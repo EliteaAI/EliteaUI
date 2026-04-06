@@ -194,10 +194,10 @@ const Card = memo(props => {
               />
             </Box>
             <Box sx={styles.bottomRightSection}>
-              {status === 'published' && isApplicationCard(type) && (
+              {(status === 'published' || status === 'embedded') && isApplicationCard(type) && (
                 <StyledTooltip
                   placement="top"
-                  title="Published"
+                  title={status === 'embedded' ? 'Embedded' : 'Published'}
                 >
                   <Box sx={styles.publishIconContainer}>
                     <PublishIcon sx={{ fontSize: '1rem' }} />
