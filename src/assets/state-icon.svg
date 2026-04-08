@@ -1,0 +1,19 @@
+<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+  <!-- Outer container representing the state -->
+  <rect x="3" y="3" width="10" height="10" rx="2" stroke="currentColor" stroke-width="0.8" fill="none" />
+
+  <!-- Inner circle representing the state node -->
+  <circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="0.8" fill="none" />
+
+  <!-- Connection lines -->
+  <line x1="8" y1="1" x2="8" y2="3" stroke="currentColor" stroke-width="0.8" />
+  <line x1="8" y1="13" x2="8" y2="15" stroke="currentColor" stroke-width="0.8" />
+  <line x1="1" y1="8" x2="3" y2="8" stroke="currentColor" stroke-width="0.8" />
+  <line x1="13" y1="8" x2="15" y2="8" stroke="currentColor" stroke-width="0.8" />
+
+  <!-- Connection points -->
+  <circle cx="8" cy="1" r="0.5" fill="currentColor" />
+  <circle cx="8" cy="15" r="0.5" fill="currentColor" />
+  <circle cx="1" cy="8" r="0.5" fill="currentColor" />
+  <circle cx="15" cy="8" r="0.5" fill="currentColor" />
+</svg>

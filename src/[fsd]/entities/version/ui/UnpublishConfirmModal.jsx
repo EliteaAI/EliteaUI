@@ -1,0 +1,110 @@
+import { memo, useCallback, useState } from 'react';
+
+import { Button, DialogContent, DialogTitle, IconButton, TextField, Typography } from '@mui/material';
+
+import CloseIcon from '@/components/Icons/CloseIcon';
+import { StyledDialog, StyledDialogActions } from '@/components/StyledDialog';
+
+const UnpublishConfirmModal = memo(({ open, onClose, onConfirm, isLoading, showReason = false }) => {
+  const [reason, setReason] = useState('');
+
+  const handleConfirm = useCallback(() => {
+    onConfirm(showReason ? reason.trim() || undefined : undefined);
+    setReason('');
+  }, [onConfirm, reason, showReason]);
+
+  const handleClose = useCallback(() => {
+    setReason('');
+    onClose();
+  }, [onClose]);
+
+  const handleKeyDown = useCallback(
+    event => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        handleClose();
+      }
+    },
+    [handleClose],
+  );
+
+  return (
+    <StyledDialog
+      open={!!open}
+      onClose={handleClose}
+      onKeyDown={handleKeyDown}
+      aria-labelledby="unpublish-dialog-title"
+    >
+      <DialogTitle
+        id="unpublish-dialog-title"
+        sx={styles.dialogTitle}
+      >
+        <Typography
+          variant="headingSmall"
+          color="text.secondary"
+        >
+          Unpublish Agent
+        </Typography>
+        <IconButton
+          variant="elitea"
+          color="tertiary"
+          aria-label="close"
+          onClick={handleClose}
+          sx={{ padding: 0, margin: 0 }}
+        >
+          <CloseIcon sx={{ fontSize: '1rem' }} />
+        </IconButton>
+      </DialogTitle>
+      <DialogContent sx={styles.dialogContent}>
+        {showReason && (
+          <TextField
+            fullWidth
+            variant="standard"
+            label="Reason"
+            placeholder="Provide clear explanation for the unpublishing decision."
+            value={reason}
+            onChange={e => setReason(e.target.value)}
+            autoComplete="off"
+          />
+        )}
+      </DialogContent>
+      <StyledDialogActions>
+        <Button
+          variant="secondary"
+          onClick={handleClose}
+        >
+          Cancel
+        </Button>
+        <Button
+          variant="contained"
+          onClick={handleConfirm}
+          disabled={isLoading}
+        >
+          Unpublish
+        </Button>
+      </StyledDialogActions>
+    </StyledDialog>
+  );
+});
+
+UnpublishConfirmModal.displayName = 'UnpublishConfirmModal';
+
+/** @type {MuiSx} */
+const styles = {
+  dialogTitle: {
+    width: '100%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    height: '3.75rem',
+  },
+  dialogContent: ({ palette }) => ({
+    width: '100%',
+    padding: '1.5rem !important',
+    borderTop: `.0625rem solid ${palette.border.lines}`,
+    borderBottom: `.0625rem solid ${palette.border.lines}`,
+    background: `${palette.background.secondary} !important`,
+  }),
+};
+
+export default UnpublishConfirmModal;

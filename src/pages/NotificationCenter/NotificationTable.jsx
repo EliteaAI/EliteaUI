@@ -1,0 +1,284 @@
+import { memo, useCallback, useMemo, useState } from 'react';
+
+import { format } from 'date-fns';
+import { useSelector } from 'react-redux';
+
+import { Box, Typography } from '@mui/material';
+
+import { useRowSelection } from '@/[fsd]/entities/grid-table/lib';
+import {
+  GridTableBody,
+  GridTableContainer,
+  GridTableHeader,
+  GridTablePagination,
+  GridTableRow,
+} from '@/[fsd]/entities/grid-table/ui';
+import { useNotificationBulkDeleteMutation, useNotificationBulkMarkSeenMutation } from '@/api/notifications';
+import { buildErrorMessage } from '@/common/utils';
+import NotificationListItem from '@/components/NotificationListItem';
+import useToast from '@/hooks/useToast';
+
+import NotificationTableToolbar from './NotificationTableToolbar';
+
+const NOTIFICATION_TABLE_CONFIG = {
+  PAGE_SIZE_OPTIONS: [5, 10, 50, 100],
+};
+
+const NOTIFICATION_COLUMNS = [
+  { field: 'event_type', label: 'Notification', width: '1fr', sortable: false },
+  { field: 'created_at', label: 'Date & Time', width: '11rem', sortable: false },
+];
+
+const GRID_TEMPLATE_COLUMNS = '3rem 1fr 11rem';
+
+const DATA_COLUMNS = NOTIFICATION_COLUMNS.slice(1);
+
+const NotificationTable = memo(props => {
+  const { isFetching, rows, rowCount, paginationModel, setPaginationModel } = props;
+  const [hoveredRowId, setHoveredRowId] = useState(null);
+  const styles = notificationTableStyles();
+  const { personal_project_id } = useSelector(state => state.user);
+  const { toastError, toastSuccess } = useToast();
+  const [bulkDeleteNotifications] = useNotificationBulkDeleteMutation();
+  const [bulkMarkSeenNotifications] = useNotificationBulkMarkSeenMutation();
+  const {
+    selectedIds: rowSelectionModel,
+    isAllSelected,
+    isIndeterminate,
+    handleSelectAll,
+    handleSelectRow,
+    clearSelection,
+  } = useRowSelection({ rows, idField: 'id' });
+
+  const { page, pageSize } = paginationModel;
+
+  const totalPages = Math.max(1, Math.ceil(rowCount / pageSize));
+  const isFirstPage = page === 0;
+  const isLastPage = page >= totalPages - 1;
+  const startRow = rowCount === 0 ? 0 : page * pageSize + 1;
+  const endRow = Math.min((page + 1) * pageSize, rowCount);
+
+  const pageSizeSelectOptions = useMemo(
+    () => NOTIFICATION_TABLE_CONFIG.PAGE_SIZE_OPTIONS.map(n => ({ value: n, label: String(n) })),
+    [],
+  );
+
+  const handlePrevPage = useCallback(() => {
+    setPaginationModel(prev => ({ ...prev, page: prev.page - 1 }));
+  }, [setPaginationModel]);
+
+  const handleNextPage = useCallback(() => {
+    setPaginationModel(prev => ({ ...prev, page: prev.page + 1 }));
+  }, [setPaginationModel]);
+
+  const handlePageSizeChange = useCallback(
+    newSize => {
+      setPaginationModel({ pageSize: newSize, page: 0 });
+    },
+    [setPaginationModel],
+  );
+
+  const handleDeleteSelected = useCallback(async () => {
+    if (!rowSelectionModel.length || !personal_project_id) return;
+    try {
+      await bulkDeleteNotifications({ projectId: personal_project_id, ids: rowSelectionModel }).unwrap();
+      clearSelection();
+      toastSuccess('Notifications deleted successfully');
+    } catch (err) {
+      toastError(buildErrorMessage(err));
+    }
+  }, [
+    rowSelectionModel,
+    bulkDeleteNotifications,
+    personal_project_id,
+    clearSelection,
+    toastError,
+    toastSuccess,
+  ]);
+
+  const selectedRowIds = useMemo(() => new Set(rowSelectionModel), [rowSelectionModel]);
+
+  const shouldMarkAsRead = useMemo(
+    () => rows.some(row => selectedRowIds.has(row.id) && !row.is_seen),
+    [rows, selectedRowIds],
+  );
+
+  const canMarkToggle = useMemo(
+    () => rowSelectionModel.length > 0 && !!personal_project_id,
+    [rowSelectionModel, personal_project_id],
+  );
+
+  const handleMarkToggle = useCallback(async () => {
+    if (!canMarkToggle) return;
+    try {
+      await bulkMarkSeenNotifications({
+        projectId: personal_project_id,
+        ids: rowSelectionModel,
+        isSeen: shouldMarkAsRead,
+      }).unwrap();
+      clearSelection();
+      toastSuccess(shouldMarkAsRead ? 'Notifications marked as read' : 'Notifications marked as unread');
+    } catch (err) {
+      toastError(buildErrorMessage(err));
+    }
+  }, [
+    canMarkToggle,
+    rowSelectionModel,
+    bulkMarkSeenNotifications,
+    personal_project_id,
+    shouldMarkAsRead,
+    clearSelection,
+    toastError,
+    toastSuccess,
+  ]);
+
+  const renderNameCell = useCallback(
+    ({ row }) => (
+      <Box sx={styles.notificationCell}>
+        <NotificationListItem
+          notification={row}
+          clampLines={0}
+          sx={styles.listItemOverride}
+          contentSX={styles.listItemContent}
+          showTime={false}
+        />
+      </Box>
+    ),
+    [styles],
+  );
+
+  const renderCheckboxCellIndicator = useCallback(
+    row => (!row.is_seen ? <Box sx={styles.unseenIndicator} /> : null),
+    [styles],
+  );
+
+  const renderCell = useCallback((column, value, row) => {
+    if (column.field === 'created_at') {
+      const textColor = row.is_seen ? 'text.primary' : 'text.secondary';
+      return (
+        <Typography
+          variant="bodyMedium"
+          sx={{ color: textColor }}
+        >
+          {format(new Date(value), 'dd-MMM-yyyy, kk:mm')}
+        </Typography>
+      );
+    }
+    return value;
+  }, []);
+
+  return (
+    <Box sx={styles.wrapper}>
+      <GridTableContainer
+        toolbar={
+          <NotificationTableToolbar
+            rowSelectionModel={rowSelectionModel}
+            onDeleteSelected={handleDeleteSelected}
+            onMarkToggle={handleMarkToggle}
+            markAsRead={shouldMarkAsRead}
+          />
+        }
+        isLoading={isFetching}
+        isEmpty={!isFetching && rows.length === 0}
+        emptyMessage="No notifications"
+        loadingMessage="Loading notifications..."
+      >
+        <GridTableHeader
+          columns={NOTIFICATION_COLUMNS}
+          gridTemplateColumns={GRID_TEMPLATE_COLUMNS}
+          onSelectAll={handleSelectAll}
+          isAllSelected={isAllSelected}
+          isIndeterminate={isIndeterminate}
+        />
+        <GridTableBody>
+          {rows.map(row => (
+            <GridTableRow
+              key={row.id}
+              row={row}
+              isSelected={rowSelectionModel.includes(row.id)}
+              isHovered={hoveredRowId === row.id}
+              onSelect={handleSelectRow}
+              onMouseEnter={() => setHoveredRowId(row.id)}
+              onMouseLeave={() => setHoveredRowId(null)}
+              gridTemplateColumns={GRID_TEMPLATE_COLUMNS}
+              columns={DATA_COLUMNS}
+              renderCell={renderCell}
+              NameCellComponent={renderNameCell}
+              nameField="event_type"
+              checkboxCellIndicator={renderCheckboxCellIndicator(row)}
+              checkboxCellSx={styles.checkboxCell}
+              dataCellSx={styles.dataCell}
+            />
+          ))}
+        </GridTableBody>
+        {rowCount > 0 && (
+          <GridTablePagination
+            totalRows={rowCount}
+            isFirstPage={isFirstPage}
+            isLastPage={isLastPage}
+            startRow={startRow}
+            endRow={endRow}
+            pageSizeSelectOptions={pageSizeSelectOptions}
+            pageSize={pageSize}
+            handlePrevPage={handlePrevPage}
+            handleNextPage={handleNextPage}
+            handlePageSizeChange={handlePageSizeChange}
+          />
+        )}
+      </GridTableContainer>
+    </Box>
+  );
+});
+
+NotificationTable.displayName = 'NotificationTable';
+
+/** @type {MuiSx} */
+const notificationTableStyles = () => ({
+  wrapper: {
+    width: '100%',
+    maxWidth: '62.5rem',
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    paddingTop: '1rem',
+    height: '100%',
+  },
+  notificationCell: {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  checkboxCell: {
+    alignSelf: 'start',
+    paddingTop: '0.4rem',
+  },
+  dataCell: {
+    alignSelf: 'start',
+    paddingTop: '0.8rem',
+  },
+  unseenIndicator: ({ palette }) => ({
+    position: 'absolute',
+    left: 0,
+    top: '0.7rem',
+    bottom: 0,
+    width: '0.25rem',
+    height: '1.25rem',
+    borderRadius: '0.25rem',
+    backgroundColor: palette.text.info,
+  }),
+  listItemOverride: {
+    padding: '0',
+    border: 'none',
+    borderBottom: 'none',
+    width: 'auto',
+    flex: 1,
+    minHeight: 'unset',
+    boxSizing: 'border-box',
+    minWidth: 0,
+  },
+  listItemContent: {
+    justifyContent: 'center',
+  },
+});
+
+export default NotificationTable;

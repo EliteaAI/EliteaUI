@@ -1,0 +1,13 @@
+node_modules
+.idea
+.promptLib
+.env
+.vscode
+.env.*
+package-lock.json
+.venv
+dist
+.playwright-mcp
+*storybook.log
+storybook-static
+.DS_Store

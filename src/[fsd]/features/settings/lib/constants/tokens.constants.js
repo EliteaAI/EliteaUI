@@ -1,0 +1,9 @@
+export const SETTINGS_PREVIEW_TYPES = {
+  VSCODE: 'vscode',
+  JETBRAINS: 'jetbrains',
+};
+
+export const SETTINGS_PREVIEW_LABELS = {
+  [SETTINGS_PREVIEW_TYPES.VSCODE]: 'VSCode',
+  [SETTINGS_PREVIEW_TYPES.JETBRAINS]: 'JetBrains',
+};

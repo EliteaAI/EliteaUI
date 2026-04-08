@@ -1,0 +1,2 @@
+# we need to run build before we push any changes to the branch to be sure nothing was broken
+# npm run build

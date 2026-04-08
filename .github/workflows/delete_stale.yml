@@ -1,0 +1,21 @@
+name: Delete stale branches
+
+on:
+  workflow_dispatch:
+  schedule:
+    # - cron: "*/6 * * * *"
+    - cron: "0 0 * * *" # Everday at midnight
+
+jobs:
+  remove-stale-branches:
+    runs-on: [self-hosted, Linux]
+    steps:
+      - name: Remove Stale Branches
+        uses: fpicalausa/remove-stale-branches@v2.1.0
+        with:
+          dry-run: false
+          ignore-branches-with-open-prs: true
+          days-before-branch-stale: 40
+          operations-per-run: 40
+          ignore-unknown-authors: true
+          default-recipient: aspect13

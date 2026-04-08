@@ -1,0 +1,34 @@
+name: Trigger deploy
+
+on:
+  release:
+    types: [published, released, updated]
+  workflow_dispatch:
+    inputs:
+      tag:
+        default: 'latest'
+        description: 'Release tag'
+        required: true
+
+env:
+  DEFAULT_TAG: 'latest'
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, Linux]
+
+    steps:
+      - name: Trigger deploy
+        run: exit 1
+      # - name: Trigger deploy
+      #   run: |
+      #     curl -X POST \
+      #        -H "Authorization:Bearer ${{ secrets.UPDATE_TOKEN }}" \
+      #        -H "Content-Type:application/json" \
+      #        -d '{
+      #          "release": "${{ github.event.inputs.tag || env.DEFAULT_TAG }}",
+      #          "commit_sha": "${{ github.sha }}",
+      #          "commit_ref": "${{ github.ref }}"
+      #        }' \
+      #        'https://dev.elitea.ai/api/v2/elitea_core/elitea_ui_ci/administration' \
+      #        --fail-with-body

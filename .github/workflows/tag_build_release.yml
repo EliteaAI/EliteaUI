@@ -1,0 +1,61 @@
+name: Build and release from tag
+
+on:
+  push:
+    tags: [ '*' ]
+
+  workflow_dispatch:
+    inputs:
+      tag:
+        default: "latest"
+        description: "Release tag"
+        required: true
+      runner:
+        type: choice
+        description: "Action runs on"
+        options:
+          - self-hosted
+          - ubuntu-latest
+        required: true
+
+jobs:
+  build_and_release:
+    runs-on: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.runner || fromJSON('["self-hosted", "Linux"]') }}
+    steps:
+      - name: Clear repository
+        run: rm -rf $GITHUB_WORKSPACE && mkdir $GITHUB_WORKSPACE
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 23.11.0
+
+      - name: Install dependencies
+        env:
+          NODE_OPTIONS: "--max-old-space-size=8192"
+        run: npm install
+
+      - name: Build project
+        env:
+          NODE_OPTIONS: "--max-old-space-size=8192"
+        run: npm run build -- --base=./
+
+      - name: Collect head version
+        run: |
+          head_version=$(git rev-parse HEAD)
+          echo "$head_version" >> ./dist/head.txt
+
+      - name: Zip artifacts
+        run: zip -r ../EliteAUI.zip .
+        working-directory: ./dist
+
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: ./EliteAUI.zip
+          makeLatest: false
+          allowUpdates: true
+          tag: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || github.ref_name }}

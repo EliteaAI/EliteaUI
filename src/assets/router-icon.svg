@@ -1,0 +1,14 @@
+<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+  <!-- Central Router Node -->
+  <circle cx="8" cy="8" r="2" fill="currentColor" />
+
+  <!-- Linked Nodes -->
+  <circle cx="2" cy="4" r="1.5" fill="currentColor" />
+  <circle cx="14" cy="4" r="1.5" fill="currentColor" />
+  <circle cx="8" cy="14" r="1.5" fill="currentColor" />
+
+  <!-- Connecting Lines -->
+  <line x1="8" y1="8" x2="2" y2="4" stroke="currentColor" stroke-width="1" />
+  <line x1="8" y1="8" x2="14" y2="4" stroke="currentColor" stroke-width="1" />
+  <line x1="8" y1="8" x2="8" y2="14" stroke="currentColor" stroke-width="1" />
+</svg>

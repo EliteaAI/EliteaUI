@@ -1,0 +1,11 @@
+{
+  "path": "./node_modules/@digitalroute/cz-conventional-changelog-for-jira",
+  "minHeaderWidth": 15,
+  "maxHeaderWidth": 100,
+  "jiraPrefix": "EL",
+  "jiraPrepend": "[",
+  "jiraAppend": "]",
+  "skipScope": true,
+  "skipBreaking": true,
+  "scopes": []
+}
