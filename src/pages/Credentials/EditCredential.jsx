@@ -194,7 +194,7 @@ const EditCredential = memo(({ title, forceShowTitle }) => {
               <Tooltip.TypographyWithConditionalTooltip
                 title={credentialDisplayName}
                 placement="top"
-                variant="labelMedium"
+                variant="headingSmall"
                 sx={styles.credentialTitle}
               >
                 {credentialDisplayName}
@@ -291,7 +291,6 @@ const editCredentialStyles = () => ({
     },
   },
   credentialTitle: {
-    maxWidth: '12.5rem',
     textAlign: 'center',
     textTransform: 'none !important',
   },

@@ -212,7 +212,7 @@ const StickyTabs = memo(props => {
                 >
                   <Typography
                     component="div"
-                    variant="labelMedium"
+                    variant="headingSmall"
                     color="text.secondary"
                   >
                     {title}

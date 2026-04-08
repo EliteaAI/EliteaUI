@@ -191,7 +191,7 @@ const CreateCredential = memo(
                 <Tooltip.TypographyWithConditionalTooltip
                   title={pageTitle}
                   placement="top"
-                  variant="labelMedium"
+                  variant="headingSmall"
                   sx={styles.pageTitle}
                 >
                   {pageTitle}
