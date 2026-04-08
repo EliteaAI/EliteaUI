@@ -286,7 +286,8 @@ const parseInformation = notification => {
   }
 };
 
-const NotificationListItemMessage = ({ notification, onCloseNotificationList }) => {
+const NotificationListItemMessage = props => {
+  const { notification, onCloseNotificationList, textVariant = 'bodySmall' } = props;
   const {
     event_type,
     leadingTextParam1 = '',
@@ -308,12 +309,12 @@ const NotificationListItemMessage = ({ notification, onCloseNotificationList }) 
     const versionHref = `${baseUrl}${basename}/${projectId}/agents/all/${sourceApplicationId}/${sourceVersionId}?viewMode=owner`;
     return (
       <Typography
-        variant="bodySmall"
+        variant={textVariant}
         color="text.secondary"
       >
         {'Unpublished agent version id: '}
         <Link
-          variant="bodySmall"
+          variant={textVariant}
           color="text.secondary"
           sx={{ textDecoration: 'underline', cursor: 'pointer' }}
           href={versionHref}
@@ -335,7 +336,7 @@ const NotificationListItemMessage = ({ notification, onCloseNotificationList }) 
     const parts = leadingTextParam1.split('{INDEX_LINK}');
     return (
       <Typography
-        variant="labelMedium"
+        variant={textVariant}
         sx={{ color: textColor }}
       >
         {parts[0]}
@@ -353,7 +354,7 @@ const NotificationListItemMessage = ({ notification, onCloseNotificationList }) 
 
   return (
     <Typography
-      variant="labelMedium"
+      variant={textVariant}
       sx={{ color: textColor }}
     >
       {leadingText(leadingTextParam1, leadingTextParam2)[event_type]}

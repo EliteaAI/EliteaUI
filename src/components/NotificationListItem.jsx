@@ -108,20 +108,29 @@ const getIcon = (type, theme, notification) => {
   }
 };
 
+const NOTIFICATION_CONTEXT_STYLES = {
+  list: {
+    textVariant: 'bodySmall',
+  },
+  table: {
+    textVariant: 'labelMedium',
+  },
+};
+
 const NotificationListItem = memo(props => {
   const {
     notification,
-    height = '4.75rem',
-    width = '100%',
     showTime = true,
     clampLines = 3,
     sx = {},
     contentSX = {},
     onCloseNotificationList,
+    context = 'list',
   } = props;
   const theme = useTheme();
   const { event_type } = notification;
-  const styles = notificationListItemStyles(height, width, clampLines);
+  const { textVariant } = NOTIFICATION_CONTEXT_STYLES[context] ?? NOTIFICATION_CONTEXT_STYLES.list;
+  const styles = notificationListItemStyles(clampLines);
 
   return (
     <Box sx={[styles.container, sx]}>
@@ -131,6 +140,7 @@ const NotificationListItem = memo(props => {
           <NotificationListItemMessage
             notification={notification}
             onCloseNotificationList={onCloseNotificationList}
+            textVariant={textVariant}
           />
         </Box>
         {showTime && (
@@ -146,13 +156,13 @@ const NotificationListItem = memo(props => {
 NotificationListItem.displayName = 'NotificationListItem';
 
 /** @type {MuiSx} */
-const notificationListItemStyles = (height, width, clampLines) => ({
+const notificationListItemStyles = clampLines => ({
   container: ({ palette }) => ({
     display: 'flex',
-    padding: '0.75rem 1.25rem',
+    padding: '0.5rem 0.75rem',
     alignItems: 'flex-start',
-    minHeight: height,
-    width,
+    height: 'auto',
+    width: '100%',
     gap: '0.7rem',
     boxSizing: 'border-box',
     borderBottom: `0.0625rem solid ${palette.border.notificationItem}`,

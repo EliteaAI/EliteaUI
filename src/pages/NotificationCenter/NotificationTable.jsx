@@ -14,6 +14,7 @@ import {
   GridTableRow,
 } from '@/[fsd]/entities/grid-table/ui';
 import { useNotificationBulkDeleteMutation, useNotificationBulkMarkSeenMutation } from '@/api/notifications';
+import { SortOrderOptions } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import NotificationListItem from '@/components/NotificationListItem';
 import useToast from '@/hooks/useToast';
@@ -26,15 +27,25 @@ const NOTIFICATION_TABLE_CONFIG = {
 
 const NOTIFICATION_COLUMNS = [
   { field: 'event_type', label: 'Notification', width: '1fr', sortable: false },
-  { field: 'created_at', label: 'Date & Time', width: '11rem', sortable: false },
+  { field: 'created_at', label: 'Date & Time', width: '11rem', sortable: true },
 ];
 
-const GRID_TEMPLATE_COLUMNS = '3rem 1fr 11rem';
+const GRID_TEMPLATE_COLUMNS = '3rem minmax(0, 50rem) 11rem';
 
 const DATA_COLUMNS = NOTIFICATION_COLUMNS.slice(1);
 
 const NotificationTable = memo(props => {
-  const { isFetching, rows, rowCount, paginationModel, setPaginationModel } = props;
+  const {
+    isFetching,
+    rows,
+    rowCount,
+    paginationModel,
+    setPaginationModel,
+    sortModel,
+    setSortModel,
+    search,
+    onSearchChange,
+  } = props;
   const [hoveredRowId, setHoveredRowId] = useState(null);
   const styles = notificationTableStyles();
   const { personal_project_id } = useSelector(state => state.user);
@@ -76,6 +87,20 @@ const NotificationTable = memo(props => {
       setPaginationModel({ pageSize: newSize, page: 0 });
     },
     [setPaginationModel],
+  );
+
+  const handleSort = useCallback(
+    field => {
+      setSortModel(prev => ({
+        field,
+        direction:
+          prev.field === field && prev.direction === SortOrderOptions.ASC
+            ? SortOrderOptions.DESC
+            : SortOrderOptions.ASC,
+      }));
+      setPaginationModel(prev => ({ ...prev, page: 0 }));
+    },
+    [setSortModel, setPaginationModel],
   );
 
   const handleDeleteSelected = useCallback(async () => {
@@ -132,6 +157,9 @@ const NotificationTable = memo(props => {
     toastSuccess,
   ]);
 
+  const handleRowMouseEnter = useCallback(id => () => setHoveredRowId(id), []);
+  const handleRowMouseLeave = useCallback(() => setHoveredRowId(null), []);
+
   const renderNameCell = useCallback(
     ({ row }) => (
       <Box sx={styles.notificationCell}>
@@ -141,14 +169,10 @@ const NotificationTable = memo(props => {
           sx={styles.listItemOverride}
           contentSX={styles.listItemContent}
           showTime={false}
+          context="table"
         />
       </Box>
     ),
-    [styles],
-  );
-
-  const renderCheckboxCellIndicator = useCallback(
-    row => (!row.is_seen ? <Box sx={styles.unseenIndicator} /> : null),
     [styles],
   );
 
@@ -170,12 +194,15 @@ const NotificationTable = memo(props => {
   return (
     <Box sx={styles.wrapper}>
       <GridTableContainer
+        toolbarSx={styles.toolbarOverride}
         toolbar={
           <NotificationTableToolbar
             rowSelectionModel={rowSelectionModel}
             onDeleteSelected={handleDeleteSelected}
             onMarkToggle={handleMarkToggle}
             markAsRead={shouldMarkAsRead}
+            search={search}
+            onSearchChange={onSearchChange}
           />
         }
         isLoading={isFetching}
@@ -189,6 +216,8 @@ const NotificationTable = memo(props => {
           onSelectAll={handleSelectAll}
           isAllSelected={isAllSelected}
           isIndeterminate={isIndeterminate}
+          sortConfig={sortModel}
+          onSort={handleSort}
         />
         <GridTableBody>
           {rows.map(row => (
@@ -198,14 +227,13 @@ const NotificationTable = memo(props => {
               isSelected={rowSelectionModel.includes(row.id)}
               isHovered={hoveredRowId === row.id}
               onSelect={handleSelectRow}
-              onMouseEnter={() => setHoveredRowId(row.id)}
-              onMouseLeave={() => setHoveredRowId(null)}
+              onMouseEnter={handleRowMouseEnter(row.id)}
+              onMouseLeave={handleRowMouseLeave}
               gridTemplateColumns={GRID_TEMPLATE_COLUMNS}
               columns={DATA_COLUMNS}
               renderCell={renderCell}
               NameCellComponent={renderNameCell}
               nameField="event_type"
-              checkboxCellIndicator={renderCheckboxCellIndicator(row)}
               checkboxCellSx={styles.checkboxCell}
               dataCellSx={styles.dataCell}
             />
@@ -236,11 +264,10 @@ NotificationTable.displayName = 'NotificationTable';
 const notificationTableStyles = () => ({
   wrapper: {
     width: '100%',
-    maxWidth: '62.5rem',
     flex: 1,
     display: 'flex',
     flexDirection: 'column',
-    paddingTop: '1rem',
+    paddingTop: '0.3rem',
     height: '100%',
   },
   notificationCell: {
@@ -256,16 +283,6 @@ const notificationTableStyles = () => ({
     alignSelf: 'start',
     paddingTop: '0.8rem',
   },
-  unseenIndicator: ({ palette }) => ({
-    position: 'absolute',
-    left: 0,
-    top: '0.7rem',
-    bottom: 0,
-    width: '0.25rem',
-    height: '1.25rem',
-    borderRadius: '0.25rem',
-    backgroundColor: palette.text.info,
-  }),
   listItemOverride: {
     padding: '0',
     border: 'none',
@@ -278,6 +295,10 @@ const notificationTableStyles = () => ({
   },
   listItemContent: {
     justifyContent: 'center',
+  },
+  toolbarOverride: {
+    paddingTop: 0,
+    paddingBottom: 0,
   },
 });
 
