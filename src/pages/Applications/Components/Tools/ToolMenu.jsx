@@ -9,7 +9,6 @@ import { Box } from '@mui/material';
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { useTrackEvent } from '@/GA';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
-import { useProjectType } from '@/[fsd]/shared/lib/hooks';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { useApplicationListQuery } from '@/api/applications';
 import { useLazyToolkitsDetailsQuery } from '@/api/toolkits';
@@ -75,8 +74,6 @@ const ToolMenu = memo(props => {
   const { values = {} } = formik || {};
   const projectId = useSelectedProjectId();
 
-  const { projectType } = useProjectType();
-
   const isFromAgents = useIsFrom(RouteDefinitions.Applications);
   const isFromPipelines = useIsFrom(RouteDefinitions.Pipelines);
 
@@ -139,14 +136,12 @@ const ToolMenu = memo(props => {
             [GA_EVENT_PARAMS.MCP_TYPE]: t?.type || 'unknown',
             [GA_EVENT_PARAMS.MCP_NAME]: t?.name || 'unknown',
             [GA_EVENT_PARAMS.TIMESTAMP]: new Date().toISOString().split('T')[0],
-            [GA_EVENT_PARAMS.PROJECT_TYPE]: projectType,
             [GA_EVENT_PARAMS.ENTITY]: entity,
           });
         else
           trackEvent(GA_EVENT_NAMES.TOOLKIT_ATTACHED, {
             [GA_EVENT_PARAMS.TOOLKIT_TYPE]: t?.type || 'unknown',
             [GA_EVENT_PARAMS.TIMESTAMP]: new Date().toISOString().split('T')[0],
-            [GA_EVENT_PARAMS.PROJECT_TYPE]: projectType,
             [GA_EVENT_PARAMS.ENTITY]: entity,
           });
       }
@@ -154,7 +149,7 @@ const ToolMenu = memo(props => {
       // Note: Success message is handled by the useLibraryToolkits hook
       // Don't show duplicate messages here
     },
-    [isFromAgents, isFromPipelines, projectType, trackEvent],
+    [isFromAgents, isFromPipelines, trackEvent],
   );
 
   // Load toolkits from library

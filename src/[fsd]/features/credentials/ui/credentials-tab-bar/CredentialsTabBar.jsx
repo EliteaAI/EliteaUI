@@ -145,7 +145,6 @@ const CredentialTabBar = memo(props => {
           trackEvent(GA_EVENT_NAMES.CREDENTIALS_CREATED, {
             [GA_EVENT_PARAMS.CREDENTIALS_TYPE]: projectType === 'private' ? 'private' : 'project',
             [GA_EVENT_PARAMS.TOOLKIT_TYPE]: toolType || 'unknown',
-            [GA_EVENT_PARAMS.PROJECT_TYPE]: projectType || 'unknown',
           });
         }
 

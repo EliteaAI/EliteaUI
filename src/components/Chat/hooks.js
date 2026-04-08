@@ -428,7 +428,6 @@ export const useChatSocket = ({
               [GA_EVENT_PARAMS[`${key}_ID`]]: theParticipant.entity_meta?.id || 'unknown',
               [GA_EVENT_PARAMS[`${key}_VERSION`]]: theParticipant.entity_settings?.version_id || 'unknown',
               [GA_EVENT_PARAMS.ENTITY]: contextExecutionEntity,
-              [GA_EVENT_PARAMS.PROJECT_TYPE]: projectTypeRef.current || 'unknown',
             };
 
             if (isPipeline) {
@@ -732,7 +731,6 @@ export const useChatSocket = ({
                   [GA_EVENT_PARAMS.TOOL_NAME]: toolNameRaw || 'unknown',
                   [GA_EVENT_PARAMS.TIMESTAMP]: new Date().toISOString().split('T')[0],
                   [GA_EVENT_PARAMS.ENTITY]: contextExecutionEntity,
-                  [GA_EVENT_PARAMS.PROJECT_TYPE]: projectTypeRef.current || 'unknown',
                 });
               else
                 trackEvent(GA_EVENT_NAMES.TOOLKIT_USAGE, {
@@ -741,7 +739,6 @@ export const useChatSocket = ({
                   [GA_EVENT_PARAMS.TOOL_NAME]: toolNameRaw || 'unknown',
                   [GA_EVENT_PARAMS.TIMESTAMP]: new Date().toISOString().split('T')[0],
                   [GA_EVENT_PARAMS.ENTITY]: contextExecutionEntity,
-                  [GA_EVENT_PARAMS.PROJECT_TYPE]: projectTypeRef.current || 'unknown',
                 });
             }
 
@@ -757,7 +754,6 @@ export const useChatSocket = ({
                   [GA_EVENT_PARAMS.MODEL_NAME]: modelName,
                   [GA_EVENT_PARAMS.TIMESTAMP]: new Date().toISOString().split('T')[0],
                   [GA_EVENT_PARAMS.ENTITY]: contextExecutionEntity,
-                  [GA_EVENT_PARAMS.PROJECT_TYPE]: projectTypeRef.current || 'unknown',
                 });
             }
 
