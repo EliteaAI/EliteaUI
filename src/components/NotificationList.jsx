@@ -1,11 +1,13 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useSelector } from 'react-redux';
+import { debounce } from 'lodash';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
-import { Box, Button, Popover, Skeleton, Typography, debounce, useTheme } from '@mui/material';
+import { Box, Popover, Skeleton, Typography } from '@mui/material';
 
-import { useNotificationListQuery } from '@/api/notifications';
+import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { TAG_NOTIFICATIONS, notificationsApi, useNotificationListQuery } from '@/api/notifications';
 import { PAGE_SIZE } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import useToast from '@/hooks/useToast';
@@ -14,13 +16,16 @@ import RouteDefinitions, { PathSessionMap } from '@/routes';
 import CloseIcon from './Icons/CloseIcon';
 import NotificationListItem from './NotificationListItem';
 
-const NotificationList = ({ notificationListAnchorEl, onCloseNotificationList }) => {
-  const theme = useTheme();
+const NotificationList = memo(props => {
+  const { notificationListAnchorEl, onCloseNotificationList } = props;
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const listRef = useRef();
   const { toastError } = useToast();
+  const styles = notificationListStyles();
   const { personal_project_id } = useSelector(state => state.user);
   const [page, setPage] = useState(0);
+
   const { data, isFetching, isError, error, refetch } = useNotificationListQuery(
     {
       projectId: personal_project_id,
@@ -32,7 +37,9 @@ const NotificationList = ({ notificationListAnchorEl, onCloseNotificationList })
     },
     { refetchOnFocus: !!personal_project_id, skip: !personal_project_id },
   );
+
   const onViewAll = useCallback(() => {
+    dispatch(notificationsApi.util.invalidateTags([TAG_NOTIFICATIONS]));
     navigate(RouteDefinitions.NotificationCenter, {
       state: {
         routeStack: [
@@ -44,33 +51,37 @@ const NotificationList = ({ notificationListAnchorEl, onCloseNotificationList })
       },
     });
     onCloseNotificationList(true);
-  }, [navigate, onCloseNotificationList]);
+  }, [dispatch, navigate, onCloseNotificationList]);
+
   const onLoadMore = useCallback(() => {
     setPage(prev => prev + 1);
   }, []);
 
-  const onScroll = debounce(() => {
-    const listDom = listRef.current;
-    const clientHeight = listDom.clientHeight;
-    const scrollHeight = listDom.scrollHeight;
-    const scrollTop = listDom.scrollTop;
+  const hasMore = data && data.rows.length < data.total;
 
+  const handleScroll = useCallback(() => {
+    const listDom = listRef.current;
+    if (!listDom) return;
+
+    const { clientHeight, scrollHeight, scrollTop } = listDom;
     const isReachBottom = scrollTop + clientHeight > scrollHeight - 10;
-    if (isReachBottom && onLoadMore && data && data.rows.length < data.total) {
+    if (isReachBottom && hasMore) {
       onLoadMore();
     }
-  }, 300);
+  }, [hasMore, onLoadMore]);
+
+  const debouncedScroll = useMemo(() => debounce(handleScroll, 300), [handleScroll]);
 
   useEffect(() => {
-    if (listRef.current) {
-      const listDom = listRef.current;
-      listDom.addEventListener('scroll', onScroll);
+    const listDom = listRef.current;
+    if (!listDom) return;
 
-      return () => {
-        listDom.removeEventListener('scroll', onScroll);
-      };
-    }
-  }, [onScroll, listRef]);
+    listDom.addEventListener('scroll', debouncedScroll);
+    return () => {
+      listDom.removeEventListener('scroll', debouncedScroll);
+      debouncedScroll.cancel();
+    };
+  }, [debouncedScroll]);
 
   useEffect(() => {
     if (isError) {
@@ -85,11 +96,10 @@ const NotificationList = ({ notificationListAnchorEl, onCloseNotificationList })
   return (
     <>
       <Popover
-        id={'notificationList'}
+        id="notificationList"
         open={Boolean(notificationListAnchorEl)}
         anchorEl={notificationListAnchorEl}
         anchorReference="anchorEl"
-        // anchorPosition={{ top: '100vh', left: sideBarCollapsed ? COLLAPSED_SIDE_BAR_WIDTH : SIDE_BAR_WIDTH }}
         onClose={onCloseNotificationList}
         anchorOrigin={{
           vertical: 'top',
@@ -99,62 +109,26 @@ const NotificationList = ({ notificationListAnchorEl, onCloseNotificationList })
           vertical: 'bottom',
           horizontal: 'left',
         }}
-        sx={{
-          background: 'transparent',
-          marginLeft: '30px',
-        }}
+        sx={styles.popover}
       >
-        <Box
-          sx={{
-            background: theme.palette.background.notificationList,
-            borderRadius: '8px',
-            width: '320px',
-            display: 'flex',
-            flexDirection: 'column',
-            maxHeight: 'calc(100vh - 120px)',
-          }}
-        >
-          <Box
-            sx={{
-              display: 'flex',
-              padding: '12px 20px',
-              alignItems: 'center',
-              height: '48px',
-              boxSizing: 'border-box',
-              justifyContent: 'space-between',
-              borderBottom: `1px solid ${theme.palette.border.notificationItem}`,
-            }}
-          >
+        <Box sx={styles.container}>
+          <Box sx={styles.header}>
             <Typography
               variant="labelMedium"
               color="text.secondary"
             >
               Notifications
             </Typography>
-            <Button
+            <BaseBtn
+              variant={BUTTON_VARIANTS.tertiary}
+              startIcon={<CloseIcon />}
               onClick={onCloseNotificationList}
-              sx={{
-                minWidth: '28px !important',
-                padding: '0px 0px !important',
-                height: '28px',
-                display: 'flex',
-                borderRadius: '16px',
-                justifyContent: 'center',
-                alignItems: 'center',
-                cursor: 'pointer',
-              }}
-            >
-              <CloseIcon sx={{ cursor: 'pointer', fontSize: '16.5px' }} />
-            </Button>
+              aria-label="Close notifications"
+            />
           </Box>
           <Box
             ref={listRef}
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              maxHeight: 'calc(100vh - 194px)',
-              overflowY: 'scroll',
-            }}
+            sx={styles.listContainer}
           >
             {!isFetching &&
               data?.rows.map(notification => (
@@ -166,152 +140,105 @@ const NotificationList = ({ notificationListAnchorEl, onCloseNotificationList })
               ))}
             {isFetching && (
               <>
-                <Skeleton
-                  sx={{
-                    '&:not(:last-of-type)': {
-                      borderBottom: `1px solid ${theme.palette.border.notificationItem}`,
-                    },
-                  }}
-                  variant="rectangular"
-                  width={'100%'}
-                  height={40}
-                />
-                <Skeleton
-                  sx={{
-                    '&:not(:last-of-type)': {
-                      borderBottom: `1px solid ${theme.palette.border.notificationItem}`,
-                    },
-                  }}
-                  variant="rectangular"
-                  width={'100%'}
-                  height={40}
-                />
-                <Skeleton
-                  sx={{
-                    '&:not(:last-of-type)': {
-                      borderBottom: `1px solid ${theme.palette.border.notificationItem}`,
-                    },
-                  }}
-                  variant="rectangular"
-                  width={'100%'}
-                  height={40}
-                />
-                <Skeleton
-                  sx={{
-                    '&:not(:last-of-type)': {
-                      borderBottom: `1px solid ${theme.palette.border.notificationItem}`,
-                    },
-                  }}
-                  variant="rectangular"
-                  width={'100%'}
-                  height={40}
-                />
-                <Skeleton
-                  sx={{
-                    '&:not(:last-of-type)': {
-                      borderBottom: `1px solid ${theme.palette.border.notificationItem}`,
-                    },
-                  }}
-                  variant="rectangular"
-                  width={'100%'}
-                  height={40}
-                />
-                <Skeleton
-                  sx={{
-                    '&:not(:last-of-type)': {
-                      borderBottom: `1px solid ${theme.palette.border.notificationItem}`,
-                    },
-                  }}
-                  variant="rectangular"
-                  width={'100%'}
-                  height={40}
-                />
-                <Skeleton
-                  sx={{
-                    '&:not(:last-of-type)': {
-                      borderBottom: `1px solid ${theme.palette.border.notificationItem}`,
-                    },
-                  }}
-                  variant="rectangular"
-                  width={'100%'}
-                  height={40}
-                />
-                <Skeleton
-                  sx={{
-                    '&:not(:last-of-type)': {
-                      borderBottom: `1px solid ${theme.palette.border.notificationItem}`,
-                    },
-                  }}
-                  variant="rectangular"
-                  width={'100%'}
-                  height={40}
-                />
-                <Skeleton
-                  sx={{
-                    '&:not(:last-of-type)': {
-                      borderBottom: `1px solid ${theme.palette.border.notificationItem}`,
-                    },
-                  }}
-                  variant="rectangular"
-                  width={'100%'}
-                  height={40}
-                />
+                {[...Array(8)].map((_, index) => (
+                  <Skeleton
+                    key={`skeleton-${index}`}
+                    sx={styles.skeletonItem}
+                    variant="rectangular"
+                    width="100%"
+                    height="2.5rem"
+                  />
+                ))}
               </>
             )}
             {!data?.rows.length && !isFetching && (
-              <Box
-                sx={{
-                  display: 'flex',
-                  padding: '12px 20px',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  height: '40px',
-                  width: '100%',
-                  gap: '16px',
-                  boxSizing: 'border-box',
-                  borderBottom: `1px solid ${theme.palette.border.notificationItem}`,
-                }}
-              >
+              <Box sx={styles.emptyState}>
                 <Typography variant="bodySmall">No notifications right now</Typography>
               </Box>
             )}
           </Box>
-          <Button
-            variant="elitea"
-            color="tertiary"
-            disableRipple
+          <BaseBtn
+            variant={BUTTON_VARIANTS.tertiary}
             onClick={onViewAll}
-            sx={{
-              display: 'flex',
-              padding: '12px 20px',
-              alignItems: 'center',
-              height: '48px',
-              boxSizing: 'border-box',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              marginRight: '0px !important',
-              borderRadius: '0px',
-              borderWidth: '0px',
-              borderTop: `1px solid ${theme.palette.border.notificationItem}`,
-              '&:active': {
-                border: `0px solid ${theme.palette.border.notificationItem}`,
-              },
-              '&:hover': {
-                borderRadius: '0px',
-              },
-            }}
+            sx={styles.viewAllButton}
           >
             <Typography
               variant="labelMedium"
-              sx={{ color: theme.palette.text.button.showMore }}
+              sx={styles.viewAllButtonText}
             >
               View all
             </Typography>
-          </Button>
+          </BaseBtn>
         </Box>
       </Popover>
     </>
   );
-};
+});
+
+NotificationList.displayName = 'NotificationList';
+
+/** @type {MuiSx} */
+const notificationListStyles = () => ({
+  popover: {
+    background: 'transparent',
+    marginLeft: '1.875rem',
+  },
+  container: ({ palette }) => ({
+    background: palette.background.notificationList,
+    borderRadius: '0.5rem',
+    width: '20rem',
+    display: 'flex',
+    flexDirection: 'column',
+    maxHeight: 'calc(100vh - 7.5rem)',
+  }),
+  header: ({ palette }) => ({
+    display: 'flex',
+    padding: '0.75rem 1.25rem',
+    alignItems: 'center',
+    height: '3rem',
+    boxSizing: 'border-box',
+    justifyContent: 'space-between',
+    borderBottom: `0.0625rem solid ${palette.border.notificationItem}`,
+  }),
+  listContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    maxHeight: 'calc(100vh - 12.125rem)',
+    overflowY: 'scroll',
+  },
+  skeletonItem: ({ palette }) => ({
+    '&:not(:last-of-type)': {
+      borderBottom: `0.0625rem solid ${palette.border.notificationItem}`,
+    },
+  }),
+  emptyState: ({ palette }) => ({
+    display: 'flex',
+    padding: '0.75rem 1.25rem',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '2.5rem',
+    width: '100%',
+    gap: '1rem',
+    boxSizing: 'border-box',
+    borderBottom: `0.0625rem solid ${palette.border.notificationItem}`,
+  }),
+  viewAllButton: ({ palette }) => ({
+    width: '100%',
+    padding: '0.75rem 1.25rem',
+    height: '3rem',
+    boxSizing: 'border-box',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderTop: `0.0625rem solid ${palette.border.notificationItem}`,
+    borderRadius: '0px',
+    '&:hover': {
+      borderRadius: '0px',
+    },
+  }),
+  viewAllButtonText: ({ palette }) => ({
+    color: palette.text.button.showMore,
+  }),
+});
 
 export default NotificationList;

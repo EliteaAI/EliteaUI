@@ -410,12 +410,17 @@ export const eliteaButtonVariants = [
         gap: '0.625rem',
         ...(isIconOnly ? { width: '1.75rem', padding: 0 } : { padding: '0.375rem 1rem' }),
 
+        '--btn-icon-fill': theme.palette.icon.fill.default,
+        '& .MuiButton-startIcon path': { fill: 'var(--btn-icon-fill)' },
+
         '&:hover': {
+          '--btn-icon-fill': theme.palette.icon.fill.secondary,
           background: eliteaButtonColors(theme)[BUTTON_VARIANTS.tertiary].hover.background,
           color: eliteaButtonColors(theme)[BUTTON_VARIANTS.tertiary].hover.color,
         },
 
         '&:focus-visible': {
+          '--btn-icon-fill': theme.palette.icon.fill.secondary,
           background: eliteaButtonColors(theme)[BUTTON_VARIANTS.tertiary].hover.background,
           color: eliteaButtonColors(theme)[BUTTON_VARIANTS.tertiary].hover.color,
         },
@@ -426,6 +431,7 @@ export const eliteaButtonVariants = [
         },
 
         '&:disabled': {
+          '--btn-icon-fill': theme.palette.icon.fill.disabled,
           color: eliteaButtonColors(theme)[BUTTON_VARIANTS.tertiary].disabled.color,
           background: eliteaButtonColors(theme)[BUTTON_VARIANTS.tertiary].disabled.background,
         },

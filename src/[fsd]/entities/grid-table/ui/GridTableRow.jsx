@@ -34,7 +34,6 @@ const GridTableRow = memo(props => {
     loadingProgress = 0,
     renderCell,
     rowHeight,
-    checkboxCellIndicator,
     checkboxCellSx,
   } = props;
 
@@ -58,7 +57,6 @@ const GridTableRow = memo(props => {
     >
       {showCheckbox && (
         <Box sx={[styles.checkboxCell, checkboxCellSx]}>
-          {checkboxCellIndicator}
           {!isLoading && (
             <Checkbox.BaseCheckbox
               checked={isSelected}
@@ -118,6 +116,7 @@ const gridTableRowStyles = (isSelected, isHovered, gridTemplateColumns, showChec
     gridTemplateColumns: gridTemplateColumns || (showCheckbox ? '3rem 1fr' : '1fr'),
     alignItems: 'center',
     width: '100%',
+    flexShrink: 0,
     ...(rowHeight ? { height: rowHeight, minHeight: rowHeight } : { minHeight: '2.5rem' }),
     borderBottom: `0.0625rem solid ${palette.border.table}`,
     backgroundColor: isSelected || isHovered ? palette.background.userInputBackground : 'transparent',

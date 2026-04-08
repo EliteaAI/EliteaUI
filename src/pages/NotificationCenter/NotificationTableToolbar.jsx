@@ -4,12 +4,20 @@ import { Box, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import SimpleSearchBar from '@/[fsd]/shared/ui/input/SimpleSearchBar';
 import MarkReadIcon from '@/assets/icons/mark-read-icon.svg?react';
 import MarkUnreadIcon from '@/assets/icons/mark-unread-icon.svg?react';
 import DeleteEntityButton from '@/components/DeleteEntityButton';
 
 const NotificationTableToolbar = memo(props => {
-  const { rowSelectionModel, onDeleteSelected, onMarkToggle, markAsRead: shouldMarkAsRead } = props;
+  const {
+    rowSelectionModel,
+    onDeleteSelected,
+    onMarkToggle,
+    markAsRead: shouldMarkAsRead,
+    search,
+    onSearchChange,
+  } = props;
   const isSelectionEmpty = !rowSelectionModel?.length;
   const markToggleLabel = shouldMarkAsRead ? 'Mark selected as read' : 'Mark selected as unread';
   const MarkIcon = shouldMarkAsRead ? MarkReadIcon : MarkUnreadIcon;
@@ -26,6 +34,13 @@ const NotificationTableToolbar = memo(props => {
         </Typography>
       </Box>
       <Box sx={styles.rightSection}>
+        <Box sx={styles.searchWrapper}>
+          <SimpleSearchBar
+            searchQuery={search}
+            onSearchChange={onSearchChange}
+            placeholder="Search"
+          />
+        </Box>
         <Tooltip
           title={markToggleLabel}
           placement="top"
@@ -66,6 +81,7 @@ const notificationTableToolbarStyles = () => ({
     justifyContent: 'space-between',
     alignItems: 'center',
     width: '100%',
+    height: '3.3rem',
     gap: '1rem',
   },
   leftSection: {
@@ -74,12 +90,17 @@ const notificationTableToolbarStyles = () => ({
     alignItems: 'center',
     gap: '0.5rem',
     overflow: 'hidden',
+    flexShrink: 0,
   },
   rightSection: {
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
     gap: '0.6rem',
+  },
+  searchWrapper: {
+    minWidth: '12.5rem',
+    marginRight: '0.25rem',
   },
 });
 

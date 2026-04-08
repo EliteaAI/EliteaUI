@@ -1,14 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 
 import { Box } from '@mui/material';
 
 import { useNotificationListQuery } from '@/api/notifications';
+import { SortOrderOptions } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
+import useDebounceValue from '@/hooks/useDebounceValue';
 import useToast from '@/hooks/useToast';
 
 import NotificationTable from './NotificationTable';
+
+const MIN_SEARCH_LENGTH = 2;
 
 export default function NotificationCenter() {
   const { toastError } = useToast();
@@ -19,11 +23,34 @@ export default function NotificationCenter() {
     page: 0,
   });
 
+  const [sortModel, setSortModel] = useState({
+    field: 'created_at',
+    direction: SortOrderOptions.DESC,
+  });
+
+  const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounceValue(search, 600);
+  const apiSearch = useMemo(
+    () => (debouncedSearch.length < MIN_SEARCH_LENGTH ? '' : debouncedSearch),
+    [debouncedSearch],
+  );
+
+  const handleSearchChange = useCallback(value => {
+    setSearch(value);
+  }, []);
+
+  useEffect(() => {
+    setPaginationModel(prev => (prev.page === 0 ? prev : { ...prev, page: 0 }));
+  }, [apiSearch]);
+
   const { data, isFetching, isError, error } = useNotificationListQuery(
     {
       projectId: personal_project_id,
       page: paginationModel.page,
       pageSize: paginationModel.pageSize,
+      sortBy: sortModel.field,
+      sortOrder: sortModel.direction,
+      search: apiSearch,
     },
     { refetchOnFocus: true, skip: !personal_project_id },
   );
@@ -44,6 +71,10 @@ export default function NotificationCenter() {
         isFetching={isFetching}
         setPaginationModel={setPaginationModel}
         paginationModel={paginationModel}
+        sortModel={sortModel}
+        setSortModel={setSortModel}
+        search={search}
+        onSearchChange={handleSearchChange}
       />
     </Box>
   );

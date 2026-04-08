@@ -2,7 +2,7 @@ import { PAGE_SIZE } from '@/common/constants.js';
 
 import { eliteaApi } from './eliteaApi.js';
 
-const TAG_NOTIFICATIONS = 'TAG_NOTIFICATIONS';
+export const TAG_NOTIFICATIONS = 'TAG_NOTIFICATIONS';
 
 export const notificationsApi = eliteaApi
   .enhanceEndpoints({
@@ -11,12 +11,15 @@ export const notificationsApi = eliteaApi
   .injectEndpoints({
     endpoints: build => ({
       notificationList: build.query({
-        query: ({ projectId, page, pageSize = PAGE_SIZE, params }) => ({
+        query: ({ projectId, page, pageSize = PAGE_SIZE, params, sortBy, sortOrder, search }) => ({
           url: `/notifications/notifications/prompt_lib/${projectId}`,
           params: {
             ...params,
             limit: pageSize,
             offset: page * pageSize,
+            sort_by: sortBy,
+            sort_order: sortOrder,
+            ...(search ? { search } : {}),
           },
         }),
         providesTags: [TAG_NOTIFICATIONS],
