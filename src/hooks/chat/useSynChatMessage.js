@@ -2,8 +2,8 @@ import { useCallback } from 'react';
 
 import { useDispatch } from 'react-redux';
 
-import { eliteaApi } from '@/api/eliteaApi';
 import { TAG_TYPE_CONVERSATION_DETAILS } from '@/api/chat';
+import { eliteaApi } from '@/api/eliteaApi';
 import { ChatParticipantType, TOOL_ACTION_TYPES } from '@/common/constants';
 import {
   convertToAIAnswer,

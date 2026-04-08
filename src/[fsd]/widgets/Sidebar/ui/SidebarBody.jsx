@@ -25,9 +25,9 @@ import {
   PUBLIC_PROJECT_ID,
   SIDE_BAR_WIDTH,
 } from '@/common/constants';
-import EliteAIcon from '@/components/Icons/EliteAIcon';
 import ApplicationsIcon from '@/components/Icons/ApplicationsIcon';
 import ChatIcon from '@/components/Icons/ChatIcon';
+import EliteAIcon from '@/components/Icons/EliteAIcon';
 import ModeratorIcon from '@/components/Icons/ModeratorIcon';
 import Person from '@/components/Icons/Person';
 import ProjectSelect from '@/components/ProjectSelect';

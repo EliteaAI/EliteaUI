@@ -292,7 +292,11 @@ const ConfigurationTab = memo(props => {
   }
 
   return isFetching ? (
-    <CircularProgress />
+    <Box
+      sx={{ height: '100%', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+    >
+      <CircularProgress />
+    </Box>
   ) : (
     <>
       <DirtyDetector setDirty={setDirty} />

@@ -3,8 +3,8 @@ import { useCallback, useMemo } from 'react';
 import { useFormikContext } from 'formik';
 import { useDispatch } from 'react-redux';
 
-import { eliteaApi } from '@/api/eliteaApi';
 import { TAG_TYPE_APPLICATION_DETAILS, useUpdateApplicationRelationMutation } from '@/api/applications';
+import { eliteaApi } from '@/api/eliteaApi';
 import { useToolkitAssociateMutation } from '@/api/toolkits';
 import { buildErrorMessage } from '@/common/utils';
 

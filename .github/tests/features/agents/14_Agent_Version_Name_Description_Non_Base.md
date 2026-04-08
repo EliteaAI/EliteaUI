@@ -15,10 +15,10 @@ High
 #### Scenario Description:
 
 This scenario verifies that an agent's name and description can be successfully updated and persisted when the
-user is viewing a non-base (named) version. Previously, changes to name/description were silently discarded
-on non-base versions because the save action used a version-only API endpoint that does not support those
-fields. All saves now go through the application update endpoint, which supports name, description, and full
-tool validation regardless of which version is active.
+user is viewing a non-base (named) version. Previously, changes to name/description were silently discarded on
+non-base versions because the save action used a version-only API endpoint that does not support those fields.
+All saves now go through the application update endpoint, which supports name, description, and full tool
+validation regardless of which version is active.
 
 ---
 
@@ -102,8 +102,8 @@ Verify that when a user edits the agent's name and description while a non-base 
 - At step 7: A success notification ("The agent has been updated" or equivalent) is displayed
 - At step 10: The **Name** field displays **"Updated Name on v1"**
 - At step 10: The **Description** field displays **"Updated Description on v1"**
-- The saved name and description values are not reverted to the previous "Base Agent Name" /
-  "Base Agent Description" values
+- The saved name and description values are not reverted to the previous "Base Agent Name" / "Base Agent
+  Description" values
 
 ### Postconditions
 
@@ -249,9 +249,8 @@ Medium
 #### Test Case Description:
 
 Verify that the **Save** button returns to a disabled/inactive state after a successful save on a non-base
-version. Previously, `resetForm` was not called after saving a non-base version, leaving the form in a
-"dirty" state and keeping the Save button active even though the data was already persisted (or silently
-discarded).
+version. Previously, `resetForm` was not called after saving a non-base version, leaving the form in a "dirty"
+state and keeping the Save button active even though the data was already persisted (or silently discarded).
 
 ### Preconditions
 
@@ -309,8 +308,8 @@ discarded).
 - At step 3: The **Save** button is disabled before any changes are made
 - At step 5: The **Save** button becomes enabled after editing a field
 - At step 7: A success notification ("The agent has been updated" or equivalent) is displayed
-- After the success notification: The **Save** button returns to a **disabled** state, indicating the form
-  has been reset to the persisted values and there are no unsaved changes
+- After the success notification: The **Save** button returns to a **disabled** state, indicating the form has
+  been reset to the persisted values and there are no unsaved changes
 
 ### Postconditions
 

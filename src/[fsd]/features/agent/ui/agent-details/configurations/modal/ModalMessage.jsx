@@ -4,8 +4,8 @@ import { Box, IconButton, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { ButtonsContainer } from '@/components/Chat/StyledComponents';
-import EliteAIcon from '@/components/Icons/EliteAIcon';
 import CopyIcon from '@/components/Icons/CopyIcon';
+import EliteAIcon from '@/components/Icons/EliteAIcon';
 import UserIcon from '@/components/Icons/UserIcon';
 import Markdown from '@/components/Markdown';
 import useToast from '@/hooks/useToast';

@@ -262,7 +262,11 @@ const CredentialForm = memo(props => {
   const styles = credentialFormStyles();
 
   return isConfigurationDataLoading ? (
-    <CircularProgress size={20} />
+    <Box
+      sx={{ height: '100%', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+    >
+      <CircularProgress />
+    </Box>
   ) : (
     <Box sx={styles.container}>
       {credentialDetails.type !== ToolTypes.custom.value && !!toolSchema && isViewToggleVisible && (

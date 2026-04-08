@@ -1,8 +1,8 @@
 import { convertToJson, removeDuplicateObjects } from '@/common/utils.jsx';
 
-import { eliteaApi } from './eliteaApi.js';
 // Import TAG_TYPE_APPLICATION_DETAILS from applications.js to invalidate application cache when toolkit is associated
 import { TAG_TYPE_APPLICATION_DETAILS } from './applications.js';
+import { eliteaApi } from './eliteaApi.js';
 
 export const TAG_TYPE_TOOLKITS = 'TAG_TYPE_TOOLKITS';
 export const TAG_TYPE_TOOLKIT_DETAILS = 'TOOLKIT_DETAILS';

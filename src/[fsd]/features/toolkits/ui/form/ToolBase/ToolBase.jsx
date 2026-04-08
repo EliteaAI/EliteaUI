@@ -265,7 +265,8 @@ const ToolBase = memo(props => {
             showOnlyConfigurationFields={false}
             editFieldRootPath={editFieldRootPath}
             disableConfigFields={
-              (showDisabledConfigFields && v.configuration) || (k === 'elitea_title' && !enableEditEliteATitle)
+              (showDisabledConfigFields && v.configuration) ||
+              (k === 'elitea_title' && !enableEditEliteATitle)
             }
             checkboxAsteriskRequired={checkboxAsteriskRequired}
             disabled={disabled && v.type !== 'configuration'}

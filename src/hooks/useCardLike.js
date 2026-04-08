@@ -1,13 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useDispatch, useSelector } from 'react-redux';
+import { useParams } from 'react-router-dom';
 
 import { useTrackEvent } from '@/GA';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
-import { useParams } from 'react-router-dom';
-
-import { eliteaApi } from '@/api/eliteaApi';
 import { useLikeApplicationMutation, useUnlikeApplicationMutation } from '@/api/applications';
+import { eliteaApi } from '@/api/eliteaApi';
 import { ViewMode } from '@/common/constants';
 import { convertToJson } from '@/common/utils';
 

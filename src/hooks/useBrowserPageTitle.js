@@ -83,8 +83,7 @@ function useBrowserPageTitle() {
       }
       return `User public - ${projectName}`;
     } else if (location.pathname.startsWith('/settings')) {
-      const settingsTab =
-        params.tab || location.pathname.replace(/^\/settings\/?/, '').split('/')[0] || '';
+      const settingsTab = params.tab || location.pathname.replace(/^\/settings\/?/, '').split('/')[0] || '';
       if (settingsTab) {
         return `Settings: ${settingsTab} - ${projectName}`;
       }

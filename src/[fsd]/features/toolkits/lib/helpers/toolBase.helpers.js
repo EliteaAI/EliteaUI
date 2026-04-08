@@ -111,7 +111,12 @@ export const isIntegerType = propertySchema => {
 /**
  * Validate required fields and return errors object
  */
-export const validateRequiredFields = (schema, settings, sectionProps = [], enableEditEliteATitle = false) => {
+export const validateRequiredFields = (
+  schema,
+  settings,
+  sectionProps = [],
+  enableEditEliteATitle = false,
+) => {
   const errors = {};
 
   schema?.required

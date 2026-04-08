@@ -2,8 +2,8 @@
 
 ## Performance Optimization Guidelines
 
-EliteA UI is a complex React application with real-time features, data visualization, and AI chat capabilities.
-Follow these performance best practices to maintain optimal user experience.
+EliteA UI is a complex React application with real-time features, data visualization, and AI chat
+capabilities. Follow these performance best practices to maintain optimal user experience.
 
 > **Note**: This document provides extended performance optimization examples. For standard performance
 > patterns, refer to the main `copilot-instructions.md` file, which includes:

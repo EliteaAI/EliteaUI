@@ -11,9 +11,9 @@ import {
   ORIENTATION,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/constants/flowEditor.constants';
 import { cleanLLMSettings } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
-import { eliteaApi } from '@/api/eliteaApi';
 import { useApplicationEditMutation } from '@/api/applications';
 import { useListModelsQuery } from '@/api/configurations';
+import { eliteaApi } from '@/api/eliteaApi';
 import clearTools, { filterEmptyStrings } from '@/common/applicationUtils';
 import { buildErrorMessage, removeDuplicateObjects } from '@/common/utils';
 import { useIsFrom } from '@/hooks/useIsFromSpecificPageHooks';
