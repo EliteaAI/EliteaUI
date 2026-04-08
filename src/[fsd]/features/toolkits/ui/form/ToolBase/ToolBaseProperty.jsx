@@ -477,7 +477,8 @@ const ToolBaseProperty = memo(props => {
         <CredentialsSelect
           showBorder
           isCreationAllowed
-          label={v.description || label}
+          label={label}
+          description={v.description}
           onSelectConfiguration={value => editField(buildEditFieldPath(k), value)}
           value={settings[k]}
           configurations={v.options}
@@ -513,6 +514,7 @@ const ToolBaseProperty = memo(props => {
           value={settings[k]}
           projectId={specifiedProjectId}
           disabled={disableConfigFields || disabled}
+          description={v.description}
         />
       );
     } else if (type === 'image_generation_model') {

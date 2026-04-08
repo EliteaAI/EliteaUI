@@ -23,11 +23,13 @@ import BriefcaseIcon from '@/components/Icons/BriefcaseIcon.jsx';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import ArrowDownIcon from './Icons/ArrowDownIcon';
+import InfoIcon from './Icons/InfoIcon';
 import Person from './Icons/Person';
 
 const EmbeddingModelSelect = memo(
   ({
     label = 'Embedding Model',
+    description,
     required,
     error,
     helperText,
@@ -201,6 +203,24 @@ const EmbeddingModelSelect = memo(
                 >
                   {label}
                   {required && <span> *</span>}
+                  {description && (
+                    <Box
+                      sx={{ marginLeft: '0.15rem', ':hover': { opacity: 0.8 } }}
+                      component="span"
+                    >
+                      <Tooltip
+                        title={description}
+                        placement="top"
+                      >
+                        <Box component="span">
+                          <InfoIcon
+                            width={14}
+                            height={14}
+                          />
+                        </Box>
+                      </Tooltip>
+                    </Box>
+                  )}
                 </Typography>
                 <Tooltip
                   title="Refresh the models"
