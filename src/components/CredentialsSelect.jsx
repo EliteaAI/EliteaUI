@@ -28,11 +28,13 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import RouteDefinitions, { getBasename } from '@/routes';
 
 import ArrowDownIcon from './Icons/ArrowDownIcon';
+import InfoIcon from './Icons/InfoIcon';
 import Person from './Icons/Person';
 
 const CredentialsSelect = memo(
   ({
     label = 'Credentials',
+    description,
     required,
     error,
     helperText,
@@ -343,6 +345,24 @@ const CredentialsSelect = memo(
                 >
                   {label}
                   {required && <span> *</span>}
+                  {description && (
+                    <Box
+                      sx={{ marginLeft: '0.15rem', ':hover': { opacity: 0.8 } }}
+                      component="span"
+                    >
+                      <Tooltip
+                        title={description}
+                        placement="top"
+                      >
+                        <Box component="span">
+                          <InfoIcon
+                            width={14}
+                            height={14}
+                          />
+                        </Box>
+                      </Tooltip>
+                    </Box>
+                  )}
                 </Typography>
               </Box>
               {/* Render selected value */}
