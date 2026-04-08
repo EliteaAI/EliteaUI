@@ -11,7 +11,7 @@ export const BUTTON_COLORS = {
 };
 
 export const BUTTON_VARIANTS = {
-  alita: 'alita',
+  elitea: 'elitea',
   contained: 'contained',
   secondary: 'secondary',
   text: 'text',
@@ -46,7 +46,7 @@ BaseBtn.displayName = 'BaseBtn';
 
 export default BaseBtn;
 
-export const alitaButtonColors = theme => ({
+export const eliteaButtonColors = theme => ({
   [BUTTON_VARIANTS.special]: {
     default: {
       background: theme.palette.mode === 'dark' ? 'rgba(106, 232, 250, 0.2)' : 'rgba(245, 81, 249, 0.2)',
@@ -236,29 +236,29 @@ const baseVariantStyle = (theme, ownerState, options = {}) => {
   };
 };
 
-export const alitaButtonVariants = [
+export const eliteaButtonVariants = [
   {
     props: { variant: BUTTON_VARIANTS.special },
     style: ({ theme, ownerState }) => ({
       ...baseVariantStyle(theme, ownerState, { iconOnly: true }),
       ...(ownerState.children != null && ownerState.startIcon != null && { paddingLeft: '0.75rem' }),
-      backgroundColor: alitaButtonColors(theme)[BUTTON_VARIANTS.special].default.background,
-      color: alitaButtonColors(theme)[BUTTON_VARIANTS.special].default.color,
+      backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.special].default.background,
+      color: eliteaButtonColors(theme)[BUTTON_VARIANTS.special].default.color,
 
       '&:hover': {
-        backgroundColor: alitaButtonColors(theme)[BUTTON_VARIANTS.special].hover.background,
+        backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.special].hover.background,
       },
       '&:focus-visible': {
-        backgroundColor: alitaButtonColors(theme)[BUTTON_VARIANTS.special].hover.background,
+        backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.special].hover.background,
       },
 
       '&:active': {
-        backgroundColor: alitaButtonColors(theme)[BUTTON_VARIANTS.special].active.background,
+        backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.special].active.background,
       },
 
       '&:disabled': {
-        backgroundColor: alitaButtonColors(theme)[BUTTON_VARIANTS.special].disabled.background,
-        color: alitaButtonColors(theme)[BUTTON_VARIANTS.special].disabled.color,
+        backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.special].disabled.background,
+        color: eliteaButtonColors(theme)[BUTTON_VARIANTS.special].disabled.color,
       },
     }),
   },
@@ -266,20 +266,20 @@ export const alitaButtonVariants = [
     props: { variant: BUTTON_VARIANTS.contained },
     style: ({ theme, ownerState }) => ({
       ...baseVariantStyle(theme, ownerState, { iconOnly: true }),
-      backgroundColor: alitaButtonColors(theme)[BUTTON_VARIANTS.contained].default.background,
-      color: alitaButtonColors(theme)[BUTTON_VARIANTS.contained].default.color,
+      backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.contained].default.background,
+      color: eliteaButtonColors(theme)[BUTTON_VARIANTS.contained].default.color,
       '&:hover': {
-        backgroundColor: alitaButtonColors(theme)[BUTTON_VARIANTS.contained].hover.background,
+        backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.contained].hover.background,
       },
       '&:focus-visible': {
-        backgroundColor: alitaButtonColors(theme)[BUTTON_VARIANTS.contained].hover.background,
+        backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.contained].hover.background,
       },
       '&:active': {
-        backgroundColor: alitaButtonColors(theme)[BUTTON_VARIANTS.contained].active.background,
+        backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.contained].active.background,
       },
       '&:disabled': {
-        backgroundColor: alitaButtonColors(theme)[BUTTON_VARIANTS.contained].disabled.background,
-        color: alitaButtonColors(theme)[BUTTON_VARIANTS.contained].disabled.color,
+        backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.contained].disabled.background,
+        color: eliteaButtonColors(theme)[BUTTON_VARIANTS.contained].disabled.color,
       },
     }),
   },
@@ -288,19 +288,19 @@ export const alitaButtonVariants = [
     style: ({ theme, ownerState }) => ({
       ...baseVariantStyle(theme, ownerState, { iconOnly: true }),
 
-      backgroundColor: alitaButtonColors(theme)[BUTTON_VARIANTS.secondary].default.background,
-      color: alitaButtonColors(theme)[BUTTON_VARIANTS.secondary].default.color,
-      border: alitaButtonColors(theme)[BUTTON_VARIANTS.secondary].default.border,
+      backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.secondary].default.background,
+      color: eliteaButtonColors(theme)[BUTTON_VARIANTS.secondary].default.color,
+      border: eliteaButtonColors(theme)[BUTTON_VARIANTS.secondary].default.border,
       '&:hover': {
-        backgroundColor: alitaButtonColors(theme)[BUTTON_VARIANTS.secondary].hover.background,
+        backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.secondary].hover.background,
       },
       '&:focus-visible': {
-        backgroundColor: alitaButtonColors(theme)[BUTTON_VARIANTS.secondary].hover.background,
+        backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.secondary].hover.background,
       },
       '&:active': {
-        backgroundColor: alitaButtonColors(theme)[BUTTON_VARIANTS.secondary].active.background,
-        color: alitaButtonColors(theme)[BUTTON_VARIANTS.secondary].active.color,
-        border: alitaButtonColors(theme)[BUTTON_VARIANTS.secondary].active.border,
+        backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.secondary].active.background,
+        color: eliteaButtonColors(theme)[BUTTON_VARIANTS.secondary].active.color,
+        border: eliteaButtonColors(theme)[BUTTON_VARIANTS.secondary].active.border,
       },
       '&:disabled': {
         backgroundColor: theme.palette.background.button.default,
@@ -319,8 +319,8 @@ export const alitaButtonVariants = [
       justifyContent: 'center',
       gap: '0.375rem',
 
-      backgroundColor: alitaButtonColors(theme)[BUTTON_VARIANTS.iconCounter].default.background,
-      color: alitaButtonColors(theme)[BUTTON_VARIANTS.iconCounter].default.color,
+      backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.iconCounter].default.background,
+      color: eliteaButtonColors(theme)[BUTTON_VARIANTS.iconCounter].default.color,
 
       '& .MuiButton-startIcon': {
         margin: 0,
@@ -350,17 +350,17 @@ export const alitaButtonVariants = [
       },
 
       '&:hover': {
-        backgroundColor: alitaButtonColors(theme)[BUTTON_VARIANTS.iconCounter].hover.background,
+        backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.iconCounter].hover.background,
       },
       '&:focus-visible': {
-        backgroundColor: alitaButtonColors(theme)[BUTTON_VARIANTS.iconCounter].hover.background,
+        backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.iconCounter].hover.background,
       },
       '&:active': {
-        backgroundColor: alitaButtonColors(theme)[BUTTON_VARIANTS.iconCounter].active.background,
+        backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.iconCounter].active.background,
       },
       '&:disabled': {
-        backgroundColor: alitaButtonColors(theme)[BUTTON_VARIANTS.iconCounter].disabled.background,
-        color: alitaButtonColors(theme)[BUTTON_VARIANTS.iconCounter].disabled.color,
+        backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.iconCounter].disabled.background,
+        color: eliteaButtonColors(theme)[BUTTON_VARIANTS.iconCounter].disabled.color,
       },
     }),
   },
@@ -371,8 +371,8 @@ export const alitaButtonVariants = [
       gap: '0.375rem',
       borderRadius: '1rem',
       border: `0.0625rem solid ${theme.palette.border.lines}`,
-      backgroundColor: alitaButtonColors(theme)[BUTTON_VARIANTS.iconLabel].default.background,
-      color: alitaButtonColors(theme)[BUTTON_VARIANTS.iconLabel].default.color,
+      backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.iconLabel].default.background,
+      color: eliteaButtonColors(theme)[BUTTON_VARIANTS.iconLabel].default.color,
       paddingLeft: '0.75rem',
       paddingRight: '0.75rem',
       '& .MuiButton-startIcon > svg': {
@@ -380,19 +380,19 @@ export const alitaButtonVariants = [
         height: '0.75rem',
       },
       '&:hover': {
-        backgroundColor: alitaButtonColors(theme)[BUTTON_VARIANTS.iconLabel].hover.background,
+        backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.iconLabel].hover.background,
         border: '0.0625rem solid transparent',
       },
       '&:focus-visible': {
-        backgroundColor: alitaButtonColors(theme)[BUTTON_VARIANTS.iconLabel].hover.background,
+        backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.iconLabel].hover.background,
       },
       '&:active': {
-        backgroundColor: alitaButtonColors(theme)[BUTTON_VARIANTS.iconLabel].active.background,
-        color: alitaButtonColors(theme)[BUTTON_VARIANTS.iconLabel].active.color,
+        backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.iconLabel].active.background,
+        color: eliteaButtonColors(theme)[BUTTON_VARIANTS.iconLabel].active.color,
       },
       '&:disabled': {
-        backgroundColor: alitaButtonColors(theme)[BUTTON_VARIANTS.iconLabel].default.background,
-        color: alitaButtonColors(theme)[BUTTON_VARIANTS.iconLabel].disabled.color,
+        backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.iconLabel].default.background,
+        color: eliteaButtonColors(theme)[BUTTON_VARIANTS.iconLabel].disabled.color,
       },
     }),
   },
@@ -403,8 +403,8 @@ export const alitaButtonVariants = [
 
       return {
         ...baseVariantStyle(theme, ownerState, { iconOnly: true }),
-        color: alitaButtonColors(theme)[BUTTON_VARIANTS.tertiary].default.color,
-        background: alitaButtonColors(theme)[BUTTON_VARIANTS.tertiary].default.background,
+        color: eliteaButtonColors(theme)[BUTTON_VARIANTS.tertiary].default.color,
+        background: eliteaButtonColors(theme)[BUTTON_VARIANTS.tertiary].default.background,
         minWidth: '1.75rem !important',
         borderRadius: '1rem',
         gap: '0.625rem',
@@ -415,25 +415,25 @@ export const alitaButtonVariants = [
 
         '&:hover': {
           '--btn-icon-fill': theme.palette.icon.fill.secondary,
-          background: alitaButtonColors(theme)[BUTTON_VARIANTS.tertiary].hover.background,
-          color: alitaButtonColors(theme)[BUTTON_VARIANTS.tertiary].hover.color,
+          background: eliteaButtonColors(theme)[BUTTON_VARIANTS.tertiary].hover.background,
+          color: eliteaButtonColors(theme)[BUTTON_VARIANTS.tertiary].hover.color,
         },
 
         '&:focus-visible': {
           '--btn-icon-fill': theme.palette.icon.fill.secondary,
-          background: alitaButtonColors(theme)[BUTTON_VARIANTS.tertiary].hover.background,
-          color: alitaButtonColors(theme)[BUTTON_VARIANTS.tertiary].hover.color,
+          background: eliteaButtonColors(theme)[BUTTON_VARIANTS.tertiary].hover.background,
+          color: eliteaButtonColors(theme)[BUTTON_VARIANTS.tertiary].hover.color,
         },
 
         '&:active': {
-          color: alitaButtonColors(theme)[BUTTON_VARIANTS.tertiary].active.color,
-          background: alitaButtonColors(theme)[BUTTON_VARIANTS.tertiary].active.background,
+          color: eliteaButtonColors(theme)[BUTTON_VARIANTS.tertiary].active.color,
+          background: eliteaButtonColors(theme)[BUTTON_VARIANTS.tertiary].active.background,
         },
 
         '&:disabled': {
           '--btn-icon-fill': theme.palette.icon.fill.disabled,
-          color: alitaButtonColors(theme)[BUTTON_VARIANTS.tertiary].disabled.color,
-          background: alitaButtonColors(theme)[BUTTON_VARIANTS.tertiary].disabled.background,
+          color: eliteaButtonColors(theme)[BUTTON_VARIANTS.tertiary].disabled.color,
+          background: eliteaButtonColors(theme)[BUTTON_VARIANTS.tertiary].disabled.background,
         },
       };
     },
@@ -443,36 +443,36 @@ export const alitaButtonVariants = [
     props: { variant: BUTTON_VARIANTS.auxiliary },
     style: ({ theme }) => ({
       ...theme.typography.labelSmall,
-      backgroundColor: alitaButtonColors(theme)[BUTTON_VARIANTS.auxiliary].default.background,
-      color: alitaButtonColors(theme)[BUTTON_VARIANTS.auxiliary].default.color,
+      backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.auxiliary].default.background,
+      color: eliteaButtonColors(theme)[BUTTON_VARIANTS.auxiliary].default.color,
       borderRadius: '0.375rem',
       padding: '0.375rem 0rem',
       '& .MuiButton-startIcon': {
-        color: alitaButtonColors(theme)[BUTTON_VARIANTS.auxiliary].default.colorIcon,
+        color: eliteaButtonColors(theme)[BUTTON_VARIANTS.auxiliary].default.colorIcon,
       },
       '&:hover': {
-        color: alitaButtonColors(theme)[BUTTON_VARIANTS.auxiliary].hover.color,
+        color: eliteaButtonColors(theme)[BUTTON_VARIANTS.auxiliary].hover.color,
         '& .MuiButton-startIcon': {
-          color: alitaButtonColors(theme)[BUTTON_VARIANTS.auxiliary].hover.colorIcon,
+          color: eliteaButtonColors(theme)[BUTTON_VARIANTS.auxiliary].hover.colorIcon,
         },
       },
       '&:focus-visible': {
-        color: alitaButtonColors(theme)[BUTTON_VARIANTS.auxiliary].hover.color,
+        color: eliteaButtonColors(theme)[BUTTON_VARIANTS.auxiliary].hover.color,
         '& .MuiButton-startIcon': {
-          color: alitaButtonColors(theme)[BUTTON_VARIANTS.auxiliary].hover.colorIcon,
+          color: eliteaButtonColors(theme)[BUTTON_VARIANTS.auxiliary].hover.colorIcon,
         },
       },
       '&:active': {
-        color: alitaButtonColors(theme)[BUTTON_VARIANTS.auxiliary].active.color,
+        color: eliteaButtonColors(theme)[BUTTON_VARIANTS.auxiliary].active.color,
         '& .MuiButton-startIcon': {
-          color: alitaButtonColors(theme)[BUTTON_VARIANTS.auxiliary].active.colorIcon,
+          color: eliteaButtonColors(theme)[BUTTON_VARIANTS.auxiliary].active.colorIcon,
         },
       },
       '&:disabled': {
-        backgroundColor: alitaButtonColors(theme)[BUTTON_VARIANTS.auxiliary].disabled.background,
-        color: alitaButtonColors(theme)[BUTTON_VARIANTS.auxiliary].disabled.color,
+        backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.auxiliary].disabled.background,
+        color: eliteaButtonColors(theme)[BUTTON_VARIANTS.auxiliary].disabled.color,
         '& .MuiButton-startIcon': {
-          color: alitaButtonColors(theme)[BUTTON_VARIANTS.auxiliary].disabled.colorIcon,
+          color: eliteaButtonColors(theme)[BUTTON_VARIANTS.auxiliary].disabled.colorIcon,
         },
       },
     }),
@@ -481,8 +481,8 @@ export const alitaButtonVariants = [
     props: { variant: BUTTON_VARIANTS.alarm },
     style: ({ theme }) => ({
       ...baseVariantStyle(theme),
-      backgroundColor: alitaButtonColors(theme)[BUTTON_VARIANTS.alarm].default.background,
-      color: alitaButtonColors(theme)[BUTTON_VARIANTS.alarm].default.color,
+      backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.alarm].default.background,
+      color: eliteaButtonColors(theme)[BUTTON_VARIANTS.alarm].default.color,
       borderRadius: '1rem',
       gap: 0,
       '& .MuiButton-startIcon': {
@@ -490,25 +490,25 @@ export const alitaButtonVariants = [
       },
 
       '&:hover': {
-        backgroundColor: alitaButtonColors(theme)[BUTTON_VARIANTS.alarm].hover.background,
-        color: alitaButtonColors(theme)[BUTTON_VARIANTS.alarm].hover.color,
+        backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.alarm].hover.background,
+        color: eliteaButtonColors(theme)[BUTTON_VARIANTS.alarm].hover.color,
       },
       '&:focus-visible': {
-        backgroundColor: alitaButtonColors(theme)[BUTTON_VARIANTS.alarm].hover.background,
-        color: alitaButtonColors(theme)[BUTTON_VARIANTS.alarm].hover.color,
+        backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.alarm].hover.background,
+        color: eliteaButtonColors(theme)[BUTTON_VARIANTS.alarm].hover.color,
       },
       '&:active': {
-        backgroundColor: alitaButtonColors(theme)[BUTTON_VARIANTS.alarm].active.background,
-        color: alitaButtonColors(theme)[BUTTON_VARIANTS.alarm].active.color,
+        backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.alarm].active.background,
+        color: eliteaButtonColors(theme)[BUTTON_VARIANTS.alarm].active.color,
       },
       '&:disabled': {
-        backgroundColor: alitaButtonColors(theme)[BUTTON_VARIANTS.alarm].disabled.background,
-        color: alitaButtonColors(theme)[BUTTON_VARIANTS.alarm].disabled.color,
+        backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.alarm].disabled.background,
+        color: eliteaButtonColors(theme)[BUTTON_VARIANTS.alarm].disabled.color,
       },
     }),
   },
   {
-    props: { variant: BUTTON_VARIANTS.alita },
+    props: { variant: BUTTON_VARIANTS.elitea },
     style: ({ theme, color }) => ({
       ...baseVariantStyle(theme),
       padding: '0.375rem 1rem',
@@ -725,8 +725,8 @@ export const alitaButtonVariants = [
     props: { variant: BUTTON_VARIANTS.neutral },
     style: ({ theme }) => ({
       ...baseVariantStyle(theme),
-      backgroundColor: alitaButtonColors(theme)[BUTTON_VARIANTS.neutral].default.background,
-      color: alitaButtonColors(theme)[BUTTON_VARIANTS.neutral].default.color,
+      backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.neutral].default.background,
+      color: eliteaButtonColors(theme)[BUTTON_VARIANTS.neutral].default.color,
       borderRadius: '1rem',
       gap: 0,
       '& .MuiButton-startIcon': {
@@ -734,20 +734,20 @@ export const alitaButtonVariants = [
       },
 
       '&:hover': {
-        backgroundColor: alitaButtonColors(theme)[BUTTON_VARIANTS.neutral].hover.background,
-        color: alitaButtonColors(theme)[BUTTON_VARIANTS.neutral].hover.color,
+        backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.neutral].hover.background,
+        color: eliteaButtonColors(theme)[BUTTON_VARIANTS.neutral].hover.color,
       },
       '&:focus-visible': {
-        backgroundColor: alitaButtonColors(theme)[BUTTON_VARIANTS.neutral].hover.background,
-        color: alitaButtonColors(theme)[BUTTON_VARIANTS.neutral].hover.color,
+        backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.neutral].hover.background,
+        color: eliteaButtonColors(theme)[BUTTON_VARIANTS.neutral].hover.color,
       },
       '&:active': {
-        backgroundColor: alitaButtonColors(theme)[BUTTON_VARIANTS.neutral].active.background,
-        color: alitaButtonColors(theme)[BUTTON_VARIANTS.neutral].active.color,
+        backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.neutral].active.background,
+        color: eliteaButtonColors(theme)[BUTTON_VARIANTS.neutral].active.color,
       },
       '&:disabled': {
-        backgroundColor: alitaButtonColors(theme)[BUTTON_VARIANTS.neutral].disabled.background,
-        color: alitaButtonColors(theme)[BUTTON_VARIANTS.neutral].disabled.color,
+        backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.neutral].disabled.background,
+        color: eliteaButtonColors(theme)[BUTTON_VARIANTS.neutral].disabled.color,
       },
     }),
   },
@@ -755,8 +755,8 @@ export const alitaButtonVariants = [
     props: { variant: BUTTON_VARIANTS.positive },
     style: ({ theme }) => ({
       ...baseVariantStyle(theme),
-      backgroundColor: alitaButtonColors(theme)[BUTTON_VARIANTS.positive].default.background,
-      color: alitaButtonColors(theme)[BUTTON_VARIANTS.positive].default.color,
+      backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.positive].default.background,
+      color: eliteaButtonColors(theme)[BUTTON_VARIANTS.positive].default.color,
       borderRadius: '1rem',
       gap: 0,
       '& .MuiButton-startIcon': {
@@ -764,20 +764,20 @@ export const alitaButtonVariants = [
       },
 
       '&:hover': {
-        backgroundColor: alitaButtonColors(theme)[BUTTON_VARIANTS.positive].hover.background,
-        color: alitaButtonColors(theme)[BUTTON_VARIANTS.positive].hover.color,
+        backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.positive].hover.background,
+        color: eliteaButtonColors(theme)[BUTTON_VARIANTS.positive].hover.color,
       },
       '&:focus-visible': {
-        backgroundColor: alitaButtonColors(theme)[BUTTON_VARIANTS.positive].hover.background,
-        color: alitaButtonColors(theme)[BUTTON_VARIANTS.positive].hover.color,
+        backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.positive].hover.background,
+        color: eliteaButtonColors(theme)[BUTTON_VARIANTS.positive].hover.color,
       },
       '&:active': {
-        backgroundColor: alitaButtonColors(theme)[BUTTON_VARIANTS.positive].active.background,
-        color: alitaButtonColors(theme)[BUTTON_VARIANTS.positive].active.color,
+        backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.positive].active.background,
+        color: eliteaButtonColors(theme)[BUTTON_VARIANTS.positive].active.color,
       },
       '&:disabled': {
-        backgroundColor: alitaButtonColors(theme)[BUTTON_VARIANTS.positive].disabled.background,
-        color: alitaButtonColors(theme)[BUTTON_VARIANTS.positive].disabled.color,
+        backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.positive].disabled.background,
+        color: eliteaButtonColors(theme)[BUTTON_VARIANTS.positive].disabled.color,
       },
     }),
   },
@@ -831,5 +831,5 @@ export const MuiButtonStyles = {
       },
     }),
   },
-  variants: alitaButtonVariants,
+  variants: eliteaButtonVariants,
 };
