@@ -82,9 +82,18 @@ const ToolkitsControls = memo(props => {
     <Box
       sx={{
         display: 'flex',
+        position: 'relative',
         alignItems: 'center',
-        borderLeft: ({ palette }) => `1px solid ${palette.border.lines}`,
         paddingLeft: '0.5rem',
+
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          left: 0,
+          top: '0.25rem',
+          bottom: '0.25rem',
+          borderLeft: ({ palette }) => `1px solid ${palette.border.lines}`,
+        },
       }}
     >
       {viewMode === ViewMode.Public && (

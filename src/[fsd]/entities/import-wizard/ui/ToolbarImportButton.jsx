@@ -2,10 +2,9 @@ import { memo } from 'react';
 
 import { useSelector } from 'react-redux';
 
-import { IconButton } from '@mui/material';
-
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { useImport } from '@/[fsd]/entities/import-wizard/lib/hooks';
+import BaseBtn from '@/[fsd]/shared/ui/button/BaseBtn';
 import ImportIcon from '@/assets/import-icon.svg?react';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
 
@@ -23,13 +22,12 @@ const ToolbarImportButton = memo(() => {
       title="Import"
       placement="top"
     >
-      <IconButton
+      <BaseBtn
+        variant="secondary"
         onClick={openFileDialog}
-        size="small"
         sx={styles.importBtn}
-      >
-        <ImportIcon />
-      </IconButton>
+        startIcon={<ImportIcon />}
+      />
     </StyledTooltip>
   );
 });
@@ -38,27 +36,11 @@ ToolbarImportButton.displayName = 'ToolbarImportButton';
 
 /** @type {MuiSx} */
 const importButtonStyles = () => ({
-  importBtn: theme => ({
+  importBtn: {
     ml: 1,
-    padding: '.5rem',
-    borderRadius: '.5rem',
-    backgroundColor: theme.palette.background.button.secondary,
-
-    '&:hover': {
-      backgroundColor: theme.palette.background.button.secondary,
-      opacity: 0.8,
-    },
-
-    svg: {
-      fontSize: '1rem',
-      width: '1rem',
-      height: '1rem',
-
-      path: {
-        fill: theme.palette.icon.fill.secondary,
-      },
-    },
-  }),
+    width: '2rem',
+    height: '2rem',
+  },
 });
 
 export default ToolbarImportButton;

@@ -293,7 +293,6 @@ const styledPureTabsStyles = (componentHeight, shouldShowLabel, tabSX, isCreateP
     marginRight: '2rem',
     minHeight: '2rem',
     fontSize: '0.875rem',
-    fontWeight: '500',
     '& button': {
       minHeight: '1.875rem',
       textTransform: 'capitalize',
@@ -346,6 +345,7 @@ const styledPureTabsStyles = (componentHeight, shouldShowLabel, tabSX, isCreateP
     }),
   },
   tab: ({ palette }) => ({
+    fontWeight: '600',
     ...(isCreatePage && {
       pointerEvents: 'none',
       '&.MuiTab-textColorPrimary': {

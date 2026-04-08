@@ -496,6 +496,6 @@ export default function DotMenu({
 const dotMenuStyles = () => ({
   iconButton: ({ palette }) => ({
     marginLeft: 0,
-    '&:hover svg': { fill: palette.icon.fill.secondary },
+    'svg, &:hover svg': { fill: palette.icon.fill.secondary },
   }),
 });
