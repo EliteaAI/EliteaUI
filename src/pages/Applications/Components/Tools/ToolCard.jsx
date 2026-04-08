@@ -2,7 +2,6 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 
 import { useSaveAgentToolVariables } from '@/[fsd]/features/agent/lib/hooks/useSaveAgentToolVariables.js';
@@ -16,6 +15,7 @@ import { TypographyWithConditionalTooltip } from '@/[fsd]/shared/ui/tooltip';
 import AttachIcon from '@/assets/attach-icon.svg?react';
 import OfflineIcon from '@/assets/offline-icon.svg?react';
 import OnlineIcon from '@/assets/online-icon.svg?react';
+import OpenInNewIcon from '@/assets/open-new-icon.svg?react';
 import { PERMISSIONS, PUBLIC_PROJECT_ID, SearchParams, ViewMode } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import AlertDialog from '@/components/AlertDialog';
@@ -507,7 +507,10 @@ const toolCardStyles = (showActions, isDuplicate, showVariables, hasVariables) =
   cardContainer: ({ palette }) => ({
     borderRadius: '0.5rem',
     backgroundColor: showActions || showVariables ? palette.background.userInputBackground : 'transparent',
-    border: showActions || showVariables ? `0.0625rem solid ${palette.border.lines}` : 'none',
+    border:
+      showActions || showVariables
+        ? `0.0625rem solid ${palette.border.lines}`
+        : `0.0625rem solid ${palette.border.table}`,
     boxSize: 'border-box',
     ...(isDuplicate && {
       border: `0.0625rem solid ${palette.border.attention}`,

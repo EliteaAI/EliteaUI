@@ -48,7 +48,8 @@ const ToolView = memo(props => {
 
       <TypographyWithConditionalTooltip
         title={toolOption.label}
-        placement="right"
+        placement="top"
+        enterDelay={1000}
         variant="bodyMedium"
         color="text.secondary"
         sx={styles.toolLabel}
