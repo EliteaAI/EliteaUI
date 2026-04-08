@@ -32,6 +32,7 @@ export default function useSelectConversation({
   const [pendingEnterRoomEvent, setPendingEnterRoomEvent] = useState();
   const [isSelectingConversation, setIsSelectingConversation] = useState(false);
   const prevSelectedConversationIdRef = useRef({ id: undefined, isPlayback: false });
+  const inFlightConversationIdRef = useRef(null);
   const { clearLocalActiveParticipant } = useLocalActiveParticipant();
   const [
     getConversationDetail,
@@ -43,14 +44,17 @@ export default function useSelectConversation({
   const onSelectConversation = useCallback(
     async conversation => {
       // Guard: Skip fetching details for dummy/invalid conversations (e.g., after deleting the last conversation)
-      if (!conversation?.id || typeof conversation.id !== 'number') {
-        return;
-      }
+      if (!conversation?.id || typeof conversation.id !== 'number') return;
+
+      // Guard: skip if this exact conversation is already being fetched
+      const conversationKey = `${conversation.id}:${!!conversation.isPlayback}`;
+      if (inFlightConversationIdRef.current === conversationKey) return;
 
       if (
         !areTheSameConversations(activeConversation, conversation) &&
         !areTheSameConversations(prevSelectedConversationIdRef.current, conversation)
       ) {
+        inFlightConversationIdRef.current = conversationKey;
         prevSelectedConversationIdRef.current.id = conversation.id;
         prevSelectedConversationIdRef.current.isPlayback = !!conversation.isPlayback;
         if (activeConversation?.id && !activeConversation?.isPlayback) {
@@ -111,13 +115,16 @@ export default function useSelectConversation({
               listenCanvasContentChangeEvent();
             }
           }
+
           setIsSelectingConversation(false);
+          inFlightConversationIdRef.current = null;
         } else {
           clearUrlConversation();
           playbackChatBoxRef.current?.reset();
           setActiveConversation(conversation);
           setActiveParticipant(null);
           setConversations(prev => prev.filter(item => !item.isNew));
+          inFlightConversationIdRef.current = null;
         }
         dispatch(chatActions.setIsCreatingNewConversation(false));
       }

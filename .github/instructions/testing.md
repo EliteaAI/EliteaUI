@@ -2,8 +2,8 @@
 
 ## Testing Architecture Overview
 
-EliteA UI uses **Playwright** with **Cucumber** for comprehensive end-to-end testing, following a **Page Object
-Model** pattern for maintainable and readable tests.
+EliteA UI uses **Playwright** with **Cucumber** for comprehensive end-to-end testing, following a **Page
+Object Model** pattern for maintainable and readable tests.
 
 ## Testing Structure
 

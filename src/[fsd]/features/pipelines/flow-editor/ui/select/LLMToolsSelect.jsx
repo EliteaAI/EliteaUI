@@ -3,8 +3,8 @@ import { memo, useCallback, useContext, useMemo } from 'react';
 import { FlowEditorContext } from '@/[fsd]/app/providers';
 import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
-import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion.jsx';
 import { Select } from '@/[fsd]/shared/ui';
+import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion.jsx';
 
 export const LLMToolsSelect = memo(props => {
   const { toolkitName, id, tools = [], disabled } = props;
@@ -26,10 +26,7 @@ export const LLMToolsSelect = memo(props => {
   }, [yamlNode?.tool_names, toolkitName, tools]);
 
   const toolOptions = useMemo(
-    () =>
-      tools
-        .map(tool => ({ label: tool, value: tool }))
-        .sort((a, b) => a.label.localeCompare(b.label)),
+    () => tools.map(tool => ({ label: tool, value: tool })).sort((a, b) => a.label.localeCompare(b.label)),
     [tools],
   );
 

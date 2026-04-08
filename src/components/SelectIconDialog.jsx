@@ -25,8 +25,8 @@ import { useTheme } from '@emotion/react';
 
 import StyledTooltip from '../ComponentsLib/Tooltip';
 import AlertDialog from './AlertDialog';
-import EliteAImage from './EliteAImage';
 import { StyledCircleProgress } from './Chat/StyledComponents';
+import EliteAImage from './EliteAImage';
 import { EntityTypeIcon } from './EntityIcon';
 import CloseIcon from './Icons/CloseIcon';
 

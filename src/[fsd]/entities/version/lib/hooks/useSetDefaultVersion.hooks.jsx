@@ -4,8 +4,8 @@ import { useFormikContext } from 'formik';
 import { useDispatch } from 'react-redux';
 
 import { SetDefaultVersionDialog } from '@/[fsd]/entities/version/ui';
-import { eliteaApi } from '@/api/eliteaApi';
 import { useSetApplicationDefaultVersionMutation } from '@/api/applications';
+import { eliteaApi } from '@/api/eliteaApi';
 import { ViewMode } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import { useViewModeFromUrl } from '@/hooks/useSearchParamValue';

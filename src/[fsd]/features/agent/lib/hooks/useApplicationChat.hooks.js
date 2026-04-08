@@ -3,7 +3,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
 
 import { ChatHelpers } from '@/[fsd]/features/chat/lib/helpers';
-import { eliteaApi } from '@/api/eliteaApi';
 import {
   useConversationCreateMutation,
   useConversationDetailsQuery,
@@ -11,6 +10,7 @@ import {
   useDeleteMessageFromConversationMutation,
   useStopChatTaskMutation,
 } from '@/api/chat';
+import { eliteaApi } from '@/api/eliteaApi';
 import { ROLES, WELCOME_MESSAGE_ID, sioEvents } from '@/common/constants';
 import { convertConversationToChatHistory } from '@/common/convertChatConversationMessages';
 import { buildErrorMessage } from '@/common/utils';

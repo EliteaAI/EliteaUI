@@ -98,7 +98,18 @@ export const useForkEntity = ({ id, entity_name, title, data = {} }) => {
         data: result.data,
       }),
     );
-  }, [projectId, dispatch, entity_name, entityName, data, exportFunc, id, version_details?.id, toastError, trackEvent]);
+  }, [
+    projectId,
+    dispatch,
+    entity_name,
+    entityName,
+    data,
+    exportFunc,
+    id,
+    version_details?.id,
+    toastError,
+    trackEvent,
+  ]);
 
   return {
     doFork,

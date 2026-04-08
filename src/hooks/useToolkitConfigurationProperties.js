@@ -28,7 +28,11 @@ export default function useToolkitConfigurationProperties({ toolType }) {
       basicProps.length === configurationProps.length ? [...basicProps] : [...basicProps, 'auth']
     ).filter(
       prop =>
-        prop !== 'type' && prop !== 'shared' && prop !== 'elitea_title' && prop !== 'label' && prop !== 'data',
+        prop !== 'type' &&
+        prop !== 'shared' &&
+        prop !== 'elitea_title' &&
+        prop !== 'label' &&
+        prop !== 'data',
     );
   }, [sectionProps, filteredConfigurationsAsSchema]);
 

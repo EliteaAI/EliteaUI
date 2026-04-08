@@ -2,9 +2,9 @@
 
 ## Component Architecture Philosophy
 
-EliteA UI follows a **composition-over-inheritance** approach with a sophisticated component hierarchy designed
-for AI chat applications. The project uses **Feature-Sliced Design (FSD)** architecture for better code
-organization.
+EliteA UI follows a **composition-over-inheritance** approach with a sophisticated component hierarchy
+designed for AI chat applications. The project uses **Feature-Sliced Design (FSD)** architecture for better
+code organization.
 
 > **Note**: This document provides comprehensive component development patterns. Also refer to the main
 > `copilot-instructions.md` file for:

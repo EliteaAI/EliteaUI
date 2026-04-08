@@ -71,9 +71,17 @@ export const apiSlice = eliteaApi
             currentCache.total = newItems.total;
           }
         },
-        // Refetch when the page, pageSize ... arg changes
+        // Refetch only when actual query parameters change, not on every re-render
         forceRefetch({ currentArg, previousArg }) {
-          return currentArg !== previousArg;
+          if (!previousArg) return false;
+
+          return (
+            currentArg.projectId !== previousArg.projectId ||
+            currentArg.page !== previousArg.page ||
+            currentArg.pageSize !== previousArg.pageSize ||
+            currentArg.params?.sort_by !== previousArg.params?.sort_by ||
+            currentArg.params?.sort_order !== previousArg.params?.sort_order
+          );
         },
       }),
       messageList: build.query({

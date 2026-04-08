@@ -10,13 +10,13 @@ import { Box, IconButton, Menu, MenuItem, Tooltip, Typography } from '@mui/mater
 
 import StyledCircleProgress from '@/ComponentsLib/CircularProgress';
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
-import { eliteaApi } from '@/api/eliteaApi';
 import {
   TAG_TYPE_APPLICATION_DETAILS,
   useApplicationDetailsQuery,
   useLazyGetApplicationVersionDetailQuery,
   useUpdateApplicationRelationMutation,
 } from '@/api/applications';
+import { eliteaApi } from '@/api/eliteaApi';
 import RefreshIcon from '@/assets/refresh-icon.svg?react';
 import { useSetRefetchDetails } from '@/hooks/application/useRefetchAgentDetails';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
