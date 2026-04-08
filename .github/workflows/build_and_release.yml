@@ -33,14 +33,8 @@ jobs:
       - name: Clear repository
         run: rm -rf $GITHUB_WORKSPACE && mkdir $GITHUB_WORKSPACE
 
-      - name: Install SSH client
-        run: |
-          apt-get update -y && apt-get install -y openssh-client
-
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ssh-key: ${{ secrets.DEPLOY_KEY }}
 
       - name: Setup Node.js environment
         uses: actions/setup-node@v4
