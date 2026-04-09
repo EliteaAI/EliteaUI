@@ -78,10 +78,12 @@ const LLMModelsMenu = memo(props => {
               )}
             </Box>
             {item.id === selectedModel?.id && (
-              <Box
-                component={CheckedIcon}
-                sx={styles.checkIcon}
-              />
+              <Box sx={styles.checkIconWrapper}>
+                <Box
+                  component={CheckedIcon}
+                  sx={styles.checkIcon}
+                />
+              </Box>
             )}
           </Box>
         </MenuItem>
@@ -144,12 +146,17 @@ const styles = {
   listItemIcon: ({ palette }) => ({
     color: palette.icon.fill.default,
   }),
+  checkIconWrapper: {
+    display: 'flex',
+    alignItems: 'center',
+    marginLeft: 'auto',
+  },
   checkIcon: ({ palette }) => ({
     width: '1.125rem',
     height: '1.125rem',
     flexShrink: 0,
     color: palette.text.secondary,
-    marginLeft: 'auto',
+    marginLeft: '1rem',
   }),
 };
 
