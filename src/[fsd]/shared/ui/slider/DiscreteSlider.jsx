@@ -38,7 +38,7 @@ const DiscreteSlider = memo(props => {
       <Label.InfoLabelWithTooltip
         label={label}
         tooltip={labelTooltip || (tooltipFormatter ? tooltipFormatter(value, disabled) : '')}
-        variant="bodyMedium"
+        variant="subtitle"
         sx={disabled ? styles.labelDisabled : styles.label}
       />
 

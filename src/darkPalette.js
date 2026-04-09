@@ -74,6 +74,10 @@ const magenta = 'rgba(244, 124, 255, 1)';
 const magenta24 = 'rgba(244, 124, 255, 0.24)';
 const deepGrey = '#1a1f28';
 const semiTransparentBlack = 'rgba(16, 23, 33, 0.5)';
+const capabilityVisionBgr = '#2A2F46';
+const capabilityReasoningBgr = '#362F2E';
+const capabilityVisionIcon = '#A48EE3';
+const capabilityReasoningIcon = '#FFB380';
 
 const darkPalette = {
   mode: 'dark',
@@ -480,6 +484,16 @@ const darkPalette = {
   scrollbar: {
     thumb: white10,
     thumbHover: gray10,
+  },
+  capability: {
+    vision: {
+      background: capabilityVisionBgr,
+      icon: capabilityVisionIcon,
+    },
+    reasoning: {
+      background: capabilityReasoningBgr,
+      icon: capabilityReasoningIcon,
+    },
   },
 };
 

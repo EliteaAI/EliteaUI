@@ -15,6 +15,7 @@ import {
   validateMaxTokens,
 } from '@/[fsd]/widgets/LLMModelSelector/lib/validation';
 import {
+  CapabilitySection,
   CreativitySlider,
   MaxTokensSection,
   ReasoningSlider,
@@ -181,6 +182,10 @@ const LLMSettings = memo(props => {
           required={false}
         />
       )}
+      <CapabilitySection
+        supportsVision={model?.supports_vision}
+        supportsReasoning={model?.supports_reasoning}
+      />
     </Box>
   );
 });
