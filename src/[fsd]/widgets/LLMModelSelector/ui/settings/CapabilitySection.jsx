@@ -16,6 +16,7 @@ const CapabilitySection = memo(props => {
       <Label.InfoLabelWithTooltip
         label="Capabilities"
         variant="subtitle"
+        sx={styles.label}
       />
       <Box sx={styles.chips}>
         {supportsVision && (
@@ -48,7 +49,10 @@ const styles = {
   container: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.75rem',
+    gap: '1rem',
+  },
+  label: {
+    paddingLeft: '0.5rem',
   },
   chips: {
     display: 'flex',

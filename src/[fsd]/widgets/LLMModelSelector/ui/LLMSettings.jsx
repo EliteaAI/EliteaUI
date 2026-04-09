@@ -197,7 +197,7 @@ const styles = {
   container: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '1.5rem',
+    gap: '2rem',
     padding: '0 1rem',
   },
 };

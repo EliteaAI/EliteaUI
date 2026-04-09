@@ -154,7 +154,6 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '0.75rem',
-    marginTop: '1rem',
   },
   label: ({ palette }) => ({
     color: palette.text.primary,
@@ -184,7 +183,7 @@ const styles = {
     width: '100%',
   },
   inputsRowAnimated: mode => ({
-    display: 'flex',
+    display: mode === 'custom' ? 'flex' : 'none',
     flexDirection: 'row',
     gap: '1rem',
     width: '100%',
