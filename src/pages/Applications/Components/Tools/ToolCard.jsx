@@ -16,6 +16,7 @@ import AttachIcon from '@/assets/attach-icon.svg?react';
 import OfflineIcon from '@/assets/offline-icon.svg?react';
 import OnlineIcon from '@/assets/online-icon.svg?react';
 import OpenInNewIcon from '@/assets/open-new-icon.svg?react';
+import RefreshIcon from '@/assets/refresh-icon.svg?react';
 import { PERMISSIONS, PUBLIC_PROJECT_ID, SearchParams, ViewMode } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import AlertDialog from '@/components/AlertDialog';
@@ -25,7 +26,10 @@ import AttentionIcon from '@/components/Icons/AttentionIcon.jsx';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import useDisassociateToolkit from '@/hooks/application/useDisassociateToolkit.js';
 import { useGetToolkitIconMeta } from '@/hooks/application/useLibraryToolkits';
-import { useToolValidationInfo } from '@/hooks/application/useValidateApplicationVersion';
+import {
+  useManualValidateApplicationVersion,
+  useToolValidationInfo,
+} from '@/hooks/application/useValidateApplicationVersion';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import useSearchParamValue from '@/hooks/useSearchParamValue';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -101,6 +105,7 @@ const ToolCard = memo(props => {
     toolId: tool.id,
     tool,
   });
+  const { doValidateVersion } = useManualValidateApplicationVersion({ applicationId, projectId, versionId });
 
   const isAttachmentToolkit = useMemo(
     () => tool.id && values?.version_details?.meta?.attachment_toolkit_id === tool.id,
@@ -394,10 +399,27 @@ const ToolCard = memo(props => {
           </Box>
           <Box sx={styles.buttonsContainer}>
             {validationInfo && (
-              <Box
-                component={AttentionIcon}
-                sx={styles.attentionIcon}
-              />
+              <>
+                <Tooltip
+                  title="Refresh toolkit"
+                  placement="top"
+                >
+                  <IconButton
+                    id={'RefreshButton'}
+                    variant="elitea"
+                    color="tertiary"
+                    aria-label="refresh toolkit"
+                    onClick={doValidateVersion}
+                    sx={styles.actionButton}
+                  >
+                    <RefreshIcon />
+                  </IconButton>
+                </Tooltip>
+                <Box
+                  component={AttentionIcon}
+                  sx={styles.attentionIcon}
+                />
+              </>
             )}
             {(!tool.meta?.mcp || tool.online || tool.type === 'mcp') && (
               <Tooltip
@@ -535,6 +557,9 @@ const toolCardStyles = (showActions, isDuplicate, showVariables, hasVariables) =
         display: 'flex',
       },
       '#OpenInNewTabButton': {
+        display: 'flex',
+      },
+      '#RefreshButton': {
         display: 'flex',
       },
     },

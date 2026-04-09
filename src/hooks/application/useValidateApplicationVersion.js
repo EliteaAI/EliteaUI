@@ -1,8 +1,11 @@
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 
 import { useDispatch, useSelector } from 'react-redux';
 
-import { useValidateApplicationVersionQuery } from '@/api/applications';
+import {
+  useLazyValidateApplicationVersionQuery,
+  useValidateApplicationVersionQuery,
+} from '@/api/applications';
 import { buildErrorMessage } from '@/common/utils';
 import useToast from '@/hooks/useToast';
 import { actions } from '@/slices/applications';
@@ -19,6 +22,20 @@ const getSubAgentValidationKey = (projectId, tool) => {
     return null;
   }
   return buildValidationKey(projectId, tool.settings.application_id, tool.settings.application_version_id);
+};
+
+const extractValidationInfo = ({ error, toastError, dispatch, applicationId, projectId, versionId }) => {
+  if (error?.status !== 400) {
+    toastError(buildErrorMessage(error));
+  }
+  dispatch(
+    actions.setVersionValidationInfo({
+      applicationId,
+      projectId,
+      versionId,
+      validationInfo: error.data?.toolkit_errors || [],
+    }),
+  );
 };
 
 export default function useValidateApplicationVersion({
@@ -42,20 +59,44 @@ export default function useValidateApplicationVersion({
 
   useEffect(() => {
     if (isError) {
-      if (error?.status !== 400) {
-        toastError(buildErrorMessage(error));
-      }
-      dispatch(
-        actions.setVersionValidationInfo({
-          applicationId,
-          projectId,
-          versionId,
-          validationInfo: error.data?.toolkit_errors || [],
-        }),
-      );
+      extractValidationInfo({ error, toastError, dispatch, applicationId, projectId, versionId });
     }
   }, [isError, error, toastError, dispatch, applicationId, projectId, versionId]);
 }
+
+export const useManualValidateApplicationVersion = ({ applicationId, projectId, versionId } = {}) => {
+  const dispatch = useDispatch();
+  const { toastError } = useToast();
+  const [validateAppVersion] = useLazyValidateApplicationVersionQuery();
+
+  const doValidateVersion = useCallback(async () => {
+    try {
+      const result = await validateAppVersion({
+        applicationId,
+        projectId,
+        versionId,
+      }).unwrap();
+      extractValidationInfo({
+        error: result.error,
+        toastError,
+        dispatch,
+        applicationId,
+        projectId,
+        versionId,
+      });
+    } catch (error) {
+      extractValidationInfo({
+        error,
+        toastError,
+        dispatch,
+        applicationId,
+        projectId,
+        versionId,
+      });
+    }
+  }, [validateAppVersion, applicationId, projectId, versionId, toastError, dispatch]);
+  return { doValidateVersion };
+};
 
 export function useToolsValidationInfo({ applicationId, projectId, versionId, tools }) {
   const selectorKey = useMemo(
