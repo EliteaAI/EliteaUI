@@ -171,17 +171,14 @@ const SimpleLLMInputItem = memo(props => {
     [onChange, type, variableName],
   );
 
-  // Determine if AI Assistant should be enabled for this field
-  // - LLM node: system and task fields (only when field types are "f-string" or "fixed")
-  // - Code node: code field (only when field types are "f-string" or "fixed")
-  // - Printer node: text field (only when field types are "f-string" or "fixed")
   const shouldEnableAIAssistant =
     enableAIAssistant &&
     (type === 'fstring' || type === 'fixed') &&
     (variableName === 'system' ||
       variableName === 'task' ||
       variableName === 'code' ||
-      variableName === 'printer');
+      variableName === 'printer' ||
+      variableName === 'user_message');
 
   const enableFStringAutocomplete =
     type === 'fstring' && FlowEditorConstants.FSTRING_AUTOCOMPLETE_VARIABLES.has(variableName);

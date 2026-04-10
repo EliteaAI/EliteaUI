@@ -4,7 +4,6 @@ import { Box, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { FlowEditorContext } from '@/[fsd]/app/providers';
-import { AIAssistantInput } from '@/[fsd]/features/pipelines/ai-assistant/ui';
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import {
@@ -12,8 +11,11 @@ import {
   useNodeAiAssistantConfig,
   useNodeOptions,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
-import { FlowEditorNodes, FlowEditorSelect } from '@/[fsd]/features/pipelines/flow-editor/ui';
-import { LabelWithTooltip } from '@/[fsd]/features/pipelines/flow-editor/ui/settings/InputMappings';
+import {
+  FlowEditorNodes,
+  FlowEditorSelect,
+  FlowEditorSettings,
+} from '@/[fsd]/features/pipelines/flow-editor/ui';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { Chip } from '@/[fsd]/shared/ui';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
@@ -56,46 +58,15 @@ const HITLNode = memo(props => {
   const isInputSelectDisabledByMessageType = userMessageType !== 'fstring';
   const isInputSelectDisabled = isInputSelectDisabledByMessageType || isRunningPipeline || disabled;
 
-  const handleUserMessageTypeChange = useCallback(
-    value => {
-      const currentType = yamlNode?.user_message?.type || 'fixed';
-      const isStringType = type => type === 'fstring' || type === 'fixed';
-      const shouldPreserveValue = isStringType(currentType) && isStringType(value);
-      const updates = {
-        user_message: { type: value, value: shouldPreserveValue ? yamlNode?.user_message?.value : '' },
-      };
-      if (currentType === 'fstring' && value !== 'fstring') {
+  const handleUserMessageMappingChange = useCallback(
+    (_variable, { type, value }) => {
+      const updates = { user_message: { type, value } };
+      if (userMessageType === 'fstring' && type !== 'fstring') {
         updates.input = [];
       }
       FlowEditorHelpers.batchUpdateYamlNode(id, updates, yamlJsonObject, setYamlJsonObject);
     },
-    [id, setYamlJsonObject, yamlJsonObject, yamlNode?.user_message],
-  );
-
-  const handleUserMessageValueChange = useCallback(
-    event => {
-      FlowEditorHelpers.updateYamlNode(
-        id,
-        'user_message',
-        { ...yamlNode?.user_message, value: event.target.value },
-        yamlJsonObject,
-        setYamlJsonObject,
-      );
-    },
-    [id, setYamlJsonObject, yamlJsonObject, yamlNode?.user_message],
-  );
-
-  const handleUserMessageVariableChange = useCallback(
-    value => {
-      FlowEditorHelpers.updateYamlNode(
-        id,
-        'user_message',
-        { ...yamlNode?.user_message, value },
-        yamlJsonObject,
-        setYamlJsonObject,
-      );
-    },
-    [id, setYamlJsonObject, yamlJsonObject, yamlNode?.user_message],
+    [id, setYamlJsonObject, yamlJsonObject, userMessageType],
   );
 
   const routes = useMemo(() => yamlNode?.routes || {}, [yamlNode?.routes]);
@@ -223,7 +194,7 @@ const HITLNode = memo(props => {
             <FlowEditorSelect.InputSelect
               id={id}
               label={
-                <LabelWithTooltip
+                <FlowEditorSettings.LabelWithTooltip
                   title="Input"
                   tooltip={INPUT_SELECT_TOOLTIP}
                 />
@@ -234,62 +205,17 @@ const HITLNode = memo(props => {
           </Box>
         </StyledTooltip>
 
-        <Box sx={styles.controlGroup}>
-          <Chip.HeadingChip label="User message" />
-          <Box sx={styles.userMessageRow}>
-            <Box sx={styles.typeField}>
-              <SingleSelect
-                sx={styles.typeSelect}
-                label="Type"
-                value={userMessageType}
-                onValueChange={handleUserMessageTypeChange}
-                options={FlowEditorConstants.agentTaskTypeOptions}
-                disabled={isRunningPipeline || disabled}
-                showBorder
-                className="nopan nodrag"
-              />
-            </Box>
-            <Box sx={styles.valueField}>
-              {userMessageType === 'variable' ? (
-                <SingleSelect
-                  sx={styles.typeSelect}
-                  label="Value"
-                  value={userMessageValue}
-                  onValueChange={handleUserMessageVariableChange}
-                  options={inputOptions}
-                  disabled={isRunningPipeline || disabled}
-                  showBorder
-                  className="nopan nodrag"
-                />
-              ) : (
-                <AIAssistantInput
-                  multiline
-                  fullWidth
-                  disabled={isRunningPipeline || disabled}
-                  autoComplete="off"
-                  showexpandicon="true"
-                  collapseContent
-                  showCopyAction={true}
-                  showExpandAction={true}
-                  variant="standard"
-                  name="user_message_value"
-                  label="Value"
-                  placeholder={userMessageType === 'fstring' ? 'Use {state_key} for variables' : ''}
-                  value={userMessageValue}
-                  onInput={handleUserMessageValueChange}
-                  hasActionsToolBar
-                  fieldName="User message"
-                  language="text"
-                  containerProps={{
-                    marginBottom: '0rem !important',
-                    className: 'nowheel',
-                  }}
-                  modelConfig={pipelineLLMConfig}
-                />
-              )}
-            </Box>
-          </Box>
-        </Box>
+        <FlowEditorSettings.SimpleLLMInputItem
+          variableName="user_message"
+          variable="user_message"
+          type={userMessageType}
+          value={userMessageValue}
+          defaultValue=""
+          onChangeMapping={handleUserMessageMappingChange}
+          disabled={isRunningPipeline || disabled}
+          enableAIAssistant
+          modelConfig={pipelineLLMConfig}
+        />
       </Box>
 
       <BasicAccordion
@@ -332,7 +258,7 @@ const HITLNode = memo(props => {
         ]}
       />
 
-      <Box sx={styles.editStateKeySection}>
+      <Box sx={[styles.controlGroup, { marginBottom: '1rem' }]}>
         <Chip.HeadingChip label="Edit state key" />
         <SingleSelect
           sx={styles.routeSelect}
@@ -392,36 +318,12 @@ const hitlNodeStyles = () => ({
     gap: '0.5rem',
     width: '100%',
   },
-  editStateKeySection: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.5rem',
-    width: '100%',
-    marginBottom: '1rem',
-  },
-  userMessageRow: {
-    display: 'flex',
-    gap: '1rem',
-    width: '100%',
-    alignItems: 'flex-end',
-  },
-  typeField: {
-    width: '7.25rem',
-    flexShrink: 0,
-  },
-  valueField: {
-    flex: 1,
-    minWidth: 0,
-  },
-  typeSelect: {
-    marginBottom: '0rem',
-  },
-  routeSelect: {
-    marginBottom: '0rem',
-  },
   inputSelectTooltipWrapper: {
     display: 'block',
     width: '100%',
+  },
+  routeSelect: {
+    marginBottom: '0rem',
   },
   validationText: {
     width: '100%',
