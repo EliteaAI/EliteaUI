@@ -53,7 +53,7 @@ const NodeFieldInput = memo(props => {
     name: 'value',
     id: `${variable}-value`,
     label: 'Value',
-    placeholder: '',
+    placeholder: enableFStringAutocomplete ? 'Use {state_key} for variables' : '',
     value: resolvedValue,
     onBlur: closeAutocomplete,
     onClick: handleCursorChange,
