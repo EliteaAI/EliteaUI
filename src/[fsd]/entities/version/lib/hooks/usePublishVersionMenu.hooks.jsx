@@ -8,7 +8,8 @@ import PublishIcon from '@/assets/publish-version.svg?react';
 
 export const usePublishApplicationMenu = onSuccess => {
   const {
-    canPublish,
+    canShowPublish,
+    isPublishBlockedByPolicy,
     isAdminPublish,
     showModal,
     step,
@@ -65,7 +66,7 @@ export const usePublishApplicationMenu = onSuccess => {
 
   const menuItem = useMemo(
     () =>
-      canPublish
+      canShowPublish
         ? {
             label: 'Publish',
             icon: (
@@ -82,11 +83,18 @@ export const usePublishApplicationMenu = onSuccess => {
                 <PublishIcon sx={{ fontSize: '1rem' }} />
               </Box>
             ),
-            disabled: false,
+            disabled: isPublishBlockedByPolicy,
             onClick: handleOpenModal,
+            ...(isPublishBlockedByPolicy && {
+              slotProps: {
+                MenuItem: {
+                  menuItemProps: { title: 'Publishing is blocked by platform policy' },
+                },
+              },
+            }),
           }
         : null,
-    [canPublish, handleOpenModal],
+    [canShowPublish, isPublishBlockedByPolicy, handleOpenModal],
   );
 
   return {

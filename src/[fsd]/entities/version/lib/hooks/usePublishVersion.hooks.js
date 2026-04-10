@@ -8,6 +8,7 @@ import { useTrackEvent } from '@/GA';
 import { PUBLISH_STEPS } from '@/[fsd]/entities/version/ui/PublishWizardModal';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
 import { usePublishApplicationMutation, useValidateForPublishMutation } from '@/api';
+import { useGetPlatformSettingsQuery } from '@/api/platformSettings';
 import { CollectionStatus, PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';
 import { useIsFromPipelineDetail } from '@/hooks/useIsFromSpecificPageHooks';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -32,9 +33,22 @@ export const usePublishVersion = onSuccess => {
 
   const isAdminPublish = useMemo(() => projectId == PUBLIC_PROJECT_ID, [projectId]);
 
-  const canPublish = useMemo(
+  const { data: platformSettings } = useGetPlatformSettingsQuery();
+  const isPublishBlockedByPolicy = useMemo(() => {
+    if (!platformSettings?.is_publish_blocked) return false;
+    if (isAdminPublish) return false;
+    const whitelist = platformSettings?.publish_whitelist_project_ids || [];
+    return !whitelist.includes(Number(projectId));
+  }, [platformSettings, projectId, isAdminPublish]);
+
+  const canShowPublish = useMemo(
     () => permissions.includes(PERMISSIONS.applications.publish) && versionStatus === CollectionStatus.Draft,
     [permissions, versionStatus],
+  );
+
+  const canPublish = useMemo(
+    () => canShowPublish && !isPublishBlockedByPolicy,
+    [canShowPublish, isPublishBlockedByPolicy],
   );
 
   // Wizard state
@@ -177,6 +191,8 @@ export const usePublishVersion = onSuccess => {
 
   return {
     canPublish,
+    canShowPublish,
+    isPublishBlockedByPolicy,
     isAdminPublish,
     showModal,
     step,
