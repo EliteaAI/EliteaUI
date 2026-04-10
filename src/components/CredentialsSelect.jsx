@@ -1,45 +1,80 @@
-import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 
-import {
-  Box,
-  CircularProgress,
-  ClickAwayListener,
-  FormControl,
-  FormHelperText,
-  IconButton,
-  Popper,
-  SvgIcon,
-  Tooltip,
-  Typography,
-} from '@mui/material';
-import MenuItem from '@mui/material/MenuItem';
+import { Box, FormControl, FormHelperText, IconButton, Tooltip, Typography } from '@mui/material';
 
 import { useTrackEvent } from '@/GA';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
 import { useContextExecutionEntity } from '@/[fsd]/shared/lib/hooks';
+import { Select } from '@/[fsd]/shared/ui';
 import { useLazyGetConfigurationsListQuery, useListModelsQuery } from '@/api/configurations';
-import CheckedIcon from '@/assets/checked-icon.svg?react';
 import RefreshIcon from '@/assets/refresh-icon.svg?react';
 import BriefcaseIcon from '@/components/Icons/BriefcaseIcon.jsx';
 import { Create_Personal_Title, Create_Project_Title, Manual_Title } from '@/hooks/useConfigurations';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import RouteDefinitions, { getBasename } from '@/routes';
 
-import ArrowDownIcon from './Icons/ArrowDownIcon';
-import InfoIcon from './Icons/InfoIcon';
 import Person from './Icons/Person';
+
+const credentialMenuItemValue = Object.freeze({
+  keyKind: 'kind',
+  keyEliteaTitle: 'elitea_title',
+  keyPrivate: 'private',
+  kindSaved: 'saved',
+  kindCreateAction: 'create_action',
+});
+
+const savedRowToSelectValue = row => {
+  if (!row?.elitea_title) return '';
+  return JSON.stringify({
+    [credentialMenuItemValue.keyKind]: credentialMenuItemValue.kindSaved,
+    [credentialMenuItemValue.keyEliteaTitle]: row.elitea_title,
+    [credentialMenuItemValue.keyPrivate]: !!row.private,
+  });
+};
+
+const selectValueToSavedRow = str => {
+  if (!str || typeof str !== 'string') return null;
+  try {
+    const payload = JSON.parse(str);
+    if (payload?.[credentialMenuItemValue.keyKind] !== credentialMenuItemValue.kindSaved) return null;
+    const title = payload[credentialMenuItemValue.keyEliteaTitle];
+    if (typeof title !== 'string') return null;
+    return {
+      elitea_title: title,
+      private: !!payload[credentialMenuItemValue.keyPrivate],
+    };
+  } catch {
+    return null;
+  }
+};
+
+const createActionToSelectValue = isPrivate =>
+  JSON.stringify({
+    [credentialMenuItemValue.keyKind]: credentialMenuItemValue.kindCreateAction,
+    [credentialMenuItemValue.keyPrivate]: !!isPrivate,
+  });
+
+const selectValueToCreateAction = str => {
+  if (!str || typeof str !== 'string') return null;
+  try {
+    const payload = JSON.parse(str);
+    if (payload?.[credentialMenuItemValue.keyKind] !== credentialMenuItemValue.kindCreateAction) return null;
+    return { isPrivate: !!payload[credentialMenuItemValue.keyPrivate] };
+  } catch {
+    return null;
+  }
+};
 
 const CredentialsSelect = memo(
   ({
     label = 'Credentials',
-    description,
     required,
     error,
     helperText,
-    value, // Current selected configuration
-    onSelectConfiguration, // Callback for selection change
+    value,
+    onSelectConfiguration,
     isCreationAllowed = true,
     sx,
     renderValue,
@@ -53,9 +88,6 @@ const CredentialsSelect = memo(
   }) => {
     const trackEvent = useTrackEvent();
 
-    const [anchorEl, setAnchorEl] = useState(null);
-    const panelRef = useRef(null);
-    const open = Boolean(anchorEl);
     const { personal_project_id } = useSelector(state => state.user);
     const selectedProjectId = useSelectedProjectId();
     const { contextExecutionEntity } = useContextExecutionEntity();
@@ -98,8 +130,6 @@ const CredentialsSelect = memo(
         }
         if (personal_project_id && personal_project_id !== selectedProjectId) {
           if (!onlyPublic) {
-            // Skip vectorstorage for personal project when in a team project
-            // Private pgvector configs are not allowed in team projects
             if (section !== 'vectorstorage') {
               const { data } = await getConfigurations({
                 projectId: personal_project_id,
@@ -128,20 +158,9 @@ const CredentialsSelect = memo(
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedProjectId, personal_project_id, type, section, onlyPublic]);
 
-    const handleFocus = useCallback(() => {
-      setAnchorEl(anchorEl ? null : panelRef.current);
-    }, [anchorEl]);
-
-    const handleClickAway = useCallback(() => {
-      setAnchorEl(null);
-    }, []);
-
-    // Create menu data: Options for creating new credentials
     const createMenuData = useMemo(() => {
       const options = [];
       if (isCreationAllowed) {
-        // Skip "New private credentials" button for vectorstorage in team projects
-        // Private pgvector configs are not allowed in team projects
         const isVectorStorageInTeamProject =
           section === 'vectorstorage' && selectedProjectId !== personal_project_id;
 
@@ -159,7 +178,6 @@ const CredentialsSelect = memo(
           });
 
         if (selectedProjectId != personal_project_id) {
-          // Only show project credentials option if the selected project is not personal
           options.push({
             elitea_title: Create_Project_Title,
             private: false,
@@ -184,7 +202,6 @@ const CredentialsSelect = memo(
       section,
     ]);
 
-    // Saved Credentials menu data
     const savedCredentialsMenuData = useMemo(() => {
       return (presetOptions?.length ? presetOptions : configurations)
         .filter(configuration => {
@@ -222,7 +239,6 @@ const CredentialsSelect = memo(
         });
     }, [configurations, personal_project_id, onlyPublic, presetOptions]);
 
-    // Combine create and saved credentials into menu data
     const menuData = useMemo(
       () => ({
         Create: createMenuData,
@@ -231,7 +247,6 @@ const CredentialsSelect = memo(
       [createMenuData, savedCredentialsMenuData, type],
     );
 
-    // Find the selected option
     const selectedOption = useMemo(() => {
       if ([Manual_Title, Create_Personal_Title, Create_Project_Title].includes(value?.elitea_title)) {
         return createMenuData.find(
@@ -269,12 +284,9 @@ const CredentialsSelect = memo(
       setShowConfigurableFields?.(!!selectedOption);
     }, [selectedOption, setShowConfigurableFields]);
 
-    // Notify parent when a default credential is auto-selected
-    // This ensures editToolDetail gets updated with the default selection
     useEffect(() => {
       if (!hasFetchedData || !selectedOption) return;
 
-      // Only notify if there's a mismatch: UI shows a selection but parent doesn't have it
       const isDefaultAutoSelected = selectedOption && !value?.elitea_title;
 
       if (isDefaultAutoSelected) {
@@ -296,7 +308,7 @@ const CredentialsSelect = memo(
           selectedOption?.elitea_title === option.elitea_title &&
           selectedOption?.private === option.private
         ) {
-          onSelectConfiguration(null); // Deselect if already selected
+          onSelectConfiguration(null);
         } else {
           trackEvent(GA_EVENT_NAMES.CREDENTIALS_ATTACHED, {
             [GA_EVENT_PARAMS.CREDENTIALS_TYPE]: option.private ? 'private' : 'project',
@@ -305,191 +317,182 @@ const CredentialsSelect = memo(
           });
           onSelectConfiguration(config);
         }
-        setAnchorEl(null); // Close dropdown
       },
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      [onSelectConfiguration, selectedOption?.elitea_title, selectedOption?.private, type],
+      [
+        onSelectConfiguration,
+        selectedOption?.elitea_title,
+        selectedOption?.private,
+        type,
+        trackEvent,
+        contextExecutionEntity,
+      ],
     );
 
     const createSelectHandler = useCallback(
-      (sec, option) => () => {
-        if (!disabled) {
-          if (sec === 'Create') {
-            const baseUrl = `${window.location.protocol}//${window.location.host}`;
-            const basename = getBasename();
-            const newPath = `${baseUrl}${basename}/${selectedProjectId}${RouteDefinitions.CreateCredentialTypeFromMain.replace(':credentialType', type)}?project_id=${option.private ? personal_project_id : selectedProjectId}${section ? `&section=${section}` : ''}`;
-            window.open(newPath, '_blank', 'noopener,noreferrer');
-          } else {
-            onSelectItem(option);
-          }
+      (sec, option) => {
+        if (disabled) return;
+        if (sec === 'Create') {
+          const baseUrl = `${window.location.protocol}//${window.location.host}`;
+          const basename = getBasename();
+          const newPath = `${baseUrl}${basename}/${selectedProjectId}${RouteDefinitions.CreateCredentialTypeFromMain.replace(':credentialType', type)}?project_id=${option.private ? personal_project_id : selectedProjectId}${section ? `&section=${section}` : ''}`;
+          window.open(newPath, '_blank', 'noopener,noreferrer');
+        } else {
+          onSelectItem(option);
         }
       },
       [disabled, onSelectItem, personal_project_id, section, selectedProjectId, type],
     );
 
-    return (
-      <>
-        <ClickAwayListener onClickAway={handleClickAway}>
-          <Box
-            sx={sx}
-            ref={panelRef}
+    const optionGroups = useMemo(() => {
+      const refreshButton = (
+        <Tooltip
+          title="Refresh the configurations"
+          placement="top"
+        >
+          <IconButton
+            variant="alita"
+            color="tertiary"
+            size="small"
+            onClick={onRefresh}
           >
-            <Box
-              onClick={handleFocus}
-              sx={styles.clickableBox(error, open)}
-            >
-              <Box sx={styles.labelBox}>
-                <Typography
-                  variant="bodySmall"
-                  sx={styles.labelTypography(open)}
-                >
-                  {label}
-                  {required && <span> *</span>}
-                  {description && (
-                    <Box
-                      sx={{ marginLeft: '0.15rem', ':hover': { opacity: 0.8 } }}
-                      component="span"
-                    >
-                      <Tooltip
-                        title={description}
-                        placement="top"
-                      >
-                        <Box component="span">
-                          <InfoIcon
-                            width={14}
-                            height={14}
-                          />
-                        </Box>
-                      </Tooltip>
-                    </Box>
-                  )}
-                </Typography>
-              </Box>
-              {/* Render selected value */}
-              <Box sx={styles.selectedValueBox}>
-                {selectedOption ? (
-                  renderValue ? (
-                    renderValue(selectedOption)
-                  ) : (
-                    <Typography
-                      variant="bodyMedium"
-                      sx={styles.selectedValueTypography(selectedOption)}
-                    >
-                      {selectedOption.label}
-                    </Typography>
-                  )
+            <RefreshIcon />
+          </IconButton>
+        </Tooltip>
+      );
+
+      return Object.entries(menuData)
+        .filter(([title, list]) => (title === 'Create' ? list.length > 0 : true))
+        .map(([title, list]) => ({
+          key: title,
+          title,
+          headerEnd: title.includes('Saved') ? refreshButton : undefined,
+          options:
+            title === 'Create'
+              ? list.map(opt => ({
+                  value: createActionToSelectValue(opt.private),
+                  label: opt.label,
+                  variant: 'action',
+                  meta: opt,
+                  onActivate: () => createSelectHandler(title, opt),
+                }))
+              : list.map(opt => ({
+                  value: savedRowToSelectValue(opt),
+                  label: opt.label,
+                  meta: opt,
+                })),
+        }));
+    }, [menuData, createSelectHandler, onRefresh]);
+
+    const selectStringValue = useMemo(() => {
+      if (!selectedOption) return '';
+      if (
+        createMenuData.some(
+          o => o.elitea_title === selectedOption.elitea_title && o.private === selectedOption.private,
+        )
+      ) {
+        return createActionToSelectValue(selectedOption.private);
+      }
+      return savedRowToSelectValue(selectedOption);
+    }, [selectedOption, createMenuData]);
+
+    const handleSelectValueChange = useCallback(
+      newValue => {
+        const savedRow = selectValueToSavedRow(newValue);
+        if (savedRow) {
+          const matchingSaved = savedCredentialsMenuData.find(
+            credentialOption =>
+              credentialOption.elitea_title === savedRow.elitea_title &&
+              credentialOption.private === savedRow.private,
+          );
+          if (matchingSaved) onSelectItem(matchingSaved);
+          return;
+        }
+        const createAction = selectValueToCreateAction(newValue);
+        if (createAction) {
+          const matchingCreate = createMenuData.find(
+            createOption => createOption.private === createAction.isPrivate,
+          );
+          if (matchingCreate) createSelectHandler('Create', matchingCreate);
+        }
+      },
+      [savedCredentialsMenuData, onSelectItem, createMenuData, createSelectHandler],
+    );
+
+    const customRenderSelectValue = useCallback(
+      foundOption => {
+        if (!foundOption) {
+          return (
+            <Box sx={styles.unmatchedValueBox(value?.elitea_title && hasFetchedData)}>
+              {value?.elitea_title ? (
+                value?.private ? (
+                  <Person
+                    key="person-icon"
+                    fontSize="1rem"
+                  />
                 ) : (
-                  <Box sx={styles.unmatchedValueBox(value?.elitea_title && hasFetchedData)}>
-                    {value?.elitea_title ? (
-                      value?.private ? (
-                        <Person
-                          key="person-icon"
-                          fontSize="1rem"
-                        />
-                      ) : (
-                        <BriefcaseIcon
-                          key="briefcase-icon"
-                          fontSize="1rem"
-                        />
-                      )
-                    ) : null}
-                    <Typography
-                      variant="bodyMedium"
-                      sx={styles.unmatchedValueTypography(value?.elitea_title && hasFetchedData)}
-                    >
-                      {!value?.elitea_title ? 'Select credentials' : value.elitea_title}
-                    </Typography>
-                  </Box>
-                )}
-                <SvgIcon
-                  viewBox="0 0 16 16"
-                  sx={styles.arrowIcon(open)}
-                >
-                  <ArrowDownIcon />
-                </SvgIcon>
-              </Box>
+                  <BriefcaseIcon
+                    key="briefcase-icon"
+                    fontSize="1rem"
+                  />
+                )
+              ) : null}
+              <Typography
+                variant="labelMedium"
+                sx={styles.unmatchedValueTypography(value?.elitea_title && hasFetchedData)}
+              >
+                {!value?.elitea_title ? 'Select credentials' : value.elitea_title}
+              </Typography>
             </Box>
-            {error && helperText && (
-              <FormControl error>
-                <FormHelperText>{error ? helperText : undefined}</FormHelperText>
-              </FormControl>
-            )}
-            {value && !selectedOption && hasFetchedData && (
-              <FormControl error>
-                <FormHelperText>
-                  {value.private && value.elitea_title
-                    ? `Credential '${value.elitea_title}' is from a private project and is not available to you. Please create a credential with the same name to use this toolkit.`
-                    : 'Your configuration does not match any available configurations.'}
-                </FormHelperText>
-              </FormControl>
-            )}
-            <Popper
-              open={open}
-              anchorEl={panelRef.current}
-              placement="bottom-start"
-              style={styles.popper(panelRef)}
-            >
-              <Box sx={styles.popperBox}>
-                {!isFetching &&
-                  Object.keys(menuData).map(sec => (
-                    <React.Fragment key={sec}>
-                      <MenuItem
-                        sx={[styles.normalMenuItem, styles.headerWrapper]}
-                        disabled
-                      >
-                        <Typography
-                          variant="bodySmall"
-                          color="textSecondary"
-                          sx={styles.sectionHeader}
-                        >
-                          {sec}
-                        </Typography>
-                      </MenuItem>
-                      <Box sx={{ position: 'relative' }}>
-                        {sec.includes('Saved') && (
-                          <Tooltip
-                            title="Refresh the configurations"
-                            placement="top"
-                            sx={styles.refreshIconWrapper}
-                          >
-                            <IconButton
-                              variant="elitea"
-                              color="tertiary"
-                              onClick={onRefresh}
-                            >
-                              <RefreshIcon />
-                            </IconButton>
-                          </Tooltip>
-                        )}
-                        {menuData[sec].map((option, index) => (
-                          <MenuItem
-                            key={option.elitea_title + sec + index}
-                            onClick={createSelectHandler(sec, option)}
-                            sx={[styles.normalMenuItem, styles.menuItem(selectedOption, option)]}
-                          >
-                            <Box sx={styles.menuItemContent}>{option.label}</Box>
-                            {selectedOption &&
-                              option.elitea_title === selectedOption.elitea_title &&
-                              option.private === selectedOption.private && (
-                                <Box sx={styles.checkedIconBox}>
-                                  <CheckedIcon />
-                                </Box>
-                              )}
-                          </MenuItem>
-                        ))}
-                      </Box>
-                    </React.Fragment>
-                  ))}
-                {isFetching && (
-                  <Box sx={styles.loadingBox}>
-                    <CircularProgress size={24} />
-                  </Box>
-                )}
-              </Box>
-            </Popper>
-          </Box>
-        </ClickAwayListener>
-      </>
+          );
+        }
+
+        const row = foundOption?.meta ?? foundOption;
+        if (renderValue) return renderValue(row);
+        return (
+          <Typography
+            variant="labelMedium"
+            sx={styles.selectedValueTypography(row)}
+          >
+            {row.label}
+          </Typography>
+        );
+      },
+      [renderValue, value, hasFetchedData],
+    );
+
+    return (
+      <Box sx={[{ marginTop: '0.75rem' }, sx]}>
+        <Select.SingleSelect
+          label={label}
+          required={required}
+          error={error}
+          helperText={helperText}
+          disabled={disabled}
+          showBorder
+          customSelectedFontSize="0.875rem"
+          optionGroups={optionGroups}
+          options={[]}
+          value={selectStringValue}
+          onValueChange={handleSelectValueChange}
+          onClear={() => onSelectConfiguration?.(null)}
+          customRenderValue={customRenderSelectValue}
+          displayEmpty
+          showEmptyPlaceholder={false}
+          isListFetching={isFetching}
+        />
+        {value && !selectedOption && hasFetchedData && (
+          <FormControl
+            error
+            fullWidth
+          >
+            <FormHelperText>
+              {value.private && value.elitea_title
+                ? `Credential '${value.elitea_title}' is from a private project and is not available to you. Please create a credential with the same name to use this toolkit.`
+                : 'Your configuration does not match any available configurations.'}
+            </FormHelperText>
+          </FormControl>
+        )}
+      </Box>
     );
   },
 );
@@ -498,75 +501,11 @@ CredentialsSelect.displayName = 'CredentialsSelect';
 
 /** @type {MuiSx} */
 const styles = {
-  normalMenuItem: ({ palette }) => ({
-    justifyContent: 'space-between',
-    padding: '0.5rem 1.5rem',
-    fontSize: '0.875rem',
-    color: palette.text.secondary,
-    '&:hover': {
-      backgroundColor: palette.background.button.iconLabelButton.hover,
-    },
-    '&.Mui-disabled': {
-      color: palette.text.disabled,
-    },
-  }),
-  // Static styles
   labelContainer: {
     display: 'inline-flex',
     alignItems: 'center',
     gap: '0.5rem',
   },
-  labelBox: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    gap: '0.5rem',
-  },
-  selectedValueBox: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  sectionHeader: {
-    textTransform: 'uppercase',
-    padding: '0.125rem 0',
-  },
-  headerWrapper: ({ palette }) => ({
-    borderBottom: `1px solid ${palette.border.lines}`,
-    borderTop: `1px solid ${palette.border.lines}`,
-  }),
-  refreshIconWrapper: {
-    position: 'absolute',
-    top: '-.3rem',
-    right: '.75rem',
-    transform: 'translateY(-100%)',
-  },
-  menuItemContent: {
-    display: 'flex',
-    gap: '0.5rem',
-    alignItems: 'center',
-  },
-  loadingBox: {
-    padding: '0.5rem',
-    display: 'flex',
-    justifyContent: 'center',
-  },
-  // Dynamic styles (functions)
-  clickableBox: (error, open) => ({
-    cursor: 'pointer',
-    padding: '0.5rem 0.75rem',
-    width: '100%',
-    borderBottom: ({ palette }) =>
-      error
-        ? '0.0625rem solid red'
-        : open
-          ? `0.0625rem solid ${palette.primary.main}`
-          : `0.0625rem solid ${palette.border.lines}`,
-  }),
-  labelTypography: open => ({
-    // color: error ? theme.palette.error.main : theme.palette.text.secondary,
-    color: ({ palette }) => (open ? palette.primary.main : palette.text.secondary),
-  }),
   selectedValueTypography: selectedOption => ({
     overflow: 'hidden',
     textOverflow: 'ellipsis',
@@ -583,35 +522,16 @@ const styles = {
   unmatchedValueTypography: mismatch => ({
     color: ({ palette }) => (mismatch ? palette.status.rejected : palette.text.disabled),
   }),
-  arrowIcon: open => ({
-    fontSize: '1rem',
-    transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
-  }),
-  popper: panelRef => ({
-    width: panelRef.current?.clientWidth,
-    zIndex: 1300,
-  }),
-  popperBox: ({ palette }) => ({
-    marginTop: '0.25rem',
-    maxHeight: '18.75rem',
-    overflowY: 'auto',
-    borderRadius: '0.5rem',
-    border: `0.0625rem solid ${palette.border.lines}`,
-    background: palette.background.secondary,
-  }),
-  menuItem: (selectedOption, option) => ({
-    background: ({ palette }) =>
-      selectedOption &&
-      option.elitea_title === selectedOption.elitea_title &&
-      option.private === selectedOption.private
-        ? palette.background.participant.active
-        : undefined,
-  }),
-  checkedIconBox: ({ palette }) => ({
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: palette.primary.main,
+  selectInputTheme: (theme, isError) => ({
+    cursor: 'pointer',
+    padding: '0.5rem 0.75rem',
+    width: '100%',
+    minHeight: 'auto',
+    height: 'auto',
+    borderBottom: isError ? '0.0625rem solid red' : `0.0625rem solid ${theme.palette.border.lines}`,
+    '&.Mui-focused': {
+      borderBottom: `0.0625rem solid ${theme.palette.primary.main}`,
+    },
   }),
 };
 

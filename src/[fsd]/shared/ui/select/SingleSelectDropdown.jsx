@@ -1,16 +1,17 @@
 import { memo } from 'react';
 
-import { Box, ListItemIcon, ListSubheader, MenuItem, Typography } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
+import { Box, ListSubheader, MenuItem, Typography } from '@mui/material';
 
+import { FLAT_MENU_ACTION_VALUE } from '@/[fsd]/shared/lib/constants/singleSelectConstants';
 import SimpleSearchBar from '@/[fsd]/shared/ui/input/SimpleSearchBar';
-import { TypographyWithConditionalTooltip } from '@/[fsd]/shared/ui/tooltip';
-import CheckedIcon from '@/assets/checked-icon.svg?react';
-import RemoveIcon from '@/assets/remove-icon.svg?react';
+import PlusIcon from '@/assets/plus-icon.svg?react';
+
+import SingleSelectMenuItem from './SingleSelectMenuItem';
 
 const SingleSelectDropdown = memo(props => {
   const {
     isSearchBar,
+    isMenuAction,
     searchQuery,
     onSearchChange,
     onSearchClear,
@@ -31,92 +32,6 @@ const SingleSelectDropdown = memo(props => {
   } = props;
 
   const styles = selectMenuItemStyles();
-  const theme = useTheme();
-  const selectedBackground = isSelected ? theme.palette.background.participant.active : undefined;
-
-  const handleClick = event => {
-    if (isSelected && onClear) {
-      onClear(event);
-    }
-    if (muiOnClick) {
-      muiOnClick(event);
-    }
-  };
-
-  const renderIcon = position => {
-    if (iconPosition !== position) return null;
-
-    const rightSx = position === 'right' ? { marginRight: '0rem', marginLeft: '0.5rem' } : {};
-
-    const iconSx = optionsWithAvatar
-      ? [styles.menuItemIconWithAvatar, rightSx]
-      : [styles.menuItemIcon, menuItemIconSX, rightSx];
-
-    return <ListItemIcon sx={iconSx}>{option.icon}</ListItemIcon>;
-  };
-
-  const renderTextBlock = () => {
-    const primaryLabel = showOptionIcon
-      ? `${option.label}${option.date ? ' - ' + option.date : ''}`
-      : option.label;
-    const fullTitle = `${primaryLabel}${option.description ? ' — ' + option.description : ''}`;
-
-    if (!showOptionDescription) {
-      return (
-        <TypographyWithConditionalTooltip
-          title={primaryLabel}
-          placement="top"
-          variant="labelMedium"
-          color="text.secondary"
-          sx={styles.optionLabel}
-        >
-          {primaryLabel}
-        </TypographyWithConditionalTooltip>
-      );
-    }
-
-    return (
-      <Box
-        sx={styles.optionTextColumn}
-        title={fullTitle}
-      >
-        <TypographyWithConditionalTooltip
-          title={primaryLabel}
-          placement="top"
-          variant="labelMedium"
-          color="text.secondary"
-          sx={styles.optionLabelPrimaryWithDescription}
-        >
-          {primaryLabel}
-        </TypographyWithConditionalTooltip>
-        {option?.description && (
-          <Typography
-            variant="bodySmall"
-            color="text.secondary"
-            sx={styles.optionDescriptionLine}
-          >
-            {option.description}
-          </Typography>
-        )}
-      </Box>
-    );
-  };
-
-  const renderContent = () => {
-    if (customRenderOption) return customRenderOption(option, isSelected);
-
-    if (showOptionIcon) {
-      return (
-        <Box sx={[styles.iconContainer, showOptionDescription && styles.iconContainerWithDescription]}>
-          {renderIcon('left')}
-          {renderTextBlock()}
-          {renderIcon('right')}
-        </Box>
-      );
-    }
-
-    return renderTextBlock();
-  };
 
   if (isSearchBar) {
     return (
@@ -133,36 +48,44 @@ const SingleSelectDropdown = memo(props => {
     );
   }
 
+  if (isMenuAction) {
+    return (
+      <MenuItem
+        value={FLAT_MENU_ACTION_VALUE}
+        sx={styles.menuActionItem}
+      >
+        <Box sx={styles.menuActionRow}>
+          <PlusIcon
+            aria-hidden
+            style={{ flexShrink: 0 }}
+          />
+          <Typography
+            variant="bodyMedium"
+            color="text.secondary"
+          >
+            Action
+          </Typography>
+        </Box>
+      </MenuItem>
+    );
+  }
+
   return (
-    <MenuItem
+    <SingleSelectMenuItem
       {...restProps}
-      sx={[
-        muiSx,
-        styles.menuItem,
-        selectedBackground && { background: `${selectedBackground} !important` },
-        option.style,
-      ]}
-      onClick={handleClick}
-    >
-      {renderContent()}
-      {option.canDelete && onDeleteOption ? (
-        <ListItemIcon
-          sx={[styles.menuItemIcon, styles.menuItemSelectedIcon, styles.deleteIcon]}
-          onClick={e => {
-            e.stopPropagation();
-            onDeleteOption(option.value);
-          }}
-        >
-          <RemoveIcon />
-        </ListItemIcon>
-      ) : (
-        isSelected && (
-          <ListItemIcon sx={[styles.menuItemIcon, styles.menuItemSelectedIcon]}>
-            <CheckedIcon />
-          </ListItemIcon>
-        )
-      )}
-    </MenuItem>
+      sx={muiSx}
+      onClick={muiOnClick}
+      option={option}
+      isSelected={isSelected}
+      onClear={onClear}
+      customRenderOption={customRenderOption}
+      showOptionIcon={showOptionIcon}
+      showOptionDescription={showOptionDescription}
+      iconPosition={iconPosition}
+      optionsWithAvatar={optionsWithAvatar}
+      menuItemIconSX={menuItemIconSX}
+      onDeleteOption={onDeleteOption}
+    />
   );
 });
 
@@ -186,74 +109,20 @@ const selectMenuItemStyles = () => ({
       borderColor: palette.border.lines,
     },
   }),
-  menuItem: {
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    '&:hover #show-on-hover': {
-      display: 'flex',
+  menuActionItem: ({ palette }) => ({
+    justifyContent: 'flex-start',
+    padding: '0.5rem 1.5rem',
+    borderBottom: `0.0625rem solid ${palette.border.lines}`,
+    color: palette.icon.main,
+    '&:hover': {
+      backgroundColor: palette.background.select.hover,
     },
-  },
-  iconContainer: {
+  }),
+  menuActionRow: {
     display: 'flex',
     alignItems: 'center',
-  },
-  iconContainerWithDescription: {
-    alignItems: 'flex-start',
-  },
-  optionTextColumn: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.125rem',
-    alignItems: 'flex-start',
-    flex: 1,
-    minWidth: 0,
-    maxWidth: 'inherit',
-  },
-  optionLabel: {
-    whiteSpaceCollapse: 'preserve',
-    maxWidth: 'inherit',
+    gap: '0.5rem',
     width: '100%',
-  },
-  optionLabelPrimaryWithDescription: {
-    whiteSpaceCollapse: 'preserve',
-    maxWidth: '100%',
-    width: '100%',
-  },
-  optionDescriptionLine: {
-    whiteSpaceCollapse: 'preserve',
-    maxWidth: '100%',
-  },
-  menuItemIconWithAvatar: {
-    width: '1rem',
-    height: '1rem',
-    fontSize: '1rem',
-    marginRight: '0.5rem',
-    minWidth: '1rem !important',
-    '& svg': {
-      fontSize: '1rem',
-      color: 'text.secondary',
-    },
-  },
-  menuItemIcon: {
-    width: '1rem',
-    height: '1rem',
-    fontSize: '1rem',
-    marginRight: '0.6rem',
-    minWidth: '1rem !important',
-    '& svg': {
-      fontSize: '1rem',
-      color: 'text.secondary',
-    },
-  },
-  menuItemSelectedIcon: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: '0rem',
-    marginLeft: '1rem',
-  },
-  deleteIcon: {
-    cursor: 'pointer',
   },
 });
 
