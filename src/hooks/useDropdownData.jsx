@@ -361,7 +361,7 @@ export const useDropdownData = ({ agentQuery, pipelineQuery, toolkitQuery, mcpQu
           <EntityIcon
             sx={entityIconSx}
             imageStyle={entityImageStyle}
-            icon={{ component: getToolIconByType(mcp.type, theme, undefined, true) }}
+            icon={{ component: getToolIconByType(mcp.type, theme, { isMCP: true }) }}
             editable={false}
             specifiedFontSize={DROPDOWN_CONSTANTS.DIMENSIONS.ICON_SVG_SIZE}
           />

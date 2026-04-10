@@ -212,7 +212,7 @@ export const useLibraryToolkits = (onSelectToolkit = () => {}, applicationId, ve
     return (
       libraryToolkits?.rows.map(toolkit => {
         const typeInfo = realToolkitSchemas[toolkit.type];
-        const iconComponent = getToolIconByType(toolkit.type, theme, typeInfo, isMCP);
+        const iconComponent = getToolIconByType(toolkit.type, theme, { toolSchema: typeInfo, isMCP });
 
         return {
           key: `library-toolkit-${toolkit.id}`,
@@ -265,7 +265,10 @@ export const useGetToolkitIconMeta = () => {
           : toolkit?.type || 'custom';
       // Get icon component based on toolkit type
       return {
-        component: getToolIconByType(toolkitType, theme, toolkitSchemas?.[toolkitType], isMCP),
+        component: getToolIconByType(toolkitType, theme, {
+          toolSchema: toolkitSchemas?.[toolkitType],
+          isMCP,
+        }),
       };
     },
     [theme, toolkitSchemas],
