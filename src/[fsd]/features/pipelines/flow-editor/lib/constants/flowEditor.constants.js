@@ -162,7 +162,7 @@ export const agentTaskTypeOptions = [
   },
 ];
 
-export const FSTRING_AUTOCOMPLETE_VARIABLES = new Set(['task']);
+export const FSTRING_AUTOCOMPLETE_VARIABLES = new Set(['task', 'system', 'code', 'user_message', 'printer']);
 
 export const InitialNodeId = {
   [PipelineNodeTypes.Tool]: 'Tool',

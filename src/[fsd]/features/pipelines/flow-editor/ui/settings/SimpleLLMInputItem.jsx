@@ -53,7 +53,7 @@ const NodeFieldInput = memo(props => {
     name: 'value',
     id: `${variable}-value`,
     label: 'Value',
-    placeholder: '',
+    placeholder: enableFStringAutocomplete ? 'Use {state_key} for variables' : '',
     value: resolvedValue,
     onBlur: closeAutocomplete,
     onClick: handleCursorChange,
@@ -171,17 +171,14 @@ const SimpleLLMInputItem = memo(props => {
     [onChange, type, variableName],
   );
 
-  // Determine if AI Assistant should be enabled for this field
-  // - LLM node: system and task fields (only when field types are "f-string" or "fixed")
-  // - Code node: code field (only when field types are "f-string" or "fixed")
-  // - Printer node: text field (only when field types are "f-string" or "fixed")
   const shouldEnableAIAssistant =
     enableAIAssistant &&
     (type === 'fstring' || type === 'fixed') &&
     (variableName === 'system' ||
       variableName === 'task' ||
       variableName === 'code' ||
-      variableName === 'printer');
+      variableName === 'printer' ||
+      variableName === 'user_message');
 
   const enableFStringAutocomplete =
     type === 'fstring' && FlowEditorConstants.FSTRING_AUTOCOMPLETE_VARIABLES.has(variableName);
@@ -251,14 +248,15 @@ const simpleLLMInputItemStyles = (isStringType = true) => ({
     display: 'flex',
     gap: '0.75rem',
     alignItems: 'flex-start',
+    minHeight: '3.79rem',
   },
   typeSelectWrapper: {
     width: '7.25rem',
-    paddingTop: '0.6rem',
+    transform: 'translateY(0.89rem)',
   },
   valueWrapper: {
     flex: 1,
-    marginTop: !isStringType ? '0.625rem' : undefined,
+    transform: !isStringType ? 'translateY(0.89rem)' : undefined,
   },
   select: {
     marginBottom: '0rem',

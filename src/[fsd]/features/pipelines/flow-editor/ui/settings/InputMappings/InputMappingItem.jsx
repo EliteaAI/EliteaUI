@@ -290,9 +290,7 @@ const InputMappingItem = memo(props => {
         showTitle={showTitle}
         language={dataType === 'object' || dataType === 'array' ? 'json' : undefined}
         multiline={isMultiline}
-        enableFStringAutocomplete={
-          type === 'fstring' && FlowEditorConstants.FSTRING_AUTOCOMPLETE_VARIABLES.has(variable)
-        }
+        enableFStringAutocomplete={type === 'fstring'}
         stateVariableOptions={inputOptions}
       />
     );
