@@ -248,14 +248,15 @@ const simpleLLMInputItemStyles = (isStringType = true) => ({
     display: 'flex',
     gap: '0.75rem',
     alignItems: 'flex-start',
+    minHeight: '3.79rem',
   },
   typeSelectWrapper: {
     width: '7.25rem',
-    paddingTop: '0.6rem',
+    transform: 'translateY(0.89rem)',
   },
   valueWrapper: {
     flex: 1,
-    marginTop: !isStringType ? '0.625rem' : undefined,
+    transform: !isStringType ? 'translateY(0.89rem)' : undefined,
   },
   select: {
     marginBottom: '0rem',
