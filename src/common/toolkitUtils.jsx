@@ -293,7 +293,14 @@ const getPredefinedIcon = (type, iconProps) => {
   }
 };
 
-export const getToolIconByType = (type, theme, toolSchema = {}, isMCP, internalToolkitName = '') => {
+export const getToolIconByType = (
+  type,
+  theme,
+  toolSchema = {},
+  isMCP,
+  internalToolkitName = '',
+  isAppAll = false,
+) => {
   const iconProps = {
     // htmlColor: theme.palette.icon.fill.default,
     color: 'secondary',
@@ -323,6 +330,10 @@ export const getToolIconByType = (type, theme, toolSchema = {}, isMCP, internalT
         {...iconProps}
       />
     );
+  }
+
+  if (isAppAll) {
+    return <ApplicationToolkitIcon {...iconProps} />;
   }
 
   return predefinedIcon;
