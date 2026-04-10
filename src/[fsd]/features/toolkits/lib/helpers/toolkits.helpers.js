@@ -176,7 +176,7 @@ export const getToolkitIcon = (toolkit, theme, toolkitSchemas, isMCP) => {
   // Toolkits from an AppAll context carry meta.application === true.
   // When the type has no dedicated icon, fall back to ApplicationToolkitIcon instead of BuildIcon.
   const isAppAll = toolkit.meta?.application === true;
-  const iconComponent = getToolIconByType(toolkit.type, theme, typeInfo, isMCP, '', isAppAll);
+  const iconComponent = getToolIconByType(toolkit.type, theme, { toolSchema: typeInfo, isMCP, isAppAll });
 
   // Determine the label
   let label;

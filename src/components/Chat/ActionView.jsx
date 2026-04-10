@@ -270,7 +270,7 @@ const ActionView = memo(props => {
       );
     }
     if (toolkitType !== 'model') {
-      return getToolIconByType(toolkitType, theme, {}, false, action?.toolMeta?.toolkit_name);
+      return getToolIconByType(toolkitType, theme, { internalToolkitName: action?.toolMeta?.toolkit_name });
     }
     return <ModelIcon style={styles.modelIconStyle} />;
   }, [

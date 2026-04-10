@@ -296,10 +296,7 @@ const getPredefinedIcon = (type, iconProps) => {
 export const getToolIconByType = (
   type,
   theme,
-  toolSchema = {},
-  isMCP,
-  internalToolkitName = '',
-  isAppAll = false,
+  { toolSchema = {}, isMCP = false, internalToolkitName = '', isAppAll = false } = {},
 ) => {
   const iconProps = {
     // htmlColor: theme.palette.icon.fill.default,
