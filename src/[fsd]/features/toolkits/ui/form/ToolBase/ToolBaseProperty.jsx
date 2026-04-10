@@ -475,7 +475,6 @@ const ToolBaseProperty = memo(props => {
     } else if (type === 'configuration') {
       return (
         <CredentialsSelect
-          showBorder
           isCreationAllowed
           label={label}
           description={v.description}

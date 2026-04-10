@@ -1,8 +1,9 @@
 import { useState } from 'react';
 
-import { Box, Typography } from '@mui/material';
+import { Box, IconButton, Typography } from '@mui/material';
 
 import { Select } from '@/[fsd]/shared/ui';
+import RefreshIcon from '@/assets/refresh-icon.svg?react';
 
 export default {
   title: 'shared/ui/Select',
@@ -214,3 +215,84 @@ export const AllStates = () => (
     </Box>
   </Box>
 );
+
+const GROUPED_OPTION_GROUPS = [
+  {
+    key: 'create',
+    title: 'CREATE',
+    options: [
+      {
+        value: '__story_action__',
+        label: '+ New item',
+        variant: 'action',
+        onActivate: () => {},
+      },
+    ],
+  },
+  {
+    key: 'saved',
+    title: 'SAVED ITEMS',
+    headerEnd: (
+      <IconButton
+        size="small"
+        aria-label="refresh"
+      >
+        <RefreshIcon />
+      </IconButton>
+    ),
+    options: [
+      { label: 'Item A', value: 'a' },
+      { label: 'Item B', value: 'b' },
+    ],
+  },
+];
+
+export const GroupedWithHeaderAction = () => {
+  const [v, setV] = useState('a');
+  return (
+    <Box sx={{ maxWidth: 320 }}>
+      <Select.SingleSelect
+        label="Grouped select"
+        optionGroups={GROUPED_OPTION_GROUPS}
+        options={[]}
+        value={v}
+        onValueChange={setV}
+        showBorder
+      />
+    </Box>
+  );
+};
+
+export const FlatMenuAction = () => {
+  const [v, setV] = useState(FILLED_VALUE);
+  return (
+    <Box sx={{ maxWidth: 320 }}>
+      <Select.SingleSelect
+        label="Flat + menu action"
+        options={DEMO_OPTIONS}
+        value={v}
+        onValueChange={setV}
+        showBorder
+        onMenuActionClick={() => {}}
+      />
+    </Box>
+  );
+};
+
+export const FlatMenuActionWithSearch = () => {
+  const [v, setV] = useState(FILLED_VALUE);
+  return (
+    <Box sx={{ maxWidth: 320 }}>
+      <Select.SingleSelect
+        label="Flat + search + action"
+        options={DEMO_OPTIONS}
+        value={v}
+        onValueChange={setV}
+        showBorder
+        withSearch
+        searchPlaceholder="Search for..."
+        onMenuActionClick={() => {}}
+      />
+    </Box>
+  );
+};

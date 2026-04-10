@@ -92,6 +92,42 @@ export const StyledTabsContextProvider = memo(props => {
 
 StyledTabsContextProvider.displayName = 'StyledTabsContextProvider';
 
+const DISABLED_TAB_TOOLTIP_OWN_KEYS = new Set(['tooltipTitle', 'tabProps', 'tabSx', 'display']);
+
+const DisabledTabWithTooltip = memo(
+  forwardRef((props, ref) => {
+    const { tooltipTitle, tabProps, tabSx, display } = props;
+
+    const tabsForwardedProps = {};
+    for (const key of Object.keys(props)) {
+      if (!DISABLED_TAB_TOOLTIP_OWN_KEYS.has(key)) {
+        tabsForwardedProps[key] = props[key];
+      }
+    }
+    return (
+      <Tooltip
+        title={tooltipTitle}
+        placement="top"
+      >
+        <Box
+          component="span"
+          sx={{ display: 'inline-flex' }}
+        >
+          <BaseTab
+            ref={ref}
+            {...tabProps}
+            {...tabsForwardedProps}
+            sx={[tabSx, { display }]}
+            disabled
+          />
+        </Box>
+      </Tooltip>
+    );
+  }),
+);
+
+DisabledTabWithTooltip.displayName = 'DisabledTabWithTooltip';
+
 const StyledPureTabs = memo(
   forwardRef((props, ref) => {
     const {
@@ -193,19 +229,13 @@ const StyledPureTabs = memo(
                   };
 
                   return tab.disabled ? (
-                    <Tooltip
-                      title={tab.disabled || 'This tab is disabled'}
-                      placement="top"
+                    <DisabledTabWithTooltip
                       key={index}
-                    >
-                      <Box component="span">
-                        <BaseTab
-                          {...tabProps}
-                          sx={[styles.disabledTab, { display: tab.display }]}
-                          disabled
-                        />
-                      </Box>
-                    </Tooltip>
+                      tooltipTitle={typeof tab.disabled === 'string' ? tab.disabled : 'This tab is disabled'}
+                      tabProps={tabProps}
+                      tabSx={styles.disabledTab}
+                      display={tab.display}
+                    />
                   ) : (
                     <BaseTab
                       sx={[styles.tab, { display: tab.display }]}

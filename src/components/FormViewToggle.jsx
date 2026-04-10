@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 
-import { ToggleButton, ToggleButtonGroup } from '@mui/material';
+import { Box, ToggleButton, ToggleButtonGroup } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { ToolkitViewOptions } from '@/common/constants';
@@ -27,30 +27,48 @@ export const FormViewToggle = ({ view = ToolkitViewOptions.Form, onChangeView, c
       sx={{ ml: 0, ...containerSX }}
     >
       <Tooltip
+        key={ToolkitViewOptions.Form}
         title="Form view"
         placement="top"
       >
-        <ToggleButton
-          variant="elitea"
-          value={ToolkitViewOptions.Form}
-          key={ToolkitViewOptions.Form}
-          sx={{ padding: `${SPACING.SM} ${SPACING.SM}`, borderRadius: '8px 0 0 8px', textTransform: 'none' }}
+        <Box
+          component="span"
+          sx={{ display: 'inline-flex' }}
         >
-          Form
-        </ToggleButton>
+          <ToggleButton
+            variant="elitea"
+            value={ToolkitViewOptions.Form}
+            sx={{
+              padding: `${SPACING.SM} ${SPACING.SM}`,
+              borderRadius: '8px 0 0 8px',
+              textTransform: 'none',
+            }}
+          >
+            Form
+          </ToggleButton>
+        </Box>
       </Tooltip>
       <Tooltip
+        key={ToolkitViewOptions.Json}
         title="Raw Json view"
         placement="top"
       >
-        <ToggleButton
-          variant="elitea"
-          value={ToolkitViewOptions.Json}
-          key={ToolkitViewOptions.Json}
-          sx={{ padding: `${SPACING.SM} ${SPACING.SM}`, borderRadius: '0 8px 8px 0', textTransform: 'none' }}
+        <Box
+          component="span"
+          sx={{ display: 'inline-flex' }}
         >
-          Raw Json
-        </ToggleButton>
+          <ToggleButton
+            variant="elitea"
+            value={ToolkitViewOptions.Json}
+            sx={{
+              padding: `${SPACING.SM} ${SPACING.SM}`,
+              borderRadius: '0 8px 8px 0',
+              textTransform: 'none',
+            }}
+          >
+            Raw Json
+          </ToggleButton>
+        </Box>
       </Tooltip>
     </ToggleButtonGroup>
   );

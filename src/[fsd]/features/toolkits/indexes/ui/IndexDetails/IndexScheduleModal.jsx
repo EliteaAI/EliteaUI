@@ -141,7 +141,6 @@ const IndexScheduleModal = props => {
               {credentialsData && (
                 <Box mt="1rem">
                   <CredentialsSelect
-                    showBorder
                     required
                     isCreationAllowed
                     label={credentialsData.description}
