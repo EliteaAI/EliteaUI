@@ -1,22 +1,12 @@
 import { memo, useCallback, useRef, useState } from 'react';
 
-import {
-  Box,
-  Button,
-  ButtonGroup,
-  Divider,
-  ListItemIcon,
-  Tooltip,
-  Typography,
-  useTheme,
-} from '@mui/material';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
+import { Box, Button, ButtonGroup, Divider, Tooltip, Typography, useTheme } from '@mui/material';
 
 import ShareIcon from '@/assets/share-icon.svg?react';
 import BriefcaseIcon from '@/components/Icons/BriefcaseIcon.jsx';
 import SettingIcon from '@/components/Icons/SettingIcon';
 
+import LLMModelsMenu from './LLMModelsMenu';
 import { LLMSettingsDialog } from './LLMSettingsDialog';
 
 /**
@@ -45,13 +35,7 @@ const LLMModelSelector = memo(props => {
   const anchorRef = useRef(null);
   const [showLLMSettings, setShowLLMSettings] = useState(false);
 
-  const handleMenuItemClick = (event, index) => {
-    onSelectModel(models[index]);
-    handleClose();
-  };
-
   const [anchorEl, setAnchorEl] = useState(null);
-  const open = Boolean(anchorEl);
 
   const handleModelMenuClick = () => {
     setAnchorEl(anchorRef.current);
@@ -155,7 +139,7 @@ const LLMModelSelector = memo(props => {
               <Box component="span">
                 <Button
                   size="small"
-                  aria-expanded={open ? 'true' : undefined}
+                  aria-expanded={showLLMSettings ? 'true' : undefined}
                   aria-label="model settings menu"
                   aria-haspopup="menu"
                   onClick={handleSettingsClick}
@@ -174,40 +158,13 @@ const LLMModelSelector = memo(props => {
         )}
       </ButtonGroup>
 
-      <Menu
+      <LLMModelsMenu
         anchorEl={anchorEl}
-        open={open}
         onClose={handleClose}
-        anchorOrigin={{
-          vertical: 'top',
-          horizontal: 'right',
-        }}
-        transformOrigin={{
-          vertical: 'bottom',
-          horizontal: 'right',
-        }}
-        slotProps={{
-          list: {
-            'aria-labelledby': 'model-selector-button',
-          },
-          paper: {
-            sx: styles.menuPaper,
-          },
-        }}
-      >
-        {models.map((item, index) => (
-          <MenuItem
-            key={index}
-            selected={item.id === selectedModel?.id}
-            onClick={event => handleMenuItemClick(event, index)}
-          >
-            <ListItemIcon>
-              {item.shared ? <ShareIcon fontSize="inherit" /> : <BriefcaseIcon fontSize="inherit" />}
-            </ListItemIcon>
-            {item.display_name || item.name}
-          </MenuItem>
-        ))}
-      </Menu>
+        models={models}
+        selectedModel={selectedModel}
+        onSelectModel={onSelectModel}
+      />
 
       {onSetLLMSettings && (
         <LLMSettingsDialog
@@ -267,9 +224,6 @@ const llmModelSelectorStyles = () => ({
     fontSize: '1rem',
     width: '1rem',
     height: '1rem',
-  },
-  menuPaper: {
-    marginTop: '-0.25rem',
   },
 });
 

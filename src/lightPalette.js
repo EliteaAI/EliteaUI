@@ -75,6 +75,10 @@ const semiTransparentBlack = 'rgba(255, 255, 255, 0.5)';
 const purpleLight = 'rgba(245, 81, 249, 1)';
 const purpleDark = 'rgba(254, 180, 255, 1)';
 const purpleShadow = 'rgba(241, 43, 255, 0.2)';
+const lightPurpleBgr = '#F0EDF7';
+const lightOrangeBgr = '#FFF1E4';
+const lightPurple = '#A48EE3';
+const lightOrange = '#FFB380';
 
 const lightPalette = {
   mode: 'light',
@@ -482,6 +486,16 @@ const lightPalette = {
   scrollbar: {
     thumb: dark10,
     thumbHover: light10,
+  },
+  capability: {
+    vision: {
+      background: lightPurpleBgr,
+      icon: lightPurple,
+    },
+    reasoning: {
+      background: lightOrangeBgr,
+      icon: lightOrange,
+    },
   },
 };
 
