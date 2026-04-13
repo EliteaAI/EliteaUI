@@ -136,6 +136,25 @@ export function useToolsValidationInfo({ applicationId, projectId, versionId, to
   return { toolsValidationInfo, totalValidationInfo };
 }
 
+/**
+ * Attempts to parse a structured error from a pydantic-formatted validation message.
+ * The backend encodes private-credential-not-found errors as JSON in the message:
+ *   "Value error, {\"error_type\": \"private_credential_not_found\", ...}"
+ * Returns the parsed object when recognised, otherwise returns the original string.
+ */
+const parseValidationMsg = msg => {
+  if (!msg) return msg;
+  const VALUE_ERROR_PREFIX = 'Value error, ';
+  const body = msg.startsWith(VALUE_ERROR_PREFIX) ? msg.slice(VALUE_ERROR_PREFIX.length) : msg;
+  try {
+    const parsed = JSON.parse(body);
+    if (parsed && parsed.error_type) return parsed;
+  } catch {
+    // not JSON – return original string
+  }
+  return msg;
+};
+
 export function useToolValidationInfo({ applicationId, projectId, versionId, toolId, tool } = {}) {
   const selectorKey = useMemo(
     () => buildValidationKey(projectId, applicationId, versionId),
@@ -149,7 +168,7 @@ export function useToolValidationInfo({ applicationId, projectId, versionId, too
   const toolValidationInfo = useMemo(() => {
     // Check parent agent's validation errors for this tool
     const parentError = (versionValidationInfo[selectorKey] || []).find(info => info.loc?.[1] === toolId);
-    if (parentError?.msg) return parentError.msg;
+    if (parentError?.msg) return parseValidationMsg(parentError.msg);
 
     // For application-type tools, also check the sub-agent's own validation errors
     if (subAgentKey) {

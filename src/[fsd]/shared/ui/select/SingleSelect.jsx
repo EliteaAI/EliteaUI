@@ -24,7 +24,7 @@ const DEFAULT_MAX_MENU_HEIGHT = '30rem';
 
 const SingleSelect = memo(props => {
   const {
-    value = '',
+    value,
     label,
     options,
     onValueChange,
@@ -80,6 +80,8 @@ const SingleSelect = memo(props => {
 
   const realValue = useMemo(() => {
     if (effectiveMultiple) return Array.isArray(value) ? value : [];
+    // Ensure single select always has a string value (never null or undefined)
+    if (value === null || value === undefined) return '';
     return options && options.length ? value : '';
   }, [effectiveMultiple, options, value]);
 

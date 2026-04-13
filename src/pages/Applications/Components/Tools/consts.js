@@ -36,7 +36,6 @@ export const ToolEvents = {
   ToolkitsCreateToolkit: 'ToolkitsCreateToolkit',
   ToolkitsUpdateToolkit: 'ToolkitsUpdateToolkit',
   ToolkitsCreateToolkitWithConfiguration: 'ToolkitsCreateToolkitWithConfiguration',
-  ToolkitsUpdateToolkitWithConfiguration: 'ToolkitsUpdateToolkitWithConfiguration',
 };
 
 export const ValidateToolEventReason = {
