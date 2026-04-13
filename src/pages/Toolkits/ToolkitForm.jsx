@@ -53,7 +53,7 @@ export const ToolkitForm = memo(props => {
   const hasSetViewManually = useRef(false);
   const [view, setView] = useState(ToolkitViewOptions.Form);
   const { configurationsAsSchema } = useGetCurrentConfigurationAsSchemas();
-  const { values, setFieldValue } = useFormikContext();
+  const { values, initialValues, setFieldValue } = useFormikContext();
   const { toolkitType } = useParams();
   const [searchParams] = useSearchParams();
   const [showValidation, setShowValidation] = useState(false);
@@ -283,19 +283,35 @@ export const ToolkitForm = memo(props => {
    * It observes fields in:
    * - editToolDetail (fields: name, description)
    * - editToolDetail?.settings
+   *
+   * Uses a ref for current values to avoid circular dependency:
+   * - Without ref: setFieldValue → values.settings changes → effect runs → setFieldValue → infinite loop
+   * - Object values always have different references after Formik deep-clones them, so reference
+   *   equality check !== would always be true without JSON.stringify deep comparison
    */
+  const currentValuesRef = useRef(values);
   useEffect(() => {
+    currentValuesRef.current = values;
+  });
+
+  useEffect(() => {
+    const currentValues = currentValuesRef.current;
     Object.keys(editToolDetail?.settings || {}).forEach(async key => {
-      if (values?.settings?.[key] !== editToolDetail?.settings?.[key]) {
-        await setFieldValue(`settings.${key}`, editToolDetail?.settings[key]); // Recursive updates
+      const currentVal = currentValues?.settings?.[key];
+      const newVal = editToolDetail?.settings?.[key];
+      if (JSON.stringify(currentVal) !== JSON.stringify(newVal)) {
+        await setFieldValue(`settings.${key}`, newVal); // Recursive updates
       }
     });
     Object.keys(editToolDetail?.meta?.mcp_options || {}).forEach(async key => {
-      if (values?.meta?.mcp_options?.[key] !== editToolDetail?.meta?.mcp_options?.[key]) {
-        await setFieldValue(`meta.mcp_options.${key}`, editToolDetail?.meta?.mcp_options?.[key]); // Recursive updates
+      const currentVal = currentValues?.meta?.mcp_options?.[key];
+      const newVal = editToolDetail?.meta?.mcp_options?.[key];
+      if (JSON.stringify(currentVal) !== JSON.stringify(newVal)) {
+        await setFieldValue(`meta.mcp_options.${key}`, newVal); // Recursive updates
       }
     });
-  }, [editToolDetail, values?.settings, setFieldValue, values?.meta?.mcp_options]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editToolDetail]);
 
   useEffect(() => {
     const setToolkitType = async () => {
@@ -347,6 +363,31 @@ export const ToolkitForm = memo(props => {
       configurationErrors,
       configurationsAsSchema,
     });
+
+  const onRevertCredentials = useCallback(() => {
+    const initialSettings = initialValues?.settings || {};
+    const currentSettings = editToolDetail?.settings || {};
+
+    // Revert only credentials that changed from team to private (matching the warning condition)
+    Object.keys(currentSettings).forEach(key => {
+      const curr = currentSettings[key];
+      const orig = initialSettings[key];
+
+      // Only revert if this is a credential that was changed from team to private
+      if (curr?.private && typeof curr === 'object' && 'elitea_title' in curr) {
+        if (curr.private !== orig?.private) {
+          // Revert to original team credential
+          editField(`settings.${key}`, orig);
+        }
+      }
+    });
+
+    // Update configuration state to match initial values
+    setConfiguration({
+      elitea_title: initialSettings?.elitea_title || '',
+      private: initialSettings?.private,
+    });
+  }, [initialValues?.settings, editToolDetail?.settings, editField]);
 
   useEffect(() => {
     if (
@@ -424,6 +465,7 @@ export const ToolkitForm = memo(props => {
           isTestingConnection={isTestingConnection}
           onCreateConfiguration={onCreateConfiguration}
           onTestConnection={onTestConnection}
+          onRevertCredentials={onRevertCredentials}
           view={view}
           onChangeView={setView}
           hideViewToggle={!effectiveToolSchema}

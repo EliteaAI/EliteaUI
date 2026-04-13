@@ -13,6 +13,7 @@ export default function AlertDialog({
   onConfirm,
   alarm,
   confirmButtonText = 'Confirm',
+  cancelButtonText = 'Cancel',
   multiline = false,
   confirming = false,
 }) {
@@ -66,7 +67,7 @@ export default function AlertDialog({
           autoFocus
           disableRipple
         >
-          Cancel
+          {cancelButtonText}
         </Button>
         <Button
           disableRipple

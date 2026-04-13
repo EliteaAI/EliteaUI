@@ -323,7 +323,7 @@ const lightPalette = {
     cardsOutlinesGradient: 'linear-gradient(0deg, rgba(208, 213, 218, 0.6) 0%, #D0D5DA 100%)',
     conversationItemDivider: dark10,
     highlightUserMessage: skyBlue40,
-    error: red,
+    error: red40,
     flowNode: light20,
     sidebarDivider: dark10,
     chatEditPlaceholderBorder: blue03,

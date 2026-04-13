@@ -115,12 +115,12 @@ export const validateRequiredFields = (
   schema,
   settings,
   sectionProps = [],
-  enableEditEliteATitle = false,
+  enableEditEliteaTitle = false,
 ) => {
   const errors = {};
 
   schema?.required
-    ?.filter(prop => (enableEditEliteATitle || prop !== 'elitea_title') && !sectionProps.includes(prop))
+    ?.filter(prop => (enableEditEliteaTitle || prop !== 'elitea_title') && !sectionProps.includes(prop))
     .forEach(prop => {
       const propSchema = schema?.properties[prop];
       if (propSchema?.type === 'boolean' || !propSchema) {

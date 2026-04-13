@@ -74,7 +74,8 @@ export const EditToolkit = memo(props => {
     setUpdateConfigKey(prev => prev + 1);
     setDirty(false);
     setHasValidationErrors(false);
-  }, [publicToolkitData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [publicToolkitData?.id]);
 
   const handleValidationStateChange = useCallback(({ hasErrors }) => {
     setHasValidationErrors(hasErrors);
@@ -87,7 +88,8 @@ export const EditToolkit = memo(props => {
       // TODO: DELETE LegacyOpenApiMigration usage after migration period (Q1 2026)
       setEditToolDetail(LegacyOpenApiMigration.normalizeLegacyOpenApiToolkit(publicToolkitData));
     }
-  }, [isFetchingPublic, publicToolkitData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isFetchingPublic, publicToolkitData?.id]);
 
   const shouldShowNotFoundPage = isPublicError && isNotFoundError(publicError);
 
@@ -118,14 +120,14 @@ export const EditToolkit = memo(props => {
       toolkitId: realId,
       theme: mode,
     });
-  }, [appUrl, currentProjectId, realId, mode]);
+  }, [appUrl, currentProjectId, mode, realId]);
 
   // Reload iframe when theme changes
   useEffect(() => {
     if (interfaceType === 'iframe' && interpolatedAppUrl && !showIframeFallback) {
       setIframeKey(prev => prev + 1);
     }
-  }, [mode, interfaceType, interpolatedAppUrl, showIframeFallback]);
+  }, [interfaceType, interpolatedAppUrl, showIframeFallback]);
 
   // Show redirect modal immediately for redirect-type applications
   useEffect(() => {
@@ -314,7 +316,8 @@ export const EditToolkit = memo(props => {
       newSearchParams.set(SearchParams.Name, publicToolkitData.name);
       setSearchParams(newSearchParams, { replace: true });
     }
-  }, [publicToolkitData, searchParams, setSearchParams]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [publicToolkitData?.name]);
 
   const defaultTab = useMemo(() => {
     // First, check the :tab parameter from the route path

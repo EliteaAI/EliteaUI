@@ -57,7 +57,7 @@ const ToolBase = memo(props => {
     toolkit_name: toolkitName = '',
     description = '',
     settings = {},
-    enableEditEliteATitle = false,
+    enableEditEliteaTitle = false,
     meta,
   } = editToolDetail;
   // console.log('toolErrors', toolErrors);
@@ -87,7 +87,7 @@ const ToolBase = memo(props => {
       schema,
       settings,
       sectionProps,
-      enableEditEliteATitle,
+      enableEditEliteaTitle,
     );
     setToolErrors(prev => ({
       ...prev,
@@ -101,7 +101,7 @@ const ToolBase = memo(props => {
     editToolDetail.type,
     sections,
     schema,
-    enableEditEliteATitle,
+    enableEditEliteaTitle,
     sectionProps,
   ]);
 
@@ -161,13 +161,13 @@ const ToolBase = memo(props => {
   }, []);
 
   useEffect(() => {
-    if (enableEditEliteATitle && settings.elitea_title && !isValidEliteATitle(settings.elitea_title)) {
+    if (enableEditEliteaTitle && settings.elitea_title && !isValidEliteATitle(settings.elitea_title)) {
       setToolErrors(prev => ({
         ...prev,
         elitea_title: getEliteATitleValidationError(settings.elitea_title, systemSenderName), // Clear error if elitea_title is valid
       }));
     }
-  }, [settings.elitea_title, setToolErrors, enableEditEliteATitle, systemSenderName]);
+  }, [settings.elitea_title, setToolErrors, enableEditEliteaTitle, systemSenderName]);
 
   const handleInputChange = field => event => {
     const initialValue = event.target.value;
@@ -266,7 +266,7 @@ const ToolBase = memo(props => {
             editFieldRootPath={editFieldRootPath}
             disableConfigFields={
               (showDisabledConfigFields && v.configuration) ||
-              (k === 'elitea_title' && !enableEditEliteATitle)
+              (k === 'elitea_title' && !enableEditEliteaTitle)
             }
             checkboxAsteriskRequired={checkboxAsteriskRequired}
             disabled={disabled && v.type !== 'configuration'}
@@ -327,7 +327,7 @@ const ToolBase = memo(props => {
               editFieldRootPath={editFieldRootPath}
               disableConfigFields={
                 (showDisabledConfigFields && v.configuration) ||
-                (k === 'elitea_title' && !enableEditEliteATitle)
+                (k === 'elitea_title' && !enableEditEliteaTitle)
               }
               checkboxAsteriskRequired={checkboxAsteriskRequired}
               disabled={disabled && v.type !== 'configuration'}
@@ -380,7 +380,7 @@ const ToolBase = memo(props => {
                             editFieldRootPath={editFieldRootPath}
                             disableConfigFields={
                               (showDisabledConfigFields && v.configuration) ||
-                              (k === 'elitea_title' && !enableEditEliteATitle)
+                              (k === 'elitea_title' && !enableEditEliteaTitle)
                             }
                             checkboxAsteriskRequired={checkboxAsteriskRequired}
                             disabled={disabled && v.type !== 'configuration'}
@@ -458,7 +458,7 @@ const ToolBase = memo(props => {
               editFieldRootPath={editFieldRootPath}
               disableConfigFields={
                 (showDisabledConfigFields && v.configuration) ||
-                (k === 'elitea_title' && !enableEditEliteATitle)
+                (k === 'elitea_title' && !enableEditEliteaTitle)
               }
               checkboxAsteriskRequired={checkboxAsteriskRequired}
               disabled={disabled && v.type !== 'configuration'}

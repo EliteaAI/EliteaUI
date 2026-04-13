@@ -27,6 +27,7 @@ import { Create_Personal_Title, Create_Project_Title, Manual_Title } from '@/hoo
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import RouteDefinitions, { getBasename } from '@/routes';
 
+import CredentialWarningBanner from './CredentialWarningBanner';
 import ArrowDownIcon from './Icons/ArrowDownIcon';
 import InfoIcon from './Icons/InfoIcon';
 import Person from './Icons/Person';
@@ -62,6 +63,7 @@ const CredentialsSelect = memo(
     const [getConfigurations, { isFetching }] = useLazyGetConfigurationsListQuery();
     const [hasFetchedData, setHasFetchedData] = useState(false);
     const [configurations, setConfigurations] = useState([]);
+    const hasAutoSelectedRef = useRef(false);
 
     const {
       data: vectorStorageData = { items: [], total: 0, default_model_name: '', default_model_project_id: '' },
@@ -75,11 +77,22 @@ const CredentialsSelect = memo(
       [vectorStorageData?.default_model_name],
     );
 
+    const mismatchedPrivateCredential = useMemo(() => {
+      if (!value?.private || !value?.elitea_title || selectedProjectId === personal_project_id) return false;
+      const match = configurations.find(
+        config =>
+          config.elitea_title &&
+          config.elitea_title === value.elitea_title &&
+          config.project_id === personal_project_id,
+      );
+      return !match;
+    }, [value?.private, value?.elitea_title, selectedProjectId, personal_project_id, configurations]);
     const onRefresh = useCallback(
       async event => {
         event?.stopPropagation();
         setConfigurations([]);
         setHasFetchedData(false);
+        hasAutoSelectedRef.current = false;
         let teamProjectConfigurations = [];
         if (selectedProjectId) {
           const { data } = await getConfigurations({
@@ -235,12 +248,18 @@ const CredentialsSelect = memo(
     const selectedOption = useMemo(() => {
       if ([Manual_Title, Create_Personal_Title, Create_Project_Title].includes(value?.elitea_title)) {
         return createMenuData.find(
-          option => option.elitea_title === value?.elitea_title && option.private === value?.private,
+          option =>
+            option.elitea_title &&
+            option.elitea_title === value?.elitea_title &&
+            option.private === value?.private,
         );
       }
 
       const availableSavedData = savedCredentialsMenuData.find(
-        option => option.elitea_title === value?.elitea_title && option.private === value?.private,
+        option =>
+          option.elitea_title &&
+          option.elitea_title === value?.elitea_title &&
+          option.private === value?.private,
       );
 
       if (availableSavedData) return availableSavedData;
@@ -248,7 +267,7 @@ const CredentialsSelect = memo(
         if (section === 'vectorstorage') {
           if (projectDefaultVectorStorageModel) {
             const defaultOption = savedCredentialsMenuData.find(
-              option => option.elitea_title === projectDefaultVectorStorageModel,
+              option => option.elitea_title && option.elitea_title === projectDefaultVectorStorageModel,
             );
 
             return defaultOption ?? null;
@@ -257,8 +276,9 @@ const CredentialsSelect = memo(
 
         if (section === 'credentials')
           return (
-            savedCredentialsMenuData.find(option => option.elitea_title === value?.elitea_title) ||
-            (!value?.elitea_title ? savedCredentialsMenuData[0] : null)
+            savedCredentialsMenuData.find(
+              option => option.elitea_title && option.elitea_title === value?.elitea_title,
+            ) || (!value?.elitea_title && !value?.private ? savedCredentialsMenuData[0] : null)
           );
 
         return null;
@@ -277,7 +297,8 @@ const CredentialsSelect = memo(
       // Only notify if there's a mismatch: UI shows a selection but parent doesn't have it
       const isDefaultAutoSelected = selectedOption && !value?.elitea_title;
 
-      if (isDefaultAutoSelected) {
+      if (isDefaultAutoSelected && !hasAutoSelectedRef.current) {
+        hasAutoSelectedRef.current = true;
         const config = {
           private: selectedOption.private,
           elitea_title: selectedOption.elitea_title,
@@ -336,7 +357,7 @@ const CredentialsSelect = memo(
           >
             <Box
               onClick={handleFocus}
-              sx={styles.clickableBox(error, open)}
+              sx={styles.clickableBox(error || mismatchedPrivateCredential, open)}
             >
               <Box sx={styles.labelBox}>
                 <Typography
@@ -379,7 +400,7 @@ const CredentialsSelect = memo(
                     </Typography>
                   )
                 ) : (
-                  <Box sx={styles.unmatchedValueBox(value?.elitea_title && hasFetchedData)}>
+                  <Box sx={styles.unmatchedValueBox}>
                     {value?.elitea_title ? (
                       value?.private ? (
                         <Person
@@ -395,9 +416,9 @@ const CredentialsSelect = memo(
                     ) : null}
                     <Typography
                       variant="bodyMedium"
-                      sx={styles.unmatchedValueTypography(value?.elitea_title && hasFetchedData)}
+                      sx={styles.unmatchedValueTypography}
                     >
-                      {!value?.elitea_title ? 'Select credentials' : value.elitea_title}
+                      {!value?.elitea_title ? 'Select credentials' : value?.elitea_title}
                     </Typography>
                   </Box>
                 )}
@@ -414,12 +435,17 @@ const CredentialsSelect = memo(
                 <FormHelperText>{error ? helperText : undefined}</FormHelperText>
               </FormControl>
             )}
-            {value && !selectedOption && hasFetchedData && (
+            {value && !open && !selectedOption && hasFetchedData && mismatchedPrivateCredential && (
+              <CredentialWarningBanner
+                credentialId={value?.elitea_title || value?.elitea_title}
+                credentialType={type}
+                section={section}
+              />
+            )}
+            {value && !open && !selectedOption && hasFetchedData && !mismatchedPrivateCredential && (
               <FormControl error>
                 <FormHelperText>
-                  {value.private && value.elitea_title
-                    ? `Credential '${value.elitea_title}' is from a private project and is not available to you. Please create a credential with the same name to use this toolkit.`
-                    : 'Your configuration does not match any available configurations.'}
+                  Your configuration does not match any available configurations.
                 </FormHelperText>
               </FormControl>
             )}
@@ -469,6 +495,7 @@ const CredentialsSelect = memo(
                           >
                             <Box sx={styles.menuItemContent}>{option.label}</Box>
                             {selectedOption &&
+                              option.elitea_title &&
                               option.elitea_title === selectedOption.elitea_title &&
                               option.private === selectedOption.private && (
                                 <Box sx={styles.checkedIconBox}>
@@ -574,15 +601,15 @@ const styles = {
     minHeight: '1.5rem',
     color: ({ palette }) => (selectedOption?.label ? palette.text.secondary : palette.text.disabled),
   }),
-  unmatchedValueBox: mismatch => ({
+  unmatchedValueBox: {
     display: 'flex',
     alignItems: 'center',
     gap: '0.5rem',
-    color: ({ palette }) => (mismatch ? palette.status.rejected : palette.text.secondary),
-  }),
-  unmatchedValueTypography: mismatch => ({
-    color: ({ palette }) => (mismatch ? palette.status.rejected : palette.text.disabled),
-  }),
+    color: ({ palette }) => palette.text.secondary,
+  },
+  unmatchedValueTypography: {
+    color: ({ palette }) => palette.text.secondary,
+  },
   arrowIcon: open => ({
     fontSize: '1rem',
     transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
@@ -602,6 +629,7 @@ const styles = {
   menuItem: (selectedOption, option) => ({
     background: ({ palette }) =>
       selectedOption &&
+      option.elitea_title &&
       option.elitea_title === selectedOption.elitea_title &&
       option.private === selectedOption.private
         ? palette.background.participant.active

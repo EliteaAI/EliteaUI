@@ -1,6 +1,7 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useFormikContext } from 'formik';
+import { useSelector } from 'react-redux';
 
 import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 
@@ -21,6 +22,7 @@ import { PERMISSIONS, PUBLIC_PROJECT_ID, SearchParams, ViewMode } from '@/common
 import { buildErrorMessage } from '@/common/utils';
 import AlertDialog from '@/components/AlertDialog';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
+import CredentialWarningBanner from '@/components/CredentialWarningBanner';
 import EntityIcon from '@/components/EntityIcon';
 import AttentionIcon from '@/components/Icons/AttentionIcon.jsx';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
@@ -56,6 +58,7 @@ const ToolCard = memo(props => {
     projectId,
   });
   const isMcp = tool.meta?.mcp || tool.type === 'mcp';
+  const { personal_project_id } = useSelector(state => state.user);
 
   // Monitor MCP token changes for remote MCP toolkits
   const mcpServerUrl = tool?.settings?.url || '';
@@ -516,7 +519,24 @@ const ToolCard = memo(props => {
           onConfirm={onConfirmAlert}
           confirmButtonText="Remove"
         />
-        {validationInfo && <Banner.BannerMessage message={toolValidationMessage} />}
+        {validationInfo &&
+          (typeof toolValidationMessage === 'object' &&
+          toolValidationMessage?.error_type === 'private_credential_not_found' &&
+          personal_project_id !== projectId ? (
+            <CredentialWarningBanner
+              credentialId={toolValidationMessage.credential_id}
+              credentialType={tool?.type}
+              section="credentials"
+            />
+          ) : (
+            <Banner.BannerMessage
+              message={
+                typeof toolValidationMessage === 'string'
+                  ? toolValidationMessage
+                  : toolValidationMessage?.message || JSON.stringify(toolValidationMessage)
+              }
+            />
+          ))}
       </Box>
     </Tooltip>
   );

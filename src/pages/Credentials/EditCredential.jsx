@@ -141,7 +141,7 @@ const EditCredential = memo(({ title, forceShowTitle }) => {
   }, [configuration, configurationsAsSchema, toolSchema, systemSenderName]);
 
   const onEnableEditTitle = useCallback(() => {
-    setEditCredentialDetail(prev => ({ ...prev, enableEditEliteATitle: true }));
+    setEditCredentialDetail(prev => ({ ...prev, enableEditEliteaTitle: true }));
   }, []);
 
   const credentialDisplayName = useMemo(
