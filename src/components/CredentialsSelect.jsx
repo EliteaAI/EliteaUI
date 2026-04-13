@@ -83,7 +83,7 @@ const CredentialsSelect = memo(
         config =>
           config.elitea_title &&
           config.elitea_title === value.elitea_title &&
-          config.project_id === personal_project_id,
+          (config.project_id === personal_project_id || config.shared),
       );
       return !match;
     }, [value?.private, value?.elitea_title, selectedProjectId, personal_project_id, configurations]);
@@ -213,6 +213,7 @@ const CredentialsSelect = memo(
             elitea_title: configuration.elitea_title || configuration.data?.title,
             private: isConfigurationPersonal,
             settings: configuration.data || {},
+            shared: configuration.shared || false,
             label: (
               <span style={styles.labelContainer}>
                 {isConfigurationPersonal ? (
@@ -275,7 +276,11 @@ const CredentialsSelect = memo(
         }
 
         if (section === 'credentials')
-          return !value?.elitea_title && !value?.private ? savedCredentialsMenuData[0] : null;
+          return (
+            savedCredentialsMenuData.find(
+              option => option.elitea_title && option.elitea_title === value?.elitea_title && option.shared,
+            ) || (!value?.elitea_title && !value?.private ? savedCredentialsMenuData[0] : null)
+          );
 
         return null;
       }
