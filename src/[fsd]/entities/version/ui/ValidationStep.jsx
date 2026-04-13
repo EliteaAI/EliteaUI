@@ -57,7 +57,8 @@ const buildPlainText = (critical_issues = [], warnings = [], recommendations = [
   if (critical_issues.length > 0) {
     parts.push(`Critical Issues (${critical_issues.length})`);
     critical_issues.forEach(i => {
-      parts.push(`  • ${i.field}: ${i.issue}`);
+      const ctx = i.context ? ` [${i.context}]` : '';
+      parts.push(`  \u2022 ${i.field}${ctx}: ${i.issue}`);
       if (i.fix) parts.push(`    Fix: ${i.fix}`);
     });
     parts.push('');
@@ -65,7 +66,8 @@ const buildPlainText = (critical_issues = [], warnings = [], recommendations = [
   if (warnings.length > 0) {
     parts.push(`Warnings (${warnings.length})`);
     warnings.forEach(i => {
-      parts.push(`  • ${i.field}: ${i.issue}`);
+      const ctx = i.context ? ` [${i.context}]` : '';
+      parts.push(`  \u2022 ${i.field}${ctx}: ${i.issue}`);
       if (i.fix) parts.push(`    Fix: ${i.fix}`);
     });
     parts.push('');
@@ -73,7 +75,8 @@ const buildPlainText = (critical_issues = [], warnings = [], recommendations = [
   if (recommendations.length > 0) {
     parts.push(`Suggestions (${recommendations.length})`);
     recommendations.forEach(i => {
-      parts.push(`  • ${i.field}: ${i.suggestion}`);
+      const ctx = i.context ? ` [${i.context}]` : '';
+      parts.push(`  \u2022 ${i.field}${ctx}: ${i.suggestion}`);
     });
     parts.push('');
   }
@@ -340,7 +343,18 @@ const IssueItem = memo(({ item, type }) => (
       sx={{ fontWeight: 600 }}
     >
       {'\u2022 '}
-      {item.field}:
+      {item.field}
+      {item.context && (
+        <Typography
+          component="span"
+          variant="bodySmall"
+          color="text.secondary"
+          sx={styles.issueContext}
+        >
+          {` [${item.context}]`}
+        </Typography>
+      )}
+      :
     </Typography>
     <Typography
       variant="bodySmall"
@@ -456,6 +470,10 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '0.75rem',
+  },
+  issueContext: {
+    fontWeight: 400,
+    opacity: 0.7,
   },
   issueItem: {
     display: 'flex',
