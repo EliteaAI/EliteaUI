@@ -275,11 +275,7 @@ const CredentialsSelect = memo(
         }
 
         if (section === 'credentials')
-          return (
-            savedCredentialsMenuData.find(
-              option => option.elitea_title && option.elitea_title === value?.elitea_title,
-            ) || (!value?.elitea_title && !value?.private ? savedCredentialsMenuData[0] : null)
-          );
+          return !value?.elitea_title && !value?.private ? savedCredentialsMenuData[0] : null;
 
         return null;
       }
