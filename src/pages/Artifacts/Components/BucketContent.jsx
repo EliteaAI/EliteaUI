@@ -130,7 +130,6 @@ const bucketContentStyles = () => ({
   },
   filesContainer: {
     pl: '1.5rem',
-    minWidth: 'max-content',
   },
 });
 
