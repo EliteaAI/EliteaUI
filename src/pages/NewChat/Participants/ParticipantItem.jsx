@@ -525,29 +525,9 @@ const ParticipantItem = memo(props => {
         onClick={isActive ? onClickHandler : undefined}
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
-        sx={{
-          boxSizing: 'border-box',
-          display: 'flex',
-          flexDirection: 'column',
-          padding: '.5rem 1rem',
-          borderWidth: '.0625rem',
-          borderStyle: 'solid',
-          borderColor: `${theme.palette.border.attention}`,
-          borderRadius: '.5rem',
-          backgroundColor: `${theme.palette.background.attention}`,
-          width: '100%',
-          marginTop: '0rem',
-          gap: '.5rem',
-          cursor: isActive ? 'pointer' : 'default',
-        }}
+        sx={styles.attentionWrapper}
       >
-        <Box
-          display="flex"
-          flexDirection="row"
-          gap=".75rem"
-          height="1.75rem"
-          alignItems="center"
-        >
+        <Box sx={styles.attentionHeader}>
           <EntityIcon
             icon={entityIcon}
             entityType={
@@ -560,20 +540,11 @@ const ParticipantItem = memo(props => {
             isActive={isActive}
           />
           {!collapsed && (
-            <Box
-              sx={{
-                flex: 1,
-                maxWidth,
-                display: 'flex',
-                flexDirection: 'row',
-                justifyContent: 'flex-start',
-                alignItems: 'center',
-              }}
-            >
+            <Box sx={styles.attentionNameBox}>
               <Typography
                 variant="bodyMedium"
                 color="text.secondary"
-                sx={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                sx={styles.attentionDisplayName}
               >
                 {displayName}
               </Typography>
@@ -581,13 +552,7 @@ const ParticipantItem = memo(props => {
                 <Typography
                   variant="bodyMedium"
                   color="primary.main"
-                  sx={{
-                    maxWidth: '50%',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpaceCollapse: 'preserve',
-                  }}
+                  sx={styles.attentionEditingText}
                 >
                   {participant.entity_meta?.project_id != PUBLIC_PROJECT_ID ? 'Editing...' : 'Viewing...'}
                 </Typography>
@@ -608,21 +573,14 @@ const ParticipantItem = memo(props => {
             />
           )}
         </Box>
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'row',
-            gap: '.75rem',
-          }}
-        >
-          <AttentionIcon
-            style={{ width: 24, height: 24 }}
-            fill={theme.palette.icon.fill.attention}
-          />
+        <Box sx={styles.attentionMessageRow}>
+          <Box sx={styles.attentionIcon}>
+            <AttentionIcon />
+          </Box>
           <Typography
             variant="bodySmall"
             color="text.attention"
-            sx={{ wordBreak: 'break-word' }}
+            sx={styles.attentionMessage}
           >
             {warningMessage}
           </Typography>
@@ -715,6 +673,66 @@ const participantItemStyles = ({ collapsed, isActive, maxWidth }) => ({
   attachIcon: {
     width: '0.75rem',
     height: '0.75rem',
+  },
+
+  attentionWrapper: ({ palette }) => ({
+    boxSizing: 'border-box',
+    display: 'flex',
+    flexDirection: 'column',
+    padding: '.5rem 1rem',
+    borderWidth: '.0625rem',
+    borderStyle: 'solid',
+    borderColor: palette.border.attention,
+    borderRadius: '.5rem',
+    backgroundColor: palette.background.attention,
+    width: '100%',
+    marginTop: '0rem',
+    gap: '.5rem',
+    cursor: isActive ? 'pointer' : 'default',
+  }),
+  attentionHeader: {
+    display: 'flex',
+    flexDirection: 'row',
+    gap: '.75rem',
+    height: '1.75rem',
+    alignItems: 'center',
+  },
+  attentionNameBox: {
+    flex: 1,
+    maxWidth,
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+  },
+  attentionDisplayName: {
+    flex: 1,
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+  },
+  attentionEditingText: {
+    maxWidth: '50%',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpaceCollapse: 'preserve',
+  },
+  attentionMessageRow: {
+    display: 'flex',
+    flexDirection: 'row',
+    gap: '0.9rem',
+  },
+  attentionIcon: ({ palette }) => ({
+    paddingLeft: '0.25rem',
+    width: '1rem',
+    height: '1rem',
+    '& svg': {
+      fill: palette.icon.fill.attention,
+    },
+  }),
+  attentionMessage: {
+    wordBreak: 'break-word',
   },
 });
 
