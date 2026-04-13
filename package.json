@@ -1,7 +1,7 @@
 {
   "name": "elitea_ui",
   "private": true,
-  "version": "0.4.1488",
+  "version": "0.4.1489",
   "type": "module",
   "homepage": "./elitea_ui/",
   "scripts": {
