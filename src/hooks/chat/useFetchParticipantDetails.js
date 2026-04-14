@@ -79,6 +79,11 @@ const useFetchParticipantDetails = () => {
       switch (type) {
         case ChatParticipantType.Pipelines:
         case ChatParticipantType.Applications: {
+          if (projectId == PUBLIC_PROJECT_ID) {
+            // Published agents: use public_application endpoint (no project membership required)
+            const result = await getPublicApplicationDetail({ applicationId: id });
+            return result?.data?.version_details || {};
+          }
           const result = await getApplicationVersion({ projectId, applicationId: id, versionId });
           return result?.data || {};
         }
@@ -87,7 +92,7 @@ const useFetchParticipantDetails = () => {
       }
       return {};
     },
-    [getApplicationVersion],
+    [getApplicationVersion, getPublicApplicationDetail],
   );
 
   return {

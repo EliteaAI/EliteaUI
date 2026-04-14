@@ -13,7 +13,14 @@ import ApplicationInformation from '@/pages/Applications/Components/Applications
 import ApplicationWelcomeMessage from '@/pages/Applications/Components/Applications/ApplicationWelcomeMessage';
 
 const ApplicationConfigurationForm = memo(props => {
-  const { applicationId, viewMode, containerStyle = {}, isChatView = false, onAttachmentToolChange } = props;
+  const {
+    applicationId,
+    viewMode,
+    containerStyle = {},
+    isChatView = false,
+    onAttachmentToolChange,
+    entityProjectId,
+  } = props;
 
   const isDisabled = useMemo(() => viewMode !== ViewMode.Owner, [viewMode]);
   const styles = useMemo(() => applicationConfigurationFormStyles(isChatView), [isChatView]);
@@ -35,6 +42,7 @@ const ApplicationConfigurationForm = memo(props => {
         applicationId={applicationId}
         disabled={isDisabled}
         onAttachmentToolChange={onAttachmentToolChange}
+        entityProjectId={entityProjectId}
       />
       <ConversationStarters
         disabled={isDisabled}

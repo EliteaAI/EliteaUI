@@ -21,7 +21,7 @@ import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/
 import { LayoutHelpers, ParsePipelineHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
 import { DEFAULT_REASONING_EFFORT } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
-import { useGetApplicationVersionDetailQuery } from '@/api/applications';
+import { useGetApplicationVersionDetailQuery, usePublicApplicationDetailsQuery } from '@/api/applications';
 import FlowIcon from '@/assets/flow-icon.svg?react';
 import { ChatParticipantType, PERMISSIONS, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants.js';
 import GearIcon from '@/components/Icons/GearIcon.jsx';
@@ -48,8 +48,16 @@ const getPipelineId = pipeline => {
 };
 
 const PipelineEditorContent = memo(props => {
-  const { isCreateMode, viewMode, canEditIt, isPublic, pipelineId, projectId, handleAttachmentToolChange } =
-    props;
+  const {
+    isCreateMode,
+    viewMode,
+    canEditIt,
+    isPublic,
+    pipelineId,
+    projectId,
+    handleAttachmentToolChange,
+    entityProjectId,
+  } = props;
   const { setFieldValue } = useFormikContext();
   const styles = getStyles();
 
@@ -82,6 +90,7 @@ const PipelineEditorContent = memo(props => {
         containerStyle={styles.configForm}
         hidePythonSandbox
         onAttachmentToolChange={handleAttachmentToolChange}
+        entityProjectId={entityProjectId}
       />
     </ContentContainer>
   );
@@ -183,19 +192,33 @@ const PipelineEditor = forwardRef(
     const { initialValues: createInitialValues } = useCreateApplicationInitialValues(true); // true for pipeline
 
     // Fetch version details in edit mode only
+    const isPublishedPipeline = pipeline?.entity_meta?.project_id == PUBLIC_PROJECT_ID;
     const {
-      data: versionDetails,
-      error,
-      refetch: refetchVersionDetails,
+      data: privateVersionDetails,
+      error: privateError,
+      refetch: refetchPrivateVersionDetails,
     } = useGetApplicationVersionDetailQuery(
-      projectId && pipelineId && versionId && isVisible && !isCreateMode
+      projectId && pipelineId && versionId && isVisible && !isCreateMode && !isPublishedPipeline
         ? { projectId: pipeline.entity_meta?.project_id || projectId, applicationId: pipelineId, versionId }
         : { skip: true },
       {
-        skip: !isVisible || !projectId || !pipelineId || !versionId || isCreateMode,
-        refetchOnMountOrArgChange: true, // Force refetch when arguments change
+        skip: !isVisible || !projectId || !pipelineId || !versionId || isCreateMode || isPublishedPipeline,
+        refetchOnMountOrArgChange: true,
       },
     );
+    const {
+      data: publicAppDetails,
+      error: publicError,
+      refetch: refetchPublicAppDetails,
+    } = usePublicApplicationDetailsQuery(
+      { applicationId: pipelineId },
+      { skip: !isVisible || !pipelineId || !isPublishedPipeline || isCreateMode },
+    );
+    const versionDetails = isPublishedPipeline ? publicAppDetails : privateVersionDetails;
+    const error = isPublishedPipeline ? publicError : privateError;
+    const refetchVersionDetails = isPublishedPipeline
+      ? refetchPublicAppDetails
+      : refetchPrivateVersionDetails;
     const { refetchAgentVersionDetailsOnClose } = useRefetchAgentVersionDetailsOnClose({
       refetchVersionDetails,
     });
@@ -449,7 +472,7 @@ const PipelineEditor = forwardRef(
         >
           <ApplicationValidator
             agentId={pipelineId}
-            projectId={projectId}
+            projectId={pipeline?.entity_meta?.project_id || projectId}
             isCreateMode={isCreateMode}
           />
 
@@ -463,6 +486,7 @@ const PipelineEditor = forwardRef(
               pipelineId={pipelineId}
               projectId={projectId}
               handleAttachmentToolChange={handleAttachmentToolChange}
+              entityProjectId={pipeline?.entity_meta?.project_id}
             />
           )}
 

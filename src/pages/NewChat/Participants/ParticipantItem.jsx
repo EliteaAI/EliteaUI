@@ -160,9 +160,12 @@ const ParticipantItem = memo(props => {
     return originalDetails?.name || entity_meta?.name || participantName || 'Participant Name';
   }, [originalDetails?.name, entity_meta?.name, participantName]);
 
+  const isPublishedParticipant = entity_meta?.project_id == PUBLIC_PROJECT_ID;
+
   useValidateApplicationVersion(
-    (participant.entity_name === ChatParticipantType.Applications ||
-      participant.entity_name === ChatParticipantType.Pipelines) &&
+    !isPublishedParticipant &&
+      (participant.entity_name === ChatParticipantType.Applications ||
+        participant.entity_name === ChatParticipantType.Pipelines) &&
       originalDetails?.version_details?.tools
       ? {
           applicationId: entity_meta?.id,
@@ -173,10 +176,10 @@ const ParticipantItem = memo(props => {
   );
 
   const { totalValidationInfo } = useToolsValidationInfo({
-    applicationId: entity_meta?.id,
+    applicationId: isPublishedParticipant ? undefined : entity_meta?.id,
     projectId: entity_meta?.project_id,
     versionId: participant.entity_settings?.version_id,
-    tools: originalDetails?.version_details?.tools || [],
+    tools: isPublishedParticipant ? [] : originalDetails?.version_details?.tools || [],
   });
 
   useValidateToolkit(

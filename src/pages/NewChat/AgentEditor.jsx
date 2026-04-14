@@ -5,7 +5,7 @@ import { useFormikContext } from 'formik';
 import { useTrackEvent } from '@/GA';
 import useRefetchAgentVersionDetailsOnClose from '@/[fsd]/features/chat/lib/hooks/useRefetchAgentVersionDetailsOnClose';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
-import { useGetApplicationVersionDetailQuery } from '@/api/applications';
+import { useGetApplicationVersionDetailQuery, usePublicApplicationDetailsQuery } from '@/api/applications';
 import { ChatParticipantType, PERMISSIONS, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants.js';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -27,7 +27,16 @@ const getAgentId = agent => {
 };
 
 const AgentEditorContent = memo(
-  ({ agentId, projectId, isCreateMode, canEditIt, viewMode, handleAttachmentToolChange, isPublic }) => {
+  ({
+    agentId,
+    projectId,
+    isCreateMode,
+    canEditIt,
+    viewMode,
+    handleAttachmentToolChange,
+    isPublic,
+    entityProjectId,
+  }) => {
     const { setFieldValue } = useFormikContext();
     const styles = getStyles();
 
@@ -46,7 +55,7 @@ const AgentEditorContent = memo(
       <>
         <ApplicationValidator
           agentId={agentId}
-          projectId={projectId}
+          projectId={entityProjectId || projectId}
           isCreateMode={isCreateMode}
         />
         <ContentContainer height="100%">
@@ -68,6 +77,7 @@ const AgentEditorContent = memo(
               isChatView={true}
               viewMode={viewMode}
               onAttachmentToolChange={handleAttachmentToolChange}
+              entityProjectId={entityProjectId}
             />
           )}
         </ContentContainer>
@@ -109,16 +119,28 @@ const AgentEditor = memo(
     const { initialValues: createInitialValues } = useCreateApplicationInitialValues();
 
     // Only fetch details when the editor is visible and we have required IDs (edit mode only)
+    const isPublishedAgent = agent?.entity_meta?.project_id == PUBLIC_PROJECT_ID;
     const {
-      data: versionDetails,
-      error,
-      refetch: refetchVersionDetails,
+      data: privateVersionDetails,
+      error: privateError,
+      refetch: refetchPrivateVersionDetails,
     } = useGetApplicationVersionDetailQuery(
-      projectId && agentId && versionId && isVisible && !isCreateMode
+      projectId && agentId && versionId && isVisible && !isCreateMode && !isPublishedAgent
         ? { projectId: agent.entity_meta?.project_id || projectId, applicationId: agentId, versionId }
         : { skip: true },
-      { skip: !isVisible || !projectId || !agentId || !versionId || isCreateMode },
+      { skip: !isVisible || !projectId || !agentId || !versionId || isCreateMode || isPublishedAgent },
     );
+    const {
+      data: publicAppDetails,
+      error: publicError,
+      refetch: refetchPublicAppDetails,
+    } = usePublicApplicationDetailsQuery(
+      { applicationId: agentId },
+      { skip: !isVisible || !agentId || !isPublishedAgent || isCreateMode },
+    );
+    const versionDetails = isPublishedAgent ? publicAppDetails : privateVersionDetails;
+    const error = isPublishedAgent ? publicError : privateError;
+    const refetchVersionDetails = isPublishedAgent ? refetchPublicAppDetails : refetchPrivateVersionDetails;
     const { refetchAgentVersionDetailsOnClose } = useRefetchAgentVersionDetailsOnClose({
       refetchVersionDetails,
     });
@@ -284,6 +306,7 @@ const AgentEditor = memo(
             viewMode={viewMode}
             handleAttachmentToolChange={handleAttachmentToolChange}
             isPublic={isPublic}
+            entityProjectId={agent?.entity_meta?.project_id}
           />
         </BaseEditor>
       </FileReaderEnhancerRefContext.Provider>

@@ -45,11 +45,13 @@ import EnhancedCardToolActions from './CardActions/EnhancedCardToolActions.jsx';
 import BaseCardBody from './CardBodies/BaseCardBody.jsx';
 
 const ToolCard = memo(props => {
-  const { tool, index, applicationId, disabled, isDuplicate, onDeleteAttachmentTool } = props;
+  const { tool, index, applicationId, disabled, isDuplicate, onDeleteAttachmentTool, entityProjectId } =
+    props;
   const theme = useTheme();
   const [openAlert, setOpenAlert] = useState(false);
   const { toastError } = useToast();
-  const projectId = useSelectedProjectId();
+  const selectedProjectId = useSelectedProjectId();
+  const projectId = entityProjectId || selectedProjectId;
   const { checkPermission } = useCheckPermission();
   const viewModeFromUrl = useSearchParamValue('ViewMode');
   const [showActions, setShowActions] = useState(false);
@@ -365,6 +367,8 @@ const ToolCard = memo(props => {
                 tool={tool}
                 index={index}
                 applicationId={applicationId}
+                disabled={disabled}
+                entityProjectId={entityProjectId}
               />
             )}
 

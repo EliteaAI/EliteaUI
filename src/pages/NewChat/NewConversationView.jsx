@@ -249,30 +249,35 @@ const NewConversationView = forwardRef(
       [activeConversation?.name],
     );
 
+    const selectedParticipantProjectId =
+      selectedParticipant?.entity_meta?.project_id || selectedParticipant?.project_id;
+    const isPublishedParticipant = selectedParticipantProjectId == PUBLIC_PROJECT_ID;
+
     useValidateApplicationVersion(
-      (selectedParticipant?.entity_name === ChatParticipantType.Applications ||
-        selectedParticipant?.entity_name === ChatParticipantType.Pipelines) &&
+      !isPublishedParticipant &&
+        (selectedParticipant?.entity_name === ChatParticipantType.Applications ||
+          selectedParticipant?.entity_name === ChatParticipantType.Pipelines) &&
         selectedParticipant?.version_details?.tools
         ? {
             applicationId: selectedParticipant?.id,
-            projectId: selectedParticipant?.project_id,
+            projectId: selectedParticipantProjectId,
             versionId: selectedParticipant?.entity_settings?.version_id,
           }
         : {},
     );
 
     const { totalValidationInfo } = useToolsValidationInfo({
-      applicationId: selectedParticipant?.id,
-      projectId: selectedParticipant?.project_id,
+      applicationId: isPublishedParticipant ? undefined : selectedParticipant?.id,
+      projectId: selectedParticipantProjectId,
       versionId: selectedParticipant?.entity_settings?.version_id,
-      tools: selectedParticipant?.version_details?.tools || [],
+      tools: isPublishedParticipant ? [] : selectedParticipant?.version_details?.tools || [],
     });
 
     useValidateToolkit(
       selectedParticipant?.entity_name === ChatParticipantType.Toolkits
         ? {
             toolkitId: selectedParticipant?.id,
-            projectId: selectedParticipant?.project_id,
+            projectId: selectedParticipant?.entity_meta?.project_id || selectedParticipant?.project_id,
             forceSkip: selectedParticipant?.entity_name !== ChatParticipantType.Toolkits,
           }
         : {},
@@ -281,7 +286,7 @@ const NewConversationView = forwardRef(
     const { toolkitValidationInfoList } = useToolkitValidationInfo(
       selectedParticipant?.entity_name === ChatParticipantType.Toolkits
         ? {
-            projectId: selectedParticipant?.project_id,
+            projectId: selectedParticipant?.entity_meta?.project_id || selectedParticipant?.project_id,
             toolkitId: selectedParticipant?.id,
           }
         : {},
@@ -449,7 +454,9 @@ const NewConversationView = forwardRef(
           selectedParticipant?.participantType,
           selectedParticipant?.id,
           version.id,
-          selectedParticipant?.project_id || selectedProjectId,
+          selectedParticipant?.entity_meta?.project_id ||
+            selectedParticipant?.project_id ||
+            selectedProjectId,
         );
         const updatedParticipant = {
           ...(selectedParticipant || {}),
