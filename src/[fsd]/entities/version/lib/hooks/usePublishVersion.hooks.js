@@ -14,6 +14,8 @@ import { useIsFromPipelineDetail } from '@/hooks/useIsFromSpecificPageHooks';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 
+const MAX_AI_RETRIES = 2;
+
 export const usePublishVersion = onSuccess => {
   const { version: versionId, tab } = useParams();
   const trackEvent = useTrackEvent();
@@ -97,11 +99,26 @@ export const usePublishVersion = onSuccess => {
     resetState();
   }, [resetState]);
 
+  const callWithAIRetry = useCallback(async (mutationTrigger, args) => {
+    let result;
+    for (let attempt = 0; attempt <= MAX_AI_RETRIES; attempt++) {
+      result = await mutationTrigger(args);
+      if (
+        !result.error ||
+        result.error.status !== 400 ||
+        result.error.data?.error !== 'ai_validation_failed'
+      ) {
+        return result;
+      }
+    }
+    return result;
+  }, []);
+
   const handleContinue = useCallback(async () => {
     setPublishError(null);
     setStep(PUBLISH_STEPS.VALIDATION);
 
-    const { data, error } = await validateForPublish({
+    const { data, error } = await callWithAIRetry(validateForPublish, {
       projectId,
       versionId: currentVersionId,
       body: { version_name: versionName },
@@ -130,7 +147,7 @@ export const usePublishVersion = onSuccess => {
       setValidationResult(data);
       setValidationToken(data.validation_token);
     }
-  }, [projectId, currentVersionId, versionName, validateForPublish, toastError]);
+  }, [projectId, currentVersionId, versionName, validateForPublish, callWithAIRetry, toastError]);
 
   const handlePublish = useCallback(async () => {
     setPublishError(null);
@@ -138,7 +155,7 @@ export const usePublishVersion = onSuccess => {
       setStep(PUBLISH_STEPS.PUBLISHING);
     }
 
-    const { data, error } = await publish({
+    const { data, error } = await callWithAIRetry(publish, {
       projectId,
       versionId: currentVersionId,
       body: {
@@ -178,6 +195,7 @@ export const usePublishVersion = onSuccess => {
     validationToken,
     isAdminPublish,
     publish,
+    callWithAIRetry,
     toastSuccess,
     toastWarning,
     trackEvent,
