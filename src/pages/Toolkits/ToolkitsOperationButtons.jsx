@@ -7,8 +7,8 @@ import { Button, Typography } from '@mui/material';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 
-import { useCredentialWarning } from '@/[fsd]/shared/lib/hooks/useCredentialWarning';
-import { CredentialWarningModal } from '@/[fsd]/shared/ui/modal/credential-warning';
+import { useCredentialWarning } from '@/[fsd]/entities/credential-warning/hooks';
+import { CredentialWarningModal } from '@/[fsd]/entities/credential-warning/ui';
 import { eliteaApi } from '@/api/eliteaApi.js';
 import { useToolkitEditMutation } from '@/api/toolkits.js';
 import eventEmitter from '@/common/eventEmitter';

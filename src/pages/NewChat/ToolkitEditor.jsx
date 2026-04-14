@@ -3,13 +3,13 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Box, Typography } from '@mui/material';
 
 import { useTrackEvent } from '@/GA';
+import { useCredentialWarning } from '@/[fsd]/entities/credential-warning/hooks';
+import { CredentialWarningModal } from '@/[fsd]/entities/credential-warning/ui';
 import { usePublicProjectAccessCheck } from '@/[fsd]/features/project/lib/hooks';
 // TODO: DELETE after migration period (Q1 2026) - Legacy OpenAPI toolkit migration
 import { LegacyOpenApiMigration } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
-import { useCredentialWarning } from '@/[fsd]/shared/lib/hooks/useCredentialWarning';
-import { CredentialWarningModal } from '@/[fsd]/shared/ui/modal/credential-warning';
 import { useToolkitsDetailsQuery } from '@/api/toolkits';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';

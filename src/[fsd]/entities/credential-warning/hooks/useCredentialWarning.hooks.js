@@ -1,30 +1,20 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 
-import { useSelector } from 'react-redux';
+import { CredentialWarningHelpers } from '@/[fsd]/entities/credential-warning/helpers';
+import { useProjectType } from '@/[fsd]/shared/lib/hooks';
 
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-
-import { hasCredentialConfigChanged, revertCredentialFields } from '../helpers/credentialWarning';
-
-export const useCredentialWarning = ({
-  isCreating = false,
-  editToolDetail,
-  originalDetails,
-  revertCredentialsRef,
-  setEditToolDetail,
-} = {}) => {
+export const useCredentialWarning = (props = {}) => {
+  const {
+    isCreating = false,
+    editToolDetail,
+    originalDetails,
+    revertCredentialsRef,
+    setEditToolDetail,
+  } = props;
   const [showCredentialWarning, setShowCredentialWarning] = useState(false);
   const [pendingSaveAction, setPendingSaveAction] = useState(null);
 
-  const { personal_project_id } = useSelector(state => state.user);
-  const projectId = useSelectedProjectId();
-
-  // Check if this is a team project (not personal)
-  const isTeamProject = useMemo(
-    () =>
-      personal_project_id != null && projectId != null && String(projectId) !== String(personal_project_id),
-    [projectId, personal_project_id],
-  );
+  const { isTeam: isTeamProject } = useProjectType();
 
   const onConfirmCredentialWarning = useCallback(() => {
     setShowCredentialWarning(false);
@@ -50,7 +40,7 @@ export const useCredentialWarning = ({
 
     // Also revert credential fields in editToolDetail state (for ToolkitEditor)
     if (setEditToolDetail && originalDetails && editToolDetail) {
-      const reverted = revertCredentialFields(editToolDetail, originalDetails);
+      const reverted = CredentialWarningHelpers.revertCredentialFields(editToolDetail, originalDetails);
       setEditToolDetail(reverted);
     }
   }, [revertCredentialsRef, originalDetails, editToolDetail, setEditToolDetail]);
@@ -58,7 +48,11 @@ export const useCredentialWarning = ({
   const checkBeforeSave = useCallback(
     saveAction => {
       // Only check in edit mode (not creation) and for team projects
-      if (!isCreating && isTeamProject && hasCredentialConfigChanged(editToolDetail, originalDetails)) {
+      if (
+        !isCreating &&
+        isTeamProject &&
+        CredentialWarningHelpers.hasCredentialConfigChanged(editToolDetail, originalDetails)
+      ) {
         setPendingSaveAction(() => saveAction);
         setShowCredentialWarning(true);
         return false; // Don't proceed yet, show warning first

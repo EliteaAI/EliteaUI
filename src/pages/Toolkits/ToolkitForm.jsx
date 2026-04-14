@@ -395,7 +395,8 @@ export const ToolkitForm = memo(props => {
     if (revertCredentialsRef) {
       revertCredentialsRef.current = onRevertCredentials;
     }
-  }, [revertCredentialsRef, onRevertCredentials]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onRevertCredentials]);
 
   useEffect(() => {
     if (

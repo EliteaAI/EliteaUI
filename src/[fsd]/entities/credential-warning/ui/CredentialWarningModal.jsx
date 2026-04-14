@@ -1,20 +1,19 @@
 import { memo } from 'react';
 
-import { Box, Typography } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 
+import BaseModal from '@/[fsd]/shared/ui/modal/BaseModal';
 import ErrorIcon from '@/assets/error-icon.svg?react';
-import AlertDialog from '@/components/AlertDialog';
 
-const CredentialWarningModal = memo(({ open, onConfirm, onCancel, onClose }) => {
+const CredentialWarningModal = memo(props => {
+  const { open, onConfirm, onCancel, onClose } = props;
+
   return (
-    <AlertDialog
-      alarm
+    <BaseModal
       open={open}
       onClose={onClose}
-      onCancel={onCancel}
-      onConfirm={onConfirm}
       title={
-        <Box sx={styles.container}>
+        <Box sx={styles.titleContainer}>
           <Box
             component={ErrorIcon}
             sx={styles.icon}
@@ -22,14 +21,32 @@ const CredentialWarningModal = memo(({ open, onConfirm, onCancel, onClose }) => 
           <Typography variant="headingSmall">Credential Configuration Change</Typography>
         </Box>
       }
-      alertContent={
+      content={
         <Typography variant="bodyMedium">
           Changing the credential may make this toolkit non-operational for other team members who do not have
           a matching Private credential. Make this decision considering the potential impact on your team.
         </Typography>
       }
-      confirmButtonText="Confirm Change"
-      cancelButtonText="Discard Change"
+      actions={
+        <>
+          <Button
+            variant="elitea"
+            color="secondary"
+            onClick={onCancel}
+            disableRipple
+          >
+            Discard changes
+          </Button>
+          <Button
+            variant="elitea"
+            color="alarm"
+            onClick={onConfirm}
+            disableRipple
+          >
+            Confirm changes
+          </Button>
+        </>
+      }
     />
   );
 });
@@ -40,7 +57,7 @@ export default CredentialWarningModal;
 
 /** @type {MuiSx} */
 const styles = {
-  container: {
+  titleContainer: {
     display: 'flex',
     alignItems: 'center',
     gap: '0.5rem',

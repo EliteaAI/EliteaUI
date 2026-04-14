@@ -1,1 +1,0 @@
-export { CredentialWarningModal } from './CredentialWarningModal';
