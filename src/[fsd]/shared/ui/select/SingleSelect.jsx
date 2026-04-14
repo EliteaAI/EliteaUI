@@ -339,8 +339,7 @@ const SingleSelect = memo(props => {
                 >
                   <Box sx={styles.groupHeaderRow}>
                     <Typography
-                      variant="labelMedium"
-                      color="textSecondary"
+                      variant="labelSmall"
                       sx={styles.groupHeaderTitle}
                     >
                       {group.title}
@@ -754,10 +753,11 @@ const singleSelectStyles = (theme, { customSelectedColor, customSelectedFontSize
       borderTop: `1px solid ${palette.border.lines}`,
     },
   }),
-  groupHeaderTitle: {
+  groupHeaderTitle: ({ palette }) => ({
     textTransform: 'uppercase',
     padding: '0.125rem 0',
-  },
+    color: palette.text.default,
+  }),
   groupHeaderRow: {
     display: 'flex',
     alignItems: 'center',

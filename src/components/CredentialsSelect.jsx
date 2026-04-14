@@ -27,8 +27,10 @@ const credentialMenuItemValue = Object.freeze({
   kindCreateAction: 'create_action',
 });
 
+const isBlankEliteaTitle = title => title == null || String(title).trim() === '';
+
 const savedRowToSelectValue = row => {
-  if (!row?.elitea_title) return '';
+  if (isBlankEliteaTitle(row?.elitea_title)) return '';
   return JSON.stringify({
     [credentialMenuItemValue.keyKind]: credentialMenuItemValue.kindSaved,
     [credentialMenuItemValue.keyEliteaTitle]: row.elitea_title,
@@ -43,6 +45,7 @@ const selectValueToSavedRow = str => {
     if (payload?.[credentialMenuItemValue.keyKind] !== credentialMenuItemValue.kindSaved) return null;
     const title = payload[credentialMenuItemValue.keyEliteaTitle];
     if (typeof title !== 'string') return null;
+    if (isBlankEliteaTitle(title)) return null;
     return {
       elitea_title: title,
       private: !!payload[credentialMenuItemValue.keyPrivate],
@@ -112,7 +115,12 @@ const CredentialsSelect = memo(
     );
 
     const mismatchedPrivateCredential = useMemo(() => {
-      if (!value?.private || !value?.elitea_title || selectedProjectId === personal_project_id) return false;
+      if (
+        !value?.private ||
+        isBlankEliteaTitle(value?.elitea_title) ||
+        selectedProjectId === personal_project_id
+      )
+        return false;
       const match = configurations.find(
         config =>
           config.elitea_title &&
@@ -291,7 +299,8 @@ const CredentialsSelect = memo(
           return (
             savedCredentialsMenuData.find(
               option => option.elitea_title && option.elitea_title === value?.elitea_title && option.shared,
-            ) || (!value?.elitea_title && !value?.private ? savedCredentialsMenuData[0] : null)
+            ) ||
+            (isBlankEliteaTitle(value?.elitea_title) && !value?.private ? savedCredentialsMenuData[0] : null)
           );
 
         return null;
@@ -305,7 +314,7 @@ const CredentialsSelect = memo(
     useEffect(() => {
       if (!hasFetchedData || !selectedOption) return;
 
-      const isDefaultAutoSelected = selectedOption && !value?.elitea_title;
+      const isDefaultAutoSelected = selectedOption && isBlankEliteaTitle(value?.elitea_title);
 
       if (isDefaultAutoSelected && !hasAutoSelectedRef.current) {
         hasAutoSelectedRef.current = true;
@@ -369,10 +378,9 @@ const CredentialsSelect = memo(
           placement="top"
         >
           <IconButton
-            variant="alita"
-            color="tertiary"
             size="small"
             onClick={onRefresh}
+            sx={({ palette }) => ({ color: palette.text.default })}
           >
             <RefreshIcon />
           </IconButton>
@@ -439,31 +447,7 @@ const CredentialsSelect = memo(
 
     const customRenderSelectValue = useCallback(
       foundOption => {
-        if (!foundOption) {
-          return (
-            <Box sx={styles.unmatchedValueBox(value?.elitea_title && hasFetchedData)}>
-              {value?.elitea_title ? (
-                value?.private ? (
-                  <Person
-                    key="person-icon"
-                    fontSize="1rem"
-                  />
-                ) : (
-                  <BriefcaseIcon
-                    key="briefcase-icon"
-                    fontSize="1rem"
-                  />
-                )
-              ) : null}
-              <Typography
-                variant="labelMedium"
-                sx={styles.unmatchedValueTypography(value?.elitea_title && hasFetchedData)}
-              >
-                {!value?.elitea_title ? 'Select credentials' : value.elitea_title}
-              </Typography>
-            </Box>
-          );
-        }
+        if (!foundOption) return null;
 
         const row = foundOption?.meta ?? foundOption;
         if (renderValue) return renderValue(row);
@@ -476,7 +460,7 @@ const CredentialsSelect = memo(
           </Typography>
         );
       },
-      [renderValue, value, hasFetchedData],
+      [renderValue],
     );
 
     const labelNode = useMemo(() => {
@@ -491,7 +475,6 @@ const CredentialsSelect = memo(
           }}
         >
           {label}
-          {required && <span> *</span>}
           <Box
             component="span"
             sx={{ marginLeft: '0.15rem', ':hover': { opacity: 0.8 } }}
@@ -513,11 +496,13 @@ const CredentialsSelect = memo(
           </Box>
         </InputLabel>
       );
-    }, [description, label, required]);
+    }, [description, label]);
 
     const selectError = error || mismatchedPrivateCredential;
 
-    const showMismatchFooter = Boolean(value && !selectedOption && hasFetchedData);
+    const showMismatchFooter = Boolean(
+      value && !isBlankEliteaTitle(value?.elitea_title) && !selectedOption && hasFetchedData,
+    );
 
     return (
       <Box sx={[{ marginTop: '0.75rem' }, sx]}>
