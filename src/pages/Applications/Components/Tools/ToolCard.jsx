@@ -529,25 +529,25 @@ const ToolCard = memo(props => {
           onConfirm={onConfirmAlert}
           confirmButtonText="Remove"
         />
-        {validationInfo &&
-          (typeof toolValidationMessage === 'object' &&
-          toolValidationMessage?.error_type === 'private_credential_not_found' &&
-          personal_project_id !== projectId ? (
-            <CredentialWarningBanner
-              credentialId={toolValidationMessage.credential_id}
-              credentialType={tool?.type}
-              section="credentials"
-            />
-          ) : (
-            <Banner.BannerMessage
-              message={
-                typeof toolValidationMessage === 'string'
-                  ? toolValidationMessage
-                  : toolValidationMessage?.message || JSON.stringify(toolValidationMessage)
-              }
-            />
-          ))}
       </Box>
+      {validationInfo &&
+        (typeof toolValidationMessage === 'object' &&
+        toolValidationMessage?.error_type === 'private_credential_not_found' &&
+        personal_project_id !== projectId ? (
+          <CredentialWarningBanner
+            credentialId={toolValidationMessage.credential_id}
+            credentialType={tool?.type}
+            section="credentials"
+          />
+        ) : (
+          <Banner.BannerMessage
+            message={
+              typeof toolValidationMessage === 'string'
+                ? toolValidationMessage
+                : toolValidationMessage?.message || JSON.stringify(toolValidationMessage)
+            }
+          />
+        ))}
     </Tooltip>
   );
 });
