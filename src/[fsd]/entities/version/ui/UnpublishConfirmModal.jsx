@@ -5,87 +5,112 @@ import { Button, DialogContent, DialogTitle, IconButton, TextField, Typography }
 import CloseIcon from '@/components/Icons/CloseIcon';
 import { StyledDialog, StyledDialogActions } from '@/components/StyledDialog';
 
-const UnpublishConfirmModal = memo(({ open, onClose, onConfirm, isLoading, showReason = false }) => {
-  const [reason, setReason] = useState('');
+const UnpublishConfirmModal = memo(
+  ({ open, onClose, onConfirm, isLoading, showReason = false, agentName, versionName }) => {
+    const [reason, setReason] = useState('');
 
-  const handleConfirm = useCallback(() => {
-    onConfirm(showReason ? reason.trim() || undefined : undefined);
-    setReason('');
-  }, [onConfirm, reason, showReason]);
+    const handleConfirm = useCallback(() => {
+      onConfirm(showReason ? reason.trim() || undefined : undefined);
+      setReason('');
+    }, [onConfirm, reason, showReason]);
 
-  const handleClose = useCallback(() => {
-    setReason('');
-    onClose();
-  }, [onClose]);
+    const handleClose = useCallback(() => {
+      setReason('');
+      onClose();
+    }, [onClose]);
 
-  const handleKeyDown = useCallback(
-    event => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        handleClose();
-      }
-    },
-    [handleClose],
-  );
+    const handleKeyDown = useCallback(
+      event => {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          handleClose();
+        }
+      },
+      [handleClose],
+    );
 
-  return (
-    <StyledDialog
-      open={!!open}
-      onClose={handleClose}
-      onKeyDown={handleKeyDown}
-      aria-labelledby="unpublish-dialog-title"
-    >
-      <DialogTitle
-        id="unpublish-dialog-title"
-        sx={styles.dialogTitle}
+    return (
+      <StyledDialog
+        open={!!open}
+        onClose={handleClose}
+        onKeyDown={handleKeyDown}
+        aria-labelledby="unpublish-dialog-title"
       >
-        <Typography
-          variant="headingSmall"
-          color="text.secondary"
+        <DialogTitle
+          id="unpublish-dialog-title"
+          sx={styles.dialogTitle}
         >
-          Unpublish Agent
-        </Typography>
-        <IconButton
-          variant="elitea"
-          color="tertiary"
-          aria-label="close"
-          onClick={handleClose}
-          sx={{ padding: 0, margin: 0 }}
-        >
-          <CloseIcon sx={{ fontSize: '1rem' }} />
-        </IconButton>
-      </DialogTitle>
-      <DialogContent sx={styles.dialogContent}>
-        {showReason && (
-          <TextField
-            fullWidth
-            variant="standard"
-            label="Reason"
-            placeholder="Provide clear explanation for the unpublishing decision."
-            value={reason}
-            onChange={e => setReason(e.target.value)}
-            autoComplete="off"
-          />
-        )}
-      </DialogContent>
-      <StyledDialogActions>
-        <Button
-          variant="secondary"
-          onClick={handleClose}
-        >
-          Cancel
-        </Button>
-        <Button
-          variant="contained"
-          onClick={handleConfirm}
-          disabled={isLoading}
-        >
-          Unpublish
-        </Button>
-      </StyledDialogActions>
-    </StyledDialog>
-  );
-});
+          <Typography
+            variant="headingSmall"
+            color="text.secondary"
+          >
+            Unpublish Agent
+          </Typography>
+          <IconButton
+            variant="elitea"
+            color="tertiary"
+            aria-label="close"
+            onClick={handleClose}
+            sx={{ padding: 0, margin: 0 }}
+          >
+            <CloseIcon sx={{ fontSize: '1rem' }} />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={styles.dialogContent}>
+          {showReason ? (
+            <TextField
+              fullWidth
+              variant="standard"
+              label="Reason"
+              placeholder="Provide clear explanation for the unpublishing decision."
+              value={reason}
+              onChange={e => setReason(e.target.value)}
+              autoComplete="off"
+            />
+          ) : (
+            <Typography
+              variant="bodyMedium"
+              color="text.secondary"
+            >
+              {'Are you sure you want to unpublish '}
+              <Typography
+                component="span"
+                variant="headingSmall"
+              >
+                {agentName}
+              </Typography>
+              {' (version: '}
+              <Typography
+                component="span"
+                variant="headingSmall"
+              >
+                {versionName}
+              </Typography>
+              {
+                ')? The agent will be removed from Agents Studio immediately. Existing conversations using this agent version may be affected.'
+              }
+            </Typography>
+          )}
+        </DialogContent>
+        <StyledDialogActions>
+          <Button
+            variant="secondary"
+            onClick={handleClose}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleConfirm}
+            disabled={isLoading}
+          >
+            Unpublish
+          </Button>
+        </StyledDialogActions>
+      </StyledDialog>
+    );
+  },
+);
 
 UnpublishConfirmModal.displayName = 'UnpublishConfirmModal';
 

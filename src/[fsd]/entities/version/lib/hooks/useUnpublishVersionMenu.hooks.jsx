@@ -36,7 +36,7 @@ export const useUnpublishVersionMenu = onSuccess => {
     values: {
       id: applicationId,
       name: agentName,
-      version_details: { id: versionIdFromDetail, status: versionStatus } = {},
+      version_details: { id: versionIdFromDetail, name: versionName, status: versionStatus } = {},
     } = {},
   } = useFormikContext();
 
@@ -146,9 +146,19 @@ export const useUnpublishVersionMenu = onSuccess => {
         onConfirm={handleConfirmUnpublish}
         isLoading={isUnpublishingVersion}
         showReason={isAdminContext}
+        agentName={agentName}
+        versionName={versionName}
       />
     ),
-    [showConfirm, handleCancelConfirm, handleConfirmUnpublish, isUnpublishingVersion, isAdminContext],
+    [
+      showConfirm,
+      handleCancelConfirm,
+      handleConfirmUnpublish,
+      isUnpublishingVersion,
+      isAdminContext,
+      agentName,
+      versionName,
+    ],
   );
 
   return {
