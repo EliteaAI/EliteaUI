@@ -108,7 +108,13 @@ const ToolCard = memo(props => {
     toolId: tool.id,
     tool,
   });
-  const { doValidateVersion } = useManualValidateApplicationVersion({ applicationId, projectId, versionId });
+  const { doValidateVersion } = useManualValidateApplicationVersion({
+    applicationId,
+    projectId,
+    versionId,
+    tools: values?.version_details?.tools || [],
+    toolId: tool.id,
+  });
 
   const isAttachmentToolkit = useMemo(
     () => tool.id && values?.version_details?.meta?.attachment_toolkit_id === tool.id,

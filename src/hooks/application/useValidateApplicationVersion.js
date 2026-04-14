@@ -25,7 +25,7 @@ const getSubAgentValidationKey = (projectId, tool) => {
 };
 
 const extractValidationInfo = ({ error, toastError, dispatch, applicationId, projectId, versionId }) => {
-  if (error?.status !== 400) {
+  if (error?.status && error.status !== 400) {
     toastError(buildErrorMessage(error));
   }
   dispatch(
@@ -33,7 +33,7 @@ const extractValidationInfo = ({ error, toastError, dispatch, applicationId, pro
       applicationId,
       projectId,
       versionId,
-      validationInfo: error.data?.toolkit_errors || [],
+      validationInfo: error?.data?.toolkit_errors || [],
     }),
   );
 };
@@ -64,10 +64,26 @@ export default function useValidateApplicationVersion({
   }, [isError, error, toastError, dispatch, applicationId, projectId, versionId]);
 }
 
-export const useManualValidateApplicationVersion = ({ applicationId, projectId, versionId } = {}) => {
+export const useManualValidateApplicationVersion = ({
+  applicationId,
+  projectId,
+  versionId,
+  tools,
+  toolId,
+} = {}) => {
   const dispatch = useDispatch();
   const { toastError } = useToast();
   const [validateAppVersion] = useLazyValidateApplicationVersionQuery();
+  const subApplication = useMemo(() => {
+    if (!tools?.length) return undefined;
+    return tools.find(
+      tool =>
+        tool.type === 'application' &&
+        tool.id === toolId &&
+        tool.settings?.application_id &&
+        tool.settings?.application_version_id,
+    );
+  }, [tools, toolId]);
 
   const doValidateVersion = useCallback(async () => {
     try {
@@ -94,7 +110,33 @@ export const useManualValidateApplicationVersion = ({ applicationId, projectId, 
         versionId,
       });
     }
-  }, [validateAppVersion, applicationId, projectId, versionId, toastError, dispatch]);
+    if (subApplication) {
+      try {
+        const result = await validateAppVersion({
+          projectId,
+          applicationId: subApplication.settings.application_id,
+          versionId: subApplication.settings.application_version_id,
+        }).unwrap();
+        extractValidationInfo({
+          error: result.error,
+          toastError,
+          dispatch,
+          projectId,
+          applicationId: subApplication.settings.application_id,
+          versionId: subApplication.settings.application_version_id,
+        });
+      } catch (error) {
+        extractValidationInfo({
+          error,
+          toastError,
+          dispatch,
+          projectId,
+          applicationId: subApplication.settings.application_id,
+          versionId: subApplication.settings.application_version_id,
+        });
+      }
+    }
+  }, [subApplication, validateAppVersion, applicationId, projectId, versionId, toastError, dispatch]);
   return { doValidateVersion };
 };
 
