@@ -374,8 +374,8 @@ export const ToolkitForm = memo(props => {
       const orig = initialSettings[key];
 
       // Only revert if this is a credential that was changed from team to private
-      if (curr?.private && typeof curr === 'object' && 'elitea_title' in curr) {
-        if (curr.private !== orig?.private) {
+      if (typeof curr === 'object' && 'elitea_title' in curr) {
+        if (curr.private !== orig?.private || curr.elitea_title !== orig?.elitea_title) {
           // Revert to original team credential
           editField(`settings.${key}`, orig);
         }
