@@ -18,6 +18,7 @@ const PipelineConfigurationForm = memo(props => {
     isChatView = false,
     hidePythonSandbox,
     onAttachmentToolChange,
+    entityProjectId,
   } = props;
   const isDisabled = viewMode !== ViewMode.Owner;
 
@@ -33,6 +34,7 @@ const PipelineConfigurationForm = memo(props => {
         disabled={isDisabled}
         hidePythonSandbox={hidePythonSandbox}
         onAttachmentToolChange={onAttachmentToolChange}
+        entityProjectId={entityProjectId}
       />
       {!isDisabled && (
         <>

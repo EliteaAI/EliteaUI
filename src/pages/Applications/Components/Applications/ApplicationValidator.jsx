@@ -4,6 +4,7 @@ import { useFormikContext } from 'formik';
 import { useDispatch } from 'react-redux';
 
 import { eliteaApi } from '@/api/eliteaApi';
+import { PUBLIC_PROJECT_ID } from '@/common/constants';
 import useValidateApplicationVersion from '@/hooks/application/useValidateApplicationVersion';
 
 /**
@@ -21,7 +22,9 @@ function ApplicationValidator({ agentId, projectId, isCreateMode = false }) {
   const dispatch = useDispatch();
   const prevToolsRef = useRef();
 
+  const isPublished = projectId == PUBLIC_PROJECT_ID;
   const shouldSkip =
+    isPublished ||
     isCreateMode ||
     !agentId ||
     !projectId ||
@@ -56,12 +59,12 @@ function ApplicationValidator({ agentId, projectId, isCreateMode = false }) {
 
   // Collect application-type sub-tools (sub-agents/pipelines used as tools)
   const applicationTools = useMemo(() => {
-    if (!values?.version_details?.tools?.length || isCreateMode) return [];
+    if (!values?.version_details?.tools?.length || isCreateMode || isPublished) return [];
     return values.version_details.tools.filter(
       tool =>
         tool.type === 'application' && tool.settings?.application_id && tool.settings?.application_version_id,
     );
-  }, [values?.version_details?.tools, isCreateMode]);
+  }, [values?.version_details?.tools, isCreateMode, isPublished]);
 
   return (
     <>
