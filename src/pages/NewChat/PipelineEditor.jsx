@@ -39,6 +39,7 @@ import { useCreateApplicationInitialValues } from '@/pages/Applications/useAppli
 import { ContentContainer } from '@/pages/Common/Components/StyledComponents.jsx';
 import BaseEditor from '@/pages/NewChat/components/BaseEditor.jsx';
 import LLMModelSelectorWrapper from '@/pages/NewChat/components/LLMModelSelectorWrapper';
+import { useConversationStartersSync } from '@/pages/NewChat/components/useConversationStartersSync';
 import EditorPanel from '@/pages/Pipelines/Components/EditorPanel';
 import { actions } from '@/slices/pipeline';
 import { actions as editorActions } from '@/slices/pipelineEditor';
@@ -57,9 +58,12 @@ const PipelineEditorContent = memo(props => {
     projectId,
     handleAttachmentToolChange,
     entityProjectId,
+    onConversationStartersChange,
   } = props;
   const { setFieldValue } = useFormikContext();
   const styles = getStyles();
+
+  useConversationStartersSync(onConversationStartersChange);
 
   // LLM Settings setter for the modal dialog
   const onLLMSettingsChange = useCallback(
@@ -109,6 +113,7 @@ const PipelineEditor = forwardRef(
       stopRunOnNodeStop,
       activeParticipantId,
       onAttachmentToolChange,
+      onConversationStartersChange,
     },
     ref,
   ) => {
@@ -490,6 +495,7 @@ const PipelineEditor = forwardRef(
               pipelineId={pipelineId}
               projectId={projectId}
               handleAttachmentToolChange={handleAttachmentToolChange}
+              onConversationStartersChange={onConversationStartersChange}
               entityProjectId={pipeline?.entity_meta?.project_id}
             />
           )}

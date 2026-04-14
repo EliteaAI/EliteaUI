@@ -114,6 +114,7 @@ const NewChat = props => {
   const [conversations, setConversations] = useState([]);
 
   const [conversationStarters, setConversationStarters] = useState([]);
+  const [editorConversationStarters, setEditorConversationStarters] = useState(null);
   const [collapsedConversations, setCollapsedConversations] = useState(false);
 
   const [activeFolder, setActiveFolder] = useState(dummyFolder);
@@ -231,14 +232,20 @@ const NewChat = props => {
   // Wrap onCloseAgentEditor to mark explicit close
   const handleCloseAgentEditor = useCallback(() => {
     markAgentEditorClosed();
+    setEditorConversationStarters(null);
     onCloseAgentEditor();
   }, [markAgentEditorClosed, onCloseAgentEditor]);
 
   // Wrap onClosePipelineEditor to mark explicit close
   const handleClosePipelineEditor = useCallback(() => {
     markPipelineEditorClosed();
+    setEditorConversationStarters(null);
     onClosePipelineEditor();
   }, [markPipelineEditorClosed, onClosePipelineEditor]);
+
+  const handleEditorConversationStartersChange = useCallback(starters => {
+    setEditorConversationStarters(starters);
+  }, []);
 
   // Handle dirty state changes for both agent and pipeline editors
   const handleEditorDirtyStateChange = useCallback(isDirty => {
@@ -874,13 +881,22 @@ const NewChat = props => {
     uploadProgress,
   } = useUploadAttachments();
 
+  const activeParticipantId = activeParticipant?.entity_meta?.id;
+  const isEditingActiveParticipant =
+    editorConversationStarters !== null &&
+    (editingAgent?.entity_meta?.id === activeParticipantId ||
+      editingPipeline?.entity_meta?.id === activeParticipantId);
+  const displayedConversationStarters = isEditingActiveParticipant
+    ? editorConversationStarters
+    : conversationStarters;
+
   // Create base settings without frequently changing props
   const baseSettings = useMemo(
     () => ({
       activeParticipant,
       activeConversation,
       isLoadingConversation,
-      conversationStarters,
+      conversationStarters: displayedConversationStarters,
       interaction_uuid,
       attachments:
         isUploadingAttachments && !attachments?.length && uploadingAttachments.length
@@ -902,7 +918,7 @@ const NewChat = props => {
       activeParticipant,
       activeConversation,
       isLoadingConversation,
-      conversationStarters,
+      displayedConversationStarters,
       interaction_uuid,
       isUploadingAttachments,
       attachments,
@@ -1081,8 +1097,24 @@ const NewChat = props => {
   }, [preProjectId, projectId]);
 
   useEffect(() => {
-    setConversationStarters(activeParticipantDetails.version_details?.conversation_starters || []);
-  }, [activeParticipantDetails.version_details?.conversation_starters]);
+    const detailsMatchParticipant = activeParticipantDetails.id === activeParticipant?.entity_meta?.id;
+
+    let starters = [];
+
+    if (activeParticipant?.version_details?.conversation_starters) {
+      starters = activeParticipant.version_details.conversation_starters;
+    } else if (detailsMatchParticipant && activeParticipantDetails.version_details?.conversation_starters) {
+      starters = activeParticipantDetails.version_details.conversation_starters;
+    }
+
+    setConversationStarters(starters);
+  }, [
+    activeParticipant?.entity_meta?.id,
+    activeParticipant?.entity_settings?.version_id,
+    activeParticipant?.version_details?.conversation_starters,
+    activeParticipantDetails.id,
+    activeParticipantDetails.version_details?.conversation_starters,
+  ]);
 
   useStreamingNavBlocker(isStreaming);
   useEditingCanvasNavBlocker(!!selectedCodeBlockInfo);
@@ -1368,6 +1400,7 @@ const NewChat = props => {
                 isVisible={isEditingAgent}
                 isCreateMode={isCreateMode}
                 onAgentDirtyStateChange={handleEditorDirtyStateChange}
+                onConversationStartersChange={handleEditorConversationStartersChange}
                 activeAgentId={
                   activeParticipant?.entity_name === ChatParticipantType.Applications
                     ? activeParticipant.entity_meta?.id
@@ -1390,6 +1423,7 @@ const NewChat = props => {
                 isVisible={isEditingPipeline}
                 isCreateMode={isPipelineCreateMode}
                 onPipelineDirtyStateChange={handleEditorDirtyStateChange}
+                onConversationStartersChange={handleEditorConversationStartersChange}
                 activePipelineId={
                   activeParticipant?.entity_name === ChatParticipantType.Pipelines ||
                   activeParticipant?.entity_name === ChatParticipantType.Applications

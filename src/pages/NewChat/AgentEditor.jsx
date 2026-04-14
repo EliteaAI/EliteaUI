@@ -20,6 +20,7 @@ import { useCreateApplicationInitialValues } from '@/pages/Applications/useAppli
 import { ContentContainer } from '@/pages/Common/Components/StyledComponents.jsx';
 import BaseEditor from '@/pages/NewChat/components/BaseEditor.jsx';
 import LLMModelSelectorWrapper from '@/pages/NewChat/components/LLMModelSelectorWrapper';
+import { useConversationStartersSync } from '@/pages/NewChat/components/useConversationStartersSync';
 
 const getAgentId = agent => {
   // agent is a chat participant with entity_meta structure
@@ -29,15 +30,25 @@ const getAgentId = agent => {
 const AgentEditorContent = memo(
   ({
     agentId,
+
     projectId,
+
     isCreateMode,
+
     canEditIt,
+
     viewMode,
+
     handleAttachmentToolChange,
+
     isPublic,
+    onConversationStartersChange,
+
     entityProjectId,
   }) => {
     const { setFieldValue } = useFormikContext();
+
+    useConversationStartersSync(onConversationStartersChange);
     const styles = getStyles();
 
     // LLM Settings setter for the modal dialog
@@ -98,6 +109,7 @@ const AgentEditor = memo(
     onAgentSaved,
     onAttachmentToolChange,
     onAgentDirtyStateChange,
+    onConversationStartersChange,
   }) => {
     const trackEvent = useTrackEvent();
 
@@ -306,6 +318,7 @@ const AgentEditor = memo(
             viewMode={viewMode}
             handleAttachmentToolChange={handleAttachmentToolChange}
             isPublic={isPublic}
+            onConversationStartersChange={onConversationStartersChange}
             entityProjectId={agent?.entity_meta?.project_id}
           />
         </BaseEditor>
