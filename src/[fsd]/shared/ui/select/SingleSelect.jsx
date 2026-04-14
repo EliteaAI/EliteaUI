@@ -7,12 +7,14 @@ import {
   FormControl,
   InputLabel,
   ListItemText,
+  ListSubheader,
   MenuItem,
   Select,
   Typography,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 
+import { FLAT_MENU_ACTION_VALUE } from '@/[fsd]/shared/lib/constants/singleSelectConstants';
 import { Banner } from '@/[fsd]/shared/ui';
 import RemoveIcon from '@/assets/remove-icon.svg?react';
 import ArrowDownIcon from '@/components/Icons/ArrowDownIcon';
@@ -69,27 +71,40 @@ const SingleSelect = memo(props => {
     searchString,
     onSearch,
     isListFetching = false,
+    optionGroups,
+    onMenuActionClick,
   } = props;
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [internalSearchQuery, setInternalSearchQuery] = useState('');
   const effectiveMultiple = multiple && !!showBorder;
 
-  const isSearchControlled = Boolean(withSearch && onSearch && searchString !== undefined);
+  const hasOptionGroups = Boolean(optionGroups?.length);
+  const effectiveWithSearch = withSearch && !hasOptionGroups;
+
+  const isSearchControlled = Boolean(effectiveWithSearch && onSearch && searchString !== undefined);
   const effectiveSearchQuery = isSearchControlled ? searchString : internalSearchQuery;
+
+  const flatOptions = useMemo(() => {
+    if (hasOptionGroups) {
+      return optionGroups.flatMap(g => g.options || []);
+    }
+    return options || [];
+  }, [hasOptionGroups, optionGroups, options]);
 
   const realValue = useMemo(() => {
     if (effectiveMultiple) return Array.isArray(value) ? value : [];
-    // Ensure single select always has a string value (never null or undefined)
-    if (value === null || value === undefined) return '';
-    return options && options.length ? value : '';
-  }, [effectiveMultiple, options, value]);
+    if (hasOptionGroups) return value ?? '';
+    return flatOptions && flatOptions.length ? (value ?? '') : '';
+  }, [effectiveMultiple, flatOptions, hasOptionGroups, value]);
 
   const filteredOptions = useMemo(() => {
-    if (!withSearch || searchFilterMode === 'remote') return options;
-    if (!effectiveSearchQuery) return options;
-    return options.filter(opt => opt.label?.toLowerCase().includes(effectiveSearchQuery.toLowerCase()));
-  }, [withSearch, searchFilterMode, effectiveSearchQuery, options]);
+    if (!effectiveWithSearch || searchFilterMode === 'remote') return options || [];
+    if (!effectiveSearchQuery) return options || [];
+    return (options || []).filter(opt =>
+      opt.label?.toLowerCase().includes(effectiveSearchQuery.toLowerCase()),
+    );
+  }, [effectiveWithSearch, searchFilterMode, effectiveSearchQuery, options]);
 
   const handleSearchInputChange = useCallback(
     next => {
@@ -118,13 +133,25 @@ const SingleSelect = memo(props => {
 
   const handleChange = useCallback(
     event => {
-      if (!effectiveMultiple) setMenuOpen(false);
       const rawValue = event.target.value;
+      if (!effectiveMultiple) {
+        if (rawValue === FLAT_MENU_ACTION_VALUE) {
+          onMenuActionClick?.(event);
+          setMenuOpen(false);
+          return;
+        }
+        const picked = flatOptions.find(o => o.value === rawValue);
+        if (picked?.variant === 'action') {
+          picked.onActivate?.(event);
+          return;
+        }
+        setMenuOpen(false);
+      }
       const newValue = effectiveMultiple && typeof rawValue === 'string' ? rawValue.split(',') : rawValue;
       if (onValueChange) onValueChange(newValue);
       if (onChange) onChange(event);
     },
-    [effectiveMultiple, onChange, onValueChange],
+    [effectiveMultiple, flatOptions, onChange, onMenuActionClick, onValueChange],
   );
 
   const handleDeleteChip = useCallback(
@@ -141,19 +168,27 @@ const SingleSelect = memo(props => {
     setMenuOpen(true);
   }, []);
 
+  const wrappedOnClear = useCallback(
+    event => {
+      setMenuOpen(false);
+      onClear?.(event);
+    },
+    [onClear],
+  );
+
   const handleMenuClose = useCallback(() => {
     setMenuOpen(false);
-    if (withSearch) {
+    if (effectiveWithSearch) {
       if (isSearchControlled) onSearch?.('');
       else setInternalSearchQuery('');
     }
-  }, [withSearch, isSearchControlled, onSearch]);
+  }, [effectiveWithSearch, isSearchControlled, onSearch]);
 
   const renderMultipleValue = useCallback(
     selected => (
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem', padding: '0 0 0.375rem' }}>
         {selected.map(selectedValue => {
-          const foundOption = options.find(({ value: v }) => v === selectedValue);
+          const foundOption = flatOptions.find(({ value: v }) => v === selectedValue);
           if (!foundOption) return null;
           return (
             <Chip
@@ -175,7 +210,7 @@ const SingleSelect = memo(props => {
         })}
       </Box>
     ),
-    [options, handleDeleteChip, disabled, styles],
+    [flatOptions, handleDeleteChip, disabled, styles],
   );
 
   const renderValue = useCallback(
@@ -184,7 +219,10 @@ const SingleSelect = memo(props => {
         return customRenderValue ? customRenderValue(selectedValue) : renderMultipleValue(selectedValue);
       }
 
-      const foundOption = options.find(({ value: itemValue }) => itemValue === selectedValue);
+      const foundOption = flatOptions.find(({ value: itemValue }) => itemValue === selectedValue);
+      if (!foundOption && customRenderValue) {
+        return <Box sx={styles.valueItem}>{customRenderValue(undefined)}</Box>;
+      }
       if (!foundOption) return showEmptyPlaceholder ? emptyPlaceholder : '';
 
       const typography = (
@@ -226,7 +264,7 @@ const SingleSelect = memo(props => {
     [
       effectiveMultiple,
       renderMultipleValue,
-      options,
+      flatOptions,
       showEmptyPlaceholder,
       emptyPlaceholder,
       maxDisplayValueLength,
@@ -238,32 +276,163 @@ const SingleSelect = memo(props => {
 
   const renderMenuItems = useCallback(
     selectIconWithLabelSx => {
-      const loadingFooter = isListFetching ? (
-        <MenuItem
-          key="__loading__"
-          disabled
-          value="__single_select_loading__"
-          sx={{ justifyContent: 'center', pointerEvents: 'none', opacity: 1 }}
-          onClick={e => e.preventDefault()}
-        >
-          <CircularProgress size={24} />
-        </MenuItem>
-      ) : null;
+      // Helper: Build loading footer if data is fetching
+      const buildLoadingFooter = () =>
+        isListFetching ? (
+          <MenuItem
+            key="__loading__"
+            disabled
+            value="__single_select_loading__"
+            sx={{ justifyContent: 'center', pointerEvents: 'none', opacity: 1 }}
+            onClick={e => e.preventDefault()}
+          >
+            <CircularProgress size={24} />
+          </MenuItem>
+        ) : null;
 
-      const searchSlot = withSearch ? (
-        <SingleSelectDropdown
-          key="__search__"
-          isSearchBar
-          searchQuery={effectiveSearchQuery}
-          onSearchChange={handleSearchInputChange}
-          onSearchClear={handleSearchClear}
-          searchPlaceholder={searchPlaceholder}
-        />
-      ) : null;
+      const buildSearchSlot = () =>
+        effectiveWithSearch ? (
+          <SingleSelectDropdown
+            key="__search__"
+            isSearchBar
+            searchQuery={effectiveSearchQuery}
+            onSearchChange={handleSearchInputChange}
+            onSearchClear={handleSearchClear}
+            searchPlaceholder={searchPlaceholder}
+          />
+        ) : null;
+
+      // Helper: Build action slot (flat mode only)
+      const buildFlatActionSlot = () => {
+        const showFlatMenuAction = Boolean(onMenuActionClick && !hasOptionGroups && !effectiveMultiple);
+        return showFlatMenuAction ? (
+          <SingleSelectDropdown
+            key="__menu_action__"
+            isMenuAction
+          />
+        ) : null;
+      };
+
+      // Helper: Build grouped menu with headers and options
+      const buildGroupedMenuBody = () => {
+        const selectableCount = flatOptions.filter(o => o.variant !== 'action').length;
+
+        return selectableCount < 1 && !flatOptions.some(o => o.variant === 'action')
+          ? [
+              <MenuItem
+                key="__empty__"
+                sx={{ justifyContent: 'space-between' }}
+                value=""
+              >
+                {emptyPlaceholder}
+              </MenuItem>,
+            ]
+          : optionGroups.flatMap((group, groupIndex) => {
+              const groupKey = group.key ?? `ss-grp-${groupIndex}`;
+              const groupOptions = group.options || [];
+
+              return [
+                <ListSubheader
+                  key={`${groupKey}-header`}
+                  disableSticky
+                  sx={styles.groupHeader}
+                >
+                  <Box sx={styles.groupHeaderRow}>
+                    <Typography
+                      variant="labelMedium"
+                      color="textSecondary"
+                      sx={styles.groupHeaderTitle}
+                    >
+                      {group.title}
+                    </Typography>
+                    {group.headerEnd ? (
+                      <Box
+                        sx={styles.groupHeaderEnd}
+                        onClick={e => e.stopPropagation()}
+                      >
+                        {group.headerEnd}
+                      </Box>
+                    ) : null}
+                  </Box>
+                </ListSubheader>,
+                ...groupOptions.map((option, index) => {
+                  const rowKey = `${groupKey}-opt-${option.value}-${index}`;
+
+                  if (option.variant === 'action') {
+                    return (
+                      <MenuItem
+                        key={rowKey}
+                        value={option.value}
+                        sx={({ palette }) => ({
+                          justifyContent: 'flex-start',
+                          padding: '0.5rem 1.5rem',
+                          fontSize: '1rem',
+                          color: palette.text.secondary,
+                        })}
+                      >
+                        {option.label}
+                      </MenuItem>
+                    );
+                  }
+
+                  return (
+                    <SingleSelectDropdown
+                      key={rowKey}
+                      value={option.value}
+                      option={option}
+                      isSelected={
+                        effectiveMultiple
+                          ? Array.isArray(realValue) && realValue.includes(option.value)
+                          : option.value === realValue
+                      }
+                      onClear={onClear ? wrappedOnClear : undefined}
+                      customRenderOption={customRenderOption}
+                      showOptionIcon={showOptionIcon}
+                      showOptionDescription={showOptionDescription}
+                      iconPosition={iconPosition}
+                      optionsWithAvatar={optionsWithAvatar}
+                      menuItemIconSX={{ ...menuItemIconSX, ...selectIconWithLabelSx }}
+                      onDeleteOption={onDeleteOption}
+                    />
+                  );
+                }),
+              ];
+            });
+      };
+
+      const buildFlatMenuBody = () => {
+        const items = filteredOptions.map(option => (
+          <SingleSelectDropdown
+            key={option.value}
+            value={option.value}
+            option={option}
+            isSelected={effectiveMultiple ? realValue.includes(option.value) : option.value === realValue}
+            onClear={onClear ? wrappedOnClear : undefined}
+            customRenderOption={customRenderOption}
+            showOptionIcon={showOptionIcon}
+            showOptionDescription={showOptionDescription}
+            iconPosition={iconPosition}
+            optionsWithAvatar={optionsWithAvatar}
+            menuItemIconSX={{ ...menuItemIconSX, ...selectIconWithLabelSx }}
+            onDeleteOption={onDeleteOption}
+          />
+        ));
+        return items;
+      };
+
+      const loadingFooter = buildLoadingFooter();
+      const searchSlot = buildSearchSlot();
+      const actionSlot = buildFlatActionSlot();
+
+      if (hasOptionGroups) {
+        const groupedBody = buildGroupedMenuBody();
+        return loadingFooter ? [...groupedBody, loadingFooter] : groupedBody;
+      }
 
       if (filteredOptions.length < 1) {
         return [
           searchSlot,
+          actionSlot,
           <MenuItem
             key="__empty__"
             sx={{ justifyContent: 'space-between' }}
@@ -275,36 +444,25 @@ const SingleSelect = memo(props => {
         ].filter(Boolean);
       }
 
-      const items = filteredOptions.map(option => (
-        <SingleSelectDropdown
-          key={option.value}
-          value={option.value}
-          option={option}
-          isSelected={effectiveMultiple ? realValue.includes(option.value) : option.value === realValue}
-          onClear={onClear}
-          customRenderOption={customRenderOption}
-          showOptionIcon={showOptionIcon}
-          showOptionDescription={showOptionDescription}
-          iconPosition={iconPosition}
-          optionsWithAvatar={optionsWithAvatar}
-          menuItemIconSX={{ ...menuItemIconSX, ...selectIconWithLabelSx }}
-          onDeleteOption={onDeleteOption}
-        />
-      ));
-
-      const withSearchSlot = searchSlot ? [searchSlot, ...items] : items;
-      return loadingFooter ? [...withSearchSlot, loadingFooter] : withSearchSlot;
+      const items = buildFlatMenuBody();
+      const leadingSlots = [searchSlot, actionSlot].filter(Boolean);
+      const withLeading = leadingSlots.length ? [...leadingSlots, ...items] : items;
+      return loadingFooter ? [...withLeading, loadingFooter] : withLeading;
     },
     [
-      withSearch,
+      effectiveWithSearch,
       effectiveSearchQuery,
       handleSearchInputChange,
       handleSearchClear,
       searchPlaceholder,
       filteredOptions,
+      hasOptionGroups,
+      optionGroups,
+      flatOptions,
       effectiveMultiple,
       emptyPlaceholder,
       realValue,
+      wrappedOnClear,
       onClear,
       customRenderOption,
       showOptionIcon,
@@ -314,6 +472,8 @@ const SingleSelect = memo(props => {
       menuItemIconSX,
       onDeleteOption,
       isListFetching,
+      onMenuActionClick,
+      styles,
     ],
   );
 
@@ -351,18 +511,33 @@ const SingleSelect = memo(props => {
     const incomingList = incomingSlotProps.list || {};
     const { sx: incomingListSx, ...incomingListRest } = incomingList;
 
+    const disableMenuAutoFocusItem =
+      effectiveWithSearch ||
+      hasOptionGroups ||
+      Boolean(onMenuActionClick && !hasOptionGroups && !effectiveMultiple);
+
     const mergedListSlotProps = {
-      ...(withSearch ? { autoFocusItem: false } : {}),
+      ...(disableMenuAutoFocusItem ? { autoFocusItem: false } : {}),
       ...legacyListRest,
       ...incomingListRest,
+      ...(hasOptionGroups ? { disablePadding: true } : {}),
       sx: [
         { flex: 1, minHeight: 0, overflowY: 'auto' },
-        ...(withSearch
+        ...(effectiveWithSearch
           ? [
               {
                 paddingTop: 0,
                 border: 'none',
                 boxShadow: 'none',
+              },
+            ]
+          : []),
+        ...(hasOptionGroups
+          ? [
+              {
+                '& .MuiListSubheader-root + .MuiMenuItem-root': {
+                  borderTop: 'none',
+                },
               },
             ]
           : []),
@@ -393,7 +568,15 @@ const SingleSelect = memo(props => {
         paper: mergedPaperSlotProps,
       },
     };
-  }, [customMenuProps, maxListHeight, onScroll, withSearch]);
+  }, [
+    customMenuProps,
+    maxListHeight,
+    onScroll,
+    effectiveWithSearch,
+    hasOptionGroups,
+    onMenuActionClick,
+    effectiveMultiple,
+  ]);
 
   const renderSelectComponent = (selectwithLabelSx, selectIconWithLabelSx) => {
     return (
@@ -412,7 +595,7 @@ const SingleSelect = memo(props => {
               sx={[
                 {
                   left: '0.75rem',
-                  fontSize: '0.875rem',
+                  fontSize: '1rem',
                   fontWeight: 500,
                   ...(effectiveMultiple && {
                     '&:not(.MuiInputLabel-shrink)': { top: '0.5rem' },
@@ -559,6 +742,33 @@ const singleSelectStyles = (theme, { customSelectedColor, customSelectedFontSize
     '&:not(.Mui-disabled) .MuiChip-deleteIcon:hover': {
       color: theme.palette.icon.tagChip.hover,
     },
+  },
+  groupHeader: ({ palette }) => ({
+    padding: '0.5rem 1.5rem',
+    fontSize: '0.875rem',
+    color: palette.text.secondary,
+    lineHeight: 1.4,
+    borderBottom: `1px solid ${palette.border.lines}`,
+    backgroundColor: palette.background.secondary,
+    '.MuiMenuItem-root + &': {
+      borderTop: `1px solid ${palette.border.lines}`,
+    },
+  }),
+  groupHeaderTitle: {
+    textTransform: 'uppercase',
+    padding: '0.125rem 0',
+  },
+  groupHeaderRow: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    gap: '0.5rem',
+  },
+  groupHeaderEnd: {
+    flexShrink: 0,
+    display: 'flex',
+    alignItems: 'center',
   },
 });
 
