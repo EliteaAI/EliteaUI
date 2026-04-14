@@ -403,7 +403,7 @@ const CredentialsSelect = memo(
     }, [menuData, createSelectHandler, onRefresh]);
 
     const selectStringValue = useMemo(() => {
-      if (!selectedOption) return '';
+      if (!selectedOption) return value?.elitea_title || '';
       if (
         createMenuData.some(
           o => o.elitea_title === selectedOption.elitea_title && o.private === selectedOption.private,
@@ -412,7 +412,7 @@ const CredentialsSelect = memo(
         return createActionToSelectValue(selectedOption.private);
       }
       return savedRowToSelectValue(selectedOption);
-    }, [selectedOption, createMenuData]);
+    }, [selectedOption, value?.elitea_title, createMenuData]);
 
     const handleSelectValueChange = useCallback(
       newValue => {
@@ -515,7 +515,7 @@ const CredentialsSelect = memo(
       );
     }, [description, label, required]);
 
-    const selectError = error || mismatchedPrivateCredential;
+    const selectError = error || (mismatchedPrivateCredential && hasFetchedData);
 
     const showMismatchFooter = Boolean(value && !selectedOption && hasFetchedData);
 

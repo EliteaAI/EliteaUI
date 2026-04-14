@@ -63,8 +63,8 @@ const ToolkitsOperationButtons = memo(
       return Object.keys(currentSettings).some(key => {
         const curr = currentSettings[key];
         const orig = originalSettings[key];
-        if (curr?.private && typeof curr === 'object' && 'elitea_title' in curr) {
-          return curr.private !== orig?.private;
+        if (typeof curr === 'object' && 'elitea_title' in curr) {
+          return curr.private !== orig?.private || curr.elitea_title !== orig?.elitea_title;
         }
         return false;
       });
