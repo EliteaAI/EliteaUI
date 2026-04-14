@@ -17,6 +17,10 @@ const useNotificationNavigate = ({ viewMode, id, event_type, name, replace = fal
       // [NotificationType.PromptModeratorReject]:
       //   `${RouteDefinitions.Prompts}/all/${id}/${encodeURIComponent(version_name)}`,
       [NotificationType.ChatUserAdded]: `${RouteDefinitions.Chat}`,
+      [NotificationType.PersonalAccessTokenExpiring]: RouteDefinitions.SettingsWithTab.replace(
+        ':tab',
+        'tokens',
+      ),
       [NotificationType.IndexDataChanged]: RouteDefinitions.ToolkitDetail.replace(':tab', 'indexes').replace(
         ':toolkitId',
         id,
@@ -26,6 +30,7 @@ const useNotificationNavigate = ({ viewMode, id, event_type, name, replace = fal
       // [NotificationType.PromptModeratorApproval]: query,
       // [NotificationType.PromptModeratorReject]: query,
       [NotificationType.ChatUserAdded]: `?${SearchParams.Conversation}=${id}`,
+      [NotificationType.PersonalAccessTokenExpiring]: '',
       [NotificationType.IndexDataChanged]: indexName
         ? `?${SearchParams.IndexName}=${encodeURIComponent(indexName)}`
         : '',
