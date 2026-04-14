@@ -7,7 +7,7 @@ export const hasCredentialConfigChanged = (current, original) => {
     const orig = originalSettings[key];
 
     // Check if this is a credential object
-    if (typeof curr === 'object' && 'elitea_title' in curr) {
+    if (typeof curr === 'object' && curr != null && 'elitea_title' in curr) {
       // Check if private flag or credential selection changed
       return curr.private !== orig?.private || curr.elitea_title !== orig?.elitea_title;
     }
