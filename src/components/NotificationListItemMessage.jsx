@@ -20,6 +20,7 @@ const leadingText = (param1, param2) => ({
   [NotificationType.PrivateProjectCreated]: 'Project was successfully created',
   [NotificationType.IndexDataChanged]: param1, // Dynamic message based on index state
   [NotificationType.BucketExpirationWarning]: 'Bucket ',
+  [NotificationType.PersonalAccessTokenExpiring]: `Your personal access token ${param1} will expire in 24 hours. After expiration, it will no longer work. You can delete and recreate a new token if needed. `,
 });
 
 const middleText = {};
@@ -42,6 +43,7 @@ const endingText = param => ({
   [NotificationType.IndexDataChanged]: '',
   [NotificationType.BucketExpirationWarning]:
     " will start deleting files in 24 hours according to its retention policy (files are removed based on each file's creation date; the bucket itself will remain).",
+  [NotificationType.PersonalAccessTokenExpiring]: '',
 });
 const formatName = name => {
   return name && name.length > MAX_NAME_LEN ? `${name.slice(0, MAX_NAME_LEN)}...` : name || '';
@@ -281,6 +283,18 @@ const parseInformation = notification => {
         endingTextParam: '',
       };
     }
+    case NotificationType.PersonalAccessTokenExpiring:
+      return {
+        event_type,
+        leadingTextParam1: meta.token_name,
+        leadingTextParam2: '',
+        firstLinkInfo: {
+          linkText: 'Manage Personal Access Tokens',
+          project_id,
+          isNewTab: true,
+        },
+        endingTextParam: '',
+      };
     default:
       return {};
   }

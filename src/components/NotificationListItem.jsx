@@ -64,6 +64,7 @@ const getIcon = (type, theme, notification) => {
     case NotificationType.TokenExpiring:
     case NotificationType.SpendingLimitExpiring:
     case NotificationType.BucketExpirationWarning:
+    case NotificationType.PersonalAccessTokenExpiring:
       return (
         <AttentionIcon
           fill={theme.palette.status.onModeration}

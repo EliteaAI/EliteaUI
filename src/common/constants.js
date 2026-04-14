@@ -1012,6 +1012,7 @@ export const NotificationType = {
   IndexDataChanged: 'index_data_changed',
   BucketExpirationWarning: 'bucket_expiration_warning',
   AgentUnpublished: 'agent_unpublished',
+  PersonalAccessTokenExpiring: 'personal_access_token_expiring',
 };
 
 export const dummyConversation = { name: '', chat_history: [], participants: [], is_private: true };
