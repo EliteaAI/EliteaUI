@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
@@ -8,6 +8,8 @@ import { usePublicProjectAccessCheck } from '@/[fsd]/features/project/lib/hooks'
 import { LegacyOpenApiMigration } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
+import { useCredentialWarning } from '@/[fsd]/shared/lib/hooks/useCredentialWarning';
+import { CredentialWarningModal } from '@/[fsd]/shared/ui/modal/credential-warning';
 import { useToolkitsDetailsQuery } from '@/api/toolkits';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -45,6 +47,8 @@ const ToolkitEditor = ({ toolkit, onCloseToolkitEditor, onToolkitCreated, onTool
   const [formikInitialValues, setFormikInitialValues] = useState({
     type: '',
   });
+
+  const revertCredentialsRef = useRef(null);
 
   // Callback for handling tool detail changes in creation mode
   const onChangeToolDetail = useCallback((...args) => {
@@ -110,6 +114,15 @@ const ToolkitEditor = ({ toolkit, onCloseToolkitEditor, onToolkitCreated, onTool
       : { skip: true },
     { skip: !isVisible || !projectId || !toolkitId || isCreating },
   );
+
+  // Credential warning hook
+  const { showWarning, checkBeforeSave, handlers } = useCredentialWarning({
+    isCreating,
+    editToolDetail,
+    originalDetails: toolkitDetails,
+    revertCredentialsRef,
+    setEditToolDetail,
+  });
 
   // Initialize editToolDetail from toolkit details (like EditToolkit.jsx)
   useEffect(() => {
@@ -229,6 +242,7 @@ const ToolkitEditor = ({ toolkit, onCloseToolkitEditor, onToolkitCreated, onTool
             hasErrors={validationState.hasErrors}
             triggerValidation={validationState.triggerValidation}
             projectId={toolkit?.entity_meta?.project_id || projectId}
+            onBeforeSave={checkBeforeSave}
           />
         )
       }
@@ -254,6 +268,7 @@ const ToolkitEditor = ({ toolkit, onCloseToolkitEditor, onToolkitCreated, onTool
               updateKey={1}
               isMCP={isMCP}
               onValidationStateChange={setValidationState}
+              revertCredentialsRef={revertCredentialsRef}
             />
           ) : (
             <ToolkitTypeSelector
@@ -285,6 +300,7 @@ const ToolkitEditor = ({ toolkit, onCloseToolkitEditor, onToolkitCreated, onTool
             isMCP={isMCP}
             onValidationStateChange={setValidationState}
             disabled={isPublic && !hasPublicProjectAccess}
+            revertCredentialsRef={revertCredentialsRef}
           />
         </ContentContainer>
       ) : (
@@ -297,6 +313,12 @@ const ToolkitEditor = ({ toolkit, onCloseToolkitEditor, onToolkitCreated, onTool
           </Typography>
         </Box>
       )}
+      <CredentialWarningModal
+        open={showWarning}
+        onConfirm={handlers.onConfirm}
+        onCancel={handlers.onCancel}
+        onClose={handlers.onClose}
+      />
     </BaseEditor>
   );
 };

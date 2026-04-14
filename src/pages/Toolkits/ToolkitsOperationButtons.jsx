@@ -1,18 +1,18 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 import { useFormikContext } from 'formik';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 
-import { Box, Button, Typography } from '@mui/material';
+import { Button, Typography } from '@mui/material';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 
+import { useCredentialWarning } from '@/[fsd]/shared/lib/hooks/useCredentialWarning';
+import { CredentialWarningModal } from '@/[fsd]/shared/ui/modal/credential-warning';
 import { eliteaApi } from '@/api/eliteaApi.js';
 import { useToolkitEditMutation } from '@/api/toolkits.js';
-import ErrorIcon from '@/assets/error-icon.svg?react';
 import eventEmitter from '@/common/eventEmitter';
 import { buildErrorMessage } from '@/common/utils.jsx';
-import AlertDialog from '@/components/AlertDialog';
 import { StyledDialog, StyledDialogActions, StyledDialogContentText } from '@/components/StyledDialog';
 import { useExtraValidation } from '@/hooks/application/useExtraValidation';
 import useConfigurations from '@/hooks/useConfigurations.js';
@@ -40,57 +40,26 @@ const ToolkitsOperationButtons = memo(
     toolSchema,
   }) => {
     const validateReasonRef = useRef('');
+    const revertCredentialsRef = useRef(onRevertCredentials);
     const { toastError, toastSuccess } = useToast();
     const { values, initialValues, resetForm, setValues } = useFormikContext();
     const projectId = useSelectedProjectId();
-    const { personal_project_id } = useSelector(state => state.user);
     const dispatch = useDispatch();
     const [openAlert, setOpenAlert] = useState(false);
     const [errorMessage, setErrorMessage] = useState('Some fields have missing or invalid data!');
-    const [showCredentialWarning, setShowCredentialWarning] = useState(false);
-    const [pendingUpdateFn, setPendingUpdateFn] = useState(null);
-    const styles = getStyles();
 
-    const isTeamProject = useMemo(
-      () =>
-        personal_project_id != null && projectId != null && String(projectId) !== String(personal_project_id),
-      [projectId, personal_project_id],
-    );
-
-    const hasCredentialConfigChanged = useCallback((current, original) => {
-      const currentSettings = current?.settings || {};
-      const originalSettings = original?.settings || {};
-      return Object.keys(currentSettings).some(key => {
-        const curr = currentSettings[key];
-        const orig = originalSettings[key];
-        if (typeof curr === 'object' && 'elitea_title' in curr) {
-          return curr.private !== orig?.private || curr.elitea_title !== orig?.elitea_title;
-        }
-        return false;
-      });
-    }, []);
-
-    const onConfirmCredentialWarning = useCallback(() => {
-      setShowCredentialWarning(false);
-      pendingUpdateFn?.();
-      setPendingUpdateFn(null);
-    }, [pendingUpdateFn]);
-
-    const onCloseCredentialWarning = useCallback(() => {
-      setShowCredentialWarning(false);
-      setPendingUpdateFn(null);
-    }, []);
-
-    const onCancelCredentialWarning = useCallback(() => {
-      setShowCredentialWarning(false);
-      setPendingUpdateFn(null);
-
-      // Revert editToolDetail and configuration state
-      // ToolkitForm's useEffect will automatically sync editToolDetail → Formik values
-      if (onRevertCredentials) {
-        onRevertCredentials();
-      }
+    // Keep revertCredentialsRef updated
+    useEffect(() => {
+      revertCredentialsRef.current = onRevertCredentials;
     }, [onRevertCredentials]);
+
+    // Use credential warning hook
+    const { showWarning, checkBeforeSave, handlers } = useCredentialWarning({
+      isCreating: isAdding,
+      editToolDetail: values,
+      originalDetails: initialValues,
+      revertCredentialsRef,
+    });
 
     const [onSave, { isError: isSaveError, isSuccess: isSaveSuccess, error: saveError }] =
       useToolkitEditMutation();
@@ -251,22 +220,18 @@ const ToolkitsOperationButtons = memo(
           // Error already handled in saveToolkit
         }
       };
-      if (isTeamProject && hasCredentialConfigChanged(values, initialValues)) {
-        setPendingUpdateFn(() => performSave);
-        setShowCredentialWarning(true);
-      } else {
+
+      // Use hook's checkBeforeSave to handle credential warning
+      if (checkBeforeSave(performSave)) {
         await performSave();
       }
     }, [
       hasErrors,
       hasNotSavedToolConfiguration,
-      values,
-      initialValues,
-      isTeamProject,
-      hasCredentialConfigChanged,
       saveToolkit,
       onValidateFailure,
       setShowValidation,
+      checkBeforeSave,
     ]);
 
     useEffect(() => {
@@ -373,30 +338,11 @@ const ToolkitsOperationButtons = memo(
             )}
           </StyledDialogActions>
         </StyledDialog>
-        <AlertDialog
-          alarm
-          open={showCredentialWarning}
-          onClose={onCloseCredentialWarning}
-          onCancel={onCancelCredentialWarning}
-          onConfirm={onConfirmCredentialWarning}
-          title={
-            <Box sx={styles.container}>
-              <Box
-                component={ErrorIcon}
-                sx={styles.icon}
-              />
-              <Typography variant="headingSmall">Credential Configuration Change</Typography>
-            </Box>
-          }
-          alertContent={
-            <Typography variant="bodyMedium">
-              Changing the credential may make this toolkit non-operational for other team members who do not
-              have a matching Private credential. Make this decision considering the potential impact on your
-              team.
-            </Typography>
-          }
-          confirmButtonText="Confirm Change"
-          cancelButtonText="Discard Change"
+        <CredentialWarningModal
+          open={showWarning}
+          onConfirm={handlers.onConfirm}
+          onCancel={handlers.onCancel}
+          onClose={handlers.onClose}
         />
       </>
     );
@@ -406,18 +352,3 @@ const ToolkitsOperationButtons = memo(
 ToolkitsOperationButtons.displayName = 'ToolkitsOperationButtons';
 
 export default ToolkitsOperationButtons;
-
-/** @type {MuiSx} */
-const getStyles = () => ({
-  container: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-  },
-  icon: {
-    fontSize: '1rem',
-    color: ({ palette }) => palette.icon.fill.error,
-    flexShrink: 0,
-    marginTop: '0.1rem',
-  },
-});
