@@ -49,6 +49,7 @@ export const ToolkitForm = memo(props => {
     disabled,
     onSyntaxError,
     validationTrigger,
+    revertCredentialsRef,
   } = props;
   const hasSetViewManually = useRef(false);
   const [view, setView] = useState(ToolkitViewOptions.Form);
@@ -388,6 +389,14 @@ export const ToolkitForm = memo(props => {
       private: initialSettings?.private,
     });
   }, [initialValues?.settings, editToolDetail?.settings, editField]);
+
+  // Expose onRevertCredentials to parent via ref (for ToolkitEditor)
+  useEffect(() => {
+    if (revertCredentialsRef) {
+      revertCredentialsRef.current = onRevertCredentials;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onRevertCredentials]);
 
   useEffect(() => {
     if (
