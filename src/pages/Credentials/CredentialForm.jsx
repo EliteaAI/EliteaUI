@@ -89,7 +89,7 @@ const CredentialForm = memo(props => {
     if (searchParams.get('forceCustom') === 'true' || view === ToolkitViewOptions.Json) {
       return ToolkitForm.ToolCustom;
     }
-    const toolTypedComponent = ToolComponentHelpers.getToolComponent(toolType, toolSchema);
+    const toolTypedComponent = ToolComponentHelpers.getToolComponent(toolType, toolSchema, true);
     return toolTypedComponent;
   }, [searchParams, view, toolType, toolSchema]);
 
