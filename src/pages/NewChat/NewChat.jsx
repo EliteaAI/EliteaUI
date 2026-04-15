@@ -12,6 +12,7 @@ import { FilePreviewCanvas } from '@/[fsd]/features/artifacts/ui';
 import {
   useAttachmentToolChange,
   useConversationNavigation,
+  useConversationStarters,
   useEditConversation,
   useInternalToolsConfig,
 } from '@/[fsd]/features/chat/lib/hooks';
@@ -113,8 +114,6 @@ const NewChat = props => {
   const [activeConversation, setActiveConversation] = useState(dummyConversation);
   const [conversations, setConversations] = useState([]);
 
-  const [conversationStarters, setConversationStarters] = useState([]);
-  const [editorConversationStarters, setEditorConversationStarters] = useState(null);
   const [collapsedConversations, setCollapsedConversations] = useState(false);
 
   const [activeFolder, setActiveFolder] = useState(dummyFolder);
@@ -229,23 +228,39 @@ const NewChat = props => {
     activeConversation,
   });
 
+  const { activeParticipantDetails, refetchParticipantDetails } = useActiveParticipantDetails({
+    activeParticipant,
+  });
+
+  const { handleAttachmentToolChange } = useAttachmentToolChange({
+    activeParticipant,
+    refetchParticipantDetails,
+  });
+
+  const {
+    displayedConversationStarters,
+    handleEditorConversationStartersChange,
+    resetEditorConversationStarters,
+  } = useConversationStarters({
+    activeParticipant,
+    activeParticipantDetails,
+    editingAgent,
+    editingPipeline,
+  });
+
   // Wrap onCloseAgentEditor to mark explicit close
   const handleCloseAgentEditor = useCallback(() => {
     markAgentEditorClosed();
-    setEditorConversationStarters(null);
+    resetEditorConversationStarters();
     onCloseAgentEditor();
-  }, [markAgentEditorClosed, onCloseAgentEditor]);
+  }, [markAgentEditorClosed, onCloseAgentEditor, resetEditorConversationStarters]);
 
   // Wrap onClosePipelineEditor to mark explicit close
   const handleClosePipelineEditor = useCallback(() => {
     markPipelineEditorClosed();
-    setEditorConversationStarters(null);
+    resetEditorConversationStarters();
     onClosePipelineEditor();
-  }, [markPipelineEditorClosed, onClosePipelineEditor]);
-
-  const handleEditorConversationStartersChange = useCallback(starters => {
-    setEditorConversationStarters(starters);
-  }, []);
+  }, [markPipelineEditorClosed, onClosePipelineEditor, resetEditorConversationStarters]);
 
   // Handle dirty state changes for both agent and pipeline editors
   const handleEditorDirtyStateChange = useCallback(isDirty => {
@@ -284,15 +299,6 @@ const NewChat = props => {
 
   const { conversationIdFromUrl, clearUrlConversation, changeUrlByConversation } =
     useConversationNavigation();
-
-  const { activeParticipantDetails, refetchParticipantDetails } = useActiveParticipantDetails({
-    activeParticipant,
-  });
-
-  const { handleAttachmentToolChange } = useAttachmentToolChange({
-    activeParticipant,
-    refetchParticipantDetails,
-  });
 
   const interaction_uuid = useChatInteractionUUID(activeConversation?.id);
   const { listenCanvasEditorsChangeEvent, stopListenCanvasEditorsChangeEvent } = useChatCanvasEditorsChange({
@@ -881,15 +887,6 @@ const NewChat = props => {
     uploadProgress,
   } = useUploadAttachments();
 
-  const activeParticipantId = activeParticipant?.entity_meta?.id;
-  const isEditingActiveParticipant =
-    editorConversationStarters !== null &&
-    (editingAgent?.entity_meta?.id === activeParticipantId ||
-      editingPipeline?.entity_meta?.id === activeParticipantId);
-  const displayedConversationStarters = isEditingActiveParticipant
-    ? editorConversationStarters
-    : conversationStarters;
-
   // Create base settings without frequently changing props
   const baseSettings = useMemo(
     () => ({
@@ -1095,26 +1092,6 @@ const NewChat = props => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [preProjectId, projectId]);
-
-  useEffect(() => {
-    const detailsMatchParticipant = activeParticipantDetails.id === activeParticipant?.entity_meta?.id;
-
-    let starters = [];
-
-    if (activeParticipant?.version_details?.conversation_starters) {
-      starters = activeParticipant.version_details.conversation_starters;
-    } else if (detailsMatchParticipant && activeParticipantDetails.version_details?.conversation_starters) {
-      starters = activeParticipantDetails.version_details.conversation_starters;
-    }
-
-    setConversationStarters(starters);
-  }, [
-    activeParticipant?.entity_meta?.id,
-    activeParticipant?.entity_settings?.version_id,
-    activeParticipant?.version_details?.conversation_starters,
-    activeParticipantDetails.id,
-    activeParticipantDetails.version_details?.conversation_starters,
-  ]);
 
   useStreamingNavBlocker(isStreaming);
   useEditingCanvasNavBlocker(!!selectedCodeBlockInfo);
