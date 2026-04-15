@@ -3,9 +3,9 @@ import React, { memo, useCallback, useMemo, useRef, useState } from 'react';
 import { useFormikContext } from 'formik';
 
 import { useTrackEvent } from '@/GA';
-import { useConversationStartersSync } from '@/[fsd]/features/chat/lib/hooks';
 import { InstructionsInputRefProvider } from '@/[fsd]/app/providers';
 import CreateAgentForm from '@/[fsd]/features/agent/ui/agent-details/configurations/form/CreateAgentForm';
+import { useConversationStartersSync } from '@/[fsd]/features/chat/lib/hooks';
 import useRefetchAgentVersionDetailsOnClose from '@/[fsd]/features/chat/lib/hooks/useRefetchAgentVersionDetailsOnClose';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
 import { useGetApplicationVersionDetailQuery, usePublicApplicationDetailsQuery } from '@/api/applications';
@@ -27,75 +27,67 @@ const getAgentId = agent => {
   return agent?.entity_meta?.id || agent?.id || agent?.meta?.id;
 };
 
-const AgentEditorContent = memo(
-  ({
+const AgentEditorContent = memo(props => {
+  const {
     agentId,
-
     projectId,
-
     isCreateMode,
-
     canEditIt,
-
     viewMode,
-
     handleAttachmentToolChange,
-
     isPublic,
     onConversationStartersChange,
-
     entityProjectId,
-  }) => {
-    const { setFieldValue } = useFormikContext();
+  } = props;
+  const { setFieldValue } = useFormikContext();
 
-    useConversationStartersSync(onConversationStartersChange);
-    const styles = getStyles();
+  useConversationStartersSync(onConversationStartersChange);
+  const styles = getStyles();
 
-    // LLM Settings setter for the modal dialog
-    const onLLMSettingsChange = useCallback(
-      newSettings => {
-        // Update each setting individually
-        Object.entries(newSettings).forEach(([key, value]) => {
-          setFieldValue(`version_details.llm_settings.${key}`, value);
-        });
-      },
-      [setFieldValue],
-    );
+  // LLM Settings setter for the modal dialog
+  const onLLMSettingsChange = useCallback(
+    newSettings => {
+      // Update each setting individually
+      Object.entries(newSettings).forEach(([key, value]) => {
+        setFieldValue(`version_details.llm_settings.${key}`, value);
+      });
+    },
+    [setFieldValue],
+  );
 
-    return (
-      <>
-        <ApplicationValidator
-          agentId={agentId}
-          projectId={entityProjectId || projectId}
-          isCreateMode={isCreateMode}
-        />
-        <ContentContainer height="100%">
-          {!isCreateMode && (
-            <LLMModelSelectorWrapper
-              projectId={projectId}
-              onLLMSettingsChange={onLLMSettingsChange}
-              disabled={!canEditIt}
-              modelTooltip={isPublic ? 'Model configuration is locked for Public agents' : undefined}
-              settingsTooltip={isPublic ? 'Model settings are locked for Public agents' : undefined}
-            />
-          )}
-          {isCreateMode ? (
-            <CreateAgentForm sx={styles.createForm} />
-          ) : (
-            <ApplicationConfigurationForm
-              applicationId={agentId}
-              containerStyle={styles.configForm}
-              isChatView={true}
-              viewMode={viewMode}
-              onAttachmentToolChange={handleAttachmentToolChange}
-              entityProjectId={entityProjectId}
-            />
-          )}
-        </ContentContainer>
-      </>
-    );
-  },
-);
+  return (
+    <>
+      <ApplicationValidator
+        agentId={agentId}
+        projectId={entityProjectId || projectId}
+        isCreateMode={isCreateMode}
+      />
+      <ContentContainer height="100%">
+        {!isCreateMode && (
+          <LLMModelSelectorWrapper
+            projectId={projectId}
+            onLLMSettingsChange={onLLMSettingsChange}
+            disabled={!canEditIt}
+            modelTooltip={isPublic ? 'Model configuration is locked for Public agents' : undefined}
+            settingsTooltip={isPublic ? 'Model settings are locked for Public agents' : undefined}
+          />
+        )}
+        {isCreateMode ? (
+          <CreateAgentForm sx={styles.createForm} />
+        ) : (
+          <ApplicationConfigurationForm
+            applicationId={agentId}
+            containerStyle={styles.configForm}
+            isChatView={true}
+            viewMode={viewMode}
+            onAttachmentToolChange={handleAttachmentToolChange}
+            entityProjectId={entityProjectId}
+          />
+        )}
+      </ContentContainer>
+    </>
+  );
+});
 
 AgentEditorContent.displayName = 'AgentEditorContent';
 
