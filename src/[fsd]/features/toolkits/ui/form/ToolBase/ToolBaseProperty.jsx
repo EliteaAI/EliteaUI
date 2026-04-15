@@ -415,13 +415,41 @@ const ToolBaseProperty = memo(props => {
     } else if ((type === 'string' || anyOf?.find(item => item.type === 'string')) && !!enumItems?.length) {
       const options = enumItems.map(item => ({ label: item, value: item }));
       const currentValue = settings[k];
-      // Ensure the value exists in options, otherwise use empty string
-      const validValue = options.some(opt => opt.value === currentValue) ? currentValue : '';
+      // Get default value from schema (check direct property and anyOf)
+      const schemaDefault = v?.default ?? anyOf?.find(item => item.default !== undefined)?.default;
+      // Use current value if valid, otherwise fall back to schema default, then empty string
+      const validValue = options.some(opt => opt.value === currentValue)
+        ? currentValue
+        : options.some(opt => opt.value === schemaDefault)
+          ? schemaDefault
+          : '';
+
+      // Build custom labelNode with info icon if description exists
+      const enumLabelNode = description ? (
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Typography variant="labelMedium">{label}</Typography>
+          <Tooltip
+            title={description}
+            placement="top"
+          >
+            <Box
+              component="span"
+              sx={{ marginLeft: '0.25rem', display: 'inline-flex', cursor: 'help' }}
+            >
+              <InfoIcon
+                width={14}
+                height={14}
+              />
+            </Box>
+          </Tooltip>
+        </Box>
+      ) : null;
 
       return (
         <SingleSelect
           showBorder
           label={label}
+          labelNode={enumLabelNode}
           onValueChange={value => editField(buildEditFieldPath(k), value)}
           value={validValue}
           options={options}
