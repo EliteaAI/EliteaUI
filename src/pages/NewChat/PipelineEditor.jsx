@@ -18,6 +18,7 @@ import { Box, Tab, Tabs } from '@mui/material';
 import { useTrackEvent } from '@/GA';
 import { InstructionsInputRefProvider } from '@/[fsd]/app/providers';
 import CreateAgentForm from '@/[fsd]/features/agent/ui/agent-details/configurations/form/CreateAgentForm';
+import { useConversationStartersSync } from '@/[fsd]/features/chat/lib/hooks';
 import useRefetchAgentVersionDetailsOnClose from '@/[fsd]/features/chat/lib/hooks/useRefetchAgentVersionDetailsOnClose';
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { LayoutHelpers, ParsePipelineHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
@@ -57,9 +58,12 @@ const PipelineEditorContent = memo(props => {
     projectId,
     handleAttachmentToolChange,
     entityProjectId,
+    onConversationStartersChange,
   } = props;
   const { setFieldValue } = useFormikContext();
   const styles = getStyles();
+
+  useConversationStartersSync(onConversationStartersChange);
 
   // LLM Settings setter for the modal dialog
   const onLLMSettingsChange = useCallback(
@@ -109,6 +113,7 @@ const PipelineEditor = forwardRef(
       stopRunOnNodeStop,
       activeParticipantId,
       onAttachmentToolChange,
+      onConversationStartersChange,
     },
     ref,
   ) => {
@@ -490,6 +495,7 @@ const PipelineEditor = forwardRef(
               pipelineId={pipelineId}
               projectId={projectId}
               handleAttachmentToolChange={handleAttachmentToolChange}
+              onConversationStartersChange={onConversationStartersChange}
               entityProjectId={pipeline?.entity_meta?.project_id}
             />
           )}
