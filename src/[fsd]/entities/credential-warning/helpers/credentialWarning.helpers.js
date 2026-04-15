@@ -7,7 +7,7 @@ export const hasCredentialConfigChanged = (current, original) => {
     const orig = originalSettings[key];
 
     // Check if this is a credential object
-    if (typeof curr === 'object' && curr != null && 'elitea_title' in curr) {
+    if (typeof curr === 'object' && curr != null && 'elitea_title' in curr && orig?.elitea_title) {
       // Check if private flag or credential selection changed
       return curr.private !== orig?.private || curr.elitea_title !== orig?.elitea_title;
     }
@@ -29,7 +29,7 @@ export const revertCredentialFields = (editToolDetail, originalDetails) => {
     const orig = originalSettings[key];
 
     // Check if this is a credential object that has changed
-    if (typeof curr === 'object' && 'elitea_title' in curr) {
+    if (typeof curr === 'object' && 'elitea_title' in curr && orig?.elitea_title) {
       if (curr.private !== orig?.private || curr.elitea_title !== orig?.elitea_title) {
         revertedSettings[key] = orig;
       }
