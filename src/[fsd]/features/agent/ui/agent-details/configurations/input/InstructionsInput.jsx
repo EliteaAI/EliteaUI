@@ -1,17 +1,19 @@
-import { useCallback, useContext } from 'react';
+import { memo, useCallback } from 'react';
 
 import { useFormikContext } from 'formik';
 
+import { Box } from '@mui/material';
+
+import { useInstructionsInputRefContext } from '@/[fsd]/app/providers';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
+import { FileReaderEnhancer } from '@/[fsd]/shared/ui/input';
 import { contextResolver } from '@/common/utils';
-import FileReaderEnhancer from '@/pages/Common/Components/FileReaderInput';
-import FileReaderEnhancerRefContext from '@/pages/Common/Components/FileReaderInputRefContext';
 import { useTheme } from '@emotion/react';
 
-const ApplicationContext = ({ style, containerStyle, disabled }) => {
+const InstructionsInput = memo(({ style, containerStyle, disabled }) => {
   const theme = useTheme();
-  const inputRef = useContext(FileReaderEnhancerRefContext);
+  const inputRef = useInstructionsInputRefContext();
   const {
     values: { version_details },
     setFieldValue,
@@ -45,7 +47,7 @@ const ApplicationContext = ({ style, containerStyle, disabled }) => {
         {
           title: 'Instructions',
           content: (
-            <div style={containerStyle}>
+            <Box sx={containerStyle}>
               <FileReaderEnhancer
                 ref={inputRef}
                 showexpandicon="true"
@@ -59,12 +61,14 @@ const ApplicationContext = ({ style, containerStyle, disabled }) => {
                 disabled={disabled}
                 fieldName={'Instructions'}
               />
-            </div>
+            </Box>
           ),
         },
       ]}
     />
   );
-};
+});
 
-export default ApplicationContext;
+InstructionsInput.displayName = 'InstructionsInput';
+
+export default InstructionsInput;

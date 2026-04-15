@@ -2,10 +2,11 @@ import { forwardRef, useCallback, useImperativeHandle, useState } from 'react';
 
 import YAML from 'js-yaml';
 
+import { useTheme } from '@mui/material';
+
 import { Input } from '@/[fsd]/shared/ui';
 import { debounce, getFileFormat } from '@/common/utils';
 import useToast from '@/hooks/useToast';
-import { useTheme } from '@emotion/react';
 
 const FileReaderEnhancer = forwardRef(
   (
@@ -82,24 +83,27 @@ const FileReaderEnhancer = forwardRef(
     );
 
     return (
-      <>
-        <Input.StyledInputEnhancer
-          maxRows={15}
-          value={inputValue}
-          style={{ backgroundColor: highlightContext ? theme.palette.text.contextHighLight : '' }}
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onInput={handleInput}
-          onBlur={handleBlur}
-          hasActionsToolBar={hasActionsToolBar}
-          fieldName={fieldName}
-          {...props}
-        />
-      </>
+      <Input.StyledInputEnhancer
+        maxRows={15}
+        value={inputValue}
+        style={getStyle({ theme, highlightContext })}
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onInput={handleInput}
+        onBlur={handleBlur}
+        hasActionsToolBar={hasActionsToolBar}
+        fieldName={fieldName}
+        {...props}
+      />
     );
   },
 );
 
 FileReaderEnhancer.displayName = 'FileReaderEnhancer';
+
+const getStyle = ({ theme, highlightContext }) => ({
+  backgroundColor: highlightContext ? theme.palette.text.contextHighLight : '',
+});
+
 export default FileReaderEnhancer;

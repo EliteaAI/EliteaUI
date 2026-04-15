@@ -332,222 +332,224 @@ const ToolCard = memo(props => {
       }
       placement="top"
     >
-      <Box sx={styles.cardContainer}>
-        <Box sx={styles.cardHeader}>
-          <EntityIcon
-            sx={styles.entityIcon}
-            imageStyle={styles.entityIconImage}
-            icon={getToolkitIconMeta(tool, isMcp)}
-            entityType={entityType}
-            projectId={projectId}
-            editable={false}
-          />
-          <Box sx={styles.contentBox(isAgentOrPipeline)}>
-            <Box sx={styles.titleRow}>
-              <TypographyWithConditionalTooltip
-                title={toolkitName}
-                placement="right"
-                variant="bodyMedium"
-                component="div"
-                color="text.secondary"
-                sx={styles.toolkitName}
-              >
-                {toolkitName}
-              </TypographyWithConditionalTooltip>
-              {isAttachmentToolkit && (
-                <IconButton
-                  variant="elitea"
-                  color="tertiary"
-                  size="small"
-                  disabled
-                  sx={styles.attachmentButton}
+      <>
+        <Box sx={styles.cardContainer}>
+          <Box sx={styles.cardHeader}>
+            <EntityIcon
+              sx={styles.entityIcon}
+              imageStyle={styles.entityIconImage}
+              icon={getToolkitIconMeta(tool, isMcp)}
+              entityType={entityType}
+              projectId={projectId}
+              editable={false}
+            />
+            <Box sx={styles.contentBox(isAgentOrPipeline)}>
+              <Box sx={styles.titleRow}>
+                <TypographyWithConditionalTooltip
+                  title={toolkitName}
+                  placement="right"
+                  variant="bodyMedium"
+                  component="div"
+                  color="text.secondary"
+                  sx={styles.toolkitName}
                 >
-                  <AttachIcon style={styles.attachIcon} />
-                </IconButton>
+                  {toolkitName}
+                </TypographyWithConditionalTooltip>
+                {isAttachmentToolkit && (
+                  <IconButton
+                    variant="elitea"
+                    color="tertiary"
+                    size="small"
+                    disabled
+                    sx={styles.attachmentButton}
+                  >
+                    <AttachIcon style={styles.attachIcon} />
+                  </IconButton>
+                )}
+              </Box>
+
+              {/* Version Selector for Agents and Pipelines */}
+              {isAgentOrPipeline && (
+                <AgentPipelineVersionSelector
+                  tool={tool}
+                  index={index}
+                  applicationId={applicationId}
+                  disabled={disabled}
+                  entityProjectId={entityProjectId}
+                />
+              )}
+
+              {/* Variables Toggle for Agents/Pipelines with variables */}
+              {hasVariables && (
+                <Box
+                  sx={styles.variablesToggle}
+                  onClick={onToggleVariables}
+                >
+                  <Typography
+                    component="span"
+                    variant="bodySmall2"
+                    sx={styles.variablesToggleLabel}
+                  >
+                    {showVariables ? 'Hide variables' : 'Show variables'}
+                  </Typography>
+                  <Typography
+                    component="span"
+                    variant="bodySmall2"
+                    sx={styles.variablesToggleCount}
+                  >
+                    ({tool.variables?.length})
+                  </Typography>
+                </Box>
+              )}
+
+              {/* Regular Tool Card Body for non-agent/pipeline tools */}
+              {!isAgentOrPipeline && ToolCardComponent && (
+                <ToolCardComponent
+                  tool={tool}
+                  onClickShowActions={onClickShowActions}
+                  showActions={showActions}
+                />
               )}
             </Box>
-
-            {/* Version Selector for Agents and Pipelines */}
-            {isAgentOrPipeline && (
-              <AgentPipelineVersionSelector
-                tool={tool}
-                index={index}
-                applicationId={applicationId}
-                disabled={disabled}
-                entityProjectId={entityProjectId}
-              />
-            )}
-
-            {/* Variables Toggle for Agents/Pipelines with variables */}
-            {hasVariables && (
-              <Box
-                sx={styles.variablesToggle}
-                onClick={onToggleVariables}
-              >
-                <Typography
-                  component="span"
-                  variant="bodySmall2"
-                  sx={styles.variablesToggleLabel}
-                >
-                  {showVariables ? 'Hide variables' : 'Show variables'}
-                </Typography>
-                <Typography
-                  component="span"
-                  variant="bodySmall2"
-                  sx={styles.variablesToggleCount}
-                >
-                  ({tool.variables?.length})
-                </Typography>
-              </Box>
-            )}
-
-            {/* Regular Tool Card Body for non-agent/pipeline tools */}
-            {!isAgentOrPipeline && ToolCardComponent && (
-              <ToolCardComponent
-                tool={tool}
-                onClickShowActions={onClickShowActions}
-                showActions={showActions}
-              />
-            )}
-          </Box>
-          <Box sx={styles.buttonsContainer}>
-            {validationInfo && (
-              <>
+            <Box sx={styles.buttonsContainer}>
+              {validationInfo && (
+                <>
+                  <Tooltip
+                    title="Refresh toolkit"
+                    placement="top"
+                  >
+                    <IconButton
+                      id={'RefreshButton'}
+                      variant="elitea"
+                      color="tertiary"
+                      aria-label="refresh toolkit"
+                      onClick={doValidateVersion}
+                      sx={styles.actionButton}
+                    >
+                      <RefreshIcon />
+                    </IconButton>
+                  </Tooltip>
+                  <Box
+                    component={AttentionIcon}
+                    sx={styles.attentionIcon}
+                  />
+                </>
+              )}
+              {(!tool.meta?.mcp || tool.online || tool.type === 'mcp') && (
                 <Tooltip
-                  title="Refresh toolkit"
+                  title={openTooltipText}
                   placement="top"
                 >
                   <IconButton
-                    id={'RefreshButton'}
+                    id={'OpenInNewTabButton'}
                     variant="elitea"
                     color="tertiary"
-                    aria-label="refresh toolkit"
-                    onClick={doValidateVersion}
+                    aria-label="open in new tab"
+                    onClick={onOpenInNewTab}
+                    disabled={disabled || (!tool?.id && !tool?.settings?.application_id)}
                     sx={styles.actionButton}
                   >
-                    <RefreshIcon />
+                    <OpenInNewIcon
+                      sx={styles.actionIcon}
+                      fill={!disabled ? theme.palette.icon.fill.default : theme.palette.icon.fill.disabled}
+                    />
                   </IconButton>
                 </Tooltip>
-                <Box
-                  component={AttentionIcon}
-                  sx={styles.attentionIcon}
-                />
-              </>
-            )}
-            {(!tool.meta?.mcp || tool.online || tool.type === 'mcp') && (
+              )}
               <Tooltip
-                title={openTooltipText}
+                title={removeTooltipText}
                 placement="top"
               >
                 <IconButton
-                  id={'OpenInNewTabButton'}
+                  id={'DeleteButton'}
                   variant="elitea"
                   color="tertiary"
-                  aria-label="open in new tab"
-                  onClick={onOpenInNewTab}
-                  disabled={disabled || (!tool?.id && !tool?.settings?.application_id)}
+                  aria-label="delete tool"
+                  onClick={onDelete}
+                  disabled={disabled}
                   sx={styles.actionButton}
                 >
-                  <OpenInNewIcon
+                  <DeleteIcon
                     sx={styles.actionIcon}
                     fill={!disabled ? theme.palette.icon.fill.default : theme.palette.icon.fill.disabled}
                   />
+                  {isLoading && <StyledCircleProgress size={20} />}
                 </IconButton>
               </Tooltip>
-            )}
-            <Tooltip
-              title={removeTooltipText}
-              placement="top"
-            >
-              <IconButton
-                id={'DeleteButton'}
-                variant="elitea"
-                color="tertiary"
-                aria-label="delete tool"
-                onClick={onDelete}
-                disabled={disabled}
-                sx={styles.actionButton}
-              >
-                <DeleteIcon
-                  sx={styles.actionIcon}
-                  fill={!disabled ? theme.palette.icon.fill.default : theme.palette.icon.fill.disabled}
+              {tool.type === 'mcp' && <McpLogInButton values={tool} />}
+              {tool.type === 'sharepoint' && spOauthEndpoint && (
+                <SharepointDelegatedLoginButton
+                  projectId={projectId}
+                  spConfig={spConfig}
+                  toolName={tool.name}
                 />
-                {isLoading && <StyledCircleProgress size={20} />}
-              </IconButton>
-            </Tooltip>
-            {tool.type === 'mcp' && <McpLogInButton values={tool} />}
-            {tool.type === 'sharepoint' && spOauthEndpoint && (
-              <SharepointDelegatedLoginButton
-                projectId={projectId}
-                spConfig={spConfig}
-                toolName={tool.name}
-              />
-            )}
-            {isMcp && (
-              <Tooltip
-                title={mcpDisconnectedTip}
-                placement="top"
-              >
-                <Box sx={styles.statusIconBox(tool.online || hasRemoteMcpLoggedIn)}>
-                  {tool.online || hasRemoteMcpLoggedIn ? (
-                    <OnlineIcon style={styles.statusIconOnline} />
-                  ) : (
-                    <OfflineIcon style={styles.statusIconOffline} />
-                  )}
-                </Box>
-              </Tooltip>
-            )}
+              )}
+              {isMcp && (
+                <Tooltip
+                  title={mcpDisconnectedTip}
+                  placement="top"
+                >
+                  <Box sx={styles.statusIconBox(tool.online || hasRemoteMcpLoggedIn)}>
+                    {tool.online || hasRemoteMcpLoggedIn ? (
+                      <OnlineIcon style={styles.statusIconOnline} />
+                    ) : (
+                      <OfflineIcon style={styles.statusIconOffline} />
+                    )}
+                  </Box>
+                </Tooltip>
+              )}
+            </Box>
           </Box>
+          {someToolsAreUnavailable && !validationInfo && !showActions && (
+            <Banner.BannerMessage message="Some tools are not available anymore." />
+          )}
+          {showVariables && (
+            <AgentVariables
+              variables={variables}
+              onChangeVariable={onChangeVariable}
+            />
+          )}
+          {/* Move ToolActionsComponent inside the main card container */}
+          <ToolActionsComponent
+            toolOptions={toolOptions}
+            selectedTools={tool?.settings?.selected_tools}
+            availableTools={availableTools}
+            showActions={showActions}
+            tool={tool}
+            index={index}
+            type={tool?.type}
+            disabled={disabled}
+          />
+          <AlertDialog
+            title={dialogTitle}
+            alertContent={dialogContent}
+            open={openAlert}
+            alarm
+            onClose={onCloseAlert}
+            onCancel={onCloseAlert}
+            onConfirm={onConfirmAlert}
+            confirmButtonText="Remove"
+          />
         </Box>
-        {someToolsAreUnavailable && !validationInfo && !showActions && (
-          <Banner.BannerMessage message="Some tools are not available anymore." />
-        )}
-        {showVariables && (
-          <AgentVariables
-            variables={variables}
-            onChangeVariable={onChangeVariable}
-          />
-        )}
-        {/* Move ToolActionsComponent inside the main card container */}
-        <ToolActionsComponent
-          toolOptions={toolOptions}
-          selectedTools={tool?.settings?.selected_tools}
-          availableTools={availableTools}
-          showActions={showActions}
-          tool={tool}
-          index={index}
-          type={tool?.type}
-          disabled={disabled}
-        />
-        <AlertDialog
-          title={dialogTitle}
-          alertContent={dialogContent}
-          open={openAlert}
-          alarm
-          onClose={onCloseAlert}
-          onCancel={onCloseAlert}
-          onConfirm={onConfirmAlert}
-          confirmButtonText="Remove"
-        />
-      </Box>
-      {validationInfo &&
-        (typeof toolValidationMessage === 'object' &&
-        toolValidationMessage?.error_type === 'private_credential_not_found' &&
-        personal_project_id !== projectId ? (
-          <CredentialWarningBanner
-            credentialId={toolValidationMessage.credential_id}
-            credentialType={tool?.type}
-            section="credentials"
-          />
-        ) : (
-          <Banner.BannerMessage
-            message={
-              typeof toolValidationMessage === 'string'
-                ? toolValidationMessage
-                : toolValidationMessage?.message || JSON.stringify(toolValidationMessage)
-            }
-          />
-        ))}
+        {validationInfo &&
+          (typeof toolValidationMessage === 'object' &&
+          toolValidationMessage?.error_type === 'private_credential_not_found' &&
+          personal_project_id !== projectId ? (
+            <CredentialWarningBanner
+              credentialId={toolValidationMessage.credential_id}
+              credentialType={tool?.type}
+              section="credentials"
+            />
+          ) : (
+            <Banner.BannerMessage
+              message={
+                typeof toolValidationMessage === 'string'
+                  ? toolValidationMessage
+                  : toolValidationMessage?.message || JSON.stringify(toolValidationMessage)
+              }
+            />
+          ))}
+      </>
     </Tooltip>
   );
 });

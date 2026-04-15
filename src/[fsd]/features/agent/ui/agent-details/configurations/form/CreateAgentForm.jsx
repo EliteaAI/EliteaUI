@@ -4,6 +4,7 @@ import { useFormikContext } from 'formik';
 
 import { Box, Typography } from '@mui/material';
 
+import { AgentInput } from '@/[fsd]/features/agent/ui/agent-details/configurations';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { useFieldFocus } from '@/[fsd]/shared/lib/hooks';
 import { Input } from '@/[fsd]/shared/ui';
@@ -19,12 +20,8 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import TagEditor from '@/pages/Common/Components/TagEditor';
 import { useTheme } from '@emotion/react';
 
-import ApplicationContext from './ApplicationContext';
-import ApplicationWelcomeMessage from './ApplicationWelcomeMessage';
-
-const ApplicationCreateForm = memo(props => {
-  const { accordionStyle, sx } = props;
-
+const CreateAgentForm = memo(props => {
+  const { accordionStyle, sx, showInstructions = true } = props;
   const formik = useFormikContext();
   const theme = useTheme();
   const projectId = useSelectedProjectId();
@@ -188,21 +185,20 @@ const ApplicationCreateForm = memo(props => {
           },
         ]}
       />
-      <ApplicationContext
-        containerStyle={{ paddingBottom: '1rem' }}
-        style={{ marginTop: '1rem' }}
-      />
+      {showInstructions && (
+        <AgentInput.InstructionsInput
+          containerStyle={styles.instructionsContainer}
+          style={styles.instructionsInput}
+        />
+      )}
       <ApplicationVariables
         variables={variables}
         onChangeVariable={onChangeVariable}
-        style={{
-          marginBottom: '0',
-        }}
+        style={styles.variablesSection}
       />
-      <ApplicationWelcomeMessage style={{ marginTop: '1rem' }} />
-      {/*<ApplicationTools containerSX={{ paddingBottom: '16px' }} />*/}
-      <ConversationStarters style={{ marginTop: '1rem' }} />
-      <ApplicationAdvanceSettings style={{ marginTop: '1rem' }} />
+      <AgentInput.WelcomeMessageInput style={styles.welcomeMessageInput} />
+      <ConversationStarters style={styles.conversationStarters} />
+      <ApplicationAdvanceSettings style={styles.advanceSettings} />
     </Box>
   );
 });
@@ -247,8 +243,26 @@ const applicationCreateFormStyles = () => ({
     position: 'relative',
     top: '0.5rem',
   },
+  instructionsContainer: {
+    paddingBottom: '1rem',
+  },
+  instructionsInput: {
+    marginTop: '1rem',
+  },
+  variablesSection: {
+    marginBottom: '0',
+  },
+  welcomeMessageInput: {
+    marginTop: '1rem',
+  },
+  conversationStarters: {
+    marginTop: '1rem',
+  },
+  advanceSettings: {
+    marginTop: '1rem',
+  },
 });
 
-ApplicationCreateForm.displayName = 'ApplicationCreateForm';
+CreateAgentForm.displayName = 'CreateAgentForm';
 
-export default ApplicationCreateForm;
+export default CreateAgentForm;
