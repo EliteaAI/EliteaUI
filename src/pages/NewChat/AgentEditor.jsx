@@ -3,6 +3,8 @@ import React, { memo, useCallback, useMemo, useRef, useState } from 'react';
 import { useFormikContext } from 'formik';
 
 import { useTrackEvent } from '@/GA';
+import { InstructionsInputRefProvider } from '@/[fsd]/app/providers';
+import CreateAgentForm from '@/[fsd]/features/agent/ui/agent-details/configurations/form/CreateAgentForm';
 import useRefetchAgentVersionDetailsOnClose from '@/[fsd]/features/chat/lib/hooks/useRefetchAgentVersionDetailsOnClose';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
 import { useGetApplicationVersionDetailQuery, usePublicApplicationDetailsQuery } from '@/api/applications';
@@ -10,13 +12,11 @@ import { ChatParticipantType, PERMISSIONS, PUBLIC_PROJECT_ID, ViewMode } from '@
 import useCheckPermission from '@/hooks/useCheckPermission';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import ApplicationConfigurationForm from '@/pages/Applications/Components/Applications/ApplicationConfigurationForm';
-import ApplicationCreateForm from '@/pages/Applications/Components/Applications/ApplicationCreateForm';
 import getValidateSchema from '@/pages/Applications/Components/Applications/ApplicationCreationValidateSchema';
 import ApplicationValidator from '@/pages/Applications/Components/Applications/ApplicationValidator';
 import CreateApplicationSaveButton from '@/pages/Applications/Components/Applications/CreateApplicationSaveButton';
 import SaveApplicationButton from '@/pages/Applications/Components/Applications/SaveApplicationButton.jsx';
 import { useCreateApplicationInitialValues } from '@/pages/Applications/useApplicationInitialValues';
-import FileReaderEnhancerRefContext from '@/pages/Common/Components/FileReaderInputRefContext';
 import { ContentContainer } from '@/pages/Common/Components/StyledComponents.jsx';
 import BaseEditor from '@/pages/NewChat/components/BaseEditor.jsx';
 import LLMModelSelectorWrapper from '@/pages/NewChat/components/LLMModelSelectorWrapper';
@@ -69,7 +69,7 @@ const AgentEditorContent = memo(
             />
           )}
           {isCreateMode ? (
-            <ApplicationCreateForm sx={styles.createForm} />
+            <CreateAgentForm sx={styles.createForm} />
           ) : (
             <ApplicationConfigurationForm
               applicationId={agentId}
@@ -276,7 +276,7 @@ const AgentEditor = memo(
     const editorSubtitle = isCreateMode ? '' : initialValues?.version_details?.name;
 
     return (
-      <FileReaderEnhancerRefContext.Provider value={fileReaderEnhancerRef}>
+      <InstructionsInputRefProvider inputRef={fileReaderEnhancerRef}>
         <BaseEditor
           isVisible={isVisible}
           isDirty={isDirty}
@@ -309,7 +309,7 @@ const AgentEditor = memo(
             entityProjectId={agent?.entity_meta?.project_id}
           />
         </BaseEditor>
-      </FileReaderEnhancerRefContext.Provider>
+      </InstructionsInputRefProvider>
     );
   },
 );

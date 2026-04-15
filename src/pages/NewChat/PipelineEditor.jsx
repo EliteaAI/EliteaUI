@@ -16,6 +16,8 @@ import { useDispatch } from 'react-redux';
 import { Box, Tab, Tabs } from '@mui/material';
 
 import { useTrackEvent } from '@/GA';
+import { InstructionsInputRefProvider } from '@/[fsd]/app/providers';
+import CreateAgentForm from '@/[fsd]/features/agent/ui/agent-details/configurations/form/CreateAgentForm';
 import useRefetchAgentVersionDetailsOnClose from '@/[fsd]/features/chat/lib/hooks/useRefetchAgentVersionDetailsOnClose';
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { LayoutHelpers, ParsePipelineHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
@@ -34,7 +36,6 @@ import CreateApplicationSaveButton from '@/pages/Applications/Components/Applica
 import PipelineConfigurationForm from '@/pages/Applications/Components/Applications/PipelineConfigurationForm.jsx';
 import SaveApplicationButton from '@/pages/Applications/Components/Applications/SaveApplicationButton.jsx';
 import { useCreateApplicationInitialValues } from '@/pages/Applications/useApplicationInitialValues';
-import FileReaderEnhancerRefContext from '@/pages/Common/Components/FileReaderInputRefContext';
 import { ContentContainer } from '@/pages/Common/Components/StyledComponents.jsx';
 import BaseEditor from '@/pages/NewChat/components/BaseEditor.jsx';
 import LLMModelSelectorWrapper from '@/pages/NewChat/components/LLMModelSelectorWrapper';
@@ -49,7 +50,6 @@ const getPipelineId = pipeline => {
 
 const PipelineEditorContent = memo(props => {
   const {
-    isCreateMode,
     viewMode,
     canEditIt,
     isPublic,
@@ -74,19 +74,17 @@ const PipelineEditorContent = memo(props => {
 
   return (
     <ContentContainer height="100%">
-      {!isCreateMode && (
-        <LLMModelSelectorWrapper
-          projectId={projectId}
-          onLLMSettingsChange={onLLMSettingsChange}
-          disabled={!canEditIt}
-          modelTooltip={isPublic ? 'Model configuration is locked for Public agents' : undefined}
-          settingsTooltip={isPublic ? 'Model settings are locked for Public agents' : undefined}
-        />
-      )}
+      <LLMModelSelectorWrapper
+        projectId={projectId}
+        onLLMSettingsChange={onLLMSettingsChange}
+        disabled={!canEditIt}
+        modelTooltip={isPublic ? 'Model configuration is locked for Public agents' : undefined}
+        settingsTooltip={isPublic ? 'Model settings are locked for Public agents' : undefined}
+      />
       <PipelineConfigurationForm
-        applicationId={isCreateMode ? '' : pipelineId}
+        applicationId={pipelineId}
         viewMode={viewMode} // Use dynamic view mode
-        isChatView={isCreateMode ? false : true} // Show form fields in create mode
+        isChatView // Show form fields in create mode
         containerStyle={styles.configForm}
         hidePythonSandbox
         onAttachmentToolChange={handleAttachmentToolChange}
@@ -423,7 +421,7 @@ const PipelineEditor = forwardRef(
     const styles = getStyles();
 
     return (
-      <FileReaderEnhancerRefContext.Provider value={fileReaderEnhancerRef}>
+      <InstructionsInputRefProvider inputRef={fileReaderEnhancerRef}>
         <BaseEditor
           isVisible={isVisible}
           isDirty={totalDirty}
@@ -437,29 +435,36 @@ const PipelineEditor = forwardRef(
           error={error}
           onDirtyStateChange={onPipelineDirtyStateChange}
           formContent={
-            <StyledTabBar sx={styles.tabBar}>
-              <Box sx={styles.tabsContainer}>
-                <Tabs
-                  value={activeTab}
-                  onChange={handleTabChange}
-                  aria-label="pipeline editor tabs"
-                  sx={styles.customTabs}
-                >
-                  <Tab
-                    sx={styles.tab}
-                    icon={<GearIcon />}
-                    label="Configuration"
-                    iconPosition="start"
-                  />
-                  <Tab
-                    sx={styles.tab}
-                    icon={<FlowIcon />}
-                    label="Flow editor"
-                    iconPosition="start"
-                  />
-                </Tabs>
-              </Box>
-            </StyledTabBar>
+            isCreateMode ? (
+              <CreateAgentForm
+                sx={styles.createForm}
+                showInstructions={false}
+              />
+            ) : (
+              <StyledTabBar sx={styles.tabBar}>
+                <Box sx={styles.tabsContainer}>
+                  <Tabs
+                    value={activeTab}
+                    onChange={handleTabChange}
+                    aria-label="pipeline editor tabs"
+                    sx={styles.customTabs}
+                  >
+                    <Tab
+                      sx={styles.tab}
+                      icon={<GearIcon />}
+                      label="Configuration"
+                      iconPosition="start"
+                    />
+                    <Tab
+                      sx={styles.tab}
+                      icon={<FlowIcon />}
+                      label="Flow editor"
+                      iconPosition="start"
+                    />
+                  </Tabs>
+                </Box>
+              </StyledTabBar>
+            )
           }
           saveButton={
             isCreateMode ? (
@@ -479,7 +484,6 @@ const PipelineEditor = forwardRef(
           {/* Configuration Tab Content */}
           {activeTab === 0 && (
             <PipelineEditorContent
-              isCreateMode={isCreateMode}
               viewMode={viewMode}
               canEditIt={canEditIt}
               isPublic={isPublic}
@@ -507,7 +511,7 @@ const PipelineEditor = forwardRef(
             <Box sx={styles.createModeMessage}>Save the pipeline to access the flow editor.</Box>
           )}
         </BaseEditor>
-      </FileReaderEnhancerRefContext.Provider>
+      </InstructionsInputRefProvider>
     );
   },
 );
@@ -518,6 +522,12 @@ PipelineEditor.displayName = 'PipelineEditor';
  * @type {MuiSx}
  */
 const getStyles = () => ({
+  createForm: {
+    margin: '0 auto',
+    maxWidth: '100%',
+    width: '100%',
+    padding: '1rem',
+  },
   configForm: {
     paddingBottom: 0,
   },

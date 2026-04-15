@@ -1,14 +1,15 @@
-import { useCallback } from 'react';
+import { memo, useCallback } from 'react';
 
 import { useFormikContext } from 'formik';
 
 import WelcomeMessage from '@/components/WelcomeMessage';
 
-const ApplicationWelcomeMessage = ({ style = { marginTop: '16px' }, disabled }) => {
+const WelcomeMessageInput = memo(({ style, disabled }) => {
   const {
     values: { version_details },
     setFieldValue,
   } = useFormikContext();
+  const styles = getStyles();
   const handleChange = useCallback(
     event => setFieldValue('version_details.welcome_message', event.target.value),
     [setFieldValue],
@@ -19,10 +20,18 @@ const ApplicationWelcomeMessage = ({ style = { marginTop: '16px' }, disabled }) 
       key={`${version_details?.id}_welcome`}
       welcome_message={version_details?.welcome_message || ''}
       onChangeWelcomeMessage={handleChange}
-      style={style}
+      style={style || styles.container}
       disabled={disabled}
     />
   );
-};
+});
 
-export default ApplicationWelcomeMessage;
+const getStyles = () => ({
+  container: {
+    marginTop: '1rem',
+  },
+});
+
+WelcomeMessageInput.displayName = 'WelcomeMessageInput';
+
+export default WelcomeMessageInput;

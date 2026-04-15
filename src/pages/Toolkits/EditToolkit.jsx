@@ -390,7 +390,6 @@ export const EditToolkit = memo(props => {
 
   // Standard toolkit view (default or fallback)
   return (
-    // <FileReaderEnhancerRefContext.Provider value={fileReaderEnhancerRef}>
     <Formik
       enableReinitialize
       initialValues={normalizedInitialValues}
@@ -420,7 +419,6 @@ export const EditToolkit = memo(props => {
         />
       </Form>
     </Formik>
-    // </FileReaderEnhancerRefContext.Provider>
   );
 });
 

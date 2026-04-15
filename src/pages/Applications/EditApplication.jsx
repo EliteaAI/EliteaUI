@@ -3,6 +3,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Form, Formik } from 'formik';
 import { useParams, useSearchParams } from 'react-router-dom';
 
+import { InstructionsInputRefProvider } from '@/[fsd]/app/providers';
 import { ApplicationControls, ApplicationTabBar } from '@/[fsd]/entities/application-tab-bar/ui';
 import { useIsVersionNotFound } from '@/[fsd]/entities/version/lib/hooks';
 import { ViewMode } from '@/common/constants';
@@ -12,7 +13,6 @@ import useCorrectUserNameInUrl from '@/hooks/application/useCorrectUserNameInUrl
 import useNavBlocker from '@/hooks/useNavBlocker';
 import useToast from '@/hooks/useToast';
 import useViewMode from '@/hooks/useViewMode';
-import FileReaderEnhancerRefContext from '@/pages/Common/Components/FileReaderInputRefContext';
 import Page404 from '@/pages/Page404.jsx';
 
 import getValidateSchema from './Components/Applications/ApplicationCreationValidateSchema';
@@ -117,7 +117,7 @@ const EditApplication = memo(() => {
   }
 
   return (
-    <FileReaderEnhancerRefContext.Provider value={fileReaderEnhancerRef}>
+    <InstructionsInputRefProvider inputRef={fileReaderEnhancerRef}>
       <Formik
         enableReinitialize
         initialValues={initialValues}
@@ -135,7 +135,7 @@ const EditApplication = memo(() => {
           />
         </Form>
       </Formik>
-    </FileReaderEnhancerRefContext.Provider>
+    </InstructionsInputRefProvider>
   );
 });
 

@@ -2,10 +2,10 @@ import { Form, Formik } from 'formik';
 
 import { Grid } from '@mui/material';
 
+import CreateAgentForm from '@/[fsd]/features/agent/ui/agent-details/configurations/form/CreateAgentForm';
 import StyledTabs from '@/components/StyledTabs';
 import { StyledGridContainer } from '@/pages/Common/Components';
 
-import ApplicationCreateForm from './Components/Applications/ApplicationCreateForm';
 import getValidateSchema from './Components/Applications/ApplicationCreationValidateSchema';
 import CreateApplicationTabBar from './Components/Applications/CreateApplicationTabBar';
 import { useCreateApplicationInitialValues } from './useApplicationInitialValues';
@@ -51,9 +51,7 @@ export default function CreateApplication() {
                       },
                     })}
                   >
-                    <ApplicationCreateForm
-                    // sx={{ display: editToolDetail ? 'none' : 'block' }}
-                    />
+                    <CreateAgentForm />
                   </Grid>
                 </StyledGridContainer>
               </Form>

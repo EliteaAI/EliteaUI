@@ -2,15 +2,13 @@ import { memo, useMemo } from 'react';
 
 import { Box } from '@mui/material';
 
-import { ApplicationTools } from '@/[fsd]/features/agent/ui/agent-details/configurations';
+import { AgentInput, ApplicationTools } from '@/[fsd]/features/agent/ui/agent-details/configurations';
 import { ViewMode } from '@/common/constants.js';
 import ApplicationAdvanceSettings from '@/components/ApplicationAdvanceSettings';
 import ApplicationVariables from '@/components/ApplicationVariables.jsx';
 import ConversationStarters from '@/components/ConversationStarters';
-import ApplicationContext from '@/pages/Applications/Components/Applications/ApplicationContext';
 import ApplicationEditForm from '@/pages/Applications/Components/Applications/ApplicationEditForm';
 import ApplicationInformation from '@/pages/Applications/Components/Applications/ApplicationInformation';
-import ApplicationWelcomeMessage from '@/pages/Applications/Components/Applications/ApplicationWelcomeMessage';
 
 const ApplicationConfigurationForm = memo(props => {
   const {
@@ -28,12 +26,12 @@ const ApplicationConfigurationForm = memo(props => {
   return (
     <Box sx={{ ...styles.container, ...containerStyle }}>
       {!isChatView && <ApplicationEditForm />}
-      <ApplicationContext
+      <AgentInput.InstructionsInput
         style={styles.contextSection}
         disabled={isDisabled}
       />
       <ApplicationVariables style={styles.section} />
-      <ApplicationWelcomeMessage
+      <AgentInput.WelcomeMessageInput
         style={styles.section}
         disabled={isDisabled}
       />
