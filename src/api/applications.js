@@ -833,6 +833,20 @@ export const apiSlice = eliteaApi
         providesTags: (result, error, { projectId, applicationId, versionId }) => [
           { type: 'ApplicationValidation', id: `${projectId}-${applicationId}-${versionId}` },
         ],
+        onQueryStarted: async (args, { dispatch, queryFulfilled }) => {
+          try {
+            await queryFulfilled;
+          } catch {
+            // When validation fails, invalidate the version details cache
+            // so stale data doesn't persist
+            const { projectId, applicationId, versionId } = args;
+            dispatch(
+              eliteaApi.util.invalidateTags([
+                { type: TAG_TYPE_APPLICATION_DETAILS, id: `${projectId}_${applicationId}_${versionId}` },
+              ]),
+            );
+          }
+        },
       }),
       setAgentAttachmentStorage: build.mutation({
         query: ({ projectId, applicationId, versionId, toolkit_id }) => {
