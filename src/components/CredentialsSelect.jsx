@@ -488,7 +488,6 @@ const CredentialsSelect = memo(
     );
 
     const labelNode = useMemo(() => {
-      if (!description) return undefined;
       return (
         <InputLabel
           id={`simple-select-label-${label}`}
@@ -504,20 +503,22 @@ const CredentialsSelect = memo(
             component="span"
             sx={{ marginLeft: '0.15rem', ':hover': { opacity: 0.8 } }}
           >
-            <Tooltip
-              title={description}
-              placement="top"
-            >
-              <Box
-                component="span"
-                sx={{ display: 'inline-flex', verticalAlign: 'middle' }}
+            {description && (
+              <Tooltip
+                title={description}
+                placement="top"
               >
-                <InfoIcon
-                  width={18}
-                  height={18}
-                />
-              </Box>
-            </Tooltip>
+                <Box
+                  component="span"
+                  sx={{ display: 'inline-flex', verticalAlign: 'middle' }}
+                >
+                  <InfoIcon
+                    width={18}
+                    height={18}
+                  />
+                </Box>
+              </Tooltip>
+            )}
           </Box>
         </InputLabel>
       );
