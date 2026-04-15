@@ -18,6 +18,7 @@ import { Box, Tab, Tabs } from '@mui/material';
 import { useTrackEvent } from '@/GA';
 import { InstructionsInputRefProvider } from '@/[fsd]/app/providers';
 import CreateAgentForm from '@/[fsd]/features/agent/ui/agent-details/configurations/form/CreateAgentForm';
+import { useConversationStartersSync } from '@/[fsd]/features/chat/lib/hooks';
 import useRefetchAgentVersionDetailsOnClose from '@/[fsd]/features/chat/lib/hooks/useRefetchAgentVersionDetailsOnClose';
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { LayoutHelpers, ParsePipelineHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
@@ -39,7 +40,6 @@ import { useCreateApplicationInitialValues } from '@/pages/Applications/useAppli
 import { ContentContainer } from '@/pages/Common/Components/StyledComponents.jsx';
 import BaseEditor from '@/pages/NewChat/components/BaseEditor.jsx';
 import LLMModelSelectorWrapper from '@/pages/NewChat/components/LLMModelSelectorWrapper';
-import { useConversationStartersSync } from '@/pages/NewChat/components/useConversationStartersSync';
 import EditorPanel from '@/pages/Pipelines/Components/EditorPanel';
 import { actions } from '@/slices/pipeline';
 import { actions as editorActions } from '@/slices/pipelineEditor';

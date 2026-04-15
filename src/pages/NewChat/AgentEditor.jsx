@@ -3,6 +3,7 @@ import React, { memo, useCallback, useMemo, useRef, useState } from 'react';
 import { useFormikContext } from 'formik';
 
 import { useTrackEvent } from '@/GA';
+import { useConversationStartersSync } from '@/[fsd]/features/chat/lib/hooks';
 import { InstructionsInputRefProvider } from '@/[fsd]/app/providers';
 import CreateAgentForm from '@/[fsd]/features/agent/ui/agent-details/configurations/form/CreateAgentForm';
 import useRefetchAgentVersionDetailsOnClose from '@/[fsd]/features/chat/lib/hooks/useRefetchAgentVersionDetailsOnClose';
@@ -20,7 +21,6 @@ import { useCreateApplicationInitialValues } from '@/pages/Applications/useAppli
 import { ContentContainer } from '@/pages/Common/Components/StyledComponents.jsx';
 import BaseEditor from '@/pages/NewChat/components/BaseEditor.jsx';
 import LLMModelSelectorWrapper from '@/pages/NewChat/components/LLMModelSelectorWrapper';
-import { useConversationStartersSync } from '@/pages/NewChat/components/useConversationStartersSync';
 
 const getAgentId = agent => {
   // agent is a chat participant with entity_meta structure
