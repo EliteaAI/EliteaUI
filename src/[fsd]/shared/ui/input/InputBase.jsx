@@ -1,9 +1,6 @@
 import { memo, useCallback, useMemo, useState } from 'react';
 
-import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
-import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import { Box, TextField as MuiTextField } from '@mui/material';
-import IconButton from '@mui/material/IconButton';
 
 import { Label } from '@/[fsd]/shared/ui';
 import useAutoBlur from '@/hooks/useAutoBlur';
@@ -71,7 +68,6 @@ const PROMPT_PAGE_INPUT = {
 const InputBase = memo(props => {
   const {
     variant = INPUT_VARIANTS.standard,
-    showexpandicon = false,
     editswitcher = false,
     editswitchconfig = {},
     onDrop,
@@ -232,28 +228,13 @@ const InputBase = memo(props => {
               sx: styles.inputSlot,
               readOnly: editswitcher,
               onDoubleClick: () => {},
-              endAdornment:
-                showexpandicon && !hasActionsToolBar ? (
-                  <IconButton
-                    size="small"
-                    variant="icon"
-                    color="tertiary"
-                    onClick={switchRows}
-                    sx={styles.expandIconButton}
-                  >
-                    {isExpanded ? (
-                      <UnfoldLessIcon sx={[styles.unfoldIcon, styles.iconSize]} />
-                    ) : (
-                      <UnfoldMoreIcon sx={[styles.unfoldIcon, styles.iconSize]} />
-                    )}
-                  </IconButton>
-                ) : null,
               disableUnderline,
             },
             htmlInput: inputProps,
             inputLabel: {
               ...InputLabelProps,
               sx: {
+                textOverflow: 'clip',
                 ...InputLabelProps?.sx,
                 ...(leftProps.required && { '& .MuiInputLabel-asterisk': { display: 'none' } }),
                 ...(tooltipDescription && { pointerEvents: 'auto', zIndex: 1 }),
@@ -281,7 +262,7 @@ const styledInputBaseStyles = (hasLabel, editswitcher, editswitchconfig, isColla
     display: 'flex',
     justifyContent: 'flex-end',
     gap: spacing(0.5),
-    top: hasLabel ? '-0.15rem' : '-1.25rem',
+    top: hasLabel ? '0.15rem' : '-1.25rem',
     right: spacing(1.5),
     zIndex: 999,
   }),

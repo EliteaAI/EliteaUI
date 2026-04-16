@@ -94,7 +94,7 @@ const NameDescriptionInput = memo(props => {
         <Box sx={styles.descriptionContainer}>
           <Input.StyledInputEnhancer
             autoComplete="off"
-            showexpandicon
+            hasActionsToolBar
             id="tool-description"
             label="Description"
             multiline
@@ -148,7 +148,6 @@ const nameDescriptionInputStyles = () => ({
     display: 'flex',
     flexDirection: 'column',
     position: 'relative',
-    marginTop: '1rem',
   },
   descriptionLengthMessage: {
     textAlign: 'right',
