@@ -94,6 +94,7 @@ AgentEditorContent.displayName = 'AgentEditorContent';
 const AgentEditor = memo(
   ({
     agent,
+    versionName,
     onCloseAgentEditor,
     isVisible,
     isCreateMode = false,
@@ -139,7 +140,7 @@ const AgentEditor = memo(
       error: publicError,
       refetch: refetchPublicAppDetails,
     } = usePublicApplicationDetailsQuery(
-      { applicationId: agentId },
+      { applicationId: agentId, versionName },
       { skip: !isVisible || !agentId || !isPublishedAgent || isCreateMode },
     );
     const versionDetails = isPublishedAgent ? publicAppDetails : privateVersionDetails;

@@ -1370,6 +1370,11 @@ const NewChat = props => {
             >
               <AgentEditor
                 agent={editingAgent}
+                versionName={
+                  activeParticipantDetails?.versions?.find(
+                    v => v.id === activeParticipant?.entity_settings?.version_id,
+                  )?.name
+                }
                 onCloseAgentEditor={handleCloseAgentEditor}
                 onAgentCreated={onAgentCreated}
                 onAgentSaved={handleAgentSaved}

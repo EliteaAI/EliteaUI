@@ -420,8 +420,11 @@ export const apiSlice = eliteaApi
         },
       }),
       publicApplicationDetails: build.query({
-        query: ({ applicationId }) => {
-          const url = apiSlicePath + '/public_application/prompt_lib/' + applicationId;
+        query: ({ applicationId, versionName }) => {
+          let url = apiSlicePath + '/public_application/prompt_lib/' + applicationId;
+          if (versionName) {
+            url += '/' + versionName;
+          }
           return {
             url,
           };
