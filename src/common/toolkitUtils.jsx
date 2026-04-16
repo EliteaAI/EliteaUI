@@ -35,7 +35,8 @@ import JiraIcon from '@/assets/jira.svg?react';
 import LangfuseIcon from '@/assets/langfuse.svg?react';
 import LlmIcon from '@/assets/llm.svg?react';
 import MCPIcon from '@/assets/mcp-icon.svg?react';
-import MemoryIcon from '@/assets/memory-icon.svg?react';
+import MemoryIcon from '@/assets/memory.svg?react';
+import MiroIcon from '@/assets/miro.svg?react';
 import OllamaIcon from '@/assets/ollama.svg?react';
 import PieChartIcon from '@/assets/pie-chart-icon.svg?react';
 import PostgreSQLIcon from '@/assets/postgre-sql-icon.svg?react';
@@ -328,6 +329,8 @@ const getPredefinedIcon = (type, iconProps) => {
       return <Context7Icon {...iconProps} />;
     case 'mcp_Buddy':
       return <BuddyIcon {...iconProps} />;
+    case 'mcp_Miro':
+      return <MiroIcon {...iconProps} />;
     case 'mcp_Atlassian Server':
       return <AtlassianIcon {...iconProps} />;
     default:
