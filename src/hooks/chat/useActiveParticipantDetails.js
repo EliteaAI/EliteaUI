@@ -31,7 +31,7 @@ const useActiveParticipantDetails = ({ activeParticipant, skip }) => {
           entity_meta.id,
           entity_settings.version_id,
           entityProjectId,
-          { versionName },
+          versionName,
         );
       }
 

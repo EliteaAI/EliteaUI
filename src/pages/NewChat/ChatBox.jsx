@@ -1418,7 +1418,7 @@ const ChatBox = forwardRef((props, boxRef) => {
           activeParticipant?.entity_meta.id,
           activeParticipant?.entity_settings?.version_id,
           activeParticipant?.entity_meta.project_id,
-          { versionName },
+          versionName,
         );
         setOriginalParticipant({
           ...details,
@@ -1485,7 +1485,7 @@ const ChatBox = forwardRef((props, boxRef) => {
         activeParticipant?.entity_meta.id,
         version.id,
         activeParticipant?.entity_meta.project_id,
-        { versionName: version.name },
+        version.name,
       );
 
       onChangeParticipantSettings(

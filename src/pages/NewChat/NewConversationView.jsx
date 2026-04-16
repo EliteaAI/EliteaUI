@@ -457,7 +457,7 @@ const NewConversationView = forwardRef(
           selectedParticipant?.entity_meta?.project_id ||
             selectedParticipant?.project_id ||
             selectedProjectId,
-          { versionName: version.name },
+          version.name,
         );
         const updatedParticipant = {
           ...(selectedParticipant || {}),

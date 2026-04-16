@@ -72,7 +72,7 @@ const useFetchParticipantDetails = () => {
   );
 
   const fetchOriginalVersionDetails = useCallback(
-    async (type, id, versionId, projectId, { versionName } = {}) => {
+    async (type, id, versionId, projectId, versionName) => {
       if (!versionId) {
         return {};
       }
