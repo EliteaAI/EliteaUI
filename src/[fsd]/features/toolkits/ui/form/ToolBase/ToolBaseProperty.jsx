@@ -66,6 +66,7 @@ const ToolBaseProperty = memo(props => {
     max_toolkit_length,
     ui_component: uiComponent,
     visible_when: visibleWhen,
+    placeholder: schemaPlaceholder,
   } = v || {};
 
   // Extract enum items - check direct enum first, then look in anyOf
@@ -415,13 +416,19 @@ const ToolBaseProperty = memo(props => {
     } else if ((type === 'string' || anyOf?.find(item => item.type === 'string')) && !!enumItems?.length) {
       const options = enumItems.map(item => ({ label: item, value: item }));
       const currentValue = settings[k];
-      // Ensure the value exists in options, otherwise use empty string
-      const validValue = options.some(opt => opt.value === currentValue) ? currentValue : '';
+      // Get default value from schema (check direct property and anyOf)
+      const schemaDefault = v?.default ?? anyOf?.find(item => item.default !== undefined)?.default;
+      // Use current value if valid, otherwise fall back to schema default, then empty string
+      const validValue = options.some(opt => opt.value === currentValue)
+        ? currentValue
+        : options.some(opt => opt.value === schemaDefault)
+          ? schemaDefault
+          : '';
 
       return (
         <SingleSelect
           showBorder
-          label={label}
+          label={description ? renderLabelWithHint(required) : label}
           onValueChange={value => editField(buildEditFieldPath(k), value)}
           value={validValue}
           options={options}
@@ -470,6 +477,7 @@ const ToolBaseProperty = memo(props => {
           rows={parseInt(lines)}
           disabled={disableConfigFields || disabled}
           inputProps={max_toolkit_length ? { maxLength: max_toolkit_length } : undefined}
+          placeholder={schemaPlaceholder}
         />
       );
     } else if (type === 'configuration') {
@@ -578,10 +586,11 @@ const ToolBaseProperty = memo(props => {
       const maxLength = k === 'label' ? MAX_NAME_LENGTH : max_toolkit_length;
       const inputProps = maxLength ? { maxLength } : undefined;
 
-      // Get default value for placeholder (for integer fields with defaults)
+      // Get placeholder - use schema placeholder if provided, or default value for integer fields
       // Check both direct property and anyOf (for Optional[int] types)
       const defaultValue = v?.default ?? anyOf?.find(item => item.default !== undefined)?.default;
-      const placeholder = isInteger && defaultValue !== undefined ? String(defaultValue) : undefined;
+      const placeholder =
+        schemaPlaceholder || (isInteger && defaultValue !== undefined ? String(defaultValue) : undefined);
 
       return (
         <Box sx={styles.nameInputContainer}>
