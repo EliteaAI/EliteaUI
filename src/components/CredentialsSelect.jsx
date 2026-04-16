@@ -362,7 +362,8 @@ const CredentialsSelect = memo(
         if (sec === 'Create') {
           const baseUrl = `${window.location.protocol}//${window.location.host}`;
           const basename = getBasename();
-          const newPath = `${baseUrl}${basename}/${selectedProjectId}${RouteDefinitions.CreateCredentialTypeFromMain.replace(':credentialType', type)}?project_id=${option.private ? personal_project_id : selectedProjectId}${section ? `&section=${section}` : ''}`;
+          const projectId = option.private ? personal_project_id : selectedProjectId;
+          const newPath = `${baseUrl}${basename}/${projectId}${RouteDefinitions.CreateCredentialTypeFromMain.replace(':credentialType', type)}?${section ? `section=${section}` : ''}`;
           window.open(newPath, '_blank', 'noopener,noreferrer');
         } else {
           onSelectItem(option);
