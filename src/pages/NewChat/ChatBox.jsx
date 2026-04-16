@@ -1410,11 +1410,15 @@ const ChatBox = forwardRef((props, boxRef) => {
         activeParticipant.participantType !== ChatParticipantType.Toolkits &&
         details?.version_details?.name !== LATEST_VERSION_NAME
       ) {
+        const versionName = details.versions?.find(
+          v => v.id === activeParticipant?.entity_settings?.version_id,
+        )?.name;
         const versionDetails = await fetchOriginalVersionDetails(
           activeParticipant?.entity_name,
           activeParticipant?.entity_meta.id,
           activeParticipant?.entity_settings?.version_id,
           activeParticipant?.entity_meta.project_id,
+          versionName,
         );
         setOriginalParticipant({
           ...details,
@@ -1481,6 +1485,7 @@ const ChatBox = forwardRef((props, boxRef) => {
         activeParticipant?.entity_meta.id,
         version.id,
         activeParticipant?.entity_meta.project_id,
+        version.name,
       );
 
       onChangeParticipantSettings(

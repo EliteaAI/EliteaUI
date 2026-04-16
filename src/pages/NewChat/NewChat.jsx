@@ -232,6 +232,13 @@ const NewChat = props => {
     activeParticipant,
   });
 
+  const activeVersionName = useMemo(
+    () =>
+      activeParticipantDetails?.versions?.find(v => v.id === activeParticipant?.entity_settings?.version_id)
+        ?.name,
+    [activeParticipantDetails?.versions, activeParticipant?.entity_settings?.version_id],
+  );
+
   const { handleAttachmentToolChange } = useAttachmentToolChange({
     activeParticipant,
     refetchParticipantDetails,
@@ -1370,6 +1377,7 @@ const NewChat = props => {
             >
               <AgentEditor
                 agent={editingAgent}
+                versionName={activeVersionName}
                 onCloseAgentEditor={handleCloseAgentEditor}
                 onAgentCreated={onAgentCreated}
                 onAgentSaved={handleAgentSaved}
