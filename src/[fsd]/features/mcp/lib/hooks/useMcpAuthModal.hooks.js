@@ -51,6 +51,8 @@ export const extractMcpAuthMetadata = source => {
     // When present, tokens should be stored under "{configUuid}:{oauth_endpoint}" so that
     // two credentials sharing the same Azure AD tenant stay isolated.
     configurationUuid: resourceMetadata?.configuration_uuid,
+    // Toolkit ID for fetching credentials from database
+    toolkitId: resourceMetadata?.toolkit_id,
   };
 };
 
