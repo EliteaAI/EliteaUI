@@ -66,6 +66,7 @@ const ToolBaseProperty = memo(props => {
     max_toolkit_length,
     ui_component: uiComponent,
     visible_when: visibleWhen,
+    placeholder: schemaPlaceholder,
   } = v || {};
 
   // Extract enum items - check direct enum first, then look in anyOf
@@ -424,32 +425,10 @@ const ToolBaseProperty = memo(props => {
           ? schemaDefault
           : '';
 
-      // Build custom labelNode with info icon if description exists
-      const enumLabelNode = description ? (
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Typography variant="labelMedium">{label}</Typography>
-          <Tooltip
-            title={description}
-            placement="top"
-          >
-            <Box
-              component="span"
-              sx={{ marginLeft: '0.25rem', display: 'inline-flex', cursor: 'help' }}
-            >
-              <InfoIcon
-                width={14}
-                height={14}
-              />
-            </Box>
-          </Tooltip>
-        </Box>
-      ) : null;
-
       return (
         <SingleSelect
           showBorder
-          label={label}
-          labelNode={enumLabelNode}
+          label={description ? renderLabelWithHint(required) : label}
           onValueChange={value => editField(buildEditFieldPath(k), value)}
           value={validValue}
           options={options}
@@ -498,6 +477,7 @@ const ToolBaseProperty = memo(props => {
           rows={parseInt(lines)}
           disabled={disableConfigFields || disabled}
           inputProps={max_toolkit_length ? { maxLength: max_toolkit_length } : undefined}
+          placeholder={schemaPlaceholder}
         />
       );
     } else if (type === 'configuration') {
@@ -606,10 +586,11 @@ const ToolBaseProperty = memo(props => {
       const maxLength = k === 'label' ? MAX_NAME_LENGTH : max_toolkit_length;
       const inputProps = maxLength ? { maxLength } : undefined;
 
-      // Get default value for placeholder (for integer fields with defaults)
+      // Get placeholder - use schema placeholder if provided, or default value for integer fields
       // Check both direct property and anyOf (for Optional[int] types)
       const defaultValue = v?.default ?? anyOf?.find(item => item.default !== undefined)?.default;
-      const placeholder = isInteger && defaultValue !== undefined ? String(defaultValue) : undefined;
+      const placeholder =
+        schemaPlaceholder || (isInteger && defaultValue !== undefined ? String(defaultValue) : undefined);
 
       return (
         <Box sx={styles.nameInputContainer}>
