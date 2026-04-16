@@ -107,21 +107,99 @@ const cleanString = (s, maxLength = 0) => {
   return maxLength > 0 ? result.slice(0, maxLength) : result;
 };
 
+const isIndexingResultMessage = parsed =>
+  parsed !== null &&
+  typeof parsed === 'object' &&
+  'status' in parsed &&
+  'message' in parsed &&
+  typeof parsed.message === 'string';
+
+const prettifyIndexingResultMessage = parsed => {
+  const { status, message } = parsed;
+  const lines = message.split('\n').filter(Boolean);
+
+  if (lines.length === 0) return message;
+
+  const summaryLines = [];
+  const skippedCategories = [];
+  let inSkippedSection = false;
+
+  for (const line of lines) {
+    // Matches section header like "Skipped items (3 total):"
+    if (/^Skipped items \(\d+ total\):/.test(line)) {
+      inSkippedSection = true;
+      continue;
+    }
+
+    if (inSkippedSection) {
+      // Matches "  - Category Name (5): file1.txt, file2.zip" — captures name, count, file list
+      const categoryMatch = line.match(/^\s*-\s+(.+?)\s+\((\d+)\):\s*(.*)$/);
+      if (categoryMatch) {
+        const [, name, countStr, filesStr] = categoryMatch;
+        const count = parseInt(countStr, 10);
+        const files = filesStr
+          ? filesStr
+              .split(',')
+              .map(f => f.trim())
+              .filter(Boolean)
+          : [];
+        skippedCategories.push({ name, count, files });
+      }
+    } else {
+      summaryLines.push(line);
+    }
+  }
+
+  const output = [];
+
+  if (summaryLines.length > 0) {
+    const summaryIcon = status === 'ok' ? '✅ ' : status === 'error' ? '❌ ' : '';
+    // Reformat "Successfully indexed 40 documents." → "40 documents - Successfully indexed."
+    const reformatted = summaryLines.map(line => {
+      const match = line.match(/^(.+?)\s+(\d+\s+\w+)\.?\s*$/);
+      return match ? `${match[2]} — ${match[1]}` : line;
+    });
+    output.push(`${summaryIcon} ${reformatted.join('\n')}`);
+  }
+
+  if (skippedCategories.length > 0) {
+    for (const cat of skippedCategories) {
+      // Categories containing "error", "fail", or "runtime" are treated as failures (❌), others as warnings (⚠️)
+      const isError = /error|fail|runtime/i.test(cat.name);
+      const icon = isError ? '❌' : '⚠️';
+      output.push(`${icon}  ${cat.count} document${cat.count !== 1 ? 's' : ''} — ${cat.name}`);
+      for (const file of cat.files) {
+        output.push(`    → ${file}`);
+      }
+    }
+  } else if (!summaryLines.length) {
+    if (status === 'ok') output.push('✅ Completed successfully');
+    else if (status === 'error') output.push('❌ Failed');
+  }
+
+  return output.join('\n');
+};
+
 const prettifyToolkitMessage = message => {
   if (!message || typeof message !== 'string') return message;
 
+  // Matches a string that is exactly a JSON object (no leading/trailing non-whitespace)
   const jsonPattern = /^(\{[\s\S]*\})$/;
   const match = message.match(jsonPattern);
 
   if (match) {
     try {
       const parsed = JSON.parse(match[1]);
+
+      if (isIndexingResultMessage(parsed)) return prettifyIndexingResultMessage(parsed);
+
       return `\`\`\`json\n${JSON.stringify(parsed, null, 2)}\n\`\`\``;
     } catch {
       return message;
     }
   }
 
+  // Matches "Calling tool 'foo' with parameters: ..." — captures tool name and raw params string (s flag allows . to match newlines)
   const toolCallPattern = /^Calling tool '([^']+)' with parameters:\s*(.+)$/s;
   const toolMatch = message.match(toolCallPattern);
 
