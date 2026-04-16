@@ -15,7 +15,7 @@ jobs:
         with:
           dry-run: false
           ignore-branches-with-open-prs: true
-          days-before-branch-stale: 40
-          operations-per-run: 40
+          days-before-branch-stale: 20
+          operations-per-run: 200
           ignore-unknown-authors: true
-          default-recipient: aspect13
+          
