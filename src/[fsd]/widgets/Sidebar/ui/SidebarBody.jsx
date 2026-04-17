@@ -387,7 +387,7 @@ const sideBarBodyStyles = (sideBarCollapsed, socketStatus) => ({
     minHeight: `${NAV_BAR_HEIGHT_IN_PX} !important`,
     padding: '0 1rem',
     width: '100%',
-    justifyContent: 'space-between',
+    justifyContent: `${sideBarCollapsed ? 'center' : 'space-between'}`,
   },
   homeButton: {
     mr: 0,
@@ -395,7 +395,7 @@ const sideBarBodyStyles = (sideBarCollapsed, socketStatus) => ({
     paddingBottom: '1rem',
     paddingX: 0,
     background: 'transparent',
-    marginLeft: '-0.5rem',
+    marginLeft: `${sideBarCollapsed ? '0' : '-0.5rem'}`,
     boxSizing: 'border-box',
     width: '2.75rem',
     height: '2.75rem',
