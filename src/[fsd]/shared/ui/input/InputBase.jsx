@@ -160,9 +160,20 @@ const InputBase = memo(props => {
   const isCollapsed = rows === minRows && minRows !== maxRows;
   const isExpanded = rows === maxRows;
 
+  const needsLabelUnclip =
+    typeof leftProps.label !== 'string' || Boolean(tooltipDescription);
+
   const styles = useMemo(
-    () => styledInputBaseStyles(leftProps.label, editswitcher, editswitchconfig, isCollapsed, minRows),
-    [leftProps.label, editswitcher, editswitchconfig, isCollapsed, minRows],
+    () =>
+      styledInputBaseStyles(
+        leftProps.label,
+        editswitcher,
+        editswitchconfig,
+        isCollapsed,
+        minRows,
+        needsLabelUnclip,
+      ),
+    [leftProps.label, editswitcher, editswitchconfig, isCollapsed, minRows, needsLabelUnclip],
   );
 
   const getLabelContent = () => {
@@ -234,7 +245,7 @@ const InputBase = memo(props => {
             inputLabel: {
               ...InputLabelProps,
               sx: {
-                textOverflow: 'clip',
+                ...styles.inputLabelSlot,
                 ...InputLabelProps?.sx,
                 ...(leftProps.required && { '& .MuiInputLabel-asterisk': { display: 'none' } }),
                 ...(tooltipDescription && { pointerEvents: 'auto', zIndex: 1 }),
@@ -251,7 +262,21 @@ const InputBase = memo(props => {
 InputBase.displayName = 'InputBase';
 
 /** @type {MuiSx} */
-const styledInputBaseStyles = (hasLabel, editswitcher, editswitchconfig, isCollapsed, minRows) => ({
+const styledInputBaseStyles = (
+  hasLabel,
+  editswitcher,
+  editswitchconfig,
+  isCollapsed,
+  minRows,
+  needsLabelUnclip,
+) => ({
+  inputLabelSlot: {
+    textOverflow: 'clip',
+    ...(needsLabelUnclip && {
+      overflow: 'visible',
+      maxWidth: 'none',
+    }),
+  },
   containerBox: {
     position: 'relative',
     display: 'flex',
