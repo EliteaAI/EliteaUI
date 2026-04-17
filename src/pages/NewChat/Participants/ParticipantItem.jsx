@@ -104,6 +104,7 @@ const ParticipantItem = memo(props => {
   );
   const [versionName, setVersionName] = useState('');
   const [originalDetails, setOriginalDetails] = useState({});
+  const [hasFetchedDetails, setHasFetchedDetails] = useState(false);
   const { fetchOriginalDetails } = useFetchParticipantDetails();
 
   // Monitor MCP token changes for remote MCP toolkits
@@ -161,6 +162,25 @@ const ParticipantItem = memo(props => {
   }, [originalDetails?.name, entity_meta?.name, participantName]);
 
   const isPublishedParticipant = entity_meta?.project_id == PUBLIC_PROJECT_ID;
+
+  const isPublishedAgentGone = useMemo(
+    () => isPublishedParticipant && hasFetchedDetails && !originalDetails?.versions?.length,
+    [isPublishedParticipant, hasFetchedDetails, originalDetails?.versions?.length],
+  );
+
+  const isVersionUnavailable = useMemo(
+    () =>
+      isPublishedParticipant &&
+      hasFetchedDetails &&
+      originalDetails?.versions?.length > 0 &&
+      !originalDetails.versions.some(v => v.id === participant.entity_settings?.version_id),
+    [
+      isPublishedParticipant,
+      hasFetchedDetails,
+      originalDetails?.versions,
+      participant.entity_settings?.version_id,
+    ],
+  );
 
   useValidateApplicationVersion(
     !isPublishedParticipant &&
@@ -237,6 +257,14 @@ const ParticipantItem = memo(props => {
   const styles = participantItemStyles({ collapsed, isActive, maxWidth });
 
   const warningMessage = useMemo(() => {
+    if (isPublishedAgentGone) {
+      return 'Published agent is no longer available';
+    }
+
+    if (isVersionUnavailable) {
+      return 'Published version not available, select another version';
+    }
+
     if (totalValidationInfo?.length || toolkitValidationInfoList?.length) {
       const isPipelineAgent = participant.entity_settings?.agent_type === 'pipeline';
 
@@ -299,6 +327,8 @@ const ParticipantItem = memo(props => {
 
     return '';
   }, [
+    isPublishedAgentGone,
+    isVersionUnavailable,
     totalValidationInfo?.length,
     toolkitValidationInfoList?.length,
     shouldDisableThisItem,
@@ -348,10 +378,19 @@ const ParticipantItem = memo(props => {
   }, []);
 
   useEffect(() => {
-    if ((totalValidationInfo?.length || toolkitValidationInfoList?.length) && isActive) {
+    if (
+      (totalValidationInfo?.length || toolkitValidationInfoList?.length || isPublishedAgentGone) &&
+      isActive
+    ) {
       onClickItem(undefined); // Deselect if active and not matched
     }
-  }, [isActive, onClickItem, toolkitValidationInfoList?.length, totalValidationInfo?.length]);
+  }, [
+    isActive,
+    onClickItem,
+    toolkitValidationInfoList?.length,
+    totalValidationInfo?.length,
+    isPublishedAgentGone,
+  ]);
 
   useEffect(() => {
     const getVersions = async () => {
@@ -362,10 +401,11 @@ const ParticipantItem = memo(props => {
           entity_meta.project_id,
         );
         setOriginalDetails(data);
+        setHasFetchedDetails(true);
       }
     };
     // Only fetch original details if we don't have them yet
-    if (entity_meta?.id && entity_meta?.project_id && !originalDetails?.versions?.length) {
+    if (entity_meta?.id && entity_meta?.project_id && !hasFetchedDetails) {
       getVersions();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -397,7 +437,9 @@ const ParticipantItem = memo(props => {
     !mcpIsDisconnected &&
     !remoteMcpLoggedOut &&
     !spOAuthLoggedOut &&
-    !someToolsAreUnavailable ? (
+    !someToolsAreUnavailable &&
+    !isVersionUnavailable &&
+    !isPublishedAgentGone ? (
       <Box
         onClick={onClickHandler}
         onMouseEnter={onMouseEnter}
@@ -525,7 +567,7 @@ const ParticipantItem = memo(props => {
       </Box>
     ) : (
       <StyledTipsContainer
-        onClick={isActive ? onClickHandler : undefined}
+        onClick={isActive || isVersionUnavailable ? onClickHandler : undefined}
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
         sx={styles.attentionWrapper}
@@ -567,7 +609,7 @@ const ParticipantItem = memo(props => {
               participant={participant}
               onEdit={onEdit}
               onDelete={onDelete}
-              disabledEdit={disabledEdit}
+              disabledEdit={disabledEdit || isPublishedAgentGone || isVersionUnavailable}
               disabledDeleteButton={disabledEdit}
               showButtons={isHovering}
               showEditButton={showEditButton}

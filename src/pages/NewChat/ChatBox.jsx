@@ -34,6 +34,7 @@ import { useListModelsQuery } from '@/api/configurations.js';
 import {
   ChatParticipantType,
   PROMPT_PAYLOAD_KEY,
+  PUBLIC_PROJECT_ID,
   ROLES,
   ToolActionStatus,
   WELCOME_MESSAGE_ID,
@@ -1737,6 +1738,14 @@ const ChatBox = forwardRef((props, boxRef) => {
     ],
   );
 
+  const isActiveParticipantBroken = useMemo(() => {
+    if (!activeParticipant) return false;
+    if (activeParticipant.entity_meta?.project_id != PUBLIC_PROJECT_ID) return false;
+    const versions = activeParticipantDetails?.versions;
+    if (!versions) return false;
+    return !versions.some(v => v.id === activeParticipant.entity_settings?.version_id);
+  }, [activeParticipant, activeParticipantDetails?.versions]);
+
   const isInputDisabled = useMemo(
     () =>
       isLoadingConversation ||
@@ -1746,7 +1755,8 @@ const ChatBox = forwardRef((props, boxRef) => {
       isUpdatingInternalToolsConfig ||
       activeConversation?.isSending ||
       (hasPendingHitlInterrupt && !hitlEditMode) ||
-      isStreamingNow,
+      isStreamingNow ||
+      isActiveParticipantBroken,
     [
       isLoadingConversation,
       isProcessingSymbols,
@@ -1757,6 +1767,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       hasPendingHitlInterrupt,
       hitlEditMode,
       isStreamingNow,
+      isActiveParticipantBroken,
     ],
   );
 
