@@ -58,8 +58,17 @@ const NotificationTable = memo(props => {
     isIndeterminate,
     handleSelectAll,
     handleSelectRow,
-    clearSelection,
+    selectRows,
   } = useRowSelection({ rows, idField: 'id' });
+
+  const removeIdsFromSelection = useCallback(
+    ids => {
+      const idsSet = new Set(ids);
+
+      return selectRows(rowSelectionModel.filter(id => !idsSet.has(id)));
+    },
+    [rowSelectionModel, selectRows],
+  );
 
   const { page, pageSize } = paginationModel;
 
@@ -103,25 +112,12 @@ const NotificationTable = memo(props => {
     [setSortModel, setPaginationModel],
   );
 
-  const handleDeleteSelected = useCallback(async () => {
-    if (!rowSelectionModel.length || !personal_project_id) return;
-    try {
-      await bulkDeleteNotifications({ projectId: personal_project_id, ids: rowSelectionModel }).unwrap();
-      clearSelection();
-      toastSuccess('Notifications deleted successfully');
-    } catch (err) {
-      toastError(buildErrorMessage(err));
-    }
-  }, [
-    rowSelectionModel,
-    bulkDeleteNotifications,
-    personal_project_id,
-    clearSelection,
-    toastError,
-    toastSuccess,
-  ]);
-
   const selectedRowIds = useMemo(() => new Set(rowSelectionModel), [rowSelectionModel]);
+
+  const currentPageSelectedIds = useMemo(
+    () => rows.filter(row => selectedRowIds.has(row.id)).map(row => row.id),
+    [rows, selectedRowIds],
+  );
 
   const shouldMarkAsRead = useMemo(
     () => rows.some(row => selectedRowIds.has(row.id) && !row.is_seen),
@@ -129,30 +125,48 @@ const NotificationTable = memo(props => {
   );
 
   const canMarkToggle = useMemo(
-    () => rowSelectionModel.length > 0 && !!personal_project_id,
-    [rowSelectionModel, personal_project_id],
+    () => currentPageSelectedIds.length > 0 && !!personal_project_id,
+    [currentPageSelectedIds, personal_project_id],
   );
+
+  const handleDeleteSelected = useCallback(async () => {
+    if (!currentPageSelectedIds.length || !personal_project_id) return;
+    try {
+      await bulkDeleteNotifications({ projectId: personal_project_id, ids: currentPageSelectedIds }).unwrap();
+      removeIdsFromSelection(currentPageSelectedIds);
+      toastSuccess('Notifications deleted successfully');
+    } catch (err) {
+      toastError(buildErrorMessage(err));
+    }
+  }, [
+    currentPageSelectedIds,
+    bulkDeleteNotifications,
+    personal_project_id,
+    removeIdsFromSelection,
+    toastError,
+    toastSuccess,
+  ]);
 
   const handleMarkToggle = useCallback(async () => {
     if (!canMarkToggle) return;
     try {
       await bulkMarkSeenNotifications({
         projectId: personal_project_id,
-        ids: rowSelectionModel,
+        ids: currentPageSelectedIds,
         isSeen: shouldMarkAsRead,
       }).unwrap();
-      clearSelection();
+      removeIdsFromSelection(currentPageSelectedIds);
       toastSuccess(shouldMarkAsRead ? 'Notifications marked as read' : 'Notifications marked as unread');
     } catch (err) {
       toastError(buildErrorMessage(err));
     }
   }, [
     canMarkToggle,
-    rowSelectionModel,
+    currentPageSelectedIds,
     bulkMarkSeenNotifications,
     personal_project_id,
     shouldMarkAsRead,
-    clearSelection,
+    removeIdsFromSelection,
     toastError,
     toastSuccess,
   ]);
@@ -197,7 +211,7 @@ const NotificationTable = memo(props => {
         toolbarSx={styles.toolbarOverride}
         toolbar={
           <NotificationTableToolbar
-            rowSelectionModel={rowSelectionModel}
+            rowSelectionModel={currentPageSelectedIds}
             onDeleteSelected={handleDeleteSelected}
             onMarkToggle={handleMarkToggle}
             markAsRead={shouldMarkAsRead}
