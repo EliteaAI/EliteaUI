@@ -35,7 +35,6 @@ const ConversationStarters = memo(props => {
   );
   const styles = conversationStartersStyles(values.length === 0);
 
-  const addButtonRef = useRef(null);
   const inputRefs = useRef({});
   const [shouldFocusIndex, setShouldFocusIndex] = useState(null);
   const [blurredIndices, setBlurredIndices] = useState(new Set());
@@ -44,13 +43,6 @@ const ConversationStarters = memo(props => {
     const newIndex = values.length;
     setFieldValue(valuesPath, [...values, '']);
     setShouldFocusIndex(newIndex);
-    setTimeout(() => {
-      if (addButtonRef.current) {
-        addButtonRef.current.scrollIntoView({
-          behavior: 'smooth',
-        });
-      }
-    }, 0);
   }, [setFieldValue, values, valuesPath]);
 
   useEffect(() => {
@@ -176,7 +168,6 @@ const ConversationStarters = memo(props => {
                     <BaseBtn
                       variant={BUTTON_VARIANTS.iconLabel}
                       disabled={disableAdd}
-                      ref={addButtonRef}
                       onMouseDown={e => e.preventDefault()}
                       onClick={disableAdd ? null : onAdd}
                       startIcon={<PlusIcon />}

@@ -77,7 +77,7 @@ const PipelineEditorContent = memo(props => {
   );
 
   return (
-    <ContentContainer height="100%">
+    <Box>
       <LLMModelSelectorWrapper
         projectId={projectId}
         onLLMSettingsChange={onLLMSettingsChange}
@@ -87,14 +87,14 @@ const PipelineEditorContent = memo(props => {
       />
       <PipelineConfigurationForm
         applicationId={pipelineId}
-        viewMode={viewMode} // Use dynamic view mode
-        isChatView // Show form fields in create mode
+        viewMode={viewMode}
+        isChatView
         containerStyle={styles.configForm}
         hidePythonSandbox
         onAttachmentToolChange={handleAttachmentToolChange}
         entityProjectId={entityProjectId}
       />
-    </ContentContainer>
+    </Box>
   );
 });
 
@@ -440,12 +440,7 @@ const PipelineEditor = forwardRef(
           error={error}
           onDirtyStateChange={onPipelineDirtyStateChange}
           formContent={
-            isCreateMode ? (
-              <CreateAgentForm
-                sx={styles.createForm}
-                showInstructions={false}
-              />
-            ) : (
+            !isCreateMode ? (
               <StyledTabBar sx={styles.tabBar}>
                 <Box sx={styles.tabsContainer}>
                   <Tabs
@@ -469,7 +464,7 @@ const PipelineEditor = forwardRef(
                   </Tabs>
                 </Box>
               </StyledTabBar>
-            )
+            ) : null
           }
           saveButton={
             isCreateMode ? (
@@ -485,6 +480,13 @@ const PipelineEditor = forwardRef(
             projectId={pipeline?.entity_meta?.project_id || projectId}
             isCreateMode={isCreateMode}
           />
+
+          {isCreateMode && (
+            <CreateAgentForm
+              sx={styles.createForm}
+              showInstructions={false}
+            />
+          )}
 
           {/* Configuration Tab Content */}
           {activeTab === 0 && (
