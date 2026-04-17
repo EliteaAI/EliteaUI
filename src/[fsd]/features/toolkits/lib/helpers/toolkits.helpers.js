@@ -153,7 +153,8 @@ const prettifyIndexingResultMessage = parsed => {
   const output = [];
 
   if (summaryLines.length > 0) {
-    const summaryIcon = status === 'ok' ? '✅ ' : status === 'error' ? '❌ ' : '';
+    const isNeutral = summaryLines.some(line => /^no\s+new\b/i.test(line.trim()) || /\b0\s+\w+/i.test(line.trim()));
+    const summaryIcon = status === 'error' ? '❌ ' : isNeutral ? 'ℹ️ ' : status === 'ok' ? '✅ ' : '';
     // Reformat "Successfully indexed 40 documents." → "40 documents - Successfully indexed."
     const reformatted = summaryLines.map(line => {
       const match = line.match(/^(.+?)\s+(\d+\s+\w+)\.?\s*$/);

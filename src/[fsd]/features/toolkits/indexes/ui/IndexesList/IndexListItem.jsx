@@ -201,13 +201,15 @@ const indexListItem = () => ({
 
   additionalInfo: {
     display: 'flex',
-    gap: '1rem',
+    gap: '0.5rem',
   },
 
   infoItem: {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
+    flexShrink: 0,
+    whiteSpace: 'nowrap',
     gap: '0.5rem',
 
     svg: {
