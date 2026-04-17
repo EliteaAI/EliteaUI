@@ -268,7 +268,9 @@ const SidebarBody = memo(({ onKeyDown, onCollapsed }) => {
           </IconButton>
           {!sideBarCollapsed && <ThemeModeToggle />}
         </Box>
+
         <Divider sx={styles.divider} />
+
         <Box sx={styles.projectSection}>
           <ProjectSelect
             customSelectedColor={`${theme.palette.text.secondary} !important`}
@@ -405,14 +407,10 @@ const sideBarBodyStyles = (sideBarCollapsed, socketStatus) => ({
     borderColor: palette.border.sidebarDivider,
   }),
   projectSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingTop: '0.3125rem',
-    paddingBottom: '0.1875rem',
-    paddingLeft: '0.9375rem',
-    paddingRight: '1rem',
-    gap: '0.5rem',
     display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '0.5rem 1rem',
     boxSizing: 'border-box',
   },
   section: {
@@ -480,6 +478,7 @@ const sideBarBodyStyles = (sideBarCollapsed, socketStatus) => ({
     fontSize: '1rem',
   }),
   projectSelectSx: ({ palette }) => ({
+    display: 'flex',
     alignItems: 'center',
     width: '100%',
     boxSizing: 'border-box',
@@ -490,43 +489,26 @@ const sideBarBodyStyles = (sideBarCollapsed, socketStatus) => ({
       },
     }),
   }),
-  projectSelectSelectSX: {
-    margin: '0 !important',
-    '& .MuiInputBase-root.MuiInput-underline:before': {
-      borderBottom: 'none !important',
-      borderBottomColor: 'transparent !important',
-    },
-    '& .MuiInputBase-root.MuiInput-underline:after': {
-      borderBottom: 'none !important',
-      borderBottomColor: 'transparent !important',
-    },
-    '& .MuiInputBase-root.MuiInput-root:not(.Mui-error, .Mui-disabled).MuiInput-underline:hover:before': {
-      borderBottom: 'none !important',
-      borderBottomColor: 'transparent !important',
-    },
-    '& .MuiInputBase-root.MuiInput-underline.Mui-focused:not(.Mui-error):after': {
-      borderBottom: 'none !important',
-      borderBottomColor: 'transparent !important',
-    },
-    '& .MuiInputBase-root.MuiInput-underline.Mui-error:before': {
-      borderBottom: 'none !important',
-    },
-    '& .MuiInputBase-root.MuiInput-underline.Mui-error:after': {
-      borderBottom: 'none !important',
-    },
-  },
   projectSelectContainerSX: {
-    marginLeft: '0 !important',
+    margin: 0,
+    padding: 0,
+    width: '100%',
+  },
+  projectSelectSelectSX: {
+    margin: 0,
+    '& .MuiInputBase-root.MuiInput-underline:before, & .MuiInputBase-root.MuiInput-underline:after, & .MuiInputBase-root.MuiInput-root:not(.Mui-error, .Mui-disabled).MuiInput-underline:hover:before, & .MuiInputBase-root.MuiInput-underline.Mui-focused:not(.Mui-error):after, & .MuiInputBase-root.MuiInput-underline.Mui-error:before, & .MuiInputBase-root.MuiInput-underline.Mui-error:after':
+      {
+        borderBottom: 'none !important',
+        borderBottomColor: 'transparent !important',
+      },
   },
   projectSelectInputSX: {
     '& .MuiInputBase-input': {
-      '& .MuiOutlinedInput-input': {
-        padding: '0',
-      },
+      padding: 0,
     },
     '& .MuiSelect-icon': {
       display: sideBarCollapsed ? 'none' : undefined,
-      top: 'calc(50% - 0.625rem) !important',
+      top: 'calc(50% - 0.5rem) !important',
     },
   },
 });
