@@ -179,8 +179,8 @@ const ToolBaseProperty = memo(props => {
           >
             <Box sx={styles.infoIconWrapper}>
               <InfoIcon
-                width={22}
-                height={22}
+                width={19}
+                height={19}
               />
             </Box>
           </Tooltip>
@@ -651,7 +651,7 @@ const toolBasePropertyStyles = theme => ({
     marginLeft: 0,
   },
   select: {
-    marginTop: '1rem',
+    marginTop: '0.5rem',
   },
   nameInputContainer: {
     width: '100%',
