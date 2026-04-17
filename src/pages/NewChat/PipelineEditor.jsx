@@ -59,6 +59,7 @@ const PipelineEditorContent = memo(props => {
     handleAttachmentToolChange,
     entityProjectId,
     onConversationStartersChange,
+    isCreateMode,
   } = props;
   const { setFieldValue } = useFormikContext();
   const styles = getStyles();
@@ -85,15 +86,17 @@ const PipelineEditorContent = memo(props => {
         modelTooltip={isPublic ? 'Model configuration is locked for Public agents' : undefined}
         settingsTooltip={isPublic ? 'Model settings are locked for Public agents' : undefined}
       />
-      <PipelineConfigurationForm
-        applicationId={pipelineId}
-        viewMode={viewMode}
-        isChatView
-        containerStyle={styles.configForm}
-        hidePythonSandbox
-        onAttachmentToolChange={handleAttachmentToolChange}
-        entityProjectId={entityProjectId}
-      />
+      {!isCreateMode && (
+        <PipelineConfigurationForm
+          applicationId={pipelineId}
+          viewMode={viewMode}
+          isChatView
+          containerStyle={styles.configForm}
+          hidePythonSandbox
+          onAttachmentToolChange={handleAttachmentToolChange}
+          entityProjectId={entityProjectId}
+        />
+      )}
     </Box>
   );
 });
@@ -500,6 +503,7 @@ const PipelineEditor = forwardRef(
               handleAttachmentToolChange={handleAttachmentToolChange}
               onConversationStartersChange={onConversationStartersChange}
               entityProjectId={pipeline?.entity_meta?.project_id}
+              isCreateMode={isCreateMode}
             />
           )}
 
