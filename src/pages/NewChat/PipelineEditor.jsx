@@ -485,6 +485,7 @@ const PipelineEditor = forwardRef(
             <CreateAgentForm
               sx={styles.createForm}
               showInstructions={false}
+              entityType="pipeline"
             />
           )}
 
