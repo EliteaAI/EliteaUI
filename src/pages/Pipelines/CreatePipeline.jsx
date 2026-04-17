@@ -83,7 +83,10 @@ export default function CreatePipeline() {
                       },
                     })}
                   >
-                    <CreateAgentForm showInstructions={false} />
+                    <CreateAgentForm
+                      showInstructions={false}
+                      entityType="pipeline"
+                    />
                   </Grid>
                 </Grid>
               </Form>

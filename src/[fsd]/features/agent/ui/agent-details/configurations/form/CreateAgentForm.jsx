@@ -21,7 +21,7 @@ import TagEditor from '@/pages/Common/Components/TagEditor';
 import { useTheme } from '@emotion/react';
 
 const CreateAgentForm = memo(props => {
-  const { accordionStyle, sx, showInstructions = true } = props;
+  const { accordionStyle, sx, showInstructions = true, entityType = 'application' } = props;
   const formik = useFormikContext();
   const theme = useTheme();
   const projectId = useSelectedProjectId();
@@ -106,7 +106,7 @@ const CreateAgentForm = memo(props => {
                 <Box sx={styles.nameContainer}>
                   <EntityIcon
                     icon={formik.values?.version_details?.meta?.icon_meta}
-                    entityType="application"
+                    entityType={entityType}
                     editable={true}
                     onChangeIcon={onChangeApplicationIcon}
                     projectId={projectId}
