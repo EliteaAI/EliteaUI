@@ -6,7 +6,7 @@ import { Box, Button, Typography } from '@mui/material';
 
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { useConfigOAuthModal, useMcpTokenChange } from '@/[fsd]/features/mcp/lib/hooks';
-import { McpAuthModal, McpAuthStatus, McpLogoutModal } from '@/[fsd]/features/mcp/ui';
+import { McpAuthModal, McpLogoutModal } from '@/[fsd]/features/mcp/ui';
 import { useResolvedSharepointConfig } from '@/[fsd]/features/sharepoint/lib/hooks/useResolvedSharepointConfig.hooks';
 import { useSharepointCheckConnection } from '@/[fsd]/features/sharepoint/lib/hooks/useSharepointCheckConnection.hooks';
 import OnlineIcon from '@/assets/online-icon.svg?react';
@@ -50,18 +50,6 @@ const SharepointOAuthStatus = memo(() => {
     onSuccess: !oauthEndpoint ? onNonDelegatedSuccess : undefined,
   });
 
-  // authConfig injected into McpAuthStatus for the non-delegated (app credentials) case.
-  const nonDelegatedAuthConfig = useMemo(
-    () => ({
-      tokenOptions: { serverUrl: connectionTokenKey },
-      serverUrl: connectionTokenKey,
-      tokenStorageKey: connectionTokenKey,
-      onLogin: handleMcpAuthRequired => runCheck(handleMcpAuthRequired, null),
-      isRunning,
-    }),
-    [connectionTokenKey, runCheck, isRunning],
-  );
-
   const onLogin = useCallback(() => {
     runCheck(configOAuth.handleConfigAuthRequired, oauthTokenKey);
   }, [runCheck, configOAuth.handleConfigAuthRequired, oauthTokenKey]);
@@ -80,15 +68,9 @@ const SharepointOAuthStatus = memo(() => {
 
   // No credential configured at all — nothing to render (checked after all hooks)
   if (!spConfig) return null;
-
-  // Non-delegated (app credentials only): use McpAuthStatus with injected authConfig
-  if (!oauthEndpoint) {
-    return <McpAuthStatus authConfig={nonDelegatedAuthConfig} />;
-  }
-
   return (
     <>
-      <Box sx={styles.loginStatusContainer}>
+      <Box sx={styles.loginStatusContainer(!!oauthEndpoint)}>
         <Box sx={styles.statusContent}>
           <OnlineIcon style={styles.statusIconOnline} />
           <Typography
@@ -132,20 +114,22 @@ const getStyles = isLoggedIn => ({
   loginStatusText: ({ palette }) => ({
     color: isLoggedIn ? palette.text.mcp.loginSuccess : palette.text.mcp.logout,
   }),
-  loginStatusContainer: ({ palette }) => ({
-    marginTop: '1rem',
-    height: '2.75rem',
-    width: '100%',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-    marginBottom: '1rem',
-    padding: '.5rem .5rem .5rem 1rem',
-    borderRadius: '2.345rem',
-    backgroundColor: isLoggedIn ? palette.background.mcp.loginSuccess : palette.background.mcp.logout,
-    border: `0.0625rem solid ${isLoggedIn ? palette.border.mcp.loginSuccess : palette.border.mcp.logout}`,
-    justifyContent: 'space-between',
-  }),
+  loginStatusContainer:
+    isDelegated =>
+    ({ palette }) => ({
+      display: isDelegated ? 'flex' : 'none',
+      marginTop: '1rem',
+      height: '2.75rem',
+      width: '100%',
+      alignItems: 'center',
+      gap: '0.5rem',
+      marginBottom: '1rem',
+      padding: '.5rem .5rem .5rem 1rem',
+      borderRadius: '2.345rem',
+      backgroundColor: isLoggedIn ? palette.background.mcp.loginSuccess : palette.background.mcp.logout,
+      border: `0.0625rem solid ${isLoggedIn ? palette.border.mcp.loginSuccess : palette.border.mcp.logout}`,
+      justifyContent: 'space-between',
+    }),
 });
 
 SharepointOAuthStatus.displayName = 'SharepointOAuthStatus';
