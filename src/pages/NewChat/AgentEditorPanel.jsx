@@ -271,11 +271,7 @@ const AgentEditorPanel = ({
   }, [isPipeline, onClosePipelineEditor, onCloseAgentEditor]);
 
   const selectedVersion = useMemo(() => {
-    return (
-      participantDetails?.versions?.find(version => version.id === selectedVersionId) ||
-      participantDetails?.versions?.[0] ||
-      {}
-    );
+    return participantDetails?.versions?.find(version => version.id === selectedVersionId) || {};
   }, [participantDetails?.versions, selectedVersionId]);
 
   const isSelectedVersionPublished = useMemo(() => {
