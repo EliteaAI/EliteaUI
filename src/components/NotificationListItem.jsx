@@ -189,12 +189,15 @@ const notificationListItemStyles = clampLines => ({
     overflow: 'hidden',
   },
   message: {
+    overflow: 'hidden',
     ...(clampLines
       ? {
-          display: '-webkit-box',
-          WebkitLineClamp: clampLines,
-          WebkitBoxOrient: 'vertical',
-          overflow: 'hidden',
+          '& > *': {
+            display: '-webkit-box',
+            WebkitLineClamp: clampLines,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+          },
         }
       : {}),
   },
