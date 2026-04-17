@@ -5,7 +5,7 @@ import { useDispatch } from 'react-redux';
 import { useConversationNavigation } from '@/[fsd]/features/chat/lib/hooks';
 import { useLazyConversationDetailsQuery, useSelectConversationMutation } from '@/api/chat';
 import { convertConversationToChatHistory } from '@/common/convertChatConversationMessages';
-import { areTheSameConversations, buildErrorMessage } from '@/common/utils';
+import { areTheSameConversations, buildErrorMessage, getChatParticipantUniqueId } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { actions as chatActions } from '@/slices/chat';
 
@@ -86,7 +86,7 @@ export default function useSelectConversation({
             const localActiveParticipant = getLocalActiveParticipant(result.data.id);
             if (localActiveParticipant.conversationId == result.data.id) {
               const foundParticipant = result.data.participants.find(
-                item => item.id == localActiveParticipant.participantId,
+                item => getChatParticipantUniqueId(item) == localActiveParticipant.participantId,
               );
               if (foundParticipant) {
                 setActiveParticipant(foundParticipant);

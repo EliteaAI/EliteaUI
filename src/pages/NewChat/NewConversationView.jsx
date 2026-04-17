@@ -22,6 +22,7 @@ import {
 } from '@/common/constants';
 import { initializeNewMessages } from '@/common/initializeNewMessages';
 import { generateMessagePayload } from '@/common/messagePayloadUtils';
+import { getChatParticipantUniqueId } from '@/common/utils';
 import { ChatBodyContainer } from '@/components/Chat/StyledComponents';
 import { EllipsisTextWithTooltip } from '@/components/ConversationStarters';
 import useValidateApplicationVersion, {
@@ -605,7 +606,7 @@ const NewConversationView = forwardRef(
                       p.entity_meta.id === selectedParticipant.entity_meta.id,
                   );
                   setActiveParticipant?.(participant);
-                  setLocalActiveParticipant(createdConversation?.id, participant.id);
+                  setLocalActiveParticipant(createdConversation?.id, getChatParticipantUniqueId(participant));
 
                   setTimeout(() => {
                     onPredictStreamRef.current?.(question, participant, createdConversation);
