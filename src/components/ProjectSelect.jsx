@@ -227,19 +227,11 @@ const ProjectSelect = memo(props => {
 });
 
 const styles = {
-  baselineContainer: {
-    display: 'flex',
-    boxSizing: 'border-box',
-    justifyContent: 'flex-end',
-    alignItems: 'baseline',
-    paddingRight: '0',
-    height: '2.5rem',
-  },
   container: {
     display: 'flex',
     marginLeft: '0.5rem',
     zIndex: 1001,
-    alignItems: 'flex-end',
+    alignItems: 'center',
   },
 };
 
