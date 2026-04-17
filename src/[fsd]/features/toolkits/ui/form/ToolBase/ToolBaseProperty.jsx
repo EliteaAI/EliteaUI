@@ -10,7 +10,7 @@ import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { ArrayFieldInput } from '@/[fsd]/features/toolkits/ui/form/ToolBase';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { useFieldFocus } from '@/[fsd]/shared/lib/hooks';
-import { Checkbox, Field } from '@/[fsd]/shared/ui';
+import { Checkbox, Field, Input } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { MAX_NAME_LENGTH } from '@/common/constants';
@@ -594,7 +594,7 @@ const ToolBaseProperty = memo(props => {
 
       return (
         <Box sx={styles.nameInputContainer}>
-          <FormInput
+          <Input.StyledInputEnhancer
             key={k}
             required={required}
             label={description ? renderLabelWithHint(required) : label}
@@ -611,15 +611,6 @@ const ToolBaseProperty = memo(props => {
             InputLabelProps={{
               shrink: true,
             }}
-            sx={
-              description
-                ? {
-                    '& .MuiInputLabel-asterisk': {
-                      display: 'none',
-                    },
-                  }
-                : {}
-            }
           />
           {isFocused('label') && MAX_NAME_LENGTH === settings[k]?.length && (
             <Typography

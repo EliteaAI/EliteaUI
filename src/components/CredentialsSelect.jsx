@@ -496,10 +496,14 @@ const CredentialsSelect = memo(
             left: '0.75rem',
             fontSize: '1rem',
             fontWeight: 500,
+            ...(required && {
+              '& .MuiInputLabel-asterisk, & .MuiFormLabel-asterisk': { display: 'none' },
+            }),
           }}
           shrink
         >
           {label}
+          {required && ' *'}
           <Box
             component="span"
             sx={{ marginLeft: '0.15rem', ':hover': { opacity: 0.8 } }}
@@ -523,7 +527,7 @@ const CredentialsSelect = memo(
           </Box>
         </InputLabel>
       );
-    }, [description, label]);
+    }, [description, label, required]);
 
     const selectError = error || (mismatchedPrivateCredential && hasFetchedData);
 
