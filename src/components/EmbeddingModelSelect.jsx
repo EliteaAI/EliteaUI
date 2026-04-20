@@ -270,7 +270,7 @@ const EmbeddingModelSelect = memo(
               open={open}
               anchorEl={panelRef.current}
               placement="bottom-start"
-              style={styles.popper(panelRef)}
+              sx={styles.popper(panelRef)}
             >
               <Box sx={styles.popperBox}>
                 {!isFetching &&
@@ -342,21 +342,27 @@ const styles = {
     width: '100%',
     borderBottom: ({ palette }) =>
       error
-        ? '0.0625rem solid red'
+        ? `0.0625rem solid ${palette.icon.fill.error}`
         : open
           ? `0.0625rem solid ${palette.primary.main}`
           : `0.0625rem solid ${palette.border.lines}`,
+    ...(!error &&
+      !open && {
+        '&:hover': {
+          borderBottom: ({ palette }) => `0.0625rem solid ${palette.border.hover}`,
+        },
+      }),
   }),
   labelTypography: open => ({
-    // color: error ? theme.palette.error.main : theme.palette.text.secondary,
-    color: ({ palette }) => (open ? palette.primary.main : palette.text.secondary),
+    color: ({ palette }) => (open ? palette.primary.main : palette.text.primary),
   }),
   selectedValueTypography: selectedOption => ({
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
     minHeight: '1.5rem',
-    color: ({ palette }) => (selectedOption?.label ? palette.text.secondary : palette.text.disabled),
+    color: ({ palette }) =>
+      selectedOption?.label ? palette.text.select.selected.primary : palette.text.default,
   }),
   arrowIcon: open => ({
     fontSize: '1rem',
