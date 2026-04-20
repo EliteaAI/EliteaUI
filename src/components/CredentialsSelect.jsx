@@ -7,7 +7,7 @@ import { Box, FormControl, FormHelperText, IconButton, InputLabel, Tooltip, Typo
 import { useTrackEvent } from '@/GA';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
 import { useContextExecutionEntity } from '@/[fsd]/shared/lib/hooks';
-import { Select } from '@/[fsd]/shared/ui';
+import { Label, Select } from '@/[fsd]/shared/ui';
 import { useLazyGetConfigurationsListQuery, useListModelsQuery } from '@/api/configurations';
 import RefreshIcon from '@/assets/refresh-icon.svg?react';
 import BriefcaseIcon from '@/components/Icons/BriefcaseIcon.jsx';
@@ -16,7 +16,6 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import RouteDefinitions, { getBasename } from '@/routes';
 
 import CredentialWarningBanner from './CredentialWarningBanner';
-import InfoIcon from './Icons/InfoIcon';
 import Person from './Icons/Person';
 
 const credentialMenuItemValue = Object.freeze({
@@ -502,29 +501,14 @@ const CredentialsSelect = memo(
           }}
           shrink
         >
-          {label}
-          {required && ' *'}
-          <Box
-            component="span"
-            sx={{ marginLeft: '0.15rem', ':hover': { opacity: 0.8 } }}
-          >
-            {description && (
-              <Tooltip
-                title={description}
-                placement="top"
-              >
-                <Box
-                  component="span"
-                  sx={{ display: 'inline-flex', verticalAlign: 'middle' }}
-                >
-                  <InfoIcon
-                    width={18}
-                    height={18}
-                  />
-                </Box>
-              </Tooltip>
-            )}
-          </Box>
+          <Label.InfoLabelWithTooltip
+            label={label}
+            required={required}
+            tooltip={description}
+            inheritLabel
+            inheritColor
+            labelTextPointerEventsNone={!!description}
+          />
         </InputLabel>
       );
     }, [description, label, required]);

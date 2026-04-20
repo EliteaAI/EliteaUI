@@ -19,6 +19,7 @@ const InfoLabelWithTooltip = memo(props => {
     inheritColor = false,
     inheritLabel = false,
     iconSize = 16,
+    required = false,
   } = props;
 
   const labelSx = [
@@ -27,19 +28,21 @@ const InfoLabelWithTooltip = memo(props => {
     ...(labelSxProp ? [labelSxProp] : []),
   ];
 
+  const labelContent = required ? `${label} *` : label;
+
   const labelNode = inheritLabel ? (
     <Box
       component="span"
       sx={labelSx}
     >
-      {label}
+      {labelContent}
     </Box>
   ) : (
     <Typography
       variant={variant}
       sx={labelSx}
     >
-      {label}
+      {labelContent}
     </Typography>
   );
 
