@@ -122,7 +122,7 @@ const styles = {
     paddingRight: '1.5rem !important',
   },
   leftPanel: {
-    overflow: 'scroll',
+    overflow: 'auto',
     maxHeight: '100%',
     height: '100%',
   },

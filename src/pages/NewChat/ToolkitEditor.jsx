@@ -14,7 +14,6 @@ import { useToolkitsDetailsQuery } from '@/api/toolkits';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { CONFIGURATION_VIEW_OPTIONS } from '@/pages/Applications/Components/Tools/ToolConfigurationForm.jsx';
-import { ContentContainer } from '@/pages/Common/Components/StyledComponents.jsx';
 import BaseEditor from '@/pages/NewChat/components/BaseEditor.jsx';
 import CreateToolkitButton from '@/pages/NewChat/components/CreateToolkitButton.jsx';
 import SaveToolkitButton from '@/pages/Toolkits/SaveToolkitButton.jsx';
@@ -213,6 +212,8 @@ const ToolkitEditor = ({ toolkit, onCloseToolkitEditor, onToolkitCreated, onTool
     setIsToolDirty(false);
   }, [toolkitDetails, isCreating]);
 
+  const styles = toolkitEditorStyles();
+
   if (!toolkit) {
     return null;
   }
@@ -250,7 +251,7 @@ const ToolkitEditor = ({ toolkit, onCloseToolkitEditor, onToolkitCreated, onTool
     >
       {isCreating ? (
         // Creation mode: Show ToolkitTypeSelector or ToolkitForm based on whether a type is selected
-        <ContentContainer height="100%">
+        <>
           {editToolDetail ? (
             <ToolkitForm
               editToolDetail={editToolDetail}
@@ -269,6 +270,7 @@ const ToolkitEditor = ({ toolkit, onCloseToolkitEditor, onToolkitCreated, onTool
               isMCP={isMCP}
               onValidationStateChange={setValidationState}
               revertCredentialsRef={revertCredentialsRef}
+              sx={styles.toolkitForm}
             />
           ) : (
             <ToolkitTypeSelector
@@ -278,31 +280,30 @@ const ToolkitEditor = ({ toolkit, onCloseToolkitEditor, onToolkitCreated, onTool
               disableNavigation={true}
             />
           )}
-        </ContentContainer>
+        </>
       ) : editToolDetail ? (
         // Edit mode: Show the existing toolkit configuration
-        <ContentContainer height="100%">
-          <ToolkitForm
-            editToolDetail={editToolDetail}
-            onChangeToolDetail={handleChangeToolDetail}
-            isEditing={true}
-            isToolDirty={isToolDirty}
-            isViewToggleVisible={false}
-            showNameFieldForcedly={false}
-            showToolkitIcon={false}
-            showOnlyConfigurationFields={false}
-            configurationViewOptions={CONFIGURATION_VIEW_OPTIONS.CredentialsSelect}
-            hasNotSavedCredentials={false}
-            hideNameDescriptionInput={false}
-            hideNameInput={!isMCP}
-            hideOperationButtons={true}
-            updateKey={1}
-            isMCP={isMCP}
-            onValidationStateChange={setValidationState}
-            disabled={isPublic && !hasPublicProjectAccess}
-            revertCredentialsRef={revertCredentialsRef}
-          />
-        </ContentContainer>
+        <ToolkitForm
+          editToolDetail={editToolDetail}
+          onChangeToolDetail={handleChangeToolDetail}
+          isEditing={true}
+          isToolDirty={isToolDirty}
+          isViewToggleVisible={false}
+          showNameFieldForcedly={false}
+          showToolkitIcon={false}
+          showOnlyConfigurationFields={false}
+          configurationViewOptions={CONFIGURATION_VIEW_OPTIONS.CredentialsSelect}
+          hasNotSavedCredentials={false}
+          hideNameDescriptionInput={false}
+          hideNameInput={!isMCP}
+          hideOperationButtons={true}
+          updateKey={1}
+          isMCP={isMCP}
+          onValidationStateChange={setValidationState}
+          disabled={isPublic && !hasPublicProjectAccess}
+          revertCredentialsRef={revertCredentialsRef}
+          sx={styles.toolkitForm}
+        />
       ) : (
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
           <Typography
@@ -322,5 +323,13 @@ const ToolkitEditor = ({ toolkit, onCloseToolkitEditor, onToolkitCreated, onTool
     </BaseEditor>
   );
 };
+
+/** @type {MuiSx} */
+const toolkitEditorStyles = () => ({
+  toolkitForm: {
+    overflow: 'visible',
+    maxHeight: 'none',
+  },
+});
 
 export default ToolkitEditor;
