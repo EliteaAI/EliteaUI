@@ -146,6 +146,7 @@ const CredentialsSelect = memo(
             sharedLimit: 500,
             includeShared: true,
             section,
+            type,
           });
           teamProjectConfigurations = [
             ...(data?.items?.filter(item => !type || item.type === type) || []),
@@ -163,6 +164,7 @@ const CredentialsSelect = memo(
                 sharedLimit: 500,
                 includeShared: true,
                 section,
+                type,
               });
               teamProjectConfigurations = [
                 ...teamProjectConfigurations,
