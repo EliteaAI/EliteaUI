@@ -38,8 +38,8 @@ ToolbarImportButton.displayName = 'ToolbarImportButton';
 const importButtonStyles = () => ({
   importBtn: {
     ml: 1,
-    width: '2rem',
-    height: '2rem',
+    width: '1.75rem',
+    height: '1.75rem',
   },
 });
 
