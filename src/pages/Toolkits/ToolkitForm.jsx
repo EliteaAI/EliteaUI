@@ -527,10 +527,8 @@ export default ToolkitForm;
 /** @type {MuiSx} */
 const toolkitFormStyles = () => ({
   container: {
-    maxHeight: '100%',
     maxWidth: '40.1875rem',
     margin: '0 auto',
-    overflow: 'auto',
   },
   formViewToggle: {
     marginBottom: '0.625rem',
