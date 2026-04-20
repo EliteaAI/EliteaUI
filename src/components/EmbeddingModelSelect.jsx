@@ -16,6 +16,7 @@ import {
 } from '@mui/material';
 import MenuItem from '@mui/material/MenuItem';
 
+import { Label } from '@/[fsd]/shared/ui';
 import { useLazyListModelsQuery, useListModelsQuery } from '@/api/configurations';
 import CheckedIcon from '@/assets/checked-icon.svg?react';
 import RefreshIcon from '@/assets/refresh-icon.svg?react';
@@ -23,7 +24,6 @@ import BriefcaseIcon from '@/components/Icons/BriefcaseIcon.jsx';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import ArrowDownIcon from './Icons/ArrowDownIcon';
-import InfoIcon from './Icons/InfoIcon';
 import Person from './Icons/Person';
 
 const EmbeddingModelSelect = memo(
@@ -197,31 +197,14 @@ const EmbeddingModelSelect = memo(
               sx={styles.clickableBox(error, open)}
             >
               <Box sx={styles.labelBox}>
-                <Typography
+                <Label.InfoLabelWithTooltip
+                  label={required ? `${label} *` : label}
+                  tooltip={description}
                   variant="bodySmall"
-                  sx={styles.labelTypography(open)}
-                >
-                  {label}
-                  {required && <span> *</span>}
-                  {description && (
-                    <Box
-                      sx={{ marginLeft: '0.15rem', ':hover': { opacity: 0.8 } }}
-                      component="span"
-                    >
-                      <Tooltip
-                        title={description}
-                        placement="top"
-                      >
-                        <Box component="span">
-                          <InfoIcon
-                            width={14}
-                            height={14}
-                          />
-                        </Box>
-                      </Tooltip>
-                    </Box>
-                  )}
-                </Typography>
+                  inheritColor
+                  iconSize={14}
+                  labelSx={styles.labelTypography(open)}
+                />
                 <Tooltip
                   title="Refresh the models"
                   placement="top"

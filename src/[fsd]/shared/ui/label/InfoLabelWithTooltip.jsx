@@ -14,14 +14,17 @@ const InfoLabelWithTooltip = memo(props => {
     tooltip,
     variant = 'bodySmall',
     sx,
+    labelSx: labelSxProp,
     labelTextPointerEventsNone = false,
     inheritColor = false,
     inheritLabel = false,
+    iconSize = 16,
   } = props;
 
   const labelSx = [
     inheritColor ? { color: 'inherit' } : styles.label,
     ...(labelTextPointerEventsNone ? [{ pointerEvents: 'none' }] : []),
+    ...(labelSxProp ? [labelSxProp] : []),
   ];
 
   const labelNode = inheritLabel ? (
@@ -47,8 +50,8 @@ const InfoLabelWithTooltip = memo(props => {
         <Tooltip title={tooltip}>
           <Box sx={styles.iconWrapper}>
             <InfoIcon
-              width={16}
-              height={16}
+              width={iconSize}
+              height={iconSize}
             />
           </Box>
         </Tooltip>
