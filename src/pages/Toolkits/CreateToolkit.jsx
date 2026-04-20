@@ -116,7 +116,9 @@ export const CreateToolkit = memo(props => {
     if (isApplication) {
       return `New ${typeLabel}Application`;
     }
-    return `New ${typeLabel}${!isMCP ? 'Toolkit' : 'MCP'}`;
+    const mcpSuffix = typeLabel.trim().toLocaleLowerCase().endsWith('mcp') ? '' : 'MCP';
+    const suffix = isMCP ? mcpSuffix : 'Toolkit';
+    return `New ${typeLabel}${suffix}`;
   }, [toolSchema, toolType, isMCP, isApplication]);
 
   return (
