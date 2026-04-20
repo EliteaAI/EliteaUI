@@ -316,7 +316,8 @@ const CredentialsSelect = memo(
     useEffect(() => {
       if (!hasFetchedData || !selectedOption) return;
 
-      const isDefaultAutoSelected = selectedOption && isBlankEliteaTitle(value?.elitea_title);
+      const isDefaultAutoSelected =
+        selectedOption && (section === 'vectorstorage' || isBlankEliteaTitle(value?.elitea_title));
 
       if (isDefaultAutoSelected && !hasAutoSelectedRef.current) {
         hasAutoSelectedRef.current = true;
@@ -326,7 +327,7 @@ const CredentialsSelect = memo(
         };
         onSelectConfiguration?.(config);
       }
-    }, [hasFetchedData, selectedOption, value, onSelectConfiguration]);
+    }, [hasFetchedData, selectedOption, value, onSelectConfiguration, section]);
 
     const onSelectItem = useCallback(
       option => {
