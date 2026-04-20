@@ -597,7 +597,8 @@ const ToolBaseProperty = memo(props => {
           <Input.StyledInputEnhancer
             key={k}
             required={required}
-            label={description ? renderLabelWithHint(required) : label}
+            label={label}
+            tooltipDescription={description}
             value={settings[k]}
             onChange={handleInputChange(buildEditFieldPath(k))}
             error={!!toastError}
@@ -608,9 +609,6 @@ const ToolBaseProperty = memo(props => {
             placeholder={placeholder}
             onFocus={() => toggleFieldFocus(k)}
             onBlur={() => toggleFieldFocus(null)}
-            InputLabelProps={{
-              shrink: true,
-            }}
           />
           {isFocused('label') && MAX_NAME_LENGTH === settings[k]?.length && (
             <Typography
