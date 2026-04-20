@@ -1,13 +1,25 @@
-import { useCallback } from 'react';
+import { memo, useCallback } from 'react';
 
-import { Box, ToggleButton, ToggleButtonGroup } from '@mui/material';
-
-import Tooltip from '@/ComponentsLib/Tooltip';
+import { TabGroupButton } from '@/[fsd]/shared/ui/tab-group-button';
 import { ToolkitViewOptions } from '@/common/constants';
-import { SPACING } from '@/common/designTokens';
 
-export const FormViewToggle = ({ view = ToolkitViewOptions.Form, onChangeView, containerSX, disabled }) => {
-  const onChange = useCallback(
+const FORM_VIEW_TABS = [
+  {
+    value: ToolkitViewOptions.Form,
+    label: 'Form',
+    tooltip: 'Form view',
+  },
+  {
+    value: ToolkitViewOptions.Json,
+    label: 'Raw Json',
+    tooltip: 'Raw Json view',
+  },
+];
+
+export const FormViewToggle = memo(props => {
+  const { view = ToolkitViewOptions.Form, onChangeView, containerSX, disabled } = props;
+
+  const handleChange = useCallback(
     (_, newValue) => {
       if (newValue !== null && newValue !== view) {
         onChangeView(newValue);
@@ -17,59 +29,14 @@ export const FormViewToggle = ({ view = ToolkitViewOptions.Form, onChangeView, c
   );
 
   return (
-    <ToggleButtonGroup
-      size="small"
+    <TabGroupButton
+      arrayBtn={FORM_VIEW_TABS}
       value={view}
-      onChange={onChange}
-      exclusive={true}
+      onChange={handleChange}
       disabled={disabled}
-      aria-label="Toolkit View Toggler"
-      sx={{ ml: 0, ...containerSX }}
-    >
-      <Tooltip
-        key={ToolkitViewOptions.Form}
-        title="Form view"
-        placement="top"
-      >
-        <Box
-          component="span"
-          sx={{ display: 'inline-flex' }}
-        >
-          <ToggleButton
-            variant="elitea"
-            value={ToolkitViewOptions.Form}
-            sx={{
-              padding: `${SPACING.SM} ${SPACING.SM}`,
-              borderRadius: '8px 0 0 8px',
-              textTransform: 'none',
-            }}
-          >
-            Form
-          </ToggleButton>
-        </Box>
-      </Tooltip>
-      <Tooltip
-        key={ToolkitViewOptions.Json}
-        title="Raw Json view"
-        placement="top"
-      >
-        <Box
-          component="span"
-          sx={{ display: 'inline-flex' }}
-        >
-          <ToggleButton
-            variant="elitea"
-            value={ToolkitViewOptions.Json}
-            sx={{
-              padding: `${SPACING.SM} ${SPACING.SM}`,
-              borderRadius: '0 8px 8px 0',
-              textTransform: 'none',
-            }}
-          >
-            Raw Json
-          </ToggleButton>
-        </Box>
-      </Tooltip>
-    </ToggleButtonGroup>
+      customSx={containerSX}
+    />
   );
-};
+});
+
+FormViewToggle.displayName = 'FormViewToggle';
