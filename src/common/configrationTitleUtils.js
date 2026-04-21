@@ -12,7 +12,7 @@ import { DEFAULT_PARTICIPANT_NAME } from '@/common/constants';
  * @param {string} fallback - Fallback string if result would be empty (default: 'untitled')
  * @returns {string} Valid elitea title string
  */
-export const convertToValidEliteATitle = (input, fallback = '') => {
+export const convertToValidEliteaTitle = (input, fallback = '') => {
   if (!input || typeof input !== 'string') {
     return fallback;
   }
@@ -29,8 +29,8 @@ export const convertToValidEliteATitle = (input, fallback = '') => {
   // Remove consecutive underscores and replace with single underscore
   result = result.replace(/_+/g, '_');
 
-  // Remove leading and trailing underscores
-  result = result.replace(/^_+|_+$/g, '');
+  // Remove trailing underscores (can result from trailing whitespace conversion)
+  result = result.replace(/_+$/g, '');
 
   // Truncate to 128 characters
   if (result.length > 128) {
