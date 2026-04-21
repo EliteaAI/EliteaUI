@@ -17,7 +17,7 @@ import SuccessIcon from './Icons/SuccessIcon';
 import TrophyOutlinedIcon from './Icons/TrophyOutlinedIcon';
 import NotificationListItemMessage from './NotificationListItemMessage';
 
-const getIcon = (type, theme, notification) => {
+export const getIcon = (type, theme, notification) => {
   switch (type) {
     case NotificationType.PromptModeratorApproval:
     case NotificationType.AuthorApproval:
@@ -123,6 +123,7 @@ const NotificationListItem = memo(props => {
     notification,
     showTime = true,
     clampLines = 3,
+    showIcon = true,
     sx = {},
     contentSX = {},
     onCloseNotificationList,
@@ -135,7 +136,7 @@ const NotificationListItem = memo(props => {
 
   return (
     <Box sx={[styles.container, sx]}>
-      <Box sx={styles.iconContainer}>{getIcon(event_type, theme, notification)}</Box>
+      {showIcon && <Box sx={styles.iconContainer}>{getIcon(event_type, theme, notification)}</Box>}
       <Box sx={[styles.content, contentSX]}>
         <Box sx={styles.message}>
           <NotificationListItemMessage
