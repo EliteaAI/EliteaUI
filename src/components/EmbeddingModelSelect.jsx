@@ -202,7 +202,6 @@ const EmbeddingModelSelect = memo(
                   tooltip={description}
                   variant="bodySmall"
                   inheritColor
-                  iconSize={14}
                   labelSx={styles.labelTypography(open)}
                 />
                 <Tooltip

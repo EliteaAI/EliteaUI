@@ -513,7 +513,6 @@ const CredentialsSelect = memo(
             inheritLabel
             inheritColor
             labelTextPointerEventsNone={!!description}
-            iconSize={14}
           />
         </InputLabel>
       );
