@@ -7,7 +7,7 @@ import { Box, FormControl, FormHelperText, IconButton, InputLabel, Tooltip, Typo
 import { useTrackEvent } from '@/GA';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
 import { useContextExecutionEntity } from '@/[fsd]/shared/lib/hooks';
-import { Select } from '@/[fsd]/shared/ui';
+import { Label, Select } from '@/[fsd]/shared/ui';
 import { useLazyGetConfigurationsListQuery, useListModelsQuery } from '@/api/configurations';
 import RefreshIcon from '@/assets/refresh-icon.svg?react';
 import BriefcaseIcon from '@/components/Icons/BriefcaseIcon.jsx';
@@ -16,7 +16,6 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import RouteDefinitions, { getBasename } from '@/routes';
 
 import CredentialWarningBanner from './CredentialWarningBanner';
-import InfoIcon from './Icons/InfoIcon';
 import Person from './Icons/Person';
 
 const credentialMenuItemValue = Object.freeze({
@@ -452,26 +451,25 @@ const CredentialsSelect = memo(
     const customRenderSelectValue = useCallback(
       foundOption => {
         if (!foundOption) {
+          if (!value?.elitea_title) return null;
           return (
-            <Box sx={styles.unmatchedValueBox(value?.elitea_title && hasFetchedData)}>
-              {value?.elitea_title ? (
-                value?.private ? (
-                  <Person
-                    key="person-icon"
-                    fontSize="1rem"
-                  />
-                ) : (
-                  <BriefcaseIcon
-                    key="briefcase-icon"
-                    fontSize="1rem"
-                  />
-                )
-              ) : null}
+            <Box sx={styles.unmatchedValueBox(hasFetchedData)}>
+              {value?.private ? (
+                <Person
+                  key="person-icon"
+                  fontSize="1rem"
+                />
+              ) : (
+                <BriefcaseIcon
+                  key="briefcase-icon"
+                  fontSize="1rem"
+                />
+              )}
               <Typography
                 variant="labelMedium"
-                sx={styles.unmatchedValueTypography(value?.elitea_title && hasFetchedData)}
+                sx={styles.unmatchedValueTypography(hasFetchedData)}
               >
-                {!value?.elitea_title ? 'Select credentials' : value.elitea_title}
+                {value.elitea_title}
               </Typography>
             </Box>
           );
@@ -497,37 +495,28 @@ const CredentialsSelect = memo(
           id={`simple-select-label-${label}`}
           sx={{
             left: '0.75rem',
-            fontSize: '1rem',
+            fontSize: '0.875rem',
             fontWeight: 500,
+            '&.MuiInputLabel-shrink': {
+              overflow: 'visible',
+            },
+            '&.MuiInputLabel-shrink svg': {
+              transform: 'scale(1.3334)',
+              transformOrigin: 'left center',
+            },
             ...(required && {
               '& .MuiInputLabel-asterisk, & .MuiFormLabel-asterisk': { display: 'none' },
             }),
           }}
-          shrink
         >
-          {label}
-          {required && ' *'}
-          <Box
-            component="span"
-            sx={{ marginLeft: '0.15rem', ':hover': { opacity: 0.8 } }}
-          >
-            {description && (
-              <Tooltip
-                title={description}
-                placement="top"
-              >
-                <Box
-                  component="span"
-                  sx={{ display: 'inline-flex', verticalAlign: 'middle' }}
-                >
-                  <InfoIcon
-                    width={18}
-                    height={18}
-                  />
-                </Box>
-              </Tooltip>
-            )}
-          </Box>
+          <Label.InfoLabelWithTooltip
+            label={label}
+            required={required}
+            tooltip={description}
+            inheritLabel
+            inheritColor
+            labelTextPointerEventsNone={!!description}
+          />
         </InputLabel>
       );
     }, [description, label, required]);

@@ -62,6 +62,7 @@ const ToolBase = memo(props => {
   } = editToolDetail;
   // console.log('toolErrors', toolErrors);
   const theme = useTheme();
+  const styles = toolBaseStyles();
   const systemSenderName = useSystemSenderName();
   const [, setNotSelectedFields] = useState([]);
   const [showDisabledConfigFields, setShowDisabledConfigFields] = useState(false);
@@ -210,7 +211,7 @@ const ToolBase = memo(props => {
   };
 
   const toolBaseConfiguration = (
-    <>
+    <Box sx={styles.configurationContainer}>
       {!hideNameDescriptionInput && (
         <ToolkitForm.NameDescriptionInput
           type={editToolDetail?.type || ''}
@@ -466,7 +467,7 @@ const ToolBase = memo(props => {
             />
           );
         })}
-    </>
+    </Box>
   );
 
   // Handler for when remote MCP tools are fetched
@@ -581,5 +582,14 @@ const ToolBase = memo(props => {
 });
 
 ToolBase.displayName = 'ToolBase';
+
+/** @type {MuiSx} */
+const toolBaseStyles = () => ({
+  configurationContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
+  },
+});
 
 export default ToolBase;

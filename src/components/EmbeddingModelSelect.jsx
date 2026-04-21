@@ -16,6 +16,7 @@ import {
 } from '@mui/material';
 import MenuItem from '@mui/material/MenuItem';
 
+import { Label } from '@/[fsd]/shared/ui';
 import { useLazyListModelsQuery, useListModelsQuery } from '@/api/configurations';
 import CheckedIcon from '@/assets/checked-icon.svg?react';
 import RefreshIcon from '@/assets/refresh-icon.svg?react';
@@ -23,7 +24,6 @@ import BriefcaseIcon from '@/components/Icons/BriefcaseIcon.jsx';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import ArrowDownIcon from './Icons/ArrowDownIcon';
-import InfoIcon from './Icons/InfoIcon';
 import Person from './Icons/Person';
 
 const EmbeddingModelSelect = memo(
@@ -197,31 +197,13 @@ const EmbeddingModelSelect = memo(
               sx={styles.clickableBox(error, open)}
             >
               <Box sx={styles.labelBox}>
-                <Typography
+                <Label.InfoLabelWithTooltip
+                  label={required ? `${label} *` : label}
+                  tooltip={description}
                   variant="bodySmall"
-                  sx={styles.labelTypography(open)}
-                >
-                  {label}
-                  {required && <span> *</span>}
-                  {description && (
-                    <Box
-                      sx={{ marginLeft: '0.15rem', ':hover': { opacity: 0.8 } }}
-                      component="span"
-                    >
-                      <Tooltip
-                        title={description}
-                        placement="top"
-                      >
-                        <Box component="span">
-                          <InfoIcon
-                            width={14}
-                            height={14}
-                          />
-                        </Box>
-                      </Tooltip>
-                    </Box>
-                  )}
-                </Typography>
+                  inheritColor
+                  labelSx={styles.labelTypography(open)}
+                />
                 <Tooltip
                   title="Refresh the models"
                   placement="top"
@@ -270,7 +252,7 @@ const EmbeddingModelSelect = memo(
               open={open}
               anchorEl={panelRef.current}
               placement="bottom-start"
-              style={styles.popper(panelRef)}
+              sx={styles.popper(panelRef)}
             >
               <Box sx={styles.popperBox}>
                 {!isFetching &&
@@ -342,21 +324,27 @@ const styles = {
     width: '100%',
     borderBottom: ({ palette }) =>
       error
-        ? '0.0625rem solid red'
+        ? `0.0625rem solid ${palette.icon.fill.error}`
         : open
           ? `0.0625rem solid ${palette.primary.main}`
           : `0.0625rem solid ${palette.border.lines}`,
+    ...(!error &&
+      !open && {
+        '&:hover': {
+          borderBottom: ({ palette }) => `0.0625rem solid ${palette.border.hover}`,
+        },
+      }),
   }),
   labelTypography: open => ({
-    // color: error ? theme.palette.error.main : theme.palette.text.secondary,
-    color: ({ palette }) => (open ? palette.primary.main : palette.text.secondary),
+    color: ({ palette }) => (open ? palette.primary.main : palette.text.primary),
   }),
   selectedValueTypography: selectedOption => ({
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
     minHeight: '1.5rem',
-    color: ({ palette }) => (selectedOption?.label ? palette.text.secondary : palette.text.disabled),
+    color: ({ palette }) =>
+      selectedOption?.label ? palette.text.select.selected.primary : palette.text.default,
   }),
   arrowIcon: open => ({
     fontSize: '1rem',

@@ -160,8 +160,7 @@ const InputBase = memo(props => {
   const isCollapsed = rows === minRows && minRows !== maxRows;
   const isExpanded = rows === maxRows;
 
-  const needsLabelUnclip =
-    typeof leftProps.label !== 'string' || Boolean(tooltipDescription);
+  const needsLabelUnclip = typeof leftProps.label !== 'string' || Boolean(tooltipDescription);
 
   const styles = useMemo(
     () =>

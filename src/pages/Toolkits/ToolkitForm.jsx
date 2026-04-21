@@ -447,7 +447,9 @@ export const ToolkitForm = memo(props => {
   const styles = toolkitFormStyles();
 
   return isFetching || editToolDetail?.isLoadingConfigurations ? (
-    <CircularProgress size={20} />
+    <Box sx={styles.loadingContainer}>
+      <CircularProgress />
+    </Box>
   ) : (
     <Box sx={[styles.container, sx]}>
       {editToolDetail.type !== ToolTypes.custom.value && !!effectiveToolSchema && isViewToggleVisible && (
@@ -527,12 +529,17 @@ export default ToolkitForm;
 /** @type {MuiSx} */
 const toolkitFormStyles = () => ({
   container: {
-    maxHeight: '100%',
     maxWidth: '40.1875rem',
     margin: '0 auto',
-    overflow: 'auto',
   },
   formViewToggle: {
     marginBottom: '0.625rem',
+  },
+  loadingContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    height: '100%',
   },
 });

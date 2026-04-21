@@ -93,7 +93,7 @@ export const eliteaTextFieldStyle = () => ({
     minWidth: 16,
     minHeight: 16,
     overflow: 'visible',
-    transform: 'scale(1.2)',
+    transform: 'scale(1.3334)',
     transformOrigin: 'center',
   },
   '& .MuiInputLabel-root': {
