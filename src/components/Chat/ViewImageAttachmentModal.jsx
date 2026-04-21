@@ -1,6 +1,6 @@
 import { memo, useEffect, useRef, useState } from 'react';
 
-import { Box, Dialog, DialogContent, IconButton, Typography } from '@mui/material';
+import { Box, Button, Dialog, DialogContent, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 
 import { Checkbox, Modal } from '@/[fsd]/shared/ui';
@@ -12,7 +12,8 @@ import DownloadIcon from '@/components/Icons/DownloadIcon';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 
-const ViewImageAttachmentModal = memo(({ open, onRemoveAttachment, onClose, attachment }) => {
+const ViewImageAttachmentModal = memo(props => {
+  const { open, onRemoveAttachment, onClose, attachment } = props;
   const { toastError } = useToast();
   const theme = useTheme();
   const projectId = useSelectedProjectId();
@@ -113,8 +114,8 @@ const ViewImageAttachmentModal = memo(({ open, onRemoveAttachment, onClose, atta
             {attachmentName}
           </Typography>
           <Box sx={styles.actionsContainer}>
-            <IconButton
-              variant="elitea"
+            <Button
+              variant="icon"
               color="secondary"
               onClick={onClickDown}
               aria-label="Download image"
@@ -124,9 +125,9 @@ const ViewImageAttachmentModal = memo(({ open, onRemoveAttachment, onClose, atta
                 sx={styles.icon}
                 fill={theme.palette.icon.fill.secondary}
               />
-            </IconButton>
-            <IconButton
-              variant="elitea"
+            </Button>
+            <Button
+              variant="icon"
               color="secondary"
               onClick={onClickRemove}
               aria-label="Remove attachment"
@@ -136,10 +137,9 @@ const ViewImageAttachmentModal = memo(({ open, onRemoveAttachment, onClose, atta
                 sx={styles.icon}
                 fill={theme.palette.icon.fill.secondary}
               />
-            </IconButton>
-            <IconButton
-              variant="elitea"
-              color="tertiary"
+            </Button>
+            <Button
+              variant="tertiary"
               onClick={onClose}
               aria-label="Close modal"
               sx={styles.closeButton}
@@ -148,7 +148,7 @@ const ViewImageAttachmentModal = memo(({ open, onRemoveAttachment, onClose, atta
                 fill={theme.palette.icon.fill.default}
                 sx={styles.closeIcon}
               />
-            </IconButton>
+            </Button>
           </Box>
         </Box>
 
@@ -243,7 +243,7 @@ const styles = {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '1rem',
+    gap: '.75rem',
   },
   iconButton: {
     marginLeft: 0,
