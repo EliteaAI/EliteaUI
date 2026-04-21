@@ -11,7 +11,7 @@ import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSett
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { useGetPlatformSettingsQuery } from '@/api/platformSettings';
 import {
-  convertToValidEliteATitle,
+  convertToValidEliteaTitle,
   getEliteATitleValidationError,
   isValidEliteATitle,
 } from '@/common/configrationTitleUtils';
@@ -198,7 +198,7 @@ const ToolBase = memo(props => {
     }
     editField(field, processedValue);
     if (field === 'settings.label') {
-      const convertedEliteATitle = convertToValidEliteATitle(processedValue);
+      const convertedEliteATitle = convertToValidEliteaTitle(processedValue);
       if (settings.elitea_title !== convertedEliteATitle) {
         editField('settings.elitea_title', convertedEliteATitle);
       }
