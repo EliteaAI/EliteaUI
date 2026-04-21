@@ -604,6 +604,10 @@ export const PERMISSIONS = {
     delete: 'configurations.configuration.delete',
     update: 'configurations.configuration.update',
   },
+  litellm: {
+    section: 'configuration.litellm',
+    edit: 'configuration.litellm.edit',
+  },
   index: {
     schedule: 'models.applications.index_meta.edit',
   },
