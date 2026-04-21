@@ -331,7 +331,7 @@ const InputMappingItem = memo(props => {
             value={type}
             onValueChange={onChangeType}
             options={typeOptions}
-            disabled={disabled}
+            disabled={disabled || dataType === 'boolean'}
             showBorder
             className="nopan nodrag"
           />
