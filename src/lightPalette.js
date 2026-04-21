@@ -278,7 +278,7 @@ const lightPalette = {
     },
     showContextDialog: gradient,
     sideBar: 'linear-gradient(180deg, #E4F0FF 0%, #FDEAFF 100%);',
-    imageAttachment: `linear-gradient(0deg, #ECECEE 0%, rgba(236, 236, 238, 0) 100%)`,
+    imageAttachment: `linear-gradient(0deg, #FFFFFF 0%, rgba(255, 255, 255, 0) 100%)`,
     agentModal: {
       border: 'linear-gradient(224.66deg, #8BC9FF 0%, #FDA3FF 99.46%)',
       background: 'linear-gradient(224.97deg, #DEEDFF 0%, #F9DFFE 100%)',
