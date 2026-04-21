@@ -16,8 +16,9 @@ import {
 import { useNotificationBulkDeleteMutation, useNotificationBulkMarkSeenMutation } from '@/api/notifications';
 import { SortOrderOptions } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
-import NotificationListItem from '@/components/NotificationListItem';
+import NotificationListItem, { getIcon } from '@/components/NotificationListItem';
 import useToast from '@/hooks/useToast';
+import { useTheme } from '@emotion/react';
 
 import NotificationTableToolbar from './NotificationTableToolbar';
 
@@ -26,13 +27,24 @@ const NOTIFICATION_TABLE_CONFIG = {
 };
 
 const NOTIFICATION_COLUMNS = [
-  { field: 'event_type', label: 'Notification', width: '1fr', sortable: false },
+  { field: 'event_type', label: 'Type', width: '6rem', sortable: true },
+  { field: 'notification_text', label: 'Notification', width: '1fr', sortable: false },
   { field: 'created_at', label: 'Date & Time', width: '11rem', sortable: true },
 ];
 
-const GRID_TEMPLATE_COLUMNS = '3rem minmax(0, 50rem) 11rem';
+const GRID_TEMPLATE_COLUMNS = '3rem 6rem minmax(0, 1fr) 11rem';
 
 const DATA_COLUMNS = NOTIFICATION_COLUMNS.slice(1);
+
+const NotificationTypeIconCell = memo(props => {
+  const { row } = props;
+  const theme = useTheme();
+  const styles = notificationTypeIconCellStyles();
+
+  return <Box sx={styles.iconWrapper}>{getIcon(row.event_type, theme, row)}</Box>;
+});
+
+NotificationTypeIconCell.displayName = 'NotificationTypeIconCell';
 
 const NotificationTable = memo(props => {
   const {
@@ -174,36 +186,38 @@ const NotificationTable = memo(props => {
   const handleRowMouseEnter = useCallback(id => () => setHoveredRowId(id), []);
   const handleRowMouseLeave = useCallback(() => setHoveredRowId(null), []);
 
-  const renderNameCell = useCallback(
-    ({ row }) => (
-      <Box sx={styles.notificationCell}>
-        <NotificationListItem
-          notification={row}
-          clampLines={0}
-          sx={styles.listItemOverride}
-          contentSX={styles.listItemContent}
-          showTime={false}
-          context="table"
-        />
-      </Box>
-    ),
+  const renderCell = useCallback(
+    (column, value, row) => {
+      if (column.field === 'notification_text') {
+        return (
+          <Box sx={styles.notificationCell}>
+            <NotificationListItem
+              notification={row}
+              clampLines={0}
+              sx={styles.listItemOverride}
+              contentSX={styles.listItemContent}
+              showTime={false}
+              showIcon={false}
+              context="table"
+            />
+          </Box>
+        );
+      }
+      if (column.field === 'created_at') {
+        return (
+          <Typography
+            variant="bodyMedium"
+            color={row.is_seen ? 'text.primary' : 'text.secondary'}
+            sx={styles.dateCell}
+          >
+            {format(new Date(value), 'dd-MMM-yyyy, kk:mm')}
+          </Typography>
+        );
+      }
+      return value;
+    },
     [styles],
   );
-
-  const renderCell = useCallback((column, value, row) => {
-    if (column.field === 'created_at') {
-      const textColor = row.is_seen ? 'text.primary' : 'text.secondary';
-      return (
-        <Typography
-          variant="bodyMedium"
-          sx={{ color: textColor }}
-        >
-          {format(new Date(value), 'dd-MMM-yyyy, kk:mm')}
-        </Typography>
-      );
-    }
-    return value;
-  }, []);
 
   return (
     <Box sx={styles.wrapper}>
@@ -246,9 +260,10 @@ const NotificationTable = memo(props => {
               gridTemplateColumns={GRID_TEMPLATE_COLUMNS}
               columns={DATA_COLUMNS}
               renderCell={renderCell}
-              NameCellComponent={renderNameCell}
+              NameCellComponent={NotificationTypeIconCell}
               nameField="event_type"
               checkboxCellSx={styles.checkboxCell}
+              nameCellSx={styles.typeIconCell}
               dataCellSx={styles.dataCell}
             />
           ))}
@@ -275,6 +290,20 @@ const NotificationTable = memo(props => {
 NotificationTable.displayName = 'NotificationTable';
 
 /** @type {MuiSx} */
+const notificationTypeIconCellStyles = () => ({
+  iconWrapper: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    '& > svg': {
+      width: '1.125rem',
+      height: '1.125rem',
+      display: 'block',
+    },
+  },
+});
+
+/** @type {MuiSx} */
 const notificationTableStyles = () => ({
   wrapper: {
     width: '100%',
@@ -287,15 +316,27 @@ const notificationTableStyles = () => ({
   notificationCell: {
     display: 'flex',
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    width: '100%',
   },
   checkboxCell: {
     alignSelf: 'start',
     paddingTop: '0.4rem',
   },
-  dataCell: {
+  typeIconCell: {
     alignSelf: 'start',
     paddingTop: '0.8rem',
+    paddingBottom: 0,
+    paddingLeft: '0.5rem',
+    paddingRight: '0.5rem',
+    justifyContent: 'center',
+  },
+  dataCell: {
+    alignSelf: 'start',
+    padding: '0.5rem 0.8rem',
+  },
+  dateCell: {
+    paddingTop: '0.3rem',
   },
   listItemOverride: {
     padding: '0',

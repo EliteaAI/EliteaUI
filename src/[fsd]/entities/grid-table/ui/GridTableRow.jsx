@@ -28,6 +28,7 @@ const GridTableRow = memo(props => {
     actions,
     actionsCellSx,
     dataCellSx,
+    nameCellSx,
     ActionsComponent,
     actionsProps,
     isLoading = false,
@@ -68,7 +69,7 @@ const GridTableRow = memo(props => {
         </Box>
       )}
 
-      <Box sx={styles.nameCell}>
+      <Box sx={[styles.nameCell, nameCellSx]}>
         <GridTableRowNameCell
           isRedesign={isRedesign}
           NameCellComponent={NameCellComponent}
