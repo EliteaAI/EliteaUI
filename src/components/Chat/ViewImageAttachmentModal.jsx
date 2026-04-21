@@ -1,9 +1,10 @@
 import { memo, useEffect, useRef, useState } from 'react';
 
-import { Box, Button, Dialog, DialogContent, Typography } from '@mui/material';
+import { Box, Dialog, DialogContent, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 
 import { Checkbox, Modal } from '@/[fsd]/shared/ui';
+import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { downloadAttachmentImage, getAttachmentName, getImageSource } from '@/common/attachmentUtils';
 import { downloadFileFromArtifact, fetchArtifactBlobUrl } from '@/common/utils';
 import CloseIcon from '@/components/Icons/CloseIcon';
@@ -114,8 +115,8 @@ const ViewImageAttachmentModal = memo(props => {
             {attachmentName}
           </Typography>
           <Box sx={styles.actionsContainer}>
-            <Button
-              variant="icon"
+            <BaseBtn
+              variant={BUTTON_VARIANTS.ICON}
               color="secondary"
               onClick={onClickDown}
               aria-label="Download image"
@@ -125,9 +126,9 @@ const ViewImageAttachmentModal = memo(props => {
                 sx={styles.icon}
                 fill={theme.palette.icon.fill.secondary}
               />
-            </Button>
-            <Button
-              variant="icon"
+            </BaseBtn>
+            <BaseBtn
+              variant={BUTTON_VARIANTS.ICON}
               color="secondary"
               onClick={onClickRemove}
               aria-label="Remove attachment"
@@ -137,8 +138,8 @@ const ViewImageAttachmentModal = memo(props => {
                 sx={styles.icon}
                 fill={theme.palette.icon.fill.secondary}
               />
-            </Button>
-            <Button
+            </BaseBtn>
+            <BaseBtn
               variant="tertiary"
               onClick={onClose}
               aria-label="Close modal"
@@ -148,7 +149,7 @@ const ViewImageAttachmentModal = memo(props => {
                 fill={theme.palette.icon.fill.default}
                 sx={styles.closeIcon}
               />
-            </Button>
+            </BaseBtn>
           </Box>
         </Box>
 
