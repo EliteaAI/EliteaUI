@@ -359,47 +359,52 @@ const SingleSelect = memo(props => {
                     ) : null}
                   </Box>
                 </ListSubheader>,
-                ...groupOptions.map((option, index) => {
-                  const rowKey = `${groupKey}-opt-${option.value}-${index}`;
-
-                  if (option.variant === 'action') {
-                    return (
+                ...(groupOptions.length === 0
+                  ? [
                       <MenuItem
-                        key={rowKey}
-                        value={option.value}
-                        sx={({ palette }) => ({
-                          justifyContent: 'flex-start',
-                          padding: '0.5rem 1.5rem',
-                          fontSize: '0.875rem',
-                          color: palette.text.secondary,
-                        })}
+                        key={`${groupKey}-empty`}
+                        disabled
+                        sx={{ justifyContent: 'flex-start', padding: '0.5rem 1.5rem', fontSize: '0.875rem' }}
                       >
-                        {option.label}
-                      </MenuItem>
-                    );
-                  }
+                        {isListFetching ? '' : 'Still no saved credentials'}
+                      </MenuItem>,
+                    ]
+                  : groupOptions.map((option, index) => {
+                      const rowKey = `${groupKey}-opt-${option.value}-${index}`;
 
-                  return (
-                    <SingleSelectDropdown
-                      key={rowKey}
-                      value={option.value}
-                      option={option}
-                      isSelected={
-                        effectiveMultiple
-                          ? Array.isArray(realValue) && realValue.includes(option.value)
-                          : option.value === realValue
+                      if (option.variant === 'action') {
+                        return (
+                          <MenuItem
+                            key={rowKey}
+                            value={option.value}
+                            sx={styles.groupAction}
+                          >
+                            {option.label}
+                          </MenuItem>
+                        );
                       }
-                      onClear={onClear ? wrappedOnClear : undefined}
-                      customRenderOption={customRenderOption}
-                      showOptionIcon={showOptionIcon}
-                      showOptionDescription={showOptionDescription}
-                      iconPosition={iconPosition}
-                      optionsWithAvatar={optionsWithAvatar}
-                      menuItemIconSX={{ ...menuItemIconSX, ...selectIconWithLabelSx }}
-                      onDeleteOption={onDeleteOption}
-                    />
-                  );
-                }),
+
+                      return (
+                        <SingleSelectDropdown
+                          key={rowKey}
+                          value={option.value}
+                          option={option}
+                          isSelected={
+                            effectiveMultiple
+                              ? Array.isArray(realValue) && realValue.includes(option.value)
+                              : option.value === realValue
+                          }
+                          onClear={onClear ? wrappedOnClear : undefined}
+                          customRenderOption={customRenderOption}
+                          showOptionIcon={showOptionIcon}
+                          showOptionDescription={showOptionDescription}
+                          iconPosition={iconPosition}
+                          optionsWithAvatar={optionsWithAvatar}
+                          menuItemIconSX={{ ...menuItemIconSX, ...selectIconWithLabelSx }}
+                          onDeleteOption={onDeleteOption}
+                        />
+                      );
+                    })),
               ];
             });
       };
@@ -774,7 +779,7 @@ const singleSelectStyles = (theme, { customSelectedColor, customSelectedFontSize
     },
   },
   groupHeader: ({ palette }) => ({
-    padding: '0.5rem 1.5rem',
+    padding: '0.5rem 1rem',
     fontSize: '0.875rem',
     color: palette.text.secondary,
     lineHeight: 1.4,
@@ -783,6 +788,12 @@ const singleSelectStyles = (theme, { customSelectedColor, customSelectedFontSize
     '.MuiMenuItem-root + &': {
       borderTop: `1px solid ${palette.border.lines}`,
     },
+  }),
+  groupAction: ({ palette }) => ({
+    justifyContent: 'flex-start',
+    padding: '0.5rem 1rem',
+    fontSize: '0.875rem',
+    color: palette.text.secondary,
   }),
   groupHeaderTitle: ({ palette }) => ({
     textTransform: 'uppercase',
@@ -797,6 +808,7 @@ const singleSelectStyles = (theme, { customSelectedColor, customSelectedFontSize
     gap: '0.5rem',
   },
   groupHeaderEnd: {
+    padding: 0,
     flexShrink: 0,
     display: 'flex',
     alignItems: 'center',

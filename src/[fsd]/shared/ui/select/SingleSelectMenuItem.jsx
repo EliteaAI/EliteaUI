@@ -157,6 +157,7 @@ const menuItemStyles = option => ({
   iconContainer: {
     display: 'flex',
     alignItems: 'center',
+    gap: '0.5rem',
   },
   iconContainerWithDescription: {
     alignItems: 'flex-start',
@@ -199,7 +200,6 @@ const menuItemStyles = option => ({
     width: '1rem',
     height: '1rem',
     fontSize: '1rem',
-    marginRight: '0.6rem',
     minWidth: '1rem !important',
     '& svg': {
       fontSize: '1rem',
