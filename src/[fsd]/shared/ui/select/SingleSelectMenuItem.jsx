@@ -24,7 +24,7 @@ const SingleSelectMenuItem = memo(props => {
     ...restProps
   } = props;
 
-  const styles = menuItemStyles();
+  const styles = menuItemStyles(option);
   const theme = useTheme();
   const selectedBackground = isSelected ? theme.palette.background.participant.active : undefined;
 
@@ -145,14 +145,15 @@ const SingleSelectMenuItem = memo(props => {
 
 SingleSelectMenuItem.displayName = 'SingleSelectMenuItem';
 
-const menuItemStyles = () => ({
-  menuItem: {
+const menuItemStyles = option => ({
+  menuItem: ({ palette }) => ({
     justifyContent: 'space-between',
     alignItems: 'center',
     '&:hover #show-on-hover': {
       display: 'flex',
     },
-  },
+    borderBottom: option.variant === 'action' ? `0.0625rem solid ${palette.border.lines}` : 'none',
+  }),
   iconContainer: {
     display: 'flex',
     alignItems: 'center',
