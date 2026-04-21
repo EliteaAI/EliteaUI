@@ -51,6 +51,8 @@ const SingleSelectDropdown = memo(props => {
   if (isMenuAction) {
     return (
       <MenuItem
+        {...restProps}
+        onClick={muiOnClick}
         value={FLAT_MENU_ACTION_VALUE}
         sx={styles.menuActionItem}
       >

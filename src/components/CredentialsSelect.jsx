@@ -2,12 +2,12 @@ import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from '
 
 import { useSelector } from 'react-redux';
 
-import { Box, FormControl, FormHelperText, IconButton, InputLabel, Tooltip, Typography } from '@mui/material';
+import { Box, FormControl, FormHelperText, IconButton, Tooltip, Typography } from '@mui/material';
 
 import { useTrackEvent } from '@/GA';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
 import { useContextExecutionEntity } from '@/[fsd]/shared/lib/hooks';
-import { Label, Select } from '@/[fsd]/shared/ui';
+import { Select } from '@/[fsd]/shared/ui';
 import { useLazyGetConfigurationsListQuery, useListModelsQuery } from '@/api/configurations';
 import RefreshIcon from '@/assets/refresh-icon.svg?react';
 import BriefcaseIcon from '@/components/Icons/BriefcaseIcon.jsx';
@@ -489,38 +489,6 @@ const CredentialsSelect = memo(
       [renderValue, value, hasFetchedData],
     );
 
-    const labelNode = useMemo(() => {
-      return (
-        <InputLabel
-          id={`simple-select-label-${label}`}
-          sx={{
-            left: '0.75rem',
-            fontSize: '0.875rem',
-            fontWeight: 500,
-            '&.MuiInputLabel-shrink': {
-              overflow: 'visible',
-            },
-            '&.MuiInputLabel-shrink svg': {
-              transform: 'scale(1.3334)',
-              transformOrigin: 'left center',
-            },
-            ...(required && {
-              '& .MuiInputLabel-asterisk, & .MuiFormLabel-asterisk': { display: 'none' },
-            }),
-          }}
-        >
-          <Label.InfoLabelWithTooltip
-            label={label}
-            required={required}
-            tooltip={description}
-            inheritLabel
-            inheritColor
-            labelTextPointerEventsNone={!!description}
-          />
-        </InputLabel>
-      );
-    }, [description, label, required]);
-
     const selectError = error || (mismatchedPrivateCredential && hasFetchedData);
 
     const showMismatchFooter = Boolean(
@@ -528,10 +496,11 @@ const CredentialsSelect = memo(
     );
 
     return (
-      <Box sx={[{ marginTop: '0.75rem' }, sx]}>
+      <Box sx={[{ marginTop: '0.5rem' }, sx]}>
         <Select.SingleSelect
           label={label}
-          labelNode={labelNode}
+          shrinkLabel
+          infoIconDescription={description}
           required={required}
           error={selectError}
           helperText={showMismatchFooter ? '' : helperText}

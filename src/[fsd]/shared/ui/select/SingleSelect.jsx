@@ -10,6 +10,7 @@ import {
   ListSubheader,
   MenuItem,
   Select,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
@@ -18,6 +19,7 @@ import { FLAT_MENU_ACTION_VALUE } from '@/[fsd]/shared/lib/constants/singleSelec
 import { Banner } from '@/[fsd]/shared/ui';
 import RemoveIcon from '@/assets/remove-icon.svg?react';
 import ArrowDownIcon from '@/components/Icons/ArrowDownIcon';
+import InfoIcon from '@/components/Icons/InfoIcon';
 
 import SingleSelectDropdown from './SingleSelectDropdown';
 import { getSingleSelectShowBorderSx, getSingleSelectWithoutBorderSx } from './singleSelectVariants';
@@ -73,6 +75,8 @@ const SingleSelect = memo(props => {
     isListFetching = false,
     optionGroups,
     onMenuActionClick,
+    infoIconDescription,
+    shrinkLabel = false,
   } = props;
 
   const [menuOpen, setMenuOpen] = useState(false);
@@ -309,6 +313,7 @@ const SingleSelect = memo(props => {
           <SingleSelectDropdown
             key="__menu_action__"
             isMenuAction
+            value={FLAT_MENU_ACTION_VALUE}
           />
         ) : null;
       };
@@ -599,11 +604,37 @@ const SingleSelect = memo(props => {
                   ...(effectiveMultiple && {
                     '&:not(.MuiInputLabel-shrink)': { top: '0.5rem' },
                   }),
+                  ...(required && {
+                    '& .MuiInputLabel-asterisk, & .MuiFormLabel-asterisk': { display: 'none' },
+                  }),
                 },
                 labelSX,
               ]}
+              shrink={shrinkLabel ? true : undefined}
             >
               {label}
+              {required && ' *'}
+              {infoIconDescription && (
+                <Box
+                  component="span"
+                  sx={{
+                    marginLeft: '0.15rem',
+                    ':hover': { opacity: 0.8 },
+                  }}
+                >
+                  <Tooltip
+                    title={infoIconDescription}
+                    placement="top"
+                  >
+                    <Box component="span">
+                      <InfoIcon
+                        width={19}
+                        height={19}
+                      />
+                    </Box>
+                  </Tooltip>
+                </Box>
+              )}
             </InputLabel>
           ))}
         <Select
