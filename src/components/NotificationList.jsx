@@ -4,7 +4,7 @@ import { debounce } from 'lodash';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
-import { Box, Popover, Skeleton, Typography } from '@mui/material';
+import { Box, CircularProgress, Popover, Skeleton, Typography } from '@mui/material';
 
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { TAG_NOTIFICATIONS, notificationsApi, useNotificationListQuery } from '@/api/notifications';
@@ -21,10 +21,12 @@ const NotificationList = memo(props => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const listRef = useRef();
+  const lastAppliedPageRef = useRef(-1);
   const { toastError } = useToast();
   const styles = notificationListStyles();
   const { personal_project_id } = useSelector(state => state.user);
   const [page, setPage] = useState(0);
+  const [allNotifications, setAllNotifications] = useState([]);
 
   const { data, isFetching, isError, error, refetch } = useNotificationListQuery(
     {
@@ -50,25 +52,46 @@ const NotificationList = memo(props => {
         ],
       },
     });
-    onCloseNotificationList(true);
+    onCloseNotificationList();
   }, [dispatch, navigate, onCloseNotificationList]);
 
   const onLoadMore = useCallback(() => {
     setPage(prev => prev + 1);
   }, []);
 
-  const hasMore = data && data.rows.length < data.total;
+  useEffect(() => {
+    if (!notificationListAnchorEl) return;
+    if (!data?.rows) return;
+    if (page === 0) {
+      lastAppliedPageRef.current = 0;
+      setAllNotifications(data.rows);
+      return;
+    }
+    if (lastAppliedPageRef.current === page) return;
+    lastAppliedPageRef.current = page;
+    setAllNotifications(prev => [...prev, ...data.rows]);
+  }, [data?.rows, notificationListAnchorEl, page]);
+
+  useEffect(() => {
+    if (!notificationListAnchorEl) {
+      setPage(0);
+      setAllNotifications([]);
+      lastAppliedPageRef.current = -1;
+    }
+  }, [notificationListAnchorEl]);
+
+  const hasMore = data && allNotifications.length < data.total;
 
   const handleScroll = useCallback(() => {
     const listDom = listRef.current;
-    if (!listDom) return;
+    if (!listDom || isFetching) return;
 
     const { clientHeight, scrollHeight, scrollTop } = listDom;
     const isReachBottom = scrollTop + clientHeight > scrollHeight - 10;
     if (isReachBottom && hasMore) {
       onLoadMore();
     }
-  }, [hasMore, onLoadMore]);
+  }, [hasMore, isFetching, onLoadMore]);
 
   const debouncedScroll = useMemo(() => debounce(handleScroll, 300), [handleScroll]);
 
@@ -130,15 +153,14 @@ const NotificationList = memo(props => {
             ref={listRef}
             sx={styles.listContainer}
           >
-            {!isFetching &&
-              data?.rows.map(notification => (
-                <NotificationListItem
-                  key={notification.id}
-                  notification={notification}
-                  onCloseNotificationList={onCloseNotificationList}
-                />
-              ))}
-            {isFetching && (
+            {allNotifications.map(notification => (
+              <NotificationListItem
+                key={notification.id}
+                notification={notification}
+                onCloseNotificationList={onCloseNotificationList}
+              />
+            ))}
+            {isFetching && !allNotifications.length && (
               <>
                 {[...Array(8)].map((_, index) => (
                   <Skeleton
@@ -151,12 +173,20 @@ const NotificationList = memo(props => {
                 ))}
               </>
             )}
-            {!data?.rows.length && !isFetching && (
+            {!allNotifications.length && !isFetching && (
               <Box sx={styles.emptyState}>
                 <Typography variant="bodySmall">No notifications right now</Typography>
               </Box>
             )}
           </Box>
+          {isFetching && page > 0 && (
+            <Box sx={styles.loadMoreSpinner}>
+              <CircularProgress
+                size="1.25rem"
+                thickness={4}
+              />
+            </Box>
+          )}
           <BaseBtn
             variant={BUTTON_VARIANTS.tertiary}
             onClick={onViewAll}
@@ -210,6 +240,13 @@ const notificationListStyles = () => ({
     '&:not(:last-of-type)': {
       borderBottom: `0.0625rem solid ${palette.border.notificationItem}`,
     },
+  }),
+  loadMoreSpinner: ({ palette }) => ({
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: '0.75rem 0',
+    borderTop: `0.0625rem solid ${palette.border.notificationItem}`,
   }),
   emptyState: ({ palette }) => ({
     display: 'flex',
