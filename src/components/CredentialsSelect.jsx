@@ -383,7 +383,7 @@ const CredentialsSelect = memo(
           <IconButton
             size="small"
             onClick={onRefresh}
-            sx={({ palette }) => ({ color: palette.text.default })}
+            sx={styles.refreshIcon}
           >
             <RefreshIcon />
           </IconButton>
@@ -546,6 +546,29 @@ const styles = {
     alignItems: 'center',
     gap: '0.5rem',
   },
+  refreshIcon: ({ palette }) => ({
+    color: palette.text.default,
+    padding: 0,
+    position: 'relative',
+    backgroundColor: 'transparent',
+    '&:hover, &:active, &.Mui-focusVisible': {
+      backgroundColor: 'transparent',
+    },
+    '&:hover': {
+      color: palette.text.secondary,
+    },
+    '&:hover::before': {
+      content: '""',
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      width: '26px',
+      height: '26px',
+      transform: 'translate(-21%, -18%)',
+      borderRadius: '50%',
+      backgroundColor: palette.background.userInputBackgroundActive,
+    },
+  }),
   selectedValueTypography: selectedOption => ({
     overflow: 'hidden',
     textOverflow: 'ellipsis',
