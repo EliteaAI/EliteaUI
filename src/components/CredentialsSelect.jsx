@@ -448,26 +448,25 @@ const CredentialsSelect = memo(
     const customRenderSelectValue = useCallback(
       foundOption => {
         if (!foundOption) {
+          if (!value?.elitea_title) return null;
           return (
-            <Box sx={styles.unmatchedValueBox(value?.elitea_title && hasFetchedData)}>
-              {value?.elitea_title ? (
-                value?.private ? (
-                  <Person
-                    key="person-icon"
-                    fontSize="1rem"
-                  />
-                ) : (
-                  <BriefcaseIcon
-                    key="briefcase-icon"
-                    fontSize="1rem"
-                  />
-                )
-              ) : null}
+            <Box sx={styles.unmatchedValueBox(hasFetchedData)}>
+              {value?.private ? (
+                <Person
+                  key="person-icon"
+                  fontSize="1rem"
+                />
+              ) : (
+                <BriefcaseIcon
+                  key="briefcase-icon"
+                  fontSize="1rem"
+                />
+              )}
               <Typography
                 variant="labelMedium"
-                sx={styles.unmatchedValueTypography(value?.elitea_title && hasFetchedData)}
+                sx={styles.unmatchedValueTypography(hasFetchedData)}
               >
-                {!value?.elitea_title ? 'Select credentials' : value.elitea_title}
+                {value.elitea_title}
               </Typography>
             </Box>
           );
@@ -493,13 +492,19 @@ const CredentialsSelect = memo(
           id={`simple-select-label-${label}`}
           sx={{
             left: '0.75rem',
-            fontSize: '1rem',
+            fontSize: '0.875rem',
             fontWeight: 500,
+            '&.MuiInputLabel-shrink': {
+              overflow: 'visible',
+            },
+            '&.MuiInputLabel-shrink svg': {
+              transform: 'scale(1.3334)',
+              transformOrigin: 'left center',
+            },
             ...(required && {
               '& .MuiInputLabel-asterisk, & .MuiFormLabel-asterisk': { display: 'none' },
             }),
           }}
-          shrink
         >
           <Label.InfoLabelWithTooltip
             label={label}
@@ -508,6 +513,7 @@ const CredentialsSelect = memo(
             inheritLabel
             inheritColor
             labelTextPointerEventsNone={!!description}
+            iconSize={14}
           />
         </InputLabel>
       );
