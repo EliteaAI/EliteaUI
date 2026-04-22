@@ -2,6 +2,7 @@ import { memo } from 'react';
 
 import { Box, Tooltip, Typography } from '@mui/material';
 
+import { TooltipMarkdownContent } from '@/[fsd]/shared/ui/tooltip';
 import InfoIcon from '@/components/Icons/InfoIcon';
 
 /**
@@ -50,7 +51,7 @@ const InfoLabelWithTooltip = memo(props => {
     <Box sx={[styles.container, sx]}>
       {labelNode}
       {tooltip && (
-        <Tooltip title={tooltip}>
+        <Tooltip title={<TooltipMarkdownContent>{tooltip}</TooltipMarkdownContent>}>
           <Box sx={styles.iconWrapper}>
             <InfoIcon
               width={iconSize}
