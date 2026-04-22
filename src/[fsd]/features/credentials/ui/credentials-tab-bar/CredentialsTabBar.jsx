@@ -164,7 +164,7 @@ const CredentialTabBar = memo(props => {
           setShowValidation?.(true);
           setApiError?.('');
         } else {
-          setApiError?.(buildErrorMessage(result.error));
+          setApiError?.(buildErrorMessage(result.error) || 'Failed to save credential');
         }
       }
     } catch {
