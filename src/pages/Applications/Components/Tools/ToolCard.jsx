@@ -279,6 +279,38 @@ const ToolCard = memo(props => {
     return validationInfo;
   }, [validationInfo, tool, entityType]);
 
+  const validationBanner = useMemo(() => {
+    if (!validationInfo) return null;
+
+    const errorType = toolValidationMessage?.error_type;
+
+    if (errorType === 'private_credential_not_found' && personal_project_id !== projectId) {
+      return (
+        <CredentialWarningBanner
+          credentialId={toolValidationMessage.credential_id}
+          credentialType={tool?.type}
+          section="credentials"
+        />
+      );
+    }
+
+    if (errorType === 'credential_not_found' || errorType === 'private_credential_not_found') {
+      return (
+        <Banner.BannerMessage message="Your configuration does not match any available configurations." />
+      );
+    }
+
+    return (
+      <Banner.BannerMessage
+        message={
+          typeof toolValidationMessage === 'string'
+            ? toolValidationMessage
+            : toolValidationMessage?.message || JSON.stringify(toolValidationMessage)
+        }
+      />
+    );
+  }, [validationInfo, toolValidationMessage, personal_project_id, projectId, tool]);
+
   // Generate dialog texts based on entity type
   const dialogTitle = useMemo(() => {
     switch (entityType) {
@@ -531,24 +563,7 @@ const ToolCard = memo(props => {
             confirmButtonText="Remove"
           />
         </Box>
-        {validationInfo &&
-          (typeof toolValidationMessage === 'object' &&
-          toolValidationMessage?.error_type === 'private_credential_not_found' &&
-          personal_project_id !== projectId ? (
-            <CredentialWarningBanner
-              credentialId={toolValidationMessage.credential_id}
-              credentialType={tool?.type}
-              section="credentials"
-            />
-          ) : (
-            <Banner.BannerMessage
-              message={
-                typeof toolValidationMessage === 'string'
-                  ? toolValidationMessage
-                  : toolValidationMessage?.message || JSON.stringify(toolValidationMessage)
-              }
-            />
-          ))}
+        {validationBanner}
       </>
     </Tooltip>
   );
