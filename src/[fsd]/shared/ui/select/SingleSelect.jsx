@@ -364,7 +364,7 @@ const SingleSelect = memo(props => {
                       <MenuItem
                         key={`${groupKey}-empty`}
                         disabled
-                        sx={{ justifyContent: 'flex-start', padding: '0.5rem 1.5rem', fontSize: '0.875rem' }}
+                        sx={{ justifyContent: 'flex-start', padding: '0.5rem 1rem', fontSize: '0.875rem' }}
                       >
                         {isListFetching ? '' : 'Still no saved credentials'}
                       </MenuItem>,
