@@ -13,6 +13,7 @@ import { useFieldFocus } from '@/[fsd]/shared/lib/hooks';
 import { Checkbox, Field, Input } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
+import { TooltipMarkdownContent } from '@/[fsd]/shared/ui/tooltip';
 import { MAX_NAME_LENGTH } from '@/common/constants';
 import AgentSelect from '@/components/AgentSelect';
 import CredentialsSelect from '@/components/CredentialsSelect';
@@ -174,7 +175,7 @@ const ToolBaseProperty = memo(props => {
           {isRequired && ' *'}
 
           <Tooltip
-            title={description}
+            title={<TooltipMarkdownContent>{description}</TooltipMarkdownContent>}
             placement="top"
           >
             <Box sx={styles.infoIconWrapper}>

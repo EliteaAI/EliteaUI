@@ -17,6 +17,7 @@ import { useTheme } from '@mui/material/styles';
 
 import { FLAT_MENU_ACTION_VALUE } from '@/[fsd]/shared/lib/constants/singleSelectConstants';
 import { Banner } from '@/[fsd]/shared/ui';
+import { TooltipMarkdownContent } from '@/[fsd]/shared/ui/tooltip';
 import RemoveIcon from '@/assets/remove-icon.svg?react';
 import ArrowDownIcon from '@/components/Icons/ArrowDownIcon';
 import InfoIcon from '@/components/Icons/InfoIcon';
@@ -628,7 +629,7 @@ const SingleSelect = memo(props => {
                   }}
                 >
                   <Tooltip
-                    title={infoIconDescription}
+                    title={<TooltipMarkdownContent>{infoIconDescription}</TooltipMarkdownContent>}
                     placement="top"
                   >
                     <Box component="span">
