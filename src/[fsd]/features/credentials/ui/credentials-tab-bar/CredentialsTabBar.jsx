@@ -43,7 +43,7 @@ const CredentialTabBar = memo(props => {
 
   const [searchParams] = useSearchParams();
   const { credential_uid } = useParams();
-  const { toastSuccess, toastError } = useToast();
+  const { toastSuccess } = useToast();
 
   const { checkPermission } = useCheckPermission();
   const { projectType } = useProjectType();
@@ -92,25 +92,21 @@ const CredentialTabBar = memo(props => {
     };
   }, [configurationsAsSchema, toolType]);
 
-  const {
-    create,
-    isLoading: isCreateLoading,
-    error: createError,
-    isError: isCreateError,
-  } = useCreateCredential(formik, credentialDetails, configurationKeys);
+  const { create, isLoading: isCreateLoading } = useCreateCredential(
+    formik,
+    credentialDetails,
+    configurationKeys,
+  );
 
-  const {
-    update,
-    isLoading: isUpdateLoading,
-    error: updateError,
-    isError: isUpdateError,
-  } = useUpdateCredential(formik, credentialDetails, configurationKeys);
+  const { update, isLoading: isUpdateLoading } = useUpdateCredential(
+    formik,
+    credentialDetails,
+    configurationKeys,
+  );
 
   const isFormDirtyExcluding = useFormDirtyExcluding();
 
   const isLoading = useMemo(() => isCreateLoading || isUpdateLoading, [isCreateLoading, isUpdateLoading]);
-  const error = useMemo(() => createError || updateError, [createError, updateError]);
-  const isError = useMemo(() => isCreateError || isUpdateError, [isCreateError, isUpdateError]);
   const shouldDisableSave = useMemo(
     () => isLoading || !isFormDirtyExcluding,
     [isLoading, isFormDirtyExcluding],
@@ -159,19 +155,17 @@ const CredentialTabBar = memo(props => {
           onEnableEditTitle?.();
 
         const { newErrors } = CredentialErrorHelpers.extractInformationFromCredentialError({
-          error,
+          error: result.error || {},
           schemaProperties,
           settings: credentialDetails?.settings || {},
         });
-
         if (Object.keys(newErrors).length > 0) {
           setValidationErrorMessages?.(newErrors);
           setShowValidation?.(true);
           setApiError?.('');
         } else {
-          setApiError?.(buildErrorMessage(error));
+          setApiError?.(buildErrorMessage(result.error));
         }
-        setApiError(buildErrorMessage(result.error) || 'Failed to save credential');
       }
     } catch {
       setApiError('An unexpected error occurred');
@@ -185,7 +179,6 @@ const CredentialTabBar = memo(props => {
     toolType,
     navigateBack,
     onEnableEditTitle,
-    error,
     schemaProperties,
     credentialDetails?.settings,
     setApiError,
@@ -209,10 +202,6 @@ const CredentialTabBar = memo(props => {
       setWantToCancel(false);
     }
   }, [onClearCredentialDetails, wantToCancel, formik, navigateBack]);
-
-  useEffect(() => {
-    if (isError) toastError(buildErrorMessage(error));
-  }, [error, isError, toastError]);
 
   return (
     <>
