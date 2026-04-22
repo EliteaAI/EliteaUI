@@ -4,25 +4,18 @@ import { useFormikContext } from 'formik';
 import { useDispatch } from 'react-redux';
 
 import { eliteaApi } from '@/api/eliteaApi';
-import { PUBLIC_PROJECT_ID } from '@/common/constants';
+import { ViewMode } from '@/common/constants';
 import useValidateApplicationVersion from '@/hooks/application/useValidateApplicationVersion';
+import useViewMode from '@/hooks/useViewMode';
 
-/**
- * ApplicationValidator component that triggers toolkit validation for an application.
- * Should be used inside a Formik context to access form values.
- *
- * @param {Object} props - Component props
- * @param {number|string} props.agentId - The application/agent ID
- * @param {number|string} props.projectId - The project ID
- * @param {boolean} [props.isCreateMode=false] - Whether the component is in create mode
- * @returns {null} This is a logic-only component that renders nothing
- */
-function ApplicationValidator({ agentId, projectId, isCreateMode = false }) {
+const ApplicationValidator = props => {
+  const { agentId, projectId, isCreateMode = false } = props;
   const { values } = useFormikContext();
   const dispatch = useDispatch();
   const prevToolsRef = useRef();
+  const viewMode = useViewMode();
 
-  const isPublished = projectId == PUBLIC_PROJECT_ID;
+  const isPublished = viewMode === ViewMode.Public;
   const shouldSkip =
     isPublished ||
     isCreateMode ||
@@ -78,7 +71,7 @@ function ApplicationValidator({ agentId, projectId, isCreateMode = false }) {
       ))}
     </>
   );
-}
+};
 
 /**
  * Validates a single sub-agent/pipeline tool using the same hook as the parent.
