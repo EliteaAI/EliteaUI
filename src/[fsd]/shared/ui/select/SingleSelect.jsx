@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo, useRef, useState } from 'react';
 
 import {
   Box,
@@ -81,6 +81,8 @@ const SingleSelect = memo(props => {
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [internalSearchQuery, setInternalSearchQuery] = useState('');
+
+  const skipNextCloseRef = useRef(false);
   const effectiveMultiple = multiple && !!showBorder;
 
   const hasOptionGroups = Boolean(optionGroups?.length);
@@ -140,20 +142,21 @@ const SingleSelect = memo(props => {
       const rawValue = event.target.value;
       if (!effectiveMultiple) {
         if (rawValue === FLAT_MENU_ACTION_VALUE) {
+          skipNextCloseRef.current = true;
           onMenuActionClick?.(event);
-          setMenuOpen(false);
           return;
         }
         const picked = flatOptions.find(o => o.value === rawValue);
         if (picked?.variant === 'action') {
+          skipNextCloseRef.current = true;
           picked.onActivate?.(event);
           return;
         }
         setMenuOpen(false);
       }
       const newValue = effectiveMultiple && typeof rawValue === 'string' ? rawValue.split(',') : rawValue;
-      if (onValueChange) onValueChange(newValue);
-      if (onChange) onChange(event);
+      onValueChange?.(newValue);
+      onChange?.(event);
     },
     [effectiveMultiple, flatOptions, onChange, onMenuActionClick, onValueChange],
   );
@@ -181,6 +184,11 @@ const SingleSelect = memo(props => {
   );
 
   const handleMenuClose = useCallback(() => {
+    if (skipNextCloseRef.current) {
+      skipNextCloseRef.current = false;
+      return;
+    }
+
     setMenuOpen(false);
     if (effectiveWithSearch) {
       if (isSearchControlled) onSearch?.('');
