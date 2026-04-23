@@ -5,6 +5,7 @@ import { Box, InputAdornment, TextField, Tooltip } from '@mui/material';
 import IconButton from '@mui/material/IconButton';
 
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
+import { TooltipMarkdownContent } from '@/[fsd]/shared/ui/tooltip';
 import { useSecretsListQuery } from '@/api/secrets.js';
 import InfoIcon from '@/components/Icons/InfoIcon';
 import Toggle from '@/components/Toggle.jsx';
@@ -192,7 +193,7 @@ export const SecretField = memo(props => {
                 {label}
                 {required ? ' *' : ''}
               </Box>
-              <Tooltip title={tooltipDescription}>
+              <Tooltip title={<TooltipMarkdownContent>{tooltipDescription}</TooltipMarkdownContent>}>
                 <Box
                   component="span"
                   sx={styles.tooltipIconInLabel}
