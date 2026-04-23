@@ -413,17 +413,35 @@ const CredentialsSelect = memo(
         }));
     }, [menuData, createSelectHandler, onRefresh]);
 
+    const isOptionsReady = useMemo(() => {
+      if (!hasFetchedData) return false;
+      const hasCreateOptions = createMenuData.length > 0;
+      const hasSavedOptions = savedCredentialsMenuData.length > 0;
+      return hasCreateOptions || hasSavedOptions;
+    }, [hasFetchedData, createMenuData.length, savedCredentialsMenuData.length]);
+
+    const normalizedIncomingValue = useMemo(() => {
+      if (!value || isBlankEliteaTitle(value?.elitea_title)) return '';
+      return savedRowToSelectValue({
+        elitea_title: value.elitea_title,
+        private: !!value.private,
+      });
+    }, [value]);
+
     const selectStringValue = useMemo(() => {
-      if (!selectedOption) return value?.elitea_title || '';
-      if (
-        createMenuData.some(
+      if (!isOptionsReady) return '';
+
+      if (selectedOption) {
+        const isCreateSelected = createMenuData.some(
           o => o.elitea_title === selectedOption.elitea_title && o.private === selectedOption.private,
-        )
-      ) {
-        return createActionToSelectValue(selectedOption.private);
+        );
+        return isCreateSelected
+          ? createActionToSelectValue(selectedOption.private)
+          : savedRowToSelectValue(selectedOption);
       }
-      return savedRowToSelectValue(selectedOption);
-    }, [selectedOption, value?.elitea_title, createMenuData]);
+
+      return normalizedIncomingValue;
+    }, [isOptionsReady, selectedOption, createMenuData, normalizedIncomingValue]);
 
     const handleSelectValueChange = useCallback(
       newValue => {

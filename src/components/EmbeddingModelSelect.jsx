@@ -26,7 +26,7 @@ const EmbeddingModelSelect = memo(
   }) => {
     const { personal_project_id } = useSelector(state => state.user);
     const selectedProjectId = useSelectedProjectId();
-    const [getModels] = useLazyListModelsQuery();
+    const [getModels, { isFetching }] = useLazyListModelsQuery();
 
     const {
       data: embeddingModelsData = {
@@ -121,7 +121,7 @@ const EmbeddingModelSelect = memo(
     const optionsWithActions = useMemo(() => {
       const actionOption = {
         value: 'refresh-models',
-        label: 'REFRESH',
+        label: 'Refresh',
         icon: <RefreshIcon sx={{ fontSize: '1rem' }} />,
         variant: 'action',
         onActivate: onRefresh,
@@ -129,6 +129,8 @@ const EmbeddingModelSelect = memo(
 
       return [actionOption, ...newModelsMenuData];
     }, [newModelsMenuData, onRefresh]);
+
+    const hasModelsOptions = useMemo(() => newModelsMenuData.length > 0, [newModelsMenuData]);
 
     const customRenderSelectValue = useCallback(
       foundOption => {
@@ -153,7 +155,7 @@ const EmbeddingModelSelect = memo(
             required={required}
             label={label}
             infoIconDescription={description}
-            value={defaultValueForSelect}
+            value={hasModelsOptions ? defaultValueForSelect : ''}
             options={optionsWithActions}
             showOptionIcon
             onValueChange={onSelectModel}
@@ -161,6 +163,7 @@ const EmbeddingModelSelect = memo(
             error={error}
             helperText={helperText}
             showEmptyPlaceholder={false}
+            isListFetching={isFetching}
           />
         </Box>
       </>

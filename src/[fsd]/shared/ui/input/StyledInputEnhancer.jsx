@@ -22,7 +22,6 @@ import { detectContentType } from '@/hooks/useCodeMirrorLanguageExtensions';
  */
 const StyledInputEnhancer = memo(props => {
   const {
-    showexpandicon = false,
     editswitcher = false,
     editswitchconfig = {},
     onDrop,
@@ -91,7 +90,6 @@ const StyledInputEnhancer = memo(props => {
         onDragOver={onDragOver}
         onBlur={onBlur}
         onKeyPress={onKeyPress}
-        showexpandicon={showexpandicon}
         editswitcher={editswitcher}
         editswitchconfig={editswitchconfig}
         containerProps={containerProps}
