@@ -25,6 +25,7 @@ export const getIcon = (type, theme, notification) => {
     case NotificationType.PromptOfSomeProjectWasPublished:
     case NotificationType.NewPromptVersionOfSomeProjectWasPublished:
     case NotificationType.ChatUserAdded:
+    case NotificationType.PrivateProjectCreated:
       return <SuccessIcon fill={theme.palette.status.published} />;
 
     case NotificationType.IndexDataChanged:

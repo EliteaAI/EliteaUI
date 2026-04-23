@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 
 import { Box } from '@mui/material';
 
+import { buildNotificationQueryFilters } from '@/[fsd]/entities/notification';
 import { useNotificationListQuery } from '@/api/notifications';
 import { SortOrderOptions } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
@@ -34,6 +35,7 @@ export default function NotificationCenter() {
     () => (debouncedSearch.length < MIN_SEARCH_LENGTH ? '' : debouncedSearch),
     [debouncedSearch],
   );
+  const notificationQueryFilters = useMemo(() => buildNotificationQueryFilters(apiSearch), [apiSearch]);
 
   const handleSearchChange = useCallback(value => {
     setSearch(value);
@@ -50,7 +52,7 @@ export default function NotificationCenter() {
       pageSize: paginationModel.pageSize,
       sortBy: sortModel.field,
       sortOrder: sortModel.direction,
-      search: apiSearch,
+      tokens: notificationQueryFilters.tokens,
     },
     { refetchOnFocus: true, skip: !personal_project_id },
   );

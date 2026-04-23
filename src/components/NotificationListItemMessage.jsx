@@ -1,7 +1,12 @@
-import { useCallback } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 
 import { Link, Typography } from '@mui/material';
 
+import {
+  NOTIFICATION_TEMPLATES,
+  deriveRenderState,
+  formatUsersForTemplate,
+} from '@/[fsd]/entities/notification';
 import { NotificationType, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
 import useNotificationNavigate from '@/hooks/useNotificationNavigate';
 import useNotificationNewTabNavigate from '@/hooks/useNotificationNewTabNavigate.js';
@@ -9,75 +14,32 @@ import { getBasename } from '@/routes';
 
 const MAX_NAME_LEN = 33;
 
-const leadingText = (param1, param2) => ({
-  [NotificationType.TokenExpiring]: `Token ${param1} will be expired in 5 days. For more details view your `,
-  [NotificationType.TokenIsExpired]: `Token ${param1} is expired! For more details view your `,
-  [NotificationType.SpendingLimitExpiring]: 'Your spending limit is expiring. For more details view your ',
-  [NotificationType.SpendingLimitIsExpired]: 'Your spending limit is expired. For more details view your ',
-  [NotificationType.RewardNewLevel]: `Congratulations! You've got ${param1} level of prompt expert!`,
-  [NotificationType.UserWasAddedToSomeProjectAsTeammate]: `${param1} added into `,
-  [NotificationType.ChatUserAdded]: `${param1} added ${param2} to `,
-  [NotificationType.PrivateProjectCreated]: 'Project was successfully created',
-  [NotificationType.IndexDataChanged]: param1, // Dynamic message based on index state
-  [NotificationType.BucketExpirationWarning]: 'Bucket ',
-  [NotificationType.PersonalAccessTokenExpiring]: `Your personal access token ${param1} will expire in 24 hours. After expiration, it will no longer work. You can delete and recreate a new token if needed. `,
-});
+const formatName = name =>
+  name && name.length > MAX_NAME_LEN ? `${name.slice(0, MAX_NAME_LEN)}...` : name || '';
 
-const middleText = {};
-
-const endingText = param => ({
-  [NotificationType.ModeratorUnpublish]: ' is unpublished after complaint.',
-  [NotificationType.AuthorApproval]: ` is approved by ${param} for publishing.`,
-  [NotificationType.AuthorReject]: ` is rejected by ${param}.`,
-  [NotificationType.ModeratorApprovalOfVersion]: ' is published.',
-  [NotificationType.ModeratorRejectOfVersion]: ' is rejected.',
-  [NotificationType.TokenExpiring]: '.',
-  [NotificationType.TokenIsExpired]: '.',
-  [NotificationType.SpendingLimitIsExpired]: '.',
-  [NotificationType.SpendingLimitExpiring]: '.',
-  [NotificationType.Rates]: '.',
-  [NotificationType.Comments]: '.',
-  [NotificationType.ContributorRequestForPublishApprove]: '.',
-  [NotificationType.UserWasAddedToSomeProjectAsTeammate]: '.',
-  [NotificationType.PrivateProjectCreated]: '.',
-  [NotificationType.IndexDataChanged]: '',
-  [NotificationType.BucketExpirationWarning]:
-    " will start deleting files in 24 hours according to its retention policy (files are removed based on each file's creation date; the bucket itself will remain).",
-  [NotificationType.PersonalAccessTokenExpiring]: '',
-});
-const formatName = name => {
-  return name && name.length > MAX_NAME_LEN ? `${name.slice(0, MAX_NAME_LEN)}...` : name || '';
+/**
+ * Resolve a link/linkText placeholder into the flat linkInfo object expected
+ * by the navigation hooks. In `linkProps`, string values are treated as meta
+ * keys, non-string values (booleans, numbers) are literals. `project_id`
+ * falls back to the notification's top-level project_id when not specified.
+ */
+const resolveLinkInfo = (seg, notification, adaptedMeta) => {
+  const resolved = { project_id: notification.project_id };
+  Object.entries(seg.linkProps || {}).forEach(([k, v]) => {
+    resolved[k] = typeof v === 'string' ? adaptedMeta?.[v] : v;
+  });
+  const text = seg.label ?? (seg.metaKey ? adaptedMeta?.[seg.metaKey] : undefined) ?? '';
+  return { ...resolved, linkText: text };
 };
 
-const formatIndexMessage = (meta, withLink = false) => {
-  const { index_name, error, reindex, indexed, updated } = meta;
-  const indexNamePlaceholder = withLink ? '{INDEX_LINK}' : index_name || 'Index';
-  const reindexedCount = updated || 0;
-
-  // Check if operation failed
-  if (error && error.trim()) {
-    return `Index ${indexNamePlaceholder} is failed.`;
-  }
-
-  // Check if it's a reindex operation
-  if (reindex) {
-    // Check if it's scheduled
-    const isScheduled = meta.initiator === 'schedule';
-    const scheduledText = isScheduled ? ' by schedule' : '';
-    return `Index ${indexNamePlaceholder} is successfully reindexed${scheduledText}. { "reindexed": ${reindexedCount}, "indexed": ${indexed || 0} }`;
-  }
-
-  // New index created
-  return `Index ${indexNamePlaceholder} is successfully created: { "indexed": ${indexed || 0} }`;
-};
-
-const MyNewTabLink = ({ linkInfo, needTrim, event_type }) => {
-  const { linkText, project_id, id, indexName } = linkInfo;
+const MyNewTabLink = memo(props => {
+  const { linkInfo, needTrim, eventType } = props;
+  const { linkText: label, project_id, id, indexName } = linkInfo;
 
   const href = useNotificationNewTabNavigate({
     project_id,
     id,
-    event_type,
+    event_type: eventType,
     indexName,
   });
 
@@ -85,23 +47,25 @@ const MyNewTabLink = ({ linkInfo, needTrim, event_type }) => {
     <Link
       variant="labelMedium"
       sx={{ textDecoration: 'underline', cursor: 'pointer' }}
-      target={'_blank'}
+      target="_blank"
       href={href}
     >
-      {needTrim ? formatName(linkText) : linkText}
+      {needTrim ? formatName(label) : label}
     </Link>
   );
-};
+});
+MyNewTabLink.displayName = 'MyNewTabLink';
 
-const MyCurrentTabLink = ({ linkInfo, needTrim, onCloseNotificationList, event_type }) => {
-  const { linkText, project_id, id, version_id, version_name, indexName } = linkInfo;
+const MyCurrentTabLink = memo(props => {
+  const { linkInfo, needTrim, onCloseNotificationList, eventType } = props;
+  const { linkText: label, project_id, id, version_id, version_name, indexName } = linkInfo;
   const viewMode = project_id == PUBLIC_PROJECT_ID ? ViewMode.Public : ViewMode.Owner;
 
   const doNavigate = useNotificationNavigate({
     viewMode,
     id,
-    event_type,
-    name: linkText,
+    event_type: eventType,
+    name: label,
     version_id,
     version_name,
     indexName,
@@ -116,69 +80,108 @@ const MyCurrentTabLink = ({ linkInfo, needTrim, onCloseNotificationList, event_t
   return (
     <Link
       variant="labelMedium"
-      component={'span'}
+      component="span"
       sx={{ textDecoration: 'underline', cursor: 'pointer' }}
       onClick={onClick}
     >
-      {needTrim ? formatName(linkText) : linkText}
+      {needTrim ? formatName(label) : label}
     </Link>
   );
-};
+});
+MyCurrentTabLink.displayName = 'MyCurrentTabLink';
 
-const MyLink = props => {
+const MyLink = memo(props => {
   const { linkInfo } = props;
-
   return linkInfo?.isNewTab ? <MyNewTabLink {...props} /> : <MyCurrentTabLink {...props} />;
+});
+MyLink.displayName = 'MyLink';
+
+/**
+ * Synthesize meta fields that aren't stored raw on the notification but are
+ * needed by templates. Keeps template declarations readable.
+ */
+const adaptMetaForTemplate = (eventType, meta) => {
+  if (!meta) return meta;
+  switch (eventType) {
+    case NotificationType.IndexDataChanged:
+      return { ...meta, _renderState: deriveRenderState(meta) };
+    case NotificationType.UserWasAddedToSomeProjectAsTeammate:
+      return { ...meta, users: formatUsersForTemplate(meta) };
+    default:
+      return meta;
+  }
 };
 
-const parseInformation = notification => {
+const pickStatusCase = (seg, adaptedMeta) => {
+  const key = adaptedMeta?.[seg.metaKey];
+  if (key && seg.cases[key]) return seg.cases[key];
+  // Key present but not in the template — BE added a value we haven't mapped
+  // yet. Surface it so the gap is noticeable and a template fix gets filed.
+  if (key) return `[${key}]`;
+  // Key absent (meta unavailable) — nothing meaningful to show.
+  return '';
+};
+
+const renderTemplate = (tplParsed, notification, adaptedMeta, onCloseNotificationList) =>
+  tplParsed.segments.map((seg, i) => {
+    switch (seg.type) {
+      case 'text':
+        return <span key={i}>{seg.text}</span>;
+      case 'var':
+        return <span key={i}>{adaptedMeta?.[seg.metaKey] ?? ''}</span>;
+      case 'link':
+      case 'linkText': {
+        const linkInfo = resolveLinkInfo(seg, notification, adaptedMeta);
+        if (!linkInfo.linkText) return null;
+        return (
+          <MyLink
+            key={i}
+            linkInfo={linkInfo}
+            needTrim={seg.type === 'link'}
+            onCloseNotificationList={onCloseNotificationList}
+            eventType={notification.event_type}
+          />
+        );
+      }
+      case 'status':
+        return <span key={i}>{pickStatusCase(seg, adaptedMeta)}</span>;
+      default:
+        return null;
+    }
+  });
+
+// ---------------------------------------------------------------------------
+// Legacy rendering path — retained for notification types not yet migrated to
+// NOTIFICATION_TEMPLATES. Preserves original behavior byte-for-byte.
+// ---------------------------------------------------------------------------
+
+const legacyLeadingText = (param1, param2) => ({
+  [NotificationType.ChatUserAdded]: `${param1} added ${param2} to `,
+});
+
+const LEGACY_ENDING_TEXT = {
+  [NotificationType.Rates]: '.',
+  [NotificationType.Comments]: '.',
+  [NotificationType.ContributorRequestForPublishApprove]: '.',
+  [NotificationType.ChatUserAdded]: '',
+};
+
+const parseLegacyInformation = notification => {
   const { event_type, project_id, meta } = notification;
   switch (event_type) {
     case NotificationType.AgentUnpublished: {
       const reasonSuffix = meta.reason ? ` Reason: ${meta.reason}` : '';
       return {
-        event_type,
-        leadingTextParam1: '',
-        leadingTextParam2: '',
         agentUnpublishedMeta: {
           sourceVersionId: meta.source_version_id,
           sourceApplicationId: meta.source_application_id,
           projectId: notification.project_id,
           reasonSuffix,
         },
-        endingTextParam: '',
       };
     }
-    case NotificationType.ModeratorApprovalOfVersion:
-    case NotificationType.ModeratorRejectOfVersion:
-    case NotificationType.ModeratorUnpublish:
-    case NotificationType.AuthorApproval:
-    case NotificationType.AuthorReject:
-    case NotificationType.TokenExpiring:
-    case NotificationType.TokenIsExpired:
-      return {
-        event_type,
-        leadingTextParam1: meta.token_name,
-        leadingTextParam2: '',
-        firstLinkInfo: {
-          linkText: 'Configuration',
-        },
-        endingTextParam: '',
-      };
-    case NotificationType.SpendingLimitIsExpired:
-    case NotificationType.SpendingLimitExpiring:
-      return {
-        event_type,
-        leadingTextParam1: '',
-        leadingTextParam2: '',
-        firstLinkInfo: {
-          linkText: 'settings section',
-        },
-        endingTextParam: '',
-      };
     case NotificationType.Rates:
       return {
-        event_type,
         leadingTextParam1: meta.rates_count,
         leadingTextParam2: '',
         firstLinkInfo: {
@@ -187,11 +190,9 @@ const parseInformation = notification => {
           version_id: meta.prompt_version_id,
           project_id,
         },
-        endingTextParam: '',
       };
     case NotificationType.Comments:
       return {
-        event_type,
         leadingTextParam1: meta.comments_count,
         leadingTextParam2: meta.replies_count,
         firstLinkInfo: {
@@ -200,18 +201,9 @@ const parseInformation = notification => {
           version_id: meta.prompt_version_id,
           project_id,
         },
-        endingTextParam: '',
-      };
-    case NotificationType.RewardNewLevel:
-      return {
-        event_type,
-        leadingTextParam1: meta.new_level,
-        leadingTextParam2: '',
-        endingTextParam: '',
       };
     case NotificationType.ContributorRequestForPublishApprove:
       return {
-        event_type,
         leadingTextParam1: meta.author_name,
         leadingTextParam2: '',
         firstLinkInfo: {
@@ -220,22 +212,9 @@ const parseInformation = notification => {
           version_id: meta.prompt_version_id,
           project_id,
         },
-        endingTextParam: '',
-      };
-    case NotificationType.UserWasAddedToSomeProjectAsTeammate:
-      return {
-        event_type,
-        leadingTextParam1: `${meta.users.join(', ')} ${meta.users.length > 1 ? 'are' : 'is'}`,
-        leadingTextParam2: '',
-        firstLinkInfo: {
-          linkText: meta.project_name,
-          project_id,
-        },
-        endingTextParam: '',
       };
     case NotificationType.ChatUserAdded:
       return {
-        event_type,
         leadingTextParam1: meta.initiator_name ? meta.initiator_name : 'You were ',
         leadingTextParam2: meta.initiator_name ? 'you ' : '',
         firstLinkInfo: {
@@ -244,76 +223,21 @@ const parseInformation = notification => {
           project_id,
           isNewTab: true,
         },
-        endingTextParam: '',
-      };
-    case NotificationType.PrivateProjectCreated:
-      return {
-        event_type,
-        leadingTextParam1: '',
-        leadingTextParam2: '',
-        endingTextParam: '',
-      };
-    case NotificationType.IndexDataChanged:
-      return {
-        event_type,
-        leadingTextParam1: formatIndexMessage(meta, !!meta.toolkit_id), // Only use link placeholder if toolkit_id exists
-        leadingTextParam2: '',
-        firstLinkInfo: meta.toolkit_id
-          ? {
-              linkText: meta.index_name || 'Index',
-              id: meta.toolkit_id,
-              project_id,
-              indexName: meta.index_name,
-              isNewTab: true,
-            }
-          : null,
-        endingTextParam: '',
-      };
-    case NotificationType.BucketExpirationWarning: {
-      return {
-        event_type,
-        leadingTextParam1: '',
-        leadingTextParam2: '',
-        firstLinkInfo: {
-          linkText: meta.bucket_name || 'Bucket',
-          id: meta.bucket_name,
-          project_id,
-          isNewTab: true,
-        },
-        endingTextParam: '',
-      };
-    }
-    case NotificationType.PersonalAccessTokenExpiring:
-      return {
-        event_type,
-        leadingTextParam1: meta.token_name,
-        leadingTextParam2: '',
-        firstLinkInfo: {
-          linkText: 'Manage Personal Access Tokens',
-          project_id,
-          isNewTab: true,
-        },
-        endingTextParam: '',
       };
     default:
       return {};
   }
 };
 
-const NotificationListItemMessage = props => {
-  const { notification, onCloseNotificationList, textVariant = 'bodySmall' } = props;
+const LegacyMessage = memo(props => {
+  const { notification, onCloseNotificationList, textVariant, textColor } = props;
+  const { event_type } = notification;
   const {
-    event_type,
     leadingTextParam1 = '',
     leadingTextParam2 = '',
     firstLinkInfo,
-    hasMiddleText,
-    secondLinkInfo,
-    endingTextParam = '',
     agentUnpublishedMeta,
-  } = parseInformation(notification);
-
-  const textColor = notification.is_seen ? 'text.primary' : 'text.secondary';
+  } = parseLegacyInformation(notification);
 
   // Special handling for AgentUnpublished — inline version link
   if (event_type === NotificationType.AgentUnpublished && agentUnpublishedMeta) {
@@ -341,28 +265,50 @@ const NotificationListItemMessage = props => {
     );
   }
 
-  // Special handling for IndexDataChanged to embed link within message text
-  if (
-    event_type === NotificationType.IndexDataChanged &&
-    firstLinkInfo &&
-    leadingTextParam1.includes('{INDEX_LINK}')
-  ) {
-    const parts = leadingTextParam1.split('{INDEX_LINK}');
-    return (
-      <Typography
-        variant={textVariant}
-        sx={{ color: textColor }}
-      >
-        {parts[0]}
+  return (
+    <Typography
+      variant={textVariant}
+      sx={{ color: textColor }}
+    >
+      {legacyLeadingText(leadingTextParam1, leadingTextParam2)[event_type]}
+      {firstLinkInfo && (
         <MyLink
           linkInfo={firstLinkInfo}
-          needTrim={false}
+          needTrim
           onCloseNotificationList={onCloseNotificationList}
-          event_type={event_type}
+          eventType={event_type}
         />
-        {parts[1]}
-        {endingText(endingTextParam)[event_type]}
-      </Typography>
+      )}
+      {LEGACY_ENDING_TEXT[event_type]}
+    </Typography>
+  );
+});
+LegacyMessage.displayName = 'LegacyMessage';
+
+// ---------------------------------------------------------------------------
+// Public component
+// ---------------------------------------------------------------------------
+
+const NotificationListItemMessage = memo(props => {
+  const { notification, onCloseNotificationList, textVariant = 'bodySmall' } = props;
+  const { event_type, meta, is_seen } = notification;
+
+  const textColor = is_seen ? 'text.primary' : 'text.secondary';
+  const template = NOTIFICATION_TEMPLATES[event_type];
+
+  const adaptedMeta = useMemo(
+    () => (template ? adaptMetaForTemplate(event_type, meta) : meta),
+    [template, event_type, meta],
+  );
+
+  if (!template) {
+    return (
+      <LegacyMessage
+        notification={notification}
+        onCloseNotificationList={onCloseNotificationList}
+        textVariant={textVariant}
+        textColor={textColor}
+      />
     );
   }
 
@@ -371,27 +317,10 @@ const NotificationListItemMessage = props => {
       variant={textVariant}
       sx={{ color: textColor }}
     >
-      {leadingText(leadingTextParam1, leadingTextParam2)[event_type]}
-      {firstLinkInfo && (
-        <MyLink
-          linkInfo={firstLinkInfo}
-          needTrim
-          onCloseNotificationList={onCloseNotificationList}
-          event_type={event_type}
-        />
-      )}
-      {hasMiddleText && middleText[event_type]}
-      {secondLinkInfo && (
-        <MyLink
-          linkInfo={secondLinkInfo}
-          needTrim
-          onCloseNotificationList={onCloseNotificationList}
-          event_type={event_type}
-        />
-      )}
-      {endingText(endingTextParam)[event_type]}
+      {renderTemplate(template, notification, adaptedMeta, onCloseNotificationList)}
     </Typography>
   );
-};
+});
+NotificationListItemMessage.displayName = 'NotificationListItemMessage';
 
 export default NotificationListItemMessage;
