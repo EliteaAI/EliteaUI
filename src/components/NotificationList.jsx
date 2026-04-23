@@ -62,6 +62,7 @@ const NotificationList = memo(props => {
   useEffect(() => {
     if (!notificationListAnchorEl) return;
     if (!data?.rows) return;
+    if (isFetching) return;
     if (page === 0) {
       lastAppliedPageRef.current = 0;
       setAllNotifications(data.rows);
@@ -70,7 +71,7 @@ const NotificationList = memo(props => {
     if (lastAppliedPageRef.current === page) return;
     lastAppliedPageRef.current = page;
     setAllNotifications(prev => [...prev, ...data.rows]);
-  }, [data?.rows, notificationListAnchorEl, page]);
+  }, [data?.rows, notificationListAnchorEl, page, isFetching]);
 
   useEffect(() => {
     if (!notificationListAnchorEl) {
