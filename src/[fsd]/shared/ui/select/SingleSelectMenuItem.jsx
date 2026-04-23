@@ -19,6 +19,7 @@ const SingleSelectMenuItem = memo(props => {
     optionsWithAvatar = false,
     menuItemIconSX,
     onDeleteOption,
+    optionTextColumnSx,
     sx: muiSx,
     onClick: muiOnClick,
     ...restProps
@@ -71,7 +72,7 @@ const SingleSelectMenuItem = memo(props => {
 
     return (
       <Box
-        sx={styles.optionTextColumn}
+        sx={[styles.optionTextColumn, optionTextColumnSx].filter(Boolean)}
         title={fullTitle}
       >
         <TypographyWithConditionalTooltip
@@ -156,7 +157,7 @@ const menuItemStyles = option => ({
   }),
   iconContainer: {
     display: 'flex',
-    alignItems: 'center',
+    alignItems: 'center !important',
     gap: '0.5rem',
   },
   iconContainerWithDescription: {

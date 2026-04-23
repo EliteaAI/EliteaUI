@@ -502,8 +502,7 @@ const ToolBaseProperty = memo(props => {
     } else if (type === 'llm_model') {
       return (
         <LlmModelSelect
-          required
-          showBorder
+          required={required}
           label={label}
           onSelectModel={value => editField(buildEditFieldPath(k), value)}
           value={settings[k]}
@@ -539,7 +538,6 @@ const ToolBaseProperty = memo(props => {
     } else if (type === 'toolkit_reference') {
       return (
         <ToolkitSelect
-          showBorder
           label={label}
           onSelectToolkit={value => editField(buildEditFieldPath(k), value)}
           value={settings[k]}
