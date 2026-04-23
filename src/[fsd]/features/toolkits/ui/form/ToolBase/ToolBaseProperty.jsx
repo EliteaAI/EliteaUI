@@ -335,6 +335,7 @@ const ToolBaseProperty = memo(props => {
           helperText={errorText}
           required={required}
           specifiedProjectId={specifiedProjectId}
+          description={description}
         />
       );
     } else if (type === 'object' || anyOf?.find(item => item.type === 'object')) {
@@ -346,7 +347,12 @@ const ToolBaseProperty = memo(props => {
             key={k}
             sx={styles.codeBox}
           >
-            <Typography variant="bodyMedium">{label || k || 'Code Editor'}</Typography>
+            <Typography
+              variant="bodyMedium"
+              sx={styles.objectFieldLabel}
+            >
+              {description ? renderLabelWithHint(required) : label || k || 'Code Editor'}
+            </Typography>
             <Field.ResizableCodeMirrorEditor
               expandAction
               value={JSON.stringify(settings[k] || {}, null, 2)}
@@ -371,7 +377,7 @@ const ToolBaseProperty = memo(props => {
             summarySX={styles.accordionSummarySX}
             items={[
               {
-                title: label || k || 'Code Editor',
+                title: description ? renderLabelWithHint(required) : label || k || 'Code Editor',
                 content: (
                   <Field.ResizableCodeMirrorEditor
                     expandAction
@@ -410,7 +416,14 @@ const ToolBaseProperty = memo(props => {
                 disabled={disableConfigFields || disabled}
               />
             }
-            label={<Typography variant="bodyMedium">{label}</Typography>}
+            label={
+              <Typography
+                variant="bodyMedium"
+                sx={styles.checkboxLabel}
+              >
+                {description ? renderLabelWithHint(false) : label}
+              </Typography>
+            }
           />
         </Box>
       );
@@ -689,6 +702,15 @@ const toolBasePropertyStyles = theme => ({
   accordionSummarySX: {
     '& .MuiAccordionSummary-content': { alignItems: 'center', paddingRight: 0 },
     paddingRight: '0 !important',
+  },
+  checkboxLabel: {
+    display: 'inline-flex',
+    alignItems: 'center',
+  },
+  objectFieldLabel: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    marginBottom: '0.5rem',
   },
 });
 
