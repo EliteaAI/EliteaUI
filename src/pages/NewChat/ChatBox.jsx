@@ -1176,6 +1176,8 @@ const ChatBox = forwardRef((props, boxRef) => {
                 isStreaming: true,
                 // Clear requiresConfirmation state since user confirmed to continue
                 requiresConfirmation: undefined,
+                // Flag to prevent StartTask from resetting content on continuation
+                isContinuing: true,
               },
         ),
       );
