@@ -384,12 +384,16 @@ export const useChatSocket = ({
 
       switch (socketMessageType) {
         case SocketMessageType.StartTask: {
+          const isContinuing = msg.isContinuing;
           msg.isLoading = true;
           msg.isStreaming = true;
           msg.isSending = false;
           msg.isRegenerating = undefined;
-          msg.content = '';
-          msg.references = [];
+          msg.isContinuing = undefined;
+          if (!isContinuing) {
+            msg.content = '';
+            msg.references = [];
+          }
           msg.task_id = task_id;
           msg.participant_id = participant_id;
           msg.question_id = question_id;
