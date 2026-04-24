@@ -446,6 +446,10 @@ const ToolCard = memo(props => {
             <Box sx={styles.buttonsContainer}>
               {validationInfo && (
                 <>
+                  <Box
+                    component={AttentionIcon}
+                    sx={styles.attentionIcon}
+                  />
                   <Tooltip
                     title="Refresh toolkit"
                     placement="top"
@@ -461,10 +465,6 @@ const ToolCard = memo(props => {
                       <RefreshIcon />
                     </IconButton>
                   </Tooltip>
-                  <Box
-                    component={AttentionIcon}
-                    sx={styles.attentionIcon}
-                  />
                 </>
               )}
               {(!tool.meta?.mcp || tool.online || tool.type === 'mcp') && (
@@ -576,10 +576,13 @@ const toolCardStyles = (showActions, isDuplicate, showVariables, hasVariables) =
   cardContainer: ({ palette }) => ({
     borderRadius: '0.5rem',
     backgroundColor: showActions || showVariables ? palette.background.userInputBackground : 'transparent',
-    border:
-      showActions || showVariables
-        ? `0.0625rem solid ${palette.border.lines}`
-        : `0.0625rem solid ${palette.border.table}`,
+    border: `0.0625rem solid ${palette.border.table}`,
+    '&:hover': {
+      border:
+        showActions || showVariables
+          ? `0.0625rem solid ${palette.border.table}`
+          : `0.0625rem solid ${palette.border.lines}`,
+    },
     boxSize: 'border-box',
     ...(isDuplicate && {
       border: `0.0625rem solid ${palette.border.attention}`,
@@ -599,7 +602,6 @@ const toolCardStyles = (showActions, isDuplicate, showVariables, hasVariables) =
     backgroundColor: showActions || showVariables ? 'transparent' : palette.background.userInputBackground,
     '&:hover': {
       backgroundColor: showActions || showVariables ? 'transparent' : palette.background.toolCard.hover,
-      border: showActions || showVariables ? 'none' : `0.0625rem solid ${palette.border.lines}`,
       '#DeleteButton': {
         display: 'flex',
       },
