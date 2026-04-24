@@ -43,6 +43,7 @@ const SingleSelect = memo(props => {
     showOptionDescription = false,
     iconPosition = 'left',
     menuItemIconSX,
+    optionTextColumnSx,
     optionsWithAvatar = false,
     showBorder,
     sx,
@@ -411,6 +412,7 @@ const SingleSelect = memo(props => {
                           optionsWithAvatar={optionsWithAvatar}
                           menuItemIconSX={{ ...menuItemIconSX, ...selectIconWithLabelSx }}
                           onDeleteOption={onDeleteOption}
+                          optionTextColumnSx={optionTextColumnSx}
                         />
                       );
                     })),
@@ -433,6 +435,7 @@ const SingleSelect = memo(props => {
             optionsWithAvatar={optionsWithAvatar}
             menuItemIconSX={{ ...menuItemIconSX, ...selectIconWithLabelSx }}
             onDeleteOption={onDeleteOption}
+            optionTextColumnSx={optionTextColumnSx}
           />
         ));
         return items;
@@ -489,6 +492,7 @@ const SingleSelect = memo(props => {
       optionsWithAvatar,
       menuItemIconSX,
       onDeleteOption,
+      optionTextColumnSx,
       isListFetching,
       onMenuActionClick,
       styles,

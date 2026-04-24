@@ -26,6 +26,7 @@ const SingleSelectDropdown = memo(props => {
     optionsWithAvatar = false,
     menuItemIconSX,
     onDeleteOption,
+    optionTextColumnSx,
     sx: muiSx,
     onClick: muiOnClick,
     ...restProps
@@ -87,6 +88,7 @@ const SingleSelectDropdown = memo(props => {
       optionsWithAvatar={optionsWithAvatar}
       menuItemIconSX={menuItemIconSX}
       onDeleteOption={onDeleteOption}
+      optionTextColumnSx={optionTextColumnSx}
     />
   );
 });
