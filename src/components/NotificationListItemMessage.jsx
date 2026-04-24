@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { Fragment, memo, useCallback, useMemo } from 'react';
 
 import { Link, Typography } from '@mui/material';
 
@@ -300,8 +300,38 @@ const parseInformation = notification => {
   }
 };
 
-const NotificationListItemMessage = props => {
-  const { notification, onCloseNotificationList, textVariant = 'bodySmall' } = props;
+/**
+ * Parses a stored notification message into renderable segments.
+ * Link syntax: [visible text](href)
+ *
+ * @param {string} message
+ * @returns {Array<{text: string, href?: string}>}
+ */
+const parseMessage = message => {
+  if (!message) return [];
+  const segments = [];
+  const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+  let lastIndex = 0;
+  let match;
+  while ((match = linkRegex.exec(message)) !== null) {
+    if (match.index > lastIndex) {
+      segments.push({ text: message.slice(lastIndex, match.index) });
+    }
+    segments.push({ text: match[1], href: match[2] });
+    lastIndex = match.index + match[0].length;
+  }
+  if (lastIndex < message.length) {
+    segments.push({ text: message.slice(lastIndex) });
+  }
+  return segments.length > 0 ? segments : [{ text: message }];
+};
+
+/**
+ * Legacy fallback renderer for notifications that pre-date meta.message storage.
+ * Remove once all environments have run the backfill migration.
+ */
+const LegacyNotificationMessage = props => {
+  const { notification, onCloseNotificationList, textVariant, textColor } = props;
   const {
     event_type,
     leadingTextParam1 = '',
@@ -313,9 +343,6 @@ const NotificationListItemMessage = props => {
     agentUnpublishedMeta,
   } = parseInformation(notification);
 
-  const textColor = notification.is_seen ? 'text.primary' : 'text.secondary';
-
-  // Special handling for AgentUnpublished — inline version link
   if (event_type === NotificationType.AgentUnpublished && agentUnpublishedMeta) {
     const { sourceVersionId, sourceApplicationId, projectId, reasonSuffix } = agentUnpublishedMeta;
     const baseUrl = `${window.location.protocol}//${window.location.host}`;
@@ -341,7 +368,6 @@ const NotificationListItemMessage = props => {
     );
   }
 
-  // Special handling for IndexDataChanged to embed link within message text
   if (
     event_type === NotificationType.IndexDataChanged &&
     firstLinkInfo &&
@@ -393,5 +419,51 @@ const NotificationListItemMessage = props => {
     </Typography>
   );
 };
+
+LegacyNotificationMessage.displayName = 'LegacyNotificationMessage';
+
+const NotificationListItemMessage = memo(props => {
+  const { notification, onCloseNotificationList, textVariant = 'bodySmall' } = props;
+  const textColor = notification.is_seen ? 'text.primary' : 'text.secondary';
+  const message = notification.meta?.message;
+  const segments = useMemo(() => parseMessage(message), [message]);
+
+  if (message) {
+    return (
+      <Typography
+        variant={textVariant}
+        sx={{ color: textColor }}
+      >
+        {segments.map((segment, index) =>
+          segment.href ? (
+            <Link
+              key={index}
+              variant={textVariant}
+              sx={{ textDecoration: 'underline', cursor: 'pointer' }}
+              href={segment.href}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {segment.text}
+            </Link>
+          ) : (
+            <Fragment key={index}>{segment.text}</Fragment>
+          ),
+        )}
+      </Typography>
+    );
+  }
+
+  return (
+    <LegacyNotificationMessage
+      notification={notification}
+      onCloseNotificationList={onCloseNotificationList}
+      textVariant={textVariant}
+      textColor={textColor}
+    />
+  );
+});
+
+NotificationListItemMessage.displayName = 'NotificationListItemMessage';
 
 export default NotificationListItemMessage;
