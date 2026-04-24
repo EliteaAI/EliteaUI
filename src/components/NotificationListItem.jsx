@@ -4,6 +4,7 @@ import { formatDistanceToNow } from 'date-fns';
 
 import { Box, Typography, useTheme } from '@mui/material';
 
+import { NotificationListItemMessage } from '@/[fsd]/entities/notifications/ui';
 import { NotificationType } from '@/common/constants';
 import { convertTime } from '@/common/convertChatConversationMessages';
 
@@ -15,7 +16,6 @@ import MedalIcon from './Icons/MedalIcon';
 import RemoveIcon from './Icons/RemoveIcon';
 import SuccessIcon from './Icons/SuccessIcon';
 import TrophyOutlinedIcon from './Icons/TrophyOutlinedIcon';
-import NotificationListItemMessage from './NotificationListItemMessage';
 
 export const getIcon = (type, theme, notification) => {
   switch (type) {
@@ -177,7 +177,7 @@ const notificationListItemStyles = clampLines => ({
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
-    paddingTop: '0.3rem',
+    paddingTop: '0.0625rem',
     '& > svg': {
       width: '1.125rem',
       height: '1.125rem',

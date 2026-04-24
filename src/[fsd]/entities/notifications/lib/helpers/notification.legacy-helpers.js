@@ -1,15 +1,11 @@
-import { Fragment, memo, useCallback, useMemo } from 'react';
-
-import { Link, Typography } from '@mui/material';
-
-import { NotificationType, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
-import useNotificationNavigate from '@/hooks/useNotificationNavigate';
-import useNotificationNewTabNavigate from '@/hooks/useNotificationNewTabNavigate.js';
-import { getBasename } from '@/routes';
+// Legacy helpers for pre-backfill notification rendering.
+// Remove this file once all environments have run the backfill migration
+// and LegacyNotificationMessage is deleted.
+import { NotificationType } from '@/common/constants';
 
 const MAX_NAME_LEN = 33;
 
-const leadingText = (param1, param2) => ({
+export const leadingText = (param1, param2) => ({
   [NotificationType.TokenExpiring]: `Token ${param1} will be expired in 5 days. For more details view your `,
   [NotificationType.TokenIsExpired]: `Token ${param1} is expired! For more details view your `,
   [NotificationType.SpendingLimitExpiring]: 'Your spending limit is expiring. For more details view your ',
@@ -18,14 +14,14 @@ const leadingText = (param1, param2) => ({
   [NotificationType.UserWasAddedToSomeProjectAsTeammate]: `${param1} added into `,
   [NotificationType.ChatUserAdded]: `${param1} added ${param2} to `,
   [NotificationType.PrivateProjectCreated]: 'Project was successfully created',
-  [NotificationType.IndexDataChanged]: param1, // Dynamic message based on index state
+  [NotificationType.IndexDataChanged]: param1,
   [NotificationType.BucketExpirationWarning]: 'Bucket ',
   [NotificationType.PersonalAccessTokenExpiring]: `Your personal access token ${param1} will expire in 24 hours. After expiration, it will no longer work. You can delete and recreate a new token if needed. `,
 });
 
-const middleText = {};
+export const middleText = {};
 
-const endingText = param => ({
+export const endingText = param => ({
   [NotificationType.ModeratorUnpublish]: ' is unpublished after complaint.',
   [NotificationType.AuthorApproval]: ` is approved by ${param} for publishing.`,
   [NotificationType.AuthorReject]: ` is rejected by ${param}.`,
@@ -45,93 +41,30 @@ const endingText = param => ({
     " will start deleting files in 24 hours according to its retention policy (files are removed based on each file's creation date; the bucket itself will remain).",
   [NotificationType.PersonalAccessTokenExpiring]: '',
 });
-const formatName = name => {
+
+export const formatName = name => {
   return name && name.length > MAX_NAME_LEN ? `${name.slice(0, MAX_NAME_LEN)}...` : name || '';
 };
 
-const formatIndexMessage = (meta, withLink = false) => {
+export const formatIndexMessage = (meta, withLink = false) => {
   const { index_name, error, reindex, indexed, updated } = meta;
   const indexNamePlaceholder = withLink ? '{INDEX_LINK}' : index_name || 'Index';
   const reindexedCount = updated || 0;
 
-  // Check if operation failed
   if (error && error.trim()) {
     return `Index ${indexNamePlaceholder} is failed.`;
   }
 
-  // Check if it's a reindex operation
   if (reindex) {
-    // Check if it's scheduled
     const isScheduled = meta.initiator === 'schedule';
     const scheduledText = isScheduled ? ' by schedule' : '';
     return `Index ${indexNamePlaceholder} is successfully reindexed${scheduledText}. { "reindexed": ${reindexedCount}, "indexed": ${indexed || 0} }`;
   }
 
-  // New index created
   return `Index ${indexNamePlaceholder} is successfully created: { "indexed": ${indexed || 0} }`;
 };
 
-const MyNewTabLink = ({ linkInfo, needTrim, event_type }) => {
-  const { linkText, project_id, id, indexName } = linkInfo;
-
-  const href = useNotificationNewTabNavigate({
-    project_id,
-    id,
-    event_type,
-    indexName,
-  });
-
-  return (
-    <Link
-      variant="labelMedium"
-      sx={{ textDecoration: 'underline', cursor: 'pointer' }}
-      target={'_blank'}
-      href={href}
-    >
-      {needTrim ? formatName(linkText) : linkText}
-    </Link>
-  );
-};
-
-const MyCurrentTabLink = ({ linkInfo, needTrim, onCloseNotificationList, event_type }) => {
-  const { linkText, project_id, id, version_id, version_name, indexName } = linkInfo;
-  const viewMode = project_id == PUBLIC_PROJECT_ID ? ViewMode.Public : ViewMode.Owner;
-
-  const doNavigate = useNotificationNavigate({
-    viewMode,
-    id,
-    event_type,
-    name: linkText,
-    version_id,
-    version_name,
-    indexName,
-  });
-  const onClick = useCallback(() => {
-    doNavigate();
-    if (onCloseNotificationList) {
-      onCloseNotificationList();
-    }
-  }, [doNavigate, onCloseNotificationList]);
-
-  return (
-    <Link
-      variant="labelMedium"
-      component={'span'}
-      sx={{ textDecoration: 'underline', cursor: 'pointer' }}
-      onClick={onClick}
-    >
-      {needTrim ? formatName(linkText) : linkText}
-    </Link>
-  );
-};
-
-const MyLink = props => {
-  const { linkInfo } = props;
-
-  return linkInfo?.isNewTab ? <MyNewTabLink {...props} /> : <MyCurrentTabLink {...props} />;
-};
-
-const parseInformation = notification => {
+export const parseInformation = notification => {
   const { event_type, project_id, meta } = notification;
   switch (event_type) {
     case NotificationType.AgentUnpublished: {
@@ -256,7 +189,7 @@ const parseInformation = notification => {
     case NotificationType.IndexDataChanged:
       return {
         event_type,
-        leadingTextParam1: formatIndexMessage(meta, !!meta.toolkit_id), // Only use link placeholder if toolkit_id exists
+        leadingTextParam1: formatIndexMessage(meta, !!meta.toolkit_id),
         leadingTextParam2: '',
         firstLinkInfo: meta.toolkit_id
           ? {
@@ -299,171 +232,3 @@ const parseInformation = notification => {
       return {};
   }
 };
-
-/**
- * Parses a stored notification message into renderable segments.
- * Link syntax: [visible text](href)
- *
- * @param {string} message
- * @returns {Array<{text: string, href?: string}>}
- */
-const parseMessage = message => {
-  if (!message) return [];
-  const segments = [];
-  const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
-  let lastIndex = 0;
-  let match;
-  while ((match = linkRegex.exec(message)) !== null) {
-    if (match.index > lastIndex) {
-      segments.push({ text: message.slice(lastIndex, match.index) });
-    }
-    segments.push({ text: match[1], href: match[2] });
-    lastIndex = match.index + match[0].length;
-  }
-  if (lastIndex < message.length) {
-    segments.push({ text: message.slice(lastIndex) });
-  }
-  return segments.length > 0 ? segments : [{ text: message }];
-};
-
-/**
- * Legacy fallback renderer for notifications that pre-date meta.message storage.
- * Remove once all environments have run the backfill migration.
- */
-const LegacyNotificationMessage = props => {
-  const { notification, onCloseNotificationList, textVariant, textColor } = props;
-  const {
-    event_type,
-    leadingTextParam1 = '',
-    leadingTextParam2 = '',
-    firstLinkInfo,
-    hasMiddleText,
-    secondLinkInfo,
-    endingTextParam = '',
-    agentUnpublishedMeta,
-  } = parseInformation(notification);
-
-  if (event_type === NotificationType.AgentUnpublished && agentUnpublishedMeta) {
-    const { sourceVersionId, sourceApplicationId, projectId, reasonSuffix } = agentUnpublishedMeta;
-    const baseUrl = `${window.location.protocol}//${window.location.host}`;
-    const basename = getBasename();
-    const versionHref = `${baseUrl}${basename}/${projectId}/agents/all/${sourceApplicationId}/${sourceVersionId}?viewMode=owner`;
-    return (
-      <Typography
-        variant={textVariant}
-        color="text.secondary"
-      >
-        {'Unpublished agent version id: '}
-        <Link
-          variant={textVariant}
-          color="text.secondary"
-          sx={{ textDecoration: 'underline', cursor: 'pointer' }}
-          href={versionHref}
-          target="_blank"
-        >
-          {sourceVersionId}
-        </Link>
-        {` from project id: ${projectId}.${reasonSuffix}`}
-      </Typography>
-    );
-  }
-
-  if (
-    event_type === NotificationType.IndexDataChanged &&
-    firstLinkInfo &&
-    leadingTextParam1.includes('{INDEX_LINK}')
-  ) {
-    const parts = leadingTextParam1.split('{INDEX_LINK}');
-    return (
-      <Typography
-        variant={textVariant}
-        sx={{ color: textColor }}
-      >
-        {parts[0]}
-        <MyLink
-          linkInfo={firstLinkInfo}
-          needTrim={false}
-          onCloseNotificationList={onCloseNotificationList}
-          event_type={event_type}
-        />
-        {parts[1]}
-        {endingText(endingTextParam)[event_type]}
-      </Typography>
-    );
-  }
-
-  return (
-    <Typography
-      variant={textVariant}
-      sx={{ color: textColor }}
-    >
-      {leadingText(leadingTextParam1, leadingTextParam2)[event_type]}
-      {firstLinkInfo && (
-        <MyLink
-          linkInfo={firstLinkInfo}
-          needTrim
-          onCloseNotificationList={onCloseNotificationList}
-          event_type={event_type}
-        />
-      )}
-      {hasMiddleText && middleText[event_type]}
-      {secondLinkInfo && (
-        <MyLink
-          linkInfo={secondLinkInfo}
-          needTrim
-          onCloseNotificationList={onCloseNotificationList}
-          event_type={event_type}
-        />
-      )}
-      {endingText(endingTextParam)[event_type]}
-    </Typography>
-  );
-};
-
-LegacyNotificationMessage.displayName = 'LegacyNotificationMessage';
-
-const NotificationListItemMessage = memo(props => {
-  const { notification, onCloseNotificationList, textVariant = 'bodySmall' } = props;
-  const textColor = notification.is_seen ? 'text.primary' : 'text.secondary';
-  const message = notification.meta?.message;
-  const segments = useMemo(() => parseMessage(message), [message]);
-
-  if (message) {
-    return (
-      <Typography
-        variant={textVariant}
-        sx={{ color: textColor }}
-      >
-        {segments.map((segment, index) =>
-          segment.href ? (
-            <Link
-              key={index}
-              variant={textVariant}
-              sx={{ textDecoration: 'underline', cursor: 'pointer' }}
-              href={segment.href}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {segment.text}
-            </Link>
-          ) : (
-            <Fragment key={index}>{segment.text}</Fragment>
-          ),
-        )}
-      </Typography>
-    );
-  }
-
-  return (
-    <LegacyNotificationMessage
-      notification={notification}
-      onCloseNotificationList={onCloseNotificationList}
-      textVariant={textVariant}
-      textColor={textColor}
-    />
-  );
-});
-
-NotificationListItemMessage.displayName = 'NotificationListItemMessage';
-
-export default NotificationListItemMessage;
