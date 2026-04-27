@@ -243,8 +243,9 @@ const ChatMessageList = ({
               isParticipantStillActive(messageParticipant) &&
               !message.isLoading &&
               !message.isRegenerating &&
+              onRegenerateAnswer &&
               ChatHelpers.canDeleteThisAIMessage(chat_history, message, userId)
-                ? onRegenerateAnswer?.(message.id, messageParticipant)
+                ? onRegenerateAnswer(message.id, messageParticipant)
                 : undefined
             }
             isRegenerating={message.isRegenerating}
