@@ -1,6 +1,4 @@
-import { forwardRef, memo, useCallback } from 'react';
-
-import PropTypes from 'prop-types';
+import React, { forwardRef, memo, useCallback, useMemo } from 'react';
 
 import { Box, FormControlLabel, Switch as MuiSwitch, Tooltip, Typography } from '@mui/material';
 
@@ -8,6 +6,36 @@ import InfoIcon from '@/components/Icons/InfoIcon';
 
 export const SWITCH_VARIANTS = {
   elitea: 'elitea',
+};
+
+const INFO_TOOLTIP_DEFAULTS = {
+  placement: 'top',
+  zIndex: 9999,
+  icon: { width: 16, height: 16 },
+};
+
+const parseInfoTooltip = (infoTooltip, slotProps) => {
+  if (!infoTooltip) return null;
+
+  const isObject = typeof infoTooltip === 'object' && !React.isValidElement(infoTooltip);
+
+  return {
+    title: isObject ? infoTooltip.title : infoTooltip,
+    placement: isObject
+      ? (infoTooltip.placement ?? INFO_TOOLTIP_DEFAULTS.placement)
+      : INFO_TOOLTIP_DEFAULTS.placement,
+    zIndex: isObject
+      ? (infoTooltip.zIndex ?? INFO_TOOLTIP_DEFAULTS.zIndex)
+      : (slotProps?.tooltip?.zIndex ?? INFO_TOOLTIP_DEFAULTS.zIndex),
+    icon: {
+      width: isObject
+        ? (infoTooltip.icon?.width ?? INFO_TOOLTIP_DEFAULTS.icon.width)
+        : INFO_TOOLTIP_DEFAULTS.icon.width,
+      height: isObject
+        ? (infoTooltip.icon?.height ?? INFO_TOOLTIP_DEFAULTS.icon.height)
+        : INFO_TOOLTIP_DEFAULTS.icon.height,
+    },
+  };
 };
 
 const BaseSwitch = memo(
@@ -20,7 +48,7 @@ const BaseSwitch = memo(
       checked: checkedProp,
       value: valueProp,
       onChange: onChangeProp,
-      size,
+      size = 'small',
       variant = 'elitea',
       disabled,
       ...restProps
@@ -28,16 +56,14 @@ const BaseSwitch = memo(
 
     const styles = genStyles({ width });
 
-    const checked = checkedProp !== undefined ? checkedProp : !!valueProp;
+    const isBooleanMode = valueProp !== undefined;
+    const checked = checkedProp ?? !!valueProp;
 
     const handleChange = useCallback(
       (event, checkedValue) => {
-        if (onChangeProp) {
-          const isValueProp = valueProp !== undefined;
-          onChangeProp(isValueProp ? checkedValue : event, checkedValue);
-        }
+        onChangeProp?.(isBooleanMode ? checkedValue : event, checkedValue);
       },
-      [onChangeProp, valueProp],
+      [onChangeProp, isBooleanMode],
     );
 
     const switchComponent = (
@@ -53,6 +79,29 @@ const BaseSwitch = memo(
       />
     );
 
+    const tooltipConfig = useMemo(() => parseInfoTooltip(infoTooltip, slotProps), [infoTooltip, slotProps]);
+
+    const tooltipIcon = tooltipConfig ? (
+      <Tooltip
+        title={tooltipConfig.title}
+        placement={tooltipConfig.placement}
+        slotProps={{
+          popper: {
+            sx: {
+              zIndex: tooltipConfig.zIndex,
+            },
+          },
+        }}
+      >
+        <Box sx={styles.iconContainer}>
+          <InfoIcon
+            width={tooltipConfig.icon.width}
+            height={tooltipConfig.icon.height}
+          />
+        </Box>
+      </Tooltip>
+    ) : null;
+
     if (label) {
       return (
         <Box sx={[styles.container, slotProps?.container?.sx]}>
@@ -60,38 +109,28 @@ const BaseSwitch = memo(
             control={switchComponent}
             label={
               <Typography
-                variant="bodyMedium"
-                color="text.secondary"
+                variant={slotProps?.label?.variant || 'bodyMedium'}
+                color={slotProps?.label?.color || 'text.secondary'}
                 component="div"
-                sx={styles.label}
+                sx={[styles.label, slotProps?.label?.sx]}
               >
                 {label}
-                {infoTooltip && (
-                  <Tooltip
-                    title={infoTooltip}
-                    placement="top"
-                    slotProps={{
-                      popper: {
-                        sx: {
-                          zIndex: slotProps?.tooltip?.zIndex || 9999,
-                        },
-                      },
-                    }}
-                  >
-                    <Box sx={styles.iconContainer}>
-                      <InfoIcon
-                        width={16}
-                        height={16}
-                      />
-                    </Box>
-                  </Tooltip>
-                )}
+                {tooltipIcon}
               </Typography>
             }
             disabled={disabled}
             labelPlacement={slotProps?.formControlLabel?.labelPlacement || 'end'}
-            sx={slotProps?.formControlLabel?.sx}
+            sx={[styles.formControlLabel, slotProps?.formControlLabel?.sx ?? {}]}
           />
+        </Box>
+      );
+    }
+
+    if (tooltipIcon) {
+      return (
+        <Box sx={[styles.standaloneWithTooltip, slotProps?.container?.sx]}>
+          {switchComponent}
+          {tooltipIcon}
         </Box>
       );
     }
@@ -101,25 +140,6 @@ const BaseSwitch = memo(
 );
 
 BaseSwitch.displayName = 'BaseSwitch';
-
-BaseSwitch.propTypes = {
-  // Standard MUI Switch props
-  checked: PropTypes.bool,
-  disabled: PropTypes.bool,
-  size: PropTypes.oneOf(['small', 'medium']),
-  variant: PropTypes.string,
-  onChange: PropTypes.func,
-  label: PropTypes.oneOfType([PropTypes.string, PropTypes.node]),
-  value: PropTypes.bool,
-  infoTooltip: PropTypes.oneOfType([PropTypes.string, PropTypes.node]),
-  width: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-  slotProps: PropTypes.shape({
-    container: PropTypes.object,
-    formControlLabel: PropTypes.object,
-    switch: PropTypes.object,
-    tooltip: PropTypes.object,
-  }),
-};
 
 const genStyles = ({ width }) => ({
   container: {
@@ -131,8 +151,22 @@ const genStyles = ({ width }) => ({
     alignItems: 'center',
     gap: '0.5rem',
   },
+  standaloneWithTooltip: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.25rem',
+  },
   label: { display: 'flex', alignItems: 'center', gap: '0.25rem' },
-  iconContainer: { display: 'flex', alignItems: 'center', gap: '0.25rem', height: '100%' },
+  iconContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.25rem',
+    height: '100%',
+    '& :hover': { opacity: 0.8 },
+  },
+  formControlLabel: {
+    gap: '0.7rem',
+  },
 });
 
 export default BaseSwitch;

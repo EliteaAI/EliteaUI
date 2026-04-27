@@ -230,18 +230,18 @@ export default StateVariableItem;
 
 /** @type {MuiSx} */
 const stateVariableItemStyles = (isDefault, nameFieldWidth, enabled, shouldExpandNameField) => ({
-  outerContainer: ({ spacing }) => ({
+  outerContainer: {
     display: 'flex',
     flexDirection: 'column',
-    gap: spacing(1),
+    gap: '0.5rem',
     minWidth: 0,
-  }),
-  container: ({ spacing }) => ({
+  },
+  container: {
     display: 'flex',
-    alignItems: 'flex-start',
-    gap: spacing(1),
+    alignItems: 'center',
+    gap: '0.5rem',
     minWidth: 0,
-  }),
+  },
   errorText: ({ palette }) => ({
     color: palette.error.main,
     fontSize: '0.6875rem',

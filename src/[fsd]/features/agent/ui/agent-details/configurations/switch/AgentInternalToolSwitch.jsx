@@ -2,9 +2,9 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { Box, FormControlLabel, Switch as MuiSwitch, Tooltip, Typography } from '@mui/material';
+import { Box, FormControlLabel, Tooltip, Typography } from '@mui/material';
 
-import { Text } from '@/[fsd]/shared/ui';
+import { Switch, Text } from '@/[fsd]/shared/ui';
 import AttachSvgIcon from '@/assets/attach-icon.svg?react';
 import CalendarIcon from '@/assets/calendar.svg?react';
 import ImageSvgIcon from '@/assets/image.svg?react';
@@ -99,12 +99,10 @@ const AgentInternalToolSwitch = memo(props => {
       </Box>
       <FormControlLabel
         control={
-          <MuiSwitch
+          <Switch.BaseSwitch
             checked={allowTool}
             onChange={onChange}
             disabled={disabled}
-            size="small"
-            variant="elitea"
           />
         }
         label=""

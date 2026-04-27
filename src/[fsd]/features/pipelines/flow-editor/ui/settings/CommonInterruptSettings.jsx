@@ -1,10 +1,11 @@
 import { memo, useCallback, useContext, useMemo } from 'react';
 
-import { Box, FormControlLabel, Switch, Typography } from '@mui/material';
+import { Box, FormControlLabel, Typography } from '@mui/material';
 
 import { FlowEditorContext } from '@/[fsd]/app/providers';
 import { PipelineNodeTypes } from '@/[fsd]/features/pipelines/flow-editor/lib/constants/flowEditor.constants';
 import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import { Switch } from '@/[fsd]/shared/ui';
 import styled from '@emotion/styled';
 
 const StyledFormControlLabel = styled(FormControlLabel)(({ theme }) => ({
@@ -108,12 +109,11 @@ const CommonInterruptSettings = memo(props => {
     >
       <StyledFormControlLabel
         control={
-          <Switch
+          <Switch.BaseSwitch
             disabled={yamlJsonObject.entry_point === id || disabled}
             checked={
               yamlJsonObject.entry_point === id ? false : !!realInterruptBefore.find(item => item === id)
             }
-            color="primary"
             onChange={onChangeInterruptBefore}
           />
         }
@@ -129,14 +129,13 @@ const CommonInterruptSettings = memo(props => {
       />
       <StyledFormControlLabel
         control={
-          <Switch
+          <Switch.BaseSwitch
             disabled={yamlNode?.transition === PipelineNodeTypes.End || disabled}
             checked={
               yamlNode?.transition === PipelineNodeTypes.End
                 ? false
                 : !!realInterruptAfter.find(item => item === id)
             }
-            color="primary"
             onChange={onChangeInterruptAfter}
           />
         }
@@ -153,10 +152,9 @@ const CommonInterruptSettings = memo(props => {
       {showStructuredOutput && (
         <StyledFormControlLabel
           control={
-            <Switch
+            <Switch.BaseSwitch
               disabled={disabled}
               checked={!!yamlNode?.structured_output}
-              color="primary"
               onChange={onChangeStructuredOutput}
             />
           }
