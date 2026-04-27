@@ -2,7 +2,7 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 
-import { Box, Button as MuiButton, Switch, Typography } from '@mui/material';
+import { Box, Button as MuiButton, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import {
@@ -19,7 +19,7 @@ import {
 } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
 import { IndexScheduleModal } from '@/[fsd]/features/toolkits/indexes/ui';
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
-import { Button } from '@/[fsd]/shared/ui';
+import { Button, Switch } from '@/[fsd]/shared/ui';
 import { useUpdateIndexScheduleMutation } from '@/api';
 import { PERMISSIONS } from '@/common/constants';
 import { convertToolkitSchema } from '@/common/toolkitSchemaUtils';
@@ -200,14 +200,12 @@ const IndexActions = memo(props => {
                 slotProps={{ popper: { modifiers: [{ name: 'offset', options: { offset: [0, -8] } }] } }}
               >
                 <Box component="span">
-                  <Switch
+                  <Switch.BaseSwitch
                     checked={scheduleData.enabled}
                     onChange={() =>
                       handleChangeIndexSchedule({ ...scheduleData, enabled: !scheduleData.enabled }, true)
                     }
                     disabled={Boolean(schedulingTooltipMessage)}
-                    size="small"
-                    variant="elitea"
                   />
                 </Box>
               </Tooltip>

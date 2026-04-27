@@ -54,6 +54,14 @@ Default.args = {
   disabled: false,
 };
 
+export const WithInfoTooltip = Template.bind({});
+WithInfoTooltip.args = {
+  variant: 'elitea',
+  checked: false,
+  disabled: false,
+  infoTooltip: 'This is an info tooltip',
+};
+
 export const Checked = Template.bind({});
 Checked.args = {
   variant: 'elitea',

@@ -1,12 +1,13 @@
 import React, { memo, useCallback, useState } from 'react';
 
-import { Switch, ThemeProvider, Typography } from '@mui/material';
+import { ThemeProvider, Typography } from '@mui/material';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import { DataGrid, GridRowEditStopReasons, gridClasses, useGridApiRef } from '@mui/x-data-grid';
 
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { FlowEditorSettings } from '@/[fsd]/features/pipelines/flow-editor/ui';
+import { Switch } from '@/[fsd]/shared/ui';
 import AlertDialog from '@/components/AlertDialog.jsx';
 import DeleteIcon from '@/components/Icons/DeleteIcon.jsx';
 import useEliteATheme from '@/hooks/useEliteATheme';
@@ -266,10 +267,9 @@ const StateVariableTable = memo(props => {
         const { name } = row;
         return name === FlowEditorConstants.STATE_INPUT || name === FlowEditorConstants.STATE_MESSAGES
           ? [
-              <Switch
+              <Switch.BaseSwitch
                 key={`switch-${id}`}
                 checked={row.enabled}
-                color="primary"
                 onChange={event => {
                   setRows(
                     rows.map(item => (item.id === id ? { ...item, enabled: event.target.checked } : item)),

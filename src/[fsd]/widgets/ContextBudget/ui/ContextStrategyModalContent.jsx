@@ -2,18 +2,10 @@ import { memo, useCallback, useEffect } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import {
-  Box,
-  Button,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-  Switch,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { Box, Button, DialogContent, DialogTitle, IconButton } from '@mui/material';
 
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
+import { Switch } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { SEPARATOR } from '@/[fsd]/widgets/ContextBudget/lib/constants';
 import { handleConvertToNumberChange } from '@/[fsd]/widgets/ContextBudget/lib/validation';
@@ -25,7 +17,6 @@ import {
 } from '@/[fsd]/widgets/ContextBudget/ui';
 import AlertDialog from '@/components/AlertDialog';
 import CloseIcon from '@/components/Icons/CloseIcon';
-import InfoIcon from '@/components/Icons/InfoIcon';
 import { StyledDialogActions } from '@/components/StyledDialog';
 
 const parseModelValue = value => {
@@ -160,27 +151,17 @@ const ContextStrategyModalContent = memo(props => {
     <>
       <DialogTitle sx={styles.dialogTitle}>
         <Box sx={styles.dialogTitleContent}>
-          <Box sx={styles.dialogTitleLeft}>
-            <Switch
-              size="small"
-              checked={values.enabled}
-              onChange={e => handleInputChange(e, 'enabled')}
-              color="primary"
-            />
-            <Box sx={styles.titleWithIcon}>
-              <Typography
-                variant="headingMedium"
-                color="text.secondary"
-              >
-                Context Management
-              </Typography>
-              <Tooltip title="Configure how conversation context is managed and optimized">
-                <Box sx={styles.infoIconContainer}>
-                  <InfoIcon />
-                </Box>
-              </Tooltip>
-            </Box>
-          </Box>
+          <Switch.BaseSwitch
+            checked={values.enabled}
+            onChange={e => handleInputChange(e, 'enabled')}
+            label="Context Management"
+            infoTooltip="Configure how conversation context is managed and optimized"
+            slotProps={{
+              label: {
+                variant: 'headingMedium',
+              },
+            }}
+          />
           <IconButton
             variant="elitea"
             color="tertiary"

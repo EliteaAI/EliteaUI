@@ -1,9 +1,10 @@
 import { memo, useCallback } from 'react';
 
-import { Box, IconButton, Switch } from '@mui/material';
+import { Box, IconButton } from '@mui/material';
 
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { FlowEditorState } from '@/[fsd]/features/pipelines/flow-editor/ui';
+import { Switch } from '@/[fsd]/shared/ui';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 
 const StateVariableItemActions = memo(props => {
@@ -30,9 +31,8 @@ const StateVariableItemActions = memo(props => {
   if (showToggle) {
     return (
       <Box sx={styles.actionContainer}>
-        <Switch
+        <Switch.BaseSwitch
           checked={enabled}
-          size="small"
           onChange={handleToggle}
           sx={styles.switch}
           disabled={disabled}
@@ -83,38 +83,18 @@ StateVariableItemActions.displayName = 'StateVariableItemActions';
 
 /** @type {MuiSx} */
 const stateVariableItemActionsStyles = () => ({
-  actionContainer: ({ spacing }) => ({
-    width: spacing(3.5),
-    height: spacing(4),
+  actionContainer: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-  }),
-  deleteButton: ({ spacing }) => ({
-    padding: spacing(0.5),
+  },
+  deleteButton: {
+    padding: '0.25rem',
     alignSelf: 'center',
-  }),
-  deleteIcon: ({ spacing }) => ({
-    fontSize: spacing(2),
-  }),
-  switch: ({ palette }) => ({
-    '& .MuiSwitch-switchBase': {
-      color: palette.secondary.main,
-
-      '&.Mui-checked': {
-        color: palette.primary.main,
-
-        '& + .MuiSwitch-track': {
-          backgroundColor: palette.split.hover,
-          opacity: 1,
-        },
-      },
-    },
-    '& .MuiSwitch-track': {
-      backgroundColor: palette.background.button.secondary.hover,
-      opacity: 1,
-    },
-  }),
+  },
+  deleteIcon: {
+    fontSize: '1rem',
+  },
 });
 
 export default StateVariableItemActions;
