@@ -2,7 +2,7 @@ import { Fragment, memo, useMemo } from 'react';
 
 import { Link, Typography } from '@mui/material';
 
-import { parseMessage } from '@/[fsd]/entities/notifications/lib/helpers';
+import { parseMessage, resolveHref } from '@/[fsd]/entities/notifications/lib/helpers';
 
 import LegacyNotificationMessage from './LegacyNotificationMessage.jsx';
 
@@ -11,6 +11,7 @@ const NotificationListItemMessage = memo(props => {
   const textColor = notification.is_seen ? 'text.primary' : 'text.secondary';
   const message = notification.meta?.message;
   const segments = useMemo(() => parseMessage(message), [message]);
+  const resolvedHref = resolveHref(notification.event_type, notification.meta, notification.project_id);
 
   if (message) {
     return (
@@ -19,12 +20,12 @@ const NotificationListItemMessage = memo(props => {
         sx={{ color: textColor }}
       >
         {segments.map((segment, index) =>
-          segment.href ? (
+          segment.isLink && resolvedHref ? (
             <Link
               key={index}
               variant={textVariant}
               sx={{ textDecoration: 'underline', cursor: 'pointer' }}
-              href={segment.href}
+              href={resolvedHref}
               target="_blank"
               rel="noopener noreferrer"
             >
