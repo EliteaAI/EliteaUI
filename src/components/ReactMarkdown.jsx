@@ -20,7 +20,7 @@ import {
 import Link from '@mui/material/Link';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
-import useEliteATheme from '@/hooks/useEliteATheme';
+import useAlitaTheme from '@/hooks/useAlitaTheme';
 import useToast from '@/hooks/useToast';
 import { useTheme } from '@emotion/react';
 
@@ -257,7 +257,7 @@ const Token = ({ markedToken, renderHtml, interaction_uuid }) => {
 };
 
 const ReactMarkdown = ({ children, renderHtml = true, interaction_uuid }) => {
-  const { localGridTheme } = useEliteATheme();
+  const { localGridTheme } = useAlitaTheme();
   let markedTokens;
   try {
     markedTokens = marked.lexer(children || '');

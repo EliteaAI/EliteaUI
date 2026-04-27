@@ -129,7 +129,7 @@ const VersionDelete = memo(props => {
       ) : (
         <Button
           disabled={isLoading || disabled}
-          variant="elitea"
+          variant="alita"
           color="secondary"
           onClick={onDeleteVersionClick}
         >

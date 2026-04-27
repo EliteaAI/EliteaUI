@@ -1,4 +1,4 @@
-import { eliteaApi } from './eliteaApi.js';
+import { alitaApi } from './alitaApi.js';
 
 const TAG_BUCKETS = 'TAG_BUCKETS';
 const TAG_ARTIFACTS = 'TAG_ARTIFACTS';
@@ -6,7 +6,7 @@ const headers = {
   'Content-Type': 'application/json',
 };
 
-export const artifactsApi = eliteaApi
+export const artifactsApi = alitaApi
   .enhanceEndpoints({
     addTagTypes: ['artifacts'],
   })

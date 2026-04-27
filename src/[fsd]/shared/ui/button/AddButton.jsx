@@ -14,7 +14,7 @@ const AddButton = memo(({ onAdd, tooltip = 'Add', sx }) => {
     >
       <IconButton
         disableRipple
-        variant="elitea"
+        variant="alita"
         color="primary"
         onClick={onAdd}
         sx={[styles.button, sx]}

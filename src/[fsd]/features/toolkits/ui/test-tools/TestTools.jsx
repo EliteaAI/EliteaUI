@@ -95,8 +95,10 @@ const TestTools = memo(props => {
     setToolInputVariables(inputVariables);
   }, []);
 
-  const onChangeTool = useCallback(value => {
-    setSelectedTool(value || null);
+  const onChangeTool = useCallback(option => {
+    const value = option?.value || null;
+
+    setSelectedTool(value);
     setToolInputVariables([]);
   }, []);
 
@@ -299,13 +301,11 @@ const testToolsStyles = ({ showAdvancedSettings }) => ({
   },
   chatBodyContainer: {
     height: 'calc(100vh - 10rem)',
-    overflow: 'hidden',
   },
   chatBodyContainerResponsive: {
     height: '100vh !important',
     minHeight: '100vh !important',
     marginBottom: '1.5rem',
-    overflow: 'hidden',
   },
   settingsGrid: {
     maxHeight: '100%',

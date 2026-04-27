@@ -116,7 +116,7 @@ const Onboarding = memo(() => {
     <Box sx={styles.page}>
       {user.personal_project_id && location.state?.from && (
         <IconButton
-          variant="elitea"
+          variant="alita"
           color={'tertiary'}
           onClick={() => navigate(-1)}
           sx={styles.backButton}

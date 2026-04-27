@@ -49,28 +49,28 @@ const Template = args => {
 
 export const Default = Template.bind({});
 Default.args = {
-  variant: 'elitea',
+  variant: 'alita',
   checked: false,
   disabled: false,
 };
 
 export const Checked = Template.bind({});
 Checked.args = {
-  variant: 'elitea',
+  variant: 'alita',
   checked: true,
   disabled: false,
 };
 
 export const Disabled = Template.bind({});
 Disabled.args = {
-  variant: 'elitea',
+  variant: 'alita',
   checked: false,
   disabled: true,
 };
 
 export const DisabledChecked = Template.bind({});
 DisabledChecked.args = {
-  variant: 'elitea',
+  variant: 'alita',
   checked: true,
   disabled: true,
 };
@@ -108,7 +108,7 @@ const StaticSwitch = ({ stateOverride, size = 'small' }) => {
 
   return (
     <BaseSwitch
-      variant={SWITCH_VARIANTS.elitea}
+      variant={SWITCH_VARIANTS.alita}
       size={size}
       {...getSwitchProps()}
       onChange={handleEmptyOnChange}
@@ -199,7 +199,7 @@ export const AllSwitches = args => {
         }}
       >
         <SwitchStatesRow
-          title="EliteA"
+          title="Alita"
           size={args.size}
         />
       </Box>

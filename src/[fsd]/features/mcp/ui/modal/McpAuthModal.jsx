@@ -382,7 +382,7 @@ const McpAuthModal = memo(props => {
       >
         {title || 'MCP Authorization'}
         <IconButton
-          variant="elitea"
+          variant="alita"
           color="tertiary"
           aria-label="close"
           onClick={handleCancel}
@@ -472,7 +472,7 @@ const McpAuthModal = memo(props => {
       </DialogContent>
       <DialogActions sx={styles.dialogActions}>
         <Button
-          variant="elitea"
+          variant="alita"
           color="secondary"
           onClick={handleCancel}
           disabled={authSuccess}
@@ -481,7 +481,7 @@ const McpAuthModal = memo(props => {
           Cancel
         </Button>
         <Button
-          variant="elitea"
+          variant="alita"
           color="primary"
           onClick={onAuthorize}
           disabled={isAuthorizeDisabled}

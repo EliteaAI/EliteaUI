@@ -1,24 +1,14 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
-import { Autocomplete, Box, Chip, InputAdornment, ListItemIcon, TextField, Typography } from '@mui/material';
-import { createFilterOptions } from '@mui/material/Autocomplete';
-import { styled as muiStyled } from '@mui/material/styles';
+import { Autocomplete, Chip, InputAdornment, TextField, Typography } from '@mui/material';
+import { Box } from '@mui/system';
 
+import { MenuItemIcon } from '@/[fsd]/shared/ui/select';
 import CheckedIcon from '@/assets/checked-icon.svg?react';
 import RemoveIcon from '@/assets/remove-icon.svg?react';
+import { filterProps } from '@/common/utils';
 import UserAvatar from '@/components/UserAvatar';
 import styled from '@emotion/styled';
-
-const MenuItemIcon = muiStyled(ListItemIcon)(() => ({
-  width: '0.625rem',
-  height: '0.625rem',
-  fontSize: '0.625rem',
-  marginRight: '0.6rem',
-  minWidth: '0.625rem !important',
-  svg: {
-    fontSize: '0.625rem',
-  },
-}));
 
 export const StyledAutocomplete = styled(Autocomplete)(() => ({
   '& .MuiAutocomplete-option': {
@@ -27,18 +17,29 @@ export const StyledAutocomplete = styled(Autocomplete)(() => ({
 }));
 
 const StyledChip = styled(Chip)(() => ({
+  height: '24px',
+  margin: '0px !important',
   '& .MuiChip-label': {
-    paddingLeft: '0.5rem',
-    paddingRight: '0.5rem',
+    paddingLeft: '8px', // Reduce left padding (default is usually 12px)
+    paddingRight: '8px', // Reduce right padding (default is usually 12px)
   },
 }));
 
-const defaultFilterOptions = createFilterOptions();
-
-const normalizeSx = sx => {
-  if (sx == null) return [];
-  return Array.isArray(sx) ? sx : [sx];
-};
+const StyledLi = styled(
+  'li',
+  filterProps('selected', 'selectedBackground', 'hoverBackgroundColor'),
+)(({ selected, selectedBackground, hoverBackgroundColor }) => ({
+  height: '40px',
+  padding: '8px 20px',
+  display: 'flex',
+  flexDirection: 'row',
+  justifyContent: 'space-between !important',
+  alignItems: 'center',
+  backgroundColor: selected ? selectedBackground : 'transparent',
+  '&:hover': {
+    backgroundColor: hoverBackgroundColor,
+  },
+}));
 
 export default function AutoCompleteDropDown({
   optionList = [],
@@ -61,23 +62,49 @@ export default function AutoCompleteDropDown({
   showSearchIcon = false,
   ignoreCase = true,
   renderOptionBody = undefined,
-  slotProps: slotPropsProp = {},
+  slotProps = {
+    Chip: {
+      sx: {},
+    },
+    RemoveIcon: {
+      fill: 'currentColor',
+    },
+    Li: {
+      selectedBackground: 'transparent',
+      hoverBackgroundColor: 'transparent',
+      CheckIcon: {
+        fill: 'currentColor',
+      },
+    },
+    paper: {
+      sx: {},
+    },
+    listbox: {
+      ref: null,
+      onScroll: null,
+      style: {},
+    },
+    input: {},
+  },
   slots = {
     SearchIcon: undefined,
   },
-  sx,
-  filterOptions: filterOptionsProp,
   ...props
 }) {
-  const filterFn = filterOptionsProp ?? defaultFilterOptions;
   const [options, setOptions] = useState(selectedOptions);
-
-  const styles = useMemo(() => autoCompleteDropDownStyled(slotPropsProp), [slotPropsProp]);
 
   useEffect(() => {
     setOptions(selectedOptions);
   }, [selectedOptions]);
 
+  // options is used to store the current list of options in the dropdown
+  // selectedOptions is the initial list of options passed to the component
+  // selectedOptions is used to set the initial state of options when the component mounts
+  // options is updated when the user adds or removes options
+  // selectedOptions is not updated when the user adds or removes options, it remains the same
+  // onChange is called with the updated options when the user adds or removes options
+  // onChange is a callback function that is called when the options are updated
+  // onChange is used to notify the parent component about the changes in options
   const [inputValue, setInputValue] = useState('');
   const [error, setError] = useState(false);
   const [helpText, setHelpText] = useState('');
@@ -211,7 +238,7 @@ export default function AutoCompleteDropDown({
                 display={'flex'}
                 alignItems={'center'}
                 flexDirection="row"
-                gap="0.25rem"
+                gap="4px"
               >
                 {avatarField && (
                   <UserAvatar
@@ -229,14 +256,14 @@ export default function AutoCompleteDropDown({
               </Box>
             }
             key={index}
-            sx={styles.mergedChipSx}
-            deleteIcon={<RemoveIcon fill={styles.mergedRemoveIcon.fill} />}
+            sx={slotProps.Chip.sx}
+            deleteIcon={<RemoveIcon fill={slotProps.RemoveIcon.fill} />}
             {...optionPropsWithoutKey}
             onDelete={() => handleDelete(option)}
           />
         );
       }),
-    [avatarField, handleDelete, nameField, styles.mergedChipSx, styles.mergedRemoveIcon.fill],
+    [avatarField, handleDelete, nameField, slotProps.Chip.sx, slotProps.RemoveIcon.fill],
   );
   const renderInput = useCallback(
     params => (
@@ -265,11 +292,11 @@ export default function AutoCompleteDropDown({
             options.length || inputValue
               ? {
                   ...(params.InputProps || {}),
-                  ...styles.inputSlotProps,
+                  ...(slotProps.input || {}),
                 }
               : {
                   ...(params.InputProps || {}),
-                  ...styles.inputSlotProps,
+                  ...(slotProps.input || {}),
                   startAdornment: showSearchIcon ? (
                     <InputAdornment
                       sx={{ marginRight: '0px' }}
@@ -294,7 +321,7 @@ export default function AutoCompleteDropDown({
       options.length,
       placeholder,
       showSearchIcon,
-      styles.inputSlotProps,
+      slotProps.input,
       slots.SearchIcon,
     ],
   );
@@ -344,13 +371,6 @@ export default function AutoCompleteDropDown({
     [idField, nameField],
   );
 
-  const filteredOptionsCount = useMemo(
-    () => filterFn(optionList || [], { inputValue, getOptionLabel }).length,
-    [filterFn, optionList, inputValue, getOptionLabel],
-  );
-
-  const showSuggestionsPopper = (optionList?.length ?? 0) > 0 && filteredOptionsCount > 0;
-
   return (
     <StyledAutocomplete
       multiple
@@ -367,32 +387,29 @@ export default function AutoCompleteDropDown({
       renderInput={renderInput}
       getOptionLabel={getOptionLabel}
       isOptionEqualToValue={isOptionEqualToValue}
-      filterOptions={filterFn}
+      sx={{ marginTop: '0.5rem' }}
       slotProps={{
         paper: {
-          sx: [
-            { display: showSuggestionsPopper ? 'block' : 'none' },
-            styles.paperDefaultSx,
-            ...normalizeSx(slotPropsProp.paper?.sx),
-          ],
+          sx: slotProps.paper.sx,
+          display: optionList && optionList.length > 0 ? 'block' : 'none',
         },
-        listbox: styles.listboxProps,
+        listbox: slotProps.listbox,
         popper: {
           placement: 'bottom-start',
+          // Completely hide the popper when no options
           sx: {
-            display: showSuggestionsPopper ? 'block' : 'none !important',
+            display: optionList && optionList.length > 0 ? 'block' : 'none !important',
           },
         },
       }}
-      sx={[styles.rootAutocompleteSx, sx].filter(Boolean)}
       renderOption={(optionProps, option, state) => {
         const { key, ...otherOptionProps } = optionProps;
         return (
-          <Box
-            component="li"
+          <StyledLi
             key={key}
             {...otherOptionProps}
-            sx={({ palette }) => styles.getOptionLiSx(state.selected, palette)}
+            selectedBackground={slotProps.Li.selectedBackground}
+            hoverBackgroundColor={slotProps.Li.hoverBackgroundColor}
             onClick={onClickOption(!state.selected, option)}
           >
             {renderOptionBody ? (
@@ -407,76 +424,16 @@ export default function AutoCompleteDropDown({
             )}
             {state.selected && (
               <MenuItemIcon>
-                <CheckedIcon sx={styles.checkIconSx} />
+                <CheckedIcon
+                  sx={{ fontSize: '16px' }}
+                  fill={slotProps.Li.CheckIcon.fill}
+                />
               </MenuItemIcon>
             )}
-          </Box>
+          </StyledLi>
         );
       }}
       {...props}
     />
   );
 }
-
-const autoCompleteDropDownStyled = slotPropsProp => ({
-  mergedRemoveIcon: {
-    fill: 'currentColor',
-    ...slotPropsProp.RemoveIcon,
-  },
-  mergedChipSx: [
-    ({ palette }) => ({
-      height: '1.5rem',
-      margin: '0 !important',
-      backgroundColor: palette.background.tagChip.disabled,
-      '& .MuiChip-deleteIcon': {
-        color: palette.icon.tagChip.default,
-        marginLeft: 0,
-      },
-      '&:not(.Mui-disabled) .MuiChip-deleteIcon:hover': {
-        color: palette.icon.tagChip.hover,
-      },
-    }),
-    slotPropsProp.Chip?.sx,
-  ].filter(Boolean),
-  paperDefaultSx: ({ palette }) => ({
-    background: palette.background.secondary,
-    border: `0.0625rem solid ${palette.border.lines}`,
-    boxShadow: palette.boxShadow.default,
-    borderRadius: '0.5rem',
-    margin: '0.5rem !important',
-  }),
-  listboxProps: slotPropsProp.listbox ?? {
-    ref: null,
-    onScroll: null,
-    style: {},
-  },
-  inputSlotProps: slotPropsProp.input ?? {},
-  rootAutocompleteSx: {
-    marginTop: '0.25rem',
-    '& .MuiAutocomplete-inputRoot': {
-      flexWrap: 'wrap',
-      gap: '0.25rem',
-    },
-  },
-  getOptionLiSx: (selected, palette) => {
-    const activeBg = slotPropsProp.Li?.selectedBackground ?? palette.background.participant.active;
-    const hoverBg = slotPropsProp.Li?.hoverBackgroundColor ?? palette.background.participant.hover;
-    return {
-      height: '2.5rem',
-      padding: '0.5rem 1.25rem',
-      display: 'flex',
-      flexDirection: 'row',
-      justifyContent: 'space-between !important',
-      alignItems: 'center',
-      margin: 0,
-      backgroundColor: selected ? activeBg : 'transparent',
-      '&:hover': {
-        backgroundColor: hoverBg,
-      },
-    };
-  },
-  checkIconSx: ({ palette }) => ({
-    fontSize: '1rem',
-    fill: slotPropsProp.Li?.CheckIcon?.fill ?? palette.icon.fill.secondary,
-  }),
-});

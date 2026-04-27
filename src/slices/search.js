@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 
-import { eliteaApi } from '../api/eliteaApi';
+import { alitaApi } from '../api/alitaApi';
 
 const isSearchDone = ({ query, queryTags }) => {
   return query || queryTags.length > 0;
@@ -25,29 +25,29 @@ const searchSlice = createSlice({
     },
   },
   extraReducers: builder => {
-    builder.addMatcher(eliteaApi.endpoints.applicationList.matchFulfilled, state => {
+    builder.addMatcher(alitaApi.endpoints.applicationList.matchFulfilled, state => {
       if (isSearchDone(state)) {
         state.searchDone = true;
       }
     });
 
-    builder.addMatcher(eliteaApi.endpoints.publicApplicationsList.matchFulfilled, state => {
+    builder.addMatcher(alitaApi.endpoints.publicApplicationsList.matchFulfilled, state => {
       if (isSearchDone(state)) {
         state.searchDone = true;
       }
     });
 
-    builder.addMatcher(eliteaApi.endpoints.publicApplicationsList.matchFulfilled, state => {
+    builder.addMatcher(alitaApi.endpoints.publicApplicationsList.matchFulfilled, state => {
       if (isSearchDone(state)) {
         state.searchDone = true;
       }
     });
-    builder.addMatcher(eliteaApi.endpoints.toolkitsList.matchFulfilled, state => {
+    builder.addMatcher(alitaApi.endpoints.toolkitsList.matchFulfilled, state => {
       if (isSearchDone(state)) {
         state.searchDone = true;
       }
     });
-    builder.addMatcher(eliteaApi.endpoints.getConfigurationsList.matchFulfilled, state => {
+    builder.addMatcher(alitaApi.endpoints.getConfigurationsList.matchFulfilled, state => {
       if (isSearchDone(state)) {
         state.searchDone = true;
       }

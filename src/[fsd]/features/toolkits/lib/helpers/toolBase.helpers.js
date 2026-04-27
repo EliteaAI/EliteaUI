@@ -111,16 +111,11 @@ export const isIntegerType = propertySchema => {
 /**
  * Validate required fields and return errors object
  */
-export const validateRequiredFields = (
-  schema,
-  settings,
-  sectionProps = [],
-  enableEditEliteaTitle = false,
-) => {
+export const validateRequiredFields = (schema, settings, sectionProps = [], enableEditAlitaTitle = false) => {
   const errors = {};
 
   schema?.required
-    ?.filter(prop => (enableEditEliteaTitle || prop !== 'elitea_title') && !sectionProps.includes(prop))
+    ?.filter(prop => (enableEditAlitaTitle || prop !== 'alita_title') && !sectionProps.includes(prop))
     .forEach(prop => {
       const propSchema = schema?.properties[prop];
       if (propSchema?.type === 'boolean' || !propSchema) {

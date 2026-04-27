@@ -1,7 +1,7 @@
 import { DEFAULT_PARTICIPANT_NAME } from '@/common/constants';
 
 /**
- * Converts an arbitrary string into a valid elitea title string
+ * Converts an arbitrary string into a valid alita title string
  * - Converts to lowercase
  * - Replaces whitespace with underscores
  * - Removes invalid characters (keeps only alphanumeric, underscores, and hyphens)
@@ -10,9 +10,9 @@ import { DEFAULT_PARTICIPANT_NAME } from '@/common/constants';
  *
  * @param {string} input - The input string to convert
  * @param {string} fallback - Fallback string if result would be empty (default: 'untitled')
- * @returns {string} Valid elitea title string
+ * @returns {string} Valid alita title string
  */
-export const convertToValidEliteaTitle = (input, fallback = '') => {
+export const convertToValidAlitaTitle = (input, fallback = '') => {
   if (!input || typeof input !== 'string') {
     return fallback;
   }
@@ -29,8 +29,8 @@ export const convertToValidEliteaTitle = (input, fallback = '') => {
   // Remove consecutive underscores and replace with single underscore
   result = result.replace(/_+/g, '_');
 
-  // Remove trailing underscores (can result from trailing whitespace conversion)
-  result = result.replace(/_+$/g, '');
+  // Remove leading and trailing underscores
+  result = result.replace(/^_+|_+$/g, '');
 
   // Truncate to 128 characters
   if (result.length > 128) {
@@ -48,11 +48,11 @@ export const convertToValidEliteaTitle = (input, fallback = '') => {
 };
 
 /**
- * Validates if a string meets the elitea title requirements
+ * Validates if a string meets the alita title requirements
  * @param {string} value - The string to validate
  * @returns {boolean} True if valid, false otherwise
  */
-export const isValidEliteATitle = value => {
+export const isValidAlitaTitle = value => {
   if (!value || typeof value !== 'string') {
     return false;
   }
@@ -66,11 +66,11 @@ export const isValidEliteATitle = value => {
 };
 
 /**
- * Gets validation error message for elitea title
+ * Gets validation error message for alita title
  * @param {string} value - The string to validate
  * @returns {string|null} Error message or null if valid
  */
-export const getEliteATitleValidationError = (value, systemSenderName = DEFAULT_PARTICIPANT_NAME) => {
+export const getAlitaTitleValidationError = (value, systemSenderName = DEFAULT_PARTICIPANT_NAME) => {
   if (!value) {
     return `${systemSenderName} title cannot be empty`;
   }

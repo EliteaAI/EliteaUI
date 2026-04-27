@@ -471,7 +471,7 @@ const Conversations = ({
                     <Button
                       disabled={!checkPermission(PERMISSIONS.chat.folders.create)}
                       onClick={clickCreateNewFolder(false)}
-                      variant="elitea"
+                      variant="alita"
                       color="secondary"
                       sx={{
                         minWidth: '28px !important',
@@ -509,7 +509,7 @@ const Conversations = ({
           {!isSmallWindow && (
             <IconButton
               sx={{ marginLeft: '0px' }}
-              variant="elitea"
+              variant="alita"
               color="tertiary"
               onClick={onCollapsed}
             >
@@ -546,7 +546,7 @@ const Conversations = ({
                 <Button
                   disabled={!checkPermission(PERMISSIONS.chat.folders.create)}
                   onClick={clickCreateNewFolder(true)}
-                  variant="elitea"
+                  variant="alita"
                   color="secondary"
                   sx={{
                     minWidth: '28px !important',
@@ -592,7 +592,7 @@ const Conversations = ({
             />
             <IconButton
               onClick={handleSearchClear}
-              variant="elitea"
+              variant="alita"
               color="tertiary"
             >
               <CloseIcon sx={styles.closeIcon} />

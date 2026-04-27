@@ -14,7 +14,7 @@ const OneClickButton = memo(props => {
 
   return (
     <Button
-      variant="elitea"
+      variant="alita"
       color={color}
       disabled={isClicked || disabled}
       onClick={handleClick}

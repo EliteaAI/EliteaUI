@@ -78,7 +78,7 @@ export default function OpenAPICardActions({
                   <IconButton
                     className={'copyButton'}
                     sx={{ marginLeft: '0px', display: 'none' }}
-                    variant="elitea"
+                    variant="alita"
                     color="tertiary"
                     onClick={onClickCopy(item.name)}
                   >

@@ -1,6 +1,6 @@
 # Common Components
 
-This folder contains shared components that are used across multiple modules in the EliteAUI application,
+This folder contains shared components that are used across multiple modules in the AlitaUI application,
 specifically between Prompts and Applications.
 
 ## Structure

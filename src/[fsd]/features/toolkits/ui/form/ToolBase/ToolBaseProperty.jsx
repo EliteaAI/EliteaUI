@@ -10,10 +10,9 @@ import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { ArrayFieldInput } from '@/[fsd]/features/toolkits/ui/form/ToolBase';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { useFieldFocus } from '@/[fsd]/shared/lib/hooks';
-import { Checkbox, Field, Input } from '@/[fsd]/shared/ui';
+import { Checkbox, Field } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
-import { TooltipMarkdownContent } from '@/[fsd]/shared/ui/tooltip';
 import { MAX_NAME_LENGTH } from '@/common/constants';
 import AgentSelect from '@/components/AgentSelect';
 import CredentialsSelect from '@/components/CredentialsSelect';
@@ -47,7 +46,6 @@ const ToolBaseProperty = memo(props => {
     disabled,
     validationErrorMessages,
     options: presetOptions,
-    noAccordionWrapper = false,
   } = props;
 
   const styles = toolBasePropertyStyles(theme);
@@ -67,7 +65,6 @@ const ToolBaseProperty = memo(props => {
     max_toolkit_length,
     ui_component: uiComponent,
     visible_when: visibleWhen,
-    placeholder: schemaPlaceholder,
   } = v || {};
 
   // Extract enum items - check direct enum first, then look in anyOf
@@ -175,13 +172,13 @@ const ToolBaseProperty = memo(props => {
           {isRequired && ' *'}
 
           <Tooltip
-            title={<TooltipMarkdownContent>{description}</TooltipMarkdownContent>}
+            title={description}
             placement="top"
           >
             <Box sx={styles.infoIconWrapper}>
               <InfoIcon
-                width={19}
-                height={19}
+                width={22}
+                height={22}
               />
             </Box>
           </Tooltip>
@@ -216,7 +213,7 @@ const ToolBaseProperty = memo(props => {
 
     // Only show configuration fields that have non-empty values
     const value = settings[k];
-    if (k !== 'elitea_title' && (value === null || value === undefined || value === '')) {
+    if (k !== 'alita_title' && (value === null || value === undefined || value === '')) {
       return null;
     }
     // Field has a value and will be shown as disabled
@@ -335,36 +332,10 @@ const ToolBaseProperty = memo(props => {
           helperText={errorText}
           required={required}
           specifiedProjectId={specifiedProjectId}
-          description={description}
         />
       );
     } else if (type === 'object' || anyOf?.find(item => item.type === 'object')) {
       const codeExtensions = [json(), jsonLinter];
-
-      if (noAccordionWrapper) {
-        return (
-          <Box
-            key={k}
-            sx={styles.codeBox}
-          >
-            <Typography
-              variant="bodyMedium"
-              sx={styles.objectFieldLabel}
-            >
-              {description ? renderLabelWithHint(required) : label || k || 'Code Editor'}
-            </Typography>
-            <Field.ResizableCodeMirrorEditor
-              expandAction
-              value={JSON.stringify(settings[k] || {}, null, 2)}
-              extensions={codeExtensions}
-              minHeight={100}
-              fieldName={title}
-              onChange={handleObjectFieldChange}
-              readOnly={disableConfigFields || disabled}
-            />
-          </Box>
-        );
-      }
 
       return (
         <Box
@@ -377,7 +348,7 @@ const ToolBaseProperty = memo(props => {
             summarySX={styles.accordionSummarySX}
             items={[
               {
-                title: description ? renderLabelWithHint(required) : label || k || 'Code Editor',
+                title: label || k || 'Code Editor',
                 content: (
                   <Field.ResizableCodeMirrorEditor
                     expandAction
@@ -416,33 +387,20 @@ const ToolBaseProperty = memo(props => {
                 disabled={disableConfigFields || disabled}
               />
             }
-            label={
-              <Typography
-                variant="bodyMedium"
-                sx={styles.checkboxLabel}
-              >
-                {description ? renderLabelWithHint(false) : label}
-              </Typography>
-            }
+            label={<Typography variant="bodyMedium">{label}</Typography>}
           />
         </Box>
       );
     } else if ((type === 'string' || anyOf?.find(item => item.type === 'string')) && !!enumItems?.length) {
       const options = enumItems.map(item => ({ label: item, value: item }));
       const currentValue = settings[k];
-      // Get default value from schema (check direct property and anyOf)
-      const schemaDefault = v?.default ?? anyOf?.find(item => item.default !== undefined)?.default;
-      // Use current value if valid, otherwise fall back to schema default, then empty string
-      const validValue = options.some(opt => opt.value === currentValue)
-        ? currentValue
-        : options.some(opt => opt.value === schemaDefault)
-          ? schemaDefault
-          : '';
+      // Ensure the value exists in options, otherwise use empty string
+      const validValue = options.some(opt => opt.value === currentValue) ? currentValue : '';
 
       return (
         <SingleSelect
           showBorder
-          label={description ? renderLabelWithHint(required) : label}
+          label={label}
           onValueChange={value => editField(buildEditFieldPath(k), value)}
           value={validValue}
           options={options}
@@ -491,15 +449,14 @@ const ToolBaseProperty = memo(props => {
           rows={parseInt(lines)}
           disabled={disableConfigFields || disabled}
           inputProps={max_toolkit_length ? { maxLength: max_toolkit_length } : undefined}
-          placeholder={schemaPlaceholder}
         />
       );
     } else if (type === 'configuration') {
       return (
         <CredentialsSelect
+          showBorder
           isCreationAllowed
-          label={label}
-          description={v.description}
+          label={v.description || label}
           onSelectConfiguration={value => editField(buildEditFieldPath(k), value)}
           value={settings[k]}
           configurations={v.options}
@@ -515,7 +472,8 @@ const ToolBaseProperty = memo(props => {
     } else if (type === 'llm_model') {
       return (
         <LlmModelSelect
-          required={required}
+          required
+          showBorder
           label={label}
           onSelectModel={value => editField(buildEditFieldPath(k), value)}
           value={settings[k]}
@@ -534,7 +492,6 @@ const ToolBaseProperty = memo(props => {
           value={settings[k]}
           projectId={specifiedProjectId}
           disabled={disableConfigFields || disabled}
-          description={v.description}
         />
       );
     } else if (type === 'image_generation_model') {
@@ -551,6 +508,7 @@ const ToolBaseProperty = memo(props => {
     } else if (type === 'toolkit_reference') {
       return (
         <ToolkitSelect
+          showBorder
           label={label}
           onSelectToolkit={value => editField(buildEditFieldPath(k), value)}
           value={settings[k]}
@@ -598,19 +556,17 @@ const ToolBaseProperty = memo(props => {
       const maxLength = k === 'label' ? MAX_NAME_LENGTH : max_toolkit_length;
       const inputProps = maxLength ? { maxLength } : undefined;
 
-      // Get placeholder - use schema placeholder if provided, or default value for integer fields
+      // Get default value for placeholder (for integer fields with defaults)
       // Check both direct property and anyOf (for Optional[int] types)
       const defaultValue = v?.default ?? anyOf?.find(item => item.default !== undefined)?.default;
-      const placeholder =
-        schemaPlaceholder || (isInteger && defaultValue !== undefined ? String(defaultValue) : undefined);
+      const placeholder = isInteger && defaultValue !== undefined ? String(defaultValue) : undefined;
 
       return (
         <Box sx={styles.nameInputContainer}>
-          <Input.StyledInputEnhancer
+          <FormInput
             key={k}
             required={required}
-            label={label}
-            tooltipDescription={description}
+            label={description ? renderLabelWithHint(required) : label}
             value={settings[k]}
             onChange={handleInputChange(buildEditFieldPath(k))}
             error={!!toastError}
@@ -621,6 +577,18 @@ const ToolBaseProperty = memo(props => {
             placeholder={placeholder}
             onFocus={() => toggleFieldFocus(k)}
             onBlur={() => toggleFieldFocus(null)}
+            InputLabelProps={{
+              shrink: true,
+            }}
+            sx={
+              description
+                ? {
+                    '& .MuiInputLabel-asterisk': {
+                      display: 'none',
+                    },
+                  }
+                : {}
+            }
           />
           {isFocused('label') && MAX_NAME_LENGTH === settings[k]?.length && (
             <Typography
@@ -661,7 +629,7 @@ const toolBasePropertyStyles = theme => ({
     marginLeft: 0,
   },
   select: {
-    marginTop: '0.5rem',
+    marginTop: '1rem',
   },
   nameInputContainer: {
     width: '100%',
@@ -700,15 +668,6 @@ const toolBasePropertyStyles = theme => ({
   accordionSummarySX: {
     '& .MuiAccordionSummary-content': { alignItems: 'center', paddingRight: 0 },
     paddingRight: '0 !important',
-  },
-  checkboxLabel: {
-    display: 'inline-flex',
-    alignItems: 'center',
-  },
-  objectFieldLabel: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    marginBottom: '0.5rem',
   },
 });
 

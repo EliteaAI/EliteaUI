@@ -29,6 +29,7 @@ import {
   FlowEditorState,
 } from '@/[fsd]/features/pipelines/flow-editor/ui';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
+import { useProjectType } from '@/[fsd]/shared/lib/hooks';
 import ClipboardIcon from '@/assets/clipboard-icon.svg?react';
 import CollapseIcon from '@/assets/collapse-second-icon.svg?react';
 import ExpandIcon from '@/assets/expand-third-icon.svg?react';
@@ -89,7 +90,7 @@ const FlowEditor = forwardRef((props, ref) => {
   const [isStateDrawerOpen, setIsStateDrawerOpen] = useState(false);
 
   const { setNodes, setEdges } = useSaveNodesAndEdges();
-
+  const { projectType } = useProjectType();
   const {
     yamlJsonObject,
     nodes: initialNodes,
@@ -249,11 +250,12 @@ const FlowEditor = forwardRef((props, ref) => {
 
       trackEvent(GA_EVENT_NAMES.PIPELINE_NODE_CREATED, {
         [GA_EVENT_PARAMS.NODE_TYPE]: type,
+        [GA_EVENT_PARAMS.PROJECT_TYPE]: projectType || 'unknown',
       });
 
       return newFlowNode;
     },
-    [flowNodes, setFlowNodes, setYamlJsonObject, trackEvent],
+    [flowNodes, projectType, setFlowNodes, setYamlJsonObject, trackEvent],
   );
 
   const onAddNode = useCallback(
@@ -500,7 +502,7 @@ const FlowEditor = forwardRef((props, ref) => {
           zIndex={100}
         >
           <Button
-            variant="elitea"
+            variant="alita"
             color="secondary"
             onClick={onToggleStateDrawer}
             startIcon={

@@ -1,9 +1,9 @@
-import { eliteaApi } from '@/api/eliteaApi.js';
+import { alitaApi } from '@/api/alitaApi.js';
 
 const INDEXES_LIST = 'INDEXES_LIST';
 const INDEX_SCHEDULE = 'INDEX_SCHEDULE';
 
-const indexesApi = eliteaApi
+const indexesApi = alitaApi
   .enhanceEndpoints({
     addTagTypes: [INDEXES_LIST, INDEX_SCHEDULE],
   })

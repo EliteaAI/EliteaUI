@@ -1,9 +1,6 @@
 import { memo, useCallback, useEffect, useState } from 'react';
 
-import { Box } from '@mui/material';
-
 import { McpAuthStatus } from '@/[fsd]/features/mcp/ui';
-import { SharepointOAuthStatus } from '@/[fsd]/features/sharepoint/ui';
 import { ToolBaseHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
@@ -11,9 +8,9 @@ import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSett
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { useGetPlatformSettingsQuery } from '@/api/platformSettings';
 import {
-  convertToValidEliteaTitle,
-  getEliteATitleValidationError,
-  isValidEliteATitle,
+  convertToValidAlitaTitle,
+  getAlitaTitleValidationError,
+  isValidAlitaTitle,
 } from '@/common/configrationTitleUtils';
 import { MAX_NAME_LENGTH } from '@/common/constants';
 import { getPropValue } from '@/common/getToolInitialValueBySchema';
@@ -50,19 +47,17 @@ const ToolBase = memo(props => {
     showTools = true,
     disabled = false,
     validationErrorMessages = {},
-    advancedFields = [],
   } = props;
   const {
     name = '',
     toolkit_name: toolkitName = '',
     description = '',
     settings = {},
-    enableEditEliteaTitle = false,
+    enableEditAlitaTitle = false,
     meta,
   } = editToolDetail;
   // console.log('toolErrors', toolErrors);
   const theme = useTheme();
-  const styles = toolBaseStyles();
   const systemSenderName = useSystemSenderName();
   const [, setNotSelectedFields] = useState([]);
   const [showDisabledConfigFields, setShowDisabledConfigFields] = useState(false);
@@ -88,7 +83,7 @@ const ToolBase = memo(props => {
       schema,
       settings,
       sectionProps,
-      enableEditEliteaTitle,
+      enableEditAlitaTitle,
     );
     setToolErrors(prev => ({
       ...prev,
@@ -102,7 +97,7 @@ const ToolBase = memo(props => {
     editToolDetail.type,
     sections,
     schema,
-    enableEditEliteaTitle,
+    enableEditAlitaTitle,
     sectionProps,
   ]);
 
@@ -162,13 +157,13 @@ const ToolBase = memo(props => {
   }, []);
 
   useEffect(() => {
-    if (enableEditEliteaTitle && settings.elitea_title && !isValidEliteATitle(settings.elitea_title)) {
+    if (enableEditAlitaTitle && settings.alita_title && !isValidAlitaTitle(settings.alita_title)) {
       setToolErrors(prev => ({
         ...prev,
-        elitea_title: getEliteATitleValidationError(settings.elitea_title, systemSenderName), // Clear error if elitea_title is valid
+        alita_title: getAlitaTitleValidationError(settings.alita_title, systemSenderName), // Clear error if alita_title is valid
       }));
     }
-  }, [settings.elitea_title, setToolErrors, enableEditEliteaTitle, systemSenderName]);
+  }, [settings.alita_title, setToolErrors, enableEditAlitaTitle, systemSenderName]);
 
   const handleInputChange = field => event => {
     const initialValue = event.target.value;
@@ -198,20 +193,20 @@ const ToolBase = memo(props => {
     }
     editField(field, processedValue);
     if (field === 'settings.label') {
-      const convertedEliteATitle = convertToValidEliteaTitle(processedValue);
-      if (settings.elitea_title !== convertedEliteATitle) {
-        editField('settings.elitea_title', convertedEliteATitle);
+      const convertedAlitaTitle = convertToValidAlitaTitle(processedValue);
+      if (settings.alita_title !== convertedAlitaTitle) {
+        editField('settings.alita_title', convertedAlitaTitle);
       }
-    } else if (field === 'settings.elitea_title') {
-      editField('settings.elitea_title', processedValue?.substring(0, MAX_NAME_LENGTH).toLowerCase() || '');
+    } else if (field === 'settings.alita_title') {
+      editField('settings.alita_title', processedValue?.substring(0, MAX_NAME_LENGTH).toLowerCase() || '');
     }
-    if ((field === 'settings.elitea_title' || field === 'title') && setConfigurationName) {
+    if ((field === 'settings.alita_title' || field === 'title') && setConfigurationName) {
       setConfigurationName(processedValue);
     }
   };
 
   const toolBaseConfiguration = (
-    <Box sx={styles.configurationContainer}>
+    <>
       {!hideNameDescriptionInput && (
         <ToolkitForm.NameDescriptionInput
           type={editToolDetail?.type || ''}
@@ -227,7 +222,7 @@ const ToolBase = memo(props => {
           showToolkitIcon={showToolkitIcon}
           hideNameInput={hideNameInput}
           configuration_title={
-            editToolDetail?.settings?.elitea_title || editToolDetail?.settings?.configuration_title || ''
+            editToolDetail?.settings?.alita_title || editToolDetail?.settings?.configuration_title || ''
           }
           isMCP={isMCP}
           disabled={disabled}
@@ -241,7 +236,7 @@ const ToolBase = memo(props => {
         const [k, v] = propertyEntry;
 
         // Apply the same filtering logic as the main section
-        if (sectionProps.includes(k) || k === 'selected_tools' || advancedFields.includes(k)) {
+        if (sectionProps.includes(k) || k === 'selected_tools') {
           return null;
         }
 
@@ -266,8 +261,7 @@ const ToolBase = memo(props => {
             showOnlyConfigurationFields={false}
             editFieldRootPath={editFieldRootPath}
             disableConfigFields={
-              (showDisabledConfigFields && v.configuration) ||
-              (k === 'elitea_title' && !enableEditEliteaTitle)
+              (showDisabledConfigFields && v.configuration) || (k === 'alita_title' && !enableEditAlitaTitle)
             }
             checkboxAsteriskRequired={checkboxAsteriskRequired}
             disabled={disabled && v.type !== 'configuration'}
@@ -285,12 +279,11 @@ const ToolBase = memo(props => {
             return false;
           }
 
-          // Exclude priority fields, bottom fields, excluded fields, and advanced fields
+          // Exclude priority fields that were already rendered
           if (
             priorityFieldsOrder.includes(k) ||
             fieldNeedToRenderAtBottom.includes(k) ||
-            excludedFields?.includes(k) ||
-            advancedFields.includes(k)
+            excludedFields?.includes(k)
           ) {
             return false;
           }
@@ -328,7 +321,7 @@ const ToolBase = memo(props => {
               editFieldRootPath={editFieldRootPath}
               disableConfigFields={
                 (showDisabledConfigFields && v.configuration) ||
-                (k === 'elitea_title' && !enableEditEliteaTitle)
+                (k === 'alita_title' && !enableEditAlitaTitle)
               }
               checkboxAsteriskRequired={checkboxAsteriskRequired}
               disabled={disabled && v.type !== 'configuration'}
@@ -337,65 +330,6 @@ const ToolBase = memo(props => {
             />
           );
         })}
-
-      {advancedFields.length > 0 && (
-        <Box sx={{ display: 'flex', flexDirection: 'column', marginTop: '0.5rem' }}>
-          <BasicAccordion
-            showMode={AccordionConstants.AccordionShowMode.LeftMode}
-            accordionSX={{ background: `${theme.palette.background.tabPanel} !important` }}
-            defaultExpanded={false}
-            items={[
-              {
-                title: 'Advanced Settings',
-                content: (
-                  <>
-                    {advancedFields
-                      .filter(fieldKey => !excludedFields?.includes(fieldKey))
-                      .map(fieldKey => {
-                        const propertyEntry = Object.entries(schema?.properties || {}).find(
-                          ([k]) => k === fieldKey,
-                        );
-
-                        if (!propertyEntry) return null;
-
-                        const [k, v] = propertyEntry;
-
-                        if (sectionProps.includes(k) || k === 'selected_tools') return null;
-
-                        return (
-                          <ToolkitForm.ToolBaseProperty
-                            key={k}
-                            k={k}
-                            v={v}
-                            noAccordionWrapper
-                            theme={theme}
-                            showValidation={showValidation}
-                            toolErrors={toolErrors}
-                            setToolErrors={setToolErrors}
-                            settings={settings}
-                            editField={editField}
-                            handleInputChange={handleInputChange}
-                            required={schema?.required?.includes(k)}
-                            showOnlyRequiredFields={showOnlyRequiredFields}
-                            showOnlyConfigurationFields={false}
-                            editFieldRootPath={editFieldRootPath}
-                            disableConfigFields={
-                              (showDisabledConfigFields && v.configuration) ||
-                              (k === 'elitea_title' && !enableEditEliteaTitle)
-                            }
-                            checkboxAsteriskRequired={checkboxAsteriskRequired}
-                            disabled={disabled && v.type !== 'configuration'}
-                            validationErrorMessages={validationErrorMessages}
-                          />
-                        );
-                      })}
-                  </>
-                ),
-              },
-            ]}
-          />
-        </Box>
-      )}
 
       {showSections &&
         sectionProps.length > 0 &&
@@ -459,7 +393,7 @@ const ToolBase = memo(props => {
               editFieldRootPath={editFieldRootPath}
               disableConfigFields={
                 (showDisabledConfigFields && v.configuration) ||
-                (k === 'elitea_title' && !enableEditEliteaTitle)
+                (k === 'alita_title' && !enableEditAlitaTitle)
               }
               checkboxAsteriskRequired={checkboxAsteriskRequired}
               disabled={disabled && v.type !== 'configuration'}
@@ -467,7 +401,7 @@ const ToolBase = memo(props => {
             />
           );
         })}
-    </Box>
+    </>
   );
 
   // Handler for when remote MCP tools are fetched
@@ -552,12 +486,9 @@ const ToolBase = memo(props => {
   const isAnyMcpType =
     schema?.title === 'mcp' || (editToolDetail?.type?.startsWith('mcp_') && editToolDetail?.type !== 'mcp');
 
-  const isSharepointToolkit = schema?.title === 'sharepoint';
-
   return (
     <>
       {isAnyMcpType && <McpAuthStatus />}
-      {isSharepointToolkit && <SharepointOAuthStatus />}
 
       {shouldUseAccordionView ? (
         <>
@@ -582,14 +513,5 @@ const ToolBase = memo(props => {
 });
 
 ToolBase.displayName = 'ToolBase';
-
-/** @type {MuiSx} */
-const toolBaseStyles = () => ({
-  configurationContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.5rem',
-  },
-});
 
 export default ToolBase;

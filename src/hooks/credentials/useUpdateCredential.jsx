@@ -24,12 +24,12 @@ const getRequestBody = ({ configurationKeys, settings, originalConfiguration }) 
     }
   });
 
-  const elitea_title =
-    settings?.elitea_title ||
+  const alita_title =
+    settings?.alita_title ||
     `updated_configurartion_${new Date().toISOString().slice(0, 19).replace(/[:-]/g, '')}`;
 
   const body = {
-    elitea_title,
+    alita_title,
     label: settings.label || '',
     data,
   };

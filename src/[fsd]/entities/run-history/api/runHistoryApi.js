@@ -1,12 +1,12 @@
 import { RunHistorySerialize } from '@/[fsd]/entities/run-history/lib';
 import { ParticipantEntityTypes } from '@/[fsd]/features/chat/lib/constants/participant.constants';
-import { eliteaApi } from '@/api/eliteaApi.js';
+import { alitaApi } from '@/api/alitaApi.js';
 import { PAGE_SIZE } from '@/common/constants';
 
 const HISTORY_ITEMS_TAG = 'HISTORY_ITEMS_TAG';
 const CONVERSATION_INFO_TAG = 'CONVERSATION_INFO_TAG';
 
-const runHistoryApi = eliteaApi
+const runHistoryApi = alitaApi
   .enhanceEndpoints({
     addTagTypes: [HISTORY_ITEMS_TAG],
   })

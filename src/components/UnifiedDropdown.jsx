@@ -32,7 +32,6 @@ export const DROPDOWN_CONSTANTS = {
     ITEM_HEIGHT: HEIGHTS.buttonLarge, // 40px
     SEARCH_FIELD_HEIGHT: '2rem', // 32px - Figma height
     ICON_SIZE: ICON_SIZES.SM, // 16px
-    ICON_SVG_SIZE: '0.73rem', // ~11.68px - SVG size inside EntityIcon container
   },
   SPACING: {
     MENU_PADDING: '0.25rem 0', // 4px 0px - Figma padding
@@ -309,7 +308,7 @@ const UnifiedDropdown = memo(
                                 <Box sx={styles.labelContainer}>
                                   <Typography
                                     variant="bodyMedium"
-                                    color="text.default"
+                                    color="text.disabled"
                                     sx={styles.ellipsisText}
                                   >
                                     {item.label}
@@ -489,15 +488,18 @@ const styles = {
     height: '1px',
     backgroundColor: palette.border.lines,
   }),
-  iconContainer: isDisabled => ({
-    width: '1.25rem',
-    height: '1.25rem',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-    ...(isDisabled && { opacity: 0.8 }),
-  }),
+  iconContainer:
+    isDisabled =>
+    ({ palette }) => ({
+      width: '1.25rem', // 20px
+      height: '1.25rem', // 20px
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      '& svg path': {
+        fill: isDisabled ? palette.icon.fill.disabled : palette.icon.fill.secondary,
+      },
+    }),
   labelContainer: {
     display: 'flex',
     flexDirection: 'row',
@@ -565,12 +567,12 @@ const styles = {
       gap: DROPDOWN_CONSTANTS.SPACING.ITEM_REGULAR_GAP,
       color: isDisabled ? palette.text.disabled : palette.text.primary,
       cursor: isDisabled ? 'not-allowed' : 'pointer',
-      opacity: isDisabled ? 0.9 : 1,
+      opacity: isDisabled ? 0.6 : 1,
       '&:hover': {
         backgroundColor: isDisabled ? 'transparent' : palette.background.select.hover,
       },
       '&.Mui-disabled': {
-        opacity: 0.9,
+        opacity: 0.6,
         color: palette.text.disabled,
       },
     }),

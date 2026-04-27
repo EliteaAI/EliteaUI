@@ -245,7 +245,7 @@ const Participants = memo(props => {
           {!isSmallWindow && (
             <IconButton
               sx={styles.collapseButton}
-              variant="elitea"
+              variant="alita"
               color="tertiary"
               onClick={onCollapsed}
             >
@@ -492,7 +492,7 @@ const Participants = memo(props => {
         <Button
           aria-label="Clear the chat history"
           disabled={disabledClear}
-          variant="elitea"
+          variant="alita"
           color="secondary"
           onClick={onClearChatHistory}
         >
@@ -506,7 +506,7 @@ const Participants = memo(props => {
           >
             <IconButton
               aria-label="Clear the chat history"
-              variant="elitea"
+              variant="alita"
               color="secondary"
               disabled={disabledClear}
               onClick={onClearChatHistory}

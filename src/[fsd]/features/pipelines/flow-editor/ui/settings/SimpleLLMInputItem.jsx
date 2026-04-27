@@ -1,15 +1,17 @@
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Box } from '@mui/material';
 
 import { AIAssistantInput } from '@/[fsd]/features/pipelines/ai-assistant/ui';
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { useInputOptions } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
-import { useFStringInputAutocomplete } from '@/[fsd]/features/pipelines/fstring-autocomplete/lib/hooks';
+import { FStringAutocompleteHelpers } from '@/[fsd]/features/pipelines/fstring-autocomplete/lib/helpers';
 import { FStringAutocompletePopper } from '@/[fsd]/features/pipelines/fstring-autocomplete/ui';
 import { Chip, Input } from '@/[fsd]/shared/ui';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { capitalizeFirstChar } from '@/common/utils.jsx';
+
+const CLOSED_FSTRING_AUTOCOMPLETE = FStringAutocompleteHelpers.createClosedFStringAutocompleteState();
 
 const NodeFieldInput = memo(props => {
   const {
@@ -25,25 +27,153 @@ const NodeFieldInput = memo(props => {
     stateVariableOptions = [],
   } = props;
 
+  const containerRef = useRef(null);
+  const inputRef = useRef(null);
+  const pendingCursorPositionRef = useRef(null);
+  const [autocompleteState, setAutocompleteState] = useState(CLOSED_FSTRING_AUTOCOMPLETE);
   const resolvedValue = typeof value !== 'string' ? JSON.stringify(value) : value;
+  const shouldShowAutocomplete = enableFStringAutocomplete && !disabled && stateVariableOptions.length > 0;
 
-  const {
-    autocompleteState,
-    closeAutocomplete,
-    containerRef,
-    filteredOptions: filteredStateVariableOptions,
-    handleAutocompleteKeyDown,
-    handleChange: handleInput,
-    handleCursorChange,
-    handleSuggestionSelect,
-    highlightedOptionIndex,
-    inputRef,
-  } = useFStringInputAutocomplete({
-    resolvedValue,
-    onInput,
-    enabled: enableFStringAutocomplete && !disabled,
-    options: stateVariableOptions,
-  });
+  const filteredStateVariableOptions = useMemo(() => {
+    if (!shouldShowAutocomplete || !autocompleteState.isOpen) {
+      return [];
+    }
+
+    return FStringAutocompleteHelpers.filterFStringAutocompleteOptions(
+      stateVariableOptions,
+      autocompleteState.query,
+    );
+  }, [autocompleteState.isOpen, autocompleteState.query, shouldShowAutocomplete, stateVariableOptions]);
+
+  const highlightedOptionIndex = FStringAutocompleteHelpers.getFStringAutocompleteHighlightedIndex(
+    autocompleteState.activeIndex,
+    filteredStateVariableOptions,
+  );
+
+  const updateAutocompleteState = useCallback(
+    (nextValue, cursorPosition) => {
+      if (!shouldShowAutocomplete) {
+        setAutocompleteState(CLOSED_FSTRING_AUTOCOMPLETE);
+        return;
+      }
+
+      const nextState = FStringAutocompleteHelpers.getFStringAutocompleteState(nextValue, cursorPosition);
+
+      setAutocompleteState(prevState => {
+        // Preserve the user's highlighted position when the query hasn't changed
+        // (e.g. cursor moved without editing text), so the selection doesn't jump.
+        if (nextState.isOpen && prevState.isOpen && nextState.query === prevState.query) {
+          return { ...nextState, activeIndex: prevState.activeIndex };
+        }
+
+        return nextState;
+      });
+    },
+    [shouldShowAutocomplete],
+  );
+
+  const handleInput = useCallback(
+    event => {
+      onInput(event);
+      updateAutocompleteState(event.target.value, event.target.selectionStart ?? event.target.value.length);
+    },
+    [onInput, updateAutocompleteState],
+  );
+
+  const handleCursorChange = useCallback(
+    event => {
+      if (event.target?.value === undefined) {
+        return;
+      }
+
+      updateAutocompleteState(event.target.value, event.target.selectionStart ?? event.target.value.length);
+    },
+    [updateAutocompleteState],
+  );
+
+  const handleBlur = useCallback(() => {
+    setAutocompleteState(CLOSED_FSTRING_AUTOCOMPLETE);
+  }, []);
+
+  const handleSuggestionSelect = useCallback(
+    selectedVariable => {
+      const { cursorPosition, nextValue } = FStringAutocompleteHelpers.getFStringAutocompleteInsertion(
+        resolvedValue,
+        autocompleteState,
+        selectedVariable,
+      );
+
+      pendingCursorPositionRef.current = cursorPosition;
+      onInput({
+        preventDefault: () => {},
+        target: {
+          value: nextValue,
+        },
+      });
+      setAutocompleteState(CLOSED_FSTRING_AUTOCOMPLETE);
+    },
+    [autocompleteState, onInput, resolvedValue],
+  );
+
+  const handleKeyDown = useCallback(
+    event => {
+      if (!autocompleteState.isOpen || filteredStateVariableOptions.length === 0) {
+        return;
+      }
+
+      if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        setAutocompleteState(prevState => ({
+          ...prevState,
+          activeIndex:
+            prevState.activeIndex >= filteredStateVariableOptions.length - 1 ? 0 : prevState.activeIndex + 1,
+        }));
+        return;
+      }
+
+      if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        setAutocompleteState(prevState => ({
+          ...prevState,
+          activeIndex:
+            prevState.activeIndex <= 0 ? filteredStateVariableOptions.length - 1 : prevState.activeIndex - 1,
+        }));
+        return;
+      }
+
+      if (event.key === 'Enter') {
+        const selectedOption = filteredStateVariableOptions[highlightedOptionIndex];
+
+        if (selectedOption) {
+          event.preventDefault();
+          handleSuggestionSelect(selectedOption.value);
+        }
+
+        return;
+      }
+
+      if (event.key === 'Escape') {
+        setAutocompleteState(CLOSED_FSTRING_AUTOCOMPLETE);
+      }
+    },
+    [autocompleteState.isOpen, filteredStateVariableOptions, handleSuggestionSelect, highlightedOptionIndex],
+  );
+
+  useEffect(() => {
+    if (pendingCursorPositionRef.current === null) {
+      return undefined;
+    }
+
+    const cursorPosition = pendingCursorPositionRef.current;
+    const animationFrameId = window.requestAnimationFrame(() => {
+      inputRef.current?.focus();
+      inputRef.current?.setSelectionRange?.(cursorPosition, cursorPosition);
+      pendingCursorPositionRef.current = null;
+      updateAutocompleteState(resolvedValue, cursorPosition);
+    });
+
+    return () => window.cancelAnimationFrame(animationFrameId);
+  }, [resolvedValue, updateAutocompleteState]);
 
   const commonProps = {
     autoComplete: 'off',
@@ -53,13 +183,13 @@ const NodeFieldInput = memo(props => {
     name: 'value',
     id: `${variable}-value`,
     label: 'Value',
-    placeholder: enableFStringAutocomplete ? 'Use {state_key} for variables' : '',
+    placeholder: '',
     value: resolvedValue,
-    onBlur: closeAutocomplete,
+    onBlur: handleBlur,
     onClick: handleCursorChange,
     onFocus: handleCursorChange,
     onInput: handleInput,
-    onKeyDown: handleAutocompleteKeyDown,
+    onKeyDown: handleKeyDown,
     onKeyUp: handleCursorChange,
     hasActionsToolBar: true,
     showCopyAction: true,
@@ -78,21 +208,33 @@ const NodeFieldInput = memo(props => {
 
   const popperSx = nodeFieldInputStyles(containerRef.current?.clientWidth);
 
-  return (
-    <Box ref={containerRef}>
-      {shouldEnableAIAssistant ? (
+  if (shouldEnableAIAssistant) {
+    return (
+      <Box ref={containerRef}>
         <AIAssistantInput
           {...commonProps}
           modelConfig={modelConfig}
           enableFStringAutocomplete={enableFStringAutocomplete}
           stateVariableOptions={stateVariableOptions}
         />
-      ) : (
-        <Input.StyledInputEnhancer
-          {...commonProps}
-          multiline={variable === 'chat_history'}
+        <FStringAutocompletePopper
+          open={filteredStateVariableOptions.length > 0 && autocompleteState.isOpen}
+          anchorEl={containerRef.current}
+          options={filteredStateVariableOptions}
+          highlightedIndex={highlightedOptionIndex}
+          onSelect={handleSuggestionSelect}
+          popperSx={popperSx}
         />
-      )}
+      </Box>
+    );
+  }
+
+  return (
+    <Box ref={containerRef}>
+      <Input.StyledInputEnhancer
+        {...commonProps}
+        multiline={variable === 'chat_history'}
+      />
       <FStringAutocompletePopper
         open={filteredStateVariableOptions.length > 0 && autocompleteState.isOpen}
         anchorEl={containerRef.current}
@@ -171,17 +313,19 @@ const SimpleLLMInputItem = memo(props => {
     [onChange, type, variableName],
   );
 
+  // Determine if AI Assistant should be enabled for this field
+  // - LLM node: system and task fields (only when field types are "f-string" or "fixed")
+  // - Code node: code field (only when field types are "f-string" or "fixed")
+  // - Printer node: text field (only when field types are "f-string" or "fixed")
   const shouldEnableAIAssistant =
     enableAIAssistant &&
     (type === 'fstring' || type === 'fixed') &&
     (variableName === 'system' ||
       variableName === 'task' ||
       variableName === 'code' ||
-      variableName === 'printer' ||
-      variableName === 'user_message');
+      variableName === 'printer');
 
-  const enableFStringAutocomplete =
-    type === 'fstring' && FlowEditorConstants.FSTRING_AUTOCOMPLETE_VARIABLES.has(variableName);
+  const enableFStringAutocomplete = type === 'fstring';
 
   const isStringType = type === 'string' || type === 'fstring' || type === 'fixed';
 
@@ -240,7 +384,9 @@ SimpleLLMInputItem.displayName = 'SimpleLLMInputItem';
 
 /** @type {MuiSx} */
 const simpleLLMInputItemStyles = (isStringType = true) => ({
-  container: {},
+  container: {
+    marginBottom: '1rem',
+  },
   label: {
     marginBottom: '0.5rem',
   },
@@ -248,15 +394,14 @@ const simpleLLMInputItemStyles = (isStringType = true) => ({
     display: 'flex',
     gap: '0.75rem',
     alignItems: 'flex-start',
-    minHeight: '3.79rem',
   },
   typeSelectWrapper: {
     width: '7.25rem',
-    transform: 'translateY(0.89rem)',
+    paddingTop: '0.6rem',
   },
   valueWrapper: {
     flex: 1,
-    transform: !isStringType ? 'translateY(0.89rem)' : undefined,
+    marginTop: !isStringType ? '0.625rem' : undefined,
   },
   select: {
     marginBottom: '0rem',

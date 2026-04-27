@@ -28,14 +28,12 @@ const GridTableRow = memo(props => {
     actions,
     actionsCellSx,
     dataCellSx,
-    nameCellSx,
     ActionsComponent,
     actionsProps,
     isLoading = false,
     loadingProgress = 0,
     renderCell,
     rowHeight,
-    checkboxCellSx,
   } = props;
 
   const styles = gridTableRowStyles(isSelected, isHovered, gridTemplateColumns, showCheckbox, rowHeight);
@@ -57,7 +55,7 @@ const GridTableRow = memo(props => {
       onMouseLeave={onMouseLeave}
     >
       {showCheckbox && (
-        <Box sx={[styles.checkboxCell, checkboxCellSx]}>
+        <Box sx={styles.checkboxCell}>
           {!isLoading && (
             <Checkbox.BaseCheckbox
               checked={isSelected}
@@ -69,7 +67,7 @@ const GridTableRow = memo(props => {
         </Box>
       )}
 
-      <Box sx={[styles.nameCell, nameCellSx]}>
+      <Box sx={styles.nameCell}>
         <GridTableRowNameCell
           isRedesign={isRedesign}
           NameCellComponent={NameCellComponent}
@@ -117,7 +115,6 @@ const gridTableRowStyles = (isSelected, isHovered, gridTemplateColumns, showChec
     gridTemplateColumns: gridTemplateColumns || (showCheckbox ? '3rem 1fr' : '1fr'),
     alignItems: 'center',
     width: '100%',
-    flexShrink: 0,
     ...(rowHeight ? { height: rowHeight, minHeight: rowHeight } : { minHeight: '2.5rem' }),
     borderBottom: `0.0625rem solid ${palette.border.table}`,
     backgroundColor: isSelected || isHovered ? palette.background.userInputBackground : 'transparent',
@@ -137,7 +134,6 @@ const gridTableRowStyles = (isSelected, isHovered, gridTemplateColumns, showChec
     alignItems: 'center',
     justifyContent: 'center',
     minWidth: 0,
-    position: 'relative',
   },
   checkbox: {
     padding: '0.375rem',

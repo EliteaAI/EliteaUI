@@ -8,8 +8,6 @@ import Tooltip from '@/ComponentsLib/Tooltip';
 import { useMcpTokenChange } from '@/[fsd]/features/mcp/lib/hooks';
 import { McpLogInLink } from '@/[fsd]/features/mcp/ui';
 import { useGetToolkitNameFromSchema } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
-import { useResolvedSharepointConfig } from '@/[fsd]/features/sharepoint/lib/hooks/useResolvedSharepointConfig.hooks';
-import { SharepointLogInLink } from '@/[fsd]/features/sharepoint/ui';
 import AttachIcon from '@/assets/attach-icon.svg?react';
 import OfflineIcon from '@/assets/offline-icon.svg?react';
 import OnlineIcon from '@/assets/online-icon.svg?react';
@@ -104,23 +102,10 @@ const ParticipantItem = memo(props => {
   );
   const [versionName, setVersionName] = useState('');
   const [originalDetails, setOriginalDetails] = useState({});
-  const [hasFetchedDetails, setHasFetchedDetails] = useState(false);
   const { fetchOriginalDetails } = useFetchParticipantDetails();
 
   // Monitor MCP token changes for remote MCP toolkits
   const mcpServerUrl = participant.entity_settings?.mcp_server_url || originalDetails?.settings?.url || '';
-
-  // SharePoint delegated OAuth tracking
-  // sharepoint_configuration only stores a credential stub { elitea_title, private }.
-  // Resolve the full credential via the shared hook.
-  const spConfigRef =
-    isToolkitParticipant && participant.entity_settings?.toolkit_type === 'sharepoint'
-      ? originalDetails?.settings?.sharepoint_configuration
-      : null;
-  const { spConfig, connectionTokenKey: spConnectionTokenKey } = useResolvedSharepointConfig(
-    spConfigRef,
-    entity_meta?.project_id,
-  );
   const someToolsAreUnavailable = useMemo(() => {
     if (
       participant.entity_name === ChatParticipantType.Applications ||
@@ -141,10 +126,6 @@ const ParticipantItem = memo(props => {
     isToolkitParticipant && participant?.entity_settings?.toolkit_type === 'mcp' ? mcpServerUrl : null,
   );
 
-  const { isLoggedIn: spOAuthLoggedIn } = useMcpTokenChange(
-    spConnectionTokenKey ? { serverUrl: spConnectionTokenKey } : null,
-  );
-
   const remoteMcpLoggedOut = useMemo(() => {
     if (!isToolkitParticipant || participant?.entity_settings?.toolkit_type !== 'mcp') {
       return false;
@@ -152,40 +133,13 @@ const ParticipantItem = memo(props => {
     return !hasRemoteMcpLoggedIn;
   }, [isToolkitParticipant, participant?.entity_settings?.toolkit_type, hasRemoteMcpLoggedIn]);
 
-  const spOAuthLoggedOut = useMemo(() => {
-    if (!spConfig) return false;
-    return !spOAuthLoggedIn;
-  }, [spConfig, spOAuthLoggedIn]);
-
   const displayName = useMemo(() => {
     return originalDetails?.name || entity_meta?.name || participantName || 'Participant Name';
   }, [originalDetails?.name, entity_meta?.name, participantName]);
 
-  const isPublishedParticipant = entity_meta?.project_id == PUBLIC_PROJECT_ID;
-
-  const isPublishedAgentGone = useMemo(
-    () => isPublishedParticipant && hasFetchedDetails && !originalDetails?.versions?.length,
-    [isPublishedParticipant, hasFetchedDetails, originalDetails?.versions?.length],
-  );
-
-  const isVersionUnavailable = useMemo(
-    () =>
-      isPublishedParticipant &&
-      hasFetchedDetails &&
-      originalDetails?.versions?.length > 0 &&
-      !originalDetails.versions.some(v => v.id === participant.entity_settings?.version_id),
-    [
-      isPublishedParticipant,
-      hasFetchedDetails,
-      originalDetails?.versions,
-      participant.entity_settings?.version_id,
-    ],
-  );
-
   useValidateApplicationVersion(
-    !isPublishedParticipant &&
-      (participant.entity_name === ChatParticipantType.Applications ||
-        participant.entity_name === ChatParticipantType.Pipelines) &&
+    (participant.entity_name === ChatParticipantType.Applications ||
+      participant.entity_name === ChatParticipantType.Pipelines) &&
       originalDetails?.version_details?.tools
       ? {
           applicationId: entity_meta?.id,
@@ -196,10 +150,10 @@ const ParticipantItem = memo(props => {
   );
 
   const { totalValidationInfo } = useToolsValidationInfo({
-    applicationId: isPublishedParticipant ? undefined : entity_meta?.id,
+    applicationId: entity_meta?.id,
     projectId: entity_meta?.project_id,
     versionId: participant.entity_settings?.version_id,
-    tools: isPublishedParticipant ? [] : originalDetails?.version_details?.tools || [],
+    tools: originalDetails?.version_details?.tools || [],
   });
 
   useValidateToolkit(
@@ -257,14 +211,6 @@ const ParticipantItem = memo(props => {
   const styles = participantItemStyles({ collapsed, isActive, maxWidth });
 
   const warningMessage = useMemo(() => {
-    if (isPublishedAgentGone) {
-      return 'Published agent is no longer available';
-    }
-
-    if (isVersionUnavailable) {
-      return 'Published version not available, select another version';
-    }
-
     if (totalValidationInfo?.length || toolkitValidationInfoList?.length) {
       const isPipelineAgent = participant.entity_settings?.agent_type === 'pipeline';
 
@@ -313,28 +259,13 @@ const ParticipantItem = memo(props => {
       );
     }
 
-    if (spOAuthLoggedOut) {
-      return (
-        <>
-          {'SharePoint requires authorization. '}
-          <SharepointLogInLink
-            projectId={entity_meta?.project_id}
-            spConfig={spConfig}
-          />
-        </>
-      );
-    }
-
     return '';
   }, [
-    isPublishedAgentGone,
-    isVersionUnavailable,
     totalValidationInfo?.length,
     toolkitValidationInfoList?.length,
     shouldDisableThisItem,
     mcpIsDisconnected,
     remoteMcpLoggedOut,
-    spOAuthLoggedOut,
     participant.entity_settings?.agent_type,
     participant.entity_name,
     handleEditClick,
@@ -343,8 +274,6 @@ const ParticipantItem = memo(props => {
     type,
     originalDetails,
     someToolsAreUnavailable,
-    entity_meta?.project_id,
-    spConfig,
   ]);
 
   const onMCPConnectionStatusChange = useCallback(connected => {
@@ -378,19 +307,10 @@ const ParticipantItem = memo(props => {
   }, []);
 
   useEffect(() => {
-    if (
-      (totalValidationInfo?.length || toolkitValidationInfoList?.length || isPublishedAgentGone) &&
-      isActive
-    ) {
+    if ((totalValidationInfo?.length || toolkitValidationInfoList?.length) && isActive) {
       onClickItem(undefined); // Deselect if active and not matched
     }
-  }, [
-    isActive,
-    onClickItem,
-    toolkitValidationInfoList?.length,
-    totalValidationInfo?.length,
-    isPublishedAgentGone,
-  ]);
+  }, [isActive, onClickItem, toolkitValidationInfoList?.length, totalValidationInfo?.length]);
 
   useEffect(() => {
     const getVersions = async () => {
@@ -401,11 +321,10 @@ const ParticipantItem = memo(props => {
           entity_meta.project_id,
         );
         setOriginalDetails(data);
-        setHasFetchedDetails(true);
       }
     };
     // Only fetch original details if we don't have them yet
-    if (entity_meta?.id && entity_meta?.project_id && !hasFetchedDetails) {
+    if (entity_meta?.id && entity_meta?.project_id && !originalDetails?.versions?.length) {
       getVersions();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -436,10 +355,7 @@ const ParticipantItem = memo(props => {
     !totalValidationInfo?.length &&
     !mcpIsDisconnected &&
     !remoteMcpLoggedOut &&
-    !spOAuthLoggedOut &&
-    !someToolsAreUnavailable &&
-    !isVersionUnavailable &&
-    !isPublishedAgentGone ? (
+    !someToolsAreUnavailable ? (
       <Box
         onClick={onClickHandler}
         onMouseEnter={onMouseEnter}
@@ -460,7 +376,7 @@ const ParticipantItem = memo(props => {
           editable={false}
           sx={{ width: '1.5rem', height: '1.5rem', minWidth: '1.5rem' }}
           imageStyle={{ width: '1.5rem', height: '1.5rem' }}
-          specifiedFontSize="0.875rem"
+          showBackgroundColor={false}
           isActive={isActive}
         />
         {!collapsed && (
@@ -474,7 +390,7 @@ const ParticipantItem = memo(props => {
               {displayName}
               {isAttachement && (
                 <IconButton
-                  variant="elitea"
+                  variant="alita"
                   color="tertiary"
                   size="small"
                   disabled
@@ -491,29 +407,6 @@ const ParticipantItem = memo(props => {
                       style={{
                         marginLeft: '.5rem',
                         width: '1rem !important',
-                        height: '1rem',
-                        color: theme.palette.icon.fill.default,
-                      }}
-                    />
-                  ) : (
-                    <OfflineIcon
-                      style={{
-                        marginLeft: '.5rem',
-                        width: '.875rem',
-                        height: '.875rem',
-                        color: theme.palette.icon.fill.attention,
-                      }}
-                    />
-                  )}
-                </>
-              )}
-              {spConfig && (
-                <>
-                  {spOAuthLoggedIn ? (
-                    <OnlineIcon
-                      style={{
-                        marginLeft: '.5rem',
-                        width: '1rem',
                         height: '1rem',
                         color: theme.palette.icon.fill.default,
                       }}
@@ -567,12 +460,32 @@ const ParticipantItem = memo(props => {
       </Box>
     ) : (
       <StyledTipsContainer
-        onClick={isActive || isVersionUnavailable ? onClickHandler : undefined}
+        onClick={isActive ? onClickHandler : undefined}
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
-        sx={styles.attentionWrapper}
+        sx={{
+          boxSizing: 'border-box',
+          display: 'flex',
+          flexDirection: 'column',
+          padding: '.5rem 1rem',
+          borderWidth: '.0625rem',
+          borderStyle: 'solid',
+          borderColor: `${theme.palette.border.attention}`,
+          borderRadius: '.5rem',
+          backgroundColor: `${theme.palette.background.attention}`,
+          width: '100%',
+          marginTop: '0rem',
+          gap: '.5rem',
+          cursor: isActive ? 'pointer' : 'default',
+        }}
       >
-        <Box sx={styles.attentionHeader}>
+        <Box
+          display="flex"
+          flexDirection="row"
+          gap=".75rem"
+          height="1.75rem"
+          alignItems="center"
+        >
           <EntityIcon
             icon={entityIcon}
             entityType={
@@ -581,15 +494,24 @@ const ParticipantItem = memo(props => {
             editable={false}
             sx={{ width: '1.5rem', height: '1.5rem', minWidth: '1.5rem' }}
             imageStyle={{ width: '1.5rem', height: '1.5rem' }}
-            specifiedFontSize="0.875rem"
+            showBackgroundColor={false}
             isActive={isActive}
           />
           {!collapsed && (
-            <Box sx={styles.attentionNameBox}>
+            <Box
+              sx={{
+                flex: 1,
+                maxWidth,
+                display: 'flex',
+                flexDirection: 'row',
+                justifyContent: 'flex-start',
+                alignItems: 'center',
+              }}
+            >
               <Typography
                 variant="bodyMedium"
                 color="text.secondary"
-                sx={styles.attentionDisplayName}
+                sx={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
               >
                 {displayName}
               </Typography>
@@ -597,7 +519,13 @@ const ParticipantItem = memo(props => {
                 <Typography
                   variant="bodyMedium"
                   color="primary.main"
-                  sx={styles.attentionEditingText}
+                  sx={{
+                    maxWidth: '50%',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpaceCollapse: 'preserve',
+                  }}
                 >
                   {participant.entity_meta?.project_id != PUBLIC_PROJECT_ID ? 'Editing...' : 'Viewing...'}
                 </Typography>
@@ -609,7 +537,7 @@ const ParticipantItem = memo(props => {
               participant={participant}
               onEdit={onEdit}
               onDelete={onDelete}
-              disabledEdit={disabledEdit || isPublishedAgentGone || isVersionUnavailable}
+              disabledEdit={disabledEdit}
               disabledDeleteButton={disabledEdit}
               showButtons={isHovering}
               showEditButton={showEditButton}
@@ -618,14 +546,21 @@ const ParticipantItem = memo(props => {
             />
           )}
         </Box>
-        <Box sx={styles.attentionMessageRow}>
-          <Box sx={styles.attentionIcon}>
-            <AttentionIcon />
-          </Box>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'row',
+            gap: '.75rem',
+          }}
+        >
+          <AttentionIcon
+            style={{ width: 24, height: 24 }}
+            fill={theme.palette.icon.fill.attention}
+          />
           <Typography
             variant="bodySmall"
             color="text.attention"
-            sx={styles.attentionMessage}
+            sx={{ wordBreak: 'break-word' }}
           >
             {warningMessage}
           </Typography>
@@ -718,66 +653,6 @@ const participantItemStyles = ({ collapsed, isActive, maxWidth }) => ({
   attachIcon: {
     width: '0.75rem',
     height: '0.75rem',
-  },
-
-  attentionWrapper: ({ palette }) => ({
-    boxSizing: 'border-box',
-    display: 'flex',
-    flexDirection: 'column',
-    padding: '.5rem 1rem',
-    borderWidth: '.0625rem',
-    borderStyle: 'solid',
-    borderColor: palette.border.attention,
-    borderRadius: '.5rem',
-    backgroundColor: palette.background.attention,
-    width: '100%',
-    marginTop: '0rem',
-    gap: '.5rem',
-    cursor: isActive ? 'pointer' : 'default',
-  }),
-  attentionHeader: {
-    display: 'flex',
-    flexDirection: 'row',
-    gap: '.75rem',
-    height: '1.75rem',
-    alignItems: 'center',
-  },
-  attentionNameBox: {
-    flex: 1,
-    maxWidth,
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-  },
-  attentionDisplayName: {
-    flex: 1,
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-  },
-  attentionEditingText: {
-    maxWidth: '50%',
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpaceCollapse: 'preserve',
-  },
-  attentionMessageRow: {
-    display: 'flex',
-    flexDirection: 'row',
-    gap: '0.9rem',
-  },
-  attentionIcon: ({ palette }) => ({
-    paddingLeft: '0.25rem',
-    width: '1rem',
-    height: '1rem',
-    '& svg': {
-      fill: palette.icon.fill.attention,
-    },
-  }),
-  attentionMessage: {
-    wordBreak: 'break-word',
   },
 });
 

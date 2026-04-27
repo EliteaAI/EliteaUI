@@ -1,32 +1,49 @@
-import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 
-import { Box, Typography } from '@mui/material';
+import {
+  Box,
+  CircularProgress,
+  ClickAwayListener,
+  FormControl,
+  FormHelperText,
+  IconButton,
+  Popper,
+  SvgIcon,
+  Tooltip,
+  Typography,
+} from '@mui/material';
+import MenuItem from '@mui/material/MenuItem';
 
-import { Select } from '@/[fsd]/shared/ui';
 import { useLazyListModelsQuery, useListModelsQuery } from '@/api/configurations';
+import CheckedIcon from '@/assets/checked-icon.svg?react';
 import RefreshIcon from '@/assets/refresh-icon.svg?react';
 import BriefcaseIcon from '@/components/Icons/BriefcaseIcon.jsx';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
+import ArrowDownIcon from './Icons/ArrowDownIcon';
 import Person from './Icons/Person';
 
 const EmbeddingModelSelect = memo(
   ({
     label = 'Embedding Model',
-    description,
     required,
     error,
     helperText,
     value, // Current selected model
     onSelectModel, // Callback for selection change
+    sx,
     renderValue,
     disabled,
   }) => {
+    const [anchorEl, setAnchorEl] = useState(null);
+    const panelRef = useRef(null);
+    const open = Boolean(anchorEl);
     const { personal_project_id } = useSelector(state => state.user);
     const selectedProjectId = useSelectedProjectId();
     const [getModels, { isFetching }] = useLazyListModelsQuery();
+    const [hasFetchedData, setHasFetchedData] = useState(false);
 
     const {
       data: embeddingModelsData = {
@@ -46,17 +63,12 @@ const EmbeddingModelSelect = memo(
     );
 
     const [models, setModels] = useState([]);
-    const defaultValueForSelect = value || projectDefaultEmbeddingModel || '';
-
-    const isNewConfigurationPersonal = useCallback(
-      model => model.project_id === personal_project_id,
-      [personal_project_id],
-    );
 
     const onRefresh = useCallback(
       async event => {
         event?.stopPropagation();
         setModels([]);
+        setHasFetchedData(false);
         let teamProjectModels = [];
         if (selectedProjectId) {
           const { data } = await getModels({
@@ -94,6 +106,7 @@ const EmbeddingModelSelect = memo(
           }
           return acc;
         }, []);
+        setHasFetchedData(true);
         setModels(uniqueModels);
       },
       [getModels, personal_project_id, selectedProjectId],
@@ -104,73 +117,265 @@ const EmbeddingModelSelect = memo(
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedProjectId, personal_project_id]);
 
-    const newModelsMenuData = useMemo(() => {
-      const modelsOptions = models.map(model => ({
-        value: model.name,
-        label: model.display_name || model.name,
-        icon: isNewConfigurationPersonal(model) ? (
-          <Person sx={{ fontSize: '0.875rem' }} />
-        ) : (
-          <BriefcaseIcon sx={{ fontSize: '0.875rem' }} />
-        ),
-      }));
+    const handleFocus = useCallback(() => {
+      if (disabled) {
+        return;
+      }
+      setAnchorEl(anchorEl ? null : panelRef.current);
+    }, [anchorEl, disabled]);
 
-      return modelsOptions;
-    }, [models, isNewConfigurationPersonal]);
+    const handleClickAway = useCallback(() => {
+      setAnchorEl(null);
+    }, []);
 
-    const optionsWithActions = useMemo(() => {
-      const actionOption = {
-        value: 'refresh-models',
-        label: 'Refresh',
-        icon: <RefreshIcon sx={{ fontSize: '1rem' }} />,
-        variant: 'action',
-        onActivate: onRefresh,
-      };
+    // Models menu data
+    const modelsMenuData = useMemo(() => {
+      return models.map(model => {
+        const isConfigurationPersonal = model.project_id === personal_project_id;
+        return {
+          id: `${model.name}_${model.project_id}`,
+          name: model.name || model.id,
+          private: isConfigurationPersonal,
+          settings: model.settings || {},
+          label: (
+            <span style={styles.labelContainer}>
+              {isConfigurationPersonal ? (
+                <Person
+                  key="person-icon"
+                  fontSize="1rem"
+                />
+              ) : (
+                <BriefcaseIcon
+                  key="briefcase-icon"
+                  fontSize="1rem"
+                />
+              )}
+              <span key="label-text">{model.display_name || model.name || model.id}</span>
+            </span>
+          ),
+        };
+      });
+    }, [models, personal_project_id]);
 
-      return [actionOption, ...newModelsMenuData];
-    }, [newModelsMenuData, onRefresh]);
+    // Find the selected option
+    const selectedOption = useMemo(() => {
+      return modelsMenuData.find(
+        option =>
+          option.name === value ||
+          (projectDefaultEmbeddingModel && option.name === projectDefaultEmbeddingModel),
+      );
+    }, [modelsMenuData, value, projectDefaultEmbeddingModel]);
 
-    const hasModelsOptions = useMemo(() => newModelsMenuData.length > 0, [newModelsMenuData]);
-
-    const customRenderSelectValue = useCallback(
-      foundOption => {
-        if (renderValue) return renderValue(foundOption);
-
-        return (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            {foundOption?.icon}
-            <Typography variant="labelMedium">{foundOption?.label}</Typography>
-          </Box>
-        );
+    const onSelectItem = useCallback(
+      option => {
+        onSelectModel(selectedOption?.name === option.name ? null : option.name);
+        setAnchorEl(null); // Close dropdown
       },
-      [renderValue],
+      [onSelectModel, selectedOption?.name],
+    );
+
+    const onClick = useCallback(
+      option => () => {
+        if (!disabled) {
+          onSelectItem(option);
+        }
+      },
+      [disabled, onSelectItem],
     );
 
     return (
       <>
-        <Box sx={{ marginTop: '0.5rem' }}>
-          <Select.SingleSelect
-            showBorder
-            disabled={disabled}
-            required={required}
-            label={label}
-            infoIconDescription={description}
-            value={hasModelsOptions ? defaultValueForSelect : ''}
-            options={optionsWithActions}
-            showOptionIcon
-            onValueChange={onSelectModel}
-            customRenderValue={customRenderSelectValue}
-            error={error}
-            helperText={helperText}
-            showEmptyPlaceholder={false}
-            isListFetching={isFetching}
-          />
-        </Box>
+        <ClickAwayListener onClickAway={handleClickAway}>
+          <Box
+            sx={sx}
+            ref={panelRef}
+          >
+            <Box
+              onClick={handleFocus}
+              sx={styles.clickableBox(error, open)}
+            >
+              <Box sx={styles.labelBox}>
+                <Typography
+                  variant="bodySmall"
+                  sx={styles.labelTypography(open)}
+                >
+                  {label}
+                  {required && <span> *</span>}
+                </Typography>
+                <Tooltip
+                  title="Refresh the models"
+                  placement="top"
+                >
+                  <IconButton
+                    variant="alita"
+                    color="tertiary"
+                    onClick={onRefresh}
+                    disabled={disabled}
+                  >
+                    <RefreshIcon />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+              {/* Render selected value */}
+              <Box sx={styles.selectedValueBox}>
+                {renderValue ? (
+                  renderValue(selectedOption)
+                ) : (
+                  <Typography
+                    variant="bodyMedium"
+                    sx={styles.selectedValueTypography(selectedOption)}
+                  >
+                    {selectedOption ? selectedOption?.label : !open ? 'Select model' : ''}
+                  </Typography>
+                )}
+                <SvgIcon
+                  viewBox="0 0 16 16"
+                  sx={styles.arrowIcon(open)}
+                >
+                  <ArrowDownIcon />
+                </SvgIcon>
+              </Box>
+            </Box>
+            {error && helperText && (
+              <FormControl error>
+                <FormHelperText>{error ? helperText : undefined}</FormHelperText>
+              </FormControl>
+            )}
+            {value && !selectedOption && hasFetchedData && (
+              <FormControl error>
+                <FormHelperText>{'Your model does not match any available models.'}</FormHelperText>
+              </FormControl>
+            )}
+            <Popper
+              open={open}
+              anchorEl={panelRef.current}
+              placement="bottom-start"
+              style={styles.popper(panelRef)}
+            >
+              <Box sx={styles.popperBox}>
+                {!isFetching &&
+                  modelsMenuData.map((option, index) => (
+                    <MenuItem
+                      key={option.name + index}
+                      onClick={onClick(option)}
+                      sx={styles.menuItem(selectedOption, option)}
+                    >
+                      <Box sx={styles.menuItemContent}>{option.label}</Box>
+                      {selectedOption &&
+                        option.name === selectedOption.name &&
+                        option.private === selectedOption.private && (
+                          <Box sx={styles.checkedIconBox}>
+                            <CheckedIcon />
+                          </Box>
+                        )}
+                    </MenuItem>
+                  ))}
+                {isFetching && (
+                  <Box sx={styles.loadingBox}>
+                    <CircularProgress size={24} />
+                  </Box>
+                )}
+              </Box>
+            </Popper>
+          </Box>
+        </ClickAwayListener>
       </>
     );
   },
 );
 
 EmbeddingModelSelect.displayName = 'EmbeddingModelSelect';
+
+/** @type {MuiSx} */
+const styles = {
+  // Static styles
+  labelContainer: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+  },
+  labelBox: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    gap: '0.5rem',
+  },
+  selectedValueBox: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  menuItemContent: {
+    display: 'flex',
+    gap: '0.5rem',
+    alignItems: 'center',
+  },
+  loadingBox: {
+    padding: '0.5rem',
+    display: 'flex',
+    justifyContent: 'center',
+  },
+  // Dynamic styles (functions)
+  clickableBox: (error, open) => ({
+    cursor: 'pointer',
+    padding: '0.5rem 0.75rem',
+    width: '100%',
+    borderBottom: ({ palette }) =>
+      error
+        ? '0.0625rem solid red'
+        : open
+          ? `0.0625rem solid ${palette.primary.main}`
+          : `0.0625rem solid ${palette.border.lines}`,
+  }),
+  labelTypography: open => ({
+    // color: error ? theme.palette.error.main : theme.palette.text.secondary,
+    color: ({ palette }) => (open ? palette.primary.main : palette.text.secondary),
+  }),
+  selectedValueTypography: selectedOption => ({
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    minHeight: '1.5rem',
+    color: ({ palette }) => (selectedOption?.label ? palette.text.secondary : palette.text.disabled),
+  }),
+  arrowIcon: open => ({
+    fontSize: '1rem',
+    transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+  }),
+  popper: panelRef => ({
+    width: panelRef.current?.clientWidth,
+    zIndex: theme => theme.zIndex.modal,
+  }),
+  popperBox: ({ palette }) => ({
+    marginTop: '0.25rem',
+    maxHeight: '18.75rem',
+    overflowY: 'auto',
+    borderRadius: '0.5rem',
+    border: `0.0625rem solid ${palette.border.lines}`,
+    background: palette.background.secondary,
+  }),
+  menuItem: (selectedOption, option) => ({
+    justifyContent: 'space-between',
+    padding: '0.5rem 1.5rem',
+    fontSize: '0.875rem',
+    color: ({ palette }) => palette.text.secondary,
+    '&:hover': {
+      backgroundColor: ({ palette }) => palette.background.button.iconLabelButton.hover,
+    },
+    '&.Mui-disabled': {
+      color: ({ palette }) => palette.text.disabled,
+    },
+    background: ({ palette }) =>
+      selectedOption && option.name === selectedOption.name && option.private === selectedOption.private
+        ? palette.background.participant.active
+        : undefined,
+  }),
+  checkedIconBox: ({ palette }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: palette.primary.main,
+  }),
+};
 
 export default EmbeddingModelSelect;

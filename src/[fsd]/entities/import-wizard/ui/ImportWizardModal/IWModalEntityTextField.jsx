@@ -19,7 +19,7 @@ const IWModalEntityTextField = memo(props => {
         >
           <IconButton
             onClick={() => setFullscreenData({ title, content: description })}
-            variant="elitea"
+            variant="alita"
             color="tertiary"
           >
             <FullScreenIconSvg />

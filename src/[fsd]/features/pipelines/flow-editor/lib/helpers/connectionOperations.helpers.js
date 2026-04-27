@@ -167,7 +167,7 @@ export const handleNormalConnection = ({ connection, yamlJsonObjectRef, setYamlJ
       setYamlJsonObject,
     );
   }
-  const edgeToRemove = `${FlowEditorConstants.EDGE_PREFIX}${connection.source}---EliteAPipelineEnd`;
+  const edgeToRemove = `${FlowEditorConstants.EDGE_PREFIX}${connection.source}---AlitaPipelineEnd`;
   return { showInterruptLabel, edgeToRemove };
 };
 

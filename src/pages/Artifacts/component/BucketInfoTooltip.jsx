@@ -62,7 +62,7 @@ const BucketInfoTooltip = memo(props => {
       sx={styles.tooltip}
     >
       <IconButton
-        variant="elitea"
+        variant="alita"
         color="tertiary"
         sx={styles.iconButton}
         size="small"

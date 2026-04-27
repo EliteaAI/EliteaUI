@@ -7,7 +7,7 @@ import { Box, useTheme } from '@mui/material';
 
 import { ProjectSelectShowMode } from '@/[fsd]/features/project/lib/constants';
 import { usePublicProjectAccessCheck, useRestoreLastListRoute } from '@/[fsd]/features/project/lib/hooks';
-import { Select } from '@/[fsd]/shared/ui';
+import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { useProjectListQuery } from '@/api/project';
 import {
   PRIVATE_PROJECT_NAME,
@@ -181,38 +181,50 @@ const ProjectSelect = memo(props => {
 
   if (projectOptions.length <= 0 && showMode === ProjectSelectShowMode.CompactMode) return selectPlaceholder;
 
-  const isCompact = showMode === ProjectSelectShowMode.CompactMode;
-
-  const projectSingleSelect = (
-    <Select.SingleSelect
-      label={isCompact ? undefined : label}
-      onValueChange={onChangeProject}
-      value={selectedProject.id}
-      displayEmpty={displayEmpty}
-      options={projectOptions}
-      customSelectedColor={`${customSelectedColor || theme.palette.text.primary} !important`}
-      customSelectedFontSize={'0.875rem'}
-      sx={selectSX}
-      labelSX={labelSX}
-      inputSX={inputSX}
-      disabled={disabled}
-      required={required}
-      error={showValidation && !selectedProject.id}
-      helperText={'Field is required'}
-      emptyPlaceholder={selectPlaceholder}
-      {...last}
-    />
-  );
-
   return (
     <>
-      <Box sx={sx}>
-        {isCompact ? (
-          <Box sx={[styles.container, containerSX]}>{projectSingleSelect}</Box>
-        ) : (
-          projectSingleSelect
-        )}
-      </Box>
+      {showMode === ProjectSelectShowMode.CompactMode ? (
+        <Box sx={sx}>
+          <Box sx={[styles.container, containerSX]}>
+            <SingleSelect
+              onValueChange={onChangeProject}
+              value={selectedProject.id}
+              displayEmpty={displayEmpty}
+              options={projectOptions}
+              customSelectedColor={`${customSelectedColor || theme.palette.text.primary} !important`}
+              customSelectedFontSize={'0.875rem'}
+              sx={selectSX}
+              labelSX={labelSX}
+              inputSX={inputSX}
+              disabled={disabled}
+              required={required}
+              error={showValidation && !selectedProject.id}
+              helperText={'Field is required'}
+              emptyPlaceholder={selectPlaceholder}
+              {...last}
+            />
+          </Box>
+        </Box>
+      ) : (
+        <SingleSelect
+          label={label}
+          onValueChange={onChangeProject}
+          value={selectedProject.id}
+          displayEmpty={displayEmpty}
+          options={projectOptions}
+          customSelectedColor={`${customSelectedColor || theme.palette.text.primary} !important`}
+          customSelectedFontSize={'0.875rem'}
+          sx={selectSX}
+          labelSX={labelSX}
+          inputSX={inputSX}
+          disabled={disabled}
+          required={required}
+          error={showValidation && !selectedProject.id}
+          helperText={'Field is required'}
+          emptyPlaceholder={selectPlaceholder}
+          {...last}
+        />
+      )}
       <AlertDialog
         title="Warning"
         alertContent={warningMessage}
@@ -227,11 +239,19 @@ const ProjectSelect = memo(props => {
 });
 
 const styles = {
+  baselineContainer: {
+    display: 'flex',
+    boxSizing: 'border-box',
+    justifyContent: 'flex-end',
+    alignItems: 'baseline',
+    paddingRight: '0',
+    height: '2.5rem',
+  },
   container: {
     display: 'flex',
     marginLeft: '0.5rem',
     zIndex: 1001,
-    alignItems: 'center',
+    alignItems: 'flex-end',
   },
 };
 

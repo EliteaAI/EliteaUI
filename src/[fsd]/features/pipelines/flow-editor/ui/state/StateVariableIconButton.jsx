@@ -13,7 +13,7 @@ const StateVariableIconButton = memo(props => {
       placement="top"
     >
       <IconButton
-        variant="elitea"
+        variant="alita"
         onClick={onClick}
         disabled={disabled}
         sx={[styles.button, sx]}

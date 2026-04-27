@@ -5,7 +5,7 @@ import { Box, Typography } from '@mui/material';
 import BaseCheckbox, {
   CHECKBOX_MODES,
   CHECKBOX_VARIANTS,
-  eliteaCheckboxColors,
+  alitaCheckboxColors,
 } from '@/[fsd]/shared/ui/checkbox/BaseCheckbox';
 
 const handleEmptyOnChange = () => {};
@@ -68,7 +68,7 @@ const InteractiveCheckbox = args => {
 export const Checkbox = InteractiveCheckbox.bind({});
 Checkbox.args = {
   mode: CHECKBOX_MODES.checkbox,
-  variant: CHECKBOX_VARIANTS.elitea,
+  variant: CHECKBOX_VARIANTS.alita,
   size: 'small',
   checked: false,
   disabled: false,
@@ -89,7 +89,7 @@ const InteractiveRadio = args => {
 export const Radio = InteractiveRadio.bind({});
 Radio.args = {
   mode: CHECKBOX_MODES.radio,
-  variant: CHECKBOX_VARIANTS.elitea,
+  variant: CHECKBOX_VARIANTS.alita,
   size: 'small',
   checked: false,
   disabled: false,
@@ -98,7 +98,7 @@ Radio.args = {
 const getHoverSx =
   ({ mode, checked, indeterminate }) =>
   theme => {
-    const colors = eliteaCheckboxColors(theme);
+    const colors = alitaCheckboxColors(theme);
 
     if (mode === CHECKBOX_MODES.radio) {
       return { '&&': { color: colors.radio.hover.off } };
@@ -135,7 +135,7 @@ const GridCell = ({ mode, cellData, size }) => {
     <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
       <BaseCheckbox
         mode={mode}
-        variant={CHECKBOX_VARIANTS.elitea}
+        variant={CHECKBOX_VARIANTS.alita}
         size={size}
         checked={checked}
         disabled={disabled}
@@ -210,7 +210,7 @@ export const AllControls = args => {
         }}
       >
         <StatesRow
-          title="EliteA"
+          title="Alita"
           grid={CHECKBOX_GRID}
           mode={CHECKBOX_MODES.checkbox}
           size={size}
@@ -248,7 +248,7 @@ export const AllControls = args => {
         }}
       >
         <StatesRow
-          title="EliteA"
+          title="Alita"
           grid={RADIO_GRID}
           mode={CHECKBOX_MODES.radio}
           size={size}

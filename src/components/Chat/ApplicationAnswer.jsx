@@ -33,11 +33,11 @@ import { useTheme } from '@emotion/react';
 import StyledTooltip from '../../ComponentsLib/Tooltip';
 import Canvas from '../Canvas';
 import EntityIcon from '../EntityIcon';
+import AlitaIcon from '../Icons/AlitaIcon';
 import CopyIcon from '../Icons/CopyIcon';
 import CopyMoveIcon from '../Icons/CopyMoveIcon';
 import DeleteIcon from '../Icons/DeleteIcon';
 import EditIcon from '../Icons/EditIcon';
-import EliteAIcon from '../Icons/EliteAIcon';
 import RegenerateIcon from '../Icons/RegenerateIcon';
 import Markdown from '../Markdown';
 import ApplicationThinkView from './ApplicationThinkView';
@@ -421,7 +421,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
           </Box>
         ) : (
           <ListItemAvatar sx={styles.listItemAvatar}>
-            <EliteAIcon sx={styles.eliteaIcon} />
+            <AlitaIcon sx={styles.alitaIcon} />
           </ListItemAvatar>
         )}
         <Box sx={styles.contentWrapper}>
@@ -579,7 +579,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                             >
                               <IconButton
                                 sx={styles.iconButton}
-                                variant="elitea"
+                                variant="alita"
                                 color="tertiary"
                                 onClick={downloadErrorTrace}
                               >
@@ -592,7 +592,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                             >
                               <IconButton
                                 sx={styles.iconButton}
-                                variant="elitea"
+                                variant="alita"
                                 color="tertiary"
                                 onClick={onClickCopy}
                               >
@@ -662,7 +662,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                       <IconButton
                         disabled={isProcessing || !realAnswer}
                         sx={styles.iconButton}
-                        variant="elitea"
+                        variant="alita"
                         color="tertiary"
                         onClick={onClickCopy}
                       >
@@ -678,7 +678,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                       <IconButton
                         disabled={isProcessing}
                         sx={styles.iconButton}
-                        variant="elitea"
+                        variant="alita"
                         color="tertiary"
                         onClick={onCopyToMessages}
                       >
@@ -694,7 +694,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                       <Box>
                         <IconButton
                           sx={styles.iconButton}
-                          variant="elitea"
+                          variant="alita"
                           color="tertiary"
                           disabled={
                             shouldDisableRegenerate ||
@@ -723,7 +723,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                       <IconButton
                         disabled={isProcessing}
                         sx={styles.iconButton}
-                        variant="elitea"
+                        variant="alita"
                         color="tertiary"
                         onClick={onClickEdit}
                       >
@@ -740,7 +740,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                         <IconButton
                           disabled={hasCanvasBeingEdited || (isApplicationParticipant ? false : isProcessing)}
                           sx={styles.iconButton}
-                          variant="elitea"
+                          variant="alita"
                           color="tertiary"
                           onClick={onDelete}
                         >
@@ -858,7 +858,7 @@ const applicationAnswerStyles = (
     minWidth: '1.5rem',
     height: '1.5rem',
   },
-  eliteaIcon: {
+  alitaIcon: {
     fontSize: '1.5rem',
   },
   contentWrapper: verticalMode ? { width: '100%' } : { width: 'calc(100% - 2rem)' },

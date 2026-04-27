@@ -1,29 +1,19 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
-import {
-  Button,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-  Typography,
-  debounce,
-  useTheme,
-} from '@mui/material';
+import { Button, DialogContent, DialogTitle, IconButton, Typography, useTheme } from '@mui/material';
 
 import StyledCircleProgress from '@/ComponentsLib/CircularProgress';
 import { useLoadToolkits } from '@/[fsd]/features/toolkits/lib/hooks';
-import { Select } from '@/[fsd]/shared/ui';
 import { buildErrorMessage } from '@/common/utils';
 import FormInput from '@/components/FormInput';
 import CloseIcon from '@/components/Icons/CloseIcon';
 import PlusIcon from '@/components/Icons/PlusIcon';
+import SingleSelectWithSearch from '@/components/SingleSelectWithSearch';
 import { StyledDialog, StyledDialogActions } from '@/components/StyledDialog';
 import { useCreateArtifactWithDefaultConfiguration } from '@/hooks/useCreateArtifactWithDefaultConfiguratiion';
 import useToast from '@/hooks/useToast';
 
 const CREATE_NEW_OPTION = 'create_new';
-const SCROLL_LOAD_MORE_THRESHOLD = 10;
-const DEBOUNCE_DELAY_MS = 300;
 
 const AttachmentSettingsModal = memo(props => {
   const {
@@ -89,26 +79,6 @@ const AttachmentSettingsModal = memo(props => {
     onLoadMoreToolkits();
   }, [data?.length, onLoadMoreToolkits, totalCount]);
 
-  const loadMoreOnScroll = useMemo(
-    () =>
-      debounce(e => {
-        const containerDom = e.target || {};
-        const clientHeight = containerDom.clientHeight;
-        const scrollHeight = containerDom.scrollHeight;
-        const scrollTop = containerDom.scrollTop;
-        const isReachBottom = scrollTop + clientHeight > scrollHeight - SCROLL_LOAD_MORE_THRESHOLD;
-        if (isReachBottom && !isToolkitsFetching) loadMoreToolkits();
-      }, DEBOUNCE_DELAY_MS),
-    [isToolkitsFetching, loadMoreToolkits],
-  );
-
-  useEffect(
-    () => () => {
-      loadMoreOnScroll.clear();
-    },
-    [loadMoreOnScroll],
-  );
-
   const onChangeBucketName = event => {
     setBucketName(event.target.value);
   };
@@ -133,18 +103,10 @@ const AttachmentSettingsModal = memo(props => {
     onSelectManager(toolkitOptions.find(option => option.value === selectedArtifact)?.toolkit);
   };
 
-  const onChangeArtifact = useCallback(option => {
+  const onChangeArtifact = option => {
     setBucketName('');
     setSelectedArtifact(option?.value);
-  }, []);
-
-  const handleArtifactValueChange = useCallback(
-    selectedValue => {
-      const opt = toolkitOptions.find(o => o.value === selectedValue);
-      onChangeArtifact(opt ?? null);
-    },
-    [onChangeArtifact, toolkitOptions],
-  );
+  };
 
   const onSearch = useCallback(value => {
     setSearchString(value);
@@ -196,22 +158,7 @@ const AttachmentSettingsModal = memo(props => {
       textOverflow="ellipsis"
       sx={{ whiteSpaceCollapse: 'preserve' }}
     >
-      {option.label}
-    </Typography>
-  );
-
-  const emptySelectPlaceholder = (
-    <Typography
-      variant="bodyMedium"
-      color="text.secondary"
-      component="div"
-      maxWidth="31.25rem"
-      overflow="hidden"
-      whiteSpace="nowrap"
-      textOverflow="ellipsis"
-      sx={{ whiteSpaceCollapse: 'preserve' }}
-    >
-      Select
+      {!option ? 'Select' : option.label}
     </Typography>
   );
 
@@ -238,7 +185,7 @@ const AttachmentSettingsModal = memo(props => {
           Attachment settings
         </Typography>
         <IconButton
-          variant="elitea"
+          variant="alita"
           color="tertiary"
           aria-label="close"
           onClick={onClose}
@@ -256,33 +203,22 @@ const AttachmentSettingsModal = memo(props => {
         >
           Choose an artifact toolkit or create new one to keep attached files.
         </Typography>
-        <Select.SingleSelect
+        <SingleSelectWithSearch
           label="Attachment's Artifact toolkit"
-          value={selectedArtifact ?? ''}
-          onValueChange={handleArtifactValueChange}
+          onValueChange={onChangeArtifact}
+          value={selectedArtifact}
           options={toolkitOptions}
-          customRenderValue={customRenderValue}
+          renderValue={customRenderValue}
           required={false}
           error={false}
           helperText=""
-          onScroll={loadMoreOnScroll}
-          isListFetching={isToolkitsFetching}
+          onLoadMore={loadMoreToolkits}
+          isFetching={isToolkitsFetching}
           maxListHeight="22.5rem"
-          withSearch
-          searchFilterMode="remote"
           searchString={searchString}
           onSearch={onSearch}
-          customMenuProps={{
-            slotProps: {
-              paper: { sx: { zIndex: 1400 } },
-            },
-          }}
-          onClear={() => onChangeArtifact(null)}
-          displayEmpty
-          emptyPlaceholder={emptySelectPlaceholder}
-          showBorder
-          showOptionIcon
-          menuItemIconSX={styles.menuItemIcon}
+          paperZIndex="1400"
+          allowEmptySelection
         />
         {selectedArtifact === CREATE_NEW_OPTION && (
           <FormInput
@@ -299,7 +235,7 @@ const AttachmentSettingsModal = memo(props => {
       <StyledDialogActions sx={styles.dialogActions}>
         <Button
           disableRipple
-          variant="elitea"
+          variant="alita"
           color="secondary"
           onClick={onCancel}
         >
@@ -308,7 +244,7 @@ const AttachmentSettingsModal = memo(props => {
         <Button
           disableRipple
           disabled={saveButtonDisabled}
-          variant="elitea"
+          variant="alita"
           onClick={handleOK}
         >
           Save

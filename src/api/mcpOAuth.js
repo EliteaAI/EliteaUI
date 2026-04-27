@@ -1,8 +1,8 @@
-import { eliteaApi } from './eliteaApi.js';
+import { alitaApi } from './alitaApi.js';
 
 const apiSlicePath = '/elitea_core';
 
-export const mcpOAuthApi = eliteaApi.injectEndpoints({
+export const mcpOAuthApi = alitaApi.injectEndpoints({
   endpoints: build => ({
     exchangeMcpOAuthToken: build.mutation({
       query: ({ projectId, ...body }) => {

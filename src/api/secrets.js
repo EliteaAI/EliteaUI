@@ -1,9 +1,9 @@
-import { eliteaApi } from './eliteaApi.js';
+import { alitaApi } from './alitaApi.js';
 
 const apiSlicePath = '/secrets';
 const TAG_TYPE_SECRETS = 'SECRETS';
 
-export const apis = eliteaApi
+export const apis = alitaApi
   .enhanceEndpoints({
     addTagTypes: [TAG_TYPE_SECRETS],
   })

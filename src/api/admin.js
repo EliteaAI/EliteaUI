@@ -1,14 +1,14 @@
 import { PAGE_SIZE } from '@/common/constants.js';
 import { removeDuplicateObjects } from '@/common/utils.jsx';
 
-import { eliteaApi } from './eliteaApi.js';
+import { alitaApi } from './alitaApi.js';
 
 const apiSlicePath = '/admin';
 const TAG_TYPE_USERS = 'TAG_TYPE_USERS';
 const TAG_TYPE_ROLES = 'TAG_TYPE_ROLES';
 const PROJECT_MODE = 'default';
 
-export const apis = eliteaApi
+export const apis = alitaApi
   .enhanceEndpoints({
     addTagTypes: [],
   })

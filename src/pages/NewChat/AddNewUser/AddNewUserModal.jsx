@@ -146,7 +146,7 @@ export function AddNewUserModal({ participants, open, onAdd, onCancel }) {
         }}
       >
         <Button
-          variant="elitea"
+          variant="alita"
           color="secondary"
           onClick={onCancel}
           disableRipple
@@ -155,7 +155,7 @@ export function AddNewUserModal({ participants, open, onAdd, onCancel }) {
         </Button>
         <Button
           disabled={!localUsers.length}
-          variant="elitea"
+          variant="alita"
           onClick={handleOK}
           disableRipple
         >

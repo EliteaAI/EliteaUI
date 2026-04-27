@@ -82,7 +82,7 @@ const OpenAITemplate = memo(() => {
               placement="top"
             >
               <IconButton
-                variant="elitea"
+                variant="alita"
                 color="secondary"
                 onClick={handleCopy}
               >
@@ -98,7 +98,7 @@ const OpenAITemplate = memo(() => {
               placement="top"
             >
               <IconButton
-                variant="elitea"
+                variant="alita"
                 color="secondary"
                 onClick={handleDownload}
               >

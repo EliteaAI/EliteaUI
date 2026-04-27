@@ -13,7 +13,7 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes';
 
-const McpAuthStatus = memo(({ authConfig } = {}) => {
+const McpAuthStatus = memo(() => {
   const { values } = useFormikContext();
   const { id, type: toolkitType, settings: { url, client_id, client_secret, scopes } = {} } = values ?? {};
   const { values: formValues } = useFormikContext();
@@ -25,11 +25,11 @@ const McpAuthStatus = memo(({ authConfig } = {}) => {
   // Check if this is a pre-built MCP (e.g., mcp_github)
   const isPrebuildMcp = useMemo(() => McpAuthHelpers.isPrebuildMcpType(toolkitType), [toolkitType]);
 
-  // Use the token change hook to monitor login status.
-  // authConfig.tokenOptions overrides the default derivation for non-MCP toolkits (e.g. SharePoint).
+  // Use the token change hook to monitor login status
+  // For pre-built MCPs, use toolkitType; for remote MCPs, use serverUrl
   const tokenOptions = useMemo(
-    () => authConfig?.tokenOptions ?? (isPrebuildMcp ? { toolkitType } : { serverUrl: url }),
-    [authConfig, isPrebuildMcp, toolkitType, url],
+    () => (isPrebuildMcp ? { toolkitType } : { serverUrl: url }),
+    [isPrebuildMcp, toolkitType, url],
   );
   const { isLoggedIn: hasLoggedInToMcp } = useMcpTokenChange(tokenOptions);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -60,45 +60,31 @@ const McpAuthStatus = memo(({ authConfig } = {}) => {
   const styles = getStyles(hasLoggedInToMcp);
 
   const onConfirmLogout = useCallback(() => {
-    const logoutKey = authConfig?.tokenStorageKey ?? authConfig?.serverUrl;
-    if (logoutKey) {
-      McpAuthHelpers.logout(logoutKey);
-    } else if (isPrebuildMcp) {
+    if (isPrebuildMcp) {
       McpAuthHelpers.logout(null, toolkitType);
     } else if (url) {
       McpAuthHelpers.logout(url);
     }
     setShowLogoutModal(false);
     toastSuccess('You have successfully logged out!');
-  }, [authConfig, isPrebuildMcp, toolkitType, url, toastSuccess]);
+  }, [isPrebuildMcp, toolkitType, url, toastSuccess]);
 
   const onLogout = useCallback(() => {
     setShowLogoutModal(true);
   }, []);
 
   const onLogin = useCallback(() => {
-    if (authConfig?.onLogin) {
-      // Delegate to the injected handler (e.g. SharePoint HTTP check_connection).
-      // Pass handleMcpAuthRequired so the handler can open the OAuth modal on 401.
-      authConfig.onLogin(handleMcpAuthRequired);
-      return;
-    }
     runAuthCheck('list_tools');
-  }, [authConfig, handleMcpAuthRequired, runAuthCheck]);
+  }, [runAuthCheck]);
 
   const onCloseLogout = useCallback(() => {
     setShowLogoutModal(false);
   }, []);
 
-  // For pre-built MCPs, we don't require URL to show the auth status.
-  // authConfig implies an external flow (e.g. SharePoint) that is always capable of login.
-  const canLogin = !!(authConfig || isPrebuildMcp || url);
+  // For pre-built MCPs, we don't require URL to show the auth status
+  const canLogin = isPrebuildMcp || url;
 
-  // For injected auth flows (authConfig), always render regardless of id/create-mode,
-  // since the parent (e.g. SharepointOAuthStatus) already gates rendering on OAuth mode.
-  const shouldRender = authConfig ? true : hasLoggedInToMcp || (!isFromCreateMcp && id);
-
-  return shouldRender ? (
+  return hasLoggedInToMcp || (!isFromCreateMcp && id) ? (
     <>
       <Box sx={styles.loginStatusContainer}>
         <Box sx={styles.statusContent}>
@@ -112,7 +98,7 @@ const McpAuthStatus = memo(({ authConfig } = {}) => {
         </Box>
         <Button
           onClick={hasLoggedInToMcp ? onLogout : onLogin}
-          disabled={!canLogin || isRunning || authConfig?.isRunning}
+          disabled={!canLogin || isRunning}
           variant="secondary"
         >
           {hasLoggedInToMcp ? 'Logout' : isRunning ? 'Logging in...' : 'Login'}
@@ -120,8 +106,7 @@ const McpAuthStatus = memo(({ authConfig } = {}) => {
       </Box>
       {showModal && (
         <McpAuthModal
-          serverUrl={authConfig?.serverUrl ?? url}
-          tokenStorageKey={authConfig?.tokenStorageKey}
+          serverUrl={url}
           mcpAuthMetadata={mcpAuthMetadata}
           formClientId={client_id}
           formClientSecret={client_secret}
@@ -135,7 +120,7 @@ const McpAuthStatus = memo(({ authConfig } = {}) => {
         />
       )}
       <McpLogoutModal
-        serverUrl={authConfig?.tokenStorageKey ?? authConfig?.serverUrl ?? url}
+        serverUrl={url}
         toolkitType={isPrebuildMcp ? toolkitType : undefined}
         open={showLogoutModal}
         onClose={onCloseLogout}

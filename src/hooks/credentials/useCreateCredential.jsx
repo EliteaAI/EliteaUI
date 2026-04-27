@@ -23,10 +23,10 @@ const getRequestBody = ({ toolType, configurationKeys, settings }) => {
   });
 
   const title =
-    settings?.elitea_title || `${toolType}_${new Date().toISOString().slice(0, 19).replace(/[:-]/g, '')}`;
+    settings?.alita_title || `${toolType}_${new Date().toISOString().slice(0, 19).replace(/[:-]/g, '')}`;
 
   const body = {
-    elitea_title: title,
+    alita_title: title,
     label: settings.label || '',
     type: toolType,
     data,

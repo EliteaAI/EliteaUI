@@ -324,8 +324,6 @@ export const ViewMode = {
 export const TOAST_DURATION = 3000;
 
 export const MIN_CARD_WIDTH = '300px';
-export const CARD_WIDTH_PX = 300;
-export const CARD_TOTAL_WIDTH_PX = 316; // card width (300px) + gap (16px)
 const ONE_CARD_WIDTH = 'calc(100% - 16px)';
 const TWO_CARD_WIDTH = 'calc(50% - 16px)';
 const THREE_CARD_WIDTH = 'calc(33.3% - 16px)';
@@ -604,10 +602,6 @@ export const PERMISSIONS = {
     delete: 'configurations.configuration.delete',
     update: 'configurations.configuration.update',
   },
-  litellm: {
-    section: 'configuration.litellm',
-    edit: 'configuration.litellm.edit',
-  },
   index: {
     schedule: 'models.applications.index_meta.edit',
   },
@@ -676,10 +670,10 @@ export const FULL_WIDTH_FLEX_GRID_PAGE = [
   `${RouteDefinitions.ModerationSpace}/${ModerationTabs[3]}`,
 ];
 
-export const ProjectIdStorageKey = 'elitea_ui.project.id';
-export const ProjectNameStorageKey = 'elitea_ui.project.name';
-export const PublicPermissionStorageKey = 'elitea_ui.public_permission';
-export const PermissionStorageKey = 'elitea_ui.project_permission';
+export const ProjectIdStorageKey = 'alita_ui.project.id';
+export const ProjectNameStorageKey = 'alita_ui.project.name';
+export const PublicPermissionStorageKey = 'alita_ui.public_permission';
+export const PermissionStorageKey = 'alita_ui.project_permission';
 
 export const AuthenticationTypes = {
   None: {
@@ -981,7 +975,7 @@ export const NewChatMentionSymbolTypeMap = {
   '@': ChatParticipantType.Users,
 };
 
-export const PinnedConversationListKey = 'EliteAPinnedConversationListKey';
+export const PinnedConversationListKey = 'AlitaPinnedConversationListKey';
 export const ActiveConversationParticipantKey = 'ActiveConversationParticipantKey';
 
 export const ImportValidationStatus = {
@@ -1014,9 +1008,6 @@ export const NotificationType = {
   ChatUserAdded: 'chat_user_added',
   PrivateProjectCreated: 'private_project_created',
   IndexDataChanged: 'index_data_changed',
-  BucketExpirationWarning: 'bucket_expiration_warning',
-  AgentUnpublished: 'agent_unpublished',
-  PersonalAccessTokenExpiring: 'personal_access_token_expiring',
 };
 
 export const dummyConversation = { name: '', chat_history: [], participants: [], is_private: true };

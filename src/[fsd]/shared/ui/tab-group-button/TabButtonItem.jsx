@@ -1,6 +1,6 @@
 import { memo } from 'react';
 
-import { Box, ToggleButton, Typography } from '@mui/material';
+import { ToggleButton, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 
@@ -10,7 +10,7 @@ const TabButtonItem = memo(props => {
 
   const button = (
     <ToggleButton
-      variant="elitea"
+      variant="alita"
       value={item.value}
       sx={{ ...styles.toggleButton, borderRadius, ...customSx }}
     >
@@ -35,12 +35,7 @@ const TabButtonItem = memo(props => {
       title={item.tooltip || item.label || item.value}
       placement="top"
     >
-      <Box
-        component="span"
-        sx={{ display: 'inline-flex' }}
-      >
-        {button}
-      </Box>
+      {button}
     </Tooltip>
   );
 });

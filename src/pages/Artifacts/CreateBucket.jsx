@@ -265,7 +265,7 @@ const CreateBucket = memo(() => {
               <Box sx={styles.buttonWrapper}>
                 <Button
                   onClick={onSave}
-                  variant="elitea"
+                  variant="alita"
                   color="primary"
                   disabled={
                     isCreating ||
@@ -280,7 +280,7 @@ const CreateBucket = memo(() => {
                 </Button>
                 <Button
                   onClick={onCancel}
-                  variant="elitea"
+                  variant="alita"
                   color="secondary"
                 >
                   Cancel

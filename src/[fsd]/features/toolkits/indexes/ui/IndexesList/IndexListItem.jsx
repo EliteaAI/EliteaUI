@@ -18,31 +18,18 @@ const IndexListItem = memo(props => {
 
   const isSelected = useMemo(() => currentIndex?.id === index.id, [currentIndex, index]);
   const documents = useMemo(() => {
-    if (!index.metadata) return { tooltip: '-', count: '–', skipped: '-' };
-
-    let skipped = { total_skipped: 0 };
-
-    try {
-      skipped =
-        typeof index.metadata.skipped === 'string'
-          ? JSON.parse(index.metadata.skipped)
-          : index.metadata.skipped;
-    } catch {
-      // silente catch
-    }
+    if (!index.metadata) return { tooltip: '-', count: '–' };
 
     if (index.metadata.history?.length > 1 && index.metadata.updated !== undefined) {
       return {
         tooltip: 'reindexed / total indexed',
         count: `${index.metadata.updated} / ${index.metadata.indexed}`,
-        skipped: skipped?.total_skipped || 0,
       };
     }
 
     return {
       tooltip: 'total indexed',
       count: index.metadata.indexed ?? '–',
-      skipped: skipped?.total_skipped || 0,
     };
   }, [index]);
 
@@ -97,26 +84,6 @@ const IndexListItem = memo(props => {
             <Typography variant="bodySmall2">{documents.count}</Typography>
           </Tooltip>
         </Box>
-
-        {Number(documents.skipped) > 0 && (
-          <Box sx={[styles.infoItem, { svg: { mt: '.15rem' } }]}>
-            <AttentionIcon
-              width={16}
-              height={16}
-            />
-            <Tooltip
-              title="total skipped during indexing"
-              placement="top"
-            >
-              <Typography
-                variant="bodySmall2"
-                sx={styles.skippedText}
-              >
-                {documents.skipped}
-              </Typography>
-            </Tooltip>
-          </Box>
-        )}
       </Box>
       {index.metadata.state === IndexStatuses.progress && (
         <CircularProgress
@@ -201,15 +168,13 @@ const indexListItem = () => ({
 
   additionalInfo: {
     display: 'flex',
-    gap: '0.5rem',
+    gap: '1rem',
   },
 
   infoItem: {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    flexShrink: 0,
-    whiteSpace: 'nowrap',
     gap: '0.5rem',
 
     svg: {
@@ -231,9 +196,6 @@ const indexListItem = () => ({
       fill: palette.background.warning,
     }),
   },
-  skippedText: ({ palette }) => ({
-    color: palette.background.warning,
-  }),
 });
 
 export default IndexListItem;

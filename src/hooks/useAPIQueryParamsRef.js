@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux';
 import { convertToJson } from '@/common/utils';
 
 export const useAPIQueryParamsRef = endpointName => {
-  const queries = useSelector(state => state.eliteaApi.queries);
+  const queries = useSelector(state => state.alitaApi.queries);
   const queryParams = useMemo(() => {
     const cacheKeys = Object.keys(queries || {});
     const matchingKeys = cacheKeys.filter(key => queries[key]?.endpointName === endpointName);

@@ -98,11 +98,10 @@ const ConfigurationSection = memo(props => {
       </Typography>
       {hasDefaultSetting && (
         <Box sx={styles.defaultSettingsContainer}>
-          <Select.SingleSelect
-            separateLabel
+          <Select.SelectWithLabel
             label={defaultSettingLabel}
             value={defaultSettingValue}
-            onValueChange={onChangeDefaultSetting}
+            onChange={onChangeDefaultSetting}
             options={defaultSettingOptions}
             disabled={!canEdit}
             showOptionIcon
@@ -111,12 +110,11 @@ const ConfigurationSection = memo(props => {
           {additionalDefaultSettings
             .filter(setting => setting)
             .map(setting => (
-              <Select.SingleSelect
-                separateLabel
+              <Select.SelectWithLabel
                 key={setting.key || setting.label}
                 label={setting.label}
                 value={setting.value}
-                onValueChange={setting.onChange}
+                onChange={setting.onChange}
                 options={setting.options}
                 disabled={!canEdit}
                 showOptionIcon

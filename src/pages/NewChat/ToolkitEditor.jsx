@@ -1,10 +1,8 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
 import { useTrackEvent } from '@/GA';
-import { useCredentialWarning } from '@/[fsd]/entities/credential-warning/hooks';
-import { CredentialWarningModal } from '@/[fsd]/entities/credential-warning/ui';
 import { usePublicProjectAccessCheck } from '@/[fsd]/features/project/lib/hooks';
 // TODO: DELETE after migration period (Q1 2026) - Legacy OpenAPI toolkit migration
 import { LegacyOpenApiMigration } from '@/[fsd]/features/toolkits/lib/helpers';
@@ -14,6 +12,7 @@ import { useToolkitsDetailsQuery } from '@/api/toolkits';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { CONFIGURATION_VIEW_OPTIONS } from '@/pages/Applications/Components/Tools/ToolConfigurationForm.jsx';
+import { ContentContainer } from '@/pages/Common/Components/StyledComponents.jsx';
 import BaseEditor from '@/pages/NewChat/components/BaseEditor.jsx';
 import CreateToolkitButton from '@/pages/NewChat/components/CreateToolkitButton.jsx';
 import SaveToolkitButton from '@/pages/Toolkits/SaveToolkitButton.jsx';
@@ -46,8 +45,6 @@ const ToolkitEditor = ({ toolkit, onCloseToolkitEditor, onToolkitCreated, onTool
   const [formikInitialValues, setFormikInitialValues] = useState({
     type: '',
   });
-
-  const revertCredentialsRef = useRef(null);
 
   // Callback for handling tool detail changes in creation mode
   const onChangeToolDetail = useCallback((...args) => {
@@ -113,15 +110,6 @@ const ToolkitEditor = ({ toolkit, onCloseToolkitEditor, onToolkitCreated, onTool
       : { skip: true },
     { skip: !isVisible || !projectId || !toolkitId || isCreating },
   );
-
-  // Credential warning hook
-  const { showWarning, checkBeforeSave, handlers } = useCredentialWarning({
-    isCreating,
-    editToolDetail,
-    originalDetails: toolkitDetails,
-    revertCredentialsRef,
-    setEditToolDetail,
-  });
 
   // Initialize editToolDetail from toolkit details (like EditToolkit.jsx)
   useEffect(() => {
@@ -212,8 +200,6 @@ const ToolkitEditor = ({ toolkit, onCloseToolkitEditor, onToolkitCreated, onTool
     setIsToolDirty(false);
   }, [toolkitDetails, isCreating]);
 
-  const styles = toolkitEditorStyles();
-
   if (!toolkit) {
     return null;
   }
@@ -243,7 +229,6 @@ const ToolkitEditor = ({ toolkit, onCloseToolkitEditor, onToolkitCreated, onTool
             hasErrors={validationState.hasErrors}
             triggerValidation={validationState.triggerValidation}
             projectId={toolkit?.entity_meta?.project_id || projectId}
-            onBeforeSave={checkBeforeSave}
           />
         )
       }
@@ -251,7 +236,7 @@ const ToolkitEditor = ({ toolkit, onCloseToolkitEditor, onToolkitCreated, onTool
     >
       {isCreating ? (
         // Creation mode: Show ToolkitTypeSelector or ToolkitForm based on whether a type is selected
-        <>
+        <ContentContainer height="100%">
           {editToolDetail ? (
             <ToolkitForm
               editToolDetail={editToolDetail}
@@ -269,8 +254,6 @@ const ToolkitEditor = ({ toolkit, onCloseToolkitEditor, onToolkitCreated, onTool
               updateKey={1}
               isMCP={isMCP}
               onValidationStateChange={setValidationState}
-              revertCredentialsRef={revertCredentialsRef}
-              sx={styles.toolkitForm}
             />
           ) : (
             <ToolkitTypeSelector
@@ -280,30 +263,30 @@ const ToolkitEditor = ({ toolkit, onCloseToolkitEditor, onToolkitCreated, onTool
               disableNavigation={true}
             />
           )}
-        </>
+        </ContentContainer>
       ) : editToolDetail ? (
         // Edit mode: Show the existing toolkit configuration
-        <ToolkitForm
-          editToolDetail={editToolDetail}
-          onChangeToolDetail={handleChangeToolDetail}
-          isEditing={true}
-          isToolDirty={isToolDirty}
-          isViewToggleVisible={false}
-          showNameFieldForcedly={false}
-          showToolkitIcon={false}
-          showOnlyConfigurationFields={false}
-          configurationViewOptions={CONFIGURATION_VIEW_OPTIONS.CredentialsSelect}
-          hasNotSavedCredentials={false}
-          hideNameDescriptionInput={false}
-          hideNameInput={!isMCP}
-          hideOperationButtons={true}
-          updateKey={1}
-          isMCP={isMCP}
-          onValidationStateChange={setValidationState}
-          disabled={isPublic && !hasPublicProjectAccess}
-          revertCredentialsRef={revertCredentialsRef}
-          sx={styles.toolkitForm}
-        />
+        <ContentContainer height="100%">
+          <ToolkitForm
+            editToolDetail={editToolDetail}
+            onChangeToolDetail={handleChangeToolDetail}
+            isEditing={true}
+            isToolDirty={isToolDirty}
+            isViewToggleVisible={false}
+            showNameFieldForcedly={false}
+            showToolkitIcon={false}
+            showOnlyConfigurationFields={false}
+            configurationViewOptions={CONFIGURATION_VIEW_OPTIONS.CredentialsSelect}
+            hasNotSavedCredentials={false}
+            hideNameDescriptionInput={false}
+            hideNameInput={!isMCP}
+            hideOperationButtons={true}
+            updateKey={1}
+            isMCP={isMCP}
+            onValidationStateChange={setValidationState}
+            disabled={isPublic && !hasPublicProjectAccess}
+          />
+        </ContentContainer>
       ) : (
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
           <Typography
@@ -314,22 +297,8 @@ const ToolkitEditor = ({ toolkit, onCloseToolkitEditor, onToolkitCreated, onTool
           </Typography>
         </Box>
       )}
-      <CredentialWarningModal
-        open={showWarning}
-        onConfirm={handlers.onConfirm}
-        onCancel={handlers.onCancel}
-        onClose={handlers.onClose}
-      />
     </BaseEditor>
   );
 };
-
-/** @type {MuiSx} */
-const toolkitEditorStyles = () => ({
-  toolkitForm: {
-    overflow: 'visible',
-    maxHeight: 'none',
-  },
-});
 
 export default ToolkitEditor;

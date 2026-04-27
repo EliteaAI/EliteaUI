@@ -75,7 +75,7 @@ export default function useSearch() {
           displayName:
             item.name ||
             item.toolkit_name ||
-            item.settings?.elitea_title ||
+            item.settings?.alita_title ||
             item.type ||
             'MCP ' + item.id ||
             '',

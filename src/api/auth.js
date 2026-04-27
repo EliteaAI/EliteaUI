@@ -1,6 +1,6 @@
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
 
-import { eliteaApi } from './eliteaApi.js';
+import { alitaApi } from './alitaApi.js';
 
 const apiSlicePath = '/auth';
 const TAG_TYPE_AUTH = 'Auth';
@@ -8,7 +8,7 @@ const TAG_TYPE_PUBLIC_PERMISSIONS = 'PERMISSION_LIST';
 const TAG_TYPE_PERMISSIONS = 'PERMISSION_LIST';
 const TAG_TYPE_TOKENS = 'TAG_TYPE_TOKENS';
 
-export const apis = eliteaApi
+export const apis = alitaApi
   .enhanceEndpoints({
     addTagTypes: [TAG_TYPE_AUTH, TAG_TYPE_PERMISSIONS],
   })

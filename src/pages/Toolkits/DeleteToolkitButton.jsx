@@ -55,7 +55,7 @@ const useDeleteToolkit = (setBlockNav, isMCP) => {
   }, [error, isError, isSuccess, reset, toastError, toastInfo]);
 
   return {
-    name: name || toolkit_name || settings?.elitea_title || settings?.configuration_title || 'Toolkit',
+    name: name || toolkit_name || settings?.alita_title || settings?.configuration_title || 'Toolkit',
     onDelete,
     isLoading,
   };

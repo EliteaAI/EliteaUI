@@ -315,7 +315,7 @@ const NodeCardHeader = memo(props => {
           </Tooltip>
         )}
         <IconButton
-          variant="elitea"
+          variant="alita"
           color="tertiary"
           sx={styles.expandButton}
           onClick={onClick}

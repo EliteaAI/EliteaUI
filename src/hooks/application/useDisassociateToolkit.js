@@ -3,8 +3,8 @@ import { useCallback, useMemo } from 'react';
 import { useFormikContext } from 'formik';
 import { useDispatch } from 'react-redux';
 
+import { alitaApi } from '@/api/alitaApi';
 import { TAG_TYPE_APPLICATION_DETAILS, useUpdateApplicationRelationMutation } from '@/api/applications';
-import { eliteaApi } from '@/api/eliteaApi';
 import { useToolkitAssociateMutation } from '@/api/toolkits';
 import { buildErrorMessage } from '@/common/utils';
 
@@ -37,7 +37,7 @@ export default function useDisassociateToolkit({ applicationId, versionId, onDel
 
   // Helper function to invalidate cache and trigger refetch
   const invalidateCacheAndRefresh = useCallback(() => {
-    dispatch(eliteaApi.util.invalidateTags([TAG_TYPE_APPLICATION_DETAILS]));
+    dispatch(alitaApi.util.invalidateTags([TAG_TYPE_APPLICATION_DETAILS]));
     setRefetch();
   }, [dispatch, setRefetch]);
 

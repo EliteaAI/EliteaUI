@@ -54,7 +54,7 @@ const GeneralFormPanel = ({ applicationId, onCollapsed }) => {
               right: '0px',
               zIndex: 100,
             }}
-            variant="elitea"
+            variant="alita"
             color="tertiary"
             onClick={onClickCollapsed}
           >

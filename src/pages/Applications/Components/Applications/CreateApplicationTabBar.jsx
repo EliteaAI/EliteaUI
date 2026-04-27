@@ -67,7 +67,7 @@ const CreateApplicationTabBar = memo(({ isEditingTool }) => {
     <>
       <TabBarItems>
         <MuiButton
-          variant="elitea"
+          variant="alita"
           color="primary"
           disabled={shouldDisableSave}
           onClick={create}

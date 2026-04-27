@@ -2,7 +2,7 @@ import { memo, useCallback, useMemo, useRef, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { Box, CircularProgress, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import RunHistoryContainer from '@/[fsd]/entities/run-history/ui/RunHistoryContainer';
 import { useApplicationChat } from '@/[fsd]/features/agent/lib/hooks';
@@ -20,6 +20,7 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useViewMode from '@/hooks/useViewMode';
 import {
   ContentContainer,
+  DetailSkeleton,
   LeftGridItem,
   RightGridItem,
   StyledGridContainer,
@@ -295,11 +296,7 @@ const ConfigurationTab = memo(props => {
   }
 
   return isFetching ? (
-    <Box
-      sx={{ height: '100%', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
-    >
-      <CircularProgress />
-    </Box>
+    <DetailSkeleton sx={styles.skeleton} />
   ) : (
     <>
       <DirtyDetector setDirty={setDirty} />
@@ -404,6 +401,9 @@ const configurationTabStyles = () => ({
     justifyContent: 'center',
     alignItems: 'center',
     height: '100%',
+  },
+  skeleton: {
+    marginTop: '1rem',
   },
   gridContainer: {
     paddingBottom: '0.75rem',

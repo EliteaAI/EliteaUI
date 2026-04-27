@@ -173,7 +173,6 @@ const fileTreeItemStyles = ({ isActive, isHovering, depth, theme, nextItemHovere
   return {
     wrapper: {
       width: '100%',
-      minWidth: `${indentPadding + 5}rem`,
     },
 
     container: {

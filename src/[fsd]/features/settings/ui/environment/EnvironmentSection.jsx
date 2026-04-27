@@ -152,7 +152,7 @@ const EnvironmentSection = memo(() => {
           await createConfiguration({
             projectId,
             body: {
-              elitea_title: ENVIRONMENT_SECTION,
+              alita_title: ENVIRONMENT_SECTION,
               label: ENVIRONMENT_SECTION,
               type: ENVIRONMENT_SECTION,
               shared: true,

@@ -49,12 +49,11 @@ export const ToolkitForm = memo(props => {
     disabled,
     onSyntaxError,
     validationTrigger,
-    revertCredentialsRef,
   } = props;
   const hasSetViewManually = useRef(false);
   const [view, setView] = useState(ToolkitViewOptions.Form);
   const { configurationsAsSchema } = useGetCurrentConfigurationAsSchemas();
-  const { values, initialValues, setFieldValue } = useFormikContext();
+  const { values, setFieldValue } = useFormikContext();
   const { toolkitType } = useParams();
   const [searchParams] = useSearchParams();
   const [showValidation, setShowValidation] = useState(false);
@@ -63,7 +62,7 @@ export const ToolkitForm = memo(props => {
   const [showConfigurationValidateError, setShowConfigurationValidateError] = useState(false);
   const [configurationName, setConfigurationName] = useState('');
   const [configuration, setConfiguration] = useState({
-    elitea_title: editToolDetail?.settings?.elitea_title || '',
+    alita_title: editToolDetail?.settings?.alita_title || '',
     private: editToolDetail?.settings?.private,
   });
 
@@ -209,7 +208,7 @@ export const ToolkitForm = memo(props => {
   // Check if this is an old toolkit that should show disabled configuration fields
   const shouldShowDisabledConfigFields = useMemo(() => {
     // First check if we're in CREATE mode - if so, never show disabled fields
-    const configurationTitle = configuration?.elitea_title || '';
+    const configurationTitle = configuration?.alita_title || '';
     const isCreateMode =
       configurationTitle === Create_Personal_Title ||
       configurationTitle === Create_Project_Title ||
@@ -219,12 +218,12 @@ export const ToolkitForm = memo(props => {
       return false;
     }
 
-    // Check if elitea_title doesn't exist or has no value, and toolkit type supports configuration
+    // Check if alita_title doesn't exist or has no value, and toolkit type supports configuration
     const configTitleHasValue = configurationTitle && configurationTitle !== '';
     const shouldDisable = !configTitleHasValue && supportsConfiguration;
 
     return shouldDisable;
-  }, [configuration?.elitea_title, isEditing, supportsConfiguration]);
+  }, [configuration?.alita_title, isEditing, supportsConfiguration]);
 
   const { nameIsRequired } = useToolkitNameProp(toolType);
 
@@ -284,35 +283,19 @@ export const ToolkitForm = memo(props => {
    * It observes fields in:
    * - editToolDetail (fields: name, description)
    * - editToolDetail?.settings
-   *
-   * Uses a ref for current values to avoid circular dependency:
-   * - Without ref: setFieldValue → values.settings changes → effect runs → setFieldValue → infinite loop
-   * - Object values always have different references after Formik deep-clones them, so reference
-   *   equality check !== would always be true without JSON.stringify deep comparison
    */
-  const currentValuesRef = useRef(values);
   useEffect(() => {
-    currentValuesRef.current = values;
-  });
-
-  useEffect(() => {
-    const currentValues = currentValuesRef.current;
     Object.keys(editToolDetail?.settings || {}).forEach(async key => {
-      const currentVal = currentValues?.settings?.[key];
-      const newVal = editToolDetail?.settings?.[key];
-      if (JSON.stringify(currentVal) !== JSON.stringify(newVal)) {
-        await setFieldValue(`settings.${key}`, newVal); // Recursive updates
+      if (values?.settings?.[key] !== editToolDetail?.settings?.[key]) {
+        await setFieldValue(`settings.${key}`, editToolDetail?.settings[key]); // Recursive updates
       }
     });
     Object.keys(editToolDetail?.meta?.mcp_options || {}).forEach(async key => {
-      const currentVal = currentValues?.meta?.mcp_options?.[key];
-      const newVal = editToolDetail?.meta?.mcp_options?.[key];
-      if (JSON.stringify(currentVal) !== JSON.stringify(newVal)) {
-        await setFieldValue(`meta.mcp_options.${key}`, newVal); // Recursive updates
+      if (values?.meta?.mcp_options?.[key] !== editToolDetail?.meta?.mcp_options?.[key]) {
+        await setFieldValue(`meta.mcp_options.${key}`, editToolDetail?.meta?.mcp_options?.[key]); // Recursive updates
       }
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editToolDetail]);
+  }, [editToolDetail, values?.settings, setFieldValue, values?.meta?.mcp_options]);
 
   useEffect(() => {
     const setToolkitType = async () => {
@@ -327,14 +310,14 @@ export const ToolkitForm = memo(props => {
   const onSaveConfiguration = useCallback(
     async config => {
       setConfiguration({
-        elitea_title: config?.settings?.elitea_title || config?.title || config?.settings?.title,
+        alita_title: config?.settings?.alita_title || config?.title || config?.settings?.title,
         private: config?.project_id == personal_project_id,
       });
 
       if (config?.title || config?.settings?.title) {
         await editField('settings', {
           ...(editToolDetail?.settings || {}),
-          elitea_title: config?.settings?.elitea_title || config?.title || config?.settings?.title,
+          alita_title: config?.settings?.alita_title || config?.title || config?.settings?.title,
           private: config?.project_id == personal_project_id,
         });
       }
@@ -365,47 +348,14 @@ export const ToolkitForm = memo(props => {
       configurationsAsSchema,
     });
 
-  const onRevertCredentials = useCallback(() => {
-    const initialSettings = initialValues?.settings || {};
-    const currentSettings = editToolDetail?.settings || {};
-
-    // Revert only credentials that changed from team to private (matching the warning condition)
-    Object.keys(currentSettings).forEach(key => {
-      const curr = currentSettings[key];
-      const orig = initialSettings[key];
-
-      // Only revert if this is a credential that was changed from team to private
-      if (typeof curr === 'object' && curr && 'elitea_title' in curr) {
-        if (curr.private !== orig?.private || curr.elitea_title !== orig?.elitea_title) {
-          // Revert to original team credential
-          editField(`settings.${key}`, orig);
-        }
-      }
-    });
-
-    // Update configuration state to match initial values
-    setConfiguration({
-      elitea_title: initialSettings?.elitea_title || '',
-      private: initialSettings?.private,
-    });
-  }, [initialValues?.settings, editToolDetail?.settings, editField]);
-
-  // Expose onRevertCredentials to parent via ref (for ToolkitEditor)
-  useEffect(() => {
-    if (revertCredentialsRef) {
-      revertCredentialsRef.current = onRevertCredentials;
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onRevertCredentials]);
-
   useEffect(() => {
     if (
-      configuration?.elitea_title !== Create_Personal_Title &&
-      configuration?.elitea_title !== Create_Project_Title
+      configuration?.alita_title !== Create_Personal_Title &&
+      configuration?.alita_title !== Create_Project_Title
     ) {
       setShowConfigurationValidateError(false);
     }
-  }, [configuration?.elitea_title]);
+  }, [configuration?.alita_title]);
 
   useEffect(() => {
     setShowValidation(false);
@@ -413,7 +363,7 @@ export const ToolkitForm = memo(props => {
     setConfigurationErrors({});
     setConfigurationName('');
     setConfiguration({
-      elitea_title: editToolDetail?.settings?.elitea_title || '',
+      alita_title: editToolDetail?.settings?.alita_title || '',
       private: editToolDetail?.settings?.private || false,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -447,9 +397,7 @@ export const ToolkitForm = memo(props => {
   const styles = toolkitFormStyles();
 
   return isFetching || editToolDetail?.isLoadingConfigurations ? (
-    <Box sx={styles.loadingContainer}>
-      <CircularProgress />
-    </Box>
+    <CircularProgress size={20} />
   ) : (
     <Box sx={[styles.container, sx]}>
       {editToolDetail.type !== ToolTypes.custom.value && !!effectiveToolSchema && isViewToggleVisible && (
@@ -476,7 +424,6 @@ export const ToolkitForm = memo(props => {
           isTestingConnection={isTestingConnection}
           onCreateConfiguration={onCreateConfiguration}
           onTestConnection={onTestConnection}
-          onRevertCredentials={onRevertCredentials}
           view={view}
           onChangeView={setView}
           hideViewToggle={!effectiveToolSchema}
@@ -529,17 +476,12 @@ export default ToolkitForm;
 /** @type {MuiSx} */
 const toolkitFormStyles = () => ({
   container: {
+    maxHeight: '100%',
     maxWidth: '40.1875rem',
     margin: '0 auto',
+    overflow: 'auto',
   },
   formViewToggle: {
     marginBottom: '0.625rem',
-  },
-  loadingContainer: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '100%',
-    height: '100%',
   },
 });

@@ -48,8 +48,8 @@ const BucketsPanel = memo(props => {
   const storageOptions = useMemo(
     () =>
       storageConfigurations?.map(item => ({
-        value: item.title || item.elitea_title || item.name,
-        label: item.name || item.title || item.elitea_title,
+        value: item.title || item.alita_title || item.name,
+        label: item.name || item.title || item.alita_title,
         ...item,
       })) || [],
     [storageConfigurations],
@@ -123,7 +123,7 @@ const BucketsPanel = memo(props => {
           />
           <IconButton
             onClick={handleSearchClear}
-            variant="elitea"
+            variant="alita"
             color="tertiary"
           >
             <CloseIcon sx={styles.closeIcon} />
@@ -182,7 +182,7 @@ const bucketsPanelStyles = collapsed => ({
     display: 'flex',
     flexDirection: 'column',
     alignItems: collapsed ? 'center' : 'stretch',
-    background: palette.background.eliteaDefault,
+    background: palette.background.alitaDefault,
   }),
   searchBarContainer: {
     display: 'flex',

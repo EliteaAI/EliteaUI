@@ -1,6 +1,6 @@
 import { CollectionStatus, PAGE_SIZE, PUBLIC_PROJECT_ID } from '@/common/constants';
 
-import { eliteaApi } from './eliteaApi.js';
+import { alitaApi } from './alitaApi.js';
 
 // MUST be an even number!!
 const INFINITE_SCROLL_TAG_COUNT_PER_PAGE = 50;
@@ -8,7 +8,7 @@ const INFINITE_SCROLL_TAG_COUNT_PER_PAGE = 50;
 const apiSlicePath = '/elitea_core';
 const TAG_TYPE_TAG = 'Tag';
 
-export const tagApi = eliteaApi
+export const tagApi = alitaApi
   .enhanceEndpoints({
     addTagTypes: [TAG_TYPE_TAG],
   })

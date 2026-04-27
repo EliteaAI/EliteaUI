@@ -103,7 +103,7 @@ export default function ForkEntityButton({
       >
         <IconButton
           aria-label={tooltipTitle}
-          variant="elitea"
+          variant="alita"
           color={button_type}
           onClick={doFork}
           disabled={disabled}

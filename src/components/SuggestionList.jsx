@@ -1,7 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useSelector } from 'react-redux';
-
 import { AutoSuggestionTitles, CollectionStatus, SortFields, SortOrderOptions } from '@/common/constants';
 import { useSearchPromptNavigate } from '@/hooks/useCardNavigate';
 import useSearch from '@/hooks/useSearch';
@@ -34,12 +32,12 @@ export default function SuggestionList({
   showTopData,
   handleAddTag,
 }) {
-  const { tagList: entityFilteredTagList } = useSelector(state => state.tags);
-
   const {
     projectId,
     getSuggestion,
     isFetching,
+    tagResult,
+    tagTotal,
     agentResult,
     agentTotal,
     pipelineResult,
@@ -129,12 +127,6 @@ export default function SuggestionList({
   }, [page]);
 
   // dopropdown data load / load more
-  const filteredTagList = useMemo(() => {
-    if (!searchString?.trim()) return entityFilteredTagList;
-    const query = searchString.toLowerCase();
-    return entityFilteredTagList.filter(tag => tag.name?.toLowerCase().includes(query));
-  }, [entityFilteredTagList, searchString]);
-
   const debouncedInputValue = useDebounce(searchString, 500);
   useEffect(() => {
     if (!isEmptyInput || searchTagLength) {
@@ -227,8 +219,8 @@ export default function SuggestionList({
           {!isToolkitsPage && !isCredentialsPage && !isMCPsPage && (
             <ListSection
               sectionTitle={AutoSuggestionTitles.TAGS}
-              data={filteredTagList}
-              total={filteredTagList.length}
+              data={tagResult}
+              total={tagTotal}
               isFetching={isFetching}
               renderItem={renderTagItem}
               fetchMoreData={fetchMoreData}

@@ -1,45 +1,79 @@
-import { memo, useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { Box, Dialog, DialogContent, Typography } from '@mui/material';
+import { Box, Dialog, DialogContent, IconButton, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 
 import { Checkbox, Modal } from '@/[fsd]/shared/ui';
-import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import ImportIcon from '@/assets/import-icon.svg?react';
 import { downloadAttachmentImage, getAttachmentName, getImageSource } from '@/common/attachmentUtils';
 import { downloadFileFromArtifact, fetchArtifactBlobUrl } from '@/common/utils';
-import CloseIcon from '@/components/Icons/CloseIcon';
-import DeleteIcon from '@/components/Icons/DeleteIcon';
-import DownloadIcon from '@/components/Icons/DownloadIcon';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 
-const ViewImageAttachmentModal = memo(props => {
-  const { open, onRemoveAttachment, onClose, attachment } = props;
+import CloseIcon from '../Icons/CloseIcon';
+import DeleteIcon from '../Icons/DeleteIcon';
+
+const ViewImageAttachmentModal = ({ open, onRemoveAttachment, onClose, attachment }) => {
   const { toastError } = useToast();
   const theme = useTheme();
   const projectId = useSelectedProjectId();
-
+  const styles = useMemo(() => componentStyles(theme), [theme]);
   // For old custom bucket attachments, use filepath (/{bucket}/{filename})
   // For new attachments, use name
   const fileName = attachment.item_details?.filepath || attachment.item_details?.name || attachment.name;
-  const imageSource = getImageSource(attachment);
-  const attachmentName = getAttachmentName(attachment);
-  const attachmentFilepath = attachment?.item_details?.filepath;
-  const attachmentBucket = attachment?.item_details?.bucket;
-
   const [openAlert, setOpenAlert] = useState(false);
   const [needToRemoveFromStorage, setNeedToRemoveFromStorage] = useState(false);
+
+  const onClickRemove = () => {
+    setOpenAlert(true);
+  };
+
+  const onCloseAlert = event => {
+    event?.stopPropagation();
+    setOpenAlert(false);
+  };
+
+  const onConfirmDelete = event => {
+    event?.stopPropagation();
+    onRemoveAttachment?.(fileName, needToRemoveFromStorage);
+    setOpenAlert(false);
+    onClose?.();
+  };
+
+  const onClickDown = event => {
+    event.stopPropagation();
+
+    const filepath = attachment.item_details?.filepath;
+    const bucket = attachment.item_details?.bucket;
+
+    if (filepath && bucket !== '__undefined__') {
+      downloadFileFromArtifact({
+        projectId,
+        filepath,
+        handleError: () => toastError('Failed to download image from storage'),
+      });
+    } else {
+      downloadAttachmentImage(attachment, toastError);
+    }
+  };
+
+  const imageSource = getImageSource(attachment);
+  const attachmentName = getAttachmentName(attachment);
   const [fullResSource, setFullResSource] = useState(null);
   const blobUrlRef = useRef(null);
+  const attachmentFilepath = attachment?.item_details?.filepath;
+  const attachmentBucket = attachment?.item_details?.bucket;
 
   useEffect(() => {
     if (!open) {
       setFullResSource(null);
       return;
     }
+
     if (!attachmentFilepath || attachmentBucket === '__undefined__') return;
 
     let cancelled = false;
+
     (async () => {
       const objectUrl = await fetchArtifactBlobUrl({ projectId, filepath: attachmentFilepath });
       if (cancelled || !objectUrl) return;
@@ -60,35 +94,6 @@ const ViewImageAttachmentModal = memo(props => {
     };
   }, []);
 
-  const onClickRemove = () => setOpenAlert(true);
-
-  const onCloseAlert = event => {
-    event?.stopPropagation();
-    setOpenAlert(false);
-  };
-
-  const onConfirmDelete = event => {
-    event?.stopPropagation();
-    onRemoveAttachment?.(fileName, needToRemoveFromStorage);
-    setOpenAlert(false);
-    onClose?.();
-  };
-
-  const onClickDown = event => {
-    event.stopPropagation();
-    const filepath = attachment.item_details?.filepath;
-    const bucket = attachment.item_details?.bucket;
-    if (filepath && bucket !== '__undefined__') {
-      downloadFileFromArtifact({
-        projectId,
-        filepath,
-        handleError: () => toastError('Failed to download image from storage'),
-      });
-    } else {
-      downloadAttachmentImage(attachment, toastError);
-    }
-  };
-
   const handleKeyDown = event => {
     if (event.key === 'Escape') {
       event.preventDefault();
@@ -96,7 +101,10 @@ const ViewImageAttachmentModal = memo(props => {
     }
   };
 
-  if (!imageSource) return null;
+  // Don't render if no valid image source
+  if (!imageSource) {
+    return null;
+  }
 
   return (
     <>
@@ -105,7 +113,9 @@ const ViewImageAttachmentModal = memo(props => {
         open={open}
         onClose={onClose}
         onKeyDown={handleKeyDown}
-        slotProps={{ paper: { sx: styles.dialogPaper } }}
+        PaperProps={{
+          sx: styles.dialogPaper,
+        }}
       >
         <Box sx={styles.headerContainer}>
           <Typography
@@ -114,43 +124,18 @@ const ViewImageAttachmentModal = memo(props => {
           >
             {attachmentName}
           </Typography>
-          <Box sx={styles.actionsContainer}>
-            <BaseBtn
-              variant={BUTTON_VARIANTS.ICON}
-              color="secondary"
-              onClick={onClickDown}
-              aria-label="Download image"
-              sx={styles.iconButton}
-            >
-              <DownloadIcon
-                sx={styles.icon}
-                fill={theme.palette.icon.fill.secondary}
-              />
-            </BaseBtn>
-            <BaseBtn
-              variant={BUTTON_VARIANTS.ICON}
-              color="secondary"
-              onClick={onClickRemove}
-              aria-label="Remove attachment"
-              sx={styles.iconButton}
-            >
-              <DeleteIcon
-                sx={styles.icon}
-                fill={theme.palette.icon.fill.secondary}
-              />
-            </BaseBtn>
-            <BaseBtn
-              variant="tertiary"
-              onClick={onClose}
-              aria-label="Close modal"
-              sx={styles.closeButton}
-            >
-              <CloseIcon
-                fill={theme.palette.icon.fill.default}
-                sx={styles.closeIcon}
-              />
-            </BaseBtn>
-          </Box>
+          <IconButton
+            variant="alita"
+            color="tertiary"
+            onClick={onClose}
+            aria-label="Close modal"
+            sx={styles.closeButton}
+          >
+            <CloseIcon
+              fill={theme.palette.icon.fill.default}
+              sx={styles.closeIcon}
+            />
+          </IconButton>
         </Box>
 
         <DialogContent sx={styles.dialogContent}>
@@ -160,9 +145,38 @@ const ViewImageAttachmentModal = memo(props => {
             height="100%"
             alt={attachmentName}
             style={{ objectFit: 'contain' }}
-            onError={() => toastError('Failed to load image')}
+            onError={() => {
+              toastError('Failed to load image');
+            }}
           />
         </DialogContent>
+
+        <Box sx={styles.actionsContainer}>
+          <IconButton
+            variant="alita"
+            color="secondary"
+            onClick={onClickDown}
+            aria-label="Download image"
+            sx={styles.iconButton}
+          >
+            <ImportIcon
+              sx={styles.icon}
+              fill={theme.palette.icon.fill.secondary}
+            />
+          </IconButton>
+          <IconButton
+            variant="alita"
+            color="secondary"
+            onClick={onClickRemove}
+            aria-label="Remove attachment"
+            sx={styles.iconButton}
+          >
+            <DeleteIcon
+              sx={styles.icon}
+              fill={theme.palette.icon.fill.secondary}
+            />
+          </IconButton>
+        </Box>
       </Dialog>
       <Modal.DeleteEntityModal
         name={fileName}
@@ -172,99 +186,105 @@ const ViewImageAttachmentModal = memo(props => {
         onConfirm={onConfirmDelete}
         shouldRequestInputName={false}
         extraContent={
-          <Box sx={styles.extraContentBox}>
-            <Checkbox.BaseCheckbox
-              checked={needToRemoveFromStorage}
-              sx={styles.checkbox}
-              onChange={(_, value) => setNeedToRemoveFromStorage(value)}
-            />
-            <Typography
-              variant="bodyMedium"
-              color="text.secondary"
-            >
-              Also delete from attachment storage
-            </Typography>
-          </Box>
+          <>
+            <Box sx={styles.extraContentBox}>
+              <Checkbox.BaseCheckbox
+                checked={needToRemoveFromStorage}
+                sx={styles.checkbox}
+                onChange={(_, value) => {
+                  setNeedToRemoveFromStorage(value);
+                }}
+              />
+              <Typography
+                variant="bodyMedium"
+                color="text.secondary"
+              >
+                Also delete from attachment storage
+              </Typography>
+            </Box>
+          </>
         }
       />
     </>
   );
-});
+};
 
-ViewImageAttachmentModal.displayName = 'ViewImageAttachmentModal';
-
-/** @type {MuiSx} */
-const styles = {
-  dialogPaper: ({ palette }) => ({
-    background: palette.background.tabPanel,
-    borderRadius: '1rem',
-    border: `1px solid ${palette.border.lines}`,
-    boxShadow: palette.boxShadow.default,
+// Component styles
+const componentStyles = theme => ({
+  dialogPaper: {
+    background: theme.palette.background.tabPanel,
+    borderRadius: '16px',
+    border: `1px solid ${theme.palette.border.lines}`,
+    boxShadow: theme.palette.boxShadow.default,
     marginTop: 0,
     position: 'absolute',
-    top: '4rem',
-    maxWidth: '47.5625rem',
-  }),
+    top: 64,
+    maxWidth: '89.5%',
+    [theme.breakpoints.up('prompt_list_xxl')]: {
+      maxWidth: '2112px',
+    },
+  },
   headerContainer: {
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: '1.5rem',
+    gap: '24px',
     width: '100%',
     boxSizing: 'border-box',
-    padding: '1rem 1.5rem',
-    height: '3.75rem',
+    padding: '32px 40px 16px 40px',
   },
   closeButton: {
-    minWidth: '1.75rem !important',
-    padding: '0 !important',
-    height: '1.75rem',
+    minWidth: '28px !important',
+    padding: '0px 0px !important',
+    height: '28px',
     display: 'flex',
-    borderRadius: '1rem',
+    borderRadius: '16px',
     justifyContent: 'center',
     alignItems: 'center',
     cursor: 'pointer',
   },
   closeIcon: {
     cursor: 'pointer',
-    fontSize: '1.031rem',
+    fontSize: '16.5px',
   },
-  dialogContent: ({ palette }) => ({
-    background: palette.background.tabPanel,
-    borderBottom: `1px solid ${palette.border.table}`,
-    borderTop: `1px solid ${palette.border.table}`,
+  dialogContent: {
+    background: theme.palette.background.alitaDefault,
+    borderBottom: `1px solid ${theme.palette.border.table}`,
+    borderTop: `1px solid ${theme.palette.border.table}`,
     width: '100%',
-    padding: '0.9375rem 2.5rem',
+    padding: '15px 40px',
     boxSizing: 'border-box',
-    height: '25.5625rem',
-  }),
+    height: 'calc(100vh - 370px)',
+  },
   actionsContainer: {
+    height: '80px',
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '.75rem',
+    padding: '0px 40px',
+    gap: '16px',
   },
   iconButton: {
-    marginLeft: 0,
+    marginLeft: '0px',
   },
   icon: {
-    fontSize: '1rem',
+    fontSize: '16px',
   },
   checkbox: {
-    padding: 0,
-    marginTop: '0.3125rem',
+    padding: '0px',
+    marginTop: '5px',
   },
   extraContentBox: {
-    marginTop: '-0.5rem',
+    marginTop: '-8px',
     boxSizing: 'border-box',
-    width: '34.5rem',
+    width: '552px',
     flexDirection: 'row',
     display: 'flex',
-    gap: '0.5rem',
+    gap: '8px',
     alignItems: 'flex-start',
   },
-};
+});
 
 export default ViewImageAttachmentModal;

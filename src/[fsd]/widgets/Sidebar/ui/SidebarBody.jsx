@@ -25,9 +25,9 @@ import {
   PUBLIC_PROJECT_ID,
   SIDE_BAR_WIDTH,
 } from '@/common/constants';
+import AlitaIcon from '@/components/Icons/AlitaIcon';
 import ApplicationsIcon from '@/components/Icons/ApplicationsIcon';
 import ChatIcon from '@/components/Icons/ChatIcon';
-import EliteAIcon from '@/components/Icons/EliteAIcon';
 import ModeratorIcon from '@/components/Icons/ModeratorIcon';
 import Person from '@/components/Icons/Person';
 import ProjectSelect from '@/components/ProjectSelect';
@@ -256,7 +256,7 @@ const SidebarBody = memo(({ onKeyDown, onCollapsed }) => {
             onClick={onClickHomeButton}
             sx={styles.homeButton}
           >
-            <EliteAIcon sx={styles.eliteaIcon} />
+            <AlitaIcon sx={styles.alitaIcon} />
             {isSocketIconVisible && (
               <Tooltip
                 title={`${systemSenderName} is ${socketStatus}`}
@@ -268,9 +268,7 @@ const SidebarBody = memo(({ onKeyDown, onCollapsed }) => {
           </IconButton>
           {!sideBarCollapsed && <ThemeModeToggle />}
         </Box>
-
         <Divider sx={styles.divider} />
-
         <Box sx={styles.projectSection}>
           <ProjectSelect
             customSelectedColor={`${theme.palette.text.secondary} !important`}
@@ -387,7 +385,7 @@ const sideBarBodyStyles = (sideBarCollapsed, socketStatus) => ({
     minHeight: `${NAV_BAR_HEIGHT_IN_PX} !important`,
     padding: '0 1rem',
     width: '100%',
-    justifyContent: `${sideBarCollapsed ? 'center' : 'space-between'}`,
+    justifyContent: 'space-between',
   },
   homeButton: {
     mr: 0,
@@ -395,22 +393,26 @@ const sideBarBodyStyles = (sideBarCollapsed, socketStatus) => ({
     paddingBottom: '1rem',
     paddingX: 0,
     background: 'transparent',
-    marginLeft: `${sideBarCollapsed ? '0' : '-0.5rem'}`,
+    marginLeft: '-0.5rem',
     boxSizing: 'border-box',
     width: '2.75rem',
     height: '2.75rem',
   },
-  eliteaIcon: {
+  alitaIcon: {
     fontSize: '1.75rem',
   },
   divider: ({ palette }) => ({
     borderColor: palette.border.sidebarDivider,
   }),
   projectSection: {
-    display: 'flex',
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    padding: '0.5rem 1rem',
+    paddingTop: '0.3125rem',
+    paddingBottom: '0.1875rem',
+    paddingLeft: '0.9375rem',
+    paddingRight: '1rem',
+    gap: '0.5rem',
+    display: 'flex',
     boxSizing: 'border-box',
   },
   section: {
@@ -477,40 +479,40 @@ const sideBarBodyStyles = (sideBarCollapsed, socketStatus) => ({
     color: palette.text.metrics,
     fontSize: '1rem',
   }),
-  projectSelectSx: ({ palette }) => ({
-    display: 'flex',
+  projectSelectSx: {
     alignItems: 'center',
-    width: '100%',
-    boxSizing: 'border-box',
-    borderRadius: '0.5rem',
-    ...(!sideBarCollapsed && {
-      '&:hover': {
-        backgroundColor: palette.background.button.drawerMenu.hover,
-      },
-    }),
-  }),
-  projectSelectContainerSX: {
-    margin: 0,
-    padding: 0,
-    width: '100%',
   },
   projectSelectSelectSX: {
-    margin: 0,
-    '& .MuiInputBase-root.MuiInput-underline:before, & .MuiInputBase-root.MuiInput-underline:after, & .MuiInputBase-root.MuiInput-root:not(.Mui-error, .Mui-disabled).MuiInput-underline:hover:before, & .MuiInputBase-root.MuiInput-underline.Mui-focused:not(.Mui-error):after, & .MuiInputBase-root.MuiInput-underline.Mui-error:before, & .MuiInputBase-root.MuiInput-underline.Mui-error:after':
-      {
-        borderBottom: 'none !important',
-        borderBottomColor: 'transparent !important',
-      },
+    margin: '0 !important',
   },
-  projectSelectInputSX: {
+  projectSelectContainerSX: {
+    marginLeft: '0 !important',
+  },
+  projectSelectInputSX: ({ palette }) => ({
+    '& .MuiSelect-root::after': {
+      borderBottom: '0 solid white',
+    },
+    '&:after': {
+      borderBottom: 'none',
+    },
+    '&.MuiInputBase-root.MuiInput-root.MuiSelect-root': {
+      '&:hover:not(.Mui-disabled, .Mui-error):before': {
+        borderBottom: `0 solid ${palette.border.hover}`,
+      },
+    },
+    '&:hover:not(.Mui-disabled, .Mui-error):before': {
+      borderBottom: 'none',
+    },
     '& .MuiInputBase-input': {
-      padding: 0,
+      '& .MuiOutlinedInput-input': {
+        padding: '0',
+      },
     },
     '& .MuiSelect-icon': {
       display: sideBarCollapsed ? 'none' : undefined,
-      top: 'calc(50% - 0.5rem) !important',
+      top: 'calc(50% - 0.625rem) !important',
     },
-  },
+  }),
 });
 
 SidebarBody.displayName = 'SideBarBody';

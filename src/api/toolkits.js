@@ -1,8 +1,8 @@
 import { convertToJson, removeDuplicateObjects } from '@/common/utils.jsx';
 
+import { alitaApi } from './alitaApi.js';
 // Import TAG_TYPE_APPLICATION_DETAILS from applications.js to invalidate application cache when toolkit is associated
 import { TAG_TYPE_APPLICATION_DETAILS } from './applications.js';
-import { eliteaApi } from './eliteaApi.js';
 
 export const TAG_TYPE_TOOLKITS = 'TAG_TYPE_TOOLKITS';
 export const TAG_TYPE_TOOLKIT_DETAILS = 'TOOLKIT_DETAILS';
@@ -17,7 +17,7 @@ const headers = {
 
 const apiSlicePath = '/elitea_core';
 
-export const toolkitsApi = eliteaApi
+export const toolkitsApi = alitaApi
   .enhanceEndpoints({
     addTagTypes: [
       TAG_TYPE_TOOLKIT_DETAILS,
@@ -197,7 +197,7 @@ export const toolkitsApi = eliteaApi
         invalidatesTags: [TAG_TYPE_TOTAL_TOOLKITS, TAG_TYPE_TOOLKITS, TAG_TYPE_TOOLKIT_DETAILS],
         onQueryStarted: async (args, { dispatch, getState, queryFulfilled }) => {
           const {
-            eliteaApi: { queries },
+            alitaApi: { queries },
           } = getState();
           const cacheKeys = Object.keys(queries || {});
           let patchResult1 = null;
@@ -205,7 +205,7 @@ export const toolkitsApi = eliteaApi
           if (foundToolkitsListKey) {
             const queryParams = foundToolkitsListKey.replace('toolkitsList', '');
             patchResult1 = dispatch(
-              eliteaApi.util.updateQueryData('toolkitsList', convertToJson(queryParams), draft => {
+              alitaApi.util.updateQueryData('toolkitsList', convertToJson(queryParams), draft => {
                 const index = draft.rows.findIndex(item => item.id === args.toolkitId);
                 if (index !== -1) {
                   draft.rows.splice(index, 1);
@@ -434,7 +434,7 @@ export const toolkitsApi = eliteaApi
           if (projectId && entity_id && entity_version_id) {
             const type = toolkitType || args.type;
             patchResult = dispatch(
-              eliteaApi.util.updateQueryData(
+              alitaApi.util.updateQueryData(
                 'getApplicationVersionDetail',
                 { projectId, applicationId: entity_id, versionId: entity_version_id },
                 draft => {

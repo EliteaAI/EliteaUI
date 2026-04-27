@@ -24,7 +24,7 @@ const CopyToClipboardButton = memo(props => {
         placement="top"
       >
         <Button
-          variant="elitea"
+          variant="alita"
           color="tertiary"
           onClick={onClick}
         >

@@ -1,19 +1,16 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Form, Formik } from 'formik';
-import { useParams, useSearchParams } from 'react-router-dom';
 
-import { InstructionsInputRefProvider } from '@/[fsd]/app/providers';
 import { ApplicationControls, ApplicationTabBar } from '@/[fsd]/entities/application-tab-bar/ui';
-import { useIsVersionNotFound } from '@/[fsd]/entities/version/lib/hooks';
 import { ViewMode } from '@/common/constants';
-import { buildErrorMessage, isNotFoundError } from '@/common/utils';
+import { buildErrorMessage } from '@/common/utils';
 import StyledTabs from '@/components/StyledTabs';
 import useCorrectUserNameInUrl from '@/hooks/application/useCorrectUserNameInUrl';
 import useNavBlocker from '@/hooks/useNavBlocker';
 import useToast from '@/hooks/useToast';
 import useViewMode from '@/hooks/useViewMode';
-import Page404 from '@/pages/Page404.jsx';
+import FileReaderEnhancerRefContext from '@/pages/Common/Components/FileReaderInputRefContext';
 
 import getValidateSchema from './Components/Applications/ApplicationCreationValidateSchema';
 import ConfigurationTab from './Components/Applications/ConfigurationTab';
@@ -25,9 +22,6 @@ const EditApplication = memo(() => {
 
   const { toastError } = useToast();
   const { initialValues, isFetching, isError, error, applicationId } = useApplicationInitialValues();
-  const { version } = useParams();
-  const [searchParams] = useSearchParams();
-  const isFromCreation = searchParams.get('isFromCreation') === 'true';
 
   const [dirty, setDirty] = useState(false);
   const [unsavedLLMSettings, setUnsavedLLMSettings] = useState();
@@ -52,23 +46,13 @@ const EditApplication = memo(() => {
 
   const { setBlockNav } = useNavBlocker(blockOptions);
 
-  const isVersionNotFound = useIsVersionNotFound({
-    version,
-    isFetching,
-    isError,
-    versions: initialValues?.versions,
-    skip: isFromCreation,
-  });
-
-  const shouldShowNotFoundPage = (isError && isNotFoundError(error)) || isVersionNotFound;
-
   useCorrectUserNameInUrl(initialValues?.name);
 
   useEffect(() => {
-    if (isError && !shouldShowNotFoundPage) {
+    if (isError) {
       toastError(buildErrorMessage(error));
     }
-  }, [error, isError, shouldShowNotFoundPage, toastError]);
+  }, [error, isError, toastError]);
 
   const tabs = useMemo(
     () => [
@@ -89,7 +73,7 @@ const EditApplication = memo(() => {
         content: (
           <ConfigurationTab
             totalToolCount={initialValues?.version_details?.tools.length || 0}
-            isFetching={isFetching}
+            isLoading={isFetching}
             isError={isError}
             applicationId={applicationId}
             setDirty={setDirty}
@@ -112,12 +96,8 @@ const EditApplication = memo(() => {
     ],
   );
 
-  if (shouldShowNotFoundPage) {
-    return <Page404 />;
-  }
-
   return (
-    <InstructionsInputRefProvider inputRef={fileReaderEnhancerRef}>
+    <FileReaderEnhancerRefContext.Provider value={fileReaderEnhancerRef}>
       <Formik
         enableReinitialize
         initialValues={initialValues}
@@ -135,7 +115,7 @@ const EditApplication = memo(() => {
           />
         </Form>
       </Formik>
-    </InstructionsInputRefProvider>
+    </FileReaderEnhancerRefContext.Provider>
   );
 });
 

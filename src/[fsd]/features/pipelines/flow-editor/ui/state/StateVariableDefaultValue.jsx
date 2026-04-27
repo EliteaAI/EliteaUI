@@ -53,7 +53,7 @@ const StateVariableDefaultValue = memo(props => {
                 e.stopPropagation();
                 onIconClick();
               }}
-              variant="elitea"
+              variant="alita"
               color="tertiary"
               sx={styles.fullScreenButton}
               className="fullscreen-button"
@@ -91,7 +91,7 @@ const StateVariableDefaultValue = memo(props => {
         placement="top"
       >
         <IconButton
-          variant="elitea"
+          variant="alita"
           color="tertiary"
           disabled={disabled}
           onClick={onIconClick}

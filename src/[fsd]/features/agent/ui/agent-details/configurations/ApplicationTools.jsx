@@ -24,7 +24,6 @@ const ApplicationTools = memo(props => {
     disabled,
     title = 'Toolkits',
     hidePythonSandbox = false,
-    entityProjectId,
   } = props;
   const sortedToolsRef = useRef(null);
 
@@ -123,7 +122,6 @@ const ApplicationTools = memo(props => {
                   applicationId={applicationId}
                   disabled={disabled}
                   isDuplicate={markedDuplicateTool.isDuplicate}
-                  entityProjectId={entityProjectId}
                 />
               ))}
 

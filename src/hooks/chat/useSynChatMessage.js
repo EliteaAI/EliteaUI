@@ -2,8 +2,8 @@ import { useCallback } from 'react';
 
 import { useDispatch } from 'react-redux';
 
+import { alitaApi } from '@/api/alitaApi';
 import { TAG_TYPE_CONVERSATION_DETAILS } from '@/api/chat';
-import { eliteaApi } from '@/api/eliteaApi';
 import { ChatParticipantType, TOOL_ACTION_TYPES } from '@/common/constants';
 import {
   convertToAIAnswer,
@@ -156,7 +156,7 @@ const useSynChatMessage = ({
       if (!messageWasFound) {
         if (message_group.context_analytics && activeConversation?.id) {
           dispatch(
-            eliteaApi.util.invalidateTags([
+            alitaApi.util.invalidateTags([
               { type: TAG_TYPE_CONVERSATION_DETAILS, id: activeConversation.id },
             ]),
           );
@@ -204,7 +204,7 @@ const useSynChatMessage = ({
 
       if (message_group.context_analytics) {
         dispatch(
-          eliteaApi.util.invalidateTags([{ type: TAG_TYPE_CONVERSATION_DETAILS, id: activeConversation.id }]),
+          alitaApi.util.invalidateTags([{ type: TAG_TYPE_CONVERSATION_DETAILS, id: activeConversation.id }]),
         );
       }
     },

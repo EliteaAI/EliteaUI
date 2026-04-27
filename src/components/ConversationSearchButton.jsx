@@ -25,7 +25,7 @@ const ConversationSearchButton = ({ collapsed = false, onExpand, onSearchActivat
     >
       <IconButton
         onClick={handleSearchClick}
-        variant="elitea"
+        variant="alita"
         color="secondary"
         sx={{
           minWidth: '28px !important',

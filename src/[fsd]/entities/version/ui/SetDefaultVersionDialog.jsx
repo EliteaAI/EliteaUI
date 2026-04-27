@@ -38,7 +38,7 @@ const SetDefaultVersionDialog = memo(props => {
       actions={
         <>
           <Button
-            variant="elitea"
+            variant="alita"
             color="secondary"
             onClick={onClose}
             autoFocus
@@ -48,7 +48,7 @@ const SetDefaultVersionDialog = memo(props => {
           </Button>
           <Button
             disableRipple
-            variant="elitea"
+            variant="alita"
             color="primary"
             onClick={onConfirm}
             disabled={confirming}

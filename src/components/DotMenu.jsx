@@ -320,7 +320,7 @@ export default function DotMenu({
         />
       ) : (
         <IconButton
-          variant="elitea"
+          variant="alita"
           color={iconColor}
           id={id + '-action'}
           // aria-label="more"
@@ -496,6 +496,6 @@ export default function DotMenu({
 const dotMenuStyles = () => ({
   iconButton: ({ palette }) => ({
     marginLeft: 0,
-    'svg, &:hover svg': { fill: palette.icon.fill.secondary },
+    '&:hover svg': { fill: palette.icon.fill.secondary },
   }),
 });

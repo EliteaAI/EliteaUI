@@ -310,8 +310,9 @@ const ToolkitRightContent = memo(props => {
   }, [welcomeMessage]);
 
   // Simple tool change handler
-  const onChangeTool = useCallback(value => {
-    setSelectedTool(value || null);
+  const onChangeTool = useCallback(option => {
+    const value = option?.value || null;
+    setSelectedTool(value);
     setToolInputVariables([]);
   }, []);
 

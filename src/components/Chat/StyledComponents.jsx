@@ -39,9 +39,8 @@ export const ChatBodyContainer = styled(Box)(
 
   border-radius: 16px;
   border: 1px solid ${theme.palette.border.lines};
-  background: ${theme.palette.background.eliteaDefault};
+  background: ${theme.palette.background.alitaDefault};
   box-sizing: border-box;
-  overflow: hidden;
 `,
 );
 
@@ -109,7 +108,15 @@ export const MessageList = styled(List)(
   () => `
   width: 100%;
   flex-grow: 1;
+  height: 200px;
   padding: 0 0.75rem 0.75rem;
+  overflow: scroll;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  ::-webkit-scrollbar {
+    width: 0 !important;
+    height: 0;
+  }
 `,
 );
 

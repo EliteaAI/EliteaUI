@@ -14,7 +14,7 @@ export const useIconMetaTooltipType = (type, isMCP) => {
   // const iconComponent = getToolIconByType(type, theme, typeInfo);
 
   const iconComponent = useMemo(() => {
-    return typeInfo ? getToolIconByType(type, theme, { toolSchema: typeInfo, isMCP }) : null;
+    return typeInfo ? getToolIconByType(type, theme, typeInfo, isMCP) : null;
   }, [type, theme, typeInfo, isMCP]);
 
   return {

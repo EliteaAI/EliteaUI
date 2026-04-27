@@ -128,14 +128,14 @@ const FeedbackDialog = memo(() => {
           </DialogContent>
           <StyledDialogActions>
             <Button
-              variant="elitea"
+              variant="alita"
               color="secondary"
               onClick={handleClose}
             >
               Cancel
             </Button>
             <Button
-              variant="elitea"
+              variant="alita"
               color="primary"
               onClick={handleSubmit}
             >

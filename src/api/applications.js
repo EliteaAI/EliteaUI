@@ -1,7 +1,7 @@
 import { PAGE_SIZE, PUBLIC_PROJECT_ID } from '@/common/constants';
 import { convertToJson, removeDuplicateObjects } from '@/common/utils.jsx';
 
-import { eliteaApi } from './eliteaApi.js';
+import { alitaApi } from './alitaApi.js';
 
 export const TAG_TYPE_APPLICATIONS = 'TAG_TYPE_APPLICATIONS';
 const TAG_TYPE_PUBLIC_APPLICATIONS = 'TAG_TYPE_PUBLIC_APPLICATIONS';
@@ -23,7 +23,7 @@ const headers = {
 
 const patchApplicationListCache = (state, dispatch, endpointName, applicationId) => {
   const {
-    eliteaApi: { queries },
+    alitaApi: { queries },
   } = state;
   const cacheKeys = Object.keys(queries || {});
   const patchResults = [];
@@ -33,7 +33,7 @@ const patchApplicationListCache = (state, dispatch, endpointName, applicationId)
   foundKeys.forEach(key => {
     const queryParams = key.replace(endpointName, '');
     const patchResult = dispatch(
-      eliteaApi.util.updateQueryData(endpointName, convertToJson(queryParams), draft => {
+      alitaApi.util.updateQueryData(endpointName, convertToJson(queryParams), draft => {
         const index = draft.rows.findIndex(item => item.id === applicationId);
         if (index !== -1) {
           draft.rows.splice(index, 1);
@@ -46,7 +46,7 @@ const patchApplicationListCache = (state, dispatch, endpointName, applicationId)
   return patchResults;
 };
 
-export const apiSlice = eliteaApi
+export const apiSlice = alitaApi
   .enhanceEndpoints({
     //
     addTagTypes: [TAG_TYPE_APPLICATION_DETAILS],
@@ -293,44 +293,32 @@ export const apiSlice = eliteaApi
         invalidatesTags: [TAG_TYPE_TOTAL_APPLICATIONS, TAG_TYPE_APPLICATIONS],
       }),
       publishApplication: build.mutation({
-        query: ({ projectId, versionId, body }) => {
+        query: ({ projectId, versionId }) => {
           return {
             url: apiSlicePath + '/publish/prompt_lib/' + projectId + '/' + versionId,
             method: 'POST',
-            body,
           };
         },
         invalidatesTags: (result, error, arg) => {
           if (error) {
             return [];
           }
-          return [{ type: TAG_TYPE_APPLICATION_DETAILS, id: arg.id }, TAG_TYPE_APPLICATIONS];
+          return [{ type: TAG_TYPE_APPLICATION_DETAILS, id: arg.id }];
         },
       }),
       unpublishApplication: build.mutation({
-        query: ({ projectId, versionId, body }) => {
+        query: ({ projectId, versionId }) => {
           return {
             url: apiSlicePath + '/unpublish/prompt_lib/' + projectId + '/' + versionId,
-            method: 'POST',
-            body,
+            method: 'DELETE',
           };
         },
         invalidatesTags: (result, error, arg) => {
           if (error) {
             return [];
           }
-          return [{ type: TAG_TYPE_APPLICATION_DETAILS, id: arg.id }, TAG_TYPE_APPLICATIONS];
+          return [{ type: TAG_TYPE_APPLICATION_DETAILS, id: arg.id }];
         },
-      }),
-      validateForPublish: build.mutation({
-        query: ({ projectId, versionId, body }) => {
-          return {
-            url: apiSlicePath + '/publish_validate/prompt_lib/' + projectId + '/' + versionId,
-            method: 'POST',
-            body,
-          };
-        },
-        invalidatesTags: [],
       }),
       stopApplicationTask: build.mutation({
         query: ({ projectId, task_id }) => {
@@ -420,11 +408,8 @@ export const apiSlice = eliteaApi
         },
       }),
       publicApplicationDetails: build.query({
-        query: ({ applicationId, versionName }) => {
-          let url = apiSlicePath + '/public_application/prompt_lib/' + applicationId;
-          if (versionName) {
-            url += '/' + versionName;
-          }
+        query: ({ applicationId }) => {
+          const url = apiSlicePath + '/public_application/prompt_lib/' + applicationId;
           return {
             url,
           };
@@ -482,7 +467,7 @@ export const apiSlice = eliteaApi
           let patchResult;
           if (projectId && applicationId && versionId) {
             patchResult = dispatch(
-              eliteaApi.util.updateQueryData(
+              alitaApi.util.updateQueryData(
                 'getApplicationVersionDetail',
                 { projectId, applicationId, versionId },
                 draft => {
@@ -674,7 +659,7 @@ export const apiSlice = eliteaApi
           // eslint-disable-next-line no-unused-vars
           const { projectId, versionId, entityId, ...icon_meta } = args;
           const {
-            eliteaApi: { queries },
+            alitaApi: { queries },
           } = getState();
           const cacheKeys = Object.keys(queries || {});
           let patchResult = null;
@@ -684,7 +669,7 @@ export const apiSlice = eliteaApi
           if (foundApplicationDetailKey) {
             const queryParams = foundApplicationDetailKey.replace('applicationDetails', '');
             patchResult = dispatch(
-              eliteaApi.util.updateQueryData('applicationDetails', convertToJson(queryParams), draft => {
+              alitaApi.util.updateQueryData('applicationDetails', convertToJson(queryParams), draft => {
                 draft.version_details.meta = {
                   ...(draft.version_details.meta || {}),
                   icon_meta,
@@ -713,7 +698,7 @@ export const apiSlice = eliteaApi
         onQueryStarted: async (args, { dispatch, getState, queryFulfilled }) => {
           const { projectId, name } = args;
           const {
-            eliteaApi: { queries },
+            alitaApi: { queries },
           } = getState();
           const cacheKeys = Object.keys(queries || {});
           let patchResult = null;
@@ -723,7 +708,7 @@ export const apiSlice = eliteaApi
           if (foundKey) {
             const queryParams = foundKey.replace('getApplicationIcons', '');
             patchResult = dispatch(
-              eliteaApi.util.updateQueryData('getApplicationIcons', convertToJson(queryParams), draft => {
+              alitaApi.util.updateQueryData('getApplicationIcons', convertToJson(queryParams), draft => {
                 draft.rows = draft.rows.filter(icon => icon.name !== name);
                 draft.total = draft.total - 1;
               }),
@@ -836,20 +821,6 @@ export const apiSlice = eliteaApi
         providesTags: (result, error, { projectId, applicationId, versionId }) => [
           { type: 'ApplicationValidation', id: `${projectId}-${applicationId}-${versionId}` },
         ],
-        onQueryStarted: async (args, { dispatch, queryFulfilled }) => {
-          try {
-            await queryFulfilled;
-          } catch {
-            // When validation fails, invalidate the version details cache
-            // so stale data doesn't persist
-            const { projectId, applicationId, versionId } = args;
-            dispatch(
-              eliteaApi.util.invalidateTags([
-                { type: TAG_TYPE_APPLICATION_DETAILS, id: `${projectId}_${applicationId}_${versionId}` },
-              ]),
-            );
-          }
-        },
       }),
       setAgentAttachmentStorage: build.mutation({
         query: ({ projectId, applicationId, versionId, toolkit_id }) => {
@@ -895,7 +866,6 @@ export const {
   useDeleteApplicationMutation,
   usePublishApplicationMutation,
   useUnpublishApplicationMutation,
-  useValidateForPublishMutation,
   useLikeApplicationMutation,
   useUnlikeApplicationMutation,
   useDeleteApplicationToolMutation,

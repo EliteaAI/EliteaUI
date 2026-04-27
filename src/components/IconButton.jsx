@@ -1,6 +1,6 @@
 import { iconButtonClasses } from '@mui/material/IconButton';
 
-export const eliteaIconButtonStyle = (theme, color) => ({
+export const alitaIconButtonStyle = (theme, color) => ({
   display: 'flex',
   height: '28px',
   width: '28px',

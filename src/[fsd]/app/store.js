@@ -7,10 +7,10 @@ import indexesReducer, {
 // Important! Need to have been already imported all APIs before the store will be created
 import '@/api';
 import {
-  middleware as eliteaMiddleware,
-  reducer as eliteaReducer,
-  reducerPath as eliteaReducerName,
-} from '@/api/eliteaApi';
+  middleware as alitaMiddleware,
+  reducer as alitaReducer,
+  reducerPath as alitaReducerName,
+} from '@/api/alitaApi';
 import agentsStudioReducer, { name as agentsStudioReducerName } from '@/slices/agentsStudio';
 import applicationsReducer, { name as applicationsReducerName } from '@/slices/applications';
 import artifactReducer, { name as artifactReducerName } from '@/slices/artifact';
@@ -29,7 +29,7 @@ import { configureStore } from '@reduxjs/toolkit';
 
 const store = configureStore({
   reducer: {
-    [eliteaReducerName]: eliteaReducer,
+    [alitaReducerName]: alitaReducer,
     [agentsStudioReducerName]: agentsStudioReducer,
     [applicationsReducerName]: applicationsReducer,
     [artifactReducerName]: artifactReducer,
@@ -51,10 +51,10 @@ const store = configureStore({
     getDefaultMiddleware({
       serializableCheck: {
         // Ignore actions that process the Blob
-        ignoredActions: ['eliteaApi/executeQuery/fulfilled'],
-        ignoredPaths: [eliteaReducerName],
+        ignoredActions: ['alitaApi/executeQuery/fulfilled'],
+        ignoredPaths: [alitaReducerName],
       },
-    }).concat([eliteaMiddleware]),
+    }).concat([alitaMiddleware]),
 });
 
 export default store;

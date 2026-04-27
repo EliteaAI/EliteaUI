@@ -22,7 +22,7 @@
  *   settings: {
  *     spec: "...",
  *     selected_tools: ["x", "y"],
- *     openapi_configuration: { id: 123, elitea_title: "my_creds" }  // reference to config entity
+ *     openapi_configuration: { id: 123, alita_title: "my_creds" }  // reference to config entity
  *   }
  * }
  *

@@ -153,7 +153,7 @@ const OpenAPISchemaInput = memo(props => {
                       placement="top"
                     >
                       <IconButton
-                        variant="elitea"
+                        variant="alita"
                         color="tertiary"
                         onClick={handleOpenFullScreen}
                       >

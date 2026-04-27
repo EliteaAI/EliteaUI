@@ -86,9 +86,9 @@ export const convertToPlayerQuestion = (message_group, playerInfo, participants)
   const sentToParticipant = participants.find(participant => participant.id === sent_to_id);
   const authorParticipant = participants.find(participant => participant.id === author_participant_id);
   const { user, firstUserMessage } = playerInfo;
-  let name = authorParticipant?.meta.user_name || 'You';
-  let avatar = authorParticipant?.meta.user_avatar || '';
-  if (firstUserMessage?.author_participant_id === authorParticipant?.id) {
+  let name = authorParticipant.meta.user_name || 'You';
+  let avatar = authorParticipant.meta.user_avatar || '';
+  if (firstUserMessage?.author_participant_id === authorParticipant.id) {
     name = user.name;
     avatar = user.avatar;
   }

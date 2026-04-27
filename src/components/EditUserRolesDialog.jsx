@@ -2,7 +2,9 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Box, Button, Typography } from '@mui/material';
 
-import { Modal, Select } from '@/[fsd]/shared/ui';
+import { Modal } from '@/[fsd]/shared/ui';
+import MultipleSelect from '@/components/MultipleSelect';
+import { useTheme } from '@emotion/react';
 
 const EditUserRolesDialog = memo(props => {
   const {
@@ -15,6 +17,7 @@ const EditUserRolesDialog = memo(props => {
     rolesOptions,
     originalRoles = [],
   } = props;
+  const theme = useTheme();
   const [selectedRoles, setSelectedRoles] = useState(originalRoles);
 
   const hasChangedRoles = useMemo(() => {
@@ -65,21 +68,28 @@ const EditUserRolesDialog = memo(props => {
           >
             Select the roles to define user permissions for this project.
           </Typography>
-          <Select.SingleSelect
+          <MultipleSelect
             label="Roles"
             onValueChange={handleRolesChange}
+            fullWidth
             value={selectedRoles}
             options={rolesOptions}
+            MenuProps={{
+              PaperProps: { sx: styles.menuPaper },
+            }}
+            customSelectedColor={`${theme.palette.text.primary} !important`}
+            customSelectedFontSize="0.875rem"
             multiple
+            emptyPlaceHolder=""
             showBorder
-            showEmptyPlaceholder={false}
+            valueItemSX={styles.valueItem}
           />
         </Box>
       }
       actions={
         <Box sx={styles.actionsWrapper}>
           <Button
-            variant="elitea"
+            variant="alita"
             color="secondary"
             onClick={onCancel}
             disableRipple
@@ -87,7 +97,7 @@ const EditUserRolesDialog = memo(props => {
             Cancel
           </Button>
           <Button
-            variant="elitea"
+            variant="alita"
             color="primary"
             onClick={handleConfirm}
             disableRipple
@@ -117,6 +127,9 @@ const editUserRolesDialogStyles = () => ({
   menuPaper: {
     marginTop: '0.5rem',
   },
+  valueItem: ({ palette }) => ({
+    color: palette.text.secondary,
+  }),
 });
 
 export default EditUserRolesDialog;

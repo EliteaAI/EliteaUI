@@ -1,12 +1,12 @@
 import { PUBLIC_PROJECT_ID } from '@/common/constants.js';
 
-import { eliteaApi } from './eliteaApi.js';
+import { alitaApi } from './alitaApi.js';
 
 const TAG_TYPE_PROJECT = 'PROJECT';
 const TAG_TYPE_PROJECT_GROUP = 'TAG_TYPE_PROJECT_GROUP';
 const PROJECT_MODE = 'default';
 
-export const projectApi = eliteaApi
+export const projectApi = alitaApi
   .enhanceEndpoints({
     addTagTypes: [TAG_TYPE_PROJECT],
   })

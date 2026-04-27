@@ -5,7 +5,6 @@ import { Link, Typography } from '@mui/material';
 import { NotificationType, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
 import useNotificationNavigate from '@/hooks/useNotificationNavigate';
 import useNotificationNewTabNavigate from '@/hooks/useNotificationNewTabNavigate.js';
-import { getBasename } from '@/routes';
 
 const MAX_NAME_LEN = 33;
 
@@ -19,8 +18,6 @@ const leadingText = (param1, param2) => ({
   [NotificationType.ChatUserAdded]: `${param1} added ${param2} to `,
   [NotificationType.PrivateProjectCreated]: 'Project was successfully created',
   [NotificationType.IndexDataChanged]: param1, // Dynamic message based on index state
-  [NotificationType.BucketExpirationWarning]: 'Bucket ',
-  [NotificationType.PersonalAccessTokenExpiring]: `Your personal access token ${param1} will expire in 24 hours. After expiration, it will no longer work. You can delete and recreate a new token if needed. `,
 });
 
 const middleText = {};
@@ -41,9 +38,6 @@ const endingText = param => ({
   [NotificationType.UserWasAddedToSomeProjectAsTeammate]: '.',
   [NotificationType.PrivateProjectCreated]: '.',
   [NotificationType.IndexDataChanged]: '',
-  [NotificationType.BucketExpirationWarning]:
-    " will start deleting files in 24 hours according to its retention policy (files are removed based on each file's creation date; the bucket itself will remain).",
-  [NotificationType.PersonalAccessTokenExpiring]: '',
 });
 const formatName = name => {
   return name && name.length > MAX_NAME_LEN ? `${name.slice(0, MAX_NAME_LEN)}...` : name || '';
@@ -83,7 +77,8 @@ const MyNewTabLink = ({ linkInfo, needTrim, event_type }) => {
 
   return (
     <Link
-      variant="labelMedium"
+      variant="bodySmall"
+      color="text.secondary"
       sx={{ textDecoration: 'underline', cursor: 'pointer' }}
       target={'_blank'}
       href={href}
@@ -115,7 +110,8 @@ const MyCurrentTabLink = ({ linkInfo, needTrim, onCloseNotificationList, event_t
 
   return (
     <Link
-      variant="labelMedium"
+      variant="bodySmall"
+      color="text.secondary"
       component={'span'}
       sx={{ textDecoration: 'underline', cursor: 'pointer' }}
       onClick={onClick}
@@ -134,21 +130,6 @@ const MyLink = props => {
 const parseInformation = notification => {
   const { event_type, project_id, meta } = notification;
   switch (event_type) {
-    case NotificationType.AgentUnpublished: {
-      const reasonSuffix = meta.reason ? ` Reason: ${meta.reason}` : '';
-      return {
-        event_type,
-        leadingTextParam1: '',
-        leadingTextParam2: '',
-        agentUnpublishedMeta: {
-          sourceVersionId: meta.source_version_id,
-          sourceApplicationId: meta.source_application_id,
-          projectId: notification.project_id,
-          reasonSuffix,
-        },
-        endingTextParam: '',
-      };
-    }
     case NotificationType.ModeratorApprovalOfVersion:
     case NotificationType.ModeratorRejectOfVersion:
     case NotificationType.ModeratorUnpublish:
@@ -269,39 +250,12 @@ const parseInformation = notification => {
           : null,
         endingTextParam: '',
       };
-    case NotificationType.BucketExpirationWarning: {
-      return {
-        event_type,
-        leadingTextParam1: '',
-        leadingTextParam2: '',
-        firstLinkInfo: {
-          linkText: meta.bucket_name || 'Bucket',
-          id: meta.bucket_name,
-          project_id,
-          isNewTab: true,
-        },
-        endingTextParam: '',
-      };
-    }
-    case NotificationType.PersonalAccessTokenExpiring:
-      return {
-        event_type,
-        leadingTextParam1: meta.token_name,
-        leadingTextParam2: '',
-        firstLinkInfo: {
-          linkText: 'Manage Personal Access Tokens',
-          project_id,
-          isNewTab: true,
-        },
-        endingTextParam: '',
-      };
     default:
       return {};
   }
 };
 
-const NotificationListItemMessage = props => {
-  const { notification, onCloseNotificationList, textVariant = 'bodySmall' } = props;
+const NotificationListItemMessage = ({ notification, onCloseNotificationList }) => {
   const {
     event_type,
     leadingTextParam1 = '',
@@ -310,36 +264,7 @@ const NotificationListItemMessage = props => {
     hasMiddleText,
     secondLinkInfo,
     endingTextParam = '',
-    agentUnpublishedMeta,
   } = parseInformation(notification);
-
-  const textColor = notification.is_seen ? 'text.primary' : 'text.secondary';
-
-  // Special handling for AgentUnpublished — inline version link
-  if (event_type === NotificationType.AgentUnpublished && agentUnpublishedMeta) {
-    const { sourceVersionId, sourceApplicationId, projectId, reasonSuffix } = agentUnpublishedMeta;
-    const baseUrl = `${window.location.protocol}//${window.location.host}`;
-    const basename = getBasename();
-    const versionHref = `${baseUrl}${basename}/${projectId}/agents/all/${sourceApplicationId}/${sourceVersionId}?viewMode=owner`;
-    return (
-      <Typography
-        variant={textVariant}
-        color="text.secondary"
-      >
-        {'Unpublished agent version id: '}
-        <Link
-          variant={textVariant}
-          color="text.secondary"
-          sx={{ textDecoration: 'underline', cursor: 'pointer' }}
-          href={versionHref}
-          target="_blank"
-        >
-          {sourceVersionId}
-        </Link>
-        {` from project id: ${projectId}.${reasonSuffix}`}
-      </Typography>
-    );
-  }
 
   // Special handling for IndexDataChanged to embed link within message text
   if (
@@ -350,8 +275,8 @@ const NotificationListItemMessage = props => {
     const parts = leadingTextParam1.split('{INDEX_LINK}');
     return (
       <Typography
-        variant={textVariant}
-        sx={{ color: textColor }}
+        variant="bodySmall"
+        color="text.secondary"
       >
         {parts[0]}
         <MyLink
@@ -368,8 +293,8 @@ const NotificationListItemMessage = props => {
 
   return (
     <Typography
-      variant={textVariant}
-      sx={{ color: textColor }}
+      variant="bodySmall"
+      color="text.secondary"
     >
       {leadingText(leadingTextParam1, leadingTextParam2)[event_type]}
       {firstLinkInfo && (

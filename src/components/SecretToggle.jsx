@@ -16,7 +16,7 @@ export default function SecretToggle({ showPlainText, onChange, id, name, sx = {
     >
       <ToggleButton
         value={false}
-        variant="elitea"
+        variant="alita"
         key={'false'}
         sx={{ padding: `${SPACING.SM} ${SPACING.SM}`, borderRadius: '8px 0 0 8px' }}
         disableRipple
@@ -26,7 +26,7 @@ export default function SecretToggle({ showPlainText, onChange, id, name, sx = {
       <ToggleButton
         value={true}
         key={'true'}
-        variant="elitea"
+        variant="alita"
         sx={{ padding: `${SPACING.SM} ${SPACING.SM}`, borderRadius: '0 8px 8px 0' }}
         disableRipple
       >

@@ -80,7 +80,7 @@ const CanvasEditHeader = ({
       >
         <IconButton
           sx={{ marginLeft: '0px' }}
-          variant="elitea"
+          variant="alita"
           color="tertiary"
           onClick={onClose}
         >
@@ -119,7 +119,7 @@ const CanvasEditHeader = ({
             <IconButton
               disabled={disableUndo || disabledAll}
               sx={{ marginLeft: '0px' }}
-              variant="elitea"
+              variant="alita"
               color="tertiary"
               onClick={onUndo}
             >
@@ -135,7 +135,7 @@ const CanvasEditHeader = ({
             <IconButton
               disabled={disableRedo || disabledAll}
               sx={{ marginLeft: '0px' }}
-              variant="elitea"
+              variant="alita"
               color="tertiary"
               onClick={onRedo}
             >
@@ -150,7 +150,7 @@ const CanvasEditHeader = ({
           <span>
             <IconButton
               sx={{ marginLeft: '0px' }}
-              variant="elitea"
+              variant="alita"
               color="tertiary"
               onClick={onCopy}
             >
@@ -166,7 +166,7 @@ const CanvasEditHeader = ({
             <span>
               <IconButton
                 aria-label="stop streaming"
-                variant="elitea"
+                variant="alita"
                 color="tertiary"
                 disabled={disabledAll}
                 onClick={onRegenerate}
@@ -185,7 +185,7 @@ const CanvasEditHeader = ({
             <span>
               <IconButton
                 aria-label="delete the message"
-                variant="elitea"
+                variant="alita"
                 color="tertiary"
                 disabled={disabledAll}
                 onClick={onDelete}
@@ -223,7 +223,7 @@ const CanvasEditHeader = ({
             <span>
               <IconButton
                 aria-label="delete the message"
-                variant="elitea"
+                variant="alita"
                 color="tertiary"
                 disabled={disableDeleteTableRowsCols}
                 onClick={onDeleteSelectedRowsOrColumns}
@@ -245,7 +245,7 @@ const CanvasEditHeader = ({
             <span>
               <IconButton
                 aria-label="add column to table"
-                variant="elitea"
+                variant="alita"
                 color="tertiary"
                 disabled={disabledAll}
                 onClick={onClickAddColumn}
@@ -264,7 +264,7 @@ const CanvasEditHeader = ({
             <span>
               <IconButton
                 aria-label="add row to table"
-                variant="elitea"
+                variant="alita"
                 color="tertiary"
                 disabled={disabledAll}
                 onClick={onClickAddRow}

@@ -7,15 +7,15 @@ import MoonIcon from '@/assets/moon-icon.svg?react';
 import TabButtonItem from './TabButtonItem.jsx';
 
 const TAB_GROUP_BUTTON = {
-  elitea: 'elitea',
+  alita: 'alita',
 };
 
 const exampleArrayBtn = [
   {
-    value: 'elitea',
+    value: 'alita',
     icon: theme => <MoonIcon fill={theme.palette.icon.fill.secondary} />,
-    label: 'EliteA',
-    tooltip: 'EliteA',
+    label: 'Alita',
+    tooltip: 'Alita',
   },
   {
     value: 'codemie',
@@ -105,7 +105,7 @@ const tabGroupButtonStyle = () => ({
 });
 
 export const colorTabGroupButtonStyle = theme => ({
-  [TAB_GROUP_BUTTON.elitea]: {
+  [TAB_GROUP_BUTTON.alita]: {
     default: {
       color: theme.palette.text.tabButton.default,
       fill: theme.palette.text.tabButton.default,
@@ -130,7 +130,7 @@ export const colorTabGroupButtonStyle = theme => ({
   },
 });
 
-export const eliteaTabGroupButtonStyle = theme => ({
+export const alitaTabGroupButtonStyle = theme => ({
   border: 'none',
   display: 'flex',
   alignItems: 'center',
@@ -153,35 +153,35 @@ export const eliteaTabGroupButtonStyle = theme => ({
   },
 });
 
-export const eliteaTabGroupVariants = [
+export const alitaTabGroupVariants = [
   {
-    props: { variant: TAB_GROUP_BUTTON.elitea },
+    props: { variant: TAB_GROUP_BUTTON.alita },
     style: ({ theme }) => ({
-      ...eliteaTabGroupButtonStyle(theme),
+      ...alitaTabGroupButtonStyle(theme),
 
-      color: colorTabGroupButtonStyle(theme)[TAB_GROUP_BUTTON.elitea].default.color,
-      fill: colorTabGroupButtonStyle(theme)[TAB_GROUP_BUTTON.elitea].default.fill,
-      backgroundColor: colorTabGroupButtonStyle(theme)[TAB_GROUP_BUTTON.elitea].default.background,
+      color: colorTabGroupButtonStyle(theme)[TAB_GROUP_BUTTON.alita].default.color,
+      fill: colorTabGroupButtonStyle(theme)[TAB_GROUP_BUTTON.alita].default.fill,
+      backgroundColor: colorTabGroupButtonStyle(theme)[TAB_GROUP_BUTTON.alita].default.background,
 
       '&:hover': {
-        color: colorTabGroupButtonStyle(theme)[TAB_GROUP_BUTTON.elitea].hover.color,
-        fill: colorTabGroupButtonStyle(theme)[TAB_GROUP_BUTTON.elitea].hover.fill,
-        backgroundColor: colorTabGroupButtonStyle(theme)[TAB_GROUP_BUTTON.elitea].hover.background,
+        color: colorTabGroupButtonStyle(theme)[TAB_GROUP_BUTTON.alita].hover.color,
+        fill: colorTabGroupButtonStyle(theme)[TAB_GROUP_BUTTON.alita].hover.fill,
+        backgroundColor: colorTabGroupButtonStyle(theme)[TAB_GROUP_BUTTON.alita].hover.background,
       },
       '&:active': {
-        color: colorTabGroupButtonStyle(theme)[TAB_GROUP_BUTTON.elitea].active.color,
-        fill: colorTabGroupButtonStyle(theme)[TAB_GROUP_BUTTON.elitea].active.fill,
-        backgroundColor: colorTabGroupButtonStyle(theme)[TAB_GROUP_BUTTON.elitea].active.pressed,
+        color: colorTabGroupButtonStyle(theme)[TAB_GROUP_BUTTON.alita].active.color,
+        fill: colorTabGroupButtonStyle(theme)[TAB_GROUP_BUTTON.alita].active.fill,
+        backgroundColor: colorTabGroupButtonStyle(theme)[TAB_GROUP_BUTTON.alita].active.pressed,
       },
       '&.Mui-selected': {
-        color: colorTabGroupButtonStyle(theme)[TAB_GROUP_BUTTON.elitea].active.color,
-        fill: colorTabGroupButtonStyle(theme)[TAB_GROUP_BUTTON.elitea].active.fill,
-        backgroundColor: colorTabGroupButtonStyle(theme)[TAB_GROUP_BUTTON.elitea].active.background,
+        color: colorTabGroupButtonStyle(theme)[TAB_GROUP_BUTTON.alita].active.color,
+        fill: colorTabGroupButtonStyle(theme)[TAB_GROUP_BUTTON.alita].active.fill,
+        backgroundColor: colorTabGroupButtonStyle(theme)[TAB_GROUP_BUTTON.alita].active.background,
       },
       '&:disabled': {
-        color: colorTabGroupButtonStyle(theme)[TAB_GROUP_BUTTON.elitea].disabled.color,
-        fill: colorTabGroupButtonStyle(theme)[TAB_GROUP_BUTTON.elitea].disabled.fill,
-        backgroundColor: colorTabGroupButtonStyle(theme)[TAB_GROUP_BUTTON.elitea].disabled.background,
+        color: colorTabGroupButtonStyle(theme)[TAB_GROUP_BUTTON.alita].disabled.color,
+        fill: colorTabGroupButtonStyle(theme)[TAB_GROUP_BUTTON.alita].disabled.fill,
+        backgroundColor: colorTabGroupButtonStyle(theme)[TAB_GROUP_BUTTON.alita].disabled.background,
       },
       '& svg': {
         fontSize: '1rem',

@@ -29,7 +29,7 @@ const TourContent = memo(props => {
       </Typography>
       <Box sx={styles.footer}>
         <IconButton
-          variant="elitea"
+          variant="alita"
           color="secondary"
           onClick={onPrevious}
           disabled={currentStep === 1}
@@ -44,7 +44,7 @@ const TourContent = memo(props => {
           {currentStep} / {onboardingTips.length}
         </Typography>
         <IconButton
-          variant="elitea"
+          variant="alita"
           color="secondary"
           onClick={onNext}
           disabled={currentStep === onboardingTips.length}

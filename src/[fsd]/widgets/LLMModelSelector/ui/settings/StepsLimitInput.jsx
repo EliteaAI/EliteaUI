@@ -55,6 +55,7 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '0.75rem',
+    marginTop: '1rem',
   },
   label: ({ palette }) => ({
     color: palette.text.primary,

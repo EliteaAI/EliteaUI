@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import { useFormikContext } from 'formik';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { eliteaApi } from '@/api/eliteaApi';
+import { alitaApi } from '@/api/alitaApi';
 import { actions } from '@/slices/applications';
 
 import { useSelectedProjectId } from '../useSelectedProject';
@@ -17,7 +17,7 @@ export default function useRefetchAgentDetails() {
   const updateData = useCallback(() => {
     if (shouldRefetchDetails) {
       dispatch(
-        eliteaApi.util.updateQueryData(
+        alitaApi.util.updateQueryData(
           'applicationDetails',
           { applicationId: values?.id, projectId: selectedProjectId },
           () => {

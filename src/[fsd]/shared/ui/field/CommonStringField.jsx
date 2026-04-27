@@ -172,7 +172,7 @@ const CommonStringField = memo(props => {
         <Box sx={styles.clipboardWrapper}>
           <IconButton
             onClick={() => handleCopyToClipboard(fieldValue)}
-            variant="elitea"
+            variant="alita"
             color="tertiary"
             sx={{
               padding: '6px',

@@ -33,7 +33,7 @@ const DiscardButton = memo(props => {
     <>
       <Button
         disabled={disabled || isSaving}
-        variant="elitea"
+        variant="alita"
         color={color}
         onClick={() => setOpenAlert(true)}
       >

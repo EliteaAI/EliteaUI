@@ -3,21 +3,25 @@ import { memo, useEffect, useMemo, useRef } from 'react';
 import { useFormikContext } from 'formik';
 import { useDispatch } from 'react-redux';
 
-import { eliteaApi } from '@/api/eliteaApi';
-import { ViewMode } from '@/common/constants';
+import { alitaApi } from '@/api/alitaApi';
 import useValidateApplicationVersion from '@/hooks/application/useValidateApplicationVersion';
-import useViewMode from '@/hooks/useViewMode';
 
-const ApplicationValidator = props => {
-  const { agentId, projectId, isCreateMode = false } = props;
+/**
+ * ApplicationValidator component that triggers toolkit validation for an application.
+ * Should be used inside a Formik context to access form values.
+ *
+ * @param {Object} props - Component props
+ * @param {number|string} props.agentId - The application/agent ID
+ * @param {number|string} props.projectId - The project ID
+ * @param {boolean} [props.isCreateMode=false] - Whether the component is in create mode
+ * @returns {null} This is a logic-only component that renders nothing
+ */
+function ApplicationValidator({ agentId, projectId, isCreateMode = false }) {
   const { values } = useFormikContext();
   const dispatch = useDispatch();
   const prevToolsRef = useRef();
-  const viewMode = useViewMode();
 
-  const isPublished = viewMode === ViewMode.Public;
   const shouldSkip =
-    isPublished ||
     isCreateMode ||
     !agentId ||
     !projectId ||
@@ -33,7 +37,7 @@ const ApplicationValidator = props => {
     if (prevToolsRef.current && prevToolsRef.current !== currentToolsHash && !shouldSkip) {
       // Tools have changed - invalidate only the specific validation cache to trigger immediate validation
       dispatch(
-        eliteaApi.util.invalidateTags([
+        alitaApi.util.invalidateTags([
           { type: 'ApplicationValidation', id: `${projectId}-${agentId}-${values?.version_details?.id}` },
         ]),
       );
@@ -52,12 +56,12 @@ const ApplicationValidator = props => {
 
   // Collect application-type sub-tools (sub-agents/pipelines used as tools)
   const applicationTools = useMemo(() => {
-    if (!values?.version_details?.tools?.length || isCreateMode || isPublished) return [];
+    if (!values?.version_details?.tools?.length || isCreateMode) return [];
     return values.version_details.tools.filter(
       tool =>
         tool.type === 'application' && tool.settings?.application_id && tool.settings?.application_version_id,
     );
-  }, [values?.version_details?.tools, isCreateMode, isPublished]);
+  }, [values?.version_details?.tools, isCreateMode]);
 
   return (
     <>
@@ -71,7 +75,7 @@ const ApplicationValidator = props => {
       ))}
     </>
   );
-};
+}
 
 /**
  * Validates a single sub-agent/pipeline tool using the same hook as the parent.

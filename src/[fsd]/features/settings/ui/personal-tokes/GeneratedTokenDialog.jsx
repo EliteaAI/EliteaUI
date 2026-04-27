@@ -88,7 +88,7 @@ const GeneratedTokenDialog = memo(props => {
       </DialogContent>
       <DialogActions sx={styles.dialogActions}>
         <Button
-          variant="elitea"
+          variant="alita"
           color="primary"
           sx={styles.copyButton}
           disabled={disabledCopy}

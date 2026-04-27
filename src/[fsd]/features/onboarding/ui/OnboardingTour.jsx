@@ -41,7 +41,7 @@ const OnboardingTour = memo(() => {
     <>
       <Box sx={styles.wrapper}>
         <IconButton
-          variant="elitea"
+          variant="alita"
           color="secondary"
           onClick={onOpenTourFullScreen}
           sx={styles.tourFullScreenButton}
@@ -73,7 +73,7 @@ const OnboardingTour = memo(() => {
             Onboarding tips
           </Typography>
           <IconButton
-            variant="elitea"
+            variant="alita"
             color="tertiary"
             onClick={onCloseTourFullScreen}
             aria-label="Close full screen tour"

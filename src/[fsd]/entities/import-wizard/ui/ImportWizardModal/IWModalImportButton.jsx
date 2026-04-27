@@ -52,12 +52,7 @@ const IWModalImportButton = memo(props => {
             await setFieldValue(`importItems[${index}].versions[${versionItemIndex}].isSelected`, false);
           });
         } else {
-          await updateValidationStatus({
-            data: importedData,
-            index,
-            validationStatus: 'error',
-            setFieldValue,
-          });
+          await updateValidationStatus({ importedData, index, validationStatus: 'error', setFieldValue });
         }
         if (item.entity === 'agents' && !isNewApplication) {
           for (let vIndex = 0; vIndex < item.versions.length; vIndex++) {
@@ -119,7 +114,7 @@ const IWModalImportButton = memo(props => {
         if (errorImportUUID.length) {
           toastError('Some fields have missing or invalid data!');
         } else {
-          onSuccess && onSuccess(result, errors);
+          onSuccess && onSuccess(result);
         }
       });
     } else {
@@ -139,7 +134,7 @@ const IWModalImportButton = memo(props => {
       <Box component="span">
         <Button
           disabled={isDisabled || isLoading}
-          variant="elitea"
+          variant="alita"
           onClick={handleClickOnImport}
           sx={{ marginRight: '0rem' }}
         >

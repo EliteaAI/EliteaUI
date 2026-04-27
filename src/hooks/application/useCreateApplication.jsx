@@ -9,7 +9,6 @@ import {
   ORIENTATION,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/constants/flowEditor.constants';
 import { useApplicationCreateMutation } from '@/api/applications';
-import { filterEmptyStrings } from '@/common/applicationUtils';
 import { PrivateApplicationTabs, SearchParams, ViewMode } from '@/common/constants';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useSavePipeline, { calculateNodesAndEdges } from '@/pages/Pipelines/useSavePipeline';
@@ -43,7 +42,7 @@ const useCreateApplication = (formik, resetBlockNav, options = {}) => {
           variables: formik.values?.version_details?.variables || [],
           tools: formik.values?.version_details?.tools || [],
           llm_settings: formik.values?.version_details?.llm_settings || {},
-          conversation_starters: filterEmptyStrings(formik.values?.version_details?.conversation_starters),
+          conversation_starters: formik.values?.version_details?.conversation_starters || [],
           agent_type: formik.values?.version_details?.agent_type || 'openai',
           welcome_message: formik.values?.version_details?.welcome_message || '',
           pipeline_settings: isFromPipeline

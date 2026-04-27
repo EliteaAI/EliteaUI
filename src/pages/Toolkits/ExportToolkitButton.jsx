@@ -69,7 +69,7 @@ export default function ExportToolkitButton({ disabled = false }) {
     >
       <IconButton
         aria-label={'export toolkit'}
-        variant="elitea"
+        variant="alita"
         color="secondary"
         disabled={disabled}
         onClick={onExport}

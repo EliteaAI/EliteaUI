@@ -3,21 +3,20 @@ import React, { memo, useCallback, useMemo, useRef, useState } from 'react';
 import { useFormikContext } from 'formik';
 
 import { useTrackEvent } from '@/GA';
-import { InstructionsInputRefProvider } from '@/[fsd]/app/providers';
-import CreateAgentForm from '@/[fsd]/features/agent/ui/agent-details/configurations/form/CreateAgentForm';
-import { useConversationStartersSync } from '@/[fsd]/features/chat/lib/hooks';
 import useRefetchAgentVersionDetailsOnClose from '@/[fsd]/features/chat/lib/hooks/useRefetchAgentVersionDetailsOnClose';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
-import { useGetApplicationVersionDetailQuery, usePublicApplicationDetailsQuery } from '@/api/applications';
+import { useGetApplicationVersionDetailQuery } from '@/api/applications';
 import { ChatParticipantType, PERMISSIONS, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants.js';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import ApplicationConfigurationForm from '@/pages/Applications/Components/Applications/ApplicationConfigurationForm';
+import ApplicationCreateForm from '@/pages/Applications/Components/Applications/ApplicationCreateForm';
 import getValidateSchema from '@/pages/Applications/Components/Applications/ApplicationCreationValidateSchema';
 import ApplicationValidator from '@/pages/Applications/Components/Applications/ApplicationValidator';
 import CreateApplicationSaveButton from '@/pages/Applications/Components/Applications/CreateApplicationSaveButton';
 import SaveApplicationButton from '@/pages/Applications/Components/Applications/SaveApplicationButton.jsx';
 import { useCreateApplicationInitialValues } from '@/pages/Applications/useApplicationInitialValues';
+import FileReaderEnhancerRefContext from '@/pages/Common/Components/FileReaderInputRefContext';
 import { ContentContainer } from '@/pages/Common/Components/StyledComponents.jsx';
 import BaseEditor from '@/pages/NewChat/components/BaseEditor.jsx';
 import LLMModelSelectorWrapper from '@/pages/NewChat/components/LLMModelSelectorWrapper';
@@ -27,74 +26,61 @@ const getAgentId = agent => {
   return agent?.entity_meta?.id || agent?.id || agent?.meta?.id;
 };
 
-const AgentEditorContent = memo(props => {
-  const {
-    agentId,
-    projectId,
-    isCreateMode,
-    canEditIt,
-    viewMode,
-    handleAttachmentToolChange,
-    isPublic,
-    onConversationStartersChange,
-    entityProjectId,
-  } = props;
-  const { setFieldValue } = useFormikContext();
+const AgentEditorContent = memo(
+  ({ agentId, projectId, isCreateMode, canEditIt, viewMode, handleAttachmentToolChange, isPublic }) => {
+    const { setFieldValue } = useFormikContext();
+    const styles = getStyles();
 
-  useConversationStartersSync(onConversationStartersChange);
-  const styles = getStyles();
+    // LLM Settings setter for the modal dialog
+    const onLLMSettingsChange = useCallback(
+      newSettings => {
+        // Update each setting individually
+        Object.entries(newSettings).forEach(([key, value]) => {
+          setFieldValue(`version_details.llm_settings.${key}`, value);
+        });
+      },
+      [setFieldValue],
+    );
 
-  // LLM Settings setter for the modal dialog
-  const onLLMSettingsChange = useCallback(
-    newSettings => {
-      // Update each setting individually
-      Object.entries(newSettings).forEach(([key, value]) => {
-        setFieldValue(`version_details.llm_settings.${key}`, value);
-      });
-    },
-    [setFieldValue],
-  );
-
-  return (
-    <>
-      <ApplicationValidator
-        agentId={agentId}
-        projectId={entityProjectId || projectId}
-        isCreateMode={isCreateMode}
-      />
-      <ContentContainer height="100%">
-        {!isCreateMode && (
-          <LLMModelSelectorWrapper
-            projectId={projectId}
-            onLLMSettingsChange={onLLMSettingsChange}
-            disabled={!canEditIt}
-            modelTooltip={isPublic ? 'Model configuration is locked for Public agents' : undefined}
-            settingsTooltip={isPublic ? 'Model settings are locked for Public agents' : undefined}
-          />
-        )}
-        {isCreateMode ? (
-          <CreateAgentForm sx={styles.createForm} />
-        ) : (
-          <ApplicationConfigurationForm
-            applicationId={agentId}
-            containerStyle={styles.configForm}
-            isChatView={true}
-            viewMode={viewMode}
-            onAttachmentToolChange={handleAttachmentToolChange}
-            entityProjectId={entityProjectId}
-          />
-        )}
-      </ContentContainer>
-    </>
-  );
-});
+    return (
+      <>
+        <ApplicationValidator
+          agentId={agentId}
+          projectId={projectId}
+          isCreateMode={isCreateMode}
+        />
+        <ContentContainer height="100%">
+          {!isCreateMode && (
+            <LLMModelSelectorWrapper
+              projectId={projectId}
+              onLLMSettingsChange={onLLMSettingsChange}
+              disabled={!canEditIt}
+              modelTooltip={isPublic ? 'Model configuration is locked for Public agents' : undefined}
+              settingsTooltip={isPublic ? 'Model settings are locked for Public agents' : undefined}
+            />
+          )}
+          {isCreateMode ? (
+            <ApplicationCreateForm sx={styles.createForm} />
+          ) : (
+            <ApplicationConfigurationForm
+              applicationId={agentId}
+              containerStyle={styles.configForm}
+              isChatView={true}
+              viewMode={viewMode}
+              onAttachmentToolChange={handleAttachmentToolChange}
+            />
+          )}
+        </ContentContainer>
+      </>
+    );
+  },
+);
 
 AgentEditorContent.displayName = 'AgentEditorContent';
 
 const AgentEditor = memo(
   ({
     agent,
-    versionName,
     onCloseAgentEditor,
     isVisible,
     isCreateMode = false,
@@ -102,7 +88,6 @@ const AgentEditor = memo(
     onAgentSaved,
     onAttachmentToolChange,
     onAgentDirtyStateChange,
-    onConversationStartersChange,
   }) => {
     const trackEvent = useTrackEvent();
 
@@ -124,28 +109,16 @@ const AgentEditor = memo(
     const { initialValues: createInitialValues } = useCreateApplicationInitialValues();
 
     // Only fetch details when the editor is visible and we have required IDs (edit mode only)
-    const isPublishedAgent = agent?.entity_meta?.project_id == PUBLIC_PROJECT_ID;
     const {
-      data: privateVersionDetails,
-      error: privateError,
-      refetch: refetchPrivateVersionDetails,
+      data: versionDetails,
+      error,
+      refetch: refetchVersionDetails,
     } = useGetApplicationVersionDetailQuery(
-      projectId && agentId && versionId && isVisible && !isCreateMode && !isPublishedAgent
+      projectId && agentId && versionId && isVisible && !isCreateMode
         ? { projectId: agent.entity_meta?.project_id || projectId, applicationId: agentId, versionId }
         : { skip: true },
-      { skip: !isVisible || !projectId || !agentId || !versionId || isCreateMode || isPublishedAgent },
+      { skip: !isVisible || !projectId || !agentId || !versionId || isCreateMode },
     );
-    const {
-      data: publicAppDetails,
-      error: publicError,
-      refetch: refetchPublicAppDetails,
-    } = usePublicApplicationDetailsQuery(
-      { applicationId: agentId, versionName },
-      { skip: !isVisible || !agentId || !isPublishedAgent || isCreateMode },
-    );
-    const versionDetails = isPublishedAgent ? publicAppDetails : privateVersionDetails;
-    const error = isPublishedAgent ? publicError : privateError;
-    const refetchVersionDetails = isPublishedAgent ? refetchPublicAppDetails : refetchPrivateVersionDetails;
     const { refetchAgentVersionDetailsOnClose } = useRefetchAgentVersionDetailsOnClose({
       refetchVersionDetails,
     });
@@ -281,7 +254,7 @@ const AgentEditor = memo(
     const editorSubtitle = isCreateMode ? '' : initialValues?.version_details?.name;
 
     return (
-      <InstructionsInputRefProvider inputRef={fileReaderEnhancerRef}>
+      <FileReaderEnhancerRefContext.Provider value={fileReaderEnhancerRef}>
         <BaseEditor
           isVisible={isVisible}
           isDirty={isDirty}
@@ -311,11 +284,9 @@ const AgentEditor = memo(
             viewMode={viewMode}
             handleAttachmentToolChange={handleAttachmentToolChange}
             isPublic={isPublic}
-            onConversationStartersChange={onConversationStartersChange}
-            entityProjectId={agent?.entity_meta?.project_id}
           />
         </BaseEditor>
-      </InstructionsInputRefProvider>
+      </FileReaderEnhancerRefContext.Provider>
     );
   },
 );

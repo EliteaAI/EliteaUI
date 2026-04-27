@@ -40,7 +40,7 @@ const InputActionsToolbar = memo(props => {
             <IconButton
               disabled={!value}
               sx={iconButtonSx}
-              variant="elitea"
+              variant="alita"
               color="tertiary"
               onClick={onCopy}
             >
@@ -57,7 +57,7 @@ const InputActionsToolbar = memo(props => {
           >
             <IconButton
               sx={iconButtonSx}
-              variant="elitea"
+              variant="alita"
               color="tertiary"
               onClick={onFullScreen}
             >
@@ -73,7 +73,7 @@ const InputActionsToolbar = memo(props => {
         >
           <IconButton
             sx={iconButtonSx}
-            variant="elitea"
+            variant="alita"
             color="tertiary"
             onClick={switchRows}
           >

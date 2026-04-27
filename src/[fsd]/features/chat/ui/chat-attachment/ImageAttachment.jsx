@@ -137,7 +137,7 @@ const ImageAttachment = memo(props => {
           onClick={toggleModal}
         >
           <IconButton
-            variant="elitea"
+            variant="alita"
             color="tertiary"
             onClick={onClickDown}
             sx={styles.iconButton}
@@ -149,7 +149,7 @@ const ImageAttachment = memo(props => {
             />
           </IconButton>
           <IconButton
-            variant="elitea"
+            variant="alita"
             color="tertiary"
             onClick={onClickRemove}
             sx={styles.iconButton}

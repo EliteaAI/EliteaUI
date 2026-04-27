@@ -52,7 +52,7 @@ const CreateApplicationSaveButton = ({
 
   return (
     <Button
-      variant="elitea"
+      variant="alita"
       color="primary"
       disabled={shouldDisableSave}
       onClick={handleSave}

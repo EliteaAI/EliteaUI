@@ -123,7 +123,7 @@ export const CredentialsList = ({ rightPanelOffset }) => {
       }
       if (!item.name || item.name.trim() === '') {
         const fallbackName =
-          item.elitea_title ||
+          item.alita_title ||
           item.credential_name ||
           item.title ||
           item.type.charAt(0).toUpperCase() + item.type.slice(1);

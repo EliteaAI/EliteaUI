@@ -83,7 +83,7 @@ const DeleteEntityButton = memo(props => {
           >
             <Box component="span">
               <IconButton
-                variant="elitea"
+                variant="alita"
                 color={buttonColor}
                 aria-label="delete entity"
                 onClick={onClickButton}

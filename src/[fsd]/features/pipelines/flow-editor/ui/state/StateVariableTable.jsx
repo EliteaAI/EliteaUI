@@ -9,7 +9,7 @@ import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/
 import { FlowEditorSettings } from '@/[fsd]/features/pipelines/flow-editor/ui';
 import AlertDialog from '@/components/AlertDialog.jsx';
 import DeleteIcon from '@/components/Icons/DeleteIcon.jsx';
-import useEliteATheme from '@/hooks/useEliteATheme';
+import useAlitaTheme from '@/hooks/useAlitaTheme';
 import useToast from '@/hooks/useToast';
 import { useTheme } from '@emotion/react';
 
@@ -21,7 +21,7 @@ const StateVariableTable = memo(props => {
   const { toastError } = useToast();
 
   const theme = useTheme();
-  const { localGridTheme } = useEliteATheme();
+  const { localGridTheme } = useAlitaTheme();
   const apiRef = useGridApiRef();
 
   const handleRowEditStop = useCallback(
@@ -280,7 +280,7 @@ const StateVariableTable = memo(props => {
           : [
               <IconButton
                 key={`delete-button-${id}`}
-                variant="elitea"
+                variant="alita"
                 id={`basic-button-${id}`}
                 aria-controls={open ? 'basic-menu' : undefined}
                 aria-haspopup="true"
@@ -333,7 +333,7 @@ const StateVariableTable = memo(props => {
         <DataGrid
           apiRef={apiRef}
           disableColumnSorting
-          variant={'elitea'}
+          variant={'alita'}
           rows={rows}
           columns={columns}
           disableRowSelectionOnClick

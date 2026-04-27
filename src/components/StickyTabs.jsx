@@ -212,7 +212,7 @@ const StickyTabs = memo(props => {
                 >
                   <Typography
                     component="div"
-                    variant="headingSmall"
+                    variant="labelMedium"
                     color="text.secondary"
                   >
                     {title}
@@ -233,7 +233,7 @@ const StickyTabs = memo(props => {
         {/* <Box height={tabBarHeight + 'px'}/> */}
         {tabs.map((tab, index) => (
           <CustomTabPanel
-            id="EliteACustomTabPanel"
+            id="AlitaCustomTabPanel"
             style={{
               display: tab.display,
               overflowY: 'scroll',

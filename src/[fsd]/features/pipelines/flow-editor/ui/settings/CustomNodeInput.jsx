@@ -135,7 +135,7 @@ const CustomNodeInput = memo(({ id }) => {
                 <IconButton
                   disabled={!jsonString}
                   sx={{ marginLeft: '0rem' }}
-                  variant="elitea"
+                  variant="alita"
                   color="tertiary"
                   onClick={onCopy}
                 >
@@ -152,7 +152,7 @@ const CustomNodeInput = memo(({ id }) => {
             >
               <IconButton
                 sx={{ marginLeft: '0rem' }}
-                variant="elitea"
+                variant="alita"
                 color="tertiary"
                 onClick={onFullScreen}
               >
@@ -165,7 +165,7 @@ const CustomNodeInput = memo(({ id }) => {
             >
               <IconButton
                 sx={{ marginLeft: '0rem' }}
-                variant="elitea"
+                variant="alita"
                 color="tertiary"
                 onClick={onSwitchHeight}
               >
@@ -262,7 +262,7 @@ const CustomNodeInput = memo(({ id }) => {
               >
                 <IconButton
                   sx={{ marginLeft: '1.25rem' }}
-                  variant="elitea"
+                  variant="alita"
                   color="tertiary"
                   onClick={onCopy}
                 >
@@ -275,7 +275,7 @@ const CustomNodeInput = memo(({ id }) => {
               >
                 <IconButton
                   sx={{ marginLeft: '1.25rem' }}
-                  variant="elitea"
+                  variant="alita"
                   color="tertiary"
                   onClick={onExitFullScreen}
                 >

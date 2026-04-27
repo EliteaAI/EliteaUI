@@ -61,10 +61,10 @@ const componentStyles = (theme, isSmallWindow) => ({
     },
   },
   loadingContainer: {
-    background: `${theme.palette.background.eliteaDefault};`,
+    background: `${theme.palette.background.alitaDefault};`,
   },
   errorContainer: {
-    background: `${theme.palette.background.eliteaDefault};`,
+    background: `${theme.palette.background.alitaDefault};`,
   },
   codeEditorContainer: {
     [theme.breakpoints.down('lg')]: {
@@ -76,7 +76,7 @@ const componentStyles = (theme, isSmallWindow) => ({
     flex: 1,
     borderRadius: '8px',
     border: `1px solid ${theme.palette.border.lines};`,
-    background: `${theme.palette.background.eliteaDefault};`,
+    background: `${theme.palette.background.alitaDefault};`,
     boxSizing: 'border-box;',
   },
   mermaidCodeEditorContainer: {
@@ -89,7 +89,7 @@ const componentStyles = (theme, isSmallWindow) => ({
     flex: 1,
     borderRadius: '8px',
     border: `1px solid ${theme.palette.border.lines};`,
-    background: `${theme.palette.background.eliteaDefault};`,
+    background: `${theme.palette.background.alitaDefault};`,
     boxSizing: 'border-box;',
   },
 });

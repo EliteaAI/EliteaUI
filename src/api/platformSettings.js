@@ -1,10 +1,10 @@
-import { eliteaApi } from './eliteaApi.js';
+import { alitaApi } from './alitaApi.js';
 
 const apiSlicePath = '/elitea_core/platform_settings';
 
 export const TAG_PLATFORM_SETTINGS = 'TAG_PLATFORM_SETTINGS';
 
-export const platformSettingsApi = eliteaApi
+export const platformSettingsApi = alitaApi
   .enhanceEndpoints({
     addTagTypes: [TAG_PLATFORM_SETTINGS],
   })

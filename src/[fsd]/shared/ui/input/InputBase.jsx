@@ -1,6 +1,9 @@
 import { memo, useCallback, useMemo, useState } from 'react';
 
+import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
+import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import { Box, TextField as MuiTextField } from '@mui/material';
+import IconButton from '@mui/material/IconButton';
 
 import { Label } from '@/[fsd]/shared/ui';
 import useAutoBlur from '@/hooks/useAutoBlur';
@@ -68,6 +71,7 @@ const PROMPT_PAGE_INPUT = {
 const InputBase = memo(props => {
   const {
     variant = INPUT_VARIANTS.standard,
+    showexpandicon = false,
     editswitcher = false,
     editswitchconfig = {},
     onDrop,
@@ -160,19 +164,9 @@ const InputBase = memo(props => {
   const isCollapsed = rows === minRows && minRows !== maxRows;
   const isExpanded = rows === maxRows;
 
-  const needsLabelUnclip = typeof leftProps.label !== 'string' || Boolean(tooltipDescription);
-
   const styles = useMemo(
-    () =>
-      styledInputBaseStyles(
-        leftProps.label,
-        editswitcher,
-        editswitchconfig,
-        isCollapsed,
-        minRows,
-        needsLabelUnclip,
-      ),
-    [leftProps.label, editswitcher, editswitchconfig, isCollapsed, minRows, needsLabelUnclip],
+    () => styledInputBaseStyles(leftProps.label, editswitcher, editswitchconfig, isCollapsed, minRows),
+    [leftProps.label, editswitcher, editswitchconfig, isCollapsed, minRows],
   );
 
   const getLabelContent = () => {
@@ -238,13 +232,28 @@ const InputBase = memo(props => {
               sx: styles.inputSlot,
               readOnly: editswitcher,
               onDoubleClick: () => {},
+              endAdornment:
+                showexpandicon && !hasActionsToolBar ? (
+                  <IconButton
+                    size="small"
+                    variant="icon"
+                    color="tertiary"
+                    onClick={switchRows}
+                    sx={styles.expandIconButton}
+                  >
+                    {isExpanded ? (
+                      <UnfoldLessIcon sx={[styles.unfoldIcon, styles.iconSize]} />
+                    ) : (
+                      <UnfoldMoreIcon sx={[styles.unfoldIcon, styles.iconSize]} />
+                    )}
+                  </IconButton>
+                ) : null,
               disableUnderline,
             },
             htmlInput: inputProps,
             inputLabel: {
               ...InputLabelProps,
               sx: {
-                ...styles.inputLabelSlot,
                 ...InputLabelProps?.sx,
                 ...(leftProps.required && { '& .MuiInputLabel-asterisk': { display: 'none' } }),
                 ...(tooltipDescription && { pointerEvents: 'auto', zIndex: 1 }),
@@ -261,21 +270,7 @@ const InputBase = memo(props => {
 InputBase.displayName = 'InputBase';
 
 /** @type {MuiSx} */
-const styledInputBaseStyles = (
-  hasLabel,
-  editswitcher,
-  editswitchconfig,
-  isCollapsed,
-  minRows,
-  needsLabelUnclip,
-) => ({
-  inputLabelSlot: {
-    textOverflow: 'clip',
-    ...(needsLabelUnclip && {
-      overflow: 'visible',
-      maxWidth: 'none',
-    }),
-  },
+const styledInputBaseStyles = (hasLabel, editswitcher, editswitchconfig, isCollapsed, minRows) => ({
   containerBox: {
     position: 'relative',
     display: 'flex',
@@ -286,7 +281,7 @@ const styledInputBaseStyles = (
     display: 'flex',
     justifyContent: 'flex-end',
     gap: spacing(0.5),
-    top: hasLabel ? '0.15rem' : '-1.25rem',
+    top: hasLabel ? '-0.15rem' : '-1.25rem',
     right: spacing(1.5),
     zIndex: 999,
   }),

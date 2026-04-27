@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
@@ -9,8 +9,8 @@ import { IndexesToolsEnum } from '@/[fsd]/features/toolkits/indexes/lib/constant
 import { adjustIndexDataSchema } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexChat.helpers';
 import { useIndexNameValidation } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
-import { Select } from '@/[fsd]/shared/ui/';
 import { LLMModelSelector } from '@/[fsd]/widgets/LLMModelSelector';
+import SingleSelectWithSearch from '@/components/SingleSelectWithSearch.jsx';
 import { useGetSelectedToolSchema } from '@/hooks/toolkit/useGetSelectedToolSchema.js';
 import { ContentContainer } from '@/pages/Common/Components';
 import styled from '@emotion/styled';
@@ -132,6 +132,8 @@ const TestSettings = ({
     }
   }, [selectedToolSchema, selectedTool, toolInputVariables, onChangeInputVariables]);
 
+  const [searchString, setSearchString] = useState('');
+
   const allToolsOptions = useMemo(() => {
     const selectedTools = values?.settings?.selected_tools || []; // Ensure it's an array
     // Map to label/value pairs and always sort by label (asc) for stable UI order
@@ -145,6 +147,22 @@ const TestSettings = ({
       }))
       .sort((a, b) => (a.label || '').toLowerCase().localeCompare((b.label || '').toLowerCase()));
   }, [values]);
+
+  const toolsOptions = useMemo(() => {
+    if (!searchString.trim()) {
+      return allToolsOptions;
+    }
+    const lowerCaseSearchString = searchString.trim().toLowerCase();
+    return allToolsOptions.filter(
+      tool =>
+        (tool.label || '').toLowerCase().includes(lowerCaseSearchString) ||
+        (typeof tool.value === 'string' && tool.value.toLowerCase().includes(lowerCaseSearchString)),
+    );
+  }, [allToolsOptions, searchString]);
+
+  const onSearch = useCallback(input => {
+    setSearchString(input);
+  }, []);
 
   // Validation logic for required fields
   const isValidForm = useMemo(() => {
@@ -213,17 +231,15 @@ const TestSettings = ({
           />
         </Box>
         <AdvanceSettingSelectorContainer>
-          <Select.SingleSelect
+          <SingleSelectWithSearch
             value={selectedTool} //@todo: can be placed in other place, not in formik or with other path
-            label="Tool"
+            label={'Tool'}
             onValueChange={onChangeTool}
-            onClear={() => onChangeTool(null)}
-            options={allToolsOptions}
-            withSearch
-            emptyPlaceholder="No tools found"
-            showEmptyPlaceholder={false}
-            displayEmpty
-            showBorder
+            options={toolsOptions}
+            searchString={searchString}
+            onSearch={onSearch}
+            noOptionsPlaceholder="No tools found"
+            allowEmptySelection={true}
           />
         </AdvanceSettingSelectorContainer>
 

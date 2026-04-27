@@ -14,11 +14,6 @@ const useNotificationNewTabNavigate = ({ project_id, id, event_type, indexName }
         ':toolkitId',
         id,
       ),
-      [NotificationType.BucketExpirationWarning]: RouteDefinitions.Artifacts,
-      [NotificationType.PersonalAccessTokenExpiring]: RouteDefinitions.SettingsWithTab.replace(
-        ':tab',
-        'tokens',
-      ),
     };
 
     const searchMap = {
@@ -26,18 +21,9 @@ const useNotificationNewTabNavigate = ({ project_id, id, event_type, indexName }
       [NotificationType.IndexDataChanged]: indexName
         ? `?${SearchParams.IndexName}=${encodeURIComponent(indexName)}`
         : '',
-      [NotificationType.BucketExpirationWarning]: id
-        ? `?${SearchParams.Bucket}=${encodeURIComponent(id)}`
-        : '',
-      [NotificationType.PersonalAccessTokenExpiring]: '',
     };
 
     const defaultUrl = `${baseUrl}${basename}/${project_id}${urlMap[event_type]}${searchMap[event_type]}`;
-
-    // Settings page is not project-scoped — return without project_id prefix
-    if (event_type === NotificationType.PersonalAccessTokenExpiring) {
-      return `${baseUrl}${basename}${urlMap[event_type]}`;
-    }
 
     return defaultUrl;
   }, [baseUrl, basename, event_type, id, project_id, indexName]);

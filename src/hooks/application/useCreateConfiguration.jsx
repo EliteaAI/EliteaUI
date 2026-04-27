@@ -26,8 +26,8 @@ const getRequestBody = ({ type, configurationKeys, settings, configurationName, 
 
   let titleValue = configurationName;
 
-  if (settings.elitea_title) {
-    titleValue = settings.elitea_title;
+  if (settings.alita_title) {
+    titleValue = settings.alita_title;
   }
 
   // Auto-generate title
@@ -37,7 +37,7 @@ const getRequestBody = ({ type, configurationKeys, settings, configurationName, 
   }
 
   const body = {
-    elitea_title: titleValue || `New ${type} configuration`,
+    alita_title: titleValue || `New ${type} configuration`,
     label: settings.label || '',
     type,
     data: {},

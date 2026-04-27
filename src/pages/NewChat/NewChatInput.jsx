@@ -196,7 +196,7 @@ const NewChatInput = forwardRef((props, ref) => {
                   title="Switch to assistant"
                 >
                   <IconButton
-                    variant="elitea"
+                    variant="alita"
                     color="secondary"
                     aria-label="chatbot"
                     onClick={onClickChatBot}
@@ -249,7 +249,7 @@ const NewChatInput = forwardRef((props, ref) => {
                     <IconButton
                       onClick={selectSavedOrDefaultModel}
                       color="secondary"
-                      variant="elitea"
+                      variant="alita"
                       disabled={disableSwitchingParticipant || isLoading || isStreaming}
                     >
                       <ModelIcon

@@ -15,7 +15,7 @@ import ModelIcon from '@/components/Icons/ModelIcon';
 import UserIcon from '@/components/Icons/UserIcon';
 import { useTheme } from '@emotion/react';
 
-import EliteAImage from './EliteAImage';
+import AlitaImage from './AlitaImage';
 import EditIcon from './Icons/EditIcon';
 import SelectIconDialog from './SelectIconDialog';
 
@@ -78,7 +78,7 @@ export const EntityTypeIcon = memo(props => {
       );
 
     case ChatParticipantType.Dummy:
-      // return <EliteAIcon sx={{ fontSize: sizeNumeric }} />;
+      // return <AlitaIcon sx={{ fontSize: sizeNumeric }} />;
       return (
         <Box
           component="img"
@@ -172,8 +172,8 @@ const EntityIcon = memo(props => {
     [onChangeIcon],
   );
 
-  const hasIconUrl = !!icon?.url;
-  const styles = entityIconStyles(showBackgroundColor, editable, sx, isHovering, imageStyle, hasIconUrl);
+  const styles = entityIconStyles(showBackgroundColor, editable, sx, isHovering, imageStyle);
+
   return (
     <>
       <Box
@@ -183,7 +183,7 @@ const EntityIcon = memo(props => {
       >
         {icon?.component && <Box sx={styles.iconComponentBox}>{icon.component}</Box>}
         {icon?.url && !icon?.component && (
-          <EliteAImage
+          <AlitaImage
             style={styles.imageStyle}
             image={icon}
             alt="Preview"
@@ -223,14 +223,7 @@ const EntityIcon = memo(props => {
 EntityIcon.displayName = 'EntityIcon';
 
 /** @type {MuiSx} */
-const entityIconStyles = (
-  showBackgroundColor,
-  editable,
-  customSx,
-  isHovering,
-  customImageStyle,
-  hasIconUrl,
-) => ({
+const entityIconStyles = (showBackgroundColor, editable, customSx, isHovering, customImageStyle) => ({
   container: ({ palette }) => ({
     minWidth: '2.25rem',
     width: '2.25rem',
@@ -240,26 +233,8 @@ const entityIconStyles = (
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    position: 'relative',
-    background: showBackgroundColor && !hasIconUrl ? palette.background.icon.entityGradient : 'transparent',
+    background: showBackgroundColor ? palette.background.icon.default : 'transparent',
     cursor: editable ? 'pointer' : undefined,
-
-    // Use mask compositing to reveal only the gradient ring and keep the inner circle transparent.
-    '&::before':
-      showBackgroundColor && !hasIconUrl
-        ? {
-            content: '""',
-            position: 'absolute',
-            inset: 0,
-            borderRadius: 'inherit',
-            padding: '0.0625rem',
-            background: palette.background.icon.entityBorderGradient,
-            WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-            WebkitMaskComposite: 'xor',
-            maskComposite: 'exclude',
-            pointerEvents: 'none',
-          }
-        : {},
     ...(typeof customSx === 'function' ? customSx({ palette }) : customSx),
   }),
 

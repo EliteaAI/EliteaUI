@@ -41,7 +41,7 @@ const PreviewUnavailable = memo(props => {
         </Typography>
         {onDownload && (
           <Button
-            variant="elitea"
+            variant="alita"
             color="secondary"
             sx={styles.downloadButton}
             onClick={handleDownload}

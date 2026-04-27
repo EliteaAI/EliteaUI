@@ -65,9 +65,9 @@ const threeButtonsIcons = [
 
 const twoButtonsLabels = [
   {
-    value: 'elitea',
-    label: 'EliteA',
-    tooltip: 'EliteA',
+    value: 'alita',
+    label: 'Alita',
+    tooltip: 'Alita',
   },
   {
     value: 'codemie',
@@ -78,9 +78,9 @@ const twoButtonsLabels = [
 
 const threeButtonsLabels = [
   {
-    value: 'elitea',
-    label: 'EliteA',
-    tooltip: 'EliteA',
+    value: 'alita',
+    label: 'Alita',
+    tooltip: 'Alita',
   },
   {
     value: 'codemie',
@@ -135,7 +135,7 @@ ThreeButtonsLabelsOnly.args = {
 
 const StaticTabGroup = ({ arrayBtn, stateOverride, size = 'small' }) => {
   const theme = useTheme();
-  const colors = colorTabGroupButtonStyle(theme).elitea;
+  const colors = colorTabGroupButtonStyle(theme).alita;
 
   const getStateStyles = () => {
     const stateStyleMap = {

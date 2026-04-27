@@ -11,10 +11,10 @@ import {
   ORIENTATION,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/constants/flowEditor.constants';
 import { cleanLLMSettings } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
+import { alitaApi } from '@/api/alitaApi';
 import { useApplicationEditMutation } from '@/api/applications';
 import { useListModelsQuery } from '@/api/configurations';
-import { eliteaApi } from '@/api/eliteaApi';
-import clearTools, { filterEmptyStrings } from '@/common/applicationUtils';
+import clearTools from '@/common/applicationUtils';
 import { buildErrorMessage, removeDuplicateObjects } from '@/common/utils';
 import { useIsFrom } from '@/hooks/useIsFromSpecificPageHooks';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -89,7 +89,6 @@ const useSaveVersion = () => {
         llm_settings: cleanedLlmSettings,
         tags: removeDuplicateObjects(version_details.tags),
         tools: clearTools(version_details?.tools, currentUserId),
-        conversation_starters: filterEmptyStrings(version_details?.conversation_starters),
         instructions: !isFromPipeline ? version_details.instructions : yamlCode,
         pipeline_settings: isFromPipeline
           ? {
@@ -111,7 +110,7 @@ const useSaveVersion = () => {
     } else {
       toastSuccess(`The ${isFromPipeline ? 'pipeline' : 'agent'} has been updated`);
       dispatch(
-        eliteaApi.util.updateQueryData('applicationDetails', { applicationId, projectId }, () => {
+        alitaApi.util.updateQueryData('applicationDetails', { applicationId, projectId }, () => {
           return {
             ...cloneData,
           };
@@ -122,7 +121,7 @@ const useSaveVersion = () => {
         instructions: !isFromPipeline ? version_details.instructions : yamlCode,
       };
       dispatch(
-        eliteaApi.util.updateQueryData(
+        alitaApi.util.updateQueryData(
           'getApplicationVersionDetail',
           { applicationId, projectId, versionId: version_details?.id },
           () => {

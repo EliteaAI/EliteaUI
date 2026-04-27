@@ -111,7 +111,7 @@ const NewBucketItem = memo(props => {
         </Box>
         <Box sx={styles.actionsContainer}>
           <IconButton
-            variant="elitea"
+            variant="alita"
             color="tertiary"
             onClick={handleConfirm}
             disabled={!!error || !name || isLoading}
@@ -120,7 +120,7 @@ const NewBucketItem = memo(props => {
             <CheckIcon sx={styles.actionIcon} />
           </IconButton>
           <IconButton
-            variant="elitea"
+            variant="alita"
             color="tertiary"
             onClick={handleCancel}
             disabled={isLoading}

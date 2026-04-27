@@ -101,7 +101,7 @@ export const buildConfigurationData = ({
     config.settings?.title ||
     config.config?.name ||
     config.label ||
-    config.elitea_title ||
+    config.alita_title ||
     config.name ||
     config.type;
 

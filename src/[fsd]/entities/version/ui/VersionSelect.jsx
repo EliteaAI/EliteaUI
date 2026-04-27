@@ -170,10 +170,9 @@ const VersionSelect = memo(props => {
           </Box>
         </Tooltip>
       )}
+      <Typography sx={styles.label}>VERSION:</Typography>
       <Box sx={styles.selectContainer}>
         <SingleSelect
-          separateLabel
-          label="VERSION:"
           showOptionIcon
           iconPosition="right"
           disabled={disabled}
@@ -209,7 +208,6 @@ const VersionSelect = memo(props => {
           customMenuProps={{
             sx: styles.customMenuPropsSx,
           }}
-          labelSX={styles.label}
         />
       </Box>
     </Box>
@@ -228,7 +226,7 @@ const versionSelectStyles = () => ({
     paddingTop: 0,
   },
   label: ({ palette }) => ({
-    display: 'flex',
+    display: 'inline-block',
     fontWeight: 500,
     fontSize: '.75rem',
     lineHeight: '1rem',

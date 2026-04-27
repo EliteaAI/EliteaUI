@@ -96,7 +96,7 @@ const DeleteParticipantButton = ({ disabled, participant, onDelete, sx, warningM
       <IconButton
         disabled={disabled}
         onClick={onClickDelete}
-        variant="elitea"
+        variant="alita"
         color="tertiary"
         id="DeleteButton"
         sx={sx}

@@ -56,7 +56,7 @@ export default function ExportDataButton({ style, onExport, isLoading, title = '
   return (
     <div style={style}>
       <Button
-        variant="elitea"
+        variant="alita"
         color="secondary"
         sx={{ marginLeft: '0px' }}
         id={'export-action'}

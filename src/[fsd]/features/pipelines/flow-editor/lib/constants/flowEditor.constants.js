@@ -136,7 +136,7 @@ export const ORIENTATION = {
   vertical: 'vertical',
 };
 
-export const OrientationKey = 'elitea_ui.orientation';
+export const OrientationKey = 'alita_ui.orientation';
 
 export const LAYOUT_VERSION = '1.0';
 
@@ -161,8 +161,6 @@ export const agentTaskTypeOptions = [
     value: 'fixed',
   },
 ];
-
-export const FSTRING_AUTOCOMPLETE_VARIABLES = new Set(['task', 'system', 'code', 'user_message', 'printer']);
 
 export const InitialNodeId = {
   [PipelineNodeTypes.Tool]: 'Tool',

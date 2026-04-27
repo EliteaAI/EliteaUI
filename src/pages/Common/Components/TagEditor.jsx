@@ -6,6 +6,7 @@ import {
   NormalTagNameInputRegExp,
   TAG_NAME_MAX_LENGTH,
 } from '@/common/constants';
+import { useTheme } from '@emotion/react';
 
 export default function TagEditor({
   tagList,
@@ -17,6 +18,7 @@ export default function TagEditor({
   initialTagValue = { data: { color: 'red' } },
   ...props
 }) {
+  const theme = useTheme();
   const validateTagName = useCallback(
     (name, setHelpText) => {
       setHelpText(
@@ -56,6 +58,31 @@ export default function TagEditor({
       nameField="name"
       canInputNewValues
       useInitialValue
+      slotProps={{
+        Chip: {
+          sx: {
+            color: theme.palette.text.secondary,
+            marginBottom: '8px !important',
+            background: theme.palette.background.tagEditor.tag,
+          },
+        },
+        RemoveIcon: {
+          fill: theme.palette.icon.fill.default,
+        },
+        Li: {
+          selectedBackground: theme.palette.background.participant.active,
+          hoverBackgroundColor: theme.palette.background.participant.hover,
+          CheckIcon: {
+            fill: theme.palette.icon.fill.secondary,
+          },
+        },
+        paper: {
+          sx: {
+            background: theme.palette.background.secondary,
+            margin: '8px !important',
+          },
+        },
+      }}
       {...props}
     />
   );

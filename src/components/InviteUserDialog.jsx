@@ -1,60 +1,12 @@
 import { memo, useCallback, useEffect, useState } from 'react';
 
-import { Box, Button, FormControl, FormHelperText, Typography } from '@mui/material';
-import { styled } from '@mui/material/styles';
+import { Box, Button, FormHelperText, Typography } from '@mui/material';
 
-import { Input, Modal, Select } from '@/[fsd]/shared/ui';
-import { filterProps } from '@/common/utils';
+import { Input, Modal } from '@/[fsd]/shared/ui';
+import { StyledFormControl } from '@/[fsd]/shared/ui/select';
+import { useTheme } from '@emotion/react';
 
-const StyledFormControl = styled(
-  FormControl,
-  filterProps('showBorder'),
-)(({ theme, showBorder }) =>
-  showBorder
-    ? {
-        '& .MuiSelect-icon': {
-          marginRight: '.75rem',
-        },
-        verticalAlign: 'bottom',
-
-        '& .MuiInputBase-root.MuiInput-root': {
-          padding: '0 .75rem',
-
-          '&:not(:hover, .Mui-error):before': {
-            borderBottom: `.0625rem solid ${theme.palette.border.lines}`,
-          },
-
-          '&:hover:not(.Mui-disabled, .Mui-error):before': {
-            borderBottom: `.125rem solid ${theme.palette.border.hover}`,
-          },
-        },
-
-        '& .MuiFormHelperText-root.Mui-error': {
-          paddingLeft: '.75rem',
-        },
-      }
-    : {
-        margin: '0 8px',
-        verticalAlign: 'bottom',
-        '& .MuiInputBase-root.MuiInput-root:before': {
-          border: 'none',
-        },
-        '& .MuiOutlinedInput-root': {
-          '& fieldset': {
-            border: 'none',
-          },
-          '&:hover fieldset': {
-            border: 'none',
-          },
-          '&.Mui-focused fieldset': {
-            border: 'none',
-          },
-          '& .MuiFormHelperText-root.Mui-error': {
-            paddingLeft: '.75rem',
-          },
-        },
-      },
-);
+import MultipleSelect from './MultipleSelect';
 
 const validateEmail = email => {
   const re =
@@ -80,6 +32,7 @@ const validateEmails = emails => {
 const InviteUserDialog = memo(props => {
   const { title, open, onClose, onCancel, onConfirm, confirmButtonText = 'Invite', rolesOptions } = props;
 
+  const theme = useTheme();
   const [inputText, setInputText] = useState('');
   const [emails, setEmails] = useState([]);
   const [error, setError] = useState(false);
@@ -198,20 +151,29 @@ const InviteUserDialog = memo(props => {
               {error && <FormHelperText>{helperText}</FormHelperText>}
             </StyledFormControl>
           </Box>
-          <Select.SingleSelect
+          <MultipleSelect
             label="Roles"
             onValueChange={handleRolesChange}
+            fullWidth
             value={selectedRoles}
             options={rolesOptions}
+            MenuProps={{
+              PaperProps: { sx: styles.menuPaper },
+            }}
+            customSelectedColor={`${theme.palette.text.primary} !important`}
+            customSelectedFontSize="0.875rem"
             multiple
+            emptyPlaceHolder=""
             showBorder
+            valueItemSX={styles.valueItem}
+            labelSX={styles.labelSX}
           />
         </Box>
       }
       actions={
         <Box sx={styles.actionsWrapper}>
           <Button
-            variant="elitea"
+            variant="alita"
             color="secondary"
             onClick={onCancel}
             disableRipple
@@ -219,7 +181,7 @@ const InviteUserDialog = memo(props => {
             Cancel
           </Button>
           <Button
-            variant="elitea"
+            variant="alita"
             color="primary"
             onClick={handleConfirm}
             disableRipple

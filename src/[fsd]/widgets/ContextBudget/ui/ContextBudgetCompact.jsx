@@ -102,7 +102,7 @@ const ContextBudgetCompact = memo(props => {
           placement={TOOLTIP_CONFIG.INFO.placement}
         >
           <IconButton
-            variant="elitea"
+            variant="alita"
             color="tertiary"
             onClick={onEdit}
             sx={styles.editButton}

@@ -1,13 +1,11 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { debounce } from 'lodash';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
-import { Box, CircularProgress, Popover, Skeleton, Typography } from '@mui/material';
+import { Box, Button, Popover, Skeleton, Typography, debounce, useTheme } from '@mui/material';
 
-import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
-import { TAG_NOTIFICATIONS, notificationsApi, useNotificationListQuery } from '@/api/notifications';
+import { useNotificationListQuery } from '@/api/notifications';
 import { PAGE_SIZE } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import useToast from '@/hooks/useToast';
@@ -16,18 +14,13 @@ import RouteDefinitions, { PathSessionMap } from '@/routes';
 import CloseIcon from './Icons/CloseIcon';
 import NotificationListItem from './NotificationListItem';
 
-const NotificationList = memo(props => {
-  const { notificationListAnchorEl, onCloseNotificationList } = props;
+const NotificationList = ({ notificationListAnchorEl, onCloseNotificationList }) => {
+  const theme = useTheme();
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const listRef = useRef();
-  const lastAppliedPageRef = useRef(-1);
   const { toastError } = useToast();
-  const styles = notificationListStyles();
   const { personal_project_id } = useSelector(state => state.user);
   const [page, setPage] = useState(0);
-  const [allNotifications, setAllNotifications] = useState([]);
-
   const { data, isFetching, isError, error, refetch } = useNotificationListQuery(
     {
       projectId: personal_project_id,
@@ -39,9 +32,7 @@ const NotificationList = memo(props => {
     },
     { refetchOnFocus: !!personal_project_id, skip: !personal_project_id },
   );
-
   const onViewAll = useCallback(() => {
-    dispatch(notificationsApi.util.invalidateTags([TAG_NOTIFICATIONS]));
     navigate(RouteDefinitions.NotificationCenter, {
       state: {
         routeStack: [
@@ -52,60 +43,34 @@ const NotificationList = memo(props => {
         ],
       },
     });
-    onCloseNotificationList();
-  }, [dispatch, navigate, onCloseNotificationList]);
-
+    onCloseNotificationList(true);
+  }, [navigate, onCloseNotificationList]);
   const onLoadMore = useCallback(() => {
     setPage(prev => prev + 1);
   }, []);
 
-  useEffect(() => {
-    if (!notificationListAnchorEl) return;
-    if (!data?.rows) return;
-    if (isFetching) return;
-    if (page === 0) {
-      lastAppliedPageRef.current = 0;
-      setAllNotifications(data.rows);
-      return;
-    }
-    if (lastAppliedPageRef.current === page) return;
-    lastAppliedPageRef.current = page;
-    setAllNotifications(prev => [...prev, ...data.rows]);
-  }, [data?.rows, notificationListAnchorEl, page, isFetching]);
-
-  useEffect(() => {
-    if (!notificationListAnchorEl) {
-      setPage(0);
-      setAllNotifications([]);
-      lastAppliedPageRef.current = -1;
-    }
-  }, [notificationListAnchorEl]);
-
-  const hasMore = data && allNotifications.length < data.total;
-
-  const handleScroll = useCallback(() => {
+  const onScroll = debounce(() => {
     const listDom = listRef.current;
-    if (!listDom || isFetching) return;
+    const clientHeight = listDom.clientHeight;
+    const scrollHeight = listDom.scrollHeight;
+    const scrollTop = listDom.scrollTop;
 
-    const { clientHeight, scrollHeight, scrollTop } = listDom;
     const isReachBottom = scrollTop + clientHeight > scrollHeight - 10;
-    if (isReachBottom && hasMore) {
+    if (isReachBottom && onLoadMore && data && data.rows.length < data.total) {
       onLoadMore();
     }
-  }, [hasMore, isFetching, onLoadMore]);
-
-  const debouncedScroll = useMemo(() => debounce(handleScroll, 300), [handleScroll]);
+  }, 300);
 
   useEffect(() => {
-    const listDom = listRef.current;
-    if (!listDom) return;
+    if (listRef.current) {
+      const listDom = listRef.current;
+      listDom.addEventListener('scroll', onScroll);
 
-    listDom.addEventListener('scroll', debouncedScroll);
-    return () => {
-      listDom.removeEventListener('scroll', debouncedScroll);
-      debouncedScroll.cancel();
-    };
-  }, [debouncedScroll]);
+      return () => {
+        listDom.removeEventListener('scroll', onScroll);
+      };
+    }
+  }, [onScroll, listRef]);
 
   useEffect(() => {
     if (isError) {
@@ -120,10 +85,11 @@ const NotificationList = memo(props => {
   return (
     <>
       <Popover
-        id="notificationList"
+        id={'notificationList'}
         open={Boolean(notificationListAnchorEl)}
         anchorEl={notificationListAnchorEl}
         anchorReference="anchorEl"
+        // anchorPosition={{ top: '100vh', left: sideBarCollapsed ? COLLAPSED_SIDE_BAR_WIDTH : SIDE_BAR_WIDTH }}
         onClose={onCloseNotificationList}
         anchorOrigin={{
           vertical: 'top',
@@ -133,150 +99,219 @@ const NotificationList = memo(props => {
           vertical: 'bottom',
           horizontal: 'left',
         }}
-        sx={styles.popover}
+        sx={{
+          background: 'transparent',
+          marginLeft: '30px',
+        }}
       >
-        <Box sx={styles.container}>
-          <Box sx={styles.header}>
+        <Box
+          sx={{
+            background: theme.palette.background.notificationList,
+            borderRadius: '8px',
+            width: '320px',
+            display: 'flex',
+            flexDirection: 'column',
+            maxHeight: 'calc(100vh - 120px)',
+          }}
+        >
+          <Box
+            sx={{
+              display: 'flex',
+              padding: '12px 20px',
+              alignItems: 'center',
+              height: '48px',
+              boxSizing: 'border-box',
+              justifyContent: 'space-between',
+              borderBottom: `1px solid ${theme.palette.border.notificationItem}`,
+            }}
+          >
             <Typography
               variant="labelMedium"
               color="text.secondary"
             >
               Notifications
             </Typography>
-            <BaseBtn
-              variant={BUTTON_VARIANTS.tertiary}
-              startIcon={<CloseIcon />}
+            <Button
               onClick={onCloseNotificationList}
-              aria-label="Close notifications"
-            />
+              sx={{
+                minWidth: '28px !important',
+                padding: '0px 0px !important',
+                height: '28px',
+                display: 'flex',
+                borderRadius: '16px',
+                justifyContent: 'center',
+                alignItems: 'center',
+                cursor: 'pointer',
+              }}
+            >
+              <CloseIcon sx={{ cursor: 'pointer', fontSize: '16.5px' }} />
+            </Button>
           </Box>
           <Box
             ref={listRef}
-            sx={styles.listContainer}
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              maxHeight: 'calc(100vh - 194px)',
+              overflowY: 'scroll',
+            }}
           >
-            {allNotifications.map(notification => (
-              <NotificationListItem
-                key={notification.id}
-                notification={notification}
-                onCloseNotificationList={onCloseNotificationList}
-              />
-            ))}
-            {isFetching && !allNotifications.length && (
+            {!isFetching &&
+              data?.rows.map(notification => (
+                <NotificationListItem
+                  key={notification.id}
+                  notification={notification}
+                  onCloseNotificationList={onCloseNotificationList}
+                />
+              ))}
+            {isFetching && (
               <>
-                {[...Array(8)].map((_, index) => (
-                  <Skeleton
-                    key={`skeleton-${index}`}
-                    sx={styles.skeletonItem}
-                    variant="rectangular"
-                    width="100%"
-                    height="2.5rem"
-                  />
-                ))}
+                <Skeleton
+                  sx={{
+                    '&:not(:last-of-type)': {
+                      borderBottom: `1px solid ${theme.palette.border.notificationItem}`,
+                    },
+                  }}
+                  variant="rectangular"
+                  width={'100%'}
+                  height={40}
+                />
+                <Skeleton
+                  sx={{
+                    '&:not(:last-of-type)': {
+                      borderBottom: `1px solid ${theme.palette.border.notificationItem}`,
+                    },
+                  }}
+                  variant="rectangular"
+                  width={'100%'}
+                  height={40}
+                />
+                <Skeleton
+                  sx={{
+                    '&:not(:last-of-type)': {
+                      borderBottom: `1px solid ${theme.palette.border.notificationItem}`,
+                    },
+                  }}
+                  variant="rectangular"
+                  width={'100%'}
+                  height={40}
+                />
+                <Skeleton
+                  sx={{
+                    '&:not(:last-of-type)': {
+                      borderBottom: `1px solid ${theme.palette.border.notificationItem}`,
+                    },
+                  }}
+                  variant="rectangular"
+                  width={'100%'}
+                  height={40}
+                />
+                <Skeleton
+                  sx={{
+                    '&:not(:last-of-type)': {
+                      borderBottom: `1px solid ${theme.palette.border.notificationItem}`,
+                    },
+                  }}
+                  variant="rectangular"
+                  width={'100%'}
+                  height={40}
+                />
+                <Skeleton
+                  sx={{
+                    '&:not(:last-of-type)': {
+                      borderBottom: `1px solid ${theme.palette.border.notificationItem}`,
+                    },
+                  }}
+                  variant="rectangular"
+                  width={'100%'}
+                  height={40}
+                />
+                <Skeleton
+                  sx={{
+                    '&:not(:last-of-type)': {
+                      borderBottom: `1px solid ${theme.palette.border.notificationItem}`,
+                    },
+                  }}
+                  variant="rectangular"
+                  width={'100%'}
+                  height={40}
+                />
+                <Skeleton
+                  sx={{
+                    '&:not(:last-of-type)': {
+                      borderBottom: `1px solid ${theme.palette.border.notificationItem}`,
+                    },
+                  }}
+                  variant="rectangular"
+                  width={'100%'}
+                  height={40}
+                />
+                <Skeleton
+                  sx={{
+                    '&:not(:last-of-type)': {
+                      borderBottom: `1px solid ${theme.palette.border.notificationItem}`,
+                    },
+                  }}
+                  variant="rectangular"
+                  width={'100%'}
+                  height={40}
+                />
               </>
             )}
-            {!allNotifications.length && !isFetching && (
-              <Box sx={styles.emptyState}>
+            {!data?.rows.length && !isFetching && (
+              <Box
+                sx={{
+                  display: 'flex',
+                  padding: '12px 20px',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  height: '40px',
+                  width: '100%',
+                  gap: '16px',
+                  boxSizing: 'border-box',
+                  borderBottom: `1px solid ${theme.palette.border.notificationItem}`,
+                }}
+              >
                 <Typography variant="bodySmall">No notifications right now</Typography>
               </Box>
             )}
           </Box>
-          {isFetching && page > 0 && (
-            <Box sx={styles.loadMoreSpinner}>
-              <CircularProgress
-                size="1.25rem"
-                thickness={4}
-              />
-            </Box>
-          )}
-          <BaseBtn
-            variant={BUTTON_VARIANTS.tertiary}
+          <Button
+            variant="alita"
+            color="tertiary"
+            disableRipple
             onClick={onViewAll}
-            sx={styles.viewAllButton}
+            sx={{
+              display: 'flex',
+              padding: '12px 20px',
+              alignItems: 'center',
+              height: '48px',
+              boxSizing: 'border-box',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              marginRight: '0px !important',
+              borderRadius: '0px',
+              borderWidth: '0px',
+              borderTop: `1px solid ${theme.palette.border.notificationItem}`,
+              '&:active': {
+                border: `0px solid ${theme.palette.border.notificationItem}`,
+              },
+              '&:hover': {
+                borderRadius: '0px',
+              },
+            }}
           >
             <Typography
               variant="labelMedium"
-              sx={styles.viewAllButtonText}
+              sx={{ color: theme.palette.text.button.showMore }}
             >
               View all
             </Typography>
-          </BaseBtn>
+          </Button>
         </Box>
       </Popover>
     </>
   );
-});
-
-NotificationList.displayName = 'NotificationList';
-
-/** @type {MuiSx} */
-const notificationListStyles = () => ({
-  popover: {
-    background: 'transparent',
-    marginLeft: '1.875rem',
-  },
-  container: ({ palette }) => ({
-    background: palette.background.notificationList,
-    borderRadius: '0.5rem',
-    width: '20rem',
-    display: 'flex',
-    flexDirection: 'column',
-    maxHeight: 'calc(100vh - 7.5rem)',
-  }),
-  header: ({ palette }) => ({
-    display: 'flex',
-    padding: '0.75rem 1.25rem',
-    alignItems: 'center',
-    height: '3rem',
-    boxSizing: 'border-box',
-    justifyContent: 'space-between',
-    borderBottom: `0.0625rem solid ${palette.border.notificationItem}`,
-  }),
-  listContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    maxHeight: 'calc(100vh - 12.125rem)',
-    overflowY: 'scroll',
-  },
-  skeletonItem: ({ palette }) => ({
-    '&:not(:last-of-type)': {
-      borderBottom: `0.0625rem solid ${palette.border.notificationItem}`,
-    },
-  }),
-  loadMoreSpinner: ({ palette }) => ({
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: '0.75rem 0',
-    borderTop: `0.0625rem solid ${palette.border.notificationItem}`,
-  }),
-  emptyState: ({ palette }) => ({
-    display: 'flex',
-    padding: '0.75rem 1.25rem',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: '2.5rem',
-    width: '100%',
-    gap: '1rem',
-    boxSizing: 'border-box',
-    borderBottom: `0.0625rem solid ${palette.border.notificationItem}`,
-  }),
-  viewAllButton: ({ palette }) => ({
-    width: '100%',
-    padding: '0.75rem 1.25rem',
-    height: '3rem',
-    boxSizing: 'border-box',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderTop: `0.0625rem solid ${palette.border.notificationItem}`,
-    borderRadius: '0px',
-    '&:hover': {
-      borderRadius: '0px',
-    },
-  }),
-  viewAllButtonText: ({ palette }) => ({
-    color: palette.text.button.showMore,
-  }),
-});
+};
 
 export default NotificationList;

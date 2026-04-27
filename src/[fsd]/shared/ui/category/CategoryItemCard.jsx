@@ -68,16 +68,12 @@ const getStyles = () => ({
     height: '100%',
   },
   itemIconContainer: {
-    width: '1.25rem',
-    height: '1.25rem',
+    width: '1rem',
+    height: '1rem',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
-    '& svg': {
-      width: '100%',
-      height: '100%',
-    },
   },
   itemLabel: ({ palette }) => ({
     color: palette.text.secondary,

@@ -48,7 +48,7 @@ const BucketHeader = memo(props => {
                 <Box component="span">
                   <Button
                     onClick={clickCreateBucket(false)}
-                    variant="elitea"
+                    variant="alita"
                     color="secondary"
                     sx={styles.createBucketButton}
                   >
@@ -72,7 +72,7 @@ const BucketHeader = memo(props => {
         </Box>
 
         <IconButton
-          variant="elitea"
+          variant="alita"
           color="tertiary"
           onClick={onCollapsed}
         >

@@ -72,7 +72,7 @@ const RunHistoryContainer = memo(props => {
     <>
       <Box sx={styles.header}>
         <IconButton
-          variant="elitea"
+          variant="alita"
           color="tertiary"
           aria-label="clear the chat"
           onClick={onClose}

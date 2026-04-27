@@ -105,7 +105,7 @@ const DeleteEntityModal = memo(props => {
         <MuiButton
           autoFocus
           disableRipple
-          variant="elitea"
+          variant="alita"
           color="secondary"
           onClick={e => resetButtonState(e, onCancel)}
         >

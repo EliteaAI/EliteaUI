@@ -428,6 +428,7 @@ export const useChatSocket = ({
               [GA_EVENT_PARAMS[`${key}_ID`]]: theParticipant.entity_meta?.id || 'unknown',
               [GA_EVENT_PARAMS[`${key}_VERSION`]]: theParticipant.entity_settings?.version_id || 'unknown',
               [GA_EVENT_PARAMS.ENTITY]: contextExecutionEntity,
+              [GA_EVENT_PARAMS.PROJECT_TYPE]: projectTypeRef.current || 'unknown',
             };
 
             if (isPipeline) {
@@ -731,6 +732,7 @@ export const useChatSocket = ({
                   [GA_EVENT_PARAMS.TOOL_NAME]: toolNameRaw || 'unknown',
                   [GA_EVENT_PARAMS.TIMESTAMP]: new Date().toISOString().split('T')[0],
                   [GA_EVENT_PARAMS.ENTITY]: contextExecutionEntity,
+                  [GA_EVENT_PARAMS.PROJECT_TYPE]: projectTypeRef.current || 'unknown',
                 });
               else
                 trackEvent(GA_EVENT_NAMES.TOOLKIT_USAGE, {
@@ -739,6 +741,7 @@ export const useChatSocket = ({
                   [GA_EVENT_PARAMS.TOOL_NAME]: toolNameRaw || 'unknown',
                   [GA_EVENT_PARAMS.TIMESTAMP]: new Date().toISOString().split('T')[0],
                   [GA_EVENT_PARAMS.ENTITY]: contextExecutionEntity,
+                  [GA_EVENT_PARAMS.PROJECT_TYPE]: projectTypeRef.current || 'unknown',
                 });
             }
 
@@ -754,6 +757,7 @@ export const useChatSocket = ({
                   [GA_EVENT_PARAMS.MODEL_NAME]: modelName,
                   [GA_EVENT_PARAMS.TIMESTAMP]: new Date().toISOString().split('T')[0],
                   [GA_EVENT_PARAMS.ENTITY]: contextExecutionEntity,
+                  [GA_EVENT_PARAMS.PROJECT_TYPE]: projectTypeRef.current || 'unknown',
                 });
             }
 
@@ -902,22 +906,6 @@ export const useChatSocket = ({
             response_metadata?.authorization_servers;
           const hasAuthServers = authServers && authServers.length > 0;
 
-          // Token storage key must match what get_toolkit() looks up in kwargs['tokens'].
-          // SharePoint uses a composite key or the oauth discovery endpoint (not site_url).
-          // All other toolkits use serverUrl (the MCP server URL).
-          const isSharePoint = response_metadata?.resource_metadata?.resource_name === 'SharePoint';
-          const oauthEndpoint = authServers?.[0];
-          const effectiveServerUrl = isSharePoint
-            ? (() => {
-                const configUuid = response_metadata?.resource_metadata?.configuration_uuid;
-                // Composite key "{configUuid}:{oauthEndpoint}" matches get_toolkit()'s lookup in
-                // elitea_sdk/tools/sharepoint/__init__.py when configuration_uuid is present.
-                return configUuid && oauthEndpoint
-                  ? `${configUuid}:${oauthEndpoint}`
-                  : oauthEndpoint || serverUrl;
-              })()
-            : serverUrl;
-
           let contentMessage;
           let status;
 
@@ -948,7 +936,7 @@ export const useChatSocket = ({
               ? {
                   resource_metadata_url: resourceMetadataUrl || null,
                   authorization_servers: authServers,
-                  server_url: effectiveServerUrl,
+                  server_url: serverUrl,
                 }
               : undefined,
             toolMeta: response_metadata,
@@ -975,6 +963,7 @@ export const useChatSocket = ({
           msg.isStreaming = false;
           msg.isRegenerating = false;
           msg.isSending = false;
+          msg.mcpAuthorization = response_metadata;
           onRcvAgentEventRef.current && onRcvAgentEventRef.current({ ...message });
           break;
         }

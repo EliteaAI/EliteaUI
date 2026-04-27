@@ -74,10 +74,6 @@ const magenta = 'rgba(244, 124, 255, 1)';
 const magenta24 = 'rgba(244, 124, 255, 0.24)';
 const deepGrey = '#1a1f28';
 const semiTransparentBlack = 'rgba(16, 23, 33, 0.5)';
-const darkPurpleBgr = '#2A2F46';
-const darkOrangeBgr = '#362F2E';
-const darkPurple = '#7C69B4';
-const darkOrange = '#A5695C';
 
 const darkPalette = {
   mode: 'dark',
@@ -96,7 +92,7 @@ const darkPalette = {
   background: {
     info: blue8,
     default: gray60,
-    eliteaDefault: gray60,
+    alitaDefault: gray60,
     secondary: gray50,
     tabPanel: gray55,
     chatBkg: gray55,
@@ -116,9 +112,6 @@ const darkPalette = {
     card: {
       default: gray50,
       hover: gray58,
-      gradientDark: 'linear-gradient(0deg, #121820 0%, #1D232C 100%)',
-      hoverBorderGradient: 'linear-gradient(0deg, rgba(83, 176, 191, 0.4) 0%, #53B0BF 100%)',
-      hoverShadow: '0px -3px 0.9375rem 0px rgba(120, 230, 255, 0.3)',
     },
     categoriesButton: {
       selected: {
@@ -143,10 +136,6 @@ const darkPalette = {
       default: white10,
       trophy: '#48433F',
       checkedBox: gray10,
-      entityGradient:
-        'linear-gradient(45.36deg, rgba(169, 183, 193, 0.3) 16.25%, rgba(169, 183, 193, 0.09) 87.07%)',
-      entityBorderGradient:
-        'linear-gradient(225deg, rgba(156, 169, 178, 0) 12.64%, rgba(156, 169, 178, 0.4) 87.88%)',
     },
     select: {
       hover: white10,
@@ -320,10 +309,9 @@ const darkPalette = {
     userMessageEditor: primaryPressed,
     notificationItem: gray60,
     cardsOutlines: gray40,
-    cardsOutlinesGradient: 'linear-gradient(0deg, #262B34 0%, #313A48 100%)',
     conversationItemDivider: white10,
     highlightUserMessage: magenta40,
-    error: red40,
+    error: dangerRed,
     flowNode: gray20,
     sidebarDivider: white10,
     chatEditPlaceholderBorder: darkBlue,
@@ -418,7 +406,6 @@ const darkPalette = {
     },
     tagChip: {
       default: gray10,
-      hover: white,
       active: white,
       disabled: gray20,
     },
@@ -480,20 +467,6 @@ const darkPalette = {
     hitl: '#5A3D23', // HITL - dark amber
 
     custom: '#351C1C', // Custom - dark red
-  },
-  scrollbar: {
-    thumb: white10,
-    thumbHover: gray10,
-  },
-  capability: {
-    vision: {
-      background: darkPurpleBgr,
-      icon: darkPurple,
-    },
-    reasoning: {
-      background: darkOrangeBgr,
-      icon: darkOrange,
-    },
   },
 };
 

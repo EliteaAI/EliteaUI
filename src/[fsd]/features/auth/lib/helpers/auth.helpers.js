@@ -20,7 +20,7 @@ export const sendAuthResult = message => {
   // Method 2: BroadcastChannel (works across all tabs of same origin)
   if (message.state) {
     try {
-      const channel = new BroadcastChannel(`elitea-auth-${message.state}`);
+      const channel = new BroadcastChannel(`alita-auth-${message.state}`);
       channel.postMessage(message);
       // Delay closing to ensure message is sent
       setTimeout(() => channel.close(), 100);

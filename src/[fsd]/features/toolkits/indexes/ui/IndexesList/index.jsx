@@ -16,7 +16,7 @@ const IndexesList = memo(props => {
       <Box sx={styles.header}>
         <Typography variant="subtitle">INDEXES</Typography>
         <IconButton
-          variant="elitea"
+          variant="alita"
           color="secondary"
           onClick={handleAddIndex}
         >

@@ -7,40 +7,21 @@ export const useRowSelection = options => {
 
   const allRowIds = useMemo(() => rows.map(row => row[idField]), [rows, idField]);
 
-  const allRowIdsSet = useMemo(() => new Set(allRowIds), [allRowIds]);
-
-  const currentPageSelectedCount = useMemo(
-    () => selectedIds.filter(id => allRowIdsSet.has(id)).length,
-    [selectedIds, allRowIdsSet],
-  );
-
   const isAllSelected = useMemo(
-    () => currentPageSelectedCount === rows.length && rows.length > 0,
-    [currentPageSelectedCount, rows.length],
+    () => selectedIds.length === rows.length && rows.length > 0,
+    [selectedIds.length, rows.length],
   );
 
   const isIndeterminate = useMemo(
-    () => currentPageSelectedCount > 0 && currentPageSelectedCount < rows.length,
-    [currentPageSelectedCount, rows.length],
+    () => selectedIds.length > 0 && selectedIds.length < rows.length,
+    [selectedIds.length, rows.length],
   );
 
   const selectedCount = selectedIds.length;
 
   const handleSelectAll = useCallback(() => {
-    // Selection is preserved across pages. When all rows on the current page are selected,
-    // toggling "select all" removes only the current page row IDs and keeps selections
-    // from other pages intact.
-    if (isAllSelected) {
-      setSelectedIds(prev => prev.filter(id => !allRowIdsSet.has(id)));
-    } else {
-      setSelectedIds(prev => {
-        const prevSelectedIdsSet = new Set(prev);
-        const nextRowIds = allRowIds.filter(id => !prevSelectedIdsSet.has(id));
-
-        return [...prev, ...nextRowIds];
-      });
-    }
-  }, [isAllSelected, allRowIds, allRowIdsSet]);
+    setSelectedIds(isAllSelected ? [] : allRowIds);
+  }, [isAllSelected, allRowIds]);
 
   const handleSelectRow = useCallback(rowId => {
     setSelectedIds(prev => {

@@ -8,20 +8,12 @@ import AdoGeneralIcon from '@/assets/ado-general.svg?react';
 import AdoPlansIcon from '@/assets/ado-plans.svg?react';
 import AdoReposIcon from '@/assets/ado-repos-icon.svg?react';
 import AmazonBedrock from '@/assets/amazon-bedrock.svg?react';
-import ApplicationToolkitIcon from '@/assets/applications-icon.svg?react';
 import ArtifactsIcon from '@/assets/artifacts-icon.svg?react';
-import AtlassianIcon from '@/assets/atlassian.svg?react';
 import AttachSvgIcon from '@/assets/attach-icon.svg?react';
 import AdoIcon from '@/assets/azure-icon.svg?react';
 import BitbucketIcon from '@/assets/bitbucket-icon.svg?react';
-import BrowserUseIcon from '@/assets/browser_use.svg?react';
-import BuddyIcon from '@/assets/buddy.svg?react';
 import CalendarIcon from '@/assets/calendar.svg?react';
 import ChromaIcon from '@/assets/chroma-icon.svg?react';
-import ClaudeCodeIcon from '@/assets/claude_code.svg?react';
-import CodexIcon from '@/assets/codex.svg?react';
-import Context7Icon from '@/assets/context7.svg?react';
-import DeepwikiQueryIcon from '@/assets/deepwiki_query.svg?react';
 import DialIcon from '@/assets/dial-icon.svg?react';
 import EmbeddingIcon from '@/assets/embeddings.svg?react';
 import FigmaIcon from '@/assets/figma-icon.svg?react';
@@ -29,18 +21,14 @@ import FlowIcon from '@/assets/flow-icon.svg?react';
 import GitlabWorkspaceIcon from '@/assets/gitlab-space.svg?react';
 import GplacesIcon from '@/assets/gplaces-icon.svg?react';
 import ImageIcon from '@/assets/image.svg?react';
-import ImageGenIcon from '@/assets/image_gen.svg?react';
-import InventorySearchIcon from '@/assets/inventory_search.svg?react';
-import JiraIcon from '@/assets/jira.svg?react';
-import LangfuseIcon from '@/assets/langfuse.svg?react';
+import JiraIcon from '@/assets/jira-icon.svg?react';
 import LlmIcon from '@/assets/llm.svg?react';
 import MCPIcon from '@/assets/mcp-icon.svg?react';
-import MemoryIcon from '@/assets/memory.svg?react';
-import MiroIcon from '@/assets/miro.svg?react';
+import MemoryIcon from '@/assets/memory-icon.svg?react';
 import OllamaIcon from '@/assets/ollama.svg?react';
 import PieChartIcon from '@/assets/pie-chart-icon.svg?react';
 import PostgreSQLIcon from '@/assets/postgre-sql-icon.svg?react';
-import PostmanIcon from '@/assets/postman.svg?react';
+import PostmanIcon from '@/assets/postman-icon.svg?react';
 import PPTXIcon from '@/assets/pptx-icon.svg?react';
 import PythonIcon from '@/assets/python.svg?react';
 import QTestIcon from '@/assets/qtest.svg?react';
@@ -48,19 +36,15 @@ import RallyIcon from '@/assets/rally.svg?react';
 import ReportPortalIcon from '@/assets/reportportal-icon.svg?react';
 import S3Storage from '@/assets/s3storage-icon.svg?react';
 import SalesForceIcon from '@/assets/salesforce.svg?react';
-import ServiceNowIcon from '@/assets/service_now.svg?react';
+import ServiceNowIcon from '@/assets/service-now.svg?react';
 import SharepointIcon from '@/assets/sharepoint.svg?react';
 import SlackIcon from '@/assets/slack-icon.svg?react';
-import SlidevIcon from '@/assets/slidev.svg?react';
 import SonarIcon from '@/assets/sonar-icon.svg?react';
 import SqlIcon from '@/assets/sql-icon.svg?react';
 import SwarmIconSVG from '@/assets/swarm-icon.svg?react';
-import SyngenIcon from '@/assets/syngen.svg?react';
 import TestIOIcon from '@/assets/testio-icon.svg?react';
 import TestrailIcon from '@/assets/testrail-icon.svg?react';
 import ToolsIcon from '@/assets/tools-icon.svg?react';
-import WebSearchIcon from '@/assets/web_search.svg?react';
-import WikiQueryIcon from '@/assets/wiki_query.svg?react';
 import XrayIcon from '@/assets/xray.svg?react';
 import ZephyrIcon from '@/assets/zephyr.svg?react';
 import { capitalizeFirstChar } from '@/common/utils';
@@ -114,7 +98,7 @@ const generateColorMatrix = color => {
           0 0 0 1 0`;
 };
 
-const EliteASvgIcon = ({ iconUrl, isToolIcon, fallbackIcon, ...iconProps }) => {
+const AlitaSvgIcon = ({ iconUrl, isToolIcon, fallbackIcon, ...iconProps }) => {
   const theme = useTheme();
   const [iconError, setIconError] = useState(false);
   const matrix = generateColorMatrix(theme.palette.icon.fill.default);
@@ -210,7 +194,7 @@ const getPredefinedIcon = (type, iconProps) => {
     case ToolTypes.gitlab.value:
       return <GitLabIcon {...iconProps} />;
     case ToolTypes.gitlab_org.value:
-      return <GitLabIcon {...iconProps} />;
+      return <GitlabWorkspaceIcon {...iconProps} />;
     case ToolTypes.bitbucket.value:
       return <BitbucketIcon {...iconProps} />;
     case ToolTypes.jira.value:
@@ -300,49 +284,12 @@ const getPredefinedIcon = (type, iconProps) => {
       return <ImageIcon {...iconProps} />;
     case 'swarm_child':
       return <ApplicationsIcon {...iconProps} />;
-    case 'deepwiki_Deepwiki':
-    case 'inventory':
-      return <ApplicationToolkitIcon {...iconProps} />;
-    case 'langfuse':
-      return <LangfuseIcon {...iconProps} />;
-    case 'wiki_query':
-      return <WikiQueryIcon {...iconProps} />;
-    case 'SyngenServiceProvider_Syngen':
-      return <SyngenIcon {...iconProps} />;
-    case 'SlidevServiceProvider_Slidev':
-      return <SlidevIcon {...iconProps} />;
-    case 'inventory_search':
-      return <InventorySearchIcon {...iconProps} />;
-    case 'ImageGenServiceProvider_ImageGen':
-      return <ImageGenIcon {...iconProps} />;
-    case 'deepwiki_query':
-      return <DeepwikiQueryIcon {...iconProps} />;
-    case 'CodexServiceProvider_Codex':
-      return <CodexIcon {...iconProps} />;
-    case 'ClaudeServiceProvider_ClaudeCode':
-      return <ClaudeCodeIcon {...iconProps} />;
-    case 'BrowserUseServiceProvider_BrowserUse':
-      return <BrowserUseIcon {...iconProps} />;
-    case 'mcp_WEB Search':
-      return <WebSearchIcon {...iconProps} />;
-    case 'mcp_context7':
-      return <Context7Icon {...iconProps} />;
-    case 'mcp_Buddy':
-      return <BuddyIcon {...iconProps} />;
-    case 'mcp_Miro':
-      return <MiroIcon {...iconProps} />;
-    case 'mcp_Atlassian Server':
-      return <AtlassianIcon {...iconProps} />;
     default:
       return <BuildIcon {...iconProps} />;
   }
 };
 
-export const getToolIconByType = (
-  type,
-  theme,
-  { toolSchema = {}, isMCP = false, internalToolkitName = '', isAppAll = false } = {},
-) => {
+export const getToolIconByType = (type, theme, toolSchema = {}, isMCP, internalToolkitName = '') => {
   const iconProps = {
     // htmlColor: theme.palette.icon.fill.default,
     color: 'secondary',
@@ -365,17 +312,13 @@ export const getToolIconByType = (
 
   if (toolSchema?.metadata?.icon_url) {
     return (
-      <EliteASvgIcon
+      <AlitaSvgIcon
         isToolIcon
         iconUrl={toolSchema.metadata.icon_url}
         fallbackIcon={predefinedIcon}
         {...iconProps}
       />
     );
-  }
-
-  if (isAppAll) {
-    return <ApplicationToolkitIcon {...iconProps} />;
   }
 
   return predefinedIcon;

@@ -81,7 +81,7 @@ const SaveNewVersionButton = forwardRef((props, ref) => {
     <>
       <Button
         disabled={isSavingNewVersion || disabled}
-        variant="elitea"
+        variant="alita"
         color="secondary"
         onClick={onSaveVersion}
       >

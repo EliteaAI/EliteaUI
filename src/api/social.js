@@ -1,6 +1,6 @@
 import { PUBLIC_PROJECT_ID } from '@/common/constants.js';
 
-import { eliteaApi } from './eliteaApi.js';
+import { alitaApi } from './alitaApi.js';
 
 const apiSlicePath = '/social';
 const TAG_TYPE_USER = 'User';
@@ -40,7 +40,7 @@ function applyPinToList(list, entityId, shouldPin) {
 
 function patchListCachesForPin(state, entityId, shouldPin, dispatch) {
   const patchResults = [];
-  Object.entries(state.eliteaApi.queries).forEach(([cacheKey, cacheEntry]) => {
+  Object.entries(state.alitaApi.queries).forEach(([cacheKey, cacheEntry]) => {
     if (!cacheEntry?.data?.rows && !cacheEntry?.data?.items) return;
     const data = cacheEntry.data;
     const hasEntity =
@@ -52,7 +52,7 @@ function patchListCachesForPin(state, entityId, shouldPin, dispatch) {
 
     try {
       const patchResult = dispatch(
-        eliteaApi.util.updateQueryData(parsed.endpointName, parsed.args, draft => {
+        alitaApi.util.updateQueryData(parsed.endpointName, parsed.args, draft => {
           if (draft?.rows) applyPinToList(draft.rows, entityId, shouldPin);
           else if (draft?.items) applyPinToList(draft.items, entityId, shouldPin);
         }),
@@ -70,7 +70,7 @@ function patchDetailCachesForPin(state, projectId, entityType, entityId, shouldP
   if (!detailConfig) return [];
 
   const patchResults = [];
-  Object.entries(state.eliteaApi.queries).forEach(([cacheKey, cacheEntry]) => {
+  Object.entries(state.alitaApi.queries).forEach(([cacheKey, cacheEntry]) => {
     if (!cacheKey.startsWith(detailConfig.endpoint) || !cacheEntry?.data) return;
     const argsStr = cacheKey.slice(detailConfig.endpoint.length);
     if (!argsStr.startsWith('{')) return;
@@ -81,7 +81,7 @@ function patchDetailCachesForPin(state, projectId, entityType, entityId, shouldP
       if (projectId != null && args.projectId != null && String(args.projectId) !== String(projectId)) return;
 
       const patchResult = dispatch(
-        eliteaApi.util.updateQueryData(detailConfig.endpoint, args, draft => {
+        alitaApi.util.updateQueryData(detailConfig.endpoint, args, draft => {
           draft.is_pinned = shouldPin;
         }),
       );
@@ -93,7 +93,7 @@ function patchDetailCachesForPin(state, projectId, entityType, entityId, shouldP
   return patchResults;
 }
 
-export const socialApi = eliteaApi
+export const socialApi = alitaApi
   .enhanceEndpoints({
     addTagTypes: [TAG_TYPE_USER],
   })

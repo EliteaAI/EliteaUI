@@ -199,7 +199,7 @@ const ToolCustom = memo(props => {
         >
           <IconButton
             sx={styles.copyButton}
-            variant="elitea"
+            variant="alita"
             color="tertiary"
             onClick={onClickCopy}
           >

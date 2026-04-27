@@ -25,8 +25,8 @@ import { useTheme } from '@emotion/react';
 
 import StyledTooltip from '../ComponentsLib/Tooltip';
 import AlertDialog from './AlertDialog';
+import AlitaImage from './AlitaImage';
 import { StyledCircleProgress } from './Chat/StyledComponents';
-import EliteAImage from './EliteAImage';
 import { EntityTypeIcon } from './EntityIcon';
 import CloseIcon from './Icons/CloseIcon';
 
@@ -97,7 +97,7 @@ const UserOwnIconContainer = ({ isSelected, children, onDelete, onClick }) => {
         </StyledItemContainer>
         <IconButton
           className="deleteButton"
-          variant="elitea"
+          variant="alita"
           color="delete"
           onClick={onClickDelete}
           sx={{
@@ -474,7 +474,7 @@ export default function SelectIconDialog({
               </Typography>
               <IconButton
                 sx={{ marginLeft: '0px' }}
-                variant="elitea"
+                variant="alita"
                 color="tertiary"
                 onClick={onClose}
               >
@@ -587,7 +587,7 @@ export default function SelectIconDialog({
                         borderRadius={'50%'}
                         overflow={'hidden'}
                       >
-                        <EliteAImage
+                        <AlitaImage
                           style={{ width: 40, height: 40 }}
                           image={icon}
                           alt="Preview"
@@ -607,7 +607,7 @@ export default function SelectIconDialog({
                         borderRadius={'50%'}
                         overflow={'hidden'}
                       >
-                        <EliteAImage
+                        <AlitaImage
                           style={{ width: 40, height: 40 }}
                           image={icon}
                           alt="Preview"

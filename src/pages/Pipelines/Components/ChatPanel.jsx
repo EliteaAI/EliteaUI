@@ -128,7 +128,7 @@ const ChatPanel = forwardRef((props, ref) => {
         {!isSmallWindow && (
           <IconButton
             sx={styles.collapseButton}
-            variant="elitea"
+            variant="alita"
             color="tertiary"
             onClick={onClickCollapsed}
           >

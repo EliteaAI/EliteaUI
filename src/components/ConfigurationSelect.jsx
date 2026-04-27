@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { useSelector } from 'react-redux';
 
-import { Typography, debounce } from '@mui/material';
+import { Typography } from '@mui/material';
 
-import { Select } from '@/[fsd]/shared/ui';
 import ToolIcon from '@/assets/tool-icon.svg?react';
+import SingleSelectWithSearch from '@/components/SingleSelectWithSearch';
 import { Create_Personal_Title, Create_Project_Title, Manual_Title } from '@/hooks/useConfigurations';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { useTheme } from '@emotion/react';
@@ -13,11 +13,9 @@ import { useTheme } from '@emotion/react';
 import FolderIcon from './Icons/FolderIcon';
 import Person from './Icons/Person';
 
-const SCROLL_LOAD_MORE_THRESHOLD = 10;
-const DEBOUNCE_DELAY_MS = 300;
-
 export default function ConfigurationSelect({
   label = 'Configuration',
+  onBlur,
   error,
   helperText,
   value,
@@ -31,7 +29,6 @@ export default function ConfigurationSelect({
   sx,
   configSelectProps,
   isCreationAllowed = true,
-  showBorder,
 }) {
   const theme = useTheme();
   const projectId = useSelectedProjectId();
@@ -133,27 +130,7 @@ export default function ConfigurationSelect({
     );
   }, [configurations, isCreationAllowed, personal_project_id, projectId]);
 
-  const loadMoreOnScroll = useMemo(
-    () =>
-      debounce(e => {
-        const containerDom = e.target || {};
-        const clientHeight = containerDom.clientHeight;
-        const scrollHeight = containerDom.scrollHeight;
-        const scrollTop = containerDom.scrollTop;
-        const isReachBottom = scrollTop + clientHeight > scrollHeight - SCROLL_LOAD_MORE_THRESHOLD;
-        if (isReachBottom && !isFetching) onLoadMore();
-      }, DEBOUNCE_DELAY_MS),
-    [isFetching, onLoadMore],
-  );
-
-  useEffect(
-    () => () => {
-      loadMoreOnScroll.clear();
-    },
-    [loadMoreOnScroll],
-  );
-
-  const mapOptionToConfig = useCallback(
+  const onValueChange = useCallback(
     option => {
       const config = {
         configuration_personal: option.configuration_personal,
@@ -163,14 +140,6 @@ export default function ConfigurationSelect({
       onSelectConfiguration(config);
     },
     [onSelectConfiguration],
-  );
-
-  const handleSelectValueChange = useCallback(
-    selectedValue => {
-      const opt = options.find(o => o.value === selectedValue);
-      if (opt) mapOptionToConfig(opt);
-    },
-    [options, mapOptionToConfig],
   );
 
   const renderValue = useCallback(
@@ -200,25 +169,21 @@ export default function ConfigurationSelect({
   );
 
   return (
-    <Select.SingleSelect
+    <SingleSelectWithSearch
       required={required}
       label={label}
       value={selectedConfiguration}
-      onValueChange={handleSelectValueChange}
-      withSearch
-      searchFilterMode="remote"
+      onValueChange={onValueChange}
       searchString={query}
       onSearch={setQuery}
       options={options}
-      isListFetching={isFetching}
-      onScroll={loadMoreOnScroll}
+      isFetching={isFetching}
+      onLoadMore={onLoadMore}
       error={error}
       helperText={helperText}
-      displayEmpty
-      emptyPlaceholder="Select"
-      showBorder={showBorder}
-      customRenderValue={renderValue}
+      onClose={onBlur}
       sx={sx}
+      renderValue={renderValue}
       {...configSelectProps}
     />
   );

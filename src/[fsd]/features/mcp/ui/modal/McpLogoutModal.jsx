@@ -79,7 +79,7 @@ const McpLogoutModal = memo(props => {
       >
         MCP Authorization
         <IconButton
-          variant="elitea"
+          variant="alita"
           color="tertiary"
           aria-label="close"
           onClick={handleCancel}
@@ -131,7 +131,7 @@ const McpLogoutModal = memo(props => {
       </DialogContent>
       <DialogActions sx={styles.dialogActions}>
         <Button
-          variant="elitea"
+          variant="alita"
           color="secondary"
           onClick={handleCancel}
           disableRipple
@@ -139,7 +139,7 @@ const McpLogoutModal = memo(props => {
           Cancel
         </Button>
         <Button
-          variant="elitea"
+          variant="alita"
           color="primary"
           onClick={handleLogout}
           disableRipple

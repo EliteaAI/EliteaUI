@@ -91,7 +91,7 @@ const CreatePersonalToken = memo(() => {
             >
               <Box component="span">
                 <MuiButton
-                  variant="elitea"
+                  variant="alita"
                   color="primary"
                   disabled={!formik.values.name || isGenerating || !!data.uuid}
                   onClick={() => formik.handleSubmit()}

@@ -13,8 +13,6 @@ export const useMultiSectionConfigurations = (sections = [], projectId) => {
       projectId,
       section: 'llm',
       includeShared: true, // Include both shared and project-specific configurations
-      pageSize: 50,
-      sharedLimit: 50,
     },
     { skip: !sections.includes('llm') || !projectId },
   );

@@ -5,7 +5,7 @@ import { useFormikContext } from 'formik';
 import { FlowEditorContext } from '@/[fsd]/app/providers';
 import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { useGetToolkitNameFromSchema } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
-import { Select } from '@/[fsd]/shared/ui';
+import MultipleSelect from '@/components/MultipleSelect';
 
 const ToolkitsSelect = memo(props => {
   const { id, label = 'Toolkits', disabled, onValueChange, allowApplications = false } = props;
@@ -79,16 +79,30 @@ const ToolkitsSelect = memo(props => {
   );
 
   return (
-    <Select.SingleSelect
-      showEmptyPlaceholder={false}
+    <MultipleSelect
+      sx={{ marginBottom: '.5rem' }}
+      emptyPlaceHolder=""
       label={label}
       value={selectedToolkits}
       onValueChange={handleToolkitsChange}
       options={toolkitOptions}
       disabled={disabled || !toolkitOptions?.length}
       showBorder
-      multiple
       className="nopan nodrag"
+      labelSX={{
+        left: '.75rem',
+        '& .Mui-focused': {
+          top: '-0.3125rem',
+        },
+      }}
+      MenuProps={{
+        PaperProps: { style: { marginTop: '.5rem' } },
+      }}
+      selectSX={{
+        '& .MuiSelect-icon': {
+          top: 'calc(50% - .6875rem) !important;',
+        },
+      }}
     />
   );
 });

@@ -16,15 +16,12 @@ import { useDispatch } from 'react-redux';
 import { Box, Tab, Tabs } from '@mui/material';
 
 import { useTrackEvent } from '@/GA';
-import { InstructionsInputRefProvider } from '@/[fsd]/app/providers';
-import CreateAgentForm from '@/[fsd]/features/agent/ui/agent-details/configurations/form/CreateAgentForm';
-import { useConversationStartersSync } from '@/[fsd]/features/chat/lib/hooks';
 import useRefetchAgentVersionDetailsOnClose from '@/[fsd]/features/chat/lib/hooks/useRefetchAgentVersionDetailsOnClose';
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { LayoutHelpers, ParsePipelineHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
 import { DEFAULT_REASONING_EFFORT } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
-import { useGetApplicationVersionDetailQuery, usePublicApplicationDetailsQuery } from '@/api/applications';
+import { useGetApplicationVersionDetailQuery } from '@/api/applications';
 import FlowIcon from '@/assets/flow-icon.svg?react';
 import { ChatParticipantType, PERMISSIONS, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants.js';
 import GearIcon from '@/components/Icons/GearIcon.jsx';
@@ -37,6 +34,7 @@ import CreateApplicationSaveButton from '@/pages/Applications/Components/Applica
 import PipelineConfigurationForm from '@/pages/Applications/Components/Applications/PipelineConfigurationForm.jsx';
 import SaveApplicationButton from '@/pages/Applications/Components/Applications/SaveApplicationButton.jsx';
 import { useCreateApplicationInitialValues } from '@/pages/Applications/useApplicationInitialValues';
+import FileReaderEnhancerRefContext from '@/pages/Common/Components/FileReaderInputRefContext';
 import { ContentContainer } from '@/pages/Common/Components/StyledComponents.jsx';
 import BaseEditor from '@/pages/NewChat/components/BaseEditor.jsx';
 import LLMModelSelectorWrapper from '@/pages/NewChat/components/LLMModelSelectorWrapper';
@@ -50,21 +48,10 @@ const getPipelineId = pipeline => {
 };
 
 const PipelineEditorContent = memo(props => {
-  const {
-    viewMode,
-    canEditIt,
-    isPublic,
-    pipelineId,
-    projectId,
-    handleAttachmentToolChange,
-    entityProjectId,
-    onConversationStartersChange,
-    isCreateMode,
-  } = props;
+  const { isCreateMode, viewMode, canEditIt, isPublic, pipelineId, projectId, handleAttachmentToolChange } =
+    props;
   const { setFieldValue } = useFormikContext();
   const styles = getStyles();
-
-  useConversationStartersSync(onConversationStartersChange);
 
   // LLM Settings setter for the modal dialog
   const onLLMSettingsChange = useCallback(
@@ -78,26 +65,25 @@ const PipelineEditorContent = memo(props => {
   );
 
   return (
-    <Box>
-      <LLMModelSelectorWrapper
-        projectId={projectId}
-        onLLMSettingsChange={onLLMSettingsChange}
-        disabled={!canEditIt}
-        modelTooltip={isPublic ? 'Model configuration is locked for Public agents' : undefined}
-        settingsTooltip={isPublic ? 'Model settings are locked for Public agents' : undefined}
-      />
+    <ContentContainer height="100%">
       {!isCreateMode && (
-        <PipelineConfigurationForm
-          applicationId={pipelineId}
-          viewMode={viewMode}
-          isChatView
-          containerStyle={styles.configForm}
-          hidePythonSandbox
-          onAttachmentToolChange={handleAttachmentToolChange}
-          entityProjectId={entityProjectId}
+        <LLMModelSelectorWrapper
+          projectId={projectId}
+          onLLMSettingsChange={onLLMSettingsChange}
+          disabled={!canEditIt}
+          modelTooltip={isPublic ? 'Model configuration is locked for Public agents' : undefined}
+          settingsTooltip={isPublic ? 'Model settings are locked for Public agents' : undefined}
         />
       )}
-    </Box>
+      <PipelineConfigurationForm
+        applicationId={isCreateMode ? '' : pipelineId}
+        viewMode={viewMode} // Use dynamic view mode
+        isChatView={isCreateMode ? false : true} // Show form fields in create mode
+        containerStyle={styles.configForm}
+        hidePythonSandbox
+        onAttachmentToolChange={handleAttachmentToolChange}
+      />
+    </ContentContainer>
   );
 });
 
@@ -116,7 +102,6 @@ const PipelineEditor = forwardRef(
       stopRunOnNodeStop,
       activeParticipantId,
       onAttachmentToolChange,
-      onConversationStartersChange,
     },
     ref,
   ) => {
@@ -198,33 +183,19 @@ const PipelineEditor = forwardRef(
     const { initialValues: createInitialValues } = useCreateApplicationInitialValues(true); // true for pipeline
 
     // Fetch version details in edit mode only
-    const isPublishedPipeline = pipeline?.entity_meta?.project_id == PUBLIC_PROJECT_ID;
     const {
-      data: privateVersionDetails,
-      error: privateError,
-      refetch: refetchPrivateVersionDetails,
+      data: versionDetails,
+      error,
+      refetch: refetchVersionDetails,
     } = useGetApplicationVersionDetailQuery(
-      projectId && pipelineId && versionId && isVisible && !isCreateMode && !isPublishedPipeline
+      projectId && pipelineId && versionId && isVisible && !isCreateMode
         ? { projectId: pipeline.entity_meta?.project_id || projectId, applicationId: pipelineId, versionId }
         : { skip: true },
       {
-        skip: !isVisible || !projectId || !pipelineId || !versionId || isCreateMode || isPublishedPipeline,
-        refetchOnMountOrArgChange: true,
+        skip: !isVisible || !projectId || !pipelineId || !versionId || isCreateMode,
+        refetchOnMountOrArgChange: true, // Force refetch when arguments change
       },
     );
-    const {
-      data: publicAppDetails,
-      error: publicError,
-      refetch: refetchPublicAppDetails,
-    } = usePublicApplicationDetailsQuery(
-      { applicationId: pipelineId },
-      { skip: !isVisible || !pipelineId || !isPublishedPipeline || isCreateMode },
-    );
-    const versionDetails = isPublishedPipeline ? publicAppDetails : privateVersionDetails;
-    const error = isPublishedPipeline ? publicError : privateError;
-    const refetchVersionDetails = isPublishedPipeline
-      ? refetchPublicAppDetails
-      : refetchPrivateVersionDetails;
     const { refetchAgentVersionDetailsOnClose } = useRefetchAgentVersionDetailsOnClose({
       refetchVersionDetails,
     });
@@ -429,7 +400,7 @@ const PipelineEditor = forwardRef(
     const styles = getStyles();
 
     return (
-      <InstructionsInputRefProvider inputRef={fileReaderEnhancerRef}>
+      <FileReaderEnhancerRefContext.Provider value={fileReaderEnhancerRef}>
         <BaseEditor
           isVisible={isVisible}
           isDirty={totalDirty}
@@ -443,31 +414,29 @@ const PipelineEditor = forwardRef(
           error={error}
           onDirtyStateChange={onPipelineDirtyStateChange}
           formContent={
-            !isCreateMode ? (
-              <StyledTabBar sx={styles.tabBar}>
-                <Box sx={styles.tabsContainer}>
-                  <Tabs
-                    value={activeTab}
-                    onChange={handleTabChange}
-                    aria-label="pipeline editor tabs"
-                    sx={styles.customTabs}
-                  >
-                    <Tab
-                      sx={styles.tab}
-                      icon={<GearIcon />}
-                      label="Configuration"
-                      iconPosition="start"
-                    />
-                    <Tab
-                      sx={styles.tab}
-                      icon={<FlowIcon />}
-                      label="Flow editor"
-                      iconPosition="start"
-                    />
-                  </Tabs>
-                </Box>
-              </StyledTabBar>
-            ) : null
+            <StyledTabBar sx={styles.tabBar}>
+              <Box sx={styles.tabsContainer}>
+                <Tabs
+                  value={activeTab}
+                  onChange={handleTabChange}
+                  aria-label="pipeline editor tabs"
+                  sx={styles.customTabs}
+                >
+                  <Tab
+                    sx={styles.tab}
+                    icon={<GearIcon />}
+                    label="Configuration"
+                    iconPosition="start"
+                  />
+                  <Tab
+                    sx={styles.tab}
+                    icon={<FlowIcon />}
+                    label="Flow editor"
+                    iconPosition="start"
+                  />
+                </Tabs>
+              </Box>
+            </StyledTabBar>
           }
           saveButton={
             isCreateMode ? (
@@ -480,30 +449,20 @@ const PipelineEditor = forwardRef(
         >
           <ApplicationValidator
             agentId={pipelineId}
-            projectId={pipeline?.entity_meta?.project_id || projectId}
+            projectId={projectId}
             isCreateMode={isCreateMode}
           />
-
-          {isCreateMode && (
-            <CreateAgentForm
-              sx={styles.createForm}
-              showInstructions={false}
-              entityType="pipeline"
-            />
-          )}
 
           {/* Configuration Tab Content */}
           {activeTab === 0 && (
             <PipelineEditorContent
+              isCreateMode={isCreateMode}
               viewMode={viewMode}
               canEditIt={canEditIt}
               isPublic={isPublic}
               pipelineId={pipelineId}
               projectId={projectId}
               handleAttachmentToolChange={handleAttachmentToolChange}
-              onConversationStartersChange={onConversationStartersChange}
-              entityProjectId={pipeline?.entity_meta?.project_id}
-              isCreateMode={isCreateMode}
             />
           )}
 
@@ -524,7 +483,7 @@ const PipelineEditor = forwardRef(
             <Box sx={styles.createModeMessage}>Save the pipeline to access the flow editor.</Box>
           )}
         </BaseEditor>
-      </InstructionsInputRefProvider>
+      </FileReaderEnhancerRefContext.Provider>
     );
   },
 );
@@ -535,12 +494,6 @@ PipelineEditor.displayName = 'PipelineEditor';
  * @type {MuiSx}
  */
 const getStyles = () => ({
-  createForm: {
-    margin: '0 auto',
-    maxWidth: '100%',
-    width: '100%',
-    padding: '1rem',
-  },
   configForm: {
     paddingBottom: 0,
   },

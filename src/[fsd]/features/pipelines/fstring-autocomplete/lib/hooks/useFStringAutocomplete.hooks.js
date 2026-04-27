@@ -29,7 +29,7 @@ export const useFStringAutocomplete = props => {
   }, []);
 
   const updateAutocompleteState = useCallback(
-    (inputValue, cursorPosition, { preserveActiveIndex = false } = {}) => {
+    (inputValue, cursorPosition) => {
       if (!enabled || !options.length) {
         const closedState = FStringAutocompleteHelpers.createClosedFStringAutocompleteState();
 
@@ -40,17 +40,7 @@ export const useFStringAutocomplete = props => {
 
       const nextState = FStringAutocompleteHelpers.getFStringAutocompleteState(inputValue, cursorPosition);
 
-      if (preserveActiveIndex) {
-        setAutocompleteState(prevState => {
-          if (nextState.isOpen && prevState.isOpen && nextState.query === prevState.query) {
-            return { ...nextState, activeIndex: prevState.activeIndex };
-          }
-
-          return nextState;
-        });
-      } else {
-        setAutocompleteState(nextState);
-      }
+      setAutocompleteState(nextState);
 
       return nextState;
     },
@@ -74,11 +64,7 @@ export const useFStringAutocomplete = props => {
         event.preventDefault();
         setAutocompleteState(prevState => ({
           ...prevState,
-          activeIndex: FStringAutocompleteHelpers.getNextAutocompleteIndex(
-            prevState.activeIndex,
-            filteredOptions.length,
-            'ArrowDown',
-          ),
+          activeIndex: prevState.activeIndex >= filteredOptions.length - 1 ? 0 : prevState.activeIndex + 1,
         }));
 
         return true;
@@ -88,11 +74,7 @@ export const useFStringAutocomplete = props => {
         event.preventDefault();
         setAutocompleteState(prevState => ({
           ...prevState,
-          activeIndex: FStringAutocompleteHelpers.getNextAutocompleteIndex(
-            prevState.activeIndex,
-            filteredOptions.length,
-            'ArrowUp',
-          ),
+          activeIndex: prevState.activeIndex <= 0 ? filteredOptions.length - 1 : prevState.activeIndex - 1,
         }));
 
         return true;
@@ -117,20 +99,12 @@ export const useFStringAutocomplete = props => {
     [autocompleteState, closeAutocomplete, filteredOptions, highlightedOptionIndex, onSelect],
   );
 
-  const setActiveIndex = useCallback(nextIndex => {
-    setAutocompleteState(prevState => ({
-      ...prevState,
-      activeIndex: nextIndex,
-    }));
-  }, []);
-
   return {
     autocompleteState,
     closeAutocomplete,
     filteredOptions,
     handleAutocompleteKeyDown,
     highlightedOptionIndex,
-    setActiveIndex,
     updateAutocompleteState,
   };
 };

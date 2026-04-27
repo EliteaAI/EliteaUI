@@ -1,7 +1,7 @@
 import { PAGE_SIZE } from '@/common/constants';
 import { removeDuplicateObjects } from '@/common/utils.jsx';
 
-import { eliteaApi } from './eliteaApi.js';
+import { alitaApi } from './alitaApi.js';
 
 const TAG_TYPE_CONVERSATIONS = 'TAG_TYPE_CONVERSATIONS';
 const TAG_TYPE_CONVERSATION_DETAILS = 'TAG_TYPE_CONVERSATION_DETAILS';
@@ -19,7 +19,7 @@ const headers = {
   'Content-Type': 'application/json',
 };
 
-export const apiSlice = eliteaApi
+export const apiSlice = alitaApi
   .enhanceEndpoints({
     addTagTypes: [TAG_TYPE_CONVERSATION_DETAILS],
   })
@@ -71,17 +71,9 @@ export const apiSlice = eliteaApi
             currentCache.total = newItems.total;
           }
         },
-        // Refetch only when actual query parameters change, not on every re-render
+        // Refetch when the page, pageSize ... arg changes
         forceRefetch({ currentArg, previousArg }) {
-          if (!previousArg) return false;
-
-          return (
-            currentArg.projectId !== previousArg.projectId ||
-            currentArg.page !== previousArg.page ||
-            currentArg.pageSize !== previousArg.pageSize ||
-            currentArg.params?.sort_by !== previousArg.params?.sort_by ||
-            currentArg.params?.sort_order !== previousArg.params?.sort_order
-          );
+          return currentArg !== previousArg;
         },
       }),
       messageList: build.query({

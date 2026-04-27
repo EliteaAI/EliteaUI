@@ -24,7 +24,7 @@ const IndexViewToggler = memo(props => {
         >
           <Box component="span">
             <ToggleButton
-              variant="elitea"
+              variant="alita"
               value={EditViewTabsEnum.run}
               key={EditViewTabsEnum.run}
               sx={[styles.toggleBtn, { borderRadius: '8px 0 0 8px' }]}
@@ -36,7 +36,7 @@ const IndexViewToggler = memo(props => {
         </Tooltip>
 
         <ToggleButton
-          variant="elitea"
+          variant="alita"
           value={EditViewTabsEnum.configuration}
           key={EditViewTabsEnum.configuration}
           sx={styles.toggleBtn}
@@ -50,7 +50,7 @@ const IndexViewToggler = memo(props => {
         >
           <Box component="span">
             <ToggleButton
-              variant="elitea"
+              variant="alita"
               value={EditViewTabsEnum.history}
               key={EditViewTabsEnum.history}
               sx={[styles.toggleBtn, { borderRadius: '0 8px 8px 0' }]}

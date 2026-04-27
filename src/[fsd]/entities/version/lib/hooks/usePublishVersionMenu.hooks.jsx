@@ -3,70 +3,45 @@ import { useMemo } from 'react';
 import { Box } from '@mui/material';
 
 import { usePublishVersion } from '@/[fsd]/entities/version/lib/hooks';
-import PublishWizardModal from '@/[fsd]/entities/version/ui/PublishWizardModal';
 import PublishIcon from '@/assets/publish-version.svg?react';
+import { CREATE_PUBLIC_VERSION, PUBLISH } from '@/common/constants';
+import { useIsFromPipelineDetail } from '@/hooks/useIsFromSpecificPageHooks';
+import InputVersionDialog from '@/pages/Common/Components/InputVersionDialog';
 
 export const usePublishApplicationMenu = onSuccess => {
+  const isFromPipeline = useIsFromPipelineDetail();
+
   const {
-    canShowPublish,
-    isPublishBlockedByPolicy,
-    isAdminPublish,
-    showModal,
-    step,
-    versionName,
-    setVersionName,
-    agreed,
-    setAgreed,
-    validationResult,
-    publishError,
-    versionNameError,
-    isValidating,
-    handleOpenModal,
-    handleCloseModal,
-    handleContinue,
-    handlePublish,
+    canPublish,
+    onConfirmVersion,
+    onInputVersion,
+    onSaveVersion,
+    onCancelShowInputVersion,
+    showInputVersion,
+    newVersion,
   } = usePublishVersion(onSuccess);
 
   const publishDialog = useMemo(
     () => (
-      <PublishWizardModal
-        open={showModal}
-        isAdminPublish={isAdminPublish}
-        step={step}
-        versionName={versionName}
-        onVersionNameChange={setVersionName}
-        agreed={agreed}
-        onAgreedChange={setAgreed}
-        validationResult={validationResult}
-        publishError={publishError}
-        versionNameError={versionNameError}
-        isValidating={isValidating}
-        onClose={handleCloseModal}
-        onContinue={handleContinue}
-        onPublish={handlePublish}
+      <InputVersionDialog
+        showTips
+        open={showInputVersion}
+        disabled={!newVersion}
+        title={CREATE_PUBLIC_VERSION}
+        doButtonTitle={PUBLISH}
+        versionName={newVersion}
+        disabledInput={false}
+        onCancel={onCancelShowInputVersion}
+        onConfirm={onConfirmVersion}
+        onChange={onInputVersion}
       />
     ),
-    [
-      showModal,
-      isAdminPublish,
-      step,
-      versionName,
-      setVersionName,
-      agreed,
-      setAgreed,
-      validationResult,
-      publishError,
-      versionNameError,
-      isValidating,
-      handleCloseModal,
-      handleContinue,
-      handlePublish,
-    ],
+    [showInputVersion, newVersion, onCancelShowInputVersion, onConfirmVersion, onInputVersion],
   );
 
   const menuItem = useMemo(
     () =>
-      canShowPublish
+      canPublish && !isFromPipeline
         ? {
             label: 'Publish',
             icon: (
@@ -83,18 +58,11 @@ export const usePublishApplicationMenu = onSuccess => {
                 <PublishIcon sx={{ fontSize: '1rem' }} />
               </Box>
             ),
-            disabled: isPublishBlockedByPolicy,
-            onClick: handleOpenModal,
-            ...(isPublishBlockedByPolicy && {
-              slotProps: {
-                MenuItem: {
-                  menuItemProps: { title: 'Publishing is blocked by platform policy' },
-                },
-              },
-            }),
+            disabled: false,
+            onClick: onSaveVersion,
           }
         : null,
-    [canShowPublish, isPublishBlockedByPolicy, handleOpenModal],
+    [canPublish, isFromPipeline, onSaveVersion],
   );
 
   return {

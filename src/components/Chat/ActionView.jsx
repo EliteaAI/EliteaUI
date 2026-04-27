@@ -13,7 +13,7 @@ import useGetComponentWidth from '@/hooks/useGetComponentWidth';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { useTheme } from '@emotion/react';
 
-import EliteAImage from '../EliteAImage';
+import AlitaImage from '../AlitaImage';
 import ModelIcon from '../Icons/ModelIcon';
 import { StyledCircleProgress } from './StyledComponents';
 import ToolModal from './ToolModal';
@@ -263,14 +263,14 @@ const ActionView = memo(props => {
   const renderIcon = useCallback(() => {
     if (iconMeta?.url && (toolkitType === 'application' || toolkitType === 'pipeline')) {
       return (
-        <EliteAImage
+        <AlitaImage
           style={styles.imageStyle}
           image={iconMeta}
         />
       );
     }
     if (toolkitType !== 'model') {
-      return getToolIconByType(toolkitType, theme, { internalToolkitName: action?.toolMeta?.toolkit_name });
+      return getToolIconByType(toolkitType, theme, {}, false, action?.toolMeta?.toolkit_name);
     }
     return <ModelIcon style={styles.modelIconStyle} />;
   }, [
@@ -311,7 +311,7 @@ const ActionView = memo(props => {
             </Box>
             {needAuthAction && onAuth && (
               <Button
-                variant="elitea"
+                variant="alita"
                 color="secondary"
                 onClick={onAuth}
                 sx={styles.authButton}

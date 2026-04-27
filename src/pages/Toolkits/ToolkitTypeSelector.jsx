@@ -52,7 +52,7 @@ const ToolkitTypeSelector = memo(
                 section: 'vectorstorage',
               });
               defaultVectorStorage = {
-                elitea_title: data?.default_model_name || '',
+                alita_title: data?.default_model_name || '',
                 private: data?.default_model_project_id === personal_project_id,
               };
             }

@@ -74,7 +74,7 @@ const EditUsersButton = memo(props => {
         <Box component="span">
           <IconButton
             disabled={disabled || isLoading}
-            variant="elitea"
+            variant="alita"
             color={isBatchEdit ? 'secondary' : 'tertiary'}
             onClick={handleOpenEdit}
           >

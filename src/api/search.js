@@ -1,6 +1,6 @@
 import { AutoSuggestionTypes, PAGE_SIZE } from '@/common/constants.js';
 
-import { eliteaApi } from './eliteaApi.js';
+import { alitaApi } from './alitaApi.js';
 
 const TAG_TYPE_SEARCH = 'Search';
 const TAG_TYPE_SEARCH_OPTIONS = 'SearchOptions';
@@ -22,7 +22,7 @@ const processArrayParams = params => {
   }, '');
 };
 
-export const searchApi = eliteaApi
+export const searchApi = alitaApi
   .enhanceEndpoints({
     addTagTypes: [TAG_TYPE_SEARCH],
   })

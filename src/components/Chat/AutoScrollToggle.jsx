@@ -5,8 +5,8 @@ import { ToggleButton } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 
-export const AUTO_SCROLL_KEY = 'project_elitea.chat.autoscroll';
-export const CONVERSATION_AUTO_SCROLL_KEY = 'project_elitea.conversation.autoscroll';
+export const AUTO_SCROLL_KEY = 'project_alita.chat.autoscroll';
+export const CONVERSATION_AUTO_SCROLL_KEY = 'project_alita.conversation.autoscroll';
 
 export default function AutoScrollToggle({ storageKey = AUTO_SCROLL_KEY }) {
   const [isAutoScroll, setIsAutoScroll] = useState(sessionStorage.getItem(storageKey) || true);
@@ -21,7 +21,7 @@ export default function AutoScrollToggle({ storageKey = AUTO_SCROLL_KEY }) {
       placement="top"
     >
       <ToggleButton
-        variant="elitea"
+        variant="alita"
         onClick={() => setIsAutoScroll(prevState => !prevState)}
         isAutoScroll={isAutoScroll}
       >

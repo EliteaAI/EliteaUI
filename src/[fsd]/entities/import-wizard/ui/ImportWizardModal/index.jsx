@@ -35,7 +35,6 @@ const ImportWizardModal = memo(props => {
 
   const [canImport, setCanImport] = useState(false);
   const [importSucceedData, setImportSucceedData] = useState(null);
-  const [importErrorData, setImportErrorData] = useState(null);
   const [forkedData, setForkedData] = useState(null);
 
   const modalTitle = useMemo(() => {
@@ -114,7 +113,6 @@ const ImportWizardModal = memo(props => {
         importSucceedData || forkedData ? (
           <IWModaSucceedlContent
             data={(importSucceedData || forkedData)?.agents ?? []}
-            importErrorData={importErrorData}
             isForking={isForking}
           />
         ) : (
@@ -131,7 +129,6 @@ const ImportWizardModal = memo(props => {
           onCloseHandler={onCloseHandler}
           isForking={isForking}
           setImportSucceedData={setImportSucceedData}
-          setImportErrorData={setImportErrorData}
           setForkedData={setForkedData}
           values={values}
           canImport={canImport}

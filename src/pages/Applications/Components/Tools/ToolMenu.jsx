@@ -1,22 +1,22 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 import { useDispatch } from 'react-redux';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import { Box } from '@mui/material';
+import { Box, Button, Typography, useTheme } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { useTrackEvent } from '@/GA';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
-import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { useProjectType } from '@/[fsd]/shared/lib/hooks';
 import { useApplicationListQuery } from '@/api/applications';
 import { useLazyToolkitsDetailsQuery } from '@/api/toolkits';
-import PlusIcon from '@/assets/plus-icon.svg?react';
 import { SearchParams, VITE_BASE_URI } from '@/common/constants';
 import { HEIGHTS, ICON_SIZES, SPACING } from '@/common/designTokens';
 import EntityIcon from '@/components/EntityIcon';
-import UnifiedDropdown, { DROPDOWN_CONSTANTS } from '@/components/UnifiedDropdown';
+import PlusIcon from '@/components/Icons/PlusIcon';
+import UnifiedDropdown from '@/components/UnifiedDropdown';
 import { useAgentPipelineAssociation } from '@/hooks/application/useAgentPipelineAssociation.jsx';
 import { useFilterAddedItems } from '@/hooks/application/useFilterAddedItems.js';
 import { useLibraryToolkits } from '@/hooks/application/useLibraryToolkits';
@@ -43,7 +43,7 @@ const TOOL_MENU_CONSTANTS = {
     MENU_MAX_HEIGHT: '373px', // Set maxHeight instead of fixed height
     ITEM_HEIGHT: HEIGHTS.buttonLarge, // 40px
     SEARCH_FIELD_HEIGHT: '32px', // Figma height
-    ICON_SIZE: ICON_SIZES.MD, // 20px
+    ICON_SIZE: ICON_SIZES.SM, // 16px
     SMALL_ICON_SIZE: '12px',
   },
   SPACING: {
@@ -59,13 +59,8 @@ const TOOL_MENU_CONSTANTS = {
   },
 };
 
-const ToolMenu = memo(props => {
-  const { applicationId } = props;
-
-  const styles = useMemo(() => toolMenuStyles(), []);
-
-  const trackEvent = useTrackEvent();
-
+export default function ToolMenu({ applicationId }) {
+  const theme = useTheme();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -73,6 +68,10 @@ const ToolMenu = memo(props => {
   const formik = useFormikContext();
   const { values = {} } = formik || {};
   const projectId = useSelectedProjectId();
+
+  const trackEvent = useTrackEvent();
+
+  const { projectType } = useProjectType();
 
   const isFromAgents = useIsFrom(RouteDefinitions.Applications);
   const isFromPipelines = useIsFrom(RouteDefinitions.Pipelines);
@@ -136,12 +135,14 @@ const ToolMenu = memo(props => {
             [GA_EVENT_PARAMS.MCP_TYPE]: t?.type || 'unknown',
             [GA_EVENT_PARAMS.MCP_NAME]: t?.name || 'unknown',
             [GA_EVENT_PARAMS.TIMESTAMP]: new Date().toISOString().split('T')[0],
+            [GA_EVENT_PARAMS.PROJECT_TYPE]: projectType,
             [GA_EVENT_PARAMS.ENTITY]: entity,
           });
         else
           trackEvent(GA_EVENT_NAMES.TOOLKIT_ATTACHED, {
             [GA_EVENT_PARAMS.TOOLKIT_TYPE]: t?.type || 'unknown',
             [GA_EVENT_PARAMS.TIMESTAMP]: new Date().toISOString().split('T')[0],
+            [GA_EVENT_PARAMS.PROJECT_TYPE]: projectType,
             [GA_EVENT_PARAMS.ENTITY]: entity,
           });
       }
@@ -149,7 +150,7 @@ const ToolMenu = memo(props => {
       // Note: Success message is handled by the useLibraryToolkits hook
       // Don't show duplicate messages here
     },
-    [isFromAgents, isFromPipelines, trackEvent],
+    [isFromAgents, isFromPipelines, projectType, trackEvent],
   );
 
   // Load toolkits from library
@@ -404,13 +405,21 @@ const ToolMenu = memo(props => {
         data: agent, // Store the full agent data
         icon: (
           <EntityIcon
-            sx={styles.entityIcon}
-            imageStyle={styles.entityImageStyle}
+            sx={{
+              minWidth: `${TOOL_MENU_CONSTANTS.DIMENSIONS.ICON_SIZE} !important`,
+              width: `${TOOL_MENU_CONSTANTS.DIMENSIONS.ICON_SIZE} !important`,
+              height: TOOL_MENU_CONSTANTS.DIMENSIONS.ICON_SIZE,
+              borderRadius: '0px !important',
+            }}
+            imageStyle={{
+              width: TOOL_MENU_CONSTANTS.DIMENSIONS.ICON_SIZE,
+              height: TOOL_MENU_CONSTANTS.DIMENSIONS.ICON_SIZE,
+              borderRadius: '50%',
+            }}
             icon={agent.icon_meta}
             entityType={'application'}
             projectId={projectId}
             editable={false}
-            specifiedFontSize={DROPDOWN_CONSTANTS.DIMENSIONS.ICON_SVG_SIZE}
           />
         ),
         onClick: async () => {
@@ -420,14 +429,7 @@ const ToolMenu = memo(props => {
           setAgentSearch(''); // Clear search when item is selected
         },
       }));
-  }, [
-    agentsData?.rows,
-    applicationId,
-    projectId,
-    handleAssociateAgent,
-    styles.entityIcon,
-    styles.entityImageStyle,
-  ]);
+  }, [agentsData?.rows, applicationId, projectId, handleAssociateAgent]);
 
   // Transform pipelines data for menu display
   const pipelineMenuItems = useMemo(() => {
@@ -443,13 +445,22 @@ const ToolMenu = memo(props => {
         has_interrupt: pipeline.has_interrupt,
         icon: (
           <EntityIcon
-            sx={styles.entityIcon}
-            imageStyle={styles.entityImageStyle}
+            sx={{
+              minWidth: `${TOOL_MENU_CONSTANTS.DIMENSIONS.ICON_SIZE} !important`,
+              width: `${TOOL_MENU_CONSTANTS.DIMENSIONS.ICON_SIZE} !important`,
+              height: TOOL_MENU_CONSTANTS.DIMENSIONS.ICON_SIZE,
+              borderRadius: '0px !important',
+            }}
+            imageStyle={{
+              width: TOOL_MENU_CONSTANTS.DIMENSIONS.ICON_SIZE,
+              height: TOOL_MENU_CONSTANTS.DIMENSIONS.ICON_SIZE,
+              borderRadius: '50%',
+            }}
             icon={pipeline.icon_meta}
             entityType={'pipeline'}
             projectId={projectId}
             editable={false}
-            specifiedFontSize={DROPDOWN_CONSTANTS.DIMENSIONS.ICON_SVG_SIZE}
+            showBackgroundColor={false}
           />
         ),
         onClick: async () => {
@@ -459,14 +470,7 @@ const ToolMenu = memo(props => {
           setPipelineSearch(''); // Clear search when item is selected
         },
       }));
-  }, [
-    pipelinesData?.rows,
-    applicationId,
-    projectId,
-    handleAssociateAgent,
-    styles.entityIcon,
-    styles.entityImageStyle,
-  ]);
+  }, [pipelinesData?.rows, applicationId, projectId, handleAssociateAgent]);
 
   // Filter agent items based on search and exclude already-added agents
   const filteredAgentItems = useMemo(() => {
@@ -490,19 +494,8 @@ const ToolMenu = memo(props => {
   const allToolkitItems = useMemo(() => {
     if (!libraryToolkits) return [];
     const availableToolkits = filterToolkits(libraryToolkits);
-    return availableToolkits.map(item => ({
-      ...item,
-      icon: (
-        <EntityIcon
-          sx={styles.entityIcon}
-          imageStyle={styles.entityImageStyle}
-          icon={{ component: item.icon }}
-          editable={false}
-          specifiedFontSize={DROPDOWN_CONSTANTS.DIMENSIONS.ICON_SVG_SIZE}
-        />
-      ),
-    }));
-  }, [libraryToolkits, filterToolkits, styles.entityIcon, styles.entityImageStyle]);
+    return availableToolkits;
+  }, [libraryToolkits, filterToolkits]);
 
   useEffect(() => {
     dispatch(actions.setQuery({ query: debouncedToolkitSearch, queryTags: [] }));
@@ -522,20 +515,8 @@ const ToolMenu = memo(props => {
     const availableMCPs = filterToolkits(libraryMCPs);
     return availableMCPs
       .filter(mcp => mcp.label.toLowerCase().includes(mcpSearch.toLowerCase()))
-      .sort((a, b) => a.label.localeCompare(b.label))
-      .map(item => ({
-        ...item,
-        icon: (
-          <EntityIcon
-            sx={styles.entityIcon}
-            imageStyle={styles.entityImageStyle}
-            icon={{ component: item.icon }}
-            editable={false}
-            specifiedFontSize={DROPDOWN_CONSTANTS.DIMENSIONS.ICON_SVG_SIZE}
-          />
-        ),
-      }));
-  }, [libraryMCPs, mcpSearch, filterToolkits, styles.entityIcon, styles.entityImageStyle]);
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [libraryMCPs, mcpSearch, filterToolkits]);
 
   const allMCPItems = useMemo(() => {
     // For the mcp button dropdown, show only regular mcp (not agents/pipelines)
@@ -554,9 +535,86 @@ const ToolMenu = memo(props => {
     }
   }, [onLoadMoreMCPs, isFetchingMCPs]);
 
+  // Button styles based on Figma design
+  const buttonStyles = useMemo(
+    () => ({
+      boxSizing: 'border-box',
+      display: 'flex',
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: `${SPACING.gap.XS} ${SPACING.gap.MD}`, // 6px 12px
+      gap: TOOL_MENU_CONSTANTS.SPACING.BUTTON_ICON_GAP,
+      minWidth: '83px', // Minimum width to accommodate text
+      height: HEIGHTS.button,
+      border: `1px solid ${theme.palette.border.lines}`,
+      borderRadius: SPACING.LG, // 16px
+      background: 'transparent !important',
+      color: theme.palette.text.secondary,
+      fontFamily: 'Montserrat',
+      textTransform: 'none',
+      transition: 'all 0.2s ease-in-out',
+      flex: 'none',
+      order: 0,
+      flexGrow: 0,
+      '&:hover': {
+        background: `${theme.palette.background.button.iconLabelButton.hover} !important`,
+        borderColor: theme.palette.border.hover,
+      },
+      '&:active': {
+        background: theme.palette.background.button.iconLabelButton.selected,
+        borderColor: theme.palette.border.lines,
+      },
+      '&:disabled': {
+        color: theme.palette.text.button.disabled,
+        background: theme.palette.background.button.iconLabelButton.disabled,
+        borderColor: theme.palette.border.lines,
+      },
+    }),
+    [
+      theme.palette.text.secondary,
+      theme.palette.background.button.iconLabelButton.hover,
+      theme.palette.background.button.iconLabelButton.selected,
+      theme.palette.text.button.disabled,
+      theme.palette.background.button.iconLabelButton.disabled,
+      theme.palette.border.lines,
+      theme.palette.border.hover,
+    ],
+  );
+
+  // Function to get button styles with disabled state when needed
+  const getButtonStyles = useCallback(
+    (disabled = false) => ({
+      ...buttonStyles,
+      ...(disabled && {
+        pointerEvents: 'none',
+        cursor: 'not-allowed',
+        opacity: 0.6,
+      }),
+    }),
+    [buttonStyles],
+  );
+
+  // Function to get icon fill color based on disabled state
+  const getIconFill = useCallback(
+    (disabled = false) => {
+      return disabled
+        ? theme.palette.icon.fill.disabled || theme.palette.text.button.disabled
+        : theme.palette.icon.fill.secondary;
+    },
+    [theme.palette.icon.fill.secondary, theme.palette.icon.fill.disabled, theme.palette.text.button.disabled],
+  );
+
   return (
     <>
-      <Box sx={styles.container}>
+      <Box
+        sx={{
+          display: 'flex',
+          gap: TOOL_MENU_CONSTANTS.SPACING.BUTTON_GAP,
+          alignItems: 'center',
+          maxWidth: '100%',
+          flexWrap: 'wrap',
+        }}
+      >
         {/* Toolkit Button */}
         <Tooltip
           title={
@@ -567,15 +625,32 @@ const ToolMenu = memo(props => {
           placement="top"
         >
           <Box component="span">
-            <BaseBtn
-              variant={BUTTON_VARIANTS.iconLabel}
-              startIcon={<PlusIcon />}
-              disableRipple
-              disabled={isEntityUnsaved}
+            <Button
               onClick={isEntityUnsaved ? undefined : handleToolkitButtonClick}
+              disabled={isEntityUnsaved}
+              sx={getButtonStyles(isEntityUnsaved)}
+              variant="alita"
+              color="secondary"
             >
-              Toolkit
-            </BaseBtn>
+              <PlusIcon
+                style={{
+                  width: TOOL_MENU_CONSTANTS.DIMENSIONS.SMALL_ICON_SIZE,
+                  height: TOOL_MENU_CONSTANTS.DIMENSIONS.SMALL_ICON_SIZE,
+                  flexShrink: 0,
+                }}
+                fill={getIconFill(isEntityUnsaved)}
+              />
+              <Typography
+                variant="labelSmall"
+                sx={{
+                  fontFamily: 'Montserrat',
+                  textTransform: 'none',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                Toolkit
+              </Typography>
+            </Button>
           </Box>
         </Tooltip>
         {/* Toolkit Button */}
@@ -587,17 +662,34 @@ const ToolMenu = memo(props => {
           }
           placement="top"
         >
-          <Box component="span">
-            <BaseBtn
-              variant={BUTTON_VARIANTS.iconLabel}
-              startIcon={<PlusIcon />}
-              disableRipple
-              disabled={isEntityUnsaved}
+          <span>
+            <Button
               onClick={isEntityUnsaved ? undefined : handleMCPButtonClick}
+              disabled={isEntityUnsaved}
+              sx={getButtonStyles(isEntityUnsaved)}
+              variant="alita"
+              color="secondary"
             >
-              MCP
-            </BaseBtn>
-          </Box>
+              <PlusIcon
+                style={{
+                  width: TOOL_MENU_CONSTANTS.DIMENSIONS.SMALL_ICON_SIZE,
+                  height: TOOL_MENU_CONSTANTS.DIMENSIONS.SMALL_ICON_SIZE,
+                  flexShrink: 0,
+                }}
+                fill={getIconFill(isEntityUnsaved)}
+              />
+              <Typography
+                variant="labelSmall"
+                sx={{
+                  fontFamily: 'Montserrat',
+                  textTransform: 'none',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                MCP
+              </Typography>
+            </Button>
+          </span>
         </Tooltip>
         {/* Agent Button */}
         <Tooltip
@@ -608,17 +700,34 @@ const ToolMenu = memo(props => {
           }
           placement="top"
         >
-          <Box component="span">
-            <BaseBtn
-              variant={BUTTON_VARIANTS.iconLabel}
-              startIcon={<PlusIcon />}
-              disableRipple
-              disabled={isEntityUnsaved}
+          <span>
+            <Button
               onClick={isEntityUnsaved ? undefined : handleAgentButtonClick}
+              disabled={isEntityUnsaved}
+              sx={getButtonStyles(isEntityUnsaved)}
+              variant="alita"
+              color="secondary"
             >
-              Agent
-            </BaseBtn>
-          </Box>
+              <PlusIcon
+                style={{
+                  width: TOOL_MENU_CONSTANTS.DIMENSIONS.SMALL_ICON_SIZE,
+                  height: TOOL_MENU_CONSTANTS.DIMENSIONS.SMALL_ICON_SIZE,
+                  flexShrink: 0,
+                }}
+                fill={getIconFill(isEntityUnsaved)}
+              />
+              <Typography
+                variant="labelSmall"
+                sx={{
+                  fontFamily: 'Montserrat',
+                  textTransform: 'none',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                Agent
+              </Typography>
+            </Button>
+          </span>
         </Tooltip>
 
         {/* Pipeline Button */}
@@ -630,17 +739,34 @@ const ToolMenu = memo(props => {
           }
           placement="top"
         >
-          <Box component="span">
-            <BaseBtn
-              variant={BUTTON_VARIANTS.iconLabel}
-              startIcon={<PlusIcon />}
-              disableRipple
-              disabled={isEntityUnsaved}
+          <span>
+            <Button
               onClick={isEntityUnsaved ? undefined : handlePipelineButtonClick}
+              disabled={isEntityUnsaved}
+              sx={getButtonStyles(isEntityUnsaved)}
+              variant="alita"
+              color="secondary"
             >
-              Pipeline
-            </BaseBtn>
-          </Box>
+              <PlusIcon
+                style={{
+                  width: TOOL_MENU_CONSTANTS.DIMENSIONS.SMALL_ICON_SIZE,
+                  height: TOOL_MENU_CONSTANTS.DIMENSIONS.SMALL_ICON_SIZE,
+                  flexShrink: 0,
+                }}
+                fill={getIconFill(isEntityUnsaved)}
+              />
+              <Typography
+                variant="labelSmall"
+                sx={{
+                  fontFamily: 'Montserrat',
+                  textTransform: 'none',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                Pipeline
+              </Typography>
+            </Button>
+          </span>
         </Tooltip>
       </Box>
 
@@ -721,38 +847,4 @@ const ToolMenu = memo(props => {
       />
     </>
   );
-});
-
-ToolMenu.displayName = 'ToolMenu';
-
-/** @type {MuiSx} */
-const toolMenuStyles = () => ({
-  container: {
-    display: 'flex',
-    gap: TOOL_MENU_CONSTANTS.SPACING.BUTTON_GAP,
-    alignItems: 'center',
-    maxWidth: '100%',
-    flexWrap: 'wrap',
-  },
-  entityIcon: {
-    minWidth: `${TOOL_MENU_CONSTANTS.DIMENSIONS.ICON_SIZE} !important`,
-    width: `${TOOL_MENU_CONSTANTS.DIMENSIONS.ICON_SIZE} !important`,
-    height: `${TOOL_MENU_CONSTANTS.DIMENSIONS.ICON_SIZE} !important`,
-    '& > div': {
-      width: TOOL_MENU_CONSTANTS.DIMENSIONS.ICON_SIZE,
-      height: TOOL_MENU_CONSTANTS.DIMENSIONS.ICON_SIZE,
-    },
-    '& svg': {
-      width: DROPDOWN_CONSTANTS.DIMENSIONS.ICON_SVG_SIZE,
-      height: DROPDOWN_CONSTANTS.DIMENSIONS.ICON_SVG_SIZE,
-      fontSize: DROPDOWN_CONSTANTS.DIMENSIONS.ICON_SVG_SIZE,
-    },
-  },
-  entityImageStyle: {
-    width: TOOL_MENU_CONSTANTS.DIMENSIONS.ICON_SIZE,
-    height: TOOL_MENU_CONSTANTS.DIMENSIONS.ICON_SIZE,
-    borderRadius: '50%',
-  },
-});
-
-export default ToolMenu;
+}

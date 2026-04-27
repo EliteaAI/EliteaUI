@@ -78,7 +78,7 @@ export default function ExportApplicationButton() {
     >
       <IconButton
         aria-label={`export ${entityType}`}
-        variant="elitea"
+        variant="alita"
         color="secondary"
         onClick={onExport}
         disabled={isExporting}

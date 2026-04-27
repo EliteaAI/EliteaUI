@@ -6,7 +6,6 @@ import { useToolkitsListQuery } from '@/api/toolkits';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
 import { getToolIconByType } from '@/common/toolkitUtils';
 import EntityIcon from '@/components/EntityIcon';
-import { DROPDOWN_CONSTANTS } from '@/components/UnifiedDropdown';
 import { useApplicationParticipants } from '@/hooks/chat/useApplicationParticipants';
 import { usePublicApplicationParticipants } from '@/hooks/chat/usePublicApplicationParticipants';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -198,33 +197,6 @@ export const useDropdownData = ({ agentQuery, pipelineQuery, toolkitQuery, mcpQu
     setPublicMCPPage(0);
   }, [mcpQuery]);
 
-  // Shared EntityIcon styles for dropdown items
-  const entityIconSx = useMemo(
-    () => ({
-      minWidth: '1.25rem !important',
-      width: '1.25rem !important',
-      height: '1.25rem !important',
-      '& > div': {
-        width: '1.25rem',
-        height: '1.25rem',
-      },
-      '& svg': {
-        width: DROPDOWN_CONSTANTS.DIMENSIONS.ICON_SVG_SIZE,
-        height: DROPDOWN_CONSTANTS.DIMENSIONS.ICON_SVG_SIZE,
-        fontSize: DROPDOWN_CONSTANTS.DIMENSIONS.ICON_SVG_SIZE,
-      },
-    }),
-    [],
-  );
-  const entityImageStyle = useMemo(
-    () => ({
-      width: '1.25rem',
-      height: '1.25rem',
-      borderRadius: '50%',
-    }),
-    [],
-  );
-
   // Transform agents data for dropdown display (combine regular + public)
   const agentMenuItems = useMemo(() => {
     const regularAgents = (agentsData?.rows || []).map(item => ({
@@ -244,17 +216,26 @@ export const useDropdownData = ({ agentQuery, pipelineQuery, toolkitQuery, mcpQu
       data: agent,
       icon: (
         <EntityIcon
-          sx={entityIconSx}
-          imageStyle={entityImageStyle}
+          sx={{
+            minWidth: '16px !important',
+            width: '16px !important',
+            height: '16px',
+            borderRadius: '0px !important',
+          }}
+          imageStyle={{
+            width: '16px',
+            height: '16px',
+            borderRadius: '50%',
+          }}
+          showBackgroundColor={false}
           icon={agent.icon_meta}
           entityType={'application'}
           projectId={agent.project_id}
           editable={false}
-          specifiedFontSize={DROPDOWN_CONSTANTS.DIMENSIONS.ICON_SVG_SIZE}
         />
       ),
     }));
-  }, [agentsData?.rows, projectId, publicAgentsData?.rows, entityIconSx, entityImageStyle]);
+  }, [agentsData?.rows, projectId, publicAgentsData?.rows]);
 
   // Transform pipelines data for dropdown display (combine regular + public)
   const pipelineMenuItems = useMemo(() => {
@@ -275,17 +256,26 @@ export const useDropdownData = ({ agentQuery, pipelineQuery, toolkitQuery, mcpQu
       data: pipeline,
       icon: (
         <EntityIcon
-          sx={entityIconSx}
-          imageStyle={entityImageStyle}
+          sx={{
+            minWidth: '16px !important',
+            width: '16px !important',
+            height: '16px',
+            borderRadius: '0px !important',
+          }}
+          imageStyle={{
+            width: '16px',
+            height: '16px',
+            borderRadius: '50%',
+          }}
+          showBackgroundColor={false}
           icon={pipeline.icon_meta}
           entityType={'pipeline'}
           projectId={pipeline.project_id}
           editable={false}
-          specifiedFontSize={DROPDOWN_CONSTANTS.DIMENSIONS.ICON_SVG_SIZE}
         />
       ),
     }));
-  }, [pipelinesData?.rows, projectId, publicPipelinesData?.rows, entityIconSx, entityImageStyle]);
+  }, [pipelinesData?.rows, projectId, publicPipelinesData?.rows]);
 
   // Transform toolkits data for dropdown display (combine regular + public)
   const toolkitMenuItems = useMemo(() => {
@@ -298,7 +288,7 @@ export const useDropdownData = ({ agentQuery, pipelineQuery, toolkitQuery, mcpQu
       // Get the preferred title following the hierarchy used in ToolkitsList
       const getToolkitTitle = item => {
         return (
-          item.settings?.elitea_title ||
+          item.settings?.alita_title ||
           item.settings?.configuration_title ||
           item.name ||
           item.toolkit_name ||
@@ -313,18 +303,10 @@ export const useDropdownData = ({ agentQuery, pipelineQuery, toolkitQuery, mcpQu
         label: `${title} (${toolkit.type})`,
         description: toolkit.description,
         data: toolkit,
-        icon: (
-          <EntityIcon
-            sx={entityIconSx}
-            imageStyle={entityImageStyle}
-            icon={{ component: getToolIconByType(toolkit.type, theme) }}
-            editable={false}
-            specifiedFontSize={DROPDOWN_CONSTANTS.DIMENSIONS.ICON_SVG_SIZE}
-          />
-        ),
+        icon: getToolIconByType(toolkit.type, theme),
       };
     });
-  }, [toolkitsData?.rows, projectId, theme, entityIconSx, entityImageStyle]);
+  }, [toolkitsData?.rows, projectId, theme]);
 
   // Transform MCPs data for dropdown display (combine regular + public)
   const mcpMenuItems = useMemo(() => {
@@ -342,7 +324,7 @@ export const useDropdownData = ({ agentQuery, pipelineQuery, toolkitQuery, mcpQu
       // Get the preferred title following the hierarchy used in MCPsList
       const getMCPTitle = item => {
         return (
-          item.settings?.elitea_title ||
+          item.settings?.alita_title ||
           item.settings?.configuration_title ||
           item.name ||
           item.toolkit_name ||
@@ -357,18 +339,10 @@ export const useDropdownData = ({ agentQuery, pipelineQuery, toolkitQuery, mcpQu
         label: `${title} (${mcp.type})`,
         description: mcp.description,
         data: mcp,
-        icon: (
-          <EntityIcon
-            sx={entityIconSx}
-            imageStyle={entityImageStyle}
-            icon={{ component: getToolIconByType(mcp.type, theme, { isMCP: true }) }}
-            editable={false}
-            specifiedFontSize={DROPDOWN_CONSTANTS.DIMENSIONS.ICON_SVG_SIZE}
-          />
-        ),
+        icon: getToolIconByType(mcp.type, theme, undefined, true),
       };
     });
-  }, [mcpsData?.rows, publicMCPsData?.rows, projectId, theme, entityIconSx, entityImageStyle]);
+  }, [mcpsData?.rows, publicMCPsData?.rows, projectId, theme]);
 
   // Refresh callback functions - wrapped in useCallback with query state guards
   const refreshAgents = useCallback(async () => {

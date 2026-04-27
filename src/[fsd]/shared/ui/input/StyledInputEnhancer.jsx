@@ -22,6 +22,7 @@ import { detectContentType } from '@/hooks/useCodeMirrorLanguageExtensions';
  */
 const StyledInputEnhancer = memo(props => {
   const {
+    showexpandicon = false,
     editswitcher = false,
     editswitchconfig = {},
     onDrop,
@@ -51,8 +52,6 @@ const StyledInputEnhancer = memo(props => {
     variantInput,
     tooltipDescription,
     forceShowActionsToolbar,
-    enableFStringAutocomplete,
-    stateVariableOptions,
     ...leftProps
   } = props;
 
@@ -90,6 +89,7 @@ const StyledInputEnhancer = memo(props => {
         onDragOver={onDragOver}
         onBlur={onBlur}
         onKeyPress={onKeyPress}
+        showexpandicon={showexpandicon}
         editswitcher={editswitcher}
         editswitchconfig={editswitchconfig}
         containerProps={containerProps}
@@ -123,8 +123,6 @@ const StyledInputEnhancer = memo(props => {
           onKeyDown={onKeyDown}
           inputProps={inputProps}
           specifiedLanguage={detectedLanguage}
-          enableFStringAutocomplete={enableFStringAutocomplete}
-          stateVariableOptions={stateVariableOptions}
           {...leftProps}
         />
       )}

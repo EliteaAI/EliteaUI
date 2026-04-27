@@ -2,7 +2,7 @@ import { PermissionStorageKey, PublicPermissionStorageKey } from '@/common/const
 import { actions as settingsActions } from '@/slices/settings';
 import { createSlice } from '@reduxjs/toolkit';
 
-import { eliteaApi } from '../api/eliteaApi.js';
+import { alitaApi } from '../api/alitaApi.js';
 
 const initialState = () => ({
   id: null,
@@ -33,10 +33,10 @@ const userSlice = createSlice({
         state.permissions = undefined;
         sessionStorage.removeItem(PermissionStorageKey);
       })
-      .addMatcher(eliteaApi.endpoints.authorDetails.matchFulfilled, (state, { payload }) => {
+      .addMatcher(alitaApi.endpoints.authorDetails.matchFulfilled, (state, { payload }) => {
         Object.assign(state, payload);
       })
-      .addMatcher(eliteaApi.endpoints.publicPermissionList.matchFulfilled, (state, { payload }) => {
+      .addMatcher(alitaApi.endpoints.publicPermissionList.matchFulfilled, (state, { payload }) => {
         if (!payload || !payload.length) {
           state.publicPermissions = ['empty.fake.permission.public'];
           sessionStorage.removeItem(PublicPermissionStorageKey);
@@ -45,7 +45,7 @@ const userSlice = createSlice({
           sessionStorage.setItem(PublicPermissionStorageKey, JSON.stringify(payload));
         }
       })
-      .addMatcher(eliteaApi.endpoints.permissionList.matchFulfilled, (state, { payload }) => {
+      .addMatcher(alitaApi.endpoints.permissionList.matchFulfilled, (state, { payload }) => {
         if (!payload || !payload.length) {
           state.permissions = ['empty.fake.permission'];
           sessionStorage.removeItem(PermissionStorageKey);
@@ -54,11 +54,11 @@ const userSlice = createSlice({
           sessionStorage.setItem(PermissionStorageKey, JSON.stringify(payload));
         }
       })
-      .addMatcher(eliteaApi.endpoints.publicPermissionList.matchRejected, state => {
+      .addMatcher(alitaApi.endpoints.publicPermissionList.matchRejected, state => {
         state.publicPermissions = ['empty.fake.permission.public'];
         sessionStorage.removeItem(PublicPermissionStorageKey);
       })
-      .addMatcher(eliteaApi.endpoints.permissionList.matchRejected, state => {
+      .addMatcher(alitaApi.endpoints.permissionList.matchRejected, state => {
         state.permissions = ['empty.fake.permission'];
         sessionStorage.removeItem(PermissionStorageKey);
       });
@@ -67,7 +67,7 @@ const userSlice = createSlice({
 
 export const logout = () => async dispatch => {
   await dispatch(userSlice.actions.logout());
-  await dispatch(eliteaApi.util.resetApiState());
+  await dispatch(alitaApi.util.resetApiState());
 };
 
 export const { name } = userSlice;

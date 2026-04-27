@@ -98,7 +98,7 @@ export default function FileUploadControl({
           />
 
           <Button
-            variant="elitea"
+            variant="alita"
             color="secondary"
             onClick={handleClick}
             disabled={disabled}

@@ -160,7 +160,7 @@ const UserMessage = React.forwardRef((props, ref) => {
               >
                 <IconButton
                   sx={styles.iconButton}
-                  variant="elitea"
+                  variant="alita"
                   color="tertiary"
                   onClick={onCopy}
                 >
@@ -175,7 +175,7 @@ const UserMessage = React.forwardRef((props, ref) => {
               >
                 <IconButton
                   sx={styles.iconButton}
-                  variant="elitea"
+                  variant="alita"
                   color="tertiary"
                   onClick={onCopyToMessages}
                 >
@@ -190,7 +190,7 @@ const UserMessage = React.forwardRef((props, ref) => {
               >
                 <IconButton
                   sx={styles.iconButton}
-                  variant="elitea"
+                  variant="alita"
                   color="tertiary"
                   disabled={shouldDisableEdit}
                   onClick={onEdit}
@@ -206,7 +206,7 @@ const UserMessage = React.forwardRef((props, ref) => {
               >
                 <IconButton
                   sx={styles.iconButton}
-                  variant="elitea"
+                  variant="alita"
                   color="tertiary"
                   onClick={onDelete}
                 >
@@ -238,7 +238,7 @@ const UserMessage = React.forwardRef((props, ref) => {
           </ChatInputContainer>
           <Box sx={styles.editButtonsContainer}>
             <Button
-              variant="elitea"
+              variant="alita"
               color="primary"
               sx={styles.submitButton}
               disabled={value === content}
@@ -247,7 +247,7 @@ const UserMessage = React.forwardRef((props, ref) => {
               Submit
             </Button>
             <Button
-              variant="elitea"
+              variant="alita"
               color="secondary"
               onClick={onCancel}
             >

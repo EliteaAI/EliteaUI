@@ -30,7 +30,7 @@ export const useStorages = props => {
       setStorageOptions(
         storages.map(item => ({
           label: `${item.label}`,
-          value: item.elitea_title,
+          value: item.alita_title,
         })),
       );
     }

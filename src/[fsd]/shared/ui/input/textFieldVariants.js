@@ -2,7 +2,7 @@ export const INPUT_VARIANTS = {
   standard: 'standard',
 };
 
-export const eliteaInputVariants = inputBodyMediumStyles => [
+export const alitaInputVariants = inputBodyMediumStyles => [
   {
     props: { variant: INPUT_VARIANTS.standard },
     style: ({ theme }) => ({
@@ -14,14 +14,14 @@ export const eliteaInputVariants = inputBodyMediumStyles => [
   },
 ];
 
-export const eliteaTextFieldColorStyle = theme => ({
+export const alitaTextFieldColorStyle = theme => ({
   [INPUT_VARIANTS.standard]: {
     default: {
       label: {
         color: theme.palette.text.primary,
       },
       placeholder: {
-        color: theme.palette.text.participant.default,
+        color: theme.palette.text.default,
       },
       input: {
         color: theme.palette.text.secondary,
@@ -72,7 +72,7 @@ export const eliteaTextFieldColorStyle = theme => ({
 });
 
 /** @type {MuiSx} */
-export const eliteaTextFieldStyle = () => ({
+export const alitaTextFieldStyle = () => ({
   padding: '0.5rem 0 0 0',
   '& .MuiFormLabel-root': {
     left: '0.75rem',
@@ -93,7 +93,7 @@ export const eliteaTextFieldStyle = () => ({
     minWidth: 16,
     minHeight: 16,
     overflow: 'visible',
-    transform: 'scale(1.3334)',
+    transform: 'scale(1.2)',
     transformOrigin: 'center',
   },
   '& .MuiInputLabel-root': {
@@ -145,12 +145,12 @@ export const eliteaTextFieldStyle = () => ({
   },
 });
 
-export const eliteaTextFieldVariants = [
+export const alitaTextFieldVariants = [
   {
     props: { variant: INPUT_VARIANTS.standard },
     style: ({ theme }) => {
-      const colors = eliteaTextFieldColorStyle(theme)[INPUT_VARIANTS.standard];
-      const baseStyles = eliteaTextFieldStyle();
+      const colors = alitaTextFieldColorStyle(theme)[INPUT_VARIANTS.standard];
+      const baseStyles = alitaTextFieldStyle();
       return {
         ...baseStyles,
 
@@ -168,7 +168,6 @@ export const eliteaTextFieldVariants = [
 
         '& input::placeholder, & textarea::placeholder': {
           color: colors.default.placeholder.color,
-          opacity: 1,
         },
 
         '& input': {

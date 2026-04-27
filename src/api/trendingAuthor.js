@@ -1,11 +1,11 @@
-import { eliteaApi } from './eliteaApi.js';
+import { alitaApi } from './alitaApi.js';
 
 const apiSlicePath = '/elitea_core';
 const apiSlicePathForDatasource = '/datasources';
 const TAG_TYPE_AUTHOR = 'Author';
 const TAG_TYPE_AUTHOR_DETAIL = 'AuthorDetail';
 
-export const trendingAuthor = eliteaApi
+export const trendingAuthor = alitaApi
   .enhanceEndpoints({
     addTagTypes: [TAG_TYPE_AUTHOR],
   })

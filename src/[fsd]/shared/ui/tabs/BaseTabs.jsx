@@ -3,16 +3,17 @@ import { forwardRef, memo } from 'react';
 import { Tabs as MuiTabs } from '@mui/material';
 
 export const TABS_VARIANTS = {
-  elitea: 'elitea',
+  alita: 'alita',
 };
 
 const BaseTabs = memo(
   forwardRef((props, ref) => {
-    const { children, ...restProps } = props;
+    const { children, variant = TABS_VARIANTS.alita, ...restProps } = props;
 
     return (
       <MuiTabs
         ref={ref}
+        variant={variant}
         {...restProps}
       >
         {children}
@@ -33,19 +34,11 @@ const baseTabsStyle = theme => ({
   },
 });
 
-export const eliteaTabsVariants = [
+export const alitaTabsVariants = [
   {
-    props: { variant: TABS_VARIANTS.elitea },
+    props: { variant: TABS_VARIANTS.alita },
     style: ({ theme }) => ({
       ...baseTabsStyle(theme),
     }),
   },
 ];
-
-export const MuiTabsStyles = {
-  styleOverrides: {
-    root: ({ theme }) => ({
-      ...baseTabsStyle(theme),
-    }),
-  },
-};

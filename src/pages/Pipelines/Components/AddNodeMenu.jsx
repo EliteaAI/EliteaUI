@@ -72,7 +72,7 @@ const PipelineAddNodeMenu = memo(props => {
         enterDelay={500}
       >
         <IconButton
-          variant="elitea"
+          variant="alita"
           color="primary"
           id="pipeline-add-node-menu-action"
           aria-label="Add node"

@@ -57,7 +57,7 @@ const StateItemViewHeader = memo(props => {
       </Typography>
       <IconButton
         sx={styles.iconButton}
-        variant="elitea"
+        variant="alita"
         color="tertiary"
         onClick={onFullScreen}
       >
@@ -215,7 +215,7 @@ const RunStateDialog = memo(props => {
                 <RunStatus status={data.status} />
                 {data.status === FlowEditorConstants.PipelineStatus.InProgress ? (
                   <IconButton
-                    variant="elitea"
+                    variant="alita"
                     color="tertiary"
                     sx={styles.iconButton}
                     onClick={onStop}
@@ -229,7 +229,7 @@ const RunStateDialog = memo(props => {
                   </IconButton>
                 ) : (
                   <IconButton
-                    variant="elitea"
+                    variant="alita"
                     color="tertiary"
                     sx={styles.iconButton}
                     onClick={onDelete}
@@ -238,7 +238,7 @@ const RunStateDialog = memo(props => {
                   </IconButton>
                 )}
                 <IconButton
-                  variant="elitea"
+                  variant="alita"
                   color="tertiary"
                   sx={styles.iconButton}
                   onClick={onClose}

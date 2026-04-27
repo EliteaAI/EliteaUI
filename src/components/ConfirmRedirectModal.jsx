@@ -79,14 +79,14 @@ const ConfirmRedirectModal = ({ open, toolkitName, toolkitDescription, redirectU
       </DialogContent>
       <StyledDialogActions>
         <Button
-          variant="elitea"
+          variant="alita"
           color="secondary"
           onClick={handleCancel}
         >
           <Typography variant="labelSmall">Cancel</Typography>
         </Button>
         <Button
-          variant="elitea"
+          variant="alita"
           color="primary"
           onClick={handleOpenInNewTab}
           autoFocus

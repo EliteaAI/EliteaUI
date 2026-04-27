@@ -134,8 +134,6 @@ export const debounce = (fn, delay) => {
   };
 };
 
-export const isNotFoundError = err => err?.status === 404 || err?.status === 400;
-
 export const buildErrorMessage = err => {
   if (err?.originalStatus === 404) {
     return 'The requested resource was not found!';
@@ -162,18 +160,13 @@ export const buildErrorMessage = err => {
   if (err?.data?.errors) {
     return Object.values(err?.data?.errors).join('\n');
   }
-  if (Array.isArray(err?.data) && err.data.length > 0) {
-    const messages = err.data
-      .filter(item => !isNullOrUndefined(item?.msg))
-      .map(item => {
-        return item.loc ? `${item.msg} at ${item.loc.join(', ')}` : item.msg;
-      });
-
-    if (messages.length > 0) {
-      return messages.join(',\n');
-    }
+  const location = (err?.data || [])[0]?.loc;
+  const msg = (err?.data || [])[0]?.msg;
+  if (location && !isNullOrUndefined(msg)) {
+    return msg + ' at ' + (location || []).join(', ');
+  } else {
+    return typeof err === 'string' ? err : err?.data;
   }
-  return typeof err === 'string' ? err : err?.data;
 };
 
 export const getStatusColor = (status, theme) => {

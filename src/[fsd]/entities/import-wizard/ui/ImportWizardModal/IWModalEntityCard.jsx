@@ -90,7 +90,7 @@ const IWModalEntityCard = memo(props => {
                               isDiagram: true,
                             })
                           }
-                          variant="elitea"
+                          variant="alita"
                           color="tertiary"
                         >
                           <FullScreenIconSvg />

@@ -48,7 +48,7 @@ const Welcome = memo(props => {
               Ready to explore Elitea’s smart tools and tips?
             </Typography>
             <Button
-              variant="elitea"
+              variant="alita"
               color="primary"
               sx={styles.button}
               onClick={onShowTour}

@@ -13,7 +13,7 @@ import { ToolkitSocketProvider } from '@/[fsd]/app/providers';
 import store from '@/[fsd]/app/store';
 import { ToastComponent, ToastProvider } from '@/components/ToastProvider';
 import { FilePreviewNavigationProvider } from '@/contexts/FilePreviewNavigationContext';
-import useEliteATheme from '@/hooks/useEliteATheme';
+import useAlitaTheme from '@/hooks/useAlitaTheme';
 import { actions as settingsActions } from '@/slices/settings.js';
 import { logVersion } from '@/utils.js';
 
@@ -24,7 +24,7 @@ import SocketContext from './contexts/SocketContext';
 logVersion();
 
 const RootComponent = () => {
-  const { globalTheme } = useEliteATheme();
+  const { globalTheme } = useAlitaTheme();
 
   const [socket, setSocket] = useState(null);
   const dispatch = useDispatch();
@@ -79,13 +79,13 @@ const RootComponent = () => {
             <GlobalStyles
               styles={theme => ({
                 body: {
-                  background: theme.palette.background.eliteaDefault,
+                  background: theme.palette.background.alitaDefault,
                 },
                 html: {
-                  background: theme.palette.background.eliteaDefault,
+                  background: theme.palette.background.alitaDefault,
                 },
                 '#root': {
-                  background: theme.palette.background.eliteaDefault,
+                  background: theme.palette.background.alitaDefault,
                 },
               })}
             />

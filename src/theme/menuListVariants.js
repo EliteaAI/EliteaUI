@@ -1,10 +1,10 @@
 /**
- * MUI MenuList Variants for EliteAUI
- * Based on MUI MenuList composition patterns and EliteAUI design system
+ * MUI MenuList Variants for AlitaUI
+ * Based on MUI MenuList composition patterns and AlitaUI design system
  * Contains all menu list style variants and configurations
  */
 
-export const eliteaMenuListVariants = [
+export const alitaMenuListVariants = [
   // Default MenuList
   /**
    * @variant default
@@ -199,7 +199,7 @@ export const eliteaMenuListVariants = [
 /**
  * MenuItem variants for enhanced styling within MenuLists
  */
-export const eliteaMenuItemVariants = [
+export const alitaMenuItemVariants = [
   // Default MenuItem
   {
     props: {},

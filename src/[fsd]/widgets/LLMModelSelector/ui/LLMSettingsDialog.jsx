@@ -59,7 +59,7 @@ const LLMSettingsDialog = memo(props => {
       actions={
         <>
           <Button
-            variant="elitea"
+            variant="alita"
             color="secondary"
             onClick={onCancel}
             disableRipple
@@ -67,7 +67,7 @@ const LLMSettingsDialog = memo(props => {
             Cancel
           </Button>
           <Button
-            variant="elitea"
+            variant="alita"
             onClick={handleOK}
             disableRipple
             disabled={isDisabled}

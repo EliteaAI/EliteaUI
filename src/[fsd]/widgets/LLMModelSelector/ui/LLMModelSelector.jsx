@@ -1,12 +1,22 @@
 import { memo, useCallback, useRef, useState } from 'react';
 
-import { Box, Button, ButtonGroup, Divider, Tooltip, Typography, useTheme } from '@mui/material';
+import {
+  Box,
+  Button,
+  ButtonGroup,
+  Divider,
+  ListItemIcon,
+  Tooltip,
+  Typography,
+  useTheme,
+} from '@mui/material';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
 
 import ShareIcon from '@/assets/share-icon.svg?react';
 import BriefcaseIcon from '@/components/Icons/BriefcaseIcon.jsx';
 import SettingIcon from '@/components/Icons/SettingIcon';
 
-import LLMModelsMenu from './LLMModelsMenu';
 import { LLMSettingsDialog } from './LLMSettingsDialog';
 
 /**
@@ -35,7 +45,13 @@ const LLMModelSelector = memo(props => {
   const anchorRef = useRef(null);
   const [showLLMSettings, setShowLLMSettings] = useState(false);
 
+  const handleMenuItemClick = (event, index) => {
+    onSelectModel(models[index]);
+    handleClose();
+  };
+
   const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
 
   const handleModelMenuClick = () => {
     setAnchorEl(anchorRef.current);
@@ -72,7 +88,7 @@ const LLMModelSelector = memo(props => {
     <>
       {/*<pre>{JSON.stringify(models, null, 2)}</pre>*/}
       <ButtonGroup
-        variant="elitea"
+        variant="alita"
         disableElevation
         color="secondary"
         disabled={disabled}
@@ -89,7 +105,7 @@ const LLMModelSelector = memo(props => {
             sx={styles.modelButtonWrapper}
           >
             <Button
-              variant="elitea"
+              variant="alita"
               color="secondary"
               disabled={disabled}
               onClick={handleModelMenuClick}
@@ -139,11 +155,11 @@ const LLMModelSelector = memo(props => {
               <Box component="span">
                 <Button
                   size="small"
-                  aria-expanded={showLLMSettings ? 'true' : undefined}
+                  aria-expanded={open ? 'true' : undefined}
                   aria-label="model settings menu"
                   aria-haspopup="menu"
                   onClick={handleSettingsClick}
-                  variant="elitea"
+                  variant="alita"
                   color="secondary"
                   disabled={!onSetLLMSettings}
                 >
@@ -158,13 +174,40 @@ const LLMModelSelector = memo(props => {
         )}
       </ButtonGroup>
 
-      <LLMModelsMenu
+      <Menu
         anchorEl={anchorEl}
+        open={open}
         onClose={handleClose}
-        models={models}
-        selectedModel={selectedModel}
-        onSelectModel={onSelectModel}
-      />
+        anchorOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
+        }}
+        slotProps={{
+          list: {
+            'aria-labelledby': 'model-selector-button',
+          },
+          paper: {
+            sx: styles.menuPaper,
+          },
+        }}
+      >
+        {models.map((item, index) => (
+          <MenuItem
+            key={index}
+            selected={item.id === selectedModel?.id}
+            onClick={event => handleMenuItemClick(event, index)}
+          >
+            <ListItemIcon>
+              {item.shared ? <ShareIcon fontSize="inherit" /> : <BriefcaseIcon fontSize="inherit" />}
+            </ListItemIcon>
+            {item.display_name || item.name}
+          </MenuItem>
+        ))}
+      </Menu>
 
       {onSetLLMSettings && (
         <LLMSettingsDialog
@@ -224,6 +267,9 @@ const llmModelSelectorStyles = () => ({
     fontSize: '1rem',
     width: '1rem',
     height: '1rem',
+  },
+  menuPaper: {
+    marginTop: '-0.25rem',
   },
 });
 

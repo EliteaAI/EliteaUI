@@ -76,7 +76,7 @@ export default function ModerationActions({
       {permissions.includes(PERMISSIONS.moderation.reject) && (
         <>
           <Button
-            variant="elitea"
+            variant="alita"
             color="secondary"
             disabled={disabled}
             onClick={onClickReject}
@@ -163,7 +163,7 @@ export default function ModerationActions({
                       endAdornment: showExpandIcon ? (
                         <IconButton
                           size="small"
-                          variant="elitea"
+                          variant="alita"
                           color="tertiary"
                           onClick={onClickExpander}
                         >
@@ -186,7 +186,7 @@ export default function ModerationActions({
       {permissions.includes(PERMISSIONS.moderation.approve) && (
         <>
           <Button
-            variant="elitea"
+            variant="alita"
             color="secondary"
             disabled={disabled}
             onClick={onClickApprove}

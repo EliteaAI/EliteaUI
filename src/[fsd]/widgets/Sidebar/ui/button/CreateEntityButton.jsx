@@ -224,7 +224,7 @@ const CreateEntityButton = memo(() => {
     >
       <Box
         component="span"
-        sx={styles.span}
+        style={styles.span}
       >
         <IconButton
           disabled={disableCreateButton}
@@ -254,10 +254,7 @@ CreateEntityButton.displayName = 'CreateEntityButton';
 /** @type {MuiSx} */
 const createEntityButtonStyles = sideBarCollapsed => ({
   span: {
-    display: 'flex',
-    justifyContent: 'center',
     width: '100%',
-    boxSizing: 'border-box',
   },
   button: ({ palette }) => ({
     boxSizing: 'border-box',
@@ -265,7 +262,6 @@ const createEntityButtonStyles = sideBarCollapsed => ({
     width: '100%',
     gap: '0.5rem',
     justifyContent: 'center',
-    alignItems: 'center',
     height: '1.75rem',
     color: palette.split.text.default,
     background: palette.split.default,
@@ -274,9 +270,11 @@ const createEntityButtonStyles = sideBarCollapsed => ({
       ? {
           maxWidth: '1.75rem !important',
           width: '1.75rem !important',
-          minWidth: '1.75rem !important',
           borderRadius: '50%',
-          padding: 0,
+          alignSelf: 'center',
+          '& span': {
+            width: '0 !important',
+          },
         }
       : {}),
     '&:hover': {

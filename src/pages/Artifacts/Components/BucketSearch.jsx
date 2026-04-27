@@ -25,7 +25,7 @@ const BucketSearch = ({ collapsed = false, onExpand, onSearchActivate }) => {
     >
       <IconButton
         onClick={handleSearchClick}
-        variant="elitea"
+        variant="alita"
         color="secondary"
         sx={{
           minWidth: '28px !important',

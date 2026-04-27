@@ -196,7 +196,7 @@ const AgentModal = memo(props => {
               />
               <CopyLinkToEntityButton link={link} />
               <IconButton
-                variant="elitea"
+                variant="alita"
                 color="secondary"
                 aria-label="close"
                 onClick={onClose}
@@ -246,7 +246,7 @@ const AgentModal = memo(props => {
           </DialogContent>
           <DialogActions sx={styles.dialogActions}>
             <Button
-              variant="elitea"
+              variant="alita"
               color="primary"
               onClick={onStartConversation()}
             >

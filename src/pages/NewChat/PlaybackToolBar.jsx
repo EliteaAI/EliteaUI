@@ -134,7 +134,7 @@ export default function PlaybackToolBar(props) {
             endAdornment: showExpandIcon ? (
               <IconButton
                 size="small"
-                variant="elitea"
+                variant="alita"
                 color="tertiary"
                 onClick={onClickExpander}
               >

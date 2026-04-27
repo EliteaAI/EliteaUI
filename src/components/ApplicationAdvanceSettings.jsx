@@ -82,18 +82,17 @@ const ApplicationAdvanceSettings = memo(props => {
         title: 'Advanced',
         content: (
           <Box sx={styles.fieldContainer}>
+            <Label.InfoLabelWithTooltip
+              label="Step limit"
+              tooltip="The maximum number of steps to take before ending the execution loop (tools call limit)."
+              variant="subtitle"
+              sx={styles.fieldLabel}
+            />
             <FormInput
               value={version_details?.meta?.step_limit ?? ''}
               onChange={handleChange}
               onKeyDown={handleKeyDown}
               disabled={disabled}
-              label={
-                <Label.InfoLabelWithTooltip
-                  label="Step limit"
-                  tooltip="The maximum number of steps to take before ending the execution loop (tools call limit)."
-                  variant="labelLarge"
-                />
-              }
               type="text"
               inputProps={{
                 inputMode: 'numeric',
@@ -130,8 +129,14 @@ const agentAdvanceSettingsStyles = () => ({
     display: 'flex',
     flexDirection: 'column',
     gap: '0.75rem',
-    marginTop: '0.5rem',
   },
+  fieldLabel: ({ palette }) => ({
+    color: palette.text.primary,
+    fontSize: '0.75rem',
+    lineHeight: '0.9375rem',
+    textTransform: 'uppercase',
+    paddingLeft: '0.5rem',
+  }),
 });
 
 export default ApplicationAdvanceSettings;

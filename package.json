@@ -1,9 +1,9 @@
 {
-  "name": "elitea_ui",
+  "name": "alita_ui",
   "private": true,
-  "version": "0.4.1546",
+  "version": "0.4.1415",
   "type": "module",
-  "homepage": "./elitea_ui/",
+  "homepage": "./alita_ui/",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -90,7 +90,6 @@
     "recharts": "^2.15.2",
     "remark-breaks": "^4.0.0",
     "remark-gfm": "^4.0.1",
-    "simplebar-react": "^3.3.2",
     "socket.io-client": "^4.8.1",
     "svg-pan-zoom": "^3.6.2",
     "uuid": "^11.1.0",

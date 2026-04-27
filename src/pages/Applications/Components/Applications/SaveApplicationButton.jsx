@@ -34,22 +34,17 @@ export default function SaveApplicationButton({ onSuccess }) {
     return stateValidationErrors && Object.keys(stateValidationErrors).length > 0;
   }, [stateValidationErrors]);
 
-  const hasEmptyStarters = useMemo(
-    () => (values?.version_details?.conversation_starters || []).some(s => !s?.trim()),
-    [values?.version_details?.conversation_starters],
-  );
-
   const isButtonDisabled = useMemo(() => {
     const hasNoChanges = !isFormDirtyExcluding && !isYamlCodeDirty;
 
     // In chat context (edit mode), skip field validation since version data comes without description
     if (isFromChat && !!values?.id) {
-      return isSaving || hasNoChanges || hasStateErrors || hasEmptyStarters;
+      return isSaving || hasNoChanges || hasStateErrors;
     }
 
     // For standalone pages, validate required fields
     const hasMissingFields = !values?.name || !values?.description;
-    return isSaving || hasNoChanges || hasMissingFields || hasStateErrors || hasEmptyStarters;
+    return isSaving || hasNoChanges || hasMissingFields || hasStateErrors;
   }, [
     isFormDirtyExcluding,
     isYamlCodeDirty,
@@ -59,13 +54,12 @@ export default function SaveApplicationButton({ onSuccess }) {
     isSaving,
     isFromChat,
     hasStateErrors,
-    hasEmptyStarters,
   ]);
 
   return (
     <Button
       disabled={isButtonDisabled}
-      variant="elitea"
+      variant="alita"
       color="primary"
       onClick={onSuccess ? handleSave : onSave}
     >

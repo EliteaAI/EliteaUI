@@ -14,11 +14,9 @@ const SimpleLLMInputs = memo(props => {
     // AI Assistant props
     enableAIAssistant = false,
     modelConfig = null,
-    // Spacing
-    gap,
   } = props;
 
-  const styles = simpleLLMInputsStyles(gap);
+  const styles = simpleLLMInputsStyles();
 
   return (
     <Box sx={styles.container}>
@@ -44,11 +42,10 @@ const SimpleLLMInputs = memo(props => {
 SimpleLLMInputs.displayName = 'SimpleLLMInputs';
 
 /** @type {MuiSx} */
-const simpleLLMInputsStyles = gap => ({
+const simpleLLMInputsStyles = () => ({
   container: {
     display: 'flex',
     flexDirection: 'column',
-    gap,
   },
 });
 

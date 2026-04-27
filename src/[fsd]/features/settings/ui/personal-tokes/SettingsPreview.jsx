@@ -40,17 +40,23 @@ const SettingsPreview = memo(props => {
   const getVSCodeSettings = useCallback((apiUrl, modelData, authToken, pId) => {
     return JSON.stringify(
       {
-        'eliteacode.providerServerURL': apiUrl,
+        'alitacode.providerServerURL': apiUrl,
+        'alitacode.LLMServerUrl': apiUrl,
+        'alitacode.modelName': modelData.model_name || '',
+        'alitacode.LLMModelName': modelData.model_name || '',
+        'alitacode.authToken': authToken || 'Your_Personal_Token',
+        'alitacode.LLMAuthToken': authToken || 'Your_Personal_Token',
+        'alitacode.projectId': pId || '',
+        'alitacode.integrationUid': modelData.integration_uid || '',
+        'alitacode.defaultViewMode': 'split',
+        'alitacode.verifySsl': false,
         'eliteacode.LLMServerUrl': apiUrl,
-        'eliteacode.modelName': modelData.model_name || '',
         'eliteacode.LLMModelName': modelData.model_name || '',
-        'eliteacode.authToken': authToken || 'Your_Personal_Token',
         'eliteacode.LLMAuthToken': authToken || 'Your_Personal_Token',
         'eliteacode.projectId': pId || '',
         'eliteacode.integrationUid': modelData.integration_uid || '',
-        'eliteacode.defaultViewMode': 'split',
-        'eliteacode.verifySsl': false,
         'eliteacode.displayType': 'split',
+        'eliteacode.verifySsl': false,
         'eliteacode.debug': false,
       },
       null,
@@ -62,7 +68,7 @@ const SettingsPreview = memo(props => {
   const getJetBrainsSettings = useCallback((apiUrl, modelData, pId) => {
     return `<?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="EliteASettings">
+  <component name="AlitaSettings">
     <option name="displayType" value="SPLIT" />
     <option name="integrationName" value="${modelData.integration_name || ''}" /> 
     <option name="integrationUid" value="${modelData.integration_uid || ''}" />
@@ -70,7 +76,7 @@ const SettingsPreview = memo(props => {
     <option name="llmCustomModelName" value="${modelData.model_name || ''}" />
     <option name="llmServerUrl" value="${apiUrl}" />
     <option name="projectId" value="${pId || ''}" />
-    <option name="provider" value="ELITEA_EYE" />
+    <option name="provider" value="ALITA_EYE" />
   </component>
 </project>`;
   }, []);
@@ -101,7 +107,7 @@ const SettingsPreview = memo(props => {
   const handleDownload = useCallback(() => {
     try {
       const fileName =
-        selectedIDE === TokensConstants.SETTINGS_PREVIEW_TYPES.VSCODE ? 'settings.json' : 'elitea.xml';
+        selectedIDE === TokensConstants.SETTINGS_PREVIEW_TYPES.VSCODE ? 'settings.json' : 'alita.xml';
       const mimeType =
         selectedIDE === TokensConstants.SETTINGS_PREVIEW_TYPES.VSCODE
           ? 'application/json'
@@ -146,7 +152,7 @@ const SettingsPreview = memo(props => {
       <Box sx={styles.header}>
         <Box sx={styles.headerLeft}>
           <IconButton
-            variant="elitea"
+            variant="alita"
             color="tertiary"
             onClick={onClose}
           >
@@ -172,7 +178,7 @@ const SettingsPreview = memo(props => {
             />
           </Box>
           <IconButton
-            variant="elitea"
+            variant="alita"
             color="secondary"
             onClick={handleCopy}
           >
@@ -180,7 +186,7 @@ const SettingsPreview = memo(props => {
           </IconButton>
 
           <IconButton
-            variant="elitea"
+            variant="alita"
             color="secondary"
             onClick={handleDownload}
           >

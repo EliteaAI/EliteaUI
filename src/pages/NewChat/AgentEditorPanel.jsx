@@ -139,7 +139,7 @@ const VersionSelector = ({
               placement="top"
             >
               <IconButton
-                variant="elitea"
+                variant="alita"
                 color="tertiary"
                 size="small"
                 onClick={handleRefresh}
@@ -271,7 +271,11 @@ const AgentEditorPanel = ({
   }, [isPipeline, onClosePipelineEditor, onCloseAgentEditor]);
 
   const selectedVersion = useMemo(() => {
-    return participantDetails?.versions?.find(version => version.id === selectedVersionId) || {};
+    return (
+      participantDetails?.versions?.find(version => version.id === selectedVersionId) ||
+      participantDetails?.versions?.[0] ||
+      {}
+    );
   }, [participantDetails?.versions, selectedVersionId]);
 
   const isSelectedVersionPublished = useMemo(() => {
@@ -301,7 +305,7 @@ const AgentEditorPanel = ({
 
   return (
     <ButtonGroup
-      variant="elitea"
+      variant="alita"
       disableElevation
       color="secondary"
       disabled={disabled}
@@ -379,7 +383,7 @@ const AgentEditorPanel = ({
           aria-haspopup="settings"
           onClick={onClickAgentEditor}
           disabled={disabled || isEditSettingsDisabled}
-          variant="elitea"
+          variant="alita"
           color="secondary"
         >
           {isActiveParticipantBeingEdited ? (

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { CodeMirrorEditorHelpers } from '@/[fsd]/shared/lib/helpers';
-import useEliteATheme from '@/hooks/useEliteATheme';
+import useAlitaTheme from '@/hooks/useAlitaTheme';
 import { lintGutter } from '@codemirror/lint';
 import { search } from '@codemirror/search';
 import { EditorView, basicSetup } from '@uiw/react-codemirror';
@@ -11,7 +11,7 @@ export const useCodeMirror = props => {
 
   const [code, setCode] = useState(value);
   const [debounceTimeout, setDebounceTimeout] = useState(null);
-  const { isDarkMode } = useEliteATheme();
+  const { isDarkMode } = useAlitaTheme();
 
   useEffect(() => {
     setCode(value);

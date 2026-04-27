@@ -3,12 +3,11 @@ import { memo, useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
-import { Box } from '@mui/material';
+import { Box, useTheme } from '@mui/material';
 
 import { MCPList } from '@/[fsd]/features/mcp/ui';
 import { useLoadToolkits } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitsList } from '@/[fsd]/features/toolkits/ui';
-import { Select } from '@/[fsd]/shared/ui';
 import { useTotalApplicationsQuery, useTotalPublicApplicationsQuery } from '@/api/applications';
 import FlowIcon from '@/assets/flow-icon.svg?react';
 import McpIcon from '@/assets/mcp-icon.svg?react';
@@ -22,6 +21,7 @@ import {
   ViewMode,
 } from '@/common/constants';
 import ApplicationsIcon from '@/components/Icons/ApplicationsIcon';
+import MultipleSelect from '@/components/MultipleSelect';
 import StickyTabs from '@/components/StickyTabs';
 import ViewToggle from '@/components/ViewToggle';
 import { useAuthorIdFromUrl } from '@/hooks/useSearchParamValue';
@@ -38,6 +38,7 @@ import ApplicationsList from './ApplicationsList';
 
 const UserPublic = memo(props => {
   const { publicView = false } = props;
+  const theme = useTheme();
   const styles = userPublicStyles();
   const { query } = useSelector(state => state.search);
   const { tab = UserPublicTabs[0] } = useParams();
@@ -310,11 +311,13 @@ const UserPublic = memo(props => {
         <>
           {viewMode === ViewMode.Owner && (
             <Box sx={styles.selectContainer}>
-              <Select.SingleSelect
-                onValueChange={newValue => onChangeStatuses([newValue])}
-                value={statuses[0]}
+              <MultipleSelect
+                onValueChange={onChangeStatuses}
+                value={statuses}
                 options={MyLibraryStatusOptions}
-                showBorder
+                customSelectedColor={`${theme.palette.text.primary} !important`}
+                customSelectedFontSize={'0.875rem'}
+                multiple={false}
               />
             </Box>
           )}

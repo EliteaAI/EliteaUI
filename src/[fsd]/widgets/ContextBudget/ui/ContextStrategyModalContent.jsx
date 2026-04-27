@@ -182,7 +182,7 @@ const ContextStrategyModalContent = memo(props => {
             </Box>
           </Box>
           <IconButton
-            variant="elitea"
+            variant="alita"
             color="tertiary"
             onClick={onClose}
             aria-label="Close modal"
@@ -205,7 +205,7 @@ const ContextStrategyModalContent = memo(props => {
                 {CONTEXT_MESSAGES.HIGH_USAGE_WARNING}
               </Typography>
               <Button
-                variant="elitea"
+                variant="alita"
                 color="secondary"
                 size="small"
                 onClick={handleOptimizeClick}
@@ -280,7 +280,7 @@ const ContextStrategyModalContent = memo(props => {
 
       <StyledDialogActions sx={styles.dialogActions}>
         <Button
-          variant="elitea"
+          variant="alita"
           onClick={onClose}
           color="secondary"
         >

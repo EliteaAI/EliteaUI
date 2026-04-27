@@ -86,7 +86,7 @@ const StyledShowContextModal = memo(props => {
               >
                 <IconButton
                   sx={styles.copyButton}
-                  variant="elitea"
+                  variant="alita"
                   color="tertiary"
                   onClick={onCopy}
                 >
@@ -96,7 +96,7 @@ const StyledShowContextModal = memo(props => {
             )}
             <IconButton
               sx={styles.closeButton}
-              variant="elitea"
+              variant="alita"
               color="tertiary"
               onClick={onClose}
             >

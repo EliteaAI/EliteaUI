@@ -7,7 +7,7 @@ export const generateNewNodeIdWithSuffix = (nodeId, suffix) => `${nodeId}${suffi
 export const generateTimestampedNodeId = (prefix, suffix) => `${prefix}${new Date().getTime()}${suffix}`;
 
 export const generateEndEdgeToRemove = sourceId =>
-  `${FlowEditorConstants.EDGE_PREFIX}${sourceId}---EliteAPipelineEnd`;
+  `${FlowEditorConstants.EDGE_PREFIX}${sourceId}---AlitaPipelineEnd`;
 
 export const removeNodeIdFromArray = (array, nodeId) => array?.filter(item => item !== nodeId);
 

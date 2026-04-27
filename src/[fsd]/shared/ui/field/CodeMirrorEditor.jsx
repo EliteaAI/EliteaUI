@@ -250,13 +250,13 @@ const CodeMirrorEditor = forwardRef((props, ref) => {
         isDarkMode
           ? vscodeDarkInit({
               settings: {
-                background: theme.palette.background.eliteaDefault,
+                background: theme.palette.background.alitaDefault,
                 gutterBackground: theme.palette.background.tabPanel,
               },
             })
           : vscodeLightInit({
               settings: {
-                background: theme.palette.background.eliteaDefault,
+                background: theme.palette.background.alitaDefault,
                 gutterBackground: theme.palette.background.tabPanel,
               },
             })

@@ -1,6 +1,6 @@
 import { Box, Typography } from '@mui/material';
 
-import BaseBtn, { eliteaButtonColors } from '@/[fsd]/shared/ui/button/BaseBtn';
+import BaseBtn, { alitaButtonColors } from '@/[fsd]/shared/ui/button/BaseBtn';
 import PlusIcon from '@/assets/plus-icon.svg?react';
 
 export default {
@@ -162,7 +162,7 @@ const variantsConfig = [
     props: { variant: 'tertiary', children: 'Label', disableRipple: true },
   },
   {
-    title: 'Tertiary Icon',
+    title: 'Tertiary',
     props: {
       variant: 'tertiary',
       startIcon: <PlusIcon />,
@@ -174,7 +174,7 @@ const variantsConfig = [
     props: { variant: 'auxiliary', children: 'Label', disableRipple: true },
   },
   {
-    title: 'Auxiliary Icon',
+    title: 'Auxiliary',
     props: {
       variant: 'auxiliary',
       startIcon: <PlusIcon />,
@@ -257,14 +257,13 @@ const ButtonStatesRow = ({ title, props }) => {
           sx={[
             props.sx,
             theme => {
-              if (!eliteaButtonColors(theme)[props.variant]) return {};
+              if (!alitaButtonColors(theme)[props.variant]) return {};
 
               return {
-                backgroundColor: eliteaButtonColors(theme)[props.variant].hover.background,
-                color: eliteaButtonColors(theme)[props.variant].hover.color,
-                ...(props.variant === 'iconLabel' ? { border: 'transparent' } : {}),
+                backgroundColor: alitaButtonColors(theme)[props.variant].hover.background,
+                color: alitaButtonColors(theme)[props.variant].hover.color,
                 '& .MuiButton-startIcon': {
-                  color: eliteaButtonColors(theme)[props.variant].hover.colorIcon,
+                  color: alitaButtonColors(theme)[props.variant].hover.colorIcon,
                 },
               };
             },
@@ -278,14 +277,14 @@ const ButtonStatesRow = ({ title, props }) => {
           sx={[
             props.sx,
             theme => {
-              if (!eliteaButtonColors(theme)[props.variant]) return {};
+              if (!alitaButtonColors(theme)[props.variant]) return {};
 
               return {
-                backgroundColor: eliteaButtonColors(theme)[props.variant].active.background,
-                color: eliteaButtonColors(theme)[props.variant].active.color,
-                border: eliteaButtonColors(theme)[props.variant].active.border,
+                backgroundColor: alitaButtonColors(theme)[props.variant].active.background,
+                color: alitaButtonColors(theme)[props.variant].active.color,
+                border: alitaButtonColors(theme)[props.variant].active.border,
                 '& .MuiButton-startIcon': {
-                  color: eliteaButtonColors(theme)[props.variant].active.colorIcon,
+                  color: alitaButtonColors(theme)[props.variant].active.colorIcon,
                 },
               };
             },

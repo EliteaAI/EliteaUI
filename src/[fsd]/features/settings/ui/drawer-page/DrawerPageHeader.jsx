@@ -33,7 +33,7 @@ const DrawerPageHeader = memo(props => {
       <Box sx={styles.titleContainer}>
         {showBackButton && (
           <IconButton
-            variant="elitea"
+            variant="alita"
             color={'tertiary'}
             onClick={onBack}
             sx={styles.iconButton}
@@ -68,7 +68,7 @@ const DrawerPageHeader = memo(props => {
               <IconButton
                 disabled={!!disabled}
                 disableRipple
-                variant="elitea"
+                variant="alita"
                 color="primary"
                 onClick={onAdd}
                 sx={styles.addButton}

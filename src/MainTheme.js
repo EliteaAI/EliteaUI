@@ -1,18 +1,17 @@
 import { MuiButtonStyles } from '@/[fsd]/shared/ui/button/BaseBtn';
-import { eliteaCheckboxVariants, eliteaUnifiedRadioVariants } from '@/[fsd]/shared/ui/checkbox/BaseCheckbox';
-import { eliteaInputVariants, eliteaTextFieldVariants } from '@/[fsd]/shared/ui/input/textFieldVariants';
-import { eliteaSingleSelectVariants } from '@/[fsd]/shared/ui/select/singleSelectVariants';
-import { eliteaSwitchVariants } from '@/[fsd]/shared/ui/switch/BaseSwitch';
-import { eliteaTabGroupVariants } from '@/[fsd]/shared/ui/tab-group-button/TabGroupButton';
-import { MuiTabStyles } from '@/[fsd]/shared/ui/tabs/BaseTab';
-import { MuiTabsStyles } from '@/[fsd]/shared/ui/tabs/BaseTabs';
-import { eliteaDataGridStyle } from '@/components/DataGrid.jsx';
-import { eliteaTreeItemStyle } from '@/components/TreeItem.jsx';
+import { alitaCheckboxVariants, alitaUnifiedRadioVariants } from '@/[fsd]/shared/ui/checkbox/BaseCheckbox';
+import { alitaInputVariants, alitaTextFieldVariants } from '@/[fsd]/shared/ui/input/textFieldVariants';
+import { alitaSwitchVariants } from '@/[fsd]/shared/ui/switch/BaseSwitch';
+import { alitaTabGroupVariants } from '@/[fsd]/shared/ui/tab-group-button/TabGroupButton';
+import { alitaTabVariants } from '@/[fsd]/shared/ui/tabs/BaseTab';
+import { alitaTabsVariants } from '@/[fsd]/shared/ui/tabs/BaseTabs';
+import { alitaDataGridStyle } from '@/components/DataGrid.jsx';
+import { alitaTreeItemStyle } from '@/components/TreeItem.jsx';
 
-import { eliteaIconButtonStyle } from './components/IconButton';
+import { alitaIconButtonStyle } from './components/IconButton';
 import darkPalette, { darkBlue, white } from './darkPalette';
 import lightPalette from './lightPalette';
-import { eliteaMenuItemVariants, eliteaMenuListVariants } from './theme/menuListVariants';
+import { alitaMenuItemVariants, alitaMenuListVariants } from './theme/menuListVariants';
 
 export const typographyVariants = {
   headingLarge: {
@@ -118,27 +117,27 @@ const getDesignTokens = mode => ({
   components: {
     MuiButton: MuiButtonStyles,
     MuiToggleButton: {
-      variants: eliteaTabGroupVariants,
+      variants: alitaTabGroupVariants,
     },
     MuiTextField: {
-      variants: eliteaTextFieldVariants,
+      variants: alitaTextFieldVariants,
     },
     MuiInput: {
-      variants: eliteaInputVariants(typographyVariants.bodyMedium),
+      variants: alitaInputVariants(typographyVariants.bodyMedium),
     },
     MuiIconButton: {
       variants: [
         {
-          props: { variant: 'elitea' },
-          style: ({ theme, color }) => eliteaIconButtonStyle(theme, color),
+          props: { variant: 'alita' },
+          style: ({ theme, color }) => alitaIconButtonStyle(theme, color),
         },
       ],
     },
     MuiDataGrid: {
       variants: [
         {
-          props: { variant: 'elitea' },
-          style: ({ theme }) => eliteaDataGridStyle(theme),
+          props: { variant: 'alita' },
+          style: ({ theme }) => alitaDataGridStyle(theme),
         },
       ],
     },
@@ -156,16 +155,16 @@ const getDesignTokens = mode => ({
     MuiTreeItem: {
       variants: [
         {
-          props: { variant: 'elitea' },
-          style: ({ theme }) => eliteaTreeItemStyle(theme),
+          props: { variant: 'alita' },
+          style: ({ theme }) => alitaTreeItemStyle(theme),
         },
       ],
     },
     MuiMenuList: {
-      variants: eliteaMenuListVariants,
+      variants: alitaMenuListVariants,
     },
     MuiMenuItem: {
-      variants: eliteaMenuItemVariants,
+      variants: alitaMenuItemVariants,
     },
     MuiFormControl: {
       styleOverrides: {
@@ -174,15 +173,6 @@ const getDesignTokens = mode => ({
             boxShadow: 'none',
           },
         },
-      },
-    },
-    MuiFormHelperText: {
-      styleOverrides: {
-        root: ({ theme }) => ({
-          '&.Mui-error': {
-            color: theme.palette.status.rejected,
-          },
-        }),
       },
     },
     MuiCssBaseline: {
@@ -220,7 +210,7 @@ const getDesignTokens = mode => ({
           background: theme.palette.background.avatar,
         }),
         outlined: ({ theme }) => ({
-          background: theme.palette.background.eliteaDefault,
+          background: theme.palette.background.alitaDefault,
           color: theme.palette.text.secondary,
         }),
       },
@@ -228,7 +218,7 @@ const getDesignTokens = mode => ({
     MuiPaper: {
       styleOverrides: {
         root: ({ theme }) => ({
-          background: theme.palette.background.eliteaDefault,
+          background: theme.palette.background.alitaDefault,
         }),
       },
     },
@@ -238,7 +228,6 @@ const getDesignTokens = mode => ({
           color: theme.palette.text.secondary,
         }),
       },
-      variants: eliteaSingleSelectVariants,
     },
     MuiMenu: {
       styleOverrides: {
@@ -271,8 +260,12 @@ const getDesignTokens = mode => ({
         },
       },
     },
-    MuiTab: MuiTabStyles,
-    MuiTabs: MuiTabsStyles,
+    MuiTab: {
+      variants: alitaTabVariants,
+    },
+    MuiTabs: {
+      variants: alitaTabsVariants,
+    },
     MuiAlert: {
       styleOverrides: {
         filledSuccess: {
@@ -298,13 +291,13 @@ const getDesignTokens = mode => ({
       },
     },
     MuiRadio: {
-      variants: eliteaUnifiedRadioVariants,
+      variants: alitaUnifiedRadioVariants,
     },
     MuiCheckbox: {
-      variants: eliteaCheckboxVariants,
+      variants: alitaCheckboxVariants,
     },
     MuiSwitch: {
-      variants: eliteaSwitchVariants,
+      variants: alitaSwitchVariants,
     },
     MuiDrawer: {
       styleOverrides: {
@@ -322,7 +315,7 @@ const getDesignTokens = mode => ({
     MuiAppBar: {
       styleOverrides: {
         root: ({ theme }) => ({
-          background: theme.palette.background.eliteaDefault, // Your color here
+          background: theme.palette.background.alitaDefault, // Your color here
         }),
       },
     },

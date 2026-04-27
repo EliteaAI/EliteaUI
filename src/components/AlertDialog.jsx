@@ -13,7 +13,6 @@ export default function AlertDialog({
   onConfirm,
   alarm,
   confirmButtonText = 'Confirm',
-  cancelButtonText = 'Cancel',
   multiline = false,
   confirming = false,
 }) {
@@ -61,17 +60,17 @@ export default function AlertDialog({
       </DialogContent>
       <StyledDialogActions>
         <Button
-          variant="elitea"
+          variant="alita"
           color="secondary"
           onClick={onCancel}
           autoFocus
           disableRipple
         >
-          {cancelButtonText}
+          Cancel
         </Button>
         <Button
           disableRipple
-          variant="elitea"
+          variant="alita"
           color={alarm ? 'alarm' : 'primary'}
           onClick={onConfirm}
           disabled={confirming}

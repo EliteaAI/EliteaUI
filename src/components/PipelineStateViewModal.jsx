@@ -49,7 +49,7 @@ export default function PipelineStateViewModal({ open, onClose, value = '', labe
           {label}
           <IconButton
             sx={{ marginLeft: '0px' }}
-            variant="elitea"
+            variant="alita"
             color="tertiary"
             onClick={onClose}
           >

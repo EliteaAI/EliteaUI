@@ -69,7 +69,7 @@ export const parseRunEvent = (
       if (!isRunningPipeline) {
         // One run started
         setIsRunningPipeline(true);
-        const id = `EliteA_Pipeline__State_${nextRunName}`;
+        const id = `Alita_Pipeline__State_${nextRunName}`;
         runPipelineStatus.current = {
           id,
           data: {

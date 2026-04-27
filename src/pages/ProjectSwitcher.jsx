@@ -5,7 +5,7 @@ import { useLocation, useParams } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
-import { eliteaApi } from '@/api/eliteaApi';
+import { alitaApi } from '@/api/alitaApi';
 import { useProjectListQuery } from '@/api/project.js';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import Page404 from '@/pages/Page404.jsx';
@@ -39,7 +39,7 @@ const ProjectSwitcher = () => {
           if (isOnArtifactsPage) {
             // Clear RTK Query cache before project switch to prevent stale data issues
             // Only needed for Artifacts due to its complex state management
-            dispatch(eliteaApi.util.resetApiState());
+            dispatch(alitaApi.util.resetApiState());
           }
 
           dispatch(
@@ -53,7 +53,7 @@ const ProjectSwitcher = () => {
           const basename = getBasename();
 
           // Handle basename properly - location.pathname already includes basename
-          // E.g., "/elitea_ui/29/artifacts" -> remove project ID -> "/elitea_ui/artifacts"
+          // E.g., "/alita_ui/29/artifacts" -> remove project ID -> "/alita_ui/artifacts"
           // Then we don't need to add basename again since it's already in the path
           const pathWithoutProjectId = location.pathname.replace(`/${projectId}`, '');
 

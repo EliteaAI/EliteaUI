@@ -6,7 +6,6 @@ import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { ChatParticipantType, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
 import AuthorContainer from '@/components/AuthorContainer';
 import EntityIcon from '@/components/EntityIcon';
-import { getCardGradientStyles } from '@/utils/cardStyles';
 
 import AgentStudioLike from './AgentStudioLike';
 
@@ -81,9 +80,11 @@ AgentCard.displayName = 'AgentCard';
 /** @type {MuiSx} */
 const agentCardStyles = () => ({
   card: ({ palette }) => ({
-    ...getCardGradientStyles(palette),
-    height: '7rem',
-    maxHeight: '7rem',
+    background: palette.background.card.default,
+    height: '7.25rem',
+    maxHeight: '7.25rem',
+    borderRadius: '0.5rem',
+    border: `0.0625rem solid ${palette.border.cardsOutlines}`,
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
@@ -92,12 +93,17 @@ const agentCardStyles = () => ({
     paddingBottom: 0,
     cursor: 'pointer',
     boxShadow: 'none',
+    '&:hover': {
+      background: palette.background.card.hover,
+      border: `0.0625rem solid ${palette.border.lines}`,
+      boxShadow: palette.boxShadow.default,
+    },
   }),
   header: {
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: '1rem',
+    gap: '0.75rem',
     width: '100%',
     padding: '0.75rem 1.25rem',
     height: '4.5rem',
@@ -110,15 +116,14 @@ const agentCardStyles = () => ({
     WebkitLineClamp: 2,
     WebkitBoxOrient: 'vertical',
   }),
-  footer: {
+  footer: ({ palette }) => ({
     display: 'flex',
     alignItems: 'center',
     width: '100%',
-    height: '2.5rem',
     justifyContent: 'space-between',
-    padding: '0 1rem 0.75rem 1.25rem',
-    gap: '0.25rem',
-  },
+    padding: '0.5rem 1.25rem',
+    borderTop: `0.0625rem solid ${palette.border.cardsOutlines}`,
+  }),
   authors: {
     minWidth: '1.25rem',
   },

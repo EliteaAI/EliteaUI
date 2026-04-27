@@ -273,7 +273,7 @@ function ColumnHeader({
           transform: currentSort?.sort === 'asc' ? 'rotate(180deg)' : 'rotate(0deg)',
           ...(!currentSort?.sort ? {} : styles.columnHeaderSortButtonActive),
         }}
-        variant="elitea"
+        variant="alita"
         color="tertiary"
         size={'small'}
         disableRipple

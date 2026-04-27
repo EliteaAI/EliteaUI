@@ -49,25 +49,23 @@ const CodePreviewHeader = memo(
     return (
       <Box sx={styles.headerContainer}>
         <Box sx={styles.controlsContainer}>
-          <Select.SingleSelect
-            separateLabel
+          <Select.SelectWithLabel
             label="Model:"
             value={`${selectedModel?.name}<<>>${selectedModel?.project_id}`}
-            onValueChange={onHandleChangeModel}
+            onChange={onHandleChangeModel}
             options={modelOptions}
             disabled={false}
           />
-          <Select.SingleSelect
-            separateLabel
+          <Select.SelectWithLabel
             label="Code:"
             value={selectedLanguage}
-            onValueChange={onLanguageChange}
+            onChange={onLanguageChange}
             options={languageOptions}
             disabled={false}
           />
           {showCloseButton && (
             <IconButton
-              variant="elitea"
+              variant="alita"
               color="secondary"
               onClick={onClose}
             >
@@ -98,7 +96,7 @@ const getStyles = () => ({
   controlsContainer: () => ({
     display: 'flex',
     alignItems: 'center',
-    gap: '2rem',
+    gap: '1.5rem',
   }),
 
   closeIcon: ({ palette }) => ({

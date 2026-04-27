@@ -6,7 +6,7 @@ import {
 } from '@/common/constants';
 import { createSlice } from '@reduxjs/toolkit';
 
-import { eliteaApi } from '../api/eliteaApi.js';
+import { alitaApi } from '../api/alitaApi.js';
 
 const defaultProjects = [
   {
@@ -250,7 +250,7 @@ const settingsSlice = createSlice({
     },
   },
   extraReducers: builder => {
-    builder.addMatcher(eliteaApi.endpoints.authorDetails.matchFulfilled, (state, { payload }) => {
+    builder.addMatcher(alitaApi.endpoints.authorDetails.matchFulfilled, (state, { payload }) => {
       if (!state.project.id) {
         if (payload?.personal_project_id) {
           state.project = {
@@ -273,7 +273,7 @@ const settingsSlice = createSlice({
         }
       }
     });
-    builder.addMatcher(eliteaApi.endpoints.projectList.matchFulfilled, (state, { payload }) => {
+    builder.addMatcher(alitaApi.endpoints.projectList.matchFulfilled, (state, { payload }) => {
       state.projects = [...(payload || defaultProjects)];
       if (state.project.id && payload?.length && !payload.find(project => project.id == state.project.id)) {
         const firstProject = payload[0];

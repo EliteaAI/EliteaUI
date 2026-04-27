@@ -66,7 +66,7 @@ const DeleteUserButton = memo(props => {
         <Box component="span">
           <IconButton
             sx={styles.iconButton}
-            variant="elitea"
+            variant="alita"
             color={useSecondaryButton ? 'secondary' : 'tertiary'}
             aria-label="delete user"
             onClick={onClickDelete}

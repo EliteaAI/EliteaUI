@@ -141,7 +141,7 @@ const ParticipantsAccordion = ({
               placement="top"
             >
               <IconButton
-                variant="elitea"
+                variant="alita"
                 color="tertiary"
                 onClick={handleRefresh}
                 sx={{}}

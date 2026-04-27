@@ -1,7 +1,7 @@
 import { PAGE_SIZE } from '@/common/constants.js';
 import { convertToJson, removeDuplicateObjects } from '@/common/utils.jsx';
 
-import { eliteaApi } from './eliteaApi.js';
+import { alitaApi } from './alitaApi.js';
 
 const apiSlicePath = '/configurations';
 
@@ -26,7 +26,7 @@ const headers = {
   'Content-Type': 'application/json',
 };
 
-export const configurationsApi = eliteaApi
+export const configurationsApi = alitaApi
   .enhanceEndpoints({
     addTagTypes: ['configurations'],
   })
@@ -350,7 +350,7 @@ export const configurationsApi = eliteaApi
         },
         onQueryStarted: async (args, { dispatch, getState, queryFulfilled }) => {
           const {
-            eliteaApi: { queries },
+            alitaApi: { queries },
           } = getState();
           const cacheKeys = Object.keys(queries || {});
           let patchResult1 = null;
@@ -362,7 +362,7 @@ export const configurationsApi = eliteaApi
           if (foundListKey) {
             const queryParams = foundListKey.replace('getConfigurationsList', '');
             patchResult1 = dispatch(
-              eliteaApi.util.updateQueryData('getConfigurationsList', convertToJson(queryParams), draft => {
+              alitaApi.util.updateQueryData('getConfigurationsList', convertToJson(queryParams), draft => {
                 const index = draft.items.findIndex(item => item.id === args.configId);
                 if (index !== -1) {
                   draft.items.splice(index, 1);

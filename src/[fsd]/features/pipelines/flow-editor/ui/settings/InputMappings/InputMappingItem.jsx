@@ -6,9 +6,9 @@ import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/
 import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { useInputOptions } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
 import { LabelWithTooltip } from '@/[fsd]/features/pipelines/flow-editor/ui/settings/InputMappings';
-import { useFStringInputAutocomplete } from '@/[fsd]/features/pipelines/fstring-autocomplete/lib/hooks';
-import { FStringAutocompletePopper } from '@/[fsd]/features/pipelines/fstring-autocomplete/ui';
-import { Checkbox, Chip, Input, Select } from '@/[fsd]/shared/ui';
+import { Checkbox, Chip, Input } from '@/[fsd]/shared/ui';
+import { SingleSelect } from '@/[fsd]/shared/ui/select';
+import MultipleSelect from '@/components/MultipleSelect';
 
 const DATA_TYPE_CONFIG = {
   boolean: { placeholder: '' },
@@ -55,77 +55,35 @@ const TextInputField = memo(props => {
     showTitle = false,
     language,
     multiline = false,
-    enableFStringAutocomplete = false,
-    stateVariableOptions = [],
   } = props;
 
-  const resolvedValue = getDisplayValue(value) ?? '';
-
-  const {
-    autocompleteState,
-    closeAutocomplete,
-    containerRef,
-    filteredOptions: filteredStateVariableOptions,
-    handleAutocompleteKeyDown,
-    handleChange,
-    handleCursorChange,
-    handleSuggestionSelect,
-    highlightedOptionIndex,
-    inputRef,
-  } = useFStringInputAutocomplete({
-    resolvedValue,
-    onInput,
-    enabled: enableFStringAutocomplete && !disabled,
-    options: stateVariableOptions,
-  });
-
-  const popperSx = textInputFieldPopperStyles(containerRef.current?.clientWidth);
-
   return (
-    <Box ref={containerRef}>
-      <Input.StyledInputEnhancer
-        autoComplete="off"
-        multiline={multiline}
-        maxRows={multiline ? 3 : undefined}
-        disabled={disabled}
-        variant="standard"
-        fullWidth
-        type={inputType}
-        name="value"
-        label={
-          <LabelWithTooltip
-            tooltip={tooltip}
-            title={showTitle ? 'Value' : undefined}
-          />
-        }
-        placeholder={placeholder}
-        value={resolvedValue}
-        onChange={handleChange}
-        onBlur={closeAutocomplete}
-        onClick={handleCursorChange}
-        onFocus={handleCursorChange}
-        onKeyDown={handleAutocompleteKeyDown}
-        onKeyUp={handleCursorChange}
-        hasActionsToolBar
-        showCopyAction={false}
-        showExpandAction={false}
-        fieldName="value"
-        containerProps={styles.inputContainerProps}
-        InputLabelProps={styles.inputLabelProps}
-        language={language}
-        inputRef={inputRef}
-        enableFStringAutocomplete={enableFStringAutocomplete}
-        stateVariableOptions={stateVariableOptions}
-      />
-      <FStringAutocompletePopper
-        open={filteredStateVariableOptions.length > 0 && autocompleteState.isOpen}
-        anchorEl={containerRef.current}
-        options={filteredStateVariableOptions}
-        highlightedIndex={highlightedOptionIndex}
-        onSelect={handleSuggestionSelect}
-        popperSx={popperSx}
-      />
-    </Box>
+    <Input.StyledInputEnhancer
+      autoComplete="off"
+      multiline={multiline}
+      maxRows={multiline ? 3 : undefined}
+      disabled={disabled}
+      variant="standard"
+      fullWidth
+      type={inputType}
+      name="value"
+      label={
+        <LabelWithTooltip
+          tooltip={tooltip}
+          title={showTitle ? 'Value' : undefined}
+        />
+      }
+      placeholder={placeholder}
+      value={getDisplayValue(value)}
+      onInput={onInput}
+      hasActionsToolBar
+      showCopyAction={false}
+      showExpandAction={false}
+      fieldName="value"
+      containerProps={styles.inputContainerProps}
+      InputLabelProps={styles.inputLabelProps}
+      language={language}
+    />
   );
 });
 
@@ -154,6 +112,7 @@ const InputMappingItem = memo(props => {
       ),
     [variable],
   );
+
   const onChangeType = useCallback(
     newType => {
       // Preserve value when switching between 'fstring' and 'fixed'
@@ -290,8 +249,6 @@ const InputMappingItem = memo(props => {
         showTitle={showTitle}
         language={dataType === 'object' || dataType === 'array' ? 'json' : undefined}
         multiline={isMultiline}
-        enableFStringAutocomplete={type === 'fstring'}
-        stateVariableOptions={inputOptions}
       />
     );
   }, [
@@ -305,7 +262,6 @@ const InputMappingItem = memo(props => {
     onNumberInput,
     mappingInfo,
     variable,
-    inputOptions,
   ]);
 
   const enumOptions = useMemo(() => {
@@ -325,13 +281,13 @@ const InputMappingItem = memo(props => {
       </Box>
       <Box sx={styles.fieldRow}>
         <Box sx={styles.typeSelectWrapper}>
-          <Select.SingleSelect
+          <SingleSelect
             sx={styles.select}
             label="Type"
             value={type}
             onValueChange={onChangeType}
             options={typeOptions}
-            disabled={disabled || dataType === 'boolean'}
+            disabled={disabled}
             showBorder
             className="nopan nodrag"
           />
@@ -339,7 +295,7 @@ const InputMappingItem = memo(props => {
         <Box sx={styles.valueWrapper}>
           {enumList?.length ? (
             dataType !== 'array' || type === 'variable' ? (
-              <Select.SingleSelect
+              <SingleSelect
                 sx={styles.select}
                 label={<LabelWithTooltip tooltip="Select one option" />}
                 value={value}
@@ -351,20 +307,30 @@ const InputMappingItem = memo(props => {
                 labelSX={styles.labelSX}
               />
             ) : (
-              <Select.SingleSelect
+              <MultipleSelect
                 label={<LabelWithTooltip tooltip="Select options" />}
                 onValueChange={onChangeValue}
                 value={value}
                 options={enumOptions}
+                MenuProps={{
+                  PaperProps: {
+                    sx: styles.menuPaper,
+                  },
+                }}
+                customSelectedFontSize="0.875rem"
                 multiple
+                emptyPlaceHolder=""
                 showBorder
+                valueItemSX={styles.valueItem}
+                labelSX={styles.labelSX}
+                sx={styles.select}
                 className="nopan nodrag"
               />
             )
           ) : isStringType ? (
             renderDataTypeField
           ) : (
-            <Select.SingleSelect
+            <SingleSelect
               sx={styles.select}
               label={<LabelWithTooltip tooltip="Select one option" />}
               value={value}
@@ -418,6 +384,12 @@ const styles = {
     pointerEvents: 'auto',
     zIndex: 500,
   },
+  menuPaper: {
+    marginTop: '0.5rem',
+  },
+  valueItem: ({ palette }) => ({
+    color: palette.text.secondary,
+  }),
   formControlLabel: {
     marginLeft: 0,
     height: '2.8125rem',
@@ -432,10 +404,5 @@ const styles = {
     style: { pointerEvents: 'auto', zIndex: 500 },
   },
 };
-
-/** @type {MuiSx} */
-const textInputFieldPopperStyles = anchorWidth => ({
-  width: anchorWidth || undefined,
-});
 
 export default InputMappingItem;

@@ -92,7 +92,7 @@ const CanvasContent = ({
           >
             <span>
               <IconButton
-                variant="elitea"
+                variant="alita"
                 color="tertiary"
                 disabled={isStreaming || !checkPermission(PERMISSIONS.chat.canvas.update)}
                 sx={{
@@ -117,7 +117,7 @@ const CanvasContent = ({
           placement="top"
         >
           <IconButton
-            variant="elitea"
+            variant="alita"
             color="tertiary"
             sx={{
               cursor: 'pointer',

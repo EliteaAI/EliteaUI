@@ -12,7 +12,6 @@ import { FilePreviewCanvas } from '@/[fsd]/features/artifacts/ui';
 import {
   useAttachmentToolChange,
   useConversationNavigation,
-  useConversationStarters,
   useEditConversation,
   useInternalToolsConfig,
 } from '@/[fsd]/features/chat/lib/hooks';
@@ -114,6 +113,7 @@ const NewChat = props => {
   const [activeConversation, setActiveConversation] = useState(dummyConversation);
   const [conversations, setConversations] = useState([]);
 
+  const [conversationStarters, setConversationStarters] = useState([]);
   const [collapsedConversations, setCollapsedConversations] = useState(false);
 
   const [activeFolder, setActiveFolder] = useState(dummyFolder);
@@ -228,46 +228,17 @@ const NewChat = props => {
     activeConversation,
   });
 
-  const { activeParticipantDetails, refetchParticipantDetails } = useActiveParticipantDetails({
-    activeParticipant,
-  });
-
-  const activeVersionName = useMemo(
-    () =>
-      activeParticipantDetails?.versions?.find(v => v.id === activeParticipant?.entity_settings?.version_id)
-        ?.name,
-    [activeParticipantDetails?.versions, activeParticipant?.entity_settings?.version_id],
-  );
-
-  const { handleAttachmentToolChange } = useAttachmentToolChange({
-    activeParticipant,
-    refetchParticipantDetails,
-  });
-
-  const {
-    displayedConversationStarters,
-    handleEditorConversationStartersChange,
-    resetEditorConversationStarters,
-  } = useConversationStarters({
-    activeParticipant,
-    activeParticipantDetails,
-    editingAgent,
-    editingPipeline,
-  });
-
   // Wrap onCloseAgentEditor to mark explicit close
   const handleCloseAgentEditor = useCallback(() => {
     markAgentEditorClosed();
-    resetEditorConversationStarters();
     onCloseAgentEditor();
-  }, [markAgentEditorClosed, onCloseAgentEditor, resetEditorConversationStarters]);
+  }, [markAgentEditorClosed, onCloseAgentEditor]);
 
   // Wrap onClosePipelineEditor to mark explicit close
   const handleClosePipelineEditor = useCallback(() => {
     markPipelineEditorClosed();
-    resetEditorConversationStarters();
     onClosePipelineEditor();
-  }, [markPipelineEditorClosed, onClosePipelineEditor, resetEditorConversationStarters]);
+  }, [markPipelineEditorClosed, onClosePipelineEditor]);
 
   // Handle dirty state changes for both agent and pipeline editors
   const handleEditorDirtyStateChange = useCallback(isDirty => {
@@ -306,6 +277,15 @@ const NewChat = props => {
 
   const { conversationIdFromUrl, clearUrlConversation, changeUrlByConversation } =
     useConversationNavigation();
+
+  const { activeParticipantDetails, refetchParticipantDetails } = useActiveParticipantDetails({
+    activeParticipant,
+  });
+
+  const { handleAttachmentToolChange } = useAttachmentToolChange({
+    activeParticipant,
+    refetchParticipantDetails,
+  });
 
   const interaction_uuid = useChatInteractionUUID(activeConversation?.id);
   const { listenCanvasEditorsChangeEvent, stopListenCanvasEditorsChangeEvent } = useChatCanvasEditorsChange({
@@ -900,7 +880,7 @@ const NewChat = props => {
       activeParticipant,
       activeConversation,
       isLoadingConversation,
-      conversationStarters: displayedConversationStarters,
+      conversationStarters,
       interaction_uuid,
       attachments:
         isUploadingAttachments && !attachments?.length && uploadingAttachments.length
@@ -922,7 +902,7 @@ const NewChat = props => {
       activeParticipant,
       activeConversation,
       isLoadingConversation,
-      displayedConversationStarters,
+      conversationStarters,
       interaction_uuid,
       isUploadingAttachments,
       attachments,
@@ -1099,6 +1079,10 @@ const NewChat = props => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [preProjectId, projectId]);
+
+  useEffect(() => {
+    setConversationStarters(activeParticipantDetails.version_details?.conversation_starters || []);
+  }, [activeParticipantDetails.version_details?.conversation_starters]);
 
   useStreamingNavBlocker(isStreaming);
   useEditingCanvasNavBlocker(!!selectedCodeBlockInfo);
@@ -1377,7 +1361,6 @@ const NewChat = props => {
             >
               <AgentEditor
                 agent={editingAgent}
-                versionName={activeVersionName}
                 onCloseAgentEditor={handleCloseAgentEditor}
                 onAgentCreated={onAgentCreated}
                 onAgentSaved={handleAgentSaved}
@@ -1385,7 +1368,6 @@ const NewChat = props => {
                 isVisible={isEditingAgent}
                 isCreateMode={isCreateMode}
                 onAgentDirtyStateChange={handleEditorDirtyStateChange}
-                onConversationStartersChange={handleEditorConversationStartersChange}
                 activeAgentId={
                   activeParticipant?.entity_name === ChatParticipantType.Applications
                     ? activeParticipant.entity_meta?.id
@@ -1408,7 +1390,6 @@ const NewChat = props => {
                 isVisible={isEditingPipeline}
                 isCreateMode={isPipelineCreateMode}
                 onPipelineDirtyStateChange={handleEditorDirtyStateChange}
-                onConversationStartersChange={handleEditorConversationStartersChange}
                 activePipelineId={
                   activeParticipant?.entity_name === ChatParticipantType.Pipelines ||
                   activeParticipant?.entity_name === ChatParticipantType.Applications

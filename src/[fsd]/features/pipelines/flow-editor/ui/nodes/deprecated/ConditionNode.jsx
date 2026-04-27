@@ -9,9 +9,9 @@ import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/
 import { DecisionOutputHelpers, FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { useInputOptions, useNodeAiAssistantConfig } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
 import { FlowEditorNodes } from '@/[fsd]/features/pipelines/flow-editor/ui';
-import { Select } from '@/[fsd]/shared/ui';
 import RemoveIcon from '@/assets/remove-icon.svg?react';
 import StyledChip from '@/components/DataDisplay/StyledChip';
+import MultipleSelect from '@/components/MultipleSelect';
 import { useEdges, useNodes } from '@xyflow/react';
 
 const ConditionNode = memo(props => {
@@ -205,6 +205,46 @@ const ConditionNode = memo(props => {
     [conditionInput, onChangeInput],
   );
 
+  const renderValue = useCallback(
+    values => {
+      return values.map(value => {
+        const canDelete = realInputOptions.find(option => option.value === value)?.canDelete;
+        return (
+          <Box
+            key={value}
+            sx={styles.renderValueItem(canDelete)}
+          >
+            <StyledTooltip
+              placement="top"
+              title={canDelete ? 'Not in state' : ''}
+            >
+              <Typography
+                variant="bodySmall"
+                color="text.secondary"
+              >
+                {value}
+              </Typography>
+            </StyledTooltip>
+            {canDelete && (
+              <StyledTooltip
+                placement="top"
+                title="Delete"
+              >
+                <Box sx={styles.deleteIconContainer}>
+                  <RemoveIcon
+                    sx={styles.removeIcon}
+                    onClick={() => onDeleteOption(value)}
+                  />
+                </Box>
+              </StyledTooltip>
+            )}
+          </Box>
+        );
+      });
+    },
+    [onDeleteOption, realInputOptions, styles],
+  );
+
   return (
     <>
       <FlowEditorNodes.NodeCard
@@ -245,17 +285,22 @@ const ConditionNode = memo(props => {
         isPerforming={data?.isPerforming}
         id={id}
       >
-        <Select.SingleSelect
+        <MultipleSelect
+          sx={styles.multipleSelect}
           label="Conditional input"
           value={conditionInput}
           onValueChange={onChangeInput}
           options={realInputOptions}
           disabled={isRunningPipeline || disabled}
           showBorder
-          multiple
-          showEmptyPlaceholder={false}
+          emptyPlaceHolder=""
+          labelSX={styles.labelSX}
+          MenuProps={styles.menuProps}
+          selectSX={styles.selectSX}
+          className="nopan nodrag"
+          valueItemSX={styles.valueItemSX}
+          customRenderValue={renderValue}
           onDeleteOption={onDeleteOption}
-          className="nopan nodrag nowheel"
         />
         <AIAssistantInput
           autoComplete="off"
@@ -319,6 +364,60 @@ ConditionNode.displayName = 'ConditionNode';
 
 /** @type {MuiSx} */
 const conditionNodeStyles = () => ({
+  // MultipleSelect styles
+  multipleSelect: {
+    marginBottom: '0rem',
+  },
+  labelSX: {
+    left: '0.75rem',
+    '& .Mui-focused': {
+      top: '-0.3125rem',
+    },
+  },
+  selectSX: {
+    '& .MuiSelect-icon': {
+      top: 'calc(50% - 0.6875rem) !important',
+    },
+  },
+  valueItemSX: {
+    maxWidth: '100% !important',
+    overflow: 'scroll !important',
+    gap: '0.75rem',
+    display: 'flex',
+    flexDirection: 'row',
+    paddingBottom: '0.25rem',
+  },
+  menuProps: {
+    PaperProps: {
+      style: {
+        marginTop: '0.5rem',
+      },
+    },
+  },
+
+  // Render value styles
+  renderValueItem: canDelete => ({
+    height: '1.5rem',
+    padding: '0.25rem 0.75rem',
+    flexDirection: 'row',
+    display: 'flex',
+    gap: '0.25rem',
+    borderRadius: '1.25rem',
+    alignItems: 'center',
+    boxSizing: 'border-box',
+    width: '100%',
+    background: ({ palette }) => (canDelete ? palette.background.wrongBkg : palette.background.dataGrid.main),
+  }),
+  deleteIconContainer: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    color: ({ palette }) => palette.icon.fill.secondary,
+  },
+  removeIcon: {
+    cursor: 'pointer',
+  },
+
   inputEnhancerContainer: {
     marginBottom: '0px !important',
     className: 'nopan nodrag nowheel',

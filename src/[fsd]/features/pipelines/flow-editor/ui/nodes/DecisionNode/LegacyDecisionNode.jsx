@@ -1,12 +1,16 @@
 import { memo, useCallback, useContext, useMemo } from 'react';
 
+import { Box, Typography } from '@mui/material';
+
+import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { FlowEditorContext } from '@/[fsd]/app/providers';
 import { AIAssistantInput } from '@/[fsd]/features/pipelines/ai-assistant/ui';
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { useInputOptions, useNodeAiAssistantConfig } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
 import { FlowEditorNodes } from '@/[fsd]/features/pipelines/flow-editor/ui';
-import { Select } from '@/[fsd]/shared/ui';
+import RemoveIcon from '@/assets/remove-icon.svg?react';
+import MultipleSelect from '@/components/MultipleSelect';
 import { useEdges } from '@xyflow/react';
 
 import { DecisionOutputs, commonComponentStyles } from './DecisionNodeShared';
@@ -191,6 +195,49 @@ const LegacyDecisionNode = memo(props => {
     [decisionInput, onChangeInput],
   );
 
+  const renderValue = useCallback(
+    values => {
+      return values.map(value => {
+        const canDelete = realInputOptions.find(option => option.value === value)?.canDelete;
+        return (
+          <Box
+            key={value}
+            sx={({ palette }) => ({
+              ...styles.renderValueBox,
+              background: canDelete ? palette.background.wrongBkg : palette.background.dataGrid.main,
+            })}
+          >
+            <StyledTooltip
+              placement="top"
+              title={canDelete ? 'Not in state' : ''}
+            >
+              <Typography
+                variant="bodySmall"
+                color="text.secondary"
+              >
+                {value}
+              </Typography>
+            </StyledTooltip>
+            {canDelete && (
+              <StyledTooltip
+                placement="top"
+                title="Delete"
+              >
+                <Box sx={styles.deleteIconBox}>
+                  <RemoveIcon
+                    sx={styles.removeIcon}
+                    onClick={() => onDeleteOption(value)}
+                  />
+                </Box>
+              </StyledTooltip>
+            )}
+          </Box>
+        );
+      });
+    },
+    [onDeleteOption, realInputOptions, styles.renderValueBox, styles.removeIcon, styles.deleteIconBox],
+  );
+
   return (
     <FlowEditorNodes.NodeCard
       name={data.label}
@@ -230,17 +277,22 @@ const LegacyDecisionNode = memo(props => {
       isPerforming={data?.isPerforming}
       id={id}
     >
-      <Select.SingleSelect
+      <MultipleSelect
+        sx={styles.multipleSelect}
         label="Decision input"
         value={decisionInput}
         onValueChange={onChangeInput}
         options={realInputOptions}
         disabled={isRunningPipeline || disabled}
         showBorder
-        multiple
-        showEmptyPlaceholder={false}
+        emptyPlaceHolder=""
+        labelSX={styles.labelSX}
+        MenuProps={styles.menuProps}
+        selectSX={styles.selectSX}
+        className="nopan nodrag"
+        valueItemSX={styles.valueItemSX}
+        customRenderValue={renderValue}
         onDeleteOption={onDeleteOption}
-        className="nopan nodrag nowheel"
       />
       <AIAssistantInput
         autoComplete="off"
@@ -282,6 +334,26 @@ const componentStyles = () => ({
   },
   defaultOutputHandle: {
     left: 'calc(50% + 3.125rem)',
+  },
+  renderValueBox: {
+    height: '1.5rem',
+    padding: '.25rem .75rem',
+    flexDirection: 'row',
+    display: 'flex',
+    gap: '.25rem',
+    borderRadius: '1.25rem',
+    alignItems: 'center',
+    boxSizing: 'border-box',
+    width: '100%',
+  },
+  deleteIconBox: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    color: ({ palette }) => `${palette.icon.fill.secondary} !important`,
+  },
+  menuProps: {
+    PaperProps: { style: { marginTop: '.5rem' } },
   },
 });
 

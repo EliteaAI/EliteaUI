@@ -38,7 +38,7 @@ const SecretValueCell = memo(props => {
       >
         <Button
           sx={styles.button}
-          variant="elitea"
+          variant="alita"
           color="tertiary"
           onClick={isSafariBrowser ? undefined : handleDirectCopy}
         >

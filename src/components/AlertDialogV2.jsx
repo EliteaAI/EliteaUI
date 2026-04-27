@@ -73,7 +73,7 @@ export default function AlertDialogV2({
       <StyledDialogActions>
         <Button
           disableRipple
-          variant="elitea"
+          variant="alita"
           color="secondary"
           onClick={closeAlert}
           autoFocus
@@ -83,7 +83,7 @@ export default function AlertDialogV2({
         <Button
           disabled={disabledConfirm}
           sx={confirmButtonSX}
-          variant="elitea"
+          variant="alita"
           color={alarm ? 'alarm' : 'primary'}
           onClick={doConfirm}
         >

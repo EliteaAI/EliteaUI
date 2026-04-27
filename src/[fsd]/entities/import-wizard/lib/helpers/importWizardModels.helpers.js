@@ -21,7 +21,7 @@ export const setDefaultModelsForImportedDatasources = (
   modelOptions,
   embeddingModelOptions,
 ) => {
-  // TODO: maximum_length should be replaced with max_tokens when BE is ready.
+  // TODO: maximum_length should be replaced with max_tokens when BE is ready
   const datasources = [];
 
   importedDatasources?.forEach(datasource => {

@@ -3,14 +3,14 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useFormikContext } from 'formik';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { eliteaApi } from '@/api/eliteaApi';
+import { alitaApi } from '@/api/alitaApi';
 import { sioEvents } from '@/common/constants';
 import { convertToJson } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useSocket from '@/hooks/useSocket';
 
 export default function useAgentMCPToolsStatusMonitor() {
-  const { queries } = useSelector(state => state.eliteaApi);
+  const { queries } = useSelector(state => state.alitaApi);
   const { dirty, setFieldValue, values } = useFormikContext();
   const queriesRef = useRef(queries);
   const dispatch = useDispatch();
@@ -54,7 +54,7 @@ export default function useAgentMCPToolsStatusMonitor() {
             const queryParams = convertToJson(key.replace('applicationDetails', ''));
             const currentTools = values?.version_details?.tools || [];
             dispatch(
-              eliteaApi.util.updateQueryData('applicationDetails', queryParams, draft => {
+              alitaApi.util.updateQueryData('applicationDetails', queryParams, draft => {
                 draft.version_details.tools = currentTools.map(item => {
                   if (item.type === type) {
                     return { ...item, online: connected };

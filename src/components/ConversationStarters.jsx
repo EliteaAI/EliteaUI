@@ -2,20 +2,19 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { Box, ListItem, Typography } from '@mui/material';
+import { Box, IconButton, ListItem, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { useFieldFocus } from '@/[fsd]/shared/lib/hooks';
 import { Input } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
-import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
-import PlusIcon from '@/assets/plus-icon.svg?react';
 import {
   MAX_CONVERSATION_STARTERS,
   MAX_CONVERSATION_STARTER_LENGTH,
   PROMPT_PAYLOAD_KEY,
 } from '@/common/constants.js';
+import AddItemButton from '@/components/AddItemButton';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 
 const ConversationStarters = memo(props => {
@@ -28,22 +27,29 @@ const ConversationStarters = memo(props => {
   } = useFormikContext();
 
   const { toggleFieldFocus, isFocused } = useFieldFocus();
+  const styles = conversationStartersStyles();
   const valuesPath = 'version_details.conversation_starters';
   const values = useMemo(
     () => version_details?.conversation_starters || [],
     [version_details?.conversation_starters],
   );
-  const styles = conversationStartersStyles(values.length === 0);
 
+  const addButtonRef = useRef(null);
   const inputRefs = useRef({});
   const [shouldFocusIndex, setShouldFocusIndex] = useState(null);
-  const [blurredIndices, setBlurredIndices] = useState(new Set());
 
   const onAdd = useCallback(() => {
     const newIndex = values.length;
     setFieldValue(valuesPath, [...values, '']);
     setShouldFocusIndex(newIndex);
-  }, [setFieldValue, values, valuesPath]);
+    setTimeout(() => {
+      if (addButtonRef.current) {
+        addButtonRef.current.scrollIntoView({
+          behavior: 'smooth',
+        });
+      }
+    }, 0);
+  }, [setFieldValue, values]);
 
   useEffect(() => {
     if (shouldFocusIndex !== null && inputRefs.current[shouldFocusIndex]) {
@@ -52,41 +58,16 @@ const ConversationStarters = memo(props => {
     }
   }, [shouldFocusIndex, values.length]);
 
-  const onStarterBlur = useCallback(
-    index => () => {
-      setBlurredIndices(prev => new Set([...prev, index]));
-      toggleFieldFocus(null);
-    },
-    [toggleFieldFocus],
-  );
-
   const onDelete = useCallback(
     index => () => {
       setFieldValue(
         valuesPath,
         values.filter((_, i) => i !== index),
       );
-      setBlurredIndices(
-        prev =>
-          new Set(
-            Array.from(prev)
-              .filter(i => i !== index)
-              .map(i => (i > index ? i - 1 : i)),
-          ),
-      );
     },
-    [setFieldValue, values, valuesPath],
+    [setFieldValue, values],
   );
-  const disableAdd = useMemo(
-    () => values.length >= MAX_CONVERSATION_STARTERS || values.some(v => !v?.trim()),
-    [values],
-  );
-
-  const addTooltipTitle = useMemo(() => {
-    if (values.length >= MAX_CONVERSATION_STARTERS)
-      return 'You have reached the limit of conversation starters';
-    return '';
-  }, [values]);
+  const disableAdd = useMemo(() => values.length >= MAX_CONVERSATION_STARTERS, [values]);
 
   return (
     <BasicAccordion
@@ -100,7 +81,6 @@ const ConversationStarters = memo(props => {
             <>
               {values.map((value, index) => {
                 const starterFocusId = `${PROMPT_PAYLOAD_KEY.conversationStarters}_${index}`;
-                const hasStarterError = blurredIndices.has(index) && !value?.trim();
                 return (
                   <Box
                     sx={styles.starterRow}
@@ -114,10 +94,9 @@ const ConversationStarters = memo(props => {
                         placeholder="Conversation message"
                         name={`${valuesPath}[${index}]`}
                         value={value}
-                        label="Starter"
                         onChange={handleChange}
                         onFocus={() => toggleFieldFocus(starterFocusId)}
-                        onBlur={onStarterBlur(index)}
+                        onBlur={() => toggleFieldFocus(null)}
                         containerProps={{ display: 'flex', flex: 2 }}
                         multiline
                         maxRows={15}
@@ -126,8 +105,6 @@ const ConversationStarters = memo(props => {
                         fieldName="Conversation starter"
                         inputProps={{ maxLength: MAX_CONVERSATION_STARTER_LENGTH }}
                         inputRef={el => (inputRefs.current[index] = el)}
-                        error={hasStarterError}
-                        helperText={hasStarterError ? 'Conversation starter cannot be empty' : undefined}
                       />
                       {isFocused(starterFocusId) && value.length > 0 && (
                         <Typography
@@ -144,13 +121,15 @@ const ConversationStarters = memo(props => {
                           placement="top"
                           title="Delete"
                         >
-                          <BaseBtn
-                            variant={BUTTON_VARIANTS.tertiary}
+                          <IconButton
+                            variant="alita"
+                            color="tertiary"
                             aria-label="delete starter"
                             onClick={onDelete(index)}
-                            startIcon={<DeleteIcon />}
-                            disableRipple
-                          />
+                            sx={styles.deleteButton}
+                          >
+                            <DeleteIcon sx={styles.deleteIcon} />
+                          </IconButton>
                         </Tooltip>
                       </Box>
                     )}
@@ -161,19 +140,17 @@ const ConversationStarters = memo(props => {
               {!disabled && (
                 <Tooltip
                   placement="top-start"
-                  title={addTooltipTitle}
+                  title={disableAdd ? 'You have reached the limit of conversation starters' : ''}
                   extraStyles={{ maxWidth: 400 }}
                 >
-                  <Box sx={styles.addButtonWrapper}>
-                    <BaseBtn
-                      variant={BUTTON_VARIANTS.iconLabel}
+                  <Box>
+                    <AddItemButton
+                      sx={styles.addButton}
                       disabled={disableAdd}
-                      onMouseDown={e => e.preventDefault()}
+                      ref={addButtonRef}
                       onClick={disableAdd ? null : onAdd}
-                      startIcon={<PlusIcon />}
-                    >
-                      Starter
-                    </BaseBtn>
+                      title="Starter"
+                    />
                   </Box>
                 </Tooltip>
               )}
@@ -186,18 +163,12 @@ const ConversationStarters = memo(props => {
 });
 
 /** @type {MuiSx} */
-const conversationStartersStyles = isEmpty => ({
-  accordionSX: ({ palette }) => ({
-    background: `${palette.background.tabPanel} !important`,
-  }),
+const conversationStartersStyles = () => ({
+  accordionSX: ({ palette }) => ({ background: `${palette.background.tabPanel} !important` }),
   starterRow: {
     display: 'flex',
     gap: '1rem',
-    marginTop: '1rem',
-
-    '&:first-of-type': {
-      marginTop: '0.5rem',
-    },
+    marginTop: '2.2rem',
   },
   inputWrapper: {
     width: '100%',
@@ -208,8 +179,14 @@ const conversationStartersStyles = isEmpty => ({
   deleteButtonWrapper: {
     paddingBottom: '0.5rem',
   },
-  addButtonWrapper: {
-    marginTop: isEmpty ? '0.75rem' : '1.5rem',
+  deleteButton: {
+    marginLeft: 0,
+  },
+  deleteIcon: {
+    fontSize: '1rem',
+  },
+  addButton: {
+    marginTop: '0.75rem',
   },
 });
 
@@ -278,7 +255,7 @@ const ellipsisTextWithTooltipStyles = () => ({
     boxSizing: 'border-box',
     cursor: 'pointer',
     padding: '0.5rem 1rem',
-    borderRadius: '0.75rem',
+    borderRadius: '0.375rem',
     background: palette.background.conversationStarters.default,
     '&:hover': {
       background: palette.background.conversationStarters.hover,

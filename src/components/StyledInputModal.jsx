@@ -2,7 +2,6 @@ import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Box } from '@mui/material';
 
-import { AIAssistantCodeMirrorInput } from '@/[fsd]/features/pipelines/ai-assistant/ui';
 import { Field, Modal } from '@/[fsd]/shared/ui';
 import { useLanguageLinter } from '@/hooks/useCodeMirrorLanguageExtensions';
 
@@ -21,8 +20,6 @@ const StyledInputModal = memo(props => {
     specifiedLanguage,
     inputProps,
     disabled,
-    enableFStringAutocomplete = false,
-    stateVariableOptions = [],
   } = props;
 
   const { maxLength } = inputProps || {};
@@ -73,30 +70,16 @@ const StyledInputModal = memo(props => {
     >
       <Box sx={styles.editorContainer}>
         <Box sx={styles.editorWrapper}>
-          {enableFStringAutocomplete ? (
-            <AIAssistantCodeMirrorInput
-              readOnly={disabled}
-              editorRef={editorRef}
-              value={currentValue}
-              extensions={extensions}
-              notifyChange={onNotifyChange}
-              onBlur={handleBlur}
-              onKeyDown={onKeyDown}
-              enableFStringAutocomplete={enableFStringAutocomplete}
-              stateVariableOptions={stateVariableOptions}
-            />
-          ) : (
-            <Field.CodeMirrorEditor
-              readOnly={disabled}
-              ref={editorRef}
-              value={currentValue}
-              extensions={extensions}
-              notifyChange={onNotifyChange}
-              onBlur={handleBlur}
-              onKeyDown={onKeyDown}
-              maxLength={maxLength}
-            />
-          )}
+          <Field.CodeMirrorEditor
+            readOnly={disabled}
+            ref={editorRef}
+            value={currentValue}
+            extensions={extensions}
+            notifyChange={onNotifyChange}
+            onBlur={handleBlur}
+            onKeyDown={onKeyDown}
+            maxLength={maxLength}
+          />
         </Box>
       </Box>
     </Modal.StyledInputModalBase>

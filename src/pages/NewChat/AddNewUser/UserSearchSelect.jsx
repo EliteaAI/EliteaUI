@@ -51,6 +51,32 @@ export default function UserSearchSelect({
       ignoreCase={false}
       renderOptionBody={renderOptionBody}
       slotProps={{
+        Chip: {
+          sx: {
+            color: theme.palette.text.secondary,
+            marginBottom: '8px !important',
+            background: theme.palette.background.tagEditor.tag,
+          },
+        },
+        RemoveIcon: {
+          fill: theme.palette.icon.fill.default,
+        },
+        Li: {
+          selectedBackground: theme.palette.background.participant.active,
+          hoverBackgroundColor: theme.palette.background.participant.hover,
+          CheckIcon: {
+            fill: theme.palette.icon.fill.secondary,
+          },
+        },
+        paper: {
+          sx: {
+            background: theme.palette.background.secondary,
+            border: `1px solid ${theme.palette.border.lines}`,
+            boxShadow: theme.palette.boxShadow.default,
+            borderRadius: '8px',
+            margin: '8px !important',
+          },
+        },
         listbox: slotProps.listBox,
       }}
       showSearchIcon

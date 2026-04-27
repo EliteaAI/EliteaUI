@@ -39,7 +39,7 @@ const EditParticipantButton = memo(
         <IconButton
           onClick={handleEdit}
           disabled={disabled}
-          variant="elitea"
+          variant="alita"
           color="tertiary"
           id={id}
           sx={[styles.listItemIcon, sx]}

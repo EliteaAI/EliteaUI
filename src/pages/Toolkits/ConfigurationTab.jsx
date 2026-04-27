@@ -1,6 +1,6 @@
 import { memo, useCallback, useState } from 'react';
 
-import { Box, CircularProgress, Grid } from '@mui/material';
+import { CircularProgress, Grid } from '@mui/material';
 
 import { RunHistoryContainer } from '@/[fsd]/entities/run-history/ui';
 import { ParticipantEntityTypes } from '@/[fsd]/features/chat/lib/constants/participant.constants';
@@ -44,11 +44,7 @@ const ConfigurationTab = memo(props => {
   const [isFullScreenChat, setIsFullScreenChat] = useState(false);
 
   return isFetching ? (
-    <Box
-      sx={{ height: '100%', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
-    >
-      <CircularProgress />
-    </Box>
+    <CircularProgress />
   ) : (
     <>
       <DirtyDetector setDirty={setDirty} />
@@ -122,7 +118,7 @@ const styles = {
     paddingRight: '1.5rem !important',
   },
   leftPanel: {
-    overflow: 'auto',
+    overflow: 'scroll',
     maxHeight: '100%',
     height: '100%',
   },

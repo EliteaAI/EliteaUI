@@ -3,7 +3,7 @@ import { useState } from 'react';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import { Box, Typography } from '@mui/material';
 
-import BaseTab, { eliteaTabColors } from '@/[fsd]/shared/ui/tabs/BaseTab';
+import BaseTab, { alitaTabColors } from '@/[fsd]/shared/ui/tabs/BaseTab';
 import BaseTabs, { TABS_VARIANTS } from '@/[fsd]/shared/ui/tabs/BaseTabs';
 
 const handleEmptyOnChange = () => {};
@@ -58,7 +58,7 @@ const TabBarCell = ({ state }) => {
   const firstTabSx = [
     isHover &&
       (theme => {
-        const colors = eliteaTabColors(theme)[TABS_VARIANTS.elitea];
+        const colors = alitaTabColors(theme)[TABS_VARIANTS.alita];
         return {
           color: `${colors.hover} !important`,
           '& .MuiSvgIcon-root': { color: 'inherit' },
@@ -142,7 +142,7 @@ export const AllStates = () => (
         rowGap: '2rem',
       }}
     >
-      <StatesRow title="EliteA" />
+      <StatesRow title="Alita" />
     </Box>
   </Box>
 );

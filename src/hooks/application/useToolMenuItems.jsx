@@ -67,7 +67,7 @@ const useToolMenuItems = ({ onAddTool, isMCP, isApplication } = {}) => {
         return {
           key,
           label: overrideLabel ?? value?.metadata?.label ?? '',
-          icon: getToolIconByType(key, theme, { toolSchema: value, isMCP }),
+          icon: getToolIconByType(key, theme, value, isMCP),
           onClick: onAddTool ? onAddTool(key, toolSchemas) : () => {},
         };
       });

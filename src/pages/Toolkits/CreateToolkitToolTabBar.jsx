@@ -9,6 +9,7 @@ import Tooltip from '@/ComponentsLib/Tooltip';
 import { useTrackEvent } from '@/GA';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
+import { useProjectType } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { SearchParams } from '@/common/constants.js';
 import eventEmitter from '@/common/eventEmitter';
@@ -34,6 +35,7 @@ export default function CreateToolkitToolTabBar({
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toastError } = useToast();
+  const { projectType } = useProjectType();
 
   const [wantToCancel, setWantToCancel] = useState(false);
   const [wantToSave, setWantToSave] = useState(false);
@@ -109,10 +111,12 @@ export default function CreateToolkitToolTabBar({
             if (isMCP)
               trackEvent(GA_EVENT_NAMES.MCP_CREATED, {
                 [GA_EVENT_PARAMS.MCP_TYPE]: formik.values?.type || 'unknown',
+                [GA_EVENT_PARAMS.PROJECT_TYPE]: projectType,
               });
             else
               trackEvent(GA_EVENT_NAMES.TOOLKIT_CREATED, {
                 [GA_EVENT_PARAMS.TOOLKIT_TYPE]: formik.values?.type || 'unknown',
+                [GA_EVENT_PARAMS.PROJECT_TYPE]: projectType,
               });
 
             // Check if we came from a source application (agent/pipeline) and should return
@@ -161,7 +165,7 @@ export default function CreateToolkitToolTabBar({
         }, 0);
       }
     },
-    [formik.values?.type, isMCP, navigate, searchParams, trackEvent],
+    [formik.values?.type, isMCP, navigate, projectType, searchParams, trackEvent],
   );
 
   useEffect(() => {
@@ -180,7 +184,7 @@ export default function CreateToolkitToolTabBar({
         >
           <Box component="span">
             <MuiButton
-              variant="elitea"
+              variant="alita"
               color="primary"
               disabled={shouldDisableSave}
               onClick={onClickSave}

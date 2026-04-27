@@ -4,6 +4,7 @@ import { useDispatch } from 'react-redux';
 import { useMatch } from 'react-router-dom';
 
 import { ChatHelpers } from '@/[fsd]/features/chat/lib/helpers';
+import { alitaApi } from '@/api/alitaApi';
 import {
   useConversationCreateMutation,
   useConversationDetailsQuery,
@@ -11,7 +12,6 @@ import {
   useDeleteMessageFromConversationMutation,
   useStopChatTaskMutation,
 } from '@/api/chat';
-import { eliteaApi } from '@/api/eliteaApi';
 import { ROLES, WELCOME_MESSAGE_ID, sioEvents } from '@/common/constants';
 import { convertConversationToChatHistory } from '@/common/convertChatConversationMessages';
 import { buildErrorMessage } from '@/common/utils';
@@ -711,7 +711,7 @@ export const usePipelineChat = ({
     if (prevIsStreamingRef.current === true && isStreaming === false && activeConversation?.id) {
       // Invalidate context status cache to refetch updated token counts
       dispatch(
-        eliteaApi.util.invalidateTags([{ type: 'TAG_TYPE_CONVERSATION_DETAILS', id: activeConversation.id }]),
+        alitaApi.util.invalidateTags([{ type: 'TAG_TYPE_CONVERSATION_DETAILS', id: activeConversation.id }]),
       );
     }
     prevIsStreamingRef.current = isStreaming;

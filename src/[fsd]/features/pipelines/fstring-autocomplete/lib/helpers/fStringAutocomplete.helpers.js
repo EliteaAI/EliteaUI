@@ -59,14 +59,6 @@ export const filterFStringAutocompleteOptions = (options = [], query = '') => {
   });
 };
 
-export const getNextAutocompleteIndex = (currentIndex, optionsLength, direction) => {
-  if (direction === 'ArrowDown') {
-    return currentIndex >= optionsLength - 1 ? 0 : currentIndex + 1;
-  }
-
-  return currentIndex <= 0 ? optionsLength - 1 : currentIndex - 1;
-};
-
 export const getFStringAutocompleteHighlightedIndex = (activeIndex = 0, options = []) => {
   return options.length ? Math.min(activeIndex, options.length - 1) : -1;
 };

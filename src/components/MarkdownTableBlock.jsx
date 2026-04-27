@@ -16,9 +16,9 @@ import Table from '@mui/material/Table';
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { PERMISSIONS } from '@/common/constants';
 import useCopyDownloadHandlers from '@/hooks/chat/useCopyEventHandlers';
+import useAlitaTheme from '@/hooks/useAlitaTheme';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import useDownloadTable, { downloadTableOptions } from '@/hooks/useDownloadTable';
-import useEliteATheme from '@/hooks/useEliteATheme';
 import useToast from '@/hooks/useToast';
 import { useTheme } from '@emotion/react';
 
@@ -53,7 +53,7 @@ export default function MarkdownTableBlock({
   showToolbar,
 }) {
   const theme = useTheme();
-  const { localGridTheme } = useEliteATheme();
+  const { localGridTheme } = useAlitaTheme();
   const { toastInfo } = useToast();
   const { isBlockEditing, blockId } = useCheckIsBlockEditing(canvasId, selectedCodeBlockInfo);
   const { headers, rows } = useMemo(() => parseMarkdownTable(tableRowData), [tableRowData]);
@@ -109,7 +109,7 @@ export default function MarkdownTableBlock({
           >
             <span>
               <IconButton
-                variant="elitea"
+                variant="alita"
                 color="tertiary"
                 disabled={shouldDisableEdit}
                 sx={{
@@ -136,7 +136,7 @@ export default function MarkdownTableBlock({
           placement="top"
         >
           <IconButton
-            variant="elitea"
+            variant="alita"
             color="tertiary"
             sx={{
               cursor: 'pointer',

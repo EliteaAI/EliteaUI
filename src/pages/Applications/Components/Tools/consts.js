@@ -36,6 +36,7 @@ export const ToolEvents = {
   ToolkitsCreateToolkit: 'ToolkitsCreateToolkit',
   ToolkitsUpdateToolkit: 'ToolkitsUpdateToolkit',
   ToolkitsCreateToolkitWithConfiguration: 'ToolkitsCreateToolkitWithConfiguration',
+  ToolkitsUpdateToolkitWithConfiguration: 'ToolkitsUpdateToolkitWithConfiguration',
 };
 
 export const ValidateToolEventReason = {
@@ -496,4 +497,4 @@ export const toolIconStaticURL =
   (VITE_SERVER_URL.endsWith('/')
     ? VITE_SERVER_URL.replace('/api/v2/', '')
     : VITE_SERVER_URL.replace('/api/v2', '')) + '/app/application_tool_icon';
-// export const toolIconStaticURL = 'https://raw.githubusercontent.com/ProjectEliteA/elitea_static/refs/heads/main/tool_icons'
+// export const toolIconStaticURL = 'https://raw.githubusercontent.com/ProjectAlita/alita_static/refs/heads/main/tool_icons'

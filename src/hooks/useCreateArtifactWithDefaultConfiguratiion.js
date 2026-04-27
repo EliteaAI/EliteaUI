@@ -35,7 +35,7 @@ export function useCreateArtifactWithDefaultConfiguration({ bucketName }) {
           section: 'vectorstorage',
         });
         setDefaultVectorStorage({
-          elitea_title: vectorData?.default_model_name || '',
+          alita_title: vectorData?.default_model_name || '',
           private: vectorData?.default_model_project_id === personal_project_id, // Replace with actual personal project ID if available
         });
       } catch (err) {

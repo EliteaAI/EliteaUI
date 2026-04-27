@@ -46,7 +46,7 @@ export const getConfigurationDisplayName = configuration => {
     configuration?.title ||
     configuration?.settings?.title ||
     configuration?.config?.name ||
-    configuration?.elitea_title ||
+    configuration?.alita_title ||
     configuration?.name ||
     configuration?.metadata?.title ||
     configuration?.metadata?.name;

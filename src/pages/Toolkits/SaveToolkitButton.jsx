@@ -15,7 +15,6 @@ export default function SaveToolkitButton({
   hasErrors,
   triggerValidation,
   projectId,
-  onBeforeSave,
 }) {
   const { dirty: isFormDirty, values, resetForm } = useFormikContext();
   const { toastError, toastSuccess } = useToast();
@@ -30,44 +29,29 @@ export default function SaveToolkitButton({
       return;
     }
 
-    // Define the actual save function
-    const performSave = async () => {
-      try {
-        const toolkitNameKey = Object.keys(toolSchema?.properties || {}).find(
-          key => toolSchema?.properties?.[key]?.toolkit_name,
-        );
+    try {
+      const toolkitNameKey = Object.keys(toolSchema?.properties || {}).find(
+        key => toolSchema?.properties?.[key]?.toolkit_name,
+      );
 
-        const toolkitData = {
-          projectId,
-          toolId: values?.id,
-          ...values,
-          name: toolkitNameKey ? values?.settings?.[toolkitNameKey] : values?.name,
-        };
+      const toolkitData = {
+        projectId,
+        toolId: values?.id,
+        ...values,
+        name: toolkitNameKey ? values?.settings?.[toolkitNameKey] : values?.name,
+      };
 
-        const result = await onSave(toolkitData).unwrap();
-        toastSuccess('The toolkit has been updated successfully');
+      const result = await onSave(toolkitData).unwrap();
+      toastSuccess('The toolkit has been updated successfully');
 
-        // Notify parent component that save was successful
-        if (onToolkitSaved) {
-          onToolkitSaved(result, toolkitData);
-        }
-        resetForm({ values });
-      } catch (error) {
-        toastError(buildErrorMessage(error) || 'An error occurred while saving. Please try again.');
-        throw error;
+      // Notify parent component that save was successful
+      if (onToolkitSaved) {
+        onToolkitSaved(result, toolkitData);
       }
-    };
-
-    // Check for credential changes before saving (if callback provided)
-    if (onBeforeSave) {
-      const shouldProceed = onBeforeSave(performSave);
-      if (shouldProceed) {
-        await performSave();
-      }
-      // If shouldProceed is false, the callback will handle showing the warning modal
-    } else {
-      // No pre-save check, proceed directly
-      await performSave();
+      resetForm({ values });
+    } catch (error) {
+      toastError(buildErrorMessage(error) || 'An error occurred while saving. Please try again.');
+      throw error;
     }
   }, [
     toolSchema?.properties,
@@ -80,7 +64,6 @@ export default function SaveToolkitButton({
     hasErrors,
     triggerValidation,
     resetForm,
-    onBeforeSave,
   ]);
 
   const shouldDisableSave = useMemo(() => {
@@ -90,7 +73,7 @@ export default function SaveToolkitButton({
   return (
     <Button
       disabled={shouldDisableSave}
-      variant="elitea"
+      variant="alita"
       color="primary"
       onClick={onSaveToolkit}
     >

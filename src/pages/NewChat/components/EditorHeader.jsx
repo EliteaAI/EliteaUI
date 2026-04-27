@@ -28,7 +28,7 @@ const EditorHeader = ({ title, subtitle, onCancel, onDiscard, saveButton, isPubl
       <Box sx={styles.titleSection}>
         <IconButton
           sx={styles.closeButton}
-          variant="elitea"
+          variant="alita"
           color="tertiary"
           onClick={onCancel}
         >

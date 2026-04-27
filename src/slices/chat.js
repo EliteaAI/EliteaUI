@@ -1,4 +1,4 @@
-import { eliteaApi } from '@/api/eliteaApi';
+import { alitaApi } from '@/api/alitaApi';
 import { createSlice } from '@reduxjs/toolkit';
 
 const chatSlice = createSlice({
@@ -52,7 +52,7 @@ const chatSlice = createSlice({
     },
   },
   extraReducers: builder => {
-    builder.addMatcher(eliteaApi.endpoints.validateToolkit.matchFulfilled, (state, { meta: { arg } }) => {
+    builder.addMatcher(alitaApi.endpoints.validateToolkit.matchFulfilled, (state, { meta: { arg } }) => {
       const { toolkitId, projectId } = arg.originalArgs;
       state.toolkitValidationInfo = {
         ...state.toolkitValidationInfo,

@@ -307,7 +307,7 @@ export default function SearchBar({ searchString, setSearchString, searchTags, s
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
-                      '&:hover .elitea-remove-icon': { opacity: 1 },
+                      '&:hover .alita-remove-icon': { opacity: 1 },
                     }}
                   >
                     <Typography
@@ -318,7 +318,7 @@ export default function SearchBar({ searchString, setSearchString, searchTags, s
                       {name}
                     </Typography>
                     <Box
-                      className="elitea-remove-icon"
+                      className="alita-remove-icon"
                       sx={{ opacity: 0.8 }}
                     >
                       <StyledRemoveIcon onClick={handleDeleteTag(id)} />

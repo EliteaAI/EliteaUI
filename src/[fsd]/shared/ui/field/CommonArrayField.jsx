@@ -4,8 +4,9 @@ import { Typography } from '@mui/material';
 import { Box } from '@mui/system';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
-import { Field, Select } from '@/[fsd]/shared/ui';
+import { Field } from '@/[fsd]/shared/ui';
 import InfoIcon from '@/components/Icons/InfoIcon';
+import MultipleSelect from '@/components/MultipleSelect';
 import { jsonLinter } from '@/hooks/useCodeMirrorLanguageExtensions';
 import { json } from '@codemirror/lang-json';
 
@@ -83,17 +84,22 @@ const CommonArrayField = memo(props => {
             </Tooltip>
           )}
         </Box>
-        <Select.SingleSelect
+        <MultipleSelect
           required={isRequired}
           options={property.items.enum.map(option => ({
             label: option,
             value: option,
           }))}
-          showEmptyPlaceholder={false}
+          emptyPlaceHolder={''}
           value={fieldValue || []}
           onValueChange={value => handleSelectChange(fieldKey, value)}
           showBorder
-          multiple
+          labelSX={styles.label}
+          selectSX={styles.select}
+          valueItemSX={styles.valueItem}
+          MenuProps={{
+            PaperProps: { style: { marginTop: '.5rem' } },
+          }}
           disabled={disabled}
         />
       </Box>
@@ -162,6 +168,22 @@ const commonArrayFieldStyles = () => ({
     cursor: 'pointer',
     pointerEvents: 'auto',
   },
+
+  label: {
+    left: '12px',
+
+    '& .Mui-focused': {
+      top: '-.3125rem',
+    },
+  },
+
+  select: {
+    '& .MuiSelect-icon': {
+      top: 'calc(50% - .6875rem) !important;',
+    },
+  },
+
+  valueItem: { maxWidth: '100% !important' },
 });
 
 export default CommonArrayField;

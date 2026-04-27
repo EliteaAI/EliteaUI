@@ -29,7 +29,7 @@ const RestoreButton = memo(({ onClick, disabled, title, itemKey, sx }) => (
       component="span"
     >
       <IconButton
-        variant="elitea"
+        variant="alita"
         color="tertiary"
         onClick={onClick}
         disabled={disabled}
@@ -85,8 +85,8 @@ const ServicePromptsSection = memo(() => {
       .filter(item => item?.section === 'service_prompts')
       .slice()
       .sort((a, b) => {
-        const aKey = String(a?.data?.key || a?.elitea_title || '').toLowerCase();
-        const bKey = String(b?.data?.key || b?.elitea_title || '').toLowerCase();
+        const aKey = String(a?.data?.key || a?.alita_title || '').toLowerCase();
+        const bKey = String(b?.data?.key || b?.alita_title || '').toLowerCase();
         return aKey.localeCompare(bKey);
       });
   }, [data?.items]);
@@ -115,7 +115,7 @@ const ServicePromptsSection = memo(() => {
     return new Set(
       prompts
         .map(item =>
-          String(item?.data?.key || item?.elitea_title || '')
+          String(item?.data?.key || item?.alita_title || '')
             .trim()
             .toLowerCase(),
         )
@@ -135,7 +135,7 @@ const ServicePromptsSection = memo(() => {
     }
 
     if (mode === 'edit' && selectedConfig) {
-      const originalKey = String(selectedConfig?.data?.key || selectedConfig?.elitea_title || '');
+      const originalKey = String(selectedConfig?.data?.key || selectedConfig?.alita_title || '');
       const originalPrompt = String(selectedConfig?.data?.prompt || '');
 
       return draftKey !== originalKey || draftPrompt !== originalPrompt;
@@ -199,7 +199,7 @@ const ServicePromptsSection = memo(() => {
   const handleOpenEdit = useCallback(config => {
     setMode('edit');
     setSelectedConfig(config);
-    setDraftKey(String(config?.data?.key || config?.elitea_title || ''));
+    setDraftKey(String(config?.data?.key || config?.alita_title || ''));
     setDraftPrompt(String(config?.data?.prompt || ''));
     setIsOpen(true);
   }, []);
@@ -277,7 +277,7 @@ const ServicePromptsSection = memo(() => {
         await createConfiguration({
           projectId,
           body: {
-            elitea_title: createKey,
+            alita_title: createKey,
             label: deriveLabelFromKey(createKey),
             type: 'service_prompt',
             shared: true,
@@ -315,7 +315,7 @@ const ServicePromptsSection = memo(() => {
     async (config, { updateDraft = false } = {}) => {
       if (!canEdit || !config?.id) return;
 
-      const rawKey = String(config?.data?.key || config?.elitea_title || '').trim();
+      const rawKey = String(config?.data?.key || config?.alita_title || '').trim();
       const normalizedKey = rawKey.toLowerCase();
       const defaultPrompt = getDefaultPrompt(rawKey);
 
@@ -380,7 +380,7 @@ const ServicePromptsSection = memo(() => {
       <Box sx={styles.wrapper}>
         <Box sx={styles.cards}>
           {prompts.map(item => {
-            const key = String(item?.data?.key || item?.elitea_title || '');
+            const key = String(item?.data?.key || item?.alita_title || '');
             const label = item?.label || deriveLabelFromKey(key);
             const preview = buildPreview(item?.data?.prompt);
 
@@ -424,7 +424,7 @@ const ServicePromptsSection = memo(() => {
                     >
                       <Box component="span">
                         <IconButton
-                          variant="elitea"
+                          variant="alita"
                           color="tertiary"
                           onClick={() => handleOpenEdit(item)}
                           disabled={!isEditable || isBusy}
@@ -512,7 +512,7 @@ const ServicePromptsSection = memo(() => {
 
               <Box sx={styles.modalFooter}>
                 <Button
-                  variant="elitea"
+                  variant="alita"
                   color="secondary"
                   onClick={handleDiscard}
                   disabled={isBusy}
@@ -520,7 +520,7 @@ const ServicePromptsSection = memo(() => {
                   Discard
                 </Button>
                 <Button
-                  variant="elitea"
+                  variant="alita"
                   color="primary"
                   onClick={handleSave}
                   disabled={isBusy || !canEdit || !hasChanges}

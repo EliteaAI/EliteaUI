@@ -216,7 +216,7 @@ const ParticipantSection = memo(props => {
           >
             <IconButton
               ref={collapsedTriggerRef}
-              variant="elitea"
+              variant="alita"
               color="secondary"
               onClick={onCollapsedTriggerClick}
               sx={styles.collapsedTriggerButton}

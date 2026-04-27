@@ -11,7 +11,7 @@ import OnlineIcon from '@/assets/online-icon.svg?react';
 import PublishIcon from '@/assets/publish-version.svg?react';
 import { isApplicationCard } from '@/common/checkCardType';
 import { ContentType, ViewMode } from '@/common/constants';
-import { getEntityType, getEntityTypeByCardType } from '@/common/utils';
+import { getEntityType, getEntityTypeByCardType, getStatusColor } from '@/common/utils';
 import AuthorContainer from '@/components/AuthorContainer';
 import CardTagSection from '@/components/CardTagSection';
 import EntityIcon from '@/components/EntityIcon';
@@ -102,7 +102,7 @@ const Card = memo(props => {
 
   const { isLoggedIn: hasMcpLoggedIn } = useMcpTokenChange(mcpTokenOptions);
 
-  const styles = cardStyles;
+  const styles = cardStyles(status);
 
   return (
     <Box
@@ -130,18 +130,8 @@ const Card = memo(props => {
               enterNextDelay={1000}
               title={
                 <>
-                  <Typography
-                    variant="bodySmall2"
-                    sx={styles.titleTooltip}
-                  >
-                    {name || ''}
-                  </Typography>
-                  <Typography
-                    variant="bodySmall2"
-                    sx={styles.descriptionTooltip}
-                  >
-                    {description || ''}
-                  </Typography>
+                  <Typography sx={styles.titleTooltip}>{name || ''}</Typography>
+                  <Typography sx={styles.descriptionTooltip}>{description || ''}</Typography>
                 </>
               }
             >
@@ -159,7 +149,10 @@ const Card = memo(props => {
               </Typography>
             </StyledTooltip>
           </Box>
-          <Box sx={styles.cardBottomSection}>
+          <Box
+            sx={styles.cardBottomSection}
+            color="text.secondary"
+          >
             <Box sx={styles.bottomLeftSection}>
               <StyledTooltip
                 key={`nameAuthor-tooltip-${authorsTooltipText}-${id}`}
@@ -194,12 +187,20 @@ const Card = memo(props => {
               />
             </Box>
             <Box sx={styles.bottomRightSection}>
-              {(status === 'published' || status === 'embedded') && isApplicationCard(type) && (
+              {status === 'published' && isApplicationCard(type) && (
                 <StyledTooltip
                   placement="top"
-                  title={status === 'embedded' ? 'Embedded' : 'Published'}
+                  title="Published"
                 >
-                  <Box sx={styles.publishIconContainer}>
+                  <Box
+                    sx={({ palette }) => ({
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+
+                      svg: { path: { fill: `${palette.icon.fill.success} !important` } },
+                    })}
+                  >
                     <PublishIcon sx={{ fontSize: '1rem' }} />
                   </Box>
                 </StyledTooltip>
@@ -253,31 +254,34 @@ const Card = memo(props => {
 
 Card.displayName = 'Card';
 
-const lineClamp = lines => ({
-  width: '100%',
-  wordWrap: 'wrap',
-  overflowWrap: 'break-word',
-  textOverflow: 'ellipsis',
-  overflow: 'hidden',
-  display: '-webkit-box',
-  WebkitBoxOrient: 'vertical',
-  WebkitLineClamp: String(lines),
-  whiteSpaceCollapse: 'preserve',
-});
-
 /** @type {MuiSx} */
-const cardStyles = {
+const cardStyles = status => ({
   wrapper: {
     width: '100%',
   },
-  card: {
+  statusIndicator: theme => ({
+    width: '0.1875rem',
+    height: '1rem',
+    position: 'absolute',
+    left: '0.0625rem',
+    top: '2rem',
+    borderRadius: '0.25rem',
+    background: getStatusColor(status, theme),
+  }),
+  card: ({ palette }) => ({
+    width: '19.7083rem',
+    height: '8.25rem',
+    maxHeight: '8.25rem',
     margin: '0.625rem 1.375rem',
+    background: palette.background.secondary,
+    minWidth: '17.1875rem',
     display: 'inline',
+    paddingBottom: '0 !important',
     boxSizing: 'border-box',
     '& :last-child': {
       paddingBottom: '0 !important',
     },
-  },
+  }),
   cardContent: {
     padding: 0,
     display: 'flex',
@@ -286,11 +290,11 @@ const cardStyles = {
     height: '100%',
   },
   cardTopSection: {
-    maxHeight: '4.5rem',
-    height: '4.5rem',
+    maxHeight: '5rem',
+    height: '5rem',
     cursor: 'pointer',
     width: '100%',
-    padding: '1.25rem',
+    padding: '1rem 1.5rem',
     boxSizing: 'border-box',
     display: 'flex',
     flexDirection: 'row',
@@ -300,22 +304,52 @@ const cardStyles = {
   },
   cardTitle: {
     maxHeight: '3rem',
-    ...lineClamp(2),
+    width: '100%',
+    wordWrap: 'wrap',
+    overflowWrap: 'break-word',
+    textOverflow: 'ellipsis',
+    overflow: 'hidden',
+    display: '-webkit-box',
+    WebkitBoxOrient: 'vertical',
+    WebkitLineClamp: '2',
+    whiteSpaceCollapse: 'preserve',
   },
-  titleTooltip: {
-    fontWeight: 700,
-    ...lineClamp(2),
-  },
-  descriptionTooltip: {
-    ...lineClamp(4),
-  },
-  cardBottomSection: {
-    height: '2.5rem',
-    padding: '0 0.75rem 0 1.125rem',
+  cardBottomSection: ({ palette }) => ({
+    borderTop: `0.0625rem solid ${palette.border.cardsOutlines}`,
+    height: '3.25rem',
+    padding: '0 1.25rem',
     boxSizing: 'border-box',
     display: 'flex',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
+  }),
+  titleTooltip: {
+    fontWeight: 700,
+    fontSize: '0.75rem',
+    lineHeight: '1.25rem',
+    width: '100%',
+    wordWrap: 'wrap',
+    overflowWrap: 'break-word',
+    textOverflow: 'ellipsis',
+    overflow: 'hidden',
+    display: '-webkit-box',
+    WebkitBoxOrient: 'vertical',
+    WebkitLineClamp: '2',
+    whiteSpaceCollapse: 'preserve',
+  },
+  descriptionTooltip: {
+    fontWeight: 400,
+    fontSize: '0.75rem',
+    lineHeight: '1.25rem',
+    width: '100%',
+    wordWrap: 'wrap',
+    overflowWrap: 'break-word',
+    textOverflow: 'ellipsis',
+    overflow: 'hidden',
+    display: '-webkit-box',
+    WebkitBoxOrient: 'vertical',
+    WebkitLineClamp: '4',
+    whiteSpaceCollapse: 'preserve',
   },
   bottomLeftSection: {
     display: 'flex',
@@ -352,13 +386,6 @@ const cardStyles = {
     height: '0.9375rem',
     alignSelf: 'center',
   },
-  publishIconContainer: ({ palette }) => ({
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: '0.25rem',
-    svg: { path: { fill: `${palette.icon.fill.success} !important` } },
-  }),
   likeContainer: {
     display: 'flex',
     minWidth: '3.25rem',
@@ -368,6 +395,6 @@ const cardStyles = {
       height: '1rem',
     },
   },
-};
+});
 
 export default Card;

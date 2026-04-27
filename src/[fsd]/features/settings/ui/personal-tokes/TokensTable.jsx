@@ -143,7 +143,7 @@ const TokenActionsCell = memo(props => {
           placement="top"
         >
           <IconButton
-            variant="elitea"
+            variant="alita"
             size="small"
             color="tertiary"
             onClick={onPreview}

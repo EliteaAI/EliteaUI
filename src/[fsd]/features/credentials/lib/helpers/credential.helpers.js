@@ -35,7 +35,7 @@ export const enhanceCredentialData = (credentials, theme, toolkitSchemas, config
     const credentialType = credential.type;
     const credentialName =
       credential.label ||
-      credential.elitea_title ||
+      credential.alita_title ||
       credential.data?.title ||
       CredentialNameHelpers.extraCredentialName(credentialType);
     const iconData = CredentialIconHelpers.getCredentialIconData(

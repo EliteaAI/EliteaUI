@@ -7,7 +7,7 @@ import { Box, FormControlLabel, Switch as MuiSwitch, Tooltip, Typography } from 
 import InfoIcon from '@/components/Icons/InfoIcon';
 
 export const SWITCH_VARIANTS = {
-  elitea: 'elitea',
+  alita: 'alita',
 };
 
 const BaseSwitch = memo(
@@ -21,7 +21,7 @@ const BaseSwitch = memo(
       value: valueProp,
       onChange: onChangeProp,
       size,
-      variant = 'elitea',
+      variant = 'alita',
       disabled,
       ...restProps
     } = props;
@@ -137,8 +137,8 @@ const genStyles = ({ width }) => ({
 
 export default BaseSwitch;
 
-export const eliteaSwitchColors = theme => ({
-  [SWITCH_VARIANTS.elitea]: {
+export const alitaSwitchColors = theme => ({
+  [SWITCH_VARIANTS.alita]: {
     default: {
       on: {
         thumb: theme.palette.background.switch.default.on.thumb,
@@ -162,11 +162,11 @@ export const eliteaSwitchColors = theme => ({
   },
 });
 
-export const eliteaSwitchVariants = [
+export const alitaSwitchVariants = [
   {
-    props: { variant: SWITCH_VARIANTS.elitea },
+    props: { variant: SWITCH_VARIANTS.alita },
     style: ({ theme }) => {
-      const colors = eliteaSwitchColors(theme)[SWITCH_VARIANTS.elitea];
+      const colors = alitaSwitchColors(theme)[SWITCH_VARIANTS.alita];
       return {
         '& .MuiSwitch-switchBase': {
           color: colors.default.off.thumb,

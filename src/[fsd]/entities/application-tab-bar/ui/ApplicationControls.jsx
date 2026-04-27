@@ -67,7 +67,7 @@ const ApplicationControls = memo(({ setBlockNav, onSuccess }) => {
   });
   const { deleteApplicationMenuItem } = useDeleteApplicationMenu(setBlockNav);
   const { publishApplicationMenuItem, publishDialog } = usePublishApplicationMenu(onSuccess);
-  const { unpublishVersionMenuItem, unpublishDialog } = useUnpublishVersionMenu(onSuccess);
+  const { unpublishVersionMenuItem } = useUnpublishVersionMenu(onSuccess);
   const { isSettingDefaultVersion, handleSetDefaultVersion, setDefaultVersionDialog } =
     useSetDefaultVersion(onSuccess);
 
@@ -188,18 +188,9 @@ const ApplicationControls = memo(({ setBlockNav, onSuccess }) => {
     <Box
       sx={{
         display: 'flex',
-        position: 'relative',
         alignItems: 'center',
+        borderLeft: ({ palette }) => `1px solid ${palette.border.lines}`,
         paddingLeft: '0.5rem',
-
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          left: 0,
-          top: '0.25rem',
-          bottom: '0.25rem',
-          borderLeft: ({ palette }) => `1px solid ${palette.border.lines}`,
-        },
       }}
     >
       {viewMode === ViewMode.Public && (
@@ -213,7 +204,6 @@ const ApplicationControls = memo(({ setBlockNav, onSuccess }) => {
       )}
       <Controls.ControlsDropdown menuItems={menuItems} />
       {publishDialog}
-      {unpublishDialog}
       {setDefaultVersionDialog}
     </Box>
   );

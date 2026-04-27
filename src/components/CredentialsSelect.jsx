@@ -2,84 +2,42 @@ import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from '
 
 import { useSelector } from 'react-redux';
 
-import { Box, FormControl, FormHelperText, IconButton, Tooltip, Typography } from '@mui/material';
+import {
+  Box,
+  CircularProgress,
+  ClickAwayListener,
+  FormControl,
+  FormHelperText,
+  IconButton,
+  Popper,
+  SvgIcon,
+  Tooltip,
+  Typography,
+} from '@mui/material';
+import MenuItem from '@mui/material/MenuItem';
 
 import { useTrackEvent } from '@/GA';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
 import { useContextExecutionEntity } from '@/[fsd]/shared/lib/hooks';
-import { Select } from '@/[fsd]/shared/ui';
 import { useLazyGetConfigurationsListQuery, useListModelsQuery } from '@/api/configurations';
+import CheckedIcon from '@/assets/checked-icon.svg?react';
 import RefreshIcon from '@/assets/refresh-icon.svg?react';
 import BriefcaseIcon from '@/components/Icons/BriefcaseIcon.jsx';
 import { Create_Personal_Title, Create_Project_Title, Manual_Title } from '@/hooks/useConfigurations';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import RouteDefinitions, { getBasename } from '@/routes';
 
-import CredentialWarningBanner from './CredentialWarningBanner';
+import ArrowDownIcon from './Icons/ArrowDownIcon';
 import Person from './Icons/Person';
-
-const credentialMenuItemValue = Object.freeze({
-  keyKind: 'kind',
-  keyEliteaTitle: 'elitea_title',
-  keyPrivate: 'private',
-  kindSaved: 'saved',
-  kindCreateAction: 'create_action',
-});
-
-const isBlankEliteaTitle = title => title == null || String(title).trim() === '';
-
-const savedRowToSelectValue = row => {
-  if (isBlankEliteaTitle(row?.elitea_title)) return '';
-  return JSON.stringify({
-    [credentialMenuItemValue.keyKind]: credentialMenuItemValue.kindSaved,
-    [credentialMenuItemValue.keyEliteaTitle]: row.elitea_title,
-    [credentialMenuItemValue.keyPrivate]: !!row.private,
-  });
-};
-
-const selectValueToSavedRow = str => {
-  if (!str || typeof str !== 'string') return null;
-  try {
-    const payload = JSON.parse(str);
-    if (payload?.[credentialMenuItemValue.keyKind] !== credentialMenuItemValue.kindSaved) return null;
-    const title = payload[credentialMenuItemValue.keyEliteaTitle];
-    if (typeof title !== 'string') return null;
-    if (isBlankEliteaTitle(title)) return null;
-    return {
-      elitea_title: title,
-      private: !!payload[credentialMenuItemValue.keyPrivate],
-    };
-  } catch {
-    return null;
-  }
-};
-
-const createActionToSelectValue = isPrivate =>
-  JSON.stringify({
-    [credentialMenuItemValue.keyKind]: credentialMenuItemValue.kindCreateAction,
-    [credentialMenuItemValue.keyPrivate]: !!isPrivate,
-  });
-
-const selectValueToCreateAction = str => {
-  if (!str || typeof str !== 'string') return null;
-  try {
-    const payload = JSON.parse(str);
-    if (payload?.[credentialMenuItemValue.keyKind] !== credentialMenuItemValue.kindCreateAction) return null;
-    return { isPrivate: !!payload[credentialMenuItemValue.keyPrivate] };
-  } catch {
-    return null;
-  }
-};
 
 const CredentialsSelect = memo(
   ({
     label = 'Credentials',
-    description,
     required,
     error,
     helperText,
-    value,
-    onSelectConfiguration,
+    value, // Current selected configuration
+    onSelectConfiguration, // Callback for selection change
     isCreationAllowed = true,
     sx,
     renderValue,
@@ -93,13 +51,15 @@ const CredentialsSelect = memo(
   }) => {
     const trackEvent = useTrackEvent();
 
+    const [anchorEl, setAnchorEl] = useState(null);
+    const panelRef = useRef(null);
+    const open = Boolean(anchorEl);
     const { personal_project_id } = useSelector(state => state.user);
     const selectedProjectId = useSelectedProjectId();
     const { contextExecutionEntity } = useContextExecutionEntity();
     const [getConfigurations, { isFetching }] = useLazyGetConfigurationsListQuery();
     const [hasFetchedData, setHasFetchedData] = useState(false);
     const [configurations, setConfigurations] = useState([]);
-    const hasAutoSelectedRef = useRef(false);
 
     const {
       data: vectorStorageData = { items: [], total: 0, default_model_name: '', default_model_project_id: '' },
@@ -113,28 +73,11 @@ const CredentialsSelect = memo(
       [vectorStorageData?.default_model_name],
     );
 
-    const mismatchedPrivateCredential = useMemo(() => {
-      if (
-        !value?.private ||
-        isBlankEliteaTitle(value?.elitea_title) ||
-        selectedProjectId === personal_project_id
-      )
-        return false;
-      const match = configurations.find(
-        config =>
-          config.elitea_title &&
-          config.elitea_title === value.elitea_title &&
-          (config.project_id === personal_project_id || config.shared),
-      );
-      return !match;
-    }, [value?.private, value?.elitea_title, selectedProjectId, personal_project_id, configurations]);
-
     const onRefresh = useCallback(
       async event => {
         event?.stopPropagation();
         setConfigurations([]);
         setHasFetchedData(false);
-        hasAutoSelectedRef.current = false;
         let teamProjectConfigurations = [];
         if (selectedProjectId) {
           const { data } = await getConfigurations({
@@ -145,7 +88,6 @@ const CredentialsSelect = memo(
             sharedLimit: 500,
             includeShared: true,
             section,
-            type,
           });
           teamProjectConfigurations = [
             ...(data?.items?.filter(item => !type || item.type === type) || []),
@@ -154,6 +96,8 @@ const CredentialsSelect = memo(
         }
         if (personal_project_id && personal_project_id !== selectedProjectId) {
           if (!onlyPublic) {
+            // Skip vectorstorage for personal project when in a team project
+            // Private pgvector configs are not allowed in team projects
             if (section !== 'vectorstorage') {
               const { data } = await getConfigurations({
                 projectId: personal_project_id,
@@ -163,7 +107,6 @@ const CredentialsSelect = memo(
                 sharedLimit: 500,
                 includeShared: true,
                 section,
-                type,
               });
               teamProjectConfigurations = [
                 ...teamProjectConfigurations,
@@ -183,15 +126,26 @@ const CredentialsSelect = memo(
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedProjectId, personal_project_id, type, section, onlyPublic]);
 
+    const handleFocus = useCallback(() => {
+      setAnchorEl(anchorEl ? null : panelRef.current);
+    }, [anchorEl]);
+
+    const handleClickAway = useCallback(() => {
+      setAnchorEl(null);
+    }, []);
+
+    // Create menu data: Options for creating new credentials
     const createMenuData = useMemo(() => {
       const options = [];
       if (isCreationAllowed) {
+        // Skip "New private credentials" button for vectorstorage in team projects
+        // Private pgvector configs are not allowed in team projects
         const isVectorStorageInTeamProject =
           section === 'vectorstorage' && selectedProjectId !== personal_project_id;
 
         if (!onlyPublic && !isVectorStorageInTeamProject)
           options.push({
-            elitea_title: Create_Personal_Title,
+            alita_title: Create_Personal_Title,
             private: true,
             label: (
               <span style={styles.labelContainer}>
@@ -203,8 +157,9 @@ const CredentialsSelect = memo(
           });
 
         if (selectedProjectId != personal_project_id) {
+          // Only show project credentials option if the selected project is not personal
           options.push({
-            elitea_title: Create_Project_Title,
+            alita_title: Create_Project_Title,
             private: false,
             label: (
               <span style={styles.labelContainer}>
@@ -227,6 +182,7 @@ const CredentialsSelect = memo(
       section,
     ]);
 
+    // Saved Credentials menu data
     const savedCredentialsMenuData = useMemo(() => {
       return (presetOptions?.length ? presetOptions : configurations)
         .filter(configuration => {
@@ -238,11 +194,10 @@ const CredentialsSelect = memo(
         .map(configuration => {
           const isConfigurationPersonal = configuration.project_id === personal_project_id;
           return {
-            id: `${configuration.elitea_title}_${configuration.project_id}`,
-            elitea_title: configuration.elitea_title || configuration.data?.title,
+            id: `${configuration.alita_title}_${configuration.project_id}`,
+            alita_title: configuration.alita_title || configuration.data?.title,
             private: isConfigurationPersonal,
             settings: configuration.data || {},
-            shared: configuration.shared || false,
             label: (
               <span style={styles.labelContainer}>
                 {isConfigurationPersonal ? (
@@ -257,7 +212,7 @@ const CredentialsSelect = memo(
                   />
                 )}
                 <span key="label-text">
-                  {configuration.label || configuration.elitea_title || configuration.data?.title}
+                  {configuration.label || configuration.alita_title || configuration.data?.title}
                 </span>
               </span>
             ),
@@ -265,6 +220,7 @@ const CredentialsSelect = memo(
         });
     }, [configurations, personal_project_id, onlyPublic, presetOptions]);
 
+    // Combine create and saved credentials into menu data
     const menuData = useMemo(
       () => ({
         Create: createMenuData,
@@ -273,15 +229,16 @@ const CredentialsSelect = memo(
       [createMenuData, savedCredentialsMenuData, type],
     );
 
+    // Find the selected option
     const selectedOption = useMemo(() => {
-      if ([Manual_Title, Create_Personal_Title, Create_Project_Title].includes(value?.elitea_title)) {
+      if ([Manual_Title, Create_Personal_Title, Create_Project_Title].includes(value?.alita_title)) {
         return createMenuData.find(
-          option => option.elitea_title === value?.elitea_title && option.private === value?.private,
+          option => option.alita_title === value?.alita_title && option.private === value?.private,
         );
       }
 
       const availableSavedData = savedCredentialsMenuData.find(
-        option => option.elitea_title === value?.elitea_title && option.private === value?.private,
+        option => option.alita_title === value?.alita_title && option.private === value?.private,
       );
 
       if (availableSavedData) return availableSavedData;
@@ -289,7 +246,7 @@ const CredentialsSelect = memo(
         if (section === 'vectorstorage') {
           if (projectDefaultVectorStorageModel) {
             const defaultOption = savedCredentialsMenuData.find(
-              option => option.elitea_title === projectDefaultVectorStorageModel,
+              option => option.alita_title === projectDefaultVectorStorageModel,
             );
 
             return defaultOption ?? null;
@@ -298,10 +255,8 @@ const CredentialsSelect = memo(
 
         if (section === 'credentials')
           return (
-            savedCredentialsMenuData.find(
-              option => option.elitea_title && option.elitea_title === value?.elitea_title && option.shared,
-            ) ||
-            (isBlankEliteaTitle(value?.elitea_title) && !value?.private ? savedCredentialsMenuData[0] : null)
+            savedCredentialsMenuData.find(option => option.alita_title === value?.alita_title) ??
+            savedCredentialsMenuData[0]
           );
 
         return null;
@@ -312,33 +267,38 @@ const CredentialsSelect = memo(
       setShowConfigurableFields?.(!!selectedOption);
     }, [selectedOption, setShowConfigurableFields]);
 
+    // Notify parent when a default credential is auto-selected
+    // This ensures editToolDetail gets updated with the default selection
     useEffect(() => {
       if (!hasFetchedData || !selectedOption) return;
 
+      // Only notify if there's a mismatch: UI shows a selection but parent doesn't have it
       const isDefaultAutoSelected =
-        selectedOption && (section === 'vectorstorage' || isBlankEliteaTitle(value?.elitea_title));
+        selectedOption &&
+        (!value ||
+          value.alita_title !== selectedOption.alita_title ||
+          value.private !== selectedOption.private);
 
-      if (isDefaultAutoSelected && !hasAutoSelectedRef.current) {
-        hasAutoSelectedRef.current = true;
+      if (isDefaultAutoSelected) {
         const config = {
           private: selectedOption.private,
-          elitea_title: selectedOption.elitea_title,
+          alita_title: selectedOption.alita_title,
         };
         onSelectConfiguration?.(config);
       }
-    }, [hasFetchedData, selectedOption, value, onSelectConfiguration, section]);
+    }, [hasFetchedData, selectedOption, value, onSelectConfiguration]);
 
     const onSelectItem = useCallback(
       option => {
         const config = {
           private: option.private,
-          elitea_title: option.elitea_title,
+          alita_title: option.alita_title,
         };
         if (
-          selectedOption?.elitea_title === option.elitea_title &&
+          selectedOption?.alita_title === option.alita_title &&
           selectedOption?.private === option.private
         ) {
-          onSelectConfiguration(null);
+          onSelectConfiguration(null); // Deselect if already selected
         } else {
           trackEvent(GA_EVENT_NAMES.CREDENTIALS_ATTACHED, {
             [GA_EVENT_PARAMS.CREDENTIALS_TYPE]: option.private ? 'private' : 'project',
@@ -347,210 +307,147 @@ const CredentialsSelect = memo(
           });
           onSelectConfiguration(config);
         }
+        setAnchorEl(null); // Close dropdown
       },
-      [
-        onSelectConfiguration,
-        selectedOption?.elitea_title,
-        selectedOption?.private,
-        type,
-        trackEvent,
-        contextExecutionEntity,
-      ],
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [onSelectConfiguration, selectedOption?.alita_title, selectedOption?.private, type],
     );
 
     const createSelectHandler = useCallback(
-      (sec, option) => {
-        if (disabled) return;
-        if (sec === 'Create') {
-          const baseUrl = `${window.location.protocol}//${window.location.host}`;
-          const basename = getBasename();
-          const projectId = option.private ? personal_project_id : selectedProjectId;
-          const newPath = `${baseUrl}${basename}/${projectId}${RouteDefinitions.CreateCredentialTypeFromMain.replace(':credentialType', type)}?${section ? `section=${section}` : ''}`;
-          window.open(newPath, '_blank', 'noopener,noreferrer');
-        } else {
-          onSelectItem(option);
+      (sec, option) => () => {
+        if (!disabled) {
+          if (sec === 'Create') {
+            const baseUrl = `${window.location.protocol}//${window.location.host}`;
+            const basename = getBasename();
+            const newPath = `${baseUrl}${basename}/${selectedProjectId}${RouteDefinitions.CreateCredentialTypeFromMain.replace(':credentialType', type)}?project_id=${option.private ? personal_project_id : selectedProjectId}${section ? `&section=${section}` : ''}`;
+            window.open(newPath, '_blank', 'noopener,noreferrer');
+          } else {
+            onSelectItem(option);
+          }
         }
       },
       [disabled, onSelectItem, personal_project_id, section, selectedProjectId, type],
     );
 
-    const optionGroups = useMemo(() => {
-      const refreshButton = (
-        <Tooltip
-          title="Refresh the configurations"
-          placement="top"
-        >
-          <IconButton
-            size="small"
-            onClick={onRefresh}
-            sx={styles.refreshIcon}
-          >
-            <RefreshIcon />
-          </IconButton>
-        </Tooltip>
-      );
-
-      return Object.entries(menuData)
-        .filter(([title, list]) => (title === 'Create' ? list.length > 0 : true))
-        .map(([title, list]) => ({
-          key: title,
-          title,
-          headerEnd: title.includes('Saved') ? refreshButton : undefined,
-          options:
-            title === 'Create'
-              ? list.map(opt => ({
-                  value: createActionToSelectValue(opt.private),
-                  label: opt.label,
-                  variant: 'action',
-                  meta: opt,
-                  onActivate: () => createSelectHandler(title, opt),
-                }))
-              : list.map(opt => ({
-                  value: savedRowToSelectValue(opt),
-                  label: opt.label,
-                  meta: opt,
-                })),
-        }));
-    }, [menuData, createSelectHandler, onRefresh]);
-
-    const isOptionsReady = useMemo(() => {
-      if (!hasFetchedData) return false;
-      const hasCreateOptions = createMenuData.length > 0;
-      const hasSavedOptions = savedCredentialsMenuData.length > 0;
-      return hasCreateOptions || hasSavedOptions;
-    }, [hasFetchedData, createMenuData.length, savedCredentialsMenuData.length]);
-
-    const normalizedIncomingValue = useMemo(() => {
-      if (!value || isBlankEliteaTitle(value?.elitea_title)) return '';
-      return savedRowToSelectValue({
-        elitea_title: value.elitea_title,
-        private: !!value.private,
-      });
-    }, [value]);
-
-    const selectStringValue = useMemo(() => {
-      if (!isOptionsReady) return '';
-
-      if (selectedOption) {
-        const isCreateSelected = createMenuData.some(
-          o => o.elitea_title === selectedOption.elitea_title && o.private === selectedOption.private,
-        );
-        return isCreateSelected
-          ? createActionToSelectValue(selectedOption.private)
-          : savedRowToSelectValue(selectedOption);
-      }
-
-      return normalizedIncomingValue;
-    }, [isOptionsReady, selectedOption, createMenuData, normalizedIncomingValue]);
-
-    const handleSelectValueChange = useCallback(
-      newValue => {
-        const savedRow = selectValueToSavedRow(newValue);
-        if (savedRow) {
-          const matchingSaved = savedCredentialsMenuData.find(
-            credentialOption =>
-              credentialOption.elitea_title === savedRow.elitea_title &&
-              credentialOption.private === savedRow.private,
-          );
-          if (matchingSaved) onSelectItem(matchingSaved);
-          return;
-        }
-        const createAction = selectValueToCreateAction(newValue);
-        if (createAction) {
-          const matchingCreate = createMenuData.find(
-            createOption => createOption.private === createAction.isPrivate,
-          );
-          if (matchingCreate) createSelectHandler('Create', matchingCreate);
-        }
-      },
-      [savedCredentialsMenuData, onSelectItem, createMenuData, createSelectHandler],
-    );
-
-    const customRenderSelectValue = useCallback(
-      foundOption => {
-        if (!foundOption) {
-          if (!value?.elitea_title) return null;
-          return (
-            <Box sx={styles.unmatchedValueBox(hasFetchedData)}>
-              {value?.private ? (
-                <Person
-                  key="person-icon"
-                  fontSize="1rem"
-                />
-              ) : (
-                <BriefcaseIcon
-                  key="briefcase-icon"
-                  fontSize="1rem"
-                />
-              )}
-              <Typography
-                variant="labelMedium"
-                sx={styles.unmatchedValueTypography(hasFetchedData)}
-              >
-                {value.elitea_title}
-              </Typography>
-            </Box>
-          );
-        }
-
-        const row = foundOption?.meta ?? foundOption;
-        if (renderValue) return renderValue(row);
-        return (
-          <Typography
-            variant="labelMedium"
-            sx={styles.selectedValueTypography(row)}
-          >
-            {row.label}
-          </Typography>
-        );
-      },
-      [renderValue, value, hasFetchedData],
-    );
-
-    const selectError = error || (mismatchedPrivateCredential && hasFetchedData);
-
-    const showMismatchFooter = Boolean(
-      value && !isBlankEliteaTitle(value?.elitea_title) && !selectedOption && hasFetchedData,
-    );
-
     return (
-      <Box sx={[{ marginTop: '0.5rem' }, sx]}>
-        <Select.SingleSelect
-          label={label}
-          shrinkLabel
-          infoIconDescription={description}
-          required={required}
-          error={selectError}
-          helperText={showMismatchFooter ? '' : helperText}
-          disabled={disabled}
-          showBorder
-          customSelectedFontSize="0.875rem"
-          optionGroups={optionGroups}
-          options={[]}
-          value={selectStringValue}
-          onValueChange={handleSelectValueChange}
-          onClear={() => onSelectConfiguration?.(null)}
-          customRenderValue={customRenderSelectValue}
-          displayEmpty
-          showEmptyPlaceholder={false}
-          isListFetching={isFetching}
-        />
-        {showMismatchFooter && mismatchedPrivateCredential && (
-          <CredentialWarningBanner
-            credentialId={value?.elitea_title}
-            credentialType={type}
-            section={section}
-          />
-        )}
-        {showMismatchFooter && !mismatchedPrivateCredential && (
-          <FormControl
-            error
-            fullWidth
+      <>
+        <ClickAwayListener onClickAway={handleClickAway}>
+          <Box
+            sx={sx}
+            ref={panelRef}
           >
-            <FormHelperText>Your configuration does not match any available configurations.</FormHelperText>
-          </FormControl>
-        )}
-      </Box>
+            <Box
+              onClick={handleFocus}
+              sx={styles.clickableBox(error, open)}
+            >
+              <Box sx={styles.labelBox}>
+                <Typography
+                  variant="bodySmall"
+                  sx={styles.labelTypography(open)}
+                >
+                  {label}
+                  {required && <span> *</span>}
+                </Typography>
+              </Box>
+              {/* Render selected value */}
+              <Box sx={styles.selectedValueBox}>
+                {renderValue ? (
+                  renderValue(selectedOption)
+                ) : (
+                  <Typography
+                    variant="bodyMedium"
+                    sx={styles.selectedValueTypography(selectedOption)}
+                  >
+                    {selectedOption ? selectedOption?.label : !open ? 'Select credentials' : ''}
+                  </Typography>
+                )}
+                <SvgIcon
+                  viewBox="0 0 16 16"
+                  sx={styles.arrowIcon(open)}
+                >
+                  <ArrowDownIcon />
+                </SvgIcon>
+              </Box>
+            </Box>
+            {error && helperText && (
+              <FormControl error>
+                <FormHelperText>{error ? helperText : undefined}</FormHelperText>
+              </FormControl>
+            )}
+            {value && !selectedOption && hasFetchedData && (
+              <FormControl error>
+                <FormHelperText>
+                  {'Your configuration does not match any available configurations.'}
+                </FormHelperText>
+              </FormControl>
+            )}
+            <Popper
+              open={open}
+              anchorEl={panelRef.current}
+              placement="bottom-start"
+              style={styles.popper(panelRef)}
+            >
+              <Box sx={styles.popperBox}>
+                {!isFetching &&
+                  Object.keys(menuData).map(sec => (
+                    <React.Fragment key={sec}>
+                      <MenuItem
+                        sx={[styles.normalMenuItem, styles.headerWrapper]}
+                        disabled
+                      >
+                        <Typography
+                          variant="bodySmall"
+                          color="textSecondary"
+                          sx={styles.sectionHeader}
+                        >
+                          {sec}
+                        </Typography>
+                      </MenuItem>
+                      <Box sx={{ position: 'relative' }}>
+                        {sec.includes('Saved') && (
+                          <Tooltip
+                            title="Refresh the configurations"
+                            placement="top"
+                            sx={styles.refreshIconWrapper}
+                          >
+                            <IconButton
+                              variant="alita"
+                              color="tertiary"
+                              onClick={onRefresh}
+                            >
+                              <RefreshIcon />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                        {menuData[sec].map((option, index) => (
+                          <MenuItem
+                            key={option.alita_title + sec + index}
+                            onClick={createSelectHandler(sec, option)}
+                            sx={[styles.normalMenuItem, styles.menuItem(selectedOption, option)]}
+                          >
+                            <Box sx={styles.menuItemContent}>{option.label}</Box>
+                            {selectedOption &&
+                              option.alita_title === selectedOption.alita_title &&
+                              option.private === selectedOption.private && (
+                                <Box sx={styles.checkedIconBox}>
+                                  <CheckedIcon />
+                                </Box>
+                              )}
+                          </MenuItem>
+                        ))}
+                      </Box>
+                    </React.Fragment>
+                  ))}
+                {isFetching && (
+                  <Box sx={styles.loadingBox}>
+                    <CircularProgress size={24} />
+                  </Box>
+                )}
+              </Box>
+            </Popper>
+          </Box>
+        </ClickAwayListener>
+      </>
     );
   },
 );
@@ -559,33 +456,74 @@ CredentialsSelect.displayName = 'CredentialsSelect';
 
 /** @type {MuiSx} */
 const styles = {
+  normalMenuItem: ({ palette }) => ({
+    justifyContent: 'space-between',
+    padding: '0.5rem 1.5rem',
+    fontSize: '0.875rem',
+    color: palette.text.secondary,
+    '&:hover': {
+      backgroundColor: palette.background.button.iconLabelButton.hover,
+    },
+    '&.Mui-disabled': {
+      color: palette.text.disabled,
+    },
+  }),
+  // Static styles
   labelContainer: {
     display: 'inline-flex',
     alignItems: 'center',
     gap: '0.5rem',
   },
-  refreshIcon: ({ palette }) => ({
-    color: palette.text.default,
-    padding: 0,
-    position: 'relative',
-    backgroundColor: 'transparent',
-    '&:hover, &:active, &.Mui-focusVisible': {
-      backgroundColor: 'transparent',
-    },
-    '&:hover': {
-      color: palette.text.secondary,
-    },
-    '&:hover::before': {
-      content: '""',
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      width: '26px',
-      height: '26px',
-      transform: 'translate(-21%, -18%)',
-      borderRadius: '50%',
-      backgroundColor: palette.background.userInputBackgroundActive,
-    },
+  labelBox: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    gap: '0.5rem',
+  },
+  selectedValueBox: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  sectionHeader: {
+    textTransform: 'uppercase',
+    padding: '0.125rem 0',
+  },
+  headerWrapper: ({ palette }) => ({
+    borderBottom: `1px solid ${palette.border.lines}`,
+    borderTop: `1px solid ${palette.border.lines}`,
+  }),
+  refreshIconWrapper: {
+    position: 'absolute',
+    top: '-.3rem',
+    right: '.75rem',
+    transform: 'translateY(-100%)',
+  },
+  menuItemContent: {
+    display: 'flex',
+    gap: '0.5rem',
+    alignItems: 'center',
+  },
+  loadingBox: {
+    padding: '0.5rem',
+    display: 'flex',
+    justifyContent: 'center',
+  },
+  // Dynamic styles (functions)
+  clickableBox: (error, open) => ({
+    cursor: 'pointer',
+    padding: '0.5rem 0.75rem',
+    width: '100%',
+    borderBottom: ({ palette }) =>
+      error
+        ? '0.0625rem solid red'
+        : open
+          ? `0.0625rem solid ${palette.primary.main}`
+          : `0.0625rem solid ${palette.border.lines}`,
+  }),
+  labelTypography: open => ({
+    // color: error ? theme.palette.error.main : theme.palette.text.secondary,
+    color: ({ palette }) => (open ? palette.primary.main : palette.text.secondary),
   }),
   selectedValueTypography: selectedOption => ({
     overflow: 'hidden',
@@ -594,14 +532,35 @@ const styles = {
     minHeight: '1.5rem',
     color: ({ palette }) => (selectedOption?.label ? palette.text.secondary : palette.text.disabled),
   }),
-  unmatchedValueBox: mismatch => ({
+  arrowIcon: open => ({
+    fontSize: '1rem',
+    transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+  }),
+  popper: panelRef => ({
+    width: panelRef.current?.clientWidth,
+    zIndex: 1300,
+  }),
+  popperBox: ({ palette }) => ({
+    marginTop: '0.25rem',
+    maxHeight: '18.75rem',
+    overflowY: 'auto',
+    borderRadius: '0.5rem',
+    border: `0.0625rem solid ${palette.border.lines}`,
+    background: palette.background.secondary,
+  }),
+  menuItem: (selectedOption, option) => ({
+    background: ({ palette }) =>
+      selectedOption &&
+      option.alita_title === selectedOption.alita_title &&
+      option.private === selectedOption.private
+        ? palette.background.participant.active
+        : undefined,
+  }),
+  checkedIconBox: ({ palette }) => ({
     display: 'flex',
     alignItems: 'center',
-    gap: '0.5rem',
-    color: ({ palette }) => (mismatch ? palette.status.rejected : palette.text.secondary),
-  }),
-  unmatchedValueTypography: mismatch => ({
-    color: ({ palette }) => (mismatch ? palette.status.rejected : palette.text.disabled),
+    justifyContent: 'center',
+    color: palette.primary.main,
   }),
 };
 

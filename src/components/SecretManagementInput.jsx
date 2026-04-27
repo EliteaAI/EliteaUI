@@ -1,13 +1,12 @@
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Visibility, VisibilityOff } from '@mui/icons-material';
-import { Box, InputAdornment, TextField, Tooltip } from '@mui/material';
+import { Box, InputAdornment } from '@mui/material';
 import IconButton from '@mui/material/IconButton';
 
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
-import { TooltipMarkdownContent } from '@/[fsd]/shared/ui/tooltip';
 import { useSecretsListQuery } from '@/api/secrets.js';
-import InfoIcon from '@/components/Icons/InfoIcon';
+import FormInput from '@/components/FormInput.jsx';
 import Toggle from '@/components/Toggle.jsx';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
@@ -57,7 +56,6 @@ export const SecretField = memo(props => {
     toggleLabelSecret = 'Secret',
     toggleLabelPassword = 'Password',
     specifiedProjectId,
-    tooltipDescription,
   } = props;
   const styles = secretFieldStyles(error);
   const { sx: containerSx, ...restOfContainerProps } = containerProps;
@@ -186,68 +184,40 @@ export const SecretField = memo(props => {
           {...selectProps}
         />
       ) : (
-        <Box sx={styles.passwordFieldWrapper}>
-          {tooltipDescription && (
-            <Box sx={styles.labelRow}>
-              <Box component="span">
-                {label}
-                {required ? ' *' : ''}
-              </Box>
-              <Tooltip title={<TooltipMarkdownContent>{tooltipDescription}</TooltipMarkdownContent>}>
-                <Box
-                  component="span"
-                  sx={styles.tooltipIconInLabel}
+        <FormInput
+          sx={styles.formInput}
+          variant="standard"
+          fullWidth
+          id={id}
+          label={label}
+          value={rawPasswordInput}
+          required={required}
+          disabled={disabled}
+          onChange={handleChangeValue}
+          type={showPassword ? 'text' : 'password'}
+          // onBlur={onInputBlur}
+          error={error}
+          helperText={helperText}
+          InputProps={{
+            endAdornment: passwordVisibilityToggle && (
+              <InputAdornment position="end">
+                <IconButton
+                  size="small"
+                  color="secondary"
+                  aria-label="toggle password visibility"
+                  edge="end"
+                  onClick={() => {
+                    setShowPassword(prevState => !prevState);
+                  }}
                 >
-                  <InfoIcon
-                    width={16}
-                    height={16}
-                  />
-                </Box>
-              </Tooltip>
-            </Box>
-          )}
-          <TextField
-            sx={styles.formInput}
-            variant="standard"
-            fullWidth
-            autoComplete="off"
-            id={id}
-            label={tooltipDescription ? undefined : `${label}${required ? ' *' : ''}`}
-            value={rawPasswordInput}
-            disabled={disabled}
-            onChange={handleChangeValue}
-            type={showPassword ? 'text' : 'password'}
-            error={error}
-            helperText={helperText}
-            slotProps={{
-              inputLabel: tooltipDescription
-                ? undefined
-                : {
-                    sx: styles.inputLabel,
-                    shrink: true,
-                  },
-            }}
-            InputProps={{
-              endAdornment: passwordVisibilityToggle && (
-                <InputAdornment position="end">
-                  <IconButton
-                    size="small"
-                    color="secondary"
-                    aria-label="toggle password visibility"
-                    edge="end"
-                    onClick={() => {
-                      setShowPassword(prevState => !prevState);
-                    }}
-                  >
-                    {showPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-            {...inputProps}
-            {...textFieldProps}
-          />
-        </Box>
+                  {showPassword ? <VisibilityOff /> : <Visibility />}
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+          {...inputProps}
+          {...textFieldProps}
+        />
       )}
       <Toggle
         sx={styles.toggle}
@@ -273,35 +243,11 @@ const secretFieldStyles = error => ({
       top: '-0.3125rem',
     },
   },
-  passwordFieldWrapper: {
-    flexGrow: 1,
-  },
   formInput: {
-    width: '100%',
+    flexGrow: 1,
   },
   toggle: {
     marginBottom: error ? '1.375rem' : 0,
-  },
-  labelRow: ({ palette }) => ({
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-    marginBottom: '0.25rem',
-    color: palette.text.secondary,
-    fontSize: '0.75rem',
-  }),
-  tooltipIconInLabel: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    cursor: 'pointer',
-    '&:hover': {
-      opacity: 0.8,
-    },
-  },
-  inputLabel: {
-    '& .MuiInputLabel-asterisk': {
-      display: 'none',
-    },
   },
 });
 
@@ -325,7 +271,6 @@ const SecretManagementInput = memo(props => {
     id,
     name,
     specifiedProjectId,
-    description,
   } = props;
 
   const [inputLabel, setInputLabel] = useState('API Key');
@@ -377,7 +322,6 @@ const SecretManagementInput = memo(props => {
       disableSecret={disableSecret}
       id={id}
       specifiedProjectId={specifiedProjectId}
-      tooltipDescription={description}
     />
   );
 });

@@ -189,7 +189,7 @@ const PreviewHeader = memo(props => {
           {canPreview && (
             <>
               <Button
-                variant="elitea"
+                variant="alita"
                 color="primary"
                 onClick={handleSaveChanges}
                 disableRipple
@@ -247,13 +247,13 @@ const PreviewHeader = memo(props => {
             >
               <ToggleButton
                 value="rendered"
-                variant="elitea"
+                variant="alita"
                 sx={styles.toggleLeftButton}
               >
                 {isMarkdownFile ? 'Preview' : isDataFile ? 'Table' : 'Diagram'}
               </ToggleButton>
               <ToggleButton
-                variant="elitea"
+                variant="alita"
                 value="code"
                 sx={styles.toggleRightButton}
               >

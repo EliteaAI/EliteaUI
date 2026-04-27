@@ -273,7 +273,7 @@ const IWModalForkButton = memo(({ selectedProject, onSuccess }) => {
         isForkingToolkit ||
         mainItemImportUUID !== selectedData[0]?.import_uuid
       }
-      variant="elitea"
+      variant="alita"
       onClick={onClickFork}
       sx={{ marginRight: '0rem' }}
     >

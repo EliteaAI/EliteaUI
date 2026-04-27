@@ -123,7 +123,7 @@ const CodeBlock = ({
                 >
                   <Box component="span">
                     <IconButton
-                      variant="elitea"
+                      variant="alita"
                       color="tertiary"
                       disabled={shouldDisableEdit}
                       sx={{
@@ -152,7 +152,7 @@ const CodeBlock = ({
                 placement="top"
               >
                 <IconButton
-                  variant="elitea"
+                  variant="alita"
                   color="tertiary"
                   sx={{
                     cursor: 'pointer',

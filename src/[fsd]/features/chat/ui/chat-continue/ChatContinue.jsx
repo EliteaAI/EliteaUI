@@ -87,10 +87,10 @@ const ChatContinue = memo(props => {
         <McpAuthModal
           open={showAuthModal}
           serverUrl={authRequiredAction.toolMeta?.server_url}
-          tokenStorageKey={authRequiredAction.toolOutputs?.server_url}
-          mcpAuthMetadata={mcpAuthMetadata}
+          authServers={mcpAuthMetadata.authServers}
+          oauthAuthorizationServer={mcpAuthMetadata.oauthAuthorizationServer}
+          oauthMetadata={mcpAuthMetadata.oauthMetadata}
           projectId={projectId}
-          toolkitId={mcpAuthMetadata?.toolkitId}
           onClose={handleCloseModal}
           onCancel={handleCancelModal}
         />

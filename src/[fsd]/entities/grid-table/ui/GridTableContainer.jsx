@@ -11,7 +11,6 @@ const GridTableContainer = memo(props => {
     emptyMessage = 'No data',
     loadingMessage = 'Loading...',
     sx = {},
-    toolbarSx = {},
     containerProps = {},
   } = props;
 
@@ -22,7 +21,7 @@ const GridTableContainer = memo(props => {
       sx={[styles.root, sx]}
       {...containerProps}
     >
-      {toolbar && <Box sx={[styles.toolbar, toolbarSx]}>{toolbar}</Box>}
+      {toolbar && <Box sx={styles.toolbar}>{toolbar}</Box>}
 
       <Box sx={styles.tableWrapper}>
         {isLoading ? (

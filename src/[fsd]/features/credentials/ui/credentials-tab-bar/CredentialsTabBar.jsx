@@ -43,7 +43,7 @@ const CredentialTabBar = memo(props => {
 
   const [searchParams] = useSearchParams();
   const { credential_uid } = useParams();
-  const { toastSuccess } = useToast();
+  const { toastSuccess, toastError } = useToast();
 
   const { checkPermission } = useCheckPermission();
   const { projectType } = useProjectType();
@@ -92,21 +92,25 @@ const CredentialTabBar = memo(props => {
     };
   }, [configurationsAsSchema, toolType]);
 
-  const { create, isLoading: isCreateLoading } = useCreateCredential(
-    formik,
-    credentialDetails,
-    configurationKeys,
-  );
+  const {
+    create,
+    isLoading: isCreateLoading,
+    error: createError,
+    isError: isCreateError,
+  } = useCreateCredential(formik, credentialDetails, configurationKeys);
 
-  const { update, isLoading: isUpdateLoading } = useUpdateCredential(
-    formik,
-    credentialDetails,
-    configurationKeys,
-  );
+  const {
+    update,
+    isLoading: isUpdateLoading,
+    error: updateError,
+    isError: isUpdateError,
+  } = useUpdateCredential(formik, credentialDetails, configurationKeys);
 
   const isFormDirtyExcluding = useFormDirtyExcluding();
 
   const isLoading = useMemo(() => isCreateLoading || isUpdateLoading, [isCreateLoading, isUpdateLoading]);
+  const error = useMemo(() => createError || updateError, [createError, updateError]);
+  const isError = useMemo(() => isCreateError || isUpdateError, [isCreateError, isUpdateError]);
   const shouldDisableSave = useMemo(
     () => isLoading || !isFormDirtyExcluding,
     [isLoading, isFormDirtyExcluding],
@@ -141,6 +145,7 @@ const CredentialTabBar = memo(props => {
           trackEvent(GA_EVENT_NAMES.CREDENTIALS_CREATED, {
             [GA_EVENT_PARAMS.CREDENTIALS_TYPE]: projectType === 'private' ? 'private' : 'project',
             [GA_EVENT_PARAMS.TOOLKIT_TYPE]: toolType || 'unknown',
+            [GA_EVENT_PARAMS.PROJECT_TYPE]: projectType || 'unknown',
           });
         }
 
@@ -151,21 +156,23 @@ const CredentialTabBar = memo(props => {
           navigateBack(true);
         }, 100);
       } else {
-        if (typeof result.error?.data?.error === 'string' && result?.error?.data?.field === 'elitea_title')
+        if (typeof result.error?.data?.error === 'string' && result?.error?.data?.field === 'alita_title')
           onEnableEditTitle?.();
 
         const { newErrors } = CredentialErrorHelpers.extractInformationFromCredentialError({
-          error: result.error || {},
+          error,
           schemaProperties,
           settings: credentialDetails?.settings || {},
         });
+
         if (Object.keys(newErrors).length > 0) {
           setValidationErrorMessages?.(newErrors);
           setShowValidation?.(true);
           setApiError?.('');
         } else {
-          setApiError?.(buildErrorMessage(result.error) || 'Failed to save credential');
+          setApiError?.(buildErrorMessage(error));
         }
+        setApiError(buildErrorMessage(result.error) || 'Failed to save credential');
       }
     } catch {
       setApiError('An unexpected error occurred');
@@ -179,6 +186,7 @@ const CredentialTabBar = memo(props => {
     toolType,
     navigateBack,
     onEnableEditTitle,
+    error,
     schemaProperties,
     credentialDetails?.settings,
     setApiError,
@@ -203,6 +211,10 @@ const CredentialTabBar = memo(props => {
     }
   }, [onClearCredentialDetails, wantToCancel, formik, navigateBack]);
 
+  useEffect(() => {
+    if (isError) toastError(buildErrorMessage(error));
+  }, [error, isError, toastError]);
+
   return (
     <>
       <TabBarItems>
@@ -212,7 +224,7 @@ const CredentialTabBar = memo(props => {
         >
           <Box component="span">
             <MuiButton
-              variant="elitea"
+              variant="alita"
               color="primary"
               disabled={
                 hasErrors ||

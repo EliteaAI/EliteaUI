@@ -1,4 +1,4 @@
-import { eliteaApi } from '@/api/eliteaApi.js';
+import { alitaApi } from '@/api/alitaApi.js';
 import { createSlice } from '@reduxjs/toolkit';
 
 const initApplication = {
@@ -36,7 +36,7 @@ const applicationsSlice = createSlice({
   },
   extraReducers: builder => {
     builder.addMatcher(
-      eliteaApi.endpoints.toolkitTypes.matchFulfilled,
+      alitaApi.endpoints.toolkitTypes.matchFulfilled,
       (state, { payload, meta: { arg } }) => {
         const { params: { mcp } = {} } = arg.originalArgs || {};
         if (!mcp) {
@@ -47,7 +47,7 @@ const applicationsSlice = createSlice({
       },
     );
     builder.addMatcher(
-      eliteaApi.endpoints.getAvailableConfigurationsType.matchFulfilled,
+      alitaApi.endpoints.getAvailableConfigurationsType.matchFulfilled,
       (state, { payload }) => {
         // Merge configurations from different sections instead of overwriting
         if (payload && Array.isArray(payload)) {
@@ -66,13 +66,13 @@ const applicationsSlice = createSlice({
         }
       },
     );
-    builder.addMatcher(eliteaApi.endpoints.applicationDetails.matchFulfilled, (state, { payload }) => {
+    builder.addMatcher(alitaApi.endpoints.applicationDetails.matchFulfilled, (state, { payload }) => {
       state.currentApplication = {
         ...payload,
       };
     });
     builder.addMatcher(
-      eliteaApi.endpoints.validateApplicationVersion.matchFulfilled,
+      alitaApi.endpoints.validateApplicationVersion.matchFulfilled,
       (state, { meta: { arg } }) => {
         const { applicationId, projectId, versionId } = arg.originalArgs;
         state.versionValidationInfo = {
@@ -81,7 +81,7 @@ const applicationsSlice = createSlice({
         };
       },
     );
-    builder.addMatcher(eliteaApi.endpoints.applicationEdit.matchFulfilled, (state, { payload }) => {
+    builder.addMatcher(alitaApi.endpoints.applicationEdit.matchFulfilled, (state, { payload }) => {
       state.currentApplication = {
         ...payload,
       };

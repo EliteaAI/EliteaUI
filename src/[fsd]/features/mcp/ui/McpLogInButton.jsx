@@ -6,10 +6,10 @@ import { useMcpLogin } from '@/[fsd]/features/mcp/lib/hooks';
 import { McpAuthModal } from '@/[fsd]/features/mcp/ui';
 
 const McpLogInButton = memo(props => {
-  const { values, onSuccess, sx, title = 'Log in', authConfig } = props;
+  const { values, onSuccess, sx, title = 'Log in' } = props;
   const styles = getStyles();
 
-  const { isLoggedIn, isRunning, onLogin, modalProps } = useMcpLogin({ values, onSuccess, authConfig });
+  const { isLoggedIn, isRunning, onLogin, modalProps } = useMcpLogin({ values, onSuccess });
 
   if (isLoggedIn) {
     return null;
@@ -19,7 +19,7 @@ const McpLogInButton = memo(props => {
     <>
       <Button
         color="tertiary"
-        variant="elitea"
+        variant="alita"
         onClick={onLogin}
         disabled={isRunning}
         sx={[styles.loginText, sx]}

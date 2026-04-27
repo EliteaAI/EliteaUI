@@ -6,17 +6,268 @@ import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { FlowEditorContext } from '@/[fsd]/app/providers';
 import { useAIContentGenerationStreaming } from '@/[fsd]/features/pipelines/ai-assistant/lib/hooks';
 import { AIAssistantPanelHeader, AIPromptInput } from '@/[fsd]/features/pipelines/ai-assistant/ui';
-import AIAssistantCodeMirrorInput from '@/[fsd]/features/pipelines/ai-assistant/ui/AIAssistantCodeMirrorInput';
 import {
   formatAvailableNodesForPrompt,
   formatStateVariablesForPrompt,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers/state.helpers';
-import { Modal, Text } from '@/[fsd]/shared/ui';
+import { FStringAutocompleteHelpers } from '@/[fsd]/features/pipelines/fstring-autocomplete/lib/helpers';
+import { FStringAutocompletePopper } from '@/[fsd]/features/pipelines/fstring-autocomplete/ui';
+import { Field, Modal, Text } from '@/[fsd]/shared/ui';
 import { capitalizeFirstChar } from '@/common/utils';
 import CloseIcon from '@/components/Icons/CloseIcon';
 import CopyIcon from '@/components/Icons/CopyIcon';
 import { detectContentType, useLanguageLinter } from '@/hooks/useCodeMirrorLanguageExtensions';
 import useToast from '@/hooks/useToast';
+import { Prec } from '@codemirror/state';
+import { EditorView, keymap } from '@codemirror/view';
+
+const CLOSED_FSTRING_AUTOCOMPLETE = FStringAutocompleteHelpers.createClosedFStringAutocompleteState();
+
+const getNextAutocompleteIndex = (currentIndex, optionsLength, direction) => {
+  if (direction === 'ArrowDown') {
+    return currentIndex >= optionsLength - 1 ? 0 : currentIndex + 1;
+  }
+  return currentIndex <= 0 ? optionsLength - 1 : currentIndex - 1;
+};
+
+const AIAssistantCodeMirrorInput = memo(props => {
+  const {
+    editorRef,
+    value,
+    extensions,
+    notifyChange,
+    readOnly = false,
+    onBlur,
+    onKeyDown,
+    enableFStringAutocomplete = false,
+    stateVariableOptions = [],
+  } = props;
+
+  const styles = aiAssistantModalStyles();
+  const [autocompleteState, setAutocompleteState] = useState(CLOSED_FSTRING_AUTOCOMPLETE);
+  const [autocompleteAnchor, setAutocompleteAnchor] = useState(null);
+
+  const filteredStateVariableOptions = useMemo(() => {
+    if (!enableFStringAutocomplete || !autocompleteState.isOpen || !stateVariableOptions.length) {
+      return [];
+    }
+
+    return FStringAutocompleteHelpers.filterFStringAutocompleteOptions(
+      stateVariableOptions,
+      autocompleteState.query,
+    );
+  }, [autocompleteState.isOpen, autocompleteState.query, enableFStringAutocomplete, stateVariableOptions]);
+
+  const highlightedOptionIndex = FStringAutocompleteHelpers.getFStringAutocompleteHighlightedIndex(
+    autocompleteState.activeIndex,
+    filteredStateVariableOptions,
+  );
+
+  const closeAutocomplete = useCallback(() => {
+    setAutocompleteState(CLOSED_FSTRING_AUTOCOMPLETE);
+    setAutocompleteAnchor(null);
+  }, []);
+
+  const updateAutocompleteFromView = useCallback(
+    view => {
+      if (!enableFStringAutocomplete || readOnly || !stateVariableOptions.length || !view?.hasFocus) {
+        closeAutocomplete();
+        return;
+      }
+
+      const currentValue = view.state.doc.toString();
+      const cursorPosition = view.state.selection.main.head;
+      const nextAutocompleteState = FStringAutocompleteHelpers.getFStringAutocompleteState(
+        currentValue,
+        cursorPosition,
+      );
+
+      if (!nextAutocompleteState.isOpen) {
+        closeAutocomplete();
+        return;
+      }
+
+      const cursorCoordinates = view.coordsAtPos(cursorPosition);
+
+      setAutocompleteState(nextAutocompleteState);
+      setAutocompleteAnchor(
+        cursorCoordinates
+          ? {
+              left: cursorCoordinates.left,
+              top: cursorCoordinates.bottom,
+            }
+          : null,
+      );
+    },
+    [closeAutocomplete, enableFStringAutocomplete, readOnly, stateVariableOptions.length],
+  );
+
+  const updateAutocompleteFromViewRef = useRef(updateAutocompleteFromView);
+  useEffect(() => {
+    updateAutocompleteFromViewRef.current = updateAutocompleteFromView;
+  }, [updateAutocompleteFromView]);
+
+  const trackingExtension = useMemo(() => {
+    if (!enableFStringAutocomplete || readOnly || !stateVariableOptions.length) {
+      return null;
+    }
+
+    return EditorView.updateListener.of(update => {
+      if (update.docChanged || update.selectionSet || update.focusChanged) {
+        updateAutocompleteFromViewRef.current(update.view);
+      }
+    });
+  }, [enableFStringAutocomplete, readOnly, stateVariableOptions.length]);
+
+  // Ref holds latest state/callbacks so the keymap extension stays stable
+  const autocompleteKeyContextRef = useRef(null);
+
+  const autocompleteKeymap = useMemo(() => {
+    if (!enableFStringAutocomplete || readOnly || !stateVariableOptions.length) {
+      return null;
+    }
+
+    const handleKey = key => {
+      const ctx = autocompleteKeyContextRef.current;
+
+      if (!ctx || !ctx.autocompleteState.isOpen) {
+        return false;
+      }
+
+      if (key === 'ArrowDown' || key === 'ArrowUp') {
+        if (ctx.filteredStateVariableOptions.length === 0) {
+          return false;
+        }
+
+        ctx.setAutocompleteState(prevState => ({
+          ...prevState,
+          activeIndex: getNextAutocompleteIndex(
+            prevState.activeIndex,
+            ctx.filteredStateVariableOptions.length,
+            key,
+          ),
+        }));
+
+        return true;
+      }
+
+      if (key === 'Enter') {
+        const selectedOption = ctx.filteredStateVariableOptions[ctx.highlightedOptionIndex];
+
+        if (!selectedOption) {
+          return false;
+        }
+
+        ctx.handleSuggestionSelect(selectedOption.value);
+
+        return true;
+      }
+
+      if (key === 'Escape') {
+        ctx.closeAutocomplete();
+
+        return true;
+      }
+
+      return false;
+    };
+
+    return Prec.highest(
+      keymap.of([
+        { key: 'ArrowDown', run: () => handleKey('ArrowDown') },
+        { key: 'ArrowUp', run: () => handleKey('ArrowUp') },
+        { key: 'Enter', run: () => handleKey('Enter') },
+        { key: 'Escape', run: () => handleKey('Escape') },
+      ]),
+    );
+  }, [enableFStringAutocomplete, readOnly, stateVariableOptions.length]);
+
+  const mergedExtensions = useMemo(() => {
+    const normalizedExtensions = Array.isArray(extensions) ? extensions : extensions ? [extensions] : [];
+    const extras = [trackingExtension, autocompleteKeymap].filter(Boolean);
+
+    return extras.length ? [...normalizedExtensions, ...extras] : normalizedExtensions;
+  }, [extensions, trackingExtension, autocompleteKeymap]);
+
+  const virtualAnchor = useMemo(
+    () => FStringAutocompleteHelpers.createVirtualAnchorElement(autocompleteAnchor),
+    [autocompleteAnchor],
+  );
+
+  const handleSuggestionSelect = useCallback(
+    selectedVariable => {
+      const view = editorRef.current?.view;
+
+      if (!view || !autocompleteState.isOpen) {
+        return;
+      }
+
+      const currentEditorValue = view.state.doc.toString();
+      const { changeFrom, changeTo, cursorPosition, insertText, nextValue } =
+        FStringAutocompleteHelpers.getFStringAutocompleteInsertion(
+          currentEditorValue,
+          autocompleteState,
+          selectedVariable,
+        );
+
+      view.dispatch({
+        changes: {
+          from: changeFrom,
+          to: changeTo,
+          insert: insertText,
+        },
+        selection: {
+          anchor: cursorPosition,
+        },
+        scrollIntoView: true,
+      });
+      notifyChange?.(nextValue);
+      closeAutocomplete();
+      view.focus();
+    },
+    [autocompleteState, closeAutocomplete, editorRef, notifyChange],
+  );
+
+  // Keep ref up to date on every render so keymap closure always uses latest values
+  autocompleteKeyContextRef.current = {
+    autocompleteState,
+    filteredStateVariableOptions,
+    highlightedOptionIndex,
+    handleSuggestionSelect,
+    closeAutocomplete,
+    setAutocompleteState,
+  };
+
+  const handleEditorKeyDown = useCallback(
+    event => {
+      onKeyDown?.(event);
+    },
+    [onKeyDown],
+  );
+
+  return (
+    <Box sx={styles.codeMirrorAutocompleteContainer}>
+      <Field.CodeMirrorEditor
+        readOnly={readOnly}
+        ref={editorRef}
+        value={value}
+        extensions={mergedExtensions}
+        notifyChange={notifyChange}
+        onBlur={onBlur}
+        onKeyDown={handleEditorKeyDown}
+      />
+      <FStringAutocompletePopper
+        open={autocompleteState.isOpen && filteredStateVariableOptions.length > 0 && !!virtualAnchor}
+        anchorEl={virtualAnchor}
+        options={filteredStateVariableOptions}
+        highlightedIndex={highlightedOptionIndex}
+        onSelect={handleSuggestionSelect}
+      />
+    </Box>
+  );
+});
+
+AIAssistantCodeMirrorInput.displayName = 'AIAssistantCodeMirrorInput';
 
 const AIAssistantModal = memo(props => {
   const {
@@ -100,7 +351,7 @@ const AIAssistantModal = memo(props => {
 
   const handleBlur = useCallback(
     contentOverride => {
-      const commitValue = typeof contentOverride === 'string' ? contentOverride : currentValue;
+      const commitValue = contentOverride !== undefined ? contentOverride : currentValue;
       const event = {
         preventDefault: () => {},
         target: { value: commitValue, name, id },
@@ -547,6 +798,10 @@ const aiAssistantModalStyles = () => ({
     left: spacing(2),
     zIndex: 10,
   }),
+  codeMirrorAutocompleteContainer: {
+    height: '100%',
+    position: 'relative',
+  },
   singleViewContainer: ({ spacing }) => ({
     flex: 1,
     minHeight: 0,

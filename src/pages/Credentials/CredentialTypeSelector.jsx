@@ -47,7 +47,7 @@ const CredentialTypeSelector = memo(
             return {
               key,
               label,
-              icon: getToolIconByType(key, theme, { toolSchema: item.config_schema.properties.data }),
+              icon: getToolIconByType(key, theme, item.config_schema.properties.data),
               onClick: onAddTool(item),
               section: item?.section,
               category: item?.config_schema?.properties?.data.metadata?.categories?.[0] || 'Other',

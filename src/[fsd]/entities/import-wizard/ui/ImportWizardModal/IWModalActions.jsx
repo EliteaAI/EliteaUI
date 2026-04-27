@@ -12,7 +12,6 @@ const IWModalActions = memo(props => {
     onSucceedImportAgree,
     isForking,
     setImportSucceedData,
-    setImportErrorData,
     setForkedData,
     forkedData,
     values,
@@ -23,7 +22,7 @@ const IWModalActions = memo(props => {
     return (
       <Button
         disableRipple
-        variant="elitea"
+        variant="alita"
         color="primary"
         onClick={onSucceedImportAgree}
       >
@@ -35,7 +34,7 @@ const IWModalActions = memo(props => {
     <Box sx={{ display: 'flex', gap: '1rem' }}>
       <Button
         disableRipple
-        variant="elitea"
+        variant="alita"
         color="secondary"
         onClick={onCloseHandler}
       >
@@ -49,10 +48,7 @@ const IWModalActions = memo(props => {
       ) : (
         <IWModalImportButton
           selectedProject={values.selectedProject}
-          onSuccess={(data, errors) => {
-            setImportSucceedData(data);
-            setImportErrorData(errors);
-          }}
+          onSuccess={data => setImportSucceedData(data)}
           isDisabled={!canImport}
           canImport={canImport}
         />

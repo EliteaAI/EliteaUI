@@ -412,7 +412,7 @@ const SecretsTable = memo(props => {
         return (
           <Box sx={styles.actionsContainer}>
             <IconButton
-              variant="elitea"
+              variant="alita"
               color="tertiary"
               onClick={handleSaveClick(row.id)}
               sx={styles.actionButton}
@@ -420,7 +420,7 @@ const SecretsTable = memo(props => {
               <CheckIcon sx={styles.checkIcon} />
             </IconButton>
             <IconButton
-              variant="elitea"
+              variant="alita"
               color="tertiary"
               onClick={handleCancelClick(row.id)}
               sx={styles.actionButton}
@@ -436,7 +436,7 @@ const SecretsTable = memo(props => {
           {/* Safari-specific copy action - only show when secret is visible */}
           {isSafariBrowser && !row.isNew && isSecretVisible && (
             <IconButton
-              variant="elitea"
+              variant="alita"
               color="tertiary"
               onClick={handleCopyVisibleSecret(row.id)}
               sx={styles.actionButton}
@@ -448,7 +448,7 @@ const SecretsTable = memo(props => {
           {/* Show/Hide secret action */}
           {checkPermission(PERMISSIONS.secrets.unsecret) && !row.isNew && (
             <IconButton
-              variant="elitea"
+              variant="alita"
               color="tertiary"
               onClick={isSecretVisible ? () => handleHideSecret(row.id) : () => handleShowSecret(row.id)}
               sx={styles.actionButton}
@@ -462,7 +462,7 @@ const SecretsTable = memo(props => {
           )}
           {/* More actions menu */}
           <IconButton
-            variant="elitea"
+            variant="alita"
             color="tertiary"
             onClick={handleActionsMenuClick(row.id)}
             sx={styles.actionButton}

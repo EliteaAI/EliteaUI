@@ -437,7 +437,7 @@ export default function UsersDropdown({
       >
         <IconButton
           ref={anchorRef}
-          variant={slotProps?.IconButton?.variant || 'elitea'}
+          variant={slotProps?.IconButton?.variant || 'alita'}
           color={slotProps?.IconButton?.color || 'tertiary'}
           disableRipple
           onClick={handleToggle}

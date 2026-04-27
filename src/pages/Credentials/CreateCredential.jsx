@@ -29,9 +29,6 @@ const CreateCredential = memo(
     // Check if we're coming from Model Configuration Settings to show filtered credentials
     const isFromModelConfiguration = searchParams.get('from') === 'model-configuration';
     const section = searchParams.get('section');
-    // Pre-fill credential name and ID when navigating from a missing-credential banner
-    const prefillName = searchParams.get('prefill_name') ?? '';
-    const prefillId = searchParams.get('prefill_id') ?? '';
     const [toolErrors, setToolErrors] = useState({});
     const [showValidation, setShowValidation] = useState(false);
     const [validationErrorMessages, setValidationErrorMessages] = useState({});
@@ -123,15 +120,9 @@ const CreateCredential = memo(
           result.settings[prop] = value;
         }
       });
-      // Apply pre-fill values from URL params (set by CredentialWarningBanner "Create a credential" link)
-      if (prefillId) result.settings.elitea_title = prefillId;
-      if (prefillName) result.settings.label = prefillName;
-      // Enable editing the elitea_title field so the pre-filled ID is visible and editable
-      if (prefillId) result.enableEditEliteaTitle = true;
-
       return result;
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [credentialType, sectionProps, toolSchema, schema, prefillId, prefillName]);
+    }, [credentialType, sectionProps, toolSchema, schema]);
 
     useEffect(() => {
       setEditCredentialDetail(initialValues);
@@ -151,7 +142,7 @@ const CreateCredential = memo(
     }, [initialValues]);
 
     const onEnableEditTitle = useCallback(() => {
-      setEditCredentialDetail(prev => ({ ...prev, enableEditEliteaTitle: true }));
+      setEditCredentialDetail(prev => ({ ...prev, enableEditAlitaTitle: true }));
     }, []);
 
     useEffect(() => {
@@ -200,7 +191,7 @@ const CreateCredential = memo(
                 <Tooltip.TypographyWithConditionalTooltip
                   title={pageTitle}
                   placement="top"
-                  variant="headingSmall"
+                  variant="labelMedium"
                   sx={styles.pageTitle}
                 >
                   {pageTitle}

@@ -75,10 +75,6 @@ const semiTransparentBlack = 'rgba(255, 255, 255, 0.5)';
 const purpleLight = 'rgba(245, 81, 249, 1)';
 const purpleDark = 'rgba(254, 180, 255, 1)';
 const purpleShadow = 'rgba(241, 43, 255, 0.2)';
-const lightPurpleBgr = '#F0EDF7';
-const lightOrangeBgr = '#FFF1E4';
-const lightPurple = '#A48EE3';
-const lightOrange = '#FFB380';
 
 const lightPalette = {
   mode: 'light',
@@ -96,7 +92,7 @@ const lightPalette = {
   background: {
     info: blue8,
     default: blue01,
-    eliteaDefault: gradient,
+    alitaDefault: gradient,
     secondary: white,
     tabPanel: white01,
     chatBkg: almostWhite,
@@ -115,10 +111,7 @@ const lightPalette = {
     warning8,
     card: {
       default: white,
-      hover: white,
-      gradientDark: 'linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0) 100%)',
-      hoverBorderGradient: 'linear-gradient(0deg, #F7AEFF 0%, #F37DFF 100%)',
-      hoverShadow: '0px -3px 0.9375rem 0px rgba(225, 56, 255, 0.3)',
+      hover: blue01,
     },
     categoriesButton: {
       selected: {
@@ -143,10 +136,6 @@ const lightPalette = {
       default: dark10,
       trophy: '#48433F',
       checkedBox: light10,
-      entityGradient:
-        'linear-gradient(45.36deg, rgba(119, 122, 124, 0.3) 16.25%, rgba(226, 226, 226, 0.3) 87.07%)',
-      entityBorderGradient:
-        'linear-gradient(225deg, rgba(59, 66, 70, 0.1) 12.64%, rgba(59, 66, 70, 0.35) 87.88%)',
     },
     select: {
       hover: dark10,
@@ -278,7 +267,7 @@ const lightPalette = {
     },
     showContextDialog: gradient,
     sideBar: 'linear-gradient(180deg, #E4F0FF 0%, #FDEAFF 100%);',
-    imageAttachment: `linear-gradient(0deg, #FFFFFF 0%, rgba(255, 255, 255, 0) 100%)`,
+    imageAttachment: `linear-gradient(0deg, #ECECEE 0%, rgba(236, 236, 238, 0) 100%)`,
     agentModal: {
       border: 'linear-gradient(224.66deg, #8BC9FF 0%, #FDA3FF 99.46%)',
       background: 'linear-gradient(224.97deg, #DEEDFF 0%, #F9DFFE 100%)',
@@ -320,10 +309,9 @@ const lightPalette = {
     userMessageEditor: magentaDefault,
     notificationItem: light40,
     cardsOutlines: light40,
-    cardsOutlinesGradient: 'linear-gradient(0deg, rgba(208, 213, 218, 0.6) 0%, #D0D5DA 100%)',
     conversationItemDivider: dark10,
     highlightUserMessage: skyBlue40,
-    error: red40,
+    error: red,
     flowNode: light20,
     sidebarDivider: dark10,
     chatEditPlaceholderBorder: blue03,
@@ -420,7 +408,6 @@ const lightPalette = {
     },
     tagChip: {
       default: light10,
-      hover: gray60,
       active: white,
       disabled: light20,
     },
@@ -482,20 +469,6 @@ const lightPalette = {
     printer: '#63EF9FFF', // Printer - 50 shades of green
     hitl: '#FFE0B6', // HITL - light amber
     custom: '#FFD5D5', // Custom - light red
-  },
-  scrollbar: {
-    thumb: dark10,
-    thumbHover: light10,
-  },
-  capability: {
-    vision: {
-      background: lightPurpleBgr,
-      icon: lightPurple,
-    },
-    reasoning: {
-      background: lightOrangeBgr,
-      icon: lightOrange,
-    },
   },
 };
 

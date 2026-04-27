@@ -4,8 +4,8 @@ import { Box, IconButton, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { ButtonsContainer } from '@/components/Chat/StyledComponents';
+import AlitaIcon from '@/components/Icons/AlitaIcon';
 import CopyIcon from '@/components/Icons/CopyIcon';
-import EliteAIcon from '@/components/Icons/EliteAIcon';
 import UserIcon from '@/components/Icons/UserIcon';
 import Markdown from '@/components/Markdown';
 import useToast from '@/hooks/useToast';
@@ -33,7 +33,7 @@ const ModalMessage = memo(props => {
             <UserIcon sx={styles.userIcon} />
           </Box>
         ) : (
-          <EliteAIcon sx={styles.eliteaIcon} />
+          <AlitaIcon sx={styles.alitaIcon} />
         )}
         <Typography
           variant="bodyMedium"
@@ -108,7 +108,7 @@ const modalMessageStyles = () => ({
     fill: palette.icon.fill.inactive,
   }),
 
-  eliteaIcon: {
+  alitaIcon: {
     fontSize: '1.5rem',
   },
 

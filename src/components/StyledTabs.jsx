@@ -92,42 +92,6 @@ export const StyledTabsContextProvider = memo(props => {
 
 StyledTabsContextProvider.displayName = 'StyledTabsContextProvider';
 
-const DISABLED_TAB_TOOLTIP_OWN_KEYS = new Set(['tooltipTitle', 'tabProps', 'tabSx', 'display']);
-
-const DisabledTabWithTooltip = memo(
-  forwardRef((props, ref) => {
-    const { tooltipTitle, tabProps, tabSx, display } = props;
-
-    const tabsForwardedProps = {};
-    for (const key of Object.keys(props)) {
-      if (!DISABLED_TAB_TOOLTIP_OWN_KEYS.has(key)) {
-        tabsForwardedProps[key] = props[key];
-      }
-    }
-    return (
-      <Tooltip
-        title={tooltipTitle}
-        placement="top"
-      >
-        <Box
-          component="span"
-          sx={{ display: 'inline-flex' }}
-        >
-          <BaseTab
-            ref={ref}
-            {...tabProps}
-            {...tabsForwardedProps}
-            sx={[tabSx, { display }]}
-            disabled
-          />
-        </Box>
-      </Tooltip>
-    );
-  }),
-);
-
-DisabledTabWithTooltip.displayName = 'DisabledTabWithTooltip';
-
 const StyledPureTabs = memo(
   forwardRef((props, ref) => {
     const {
@@ -229,13 +193,19 @@ const StyledPureTabs = memo(
                   };
 
                   return tab.disabled ? (
-                    <DisabledTabWithTooltip
+                    <Tooltip
+                      title={tab.disabled || 'This tab is disabled'}
+                      placement="top"
                       key={index}
-                      tooltipTitle={typeof tab.disabled === 'string' ? tab.disabled : 'This tab is disabled'}
-                      tabProps={tabProps}
-                      tabSx={styles.disabledTab}
-                      display={tab.display}
-                    />
+                    >
+                      <Box component="span">
+                        <BaseTab
+                          {...tabProps}
+                          sx={[styles.disabledTab, { display: tab.display }]}
+                          disabled
+                        />
+                      </Box>
+                    </Tooltip>
                   ) : (
                     <BaseTab
                       sx={[styles.tab, { display: tab.display }]}
@@ -311,7 +281,7 @@ export const StyledTabBar = styled(Box)(({ theme }) => ({
   borderBottomWidth: '0.0625rem',
   borderBottomColor: theme.palette.border.sidebarDivider,
   width: '100%',
-  background: theme.palette.background.eliteaDefault,
+  background: theme.palette.background.alitaDefault,
 }));
 
 /** @type {MuiSx} */
@@ -323,6 +293,7 @@ const styledPureTabsStyles = (componentHeight, shouldShowLabel, tabSX, isCreateP
     marginRight: '2rem',
     minHeight: '2rem',
     fontSize: '0.875rem',
+    fontWeight: '500',
     '& button': {
       minHeight: '1.875rem',
       textTransform: 'capitalize',
@@ -346,7 +317,7 @@ const styledPureTabsStyles = (componentHeight, shouldShowLabel, tabSX, isCreateP
     borderBottomWidth: '0.0625rem',
     borderBottomColor: palette.border.sidebarDivider,
     width: '100%',
-    background: palette.background.eliteaDefault,
+    background: palette.background.alitaDefault,
   }),
   tabBar: ({ palette }) => ({
     display: 'flex',
@@ -375,7 +346,6 @@ const styledPureTabsStyles = (componentHeight, shouldShowLabel, tabSX, isCreateP
     }),
   },
   tab: ({ palette }) => ({
-    fontWeight: '600',
     ...(isCreatePage && {
       pointerEvents: 'none',
       '&.MuiTab-textColorPrimary': {

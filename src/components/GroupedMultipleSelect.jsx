@@ -7,17 +7,16 @@ import {
   Input,
   InputAdornment,
   InputLabel,
-  ListItemIcon,
   ListItemText,
   MenuItem,
   Typography,
 } from '@mui/material';
-import { styled as muiStyled } from '@mui/material/styles';
 
 import { typographyVariants } from '@/MainTheme';
+import { MenuItemIcon, StyledFormControl, StyledMenuItemIcon } from '@/[fsd]/shared/ui/select';
 import CheckedIcon from '@/assets/checked-icon.svg?react';
 import { GROUP_SELECT_VALUE_SEPARATOR } from '@/common/constants';
-import { debounce, filterProps } from '@/common/utils';
+import { debounce } from '@/common/utils';
 import { useTheme } from '@emotion/react';
 import styled from '@emotion/styled';
 
@@ -26,78 +25,6 @@ import ArrowDownIcon from './Icons/ArrowDownIcon';
 import SearchIcon from './Icons/SearchIcon';
 import { StyledListSubheader } from './SearchBarComponents';
 import StyledSelect from './StyledSelect';
-
-const StyledFormControl = muiStyled(
-  FormControl,
-  filterProps('showBorder'),
-)(({ theme, showBorder }) =>
-  showBorder
-    ? {
-        '& .MuiSelect-icon': {
-          marginRight: '.75rem',
-        },
-        verticalAlign: 'bottom',
-
-        '& .MuiInputBase-root.MuiInput-root': {
-          padding: '0 .75rem',
-
-          '&:not(:hover, .Mui-error):before': {
-            borderBottom: `.0625rem solid ${theme.palette.border.lines}`,
-          },
-
-          '&:hover:not(.Mui-disabled, .Mui-error):before': {
-            borderBottom: `.125rem solid ${theme.palette.border.hover}`,
-          },
-        },
-
-        '& .MuiFormHelperText-root.Mui-error': {
-          paddingLeft: '.75rem',
-        },
-      }
-    : {
-        margin: '0 8px',
-        verticalAlign: 'bottom',
-        '& .MuiInputBase-root.MuiInput-root:before': {
-          border: 'none',
-        },
-        '& .MuiOutlinedInput-root': {
-          '& fieldset': {
-            border: 'none',
-          },
-          '&:hover fieldset': {
-            border: 'none',
-          },
-          '&.Mui-focused fieldset': {
-            border: 'none',
-          },
-          '& .MuiFormHelperText-root.Mui-error': {
-            paddingLeft: '.75rem',
-          },
-        },
-      },
-);
-
-const MenuItemIcon = muiStyled(ListItemIcon)(() => ({
-  width: '0.625rem',
-  height: '0.625rem',
-  fontSize: '0.625rem',
-  marginRight: '0.6rem',
-  minWidth: '0.625rem !important',
-  svg: {
-    fontSize: '0.625rem',
-  },
-}));
-
-const StyledMenuItemIcon = muiStyled(MenuItemIcon)(() => ({
-  justifySelf: 'flex-end',
-  justifyContent: 'flex-end',
-  marginRight: '0rem',
-  marginLeft: '1rem',
-
-  svg: {
-    fontSize: '0.75rem',
-  },
-}));
 
 const ValueItem = styled(Box)(() => ({
   alignItems: 'center',

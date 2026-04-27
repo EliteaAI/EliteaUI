@@ -2,12 +2,13 @@ import { memo, useMemo } from 'react';
 
 import { Box } from '@mui/material';
 
-import { AgentInput, ApplicationTools } from '@/[fsd]/features/agent/ui/agent-details/configurations';
+import { ApplicationTools } from '@/[fsd]/features/agent/ui/agent-details/configurations';
 import { ViewMode } from '@/common/constants.js';
 import ApplicationAdvanceSettings from '@/components/ApplicationAdvanceSettings';
 import ConversationStarters from '@/components/ConversationStarters';
 import ApplicationEditForm from '@/pages/Applications/Components/Applications/ApplicationEditForm';
 import ApplicationInformation from '@/pages/Applications/Components/Applications/ApplicationInformation';
+import ApplicationWelcomeMessage from '@/pages/Applications/Components/Applications/ApplicationWelcomeMessage';
 
 const PipelineConfigurationForm = memo(props => {
   const {
@@ -17,7 +18,6 @@ const PipelineConfigurationForm = memo(props => {
     isChatView = false,
     hidePythonSandbox,
     onAttachmentToolChange,
-    entityProjectId,
   } = props;
   const isDisabled = viewMode !== ViewMode.Owner;
 
@@ -33,11 +33,10 @@ const PipelineConfigurationForm = memo(props => {
         disabled={isDisabled}
         hidePythonSandbox={hidePythonSandbox}
         onAttachmentToolChange={onAttachmentToolChange}
-        entityProjectId={entityProjectId}
       />
       {!isDisabled && (
         <>
-          <AgentInput.WelcomeMessageInput />
+          <ApplicationWelcomeMessage />
           <ConversationStarters
             disabled={isDisabled}
             style={styles.conversationStarters}

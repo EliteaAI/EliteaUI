@@ -5,8 +5,8 @@ import { useParams } from 'react-router-dom';
 
 import { useTrackEvent } from '@/GA';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
+import { alitaApi } from '@/api/alitaApi';
 import { useLikeApplicationMutation, useUnlikeApplicationMutation } from '@/api/applications';
-import { eliteaApi } from '@/api/eliteaApi';
 import { ViewMode } from '@/common/constants';
 import { convertToJson } from '@/common/utils';
 
@@ -14,7 +14,7 @@ export function useLikeApplicationCard({ id, name, is_liked, type, viewMode, onS
   const dispatch = useDispatch();
   const trackEvent = useTrackEvent();
   const { tab } = useParams();
-  const queries = useSelector(state => state.eliteaApi.queries);
+  const queries = useSelector(state => state.alitaApi.queries);
   const queriesRef = useRef(queries);
   const [likeApplication, { isSuccess: isLikeApplicationSuccess, isLoading: isLoadingLikeApplication }] =
     useLikeApplicationMutation();
@@ -65,7 +65,7 @@ export function useLikeApplicationCard({ id, name, is_liked, type, viewMode, onS
         try {
           const params = convertToJson(cacheKey.replace('publicApplicationsList', '') || '{}');
           dispatch(
-            eliteaApi.util.updateQueryData('publicApplicationsList', params, applicationList => {
+            alitaApi.util.updateQueryData('publicApplicationsList', params, applicationList => {
               applicationList.rows = applicationList.rows.map(application => {
                 if (application.id === id) {
                   application.is_liked = true;
@@ -103,7 +103,7 @@ export function useLikeApplicationCard({ id, name, is_liked, type, viewMode, onS
         try {
           const params = convertToJson(cacheKey.replace('publicApplicationsList', '') || '{}');
           dispatch(
-            eliteaApi.util.updateQueryData('publicApplicationsList', params, applicationList => {
+            alitaApi.util.updateQueryData('publicApplicationsList', params, applicationList => {
               if (tab === 'my-liked') {
                 applicationList.rows = applicationList.rows.filter(application => application.id !== id);
               } else {

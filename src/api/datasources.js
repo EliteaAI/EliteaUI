@@ -1,7 +1,7 @@
 import { PAGE_SIZE, PUBLIC_PROJECT_ID } from '@/common/constants';
 import { convertToJson, removeDuplicateObjects, stringToList } from '@/common/utils.jsx';
 
-import { eliteaApi } from './eliteaApi.js';
+import { alitaApi } from './alitaApi.js';
 
 export const TAG_TYPE_DATA_SOURCES = 'TAG_TYPE_DATA_SOURCES';
 const TAG_TYPE_PUBLIC_DATA_SOURCES = 'TAG_TYPE_PUBLIC_DATA_SOURCES';
@@ -16,7 +16,7 @@ const headers = {
   'Content-Type': 'application/json',
 };
 
-export const apiSlice = eliteaApi
+export const apiSlice = alitaApi
   .enhanceEndpoints({
     addTagTypes: [TAG_TYPE_DATASOURCE_DETAILS],
   })
@@ -191,7 +191,7 @@ export const apiSlice = eliteaApi
         invalidatesTags: [TAG_TYPE_TOTAL_DATASOURCES, TAG_TYPE_DATA_SOURCES],
         onQueryStarted: async (args, { dispatch, getState, queryFulfilled }) => {
           const {
-            eliteaApi: { queries },
+            alitaApi: { queries },
           } = getState();
           const cacheKeys = Object.keys(queries || {});
           let patchResult1 = null;
@@ -202,7 +202,7 @@ export const apiSlice = eliteaApi
           if (foundDatasourceListKey) {
             const queryParams = foundDatasourceListKey.replace('datasourceList', '');
             patchResult1 = dispatch(
-              eliteaApi.util.updateQueryData('datasourceList', convertToJson(queryParams), draft => {
+              alitaApi.util.updateQueryData('datasourceList', convertToJson(queryParams), draft => {
                 const index = draft.rows.findIndex(item => item.id === args.datasourceId);
                 if (index !== -1) {
                   draft.rows.splice(index, 1);
@@ -216,7 +216,7 @@ export const apiSlice = eliteaApi
           if (foundPublicDatasourceListKey) {
             const queryParams = foundPublicDatasourceListKey.replace('publicDataSourcesList', '');
             patchResult2 = dispatch(
-              eliteaApi.util.updateQueryData('publicDataSourcesList', convertToJson(queryParams), draft => {
+              alitaApi.util.updateQueryData('publicDataSourcesList', convertToJson(queryParams), draft => {
                 const index = draft.rows.findIndex(item => item.id === args.datasourceId);
                 if (index !== -1) {
                   draft.rows.splice(index, 1);
@@ -368,7 +368,7 @@ export const apiSlice = eliteaApi
         onQueryStarted: async (args, { dispatch, getState, queryFulfilled }) => {
           const { projectId, datasetId, datasourceId } = args;
           const {
-            eliteaApi: { queries },
+            alitaApi: { queries },
           } = getState();
           const cacheKeys = Object.keys(queries || {});
           let patchResult = null;
@@ -381,7 +381,7 @@ export const apiSlice = eliteaApi
           if (foundKey) {
             const queryParams = foundKey.replace('datasourceDetails', '');
             patchResult = dispatch(
-              eliteaApi.util.updateQueryData('datasourceDetails', convertToJson(queryParams), draft => {
+              alitaApi.util.updateQueryData('datasourceDetails', convertToJson(queryParams), draft => {
                 draft.version_details.datasets = draft.version_details.datasets.filter(
                   dataset => dataset.id != datasetId,
                 );
@@ -499,7 +499,7 @@ export const apiSlice = eliteaApi
           // eslint-disable-next-line no-unused-vars
           const { projectId, versionId, entityId, ...icon_meta } = args;
           const {
-            eliteaApi: { queries },
+            alitaApi: { queries },
           } = getState();
           const cacheKeys = Object.keys(queries || {});
           let patchResult = null;
@@ -509,7 +509,7 @@ export const apiSlice = eliteaApi
           if (foundDatasourceDetailKey) {
             const queryParams = foundDatasourceDetailKey.replace('datasourceDetails', '');
             patchResult = dispatch(
-              eliteaApi.util.updateQueryData('datasourceDetails', convertToJson(queryParams), draft => {
+              alitaApi.util.updateQueryData('datasourceDetails', convertToJson(queryParams), draft => {
                 draft.version_details.meta = {
                   ...(draft.version_details.meta || {}),
                   icon_meta,
@@ -538,7 +538,7 @@ export const apiSlice = eliteaApi
         onQueryStarted: async (args, { dispatch, getState, queryFulfilled }) => {
           const { projectId, name } = args;
           const {
-            eliteaApi: { queries },
+            alitaApi: { queries },
           } = getState();
           const cacheKeys = Object.keys(queries || {});
           let patchResult = null;
@@ -548,7 +548,7 @@ export const apiSlice = eliteaApi
           if (foundKey) {
             const queryParams = foundKey.replace('getDatasourceIcons', '');
             patchResult = dispatch(
-              eliteaApi.util.updateQueryData('getDatasourceIcons', convertToJson(queryParams), draft => {
+              alitaApi.util.updateQueryData('getDatasourceIcons', convertToJson(queryParams), draft => {
                 draft.rows = draft.rows.filter(icon => icon.name !== name);
                 draft.total = draft.total - 1;
               }),

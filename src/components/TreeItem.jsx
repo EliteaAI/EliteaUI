@@ -3,7 +3,7 @@ import { TreeItem } from '@mui/x-tree-view/TreeItem';
 
 import { filterProps } from '@/common/utils.jsx';
 
-export const eliteaTreeItemStyle = (theme, isActive) => ({
+export const alitaTreeItemStyle = (theme, isActive) => ({
   '& > .MuiTreeItem-content:first-of-type': {
     background: isActive ? `${theme.palette.background.select.hover} !important` : 'transparent',
   },
@@ -52,7 +52,7 @@ export const eliteaTreeItemStyle = (theme, isActive) => ({
 export const TheStyledTreeItem = styled(
   TreeItem,
   filterProps('isActive'),
-)(({ theme, isActive }) => eliteaTreeItemStyle(theme, isActive));
+)(({ theme, isActive }) => alitaTreeItemStyle(theme, isActive));
 
 export default function StyledTreeItem(props) {
   return <TheStyledTreeItem {...props} />;

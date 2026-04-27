@@ -10,7 +10,7 @@ import { useTextOverflow } from '@/[fsd]/shared/lib/hooks';
  */
 
 const TypographyWithConditionalTooltip = forwardRef((props, ref) => {
-  const { title, placement = 'right', children, sx, enterDelay = 100, ...typographyProps } = props;
+  const { title, placement = 'right', children, sx, ...typographyProps } = props;
   const { textRef, isOverflowing } = useTextOverflow(title);
   const styles = typographyWithConditionalTooltipStyles();
 
@@ -28,7 +28,6 @@ const TypographyWithConditionalTooltip = forwardRef((props, ref) => {
   return (
     <Tooltip
       title={isOverflowing ? title : ''}
-      enterNextDelay={enterDelay}
       placement={placement}
       disableHoverListener={!isOverflowing}
       arrow

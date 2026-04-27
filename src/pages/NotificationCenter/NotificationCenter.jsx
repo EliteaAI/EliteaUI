@@ -1,91 +1,65 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 
-import { Box } from '@mui/material';
+import { Box, Grid } from '@mui/material';
 
 import { useNotificationListQuery } from '@/api/notifications';
-import { SortOrderOptions } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
-import useDebounceValue from '@/hooks/useDebounceValue';
 import useToast from '@/hooks/useToast';
+import { useTheme } from '@emotion/react';
 
 import NotificationTable from './NotificationTable';
 
-const MIN_SEARCH_LENGTH = 2;
-
 export default function NotificationCenter() {
+  const theme = useTheme();
+  const [rowModesModel] = useState({});
   const { toastError } = useToast();
   const { personal_project_id } = useSelector(state => state.user);
-
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 50,
     page: 0,
   });
-
-  const [sortModel, setSortModel] = useState({
-    field: 'created_at',
-    direction: SortOrderOptions.DESC,
-  });
-
-  const [search, setSearch] = useState('');
-  const debouncedSearch = useDebounceValue(search, 600);
-  const apiSearch = useMemo(
-    () => (debouncedSearch.length < MIN_SEARCH_LENGTH ? '' : debouncedSearch),
-    [debouncedSearch],
-  );
-
-  const handleSearchChange = useCallback(value => {
-    setSearch(value);
-  }, []);
-
-  useEffect(() => {
-    setPaginationModel(prev => (prev.page === 0 ? prev : { ...prev, page: 0 }));
-  }, [apiSearch]);
 
   const { data, isFetching, isError, error } = useNotificationListQuery(
     {
       projectId: personal_project_id,
       page: paginationModel.page,
       pageSize: paginationModel.pageSize,
-      sortBy: sortModel.field,
-      sortOrder: sortModel.direction,
-      search: apiSearch,
     },
     { refetchOnFocus: true, skip: !personal_project_id },
   );
-
   useEffect(() => {
     if (isError) {
       toastError(buildErrorMessage(error));
     }
   }, [error, isError, toastError]);
 
-  const styles = notificationCenterStyles();
-
   return (
-    <Box sx={styles.container}>
-      <NotificationTable
-        rows={isError ? [] : (data?.rows ?? [])}
-        rowCount={data?.total || 0}
-        isFetching={isFetching}
-        setPaginationModel={setPaginationModel}
-        paginationModel={paginationModel}
-        sortModel={sortModel}
-        setSortModel={setSortModel}
-        search={search}
-        onSearchChange={handleSearchChange}
+    <>
+      <Box
+        width={'100%'}
+        height={'1px'}
+        borderBottom={`1px solid ${theme.palette.border.lines}`}
       />
-    </Box>
+      <Grid
+        container
+        px="24px"
+        overflow={'scroll'}
+        sx={{
+          height: 'calc(100vh - 17px)',
+          backgroundColor: theme.palette.background.tabPanel,
+        }}
+      >
+        <NotificationTable
+          rows={isError ? [] : (data?.rows ?? [])}
+          rowCount={data?.total || 0}
+          rowModesModel={rowModesModel}
+          isFetching={isFetching}
+          setPaginationModel={setPaginationModel}
+          paginationModel={paginationModel}
+        />
+      </Grid>
+    </>
   );
 }
-
-/** @type {MuiSx} */
-const notificationCenterStyles = () => ({
-  container: ({ palette, spacing }) => ({
-    px: spacing(2),
-    overflow: 'scroll',
-    height: '100vh',
-    backgroundColor: palette.background.tabPanel,
-  }),
-});

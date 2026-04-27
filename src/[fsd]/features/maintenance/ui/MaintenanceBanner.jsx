@@ -78,7 +78,7 @@ const MaintenanceBanner = memo(() => {
         </Box>
         {bannerConfig.dismissible && (
           <IconButton
-            variant="elitea"
+            variant="alita"
             color="secondary"
             aria-label="close"
             onClick={handleCloseBanner}

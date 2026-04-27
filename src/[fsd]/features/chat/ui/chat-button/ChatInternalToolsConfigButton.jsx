@@ -45,7 +45,7 @@ const ChatInternalToolsConfigButton = memo(props => {
       <Tooltip title="Enable internal tools">
         <IconButton
           ref={buttonRef}
-          variant="elitea"
+          variant="alita"
           color="secondary"
           aria-label="enable internal tools"
           onClick={onClickButton}

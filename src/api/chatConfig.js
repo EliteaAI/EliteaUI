@@ -1,10 +1,10 @@
-import { eliteaApi } from './eliteaApi.js';
+import { alitaApi } from './alitaApi.js';
 
 const apiSlicePath = '/elitea_core/chat_config';
 
 export const TAG_CHAT_CONFIG = 'TAG_CHAT_CONFIG';
 
-export const chatConfigApi = eliteaApi
+export const chatConfigApi = alitaApi
   .enhanceEndpoints({
     addTagTypes: [TAG_CHAT_CONFIG],
   })

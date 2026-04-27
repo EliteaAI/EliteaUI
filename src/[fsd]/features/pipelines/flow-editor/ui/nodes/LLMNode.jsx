@@ -80,7 +80,6 @@ const LLMNode = memo(props => {
         nodeType={FlowEditorConstants.PipelineNodeTypes.LLM}
         enableAIAssistant
         modelConfig={pipelineLLMConfig}
-        gap="1rem"
       />
 
       <FlowEditorSelect.InputSelect

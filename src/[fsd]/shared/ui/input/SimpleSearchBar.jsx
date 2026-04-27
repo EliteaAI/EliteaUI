@@ -11,8 +11,6 @@ const SimpleSearchBar = memo(props => {
     onSearchClear,
     placeholder = 'Search...',
     autoFocus = true,
-    sx,
-    onKeyDown: externalOnKeyDown,
   } = props;
 
   const styles = simpleSearchBarStyles();
@@ -30,9 +28,8 @@ const SimpleSearchBar = memo(props => {
       if (event.key === 'Escape') {
         onSearchClear?.();
       }
-      externalOnKeyDown?.(event);
     },
-    [onSearchClear, externalOnKeyDown],
+    [onSearchClear],
   );
 
   // Auto-focus the input when component mounts
@@ -46,7 +43,7 @@ const SimpleSearchBar = memo(props => {
   }, [autoFocus]);
 
   return (
-    <Box sx={[styles.searchContainer, sx]}>
+    <Box sx={styles.searchContainer}>
       <SearchIcon fill="currentColor" />
       <InputBase
         ref={inputRef}

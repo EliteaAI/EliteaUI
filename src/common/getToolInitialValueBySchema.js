@@ -56,7 +56,7 @@ export const getPropValue = ({
       return defaultValue || defaultImageGenerationModel || '';
     default:
       if (configuration_types) {
-        if (name === 'pgvector_configuration' && defaultVectorStorage?.elitea_title) {
+        if (name === 'pgvector_configuration' && defaultVectorStorage?.alita_title) {
           return defaultVectorStorage;
         }
         return defaultValue || defaultVectorStorage?.[name]?.[0] || null;

@@ -143,7 +143,7 @@ const ToolModal = ({ open, onClose, toolData, title = '', input = '', output = '
 
         <IconButton
           onClick={onClose}
-          variant="elitea"
+          variant="alita"
           color="tertiary"
           sx={{
             padding: '6px',
@@ -240,7 +240,7 @@ const ToolModal = ({ open, onClose, toolData, title = '', input = '', output = '
 
               <IconButton
                 onClick={handleCopyInput}
-                variant="elitea"
+                variant="alita"
                 color="tertiary"
                 sx={{
                   padding: '6px',
@@ -314,7 +314,7 @@ const ToolModal = ({ open, onClose, toolData, title = '', input = '', output = '
 
               <IconButton
                 onClick={handleCopyOutput}
-                variant="elitea"
+                variant="alita"
                 color="tertiary"
                 sx={{
                   padding: '6px',

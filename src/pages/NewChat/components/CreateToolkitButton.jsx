@@ -71,7 +71,7 @@ export default function CreateToolkitButton({ toolSchema, onToolkitCreated, hasE
   return (
     <Button
       disabled={shouldDisableSave}
-      variant="elitea"
+      variant="alita"
       color="primary"
       onClick={onCreateToolkit}
     >

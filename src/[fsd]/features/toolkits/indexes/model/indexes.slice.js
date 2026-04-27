@@ -1,4 +1,4 @@
-import { eliteaApi } from '@/api/eliteaApi.js';
+import { alitaApi } from '@/api/alitaApi.js';
 import { createSlice } from '@reduxjs/toolkit';
 
 const indexesSlice = createSlice({
@@ -40,26 +40,26 @@ const indexesSlice = createSlice({
   },
   extraReducers: builder => {
     builder
-      .addMatcher(eliteaApi.endpoints.getIndexesList.matchPending, state => {
+      .addMatcher(alitaApi.endpoints.getIndexesList.matchPending, state => {
         state.indexesList.isFetching = true;
         state.indexesList.isLoading = !state.indexesList.hasData;
       })
-      .addMatcher(eliteaApi.endpoints.getIndexesList.matchFulfilled, (state, { payload }) => {
+      .addMatcher(alitaApi.endpoints.getIndexesList.matchFulfilled, (state, { payload }) => {
         state.indexesList.data = payload ?? [];
         state.indexesList.isLoading = false;
         state.indexesList.isFetching = false;
         state.indexesList.hasData = true;
       })
-      .addMatcher(eliteaApi.endpoints.getIndexesList.matchRejected, state => {
+      .addMatcher(alitaApi.endpoints.getIndexesList.matchRejected, state => {
         state.indexesList.data = [];
         state.indexesList.hasData = false;
         state.indexesList.isLoading = false;
         state.indexesList.isFetching = false;
       })
-      .addMatcher(eliteaApi.endpoints.getIndexSchedule.matchFulfilled, (state, { payload }) => {
+      .addMatcher(alitaApi.endpoints.getIndexSchedule.matchFulfilled, (state, { payload }) => {
         state.toolkitScheduler = payload.meta?.indexes_meta ?? {};
       })
-      .addMatcher(eliteaApi.endpoints.deleteIndexItem.matchFulfilled, (state, { meta: { arg } }) => {
+      .addMatcher(alitaApi.endpoints.deleteIndexItem.matchFulfilled, (state, { meta: { arg } }) => {
         const indexName = arg?.originalArgs?.indexName;
 
         if (indexName) delete state.toolkitScheduler[indexName];

@@ -67,7 +67,7 @@ const EnvironmentFieldRow = memo(props => {
         >
           <Box component="span">
             <IconButton
-              variant="elitea"
+              variant="alita"
               color="tertiary"
               onClick={handleRestore}
               disabled={disabled}

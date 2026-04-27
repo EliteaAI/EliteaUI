@@ -1,6 +1,6 @@
-import { eliteaApi } from './eliteaApi';
+import { alitaApi } from './alitaApi';
 
-export const llmApi = eliteaApi.injectEndpoints({
+export const llmApi = alitaApi.injectEndpoints({
   endpoints: builder => ({
     // Generate content using LLM (streaming mode with socket.io)
     generateContentStreaming: builder.mutation({

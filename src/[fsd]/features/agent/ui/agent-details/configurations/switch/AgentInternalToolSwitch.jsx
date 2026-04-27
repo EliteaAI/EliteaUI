@@ -12,7 +12,6 @@ import PieChartIcon from '@/assets/pie-chart-icon.svg?react';
 import PythonIcon from '@/assets/python.svg?react';
 import SwarmIconSVG from '@/assets/swarm-icon.svg?react';
 import ToolsIcon from '@/assets/tools-icon.svg?react';
-import EntityIcon from '@/components/EntityIcon';
 import InfoIcon from '@/components/Icons/InfoIcon';
 
 const AgentInternalToolSwitch = memo(props => {
@@ -41,40 +40,42 @@ const AgentInternalToolSwitch = memo(props => {
     setAllowTool(internal_tools.includes(name));
   }, [internal_tools, name]);
 
-  const iconMap = useMemo(
-    () => ({
-      GearIcon: ToolsIcon,
-      CodeIcon: PythonIcon,
-      DatabaseIcon: PieChartIcon,
-      CalendarIcon,
-      ImageSvgIcon,
-      UsersIcon: SwarmIconSVG,
-      AttachSvgIcon,
-    }),
-    [],
-  );
-
-  const toolIcon = useMemo(() => {
-    const IconComponent = iconMap[icon];
-    if (!IconComponent) return null;
-    return {
-      component: (
-        <Box
-          component={IconComponent}
-          sx={styles.toolSvgIcon}
-        />
-      ),
+  const renderToolIcon = () => {
+    const iconProps = {
+      width: 14,
+      height: 14,
+      style: { flexShrink: 0 },
     };
-  }, [icon, iconMap, styles.toolSvgIcon]);
+
+    switch (icon) {
+      case 'GearIcon':
+        return <ToolsIcon {...iconProps} />;
+      case 'CodeIcon':
+        return <PythonIcon {...iconProps} />;
+      case 'DatabaseIcon':
+        return <PieChartIcon {...iconProps} />;
+      case 'CalendarIcon':
+        return <CalendarIcon {...iconProps} />;
+      case 'ImageSvgIcon':
+        return (
+          <Box
+            component={ImageSvgIcon}
+            sx={{ width: '.875rem', height: '0.875rem', flexShrink: 0 }}
+          />
+        );
+      case 'UsersIcon':
+        return <SwarmIconSVG {...iconProps} />;
+      case 'AttachSvgIcon':
+        return <AttachSvgIcon {...iconProps} />;
+      default:
+        return null;
+    }
+  };
 
   return (
     <Box sx={styles.container}>
       <Box sx={styles.contentContainer}>
-        <EntityIcon
-          sx={styles.entityIcon}
-          icon={toolIcon}
-          editable={false}
-        />
+        <Box sx={styles.toolIconWrapper}>{renderToolIcon()}</Box>
         <Typography sx={styles.title}>{title}</Typography>
         {infoTooltip && (
           <Tooltip
@@ -104,7 +105,7 @@ const AgentInternalToolSwitch = memo(props => {
             onChange={onChange}
             disabled={disabled}
             size="small"
-            variant="elitea"
+            variant="alita"
           />
         }
         label=""
@@ -145,16 +146,19 @@ const agentInternalToolSwitchStyles = () => ({
     overflow: 'hidden',
     textOverflow: 'ellipsis',
   }),
-  entityIcon: ({ palette }) => ({
-    minWidth: '1.5rem',
+  toolIconWrapper: ({ palette }) => ({
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
     width: '1.5rem',
     height: '1.5rem',
-    marginRight: '0.5rem',
+    borderRadius: '50%',
 
-    '& > div': {
-      width: '1.5rem',
-      height: '1.5rem',
-    },
+    background:
+      palette.mode === 'light'
+        ? 'linear-gradient(45.36deg, rgba(158, 168, 175, 0.3) 16.25%, rgba(158, 168, 175, 0.09) 87.07%)'
+        : 'linear-gradient(45.36deg, rgba(169, 183, 193, 0.3) 16.25%, rgba(80, 86, 91, 0.3) 87.07%)',
+    marginRight: '0.5rem',
 
     svg: {
       path: {
@@ -162,11 +166,6 @@ const agentInternalToolSwitchStyles = () => ({
       },
     },
   }),
-  toolSvgIcon: {
-    width: '0.875rem',
-    height: '0.875rem',
-    flexShrink: 0,
-  },
   iconContainer: {
     display: 'flex',
     alignItems: 'center',

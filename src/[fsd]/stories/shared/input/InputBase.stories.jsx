@@ -1,7 +1,7 @@
 import { Box, Typography, useTheme } from '@mui/material';
 
 import { Input } from '@/[fsd]/shared/ui';
-import { INPUT_VARIANTS, eliteaTextFieldColorStyle } from '@/[fsd]/shared/ui/input/textFieldVariants';
+import { INPUT_VARIANTS, alitaTextFieldColorStyle } from '@/[fsd]/shared/ui/input/textFieldVariants';
 
 export default {
   title: 'shared/ui/InputBase',
@@ -140,7 +140,7 @@ const INPUT_STATES_ROWS = [
 
 const getForceStateSx = (forceState, theme) => {
   if (!forceState) return {};
-  const colors = eliteaTextFieldColorStyle(theme)[INPUT_VARIANTS.standard];
+  const colors = alitaTextFieldColorStyle(theme)[INPUT_VARIANTS.standard];
   if (!colors) return {};
 
   switch (forceState) {

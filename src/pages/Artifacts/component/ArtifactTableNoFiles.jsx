@@ -27,7 +27,7 @@ const ArtifactTableNoFiles = memo(props => {
         </Typography>
         {onUpload && (
           <Button
-            variant="elitea"
+            variant="alita"
             color="secondary"
             sx={styles.downloadButton}
             onClick={handleUpload}

@@ -524,7 +524,7 @@ const goThroughNodesTree = (
             });
             isEnd = true;
           } else {
-            const edgeId = `${EDGE_PREFIX}${id}---EliteAPipelineEnd`;
+            const edgeId = `${EDGE_PREFIX}${id}---AlitaPipelineEnd`;
             checkAndAddEdge({
               edges,
               edgeId,
@@ -607,7 +607,7 @@ export const parseYaml = (yamlJson, orientation = ORIENTATION.vertical) => {
       : {
           ...node,
           type: PipelineNodeTypes.Default,
-          originalEliteAType: node.type,
+          originalAlitaType: node.type,
           data: {
             ...node.data,
             type: node.type,

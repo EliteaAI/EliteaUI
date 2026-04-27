@@ -544,7 +544,7 @@ const MermaidDiagramOutput = ({ code, onQuickFix, isQuickFixLoading = false, qui
         border={`1px solid ${theme.palette.border.lines}`}
       >
         <IconButton
-          variant="elitea"
+          variant="alita"
           color="tertiary"
           sx={{
             marginLeft: '0px',
@@ -559,7 +559,7 @@ const MermaidDiagramOutput = ({ code, onQuickFix, isQuickFixLoading = false, qui
           />
         </IconButton>
         <IconButton
-          variant="elitea"
+          variant="alita"
           color="tertiary"
           sx={{
             marginLeft: '0px',
@@ -575,7 +575,7 @@ const MermaidDiagramOutput = ({ code, onQuickFix, isQuickFixLoading = false, qui
         </IconButton>
         <IconButton
           disabled={!hasBeenChanged}
-          variant="elitea"
+          variant="alita"
           color="tertiary"
           sx={{ marginLeft: '0px', borderRadius: '0px' }}
           onClick={onReset}

@@ -4,7 +4,7 @@ import { Box, Button } from '@mui/material';
 
 import { IndexesToolsEnum } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
-import { Select } from '@/[fsd]/shared/ui';
+import SingleSelectWithSearch from '@/components/SingleSelectWithSearch';
 import { ContentContainer } from '@/pages/Common/Components';
 
 const IndexConfig = memo(props => {
@@ -50,12 +50,12 @@ const IndexConfig = memo(props => {
         <Box sx={styles.scrollableContainer}>
           {toolsConfig && (
             <Box>
-              <Select.SingleSelect
+              <SingleSelectWithSearch
+                hideSearch
+                value={toolsConfig.selectedRunTool}
                 label="Tool"
-                value={toolsConfig.selectedRunTool ?? ''}
-                onValueChange={selectedValue => toolsConfig.onChangeTool({ value: selectedValue })}
+                onValueChange={toolsConfig.onChangeTool}
                 options={toolsOptions}
-                showBorder
               />
             </Box>
           )}

@@ -13,7 +13,7 @@ export const convertCredentialConfigSchema = (
     return {};
   }
   const { properties, required, ...rest } = configSchema;
-  const { data, shared, title, label, elitea_title } = properties || {};
+  const { data, shared, title, label, alita_title } = properties || {};
   const { properties: dataProperties, required: dataRequired, metadata = {} } = data || {};
   // eslint-disable-next-line no-unused-vars
   const { title: _dataTitle, ...resetProperties } = dataProperties || {};
@@ -48,14 +48,14 @@ export const convertCredentialConfigSchema = (
       ...(required || []),
       ...Object.keys(nonConfigPropsOfData || {}).filter(key => dataRequired?.includes(key)),
     ].filter(key => key !== 'type'),
-    properties: elitea_title
+    properties: alita_title
       ? {
           label: label || { title: 'Label', type: 'string' },
-          elitea_title: elitea_title
+          alita_title: alita_title
             ? {
-                ...elitea_title,
+                ...alita_title,
                 title:
-                  elitea_title.title?.replace('EliteA Title', `${systemSenderName} title`) ||
+                  alita_title.title?.replace('Alita Title', `${systemSenderName} title`) ||
                   `${systemSenderName} title`,
               }
             : { title: `${systemSenderName} title`, type: 'string' },

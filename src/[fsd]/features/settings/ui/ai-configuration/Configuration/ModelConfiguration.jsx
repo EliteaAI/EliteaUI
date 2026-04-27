@@ -194,7 +194,7 @@ const ModelConfiguration = memo(() => {
         >
           <IconButton
             onClick={handleCopyCardInformation}
-            variant="elitea"
+            variant="alita"
             color="secondary"
             sx={styles.copyButton}
           >

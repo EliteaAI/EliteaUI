@@ -104,7 +104,7 @@ const FileList = memo(({ files = [], onDeleteFile, disabledDelete }) => {
         <>
           <Button
             ref={anchorRef}
-            variant="elitea"
+            variant="alita"
             color="secondary"
             onClick={handleMoreClick}
             aria-label="Show more files"

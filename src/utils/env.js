@@ -2,12 +2,12 @@
 /* eslint-env node */
 
 export function getEnvVar(key, fallback = undefined) {
-  // 1. Check elitea_ui_config on globalThis or window
+  // 1. Check alita_ui_config on globalThis or window
   const config =
-    typeof globalThis !== 'undefined' && globalThis.elitea_ui_config
-      ? globalThis.elitea_ui_config
-      : typeof window !== 'undefined' && window.elitea_ui_config
-        ? window.elitea_ui_config
+    typeof globalThis !== 'undefined' && globalThis.alita_ui_config
+      ? globalThis.alita_ui_config
+      : typeof window !== 'undefined' && window.alita_ui_config
+        ? window.alita_ui_config
         : undefined;
   if (config && Object.prototype.hasOwnProperty.call(config, key.toLowerCase())) {
     return config[key.toLowerCase()];

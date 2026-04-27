@@ -12,12 +12,12 @@ export const CHECKBOX_MODES = {
 };
 
 export const CHECKBOX_VARIANTS = {
-  elitea: 'elitea',
+  alita: 'alita',
 };
 
 const BaseCheckbox = memo(
   forwardRef((props, ref) => {
-    const { mode = CHECKBOX_MODES.checkbox, variant = CHECKBOX_VARIANTS.elitea, ...restProps } = props;
+    const { mode = CHECKBOX_MODES.checkbox, variant = CHECKBOX_VARIANTS.alita, ...restProps } = props;
 
     if (mode === CHECKBOX_MODES.radio) {
       return (
@@ -69,7 +69,7 @@ export const CHECKBOX_STATES = {
   disabled: 'disabled',
 };
 
-export const eliteaCheckboxColors = theme => {
+export const alitaCheckboxColors = theme => {
   return {
     checkbox: {
       [CHECKBOX_STATES.default]: {
@@ -102,11 +102,11 @@ export const eliteaCheckboxColors = theme => {
   };
 };
 
-export const eliteaCheckboxVariants = [
+export const alitaCheckboxVariants = [
   {
-    props: { variant: CHECKBOX_VARIANTS.elitea },
+    props: { variant: CHECKBOX_VARIANTS.alita },
     style: ({ theme }) => {
-      const colors = eliteaCheckboxColors(theme).checkbox;
+      const colors = alitaCheckboxColors(theme).checkbox;
 
       return {
         '& .MuiSvgIcon-root': {
@@ -219,11 +219,11 @@ export const eliteaCheckboxVariants = [
   },
 ];
 
-export const eliteaUnifiedRadioVariants = [
+export const alitaUnifiedRadioVariants = [
   {
-    props: { variant: CHECKBOX_VARIANTS.elitea },
+    props: { variant: CHECKBOX_VARIANTS.alita },
     style: ({ theme }) => {
-      const colors = eliteaCheckboxColors(theme).radio;
+      const colors = alitaCheckboxColors(theme).radio;
 
       return {
         '&&': {

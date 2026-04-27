@@ -114,7 +114,7 @@ const StateDrawer = memo(props => {
           </Box>
           <IconButton
             sx={styles.closeButton}
-            variant="elitea"
+            variant="alita"
             color="tertiary"
             onClick={onClose}
           >

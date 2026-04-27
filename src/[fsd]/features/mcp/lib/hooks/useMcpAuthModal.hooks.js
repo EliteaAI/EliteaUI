@@ -47,12 +47,6 @@ export const extractMcpAuthMetadata = source => {
     // These are the scopes the MCP resource itself requires (e.g. "ea9ffc3e-.../.default").
     // They must be included in the authorization request so the issued token has the correct audience.
     resourceScopes: resourceMetadata?.scopes_supported,
-    // Configuration UUID for credential-scoped token storage key isolation.
-    // When present, tokens should be stored under "{configUuid}:{oauth_endpoint}" so that
-    // two credentials sharing the same Azure AD tenant stay isolated.
-    configurationUuid: resourceMetadata?.configuration_uuid,
-    // Toolkit ID for fetching credentials from database
-    toolkitId: resourceMetadata?.toolkit_id,
   };
 };
 
@@ -101,12 +95,6 @@ export const useMcpAuthModal = (options = {}) => {
 
   const [showModal, setShowModal] = useState(false);
   const [mcpAuthMetadata, setMcpAuthMetadata] = useState(null);
-  // server_url extracted from the incoming McpAuthorizationRequired message.
-  // Used as serverUrl fallback for toolkits (e.g. SharePoint) that have no settings.url.
-  const [runtimeServerUrl, setRuntimeServerUrl] = useState('');
-  // For SharePoint: token must be stored under oauth_discovery_endpoint (authServers[0])
-  // so get_toolkit() can find it. Undefined for other toolkits (they use serverUrl as key).
-  const [runtimeTokenStorageKey, setRuntimeTokenStorageKey] = useState('');
 
   // Check if this is a pre-built MCP type (e.g., mcp_github)
   const isPrebuildMcp = useMemo(() => McpAuthHelpers.isPrebuildMcpType(toolkitType), [toolkitType]);
@@ -118,22 +106,6 @@ export const useMcpAuthModal = (options = {}) => {
   const handleMcpAuthRequired = useCallback(message => {
     const metadata = extractMcpAuthMetadata(message);
     setMcpAuthMetadata(metadata);
-    const serverUrl = message?.response_metadata?.server_url || '';
-    setRuntimeServerUrl(serverUrl);
-    // Determine the correct token storage key so the backend can find it.
-    // Priority:
-    // 1. Composite "{configUuid}:{oauthEndpoint}" when configuration_uuid is present
-    //    (e.g. SharePoint with credential-scoped isolation).
-    // 2. Plain oauthEndpoint when it differs from server_url
-    //    (e.g. SharePoint without configUuid: site_url ≠ azure AD endpoint).
-    // 3. Empty string — falls back to serverUrl (regular MCP where server_url = oauth endpoint).
-    const configUuid = metadata?.configurationUuid;
-    const oauthEndpoint = metadata?.authServers?.[0];
-    if (configUuid && oauthEndpoint) {
-      setRuntimeTokenStorageKey(`${configUuid}:${oauthEndpoint}`);
-    } else if (oauthEndpoint && oauthEndpoint !== serverUrl) {
-      setRuntimeTokenStorageKey(oauthEndpoint);
-    }
     setShowModal(true);
   }, []);
 
@@ -145,8 +117,6 @@ export const useMcpAuthModal = (options = {}) => {
     success => {
       setShowModal(false);
       setMcpAuthMetadata(null);
-      setRuntimeServerUrl('');
-      setRuntimeTokenStorageKey('');
 
       if (success) {
         if (showSuccessToast) {
@@ -164,8 +134,6 @@ export const useMcpAuthModal = (options = {}) => {
   const handleCancelModal = useCallback(() => {
     setShowModal(false);
     setMcpAuthMetadata(null);
-    setRuntimeServerUrl('');
-    setRuntimeTokenStorageKey('');
   }, []);
 
   /**
@@ -184,12 +152,7 @@ export const useMcpAuthModal = (options = {}) => {
   const getModalProps = useCallback(
     () => ({
       open: showModal && mcpAuthMetadata !== null,
-      // runtimeServerUrl is extracted from the McpAuthorizationRequired socket message.
-      // It provides the server URL for toolkits that have no settings.url (e.g. SharePoint).
-      serverUrl: url || runtimeServerUrl,
-      // runtimeTokenStorageKey overrides the default serverUrl-based key for toolkits
-      // (e.g. SharePoint) where the backend stores/retrieves tokens under a different URL.
-      tokenStorageKey: runtimeTokenStorageKey || undefined,
+      serverUrl: url,
       mcpAuthMetadata,
       formClientId: client_id,
       formClientSecret: client_secret,
@@ -205,8 +168,6 @@ export const useMcpAuthModal = (options = {}) => {
       showModal,
       mcpAuthMetadata,
       url,
-      runtimeServerUrl,
-      runtimeTokenStorageKey,
       client_id,
       client_secret,
       scopes,

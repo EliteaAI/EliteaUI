@@ -89,7 +89,7 @@ const CredentialForm = memo(props => {
     if (searchParams.get('forceCustom') === 'true' || view === ToolkitViewOptions.Json) {
       return ToolkitForm.ToolCustom;
     }
-    const toolTypedComponent = ToolComponentHelpers.getToolComponent(toolType, toolSchema, true);
+    const toolTypedComponent = ToolComponentHelpers.getToolComponent(toolType, toolSchema);
     return toolTypedComponent;
   }, [searchParams, view, toolType, toolSchema]);
 
@@ -97,7 +97,7 @@ const CredentialForm = memo(props => {
   const [showConfigurationValidateError, setShowConfigurationValidateError] = useState(false);
   const [configurationName, setConfigurationName] = useState(credentialDetails?.settings?.title || '');
   const [configuration, setConfiguration] = useState({
-    elitea_title: credentialDetails?.settings?.elitea_title || Manual_Title,
+    alita_title: credentialDetails?.settings?.alita_title || Manual_Title,
     private: credentialDetails?.settings?.private,
   });
 
@@ -124,7 +124,7 @@ const CredentialForm = memo(props => {
   const onSaveConfiguration = useCallback(
     async config => {
       setConfiguration({
-        elitea_title: config?.settings?.elitea_title,
+        alita_title: config?.settings?.alita_title,
         private: config?.project_id === personal_project_id,
       });
       if (config?.project_id) {
@@ -134,7 +134,7 @@ const CredentialForm = memo(props => {
             ...prevState,
             settings: {
               ...(prevState?.settings || {}),
-              elitea_title: config?.settings?.elitea_title,
+              alita_title: config?.settings?.alita_title,
               private: config?.project_id === personal_project_id,
             },
           };
@@ -226,19 +226,19 @@ const CredentialForm = memo(props => {
     setConfigurationErrors(prevState => ({
       ...prevState,
       configurationName:
-        [Create_Personal_Title, Create_Project_Title, Manual_Title].includes(configuration?.elitea_title) &&
+        [Create_Personal_Title, Create_Project_Title, Manual_Title].includes(configuration?.alita_title) &&
         !configurationName,
     }));
-  }, [configuration?.elitea_title, configurationName]);
+  }, [configuration?.alita_title, configurationName]);
 
   useEffect(() => {
     if (
-      configuration?.elitea_title !== Create_Personal_Title &&
-      configuration?.elitea_title !== Create_Project_Title
+      configuration?.alita_title !== Create_Personal_Title &&
+      configuration?.alita_title !== Create_Project_Title
     ) {
       setShowConfigurationValidateError(false);
     }
-  }, [configuration?.elitea_title]);
+  }, [configuration?.alita_title]);
 
   const testConnectionTooltipTitle = useMemo(() => {
     if (!credentialDetails?.has_test_connection) {
@@ -262,11 +262,7 @@ const CredentialForm = memo(props => {
   const styles = credentialFormStyles();
 
   return isConfigurationDataLoading ? (
-    <Box
-      sx={{ height: '100%', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
-    >
-      <CircularProgress />
-    </Box>
+    <CircularProgress size={20} />
   ) : (
     <Box sx={styles.container}>
       {credentialDetails.type !== ToolTypes.custom.value && !!toolSchema && isViewToggleVisible && (
@@ -314,7 +310,7 @@ const CredentialForm = memo(props => {
         >
           <span>
             <Button
-              variant="elitea"
+              variant="alita"
               color="secondary"
               onClick={onClickTestConnection}
               disabled={
@@ -328,7 +324,7 @@ const CredentialForm = memo(props => {
         </Tooltip>
         {isOAuthLoggedIn && oauthTokenKey && (
           <Button
-            variant="elitea"
+            variant="alita"
             color="secondary"
             onClick={onLogout}
           >
@@ -337,7 +333,7 @@ const CredentialForm = memo(props => {
         )}
         {!isOAuthLoggedIn && oauthTokenKey && (
           <Button
-            variant="elitea"
+            variant="alita"
             color="secondary"
             onClick={onClickTestConnection}
             disabled={isTestingConnection}

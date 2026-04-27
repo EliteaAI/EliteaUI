@@ -17,7 +17,7 @@ import { ToolkitsControls, ToolkitsTabBar } from '@/[fsd]/features/toolkits/ui';
 import { useListModelsQuery } from '@/api/configurations.js';
 import { useToolkitsDetailsQuery } from '@/api/toolkits.js';
 import { CapabilityTypes, SearchParams } from '@/common/constants.js';
-import { buildErrorMessage, isNotFoundError } from '@/common/utils.jsx';
+import { buildErrorMessage } from '@/common/utils.jsx';
 import BackButton from '@/components/BackButton';
 import ConfirmRedirectModal from '@/components/ConfirmRedirectModal';
 import GearIcon from '@/components/Icons/GearIcon.jsx';
@@ -27,7 +27,6 @@ import useNavBlocker from '@/hooks/useNavBlocker';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast.jsx';
 import getValidateSchema from '@/pages/Applications/Components/Applications/ApplicationCreationValidateSchema';
-import Page404 from '@/pages/Page404.jsx';
 import ConfigurationTab from '@/pages/Toolkits/ConfigurationTab.jsx';
 import { interpolateUrl } from '@/utils/urlInterpolation';
 
@@ -74,8 +73,7 @@ export const EditToolkit = memo(props => {
     setUpdateConfigKey(prev => prev + 1);
     setDirty(false);
     setHasValidationErrors(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [publicToolkitData?.id]);
+  }, [publicToolkitData]);
 
   const handleValidationStateChange = useCallback(({ hasErrors }) => {
     setHasValidationErrors(hasErrors);
@@ -88,16 +86,13 @@ export const EditToolkit = memo(props => {
       // TODO: DELETE LegacyOpenApiMigration usage after migration period (Q1 2026)
       setEditToolDetail(LegacyOpenApiMigration.normalizeLegacyOpenApiToolkit(publicToolkitData));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isFetchingPublic, publicToolkitData?.id]);
-
-  const shouldShowNotFoundPage = isPublicError && isNotFoundError(publicError);
+  }, [isFetchingPublic, publicToolkitData]);
 
   useEffect(() => {
-    if (isPublicError && !shouldShowNotFoundPage) {
+    if (isPublicError) {
       toastError(buildErrorMessage(publicError));
     }
-  }, [publicError, isPublicError, shouldShowNotFoundPage, toastError]);
+  }, [publicError, isPublicError, toastError]);
 
   // Check if this is an application-type toolkit with custom interface
   const isApplicationToolkit = useMemo(() => {
@@ -120,14 +115,14 @@ export const EditToolkit = memo(props => {
       toolkitId: realId,
       theme: mode,
     });
-  }, [appUrl, currentProjectId, mode, realId]);
+  }, [appUrl, currentProjectId, realId, mode]);
 
   // Reload iframe when theme changes
   useEffect(() => {
     if (interfaceType === 'iframe' && interpolatedAppUrl && !showIframeFallback) {
       setIframeKey(prev => prev + 1);
     }
-  }, [interfaceType, interpolatedAppUrl, showIframeFallback]);
+  }, [mode, interfaceType, interpolatedAppUrl, showIframeFallback]);
 
   // Show redirect modal immediately for redirect-type applications
   useEffect(() => {
@@ -316,8 +311,7 @@ export const EditToolkit = memo(props => {
       newSearchParams.set(SearchParams.Name, publicToolkitData.name);
       setSearchParams(newSearchParams, { replace: true });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [publicToolkitData?.name]);
+  }, [publicToolkitData, searchParams, setSearchParams]);
 
   const defaultTab = useMemo(() => {
     // First, check the :tab parameter from the route path
@@ -354,10 +348,6 @@ export const EditToolkit = memo(props => {
 
   const styles = useMemo(() => editToolkitStyles(isMCP), [isMCP]);
 
-  if (shouldShowNotFoundPage) {
-    return <Page404 />;
-  }
-
   // Render redirect modal for redirect-type applications
   if (isApplicationToolkit && interfaceType === 'redirect' && interpolatedAppUrl) {
     return (
@@ -390,6 +380,7 @@ export const EditToolkit = memo(props => {
 
   // Standard toolkit view (default or fallback)
   return (
+    // <FileReaderEnhancerRefContext.Provider value={fileReaderEnhancerRef}>
     <Formik
       enableReinitialize
       initialValues={normalizedInitialValues}
@@ -419,6 +410,7 @@ export const EditToolkit = memo(props => {
         />
       </Form>
     </Formik>
+    // </FileReaderEnhancerRefContext.Provider>
   );
 });
 

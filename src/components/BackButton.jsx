@@ -119,7 +119,7 @@ const BackButton = memo(() => {
   ]);
   return (
     <IconButton
-      variant="elitea"
+      variant="alita"
       color={'tertiary'}
       onClick={onBack}
       sx={styles.iconButton}

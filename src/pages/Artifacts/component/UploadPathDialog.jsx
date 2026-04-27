@@ -102,7 +102,7 @@ const UploadPathDialog = memo(props => {
   const actions = (
     <>
       <Button
-        variant="elitea"
+        variant="alita"
         color="secondary"
         onClick={handleCancel}
         sx={styles.cancelButton}
@@ -110,7 +110,7 @@ const UploadPathDialog = memo(props => {
         Cancel
       </Button>
       <Button
-        variant="elitea"
+        variant="alita"
         color="primary"
         onClick={handleConfirm}
         disabled={!!validationError}

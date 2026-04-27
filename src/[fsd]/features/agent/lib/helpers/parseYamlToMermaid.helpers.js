@@ -221,16 +221,6 @@ export const parseYamlToMermaid = yamlString => {
     else if (node.type === FlowEditorConstants.PipelineNodeTypes.Router) {
       mermaidDiagram = handleRouterNode(mermaidDiagram, nodeId, node);
     }
-
-    // Handle HITL nodes - routes is an object with action: target pairs
-    if (node.type === FlowEditorConstants.PipelineNodeTypes.Hitl && node.routes) {
-      Object.entries(node.routes).forEach(([action, target]) => {
-        if (target) {
-          const targetId = sanitizeId(target);
-          mermaidDiagram += addMermaidLine(nodeId, targetId, action);
-        }
-      });
-    }
   });
 
   return mermaidDiagram;

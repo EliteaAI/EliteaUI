@@ -102,7 +102,7 @@ const ArtifactTableToolbar = memo(props => {
             placement="top"
           >
             <IconButton
-              variant={'elitea'}
+              variant={'alita'}
               sx={styles.actionButton}
               size="small"
               color="secondary"
@@ -117,18 +117,16 @@ const ArtifactTableToolbar = memo(props => {
           title="Download files"
           placement="top"
         >
-          <Box component="span">
-            <IconButton
-              variant={'elitea'}
-              sx={styles.actionButton}
-              size="small"
-              color="secondary"
-              onClick={onDownloadFiles}
-              disabled={!rowSelectionModel.length}
-            >
-              <DownloadIcon sx={styles.actionIcon} />
-            </IconButton>
-          </Box>
+          <IconButton
+            variant={'alita'}
+            sx={styles.actionButton}
+            size="small"
+            color="secondary"
+            onClick={onDownloadFiles}
+            disabled={!rowSelectionModel.length}
+          >
+            <DownloadIcon sx={styles.actionIcon} />
+          </IconButton>
         </Tooltip>
 
         {checkPermission(PERMISSIONS.artifacts.delete) && (

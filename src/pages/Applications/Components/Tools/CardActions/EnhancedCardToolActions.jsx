@@ -48,8 +48,7 @@ const ToolView = memo(props => {
 
       <TypographyWithConditionalTooltip
         title={toolOption.label}
-        placement="top"
-        enterDelay={1000}
+        placement="right"
         variant="bodyMedium"
         color="text.secondary"
         sx={styles.toolLabel}
@@ -65,7 +64,7 @@ const ToolView = memo(props => {
           >
             <IconButton
               sx={styles.copyActionButton}
-              variant="elitea"
+              variant="alita"
               color="tertiary"
               onClick={onCopy(toolOption.value)}
             >

@@ -77,7 +77,7 @@ export const useNewConversationAgentAttachment = () => {
           });
 
           const appropriateConfiguration =
-            data.items.find(pg => pg.elitea_title === 'elitea-pgvector') ??
+            data.items.find(pg => pg.alita_title === 'elitea-pgvector') ??
             data.items.find(pg => pg.project_id === selectedProjectId);
 
           if (appropriateConfiguration) {
@@ -88,7 +88,7 @@ export const useNewConversationAgentAttachment = () => {
               settings: {
                 ...attachmentToolkitDetails.settings,
                 pgvector_configuration: {
-                  elitea_title: appropriateConfiguration?.label,
+                  alita_title: appropriateConfiguration?.label,
                   private: appropriateConfiguration?.project_id === personal_project_id,
                 },
               },

@@ -1,20 +1,18 @@
 import { memo, useCallback, useMemo } from 'react';
 
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, useTheme } from '@mui/material';
 
-import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { ConfigurationHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { useConfigurationNavigation } from '@/[fsd]/features/settings/lib/hooks';
-import EditDisabledIcon from '@/assets/edit-disabled.svg?react';
 import { BORDER_RADIUS, HEIGHTS, SPACING } from '@/common/designTokens';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import { getCardGradientStyles } from '@/utils/cardStyles';
 
 import ConfigurationIcon from './ConfigurationIcon';
 
 const { getConfigurationDisplayName, getConfigurationStatus, isConfigurationEditable } = ConfigurationHelpers;
 
 const ConfigurationCard = memo(({ configuration, canEdit, locationState, isDefault }) => {
+  const theme = useTheme();
   const styles = getStyles();
   const projectId = useSelectedProjectId();
   const { navigateToConfiguration } = useConfigurationNavigation();
@@ -45,7 +43,7 @@ const ConfigurationCard = memo(({ configuration, canEdit, locationState, isDefau
       sx={styles.cardContainer(disabled)}
     >
       <Box sx={styles.content}>
-        <Box sx={styles.iconContainer}>
+        <Box sx={styles.iconContainer(theme)}>
           <ConfigurationIcon
             name={configuration.name}
             type={configuration.type}
@@ -53,28 +51,13 @@ const ConfigurationCard = memo(({ configuration, canEdit, locationState, isDefau
           />
         </Box>
         <Box sx={styles.textContainer}>
-          <Box sx={styles.titleRow}>
-            <Typography
-              variant="bodyMedium"
-              color="text.secondary"
-              sx={styles.displayName}
-            >
-              {displayName}
-            </Typography>
-            {disabled && (
-              <StyledTooltip
-                title="No edit permissions"
-                placement="top"
-              >
-                <Box sx={styles.disabledIconWrapper}>
-                  <Box
-                    component={EditDisabledIcon}
-                    sx={styles.disabledIcon}
-                  />
-                </Box>
-              </StyledTooltip>
-            )}
-          </Box>
+          <Typography
+            variant="bodyMedium"
+            color="text.secondary"
+            sx={styles.displayName}
+          >
+            {displayName}
+          </Typography>
           <Typography
             component={Box}
             variant="bodySmall"
@@ -127,7 +110,6 @@ const getStyles = () => ({
     disabled =>
     ({ palette, breakpoints }) => ({
       boxSizing: 'border-box',
-      overflow: 'hidden',
       display: 'flex',
       flexDirection: 'row',
       justifyContent: 'space-between',
@@ -135,7 +117,7 @@ const getStyles = () => ({
       flex: '0 0 calc((100% - 1.5rem) / 3)',
       maxWidth: 'calc((100% - 1.5rem) / 3)',
       minWidth: '20rem',
-      ...getCardGradientStyles(palette, { enableHover: !disabled }),
+      borderRadius: '.5rem',
       [breakpoints.down('prompt_list_md')]: {
         flex: '0 0 calc((100% - 1.5rem) / 2)',
         maxWidth: 'calc((100% - 1.5rem) / 2)',
@@ -145,7 +127,14 @@ const getStyles = () => ({
         maxWidth: '100%',
       },
       padding: SPACING.SM,
+      border: `0.0625rem solid ${palette.border.table}`,
+      background: !disabled ? palette.background.secondary : palette.background.tabPanel,
       cursor: disabled ? 'default' : 'pointer',
+      '&:hover': !disabled && {
+        border: `0.0625rem solid ${palette.border.lines}`,
+        backgroundColor: palette.background.default,
+        boxShadow: palette.boxShadow.default,
+      },
       height: '4.4375rem',
     }),
   container: {
@@ -166,16 +155,18 @@ const getStyles = () => ({
     width: '100%',
     alignItems: 'center',
   },
-  iconContainer: {
+  iconContainer: ({ palette }) => ({
     width: HEIGHTS.iconContainer,
     height: HEIGHTS.iconContainer,
     borderRadius: BORDER_RADIUS.XXL,
+    padding: '0.5rem',
     boxSizing: 'border-box',
+    background: palette.background.button.default,
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
     minWidth: HEIGHTS.iconContainer,
-  },
+  }),
   textContainer: {
     display: 'flex',
     flexDirection: 'column',
@@ -183,12 +174,6 @@ const getStyles = () => ({
     flex: 1,
     minWidth: 0,
     height: '100%',
-  },
-  titleRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-    minWidth: 0,
   },
   displayName: {
     overflow: 'hidden',
@@ -212,17 +197,6 @@ const getStyles = () => ({
     padding: '0.125rem 0.5rem',
     backgroundColor: ({ palette }) => palette.icon.fill.is_default,
   },
-  disabledIconWrapper: {
-    marginLeft: 'auto',
-    flexShrink: 0,
-    display: 'flex',
-    alignItems: 'center',
-  },
-  disabledIcon: ({ palette }) => ({
-    width: '1rem',
-    height: '1rem',
-    color: palette.icon.fill.disabled,
-  }),
 });
 
 export default ConfigurationCard;

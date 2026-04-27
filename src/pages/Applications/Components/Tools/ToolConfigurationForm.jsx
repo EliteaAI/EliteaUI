@@ -221,6 +221,7 @@ export default function ToolConfigurationForm({
           {!showOnlyConfigurationFields &&
             configurationViewOptions === CONFIGURATION_VIEW_OPTIONS.CredentialsSelect && (
               <CredentialsSelect
+                showBorder
                 label="Credentials"
                 onSelectConfiguration={onSelectConfiguration}
                 value={configuration}

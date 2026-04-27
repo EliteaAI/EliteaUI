@@ -11,7 +11,7 @@ const ViewRunHistoryButton = memo(({ onShowHistory }) => {
       placement="top"
     >
       <IconButton
-        variant="elitea"
+        variant="alita"
         color="secondary"
         aria-label="view run history"
         onClick={onShowHistory}

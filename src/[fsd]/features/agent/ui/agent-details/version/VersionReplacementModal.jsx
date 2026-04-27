@@ -181,7 +181,7 @@ const VersionReplacementModal = memo(props => {
         <Button
           onClick={handleClose}
           disabled={isReplacing}
-          variant="elitea"
+          variant="alita"
           color="secondary"
         >
           Cancel
@@ -189,7 +189,7 @@ const VersionReplacementModal = memo(props => {
         <Button
           onClick={handleReplace}
           disabled={!selectedVersionId || isReplacing}
-          variant="elitea"
+          variant="alita"
           color="alarm"
         >
           {isReplacing ? (

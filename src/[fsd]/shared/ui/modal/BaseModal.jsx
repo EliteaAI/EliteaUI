@@ -47,7 +47,7 @@ const Modal = props => {
           {title}
         </Typography>
         <IconButton
-          variant="elitea"
+          variant="alita"
           color="tertiary"
           aria-label="close"
           onClick={onClose}

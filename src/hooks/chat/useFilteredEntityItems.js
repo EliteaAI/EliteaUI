@@ -104,8 +104,8 @@ export default function useFilteredEntityItems(entityItems, participants, partic
             const typeMatch = toolkit.data?.type && toolkit.data.type.toLowerCase().includes(searchLower);
             // Also search in the toolkit's title fields
             const titleMatch =
-              toolkit.data?.settings?.elitea_title &&
-              toolkit.data.settings.elitea_title.toLowerCase().includes(searchLower);
+              toolkit.data?.settings?.alita_title &&
+              toolkit.data.settings.alita_title.toLowerCase().includes(searchLower);
             const configTitleMatch =
               toolkit.data?.settings?.configuration_title &&
               toolkit.data.settings.configuration_title.toLowerCase().includes(searchLower);

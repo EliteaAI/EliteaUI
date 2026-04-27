@@ -14,7 +14,7 @@ const ClearChatButton = memo(({ disabled, onClear }) => {
     >
       <Box component="span">
         <IconButton
-          variant="elitea"
+          variant="alita"
           color="secondary"
           aria-label="clear the chat"
           disabled={disabled}

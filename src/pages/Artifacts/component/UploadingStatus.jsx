@@ -3,7 +3,7 @@ import { useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { FORBIDDEN_FILENAME_HINT } from '@/[fsd]/features/artifacts/lib/helpers/pathValidation.helpers';
-import { eliteaApi } from '@/api/eliteaApi';
+import { alitaApi } from '@/api/alitaApi';
 import useToast from '@/hooks/useToast';
 import { setIsUploading, setSkippedFiles, setUploadFinished } from '@/slices/upload';
 
@@ -30,7 +30,7 @@ export default function UploadingStatus() {
 
       // Invalidate cache regardless — the valid files were still uploaded
       if (!hasFileFailed) {
-        dispatch(eliteaApi.util.invalidateTags(['TAG_ARTIFACTS', 'TAG_BUCKETS']));
+        dispatch(alitaApi.util.invalidateTags(['TAG_ARTIFACTS', 'TAG_BUCKETS']));
       }
 
       if (hasSkippedFiles) {

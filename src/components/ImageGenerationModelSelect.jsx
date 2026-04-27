@@ -195,7 +195,7 @@ const ImageGenerationModelSelect = memo(props => {
                 placement="top"
               >
                 <IconButton
-                  variant="elitea"
+                  variant="alita"
                   color="tertiary"
                   onClick={onRefresh}
                   disabled={disabled}

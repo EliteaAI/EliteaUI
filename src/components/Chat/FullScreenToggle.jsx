@@ -22,7 +22,7 @@ export default function FullScreenToggle({ isFullScreenChat, setIsFullScreenChat
       placement="top"
     >
       <IconButton
-        variant="elitea"
+        variant="alita"
         color="secondary"
         onClick={handleToggle(false)}
         sx={{ marginLeft: '0px' }}
@@ -39,7 +39,7 @@ export default function FullScreenToggle({ isFullScreenChat, setIsFullScreenChat
       placement="top"
     >
       <IconButton
-        variant="elitea"
+        variant="alita"
         color="secondary"
         onClick={handleToggle(true)}
         sx={{ marginLeft: '0px' }}

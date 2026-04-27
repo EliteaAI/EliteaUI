@@ -147,7 +147,7 @@ const ToolkitsTabBarContainer = memo(props => {
       <TabBarItems>
         <MuiButton
           disabled={shouldDisableSave}
-          variant="elitea"
+          variant="alita"
           color="primary"
           onClick={onClickSave}
         >
@@ -174,7 +174,7 @@ const ToolkitsTabBarContainer = memo(props => {
         actions={
           <Box sx={{ display: 'flex', gap: '1rem' }}>
             <MuiButton
-              variant="elitea"
+              variant="alita"
               color="secondary"
               onClick={onDiscardAlertChanges}
               disableRipple
@@ -182,7 +182,7 @@ const ToolkitsTabBarContainer = memo(props => {
               Discard changes
             </MuiButton>
             <MuiButton
-              variant="elitea"
+              variant="alita"
               color="alarm"
               onClick={handleConfirmSave}
               disableRipple

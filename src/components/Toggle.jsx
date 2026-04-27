@@ -14,7 +14,7 @@ export default function Toggle({ value, onChange, id, name, sx = {}, options, di
       sx={{ ml: 1, ...sx }}
     >
       <ToggleButton
-        variant="elitea"
+        variant="alita"
         value={options[0].value}
         key={options[0].value}
         disabled={options[0].disabled}
@@ -25,7 +25,7 @@ export default function Toggle({ value, onChange, id, name, sx = {}, options, di
       </ToggleButton>
       {options.slice(1, -1).map(option => (
         <ToggleButton
-          variant="elitea"
+          variant="alita"
           value={option.value}
           key={option.value}
           disabled={option.disabled}
@@ -36,7 +36,7 @@ export default function Toggle({ value, onChange, id, name, sx = {}, options, di
         </ToggleButton>
       ))}
       <ToggleButton
-        variant="elitea"
+        variant="alita"
         value={options[options.length - 1].value}
         key={options[options.length - 1].value}
         disabled={options[options.length - 1].disabled}

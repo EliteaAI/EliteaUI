@@ -100,20 +100,20 @@ Cloning means creating a local copy of the repository on your computer.
 **Using HTTPS (recommended for beginners):**
 
 ```
-git clone https://github.com/ProjectEliteA/EliteAUI.git
+git clone https://github.com/ProjectAlita/AlitaUI.git
 ```
 
 **Using SSH (if you have SSH keys set up):**
 
 ```
-git clone git@github.com:ProjectEliteA/EliteAUI.git
+git clone git@github.com:ProjectAlita/AlitaUI.git
 ```
 
 4. Wait for the cloning process to complete
 5. After cloning, navigate into the project folder:
 
 ```
-cd EliteAUI
+cd AlitaUI
 ```
 
 ## Setup Environment
@@ -126,7 +126,7 @@ Now you need to set up the environment configuration:
 
 ```
 VITE_SERVER_URL=/api/v2
-VITE_BASE_URI=/elitea_ui
+VITE_BASE_URI=/alita_ui
 VITE_DEV_SERVER=https://dev.elitea.ai
 VITE_DEV_TOKEN=YOUR_ELITEA_TOKEN_FOR_DEV_ENV
 VITE_DEV_TOKEN_WITHOUT_PERMISSION=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJ1dWlkIjoiMzMxNjkxOGItM2JjOS00ZTM3LTg5ZTktZTIwMDc0ZDhlNTQyIiwiZXhwaXJlcyI6bnVsbH0.ENVCJaa7gB9Q7Bed8WbkzIndT9_jORX4vXKUaJgjq-Al1X--tNTR8kr9Ro6q8lSS5OjxNwOBvnINlHGwCyeMww
@@ -147,7 +147,7 @@ VITE_USE_COLLECTION=1
 
 Before running the project, you need to install all necessary dependencies:
 
-1. In the terminal, make sure you're in the EliteAUI directory
+1. In the terminal, make sure you're in the AlitaUI directory
 2. Run the following command:
 
 ```
@@ -244,7 +244,7 @@ After making and testing changes, you need to save them to GitHub:
 
 ### Create a New Branch
 
-1. In the terminal, make sure you're in the EliteAUI directory
+1. In the terminal, make sure you're in the AlitaUI directory
 2. Create and switch to a new branch using:
 
 ```
@@ -283,7 +283,7 @@ Replace `fix/your-branch-name` with your actual branch name
 
 Now that your changes are on GitHub, create a Merge Request (also known as Pull Request):
 
-1. Go to the [EliteAUI GitHub repository](https://github.com/ProjectEliteA/EliteAUI)
+1. Go to the [AlitaUI GitHub repository](https://github.com/ProjectAlita/AlitaUI)
 2. You should see a notification about your recently pushed branch; click on "Compare & pull request"
 3. If you don't see this notification:
    - Click on the "Pull requests" tab

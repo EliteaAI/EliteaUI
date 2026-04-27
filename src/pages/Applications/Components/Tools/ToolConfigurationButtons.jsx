@@ -17,7 +17,7 @@ export default function ToolConfigurationButtons({
         {[Create_Personal_Title, Create_Project_Title].includes(configuration?.configuration_title) && (
           <Button
             disabled={isCreatingConfiguration}
-            variant="elitea"
+            variant="alita"
             color="primary"
             onClick={onCreateConfiguration}
           >
@@ -30,7 +30,7 @@ export default function ToolConfigurationButtons({
         ) && (
           <Button
             disabled={isTestingConnection}
-            variant="elitea"
+            variant="alita"
             color="secondary"
             onClick={onTestConnection}
           >

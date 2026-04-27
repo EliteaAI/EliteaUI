@@ -1,4 +1,4 @@
-import { eliteaApi } from '@/api/eliteaApi.js';
+import { alitaApi } from '@/api/alitaApi.js';
 import { getTagsFromUrl, newlyFetchedTags, uniqueTagsByName } from '@/common/tagUtils';
 import { removeDuplicateObjects } from '@/common/utils';
 import { createSlice } from '@reduxjs/toolkit';
@@ -38,7 +38,7 @@ const tagsSlice = createSlice({
     },
   },
   extraReducers: builder => {
-    builder.addMatcher(eliteaApi.endpoints.tagList.matchFulfilled, (state, { payload }) => {
+    builder.addMatcher(alitaApi.endpoints.tagList.matchFulfilled, (state, { payload }) => {
       let validTags = [];
       const { rows, total, isLoadMore, skipTotal = false } = payload;
       const storedTagsFromUrl = getTagsFromUrl().map(urlTag => {
@@ -61,11 +61,11 @@ const tagsSlice = createSlice({
       state.totalTags = total;
     });
 
-    builder.addMatcher(eliteaApi.endpoints.publicApplicationsList.matchFulfilled, (state, { payload }) => {
+    builder.addMatcher(alitaApi.endpoints.publicApplicationsList.matchFulfilled, (state, { payload }) => {
       const { rows = [] } = payload;
       state.tagsOnVisibleCards = uniqueTagsByName(newlyFetchedTags(rows));
     });
-    builder.addMatcher(eliteaApi.endpoints.applicationList.matchFulfilled, (state, { payload }) => {
+    builder.addMatcher(alitaApi.endpoints.applicationList.matchFulfilled, (state, { payload }) => {
       const { rows = [] } = payload;
       state.tagsOnVisibleCards = uniqueTagsByName(newlyFetchedTags(rows));
     });

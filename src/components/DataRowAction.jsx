@@ -292,7 +292,7 @@ const DataRowAction = memo(props => {
   return (
     <Box sx={styles.container}>
       <IconButton
-        variant="elitea"
+        variant="alita"
         color="tertiary"
         sx={styles.iconButton}
         id={data?.id + '-action'}

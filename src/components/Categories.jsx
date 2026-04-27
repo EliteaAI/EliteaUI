@@ -289,7 +289,7 @@ const Categories = ({
               placement="top"
             >
               <IconButton
-                variant="elitea"
+                variant="alita"
                 color="secondary"
                 onClick={handleClear}
               >

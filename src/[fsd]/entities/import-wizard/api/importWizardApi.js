@@ -3,7 +3,7 @@ import {
   TAG_TYPE_DATA_SOURCES,
   TAG_TYPE_TOTAL_APPLICATIONS,
   TAG_TYPE_TOTAL_DATASOURCES,
-  eliteaApi,
+  alitaApi,
 } from '@/api';
 
 const apiSlicePath = '/elitea_core';
@@ -12,7 +12,7 @@ const headers = {
   'Content-Type': 'application/json',
 };
 
-export const importWizardApi = eliteaApi
+export const importWizardApi = alitaApi
   .enhanceEndpoints({
     addTagTypes: [],
   })

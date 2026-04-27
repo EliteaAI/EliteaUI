@@ -48,7 +48,7 @@ const AddCredentialButton = () => {
     <ClickAwayListener onClickAway={handleClickAway}>
       <Box>
         <IconButton
-          variant="elitea"
+          variant="alita"
           color="primary"
           onClick={onClickAdd}
         >

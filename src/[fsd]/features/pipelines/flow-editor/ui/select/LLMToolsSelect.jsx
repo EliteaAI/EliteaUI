@@ -1,10 +1,12 @@
-import { memo, useCallback, useContext, useMemo } from 'react';
+import React, { memo, useCallback, useContext, useMemo } from 'react';
+
+import { Box } from '@mui/material';
 
 import { FlowEditorContext } from '@/[fsd]/app/providers';
 import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
-import { Select } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion.jsx';
+import MultipleSelect from '@/components/MultipleSelect.jsx';
 
 export const LLMToolsSelect = memo(props => {
   const { toolkitName, id, tools = [], disabled } = props;
@@ -22,13 +24,8 @@ export const LLMToolsSelect = memo(props => {
   const selectedTools = useMemo(() => {
     const toolNames = yamlNode?.tool_names || {};
     const currentSelection = toolNames[toolkitName] || [];
-    return currentSelection.filter(tool => tools.includes(tool)).sort((a, b) => a.localeCompare(b));
+    return currentSelection.filter(tool => tools.includes(tool));
   }, [yamlNode?.tool_names, toolkitName, tools]);
-
-  const toolOptions = useMemo(
-    () => tools.map(tool => ({ label: tool, value: tool })).sort((a, b) => a.label.localeCompare(b.label)),
-    [tools],
-  );
 
   // Handle tool selection changes
   const handleToolsChange = useCallback(
@@ -50,22 +47,44 @@ export const LLMToolsSelect = memo(props => {
       {
         title: `${toolkitName} (${selectedTools.length}/${tools.length})`,
         content: (
-          <Select.SingleSelect
-            showEmptyPlaceholder={false}
-            options={toolOptions}
-            value={selectedTools}
-            onValueChange={handleToolsChange}
-            label="Tools"
-            showBorder
-            multiple
-            className="nopan nodrag nowheel"
-            disabled={disabled}
-          />
+          <Box
+            className={'nowheel'}
+            sx={{ overflow: 'auto' }}
+          >
+            <MultipleSelect
+              sx={{ marginBottom: '0rem' }}
+              options={tools
+                .map(tool => ({ label: tool, value: tool }))
+                .sort((a, b) => a.label.localeCompare(b.label))}
+              emptyPlaceHolder={''}
+              value={selectedTools}
+              onValueChange={handleToolsChange}
+              label="Tools"
+              showBorder
+              className="nopan nodrag"
+              labelSX={{
+                left: '.75rem',
+                '& .Mui-focused': {
+                  top: '-.3125rem',
+                },
+              }}
+              MenuProps={{
+                PaperProps: { style: { marginTop: '.5rem' } },
+              }}
+              selectSX={{
+                '& .MuiSelect-icon': {
+                  top: 'calc(50% - .6875rem) !important;',
+                },
+              }}
+              valueItemSX={{ maxWidth: '100% !important' }}
+              disabled={disabled}
+            />
+          </Box>
         ),
         itemDefaultExpanded: true,
       },
     ],
-    [toolkitName, selectedTools, tools.length, toolOptions, handleToolsChange, disabled],
+    [toolkitName, selectedTools, tools, handleToolsChange, disabled],
   );
 
   return (

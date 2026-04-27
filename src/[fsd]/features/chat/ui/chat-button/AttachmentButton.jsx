@@ -199,7 +199,7 @@ const AttachmentButton = forwardRef((props, ref) => {
       >
         <IconButton
           ref={buttonRef}
-          variant="elitea"
+          variant="alita"
           color="secondary"
           aria-label="attach files"
           onClick={handleClickAttach}

@@ -2,7 +2,6 @@ import { memo } from 'react';
 
 import { Box, Tooltip, Typography } from '@mui/material';
 
-import { TooltipMarkdownContent } from '@/[fsd]/shared/ui/tooltip';
 import InfoIcon from '@/components/Icons/InfoIcon';
 
 /**
@@ -15,35 +14,29 @@ const InfoLabelWithTooltip = memo(props => {
     tooltip,
     variant = 'bodySmall',
     sx,
-    labelSx: labelSxProp,
     labelTextPointerEventsNone = false,
     inheritColor = false,
     inheritLabel = false,
-    iconSize = 16,
-    required = false,
   } = props;
 
   const labelSx = [
     inheritColor ? { color: 'inherit' } : styles.label,
     ...(labelTextPointerEventsNone ? [{ pointerEvents: 'none' }] : []),
-    ...(labelSxProp ? [labelSxProp] : []),
   ];
-
-  const labelContent = required ? `${label} *` : label;
 
   const labelNode = inheritLabel ? (
     <Box
       component="span"
       sx={labelSx}
     >
-      {labelContent}
+      {label}
     </Box>
   ) : (
     <Typography
       variant={variant}
       sx={labelSx}
     >
-      {labelContent}
+      {label}
     </Typography>
   );
 
@@ -51,11 +44,11 @@ const InfoLabelWithTooltip = memo(props => {
     <Box sx={[styles.container, sx]}>
       {labelNode}
       {tooltip && (
-        <Tooltip title={<TooltipMarkdownContent>{tooltip}</TooltipMarkdownContent>}>
+        <Tooltip title={tooltip}>
           <Box sx={styles.iconWrapper}>
             <InfoIcon
-              width={iconSize}
-              height={iconSize}
+              width={16}
+              height={16}
             />
           </Box>
         </Tooltip>

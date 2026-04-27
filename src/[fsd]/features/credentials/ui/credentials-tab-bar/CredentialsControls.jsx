@@ -11,7 +11,7 @@ import { Controls } from '@/[fsd]/shared/ui';
 import { PinEntityType } from '@/[fsd]/widgets/PinToggler/lib/constants';
 import { usePin, usePinMenu } from '@/[fsd]/widgets/PinToggler/lib/hooks';
 import { TAG_MODELS, useDeleteConfigurationMutation } from '@/api';
-import { eliteaApi } from '@/api/eliteaApi';
+import { alitaApi } from '@/api/alitaApi';
 import { PERMISSIONS } from '@/common/constants';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
@@ -86,7 +86,7 @@ const CredentialsControls = memo(props => {
     if (!deleteError) {
       toastSuccess('The credential has been deleted');
 
-      if (credentialDetails?.type === 'llm_model') dispatch(eliteaApi.util.invalidateTags([TAG_MODELS]));
+      if (credentialDetails?.type === 'llm_model') dispatch(alitaApi.util.invalidateTags([TAG_MODELS]));
 
       navigateBack(true);
     } else {
@@ -121,8 +121,8 @@ const CredentialsControls = memo(props => {
         entityName:
           formik.values?.settings?.label ||
           credentialDetails?.label ||
-          credentialDetails?.settings?.elitea_title ||
-          credentialDetails?.elitea_title ||
+          credentialDetails?.settings?.alita_title ||
+          credentialDetails?.alita_title ||
           CredentialNameHelpers.extraCredentialName(credentialDetails?.name || ''),
         shouldRequestInputName: true,
         disabled: isDeleting || !credentialDetails?.id || !checkPermission(PERMISSIONS.configuration.delete),
@@ -130,11 +130,11 @@ const CredentialsControls = memo(props => {
     ],
     [
       checkPermission,
-      credentialDetails?.elitea_title,
+      credentialDetails?.alita_title,
       credentialDetails?.id,
       credentialDetails?.label,
       credentialDetails?.name,
-      credentialDetails?.settings?.elitea_title,
+      credentialDetails?.settings?.alita_title,
       credentialDetails?.uuid,
       formik.values?.settings?.label,
       isDeleting,
@@ -157,18 +157,9 @@ CredentialsControls.displayName = 'CredentialsControls';
 const credentialsControlsStyles = () => ({
   wrapper: {
     display: 'flex',
-    position: 'relative',
     alignItems: 'center',
+    borderLeft: ({ palette }) => `1px solid ${palette.border.lines}`,
     paddingLeft: '0.5rem',
-
-    '&::before': {
-      content: '""',
-      position: 'absolute',
-      left: 0,
-      top: '0.25rem',
-      bottom: '0.25rem',
-      borderLeft: ({ palette }) => `1px solid ${palette.border.lines}`,
-    },
   },
   deleteIcon: {
     fontSize: '1rem',

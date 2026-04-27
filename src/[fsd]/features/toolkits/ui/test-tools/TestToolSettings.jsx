@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useMemo } from 'react';
+import React, { memo, useCallback, useMemo, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
@@ -8,9 +8,9 @@ import { Box, Button, Typography } from '@mui/material';
 import { IndexesToolsEnum } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
-import { Select } from '@/[fsd]/shared/ui/';
 import LLMModelSelector from '@/[fsd]/widgets/LLMModelSelector/ui/LLMModelSelector';
 import { useToolkitAvailableToolsQuery } from '@/api/toolkits.js';
+import SingleSelectWithSearch from '@/components/SingleSelectWithSearch.jsx';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { ContentContainer } from '@/pages/Common/Components';
 
@@ -65,6 +65,8 @@ const TestToolSettings = memo(props => {
 
   const styles = testToolSettingsStyles();
 
+  const [searchString, setSearchString] = useState('');
+
   const allToolsOptions = useMemo(() => {
     const explicitSelectedTools = values?.settings?.selected_tools || [];
     const hasExplicitSelection = Array.isArray(explicitSelectedTools) && explicitSelectedTools.length > 0;
@@ -85,6 +87,22 @@ const TestToolSettings = memo(props => {
       }))
       .sort((a, b) => (a.label || '').toLowerCase().localeCompare((b.label || '').toLowerCase()));
   }, [dynamicToolNames, schemaToolNames, values?.settings?.selected_tools]);
+
+  const filteredToolOptions = useMemo(() => {
+    if (!searchString.trim()) return allToolsOptions;
+
+    const lowerCaseSearchString = searchString.trim().toLowerCase();
+
+    return allToolsOptions.filter(
+      tool =>
+        (tool.label || '').toLowerCase().includes(lowerCaseSearchString) ||
+        (typeof tool.value === 'string' && tool.value.toLowerCase().includes(lowerCaseSearchString)),
+    );
+  }, [allToolsOptions, searchString]);
+
+  const onSearch = useCallback(input => {
+    setSearchString(input);
+  }, []);
 
   const onChangeInputVariablesWrapper = useCallback(
     value => {
@@ -119,18 +137,19 @@ const TestToolSettings = memo(props => {
             onSetLLMSettings={onSetLLMSettings}
           />
         </Box>
-        <Box sx={styles.toolSelectContainer}>
-          <Select.SingleSelect
+        <Box
+          mt="0.2rem"
+          pr="0.5rem"
+        >
+          <SingleSelectWithSearch
             value={selectedTool}
             label="Tool"
             onValueChange={onChangeTool}
-            onClear={() => onChangeTool(null)}
-            options={allToolsOptions}
-            withSearch
-            emptyPlaceholder="No tools found"
-            showEmptyPlaceholder={false}
-            displayEmpty
-            showBorder
+            options={filteredToolOptions}
+            searchString={searchString}
+            onSearch={onSearch}
+            noOptionsPlaceholder="No tools found"
+            allowEmptySelection={true}
           />
         </Box>
 
@@ -183,10 +202,6 @@ const testToolSettingsStyles = () => ({
     width: '100%',
     overflow: 'hidden',
     marginTop: '.875rem',
-  },
-  toolSelectContainer: {
-    marginTop: '0.5rem',
-    paddingRight: '0.5rem',
   },
   configContainer: {
     display: 'flex',

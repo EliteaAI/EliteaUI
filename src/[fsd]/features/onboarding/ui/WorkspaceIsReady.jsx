@@ -27,7 +27,7 @@ const WorkspaceIsReady = memo(props => {
             </Typography>
           </Box>
           <Button
-            variant="elitea"
+            variant="alita"
             color="primary"
             sx={styles.button}
             onClick={onJumpIn}

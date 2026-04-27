@@ -5,15 +5,12 @@ import { Box, Typography } from '@mui/material';
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { useValidateToolkitImport } from '@/[fsd]/entities/import-wizard/lib/hooks';
 import IWModalEntityToolkitsField from '@/[fsd]/entities/import-wizard/ui/ImportWizardModal/IWModalEntityToolkitsField';
-import FailIcon from '@/assets/fail-icon.svg?react';
 import SuccessIcon from '@/assets/success-icon.svg?react';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
 import InfoIcon from '@/components/Icons/InfoIcon';
 
-const SKIPPED_TOOLKITS = 'skipped_toolkits';
-
 const IWModaSucceedlContent = memo(props => {
-  const { data, importErrorData, isForking } = props;
+  const { data, isForking } = props;
   const styles = iWModaSucceedlContentStyles();
 
   const { validateToolkitImport } = useValidateToolkitImport();
@@ -22,7 +19,6 @@ const IWModaSucceedlContent = memo(props => {
     const pipelines = [];
     const agents = [];
     const toolkits = [];
-    const skipped_toolkits = [];
 
     data.forEach(dataItem => {
       const versionItem = dataItem.version_details;
@@ -34,20 +30,14 @@ const IWModaSucceedlContent = memo(props => {
         if (tool.type !== 'application') {
           const { errors, isValid } = validateToolkitImport(tool);
 
-          const skippedToolkit = importErrorData?.toolkits?.find(t =>
-            t.msg.includes(`existing toolkit ID: ${tool.id}`),
-          );
-
-          if (skippedToolkit) skipped_toolkits.push(tool.name);
-
-          if (!toolkits.find(t => t.id === tool.id) && !skippedToolkit)
-            toolkits.push({ id: tool.id, name: tool.name, type: tool.type, isValid, errors });
+          if (!toolkits.find(t => t.id === tool.id));
+          toolkits.push({ id: tool.id, name: tool.name, type: tool.type, isValid, errors });
         }
       });
     });
 
-    return { pipelines, agents, toolkits, skipped_toolkits };
-  }, [data, importErrorData?.toolkits, validateToolkitImport]);
+    return { pipelines, agents, toolkits };
+  }, [data, validateToolkitImport]);
 
   const invalidToolkits = useMemo(
     () => importedItems.toolkits.filter(i => !i.isValid),
@@ -59,16 +49,7 @@ const IWModaSucceedlContent = memo(props => {
       <Typography sx={[styles.label, { display: 'flex', alignItems: 'center', gap: '0.25rem' }]}>
         {`${isForking ? 'Forked' : 'Imported'}`}:
         <Tooltip
-          title={
-            <>
-              Imported entities use the project&apos;s default LLM, Embedding, and PgVector configurations.
-              You can customize these settings individually after import.
-              <Box component="br" />
-              <Box component="br" />
-              <Box component="strong">Note:</Box> If a toolkit already exists, it will be automatically
-              skipped and not imported again.
-            </>
-          }
+          title="Imported entities use the project's default LLM, Embedding, and PgVector configurations. You can customize these settings individually after import."
           placement="top"
         >
           <Box sx={styles.infoIconWrapper}>
@@ -83,15 +64,15 @@ const IWModaSucceedlContent = memo(props => {
         {Object.keys(importedItems).map(key => (
           <Fragment key={key}>
             {Boolean(importedItems[key].length) && (
-              <Box sx={[styles.importedItem, key === SKIPPED_TOOLKITS && styles.skippedItems]}>
-                {key === SKIPPED_TOOLKITS ? <FailIcon /> : <SuccessIcon />}
+              <Box sx={styles.importedItem}>
+                <SuccessIcon />
                 <Box sx={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
                   <Typography
                     variant="bodyMedium"
                     sx={{ textTransform: 'capitalize', minWidth: '5.25rem', whiteSpace: 'nowrap' }}
                     component="p"
                   >
-                    {`${importedItems[key].length} ${key === SKIPPED_TOOLKITS ? 'toolkits' : key}: `}
+                    {`${importedItems[key].length} ${key}: `}
                   </Typography>
                   <Typography
                     key={key}
@@ -166,13 +147,6 @@ const iWModaSucceedlContentStyles = () => ({
 
       path: {
         fill: palette.icon.fill.success,
-      },
-    },
-  }),
-  skippedItems: ({ palette }) => ({
-    svg: {
-      path: {
-        fill: palette.icon.fill.attention,
       },
     },
   }),

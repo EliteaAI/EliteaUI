@@ -64,7 +64,7 @@ const StateVariableItemActions = memo(props => {
       <Box sx={styles.actionContainer}>
         <IconButton
           onClick={onDelete}
-          variant="elitea"
+          variant="alita"
           color="tertiary"
           disabled={disabled}
           sx={styles.deleteButton}

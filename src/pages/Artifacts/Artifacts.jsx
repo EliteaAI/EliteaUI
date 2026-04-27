@@ -553,10 +553,10 @@ export default function Artifacts() {
   useEffect(() => {
     if (isSuccess && storageConfigurations.length && !queryParams.configurationTitle) {
       const first = storageConfigurations[0] || {};
-      const resolvedTitle = first.title || first.elitea_title || first.name;
+      const resolvedTitle = first.title || first.alita_title || first.name;
       setQueryParams(prev => ({
         ...prev,
-        storage: [first.title || first.elitea_title || first.name].filter(Boolean),
+        storage: [first.title || first.alita_title || first.name].filter(Boolean),
         configurationTitle: resolvedTitle,
       }));
     }

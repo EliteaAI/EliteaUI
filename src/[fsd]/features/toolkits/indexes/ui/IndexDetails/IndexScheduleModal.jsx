@@ -141,6 +141,7 @@ const IndexScheduleModal = props => {
               {credentialsData && (
                 <Box mt="1rem">
                   <CredentialsSelect
+                    showBorder
                     required
                     isCreationAllowed
                     label={credentialsData.description}
@@ -163,7 +164,7 @@ const IndexScheduleModal = props => {
           <Box sx={styles.actionsWrapper}>
             <Button
               sx={styles.actionBtn}
-              variant="elitea"
+              variant="alita"
               color="secondary"
               onClick={onClose}
             >
@@ -171,7 +172,7 @@ const IndexScheduleModal = props => {
             </Button>
             <Button
               sx={styles.actionBtn}
-              variant="elitea"
+              variant="alita"
               color="primary"
               onClick={applyChanges}
               disabled={applyIsDisabled}

@@ -59,7 +59,7 @@ const Like = memo(props => {
   const styles = getStyles();
   return (
     <IconButton
-      variant="elitea"
+      variant="alita"
       color="tertiaryCount"
       disabled={viewMode !== ViewMode.Public || isLoading}
       onClick={handleLikeClick}

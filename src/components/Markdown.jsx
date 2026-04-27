@@ -7,7 +7,7 @@ import { Box, ThemeProvider, Typography } from '@mui/material';
 import Link from '@mui/material/Link';
 
 import { typographyVariants } from '@/MainTheme';
-import useEliteATheme from '@/hooks/useEliteATheme';
+import useAlitaTheme from '@/hooks/useAlitaTheme';
 import { useTheme } from '@emotion/react';
 import styled from '@emotion/styled';
 
@@ -558,7 +558,7 @@ const Markdown = ({
   showToolbar,
 }) => {
   const styles = getStyles();
-  const { localGridTheme } = useEliteATheme();
+  const { localGridTheme } = useAlitaTheme();
   let markedTokens;
   let pos = 0;
   try {

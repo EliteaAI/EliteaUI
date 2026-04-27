@@ -8,8 +8,7 @@ export const getErrorImportUUID = (errors, selectedData) => {
     // eslint-disable-next-line no-prototype-builtins
     if (errors.hasOwnProperty(key)) {
       errors[key].forEach(item => {
-        if (!item?.msg?.includes('was reused') && !item?.msg?.includes('existing toolkit ID:'))
-          errorIndex.push(selectedData[item.index].import_uuid);
+        errorIndex.push(selectedData[item.index].import_uuid);
       });
     }
   }

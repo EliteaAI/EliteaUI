@@ -43,7 +43,7 @@ const ZipDownloadProgressDialog = memo(props => {
 
   const actions = (
     <Button
-      variant="elitea"
+      variant="alita"
       color="alarm"
       onClick={onCancel}
       disableRipple

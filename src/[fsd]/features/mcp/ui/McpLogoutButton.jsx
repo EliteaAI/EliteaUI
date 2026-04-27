@@ -47,7 +47,7 @@ const McpLogoutButton = memo(props => {
           onMouseDown={stopPropagation}
           onMouseEnter={stopPropagation}
           onMouseLeave={stopPropagation}
-          variant="elitea"
+          variant="alita"
           color="tertiary"
         >
           <LogoutIcon

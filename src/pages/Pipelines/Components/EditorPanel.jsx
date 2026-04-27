@@ -208,7 +208,7 @@ const EditorPanel = forwardRef(({ setYamlDirty, stopRun, display, sx, disabled }
             >
               <IconButton
                 sx={styles.copyIconButton}
-                variant="elitea"
+                variant="alita"
                 color="tertiary"
                 onClick={onCopy}
               >
@@ -245,7 +245,7 @@ const EditorPanel = forwardRef(({ setYamlDirty, stopRun, display, sx, disabled }
                     placement="top"
                   >
                     <Button
-                      variant="elitea"
+                      variant="alita"
                       color="secondary"
                       onClick={() => window.location.reload()}
                     >

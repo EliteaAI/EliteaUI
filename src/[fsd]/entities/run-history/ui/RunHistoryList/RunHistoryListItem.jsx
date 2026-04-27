@@ -219,7 +219,7 @@ const RunHistoryListItem = memo(props => {
         actions={
           <Box sx={{ display: 'flex', gap: '1rem' }}>
             <Button
-              variant="elitea"
+              variant="alita"
               color="secondary"
               onClick={closeConfirmationModal}
               disableRipple
@@ -227,7 +227,7 @@ const RunHistoryListItem = memo(props => {
               Cancel
             </Button>
             <Button
-              variant="elitea"
+              variant="alita"
               color="alarm"
               onClick={confirmHistoryItemRemoval}
               disableRipple

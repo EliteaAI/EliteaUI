@@ -173,7 +173,7 @@ const NormalAttachment = ({
               placement="top"
             >
               <IconButton
-                variant="elitea"
+                variant="alita"
                 color="tertiary"
                 onClick={onPreviewFile}
                 sx={styles.iconButton}
@@ -187,7 +187,7 @@ const NormalAttachment = ({
             </Tooltip>
           )}
           <IconButton
-            variant="elitea"
+            variant="alita"
             color="tertiary"
             onClick={onClickDown}
             sx={styles.iconButton}
@@ -199,7 +199,7 @@ const NormalAttachment = ({
             />
           </IconButton>
           <IconButton
-            variant="elitea"
+            variant="alita"
             color="tertiary"
             onClick={onClickRemove}
             sx={styles.iconButton}

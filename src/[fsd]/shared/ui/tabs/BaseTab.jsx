@@ -6,11 +6,12 @@ import { TABS_VARIANTS } from './BaseTabs';
 
 const BaseTab = memo(
   forwardRef((props, ref) => {
-    const { iconPosition = 'start', ...restProps } = props;
+    const { variant = TABS_VARIANTS.alita, iconPosition = 'start', ...restProps } = props;
 
     return (
       <MuiTab
         ref={ref}
+        variant={variant}
         iconPosition={iconPosition}
         {...restProps}
       />
@@ -22,8 +23,8 @@ BaseTab.displayName = 'BaseTab';
 
 export default BaseTab;
 
-export const eliteaTabColors = theme => ({
-  [TABS_VARIANTS.elitea]: {
+export const alitaTabColors = theme => ({
+  [TABS_VARIANTS.alita]: {
     default: theme.palette.background.tab.default,
     hover: theme.palette.background.tab.hover,
     active: theme.palette.background.tab.active,
@@ -31,7 +32,7 @@ export const eliteaTabColors = theme => ({
   },
 });
 
-const baseTabStyle = {
+const baseTabStyle = () => ({
   padding: '0.5rem 1rem 0.5rem 1rem',
   borderRadius: '0.5rem 0.5rem 0 0',
   minHeight: '0rem',
@@ -45,19 +46,17 @@ const baseTabStyle = {
     color: 'inherit',
     fontSize: '1rem',
   },
-};
+});
 
-const isTabIconOnly = ownerState => ownerState && (ownerState.label === '' || ownerState.label == null);
-
-export const eliteaTabVariants = [
+export const alitaTabVariants = [
   {
-    props: { variant: TABS_VARIANTS.elitea },
+    props: { variant: TABS_VARIANTS.alita },
     style: ({ theme, ownerState }) => {
-      const colors = eliteaTabColors(theme)[TABS_VARIANTS.elitea];
-      const isIconOnly = isTabIconOnly(ownerState);
+      const colors = alitaTabColors(theme)[TABS_VARIANTS.alita];
+      const isIconOnly = ownerState.label === '' || ownerState.label == null;
       return {
-        ...baseTabStyle,
-        ...(isIconOnly ? { minWidth: '3.5rem' } : {}),
+        ...baseTabStyle(),
+        minWidth: isIconOnly ? '3.5rem' : 'auto',
         '&.MuiTab-textColorPrimary': {
           color: colors.default,
         },
@@ -74,10 +73,3 @@ export const eliteaTabVariants = [
     },
   },
 ];
-
-export const MuiTabStyles = {
-  defaultProps: {
-    variant: TABS_VARIANTS.elitea,
-  },
-  variants: eliteaTabVariants,
-};

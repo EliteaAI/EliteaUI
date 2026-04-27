@@ -73,7 +73,7 @@ export default function ImportTableButton({ onImported, disabled }) {
         <IconButton
           onClick={onClickImport}
           aria-label="import table"
-          variant="elitea"
+          variant="alita"
           color="tertiary"
           disabled={disabled}
           sx={{ marginLeft: '0px' }}

@@ -119,7 +119,7 @@ const ToolkitsList = memo(props => {
       if (!item.name || item.name.trim() === '') {
         const fallbackName =
           item.toolkit_name ||
-          item.settings?.elitea_title ||
+          item.settings?.alita_title ||
           item.settings?.configuration_title ||
           item.type.charAt(0).toUpperCase() + item.type.slice(1);
         return fallbackName;

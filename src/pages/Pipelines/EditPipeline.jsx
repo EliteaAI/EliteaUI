@@ -2,13 +2,10 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Form, Formik } from 'formik';
 import { useDispatch } from 'react-redux';
-import { useParams, useSearchParams } from 'react-router-dom';
 
-import { InstructionsInputRefProvider } from '@/[fsd]/app/providers';
 import { ApplicationControls, ApplicationTabBar } from '@/[fsd]/entities/application-tab-bar/ui';
-import { useIsVersionNotFound } from '@/[fsd]/entities/version/lib/hooks';
 import { ViewMode } from '@/common/constants';
-import { buildErrorMessage, isNotFoundError } from '@/common/utils';
+import { buildErrorMessage } from '@/common/utils';
 import StyledTabs from '@/components/StyledTabs';
 import useCorrectUserNameInUrl from '@/hooks/application/useCorrectUserNameInUrl';
 import useNavBlocker from '@/hooks/useNavBlocker';
@@ -16,7 +13,7 @@ import useToast from '@/hooks/useToast';
 import useViewMode from '@/hooks/useViewMode';
 import getValidateSchema from '@/pages/Applications/Components/Applications/ApplicationCreationValidateSchema';
 import useApplicationInitialValues from '@/pages/Applications/useApplicationInitialValues';
-import Page404 from '@/pages/Page404.jsx';
+import FileReaderEnhancerRefContext from '@/pages/Common/Components/FileReaderInputRefContext';
 import { actions } from '@/slices/pipeline';
 import { actions as editorActions } from '@/slices/pipelineEditor';
 
@@ -29,9 +26,6 @@ const EditPipeline = memo(() => {
 
   const { toastError } = useToast();
   const { initialValues, isFetching, isError, error, applicationId } = useApplicationInitialValues(true);
-  const { version } = useParams();
-  const [searchParams] = useSearchParams();
-  const isFromCreation = searchParams.get('isFromCreation') === 'true';
 
   const [dirty, setDirty] = useState(false);
   const [isYamlDirty, setIsYamlDirty] = useState(false);
@@ -60,23 +54,13 @@ const EditPipeline = memo(() => {
 
   const { setBlockNav } = useNavBlocker(blockOptions);
 
-  const isVersionNotFound = useIsVersionNotFound({
-    version,
-    isFetching,
-    isError,
-    versions: initialValues?.versions,
-    skip: isFromCreation,
-  });
-
-  const shouldShowNotFoundPage = (isError && isNotFoundError(error)) || isVersionNotFound;
-
   useCorrectUserNameInUrl(initialValues?.name);
 
   useEffect(() => {
-    if (isError && !shouldShowNotFoundPage) {
+    if (isError) {
       toastError(buildErrorMessage(error));
     }
-  }, [error, isError, shouldShowNotFoundPage, toastError]);
+  }, [error, isError, toastError]);
 
   const tabs = useMemo(
     () => [
@@ -116,12 +100,8 @@ const EditPipeline = memo(() => {
     ],
   );
 
-  if (shouldShowNotFoundPage) {
-    return <Page404 />;
-  }
-
   return (
-    <InstructionsInputRefProvider inputRef={fileReaderEnhancerRef}>
+    <FileReaderEnhancerRefContext.Provider value={fileReaderEnhancerRef}>
       <Formik
         enableReinitialize
         initialValues={initialValues}
@@ -139,7 +119,7 @@ const EditPipeline = memo(() => {
           />
         </Form>
       </Formik>
-    </InstructionsInputRefProvider>
+    </FileReaderEnhancerRefContext.Provider>
   );
 });
 

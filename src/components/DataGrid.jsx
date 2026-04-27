@@ -1,7 +1,7 @@
 import { styled } from '@mui/material/styles';
 import { DataGrid } from '@mui/x-data-grid';
 
-export const eliteaDataGridStyle = theme => ({
+export const alitaDataGridStyle = theme => ({
   ['& .MuiDataGrid']: {
     backgroundColor: 'transparent',
   },
@@ -87,7 +87,7 @@ export const eliteaDataGridStyle = theme => ({
   },
 });
 
-export const TheStyledDataGrid = styled(DataGrid)(({ theme }) => eliteaDataGridStyle(theme));
+export const TheStyledDataGrid = styled(DataGrid)(({ theme }) => alitaDataGridStyle(theme));
 
 export default function StyledDataGrid(props) {
   return <TheStyledDataGrid {...props} />;

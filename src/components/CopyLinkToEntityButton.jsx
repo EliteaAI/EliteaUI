@@ -90,7 +90,7 @@ export const CopyLinkToEntityButton = ({ link }) => {
     >
       <IconButton
         sx={{ marginLeft: '0px' }}
-        variant="elitea"
+        variant="alita"
         color="secondary"
         aria-label={copied ? 'Copied!' : 'Copy link to clipboard'}
         onClick={handleCopy}

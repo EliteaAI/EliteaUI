@@ -189,17 +189,23 @@ const PersonalTokens = memo(() => {
         ide.toLowerCase() === 'vscode'
           ? JSON.stringify(
               {
-                'eliteacode.providerServerURL': serverUrl,
+                'alitacode.providerServerURL': serverUrl,
+                'alitacode.LLMServerUrl': serverUrl,
+                'alitacode.modelName': model.model_name,
+                'alitacode.LLMModelName': model.model_name,
+                'alitacode.authToken': token,
+                'alitacode.LLMAuthToken': token,
+                'alitacode.projectId': selectedProjectId,
+                'alitacode.integrationUid': model.configuration_uid,
+                'alitacode.defaultViewMode': 'split',
+                'alitacode.verifySsl': false,
                 'eliteacode.LLMServerUrl': serverUrl,
-                'eliteacode.modelName': model.model_name,
                 'eliteacode.LLMModelName': model.model_name,
-                'eliteacode.authToken': token,
                 'eliteacode.LLMAuthToken': token,
                 'eliteacode.projectId': selectedProjectId,
                 'eliteacode.integrationUid': model.configuration_uid,
-                'eliteacode.defaultViewMode': 'split',
-                'eliteacode.verifySsl': false,
                 'eliteacode.displayType': 'split',
+                'eliteacode.verifySsl': false,
                 'eliteacode.debug': false,
               },
               null,
@@ -207,7 +213,7 @@ const PersonalTokens = memo(() => {
             )
           : `<?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="EliteASettings">
+  <component name="AlitaSettings">
     <option name="displayType" value="SPLIT" />
     <option name="integrationName" value="${model.configuration_name}" /> 
     <option name="integrationUid" value="${model.configuration_uid}" />
@@ -215,7 +221,7 @@ const PersonalTokens = memo(() => {
     <option name="llmCustomModelName" value="${model.model_name}" />
     <option name="llmServerUrl" value="${serverUrl}" />
     <option name="projectId" value="${selectedProjectId}" />
-    <option name="provider" value="ELITEA_EYE" />
+    <option name="provider" value="ALITA_EYE" />
   </component>
 </project>
 `;
@@ -224,7 +230,7 @@ const PersonalTokens = memo(() => {
         type: ide.toLowerCase() === 'vscode' ? 'application/json' : 'application/xml',
       });
       element.href = URL.createObjectURL(file);
-      element.download = ide.toLowerCase() === 'vscode' ? 'settings.json' : 'elitea.xml';
+      element.download = ide.toLowerCase() === 'vscode' ? 'settings.json' : 'alita.xml';
       document.body.appendChild(element);
       element.click();
       document.body.removeChild(element);

@@ -1,4 +1,4 @@
-export const eliteaToggleButtonStyle = theme => ({
+export const alitaToggleButtonStyle = theme => ({
   padding: '8px 8px',
   height: '28px',
   border: 'none',

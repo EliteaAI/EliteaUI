@@ -8,8 +8,8 @@ import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import { buildVersionOption } from '@/[fsd]/entities/version/lib/helpers';
 import { useSetDefaultVersion } from '@/[fsd]/entities/version/lib/hooks';
 import { VersionSelect } from '@/[fsd]/entities/version/ui';
+import { alitaApi } from '@/api/alitaApi';
 import { useLazyGetApplicationVersionDetailQuery } from '@/api/applications';
-import { eliteaApi } from '@/api/eliteaApi';
 import { PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
 import { replaceVersionInPath } from '@/common/utils';
 import { useToolsValidationInfo } from '@/hooks/application/useValidateApplicationVersion';
@@ -126,7 +126,7 @@ const ApplicationVersionSelect = memo(props => {
       });
 
       dispatch(
-        eliteaApi.util.updateQueryData(
+        alitaApi.util.updateQueryData(
           viewMode === ViewMode.Public ? 'publicApplicationDetails' : 'applicationDetails',
           { applicationId, projectId: formik.values?.owner_id },
           details => {
@@ -143,7 +143,7 @@ const ApplicationVersionSelect = memo(props => {
       const result = await getVersionDetail({ projectId, applicationId, versionId: vId });
 
       dispatch(
-        eliteaApi.util.updateQueryData(
+        alitaApi.util.updateQueryData(
           viewMode === ViewMode.Public ? 'publicApplicationDetails' : 'applicationDetails',
           { applicationId, projectId },
           details => {

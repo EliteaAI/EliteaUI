@@ -319,7 +319,7 @@ const MermaidCodeBlock = ({
           >
             <span>
               <IconButton
-                variant="elitea"
+                variant="alita"
                 color="tertiary"
                 disabled={shouldDisableEdit}
                 sx={{
@@ -346,7 +346,7 @@ const MermaidCodeBlock = ({
           placement="top"
         >
           <IconButton
-            variant="elitea"
+            variant="alita"
             color="tertiary"
             sx={{
               cursor: 'pointer',

@@ -72,18 +72,13 @@ const useFetchParticipantDetails = () => {
   );
 
   const fetchOriginalVersionDetails = useCallback(
-    async (type, id, versionId, projectId, versionName) => {
+    async (type, id, versionId, projectId) => {
       if (!versionId) {
         return {};
       }
       switch (type) {
         case ChatParticipantType.Pipelines:
         case ChatParticipantType.Applications: {
-          if (projectId == PUBLIC_PROJECT_ID) {
-            // Published agents: use public_application endpoint with version name
-            const result = await getPublicApplicationDetail({ applicationId: id, versionName });
-            return result?.data?.version_details || {};
-          }
           const result = await getApplicationVersion({ projectId, applicationId: id, versionId });
           return result?.data || {};
         }
@@ -92,7 +87,7 @@ const useFetchParticipantDetails = () => {
       }
       return {};
     },
-    [getApplicationVersion, getPublicApplicationDetail],
+    [getApplicationVersion],
   );
 
   return {

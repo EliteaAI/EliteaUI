@@ -24,7 +24,7 @@ export const useServicePromptByKey = (projectId, key) => {
     const all = [...locals, ...shared];
 
     const found =
-      all.find(item => item?.data?.key === key) || all.find(item => item?.elitea_title === key) || null;
+      all.find(item => item?.data?.key === key) || all.find(item => item?.alita_title === key) || null;
 
     return {
       config: found,

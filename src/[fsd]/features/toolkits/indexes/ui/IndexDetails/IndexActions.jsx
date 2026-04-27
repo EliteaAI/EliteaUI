@@ -164,7 +164,7 @@ const IndexActions = memo(props => {
       <Box component="span">
         <MuiButton
           sx={styles.indexButton}
-          variant="elitea"
+          variant="alita"
           color="secondary"
           onClick={handleDeleteIndex}
           disabled={isActionsDisabled || isRemovingDisabled}
@@ -207,7 +207,7 @@ const IndexActions = memo(props => {
                     }
                     disabled={Boolean(schedulingTooltipMessage)}
                     size="small"
-                    variant="elitea"
+                    variant="alita"
                   />
                 </Box>
               </Tooltip>
@@ -240,7 +240,7 @@ const IndexActions = memo(props => {
               <Box component="span">
                 <MuiButton
                   sx={styles.indexButton}
-                  variant="elitea"
+                  variant="alita"
                   color="secondary"
                   onClick={indexData}
                   disabled={Boolean(isActionsDisabled || isReindexDisabled)}
@@ -262,7 +262,7 @@ const IndexActions = memo(props => {
             <MuiButton
               sx={styles.indexButton}
               disabled={!isValidForm || isRunningTool}
-              variant="elitea"
+              variant="alita"
               color="primary"
               onClick={indexData}
             >

@@ -44,7 +44,7 @@ export const openAuthPopup = () => {
 
     // Set up BroadcastChannel listener for this specific auth flow
     try {
-      broadcastChannel = new BroadcastChannel(`elitea-auth-${authState}`);
+      broadcastChannel = new BroadcastChannel(`alita-auth-${authState}`);
       broadcastChannel.onmessage = event => {
         handleAuthResult({ origin: window.location.origin, data: event.data });
       };
@@ -68,14 +68,14 @@ export const openAuthPopup = () => {
 
     // Construct callback URL that goes through the backend
     // VITE_DEV_SERVER in dev mode points to backend (e.g., http://localhost)
-    // VITE_BASE_URI is the app's base path (e.g., /elitea_ui)
+    // VITE_BASE_URI is the app's base path (e.g., /alita_ui)
     const baseOrigin = DEV && VITE_DEV_SERVER ? VITE_DEV_SERVER : window.location.origin;
     const basePath = VITE_BASE_URI || '';
     const callbackUrl = `${baseOrigin}${basePath}${RouteDefinitions.AuthCallbackPage}?${AuthConstants.AUTH_STATE_PARAM}=${authState}`;
 
     const popup = window.open(
       callbackUrl,
-      'elitea-auth',
+      'alita-auth',
       `width=${popupWidth},height=${popupHeight},left=${Math.max(0, left)},top=${Math.max(0, top)},` +
         'menubar=no,toolbar=no,location=yes,status=no,resizable=yes,scrollbars=yes',
     );

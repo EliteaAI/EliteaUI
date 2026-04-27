@@ -1,8 +1,8 @@
-# EliteA UI - AI Chat Application Instructions
+# Alita UI - AI Chat Application Instructions
 
 ## Project Overview
 
-**EliteA UI** is a sophisticated React-based AI chat application with advanced conversation management,
+**Alita UI** is a sophisticated React-based AI chat application with advanced conversation management,
 pipeline creation, and data source integration. This is an enterprise-grade frontend application built for AI
 conversation experiences.
 
@@ -22,7 +22,7 @@ conversation experiences.
 - **Feature-Sliced Design (FSD)**: The project is organized by business domains and technical
   responsibilities.
 - **Feature-based folder structure** organized by domain (Applications, Pipelines, DataSources, etc.)
-- **RTK Query** for all API operations with centralized `eliteaApi`
+- **RTK Query** for all API operations with centralized `alitaApi`
 - **Custom theme system** with light/dark mode support
 - **Component composition** over inheritance
 - **Custom hooks** for reusable logic (prefix with `use`)
@@ -135,7 +135,7 @@ src/
 └── shared/                       # Shared layer
     ├── api/                      # Base API configuration
     │   ├── base.js               # Axios setup, interceptors
-    │   ├── eliteaApi.js           # RTK Query base API
+    │   ├── alitaApi.js           # RTK Query base API
     │   └── types.js              # API type definitions
     │
     ├── ui/                       # Reusable UI components
@@ -267,13 +267,13 @@ import { useTheme } from '@emotion/react';
 
 ### RTK Query Structure
 
-All API calls use RTK Query extending from `eliteaApi`:
+All API calls use RTK Query extending from `alitaApi`:
 
 ```javascript
 // ✅ Correct API pattern
-import { eliteaApi } from './eliteaApi';
+import { alitaApi } from './alitaApi';
 
-export const applicationsApi = eliteaApi.injectEndpoints({
+export const applicationsApi = alitaApi.injectEndpoints({
   endpoints: builder => ({
     getApplications: builder.query({
       query: ({ projectId, ...params }) => ({
@@ -595,7 +595,7 @@ const styles = leftPanelWidth => ({
 
 **Important conventions:**
 
-- The project uses custom MUI button variant `elitea` and custom theme palettes
+- The project uses custom MUI button variant `alita` and custom theme palettes
 - Always reuse existing theme tokens instead of hard-coded colors
 - Import design tokens from `@/common/designTokens` for consistent values
 - Use rem units (e.g., `0.0625rem` for 1px) for better accessibility

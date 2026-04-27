@@ -6,33 +6,18 @@ import {
   ButtonGroup,
   ClickAwayListener,
   Grow,
-  ListItemIcon,
   MenuItem,
   MenuList,
   Paper,
   Popper,
   Typography,
 } from '@mui/material';
-import { styled } from '@mui/material/styles';
 
+import { StyledMenuItemIcon } from '@/[fsd]/shared/ui/select';
 import CheckedIcon from '@/assets/checked-icon.svg?react';
 import { useTheme } from '@emotion/react';
 
 import ArrowDownIcon from './Icons/ArrowDownIcon';
-
-const StyledMenuItemIcon = styled(ListItemIcon)(() => ({
-  width: '0.625rem',
-  height: '0.625rem',
-  fontSize: '0.625rem',
-  marginRight: '0rem',
-  marginLeft: '1rem',
-  minWidth: '0.625rem !important',
-  justifySelf: 'flex-end',
-  justifyContent: 'flex-end',
-  svg: {
-    fontSize: '0.75rem',
-  },
-}));
 
 export default function SplitButton({ defaultValue = '', options = [], onClick }) {
   const theme = useTheme();
@@ -110,7 +95,7 @@ export default function SplitButton({ defaultValue = '', options = [], onClick }
             aria-label="split button"
           >
             <Button
-              variant="elitea"
+              variant="alita"
               disableRipple
               sx={{ marginRight: '0px' }}
               color="secondary"
@@ -119,7 +104,7 @@ export default function SplitButton({ defaultValue = '', options = [], onClick }
               {selectedOption.label}
             </Button>
             <Button
-              variant="elitea"
+              variant="alita"
               disableRipple
               sx={{ marginRight: '0px' }}
               color="secondary"

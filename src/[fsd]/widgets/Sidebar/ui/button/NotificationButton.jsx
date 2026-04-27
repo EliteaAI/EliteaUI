@@ -44,8 +44,11 @@ const NotificationButton = memo(() => {
 
   useSocket(sioEvents.notifications_notify, onNotificationEvent);
 
-  const onCloseNotificationList = useCallback(() => {
+  const onCloseNotificationList = useCallback(clearDot => {
     setNotificationListAnchorEl(null);
+    if (clearDot) {
+      setHasMessages(false);
+    }
   }, []);
 
   const onClickNotificationButton = useCallback(
@@ -60,10 +63,10 @@ const NotificationButton = memo(() => {
   );
 
   useEffect(() => {
-    if (data !== undefined) {
-      setHasMessages(!!data?.total);
+    if (data?.total) {
+      setHasMessages(true);
     }
-  }, [data]);
+  }, [data?.total]);
 
   return (
     <>

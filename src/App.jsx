@@ -16,13 +16,13 @@ import { Box } from '@mui/material';
 
 import { actions as importWizardActions } from '@/[fsd]/entities/import-wizard/model/importWizard.slice';
 import { ImportWizardModal } from '@/[fsd]/entities/import-wizard/ui';
-import { AnalyticsContainer } from '@/[fsd]/features/analytics/ui';
 import { MaintenanceBanner } from '@/[fsd]/features/maintenance/ui';
 import { AppDetail, Apps } from '@/[fsd]/pages/apps';
 import AuthCallbackPage from '@/[fsd]/pages/auth/index.jsx';
 import McpAuthPage from '@/[fsd]/pages/mcp/index.jsx';
 import Settings from '@/[fsd]/pages/settings';
 import AIConfiguration from '@/[fsd]/pages/settings/AIConfiguration';
+import Analytics from '@/[fsd]/pages/settings/Analytics';
 import CreatePersonalToken from '@/[fsd]/pages/settings/CreatePersonalToken';
 import EnvironmentSettings from '@/[fsd]/pages/settings/EnvironmentSettings';
 import TokensSettings from '@/[fsd]/pages/settings/PersonalTokens';
@@ -379,7 +379,7 @@ const ProtectedRoutes = () => {
           />
           <Route
             path="analytics"
-            element={<AnalyticsContainer />}
+            element={<Analytics />}
           />
           <Route
             path={'create-integration'}
