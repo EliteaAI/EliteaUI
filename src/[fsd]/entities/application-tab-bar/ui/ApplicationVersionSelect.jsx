@@ -23,7 +23,7 @@ const ApplicationVersionSelect = memo(props => {
   const navigate = useNavigate();
 
   const { agentId, version } = useParams();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { pathname, search } = useLocation();
 
   const selectedProjectId = useSelectedProjectId();
@@ -138,9 +138,28 @@ const ApplicationVersionSelect = memo(props => {
     [getVersionDetail, dispatch, viewMode, applicationId, formik.values?.owner_id],
   );
 
+  const stripIsFromCreation = useCallback(() => {
+    setSearchParams(
+      prev => {
+        const next = new URLSearchParams(prev);
+        next.delete('isFromCreation');
+        return next;
+      },
+      { replace: true },
+    );
+  }, [setSearchParams]);
+
   const getDetail = useCallback(
     async vId => {
       const result = await getVersionDetail({ projectId, applicationId, versionId: vId });
+
+      if (!result.data) {
+        // Version not found on the server. Strip isFromCreation so useIsVersionNotFound
+        // (skip: isFromCreation) in the parent page can detect the missing version
+        // and render <Page404 />.
+        if (isFromCreation) stripIsFromCreation();
+        return;
+      }
 
       dispatch(
         eliteaApi.util.updateQueryData(
@@ -164,8 +183,12 @@ const ApplicationVersionSelect = memo(props => {
           },
         ),
       );
+
+      // isFromCreation is a one-time flag — strip it after the version is loaded
+      // so it does not persist or accumulate in the URL.
+      if (isFromCreation) stripIsFromCreation();
     },
-    [applicationId, dispatch, getVersionDetail, isFromCreation, projectId, viewMode],
+    [applicationId, dispatch, getVersionDetail, isFromCreation, projectId, stripIsFromCreation, viewMode],
   );
 
   useEffect(() => {
