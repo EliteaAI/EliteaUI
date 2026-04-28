@@ -110,13 +110,6 @@ const ToolCard = memo(props => {
     toolId: tool.id,
     tool,
   });
-  const { doValidateVersion } = useManualValidateApplicationVersion({
-    applicationId,
-    projectId,
-    versionId,
-    tools: values?.version_details?.tools || [],
-    toolId: tool.id,
-  });
 
   const isAttachmentToolkit = useMemo(
     () => tool.id && values?.version_details?.meta?.attachment_toolkit_id === tool.id,
@@ -173,6 +166,15 @@ const ToolCard = memo(props => {
       tool?.settings?.selected_tools?.some(item => !availableTools.includes(item)),
     [availableTools, tool?.settings?.selected_tools],
   );
+
+  const { doValidateVersion } = useManualValidateApplicationVersion({
+    applicationId,
+    projectId,
+    versionId,
+    tools: values?.version_details?.tools || [],
+    toolId: tool.id,
+    needValidateTheWholeAgent: tool?.type === 'application' && someToolsAreUnavailable,
+  });
 
   // Function to open agent/pipeline in new tab
   const onOpenInNewTab = useCallback(() => {
@@ -444,7 +446,7 @@ const ToolCard = memo(props => {
               )}
             </Box>
             <Box sx={styles.buttonsContainer}>
-              {validationInfo && (
+              {(validationInfo || someToolsAreUnavailable) && (
                 <>
                   <Box
                     component={AttentionIcon}
