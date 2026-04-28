@@ -1,4 +1,4 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useState } from 'react';
 
 import { Box, Dialog, DialogContent, DialogTitle, IconButton, Typography } from '@mui/material';
 
@@ -44,14 +44,10 @@ const TERMS_SECTIONS = [
 ];
 
 const COLLAPSED_HEIGHT = '10rem';
-const EXPANDED_HEIGHT = 'none';
 
 const PublishingTerms = memo(() => {
   const [isHovering, setIsHovering] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
   const [showFullScreen, setShowFullScreen] = useState(false);
-
-  const switchRows = useCallback(() => setIsExpanded(prev => !prev), []);
 
   return (
     <>
@@ -65,16 +61,14 @@ const PublishingTerms = memo(() => {
             value="terms"
             showCopyAction={false}
             showFullScreenAction
-            showExpandAction
+            showExpandAction={false}
             onFullScreen={() => setShowFullScreen(true)}
-            switchRows={switchRows}
-            isExpanded={isExpanded}
             toolbarSx={styles.toolbar}
             iconButtonSx={styles.iconButton}
             iconSizeSx={styles.iconSize}
           />
         )}
-        <Box sx={{ ...styles.scrollArea, maxHeight: isExpanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT }}>
+        <Box sx={{ ...styles.scrollArea, maxHeight: COLLAPSED_HEIGHT }}>
           <TermsContent />
         </Box>
       </Box>
@@ -144,6 +138,7 @@ const styles = {
   container: ({ palette }) => ({
     position: 'relative',
     border: `1px solid ${palette.border.lines}`,
+    backgroundColor: `${palette.background.tabPanel}`,
     borderRadius: '0.5rem',
     padding: '0.75rem',
     cursor: 'text',

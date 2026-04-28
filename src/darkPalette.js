@@ -13,6 +13,7 @@ const white10 = 'rgba(255, 255, 255, 0.10)';
 const white14 = 'rgba(255, 255, 255, 0.14)';
 const white20 = 'rgba(255, 255, 255, 0.20)';
 const white50 = 'rgba(255, 255, 255, 0.50)';
+const whiteStepBorder = '#757575';
 const blue15 = 'rgba(41, 184, 245, 0.15)'; // conversation selected dark
 const veryLightBlue = '#C7EBFF';
 const skyBlue = '#29B8F5';
@@ -35,6 +36,8 @@ const blue30 = 'rgba(106, 232, 250, 0.30)';
 const blue40 = 'rgba(41, 184, 245, 0.40)';
 const skyBlue20 = 'rgba(41, 184, 245, 0.20)';
 export const darkBlue = '#006DD1';
+const darkBlueLowOpacity = 'rgba(0, 109, 209, 0.4)';
+const completedBlue = '#036ED033';
 const hoverBlue = '#2783D8';
 const darkBlue40 = '#29B8F566';
 const grey500 = '#ABB3B9';
@@ -54,6 +57,8 @@ const orange10 = 'rgba(211, 112, 21, 1)';
 const orange8 = 'rgba(233, 121, 18, 0.08)';
 const orange40 = 'rgba(233, 121, 18, 0.4)';
 const warningOrange = '#ED6C02';
+const warningStatus = '#E97912';
+const warningStatusTextLight = '#FFEBD3';
 const warningYellow = '#E8B747';
 const lightOrange = 'rgba(255, 235, 211, 1)';
 const orangeFill5 = 'rgba(233, 121, 18, 0.05)';
@@ -64,6 +69,7 @@ const green8 = 'rgba(43, 212, 141, 0.08)';
 const green = '#2BD48D';
 const greenDefaultBtn = '#108D22';
 const greenHoverBtn = '#15A42A';
+const greenBorder = '#2AB37A';
 const greenLight = 'rgba(30, 209, 222, 1)';
 const greenDark = 'rgba(15, 81, 96, 1)';
 const greenShadow = 'rgba(21, 255, 247, 0.2)';
@@ -92,6 +98,15 @@ const darkPalette = {
   info: {
     main: darkBlue,
     secondary: darkBlue40,
+  },
+  step: {
+    default: { border: whiteStepBorder, icon: white10 },
+    active: darkBlueLowOpacity,
+    completed: {
+      border: darkBlueLowOpacity,
+      background: completedBlue,
+      icon: darkBlue,
+    },
   },
   background: {
     info: blue8,
@@ -452,9 +467,15 @@ const darkPalette = {
   },
   status: {
     draft: skyBlue,
-    onModeration: '#E97912',
+    onModeration: warningStatus,
+    warningText: warningStatusTextLight,
     published: green,
+    publishedIcon: greenDefaultBtn,
+    publishedBackground: green,
+    publishedText: white,
+    publishedBorder: greenBorder,
     rejected: dangerRed,
+    rejectedText: lightRed,
     userApproval: magenta,
   },
   warning: {

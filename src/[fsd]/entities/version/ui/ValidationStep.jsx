@@ -8,6 +8,7 @@ import {
   DialogTitle,
   IconButton,
   Typography,
+  alpha,
   useTheme,
 } from '@mui/material';
 
@@ -23,23 +24,36 @@ const STATUS_CONFIG = {
   PASS: {
     message:
       'Your agent version meets all the necessary requirements and is ready to publish to Agent Studio!',
-    color: 'success.main',
+    color: (palette, alphaMui) => ({
+      iconColor: palette.status.publishedIcon,
+      message: palette.status.publishedText,
+      border: `0.0625rem solid ${alphaMui(palette.status.publishedBorder, 0.4)}`,
+      background: alphaMui(palette.status.publishedBackground, 0.08),
+    }),
     Icon: SuccessIcon,
     iconColor: theme => theme.palette.status.published,
   },
   WARN: {
     message:
       'Your agent version meets the necessary requirements, but has some points for improvement. Follow summary details to improve.',
-    color: 'warning.main',
+    color: (palette, alphaMui) => ({
+      iconColor: palette.status.onModeration,
+      message: palette.status.warningText,
+      border: `0.0625rem solid ${alphaMui(palette.status.onModeration, 0.4)}`,
+      background: alphaMui(palette.status.onModeration, 0.08),
+    }),
     Icon: AttentionIcon,
-    iconColor: theme => theme.palette.status.onModeration,
   },
   FAIL: {
     message:
       "Sorry, your agent version doesn't meet all the necessary requirements. Follow summary details to fix the issues and try again.",
-    color: 'error.main',
+    color: (palette, alphaMui) => ({
+      iconColor: palette.status.rejected,
+      message: palette.status.rejectedText,
+      border: `0.0625rem solid ${alphaMui(palette.status.rejected, 0.4)}`,
+      background: alphaMui(palette.status.rejected, 0.08),
+    }),
     Icon: ErrorIcon,
-    iconColor: theme => theme.palette.status.rejected,
   },
 };
 
@@ -87,14 +101,14 @@ const ValidationStep = memo(({ isValidating, validationResult }) => {
   if (isValidating) {
     return (
       <Box sx={styles.loadingRoot}>
-        <CircularProgress size={48} />
         <Typography
-          variant="bodySmall"
+          variant="headingSmall"
           color="text.secondary"
-          sx={{ marginTop: '1.5rem', textAlign: 'center' }}
+          sx={{ textAlign: 'center' }}
         >
           Reviewing your agent version to ensure it meets publication rules.
         </Typography>
+        <CircularProgress size={48} />
       </Box>
     );
   }
@@ -111,13 +125,11 @@ ValidationStep.displayName = 'ValidationStep';
 const ValidationResult = memo(({ result }) => {
   const { status, counts = {}, critical_issues = [], warnings = [], recommendations = [] } = result;
   const config = STATUS_CONFIG[status] || STATUS_CONFIG.FAIL;
-  const StatusIcon = config.Icon;
   const theme = useTheme();
   const scrollRef = useRef(null);
   const { toastInfo, toastError } = useToast();
 
   const [isHovering, setIsHovering] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
   const [showFullScreen, setShowFullScreen] = useState(false);
 
   const plainText = useMemo(
@@ -141,26 +153,26 @@ const ValidationResult = memo(({ result }) => {
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, []);
 
+  const StatusIcon = config.Icon;
+
   return (
     <Box sx={styles.resultRoot}>
       <Box sx={styles.summaryHeader}>
-        <StatusIcon
-          width={16}
-          height={16}
-          fill={config.iconColor(theme)}
-        />
-        <Typography
-          variant="bodySmall"
-          sx={{ color: config.color, fontWeight: 700 }}
-        >
-          SUMMARY:
-        </Typography>
+        <Typography variant="labelSmall">SUMMARY:</Typography>
       </Box>
 
-      <Box sx={styles.statusBox}>
+      <Box sx={styles.statusBox(config.color(theme.palette, alpha))}>
+        <Box>
+          {
+            <StatusIcon
+              size={16}
+              fill={config.color(theme.palette, alpha).iconColor}
+            />
+          }
+        </Box>
         <Typography
-          variant="bodySmall"
-          sx={{ color: config.color }}
+          variant="labelMedium"
+          sx={{ color: config.color(theme.palette, alpha).message }}
         >
           {config.message}
         </Typography>
@@ -218,11 +230,9 @@ const ValidationResult = memo(({ result }) => {
               value={plainText}
               showCopyAction
               showFullScreenAction
-              showExpandAction
+              showExpandAction={false}
               onCopy={handleCopy}
               onFullScreen={() => setShowFullScreen(true)}
-              switchRows={() => setIsExpanded(prev => !prev)}
-              isExpanded={isExpanded}
               toolbarSx={styles.toolbar}
               iconButtonSx={styles.iconButton}
               iconSizeSx={styles.iconSize}
@@ -230,7 +240,7 @@ const ValidationResult = memo(({ result }) => {
           )}
           <Box
             ref={scrollRef}
-            sx={{ ...styles.scrollArea, maxHeight: isExpanded ? 'none' : '12rem' }}
+            sx={{ ...styles.scrollArea, maxHeight: '12rem' }}
           >
             <DetailsContent
               critical_issues={critical_issues}
@@ -404,7 +414,7 @@ const SeverityBadge = memo(({ icon, label, count, onClick, disabled }) => (
     <Typography
       variant="bodySmall"
       color="text.secondary"
-      sx={{ fontWeight: 600 }}
+      sx={{ fontWeight: 600, marginLeft: 'auto' }}
     >
       {count}
     </Typography>
@@ -420,17 +430,22 @@ const styles = {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: '3rem 1rem',
+    padding: '0 1rem',
+    gap: '8.5rem',
   },
   resultRoot: {
     display: 'flex',
     flexDirection: 'column',
     gap: '1rem',
   },
-  statusBox: ({ palette }) => ({
-    border: `1px solid ${palette.border.lines}`,
+  statusBox: config => ({
     borderRadius: '0.5rem',
     padding: '0.75rem',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem',
+    background: config.background,
+    border: config.border,
   }),
   summaryHeader: {
     display: 'flex',
@@ -448,6 +463,7 @@ const styles = {
     border: `1px solid ${palette.border.lines}`,
     borderRadius: '2rem',
     padding: '0.375rem 0.75rem',
+    flex: 1,
   }),
   counterIcon: {
     display: 'flex',
@@ -457,6 +473,7 @@ const styles = {
   detailsContainer: ({ palette }) => ({
     position: 'relative',
     border: `1px solid ${palette.border.lines}`,
+    backgroundColor: `${palette.background.tabPanel}`,
     borderRadius: '0.5rem',
     padding: '0.75rem',
     cursor: 'text',
