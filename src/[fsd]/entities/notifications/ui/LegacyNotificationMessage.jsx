@@ -8,13 +8,14 @@ import {
   leadingText,
   middleText,
   parseInformation,
-} from '@/[fsd]/entities/notifications/lib/helpers/notification.legacy-helpers.js';
+} from '@/[fsd]/entities/notifications/lib/helpers/notificationLegacy.helpers.js';
 import { NotificationType, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
 import useNotificationNavigate from '@/hooks/useNotificationNavigate';
 import useNotificationNewTabNavigate from '@/hooks/useNotificationNewTabNavigate.js';
 import { getBasename } from '@/routes';
 
-const MyNewTabLink = ({ linkInfo, needTrim, event_type }) => {
+const MyNewTabLink = props => {
+  const { linkInfo, needTrim, event_type } = props;
   const { linkText, project_id, id, indexName } = linkInfo;
 
   const href = useNotificationNewTabNavigate({
