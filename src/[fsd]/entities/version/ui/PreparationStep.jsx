@@ -1,13 +1,11 @@
 import { memo, useCallback } from 'react';
 
-import { Box, FormControlLabel, TextField, Typography } from '@mui/material';
+import { Box, FormControlLabel, Typography } from '@mui/material';
 
-import { Checkbox } from '@/[fsd]/shared/ui';
+import { Checkbox, Input } from '@/[fsd]/shared/ui';
 
+import { VERSION_NAME_MAX_LENGTH, VERSION_NAME_REGEX } from '../lib/constants/version.constants';
 import PublishingTerms from './PublishingTerms';
-
-const VERSION_NAME_REGEX = /^[a-zA-Z0-9._-]*$/;
-const VERSION_NAME_MAX_LENGTH = 50;
 
 const PreparationStep = memo(({ versionName, onVersionNameChange, agreed, onAgreedChange, error }) => {
   const handleVersionNameChange = useCallback(
@@ -30,15 +28,14 @@ const PreparationStep = memo(({ versionName, onVersionNameChange, agreed, onAgre
   return (
     <Box sx={styles.root}>
       <Typography
-        variant="bodySmall"
+        variant="headingSmall"
         color="text.secondary"
+        sx={{ textAlign: 'center' }}
       >
         Enter a version name and accept the Publishing Terms to continue.
       </Typography>
 
-      <TextField
-        fullWidth
-        variant="standard"
+      <Input.InputBase
         label="Version name"
         autoComplete="off"
         value={versionName}
@@ -53,7 +50,7 @@ const PreparationStep = memo(({ versionName, onVersionNameChange, agreed, onAgre
         <Typography
           variant="labelSmall"
           color="text.secondary"
-          sx={{ fontWeight: 600, marginBottom: '0.5rem' }}
+          sx={{ fontWeight: 600, marginLeft: '0.75rem' }}
         >
           Publishing Terms
         </Typography>
@@ -93,15 +90,21 @@ const styles = {
   textField: {
     '& .MuiFormHelperText-root': {
       fontSize: '0.75rem',
+      marginLeft: '0.75rem',
     },
   },
   termsContainer: {
     maxHeight: '15rem',
     overflowY: 'auto',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
   },
   checkbox: {
     marginLeft: 0,
     alignItems: 'center',
+    display: 'flex',
+    gap: '0.5rem',
   },
 };
 

@@ -97,6 +97,7 @@ const InputBase = memo(props => {
     forceShowActionsToolbar = false,
     // eslint-disable-next-line no-unused-vars
     fieldName, // Extract but don't use - prevents DOM warning when passed from parent
+    sx: externalSx,
     ...leftProps
   } = props;
 
@@ -227,7 +228,7 @@ const InputBase = memo(props => {
         <MuiTextField
           variant={variant}
           fullWidth
-          sx={styles.textField}
+          sx={[styles.textField, externalSx]}
           value={value}
           inputRef={inputRef}
           {...leftProps}
@@ -310,6 +311,9 @@ const styledInputBaseStyles = (
     paddingRight: spacing(1.5),
   }),
   textField: {
+    '& .MuiFormHelperText-root:not(.Mui-error)': ({ palette }) => ({
+      color: palette.secondary.main,
+    }),
     '.MuiInputBase-input': {
       maxHeight: editswitcher ? editswitchconfig.inputHeight || PROMPT_PAGE_INPUT.ROWS.TWO : '100%',
       WebkitLineClamp: editswitcher
