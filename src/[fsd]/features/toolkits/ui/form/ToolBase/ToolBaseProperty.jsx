@@ -535,6 +535,8 @@ const ToolBaseProperty = memo(props => {
           projectId={specifiedProjectId}
           disabled={disableConfigFields || disabled}
           description={v.description}
+          error={!!toastError}
+          helperText={errorText}
         />
       );
     } else if (type === 'image_generation_model') {
@@ -546,6 +548,8 @@ const ToolBaseProperty = memo(props => {
           value={settings[k]}
           projectId={specifiedProjectId}
           disabled={disableConfigFields || disabled}
+          error={!!toastError}
+          helperText={errorText}
         />
       );
     } else if (type === 'toolkit_reference') {
