@@ -302,6 +302,14 @@ const ToolCard = memo(props => {
       );
     }
 
+    if (errorType === 'configuration_model_not_found') {
+      return (
+        <Banner.BannerMessage
+          message={`Model "${toolValidationMessage.model_name}" is no longer available in project configurations.`}
+        />
+      );
+    }
+
     return (
       <Banner.BannerMessage
         message={

@@ -429,9 +429,25 @@ export const ToolkitForm = memo(props => {
 
   useEffect(() => {
     if (isError) {
+      const VALUE_ERROR_PREFIX = 'Value error, ';
       const validationErrors =
         error.data?.settings_errors?.reduce((acc, curr) => {
-          acc[curr.loc[1]] = curr.message;
+          let msg = curr.msg || '';
+          // Parse structured error JSON from Pydantic "Value error, {...}" format
+          const body = msg.startsWith(VALUE_ERROR_PREFIX) ? msg.slice(VALUE_ERROR_PREFIX.length) : msg;
+          try {
+            const parsed = JSON.parse(body);
+            if (parsed?.error_type === 'configuration_model_not_found') {
+              msg = `Model "${parsed.model_name}" is no longer available in project configurations.`;
+            } else if (parsed?.error_type === 'credential_not_found') {
+              msg = 'Your configuration does not match any available configurations.';
+            } else if (parsed?.error_type === 'private_credential_not_found') {
+              msg = 'Your private configuration does not match any available configurations.';
+            }
+          } catch {
+            // not JSON – use original msg
+          }
+          acc[curr.loc[1]] = msg;
           return acc;
         }, {}) || {};
       if (Object.keys(validationErrors).length > 0) {

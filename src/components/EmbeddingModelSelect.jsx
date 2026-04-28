@@ -2,7 +2,7 @@ import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 
-import { Box, Typography } from '@mui/material';
+import { Box, FormControl, FormHelperText, Typography } from '@mui/material';
 
 import { Select } from '@/[fsd]/shared/ui';
 import { useLazyListModelsQuery, useListModelsQuery } from '@/api/configurations';
@@ -132,6 +132,13 @@ const EmbeddingModelSelect = memo(
 
     const hasModelsOptions = useMemo(() => newModelsMenuData.length > 0, [newModelsMenuData]);
 
+    const hasFetchedData = models.length > 0;
+    const selectedOption = useMemo(
+      () => newModelsMenuData.find(opt => opt.value === value),
+      [newModelsMenuData, value],
+    );
+    const showMismatchFooter = Boolean(value && !selectedOption && hasFetchedData);
+
     const customRenderSelectValue = useCallback(
       foundOption => {
         if (renderValue) return renderValue(foundOption);
@@ -160,11 +167,26 @@ const EmbeddingModelSelect = memo(
             showOptionIcon
             onValueChange={onSelectModel}
             customRenderValue={customRenderSelectValue}
-            error={error}
-            helperText={helperText}
+            error={error || showMismatchFooter}
             showEmptyPlaceholder={false}
             isListFetching={isFetching}
           />
+          {error && helperText && (
+            <FormControl
+              error
+              fullWidth
+            >
+              <FormHelperText>{helperText}</FormHelperText>
+            </FormControl>
+          )}
+          {showMismatchFooter && !helperText && (
+            <FormControl
+              error
+              fullWidth
+            >
+              <FormHelperText>Your model does not match any available models.</FormHelperText>
+            </FormControl>
+          )}
         </Box>
       </>
     );
