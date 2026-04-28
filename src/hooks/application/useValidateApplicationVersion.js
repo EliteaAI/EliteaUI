@@ -76,7 +76,7 @@ export const useManualValidateApplicationVersion = ({
 } = {}) => {
   const dispatch = useDispatch();
   const { toastError } = useToast();
-  const { setFieldValue } = useFormikContext();
+  const { resetForm, setFieldValue, values, dirty } = useFormikContext();
   const [validateAppVersion] = useLazyValidateApplicationVersionQuery();
   const [fetchVersionDetail] = useLazyGetApplicationVersionDetailQuery();
 
@@ -148,7 +148,35 @@ export const useManualValidateApplicationVersion = ({
         applicationId,
         versionId,
       }).unwrap();
-      setFieldValue('version_details.tools', details.tools || []);
+      if (dirty) {
+        const available_tools = (details.tools || []).find(tool => tool.id !== toolId)?.settings
+          .available_tools;
+        setFieldValue(
+          'version_details.tools',
+          (details.tools || []).map(tool => {
+            if (tool.id === toolId) {
+              return {
+                ...tool,
+                settings: {
+                  ...tool.settings,
+                  available_tools: available_tools || [],
+                },
+              };
+            }
+            return tool;
+          }),
+        );
+      } else {
+        resetForm({
+          values: {
+            ...(values || {}),
+            version_details: {
+              ...(values?.version_details || {}),
+              tools: details.tools || [],
+            },
+          },
+        });
+      }
     }
   }, [
     subApplication,
@@ -160,7 +188,11 @@ export const useManualValidateApplicationVersion = ({
     toastError,
     dispatch,
     fetchVersionDetail,
+    resetForm,
     setFieldValue,
+    values,
+    dirty,
+    toolId,
   ]);
   return { doValidateVersion };
 };
