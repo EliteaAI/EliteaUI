@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo } from 'react';
 
+import { useFormikContext } from 'formik';
 import { useDispatch, useSelector } from 'react-redux';
 
 import {
+  useLazyGetApplicationVersionDetailQuery,
   useLazyValidateApplicationVersionQuery,
   useValidateApplicationVersionQuery,
 } from '@/api/applications';
@@ -70,10 +72,14 @@ export const useManualValidateApplicationVersion = ({
   versionId,
   tools,
   toolId,
+  needValidateTheWholeAgent = true,
 } = {}) => {
   const dispatch = useDispatch();
   const { toastError } = useToast();
+  const { setFieldValue } = useFormikContext();
   const [validateAppVersion] = useLazyValidateApplicationVersionQuery();
+  const [fetchVersionDetail] = useLazyGetApplicationVersionDetailQuery();
+
   const subApplication = useMemo(() => {
     if (!tools?.length) return undefined;
     return tools.find(
@@ -136,7 +142,26 @@ export const useManualValidateApplicationVersion = ({
         });
       }
     }
-  }, [subApplication, validateAppVersion, applicationId, projectId, versionId, toastError, dispatch]);
+    if (needValidateTheWholeAgent) {
+      const details = await fetchVersionDetail({
+        projectId,
+        applicationId,
+        versionId,
+      }).unwrap();
+      setFieldValue('version_details.tools', details.tools || []);
+    }
+  }, [
+    subApplication,
+    needValidateTheWholeAgent,
+    validateAppVersion,
+    applicationId,
+    projectId,
+    versionId,
+    toastError,
+    dispatch,
+    fetchVersionDetail,
+    setFieldValue,
+  ]);
   return { doValidateVersion };
 };
 
