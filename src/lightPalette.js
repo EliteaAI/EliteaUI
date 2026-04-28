@@ -23,12 +23,12 @@ const orange8 = 'rgba(233, 121, 18, 0.08)';
 const orange40 = 'rgba(233, 121, 18, 0.4)';
 
 const warning = 'rgba(233, 121, 18, 1)';
+const warningStatusText = '#D37015';
 const warning8 = 'rgba(233, 121, 18, 0.08)';
 const warning40 = 'rgba(233, 121, 18, 0.4)';
 
 const warningOrange = '#ED6C02';
 const warningYellow = '#FFC124';
-const orange10 = 'rgba(211, 112, 21, 1)';
 const orangeFill5 = 'rgba(233, 121, 18, 0.05)';
 const orangeOutline40 = 'rgba(233, 121, 18, 0.4)';
 const green40 = 'rgba(43, 212, 141, 0.40)';
@@ -51,6 +51,7 @@ const light10 = '#777A83';
 const light20 = 'rgba(173, 175, 183, 1)';
 const light30 = 'rgba(203, 206, 214, 1)';
 const light40 = 'rgba(225, 229, 233, 1)';
+const lightStepBorder = '#bdbdbd';
 const dark20 = 'rgba(61, 68, 86, 0.2)';
 const dark10 = 'rgba(61, 68, 86, 0.1)';
 const dark5 = 'rgba(61, 68, 86, 0.05)';
@@ -67,6 +68,8 @@ const blue02 = 'rgba(110, 177, 255, 1)';
 const blue03 = 'rgba(99, 144, 254, 1)';
 const blue = 'rgba(41, 184, 245, 1)';
 const darkBlue = '#006DD1';
+const darkBlueLowOpacity = 'rgba(0, 109, 209, 0.4)';
+const completedBlue = '#036ED033';
 const hoverBlue = '#2783D8';
 const almostWhite = '#FAFAFA';
 const magenta08 = 'rgba(196, 40, 221, 0.08)';
@@ -92,6 +95,15 @@ const lightPalette = {
   info: {
     main: blue03,
     secondary: blue02,
+  },
+  step: {
+    default: { border: lightStepBorder, icon: dark10 },
+    active: darkBlueLowOpacity,
+    completed: {
+      border: darkBlue,
+      background: completedBlue,
+      icon: darkBlue,
+    },
   },
   background: {
     info: blue8,
@@ -290,7 +302,7 @@ const lightPalette = {
     toolCard: {
       hover: dark8,
     },
-    deprecated: orange10,
+    deprecated: warningStatusText,
     mcp: {
       loginSuccess: green8,
       logout: orange8,
@@ -382,7 +394,7 @@ const lightPalette = {
     },
     info: blue03,
     tips: darkBlue,
-    attention: orange10,
+    attention: warningStatusText,
     metrics: light00,
     contextHighLight: '#3d3d3d',
     warningText: red,
@@ -454,9 +466,15 @@ const lightPalette = {
   },
   status: {
     draft: blue03,
-    onModeration: '#E97912',
+    onModeration: warning,
+    warningText: warningStatusText,
     published: green,
+    publishedIcon: greenDefaultBtn,
+    publishedBackground: green8,
+    publishedText: greenHoverBtn,
+    publishedBorder: green,
     rejected: dangerRed,
+    rejectedText: dangerRed,
     userApproval: magenta,
   },
   warning: {

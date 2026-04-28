@@ -11,21 +11,28 @@ import {
   Step,
   StepLabel,
   Stepper,
-  TextField,
   Typography,
 } from '@mui/material';
-import { alpha } from '@mui/material/styles';
 
+import { Input } from '@/[fsd]/shared/ui';
+import CheckedIcon from '@/assets/checked-icon.svg?react';
 import { useCtrlEnterKeyEventsHandler } from '@/components/Chat/hooks';
 import CloseIcon from '@/components/Icons/CloseIcon';
 import { StyledDialog, StyledDialogActions } from '@/components/StyledDialog';
 
+import { VERSION_NAME_MAX_LENGTH, VERSION_NAME_REGEX } from '../lib/constants/version.constants';
 import PreparationStep from './PreparationStep';
 import ValidationStep from './ValidationStep';
 
 export const PUBLISH_STEPS = { PREPARATION: 0, VALIDATION: 1, PUBLISHING: 2 };
 
 const STEP_LABELS = ['Preparation', 'Validation', 'Publishing'];
+
+const getStepStyle = (index, step, styles) => {
+  if (index < step) return styles.completedStep;
+  if (index === step) return styles.activeStep;
+  return styles.defaultStep;
+};
 
 const PublishWizardModal = memo(
   ({
@@ -90,6 +97,14 @@ const PublishWizardModal = memo(
       [onClose, onKeyDown],
     );
 
+    const handleVersionNameChange = useCallback(
+      e => {
+        const value = e.target.value;
+        if (VERSION_NAME_REGEX.test(value)) onVersionNameChange(value);
+      },
+      [onVersionNameChange],
+    );
+
     return (
       <StyledDialog
         open={!!open}
@@ -131,9 +146,9 @@ const PublishWizardModal = memo(
               {STEP_LABELS.map((label, index) => (
                 <Step
                   key={label}
-                  sx={index < step ? styles.completedStep : styles.defaultStep}
+                  sx={[styles.configStep, getStepStyle(index, step, styles)]}
                 >
-                  <StepLabel>{label}</StepLabel>
+                  <StepLabel slots={{ stepIcon: CheckedIcon }}>{label}</StepLabel>
                 </Step>
               ))}
             </Stepper>
@@ -146,25 +161,22 @@ const PublishWizardModal = memo(
               <Typography
                 variant="bodySmall"
                 color="text.secondary"
+                sx={{ display: 'flex', alignSelf: 'center' }}
               >
                 Enter a version name to publish.
               </Typography>
-              <TextField
-                fullWidth
-                variant="standard"
+              <Input.InputBase
                 label="Version name"
                 autoComplete="off"
                 value={versionName}
-                onChange={e => {
-                  if (/^[a-zA-Z0-9._-]*$/.test(e.target.value)) onVersionNameChange(e.target.value);
-                }}
+                onChange={handleVersionNameChange}
                 error={!!(versionNameError || publishError)}
                 helperText={
                   versionNameError ||
                   publishError ||
                   'Only letters, numbers, dots, hyphens and underscores allowed.'
                 }
-                inputProps={{ maxLength: 50 }}
+                inputProps={{ maxLength: VERSION_NAME_MAX_LENGTH }}
               />
             </Box>
           ) : (
@@ -211,7 +223,10 @@ const PublishWizardModal = memo(
           )}
         </DialogContent>
 
-        <StyledDialogActions sx={styles.dialogActions}>
+        <StyledDialogActions
+          disableSpacing
+          sx={styles.dialogActions}
+        >
           <Button
             variant="secondary"
             onClick={onClose}
@@ -273,56 +288,106 @@ const styles = {
     '& .MuiDialog-paper': {
       width: '37.5rem !important',
       maxWidth: '90vw !important',
+      height: '38.75rem',
+      borderRadius: '1rem !important',
     },
   },
-  dialogTitle: {
+  dialogTitle: ({ palette }) => ({
     width: '100%',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
     height: '3.75rem',
-  },
+    padding: '1rem 1.5rem',
+    borderBottom: `1px solid ${palette.border.lines}`,
+    backgroundColor: `${palette.background.tabPanel}`,
+  }),
   stepperContainer: {
-    padding: '0.75rem 1.5rem',
-    margin: '0 1.5rem',
+    padding: '1rem 1.5rem',
+    display: 'flex',
+    justifyContent: 'center',
+    width: '100%',
     boxSizing: 'border-box',
-    width: 'calc(100% - 3rem)',
+    overflow: 'hidden',
   },
-  stepper: {
+  stepper: ({ palette }) => ({
+    width: '100%',
+    '& .MuiStep-root': {
+      flex: '0 0 auto',
+    },
     '& .MuiStepLabel-label': {
       fontSize: '0.75rem',
     },
-    '& .MuiStepConnector-root': {
-      marginLeft: 0,
-      marginRight: 0,
+    '& .MuiStepConnector-root.Mui-active .MuiStepConnector-line': {
+      borderColor: `${palette.step.completed.border} !important`,
+    },
+  }),
+  configStep: {
+    borderRadius: '2rem',
+    padding: '0.25rem 0.75rem 0.25rem 0.25rem',
+    '& .MuiStepLabel-iconContainer': {
+      width: '1.5rem',
+      height: '1.5rem',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: '1.5rem',
+      marginRight: '0.5rem',
+      padding: '0',
+      '& svg': {
+        width: '0.75rem',
+        height: '0.75rem',
+      },
     },
   },
   defaultStep: ({ palette }) => ({
-    border: `1px solid ${palette.border.lines}`,
-    borderRadius: '2rem',
-    padding: '0.25rem 0.75rem',
+    border: `1px solid ${palette.step.default.border}`,
+    '& .MuiStepLabel-iconContainer': {
+      backgroundColor: palette.step.default.icon,
+      color: palette.secondary.main,
+    },
+    '& .MuiStepLabel-label': {
+      color: palette.secondary.main,
+    },
+  }),
+  activeStep: ({ palette }) => ({
+    border: `1px solid ${palette.step.active}`,
+    '& .MuiStepLabel-iconContainer': {
+      backgroundColor: palette.step.active,
+      color: palette.text.tag.selected,
+    },
+    '& .MuiStepLabel-label.Mui-active': {
+      color: palette.text.secondary,
+    },
   }),
   completedStep: ({ palette }) => ({
-    border: `1px solid ${palette.info.main}`,
-    borderRadius: '2rem',
-    padding: '0.25rem 0.75rem',
-    backgroundColor: alpha(palette.info.main, 0.2),
+    border: `1px solid ${palette.step.completed.border}`,
+    backgroundColor: palette.step.completed.background,
+    '& .MuiStepLabel-iconContainer': {
+      backgroundColor: palette.step.completed.icon,
+      color: palette.text.tag.selected,
+    },
+    '& .MuiStepLabel-label': {
+      color: palette.text.secondary,
+    },
   }),
   dialogContent: ({ palette }) => ({
     width: '100%',
-    overflow: 'auto',
+    overflow: 'hidden',
     maxHeight: 'calc(100vh - 20rem)',
     boxSizing: 'border-box',
-    padding: '1.5rem !important',
+    padding: '0.875rem 1.5rem !important',
     background: `${palette.background.secondary} !important`,
   }),
-  dialogActions: {
+  dialogActions: ({ palette }) => ({
     width: '100%',
     alignItems: 'center',
     flexDirection: 'row',
-    padding: '.75rem 1.5rem !important',
+    padding: '1rem 1.5rem !important',
     gap: '.75rem',
-  },
+    borderTop: `1px solid ${palette.border.lines}`,
+    backgroundColor: `${palette.background.tabPanel}`,
+  }),
   publishingState: {
     display: 'flex',
     flexDirection: 'column',
