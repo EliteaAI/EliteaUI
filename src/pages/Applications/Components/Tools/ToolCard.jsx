@@ -173,7 +173,7 @@ const ToolCard = memo(props => {
     versionId,
     tools: values?.version_details?.tools || [],
     toolId: tool.id,
-    needValidateTheWholeAgent: tool?.type === 'application' && someToolsAreUnavailable,
+    needValidateTheWholeAgent: someToolsAreUnavailable,
   });
 
   // Function to open agent/pipeline in new tab
