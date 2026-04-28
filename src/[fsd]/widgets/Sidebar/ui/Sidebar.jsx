@@ -10,7 +10,8 @@ import { COLLAPSED_SIDE_BAR_WIDTH, SIDE_BAR_WIDTH } from '@/common/constants';
 import ArrowLeftIcon from '@/components/Icons/ArrowLeftIcon';
 import ArrowRightIcon from '@/components/Icons/ArrowRightIcon';
 
-const Sidebar = memo(({ onCollapsed, onKeyDown }) => {
+const Sidebar = memo(props => {
+  const { onCollapsed, onKeyDown, onToggleAssistant } = props;
   // const { showSearchBar } = useSearchBar();
   const sideBarCollapsed = useSelector(state => state.settings.sideBarCollapsed);
   const styles = sideBarStyles(sideBarCollapsed);
@@ -37,6 +38,7 @@ const Sidebar = memo(({ onCollapsed, onKeyDown }) => {
       <SidebarBody
         onKeyDown={onKeyDown}
         onCollapsed={onCollapsedHandler}
+        onToggleAssistant={onToggleAssistant}
       />
       <Box
         onClick={onClickCollapsed}

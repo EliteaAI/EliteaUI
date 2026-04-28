@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import ReactGA from 'react-ga4';
 import { useDispatch, useSelector } from 'react-redux';
@@ -12,7 +12,7 @@ import {
   useLocation,
 } from 'react-router-dom';
 
-import { Box } from '@mui/material';
+import { Box, useTheme } from '@mui/material';
 
 import { actions as importWizardActions } from '@/[fsd]/entities/import-wizard/model/importWizard.slice';
 import { ImportWizardModal } from '@/[fsd]/entities/import-wizard/ui';
@@ -38,6 +38,7 @@ import {
   ApplicationsTabs,
   COLLAPSED_SIDE_BAR_WIDTH,
   CredentialsTabs,
+  ELITEA_ASSISTANT_ENABLED,
   MISSING_ENVS,
   ModerationTabs,
   PERMISSION_GROUPS,
@@ -81,6 +82,7 @@ import UserSettings from '@/pages/UserSettings/UserSettings';
 import RouteDefinitions, { getBasename } from '@/routes';
 import { actions as chatActions } from '@/slices/chat';
 import { actions } from '@/slices/settings';
+import { EliteaAssistant } from '@eliteaai/elitea-assistant';
 
 import { gaInit } from './GA';
 
@@ -436,7 +438,8 @@ const ProtectedRoutes = () => {
   );
 };
 
-const LeftSideBar = () => {
+const LeftSideBar = props => {
+  const { onToggleAssistant } = props;
   const dispatch = useDispatch();
   const isOnboardingPage = useIsOnboarding();
   const user = useSelector(state => state.user);
@@ -472,7 +475,10 @@ const LeftSideBar = () => {
       sx={styles.leftSideBar}
       aria-label="side-bar"
     >
-      <Sidebar onCollapsed={onSideCollapsed} />
+      <Sidebar
+        onCollapsed={onSideCollapsed}
+        onToggleAssistant={onToggleAssistant}
+      />
       <ImportWizardModal
         open={openWizard}
         onClose={onCloseImportWizard}
@@ -507,10 +513,36 @@ const MainPanel = () => {
 
 const AppLayout = () => {
   const styles = appStyles();
+  const theme = useTheme();
+  const assistantRef = useRef(null);
+
+  const onToggleAssistant = useCallback(() => {
+    assistantRef.current?.toggle();
+  }, []);
+
+  const showEliteaAssistant = useMemo(() => {
+    if (typeof ELITEA_ASSISTANT_ENABLED === 'string') {
+      return (
+        ELITEA_ASSISTANT_ENABLED.toLowerCase() === '1' || ELITEA_ASSISTANT_ENABLED.toLowerCase() === 'true'
+      );
+    }
+
+    return Boolean(ELITEA_ASSISTANT_ENABLED);
+  }, []);
+
   return (
     <Box sx={styles.appContainer}>
-      <LeftSideBar />
+      <LeftSideBar onToggleAssistant={showEliteaAssistant ? onToggleAssistant : undefined} />
       <MainPanel />
+      {showEliteaAssistant && (
+        <EliteaAssistant
+          ref={assistantRef}
+          apiUrl="https://dev.elitea.ai"
+          token="test-token"
+          position="bottom-left"
+          theme={theme.palette.mode}
+        />
+      )}
     </Box>
   );
 };

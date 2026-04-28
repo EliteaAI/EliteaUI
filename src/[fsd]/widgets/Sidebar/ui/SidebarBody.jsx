@@ -35,7 +35,8 @@ import ThemeModeToggle from '@/components/ThemeModeToggle';
 import useNavBlocker from '@/hooks/useNavBlocker';
 import RouteDefinitions from '@/routes';
 
-const SidebarBody = memo(({ onKeyDown, onCollapsed }) => {
+const SidebarBody = memo(props => {
+  const { onKeyDown, onCollapsed, onToggleAssistant } = props;
   const theme = useTheme();
   const { pathname } = useLocation();
   const sideBarCollapsed = useSelector(state => state.settings.sideBarCollapsed);
@@ -353,6 +354,20 @@ const SidebarBody = memo(({ onKeyDown, onCollapsed }) => {
           </Box>
         </Box>
       </Box>
+
+      {onToggleAssistant && (
+        <Tooltip
+          title={sideBarCollapsed ? 'Support Assistant' : ''}
+          placement="left"
+        >
+          <Box
+            sx={styles.assistantBlock}
+            onClick={onToggleAssistant}
+          >
+            {sideBarCollapsed ? null : <Typography component="span">Support Assistant</Typography>}
+          </Box>
+        </Tooltip>
+      )}
     </Box>
   );
 });
@@ -511,6 +526,37 @@ const sideBarBodyStyles = (sideBarCollapsed, socketStatus) => ({
       top: 'calc(50% - 0.5rem) !important',
     },
   },
+  assistantBlock: ({ palette }) => ({
+    position: 'relative',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '3.25rem',
+    flexShrink: 0,
+    padding: '.75rem 1rem',
+
+    span: {
+      fontSize: '.75rem',
+      color: palette.text.metrics,
+      fontWeight: 500,
+      marginLeft: '.75rem',
+    },
+
+    ':hover': {
+      background: palette.background.button.assistantButton?.hover ?? palette.background.button.drawerMenu.hover,
+      cursor: 'pointer',
+    },
+
+    ':before': {
+      content: '""',
+      position: 'absolute',
+      left: 0,
+      top: 0,
+      width: '100%',
+      height: '1px',
+      backgroundColor: palette.border.sidebarDivider,
+    },
+  }),
 });
 
 SidebarBody.displayName = 'SideBarBody';

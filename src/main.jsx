@@ -87,6 +87,13 @@ const RootComponent = () => {
                 '#root': {
                   background: theme.palette.background.eliteaDefault,
                 },
+                '.elitea-assistant-container': {
+                  left: '1.25rem',
+
+                  '> button': {
+                    pointerEvents: 'none',
+                  },
+                },
               })}
             />
             <FilePreviewNavigationProvider>

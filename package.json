@@ -46,6 +46,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@eigenpal/docx-js-editor": "^0.0.16",
+    "@eliteaai/elitea-assistant": "github:EliteaAI/elitea_assistant#main",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@fontsource/roboto": "^5.2.5",

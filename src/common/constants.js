@@ -16,6 +16,7 @@ export const MODE = getEnvVar('MODE');
 export const PROD = getEnvVar('PROD');
 export const VITE_PUBLIC_PROJECT_ID = getEnvVar('VITE_PUBLIC_PROJECT_ID');
 export const ALLOW_PROJECT_OWN_LLMS = getEnvVar('allow_project_own_llms', true);
+export const ELITEA_ASSISTANT_ENABLED = getEnvVar('VITE_ELITEA_ASSISTANT', false);
 
 export const MISSING_ENVS = [
   { key: 'VITE_SERVER_URL', value: VITE_SERVER_URL },
