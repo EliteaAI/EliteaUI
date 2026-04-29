@@ -483,8 +483,6 @@ const LeftSideBar = () => {
   );
 };
 
-// Add comment to test workflow
-
 const MainPanel = () => {
   const sideBarCollapsed = useSelector(state => state.settings.sideBarCollapsed);
   const isOnboardingPage = useIsOnboarding();
