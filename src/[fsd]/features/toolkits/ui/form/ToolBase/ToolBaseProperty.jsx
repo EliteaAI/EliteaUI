@@ -615,7 +615,7 @@ const ToolBaseProperty = memo(props => {
             required={required}
             label={label}
             tooltipDescription={description}
-            value={settings[k]}
+            value={settings[k] ?? ''}
             onChange={handleInputChange(buildEditFieldPath(k))}
             error={!!toastError}
             helperText={errorText}
