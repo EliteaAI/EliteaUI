@@ -1,0 +1,177 @@
+name: Cherry-pick hotfix to main
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - 'release/**'
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  cherry_pick:
+    if: github.event.pull_request.merged == true && startsWith(github.head_ref, 'hotfix/')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Generate GitHub App Token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: Parse branch name
+        id: parse
+        run: |
+          HOTFIX_BRANCH="${{ github.head_ref }}"
+          # hotfix/MEN-123/some-description → pick/MEN-123/some-description
+          PICK_BRANCH="pick/${HOTFIX_BRANCH#hotfix/}"
+          echo "hotfix_branch=$HOTFIX_BRANCH" >> "$GITHUB_OUTPUT"
+          echo "pick_branch=$PICK_BRANCH" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create pick branch and cherry-pick
+        id: cherry_pick
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          PICK_BRANCH="${{ steps.parse.outputs.pick_branch }}"
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+
+          git checkout main
+          git checkout -b "$PICK_BRANCH"
+
+          # Get the exact commits from the merged PR (in chronological order)
+          COMMITS=$(gh pr view "$PR_NUMBER" --json commits --jq '.commits[].oid')
+
+          if [ -z "$COMMITS" ]; then
+            echo "No commits to cherry-pick"
+            echo "has_commits=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Cherry-picking commits:"
+          echo "$COMMITS"
+
+          CONFLICT=false
+          for COMMIT in $COMMITS; do
+            if ! git cherry-pick "$COMMIT"; then
+              CONFLICT=true
+              git cherry-pick --abort
+              break
+            fi
+          done
+
+          if [ "$CONFLICT" = true ]; then
+            echo "has_conflicts=true" >> "$GITHUB_OUTPUT"
+            # Reset and create an empty branch so we can still open a PR for visibility
+            git checkout main
+            git branch -D "$PICK_BRANCH"
+            git checkout -b "$PICK_BRANCH"
+            echo "has_commits=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_conflicts=false" >> "$GITHUB_OUTPUT"
+            echo "has_commits=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Push pick branch
+        if: steps.cherry_pick.outputs.has_commits == 'true'
+        run: |
+          git push -u origin "${{ steps.parse.outputs.pick_branch }}"
+
+      - name: Ensure label exists
+        if: steps.cherry_pick.outputs.has_commits == 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          gh label create "do not merge till confirmation" \
+            --color "D93F0B" \
+            --description "Hotfix cherry-pick — wait for release branch testing" \
+            --force
+
+      - name: Create pull request
+        if: steps.cherry_pick.outputs.has_commits == 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          HOTFIX_BRANCH="${{ steps.parse.outputs.hotfix_branch }}"
+          PICK_BRANCH="${{ steps.parse.outputs.pick_branch }}"
+          HOTFIX_PR="${{ github.event.pull_request.number }}"
+          HAS_CONFLICTS="${{ steps.cherry_pick.outputs.has_conflicts }}"
+
+          if [ "$HAS_CONFLICTS" = "true" ]; then
+            BODY="$(cat <<EOF
+          ## Cherry-pick from hotfix
+
+          ⚠️ **Cherry-pick had merge conflicts and needs manual resolution.**
+
+          - Source hotfix PR: #${HOTFIX_PR}
+          - Hotfix branch: \`${HOTFIX_BRANCH}\`
+
+          ### Steps to resolve
+          \`\`\`bash
+          git fetch origin
+          git checkout ${PICK_BRANCH}
+          # Cherry-pick the commits from the hotfix PR:
+          gh pr view ${HOTFIX_PR} --json commits --jq '.commits[].oid' | xargs -n1 git cherry-pick
+          # Resolve any conflicts, then:
+          git cherry-pick --continue
+          git push
+          \`\`\`
+
+          > **do not merge** until the fix is confirmed on the release branch.
+          EOF
+          )"
+          else
+            BODY="$(cat <<EOF
+          ## Cherry-pick from hotfix
+
+          Automatically cherry-picked from hotfix PR #${HOTFIX_PR}.
+
+          - Hotfix branch: \`${HOTFIX_BRANCH}\`
+          - Target: \`main\`
+
+          > **do not merge** until the fix is confirmed on the release branch.
+          EOF
+          )"
+          fi
+
+          gh pr create \
+            --base main \
+            --head "$PICK_BRANCH" \
+            --title "pick: cherry-pick ${HOTFIX_BRANCH#hotfix/} to main" \
+            --body "$BODY" \
+            --label "do not merge till confirmation"
+
+      - name: Comment on hotfix PR
+        if: steps.cherry_pick.outputs.has_commits == 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          PICK_BRANCH="${{ steps.parse.outputs.pick_branch }}"
+          HAS_CONFLICTS="${{ steps.cherry_pick.outputs.has_conflicts }}"
+
+          # Find the pick PR number we just created
+          PICK_PR=$(gh pr list --head "$PICK_BRANCH" --json number --jq '.[0].number')
+
+          if [ "$HAS_CONFLICTS" = "true" ]; then
+            COMMENT="🍒 Cherry-pick PR #${PICK_PR} was created to main, but **has merge conflicts** that need manual resolution."
+          else
+            COMMENT="🍒 Cherry-pick PR #${PICK_PR} was automatically created to main. It is labeled *do not merge till confirmation*."
+          fi
+
+          gh pr comment "${{ github.event.pull_request.number }}" --body "$COMMENT"
