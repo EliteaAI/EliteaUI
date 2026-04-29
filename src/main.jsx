@@ -89,6 +89,11 @@ const RootComponent = () => {
                 },
                 '.elitea-assistant-container': {
                   left: '1.25rem',
+                  pointerEvents: 'none',
+
+                  '> *': {
+                    pointerEvents: 'auto',
+                  },
 
                   '> button': {
                     pointerEvents: 'none',
