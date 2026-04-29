@@ -93,20 +93,10 @@ jobs:
         run: |
           git push -u origin "${{ steps.parse.outputs.pick_branch }}"
 
-      - name: Ensure label exists
-        if: steps.cherry_pick.outputs.has_commits == 'true'
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-        run: |
-          gh label create "do not merge till confirmation" \
-            --color "D93F0B" \
-            --description "Hotfix cherry-pick — wait for release branch testing" \
-            --force
-
       - name: Create pull request
         if: steps.cherry_pick.outputs.has_commits == 'true'
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           HOTFIX_BRANCH="${{ steps.parse.outputs.hotfix_branch }}"
           PICK_BRANCH="${{ steps.parse.outputs.pick_branch }}"
@@ -160,7 +150,7 @@ jobs:
       - name: Comment on hotfix PR
         if: steps.cherry_pick.outputs.has_commits == 'true'
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           PICK_BRANCH="${{ steps.parse.outputs.pick_branch }}"
           HAS_CONFLICTS="${{ steps.cherry_pick.outputs.has_conflicts }}"
