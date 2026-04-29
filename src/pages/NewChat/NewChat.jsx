@@ -1049,6 +1049,18 @@ const NewChat = props => {
       if (isStreaming) {
         boxRef.current?.stopAll?.();
       }
+      // Leave the current socket room before replacing activeConversation with a stub.
+      // The stub has no uuid, so onCreateConversation's leave-room guard would be skipped,
+      // leaving the user subscribed to the old room and receiving cross-chat messages.
+      if (activeConversation?.id && activeConversation?.uuid) {
+        stopListenCanvasEditorsChangeEvent();
+        stopListenCanvasContentChangeEvent();
+        emitLeaveRoom({
+          conversation_id: activeConversation.id,
+          conversation_uuid: activeConversation.uuid,
+          project_id: projectId,
+        });
+      }
       dispatch(chatActions.setIsCreatingNewConversation(true));
       clearUrlConversation();
       const newConversation = {
