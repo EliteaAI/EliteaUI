@@ -483,6 +483,8 @@ const LeftSideBar = () => {
   );
 };
 
+// Add this commit to test auto picking up commit for PR
+
 const MainPanel = () => {
   const sideBarCollapsed = useSelector(state => state.settings.sideBarCollapsed);
   const isOnboardingPage = useIsOnboarding();
