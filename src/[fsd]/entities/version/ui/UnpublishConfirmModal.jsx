@@ -35,6 +35,7 @@ const UnpublishConfirmModal = memo(
         onClose={handleClose}
         onKeyDown={handleKeyDown}
         aria-labelledby="unpublish-dialog-title"
+        sx={styles.dialogContainer}
       >
         <DialogTitle
           id="unpublish-dialog-title"
@@ -51,9 +52,9 @@ const UnpublishConfirmModal = memo(
             color="tertiary"
             aria-label="close"
             onClick={handleClose}
-            sx={{ padding: 0, margin: 0 }}
+            sx={{ padding: 0, marginRight: '-0.5rem' }}
           >
-            <CloseIcon sx={{ fontSize: '1rem' }} />
+            <CloseIcon sx={{ fontSize: '1.5rem' }} />
           </IconButton>
         </DialogTitle>
         <DialogContent sx={styles.dialogContent}>
@@ -92,7 +93,7 @@ const UnpublishConfirmModal = memo(
             </Typography>
           )}
         </DialogContent>
-        <StyledDialogActions>
+        <StyledDialogActions sx={styles.dialogActions}>
           <Button
             variant="secondary"
             onClick={handleClose}
@@ -116,19 +117,33 @@ UnpublishConfirmModal.displayName = 'UnpublishConfirmModal';
 
 /** @type {MuiSx} */
 const styles = {
-  dialogTitle: {
+  dialogContainer: {
+    '& .MuiDialog-paper': {
+      width: '100% !important',
+      borderRadius: '1rem !important',
+    },
+  },
+  dialogTitle: ({ palette }) => ({
     width: '100%',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
     height: '3.75rem',
-  },
+    backgroundColor: `${palette.background.tabPanel}`,
+  }),
   dialogContent: ({ palette }) => ({
     width: '100%',
     padding: '1.5rem !important',
     borderTop: `.0625rem solid ${palette.border.lines}`,
     borderBottom: `.0625rem solid ${palette.border.lines}`,
     background: `${palette.background.secondary} !important`,
+  }),
+  dialogActions: ({ palette }) => ({
+    display: 'flex',
+    gap: '0.25rem',
+    padding: '1rem 1.5rem !important',
+    width: '100%',
+    backgroundColor: `${palette.background.tabPanel}`,
   }),
 };
 
