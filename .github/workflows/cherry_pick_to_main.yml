@@ -55,26 +55,33 @@ jobs:
           git checkout main
           git checkout -b "$PICK_BRANCH"
 
-          # Get the exact commits from the merged PR (in chronological order)
-          COMMITS=$(gh pr view "$PR_NUMBER" --json commits --jq '.commits[].oid')
+          # Get the merge commit SHA from the merged PR
+          MERGE_COMMIT=$(gh pr view "$PR_NUMBER" --json mergeCommit --jq '.mergeCommit.oid')
 
-          if [ -z "$COMMITS" ]; then
-            echo "No commits to cherry-pick"
+          if [ -z "$MERGE_COMMIT" ]; then
+            echo "No merge commit found"
             echo "has_commits=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-          echo "Cherry-picking commits:"
-          echo "$COMMITS"
+          echo "Cherry-picking merge commit: $MERGE_COMMIT"
+
+          # Determine merge method: if it's a squash/rebase merge, cherry-pick directly;
+          # if it's a true merge commit (2 parents), use -m 1 to pick the first-parent diff.
+          PARENT_COUNT=$(git cat-file -p "$MERGE_COMMIT" | grep -c '^parent ')
 
           CONFLICT=false
-          for COMMIT in $COMMITS; do
-            if ! git cherry-pick "$COMMIT"; then
+          if [ "$PARENT_COUNT" -gt 1 ]; then
+            if ! git cherry-pick -m 1 "$MERGE_COMMIT"; then
               CONFLICT=true
               git cherry-pick --abort
-              break
             fi
-          done
+          else
+            if ! git cherry-pick "$MERGE_COMMIT"; then
+              CONFLICT=true
+              git cherry-pick --abort
+            fi
+          fi
 
           if [ "$CONFLICT" = true ]; then
             echo "has_conflicts=true" >> "$GITHUB_OUTPUT"
