@@ -262,6 +262,14 @@ export const ToolkitForm = memo(props => {
       if (toolType === 'mcp' && field === 'settings.scopes') {
         McpAuthHelpers.logout(values?.settings?.url);
       }
+      // Clear any existing validation error for this field when user changes its value
+      const fieldKey = field.includes('.') ? field.split('.').pop() : field;
+      setToolErrors(prev => {
+        if (!prev[fieldKey]) return prev;
+        const next = { ...prev };
+        delete next[fieldKey];
+        return next;
+      });
       onChangeToolDetail(prevState => updateObjectByPath(prevState, field, value, replace));
     },
     [onChangeToolDetail, setFieldValue, toolType, values?.settings?.url],
