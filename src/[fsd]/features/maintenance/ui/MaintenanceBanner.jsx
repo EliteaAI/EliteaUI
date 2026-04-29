@@ -106,7 +106,7 @@ const getStyles = styleTokens => ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 1200,
+    zIndex: 2400,
     background: palette.background.default,
     borderRadius: '1rem',
   }),
