@@ -190,7 +190,7 @@ const ChatMessageList = memo(props => {
           return message.role === ROLES.User ? (
             <UserMessage
               verticalMode
-              key={message.internal_id || message.id}
+              key={message.id || message.internal_id}
               messageId={message.id}
               name={message.name}
               avatar={message.avatar}
@@ -218,7 +218,7 @@ const ChatMessageList = memo(props => {
             />
           ) : (
             <ApplicationAnswer
-              key={message.internal_id || message.id}
+              key={message.id || message.internal_id}
               verticalMode
               ref={ref => (listRefs.current[index] = ref)}
               answer={message.content}
