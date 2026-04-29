@@ -172,6 +172,21 @@ export const parseRunEvent = (
         activeNodeIdRef.current = PipelineNodeTypes.End;
       }
       break;
+    case SocketMessageType.AgentHitlInterrupt:
+      if (isRunningPipeline) {
+        // start a node
+        const nodeId = event.response_metadata.node_name;
+        if (nodeId) {
+          runPipelineStatus.current.data.timeline.push({
+            id: nodeId,
+            status: PipelineStatus.InProgress,
+            state: {},
+            created_at: new Date().getTime(),
+          });
+          activeNodeIdRef.current = findNode(nodes, nodeId)?.id;
+        }
+      }
+      break;
     case SocketMessageType.AgentOnTransitionalEdge:
       if (isRunningPipeline) {
         // avoid pipeline finalization after langraph agent execution
