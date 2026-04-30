@@ -14,12 +14,10 @@ import {
   TAG_TYPE_APPLICATION_DETAILS,
   useApplicationDetailsQuery,
   useLazyGetApplicationVersionDetailQuery,
-  usePublicApplicationDetailsQuery,
   useUpdateApplicationRelationMutation,
 } from '@/api/applications';
 import { eliteaApi } from '@/api/eliteaApi';
 import RefreshIcon from '@/assets/refresh-icon.svg?react';
-import { PUBLIC_PROJECT_ID } from '@/common/constants';
 import { useSetRefetchDetails } from '@/hooks/application/useRefetchAgentDetails';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
@@ -53,7 +51,6 @@ const AgentPipelineVersionSelector = memo(({ tool, index, applicationId, disable
   const [anchorEl, setAnchorEl] = useState(null);
   const selectedProjectId = useSelectedProjectId();
   const projectId = entityProjectId || selectedProjectId;
-  const isPublished = projectId == PUBLIC_PROJECT_ID;
   const [updateApplicationRelation] = useUpdateApplicationRelationMutation();
   const [isUpdating, setIsUpdating] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -63,19 +60,15 @@ const AgentPipelineVersionSelector = memo(({ tool, index, applicationId, disable
   const [getVersionDetail] = useLazyGetApplicationVersionDetailQuery();
   const styles = agentPipelineVersionSelectorStyles();
 
-  // Fetch all versions for this agent/pipeline using the appropriate endpoint
-  const { data: privateAppData = { versions: [] }, refetch: refetchPrivateDetails } =
+  // Always use the private (project-scoped) endpoint to fetch versions.
+  // This component is inside a Formik form so the user has project access.
+  // The public endpoint filters out draft versions, which breaks sub-agent display
+  // when sub-agents are added directly in the public project (their versions are draft).
+  const { data: applicationData = { versions: [] }, refetch: refetchApplicationDetails } =
     useApplicationDetailsQuery(
       { projectId, applicationId: tool.settings?.application_id },
-      { skip: isPublished || !projectId || !tool.settings?.application_id },
+      { skip: !projectId || !tool.settings?.application_id },
     );
-  const { data: publicAppData = { versions: [] }, refetch: refetchPublicDetails } =
-    usePublicApplicationDetailsQuery(
-      { applicationId: tool.settings?.application_id },
-      { skip: !isPublished || !tool.settings?.application_id },
-    );
-  const applicationData = isPublished ? publicAppData : privateAppData;
-  const refetchApplicationDetails = isPublished ? refetchPublicDetails : refetchPrivateDetails;
 
   // Get versions from the API response or fallback to local data, sorted properly
   const versions = useMemo(() => {
@@ -102,21 +95,17 @@ const AgentPipelineVersionSelector = memo(({ tool, index, applicationId, disable
   }, [applicationData]);
 
   // Check if the stored version reference is invalid (version was deleted)
-  // For published agents, the embedded version may not be in the public list - that's expected, not invalid
   const isInvalidVersionReference = useMemo(() => {
-    if (isPublished) return false;
     const storedVersionId = tool.settings?.application_version_id;
     return storedVersionId && versions.length > 0 && !versions.find(v => v.id === storedVersionId);
-  }, [tool.settings?.application_version_id, versions, isPublished]);
+  }, [tool.settings?.application_version_id, versions]);
 
   // Get current selected version or default to latest
   const selectedVersion = useMemo(() => {
     const found = versions.find(v => v.id === tool.settings.application_version_id);
     if (found) return found;
-    // For published agents, the referenced version (e.g. embedded) may not be in the public versions list
-    if (isPublished) return null;
-    return versions[0];
-  }, [tool, versions, isPublished]);
+    return versions[0] || null;
+  }, [tool, versions]);
 
   // Helper function to format version display text
   const formatVersionDisplayText = useCallback(version => {
@@ -146,14 +135,9 @@ const AgentPipelineVersionSelector = memo(({ tool, index, applicationId, disable
   // Get display text for the selected version
   const displayText = useMemo(() => {
     if (isInvalidVersionReference) return 'Invalid version';
-    if (!selectedVersion) {
-      // For published agents, the embedded version is not in the public versions list
-      if (isPublished) return 'embedded';
-      return LATEST_VERSION_NAME;
-    }
-
+    if (!selectedVersion) return LATEST_VERSION_NAME;
     return formatVersionDisplayText(selectedVersion);
-  }, [selectedVersion, formatVersionDisplayText, isInvalidVersionReference, isPublished]);
+  }, [selectedVersion, formatVersionDisplayText, isInvalidVersionReference]);
 
   // Helper function to invalidate cache and trigger refetch
   const invalidateCacheAndRefresh = useCallback(
