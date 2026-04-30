@@ -67,6 +67,16 @@ const PublishWizardModal = memo(
       [validationResult, publishError],
     );
 
+    const visualStep = useMemo(() => {
+      if (step === PUBLISH_STEPS.PUBLISHING) {
+        return PUBLISH_STEPS.PUBLISHING + 1;
+      }
+      if (step === PUBLISH_STEPS.VALIDATION && validationResult) {
+        return PUBLISH_STEPS.PUBLISHING;
+      }
+      return step;
+    }, [step, validationResult]);
+
     const handleEnterDown = useCallback(
       event => {
         if (isAdminPublish && canAdminPublish) {
@@ -140,13 +150,13 @@ const PublishWizardModal = memo(
         {!isAdminPublish && (
           <Box sx={styles.stepperContainer}>
             <Stepper
-              activeStep={step}
+              activeStep={visualStep}
               sx={styles.stepper}
             >
               {STEP_LABELS.map((label, index) => (
                 <Step
                   key={label}
-                  sx={[styles.configStep, getStepStyle(index, step, styles)]}
+                  sx={[styles.configStep, getStepStyle(index, visualStep, styles)]}
                 >
                   <StepLabel slots={{ stepIcon: CheckedIcon }}>{label}</StepLabel>
                 </Step>
@@ -180,7 +190,7 @@ const PublishWizardModal = memo(
               />
             </Box>
           ) : (
-            <>
+            <Box sx={styles.stepsContentWrapper}>
               {step === PUBLISH_STEPS.PREPARATION && (
                 <PreparationStep
                   versionName={versionName}
@@ -219,7 +229,7 @@ const PublishWizardModal = memo(
                   {publishError}
                 </Alert>
               )}
-            </>
+            </Box>
           )}
         </DialogContent>
 
@@ -288,7 +298,7 @@ const styles = {
     '& .MuiDialog-paper': {
       width: '37.5rem !important',
       maxWidth: '90vw !important',
-      height: '38.75rem',
+      maxHeight: 'min(38.75rem, 90dvh)',
       borderRadius: '1rem !important',
     },
   },
@@ -318,9 +328,10 @@ const styles = {
     '& .MuiStepLabel-label': {
       fontSize: '0.75rem',
     },
-    '& .MuiStepConnector-root.Mui-active .MuiStepConnector-line': {
-      borderColor: `${palette.step.completed.border} !important`,
-    },
+    '& .MuiStepConnector-root.Mui-active .MuiStepConnector-line, & .MuiStepConnector-root.Mui-completed .MuiStepConnector-line':
+      {
+        borderColor: `${palette.step.completed.border} !important`,
+      },
   }),
   configStep: {
     borderRadius: '2rem',
@@ -373,11 +384,12 @@ const styles = {
   }),
   dialogContent: ({ palette }) => ({
     width: '100%',
-    overflow: 'hidden',
-    maxHeight: 'calc(100vh - 20rem)',
+    overflowY: 'auto',
     boxSizing: 'border-box',
     padding: '0.875rem 1.5rem !important',
     background: `${palette.background.secondary} !important`,
+    flex: 1,
+    minHeight: 0,
   }),
   dialogActions: ({ palette }) => ({
     width: '100%',
@@ -394,6 +406,9 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     padding: '3rem 1rem',
+  },
+  stepsContentWrapper: {
+    minHeight: '25rem',
   },
 };
 
