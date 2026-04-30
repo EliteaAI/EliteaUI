@@ -3,6 +3,7 @@ import { memo, useCallback, useState } from 'react';
 import { Box, IconButton, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
+import { useDeleteConfirmationDisabled } from '@/[fsd]/shared/lib/hooks';
 import { Modal } from '@/[fsd]/shared/ui';
 import { PERMISSIONS } from '@/common/constants';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
@@ -33,11 +34,19 @@ const DeleteEntityButton = memo(props => {
   const theme = useTheme();
   const [openAlert, setOpenAlert] = useState(false);
   const { checkPermission } = useCheckPermission();
+  const skipConfirmation = useDeleteConfirmationDisabled();
 
-  const onClickButton = useCallback(event => {
-    event.stopPropagation();
-    setOpenAlert(true);
-  }, []);
+  const onClickButton = useCallback(
+    event => {
+      event.stopPropagation();
+      if (skipConfirmation && shouldRequestInputName) {
+        onDelete && onDelete();
+      } else {
+        setOpenAlert(true);
+      }
+    },
+    [skipConfirmation, shouldRequestInputName, onDelete],
+  );
 
   const onClose = useCallback(
     event => {
