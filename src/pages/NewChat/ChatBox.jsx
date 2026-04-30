@@ -16,6 +16,8 @@ import { Box } from '@mui/system';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import { ChatHelpers, NewConversationHelpers } from '@/[fsd]/features/chat/lib/helpers';
+import { useSlashMention } from '@/[fsd]/features/chat/lib/hooks';
+import { SlashSuggestionList } from '@/[fsd]/features/chat/ui';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import {
   DEFAULT_MAX_TOKENS,
@@ -763,6 +765,22 @@ const ChatBox = forwardRef((props, boxRef) => {
     }
   };
 
+  const {
+    slashPhase,
+    slashToolkitQuery,
+    slashToolQuery,
+    slashSelectedToolkit,
+    slashIsQueryFinal,
+    slashOnKeyDown,
+    participantToolkitIds,
+    resetSlash,
+    clearMentions,
+    onSlashSelectToolkit,
+    onSlashCommitMention,
+    onSlashInputChange,
+    slashHighlightRanges,
+  } = useSlashMention({ chatInput, activeConversation });
+
   const onPredictStream = useCallback(
     async question => {
       // Before sending a new message, add any pending MCP server (that required auth) to ignored list
@@ -892,7 +910,11 @@ const ChatBox = forwardRef((props, boxRef) => {
           sendResult?.createdConversation?.uuid ||
           activeConversation?.uuid;
         if (conversationUuid) {
-          emit({ ...eventPayload, conversation_uuid: conversationUuid });
+          emit({
+            ...eventPayload,
+            conversation_uuid: conversationUuid,
+          });
+          clearMentions();
         }
 
         // If a brand-new conversation was just created and the user had set a custom steps_limit
@@ -928,6 +950,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       attachments,
       avatar,
       chat_history,
+      clearMentions,
       conversationEdit,
       emit,
       getPayload,
@@ -1293,6 +1316,8 @@ const ChatBox = forwardRef((props, boxRef) => {
 
   const onSendMessage = useCallback(
     async question => {
+      resetSlash();
+
       if (hasPendingHitlInterrupt && !hitlEditMode) {
         return;
       }
@@ -1305,12 +1330,20 @@ const ChatBox = forwardRef((props, boxRef) => {
 
       return onPredictStream(question);
     },
-    [hasPendingHitlInterrupt, hitlEditMode, onHitlResume, onPredictStream],
+    [hasPendingHitlInterrupt, hitlEditMode, onHitlResume, onPredictStream, resetSlash],
   );
 
   const { onKeyDown, isProcessingSymbols, query, stopProcessingSymbols } = useNewInputKeyDownHandler({
     disableHashtagDetection: isAgentsPage,
   });
+
+  const combinedKeyDown = useCallback(
+    event => {
+      onKeyDown(event);
+      slashOnKeyDown(event);
+    },
+    [onKeyDown, slashOnKeyDown],
+  );
 
   const onSelectParticipant = selectedParticipant => {
     const isSearchParticipant = isProcessingSymbols;
@@ -1846,13 +1879,27 @@ const ChatBox = forwardRef((props, boxRef) => {
               }}
             />
           )}
+          {slashPhase !== 'idle' && (
+            <SlashSuggestionList
+              phase={slashPhase}
+              toolkitQuery={slashToolkitQuery}
+              toolQuery={slashToolQuery}
+              selectedToolkit={slashSelectedToolkit}
+              isQueryFinal={slashIsQueryFinal}
+              onSelectToolkit={onSlashSelectToolkit}
+              onSelectTool={onSlashCommitMention}
+              onClose={resetSlash}
+              participantToolkitIds={participantToolkitIds}
+            />
+          )}
           <NewChatInput
             placeholder={inputPlaceholder}
             ref={chatInput}
             onSend={onSendMessage}
             isLoading={isInputLoading}
             disabledSend={isInputDisabled}
-            onNormalKeyDown={onKeyDown}
+            onNormalKeyDown={combinedKeyDown}
+            onInputChange={onSlashInputChange}
             shouldHandleEnter
             tooltipOfSendButton=""
             onShowParticipantsList={onShowParticipantsList}
@@ -1903,6 +1950,7 @@ const ChatBox = forwardRef((props, boxRef) => {
             onInternalToolsConfigChange={onInternalToolsConfigChange}
             internal_tools={activeConversation?.meta?.internal_tools || []}
             projectId={projectId}
+            slashHighlights={slashHighlightRanges}
           />
         </Box>
       </ChatBodyContainer>

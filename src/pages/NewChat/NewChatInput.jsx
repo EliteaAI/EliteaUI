@@ -23,6 +23,7 @@ const NewChatInput = forwardRef((props, ref) => {
     placeholder = '',
     clearInputAfterSubmit = true,
     onNormalKeyDown,
+    onInputChange,
     tooltipOfSendButton,
     isCreatingConversation = false,
 
@@ -76,6 +77,8 @@ const NewChatInput = forwardRef((props, ref) => {
     onInternalToolsConfigChange,
     internal_tools = [],
     projectId,
+
+    slashHighlights = [],
   } = props;
   const theme = useTheme();
   const { toastError } = useToast();
@@ -292,12 +295,17 @@ const NewChatInput = forwardRef((props, ref) => {
           users,
           onMentionChange,
         },
+        highlight: {
+          ranges: slashHighlights,
+          color: theme.palette.primary.main,
+        },
       }}
       clearInputAfterSend={clearInputAfterSubmit}
       disabledSend={disabledSend}
       disabledInput={isLoading}
       onSend={onSend}
       onNormalKeyDown={onNormalKeyDown}
+      onInputChange={onInputChange}
       tooltipOfSendButton={tooltipOfSendButton}
       showLoading={isLoading}
       onFilePaste={handleFilePaste}

@@ -5,3 +5,6 @@ export { useInternalToolsConfig } from './useInternalToolsConfig.hooks';
 export { useAttachmentToolChange } from './useAttachmentToolChange.hooks';
 export { useNewConversationAgentAttachment } from './useNewConversationAgentAttachment.hooks';
 export { useConversationStartersSync } from './useConversationStartersSync.hooks';
+export { useSlashCommandHandler } from './useSlashCommandHandler.hooks';
+export { useSlashHighlights } from './useSlashHighlights.hooks';
+export { useSlashMention } from './useSlashMention.hooks';
