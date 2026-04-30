@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 import { IconButton, Menu, MenuItem, Typography } from '@mui/material';
 import { Box } from '@mui/system';
 
+import { useDeleteConfirmationDisabled } from '@/[fsd]/shared/lib/hooks';
 import { Modal } from '@/[fsd]/shared/ui';
 import { useDeleteApplicationMutation } from '@/api/applications';
 import { useDeleteConfigurationMutation } from '@/api/configurations';
@@ -42,11 +43,17 @@ BasicMenuItem.displayName = 'BasicMenuItem';
 const ActionWithDialog = memo(props => {
   const { icon, label, name, onConfirm, closeMenu } = props;
   const [open, setOpen] = useState(false);
+  const skipConfirmation = useDeleteConfirmationDisabled();
 
   const openDialog = useCallback(() => {
+    if (skipConfirmation) {
+      onConfirm?.();
+      closeMenu();
+      return;
+    }
     closeMenu();
     setOpen(true);
-  }, [closeMenu]);
+  }, [closeMenu, skipConfirmation, onConfirm]);
 
   const onClose = useCallback(() => {
     closeMenu();

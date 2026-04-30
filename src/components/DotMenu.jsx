@@ -4,6 +4,7 @@ import { Box, Divider, IconButton, ListItemIcon, Menu, MenuItem } from '@mui/mat
 import ListItemText from '@mui/material/ListItemText';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
+import { useDeleteConfirmationDisabled } from '@/[fsd]/shared/lib/hooks';
 import { Modal } from '@/[fsd]/shared/ui';
 import CheckedIcon from '@/assets/checked-icon.svg?react';
 import AlertDialogV2 from '@/components/AlertDialogV2';
@@ -22,6 +23,7 @@ const BasicMenuItem = ({
   isSelected,
   showCheckIcon,
   setActiveDialog,
+  skipConfirmation,
 }) => {
   const theme = useTheme();
   const [anchorEl, setAnchorEl] = useState(null);
@@ -125,6 +127,7 @@ const BasicMenuItem = ({
                 shouldRequestInputName={subMenuItem.shouldRequestInputName}
                 setActiveDialog={setActiveDialog}
                 dialogKey={subMenuItem.key || subMenuItem.label}
+                skipConfirmation={skipConfirmation}
               />
             ) : (
               <BasicMenuItem
@@ -161,10 +164,16 @@ const ActionWithDialog = ({
   modalSx,
   setActiveDialog,
   dialogKey,
+  skipConfirmation,
 }) => {
   const openDialog = useCallback(
     event => {
       event.stopPropagation();
+      if (skipConfirmation && entityName && shouldRequestInputName) {
+        onConfirm?.();
+        closeMenu();
+        return;
+      }
       setActiveDialog({
         key: dialogKey,
         props: {
@@ -198,6 +207,7 @@ const ActionWithDialog = ({
       extraContent,
       inlineExtraContent,
       modalSx,
+      skipConfirmation,
     ],
   );
 
@@ -236,6 +246,7 @@ export default function DotMenu({
   const [anchorEl, setAnchorEl] = useState(null);
   const [activeDialog, setActiveDialog] = useState(null);
   const open = useMemo(() => Boolean(anchorEl), [anchorEl]);
+  const skipConfirmation = useDeleteConfirmationDisabled();
 
   const onClickMenu = useCallback(
     event => {
@@ -385,6 +396,7 @@ export default function DotMenu({
                     modalSx={item.modalSx}
                     setActiveDialog={setActiveDialog}
                     dialogKey={item.key || item.label}
+                    skipConfirmation={skipConfirmation}
                   />
                 </TooltipWrapper>
               ) : (
@@ -397,6 +409,7 @@ export default function DotMenu({
                     onClick={withClose(item.onClick)}
                     onCloseSubMenu={handleClose}
                     setActiveDialog={setActiveDialog}
+                    skipConfirmation={skipConfirmation}
                   />
                 </TooltipWrapper>
               );
@@ -441,6 +454,7 @@ export default function DotMenu({
                         modalSx={item.modalSx}
                         setActiveDialog={setActiveDialog}
                         dialogKey={item.key || item.label}
+                        skipConfirmation={skipConfirmation}
                       />
                     </TooltipWrapper>
                   ) : (
