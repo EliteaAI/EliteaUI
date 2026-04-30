@@ -1,5 +1,14 @@
 import { useCallback, useRef, useState } from 'react';
 
+/** Pure utility: convert a committed mention entry to a toolkit object. */
+const toolkitFromMention = mention => ({
+  id: mention.toolkit_id,
+  project_id: mention.project_id,
+  name: mention.toolkit_name,
+  type: mention.toolkit_type,
+  settings: mention.toolkit_settings,
+});
+
 /**
  * Manages "/" slash-mention state in the chat input.
  *
@@ -112,103 +121,82 @@ export const useSlashCommandHandler = ({ setInputContent }) => {
     [resetSlash],
   );
 
-  // ── Idle phase ───────────────────────────────────────────────────────────────
-  //
-  // Three strategies to re-enter toolkit/tool phase from idle:
-  //   1. Committed-mention literal prefix loop (handles space-containing names)
-  //   2. Regex full match: /toolkitName/toolQuery
-  //   3. Regex toolkit-only match: /toolkitName
-  //   4. lastSlashIdx fallback (space-containing names partially backspaced)
-  const syncIdlePhase = useCallback((textToCursor, cursorPos, fullMatch, toolkitOnlyMatch) => {
-    // Fast-path: iterate over ALL committed mentions using literal prefix matching
-    // so toolkit names with spaces are handled correctly.
-    // This lets the user edit any earlier mention, not only the most recent one.
-    for (const mention of committedMentionsRef.current) {
+  // ── Idle phase helpers ───────────────────────────────────────────────────────
+
+  /** Remove a mention from state+ref by toolkit identity. */
+  const uncommitMention = useCallback((toolkitId, projectId) => {
+    setCommittedMentions(prev => {
+      const next = prev.filter(m => !(m.toolkit_id === toolkitId && m.project_id === projectId));
+      committedMentionsRef.current = next;
+      return next;
+    });
+  }, []);
+
+  /**
+   * Handles /toolkitName/toolQuery — re-enters tool phase from a committed mention.
+   * Returns true if it handled the case.
+   */
+  const tryReEnterToolPhaseFromMention = useCallback(
+    (textToCursor, mention) => {
       const fullPrefix = '/' + mention.toolkit_name + '/';
       const prefixIdx = textToCursor.lastIndexOf(fullPrefix);
+      if (prefixIdx === -1) return false;
 
-      if (prefixIdx !== -1) {
-        const toolQueryPart = textToCursor.slice(prefixIdx + fullPrefix.length);
-        if (!/[\s/]/.test(toolQueryPart)) {
-          // Cursor is within /toolkitName/toolQuery — re-enter tool phase.
-          const toolkit = {
-            id: mention.toolkit_id,
-            project_id: mention.project_id,
-            name: mention.toolkit_name,
-            type: mention.toolkit_type,
-            settings: mention.toolkit_settings,
-          };
-          setCommittedMentions(prev => {
-            const next = prev.filter(
-              m => !(m.toolkit_id === mention.toolkit_id && m.project_id === mention.project_id),
-            );
-            committedMentionsRef.current = next;
-            return next;
-          });
-          setSelectedToolkit(toolkit);
-          lastToolkitRef.current = toolkit;
-          setToolkitQuery(mention.toolkit_name);
-          setToolQuery(toolQueryPart);
-          phaseRef.current = 'tool';
-          setPhase('tool');
-          setIsQueryFinal(false);
-          if (mentionAnchorRef.current === null) mentionAnchorRef.current = prefixIdx;
-          return;
-        }
-      }
+      const toolQueryPart = textToCursor.slice(prefixIdx + fullPrefix.length);
+      if (/[\s/]/.test(toolQueryPart)) return false;
 
-      // Check toolkit-name-only form (no separator yet).
+      const toolkit = toolkitFromMention(mention);
+      uncommitMention(mention.toolkit_id, mention.project_id);
+      setSelectedToolkit(toolkit);
+      lastToolkitRef.current = toolkit;
+      setToolkitQuery(mention.toolkit_name);
+      setToolQuery(toolQueryPart);
+      phaseRef.current = 'tool';
+      setPhase('tool');
+      setIsQueryFinal(false);
+      if (mentionAnchorRef.current === null) mentionAnchorRef.current = prefixIdx;
+      return true;
+    },
+    [uncommitMention],
+  );
+
+  /**
+   * Handles /toolkitName (no separator) — re-enters toolkit phase from a committed mention.
+   * Returns true if it handled the case.
+   */
+  const tryReEnterToolkitPhaseFromMention = useCallback(
+    (textToCursor, mention) => {
       const nameOnly = '/' + mention.toolkit_name;
       const nameIdx = textToCursor.lastIndexOf(nameOnly);
-      if (nameIdx !== -1 && /^[^\s/]*$/.test(textToCursor.slice(nameIdx + nameOnly.length))) {
-        // Cursor is within /toolkitName (no separator) — re-enter toolkit phase.
-        const toolkit = {
-          id: mention.toolkit_id,
-          project_id: mention.project_id,
-          name: mention.toolkit_name,
-          type: mention.toolkit_type,
-          settings: mention.toolkit_settings,
-        };
-        setCommittedMentions(prev => {
-          const next = prev.filter(
-            m => !(m.toolkit_id === mention.toolkit_id && m.project_id === mention.project_id),
-          );
-          committedMentionsRef.current = next;
-          return next;
-        });
-        lastToolkitRef.current = toolkit;
-        setToolkitQuery(mention.toolkit_name);
-        phaseRef.current = 'toolkit';
-        setPhase('toolkit');
-        setIsQueryFinal(false);
-        if (mentionAnchorRef.current === null) mentionAnchorRef.current = nameIdx;
-        return;
-      }
-    }
+      if (nameIdx === -1) return false;
+      if (!/^[^\s/]*$/.test(textToCursor.slice(nameIdx + nameOnly.length))) return false;
 
-    // Regex-based detection: handles paste and backspace for no-space toolkit names.
-    if (fullMatch) {
+      uncommitMention(mention.toolkit_id, mention.project_id);
+      lastToolkitRef.current = toolkitFromMention(mention);
+      setToolkitQuery(mention.toolkit_name);
+      phaseRef.current = 'toolkit';
+      setPhase('toolkit');
+      setIsQueryFinal(false);
+      if (mentionAnchorRef.current === null) mentionAnchorRef.current = nameIdx;
+      return true;
+    },
+    [uncommitMention],
+  );
+
+  /**
+   * Handles the regex full-match path (/toolkitName/toolQuery) when no committed
+   * mention loop matched. Resolves via committed mention, lastToolkitRef, or unknown.
+   */
+  const syncIdleHandleFullMatch = useCallback(
+    (textToCursor, cursorPos, fullMatch) => {
       const detectedName = fullMatch[1].toLowerCase();
-      // Check committed mentions first so re-editing an earlier mention goes directly
-      // to tool phase with the stored toolkit settings (no API round-trip needed).
       const committedMatch = committedMentionsRef.current.find(
         m => m.toolkit_name.toLowerCase() === detectedName,
       );
+
       if (committedMatch) {
-        const toolkit = {
-          id: committedMatch.toolkit_id,
-          project_id: committedMatch.project_id,
-          name: committedMatch.toolkit_name,
-          type: committedMatch.toolkit_type,
-          settings: committedMatch.toolkit_settings,
-        };
-        setCommittedMentions(prev => {
-          const next = prev.filter(
-            m => !(m.toolkit_id === committedMatch.toolkit_id && m.project_id === committedMatch.project_id),
-          );
-          committedMentionsRef.current = next;
-          return next;
-        });
+        const toolkit = toolkitFromMention(committedMatch);
+        uncommitMention(committedMatch.toolkit_id, committedMatch.project_id);
         setSelectedToolkit(toolkit);
         lastToolkitRef.current = toolkit;
         setToolkitQuery(fullMatch[1]);
@@ -217,7 +205,7 @@ export const useSlashCommandHandler = ({ setInputContent }) => {
         setPhase('tool');
         setIsQueryFinal(false);
       } else if (lastToolkitRef.current && lastToolkitRef.current.name.toLowerCase() === detectedName) {
-        // Fallback to lastToolkitRef for the most-recent toolkit (handles paste/backspace).
+        // Fallback to lastToolkitRef (handles paste/backspace for most-recent toolkit).
         setSelectedToolkit(lastToolkitRef.current);
         setToolkitQuery(fullMatch[1]);
         setToolQuery(fullMatch[2]);
@@ -225,76 +213,101 @@ export const useSlashCommandHandler = ({ setInputContent }) => {
         setPhase('tool');
         setIsQueryFinal(false);
       } else {
-        // Unknown toolkit name — enter toolkit phase, auto-select will resolve it.
+        // Unknown toolkit name — enter toolkit phase; auto-select will resolve it.
         pendingToolQueryRef.current = fullMatch[2];
         setToolkitQuery(fullMatch[1]);
         phaseRef.current = 'toolkit';
         setPhase('toolkit');
         setIsQueryFinal(true);
       }
+
       if (mentionAnchorRef.current === null) {
         mentionAnchorRef.current = (cursorPos ?? textToCursor.length) - fullMatch[0].length;
       }
-    } else if (toolkitOnlyMatch) {
-      // Backspace into a mention or paste of a partial mention (no-space toolkit names).
-      // onKeyDown handles the normal '/' keypress — this covers backspace/paste only.
-      setToolkitQuery(toolkitOnlyMatch[1]);
-      phaseRef.current = 'toolkit';
-      setPhase('toolkit');
-      setIsQueryFinal(false);
-      if (mentionAnchorRef.current === null) {
-        mentionAnchorRef.current = (cursorPos ?? textToCursor.length) - toolkitOnlyMatch[0].length;
-      }
-    } else {
-      // Partial committed mention check for space-containing toolkit names.
-      // Handles backspacing into a committed mention when the full name is no longer
-      // present — the committed-mention loop above only handles exact name matches,
-      // and the regexes can't match names containing spaces.
-      const lastSlashIdx = textToCursor.lastIndexOf('/');
-      if (lastSlashIdx !== -1) {
-        const afterSlash = textToCursor.slice(lastSlashIdx + 1);
-        if (afterSlash.length > 0 && !afterSlash.endsWith(' ')) {
-          for (const mention of committedMentionsRef.current) {
-            if (mention.toolkit_name.toLowerCase().startsWith(afterSlash.toLowerCase())) {
-              const toolkit = {
-                id: mention.toolkit_id,
-                project_id: mention.project_id,
-                name: mention.toolkit_name,
-                type: mention.toolkit_type,
-                settings: mention.toolkit_settings,
-              };
-              setCommittedMentions(prev => {
-                const next = prev.filter(
-                  m => !(m.toolkit_id === mention.toolkit_id && m.project_id === mention.project_id),
-                );
-                committedMentionsRef.current = next;
-                return next;
-              });
-              lastToolkitRef.current = toolkit;
-              setToolkitQuery(afterSlash);
-              phaseRef.current = 'toolkit';
-              setPhase('toolkit');
-              setIsQueryFinal(false);
-              if (mentionAnchorRef.current === null) mentionAnchorRef.current = lastSlashIdx;
-              return;
-            }
-          }
-          // Fall back to lastToolkitRef when the committed mention was already removed
-          // (un-committed when first entering toolkit phase from an earlier backspace).
-          if (
-            lastToolkitRef.current &&
-            lastToolkitRef.current.name.toLowerCase().startsWith(afterSlash.toLowerCase())
-          ) {
-            setToolkitQuery(afterSlash);
-            phaseRef.current = 'toolkit';
-            setPhase('toolkit');
-            setIsQueryFinal(false);
-            if (mentionAnchorRef.current === null) mentionAnchorRef.current = lastSlashIdx;
-          }
-        }
-      }
+    },
+    [uncommitMention],
+  );
+
+  /**
+   * Handles the regex toolkit-only match (/toolkitName, no separator).
+   * Covers backspace/paste; normal '/' keypress is handled in onKeyDown.
+   */
+  const syncIdleHandleToolkitOnlyMatch = useCallback((textToCursor, cursorPos, toolkitOnlyMatch) => {
+    setToolkitQuery(toolkitOnlyMatch[1]);
+    phaseRef.current = 'toolkit';
+    setPhase('toolkit');
+    setIsQueryFinal(false);
+    if (mentionAnchorRef.current === null) {
+      mentionAnchorRef.current = (cursorPos ?? textToCursor.length) - toolkitOnlyMatch[0].length;
     }
   }, []);
+
+  /**
+   * Last-resort fallback for space-containing toolkit names being partially backspaced.
+   * Uses the position of the last '/' to find a matching committed mention or lastToolkitRef.
+   */
+  const syncIdleHandleLastSlashFallback = useCallback(
+    textToCursor => {
+      const lastSlashIdx = textToCursor.lastIndexOf('/');
+      if (lastSlashIdx === -1) return;
+
+      const afterSlash = textToCursor.slice(lastSlashIdx + 1);
+      if (afterSlash.length === 0 || afterSlash.endsWith(' ')) return;
+
+      for (const mention of committedMentionsRef.current) {
+        if (mention.toolkit_name.toLowerCase().startsWith(afterSlash.toLowerCase())) {
+          uncommitMention(mention.toolkit_id, mention.project_id);
+          lastToolkitRef.current = toolkitFromMention(mention);
+          setToolkitQuery(afterSlash);
+          phaseRef.current = 'toolkit';
+          setPhase('toolkit');
+          setIsQueryFinal(false);
+          if (mentionAnchorRef.current === null) mentionAnchorRef.current = lastSlashIdx;
+          return;
+        }
+      }
+
+      // Committed mention already removed — fall back to lastToolkitRef.
+      if (
+        lastToolkitRef.current &&
+        lastToolkitRef.current.name.toLowerCase().startsWith(afterSlash.toLowerCase())
+      ) {
+        setToolkitQuery(afterSlash);
+        phaseRef.current = 'toolkit';
+        setPhase('toolkit');
+        setIsQueryFinal(false);
+        if (mentionAnchorRef.current === null) mentionAnchorRef.current = lastSlashIdx;
+      }
+    },
+    [uncommitMention],
+  );
+
+  // ── Idle phase ───────────────────────────────────────────────────────────────
+  //
+  // Four strategies to re-enter toolkit/tool phase from idle:
+  //   1. Committed-mention literal prefix loop (handles space-containing names)
+  //   2. Regex full match: /toolkitName/toolQuery
+  //   3. Regex toolkit-only match: /toolkitName
+  //   4. lastSlashIdx fallback (space-containing names partially backspaced)
+  const syncIdlePhase = useCallback(
+    (textToCursor, cursorPos, fullMatch, toolkitOnlyMatch) => {
+      for (const mention of committedMentionsRef.current) {
+        if (tryReEnterToolPhaseFromMention(textToCursor, mention)) return;
+        if (tryReEnterToolkitPhaseFromMention(textToCursor, mention)) return;
+      }
+
+      if (fullMatch) return syncIdleHandleFullMatch(textToCursor, cursorPos, fullMatch);
+      if (toolkitOnlyMatch) return syncIdleHandleToolkitOnlyMatch(textToCursor, cursorPos, toolkitOnlyMatch);
+      syncIdleHandleLastSlashFallback(textToCursor);
+    },
+    [
+      tryReEnterToolPhaseFromMention,
+      tryReEnterToolkitPhaseFromMention,
+      syncIdleHandleFullMatch,
+      syncIdleHandleToolkitOnlyMatch,
+      syncIdleHandleLastSlashFallback,
+    ],
+  );
 
   // ── Toolkit phase ────────────────────────────────────────────────────────────
   const syncToolkitPhase = useCallback(
