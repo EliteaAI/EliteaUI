@@ -68,11 +68,11 @@ export const useSlashMention = ({ chatInput, activeConversation }) => {
         // toolkit name and tool query, e.g. "/name|/toolQuery").
         const hasSeparatorAtCursor = !hasSeparatorInFragment && content[cursorPos] === '/';
         const hasSeparator = hasSeparatorInFragment || hasSeparatorAtCursor;
-        const replaceEnd = hasSeparatorInFragment
-          ? anchor + separatorIdx + 1
-          : hasSeparatorAtCursor
-            ? cursorPos + 1
-            : cursorPos;
+
+        let replaceEnd = cursorPos;
+        if (hasSeparatorInFragment) replaceEnd = anchor + separatorIdx + 1;
+        else if (hasSeparatorAtCursor) replaceEnd = cursorPos + 1;
+
         const replacement = hasSeparator ? '/' + toolkit.name + '/' : '/' + toolkit.name;
         chatInput.current.replaceRange(anchor, replaceEnd, replacement);
         // replaceRange bypasses onChange, so sync local inputContent manually so that

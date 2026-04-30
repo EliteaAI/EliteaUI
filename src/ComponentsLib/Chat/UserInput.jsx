@@ -6,6 +6,7 @@ import { Box, IconButton, TextField, Typography } from '@mui/material';
 
 import StyledCircleProgress from '@/ComponentsLib/CircularProgress';
 import Tooltip from '@/ComponentsLib/Tooltip';
+import HighlightedText from '@/[fsd]/features/chat/ui/highlighted-text/HighlightedText';
 import { useFileDragAndDrop } from '@/[fsd]/shared/lib/hooks';
 import StopIcon from '@/assets/stop-icon.svg?react';
 import { generateRandomAppendix, renameFile } from '@/common/attachmentValidationUtils';
@@ -18,31 +19,6 @@ import { useMentionDetection } from './useMentionDetection';
 const MAX_ROWS = 10;
 const MIN_ROWS = 2;
 const MIN_HEIGHT = 70;
-
-const HighlightedText = memo(({ text, ranges }) => {
-  if (!ranges?.length || !text) return null;
-  const styles = userInputStyles(false, false);
-  const children = [];
-  let lastIndex = 0;
-  for (const { start, end } of ranges) {
-    if (start > lastIndex) children.push(text.slice(lastIndex, start));
-    children.push(
-      <Typography
-        key={start}
-        component="span"
-        variant="labelMedium"
-        sx={styles.highlightSpan}
-      >
-        {text.slice(start, end)}
-      </Typography>,
-    );
-    lastIndex = end;
-  }
-  if (lastIndex < text.length) children.push(text.slice(lastIndex));
-  return children;
-});
-
-HighlightedText.displayName = 'HighlightedText';
 
 const UserInput = forwardRef((props, ref) => {
   const {
@@ -515,10 +491,6 @@ const userInputStyles = (isFocused, isDragOver) => {
       '&::-webkit-scrollbar': { display: 'none' },
       scrollbarWidth: 'none',
       msOverflowStyle: 'none',
-    },
-    highlightSpan: {
-      color: ({ palette }) => palette.primary.main,
-      borderRadius: '.25rem',
     },
     textField: {
       padding: 0,
