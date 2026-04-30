@@ -6,6 +6,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { Box, Typography } from '@mui/material';
 
 import { NewConversationHelpers } from '@/[fsd]/features/chat/lib/helpers';
+import { useSlashMention } from '@/[fsd]/features/chat/lib/hooks';
+import { SlashSuggestionList } from '@/[fsd]/features/chat/ui';
 import { DEFAULT_STEPS_LIMIT } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
 import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
 import { cleanLLMSettings, generateLLMSettings } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
@@ -161,6 +163,22 @@ const NewConversationView = forwardRef(
     );
     const { setConversationStreamingInfo } = useChatStreaming({ chatHistory: [] });
 
+    const {
+      slashPhase,
+      slashToolkitQuery,
+      slashToolQuery,
+      slashSelectedToolkit,
+      slashIsQueryFinal,
+      slashOnKeyDown,
+      participantToolkitIds,
+      resetSlash,
+      clearMentions,
+      onSlashSelectToolkit,
+      onSlashCommitMention,
+      onSlashInputChange,
+      slashHighlightRanges,
+    } = useSlashMention({ chatInput, activeConversation });
+
     const onPredictStream = useCallback(
       (question, specifiedParticipant, conversation) => {
         // Guard: ensure conversation and uuid exist before emitting
@@ -211,6 +229,7 @@ const NewConversationView = forwardRef(
             attachmentList: updatedAttachments || attachments,
           });
           emit(payload);
+          clearMentions();
           onClearAttachments?.();
           setActiveConversation(prev => ({
             ...prev,
@@ -233,6 +252,7 @@ const NewConversationView = forwardRef(
         onClearAttachments,
         setActiveConversation,
         dispatch,
+        clearMentions,
       ],
     );
     const onPredictStreamRef = useRef(onPredictStream);
@@ -299,6 +319,14 @@ const NewConversationView = forwardRef(
 
     const { onKeyDown, query, stopProcessingSymbols, isProcessingSymbols } =
       useNewStartConversationInputKeyDownHandler();
+
+    const combinedKeyDown = useCallback(
+      event => {
+        onKeyDown(event);
+        slashOnKeyDown(event);
+      },
+      [onKeyDown, slashOnKeyDown],
+    );
 
     const onClearSelectedParticipant = useCallback(() => {
       setSelectedParticipant(null);
@@ -532,6 +560,7 @@ const NewConversationView = forwardRef(
     ]);
 
     const onSend = async (question, inputContent) => {
+      resetSlash();
       setIsSending(true);
 
       // Need to keep input content for sending message after conversation is created
@@ -733,6 +762,19 @@ const NewConversationView = forwardRef(
               What can I do for you today?
             </Typography>
           </Box>
+          {slashPhase !== 'idle' && (
+            <SlashSuggestionList
+              phase={slashPhase}
+              toolkitQuery={slashToolkitQuery}
+              toolQuery={slashToolQuery}
+              selectedToolkit={slashSelectedToolkit}
+              isQueryFinal={slashIsQueryFinal}
+              onSelectToolkit={onSlashSelectToolkit}
+              onSelectTool={onSlashCommitMention}
+              onClose={resetSlash}
+              participantToolkitIds={participantToolkitIds}
+            />
+          )}
           <Box sx={styles.inputContainer}>
             <NewChatInput
               placeholder="Type your message. Use # to search and add AI assistants to conversation."
@@ -746,7 +788,8 @@ const NewConversationView = forwardRef(
                 totalValidationInfo?.length ||
                 toolkitValidationInfoList?.length
               }
-              onNormalKeyDown={onKeyDown}
+              onNormalKeyDown={combinedKeyDown}
+              onInputChange={onSlashInputChange}
               shouldHandleEnter
               tooltipOfSendButton={isConversationNameInvalid ? ConversationNameWarningMessage : ''}
               onShowParticipantsList={onShowParticipantsList}
@@ -777,6 +820,7 @@ const NewConversationView = forwardRef(
               disableAttachments={disableAttachments}
               onInternalToolsConfigChange={onInternalToolsConfigChange}
               internal_tools={internalTools}
+              slashHighlights={slashHighlightRanges}
             />
           </Box>
           <Box sx={styles.recommendationsContainer}>

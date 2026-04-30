@@ -2,7 +2,7 @@ import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useRef, 
 
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
-import { Box, IconButton, TextField } from '@mui/material';
+import { Box, IconButton, TextField, Typography } from '@mui/material';
 
 import StyledCircleProgress from '@/ComponentsLib/CircularProgress';
 import Tooltip from '@/ComponentsLib/Tooltip';
@@ -18,6 +18,31 @@ import { useMentionDetection } from './useMentionDetection';
 const MAX_ROWS = 10;
 const MIN_ROWS = 2;
 const MIN_HEIGHT = 70;
+
+const HighlightedText = memo(({ text, ranges }) => {
+  if (!ranges?.length || !text) return null;
+  const styles = userInputStyles(false, false);
+  const children = [];
+  let lastIndex = 0;
+  for (const { start, end } of ranges) {
+    if (start > lastIndex) children.push(text.slice(lastIndex, start));
+    children.push(
+      <Typography
+        key={start}
+        component="span"
+        variant="labelMedium"
+        sx={styles.highlightSpan}
+      >
+        {text.slice(start, end)}
+      </Typography>,
+    );
+    lastIndex = end;
+  }
+  if (lastIndex < text.length) children.push(text.slice(lastIndex));
+  return children;
+});
+
+HighlightedText.displayName = 'HighlightedText';
 
 const UserInput = forwardRef((props, ref) => {
   const {
@@ -55,6 +80,7 @@ const UserInput = forwardRef((props, ref) => {
         placement: 'top',
       },
       footerContainer = {},
+      highlight = {},
     } = {},
     clearInputAfterSend = true,
     disabledSend,
@@ -62,6 +88,7 @@ const UserInput = forwardRef((props, ref) => {
     onSend,
     onStop,
     onNormalKeyDown,
+    onInputChange,
     tooltipOfSendButton,
     showLoading = false,
     isStreaming = false,
@@ -74,6 +101,7 @@ const UserInput = forwardRef((props, ref) => {
   } = props;
 
   const inputRef = useRef(null);
+  const mirrorRef = useRef(null);
 
   const [question, setQuestion] = useState('');
   const [inputContent, setInputContent] = useState('');
@@ -98,7 +126,22 @@ const UserInput = forwardRef((props, ref) => {
     handleDrop: handleDropFromHook,
   } = useFileDragAndDrop(originalOnDrop);
 
+  const { ranges: highlightRanges = [] } = highlight;
+  const hasHighlights = highlightRanges.length > 0 && !!inputContent;
+  // console.log('highlightRanges', highlightRanges, hasHighlights);
+
   const styles = userInputStyles(isFocused, isDragOver);
+
+  useEffect(() => {
+    const textarea = inputRef.current;
+    const mirror = mirrorRef.current;
+    if (!textarea || !mirror || !hasHighlights) return;
+    const sync = () => {
+      mirror.scrollTop = textarea.scrollTop;
+    };
+    textarea.addEventListener('scroll', sync);
+    return () => textarea.removeEventListener('scroll', sync);
+  }, [hasHighlights]);
 
   useEffect(() => {
     onMentionChange?.(mentions);
@@ -164,9 +207,22 @@ const UserInput = forwardRef((props, ref) => {
       setShowExpandIcon(false);
     },
     getInputContent: () => inputContent,
+    getCursorPosition: () => inputRef.current?.selectionStart ?? null,
     setValue: value => {
       setQuestion(value);
       setInputContent(value);
+    },
+    replaceRange: (start, end, text) => {
+      const newValue = inputContent.slice(0, start) + text + inputContent.slice(end);
+      setInputContent(newValue);
+      setQuestion(newValue.trim() ? newValue : '');
+      const newCursorPos = start + text.length;
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.setSelectionRange(newCursorPos, newCursorPos);
+          inputRef.current.focus();
+        }
+      }, 0);
     },
     removeSymbol: symbol => {
       const index = inputContent.lastIndexOf(symbol);
@@ -186,8 +242,10 @@ const UserInput = forwardRef((props, ref) => {
   }));
 
   const onInputQuestion = event => {
-    setInputContent(event.target.value);
-    setQuestion(event.target.value?.trim() ? event.target.value : '');
+    const value = event.target.value;
+    setInputContent(value);
+    setQuestion(value?.trim() ? value : '');
+    onInputChange?.(value);
     setTimeout(() => {
       setShowExpandIcon(event.target.offsetHeight > MIN_HEIGHT);
     }, 0);
@@ -270,6 +328,20 @@ const UserInput = forwardRef((props, ref) => {
             />
           )}
           <Box sx={styles.textFieldWrapper}>
+            {hasHighlights && (
+              <Typography
+                ref={mirrorRef}
+                aria-hidden="true"
+                component="div"
+                color="text.secondary"
+                sx={styles.mirrorDiv}
+              >
+                <HighlightedText
+                  text={inputContent}
+                  ranges={highlightRanges}
+                />
+              </Typography>
+            )}
             <TextField
               value={inputContent}
               fullWidth
@@ -293,7 +365,12 @@ const UserInput = forwardRef((props, ref) => {
               slotProps={{
                 input: {
                   inputRef,
-                  sx: styles.textFieldInput(input),
+                  sx: [
+                    styles.textFieldInput(input),
+                    hasHighlights && {
+                      '& textarea': { color: 'transparent', caretColor: input?.color ?? '#FFFFFF' },
+                    },
+                  ],
                   disableUnderline: true,
                   endAdornment: showExpandIcon ? (
                     <IconButton
@@ -419,14 +496,39 @@ const userInputStyles = (isFocused, isDragOver) => {
       flexDirection: 'column',
       alignItems: 'center',
       width: '100%',
+      position: 'relative',
+    },
+    mirrorDiv: {
+      position: 'absolute',
+      inset: 0,
+      overflow: 'auto',
+      pointerEvents: 'none',
+      zIndex: 0,
+      whiteSpace: 'pre-wrap',
+      wordBreak: 'break-word',
+      padding: 0,
+      fontSize: '.875rem',
+      fontStyle: 'normal',
+      fontWeight: 500,
+      lineHeight: '1.5rem',
+      fontFamily: 'inherit',
+      '&::-webkit-scrollbar': { display: 'none' },
+      scrollbarWidth: 'none',
+      msOverflowStyle: 'none',
+    },
+    highlightSpan: {
+      color: ({ palette }) => palette.primary.main,
+      borderRadius: '.25rem',
     },
     textField: {
       padding: 0,
       flex: '1 0 0',
       fontSize: '.875rem',
       fontStyle: 'normal',
-      fontWeight: 400,
-      lineHeight: '1.375rem',
+      fontWeight: 500,
+      lineHeight: '1.5rem',
+      position: 'relative',
+      zIndex: 1,
       '&::-webkit-scrollbar': {
         display: 'none',
       },
