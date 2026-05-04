@@ -10,6 +10,7 @@ permissions:
   contents: write
   pull-requests: write
   issues: write
+  actions: write
 
 jobs:
   cherry_pick:
@@ -178,13 +179,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Generate GitHub App Token
-        id: app-token
-        uses: actions/create-github-app-token@v1
-        with:
-          app-id: ${{ secrets.APP_ID }}
-          private-key: ${{ secrets.APP_PRIVATE_KEY }}
-
       - name: Extract version from release branch
         id: version
         run: |
@@ -194,7 +188,7 @@ jobs:
 
       - name: Trigger build and release
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Triggering build on branch ${{ github.base_ref }} with tag ${{ steps.version.outputs.version }}"
           gh workflow run tag_build_release.yml \
