@@ -59,19 +59,35 @@ const ResourcesPage = memo(() => {
               </>
             ) : (
               <>
-                {systemInfo?.elitea_version && (
+                {configValues.resources_information_version && (
                   <Box sx={styles.infoRow}>
                     <Typography
                       variant="bodySmall"
                       color="text.secondary"
                     >
-                      {configValues.resources_information_version_label ?? 'ELITEA version:'}
+                      Release Version
                     </Typography>
                     <Typography
                       variant="bodySmallBold"
                       color="text.primary"
                     >
-                      {systemInfo.elitea_version}
+                      {configValues.resources_information_version}
+                    </Typography>
+                  </Box>
+                )}
+                {configValues.resources_information_upgrade_date && (
+                  <Box sx={styles.infoRow}>
+                    <Typography
+                      variant="bodySmall"
+                      color="text.secondary"
+                    >
+                      Released on
+                    </Typography>
+                    <Typography
+                      variant="bodySmallBold"
+                      color="text.primary"
+                    >
+                      {configValues.resources_information_upgrade_date}
                     </Typography>
                   </Box>
                 )}
