@@ -212,7 +212,8 @@ const addMessageToChatHistory = ({
       })
     : setChatHistoryRef.current?.(prevState => {
         const newState = [...prevState]; // Create new array first
-        if (!newState[msgIndex].participant) {
+        const existingMessage = newState[msgIndex];
+        if (!existingMessage.participant) {
           const theParticipant = participantsRef.current?.find(
             participant => participant.id === participant_id,
           );
@@ -220,7 +221,7 @@ const addMessageToChatHistory = ({
         }
         // Preserve SwarmChild toolActions from current state that may have been added
         // by socket events not yet reflected in chatHistoryRef (stale ref issue)
-        const existingSwarmChildren = (newState[msgIndex]?.toolActions || []).filter(
+        const existingSwarmChildren = (existingMessage?.toolActions || []).filter(
           a => a.type === TOOL_ACTION_TYPES.SwarmChild,
         );
         if (existingSwarmChildren.length > 0) {
@@ -229,7 +230,7 @@ const addMessageToChatHistory = ({
           );
           msg.toolActions = [...nonSwarmChildren, ...existingSwarmChildren];
         }
-        newState[msgIndex] = msg;
+        newState[msgIndex] = { ...existingMessage, ...msg };
         return newState;
       });
 };
@@ -393,6 +394,7 @@ export const useChatSocket = ({
           if (!isContinuing) {
             msg.content = '';
             msg.references = [];
+            msg.created_at = new Date().getTime();
           }
           msg.task_id = task_id;
           msg.participant_id = participant_id;
