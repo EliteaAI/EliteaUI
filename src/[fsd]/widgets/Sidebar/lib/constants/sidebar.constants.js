@@ -9,4 +9,5 @@ export const RouteToSideBarItemMap = [
   { route: RouteDefinitions.Toolkits, item: 'toolkits' },
   { route: RouteDefinitions.Apps, item: 'applications' },
   { route: RouteDefinitions.MCPs, item: 'mcps' },
+  { route: RouteDefinitions.Resources, item: 'resources' },
 ];
