@@ -348,7 +348,7 @@ const SidebarBody = memo(props => {
           <Divider sx={styles.sectionDivider} />
           <Box sx={styles.section}>
             <Buttons.SettingsButton navigateToPage={navigateToPage} />
-            <Buttons.TipsButton />
+            <Buttons.ResourcesButton />
             <Buttons.NotificationButton />
             <Buttons.UserButton navigateToPage={navigateToPage} />
           </Box>
@@ -543,7 +543,8 @@ const sideBarBodyStyles = (sideBarCollapsed, socketStatus) => ({
     },
 
     ':hover': {
-      background: palette.background.button.assistantButton?.hover ?? palette.background.button.drawerMenu.hover,
+      background:
+        palette.background.button.assistantButton?.hover ?? palette.background.button.drawerMenu.hover,
       cursor: 'pointer',
     },
 

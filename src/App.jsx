@@ -21,6 +21,7 @@ import { MaintenanceBanner } from '@/[fsd]/features/maintenance/ui';
 import { AppDetail, Apps } from '@/[fsd]/pages/apps';
 import AuthCallbackPage from '@/[fsd]/pages/auth/index.jsx';
 import McpAuthPage from '@/[fsd]/pages/mcp/index.jsx';
+import Resources from '@/[fsd]/pages/resources';
 import Settings from '@/[fsd]/pages/settings';
 import AIConfiguration from '@/[fsd]/pages/settings/AIConfiguration';
 import CreatePersonalToken from '@/[fsd]/pages/settings/CreatePersonalToken';
@@ -73,7 +74,6 @@ import CreatePipeline from '@/pages/Pipelines/CreatePipeline';
 import EditPipeline from '@/pages/Pipelines/EditPipeline';
 import Pipelines from '@/pages/Pipelines/Pipelines';
 import ProjectSwitcher from '@/pages/ProjectSwitcher.jsx';
-import Tips from '@/pages/Tips/Tips';
 import { CreateToolkit } from '@/pages/Toolkits/CreateToolkit';
 import { EditToolkit } from '@/pages/Toolkits/EditToolkit';
 import { Toolkits } from '@/pages/Toolkits/Toolkits';
@@ -227,7 +227,7 @@ const ProtectedRoutes = () => {
     () => [
       /* onboarding */
       { path: RouteDefinitions.Onboarding, element: <Onboarding /> },
-      { path: RouteDefinitions.Tips, element: <Tips /> },
+      { path: RouteDefinitions.Resources, element: <Resources /> },
       { path: RouteDefinitions.AgentStudio, element: <AgentsStudio /> },
       /* chat */
       { path: RouteDefinitions.Chat, element: <ChatWrapper /> },

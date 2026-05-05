@@ -74,7 +74,7 @@ const RouteDefinitions = {
   AuthCallbackPage: '/auth-callback',
 
   Onboarding: '/onboarding',
-  Tips: '/tips',
+  Resources: '/resources',
   AgentStudio: '/agents-studio',
 };
 
@@ -124,6 +124,7 @@ export const PathSessionMap = {
   [RouteDefinitions.Credentials]: 'Credentials',
   [RouteDefinitions.ModerationSpace]: 'Moderation Space',
   [RouteDefinitions.NotificationCenter]: 'Notification Center',
+  [RouteDefinitions.Resources]: 'Resources',
 };
 
 export const getBasename = () => {

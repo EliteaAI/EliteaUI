@@ -1,9 +1,9 @@
 import { memo } from 'react';
 
 import BuildIcon from '@mui/icons-material/Build';
-import { Box } from '@mui/material';
 
 import { ConfigurationHelpers } from '@/[fsd]/features/settings/lib/helpers';
+import { GradientIconWrapper } from '@/[fsd]/shared/ui/icon';
 import AmazonBedrock from '@/assets/amazon-bedrock.svg?react';
 import AmazonIcon from '@/assets/amazon.svg?react';
 import AzureIcon from '@/assets/azure-icon.svg?react';
@@ -106,39 +106,9 @@ const ConfigurationIcon = memo(({ name, type, label }) => {
     }
   };
 
-  const styles = configurationIconStyles();
-
-  return <Box sx={styles.container}>{renderIcon()}</Box>;
+  return <GradientIconWrapper size="2.25rem">{renderIcon()}</GradientIconWrapper>;
 });
 
 ConfigurationIcon.displayName = 'ConfigurationIcon';
-
-/** @type {MuiSx} */
-const configurationIconStyles = () => ({
-  container: ({ palette }) => ({
-    minWidth: '2.25rem',
-    width: '2.25rem',
-    height: '2.25rem',
-    borderRadius: '50%',
-    overflow: 'hidden',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-    background: palette.background.icon.entityGradient,
-    '&::before': {
-      content: '""',
-      position: 'absolute',
-      inset: 0,
-      borderRadius: 'inherit',
-      padding: '0.0625rem',
-      background: palette.background.icon.entityBorderGradient,
-      WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-      WebkitMaskComposite: 'xor',
-      maskComposite: 'exclude',
-      pointerEvents: 'none',
-    },
-  }),
-});
 
 export default ConfigurationIcon;
