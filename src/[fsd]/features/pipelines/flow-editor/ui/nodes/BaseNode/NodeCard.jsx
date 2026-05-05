@@ -6,6 +6,7 @@ import { FlowEditorContext, NodeCardContext } from '@/[fsd]/app/providers';
 import { NodeHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import NodeBodyContainer from '@/[fsd]/features/pipelines/flow-editor/ui/nodes/BaseNode/NodeBodyContainer';
 import NodeCardHeader from '@/[fsd]/features/pipelines/flow-editor/ui/nodes/BaseNode/NodeCardHeader';
+import { TriggerTypeSelector } from '@/[fsd]/features/pipelines/flow-editor/ui/settings';
 
 const NodeCard = memo(props => {
   const { name, isEntrypoint, children, selected, isConditionNode, handles, isPerforming, type, id } = props;
@@ -37,7 +38,10 @@ const NodeCard = memo(props => {
             disabled={disabled}
           />
         </Box>
-        <NodeBodyContainer display={isExpanded ? 'flex' : 'none'}>{children}</NodeBodyContainer>
+        <NodeBodyContainer display={isExpanded ? 'flex' : 'none'}>
+          {isEntrypoint && <TriggerTypeSelector disabled={isRunningPipeline || disabled} />}
+          {children}
+        </NodeBodyContainer>
         {handles && handles(isExpanded)}
       </Box>
     </NodeCardContext.Provider>
