@@ -74,7 +74,6 @@ const RouteDefinitions = {
   AuthCallbackPage: '/auth-callback',
 
   Onboarding: '/onboarding',
-  Tips: '/tips',
   Resources: '/resources',
   AgentStudio: '/agents-studio',
 };
