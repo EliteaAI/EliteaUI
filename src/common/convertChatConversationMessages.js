@@ -113,6 +113,7 @@ export const convertToAIAnswer = (message_group, message_groups, participants) =
     content,
     message_items = [],
     created_at,
+    updated_at,
     reply_to_id,
     uuid,
     is_streaming,
@@ -240,12 +241,14 @@ export const convertToAIAnswer = (message_group, message_groups, participants) =
       });
     }
   }) || [];
+
+  const displayTime = updated_at || created_at;
   return {
     id: uuid,
     role: ROLES.Assistant,
     message_items: [...message_items].sort((a, b) => a.id - b.id),
     content: is_streaming ? '...' : content,
-    created_at: new Date(convertTime(created_at)).getTime(),
+    created_at: new Date(convertTime(displayTime)).getTime(),
     participant_id: author_participant_id,
     question_id: foundQuestion?.uuid || foundQuestion?.id,
     replyTo: foundQuestion,

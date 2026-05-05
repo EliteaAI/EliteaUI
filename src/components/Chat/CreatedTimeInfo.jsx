@@ -9,6 +9,8 @@ const CreatedTimeInfo = props => {
   const [time, setTime] = useState(formatDistanceToNow(new Date(created_at)) + ' ago');
 
   useEffect(() => {
+    setTime(formatDistanceToNow(new Date(created_at)) + ' ago');
+
     const intervalId = setInterval(() => {
       setTime(formatDistanceToNow(new Date(created_at)) + ' ago');
     }, 30000);
