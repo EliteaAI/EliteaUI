@@ -20,7 +20,7 @@ const ResourcesPage = memo(() => {
     <Box sx={styles.page}>
       <Box sx={styles.header}>
         <Typography
-          variant="headingSmall"
+          variant="headingMedium"
           color="text.secondary"
         >
           Resources
@@ -30,7 +30,12 @@ const ResourcesPage = memo(() => {
       <Box sx={styles.content}>
         {configValues.resources_information_enabled !== false && (
           <ResourceCard
-            icon={<InfoIcon />}
+            icon={
+              <InfoIcon
+                width="1.5rem"
+                height="1.5rem"
+              />
+            }
             title="Information"
             description="Installed ELITEA environment details"
           >
@@ -57,7 +62,7 @@ const ResourcesPage = memo(() => {
                       variant="bodySmall"
                       color="text.secondary"
                     >
-                      ELITEA version:
+                      {configValues.resources_information_version_label ?? 'ELITEA version:'}
                     </Typography>
                     <Typography
                       variant="bodySmallBold"
@@ -124,7 +129,12 @@ const ResourcesPage = memo(() => {
                 key={config.enabledKey}
                 title={configValues[config.titleKey] || config.defaultTitle}
                 description={configValues[config.descriptionKey] || config.defaultDescription}
-                icon={<config.Icon />}
+                icon={
+                  <config.Icon
+                    width="1.5rem"
+                    height="1.5rem"
+                  />
+                }
               >
                 {isConfigLoading ? (
                   <>
@@ -188,16 +198,16 @@ const resourcesPageStyles = () => ({
     flexShrink: 0,
     display: 'flex',
     alignItems: 'center',
-    px: spacing(2),
-    height: '3.3rem',
-    minHeight: '3.3rem',
+    px: spacing(3),
+    height: '3.75rem',
+    minHeight: '3.75rem',
     borderBottom: `0.0625rem solid ${palette.border.lines}`,
     backgroundColor: palette.background.tabPanel,
   }),
   content: ({ spacing }) => ({
     flex: 1,
     overflowY: 'auto',
-    px: spacing(2),
+    px: spacing(3),
     py: spacing(2),
     display: 'flex',
     flexDirection: 'column',
@@ -218,11 +228,13 @@ const resourcesPageStyles = () => ({
     color: palette.primary.main,
     cursor: 'pointer',
     display: 'block',
+    textDecorationColor: 'currentColor',
   }),
   link: ({ palette }) => ({
     color: palette.text.metrics,
     cursor: 'pointer',
     display: 'block',
+    textDecorationColor: 'currentColor',
   }),
 });
 

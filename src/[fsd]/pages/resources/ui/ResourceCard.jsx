@@ -2,10 +2,12 @@ import { memo } from 'react';
 
 import { Box, Divider, Typography } from '@mui/material';
 
+import { GradientIconWrapper } from '@/[fsd]/shared/ui/icon';
 import FileIcon from '@/assets/file.svg?react';
 import RocketIcon from '@/assets/rocket-icon.svg?react';
 import TutorialsIcon from '@/assets/tutorials-icon.svg?react';
 import VideoIcon from '@/assets/video-icon.svg?react';
+import { getCardGradientStyles } from '@/utils/cardStyles';
 
 export const RESOURCE_CARD_CONFIGS = [
   {
@@ -53,17 +55,17 @@ const ResourceCard = memo(props => {
   return (
     <Box sx={styles.card}>
       <Box sx={styles.cardHeader}>
-        <Box sx={styles.iconWrapper}>{icon}</Box>
+        <GradientIconWrapper>{icon}</GradientIconWrapper>
         <Box sx={styles.headerText}>
           <Typography
             variant="bodyMediumBold"
-            color="text.primary"
+            color="text.secondary"
           >
             {title}
           </Typography>
           <Typography
             variant="bodySmall"
-            color="text.secondary"
+            color="text.primary"
           >
             {description}
           </Typography>
@@ -80,46 +82,37 @@ ResourceCard.displayName = 'ResourceCard';
 /** @type {MuiSx} */
 const resourceCardStyles = () => ({
   card: ({ palette }) => ({
+    ...getCardGradientStyles(palette, { enableHover: false }),
     display: 'flex',
     flexDirection: 'column',
-    borderRadius: '0.75rem',
-    border: `0.0625rem solid ${palette.border.lines}`,
-    backgroundColor: palette.background.paper,
+    minWidth: '23.75rem',
+    minHeight: '14.25rem',
     overflow: 'hidden',
   }),
-  cardHeader: ({ spacing }) => ({
+  cardHeader: ({ palette }) => ({
     display: 'flex',
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing(1.5),
-    px: spacing(2),
-    py: spacing(1.5),
-  }),
-  iconWrapper: ({ palette }) => ({
-    flexShrink: 0,
-    width: '2.5rem',
-    height: '2.5rem',
-    display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: '0.5rem',
-    backgroundColor: palette.background.default,
-    color: palette.icon?.fill?.default ?? palette.text.secondary,
+    gap: '1rem',
+    px: '1rem',
+    py: '0.75rem',
+    border: `0.0625rem solid ${palette.border.cardsOutlines}`,
   }),
   headerText: {
     display: 'flex',
     flexDirection: 'column',
     gap: '0.125rem',
+    flex: 1,
   },
   divider: ({ palette }) => ({
-    borderColor: palette.border.lines,
+    borderColor: palette.border.cardsOutlines,
   }),
   body: ({ spacing }) => ({
     display: 'flex',
     flexDirection: 'column',
-    gap: spacing(0.75),
-    px: spacing(2),
-    py: spacing(1.5),
+    gap: spacing(1),
+    px: '1.5rem',
+    py: '0.75rem',
     flex: 1,
   }),
 });
