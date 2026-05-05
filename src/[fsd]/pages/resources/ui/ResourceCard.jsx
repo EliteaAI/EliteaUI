@@ -89,14 +89,13 @@ const resourceCardStyles = () => ({
     minWidth: '23.75rem',
     minHeight: '14.25rem',
   }),
-  cardHeader: ({ palette }) => ({
+  cardHeader: () => ({
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
     gap: '1rem',
     px: '1rem',
     py: '0.75rem',
-    border: `0.0625rem solid ${palette.border.cardsOutlines}`,
   }),
   headerText: {
     display: 'flex',
