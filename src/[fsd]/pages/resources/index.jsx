@@ -4,9 +4,52 @@ import { Box, Link, Skeleton, Typography } from '@mui/material';
 
 import { LinkHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useGetResourcesConfigQuery, useGetSystemInfoQuery } from '@/api/resources';
+import FileIcon from '@/assets/file.svg?react';
 import InfoIcon from '@/assets/info.svg?react';
+import RocketIcon from '@/assets/rocket-icon.svg?react';
+import TutorialsIcon from '@/assets/tutorials-icon.svg?react';
+import VideoIcon from '@/assets/video-icon.svg?react';
 
-import ResourceCard, { RESOURCE_CARD_CONFIGS } from './ui/ResourceCard';
+import ResourceCard from './ui/ResourceCard';
+
+const RESOURCE_CARD_CONFIGS = [
+  {
+    enabledKey: 'resources_documentation_enabled',
+    titleKey: 'resources_documentation_title',
+    descriptionKey: 'resources_documentation_description',
+    defaultTitle: 'Documentation',
+    defaultDescription: 'API reference, guides, and platform concepts',
+    Icon: FileIcon,
+    linksKey: 'resources_documentation_links',
+  },
+  {
+    enabledKey: 'resources_release_notes_enabled',
+    titleKey: 'resources_release_notes_title',
+    descriptionKey: 'resources_release_notes_description',
+    defaultTitle: 'Release Notes',
+    defaultDescription: 'Product updates, improvements, and fixes',
+    Icon: RocketIcon,
+    linksKey: 'resources_release_notes_links',
+  },
+  {
+    enabledKey: 'resources_video_library_enabled',
+    titleKey: 'resources_video_library_title',
+    descriptionKey: 'resources_video_library_description',
+    defaultTitle: 'Video Library',
+    defaultDescription: 'Product walkthroughs and recorded sessions',
+    Icon: VideoIcon,
+    linksKey: 'resources_video_library_links',
+  },
+  {
+    enabledKey: 'resources_tutorials_enabled',
+    titleKey: 'resources_tutorials_title',
+    descriptionKey: 'resources_tutorials_description',
+    defaultTitle: 'Tutorials',
+    defaultDescription: 'Step-by-step guides and use cases',
+    Icon: TutorialsIcon,
+    linksKey: 'resources_tutorials_links',
+  },
+];
 
 const { openExternalLink } = LinkHelpers;
 
@@ -139,7 +182,7 @@ const ResourcesPage = memo(() => {
                   />
                 }
               >
-                {isConfigLoading ? (
+                {isConfigLoading && (
                   <>
                     <Skeleton
                       variant="text"
@@ -154,7 +197,9 @@ const ResourcesPage = memo(() => {
                       width="65%"
                     />
                   </>
-                ) : hasLinks ? (
+                )}
+                {!isConfigLoading &&
+                  hasLinks &&
                   links.map((link, idx) =>
                     link.url ? (
                       <Link
@@ -178,8 +223,8 @@ const ResourcesPage = memo(() => {
                         {link.title} (undefined)
                       </Typography>
                     ),
-                  )
-                ) : (
+                  )}
+                {!isConfigLoading && !hasLinks && (
                   <Typography
                     variant="bodySmall"
                     color="text.disabled"
@@ -231,7 +276,6 @@ const resourcesPageStyles = () => ({
   grid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(2, 1fr)',
-    // alignItems: 'start',
     gap: '1rem',
   },
   infoRow: {
