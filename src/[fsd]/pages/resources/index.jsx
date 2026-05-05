@@ -72,22 +72,6 @@ const ResourcesPage = memo(() => {
                     </Typography>
                   </Box>
                 )}
-                {systemInfo?.pylon_version && (
-                  <Box sx={styles.infoRow}>
-                    <Typography
-                      variant="bodySmall"
-                      color="text.secondary"
-                    >
-                      Pylon version:
-                    </Typography>
-                    <Typography
-                      variant="bodySmallBold"
-                      color="text.primary"
-                    >
-                      {systemInfo.pylon_version}
-                    </Typography>
-                  </Box>
-                )}
                 {pylons.map(pylon => (
                   <Box
                     key={pylon.pylon_id}
@@ -211,11 +195,13 @@ const resourcesPageStyles = () => ({
     py: spacing(2),
     display: 'flex',
     flexDirection: 'column',
+    alignItems: 'stretch',
     gap: spacing(2),
   }),
   grid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(2, 1fr)',
+    // alignItems: 'start',
     gap: '1rem',
   },
   infoRow: {

@@ -85,9 +85,9 @@ const resourceCardStyles = () => ({
     ...getCardGradientStyles(palette, { enableHover: false }),
     display: 'flex',
     flexDirection: 'column',
+    flexShrink: 0,
     minWidth: '23.75rem',
     minHeight: '14.25rem',
-    overflow: 'hidden',
   }),
   cardHeader: ({ palette }) => ({
     display: 'flex',
