@@ -17,7 +17,7 @@ const ResourcesPage = memo(() => {
   const configValues = resourcesConfig?.values ?? {};
   const styles = resourcesPageStyles();
 
-  const pylons = useMemo(() => systemInfo?.pylons ?? [], [systemInfo?.pylons]);
+  const plugins = useMemo(() => systemInfo?.plugins ?? [], [systemInfo?.plugins]);
 
   return (
     <Box sx={styles.page}>
@@ -75,22 +75,22 @@ const ResourcesPage = memo(() => {
                     </Typography>
                   </Box>
                 )}
-                {pylons.map(pylon => (
+                {plugins.map(plugin => (
                   <Box
-                    key={pylon.pylon_id}
+                    key={plugin.name}
                     sx={styles.infoRow}
                   >
                     <Typography
                       variant="bodySmall"
                       color="text.secondary"
                     >
-                      {pylon.name}:
+                      {plugin.name}:
                     </Typography>
                     <Typography
                       variant="bodySmallBold"
                       color="text.primary"
                     >
-                      {pylon.core_version ?? '—'}
+                      {plugin.version || '—'}
                     </Typography>
                   </Box>
                 ))}
