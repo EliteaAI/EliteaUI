@@ -2,10 +2,13 @@ import { memo, useMemo } from 'react';
 
 import { Box, Link, Skeleton, Typography } from '@mui/material';
 
+import { LinkHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useGetResourcesConfigQuery, useGetSystemInfoQuery } from '@/api/resources';
 import InfoIcon from '@/assets/info.svg?react';
 
 import ResourceCard, { RESOURCE_CARD_CONFIGS } from './ui/ResourceCard';
+
+const { openExternalLink } = LinkHelpers;
 
 const ResourcesPage = memo(() => {
   const { data: systemInfo, isLoading: isSystemInfoLoading } = useGetSystemInfoQuery();
@@ -136,19 +139,30 @@ const ResourcesPage = memo(() => {
                     />
                   </>
                 ) : hasLinks ? (
-                  links.map((link, idx) => (
-                    <Link
-                      key={idx}
-                      href={link.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      underline="always"
-                      sx={idx === 0 ? styles.linkPrimary : styles.link}
-                      variant="bodyMedium"
-                    >
-                      {link.title}
-                    </Link>
-                  ))
+                  links.map((link, idx) =>
+                    link.url ? (
+                      <Link
+                        key={idx}
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={openExternalLink}
+                        underline="always"
+                        sx={idx === 0 ? styles.linkPrimary : styles.link}
+                        variant="bodyMedium"
+                      >
+                        {link.title}
+                      </Link>
+                    ) : (
+                      <Typography
+                        key={idx}
+                        variant="bodyMedium"
+                        sx={styles.linkUndefined}
+                      >
+                        {link.title} (undefined)
+                      </Typography>
+                    ),
+                  )
                 ) : (
                   <Typography
                     variant="bodySmall"
@@ -221,6 +235,11 @@ const resourcesPageStyles = () => ({
     cursor: 'pointer',
     display: 'block',
     textDecorationColor: 'currentColor',
+  }),
+  linkUndefined: ({ palette }) => ({
+    color: palette.text.disabled,
+    display: 'block',
+    fontStyle: 'italic',
   }),
 });
 
