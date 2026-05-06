@@ -60,17 +60,20 @@ export default function AlertDialog({
         </StyledDialogContentText>
       </DialogContent>
       <StyledDialogActions>
+        {cancelButtonText && (
+          <Button
+            variant="elitea"
+            color="secondary"
+            onClick={onCancel}
+            autoFocus
+            disableRipple
+          >
+            {cancelButtonText}
+          </Button>
+        )}
         <Button
-          variant="elitea"
-          color="secondary"
-          onClick={onCancel}
-          autoFocus
           disableRipple
-        >
-          {cancelButtonText}
-        </Button>
-        <Button
-          disableRipple
+          autoFocus={!cancelButtonText}
           variant="elitea"
           color={alarm ? 'alarm' : 'primary'}
           onClick={onConfirm}

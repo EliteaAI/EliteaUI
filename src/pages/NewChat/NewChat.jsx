@@ -118,6 +118,7 @@ const NewChat = props => {
 
   const [activeFolder, setActiveFolder] = useState(dummyFolder);
   const [folders, setFolders] = useState([]);
+  const [conversationNotFound, setConversationNotFound] = useState(false);
   const isPlayback = useMemo(() => activeConversation?.isPlayback, [activeConversation]);
   const isNewConversation = useMemo(
     () =>
@@ -306,6 +307,11 @@ const NewChat = props => {
 
   const { conversationIdFromUrl, clearUrlConversation, changeUrlByConversation } =
     useConversationNavigation();
+
+  const handleNotFoundAcknowledge = useCallback(() => {
+    setConversationNotFound(false);
+    clearUrlConversation();
+  }, [clearUrlConversation]);
 
   const interaction_uuid = useChatInteractionUUID(activeConversation?.id);
   const { listenCanvasEditorsChangeEvent, stopListenCanvasEditorsChangeEvent } = useChatCanvasEditorsChange({
@@ -563,6 +569,7 @@ const NewChat = props => {
       isCreatingConversation ||
       activeConversation?.isNew ||
       activeConversation?.id ||
+      Boolean(conversationIdFromUrl) ||
       Boolean(searchParams.get(SearchParams.SharedChat)),
   });
 
@@ -939,13 +946,22 @@ const NewChat = props => {
   );
 
   useEffect(() => {
+    if (!conversationIdFromUrl) {
+      setConversationNotFound(false);
+      return;
+    }
     const folderConversations = folders?.map(folder => folder.conversations) || [];
     const conversationList = [...conversations, ...folderConversations.flat()];
     const conversationFromUrl = conversationList.find(
       conversation => conversation.id == conversationIdFromUrl,
     );
-    if (!isLoadMoreConversations && conversationIdFromUrl && conversationFromUrl && !activeConversation?.id) {
-      onSelectConversation(conversationFromUrl);
+    if (!isLoadMoreConversations) {
+      if (conversationFromUrl && !activeConversation?.id) {
+        setConversationNotFound(false);
+        onSelectConversation(conversationFromUrl);
+      } else if (!conversationFromUrl && !activeConversation?.id) {
+        setConversationNotFound(true);
+      }
     }
   }, [
     activeConversation?.id,
@@ -1489,6 +1505,15 @@ const NewChat = props => {
         onCancel={handleVersionChangeCancel}
         onConfirm={handleVersionChangeConfirm}
         confirmButtonText="Discard Changes"
+      />
+      <AlertDialog
+        open={conversationNotFound}
+        title="Conversation not found"
+        alertContent="The conversation you are looking for does not exist in your project or you don't have access to it. For sharing links, please use the Share option in the conversation menu."
+        confirmButtonText="Got it"
+        cancelButtonText=""
+        onClose={handleNotFoundAcknowledge}
+        onConfirm={handleNotFoundAcknowledge}
       />
     </>
   );
