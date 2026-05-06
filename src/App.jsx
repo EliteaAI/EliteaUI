@@ -39,6 +39,7 @@ import {
   ApplicationsTabs,
   COLLAPSED_SIDE_BAR_WIDTH,
   CredentialsTabs,
+  DEV,
   ELITEA_ASSISTANT_ENABLED,
   MISSING_ENVS,
   ModerationTabs,
@@ -540,7 +541,8 @@ const AppLayout = () => {
         <EliteaAssistant
           ref={assistantRef}
           apiUrl={`${VITE_SERVER_URL}support_assistant`}
-          token={VITE_DEV_TOKEN}
+          token={DEV ? VITE_DEV_TOKEN : undefined}
+          withCredentials={!DEV}
           position="bottom-left"
           theme={theme.palette.mode}
         />
