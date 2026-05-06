@@ -2,9 +2,9 @@ import { memo, useCallback, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 
-import { Button } from '@mui/material';
-
 import AlertDialog from '@/components/AlertDialog';
+
+import BaseBtn from './BaseBtn';
 
 const DiscardButton = memo(props => {
   const {
@@ -31,14 +31,14 @@ const DiscardButton = memo(props => {
 
   return (
     <>
-      <Button
+      <BaseBtn
         disabled={disabled || isSaving}
         variant="elitea"
         color={color}
         onClick={() => setOpenAlert(true)}
       >
         {title}
-      </Button>
+      </BaseBtn>
       <AlertDialog
         alarm
         title="Warning"
