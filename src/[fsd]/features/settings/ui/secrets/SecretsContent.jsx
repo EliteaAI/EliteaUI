@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 import { useLocation, useSearchParams } from 'react-router-dom';
@@ -22,10 +22,6 @@ const SecretsContent = memo(() => {
   const sideBarCollapsed = useSelector(state => state.settings.sideBarCollapsed);
   const [search, setSearch] = useState('');
   const [rowModesModel, setRowModesModel] = useState({});
-  const [pageModel, setPageModel] = useState({
-    page: 0,
-    pageSize: 100,
-  });
   const [forceRender, setForceRender] = useState(0);
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -35,6 +31,7 @@ const SecretsContent = memo(() => {
 
   const [secretRows, setSecretRows] = useState([]);
   const { toastError } = useToast();
+  const resetPaginationRef = useRef(null);
 
   const {
     data: secrets = [],
@@ -75,7 +72,6 @@ const SecretsContent = memo(() => {
   // If navigated with ?createSecret=1, trigger creation of a new secret row
   useEffect(() => {
     if (shouldCreate) {
-      // Simulate AddSecretButton click by focusing a new row at current pagination start
       const id = `new-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
       let newRowId;
       setSecretRows(oldRows => {
@@ -84,38 +80,27 @@ const SecretsContent = memo(() => {
           const existingRows = [...oldRows];
           newRowId = oldRows[newRowIndex].id;
           existingRows.splice(newRowIndex, 1);
-          return [
-            ...existingRows.slice(0, pageModel.page * pageModel.pageSize),
-            oldRows[newRowIndex],
-            ...existingRows.slice(pageModel.page * pageModel.pageSize),
-          ];
+          return [oldRows[newRowIndex], ...existingRows];
         }
-        return [
-          ...oldRows.slice(0, pageModel.page * pageModel.pageSize),
-          { id, name: '', isNew: true },
-          ...oldRows.slice(pageModel.page * pageModel.pageSize),
-        ];
+        return [{ id, name: '', isNew: true }, ...oldRows];
       });
       setRowModesModel(oldModel => ({
         ...oldModel,
         [newRowId || id]: { mode: GridRowModes.Edit, fieldToFocus: 'name' },
       }));
+      resetPaginationRef.current?.();
       // Remove the flag from URL to avoid re-triggering
       const newParams = new URLSearchParams(location.search);
       newParams.delete('createSecret');
       setSearchParams(newParams, { replace: true });
     }
-  }, [location.search, pageModel.page, pageModel.pageSize, setSearchParams, shouldCreate]);
+  }, [location.search, setSearchParams, shouldCreate]);
 
   useEffect(() => {
     if (isError) {
       toastError(error?.status === 403 ? 'The access is not allowed' : buildErrorMessage(error));
     }
   }, [error, isError, toastError]);
-
-  const onPaginationModelChange = useCallback(newPageModel => {
-    setPageModel(newPageModel);
-  }, []);
 
   // Force re-render when sidebar state changes
   useEffect(() => {
@@ -128,7 +113,7 @@ const SecretsContent = memo(() => {
   }, [sideBarCollapsed]);
 
   const addSecretRow = useCallback(() => {
-    const id = `new-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`; // More stable ID for new rows
+    const id = `new-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
     let newRowId = undefined;
     setSecretRows(oldRows => {
       const newRowIndex = oldRows.findIndex(row => row.isNew);
@@ -136,23 +121,16 @@ const SecretsContent = memo(() => {
         const existingRows = [...oldRows];
         newRowId = oldRows[newRowIndex].id;
         existingRows.splice(newRowIndex, 1);
-        return [
-          ...existingRows.slice(0, pageModel.page * pageModel.pageSize),
-          oldRows[newRowIndex],
-          ...existingRows.slice(pageModel.page * pageModel.pageSize),
-        ];
+        return [oldRows[newRowIndex], ...existingRows];
       }
-      return [
-        ...oldRows.slice(0, pageModel.page * pageModel.pageSize),
-        { id, name: '', isNew: true },
-        ...oldRows.slice(pageModel.page * pageModel.pageSize),
-      ];
+      return [{ id, name: '', isNew: true }, ...oldRows];
     });
     setRowModesModel(oldModel => ({
       ...oldModel,
       [newRowId || id]: { mode: GridRowModes.Edit, fieldToFocus: 'name' },
     }));
-  }, [pageModel.page, pageModel.pageSize, setRowModesModel, setSecretRows]);
+    resetPaginationRef.current?.();
+  }, []);
 
   return (
     <>
@@ -187,8 +165,9 @@ const SecretsContent = memo(() => {
             isFetching={isFetching}
             refetch={refetch}
             projectId={projectId}
-            onPaginationModelChange={onPaginationModelChange}
-            pageModel={pageModel}
+            onResetPaginationReady={fn => {
+              resetPaginationRef.current = fn;
+            }}
           />
         </Box>
       </Box>
