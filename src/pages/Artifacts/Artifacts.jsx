@@ -55,6 +55,8 @@ export default function Artifacts() {
   const sideBarCollapsed = useSelector(state => state.settings.sideBarCollapsed);
 
   const [showUnsavedChangesAlert, setShowUnsavedChangesAlert] = useState(false);
+  const [bucketNotFoundOpen, setBucketNotFoundOpen] = useState(false);
+  const [notFoundBucketName, setNotFoundBucketName] = useState('');
   const [pendingFileSelection, setPendingFileSelection] = useState(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
@@ -410,6 +412,12 @@ export default function Artifacts() {
     setPendingFileSelection(null);
   }, []);
 
+  const handleCloseBucketNotFound = useCallback(() => {
+    setBucketNotFoundOpen(false);
+    setNotFoundBucketName('');
+    setSearchParams({});
+  }, [setSearchParams]);
+
   const [isHandlingNavigationState, setIsHandlingNavigationState] = useState(false);
 
   // Calculate available table width for responsive column management
@@ -467,9 +475,16 @@ export default function Artifacts() {
         const bucketFromUrl = searchParams.get('bucket');
         if (bucketFromUrl) {
           bucketToSelect = allBuckets.find(b => b.name === bucketFromUrl);
+
+          // Bucket from URL not found — show dialog, keep URL until user dismisses
+          if (!bucketToSelect) {
+            setNotFoundBucketName(bucketFromUrl);
+            setBucketNotFoundOpen(true);
+            return;
+          }
         }
 
-        // Fallback: select most recent if URL bucket not found
+        // Fallback: select most recent if no bucket in URL
         if (!bucketToSelect) {
           const sortedBuckets = sortBucketsByRecent(allBuckets);
           bucketToSelect = sortedBuckets[0];
@@ -688,6 +703,16 @@ export default function Artifacts() {
         onClose={handleUnsavedChangesCancel}
         onCancel={handleUnsavedChangesCancel}
         onConfirm={handleUnsavedChangesConfirm}
+      />
+
+      <AlertDialog
+        open={bucketNotFoundOpen}
+        title="Bucket not found"
+        alertContent={`The bucket "${notFoundBucketName}" no longer exists or you don't have access to it.`}
+        confirmButtonText="Got it"
+        cancelButtonText=""
+        onClose={handleCloseBucketNotFound}
+        onConfirm={handleCloseBucketNotFound}
       />
 
       <AlertDialogV2

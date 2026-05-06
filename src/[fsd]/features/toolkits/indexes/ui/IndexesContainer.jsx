@@ -20,6 +20,7 @@ import { actions, selectIndexesList } from '@/[fsd]/features/toolkits/indexes/mo
 import { IndexDetails, IndexesList } from '@/[fsd]/features/toolkits/indexes/ui';
 import { Modal } from '@/[fsd]/shared/ui';
 import { SearchParams } from '@/common/constants';
+import AlertDialog from '@/components/AlertDialog';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 
@@ -52,6 +53,7 @@ const IndexesContainer = memo(props => {
   const [currentIndex, setCurrentIndex] = useState(null);
 
   const [deleteIndexModal, setDeleteIndexModal] = useState(false);
+  const [indexNotFoundOpen, setIndexNotFoundOpen] = useState(false);
 
   const { data: indexesList, isLoading, isFetching } = useSelector(selectIndexesList);
 
@@ -63,13 +65,16 @@ const IndexesContainer = memo(props => {
 
     const targetIndex = indexesList.find(idx => idx.metadata?.collection === indexNameFromUrl);
 
-    if (targetIndex) {
-      setCurrentIndex(targetIndex);
-      hasSelectedFromUrlRef.current = true;
+    hasSelectedFromUrlRef.current = true;
 
+    if (targetIndex) {
       const newSearchParams = new URLSearchParams(searchParams);
       newSearchParams.delete(SearchParams.IndexName);
       setSearchParams(newSearchParams, { replace: true });
+      setCurrentIndex(targetIndex);
+    } else {
+      // Keep URL until user dismisses the dialog so they can see which item is missing
+      setIndexNotFoundOpen(true);
     }
   }, [indexNameFromUrl, indexesList, isLoading, isFetching, searchParams, setSearchParams]);
 
@@ -150,6 +155,12 @@ const IndexesContainer = memo(props => {
   }, [refetch, toolkitId, projectId]);
 
   const closeDeleteIndexModal = () => setDeleteIndexModal(false);
+  const handleCloseIndexNotFound = useCallback(() => {
+    setIndexNotFoundOpen(false);
+    const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.delete(SearchParams.IndexName);
+    setSearchParams(newSearchParams, { replace: true });
+  }, [searchParams, setSearchParams]);
   const handleDeleteIndex = useCallback(() => setDeleteIndexModal(true), []);
 
   const confirmIndexDeleting = useCallback(async () => {
@@ -205,6 +216,15 @@ const IndexesContainer = memo(props => {
           onConfirm={confirmIndexDeleting}
         />
       )}
+      <AlertDialog
+        open={indexNotFoundOpen}
+        title="Item no longer exists"
+        alertContent="This item was deleted and can't be opened."
+        confirmButtonText="Got it"
+        cancelButtonText=""
+        onClose={handleCloseIndexNotFound}
+        onConfirm={handleCloseIndexNotFound}
+      />
     </Box>
   );
 });
