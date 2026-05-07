@@ -1,0 +1,1 @@
+export { useGetSupportAssistantConfigQuery } from './supportAssistantConfigApi';

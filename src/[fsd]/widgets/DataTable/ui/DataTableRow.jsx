@@ -1,9 +1,12 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
-import { Box, TableCell, TableRow, Typography } from '@mui/material';
+import { Box, IconButton, TableCell, TableRow, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
+import { useEliteaAssistantRef } from '@/[fsd]/app/providers';
+import { useGetSupportAssistantConfigQuery } from '@/[fsd]/features/agent/api';
 import { PinButton } from '@/[fsd]/widgets/PinToggler/ui';
+import EliteaAssistantIcon from '@/assets/icons/elitea-assistant-icon.svg?react';
 import PublishIcon from '@/assets/publish-version.svg?react';
 import { isApplicationCard } from '@/common/checkCardType';
 import { SortFields } from '@/common/constants';
@@ -15,10 +18,15 @@ import HighlightQuery from '@/components/HighlightQuery';
 import Like from '@/components/Like';
 import useCardNavigate from '@/hooks/useCardNavigate';
 import useDataViewMode from '@/hooks/useDataViewMode';
+import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const DataTableRow = props => {
   const styles = dataTableRowStyles();
   const { columns, data: row, cardType, viewMode, onPinChange } = props;
+  const projectId = useSelectedProjectId();
+
+  const { data: supportAssistantConfig } = useGetSupportAssistantConfigQuery({ enabled: false });
+  const assistantRef = useEliteaAssistantRef();
 
   const { id, name, is_forked: isForked, meta, status, is_pinned: isPinned = false } = row;
   const dataViewMode = useDataViewMode(viewMode, row);
@@ -30,6 +38,23 @@ const DataTableRow = props => {
   });
 
   const [isRowHovered, setIsRowHovered] = useState(false);
+
+  const isSupportAssistant = useMemo(
+    () =>
+      isApplicationCard(cardType) &&
+      supportAssistantConfig?.values?.support_agent_id === id &&
+      supportAssistantConfig?.values?.support_project_id === projectId,
+    [supportAssistantConfig, id, projectId, cardType],
+  );
+
+  const handleAssistantClick = useCallback(
+    event => {
+      event.stopPropagation();
+      event.preventDefault();
+      assistantRef?.current?.showPopup();
+    },
+    [assistantRef],
+  );
 
   const handlePinneChange = useCallback(
     newState => {
@@ -98,6 +123,18 @@ const DataTableRow = props => {
                   <PublishIcon sx={{ fontSize: '1rem' }} />
                 </Box>
               </StyledTooltip>
+            )}
+            {isSupportAssistant && (
+              <IconButton
+                disableRipple
+                onClick={handleAssistantClick}
+                sx={styles.supportAssistantContainer}
+              >
+                <Box
+                  component={EliteaAssistantIcon}
+                  sx={{ width: '1.45rem', height: '1.45rem' }}
+                />
+              </IconButton>
             )}
             <PinButton
               entityId={id}
@@ -249,6 +286,18 @@ const dataTableRowStyles = () => ({
     maxWidth: '9.75rem',
     width: '9.75rem',
   },
+  supportAssistantContainer: ({ palette }) => ({
+    width: '1.75rem',
+    height: '1.75rem',
+    minWidth: '1.75rem',
+    padding: 0,
+    color: palette.icon.fill.default,
+    svg: { path: { fill: `${palette.icon.fill.default} !important` } },
+
+    '&:hover': {
+      backgroundColor: palette.background.button.secondary.default,
+    },
+  }),
 });
 
 export default DataTableRow;

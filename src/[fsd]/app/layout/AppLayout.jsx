@@ -4,6 +4,7 @@ import { Box, useTheme } from '@mui/material';
 
 import MainPanel from '@/[fsd]/app/layout/MainPanel';
 import MainSidebar from '@/[fsd]/app/layout/MainSidebar';
+import { EliteaAssistantProvider } from '@/[fsd]/app/providers';
 import { DEV, ELITEA_ASSISTANT_ENABLED, VITE_DEV_TOKEN, VITE_SERVER_URL } from '@/common/constants';
 import { clearBaseUrlPrefix } from '@/common/utils';
 import { EliteaAssistant } from '@eliteaai/elitea-assistant';
@@ -28,21 +29,23 @@ const AppLayout = memo(() => {
   }, []);
 
   return (
-    <Box sx={styles.appContainer}>
-      <MainSidebar onToggleAssistant={showEliteaAssistant ? onToggleAssistant : undefined} />
-      <MainPanel />
+    <EliteaAssistantProvider assistantRef={assistantRef}>
+      <Box sx={styles.appContainer}>
+        <MainSidebar onToggleAssistant={showEliteaAssistant ? onToggleAssistant : undefined} />
+        <MainPanel />
 
-      {showEliteaAssistant && (
-        <EliteaAssistant
-          ref={assistantRef}
-          apiUrl={`${clearBaseUrlPrefix(VITE_SERVER_URL)}/support_assistant`}
-          token={DEV ? VITE_DEV_TOKEN : undefined}
-          withCredentials={!DEV}
-          position="bottom-left"
-          theme={theme.palette.mode}
-        />
-      )}
-    </Box>
+        {showEliteaAssistant && (
+          <EliteaAssistant
+            ref={assistantRef}
+            apiUrl={`${clearBaseUrlPrefix(VITE_SERVER_URL)}/support_assistant`}
+            token={DEV ? VITE_DEV_TOKEN : undefined}
+            withCredentials={!DEV}
+            position="bottom-left"
+            theme={theme.palette.mode}
+          />
+        )}
+      </Box>
+    </EliteaAssistantProvider>
   );
 });
 

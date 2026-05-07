@@ -1,11 +1,14 @@
 import { memo, useCallback, useMemo, useRef, useState } from 'react';
 
-import { Box, CardContent, Divider, Card as MuiCard, Typography } from '@mui/material';
+import { Box, CardContent, Divider, IconButton, Card as MuiCard, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
+import { useEliteaAssistantRef } from '@/[fsd]/app/providers';
+import { useGetSupportAssistantConfigQuery } from '@/[fsd]/features/agent/api';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { useMcpTokenChange } from '@/[fsd]/features/mcp/lib/hooks';
 import { PinButton } from '@/[fsd]/widgets/PinToggler/ui';
+import EliteaAssistantIcon from '@/assets/icons/elitea-assistant-icon.svg?react';
 import OfflineIcon from '@/assets/offline-icon.svg?react';
 import OnlineIcon from '@/assets/online-icon.svg?react';
 import PublishIcon from '@/assets/publish-version.svg?react';
@@ -27,6 +30,9 @@ const Card = memo(props => {
   const { data = {}, viewMode: pageViewMode, type, index = 0, customTagClickHandler } = props;
 
   const projectId = useSelectedProjectId();
+  const { data: supportAssistantConfig } = useGetSupportAssistantConfigQuery({ enabled: false });
+  const assistantRef = useEliteaAssistantRef();
+
   const {
     id,
     name = '',
@@ -65,6 +71,14 @@ const Card = memo(props => {
   const isPrebuildMcp = useMemo(() => McpAuthHelpers.isPrebuildMcpType(data.type), [data.type]);
   const isRemoteMcp = data.type === 'mcp';
 
+  const isSupportAssistant = useMemo(
+    () =>
+      isApplicationCard(type) &&
+      supportAssistantConfig?.values?.support_agent_id === id &&
+      supportAssistantConfig?.values?.support_project_id === projectId,
+    [supportAssistantConfig, id, projectId, type],
+  );
+
   // For pre-built MCPs, navigate to MCP detail page instead of toolkit page
   // This ensures unified experience for all MCP types
   const navigationType = useMemo(() => {
@@ -87,6 +101,15 @@ const Card = memo(props => {
   const handlePinChange = useCallback(() => {
     setIsCardHovered(false);
   }, []);
+
+  const handleAssistantClick = useCallback(
+    event => {
+      event.stopPropagation();
+      event.preventDefault();
+      assistantRef?.current?.showPopup();
+    },
+    [assistantRef],
+  );
 
   // Monitor MCP token changes for both remote and pre-built MCP toolkits
   // For remote MCPs, use serverUrl; for pre-built MCPs, use toolkitType
@@ -203,6 +226,18 @@ const Card = memo(props => {
                     <PublishIcon sx={{ fontSize: '1rem' }} />
                   </Box>
                 </StyledTooltip>
+              )}
+              {isSupportAssistant && (
+                <IconButton
+                  disableRipple
+                  onClick={handleAssistantClick}
+                  sx={styles.supportAssistantIconContainer}
+                >
+                  <Box
+                    component={EliteaAssistantIcon}
+                    sx={{ width: '1.45rem', height: '1.45rem' }}
+                  />
+                </IconButton>
               )}
               <PinButton
                 entityId={id}
@@ -358,6 +393,18 @@ const cardStyles = {
     alignItems: 'center',
     marginRight: '0.25rem',
     svg: { path: { fill: `${palette.icon.fill.success} !important` } },
+  }),
+  supportAssistantIconContainer: ({ palette }) => ({
+    width: '1.75rem',
+    height: '1.75rem',
+    minWidth: '1.75rem',
+    padding: 0,
+    color: palette.icon.fill.default,
+
+    '&:hover': {
+      backgroundColor: palette.background.button.secondary.default,
+    },
+    svg: { path: { fill: `${palette.icon.fill.default} !important` } },
   }),
   likeContainer: {
     display: 'flex',
