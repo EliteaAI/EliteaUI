@@ -1,6 +1,6 @@
 import { memo, useMemo } from 'react';
 
-import { Box, Link, Skeleton, Typography } from '@mui/material';
+import { Box, Link, Skeleton, Tooltip, Typography } from '@mui/material';
 
 import { LinkHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useGetResourcesConfigQuery, useGetSystemInfoQuery } from '@/api/resources';
@@ -62,6 +62,14 @@ const ResourcesPage = memo(() => {
 
   const plugins = useMemo(() => systemInfo?.plugins ?? [], [systemInfo?.plugins]);
 
+  const versionLabel = useMemo(() => {
+    const version = configValues.resources_information_version;
+    const date = configValues.resources_information_upgrade_date;
+    if (!version && !date) return null;
+    const parts = [version && `Version: ${version}`, date && `(${date})`].filter(Boolean);
+    return parts.join(' ');
+  }, [configValues.resources_information_version, configValues.resources_information_upgrade_date]);
+
   return (
     <Box sx={styles.page}>
       <Box sx={styles.header}>
@@ -71,100 +79,62 @@ const ResourcesPage = memo(() => {
         >
           Resources
         </Typography>
+        <Box sx={styles.headerRight}>
+          {isConfigLoading ? (
+            <Skeleton
+              variant="text"
+              width="12rem"
+            />
+          ) : (
+            configValues.resources_information_enabled !== false &&
+            versionLabel && (
+              <Box sx={styles.headerVersionInfo}>
+                <Typography
+                  variant="bodySmall"
+                  color="text.secondary"
+                >
+                  {versionLabel}
+                </Typography>
+                <Tooltip
+                  placement="bottom-end"
+                  title={
+                    isSystemInfoLoading ? (
+                      <Skeleton
+                        variant="text"
+                        width="8rem"
+                      />
+                    ) : plugins.length > 0 ? (
+                      <Box sx={styles.tooltipContent}>
+                        {plugins.map(plugin => (
+                          <Box
+                            key={plugin.name}
+                            sx={styles.tooltipRow}
+                          >
+                            <Typography variant="bodySmall">{plugin.name}:</Typography>
+                            <Typography variant="bodySmallBold">{plugin.version || '\u2014'}</Typography>
+                          </Box>
+                        ))}
+                      </Box>
+                    ) : null
+                  }
+                >
+                  <Box
+                    component="span"
+                    sx={styles.infoIcon}
+                  >
+                    <Box
+                      component={InfoIcon}
+                      sx={styles.infoIconSvg}
+                    />
+                  </Box>
+                </Tooltip>
+              </Box>
+            )
+          )}
+        </Box>
       </Box>
 
       <Box sx={styles.content}>
-        {configValues.resources_information_enabled !== false && (
-          <ResourceCard
-            icon={
-              <InfoIcon
-                width="1.5rem"
-                height="1.5rem"
-              />
-            }
-            title="Information"
-            description="Installed ELITEA environment details"
-          >
-            {isSystemInfoLoading ? (
-              <>
-                <Skeleton
-                  variant="text"
-                  width="60%"
-                />
-                <Skeleton
-                  variant="text"
-                  width="50%"
-                />
-                <Skeleton
-                  variant="text"
-                  width="70%"
-                />
-              </>
-            ) : (
-              <>
-                {configValues.resources_information_version && (
-                  <Box sx={styles.infoRow}>
-                    <Typography
-                      variant="bodySmall"
-                      color="text.secondary"
-                    >
-                      Release Version
-                    </Typography>
-                    <Typography
-                      variant="bodySmallBold"
-                      color="text.primary"
-                    >
-                      {configValues.resources_information_version}
-                    </Typography>
-                  </Box>
-                )}
-                {configValues.resources_information_upgrade_date && (
-                  <Box sx={styles.infoRow}>
-                    <Typography
-                      variant="bodySmall"
-                      color="text.secondary"
-                    >
-                      Released on
-                    </Typography>
-                    <Typography
-                      variant="bodySmallBold"
-                      color="text.primary"
-                    >
-                      {configValues.resources_information_upgrade_date}
-                    </Typography>
-                  </Box>
-                )}
-                {plugins.map(plugin => (
-                  <Box
-                    key={plugin.name}
-                    sx={styles.infoRow}
-                  >
-                    <Typography
-                      variant="bodySmall"
-                      color="text.secondary"
-                    >
-                      {plugin.name}:
-                    </Typography>
-                    <Typography
-                      variant="bodySmallBold"
-                      color="text.primary"
-                    >
-                      {plugin.version || '—'}
-                    </Typography>
-                  </Box>
-                ))}
-                {!systemInfo && (
-                  <Typography
-                    variant="bodySmall"
-                    color="text.disabled"
-                  >
-                    Version information unavailable
-                  </Typography>
-                )}
-              </>
-            )}
-          </ResourceCard>
-        )}
         <Box sx={styles.grid}>
           {RESOURCE_CARD_CONFIGS.filter(config => configValues[config.enabledKey] !== false).map(config => {
             const links = configValues[config.linksKey];
@@ -253,10 +223,43 @@ const resourcesPageStyles = () => ({
     overflow: 'hidden',
     backgroundColor: palette.background.tabPanel,
   }),
+  headerRight: {
+    display: 'flex',
+    alignItems: 'center',
+  },
+  headerVersionInfo: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.375rem',
+  },
+  infoIcon: ({ palette }) => ({
+    display: 'inline-flex',
+    alignItems: 'center',
+    flexShrink: 0,
+    cursor: 'pointer',
+    color: palette.text.primary,
+  }),
+  infoIconSvg: {
+    width: '0.875rem',
+    height: '0.875rem',
+    display: 'block',
+  },
+  tooltipContent: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem',
+    padding: '0.125rem 0',
+  },
+  tooltipRow: {
+    display: 'flex',
+    gap: '0.25rem',
+    alignItems: 'baseline',
+  },
   header: ({ palette, spacing }) => ({
     flexShrink: 0,
     display: 'flex',
     alignItems: 'center',
+    justifyContent: 'space-between',
     px: spacing(3),
     height: '3.75rem',
     minHeight: '3.75rem',
@@ -277,12 +280,6 @@ const resourcesPageStyles = () => ({
     display: 'grid',
     gridTemplateColumns: 'repeat(2, 1fr)',
     gap: '1rem',
-  },
-  infoRow: {
-    display: 'flex',
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: '0.5rem',
   },
   linkPrimary: ({ palette }) => ({
     color: palette.primary.main,
