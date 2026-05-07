@@ -21,6 +21,7 @@ const RESOURCE_CARD_CONFIGS = [
     defaultDescription: 'API reference, guides, and platform concepts',
     Icon: FileIcon,
     linksKey: 'resources_documentation_links',
+    colorScheme: 'blue',
   },
   {
     enabledKey: 'resources_release_notes_enabled',
@@ -30,6 +31,7 @@ const RESOURCE_CARD_CONFIGS = [
     defaultDescription: 'Product updates, improvements, and fixes',
     Icon: RocketIcon,
     linksKey: 'resources_release_notes_links',
+    colorScheme: 'orange',
   },
   {
     enabledKey: 'resources_video_library_enabled',
@@ -39,6 +41,7 @@ const RESOURCE_CARD_CONFIGS = [
     defaultDescription: 'Product walkthroughs and recorded sessions',
     Icon: VideoIcon,
     linksKey: 'resources_video_library_links',
+    colorScheme: 'purple',
   },
   {
     enabledKey: 'resources_tutorials_enabled',
@@ -48,6 +51,7 @@ const RESOURCE_CARD_CONFIGS = [
     defaultDescription: 'Step-by-step guides and use cases',
     Icon: TutorialsIcon,
     linksKey: 'resources_tutorials_links',
+    colorScheme: 'green',
   },
 ];
 
@@ -151,6 +155,7 @@ const ResourcesPage = memo(() => {
                 key={config.enabledKey}
                 title={configValues[config.titleKey] || config.defaultTitle}
                 description={configValues[config.descriptionKey] || config.defaultDescription}
+                colorScheme={config.colorScheme}
                 icon={
                   <config.Icon
                     width="1.5rem"

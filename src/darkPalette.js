@@ -135,6 +135,41 @@ const darkPalette = {
       hoverBorderGradient: 'linear-gradient(0deg, rgba(83, 176, 191, 0.4) 0%, #53B0BF 100%)',
       hoverShadow: '0px -3px 0.9375rem 0px rgba(120, 230, 255, 0.3)',
     },
+    resourceCard: {
+      blue: {
+        card: 'linear-gradient(0deg, rgba(14, 39, 62, 0.4) 0%, #0E273E 100%)',
+        icon: 'linear-gradient(45.36deg, rgba(0, 148, 255, 0.3) 16.25%, rgba(0, 148, 255, 0.09) 87.07%)',
+        iconColor: '#0094FF',
+        iconBorderGradient: 'linear-gradient(180deg, rgba(0, 148, 255, 0) 0%, rgba(0, 148, 255, 0.4) 100%)',
+        divider: 'rgba(0, 148, 255, 0.15)',
+        borderGradient: 'linear-gradient(180deg, rgba(0, 148, 255, 0.2) 0%, rgba(0, 148, 255, 0) 100%)',
+      },
+      orange: {
+        card: 'linear-gradient(0deg, rgba(59, 51, 40, 0.4) 0%, #3B3328 100%)',
+        icon: 'linear-gradient(45.36deg, rgba(245, 173, 73, 0.3) 16.25%, rgba(245, 173, 73, 0.09) 87.07%)',
+        iconColor: '#F5AD49',
+        iconBorderGradient: 'linear-gradient(180deg, rgba(245, 173, 73, 0) 0%, rgba(245, 173, 73, 0.4) 100%)',
+        divider: 'rgba(245, 173, 73, 0.15)',
+        borderGradient: 'linear-gradient(180deg, rgba(245, 173, 73, 0.2) 0%, rgba(245, 173, 73, 0) 100%)',
+      },
+      purple: {
+        card: 'linear-gradient(0deg, rgba(41, 29, 64, 0.4) 0%, #291D40 100%)',
+        icon: 'linear-gradient(45.36deg, rgba(164, 115, 255, 0.3) 16.25%, rgba(164, 115, 255, 0.09) 87.07%)',
+        iconColor: '#A473FF',
+        iconBorderGradient:
+          'linear-gradient(180deg, rgba(164, 115, 255, 0) 0%, rgba(164, 115, 255, 0.4) 100%)',
+        divider: 'rgba(164, 115, 255, 0.15)',
+        borderGradient: 'linear-gradient(180deg, rgba(164, 115, 255, 0.2) 0%, rgba(164, 115, 255, 0) 100%)',
+      },
+      green: {
+        card: 'linear-gradient(0deg, rgba(20, 47, 35, 0.4) 0%, #142F23 100%)',
+        icon: 'linear-gradient(45.36deg, rgba(75, 186, 136, 0.3) 16.25%, rgba(75, 186, 136, 0.09) 87.07%)',
+        iconColor: '#4BBA88',
+        iconBorderGradient: 'linear-gradient(180deg, rgba(75, 186, 136, 0) 0%, rgba(75, 186, 136, 0.4) 100%)',
+        divider: 'rgba(75, 186, 136, 0.15)',
+        borderGradient: 'linear-gradient(180deg, rgba(75, 186, 136, 0.2) 0%, rgba(75, 186, 136, 0) 100%)',
+      },
+    },
     categoriesButton: {
       selected: {
         active: darkBlue,
