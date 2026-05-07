@@ -135,6 +135,12 @@ const ResourcesPage = memo(() => {
       </Box>
 
       <Box sx={styles.content}>
+        <Box sx={styles.intro}>
+          <Typography variant="headingLarge">Explore Resources</Typography>
+          <Typography variant="bodyMedium">
+            Guides, documentation, and release notes to support your work.
+          </Typography>
+        </Box>
         <Box sx={styles.grid}>
           {RESOURCE_CARD_CONFIGS.filter(config => configValues[config.enabledKey] !== false).map(config => {
             const links = configValues[config.linksKey];
@@ -275,6 +281,15 @@ const resourcesPageStyles = () => ({
     flexDirection: 'column',
     alignItems: 'stretch',
     gap: spacing(2),
+  }),
+  intro: ({ palette }) => ({
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '0.5rem',
+    textAlign: 'center',
+    py: '1rem',
+    color: palette.text.secondary,
   }),
   grid: {
     display: 'grid',

@@ -15,7 +15,7 @@ const ResourceCard = memo(props => {
         <GradientIconWrapper>{icon}</GradientIconWrapper>
         <Box sx={styles.headerText}>
           <Typography
-            variant="bodyMediumBold"
+            variant="subtitle"
             color="text.secondary"
           >
             {title}
@@ -57,7 +57,7 @@ const resourceCardStyles = () => ({
   headerText: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.125rem',
+    gap: '0.25rem',
     flex: 1,
   },
   divider: ({ palette }) => ({
