@@ -80,6 +80,18 @@ export const useStreamingSpeechRecognition = ({
     };
   }, [socket]);
 
+  const float32ToPcm16Base64 = useCallback(float32Array => {
+    const pcm = new Int16Array(float32Array.length);
+    for (let i = 0; i < float32Array.length; i++) {
+      const s = Math.max(-1, Math.min(1, float32Array[i]));
+      pcm[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
+    }
+    const bytes = new Uint8Array(pcm.buffer);
+    let binary = '';
+    for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+    return btoa(binary);
+  }, []);
+
   const startRecording = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -130,7 +142,7 @@ export const useStreamingSpeechRecognition = ({
       else if (err.name === 'NotFoundError') onErrorRef.current?.('audio-capture');
       else onErrorRef.current?.('network');
     }
-  }, [socket, projectId, asrModel]);
+  }, [socket, projectId, asrModel, float32ToPcm16Base64]);
 
   const stopRecording = useCallback(() => {
     workletNodeRef.current?.disconnect();
@@ -155,16 +167,4 @@ export const useStreamingSpeechRecognition = ({
   }, [socket]);
 
   return { isRecording, isSupported: !!asrModel, startRecording, stopRecording };
-};
-
-const float32ToPcm16Base64 = float32Array => {
-  const pcm = new Int16Array(float32Array.length);
-  for (let i = 0; i < float32Array.length; i++) {
-    const s = Math.max(-1, Math.min(1, float32Array[i]));
-    pcm[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
-  }
-  const bytes = new Uint8Array(pcm.buffer);
-  let binary = '';
-  for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
-  return btoa(binary);
 };

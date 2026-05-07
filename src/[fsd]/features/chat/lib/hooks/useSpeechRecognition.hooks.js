@@ -20,6 +20,35 @@ export const useSpeechRecognition = ({ onTranscript, onError } = {}) => {
     setIsSupported(!!SpeechRecognition);
   }, []);
 
+  const handleResult = useCallback(event => {
+    let interimTranscript = '';
+    let finalTranscript = '';
+
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      const transcript = event.results[i][0].transcript;
+      if (event.results[i].isFinal) {
+        finalTranscript += transcript;
+      } else {
+        interimTranscript += transcript;
+      }
+    }
+
+    onTranscriptRef.current?.({ final: finalTranscript, interim: interimTranscript });
+  }, []);
+
+  const handleError = useCallback(event => {
+    setIsRecording(false);
+    recognitionRef.current = null;
+    // Ignore aborted sessions (triggered by stopRecording)
+    if (event.error === 'aborted') return;
+    onErrorRef.current?.(event.error);
+  }, []);
+
+  const handleEnd = useCallback(() => {
+    setIsRecording(false);
+    recognitionRef.current = null;
+  }, []);
+
   const startRecording = useCallback(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) return;
@@ -35,39 +64,14 @@ export const useSpeechRecognition = ({ onTranscript, onError } = {}) => {
     recognition.interimResults = true;
     recognition.lang = navigator.language || 'en-US';
 
-    recognition.onresult = event => {
-      let interimTranscript = '';
-      let finalTranscript = '';
-
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcript = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
-          finalTranscript += transcript;
-        } else {
-          interimTranscript += transcript;
-        }
-      }
-
-      onTranscriptRef.current?.({ final: finalTranscript, interim: interimTranscript });
-    };
-
-    recognition.onerror = event => {
-      setIsRecording(false);
-      recognitionRef.current = null;
-      // Ignore aborted sessions (triggered by stopRecording)
-      if (event.error === 'aborted') return;
-      onErrorRef.current?.(event.error);
-    };
-
-    recognition.onend = () => {
-      setIsRecording(false);
-      recognitionRef.current = null;
-    };
+    recognition.onresult = handleResult;
+    recognition.onerror = handleError;
+    recognition.onend = handleEnd;
 
     recognition.start();
     recognitionRef.current = recognition;
     setIsRecording(true);
-  }, []);
+  }, [handleResult, handleError, handleEnd]);
 
   const stopRecording = useCallback(() => {
     if (recognitionRef.current) {
