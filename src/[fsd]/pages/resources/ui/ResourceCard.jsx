@@ -53,6 +53,7 @@ const resourceCardStyles = colorScheme => ({
       flexDirection: 'column',
       flexShrink: 0,
       minWidth: '23.75rem',
+      maxWidth: '31.25rem',
       minHeight: '14.25rem',
     };
   },

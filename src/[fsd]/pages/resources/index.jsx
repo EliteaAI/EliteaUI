@@ -190,7 +190,7 @@ const ResourcesPage = memo(() => {
                         rel="noopener noreferrer"
                         onClick={openExternalLink}
                         underline="always"
-                        sx={idx === 0 ? styles.linkPrimary : styles.link}
+                        sx={styles.link}
                         variant="bodyMedium"
                       >
                         {link.title}
@@ -295,23 +295,24 @@ const resourcesPageStyles = () => ({
     textAlign: 'center',
     py: '1rem',
     color: palette.text.secondary,
+    maxWidth: '63.5rem',
+    alignSelf: 'flex-start',
+    marginLeft: '15.75rem',
   }),
   grid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(2, 1fr)',
+    gridTemplateColumns: 'repeat(2, minmax(23.75rem, 31.25rem))',
     gap: '1rem',
+    justifyContent: 'start',
   },
-  linkPrimary: ({ palette }) => ({
-    color: palette.primary.main,
-    cursor: 'pointer',
-    display: 'block',
-    textDecorationColor: 'currentColor',
-  }),
   link: ({ palette }) => ({
     color: palette.text.metrics,
     cursor: 'pointer',
-    display: 'block',
+    alignSelf: 'flex-start',
     textDecorationColor: 'currentColor',
+    '&:hover': {
+      color: palette.primary.main,
+    },
   }),
   linkUndefined: ({ palette }) => ({
     color: palette.text.disabled,
