@@ -1,4 +1,4 @@
-import { forwardRef, useCallback, useRef } from 'react';
+import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 
 import { Box, IconButton } from '@mui/material';
 
@@ -84,6 +84,11 @@ const NewChatInput = forwardRef((props, ref) => {
   const { toastError } = useToast();
   const { limits } = useChatConfig();
   const attachmentButtonRef = useRef(null);
+  const userInputRef = useRef(null);
+  const [isRecording, setIsRecording] = useState(false);
+
+  // Forward the same imperative handle the outer caller expects from UserInput
+  useImperativeHandle(ref, () => userInputRef.current, []);
 
   const onClickChatBot = useCallback(() => {
     onShowParticipantsList();
@@ -179,6 +184,11 @@ const NewChatInput = forwardRef((props, ref) => {
                   disabled={isLoading || isStreaming}
                 />
               )}
+              <ChatButton.VoiceButton
+                inputRef={userInputRef}
+                disabled={isLoading || isStreaming}
+                onRecordingChange={setIsRecording}
+              />
             </Box>
             <Box
               flex={1}
@@ -279,7 +289,7 @@ const NewChatInput = forwardRef((props, ref) => {
           onDrop,
         },
         input: {
-          placeholder,
+          placeholder: isRecording ? 'Speak your message' : placeholder,
           color: theme.palette.text.secondary,
           iconColor: theme.palette.icon.fill.default,
         },
@@ -311,7 +321,8 @@ const NewChatInput = forwardRef((props, ref) => {
       onFilePaste={handleFilePaste}
       isUploadingAttachments={isUploadingAttachments}
       uploadProgress={uploadProgress}
-      ref={ref}
+      isRecording={isRecording}
+      ref={userInputRef}
     />
   );
 });

@@ -65,9 +65,14 @@ const ModelConfiguration = memo(() => {
     { skip: !projectId },
   );
 
+  const { data: asrData = { items: [], total: 0, default_model_name: '', default_model_project_id: '' } } =
+    useListModelsQuery(
+      { projectId, include_shared: projectId != PUBLIC_PROJECT_ID, section: 'asr' },
+      { skip: !projectId },
+    );
   // Get multi-section configurations
   const { data: availableConfigurations, isLoading: configurationsLoading } = useMultiSectionConfigurations(
-    ['llm', 'embedding', 'vectorstorage', 'ai_credentials', 'image_generation'],
+    ['llm', 'embedding', 'vectorstorage', 'ai_credentials', 'image_generation', 'asr'],
     projectId,
   );
 
@@ -80,11 +85,13 @@ const ModelConfiguration = memo(() => {
     embeddingModelOptions,
     vectorStorageOptions,
     imageGenerationOptions,
+    asrOptions,
   } = useModelOptions({
     configurations: modelsData.items,
     embeddingModelsData,
     vectorStorageData,
     imageGenerationData,
+    asrData,
   });
 
   const { model } = useModelConfiguration({
@@ -95,7 +102,7 @@ const ModelConfiguration = memo(() => {
   // Group configurations by section
   const configurationsBySections = useMemo(() => {
     if (!availableConfigurations)
-      return { llm: [], embedding: [], vectorstorage: [], ai_credentials: [], image_generation: [] };
+      return { llm: [], embedding: [], vectorstorage: [], ai_credentials: [], image_generation: [], asr: [] };
     return {
       llm: availableConfigurations
         .filter(config => config.section === 'llm')
@@ -110,6 +117,7 @@ const ModelConfiguration = memo(() => {
       vectorstorage: availableConfigurations.filter(config => config.section === 'vectorstorage'),
       ai_credentials: availableConfigurations.filter(config => config.section === 'ai_credentials'),
       image_generation: availableConfigurations.filter(config => config.section === 'image_generation'),
+      asr: availableConfigurations.filter(config => config.section === 'asr'),
     };
   }, [availableConfigurations, modelsData.default_model_name, modelsData.default_model_project_id]);
 
@@ -166,6 +174,11 @@ const ModelConfiguration = memo(() => {
   const projectDefaultImageGenerationModel = useMemo(
     () => `${imageGenerationData?.default_model_name}<<>>${imageGenerationData?.default_model_project_id}`,
     [imageGenerationData?.default_model_name, imageGenerationData?.default_model_project_id],
+  );
+
+  const projectDefaultASRModel = useMemo(
+    () => `${asrData?.default_model_name}<<>>${asrData?.default_model_project_id}`,
+    [asrData?.default_model_name, asrData?.default_model_project_id],
   );
 
   // Handle changing default model
@@ -225,6 +238,8 @@ const ModelConfiguration = memo(() => {
             embeddingModelOptions={embeddingModelOptions}
             vectorStorageOptions={vectorStorageOptions}
             imageGenerationOptions={imageGenerationOptions}
+            projectDefaultASRModel={projectDefaultASRModel}
+            asrOptions={asrOptions}
             onChangeDefaultModel={onChangeDefaultModel}
           />
 

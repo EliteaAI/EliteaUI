@@ -158,6 +158,14 @@ export const buildConfigurationData = ({
           shared: config.shared === true,
           project_id: config.project_id,
         })) || [],
+      asr_models:
+        configurationsBySections.asr?.map(config => ({
+          id: config.id,
+          name: extractConfigName(config),
+          type: config.type,
+          shared: config.shared === true,
+          project_id: config.project_id,
+        })) || [],
     },
   };
 };

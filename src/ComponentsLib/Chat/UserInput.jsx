@@ -74,6 +74,7 @@ const UserInput = forwardRef((props, ref) => {
     isUploadingAttachments = false,
     uploadProgress = 0,
     isCreatingConversation = false,
+    isRecording = false,
   } = props;
 
   const inputRef = useRef(null);
@@ -106,7 +107,7 @@ const UserInput = forwardRef((props, ref) => {
   const hasHighlights = highlightRanges.length > 0 && !!inputContent;
   // console.log('highlightRanges', highlightRanges, hasHighlights);
 
-  const styles = userInputStyles(isFocused, isDragOver);
+  const styles = userInputStyles(isFocused, isDragOver, isRecording);
 
   useEffect(() => {
     const textarea = inputRef.current;
@@ -184,9 +185,17 @@ const UserInput = forwardRef((props, ref) => {
     },
     getInputContent: () => inputContent,
     getCursorPosition: () => inputRef.current?.selectionStart ?? null,
-    setValue: value => {
+    setValue: (value, cursorPos) => {
       setQuestion(value);
       setInputContent(value);
+      if (cursorPos !== undefined) {
+        setTimeout(() => {
+          if (inputRef.current) {
+            inputRef.current.setSelectionRange(cursorPos, cursorPos);
+            inputRef.current.focus();
+          }
+        }, 0);
+      }
     },
     replaceRange: (start, end, text) => {
       const newValue = inputContent.slice(0, start) + text + inputContent.slice(end);
@@ -423,14 +432,15 @@ const UserInput = forwardRef((props, ref) => {
 UserInput.displayName = 'UserInput';
 
 /** @type {MuiSx} */
-const userInputStyles = (isFocused, isDragOver) => {
+const userInputStyles = (isFocused, isDragOver, isRecording) => {
   const getInputBackground = palette => {
-    if (!isFocused) return palette.background.card.default;
+    if (!isFocused && !isRecording) return palette.background.card.default;
 
     return palette.mode === 'light' ? palette.background.secondary : palette.background.onboardingBody;
   };
 
   const getInputBorder = palette => {
+    if (isRecording) return palette.primary.main;
     if (!isFocused) return 'transparent';
 
     return `linear-gradient(0deg, ${palette.background.userInputBorderDark} 0%, ${palette.background.userInputBorderLight} 100%)`;
@@ -439,12 +449,14 @@ const userInputStyles = (isFocused, isDragOver) => {
   return {
     gradientBorder: ({ palette }) => ({
       width: '100%',
-      padding: '1px',
+      padding: '0.0625rem',
       borderRadius: '1rem',
       background: getInputBorder(palette),
 
-      ...(isFocused && {
-        boxShadow: `0px -5px 20px 0px ${palette.background.userInputBorderShadow}`,
+      ...((isFocused || isRecording) && {
+        boxShadow: isRecording
+          ? `0 0 0.75rem 0 ${palette.primary.main}40`
+          : `0 -0.3125rem 1.25rem 0 ${palette.background.userInputBorderShadow}`,
       }),
     }),
     container: ({ palette }) => ({
@@ -456,14 +468,14 @@ const userInputStyles = (isFocused, isDragOver) => {
       borderRadius: '1rem',
       background: isDragOver ? `${palette.primary.main}15` : getInputBackground(palette),
       border: isDragOver
-        ? `2px dashed ${palette.primary.main}`
-        : `1px solid ${isFocused ? 'transparent' : palette.border.lines}`,
+        ? `0.125rem dashed ${palette.primary.main}`
+        : `0.0625rem solid ${isFocused || isRecording ? 'transparent' : palette.border.lines}`,
       boxSizing: 'border-box',
       gap: '1.5rem',
       transition: 'all 0.2s ease-in-out',
       position: 'relative',
       ...(isDragOver && {
-        boxShadow: `0 4px 12px ${palette.primary.main}30`,
+        boxShadow: `0 0.25rem 0.75rem ${palette.primary.main}30`,
       }),
     }),
     textFieldWrapper: {

@@ -19,12 +19,14 @@ const ConfigurationsPanel = memo(props => {
     projectDefaultEmbeddingModel,
     projectDefaultVectorStorageModel,
     projectDefaultImageGenerationModel,
+    projectDefaultASRModel,
     modelOptions,
     lowTierModelOptions,
     highTierModelOptions,
     embeddingModelOptions,
     vectorStorageOptions,
     imageGenerationOptions,
+    asrOptions,
     onChangeDefaultModel,
   } = props;
   const styles = getStyles();
@@ -153,6 +155,17 @@ const ConfigurationsPanel = memo(props => {
         defaultSettingValue={projectDefaultImageGenerationModel}
         defaultSettingOptions={imageGenerationOptions}
         onChangeDefaultSetting={onChangeDefaultModel('image_generation')}
+      />
+
+      <ConfigurationSection
+        title="Speech Recognition (ASR)"
+        configurations={configurationsBySections.asr}
+        isLoading={configurationsLoading}
+        hasDefaultSetting={true}
+        defaultSettingLabel="Default ASR model:"
+        defaultSettingValue={projectDefaultASRModel}
+        defaultSettingOptions={asrOptions}
+        onChangeDefaultSetting={onChangeDefaultModel('asr')}
       />
 
       <ConfigurationSection

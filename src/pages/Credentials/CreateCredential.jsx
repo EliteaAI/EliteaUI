@@ -43,7 +43,7 @@ const CreateCredential = memo(
         return [section];
       } else if (isFromModelConfiguration) {
         // For model credentials, use multiple sections
-        return ['llm', 'embedding', 'vectorstorage', 'ai_credentials', 'image_generation'];
+        return ['llm', 'embedding', 'vectorstorage', 'ai_credentials', 'image_generation', 'asr'];
       } else {
         // For regular credentials page, use credentials section
         return ['credentials'];

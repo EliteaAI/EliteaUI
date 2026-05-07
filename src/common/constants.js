@@ -933,6 +933,14 @@ export const sioEvents = {
 
   // MCP connection test (uses protocol-level list_tools)
   test_mcp_connection: 'test_mcp_connection',
+
+  // Server-side ASR (real-time transcription via OpenAI Realtime API)
+  asr_start: 'asr_start',
+  asr_audio_chunk: 'asr_audio_chunk',
+  asr_stop: 'asr_stop',
+  asr_transcript_delta: 'asr_transcript_delta',
+  asr_transcript_done: 'asr_transcript_done',
+  asr_error: 'asr_error',
 };
 
 export const ToolActionStatus = {
