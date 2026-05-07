@@ -118,7 +118,7 @@ const VoiceButton = memo(props => {
 
   if (!isSupported) return null;
 
-  const styles = getStyles(isRecording);
+  const styles = getStyles(isRecording, disabled);
 
   return (
     <Box
@@ -170,29 +170,33 @@ const VoiceButton = memo(props => {
 VoiceButton.displayName = 'VoiceButton';
 
 /** @type {MuiSx} */
-const getStyles = isRecording => ({
-  wrapper: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: isRecording ? '0.5rem' : '0rem',
-    border: isRecording ? theme => `0.0625rem solid ${theme.palette.border.chatContinue}` : 'none',
-    padding: '0rem',
-    borderRadius: isRecording ? '1.75rem' : '0rem',
-    boxSizing: 'border-box',
-    height: '1.75rem',
-  },
-  micButton: ({ palette }) => ({
-    marginLeft: '0rem',
-    color: `${isRecording ? palette.primary.main : palette.text.secondary} !important`,
-    ...(isRecording && { backgroundColor: 'transparent !important' }),
-  }),
-  stopButton: {
-    marginLeft: '0rem',
-    color: ({ palette }) => palette.text.secondary,
-  },
-  icon: {
-    fontSize: '1rem',
-  },
-});
+const getStyles = (isRecording, disabled) => {
+  const micButtonColor = palette =>
+    disabled ? palette.icon.fill.disabled : isRecording ? palette.primary.main : palette.text.secondary;
+  return {
+    wrapper: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: isRecording ? '0.5rem' : '0rem',
+      border: isRecording ? theme => `0.0625rem solid ${theme.palette.border.chatContinue}` : 'none',
+      padding: '0rem',
+      borderRadius: isRecording ? '1.75rem' : '0rem',
+      boxSizing: 'border-box',
+      height: '1.75rem',
+    },
+    micButton: ({ palette }) => ({
+      marginLeft: '0rem',
+      color: `${micButtonColor(palette)} !important`,
+      ...(isRecording && { backgroundColor: 'transparent !important' }),
+    }),
+    stopButton: {
+      marginLeft: '0rem',
+      color: ({ palette }) => palette.text.secondary,
+    },
+    icon: {
+      fontSize: '1rem',
+    },
+  };
+};
 
 export default VoiceButton;
