@@ -1,25 +1,14 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import ReactGA from 'react-ga4';
 import { useDispatch, useSelector } from 'react-redux';
-import {
-  Navigate,
-  Route,
-  RouterProvider,
-  Routes,
-  createBrowserRouter,
-  createRoutesFromElements,
-  useLocation,
-} from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 
-import { Box, useTheme } from '@mui/material';
-
-import { actions as importWizardActions } from '@/[fsd]/entities/import-wizard/model/importWizard.slice';
-import { ImportWizardModal } from '@/[fsd]/entities/import-wizard/ui';
+import IndexRoute from '@/[fsd]/app/routes/IndexRoute';
+import IntegrationGuard from '@/[fsd]/app/routes/IntegrationGuard';
+import ProtectedRoute from '@/[fsd]/app/routes/ProtectedRoute';
 import { AnalyticsContainer } from '@/[fsd]/features/analytics/ui';
-import { MaintenanceBanner } from '@/[fsd]/features/maintenance/ui';
 import { AppDetail, Apps } from '@/[fsd]/pages/apps';
-import AuthCallbackPage from '@/[fsd]/pages/auth/index.jsx';
 import McpAuthPage from '@/[fsd]/pages/mcp/index.jsx';
 import Resources from '@/[fsd]/pages/resources';
 import Settings from '@/[fsd]/pages/settings';
@@ -30,31 +19,19 @@ import TokensSettings from '@/[fsd]/pages/settings/PersonalTokens';
 import Secrets from '@/[fsd]/pages/settings/Secrets';
 import ServicePromptsPage from '@/[fsd]/pages/settings/ServicePromptsPage';
 import Users from '@/[fsd]/pages/settings/Users';
-import { useIsOnboarding } from '@/[fsd]/shared/lib/hooks';
-import { Sidebar } from '@/[fsd]/widgets/Sidebar/ui';
 import { useLazyPermissionListQuery, useLazyPublicPermissionListQuery } from '@/api/auth';
 import { useLazyAuthorDetailsQuery } from '@/api/social.js';
 import {
-  ALLOW_PROJECT_OWN_LLMS,
   ApplicationsTabs,
-  COLLAPSED_SIDE_BAR_WIDTH,
   CredentialsTabs,
-  DEV,
-  ELITEA_ASSISTANT_ENABLED,
   MISSING_ENVS,
   ModerationTabs,
   PERMISSION_GROUPS,
   PERSONAL_SPACE_PERIOD_FOR_NEW_USER,
-  PUBLIC_PROJECT_ID,
-  SIDE_BAR_WIDTH,
   ToolkitsTabs,
   UserProfileTabs,
-  VITE_DEV_TOKEN,
-  VITE_SERVER_URL,
 } from '@/common/constants';
-import { clearBaseUrlPrefix } from '@/common/utils';
 import RouteChangeResetSearch from '@/components/RouteChangeResetSearch';
-import UnsavedDialog from '@/components/UnsavedDialog';
 import { PageTitleSetter } from '@/hooks/useBrowserPageTitle';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import AgentsStudio from '@/pages/AgentsStudio/AgentsStudio';
@@ -66,8 +43,6 @@ import CreateBucket from '@/pages/Artifacts/CreateBucket';
 import CreateCredentialFromMain from '@/pages/Credentials/CreateCredential';
 import { Credentials } from '@/pages/Credentials/Credentials';
 import EditCredentialFromMain from '@/pages/Credentials/EditCredential';
-import EnvMissingPage from '@/pages/EnvMissingPage';
-import LoadingPage from '@/pages/LoadingPage';
 import ModeSwitch from '@/pages/ModeSwitch';
 import ModerationSpace from '@/pages/ModerationSpace/ModerationSpace';
 import ChatWrapper from '@/pages/NewChat/index';
@@ -83,107 +58,42 @@ import { EditToolkit } from '@/pages/Toolkits/EditToolkit';
 import { Toolkits } from '@/pages/Toolkits/Toolkits';
 import UserPublic from '@/pages/UserPublic/UserPublic';
 import UserSettings from '@/pages/UserSettings/UserSettings';
-import RouteDefinitions, { getBasename } from '@/routes';
+import RouteDefinitions from '@/routes';
 import { actions as chatActions } from '@/slices/chat';
-import { actions } from '@/slices/settings';
-import { EliteaAssistant } from '@eliteaai/elitea-assistant';
-
-import { gaInit } from './GA';
-
-gaInit();
 
 let userInfoTimer = undefined;
-
-const ProtectedRoute = ({ requiredPermissions, publicPage, children }) => {
-  const user = useSelector(state => state.user);
-  const { permissions, publicPermissions } = user;
-  const targetPermissions = useMemo(
-    () => (publicPage ? publicPermissions : permissions),
-    [permissions, publicPage, publicPermissions],
-  );
-  if (!requiredPermissions) return children;
-  if (!targetPermissions) return <LoadingPage />;
-
-  const hasPermission = requiredPermissions.some(p => targetPermissions?.includes(p));
-
-  if (!hasPermission) {
-    return (
-      <Navigate
-        to={RouteDefinitions.Applications}
-        replace
-      />
-    );
-  }
-
-  return children;
-};
-
-const IntegrationGuard = ({ children }) => {
-  const projectId = useSelectedProjectId();
-  if (ALLOW_PROJECT_OWN_LLMS === false && projectId != PUBLIC_PROJECT_ID) {
-    return (
-      <Navigate
-        to={RouteDefinitions.SettingsWithTab.replace(':tab', 'model-configuration')}
-        replace
-      />
-    );
-  }
-  return children;
-};
-
-const IndexRoute = () => {
-  const user = useSelector(state => state.user);
-
-  // Show loading page while user info is being fetched
-  if (!user.id) {
-    return <LoadingPage />;
-  }
-
-  if (!user.personal_project_id) {
-    return (
-      <Navigate
-        to={RouteDefinitions.Onboarding}
-        replace
-      />
-    );
-  }
-
-  return (
-    <Navigate
-      to={RouteDefinitions.Chat}
-      replace
-    />
-  );
-};
 
 const ProtectedRoutes = () => {
   const location = useLocation();
   const dispatch = useDispatch();
+
+  const [getUserDetails] = useLazyAuthorDetailsQuery();
+  const projectId = useSelectedProjectId();
+
+  const user = useSelector(state => state.user);
+
+  const [currentProjectId, setCurrentProjectId] = useState(null);
+  const [getUserPermissions] = useLazyPermissionListQuery();
+  const [getPublicUserPermissions] = useLazyPublicPermissionListQuery();
+
   useEffect(() => {
     ReactGA.isInitialized &&
       ReactGA.send({ hitType: 'pageview', page: decodeURI(location.pathname) + location.search });
+
     // eslint-disable-next-line no-console
     console.debug('Google analytics init:', ReactGA.isInitialized);
   }, [location]);
 
-  const user = useSelector(state => state.user);
-  const [getUserDetails] = useLazyAuthorDetailsQuery();
-  const projectId = useSelectedProjectId();
-  const [currentProjectId, setCurrentProjectId] = useState(null);
-  const [getUserPermissions] = useLazyPermissionListQuery();
-  const [getPublicUserPermissions] = useLazyPublicPermissionListQuery();
   useEffect(() => {
     if (!MISSING_ENVS.length) {
-      if (!user.id) {
-        getUserDetails();
-      }
+      if (!user.id) getUserDetails();
+
       if (currentProjectId !== projectId && projectId) {
         getUserPermissions(projectId);
         setCurrentProjectId(projectId);
       }
-      if (!user.publicPermissions || !user.publicPermissions.length) {
-        getPublicUserPermissions();
-      }
+
+      if (!user.publicPermissions || !user.publicPermissions.length) getPublicUserPermissions();
     }
   }, [getPublicUserPermissions, user, getUserDetails, projectId, getUserPermissions, currentProjectId]);
 
@@ -194,9 +104,7 @@ const ProtectedRoutes = () => {
   }, []);
 
   useEffect(() => {
-    if (!MISSING_ENVS.length && !user.personal_project_id) {
-      getUserDetails();
-    }
+    if (!MISSING_ENVS.length && !user.personal_project_id) getUserDetails();
   }, [location, user.personal_project_id, getUserDetails]);
 
   useEffect(() => {
@@ -215,15 +123,13 @@ const ProtectedRoutes = () => {
   }, [user.personal_project_id]);
 
   const getIndexElement = useCallback(
-    relativePath => {
-      return (
-        <Navigate
-          to={relativePath + location.search}
-          state={location.state}
-          replace
-        />
-      );
-    },
+    relativePath => (
+      <Navigate
+        to={relativePath + location.search}
+        state={location.state}
+        replace
+      />
+    ),
     [location.search, location.state],
   );
 
@@ -233,43 +139,51 @@ const ProtectedRoutes = () => {
       { path: RouteDefinitions.Onboarding, element: <Onboarding /> },
       { path: RouteDefinitions.Resources, element: <Resources /> },
       { path: RouteDefinitions.AgentStudio, element: <AgentsStudio /> },
+
       /* chat */
       { path: RouteDefinitions.Chat, element: <ChatWrapper /> },
       { path: RouteDefinitions.ChatConversation, element: <ChatWrapper /> },
+
       /* applications */
       { path: RouteDefinitions.Applications, element: getIndexElement(ApplicationsTabs[0]) },
       { path: RouteDefinitions.CreateApplication, element: <CreateApplication /> },
       { path: RouteDefinitions.ApplicationsWithTab, element: <Applications /> },
       { path: RouteDefinitions.ApplicationsDetail, element: <EditApplication /> },
+
       /* pipelines */
       { path: RouteDefinitions.Pipelines, element: getIndexElement(ApplicationsTabs[0]) },
       { path: RouteDefinitions.CreatePipeline, element: <CreatePipeline /> },
       { path: RouteDefinitions.PipelinesWithTab, element: <Pipelines /> },
       { path: RouteDefinitions.PipelineDetail, element: <EditPipeline /> },
+
       /* credentials */
       { path: RouteDefinitions.Credentials, element: getIndexElement(CredentialsTabs[0]) },
       { path: RouteDefinitions.CredentialsWithTab, element: <Credentials /> },
       { path: RouteDefinitions.CreateCredentialFromMain, element: <CreateCredentialFromMain /> },
       { path: RouteDefinitions.CreateCredentialTypeFromMain, element: <CreateCredentialFromMain /> },
       { path: RouteDefinitions.EditCredentialFromMain, element: <EditCredentialFromMain /> },
+
       /* tools */
       { path: RouteDefinitions.Toolkits, element: getIndexElement(ToolkitsTabs[0]) },
       { path: RouteDefinitions.CreateToolkit, element: <CreateToolkit /> },
       { path: RouteDefinitions.CreateToolkitType, element: <CreateToolkit /> },
       { path: RouteDefinitions.ToolkitsWithTab, element: <Toolkits /> },
       { path: RouteDefinitions.ToolkitDetail, element: <EditToolkit /> },
+
       /* mcp */
       { path: RouteDefinitions.MCPs, element: getIndexElement(ToolkitsTabs[0]) },
       { path: RouteDefinitions.CreateMCP, element: <CreateToolkit isMCP={true} /> },
       { path: RouteDefinitions.CreateMCPType, element: <CreateToolkit isMCP={true} /> },
       { path: RouteDefinitions.MCPsWithTab, element: <Toolkits isMCP={true} /> },
       { path: RouteDefinitions.MCPDetail, element: <EditToolkit isMCP={true} /> },
+
       /* apps */
       { path: RouteDefinitions.Apps, element: getIndexElement(ToolkitsTabs[0]) },
       { path: RouteDefinitions.CreateApp, element: <CreateToolkit isApplication={true} /> },
       { path: RouteDefinitions.CreateAppType, element: <CreateToolkit isApplication={true} /> },
       { path: RouteDefinitions.AppsWithTab, element: <Apps /> },
       { path: RouteDefinitions.AppDetail, element: <AppDetail /> },
+
       // user public
       { path: RouteDefinitions.UserPublicWithTab, element: <UserPublic /> },
       { path: RouteDefinitions.UserPublicApplicationDetail, element: <EditApplication /> },
@@ -277,9 +191,7 @@ const ProtectedRoutes = () => {
       { path: RouteDefinitions.UserPublicToolkitDetail, element: <EditToolkit /> },
       { path: RouteDefinitions.UserPublicMCPDetail, element: <EditToolkit isMCP /> },
       { path: RouteDefinitions.UserPublicAppDetail, element: <AppDetail /> },
-
       { path: RouteDefinitions.ModeSwitch, element: <ModeSwitch /> },
-
       { path: RouteDefinitions.UserSettings, element: getIndexElement(UserProfileTabs[0]) },
       { path: RouteDefinitions.UserSettingsWithTab, element: <UserSettings /> },
 
@@ -310,6 +222,7 @@ const ProtectedRoutes = () => {
       // artifacts
       { path: RouteDefinitions.Artifacts, element: <Artifacts /> },
       { path: RouteDefinitions.CreateBucket, element: <CreateBucket /> },
+
       // MCP OAuth callback
       { path: RouteDefinitions.McpAuthPage, element: <McpAuthPage /> },
     ],
@@ -337,7 +250,6 @@ const ProtectedRoutes = () => {
               </ProtectedRoute>
             }
           >
-            {/*{path.endsWith('/:promptId') && <Route path=':version' element={<></>} />}*/}
             {path.endsWith('/:agentId') && (
               <Route
                 path=":version"
@@ -442,159 +354,6 @@ const ProtectedRoutes = () => {
   );
 };
 
-const LeftSideBar = props => {
-  const { onToggleAssistant } = props;
-  const dispatch = useDispatch();
-  const isOnboardingPage = useIsOnboarding();
-  const user = useSelector(state => state.user);
+ProtectedRoutes.displayName = 'ProtectedRoutes';
 
-  const sideBarCollapsed = useSelector(state => state.settings.sideBarCollapsed);
-
-  const { openWizard, data, isForking } = useSelector(state => state.importWizard);
-
-  const styles = appStyles(sideBarCollapsed);
-
-  const onSideCollapsed = useCallback(
-    collapsed => {
-      dispatch(actions.setSideBarCollapsed(collapsed));
-    },
-    [dispatch],
-  );
-
-  const onCloseImportWizard = useCallback(
-    event => {
-      event?.stopPropagation?.();
-      dispatch(importWizardActions.closeImportWizard());
-    },
-    [dispatch],
-  );
-
-  if (isOnboardingPage && !user.personal_project_id) {
-    return null;
-  }
-
-  return (
-    <Box
-      component="nav"
-      sx={styles.leftSideBar}
-      aria-label="side-bar"
-    >
-      <Sidebar
-        onCollapsed={onSideCollapsed}
-        onToggleAssistant={onToggleAssistant}
-      />
-      <ImportWizardModal
-        open={openWizard}
-        onClose={onCloseImportWizard}
-        data={data}
-        isForking={isForking}
-      />
-    </Box>
-  );
-};
-
-const MainPanel = () => {
-  const sideBarCollapsed = useSelector(state => state.settings.sideBarCollapsed);
-  const isOnboardingPage = useIsOnboarding();
-
-  // Check if on Onboarding page
-  const sidebarWidth = isOnboardingPage ? 0 : sideBarCollapsed ? COLLAPSED_SIDE_BAR_WIDTH : SIDE_BAR_WIDTH;
-  const styles = appStyles(sideBarCollapsed, sidebarWidth);
-
-  return (
-    <Box
-      component="main"
-      display={'block'}
-      flexGrow={1}
-      sx={styles.mainPanel}
-    >
-      <MaintenanceBanner />
-      <ProtectedRoutes />
-      <UnsavedDialog />
-    </Box>
-  );
-};
-
-const AppLayout = () => {
-  const styles = appStyles();
-  const theme = useTheme();
-  const assistantRef = useRef(null);
-
-  const onToggleAssistant = useCallback(() => {
-    assistantRef.current?.toggle();
-  }, []);
-
-  const showEliteaAssistant = useMemo(() => {
-    if (typeof ELITEA_ASSISTANT_ENABLED === 'string') {
-      return (
-        ELITEA_ASSISTANT_ENABLED.toLowerCase() === '1' || ELITEA_ASSISTANT_ENABLED.toLowerCase() === 'true'
-      );
-    }
-
-    return Boolean(ELITEA_ASSISTANT_ENABLED);
-  }, []);
-
-  return (
-    <Box sx={styles.appContainer}>
-      <LeftSideBar onToggleAssistant={showEliteaAssistant ? onToggleAssistant : undefined} />
-      <MainPanel />
-      {showEliteaAssistant && (
-        <EliteaAssistant
-          ref={assistantRef}
-          apiUrl={`${clearBaseUrlPrefix(VITE_SERVER_URL)}/support_assistant`}
-          token={DEV ? VITE_DEV_TOKEN : undefined}
-          withCredentials={!DEV}
-          position="bottom-left"
-          theme={theme.palette.mode}
-        />
-      )}
-    </Box>
-  );
-};
-
-const router = createBrowserRouter(
-  createRoutesFromElements(
-    <>
-      <Route
-        path={RouteDefinitions.AuthCallbackPage}
-        element={<AuthCallbackPage />}
-      />
-      <Route
-        path="/*"
-        element={<AppLayout />}
-      >
-        <Route
-          path="*"
-          element={<Page404 />}
-        />
-      </Route>
-    </>,
-  ),
-  { basename: getBasename() },
-);
-
-const App = () => {
-  return MISSING_ENVS.length > 0 ? <EnvMissingPage /> : <RouterProvider router={router} />;
-};
-
-/** @type {MuiSx} */
-const appStyles = (sideBarCollapsed, sidebarWidth) => ({
-  appContainer: {
-    display: 'flex',
-  },
-  leftSideBar: {
-    width: `${(sideBarCollapsed ? COLLAPSED_SIDE_BAR_WIDTH : SIDE_BAR_WIDTH) / 16}rem`,
-    flexShrink: 0,
-    overflowX: 'hidden',
-  },
-  mainPanel: {
-    width: `calc(100% - ${sidebarWidth / 16}rem)`,
-    maxWidth: `calc(100% - ${sidebarWidth / 16}rem)`,
-    height: '100vh',
-    boxSizing: 'border-box',
-    padding: 0,
-    position: 'relative',
-  },
-});
-
-export default App;
+export default ProtectedRoutes;
