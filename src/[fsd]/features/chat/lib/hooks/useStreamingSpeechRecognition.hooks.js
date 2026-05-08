@@ -202,14 +202,16 @@ export const useStreamingSpeechRecognition = ({
   }, []);
 
   const stopRecording = useCallback(() => {
+    if (!isRecording) return;
     _releaseAudio();
     socket?.emit(sioEvents.asr_stop, {});
     setIsRecording(false);
-  }, [socket, _releaseAudio]);
+  }, [isRecording, socket, _releaseAudio]);
 
-  // Cleanup on unmount
+  // Cleanup on unmount — only emit asr_stop if actually recording
   useEffect(() => {
     return () => {
+      if (!streamRef.current) return;
       _releaseAudio();
       socket?.emit(sioEvents.asr_stop, {});
     };

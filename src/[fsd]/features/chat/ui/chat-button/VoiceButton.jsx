@@ -1,4 +1,4 @@
-import { memo, useCallback, useContext, useEffect, useRef } from 'react';
+import { forwardRef, memo, useCallback, useContext, useEffect, useImperativeHandle, useRef } from 'react';
 
 import { Box } from '@mui/material';
 
@@ -27,168 +27,172 @@ import useToast from '@/hooks/useToast';
  *
  * Returns null when neither server ASR nor the Web Speech API is available.
  */
-const VoiceButton = memo(props => {
-  const { inputRef, disabled, onRecordingChange } = props;
-  const { toastError } = useToast();
-  const socket = useContext(SocketContext);
-  const projectId = useSelectedProjectId();
+const VoiceButton = memo(
+  forwardRef((props, ref) => {
+    const { inputRef, disabled, onRecordingChange } = props;
+    const { toastError } = useToast();
+    const socket = useContext(SocketContext);
+    const projectId = useSelectedProjectId();
 
-  // Text before the cursor position at the moment recording started
-  const preCursorContentRef = useRef('');
-  // Text after the cursor position at the moment recording started
-  const postCursorContentRef = useRef('');
-  // Accumulates all finalized voice text within the current recording session
-  const voiceFinalAccumulatedRef = useRef('');
+    // Text before the cursor position at the moment recording started
+    const preCursorContentRef = useRef('');
+    // Text after the cursor position at the moment recording started
+    const postCursorContentRef = useRef('');
+    // Accumulates all finalized voice text within the current recording session
+    const voiceFinalAccumulatedRef = useRef('');
 
-  const handleTranscript = useCallback(
-    ({ final, interim }) => {
-      const voiceBase = preCursorContentRef.current + voiceFinalAccumulatedRef.current;
-      if (interim) {
-        // Live preview: cursor sits after the interim words (before postCursor)
-        const newValue = voiceBase + interim + postCursorContentRef.current;
-        const cursorPos = voiceBase.length + interim.length;
-        inputRef.current?.setValue(newValue, cursorPos);
-      }
-      if (final) {
-        // Commit: accumulate final, place cursor right after the inserted voice text
-        voiceFinalAccumulatedRef.current += (voiceFinalAccumulatedRef.current ? ' ' : '') + final;
-        const newValue =
-          preCursorContentRef.current + voiceFinalAccumulatedRef.current + postCursorContentRef.current;
-        const cursorPos = preCursorContentRef.current.length + voiceFinalAccumulatedRef.current.length;
-        inputRef.current?.setValue(newValue, cursorPos);
-      }
-    },
-    [inputRef],
-  );
+    const handleTranscript = useCallback(
+      ({ final, interim }) => {
+        const voiceBase = preCursorContentRef.current + voiceFinalAccumulatedRef.current;
+        if (interim) {
+          // Live preview: cursor sits after the interim words (before postCursor)
+          const newValue = voiceBase + interim + postCursorContentRef.current;
+          const cursorPos = voiceBase.length + interim.length;
+          inputRef.current?.setValue(newValue, cursorPos);
+        }
+        if (final) {
+          // Commit: accumulate final, place cursor right after the inserted voice text
+          voiceFinalAccumulatedRef.current += (voiceFinalAccumulatedRef.current ? ' ' : '') + final;
+          const newValue =
+            preCursorContentRef.current + voiceFinalAccumulatedRef.current + postCursorContentRef.current;
+          const cursorPos = preCursorContentRef.current.length + voiceFinalAccumulatedRef.current.length;
+          inputRef.current?.setValue(newValue, cursorPos);
+        }
+      },
+      [inputRef],
+    );
 
-  const handleVoiceError = useCallback(
-    error => {
-      const errorMessages = {
-        'not-allowed': 'Microphone access denied. Please allow microphone access in your browser settings.',
-        'audio-capture': 'No microphone found. Please connect a microphone and try again.',
-        network: 'Voice input requires an internet connection. Please check your connection and try again.',
-      };
-      const message = errorMessages[error];
-      if (message) toastError(message);
-      // 'no-speech' and 'aborted' are silently ignored — not user-facing errors
-    },
-    [toastError],
-  );
+    const handleVoiceError = useCallback(
+      error => {
+        const errorMessages = {
+          'not-allowed': 'Microphone access denied. Please allow microphone access in your browser settings.',
+          'audio-capture': 'No microphone found. Please connect a microphone and try again.',
+          network: 'Voice input requires an internet connection. Please check your connection and try again.',
+        };
+        const message = errorMessages[error];
+        if (message) toastError(message);
+        // 'no-speech' and 'aborted' are silently ignored — not user-facing errors
+      },
+      [toastError],
+    );
 
-  const isWhisperModel = useCallback(name => Boolean(name && name.toLowerCase().includes('whisper')), []);
+    const isWhisperModel = useCallback(name => Boolean(name && name.toLowerCase().includes('whisper')), []);
 
-  /**
-   * Select the best available ASR model following priority order:
-   * default streaming → first streaming → default whisper → first whisper
-   */
-  const selectAsrModel = useCallback(
-    items => {
-      const streamingModels = items.filter(m => !isWhisperModel(m.name));
-      const whisperModels = items.filter(m => isWhisperModel(m.name));
+    /**
+     * Select the best available ASR model following priority order:
+     * default streaming → first streaming → default whisper → first whisper
+     */
+    const selectAsrModel = useCallback(
+      items => {
+        const streamingModels = items.filter(m => !isWhisperModel(m.name));
+        const whisperModels = items.filter(m => isWhisperModel(m.name));
 
-      return (
-        streamingModels.find(m => m.default) ??
-        streamingModels[0] ??
-        whisperModels.find(m => m.default) ??
-        whisperModels[0]
-      );
-    },
-    [isWhisperModel],
-  );
+        return (
+          streamingModels.find(m => m.default) ??
+          streamingModels[0] ??
+          whisperModels.find(m => m.default) ??
+          whisperModels[0]
+        );
+      },
+      [isWhisperModel],
+    );
 
-  const { data: asrModelsData } = useListModelsQuery(
-    { projectId, section: 'asr', include_shared: true },
-    { skip: !projectId },
-  );
-  const asrModel = selectAsrModel(asrModelsData?.items ?? []);
+    const { data: asrModelsData } = useListModelsQuery(
+      { projectId, section: 'asr', include_shared: true },
+      { skip: !projectId },
+    );
+    const asrModel = selectAsrModel(asrModelsData?.items ?? []);
 
-  const serverHook = useStreamingSpeechRecognition({
-    onTranscript: handleTranscript,
-    onError: handleVoiceError,
-    socket,
-    projectId,
-    asrModel,
-  });
+    const serverHook = useStreamingSpeechRecognition({
+      onTranscript: handleTranscript,
+      onError: handleVoiceError,
+      socket,
+      projectId,
+      asrModel,
+    });
 
-  const clientHook = useSpeechRecognition({
-    onTranscript: handleTranscript,
-    onError: handleVoiceError,
-  });
+    const clientHook = useSpeechRecognition({
+      onTranscript: handleTranscript,
+      onError: handleVoiceError,
+    });
 
-  // Priority: 1. streaming model, 2. whisper model, 3. browser Speech API, 4. hide button
-  const { isRecording, isSupported, startRecording, stopRecording } = serverHook.isSupported
-    ? serverHook
-    : clientHook;
+    // Priority: 1. streaming model, 2. whisper model, 3. browser Speech API, 4. hide button
+    const { isRecording, isSupported, startRecording, stopRecording } = serverHook.isSupported
+      ? serverHook
+      : clientHook;
 
-  useEffect(() => {
-    onRecordingChange?.(isRecording);
-  }, [isRecording, onRecordingChange]);
+    useEffect(() => {
+      onRecordingChange?.(isRecording);
+    }, [isRecording, onRecordingChange]);
 
-  const handleStartRecording = useCallback(() => {
-    const content = inputRef.current?.getInputContent() ?? '';
-    const cursor = inputRef.current?.getCursorPosition() ?? content.length;
-    // Split content at cursor so voice text is inserted at that exact position
-    preCursorContentRef.current = content.slice(0, cursor);
-    postCursorContentRef.current = content.slice(cursor);
-    voiceFinalAccumulatedRef.current = '';
-    startRecording();
-  }, [inputRef, startRecording]);
+    const handleStartRecording = useCallback(() => {
+      const content = inputRef.current?.getInputContent() ?? '';
+      const cursor = inputRef.current?.getCursorPosition() ?? content.length;
+      // Split content at cursor so voice text is inserted at that exact position
+      preCursorContentRef.current = content.slice(0, cursor);
+      postCursorContentRef.current = content.slice(cursor);
+      voiceFinalAccumulatedRef.current = '';
+      startRecording();
+    }, [inputRef, startRecording]);
 
-  const handleStopRecording = useCallback(() => {
-    stopRecording();
-    inputRef.current?.focus();
-  }, [inputRef, stopRecording]);
+    const handleStopRecording = useCallback(() => {
+      stopRecording();
+      inputRef.current?.focus();
+    }, [inputRef, stopRecording]);
 
-  if (!isSupported) return null;
+    useImperativeHandle(ref, () => ({ stop: handleStopRecording }), [handleStopRecording]);
 
-  const styles = getStyles(isRecording, disabled);
+    if (!isSupported) return null;
 
-  return (
-    <Box
-      component="span"
-      sx={styles.wrapper}
-    >
-      <Tooltip
-        title={isRecording ? 'Voice input active' : 'Start voice input'}
-        placement="top"
+    const styles = getStyles(isRecording, disabled);
+
+    return (
+      <Box
+        component="span"
+        sx={styles.wrapper}
       >
-        <Box component="span">
-          <BaseBtn
-            variant={BUTTON_VARIANTS.icon}
-            color={isRecording ? 'tertiary' : 'secondary'}
-            onClick={isRecording ? undefined : handleStartRecording}
-            aria-label={isRecording ? 'voice input active' : 'start voice input'}
-            aria-pressed={isRecording}
-            disabled={disabled || isRecording}
-            sx={styles.micButton}
-          >
-            <MicIcon sx={styles.icon} />
-          </BaseBtn>
-        </Box>
-      </Tooltip>
-
-      {isRecording && (
         <Tooltip
-          title="Stop dictation"
+          title={isRecording ? 'Voice input active' : 'Start voice input'}
           placement="top"
         >
           <Box component="span">
             <BaseBtn
               variant={BUTTON_VARIANTS.icon}
-              color="secondary"
-              aria-label="stop voice input"
-              onClick={handleStopRecording}
-              disabled={disabled}
-              sx={styles.stopButton}
+              color={isRecording ? 'tertiary' : 'secondary'}
+              onClick={isRecording ? undefined : handleStartRecording}
+              aria-label={isRecording ? 'voice input active' : 'start voice input'}
+              aria-pressed={isRecording}
+              disabled={disabled || isRecording}
+              sx={styles.micButton}
             >
-              <StopIcon sx={styles.icon} />
+              <MicIcon sx={styles.icon} />
             </BaseBtn>
           </Box>
         </Tooltip>
-      )}
-    </Box>
-  );
-});
+
+        {isRecording && (
+          <Tooltip
+            title="Stop dictation"
+            placement="top"
+          >
+            <Box component="span">
+              <BaseBtn
+                variant={BUTTON_VARIANTS.icon}
+                color="secondary"
+                aria-label="stop voice input"
+                onClick={handleStopRecording}
+                disabled={disabled}
+                sx={styles.stopButton}
+              >
+                <StopIcon sx={styles.icon} />
+              </BaseBtn>
+            </Box>
+          </Tooltip>
+        )}
+      </Box>
+    );
+  }),
+);
 
 VoiceButton.displayName = 'VoiceButton';
 

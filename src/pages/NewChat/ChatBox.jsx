@@ -1894,6 +1894,7 @@ const ChatBox = forwardRef((props, boxRef) => {
             />
           )}
           <NewChatInput
+            conversationId={activeConversation?.id}
             placeholder={inputPlaceholder}
             ref={chatInput}
             onSend={onSendMessage}
