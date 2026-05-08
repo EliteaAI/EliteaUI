@@ -79,15 +79,15 @@ const VoiceButton = memo(props => {
     { projectId, section: 'asr', include_shared: true },
     { skip: !projectId },
   );
-  const defaultAsrModel = asrModelsData?.items?.find(m => m.default) ?? asrModelsData?.items?.[0];
-  const hasServerAsr = !!defaultAsrModel;
+  // Server ASR fallback: default model first, then any available model
+  const asrModel = asrModelsData?.items?.find(m => m.default) ?? asrModelsData?.items?.[0];
 
   const serverHook = useStreamingSpeechRecognition({
     onTranscript: handleTranscript,
     onError: handleVoiceError,
     socket,
     projectId,
-    asrModel: defaultAsrModel,
+    asrModel,
   });
 
   const clientHook = useSpeechRecognition({
@@ -95,7 +95,10 @@ const VoiceButton = memo(props => {
     onError: handleVoiceError,
   });
 
-  const { isRecording, isSupported, startRecording, stopRecording } = hasServerAsr ? serverHook : clientHook;
+  // Priority: 1. browser Speech API, 2. default server ASR, 3. first available server ASR, 4. hide button
+  const { isRecording, isSupported, startRecording, stopRecording } = clientHook.isSupported
+    ? clientHook
+    : serverHook;
 
   useEffect(() => {
     onRecordingChange?.(isRecording);

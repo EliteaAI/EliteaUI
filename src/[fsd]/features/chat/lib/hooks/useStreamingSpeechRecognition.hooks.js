@@ -2,13 +2,25 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { sioEvents } from '@/common/constants';
 
+// Buffer sizes at 24 kHz — trade-off between latency and API call frequency
+// Whisper is a batch API with rate limits, so larger chunks reduce request frequency.
+// Realtime models stream continuously and benefit from lower latency.
+const BUFFER_SIZE_WHISPER = 7200; // 300 ms — reduce Whisper API call frequency
+const BUFFER_SIZE_REALTIME = 4800; // 200 ms — lower latency for streaming models
+
+// Mirrors the backend _is_whisper_model() check
+const isWhisperModel = name => Boolean(name && name.toLowerCase().includes('whisper'));
+
 // AudioWorklet processor code — runs on the audio thread, not the main thread
 const PROCESSOR_CODE = `
 class AudioChunkProcessor extends AudioWorkletProcessor {
   constructor() {
     super();
     this._buffer = [];
-    this._bufferSize = 7200; // 300ms at 24kHz
+    this._bufferSize = 4800; // default — overridden via port message before audio flows
+    this.port.onmessage = (e) => {
+      if (e.data?.bufferSize) this._bufferSize = e.data.bufferSize;
+    };
   }
 
   process(inputs) {
@@ -116,6 +128,10 @@ export const useStreamingSpeechRecognition = ({
       const source = audioContext.createMediaStreamSource(stream);
       const workletNode = new AudioWorkletNode(audioContext, 'audio-chunk-processor');
       workletNodeRef.current = workletNode;
+
+      // Configure chunk size before audio starts flowing
+      const bufferSize = isWhisperModel(asrModel?.name) ? BUFFER_SIZE_WHISPER : BUFFER_SIZE_REALTIME;
+      workletNode.port.postMessage({ bufferSize });
 
       workletNode.port.onmessage = e => {
         const base64 = float32ToPcm16Base64(e.data);

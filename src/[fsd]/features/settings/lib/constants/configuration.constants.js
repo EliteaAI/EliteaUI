@@ -1,7 +1,7 @@
 export const ICON_TYPE_MAP = {
   VERTEX_AI: ['vertex_ai', 'vertexai'],
   AI_DIAL: ['ai_dial', 'dial'],
-  OPEN_AI: ['open_ai', 'openai', 'gpt', 'codex mini', 'embedding-ada'],
+  OPEN_AI: ['open_ai', 'openai', 'gpt', 'codex mini', 'embedding-ada', 'whisper'],
   CLAUDE: ['claude', 'anthropic', 'opus', 'haiku'],
   OLLAMA: ['ollama'],
   AMAZON_BEDROCK: ['amazon_bedrock'],
