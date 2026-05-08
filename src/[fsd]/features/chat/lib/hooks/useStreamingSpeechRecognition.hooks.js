@@ -11,24 +11,46 @@ const BUFFER_SIZE_REALTIME = 4800; // 200 ms — lower latency for streaming mod
 // Mirrors the backend _is_whisper_model() check
 const isWhisperModel = name => Boolean(name && name.toLowerCase().includes('whisper'));
 
+// Target sample rate expected by both Whisper and the Realtime API
+const TARGET_SAMPLE_RATE = 24000;
+
 // AudioWorklet processor code — runs on the audio thread, not the main thread
 const PROCESSOR_CODE = `
 class AudioChunkProcessor extends AudioWorkletProcessor {
   constructor() {
     super();
     this._buffer = [];
-    this._bufferSize = 4800; // default — overridden via port message before audio flows
+    this._bufferSize = 4800;    // output samples at TARGET_SAMPLE_RATE
+    this._inputRate = 44100;    // overridden via port message
+    this._outputRate = 24000;   // overridden via port message
     this.port.onmessage = (e) => {
-      if (e.data?.bufferSize) this._bufferSize = e.data.bufferSize;
+      if (e.data?.bufferSize)  this._bufferSize  = e.data.bufferSize;
+      if (e.data?.inputRate)   this._inputRate   = e.data.inputRate;
+      if (e.data?.outputRate)  this._outputRate  = e.data.outputRate;
     };
+  }
+
+  _resample(input) {
+    if (this._inputRate === this._outputRate) return input;
+    const ratio = this._inputRate / this._outputRate;
+    const outLen = Math.round(input.length / ratio);
+    const out = new Float32Array(outLen);
+    for (let i = 0; i < outLen; i++) {
+      const src = i * ratio;
+      const lo = Math.floor(src);
+      const hi = Math.min(lo + 1, input.length - 1);
+      out[i] = input[lo] + (input[hi] - input[lo]) * (src - lo);
+    }
+    return out;
   }
 
   process(inputs) {
     const channel = inputs[0]?.[0];
     if (!channel) return true;
 
-    for (let i = 0; i < channel.length; i++) {
-      this._buffer.push(channel[i]);
+    const resampled = this._resample(channel);
+    for (let i = 0; i < resampled.length; i++) {
+      this._buffer.push(resampled[i]);
     }
 
     while (this._buffer.length >= this._bufferSize) {
@@ -115,8 +137,9 @@ export const useStreamingSpeechRecognition = ({
       });
       streamRef.current = stream;
 
-      // AudioContext at 24kHz — required by OpenAI Realtime API
-      const audioContext = new AudioContext({ sampleRate: 24000 });
+      // Use the browser's native sample rate to avoid cross-rate errors (e.g. Firefox).
+      // The worklet resamples to TARGET_SAMPLE_RATE (24 kHz) before sending chunks.
+      const audioContext = new AudioContext();
       audioContextRef.current = audioContext;
 
       // Register the AudioWorklet processor via a Blob URL
@@ -129,9 +152,13 @@ export const useStreamingSpeechRecognition = ({
       const workletNode = new AudioWorkletNode(audioContext, 'audio-chunk-processor');
       workletNodeRef.current = workletNode;
 
-      // Configure chunk size before audio starts flowing
+      // Configure chunk size and sample rates before audio starts flowing
       const bufferSize = isWhisperModel(asrModel?.name) ? BUFFER_SIZE_WHISPER : BUFFER_SIZE_REALTIME;
-      workletNode.port.postMessage({ bufferSize });
+      workletNode.port.postMessage({
+        bufferSize,
+        inputRate: audioContext.sampleRate,
+        outputRate: TARGET_SAMPLE_RATE,
+      });
 
       workletNode.port.onmessage = e => {
         const base64 = float32ToPcm16Base64(e.data);
@@ -160,27 +187,33 @@ export const useStreamingSpeechRecognition = ({
     }
   }, [socket, projectId, asrModel, float32ToPcm16Base64]);
 
-  const stopRecording = useCallback(() => {
-    workletNodeRef.current?.disconnect();
-    audioContextRef.current?.close();
-    streamRef.current?.getTracks().forEach(t => t.stop());
+  const _releaseAudio = useCallback(() => {
+    // Null refs first so concurrent calls (stopRecording + unmount) don't double-close
+    const worklet = workletNodeRef.current;
+    const ctx = audioContextRef.current;
+    const stream = streamRef.current;
     workletNodeRef.current = null;
     audioContextRef.current = null;
     streamRef.current = null;
 
+    worklet?.disconnect();
+    if (ctx && ctx.state !== 'closed') ctx.close();
+    stream?.getTracks().forEach(t => t.stop());
+  }, []);
+
+  const stopRecording = useCallback(() => {
+    _releaseAudio();
     socket?.emit(sioEvents.asr_stop, {});
     setIsRecording(false);
-  }, [socket]);
+  }, [socket, _releaseAudio]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      workletNodeRef.current?.disconnect();
-      audioContextRef.current?.close();
-      streamRef.current?.getTracks().forEach(t => t.stop());
+      _releaseAudio();
       socket?.emit(sioEvents.asr_stop, {});
     };
-  }, [socket]);
+  }, [socket, _releaseAudio]);
 
   return { isRecording, isSupported: !!asrModel, startRecording, stopRecording };
 };

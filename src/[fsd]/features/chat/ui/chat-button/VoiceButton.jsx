@@ -75,12 +75,32 @@ const VoiceButton = memo(props => {
     [toastError],
   );
 
+  const isWhisperModel = useCallback(name => Boolean(name && name.toLowerCase().includes('whisper')), []);
+
+  /**
+   * Select the best available ASR model following priority order:
+   * default streaming → first streaming → default whisper → first whisper
+   */
+  const selectAsrModel = useCallback(
+    items => {
+      const streamingModels = items.filter(m => !isWhisperModel(m.name));
+      const whisperModels = items.filter(m => isWhisperModel(m.name));
+
+      return (
+        streamingModels.find(m => m.default) ??
+        streamingModels[0] ??
+        whisperModels.find(m => m.default) ??
+        whisperModels[0]
+      );
+    },
+    [isWhisperModel],
+  );
+
   const { data: asrModelsData } = useListModelsQuery(
     { projectId, section: 'asr', include_shared: true },
     { skip: !projectId },
   );
-  // Server ASR fallback: default model first, then any available model
-  const asrModel = asrModelsData?.items?.find(m => m.default) ?? asrModelsData?.items?.[0];
+  const asrModel = selectAsrModel(asrModelsData?.items ?? []);
 
   const serverHook = useStreamingSpeechRecognition({
     onTranscript: handleTranscript,
@@ -95,10 +115,10 @@ const VoiceButton = memo(props => {
     onError: handleVoiceError,
   });
 
-  // Priority: 1. browser Speech API, 2. default server ASR, 3. first available server ASR, 4. hide button
-  const { isRecording, isSupported, startRecording, stopRecording } = clientHook.isSupported
-    ? clientHook
-    : serverHook;
+  // Priority: 1. streaming model, 2. whisper model, 3. browser Speech API, 4. hide button
+  const { isRecording, isSupported, startRecording, stopRecording } = serverHook.isSupported
+    ? serverHook
+    : clientHook;
 
   useEffect(() => {
     onRecordingChange?.(isRecording);
