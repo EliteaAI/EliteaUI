@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import { Box, Chip, Typography } from '@mui/material';
@@ -10,7 +10,9 @@ import ListItemText from '@mui/material/ListItemText';
 
 import { ChatAttachment, ChatContinue, ChatHitlActions } from '@/[fsd]/features/chat/ui';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
+import { BaseBtn } from '@/[fsd]/shared/ui/button';
 import ArrowRightIcon from '@/assets/arrow-right-icon.svg?react';
+import MicphoneIcon from '@/assets/megaphone.svg?react';
 import {
   CANVAS_ADMIN_USER,
   CANVAS_SYSTEM_USER,
@@ -102,8 +104,13 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
     // Swarm mode props
     isSwarmChild = false,
     swarmAgentName = '',
+    // Speaking mode TTS
+    isSpeakingMode = false,
+    isLastMessage = false,
+    onAutoSpeak,
+    speakingMessageId,
+    spokenRange,
   } = props;
-
   const [isErrorExpanded, setIsErrorExpanded] = useState(false);
 
   const downloadErrorTrace = useCallback(() => {
@@ -168,6 +175,40 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
     [answer, message_items],
   );
   const realAnswer = useMemo(() => convertJsonToString(rawAnswer || '', true), [rawAnswer]);
+
+  // Progressive highlight: always from start of message to current spoken position
+  const activeSpokenRange = useMemo(() => {
+    if (messageId !== speakingMessageId || !spokenRange) return null;
+    return { start: 0, end: spokenRange.end };
+  }, [messageId, speakingMessageId, spokenRange]);
+
+  // Cumulative start offsets of each message_item in the joined realAnswer string
+  const messageItemOffsets = useMemo(() => {
+    if (!message_items?.length) return {};
+    const offsets = {};
+    let pos = 0;
+    message_items.forEach((item, idx) => {
+      const rawContent =
+        item.item_type === 'canvas_message'
+          ? item.item_details.latest_version?.canvas_content || ''
+          : item.item_details.content;
+      const str = rawContent == null ? '' : String(rawContent);
+      if (item.item_type === 'text_message') {
+        offsets[item.uuid] = pos;
+      }
+      pos += str.length;
+      if (idx < message_items.length - 1) pos += 1; // comma separator from .join()
+    });
+    return offsets;
+  }, [message_items]);
+
+  // Auto-speak AI response in speaking mode when streaming/loading ends (last message only)
+  useEffect(() => {
+    if (isSpeakingMode && isLastMessage && !isStreaming && !isLoading && realAnswer) {
+      onAutoSpeak?.(realAnswer, messageId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isStreaming, isLoading]);
 
   // Check if this is an Application participant
   const isApplicationParticipant = participant?.entity_name === ChatParticipantType.Applications;
@@ -475,8 +516,9 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                   onEdit={onEdit}
                   selectedCodeBlockInfo={selectedCodeBlockInfo}
                   isStreaming={isStreaming || isRegenerating}
+                  spokenRange={activeSpokenRange}
                 >
-                  {realAnswer || ''}
+                  {realAnswer ?? ''}
                 </Markdown>
               )}
 
@@ -502,7 +544,13 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                           }
                         />
                       );
-                    case 'text_message':
+                    case 'text_message': {
+                      const itemOffset = messageItemOffsets[item.uuid] ?? 0;
+                      const itemEndPos = activeSpokenRange
+                        ? Math.max(0, activeSpokenRange.end - itemOffset)
+                        : 0;
+                      const itemSpokenRange =
+                        activeSpokenRange && itemEndPos > 0 ? { start: 0, end: itemEndPos } : null;
                       return (
                         <Markdown
                           key={item.uuid}
@@ -512,10 +560,12 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                           selectedCodeBlockInfo={selectedCodeBlockInfo}
                           messageItemId={item.id}
                           isStreaming={isStreaming || isRegenerating}
+                          spokenRange={itemSpokenRange}
                         >
                           {convertJsonToString(item.item_details.content) || ''}
                         </Markdown>
                       );
+                    }
 
                     default:
                       return null;
@@ -654,6 +704,21 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                   className="actionButtons"
                   sx={styles.buttonsContainer}
                 >
+                  {onAutoSpeak && !!realAnswer && (
+                    <StyledTooltip
+                      title="Read out"
+                      placement="top"
+                    >
+                      <BaseBtn
+                        disabled={isProcessing || !realAnswer}
+                        sx={styles.iconButton}
+                        variant="tertiary"
+                        onClick={() => onAutoSpeak(realAnswer, messageId)}
+                      >
+                        <MicphoneIcon sx={styles.icon} />
+                      </BaseBtn>
+                    </StyledTooltip>
+                  )}
                   {onCopy && (!!answer || !!message_items?.length || !!exception) && (
                     <StyledTooltip
                       title="Copy to clipboard"
@@ -981,6 +1046,10 @@ const applicationAnswerStyles = (
   },
   iconButton: {
     marginLeft: '0',
+    minWidth: '1rem',
+    width: '1rem',
+    height: '1.75rem',
+    padding: '0',
   },
   icon: {
     fontSize: '1rem',

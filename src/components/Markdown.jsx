@@ -355,6 +355,7 @@ const Token = ({
   messageItemId,
   isStreaming,
   showToolbar = true,
+  spokenRange,
 }) => {
   const theme = useTheme();
   const styles = getStyles();
@@ -434,7 +435,33 @@ const Token = ({
         );
       }
     }
-    case 'text':
+    case 'text': {
+      if (spokenRange && markedToken.startPos !== undefined) {
+        const ts = markedToken.startPos;
+        const te = markedToken.startPos + markedToken.raw.length;
+        const overlapStart = Math.max(spokenRange.start, ts);
+        const overlapEnd = Math.min(spokenRange.end, te);
+        if (overlapStart < overlapEnd) {
+          const before = markedToken.raw.slice(0, overlapStart - ts);
+          const highlighted = markedToken.raw.slice(overlapStart - ts, overlapEnd - ts);
+          const after = markedToken.raw.slice(overlapEnd - ts);
+          return (
+            <Box
+              component="span"
+              sx={styles.text}
+            >
+              {before}
+              <Box
+                component="mark"
+                sx={{ background: 'transparent', color: 'white', fontWeight: 500 }}
+              >
+                {highlighted}
+              </Box>
+              {after}
+            </Box>
+          );
+        }
+      }
       return (
         <Box
           component="span"
@@ -443,6 +470,7 @@ const Token = ({
           {markedToken.raw}
         </Box>
       );
+    }
     case 'br':
       return <Box component="br" />;
     case 'table':
@@ -501,22 +529,31 @@ const Token = ({
     }
     case 'paragraph': {
       try {
-        return markedToken.tokens?.length ? (
-          <Box
-            component="p"
-            sx={styles.paragraph}
-          >
-            {markedToken.tokens.map((token, idx) => (
-              <Token
-                markedToken={token}
-                key={idx}
-                renderHtml={renderHtml}
-              />
-            ))}
-          </Box>
-        ) : (
-          <MuiMarkdown overrides={overrides(markedToken.raw)}>{markedToken.raw}</MuiMarkdown>
-        );
+        if (markedToken.tokens?.length) {
+          // Stamp startPos onto each inline sub-token so spokenRange overlap works
+          let subPos = markedToken.startPos ?? 0;
+          const subTokens = markedToken.tokens.map(token => {
+            const withPos = { ...token, startPos: subPos };
+            subPos += token.raw.length;
+            return withPos;
+          });
+          return (
+            <Box
+              component="p"
+              sx={styles.paragraph}
+            >
+              {subTokens.map((token, idx) => (
+                <Token
+                  markedToken={token}
+                  key={idx}
+                  renderHtml={renderHtml}
+                  spokenRange={spokenRange}
+                />
+              ))}
+            </Box>
+          );
+        }
+        return <MuiMarkdown overrides={overrides(markedToken.raw)}>{markedToken.raw}</MuiMarkdown>;
       } catch (error) {
         // eslint-disable-next-line no-console
         console.error('render paragraph markdown error: ', error);
@@ -556,6 +593,7 @@ const Markdown = ({
   tableId,
   // For toolbar
   showToolbar,
+  spokenRange,
 }) => {
   const styles = getStyles();
   const { localGridTheme } = useEliteATheme();
@@ -600,6 +638,7 @@ const Markdown = ({
             messageItemId={messageItemId}
             isStreaming={isStreaming}
             showToolbar={showToolbar}
+            spokenRange={spokenRange}
           />
         ))}
       </Box>

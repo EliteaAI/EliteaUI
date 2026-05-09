@@ -42,6 +42,10 @@ const ChatMessageList = memo(props => {
     hideContinueButton,
     hideHitlActions,
     onOpenArtifactPreview,
+    isSpeakingMode = false,
+    onAutoSpeak,
+    speakingMessageId,
+    spokenRange,
   } = props;
 
   const dispatch = useDispatch();
@@ -310,6 +314,12 @@ const ChatMessageList = memo(props => {
               isSwarmChild={message.isSwarmChild}
               swarmAgentName={message.swarmAgentName}
               parentMessageId={message.parentMessageId}
+              // Speaking mode TTS
+              isSpeakingMode={isSpeakingMode}
+              isLastMessage={chat_history.length - 1 === index}
+              onAutoSpeak={onAutoSpeak}
+              speakingMessageId={speakingMessageId}
+              spokenRange={spokenRange}
             />
           );
         })}

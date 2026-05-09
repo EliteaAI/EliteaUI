@@ -10,3 +10,5 @@ export { useSlashHighlights } from './useSlashHighlights.hooks';
 export { useSlashMention } from './useSlashMention.hooks';
 export { useSpeechRecognition } from './useSpeechRecognition.hooks';
 export { useStreamingSpeechRecognition } from './useStreamingSpeechRecognition.hooks';
+export { useTextToSpeech } from './useTextToSpeech.hooks';
+export { useSpeakingModeLoop } from './useSpeakingModeLoop.hooks';

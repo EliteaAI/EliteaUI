@@ -6,12 +6,13 @@ import { Box, IconButton, TextField, Typography } from '@mui/material';
 
 import StyledCircleProgress from '@/ComponentsLib/CircularProgress';
 import Tooltip from '@/ComponentsLib/Tooltip';
+import { SendButton } from '@/[fsd]/features/chat/ui/chat-button';
 import HighlightedText from '@/[fsd]/features/chat/ui/highlighted-text/HighlightedText';
 import { useFileDragAndDrop } from '@/[fsd]/shared/lib/hooks';
+import { BaseBtn } from '@/[fsd]/shared/ui/button';
 import StopIcon from '@/assets/stop-icon.svg?react';
 import { generateRandomAppendix, renameFile } from '@/common/attachmentValidationUtils';
 import FileList from '@/components/Chat/FileList';
-import SendIcon from '@/components/Icons/SendIcon';
 import useCtrlEnterKeyEventsHandler from '@/hooks/useCtrlEnterKeyEventsHandler';
 
 import { useMentionDetection } from './useMentionDetection';
@@ -75,6 +76,9 @@ const UserInput = forwardRef((props, ref) => {
     uploadProgress = 0,
     isCreatingConversation = false,
     isRecording = false,
+    isSpeakingMode = false,
+    onEnterSpeakingMode,
+    onExitSpeakingMode,
   } = props;
 
   const inputRef = useRef(null);
@@ -384,23 +388,17 @@ const UserInput = forwardRef((props, ref) => {
             {footer}
             {!isStreaming || isUploadingAttachments ? (
               <Box sx={styles.sendButtonContainer}>
-                <Tooltip
-                  title={tooltipOfSendButton}
-                  placement="top"
-                >
-                  <Box component="span">
-                    <IconButton
-                      variant="icon"
-                      disabled={disabledSend || !question}
-                      onClick={onEnterDown}
-                      aria-label="send your question"
-                      sx={styles.sendButton(sendButton)}
-                    >
-                      <SendIcon sx={styles.sendIcon(sendButton)} />
-                    </IconButton>
-                  </Box>
-                </Tooltip>
-
+                <SendButton
+                  isSpeakingMode={isSpeakingMode}
+                  question={question}
+                  disabledSend={disabledSend}
+                  onEnterSpeakingMode={onEnterSpeakingMode}
+                  onExitSpeakingMode={onExitSpeakingMode}
+                  onSend={onEnterDown}
+                  tooltipOfSendButton={tooltipOfSendButton}
+                  sendButton={sendButton}
+                  styles={styles}
+                />
                 {showLoading && (
                   <StyledCircleProgress {...(isUploadingAttachments && { progress: uploadProgress })} />
                 )}
@@ -411,14 +409,14 @@ const UserInput = forwardRef((props, ref) => {
                 placement="top"
               >
                 <Box component="span">
-                  <IconButton
+                  <BaseBtn
                     variant="icon"
                     color="secondary"
                     sx={styles.stopButton(stopButton)}
                     onClick={onStop}
                   >
                     <StopIcon style={styles.stopIconStyle} />
-                  </IconButton>
+                  </BaseBtn>
                 </Box>
               </Tooltip>
             )}
@@ -549,6 +547,32 @@ const userInputStyles = (isFocused, isDragOver, isRecording) => {
       alignItems: 'center',
       justifyContent: 'center',
     },
+    closeButton: {
+      height: '1.75rem',
+      width: '1.75rem',
+    },
+    voiceModePill: ({ palette }) => ({
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.5rem',
+      paddingLeft: '0.625rem',
+      height: '1.75rem',
+      borderRadius: '0.875rem',
+      border: `0.0625rem solid ${palette.border.chatContinue}`,
+      flexShrink: 0,
+      color: palette.primary.main,
+    }),
+    voiceModeIcon: {
+      width: '1.5rem',
+      height: '1.5rem',
+      flexShrink: 0,
+    },
+    voiceModeClose: ({ palette }) => ({
+      width: '1.5rem',
+      height: '1.5rem',
+      color: palette.text.secondary,
+      flexShrink: 0,
+    }),
     sendButton: sendButton => ({
       height: sendButton?.size ?? '1.75rem',
       width: sendButton?.size ?? '1.75rem',
@@ -559,6 +583,7 @@ const userInputStyles = (isFocused, isDragOver, isRecording) => {
       '&:hover': {
         backgroundColor: sendButton?.background ?? '#6ae8fa',
       },
+      color: sendButton?.iconColor ?? '#0E131D',
     }),
     sendIcon: sendButton => ({
       fontSize: '1.125rem',

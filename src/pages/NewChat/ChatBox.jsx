@@ -16,7 +16,7 @@ import { Box } from '@mui/system';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import { ChatHelpers, NewConversationHelpers } from '@/[fsd]/features/chat/lib/helpers';
-import { useSlashMention } from '@/[fsd]/features/chat/lib/hooks';
+import { useSlashMention, useTextToSpeech } from '@/[fsd]/features/chat/lib/hooks';
 import { SlashSuggestionList } from '@/[fsd]/features/chat/ui';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import {
@@ -69,6 +69,7 @@ import ChatConversationStarters from './ChatConversationStarters';
 import NewChatInput from './NewChatInput';
 import RecommendationList from './Recommendations/RecommendationList';
 import SearchResultList from './Recommendations/SearchResultList';
+import VoiceMiniPlayer from './VoiceMiniPlayer';
 
 const getParticipantById = (conversation, participantId) => {
   return conversation?.participants.find(({ id }) => id === participantId) || {};
@@ -254,6 +255,32 @@ const ChatBox = forwardRef((props, boxRef) => {
   const [isMentioningEveryone, setIsMentioningEveryone] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [hasStarterBeenSent, setHasStarterBeenSent] = useState(false);
+  const [isSpeakingMode, setIsSpeakingMode] = useState(false);
+  const [speakingMessageId, setSpeakingMessageId] = useState(null);
+  const {
+    speak,
+    // we may need stopTTS in the future if we want to add a "Stop" button in the UI
+    // eslint-disable-next-line no-unused-vars
+    stop: stopTTS,
+    pause: pauseTTS,
+    resume: resumeTTS,
+    isPlaying,
+    isPaused,
+    spokenRange,
+  } = useTextToSpeech({ ttsModel, socket });
+
+  const handleAutoSpeak = useCallback(
+    (text, msgId) => {
+      if (!text) return;
+      setSpeakingMessageId(msgId ?? null);
+      speak(text);
+    },
+    [speak],
+  );
+
+  useEffect(() => {
+    if (!isPlaying && !isPaused) setSpeakingMessageId(null);
+  }, [isPlaying, isPaused]);
   const isTheUserChattingNow = useMemo(() => {
     const latest40Messages = chat_history.slice(-40);
     let isChatting = false;
@@ -273,6 +300,12 @@ const ChatBox = forwardRef((props, boxRef) => {
     { projectId, include_shared: true },
     { skip: !projectId },
   );
+
+  const { data: ttsModelsData } = useListModelsQuery(
+    { projectId, section: 'tts', include_shared: true },
+    { skip: !projectId },
+  );
+  const ttsModel = ttsModelsData?.items?.find(m => m.default) ?? ttsModelsData?.items?.[0] ?? null;
   const [selectedModel, setSelectedModel] = useState(null);
 
   const defaultModel = useMemo(() => {
@@ -1843,6 +1876,10 @@ const ChatBox = forwardRef((props, boxRef) => {
           hideContinueButton={isAgentsPage}
           hideHitlActions={hitlEditMode}
           onOpenArtifactPreview={onOpenArtifactPreview}
+          isSpeakingMode={isSpeakingMode}
+          onAutoSpeak={handleAutoSpeak}
+          speakingMessageId={speakingMessageId}
+          spokenRange={spokenRange}
         />
         {displayConversationStarters && (
           <ChatConversationStarters
@@ -1850,6 +1887,12 @@ const ChatBox = forwardRef((props, boxRef) => {
             conversation_starters={hasStarterBeenSent || isTheUserChattingNow ? [] : conversationStarters}
           />
         )}
+        <VoiceMiniPlayer
+          isPlaying={isPlaying}
+          isPaused={isPaused}
+          onPause={pauseTTS}
+          onResume={resumeTTS}
+        />
         <Box sx={hitlEditMode ? styles.inputWrapperHitl : styles.inputWrapper}>
           {hitlEditMode && (
             <Box sx={styles.hitlInfoBanner}>
@@ -1953,6 +1996,9 @@ const ChatBox = forwardRef((props, boxRef) => {
             internal_tools={activeConversation?.meta?.internal_tools || []}
             projectId={projectId}
             slashHighlights={slashHighlightRanges}
+            isSpeakingMode={isSpeakingMode}
+            onSpeakingModeToggle={() => setIsSpeakingMode(v => !v)}
+            isTTSPlaying={isPlaying}
           />
         </Box>
       </ChatBodyContainer>
