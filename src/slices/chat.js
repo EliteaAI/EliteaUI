@@ -64,3 +64,5 @@ const chatSlice = createSlice({
 
 export const { name, actions } = chatSlice;
 export default chatSlice.reducer;
+
+export const selectMessageIdToView = state => state.chat.messageIdToView;

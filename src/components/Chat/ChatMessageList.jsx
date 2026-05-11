@@ -11,7 +11,7 @@ import ApplicationAnswer from '@/components/Chat/ApplicationAnswer';
 import { MessageList } from '@/components/Chat/StyledComponents';
 import UserMessage from '@/components/Chat/UserMessage';
 import { isParticipantStillActive } from '@/hooks/chat/useParticipantName';
-import { actions as chatActions } from '@/slices/chat';
+import { actions as chatActions, selectMessageIdToView } from '@/slices/chat';
 
 const isEditAPIReady = false;
 
@@ -48,6 +48,7 @@ const ChatMessageList = memo(props => {
   const listRef = useRef();
   const listRefs = useRef([]);
   const messagesEndRef = useRef();
+  const messageIdToView = useSelector(selectMessageIdToView);
 
   // Simplified autoscroll: scroll new message to top of viewport
   const [bottomSpacer, setBottomSpacer] = useState(0);
@@ -116,6 +117,15 @@ const ChatMessageList = memo(props => {
       messagesEndRef.current?.scrollIntoView({ block: 'end' });
     }
   }, [activeConversation?.id, askingQuestionId]);
+
+  useEffect(() => {
+    if (!messageIdToView || !chat_history?.length) return;
+    const index = chat_history.findIndex(msg => msg.id === messageIdToView || msg.uuid === messageIdToView);
+    if (index !== -1) {
+      listRefs.current[index]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      dispatch(chatActions.setMessageIdToView({ messageIdToView: '' }));
+    }
+  }, [messageIdToView, chat_history, dispatch]);
 
   useEffect(() => {
     const scrollEl = listRef.current?.getScrollElement();

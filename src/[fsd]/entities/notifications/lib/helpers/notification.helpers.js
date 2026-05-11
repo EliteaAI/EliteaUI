@@ -14,10 +14,14 @@ export const resolveHref = (eventType, meta, projectId) => {
     case NotificationType.PersonalAccessTokenExpiring:
       return `${base}${RouteDefinitions.SettingsWithTab.replace(':tab', 'tokens')}`;
 
-    case NotificationType.ChatUserAdded: {
+    case NotificationType.ChatUserAdded:
+    case NotificationType.ChatUserMentioned: {
       const convId = meta?.conversation_id;
+      const messageId = meta?.message_id;
       const route = `${base}/${projectId}${RouteDefinitions.Chat}`;
-      return convId ? `${route}?${SearchParams.Conversation}=${convId}` : route;
+      if (!convId) return route;
+      const url = `${route}?${SearchParams.Conversation}=${convId}`;
+      return messageId ? `${url}&${SearchParams.MessageId}=${messageId}` : url;
     }
 
     case NotificationType.IndexDataChanged: {

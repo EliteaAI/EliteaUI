@@ -975,6 +975,14 @@ const NewChat = props => {
     onSelectConversation,
   ]);
 
+  const messageIdFromUrl = searchParams.get(SearchParams.MessageId);
+
+  useEffect(() => {
+    if (messageIdFromUrl && activeConversation?.id) {
+      dispatch(chatActions.setMessageIdToView({ messageIdToView: messageIdFromUrl }));
+    }
+  }, [activeConversation?.id, dispatch, messageIdFromUrl]);
+
   const onParticipantsCollapsed = useCallback(() => {
     setCollapsedParticipants(prev => !prev);
   }, []);
