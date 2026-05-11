@@ -560,6 +560,7 @@ const NewChat = props => {
     isLoadFolders: isLoadConversations,
     isLoadMoreFolders: isLoadMoreConversations,
     onLoadMoreFolders: onLoadMoreConversations,
+    isConversationsLoaded,
   } = useQueryFoldersList({
     toastError,
     setFolders,
@@ -955,11 +956,13 @@ const NewChat = props => {
     const conversationFromUrl = conversationList.find(
       conversation => conversation.id == conversationIdFromUrl,
     );
-    if (!isLoadMoreConversations) {
-      if (conversationFromUrl && !activeConversation?.id) {
+    if (isConversationsLoaded) {
+      if (conversationFromUrl) {
         setConversationNotFound(false);
-        onSelectConversation(conversationFromUrl);
-      } else if (!conversationFromUrl && !activeConversation?.id) {
+        if (!activeConversation?.id) {
+          onSelectConversation(conversationFromUrl);
+        }
+      } else if (!activeConversation?.id) {
         setConversationNotFound(true);
       }
     }
@@ -968,7 +971,7 @@ const NewChat = props => {
     conversationIdFromUrl,
     conversations,
     folders,
-    isLoadMoreConversations,
+    isConversationsLoaded,
     onSelectConversation,
   ]);
 
