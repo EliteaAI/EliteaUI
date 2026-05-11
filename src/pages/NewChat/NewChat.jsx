@@ -944,8 +944,16 @@ const NewChat = props => {
     const conversationFromUrl = conversationList.find(
       conversation => conversation.id == conversationIdFromUrl,
     );
-    if (!isLoadMoreConversations && conversationIdFromUrl && conversationFromUrl && !activeConversation?.id) {
-      onSelectConversation(conversationFromUrl);
+    if (!isLoadMoreConversations && conversationIdFromUrl && !activeConversation?.id) {
+      if (conversationFromUrl) {
+        onSelectConversation(conversationFromUrl);
+      } else {
+        // Conversation not in list - try to fetch by ID (e.g., webhook-triggered conversations)
+        const numericId = parseInt(conversationIdFromUrl, 10);
+        if (!isNaN(numericId)) {
+          onSelectConversation({ id: numericId });
+        }
+      }
     }
   }, [
     activeConversation?.id,

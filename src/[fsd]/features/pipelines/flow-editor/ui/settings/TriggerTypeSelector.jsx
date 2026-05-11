@@ -2,6 +2,7 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
+import LinkIcon from '@mui/icons-material/Link';
 import { Box, IconButton } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
@@ -13,16 +14,26 @@ import { useSelectedProject } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 
 import PipelineScheduleModal from './PipelineScheduleModal';
+import PipelineWebhookModal from './PipelineWebhookModal';
 
 // Trigger types
 export const TRIGGER_TYPES = {
   chat_message: 'chat_message',
   schedule: 'schedule',
+  webhook: 'webhook',
+};
+
+// Webhook types
+export const WEBHOOK_TYPES = {
+  github: 'github',
+  gitlab: 'gitlab',
+  custom: 'custom',
 };
 
 const TRIGGER_OPTIONS = [
   { label: 'Chat Message', value: TRIGGER_TYPES.chat_message },
   { label: 'Schedule', value: TRIGGER_TYPES.schedule },
+  { label: 'Webhook', value: TRIGGER_TYPES.webhook },
 ];
 
 const TriggerTypeSelector = memo(props => {
@@ -39,6 +50,9 @@ const TriggerTypeSelector = memo(props => {
   // State for schedule modal
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
 
+  // State for webhook modal
+  const [isWebhookModalOpen, setIsWebhookModalOpen] = useState(false);
+
   // Fetch current trigger configuration
   const { data: triggerData, isLoading: isFetching } = useGetPipelineTriggerQuery(
     { projectId, versionId },
@@ -54,6 +68,13 @@ const TriggerTypeSelector = memo(props => {
 
   const currentCron = useMemo(() => triggerData?.cron || '0 0 * * 6', [triggerData?.cron]);
 
+  const currentWebhookType = useMemo(
+    () => triggerData?.webhook_type || WEBHOOK_TYPES.github,
+    [triggerData?.webhook_type],
+  );
+
+  const webhookUrl = useMemo(() => triggerData?.webhook_url || '', [triggerData?.webhook_url]);
+
   const handleTriggerTypeChange = useCallback(
     async newType => {
       if (newType === currentTriggerType) return;
@@ -61,6 +82,19 @@ const TriggerTypeSelector = memo(props => {
       if (newType === TRIGGER_TYPES.schedule) {
         // Open modal to configure schedule
         setIsScheduleModalOpen(true);
+      } else if (newType === TRIGGER_TYPES.webhook) {
+        // Save webhook trigger first to generate secret, then open modal
+        try {
+          await updateTrigger({
+            projectId,
+            versionId,
+            type: TRIGGER_TYPES.webhook,
+            webhook_type: currentWebhookType,
+          }).unwrap();
+          setIsWebhookModalOpen(true);
+        } catch (error) {
+          toastError(error?.data?.error || 'Failed to configure webhook');
+        }
       } else {
         // Switch to chat_message
         try {
@@ -75,7 +109,7 @@ const TriggerTypeSelector = memo(props => {
         }
       }
     },
-    [currentTriggerType, projectId, versionId, updateTrigger, toastSuccess, toastError],
+    [currentTriggerType, currentWebhookType, projectId, versionId, updateTrigger, toastSuccess, toastError],
   );
 
   const handleScheduleSubmit = useCallback(
@@ -105,10 +139,65 @@ const TriggerTypeSelector = memo(props => {
     }
   }, [currentTriggerType]);
 
+  const handleWebhookIconClick = useCallback(async () => {
+    if (currentTriggerType === TRIGGER_TYPES.webhook) {
+      // Ensure webhook is saved (generates secret if not exists) before opening modal
+      if (!triggerData?.secret_value) {
+        try {
+          await updateTrigger({
+            projectId,
+            versionId,
+            type: TRIGGER_TYPES.webhook,
+            webhook_type: currentWebhookType,
+          }).unwrap();
+        } catch (error) {
+          toastError(error?.data?.error || 'Failed to load webhook settings');
+          return;
+        }
+      }
+      setIsWebhookModalOpen(true);
+    }
+  }, [
+    currentTriggerType,
+    currentWebhookType,
+    triggerData?.secret_value,
+    projectId,
+    versionId,
+    updateTrigger,
+    toastError,
+  ]);
+
+  const handleWebhookSubmit = useCallback(
+    async (webhookType, newSecretValue) => {
+      try {
+        // Build request with optional new secret
+        const requestData = {
+          projectId,
+          versionId,
+          type: TRIGGER_TYPES.webhook,
+          webhook_type: webhookType,
+        };
+
+        // If user regenerated the secret, include it in the request
+        if (newSecretValue) {
+          requestData.webhook_secret_value = newSecretValue;
+        }
+
+        await updateTrigger(requestData).unwrap();
+        toastSuccess(
+          newSecretValue ? 'Webhook configured with new secret' : 'Webhook configured successfully',
+        );
+      } catch (error) {
+        toastError(error?.data?.error || 'Failed to configure webhook');
+      }
+    },
+    [projectId, versionId, updateTrigger, toastSuccess, toastError],
+  );
+
   const isLoading = isFetching || isUpdating;
 
   const triggerTooltip =
-    'Choose how this pipeline is triggered.\n* Chat Message (default) requires user input.\n* Schedule runs automatically based on a cron expression (input text is ignored, only static data can be used for schedule, i.e. variable/f-string with default values or fixed).';
+    'Choose how this pipeline is triggered.\n* Chat Message (default) requires user input.\n* Schedule runs automatically based on a cron expression.\n* Webhook allows external systems to trigger the pipeline via HTTP POST.';
 
   return (
     <Box sx={styles.container}>
@@ -147,6 +236,23 @@ const TriggerTypeSelector = memo(props => {
             </IconButton>
           </Tooltip>
         )}
+
+        {currentTriggerType === TRIGGER_TYPES.webhook && (
+          <Tooltip
+            title="Edit webhook settings"
+            placement="top"
+          >
+            <IconButton
+              variant="elitea"
+              color="tertiary"
+              sx={styles.scheduleButton}
+              onClick={handleWebhookIconClick}
+              disabled={disabled || isLoading}
+            >
+              <LinkIcon sx={styles.iconStyle} />
+            </IconButton>
+          </Tooltip>
+        )}
       </Box>
 
       <PipelineScheduleModal
@@ -154,6 +260,18 @@ const TriggerTypeSelector = memo(props => {
         onClose={() => setIsScheduleModalOpen(false)}
         onSubmit={handleScheduleSubmit}
         cron={currentCron}
+        isLoading={isUpdating}
+      />
+
+      <PipelineWebhookModal
+        open={isWebhookModalOpen}
+        onClose={() => setIsWebhookModalOpen(false)}
+        onSubmit={handleWebhookSubmit}
+        webhookType={currentWebhookType}
+        webhookUrl={webhookUrl}
+        secretValue={triggerData?.secret_value}
+        secretHeader={triggerData?.secret_header}
+        secretInstructions={triggerData?.secret_instructions}
         isLoading={isUpdating}
       />
     </Box>
