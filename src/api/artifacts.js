@@ -25,10 +25,6 @@ export const artifactsApi = eliteaApi
               return { error: { status: response.status, data: response.statusText } };
             }
             const data = await response.json();
-            // Sort buckets by name to match original backend behavior
-            if (data.buckets && Array.isArray(data.buckets)) {
-              data.buckets.sort((a, b) => a.name.localeCompare(b.name));
-            }
             return { data };
           } catch (error) {
             if (error.name === 'AbortError') {
@@ -54,6 +50,15 @@ export const artifactsApi = eliteaApi
           method: 'PUT',
           headers,
           body,
+        }),
+        invalidatesTags: [TAG_BUCKETS],
+      }),
+      updateBucketPin: build.mutation({
+        query: ({ projectId, bucketName, isPinned }) => ({
+          url: `/artifacts/buckets/default/${projectId}?name=${encodeURI(bucketName)}`,
+          method: 'PATCH',
+          headers,
+          body: { is_pinned: isPinned },
         }),
         invalidatesTags: [TAG_BUCKETS],
       }),
@@ -134,6 +139,7 @@ export const {
   useArtifactListQuery,
   useCreateBucketMutation,
   useEditBucketMutation,
+  useUpdateBucketPinMutation,
   useDeleteBucketMutation,
   useCreateArtifactMutation,
   useDeleteArtifactMutation,

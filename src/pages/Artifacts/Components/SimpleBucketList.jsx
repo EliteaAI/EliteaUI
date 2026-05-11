@@ -19,6 +19,7 @@ const SimpleBucketList = memo(props => {
     onUpload,
     onSelectFile,
     onSelectFolder,
+    onPin,
   } = props;
 
   const [hoveredBucketName, setHoveredBucketName] = useState(null);
@@ -98,6 +99,7 @@ const SimpleBucketList = memo(props => {
                   onItemHover={handleItemHover}
                   isExpanded={isExpanded}
                   onToggle={handleBucketToggle}
+                  onPin={onPin}
                 />
                 {isExpanded && (
                   <BucketContent

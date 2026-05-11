@@ -5,10 +5,12 @@ import { useSelector } from 'react-redux';
 import { Box, useTheme } from '@mui/material';
 
 import { useShareLink } from '@/[fsd]/shared/lib/hooks/useShareLink.hooks';
-import { Tooltip } from '@/[fsd]/shared/ui';
+import { Button, Tooltip } from '@/[fsd]/shared/ui';
 import CopyLinkIcon from '@/assets/copy-link-icon.svg?react';
 import FileUploadIcon from '@/assets/icons/FileUploadIcon.svg?react';
 import BucketIcon from '@/assets/icons/bucket-icon.svg?react';
+import PinIconFilled from '@/assets/pin-filled-new.svg?react';
+import PinIcon from '@/assets/pin-icon.svg?react';
 import { PERMISSIONS } from '@/common/constants';
 import DotMenu from '@/components/DotMenu';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
@@ -30,8 +32,9 @@ export const BucketItem = forwardRef((props, ref) => {
     onItemHover,
     isExpanded = false,
     onToggle,
+    onPin,
   } = props;
-  const { name, owner_id } = bucket;
+  const { name, owner_id, isPinned = false } = bucket;
 
   const { checkPermission } = useCheckPermission();
   const projectId = useSelectedProjectId();
@@ -66,6 +69,17 @@ export const BucketItem = forwardRef((props, ref) => {
     const shareUrl = generateBucketShareUrl(projectId, name, getBasename());
     copyShareLink(shareUrl, 'bucket', bucket?.id, name);
   }, [bucket?.id, copyShareLink, name, projectId]);
+
+  const handlePinBucket = useCallback(
+    e => {
+      if (e) {
+        e.stopPropagation();
+        e.preventDefault();
+      }
+      onPin(bucket);
+    },
+    [bucket, onPin],
+  );
 
   const handleSelectBucket = useCallback(() => {
     if (isActive) {
@@ -134,6 +148,16 @@ export const BucketItem = forwardRef((props, ref) => {
         onClick: handleUploadClick,
       },
       {
+        label: isPinned ? 'Unpin from top' : 'Pin to top',
+        icon: (
+          <Box
+            component={isPinned ? PinIconFilled : PinIcon}
+            sx={styles.menuIcon}
+          />
+        ),
+        onClick: handlePinBucket,
+      },
+      {
         label: 'Edit',
         icon: (
           <EditIcon
@@ -186,6 +210,8 @@ export const BucketItem = forwardRef((props, ref) => {
     userId,
     isPersonalProject,
     name,
+    isPinned,
+    handlePinBucket,
   ]);
 
   return (
@@ -213,6 +239,22 @@ export const BucketItem = forwardRef((props, ref) => {
           </Tooltip.TypographyWithConditionalTooltip>
         </Box>
       </Box>
+
+      {isPinned && (
+        <Button.BaseBtn
+          component={PinIconFilled}
+          sx={styles.menuIcon}
+          onClick={e => handlePinBucket(e)}
+        />
+      )}
+
+      {!isPinned && isHovering && (
+        <Button.BaseBtn
+          component={PinIcon}
+          sx={styles.menuIcon}
+          onClick={e => handlePinBucket(e)}
+        />
+      )}
 
       <Box
         id="Menu"
@@ -281,7 +323,9 @@ const bucketItemStyles = ({ isActive, isHovering, isNextItemHighlighted, showMen
     },
 
     contentArea: {
-      width: 'calc(100% - 2rem)',
+      flex: 1,
+      minWidth: 0,
+      paddingRight: isHovering ? 0 : '1rem',
     },
 
     contentInner: {

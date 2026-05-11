@@ -34,6 +34,7 @@ const BucketsPanel = memo(props => {
     onSelectFolder,
     onEdit,
     onDelete,
+    onPin,
   } = props;
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -64,6 +65,12 @@ const BucketsPanel = memo(props => {
     const filterQuery = debouncedSearchQuery.toLowerCase().trim();
     return buckets.filter(bucket => bucket.name?.toLowerCase().includes(filterQuery));
   }, [buckets, debouncedSearchQuery]);
+
+  const { pinnedBuckets, unpinnedBuckets } = useMemo(() => {
+    const pinned = filteredBuckets.filter(b => b.isPinned);
+    const unpinned = filteredBuckets.filter(b => !b.isPinned);
+    return { pinnedBuckets: pinned, unpinnedBuckets: unpinned };
+  }, [filteredBuckets]);
 
   // Determine bucket list type for rendering
   const bucketsType = useMemo(() => {
@@ -146,7 +153,8 @@ const BucketsPanel = memo(props => {
           <Box sx={styles.bucketListInnerContainer}>
             <BucketsListContent
               bucketsType={bucketsType}
-              filteredBuckets={filteredBuckets}
+              filteredBuckets={unpinnedBuckets}
+              filteredPinnedBuckets={pinnedBuckets}
               selectedBucketName={selectedBucket?.name}
               selectedFile={selectedFile}
               currentPrefix={currentPrefix}
@@ -156,6 +164,7 @@ const BucketsPanel = memo(props => {
               onUpload={onUpload}
               onSelectFile={onSelectFile}
               onSelectFolder={onSelectFolder}
+              onPin={onPin}
             />
           </Box>
         )}

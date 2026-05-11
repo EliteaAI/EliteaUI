@@ -14,6 +14,7 @@ const BucketsListContent = memo(props => {
   const {
     bucketsType,
     filteredBuckets,
+    filteredPinnedBuckets,
     selectedBucketName,
     selectedFile,
     currentPrefix,
@@ -23,25 +24,36 @@ const BucketsListContent = memo(props => {
     onUpload,
     onSelectFile,
     onSelectFolder,
+    onPin,
   } = props;
 
   const styles = bucketsListContentStyles();
 
+  const renderBucketsList = filtredBuckets => {
+    return (
+      <SimpleBucketList
+        buckets={filtredBuckets}
+        selectedBucketName={selectedBucketName}
+        selectedFile={selectedFile}
+        currentPrefix={currentPrefix}
+        onEdit={onEdit}
+        onDelete={onDelete}
+        onSelect={onSelect}
+        onUpload={onUpload}
+        onSelectFile={onSelectFile}
+        onSelectFolder={onSelectFolder}
+        onPin={onPin}
+      />
+    );
+  };
+
   switch (bucketsType) {
     case BUCKET_TYPES.DATA:
       return (
-        <SimpleBucketList
-          buckets={filteredBuckets}
-          selectedBucketName={selectedBucketName}
-          selectedFile={selectedFile}
-          currentPrefix={currentPrefix}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          onSelect={onSelect}
-          onUpload={onUpload}
-          onSelectFile={onSelectFile}
-          onSelectFolder={onSelectFolder}
-        />
+        <>
+          {filteredPinnedBuckets?.length > 0 && <>{renderBucketsList(filteredPinnedBuckets)}</>}
+          {renderBucketsList(filteredBuckets)}
+        </>
       );
 
     case BUCKET_TYPES.FILTERED_EMPTY:
@@ -101,6 +113,10 @@ const bucketsListContentStyles = () => ({
   },
   emptyStateTitle: {
     marginBottom: '0.5rem',
+  },
+  sectionHeader: {
+    marginBottom: '0.5rem',
+    marginTop: '0.5rem',
   },
 });
 

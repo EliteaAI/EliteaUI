@@ -3,7 +3,7 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-import { useBucketListQuery, useDeleteBucketMutation } from '@/api/artifacts';
+import { useBucketListQuery, useDeleteBucketMutation, useUpdateBucketPinMutation } from '@/api/artifacts';
 import { isSystemBucket } from '@/common/artifactConstants';
 import { sortBucketsByRecent } from '@/common/bucketSortingUtils';
 import { ViewMode } from '@/common/constants';
@@ -71,6 +71,19 @@ const Buckets = memo(props => {
       // Add more aggressive refetching to pick up bucket timestamp updates
       refetchOnWindowFocus: true,
     },
+  );
+
+  const [updateBucketPin] = useUpdateBucketPinMutation();
+
+  const handlePinBucket = useCallback(
+    bucket => {
+      updateBucketPin({
+        projectId,
+        bucketName: bucket.name,
+        isPinned: !bucket.isPinned,
+      });
+    },
+    [updateBucketPin, projectId],
   );
 
   // Delete bucket mutation
@@ -209,6 +222,7 @@ const Buckets = memo(props => {
       onSelectFolder={onSelectFolder}
       onEdit={handleEdit}
       onDelete={handleDelete}
+      onPin={handlePinBucket}
     />
   );
 });
