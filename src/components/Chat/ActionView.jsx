@@ -4,11 +4,11 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Box, Button, Collapse, Typography } from '@mui/material';
 
+import Markdown from '@/[fsd]/shared/ui/markdown';
 import { useListModelsQuery } from '@/api/configurations';
 import { TOOL_ACTION_TYPES, ToolActionStatus } from '@/common/constants';
 import { getToolInfoFromAction } from '@/common/toolActionUitls';
 import { getToolIconByType } from '@/common/toolkitUtils';
-import Markdown from '@/components/Markdown.jsx';
 import useGetComponentWidth from '@/hooks/useGetComponentWidth';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { useTheme } from '@emotion/react';

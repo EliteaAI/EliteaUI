@@ -105,6 +105,16 @@ const NewChatInput = forwardRef((props, ref) => {
   // Forward the same imperative handle the outer caller expects from UserInput
   useImperativeHandle(ref, () => userInputRef.current, []);
 
+  const handleVoiceRecordingChange = useCallback(
+    recording => {
+      setIsRecording(recording);
+      if (recording && isSpeakingMode) {
+        onSpeakingModeToggle?.();
+      }
+    },
+    [isSpeakingMode, onSpeakingModeToggle],
+  );
+
   const handleSend = useCallback(
     (question, inputContent) => {
       voiceButtonRef.current?.stop();
@@ -215,7 +225,7 @@ const NewChatInput = forwardRef((props, ref) => {
                 ref={voiceButtonRef}
                 inputRef={userInputRef}
                 disabled={isLoading || isStreaming || isSpeakingMode}
-                onRecordingChange={setIsRecording}
+                onRecordingChange={handleVoiceRecordingChange}
               />
             </Box>
             <Box

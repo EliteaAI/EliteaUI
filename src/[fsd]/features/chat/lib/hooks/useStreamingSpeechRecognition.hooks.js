@@ -78,6 +78,9 @@ export const useStreamingSpeechRecognition = ({
   const workletNodeRef = useRef(null);
   const onTranscriptRef = useRef(onTranscript);
   const onErrorRef = useRef(onError);
+  // Set to false at the start of each new recording session to discard stale
+  // events that arrive from the previous session before the new one is ready.
+  const acceptEventsRef = useRef(false);
 
   useEffect(() => {
     onTranscriptRef.current = onTranscript;
@@ -92,10 +95,12 @@ export const useStreamingSpeechRecognition = ({
     if (!socket) return;
 
     const onDelta = ({ delta }) => {
+      if (!acceptEventsRef.current) return;
       onTranscriptRef.current?.({ interim: delta, final: '' });
     };
 
     const onDone = ({ transcript }) => {
+      if (!acceptEventsRef.current) return;
       onTranscriptRef.current?.({ interim: '', final: transcript });
     };
 
@@ -127,6 +132,8 @@ export const useStreamingSpeechRecognition = ({
   }, []);
 
   const startRecording = useCallback(async () => {
+    // Discard any late events still arriving from the previous session
+    acceptEventsRef.current = false;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -171,6 +178,9 @@ export const useStreamingSpeechRecognition = ({
       gainNode.connect(workletNode);
       workletNode.connect(audioContext.destination);
 
+      // Start accepting transcript events for this session
+      acceptEventsRef.current = true;
+
       // Tell backend to open the Realtime WS
       socket.emit(sioEvents.asr_start, {
         project_id: projectId,
@@ -181,6 +191,7 @@ export const useStreamingSpeechRecognition = ({
 
       setIsRecording(true);
     } catch (err) {
+      acceptEventsRef.current = false;
       if (err.name === 'NotAllowedError') onErrorRef.current?.('not-allowed');
       else if (err.name === 'NotFoundError') onErrorRef.current?.('audio-capture');
       else onErrorRef.current?.('network');

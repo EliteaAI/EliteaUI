@@ -20,6 +20,7 @@ const ConfigurationsPanel = memo(props => {
     projectDefaultVectorStorageModel,
     projectDefaultImageGenerationModel,
     projectDefaultASRModel,
+    projectDefaultTTSModel,
     modelOptions,
     lowTierModelOptions,
     highTierModelOptions,
@@ -27,6 +28,7 @@ const ConfigurationsPanel = memo(props => {
     vectorStorageOptions,
     imageGenerationOptions,
     asrOptions,
+    ttsOptions,
     onChangeDefaultModel,
   } = props;
   const styles = getStyles();
@@ -166,6 +168,17 @@ const ConfigurationsPanel = memo(props => {
         defaultSettingValue={projectDefaultASRModel}
         defaultSettingOptions={asrOptions}
         onChangeDefaultSetting={onChangeDefaultModel('asr')}
+      />
+
+      <ConfigurationSection
+        title="Text to Speech (TTS)"
+        configurations={configurationsBySections.tts}
+        isLoading={configurationsLoading}
+        hasDefaultSetting={true}
+        defaultSettingLabel="Default TTS model:"
+        defaultSettingValue={projectDefaultTTSModel}
+        defaultSettingOptions={ttsOptions}
+        onChangeDefaultSetting={onChangeDefaultModel('tts')}
       />
 
       <ConfigurationSection

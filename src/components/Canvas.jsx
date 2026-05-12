@@ -6,6 +6,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { Box, IconButton, Typography, useTheme } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
+import Markdown from '@/[fsd]/shared/ui/markdown';
 import { CANVAS_ADMIN_USER, CANVAS_SYSTEM_USER, PERMISSIONS } from '@/common/constants';
 import useCopyDownloadHandlers from '@/hooks/chat/useCopyEventHandlers';
 import useCheckPermission from '@/hooks/useCheckPermission';
@@ -15,7 +16,6 @@ import AuthorContainer from './AuthorContainer';
 import EditingPlaceholder from './Chat/EditingPlaceholder';
 import { useCheckIsBlockEditing } from './CodeBlock';
 import EditIcon from './Icons/EditIcon';
-import Markdown from './Markdown';
 
 function trimEmptyStringsAtEnd(array = []) {
   let endIndex = array.length - 1;

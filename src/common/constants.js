@@ -942,6 +942,13 @@ export const sioEvents = {
   asr_transcript_delta: 'asr_transcript_delta',
   asr_transcript_done: 'asr_transcript_done',
   asr_error: 'asr_error',
+
+  // Server-side TTS (text-to-speech via model API)
+  tts_start: 'tts_start',
+  tts_stop: 'tts_stop',
+  tts_audio_chunk: 'tts_audio_chunk',
+  tts_done: 'tts_done',
+  tts_error: 'tts_error',
 };
 
 export const ToolActionStatus = {

@@ -45,6 +45,7 @@ const ChatMessageList = memo(props => {
     isSpeakingMode = false,
     onAutoSpeak,
     speakingMessageId,
+    speakingSegments,
     spokenRange,
   } = props;
 
@@ -319,6 +320,7 @@ const ChatMessageList = memo(props => {
               isLastMessage={chat_history.length - 1 === index}
               onAutoSpeak={onAutoSpeak}
               speakingMessageId={speakingMessageId}
+              speakingSegments={speakingSegments}
               spokenRange={spokenRange}
             />
           );

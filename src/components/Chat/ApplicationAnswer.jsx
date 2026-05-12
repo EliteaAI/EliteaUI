@@ -8,9 +8,11 @@ import ListItem from '@mui/material/ListItem';
 import ListItemAvatar from '@mui/material/ListItemAvatar';
 import ListItemText from '@mui/material/ListItemText';
 
+import { toSpeakableText, translateSpokenPos } from '@/[fsd]/features/chat/lib/helpers';
 import { ChatAttachment, ChatContinue, ChatHitlActions } from '@/[fsd]/features/chat/ui';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
 import { BaseBtn } from '@/[fsd]/shared/ui/button';
+import Markdown from '@/[fsd]/shared/ui/markdown';
 import ArrowRightIcon from '@/assets/arrow-right-icon.svg?react';
 import MicphoneIcon from '@/assets/megaphone.svg?react';
 import {
@@ -41,7 +43,6 @@ import DeleteIcon from '../Icons/DeleteIcon';
 import EditIcon from '../Icons/EditIcon';
 import EliteAIcon from '../Icons/EliteAIcon';
 import RegenerateIcon from '../Icons/RegenerateIcon';
-import Markdown from '../Markdown';
 import ApplicationThinkView from './ApplicationThinkView';
 import CreatedTimeInfo from './CreatedTimeInfo';
 import EditingPlaceholder from './EditingPlaceholder';
@@ -109,6 +110,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
     isLastMessage = false,
     onAutoSpeak,
     speakingMessageId,
+    speakingSegments,
     spokenRange,
   } = props;
   const [isErrorExpanded, setIsErrorExpanded] = useState(false);
@@ -175,12 +177,15 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
     [answer, message_items],
   );
   const realAnswer = useMemo(() => convertJsonToString(rawAnswer || '', true), [rawAnswer]);
+  const hasSpeakableText = useMemo(() => !!toSpeakableText(realAnswer).text, [realAnswer]);
 
-  // Progressive highlight: always from start of message to current spoken position
+  // Progressive highlight: always from start of message to current spoken position.
+  // spokenRange positions are in stripped-text coordinates; translate back to original markdown.
   const activeSpokenRange = useMemo(() => {
     if (messageId !== speakingMessageId || !spokenRange) return null;
-    return { start: 0, end: spokenRange.end };
-  }, [messageId, speakingMessageId, spokenRange]);
+    const translatedEnd = translateSpokenPos(spokenRange.end, speakingSegments);
+    return { start: 0, end: translatedEnd };
+  }, [messageId, speakingMessageId, spokenRange, speakingSegments]);
 
   // Cumulative start offsets of each message_item in the joined realAnswer string
   const messageItemOffsets = useMemo(() => {
@@ -204,7 +209,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
 
   // Auto-speak AI response in speaking mode when streaming/loading ends (last message only)
   useEffect(() => {
-    if (isSpeakingMode && isLastMessage && !isStreaming && !isLoading && realAnswer) {
+    if (isSpeakingMode && isLastMessage && !isStreaming && !isLoading && hasSpeakableText) {
       onAutoSpeak?.(realAnswer, messageId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -508,7 +513,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
 
           {/* {exception && <AgentException exception={exception} title={!isApplicationParticipant ? 'LLM exception' : undefined} />} */}
           {!isEditing && shouldRenderAnswerBlock && (
-            <Answer sx={styles.answerBlock}>
+            <Answer sx={styles.answerBlock(messageId === speakingMessageId)}>
               {canRenderContent && !isNullOrUndefined(answer) && !message_items?.length && (
                 <Markdown
                   interaction_uuid={interaction_uuid}
@@ -704,13 +709,13 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                   className="actionButtons"
                   sx={styles.buttonsContainer}
                 >
-                  {onAutoSpeak && !!realAnswer && (
+                  {onAutoSpeak && hasSpeakableText && (
                     <StyledTooltip
                       title="Read out"
                       placement="top"
                     >
                       <BaseBtn
-                        disabled={isProcessing || !realAnswer}
+                        disabled={isProcessing || !realAnswer || !!speakingMessageId}
                         sx={styles.iconButton}
                         variant="tertiary"
                         onClick={() => onAutoSpeak(realAnswer, messageId)}
@@ -927,20 +932,23 @@ const applicationAnswerStyles = (
     fontSize: '1.5rem',
   },
   contentWrapper: verticalMode ? { width: '100%' } : { width: 'calc(100% - 2rem)' },
-  answerBlock: ({ palette }) => ({
-    background: palette.background.aiAnswerBkg,
-    width: '100%',
-    borderRadius: '0.5rem',
-    padding: '0.75rem 1rem 0.75rem 1rem',
-    position: 'relative',
-    boxSizing: 'border-box',
-    minHeight: '3rem',
-    marginTop: hasToolActionsOrException ? '0.5rem' : '0',
-    flex: 1,
-    border: 'none',
-    borderColor: 'transparent',
-    boxShadow: palette.boxShadow.aiAnswer,
-  }),
+  answerBlock:
+    isSpeaking =>
+    ({ palette }) => ({
+      background: palette.background.aiAnswerBkg,
+      width: '100%',
+      borderRadius: '0.5rem',
+      padding: '0.75rem 1rem 0.75rem 1rem',
+      position: 'relative',
+      boxSizing: 'border-box',
+      minHeight: '3rem',
+      marginTop: hasToolActionsOrException ? '0.5rem' : '0',
+      flex: 1,
+      border: 'none',
+      borderColor: 'transparent',
+      boxShadow: palette.boxShadow.aiAnswer,
+      color: isSpeaking ? `${palette.text.primary} !important` : palette.text.secondary,
+    }),
   attachmentGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, 16.25rem)',

@@ -1,9 +1,60 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 
 import { sioEvents } from '@/common/constants';
 
 const isSpeechSynthesisSupported = typeof window !== 'undefined' && 'speechSynthesis' in window;
 const isAudioContextSupported = typeof window !== 'undefined' && 'AudioContext' in window;
+
+// Extra pause durations (seconds) inserted after punctuation that is followed by
+// whitespace or end-of-string, modelling natural speech rhythm.
+const PUNCTUATION_PAUSES = {
+  '.': 0.25,
+  '!': 0.25,
+  '?': 0.25,
+  ',': 0.08,
+  ';': 0.12,
+  ':': 0.12,
+  '\n': 0.2,
+};
+
+/**
+ * Build a char-index → expected-playback-time (seconds) lookup array.
+ * Returns { times: Float32Array(text.length + 1), totalEstimated: number }.
+ */
+const buildCharTimeline = (text, charsPerSec) => {
+  const baseInterval = 1 / charsPerSec;
+  const times = new Float32Array(text.length + 1);
+  let t = 0;
+  for (let i = 0; i < text.length; i++) {
+    times[i] = t;
+    t += baseInterval;
+    const pause = PUNCTUATION_PAUSES[text[i]];
+    if (pause !== undefined) {
+      const next = text[i + 1];
+      if (next === undefined || next === ' ' || next === '\n') {
+        t += pause;
+      }
+    }
+  }
+  times[text.length] = t;
+  return { times, totalEstimated: t };
+};
+
+/**
+ * Binary search: return the largest char index whose expected time is <= t.
+ */
+const findCharAtTime = (times, t) => {
+  if (t <= 0) return 0;
+  if (t >= times[times.length - 1]) return times.length - 2;
+  let lo = 0;
+  let hi = times.length - 2;
+  while (lo < hi) {
+    const mid = (lo + hi + 1) >> 1;
+    if (times[mid] <= t) lo = mid;
+    else hi = mid - 1;
+  }
+  return lo;
+};
 
 /**
  * TTS playback hook using either:
@@ -20,9 +71,18 @@ const isAudioContextSupported = typeof window !== 'undefined' && 'AudioContext' 
  * Usage:
  *   const { speak, stop, pause, resume, isPlaying, isPaused } = useTextToSpeech({ ttsModel, socket });
  */
+// Reducer that bails out (returns the same reference) when the new range
+// is identical to the current one. This prevents unnecessary re-renders
+// when the RAF loop calls setSpokenRange on every frame with the same word.
+const spokenRangeReducer = (prev, next) => {
+  if (next === null) return prev === null ? prev : null;
+  if (prev && prev.start === next.start && prev.end === next.end) return prev;
+  return next;
+};
+
 const useTextToSpeech = ({ ttsModel, socket } = {}) => {
   const [status, setStatus] = useState('idle'); // idle | playing | paused | done | error
-  const [spokenRange, setSpokenRange] = useState(null);
+  const [spokenRange, setSpokenRange] = useReducer(spokenRangeReducer, null);
 
   const hasModelTTS = !!(ttsModel && socket && isAudioContextSupported);
 
@@ -35,9 +95,26 @@ const useTextToSpeech = ({ ttsModel, socket } = {}) => {
 
   // ── Model TTS (Web Audio) refs ────────────────────────────────────────────
   const audioContextRef = useRef(null);
+  const masterGainRef = useRef(null);
   const nextStartTimeRef = useRef(0);
   // Track all scheduled source nodes so we can stop them immediately
   const scheduledSourcesRef = useRef([]);
+
+  // Highlight tracking refs for model TTS
+  const playStartTimeRef = useRef(null); // null = play hasn't started yet
+  const totalDurationRef = useRef(0);
+  const allChunksReceivedRef = useRef(false);
+  // True only when the user explicitly paused — distinguishes user-pause from browser auto-suspend
+  const userPausedRef = useRef(false);
+  const rafRef = useRef(null);
+  // Self-calibrating chars/second rate. Measured from the previous session's
+  // (text.length / totalDuration) and reused for the linear estimation phase
+  // of the next session before tts_done fires.  Intentionally NOT reset between
+  // sessions so the value accumulates across the component's lifetime.
+  const calibratedRateRef = useRef(15.4);
+  // Punctuation-aware char timeline for the current session.
+  // Built in speak() from the TTS text + calibratedRate.
+  const charTimelineRef = useRef(null);
 
   const isPlaying = status === 'playing';
   const isPaused = status === 'paused';
@@ -46,16 +123,32 @@ const useTextToSpeech = ({ ttsModel, socket } = {}) => {
   // Model TTS helpers
   // ─────────────────────────────────────────────────────────────────────────
 
-  const ensureAudioContext = useCallback(() => {
+  const ensureAudioContext = useCallback((sampleRate = 24000) => {
     if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
-      audioContextRef.current = new AudioContext();
+      // Match the context sample rate to the audio to eliminate SRC artifacts
+      audioContextRef.current = new AudioContext({ sampleRate });
       nextStartTimeRef.current = 0;
       scheduledSourcesRef.current = [];
+      // Master gain node — all chunk gain nodes connect here instead of directly
+      // to destination, so we can schedule a fade-out at end-of-stream to prevent
+      // the DC-offset click that occurs when the last PCM buffer ends abruptly.
+      const masterGain = audioContextRef.current.createGain();
+      masterGain.connect(audioContextRef.current.destination);
+      masterGainRef.current = masterGain;
+      // Resume immediately after creation to satisfy browser autoplay policy
+      if (audioContextRef.current.state === 'suspended') {
+        audioContextRef.current.resume();
+      }
     }
+    // Do NOT auto-resume an existing context here — the user may have explicitly paused it
     return audioContextRef.current;
   }, []);
 
   const stopModelAudio = useCallback(() => {
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
     scheduledSourcesRef.current.forEach(src => {
       try {
         src.stop();
@@ -68,12 +161,17 @@ const useTextToSpeech = ({ ttsModel, socket } = {}) => {
       audioContextRef.current.close();
     }
     audioContextRef.current = null;
+    masterGainRef.current = null;
     nextStartTimeRef.current = 0;
+    playStartTimeRef.current = null;
+    totalDurationRef.current = 0;
+    allChunksReceivedRef.current = false;
+    charTimelineRef.current = null;
   }, []);
 
   const playPcm16Chunk = useCallback(
     (audio_base64, sample_rate = 24000) => {
-      const ctx = ensureAudioContext();
+      const ctx = ensureAudioContext(sample_rate);
       if (!ctx) return;
 
       try {
@@ -94,10 +192,39 @@ const useTextToSpeech = ({ ttsModel, socket } = {}) => {
 
         const source = ctx.createBufferSource();
         source.buffer = buffer;
-        source.connect(ctx.destination);
+
+        // If the browser auto-suspended the context (autoplay policy) and the user
+        // hasn't explicitly paused, resume now so chunks aren't scheduled on a
+        // frozen timeline (which would cause them to pile up and play in a burst).
+        if (ctx.state === 'suspended' && !userPausedRef.current) {
+          ctx.resume().catch(() => {});
+        }
+
+        // Route through a GainNode so we can apply a short linear ramp on the
+        // first chunk (silence → full) to eliminate the click caused by the
+        // AudioContext output jumping from 0 to a non-zero first sample.
+        const gain = ctx.createGain();
+        const isFirstChunk = playStartTimeRef.current === null;
+        const FADE_DURATION = 0.005; // 5 ms — inaudible but removes the discontinuity
+        if (isFirstChunk) {
+          gain.gain.setValueAtTime(0, 0);
+        }
+        source.connect(gain);
+        gain.connect(masterGainRef.current ?? ctx.destination);
 
         const now = ctx.currentTime;
         const startTime = nextStartTimeRef.current <= now ? now : nextStartTimeRef.current;
+
+        // Apply fade-in ramp on the first chunk only
+        if (isFirstChunk) {
+          gain.gain.linearRampToValueAtTime(1, startTime + FADE_DURATION);
+        }
+
+        // Track when audio playback actually begins (first chunk only)
+        if (playStartTimeRef.current === null) {
+          playStartTimeRef.current = startTime;
+        }
+
         source.start(startTime);
         nextStartTimeRef.current = startTime + buffer.duration;
 
@@ -168,8 +295,21 @@ const useTextToSpeech = ({ ttsModel, socket } = {}) => {
       if (!text) return;
 
       if (hasModelTTS) {
+        // Cancel any in-flight server session first so stale chunks from the
+        // previous TTS stream don't arrive and corrupt the new audio buffer.
+        userPausedRef.current = false;
+        socket.emit(sioEvents.tts_stop, {});
         stopModelAudio();
         fullTextRef.current = text;
+        // Build punctuation-aware timeline for this session's text.
+        // Uses the calibrated rate from the previous session (or the default
+        // 15.4 chars/sec on first use).  After tts_done fires, the RAF loop
+        // scales elapsed time against the real totalDuration so any rate
+        // inaccuracy is corrected for the post-streaming phase.
+        charTimelineRef.current = buildCharTimeline(text, calibratedRateRef.current);
+        // Create the AudioContext eagerly so pause() can suspend it
+        // before the first chunk arrives
+        ensureAudioContext(24000);
         socket.emit(sioEvents.tts_start, {
           project_id: ttsModel.project_id,
           model_name: ttsModel.name,
@@ -186,13 +326,14 @@ const useTextToSpeech = ({ ttsModel, socket } = {}) => {
         startUtterance(text, 0);
       }
     },
-    [hasModelTTS, ttsModel, socket, stopModelAudio, startUtterance],
+    [hasModelTTS, ttsModel, socket, stopModelAudio, startUtterance, ensureAudioContext],
   );
 
   const pause = useCallback(() => {
     if (status !== 'playing') return;
 
     if (hasModelTTS) {
+      userPausedRef.current = true;
       audioContextRef.current?.suspend();
       setStatus('paused');
     } else if (isSpeechSynthesisSupported) {
@@ -207,6 +348,7 @@ const useTextToSpeech = ({ ttsModel, socket } = {}) => {
     if (status !== 'paused') return;
 
     if (hasModelTTS) {
+      userPausedRef.current = false;
       audioContextRef.current?.resume();
       setStatus('playing');
     } else if (isSpeechSynthesisSupported) {
@@ -216,6 +358,7 @@ const useTextToSpeech = ({ ttsModel, socket } = {}) => {
 
   const stop = useCallback(() => {
     if (hasModelTTS) {
+      userPausedRef.current = false;
       socket?.emit(sioEvents.tts_stop, {});
       stopModelAudio();
     } else if (isSpeechSynthesisSupported) {
@@ -242,8 +385,25 @@ const useTextToSpeech = ({ ttsModel, socket } = {}) => {
     };
 
     const handleDone = () => {
-      setStatus('done');
-      setSpokenRange(null);
+      // Record total audio duration and signal that all chunks are buffered.
+      // The RAF loop will call setStatus('done') once the audio actually finishes.
+      const bufferedDuration = nextStartTimeRef.current - playStartTimeRef.current;
+      totalDurationRef.current = bufferedDuration > 0 ? bufferedDuration : 0;
+      allChunksReceivedRef.current = true;
+      // Calibrate chars/second for the next session's linear phase
+      if (bufferedDuration > 0 && fullTextRef.current.length > 0) {
+        calibratedRateRef.current = fullTextRef.current.length / bufferedDuration;
+      }
+      // Schedule a short linear fade-out on the master gain so the last PCM buffer
+      // doesn't end abruptly at a non-zero sample (which causes a DC-offset click).
+      const masterGain = masterGainRef.current;
+      const ctx = audioContextRef.current;
+      if (masterGain && ctx && nextStartTimeRef.current > 0) {
+        const FADE_OUT = 0.02; // 20 ms — inaudible but removes the click
+        const endTime = nextStartTimeRef.current;
+        masterGain.gain.setValueAtTime(1, Math.max(ctx.currentTime, endTime - FADE_OUT));
+        masterGain.gain.linearRampToValueAtTime(0, endTime);
+      }
     };
 
     const handleError = ({ error }) => {
@@ -264,6 +424,99 @@ const useTextToSpeech = ({ ttsModel, socket } = {}) => {
       socket.off(sioEvents.tts_error, handleError);
     };
   }, [hasModelTTS, socket, playPcm16Chunk, stopModelAudio]);
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // RAF loop — word highlighting + completion detection for model TTS
+  // ─────────────────────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    if (!hasModelTTS || status !== 'playing') return;
+
+    const tick = () => {
+      const ctx = audioContextRef.current;
+      // AudioContext not yet created (first chunk hasn't arrived) — keep waiting
+      if (!ctx) {
+        rafRef.current = requestAnimationFrame(tick);
+        return;
+      }
+      // AudioContext was closed (stopModelAudio called) — exit loop
+      if (ctx.state === 'closed') {
+        rafRef.current = null;
+        return;
+      }
+
+      // Don't highlight until the first chunk has been scheduled.
+      // Before that we don't know the real play-start time, so elapsed would be wrong.
+      if (playStartTimeRef.current === null) {
+        // If tts_done fired before any audio chunk arrived (empty response),
+        // complete immediately rather than spinning forever.
+        if (allChunksReceivedRef.current) {
+          setStatus('done');
+          setSpokenRange(null);
+          rafRef.current = null;
+          return;
+        }
+        rafRef.current = requestAnimationFrame(tick);
+        return;
+      }
+
+      // Subtract outputLatency so the highlight tracks what the user actually hears,
+      // not what has been sent to the audio hardware buffer.
+      const elapsed = ctx.currentTime - (ctx.outputLatency ?? 0) - playStartTimeRef.current;
+      const text = fullTextRef.current;
+      const totalDuration = totalDurationRef.current;
+      const allReceived = allChunksReceivedRef.current;
+
+      if (elapsed >= 0 && text) {
+        // Use the punctuation-aware char timeline built at speak() time.
+        // After tts_done fires we know the real total duration, so we scale
+        // elapsed to correct for any rate inaccuracy in the timeline model.
+        // Before tts_done the timeline runs at the calibrated rate as-is.
+        const timeline = charTimelineRef.current;
+        let charPos;
+        if (timeline) {
+          let scaledElapsed;
+          if (allReceived && totalDuration > 0 && timeline.totalEstimated > 0) {
+            scaledElapsed = elapsed * (timeline.totalEstimated / totalDuration);
+          } else {
+            scaledElapsed = elapsed;
+          }
+          charPos = findCharAtTime(timeline.times, scaledElapsed);
+        } else {
+          // Fallback if timeline was not built (shouldn't happen in normal flow).
+          charPos = Math.min(Math.floor(elapsed * calibratedRateRef.current), text.length - 1);
+        }
+
+        // Advance past any whitespace so charPos lands on a word character
+        let pos = charPos;
+        while (pos < text.length && /\s/.test(text[pos])) pos++;
+        let wordStart = pos;
+        let wordEnd = pos;
+        while (wordStart > 0 && !/\s/.test(text[wordStart - 1])) wordStart--;
+        while (wordEnd < text.length && !/\s/.test(text[wordEnd])) wordEnd++;
+        if (wordEnd > wordStart) setSpokenRange({ start: wordStart, end: wordEnd });
+      }
+
+      // Detect audio completion: all chunks received and playback time elapsed
+      if (allReceived && (totalDuration <= 0 || elapsed >= totalDuration)) {
+        setStatus('done');
+        setSpokenRange(null);
+        rafRef.current = null;
+        return;
+      }
+
+      rafRef.current = requestAnimationFrame(tick);
+    };
+
+    rafRef.current = requestAnimationFrame(tick);
+
+    return () => {
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+    };
+  }, [hasModelTTS, status]);
 
   // Cleanup on unmount
   useEffect(() => {

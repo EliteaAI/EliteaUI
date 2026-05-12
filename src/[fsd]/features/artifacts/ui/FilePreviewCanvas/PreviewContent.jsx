@@ -16,7 +16,7 @@ import {
 import { FilePreviewCanvasConstants } from '@/[fsd]/features/artifacts/lib/constants';
 import { PreviewDocument } from '@/[fsd]/features/artifacts/ui/';
 import { Field } from '@/[fsd]/shared/ui';
-import Markdown from '@/components/Markdown';
+import Markdown from '@/[fsd]/shared/ui/markdown';
 import MermaidDiagramOutput from '@/components/MermaidDiagramOutput/DiagramOutput';
 
 const PreviewTypeEnum = {

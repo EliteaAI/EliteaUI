@@ -149,6 +149,7 @@ export const useModelOptions = ({
   vectorStorageData,
   imageGenerationData,
   asrData,
+  ttsData,
 }) => {
   const uniqueConfigurations = useMemo(
     () => ModelConfigurationHelpers.removeDuplicateModels(configurations),
@@ -209,6 +210,8 @@ export const useModelOptions = ({
 
   const asrOptions = useMemo(() => createOptions(asrData?.items), [asrData, createOptions]);
 
+  const ttsOptions = useMemo(() => createOptions(ttsData?.items), [ttsData, createOptions]);
+
   return {
     uniqueConfigurations,
     modelOptions,
@@ -218,6 +221,7 @@ export const useModelOptions = ({
     vectorStorageOptions,
     imageGenerationOptions,
     asrOptions,
+    ttsOptions,
   };
 };
 

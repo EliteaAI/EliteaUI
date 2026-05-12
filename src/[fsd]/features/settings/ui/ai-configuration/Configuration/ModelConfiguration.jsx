@@ -70,9 +70,16 @@ const ModelConfiguration = memo(() => {
       { projectId, include_shared: projectId != PUBLIC_PROJECT_ID, section: 'asr' },
       { skip: !projectId },
     );
+
+  const { data: ttsData = { items: [], total: 0, default_model_name: '', default_model_project_id: '' } } =
+    useListModelsQuery(
+      { projectId, include_shared: projectId != PUBLIC_PROJECT_ID, section: 'tts' },
+      { skip: !projectId },
+    );
+
   // Get multi-section configurations
   const { data: availableConfigurations, isLoading: configurationsLoading } = useMultiSectionConfigurations(
-    ['llm', 'embedding', 'vectorstorage', 'ai_credentials', 'image_generation', 'asr'],
+    ['llm', 'embedding', 'vectorstorage', 'ai_credentials', 'image_generation', 'asr', 'tts'],
     projectId,
   );
 
@@ -86,12 +93,14 @@ const ModelConfiguration = memo(() => {
     vectorStorageOptions,
     imageGenerationOptions,
     asrOptions,
+    ttsOptions,
   } = useModelOptions({
     configurations: modelsData.items,
     embeddingModelsData,
     vectorStorageData,
     imageGenerationData,
     asrData,
+    ttsData,
   });
 
   const { model } = useModelConfiguration({
@@ -102,7 +111,15 @@ const ModelConfiguration = memo(() => {
   // Group configurations by section
   const configurationsBySections = useMemo(() => {
     if (!availableConfigurations)
-      return { llm: [], embedding: [], vectorstorage: [], ai_credentials: [], image_generation: [], asr: [] };
+      return {
+        llm: [],
+        embedding: [],
+        vectorstorage: [],
+        ai_credentials: [],
+        image_generation: [],
+        asr: [],
+        tts: [],
+      };
     return {
       llm: availableConfigurations
         .filter(config => config.section === 'llm')
@@ -118,6 +135,7 @@ const ModelConfiguration = memo(() => {
       ai_credentials: availableConfigurations.filter(config => config.section === 'ai_credentials'),
       image_generation: availableConfigurations.filter(config => config.section === 'image_generation'),
       asr: availableConfigurations.filter(config => config.section === 'asr'),
+      tts: availableConfigurations.filter(config => config.section === 'tts'),
     };
   }, [availableConfigurations, modelsData.default_model_name, modelsData.default_model_project_id]);
 
@@ -181,6 +199,11 @@ const ModelConfiguration = memo(() => {
     [asrData?.default_model_name, asrData?.default_model_project_id],
   );
 
+  const projectDefaultTTSModel = useMemo(
+    () => `${ttsData?.default_model_name}<<>>${ttsData?.default_model_project_id}`,
+    [ttsData?.default_model_name, ttsData?.default_model_project_id],
+  );
+
   // Handle changing default model
   const onChangeDefaultModel = useCallback(
     (section = 'llm') =>
@@ -240,6 +263,8 @@ const ModelConfiguration = memo(() => {
             imageGenerationOptions={imageGenerationOptions}
             projectDefaultASRModel={projectDefaultASRModel}
             asrOptions={asrOptions}
+            projectDefaultTTSModel={projectDefaultTTSModel}
+            ttsOptions={ttsOptions}
             onChangeDefaultModel={onChangeDefaultModel}
           />
 
