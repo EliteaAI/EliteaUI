@@ -53,6 +53,16 @@ const RESOURCE_CARD_CONFIGS = [
     linksKey: 'resources_tutorials_links',
     colorScheme: 'green',
   },
+  {
+    enabledKey: 'resources_interactive_tours_enabled',
+    titleKey: 'resources_interactive_tours_title',
+    descriptionKey: 'resources_interactive_tours_description',
+    defaultTitle: 'Interactive Tours',
+    defaultDescription: 'Guided tours to explore key features and workflows',
+    Icon: VideoIcon,
+    linksKey: 'resources_interactive_tours_links',
+    colorScheme: 'pink',
+  },
 ];
 
 const { openExternalLink } = LinkHelpers;
@@ -295,13 +305,11 @@ const resourcesPageStyles = () => ({
     textAlign: 'center',
     py: '1rem',
     color: palette.text.secondary,
-    maxWidth: '63.5rem',
-    alignSelf: 'flex-start',
-    marginLeft: '15.75rem',
+    width: '100%',
   }),
   grid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(2, minmax(23.75rem, 31.25rem))',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(23.75rem, 31.25rem))',
     gap: '1rem',
     justifyContent: 'start',
   },

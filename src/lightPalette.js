@@ -166,6 +166,15 @@ const lightPalette = {
         divider: 'rgba(75, 186, 136, 0.15)',
         borderGradient: 'linear-gradient(180deg, rgba(75, 186, 136, 0.2) 0%, rgba(75, 186, 136, 0) 100%)',
       },
+      pink: {
+        card: 'linear-gradient(180deg, #FFE8F1 0%, rgba(255, 232, 241, 0.4) 100%)',
+        icon: 'linear-gradient(45.36deg, rgba(255, 115, 176, 0.3) 16.25%, rgba(255, 115, 176, 0.09) 87.07%)',
+        iconColor: '#FF73B0',
+        iconBorderGradient:
+          'linear-gradient(180deg, rgba(255, 115, 176, 0) 0%, rgba(255, 115, 176, 0.4) 100%)',
+        divider: 'rgba(255, 115, 176, 0.15)',
+        borderGradient: 'linear-gradient(180deg, rgba(255, 115, 176, 0.2) 0%, rgba(255, 115, 176, 0) 100%)',
+      },
     },
     categoriesButton: {
       selected: {
