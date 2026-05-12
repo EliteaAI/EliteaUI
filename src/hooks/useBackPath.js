@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom';
 
 import {
   ApplicationsTabs,
+  AppsTabs,
   PUBLIC_PROJECT_ID,
   SearchParams,
   ToolkitsTabs,
@@ -78,7 +79,7 @@ const getPrevPath = (routeStack, currentPath, search, viewMode, authorId, author
       return `${RouteDefinitions.CreateApp}/?${SearchParams.ViewMode}=${viewMode}`;
     } else if (currentPath.startsWith(RouteDefinitions.Apps) && !hasSubPath(currentPath)) {
       // Handle /apps/create (selector page) - go back to apps list
-      return `${RouteDefinitions.Apps}/all?${SearchParams.ViewMode}=${viewMode}`;
+      return `${RouteDefinitions.Apps}/${AppsTabs[0]}?${SearchParams.ViewMode}=${viewMode}`;
     } else if (currentPath.startsWith(RouteDefinitions.UserPublic)) {
       if (currentPath.match(/\/user-public\/pipelines\/\d+/g)) {
         return `${RouteDefinitions.UserPublic}/${UserPublicTabs[2]}?${SearchParams.ViewMode}=${viewMode}&${SearchParams.AuthorId}=${authorId}&${SearchParams.AuthorName}=${authorName}`;

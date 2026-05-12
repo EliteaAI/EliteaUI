@@ -4,6 +4,7 @@ import { useLocation, useMatch, useNavigate, useParams, useSearchParams } from '
 
 import {
   ApplicationsTabs,
+  AppsTabs,
   ContentType,
   PUBLIC_PROJECT_ID,
   SearchParams,
@@ -106,7 +107,7 @@ const useCardNavigate = props => {
       [ContentType.PipelineRejected]: buildUrl(RouteDefinitions.Pipelines, tab),
       [ContentType.ToolkitAdmin]: buildUrl(RouteDefinitions.Toolkits, tab),
       [ContentType.ToolkitAll]: buildUrl(RouteDefinitions.Toolkits, tab),
-      [ContentType.AppAll]: buildUrl(RouteDefinitions.Apps, tab),
+      [ContentType.AppAll]: buildUrl(RouteDefinitions.Apps, AppsTabs[1]),
       [ContentType.MCPAll]: buildUrl(RouteDefinitions.MCPs, tab),
       [ContentType.CredentialAll]: buildUrl(RouteDefinitions.Credentials, tab),
       [ContentType.ApplicationTop]: buildUrl(RouteDefinitions.Applications, 'top'),

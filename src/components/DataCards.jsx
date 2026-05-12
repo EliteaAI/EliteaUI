@@ -28,6 +28,9 @@ const DataCards = memo(props => {
     cardType,
     dynamicTags,
     total,
+    isFullWidth,
+    cardHeight = '7rem',
+    cardWidthOverride,
   } = props;
 
   const { pathname } = useLocation();
@@ -35,11 +38,13 @@ const DataCards = memo(props => {
   const { calculateTagsWidthOnCard, setGetElement } = useTags(tagList);
   const { componentRef: gridRef, componentWidth: cardListWidth } = useGetComponentWidth();
 
-  const isFullWidthPage = FULL_WIDTH_FLEX_GRID_PAGE.includes(pathname);
+  const isFullWidthPage = isFullWidth || FULL_WIDTH_FLEX_GRID_PAGE.includes(pathname);
+  const isDefaultCardHeight = cardHeight === '7rem';
 
-  const cardWidth = useCardLayout(cardListWidth, cardList.length, isFullWidthPage);
+  const layoutCardWidth = useCardLayout(cardListWidth, cardList.length, isFullWidthPage);
+  const cardWidth = cardWidthOverride || layoutCardWidth;
 
-  const styles = dataCardStyles(cardWidth, isFullWidthPage);
+  const styles = dataCardStyles(cardWidth, isFullWidthPage, cardHeight, isDefaultCardHeight);
 
   useEffect(() => {
     if (isLoading) return;
@@ -96,7 +101,7 @@ const DataCards = memo(props => {
 DataCards.displayName = 'DataCards';
 
 /** @type {MuiSx} */
-const dataCardStyles = (cardWidth, isFullWidthPage) => ({
+const dataCardStyles = (cardWidth, isFullWidthPage, cardHeight, isDefaultCardHeight) => ({
   cardListContainer: {
     flexGrow: 1,
     width: isFullWidthPage ? CARD_LIST_WIDTH_FULL : CARD_LIST_WIDTH,
@@ -106,7 +111,7 @@ const dataCardStyles = (cardWidth, isFullWidthPage) => ({
   },
   loadingSkeleton: {
     width: '100%',
-    height: '100%',
+    height: cardHeight,
     borderRadius: '0.75rem',
   },
   card: ({ palette }) => ({
@@ -114,10 +119,10 @@ const dataCardStyles = (cardWidth, isFullWidthPage) => ({
     margin: '0 1rem 1rem 0',
     minWidth: MIN_CARD_WIDTH,
     width: cardWidth,
-    height: '7rem',
-    maxHeight: '7rem',
+    height: cardHeight,
+    maxHeight: cardHeight,
     display: 'flex',
-    alignItems: 'center',
+    alignItems: isDefaultCardHeight ? 'center' : 'stretch',
     flexGrow: '0',
   }),
 });

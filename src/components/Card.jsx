@@ -27,7 +27,17 @@ import useDataViewMode from '@/hooks/useDataViewMode';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const Card = memo(props => {
-  const { data = {}, viewMode: pageViewMode, type, index = 0, customTagClickHandler } = props;
+  const {
+    data = {},
+    viewMode: pageViewMode,
+    type,
+    index = 0,
+    customTagClickHandler,
+    cardDetails,
+    disableCardActions = false,
+    hideCardBottom = false,
+    onCardClick,
+  } = props;
 
   const projectId = useSelectedProjectId();
   const { data: supportAssistantConfig } = useGetSupportAssistantConfigQuery({ enabled: false });
@@ -111,6 +121,15 @@ const Card = memo(props => {
     [assistantRef],
   );
 
+  const handleCardClick = useCallback(() => {
+    if (onCardClick) {
+      onCardClick(data);
+      return;
+    }
+
+    doNavigate();
+  }, [data, doNavigate, onCardClick]);
+
   // Monitor MCP token changes for both remote and pre-built MCP toolkits
   // For remote MCPs, use serverUrl; for pre-built MCPs, use toolkitType
   const mcpTokenOptions = useMemo(() => {
@@ -125,7 +144,10 @@ const Card = memo(props => {
 
   const { isLoggedIn: hasMcpLoggedIn } = useMcpTokenChange(mcpTokenOptions);
 
-  const styles = cardStyles;
+  const hasCardDetails = Boolean(cardDetails);
+  const showCardBottom = !hideCardBottom;
+  const isWholeCardClickable = hasCardDetails && Boolean(onCardClick);
+  const styles = cardStyles(hasCardDetails, showCardBottom, isWholeCardClickable);
 
   return (
     <Box
@@ -134,11 +156,14 @@ const Card = memo(props => {
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <MuiCard sx={styles.card}>
+      <MuiCard
+        sx={styles.card}
+        onClick={isWholeCardClickable ? handleCardClick : undefined}
+      >
         <CardContent sx={styles.cardContent}>
           <Box
             sx={styles.cardTopSection}
-            onClick={doNavigate}
+            onClick={isWholeCardClickable ? undefined : handleCardClick}
           >
             <EntityIcon
               icon={data.icon_meta}
@@ -182,104 +207,111 @@ const Card = memo(props => {
               </Typography>
             </StyledTooltip>
           </Box>
-          <Box sx={styles.cardBottomSection}>
-            <Box sx={styles.bottomLeftSection}>
-              <StyledTooltip
-                key={`nameAuthor-tooltip-${authorsTooltipText}-${id}`}
-                placement="top"
-                title={authorsTooltipText}
-              >
-                <Box>
-                  <AuthorContainer
-                    authors={cardAuthors}
-                    showName={false}
-                    style={styles.authorContainer}
-                  />
-                </Box>
-              </StyledTooltip>
-              {data?.tags?.length > 0 && (
-                <Divider
-                  orientation="vertical"
-                  flexItem
-                  sx={styles.sectionDivider}
-                />
-              )}
-              <CardTagSection
-                tags={processedTags}
-                allTags={data.tags}
-                extraTagsCount={extraTagsCount}
-                disableClickTags={
-                  type === ContentType.ModerationSpaceApplication ||
-                  type === ContentType.ModerationSpacePipeline
-                }
-                dynamic={false}
-                customTagClickHandler={customTagClickHandler}
-              />
-            </Box>
-            <Box sx={styles.bottomRightSection}>
-              {(status === 'published' || status === 'embedded') && isApplicationCard(type) && (
+          {hasCardDetails && <Box sx={styles.cardDetailsSection}>{cardDetails}</Box>}
+          {showCardBottom && (
+            <Box sx={styles.cardBottomSection}>
+              <Box sx={styles.bottomLeftSection}>
                 <StyledTooltip
+                  key={`nameAuthor-tooltip-${authorsTooltipText}-${id}`}
                   placement="top"
-                  title={status === 'embedded' ? 'Embedded' : 'Published'}
+                  title={authorsTooltipText}
                 >
-                  <Box sx={styles.publishIconContainer}>
-                    <PublishIcon sx={{ fontSize: '1rem' }} />
+                  <Box>
+                    <AuthorContainer
+                      authors={cardAuthors}
+                      showName={false}
+                      style={styles.authorContainer}
+                    />
                   </Box>
                 </StyledTooltip>
-              )}
-              {isSupportAssistant && (
-                <IconButton
-                  disableRipple
-                  onClick={handleAssistantClick}
-                  sx={styles.supportAssistantIconContainer}
-                >
-                  <Box
-                    component={EliteaAssistantIcon}
-                    sx={{ width: '1.45rem', height: '1.45rem' }}
+                {data?.tags?.length > 0 && (
+                  <Divider
+                    orientation="vertical"
+                    flexItem
+                    sx={styles.sectionDivider}
                   />
-                </IconButton>
-              )}
-              <PinButton
-                entityId={id}
-                entityType={type}
-                initialPinned={isPinned}
-                alwaysVisible={isCardHovered}
-                onPinChange={handlePinChange}
-              />
-              {pageViewMode !== ViewMode.Owner && (
-                <Box sx={styles.likeContainer}>
-                  <Like
-                    viewMode={pageViewMode}
-                    type={type}
-                    data={data}
-                  />
-                </Box>
-              )}
-              {isForked && (
-                <IconLinkWithToolTip
-                  tooltip={name}
-                  meta={meta}
-                  type={getEntityTypeByCardType(type)}
+                )}
+                <CardTagSection
+                  tags={processedTags}
+                  allTags={data.tags}
+                  extraTagsCount={extraTagsCount}
+                  disableClickTags={
+                    type === ContentType.ModerationSpaceApplication ||
+                    type === ContentType.ModerationSpacePipeline
+                  }
+                  dynamic={false}
+                  customTagClickHandler={customTagClickHandler}
                 />
-              )}
-              {(type === ContentType.MCPAdmin || type === ContentType.MCPAll) && (
-                <StyledTooltip
-                  placement="top"
-                  title={data.online || hasMcpLoggedIn ? 'Connected' : 'Disconnected'}
-                >
-                  {data.online || hasMcpLoggedIn ? (
-                    <Box sx={styles.mcpIconOnline}>
-                      <OnlineIcon />
-                    </Box>
-                  ) : (
-                    <Box sx={styles.mcpIconOffline}>
-                      <OfflineIcon />
-                    </Box>
-                  )}
-                </StyledTooltip>
-              )}
+              </Box>
+              <Box sx={styles.bottomRightSection}>
+                {!disableCardActions && (
+                  <>
+                    {(status === 'published' || status === 'embedded') && isApplicationCard(type) && (
+                      <StyledTooltip
+                        placement="top"
+                        title={status === 'embedded' ? 'Embedded' : 'Published'}
+                      >
+                        <Box sx={styles.publishIconContainer}>
+                          <PublishIcon sx={{ fontSize: '1rem' }} />
+                        </Box>
+                      </StyledTooltip>
+                    )}
+                    {isSupportAssistant && (
+                      <IconButton
+                        disableRipple
+                        onClick={handleAssistantClick}
+                        sx={styles.supportAssistantIconContainer}
+                      >
+                        <Box
+                          component={EliteaAssistantIcon}
+                          sx={{ width: '1.45rem', height: '1.45rem' }}
+                        />
+                      </IconButton>
+                    )}
+                    <PinButton
+                      entityId={id}
+                      entityType={type}
+                      initialPinned={isPinned}
+                      alwaysVisible={isCardHovered}
+                      onPinChange={handlePinChange}
+                    />
+                    {pageViewMode !== ViewMode.Owner && (
+                      <Box sx={styles.likeContainer}>
+                        <Like
+                          viewMode={pageViewMode}
+                          type={type}
+                          data={data}
+                        />
+                      </Box>
+                    )}
+                    {isForked && (
+                      <IconLinkWithToolTip
+                        tooltip={name}
+                        meta={meta}
+                        type={getEntityTypeByCardType(type)}
+                      />
+                    )}
+                    {(type === ContentType.MCPAdmin || type === ContentType.MCPAll) && (
+                      <StyledTooltip
+                        placement="top"
+                        title={data.online || hasMcpLoggedIn ? 'Connected' : 'Disconnected'}
+                      >
+                        {data.online || hasMcpLoggedIn ? (
+                          <Box sx={styles.mcpIconOnline}>
+                            <OnlineIcon />
+                          </Box>
+                        ) : (
+                          <Box sx={styles.mcpIconOffline}>
+                            <OfflineIcon />
+                          </Box>
+                        )}
+                      </StyledTooltip>
+                    )}
+                  </>
+                )}
+              </Box>
             </Box>
-          </Box>
+          )}
         </CardContent>
       </MuiCard>
     </Box>
@@ -301,14 +333,22 @@ const lineClamp = lines => ({
 });
 
 /** @type {MuiSx} */
-const cardStyles = {
+const cardStyles = (hasCardDetails, showCardBottom, isWholeCardClickable) => ({
   wrapper: {
     width: '100%',
+    ...(hasCardDetails ? { height: '100%' } : {}),
   },
   card: {
     margin: '0.625rem 1.375rem',
-    display: 'inline',
+    display: hasCardDetails ? 'block' : 'inline',
     boxSizing: 'border-box',
+    cursor: isWholeCardClickable ? 'pointer' : 'default',
+    ...(hasCardDetails
+      ? {
+          height: 'calc(100% - 1.25rem)',
+          overflow: 'hidden',
+        }
+      : {}),
     '& :last-child': {
       paddingBottom: '0 !important',
     },
@@ -321,11 +361,11 @@ const cardStyles = {
     height: '100%',
   },
   cardTopSection: {
-    maxHeight: '4.5rem',
-    height: '4.5rem',
+    maxHeight: hasCardDetails ? '3.75rem' : '4.5rem',
+    height: hasCardDetails ? '3.75rem' : '4.5rem',
     cursor: 'pointer',
     width: '100%',
-    padding: '1.25rem',
+    padding: hasCardDetails ? '1rem 1.25rem 0.75rem' : '1.25rem',
     boxSizing: 'border-box',
     display: 'flex',
     flexDirection: 'row',
@@ -344,9 +384,17 @@ const cardStyles = {
   descriptionTooltip: {
     ...lineClamp(4),
   },
+  cardDetailsSection: {
+    px: '1.25rem',
+    pb: showCardBottom ? '0.75rem' : '1rem',
+    flex: 1,
+    minHeight: 0,
+    display: 'flex',
+    flexDirection: 'column',
+  },
   cardBottomSection: {
-    height: '2.5rem',
-    padding: '0 0.75rem 0 1.125rem',
+    height: hasCardDetails ? '2.25rem' : '2.5rem',
+    padding: hasCardDetails ? '0 0.75rem 0.75rem 1.125rem' : '0 0.75rem 0 1.125rem',
     boxSizing: 'border-box',
     display: 'flex',
     justifyContent: 'space-between',
@@ -415,6 +463,6 @@ const cardStyles = {
       height: '1rem',
     },
   },
-};
+});
 
 export default Card;
