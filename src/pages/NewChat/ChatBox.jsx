@@ -1466,7 +1466,10 @@ const ChatBox = forwardRef((props, boxRef) => {
   const users = useMemo(
     () => [
       ...(activeConversation?.participants
-        ?.filter(participant => participant.entity_name === ChatParticipantType.Users)
+        ?.filter(
+          participant =>
+            participant.entity_name === ChatParticipantType.Users && participant.entity_meta?.id !== userId,
+        )
         .map(participant => ({
           id: participant.id,
           name: participant.meta.user_name,
@@ -1478,7 +1481,7 @@ const ChatBox = forwardRef((props, boxRef) => {
         participant: 'All users',
       },
     ],
-    [activeConversation?.participants],
+    [activeConversation?.participants, userId],
   );
 
   const hasOtherUsers = useMemo(
