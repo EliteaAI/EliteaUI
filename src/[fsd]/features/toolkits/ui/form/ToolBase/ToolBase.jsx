@@ -3,6 +3,7 @@ import { memo, useCallback, useEffect, useState } from 'react';
 import { Box } from '@mui/material';
 
 import { McpAuthStatus } from '@/[fsd]/features/mcp/ui';
+import { OpenApiOAuthStatus } from '@/[fsd]/features/openapi/ui';
 import { SharepointOAuthStatus } from '@/[fsd]/features/sharepoint/ui';
 import { ToolBaseHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
@@ -553,11 +554,13 @@ const ToolBase = memo(props => {
     schema?.title === 'mcp' || (editToolDetail?.type?.startsWith('mcp_') && editToolDetail?.type !== 'mcp');
 
   const isSharepointToolkit = schema?.title === 'sharepoint';
+  const isOpenApiToolkit = editToolDetail?.type === 'openapi';
 
   return (
     <>
       {isAnyMcpType && <McpAuthStatus />}
       {isSharepointToolkit && <SharepointOAuthStatus />}
+      {isOpenApiToolkit && showTools && <OpenApiOAuthStatus />}
 
       {shouldUseAccordionView ? (
         <>

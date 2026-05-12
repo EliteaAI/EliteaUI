@@ -8,6 +8,8 @@ import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 import { useSaveAgentToolVariables } from '@/[fsd]/features/agent/lib/hooks/useSaveAgentToolVariables.js';
 import { useMcpTokenChange } from '@/[fsd]/features/mcp/lib/hooks';
 import { McpLogInButton } from '@/[fsd]/features/mcp/ui';
+import { useResolvedOpenApiConfig } from '@/[fsd]/features/openapi/lib/hooks/useResolvedOpenApiConfig.hooks';
+import { OpenApiDelegatedLoginButton } from '@/[fsd]/features/openapi/ui';
 import { useGetToolkitNameFromSchema } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks/useGetToolkitNameFromSchema.hooks.js';
 import { useResolvedSharepointConfig } from '@/[fsd]/features/sharepoint/lib/hooks/useResolvedSharepointConfig.hooks';
 import { SharepointDelegatedLoginButton } from '@/[fsd]/features/sharepoint/ui';
@@ -70,6 +72,17 @@ const ToolCard = memo(props => {
   // { elitea_title, private }. Resolve the full credential via the shared hook.
   const spConfigRef = tool.type === 'sharepoint' ? tool?.settings?.sharepoint_configuration : null;
   const { spConfig, oauthEndpoint: spOauthEndpoint } = useResolvedSharepointConfig(spConfigRef, projectId);
+
+  // OpenAPI delegated OAuth: resolve openapi_configuration reference (or read endpoint directly)
+  const openApiConfigRef = tool.type === 'openapi' ? tool?.settings?.openapi_configuration : null;
+  const openApiDirectEndpoint = tool.type === 'openapi' ? tool?.settings?.oauth_discovery_endpoint : null;
+  const { openApiConfig, oauthEndpoint: openApiOauthEndpoint } = useResolvedOpenApiConfig(
+    openApiConfigRef,
+    projectId,
+  );
+  // When no credential reference, build a minimal config object from direct settings
+  const effectiveOpenApiConfig = openApiConfig || (openApiDirectEndpoint ? tool?.settings : null);
+  const effectiveOpenApiEndpoint = openApiOauthEndpoint || openApiDirectEndpoint || '';
 
   const mcpDisconnectedTip = useMemo(
     () =>
@@ -523,6 +536,13 @@ const ToolCard = memo(props => {
                 <SharepointDelegatedLoginButton
                   projectId={projectId}
                   spConfig={spConfig}
+                  toolName={tool.name}
+                />
+              )}
+              {tool.type === 'openapi' && effectiveOpenApiEndpoint && (
+                <OpenApiDelegatedLoginButton
+                  projectId={projectId}
+                  openApiConfig={effectiveOpenApiConfig}
                   toolName={tool.name}
                 />
               )}

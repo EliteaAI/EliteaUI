@@ -909,20 +909,22 @@ export const useChatSocket = ({
           const hasAuthServers = authServers && authServers.length > 0;
 
           // Token storage key must match what get_toolkit() looks up in kwargs['tokens'].
-          // SharePoint uses a composite key or the oauth discovery endpoint (not site_url).
-          // All other toolkits use serverUrl (the MCP server URL).
+          // SharePoint and OpenAPI use a composite key or the oauth discovery endpoint (not server URL).
+          // All other toolkits (regular MCP) use serverUrl (the MCP server URL = oauth endpoint).
           const isSharePoint = response_metadata?.resource_metadata?.resource_name === 'SharePoint';
+          const isOpenApi = response_metadata?.resource_metadata?.resource_name === 'OpenAPI';
+          const configUuid = response_metadata?.resource_metadata?.configuration_uuid;
           const oauthEndpoint = authServers?.[0];
-          const effectiveServerUrl = isSharePoint
-            ? (() => {
-                const configUuid = response_metadata?.resource_metadata?.configuration_uuid;
-                // Composite key "{configUuid}:{oauthEndpoint}" matches get_toolkit()'s lookup in
-                // elitea_sdk/tools/sharepoint/__init__.py when configuration_uuid is present.
-                return configUuid && oauthEndpoint
-                  ? `${configUuid}:${oauthEndpoint}`
-                  : oauthEndpoint || serverUrl;
-              })()
-            : serverUrl;
+          const effectiveServerUrl =
+            configUuid && oauthEndpoint
+              ? // Composite key "{configUuid}:{oauthEndpoint}" — matches SDK primary lookup for
+                // any delegated OAuth toolkit where configuration_uuid is present.
+                `${configUuid}:${oauthEndpoint}`
+              : isSharePoint || isOpenApi
+                ? // Delegated OAuth without configUuid: token lives under the discovery endpoint.
+                  oauthEndpoint || serverUrl
+                : // Regular MCP: the MCP server URL is itself the OAuth endpoint.
+                  serverUrl;
 
           let contentMessage;
           let status;

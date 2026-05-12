@@ -55,9 +55,19 @@ const ToolSection = memo(props => {
     [required, sectionKey, subsections],
   );
   const defaultOption = useMemo(() => {
-    return subsections.find(subsection => {
-      return !!subsection.fields?.find(field => !isNullOrUndefined(settings[field]));
-    })?.name;
+    // Pick the subsection with the most matching (non-null) fields so that subsections
+    // sharing common fields (e.g. OAuth Delegated and OAuth Client Credentials both have
+    // client_id/client_secret) resolve to the correct one rather than always the first.
+    let best = null;
+    let bestCount = 0;
+    for (const subsection of subsections) {
+      const count = subsection.fields?.filter(field => !isNullOrUndefined(settings[field])).length ?? 0;
+      if (count > bestCount) {
+        bestCount = count;
+        best = subsection;
+      }
+    }
+    return best?.name;
   }, [settings, subsections]);
   const [selectedOption, setSelectedOption] = useState(defaultOption || sectionOptions[0].value);
   const { fields = [] } = useMemo(
