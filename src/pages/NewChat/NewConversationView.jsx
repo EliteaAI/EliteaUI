@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Box, Typography } from '@mui/material';
 
 import { NewConversationHelpers } from '@/[fsd]/features/chat/lib/helpers';
-import { useSlashMention } from '@/[fsd]/features/chat/lib/hooks';
+import { useNewStartConversationInputKeyDownHandler, useSlashMention } from '@/[fsd]/features/chat/lib/hooks';
 import { SlashSuggestionList } from '@/[fsd]/features/chat/ui';
 import { DEFAULT_STEPS_LIMIT } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
 import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
@@ -33,7 +33,6 @@ import useValidateApplicationVersion, {
 import useValidateToolkit, { useToolkitValidationInfo } from '@/hooks/application/useValidateToolkit';
 import useChatStreaming from '@/hooks/chat/useChatStreaming';
 import useFetchParticipantDetails from '@/hooks/chat/useFetchParticipantDetails';
-import { useNewStartConversationInputKeyDownHandler } from '@/hooks/chat/useInputKeyDownHandler';
 import useLocalActiveParticipant from '@/hooks/chat/useLocalActiveParticipant';
 import useNewConversationAttachments from '@/hooks/chat/useNewConversationAttachments';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
