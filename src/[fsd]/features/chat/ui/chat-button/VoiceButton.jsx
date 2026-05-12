@@ -40,14 +40,32 @@ const VoiceButton = memo(
     const postCursorContentRef = useRef('');
     // Accumulates all finalized voice text within the current recording session
     const voiceFinalAccumulatedRef = useRef('');
+    // The last value we programmatically set via setValue — used to detect
+    // manual edits the user made between transcript events.
+    const lastSetValueRef = useRef(null);
 
     const handleTranscript = useCallback(
       ({ final, interim }) => {
+        // If the user manually edited the input between transcript events (e.g. deleted
+        // the previous transcript while still recording), re-sync our cursor refs so the
+        // next transcript continues from the current input state rather than the stale
+        // accumulated refs.
+        if (lastSetValueRef.current !== null) {
+          const currentContent = inputRef.current?.getInputContent() ?? '';
+          if (currentContent !== lastSetValueRef.current) {
+            const cursor = inputRef.current?.getCursorPosition() ?? currentContent.length;
+            preCursorContentRef.current = currentContent.slice(0, cursor);
+            postCursorContentRef.current = currentContent.slice(cursor);
+            voiceFinalAccumulatedRef.current = '';
+          }
+        }
+
         const voiceBase = preCursorContentRef.current + voiceFinalAccumulatedRef.current;
         if (interim) {
           // Live preview: cursor sits after the interim words (before postCursor)
           const newValue = voiceBase + interim + postCursorContentRef.current;
           const cursorPos = voiceBase.length + interim.length;
+          lastSetValueRef.current = newValue;
           inputRef.current?.setValue(newValue, cursorPos);
         }
         if (final) {
@@ -56,6 +74,7 @@ const VoiceButton = memo(
           const newValue =
             preCursorContentRef.current + voiceFinalAccumulatedRef.current + postCursorContentRef.current;
           const cursorPos = preCursorContentRef.current.length + voiceFinalAccumulatedRef.current.length;
+          lastSetValueRef.current = newValue;
           inputRef.current?.setValue(newValue, cursorPos);
         }
       },
@@ -132,6 +151,9 @@ const VoiceButton = memo(
       preCursorContentRef.current = content.slice(0, cursor);
       postCursorContentRef.current = content.slice(cursor);
       voiceFinalAccumulatedRef.current = '';
+      // Seed the edit-detection tracker with the content as it is now, so the
+      // first transcript event can tell if the user edits before it arrives.
+      lastSetValueRef.current = content;
       startRecording();
     }, [inputRef, startRecording]);
 
