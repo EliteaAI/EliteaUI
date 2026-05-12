@@ -13,10 +13,10 @@ import {
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { ParseYamlToMermaidHelpers } from '@/[fsd]/features/agent/lib/helpers';
 import ModalMessage from '@/[fsd]/features/agent/ui/agent-details/configurations/modal/ModalMessage';
+import Markdown from '@/[fsd]/shared/ui/markdown';
 import { ROLES } from '@/common/constants';
 import CloseIcon from '@/components/Icons/CloseIcon';
 import CopyIcon from '@/components/Icons/CopyIcon';
-import Markdown from '@/components/Markdown';
 import MermaidDiagramOutput from '@/components/MermaidDiagramOutput/DiagramOutput';
 import useToast from '@/hooks/useToast';
 

@@ -24,6 +24,8 @@ export default function useGetCurrentConfigurationAsSchemas({ skip = false } = {
     getConfigurationsAsSchema({ section: 'vectorstorage' });
     getConfigurationsAsSchema({ section: 'image_generation' });
     getConfigurationsAsSchema({ section: 'storage' });
+    getConfigurationsAsSchema({ section: 'asr' });
+    getConfigurationsAsSchema({ section: 'tts' });
   }, [getConfigurationsAsSchema, skip]);
 
   return {

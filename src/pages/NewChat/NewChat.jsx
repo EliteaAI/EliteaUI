@@ -118,6 +118,7 @@ const NewChat = props => {
 
   const [activeFolder, setActiveFolder] = useState(dummyFolder);
   const [folders, setFolders] = useState([]);
+  const [conversationNotFound, setConversationNotFound] = useState(false);
   const isPlayback = useMemo(() => activeConversation?.isPlayback, [activeConversation]);
   const isNewConversation = useMemo(
     () =>
@@ -306,6 +307,11 @@ const NewChat = props => {
 
   const { conversationIdFromUrl, clearUrlConversation, changeUrlByConversation } =
     useConversationNavigation();
+
+  const handleNotFoundAcknowledge = useCallback(() => {
+    setConversationNotFound(false);
+    clearUrlConversation();
+  }, [clearUrlConversation]);
 
   const interaction_uuid = useChatInteractionUUID(activeConversation?.id);
   const { listenCanvasEditorsChangeEvent, stopListenCanvasEditorsChangeEvent } = useChatCanvasEditorsChange({
@@ -554,6 +560,7 @@ const NewChat = props => {
     isLoadFolders: isLoadConversations,
     isLoadMoreFolders: isLoadMoreConversations,
     onLoadMoreFolders: onLoadMoreConversations,
+    isConversationsLoaded,
   } = useQueryFoldersList({
     toastError,
     setFolders,
@@ -563,6 +570,7 @@ const NewChat = props => {
       isCreatingConversation ||
       activeConversation?.isNew ||
       activeConversation?.id ||
+      Boolean(conversationIdFromUrl) ||
       Boolean(searchParams.get(SearchParams.SharedChat)),
   });
 
@@ -939,30 +947,50 @@ const NewChat = props => {
   );
 
   useEffect(() => {
+    if (!conversationIdFromUrl) {
+      setConversationNotFound(false);
+      return;
+    }
     const folderConversations = folders?.map(folder => folder.conversations) || [];
     const conversationList = [...conversations, ...folderConversations.flat()];
     const conversationFromUrl = conversationList.find(
       conversation => conversation.id == conversationIdFromUrl,
     );
-    if (!isLoadMoreConversations && conversationIdFromUrl && !activeConversation?.id) {
-      if (conversationFromUrl) {
-        onSelectConversation(conversationFromUrl);
-      } else {
-        // Conversation not in list - try to fetch by ID (e.g., webhook-triggered conversations)
-        const numericId = parseInt(conversationIdFromUrl, 10);
-        if (!isNaN(numericId)) {
-          onSelectConversation({ id: numericId });
-        }
-      }
+    if (isConversationsLoaded) {                                                                                                                                                                                 
+      if (conversationFromUrl) {                                                                                                                                                                                 
+        setConversationNotFound(false);                                                                                                                                                                          
+        if (!activeConversation?.id) {                                                                                                                                                                           
+          onSelectConversation(conversationFromUrl);                                                                                                                                                             
+        }                                                                                                                                                                                                        
+      } else if (conversationIdFromUrl && !activeConversation?.id) {                                                                                                                                             
+        // Conversation not in list - try to fetch by ID (e.g., webhook-triggered conversations)                                                                                                                 
+        const numericId = parseInt(conversationIdFromUrl, 10);                                                                                                                                                   
+        if (!isNaN(numericId)) {                                                                                                                                                                                 
+          onSelectConversation({ id: numericId });                                                                                                                                                               
+          setConversationNotFound(false);                                                                                                                                                                        
+        } else {                                                                                                                                                                                                 
+          setConversationNotFound(true);                                                                                                                                                                       
+        }                                                                                                                                                                                                        
+      } else if (!activeConversation?.id) {                                                                                                                                                                    
+        setConversationNotFound(true);                                                                                                                                                                           
+      }                                                                                                                                                                                                          
     }
   }, [
     activeConversation?.id,
     conversationIdFromUrl,
     conversations,
     folders,
-    isLoadMoreConversations,
+    isConversationsLoaded,
     onSelectConversation,
   ]);
+
+  const messageIdFromUrl = searchParams.get(SearchParams.MessageId);
+
+  useEffect(() => {
+    if (messageIdFromUrl && activeConversation?.id) {
+      dispatch(chatActions.setMessageIdToView({ messageIdToView: messageIdFromUrl }));
+    }
+  }, [activeConversation?.id, dispatch, messageIdFromUrl]);
 
   const onParticipantsCollapsed = useCallback(() => {
     setCollapsedParticipants(prev => !prev);
@@ -1497,6 +1525,15 @@ const NewChat = props => {
         onCancel={handleVersionChangeCancel}
         onConfirm={handleVersionChangeConfirm}
         confirmButtonText="Discard Changes"
+      />
+      <AlertDialog
+        open={conversationNotFound}
+        title="Conversation not found"
+        alertContent="The conversation you are looking for does not exist in your project or you don't have access to it. For sharing links, please use the Share option in the conversation menu."
+        confirmButtonText="Got it"
+        cancelButtonText=""
+        onClose={handleNotFoundAcknowledge}
+        onConfirm={handleNotFoundAcknowledge}
       />
     </>
   );

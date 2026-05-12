@@ -1,9 +1,10 @@
-import { forwardRef, useCallback, useRef } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
 import { Box, IconButton } from '@mui/material';
 
 import UserInput from '@/ComponentsLib/Chat/UserInput';
 import Tooltip from '@/ComponentsLib/Tooltip';
+import { useSpeakingModeLoop } from '@/[fsd]/features/chat/lib/hooks';
 import { ChatButton } from '@/[fsd]/features/chat/ui';
 import { LLMModelSelector } from '@/[fsd]/widgets/LLMModelSelector';
 import ChatBotIcon from '@/assets/chatbot-icon.svg?react';
@@ -15,6 +16,7 @@ import { useTheme } from '@emotion/react';
 
 const NewChatInput = forwardRef((props, ref) => {
   const {
+    conversationId,
     onSend,
     isLoading,
     isStreaming = false,
@@ -79,11 +81,51 @@ const NewChatInput = forwardRef((props, ref) => {
     projectId,
 
     slashHighlights = [],
+
+    // Speaking mode
+    isSpeakingMode = false,
+    onSpeakingModeToggle,
+    isTTSPlaying = false,
   } = props;
   const theme = useTheme();
   const { toastError } = useToast();
   const { limits } = useChatConfig();
   const attachmentButtonRef = useRef(null);
+  const userInputRef = useRef(null);
+  const voiceButtonRef = useRef(null);
+  const [isRecording, setIsRecording] = useState(false);
+
+  const { isRecording: isSpeakingModeRecording } = useSpeakingModeLoop({
+    isSpeakingMode,
+    inputRef: userInputRef,
+    isStreaming,
+    isTTSPlaying,
+  });
+
+  // Forward the same imperative handle the outer caller expects from UserInput
+  useImperativeHandle(ref, () => userInputRef.current, []);
+
+  const handleVoiceRecordingChange = useCallback(
+    recording => {
+      setIsRecording(recording);
+      if (recording && isSpeakingMode) {
+        onSpeakingModeToggle?.();
+      }
+    },
+    [isSpeakingMode, onSpeakingModeToggle],
+  );
+
+  const handleSend = useCallback(
+    (question, inputContent) => {
+      voiceButtonRef.current?.stop();
+      onSend?.(question, inputContent);
+    },
+    [onSend],
+  );
+
+  useEffect(() => {
+    voiceButtonRef.current?.stop();
+  }, [conversationId]);
 
   const onClickChatBot = useCallback(() => {
     onShowParticipantsList();
@@ -179,6 +221,12 @@ const NewChatInput = forwardRef((props, ref) => {
                   disabled={isLoading || isStreaming}
                 />
               )}
+              <ChatButton.VoiceButton
+                ref={voiceButtonRef}
+                inputRef={userInputRef}
+                disabled={isLoading || isStreaming || isSpeakingMode}
+                onRecordingChange={handleVoiceRecordingChange}
+              />
             </Box>
             <Box
               flex={1}
@@ -279,7 +327,7 @@ const NewChatInput = forwardRef((props, ref) => {
           onDrop,
         },
         input: {
-          placeholder,
+          placeholder: isRecording || isSpeakingMode ? 'Speak your message' : placeholder,
           color: theme.palette.text.secondary,
           iconColor: theme.palette.icon.fill.default,
         },
@@ -303,7 +351,7 @@ const NewChatInput = forwardRef((props, ref) => {
       clearInputAfterSend={clearInputAfterSubmit}
       disabledSend={disabledSend}
       disabledInput={isLoading}
-      onSend={onSend}
+      onSend={handleSend}
       onNormalKeyDown={onNormalKeyDown}
       onInputChange={onInputChange}
       tooltipOfSendButton={tooltipOfSendButton}
@@ -311,7 +359,11 @@ const NewChatInput = forwardRef((props, ref) => {
       onFilePaste={handleFilePaste}
       isUploadingAttachments={isUploadingAttachments}
       uploadProgress={uploadProgress}
-      ref={ref}
+      isRecording={isRecording || isSpeakingModeRecording}
+      isSpeakingMode={isSpeakingMode}
+      onEnterSpeakingMode={onSpeakingModeToggle}
+      onExitSpeakingMode={onSpeakingModeToggle}
+      ref={userInputRef}
     />
   );
 });

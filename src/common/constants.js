@@ -280,6 +280,7 @@ export const SearchParams = {
   DeploymentConfigName: 'config_name',
   CreateConversation: 'create',
   Conversation: 'conversation',
+  MessageId: 'message_id',
   DestTab: 'destTab',
   ToolkitType: 'toolkit_type',
   SaveToolkit: 'save_toolkit',
@@ -485,6 +486,7 @@ export const publicTabs = ['latest', 'my-liked', 'trending'];
 export const ModerationTabs = ['all', 'agents'];
 export const ApplicationsTabs = ['latest', 'my-liked', 'trending', 'admin'];
 export const ToolkitsTabs = ['all', 'my-liked', 'trending', 'admin'];
+export const AppsTabs = ['request', 'configured'];
 
 export const CredentialsTabs = ['all'];
 
@@ -933,6 +935,21 @@ export const sioEvents = {
 
   // MCP connection test (uses protocol-level list_tools)
   test_mcp_connection: 'test_mcp_connection',
+
+  // Server-side ASR (real-time transcription via OpenAI Realtime API)
+  asr_start: 'asr_start',
+  asr_audio_chunk: 'asr_audio_chunk',
+  asr_stop: 'asr_stop',
+  asr_transcript_delta: 'asr_transcript_delta',
+  asr_transcript_done: 'asr_transcript_done',
+  asr_error: 'asr_error',
+
+  // Server-side TTS (text-to-speech via model API)
+  tts_start: 'tts_start',
+  tts_stop: 'tts_stop',
+  tts_audio_chunk: 'tts_audio_chunk',
+  tts_done: 'tts_done',
+  tts_error: 'tts_error',
 };
 
 export const ToolActionStatus = {
@@ -1013,6 +1030,7 @@ export const NotificationType = {
   ContributorRequestForPublishApprove: 'contributor_request_for_publish_approve',
   UserWasAddedToSomeProjectAsTeammate: 'user_was_added_to_some_project_as_teammate',
   ChatUserAdded: 'chat_user_added',
+  ChatUserMentioned: 'chat_user_mentioned',
   PrivateProjectCreated: 'private_project_created',
   IndexDataChanged: 'index_data_changed',
   BucketExpirationWarning: 'bucket_expiration_warning',

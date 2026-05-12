@@ -35,7 +35,9 @@ import JiraIcon from '@/assets/jira.svg?react';
 import LangfuseIcon from '@/assets/langfuse.svg?react';
 import LlmIcon from '@/assets/llm.svg?react';
 import MCPIcon from '@/assets/mcp-icon.svg?react';
+import MicphoneIcon from '@/assets/megaphone.svg?react';
 import MemoryIcon from '@/assets/memory.svg?react';
+import MicIcon from '@/assets/microphone.svg?react';
 import MiroIcon from '@/assets/miro.svg?react';
 import OllamaIcon from '@/assets/ollama.svg?react';
 import PieChartIcon from '@/assets/pie-chart-icon.svg?react';
@@ -333,6 +335,10 @@ const getPredefinedIcon = (type, iconProps) => {
       return <MiroIcon {...iconProps} />;
     case 'mcp_Atlassian Server':
       return <AtlassianIcon {...iconProps} />;
+    case 'asr_model':
+      return <MicIcon {...iconProps} />;
+    case 'tts_model':
+      return <MicphoneIcon {...iconProps} />;
     default:
       return <BuildIcon {...iconProps} />;
   }

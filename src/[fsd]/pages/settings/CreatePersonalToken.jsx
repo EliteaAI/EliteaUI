@@ -1,10 +1,10 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useFormik } from 'formik';
 import { useNavigate } from 'react-router-dom';
 import * as yup from 'yup';
 
-import { Box, CircularProgress, Button as MuiButton, TextField, Tooltip } from '@mui/material';
+import { Box, CircularProgress, TextField, Tooltip } from '@mui/material';
 
 import { DrawerPage, DrawerPageHeader } from '@/[fsd]/features/settings/ui/drawer-page';
 import { GeneratedTokenDialog } from '@/[fsd]/features/settings/ui/personal-tokes';
@@ -22,6 +22,7 @@ const validationSchema = yup.object({
 const CreatePersonalToken = memo(() => {
   const navigate = useNavigate();
   const [data, setData] = useState({});
+  const [wantToCancel, setWantToCancel] = useState(false);
   const [openTokenDialog, setOpenTokenDialog] = useState(false);
   const [createToken, { isLoading: isGenerating }] = useTokenCreateMutation();
   const { refetch } = useTokenListQuery({ skip: true });
@@ -48,6 +49,7 @@ const CreatePersonalToken = memo(() => {
       }
     },
   });
+
   const hasChanged = useMemo(() => {
     return (
       JSON.stringify({
@@ -59,8 +61,12 @@ const CreatePersonalToken = memo(() => {
   }, [formik.values]);
 
   const onCancel = useCallback(() => {
-    navigate(-1);
-  }, [navigate]);
+    setWantToCancel(true);
+  }, []);
+
+  useEffect(() => {
+    if (wantToCancel) navigate(-1);
+  }, [navigate, wantToCancel]);
 
   const onChangeExpiration = useCallback(
     event => {
@@ -71,7 +77,7 @@ const CreatePersonalToken = memo(() => {
   );
 
   useNavBlocker({
-    blockCondition: !data.uuid && hasChanged,
+    blockCondition: !data.uuid && hasChanged && !wantToCancel,
   });
 
   const styles = createPersonalTokenStyles();
@@ -90,7 +96,7 @@ const CreatePersonalToken = memo(() => {
               placement="bottom"
             >
               <Box component="span">
-                <MuiButton
+                <Button.BaseBtn
                   variant="elitea"
                   color="primary"
                   disabled={!formik.values.name || isGenerating || !!data.uuid}
@@ -103,7 +109,7 @@ const CreatePersonalToken = memo(() => {
                       sx={styles.loadingIndicator}
                     />
                   )}
-                </MuiButton>
+                </Button.BaseBtn>
               </Box>
             </Tooltip>
             <Button.DiscardButton

@@ -74,6 +74,26 @@ export const useMultiSectionConfigurations = (sections = [], projectId) => {
     { skip: !sections.includes('image_generation') || !projectId },
   );
 
+  // ASR (Speech Recognition) models
+  const asrQuery = useGetConfigurationsListQuery(
+    {
+      projectId,
+      section: 'asr',
+      includeShared: true,
+    },
+    { skip: !sections.includes('asr') || !projectId },
+  );
+
+  // TTS (Text-to-Speech) models
+  const ttsQuery = useGetConfigurationsListQuery(
+    {
+      projectId,
+      section: 'tts',
+      includeShared: true,
+    },
+    { skip: !sections.includes('tts') || !projectId },
+  );
+
   // Combine results and loading states
   const combinedData = useMemo(() => {
     const locals = [];
@@ -100,6 +120,12 @@ export const useMultiSectionConfigurations = (sections = [], projectId) => {
 
     // Image generation models
     pushItems(imageGenerationQuery.data, 'image_generation');
+
+    // ASR models
+    pushItems(asrQuery.data, 'asr');
+
+    // TTS models
+    pushItems(ttsQuery.data, 'tts');
 
     // AI credentials from generic credentials
     const aiTypes = new Set([
@@ -166,6 +192,8 @@ export const useMultiSectionConfigurations = (sections = [], projectId) => {
     aiCredentialsQuery.data,
     credentialsAltQuery.data,
     imageGenerationQuery.data,
+    asrQuery.data,
+    ttsQuery.data,
   ]);
 
   const isLoading =
@@ -175,7 +203,9 @@ export const useMultiSectionConfigurations = (sections = [], projectId) => {
     embeddingAltQuery.isLoading ||
     aiCredentialsQuery.isLoading ||
     credentialsAltQuery.isLoading ||
-    imageGenerationQuery.isLoading;
+    imageGenerationQuery.isLoading ||
+    asrQuery.isLoading ||
+    ttsQuery.isLoading;
 
   const error =
     llmQuery.error ||
@@ -184,7 +214,9 @@ export const useMultiSectionConfigurations = (sections = [], projectId) => {
     embeddingAltQuery.error ||
     aiCredentialsQuery.error ||
     credentialsAltQuery.error ||
-    imageGenerationQuery.error;
+    imageGenerationQuery.error ||
+    asrQuery.error ||
+    ttsQuery.error;
 
   return {
     data: combinedData,
@@ -202,6 +234,8 @@ export const useMultiSectionConfigurations = (sections = [], projectId) => {
         credentialsAltQuery.refetch();
       }
       if (sections.includes('image_generation')) imageGenerationQuery.refetch();
+      if (sections.includes('asr')) asrQuery.refetch();
+      if (sections.includes('tts')) ttsQuery.refetch();
     },
   };
 };

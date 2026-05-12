@@ -41,6 +41,7 @@ export default function useQueryFoldersList({
   //@todo: need to modify this state after resolving an issue with pagination
   // const [page, setPage] = useState(0);
   const [page] = useState(0);
+  const [isConversationsLoaded, setIsConversationsLoaded] = useState(false);
 
   const {
     data,
@@ -117,6 +118,7 @@ export default function useQueryFoldersList({
     if (isSuccess && !isLoadFolders) {
       updateUngroupedConversations(data?.ungrouped_conversations);
       updateFolders(data?.folders);
+      setIsConversationsLoaded(true);
     }
   }, [data, isSuccess, isLoadFolders, updateFolders, updateUngroupedConversations]);
 
@@ -152,5 +154,6 @@ export default function useQueryFoldersList({
     isLoadMoreFolders,
     onLoadMoreFolders,
     totalFolderCount: data?.total_folders || 0,
+    isConversationsLoaded,
   };
 }

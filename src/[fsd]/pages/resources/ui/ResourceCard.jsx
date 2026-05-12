@@ -3,19 +3,19 @@ import { memo } from 'react';
 import { Box, Divider, Typography } from '@mui/material';
 
 import { GradientIconWrapper } from '@/[fsd]/shared/ui/icon';
-import { getCardGradientStyles } from '@/utils/cardStyles';
+import { getCardGradientBorderBefore, getCardGradientStyles } from '@/utils/cardStyles';
 
 const ResourceCard = memo(props => {
-  const { title, description, icon, children } = props;
-  const styles = resourceCardStyles();
+  const { title, description, icon, colorScheme, children } = props;
+  const styles = resourceCardStyles(colorScheme);
 
   return (
     <Box sx={styles.card}>
       <Box sx={styles.cardHeader}>
-        <GradientIconWrapper>{icon}</GradientIconWrapper>
+        <GradientIconWrapper sx={styles.iconWrapper}>{icon}</GradientIconWrapper>
         <Box sx={styles.headerText}>
           <Typography
-            variant="bodyMediumBold"
+            variant="subtitle"
             color="text.secondary"
           >
             {title}
@@ -37,32 +37,55 @@ const ResourceCard = memo(props => {
 ResourceCard.displayName = 'ResourceCard';
 
 /** @type {MuiSx} */
-const resourceCardStyles = () => ({
-  card: ({ palette }) => ({
-    ...getCardGradientStyles(palette, { enableHover: false }),
-    display: 'flex',
-    flexDirection: 'column',
-    flexShrink: 0,
-    minWidth: '23.75rem',
-    minHeight: '14.25rem',
-  }),
-  cardHeader: () => ({
+const resourceCardStyles = colorScheme => ({
+  card: ({ palette }) => {
+    const scheme = palette.background.resourceCard?.[colorScheme];
+    return {
+      ...getCardGradientStyles(palette, { enableHover: false }),
+      borderRadius: '1rem',
+      ...(scheme
+        ? {
+            background: scheme.card,
+            '&::before': { ...getCardGradientBorderBefore(palette), background: scheme.borderGradient },
+          }
+        : {}),
+      display: 'flex',
+      flexDirection: 'column',
+      flexShrink: 0,
+      minWidth: '23.75rem',
+      maxWidth: '31.25rem',
+      minHeight: '14.25rem',
+    };
+  },
+  cardHeader: {
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
     gap: '1rem',
     px: '1rem',
     py: '0.75rem',
-  }),
+  },
   headerText: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.125rem',
+    gap: '0.25rem',
     flex: 1,
   },
-  divider: ({ palette }) => ({
-    borderColor: palette.border.cardsOutlines,
-  }),
+  iconWrapper: ({ palette }) => {
+    const scheme = palette.background.resourceCard?.[colorScheme];
+    if (!scheme) return {};
+    return {
+      background: scheme.icon,
+      color: scheme.iconColor,
+      '&::before': { background: scheme.iconBorderGradient },
+    };
+  },
+  divider: ({ palette }) => {
+    const scheme = palette.background.resourceCard?.[colorScheme];
+    return {
+      borderColor: scheme?.divider ?? palette.border.cardsOutlines,
+    };
+  },
   body: ({ spacing }) => ({
     display: 'flex',
     flexDirection: 'column',

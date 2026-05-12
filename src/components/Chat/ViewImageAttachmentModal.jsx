@@ -116,7 +116,7 @@ const ViewImageAttachmentModal = memo(props => {
           </Typography>
           <Box sx={styles.actionsContainer}>
             <BaseBtn
-              variant={BUTTON_VARIANTS.ICON}
+              variant={BUTTON_VARIANTS.icon}
               color="secondary"
               onClick={onClickDown}
               aria-label="Download image"
@@ -128,7 +128,7 @@ const ViewImageAttachmentModal = memo(props => {
               />
             </BaseBtn>
             <BaseBtn
-              variant={BUTTON_VARIANTS.ICON}
+              variant={BUTTON_VARIANTS.icon}
               color="secondary"
               onClick={onClickRemove}
               aria-label="Remove attachment"

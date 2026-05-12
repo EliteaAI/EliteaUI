@@ -3,9 +3,9 @@ import { memo } from 'react';
 import { Box, IconButton, Typography } from '@mui/material';
 
 import { onboardingTips } from '@/[fsd]/features/onboarding/lib/constants';
+import { Markdown } from '@/[fsd]/shared/ui';
 import ArrowLeftIcon from '@/assets/arrow-left-icon.svg?react';
 import ArrowRightIcon from '@/assets/arrow-right-icon.svg?react';
-import ReactMarkdown from '@/components/ReactMarkdown';
 
 const TourContent = memo(props => {
   const { currentStep, onNext, onPrevious } = props;
@@ -25,7 +25,7 @@ const TourContent = memo(props => {
         variant="bodyMedium"
         sx={styles.title}
       >
-        <ReactMarkdown>{onboardingTips[currentStep - 1].tip}</ReactMarkdown>
+        <Markdown>{onboardingTips[currentStep - 1].tip}</Markdown>
       </Typography>
       <Box sx={styles.footer}>
         <IconButton

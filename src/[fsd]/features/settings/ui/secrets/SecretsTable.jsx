@@ -56,7 +56,16 @@ const SECRETS_COLUMNS = [
 ];
 
 const SecretsTable = memo(props => {
-  const { isFetching, rows, setRows, setRowModesModel, rowModesModel, projectId, refetch } = props;
+  const {
+    isFetching,
+    rows,
+    setRows,
+    setRowModesModel,
+    rowModesModel,
+    projectId,
+    refetch,
+    onResetPaginationReady,
+  } = props;
 
   const { windowWidth } = useGetWindowWidth();
   const isSafariBrowser = isSafari();
@@ -146,7 +155,11 @@ const SecretsTable = memo(props => {
     pageSizeOptions: SECRETS_TABLE_CONFIG.PAGE_SIZE_OPTIONS,
   });
 
-  const { paginateData } = pagination;
+  const { paginateData, handlePageChange } = pagination;
+
+  useEffect(() => {
+    onResetPaginationReady?.(() => handlePageChange(0));
+  }, [onResetPaginationReady, handlePageChange]);
   const paginatedRows = useMemo(() => paginateData(sortedRows), [paginateData, sortedRows]);
 
   // Custom hooks for business logic

@@ -4,8 +4,8 @@ import { Box, Button, Typography } from '@mui/material';
 import IconButton from '@mui/material/IconButton';
 import ListItemAvatar from '@mui/material/ListItemAvatar';
 
+import Markdown from '@/[fsd]/shared/ui/markdown';
 import { ChatParticipantType } from '@/common/constants';
-import Markdown from '@/components/Markdown.jsx';
 import UserAvatar from '@/components/UserAvatar';
 import useHighlightUserMessage from '@/hooks/chat/useHighlightUserMessage';
 import useParticipantName from '@/hooks/chat/useParticipantName';

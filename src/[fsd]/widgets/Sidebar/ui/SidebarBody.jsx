@@ -6,6 +6,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Box, Divider, IconButton, Tooltip, Typography, useTheme } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
+import { useGetSupportAssistantConfigQuery } from '@/[fsd]/features/agent/api';
 import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
 import { SidebarConstants, SocketConstants } from '@/[fsd]/widgets/Sidebar/lib/constants';
 import { useSocketIcon } from '@/[fsd]/widgets/Sidebar/lib/hooks';
@@ -47,6 +48,9 @@ const SidebarBody = memo(props => {
   const { isSocketIconVisible, socketStatus } = useSocketIcon();
   const { personal_project_id } = useSelector(state => state.user);
   const { data: platformSettings } = useGetPlatformSettingsQuery();
+
+  useGetSupportAssistantConfigQuery();
+
   const styles = sideBarBodyStyles(sideBarCollapsed, socketStatus);
 
   const navigateToPage = useCallback(

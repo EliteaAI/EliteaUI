@@ -15,9 +15,9 @@ import { v4 as uuidv4 } from 'uuid';
 import { Box } from '@mui/system';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
-import { ChatHelpers, NewConversationHelpers } from '@/[fsd]/features/chat/lib/helpers';
-import { useSlashMention } from '@/[fsd]/features/chat/lib/hooks';
-import { SlashSuggestionList } from '@/[fsd]/features/chat/ui';
+import { ChatHelpers, NewConversationHelpers, toSpeakableText } from '@/[fsd]/features/chat/lib/helpers';
+import { useSlashMention, useTextToSpeech } from '@/[fsd]/features/chat/lib/hooks';
+import { SlashSuggestionList, VoiceMiniPlayer } from '@/[fsd]/features/chat/ui';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import {
   DEFAULT_MAX_TOKENS,
@@ -254,6 +254,44 @@ const ChatBox = forwardRef((props, boxRef) => {
   const [isMentioningEveryone, setIsMentioningEveryone] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [hasStarterBeenSent, setHasStarterBeenSent] = useState(false);
+  const [isSpeakingMode, setIsSpeakingMode] = useState(false);
+  const [speakingMessageId, setSpeakingMessageId] = useState(null);
+  const [speakingSegments, setSpeakingSegments] = useState(null);
+  const { data: ttsModelsData } = useListModelsQuery(
+    { projectId, section: 'tts', include_shared: true },
+    { skip: !projectId },
+  );
+  const ttsModel = useMemo(
+    () => ttsModelsData?.items?.find(m => m.default) ?? ttsModelsData?.items?.[0] ?? null,
+    [ttsModelsData],
+  );
+  const {
+    speak,
+    pause: pauseTTS,
+    resume: resumeTTS,
+    isPlaying,
+    isPaused,
+    spokenRange,
+  } = useTextToSpeech({ ttsModel, socket });
+
+  const handleAutoSpeak = useCallback(
+    (text, msgId) => {
+      if (!text) return;
+      const { text: speakableText, segments } = toSpeakableText(text);
+      if (!speakableText) return;
+      setSpeakingMessageId(msgId ?? null);
+      setSpeakingSegments(segments);
+      speak(speakableText);
+    },
+    [speak],
+  );
+
+  useEffect(() => {
+    if (!isPlaying && !isPaused) {
+      setSpeakingMessageId(null);
+      setSpeakingSegments(null);
+    }
+  }, [isPlaying, isPaused]);
   const isTheUserChattingNow = useMemo(() => {
     const latest40Messages = chat_history.slice(-40);
     let isChatting = false;
@@ -273,6 +311,7 @@ const ChatBox = forwardRef((props, boxRef) => {
     { projectId, include_shared: true },
     { skip: !projectId },
   );
+
   const [selectedModel, setSelectedModel] = useState(null);
 
   const defaultModel = useMemo(() => {
@@ -1843,6 +1882,11 @@ const ChatBox = forwardRef((props, boxRef) => {
           hideContinueButton={isAgentsPage}
           hideHitlActions={hitlEditMode}
           onOpenArtifactPreview={onOpenArtifactPreview}
+          isSpeakingMode={isSpeakingMode}
+          onAutoSpeak={handleAutoSpeak}
+          speakingMessageId={speakingMessageId}
+          speakingSegments={speakingSegments}
+          spokenRange={spokenRange}
         />
         {displayConversationStarters && (
           <ChatConversationStarters
@@ -1850,6 +1894,12 @@ const ChatBox = forwardRef((props, boxRef) => {
             conversation_starters={hasStarterBeenSent || isTheUserChattingNow ? [] : conversationStarters}
           />
         )}
+        <VoiceMiniPlayer
+          isPlaying={isPlaying}
+          isPaused={isPaused}
+          onPause={pauseTTS}
+          onResume={resumeTTS}
+        />
         <Box sx={hitlEditMode ? styles.inputWrapperHitl : styles.inputWrapper}>
           {hitlEditMode && (
             <Box sx={styles.hitlInfoBanner}>
@@ -1894,6 +1944,7 @@ const ChatBox = forwardRef((props, boxRef) => {
             />
           )}
           <NewChatInput
+            conversationId={activeConversation?.id}
             placeholder={inputPlaceholder}
             ref={chatInput}
             onSend={onSendMessage}
@@ -1952,6 +2003,9 @@ const ChatBox = forwardRef((props, boxRef) => {
             internal_tools={activeConversation?.meta?.internal_tools || []}
             projectId={projectId}
             slashHighlights={slashHighlightRanges}
+            isSpeakingMode={isSpeakingMode}
+            onSpeakingModeToggle={() => setIsSpeakingMode(v => !v)}
+            isTTSPlaying={isPlaying}
           />
         </Box>
       </ChatBodyContainer>

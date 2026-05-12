@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import { Box, Chip, Typography } from '@mui/material';
@@ -8,9 +8,13 @@ import ListItem from '@mui/material/ListItem';
 import ListItemAvatar from '@mui/material/ListItemAvatar';
 import ListItemText from '@mui/material/ListItemText';
 
+import { toSpeakableText, translateSpokenPos } from '@/[fsd]/features/chat/lib/helpers';
 import { ChatAttachment, ChatContinue, ChatHitlActions } from '@/[fsd]/features/chat/ui';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
+import { BaseBtn } from '@/[fsd]/shared/ui/button';
+import Markdown from '@/[fsd]/shared/ui/markdown';
 import ArrowRightIcon from '@/assets/arrow-right-icon.svg?react';
+import MicphoneIcon from '@/assets/megaphone.svg?react';
 import {
   CANVAS_ADMIN_USER,
   CANVAS_SYSTEM_USER,
@@ -39,7 +43,6 @@ import DeleteIcon from '../Icons/DeleteIcon';
 import EditIcon from '../Icons/EditIcon';
 import EliteAIcon from '../Icons/EliteAIcon';
 import RegenerateIcon from '../Icons/RegenerateIcon';
-import Markdown from '../Markdown';
 import ApplicationThinkView from './ApplicationThinkView';
 import CreatedTimeInfo from './CreatedTimeInfo';
 import EditingPlaceholder from './EditingPlaceholder';
@@ -102,8 +105,14 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
     // Swarm mode props
     isSwarmChild = false,
     swarmAgentName = '',
+    // Speaking mode TTS
+    isSpeakingMode = false,
+    isLastMessage = false,
+    onAutoSpeak,
+    speakingMessageId,
+    speakingSegments,
+    spokenRange,
   } = props;
-
   const [isErrorExpanded, setIsErrorExpanded] = useState(false);
 
   const downloadErrorTrace = useCallback(() => {
@@ -168,6 +177,43 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
     [answer, message_items],
   );
   const realAnswer = useMemo(() => convertJsonToString(rawAnswer || '', true), [rawAnswer]);
+  const hasSpeakableText = useMemo(() => !!toSpeakableText(realAnswer).text, [realAnswer]);
+
+  // Progressive highlight: always from start of message to current spoken position.
+  // spokenRange positions are in stripped-text coordinates; translate back to original markdown.
+  const activeSpokenRange = useMemo(() => {
+    if (messageId !== speakingMessageId || !spokenRange) return null;
+    const translatedEnd = translateSpokenPos(spokenRange.end, speakingSegments);
+    return { start: 0, end: translatedEnd };
+  }, [messageId, speakingMessageId, spokenRange, speakingSegments]);
+
+  // Cumulative start offsets of each message_item in the joined realAnswer string
+  const messageItemOffsets = useMemo(() => {
+    if (!message_items?.length) return {};
+    const offsets = {};
+    let pos = 0;
+    message_items.forEach((item, idx) => {
+      const rawContent =
+        item.item_type === 'canvas_message'
+          ? item.item_details.latest_version?.canvas_content || ''
+          : item.item_details.content;
+      const str = rawContent == null ? '' : String(rawContent);
+      if (item.item_type === 'text_message') {
+        offsets[item.uuid] = pos;
+      }
+      pos += str.length;
+      if (idx < message_items.length - 1) pos += 1; // comma separator from .join()
+    });
+    return offsets;
+  }, [message_items]);
+
+  // Auto-speak AI response in speaking mode when streaming/loading ends (last message only)
+  useEffect(() => {
+    if (isSpeakingMode && isLastMessage && !isStreaming && !isLoading && hasSpeakableText) {
+      onAutoSpeak?.(realAnswer, messageId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isStreaming, isLoading]);
 
   // Check if this is an Application participant
   const isApplicationParticipant = participant?.entity_name === ChatParticipantType.Applications;
@@ -467,7 +513,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
 
           {/* {exception && <AgentException exception={exception} title={!isApplicationParticipant ? 'LLM exception' : undefined} />} */}
           {!isEditing && shouldRenderAnswerBlock && (
-            <Answer sx={styles.answerBlock}>
+            <Answer sx={styles.answerBlock(messageId === speakingMessageId)}>
               {canRenderContent && !isNullOrUndefined(answer) && !message_items?.length && (
                 <Markdown
                   interaction_uuid={interaction_uuid}
@@ -475,8 +521,9 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                   onEdit={onEdit}
                   selectedCodeBlockInfo={selectedCodeBlockInfo}
                   isStreaming={isStreaming || isRegenerating}
+                  spokenRange={activeSpokenRange}
                 >
-                  {realAnswer || ''}
+                  {realAnswer ?? ''}
                 </Markdown>
               )}
 
@@ -502,7 +549,13 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                           }
                         />
                       );
-                    case 'text_message':
+                    case 'text_message': {
+                      const itemOffset = messageItemOffsets[item.uuid] ?? 0;
+                      const itemEndPos = activeSpokenRange
+                        ? Math.max(0, activeSpokenRange.end - itemOffset)
+                        : 0;
+                      const itemSpokenRange =
+                        activeSpokenRange && itemEndPos > 0 ? { start: 0, end: itemEndPos } : null;
                       return (
                         <Markdown
                           key={item.uuid}
@@ -512,10 +565,12 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                           selectedCodeBlockInfo={selectedCodeBlockInfo}
                           messageItemId={item.id}
                           isStreaming={isStreaming || isRegenerating}
+                          spokenRange={itemSpokenRange}
                         >
                           {convertJsonToString(item.item_details.content) || ''}
                         </Markdown>
                       );
+                    }
 
                     default:
                       return null;
@@ -654,6 +709,21 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                   className="actionButtons"
                   sx={styles.buttonsContainer}
                 >
+                  {onAutoSpeak && hasSpeakableText && (
+                    <StyledTooltip
+                      title="Read out"
+                      placement="top"
+                    >
+                      <BaseBtn
+                        disabled={isProcessing || !realAnswer || !!speakingMessageId}
+                        sx={styles.iconButton}
+                        variant="tertiary"
+                        onClick={() => onAutoSpeak(realAnswer, messageId)}
+                      >
+                        <MicphoneIcon sx={styles.icon} />
+                      </BaseBtn>
+                    </StyledTooltip>
+                  )}
                   {onCopy && (!!answer || !!message_items?.length || !!exception) && (
                     <StyledTooltip
                       title="Copy to clipboard"
@@ -862,20 +932,23 @@ const applicationAnswerStyles = (
     fontSize: '1.5rem',
   },
   contentWrapper: verticalMode ? { width: '100%' } : { width: 'calc(100% - 2rem)' },
-  answerBlock: ({ palette }) => ({
-    background: palette.background.aiAnswerBkg,
-    width: '100%',
-    borderRadius: '0.5rem',
-    padding: '0.75rem 1rem 0.75rem 1rem',
-    position: 'relative',
-    boxSizing: 'border-box',
-    minHeight: '3rem',
-    marginTop: hasToolActionsOrException ? '0.5rem' : '0',
-    flex: 1,
-    border: 'none',
-    borderColor: 'transparent',
-    boxShadow: palette.boxShadow.aiAnswer,
-  }),
+  answerBlock:
+    isSpeaking =>
+    ({ palette }) => ({
+      background: palette.background.aiAnswerBkg,
+      width: '100%',
+      borderRadius: '0.5rem',
+      padding: '0.75rem 1rem 0.75rem 1rem',
+      position: 'relative',
+      boxSizing: 'border-box',
+      minHeight: '3rem',
+      marginTop: hasToolActionsOrException ? '0.5rem' : '0',
+      flex: 1,
+      border: 'none',
+      borderColor: 'transparent',
+      boxShadow: palette.boxShadow.aiAnswer,
+      color: isSpeaking ? `${palette.text.primary} !important` : palette.text.secondary,
+    }),
   attachmentGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, 16.25rem)',
@@ -981,6 +1054,10 @@ const applicationAnswerStyles = (
   },
   iconButton: {
     marginLeft: '0',
+    minWidth: '1rem',
+    width: '1rem',
+    height: '1.75rem',
+    padding: '0',
   },
   icon: {
     fontSize: '1rem',

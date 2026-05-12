@@ -4,13 +4,13 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useMatch } from 'react-router-dom';
 
 import RouteDefinitions from '@/routes';
-import { actions as chatActions } from '@/slices/chat';
+import { actions as chatActions, selectMessageIdToView } from '@/slices/chat';
 
 const HIGHLIGHT_DURATION = 2000;
 
 const useHighlightUserMessage = messageId => {
   const dispatch = useDispatch();
-  const messageIdToView = useSelector(state => state.chat.messageIdToView);
+  const messageIdToView = useSelector(selectMessageIdToView);
   const [highLightMe, setHighLightMe] = useState(false);
   const isChatPage = useMatch({ path: RouteDefinitions.ChatConversation });
 

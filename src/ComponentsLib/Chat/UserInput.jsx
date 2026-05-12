@@ -6,12 +6,13 @@ import { Box, IconButton, TextField, Typography } from '@mui/material';
 
 import StyledCircleProgress from '@/ComponentsLib/CircularProgress';
 import Tooltip from '@/ComponentsLib/Tooltip';
+import { SendButton } from '@/[fsd]/features/chat/ui/chat-button';
 import HighlightedText from '@/[fsd]/features/chat/ui/highlighted-text/HighlightedText';
 import { useFileDragAndDrop } from '@/[fsd]/shared/lib/hooks';
+import { BaseBtn } from '@/[fsd]/shared/ui/button';
 import StopIcon from '@/assets/stop-icon.svg?react';
 import { generateRandomAppendix, renameFile } from '@/common/attachmentValidationUtils';
 import FileList from '@/components/Chat/FileList';
-import SendIcon from '@/components/Icons/SendIcon';
 import useCtrlEnterKeyEventsHandler from '@/hooks/useCtrlEnterKeyEventsHandler';
 
 import { useMentionDetection } from './useMentionDetection';
@@ -74,6 +75,10 @@ const UserInput = forwardRef((props, ref) => {
     isUploadingAttachments = false,
     uploadProgress = 0,
     isCreatingConversation = false,
+    isRecording = false,
+    isSpeakingMode = false,
+    onEnterSpeakingMode,
+    onExitSpeakingMode,
   } = props;
 
   const inputRef = useRef(null);
@@ -106,7 +111,7 @@ const UserInput = forwardRef((props, ref) => {
   const hasHighlights = highlightRanges.length > 0 && !!inputContent;
   // console.log('highlightRanges', highlightRanges, hasHighlights);
 
-  const styles = userInputStyles(isFocused, isDragOver);
+  const styles = userInputStyles(isFocused, isDragOver, isRecording);
 
   useEffect(() => {
     const textarea = inputRef.current;
@@ -184,9 +189,17 @@ const UserInput = forwardRef((props, ref) => {
     },
     getInputContent: () => inputContent,
     getCursorPosition: () => inputRef.current?.selectionStart ?? null,
-    setValue: value => {
+    setValue: (value, cursorPos) => {
       setQuestion(value);
       setInputContent(value);
+      if (cursorPos !== undefined) {
+        setTimeout(() => {
+          if (inputRef.current) {
+            inputRef.current.setSelectionRange(cursorPos, cursorPos);
+            inputRef.current.focus();
+          }
+        }, 0);
+      }
     },
     replaceRange: (start, end, text) => {
       const newValue = inputContent.slice(0, start) + text + inputContent.slice(end);
@@ -375,23 +388,17 @@ const UserInput = forwardRef((props, ref) => {
             {footer}
             {!isStreaming || isUploadingAttachments ? (
               <Box sx={styles.sendButtonContainer}>
-                <Tooltip
-                  title={tooltipOfSendButton}
-                  placement="top"
-                >
-                  <Box component="span">
-                    <IconButton
-                      variant="icon"
-                      disabled={disabledSend || !question}
-                      onClick={onEnterDown}
-                      aria-label="send your question"
-                      sx={styles.sendButton(sendButton)}
-                    >
-                      <SendIcon sx={styles.sendIcon(sendButton)} />
-                    </IconButton>
-                  </Box>
-                </Tooltip>
-
+                <SendButton
+                  isSpeakingMode={isSpeakingMode}
+                  question={question}
+                  disabledSend={disabledSend}
+                  onEnterSpeakingMode={onEnterSpeakingMode}
+                  onExitSpeakingMode={onExitSpeakingMode}
+                  onSend={onEnterDown}
+                  tooltipOfSendButton={tooltipOfSendButton}
+                  sendButton={sendButton}
+                  styles={styles}
+                />
                 {showLoading && (
                   <StyledCircleProgress {...(isUploadingAttachments && { progress: uploadProgress })} />
                 )}
@@ -402,14 +409,14 @@ const UserInput = forwardRef((props, ref) => {
                 placement="top"
               >
                 <Box component="span">
-                  <IconButton
+                  <BaseBtn
                     variant="icon"
                     color="secondary"
                     sx={styles.stopButton(stopButton)}
                     onClick={onStop}
                   >
                     <StopIcon style={styles.stopIconStyle} />
-                  </IconButton>
+                  </BaseBtn>
                 </Box>
               </Tooltip>
             )}
@@ -423,14 +430,15 @@ const UserInput = forwardRef((props, ref) => {
 UserInput.displayName = 'UserInput';
 
 /** @type {MuiSx} */
-const userInputStyles = (isFocused, isDragOver) => {
+const userInputStyles = (isFocused, isDragOver, isRecording) => {
   const getInputBackground = palette => {
-    if (!isFocused) return palette.background.card.default;
+    if (!isFocused && !isRecording) return palette.background.card.default;
 
     return palette.mode === 'light' ? palette.background.secondary : palette.background.onboardingBody;
   };
 
   const getInputBorder = palette => {
+    if (isRecording) return palette.primary.main;
     if (!isFocused) return 'transparent';
 
     return `linear-gradient(0deg, ${palette.background.userInputBorderDark} 0%, ${palette.background.userInputBorderLight} 100%)`;
@@ -439,12 +447,14 @@ const userInputStyles = (isFocused, isDragOver) => {
   return {
     gradientBorder: ({ palette }) => ({
       width: '100%',
-      padding: '1px',
+      padding: '0.0625rem',
       borderRadius: '1rem',
       background: getInputBorder(palette),
 
-      ...(isFocused && {
-        boxShadow: `0px -5px 20px 0px ${palette.background.userInputBorderShadow}`,
+      ...((isFocused || isRecording) && {
+        boxShadow: isRecording
+          ? `0 0 0.75rem 0 ${palette.primary.main}40`
+          : `0 -0.3125rem 1.25rem 0 ${palette.background.userInputBorderShadow}`,
       }),
     }),
     container: ({ palette }) => ({
@@ -456,14 +466,14 @@ const userInputStyles = (isFocused, isDragOver) => {
       borderRadius: '1rem',
       background: isDragOver ? `${palette.primary.main}15` : getInputBackground(palette),
       border: isDragOver
-        ? `2px dashed ${palette.primary.main}`
-        : `1px solid ${isFocused ? 'transparent' : palette.border.lines}`,
+        ? `0.125rem dashed ${palette.primary.main}`
+        : `0.0625rem solid ${isFocused || isRecording ? 'transparent' : palette.border.lines}`,
       boxSizing: 'border-box',
       gap: '1.5rem',
       transition: 'all 0.2s ease-in-out',
       position: 'relative',
       ...(isDragOver && {
-        boxShadow: `0 4px 12px ${palette.primary.main}30`,
+        boxShadow: `0 0.25rem 0.75rem ${palette.primary.main}30`,
       }),
     }),
     textFieldWrapper: {
@@ -537,6 +547,32 @@ const userInputStyles = (isFocused, isDragOver) => {
       alignItems: 'center',
       justifyContent: 'center',
     },
+    closeButton: {
+      height: '1.75rem',
+      width: '1.75rem',
+    },
+    voiceModePill: ({ palette }) => ({
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.5rem',
+      paddingLeft: '0.625rem',
+      height: '1.75rem',
+      borderRadius: '0.875rem',
+      border: `0.0625rem solid ${palette.border.chatContinue}`,
+      flexShrink: 0,
+      color: palette.primary.main,
+    }),
+    voiceModeIcon: {
+      width: '1.5rem',
+      height: '1.5rem',
+      flexShrink: 0,
+    },
+    voiceModeClose: ({ palette }) => ({
+      width: '1.5rem',
+      height: '1.5rem',
+      color: palette.text.secondary,
+      flexShrink: 0,
+    }),
     sendButton: sendButton => ({
       height: sendButton?.size ?? '1.75rem',
       width: sendButton?.size ?? '1.75rem',
@@ -547,6 +583,7 @@ const userInputStyles = (isFocused, isDragOver) => {
       '&:hover': {
         backgroundColor: sendButton?.background ?? '#6ae8fa',
       },
+      color: sendButton?.iconColor ?? '#0E131D',
     }),
     sendIcon: sendButton => ({
       fontSize: '1.125rem',
