@@ -53,6 +53,16 @@ const RESOURCE_CARD_CONFIGS = [
     linksKey: 'resources_tutorials_links',
     colorScheme: 'green',
   },
+  {
+    enabledKey: 'resources_interactive_tours_enabled',
+    titleKey: 'resources_interactive_tours_title',
+    descriptionKey: 'resources_interactive_tours_description',
+    defaultTitle: 'Interactive Tours',
+    defaultDescription: 'Guided tours to explore key features and workflows',
+    Icon: VideoIcon,
+    linksKey: 'resources_interactive_tours_links',
+    colorScheme: 'pink',
+  },
 ];
 
 const { openExternalLink } = LinkHelpers;
