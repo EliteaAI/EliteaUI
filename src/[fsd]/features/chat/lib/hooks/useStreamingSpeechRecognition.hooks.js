@@ -214,6 +214,9 @@ export const useStreamingSpeechRecognition = ({
 
   const stopRecording = useCallback(() => {
     if (!isRecording) return;
+    // Block events from this session before tearing down audio so late backend
+    // messages (e.g. a final Realtime transcript still in-flight) are discarded.
+    acceptEventsRef.current = false;
     _releaseAudio();
     socket?.emit(sioEvents.asr_stop, {});
     setIsRecording(false);
@@ -223,6 +226,7 @@ export const useStreamingSpeechRecognition = ({
   useEffect(() => {
     return () => {
       if (!streamRef.current) return;
+      acceptEventsRef.current = false;
       _releaseAudio();
       socket?.emit(sioEvents.asr_stop, {});
     };
