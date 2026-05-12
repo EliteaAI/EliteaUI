@@ -17,7 +17,7 @@ import { Box } from '@mui/system';
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import { ChatHelpers, NewConversationHelpers, toSpeakableText } from '@/[fsd]/features/chat/lib/helpers';
 import { useSlashMention, useTextToSpeech } from '@/[fsd]/features/chat/lib/hooks';
-import { SlashSuggestionList } from '@/[fsd]/features/chat/ui';
+import { SlashSuggestionList, VoiceMiniPlayer } from '@/[fsd]/features/chat/ui';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import {
   DEFAULT_MAX_TOKENS,
@@ -69,7 +69,6 @@ import ChatConversationStarters from './ChatConversationStarters';
 import NewChatInput from './NewChatInput';
 import RecommendationList from './Recommendations/RecommendationList';
 import SearchResultList from './Recommendations/SearchResultList';
-import VoiceMiniPlayer from './VoiceMiniPlayer';
 
 const getParticipantById = (conversation, participantId) => {
   return conversation?.participants.find(({ id }) => id === participantId) || {};
