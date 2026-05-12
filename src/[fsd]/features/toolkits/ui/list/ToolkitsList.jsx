@@ -25,6 +25,8 @@ const ToolkitsList = memo(props => {
   const {
     rightPanelOffset,
     cardContentType = ContentType.ToolkitAll,
+    disableEmptyRedirect = false,
+    emptyListPlaceHolder,
     isMCP = false,
     isApplication = false,
   } = props;
@@ -94,7 +96,15 @@ const ToolkitsList = memo(props => {
     const hasError = !!isToolkitsError;
     const hasQuery = !!(query && String(query).trim());
 
-    if (!isPublic && !loading && !hasError && !hasQuery && totalCount === 0 && selectedTypes?.length === 0) {
+    if (
+      !isPublic &&
+      !loading &&
+      !hasError &&
+      !disableEmptyRedirect &&
+      !hasQuery &&
+      totalCount === 0 &&
+      selectedTypes?.length === 0
+    ) {
       if (isApplication) {
         navigate(RouteDefinitions.CreateApp, { replace: true });
       } else {
@@ -110,6 +120,7 @@ const ToolkitsList = memo(props => {
     query,
     totalCount,
     navigate,
+    disableEmptyRedirect,
     isMCP,
     isApplication,
   ]);
@@ -173,10 +184,12 @@ const ToolkitsList = memo(props => {
       loadMoreFunc={loadMore}
       cardType={cardContentType}
       emptyListPlaceHolder={
-        <ToolkitsEmptyListPlaceHolder
-          query={query}
-          isMCP={isMCP}
-        />
+        emptyListPlaceHolder || (
+          <ToolkitsEmptyListPlaceHolder
+            query={query}
+            isMCP={isMCP}
+          />
+        )
       }
       setPage={setPage}
       page={page}

@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom';
 
 import {
   ApplicationsTabs,
+  AppsTabs,
   PUBLIC_PROJECT_ID,
   SearchParams,
   ToolkitsTabs,
@@ -73,12 +74,14 @@ const getPrevPath = (routeStack, currentPath, search, viewMode, authorId, author
       return `${RouteDefinitions.CreateMCP}/?${SearchParams.ViewMode}=${viewMode}`;
     } else if (currentPath.startsWith(RouteDefinitions.MCPs) && !search.includes(SearchParams.ToolkitType)) {
       return `${RouteDefinitions.MCPs}/${getTabFromUrl(currentPath, ToolkitsTabs[0])}?${SearchParams.ViewMode}=${viewMode}`;
-    } else if (currentPath.startsWith(RouteDefinitions.Apps) && hasSubPath(currentPath)) {
+    } else if (isPathOrSubPath(currentPath, RouteDefinitions.CreateApp) && hasSubPath(currentPath)) {
       // Handle /apps/create/:appType - go back to /apps/create
       return `${RouteDefinitions.CreateApp}/?${SearchParams.ViewMode}=${viewMode}`;
-    } else if (currentPath.startsWith(RouteDefinitions.Apps) && !hasSubPath(currentPath)) {
+    } else if (isPathOrSubPath(currentPath, RouteDefinitions.CreateApp)) {
       // Handle /apps/create (selector page) - go back to apps list
-      return `${RouteDefinitions.Apps}/all?${SearchParams.ViewMode}=${viewMode}`;
+      return `${RouteDefinitions.Apps}/${AppsTabs[0]}?${SearchParams.ViewMode}=${viewMode}`;
+    } else if (currentPath.startsWith(RouteDefinitions.Apps) && hasSubPath(currentPath)) {
+      return `${RouteDefinitions.Apps}/${getTabFromUrl(currentPath, AppsTabs[1])}?${SearchParams.ViewMode}=${viewMode}`;
     } else if (currentPath.startsWith(RouteDefinitions.UserPublic)) {
       if (currentPath.match(/\/user-public\/pipelines\/\d+/g)) {
         return `${RouteDefinitions.UserPublic}/${UserPublicTabs[2]}?${SearchParams.ViewMode}=${viewMode}&${SearchParams.AuthorId}=${authorId}&${SearchParams.AuthorName}=${authorName}`;
@@ -120,6 +123,8 @@ const hasSubPath = url => {
   const paths = url.split('/').filter(item => item.length > 0);
   return paths.length > 2;
 };
+
+const isPathOrSubPath = (url, basePath) => url === basePath || url.startsWith(`${basePath}/`);
 
 export default function useBackPath() {
   const { pathname, search, state: locationState } = useLocation();
