@@ -12,6 +12,13 @@ import {
   APPLICATION_REQUEST_SUPPORT_EMAIL,
 } from '../constants/applicationCatalog.constants';
 
+const getApplicationStatusLabel = (isConfigured, canCreate) => {
+  if (isConfigured) return 'Configured';
+  if (canCreate) return 'Available';
+
+  return 'By request';
+};
+
 export const useApplicationCatalogState = () => {
   const theme = useTheme();
   const projectId = useSelectedProjectId();
@@ -43,7 +50,7 @@ export const useApplicationCatalogState = () => {
       const typeLabel = schema?.metadata?.label || application.name;
       const canCreate = Boolean(schema);
       const isConfigured = configuredTypes.has(application.type);
-      const statusLabel = canCreate ? 'Available' : isConfigured ? 'Configured' : 'By request';
+      const statusLabel = getApplicationStatusLabel(isConfigured, canCreate);
       const icon = getToolIconByType(application.type, theme, { toolSchema: schema, isAppAll: true });
 
       return {
