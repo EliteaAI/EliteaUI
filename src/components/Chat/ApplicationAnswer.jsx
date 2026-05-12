@@ -553,7 +553,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
               )}
               {!!exception && (
                 <>
-                  <Box sx={styles.errorWrapper}>{realAnswer}</Box>
+                  <Box sx={styles.errorWrapper}>{realAnswer || 'Unknown error'}</Box>
 
                   {realAnswer !== exception && (
                     <Box sx={styles.errorStackTrace}>
