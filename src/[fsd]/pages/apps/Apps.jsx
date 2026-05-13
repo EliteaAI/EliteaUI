@@ -27,27 +27,27 @@ const CONFIGURED_APPS_EMPTY_PLACEHOLDER = (
   </Typography>
 );
 
-const getSearchForAppsTab = (nextTab, search) => {
-  if (nextTab !== AppsTabs[0]) return search;
-
-  const searchParams = new URLSearchParams(search);
-  searchParams.delete(SearchParams.View);
-
-  const nextSearch = searchParams.toString();
-  return nextSearch ? `?${nextSearch}` : '';
-};
-
 const Apps = memo(() => {
   const navigate = useNavigate();
   const location = useLocation();
   const { tab = AppsTabs[0] } = useParams();
   const { shouldCollapseRightToolbar } = useShouldCollapseRightToolbar();
 
+  const getSearchForAppsTab = useCallback((nextTab, search) => {
+    if (nextTab !== AppsTabs[0]) return search;
+
+    const searchParams = new URLSearchParams(search);
+    searchParams.delete(SearchParams.View);
+
+    const nextSearch = searchParams.toString();
+    return nextSearch ? `?${nextSearch}` : '';
+  }, []);
+
   const normalizedTab =
     LEGACY_APPS_TABS[tab] || (APP_TAB_INDEX_BY_KEY[tab] === undefined ? AppsTabs[0] : tab);
   const normalizedSearch = useMemo(
     () => getSearchForAppsTab(normalizedTab, location.search),
-    [location.search, normalizedTab],
+    [getSearchForAppsTab, location.search, normalizedTab],
   );
   const selectedTab = APP_TAB_INDEX_BY_KEY[normalizedTab] ?? APP_TAB_INDEX_BY_KEY[AppsTabs[0]];
   const isConfiguredTab = selectedTab === APP_TAB_INDEX_BY_KEY[AppsTabs[1]];
@@ -70,7 +70,7 @@ const Apps = memo(() => {
         state: location.state,
       });
     },
-    [location.search, location.state, navigate],
+    [getSearchForAppsTab, location.search, location.state, navigate],
   );
 
   const tabs = useMemo(
