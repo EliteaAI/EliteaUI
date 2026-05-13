@@ -9,7 +9,7 @@ import {
   useState,
 } from 'react';
 
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Box } from '@mui/system';
@@ -63,6 +63,7 @@ import useLoadMoreMessages from '@/hooks/chat/useLoadMoreMessages';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useSocket from '@/hooks/useSocket';
 import useToast from '@/hooks/useToast';
+import { actions as chatActions } from '@/slices/chat';
 
 import ChatMessageList from '../../components/Chat/ChatMessageList';
 import ChatConversationStarters from './ChatConversationStarters';
@@ -236,6 +237,7 @@ const ChatBox = forwardRef((props, boxRef) => {
   const socket = useContext(SocketContext);
   const projectId = useSelectedProjectId();
   const [regenerate] = useRegenerateMutation();
+  const dispatch = useDispatch();
   const { name, id: userId, avatar } = useSelector(state => state.user);
 
   const chat_history = useMemo(
@@ -317,6 +319,10 @@ const ChatBox = forwardRef((props, boxRef) => {
   const defaultModel = useMemo(() => {
     return modelsData.items.find(model => model.default) || modelsData.items[0] || null;
   }, [modelsData.items]);
+
+  useEffect(() => {
+    dispatch(chatActions.setCurrentChatModel(selectedModel));
+  }, [dispatch, selectedModel]);
 
   // Create LLM settings for conversation pages from user settings
   const conversationLlmSettings = useMemo(() => {

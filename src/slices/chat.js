@@ -9,6 +9,7 @@ const chatSlice = createSlice({
     toolkitValidationInfo: {},
     selectedAgent: null,
     selectedAgentStarter: null,
+    currentChatModel: null,
     isCreatingNewConversation: false,
   },
   reducers: {
@@ -46,6 +47,9 @@ const chatSlice = createSlice({
       const { agent, starter } = action.payload;
       state.selectedAgent = agent;
       state.selectedAgentStarter = starter;
+    },
+    setCurrentChatModel: (state, action) => {
+      state.currentChatModel = action.payload;
     },
     setIsCreatingNewConversation: (state, action) => {
       state.isCreatingNewConversation = action.payload;

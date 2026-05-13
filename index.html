@@ -2,6 +2,22 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      // Suppress html-to-image cssRules SecurityError noise from cross-origin Google Fonts
+      (function () {
+        var orig = console.error;
+        console.error = function () {
+          var msg = arguments.length > 0 && typeof arguments[0] === 'string' ? arguments[0] : '';
+          if (
+            msg.indexOf('Error inlining remote css') !== -1 ||
+            msg.indexOf('Error while reading CSS rules') !== -1 ||
+            msg.indexOf('Error loading remote css') !== -1
+          )
+            return;
+          return orig.apply(console, arguments);
+        };
+      })();
+    </script>
     <link
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"

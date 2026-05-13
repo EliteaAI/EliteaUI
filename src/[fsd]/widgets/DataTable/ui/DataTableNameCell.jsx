@@ -3,8 +3,7 @@ import { memo, useCallback, useMemo } from 'react';
 import { Box, IconButton, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
-import { useEliteaAssistantRef } from '@/[fsd]/app/providers';
-import { useGetSupportAssistantConfigQuery } from '@/[fsd]/features/agent/api';
+import { useEliteaAssistantRef, useGetSupportAssistantConfigQuery } from '@/[fsd]/widgets/SupportAssistant';
 import { PinButton } from '@/[fsd]/widgets/PinToggler/ui';
 import EliteaAssistantIcon from '@/assets/icons/elitea-assistant-icon.svg?react';
 import PublishIcon from '@/assets/publish-version.svg?react';

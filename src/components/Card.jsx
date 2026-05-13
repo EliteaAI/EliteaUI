@@ -3,8 +3,7 @@ import { memo, useCallback, useMemo, useRef, useState } from 'react';
 import { Box, CardContent, Divider, IconButton, Card as MuiCard, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
-import { useEliteaAssistantRef } from '@/[fsd]/app/providers';
-import { useGetSupportAssistantConfigQuery } from '@/[fsd]/features/agent/api';
+import { useEliteaAssistantRef, useGetSupportAssistantConfigQuery } from '@/[fsd]/widgets/SupportAssistant';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { useMcpTokenChange } from '@/[fsd]/features/mcp/lib/hooks';
 import { PinButton } from '@/[fsd]/widgets/PinToggler/ui';

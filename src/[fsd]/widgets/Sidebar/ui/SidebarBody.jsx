@@ -6,7 +6,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Box, Divider, IconButton, Tooltip, Typography, useTheme } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
-import { useGetSupportAssistantConfigQuery } from '@/[fsd]/features/agent/api';
+import { useGetSupportAssistantConfigQuery } from '@/[fsd]/widgets/SupportAssistant';
 import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
 import { SidebarConstants, SocketConstants } from '@/[fsd]/widgets/Sidebar/lib/constants';
 import { useSocketIcon } from '@/[fsd]/widgets/Sidebar/lib/hooks';
