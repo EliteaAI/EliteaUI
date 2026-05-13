@@ -137,6 +137,10 @@ const NewConversationView = forwardRef(
       setPrevSelectedModel(defaultModel);
     }, [defaultModel]);
 
+    useEffect(() => {
+      dispatch(actions.setCurrentChatModel(selectedModel));
+    }, [dispatch, selectedModel]);
+
     const { emit } = useSocket(sioEvents.chat_predict);
     const getPayload = useCallback(
       ({ question, question_id, participant, conversationUuid, attachmentList }) => {

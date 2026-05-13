@@ -61,6 +61,7 @@ export const usePageDetails = () => {
   const isAppsWithTab = useMatch({ path: RouteDefinitions.AppsWithTab });
 
   const isChatPage = useMatch({ path: RouteDefinitions.Chat });
+  const isChatConversationPage = useMatch({ path: RouteDefinitions.ChatConversation });
 
   const isApplicationPage =
     isApplicationDetailPage ||
@@ -102,9 +103,13 @@ export const usePageDetails = () => {
   let pageType = null;
   // let details = {projectPath: ''}; //@todo: consider to add this || or add details for toolkits
   let details = null;
+  let matchParams = {};
 
   if (isApplicationPage) {
     pageType = 'ApplicationDetails';
+    matchParams = (isApplicationDetailPage || isApplicationVersionDetailPage ||
+      isModerationSpaceApplicationDetailPage || isModerationSpaceApplicationVersionDetailPage ||
+      isUserPublicApplicationDetailPage || isUserPublicApplicationVersionDetailPage)?.params || {};
     details = {
       projectPath: agentId
         ? replacePathParams(PROJECT_ID_URL_PREFIX + RouteDefinitions.ApplicationsDetail, {
@@ -119,6 +124,9 @@ export const usePageDetails = () => {
     };
   } else if (isPipelinePage) {
     pageType = 'PipelineDetails';
+    matchParams = (isPipelineDetailPage || isPipelineVersionDetailPage ||
+      isModerationSpacePipelineDetailPage || isModerationSpacePipelineVersionDetailPage ||
+      isUserPublicPipelineDetailPage || isUserPublicPipelineVersionDetailPage)?.params || {};
     details = {
       projectPath: agentId
         ? replacePathParams(PROJECT_ID_URL_PREFIX + RouteDefinitions.PipelineDetail, {
@@ -133,6 +141,7 @@ export const usePageDetails = () => {
     };
   } else if (isToolkitPage) {
     pageType = 'ToolkitDetails';
+    matchParams = (isToolkitDetailPage || isUserPublicToolkitDetailPage)?.params || {};
     details = {
       projectPath: toolkitId
         ? replacePathParams(PROJECT_ID_URL_PREFIX + RouteDefinitions.ToolkitDetail, {
@@ -147,6 +156,7 @@ export const usePageDetails = () => {
     };
   } else if (isMCPPage) {
     pageType = 'MCPDetails';
+    matchParams = (isMCPDetailPage || isUserPublicMCPDetailPage)?.params || {};
     details = {
       projectPath: mcpId
         ? replacePathParams(PROJECT_ID_URL_PREFIX + RouteDefinitions.MCPDetail, {
@@ -161,6 +171,7 @@ export const usePageDetails = () => {
     };
   } else if (isCredentialPage) {
     pageType = 'CredentialDetails';
+    matchParams = isCredentialDetailPage?.params || {};
     details = {
       projectPath: credential_uid
         ? replacePathParams(PROJECT_ID_URL_PREFIX + RouteDefinitions.CredentialDetail, {
@@ -173,8 +184,9 @@ export const usePageDetails = () => {
           }),
       search,
     };
-  } else if (isChatPage) {
+  } else if (isChatPage || isChatConversationPage) {
     pageType = 'Chat';
+    matchParams = isChatConversationPage?.params || {};
     details = {
       projectPath: replacePathParams(PROJECT_ID_URL_PREFIX + RouteDefinitions.Chat, {
         projectId,
@@ -183,6 +195,7 @@ export const usePageDetails = () => {
     };
   } else if (isAppPage) {
     pageType = 'AppDetails';
+    matchParams = (isAppDetailPage || isUserPublicAppDetailPage)?.params || {};
     details = {
       projectPath: replacePathParams(PROJECT_ID_URL_PREFIX + RouteDefinitions.AppDetail, {
         projectId,
@@ -193,5 +206,5 @@ export const usePageDetails = () => {
     };
   }
 
-  return { pageType, details };
+  return { pageType, details, matchParams };
 };

@@ -5,6 +5,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Box, IconButton, Typography, useTheme } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
+import { useEliteaAssistantRef } from '@/[fsd]/widgets/SupportAssistant';
 import { useMcpTokenChange } from '@/[fsd]/features/mcp/lib/hooks';
 import { McpLogInLink } from '@/[fsd]/features/mcp/ui';
 import { useGetToolkitNameFromSchema } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
@@ -42,6 +43,8 @@ const ParticipantItem = memo(props => {
     editingToolkit,
     isAttachement = false,
   } = props;
+
+  const assistantRef = useEliteaAssistantRef();
 
   const { entity_meta, entity_name: type, meta = {} } = participant;
   const { name: participantName } = meta || {};
@@ -221,6 +224,13 @@ const ParticipantItem = memo(props => {
       : {},
   );
 
+  const hasMisconfigurationErrors = totalValidationInfo?.length > 0 || toolkitValidationInfoList?.length > 0;
+
+  useEffect(() => {
+    if (hasMisconfigurationErrors) assistantRef?.current?.showPopup();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasMisconfigurationErrors]);
+
   const mcpIsDisconnected = useMemo(
     () => isToolkitParticipant && originalDetails?.meta?.mcp && !originalDetails?.online,
     [isToolkitParticipant, originalDetails],
@@ -265,7 +275,7 @@ const ParticipantItem = memo(props => {
       return 'Published version not available, select another version';
     }
 
-    if (totalValidationInfo?.length || toolkitValidationInfoList?.length) {
+    if (hasMisconfigurationErrors) {
       const isPipelineAgent = participant.entity_settings?.agent_type === 'pipeline';
 
       const getParticipantTypeText = () => {
@@ -329,20 +339,19 @@ const ParticipantItem = memo(props => {
   }, [
     isPublishedAgentGone,
     isVersionUnavailable,
-    totalValidationInfo?.length,
-    toolkitValidationInfoList?.length,
+    hasMisconfigurationErrors,
     shouldDisableThisItem,
     mcpIsDisconnected,
+    someToolsAreUnavailable,
     remoteMcpLoggedOut,
     spOAuthLoggedOut,
     participant.entity_settings?.agent_type,
     participant.entity_name,
     handleEditClick,
-    styles,
+    styles.misconfigurationError,
     isToolkitParticipant,
     type,
     originalDetails,
-    someToolsAreUnavailable,
     entity_meta?.project_id,
     spConfig,
   ]);

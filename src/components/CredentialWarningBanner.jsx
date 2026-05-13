@@ -1,9 +1,10 @@
-import { memo, useMemo } from 'react';
+import { memo, useEffect, useMemo, useRef } from 'react';
 
 import { useSelector } from 'react-redux';
 
 import { Box, Link, Typography } from '@mui/material';
 
+import { useEliteaAssistantRef } from '@/[fsd]/widgets/SupportAssistant';
 import ErrorIcon from '@/assets/error-icon.svg?react';
 import { BORDER_RADIUS } from '@/common/designTokens';
 import RouteDefinitions, { getBasename } from '@/routes';
@@ -22,7 +23,16 @@ import RouteDefinitions, { getBasename } from '@/routes';
  */
 const CredentialWarningBanner = memo(({ credentialId, credentialType, section }) => {
   const { personal_project_id } = useSelector(state => state.user);
+  const assistantRef = useEliteaAssistantRef();
+  const hasShownPopup = useRef(false);
   const styles = getStyles();
+
+  useEffect(() => {
+    if (hasShownPopup.current) return;
+    hasShownPopup.current = true;
+    setTimeout(() => assistantRef?.current?.showPopup(), 500);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const createUrl = useMemo(() => {
     const baseUrl = `${window.location.protocol}//${window.location.host}`;

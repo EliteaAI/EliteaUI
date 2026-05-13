@@ -55,6 +55,12 @@ export default ({ mode }) => {
             });
           },
         },
+        '/socket.io': {
+          target: VITE_DEV_SERVER,
+          changeOrigin: true,
+          secure: false,
+          ws: true,
+        },
         '/app/application_tool_icon': {
           target: VITE_DEV_SERVER, // Replace with your API server URL
           changeOrigin: true, // Change the origin of the request to the target server
