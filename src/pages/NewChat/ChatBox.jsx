@@ -568,15 +568,11 @@ const ChatBox = forwardRef((props, boxRef) => {
 
   const [conversationEdit] = useConversationEditMutation();
 
-  const handleError = useCallback(
-    errorObj => {
-      toastError(buildErrorMessage(errorObj));
-      if (isRegenerating) {
-        setIsRegenerating(false);
-      }
-    },
-    [isRegenerating, toastError],
-  );
+  const handleError = useCallback(() => {
+    if (isRegenerating) {
+      setIsRegenerating(false);
+    }
+  }, [isRegenerating]);
 
   const onDeleteChatMessage = useCallback(
     async (messageIdToDelete, callback) => {
