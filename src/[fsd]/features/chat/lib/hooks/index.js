@@ -12,3 +12,7 @@ export { useSpeechRecognition } from './useSpeechRecognition.hooks';
 export { useStreamingSpeechRecognition } from './useStreamingSpeechRecognition.hooks';
 export { useTextToSpeech } from './useTextToSpeech.hooks';
 export { useSpeakingModeLoop } from './useSpeakingModeLoop.hooks';
+export {
+  useNewInputKeyDownHandler,
+  useNewStartConversationInputKeyDownHandler,
+} from './useInputKeyDownHandler.hooks';

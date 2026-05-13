@@ -16,8 +16,9 @@ import { Box } from '@mui/system';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import { ChatHelpers, NewConversationHelpers, toSpeakableText } from '@/[fsd]/features/chat/lib/helpers';
-import { useSlashMention, useTextToSpeech } from '@/[fsd]/features/chat/lib/hooks';
+import { useNewInputKeyDownHandler, useSlashMention, useTextToSpeech } from '@/[fsd]/features/chat/lib/hooks';
 import { SlashSuggestionList, VoiceMiniPlayer } from '@/[fsd]/features/chat/ui';
+import { UserMentionList } from '@/[fsd]/features/chat/ui/user-mention-list';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import {
   DEFAULT_MAX_TOKENS,
@@ -58,7 +59,6 @@ import SocketContext from '@/contexts/SocketContext';
 import useChatStreaming from '@/hooks/chat/useChatStreaming';
 import useDeleteMessageAlert from '@/hooks/chat/useDeleteMessageAlert';
 import useFetchParticipantDetails from '@/hooks/chat/useFetchParticipantDetails';
-import { useNewInputKeyDownHandler } from '@/hooks/chat/useInputKeyDownHandler';
 import useLoadMoreMessages from '@/hooks/chat/useLoadMoreMessages';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useSocket from '@/hooks/useSocket';
@@ -542,7 +542,7 @@ const ChatBox = forwardRef((props, boxRef) => {
                   it.entity_meta?.id &&
                   userId !== it.entity_meta?.id,
               )
-              .map(it => it.entity_meta?.id) || []
+              .map(it => it.id) || []
           : selectedUsers.map(user => user.user.id),
         unsavedLLMSettings,
         participants: activeConversation?.participants || [],
@@ -1373,7 +1373,16 @@ const ChatBox = forwardRef((props, boxRef) => {
     [hasPendingHitlInterrupt, hitlEditMode, onHitlResume, onPredictStream, resetSlash],
   );
 
-  const { onKeyDown, isProcessingSymbols, query, stopProcessingSymbols } = useNewInputKeyDownHandler({
+  const {
+    onKeyDown,
+    isProcessingSymbols,
+    query,
+    stopProcessingSymbols,
+    isProcessingAtSymbol,
+    atQuery,
+    stopProcessingAtSymbol,
+    atAnchorRef,
+  } = useNewInputKeyDownHandler({
     disableHashtagDetection: isAgentsPage,
   });
 
@@ -1395,6 +1404,22 @@ const ChatBox = forwardRef((props, boxRef) => {
       }
     }, 0);
   };
+
+  const onSelectUserMention = useCallback(
+    user => {
+      if (chatInput.current && atAnchorRef.current !== null) {
+        chatInput.current.replaceRange(
+          atAnchorRef.current,
+          atAnchorRef.current + atQuery.length,
+          '@' + user.name + ' ',
+        );
+      }
+      stopProcessingAtSymbol();
+    },
+    // atAnchorRef is a ref — stable, no dep needed
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [atQuery, stopProcessingAtSymbol],
+  );
 
   const onResendQuestionStream = useCallback(
     async (question_id, question) => {
@@ -1441,7 +1466,10 @@ const ChatBox = forwardRef((props, boxRef) => {
   const users = useMemo(
     () => [
       ...(activeConversation?.participants
-        ?.filter(participant => participant.entity_name === ChatParticipantType.Users)
+        ?.filter(
+          participant =>
+            participant.entity_name === ChatParticipantType.Users && participant.entity_meta?.id !== userId,
+        )
         .map(participant => ({
           id: participant.id,
           name: participant.meta.user_name,
@@ -1453,7 +1481,16 @@ const ChatBox = forwardRef((props, boxRef) => {
         participant: 'All users',
       },
     ],
-    [activeConversation?.participants],
+    [activeConversation?.participants, userId],
+  );
+
+  const hasOtherUsers = useMemo(
+    () =>
+      (activeConversation?.participants || []).some(
+        participant =>
+          participant.entity_name === ChatParticipantType.Users && participant.entity_meta?.id !== userId,
+      ),
+    [activeConversation?.participants, userId],
   );
 
   const [showRecommendationList, setShowRecommendationList] = useState(false);
@@ -1917,6 +1954,14 @@ const ChatBox = forwardRef((props, boxRef) => {
               onSelectParticipant={onSelectParticipant}
               existingParticipants={activeConversation?.participants || []}
               onClose={onShowParticipantsList}
+            />
+          )}
+          {isProcessingAtSymbol && hasOtherUsers && (
+            <UserMentionList
+              users={users}
+              query={atQuery}
+              onSelectUser={onSelectUserMention}
+              onClose={stopProcessingAtSymbol}
             />
           )}
           {enableMentions && !!query?.slice(1) && (
