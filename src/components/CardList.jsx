@@ -20,6 +20,7 @@ const CardList = props => {
     isFullWidth = false,
     cardHeight,
     cardWidthOverride,
+    disableTableView = false,
     resetPageOnSort,
     ...rest
   } = props;
@@ -29,6 +30,7 @@ const CardList = props => {
   const isEmptyList = useMemo(() => cardList.length === 0, [cardList.length]);
   const shouldShowRightPanel = Boolean(rightPanelContent) && !shouldCollapseRightToolbar;
   const isListFullWidth = isFullWidth || !shouldShowRightPanel;
+  const shouldRenderTable = isTableView && !disableTableView;
 
   return (
     <>
@@ -40,7 +42,7 @@ const CardList = props => {
           isFullWidth={isListFullWidth}
           sx={emptyListSX}
         />
-      ) : isTableView ? (
+      ) : shouldRenderTable ? (
         <DataTable
           data={cardList}
           isFullWidth={isListFullWidth}

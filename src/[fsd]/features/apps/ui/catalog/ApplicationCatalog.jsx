@@ -177,6 +177,7 @@ const ApplicationCatalog = memo(() => {
           cardType={ContentType.AppAll}
           loadMoreFunc={handleLoadMore}
           isFullWidth
+          disableTableView
           cardHeight="14rem"
           cardWidthOverride={APPLICATION_CATALOG_CARD_WIDTH}
           emptyListPlaceHolder={
@@ -249,6 +250,7 @@ const applicationCatalogStyles = () => ({
     flexWrap: 'wrap',
     alignItems: 'center',
     gap: '0.5rem',
+    mb: '0.25rem',
   },
   ...applicationActionButtonStyles,
   cardMeta: {
