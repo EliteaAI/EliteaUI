@@ -107,7 +107,7 @@ const dataCardStyles = (cardWidth, isFullWidthPage, cardHeight, isDefaultCardHei
     width: isFullWidthPage ? CARD_LIST_WIDTH_FULL : CARD_LIST_WIDTH,
     overflowY: 'hidden',
     marginRight: `-${MARGIN_COMPENSATION}`,
-    padding: '0.3125rem 0 0 1.5rem',
+    padding: '1.25rem 0 0 1.5rem',
   },
   loadingSkeleton: {
     width: '100%',
