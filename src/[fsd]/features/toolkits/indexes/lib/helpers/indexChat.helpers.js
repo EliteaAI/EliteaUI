@@ -278,6 +278,8 @@ export const generateChatMessageBasedOnResponse = ({ message, chatHistory, onFin
         msg.isLoading = false;
         msg.isStreaming = false;
         msg.exception = message.content;
+        // Update visible content to show error message instead of "Testing tool..."
+        msg.content = convertJsonToString(message.content);
 
         onFinish(IndexStatuses.fail);
       } else {
