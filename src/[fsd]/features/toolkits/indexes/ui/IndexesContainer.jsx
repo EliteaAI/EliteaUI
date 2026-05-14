@@ -29,6 +29,7 @@ const IndexesContainer = memo(props => {
 
   const skipAutoSelection = useRef(false);
   const hasSelectedFromUrlRef = useRef(false);
+  const detailsKeyRef = useRef(0);
 
   const { toastSuccess, toastError } = useToast();
   const dispatch = useDispatch();
@@ -124,6 +125,8 @@ const IndexesContainer = memo(props => {
           skipAutoSelection.current = true;
         }
 
+        if (prev?.id === NEW_INDEX_ID && index.id === NEW_INDEX_ID) detailsKeyRef.current += 1;
+
         return index;
       });
     },
@@ -195,6 +198,7 @@ const IndexesContainer = memo(props => {
       />
       {currentIndex && (
         <IndexDetails
+          key={`${currentIndex.id}-${detailsKeyRef.current}`}
           index={currentIndex}
           traceNewIndex={traceNewIndex}
           view={view}
