@@ -23,11 +23,12 @@ const ToolbarImportButton = memo(() => {
       placement="top"
     >
       <BaseBtn
-        variant="secondary"
+        variant="icon"
         onClick={openFileDialog}
         sx={styles.importBtn}
-        startIcon={<ImportIcon />}
-      />
+      >
+        <ImportIcon />
+      </BaseBtn>
     </StyledTooltip>
   );
 });
