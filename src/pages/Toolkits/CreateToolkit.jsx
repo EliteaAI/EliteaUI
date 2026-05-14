@@ -6,6 +6,7 @@ import { useParams } from 'react-router-dom';
 
 import { Box, Grid } from '@mui/material';
 
+import { ToolkitForm } from '@/[fsd]/features/toolkits/ui/form/ToolkitForm';
 import { NAV_BAR_HEIGHT_IN_PX } from '@/common/constants';
 import StyledTabs from '@/components/StyledTabs';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -13,7 +14,6 @@ import useToast from '@/hooks/useToast';
 import { CONFIGURATION_VIEW_OPTIONS } from '@/pages/Applications/Components/Tools/ToolConfigurationForm.jsx';
 import { StyledGridContainer } from '@/pages/Common/Components';
 import CreateToolkitToolTabBar from '@/pages/Toolkits/CreateToolkitToolTabBar';
-import ToolkitForm from '@/pages/Toolkits/ToolkitForm.jsx';
 import ToolkitTypeSelector from '@/pages/Toolkits/ToolkitTypeSelector';
 import { formatTitleFromSnakeCase } from '@/utils/stringUtils';
 import { interpolateUrl } from '@/utils/urlInterpolation';

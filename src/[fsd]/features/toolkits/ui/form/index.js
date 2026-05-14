@@ -11,3 +11,4 @@ export {
 export { default as ToolCustom } from './ToolCustom';
 export { default as ToolFormContainer } from './ToolFormContainer';
 export { OpenAPIActions, OpenAPISchemaInput } from './ToolOpenAPI';
+export { ToolkitForm } from './ToolkitForm';

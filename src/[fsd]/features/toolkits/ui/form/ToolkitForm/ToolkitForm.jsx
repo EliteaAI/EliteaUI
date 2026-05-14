@@ -7,7 +7,9 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { Box, CircularProgress } from '@mui/material';
 
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
-import { ToolComponentHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
+import { ToolkitFormConstants } from '@/[fsd]/features/toolkits/lib/constants';
+import { ToolComponentHelpers, ToolkitFormHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
+import { CONFIGURATION_VIEW_OPTIONS } from '@/[fsd]/features/toolkits/lib/helpers/toolkitForm.helpers';
 import { useGetCurrentToolkitSchemas, useToolkitNameProp } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitForm as GeneralToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { useGetConfigurationsListQuery } from '@/api/configurations.js';
@@ -21,9 +23,10 @@ import { useToolkitView } from '@/hooks/toolkit/useToolkitView.js';
 import { Create_Personal_Title, Create_Project_Title } from '@/hooks/useConfigurations';
 import useGetCurrentConfigurationAsSchemas from '@/hooks/useGetCurrentConfigurationAsSchemas';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import { CONFIGURATION_VIEW_OPTIONS } from '@/pages/Applications/Components/Tools/ToolConfigurationForm.jsx';
-import { ToolTypes } from '@/pages/Applications/Components/Tools/consts';
-import ToolkitsOperationButtons from '@/pages/Toolkits/ToolkitsOperationButtons.jsx';
+
+import ToolkitsOperationButtons from './ToolkitsOperationButtons.jsx';
+
+const { ToolTypes } = ToolkitFormConstants;
 
 export const ToolkitForm = memo(props => {
   const {
@@ -436,35 +439,13 @@ export const ToolkitForm = memo(props => {
   );
 
   useEffect(() => {
-    if (isError) {
-      const VALUE_ERROR_PREFIX = 'Value error, ';
-      const validationErrors =
-        error.data?.settings_errors?.reduce((acc, curr) => {
-          let msg = curr.msg || '';
-          // Parse structured error JSON from Pydantic "Value error, {...}" format
-          const body = msg.startsWith(VALUE_ERROR_PREFIX) ? msg.slice(VALUE_ERROR_PREFIX.length) : msg;
-          try {
-            const parsed = JSON.parse(body);
-            if (parsed?.error_type === 'configuration_model_not_found') {
-              msg = `Model "${parsed.model_name}" is no longer available in project configurations.`;
-            } else if (parsed?.error_type === 'credential_not_found') {
-              msg = 'Your configuration does not match any available configurations.';
-            } else if (parsed?.error_type === 'private_credential_not_found') {
-              msg = 'Your private configuration does not match any available configurations.';
-            }
-          } catch {
-            // not JSON – use original msg
-          }
-          acc[curr.loc[1]] = msg;
-          return acc;
-        }, {}) || {};
-      if (Object.keys(validationErrors).length > 0) {
-        setToolErrors(prevState => ({
-          ...prevState,
-          ...validationErrors,
-        }));
-        setShowValidation(true);
-      }
+    if (!isError) return;
+
+    const validationErrors = ToolkitFormHelpers.parseValidationErrors(error.data?.settings_errors);
+
+    if (Object.keys(validationErrors).length > 0) {
+      setToolErrors(prevState => ({ ...prevState, ...validationErrors }));
+      setShowValidation(true);
     }
   }, [error, isError]);
 

@@ -7,3 +7,4 @@ export * as ToolBaseHelpers from './toolBase.helpers.js';
 export * as ToolkitConversationHelpers from './toolkitConversation.helpers.js';
 // TODO: DELETE after migration period (Q1 2026) - Legacy OpenAPI toolkit migration
 export * as LegacyOpenApiMigration from './legacyOpenApiMigration.helpers.js';
+export * as ToolkitFormHelpers from './toolkitForm.helpers.js';

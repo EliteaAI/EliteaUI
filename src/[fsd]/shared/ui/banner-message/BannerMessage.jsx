@@ -88,6 +88,7 @@ const bannerMessageStyles = (expanded, theme, variant) => {
       border: `0.0625rem solid ${styleVariant?.border}`,
       borderRadius: BORDER_RADIUS.MD,
       cursor: 'pointer',
+      marginTop: '0.5rem',
     },
     icon: {
       fontSize: '1rem',

@@ -9,6 +9,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 
 import { useCredentialWarning } from '@/[fsd]/entities/credential-warning/hooks';
 import { CredentialWarningModal } from '@/[fsd]/entities/credential-warning/ui';
+import { ToolkitFormConstants } from '@/[fsd]/features/toolkits/lib/constants';
 import { eliteaApi } from '@/api/eliteaApi.js';
 import { useToolkitEditMutation } from '@/api/toolkits.js';
 import eventEmitter from '@/common/eventEmitter';
@@ -18,7 +19,8 @@ import { useExtraValidation } from '@/hooks/application/useExtraValidation';
 import useConfigurations from '@/hooks/useConfigurations.js';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast.jsx';
-import { ToolEvents } from '@/pages/Applications/Components/Tools/consts';
+
+const { ToolEvents } = ToolkitFormConstants;
 
 // Helper functions
 const getToolkitName = (values, toolSchema) => {

@@ -9,6 +9,7 @@ import { usePublicProjectAccessCheck } from '@/[fsd]/features/project/lib/hooks'
 // TODO: DELETE after migration period (Q1 2026) - Legacy OpenAPI toolkit migration
 import { LegacyOpenApiMigration } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
+import { ToolkitForm } from '@/[fsd]/features/toolkits/ui/form/ToolkitForm';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
 import { useToolkitsDetailsQuery } from '@/api/toolkits';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
@@ -17,7 +18,6 @@ import { CONFIGURATION_VIEW_OPTIONS } from '@/pages/Applications/Components/Tool
 import BaseEditor from '@/pages/NewChat/components/BaseEditor.jsx';
 import CreateToolkitButton from '@/pages/NewChat/components/CreateToolkitButton.jsx';
 import SaveToolkitButton from '@/pages/Toolkits/SaveToolkitButton.jsx';
-import ToolkitForm from '@/pages/Toolkits/ToolkitForm.jsx';
 import ToolkitTypeSelector from '@/pages/Toolkits/ToolkitTypeSelector';
 import { formatTitleFromSnakeCase } from '@/utils/stringUtils';
 

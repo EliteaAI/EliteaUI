@@ -168,17 +168,10 @@ const EmbeddingModelSelect = memo(
             onValueChange={onSelectModel}
             customRenderValue={customRenderSelectValue}
             error={error || showMismatchFooter}
+            helperText={helperText}
             showEmptyPlaceholder={false}
             isListFetching={isFetching}
           />
-          {error && helperText && (
-            <FormControl
-              error
-              fullWidth
-            >
-              <FormHelperText>{helperText}</FormHelperText>
-            </FormControl>
-          )}
           {showMismatchFooter && !helperText && (
             <FormControl
               error
