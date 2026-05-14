@@ -120,10 +120,7 @@ export const BucketItem = forwardRef((props, ref) => {
 
   const onShowMenuList = useCallback(() => {
     setShowMenu(true);
-    if (!isActive) {
-      onSelect(bucket);
-    }
-  }, [bucket, isActive, onSelect]);
+  }, []);
 
   const menuItems = useMemo(() => {
     const hasActionRights = action =>
@@ -241,19 +238,25 @@ export const BucketItem = forwardRef((props, ref) => {
       </Box>
 
       {isPinned && (
-        <Button.BaseBtn
-          component={PinIconFilled}
-          sx={styles.menuIcon}
-          onClick={e => handlePinBucket(e)}
-        />
+        <Box onClick={e => e.stopPropagation()}>
+          <Button.BaseBtn
+            variant="tertiary"
+            startIcon={<PinIconFilled />}
+            sx={styles.pinIcon}
+            onClick={handlePinBucket}
+          />
+        </Box>
       )}
 
       {!isPinned && isHovering && (
-        <Button.BaseBtn
-          component={PinIcon}
-          sx={styles.menuIcon}
-          onClick={e => handlePinBucket(e)}
-        />
+        <Box onClick={e => e.stopPropagation()}>
+          <Button.BaseBtn
+            variant="tertiary"
+            startIcon={<PinIcon />}
+            sx={styles.pinIcon}
+            onClick={handlePinBucket}
+          />
+        </Box>
       )}
 
       <Box
@@ -373,6 +376,16 @@ const bucketItemStyles = ({ isActive, isHovering, isNextItemHighlighted, showMen
       },
     },
     menuIcon: { fontSize: '1rem', color: theme.palette.icon.fill.default },
+    pinIcon: {
+      minWidth: '1.75rem',
+      width: '1.75rem',
+      height: '1.75rem',
+      padding: 0,
+      gap: 0,
+      '& .MuiButton-startIcon': {
+        margin: 0,
+      },
+    },
   };
 };
 

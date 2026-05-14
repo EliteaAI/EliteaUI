@@ -13,6 +13,7 @@ const SimpleBucketList = memo(props => {
     selectedBucketName,
     selectedFile,
     currentPrefix,
+    expandedBuckets,
     onEdit,
     onDelete,
     onSelect,
@@ -20,10 +21,10 @@ const SimpleBucketList = memo(props => {
     onSelectFile,
     onSelectFolder,
     onPin,
+    onToggle,
   } = props;
 
   const [hoveredBucketName, setHoveredBucketName] = useState(null);
-  const [expandedBuckets, setExpandedBuckets] = useState({});
   const selectedBucketRef = useRef(null);
   const hasInitialScrolledRef = useRef(false);
 
@@ -32,24 +33,6 @@ const SimpleBucketList = memo(props => {
   const handleItemHover = useCallback((bucketName, isHovered) => {
     setHoveredBucketName(isHovered ? bucketName : null);
   }, []);
-
-  const handleBucketToggle = useCallback(bucketName => {
-    setExpandedBuckets(prev => ({
-      ...prev,
-      [bucketName]: !prev[bucketName],
-    }));
-  }, []);
-
-  // Auto-expand selected bucket to show files (only when selection changes)
-  useEffect(() => {
-    if (selectedBucketName && !expandedBuckets[selectedBucketName]) {
-      setExpandedBuckets(prev => ({
-        ...prev,
-        [selectedBucketName]: true,
-      }));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedBucketName]); // Only re-run when selectedBucketName changes, not expandedBuckets
 
   // Scroll to top only on initial load from URL
   useEffect(() => {
@@ -98,7 +81,7 @@ const SimpleBucketList = memo(props => {
                   isNextItemHighlighted={isNextBucketHighlighted}
                   onItemHover={handleItemHover}
                   isExpanded={isExpanded}
-                  onToggle={handleBucketToggle}
+                  onToggle={onToggle}
                   onPin={onPin}
                 />
                 {isExpanded && (

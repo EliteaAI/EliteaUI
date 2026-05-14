@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useCallback, useEffect, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
@@ -27,6 +27,24 @@ const BucketsListContent = memo(props => {
     onPin,
   } = props;
 
+  const [expandedBuckets, setExpandedBuckets] = useState({});
+
+  const handleBucketToggle = useCallback(bucketName => {
+    setExpandedBuckets(prev => ({
+      ...prev,
+      [bucketName]: !prev[bucketName],
+    }));
+  }, []);
+
+  useEffect(() => {
+    if (selectedBucketName && !expandedBuckets[selectedBucketName]) {
+      setExpandedBuckets(prev => ({
+        ...prev,
+        [selectedBucketName]: true,
+      }));
+    }
+  }, [selectedBucketName]);
+
   const styles = bucketsListContentStyles();
 
   const renderBucketsList = filtredBuckets => {
@@ -36,6 +54,7 @@ const BucketsListContent = memo(props => {
         selectedBucketName={selectedBucketName}
         selectedFile={selectedFile}
         currentPrefix={currentPrefix}
+        expandedBuckets={expandedBuckets}
         onEdit={onEdit}
         onDelete={onDelete}
         onSelect={onSelect}
@@ -43,6 +62,7 @@ const BucketsListContent = memo(props => {
         onSelectFile={onSelectFile}
         onSelectFolder={onSelectFolder}
         onPin={onPin}
+        onToggle={handleBucketToggle}
       />
     );
   };
