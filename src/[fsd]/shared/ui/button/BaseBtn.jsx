@@ -408,7 +408,16 @@ export const eliteaButtonVariants = [
         minWidth: '1.75rem !important',
         borderRadius: '1rem',
         gap: '0.625rem',
-        ...(isIconOnly ? { width: '1.75rem', padding: 0 } : { padding: '0.375rem 1rem' }),
+        ...(isIconOnly
+          ? {
+              width: '1.75rem',
+              padding: 0,
+              gap: 0,
+              '& .MuiButton-startIcon': {
+                margin: '0 !important',
+              },
+            }
+          : { padding: '0.375rem 1rem' }),
 
         '--btn-icon-fill': theme.palette.icon.fill.default,
         '& .MuiButton-startIcon path': { fill: 'var(--btn-icon-fill)' },
