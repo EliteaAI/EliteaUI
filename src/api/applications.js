@@ -49,7 +49,7 @@ const patchApplicationListCache = (state, dispatch, endpointName, applicationId)
 export const apiSlice = eliteaApi
   .enhanceEndpoints({
     //
-    addTagTypes: [TAG_TYPE_APPLICATION_DETAILS],
+    addTagTypes: [TAG_TYPE_APPLICATION_DETAILS, 'PipelineTrigger'],
   })
   .injectEndpoints({
     endpoints: build => ({
@@ -874,6 +874,28 @@ export const apiSlice = eliteaApi
         }),
         providesTags: [TAG_TYPE_DOCUMENT_LOADERS],
       }),
+      // Pipeline Trigger API endpoints
+      // URL pattern: /api/v2/elitea_core/prompt_lib/{project_id}/pipeline/{version_id}/trigger
+      getPipelineTrigger: build.query({
+        query: ({ projectId, versionId }) => ({
+          url: `${apiSlicePath}/pipeline_trigger/prompt_lib/${projectId}/pipeline/${versionId}/trigger`,
+        }),
+        providesTags: (result, error, { projectId, versionId }) => [
+          { type: 'PipelineTrigger', id: `${projectId}-${versionId}` },
+        ],
+      }),
+      updatePipelineTrigger: build.mutation({
+        query: ({ projectId, versionId, ...body }) => ({
+          url: `${apiSlicePath}/pipeline_trigger/prompt_lib/${projectId}/pipeline/${versionId}/trigger`,
+          method: 'PUT',
+          headers,
+          body,
+        }),
+        invalidatesTags: (result, error, { projectId, versionId }) => {
+          if (error) return [];
+          return [{ type: 'PipelineTrigger', id: `${projectId}-${versionId}` }];
+        },
+      }),
     }),
   });
 
@@ -926,4 +948,7 @@ export const {
   useSetAgentAttachmentStorageMutation,
   useGetDocumentLoadersQuery,
   useLazyPublicApplicationsListQuery,
+  useGetPipelineTriggerQuery,
+  useLazyGetPipelineTriggerQuery,
+  useUpdatePipelineTriggerMutation,
 } = apiSlice;

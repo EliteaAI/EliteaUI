@@ -1,7 +1,7 @@
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Visibility, VisibilityOff } from '@mui/icons-material';
-import { Box, InputAdornment, TextField, Tooltip } from '@mui/material';
+import { Box, InputAdornment } from '@mui/material';
 import IconButton from '@mui/material/IconButton';
 
 import { SingleSelect } from '@/[fsd]/shared/ui/select';

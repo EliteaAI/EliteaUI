@@ -956,15 +956,24 @@ const NewChat = props => {
     const conversationFromUrl = conversationList.find(
       conversation => conversation.id == conversationIdFromUrl,
     );
-    if (isConversationsLoaded) {
-      if (conversationFromUrl) {
-        setConversationNotFound(false);
-        if (!activeConversation?.id) {
-          onSelectConversation(conversationFromUrl);
-        }
-      } else if (!activeConversation?.id) {
-        setConversationNotFound(true);
-      }
+    if (isConversationsLoaded) {                                                                                                                                                                                 
+      if (conversationFromUrl) {                                                                                                                                                                                 
+        setConversationNotFound(false);                                                                                                                                                                          
+        if (!activeConversation?.id) {                                                                                                                                                                           
+          onSelectConversation(conversationFromUrl);                                                                                                                                                             
+        }                                                                                                                                                                                                        
+      } else if (conversationIdFromUrl && !activeConversation?.id) {                                                                                                                                             
+        // Conversation not in list - try to fetch by ID (e.g., webhook-triggered conversations)                                                                                                                 
+        const numericId = parseInt(conversationIdFromUrl, 10);                                                                                                                                                   
+        if (!isNaN(numericId)) {                                                                                                                                                                                 
+          onSelectConversation({ id: numericId });                                                                                                                                                               
+          setConversationNotFound(false);                                                                                                                                                                        
+        } else {                                                                                                                                                                                                 
+          setConversationNotFound(true);                                                                                                                                                                       
+        }                                                                                                                                                                                                        
+      } else if (!activeConversation?.id) {                                                                                                                                                                    
+        setConversationNotFound(true);                                                                                                                                                                           
+      }                                                                                                                                                                                                          
     }
   }, [
     activeConversation?.id,

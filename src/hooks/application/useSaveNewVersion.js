@@ -7,7 +7,7 @@ import {
   LAYOUT_VERSION,
   ORIENTATION,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/constants/flowEditor.constants';
-import { useSaveApplicationNewVersionMutation } from '@/api/applications';
+import { useLazyGetPipelineTriggerQuery, useSaveApplicationNewVersionMutation } from '@/api/applications';
 import { buildErrorMessage, replaceVersionInPath } from '@/common/utils';
 import { useNameFromUrl, useViewModeFromUrl } from '@/hooks/useSearchParamValue';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -47,6 +47,8 @@ const useSaveNewVersion = ({
       reset,
     },
   ] = useSaveApplicationNewVersionMutation();
+
+  const [fetchPipelineTrigger] = useLazyGetPipelineTriggerQuery();
 
   const onSuccessHandler = useCallback(
     newVersionData => {
@@ -113,6 +115,29 @@ const useSaveNewVersion = ({
       const { nodes, edges } = isFromPipeline
         ? calculateNodesAndEdges(yamlCode, ORIENTATION.vertical, flowNodes)
         : {};
+
+      // Fetch current trigger configuration for pipelines
+      // (trigger is cached separately from version details, so we need to fetch it fresh)
+      // Note: versionDetails.id is undefined (cleared by SaveNewVersionButton), so use currentVersionId from URL
+      let triggerConfig = null;
+      if (isFromPipeline && selectedProjectId && currentVersionId) {
+        try {
+          const triggerResult = await fetchPipelineTrigger({
+            projectId: selectedProjectId,
+            versionId: currentVersionId,
+          }).unwrap();
+          if (triggerResult) {
+            triggerConfig = {
+              type: triggerResult.type,
+              cron: triggerResult.cron,
+              timezone: triggerResult.timezone,
+            };
+          }
+        } catch {
+          // Ignore errors - will default to chat_message trigger
+        }
+      }
+
       const result = await saveNewVersion({
         ...(versionDetails || {}),
         tools: clearTools(versionDetails?.tools),
@@ -127,6 +152,7 @@ const useSaveNewVersion = ({
               edges,
               orientation: ORIENTATION.vertical,
               layout_version: LAYOUT_VERSION,
+              trigger: triggerConfig,
             }
           : undefined,
         meta: {
@@ -151,6 +177,8 @@ const useSaveNewVersion = ({
       applicationId,
       onSuccessHandler,
       flowNodes,
+      fetchPipelineTrigger,
+      currentVersionId,
     ],
   );
 
