@@ -1398,11 +1398,12 @@ const ChatBox = forwardRef((props, boxRef) => {
 
   const onSelectParticipant = selectedParticipant => {
     const isSearchParticipant = isProcessingSymbols;
+    const currentQuery = query;
     stopProcessingSymbols();
     setTimeout(() => {
       onSelectThisParticipant(selectedParticipant);
       if (isSearchParticipant) {
-        chatInput.current?.reset();
+        chatInput.current?.removeSymbol(currentQuery);
       }
     }, 0);
   };
