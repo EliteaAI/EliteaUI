@@ -74,6 +74,21 @@ const findCharAtTime = (times, t) => {
 // Reducer that bails out (returns the same reference) when the new range
 // is identical to the current one. This prevents unnecessary re-renders
 // when the RAF loop calls setSpokenRange on every frame with the same word.
+
+/** Decode raw binary PCM-16-LE to a Float32Array of normalised [-1, 1] samples. */
+const decodePcm16 = audio => {
+  const bytes =
+    audio instanceof ArrayBuffer
+      ? new Uint8Array(audio)
+      : new Uint8Array(audio.buffer, audio.byteOffset, audio.byteLength);
+  const samples = new Float32Array(bytes.byteLength / 2);
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  for (let i = 0; i < samples.length; i++) {
+    samples[i] = view.getInt16(i * 2, true) / 32768.0;
+  }
+  return samples;
+};
+
 const spokenRangeReducer = (prev, next) => {
   if (next === null) return prev === null ? prev : null;
   if (prev && prev.start === next.start && prev.end === next.end) return prev;
@@ -115,6 +130,30 @@ const useTextToSpeech = ({ ttsModel, socket } = {}) => {
   // Punctuation-aware char timeline for the current session.
   // Built in speak() from the TTS text + calibratedRate.
   const charTimelineRef = useRef(null);
+  // Sentence waypoints: exact { charPos, audioTime } anchors received from the
+  // backend tts_done events that carry char_end.  audioTime is seconds elapsed
+  // from playback start (nextStartTimeRef - playStartTimeRef at the moment the
+  // sentence's audio finishes buffering).  Used for linear interpolation in the
+  // RAF loop to give near-exact word highlight synchronisation.
+  const sentenceWaypointsRef = useRef([]); // [{ charPos, audioTime }]
+  // 1-chunk pipeline buffer. A fade-out is applied to the tail of the pending chunk
+  // right before it is scheduled, and a fade-in to the head of the first chunk of
+  // each new sentence. This eliminates amplitude discontinuities at sentence
+  // boundaries (the main source of audible pops).
+  const pendingChunkRef = useRef(null); // { samples: Float32Array, sample_rate }
+  // True at the start of every sentence — reset after the first chunk of that sentence is enqueued.
+  const newSentenceRef = useRef(true);
+  // Buffered-playback refs — incoming PCM is queued here; a scheduler loop
+  // pulls from it and pre-schedules audio into the AudioContext to prevent
+  // buffer underruns caused by network jitter.
+  const pcmQueueRef = useRef([]); // [{ samples: Float32Array, sampleRate: number }]
+  const schedulerTimerRef = useRef(null); // setInterval ID for the scheduler loop
+  const finalTtsDoneRef = useRef(false); // true once the final tts_done (no char_end) fires
+  // Monotonically-increasing count of samples enqueued this session — used to
+  // compute sentence-waypoint audioTime independently of how far the scheduler
+  // has advanced, so waypoints are correct even when buffering introduces lag.
+  const totalEnqueuedSamplesRef = useRef(0);
+  const sampleRateRef = useRef(24000); // sample rate of the current TTS stream
 
   const isPlaying = status === 'playing';
   const isPaused = status === 'paused';
@@ -167,60 +206,90 @@ const useTextToSpeech = ({ ttsModel, socket } = {}) => {
     totalDurationRef.current = 0;
     allChunksReceivedRef.current = false;
     charTimelineRef.current = null;
+    sentenceWaypointsRef.current = [];
+    pendingChunkRef.current = null;
+    newSentenceRef.current = true;
+    clearInterval(schedulerTimerRef.current);
+    schedulerTimerRef.current = null;
+    pcmQueueRef.current = [];
+    finalTtsDoneRef.current = false;
+    totalEnqueuedSamplesRef.current = 0;
   }, []);
 
-  const playPcm16Chunk = useCallback(
-    (audio_base64, sample_rate = 24000) => {
-      const ctx = ensureAudioContext(sample_rate);
-      if (!ctx) return;
+  // Push decoded samples into the playback queue. All fades must be applied
+  // in-place by the caller before this function is called. The scheduler loop
+  // (scheduleFromQueue) is responsible for actually sending buffers to the
+  // AudioContext — that decoupling is what prevents buffer underruns.
+  //
+  // Tiny fragments (< 1 render quantum = 128 samples) are merged into the
+  // previous queue entry instead of being scheduled as separate AudioBufferSourceNodes.
+  // The HTTP chunked-transfer encoding occasionally produces 1–4 byte trailing
+  // fragments at sentence boundaries, which cause amplitude discontinuities
+  // when played back as individual 1–2 sample buffers (below the Web Audio
+  // render quantum), manifesting as audible pops.
+  const enqueueSamples = useCallback((samples, sampleRate = 24000) => {
+    sampleRateRef.current = sampleRate;
+    const QUANTUM = 128; // Web Audio API render quantum — sub-quantum buffers cause pops
+    if (samples.length < QUANTUM && pcmQueueRef.current.length > 0) {
+      // Merge tiny fragment into the tail of the previous segment
+      const last = pcmQueueRef.current[pcmQueueRef.current.length - 1];
+      const merged = new Float32Array(last.samples.length + samples.length);
+      merged.set(last.samples, 0);
+      merged.set(samples, last.samples.length);
+      pcmQueueRef.current[pcmQueueRef.current.length - 1] = { samples: merged, sampleRate };
+    } else {
+      pcmQueueRef.current.push({ samples, sampleRate });
+    }
+    totalEnqueuedSamplesRef.current += samples.length;
+  }, []);
+
+  // Scheduler tick — invoked by setInterval every 25 ms.
+  // Pulls segments from pcmQueueRef and pre-schedules them into the AudioContext
+  // up to LOOKAHEAD seconds ahead of ctx.currentTime.
+  //
+  // A 200 ms pre-roll is enforced before the first buffer is scheduled so that
+  // transient network delays cannot immediately cause an underrun. Once the pre-roll
+  // is met (or the final tts_done has fired), playback begins and the scheduler
+  // keeps the lookahead window filled on every tick.
+  const scheduleFromQueue = useCallback(() => {
+    const ctx = audioContextRef.current;
+    if (!ctx || ctx.state === 'closed') return;
+
+    if (ctx.state === 'suspended' && !userPausedRef.current) {
+      ctx.resume().catch(() => {});
+      return;
+    }
+
+    const sr = sampleRateRef.current;
+    const PREROLL_SAMPLES = Math.floor(sr * 0.2); // 200 ms worth of samples
+    const LOOKAHEAD = 0.25; // schedule up to 250 ms ahead of current time
+
+    // Hold off until enough data is buffered, unless the stream is already done.
+    if (playStartTimeRef.current === null) {
+      const queued = pcmQueueRef.current.reduce((sum, seg) => sum + seg.samples.length, 0);
+      if (queued < PREROLL_SAMPLES && !finalTtsDoneRef.current) {
+        return;
+      }
+    }
+
+    const now = ctx.currentTime;
+    const scheduleUntil = now + LOOKAHEAD;
+
+    while (nextStartTimeRef.current < scheduleUntil) {
+      const segment = pcmQueueRef.current.shift();
+      if (!segment) break;
 
       try {
-        const binaryStr = atob(audio_base64);
-        const bytes = new Uint8Array(binaryStr.length);
-        for (let i = 0; i < binaryStr.length; i++) {
-          bytes[i] = binaryStr.charCodeAt(i);
-        }
-
-        const samples = new Float32Array(bytes.byteLength / 2);
-        const view = new DataView(bytes.buffer);
-        for (let i = 0; i < samples.length; i++) {
-          samples[i] = view.getInt16(i * 2, true) / 32768.0;
-        }
-
-        const buffer = ctx.createBuffer(1, samples.length, sample_rate);
+        const { samples, sampleRate } = segment;
+        const buffer = ctx.createBuffer(1, samples.length, sampleRate);
         buffer.copyToChannel(samples, 0);
 
         const source = ctx.createBufferSource();
         source.buffer = buffer;
+        source.connect(masterGainRef.current ?? ctx.destination);
 
-        // If the browser auto-suspended the context (autoplay policy) and the user
-        // hasn't explicitly paused, resume now so chunks aren't scheduled on a
-        // frozen timeline (which would cause them to pile up and play in a burst).
-        if (ctx.state === 'suspended' && !userPausedRef.current) {
-          ctx.resume().catch(() => {});
-        }
+        const startTime = Math.max(nextStartTimeRef.current, now);
 
-        // Route through a GainNode so we can apply a short linear ramp on the
-        // first chunk (silence → full) to eliminate the click caused by the
-        // AudioContext output jumping from 0 to a non-zero first sample.
-        const gain = ctx.createGain();
-        const isFirstChunk = playStartTimeRef.current === null;
-        const FADE_DURATION = 0.005; // 5 ms — inaudible but removes the discontinuity
-        if (isFirstChunk) {
-          gain.gain.setValueAtTime(0, 0);
-        }
-        source.connect(gain);
-        gain.connect(masterGainRef.current ?? ctx.destination);
-
-        const now = ctx.currentTime;
-        const startTime = nextStartTimeRef.current <= now ? now : nextStartTimeRef.current;
-
-        // Apply fade-in ramp on the first chunk only
-        if (isFirstChunk) {
-          gain.gain.linearRampToValueAtTime(1, startTime + FADE_DURATION);
-        }
-
-        // Track when audio playback actually begins (first chunk only)
         if (playStartTimeRef.current === null) {
           playStartTimeRef.current = startTime;
         }
@@ -229,17 +298,35 @@ const useTextToSpeech = ({ ttsModel, socket } = {}) => {
         nextStartTimeRef.current = startTime + buffer.duration;
 
         scheduledSourcesRef.current.push(source);
-        // Prune finished sources to avoid unbounded growth
         source.onended = () => {
           scheduledSourcesRef.current = scheduledSourcesRef.current.filter(s => s !== source);
         };
       } catch (err) {
         // eslint-disable-next-line no-console
-        console.error('[TTS] Failed to decode/play PCM chunk:', err);
+        console.error('[TTS] Failed to schedule PCM chunk:', err);
       }
-    },
-    [ensureAudioContext],
-  );
+    }
+
+    // Stream completion: final tts_done fired and the queue has been fully drained.
+    if (finalTtsDoneRef.current && pcmQueueRef.current.length === 0 && !allChunksReceivedRef.current) {
+      const bufferedDuration =
+        playStartTimeRef.current !== null ? nextStartTimeRef.current - playStartTimeRef.current : 0;
+      totalDurationRef.current = bufferedDuration > 0 ? bufferedDuration : 0;
+      if (bufferedDuration > 0 && fullTextRef.current.length > 0) {
+        calibratedRateRef.current = fullTextRef.current.length / bufferedDuration;
+      }
+      // Fade out master gain at end-of-stream to silence any DC-offset click
+      // that would occur if the last PCM buffer ends at a non-zero sample.
+      const masterGain = masterGainRef.current;
+      if (masterGain && nextStartTimeRef.current > 0) {
+        const FADE_OUT = 0.02; // 20 ms
+        const endTime = nextStartTimeRef.current;
+        masterGain.gain.setValueAtTime(1, Math.max(now, endTime - FADE_OUT));
+        masterGain.gain.linearRampToValueAtTime(0, endTime);
+      }
+      allChunksReceivedRef.current = true;
+    }
+  }, []);
 
   // ─────────────────────────────────────────────────────────────────────────
   // Browser SpeechSynthesis helpers
@@ -300,6 +387,7 @@ const useTextToSpeech = ({ ttsModel, socket } = {}) => {
         userPausedRef.current = false;
         socket.emit(sioEvents.tts_stop, {});
         stopModelAudio();
+        sentenceWaypointsRef.current = [];
         fullTextRef.current = text;
         // Build punctuation-aware timeline for this session's text.
         // Uses the calibrated rate from the previous session (or the default
@@ -307,9 +395,15 @@ const useTextToSpeech = ({ ttsModel, socket } = {}) => {
         // scales elapsed time against the real totalDuration so any rate
         // inaccuracy is corrected for the post-streaming phase.
         charTimelineRef.current = buildCharTimeline(text, calibratedRateRef.current);
+        pcmQueueRef.current = [];
+        finalTtsDoneRef.current = false;
+        totalEnqueuedSamplesRef.current = 0;
         // Create the AudioContext eagerly so pause() can suspend it
         // before the first chunk arrives
         ensureAudioContext(24000);
+        // Start the scheduler loop — it holds off playing until the pre-roll is met.
+        clearInterval(schedulerTimerRef.current);
+        schedulerTimerRef.current = setInterval(scheduleFromQueue, 25);
         socket.emit(sioEvents.tts_start, {
           project_id: ttsModel.project_id,
           model_name: ttsModel.name,
@@ -326,7 +420,7 @@ const useTextToSpeech = ({ ttsModel, socket } = {}) => {
         startUtterance(text, 0);
       }
     },
-    [hasModelTTS, ttsModel, socket, stopModelAudio, startUtterance, ensureAudioContext],
+    [hasModelTTS, ttsModel, socket, stopModelAudio, startUtterance, ensureAudioContext, scheduleFromQueue],
   );
 
   const pause = useCallback(() => {
@@ -380,30 +474,85 @@ const useTextToSpeech = ({ ttsModel, socket } = {}) => {
   useEffect(() => {
     if (!hasModelTTS) return;
 
-    const handleChunk = ({ audio_base64, sample_rate }) => {
-      playPcm16Chunk(audio_base64, sample_rate);
+    // Apply a linear fade-in or fade-out over FADE_SAMPLES samples in-place.
+    // 5 ms at 24 kHz = 120 samples — inaudible but sufficient to eliminate
+    // amplitude discontinuities at sentence boundaries.
+    const applyFade = (samples, fadeSamples, type) => {
+      const count = Math.min(fadeSamples, samples.length);
+      if (type === 'in') {
+        for (let i = 0; i < count; i++) {
+          samples[i] *= i / count;
+        }
+      } else {
+        const start = samples.length - count;
+        for (let i = 0; i < count; i++) {
+          samples[start + i] *= (count - 1 - i) / count;
+        }
+      }
     };
 
-    const handleDone = () => {
-      // Record total audio duration and signal that all chunks are buffered.
-      // The RAF loop will call setStatus('done') once the audio actually finishes.
-      const bufferedDuration = nextStartTimeRef.current - playStartTimeRef.current;
-      totalDurationRef.current = bufferedDuration > 0 ? bufferedDuration : 0;
-      allChunksReceivedRef.current = true;
-      // Calibrate chars/second for the next session's linear phase
-      if (bufferedDuration > 0 && fullTextRef.current.length > 0) {
-        calibratedRateRef.current = fullTextRef.current.length / bufferedDuration;
+    const handleChunk = ({ audio, sample_rate }) => {
+      const sr = sample_rate || 24000;
+      const FADE_SAMPLES = Math.floor(sr * 0.005); // 5 ms
+
+      const samples = decodePcm16(audio);
+
+      // Apply fade-in to the head of the first chunk of each sentence so the
+      // amplitude ramps up from 0 rather than jumping in abruptly after the
+      // silence left by the previous sentence's fade-out.
+      if (newSentenceRef.current) {
+        applyFade(samples, FADE_SAMPLES, 'in');
+        newSentenceRef.current = false;
       }
-      // Schedule a short linear fade-out on the master gain so the last PCM buffer
-      // doesn't end abruptly at a non-zero sample (which causes a DC-offset click).
-      const masterGain = masterGainRef.current;
-      const ctx = audioContextRef.current;
-      if (masterGain && ctx && nextStartTimeRef.current > 0) {
-        const FADE_OUT = 0.02; // 20 ms — inaudible but removes the click
-        const endTime = nextStartTimeRef.current;
-        masterGain.gain.setValueAtTime(1, Math.max(ctx.currentTime, endTime - FADE_OUT));
-        masterGain.gain.linearRampToValueAtTime(0, endTime);
+
+      // Flush the previous pending chunk as-is — consecutive chunks within a
+      // sentence are contiguous PCM bytes, so no fade is needed at this boundary.
+      if (pendingChunkRef.current) {
+        enqueueSamples(pendingChunkRef.current.samples, pendingChunkRef.current.sample_rate);
+        pendingChunkRef.current = null;
       }
+
+      // Hold the new chunk; it will be flushed with a fade-out when the
+      // sentence-boundary tts_done arrives, or as-is if more chunks follow.
+      pendingChunkRef.current = { samples, sample_rate: sr };
+    };
+
+    const handleDone = ({ char_end } = {}) => {
+      const sr = pendingChunkRef.current?.sample_rate || 24000;
+      const FADE_SAMPLES = Math.floor(sr * 0.005); // 5 ms
+
+      if (char_end !== undefined) {
+        // Sentence boundary — apply fade-out to the last pending chunk so the
+        // waveform tapers to zero before the next sentence's fade-in begins.
+        if (pendingChunkRef.current) {
+          const { samples, sample_rate } = pendingChunkRef.current;
+          applyFade(samples, FADE_SAMPLES, 'out');
+          enqueueSamples(samples, sample_rate);
+          pendingChunkRef.current = null;
+        }
+        newSentenceRef.current = true;
+
+        // Compute waypoint audioTime from total samples enqueued rather than from
+        // nextStartTimeRef, because the scheduler may not have processed the queue
+        // yet — using enqueued count gives the correct absolute playback position
+        // regardless of scheduling lag.
+        const audioTime = totalEnqueuedSamplesRef.current / sampleRateRef.current;
+        sentenceWaypointsRef.current.push({ charPos: char_end, audioTime });
+        return;
+      }
+
+      // Final tts_done — flush the last pending chunk without an extra fade-out:
+      // the master-gain ramp in scheduleFromQueue handles the end-of-stream click.
+      if (pendingChunkRef.current) {
+        const { samples, sample_rate } = pendingChunkRef.current;
+        enqueueSamples(samples, sample_rate);
+        pendingChunkRef.current = null;
+      }
+
+      // Signal that all chunks have been received. The scheduler loop
+      // (scheduleFromQueue) will set allChunksReceivedRef once the queue drains,
+      // at which point it also records totalDuration and schedules the fade-out.
+      finalTtsDoneRef.current = true;
     };
 
     const handleError = ({ error }) => {
@@ -423,7 +572,7 @@ const useTextToSpeech = ({ ttsModel, socket } = {}) => {
       socket.off(sioEvents.tts_done, handleDone);
       socket.off(sioEvents.tts_error, handleError);
     };
-  }, [hasModelTTS, socket, playPcm16Chunk, stopModelAudio]);
+  }, [hasModelTTS, socket, enqueueSamples, stopModelAudio]);
 
   // ─────────────────────────────────────────────────────────────────────────
   // RAF loop — word highlighting + completion detection for model TTS
@@ -468,23 +617,53 @@ const useTextToSpeech = ({ ttsModel, socket } = {}) => {
       const allReceived = allChunksReceivedRef.current;
 
       if (elapsed >= 0 && text) {
-        // Use the punctuation-aware char timeline built at speak() time.
-        // After tts_done fires we know the real total duration, so we scale
-        // elapsed to correct for any rate inaccuracy in the timeline model.
-        // Before tts_done the timeline runs at the calibrated rate as-is.
-        const timeline = charTimelineRef.current;
+        const waypoints = sentenceWaypointsRef.current;
         let charPos;
-        if (timeline) {
-          let scaledElapsed;
-          if (allReceived && totalDuration > 0 && timeline.totalEstimated > 0) {
-            scaledElapsed = elapsed * (timeline.totalEstimated / totalDuration);
-          } else {
-            scaledElapsed = elapsed;
+
+        if (waypoints.length > 0) {
+          // Interpolate between exact sentence-boundary anchors sent by the backend.
+          // Build anchor list starting at (0, 0); append final (text.length, totalDuration)
+          // once all audio is buffered so the last sentence also interpolates correctly.
+          const anchors = [{ charPos: 0, audioTime: 0 }, ...waypoints];
+          if (allReceived && totalDuration > 0) {
+            anchors.push({ charPos: text.length, audioTime: totalDuration });
           }
-          charPos = findCharAtTime(timeline.times, scaledElapsed);
+
+          let found = false;
+          for (let i = 1; i < anchors.length; i++) {
+            if (elapsed <= anchors[i].audioTime) {
+              const prev = anchors[i - 1];
+              const next = anchors[i];
+              const segDuration = next.audioTime - prev.audioTime;
+              const t = segDuration > 0 ? Math.min(1, (elapsed - prev.audioTime) / segDuration) : 0;
+              charPos = prev.charPos + Math.floor(t * (next.charPos - prev.charPos));
+              found = true;
+              break;
+            }
+          }
+
+          if (!found) {
+            // Past all known anchors — extrapolate with calibrated rate.
+            const last = anchors[anchors.length - 1];
+            charPos = Math.min(
+              text.length - 1,
+              last.charPos + Math.floor((elapsed - last.audioTime) * calibratedRateRef.current),
+            );
+          }
         } else {
-          // Fallback if timeline was not built (shouldn't happen in normal flow).
-          charPos = Math.min(Math.floor(elapsed * calibratedRateRef.current), text.length - 1);
+          // No waypoints yet — use the punctuation-aware char timeline.
+          const timeline = charTimelineRef.current;
+          if (timeline) {
+            let scaledElapsed;
+            if (allReceived && totalDuration > 0 && timeline.totalEstimated > 0) {
+              scaledElapsed = elapsed * (timeline.totalEstimated / totalDuration);
+            } else {
+              scaledElapsed = elapsed;
+            }
+            charPos = findCharAtTime(timeline.times, scaledElapsed);
+          } else {
+            charPos = Math.min(Math.floor(elapsed * calibratedRateRef.current), text.length - 1);
+          }
         }
 
         // Advance past any whitespace so charPos lands on a word character
