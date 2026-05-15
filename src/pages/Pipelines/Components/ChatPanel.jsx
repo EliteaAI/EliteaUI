@@ -177,7 +177,7 @@ const ChatPanel = forwardRef((props, ref) => {
               chatOnly
               type="chat"
               isAgentsPage={true}
-              hideAttachments={settings.disableAttachments}
+              hideAttachments={true}
               ref={boxRef}
               inputPlaceholder="Type your message."
             />
