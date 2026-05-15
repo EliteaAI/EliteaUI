@@ -16,6 +16,7 @@ const LLMSettingsDialog = memo(props => {
     onCancel,
     showWebhookSecret = false,
     showStepsLimit = false,
+    onResetToDefaults,
   } = props;
 
   const [localSettings, setLocalSettings] = useState(llmSettings);
@@ -58,6 +59,20 @@ const LLMSettingsDialog = memo(props => {
       }
       actions={
         <>
+          {onResetToDefaults && (
+            <Button
+              variant="elitea"
+              color="secondary"
+              onClick={() => {
+                onResetToDefaults();
+                onCancel();
+              }}
+              disableRipple
+              sx={{ marginRight: 'auto' }}
+            >
+              Reset to defaults
+            </Button>
+          )}
           <Button
             variant="elitea"
             color="secondary"

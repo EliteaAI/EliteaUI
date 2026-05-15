@@ -20,6 +20,22 @@ const useEditAgent = ({ activeParticipant, setActiveParticipant, onChangePartici
   // Store whether we're in create mode
   const [isCreateMode, setIsCreateMode] = useState(false);
 
+  // Keep editingAgent in sync with activeParticipant while the editor is open.
+  // This ensures changes persisted via onChangeParticipantSettings (e.g. LLM override resets)
+  // are reflected in the editor without requiring a page refresh.
+  useEffect(() => {
+    if (
+      isEditingAgent &&
+      !isCreateMode &&
+      editingAgent &&
+      activeParticipant &&
+      editingAgent.id === activeParticipant.id
+    ) {
+      setEditingAgent(activeParticipant);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeParticipant, isEditingAgent, isCreateMode, editingAgent?.id]);
+
   /**
    * Show the agent editor for a participant
    */

@@ -27,6 +27,7 @@ const LLMModelSelector = memo(props => {
     showSettingsEntry = true,
     modelTooltip = 'Select LLM Model',
     settingsTooltip = 'Model Settings',
+    onResetToDefaults,
   } = props;
 
   const theme = useTheme();
@@ -175,6 +176,7 @@ const LLMModelSelector = memo(props => {
           llmSettings={llmSettings}
           showWebhookSecret={showWebhookSecret}
           showStepsLimit={showStepsLimit}
+          onResetToDefaults={onResetToDefaults}
         />
       )}
     </>
