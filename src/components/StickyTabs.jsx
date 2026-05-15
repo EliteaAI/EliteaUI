@@ -10,6 +10,7 @@ import { AccessibilityAriaHelpers } from '@/[fsd]/shared/lib/helpers';
 import { BaseTab, BaseTabs } from '@/[fsd]/shared/ui/tabs';
 import { RIGHT_PANEL_WIDTH } from '@/common/constants';
 import { filterProps } from '@/common/utils';
+import useShouldCollapseRightToolbar from '@/hooks/useShouldCollapseRightToolbar';
 
 import BackButton from './BackButton';
 
@@ -111,6 +112,9 @@ const StickyTabs = memo(props => {
     showBackButton,
   } = props;
 
+  const { shouldCollapseRightToolbar } = useShouldCollapseRightToolbar();
+  const effectiveNoRightPanel = noRightPanel ?? shouldCollapseRightToolbar;
+
   const tabBarRef = useRef();
   const tabsRef = useRef();
   const [tabsMinWidth, setTabsMinWidth] = useState(undefined);
@@ -155,7 +159,7 @@ const StickyTabs = memo(props => {
     <ResponsiveBox sx={containerStyle}>
       <ContentBox>
         <FixedTabBar
-          noRightPanel={noRightPanel}
+          noRightPanel={effectiveNoRightPanel}
           ref={tabBarRef}
           sx={tabBarStyle}
           container
@@ -222,7 +226,7 @@ const StickyTabs = memo(props => {
             </Box>
             {middleTabComponent && (
               <MiddleArea
-                noRightPanel={noRightPanel}
+                noRightPanel={effectiveNoRightPanel}
                 sx={middleAreaSX}
               >
                 {middleTabComponent}
