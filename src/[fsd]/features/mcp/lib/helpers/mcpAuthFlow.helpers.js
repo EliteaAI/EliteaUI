@@ -1,3 +1,4 @@
+import store from '@/[fsd]/app/store';
 import {
   McpAuthHelpers,
   McpAuthWindowHelpers,
@@ -5,6 +6,7 @@ import {
   McpDiscoveryHelpers,
 } from '@/[fsd]/features/mcp/lib/helpers';
 import { mcpOAuthApi } from '@/api/mcpOAuth';
+import { toolkitsApi } from '@/api/toolkits';
 import RouteDefinitions, { getBasename } from '@/routes';
 
 import { MCP_OAUTH_ERRORS } from '../constants/mcpAuthFlow.constants';
@@ -26,8 +28,6 @@ const resolveCredentials = (serverUrl, tokenInfo) => {
 
 const fetchToolkitCredentials = async tokenInfo => {
   try {
-    const { default: store } = await import('@/[fsd]/app/store');
-    const { toolkitsApi } = await import('@/api/toolkits');
     const result = await store.dispatch(
       toolkitsApi.endpoints.toolkitsDetails.initiate({
         projectId: tokenInfo.project_id,
@@ -99,7 +99,6 @@ export const triggerProactiveRefresh = serverUrl => {
         return;
       }
 
-      const { default: store } = await import('@/[fsd]/app/store');
       const requestBody = {
         projectId: tokenInfo.project_id || 1,
         grant_type: 'refresh_token',
@@ -158,7 +157,6 @@ export const refreshAccessToken = async options => {
 
   const canonicalServer = McpAuthHelpers.canonicalizeServerUrl(serverUrl);
 
-  const { default: store } = await import('@/[fsd]/app/store');
   const requestBody = {
     projectId: projectId || 1,
     token_endpoint: tokenEndpoint,
@@ -420,10 +418,6 @@ export const startMcpAuthFlow = async options => {
       // noinspection ExceptionCaughtLocallyJS
       throw new Error('No authorization code received from popup');
     }
-
-    // Exchange authorization code for tokens via backend proxy
-    // This uses the app's authenticated API to avoid CORS issues
-    const { default: store } = await import('@/[fsd]/app/store');
 
     // Determine which credentials to send:
     // - If we used DCR: Always send the dynamically registered client_id

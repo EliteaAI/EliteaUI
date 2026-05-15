@@ -1,4 +1,5 @@
 import { McpAuthConstants } from '@/[fsd]/features/mcp/lib/constants';
+import { triggerProactiveRefresh } from './mcpAuthFlow.helpers';
 
 const REFRESH_CHECK_INTERVAL_MS = 60 * 1000; // Check for refresh needs every 60 seconds
 const REFRESH_DELAY_BETWEEN_REQUESTS_MS = 2000; // 2 seconds between refresh requests
@@ -396,13 +397,7 @@ export const getAllTokens = () => {
   if (serversToRefresh.length > 0) {
     addToRefreshQueue(serversToRefresh);
 
-    // Dynamic import to avoid circular dependency
-    import('./mcpAuthFlow.helpers')
-      .then(({ triggerProactiveRefresh }) => processRefreshQueue(triggerProactiveRefresh))
-      .catch(() => {
-        // Ignore import errors - refresh is best-effort
-        refreshQueue = [];
-      });
+    processRefreshQueue(triggerProactiveRefresh);
   }
 
   return result;

@@ -116,7 +116,23 @@ export default ({ mode }) => {
     },
     build: {
       outDir: 'dist',
-      sourcemap: true,
+      sourcemap: false,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'vendor-react-mui': [
+              'react', 'react-dom', 'react-router-dom', 'react-redux', '@reduxjs/toolkit',
+              '@mui/material', '@mui/icons-material', '@mui/system',
+              '@mui/x-charts', '@mui/x-data-grid', '@mui/x-date-pickers', '@mui/x-tree-view',
+              '@emotion/react', '@emotion/styled',
+            ],
+            'vendor-codemirror': ['codemirror', '@uiw/react-codemirror', '@uiw/codemirror-theme-vscode', '@uiw/codemirror-extensions-langs'],
+            'vendor-charts': ['recharts', 'mermaid'],
+            'vendor-utils': ['axios', 'jszip', 'marked', 'date-fns', 'formik', 'yup', 'js-yaml', 'uuid'],
+            'vendor-xyflow': ['@xyflow/react', '@dagrejs/dagre'],
+          },
+        },
+      },
     },
     optimizeDeps: {
       include: ['@emotion/react', '@emotion/styled', '@mui/material/Tooltip'],

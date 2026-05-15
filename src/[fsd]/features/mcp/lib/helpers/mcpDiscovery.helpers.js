@@ -1,4 +1,6 @@
+import store from '@/[fsd]/app/store';
 import { McpAuthFlowConstants } from '@/[fsd]/features/mcp/lib/constants';
+import { mcpOAuthApi } from '@/api/mcpOAuth';
 
 /**
  * Construct OAuth metadata from authorization server URL when discovery metadata is not available.
@@ -73,10 +75,6 @@ const DCR_REQUEST_DEFAULTS = {
  * @returns {Promise<string>} - The client_id from the registration response
  */
 export const registerDynamicClient = async (registrationEndpoint, redirectUri, projectId) => {
-  // Import store and API dynamically to avoid circular dependencies
-  const { default: store } = await import('@/[fsd]/app/store');
-  const { mcpOAuthApi } = await import('@/api/mcpOAuth');
-
   const requestBody = {
     projectId: projectId || 1,
     registration_endpoint: registrationEndpoint,
