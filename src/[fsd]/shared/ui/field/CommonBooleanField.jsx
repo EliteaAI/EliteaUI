@@ -2,10 +2,9 @@ import { memo, useCallback } from 'react';
 
 import { Box, FormControlLabel, Typography } from '@mui/material';
 
-import Tooltip from '@/ComponentsLib/Tooltip';
 import { Checkbox } from '@/[fsd]/shared/ui';
 import { includeFieldWrapperOverlapStyles } from '@/[fsd]/shared/ui/field/styles';
-import InfoIcon from '@/components/Icons/InfoIcon';
+import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 
 const CommonBooleanField = memo(props => {
   const { fieldKey, fieldValue, fieldProperties, onChangeInputVariables, toolInputVariables } = props;
@@ -40,19 +39,7 @@ const CommonBooleanField = memo(props => {
         label={
           <Box sx={styles.header}>
             <Typography variant="bodyMedium">{`${label}${isRequired ? ' *' : ''}`}</Typography>
-            {description && (
-              <Tooltip
-                title={description}
-                placement="top"
-              >
-                <Box sx={styles.infoIconWrapper}>
-                  <InfoIcon
-                    width={16}
-                    height={16}
-                  />
-                </Box>
-              </Tooltip>
-            )}
+            {description && <InfoTooltip infoTooltip={description} sx={styles.infoIconWrapper} />}
           </Box>
         }
         sx={styles.formControlLabel}

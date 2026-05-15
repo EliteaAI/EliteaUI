@@ -1,0 +1,119 @@
+import React, { memo, useCallback, useMemo } from 'react';
+
+import { Box, Tooltip } from '@mui/material';
+
+import TooltipMarkdownContent from '@/[fsd]/shared/ui/tooltip/TooltipMarkdownContent';
+import InfoIcon from '@/components/Icons/InfoIcon';
+
+const INFO_TOOLTIP_DEFAULTS = {
+  placement: 'top',
+  zIndex: 9999,
+  icon: { width: 16, height: 16 },
+};
+
+const InfoTooltip = memo(props => {
+  const {
+    infoTooltip,
+    slotProps,
+    sx,
+    href,
+    linkTarget = '_blank',
+    rel = 'noopener noreferrer',
+    disableTooltip = false,
+    TitleComponent,
+    titleComponentProps,
+  } = props;
+
+  const styles = infoTooltipStyles();
+
+  const parseInfoTooltip = useCallback((tooltip, sProps) => {
+    if (!tooltip) return null;
+
+    const isObject = typeof tooltip === 'object' && !React.isValidElement(tooltip);
+
+    return {
+      title: isObject ? tooltip.title : tooltip,
+      placement: isObject
+        ? (tooltip.placement ?? INFO_TOOLTIP_DEFAULTS.placement)
+        : INFO_TOOLTIP_DEFAULTS.placement,
+      zIndex: isObject
+        ? (tooltip.zIndex ?? INFO_TOOLTIP_DEFAULTS.zIndex)
+        : (sProps?.tooltip?.zIndex ?? INFO_TOOLTIP_DEFAULTS.zIndex),
+      icon: {
+        width: isObject
+          ? (tooltip.icon?.width ?? INFO_TOOLTIP_DEFAULTS.icon.width)
+          : INFO_TOOLTIP_DEFAULTS.icon.width,
+        height: isObject
+          ? (tooltip.icon?.height ?? INFO_TOOLTIP_DEFAULTS.icon.height)
+          : INFO_TOOLTIP_DEFAULTS.icon.height,
+        fill: isObject ? tooltip.icon?.fill : undefined,
+      },
+    };
+  }, []);
+
+  const tooltipConfig = useMemo(
+    () => parseInfoTooltip(infoTooltip, slotProps),
+    [parseInfoTooltip, infoTooltip, slotProps],
+  );
+
+  if (!tooltipConfig) return null;
+
+  const boxProps = href ? { component: 'a', href, target: linkTarget, rel } : {};
+
+  const iconElement = (
+    <Box
+      data-info-tooltip
+      sx={[styles.iconContainer, sx]}
+      {...boxProps}
+    >
+      <InfoIcon
+        width={tooltipConfig.icon.width}
+        height={tooltipConfig.icon.height}
+        fill={tooltipConfig.icon.fill}
+      />
+    </Box>
+  );
+
+  if (disableTooltip) return iconElement;
+
+  const resolvedTitleProps = titleComponentProps ?? (typeof infoTooltip === 'object' ? infoTooltip : {});
+  const titleContent = TitleComponent ? (
+    <TitleComponent {...resolvedTitleProps} />
+  ) : (
+    <TooltipMarkdownContent>{tooltipConfig.title}</TooltipMarkdownContent>
+  );
+
+  return (
+    <Tooltip
+      title={titleContent}
+      placement={tooltipConfig.placement}
+      slotProps={{
+        popper: {
+          sx: {
+            zIndex: tooltipConfig.zIndex,
+          },
+        },
+      }}
+    >
+      {iconElement}
+    </Tooltip>
+  );
+});
+
+InfoTooltip.displayName = 'InfoTooltip';
+
+const infoTooltipStyles = () => ({
+  iconContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.25rem',
+    height: '100%',
+    position: 'relative',
+    cursor: 'pointer',
+    bottom: '0.25rem',
+    overflow: 'visible',
+    '& :hover': { opacity: 0.8 },
+  },
+});
+
+export default InfoTooltip;

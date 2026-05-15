@@ -2,9 +2,8 @@ import { memo, useCallback, useMemo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import Tooltip from '@/ComponentsLib/Tooltip';
 import { includeFieldWrapperOverlapStyles } from '@/[fsd]/shared/ui/field/styles';
-import InfoIcon from '@/components/Icons/InfoIcon';
+import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import SecretManagementInput from '@/components/SecretManagementInput.jsx';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
@@ -39,19 +38,7 @@ const SecretInputFieldField = memo(props => {
     >
       <Box sx={styles.header}>
         <Typography variant="bodyMedium">{`${label}${isRequired ? ' *' : ''}`}</Typography>
-        {tooltipHint && (
-          <Tooltip
-            title={tooltipHint}
-            placement="top"
-          >
-            <Box sx={styles.infoIconWrapper}>
-              <InfoIcon
-                width={16}
-                height={16}
-              />
-            </Box>
-          </Tooltip>
-        )}
+        {tooltipHint && <InfoTooltip infoTooltip={tooltipHint} sx={styles.infoIconWrapper} />}
       </Box>
       <SecretManagementInput
         sx={{ marginTop: '0rem' }}

@@ -87,7 +87,7 @@ export const eliteaTextFieldStyle = () => ({
     fontSize: '1rem',
     fontWeight: 500,
   },
-  '& .MuiInputLabel-shrink .MuiBox-root:has(> svg)': {
+  '& .MuiInputLabel-shrink .MuiBox-root:has(> svg):not([data-info-tooltip])': {
     width: 16,
     height: 16,
     minWidth: 16,
@@ -96,10 +96,18 @@ export const eliteaTextFieldStyle = () => ({
     transform: 'scale(1.3334)',
     transformOrigin: 'center',
   },
+  '& .MuiInputLabel-shrink [data-info-tooltip]': {
+    transform: 'scale(1.3334)',
+    transformOrigin: 'center',
+  },
   '& .MuiInputLabel-root': {
     maxWidth: '100%',
     '&:not(.MuiInputLabel-shrink)': {
       maxWidth: 'calc(100% - 1.5rem)',
+    },
+    '&:has([data-info-tooltip])': {
+      overflow: 'visible',
+      maxWidth: 'none',
     },
   },
   '& .MuiInputBase-root': {

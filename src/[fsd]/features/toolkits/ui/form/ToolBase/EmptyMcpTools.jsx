@@ -2,20 +2,17 @@ import { memo } from 'react';
 
 import { Box, Typography, useTheme } from '@mui/material';
 
-import InfoIcon from '@/components/Icons/InfoIcon';
+import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 
 const EmptyMcpTools = memo(() => {
-  const styles = getStyles();
   const theme = useTheme();
+  const styles = getStyles(theme);
   return (
     <Box sx={styles.container}>
-      <Box sx={styles.infoIconWrapper}>
-        <InfoIcon
-          width={14}
-          height={14}
-          fill={theme.palette.icon.fill.tips}
-        />
-      </Box>
+      <InfoTooltip
+        infoTooltip={{ icon: styles.info }}
+        disableTooltip
+      />
       <Typography
         variant="bodySmall"
         sx={styles.text}
@@ -26,13 +23,7 @@ const EmptyMcpTools = memo(() => {
   );
 });
 
-const getStyles = () => ({
-  infoIconWrapper: {
-    display: 'flex',
-    alignItems: 'center',
-    width: '0.875rem',
-    height: '0.875rem',
-  },
+const getStyles = theme => ({
   container: ({ palette }) => ({
     marginTop: '0.75rem',
     display: 'flex',
@@ -46,6 +37,11 @@ const getStyles = () => ({
     borderRadius: '0.5rem',
     background: palette.background.tips,
   }),
+  info: {
+    width: 14,
+    height: 14,
+    fill: theme.palette.icon.fill.tips,
+  },
   text: ({ palette }) => ({
     color: palette.text.tips,
   }),

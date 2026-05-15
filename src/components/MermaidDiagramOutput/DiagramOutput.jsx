@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import domtoimage from 'dom-to-image';
 import mermaid from 'mermaid';
@@ -8,6 +8,7 @@ import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import { Box, CircularProgress, IconButton, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
+import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import FullscreenIcon from '@/assets/full-screen-icon.svg?react';
 import MinusIcon from '@/assets/minus-icon.svg?react';
 import { HEIGHTS, ICON_SIZES, WIDTHS } from '@/common/designTokens';
@@ -15,7 +16,6 @@ import { useTheme } from '@emotion/react';
 
 import DotMenu from '../DotMenu';
 import DownloadIcon from '../Icons/DownloadIcon';
-import InfoIcon from '../Icons/InfoIcon';
 import PlusIcon from '../Icons/PlusIcon';
 import './DiagramOutput.css';
 
@@ -137,15 +137,17 @@ const createUserFriendlyErrorMessage = error => {
   return fallbackMessage;
 };
 
-const MermaidDiagramOutput = ({ code, onQuickFix, isQuickFixLoading = false, quickFixTooltip = '' }) => {
+const MermaidDiagramOutput = memo(props => {
+  const { code, onQuickFix, isQuickFixLoading = false, quickFixTooltip = '' } = props;
+  const theme = useTheme();
   // console.log('MermaidDiagramOutput=====>', code)
   const panZoomTigerRef = useRef(null);
-  const theme = useTheme();
   const [hasBeenChanged, setHasBeenChanged] = useState(false);
   const { diagramId, graphId } = useMemo(() => getDiagramId(), []);
   const [isValidCode, setIsValidCode] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [rawErrorMessage, setRawErrorMessage] = useState('');
+  const styles = mermaidDiagramOutputStyles(theme, isValidCode, errorMessage, WIDTHS, HEIGHTS);
 
   const createExportDiagram = useCallback(async () => {
     const canvas = document.createElement('div');
@@ -421,71 +423,21 @@ const MermaidDiagramOutput = ({ code, onQuickFix, isQuickFixLoading = false, qui
   }, [theme.palette.text.primary]);
 
   return (
-    <Box
-      width={'100%'}
-      display={'flex'}
-      flexDirection={'column'}
-      padding="0px 0px 0px 0px"
-      gap="12px"
-      height={'100%'}
-      boxSizing={'border-box'}
-      position={'relative'}
-    >
-      <Box
-        display={'flex'}
-        flexDirection={'row'}
-        height={'auto'}
-        justifyContent={'flex-end'}
-        alignItems={'center'}
-        position={'absolute'}
-        top="12px"
-        right={'12px'}
-        gap={'8px'}
-      >
+    <Box sx={styles.container}>
+      <Box sx={styles.toolbar}>
         {errorMessage && onQuickFix && (
           <Tooltip
             title={quickFixTooltip}
             placement="bottom"
           >
-            <span>
+            <Box component="span">
               <IconButton
                 onClick={handleQuickFix}
                 disabled={isQuickFixLoading}
                 disableRipple
-                sx={({ palette }) => ({
-                  boxSizing: 'border-box',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  justifyContent: 'center',
-                  height: '1.75rem',
-                  paddingLeft: '0.75rem',
-                  paddingRight: '0.75rem',
-                  color: palette.split.text.default,
-                  background: palette.split.default,
-                  borderRadius: '1.5rem',
-                  whiteSpace: 'nowrap',
-                  '&:hover': {
-                    background: palette.split.hover,
-                  },
-                  '&:active': {
-                    color: palette.split.text.pressed,
-                    backgroundColor: palette.split.pressed,
-                  },
-                  '&:disabled': {
-                    color: palette.split.text.disabled,
-                    backgroundColor: palette.split.disabled,
-                  },
-                })}
+                sx={styles.quickFixButton}
               >
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: ({ palette }) => palette.text.createButton,
-                  }}
-                >
+                <Box sx={styles.quickFixIconWrapper}>
                   {isQuickFixLoading ? (
                     <CircularProgress
                       size={16}
@@ -496,17 +448,13 @@ const MermaidDiagramOutput = ({ code, onQuickFix, isQuickFixLoading = false, qui
                   )}
                 </Box>
                 <Typography
-                  sx={({ typography }) => ({
-                    color: 'inherit',
-                    fontFamily: typography.fontFamily,
-                    fontFeatureSettings: typography.fontFeatureSettings,
-                  })}
+                  sx={styles.quickFixText}
                   variant="labelSmall"
                 >
                   {isQuickFixLoading ? 'Fixing...' : 'Quick Fix'}
                 </Typography>
               </IconButton>
-            </span>
+            </Box>
           </Tooltip>
         )}
         <DotMenu
@@ -521,97 +469,45 @@ const MermaidDiagramOutput = ({ code, onQuickFix, isQuickFixLoading = false, qui
           }}
           disabled={!isValidCode}
           iconColor="secondary"
-          menuIcon={
-            <DownloadIcon
-              sx={{ fontSize: '16px', marginTop: '-1px' }}
-              fill={isValidCode ? theme.palette.icon.fill.default : theme.palette.icon.fill.disabled}
-            />
-          }
+          menuIcon={<DownloadIcon sx={styles.downloadIcon} />}
         >
           {menuItems}
         </DotMenu>
       </Box>
-      <Box
-        display={'flex'}
-        flexDirection={'column'}
-        height={'auto'}
-        justifyContent={'flex-end'}
-        alignItems={'flex-end'}
-        position={'absolute'}
-        bottom="12px"
-        left={'12px'}
-        borderRadius={'2px'}
-        border={`1px solid ${theme.palette.border.lines}`}
-      >
+      <Box sx={styles.zoomControls}>
         <IconButton
           variant="elitea"
           color="tertiary"
-          sx={{
-            marginLeft: '0px',
-            borderRadius: '0px',
-            borderBottom: `1px solid ${theme.palette.border.lines}`,
-          }}
+          sx={styles.zoomButton}
           onClick={onZoomIn}
         >
-          <PlusIcon
-            sx={{ fontSize: '16px' }}
-            fill={theme.palette.icon.fill.default}
-          />
+          <PlusIcon sx={styles.zoomIcon} />
         </IconButton>
         <IconButton
           variant="elitea"
           color="tertiary"
-          sx={{
-            marginLeft: '0px',
-            borderRadius: '0px',
-            borderBottom: `1px solid ${theme.palette.border.lines}`,
-          }}
+          sx={styles.zoomButton}
           onClick={onZoomOut}
         >
-          <MinusIcon
-            sx={{ fontSize: '16px' }}
-            fill={theme.palette.icon.fill.default}
-          />
+          <MinusIcon sx={styles.zoomIcon} />
         </IconButton>
         <IconButton
           disabled={!hasBeenChanged}
           variant="elitea"
           color="tertiary"
-          sx={{ marginLeft: '0px', borderRadius: '0px' }}
+          sx={styles.zoomButtonLast}
           onClick={onReset}
         >
-          <FullscreenIcon
-            sx={{ fontSize: '16px' }}
-            fill={theme.palette.icon.fill.secondary}
-          />
+          <FullscreenIcon sx={styles.fullscreenIcon} />
         </IconButton>
       </Box>
-      <Box
-        height={'100%'}
-        width={'100%'}
-        maxWidth={'100%'}
-        border={`1px solid ${theme.palette.border.lines} `}
-        borderRadius={'8px'}
-        display={'flex'}
-        flexDirection="column"
-        justifyContent={'flex-start'}
-        alignItems={'center'}
-        boxSizing={'border-box'}
-        overflow={'scroll'}
-        backgroundColor={theme.palette.background.tabPanel}
-      >
+      <Box sx={styles.diagramContainer}>
         {errorMessage && (
-          <Box
-            width={'100%'}
-            marginTop={'8px'}
-            marginBottom={'8px'}
-            padding="8px"
-            flexWrap={'wrap'}
-          >
+          <Box sx={styles.errorMessageBox}>
             <Typography
               variant="labelMedium"
               color="error"
-              sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.2 }}
+              sx={styles.errorText}
             >
               {(() => {
                 const message = errorMessage?.toString() || '';
@@ -620,14 +516,11 @@ const MermaidDiagramOutput = ({ code, onQuickFix, isQuickFixLoading = false, qui
                 return parts.map((part, index) => {
                   if (part === '**TIP_ICON**') {
                     return (
-                      <InfoIcon
+                      <InfoTooltip
                         key={index}
-                        sx={{
-                          fontSize: '16px',
-                          verticalAlign: 'text-bottom',
-                          marginRight: '4px',
-                          color: theme.palette.info.main,
-                        }}
+                        infoTooltip={{ icon: styles.infoIcon }}
+                        disableTooltip
+                        sx={styles.infoTooltip}
                       />
                     );
                   } else if (part.startsWith('**') && part.endsWith('**')) {
@@ -637,14 +530,7 @@ const MermaidDiagramOutput = ({ code, onQuickFix, isQuickFixLoading = false, qui
                         key={index}
                         component="span"
                         variant="labelMedium"
-                        sx={{
-                          fontWeight: 'bold',
-                          backgroundColor:
-                            theme.palette.background.errorCodeHighlight || theme.palette.action.hover,
-                          padding: '2px 4px',
-                          borderRadius: '4px',
-                          fontFamily: 'monospace',
-                        }}
+                        sx={styles.boldErrorText}
                       >
                         {boldText}
                       </Typography>
@@ -656,31 +542,171 @@ const MermaidDiagramOutput = ({ code, onQuickFix, isQuickFixLoading = false, qui
             </Typography>
           </Box>
         )}
-        <div
+        <Box
+          component="div"
           id={diagramId}
           className={`mermaid ${errorMessage ? 'mermaid-error' : ''}`}
-          style={{
-            width: '100% !important',
-            height: '100% !important',
-            marginTop: '0px',
-            padding: '4px',
-            ...(errorMessage
-              ? {
-                  maxWidth: WIDTHS.errorContainer,
-                  maxHeight: HEIGHTS.errorContainer,
-                  display: 'flex',
-                  justifyContent: 'flex-start',
-                  alignItems: 'flex-start',
-                  textAlign: 'left',
-                  margin: '0',
-                  marginTop: '8px',
-                }
-              : {}),
-          }}
-        />
+          sx={styles.mermaid}
+        ></Box>
       </Box>
     </Box>
   );
-};
+});
+
+MermaidDiagramOutput.displayName = 'MermaidDiagramOutput';
+
+const mermaidDiagramOutputStyles = (theme, isValidCode, errorMessage, widthsValue, heightsValue) => ({
+  container: {
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    padding: 0,
+    gap: '0.75rem',
+    height: '100%',
+    boxSizing: 'border-box',
+    position: 'relative',
+  },
+  toolbar: {
+    display: 'flex',
+    flexDirection: 'row',
+    height: 'auto',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    position: 'absolute',
+    top: '0.75rem',
+    right: '0.75rem',
+    gap: '0.5rem',
+  },
+  quickFixButton: ({ palette }) => ({
+    boxSizing: 'border-box',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    justifyContent: 'center',
+    height: '1.75rem',
+    paddingLeft: '0.75rem',
+    paddingRight: '0.75rem',
+    color: palette.split.text.default,
+    background: palette.split.default,
+    borderRadius: '1.5rem',
+    whiteSpace: 'nowrap',
+    '&:hover': {
+      background: palette.split.hover,
+    },
+    '&:active': {
+      color: palette.split.text.pressed,
+      backgroundColor: palette.split.pressed,
+    },
+    '&:disabled': {
+      color: palette.split.text.disabled,
+      backgroundColor: palette.split.disabled,
+    },
+  }),
+  quickFixIconWrapper: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: ({ palette }) => palette.text.createButton,
+  },
+  quickFixText: ({ typography }) => ({
+    color: 'inherit',
+    fontFamily: typography.fontFamily,
+    fontFeatureSettings: typography.fontFeatureSettings,
+  }),
+  downloadIcon: {
+    fontSize: '1rem',
+    marginTop: '-0.0625rem',
+    fill: isValidCode ? theme.palette.icon.fill.default : theme.palette.icon.fill.disabled,
+  },
+  zoomControls: ({ palette }) => ({
+    display: 'flex',
+    flexDirection: 'column',
+    height: 'auto',
+    justifyContent: 'flex-end',
+    alignItems: 'flex-end',
+    position: 'absolute',
+    bottom: '0.75rem',
+    left: '0.75rem',
+    borderRadius: '0.125rem',
+    border: `0.0625rem solid ${palette.border.lines}`,
+  }),
+  zoomButton: ({ palette }) => ({
+    marginLeft: 0,
+    borderRadius: 0,
+    borderBottom: `0.0625rem solid ${palette.border.lines}`,
+  }),
+  zoomButtonLast: {
+    marginLeft: 0,
+    borderRadius: 0,
+  },
+  zoomIcon: {
+    fontSize: '1rem',
+    fill: theme.palette.icon.fill.default,
+  },
+  fullscreenIcon: {
+    fontSize: '1rem',
+    fill: theme.palette.icon.fill.secondary,
+  },
+  diagramContainer: ({ palette }) => ({
+    height: '100%',
+    width: '100%',
+    maxWidth: '100%',
+    border: `0.0625rem solid ${palette.border.lines}`,
+    borderRadius: '0.5rem',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    boxSizing: 'border-box',
+    overflow: 'scroll',
+    backgroundColor: palette.background.default,
+  }),
+  errorMessageBox: {
+    width: '100%',
+    marginTop: '0.5rem',
+    marginBottom: '0.5rem',
+    padding: '0.5rem',
+    flexWrap: 'wrap',
+  },
+  errorText: {
+    whiteSpace: 'pre-wrap',
+    lineHeight: 1.2,
+  },
+  infoIcon: {
+    fill: theme.palette.info.main,
+  },
+  infoTooltip: {
+    display: 'inline-flex',
+    verticalAlign: 'text-bottom',
+    marginRight: '0.25rem',
+    position: 'static',
+    bottom: 0,
+  },
+  boldErrorText: ({ palette }) => ({
+    fontWeight: 'bold',
+    backgroundColor: palette.background.errorCodeHighlight || palette.action.hover,
+    padding: '0.125rem 0.25rem',
+    borderRadius: '0.25rem',
+    fontFamily: 'monospace',
+  }),
+  mermaid: {
+    width: '100% !important',
+    height: '100% !important',
+    marginTop: 0,
+    padding: '0.25rem',
+    ...(errorMessage
+      ? {
+          maxWidth: widthsValue.errorContainer,
+          maxHeight: heightsValue.errorContainer,
+          display: 'flex',
+          justifyContent: 'flex-start',
+          alignItems: 'flex-start',
+          textAlign: 'left',
+          margin: 0,
+          marginTop: '0.5rem',
+        }
+      : {}),
+  },
+});
 
 export default MermaidDiagramOutput;

@@ -2,12 +2,10 @@ import { memo, useCallback, useMemo } from 'react';
 
 import { Box, IconButton, Typography } from '@mui/material';
 
-import Tooltip from '@/ComponentsLib/Tooltip';
-import { Field } from '@/[fsd]/shared/ui';
+import { Field, Input } from '@/[fsd]/shared/ui';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
-import FormInput from '@/components/FormInput';
+import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import CopyIcon from '@/components/Icons/CopyIcon';
-import InfoIcon from '@/components/Icons/InfoIcon';
 import useToast from '@/hooks/useToast';
 
 const CommonStringField = memo(props => {
@@ -92,6 +90,17 @@ const CommonStringField = memo(props => {
     ];
   }, [enumValues, isRequired, property]);
 
+  const renderInfoTooltip = useCallback(
+    descriptionValue =>
+      descriptionValue ? (
+        <InfoTooltip
+          infoTooltip={descriptionValue}
+          sx={styles.infoIconWrapper}
+        />
+      ) : null,
+    [styles.infoIconWrapper],
+  );
+
   if (enumOptions) {
     return (
       <Box
@@ -101,19 +110,7 @@ const CommonStringField = memo(props => {
       >
         <Box sx={styles.header}>
           <Typography variant="bodyMedium">{`${label}${isRequired ? ' *' : ''}`}</Typography>
-          {description && (
-            <Tooltip
-              title={description}
-              placement="top"
-            >
-              <Box sx={styles.infoIconWrapper}>
-                <InfoIcon
-                  width={16}
-                  height={16}
-                />
-              </Box>
-            </Tooltip>
-          )}
+          {renderInfoTooltip(description)}
         </Box>
         <SingleSelect
           sx={{ width: 'calc(100% - 0.35rem)', margin: '0 auto' }}
@@ -137,19 +134,7 @@ const CommonStringField = memo(props => {
       >
         <Box sx={styles.header}>
           <Typography variant="bodyMedium">{`${label}${isRequired ? ' *' : ''}`}</Typography>
-          {description && (
-            <Tooltip
-              title={description}
-              placement="top"
-            >
-              <Box sx={styles.infoIconWrapper}>
-                <InfoIcon
-                  width={16}
-                  height={16}
-                />
-              </Box>
-            </Tooltip>
-          )}
+          {renderInfoTooltip(description)}
         </Box>
         <Field.CodeMirrorEditor
           value={fieldValue || ''}
@@ -188,22 +173,9 @@ const CommonStringField = memo(props => {
       )}
       <Box sx={{ ...styles.header, ...styles.noMargin }}>
         <Typography variant="bodyMedium">{`${label}${isRequired ? ' *' : ''}`}</Typography>
-        {description && (
-          <Tooltip
-            title={description}
-            placement="top"
-          >
-            <Box sx={styles.infoIconWrapper}>
-              <InfoIcon
-                width={16}
-                height={16}
-              />
-            </Box>
-          </Tooltip>
-        )}
+        {renderInfoTooltip(description)}
       </Box>
-      <FormInput
-        inputEnhancer={isMultiline}
+      <Input.StyledInputEnhancer
         required={isRequired}
         multiline={isMultiline}
         minRows={lines ? parseInt(lines) : isMultiline ? 3 : 1}

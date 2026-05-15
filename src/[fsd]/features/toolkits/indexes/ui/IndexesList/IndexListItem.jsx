@@ -6,11 +6,11 @@ import { Box, CircularProgress, Skeleton, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
+import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import ClockIcon from '@/assets/clock.svg?react';
 import FileIcon from '@/assets/file.svg?react';
 import StopIcon from '@/assets/stop-icon.svg?react';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
-import InfoIcon from '@/components/Icons/InfoIcon';
 
 const IndexListItem = memo(props => {
   const { index, onIndexClick, currentIndex, useMock } = props;
@@ -126,13 +126,11 @@ const IndexListItem = memo(props => {
         />
       )}
       {index.metadata.state === IndexStatuses.fail && (
-        <Box sx={styles.icon}>
-          <InfoIcon
-            width={16}
-            height={16}
-            fill="#D71616"
-          />
-        </Box>
+        <InfoTooltip
+          infoTooltip={{ icon: styles.error }}
+          disableTooltip
+          sx={styles.icon}
+        />
       )}
 
       {index.metadata.state === IndexStatuses.cancelled && (
@@ -226,6 +224,9 @@ const indexListItem = () => ({
     right: '1rem',
     marginTop: '-.4375rem',
   }),
+  error: {
+    fill: '#D71616',
+  },
   warning: {
     path: ({ palette }) => ({
       fill: palette.background.warning,

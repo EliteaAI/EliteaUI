@@ -1,9 +1,9 @@
 import { memo } from 'react';
 
-import { Box, FormControlLabel, Tooltip, Typography } from '@mui/material';
+import { FormControlLabel, Typography } from '@mui/material';
 
 import { Checkbox, Input } from '@/[fsd]/shared/ui';
-import InfoIcon from '@/components/Icons/InfoIcon';
+import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 
 const OAuthFormFields = memo(props => {
   const {
@@ -58,17 +58,10 @@ const OAuthFormFields = memo(props => {
           >
             Scope (optional)
             {availableScopes.length > 0 && (
-              <Tooltip
-                title={`MCP server supports: ${availableScopes.join(', ')}.`}
-                placement="top"
-              >
-                <Box sx={styles.infoIconWrapper}>
-                  <InfoIcon
-                    width={16}
-                    height={16}
-                  />
-                </Box>
-              </Tooltip>
+              <InfoTooltip
+                infoTooltip={`MCP server supports: ${availableScopes.join(', ')}.`}
+                sx={styles.infoIconWrapper}
+              />
             )}
           </Typography>
         }

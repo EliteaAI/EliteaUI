@@ -10,17 +10,15 @@ import {
   ListSubheader,
   MenuItem,
   Select,
-  Tooltip,
   Typography,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 
 import { FLAT_MENU_ACTION_VALUE } from '@/[fsd]/shared/lib/constants/singleSelectConstants';
 import { Banner } from '@/[fsd]/shared/ui';
-import { TooltipMarkdownContent } from '@/[fsd]/shared/ui/tooltip';
+import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import RemoveIcon from '@/assets/remove-icon.svg?react';
 import ArrowDownIcon from '@/components/Icons/ArrowDownIcon';
-import InfoIcon from '@/components/Icons/InfoIcon';
 
 import SingleSelectDropdown from './SingleSelectDropdown';
 import { getSingleSelectShowBorderSx, getSingleSelectWithoutBorderSx } from './singleSelectVariants';
@@ -135,8 +133,19 @@ const SingleSelect = memo(props => {
         customSelectedColor,
         customSelectedFontSize,
         showBorder,
+        effectiveMultiple,
+        required,
+        hasInfoTooltip: Boolean(infoIconDescription),
       }),
-    [theme, customSelectedColor, customSelectedFontSize, showBorder],
+    [
+      theme,
+      customSelectedColor,
+      customSelectedFontSize,
+      showBorder,
+      effectiveMultiple,
+      required,
+      infoIconDescription,
+    ],
   );
 
   const handleChange = useCallback(
@@ -614,44 +623,16 @@ const SingleSelect = memo(props => {
         {labelNode ??
           (label && !separateLabel && (
             <InputLabel
-              sx={[
-                {
-                  left: '0.75rem',
-                  fontSize: '1rem',
-                  fontWeight: 500,
-                  ...(effectiveMultiple && {
-                    '&:not(.MuiInputLabel-shrink)': { top: '0.5rem' },
-                  }),
-                  ...(required && {
-                    '& .MuiInputLabel-asterisk, & .MuiFormLabel-asterisk': { display: 'none' },
-                  }),
-                },
-                labelSX,
-              ]}
+              sx={[styles.inputLabel, labelSX]}
               shrink={shrinkLabel ? true : undefined}
             >
               {label}
               {required && ' *'}
               {infoIconDescription && (
-                <Box
-                  component="span"
-                  sx={{
-                    marginLeft: '0.15rem',
-                    ':hover': { opacity: 0.8 },
-                  }}
-                >
-                  <Tooltip
-                    title={<TooltipMarkdownContent>{infoIconDescription}</TooltipMarkdownContent>}
-                    placement="top"
-                  >
-                    <Box component="span">
-                      <InfoIcon
-                        width={19}
-                        height={19}
-                      />
-                    </Box>
-                  </Tooltip>
-                </Box>
+                <InfoTooltip
+                  infoTooltip={{ title: infoIconDescription }}
+                  sx={styles.infoTooltip}
+                />
               )}
             </InputLabel>
           ))}
@@ -704,7 +685,17 @@ const SingleSelect = memo(props => {
 
 SingleSelect.displayName = 'SingleSelect';
 
-const singleSelectStyles = (theme, { customSelectedColor, customSelectedFontSize, showBorder } = {}) => ({
+const singleSelectStyles = (
+  theme,
+  {
+    customSelectedColor,
+    customSelectedFontSize,
+    showBorder,
+    effectiveMultiple,
+    required,
+    hasInfoTooltip,
+  } = {},
+) => ({
   labelContainer: {
     display: 'flex',
     alignItems: 'center',
@@ -766,6 +757,29 @@ const singleSelectStyles = (theme, { customSelectedColor, customSelectedFontSize
       border: 'none !important',
       outline: 'none !important',
     },
+  },
+  inputLabel: {
+    display: 'flex',
+    left: '0.75rem',
+    fontSize: '1rem',
+    fontWeight: 500,
+    ...(effectiveMultiple && {
+      '&:not(.MuiInputLabel-shrink)': { top: '0.5rem' },
+    }),
+    ...(required && {
+      '& .MuiInputLabel-asterisk, & .MuiFormLabel-asterisk': { display: 'none' },
+    }),
+    ...(hasInfoTooltip && {
+      overflow: 'visible',
+      maxWidth: 'none',
+    }),
+    '& [data-info-tooltip]': {
+      transform: 'scale(1.3334)',
+      transformOrigin: 'center',
+    },
+  },
+  infoTooltip: {
+    marginLeft: '0.5rem',
   },
   formControl: showBorder ? getSingleSelectShowBorderSx(theme) : getSingleSelectWithoutBorderSx(theme),
   multipleSelect: {

@@ -2,10 +2,9 @@ import { memo, useCallback, useMemo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import Tooltip from '@/ComponentsLib/Tooltip';
 import { includeFieldWrapperOverlapStyles } from '@/[fsd]/shared/ui/field/styles';
+import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import FormInput from '@/components/FormInput.jsx';
-import InfoIcon from '@/components/Icons/InfoIcon';
 import Slider from '@/components/Slider.jsx';
 
 const CommonNumberField = memo(props => {
@@ -152,19 +151,7 @@ const CommonNumberField = memo(props => {
     >
       <Box sx={styles.header}>
         <Typography variant="bodyMedium">{`${label}${isRequired ? ' *' : ''}`}</Typography>
-        {description && (
-          <Tooltip
-            title={description}
-            placement="top"
-          >
-            <Box sx={styles.infoIconWrapper}>
-              <InfoIcon
-                width={16}
-                height={16}
-              />
-            </Box>
-          </Tooltip>
-        )}
+        {description && <InfoTooltip infoTooltip={description} />}
       </Box>
       <FormInput
         required={fieldProperties.isRequired}
@@ -209,15 +196,6 @@ const commonNumberFieldStyles = () => ({
     ...includeFieldWrapperOverlapStyles(disabled),
   }),
   header: { display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: '0.5rem' },
-  infoIconWrapper: {
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    height: '100%',
-    width: '1rem',
-    cursor: 'pointer',
-    pointerEvents: 'auto',
-  },
 });
 
 export default CommonNumberField;
