@@ -102,8 +102,23 @@ const NewChatInput = forwardRef((props, ref) => {
     isTTSPlaying,
   });
 
-  // Forward the same imperative handle the outer caller expects from UserInput
-  useImperativeHandle(ref, () => userInputRef.current, []);
+  // Expose a stable imperative API while delegating each call to the latest UserInput handle.
+  useImperativeHandle(
+    ref,
+    () => ({
+      focus: () => userInputRef.current?.focus?.(),
+      reset: () => userInputRef.current?.reset?.(),
+      getInputContent: () => userInputRef.current?.getInputContent?.(),
+      getCursorPosition: () => userInputRef.current?.getCursorPosition?.(),
+      setValue: (...args) => userInputRef.current?.setValue?.(...args),
+      replaceRange: (...args) => userInputRef.current?.replaceRange?.(...args),
+      removeSymbol: (...args) => userInputRef.current?.removeSymbol?.(...args),
+      sendQuestion: (...args) => userInputRef.current?.sendQuestion?.(...args),
+      insertTextAtCursor: (...args) => userInputRef.current?.insertTextAtCursor?.(...args),
+      mentionUser: (...args) => userInputRef.current?.mentionUser?.(...args),
+    }),
+    [],
+  );
 
   const handleVoiceRecordingChange = useCallback(
     recording => {

@@ -433,7 +433,6 @@ const NewConversationView = forwardRef(
 
       if (isProcessingSymbols) {
         stopProcessingSymbols();
-        chatInput.current?.reset();
       }
 
       const details =
