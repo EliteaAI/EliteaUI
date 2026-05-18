@@ -5,6 +5,7 @@ import { useFormikContext } from 'formik';
 import { Box, ListItem, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
+import { conversationStartersHelpers } from '@/[fsd]/features/agent/lib/helpers';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { useFieldFocus } from '@/[fsd]/shared/lib/hooks';
 import { Input } from '@/[fsd]/shared/ui';
@@ -30,7 +31,8 @@ const ConversationStarters = memo(props => {
   const { toggleFieldFocus, isFocused } = useFieldFocus();
   const valuesPath = 'version_details.conversation_starters';
   const values = useMemo(
-    () => version_details?.conversation_starters || [],
+    () =>
+      (version_details?.conversation_starters || []).map(conversationStartersHelpers.convertStarterToString),
     [version_details?.conversation_starters],
   );
   const styles = conversationStartersStyles(values.length === 0);

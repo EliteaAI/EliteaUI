@@ -2,6 +2,7 @@ import { memo, useCallback, useMemo } from 'react';
 
 import { Box } from '@mui/material';
 
+import { conversationStartersHelpers } from '@/[fsd]/features/agent/lib/helpers';
 import { EllipsisTextWithTooltip } from '@/components/ConversationStarters';
 
 const ChatConversationStarters = memo(props => {
@@ -15,7 +16,10 @@ const ChatConversationStarters = memo(props => {
   );
 
   const filteredStarters = useMemo(
-    () => conversation_starters?.filter(item => item?.trim()) || [],
+    () =>
+      conversation_starters?.filter(starter =>
+        conversationStartersHelpers.convertStarterToString(starter).trim(),
+      ) || [],
     [conversation_starters],
   );
 

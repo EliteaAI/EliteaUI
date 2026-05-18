@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 
 import { Button } from '@mui/material';
 
+import { conversationStartersHelpers } from '@/[fsd]/features/agent/lib/helpers';
 import { useFormDirtyExcluding } from '@/[fsd]/shared/lib/hooks';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import useSaveVersion from '@/hooks/application/useSaveVersion';
@@ -35,7 +36,10 @@ export default function SaveApplicationButton({ onSuccess }) {
   }, [stateValidationErrors]);
 
   const hasEmptyStarters = useMemo(
-    () => (values?.version_details?.conversation_starters || []).some(s => !s?.trim()),
+    () =>
+      (values?.version_details?.conversation_starters || []).some(
+        s => !conversationStartersHelpers.convertStarterToString(s).trim(),
+      ),
     [values?.version_details?.conversation_starters],
   );
 

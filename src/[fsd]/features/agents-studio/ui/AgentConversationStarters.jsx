@@ -2,6 +2,7 @@ import { memo, useMemo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
+import { conversationStartersHelpers } from '../../agent/lib/helpers';
 import AgentConversationStarterItem from './AgentConversationStarterItem';
 
 const AgentConversationStarters = memo(props => {
@@ -9,7 +10,10 @@ const AgentConversationStarters = memo(props => {
   const styles = agentConversationStartersStyles();
 
   const filteredStarters = useMemo(
-    () => conversation_starters?.filter(starter => starter?.trim()) || [],
+    () =>
+      conversation_starters?.filter(starter =>
+        conversationStartersHelpers.convertStarterToString(starter).trim(),
+      ) || [],
     [conversation_starters],
   );
 
