@@ -3,9 +3,8 @@ import { memo, useCallback } from 'react';
 import { Typography } from '@mui/material';
 import { Box } from '@mui/system';
 
-import Tooltip from '@/ComponentsLib/Tooltip';
 import { Field, Select } from '@/[fsd]/shared/ui';
-import InfoIcon from '@/components/Icons/InfoIcon';
+import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import { jsonLinter } from '@/hooks/useCodeMirrorLanguageExtensions';
 import { json } from '@codemirror/lang-json';
 
@@ -69,19 +68,7 @@ const CommonArrayField = memo(props => {
       >
         <Box sx={styles.header}>
           <Typography variant="bodyMedium">{label}</Typography>
-          {description && (
-            <Tooltip
-              title={description}
-              placement="top"
-            >
-              <Box sx={styles.infoIconWrapper}>
-                <InfoIcon
-                  width={16}
-                  height={16}
-                />
-              </Box>
-            </Tooltip>
-          )}
+          {description && <InfoTooltip infoTooltip={description} sx={styles.infoIconWrapper} />}
         </Box>
         <Select.SingleSelect
           required={isRequired}

@@ -1,41 +1,11 @@
-import React, { forwardRef, memo, useCallback, useMemo } from 'react';
+import React, { forwardRef, memo, useCallback } from 'react';
 
-import { Box, FormControlLabel, Switch as MuiSwitch, Tooltip, Typography } from '@mui/material';
+import { Box, FormControlLabel, Switch as MuiSwitch, Typography } from '@mui/material';
 
-import InfoIcon from '@/components/Icons/InfoIcon';
+import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 
 export const SWITCH_VARIANTS = {
   elitea: 'elitea',
-};
-
-const INFO_TOOLTIP_DEFAULTS = {
-  placement: 'top',
-  zIndex: 9999,
-  icon: { width: 16, height: 16 },
-};
-
-const parseInfoTooltip = (infoTooltip, slotProps) => {
-  if (!infoTooltip) return null;
-
-  const isObject = typeof infoTooltip === 'object' && !React.isValidElement(infoTooltip);
-
-  return {
-    title: isObject ? infoTooltip.title : infoTooltip,
-    placement: isObject
-      ? (infoTooltip.placement ?? INFO_TOOLTIP_DEFAULTS.placement)
-      : INFO_TOOLTIP_DEFAULTS.placement,
-    zIndex: isObject
-      ? (infoTooltip.zIndex ?? INFO_TOOLTIP_DEFAULTS.zIndex)
-      : (slotProps?.tooltip?.zIndex ?? INFO_TOOLTIP_DEFAULTS.zIndex),
-    icon: {
-      width: isObject
-        ? (infoTooltip.icon?.width ?? INFO_TOOLTIP_DEFAULTS.icon.width)
-        : INFO_TOOLTIP_DEFAULTS.icon.width,
-      height: isObject
-        ? (infoTooltip.icon?.height ?? INFO_TOOLTIP_DEFAULTS.icon.height)
-        : INFO_TOOLTIP_DEFAULTS.icon.height,
-    },
-  };
 };
 
 const BaseSwitch = memo(
@@ -79,27 +49,8 @@ const BaseSwitch = memo(
       />
     );
 
-    const tooltipConfig = useMemo(() => parseInfoTooltip(infoTooltip, slotProps), [infoTooltip, slotProps]);
-
-    const tooltipIcon = tooltipConfig ? (
-      <Tooltip
-        title={tooltipConfig.title}
-        placement={tooltipConfig.placement}
-        slotProps={{
-          popper: {
-            sx: {
-              zIndex: tooltipConfig.zIndex,
-            },
-          },
-        }}
-      >
-        <Box sx={styles.iconContainer}>
-          <InfoIcon
-            width={tooltipConfig.icon.width}
-            height={tooltipConfig.icon.height}
-          />
-        </Box>
-      </Tooltip>
+    const tooltipIcon = infoTooltip ? (
+      <InfoTooltip infoTooltip={infoTooltip} slotProps={slotProps} />
     ) : null;
 
     if (label) {
@@ -157,13 +108,6 @@ const genStyles = ({ width }) => ({
     gap: '0.25rem',
   },
   label: { display: 'flex', alignItems: 'center', gap: '0.25rem' },
-  iconContainer: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.25rem',
-    height: '100%',
-    '& :hover': { opacity: 0.8 },
-  },
   formControlLabel: {
     gap: '0.7rem',
   },

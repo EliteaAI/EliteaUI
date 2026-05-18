@@ -8,8 +8,7 @@ import Slider from '@mui/material/Slider';
 import Typography from '@mui/material/Typography';
 import { styled } from '@mui/material/styles';
 
-import Tooltip from '@/ComponentsLib/Tooltip';
-import InfoIcon from '@/components/Icons/InfoIcon';
+import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 
 const Input = styled(MuiInput)(
   ({ theme }) => `
@@ -121,28 +120,7 @@ export default function InputSlider({
           >
             <Typography variant="bodyMedium">{`${label}${isRequired ? ' *' : ''}`}</Typography>
           </Typography>
-
-          <Tooltip
-            title={labelHint}
-            placement="top"
-          >
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                height: '100%',
-                width: '16px',
-                cursor: 'pointer',
-                pointerEvents: 'auto',
-              }}
-            >
-              <InfoIcon
-                width={16}
-                height={16}
-              />
-            </Box>
-          </Tooltip>
+          <InfoTooltip infoTooltip={labelHint} />
         </Box>
       ) : (
         <Typography

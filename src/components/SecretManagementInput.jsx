@@ -1,13 +1,12 @@
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Visibility, VisibilityOff } from '@mui/icons-material';
-import { Box, InputAdornment, TextField, Tooltip } from '@mui/material';
+import { Box, InputAdornment, TextField } from '@mui/material';
 import IconButton from '@mui/material/IconButton';
 
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
-import { TooltipMarkdownContent } from '@/[fsd]/shared/ui/tooltip';
+import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import { useSecretsListQuery } from '@/api/secrets.js';
-import InfoIcon from '@/components/Icons/InfoIcon';
 import Toggle from '@/components/Toggle.jsx';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
@@ -193,17 +192,10 @@ export const SecretField = memo(props => {
                 {label}
                 {required ? ' *' : ''}
               </Box>
-              <Tooltip title={<TooltipMarkdownContent>{tooltipDescription}</TooltipMarkdownContent>}>
-                <Box
-                  component="span"
-                  sx={styles.tooltipIconInLabel}
-                >
-                  <InfoIcon
-                    width={16}
-                    height={16}
-                  />
-                </Box>
-              </Tooltip>
+              <InfoTooltip
+                infoTooltip={tooltipDescription}
+                sx={styles.infoIconWrapper}
+              />
             </Box>
           )}
           <TextField

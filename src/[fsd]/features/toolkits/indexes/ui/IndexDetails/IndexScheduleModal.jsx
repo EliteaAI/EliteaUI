@@ -6,13 +6,12 @@ import { useSelector } from 'react-redux';
 
 import { Box, Button, GlobalStyles, Typography } from '@mui/material';
 
-import Tooltip from '@/ComponentsLib/Tooltip';
 import { IndexCronDefault } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import { validateCronExpression } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexSchedule.helpers.js';
 import { Modal } from '@/[fsd]/shared/ui';
+import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import CredentialsSelect from '@/components/CredentialsSelect';
 import FormInput from '@/components/FormInput';
-import InfoIcon from '@/components/Icons/InfoIcon';
 import RadioButtonGroup from '@/components/RadioButtonGroup';
 import { useSelectedProject } from '@/hooks/useSelectedProject';
 
@@ -118,24 +117,11 @@ const IndexScheduleModal = props => {
                 >
                   minute – hour – day (month) – month – day (week)
                 </Typography>
-                <Tooltip
-                  title="Cron expression help"
-                  placement="top"
-                  slotProps={{ popper: { modifiers: [{ name: 'offset', options: { offset: [0, -8] } }] } }}
-                >
-                  <Box
-                    sx={styles.infoIconWrapper}
-                    component="a"
-                    href="https://crontab.guru/#*_*_*_*"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <InfoIcon
-                      width={16}
-                      height={16}
-                    />
-                  </Box>
-                </Tooltip>
+                <InfoTooltip
+                  infoTooltip="Cron expression help"
+                  href="https://crontab.guru/#*_*_*_*"
+                  sx={styles.infoIconWrapper}
+                />
               </Box>
 
               {credentialsData && (

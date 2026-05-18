@@ -2,11 +2,10 @@ import { memo, useCallback, useMemo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import Tooltip from '@/ComponentsLib/Tooltip';
 import AddModelButton from '@/[fsd]/features/settings/ui/ai-configuration/Configuration/AddModelButton';
 import ConfigurationSection from '@/[fsd]/features/settings/ui/ai-configuration/Configuration/ConfigurationSection';
+import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import { ALLOW_PROJECT_OWN_LLMS, PUBLIC_PROJECT_ID } from '@/common/constants';
-import InfoIcon from '@/components/Icons/InfoIcon';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const ConfigurationsPanel = memo(props => {
@@ -49,17 +48,7 @@ const ConfigurationsPanel = memo(props => {
           >
             {label}
           </Typography>
-          <Tooltip
-            title={tooltipText}
-            placement="top"
-          >
-            <Box
-              sx={styles.inlineInfoIconWrapper}
-              aria-label={`${String(label).toLowerCase()}-model-info`}
-            >
-              <InfoIcon />
-            </Box>
-          </Tooltip>
+          <InfoTooltip infoTooltip={tooltipText} sx={styles.inlineInfoIconWrapper} />
         </Box>
       );
     },

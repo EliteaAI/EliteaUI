@@ -2,10 +2,7 @@ import { memo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import StyledTooltip from '@/ComponentsLib/Tooltip';
-import InfoIcon from '@/components/Icons/InfoIcon';
-
-const ICON_SIZE = 16;
+import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 
 const LabelWithTooltip = memo(props => {
   const { tooltip, title = 'Value', fill } = props;
@@ -17,20 +14,10 @@ const LabelWithTooltip = memo(props => {
     >
       {title && <Typography variant="labelMedium">{title}</Typography>}
       {tooltip && (
-        <StyledTooltip
-          placement="top"
-          title={tooltip}
-        >
-          <Box
-            component="span"
-            sx={styles.iconWrapper(fill)}
-          >
-            <InfoIcon
-              width={ICON_SIZE}
-              height={ICON_SIZE}
-            />
-          </Box>
-        </StyledTooltip>
+        <InfoTooltip
+          infoTooltip={{ title: tooltip, icon: { fill } }}
+          sx={styles.iconWrapper}
+        />
       )}
     </Box>
   );
@@ -46,11 +33,12 @@ const styles = {
     gap: '.25rem',
     zIndex: 999,
   },
-  iconWrapper: fill => ({
+  iconWrapper: {
     display: 'inline-flex',
     alignItems: 'center',
-    color: ({ palette }) => fill || palette.icon.main,
-  }),
+    position: 'static',
+    bottom: 0,
+  },
 };
 
 export default LabelWithTooltip;

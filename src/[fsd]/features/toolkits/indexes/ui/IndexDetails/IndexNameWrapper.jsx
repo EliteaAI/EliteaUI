@@ -3,15 +3,14 @@ import { memo, useMemo } from 'react';
 import { Box, CircularProgress, Typography, useTheme } from '@mui/material';
 
 import { IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
+import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import StopIcon from '@/assets/stop-icon.svg?react';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
-import InfoIcon from '@/components/Icons/InfoIcon';
 
 const IndexNameWrapper = memo(props => {
   const { index } = props;
-  const styles = indexNameWrapperStyles();
-
   const theme = useTheme();
+  const styles = indexNameWrapperStyles(theme);
 
   const state = index?.metadata?.state;
   const isFailed = state === IndexStatuses.fail;
@@ -38,10 +37,9 @@ const IndexNameWrapper = memo(props => {
         <Box sx={ui => styles.errorWrapper(ui, isFailed)}>
           <>
             {isFailed ? (
-              <InfoIcon
-                width={16}
-                height={16}
-                fill={theme.palette.background.button.danger}
+              <InfoTooltip
+                infoTooltip={{ icon: styles.errorInfoIcon }}
+                disableTooltip
               />
             ) : isPartlyOk ? (
               <AttentionIcon
@@ -84,7 +82,7 @@ const IndexNameWrapper = memo(props => {
 IndexNameWrapper.displayName = 'IndexNameWrapper';
 
 /** @type {MuiSx} */
-const indexNameWrapperStyles = () => ({
+const indexNameWrapperStyles = theme => ({
   nameWrapper: {
     display: 'flex',
     justifyContent: 'flex-start',
@@ -113,6 +111,9 @@ const indexNameWrapperStyles = () => ({
         : {}),
     },
   }),
+  errorInfoIcon: {
+    fill: theme.palette.background.button.danger,
+  },
   progressWrapper: ({ palette }) => ({
     display: 'flex',
     justifyContent: 'center',

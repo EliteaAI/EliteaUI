@@ -1,111 +1,111 @@
-import { useCallback } from 'react';
+import { memo, useCallback } from 'react';
 
 import { Box, FormControlLabel, RadioGroup, Typography, useTheme } from '@mui/material';
 
-import Tooltip from '@/ComponentsLib/Tooltip';
 import { Checkbox } from '@/[fsd]/shared/ui';
+import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 
-import InfoIcon from './Icons/InfoIcon';
-
-export default function RadioButtonGroup({
-  value,
-  defaultValue,
-  onChange,
-  items,
-  wrapRow = false,
-  columnGap,
-  disabled,
-}) {
-  const theme = useTheme();
-  const onChangeHandler = useCallback(
-    event => {
-      onChange(event.target.value);
-    },
-    [onChange],
-  );
-  return (
-    <RadioGroup
-      aria-labelledby="radio-buttons-group-label"
-      defaultValue={defaultValue}
-      name="radio-buttons-group"
-      value={value}
-      onChange={onChangeHandler}
-    >
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          rowGap: '0px',
-          columnGap: columnGap || '24px',
-          flexWrap: wrapRow ? 'wrap' : 'nowrap',
-        }}
+const RadioButtonGroup = memo(
+  ({ value, defaultValue, onChange, items, wrapRow = false, columnGap, disabled }) => {
+    const theme = useTheme();
+    const styles = radioButtonGroupStyles(theme, wrapRow, columnGap);
+    const onChangeHandler = useCallback(
+      event => {
+        onChange(event.target.value);
+      },
+      [onChange],
+    );
+    return (
+      <RadioGroup
+        aria-labelledby="radio-buttons-group-label"
+        defaultValue={defaultValue}
+        name="radio-buttons-group"
+        value={value}
+        onChange={onChangeHandler}
       >
-        {items.map(item => (
-          <Box
-            key={item.value}
-            display="flex"
-            flexDirection="column"
-          >
-            <FormControlLabel
-              sx={{
-                alignItems: 'flex-start',
-                mb: '8px',
-              }}
-              value={item.value}
-              control={
-                <Checkbox.BaseCheckbox
-                  mode="radio"
-                  disabled={item.disabled || disabled}
-                />
-              }
-              label={
-                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '10px' }}>
-                  <Typography
-                    component="div"
-                    variant="bodyMedium"
-                    color={theme.palette.text.secondary}
-                    sx={{ mt: '7px' }}
-                  >
-                    {item.label}
-                  </Typography>
-                  {item.description && (
+        <Box sx={styles.container}>
+          {items.map(item => (
+            <Box
+              key={item.value}
+              sx={styles.itemContainer}
+            >
+              <FormControlLabel
+                sx={styles.formControlLabel}
+                value={item.value}
+                control={
+                  <Checkbox.BaseCheckbox
+                    mode="radio"
+                    disabled={item.disabled || disabled}
+                  />
+                }
+                label={
+                  <Box sx={styles.labelContainer}>
                     <Typography
                       component="div"
-                      variant="bodySmall"
+                      variant="bodyMedium"
+                      sx={styles.typographyLabel}
                     >
-                      {item.description}
+                      {item.label}
                     </Typography>
-                  )}
-                  {item.info && (
-                    <Tooltip
-                      title={item.info}
-                      placement="top"
-                    >
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          justifyContent: 'center',
-                          height: '100%',
-                          width: '12px',
-                          pt: '9px',
-                        }}
+                    {item.description && (
+                      <Typography
+                        component="div"
+                        variant="bodySmall"
                       >
-                        <InfoIcon
-                          width={12}
-                          height={12}
-                          fill={theme.palette.icon.main}
-                        />
-                      </Box>
-                    </Tooltip>
-                  )}
-                </Box>
-              }
-            />
-          </Box>
-        ))}
-      </Box>
-    </RadioGroup>
-  );
-}
+                        {item.description}
+                      </Typography>
+                    )}
+                    {item.info && (
+                      <InfoTooltip
+                        infoTooltip={{
+                          title: item.info,
+                          icon: styles.infoIcon,
+                        }}
+                      />
+                    )}
+                  </Box>
+                }
+              />
+            </Box>
+          ))}
+        </Box>
+      </RadioGroup>
+    );
+  },
+);
+
+const radioButtonGroupStyles = (theme, wrapRow, columnGap) => ({
+  container: {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    rowGap: '0',
+    columnGap: columnGap || '1.5rem',
+    flexWrap: wrapRow ? 'wrap' : 'nowrap',
+  },
+  itemContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  formControlLabel: {
+    alignItems: 'flex-start',
+    mb: '0.5rem',
+  },
+  labelContainer: {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: '0.625rem',
+  },
+  typographyLabel: ({ palette }) => ({
+    color: palette.text.secondary,
+    mt: '0.4375rem',
+  }),
+  infoIcon: {
+    fill: theme.palette.icon.main,
+  },
+});
+
+RadioButtonGroup.displayName = 'RadioButtonGroup';
+
+export default RadioButtonGroup;

@@ -4,7 +4,6 @@ import YAML from 'js-yaml';
 
 import { Box, FormControlLabel, Typography } from '@mui/material';
 
-import Tooltip from '@/ComponentsLib/Tooltip';
 import { OpenApiHelpers, ToolBaseHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { ArrayFieldInput } from '@/[fsd]/features/toolkits/ui/form/ToolBase';
@@ -13,13 +12,12 @@ import { useFieldFocus } from '@/[fsd]/shared/lib/hooks';
 import { Checkbox, Field, Input } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
-import { TooltipMarkdownContent } from '@/[fsd]/shared/ui/tooltip';
+import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import { MAX_NAME_LENGTH } from '@/common/constants';
 import AgentSelect from '@/components/AgentSelect';
 import CredentialsSelect from '@/components/CredentialsSelect';
 import EmbeddingModelSelect from '@/components/EmbeddingModelSelect';
 import FormInput from '@/components/FormInput.jsx';
-import InfoIcon from '@/components/Icons/InfoIcon';
 import ImageGenerationModelSelect from '@/components/ImageGenerationModelSelect';
 import LlmModelSelect from '@/components/LlmModelSelect';
 import SecretManagementInput from '@/components/SecretManagementInput.jsx';
@@ -164,7 +162,6 @@ const ToolBaseProperty = memo(props => {
     [settings?.selected_tools, editField, buildEditFieldPath],
   );
 
-  // Helper to render label with optional info icon tooltip
   const renderLabelWithHint = useCallback(
     (isRequired = false) => {
       if (!description) return label;
@@ -173,18 +170,10 @@ const ToolBaseProperty = memo(props => {
         <>
           {label}
           {isRequired && ' *'}
-
-          <Tooltip
-            title={<TooltipMarkdownContent>{description}</TooltipMarkdownContent>}
-            placement="top"
-          >
-            <Box sx={styles.infoIconWrapper}>
-              <InfoIcon
-                width={19}
-                height={19}
-              />
-            </Box>
-          </Tooltip>
+          <InfoTooltip
+            infoTooltip={description}
+            sx={styles.infoIconWrapper}
+          />
         </>
       );
     },

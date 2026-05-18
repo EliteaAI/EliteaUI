@@ -273,8 +273,8 @@ const styledInputBaseStyles = (
   inputLabelSlot: {
     textOverflow: 'clip',
     ...(needsLabelUnclip && {
-      overflow: 'visible',
-      maxWidth: 'none',
+      overflow: 'visible !important',
+      maxWidth: 'none !important',
     }),
   },
   containerBox: {

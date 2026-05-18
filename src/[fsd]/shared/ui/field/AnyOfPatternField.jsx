@@ -2,9 +2,8 @@ import { memo, useCallback } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import Tooltip from '@/ComponentsLib/Tooltip';
 import { Field } from '@/[fsd]/shared/ui';
-import InfoIcon from '@/components/Icons/InfoIcon';
+import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import { jsonLinter } from '@/hooks/useCodeMirrorLanguageExtensions';
 import { json } from '@codemirror/lang-json';
 
@@ -55,19 +54,7 @@ const AnyOfPatternField = memo(props => {
     >
       <Box sx={styles.header}>
         <Typography variant="bodyMedium">{`${label}${isRequired ? ' *' : ''}`}</Typography>
-        {description && (
-          <Tooltip
-            title={description}
-            placement="top"
-          >
-            <Box sx={styles.infoIconWrapper}>
-              <InfoIcon
-                width={16}
-                height={16}
-              />
-            </Box>
-          </Tooltip>
-        )}
+        {description && <InfoTooltip infoTooltip={description} sx={styles.infoIconWrapper} />}
       </Box>
       <Box sx={{ marginTop: '0.75rem' }}>
         <Field.ResizableCodeMirrorEditor

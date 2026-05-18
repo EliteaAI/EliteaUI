@@ -1,14 +1,9 @@
 import { memo } from 'react';
 
-import { Box, Tooltip, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
-import { TooltipMarkdownContent } from '@/[fsd]/shared/ui/tooltip';
-import InfoIcon from '@/components/Icons/InfoIcon';
+import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 
-/**
- * Reusable field label with optional info icon and tooltip
- * Used for form fields, settings, and other input labels
- */
 const InfoLabelWithTooltip = memo(props => {
   const {
     label,
@@ -22,6 +17,8 @@ const InfoLabelWithTooltip = memo(props => {
     iconSize = 16,
     required = false,
   } = props;
+
+  const styles = infoLabelWithTooltipStyles(iconSize);
 
   const labelSx = [
     inheritColor ? { color: 'inherit' } : styles.label,
@@ -50,16 +47,7 @@ const InfoLabelWithTooltip = memo(props => {
   return (
     <Box sx={[styles.container, sx]}>
       {labelNode}
-      {tooltip && (
-        <Tooltip title={<TooltipMarkdownContent>{tooltip}</TooltipMarkdownContent>}>
-          <Box sx={styles.iconWrapper}>
-            <InfoIcon
-              width={iconSize}
-              height={iconSize}
-            />
-          </Box>
-        </Tooltip>
-      )}
+      {tooltip && <InfoTooltip infoTooltip={{ title: tooltip, icon: styles.info }} />}
     </Box>
   );
 });
@@ -67,7 +55,7 @@ const InfoLabelWithTooltip = memo(props => {
 InfoLabelWithTooltip.displayName = 'InfoLabelWithTooltip';
 
 /** @type {MuiSx} */
-const styles = {
+const infoLabelWithTooltipStyles = iconSize => ({
   container: {
     display: 'flex',
     alignItems: 'center',
@@ -76,15 +64,10 @@ const styles = {
   label: ({ palette }) => ({
     color: palette.text.primary,
   }),
-  iconWrapper: {
-    display: 'flex',
-    alignItems: 'center',
-    cursor: 'pointer',
-
-    '&:hover': {
-      opacity: 0.8,
-    },
+  info: {
+    width: iconSize,
+    height: iconSize,
   },
-};
+});
 
 export default InfoLabelWithTooltip;

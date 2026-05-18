@@ -2,9 +2,10 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { Box, FormControlLabel, Tooltip, Typography } from '@mui/material';
+import { Box, FormControlLabel, Typography } from '@mui/material';
 
 import { Switch, Text } from '@/[fsd]/shared/ui';
+import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import AttachSvgIcon from '@/assets/attach-icon.svg?react';
 import CalendarIcon from '@/assets/calendar.svg?react';
 import ImageSvgIcon from '@/assets/image.svg?react';
@@ -13,7 +14,6 @@ import PythonIcon from '@/assets/python.svg?react';
 import SwarmIconSVG from '@/assets/swarm-icon.svg?react';
 import ToolsIcon from '@/assets/tools-icon.svg?react';
 import EntityIcon from '@/components/EntityIcon';
-import InfoIcon from '@/components/Icons/InfoIcon';
 
 const AgentInternalToolSwitch = memo(props => {
   const { title, name, disabled, infoTooltip, icon } = props;
@@ -77,24 +77,11 @@ const AgentInternalToolSwitch = memo(props => {
         />
         <Typography sx={styles.title}>{title}</Typography>
         {infoTooltip && (
-          <Tooltip
-            title={<Text.TextWithLink {...infoTooltip} />}
-            placement="top"
-            slotProps={{
-              popper: {
-                sx: {
-                  zIndex: 9999,
-                },
-              },
-            }}
-          >
-            <Box sx={styles.iconContainer}>
-              <InfoIcon
-                width={16}
-                height={16}
-              />
-            </Box>
-          </Tooltip>
+          <InfoTooltip
+            infoTooltip={infoTooltip}
+            TitleComponent={Text.TextWithLink}
+            sx={styles.iconContainer}
+          />
         )}
       </Box>
       <FormControlLabel
