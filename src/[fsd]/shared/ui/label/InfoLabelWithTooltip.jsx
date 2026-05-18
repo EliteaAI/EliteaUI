@@ -60,6 +60,10 @@ const infoLabelWithTooltipStyles = iconSize => ({
     display: 'flex',
     alignItems: 'center',
     gap: '0.5rem',
+    height: '1.5rem',
+    '[data-shrink="true"] &': {
+      height: '1.5rem',
+    },
   },
   label: ({ palette }) => ({
     color: palette.text.primary,

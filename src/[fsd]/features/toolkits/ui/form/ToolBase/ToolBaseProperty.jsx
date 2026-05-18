@@ -431,7 +431,9 @@ const ToolBaseProperty = memo(props => {
       return (
         <SingleSelect
           showBorder
-          label={description ? renderLabelWithHint(required) : label}
+          label={label}
+          infoIconDescription={description}
+          required={required}
           onValueChange={value => editField(buildEditFieldPath(k), value)}
           value={validValue}
           options={options}
