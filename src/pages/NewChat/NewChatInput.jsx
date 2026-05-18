@@ -60,10 +60,6 @@ const NewChatInput = forwardRef((props, ref) => {
     // New prop to indicate if we're on agents page
     isAgentsPage = false,
 
-    // Published agent from public project (agent studio) — allows per-conversation LLM override
-    isPublishedPublicAgent = false,
-    onResetLLMSettings,
-
     // LLM Settings props for modal dialog
     llmSettings = {},
     onSetLLMSettings,
@@ -286,7 +282,7 @@ const NewChatInput = forwardRef((props, ref) => {
                     onRefreshParticipantDetails={onRefreshParticipantDetails}
                   />
                 )}
-              {(isAgentsPage || isPublishedPublicAgent || !activeParticipant) && (
+              {(isAgentsPage || !activeParticipant) && (
                 <LLMModelSelector
                   selectedModel={selectedModel}
                   onSelectModel={onSelectModel}
@@ -296,10 +292,9 @@ const NewChatInput = forwardRef((props, ref) => {
                   onSetLLMSettings={onSetLLMSettings}
                   showWebhookSecret={showWebhookSecret}
                   showStepsLimit={showStepsLimit}
-                  onResetToDefaults={isPublishedPublicAgent ? onResetLLMSettings : undefined}
                 />
               )}
-              {!isAgentsPage && !isPublishedPublicAgent && activeParticipant && (
+              {!isAgentsPage && activeParticipant && (
                 <Tooltip title="Switch to model">
                   <Box component="span">
                     <IconButton

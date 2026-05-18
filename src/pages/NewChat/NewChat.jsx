@@ -268,7 +268,7 @@ const NewChat = props => {
     llmSettings => {
       if (!editingAgent) return;
       const updatedParticipant = {
-        ...(editingAgent || {}),
+        ...editingAgent,
         entity_settings: {
           ...(editingAgent.entity_settings || {}),
           llm_settings: llmSettings ?? undefined,
