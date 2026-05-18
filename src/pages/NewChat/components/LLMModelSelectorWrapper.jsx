@@ -19,6 +19,8 @@ const LLMModelSelectorWrapper = ({
   disabled,
   modelTooltip,
   settingsTooltip,
+  // When provided (for public agents), model changes save to entity_settings instead of agent version
+  onPublicLlmOverride,
 }) => {
   const {
     values: { version_details = {} },
@@ -74,19 +76,19 @@ const LLMModelSelectorWrapper = ({
       };
       setFieldValue('version_details.llm_settings', newSettings);
       onLLMSettingsChange?.(pev => ({ ...pev, ...newSettings }));
+      onPublicLlmOverride?.(newSettings);
     },
-    [onLLMSettingsChange, setFieldValue, version_details?.llm_settings],
+    [onLLMSettingsChange, onPublicLlmOverride, setFieldValue, version_details?.llm_settings],
   );
 
   const handleSetLLMSettings = useCallback(
     settings => {
       onLLMSettingsChange?.(prev => ({ ...prev, ...settings }));
-      setFieldValue('version_details.llm_settings', {
-        ...version_details?.llm_settings,
-        ...settings,
-      });
+      const fullSettings = { ...version_details?.llm_settings, ...settings };
+      setFieldValue('version_details.llm_settings', fullSettings);
+      onPublicLlmOverride?.(fullSettings);
     },
-    [onLLMSettingsChange, setFieldValue, version_details?.llm_settings],
+    [onLLMSettingsChange, onPublicLlmOverride, setFieldValue, version_details?.llm_settings],
   );
 
   if (!modelList.length) return <Box sx={{ p: 2 }}>Loading models...</Box>;
@@ -102,6 +104,7 @@ const LLMModelSelectorWrapper = ({
         disabled={isDisabled}
         modelTooltip={modelTooltip}
         settingsTooltip={settingsTooltip}
+        onResetToDefaults={onPublicLlmOverride ? () => onPublicLlmOverride(null) : undefined}
       />
     </Box>
   );

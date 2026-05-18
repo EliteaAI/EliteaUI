@@ -263,6 +263,22 @@ const NewChat = props => {
     onCloseAgentEditor();
   }, [markAgentEditorClosed, onCloseAgentEditor, resetEditorConversationStarters]);
 
+  // Save per-conversation LLM override for a published public agent from the AgentEditor panel
+  const handleConversationLlmOverride = useCallback(
+    llmSettings => {
+      if (!editingAgent) return;
+      const updatedParticipant = {
+        ...editingAgent,
+        entity_settings: {
+          ...(editingAgent.entity_settings || {}),
+          llm_settings: llmSettings ?? undefined,
+        },
+      };
+      onChangeParticipantSettings(updatedParticipant, true);
+    },
+    [editingAgent, onChangeParticipantSettings],
+  );
+
   // Wrap onClosePipelineEditor to mark explicit close
   const handleClosePipelineEditor = useCallback(() => {
     markPipelineEditorClosed();
@@ -1434,6 +1450,7 @@ const NewChat = props => {
                 isCreateMode={isCreateMode}
                 onAgentDirtyStateChange={handleEditorDirtyStateChange}
                 onConversationStartersChange={handleEditorConversationStartersChange}
+                onConversationLlmOverride={handleConversationLlmOverride}
                 activeAgentId={
                   activeParticipant?.entity_name === ChatParticipantType.Applications
                     ? activeParticipant.entity_meta?.id

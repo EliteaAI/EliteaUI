@@ -38,6 +38,8 @@ const AgentEditorContent = memo(props => {
     isPublic,
     onConversationStartersChange,
     entityProjectId,
+    // When provided, public-agent model changes save to entity_settings (per-conversation override)
+    onPublicLlmOverride,
   } = props;
   const { setFieldValue } = useFormikContext();
 
@@ -55,6 +57,9 @@ const AgentEditorContent = memo(props => {
     [setFieldValue],
   );
 
+  // Model selector is enabled when user can edit the agent OR when a conversation override is available
+  const canEditModel = canEditIt || !!onPublicLlmOverride;
+
   return (
     <>
       <ApplicationValidator
@@ -67,9 +72,14 @@ const AgentEditorContent = memo(props => {
           <LLMModelSelectorWrapper
             projectId={projectId}
             onLLMSettingsChange={onLLMSettingsChange}
-            disabled={!canEditIt}
-            modelTooltip={isPublic ? 'Model configuration is locked for Public agents' : undefined}
-            settingsTooltip={isPublic ? 'Model settings are locked for Public agents' : undefined}
+            disabled={!canEditModel}
+            modelTooltip={
+              isPublic && !onPublicLlmOverride ? 'Model configuration is locked for Public agents' : undefined
+            }
+            settingsTooltip={
+              isPublic && !onPublicLlmOverride ? 'Model settings are locked for Public agents' : undefined
+            }
+            onPublicLlmOverride={onPublicLlmOverride}
           />
         )}
         {isCreateMode ? (
@@ -103,6 +113,8 @@ const AgentEditor = memo(
     onAttachmentToolChange,
     onAgentDirtyStateChange,
     onConversationStartersChange,
+    // Callback to save per-conversation LLM override for published public agents
+    onConversationLlmOverride,
   }) => {
     const trackEvent = useTrackEvent();
 
@@ -182,13 +194,20 @@ const AgentEditor = memo(
         if (isValidVersion) {
           // Valid version details - use them for form initialization
           const applicationName = agent?.meta?.name || agent?.name || '';
+          // For public agents, display any per-conversation LLM override in the model selector
+          const entityLlmOverride = isPublishedAgent ? (agent?.entity_settings?.llm_settings ?? null) : null;
 
           if (versionDetails.version_details) {
+            const baseLlmSettings = versionDetails.version_details.llm_settings;
             return {
               ...versionDetails,
               id: agentId,
               name: applicationName,
-              llm_settings: versionDetails.version_details.llm_settings,
+              llm_settings: entityLlmOverride || baseLlmSettings,
+              version_details: {
+                ...versionDetails.version_details,
+                llm_settings: entityLlmOverride || baseLlmSettings,
+              },
             };
           }
 
@@ -198,7 +217,7 @@ const AgentEditor = memo(
             name: applicationName,
             version_details: {
               ...versionDetails,
-              llm_settings: versionDetails.llm_settings,
+              llm_settings: entityLlmOverride || versionDetails.llm_settings,
             },
           };
         }
@@ -233,7 +252,16 @@ const AgentEditor = memo(
       }
 
       return {};
-    }, [isCreateMode, versionDetails, agent, agentId, createInitialValues, versionId, projectId]);
+    }, [
+      isCreateMode,
+      versionDetails,
+      agent,
+      agentId,
+      createInitialValues,
+      versionId,
+      projectId,
+      isPublishedAgent,
+    ]);
 
     const handleDiscard = useCallback(() => {
       // Reset the form to initial values
@@ -313,6 +341,9 @@ const AgentEditor = memo(
             isPublic={isPublic}
             onConversationStartersChange={onConversationStartersChange}
             entityProjectId={agent?.entity_meta?.project_id}
+            onPublicLlmOverride={
+              isPublic && onConversationLlmOverride ? onConversationLlmOverride : undefined
+            }
           />
         </BaseEditor>
       </InstructionsInputRefProvider>
