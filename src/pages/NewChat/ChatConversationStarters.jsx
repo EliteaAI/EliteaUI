@@ -17,9 +17,7 @@ const ChatConversationStarters = memo(props => {
 
   const filteredStarters = useMemo(
     () =>
-      conversation_starters?.filter(starter =>
-        conversationStartersHelpers.convertStarterToString(starter).trim(),
-      ) || [],
+      conversation_starters?.filter(starter => conversationStartersHelpers.toString(starter).trim()) || [],
     [conversation_starters],
   );
 

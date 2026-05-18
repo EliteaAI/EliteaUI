@@ -1,1 +1,1 @@
-export const convertStarterToString = value => (value === null || value === undefined ? '' : String(value));
+export const toString = value => (value === null || value === undefined ? '' : String(value));

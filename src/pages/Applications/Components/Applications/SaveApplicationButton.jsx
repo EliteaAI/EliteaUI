@@ -38,7 +38,7 @@ export default function SaveApplicationButton({ onSuccess }) {
   const hasEmptyStarters = useMemo(
     () =>
       (values?.version_details?.conversation_starters || []).some(
-        s => !conversationStartersHelpers.convertStarterToString(s).trim(),
+        s => !conversationStartersHelpers.toString(s).trim(),
       ),
     [values?.version_details?.conversation_starters],
   );

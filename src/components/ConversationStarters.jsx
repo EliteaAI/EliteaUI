@@ -31,8 +31,7 @@ const ConversationStarters = memo(props => {
   const { toggleFieldFocus, isFocused } = useFieldFocus();
   const valuesPath = 'version_details.conversation_starters';
   const values = useMemo(
-    () =>
-      (version_details?.conversation_starters || []).map(conversationStartersHelpers.convertStarterToString),
+    () => (version_details?.conversation_starters || []).map(conversationStartersHelpers.toString),
     [version_details?.conversation_starters],
   );
   const styles = conversationStartersStyles(values.length === 0);
