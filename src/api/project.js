@@ -15,7 +15,7 @@ export const projectApi = eliteaApi
       projectList: build.query({
         query: () => {
           return {
-            url: '/projects/project/' + PROJECT_MODE + '/' + PUBLIC_PROJECT_ID,
+            url: '/projects/project/' + PROJECT_MODE + '/' + PUBLIC_PROJECT_ID + '?check_public_role=true',
             method: 'GET',
           };
         },
