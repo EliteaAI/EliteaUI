@@ -85,6 +85,17 @@ const ApplicationTools = memo(props => {
     };
   }, [sortedInternalTools, showAllInternalTools, currentInternalTools.length]);
 
+  // For pipeline pages show only the attachments card; for agent pages show all available tools.
+  const pipelineVisibleTools = useMemo(
+    () =>
+      isFromPipeline ? sortedInternalTools.filter(t => t.name === 'attachments') : displayedInternalTools,
+    [isFromPipeline, sortedInternalTools, displayedInternalTools],
+  );
+
+  const shouldShowInternalTools = isFromPipeline
+    ? pipelineVisibleTools.length > 0
+    : !hidePythonSandbox && sortedInternalTools.length > 0;
+
   const markedDuplicateTools = useMemo(
     () =>
       markAllDuplicatesByMultipleKeys(
@@ -127,11 +138,11 @@ const ApplicationTools = memo(props => {
                 />
               ))}
 
-              {!isFromPipeline && !hidePythonSandbox && sortedInternalTools.length > 0 && (
+              {shouldShowInternalTools && (
                 <Box sx={styles.internalToolsContainer}>
                   <Typography sx={styles.internalToolsTitle}>INTERNAL TOOLS</Typography>
                   <Box sx={styles.internalToolsGrid}>
-                    {displayedInternalTools.map(tool => (
+                    {pipelineVisibleTools.map(tool => (
                       <Switch.AgentInternalToolSwitch
                         key={tool.name}
                         title={tool.title}
@@ -142,7 +153,7 @@ const ApplicationTools = memo(props => {
                       />
                     ))}
                   </Box>
-                  {canToggleTools && (
+                  {!isFromPipeline && canToggleTools && (
                     <Box sx={styles.showMoreContainer}>
                       <Typography
                         onClick={() => setShowAllInternalTools(!showAllInternalTools)}

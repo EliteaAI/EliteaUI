@@ -20,7 +20,11 @@ const StateVariableList = memo(props => {
 
   const stateEntries = useMemo(() => {
     return Object.entries(states || FlowEditorConstants.DefaultState)
-      .filter(([name]) => !FlowEditorConstants.StateDefaultProps.includes(name))
+      .filter(
+        ([name]) =>
+          !FlowEditorConstants.StateDefaultProps.includes(name) &&
+          !FlowEditorConstants.StateManagedProps.includes(name),
+      )
       .map(([name, config]) => ({
         name,
         type: config.type || 'str',
@@ -146,6 +150,24 @@ const StateVariableList = memo(props => {
         editable={false}
         disabled={disabled}
       />
+      {!!states?.[FlowEditorConstants.STATE_INPUT_ATTACHMENTS] && (
+        <FlowEditorState.StateVariableItem
+          key={FlowEditorConstants.STATE_INPUT_ATTACHMENTS}
+          name={FlowEditorConstants.STATE_INPUT_ATTACHMENTS}
+          type={FlowEditorConstants.StateVariableTypes.List}
+          enabled
+          isDefault
+          drawerWidth={drawerWidth}
+          validateName={validateName}
+          onToggle={handleToggle}
+          onDelete={handleDelete}
+          onUpdateName={handleUpdateNameWithCreate}
+          onUpdateType={handleUpdateType}
+          onUpdateDefaultValue={handleUpdateDefaultValue}
+          editable={false}
+          disabled={disabled}
+        />
+      )}
       {stateEntries.map(({ name, type, value }) => (
         <FlowEditorState.StateVariableItem
           key={name}

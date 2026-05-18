@@ -1,11 +1,18 @@
 import { memo, useCallback, useMemo } from 'react';
 
 import { useFormikContext } from 'formik';
+import YAML from 'js-yaml';
+import { useDispatch, useSelector } from 'react-redux';
 
+import {
+  STATE_INPUT_ATTACHMENTS,
+  StateVariableTypes,
+} from '@/[fsd]/features/pipelines/flow-editor/lib/constants/flowEditor.constants';
 import { InternalToolsConstants } from '@/[fsd]/shared/lib/constants';
 import { Switch, Text } from '@/[fsd]/shared/ui';
 import { PERMISSIONS } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
+import { actions as pipelineActions } from '@/slices/pipeline';
 
 const ATTACHMENTS_INTERNAL_TOOL = 'attachments';
 
@@ -17,6 +24,9 @@ const ATTACHMENTS_INTERNAL_TOOL = 'attachments';
 const AttachmentSwitch = memo(({ disabled }) => {
   const { checkPermission } = useCheckPermission();
   const { values, setFieldValue } = useFormikContext();
+  const dispatch = useDispatch();
+  const { yamlCode, yamlJsonObject } = useSelector(state => state.pipeline);
+  const isPipeline = Boolean(yamlCode);
 
   // Get attachments tool info from constants
   const attachmentToolInfo = useMemo(
@@ -51,8 +61,33 @@ const AttachmentSwitch = memo(({ disabled }) => {
       }
 
       setFieldValue('version_details.meta.internal_tools', newInternalTools);
+
+      // Sync input_attachments state variable in pipeline YAML
+      if (isPipeline) {
+        const currentState = yamlJsonObject?.state || {};
+        const alreadyHasKey = STATE_INPUT_ATTACHMENTS in currentState;
+
+        if (checkedValue && !alreadyHasKey) {
+          const newYamlJsonObject = {
+            ...yamlJsonObject,
+            state: {
+              ...currentState,
+              [STATE_INPUT_ATTACHMENTS]: { type: StateVariableTypes.List, default: [] },
+            },
+          };
+          dispatch(pipelineActions.setYamlCode(YAML.dump(newYamlJsonObject)));
+          dispatch(pipelineActions.setYamlJsonObject({ yamlJsonObject: newYamlJsonObject }));
+        } else if (!checkedValue && alreadyHasKey) {
+          const remainingState = Object.fromEntries(
+            Object.entries(currentState).filter(([k]) => k !== STATE_INPUT_ATTACHMENTS),
+          );
+          const newYamlJsonObject = { ...yamlJsonObject, state: remainingState };
+          dispatch(pipelineActions.setYamlCode(YAML.dump(newYamlJsonObject)));
+          dispatch(pipelineActions.setYamlJsonObject({ yamlJsonObject: newYamlJsonObject }));
+        }
+      }
     },
-    [values?.version_details?.meta?.internal_tools, setFieldValue],
+    [values?.version_details?.meta?.internal_tools, setFieldValue, isPipeline, yamlJsonObject, dispatch],
   );
 
   return (

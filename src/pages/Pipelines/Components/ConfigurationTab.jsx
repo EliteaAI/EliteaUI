@@ -7,7 +7,7 @@ import { Box, CircularProgress, Typography } from '@mui/material';
 
 import RunHistoryContainer from '@/[fsd]/entities/run-history/ui/RunHistoryContainer';
 import { ParticipantEntityTypes } from '@/[fsd]/features/chat/lib/constants/participant.constants';
-import { usePipelineChat } from '@/[fsd]/features/pipelines/lib/hooks';
+import { usePipelineAttachmentYamlSync, usePipelineChat } from '@/[fsd]/features/pipelines/lib/hooks';
 import {
   DEFAULT_MAX_TOKENS,
   DEFAULT_REASONING_EFFORT,
@@ -48,6 +48,7 @@ const ConfigurationTab = memo(props => {
   const projectId = useSelectedProjectId();
 
   useAgentMCPToolsStatusMonitor();
+  usePipelineAttachmentYamlSync();
 
   const { isSmallWindow } = useIsSmallWindow(() => {
     setTimeout(() => {
