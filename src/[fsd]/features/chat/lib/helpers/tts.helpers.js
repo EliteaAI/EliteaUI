@@ -105,6 +105,192 @@ const inlineText = tokens => {
     .join('');
 };
 
+/**
+ * Like inlineText but also builds fine-grained segments so each text run maps
+ * precisely to its position in the original markdown.
+ *
+ * origBase    — absolute start position of these tokens in the original markdown
+ * strippedBase — absolute start position of these tokens in the stripped text
+ *
+ * Returns { text: string, segments: Segment[] }
+ * where Segment = { origStart, origLen, strippedStart, strippedLen }
+ *
+ * Segments for leaf text tokens have a 1:1 char mapping (modulo emoji
+ * stripping which is rare mid-word), so translateSpokenPos works correctly.
+ */
+const inlineTextSegments = (tokens, origBase, strippedBase) => {
+  if (!tokens?.length) return { text: '', segments: [] };
+
+  let origOffset = 0;
+  let strippedOffset = 0;
+  const segments = [];
+  const parts = [];
+
+  for (const token of tokens) {
+    const tokenOrigStart = origBase + origOffset;
+
+    switch (token.type) {
+      case 'text': {
+        if (token.tokens?.length) {
+          // text token wrapping sub-tokens — recurse at same origBase; no extra delimiter
+          const inner = inlineTextSegments(token.tokens, tokenOrigStart, strippedBase + strippedOffset);
+          segments.push(...inner.segments);
+          parts.push(inner.text);
+          strippedOffset += inner.text.length;
+        } else {
+          const piece = stripEmoji(token.text ?? token.raw ?? '');
+          if (piece) {
+            segments.push({
+              origStart: tokenOrigStart,
+              origLen: token.raw.length,
+              strippedStart: strippedBase + strippedOffset,
+              strippedLen: piece.length,
+            });
+            parts.push(piece);
+            strippedOffset += piece.length;
+          }
+        }
+        origOffset += token.raw.length;
+        break;
+      }
+
+      case 'em':
+      case 'strong':
+      case 'strong_em': {
+        // Skip the opening delimiter (* / ** / ***) so inner content maps 1:1
+        const delimLen = token.type === 'strong_em' ? 3 : token.type === 'strong' ? 2 : 1;
+        const innerTokens = token.tokens ?? [];
+        const inner = inlineTextSegments(
+          innerTokens,
+          tokenOrigStart + delimLen,
+          strippedBase + strippedOffset,
+        );
+        segments.push(...inner.segments);
+        parts.push(inner.text);
+        strippedOffset += inner.text.length;
+        origOffset += token.raw.length;
+        break;
+      }
+
+      case 'link': {
+        const href = token.href ?? '';
+        const linkTokens = token.tokens ?? [];
+        const textFromTokens = inlineText(linkTokens);
+        if (isUrl(href)) {
+          const piece =
+            !textFromTokens || textFromTokens === href || isUrl(textFromTokens) ? 'the link' : textFromTokens;
+          segments.push({
+            origStart: tokenOrigStart,
+            origLen: token.raw.length,
+            strippedStart: strippedBase + strippedOffset,
+            strippedLen: piece.length,
+          });
+          parts.push(piece);
+          strippedOffset += piece.length;
+        } else if (isFilePath(href)) {
+          const piece = !textFromTokens || textFromTokens === href ? 'the file path' : textFromTokens;
+          segments.push({
+            origStart: tokenOrigStart,
+            origLen: token.raw.length,
+            strippedStart: strippedBase + strippedOffset,
+            strippedLen: piece.length,
+          });
+          parts.push(piece);
+          strippedOffset += piece.length;
+        } else {
+          // Descriptive link — fine-grained segments for the display text (starts after '[')
+          const inner = inlineTextSegments(linkTokens, tokenOrigStart + 1, strippedBase + strippedOffset);
+          segments.push(...inner.segments);
+          parts.push(inner.text);
+          strippedOffset += inner.text.length;
+        }
+        origOffset += token.raw.length;
+        break;
+      }
+
+      case 'image': {
+        const alt = stripEmoji(token.text ?? '').trim();
+        const piece = alt ? `an image showing ${alt}` : '';
+        if (piece) {
+          segments.push({
+            origStart: tokenOrigStart,
+            origLen: token.raw.length,
+            strippedStart: strippedBase + strippedOffset,
+            strippedLen: piece.length,
+          });
+          parts.push(piece);
+          strippedOffset += piece.length;
+        }
+        origOffset += token.raw.length;
+        break;
+      }
+
+      case 'codespan': {
+        const piece = (token.text?.length ?? 0) <= 40 ? (token.text ?? '') : 'a code example';
+        if (piece) {
+          segments.push({
+            origStart: tokenOrigStart,
+            origLen: token.raw.length,
+            strippedStart: strippedBase + strippedOffset,
+            strippedLen: piece.length,
+          });
+          parts.push(piece);
+          strippedOffset += piece.length;
+        }
+        origOffset += token.raw.length;
+        break;
+      }
+
+      case 'escape': {
+        const piece = token.text ?? '';
+        if (piece) {
+          segments.push({
+            origStart: tokenOrigStart,
+            origLen: token.raw.length,
+            strippedStart: strippedBase + strippedOffset,
+            strippedLen: piece.length,
+          });
+          parts.push(piece);
+          strippedOffset += piece.length;
+        }
+        origOffset += token.raw.length;
+        break;
+      }
+
+      case 'br': {
+        segments.push({
+          origStart: tokenOrigStart,
+          origLen: token.raw.length,
+          strippedStart: strippedBase + strippedOffset,
+          strippedLen: 1,
+        });
+        parts.push('\n');
+        strippedOffset += 1;
+        origOffset += token.raw.length;
+        break;
+      }
+
+      default: {
+        const piece = stripEmoji(token.text ?? token.raw ?? '');
+        if (piece) {
+          segments.push({
+            origStart: tokenOrigStart,
+            origLen: token.raw.length,
+            strippedStart: strippedBase + strippedOffset,
+            strippedLen: piece.length,
+          });
+          parts.push(piece);
+          strippedOffset += piece.length;
+        }
+        origOffset += token.raw.length;
+        break;
+      }
+    }
+  }
+
+  return { text: parts.join(''), segments };
+};
+
 // ─── Block token → speakable text ────────────────────────────────────────────
 
 /**
@@ -197,16 +383,33 @@ export const toSpeakableText = markdown => {
       // `html` blocks return '' from blockText; skip early to avoid empty segments.
       if (token.type === 'space' || token.type === 'html') continue;
 
-      const piece = blockText([token]);
-      if (piece) {
-        segments.push({
-          origStart: tokenOrigStart,
-          origLen: token.raw.length,
-          strippedStart: strippedPos,
-          strippedLen: piece.length,
-        });
-        strippedPos += piece.length;
-        parts.push(piece);
+      if (token.type === 'paragraph' || token.type === 'heading') {
+        // Fine-grained inline segments: one segment per leaf text run so
+        // translateSpokenPos gives word-level accuracy for highlight.
+        const { text: inlineResult, segments: inlineSegs } = inlineTextSegments(
+          token.tokens ?? [],
+          tokenOrigStart,
+          strippedPos,
+        );
+        if (inlineResult) {
+          segments.push(...inlineSegs);
+          const piece = inlineResult + '\n';
+          strippedPos += piece.length;
+          parts.push(piece);
+        }
+      } else {
+        // Coarse segment for code blocks, tables, lists, blockquotes, etc.
+        const piece = blockText([token]);
+        if (piece) {
+          segments.push({
+            origStart: tokenOrigStart,
+            origLen: token.raw.length,
+            strippedStart: strippedPos,
+            strippedLen: piece.length,
+          });
+          strippedPos += piece.length;
+          parts.push(piece);
+        }
       }
     }
 

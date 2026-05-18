@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { isWhisperModel } from '@/[fsd]/features/chat/lib/helpers';
 import { sioEvents } from '@/common/constants';
 
 // Buffer sizes at 24 kHz — trade-off between latency and API call frequency
@@ -7,9 +8,6 @@ import { sioEvents } from '@/common/constants';
 // Realtime models stream continuously and benefit from lower latency.
 const BUFFER_SIZE_WHISPER = 7200; // 300 ms — reduce Whisper API call frequency
 const BUFFER_SIZE_REALTIME = 4800; // 200 ms — lower latency for streaming models
-
-// Mirrors the backend _is_whisper_model() check
-const isWhisperModel = name => Boolean(name && name.toLowerCase().includes('whisper'));
 
 // Target sample rate expected by both Whisper and the Realtime API
 const TARGET_SAMPLE_RATE = 24000;
@@ -119,16 +117,13 @@ export const useStreamingSpeechRecognition = ({
     };
   }, [socket]);
 
-  const float32ToPcm16Base64 = useCallback(float32Array => {
+  const float32ToPcm16Buffer = useCallback(float32Array => {
     const pcm = new Int16Array(float32Array.length);
     for (let i = 0; i < float32Array.length; i++) {
       const s = Math.max(-1, Math.min(1, float32Array[i]));
       pcm[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
     }
-    const bytes = new Uint8Array(pcm.buffer);
-    let binary = '';
-    for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
-    return btoa(binary);
+    return pcm.buffer;
   }, []);
 
   const startRecording = useCallback(async () => {
@@ -168,8 +163,8 @@ export const useStreamingSpeechRecognition = ({
       });
 
       workletNode.port.onmessage = e => {
-        const base64 = float32ToPcm16Base64(e.data);
-        socket.emit(sioEvents.asr_audio_chunk, { audio_base64: base64 });
+        const pcm16Buffer = float32ToPcm16Buffer(e.data);
+        socket.emit(sioEvents.asr_audio_chunk, { audio: pcm16Buffer });
       };
 
       const gainNode = audioContext.createGain();
@@ -196,7 +191,7 @@ export const useStreamingSpeechRecognition = ({
       else if (err.name === 'NotFoundError') onErrorRef.current?.('audio-capture');
       else onErrorRef.current?.('network');
     }
-  }, [socket, projectId, asrModel, float32ToPcm16Base64]);
+  }, [socket, projectId, asrModel, float32ToPcm16Buffer]);
 
   const _releaseAudio = useCallback(() => {
     // Null refs first so concurrent calls (stopRecording + unmount) don't double-close

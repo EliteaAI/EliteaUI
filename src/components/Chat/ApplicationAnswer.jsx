@@ -179,12 +179,17 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
   const realAnswer = useMemo(() => convertJsonToString(rawAnswer || '', true), [rawAnswer]);
   const hasSpeakableText = useMemo(() => !!toSpeakableText(realAnswer).text, [realAnswer]);
 
-  // Progressive highlight: always from start of message to current spoken position.
-  // spokenRange positions are in stripped-text coordinates; translate back to original markdown.
+  // Translate the current TTS word range (in stripped-text coordinates) back to
+  // original markdown coordinates for word-level highlight.
+  // Fine-grained inline segments in speakingSegments ensure 1:1 char mapping
+  // within each segment so translateSpokenPos gives word-accurate positions.
   const activeSpokenRange = useMemo(() => {
     if (messageId !== speakingMessageId || !spokenRange) return null;
-    const translatedEnd = translateSpokenPos(spokenRange.end, speakingSegments);
-    return { start: 0, end: translatedEnd };
+    if (!speakingSegments?.length) return spokenRange;
+    const start = translateSpokenPos(spokenRange.start, speakingSegments);
+    const end = translateSpokenPos(spokenRange.end, speakingSegments);
+    if (end <= start) return null;
+    return { start, end };
   }, [messageId, speakingMessageId, spokenRange, speakingSegments]);
 
   // Cumulative start offsets of each message_item in the joined realAnswer string

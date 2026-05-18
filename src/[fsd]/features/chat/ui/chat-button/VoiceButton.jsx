@@ -3,6 +3,7 @@ import { forwardRef, memo, useCallback, useContext, useEffect, useImperativeHand
 import { Box } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
+import { isWhisperModel } from '@/[fsd]/features/chat/lib/helpers';
 import { useSpeechRecognition, useStreamingSpeechRecognition } from '@/[fsd]/features/chat/lib/hooks';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { useListModelsQuery } from '@/api/configurations';
@@ -95,26 +96,21 @@ const VoiceButton = memo(
       [toastError],
     );
 
-    const isWhisperModel = useCallback(name => Boolean(name && name.toLowerCase().includes('whisper')), []);
-
     /**
      * Select the best available ASR model following priority order:
      * default streaming → first streaming → default whisper → first whisper
      */
-    const selectAsrModel = useCallback(
-      items => {
-        const streamingModels = items.filter(m => !isWhisperModel(m.name));
-        const whisperModels = items.filter(m => isWhisperModel(m.name));
+    const selectAsrModel = useCallback(items => {
+      const streamingModels = items.filter(m => !isWhisperModel(m.name));
+      const whisperModels = items.filter(m => isWhisperModel(m.name));
 
-        return (
-          streamingModels.find(m => m.default) ??
-          streamingModels[0] ??
-          whisperModels.find(m => m.default) ??
-          whisperModels[0]
-        );
-      },
-      [isWhisperModel],
-    );
+      return (
+        streamingModels.find(m => m.default) ??
+        streamingModels[0] ??
+        whisperModels.find(m => m.default) ??
+        whisperModels[0]
+      );
+    }, []);
 
     const { data: asrModelsData } = useListModelsQuery(
       { projectId, section: 'asr', include_shared: true },
