@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { useCreateCanvasMutation } from '@/api/chat';
+import { useCreateCanvasMutation } from '@/api';
 import { isNullOrUndefined } from '@/common/utils';
 import { useCanvasEditSocket } from '@/hooks/chat/useCanvasSocket';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';

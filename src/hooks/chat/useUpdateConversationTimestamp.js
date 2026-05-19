@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 
-import { useConversationEditMutation } from '@/api/chat';
+import { useConversationEditMutation } from '@/api';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 /**

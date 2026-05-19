@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { useUpdateParticipantSettingsMutation } from '@/api/chat';
+import { useUpdateParticipantSettingsMutation } from '@/api';
 import { buildErrorMessage } from '@/common/utils';
 import useToast from '@/hooks/useToast';
 

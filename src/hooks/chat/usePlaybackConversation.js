@@ -3,7 +3,7 @@ import { useCallback, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 
 import { useConversationNavigation } from '@/[fsd]/features/chat/lib/hooks';
-import { useLazyConversationDetailsQuery, useLazyMessageListQuery } from '@/api/chat';
+import { useLazyConversationDetailsQuery, useLazyMessageListQuery } from '@/api';
 import { buildErrorMessage } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 

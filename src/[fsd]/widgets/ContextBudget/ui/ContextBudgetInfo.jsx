@@ -1,7 +1,7 @@
 import { memo } from 'react';
 
 import { useModal } from '@/[fsd]/shared/lib/hooks';
-import { useGetContextStatusQuery } from '@/api/chat';
+import { useGetContextStatusQuery } from '@/api';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { formatNumberWithSpaces } from '@/utils/stringUtils';
 

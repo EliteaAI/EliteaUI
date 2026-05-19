@@ -10,7 +10,7 @@ import {
   useDeleteAllMessagesFromConversationMutation,
   useDeleteMessageFromConversationMutation,
   useStopChatTaskMutation,
-} from '@/api/chat';
+} from '@/api';
 import { eliteaApi } from '@/api/eliteaApi';
 import { ROLES, WELCOME_MESSAGE_ID, sioEvents } from '@/common/constants';
 import { convertConversationToChatHistory } from '@/common/convertChatConversationMessages';

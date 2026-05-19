@@ -21,8 +21,12 @@ import {
   findToolkitParticipant,
 } from '@/[fsd]/features/toolkits/lib/helpers/toolkitConversation.helpers';
 import { generateLLMSettings } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
-import { useListModelsQuery, useStopIndexingItemMutation } from '@/api';
-import { useAddParticipantIntoConversationMutation, useConversationCreateMutation } from '@/api/chat';
+import {
+  useAddParticipantIntoConversationMutation,
+  useConversationCreateMutation,
+  useListModelsQuery,
+  useStopIndexingItemMutation,
+} from '@/api';
 import { SocketMessageType, sioEvents } from '@/common/constants';
 import { convertConversationToChatHistory } from '@/common/convertChatConversationMessages';
 import { generateMessagePayload } from '@/common/messagePayloadUtils';

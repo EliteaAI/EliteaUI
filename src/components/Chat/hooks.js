@@ -8,7 +8,7 @@ import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { ParsePipelineHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
 import { useContextExecutionEntity, useProjectType } from '@/[fsd]/shared/lib/hooks';
-import { useStopChatTaskMutation } from '@/api/chat';
+import { useStopChatTaskMutation } from '@/api';
 import { useStopDatasourceTaskMutation } from '@/api/datasources';
 import {
   ChatParticipantType,

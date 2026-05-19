@@ -1,0 +1,101 @@
+import React, { memo } from 'react';
+
+import { Box, useTheme } from '@mui/material';
+
+import { useDroppable } from '@dnd-kit/core';
+
+const DroppableFolderItem = memo(props => {
+  const { folder, children, isDropDisabled = false, isValidDropTarget = true, isActive = true } = props;
+
+  const theme = useTheme();
+
+  const { isOver, setNodeRef } = useDroppable({
+    id: `folder-${folder.id}`,
+    disabled: isDropDisabled || !isValidDropTarget,
+    data: {
+      type: 'folder',
+      folder,
+    },
+  });
+
+  const shouldShowDropFeedback = isOver && isActive && isValidDropTarget;
+
+  return (
+    <Box
+      sx={{
+        // Add padding when drag is active to ensure border has space
+        padding: shouldShowDropFeedback || (isValidDropTarget && isActive && !isOver) ? '.125rem' : '0rem',
+        transition: 'padding 0.2s ease-in-out',
+      }}
+    >
+      <Box
+        ref={setNodeRef}
+        sx={{
+          position: 'relative',
+          borderRadius: '.375rem',
+          transition: 'all 0.2s ease-in-out',
+        }}
+      >
+        {children}
+
+        {/* Absolute positioned border overlay - always visible */}
+        {shouldShowDropFeedback && (
+          <Box
+            sx={{
+              position: 'absolute',
+              top: -2,
+              left: -2,
+              right: -2,
+              bottom: -2,
+              border: `.125rem dashed ${theme.palette.primary.main}`,
+              borderRadius: '.5rem',
+              backgroundColor: `${theme.palette.primary.main}15`, // 15% opacity
+              pointerEvents: 'none',
+              zIndex: 999, // Very high z-index to ensure it's always on top
+              boxShadow: `0 .25rem .75rem ${theme.palette.primary.main}30`, // Glow effect
+            }}
+          />
+        )}
+
+        {/* Subtle hover state for valid drop targets */}
+        {isValidDropTarget && isActive && !isOver && (
+          <Box
+            sx={{
+              position: 'absolute',
+              top: -1,
+              left: -1,
+              right: -1,
+              bottom: -1,
+              border: `.0625rem solid ${theme.palette.primary.main}40`,
+              borderRadius: '.4375rem',
+              backgroundColor: `${theme.palette.primary.main}08`,
+              pointerEvents: 'none',
+              zIndex: 998,
+            }}
+          />
+        )}
+
+        {/* Dimmed overlay for invalid drop targets */}
+        {!isValidDropTarget && isActive && (
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0,0,0,0.3)',
+              borderRadius: '.375rem',
+              pointerEvents: 'none',
+              zIndex: 997,
+            }}
+          />
+        )}
+      </Box>
+    </Box>
+  );
+});
+
+DroppableFolderItem.displayName = 'DroppableFolderItem';
+
+export default DroppableFolderItem;

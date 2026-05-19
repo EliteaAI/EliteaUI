@@ -1,6 +1,6 @@
 import { useCallback, useEffect } from 'react';
 
-import { useDeleteConversationMutation, useUnselectConversationMutation } from '@/api/chat';
+import { useDeleteConversationMutation, useUnselectConversationMutation } from '@/api';
 import { dummyConversation } from '@/common/constants';
 import { areTheSameConversations, buildErrorMessage } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';

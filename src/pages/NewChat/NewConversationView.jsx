@@ -11,7 +11,7 @@ import { SlashSuggestionList } from '@/[fsd]/features/chat/ui';
 import { DEFAULT_STEPS_LIMIT } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
 import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
 import { cleanLLMSettings, generateLLMSettings } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
-import { useConversationEditMutation, useUpdateParticipantLlmSettingsMutation } from '@/api/chat';
+import { useConversationEditMutation, useUpdateParticipantLlmSettingsMutation } from '@/api';
 import { useListModelsQuery } from '@/api/configurations.js';
 import WelcomeImage from '@/assets/chat-welcome.png';
 import {

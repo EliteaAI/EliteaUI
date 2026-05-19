@@ -4,11 +4,7 @@ import { Box, CircularProgress, Typography } from '@mui/material';
 
 import ListInfiniteMoreLoader from '@/ComponentsLib/ListInfiniteMoreLoader';
 import { Modal } from '@/[fsd]/shared/ui';
-import {
-  useDeleteSummaryMutation,
-  useGetConversationSummariesQuery,
-  useUpdateSummaryMutation,
-} from '@/api/chat';
+import { useDeleteSummaryMutation, useGetConversationSummariesQuery, useUpdateSummaryMutation } from '@/api';
 import useToast from '@/hooks/useToast';
 
 import SummaryDetailsItem from './SummaryDetailsItem';

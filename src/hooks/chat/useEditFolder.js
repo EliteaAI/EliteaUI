@@ -1,6 +1,6 @@
 import { useCallback, useEffect } from 'react';
 
-import { useFolderPinUpdateMutation, useFolderUpdateMutation } from '@/api/chat';
+import { useFolderPinUpdateMutation, useFolderUpdateMutation } from '@/api';
 import { PERMISSIONS } from '@/common/constants.js';
 import { areTheSameFolders, buildErrorMessage } from '@/common/utils';
 import useCheckPermission from '@/hooks/useCheckPermission';

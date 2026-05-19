@@ -10,7 +10,7 @@ import {
   useConversationEditMutation,
   useOptimizeContextMutation,
   useUpdateContextStrategyMutation,
-} from '@/api/chat';
+} from '@/api';
 import { StyledDialog } from '@/components/StyledDialog';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';

@@ -1,6 +1,6 @@
 import { useCallback, useEffect } from 'react';
 
-import { useFolderUpdateMutation } from '@/api/chat';
+import { useFolderUpdateMutation } from '@/api';
 import { PERMISSIONS } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import useCheckPermission from '@/hooks/useCheckPermission';

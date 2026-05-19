@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import { useLazyMessageListQuery } from '@/api/chat';
+import { useLazyMessageListQuery } from '@/api';
 import { convertMessagesToChatHistory } from '@/common/convertChatConversationMessages';
 import { buildErrorMessage } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';

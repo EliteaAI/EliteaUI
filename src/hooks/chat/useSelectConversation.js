@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
 
 import { useConversationNavigation } from '@/[fsd]/features/chat/lib/hooks';
-import { useLazyConversationDetailsQuery, useSelectConversationMutation } from '@/api/chat';
+import { useLazyConversationDetailsQuery, useSelectConversationMutation } from '@/api';
 import { convertConversationToChatHistory } from '@/common/convertChatConversationMessages';
 import { areTheSameConversations, buildErrorMessage, getChatParticipantUniqueId } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -25,6 +25,7 @@ export default function useSelectConversation({
   stopListenCanvasEditorsChangeEvent,
   listenCanvasContentChangeEvent,
   stopListenCanvasContentChangeEvent,
+  enableMessagesPagination = false,
 }) {
   const dispatch = useDispatch();
   const { clearUrlConversation, changeUrlByConversation } = useConversationNavigation();
@@ -71,7 +72,13 @@ export default function useSelectConversation({
           const result = await getConversationDetail({
             projectId,
             id: conversation.id,
+            ...(enableMessagesPagination && {
+              messages_offset: 0,
+              messages_limit: 10,
+              sort_order: 'desc',
+            }),
           });
+
           changeUrlByConversation(conversation.id, result.data?.name || conversation.name);
           if (result.data) {
             selectConversation({
@@ -148,6 +155,7 @@ export default function useSelectConversation({
       stopListenCanvasEditorsChangeEvent,
       listenCanvasContentChangeEvent,
       stopListenCanvasContentChangeEvent,
+      enableMessagesPagination,
       dispatch,
     ],
   );

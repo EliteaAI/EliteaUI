@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { useTrackEvent } from '@/GA';
+import { sortConversations } from '@/[fsd]/features/chat/conversation-list/lib/helpers';
 import { useConversationNavigation } from '@/[fsd]/features/chat/lib/hooks';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
-import { useConversationCreateMutation, useSelectConversationMutation } from '@/api/chat';
+import { useConversationCreateMutation, useSelectConversationMutation } from '@/api';
 import { DefaultConversationName, dummyConversation } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
-import { sortConversations } from './usePinConversation';
 import useResetCreateFlag from './useResetCreateFlag';
 
 export default function useCreateConversation({

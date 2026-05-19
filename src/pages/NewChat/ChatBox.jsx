@@ -32,7 +32,7 @@ import {
   useRegenerateMutation,
   useRemoveAttachmentsMutation,
   useUpdateParticipantLlmSettingsMutation,
-} from '@/api/chat';
+} from '@/api';
 import { useListModelsQuery } from '@/api/configurations.js';
 import {
   ChatParticipantType,

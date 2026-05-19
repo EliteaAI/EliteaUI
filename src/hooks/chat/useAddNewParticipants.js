@@ -5,8 +5,12 @@ import {
   DEFAULT_REASONING_EFFORT,
   DEFAULT_TEMPERATURE,
 } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
-import { useListModelsQuery, useUpdateApplicationVersionMutation } from '@/api';
-import { useAddParticipantIntoConversationMutation, useLazyConversationDetailsQuery } from '@/api/chat';
+import {
+  useAddParticipantIntoConversationMutation,
+  useLazyConversationDetailsQuery,
+  useListModelsQuery,
+  useUpdateApplicationVersionMutation,
+} from '@/api';
 import { ChatParticipantType } from '@/common/constants';
 import { buildErrorMessage, getChatParticipantUniqueId } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';

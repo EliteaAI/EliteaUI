@@ -9,7 +9,7 @@ import { Box, useTheme } from '@mui/system';
 import { useTrackEvent } from '@/GA';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
 import { Field } from '@/[fsd]/shared/ui';
-import { useEditCanvasMutation } from '@/api/chat';
+import { useEditCanvasMutation } from '@/api';
 import { useListModelsQuery } from '@/api/configurations.js';
 import { useGenerateContentBlockingMutation } from '@/api/llm.js';
 import { CANVAS_ADMIN_USER, CANVAS_SYSTEM_USER, PUBLIC_PROJECT_ID } from '@/common/constants';

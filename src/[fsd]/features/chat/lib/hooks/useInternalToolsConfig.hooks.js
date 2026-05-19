@@ -1,4 +1,4 @@
-import { useConversationEditMutation } from '@/api/chat';
+import { useConversationEditMutation } from '@/api';
 import { buildErrorMessage } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';

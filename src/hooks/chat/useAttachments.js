@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo } from 'react';
 
-import { useSetAttachmentStorageMutation } from '@/api/chat';
+import { useSetAttachmentStorageMutation } from '@/api';
 import { getAttachmentDisabledStatus, getAttachmentManagerId } from '@/common/attachmentUtils';
 
 import { useSelectedProjectId } from '../useSelectedProject';

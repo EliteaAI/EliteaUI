@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 
-import { useLazyMessageListQuery } from '@/api/chat';
+import { useLazyMessageListQuery } from '@/api';
 import { buildErrorMessage } from '@/common/utils';
 import { PLAYBACK_PAGE_SIZE } from '@/hooks/chat/usePlaybackConversation.js';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';

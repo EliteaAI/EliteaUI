@@ -9,6 +9,15 @@ import { Box, CircularProgress, Grid, useTheme } from '@mui/material';
 
 import { useEditingArtifactsNavBlocker } from '@/[fsd]/features/artifacts/lib/hooks/useEditingArtifactsNavBlocker.hooks';
 import { FilePreviewCanvas } from '@/[fsd]/features/artifacts/ui';
+import { redistributeConversationsIntoGroups } from '@/[fsd]/features/chat/conversation-list/lib/helpers';
+import {
+  useCreateFolder,
+  useDeleteFolder,
+  useMoveToFolderConversation,
+  usePinConversation,
+  useQueryFoldersList,
+} from '@/[fsd]/features/chat/conversation-list/lib/hooks';
+import { Conversations } from '@/[fsd]/features/chat/conversation-list/ui';
 import {
   useAttachmentToolChange,
   useConversationNavigation,
@@ -16,6 +25,7 @@ import {
   useEditConversation,
   useInternalToolsConfig,
 } from '@/[fsd]/features/chat/lib/hooks';
+import { eliteaApi } from '@/api/eliteaApi';
 import {
   ChatParticipantType,
   DefaultConversationName,
@@ -47,10 +57,8 @@ import useChatCanvasEditorsChange from '@/hooks/chat/useChatCanvasEditorsChange'
 import useChatInteractionUUID from '@/hooks/chat/useChatInteractionUUID';
 import useCloseEditorAlert from '@/hooks/chat/useCloseEditorAlert';
 import useCreateConversation from '@/hooks/chat/useCreateConversation';
-import useCreateFolder from '@/hooks/chat/useCreateFolder';
 import useDeleteAllMessageFromConversation from '@/hooks/chat/useDeleteAllMessageFromConversation';
 import useDeleteConversation from '@/hooks/chat/useDeleteConversation';
-import { useDeleteFolder } from '@/hooks/chat/useDeleteFolder.js';
 import useDeleteMessageFromConversation from '@/hooks/chat/useDeleteMessageFromConversation';
 import useDeleteParticipant from '@/hooks/chat/useDeleteParticipant';
 import useEditAgent from '@/hooks/chat/useEditAgent';
@@ -60,17 +68,14 @@ import useEditPipeline from '@/hooks/chat/useEditPipeline';
 import useEditToolkit from '@/hooks/chat/useEditToolkit';
 import useEditingCanvasNavBlocker from '@/hooks/chat/useEditingCanvasNavBlocker';
 import useLocalActiveParticipant from '@/hooks/chat/useLocalActiveParticipant';
-import useMoveToFolderConversation from '@/hooks/chat/useMoveToFolderConversation.js';
 import { useMutuallyExclusiveEditors } from '@/hooks/chat/useMutuallyExclusiveEditors';
-import usePinConversation from '@/hooks/chat/usePinConversation';
 import usePipelineCreation from '@/hooks/chat/usePipelineCreation';
 import usePlaybackConversation from '@/hooks/chat/usePlaybackConversation';
-import useQueryFoldersList from '@/hooks/chat/useQueryFoldersList.js';
 import useRemoteParticipantUpdate from '@/hooks/chat/useRemoteParticipantUpdate';
 import useReorderFolders from '@/hooks/chat/useReorderFolders.js';
 import useSelectConversation from '@/hooks/chat/useSelectConversation';
 import useStreamingNavBlocker from '@/hooks/chat/useStreamingNavBlocker';
-import useSynChatMessage from '@/hooks/chat/useSynChatMessage';
+import useSynChatMessage from '@/hooks/chat/useSyncChatMessage';
 import useToolkitCreation from '@/hooks/chat/useToolkitCreation';
 import useUploadAttachments from '@/hooks/chat/useUploadAttachments';
 import useGetWindowWidth from '@/hooks/useGetWindowWidth';
@@ -83,7 +88,6 @@ import { AddNewUserModal } from '@/pages/NewChat/AddNewUser/AddNewUserModal';
 import AgentEditor from '@/pages/NewChat/AgentEditor';
 import CanvasEditor from '@/pages/NewChat/CanvasEditor';
 import ChatBox from '@/pages/NewChat/ChatBox';
-import Conversations from '@/pages/NewChat/Conversations';
 import NewConversationView from '@/pages/NewChat/NewConversationView';
 import PipelineEditor from '@/pages/NewChat/PipelineEditor';
 import PlaybackChatBox from '@/pages/NewChat/PlaybackChatBox';
@@ -112,12 +116,24 @@ const NewChat = props => {
 
   // State variables
   const [activeConversation, setActiveConversation] = useState(dummyConversation);
-  const [conversations, setConversations] = useState([]);
+  const [dateGroups, setDateGroups] = useState([]);
+  const [pinnedConversations, setPinnedConversations] = useState([]);
+
+  const conversations = useMemo(() => dateGroups.flatMap(g => g.conversations), [dateGroups]);
+
+  const setConversations = useCallback(updater => {
+    setDateGroups(prevGroups => {
+      const prevFlat = prevGroups.flatMap(g => g.conversations);
+      const newFlat = typeof updater === 'function' ? updater(prevFlat) : updater;
+      return redistributeConversationsIntoGroups(prevGroups, newFlat);
+    });
+  }, []);
 
   const [collapsedConversations, setCollapsedConversations] = useState(false);
 
   const [activeFolder, setActiveFolder] = useState(dummyFolder);
   const [folders, setFolders] = useState([]);
+  const [sidebarSearchQuery, setSidebarSearchQuery] = useState();
   const [conversationNotFound, setConversationNotFound] = useState(false);
   const isPlayback = useMemo(() => activeConversation?.isPlayback, [activeConversation]);
   const isNewConversation = useMemo(
@@ -164,12 +180,12 @@ const NewChat = props => {
     useLocalActiveParticipant();
 
   const ungroupedConversationsCount = useMemo(() => {
-    return conversations.length;
-  }, [conversations]);
+    return dateGroups.reduce((sum, g) => sum + (g.total || 0), 0);
+  }, [dateGroups]);
 
   const totalConversationsAmount = useMemo(() => {
     const folderConversationsCount = (Array.isArray(folders) ? folders : []).reduce((acc, folder) => {
-      return acc + (folder.conversations?.length || 0);
+      return acc + (folder.total || folder.conversations?.length || 0);
     }, 0);
 
     return ungroupedConversationsCount + folderConversationsCount;
@@ -428,8 +444,10 @@ const NewChat = props => {
           ),
         })),
       );
+
+      dispatch(eliteaApi.util.invalidateTags(['TAG_TYPE_FOLDERS']));
     },
-    [activeConversation?.uuid, changeUrlByConversation],
+    [activeConversation?.uuid, changeUrlByConversation, dispatch, setConversations],
   );
 
   useChatConversationNameUpdateSocket({ onRemoteUpdateConversationName });
@@ -437,9 +455,11 @@ const NewChat = props => {
   const { onPinConversation } = usePinConversation({
     activeConversation,
     setActiveConversation,
-    setConversations,
+    setPinnedConversations,
+    setDateGroups,
     setFolders,
     projectId,
+    toastError,
   });
 
   const onClearActiveParticipant = useCallback(
@@ -570,18 +590,20 @@ const NewChat = props => {
     stopListenCanvasEditorsChangeEvent,
     listenCanvasContentChangeEvent,
     stopListenCanvasContentChangeEvent,
+    enableMessagesPagination: true,
   });
 
   const {
     isLoadFolders: isLoadConversations,
     isLoadMoreFolders: isLoadMoreConversations,
-    onLoadMoreFolders: onLoadMoreConversations,
     isConversationsLoaded,
   } = useQueryFoldersList({
     toastError,
     setFolders,
-    setConversations,
+    setDateGroups,
+    setPinnedConversations,
     onSelectConversation,
+    searchQuery: sidebarSearchQuery,
     skipSetConversation:
       isCreatingConversation ||
       activeConversation?.isNew ||
@@ -972,24 +994,24 @@ const NewChat = props => {
     const conversationFromUrl = conversationList.find(
       conversation => conversation.id == conversationIdFromUrl,
     );
-    if (isConversationsLoaded) {                                                                                                                                                                                 
-      if (conversationFromUrl) {                                                                                                                                                                                 
-        setConversationNotFound(false);                                                                                                                                                                          
-        if (!activeConversation?.id) {                                                                                                                                                                           
-          onSelectConversation(conversationFromUrl);                                                                                                                                                             
-        }                                                                                                                                                                                                        
-      } else if (conversationIdFromUrl && !activeConversation?.id) {                                                                                                                                             
-        // Conversation not in list - try to fetch by ID (e.g., webhook-triggered conversations)                                                                                                                 
-        const numericId = parseInt(conversationIdFromUrl, 10);                                                                                                                                                   
-        if (!isNaN(numericId)) {                                                                                                                                                                                 
-          onSelectConversation({ id: numericId });                                                                                                                                                               
-          setConversationNotFound(false);                                                                                                                                                                        
-        } else {                                                                                                                                                                                                 
-          setConversationNotFound(true);                                                                                                                                                                       
-        }                                                                                                                                                                                                        
-      } else if (!activeConversation?.id) {                                                                                                                                                                    
-        setConversationNotFound(true);                                                                                                                                                                           
-      }                                                                                                                                                                                                          
+    if (isConversationsLoaded) {
+      if (conversationFromUrl) {
+        setConversationNotFound(false);
+        if (!activeConversation?.id) {
+          onSelectConversation(conversationFromUrl);
+        }
+      } else if (conversationIdFromUrl && !activeConversation?.id) {
+        // Conversation not in list - try to fetch by ID (e.g., webhook-triggered conversations)
+        const numericId = parseInt(conversationIdFromUrl, 10);
+        if (!isNaN(numericId)) {
+          onSelectConversation({ id: numericId });
+          setConversationNotFound(false);
+        } else {
+          setConversationNotFound(true);
+        }
+      } else if (!activeConversation?.id) {
+        setConversationNotFound(true);
+      }
     }
   }, [
     activeConversation?.id,
@@ -999,6 +1021,14 @@ const NewChat = props => {
     isConversationsLoaded,
     onSelectConversation,
   ]);
+
+  const shouldShowConversationLoader = useMemo(() => {
+    if (isLoadMoreConversations) return true;
+    if (isSelectingConversation) return true;
+    if (!activeConversation?.name && !activeConversation?.chat_history?.length) return true;
+
+    return false;
+  }, [isLoadMoreConversations, isSelectingConversation, activeConversation]);
 
   const messageIdFromUrl = searchParams.get(SearchParams.MessageId);
 
@@ -1303,6 +1333,9 @@ const NewChat = props => {
             isLoadMoreConversations={isLoadMoreConversations}
             selectedConversationId={genConversationId(activeConversation)}
             conversations={conversations}
+            pinnedConversations={pinnedConversations}
+            dateGroups={dateGroups}
+            setDateGroups={setDateGroups}
             ungroupedConversationsCount={ungroupedConversationsCount}
             totalConversationsAmount={totalConversationsAmount}
             onSelectConversation={onHandleSelectConversation}
@@ -1311,12 +1344,13 @@ const NewChat = props => {
             onPlaybackConversation={onPlaybackConversation}
             collapsed={collapsedConversations}
             onCollapsed={onConversationCollapsed}
-            onLoadMore={onLoadMoreConversations}
+            onLoadMore={() => {}}
             onPinConversation={onPinConversation}
             onCreateConversation={onCreateConversation}
             onCancelCreateConversation={onCancelCreateConversation}
             onChangeActiveConversationName={onChangeActiveConversationName}
             folders={folders}
+            setFolders={setFolders}
             onCreateFolder={onCreateFolder}
             onCancelCreateFolder={onCancelCreateFolder}
             onDeleteFolder={onDeleteFolder}
@@ -1331,6 +1365,7 @@ const NewChat = props => {
             onCloseCanvas={onCloseCanvas}
             toastSuccess={toastSuccess}
             toastError={toastError}
+            onSearchQueryChange={setSidebarSearchQuery}
             onReorderFolders={onReorderFolders}
             isFolderOperationInProgress={isFolderUpdate || isLoadConversations || isLoadMoreConversations}
           />
@@ -1422,7 +1457,7 @@ const NewChat = props => {
                 toastError={toastError}
                 key={'playback' + isPlayback}
               />
-              {(isLoadMoreConversations || isSelectingConversation) && (
+              {shouldShowConversationLoader && (
                 <Box sx={styles.loadingContainer}>
                   <Box sx={styles.loadingInnerContainer}>
                     <CircularProgress />
