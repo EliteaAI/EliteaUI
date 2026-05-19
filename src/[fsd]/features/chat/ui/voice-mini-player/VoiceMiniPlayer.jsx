@@ -4,37 +4,25 @@ import { Box } from '@mui/material';
 
 import BaseBtn from '@/[fsd]/shared/ui/button/BaseBtn';
 import MicphoneIcon from '@/assets/megaphone.svg?react';
-import PlayIcon from '@/assets/play_record.svg?react';
-import PauseIcon from '@/assets/stop_record.svg?react';
+import StopIcon from '@/assets/stop_record.svg?react';
 
 const VoiceMiniPlayer = memo(props => {
-  const { isPlaying, isPaused, onPause, onResume } = props;
+  const { isPlaying, onStop } = props;
   const styles = getStyles();
 
-  if (!isPlaying && !isPaused) return null;
+  if (!isPlaying) return null;
 
   return (
     <Box sx={styles.pill}>
       <MicphoneIcon sx={styles.icon} />
-      {isPaused ? (
-        <BaseBtn
-          variant="icon"
-          size="small"
-          onClick={onResume}
-          aria-label="Resume speaking"
-        >
-          <PlayIcon sx={styles.icon} />
-        </BaseBtn>
-      ) : (
-        <BaseBtn
-          variant="icon"
-          size="small"
-          onClick={onPause}
-          aria-label="Pause speaking"
-        >
-          <PauseIcon sx={styles.icon} />
-        </BaseBtn>
-      )}
+      <BaseBtn
+        variant="icon"
+        size="small"
+        onClick={onStop}
+        aria-label="Stop speaking"
+      >
+        <StopIcon sx={styles.icon} />
+      </BaseBtn>
     </Box>
   );
 });
