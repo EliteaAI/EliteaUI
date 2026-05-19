@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
 import { Box } from '@mui/material';
 
@@ -6,7 +6,7 @@ import { AIAssistantCodeMirrorInput } from '@/[fsd]/features/pipelines/ai-assist
 import { Field, Modal } from '@/[fsd]/shared/ui';
 import { useLanguageLinter } from '@/hooks/useCodeMirrorLanguageExtensions';
 
-const StyledInputModal = memo(props => {
+const StyledInputModal = forwardRef((props, ref) => {
   const {
     open,
     onClose,
@@ -23,38 +23,49 @@ const StyledInputModal = memo(props => {
     disabled,
     enableFStringAutocomplete = false,
     stateVariableOptions = [],
+    onRealtimeChange,
+    afterContent,
   } = props;
 
   const { maxLength } = inputProps || {};
 
   const [currentValue, setCurrentValue] = useState(value);
+  const currentValueRef = useRef(value);
   const editorRef = useRef();
+  const suppressRealtimeRef = useRef(false);
 
   useEffect(() => {
     if (open) {
       setCurrentValue(value);
+      currentValueRef.current = value;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   const onNotifyChange = useCallback(
     newValue => {
+      currentValueRef.current = newValue;
       setCurrentValue(newValue);
+      if (suppressRealtimeRef.current) {
+        suppressRealtimeRef.current = false;
+        return;
+      }
+      onRealtimeChange?.(newValue);
     },
-    [setCurrentValue],
+    [onRealtimeChange],
   );
 
   const handleBlur = useCallback(() => {
     const event = {
       preventDefault: () => {},
       target: {
-        value: currentValue,
+        value: currentValueRef.current,
         name,
         id,
       },
     };
     hasOnChangeCallback ? onChange?.(event) : onInput?.(event);
-  }, [currentValue, hasOnChangeCallback, id, name, onChange, onInput]);
+  }, [hasOnChangeCallback, id, name, onChange, onInput]);
 
   const { extensions } = useLanguageLinter(specifiedLanguage, editorRef.current?.view);
 
@@ -62,6 +73,30 @@ const StyledInputModal = memo(props => {
     handleBlur();
     onClose?.();
   }, [handleBlur, onClose]);
+
+  const handleReplaceRange = useCallback((start, end, replacement) => {
+    const view = editorRef.current?.view;
+    if (!view) return;
+    suppressRealtimeRef.current = true;
+    try {
+      const cursorPos = start + replacement.length;
+      view.dispatch({
+        changes: { from: start, to: end, insert: replacement },
+        selection: { anchor: cursorPos },
+      });
+      const newValue = view.state.doc.toString();
+      currentValueRef.current = newValue;
+      setCurrentValue(newValue);
+    } catch {
+      suppressRealtimeRef.current = false;
+    }
+  }, []);
+
+  useImperativeHandle(ref, () => ({
+    getCurrentValue: () => editorRef.current?.view?.state?.doc?.toString() ?? currentValueRef.current,
+    getCursorPosition: () => editorRef.current?.view?.state?.selection?.main?.head ?? null,
+    replaceRange: handleReplaceRange,
+  }));
 
   return (
     <Modal.StyledInputModalBase
@@ -99,13 +134,14 @@ const StyledInputModal = memo(props => {
           )}
         </Box>
       </Box>
+      {afterContent}
     </Modal.StyledInputModalBase>
   );
 });
 
 StyledInputModal.displayName = 'StyledInputModal';
 
-export default StyledInputModal;
+export default memo(StyledInputModal);
 
 /** @type {MuiSx} */
 const styles = {

@@ -53,6 +53,10 @@ const StyledInputEnhancer = memo(props => {
     forceShowActionsToolbar,
     enableFStringAutocomplete,
     stateVariableOptions,
+    innerModalRef,
+    onRealtimeChange,
+    afterContent,
+    onFullScreenChange,
     ...leftProps
   } = props;
 
@@ -60,12 +64,14 @@ const StyledInputEnhancer = memo(props => {
 
   const handleOpenFullScreen = useCallback(() => {
     setShowFullScreenInputModel(true);
-  }, []);
+    onFullScreenChange?.(true);
+  }, [onFullScreenChange]);
 
   const handleCloseFullScreen = useCallback(() => {
     setShowFullScreenInputModel(false);
+    onFullScreenChange?.(false);
     onInputModalClose?.();
-  }, [onInputModalClose]);
+  }, [onFullScreenChange, onInputModalClose]);
 
   const handleChange = useCallback(
     event => {
@@ -112,6 +118,7 @@ const StyledInputEnhancer = memo(props => {
       />
       {showFullScreenInputModel && (
         <StyledInputModal
+          ref={innerModalRef}
           value={value}
           title={fieldName}
           key={showFullScreenInputModel}
@@ -125,6 +132,8 @@ const StyledInputEnhancer = memo(props => {
           specifiedLanguage={detectedLanguage}
           enableFStringAutocomplete={enableFStringAutocomplete}
           stateVariableOptions={stateVariableOptions}
+          onRealtimeChange={onRealtimeChange}
+          afterContent={afterContent}
           {...leftProps}
         />
       )}

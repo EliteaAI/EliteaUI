@@ -1,0 +1,59 @@
+import { memo } from 'react';
+
+import { Box, Typography } from '@mui/material';
+
+const MentionToolItem = memo(props => {
+  const { label, description, onClick } = props;
+  const styles = mentionToolItemStyles();
+  return (
+    <Box
+      onClick={onClick}
+      sx={styles.container}
+    >
+      <Typography
+        variant="headingSmall"
+        color="text.secondary"
+        sx={styles.label}
+      >
+        {label}
+      </Typography>
+      {description && (
+        <Typography
+          variant="bodySmall"
+          color="text.primary"
+          sx={styles.description}
+        >
+          {description}
+        </Typography>
+      )}
+    </Box>
+  );
+});
+
+MentionToolItem.displayName = 'MentionToolItem';
+
+export default MentionToolItem;
+
+/** @type {MuiSx} */
+const mentionToolItemStyles = () => ({
+  container: ({ palette }) => ({
+    display: 'flex',
+    flexDirection: 'column',
+    padding: '0.5rem 0.75rem',
+    borderRadius: '0.5rem',
+    cursor: 'pointer',
+    background: palette.background.userInputBackground,
+    '&:hover': { background: palette.background.userInputBackgroundActive },
+  }),
+  label: {
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  description: {
+    overflow: 'hidden',
+    display: '-webkit-box',
+    WebkitBoxOrient: 'vertical',
+    WebkitLineClamp: 1,
+  },
+});
