@@ -28,19 +28,8 @@ const FileReaderEnhancer = forwardRef(
     const textareaRef = useRef(null);
     const modalRef = useRef(null);
 
-    useImperativeHandle(ref, () => ({
-      restoreValue: (valueToRestore = '') => setInputValue(valueToRestore),
-      getInputContent: () => {
-        if (modalRef.current) return modalRef.current.getCurrentValue?.() ?? inputValue;
-        return textareaRef.current?.value ?? inputValue;
-      },
-      getCursorPosition: () => {
-        if (modalRef.current) return modalRef.current.getCursorPosition?.() ?? null;
-        return textareaRef.current?.selectionStart ?? null;
-      },
-      getTextareaElement: () => textareaRef.current,
-      resetMentionState: onResetMentionState ?? undefined,
-      replaceRange: (start, end, replacement) => {
+    const handleReplaceRange = useCallback(
+      (start, end, replacement) => {
         const isModalOpen = !!modalRef.current;
         const current = isModalOpen
           ? (modalRef.current.getCurrentValue?.() ?? inputValue)
@@ -62,6 +51,22 @@ const FileReaderEnhancer = forwardRef(
           });
         }
       },
+      [inputValue, onChange, updateVariableList],
+    );
+
+    useImperativeHandle(ref, () => ({
+      restoreValue: (valueToRestore = '') => setInputValue(valueToRestore),
+      getInputContent: () => {
+        if (modalRef.current) return modalRef.current.getCurrentValue?.() ?? inputValue;
+        return textareaRef.current?.value ?? inputValue;
+      },
+      getCursorPosition: () => {
+        if (modalRef.current) return modalRef.current.getCursorPosition?.() ?? null;
+        return textareaRef.current?.selectionStart ?? null;
+      },
+      getTextareaElement: () => textareaRef.current,
+      resetMentionState: onResetMentionState ?? undefined,
+      replaceRange: handleReplaceRange,
     }));
 
     const debouncedUpdateVariableList = useMemo(

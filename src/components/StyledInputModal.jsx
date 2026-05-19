@@ -74,26 +74,28 @@ const StyledInputModal = forwardRef((props, ref) => {
     onClose?.();
   }, [handleBlur, onClose]);
 
+  const handleReplaceRange = useCallback((start, end, replacement) => {
+    const view = editorRef.current?.view;
+    if (!view) return;
+    suppressRealtimeRef.current = true;
+    try {
+      const cursorPos = start + replacement.length;
+      view.dispatch({
+        changes: { from: start, to: end, insert: replacement },
+        selection: { anchor: cursorPos },
+      });
+      const newValue = view.state.doc.toString();
+      currentValueRef.current = newValue;
+      setCurrentValue(newValue);
+    } catch {
+      suppressRealtimeRef.current = false;
+    }
+  }, []);
+
   useImperativeHandle(ref, () => ({
     getCurrentValue: () => editorRef.current?.view?.state?.doc?.toString() ?? currentValueRef.current,
     getCursorPosition: () => editorRef.current?.view?.state?.selection?.main?.head ?? null,
-    replaceRange: (start, end, replacement) => {
-      const view = editorRef.current?.view;
-      if (!view) return;
-      suppressRealtimeRef.current = true;
-      try {
-        const cursorPos = start + replacement.length;
-        view.dispatch({
-          changes: { from: start, to: end, insert: replacement },
-          selection: { anchor: cursorPos },
-        });
-        const newValue = view.state.doc.toString();
-        currentValueRef.current = newValue;
-        setCurrentValue(newValue);
-      } catch {
-        suppressRealtimeRef.current = false;
-      }
-    },
+    replaceRange: handleReplaceRange,
   }));
 
   return (

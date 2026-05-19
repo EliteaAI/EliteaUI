@@ -2,6 +2,7 @@ import { memo, useMemo } from 'react';
 
 import { Box, ClickAwayListener, Typography } from '@mui/material';
 
+import { MentionConstants } from '@/[fsd]/shared/lib/constants';
 import { Mention } from '@/[fsd]/shared/ui';
 
 /**
@@ -29,9 +30,9 @@ const InstructionsSlashSuggestionList = memo(props => {
     return items.filter(item => item.name.toLowerCase().includes(itemQuery.toLowerCase()));
   }, [items, itemQuery]);
 
-  if (phase === 'idle') return null;
+  if (phase === MentionConstants.MentionPhase.Idle) return null;
 
-  if (phase === 'tools') {
+  if (phase === MentionConstants.MentionPhase.Tools) {
     if (filteredTools.length === 0) return null;
     return (
       <Mention.MentionToolList

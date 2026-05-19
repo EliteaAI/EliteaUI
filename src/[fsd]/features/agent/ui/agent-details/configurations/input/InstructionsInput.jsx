@@ -16,19 +16,6 @@ import { useTheme } from '@emotion/react';
 
 import InstructionsSlashSuggestionList from './InstructionsSlashSuggestionList';
 
-/**
- * Returns true when a tool entry is a toolkit or MCP (has selectable sub-tools).
- * Agents and pipelines have type 'application'.
- */
-const isToolkitItem = tool => tool.type !== 'application';
-
-const getItemDescription = tool => {
-  if (tool.type === 'application') {
-    return tool.agent_type === 'pipeline' ? 'Pipeline' : 'Agent';
-  }
-  return 'Toolkit';
-};
-
 const InstructionsInput = memo(props => {
   const { style, containerStyle, disabled, applicationId, entityProjectId } = props;
   const theme = useTheme();
@@ -71,6 +58,15 @@ const InstructionsInput = memo(props => {
   });
 
   // ── Mentionable items from the agent's tool list ──────────────────────────────
+
+  const isToolkitItem = tool => tool.type !== 'application';
+
+  const getItemDescription = tool => {
+    if (tool.type === 'application') {
+      return tool.agent_type === 'pipeline' ? 'Pipeline' : 'Agent';
+    }
+    return 'Toolkit';
+  };
 
   const mentionableItems = useMemo(
     () =>

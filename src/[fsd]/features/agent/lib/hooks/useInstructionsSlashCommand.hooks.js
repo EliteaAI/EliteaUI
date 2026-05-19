@@ -1,5 +1,9 @@
 import { useCallback, useRef, useState } from 'react';
 
+import { MentionConstants } from '@/[fsd]/shared/lib/constants';
+
+const { MentionPhase } = MentionConstants;
+
 /**
  * State machine for "/" slash-mention in the agent instructions textarea.
  *
@@ -21,8 +25,8 @@ import { useCallback, useRef, useState } from 'react';
  * mentionAnchorRef: character index of the leading "/" in the current mention.
  */
 export const useInstructionsSlashCommand = () => {
-  const [phase, setPhase] = useState('idle'); // 'idle' | 'items' | 'tools'
-  const phaseRef = useRef('idle');
+  const [phase, setPhase] = useState(MentionPhase.Idle);
+  const phaseRef = useRef(MentionPhase.Idle);
 
   const [itemQuery, setItemQuery] = useState('');
   const [toolQuery, setToolQuery] = useState('');
@@ -37,8 +41,8 @@ export const useInstructionsSlashCommand = () => {
   // ── Helpers ──────────────────────────────────────────────────────────────────
 
   const resetSlash = useCallback(() => {
-    phaseRef.current = 'idle';
-    setPhase('idle');
+    phaseRef.current = MentionPhase.Idle;
+    setPhase(MentionPhase.Idle);
     setItemQuery('');
     setToolQuery('');
     setSelectedItem(null);
@@ -46,8 +50,8 @@ export const useInstructionsSlashCommand = () => {
   }, []);
 
   const resetAll = useCallback(() => {
-    phaseRef.current = 'idle';
-    setPhase('idle');
+    phaseRef.current = MentionPhase.Idle;
+    setPhase(MentionPhase.Idle);
     setItemQuery('');
     setToolQuery('');
     setSelectedItem(null);
@@ -86,9 +90,9 @@ export const useInstructionsSlashCommand = () => {
       const { key } = event;
       const current = phaseRef.current;
 
-      if (current === 'idle' && key === '/') {
-        phaseRef.current = 'items';
-        setPhase('items');
+      if (current === MentionPhase.Idle && key === '/') {
+        phaseRef.current = MentionPhase.Items;
+        setPhase(MentionPhase.Items);
         setItemQuery('');
         // For a textarea, selectionStart is the position where '/' will be inserted.
         // For CodeMirror the property is absent — anchor is set later in syncWithValue.
@@ -96,7 +100,7 @@ export const useInstructionsSlashCommand = () => {
         return;
       }
 
-      if (key === 'Escape' && current !== 'idle') {
+      if (key === 'Escape' && current !== MentionPhase.Idle) {
         resetSlash();
       }
     },
@@ -123,7 +127,7 @@ export const useInstructionsSlashCommand = () => {
       const textToCursor = text.slice(0, pos);
       const current = phaseRef.current;
 
-      if (current === 'idle') {
+      if (current === MentionPhase.Idle) {
         // Detect backspace into a committed mention.
         const fullMatch = textToCursor.match(/\/([^#\s]+)#([^#\s]*)$/);
         const itemOnlyMatch = !fullMatch && textToCursor.match(/\/([^#\s]*)$/);
@@ -138,8 +142,8 @@ export const useInstructionsSlashCommand = () => {
             setSelectedItem({ name: committedMatch.name });
             setItemQuery(fullMatch[1]);
             setToolQuery(fullMatch[2]);
-            phaseRef.current = 'tools';
-            setPhase('tools');
+            phaseRef.current = MentionPhase.Tools;
+            setPhase(MentionPhase.Tools);
             if (mentionAnchorRef.current === null) {
               mentionAnchorRef.current = pos - fullMatch[0].length;
             }
@@ -153,8 +157,8 @@ export const useInstructionsSlashCommand = () => {
             if (committedMatch) {
               uncommitByName(committedMatch.name);
               setItemQuery(name);
-              phaseRef.current = 'items';
-              setPhase('items');
+              phaseRef.current = MentionPhase.Items;
+              setPhase(MentionPhase.Items);
               if (mentionAnchorRef.current === null) {
                 mentionAnchorRef.current = pos - itemOnlyMatch[0].length;
               }
@@ -179,14 +183,14 @@ export const useInstructionsSlashCommand = () => {
                 setSelectedItem({ name: mention.name });
                 setItemQuery(mention.name);
                 setToolQuery(candidate.slice(hashIdx + 1));
-                phaseRef.current = 'tools';
-                setPhase('tools');
+                phaseRef.current = MentionPhase.Tools;
+                setPhase(MentionPhase.Tools);
                 mentionAnchorRef.current = pos - candidate.length;
               } else {
                 uncommitByName(mention.name);
                 setItemQuery(candidate.slice(1));
-                phaseRef.current = 'items';
-                setPhase('items');
+                phaseRef.current = MentionPhase.Items;
+                setPhase(MentionPhase.Items);
                 mentionAnchorRef.current = pos - candidate.length;
               }
               return;
@@ -196,7 +200,7 @@ export const useInstructionsSlashCommand = () => {
         return;
       }
 
-      if (current === 'items') {
+      if (current === MentionPhase.Items) {
         // When anchor is set and still points to '/', extract the query as the text
         // between the anchor and the cursor. This supports names with spaces.
         if (mentionAnchorRef.current !== null && text[mentionAnchorRef.current] === '/') {
@@ -206,8 +210,8 @@ export const useInstructionsSlashCommand = () => {
             setItemQuery(afterAnchor.slice(0, hashIdx));
             if (selectedItem) {
               setToolQuery(afterAnchor.slice(hashIdx + 1));
-              phaseRef.current = 'tools';
-              setPhase('tools');
+              phaseRef.current = MentionPhase.Tools;
+              setPhase(MentionPhase.Tools);
             }
           } else if (afterAnchor.endsWith(' ') || afterAnchor.includes('\n')) {
             resetSlash();
@@ -225,8 +229,8 @@ export const useInstructionsSlashCommand = () => {
           setItemQuery(fullMatch[1]);
           if (selectedItem) {
             setToolQuery(fullMatch[2]);
-            phaseRef.current = 'tools';
-            setPhase('tools');
+            phaseRef.current = MentionPhase.Tools;
+            setPhase(MentionPhase.Tools);
           }
         } else if (itemOnlyMatch) {
           setItemQuery(itemOnlyMatch[1]);
@@ -239,7 +243,7 @@ export const useInstructionsSlashCommand = () => {
         return;
       }
 
-      if (current === 'tools') {
+      if (current === MentionPhase.Tools) {
         if (!selectedItem) {
           resetSlash();
           return;
@@ -260,8 +264,8 @@ export const useInstructionsSlashCommand = () => {
         const nameIdx = textToCursor.lastIndexOf(nameOnly);
         if (nameIdx !== -1 && !/[\s#]/.test(textToCursor.slice(nameIdx + nameOnly.length))) {
           setItemQuery(selectedItem.name);
-          phaseRef.current = 'items';
-          setPhase('items');
+          phaseRef.current = MentionPhase.Items;
+          setPhase(MentionPhase.Items);
         } else {
           // User may be backspacing into the name itself (e.g. "Github mcp" → "Github mc").
           // Check if textToCursor ends with a prefix of the toolkit name.
@@ -274,8 +278,8 @@ export const useInstructionsSlashCommand = () => {
             if (prevChar !== '' && !/\s/.test(prevChar)) break;
             uncommitByName(selectedItem.name);
             setItemQuery(candidate.slice(1));
-            phaseRef.current = 'items';
-            setPhase('items');
+            phaseRef.current = MentionPhase.Items;
+            setPhase(MentionPhase.Items);
             mentionAnchorRef.current = pos - candidate.length;
             recovered = true;
             break;
@@ -310,8 +314,8 @@ export const useInstructionsSlashCommand = () => {
       setItemQuery(item.name);
       setToolQuery('');
       upsertMention(item.name, null);
-      phaseRef.current = 'tools';
-      setPhase('tools');
+      phaseRef.current = MentionPhase.Tools;
+      setPhase(MentionPhase.Tools);
     },
     [resetSlash, upsertMention],
   );
