@@ -14,3 +14,4 @@ export * from './useContextExecutionEntity.hooks';
 export * from './useEnvironmentSettingByKey.hooks';
 export * from './useShowRunHistoryFromUrl.hooks';
 export * from './useDeleteConfirmationDisabled.hooks';
+export * from './useMentionHighlights.hooks';

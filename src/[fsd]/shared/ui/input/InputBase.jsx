@@ -77,6 +77,7 @@ const InputBase = memo(props => {
     onKeyPress,
     value,
     containerProps = {},
+    overlayContent,
     InputLabelProps,
     maxRows = null,
     minRows = 3,
@@ -208,6 +209,7 @@ const InputBase = memo(props => {
         sx={styles.containerBox}
         {...containerProps}
       >
+        {overlayContent}
         {hasActionsToolBar && (isHovering || forceShowActionsToolbar) && (
           <InputActionsToolbar
             value={value}

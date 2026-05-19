@@ -1,4 +1,4 @@
-import { forwardRef, useCallback, useImperativeHandle, useState } from 'react';
+import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react';
 
 import YAML from 'js-yaml';
 
@@ -10,28 +10,74 @@ import useToast from '@/hooks/useToast';
 
 const FileReaderEnhancer = forwardRef(
   (
-    { defaultValue, updateVariableList, onChange, hasActionsToolBar = true, fieldName = '', ...props },
+    {
+      defaultValue,
+      updateVariableList,
+      onChange,
+      hasActionsToolBar = true,
+      fieldName = '',
+      onResetMentionState,
+      ...props
+    },
     ref,
   ) => {
     const theme = useTheme();
     const [inputValue, setInputValue] = useState(defaultValue);
     const [highlightContext, setHighlightContext] = useState(false);
     const { toastError } = useToast();
+    const textareaRef = useRef(null);
+    const modalRef = useRef(null);
 
     useImperativeHandle(ref, () => ({
       restoreValue: (valueToRestore = '') => setInputValue(valueToRestore),
+      getInputContent: () => {
+        if (modalRef.current) return modalRef.current.getCurrentValue?.() ?? inputValue;
+        return textareaRef.current?.value ?? inputValue;
+      },
+      getCursorPosition: () => {
+        if (modalRef.current) return modalRef.current.getCursorPosition?.() ?? null;
+        return textareaRef.current?.selectionStart ?? null;
+      },
+      getTextareaElement: () => textareaRef.current,
+      resetMentionState: onResetMentionState ?? undefined,
+      replaceRange: (start, end, replacement) => {
+        const isModalOpen = !!modalRef.current;
+        const current = isModalOpen
+          ? (modalRef.current.getCurrentValue?.() ?? inputValue)
+          : (textareaRef.current?.value ?? inputValue);
+        const newValue = current.slice(0, start) + replacement + current.slice(end);
+        setInputValue(newValue);
+        updateVariableList(newValue);
+        onChange(newValue);
+        if (isModalOpen) {
+          modalRef.current.replaceRange?.(start, end, replacement);
+        } else {
+          // Restore cursor position after React re-render.
+          const cursorPos = start + replacement.length;
+          requestAnimationFrame(() => {
+            if (textareaRef.current) {
+              textareaRef.current.setSelectionRange(cursorPos, cursorPos);
+              textareaRef.current.focus();
+            }
+          });
+        }
+      },
     }));
+
+    const debouncedUpdateVariableList = useMemo(
+      () => debounce(value => updateVariableList(value), 500),
+      [updateVariableList],
+    );
 
     const handleInput = useCallback(
       event => {
         event.preventDefault();
-        setInputValue(event.target.value);
-        debounce(() => {
-          updateVariableList(event.target.value);
-          onChange(event.target.value);
-        }, 500)();
+        const value = event.target.value;
+        setInputValue(value);
+        onChange(value);
+        debouncedUpdateVariableList(value);
       },
-      [onChange, updateVariableList],
+      [onChange, debouncedUpdateVariableList],
     );
 
     const handleDragOver = useCallback(() => {
@@ -94,6 +140,8 @@ const FileReaderEnhancer = forwardRef(
         onBlur={handleBlur}
         hasActionsToolBar={hasActionsToolBar}
         fieldName={fieldName}
+        inputRef={textareaRef}
+        innerModalRef={modalRef}
         {...props}
       />
     );

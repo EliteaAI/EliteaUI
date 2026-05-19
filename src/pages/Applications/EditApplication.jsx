@@ -36,11 +36,13 @@ const EditApplication = memo(() => {
 
   const handleDiscard = useCallback(() => {
     fileReaderEnhancerRef.current?.restoreValue(initialValues?.version_details?.instructions || '');
+    fileReaderEnhancerRef.current?.resetMentionState?.();
     setUnsavedLLMSettings(undefined);
   }, [initialValues?.version_details?.instructions]);
 
   const handleSuccess = useCallback(() => {
     setDirty(false);
+    fileReaderEnhancerRef.current?.resetMentionState?.();
   }, []);
 
   const blockOptions = useMemo(
