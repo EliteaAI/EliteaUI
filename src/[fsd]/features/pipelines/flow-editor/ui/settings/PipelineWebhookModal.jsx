@@ -7,9 +7,8 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { Box, Button, IconButton, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
-import { Modal } from '@/[fsd]/shared/ui';
+import { Checkbox, Modal } from '@/[fsd]/shared/ui';
 import FormInput from '@/components/FormInput';
-import RadioButtonGroup from '@/components/RadioButtonGroup';
 import useToast from '@/hooks/useToast';
 
 const WEBHOOK_TYPE_OPTIONS = [
@@ -181,7 +180,7 @@ const PipelineWebhookModal = props => {
             >
               Webhook Type
             </Typography>
-            <RadioButtonGroup
+            <Checkbox.RadioButtonGroup
               value={selectedWebhookType}
               items={WEBHOOK_TYPE_OPTIONS}
               onChange={setSelectedWebhookType}

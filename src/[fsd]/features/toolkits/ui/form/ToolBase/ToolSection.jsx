@@ -4,8 +4,8 @@ import { Box, Typography } from '@mui/material';
 
 import { ToolBaseHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
+import { Checkbox } from '@/[fsd]/shared/ui';
 import { capitalizeFirstChar, isNullOrUndefined } from '@/common/utils';
-import RadioButtonGroup from '@/components/RadioButtonGroup';
 import { useTheme } from '@emotion/react';
 
 const ToolSection = memo(props => {
@@ -275,7 +275,7 @@ const ToolSection = memo(props => {
         >
           {capitalizeFirstChar(sectionKey)}
         </Typography>
-        <RadioButtonGroup
+        <Checkbox.RadioButtonGroup
           value={selectedOption}
           items={sectionOptions}
           onChange={onChangeOption}

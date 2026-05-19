@@ -8,11 +8,10 @@ import { Box, Button, GlobalStyles, Typography } from '@mui/material';
 
 import { IndexCronDefault } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import { validateCronExpression } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexSchedule.helpers.js';
-import { Modal } from '@/[fsd]/shared/ui';
+import { Checkbox, Modal } from '@/[fsd]/shared/ui';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import CredentialsSelect from '@/components/CredentialsSelect';
 import FormInput from '@/components/FormInput';
-import RadioButtonGroup from '@/components/RadioButtonGroup';
 import { useSelectedProject } from '@/hooks/useSelectedProject';
 
 const IndexScheduleModal = props => {
@@ -82,7 +81,7 @@ const IndexScheduleModal = props => {
               </Typography>
 
               <Box sx={styles.inputWrapper}>
-                <RadioButtonGroup
+                <Checkbox.RadioButtonGroup
                   label="Schedule Type"
                   value={cronTyoe}
                   items={[

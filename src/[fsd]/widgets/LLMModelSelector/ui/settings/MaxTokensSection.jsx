@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useState } from 'react';
 
-import { Box, FormControlLabel, RadioGroup } from '@mui/material';
+import { Box } from '@mui/material';
 
 import {
   DEFAULT_MAX_TOKENS,
@@ -29,14 +29,12 @@ const MaxTokensSection = memo(props => {
   }, [value]);
 
   const handleModeChange = useCallback(
-    event => {
-      const newMode = event.target.value;
+    newMode => {
       setMode(newMode);
 
       if (newMode === 'auto') {
         onChange?.(DEFAULT_MAX_TOKENS);
       } else if (newMode === 'custom' && value === DEFAULT_MAX_TOKENS) {
-        // When switching from auto to custom, set the default custom value
         onChange?.(DEFAULT_MAX_TOKENS_CUSTOM);
       }
     },
@@ -61,36 +59,18 @@ const MaxTokensSection = memo(props => {
         sx={styles.label}
       />
 
-      <RadioGroup
+      <Checkbox.RadioButtonGroup
         value={mode}
         onChange={handleModeChange}
-        sx={styles.radioGroup}
-      >
-        <FormControlLabel
-          value="auto"
-          control={<Checkbox.BaseCheckbox mode="radio" />}
-          label={
-            <Label.InfoLabelWithTooltip
-              label="Auto"
-              tooltip="System automatically sets the best token limit for this model."
-              variant="bodyMedium"
-              sx={styles.radioLabel}
-            />
-          }
-        />
-        <FormControlLabel
-          value="custom"
-          control={<Checkbox.BaseCheckbox mode="radio" />}
-          label={
-            <Label.InfoLabelWithTooltip
-              label="Custom"
-              tooltip="Manually set a specific token limit for responses."
-              variant="bodyMedium"
-              sx={styles.radioLabel}
-            />
-          }
-        />
-      </RadioGroup>
+        items={[
+          {
+            label: 'Auto',
+            value: 'auto',
+            info: 'System automatically sets the best token limit for this model.',
+          },
+          { label: 'Custom', value: 'custom', info: 'Manually set a specific token limit for responses.' },
+        ]}
+      />
 
       {/* Custom input - only shown when Custom is selected */}
       <Box sx={styles.inputsRowAnimated(mode)}>
@@ -161,20 +141,6 @@ const styles = {
     lineHeight: '0.9375rem',
     textTransform: 'uppercase',
     paddingLeft: '0.5rem',
-  }),
-  radioGroup: {
-    flexDirection: 'row',
-    gap: '1rem',
-    paddingLeft: '0.5rem',
-  },
-  radioLabel: ({ palette }) => ({
-    marginRight: 0,
-    color: `${palette.text.secondary} !important`,
-
-    '& .MuiTypography-root': {
-      color: `${palette.text.secondary} !important`,
-      fontWeight: 400,
-    },
   }),
   inputsRow: {
     display: 'flex',
