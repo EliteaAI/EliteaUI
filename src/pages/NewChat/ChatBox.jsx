@@ -267,14 +267,7 @@ const ChatBox = forwardRef((props, boxRef) => {
     () => ttsModelsData?.items?.find(m => m.default) ?? ttsModelsData?.items?.[0] ?? null,
     [ttsModelsData],
   );
-  const {
-    speak,
-    pause: pauseTTS,
-    resume: resumeTTS,
-    isPlaying,
-    isPaused,
-    spokenRange,
-  } = useTextToSpeech({ ttsModel, socket });
+  const { speak, stop: stopTTS, isPlaying, spokenRange } = useTextToSpeech({ ttsModel, socket });
 
   const handleAutoSpeak = useCallback(
     (text, msgId) => {
@@ -289,11 +282,11 @@ const ChatBox = forwardRef((props, boxRef) => {
   );
 
   useEffect(() => {
-    if (!isPlaying && !isPaused) {
+    if (!isPlaying) {
       setSpeakingMessageId(null);
       setSpeakingSegments(null);
     }
-  }, [isPlaying, isPaused]);
+  }, [isPlaying]);
   const isTheUserChattingNow = useMemo(() => {
     const latest40Messages = chat_history.slice(-40);
     let isChatting = false;
@@ -1936,9 +1929,7 @@ const ChatBox = forwardRef((props, boxRef) => {
         )}
         <VoiceMiniPlayer
           isPlaying={isPlaying}
-          isPaused={isPaused}
-          onPause={pauseTTS}
-          onResume={resumeTTS}
+          onStop={stopTTS}
         />
         <Box sx={hitlEditMode ? styles.inputWrapperHitl : styles.inputWrapper}>
           {hitlEditMode && (
