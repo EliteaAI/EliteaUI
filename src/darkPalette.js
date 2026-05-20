@@ -141,6 +141,7 @@ const darkPalette = {
       borderGradient: 'linear-gradient(186.77deg, #2773EE 5.31%, #1A3C74 94.69%)',
       dividerGradient:
         'linear-gradient(90deg, rgba(38, 112, 232, 0) 0%, #26ABE8 49.7%, rgba(38, 112, 232, 0) 100%)',
+      counter: 'rgba(92, 130, 191, 1)',
     },
     resourceCard: {
       blue: {

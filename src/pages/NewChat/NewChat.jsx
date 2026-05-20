@@ -25,7 +25,8 @@ import {
   useEditConversation,
   useInternalToolsConfig,
 } from '@/[fsd]/features/chat/lib/hooks';
-import FirstVisitPrompt from '@/[fsd]/features/interactive-tours/ui/FirstVisitPrompt';
+import { CHAT_TOUR_ID } from '@/[fsd]/features/interactive-tours/lib/chatTour';
+import { useProposeTour } from '@/[fsd]/features/interactive-tours/model/useProposeTour';
 import { eliteaApi } from '@/api/eliteaApi';
 import {
   ChatParticipantType,
@@ -101,6 +102,8 @@ import ParticipantsWrapper from './Participants/index';
 const NewChat = props => {
   const { projectId, preProjectId, setPreProjectId } = props;
 
+  useProposeTour(CHAT_TOUR_ID);
+
   const dispatch = useDispatch();
 
   // For syncing AgentEditor state with URL
@@ -156,11 +159,6 @@ const NewChat = props => {
   const [isStreaming, setIsStreaming] = useState(false);
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [newConversationQuestion, setNewConversationQuestion] = useState('');
-
-  // Interactive tour first-visit prompt (TODO: replace with useInteractiveTour hook)
-  const [showTourPrompt, setShowTourPrompt] = useState(
-    () => localStorage.getItem('interactive-tour:chat:prompt-seen') !== 'true',
-  );
 
   // Track dirty state for both agent and pipeline editors
   const [editorIsDirty, setEditorIsDirty] = useState(false);
@@ -1592,19 +1590,6 @@ const NewChat = props => {
         onConfirm={handleVersionChangeConfirm}
         confirmButtonText="Discard Changes"
       />
-      {showTourPrompt && (
-        <FirstVisitPrompt
-          onSkip={() => {
-            localStorage.setItem('interactive-tour:chat:prompt-seen', 'true');
-            setShowTourPrompt(false);
-          }}
-          onStart={() => {
-            localStorage.setItem('interactive-tour:chat:prompt-seen', 'true');
-            setShowTourPrompt(false);
-            // TODO: startTour(CHAT_TOUR_ID)
-          }}
-        />
-      )}
       <AlertDialog
         open={conversationNotFound}
         title="Conversation not found"
