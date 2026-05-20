@@ -65,7 +65,7 @@ const McpAuthModal = memo(props => {
 
   const [clientId, setClientId] = useState('');
   const [clientSecret, setClientSecret] = useState('');
-  const [scope, setScope] = useState(convertScopes(scopes) || convertScopes(resourceScopes));
+  const [scope, setScope] = useState(convertScopes(resourceScopes) || convertScopes(scopes));
   const [authLoading, setAuthLoading] = useState(false);
   const [authError, setAuthError] = useState('');
   const [authSuccess, setAuthSuccess] = useState(false);
@@ -88,7 +88,7 @@ const McpAuthModal = memo(props => {
         setClientSecret('');
         setSaveCredentials(false);
       }
-      setScope(convertScopes(scopes) || convertScopes(resourceScopes));
+      setScope(convertScopes(resourceScopes) || convertScopes(scopes));
       setAuthError('');
       setAuthSuccess(false);
     }

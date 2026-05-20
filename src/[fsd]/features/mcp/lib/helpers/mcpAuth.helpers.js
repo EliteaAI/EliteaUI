@@ -1,4 +1,5 @@
 import { McpAuthConstants } from '@/[fsd]/features/mcp/lib/constants';
+
 import { triggerProactiveRefresh } from './mcpAuthFlow.helpers';
 
 const REFRESH_CHECK_INTERVAL_MS = 60 * 1000; // Check for refresh needs every 60 seconds
@@ -7,7 +8,7 @@ const PROACTIVE_REFRESH_THRESHOLD = 0.75; // Refresh at 75% of token lifetime
 
 const pendingRefreshes = new Set();
 let lastRefreshCheckTime = 0;
-let refreshQueue = [];
+const refreshQueue = [];
 let isProcessingRefreshQueue = false;
 
 const safeParse = value => {
@@ -331,7 +332,7 @@ export const getServersNeedingRefresh = () => {
   return serversToRefresh;
 };
 
-const processRefreshQueue = async triggerProactiveRefresh => {
+const processRefreshQueue = async () => {
   if (isProcessingRefreshQueue || refreshQueue.length === 0) return;
 
   isProcessingRefreshQueue = true;
@@ -370,19 +371,20 @@ export const getAllTokens = () => {
   const tokens = loadTokens();
   const result = {};
 
-  // Collect valid tokens - BE expects Dict[str, Dict] (URL -> {access_token, session_id})
-  // session_id is important for maintaining stateful MCP connections
+  // Collect tokens - BE expects Dict[str, Dict] (URL -> {access_token, session_id, refresh_token})
+  // session_id is important for maintaining stateful MCP connections.
+  // Expired tokens that still have a refresh_token are included (access_token: null) so the
+  // BE can perform a token refresh before making API calls, without requiring re-authorization.
   Object.entries(tokens).forEach(([key, value]) => {
-    if (
-      !isExpired(value) &&
-      value?.access_token &&
-      value.access_token !== McpAuthConstants.MCP_CONNECTION_VERIFIED
-    ) {
-      result[key] = {
-        access_token: value.access_token,
-        session_id: value.session_id || null,
-      };
-    }
+    if (!value?.access_token || value.access_token === McpAuthConstants.MCP_CONNECTION_VERIFIED) return;
+    const expired = isExpired(value);
+    // Skip expired tokens that have no refresh_token — BE can't do anything with them
+    if (expired && !value.refresh_token) return;
+    result[key] = {
+      access_token: expired ? null : value.access_token,
+      session_id: expired ? null : value.session_id || null,
+      ...(value.refresh_token && { refresh_token: value.refresh_token }),
+    };
   });
 
   // Rate-limited refresh check
@@ -397,7 +399,7 @@ export const getAllTokens = () => {
   if (serversToRefresh.length > 0) {
     addToRefreshQueue(serversToRefresh);
 
-    processRefreshQueue(triggerProactiveRefresh);
+    processRefreshQueue();
   }
 
   return result;
