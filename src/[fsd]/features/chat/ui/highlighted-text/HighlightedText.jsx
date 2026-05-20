@@ -20,7 +20,17 @@ const HighlightedText = memo(props => {
   let lastIndex = 0;
 
   for (const { start, end } of ranges) {
-    if (start > lastIndex) children.push(text.slice(lastIndex, start));
+    if (start > lastIndex)
+      children.push(
+        <Typography
+          key={start}
+          component="span"
+          variant="labelMedium"
+          color="text.secondary"
+        >
+          {text.slice(lastIndex, start)}
+        </Typography>,
+      );
     children.push(
       <Typography
         key={start}
@@ -34,7 +44,17 @@ const HighlightedText = memo(props => {
     lastIndex = end;
   }
 
-  if (lastIndex < text.length) children.push(text.slice(lastIndex));
+  if (lastIndex < text.length)
+    children.push(
+      <Typography
+        key={lastIndex}
+        component="span"
+        variant="labelMedium"
+        color="text.secondary"
+      >
+        {text.slice(lastIndex)}
+      </Typography>,
+    );
 
   return children;
 });

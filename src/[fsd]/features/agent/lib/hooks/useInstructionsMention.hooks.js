@@ -1,6 +1,10 @@
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
+import { MentionConstants } from '@/[fsd]/shared/lib/constants';
 
 import { useInstructionsSlashCommand } from './useInstructionsSlashCommand.hooks';
+
+const { MentionPhase } = MentionConstants;
 
 /**
  * Higher-level hook that wires the instructions slash-command state machine to
@@ -12,13 +16,15 @@ import { useInstructionsSlashCommand } from './useInstructionsSlashCommand.hooks
 export const useInstructionsMention = ({ fileReaderRef, mentionableItems = [] }) => {
   // Track input content via ref to avoid per-keystroke re-renders.
   const inputContentRef = useRef('');
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
 
   const {
     phase,
     itemQuery,
     toolQuery,
     selectedItem,
-    onKeyDown,
+    committedMentions,
+    onKeyDown: slashOnKeyDown,
     syncWithValue,
     selectItem,
     commitMention: slashCommitMention,
@@ -26,6 +32,13 @@ export const useInstructionsMention = ({ fileReaderRef, mentionableItems = [] })
     resetAll,
     mentionAnchorRef,
   } = useInstructionsSlashCommand();
+
+  // Filtered items list (previously computed in the suggestion list component).
+  const filteredItems = useMemo(() => {
+    if (!mentionableItems?.length) return [];
+    if (!itemQuery) return mentionableItems;
+    return mentionableItems.filter(item => item.name.toLowerCase().includes(itemQuery.toLowerCase()));
+  }, [mentionableItems, itemQuery]);
 
   // ── Text manipulation helpers ────────────────────────────────────────────────
 
@@ -117,18 +130,14 @@ export const useInstructionsMention = ({ fileReaderRef, mentionableItems = [] })
         const ref = fileReaderRef?.current;
         const content = ref?.getInputContent?.() ?? inputContentRef.current;
         const anchor = mentionAnchorRef.current ?? 0;
-        // Locate the end of the toolkit prefix in text.
-        const toolkitPrefix = '/' + selectedItem.name + '#';
-        const prefixIdx = content.lastIndexOf(toolkitPrefix, anchor + toolkitPrefix.length + 50);
-        let end;
-        if (prefixIdx !== -1) {
-          const afterPrefix = content.slice(prefixIdx + toolkitPrefix.length);
-          const spaceIdx = afterPrefix.search(/[\s#]/);
-          end = prefixIdx + toolkitPrefix.length + (spaceIdx === -1 ? afterPrefix.length : spaceIdx);
-        } else {
-          // Fallback: no # separator yet — end after the name.
-          end = anchor + ('/' + selectedItem.name).length;
-        }
+        // The current mention starts at anchor with '/' + selectedItem.name (which may
+        // contain spaces). Skip past the known name prefix, then scan for the first
+        // whitespace to find the end (covers the optional '#partialToolQuery' portion).
+        const namePrefix = '/' + selectedItem.name;
+        const afterNameStart = anchor + namePrefix.length;
+        const afterName = content.slice(afterNameStart);
+        const spaceIdx = afterName.search(/\s/);
+        const end = afterNameStart + (spaceIdx === -1 ? afterName.length : spaceIdx);
         const replacement = '/' + selectedItem.name + '#' + toolName + ' ';
         ref?.replaceRange?.(anchor, end, replacement);
         inputContentRef.current = content.slice(0, anchor) + replacement + content.slice(end);
@@ -171,12 +180,69 @@ export const useInstructionsMention = ({ fileReaderRef, mentionableItems = [] })
     [availableTools, toolQuery],
   );
 
+  // ── Keyboard navigation ───────────────────────────────────────────────────────
+
+  // Reset highlight to first item when the active list changes (phase switch or filter change).
+  useEffect(() => {
+    setHighlightedIndex(0);
+  }, [phase, filteredItems, filteredTools]);
+
+  const onKeyDown = useCallback(
+    event => {
+      const { key } = event;
+
+      if (phase === MentionPhase.Items && filteredItems.length > 0) {
+        if (key === 'ArrowDown') {
+          event.preventDefault();
+          setHighlightedIndex(prev => (prev + 1) % filteredItems.length);
+          return;
+        }
+        if (key === 'ArrowUp') {
+          event.preventDefault();
+          setHighlightedIndex(prev => (prev <= 0 ? filteredItems.length - 1 : prev - 1));
+          return;
+        }
+        if (key === 'Enter' && highlightedIndex >= 0) {
+          event.preventDefault();
+          const item = filteredItems[highlightedIndex];
+          if (item) onSelectItem(item, item.isToolkit);
+          return;
+        }
+      }
+
+      if (phase === MentionPhase.Tools && filteredTools.length > 0) {
+        if (key === 'ArrowDown') {
+          event.preventDefault();
+          setHighlightedIndex(prev => (prev + 1) % filteredTools.length);
+          return;
+        }
+        if (key === 'ArrowUp') {
+          event.preventDefault();
+          setHighlightedIndex(prev => (prev <= 0 ? filteredTools.length - 1 : prev - 1));
+          return;
+        }
+        if (key === 'Enter' && highlightedIndex >= 0) {
+          event.preventDefault();
+          const tool = filteredTools[highlightedIndex];
+          if (tool) onSelectTool(tool.name);
+          return;
+        }
+      }
+
+      slashOnKeyDown(event);
+    },
+    [phase, filteredItems, filteredTools, highlightedIndex, onSelectItem, onSelectTool, slashOnKeyDown],
+  );
+
   return {
     phase,
     itemQuery,
     toolQuery,
     selectedItem: resolvedSelectedItem,
+    committedMentions,
+    filteredItems,
     filteredTools,
+    highlightedIndex,
     onKeyDown,
     onInstructionsInputChange,
     onSelectItem,

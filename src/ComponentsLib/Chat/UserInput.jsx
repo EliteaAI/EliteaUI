@@ -583,11 +583,11 @@ const userInputStyles = (isFocused, isDragOver, isRecording) => {
       '&:hover': {
         backgroundColor: sendButton?.background ?? '#6ae8fa',
       },
-      color: sendButton?.iconColor ?? '#0E131D',
+      color: `${sendButton?.iconColor ?? '#0E131D'} !important`,
     }),
     sendIcon: sendButton => ({
       fontSize: '1.125rem',
-      fill: sendButton?.iconColor ?? '#0E131D',
+      fill: `${sendButton?.iconColor ?? '#0E131D'} !important`,
     }),
     stopButton: stopButton => ({
       cursor: 'pointer',
