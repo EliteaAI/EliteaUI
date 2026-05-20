@@ -132,6 +132,14 @@ const lightPalette = {
       hoverBorderGradient: 'linear-gradient(0deg, #F7AEFF 0%, #F37DFF 100%)',
       hoverShadow: '0px -3px 0.9375rem 0px rgba(225, 56, 255, 0.3)',
     },
+    interactiveTourPrompt: {
+      backdrop: 'rgba(59, 62, 70, 0.5)',
+      card: 'linear-gradient(180deg, #EFF8FF 0%, #BAD1FF 100%)',
+      borderGradient: 'linear-gradient(186.77deg, #5194FF 5.31%, #A6DAFF 94.69%)',
+      dividerGradient:
+        'linear-gradient(90deg, rgba(246, 142, 255, 0) 0%, #8DACFF 49.7%, rgba(246, 142, 255, 0) 100%)',
+      counter: 'rgba(92, 130, 191, 1)',
+    },
     resourceCard: {
       blue: {
         card: 'linear-gradient(0deg, rgba(214, 235, 255, 0.4) 0%, #D6EBFF 100%)',
