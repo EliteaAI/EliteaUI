@@ -478,6 +478,7 @@ const Conversations = memo(props => {
       autoScroll={false}
     >
       <Box
+        data-tour="chat-conversations"
         sx={{ height: '100%', position: 'relative', width: collapsed && !isSmallWindow ? '36px' : '100%' }}
       >
         <Box
@@ -665,7 +666,7 @@ const Conversations = memo(props => {
               renderConversationItem={renderConversationItem}
             />
 
-            {renderFoldersSection({ isPinned: false })}
+            <Box data-tour="chat-folders">{renderFoldersSection({ isPinned: false })}</Box>
 
             {/* Render Grouped Conversations */}
             <DroppableGroupedArea

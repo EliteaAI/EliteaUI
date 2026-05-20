@@ -138,6 +138,7 @@ const lightPalette = {
       borderGradient: 'linear-gradient(186.77deg, #5194FF 5.31%, #A6DAFF 94.69%)',
       dividerGradient:
         'linear-gradient(90deg, rgba(246, 142, 255, 0) 0%, #8DACFF 49.7%, rgba(246, 142, 255, 0) 100%)',
+      counter: 'rgba(92, 130, 191, 1)',
     },
     resourceCard: {
       blue: {

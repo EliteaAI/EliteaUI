@@ -235,7 +235,10 @@ const Participants = memo(props => {
       ref={componentRef}
       sx={styles.mainContainer(collapsed)}
     >
-      <Box sx={styles.contentContainer(hideClearChatButton, collapsed, isSmallWindow)}>
+      <Box
+        sx={styles.contentContainer(hideClearChatButton, collapsed, isSmallWindow)}
+        data-tour="chat-participants"
+      >
         <Box sx={styles.headerContainer(collapsed, isSmallWindow)}>
           {(!collapsed || isSmallWindow) && (
             <Box sx={styles.titleContainer}>
