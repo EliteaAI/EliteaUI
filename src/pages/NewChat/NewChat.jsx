@@ -1025,10 +1025,17 @@ const NewChat = props => {
   const shouldShowConversationLoader = useMemo(() => {
     if (isLoadMoreConversations) return true;
     if (isSelectingConversation) return true;
-    if (!activeConversation?.name && !activeConversation?.chat_history?.length) return true;
+    if (!conversations?.length && !isConversationsLoaded) return true;
+    if (conversations?.length && isConversationsLoaded && !activeConversation?.name) return true;
 
     return false;
-  }, [isLoadMoreConversations, isSelectingConversation, activeConversation]);
+  }, [
+    isLoadMoreConversations,
+    isSelectingConversation,
+    conversations?.length,
+    isConversationsLoaded,
+    activeConversation?.name,
+  ]);
 
   const messageIdFromUrl = searchParams.get(SearchParams.MessageId);
 

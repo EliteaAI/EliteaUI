@@ -262,7 +262,7 @@ const useDragAndDrop = ({
           targetLocation = `"${targetFolder.name}" folder`;
 
           for (const conversation of currentDraggedItems) {
-            if (conversation.isPlayback) continue;
+            if (conversation.isPlayback || conversation.isPinned) continue;
             const hasPlaybacks =
               conversations.some(conv => conv.isPlayback && conv.id === conversation.id) ||
               foldersForReordering.some(folder =>
@@ -283,7 +283,7 @@ const useDragAndDrop = ({
           targetLocation = 'ungrouped area';
 
           for (const conversation of currentDraggedItems) {
-            if (conversation.isPlayback) continue;
+            if (conversation.isPlayback || conversation.isPinned) continue;
             const hasPlaybacks =
               conversations.some(conv => conv.isPlayback && conv.id === conversation.id) ||
               foldersForReordering.some(folder =>

@@ -382,7 +382,7 @@ const Conversations = memo(props => {
         moveToFoldersMenuItems={getMoveConversationToFoldersMenuItems(conversation)}
         isEditingCanvas={isEditingCanvas}
         enableDragAndDrop={enableDragAndDrop}
-        isDragDisabled={isEditingCanvas || conversation.isPlayback}
+        isDragDisabled={isEditingCanvas || conversation.isPlayback || conversation.isPinned}
         onItemHover={onItemHover}
         isNextItemHovered={isNextItemHovered}
       />

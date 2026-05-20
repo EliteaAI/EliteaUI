@@ -201,6 +201,7 @@ const ConversationItem = memo(props => {
             icon: <MoveTo sx={{ fontSize: '1rem' }} />,
             hasSubMenu: true,
             disabled:
+              isPinned ||
               !checkPermission(PERMISSIONS.chat.folders.create) ||
               !checkPermission(PERMISSIONS.chat.folders.update) ||
               (isActive && isEditingCanvas),
@@ -256,6 +257,7 @@ const ConversationItem = memo(props => {
           {
             label: isPinned ? 'Unpin' : 'Pin on top',
             icon: <PinIcon sx={{ fontSize: '1rem' }} />,
+            disabled: !isPinned && !!conversation.folder_id,
             onClick: handlePin,
           },
         ].filter(item => item.display !== 'none')
@@ -283,6 +285,7 @@ const ConversationItem = memo(props => {
     isEditingCanvas,
     handleDelete,
     handleEdit,
+    isPinned,
     checkPermission,
     moveToFoldersMenuItems,
     onExport,
@@ -290,11 +293,11 @@ const ConversationItem = memo(props => {
     theme.palette.text.button.primary,
     handleMakePublic,
     projectId,
+    personal_project_id,
     handleShareConversation,
     handlePlayback,
-    isPinned,
+    conversation.folder_id,
     handlePin,
-    personal_project_id,
     is_private,
   ]);
 
