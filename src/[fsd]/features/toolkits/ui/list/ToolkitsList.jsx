@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
 import { AuthorInformation } from '@/[fsd]/entities/author/ui';
+import ApplicationsEmptyState from '@/[fsd]/features/apps/ui/list/ApplicationsEmptyState';
 import { useLoadToolkits } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitTypesPanel, ToolkitsEmptyListPlaceHolder } from '@/[fsd]/features/toolkits/ui/list';
 import { ContentType, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
@@ -183,6 +184,7 @@ const ToolkitsList = memo(props => {
       isLoadingMore={isToolkitsFetching}
       loadMoreFunc={loadMore}
       cardType={cardContentType}
+      customEmptyState={isApplication ? <ApplicationsEmptyState /> : null}
       emptyListPlaceHolder={
         emptyListPlaceHolder || (
           <ToolkitsEmptyListPlaceHolder

@@ -140,7 +140,7 @@ export const eliteaButtonColors = theme => ({
   },
   [BUTTON_VARIANTS.auxiliary]: {
     default: {
-      background: theme.palette.background.default,
+      background: 'transparent',
       color: theme.palette.mode === 'dark' ? theme.palette.primary.pressed : theme.palette.primary.main,
       colorIcon: theme.palette.secondary.main,
     },
@@ -155,7 +155,7 @@ export const eliteaButtonColors = theme => ({
       colorIcon: theme.palette.secondary.main,
     },
     disabled: {
-      background: theme.palette.background.default,
+      background: 'transparent',
       color: theme.palette.text.button.disabled,
       colorIcon: theme.palette.text.button.disabled,
     },
@@ -798,6 +798,9 @@ export const MuiButtonStyles = {
   },
   styleOverrides: {
     root: ({ theme }) => ({
+      '&::before': {
+        display: 'none',
+      },
       textTransform: 'none',
       fontFamily: '"Montserrat", Roboto, Arial, sans-serif',
       fontWeight: 500,

@@ -50,6 +50,7 @@ const CreateEntityButton = memo(() => {
     [isSettingsUsersPage, checkPermission],
   );
   const isCreatingNow = useMemo(() => pathname.includes('/create'), [pathname]);
+  const isAppCatalogTab = useMemo(() => pathname.startsWith(RouteDefinitions.AppsCatalog), [pathname]);
   const shouldReplaceThePage = useMemo(
     () =>
       isFromApplicationDetailPage ||
@@ -73,6 +74,11 @@ const CreateEntityButton = memo(() => {
     [selectedOption, projectId],
   );
   const handleCommand = useCallback(() => {
+    if (pathname.startsWith(RouteDefinitions.AppsApplications)) {
+      navigate(RouteDefinitions.AppsCatalog, { state: locationState });
+      return;
+    }
+
     // Special inline action for creating a Secret from Settings -> Secrets
     switch (selectedOption) {
       case 'Secret':
@@ -194,7 +200,8 @@ const CreateEntityButton = memo(() => {
       isSystemPromptsPage ||
       shouldDisableInviteUser ||
       shouldDisableCreatingChat ||
-      shouldDisableOwnLLMs,
+      shouldDisableOwnLLMs ||
+      isAppCatalogTab,
     [
       shouldDisablePersonalSpace,
       hasPermissionForSelectedOption,
@@ -202,6 +209,7 @@ const CreateEntityButton = memo(() => {
       shouldDisableInviteUser,
       shouldDisableCreatingChat,
       shouldDisableOwnLLMs,
+      isAppCatalogTab,
     ],
   );
 

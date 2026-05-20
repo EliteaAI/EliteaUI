@@ -1,6 +1,7 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useEffect, useRef } from 'react';
 
 import { useSelector } from 'react-redux';
+import { useParams } from 'react-router-dom';
 
 import { Link, Typography } from '@mui/material';
 
@@ -22,6 +23,8 @@ const ToolkitTypeSelector = memo(
     const [getModels] = useLazyListModelsQuery();
     const projectId = useSelectedProjectId();
     const { personal_project_id } = useSelector(state => state.user);
+    const { appType } = useParams();
+    const autoSelectedRef = useRef(false);
 
     const { isNameRequired, getRequiredProperties } = useGetToolkitNameFromSchema();
 
@@ -145,6 +148,16 @@ const ToolkitTypeSelector = memo(
 
     const { toolMenuItems, isFetchingToolkitTypes } = useToolMenuItems({ onAddTool, isMCP, isApplication });
     const searchProps = useToolkitSearch({ toolMenuItems, isMCP, isApplication, disableNavigation });
+
+    useEffect(() => {
+      if (isApplication && appType && toolMenuItems?.length > 0 && !autoSelectedRef.current) {
+        const matchedItem = toolMenuItems.find(item => item.key === appType);
+        if (matchedItem?.onClick) {
+          autoSelectedRef.current = true;
+          matchedItem.onClick();
+        }
+      }
+    }, [isApplication, appType, toolMenuItems]);
 
     const renderCategory = useCallback(
       (category, items) => (
