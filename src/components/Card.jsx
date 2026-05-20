@@ -3,10 +3,10 @@ import { memo, useCallback, useMemo, useRef, useState } from 'react';
 import { Box, CardContent, Divider, IconButton, Card as MuiCard, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
-import { useEliteaAssistantRef, useGetSupportAssistantConfigQuery } from '@/[fsd]/widgets/SupportAssistant';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { useMcpTokenChange } from '@/[fsd]/features/mcp/lib/hooks';
 import { PinButton } from '@/[fsd]/widgets/PinToggler/ui';
+import { useEliteaAssistantRef, useGetSupportAssistantConfigQuery } from '@/[fsd]/widgets/SupportAssistant';
 import EliteaAssistantIcon from '@/assets/icons/elitea-assistant-icon.svg?react';
 import OfflineIcon from '@/assets/offline-icon.svg?react';
 import OnlineIcon from '@/assets/online-icon.svg?react';
@@ -156,6 +156,7 @@ const Card = memo(props => {
       onMouseLeave={handleMouseLeave}
     >
       <MuiCard
+        elevation={0}
         sx={styles.card}
         onClick={isWholeCardClickable ? handleCardClick : undefined}
       >
@@ -338,6 +339,7 @@ const cardStyles = (hasCardDetails, showCardBottom, isWholeCardClickable) => ({
     ...(hasCardDetails ? { height: '100%' } : {}),
   },
   card: {
+    background: 'transparent !important',
     margin: '0.625rem 1.375rem',
     display: hasCardDetails ? 'block' : 'inline',
     boxSizing: 'border-box',

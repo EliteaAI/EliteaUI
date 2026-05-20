@@ -29,6 +29,8 @@ const RouteDefinitions = {
   ToolkitDetail: '/toolkits/:tab/:toolkitId',
 
   Apps: '/apps',
+  AppsApplications: '/apps/applications',
+  AppsCatalog: '/apps/catalog',
   AppsWithTab: '/apps/:tab',
   CreateApp: '/apps/create',
   CreateAppType: '/apps/create/:appType',

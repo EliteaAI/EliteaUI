@@ -194,7 +194,7 @@ export const CreateToolkit = memo(props => {
                         />
                       )
                     ) : (
-                      <Box sx={styles.selectorContainer}>
+                      <Box sx={[styles.selectorContainer, isApplication && appType && { display: 'none' }]}>
                         <ToolkitTypeSelector
                           onSelectTool={setEditToolDetail}
                           setFormikInitialValues={setFormikInitialValues}

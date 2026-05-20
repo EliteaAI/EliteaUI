@@ -108,6 +108,7 @@ const dataCardStyles = (cardWidth, isFullWidthPage, cardHeight, isDefaultCardHei
     overflowY: 'hidden',
     marginRight: `-${MARGIN_COMPENSATION}`,
     padding: '1.25rem 0 0 1.5rem',
+    gap: '1rem',
   },
   loadingSkeleton: {
     width: '100%',
@@ -116,7 +117,6 @@ const dataCardStyles = (cardWidth, isFullWidthPage, cardHeight, isDefaultCardHei
   },
   card: ({ palette }) => ({
     ...getCardGradientStyles(palette),
-    margin: '0 1rem 1rem 0',
     minWidth: MIN_CARD_WIDTH,
     width: cardWidth,
     height: cardHeight,

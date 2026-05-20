@@ -2,13 +2,15 @@ import { memo, useCallback, useEffect, useMemo } from 'react';
 
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
-import { Typography } from '@mui/material';
-
 import { ApplicationCatalog } from '@/[fsd]/features/apps/ui/catalog';
 import ToolkitsList from '@/[fsd]/features/toolkits/ui/list/ToolkitsList';
+import { useToolkitsListQuery } from '@/api/toolkits';
+import AppCatalogIcon from '@/assets/app-catalog-icon.svg?react';
+import ApplicationsIcon from '@/assets/applications-icon.svg?react';
 import { AppsTabs, ContentType, SearchParams } from '@/common/constants';
 import StickyTabs from '@/components/StickyTabs';
 import ViewToggle from '@/components/ViewToggle';
+import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useShouldCollapseRightToolbar from '@/hooks/useShouldCollapseRightToolbar';
 import RouteDefinitions from '@/routes';
 
@@ -21,20 +23,23 @@ const APP_TAB_INDEX_BY_KEY = AppsTabs.reduce((acc, tab, index) => {
   return acc;
 }, {});
 
-const CONFIGURED_APPS_EMPTY_PLACEHOLDER = (
-  <Typography component="span">
-    No configured applications yet. Use the Request App tab to request or create one for this project.
-  </Typography>
-);
-
 const Apps = memo(() => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { tab = AppsTabs[0] } = useParams();
+  const { tab } = useParams();
   const { shouldCollapseRightToolbar } = useShouldCollapseRightToolbar();
+  const projectId = useSelectedProjectId();
+
+  const { data: applicationsData } = useToolkitsListQuery(
+    { projectId, page: 1, page_size: 1, params: { application: true } },
+    { skip: !projectId },
+  );
+
+  const hasApplications = (applicationsData?.total ?? 0) > 0;
+  const defaultTab = hasApplications ? AppsTabs[0] : AppsTabs[1];
 
   const getSearchForAppsTab = useCallback((nextTab, search) => {
-    if (nextTab !== AppsTabs[0]) return search;
+    if (nextTab !== AppsTabs[1]) return search;
 
     const searchParams = new URLSearchParams(search);
     searchParams.delete(SearchParams.View);
@@ -43,14 +48,19 @@ const Apps = memo(() => {
     return nextSearch ? `?${nextSearch}` : '';
   }, []);
 
-  const normalizedTab =
-    LEGACY_APPS_TABS[tab] || (APP_TAB_INDEX_BY_KEY[tab] === undefined ? AppsTabs[0] : tab);
+  const normalizedTab = useMemo(() => {
+    if (LEGACY_APPS_TABS[tab]) return LEGACY_APPS_TABS[tab];
+
+    if (APP_TAB_INDEX_BY_KEY[tab] === undefined) return defaultTab;
+
+    return tab;
+  }, [tab, defaultTab]);
   const normalizedSearch = useMemo(
     () => getSearchForAppsTab(normalizedTab, location.search),
     [getSearchForAppsTab, location.search, normalizedTab],
   );
-  const selectedTab = APP_TAB_INDEX_BY_KEY[normalizedTab] ?? APP_TAB_INDEX_BY_KEY[AppsTabs[0]];
-  const isConfiguredTab = selectedTab === APP_TAB_INDEX_BY_KEY[AppsTabs[1]];
+  const selectedTab = APP_TAB_INDEX_BY_KEY[normalizedTab] ?? APP_TAB_INDEX_BY_KEY[AppsTabs[1]];
+  const isConfiguredTab = selectedTab === APP_TAB_INDEX_BY_KEY[AppsTabs[0]];
 
   useEffect(() => {
     if (normalizedTab === tab && normalizedSearch === location.search) return;
@@ -76,19 +86,20 @@ const Apps = memo(() => {
   const tabs = useMemo(
     () => [
       {
-        label: 'Request App',
-        content: <ApplicationCatalog />,
-      },
-      {
-        label: 'Configured',
+        label: 'Applications',
         content: (
           <ToolkitsList
             isApplication={true}
             cardContentType={ContentType.AppAll}
             disableEmptyRedirect={true}
-            emptyListPlaceHolder={CONFIGURED_APPS_EMPTY_PLACEHOLDER}
           />
         ),
+        icon: <ApplicationsIcon />,
+      },
+      {
+        label: 'App Catalog',
+        content: <ApplicationCatalog />,
+        icon: <AppCatalogIcon />,
       },
     ],
     [],

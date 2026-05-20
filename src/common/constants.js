@@ -486,7 +486,7 @@ export const publicTabs = ['latest', 'my-liked', 'trending'];
 export const ModerationTabs = ['all', 'agents'];
 export const ApplicationsTabs = ['latest', 'my-liked', 'trending', 'admin'];
 export const ToolkitsTabs = ['all', 'my-liked', 'trending', 'admin'];
-export const AppsTabs = ['request', 'configured'];
+export const AppsTabs = ['applications', 'catalog'];
 
 export const CredentialsTabs = ['all'];
 

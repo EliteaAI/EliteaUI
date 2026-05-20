@@ -23,7 +23,6 @@ import { useLazyPermissionListQuery, useLazyPublicPermissionListQuery } from '@/
 import { useLazyAuthorDetailsQuery } from '@/api/social.js';
 import {
   ApplicationsTabs,
-  AppsTabs,
   CredentialsTabs,
   MISSING_ENVS,
   ModerationTabs,
@@ -179,7 +178,7 @@ const ProtectedRoutes = () => {
       { path: RouteDefinitions.MCPDetail, element: <EditToolkit isMCP={true} /> },
 
       /* apps */
-      { path: RouteDefinitions.Apps, element: getIndexElement(AppsTabs[0]) },
+      { path: RouteDefinitions.Apps, element: <Apps /> },
       { path: RouteDefinitions.CreateApp, element: <CreateToolkit isApplication={true} /> },
       { path: RouteDefinitions.CreateAppType, element: <CreateToolkit isApplication={true} /> },
       { path: RouteDefinitions.AppsWithTab, element: <Apps /> },
