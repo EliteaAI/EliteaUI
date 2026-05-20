@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react';
+import { memo, useEffect, useRef } from 'react';
 
 import { Box, ClickAwayListener, Typography } from '@mui/material';
 
@@ -10,25 +10,49 @@ import { Mention } from '@/[fsd]/shared/ui';
  * 'items' or 'tools' phase.
  *
  * Props:
- *   phase        — 'idle' | 'items' | 'tools'
- *   itemQuery    — current filter text (typed after "/")
- *   toolQuery    — current tool filter text (typed after "#")
- *   items        — all mentionable items derived from version_details.tools
- *   filteredTools — tools pre-filtered by toolQuery (from useInstructionsMention)
- *   selectedItem  — the toolkit/MCP currently in 'tools' phase
- *   onSelectItem  — (item, isToolkit) => void
- *   onSelectTool  — (toolName | null) => void
- *   onClose       — () => void  (dismiss the dropdown)
+ *   phase            — 'idle' | 'items' | 'tools'
+ *   filteredItems    — pre-filtered item list (from useInstructionsMention)
+ *   filteredTools    — tools pre-filtered by toolQuery (from useInstructionsMention)
+ *   selectedItem     — the toolkit/MCP currently in 'tools' phase
+ *   committedMentions — [{name, tool_name}] already mentioned in instructions
+ *   highlightedIndex — keyboard-highlighted row index (-1 = none)
+ *   onSelectItem     — (item, isToolkit) => void
+ *   onSelectTool     — (toolName | null) => void
+ *   onClose          — () => void  (dismiss the dropdown)
  */
 const InstructionsSlashSuggestionList = memo(props => {
-  const { phase, itemQuery, items, filteredTools, selectedItem, onSelectItem, onSelectTool, onClose } = props;
+  const {
+    phase,
+    filteredItems,
+    filteredTools,
+    selectedItem,
+    committedMentions,
+    highlightedIndex,
+    onSelectItem,
+    onSelectTool,
+    onClose,
+  } = props;
   const styles = instructionsSlashSuggestionListStyles();
-  // Filter items by itemQuery client-side for instant response.
-  const filteredItems = useMemo(() => {
-    if (!items?.length) return [];
-    if (!itemQuery) return items;
-    return items.filter(item => item.name.toLowerCase().includes(itemQuery.toLowerCase()));
-  }, [items, itemQuery]);
+  const containerRef = useRef(null);
+
+  // Scroll the highlighted item into view, accounting for the sticky header.
+  useEffect(() => {
+    if (!containerRef.current || highlightedIndex < 0) return;
+    const container = containerRef.current;
+    const highlighted = container.querySelector('[data-highlighted="true"]');
+    if (!highlighted) return;
+    const stickyHeader = container.firstElementChild;
+    const headerHeight = stickyHeader ? stickyHeader.offsetHeight : 0;
+    const containerRect = container.getBoundingClientRect();
+    const itemRect = highlighted.getBoundingClientRect();
+    const itemTopRelative = itemRect.top - containerRect.top;
+    const itemBottomRelative = itemRect.bottom - containerRect.top;
+    if (itemTopRelative < headerHeight) {
+      container.scrollTop += itemTopRelative - headerHeight;
+    } else if (itemBottomRelative > container.clientHeight) {
+      container.scrollTop += itemBottomRelative - container.clientHeight;
+    }
+  }, [highlightedIndex]);
 
   if (phase === MentionConstants.MentionPhase.Idle) return null;
 
@@ -39,6 +63,7 @@ const InstructionsSlashSuggestionList = memo(props => {
         tools={filteredTools}
         toolkitName={selectedItem?.name}
         onSelectTool={onSelectTool}
+        highlightedIndex={highlightedIndex}
       />
     );
   }
@@ -48,21 +73,26 @@ const InstructionsSlashSuggestionList = memo(props => {
 
   return (
     <ClickAwayListener onClickAway={onClose}>
-      <Box sx={styles.container}>
+      <Box
+        ref={containerRef}
+        sx={styles.container}
+      >
         <Box sx={styles.header}>
           <Typography
             variant="subtitle"
             color="text.primary"
           >
-            Mention agent, pipeline or toolkit
+            Mention toolkit, mcp, agent or pipeline
           </Typography>
         </Box>
-        {filteredItems.map(item => (
+        {filteredItems.map((item, index) => (
           <Mention.MentionToolItem
             key={item.name}
             label={item.name}
             description={item.description}
             onClick={() => onSelectItem(item, item.isToolkit)}
+            isHighlighted={index === highlightedIndex}
+            isSelected={committedMentions?.some(m => m.name === item.name) ?? false}
           />
         ))}
       </Box>

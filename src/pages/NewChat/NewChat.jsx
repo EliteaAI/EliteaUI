@@ -1025,7 +1025,8 @@ const NewChat = props => {
   const shouldShowConversationLoader = useMemo(() => {
     if (isLoadMoreConversations) return true;
     if (isSelectingConversation) return true;
-    if (!activeConversation?.name && !activeConversation?.chat_history?.length) return true;
+    if (activeConversation?.id && !activeConversation?.name && !activeConversation?.chat_history?.length)
+      return true;
 
     return false;
   }, [isLoadMoreConversations, isSelectingConversation, activeConversation]);

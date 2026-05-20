@@ -62,10 +62,10 @@ export const useInstructionsSlashCommand = () => {
 
   const upsertMention = useCallback((name, tool_name = null) => {
     setCommittedMentions(prev => {
-      const existing = prev.find(m => m.name === name);
-      const next = existing
-        ? prev.map(m => (m.name === name ? { name, tool_name } : m))
-        : [...prev, { name, tool_name }];
+      // Each unique {name, tool_name} pair is its own entry so the same toolkit
+      // can be mentioned multiple times with different tools.
+      const alreadyPresent = prev.some(m => m.name === name && m.tool_name === tool_name);
+      const next = alreadyPresent ? prev : [...prev, { name, tool_name }];
       committedMentionsRef.current = next;
       return next;
     });
