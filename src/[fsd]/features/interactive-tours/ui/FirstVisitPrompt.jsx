@@ -9,6 +9,7 @@ import { useTheme } from '@emotion/react';
 
 import InteractiveTourBackdrop from './InteractiveTourBackdrop';
 import TourCard from './TourCard';
+import TourCardHeader from './TourCardHeader';
 
 const TITLE_ID = 'first-visit-prompt-title';
 const DESCRIPTION_ID = 'first-visit-prompt-description';
@@ -43,22 +44,12 @@ const FirstVisitPrompt = memo(props => {
           onKeyDown={handleKeyDown}
           sx={styles.card}
         >
-          <Box sx={styles.header}>
-            <Box
-              component={TutorialsPromptIcon}
-              sx={styles.icon}
-            />
-            <Typography
-              id={TITLE_ID}
-              variant="headingMedium"
-              color="text.secondary"
-              align="center"
-            >
-              New here?
-            </Typography>
-          </Box>
-
-          <Box sx={styles.divider} />
+          <TourCardHeader
+            icon={TutorialsPromptIcon}
+            titleId={TITLE_ID}
+          >
+            New here?
+          </TourCardHeader>
 
           <Box sx={styles.body}>
             <Typography
@@ -102,30 +93,6 @@ const firstVisitPromptStyles = () => ({
     pointerEvents: 'auto',
     '&:focus': { outline: 'none' },
   },
-
-  header: {
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingBottom: '0.6rem',
-    gap: '0.75rem',
-  },
-
-  icon: {
-    width: '1.5rem',
-    height: '1.5rem',
-    flexShrink: 0,
-    display: 'block',
-  },
-
-  divider: ({ palette }) => ({
-    height: 0,
-    borderBottom: '0.03125rem solid transparent',
-    borderTop: '0.03125rem solid transparent',
-    borderImageSlice: 1,
-    borderImageSource: palette.background.interactiveTourPrompt.dividerGradient,
-  }),
 
   body: {
     display: 'flex',

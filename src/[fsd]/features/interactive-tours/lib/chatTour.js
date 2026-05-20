@@ -6,6 +6,14 @@
 
 export const CHAT_TOUR_ID = 'chat';
 
+export const CHAT_TOUR_COMPLETION = {
+  keepExploring: [
+    { label: 'How to Create Agent', tourId: 'agent' },
+    { label: 'How to Create Pipeline', tourId: 'pipeline' },
+    { label: 'How to Create Index', tourId: 'index' },
+  ],
+};
+
 export const chatTourSteps = [
   {
     id: 'what-is-chat',

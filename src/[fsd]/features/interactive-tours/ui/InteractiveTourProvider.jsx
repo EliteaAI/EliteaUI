@@ -1,9 +1,15 @@
 import { memo, useCallback, useMemo, useReducer } from 'react';
 
-import { CHAT_TOUR_ID } from '../lib/chatTour';
+import { CHAT_TOUR_COMPLETION, CHAT_TOUR_ID } from '../lib/chatTour';
 import { InteractiveTourContext } from '../model/InteractiveTourContext';
 import FirstVisitPrompt from './FirstVisitPrompt';
 import InteractiveTourCard from './InteractiveTourCard';
+import TourCompleteCard from './TourCompleteCard';
+
+// ─── Tour completion configs ───────────────────────────────────────────────────
+const TOUR_COMPLETION_CONFIGS = {
+  [CHAT_TOUR_ID]: CHAT_TOUR_COMPLETION,
+};
 
 // ─── Tour loaders (lazy) ───────────────────────────────────────────────────────
 const TOUR_LOADERS = {
@@ -150,6 +156,9 @@ const InteractiveTourProvider = memo(props => {
         />
       )}
       {state.phase === 'running' && currentStep && <InteractiveTourCard />}
+      {state.phase === 'complete' && (
+        <TourCompleteCard keepExploring={TOUR_COMPLETION_CONFIGS[state.tourId]?.keepExploring ?? []} />
+      )}
     </InteractiveTourContext.Provider>
   );
 });
