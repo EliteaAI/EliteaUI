@@ -5,7 +5,8 @@ import { Box } from '@mui/material';
 import MainPanel from '@/[fsd]/app/layout/MainPanel';
 import MainSidebar from '@/[fsd]/app/layout/MainSidebar';
 import { InteractiveTourProvider } from '@/[fsd]/app/providers/InteractiveTourProvider';
-import { useTourFromUrl } from '@/[fsd]/features/interactive-tours';
+import { useInteractiveTourController, useTourFromUrl } from '@/[fsd]/features/interactive-tours';
+import InteractiveTourRoot from '@/[fsd]/features/interactive-tours/ui/InteractiveTourRoot';
 import { SupportAssistantWidget } from '@/[fsd]/widgets/SupportAssistant';
 
 const AppLayoutInner = memo(props => {
@@ -25,11 +26,14 @@ const AppLayoutInner = memo(props => {
 AppLayoutInner.displayName = 'AppLayoutInner';
 
 const AppLayout = memo(() => {
+  const tourValue = useInteractiveTourController();
+
   return (
-    <InteractiveTourProvider>
+    <InteractiveTourProvider value={tourValue}>
       <SupportAssistantWidget>
         {({ onToggleAssistant }) => <AppLayoutInner onToggleAssistant={onToggleAssistant} />}
       </SupportAssistantWidget>
+      <InteractiveTourRoot />
     </InteractiveTourProvider>
   );
 });
