@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
@@ -7,11 +7,9 @@ import { Box } from '@mui/material';
 import { useInstructionsInputRefContext } from '@/[fsd]/app/providers';
 import { useInstructionsMention } from '@/[fsd]/features/agent/lib/hooks/useInstructionsMention.hooks';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
-import { useMentionHighlights } from '@/[fsd]/shared/lib/hooks';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { FileReaderEnhancer } from '@/[fsd]/shared/ui/input';
 import { contextResolver } from '@/common/utils';
-import { useToolsValidationInfo } from '@/hooks/application/useValidateApplicationVersion';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { useTheme } from '@emotion/react';
 
@@ -92,41 +90,6 @@ const InstructionsInput = memo(props => {
     [setFieldValue, version_details?.variables],
   );
 
-  // ── Validation info for filtering out misconfigured toolkits ─────────────────
-
-  const { toolsValidationInfo } = useToolsValidationInfo({
-    applicationId,
-    projectId,
-    versionId: version_details?.id,
-    tools: version_details?.tools,
-  });
-
-  // ── Mentionable items from the agent's tool list ──────────────────────────────
-
-  const isToolkitItem = tool => tool.type !== 'application';
-
-  const getItemDescription = tool => {
-    if (tool.type === 'application') {
-      return tool.agent_type === 'pipeline' ? 'Pipeline' : 'Agent';
-    }
-    return 'Toolkit';
-  };
-
-  const mentionableItems = useMemo(
-    () =>
-      (version_details?.tools || [])
-        .filter(tool => !toolsValidationInfo[tool.id])
-        .map(tool => ({
-          name: tool.name,
-          type: tool.type,
-          agent_type: tool.agent_type,
-          settings: tool.settings,
-          isToolkit: isToolkitItem(tool),
-          description: getItemDescription(tool),
-        })),
-    [version_details?.tools, toolsValidationInfo],
-  );
-
   // ── Mention hook ──────────────────────────────────────────────────────────────
 
   const {
@@ -136,26 +99,20 @@ const InstructionsInput = memo(props => {
     filteredItems,
     filteredTools,
     highlightedIndex,
+    highlightRanges,
+    codeMirrorExtensions,
     onKeyDown: mentionOnKeyDown,
     onInstructionsInputChange,
     onSelectItem,
     onSelectTool,
     resetSlash,
-    resetMentionState,
-  } = useInstructionsMention({ fileReaderRef: inputRef, mentionableItems });
+  } = useInstructionsMention({
+    fileReaderRef: inputRef,
+    applicationId,
+    projectId,
+    versionDetails: version_details,
+  });
 
-  // ── Mention highlights in textarea ────────────────────────────────────────────
-
-  const tokenBuilder = useCallback(
-    mention => (mention.tool_name ? '/' + mention.name + '/' + mention.tool_name : '/' + mention.name),
-    [],
-  );
-
-  const highlightRanges = useMentionHighlights(
-    version_details?.instructions ?? '',
-    committedMentions,
-    tokenBuilder,
-  );
   const hasHighlights = highlightRanges.length > 0;
 
   // Sync the mirror div's geometry (position, size, padding) and scroll with the textarea.
@@ -278,11 +235,11 @@ const InstructionsInput = memo(props => {
                   disabled={disabled}
                   fieldName={'Instructions'}
                   onKeyDown={mentionOnKeyDown}
-                  onResetMentionState={resetMentionState}
                   onRealtimeChange={onInstructionsInputChange}
                   onFullScreenChange={setIsModalOpen}
                   afterContent={suggestionList}
                   overlayContent={overlayContent}
+                  codeMirrorExtensions={codeMirrorExtensions}
                   sx={hasHighlights ? styles.transparentInput : undefined}
                 />
               </Box>

@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { MentionConstants } from '@/[fsd]/shared/lib/constants';
+import {
+  createMentionCmExtension,
+  getItemDescription,
+  isToolkitItem,
+  parseMentionRanges,
+} from '@/[fsd]/shared/lib/utils/instructionsMention.utils';
+import { useToolsValidationInfo } from '@/hooks/application/useValidateApplicationVersion';
+import { useTheme } from '@emotion/react';
 
 import { useInstructionsSlashCommand } from './useInstructionsSlashCommand.hooks';
 
@@ -10,13 +18,43 @@ const { MentionPhase } = MentionConstants;
  * Higher-level hook that wires the instructions slash-command state machine to
  * actual textarea text manipulation via the FileReaderInput component ref.
  *
- * @param {React.RefObject} fileReaderRef - ref to the FileReaderInput component
+ * @param {React.RefObject} fileReaderRef   - ref to the FileReaderInput component
  *        (must expose getCursorPosition, replaceRange)
+ * @param {number}          applicationId   - current agent application ID
+ * @param {number}          projectId       - current project ID
+ * @param {object}          versionDetails  - version_details from Formik
  */
-export const useInstructionsMention = ({ fileReaderRef, mentionableItems = [] }) => {
+export const useInstructionsMention = ({ fileReaderRef, applicationId, projectId, versionDetails }) => {
   // Track input content via ref to avoid per-keystroke re-renders.
   const inputContentRef = useRef('');
   const [highlightedIndex, setHighlightedIndex] = useState(0);
+  const theme = useTheme();
+
+  // ── Mentionable items ─────────────────────────────────────────────────────
+
+  const { toolsValidationInfo } = useToolsValidationInfo({
+    applicationId,
+    projectId,
+    versionId: versionDetails?.id,
+    tools: versionDetails?.tools,
+  });
+
+  const mentionableItems = useMemo(
+    () =>
+      (versionDetails?.tools || [])
+        .filter(tool => !toolsValidationInfo[tool.id])
+        .map(tool => ({
+          name: tool.name,
+          type: tool.type,
+          agent_type: tool.agent_type,
+          settings: tool.settings,
+          isToolkit: isToolkitItem(tool),
+          description: getItemDescription(tool),
+        })),
+    [versionDetails?.tools, toolsValidationInfo],
+  );
+
+  // ── Slash-command state machine ───────────────────────────────────────────
 
   const {
     phase,
@@ -29,18 +67,72 @@ export const useInstructionsMention = ({ fileReaderRef, mentionableItems = [] })
     selectItem,
     commitMention: slashCommitMention,
     resetSlash,
-    resetAll,
+    initCommittedMentions,
     mentionAnchorRef,
   } = useInstructionsSlashCommand();
 
-  // Filtered items list (previously computed in the suggestion list component).
+  // Seed committedMentions from the saved instructions text when the version loads.
+  // This enables backspace-into-mention detection to work on pre-existing tokens.
+  useEffect(() => {
+    const text = versionDetails?.instructions;
+    if (!text || !mentionableItems.length) return;
+
+    const mentions = [];
+    const sortedItems = [...mentionableItems].sort((a, b) => b.name.length - a.name.length);
+
+    for (const item of sortedItems) {
+      const baseToken = '/' + item.name;
+      let pos = text.indexOf(baseToken);
+      while (pos !== -1) {
+        const prevChar = pos > 0 ? text[pos - 1] : '';
+        if (prevChar === '' || /\s/.test(prevChar)) {
+          const after = text.slice(pos + baseToken.length);
+          if (item.isToolkit && (after.startsWith('/') || after.startsWith('#'))) {
+            const toolMatch = after.slice(1).match(/^([^\s/#]+)/);
+            mentions.push({ name: item.name, tool_name: toolMatch ? toolMatch[1] : null });
+          } else if (after === '' || /[\s/#]/.test(after[0])) {
+            mentions.push({ name: item.name, tool_name: null });
+          }
+        }
+        pos = text.indexOf(baseToken, pos + 1);
+      }
+    }
+
+    const seen = new Set();
+    const unique = mentions.filter(m => {
+      const key = m.name + '::' + m.tool_name;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    initCommittedMentions(unique);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [versionDetails?.id]);
+
+  // ── Highlight ranges (textarea mirror overlay) ────────────────────────────
+
+  const highlightRanges = useMemo(
+    () => parseMentionRanges(versionDetails?.instructions ?? '', mentionableItems),
+    [versionDetails?.instructions, mentionableItems],
+  );
+
+  // ── CodeMirror extension (full-screen editor) ─────────────────────────────
+
+  const codeMirrorExtensions = useMemo(
+    () => createMentionCmExtension(mentionableItems, theme.palette.text.info),
+    [mentionableItems, theme.palette.text.info],
+  );
+
+  // ── Filtered suggestion lists ─────────────────────────────────────────────
+
   const filteredItems = useMemo(() => {
     if (!mentionableItems?.length) return [];
     if (!itemQuery) return mentionableItems;
     return mentionableItems.filter(item => item.name.toLowerCase().includes(itemQuery.toLowerCase()));
   }, [mentionableItems, itemQuery]);
 
-  // ── Text manipulation helpers ────────────────────────────────────────────────
+  // ── Text manipulation helpers ─────────────────────────────────────────────
 
   /**
    * Replace text in the textarea from anchor to cursorPos with replacement.
@@ -63,7 +155,7 @@ export const useInstructionsMention = ({ fileReaderRef, mentionableItems = [] })
     [fileReaderRef],
   );
 
-  // ── Input change handler ─────────────────────────────────────────────────────
+  // ── Input change handler ──────────────────────────────────────────────────
 
   const onInstructionsInputChange = useCallback(
     value => {
@@ -82,7 +174,7 @@ export const useInstructionsMention = ({ fileReaderRef, mentionableItems = [] })
     [syncWithValue, resetSlash],
   );
 
-  // ── Item (agent / toolkit / pipeline) selection ──────────────────────────────
+  // ── Item (agent / toolkit / pipeline) selection ──────────────────────────
 
   const onSelectItem = useCallback(
     (item, isToolkit) => {
@@ -102,7 +194,7 @@ export const useInstructionsMention = ({ fileReaderRef, mentionableItems = [] })
     [replaceFragment, selectItem],
   );
 
-  // ── Tool selection ────────────────────────────────────────────────────────────
+  // ── Tool selection ────────────────────────────────────────────────────────
 
   /**
    * Called when the user picks a specific tool (or passes null to commit
@@ -149,7 +241,7 @@ export const useInstructionsMention = ({ fileReaderRef, mentionableItems = [] })
     [fileReaderRef, selectedItem, slashCommitMention],
   );
 
-  // ── Available tools for the selected toolkit ──────────────────────────────────
+  // ── Available tools for the selected toolkit ──────────────────────────────
 
   // When re-entering tools phase via backspace, selectedItem only has { name }.
   // Look up the full item (with settings/type) from mentionableItems.
@@ -180,7 +272,7 @@ export const useInstructionsMention = ({ fileReaderRef, mentionableItems = [] })
     [availableTools, toolQuery],
   );
 
-  // ── Keyboard navigation ───────────────────────────────────────────────────────
+  // ── Keyboard navigation ───────────────────────────────────────────────────
 
   // Reset highlight to first item when the active list changes (phase switch or filter change).
   useEffect(() => {
@@ -240,14 +332,16 @@ export const useInstructionsMention = ({ fileReaderRef, mentionableItems = [] })
     toolQuery,
     selectedItem: resolvedSelectedItem,
     committedMentions,
+    mentionableItems,
     filteredItems,
     filteredTools,
     highlightedIndex,
+    highlightRanges,
+    codeMirrorExtensions,
     onKeyDown,
     onInstructionsInputChange,
     onSelectItem,
     onSelectTool,
     resetSlash,
-    resetMentionState: resetAll,
   };
 };

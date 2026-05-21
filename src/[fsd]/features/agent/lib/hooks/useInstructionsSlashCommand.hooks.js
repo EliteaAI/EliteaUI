@@ -79,6 +79,11 @@ export const useInstructionsSlashCommand = () => {
     });
   }, []);
 
+  const initCommittedMentions = useCallback(mentions => {
+    committedMentionsRef.current = mentions;
+    setCommittedMentions(mentions);
+  }, []);
+
   // ── Keyboard handler ─────────────────────────────────────────────────────────
 
   /**
@@ -345,6 +350,7 @@ export const useInstructionsSlashCommand = () => {
     commitMention,
     resetSlash,
     resetAll,
+    initCommittedMentions,
     mentionAnchorRef,
   };
 };
