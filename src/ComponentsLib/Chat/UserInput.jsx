@@ -9,11 +9,11 @@ import Tooltip from '@/ComponentsLib/Tooltip';
 import { SendButton } from '@/[fsd]/features/chat/ui/chat-button';
 import HighlightedText from '@/[fsd]/features/chat/ui/highlighted-text/HighlightedText';
 import { useFileDragAndDrop } from '@/[fsd]/shared/lib/hooks';
+import useCtrlEnterKeyEventsHandler from '@/[fsd]/shared/lib/hooks/useCtrlEnterKeyEventsHandler.hooks';
 import { BaseBtn } from '@/[fsd]/shared/ui/button';
 import StopIcon from '@/assets/stop-icon.svg?react';
 import { generateRandomAppendix, renameFile } from '@/common/attachmentValidationUtils';
 import FileList from '@/components/Chat/FileList';
-import useCtrlEnterKeyEventsHandler from '@/hooks/useCtrlEnterKeyEventsHandler';
 
 import { useMentionDetection } from './useMentionDetection';
 

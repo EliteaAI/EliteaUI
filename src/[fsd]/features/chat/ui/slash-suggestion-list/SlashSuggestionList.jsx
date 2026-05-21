@@ -82,14 +82,10 @@ const SlashSuggestionList = memo(props => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, isQueryFinal, toolkitQuery, filteredParticipants]);
 
-  // Keep itemCountRef in sync with the currently visible list length.
+  // Keep itemCountRef in sync and reset active index whenever the visible list changes.
   const currentListLength = phase === 'toolkit' ? filteredParticipants.length : filteredTools.length;
   useEffect(() => {
     if (itemCountRef) itemCountRef.current = currentListLength;
-  }, [currentListLength, itemCountRef]);
-
-  // Reset active index to 0 whenever the list contents change (user types to filter).
-  useEffect(() => {
     if (setActiveIndex) setActiveIndex(0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentListLength]);

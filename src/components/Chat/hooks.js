@@ -8,6 +8,7 @@ import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { ParsePipelineHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
 import { useContextExecutionEntity, useProjectType } from '@/[fsd]/shared/lib/hooks';
+import useCtrlEnterKeyEventsHandler from '@/[fsd]/shared/lib/hooks/useCtrlEnterKeyEventsHandler.hooks';
 import { useStopChatTaskMutation } from '@/api';
 import { useStopDatasourceTaskMutation } from '@/api/datasources';
 import {
@@ -21,7 +22,6 @@ import {
 } from '@/common/constants';
 import { convertTime } from '@/common/convertChatConversationMessages.js';
 import { convertJsonToString } from '@/common/utils';
-import useCtrlEnterKeyEventsHandler from '@/hooks/useCtrlEnterKeyEventsHandler';
 import { useIsFrom } from '@/hooks/useIsFromSpecificPageHooks';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useSocket, { useManualSocket } from '@/hooks/useSocket';
