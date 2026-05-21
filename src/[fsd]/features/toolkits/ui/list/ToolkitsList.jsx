@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
 import { AuthorInformation } from '@/[fsd]/entities/author/ui';
-import ApplicationsEmptyState from '@/[fsd]/features/apps/ui/list/ApplicationsEmptyState';
+import { EmptyStatePage } from '@/[fsd]/entities/empty-state-page';
 import { useLoadToolkits } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitTypesPanel, ToolkitsEmptyListPlaceHolder } from '@/[fsd]/features/toolkits/ui/list';
 import { ContentType, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
@@ -171,6 +171,31 @@ const ToolkitsList = memo(props => {
     }
   }, [toolkitsError, isMoreToolkitsError, toastError]);
 
+  const getEmptyStateConfig = useMemo(() => {
+    if (isApplication) {
+      return {
+        title: 'No applications yet',
+        description:
+          'Create your first app to build AI-powered solutions for specific tasks. Or take a quick tour to get started.',
+        onCreateClick: () => navigate(RouteDefinitions.AppsCatalog),
+      };
+    }
+    if (isMCP) {
+      return {
+        title: 'No MCPs yet',
+        description:
+          'Create your first MCP to integrate tools and data into your AI workflows. Or take a quick tour to get started.',
+        onCreateClick: () => navigate(RouteDefinitions.CreateMCP),
+      };
+    }
+
+    return {
+      title: 'No toolkits yet',
+      description: 'Create your first toolkit to add new functionality. Or take a quick tour to get started.',
+      onCreateClick: () => navigate(RouteDefinitions.CreateToolkit),
+    };
+  }, [isApplication, isMCP, navigate]);
+
   return (
     <CardList
       key={cardContentType}
@@ -184,7 +209,7 @@ const ToolkitsList = memo(props => {
       isLoadingMore={isToolkitsFetching}
       loadMoreFunc={loadMore}
       cardType={cardContentType}
-      customEmptyState={isApplication ? <ApplicationsEmptyState /> : null}
+      customEmptyState={<EmptyStatePage {...getEmptyStateConfig} />}
       emptyListPlaceHolder={
         emptyListPlaceHolder || (
           <ToolkitsEmptyListPlaceHolder
