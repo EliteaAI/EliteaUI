@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { CARD_WIDTH_PX } from '@/[fsd]/features/interactive-tours/lib/constants';
 
@@ -33,6 +33,26 @@ export const useTourCardPosition = currentStep => {
   // the target element's own rect hasn't changed (e.g. a fixed-position sidebar).
   const [viewport, setViewport] = useState(getViewportSize);
 
+  const measureElement = useCallback(el => {
+    const rect = el.getBoundingClientRect();
+    // getComputedStyle returns '0px' (truthy) when no radius is set, so check
+    // for zero explicitly and fall back to the design-spec default (12px).
+    const computed = getComputedStyle(el).borderRadius;
+    const borderRadius = !computed || computed === '0px' ? '0.75rem' : computed;
+
+    setTargetInfo({ rect, borderRadius });
+  }, []);
+
+  // Viewport dimensions only change on window resize — update them separately
+  // so scroll events don't create unnecessary re-renders.
+  const updateViewport = useCallback(() => {
+    setViewport(prev => {
+      const { vw, vh } = getViewportSize();
+
+      return prev.vw === vw && prev.vh === vh ? prev : { vw, vh };
+    });
+  }, []);
+
   useEffect(() => {
     if (!currentStep?.target || currentStep.placement === 'center') {
       setTargetInfo(null);
@@ -46,54 +66,36 @@ export const useTourCardPosition = currentStep => {
       return;
     }
 
-    const measure = () => {
-      const rect = el.getBoundingClientRect();
-      // getComputedStyle returns '0px' (truthy) when no radius is set, so check
-      // for zero explicitly and fall back to the design-spec default (12px).
-      const computed = getComputedStyle(el).borderRadius;
-      const borderRadius = !computed || computed === '0px' ? '0.75rem' : computed;
-      setTargetInfo({ rect, borderRadius });
-    };
-
-    // Initial measurement
-    measure();
+    measureElement(el);
 
     // Throttle re-measurement to one rAF tick to avoid layout thrash on every
-    // scroll/resize event.
+    // scroll/resize event. Captures el and rafId from this effect's closure.
     let rafId = null;
     const scheduleMeasure = () => {
       if (rafId !== null) return;
       rafId = requestAnimationFrame(() => {
         rafId = null;
-        measure();
-      });
-    };
-
-    // Viewport dimensions only change on window resize — update them separately
-    // so scroll events don't create unnecessary re-renders.
-    const scheduleViewportUpdate = () => {
-      setViewport(prev => {
-        const { vw, vh } = getViewportSize();
-        return prev.vw === vw && prev.vh === vh ? prev : { vw, vh };
+        measureElement(el);
       });
     };
 
     // Capture phase catches scroll on any scrollable ancestor.
     window.addEventListener('scroll', scheduleMeasure, { capture: true, passive: true });
     window.addEventListener('resize', scheduleMeasure, { passive: true });
-    window.addEventListener('resize', scheduleViewportUpdate, { passive: true });
+    window.addEventListener('resize', updateViewport, { passive: true });
 
     const ro = new ResizeObserver(scheduleMeasure);
+
     ro.observe(el);
 
     return () => {
       window.removeEventListener('scroll', scheduleMeasure, { capture: true });
       window.removeEventListener('resize', scheduleMeasure);
-      window.removeEventListener('resize', scheduleViewportUpdate);
+      window.removeEventListener('resize', updateViewport);
       ro.disconnect();
       if (rafId !== null) cancelAnimationFrame(rafId);
     };
-  }, [currentStep?.target, currentStep?.placement]);
+  }, [currentStep?.target, currentStep?.placement, measureElement, updateViewport]);
 
   const cardPositionSx = useMemo(() => {
     if (!targetInfo || currentStep?.placement === 'center') {
