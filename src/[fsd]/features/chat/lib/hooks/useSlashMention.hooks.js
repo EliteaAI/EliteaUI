@@ -1,6 +1,10 @@
 import { useCallback, useMemo, useState } from 'react';
 
+import { useTheme } from '@mui/system';
+
+import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ChatParticipantType } from '@/common/constants';
+import { getToolIconByType } from '@/common/toolkitUtils';
 
 import { useSlashCommandHandler } from './useSlashCommandHandler.hooks';
 import { useSlashHighlights } from './useSlashHighlights.hooks';
@@ -17,6 +21,7 @@ export const useSlashMention = ({ chatInput, activeConversation }) => {
   // Track a copy of the current input text so highlight ranges can be computed
   // without reading the DOM imperative ref on every render.
   const [inputContent, setInputContent] = useState('');
+  const { toolkitSchemas } = useGetCurrentToolkitSchemas();
 
   const {
     phase: slashPhase,
@@ -32,18 +37,36 @@ export const useSlashMention = ({ chatInput, activeConversation }) => {
     clearMentions,
     resetSlash,
     mentionAnchorRef,
+    activeIndex: slashActiveIndex,
+    setActiveIndex: slashSetActiveIndex,
+    itemCountRef: slashItemCountRef,
+    onConfirmActiveRef: slashOnConfirmActiveRef,
   } = useSlashCommandHandler({ setInputContent });
+  const theme = useTheme();
 
   // IDs of toolkit participants in the current conversation, used by SlashSuggestionList
   // to filter the autosuggest to only those already added (AC1).
-  const participantToolkitIds = useMemo(
+  const participantToolkits = useMemo(
     () =>
       (activeConversation?.participants || [])
         .filter(p => p.entity_name === ChatParticipantType.Toolkits)
-        .map(p => ({ id: p.entity_meta.id, project_id: p.entity_meta.project_id })),
-    [activeConversation?.participants],
+        .map(p => ({
+          id: p.entity_meta.id,
+          project_id: p.entity_meta.project_id,
+          type: p.entity_settings?.toolkit_type,
+          name: p.meta?.name,
+          icon_meta: p.entity_settings?.icon_meta?.url
+            ? p.entity_settings?.icon_meta
+            : {
+                component: getToolIconByType(p.entity_settings?.toolkit_type, theme, {
+                  toolSchema: toolkitSchemas?.[p.entity_settings?.toolkit_type],
+                  isMCP: p.entity_settings?.toolkit_type?.toLowerCase().endsWith('mcp'),
+                }),
+              },
+          participantType: p.entity_name,
+        })),
+    [activeConversation?.participants, theme, toolkitSchemas],
   );
-
   // Replace the typed "/query" or "/query/" fragment with "/toolkit.name" in the input.
   // Uses mentionAnchorRef so that editing an earlier mention in the middle of the text
   // replaces only the correct fragment (not the last mention in the string).
@@ -150,12 +173,16 @@ export const useSlashMention = ({ chatInput, activeConversation }) => {
     committedMentions,
     slashIsQueryFinal,
     slashOnKeyDown,
-    participantToolkitIds,
+    participantToolkits,
     resetSlash,
     clearMentions,
     onSlashSelectToolkit,
     onSlashCommitMention,
     onSlashInputChange,
     slashHighlightRanges,
+    slashActiveIndex,
+    slashSetActiveIndex,
+    slashItemCountRef,
+    slashOnConfirmActiveRef,
   };
 };

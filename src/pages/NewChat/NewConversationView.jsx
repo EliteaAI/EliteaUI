@@ -173,13 +173,17 @@ const NewConversationView = forwardRef(
       slashSelectedToolkit,
       slashIsQueryFinal,
       slashOnKeyDown,
-      participantToolkitIds,
+      participantToolkits,
       resetSlash,
       clearMentions,
       onSlashSelectToolkit,
       onSlashCommitMention,
       onSlashInputChange,
       slashHighlightRanges,
+      slashActiveIndex,
+      slashSetActiveIndex,
+      slashItemCountRef,
+      slashOnConfirmActiveRef,
     } = useSlashMention({ chatInput, activeConversation });
 
     const onPredictStream = useCallback(
@@ -774,7 +778,11 @@ const NewConversationView = forwardRef(
               onSelectToolkit={onSlashSelectToolkit}
               onSelectTool={onSlashCommitMention}
               onClose={resetSlash}
-              participantToolkitIds={participantToolkitIds}
+              participantToolkits={participantToolkits}
+              activeIndex={slashActiveIndex}
+              setActiveIndex={slashSetActiveIndex}
+              itemCountRef={slashItemCountRef}
+              onConfirmActiveRef={slashOnConfirmActiveRef}
             />
           )}
           <Box sx={styles.inputContainer}>

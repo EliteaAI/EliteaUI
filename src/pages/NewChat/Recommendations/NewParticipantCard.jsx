@@ -6,7 +6,8 @@ import { TooltipWithDuration } from '@/ComponentsLib/Tooltip';
 import { ChatParticipantType, PUBLIC_PROJECT_ID } from '@/common/constants';
 import EntityIcon from '@/components/EntityIcon';
 
-const NewParticipantCard = memo(({ participant, onClick, alreadyExists }) => {
+const NewParticipantCard = memo(props => {
+  const { participant, onClick, alreadyExists, isActive, itemRef } = props;
   const cardRef = useRef(null);
   const tooltipRef = useRef(null);
 
@@ -34,6 +35,13 @@ const NewParticipantCard = memo(({ participant, onClick, alreadyExists }) => {
     };
   }, []);
 
+  const itemRefLatest = useRef(itemRef);
+  itemRefLatest.current = itemRef;
+  const setRef = useCallback(el => {
+    cardRef.current = el;
+    itemRefLatest.current?.(el);
+  }, []);
+
   const onClickHandler = useCallback(
     event => {
       event.stopPropagation();
@@ -56,8 +64,8 @@ const NewParticipantCard = memo(({ participant, onClick, alreadyExists }) => {
       }
     >
       <Box
-        ref={cardRef}
-        sx={styles.card(alreadyExists)}
+        ref={setRef}
+        sx={styles.card(alreadyExists, isActive)}
         onClick={onClickHandler}
       >
         <EntityIcon
@@ -83,7 +91,9 @@ const NewParticipantCard = memo(({ participant, onClick, alreadyExists }) => {
               ? participant.agent_type === 'pipeline'
                 ? 'pipeline'
                 : 'agent'
-              : participant.participantType}
+              : participant.type?.toLowerCase().endsWith('mcp')
+                ? 'MCP'
+                : participant.participantType}
           </Typography>
         </Box>
         {participant.project_id == PUBLIC_PROJECT_ID &&
@@ -115,7 +125,7 @@ const styles = {
     fontSize: '0.75rem',
     lineHeight: '1.25rem',
   },
-  card: alreadyExists => theme => ({
+  card: (alreadyExists, isActive) => theme => ({
     display: 'flex',
     boxSizing: 'border-box',
     gap: '0.75rem',
@@ -125,7 +135,9 @@ const styles = {
     height: '3.5rem',
     cursor: alreadyExists ? 'default' : 'pointer',
     border: alreadyExists ? `1px solid ${theme.palette.border.userMessageEditor}` : 'none',
-    background: theme.palette.background.userInputBackground,
+    background: isActive
+      ? theme.palette.background.userInputBackgroundActive
+      : theme.palette.background.userInputBackground,
     '&:hover': {
       background: theme.palette.background.userInputBackgroundActive,
     },

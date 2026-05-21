@@ -806,13 +806,17 @@ const ChatBox = forwardRef((props, boxRef) => {
     slashSelectedToolkit,
     slashIsQueryFinal,
     slashOnKeyDown,
-    participantToolkitIds,
+    participantToolkits,
     resetSlash,
     clearMentions,
     onSlashSelectToolkit,
     onSlashCommitMention,
     onSlashInputChange,
     slashHighlightRanges,
+    slashActiveIndex,
+    slashSetActiveIndex,
+    slashItemCountRef,
+    slashOnConfirmActiveRef,
   } = useSlashMention({ chatInput, activeConversation });
 
   const onPredictStream = useCallback(
@@ -1979,7 +1983,11 @@ const ChatBox = forwardRef((props, boxRef) => {
               onSelectToolkit={onSlashSelectToolkit}
               onSelectTool={onSlashCommitMention}
               onClose={resetSlash}
-              participantToolkitIds={participantToolkitIds}
+              participantToolkits={participantToolkits}
+              activeIndex={slashActiveIndex}
+              setActiveIndex={slashSetActiveIndex}
+              itemCountRef={slashItemCountRef}
+              onConfirmActiveRef={slashOnConfirmActiveRef}
             />
           )}
           <NewChatInput

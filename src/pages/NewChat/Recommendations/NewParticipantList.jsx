@@ -1,8 +1,9 @@
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 
 import { Box, ClickAwayListener, Skeleton, Typography, useTheme } from '@mui/material';
 
 import ListInfiniteMoreLoader from '@/ComponentsLib/ListInfiniteMoreLoader';
+import useScrollActiveIntoView from '@/[fsd]/shared/lib/hooks/useScrollActiveIntoView.hooks';
 import { getRawParticipantUniqueId } from '@/common/utils';
 import useGetComponentWidth from '@/hooks/useGetComponentWidth';
 
@@ -34,9 +35,12 @@ export default function NewParticipantList({
   onClose = () => {},
   title = 'Frequently used',
   onLoadMore,
+  activeIndex = -1,
 }) {
   const theme = useTheme();
   const { componentWidth, componentRef } = useGetComponentWidth();
+  const containerRef = useRef(null);
+  const { itemRefs } = useScrollActiveIntoView(activeIndex, containerRef);
 
   const onClickParticipant = useCallback(
     participant => {
@@ -48,6 +52,7 @@ export default function NewParticipantList({
   return (
     <ClickAwayListener onClickAway={onClose}>
       <Box
+        ref={containerRef}
         border={`1px solid ${theme.palette.border.lines}`}
         width={'100%'}
         maxWidth={'100%'}
@@ -119,13 +124,17 @@ export default function NewParticipantList({
                 ))}
             {!isLoading &&
               participants
-                .map(item => ({ ...item, participantId: getRawParticipantUniqueId(item) }))
+                .map((item, idx) => ({ ...item, participantId: getRawParticipantUniqueId(item), _idx: idx }))
                 .map(participant => (
                   <NewParticipantCard
                     key={participant.participantType + '_' + participant.id + '_' + participant.project_id}
                     participant={participant}
                     onClick={onClickParticipant}
                     alreadyExists={existingParticipantUids.find(item => item === participant.participantId)}
+                    isActive={participant._idx === activeIndex}
+                    itemRef={el => {
+                      itemRefs.current[participant._idx] = el;
+                    }}
                   />
                 ))}
             {isFetching &&

@@ -1,13 +1,22 @@
-import { memo } from 'react';
+import { memo, useCallback, useRef } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
 const ToolItem = memo(props => {
-  const { label, description, onClick } = props;
+  const { label, description, onClick, isActive, itemRef } = props;
+
+  // Keep a stable ref callback so the Box ref doesn't change on every render.
+  const itemRefLatest = useRef(itemRef);
+  itemRefLatest.current = itemRef;
+  const setRef = useCallback(el => {
+    itemRefLatest.current?.(el);
+  }, []);
+
   return (
     <Box
+      ref={setRef}
       onClick={onClick}
-      sx={toolItemStyles.container}
+      sx={toolItemStyles.container(isActive)}
     >
       <Typography
         variant="headingSmall"
@@ -35,15 +44,19 @@ export default ToolItem;
 
 /** @type {MuiSx} */
 const toolItemStyles = {
-  container: ({ palette }) => ({
-    display: 'flex',
-    flexDirection: 'column',
-    padding: '0.5rem 0.75rem',
-    borderRadius: '0.5rem',
-    cursor: 'pointer',
-    background: palette.background.userInputBackground,
-    '&:hover': { background: palette.background.userInputBackgroundActive },
-  }),
+  container:
+    isActive =>
+    ({ palette }) => ({
+      display: 'flex',
+      flexDirection: 'column',
+      padding: '0.5rem 0.75rem',
+      borderRadius: '0.5rem',
+      cursor: 'pointer',
+      background: isActive
+        ? palette.background.userInputBackgroundActive
+        : palette.background.userInputBackground,
+      '&:hover': { background: palette.background.userInputBackgroundActive },
+    }),
   label: {
     overflow: 'hidden',
     textOverflow: 'ellipsis',

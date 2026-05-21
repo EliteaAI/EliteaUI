@@ -1,15 +1,27 @@
-import { memo } from 'react';
+import { memo, useRef } from 'react';
 
-import { Box, ClickAwayListener, Typography } from '@mui/material';
+import { Box, CircularProgress, ClickAwayListener, Typography } from '@mui/material';
+
+import useScrollActiveIntoView from '@/[fsd]/shared/lib/hooks/useScrollActiveIntoView.hooks';
 
 import ToolItem from './ToolItem';
 
 const ToolList = memo(props => {
-  const { tools, toolkitName, onSelectTool } = props;
+  const { tools, toolkitName, onSelectTool, activeIndex, isLoading } = props;
+
+  const containerRef = useRef(null);
+  const headerRef = useRef(null);
+  const { itemRefs } = useScrollActiveIntoView(activeIndex, containerRef, headerRef);
 
   const content = (
-    <Box sx={toolListStyles.container}>
-      <Box sx={toolListStyles.header}>
+    <Box
+      ref={containerRef}
+      sx={toolListStyles.container}
+    >
+      <Box
+        ref={headerRef}
+        sx={toolListStyles.header}
+      >
         <Typography
           variant="subtitle"
           color="text.primary"
@@ -18,14 +30,24 @@ const ToolList = memo(props => {
         </Typography>
       </Box>
 
-      {tools.map(tool => (
-        <ToolItem
-          key={tool.name}
-          label={tool.name}
-          description={tool.description}
-          onClick={() => onSelectTool(tool.name)}
-        />
-      ))}
+      {isLoading ? (
+        <Box sx={toolListStyles.loader}>
+          <CircularProgress size="1.25rem" />
+        </Box>
+      ) : (
+        tools.map((tool, idx) => (
+          <ToolItem
+            key={tool.name}
+            label={tool.name}
+            description={tool.description}
+            onClick={() => onSelectTool(tool.name)}
+            isActive={idx === activeIndex}
+            itemRef={el => {
+              itemRefs.current[idx] = el;
+            }}
+          />
+        ))
+      )}
     </Box>
   );
 
@@ -52,6 +74,11 @@ const toolListStyles = {
     background: palette.background.secondary,
     overflowY: 'auto',
   }),
+  loader: {
+    display: 'flex',
+    justifyContent: 'center',
+    padding: '0.5rem 0',
+  },
   header: {
     position: 'sticky',
     top: '-0.75rem',

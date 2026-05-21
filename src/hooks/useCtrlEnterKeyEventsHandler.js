@@ -14,6 +14,17 @@ const useCtrlEnterKeyEventsHandler = ({
       }
       // Check current event modifiers directly instead of relying on keysPressed tracking
       const hasModifier = event.ctrlKey || event.metaKey || event.altKey;
+
+      // Call onNormalKeyDown first for all non-modifier keys so that handlers
+      // (e.g. slash-mention keyboard navigation) can intercept Enter by calling
+      // event.preventDefault() before the send-message logic runs.
+      if (!hasModifier && onNormalKeyDown && !['Control', 'Meta', 'Alt', 'Shift'].includes(event.key)) {
+        onNormalKeyDown(event);
+      }
+
+      // If a normal-key handler already handled this event, stop here.
+      if (event.defaultPrevented) return;
+
       // Handle specific key combinations
       if ((event.ctrlKey || event.metaKey) && event.key === 'Enter' && onCtrlEnterDown) {
         event.preventDefault();
@@ -24,14 +35,6 @@ const useCtrlEnterKeyEventsHandler = ({
       } else if (!hasModifier && event.key === 'Enter' && onEnterDown) {
         event.preventDefault();
         onEnterDown(event);
-      } else if (
-        !hasModifier &&
-        onNormalKeyDown &&
-        // Also ignore standalone modifier keys
-        !['Control', 'Meta', 'Alt', 'Shift'].includes(event.key)
-      ) {
-        // Call onNormalKeyDown only for normal keys without modifiers
-        onNormalKeyDown(event);
       }
     },
     [isInComposition, onCtrlEnterDown, onShiftEnterPressed, onEnterDown, onNormalKeyDown],

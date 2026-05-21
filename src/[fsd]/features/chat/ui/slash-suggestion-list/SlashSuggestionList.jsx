@@ -2,8 +2,7 @@ import { memo, useEffect, useMemo } from 'react';
 
 import { useSelector } from 'react-redux';
 
-import { ChatParticipantType, PAGE_SIZE } from '@/common/constants';
-import useParticipants from '@/hooks/chat/useParticipants';
+import { useToolkitsDetailsQuery } from '@/api/toolkits';
 import NewParticipantList from '@/pages/NewChat/Recommendations/NewParticipantList';
 
 import ToolList from './ToolList';
@@ -19,48 +18,45 @@ const SlashSuggestionList = memo(props => {
     onSelectToolkit,
     onSelectTool,
     onClose,
-    participantToolkitIds,
+    participantToolkits,
+    activeIndex,
+    setActiveIndex,
+    itemCountRef,
+    onConfirmActiveRef,
   } = props;
 
   const toolkitValidationInfo = useSelector(state => state.chat.toolkitValidationInfo);
-
-  const { participants, isLoading, isFetching, onLoadMore, total } = useParticipants({
-    sortBy: 'name',
-    sortOrder: 'asc',
-    pageSize: PAGE_SIZE,
-    query: toolkitQuery,
-    types: [ChatParticipantType.Toolkits],
-    projectFilter: 'all',
-    forceSkip: phase !== 'toolkit',
-  });
 
   // Only show toolkits that are added as conversation participants (AC1)
   // and are properly configured (AC2).
   // Name filtering is done client-side for instant response (no debounce lag).
   const filteredParticipants = useMemo(() => {
-    if (!participantToolkitIds?.length) return [];
-    const idKeys = new Set(participantToolkitIds.map(p => `${p.project_id}_${p.id}`));
-    return participants.filter(p => {
+    if (!participantToolkits?.length) return [];
+    return participantToolkits.filter(p => {
       const key = `${p.project_id}_${p.id}`;
-      if (!idKeys.has(key)) return false;
       const validationInfo = toolkitValidationInfo?.[key];
       if (validationInfo?.length) return false;
       if (toolkitQuery && !p.name.toLowerCase().includes(toolkitQuery.toLowerCase())) return false;
       return true;
     });
-  }, [participants, participantToolkitIds, toolkitValidationInfo, toolkitQuery]);
+  }, [participantToolkits, toolkitValidationInfo, toolkitQuery]);
+
+  const { data: toolkitDetails, isFetching: isToolsFetching } = useToolkitsDetailsQuery(
+    { projectId: selectedToolkit?.project_id, toolkitId: selectedToolkit?.id },
+    { skip: phase !== 'tool' || !selectedToolkit },
+  );
 
   const availableTools = useMemo(() => {
-    if (!selectedToolkit?.settings) return [];
-    const isMcp = selectedToolkit.type === 'mcp' || selectedToolkit.type?.startsWith('mcp_');
+    if (!toolkitDetails?.settings) return [];
+    const isMcp = toolkitDetails.type === 'mcp' || toolkitDetails.type?.startsWith('mcp_');
     if (isMcp) {
-      return (selectedToolkit.settings.available_mcp_tools || []).map(item => ({
+      return (toolkitDetails.settings.available_mcp_tools || []).map(item => ({
         name: item.value || item.label,
         description: item.description || '',
       }));
     }
-    return (selectedToolkit.settings.selected_tools || []).map(name => ({ name, description: '' }));
-  }, [selectedToolkit]);
+    return (toolkitDetails.settings.selected_tools || []).map(name => ({ name, description: '' }));
+  }, [toolkitDetails]);
 
   const filteredTools = useMemo(
     () =>
@@ -69,7 +65,7 @@ const SlashSuggestionList = memo(props => {
   );
 
   useEffect(() => {
-    if (phase !== 'toolkit' || !isQueryFinal || isFetching) return;
+    if (phase !== 'toolkit' || !isQueryFinal) return;
 
     const match = filteredParticipants.find(p => p.name.toLowerCase().startsWith(toolkitQuery.toLowerCase()));
     if (match && (match.project_id !== selectedToolkit?.project_id || match.id !== selectedToolkit?.id)) {
@@ -84,11 +80,50 @@ const SlashSuggestionList = memo(props => {
       onClose();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, isQueryFinal, isFetching, toolkitQuery, filteredParticipants]);
+  }, [phase, isQueryFinal, toolkitQuery, filteredParticipants]);
+
+  // Keep itemCountRef in sync with the currently visible list length.
+  const currentListLength = phase === 'toolkit' ? filteredParticipants.length : filteredTools.length;
+  useEffect(() => {
+    if (itemCountRef) itemCountRef.current = currentListLength;
+  }, [currentListLength, itemCountRef]);
+
+  // Reset active index to 0 whenever the list contents change (user types to filter).
+  useEffect(() => {
+    if (setActiveIndex) setActiveIndex(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentListLength]);
+
+  // Register the confirm callback for the current phase so Enter can trigger selection.
+  useEffect(() => {
+    if (!onConfirmActiveRef) return;
+    if (phase === 'toolkit') {
+      onConfirmActiveRef.current = idx => {
+        const participant = filteredParticipants[idx];
+        if (!participant) return;
+        onSelectToolkit({
+          id: participant.id,
+          project_id: participant.project_id,
+          name: participant.name,
+          type: participant.type,
+          settings: participant.settings,
+        });
+      };
+    } else if (phase === 'tool') {
+      onConfirmActiveRef.current = idx => {
+        const tool = filteredTools[idx];
+        if (!tool) return;
+        onSelectTool(tool.name);
+      };
+    } else {
+      onConfirmActiveRef.current = null;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, filteredParticipants, filteredTools]);
 
   // Render one validator per participant toolkit. Each mounts when the slash menu
   // opens and fires the validation API only when no data exists yet in Redux.
-  const validators = participantToolkitIds?.map(({ id, project_id }) => (
+  const validators = participantToolkits?.map(({ id, project_id }) => (
     <ToolkitValidator
       key={`${project_id}_${id}`}
       toolkitId={id}
@@ -112,27 +147,29 @@ const SlashSuggestionList = memo(props => {
               settings: participant.settings,
             })
           }
-          isLoading={isLoading}
-          isFetching={isFetching}
+          isLoading={false}
+          isFetching={false}
           participants={filteredParticipants}
           existingParticipantUids={[]}
           onClose={onClose}
-          onLoadMore={onLoadMore}
-          total={total}
-          title="Mention toolkit"
+          total={participantToolkits.length}
+          title="Mention Toolkit or MCP"
+          activeIndex={activeIndex}
         />
       </>
     );
   }
 
-  // phase === 'tool' — hide the list entirely when the filter matches nothing
-  if (toolQuery && filteredTools.length === 0) return null;
+  // phase === 'tool' — hide the list entirely when the filter matches nothing (but not while loading)
+  if (!isToolsFetching && toolQuery && filteredTools.length === 0) return null;
 
   return (
     <ToolList
       tools={filteredTools}
       toolkitName={selectedToolkit?.name}
       onSelectTool={onSelectTool}
+      activeIndex={activeIndex}
+      isLoading={isToolsFetching}
     />
   );
 });

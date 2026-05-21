@@ -44,6 +44,15 @@ export const useSlashCommandHandler = ({ setInputContent }) => {
   const [committedMentions, setCommittedMentions] = useState([]);
   const [isQueryFinal, setIsQueryFinal] = useState(false);
 
+  // Keyboard navigation for the suggestion dropdown.
+  // activeIndex: index of the highlighted item (-1 = none).
+  // itemCountRef: written by SlashSuggestionList with the current list length.
+  // onConfirmActiveRef: written by SlashSuggestionList with the selection callback.
+  const [activeIndex, setActiveIndex] = useState(0);
+  const activeIndexRef = useRef(0);
+  const itemCountRef = useRef(0);
+  const onConfirmActiveRef = useRef(null);
+
   // When in toolkit phase and a second '/' is detected in the text (fullMatch),
   // this stores the tool-query portion so selectToolkit can seed toolQuery correctly.
   const pendingToolQueryRef = useRef('');
@@ -85,6 +94,8 @@ export const useSlashCommandHandler = ({ setInputContent }) => {
     setIsQueryFinal(false);
     pendingToolQueryRef.current = '';
     mentionAnchorRef.current = null;
+    activeIndexRef.current = 0;
+    setActiveIndex(0);
   }, []);
 
   /**
@@ -98,6 +109,35 @@ export const useSlashCommandHandler = ({ setInputContent }) => {
     event => {
       const { key } = event;
       const currentPhase = phaseRef.current;
+
+      // ── Dropdown keyboard navigation (active when suggestion list is visible) ──
+      if (currentPhase !== 'idle') {
+        if (key === 'ArrowDown' || key === 'PageDown' || key === 'ArrowRight') {
+          event.preventDefault();
+          const count = itemCountRef.current;
+          if (count > 0) {
+            const next =
+              activeIndexRef.current < count - 1 ? activeIndexRef.current + 1 : activeIndexRef.current;
+            activeIndexRef.current = next;
+            setActiveIndex(next);
+          }
+          return;
+        }
+
+        if (key === 'ArrowUp' || key === 'PageUp' || key === 'ArrowLeft') {
+          event.preventDefault();
+          const next = activeIndexRef.current > 0 ? activeIndexRef.current - 1 : 0;
+          activeIndexRef.current = next;
+          setActiveIndex(next);
+          return;
+        }
+
+        if (key === 'Enter' && activeIndexRef.current >= 0) {
+          event.preventDefault();
+          onConfirmActiveRef.current?.(activeIndexRef.current);
+          return;
+        }
+      }
 
       if (currentPhase === 'idle' && key === '/') {
         phaseRef.current = 'toolkit';
@@ -561,5 +601,9 @@ export const useSlashCommandHandler = ({ setInputContent }) => {
     clearMentions,
     resetSlash,
     mentionAnchorRef,
+    activeIndex,
+    setActiveIndex,
+    itemCountRef,
+    onConfirmActiveRef,
   };
 };
