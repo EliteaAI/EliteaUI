@@ -123,7 +123,6 @@ const infoTooltipStyles = () => ({
     height: '100%',
     position: 'relative',
     cursor: 'pointer',
-    bottom: '0.25rem',
     overflow: 'visible',
     '& :hover': { opacity: 0.8 },
   },
