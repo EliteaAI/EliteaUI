@@ -2,6 +2,7 @@ import { memo, useCallback } from 'react';
 
 import { useLocation, useMatch, useNavigate } from 'react-router-dom';
 
+import { SIDEBAR_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import AgentStudioIcon from '@/assets/agent-studio-icon.svg?react';
 import RouteDefinitions from '@/routes';
 
@@ -28,7 +29,7 @@ const AgentsStudioButton = memo(() => {
       icon={<AgentStudioIcon sx={styles.icon} />}
       label="Agents Studio"
       tooltip="Agents Studio"
-      tourId="sidebar-agents-studio"
+      tourId={SIDEBAR_TOUR_TARGET_IDS.agentsStudio}
       onClick={handleAgentStudioClick}
       isActive={!!isOnAgentStudio}
     />

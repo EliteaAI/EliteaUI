@@ -6,6 +6,7 @@ import { useMatch } from 'react-router-dom';
 import { Box, Typography, useTheme } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
+import { SIDEBAR_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import LogoutIcon from '@/assets/logout-icon.svg?react';
 import UserIcon from '@/assets/personalization-icon.svg?react';
 import DotMenu from '@/components/DotMenu';
@@ -77,7 +78,7 @@ const UserButton = memo(props => {
   );
 
   return (
-    <Box data-tour="sidebar-user">
+    <Box data-tour={SIDEBAR_TOUR_TARGET_IDS.user}>
       <DotMenu
         id="user-menu"
         slotProps={slotProps}

@@ -1,3 +1,5 @@
+import { SIDEBAR_TOUR_TARGETS } from './sidebarTourTargets.constants.js';
+
 export const SIDEBAR_TOUR_ID = 'sidebar';
 
 export const SIDEBAR_TOUR_COMPLETION = {
@@ -11,7 +13,7 @@ export const SIDEBAR_TOUR_COMPLETION = {
 export const sidebarTourSteps = [
   {
     id: 'sidebar-logo',
-    target: '[data-tour="sidebar-logo"]',
+    target: SIDEBAR_TOUR_TARGETS.logo,
     placement: 'right',
     title: 'ELITEA Logo',
     content: `The **ELITEA Logo** 
@@ -22,7 +24,7 @@ Red mark points that server is updating.`,
   },
   {
     id: 'switch-dark-light-mode',
-    target: '[data-tour="sidebar-switch-dark-light-mode"]',
+    target: SIDEBAR_TOUR_TARGETS.themeToggle,
     placement: 'right',
     title: 'Switch Dark/Light Mode',
     content: `The **Switch Dark/Light Mode** button allows you to toggle between dark and light themes for the ELITEA interface.`,
@@ -30,7 +32,7 @@ Red mark points that server is updating.`,
   },
   {
     id: 'project-switcher',
-    target: '[data-tour="sidebar-project-switcher"]',
+    target: SIDEBAR_TOUR_TARGETS.projectSwitcher,
     placement: 'right',
     title: 'Project Switcher',
     content: `The **Project Switcher** is a dropdown in the sidebar that controls which project is currently active. All content in ELITEA — agents, pipelines, toolkits, credentials, artifacts, and conversations — is scoped to the selected project. Switching projects immediately updates everything you see in the platform.
@@ -46,7 +48,7 @@ Click the dropdown and select any project to switch to it. If you switch while u
   },
   {
     id: 'create-button',
-    target: '[data-tour="sidebar-create-button"]',
+    target: SIDEBAR_TOUR_TARGETS.createButton,
     placement: 'right',
     title: '+ Create Button',
     content: `The **+ Create** button is a context-aware shortcut that creates a new item for whichever section you are currently viewing. Its action updates automatically as you navigate — so you never need to find a separate "New" button inside each page.
@@ -71,7 +73,7 @@ The button is disabled when you do not have permission to create the item for th
   },
   {
     id: 'chat',
-    target: '[data-tour="sidebar-nav-chat"]',
+    target: SIDEBAR_TOUR_TARGETS.navChat,
     placement: 'right',
     title: 'Chat',
     content: `**ELITEA Chat** is the central hub where all platform capabilities come together. It provides a conversational interface where you can interact with AI models, agents, pipelines, toolkits, and MCP servers — all in one place, using natural language.
@@ -80,7 +82,7 @@ Each conversation is an independent dialogue session. Context is not shared betw
   },
   {
     id: 'agents',
-    target: '[data-tour="sidebar-nav-agents"]',
+    target: SIDEBAR_TOUR_TARGETS.navAgents,
     placement: 'right',
     title: 'Agents',
     content: `**ELITEA Agents** are customizable AI-powered virtual assistants that automate tasks and streamline workflows. Each agent is built around three core components:
@@ -93,7 +95,7 @@ Once configured, an agent can autonomously execute complex, multi-step tasks suc
   },
   {
     id: 'pipelines',
-    target: '[data-tour="sidebar-nav-pipelines"]',
+    target: SIDEBAR_TOUR_TARGETS.navPipelines,
     placement: 'right',
     title: 'Pipelines',
     content: `**ELITEA Pipelines** are visual workflow automation tools that let you design and execute complex, multi-step processes by connecting a series of nodes. Each pipeline can combine LLM calls, toolkit actions, agent interactions, conditional logic, and custom code into a single automated flow.
@@ -102,7 +104,7 @@ Unlike a simple agent that responds turn-by-turn, a pipeline follows a defined e
   },
   {
     id: 'credentials',
-    target: '[data-tour="sidebar-nav-credentials"]',
+    target: SIDEBAR_TOUR_TARGETS.navCredentials,
     placement: 'right',
     title: 'Credentials',
     content: `**ELITEA Credentials** are saved authentication configurations that let agents, pipelines, and toolkits securely connect to external services. Instead of entering API keys or passwords each time you configure a toolkit, you store them once as a credential and reference that credential by name wherever it is needed.
@@ -111,7 +113,7 @@ Credentials are reusable across multiple toolkits and projects, and they can be 
   },
   {
     id: 'toolkits',
-    target: '[data-tour="sidebar-nav-toolkits"]',
+    target: SIDEBAR_TOUR_TARGETS.navToolkits,
     placement: 'right',
     title: 'Toolkits',
     content: `**ELITEA Toolkits** are modular integrations that connect AI agents, pipelines, and conversations to external platforms and services. Each toolkit packages the connection configuration and a set of tools — specific actions the AI can perform on that service, such as creating issues, querying databases, or searching documents.
@@ -120,7 +122,7 @@ Once configured, a toolkit can be attached to any agent or pipeline and used dir
   },
   {
     id: 'applications',
-    target: '[data-tour="sidebar-nav-applications"]',
+    target: SIDEBAR_TOUR_TARGETS.navApplications,
     placement: 'right',
     title: 'Applications',
     content: `## What is Applications?
@@ -130,7 +132,7 @@ The Applications menu is where you discover, request, and manage purpose-built A
   },
   {
     id: 'mcps',
-    target: '[data-tour="sidebar-nav-mcps"]',
+    target: SIDEBAR_TOUR_TARGETS.navMcps,
     placement: 'right',
     title: 'MCPs',
     content: `**ELITEA MCPs** (Model Context Protocol servers) are external tool providers that follow the MCP specification to expose specialized capabilities to your agents, pipelines, and conversations. Unlike native toolkits, MCPs connect to independently hosted servers — local or remote — that supply their own set of tools.
@@ -139,7 +141,7 @@ Once configured, MCP tools are available everywhere toolkits are used: in agents
   },
   {
     id: 'artifacts',
-    target: '[data-tour="sidebar-nav-artifacts"]',
+    target: SIDEBAR_TOUR_TARGETS.navArtifacts,
     placement: 'right',
     title: 'Artifacts',
     content: `**ELITEA Artifacts** is a file storage system built into the platform. Files are organized into **buckets** — named containers with configurable retention policies. Buckets can hold any file type and support nested folder structures up to 10 levels deep.
@@ -148,7 +150,7 @@ Artifacts are used to store outputs generated by agents and pipelines, share fil
   },
   {
     id: 'agents-studio',
-    target: '[data-tour="sidebar-agents-studio"]',
+    target: SIDEBAR_TOUR_TARGETS.agentsStudio,
     placement: 'right',
     title: 'Agents Studio',
     content: `**Agents Studio** is a shared library of community-published agents. Unlike the Agents menu — where you create and manage your own agents — Studio gives you read-only access to agents published by other users across all projects.
@@ -157,7 +159,7 @@ Each agent in Studio is a fully configured AI assistant built for a specific pur
   },
   {
     id: 'settings',
-    target: '[data-tour="sidebar-settings"]',
+    target: SIDEBAR_TOUR_TARGETS.settings,
     placement: 'right',
     title: 'Settings',
     content: `**Settings** is the project-level administration area where you configure AI integrations, manage access, and control platform behaviour. It opens as a panel with a navigation drawer listing all available sections.
@@ -166,7 +168,7 @@ Settings are project-specific — the sections available depend on which project
   },
   {
     id: 'resources',
-    target: '[data-tour="sidebar-resources"]',
+    target: SIDEBAR_TOUR_TARGETS.resources,
     placement: 'right',
     title: 'Resources',
     content: `The **Resources** page is a central hub for learning and reference material. It provides quick access to documentation, release notes, video walkthroughs, tutorials, and interactive tours — all in one place, without leaving the platform.
@@ -175,7 +177,7 @@ The page also displays the current ELITEA version and any installed plugin versi
   },
   {
     id: 'notifications',
-    target: '[data-tour="sidebar-notifications"]',
+    target: SIDEBAR_TOUR_TARGETS.notifications,
     placement: 'right',
     title: 'Notifications',
     content: `## What is the Notifications?
@@ -185,14 +187,14 @@ The Notification Center keeps you informed about platform events — published a
   },
   {
     id: 'user',
-    target: '[data-tour="sidebar-user"]',
+    target: SIDEBAR_TOUR_TARGETS.user,
     placement: 'right',
     title: 'User Menu',
     content: `The **User Menu** gives you quick access to your profile settings and the logout option. Click it to open a dropdown with **Personalization** — where you can manage your profile — and **Logout** to end your session.`,
   },
   {
     id: 'support-assistant',
-    target: '[data-tour="sidebar-support-assistant"]',
+    target: SIDEBAR_TOUR_TARGETS.supportAssistant,
     placement: 'right',
     title: 'Support Assistant',
     content: `The Support Assistant is a context-aware AI chatbot embedded directly in the ELITEA platform. It provides instant help, answers questions about features, and guides you through workflows — without leaving your current page.`,

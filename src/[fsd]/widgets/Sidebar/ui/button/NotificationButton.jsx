@@ -3,6 +3,7 @@ import { memo, useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useMatch, useNavigate } from 'react-router-dom';
 
+import { SIDEBAR_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { useNotificationListQuery } from '@/api/notifications';
 import { sioEvents } from '@/common/constants';
 import BellIcon from '@/components/Icons/BellIcon';
@@ -76,7 +77,7 @@ const NotificationButton = memo(() => {
         }
         label="Notifications"
         tooltip="Notifications"
-        tourId="sidebar-notifications"
+        tourId={SIDEBAR_TOUR_TARGET_IDS.notifications}
         onClick={onClickNotificationButton}
         isActive={!!isOnNotification}
       />

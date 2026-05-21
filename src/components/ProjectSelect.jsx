@@ -21,6 +21,7 @@ import { actions as settingsActions } from '@/slices/settings';
 
 const ProjectSelect = memo(props => {
   const {
+    tourId,
     customSelectedColor,
     showMode = ProjectSelectShowMode.CompactMode,
     label,
@@ -208,7 +209,7 @@ const ProjectSelect = memo(props => {
     <>
       <Box
         sx={sx}
-        data-tour="sidebar-project-switcher"
+        data-tour={tourId}
       >
         {isCompact ? (
           <Box sx={[styles.container, containerSX]}>{projectSingleSelect}</Box>

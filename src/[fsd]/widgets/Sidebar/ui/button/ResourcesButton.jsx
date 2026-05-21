@@ -2,6 +2,7 @@ import { memo, useCallback } from 'react';
 
 import { useLocation, useMatch, useNavigate } from 'react-router-dom';
 
+import { SIDEBAR_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import ResourcesIcon from '@/assets/resources-icon.svg?react';
 import RouteDefinitions from '@/routes';
 
@@ -29,7 +30,7 @@ const ResourcesButton = memo(() => {
       icon={<ResourcesIcon style={styles.icon} />}
       label="Resources"
       tooltip="Resources"
-      tourId="sidebar-resources"
+      tourId={SIDEBAR_TOUR_TARGET_IDS.resources}
       onClick={handleResourcesClick}
       isActive={!!isOnResources}
     />

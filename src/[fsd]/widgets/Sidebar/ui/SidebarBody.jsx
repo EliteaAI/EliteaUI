@@ -7,6 +7,7 @@ import { Box, Divider, IconButton, Tooltip, Typography, useTheme } from '@mui/ma
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { SIDEBAR_TOUR_ID, useProposeTour } from '@/[fsd]/features/interactive-tours';
+import { SIDEBAR_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
 import { SidebarConstants, SocketConstants } from '@/[fsd]/widgets/Sidebar/lib/constants';
 import { useSocketIcon } from '@/[fsd]/widgets/Sidebar/lib/hooks';
@@ -105,7 +106,7 @@ const SidebarBody = memo(props => {
           url: RouteDefinitions.Chat,
           breadCrumb: 'Chat',
           tooltip: 'Chat',
-          tourId: 'sidebar-nav-chat',
+          tourId: SIDEBAR_TOUR_TARGET_IDS.navChat,
         },
       ],
       [
@@ -116,7 +117,7 @@ const SidebarBody = memo(props => {
           url: RouteDefinitions.Applications,
           breadCrumb: 'Agents',
           tooltip: 'Agents',
-          tourId: 'sidebar-nav-agents',
+          tourId: SIDEBAR_TOUR_TARGET_IDS.navAgents,
         },
         {
           value: 'pipelines',
@@ -125,7 +126,7 @@ const SidebarBody = memo(props => {
           url: RouteDefinitions.Pipelines,
           breadCrumb: 'Pipelines',
           tooltip: 'Pipelines',
-          tourId: 'sidebar-nav-pipelines',
+          tourId: SIDEBAR_TOUR_TARGET_IDS.navPipelines,
         },
       ],
       [
@@ -136,7 +137,7 @@ const SidebarBody = memo(props => {
           url: RouteDefinitions.Credentials,
           breadCrumb: 'Credentials',
           tooltip: 'Credentials',
-          tourId: 'sidebar-nav-credentials',
+          tourId: SIDEBAR_TOUR_TARGET_IDS.navCredentials,
         },
 
         {
@@ -146,7 +147,7 @@ const SidebarBody = memo(props => {
           url: RouteDefinitions.Toolkits,
           breadCrumb: 'Toolkits',
           tooltip: 'Toolkits',
-          tourId: 'sidebar-nav-toolkits',
+          tourId: SIDEBAR_TOUR_TARGET_IDS.navToolkits,
         },
         {
           value: 'applications',
@@ -155,7 +156,7 @@ const SidebarBody = memo(props => {
           url: RouteDefinitions.Apps,
           breadCrumb: 'Applications',
           tooltip: 'Applications',
-          tourId: 'sidebar-nav-applications',
+          tourId: SIDEBAR_TOUR_TARGET_IDS.navApplications,
         },
         {
           value: 'mcps',
@@ -164,7 +165,7 @@ const SidebarBody = memo(props => {
           url: RouteDefinitions.MCPs,
           breadCrumb: 'MCP',
           tooltip: 'MCP',
-          tourId: 'sidebar-nav-mcps',
+          tourId: SIDEBAR_TOUR_TARGET_IDS.navMcps,
         },
       ],
       [
@@ -175,7 +176,7 @@ const SidebarBody = memo(props => {
           url: RouteDefinitions.Artifacts,
           breadCrumb: 'Artifacts',
           tooltip: 'Artifacts',
-          tourId: 'sidebar-nav-artifacts',
+          tourId: SIDEBAR_TOUR_TARGET_IDS.navArtifacts,
         },
       ],
       [
@@ -265,7 +266,7 @@ const SidebarBody = memo(props => {
       <Box sx={styles.stickyTop}>
         <Box sx={styles.header}>
           <IconButton
-            data-tour="sidebar-logo"
+            data-tour={SIDEBAR_TOUR_TARGET_IDS.logo}
             size="large"
             color="inherit"
             aria-label="open drawer"
@@ -283,7 +284,7 @@ const SidebarBody = memo(props => {
             )}
           </IconButton>
           {!sideBarCollapsed && (
-            <Box data-tour="sidebar-switch-dark-light-mode">
+            <Box data-tour={SIDEBAR_TOUR_TARGET_IDS.themeToggle}>
               <ThemeModeToggle />
             </Box>
           )}
@@ -293,6 +294,7 @@ const SidebarBody = memo(props => {
 
         <Box sx={styles.projectSection}>
           <ProjectSelect
+            tourId={SIDEBAR_TOUR_TARGET_IDS.projectSwitcher}
             customSelectedColor={`${theme.palette.text.secondary} !important`}
             sx={styles.projectSelectSx}
             selectSX={styles.projectSelectSelectSX}
@@ -330,7 +332,7 @@ const SidebarBody = memo(props => {
         <Divider sx={styles.divider} />
 
         <Box sx={styles.section}>
-          <Buttons.CreateEntityButton tourId="sidebar-create-button" />
+          <Buttons.CreateEntityButton tourId={SIDEBAR_TOUR_TARGET_IDS.createButton} />
         </Box>
 
         <Divider sx={styles.divider} />
@@ -381,7 +383,7 @@ const SidebarBody = memo(props => {
           placement="left"
         >
           <Box
-            data-tour="sidebar-support-assistant"
+            data-tour={SIDEBAR_TOUR_TARGET_IDS.supportAssistant}
             sx={styles.assistantBlock}
             onClick={onToggleAssistant}
           >

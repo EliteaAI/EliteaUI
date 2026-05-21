@@ -1,0 +1,43 @@
+const buildTourSelector = tourId => `[data-tour="${tourId}"]`;
+
+export const SIDEBAR_TOUR_TARGET_IDS = {
+  logo: 'sidebar-logo',
+  themeToggle: 'sidebar-switch-dark-light-mode',
+  projectSwitcher: 'sidebar-project-switcher',
+  createButton: 'sidebar-create-button',
+  navChat: 'sidebar-nav-chat',
+  navAgents: 'sidebar-nav-agents',
+  navPipelines: 'sidebar-nav-pipelines',
+  navCredentials: 'sidebar-nav-credentials',
+  navToolkits: 'sidebar-nav-toolkits',
+  navApplications: 'sidebar-nav-applications',
+  navMcps: 'sidebar-nav-mcps',
+  navArtifacts: 'sidebar-nav-artifacts',
+  agentsStudio: 'sidebar-agents-studio',
+  settings: 'sidebar-settings',
+  resources: 'sidebar-resources',
+  notifications: 'sidebar-notifications',
+  user: 'sidebar-user',
+  supportAssistant: 'sidebar-support-assistant',
+};
+
+export const SIDEBAR_TOUR_TARGETS = {
+  logo: buildTourSelector(SIDEBAR_TOUR_TARGET_IDS.logo),
+  themeToggle: buildTourSelector(SIDEBAR_TOUR_TARGET_IDS.themeToggle),
+  projectSwitcher: buildTourSelector(SIDEBAR_TOUR_TARGET_IDS.projectSwitcher),
+  createButton: buildTourSelector(SIDEBAR_TOUR_TARGET_IDS.createButton),
+  navChat: buildTourSelector(SIDEBAR_TOUR_TARGET_IDS.navChat),
+  navAgents: buildTourSelector(SIDEBAR_TOUR_TARGET_IDS.navAgents),
+  navPipelines: buildTourSelector(SIDEBAR_TOUR_TARGET_IDS.navPipelines),
+  navCredentials: buildTourSelector(SIDEBAR_TOUR_TARGET_IDS.navCredentials),
+  navToolkits: buildTourSelector(SIDEBAR_TOUR_TARGET_IDS.navToolkits),
+  navApplications: buildTourSelector(SIDEBAR_TOUR_TARGET_IDS.navApplications),
+  navMcps: buildTourSelector(SIDEBAR_TOUR_TARGET_IDS.navMcps),
+  navArtifacts: buildTourSelector(SIDEBAR_TOUR_TARGET_IDS.navArtifacts),
+  agentsStudio: buildTourSelector(SIDEBAR_TOUR_TARGET_IDS.agentsStudio),
+  settings: buildTourSelector(SIDEBAR_TOUR_TARGET_IDS.settings),
+  resources: buildTourSelector(SIDEBAR_TOUR_TARGET_IDS.resources),
+  notifications: buildTourSelector(SIDEBAR_TOUR_TARGET_IDS.notifications),
+  user: buildTourSelector(SIDEBAR_TOUR_TARGET_IDS.user),
+  supportAssistant: buildTourSelector(SIDEBAR_TOUR_TARGET_IDS.supportAssistant),
+};
