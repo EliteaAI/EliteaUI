@@ -132,13 +132,13 @@ export const useInstructionsMention = ({ fileReaderRef, mentionableItems = [] })
         const anchor = mentionAnchorRef.current ?? 0;
         // The current mention starts at anchor with '/' + selectedItem.name (which may
         // contain spaces). Skip past the known name prefix, then scan for the first
-        // whitespace to find the end (covers the optional '#partialToolQuery' portion).
+        // whitespace to find the end (covers the optional '/partialToolQuery' portion).
         const namePrefix = '/' + selectedItem.name;
         const afterNameStart = anchor + namePrefix.length;
         const afterName = content.slice(afterNameStart);
         const spaceIdx = afterName.search(/\s/);
         const end = afterNameStart + (spaceIdx === -1 ? afterName.length : spaceIdx);
-        const replacement = '/' + selectedItem.name + '#' + toolName + ' ';
+        const replacement = '/' + selectedItem.name + '/' + toolName + ' ';
         ref?.replaceRange?.(anchor, end, replacement);
         inputContentRef.current = content.slice(0, anchor) + replacement + content.slice(end);
       }

@@ -147,7 +147,7 @@ const InstructionsInput = memo(props => {
   // ── Mention highlights in textarea ────────────────────────────────────────────
 
   const tokenBuilder = useCallback(
-    mention => (mention.tool_name ? '/' + mention.name + '#' + mention.tool_name : '/' + mention.name),
+    mention => (mention.tool_name ? '/' + mention.name + '/' + mention.tool_name : '/' + mention.name),
     [],
   );
 
