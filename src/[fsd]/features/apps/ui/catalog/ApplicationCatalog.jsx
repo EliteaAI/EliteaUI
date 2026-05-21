@@ -1,60 +1,60 @@
 import { memo, useCallback, useState } from 'react';
 
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import { Box, Typography } from '@mui/material';
 
-import { useApplicationCatalogState } from '@/[fsd]/features/apps/lib/hooks';
+import { REQUEST_STATUS } from '@/[fsd]/features/apps/lib/constants/applicationCatalog.constants';
+import { useApplicationCatalogState, useApplicationRequests } from '@/[fsd]/features/apps/lib/hooks';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
-import { AppsTabs, ContentType, URL_PARAMS_KEY_TAGS, ViewMode } from '@/common/constants';
+import ClockIcon from '@/assets/clock.svg?react';
+import GearIcon from '@/assets/gear-icon.svg?react';
+import LinkIcon from '@/assets/link-icon.svg?react';
+import { ContentType, ViewMode } from '@/common/constants';
 import EntityCard from '@/components/Card';
 import CardList from '@/components/CardList';
-import ArrowRightIcon from '@/components/Icons/ArrowRightIcon';
-import PlusIcon from '@/components/Icons/PlusIcon';
+import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes';
 
-import ApplicationDetailsModal from './ApplicationDetailsModal';
+import RequestAccessModal from './RequestAccessModal';
 import { applicationActionButtonStyles } from './applicationActionButton.styles';
 
 const APPLICATION_CATALOG_CARD_WIDTH = 'min(42rem, calc(100% - 1rem))';
 
 const ApplicationCatalog = memo(() => {
   const styles = applicationCatalogStyles();
-  const location = useLocation();
   const navigate = useNavigate();
+  const { toastSuccess } = useToast();
   const { applications, isLoading } = useApplicationCatalogState();
-  const [selectedApplication, setSelectedApplication] = useState(null);
+  const { submitRequest, getRequestStatus } = useApplicationRequests();
 
-  const handleOpenDetails = useCallback(application => {
-    setSelectedApplication(application);
+  const [requestModalApp, setRequestModalApp] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleOpenRequestModal = useCallback(application => {
+    setRequestModalApp(application);
   }, []);
 
-  const handleCloseDetails = useCallback(() => {
-    setSelectedApplication(null);
+  const handleCloseRequestModal = useCallback(() => {
+    setRequestModalApp(null);
   }, []);
+
+  const handleSubmitRequest = useCallback(
+    (application, reason) => {
+      setIsSubmitting(true);
+      submitRequest(application.type, reason);
+      setIsSubmitting(false);
+      setRequestModalApp(null);
+      toastSuccess('Your request sent successfully!');
+    },
+    [submitRequest, toastSuccess],
+  );
 
   const handleCreate = useCallback(
     application => {
       navigate(RouteDefinitions.CreateAppType.replace(':appType', application.type));
     },
     [navigate],
-  );
-
-  const handleViewConfigured = useCallback(
-    application => {
-      const searchParams = new URLSearchParams(location.search);
-      searchParams.delete(URL_PARAMS_KEY_TAGS);
-      searchParams.append(URL_PARAMS_KEY_TAGS, application.typeLabel);
-
-      navigate(
-        {
-          pathname: `${RouteDefinitions.Apps}/${AppsTabs[1]}`,
-          search: searchParams.toString(),
-        },
-        { state: location.state },
-      );
-    },
-    [location.search, location.state, navigate],
   );
 
   const handleCatalogTagClick = useCallback(event => {
@@ -65,14 +65,18 @@ const ApplicationCatalog = memo(() => {
 
   const renderApplicationCard = useCallback(
     (application, cardType, index) => {
+      const requestStatus = getRequestStatus(application.type);
+      const isPending = requestStatus === REQUEST_STATUS.PENDING;
+      const canRequestAccess = !application.canCreate && requestStatus !== REQUEST_STATUS.PENDING;
+
       const handleCreateClick = event => {
         event.stopPropagation();
         handleCreate(application);
       };
 
-      const handleViewConfiguredClick = event => {
+      const handleRequestClick = event => {
         event.stopPropagation();
-        handleViewConfigured(application);
+        handleOpenRequestModal(application);
       };
 
       return (
@@ -84,22 +88,29 @@ const ApplicationCatalog = memo(() => {
           disableCardActions
           hideCardBottom
           customTagClickHandler={handleCatalogTagClick}
-          onCardClick={handleOpenDetails}
           cardDetails={
             <Box sx={styles.cardDetails}>
-              <Typography sx={styles.cardDescription}>{application.shortDescription}</Typography>
-
-              <Box sx={styles.cardMeta}>
-                <Typography sx={styles.metaText}>{application.typeLabel}</Typography>
-                <Box sx={styles.metaDivider} />
-                <Typography sx={styles.metaText}>{application.statusLabel}</Typography>
+              <Box>
+                <Typography sx={styles.cardDescription}>{application.shortDescription}</Typography>
+                <Box sx={styles.additionalDescription}>
+                  <Typography sx={styles.cardDescription}>
+                    <Box component="b">Includes: </Box>
+                    {application.capabilities.join(', ')}
+                  </Typography>
+                </Box>
+                <Box sx={styles.additionalDescription}>
+                  <Typography sx={styles.cardDescription}>
+                    <Box component="b">Best for: </Box>
+                    {application.bestFor}
+                  </Typography>
+                </Box>
               </Box>
 
               <Box sx={styles.cardActions}>
-                {application.canCreate && (
+                {application.canCreate && !isPending && (
                   <BaseBtn
                     variant={BUTTON_VARIANTS.contained}
-                    startIcon={<PlusIcon />}
+                    startIcon={<GearIcon />}
                     disabled={isLoading}
                     sx={[styles.actionButton, styles.createActionButton]}
                     onClick={handleCreateClick}
@@ -109,64 +120,60 @@ const ApplicationCatalog = memo(() => {
                       variant="labelSmall"
                       sx={styles.actionButtonLabel}
                     >
-                      Create App
+                      Configure
                     </Typography>
                   </BaseBtn>
                 )}
 
-                {application.isConfigured && (
+                {canRequestAccess && !isPending && (
                   <BaseBtn
-                    variant={BUTTON_VARIANTS.secondary}
-                    startIcon={<ArrowRightIcon />}
-                    sx={styles.actionButton}
-                    onClick={handleViewConfiguredClick}
+                    variant={BUTTON_VARIANTS.auxiliary}
+                    onClick={handleRequestClick}
                   >
                     <Typography
                       component="span"
                       variant="labelSmall"
-                      sx={styles.actionButtonLabel}
                     >
-                      View Configured
+                      Request Access
                     </Typography>
                   </BaseBtn>
                 )}
 
-                {application.canRequest && (
-                  <Typography sx={styles.requestText}>
-                    Request through support at{' '}
-                    <Box
-                      component="span"
-                      sx={styles.supportEmail}
-                    >
-                      {application.supportEmail}
-                    </Box>
-                  </Typography>
+                {isPending && (
+                  <Box sx={styles.pendingStatus}>
+                    <ClockIcon />
+                    <Typography variant="labelSmall">Pending approval</Typography>
+                  </Box>
                 )}
+
+                <Box
+                  component="a"
+                  href={application.documentation}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={e => e.stopPropagation()}
+                  sx={styles.documentationLink}
+                >
+                  <Typography
+                    component="span"
+                    variant="labelSmall"
+                    sx={styles.documentationText}
+                  >
+                    Documentation
+                  </Typography>
+                  <LinkIcon />
+                </Box>
               </Box>
             </Box>
           }
         />
       );
     },
-    [handleCatalogTagClick, handleCreate, handleOpenDetails, handleViewConfigured, isLoading, styles],
+    [getRequestStatus, handleCatalogTagClick, handleCreate, handleOpenRequestModal, isLoading, styles],
   );
 
   return (
     <Box sx={styles.wrapper}>
-      <Box sx={styles.header}>
-        <Typography
-          component="h1"
-          variant="h5"
-          sx={styles.title}
-        >
-          Request an application
-        </Typography>
-        <Typography sx={styles.subtitle}>
-          Choose a ready application to configure for this project, or request access when it is not yet
-          available.
-        </Typography>
-      </Box>
-
       <Box sx={styles.cards}>
         <CardList
           cardList={applications}
@@ -178,7 +185,7 @@ const ApplicationCatalog = memo(() => {
           loadMoreFunc={handleLoadMore}
           isFullWidth
           disableTableView
-          cardHeight="14rem"
+          cardHeight="12.5rem"
           cardWidthOverride={APPLICATION_CATALOG_CARD_WIDTH}
           emptyListPlaceHolder={
             <Typography component="span">No applications are available to request.</Typography>
@@ -186,13 +193,12 @@ const ApplicationCatalog = memo(() => {
         />
       </Box>
 
-      <ApplicationDetailsModal
-        open={Boolean(selectedApplication)}
-        application={selectedApplication}
-        isResolving={isLoading}
-        onClose={handleCloseDetails}
-        onCreate={handleCreate}
-        onViewConfigured={handleViewConfigured}
+      <RequestAccessModal
+        open={Boolean(requestModalApp)}
+        application={requestModalApp}
+        isSubmitting={isSubmitting}
+        onClose={handleCloseRequestModal}
+        onSubmit={handleSubmitRequest}
       />
     </Box>
   );
@@ -210,20 +216,6 @@ const applicationCatalogStyles = () => ({
     pt: '1rem',
     pb: '2rem',
   },
-  header: {
-    maxWidth: '48rem',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.5rem',
-  },
-  title: ({ palette }) => ({
-    color: palette.text.primary,
-  }),
-  subtitle: ({ palette }) => ({
-    color: palette.text.secondary,
-    fontSize: '0.875rem',
-    lineHeight: 1.5,
-  }),
   cards: {
     width: '100%',
     ml: '-1.5rem',
@@ -245,43 +237,45 @@ const applicationCatalogStyles = () => ({
     WebkitBoxOrient: 'vertical',
     WebkitLineClamp: '3',
   }),
+  additionalDescription: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.25rem',
+  },
   cardActions: {
     display: 'flex',
+    justifyContent: 'space-between',
     flexWrap: 'wrap',
     alignItems: 'center',
     gap: '0.5rem',
     mb: '0.25rem',
   },
   ...applicationActionButtonStyles,
-  cardMeta: {
+  documentationLink: ({ palette }) => ({
     display: 'flex',
     alignItems: 'center',
-    gap: '0.5rem',
-    minWidth: 0,
-  },
-  metaText: ({ palette }) => ({
-    color: palette.text.secondary,
-    fontSize: '0.75rem',
-    lineHeight: 1.35,
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
+    gap: '0.25rem',
+    textDecoration: 'none',
+    color: palette.text.default,
+    transition: 'color 0.2s',
+    '&:hover': {
+      color: palette.text.secondary,
+    },
+    '& svg': {
+      width: '0.875rem',
+      height: '0.875rem',
+    },
   }),
-  metaDivider: ({ palette }) => ({
-    width: '0.0625rem',
-    height: '0.875rem',
-    flexShrink: 0,
-    backgroundColor: palette.border.lines,
-  }),
-  requestText: ({ palette }) => ({
-    color: palette.text.secondary,
+  documentationText: {
     fontSize: '0.8125rem',
     lineHeight: 1.45,
-  }),
-  supportEmail: ({ palette }) => ({
-    color: palette.text.primary,
-    fontWeight: 600,
-    userSelect: 'text',
+    textDecoration: 'underline',
+  },
+  pendingStatus: ({ palette }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.25rem',
+    color: palette.status.onModeration,
   }),
 });
 

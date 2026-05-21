@@ -1,10 +1,9 @@
-import { useMemo } from 'react';
+import { createElement, useMemo } from 'react';
 
 import { useTheme } from '@mui/material';
 
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
 import { useListToolkitTypesQuery } from '@/api/toolkits';
-import { getToolIconByType } from '@/common/toolkitUtils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import {
@@ -51,7 +50,13 @@ export const useApplicationCatalogState = () => {
       const canCreate = Boolean(schema);
       const isConfigured = configuredTypes.has(application.type);
       const statusLabel = getApplicationStatusLabel(isConfigured, canCreate);
-      const icon = getToolIconByType(application.type, theme, { toolSchema: schema, isAppAll: true });
+      const iconElement = application.IconComponent
+        ? createElement(application.IconComponent, {
+            fill: theme.palette.icon.fill.default,
+            width: '1rem',
+            height: '1rem',
+          })
+        : null;
 
       return {
         ...application,
@@ -59,10 +64,7 @@ export const useApplicationCatalogState = () => {
         typeLabel,
         schema,
         description: application.shortDescription,
-        icon,
-        icon_meta: {
-          component: icon,
-        },
+        icon_meta: iconElement ? { component: iconElement } : undefined,
         author: {
           id: 'application-support',
           name: 'EliteA Support',
@@ -82,6 +84,7 @@ export const useApplicationCatalogState = () => {
         isConfigured,
         statusLabel,
         supportEmail: APPLICATION_REQUEST_SUPPORT_EMAIL,
+        documentation: application.documentation,
       };
     });
   }, [applicationSchemas, configuredTypes, theme]);

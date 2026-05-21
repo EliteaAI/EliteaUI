@@ -74,12 +74,9 @@ const getPrevPath = (routeStack, currentPath, search, viewMode, authorId, author
       return `${RouteDefinitions.CreateMCP}/?${SearchParams.ViewMode}=${viewMode}`;
     } else if (currentPath.startsWith(RouteDefinitions.MCPs) && !search.includes(SearchParams.ToolkitType)) {
       return `${RouteDefinitions.MCPs}/${getTabFromUrl(currentPath, ToolkitsTabs[0])}?${SearchParams.ViewMode}=${viewMode}`;
-    } else if (isPathOrSubPath(currentPath, RouteDefinitions.CreateApp) && hasSubPath(currentPath)) {
-      // Handle /apps/create/:appType - go back to /apps/create
-      return `${RouteDefinitions.CreateApp}/?${SearchParams.ViewMode}=${viewMode}`;
     } else if (isPathOrSubPath(currentPath, RouteDefinitions.CreateApp)) {
-      // Handle /apps/create (selector page) - go back to apps list
-      return `${RouteDefinitions.Apps}/${AppsTabs[0]}?${SearchParams.ViewMode}=${viewMode}`;
+      // Handle /apps/create and /apps/create/:appType - go back to App Catalog
+      return `${RouteDefinitions.AppsCatalog}?${SearchParams.ViewMode}=${viewMode}`;
     } else if (currentPath.startsWith(RouteDefinitions.Apps) && hasSubPath(currentPath)) {
       return `${RouteDefinitions.Apps}/${getTabFromUrl(currentPath, AppsTabs[1])}?${SearchParams.ViewMode}=${viewMode}`;
     } else if (currentPath.startsWith(RouteDefinitions.UserPublic)) {
