@@ -52,7 +52,7 @@ const WelcomeMessage = memo(props => {
           title: 'Welcome message',
           content: (
             <>
-              <Box>
+              <Box data-tour="agent-welcome-message">
                 <Input.StyledInputEnhancer
                   autoComplete="off"
                   showexpandicon="true"

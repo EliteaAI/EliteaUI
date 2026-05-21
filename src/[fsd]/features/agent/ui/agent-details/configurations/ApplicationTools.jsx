@@ -115,7 +115,10 @@ const ApplicationTools = memo(props => {
         {
           title,
           content: (
-            <Box sx={[styles.containerStyles, containerSX]}>
+            <Box
+              sx={[styles.containerStyles, containerSX]}
+              data-tour="agent-tools"
+            >
               {!disabled && (
                 <Box sx={{ margin: '.75rem 0' }}>
                   <ToolMenu applicationId={applicationId} />

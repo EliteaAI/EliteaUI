@@ -98,7 +98,7 @@ const ConversationStarters = memo(props => {
         {
           title: 'Conversation starters',
           content: (
-            <>
+            <Box data-tour="agent-conversation-starters">
               {values.map((value, index) => {
                 const starterFocusId = `${PROMPT_PAYLOAD_KEY.conversationStarters}_${index}`;
                 const hasStarterError = blurredIndices.has(index) && !value?.trim();
@@ -178,7 +178,7 @@ const ConversationStarters = memo(props => {
                   </Box>
                 </Tooltip>
               )}
-            </>
+            </Box>
           ),
         },
       ]}

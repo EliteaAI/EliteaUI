@@ -220,7 +220,10 @@ const InstructionsInput = memo(props => {
         {
           title: 'Instructions',
           content: (
-            <Box sx={styles.wrapper}>
+            <Box
+              sx={styles.wrapper}
+              data-tour="agent-instructions"
+            >
               <Box sx={containerStyle}>
                 <FileReaderEnhancer
                   ref={inputRef}

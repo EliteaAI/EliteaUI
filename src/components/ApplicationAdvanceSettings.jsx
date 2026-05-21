@@ -81,7 +81,10 @@ const ApplicationAdvanceSettings = memo(props => {
       {
         title: 'Advanced',
         content: (
-          <Box sx={styles.fieldContainer}>
+          <Box
+            sx={styles.fieldContainer}
+            data-tour="agent-advanced-settings"
+          >
             <FormInput
               value={version_details?.meta?.step_limit ?? ''}
               onChange={handleChange}

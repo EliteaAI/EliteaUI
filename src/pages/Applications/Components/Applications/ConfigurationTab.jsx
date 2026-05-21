@@ -322,6 +322,7 @@ const ConfigurationTab = memo(props => {
             size={{ xs: 12, lg: lgGridColumns }}
             sx={styles.leftGridItem}
             hidden={isFullScreenChat}
+            data-tour="agent-workspace"
           >
             <ContentContainer height="100%">
               <ApplicationConfigurationForm
