@@ -6,6 +6,7 @@ import { Box, Button, IconButton, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { ParticipantEntityTypes } from '@/[fsd]/features/chat/lib/constants/participant.constants';
+import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { ContextBudgetUI } from '@/[fsd]/widgets/ContextBudget';
 import AddAgentIcon from '@/assets/add-agent-icon.svg?react';
 import AddMCPIcon from '@/assets/add-mcp-icon.svg?react';
@@ -237,7 +238,7 @@ const Participants = memo(props => {
     >
       <Box
         sx={styles.contentContainer(hideClearChatButton, collapsed, isSmallWindow)}
-        data-tour="chat-participants"
+        data-tour={CHAT_TOUR_TARGET_IDS.participants}
       >
         <Box sx={styles.headerContainer(collapsed, isSmallWindow)}>
           {(!collapsed || isSmallWindow) && (
@@ -524,7 +525,7 @@ const Participants = memo(props => {
         </Box>
       )}
       {conversationId && (
-        <Box data-tour="chat-context-budget">
+        <Box data-tour={CHAT_TOUR_TARGET_IDS.contextBudget}>
           <ContextBudgetUI.ContextBudgetInfo
             conversationId={conversationId}
             collapsed={collapsed && !isSmallWindow}

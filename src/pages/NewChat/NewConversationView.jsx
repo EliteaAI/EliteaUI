@@ -8,6 +8,7 @@ import { Box, Typography } from '@mui/material';
 import { NewConversationHelpers } from '@/[fsd]/features/chat/lib/helpers';
 import { useNewStartConversationInputKeyDownHandler, useSlashMention } from '@/[fsd]/features/chat/lib/hooks';
 import { SlashSuggestionList } from '@/[fsd]/features/chat/ui';
+import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { DEFAULT_STEPS_LIMIT } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
 import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
 import { cleanLLMSettings, generateLLMSettings } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
@@ -787,7 +788,7 @@ const NewConversationView = forwardRef(
           )}
           <Box
             sx={styles.inputContainer}
-            data-tour="chat-message-input"
+            data-tour={CHAT_TOUR_TARGET_IDS.messageInput}
           >
             <NewChatInput
               placeholder="Type your message. Use # to search and add AI assistants to conversation."

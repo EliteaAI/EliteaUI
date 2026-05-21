@@ -25,6 +25,7 @@ import {
   useEditConversation,
   useInternalToolsConfig,
 } from '@/[fsd]/features/chat/lib/hooks';
+import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { eliteaApi } from '@/api/eliteaApi';
 import {
   ChatParticipantType,
@@ -1329,7 +1330,7 @@ const NewChat = props => {
     <>
       <Grid
         container
-        data-tour="chat-workspace"
+        data-tour={CHAT_TOUR_TARGET_IDS.workspace}
         sx={styles.container}
       >
         <Grid

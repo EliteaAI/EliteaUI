@@ -2,6 +2,7 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Box, Typography, debounce } from '@mui/material';
 
+import { AGENT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { useFieldFocus } from '@/[fsd]/shared/lib/hooks';
 import { Input } from '@/[fsd]/shared/ui';
@@ -52,7 +53,7 @@ const WelcomeMessage = memo(props => {
           title: 'Welcome message',
           content: (
             <>
-              <Box data-tour="agent-welcome-message">
+              <Box data-tour={AGENT_TOUR_TARGET_IDS.welcomeMessage}>
                 <Input.StyledInputEnhancer
                   autoComplete="off"
                   showexpandicon="true"

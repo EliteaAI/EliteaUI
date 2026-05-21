@@ -1,3 +1,5 @@
+import { CHAT_TOUR_TARGETS } from '@/[fsd]/features/interactive-tours/lib/constants/chatTourTargets';
+
 export const CHAT_TOUR_ID = 'chat';
 
 export const CHAT_TOUR_COMPLETION = {
@@ -11,7 +13,7 @@ export const CHAT_TOUR_COMPLETION = {
 export const chatTourSteps = [
   {
     id: 'what-is-chat',
-    target: '[data-tour="chat-workspace"]',
+    target: CHAT_TOUR_TARGETS.workspace,
     placement: 'center',
     title: 'What is ELITEA Chat?',
     // markdown — rendered via mui-markdown in InteractiveTourCard
@@ -21,7 +23,7 @@ Each conversation is an independent dialogue session. Context is not shared betw
   },
   {
     id: 'conversations',
-    target: '[data-tour="chat-conversations"]',
+    target: CHAT_TOUR_TARGETS.conversations,
     placement: 'right',
     title: 'Conversations',
     content: `Every interaction in Chat takes place inside a conversation. Conversations are automatically named based on your first message and organized by time period (Today, Yesterday, This Week, Older). Pinned conversations always appear at the top.
@@ -42,7 +44,7 @@ Use the **search** icon in the CONVERSATIONS header to filter conversations by n
   },
   {
     id: 'folders',
-    target: '[data-tour="chat-folders"]',
+    target: CHAT_TOUR_TARGETS.folders,
     placement: 'right',
     title: 'Folders',
     content: `Conversations can be organized into folders. Create a folder using the **+ Folder** button, then move conversations into it by dragging and dropping or using the three-dot menu. Folders follow the same private/public rules as conversations.
@@ -52,7 +54,7 @@ Use the **search** icon in the CONVERSATIONS header to filter conversations by n
   },
   {
     id: 'participants',
-    target: '[data-tour="chat-participants"]',
+    target: CHAT_TOUR_TARGETS.participants,
     placement: 'left',
     title: 'Participants',
     content: `Participants define what a conversation can do. Five types are available:
@@ -69,7 +71,7 @@ Agents, pipelines, toolkits, and MCPs can also be created or edited directly fro
   },
   {
     id: 'messaging',
-    target: '[data-tour="chat-message-input"]',
+    target: CHAT_TOUR_TARGETS.messageInput,
     placement: 'bottom',
     title: 'Messaging',
     content: `- **Mentioning tools** — type \`/\` in the message input to direct the AI to use a specific tool from an already-added toolkit. Select the toolkit, then select the tool — the mention is embedded as \`/{ToolkitName}/{ToolName}\`. Multiple mentions can be combined in a single message.
@@ -78,7 +80,7 @@ Agents, pipelines, toolkits, and MCPs can also be created or edited directly fro
   },
   {
     id: 'internal-tools',
-    target: '[data-tour="chat-internal-tools"]',
+    target: CHAT_TOUR_TARGETS.internalTools,
     placement: 'top',
     title: 'Internal Tools',
     content: `Internal tools are built-in capabilities that require no external credentials:
@@ -93,7 +95,7 @@ Agents, pipelines, toolkits, and MCPs can also be created or edited directly fro
   },
   {
     id: 'model-settings',
-    target: '[data-tour="chat-model-settings"]',
+    target: CHAT_TOUR_TARGETS.modelSettings,
     placement: 'top',
     title: 'Model & Settings',
     content: `Choose a language model from the model selector in the message input area. Click the settings (⚙️) icon to fine-tune response generation:
@@ -103,7 +105,7 @@ Agents, pipelines, toolkits, and MCPs can also be created or edited directly fro
   },
   {
     id: 'context-budget',
-    target: '[data-tour="chat-context-budget"]',
+    target: CHAT_TOUR_TARGETS.contextBudget,
     placement: 'left',
     title: 'Context Budget',
     content: `The **Context Budget** widget displays real-time token usage for the current conversation and automatically manages context as it approaches the model's token limit. It appears in the PARTICIPANTS panel after the first message is sent.
@@ -119,7 +121,7 @@ Key capabilities:
   },
   {
     id: 'canvas-mode',
-    target: '[data-tour="chat-canvas-mode"]',
+    target: CHAT_TOUR_TARGETS.canvasMode,
     placement: 'left',
     title: 'Canvas Mode',
     content: `When a response contains editable content, a **Pencil** icon (✏️) appears alongside the output. Clicking it opens an inline editor for that content:
@@ -133,7 +135,7 @@ Canvas editing is available when interacting with Models, Agents, and Pipelines.
   },
   {
     id: 'message-feedback',
-    target: '[data-tour="chat-message-feedback"]',
+    target: CHAT_TOUR_TARGETS.messageFeedback,
     placement: 'top',
     title: 'Message Feedback',
     content: `Each AI response includes feedback controls:

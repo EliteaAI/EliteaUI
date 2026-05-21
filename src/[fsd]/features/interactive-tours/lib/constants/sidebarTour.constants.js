@@ -128,7 +128,7 @@ Once configured, a toolkit can be attached to any agent or pipeline and used dir
     content: `## What is Applications?
 
 The Applications menu is where you discover, request, and manage purpose-built AI applications that extend ELITEA beyond agents and pipelines. Each application provides a dedicated interface and a ready-to-use set of tools that can also be referenced in agents and pipelines.`,
-    skip: true,
+    skip: false,
   },
   {
     id: 'mcps',

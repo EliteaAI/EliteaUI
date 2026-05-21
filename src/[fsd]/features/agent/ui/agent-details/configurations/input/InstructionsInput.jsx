@@ -6,6 +6,7 @@ import { Box } from '@mui/material';
 
 import { useInstructionsInputRefContext } from '@/[fsd]/app/providers';
 import { useInstructionsMention } from '@/[fsd]/features/agent/lib/hooks/useInstructionsMention.hooks';
+import { AGENT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { FileReaderEnhancer } from '@/[fsd]/shared/ui/input';
@@ -222,7 +223,7 @@ const InstructionsInput = memo(props => {
           content: (
             <Box
               sx={styles.wrapper}
-              data-tour="agent-instructions"
+              data-tour={AGENT_TOUR_TARGET_IDS.instructions}
             >
               <Box sx={containerStyle}>
                 <FileReaderEnhancer

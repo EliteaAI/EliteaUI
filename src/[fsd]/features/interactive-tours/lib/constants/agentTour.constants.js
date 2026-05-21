@@ -1,3 +1,5 @@
+import { AGENT_TOUR_TARGETS } from '@/[fsd]/features/interactive-tours/lib/constants/agentTourTargets';
+
 export const AGENT_TOUR_ID = 'agent';
 
 export const AGENT_TOUR_COMPLETION = {
@@ -11,7 +13,7 @@ export const AGENT_TOUR_COMPLETION = {
 export const agentTourSteps = [
   {
     id: 'what-is-agent',
-    target: '[data-tour="agent-workspace"]',
+    target: AGENT_TOUR_TARGETS.workspace,
     placement: 'center',
     title: 'What are ELITEA Agents?',
     content: `ELITEA Agents are customizable AI-powered virtual assistants that automate tasks and streamline workflows. Each agent is built around three core components:
@@ -24,7 +26,7 @@ Once configured, an agent can autonomously execute complex, multi-step tasks suc
   },
   {
     id: 'instructions',
-    target: '[data-tour="agent-instructions"]',
+    target: AGENT_TOUR_TARGETS.instructions,
     placement: 'right',
     title: 'Instructions (System Prompt)',
     content: `**Instructions** are the core of every agent — write clear, step-by-step guidance for the AI and reference the toolkits it should use.
@@ -34,7 +36,7 @@ Once configured, an agent can autonomously execute complex, multi-step tasks suc
   },
   {
     id: 'tools',
-    target: '[data-tour="agent-tools"]',
+    target: AGENT_TOUR_TARGETS.tools,
     placement: 'right',
     title: 'Toolkits',
     content: `Toolkits extend the agent's capabilities by connecting it to external services and other ELITEA resources. Attach them using the buttons in the TOOLKITS section — existing items can be selected from a dropdown, or new ones can be created inline without leaving the agent page.
@@ -46,7 +48,7 @@ Once configured, an agent can autonomously execute complex, multi-step tasks suc
   },
   {
     id: 'conversation-starters',
-    target: '[data-tour="agent-conversation-starters"]',
+    target: AGENT_TOUR_TARGETS.conversationStarters,
     placement: 'right',
     title: 'Conversation Starters',
     content: `**Conversation Starters** are predefined prompt buttons that let users launch common tasks with a single click, without typing anything.
@@ -55,7 +57,7 @@ Add starters that represent the most frequent or useful tasks for your agent. Us
   },
   {
     id: 'advanced-settings',
-    target: '[data-tour="agent-advanced-settings"]',
+    target: AGENT_TOUR_TARGETS.advancedSettings,
     placement: 'right',
     title: 'Internal Tools & AI Model',
     content: `**Internal Tools** are built-in capabilities available to every agent without external credentials. Enable them directly from the agent configuration:
@@ -75,14 +77,14 @@ Add starters that represent the most frequent or useful tasks for your agent. Us
   },
   {
     id: 'welcome-message',
-    target: '[data-tour="agent-welcome-message"]',
+    target: AGENT_TOUR_TARGETS.welcomeMessage,
     placement: 'right',
     title: 'Welcome Message',
     content: `The **Welcome Message** is a greeting shown when the agent is opened in Chat. Use it to explain the agent's purpose and set expectations for the user.`,
   },
   {
     id: 'versions',
-    target: '[data-tour="agent-versions"]',
+    target: AGENT_TOUR_TARGETS.versions,
     placement: 'bottom',
     title: 'Version Management',
     content: `Every save creates or updates the **base** version. Use **Save As Version** to snapshot a stable state with a named version. Switch between versions via the version dropdown, and roll back at any time.
@@ -91,7 +93,7 @@ You can also **Export** any saved version as a \`.zip\` or \`.md\` file to back 
   },
   {
     id: 'publish',
-    target: '[data-tour="agent-publish"]',
+    target: AGENT_TOUR_TARGETS.publish,
     placement: 'bottom',
     title: 'Publishing to Agents Studio',
     content: `Publish an agent to **Agents Studio** — a shared community library accessible to all users across projects. Published agents appear as read-only cards in Studio. Other users can start conversations with them, like them, and add them to their own chats.
@@ -100,7 +102,7 @@ Once submitted, a published version goes through a moderation review. You will r
   },
   {
     id: 'test-chat',
-    target: '[data-tour="agent-workspace"]',
+    target: AGENT_TOUR_TARGETS.workspace,
     placement: 'center',
     title: 'Embedded Test Chat',
     content: `The agent configuration page includes a live chat panel so you can test the agent as you build it — no need to navigate away. Any change to the instructions, toolkits, or model settings takes effect immediately in the next message you send.
@@ -109,7 +111,7 @@ Once submitted, a published version goes through a moderation review. You will r
   },
   {
     id: 'run-history',
-    target: '[data-tour="agent-workspace"]',
+    target: AGENT_TOUR_TARGETS.workspace,
     placement: 'center',
     title: 'Run History',
     content: `Every agent execution is logged automatically. Open the **Run History** panel to browse past runs, inspect inputs and outputs, replay conversations step by step, and restore a previous run's message history to the test chat for further debugging.`,

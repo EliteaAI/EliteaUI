@@ -12,6 +12,7 @@ import {
   GroupedConversations,
   PinnedConversations,
 } from '@/[fsd]/features/chat/conversation-list/ui';
+import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { SimpleSearchBar } from '@/[fsd]/shared/ui/input';
 import { useLazyDateGroupConversationsQuery, useLazyFolderConversationsQuery } from '@/api';
 import { PERMISSIONS } from '@/common/constants';
@@ -478,7 +479,7 @@ const Conversations = memo(props => {
       autoScroll={false}
     >
       <Box
-        data-tour="chat-conversations"
+        data-tour={CHAT_TOUR_TARGET_IDS.conversations}
         sx={{ height: '100%', position: 'relative', width: collapsed && !isSmallWindow ? '36px' : '100%' }}
       >
         <Box
@@ -666,7 +667,7 @@ const Conversations = memo(props => {
               renderConversationItem={renderConversationItem}
             />
 
-            <Box data-tour="chat-folders">{renderFoldersSection({ isPinned: false })}</Box>
+            <Box data-tour={CHAT_TOUR_TARGET_IDS.folders}>{renderFoldersSection({ isPinned: false })}</Box>
 
             {/* Render Grouped Conversations */}
             <DroppableGroupedArea

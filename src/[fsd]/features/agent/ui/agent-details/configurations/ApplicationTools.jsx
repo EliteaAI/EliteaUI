@@ -5,6 +5,7 @@ import { useFormikContext } from 'formik';
 import { Box, Typography } from '@mui/material';
 
 import { Switch } from '@/[fsd]/features/agent/ui/agent-details/configurations';
+import { AGENT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
@@ -117,7 +118,7 @@ const ApplicationTools = memo(props => {
           content: (
             <Box
               sx={[styles.containerStyles, containerSX]}
-              data-tour="agent-tools"
+              data-tour={AGENT_TOUR_TARGET_IDS.tools}
             >
               {!disabled && (
                 <Box sx={{ margin: '.75rem 0' }}>

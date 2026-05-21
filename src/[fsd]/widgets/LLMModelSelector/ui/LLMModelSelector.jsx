@@ -2,6 +2,7 @@ import { memo, useCallback, useRef, useState } from 'react';
 
 import { Box, Button, ButtonGroup, Divider, Tooltip, Typography, useTheme } from '@mui/material';
 
+import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import ShareIcon from '@/assets/share-icon.svg?react';
 import BriefcaseIcon from '@/components/Icons/BriefcaseIcon.jsx';
 import SettingIcon from '@/components/Icons/SettingIcon';
@@ -80,7 +81,7 @@ const LLMModelSelector = memo(props => {
         ref={anchorRef}
         aria-label="Model Selector Menu"
         sx={styles.buttonGroup}
-        data-tour="chat-model-settings"
+        data-tour={CHAT_TOUR_TARGET_IDS.modelSettings}
       >
         <Tooltip
           placement="top"

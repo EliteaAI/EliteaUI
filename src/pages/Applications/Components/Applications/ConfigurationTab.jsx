@@ -8,6 +8,7 @@ import RunHistoryContainer from '@/[fsd]/entities/run-history/ui/RunHistoryConta
 import { useApplicationChat } from '@/[fsd]/features/agent/lib/hooks';
 import { ParticipantEntityTypes } from '@/[fsd]/features/chat/lib/constants/participant.constants';
 import { ChatButton } from '@/[fsd]/features/chat/ui';
+import { AGENT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { useShowRunHistoryFromUrl } from '@/[fsd]/shared/lib/hooks';
 import { ViewRunHistoryButton } from '@/[fsd]/shared/ui/button';
 import { ContextBudgetUI } from '@/[fsd]/widgets/ContextBudget';
@@ -322,7 +323,7 @@ const ConfigurationTab = memo(props => {
             size={{ xs: 12, lg: lgGridColumns }}
             sx={styles.leftGridItem}
             hidden={isFullScreenChat}
-            data-tour="agent-workspace"
+            data-tour={AGENT_TOUR_TARGET_IDS.workspace}
           >
             <ContentContainer height="100%">
               <ApplicationConfigurationForm

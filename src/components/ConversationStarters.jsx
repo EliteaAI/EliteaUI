@@ -6,6 +6,7 @@ import { Box, ListItem, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { conversationStartersHelpers } from '@/[fsd]/features/agent/lib/helpers';
+import { AGENT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { useFieldFocus } from '@/[fsd]/shared/lib/hooks';
 import { Input } from '@/[fsd]/shared/ui';
@@ -98,7 +99,7 @@ const ConversationStarters = memo(props => {
         {
           title: 'Conversation starters',
           content: (
-            <Box data-tour="agent-conversation-starters">
+            <Box data-tour={AGENT_TOUR_TARGET_IDS.conversationStarters}>
               {values.map((value, index) => {
                 const starterFocusId = `${PROMPT_PAYLOAD_KEY.conversationStarters}_${index}`;
                 const hasStarterError = blurredIndices.has(index) && !value?.trim();
