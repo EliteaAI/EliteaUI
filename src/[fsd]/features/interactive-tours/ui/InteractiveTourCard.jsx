@@ -24,12 +24,15 @@ const InteractiveTourCard = memo(() => {
   const { currentStep, stepIndex, totalSteps, next, back, skip } = useInteractiveTour();
   const styles = tourCardStyles();
   const { targetInfo, cardPositionSx, cardBodySx } = useTourCardPosition(currentStep);
+  const isFirstStep = stepIndex === 0;
+  const isLastStep = stepIndex === totalSteps - 1;
 
   const dialogRef = useRef(null);
+  const primaryActionRef = useRef(null);
   const previousFocusRef = useRef(null);
 
-  // Capture the focused element when the tour starts, move focus into the card
-  // on each step, and restore the original focus when the tour ends.
+  // Capture the focused element when the tour starts, move focus to the primary
+  // action on each step, and restore the original focus when the tour ends.
   useEffect(() => {
     if (!currentStep) {
       previousFocusRef.current?.focus?.();
@@ -39,35 +42,66 @@ const InteractiveTourCard = memo(() => {
     if (!previousFocusRef.current) {
       previousFocusRef.current = document.activeElement;
     }
-    dialogRef.current?.focus();
+    primaryActionRef.current?.focus?.() ?? dialogRef.current?.focus();
   }, [currentStep]);
 
-  // Keep Tab/Shift+Tab cycling within the dialog while the tour is active.
-  const handleKeyDown = useCallback(e => {
-    if (e.key !== 'Tab' || !dialogRef.current) return;
-    const focusable = Array.from(
-      dialogRef.current.querySelectorAll(
-        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
-      ),
-    );
-    if (!focusable.length) return;
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-    if (e.shiftKey) {
-      if (document.activeElement === first) {
-        e.preventDefault();
-        last.focus();
+  // Keep Tab/Shift+Tab cycling within the dialog while the tour is active and
+  // allow keyboard step navigation without requiring pointer interaction.
+  const handleKeyDown = useCallback(
+    e => {
+      if (!dialogRef.current) return;
+
+      const focusable = Array.from(
+        dialogRef.current.querySelectorAll(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      );
+
+      if (e.key === 'Tab') {
+        if (!focusable.length) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
+        if (e.shiftKey) {
+          if (document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          }
+          return;
+        }
+
+        if (document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+        return;
       }
-    } else if (document.activeElement === last) {
-      e.preventDefault();
-      first.focus();
-    }
-  }, []);
+
+      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        next();
+        return;
+      }
+
+      if (e.key === 'ArrowLeft') {
+        if (!isFirstStep) {
+          e.preventDefault();
+          back();
+        }
+        return;
+      }
+
+      if (e.key === 'Enter' && document.activeElement === dialogRef.current) {
+        e.preventDefault();
+        next();
+      }
+    },
+    [back, isFirstStep, next],
+  );
 
   if (!currentStep) return null;
-
-  const isFirstStep = stepIndex === 0;
-  const isLastStep = stepIndex === totalSteps - 1;
 
   return (
     <>
@@ -120,6 +154,7 @@ const InteractiveTourCard = memo(() => {
             </BaseBtn>
             <BaseBtn
               variant={BUTTON_VARIANTS.contained}
+              ref={primaryActionRef}
               onClick={next}
             >
               {isLastStep ? 'Finish' : 'Next'}
