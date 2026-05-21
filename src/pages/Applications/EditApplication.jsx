@@ -6,8 +6,6 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { InstructionsInputRefProvider } from '@/[fsd]/app/providers';
 import { ApplicationControls, ApplicationTabBar } from '@/[fsd]/entities/application-tab-bar/ui';
 import { useIsVersionNotFound } from '@/[fsd]/entities/version/lib/hooks';
-import { AGENT_TOUR_ID } from '@/[fsd]/features/interactive-tours/lib/agentTour';
-import { useProposeTour } from '@/[fsd]/features/interactive-tours/model/useProposeTour';
 import { ViewMode } from '@/common/constants';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils';
 import StyledTabs from '@/components/StyledTabs';
@@ -24,8 +22,6 @@ import useApplicationInitialValues from './useApplicationInitialValues';
 const EditApplication = memo(() => {
   const viewMode = useViewMode();
   const fileReaderEnhancerRef = useRef();
-
-  useProposeTour(AGENT_TOUR_ID);
 
   const { toastError } = useToast();
   const { initialValues, isFetching, isError, error, applicationId } = useApplicationInitialValues();

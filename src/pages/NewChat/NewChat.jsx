@@ -25,7 +25,6 @@ import {
   useEditConversation,
   useInternalToolsConfig,
 } from '@/[fsd]/features/chat/lib/hooks';
-import { CHAT_TOUR_ID, useProposeTour } from '@/[fsd]/features/interactive-tours';
 import { eliteaApi } from '@/api/eliteaApi';
 import {
   ChatParticipantType,
@@ -100,8 +99,6 @@ import ParticipantsWrapper from './Participants/index';
 
 const NewChat = props => {
   const { projectId, preProjectId, setPreProjectId } = props;
-
-  useProposeTour(CHAT_TOUR_ID);
 
   const dispatch = useDispatch();
 
