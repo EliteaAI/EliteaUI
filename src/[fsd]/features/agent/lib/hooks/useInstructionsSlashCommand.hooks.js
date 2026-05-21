@@ -20,7 +20,7 @@ const { MentionPhase } = MentionConstants;
  * Token written to textarea:
  *   agent/pipeline              → "/Name "
  *   toolkit without specific tool → "/Name "
- *   toolkit with specific tool  → "/Name#ToolName "
+ *   toolkit with specific tool  → "/Name/ToolName "
  *
  * mentionAnchorRef: character index of the leading "/" in the current mention.
  */
@@ -62,10 +62,10 @@ export const useInstructionsSlashCommand = () => {
 
   const upsertMention = useCallback((name, tool_name = null) => {
     setCommittedMentions(prev => {
-      const existing = prev.find(m => m.name === name);
-      const next = existing
-        ? prev.map(m => (m.name === name ? { name, tool_name } : m))
-        : [...prev, { name, tool_name }];
+      // Each unique {name, tool_name} pair is its own entry so the same toolkit
+      // can be mentioned multiple times with different tools.
+      const alreadyPresent = prev.some(m => m.name === name && m.tool_name === tool_name);
+      const next = alreadyPresent ? prev : [...prev, { name, tool_name }];
       committedMentionsRef.current = next;
       return next;
     });
@@ -77,6 +77,11 @@ export const useInstructionsSlashCommand = () => {
       committedMentionsRef.current = next;
       return next;
     });
+  }, []);
+
+  const initCommittedMentions = useCallback(mentions => {
+    committedMentionsRef.current = mentions;
+    setCommittedMentions(mentions);
   }, []);
 
   // ── Keyboard handler ─────────────────────────────────────────────────────────
@@ -118,8 +123,8 @@ export const useInstructionsSlashCommand = () => {
    * correctly — the user can type "/" at any cursor position, not just at the end.
    *
    * Regex patterns (matched at end of textToCursor):
-   *   fullMatch       → /name#toolQuery   (# separator for instructions)
-   *   itemOnlyMatch   → /name             (no # yet)
+   *   fullMatch       → /name/toolQuery   (/ separator for instructions)
+   *   itemOnlyMatch   → /name             (no / yet)
    */
   const syncWithValue = useCallback(
     (text, cursorPos) => {
@@ -129,8 +134,8 @@ export const useInstructionsSlashCommand = () => {
 
       if (current === MentionPhase.Idle) {
         // Detect backspace into a committed mention.
-        const fullMatch = textToCursor.match(/\/([^#\s]+)#([^#\s]*)$/);
-        const itemOnlyMatch = !fullMatch && textToCursor.match(/\/([^#\s]*)$/);
+        const fullMatch = textToCursor.match(/\/([^/\s]+)\/([^/\s]*)$/);
+        const itemOnlyMatch = !fullMatch && textToCursor.match(/\/([^/\s]*)$/);
 
         if (fullMatch) {
           const name = fullMatch[1];
@@ -169,7 +174,7 @@ export const useInstructionsSlashCommand = () => {
           // Check if textToCursor ends with a prefix of any committed mention token.
           for (const mention of committedMentionsRef.current) {
             const fullToken = mention.tool_name
-              ? '/' + mention.name + '#' + mention.tool_name
+              ? '/' + mention.name + '/' + mention.tool_name
               : '/' + mention.name;
             for (let len = fullToken.length; len >= 2; len--) {
               const candidate = fullToken.slice(0, len);
@@ -177,12 +182,12 @@ export const useInstructionsSlashCommand = () => {
               const prevCharIdx = textToCursor.length - candidate.length - 1;
               const prevChar = prevCharIdx >= 0 ? textToCursor[prevCharIdx] : '';
               if (prevChar !== '' && !/\s/.test(prevChar)) break;
-              const hashIdx = candidate.indexOf('#');
-              if (hashIdx !== -1) {
+              const sepIdx = candidate.indexOf('/', 1);
+              if (sepIdx !== -1) {
                 uncommitByName(mention.name);
                 setSelectedItem({ name: mention.name });
                 setItemQuery(mention.name);
-                setToolQuery(candidate.slice(hashIdx + 1));
+                setToolQuery(candidate.slice(sepIdx + 1));
                 phaseRef.current = MentionPhase.Tools;
                 setPhase(MentionPhase.Tools);
                 mentionAnchorRef.current = pos - candidate.length;
@@ -205,11 +210,11 @@ export const useInstructionsSlashCommand = () => {
         // between the anchor and the cursor. This supports names with spaces.
         if (mentionAnchorRef.current !== null && text[mentionAnchorRef.current] === '/') {
           const afterAnchor = text.slice(mentionAnchorRef.current + 1, pos);
-          const hashIdx = afterAnchor.indexOf('#');
-          if (hashIdx !== -1) {
-            setItemQuery(afterAnchor.slice(0, hashIdx));
+          const sepIdx = afterAnchor.indexOf('/');
+          if (sepIdx !== -1) {
+            setItemQuery(afterAnchor.slice(0, sepIdx));
             if (selectedItem) {
-              setToolQuery(afterAnchor.slice(hashIdx + 1));
+              setToolQuery(afterAnchor.slice(sepIdx + 1));
               phaseRef.current = MentionPhase.Tools;
               setPhase(MentionPhase.Tools);
             }
@@ -221,11 +226,11 @@ export const useInstructionsSlashCommand = () => {
           return;
         }
 
-        const fullMatch = textToCursor.match(/\/([^#\s]+)#([^#\s]*)$/);
-        const itemOnlyMatch = !fullMatch && textToCursor.match(/\/([^#\s]*)$/);
+        const fullMatch = textToCursor.match(/\/([^/\s]+)\/([^/\s]*)$/);
+        const itemOnlyMatch = !fullMatch && textToCursor.match(/\/([^/\s]*)$/);
 
         if (fullMatch) {
-          // User typed "#" — treat as a toolkit separator if we have a selected item.
+          // User typed "/" — treat as a toolkit separator if we have a selected item.
           setItemQuery(fullMatch[1]);
           if (selectedItem) {
             setToolQuery(fullMatch[2]);
@@ -248,11 +253,11 @@ export const useInstructionsSlashCommand = () => {
           resetSlash();
           return;
         }
-        const toolkitPrefix = '/' + selectedItem.name + '#';
+        const toolkitPrefix = '/' + selectedItem.name + '/';
         const prefixIdx = textToCursor.lastIndexOf(toolkitPrefix);
         if (prefixIdx !== -1) {
           const toolQueryPart = textToCursor.slice(prefixIdx + toolkitPrefix.length);
-          if (/[\s#]/.test(toolQueryPart)) {
+          if (/[\s/]/.test(toolQueryPart)) {
             resetSlash();
           } else {
             setToolQuery(toolQueryPart);
@@ -262,7 +267,7 @@ export const useInstructionsSlashCommand = () => {
         // Separator deleted — fall back to items phase.
         const nameOnly = '/' + selectedItem.name;
         const nameIdx = textToCursor.lastIndexOf(nameOnly);
-        if (nameIdx !== -1 && !/[\s#]/.test(textToCursor.slice(nameIdx + nameOnly.length))) {
+        if (nameIdx !== -1 && !/[\s/]/.test(textToCursor.slice(nameIdx + nameOnly.length))) {
           setItemQuery(selectedItem.name);
           phaseRef.current = MentionPhase.Items;
           setPhase(MentionPhase.Items);
@@ -345,6 +350,7 @@ export const useInstructionsSlashCommand = () => {
     commitMention,
     resetSlash,
     resetAll,
+    initCommittedMentions,
     mentionAnchorRef,
   };
 };

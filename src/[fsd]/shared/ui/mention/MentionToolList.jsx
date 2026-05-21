@@ -1,15 +1,38 @@
-import { memo } from 'react';
+import { memo, useEffect, useRef } from 'react';
 
 import { Box, ClickAwayListener, Typography } from '@mui/material';
 
 import MentionToolItem from './MentionToolItem';
 
 const MentionToolList = memo(props => {
-  const { tools, toolkitName, onSelectTool } = props;
+  const { tools, toolkitName, onSelectTool, highlightedIndex } = props;
   const styles = mentionToolListStyles();
+  const containerRef = useRef(null);
+
+  // Scroll the highlighted item into view, accounting for the sticky header.
+  useEffect(() => {
+    if (!containerRef.current || highlightedIndex < 0) return;
+    const container = containerRef.current;
+    const highlighted = container.querySelector('[data-highlighted="true"]');
+    if (!highlighted) return;
+    const stickyHeader = container.firstElementChild;
+    const headerHeight = stickyHeader ? stickyHeader.offsetHeight : 0;
+    const containerRect = container.getBoundingClientRect();
+    const itemRect = highlighted.getBoundingClientRect();
+    const itemTopRelative = itemRect.top - containerRect.top;
+    const itemBottomRelative = itemRect.bottom - containerRect.top;
+    if (itemTopRelative < headerHeight) {
+      container.scrollTop += itemTopRelative - headerHeight;
+    } else if (itemBottomRelative > container.clientHeight) {
+      container.scrollTop += itemBottomRelative - container.clientHeight;
+    }
+  }, [highlightedIndex]);
 
   const content = (
-    <Box sx={styles.container}>
+    <Box
+      ref={containerRef}
+      sx={styles.container}
+    >
       <Box sx={styles.header}>
         <Typography
           variant="subtitle"
@@ -19,12 +42,13 @@ const MentionToolList = memo(props => {
         </Typography>
       </Box>
 
-      {tools.map(tool => (
+      {tools.map((tool, index) => (
         <MentionToolItem
           key={tool.name}
           label={tool.name}
           description={tool.description}
           onClick={() => onSelectTool(tool.name)}
+          isHighlighted={index === highlightedIndex}
         />
       ))}
     </Box>

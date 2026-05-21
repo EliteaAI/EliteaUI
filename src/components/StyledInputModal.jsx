@@ -25,6 +25,7 @@ const StyledInputModal = forwardRef((props, ref) => {
     stateVariableOptions = [],
     onRealtimeChange,
     afterContent,
+    codeMirrorExtensions,
   } = props;
 
   const { maxLength } = inputProps || {};
@@ -67,7 +68,8 @@ const StyledInputModal = forwardRef((props, ref) => {
     hasOnChangeCallback ? onChange?.(event) : onInput?.(event);
   }, [hasOnChangeCallback, id, name, onChange, onInput]);
 
-  const { extensions } = useLanguageLinter(specifiedLanguage, editorRef.current?.view);
+  const { extensions: linterExtensions } = useLanguageLinter(specifiedLanguage, editorRef.current?.view);
+  const extensions = [...(linterExtensions || []), ...(codeMirrorExtensions || [])];
 
   const onClickClose = useCallback(() => {
     handleBlur();

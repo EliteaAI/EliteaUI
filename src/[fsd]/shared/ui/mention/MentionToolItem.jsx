@@ -3,11 +3,12 @@ import { memo } from 'react';
 import { Box, Typography } from '@mui/material';
 
 const MentionToolItem = memo(props => {
-  const { label, description, onClick } = props;
-  const styles = mentionToolItemStyles();
+  const { label, description, onClick, isHighlighted } = props;
+  const styles = mentionToolItemStyles({ isHighlighted });
   return (
     <Box
       onClick={onClick}
+      data-highlighted={isHighlighted ? 'true' : undefined}
       sx={styles.container}
     >
       <Typography
@@ -35,14 +36,16 @@ MentionToolItem.displayName = 'MentionToolItem';
 export default MentionToolItem;
 
 /** @type {MuiSx} */
-const mentionToolItemStyles = () => ({
+const mentionToolItemStyles = ({ isHighlighted } = {}) => ({
   container: ({ palette }) => ({
     display: 'flex',
     flexDirection: 'column',
     padding: '0.5rem 0.75rem',
     borderRadius: '0.5rem',
     cursor: 'pointer',
-    background: palette.background.userInputBackground,
+    background: isHighlighted
+      ? palette.background.userInputBackgroundActive
+      : palette.background.userInputBackground,
     '&:hover': { background: palette.background.userInputBackgroundActive },
   }),
   label: {

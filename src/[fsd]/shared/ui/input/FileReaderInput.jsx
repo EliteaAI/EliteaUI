@@ -10,15 +10,7 @@ import useToast from '@/hooks/useToast';
 
 const FileReaderEnhancer = forwardRef(
   (
-    {
-      defaultValue,
-      updateVariableList,
-      onChange,
-      hasActionsToolBar = true,
-      fieldName = '',
-      onResetMentionState,
-      ...props
-    },
+    { defaultValue, updateVariableList, onChange, hasActionsToolBar = true, fieldName = '', ...props },
     ref,
   ) => {
     const theme = useTheme();
@@ -65,7 +57,6 @@ const FileReaderEnhancer = forwardRef(
         return textareaRef.current?.selectionStart ?? null;
       },
       getTextareaElement: () => textareaRef.current,
-      resetMentionState: onResetMentionState ?? undefined,
       replaceRange: handleReplaceRange,
     }));
 
