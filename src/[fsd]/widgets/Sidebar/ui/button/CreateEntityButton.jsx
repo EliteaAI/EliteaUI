@@ -21,7 +21,8 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import RouteDefinitions from '@/routes';
 import { actions as artifactActions } from '@/slices/artifact';
 
-const CreateEntityButton = memo(() => {
+const CreateEntityButton = memo(props => {
+  const { tourId } = props;
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { checkPermission } = useCheckPermission();
@@ -232,6 +233,7 @@ const CreateEntityButton = memo(() => {
     >
       <Box
         component="span"
+        data-tour={tourId}
         sx={styles.span}
       >
         <IconButton

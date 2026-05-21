@@ -20,6 +20,7 @@ const SidebarMenuItem = memo(props => {
     disabled,
     tooltip,
     showLabel = true,
+    tourId,
   } = props;
   const sideBarCollapsed = useSelector(state => state.settings.sideBarCollapsed);
   const { shouldDisablePersonalSpace } = useDisablePersonalSpace();
@@ -27,7 +28,10 @@ const SidebarMenuItem = memo(props => {
 
   return isPersonalSpace ? (
     <TooltipForDisablePersonalSpace>
-      <ListItem sx={{ ...styles.menuItem, display }}>
+      <ListItem
+        data-tour={tourId}
+        sx={{ ...styles.menuItem, display }}
+      >
         <ListItemButton
           disabled={shouldDisablePersonalSpace || disabled}
           selected={selected}
@@ -46,7 +50,10 @@ const SidebarMenuItem = memo(props => {
       enterDelay={500}
       enterNextDelay={500}
     >
-      <ListItem sx={{ ...styles.menuItem, display }}>
+      <ListItem
+        data-tour={tourId}
+        sx={{ ...styles.menuItem, display }}
+      >
         <ListItemButton
           disabled={disabled}
           selected={selected}

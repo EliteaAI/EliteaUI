@@ -2,6 +2,7 @@ import { memo, useCallback, useMemo, useReducer } from 'react';
 
 import { AGENT_TOUR_COMPLETION, AGENT_TOUR_ID } from '../lib/agentTour';
 import { CHAT_TOUR_COMPLETION, CHAT_TOUR_ID } from '../lib/chatTour';
+import { SIDEBAR_TOUR_COMPLETION, SIDEBAR_TOUR_ID } from '../lib/sidebarTour';
 import { InteractiveTourContext } from '../model/InteractiveTourContext';
 import FirstVisitPrompt from './FirstVisitPrompt';
 import InteractiveTourCard from './InteractiveTourCard';
@@ -11,12 +12,14 @@ import TourCompleteCard from './TourCompleteCard';
 const TOUR_COMPLETION_CONFIGS = {
   [CHAT_TOUR_ID]: CHAT_TOUR_COMPLETION,
   [AGENT_TOUR_ID]: AGENT_TOUR_COMPLETION,
+  [SIDEBAR_TOUR_ID]: SIDEBAR_TOUR_COMPLETION,
 };
 
 // ─── Tour loaders (lazy) ───────────────────────────────────────────────────────
 const TOUR_LOADERS = {
   [CHAT_TOUR_ID]: () => import('../lib/chatTour').then(m => m.chatTourSteps),
   [AGENT_TOUR_ID]: () => import('../lib/agentTour').then(m => m.agentTourSteps),
+  [SIDEBAR_TOUR_ID]: () => import('../lib/sidebarTour').then(m => m.sidebarTourSteps),
 };
 
 // ─── localStorage helpers ──────────────────────────────────────────────────────
@@ -89,15 +92,16 @@ const InteractiveTourProvider = memo(props => {
     // (e.g. triggered by a context update) cannot snap the phase back to 'prompt'.
     localStorage.setItem(lsPromptKey(id), 'true');
     const steps = (await TOUR_LOADERS[id]?.()) ?? [];
+    const activeSteps = steps.filter(step => !step.skip);
 
-    if (!steps.length) {
+    if (!activeSteps.length) {
       // Unknown tour id or loader returned no steps — reset to idle rather than
       // getting stuck in 'running' with no currentStep and no UI.
       dispatch({ type: 'SKIP' });
       return;
     }
 
-    dispatch({ type: 'START', tourId: id, steps });
+    dispatch({ type: 'START', tourId: id, steps: activeSteps });
   }, []);
 
   const next = useCallback(() => dispatch({ type: 'NEXT' }), []);

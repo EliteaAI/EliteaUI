@@ -29,6 +29,7 @@ const ResourcesButton = memo(() => {
       icon={<ResourcesIcon style={styles.icon} />}
       label="Resources"
       tooltip="Resources"
+      tourId="sidebar-resources"
       onClick={handleResourcesClick}
       isActive={!!isOnResources}
     />

@@ -22,6 +22,7 @@ const SettingsButton = memo(props => {
       icon={<ConfigurationIcon sx={styles.icon} />}
       label="Settings"
       tooltip="Settings"
+      tourId="sidebar-settings"
       onClick={handleSettingsClick}
       isActive={!!isOnSettings}
     />

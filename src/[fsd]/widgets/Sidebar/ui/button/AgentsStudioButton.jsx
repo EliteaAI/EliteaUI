@@ -28,6 +28,7 @@ const AgentsStudioButton = memo(() => {
       icon={<AgentStudioIcon sx={styles.icon} />}
       label="Agents Studio"
       tooltip="Agents Studio"
+      tourId="sidebar-agents-studio"
       onClick={handleAgentStudioClick}
       isActive={!!isOnAgentStudio}
     />

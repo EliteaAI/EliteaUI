@@ -113,8 +113,15 @@ export const useTourCardPosition = currentStep => {
     switch (currentStep.placement) {
       case 'left':
         return { top: verticalTop, left: clampLeft(rect.left - CARD_WIDTH_PX - CARD_GAP_PX) };
-      case 'right':
-        return { top: verticalTop, left: clampLeft(rect.right + CARD_GAP_PX) };
+      case 'right': {
+        const cardLeft = clampLeft(rect.right + CARD_GAP_PX);
+        // If the card fits below the target's top edge, top-align to the target
+        if (rect.top + CARD_ESTIMATED_HEIGHT_PX + VIEWPORT_MARGIN_PX <= vh) {
+          return { top: Math.max(VIEWPORT_MARGIN_PX, rect.top), left: cardLeft };
+        }
+        // Target is near the bottom — bottom-align the card to the target's bottom edge
+        return { bottom: Math.max(VIEWPORT_MARGIN_PX, vh - rect.bottom), left: cardLeft };
+      }
       case 'top': {
         const fitsAbove = rect.top - CARD_GAP_PX - CARD_ESTIMATED_HEIGHT_PX - VIEWPORT_MARGIN_PX >= 0;
         if (fitsAbove) {

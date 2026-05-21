@@ -76,6 +76,7 @@ const NotificationButton = memo(() => {
         }
         label="Notifications"
         tooltip="Notifications"
+        tourId="sidebar-notifications"
         onClick={onClickNotificationButton}
         isActive={!!isOnNotification}
       />

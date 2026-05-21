@@ -11,7 +11,7 @@ import StyledTooltip from '@/ComponentsLib/Tooltip';
  * Common base for Settings, Tips, Notifications, etc.
  */
 const SidebarButton = memo(props => {
-  const { icon, label, tooltip, onClick, isActive = false, children } = props;
+  const { icon, label, tooltip, onClick, isActive = false, children, tourId } = props;
 
   const sideBarCollapsed = useSelector(state => state.settings.sideBarCollapsed);
 
@@ -25,6 +25,7 @@ const SidebarButton = memo(props => {
       enterNextDelay={500}
     >
       <Box
+        data-tour={tourId}
         onClick={onClick}
         sx={styles.container}
       >

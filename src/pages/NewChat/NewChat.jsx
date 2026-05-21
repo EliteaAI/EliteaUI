@@ -25,8 +25,7 @@ import {
   useEditConversation,
   useInternalToolsConfig,
 } from '@/[fsd]/features/chat/lib/hooks';
-import { CHAT_TOUR_ID } from '@/[fsd]/features/interactive-tours/lib/chatTour';
-import { useProposeTour } from '@/[fsd]/features/interactive-tours/model/useProposeTour';
+import { CHAT_TOUR_ID, useProposeTour } from '@/[fsd]/features/interactive-tours';
 import { eliteaApi } from '@/api/eliteaApi';
 import {
   ChatParticipantType,

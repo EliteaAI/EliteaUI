@@ -6,11 +6,13 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Box, Divider, IconButton, Tooltip, Typography, useTheme } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
-import { useGetSupportAssistantConfigQuery } from '@/[fsd]/widgets/SupportAssistant';
+import { useProposeTour } from '@/[fsd]/features/interactive-tours';
+import { SIDEBAR_TOUR_ID } from '@/[fsd]/features/interactive-tours/lib/sidebarTour';
 import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
 import { SidebarConstants, SocketConstants } from '@/[fsd]/widgets/Sidebar/lib/constants';
 import { useSocketIcon } from '@/[fsd]/widgets/Sidebar/lib/hooks';
 import { Buttons, SidebarMenuItem } from '@/[fsd]/widgets/Sidebar/ui';
+import { useGetSupportAssistantConfigQuery } from '@/[fsd]/widgets/SupportAssistant';
 import { useGetPlatformSettingsQuery } from '@/api/platformSettings';
 import AppsIcon from '@/assets/applications-icon.svg?react';
 import ArtifactsIcon from '@/assets/artifacts-icon.svg?react';
@@ -50,6 +52,7 @@ const SidebarBody = memo(props => {
   const { data: platformSettings } = useGetPlatformSettingsQuery();
 
   useGetSupportAssistantConfigQuery();
+  useProposeTour(SIDEBAR_TOUR_ID);
 
   const styles = sideBarBodyStyles(sideBarCollapsed, socketStatus);
 
@@ -103,6 +106,7 @@ const SidebarBody = memo(props => {
           url: RouteDefinitions.Chat,
           breadCrumb: 'Chat',
           tooltip: 'Chat',
+          tourId: 'sidebar-nav-chat',
         },
       ],
       [
@@ -113,6 +117,7 @@ const SidebarBody = memo(props => {
           url: RouteDefinitions.Applications,
           breadCrumb: 'Agents',
           tooltip: 'Agents',
+          tourId: 'sidebar-nav-agents',
         },
         {
           value: 'pipelines',
@@ -121,6 +126,7 @@ const SidebarBody = memo(props => {
           url: RouteDefinitions.Pipelines,
           breadCrumb: 'Pipelines',
           tooltip: 'Pipelines',
+          tourId: 'sidebar-nav-pipelines',
         },
       ],
       [
@@ -131,6 +137,7 @@ const SidebarBody = memo(props => {
           url: RouteDefinitions.Credentials,
           breadCrumb: 'Credentials',
           tooltip: 'Credentials',
+          tourId: 'sidebar-nav-credentials',
         },
 
         {
@@ -140,6 +147,7 @@ const SidebarBody = memo(props => {
           url: RouteDefinitions.Toolkits,
           breadCrumb: 'Toolkits',
           tooltip: 'Toolkits',
+          tourId: 'sidebar-nav-toolkits',
         },
         {
           value: 'applications',
@@ -148,6 +156,7 @@ const SidebarBody = memo(props => {
           url: RouteDefinitions.Apps,
           breadCrumb: 'Applications',
           tooltip: 'Applications',
+          tourId: 'sidebar-nav-applications',
         },
         {
           value: 'mcps',
@@ -156,6 +165,7 @@ const SidebarBody = memo(props => {
           url: RouteDefinitions.MCPs,
           breadCrumb: 'MCP',
           tooltip: 'MCP',
+          tourId: 'sidebar-nav-mcps',
         },
       ],
       [
@@ -166,6 +176,7 @@ const SidebarBody = memo(props => {
           url: RouteDefinitions.Artifacts,
           breadCrumb: 'Artifacts',
           tooltip: 'Artifacts',
+          tourId: 'sidebar-nav-artifacts',
         },
       ],
       [
@@ -255,6 +266,7 @@ const SidebarBody = memo(props => {
       <Box sx={styles.stickyTop}>
         <Box sx={styles.header}>
           <IconButton
+            data-tour="sidebar-logo"
             size="large"
             color="inherit"
             aria-label="open drawer"
@@ -271,7 +283,11 @@ const SidebarBody = memo(props => {
               </Tooltip>
             )}
           </IconButton>
-          {!sideBarCollapsed && <ThemeModeToggle />}
+          {!sideBarCollapsed && (
+            <Box data-tour="sidebar-switch-dark-light-mode">
+              <ThemeModeToggle />
+            </Box>
+          )}
         </Box>
 
         <Divider sx={styles.divider} />
@@ -315,7 +331,7 @@ const SidebarBody = memo(props => {
         <Divider sx={styles.divider} />
 
         <Box sx={styles.section}>
-          <Buttons.CreateEntityButton />
+          <Buttons.CreateEntityButton tourId="sidebar-create-button" />
         </Box>
 
         <Divider sx={styles.divider} />
@@ -338,6 +354,7 @@ const SidebarBody = memo(props => {
                   disabled={i.disabled}
                   tooltip={i.tooltip}
                   showLabel={!sideBarCollapsed}
+                  tourId={i.tourId}
                 />
               ))}
             </Box>
@@ -365,6 +382,7 @@ const SidebarBody = memo(props => {
           placement="left"
         >
           <Box
+            data-tour="sidebar-support-assistant"
             sx={styles.assistantBlock}
             onClick={onToggleAssistant}
           >

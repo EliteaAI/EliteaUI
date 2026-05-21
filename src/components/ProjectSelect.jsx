@@ -206,7 +206,10 @@ const ProjectSelect = memo(props => {
 
   return (
     <>
-      <Box sx={sx}>
+      <Box
+        sx={sx}
+        data-tour="sidebar-project-switcher"
+      >
         {isCompact ? (
           <Box sx={[styles.container, containerSX]}>{projectSingleSelect}</Box>
         ) : (

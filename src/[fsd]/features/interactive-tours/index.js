@@ -4,3 +4,4 @@ export { useProposeTour } from './model/useProposeTour';
 export { useTourFromUrl } from './model/useTourFromUrl';
 export { AGENT_TOUR_ID } from './lib/agentTour';
 export { CHAT_TOUR_ID } from './lib/chatTour';
+export { SIDEBAR_TOUR_ID } from './lib/sidebarTour';

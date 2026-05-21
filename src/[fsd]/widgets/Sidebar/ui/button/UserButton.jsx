@@ -77,47 +77,49 @@ const UserButton = memo(props => {
   );
 
   return (
-    <DotMenu
-      id="user-menu"
-      slotProps={slotProps}
-      menuStyle={styles.menuStyle}
-      anchorOrigin={{
-        vertical: 'top',
-        horizontal: 'right',
-      }}
-      transformOrigin={{
-        vertical: 'top',
-        horizontal: 'left',
-      }}
-      menuIconSX={styles.menuIconSX(theme)}
-      menuIcon={
-        <StyledTooltip
-          placement="right"
-          title={sideBarCollapsed ? 'User profile' : ''}
-          enterDelay={500}
-          enterNextDelay={500}
-        >
-          <Box sx={styles.menuIconContainer}>
-            <UserAvatar
-              avatar={avatar}
-              name={name}
-              size={16}
-            />
-            {!sideBarCollapsed && (
-              <Typography
-                variant="labelSmall"
-                sx={styles.typography}
-              >
-                {name}
-              </Typography>
-            )}
-            {!sideBarCollapsed && <ArrowRightIcon style={styles.arrowIcon} />}
-          </Box>
-        </StyledTooltip>
-      }
-    >
-      {menuItems}
-    </DotMenu>
+    <Box data-tour="sidebar-user">
+      <DotMenu
+        id="user-menu"
+        slotProps={slotProps}
+        menuStyle={styles.menuStyle}
+        anchorOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'left',
+        }}
+        menuIconSX={styles.menuIconSX(theme)}
+        menuIcon={
+          <StyledTooltip
+            placement="right"
+            title={sideBarCollapsed ? 'User profile' : ''}
+            enterDelay={500}
+            enterNextDelay={500}
+          >
+            <Box sx={styles.menuIconContainer}>
+              <UserAvatar
+                avatar={avatar}
+                name={name}
+                size={16}
+              />
+              {!sideBarCollapsed && (
+                <Typography
+                  variant="labelSmall"
+                  sx={styles.typography}
+                >
+                  {name}
+                </Typography>
+              )}
+              {!sideBarCollapsed && <ArrowRightIcon style={styles.arrowIcon} />}
+            </Box>
+          </StyledTooltip>
+        }
+      >
+        {menuItems}
+      </DotMenu>
+    </Box>
   );
 });
 
