@@ -5,6 +5,10 @@ export const CARD_WIDTH_PX = 440;
 const CARD_GAP_PX = 18;
 const CARD_ESTIMATED_HEIGHT_PX = 400;
 const VIEWPORT_MARGIN_PX = 16;
+// Fixed vertical space consumed by padding, title, gaps, and footer — everything
+// except the scrollable body. Used to compute the maximum body height when the
+// card is placed below a target near the bottom of the viewport.
+const CARD_CHROME_HEIGHT_PX = 136;
 
 const getViewportSize = () => {
   if (typeof window === 'undefined') {
@@ -20,7 +24,7 @@ const getViewportSize = () => {
  * target element resize.
  *
  * @param {object|null} currentStep
- * @returns {{ targetInfo: { rect: DOMRect, borderRadius: string }|null, cardPositionSx: object }}
+ * @returns {{ targetInfo: { rect: DOMRect, borderRadius: string }|null, cardPositionSx: object, cardBodySx: object|null }}
  */
 export const useTourCardPosition = currentStep => {
   const [targetInfo, setTargetInfo] = useState(null);
@@ -111,20 +115,44 @@ export const useTourCardPosition = currentStep => {
         return { top: verticalTop, left: clampLeft(rect.left - CARD_WIDTH_PX - CARD_GAP_PX) };
       case 'right':
         return { top: verticalTop, left: clampLeft(rect.right + CARD_GAP_PX) };
-      case 'top':
+      case 'top': {
+        const fitsAbove = rect.top - CARD_GAP_PX - CARD_ESTIMATED_HEIGHT_PX - VIEWPORT_MARGIN_PX >= 0;
+        if (fitsAbove) {
+          return {
+            bottom: vh - rect.top + CARD_GAP_PX,
+            left: clampLeft(rect.left + rect.width / 2 - CARD_WIDTH_PX / 2),
+          };
+        }
+        // Not enough room above — flip to below
         return {
-          bottom: vh - rect.top + CARD_GAP_PX,
+          top: rect.bottom + CARD_GAP_PX,
           left: clampLeft(rect.left + rect.width / 2 - CARD_WIDTH_PX / 2),
         };
-      case 'bottom':
+      }
+      case 'bottom': {
+        // Always position below the target. Constrain the body height to the
+        // available space so the card never overflows the viewport bottom.
+        const availableBelow = vh - rect.bottom - CARD_GAP_PX - VIEWPORT_MARGIN_PX;
+        const bodyMaxHeightPx = Math.max(80, availableBelow - CARD_CHROME_HEIGHT_PX);
         return {
-          top: Math.min(rect.bottom + CARD_GAP_PX, vh - CARD_ESTIMATED_HEIGHT_PX - VIEWPORT_MARGIN_PX),
-          left: clampLeft(rect.left + rect.width / 2 - CARD_WIDTH_PX / 2),
+          positionSx: {
+            top: rect.bottom + CARD_GAP_PX,
+            left: clampLeft(rect.left + rect.width / 2 - CARD_WIDTH_PX / 2),
+          },
+          bodySx: { maxHeight: `${bodyMaxHeightPx}px` },
         };
+      }
       default:
         return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' };
     }
   }, [targetInfo, viewport, currentStep?.placement]);
 
-  return { targetInfo, cardPositionSx };
+  // bottom returns a split { positionSx, bodySx } shape; all others return a flat sx object.
+  const isBottomSplit = cardPositionSx !== null && 'positionSx' in cardPositionSx;
+
+  return {
+    targetInfo,
+    cardPositionSx: isBottomSplit ? cardPositionSx.positionSx : cardPositionSx,
+    cardBodySx: isBottomSplit ? cardPositionSx.bodySx : null,
+  };
 };

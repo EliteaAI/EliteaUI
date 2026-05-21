@@ -22,7 +22,7 @@ const stepFadeIn = keyframes({
 const InteractiveTourCard = memo(() => {
   const { currentStep, stepIndex, totalSteps, next, back, skip } = useInteractiveTour();
   const styles = tourCardStyles();
-  const { targetInfo, cardPositionSx } = useTourCardPosition(currentStep);
+  const { targetInfo, cardPositionSx, cardBodySx } = useTourCardPosition(currentStep);
 
   const dialogRef = useRef(null);
   const previousFocusRef = useRef(null);
@@ -90,7 +90,7 @@ const InteractiveTourCard = memo(() => {
         >
           {currentStep.title && <Typography variant="headingMedium">{currentStep.title}</Typography>}
 
-          <Box sx={styles.body}>
+          <Box sx={[styles.body, cardBodySx]}>
             <MuiMarkdown overrides={MarkdownMapping}>{currentStep.content}</MuiMarkdown>
           </Box>
         </Box>

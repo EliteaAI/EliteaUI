@@ -42,7 +42,10 @@ const ChatInternalToolsConfigButton = memo(props => {
 
   return (
     <>
-      <Tooltip title="Enable internal tools">
+      <Tooltip
+        title="Enable internal tools"
+        data-tour="chat-internal-tools"
+      >
         <IconButton
           ref={buttonRef}
           variant="elitea"

@@ -523,16 +523,17 @@ const Participants = memo(props => {
           </StyledTooltip>
         </Box>
       )}
-      {/* Context Budget Info */}
       {conversationId && (
-        <ContextBudgetUI.ContextBudgetInfo
-          conversationId={conversationId}
-          collapsed={collapsed && !isSmallWindow}
-          contextStrategy={contextStrategy}
-          setActiveConversation={setActiveConversation}
-          conversationInstructions={conversationInstructions}
-          persona={persona}
-        />
+        <Box data-tour="chat-context-budget">
+          <ContextBudgetUI.ContextBudgetInfo
+            conversationId={conversationId}
+            collapsed={collapsed && !isSmallWindow}
+            contextStrategy={contextStrategy}
+            setActiveConversation={setActiveConversation}
+            conversationInstructions={conversationInstructions}
+            persona={persona}
+          />
+        </Box>
       )}
     </Box>
   );

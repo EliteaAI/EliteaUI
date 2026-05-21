@@ -785,7 +785,10 @@ const NewConversationView = forwardRef(
               onConfirmActiveRef={slashOnConfirmActiveRef}
             />
           )}
-          <Box sx={styles.inputContainer}>
+          <Box
+            sx={styles.inputContainer}
+            data-tour="chat-message-input"
+          >
             <NewChatInput
               placeholder="Type your message. Use # to search and add AI assistants to conversation."
               ref={chatInput}

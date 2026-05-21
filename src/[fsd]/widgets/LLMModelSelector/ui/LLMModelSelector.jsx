@@ -80,6 +80,7 @@ const LLMModelSelector = memo(props => {
         ref={anchorRef}
         aria-label="Model Selector Menu"
         sx={styles.buttonGroup}
+        data-tour="chat-model-settings"
       >
         <Tooltip
           placement="top"
