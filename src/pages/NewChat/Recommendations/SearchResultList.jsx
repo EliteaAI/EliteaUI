@@ -19,7 +19,7 @@ export default function SearchResultList({
     sortOrder: 'asc',
     pageSize: PAGE_SIZE,
     query,
-    types: [ChatParticipantType.Applications, ChatParticipantType.Toolkits],
+    types: [ChatParticipantType.Applications],
     projectFilter: 'all',
     forceSkip: !query,
   });
