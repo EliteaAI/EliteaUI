@@ -1,5 +1,5 @@
 export function filterEmptyStrings(strings = []) {
-  return strings.filter(s => s?.trim());
+  return (strings || []).filter(s => s?.trim());
 }
 
 export default function clearTools(tools = [], currentUserId = null) {
