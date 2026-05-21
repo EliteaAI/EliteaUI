@@ -1,9 +1,3 @@
-// MVP: steps are hardcoded here.
-// Phase 2+: these will be loaded from the .md file referenced by
-// resources_interactive_tours_links[menuKey="chat"].url
-// (e.g. /interactive-tours/chat-tour.md), parsed via frontmatter + body sections.
-// The step shape stays identical — only the source changes.
-
 export const CHAT_TOUR_ID = 'chat';
 
 export const CHAT_TOUR_COMPLETION = {

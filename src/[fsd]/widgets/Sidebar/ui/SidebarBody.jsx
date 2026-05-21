@@ -6,8 +6,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Box, Divider, IconButton, Tooltip, Typography, useTheme } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
-import { useProposeTour } from '@/[fsd]/features/interactive-tours';
-import { SIDEBAR_TOUR_ID } from '@/[fsd]/features/interactive-tours/lib/sidebarTour';
+import { SIDEBAR_TOUR_ID, useProposeTour } from '@/[fsd]/features/interactive-tours';
 import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
 import { SidebarConstants, SocketConstants } from '@/[fsd]/widgets/Sidebar/lib/constants';
 import { useSocketIcon } from '@/[fsd]/widgets/Sidebar/lib/hooks';

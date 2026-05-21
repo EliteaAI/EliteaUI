@@ -1,6 +1,11 @@
-import { AGENT_TOUR_COMPLETION, AGENT_TOUR_ID } from '../agentTour';
-import { CHAT_TOUR_COMPLETION, CHAT_TOUR_ID } from '../chatTour';
-import { SIDEBAR_TOUR_COMPLETION, SIDEBAR_TOUR_ID } from '../sidebarTour';
+import {
+  AGENT_TOUR_COMPLETION,
+  AGENT_TOUR_ID,
+  CHAT_TOUR_COMPLETION,
+  CHAT_TOUR_ID,
+  SIDEBAR_TOUR_COMPLETION,
+  SIDEBAR_TOUR_ID,
+} from '../constants';
 
 // ─── Tour completion configs ───────────────────────────────────────────────────
 export const TOUR_COMPLETION_CONFIGS = {
