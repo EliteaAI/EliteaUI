@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-import { useInteractiveTour } from './useInteractiveTour';
+import { useInteractiveTour } from '@/[fsd]/app/providers/InteractiveTourContext';
 
 export const isTourCompleted = tourId =>
   localStorage.getItem(`interactive-tour:${tourId}:completed`) === 'true';

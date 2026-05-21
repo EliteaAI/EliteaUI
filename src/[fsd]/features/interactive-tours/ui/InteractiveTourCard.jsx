@@ -4,12 +4,13 @@ import { MuiMarkdown } from 'mui-markdown';
 
 import { Box, Typography } from '@mui/material';
 
+import { useInteractiveTour } from '@/[fsd]/app/providers/InteractiveTourContext';
 import { MarkdownMapping } from '@/[fsd]/shared/lib/utils/markdown.utils';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { keyframes } from '@emotion/react';
 
-import { useInteractiveTour } from '../model/useInteractiveTour';
-import { CARD_WIDTH_PX, useTourCardPosition } from '../model/useTourCardPosition';
+import { CARD_WIDTH_PX } from '../lib/constants';
+import { useTourCardPosition } from '../lib/hooks';
 import InteractiveTourSpotlight from './InteractiveTourSpotlight';
 import TourCard from './TourCard';
 

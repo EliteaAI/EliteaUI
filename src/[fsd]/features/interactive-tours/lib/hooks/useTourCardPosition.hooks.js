@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 
-export const CARD_WIDTH_PX = 440;
+import { CARD_WIDTH_PX } from '@/[fsd]/features/interactive-tours/lib/constants';
 
 const CARD_GAP_PX = 18;
 const CARD_ESTIMATED_HEIGHT_PX = 400;
