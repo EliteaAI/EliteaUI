@@ -1,6 +1,16 @@
 export { CARD_WIDTH_PX } from './interactiveTour.constants';
 export { AGENT_TOUR_COMPLETION, AGENT_TOUR_ID, agentTourSteps } from './agentTour.constants';
 export { AGENT_TOUR_TARGET_IDS, AGENT_TOUR_TARGETS } from './agentTourTargets.js';
+export {
+  CONVERSATION_TOUR_COMPLETION,
+  CONVERSATION_TOUR_ID,
+  conversationTourSteps,
+} from './conversationTour.constants';
+export {
+  FIRST_ELITEA_TOUR_COMPLETION,
+  FIRST_ELITEA_TOUR_ID,
+  firstEliteaTourSteps,
+} from './firstEliteaTour.constants';
 export { CHAT_TOUR_COMPLETION, CHAT_TOUR_ID, chatTourSteps } from './chatTour.constants';
 export { CHAT_TOUR_TARGET_IDS, CHAT_TOUR_TARGETS } from './chatTourTargets.js';
 export { SIDEBAR_TOUR_COMPLETION, SIDEBAR_TOUR_ID, sidebarTourSteps } from './sidebarTour.constants';

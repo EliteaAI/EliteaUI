@@ -6,7 +6,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Box, Divider, IconButton, Tooltip, Typography, useTheme } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
-import { SIDEBAR_TOUR_ID, useProposeTour } from '@/[fsd]/features/interactive-tours';
 import { SIDEBAR_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
 import { SidebarConstants, SocketConstants } from '@/[fsd]/widgets/Sidebar/lib/constants';
@@ -52,7 +51,6 @@ const SidebarBody = memo(props => {
   const { data: platformSettings } = useGetPlatformSettingsQuery();
 
   useGetSupportAssistantConfigQuery();
-  useProposeTour(SIDEBAR_TOUR_ID);
 
   const styles = sideBarBodyStyles(sideBarCollapsed, socketStatus);
 

@@ -54,7 +54,7 @@ export const useTourCardPosition = currentStep => {
   }, []);
 
   useEffect(() => {
-    if (!currentStep?.target || currentStep.placement === 'center') {
+    if (!currentStep?.target) {
       setTargetInfo(null);
       return;
     }
@@ -112,7 +112,20 @@ export const useTourCardPosition = currentStep => {
       Math.min(rect.top, vh - CARD_ESTIMATED_HEIGHT_PX - VIEWPORT_MARGIN_PX),
     );
 
+    const centeredTop = Math.max(
+      VIEWPORT_MARGIN_PX,
+      Math.min(
+        rect.top + rect.height / 2 - CARD_ESTIMATED_HEIGHT_PX / 2,
+        vh - CARD_ESTIMATED_HEIGHT_PX - VIEWPORT_MARGIN_PX,
+      ),
+    );
+
     switch (currentStep.placement) {
+      case 'center':
+        return {
+          top: centeredTop,
+          left: clampLeft(rect.left + rect.width / 2 - CARD_WIDTH_PX / 2),
+        };
       case 'left':
         return { top: verticalTop, left: clampLeft(rect.left - CARD_WIDTH_PX - CARD_GAP_PX) };
       case 'right': {

@@ -1,28 +1,23 @@
 import { CHAT_TOUR_TARGETS } from '@/[fsd]/features/interactive-tours/lib/constants/chatTourTargets';
 
-export const CHAT_TOUR_ID = 'chat';
+export const CONVERSATION_TOUR_ID = 'conversation';
 
-export const CHAT_TOUR_COMPLETION = {
-  keepExploring: [
-    // { label: 'How to Create Agent', tourId: 'agent' },
-    // { label: 'How to Create Pipeline', tourId: 'pipeline' },
-    // { label: 'How to Create Index', tourId: 'index' },
-  ],
+export const CONVERSATION_TOUR_COMPLETION = {
+  keepExploring: [],
 };
 
-export const chatTourSteps = [
+export const conversationTourSteps = [
   {
-    id: 'what-is-chat',
+    id: 'what-is-elitea-chat',
     target: CHAT_TOUR_TARGETS.workspace,
-    placement: 'center',
+    placement: 'left',
     title: 'What is ELITEA Chat?',
-    // markdown — rendered via mui-markdown in InteractiveTourCard
     content: `ELITEA Chat is the central hub where all platform capabilities come together. It provides a conversational interface where you can interact with AI models, agents, pipelines, toolkits, and MCP servers — all in one place, using natural language.
 
 Each conversation is an independent dialogue session. Context is not shared between separate conversations. All conversations are stored on the ELITEA server and accessible from any device.`,
   },
   {
-    id: 'conversations',
+    id: 'conversation-list',
     target: CHAT_TOUR_TARGETS.conversations,
     placement: 'right',
     title: 'Conversations',
@@ -43,17 +38,7 @@ Use the **search** icon in the CONVERSATIONS header to filter conversations by n
 - **Delete** — Permanently delete the conversation`,
   },
   {
-    id: 'folders',
-    target: CHAT_TOUR_TARGETS.folders,
-    placement: 'right',
-    title: 'Folders',
-    content: `Conversations can be organized into folders. Create a folder using the **+ Folder** button, then move conversations into it by dragging and dropping or using the three-dot menu. Folders follow the same private/public rules as conversations.
-
-- **Edit** — Rename the folder
-- **Delete** — Remove the folder; conversations inside are moved back to the main list`,
-  },
-  {
-    id: 'participants',
+    id: 'conversation-participants',
     target: CHAT_TOUR_TARGETS.participants,
     placement: 'left',
     title: 'Participants',
@@ -70,7 +55,7 @@ Add participants by clicking **+** in the PARTICIPANTS section, or by typing \`#
 Agents, pipelines, toolkits, and MCPs can also be created or edited directly from Chat without navigating away. Use the **Create new** option in the PARTICIPANTS section to open the entity's canvas editor inline — any changes take effect in the current conversation immediately.`,
   },
   {
-    id: 'messaging',
+    id: 'conversation-messaging',
     target: CHAT_TOUR_TARGETS.messageInput,
     placement: 'bottom',
     title: 'Messaging',
@@ -79,9 +64,9 @@ Agents, pipelines, toolkits, and MCPs can also be created or edited directly fro
 - **Voice input** — click the **microphone** icon to dictate instead of type. Speech is converted to text in real time at the cursor position. Stop recording at any time to finalize the transcript.`,
   },
   {
-    id: 'internal-tools',
+    id: 'conversation-internal-tools',
     target: CHAT_TOUR_TARGETS.internalTools,
-    placement: 'top',
+    placement: 'bottom',
     title: 'Internal Tools',
     content: `Use this button to enable built-in tools for the current conversation. The popup shows only the tools available in the current project configuration.
 
@@ -95,54 +80,13 @@ Agents, pipelines, toolkits, and MCPs can also be created or edited directly fro
 Turn on only the tools you need for this conversation.`,
   },
   {
-    id: 'model-settings',
+    id: 'conversation-model-settings',
     target: CHAT_TOUR_TARGETS.modelSettings,
-    placement: 'top',
+    placement: 'bottom',
     title: 'Model & Settings',
     content: `Choose a language model from the model selector in the message input area. Click the settings (⚙️) icon to fine-tune response generation:
 
 - **Reasoning models** (e.g. GPT-5.1) — choose a Reasoning depth: Low, Medium, or High
 - **Standard models** (e.g. GPT-4o) — set a Creativity level and Max Completion Tokens`,
-  },
-  {
-    id: 'context-budget',
-    target: CHAT_TOUR_TARGETS.contextBudget,
-    placement: 'left',
-    title: 'Context Budget',
-    content: `The **Context Budget** widget displays real-time token usage for the current conversation and automatically manages context as it approaches the model's token limit. It appears in the PARTICIPANTS panel after the first message is sent.
-
-Key capabilities:
-
-- **Real-time token tracking** — see how many tokens have been used and how many remain
-- **Automatic pruning** — old messages are removed or summarized when the limit is approached
-- **Manual optimization** — trigger context cleanup at any time when usage exceeds 100%
-- **Pruning strategies** — choose between \`oldest_first\` or \`importance_based\`
-- **Message preservation** — configure how many recent messages are always protected from pruning
-- **Summarization** — automatically condense older messages to reduce token usage while preserving context`,
-  },
-  {
-    id: 'canvas-mode',
-    target: CHAT_TOUR_TARGETS.canvasMode,
-    placement: 'left',
-    title: 'Canvas Mode',
-    content: `When a response contains editable content, a **Pencil** icon (✏️) appears alongside the output. Clicking it opens an inline editor for that content:
-
-- **Code** — Edit code with syntax highlighting; select language; undo/redo; copy to clipboard
-- **Table** — Edit cells, add/delete rows and columns, sort, filter, hide columns, import from CSV, download as XLSX
-- **Mermaid diagram** — Edit diagram code with a live visual preview; download as JPG, PNG, or SVG
-- **DOCX** — Full WYSIWYG document editing (opened via Artifacts)
-
-Canvas editing is available when interacting with Models, Agents, and Pipelines. Multiple team members can edit the same canvas content simultaneously — changes appear in real time for all participants.`,
-  },
-  {
-    id: 'message-feedback',
-    target: CHAT_TOUR_TARGETS.messageFeedback,
-    placement: 'top',
-    title: 'Message Feedback',
-    content: `Each AI response includes feedback controls:
-
-- **Thumbs Up** — like the response
-- **Thumbs Down** — dislike the response; a **Leave comment** field appears so you can describe the issue and submit it as feedback
-- **Regenerate** (🔄) — re-runs the last prompt to get a different response`,
   },
 ];

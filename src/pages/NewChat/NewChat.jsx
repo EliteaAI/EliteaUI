@@ -25,7 +25,7 @@ import {
   useEditConversation,
   useInternalToolsConfig,
 } from '@/[fsd]/features/chat/lib/hooks';
-import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
+import { FIRST_ELITEA_TOUR_ID, useProposeTour } from '@/[fsd]/features/interactive-tours';
 import { eliteaApi } from '@/api/eliteaApi';
 import {
   ChatParticipantType,
@@ -100,6 +100,8 @@ import ParticipantsWrapper from './Participants/index';
 
 const NewChat = props => {
   const { projectId, preProjectId, setPreProjectId } = props;
+
+  useProposeTour(FIRST_ELITEA_TOUR_ID);
 
   const dispatch = useDispatch();
 
@@ -1330,7 +1332,6 @@ const NewChat = props => {
     <>
       <Grid
         container
-        data-tour={CHAT_TOUR_TARGET_IDS.workspace}
         sx={styles.container}
       >
         <Grid
