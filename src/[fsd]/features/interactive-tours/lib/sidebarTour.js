@@ -14,7 +14,10 @@ export const sidebarTourSteps = [
     target: '[data-tour="sidebar-logo"]',
     placement: 'right',
     title: 'ELITEA Logo',
-    content: `The **ELITEA Logo**`,
+    content: `The **ELITEA Logo** 
+    
+Green mark points that server is working
+Red mark points that server is updating.`,
     skip: false,
   },
   {

@@ -1,12 +1,13 @@
 import { memo, useCallback, useMemo, useReducer } from 'react';
 
-import { AGENT_TOUR_COMPLETION, AGENT_TOUR_ID } from '../lib/agentTour';
-import { CHAT_TOUR_COMPLETION, CHAT_TOUR_ID } from '../lib/chatTour';
-import { SIDEBAR_TOUR_COMPLETION, SIDEBAR_TOUR_ID } from '../lib/sidebarTour';
-import { InteractiveTourContext } from '../model/InteractiveTourContext';
-import FirstVisitPrompt from './FirstVisitPrompt';
-import InteractiveTourCard from './InteractiveTourCard';
-import TourCompleteCard from './TourCompleteCard';
+import { AGENT_TOUR_COMPLETION, AGENT_TOUR_ID } from '@/[fsd]/features/interactive-tours/lib/agentTour';
+import { CHAT_TOUR_COMPLETION, CHAT_TOUR_ID } from '@/[fsd]/features/interactive-tours/lib/chatTour';
+import { SIDEBAR_TOUR_COMPLETION, SIDEBAR_TOUR_ID } from '@/[fsd]/features/interactive-tours/lib/sidebarTour';
+import FirstVisitPrompt from '@/[fsd]/features/interactive-tours/ui/FirstVisitPrompt';
+import InteractiveTourCard from '@/[fsd]/features/interactive-tours/ui/InteractiveTourCard';
+import TourCompleteCard from '@/[fsd]/features/interactive-tours/ui/TourCompleteCard';
+
+import { InteractiveTourContext } from './InteractiveTourContext';
 
 // ─── Tour completion configs ───────────────────────────────────────────────────
 const TOUR_COMPLETION_CONFIGS = {
@@ -17,9 +18,11 @@ const TOUR_COMPLETION_CONFIGS = {
 
 // ─── Tour loaders (lazy) ───────────────────────────────────────────────────────
 const TOUR_LOADERS = {
-  [CHAT_TOUR_ID]: () => import('../lib/chatTour').then(m => m.chatTourSteps),
-  [AGENT_TOUR_ID]: () => import('../lib/agentTour').then(m => m.agentTourSteps),
-  [SIDEBAR_TOUR_ID]: () => import('../lib/sidebarTour').then(m => m.sidebarTourSteps),
+  [CHAT_TOUR_ID]: () => import('@/[fsd]/features/interactive-tours/lib/chatTour').then(m => m.chatTourSteps),
+  [AGENT_TOUR_ID]: () =>
+    import('@/[fsd]/features/interactive-tours/lib/agentTour').then(m => m.agentTourSteps),
+  [SIDEBAR_TOUR_ID]: () =>
+    import('@/[fsd]/features/interactive-tours/lib/sidebarTour').then(m => m.sidebarTourSteps),
 };
 
 // ─── localStorage helpers ──────────────────────────────────────────────────────
@@ -74,7 +77,7 @@ const reducer = (state, action) => {
 };
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
-const InteractiveTourProvider = memo(props => {
+export const InteractiveTourProvider = memo(props => {
   const { children } = props;
   const [state, dispatch] = useReducer(reducer, initialState);
 
@@ -171,5 +174,3 @@ const InteractiveTourProvider = memo(props => {
 });
 
 InteractiveTourProvider.displayName = 'InteractiveTourProvider';
-
-export default InteractiveTourProvider;

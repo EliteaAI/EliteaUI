@@ -4,8 +4,8 @@ import { Box } from '@mui/material';
 
 import MainPanel from '@/[fsd]/app/layout/MainPanel';
 import MainSidebar from '@/[fsd]/app/layout/MainSidebar';
+import { InteractiveTourProvider } from '@/[fsd]/app/providers/InteractiveTourProvider';
 import { useTourFromUrl } from '@/[fsd]/features/interactive-tours/model/useTourFromUrl';
-import InteractiveTourProvider from '@/[fsd]/features/interactive-tours/ui/InteractiveTourProvider';
 import { SupportAssistantWidget } from '@/[fsd]/widgets/SupportAssistant';
 
 const AppLayoutInner = memo(props => {
