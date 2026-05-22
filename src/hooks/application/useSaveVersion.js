@@ -56,7 +56,7 @@ const useSaveVersion = () => {
 
   const onSave = useCallback(async () => {
     if ((await onSaveTools()) === false) {
-      return; // Stop if toolkit save failed
+      return false; // Stop if toolkit save failed
     }
     const { nodes, edges } = isFromPipeline
       ? calculateNodesAndEdges(yamlCode, ORIENTATION.vertical, flowNodes)
@@ -105,45 +105,52 @@ const useSaveVersion = () => {
         },
       },
     });
-    const cloneData = deepClone(data);
+    reset();
+
     if (error) {
       toastError(buildErrorMessage(error));
-    } else {
-      toastSuccess(`The ${isFromPipeline ? 'pipeline' : 'agent'} has been updated`);
-      dispatch(
-        eliteaApi.util.updateQueryData('applicationDetails', { applicationId, projectId }, () => {
-          return {
-            ...cloneData,
-          };
-        }),
-      );
-      const savedVersionDetails = {
-        ...version_details,
-        instructions: !isFromPipeline ? version_details.instructions : yamlCode,
-      };
-      dispatch(
-        eliteaApi.util.updateQueryData(
-          'getApplicationVersionDetail',
-          { applicationId, projectId, versionId: version_details?.id },
-          () => {
-            return {
-              ...savedVersionDetails, // Please note that update application API always returns the base version details, so we need to use the version details from the form which is the selected one.
-            };
-          },
-        ),
-      );
-      // Only update URL name if NOT in chat (name should remain conversation name in chat)
-      if (!isFromChat) {
-        handleChangeName(name);
-      }
-      resetForm?.({
-        values: {
-          ...cloneData,
-          version_details: savedVersionDetails, // Please note that update application API always returns the base version details, so we need to use the version details from the form which is the selected one.
-        },
-      });
+      return false;
     }
-    reset();
+
+    const cloneData = deepClone(data);
+    toastSuccess(`The ${isFromPipeline ? 'pipeline' : 'agent'} has been updated`);
+    dispatch(
+      eliteaApi.util.updateQueryData('applicationDetails', { applicationId, projectId }, () => {
+        return {
+          ...cloneData,
+        };
+      }),
+    );
+    // savedVersionDetails uses cleanedLlmSettings so downstream callers (e.g. entity_settings PUT)
+    // send llm_settings that exactly match what was stored in DB, avoiding the validation mismatch.
+    const savedVersionDetails = {
+      ...version_details,
+      llm_settings: cleanedLlmSettings,
+      instructions: !isFromPipeline ? version_details.instructions : yamlCode,
+    };
+    dispatch(
+      eliteaApi.util.updateQueryData(
+        'getApplicationVersionDetail',
+        { applicationId, projectId, versionId: version_details?.id },
+        () => {
+          return {
+            ...savedVersionDetails, // Please note that update application API always returns the base version details, so we need to use the version details from the form which is the selected one.
+          };
+        },
+      ),
+    );
+    // Only update URL name if NOT in chat (name should remain conversation name in chat)
+    if (!isFromChat) {
+      handleChangeName(name);
+    }
+    resetForm?.({
+      values: {
+        ...cloneData,
+        version_details: savedVersionDetails, // Please note that update application API always returns the base version details, so we need to use the version details from the form which is the selected one.
+      },
+    });
+
+    return savedVersionDetails;
   }, [
     onSaveTools,
     isFromPipeline,
