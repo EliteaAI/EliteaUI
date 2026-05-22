@@ -1,5 +1,9 @@
 import { useCallback, useMemo, useReducer } from 'react';
 
+import { useDispatch } from 'react-redux';
+
+import { actions as settingsActions } from '@/slices/settings';
+
 import {
   AGENT_TOUR_ID,
   CHAT_TOUR_ID,
@@ -26,6 +30,7 @@ const TOUR_LOADERS = {
  * `InteractiveTourProvider`.
  */
 export const useInteractiveTourController = () => {
+  const dispatchRedux = useDispatch();
   const [state, dispatch] = useReducer(tourReducer, initialState);
 
   const proposeTour = useCallback(id => {
@@ -37,22 +42,30 @@ export const useInteractiveTourController = () => {
     }
   }, []);
 
-  const startTour = useCallback(async id => {
-    // Mark the prompt as seen immediately so that any re-run of proposeTour
-    // (e.g. triggered by a context update) cannot snap the phase back to 'prompt'.
-    localStorage.setItem(lsPromptKey(id), 'true');
-    const steps = (await TOUR_LOADERS[id]?.()) ?? [];
-    const activeSteps = steps.filter(step => !step.skip);
+  const startTour = useCallback(
+    async id => {
+      // Mark the prompt as seen immediately so that any re-run of proposeTour
+      // (e.g. triggered by a context update) cannot snap the phase back to 'prompt'.
+      localStorage.setItem(lsPromptKey(id), 'true');
 
-    if (!activeSteps.length) {
-      // Unknown tour id or loader returned no steps — reset to idle rather than
-      // getting stuck in 'running' with no currentStep and no UI.
-      dispatch({ type: 'SKIP' });
-      return;
-    }
+      if (id === SIDEBAR_TOUR_ID || id === FIRST_ELITEA_TOUR_ID) {
+        dispatchRedux(settingsActions.setSideBarCollapsed(false));
+      }
 
-    dispatch({ type: 'START', tourId: id, steps: activeSteps });
-  }, []);
+      const steps = (await TOUR_LOADERS[id]?.()) ?? [];
+      const activeSteps = steps.filter(step => !step.skip);
+
+      if (!activeSteps.length) {
+        // Unknown tour id or loader returned no steps — reset to idle rather than
+        // getting stuck in 'running' with no currentStep and no UI.
+        dispatch({ type: 'SKIP' });
+        return;
+      }
+
+      dispatch({ type: 'START', tourId: id, steps: activeSteps });
+    },
+    [dispatchRedux],
+  );
 
   const next = useCallback(() => dispatch({ type: 'NEXT' }), []);
   const back = useCallback(() => dispatch({ type: 'BACK' }), []);
