@@ -27,6 +27,7 @@ export const getIcon = (type, theme, notification) => {
     case NotificationType.ChatUserAdded:
     case NotificationType.ChatUserMentioned:
     case NotificationType.PrivateProjectCreated:
+    case NotificationType.ModerationApproved:
       return <SuccessIcon fill={theme.palette.status.published} />;
 
     case NotificationType.IndexDataChanged:
@@ -52,6 +53,7 @@ export const getIcon = (type, theme, notification) => {
     case NotificationType.ModeratorRejectOfVersion:
     case NotificationType.PromptOfSomeProjectWasRejected:
     case NotificationType.NewPromptVersionOfSomeProjectWasRejected:
+    case NotificationType.ModerationRejected:
       return <RemoveIcon fill={theme.palette.status.rejected} />;
 
     case NotificationType.TokenIsExpired:
