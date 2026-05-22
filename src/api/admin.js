@@ -6,6 +6,7 @@ import { eliteaApi } from './eliteaApi.js';
 const apiSlicePath = '/admin';
 const TAG_TYPE_USERS = 'TAG_TYPE_USERS';
 const TAG_TYPE_ROLES = 'TAG_TYPE_ROLES';
+const TAG_TYPE_MODERATION_STATUS = 'TAG_TYPE_MODERATION_STATUS';
 const PROJECT_MODE = 'default';
 
 export const apis = eliteaApi
@@ -122,6 +123,26 @@ export const apis = eliteaApi
         },
         invalidatesTags: [TAG_TYPE_USERS],
       }),
+      moderationStatus: build.query({
+        query: ({ projectId, entityId }) => ({
+          url: apiSlicePath + '/moderation_status/' + PROJECT_MODE + '/' + projectId + '/' + entityId,
+        }),
+        providesTags: (_, error, { entityId }) => {
+          if (error) return [];
+          return [{ type: TAG_TYPE_MODERATION_STATUS, id: entityId }];
+        },
+      }),
+      createModerationRequest: build.mutation({
+        query: ({ projectId, entityId, ...body }) => ({
+          url: apiSlicePath + '/moderation_status/' + PROJECT_MODE + '/' + projectId + '/' + entityId,
+          method: 'POST',
+          body,
+        }),
+        invalidatesTags: (_, error, { entityId }) => {
+          if (error) return [];
+          return [{ type: TAG_TYPE_MODERATION_STATUS, id: entityId }];
+        },
+      }),
     }),
   });
 
@@ -131,4 +152,7 @@ export const {
   useUserCreateMutation,
   useUserUpdateMutation,
   useUserDeleteMutation,
+  useModerationStatusQuery,
+  useLazyModerationStatusQuery,
+  useCreateModerationRequestMutation,
 } = apis;

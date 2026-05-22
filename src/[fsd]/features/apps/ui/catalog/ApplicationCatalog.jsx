@@ -13,7 +13,6 @@ import LinkIcon from '@/assets/link-icon.svg?react';
 import { ContentType, ViewMode } from '@/common/constants';
 import EntityCard from '@/components/Card';
 import CardList from '@/components/CardList';
-import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes';
 
 import RequestAccessModal from './RequestAccessModal';
@@ -24,12 +23,15 @@ const APPLICATION_CATALOG_CARD_WIDTH = 'min(42rem, calc(100% - 1rem))';
 const ApplicationCatalog = memo(() => {
   const styles = applicationCatalogStyles();
   const navigate = useNavigate();
-  const { toastSuccess } = useToast();
   const { applications, isLoading } = useApplicationCatalogState();
-  const { submitRequest, getRequestStatus } = useApplicationRequests();
+  const {
+    getRequestStatus,
+    submitRequest,
+    isSubmitting,
+    isFetching: isFetchingModeration,
+  } = useApplicationRequests();
 
   const [requestModalApp, setRequestModalApp] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleOpenRequestModal = useCallback(application => {
     setRequestModalApp(application);
@@ -41,13 +43,10 @@ const ApplicationCatalog = memo(() => {
 
   const handleSubmitRequest = useCallback(
     (application, reason) => {
-      setIsSubmitting(true);
       submitRequest(application.type, reason);
-      setIsSubmitting(false);
       setRequestModalApp(null);
-      toastSuccess('Your request sent successfully!');
     },
-    [submitRequest, toastSuccess],
+    [submitRequest],
   );
 
   const handleCreate = useCallback(
@@ -81,12 +80,12 @@ const ApplicationCatalog = memo(() => {
 
       return (
         <EntityCard
+          disableCardActions
+          hideCardBottom
           data={application}
           viewMode={ViewMode.Owner}
           type={cardType}
           index={index}
-          disableCardActions
-          hideCardBottom
           customTagClickHandler={handleCatalogTagClick}
           cardDetails={
             <Box sx={styles.cardDetails}>
@@ -178,7 +177,7 @@ const ApplicationCatalog = memo(() => {
         <CardList
           cardList={applications}
           total={applications.length}
-          isLoading={isLoading}
+          isLoading={isLoading || isFetchingModeration}
           isError={false}
           renderCard={renderApplicationCard}
           cardType={ContentType.AppAll}
