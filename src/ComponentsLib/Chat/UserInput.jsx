@@ -23,6 +23,7 @@ const MIN_HEIGHT = 70;
 
 const UserInput = forwardRef((props, ref) => {
   const {
+    dataTourTargetId,
     slots: { footer } = {},
     slotProps: {
       container = {
@@ -297,7 +298,10 @@ const UserInput = forwardRef((props, ref) => {
   }, [showExpandIcon]);
 
   return (
-    <Box sx={styles.gradientBorder}>
+    <Box
+      sx={styles.gradientBorder}
+      {...(dataTourTargetId ? { 'data-tour': dataTourTargetId } : {})}
+    >
       <Tooltip
         title={tooltip?.title}
         placement={tooltip?.placement}

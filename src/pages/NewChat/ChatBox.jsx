@@ -19,6 +19,7 @@ import { ChatHelpers, NewConversationHelpers, toSpeakableText } from '@/[fsd]/fe
 import { useNewInputKeyDownHandler, useSlashMention, useTextToSpeech } from '@/[fsd]/features/chat/lib/hooks';
 import { SlashSuggestionList, VoiceMiniPlayer } from '@/[fsd]/features/chat/ui';
 import { UserMentionList } from '@/[fsd]/features/chat/ui/user-mention-list';
+import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import {
   DEFAULT_MAX_TOKENS,
@@ -1907,7 +1908,10 @@ const ChatBox = forwardRef((props, boxRef) => {
 
   return (
     <>
-      <ChatBodyContainer sx={styles.container}>
+      <ChatBodyContainer
+        sx={styles.container}
+        data-tour={CHAT_TOUR_TARGET_IDS.workspace}
+      >
         <ChatMessageList
           sx={messageListSX}
           chat_history={chat_history}

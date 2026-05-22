@@ -6,6 +6,7 @@ import UserInput from '@/ComponentsLib/Chat/UserInput';
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { useSpeakingModeLoop } from '@/[fsd]/features/chat/lib/hooks';
 import { ChatButton } from '@/[fsd]/features/chat/ui';
+import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { LLMModelSelector } from '@/[fsd]/widgets/LLMModelSelector';
 import ChatBotIcon from '@/assets/chatbot-icon.svg?react';
 import ModelIcon from '@/components/Icons/ModelIcon.jsx';
@@ -190,6 +191,7 @@ const NewChatInput = forwardRef((props, ref) => {
 
   return (
     <UserInput
+      dataTourTargetId={CHAT_TOUR_TARGET_IDS.messageInput}
       isStreaming={isStreaming}
       onStop={onStopGeneration}
       attachments={attachments}
@@ -299,6 +301,7 @@ const NewChatInput = forwardRef((props, ref) => {
                 )}
               {(isAgentsPage || !activeParticipant) && (
                 <LLMModelSelector
+                  dataTourTargetId={CHAT_TOUR_TARGET_IDS.modelSettings}
                   selectedModel={selectedModel}
                   onSelectModel={onSelectModel}
                   models={modelList}
@@ -313,6 +316,7 @@ const NewChatInput = forwardRef((props, ref) => {
                 <Tooltip title="Switch to model">
                   <Box component="span">
                     <IconButton
+                      data-tour={CHAT_TOUR_TARGET_IDS.modelSettings}
                       onClick={selectSavedOrDefaultModel}
                       color="secondary"
                       variant="elitea"
