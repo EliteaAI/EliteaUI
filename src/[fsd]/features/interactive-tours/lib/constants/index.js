@@ -2,11 +2,6 @@ export { CARD_WIDTH_PX } from './interactiveTour.constants';
 export { AGENT_TOUR_COMPLETION, AGENT_TOUR_ID, agentTourSteps } from './agentTour.constants';
 export { AGENT_TOUR_TARGET_IDS, AGENT_TOUR_TARGETS } from './agentTourTargets.constants.js';
 export {
-  CONVERSATION_TOUR_COMPLETION,
-  CONVERSATION_TOUR_ID,
-  conversationTourSteps,
-} from './conversationTour.constants';
-export {
   FIRST_ELITEA_TOUR_COMPLETION,
   FIRST_ELITEA_TOUR_ID,
   firstEliteaTourSteps,

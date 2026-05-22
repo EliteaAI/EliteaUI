@@ -4,7 +4,7 @@ export const SIDEBAR_TOUR_ID = 'sidebar';
 
 export const SIDEBAR_TOUR_COMPLETION = {
   keepExploring: [
-    // { label: 'How to Use Chat', tourId: 'chat' },
+    { label: 'Chat Interactive Tour', tourId: 'chat' },
     // { label: 'How to Create Agent', tourId: 'agent' },
     // { label: 'How to Create Pipeline', tourId: 'pipeline' },
   ],

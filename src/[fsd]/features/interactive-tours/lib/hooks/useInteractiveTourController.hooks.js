@@ -4,21 +4,13 @@ import { useDispatch } from 'react-redux';
 
 import { actions as settingsActions } from '@/slices/settings';
 
-import {
-  AGENT_TOUR_ID,
-  CHAT_TOUR_ID,
-  CONVERSATION_TOUR_ID,
-  FIRST_ELITEA_TOUR_ID,
-  SIDEBAR_TOUR_ID,
-} from '../constants';
+import { AGENT_TOUR_ID, CHAT_TOUR_ID, FIRST_ELITEA_TOUR_ID, SIDEBAR_TOUR_ID } from '../constants';
 import { initialState, lsCompletedKey, lsPromptKey, tourReducer } from '../helpers';
 
 // ─── Tour loaders (lazy) ───────────────────────────────────────────────────────
 const TOUR_LOADERS = {
   [CHAT_TOUR_ID]: () => import('../constants/chatTour.constants').then(m => m.chatTourSteps),
   [AGENT_TOUR_ID]: () => import('../constants/agentTour.constants').then(m => m.agentTourSteps),
-  [CONVERSATION_TOUR_ID]: () =>
-    import('../constants/conversationTour.constants').then(m => m.conversationTourSteps),
   [FIRST_ELITEA_TOUR_ID]: () =>
     import('../constants/firstEliteaTour.constants').then(m => m.firstEliteaTourSteps),
   [SIDEBAR_TOUR_ID]: () => import('../constants/sidebarTour.constants').then(m => m.sidebarTourSteps),
