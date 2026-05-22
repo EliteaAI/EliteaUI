@@ -11,6 +11,7 @@ export default function useDeleteMessageAlert({
   onDeleteAllChatMessages,
   resetSessionRef,
   deleteAllRunNodes,
+  onStopTTS,
 }) {
   const [openAlert, setOpenAlert] = useState(false);
   const [alertContent, setAlertContent] = useState('');
@@ -45,6 +46,7 @@ export default function useDeleteMessageAlert({
   }, [chatInput, deleteAllRunNodes, resetSessionRef, setChatHistory]);
 
   const onConfirmDelete = useCallback(() => {
+    onStopTTS?.();
     if (messageIdToDelete === ALL_MESSAGES) {
       if (!onDeleteAllChatMessages) {
         onClearChat();
@@ -68,6 +70,7 @@ export default function useDeleteMessageAlert({
     onDeleteAllChatMessages,
     onDeleteChatMessage,
     setChatHistory,
+    onStopTTS,
   ]);
 
   return {

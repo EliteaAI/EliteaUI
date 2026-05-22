@@ -691,11 +691,13 @@ const ChatBox = forwardRef((props, boxRef) => {
       onDeleteChatMessage,
       onDeleteAllChatMessages,
       deleteAllRunNodes,
+      onStopTTS: stopTTS,
     });
 
   const onClickClearChat = useCallback(() => {
     if (chat_history?.length) {
       if (isAgentsPage) {
+        stopTTS?.();
         const chatHistory = !activeParticipantDetails?.version_details?.welcome_message
           ? []
           : [
@@ -755,6 +757,7 @@ const ChatBox = forwardRef((props, boxRef) => {
     setChatHistory,
     setActiveConversation,
     onDeleteAll,
+    stopTTS,
   ]);
 
   useEffect(() => {
@@ -1059,6 +1062,7 @@ const ChatBox = forwardRef((props, boxRef) => {
 
   const onRegenerateAnswerStream = useCallback(
     (id, question, questionId) => async () => {
+      stopTTS?.();
       const questionIndex = chat_history.findIndex(item => item.id === id) - 1;
       const theQuestion = question || chat_history[questionIndex]?.content;
       const question_id = questionId || chat_history[questionIndex]?.id;
@@ -1076,11 +1080,12 @@ const ChatBox = forwardRef((props, boxRef) => {
       payload.payload.message_id = id;
       emit(payload);
     },
-    [chat_history, activeConversation, getPayload, emit],
+    [chat_history, activeConversation, getPayload, emit, stopTTS],
   );
 
   const onRegenerateAnswer = useCallback(
     (uuid, messageParticipant) => async () => {
+      stopTTS();
       let prevMessage = {};
       setChatHistory(prevMessages => {
         prevMessage = prevMessages.find(message => message.id === uuid);
@@ -1138,7 +1143,16 @@ const ChatBox = forwardRef((props, boxRef) => {
         });
       }
     },
-    [setChatHistory, chat_history, getRegeneratePayload, setStreamingInfo, regenerate, socket?.id, projectId],
+    [
+      setChatHistory,
+      chat_history,
+      getRegeneratePayload,
+      setStreamingInfo,
+      regenerate,
+      socket?.id,
+      projectId,
+      stopTTS,
+    ],
   );
 
   /**
@@ -1355,6 +1369,7 @@ const ChatBox = forwardRef((props, boxRef) => {
 
   const onSendMessage = useCallback(
     async question => {
+      stopTTS?.();
       resetSlash();
 
       if (hasPendingHitlInterrupt && !hitlEditMode) {
@@ -1369,7 +1384,7 @@ const ChatBox = forwardRef((props, boxRef) => {
 
       return onPredictStream(question);
     },
-    [hasPendingHitlInterrupt, hitlEditMode, onHitlResume, onPredictStream, resetSlash],
+    [hasPendingHitlInterrupt, hitlEditMode, onHitlResume, onPredictStream, resetSlash, stopTTS],
   );
 
   const {
