@@ -5,6 +5,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 
 import { Box, IconButton, LinearProgress, Typography } from '@mui/material';
 
+import { FIRST_ELITEA_TOUR_ID, markTourPending } from '@/[fsd]/features/interactive-tours';
 import { Welcome, WorkspaceIsReady } from '@/[fsd]/features/onboarding/ui';
 import { useLazyProjectListQuery } from '@/api';
 import { useLazyAuthorDetailsQuery } from '@/api/social.js';
@@ -34,6 +35,32 @@ const Onboarding = memo(() => {
   const [showTour, setShowTour] = useState(hasClickedGetStarted || !!user.personal_project_id);
   const [progress, setProgress] = useState(5);
 
+  const onClearIntervals = useCallback(() => {
+    if (progressIntervalIdRef.current !== -1) {
+      clearInterval(progressIntervalIdRef.current);
+      progressIntervalIdRef.current = -1;
+    }
+    if (queryStatusIntervalIdRef.current !== -1) {
+      clearInterval(queryStatusIntervalIdRef.current);
+      queryStatusIntervalIdRef.current = -1;
+    }
+  }, []);
+
+  const handlePersonalProjectReady = useCallback(
+    ({ shouldRefreshProjects = false } = {}) => {
+      if (shouldRefreshProjects) {
+        getProjectList();
+      }
+
+      markTourPending(FIRST_ELITEA_TOUR_ID);
+      onClearIntervals();
+      setShowTour(true);
+      setThePrivateProjectIsReady(true);
+      sessionStorage.removeItem(ONBOARDING_STORAGE_KEY);
+    },
+    [getProjectList, onClearIntervals],
+  );
+
   const handleShowTour = useCallback(() => {
     // Save that user clicked "Get Started"
     sessionStorage.setItem(ONBOARDING_STORAGE_KEY, 'true');
@@ -47,25 +74,13 @@ const Onboarding = memo(() => {
         if (result.personal_project_id) {
           clearInterval(queryStatusIntervalIdRef.current);
           queryStatusIntervalIdRef.current = -1;
-          getProjectList();
-          setThePrivateProjectIsReady(true);
+          handlePersonalProjectReady({ shouldRefreshProjects: true });
         }
       }, 5000);
     }
 
     setShowTour(true);
-  }, [user.personal_project_id, getUserDetails, getProjectList]);
-
-  const onClearIntervals = useCallback(() => {
-    if (progressIntervalIdRef.current !== -1) {
-      clearInterval(progressIntervalIdRef.current);
-      progressIntervalIdRef.current = -1;
-    }
-    if (queryStatusIntervalIdRef.current !== -1) {
-      clearInterval(queryStatusIntervalIdRef.current);
-      queryStatusIntervalIdRef.current = -1;
-    }
-  }, []);
+  }, [user.personal_project_id, getUserDetails, handlePersonalProjectReady]);
 
   const handleJumpIn = () => {
     // Clear session storage when jumping in
@@ -95,22 +110,24 @@ const Onboarding = memo(() => {
           if (result.personal_project_id) {
             clearInterval(queryStatusIntervalIdRef.current);
             queryStatusIntervalIdRef.current = -1;
-            getProjectList();
-            setThePrivateProjectIsReady(true);
+            handlePersonalProjectReady({ shouldRefreshProjects: true });
           }
         }, 5000);
       }
     }
-  }, [user.personal_project_id, showTour, thePrivateProjectIsReady, getUserDetails, getProjectList]);
+  }, [
+    user.personal_project_id,
+    showTour,
+    thePrivateProjectIsReady,
+    getUserDetails,
+    handlePersonalProjectReady,
+  ]);
 
   useEffect(() => {
     if (user.personal_project_id) {
-      onClearIntervals();
-      setShowTour(true);
-      // Clear session storage when personal project is ready
-      sessionStorage.removeItem(ONBOARDING_STORAGE_KEY);
+      handlePersonalProjectReady();
     }
-  }, [onClearIntervals, user.personal_project_id]);
+  }, [handlePersonalProjectReady, user.personal_project_id]);
 
   return (
     <Box sx={styles.page}>

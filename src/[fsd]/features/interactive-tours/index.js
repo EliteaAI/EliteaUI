@@ -1,5 +1,12 @@
 export { CARD_WIDTH_PX } from './lib/constants';
-export { isTourCompleted, useInteractiveTourController, useProposeTour, useTourFromUrl } from './lib/hooks';
+export {
+  isTourCompleted,
+  markTourPending,
+  useInteractiveTourController,
+  useProposePendingTour,
+  useProposeTour,
+  useTourFromUrl,
+} from './lib/hooks';
 export {
   AGENT_TOUR_ID,
   CHAT_TOUR_ID,
