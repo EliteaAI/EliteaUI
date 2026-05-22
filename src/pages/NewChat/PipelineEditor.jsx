@@ -395,6 +395,8 @@ const PipelineEditor = forwardRef(
         setIsDirty(false);
         setIsYamlDirty(false);
 
+        onAttachmentToolChange?.(pipeline?.id);
+
         // Notify parent component if needed
         if (onPipelineSaved && savedFormData) {
           trackEvent(GA_EVENT_NAMES.PIPELINE_MODIFIED_FROM_CHAT, {
@@ -407,7 +409,7 @@ const PipelineEditor = forwardRef(
           onPipelineSaved(savedFormData);
         }
       },
-      [onPipelineSaved, pipelineId, trackEvent],
+      [onAttachmentToolChange, onPipelineSaved, pipeline?.id, pipelineId, trackEvent],
     );
 
     const handleAttachmentToolChange = useCallback(() => {
