@@ -130,7 +130,7 @@ const ResourcesPage = memo(() => {
             versionLabel && (
               <Box sx={styles.headerVersionInfo}>
                 <Typography
-                  variant="bodySmall"
+                  variant="bodyMedium"
                   color="text.secondary"
                 >
                   {versionLabel}
@@ -349,7 +349,7 @@ const resourcesPageStyles = () => ({
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fill, minmax(23.75rem, 31.25rem))',
     gap: '1rem',
-    justifyContent: 'start',
+    justifyContent: 'center',
   },
   link: ({ palette }) => ({
     color: palette.text.metrics,
