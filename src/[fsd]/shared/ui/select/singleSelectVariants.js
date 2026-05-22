@@ -102,8 +102,7 @@ export const getSingleSelectShowBorderSx = theme => {
     },
     verticalAlign: 'bottom',
     '& .MuiInputBase-root.MuiInput-root': {
-      padding: '0.75rem',
-      marginTop: '1.25rem',
+      padding: '0 0.75rem',
     },
     '& label, & label.Mui-error, .MuiFormLabel-asterisk.Mui-error': {
       color: colors.default.label.color,
