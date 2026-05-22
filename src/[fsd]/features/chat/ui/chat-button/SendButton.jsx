@@ -19,6 +19,7 @@ const SendButton = memo(props => {
     tooltipOfSendButton,
     sendButton,
     styles,
+    isCreatingConversation = false,
   } = props;
 
   if (isSpeakingMode) {
@@ -44,7 +45,7 @@ const SendButton = memo(props => {
     );
   }
 
-  if (!question) {
+  if (!question && !isCreatingConversation) {
     return (
       <Tooltip
         title="Speaking mode"
