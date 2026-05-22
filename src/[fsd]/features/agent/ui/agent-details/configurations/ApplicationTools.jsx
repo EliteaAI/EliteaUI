@@ -11,10 +11,8 @@ import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { useAvailableInternalTools } from '@/[fsd]/shared/lib/hooks';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { markAllDuplicatesByMultipleKeys } from '@/common/utils';
-import { useIsFrom } from '@/hooks/useIsFromSpecificPageHooks';
 import ToolCard from '@/pages/Applications/Components/Tools/ToolCard';
 import ToolMenu from '@/pages/Applications/Components/Tools/ToolMenu';
-import RouteDefinitions from '@/routes';
 
 const ApplicationTools = memo(props => {
   const {
@@ -25,10 +23,9 @@ const ApplicationTools = memo(props => {
     title = 'Toolkits',
     hidePythonSandbox = false,
     entityProjectId,
+    isPipeline = false,
   } = props;
   const sortedToolsRef = useRef(null);
-
-  const isFromPipeline = useIsFrom(RouteDefinitions.Pipelines);
 
   const { values } = useFormikContext();
   const { toolkitSchemas } = useGetCurrentToolkitSchemas();
@@ -87,12 +84,11 @@ const ApplicationTools = memo(props => {
 
   // For pipeline pages show only the attachments card; for agent pages show all available tools.
   const pipelineVisibleTools = useMemo(
-    () =>
-      isFromPipeline ? sortedInternalTools.filter(t => t.name === 'attachments') : displayedInternalTools,
-    [isFromPipeline, sortedInternalTools, displayedInternalTools],
+    () => (isPipeline ? sortedInternalTools.filter(t => t.name === 'attachments') : displayedInternalTools),
+    [isPipeline, sortedInternalTools, displayedInternalTools],
   );
 
-  const shouldShowInternalTools = isFromPipeline
+  const shouldShowInternalTools = isPipeline
     ? pipelineVisibleTools.length > 0
     : !hidePythonSandbox && sortedInternalTools.length > 0;
 
@@ -153,7 +149,7 @@ const ApplicationTools = memo(props => {
                       />
                     ))}
                   </Box>
-                  {!isFromPipeline && canToggleTools && (
+                  {!isPipeline && canToggleTools && (
                     <Box sx={styles.showMoreContainer}>
                       <Typography
                         onClick={() => setShowAllInternalTools(!showAllInternalTools)}
