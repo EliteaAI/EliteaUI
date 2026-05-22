@@ -4,11 +4,15 @@ import { Box, IconButton, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
+import {
+  downloadAttachmentFile,
+  downloadAttachmentImage,
+  getAttachmentName,
+} from '@/[fsd]/entities/attachment/lib';
 import { Checkbox, Modal } from '@/[fsd]/shared/ui';
 import TypographyWithConditionalTooltip from '@/[fsd]/shared/ui/tooltip/TypographyWithConditionalTooltip';
 import AttachedFileIcon from '@/assets/attached-file-icon.svg?react';
 import ImportIcon from '@/assets/import-icon.svg?react';
-import { downloadAttachmentFile, downloadAttachmentImage, getAttachmentName } from '@/common/attachmentUtils';
 import { downloadFileFromArtifact, parseFilepath } from '@/common/utils';
 import OpenEyeIcon from '@/components/Icons/OpenEyeIcon';
 import useIsSmallWindow from '@/hooks/useIsSmallWindow';

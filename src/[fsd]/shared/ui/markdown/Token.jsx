@@ -292,6 +292,24 @@ const Token = memo(props => {
       }
       return fallback;
     }
+    case 'codespan': {
+      if (spokenRange && markedToken.startPos !== undefined) {
+        const ts = markedToken.startPos;
+        const overlapStart = Math.max(spokenRange.start, ts);
+        const overlapEnd = Math.min(spokenRange.end, ts + markedToken.raw.length);
+        if (overlapStart < overlapEnd) {
+          return (
+            <Box
+              component="mark"
+              sx={styles.mark}
+            >
+              <Box component="code">{markedToken.text ?? ''}</Box>
+            </Box>
+          );
+        }
+      }
+      return fallback;
+    }
     case 'list': {
       if (markedToken.items?.length) {
         const stampedItems = stampChildren(

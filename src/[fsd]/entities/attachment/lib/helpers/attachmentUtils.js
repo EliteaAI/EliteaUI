@@ -308,3 +308,25 @@ export const createAttachmentManagerData = toolkit => {
     toolkit_name: toolkit.toolkit_name || toolkit.name || 'New Toolkit',
   };
 };
+
+export const buildAttachmentSummary = items => {
+  if (!items.length) return '';
+  const images = items.filter(item => getAttachmentType(item) === 'image');
+  const docs = items.filter(item => getAttachmentType(item) !== 'image');
+  const extGroups = {};
+  docs.forEach(item => {
+    const ext = getAttachmentName(item).split('.').pop()?.toLowerCase() || 'file';
+    extGroups[ext] = (extGroups[ext] || 0) + 1;
+  });
+  const parts = [];
+  if (images.length) {
+    parts.push(`${images.length} ${images.length === 1 ? 'image' : 'images'}`);
+  }
+  Object.entries(extGroups).forEach(([ext, count]) => {
+    parts.push(`${count} ${ext.toUpperCase()} ${count === 1 ? 'file' : 'files'}`);
+  });
+  const listing =
+    parts.length === 1 ? parts[0] : `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}`;
+  const total = items.length;
+  return `${total} ${total === 1 ? 'file is' : 'files are'} attached, including ${listing}.`;
+};

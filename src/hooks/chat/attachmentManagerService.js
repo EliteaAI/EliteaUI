@@ -1,4 +1,4 @@
-import { createAttachmentManagerData } from '@/common/attachmentUtils';
+import { createAttachmentManagerData } from '@/[fsd]/entities/attachment/lib';
 import { ToolTypes } from '@/pages/Applications/Components/Tools/consts';
 
 /**

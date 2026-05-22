@@ -3,14 +3,14 @@ import { memo, useCallback, useEffect, useState } from 'react';
 import { Box, IconButton, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 
-import { Checkbox, Modal } from '@/[fsd]/shared/ui';
-import ImportIcon from '@/assets/import-icon.svg?react';
 import {
   downloadAttachmentImage,
   getAttachmentName,
   getImageSource,
   hasUnresolvedFilepath,
-} from '@/common/attachmentUtils';
+} from '@/[fsd]/entities/attachment/lib';
+import { Checkbox, Modal } from '@/[fsd]/shared/ui';
+import ImportIcon from '@/assets/import-icon.svg?react';
 import { downloadFileFromArtifact } from '@/common/utils';
 import ViewImageAttachmentModal from '@/components/Chat/ViewImageAttachmentModal';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
