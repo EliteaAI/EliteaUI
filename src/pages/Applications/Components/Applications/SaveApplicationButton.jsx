@@ -25,9 +25,11 @@ export default function SaveApplicationButton({ onSuccess }) {
 
   // Enhanced save function with callback support
   const handleSave = useCallback(async () => {
-    await onSave();
-    // Call the success callback with the current form values
-    onSuccess?.(values);
+    // onSave returns savedVersionDetails (with cleaned llm_settings) on success, false on failure
+    const savedVersionDetails = await onSave();
+    if (savedVersionDetails) {
+      onSuccess?.({ ...values, version_details: savedVersionDetails });
+    }
   }, [onSave, onSuccess, values]);
 
   // Check if there are validation errors in state variables (cached in Redux)

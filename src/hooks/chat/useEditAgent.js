@@ -91,6 +91,9 @@ const useEditAgent = ({ activeParticipant, setActiveParticipant, onChangePartici
             variables: syncedKeysVariables,
             // Update version_id to reflect the saved version
             version_id: savedData.version_details?.id || activeParticipant.entity_settings?.version_id,
+            // Always use the saved version's llm_settings to avoid carrying forward stale overrides
+            // from a prior version context (e.g., published version llm_settings on an unpublished version)
+            llm_settings: savedData.version_details?.llm_settings,
           },
         };
 
