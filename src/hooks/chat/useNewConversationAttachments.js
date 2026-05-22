@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import { getAttachmentDisabledStatus } from '@/common/attachmentUtils';
+import { getAttachmentDisabledStatus } from '@/[fsd]/entities/attachment/lib';
 
 import { useAttachmentState } from './useAttachmentState';
 

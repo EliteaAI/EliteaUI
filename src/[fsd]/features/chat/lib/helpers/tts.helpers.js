@@ -50,14 +50,13 @@ const isFilePath = s => /^[./\\]|^\w:[\\/]/.test(s);
 // ─── List ordinals ────────────────────────────────────────────────────────────
 
 const ORDINALS = ['First', 'Second', 'Third', 'Fourth', 'Fifth'];
-const MAX_LIST_FULL = 5; // lists longer than this get a spoken summary
 
 // ─── Inline token → speakable text ───────────────────────────────────────────
 
 /**
  * Extract speakable plain text from an array of inline tokens.
  *
- * - codespan  : read content (drop backticks); long snippets → "a code example"
+ * - codespan  : read content (drop backticks)
  * - link      : URL hrefs → "the link", file-path hrefs → "the file path",
  *               descriptive link text → keep the text
  * - image     : read alt text as "an image showing <alt>"
@@ -95,9 +94,7 @@ const inlineText = tokens => {
         case 'br':
           return '\n';
         case 'codespan':
-          // Short inline code → read as-is (backticks already stripped by marked).
-          // Long snippets (SQL, expressions, etc.) → brief placeholder.
-          return (token.text?.length ?? 0) <= 40 ? (token.text ?? '') : 'a code example';
+          return token.text ?? '';
         default:
           return stripEmoji(token.text ?? token.raw ?? '');
       }
@@ -226,7 +223,7 @@ const inlineTextSegments = (tokens, origBase, strippedBase) => {
       }
 
       case 'codespan': {
-        const piece = (token.text?.length ?? 0) <= 40 ? (token.text ?? '') : 'a code example';
+        const piece = token.text ?? '';
         if (piece) {
           segments.push({
             origStart: tokenOrigStart,
@@ -314,15 +311,6 @@ const blockText = tokens => {
           return token.tokens ? inlineText(token.tokens) : stripEmoji(token.text ?? token.raw ?? '');
         case 'list': {
           const items = token.items;
-          const count = items.length;
-          if (count > MAX_LIST_FULL) {
-            // Summarise long lists: state total, read first three
-            const first3 = items
-              .slice(0, 3)
-              .map(item => blockText(item.tokens).trim())
-              .join(', ');
-            return `There are ${count} items in the list. The first three are: ${first3}.\n`;
-          }
           if (token.ordered) {
             // Short ordered list → ordinal prefixes
             return (
@@ -351,6 +339,43 @@ const blockText = tokens => {
       }
     })
     .join('');
+};
+
+// ─── List segment tracking ───────────────────────────────────────────────────
+
+/**
+ * Build per-item segments for a list token so translateSpokenPos can highlight
+ * each list item individually as TTS reads through it.
+ *
+ * Returns { text: string, segments: Segment[] }
+ */
+const listSegments = (listToken, tokenOrigStart, strippedBase) => {
+  const items = listToken.items;
+  const itemTexts = [];
+  const segments = [];
+  let itemOrigStart = tokenOrigStart;
+  let strippedOffset = 0;
+
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    const prefix = listToken.ordered ? `${ORDINALS[i] ?? `Item ${i + 1}`}, ` : '';
+    const itemContent = blockText(item.tokens).trim();
+    const itemText = prefix + itemContent;
+
+    segments.push({
+      origStart: itemOrigStart,
+      origLen: item.raw.length,
+      strippedStart: strippedBase + strippedOffset,
+      strippedLen: itemText.length,
+    });
+
+    itemTexts.push(itemText);
+    // each item is followed by ". " (separator) or ".\n" (terminator) — both 2 chars
+    strippedOffset += itemText.length + 2;
+    itemOrigStart += item.raw.length;
+  }
+
+  return { text: itemTexts.join('. ') + '.\n', segments };
 };
 
 // ─── Public API ───────────────────────────────────────────────────────────────
@@ -397,8 +422,16 @@ export const toSpeakableText = markdown => {
           strippedPos += piece.length;
           parts.push(piece);
         }
+      } else if (token.type === 'list') {
+        // Per-item segments so each list item is highlighted individually.
+        const { text: listResult, segments: listSegs } = listSegments(token, tokenOrigStart, strippedPos);
+        if (listResult) {
+          segments.push(...listSegs);
+          strippedPos += listResult.length;
+          parts.push(listResult);
+        }
       } else {
-        // Coarse segment for code blocks, tables, lists, blockquotes, etc.
+        // Coarse segment for code blocks, tables, blockquotes, etc.
         const piece = blockText([token]);
         if (piece) {
           segments.push({

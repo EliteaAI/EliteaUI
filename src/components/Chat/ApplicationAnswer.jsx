@@ -8,6 +8,7 @@ import ListItem from '@mui/material/ListItem';
 import ListItemAvatar from '@mui/material/ListItemAvatar';
 import ListItemText from '@mui/material/ListItemText';
 
+import { buildAttachmentSummary } from '@/[fsd]/entities/attachment/lib';
 import { toSpeakableText, translateSpokenPos } from '@/[fsd]/features/chat/lib/helpers';
 import { ChatAttachment, ChatContinue, ChatHitlActions } from '@/[fsd]/features/chat/ui';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
@@ -164,18 +165,28 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
   const { onClickCopy } = useCopyDownloadHandlers({
     onCopy,
   });
-  const rawAnswer = useMemo(
-    () =>
-      answer ||
-      message_items
-        ?.map(item =>
-          item.item_type === 'canvas_message'
-            ? item.item_details.latest_version?.canvas_content || ''
-            : item.item_details.content,
-        )
-        .join(),
-    [answer, message_items],
-  );
+  const itemToSpeakableText = item => {
+    if (item.item_type === 'canvas_message') {
+      return item.item_details.latest_version?.canvas_content || '';
+    }
+    if (item.item_type === 'attachment_message') {
+      return '';
+    }
+    return item.item_details.content;
+  };
+
+  const rawAnswer = useMemo(() => {
+    if (answer) return answer;
+    if (!message_items) return undefined;
+    const attachmentItems = message_items.filter(item => item.item_type === 'attachment_message');
+    const parts = message_items
+      .filter(item => item.item_type !== 'attachment_message')
+      .map(itemToSpeakableText);
+    const summary = buildAttachmentSummary(attachmentItems);
+    if (summary) parts.push(summary);
+    return parts.join('\n');
+  }, [answer, message_items]);
+
   const realAnswer = useMemo(() => convertJsonToString(rawAnswer || '', true), [rawAnswer]);
   const hasSpeakableText = useMemo(() => !!toSpeakableText(realAnswer).text, [realAnswer]);
 
@@ -198,16 +209,12 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
     const offsets = {};
     let pos = 0;
     message_items.forEach((item, idx) => {
-      const rawContent =
-        item.item_type === 'canvas_message'
-          ? item.item_details.latest_version?.canvas_content || ''
-          : item.item_details.content;
-      const str = rawContent == null ? '' : String(rawContent);
+      const str = String(itemToSpeakableText(item) ?? '');
       if (item.item_type === 'text_message') {
         offsets[item.uuid] = pos;
       }
       pos += str.length;
-      if (idx < message_items.length - 1) pos += 1; // comma separator from .join()
+      if (idx < message_items.length - 1) pos += 1; // newline separator from .join('\n')
     });
     return offsets;
   }, [message_items]);
