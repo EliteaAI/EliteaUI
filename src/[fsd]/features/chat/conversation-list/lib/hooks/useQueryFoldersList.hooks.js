@@ -69,23 +69,33 @@ export const useQueryFoldersList = props => {
     { skip: !projectId || !checkPermission(PERMISSIONS.chat.folders.get) },
   );
 
-  const updateDateGroups = useCallback(dateGroupsList => {
-    const processedGroups = (dateGroupsList || []).map(group => ({
-      ...group,
-      conversations: sortConversations(group.conversations || []),
-      offset: group.conversations?.length || 0,
-    }));
+  const updateDateGroups = useCallback((dateGroupsList, pinnedIds) => {
+    const processedGroups = (dateGroupsList || []).map(group => {
+      const filtered = pinnedIds?.size
+        ? (group.conversations || []).filter(c => !pinnedIds.has(c.id))
+        : group.conversations || [];
+      return {
+        ...group,
+        conversations: sortConversations(filtered),
+        offset: filtered.length,
+      };
+    });
 
     setDateGroupsRef.current?.(processedGroups);
   }, []);
 
-  const updateFolders = useCallback(folderList => {
+  const updateFolders = useCallback((folderList, pinnedIds) => {
     const folderedConversations =
-      (folderList || []).map(folder => ({
-        ...folder,
-        conversations: sortConversations(folder?.conversations || []),
-        offset: folder.conversations?.length || 0,
-      })) || [];
+      (folderList || []).map(folder => {
+        const filtered = pinnedIds?.size
+          ? (folder?.conversations || []).filter(c => !pinnedIds.has(c.id))
+          : folder?.conversations || [];
+        return {
+          ...folder,
+          conversations: sortConversations(filtered),
+          offset: filtered.length,
+        };
+      }) || [];
 
     setFoldersRef.current?.(prevFolders => {
       const newFolders = (prevFolders || []).filter(folder => folder.isNew);
@@ -101,8 +111,9 @@ export const useQueryFoldersList = props => {
 
   useEffect(() => {
     if (isSuccess && !isLoadFolders) {
-      updateDateGroups(data?.date_groups);
-      updateFolders(data?.folders);
+      const pinnedIds = new Set((data?.pinned?.conversations || []).map(c => c.id));
+      updateDateGroups(data?.date_groups, pinnedIds);
+      updateFolders(data?.folders, pinnedIds);
       updatePinnedConversations(data?.pinned);
       setIsConversationsLoaded(true);
     }

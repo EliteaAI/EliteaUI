@@ -152,8 +152,9 @@ const Conversations = memo(props => {
             if (g.name !== groupName) return g;
 
             const existingIds = new Set(g.conversations.map(c => c.id));
+            const pinnedIds = new Set((pinnedConversations || []).map(c => c.id));
             const rawConversations = result.conversations || [];
-            const newConversations = rawConversations.filter(c => !existingIds.has(c.id));
+            const newConversations = rawConversations.filter(c => !existingIds.has(c.id) && !pinnedIds.has(c.id));
             const newOffset = (g.offset || g.conversations.length) + rawConversations.length;
 
             return {
@@ -175,7 +176,7 @@ const Conversations = memo(props => {
         });
       }
     },
-    [dateGroups, loadingGroups, projectId, setDateGroups, triggerDateGroupFetch, sortBy, sortOrder],
+    [dateGroups, loadingGroups, pinnedConversations, projectId, setDateGroups, triggerDateGroupFetch, sortBy, sortOrder],
   );
 
   const onLoadMoreInFolder = useCallback(
@@ -202,8 +203,9 @@ const Conversations = memo(props => {
           prev.map(f => {
             if (f.id !== folderId) return f;
             const existingIds = new Set(f.conversations.map(c => c.id));
+            const pinnedIds = new Set((pinnedConversations || []).map(c => c.id));
             const rawConversations = result.conversations || [];
-            const newConversations = rawConversations.filter(c => !existingIds.has(c.id));
+            const newConversations = rawConversations.filter(c => !existingIds.has(c.id) && !pinnedIds.has(c.id));
             const newOffset = (f.offset || f.conversations.length) + rawConversations.length;
 
             return {
@@ -225,7 +227,7 @@ const Conversations = memo(props => {
         });
       }
     },
-    [folders, loadingFolders, projectId, setFolders, triggerFolderFetch, sortBy, sortOrder],
+    [folders, loadingFolders, pinnedConversations, projectId, setFolders, triggerFolderFetch, sortBy, sortOrder],
   );
 
   // Initialize drag and drop functionality

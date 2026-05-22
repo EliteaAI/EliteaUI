@@ -1036,6 +1036,8 @@ export const NotificationType = {
   BucketExpirationWarning: 'bucket_expiration_warning',
   AgentUnpublished: 'agent_unpublished',
   PersonalAccessTokenExpiring: 'personal_access_token_expiring',
+  ModerationRejected: 'moderation_rejected',
+  ModerationApproved: 'moderation_approved',
 };
 
 export const dummyConversation = { name: '', chat_history: [], participants: [], is_private: true };
