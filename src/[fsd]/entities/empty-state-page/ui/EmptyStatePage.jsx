@@ -1,24 +1,29 @@
 import { memo, useCallback } from 'react';
 
-import { useNavigate } from 'react-router-dom';
-
 import { Box, Typography, useTheme } from '@mui/material';
 
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
-import applicationsDarkImage from '@/assets/images/Applications_Dark 1.png';
-import applicationsLightImage from '@/assets/images/Applications_Light 1.png';
+import applicationsDarkImage from '@/assets/images/Applications_Dark_1.png';
+import applicationsLightImage from '@/assets/images/Applications_Light_1.png';
 import PlusIcon from '@/assets/plus-icon.svg?react';
-import RouteDefinitions from '@/routes';
 
-const ApplicationsEmptyState = memo(() => {
+const EmptyStatePage = memo(props => {
+  const {
+    title,
+    description,
+    imageDark = applicationsDarkImage,
+    imageLight = applicationsLightImage,
+    onCreateClick,
+    onGuidedTourClick = null,
+  } = props;
+
   const theme = useTheme();
-  const navigate = useNavigate();
-  const styles = applicationsEmptyStateStyles();
+  const styles = emptyStateStyles();
   const isDarkMode = theme.palette.mode === 'dark';
 
   const handleCreateClick = useCallback(() => {
-    navigate(RouteDefinitions.AppsCatalog);
-  }, [navigate]);
+    onCreateClick();
+  }, [onCreateClick]);
 
   const handleGuidedTourClick = useCallback(() => {
     // TODO: Implement guided tour logic
@@ -28,8 +33,8 @@ const ApplicationsEmptyState = memo(() => {
     <Box sx={styles.container}>
       <Box
         component="img"
-        src={isDarkMode ? applicationsDarkImage : applicationsLightImage}
-        alt="No applications"
+        src={isDarkMode ? imageDark : imageLight}
+        alt="No image of tool"
         sx={styles.image}
       />
 
@@ -37,13 +42,10 @@ const ApplicationsEmptyState = memo(() => {
         variant="headingSmall"
         sx={styles.title}
       >
-        No applications yet
+        {title}
       </Typography>
 
-      <Typography sx={styles.description}>
-        Create your first app to build AI-powered solutions for specific tasks. Or take a quick tour to get
-        started.
-      </Typography>
+      <Typography sx={styles.description}>{description}</Typography>
 
       <Box sx={styles.actions}>
         <BaseBtn
@@ -54,7 +56,7 @@ const ApplicationsEmptyState = memo(() => {
         </BaseBtn>
         <BaseBtn
           variant={BUTTON_VARIANTS.secondary}
-          onClick={handleGuidedTourClick}
+          onClick={onGuidedTourClick || handleGuidedTourClick}
         >
           Start Guided Tour
         </BaseBtn>
@@ -63,10 +65,10 @@ const ApplicationsEmptyState = memo(() => {
   );
 });
 
-ApplicationsEmptyState.displayName = 'ApplicationsEmptyState';
+EmptyStatePage.displayName = 'EmptyStatePage';
 
 /** @type {MuiSx} */
-const applicationsEmptyStateStyles = () => ({
+const emptyStateStyles = () => ({
   container: {
     display: 'flex',
     flexDirection: 'column',
@@ -102,4 +104,4 @@ const applicationsEmptyStateStyles = () => ({
   },
 });
 
-export default ApplicationsEmptyState;
+export default EmptyStatePage;
