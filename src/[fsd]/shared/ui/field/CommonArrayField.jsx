@@ -68,7 +68,12 @@ const CommonArrayField = memo(props => {
       >
         <Box sx={styles.header}>
           <Typography variant="bodyMedium">{label}</Typography>
-          {description && <InfoTooltip infoTooltip={description} sx={styles.infoIconWrapper} />}
+          {description && (
+            <InfoTooltip
+              infoTooltip={description}
+              sx={styles.infoIconWrapper}
+            />
+          )}
         </Box>
         <Select.SingleSelect
           required={isRequired}
@@ -97,17 +102,10 @@ const CommonArrayField = memo(props => {
       <Box sx={styles.header}>
         <Typography variant="bodyMedium">{`${label}${isRequired ? ' *' : ''}`}</Typography>
         {description && (
-          <Tooltip
-            title={description}
-            placement="top"
-          >
-            <Box sx={styles.infoIconWrapper}>
-              <InfoIcon
-                width={16}
-                height={16}
-              />
-            </Box>
-          </Tooltip>
+          <InfoTooltip
+            infoTooltip={description}
+            sx={styles.infoIconWrapper}
+          />
         )}
       </Box>
       <Field.ResizableCodeMirrorEditor
