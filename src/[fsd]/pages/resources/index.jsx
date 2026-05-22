@@ -1,14 +1,17 @@
-import { memo, useMemo } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 
-import { Box, Link, Skeleton, Tooltip, Typography } from '@mui/material';
+import { Box, Link, Skeleton, Tooltip, Typography, useTheme } from '@mui/material';
 
 import { LinkHelpers } from '@/[fsd]/shared/lib/helpers';
+import { BaseBtn } from '@/[fsd]/shared/ui/button';
 import { useGetResourcesConfigQuery, useGetSystemInfoQuery } from '@/api/resources';
 import FileIcon from '@/assets/file.svg?react';
 import InfoIcon from '@/assets/info.svg?react';
 import RocketIcon from '@/assets/rocket-icon.svg?react';
 import TutorialsIcon from '@/assets/tutorials-icon.svg?react';
 import VideoIcon from '@/assets/video-icon.svg?react';
+import CopyIcon from '@/components/Icons/CopyIcon';
+import useToast from '@/hooks/useToast';
 
 import ResourceCard from './ui/ResourceCard';
 
@@ -70,6 +73,8 @@ const { openExternalLink } = LinkHelpers;
 const ResourcesPage = memo(() => {
   const { data: systemInfo, isLoading: isSystemInfoLoading } = useGetSystemInfoQuery();
   const { data: resourcesConfig, isLoading: isConfigLoading } = useGetResourcesConfigQuery();
+  const { toastInfo } = useToast();
+  const theme = useTheme();
 
   const configValues = resourcesConfig?.values ?? {};
   const styles = resourcesPageStyles();
@@ -83,6 +88,27 @@ const ResourcesPage = memo(() => {
     const parts = [version && `Version: ${version}`, date && `(${date})`].filter(Boolean);
     return parts.join(' ');
   }, [configValues.resources_information_version, configValues.resources_information_upgrade_date]);
+
+  const onCopyToClipboard = useCallback(async () => {
+    if (!systemInfo) return;
+    try {
+      const version = configValues.resources_information_version;
+      const date = configValues.resources_information_upgrade_date;
+      const versionInfo = version ? `Version: ${version}${date ? ` (${date})` : ''}` : '';
+      const infoToCopy =
+        `${versionInfo}\n` + plugins.map(p => `${p.name}: ${p.version || '\u2014'}`).join('\n');
+      await navigator.clipboard.writeText(infoToCopy);
+      toastInfo('The version information has been copied to clipboard');
+    } catch {
+      // Optionally, handle copy failure (e.g., show an error toast)
+    }
+  }, [
+    systemInfo,
+    configValues.resources_information_version,
+    configValues.resources_information_upgrade_date,
+    plugins,
+    toastInfo,
+  ]);
 
   return (
     <Box sx={styles.page}>
@@ -128,6 +154,18 @@ const ResourcesPage = memo(() => {
                             <Typography variant="bodySmallBold">{plugin.version || '\u2014'}</Typography>
                           </Box>
                         ))}
+                        <BaseBtn
+                          variant="icon"
+                          size="small"
+                          onClick={onCopyToClipboard}
+                          aria-label="copy version info"
+                          sx={styles.copyButton}
+                        >
+                          <CopyIcon
+                            sx={styles.icon}
+                            fill={theme.palette.text.link}
+                          />
+                        </BaseBtn>
                       </Box>
                     ) : null
                   }
@@ -327,6 +365,13 @@ const resourcesPageStyles = () => ({
     display: 'block',
     fontStyle: 'italic',
   }),
+  copyButton: {
+    justifySelf: 'end',
+    alignSelf: 'end',
+  },
+  icon: {
+    fontSize: '1rem',
+  },
 });
 
 export default ResourcesPage;
