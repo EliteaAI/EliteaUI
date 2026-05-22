@@ -30,6 +30,7 @@ const PipelineConfigurationForm = memo(props => {
         title={'Toolkits'}
         style={styles.applicationTools}
         applicationId={applicationId}
+        isPipeline
         disabled={isDisabled}
         hidePythonSandbox={hidePythonSandbox}
         onAttachmentToolChange={onAttachmentToolChange}
