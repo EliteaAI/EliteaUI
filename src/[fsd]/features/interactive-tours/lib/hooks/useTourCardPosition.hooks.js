@@ -79,10 +79,14 @@ export const useTourCardPosition = currentStep => {
       });
     };
 
+    const onResize = () => {
+      scheduleMeasure();
+      updateViewport();
+    };
+
     // Capture phase catches scroll on any scrollable ancestor.
     window.addEventListener('scroll', scheduleMeasure, { capture: true, passive: true });
-    window.addEventListener('resize', scheduleMeasure, { passive: true });
-    window.addEventListener('resize', updateViewport, { passive: true });
+    window.addEventListener('resize', onResize, { passive: true });
 
     const ro = new ResizeObserver(scheduleMeasure);
 
@@ -90,8 +94,7 @@ export const useTourCardPosition = currentStep => {
 
     return () => {
       window.removeEventListener('scroll', scheduleMeasure, { capture: true });
-      window.removeEventListener('resize', scheduleMeasure);
-      window.removeEventListener('resize', updateViewport);
+      window.removeEventListener('resize', onResize);
       ro.disconnect();
       if (rafId !== null) cancelAnimationFrame(rafId);
     };
