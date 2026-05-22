@@ -70,7 +70,7 @@ const GroupedConversations = memo(props => {
               isExpanded={isGroupExpanded(group.name)}
               onToggleExpanded={toggleGroup}
               selectedConversationId={selectedConversationId}
-              hasMore={group.conversations.length < (group.total || 0)}
+              hasMore={!group.exhausted && group.conversations.length < (group.total || 0)}
               onLoadMore={() => onLoadMoreInGroup?.(group.name)}
               isLoadingMore={loadingGroups?.has(group.name)}
             />

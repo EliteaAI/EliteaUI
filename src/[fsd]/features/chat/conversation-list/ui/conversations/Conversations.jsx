@@ -132,7 +132,7 @@ const Conversations = memo(props => {
 
       const group = dateGroups.find(g => g.name === groupName);
 
-      if (!group || group.conversations.length >= (group.total || 0)) return;
+      if (!group || group.exhausted || group.conversations.length >= (group.total || 0)) return;
 
       setLoadingGroups(prev => new Set([...prev, groupName]));
 
@@ -151,13 +151,16 @@ const Conversations = memo(props => {
             if (g.name !== groupName) return g;
 
             const existingIds = new Set(g.conversations.map(c => c.id));
-            const newConversations = (result.conversations || []).filter(c => !existingIds.has(c.id));
+            const rawConversations = result.conversations || [];
+            const newConversations = rawConversations.filter(c => !existingIds.has(c.id));
+            const newOffset = (g.offset || g.conversations.length) + rawConversations.length;
 
             return {
               ...g,
               conversations: [...g.conversations, ...newConversations],
-              offset: (g.offset || g.conversations.length) + newConversations.length,
+              offset: newOffset,
               total: result.total ?? g.total,
+              exhausted: rawConversations.length === 0 || newOffset >= (result.total ?? g.total),
             };
           }),
         );
@@ -180,7 +183,7 @@ const Conversations = memo(props => {
 
       const folder = folders.find(f => f.id === folderId);
 
-      if (!folder || folder.conversations.length >= (folder.total || 0)) return;
+      if (!folder || folder.exhausted || folder.conversations.length >= (folder.total || 0)) return;
 
       setLoadingFolders(prev => new Set([...prev, folderId]));
 
@@ -198,13 +201,16 @@ const Conversations = memo(props => {
           prev.map(f => {
             if (f.id !== folderId) return f;
             const existingIds = new Set(f.conversations.map(c => c.id));
-            const newConversations = (result.conversations || []).filter(c => !existingIds.has(c.id));
+            const rawConversations = result.conversations || [];
+            const newConversations = rawConversations.filter(c => !existingIds.has(c.id));
+            const newOffset = (f.offset || f.conversations.length) + rawConversations.length;
 
             return {
               ...f,
               conversations: [...f.conversations, ...newConversations],
-              offset: (f.offset || f.conversations.length) + newConversations.length,
+              offset: newOffset,
               total: result.total ?? f.total,
+              exhausted: rawConversations.length === 0 || newOffset >= (result.total ?? f.total),
             };
           }),
         );

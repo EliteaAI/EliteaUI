@@ -242,7 +242,7 @@ const FolderItem = memo(props => {
               <FolderAccordionItem
                 folder={folder}
                 renderConversationItem={renderConversationItem}
-                hasMore={folder.conversations?.length < (folder.total || 0)}
+                hasMore={!folder.exhausted && folder.conversations?.length < (folder.total || 0)}
                 onLoadMore={() => onLoadMoreInFolder?.(folder.id)}
                 isLoadingMore={isLoadingMoreInFolder}
               />
