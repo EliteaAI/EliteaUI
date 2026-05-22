@@ -4,9 +4,6 @@ import { useInteractiveTour } from '@/[fsd]/app/providers/InteractiveTourProvide
 
 const getPendingTourKey = tourId => `interactive-tour:${tourId}:pending`;
 
-export const isTourCompleted = tourId =>
-  localStorage.getItem(`interactive-tour:${tourId}:completed`) === 'true';
-
 export const markTourPending = tourId => {
   if (!tourId) return;
 
