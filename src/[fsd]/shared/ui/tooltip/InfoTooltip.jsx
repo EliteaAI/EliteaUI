@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useMemo } from 'react';
+import { isValidElement, memo, useCallback, useMemo } from 'react';
 
 import { Box, Tooltip } from '@mui/material';
 
@@ -23,13 +23,23 @@ const InfoTooltip = memo(props => {
     TitleComponent,
     titleComponentProps,
   } = props;
-
   const styles = infoTooltipStyles();
 
   const parseInfoTooltip = useCallback((tooltip, sProps) => {
     if (!tooltip) return null;
-
-    const isObject = typeof tooltip === 'object' && !React.isValidElement(tooltip);
+    const isObject = typeof tooltip === 'object' && !isValidElement(tooltip);
+    if (isValidElement(tooltip)) {
+      return {
+        title: tooltip,
+        placement: sProps?.tooltip?.placement ?? INFO_TOOLTIP_DEFAULTS.placement,
+        zIndex: sProps?.tooltip?.zIndex ?? INFO_TOOLTIP_DEFAULTS.zIndex,
+        icon: {
+          width: sProps?.tooltip?.icon?.width ?? INFO_TOOLTIP_DEFAULTS.icon.width,
+          height: sProps?.tooltip?.icon?.height ?? INFO_TOOLTIP_DEFAULTS.icon.height,
+          fill: sProps?.tooltip?.icon?.fill,
+        },
+      };
+    }
 
     return {
       title: isObject ? tooltip.title : tooltip,
@@ -77,11 +87,14 @@ const InfoTooltip = memo(props => {
   if (disableTooltip) return iconElement;
 
   const resolvedTitleProps = titleComponentProps ?? (typeof infoTooltip === 'object' ? infoTooltip : {});
-  const titleContent = TitleComponent ? (
-    <TitleComponent {...resolvedTitleProps} />
-  ) : (
-    <TooltipMarkdownContent>{tooltipConfig.title}</TooltipMarkdownContent>
-  );
+  let titleContent;
+  if (TitleComponent) {
+    titleContent = <TitleComponent {...resolvedTitleProps} />;
+  } else if (isValidElement(tooltipConfig.title)) {
+    titleContent = tooltipConfig.title;
+  } else {
+    titleContent = <TooltipMarkdownContent>{tooltipConfig.title}</TooltipMarkdownContent>;
+  }
 
   return (
     <Tooltip
