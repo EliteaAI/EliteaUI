@@ -152,13 +152,27 @@ export const useTourCardPosition = currentStep => {
         };
       }
       case 'bottom': {
-        // Always position below the target. Constrain the body height to the
-        // available space so the card never overflows the viewport bottom.
         const availableBelow = vh - rect.bottom - CARD_GAP_PX - VIEWPORT_MARGIN_PX;
-        const bodyMaxHeightPx = Math.max(80, availableBelow - CARD_CHROME_HEIGHT_PX);
+        const fitsBelow = availableBelow >= CARD_ESTIMATED_HEIGHT_PX;
+
+        if (fitsBelow) {
+          const bodyMaxHeightPx = Math.max(80, availableBelow - CARD_CHROME_HEIGHT_PX);
+
+          return {
+            positionSx: {
+              top: rect.bottom + CARD_GAP_PX,
+              left: clampLeft(rect.left + rect.width / 2 - CARD_WIDTH_PX / 2),
+            },
+            bodySx: { maxHeight: `${bodyMaxHeightPx}px` },
+          };
+        }
+
+        const availableAbove = rect.top - CARD_GAP_PX - VIEWPORT_MARGIN_PX;
+        const bodyMaxHeightPx = Math.max(80, availableAbove - CARD_CHROME_HEIGHT_PX);
+
         return {
           positionSx: {
-            top: rect.bottom + CARD_GAP_PX,
+            bottom: vh - rect.top + CARD_GAP_PX,
             left: clampLeft(rect.left + rect.width / 2 - CARD_WIDTH_PX / 2),
           },
           bodySx: { maxHeight: `${bodyMaxHeightPx}px` },
