@@ -90,7 +90,10 @@ const ApplicationCatalog = memo(() => {
           cardDetails={
             <Box sx={styles.cardDetails}>
               <Box>
-                <Typography sx={styles.cardDescription}>{application.shortDescription}</Typography>
+                <Typography sx={styles.cardDescription}>
+                  <Box component="b">Use it to: </Box>
+                  {application.shortDescription}
+                </Typography>
                 <Box sx={styles.additionalDescription}>
                   <Typography sx={styles.cardDescription}>
                     <Box component="b">Includes: </Box>

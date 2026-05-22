@@ -3,6 +3,8 @@ import { memo, useCallback, useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
+import { Box } from '@mui/material';
+
 import { AuthorInformation } from '@/[fsd]/entities/author/ui';
 import { EmptyStatePage } from '@/[fsd]/entities/empty-state-page';
 import { useLoadToolkits } from '@/[fsd]/features/toolkits/lib/hooks';
@@ -20,7 +22,6 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes';
 import { actions as tagsActions } from '@/slices/tags';
-import { rightInfoPanelStyle } from '@/styles/RightInfoPanelStyle';
 
 const ToolkitsList = memo(props => {
   const {
@@ -32,7 +33,7 @@ const ToolkitsList = memo(props => {
     isApplication = false,
   } = props;
   const navigate = useNavigate();
-  const styles = getStyles();
+  const styles = toolkitsListStyles();
   const { selectedTypes } = useTypes();
   const dispatch = useDispatch();
   const { query } = useSelector(state => state.search);
@@ -74,7 +75,7 @@ const ToolkitsList = memo(props => {
 
   const rightPanelContent = useMemo(
     () => (
-      <div style={rightInfoPanelStyle}>
+      <Box style={styles.rightInfoPanelContainer}>
         <ToolkitTypesPanel
           tagList={tagList}
           title="Types"
@@ -85,9 +86,9 @@ const ToolkitsList = memo(props => {
         ) : (
           <TeamMates entityType="toolkit" />
         )}
-      </div>
+      </Box>
     ),
-    [tagList, styles.rightInfoPanel, selectedProjectId, privateProjectId, authorId, isLoadingAuthor],
+    [tagList, styles, selectedProjectId, privateProjectId, authorId, isLoadingAuthor],
   );
 
   // Navigate to New Toolkit page for private projects with no toolkits
@@ -226,8 +227,13 @@ const ToolkitsList = memo(props => {
 });
 
 /** @type {MuiSx} */
-const getStyles = () => ({
+const toolkitsListStyles = () => ({
   rightInfoPanel: { flex: 1 },
+  rightInfoPanelContainer: {
+    height: '100dvh',
+    display: 'flex',
+    flexDirection: 'column',
+  },
 });
 
 ToolkitsList.displayName = 'ToolkitsList';
