@@ -18,6 +18,8 @@ export const buildApplicationContext = (baseContext, currentApplication, matchPa
 
   if (!agentId) return baseContext;
 
+  if (!currentApplication) return baseContext;
+
   const llmSettings = currentApplication?.version_details?.llm_settings;
 
   return filterDefined({

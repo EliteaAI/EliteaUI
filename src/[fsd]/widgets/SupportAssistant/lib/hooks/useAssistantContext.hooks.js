@@ -14,13 +14,25 @@ import {
   getBrowserInfo,
 } from '../helpers';
 
+const findApplicationDetailsInCache = (queries, agentId) => {
+  if (!agentId) return undefined;
+  const id = parseInt(agentId, 10);
+
+  for (const [key, cacheEntry] of Object.entries(queries)) {
+    if (!key.startsWith('applicationDetails') || !cacheEntry?.data) continue;
+    if (cacheEntry.data.id === id) return cacheEntry.data;
+  }
+
+  return undefined;
+};
+
 export const useAssistantContext = () => {
   const { pageType, matchParams } = usePageDetails();
   const projectId = useSelectedProjectId();
   const projectName = useSelectedProjectName();
   const { pathname, search } = useLocation();
 
-  const currentApplication = useSelector(state => state.applications?.currentApplication);
+  const queries = useSelector(state => state.eliteaApi.queries);
   const currentChatModel = useSelector(state => state.chat?.currentChatModel);
 
   return useMemo(() => {
@@ -31,11 +43,13 @@ export const useAssistantContext = () => {
       meta: cleanMeta({ browser: getBrowserInfo() }),
     });
 
+    const application = findApplicationDetailsInCache(queries, matchParams.agentId);
+
     switch (pageType) {
       case 'ApplicationDetails':
-        return buildApplicationContext(baseContext, currentApplication, matchParams, 'agent');
+        return buildApplicationContext(baseContext, application, matchParams, 'agent');
       case 'PipelineDetails':
-        return buildApplicationContext(baseContext, currentApplication, matchParams, 'pipeline');
+        return buildApplicationContext(baseContext, application, matchParams, 'pipeline');
       case 'ToolkitDetails':
         return buildSimpleEntityContext(baseContext, matchParams, 'toolkit', 'toolkitId');
       case 'MCPDetails':
@@ -80,7 +94,7 @@ export const useAssistantContext = () => {
     pathname,
     pageType,
     matchParams,
-    currentApplication,
+    queries,
     search,
     currentChatModel?.name,
     currentChatModel?.integration_name,
