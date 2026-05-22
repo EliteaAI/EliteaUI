@@ -172,7 +172,7 @@ const ToolkitTypeSelector = memo(
               >
                 {'Still no local MCP available. Follow creation guides in our '}
                 <Link
-                  href="https://elitea.ai/docs/integrations/mcp/create-and-use-client-stdio/"
+                  href="https://docs.elitea.ai/integrations/mcp/create-and-use-server-stdio"
                   target="_blank"
                   rel="noopener noreferrer"
                   sx={getStyles().link}
