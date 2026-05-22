@@ -1,6 +1,5 @@
 export { CARD_WIDTH_PX } from './lib/constants';
 export {
-  isTourCompleted,
   markTourPending,
   useInteractiveTourController,
   useProposePendingTour,
