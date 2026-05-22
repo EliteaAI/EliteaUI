@@ -1,6 +1,6 @@
 import { memo, useCallback, useMemo } from 'react';
 
-import { Box, Link, Skeleton, Tooltip, Typography } from '@mui/material';
+import { Box, Link, Skeleton, Tooltip, Typography, useTheme } from '@mui/material';
 
 import { LinkHelpers } from '@/[fsd]/shared/lib/helpers';
 import { BaseBtn } from '@/[fsd]/shared/ui/button';
@@ -74,6 +74,7 @@ const ResourcesPage = memo(() => {
   const { data: systemInfo, isLoading: isSystemInfoLoading } = useGetSystemInfoQuery();
   const { data: resourcesConfig, isLoading: isConfigLoading } = useGetResourcesConfigQuery();
   const { toastInfo } = useToast();
+  const theme = useTheme();
 
   const configValues = resourcesConfig?.values ?? {};
   const styles = resourcesPageStyles();
@@ -162,7 +163,7 @@ const ResourcesPage = memo(() => {
                         >
                           <CopyIcon
                             sx={styles.icon}
-                            fill="blue"
+                            fill={theme.palette.text.link}
                           />
                         </BaseBtn>
                       </Box>
