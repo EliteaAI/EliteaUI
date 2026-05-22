@@ -1,4 +1,4 @@
-import { AGENT_TOUR_TARGETS } from '@/[fsd]/features/interactive-tours/lib/constants/agentTourTargets';
+import { AGENT_TOUR_TARGETS } from '@/[fsd]/features/interactive-tours/lib/constants/agentTourTargets.constants';
 
 export const AGENT_TOUR_ID = 'agent';
 

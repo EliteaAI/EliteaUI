@@ -1,4 +1,4 @@
-import { CHAT_TOUR_TARGETS } from '@/[fsd]/features/interactive-tours/lib/constants/chatTourTargets';
+import { CHAT_TOUR_TARGETS } from '@/[fsd]/features/interactive-tours/lib/constants/chatTourTargets.constants';
 
 export const CHAT_TOUR_ID = 'chat';
 
