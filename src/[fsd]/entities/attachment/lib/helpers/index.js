@@ -1,1 +1,1 @@
-export * from './attachmentUtils';
+export * from './attachment.helpers';
