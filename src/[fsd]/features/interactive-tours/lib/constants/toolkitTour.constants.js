@@ -13,7 +13,7 @@ export const TOOLKIT_TOUR_COMPLETION = {
 export const toolkitTourSteps = [
   {
     id: 'what-is-toolkit',
-    target: TOOLKIT_TOUR_TARGETS.workspace,
+    target: SHARED_TOUR_TARGETS.workspace,
     placement: 'center',
     title: 'What are ELITEA Toolkits?',
     content: `ELITEA Toolkits are modular integrations that connect AI agents, pipelines, and conversations to external platforms and services. Each toolkit packages the connection configuration and a set of tools — specific actions the AI can perform on that service, such as creating issues, querying databases, or searching documents.
@@ -22,7 +22,7 @@ Once configured, a toolkit can be attached to any agent or pipeline and used dir
   },
   {
     id: 'configuration-form',
-    target: TOOLKIT_TOUR_TARGETS.configurationForm,
+    target: SHARED_TOUR_TARGETS.configurationForm,
     placement: 'right',
     title: 'Configuration',
     content: `The configuration form contains the fields needed to connect and shape the toolkit. Common fields across most toolkits include:
@@ -36,7 +36,7 @@ Once configured, a toolkit can be attached to any agent or pipeline and used dir
   },
   {
     id: 'tools',
-    target: TOOLKIT_TOUR_TARGETS.tools,
+    target: SHARED_TOUR_TARGETS.tools,
     placement: 'right',
     title: 'Tool Selection',
     content: `Each toolkit exposes a set of tools — discrete actions the AI can perform, such as *Create Issue*, *Search Confluence*, or *Run SQL Query*. Enable only the tools your use case requires; limiting tool selection improves performance and reduces unnecessary access.
@@ -61,7 +61,7 @@ From the Indexes tab, create and manage indexes for any supported content source
   },
   {
     id: 'test-settings',
-    target: TOOLKIT_TOUR_TARGETS.testSettings,
+    target: SHARED_TOUR_TARGETS.testSettings,
     placement: 'left',
     title: 'Test Settings',
     content: `The toolkit detail page includes a built-in test interface. Select a model, choose a tool, provide any required parameters, and click **RUN TOOL** to execute it in real time. Results appear inline so you can verify the integration works correctly before attaching it to an agent or pipeline.`,

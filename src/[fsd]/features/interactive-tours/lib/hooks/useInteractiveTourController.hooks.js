@@ -8,6 +8,7 @@ import {
   AGENT_TOUR_ID,
   CHAT_TOUR_ID,
   FIRST_ELITEA_TOUR_ID,
+  MCP_TOUR_ID,
   PIPELINE_TOUR_ID,
   SIDEBAR_TOUR_ID,
   TOOLKIT_TOUR_ID,
@@ -21,6 +22,7 @@ const TOUR_LOADERS = {
   [PIPELINE_TOUR_ID]: () => import('../constants/pipelineTour.constants').then(m => m.pipelineTourSteps),
   [FIRST_ELITEA_TOUR_ID]: () =>
     import('../constants/firstEliteaTour.constants').then(m => m.firstEliteaTourSteps),
+  [MCP_TOUR_ID]: () => import('../constants/mcpTour.constants.js').then(m => m.mcpTourSteps),
   [SIDEBAR_TOUR_ID]: () => import('../constants/sidebarTour.constants').then(m => m.sidebarTourSteps),
   [TOOLKIT_TOUR_ID]: () => import('../constants/toolkitTour.constants').then(m => m.toolkitTourSteps),
 };

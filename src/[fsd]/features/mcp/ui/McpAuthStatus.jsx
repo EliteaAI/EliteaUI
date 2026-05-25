@@ -4,6 +4,7 @@ import { useFormikContext } from 'formik';
 
 import { Box, Button, Typography } from '@mui/material';
 
+import { MCP_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { useMcpAuthCheck, useMcpAuthModal, useMcpTokenChange } from '@/[fsd]/features/mcp/lib/hooks';
 import { McpAuthModal, McpLogoutModal } from '@/[fsd]/features/mcp/ui';
@@ -100,7 +101,10 @@ const McpAuthStatus = memo(({ authConfig } = {}) => {
 
   return shouldRender ? (
     <>
-      <Box sx={styles.loginStatusContainer}>
+      <Box
+        sx={styles.loginStatusContainer}
+        data-tour={MCP_TOUR_TARGET_IDS.connectionStatus}
+      >
         <Box sx={styles.statusContent}>
           <OnlineIcon style={styles.statusIconOnline} />
           <Typography

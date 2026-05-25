@@ -115,7 +115,7 @@ export const useTourCardPosition = currentStep => {
     if (!isTargetWithinViewport(el.getBoundingClientRect())) {
       el.scrollIntoView({
         behavior: getScrollBehavior(),
-        block: 'center',
+        block: currentStep?.scrollBlock ?? 'center',
         inline: 'nearest',
       });
     }
@@ -126,7 +126,7 @@ export const useTourCardPosition = currentStep => {
       ro.disconnect();
       if (rafId !== null) cancelAnimationFrame(rafId);
     };
-  }, [currentStep?.target, currentStep?.placement, measureElement, updateViewport]);
+  }, [currentStep?.target, currentStep?.placement, currentStep?.scrollBlock, measureElement, updateViewport]);
 
   const cardPositionSx = useMemo(() => {
     if (!targetInfo || currentStep?.placement === 'center') {

@@ -4,7 +4,7 @@ import { useFormikContext } from 'formik';
 
 import { Box, Typography } from '@mui/material';
 
-import { TOOLKIT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
+import { SHARED_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { useGetRemoteMcpTools } from '@/[fsd]/features/mcp/lib/hooks';
 import { McpAuthModal } from '@/[fsd]/features/mcp/ui';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
@@ -88,7 +88,7 @@ export const ToolActionsSelector = memo(props => {
   return (
     <Box
       sx={styles.container(shouldUseAccordionView)}
-      data-tour={TOOLKIT_TOUR_TARGET_IDS.tools}
+      data-tour={SHARED_TOUR_TARGET_IDS.tools}
     >
       {shouldUseAccordionView ? (
         <BasicAccordion
