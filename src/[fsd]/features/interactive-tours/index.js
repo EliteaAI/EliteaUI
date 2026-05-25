@@ -7,6 +7,7 @@ export {
   useTourFromUrl,
 } from './lib/hooks';
 export {
+  AGENT_STUDIO_TOUR_ID,
   AGENT_TOUR_ID,
   ARTIFACT_TOUR_ID,
   CHAT_TOUR_ID,
