@@ -5,6 +5,7 @@ import { CARD_WIDTH_PX } from '@/[fsd]/features/interactive-tours/lib/constants'
 const CARD_GAP_PX = 18;
 const CARD_ESTIMATED_HEIGHT_PX = 400;
 const VIEWPORT_MARGIN_PX = 16;
+const TARGET_SCROLL_MARGIN_PX = 32;
 // Fixed vertical space consumed by padding, title, gaps, and footer — everything
 // except the scrollable body. Used to compute the maximum body height when the
 // card is placed below a target near the bottom of the viewport.
@@ -16,6 +17,25 @@ const getViewportSize = () => {
   }
 
   return { vw: window.innerWidth, vh: window.innerHeight };
+};
+
+const isTargetWithinViewport = rect => {
+  const { vw, vh } = getViewportSize();
+
+  return (
+    rect.top >= TARGET_SCROLL_MARGIN_PX &&
+    rect.left >= TARGET_SCROLL_MARGIN_PX &&
+    rect.bottom <= vh - TARGET_SCROLL_MARGIN_PX &&
+    rect.right <= vw - TARGET_SCROLL_MARGIN_PX
+  );
+};
+
+const getScrollBehavior = () => {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+    return 'smooth';
+  }
+
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
 };
 
 /**
@@ -91,6 +111,14 @@ export const useTourCardPosition = currentStep => {
     const ro = new ResizeObserver(scheduleMeasure);
 
     ro.observe(el);
+
+    if (!isTargetWithinViewport(el.getBoundingClientRect())) {
+      el.scrollIntoView({
+        behavior: getScrollBehavior(),
+        block: 'center',
+        inline: 'nearest',
+      });
+    }
 
     return () => {
       window.removeEventListener('scroll', scheduleMeasure, { capture: true });
