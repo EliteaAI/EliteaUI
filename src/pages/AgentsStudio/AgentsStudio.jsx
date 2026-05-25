@@ -1,12 +1,16 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useLocation, useSearchParams } from 'react-router-dom';
 
-import { AgentsStudioContext } from '@/[fsd]/app/providers';
+import { Box } from '@mui/material';
+
+import { AgentsStudioContext, useInteractiveTour } from '@/[fsd]/app/providers';
 import { AgentsStudioConstants } from '@/[fsd]/features/agents-studio/lib/constants';
 import { AgentsStudioHelpers, TagHelpers } from '@/[fsd]/features/agents-studio/lib/helpers';
 import { useAgentsStudioData } from '@/[fsd]/features/agents-studio/lib/hooks';
 import { AgentCategorySection, AgentModal } from '@/[fsd]/features/agents-studio/ui';
+import { AGENT_STUDIO_TOUR_ID } from '@/[fsd]/features/interactive-tours/lib/constants';
+import { AGENT_STUDIO_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/agentStudioTourTargets.constants';
 import { useGroupedCategories } from '@/[fsd]/shared/lib/hooks';
 import { Category } from '@/[fsd]/shared/ui';
 import useDebounceValue from '@/hooks/useDebounceValue';
@@ -17,8 +21,10 @@ const AgentsStudio = memo(() => {
   const [selectedTagNames, setSelectedTagNames] = useState([]);
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const modalOpenedByTourRef = useRef(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
+  const tour = useInteractiveTour();
 
   useEffect(() => {
     const agentId = searchParams.get(AgentsStudioConstants.AGENT_ID);
@@ -65,6 +71,7 @@ const AgentsStudio = memo(() => {
   }, []);
 
   const handleCloseModal = useCallback(() => {
+    modalOpenedByTourRef.current = false;
     setIsModalOpen(false);
     setSelectedApplication(null);
   }, []);
@@ -175,6 +182,43 @@ const AgentsStudio = memo(() => {
     [],
   );
 
+  const firstVisibleApplication = useMemo(() => {
+    for (const category of allCategories) {
+      const firstItem = groupedItems?.[category]?.find(item => item?.value);
+
+      if (firstItem?.value) {
+        return firstItem.value;
+      }
+    }
+
+    return null;
+  }, [allCategories, groupedItems]);
+
+  const isStartingConversationStep = useMemo(
+    () => tour?.tourId === AGENT_STUDIO_TOUR_ID && tour?.currentStep?.id === 'starting-a-conversation',
+    [tour?.currentStep?.id, tour?.tourId],
+  );
+
+  useEffect(() => {
+    if (isStartingConversationStep) {
+      if (!isModalOpen && !selectedApplication && firstVisibleApplication) {
+        modalOpenedByTourRef.current = true;
+        setSelectedApplication(firstVisibleApplication);
+        setIsModalOpen(true);
+      }
+
+      return;
+    }
+
+    if (modalOpenedByTourRef.current) {
+      modalOpenedByTourRef.current = false;
+      setIsModalOpen(false);
+      setSelectedApplication(null);
+    }
+  }, [firstVisibleApplication, isModalOpen, isStartingConversationStep, selectedApplication]);
+
+  const styles = agentsStudioStyles();
+
   const contextValue = useMemo(
     () => ({
       updateApplicationInState: updateApplicationInStateAndModal,
@@ -186,44 +230,56 @@ const AgentsStudio = memo(() => {
 
   return (
     <AgentsStudioContext.Provider value={contextValue}>
-      <Category.GroupedCategory
-        title="Welcome to Agents Studio"
-        searchPlaceholder="Search for agents"
-        noResultsTitle="No agents found"
-        noResultsDescription="Try adjusting your search terms"
-        isLoading={isFetching && Object.keys(applicationsByTag).length === 0}
-        allCategories={allCategories}
-        groupedItems={groupedItems}
-        selectedCategories={selectedCategories}
-        searchQuery={searchQuery}
-        renderCategory={renderCategory}
-        renderNoResults={renderNoResults}
-        onSelectCategory={handleTagSelect}
-        onSearchChange={handleSearchChange}
-        slotProps={{
-          categoryList: {
-            sx: {
-              maxWidth: '81.375rem',
-            },
-          },
-          groupedItems: {
-            sx: {
-              maxWidth: '81.375rem',
-            },
-          },
-        }}
-      />
-      {selectedApplication && (
-        <AgentModal
-          open={isModalOpen}
-          onClose={handleCloseModal}
-          agent={selectedApplication}
+      <Box
+        data-tour={AGENT_STUDIO_TOUR_TARGET_IDS.workspace}
+        sx={styles.workspace}
+      >
+        <Category.GroupedCategory
+          title="Welcome to Agents Studio"
+          searchPlaceholder="Search for agents"
+          noResultsTitle="No agents found"
+          noResultsDescription="Try adjusting your search terms"
+          isLoading={isFetching && Object.keys(applicationsByTag).length === 0}
+          allCategories={allCategories}
+          groupedItems={groupedItems}
+          selectedCategories={selectedCategories}
+          searchQuery={searchQuery}
+          renderCategory={renderCategory}
+          renderNoResults={renderNoResults}
+          onSelectCategory={handleTagSelect}
+          onSearchChange={handleSearchChange}
+          slotProps={{
+            categoryList: { sx: styles.categoryList },
+            groupedItems: { sx: styles.groupedItems },
+          }}
         />
-      )}
+        {selectedApplication && (
+          <AgentModal
+            open={isModalOpen}
+            onClose={handleCloseModal}
+            agent={selectedApplication}
+          />
+        )}
+      </Box>
     </AgentsStudioContext.Provider>
   );
 });
 
 AgentsStudio.displayName = 'AgentsStudio';
+
+/** @type {MuiSx} */
+const agentsStudioStyles = () => ({
+  workspace: {
+    display: 'flex',
+    flexDirection: 'column',
+    height: '100%',
+  },
+  categoryList: {
+    maxWidth: '81.375rem',
+  },
+  groupedItems: {
+    maxWidth: '81.375rem',
+  },
+});
 
 export default AgentsStudio;

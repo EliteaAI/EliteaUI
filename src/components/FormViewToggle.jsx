@@ -1,5 +1,6 @@
 import { memo, useCallback } from 'react';
 
+import { SHARED_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { TabGroupButton } from '@/[fsd]/shared/ui/tab-group-button';
 import { ToolkitViewOptions } from '@/common/constants';
 
@@ -13,6 +14,7 @@ const FORM_VIEW_TABS = [
     value: ToolkitViewOptions.Json,
     label: 'Raw Json',
     tooltip: 'Raw Json view',
+    buttonProps: { 'data-tour': SHARED_TOUR_TARGET_IDS.rawJsonTab },
   },
 ];
 

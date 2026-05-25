@@ -6,11 +6,14 @@ import { GradientIconWrapper } from '@/[fsd]/shared/ui/icon';
 import { getCardGradientBorderBefore, getCardGradientStyles } from '@/utils/cardStyles';
 
 const ResourceCard = memo(props => {
-  const { title, description, icon, colorScheme, children } = props;
+  const { title, description, icon, colorScheme, tourTargetId, children } = props;
   const styles = resourceCardStyles(colorScheme);
 
   return (
-    <Box sx={styles.card}>
+    <Box
+      sx={styles.card}
+      data-tour={tourTargetId}
+    >
       <Box sx={styles.cardHeader}>
         <GradientIconWrapper sx={styles.iconWrapper}>{icon}</GradientIconWrapper>
         <Box sx={styles.headerText}>

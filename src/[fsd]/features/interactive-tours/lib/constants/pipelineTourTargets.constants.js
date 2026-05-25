@@ -1,4 +1,4 @@
-const buildTourSelector = targetId => `[data-tour="${targetId}"]`;
+import { buildTourSelector } from '../helpers/tourSelector.helpers';
 
 export const PIPELINE_TOUR_TARGET_IDS = {
   workspace: 'pipeline-workspace',

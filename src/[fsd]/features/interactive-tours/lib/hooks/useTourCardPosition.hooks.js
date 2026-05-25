@@ -39,6 +39,33 @@ const getScrollBehavior = () => {
 };
 
 /**
+ * Collapses multiple calls within the same animation frame into a single
+ * execution of `fn`. Returns `schedule()` to enqueue and `cancel()` to abort.
+ *
+ * @param {() => void} fn
+ * @returns {{ schedule: () => void, cancel: () => void }}
+ */
+const createRafThrottle = fn => {
+  let rafId = null;
+
+  return {
+    schedule() {
+      if (rafId !== null) return;
+      rafId = requestAnimationFrame(() => {
+        rafId = null;
+        fn();
+      });
+    },
+    cancel() {
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+    },
+  };
+};
+
+/**
  * Tracks the bounding rect of a tour step's target element and derives the
  * card's fixed position, keeping both in sync with scroll, viewport resize, and
  * target element resize.
@@ -79,54 +106,75 @@ export const useTourCardPosition = currentStep => {
       return;
     }
 
-    const el = document.querySelector(currentStep.target);
+    let observedEl = null;
+    let resizeObserver = null;
 
-    if (!el) {
-      setTargetInfo(null);
-      return;
-    }
+    // Queries the selector, attaches a ResizeObserver to the (possibly new)
+    // element, measures it, and scrolls it into view when necessary.
+    // All three responsibilities live here to keep the logic sequential and
+    // avoid the forward-reference tangle that separate helpers would require.
+    const measureTarget = () => {
+      const el = document.querySelector(currentStep.target);
 
-    measureElement(el);
+      if (!el) {
+        resizeObserver?.disconnect();
+        resizeObserver = null;
+        observedEl = null;
+        setTargetInfo(null);
+        return;
+      }
 
-    // Throttle re-measurement to one rAF tick to avoid layout thrash on every
-    // scroll/resize event. Captures el and rafId from this effect's closure.
-    let rafId = null;
-    const scheduleMeasure = () => {
-      if (rafId !== null) return;
-      rafId = requestAnimationFrame(() => {
-        rafId = null;
-        measureElement(el);
-      });
+      if (observedEl !== el) {
+        resizeObserver?.disconnect();
+        resizeObserver = new ResizeObserver(throttle.schedule);
+        resizeObserver.observe(el);
+        observedEl = el;
+      }
+
+      measureElement(el);
+
+      if (!isTargetWithinViewport(el.getBoundingClientRect())) {
+        el.scrollIntoView({
+          behavior: getScrollBehavior(),
+          block: currentStep?.scrollBlock ?? 'center',
+          inline: 'nearest',
+        });
+      }
     };
 
-    const onResize = () => {
-      scheduleMeasure();
+    // Throttle re-measurement to one rAF tick to avoid layout thrash while
+    // handling scroll/resize events and while waiting for late-mounted targets.
+    const throttle = createRafThrottle(measureTarget);
+
+    const handleResize = () => {
+      throttle.schedule();
       updateViewport();
     };
 
+    // MutationObserver re-queries the selector when the DOM changes, which
+    // handles targets that mount after the step becomes active (e.g. a modal).
+    // childList + subtree is enough — we only need to react to nodes being added
+    // or removed, not attribute changes (which fire constantly in React apps).
+    const mutationObserver = new MutationObserver(throttle.schedule);
+
     // Capture phase catches scroll on any scrollable ancestor.
-    window.addEventListener('scroll', scheduleMeasure, { capture: true, passive: true });
-    window.addEventListener('resize', onResize, { passive: true });
+    window.addEventListener('scroll', throttle.schedule, { capture: true, passive: true });
+    window.addEventListener('resize', handleResize, { passive: true });
 
-    const ro = new ResizeObserver(scheduleMeasure);
-
-    ro.observe(el);
-
-    if (!isTargetWithinViewport(el.getBoundingClientRect())) {
-      el.scrollIntoView({
-        behavior: getScrollBehavior(),
-        block: 'center',
-        inline: 'nearest',
-      });
+    if (document.body) {
+      mutationObserver.observe(document.body, { childList: true, subtree: true });
     }
 
+    throttle.schedule();
+
     return () => {
-      window.removeEventListener('scroll', scheduleMeasure, { capture: true });
-      window.removeEventListener('resize', onResize);
-      ro.disconnect();
-      if (rafId !== null) cancelAnimationFrame(rafId);
+      window.removeEventListener('scroll', throttle.schedule, { capture: true });
+      window.removeEventListener('resize', handleResize);
+      mutationObserver.disconnect();
+      resizeObserver?.disconnect();
+      throttle.cancel();
     };
-  }, [currentStep?.target, currentStep?.placement, measureElement, updateViewport]);
+  }, [currentStep?.target, currentStep?.placement, currentStep?.scrollBlock, measureElement, updateViewport]);
 
   const cardPositionSx = useMemo(() => {
     if (!targetInfo || currentStep?.placement === 'center') {

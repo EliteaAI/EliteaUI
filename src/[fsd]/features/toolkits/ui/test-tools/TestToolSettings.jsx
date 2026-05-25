@@ -5,6 +5,7 @@ import { useFormikContext } from 'formik';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { Box, Button, Typography } from '@mui/material';
 
+import { SHARED_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { IndexesToolsEnum } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
@@ -105,6 +106,7 @@ const TestToolSettings = memo(props => {
     <Box
       width="100%"
       height="100%"
+      data-tour={SHARED_TOUR_TARGET_IDS.testSettings}
     >
       <ContentContainer sx={styles.contentContainer}>
         <Box>

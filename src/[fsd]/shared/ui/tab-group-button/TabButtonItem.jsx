@@ -12,6 +12,7 @@ const TabButtonItem = memo(props => {
     <ToggleButton
       variant="elitea"
       value={item.value}
+      {...item.buttonProps}
       sx={{ ...styles.toggleButton, borderRadius, ...customSx }}
     >
       {item.label && (
