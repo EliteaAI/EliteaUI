@@ -15,5 +15,6 @@ export {
   FIRST_ELITEA_TOUR_ID,
   MCP_TOUR_ID,
   SIDEBAR_TOUR_ID,
+  RESOURCES_TOUR_ID,
   TOOLKIT_TOUR_ID,
 } from './lib/constants';

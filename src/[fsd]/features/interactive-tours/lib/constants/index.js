@@ -27,3 +27,5 @@ export { SIDEBAR_TOUR_COMPLETION, SIDEBAR_TOUR_ID, sidebarTourSteps } from './si
 export { SIDEBAR_TOUR_TARGET_IDS, SIDEBAR_TOUR_TARGETS } from './sidebarTourTargets.constants.js';
 export { TOOLKIT_TOUR_COMPLETION, TOOLKIT_TOUR_ID, toolkitTourSteps } from './toolkitTour.constants';
 export { TOOLKIT_TOUR_TARGET_IDS, TOOLKIT_TOUR_TARGETS } from './toolkitTourTargets.constants.js';
+export { RESOURCES_TOUR_COMPLETION, RESOURCES_TOUR_ID, resourcesTourSteps } from './resourcesTour.constants';
+export { RESOURCES_TOUR_TARGET_IDS, RESOURCES_TOUR_TARGETS } from './resourcesTourTargets.constants.js';
