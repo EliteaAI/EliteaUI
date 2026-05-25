@@ -9,6 +9,8 @@ export const AGENT_TOUR_TARGET_IDS = {
   welcomeMessage: 'agent-welcome-message',
   versions: 'agent-versions',
   publish: 'agent-publish',
+  testChat: 'agent-test-chat',
+  runHistory: 'agent-run-history',
 };
 
 export const AGENT_TOUR_TARGETS = {
@@ -20,4 +22,6 @@ export const AGENT_TOUR_TARGETS = {
   welcomeMessage: buildTourSelector(AGENT_TOUR_TARGET_IDS.welcomeMessage),
   versions: buildTourSelector(AGENT_TOUR_TARGET_IDS.versions),
   publish: buildTourSelector(AGENT_TOUR_TARGET_IDS.publish),
+  testChat: buildTourSelector(AGENT_TOUR_TARGET_IDS.testChat),
+  runHistory: buildTourSelector(AGENT_TOUR_TARGET_IDS.runHistory),
 };

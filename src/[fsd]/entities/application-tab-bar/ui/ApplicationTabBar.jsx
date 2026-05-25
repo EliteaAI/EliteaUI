@@ -6,6 +6,7 @@ import { useSelector } from 'react-redux';
 import { Box } from '@mui/material';
 
 import { ApplicationVersionSelect } from '@/[fsd]/entities/application-tab-bar/ui';
+import { AGENT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { useFormDirtyExcluding } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { ViewMode } from '@/common/constants';
@@ -50,7 +51,10 @@ const ApplicationTabBar = memo(({ onSuccess, onDiscard }) => {
         isCreateMode={false}
       />
       <Box sx={styles.wrapper}>
-        <Box sx={styles.centeredBlock}>
+        <Box
+          sx={styles.centeredBlock}
+          data-tour={AGENT_TOUR_TARGET_IDS.versions}
+        >
           <ApplicationVersionSelect
             enableVersionListAvatar={isFromApplications && isPublic && projectId !== personal_project_id}
             isFromPipeline={isFromPipeline}
