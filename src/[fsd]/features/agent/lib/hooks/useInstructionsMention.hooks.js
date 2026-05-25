@@ -70,7 +70,8 @@ export const useInstructionsMention = ({ fileReaderRef, applicationId, projectId
           settings: tool.settings,
           isToolkit: isToolkitItem(tool),
           description: getItemDescription(tool),
-        })),
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name)),
     // mcpTokenVersion is a cache-buster: it forces re-evaluation when MCP login state changes
     // (sessionStorage is not reactive, so we need an explicit trigger)
     // eslint-disable-next-line react-hooks/exhaustive-deps
