@@ -8,6 +8,7 @@ export {
 } from './lib/hooks';
 export {
   AGENT_TOUR_ID,
+  ARTIFACT_TOUR_ID,
   CHAT_TOUR_ID,
   CHAT_TOUR_TARGET_IDS,
   FIRST_ELITEA_TOUR_ID,

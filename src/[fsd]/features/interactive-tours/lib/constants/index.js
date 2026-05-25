@@ -1,4 +1,6 @@
 export { CARD_WIDTH_PX, SHARED_TOUR_TARGET_IDS, SHARED_TOUR_TARGETS } from './interactiveTour.constants';
+export { ARTIFACT_TOUR_COMPLETION, ARTIFACT_TOUR_ID, artifactTourSteps } from './artifactTour.constants';
+export { ARTIFACT_TOUR_TARGET_IDS, ARTIFACT_TOUR_TARGETS } from './artifactTourTargets.constants.js';
 export { AGENT_TOUR_COMPLETION, AGENT_TOUR_ID, agentTourSteps } from './agentTour.constants';
 export { AGENT_TOUR_TARGET_IDS, AGENT_TOUR_TARGETS } from './agentTourTargets.constants.js';
 export {

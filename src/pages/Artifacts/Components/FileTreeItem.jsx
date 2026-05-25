@@ -2,6 +2,7 @@ import { memo, useCallback, useEffect, useState } from 'react';
 
 import { Box, Collapse, useTheme } from '@mui/material';
 
+import { ARTIFACT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/artifactTourTargets.constants';
 import { Tooltip } from '@/[fsd]/shared/ui';
 import FolderIcon from '@/components/Icons/FolderIcon';
 
@@ -107,6 +108,7 @@ const FileTreeItem = memo(props => {
         onClick={handleSelect}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
+        {...(item.isFile ? { 'data-tour': ARTIFACT_TOUR_TARGET_IDS.selectedFile } : {})}
       >
         <Box sx={styles.contentArea}>
           {!item.isFile && <FolderIcon sx={styles.folderIcon} />}
