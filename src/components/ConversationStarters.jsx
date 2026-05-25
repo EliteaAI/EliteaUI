@@ -9,7 +9,7 @@ import { conversationStartersHelpers } from '@/[fsd]/features/agent/lib/helpers'
 import { AGENT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { useFieldFocus } from '@/[fsd]/shared/lib/hooks';
-import { Input } from '@/[fsd]/shared/ui';
+import { Input, Text } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import PlusIcon from '@/assets/plus-icon.svg?react';
@@ -127,17 +127,16 @@ const ConversationStarters = memo(props => {
                         disabled={disabled}
                         fieldName="Conversation starter"
                         inputProps={{ maxLength: MAX_CONVERSATION_STARTER_LENGTH }}
+                        showCharacterCounter
                         inputRef={el => (inputRefs.current[index] = el)}
                         error={hasStarterError}
                         helperText={hasStarterError ? 'Conversation starter cannot be empty' : undefined}
                       />
                       {isFocused(starterFocusId) && value.length > 0 && (
-                        <Typography
-                          variant="bodySmall"
-                          sx={styles.characterCount}
-                        >
-                          {`${MAX_CONVERSATION_STARTER_LENGTH - value.length} characters left`}
-                        </Typography>
+                        <Text.CharacterCounter
+                          value={value}
+                          maxLength={MAX_CONVERSATION_STARTER_LENGTH}
+                        />
                       )}
                     </Box>
                     {!disabled && (
@@ -202,9 +201,6 @@ const conversationStartersStyles = isEmpty => ({
     },
   },
   inputWrapper: {
-    width: '100%',
-  },
-  characterCount: {
     width: '100%',
   },
   deleteButtonWrapper: {

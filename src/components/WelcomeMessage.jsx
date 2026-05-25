@@ -1,11 +1,11 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Box, Typography, debounce } from '@mui/material';
+import { Box, debounce } from '@mui/material';
 
 import { AGENT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { useFieldFocus } from '@/[fsd]/shared/lib/hooks';
-import { Input } from '@/[fsd]/shared/ui';
+import { Input, Text } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { MAX_WELCOME_MESSAGE_LENGTH, PROMPT_PAYLOAD_KEY } from '@/common/constants';
 import { useTheme } from '@emotion/react';
@@ -66,6 +66,7 @@ const WelcomeMessage = memo(props => {
                   placeholder="Input your welcome message"
                   value={inputValue}
                   inputProps={{ maxLength: MAX_WELCOME_MESSAGE_LENGTH }}
+                  showCharacterCounter
                   onChange={handleInput}
                   onFocus={() => toggleFieldFocus(PROMPT_PAYLOAD_KEY.welcomeMessage)}
                   onBlur={() => toggleFieldFocus(null)}
@@ -74,9 +75,10 @@ const WelcomeMessage = memo(props => {
                   disabled={disabled}
                 />
                 {isFocused(PROMPT_PAYLOAD_KEY.welcomeMessage) && inputValue.length > 0 && (
-                  <Typography variant="bodySmall">
-                    {`${MAX_WELCOME_MESSAGE_LENGTH - inputValue.length} characters left`}
-                  </Typography>
+                  <Text.CharacterCounter
+                    value={inputValue}
+                    maxLength={MAX_WELCOME_MESSAGE_LENGTH}
+                  />
                 )}
               </Box>
             </>

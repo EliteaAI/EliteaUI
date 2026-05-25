@@ -58,6 +58,7 @@ const StyledInputEnhancer = memo(props => {
     afterContent,
     onFullScreenChange,
     codeMirrorExtensions,
+    showCharacterCounter,
     ...leftProps
   } = props;
 
@@ -136,6 +137,7 @@ const StyledInputEnhancer = memo(props => {
           onRealtimeChange={onRealtimeChange}
           afterContent={afterContent}
           codeMirrorExtensions={codeMirrorExtensions}
+          showCharacterCounter={showCharacterCounter}
           {...leftProps}
         />
       )}

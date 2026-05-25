@@ -3,7 +3,7 @@ import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useRef, 
 import { Box } from '@mui/material';
 
 import { AIAssistantCodeMirrorInput } from '@/[fsd]/features/pipelines/ai-assistant/ui';
-import { Field, Modal } from '@/[fsd]/shared/ui';
+import { Field, Modal, Text } from '@/[fsd]/shared/ui';
 import { useLanguageLinter } from '@/hooks/useCodeMirrorLanguageExtensions';
 
 const StyledInputModal = forwardRef((props, ref) => {
@@ -26,6 +26,7 @@ const StyledInputModal = forwardRef((props, ref) => {
     onRealtimeChange,
     afterContent,
     codeMirrorExtensions,
+    showCharacterCounter = false,
   } = props;
 
   const { maxLength } = inputProps || {};
@@ -110,6 +111,15 @@ const StyledInputModal = forwardRef((props, ref) => {
     >
       <Box sx={styles.editorContainer}>
         <Box sx={styles.editorWrapper}>
+          {maxLength && showCharacterCounter && (
+            <Box sx={styles.limitWrapper}>
+              <Text.CharacterCounter
+                value={currentValue}
+                maxLength={maxLength}
+                textVariant="bodyMedium"
+              />
+            </Box>
+          )}
           {enableFStringAutocomplete ? (
             <AIAssistantCodeMirrorInput
               readOnly={disabled}
@@ -168,4 +178,9 @@ const styles = {
       borderRight: 'none',
     },
   }),
+  limitWrapper: {
+    display: 'flex',
+    justifyContent: 'center',
+    padding: '0.5rem',
+  },
 };
