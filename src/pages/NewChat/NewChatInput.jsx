@@ -368,7 +368,7 @@ const NewChatInput = forwardRef((props, ref) => {
         },
       }}
       clearInputAfterSend={clearInputAfterSubmit}
-      disabledSend={disabledSend}
+      disabledSend={disabledSend || isRecording}
       disabledInput={isLoading}
       onSend={handleSend}
       onNormalKeyDown={onNormalKeyDown}
