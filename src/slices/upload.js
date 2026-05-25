@@ -1,5 +1,6 @@
 import axios from 'axios';
 
+import { normalizeFileExtension } from '@/[fsd]/entities/attachment/lib';
 import { PathValidationHelpers } from '@/[fsd]/features/artifacts/lib/helpers';
 import { DEV, VITE_DEV_TOKEN, VITE_SERVER_URL } from '@/common/constants';
 import { clearBaseUrlPrefix } from '@/common/utils';
@@ -69,7 +70,7 @@ export const uploadFile = createAsyncThunk(
     }
 
     const displayFilenames = Object.keys(files).map(key => {
-      const fileName = files[key].name;
+      const fileName = normalizeFileExtension(files[key]).name;
       return folderPath ? `${folderPath}/${fileName}` : fileName;
     });
 
@@ -90,7 +91,8 @@ export const uploadFile = createAsyncThunk(
       uploadPromises = Object.keys(files).map((key, index) => {
         // Construct URL with folder path as part of the path (S3 API expects key in URL)
         // Note: S3 API doesn't use /api/v2 prefix, it's directly under /artifacts/s3
-        const fileName = files[key].name;
+        const normalizedFile = normalizeFileExtension(files[key]);
+        const fileName = normalizedFile.name;
         const fileKey = folderPath ? `${folderPath}/${fileName}` : fileName;
 
         if (!PathValidationHelpers.isSecureUploadPath(fileKey))
@@ -107,13 +109,12 @@ export const uploadFile = createAsyncThunk(
 
         // S3 PUT expects raw file content, not FormData
         // Send the file directly as the request body with appropriate Content-Type
-        const file = files[key];
         const uploadHeaders = {
           ...headers,
-          'Content-Type': file.type || 'application/octet-stream',
+          'Content-Type': normalizedFile.type || 'application/octet-stream',
         };
 
-        return axios.put(uploadUrl, file, {
+        return axios.put(uploadUrl, normalizedFile, {
           onUploadProgress: progressEvent => {
             const uploadProgress = Math.round((progressEvent.loaded / progressEvent.total) * 100);
             dispatch(uploadSlice.actions.updateFileStatus({ index, uploadProgress }));

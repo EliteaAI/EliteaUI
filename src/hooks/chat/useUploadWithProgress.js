@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 
 import { v4 as uuidv4 } from 'uuid';
 
+import { normalizeFileExtension } from '@/[fsd]/entities/attachment/lib';
 import { DEV, VITE_DEV_TOKEN, VITE_SERVER_URL } from '@/common/constants';
 import { clearBaseUrlPrefix } from '@/common/utils';
 
@@ -149,7 +150,9 @@ export const useUploadWithProgress = () => {
         const totalBytes = attachments.reduce((sum, file) => sum + file.size, 0);
         let uploadedBytes = 0;
 
-        for (const file of attachments) {
+        for (let file of attachments) {
+          file = normalizeFileExtension(file);
+
           if (file.size > MAX_FILE_SIZE)
             throw new Error(`File "${file.name}" exceeds maximum size limit of 300MB`);
 

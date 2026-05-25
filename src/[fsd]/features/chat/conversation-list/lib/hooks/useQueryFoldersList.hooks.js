@@ -120,16 +120,18 @@ export const useQueryFoldersList = props => {
   }, [data, isSuccess, isLoadFolders, updateFolders, updateDateGroups, updatePinnedConversations]);
 
   const selectConversationIfNeeded = useCallback(() => {
+    if (skipSetConversation || !data?.selected_conversation_id) return;
+
+    const pinnedConversations = data?.pinned?.conversations || [];
     const dateGroupConversations = data?.date_groups?.flatMap(group => group.conversations) || [];
     const folderConversations = data?.folders?.flatMap(folder => folder.conversations) || [];
-    const pinnedConversations = data?.pinned?.conversations || [];
     const conversationList = [...pinnedConversations, ...dateGroupConversations, ...folderConversations];
-    const latestSelectedConversation = conversationList.find(
-      conversation => conversation.id == data?.selected_conversation_id,
-    );
 
-    if (data?.selected_conversation_id && latestSelectedConversation && !skipSetConversation)
-      onSelectConversationRef?.current(latestSelectedConversation);
+    const selectedConversation =
+      conversationList.find(conversation => conversation.id == data?.selected_conversation_id) ||
+      conversationList[0];
+
+    if (selectedConversation) onSelectConversationRef?.current(selectedConversation);
   }, [data?.folders, data?.date_groups, data?.pinned, data?.selected_conversation_id, skipSetConversation]);
 
   useEffect(() => {
