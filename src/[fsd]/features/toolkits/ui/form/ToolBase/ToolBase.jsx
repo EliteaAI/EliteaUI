@@ -91,10 +91,15 @@ const ToolBase = memo(props => {
       sectionProps,
       enableEditEliteaTitle,
     );
-    setToolErrors(prev => ({
-      ...prev,
-      ...requiredPropertiesError,
-    }));
+    setToolErrors(prev => {
+      const merged = { ...prev };
+      Object.entries(requiredPropertiesError).forEach(([key, value]) => {
+        if (value === false || typeof prev[key] !== 'string') {
+          merged[key] = value;
+        }
+      });
+      return merged;
+    });
   }, [
     schema?.required,
     settings,
