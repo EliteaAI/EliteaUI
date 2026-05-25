@@ -330,3 +330,18 @@ export const buildAttachmentSummary = items => {
   const total = items.length;
   return `${total} ${total === 1 ? 'file is' : 'files are'} attached, including ${listing}.`;
 };
+
+export const normalizeFileExtension = file => {
+  const name = file.name;
+  const dotIndex = name.lastIndexOf('.');
+
+  if (dotIndex === -1 || dotIndex === name.length - 1) return file;
+
+  const baseName = name.substring(0, dotIndex);
+  const ext = name.substring(dotIndex).toLowerCase();
+  const normalizedName = baseName + ext;
+
+  if (normalizedName === name) return file;
+
+  return new File([file], normalizedName, { type: file.type, lastModified: file.lastModified });
+};

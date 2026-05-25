@@ -98,6 +98,8 @@ import { actions } from '@/slices/settings';
 
 import ParticipantsWrapper from './Participants/index';
 
+const TAG_TYPE_FOLDERS = 'TAG_TYPE_FOLDERS';
+
 const NewChat = props => {
   const { projectId, preProjectId, setPreProjectId } = props;
 
@@ -343,10 +345,11 @@ const NewChat = props => {
   const { conversationIdFromUrl, clearUrlConversation, changeUrlByConversation } =
     useConversationNavigation();
 
-  const handleNotFoundAcknowledge = useCallback(() => {
-    setConversationNotFound(false);
-    clearUrlConversation();
-  }, [clearUrlConversation]);
+  const hasAttemptedUrlConversationRef = useRef(false);
+
+  useEffect(() => {
+    hasAttemptedUrlConversationRef.current = false;
+  }, [conversationIdFromUrl]);
 
   const interaction_uuid = useChatInteractionUUID(activeConversation?.id);
   const { listenCanvasEditorsChangeEvent, stopListenCanvasEditorsChangeEvent } = useChatCanvasEditorsChange({
@@ -448,7 +451,7 @@ const NewChat = props => {
         })),
       );
 
-      dispatch(eliteaApi.util.invalidateTags(['TAG_TYPE_FOLDERS']));
+      dispatch(eliteaApi.util.invalidateTags([TAG_TYPE_FOLDERS]));
     },
     [activeConversation?.uuid, changeUrlByConversation, dispatch, setConversations],
   );
@@ -595,6 +598,18 @@ const NewChat = props => {
     stopListenCanvasContentChangeEvent,
     enableMessagesPagination: true,
   });
+
+  const handleNotFoundAcknowledge = useCallback(() => {
+    setConversationNotFound(false);
+    clearUrlConversation();
+
+    const pinnedList = pinnedConversations || [];
+    const dateGroupList = dateGroups?.flatMap(g => g.conversations) || [];
+    const folderList = folders?.flatMap(f => f.conversations) || [];
+    const firstAvailable = [...pinnedList, ...dateGroupList, ...folderList][0];
+
+    if (firstAvailable) onSelectConversation(firstAvailable);
+  }, [clearUrlConversation, pinnedConversations, dateGroups, folders, onSelectConversation]);
 
   const {
     isLoadFolders: isLoadConversations,
@@ -992,28 +1007,30 @@ const NewChat = props => {
       setConversationNotFound(false);
       return;
     }
+    if (!isConversationsLoaded || isSelectingConversation) return;
+
     const folderConversations = folders?.map(folder => folder.conversations) || [];
     const conversationList = [...conversations, ...folderConversations.flat()];
     const conversationFromUrl = conversationList.find(
       conversation => conversation.id == conversationIdFromUrl,
     );
-    if (isConversationsLoaded) {
-      if (conversationFromUrl) {
-        setConversationNotFound(false);
-        if (!activeConversation?.id) {
-          onSelectConversation(conversationFromUrl);
-        }
-      } else if (conversationIdFromUrl && !activeConversation?.id) {
-        // Conversation not in list - try to fetch by ID (e.g., webhook-triggered conversations)
+
+    if (conversationFromUrl) {
+      setConversationNotFound(false);
+      if (!activeConversation?.id) {
+        onSelectConversation(conversationFromUrl);
+      }
+    } else if (!activeConversation?.id) {
+      if (hasAttemptedUrlConversationRef.current) {
+        setConversationNotFound(true);
+      } else {
         const numericId = parseInt(conversationIdFromUrl, 10);
         if (!isNaN(numericId)) {
+          hasAttemptedUrlConversationRef.current = true;
           onSelectConversation({ id: numericId });
-          setConversationNotFound(false);
         } else {
           setConversationNotFound(true);
         }
-      } else if (!activeConversation?.id) {
-        setConversationNotFound(true);
       }
     }
   }, [
@@ -1022,6 +1039,7 @@ const NewChat = props => {
     conversations,
     folders,
     isConversationsLoaded,
+    isSelectingConversation,
     onSelectConversation,
   ]);
 
