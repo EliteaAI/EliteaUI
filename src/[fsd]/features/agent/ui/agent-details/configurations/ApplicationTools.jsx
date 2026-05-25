@@ -116,12 +116,12 @@ const ApplicationTools = memo(props => {
         {
           title,
           content: (
-            <Box
-              sx={[styles.containerStyles, containerSX]}
-              data-tour={AGENT_TOUR_TARGET_IDS.tools}
-            >
+            <Box sx={[styles.containerStyles, containerSX]}>
               {!disabled && (
-                <Box sx={{ margin: '.75rem 0' }}>
+                <Box
+                  sx={{ margin: '.75rem 0' }}
+                  data-tour={AGENT_TOUR_TARGET_IDS.tools}
+                >
                   <ToolMenu applicationId={applicationId} />
                 </Box>
               )}
@@ -139,7 +139,10 @@ const ApplicationTools = memo(props => {
               ))}
 
               {shouldShowInternalTools && (
-                <Box sx={styles.internalToolsContainer}>
+                <Box
+                  sx={styles.internalToolsContainer}
+                  data-tour={AGENT_TOUR_TARGET_IDS.advancedSettings}
+                >
                   <Typography sx={styles.internalToolsTitle}>INTERNAL TOOLS</Typography>
                   <Box sx={styles.internalToolsGrid}>
                     {pipelineVisibleTools.map(tool => (

@@ -1,4 +1,5 @@
 import { AGENT_TOUR_TARGETS } from '@/[fsd]/features/interactive-tours/lib/constants/agentTourTargets.constants';
+import { SHARED_TOUR_TARGETS } from '@/[fsd]/features/interactive-tours/lib/constants/interactiveTour.constants';
 
 export const AGENT_TOUR_ID = 'agent';
 
@@ -47,15 +48,6 @@ Once configured, an agent can autonomously execute complex, multi-step tasks suc
 - **+ Pipeline** — invoke a pipeline as a step in the agent's execution`,
   },
   {
-    id: 'conversation-starters',
-    target: AGENT_TOUR_TARGETS.conversationStarters,
-    placement: 'right',
-    title: 'Conversation Starters',
-    content: `**Conversation Starters** are predefined prompt buttons that let users launch common tasks with a single click, without typing anything.
-
-Add starters that represent the most frequent or useful tasks for your agent. Users can click any starter to send it immediately as their first message.`,
-  },
-  {
     id: 'advanced-settings',
     target: AGENT_TOUR_TARGETS.advancedSettings,
     placement: 'right',
@@ -76,6 +68,16 @@ Add starters that represent the most frequent or useful tasks for your agent. Us
 - **Standard models** (e.g. GPT-4o) — set a Creativity level (1–5) and Max Completion Tokens`,
   },
   {
+    id: 'conversation-starters',
+    target: AGENT_TOUR_TARGETS.conversationStarters,
+    placement: 'right',
+    title: 'Conversation Starters',
+    content: `**Conversation Starters** are predefined prompt buttons that let users launch common tasks with a single click, without typing anything.
+
+Add starters that represent the most frequent or useful tasks for your agent. Users can click any starter to send it immediately as their first message.`,
+  },
+
+  {
     id: 'welcome-message',
     target: AGENT_TOUR_TARGETS.welcomeMessage,
     placement: 'right',
@@ -93,6 +95,7 @@ You can also **Export** any saved version as a \`.zip\` or \`.md\` file to back 
   },
   {
     id: 'publish',
+    skip: true, // For targeting need to open menu
     target: AGENT_TOUR_TARGETS.publish,
     placement: 'bottom',
     title: 'Publishing to Agents Studio',
@@ -102,7 +105,7 @@ Once submitted, a published version goes through a moderation review. You will r
   },
   {
     id: 'test-chat',
-    target: AGENT_TOUR_TARGETS.workspace,
+    target: AGENT_TOUR_TARGETS.testChat,
     placement: 'center',
     title: 'Embedded Test Chat',
     content: `The agent configuration page includes a live chat panel so you can test the agent as you build it — no need to navigate away. Any change to the instructions, toolkits, or model settings takes effect immediately in the next message you send.
@@ -111,8 +114,8 @@ Once submitted, a published version goes through a moderation review. You will r
   },
   {
     id: 'run-history',
-    target: AGENT_TOUR_TARGETS.workspace,
-    placement: 'center',
+    target: SHARED_TOUR_TARGETS.runHistory,
+    placement: 'left',
     title: 'Run History',
     content: `Every agent execution is logged automatically. Open the **Run History** panel to browse past runs, inspect inputs and outputs, replay conversations step by step, and restore a previous run's message history to the test chat for further debugging.`,
   },

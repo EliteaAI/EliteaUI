@@ -12,6 +12,7 @@ import {
   useTheme,
 } from '@mui/material';
 
+import { PIPELINE_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import {
   DeprecatedConstants,
   FlowEditorConstants,
@@ -75,6 +76,7 @@ const PipelineAddNodeMenu = memo(props => {
           variant="elitea"
           color="primary"
           id="pipeline-add-node-menu-action"
+          data-tour={PIPELINE_TOUR_TARGET_IDS.nodes}
           aria-label="Add node"
           aria-controls={open ? 'pipeline-add-node-menu' : undefined}
           aria-haspopup="true"

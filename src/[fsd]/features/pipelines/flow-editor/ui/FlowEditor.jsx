@@ -8,6 +8,7 @@ import { deepClone } from '@mui/x-data-grid/internals';
 
 import { useTrackEvent } from '@/GA';
 import { FlowEditorProvider } from '@/[fsd]/app/providers';
+import { PIPELINE_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { PipelineStatus } from '@/[fsd]/features/pipelines/flow-editor/lib/constants/flowEditor.constants';
 import {
@@ -479,6 +480,7 @@ const FlowEditor = forwardRef((props, ref) => {
   return (
     <Box
       sx={[styles.container, sx]}
+      data-tour={PIPELINE_TOUR_TARGET_IDS.flowDesigner}
       ref={editorRef}
       {...leftProps}
     >
@@ -498,6 +500,7 @@ const FlowEditor = forwardRef((props, ref) => {
           top={theme.spacing(2.5)}
           right={theme.spacing(2.5)}
           zIndex={100}
+          data-tour={PIPELINE_TOUR_TARGET_IDS.state}
         >
           <Button
             variant="elitea"

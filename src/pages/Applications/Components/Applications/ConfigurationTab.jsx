@@ -184,11 +184,16 @@ const ConfigurationRightContent = memo(props => {
         </Box>
 
         {activeConversation && activeParticipant && (
-          <ChatBox
-            {...enhancedSettings}
-            ref={boxRef}
-            inputPlaceholder="Type your message."
-          />
+          <Box
+            sx={styles.chatBoxContainer}
+            data-tour={AGENT_TOUR_TARGET_IDS.testChat}
+          >
+            <ChatBox
+              {...enhancedSettings}
+              ref={boxRef}
+              inputPlaceholder="Type your message."
+            />
+          </Box>
         )}
 
         {(!activeConversation || !activeParticipant) && (
@@ -396,6 +401,11 @@ const configurationRightContentStyles = isFullScreenChat => ({
     justifyContent: 'center',
     alignItems: 'center',
     height: '12.5rem',
+  },
+  chatBoxContainer: {
+    display: 'flex',
+    flex: 1,
+    minHeight: 0,
   },
 });
 
