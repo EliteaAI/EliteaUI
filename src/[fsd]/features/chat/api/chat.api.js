@@ -1,6 +1,8 @@
+import { normalizeFileExtension } from '@/[fsd]/entities/attachment/lib';
 import { eliteaApi } from '@/api';
 import { removeDuplicateObjects } from '@/common/utils.jsx';
 
+const TAG_TYPE_FOLDERS = 'TAG_TYPE_FOLDERS';
 const TAG_TYPE_CONVERSATIONS = 'TAG_TYPE_CONVERSATIONS';
 const TAG_TYPE_CONVERSATION_DETAILS = 'TAG_TYPE_CONVERSATION_DETAILS';
 const TAG_TYPE_TOTAL_CONVERSATIONS = 'TAG_TYPE_TOTAL_CONVERSATIONS';
@@ -257,7 +259,7 @@ export const apiSlice = eliteaApi
           }
           return [];
         },
-        invalidatesTags: [],
+        invalidatesTags: [TAG_TYPE_FOLDERS],
       }),
       unselectConversation: build.mutation({
         query: ({ projectId }) => {
@@ -471,7 +473,7 @@ export const apiSlice = eliteaApi
           const form = new FormData();
           if (attachments?.length) {
             for (let i = 0; i < attachments.length; i++) {
-              form.append('file', attachments[i]);
+              form.append('file', normalizeFileExtension(attachments[i]));
             }
           }
           form.append('overwrite_attachments', 1);
