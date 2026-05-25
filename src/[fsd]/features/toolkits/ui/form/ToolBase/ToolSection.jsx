@@ -27,6 +27,7 @@ const ToolSection = memo(props => {
     disableConfigFields = false,
     disabled,
     validationErrorMessages,
+    checkboxAsteriskRequired = true,
   } = props;
 
   const styles = sectionStyles();
@@ -199,14 +200,19 @@ const ToolSection = memo(props => {
   useEffect(() => {
     if (required) {
       const requiredPropertiesError = {};
-      fields.forEach(field => (requiredPropertiesError[field] = !settings[field]));
+      fields.forEach(field => {
+        const propSchema = schema?.properties?.[field];
+        const isBooleanField =
+          propSchema?.type === 'boolean' || propSchema?.anyOf?.some(item => item.type === 'boolean');
+        requiredPropertiesError[field] = isBooleanField ? false : !settings[field];
+      });
       notSelectedFields.forEach(field => (requiredPropertiesError[field] = false));
       setToolErrors(prevState => ({
         ...prevState,
         ...requiredPropertiesError,
       }));
     }
-  }, [setToolErrors, settings, required, fields, notSelectedFields, selectedOption]);
+  }, [setToolErrors, settings, required, fields, notSelectedFields, selectedOption, schema?.properties]);
 
   // For disabled fields (especially for auth section), handle differently
   if (disableConfigFields) {
@@ -283,7 +289,10 @@ const ToolSection = memo(props => {
         />
       </Box>
       {sectionProps.map(([k, v]) => {
-        const isRequired = showOnlyConfigurationFields ? !showOnlyConfigurationFields : required;
+        const isBooleanField = v?.type === 'boolean' || v?.anyOf?.some(item => item.type === 'boolean');
+        const isRequired = showOnlyConfigurationFields
+          ? !showOnlyConfigurationFields
+          : required && !(isBooleanField && !checkboxAsteriskRequired);
         return (
           <ToolkitForm.ToolBaseProperty
             key={k}
