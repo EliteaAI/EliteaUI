@@ -7,6 +7,7 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { Box, Typography } from '@mui/material';
 
 import { getIntegrationOptions } from '@/DEPRECATED.js';
+import { TOOLKIT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { useGetIndexesListQuery } from '@/[fsd]/features/toolkits/indexes/api';
 import { IndexesToolsEnum } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import { IndexesContainer } from '@/[fsd]/features/toolkits/indexes/ui';
@@ -264,6 +265,7 @@ export const EditToolkit = memo(props => {
       {
         label: 'Indexes',
         icon: <IndexingIcon />,
+        tabProps: { 'data-tour': TOOLKIT_TOUR_TARGET_IDS.indexesTab },
         content: (
           <IndexesContainer
             toolkitId={realId}

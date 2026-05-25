@@ -10,6 +10,7 @@ import {
   FIRST_ELITEA_TOUR_ID,
   PIPELINE_TOUR_ID,
   SIDEBAR_TOUR_ID,
+  TOOLKIT_TOUR_ID,
 } from '../constants';
 import { initialState, lsCompletedKey, lsPromptKey, tourReducer } from '../helpers';
 
@@ -21,6 +22,7 @@ const TOUR_LOADERS = {
   [FIRST_ELITEA_TOUR_ID]: () =>
     import('../constants/firstEliteaTour.constants').then(m => m.firstEliteaTourSteps),
   [SIDEBAR_TOUR_ID]: () => import('../constants/sidebarTour.constants').then(m => m.sidebarTourSteps),
+  [TOOLKIT_TOUR_ID]: () => import('../constants/toolkitTour.constants').then(m => m.toolkitTourSteps),
 };
 
 /**

@@ -5,8 +5,12 @@ import {
   CHAT_TOUR_ID,
   FIRST_ELITEA_TOUR_COMPLETION,
   FIRST_ELITEA_TOUR_ID,
+  PIPELINE_TOUR_COMPLETION,
+  PIPELINE_TOUR_ID,
   SIDEBAR_TOUR_COMPLETION,
   SIDEBAR_TOUR_ID,
+  TOOLKIT_TOUR_COMPLETION,
+  TOOLKIT_TOUR_ID,
 } from '../constants';
 
 // ─── Tour completion configs ───────────────────────────────────────────────────
@@ -14,7 +18,9 @@ export const TOUR_COMPLETION_CONFIGS = {
   [CHAT_TOUR_ID]: CHAT_TOUR_COMPLETION,
   [AGENT_TOUR_ID]: AGENT_TOUR_COMPLETION,
   [FIRST_ELITEA_TOUR_ID]: FIRST_ELITEA_TOUR_COMPLETION,
+  [PIPELINE_TOUR_ID]: PIPELINE_TOUR_COMPLETION,
   [SIDEBAR_TOUR_ID]: SIDEBAR_TOUR_COMPLETION,
+  [TOOLKIT_TOUR_ID]: TOOLKIT_TOUR_COMPLETION,
 };
 
 // ─── localStorage helpers ──────────────────────────────────────────────────────

@@ -12,4 +12,5 @@ export {
   CHAT_TOUR_TARGET_IDS,
   FIRST_ELITEA_TOUR_ID,
   SIDEBAR_TOUR_ID,
+  TOOLKIT_TOUR_ID,
 } from './lib/constants';

@@ -12,3 +12,5 @@ export { PIPELINE_TOUR_COMPLETION, PIPELINE_TOUR_ID, pipelineTourSteps } from '.
 export { PIPELINE_TOUR_TARGET_IDS, PIPELINE_TOUR_TARGETS } from './pipelineTourTargets.constants.js';
 export { SIDEBAR_TOUR_COMPLETION, SIDEBAR_TOUR_ID, sidebarTourSteps } from './sidebarTour.constants';
 export { SIDEBAR_TOUR_TARGET_IDS, SIDEBAR_TOUR_TARGETS } from './sidebarTourTargets.constants.js';
+export { TOOLKIT_TOUR_COMPLETION, TOOLKIT_TOUR_ID, toolkitTourSteps } from './toolkitTour.constants';
+export { TOOLKIT_TOUR_TARGET_IDS, TOOLKIT_TOUR_TARGETS } from './toolkitTourTargets.constants.js';
