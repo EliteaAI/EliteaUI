@@ -2,6 +2,7 @@ import { memo, useCallback, useMemo } from 'react';
 
 import { Box, Link, Skeleton, Tooltip, Typography, useTheme } from '@mui/material';
 
+import { RESOURCES_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/resourcesTourTargets.constants';
 import { LinkHelpers } from '@/[fsd]/shared/lib/helpers';
 import { BaseBtn } from '@/[fsd]/shared/ui/button';
 import { useGetResourcesConfigQuery, useGetSystemInfoQuery } from '@/api/resources';
@@ -25,6 +26,7 @@ const RESOURCE_CARD_CONFIGS = [
     Icon: FileIcon,
     linksKey: 'resources_documentation_links',
     colorScheme: 'blue',
+    tourTargetId: RESOURCES_TOUR_TARGET_IDS.documentationCard,
   },
   {
     enabledKey: 'resources_release_notes_enabled',
@@ -35,6 +37,7 @@ const RESOURCE_CARD_CONFIGS = [
     Icon: RocketIcon,
     linksKey: 'resources_release_notes_links',
     colorScheme: 'orange',
+    tourTargetId: RESOURCES_TOUR_TARGET_IDS.releaseNotesCard,
   },
   {
     enabledKey: 'resources_video_library_enabled',
@@ -45,6 +48,7 @@ const RESOURCE_CARD_CONFIGS = [
     Icon: VideoIcon,
     linksKey: 'resources_video_library_links',
     colorScheme: 'purple',
+    tourTargetId: RESOURCES_TOUR_TARGET_IDS.videoLibraryCard,
   },
   {
     enabledKey: 'resources_tutorials_enabled',
@@ -55,6 +59,7 @@ const RESOURCE_CARD_CONFIGS = [
     Icon: TutorialsIcon,
     linksKey: 'resources_tutorials_links',
     colorScheme: 'green',
+    tourTargetId: RESOURCES_TOUR_TARGET_IDS.tutorialsCard,
   },
   {
     enabledKey: 'resources_interactive_tours_enabled',
@@ -65,6 +70,7 @@ const RESOURCE_CARD_CONFIGS = [
     Icon: VideoIcon,
     linksKey: 'resources_interactive_tours_links',
     colorScheme: 'pink',
+    tourTargetId: RESOURCES_TOUR_TARGET_IDS.interactiveToursCard,
   },
 ];
 
@@ -111,7 +117,10 @@ const ResourcesPage = memo(() => {
   ]);
 
   return (
-    <Box sx={styles.page}>
+    <Box
+      data-tour={RESOURCES_TOUR_TARGET_IDS.page}
+      sx={styles.page}
+    >
       <Box sx={styles.header}>
         <Typography
           variant="headingMedium"
@@ -204,6 +213,7 @@ const ResourcesPage = memo(() => {
                 title={configValues[config.titleKey] || config.defaultTitle}
                 description={configValues[config.descriptionKey] || config.defaultDescription}
                 colorScheme={config.colorScheme}
+                tourTargetId={config.tourTargetId}
                 icon={
                   <config.Icon
                     width="1.5rem"

@@ -2,6 +2,7 @@ import { memo, useCallback, useEffect, useState } from 'react';
 
 import { Box } from '@mui/material';
 
+import { SHARED_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { McpAuthStatus } from '@/[fsd]/features/mcp/ui';
 import { OpenApiOAuthStatus } from '@/[fsd]/features/openapi/ui';
 import { SharepointOAuthStatus } from '@/[fsd]/features/sharepoint/ui';
@@ -217,7 +218,10 @@ const ToolBase = memo(props => {
   };
 
   const toolBaseConfiguration = (
-    <Box sx={styles.configurationContainer}>
+    <Box
+      sx={styles.configurationContainer}
+      data-tour={SHARED_TOUR_TARGET_IDS.configurationForm}
+    >
       {!hideNameDescriptionInput && (
         <ToolkitForm.NameDescriptionInput
           type={editToolDetail?.type || ''}

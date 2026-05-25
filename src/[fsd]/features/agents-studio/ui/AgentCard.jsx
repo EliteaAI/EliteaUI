@@ -3,6 +3,7 @@ import { memo, useCallback, useMemo } from 'react';
 import { Box, Card, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
+import { AGENT_STUDIO_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/agentStudioTourTargets.constants';
 import { ChatParticipantType, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
 import AuthorContainer from '@/components/AuthorContainer';
 import EntityIcon from '@/components/EntityIcon';
@@ -36,6 +37,7 @@ const AgentCard = memo(props => {
 
   return (
     <Card
+      data-tour={AGENT_STUDIO_TOUR_TARGET_IDS.agentCard}
       sx={styles.card}
       onClick={handleClick}
     >
@@ -53,7 +55,10 @@ const AgentCard = memo(props => {
           {application.name || 'Untitled'}
         </Typography>
       </Box>
-      <Box sx={styles.footer}>
+      <Box
+        data-tour={AGENT_STUDIO_TOUR_TARGET_IDS.likeButton}
+        sx={styles.footer}
+      >
         <StyledTooltip
           key={`nameAuthor-tooltip-${authorsTooltipText}-${cardAuthors.id}`}
           placement="top"

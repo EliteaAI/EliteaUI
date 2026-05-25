@@ -2,6 +2,7 @@ import { memo, useCallback, useMemo } from 'react';
 
 import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 
+import { ARTIFACT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/artifactTourTargets.constants';
 import { SimpleSearchBar } from '@/[fsd]/shared/ui/input';
 import FileUploadIcon from '@/assets/icons/FileUploadIcon.svg?react';
 import { PERMISSIONS } from '@/common/constants';
@@ -107,6 +108,7 @@ const ArtifactTableToolbar = memo(props => {
               size="small"
               color="secondary"
               onClick={handleUploadClick}
+              data-tour={ARTIFACT_TOUR_TARGET_IDS.uploadButton}
             >
               <FileUploadIcon sx={styles.actionIcon} />
             </IconButton>

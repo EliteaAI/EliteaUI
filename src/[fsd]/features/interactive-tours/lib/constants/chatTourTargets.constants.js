@@ -1,4 +1,4 @@
-const buildTourSelector = tourId => `[data-tour="${tourId}"]`;
+import { buildTourSelector } from '../helpers/tourSelector.helpers';
 
 export const CHAT_TOUR_TARGET_IDS = {
   workspace: 'chat-workspace',

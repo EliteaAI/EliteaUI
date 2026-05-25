@@ -39,37 +39,44 @@ const CategoryFilter = memo(props => {
         </Typography>
       )}
 
-      {/* Search Bar */}
-      <Box sx={styles.searchContainer(allCategories.length > 1)}>
-        <Box sx={styles.searchIconContainer}>
-          <SearchIcon fill={theme.palette.text.secondary} />
-        </Box>
-        <TextField
-          placeholder={searchPlaceholder}
-          value={searchQuery}
-          onChange={onSearchChange}
-          sx={styles.searchField}
-          variant="outlined"
-          size="small"
-        />
-      </Box>
-
-      {/* Category Filter Chips - only show when multiple categories exist */}
-      {allCategories.length > 1 && (
-        <Box sx={[styles.categoryFilterContainer, categoryList?.sx]}>
-          <Box sx={styles.categoryChipsWrapper}>
-            {allCategories.map(category => (
-              <Chip
-                key={category}
-                label={category}
-                clickable
-                onClick={() => onSelectCategory(category)}
-                sx={selectedCategories.includes(category) ? styles.selectedCategoryChip : styles.categoryChip}
-              />
-            ))}
+      <Box
+        data-category-filter-controls=""
+        sx={styles.controlsContainer}
+      >
+        {/* Search Bar */}
+        <Box sx={styles.searchContainer(allCategories.length > 1)}>
+          <Box sx={styles.searchIconContainer}>
+            <SearchIcon fill={theme.palette.text.secondary} />
           </Box>
+          <TextField
+            placeholder={searchPlaceholder}
+            value={searchQuery}
+            onChange={onSearchChange}
+            sx={styles.searchField}
+            variant="outlined"
+            size="small"
+          />
         </Box>
-      )}
+
+        {/* Category Filter Chips - only show when multiple categories exist */}
+        {allCategories.length > 1 && (
+          <Box sx={[styles.categoryFilterContainer, categoryList?.sx]}>
+            <Box sx={styles.categoryChipsWrapper}>
+              {allCategories.map(category => (
+                <Chip
+                  key={category}
+                  label={category}
+                  clickable
+                  onClick={() => onSelectCategory(category)}
+                  sx={
+                    selectedCategories.includes(category) ? styles.selectedCategoryChip : styles.categoryChip
+                  }
+                />
+              ))}
+            </Box>
+          </Box>
+        )}
+      </Box>
 
       {/* Items Container */}
       <Box
@@ -100,6 +107,12 @@ const componentStyles = () => ({
   }),
   title: {
     marginBottom: '1rem',
+  },
+  controlsContainer: {
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
   },
   searchContainer: showCategory => ({
     width: '23.75rem',

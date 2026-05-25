@@ -18,6 +18,7 @@ import { ConfigurationModal } from '@/[fsd]/features/agent/ui/agent-details/conf
 import AgentConversationStarters from '@/[fsd]/features/agents-studio/ui/AgentConversationStarters';
 import AgentStudioLike from '@/[fsd]/features/agents-studio/ui/AgentStudioLike';
 import AgentWelcomeMessage from '@/[fsd]/features/agents-studio/ui/AgentWelcomeMessage';
+import { AGENT_STUDIO_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/agentStudioTourTargets.constants';
 import { useLazyPublicApplicationDetailsQuery } from '@/api';
 import { ChatParticipantType, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
 import AuthorContainer from '@/components/AuthorContainer';
@@ -246,6 +247,7 @@ const AgentModal = memo(props => {
           </DialogContent>
           <DialogActions sx={styles.dialogActions}>
             <Button
+              data-tour={AGENT_STUDIO_TOUR_TARGET_IDS.startConversationButton}
               variant="elitea"
               color="primary"
               onClick={onStartConversation()}

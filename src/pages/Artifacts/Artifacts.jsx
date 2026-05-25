@@ -7,6 +7,7 @@ import { Box } from '@mui/material';
 
 import { useFileUpload } from '@/[fsd]/features/artifacts/lib/hooks/useFileUpload.hooks';
 import { FilePreviewCanvas } from '@/[fsd]/features/artifacts/ui';
+import { ARTIFACT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/artifactTourTargets.constants';
 import { useGetConfigurationsListQuery } from '@/api/configurations';
 import { PENDING_BUCKET_SESSION_KEY } from '@/common/artifactConstants';
 import { sortBucketsByRecent } from '@/common/bucketSortingUtils';
@@ -638,9 +639,15 @@ export default function Artifacts() {
       <Box sx={styles.rootBox} />
       <Box sx={styles.rootContainer}>
         {/* Main Content Area with Canvas-like Grid Layout */}
-        <Box sx={styles.mainContentContainer}>
+        <Box
+          sx={styles.mainContentContainer}
+          data-tour={ARTIFACT_TOUR_TARGET_IDS.workspace}
+        >
           {/* Buckets Sidebar */}
-          <Box sx={styles.bucketSidebarBox}>
+          <Box
+            sx={styles.bucketSidebarBox}
+            data-tour={ARTIFACT_TOUR_TARGET_IDS.bucketsPanel}
+          >
             <Buckets
               key={`${queryParams.projectId}-${queryParams.configurationTitle}`}
               projectId={queryParams.projectId}
@@ -663,7 +670,10 @@ export default function Artifacts() {
             />
           </Box>
 
-          <Box sx={styles.mainContentAreaBox}>
+          <Box
+            sx={styles.mainContentAreaBox}
+            data-tour={ARTIFACT_TOUR_TARGET_IDS.fileTable}
+          >
             {previewFile ? (
               <Box sx={styles.contentBox}>
                 <FilePreviewCanvas
