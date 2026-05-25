@@ -81,6 +81,7 @@ const ApplicationCatalog = memo(() => {
       return (
         <EntityCard
           disableCardActions
+          disableCardClick
           hideCardBottom
           data={application}
           viewMode={ViewMode.Owner}

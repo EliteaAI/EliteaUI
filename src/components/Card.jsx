@@ -35,6 +35,7 @@ const Card = memo(props => {
     cardDetails,
     disableCardActions = false,
     hideCardBottom = false,
+    disableCardClick = false,
     onCardClick,
   } = props;
 
@@ -121,13 +122,15 @@ const Card = memo(props => {
   );
 
   const handleCardClick = useCallback(() => {
+    if (disableCardClick) return;
+
     if (onCardClick) {
       onCardClick(data);
       return;
     }
 
     doNavigate();
-  }, [data, doNavigate, onCardClick]);
+  }, [data, disableCardClick, doNavigate, onCardClick]);
 
   // Monitor MCP token changes for both remote and pre-built MCP toolkits
   // For remote MCPs, use serverUrl; for pre-built MCPs, use toolkitType
@@ -145,8 +148,9 @@ const Card = memo(props => {
 
   const hasCardDetails = Boolean(cardDetails);
   const showCardBottom = !hideCardBottom;
-  const isWholeCardClickable = hasCardDetails && Boolean(onCardClick);
-  const styles = cardStyles(hasCardDetails, showCardBottom, isWholeCardClickable);
+  const isWholeCardClickable = hasCardDetails && Boolean(onCardClick) && !disableCardClick;
+  const isClickable = !disableCardClick;
+  const styles = cardStyles(hasCardDetails, showCardBottom, isWholeCardClickable, isClickable);
 
   return (
     <Box
@@ -163,7 +167,7 @@ const Card = memo(props => {
         <CardContent sx={styles.cardContent}>
           <Box
             sx={styles.cardTopSection}
-            onClick={isWholeCardClickable ? undefined : handleCardClick}
+            onClick={isWholeCardClickable || disableCardClick ? undefined : handleCardClick}
           >
             <EntityIcon
               icon={data.icon_meta}
@@ -333,7 +337,7 @@ const lineClamp = lines => ({
 });
 
 /** @type {MuiSx} */
-const cardStyles = (hasCardDetails, showCardBottom, isWholeCardClickable) => ({
+const cardStyles = (hasCardDetails, showCardBottom, isWholeCardClickable, isClickable) => ({
   wrapper: {
     width: '100%',
     ...(hasCardDetails ? { height: '100%' } : {}),
@@ -364,7 +368,7 @@ const cardStyles = (hasCardDetails, showCardBottom, isWholeCardClickable) => ({
   cardTopSection: {
     maxHeight: hasCardDetails ? '3.75rem' : '4.5rem',
     height: hasCardDetails ? '3.75rem' : '4.5rem',
-    cursor: 'pointer',
+    cursor: isClickable ? 'pointer' : 'default',
     width: '100%',
     padding: hasCardDetails ? '1rem 1.25rem 0.75rem' : '1.25rem',
     boxSizing: 'border-box',
