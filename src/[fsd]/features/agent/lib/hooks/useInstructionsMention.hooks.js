@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { McpAuthConstants } from '@/[fsd]/features/mcp/lib/constants';
+import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { MentionConstants } from '@/[fsd]/shared/lib/constants';
 import {
   createMentionCmExtension,
@@ -39,10 +41,28 @@ export const useInstructionsMention = ({ fileReaderRef, applicationId, projectId
     tools: versionDetails?.tools,
   });
 
+  // Re-evaluate MCP login state whenever any MCP token changes.
+  const [mcpTokenVersion, setMcpTokenVersion] = useState(0);
+  useEffect(() => {
+    const handleTokenChange = () => setMcpTokenVersion(v => v + 1);
+    window.addEventListener(McpAuthConstants.MCP_TOKEN_CHANGE_EVENT, handleTokenChange);
+    return () => window.removeEventListener(McpAuthConstants.MCP_TOKEN_CHANGE_EVENT, handleTokenChange);
+  }, []);
+
   const mentionableItems = useMemo(
     () =>
       (versionDetails?.tools || [])
-        .filter(tool => !toolsValidationInfo[tool.id])
+        .filter(tool => {
+          if (toolsValidationInfo[tool.id]) return false;
+          if (tool.type === 'mcp') {
+            const serverUrl = tool.settings?.url;
+            const isLoggedIn = serverUrl ? McpAuthHelpers.getAccessToken(serverUrl) !== null : false;
+            if (!tool.online && !isLoggedIn) return false;
+          } else if (McpAuthHelpers.isPrebuildMcpType(tool.type)) {
+            if (McpAuthHelpers.getAccessToken(undefined, tool.type) === null) return false;
+          }
+          return true;
+        })
         .map(tool => ({
           name: tool.name,
           type: tool.type,
@@ -51,7 +71,10 @@ export const useInstructionsMention = ({ fileReaderRef, applicationId, projectId
           isToolkit: isToolkitItem(tool),
           description: getItemDescription(tool),
         })),
-    [versionDetails?.tools, toolsValidationInfo],
+    // mcpTokenVersion is a cache-buster: it forces re-evaluation when MCP login state changes
+    // (sessionStorage is not reactive, so we need an explicit trigger)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [versionDetails?.tools, toolsValidationInfo, mcpTokenVersion],
   );
 
   // ── Slash-command state machine ───────────────────────────────────────────
