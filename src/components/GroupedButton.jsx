@@ -2,6 +2,7 @@ import { Button } from '@mui/material';
 import ButtonGroup from '@mui/material/ButtonGroup';
 
 import { typographyVariants } from '@/MainTheme';
+import { PIPELINE_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { useTheme } from '@emotion/react';
 import styled from '@emotion/styled';
 
@@ -38,6 +39,7 @@ const GroupedButton = ({ value, onChange, buttonItems, readOnly, disabled, sx })
       aria-label="chat action buttons"
       disabled={disabled}
       sx={sx}
+      data-tour={PIPELINE_TOUR_TARGET_IDS.yamlEditor}
     >
       {buttonItems.map((item, index) => (
         <StyledButton

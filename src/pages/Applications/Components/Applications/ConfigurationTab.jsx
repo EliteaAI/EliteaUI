@@ -179,11 +179,7 @@ const ConfigurationRightContent = memo(props => {
               disabled={shouldDisableClear}
               onClear={() => boxRef.current?.onClear()}
             />
-            {onShowHistory && (
-              <Box data-tour={AGENT_TOUR_TARGET_IDS.runHistory}>
-                <ViewRunHistoryButton onShowHistory={onShowHistory} />
-              </Box>
-            )}
+            {onShowHistory && <ViewRunHistoryButton onShowHistory={onShowHistory} />}
           </Box>
         </Box>
 

@@ -1,4 +1,5 @@
 import { AGENT_TOUR_TARGETS } from '@/[fsd]/features/interactive-tours/lib/constants/agentTourTargets.constants';
+import { SHARED_TOUR_TARGETS } from '@/[fsd]/features/interactive-tours/lib/constants/interactiveTour.constants';
 
 export const AGENT_TOUR_ID = 'agent';
 
@@ -113,7 +114,7 @@ Once submitted, a published version goes through a moderation review. You will r
   },
   {
     id: 'run-history',
-    target: AGENT_TOUR_TARGETS.runHistory,
+    target: SHARED_TOUR_TARGETS.runHistory,
     placement: 'left',
     title: 'Run History',
     content: `Every agent execution is logged automatically. Open the **Run History** panel to browse past runs, inspect inputs and outputs, replay conversations step by step, and restore a previous run's message history to the test chat for further debugging.`,

@@ -7,6 +7,7 @@ import { Box, CircularProgress, Typography } from '@mui/material';
 
 import RunHistoryContainer from '@/[fsd]/entities/run-history/ui/RunHistoryContainer';
 import { ParticipantEntityTypes } from '@/[fsd]/features/chat/lib/constants/participant.constants';
+import { PIPELINE_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { usePipelineAttachmentYamlSync, usePipelineChat } from '@/[fsd]/features/pipelines/lib/hooks';
 import {
   DEFAULT_MAX_TOKENS,
@@ -311,7 +312,10 @@ const ConfigurationTab = memo(props => {
         />
       )}
       {!showHistory && (
-        <Box sx={styles.mainContainer}>
+        <Box
+          sx={styles.mainContainer}
+          data-tour={PIPELINE_TOUR_TARGET_IDS.workspace}
+        >
           <GeneralFormPanel
             applicationId={applicationId}
             onCollapsed={handleCollapsedGeneralPane}
