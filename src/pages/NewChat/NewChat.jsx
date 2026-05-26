@@ -1446,6 +1446,7 @@ const NewChat = props => {
                 activeConversation={activeConversation}
                 setActiveConversation={setActiveConversation}
                 activeParticipant={activeParticipant}
+                activeParticipantDetails={activeParticipantDetails}
                 setActiveParticipant={setActiveParticipant}
                 setChatHistory={setChatHistory}
                 interaction_uuid={interaction_uuid}

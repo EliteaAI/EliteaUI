@@ -54,6 +54,7 @@ const NewConversationView = forwardRef(
       setActiveConversation,
       setActiveParticipant,
       activeParticipant,
+      activeParticipantDetails,
       setChatHistory,
       interaction_uuid,
       onShowAgentEditor,
@@ -95,7 +96,7 @@ const NewConversationView = forwardRef(
     const [updateChatLlmSettings] = useUpdateParticipantLlmSettingsMutation();
     const [conversationEditMeta] = useConversationEditMutation();
     const { attachments, disableAttachments, onAttachFiles, onDeleteAttachment, onClearAttachments } =
-      useNewConversationAttachments({ selectedParticipant });
+      useNewConversationAttachments({ selectedParticipant, activeParticipantDetails });
 
     // Create LLM settings for conversation pages from user settings
     const [llmSettings, setLlmSettings] = useState({
