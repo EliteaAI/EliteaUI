@@ -537,6 +537,7 @@ const ToolCard = memo(props => {
                   projectId={projectId}
                   spConfig={spConfig}
                   toolName={tool.name}
+                  toolkitId={tool.id}
                 />
               )}
               {tool.type === 'openapi' && effectiveOpenApiEndpoint && (
@@ -544,6 +545,7 @@ const ToolCard = memo(props => {
                   projectId={projectId}
                   openApiConfig={effectiveOpenApiConfig}
                   toolName={tool.name}
+                  toolkitId={tool.id}
                 />
               )}
               {isMcp && (

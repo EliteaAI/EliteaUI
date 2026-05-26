@@ -9,7 +9,7 @@ import OfflineIcon from '@/assets/offline-icon.svg?react';
 import OnlineIcon from '@/assets/online-icon.svg?react';
 
 const SharepointDelegatedLoginButton = memo(props => {
-  const { projectId, spConfig, toolName } = props;
+  const { projectId, spConfig, toolName, toolkitId } = props;
   const oauthEndpoint = spConfig?.oauth_discovery_endpoint ?? '';
   const configUuid = spConfig?.configuration_uuid || spConfig?.id;
   const oauthTokenKey = useMemo(
@@ -25,6 +25,7 @@ const SharepointDelegatedLoginButton = memo(props => {
       client_secret: spConfig?.client_secret,
       scopes: spConfig?.scopes,
     },
+    toolkitId,
   });
 
   const { runCheck, isRunning } = useSharepointCheckConnection({ projectId, spConfig });

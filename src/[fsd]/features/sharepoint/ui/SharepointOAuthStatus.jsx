@@ -19,6 +19,7 @@ const SharepointOAuthStatus = memo(() => {
   const { toastSuccess } = useToast();
 
   const spConfigRef = values?.settings?.sharepoint_configuration;
+  const toolkitId = values?.id;
   const { spConfig, oauthEndpoint, oauthTokenKey, connectionTokenKey } = useResolvedSharepointConfig(
     spConfigRef,
     projectId,
@@ -33,6 +34,7 @@ const SharepointOAuthStatus = memo(() => {
       client_secret: spConfig?.client_secret,
       scopes: spConfig?.scopes,
     },
+    toolkitId,
   });
 
   const authModalProps = useMemo(() => configOAuth.getModalProps(), [configOAuth]);

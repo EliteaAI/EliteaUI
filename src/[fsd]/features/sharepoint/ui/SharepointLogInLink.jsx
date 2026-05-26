@@ -10,7 +10,7 @@ import { useSharepointCheckConnection } from '@/[fsd]/features/sharepoint/lib/ho
 import useToast from '@/hooks/useToast';
 
 const SharepointLogInLink = memo(props => {
-  const { projectId, spConfig } = props;
+  const { projectId, spConfig, toolkitId } = props;
   const { toastSuccess } = useToast();
 
   const oauthEndpoint = spConfig?.oauth_discovery_endpoint ?? '';
@@ -30,6 +30,7 @@ const SharepointLogInLink = memo(props => {
       client_secret: spConfig?.client_secret,
       scopes: spConfig?.scopes,
     },
+    toolkitId,
   });
 
   const authModalProps = useMemo(() => configOAuth.getModalProps(), [configOAuth]);
