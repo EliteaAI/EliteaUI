@@ -5,12 +5,12 @@ import { useSearchParams } from 'react-router-dom';
 import { Box, IconButton, Typography, useTheme } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
-import { useEliteaAssistantRef } from '@/[fsd]/widgets/SupportAssistant';
 import { useMcpTokenChange } from '@/[fsd]/features/mcp/lib/hooks';
 import { McpLogInLink } from '@/[fsd]/features/mcp/ui';
 import { useGetToolkitNameFromSchema } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
 import { useResolvedSharepointConfig } from '@/[fsd]/features/sharepoint/lib/hooks/useResolvedSharepointConfig.hooks';
 import { SharepointLogInLink } from '@/[fsd]/features/sharepoint/ui';
+import { useEliteaAssistantRef } from '@/[fsd]/widgets/SupportAssistant';
 import AttachIcon from '@/assets/attach-icon.svg?react';
 import OfflineIcon from '@/assets/offline-icon.svg?react';
 import OnlineIcon from '@/assets/online-icon.svg?react';
@@ -330,6 +330,7 @@ const ParticipantItem = memo(props => {
           <SharepointLogInLink
             projectId={entity_meta?.project_id}
             spConfig={spConfig}
+            toolkitId={entity_meta?.id}
           />
         </>
       );
@@ -353,6 +354,7 @@ const ParticipantItem = memo(props => {
     type,
     originalDetails,
     entity_meta?.project_id,
+    entity_meta?.id,
     spConfig,
   ]);
 

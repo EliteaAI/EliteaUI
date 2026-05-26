@@ -51,7 +51,7 @@ const OpenApiOAuthStatus = memo(() => {
     scopes: config?.scope,
   };
 
-  const configOAuth = useConfigOAuthModal({ credentials });
+  const configOAuth = useConfigOAuthModal({ credentials, toolkitId: values?.id });
 
   const authModalProps = useMemo(() => configOAuth.getModalProps(), [configOAuth]);
 
