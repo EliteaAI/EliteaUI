@@ -53,6 +53,22 @@ export const useSpeakingModeLoop = ({ isSpeakingMode, inputRef, isStreaming, isT
     }
   }, []);
 
+  // Schedule an auto-send after SILENCE_TIMEOUT_MS of no new activity.
+  // Shared by both voice transcripts and manual-edit detection.
+  const scheduleSend = useCallback(() => {
+    clearSilenceTimer();
+    silenceTimerRef.current = setTimeout(() => {
+      const content = inputRef.current?.getInputContent?.() ?? '';
+      if (content.trim()) {
+        hasSentRef.current = true;
+        inputRef.current?.sendQuestion?.();
+        inputRef.current?.reset?.();
+        // Pause recording until the AI response and TTS are done
+        stopRecordingRef.current?.();
+      }
+    }, SILENCE_TIMEOUT_MS);
+  }, [clearSilenceTimer, inputRef]);
+
   const handleTranscript = useCallback(
     ({ final, interim }) => {
       // Re-sync cursor refs if the user manually edited the input between transcript
@@ -83,21 +99,18 @@ export const useSpeakingModeLoop = ({ isSpeakingMode, inputRef, isStreaming, isT
         lastSetValueRef.current = newValue;
         inputRef.current?.setValue(newValue, cursorPos);
 
-        clearSilenceTimer();
-        silenceTimerRef.current = setTimeout(() => {
-          const content = inputRef.current?.getInputContent?.() ?? '';
-          if (content.trim()) {
-            hasSentRef.current = true;
-            inputRef.current?.sendQuestion?.();
-            inputRef.current?.reset?.();
-            // Pause recording until the AI response and TTS are done
-            stopRecordingRef.current?.();
-          }
-        }, SILENCE_TIMEOUT_MS);
+        scheduleSend();
       }
     },
-    [inputRef, clearSilenceTimer],
+    [inputRef, scheduleSend],
   );
+
+  // Called when the user manually edits the input field while speaking mode is
+  // active. Resets the auto-send timer so the message is not sent mid-edit.
+  const notifyManualEdit = useCallback(() => {
+    if (!isSpeakingMode || hasSentRef.current) return;
+    scheduleSend();
+  }, [isSpeakingMode, scheduleSend]);
 
   const serverHook = useStreamingSpeechRecognition({
     onTranscript: handleTranscript,
@@ -148,6 +161,15 @@ export const useSpeakingModeLoop = ({ isSpeakingMode, inputRef, isStreaming, isT
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isStreaming, isTTSPlaying, isSpeakingMode]);
 
+  // Called by external actions that trigger a new AI response (e.g. Regenerate).
+  // Stops recording and activates the restart guard, identical to the auto-send path.
+  const pauseForRegeneration = useCallback(() => {
+    if (!isSpeakingMode) return;
+    clearSilenceTimer();
+    stopRecordingRef.current?.();
+    hasSentRef.current = true;
+  }, [isSpeakingMode, clearSilenceTimer]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -157,5 +179,5 @@ export const useSpeakingModeLoop = ({ isSpeakingMode, inputRef, isStreaming, isT
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { isRecording };
+  return { isRecording, pauseForRegeneration, notifyManualEdit };
 };
