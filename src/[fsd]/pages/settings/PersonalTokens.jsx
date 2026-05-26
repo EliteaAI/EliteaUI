@@ -6,6 +6,7 @@ import Split from 'react-split';
 
 import { Box, CircularProgress, useTheme } from '@mui/material';
 
+import { PERSONAL_TOKENS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/personalTokensTourTargets.constants';
 import { DrawerPage, DrawerPageHeader } from '@/[fsd]/features/settings/ui/drawer-page';
 import { SettingsPreview, TokensSection } from '@/[fsd]/features/settings/ui/personal-tokes';
 import { useListModelsQuery } from '@/api/configurations';
@@ -249,6 +250,7 @@ const PersonalTokens = memo(() => {
               onAdd: onAddPersonalToken,
               disabled: isFetching || configurations.length === 0,
               tooltip: 'Generate new token',
+              tourId: PERSONAL_TOKENS_TOUR_TARGET_IDS.addButton,
             },
           }}
         />
@@ -283,7 +285,10 @@ const PersonalTokens = memo(() => {
 
   return (
     <DrawerPage>
-      <Box sx={styles.splitContainer}>
+      <Box
+        data-tour={PERSONAL_TOKENS_TOUR_TARGET_IDS.page}
+        sx={styles.splitContainer}
+      >
         {!showSettingsPreview ? (
           <Box sx={styles.mainTokensContainer}>{renderTokensContent()}</Box>
         ) : (

@@ -12,6 +12,7 @@ import {
   GridTablePagination,
   GridTableRow,
 } from '@/[fsd]/entities/grid-table/ui';
+import { PERSONAL_TOKENS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/personalTokensTourTargets.constants';
 import { Text } from '@/[fsd]/shared/ui';
 import { useTokenDeleteMutation, useTokenListQuery } from '@/api/auth';
 import VsCodeIcon from '@/assets/vscode.svg?react';
@@ -136,7 +137,10 @@ const TokenActionsCell = memo(props => {
   }, [deleteToken, isDeleting, refetch, token.uuid]);
 
   return (
-    <Box sx={styles.container}>
+    <Box
+      data-tour={PERSONAL_TOKENS_TOUR_TARGET_IDS.ideSettings}
+      sx={styles.container}
+    >
       {showDownload && (
         <Tooltip
           title="Preview settings"
@@ -311,6 +315,7 @@ const TokensTable = memo(props => {
   return !isFetchingTokens ? (
     <Box
       key={`tokens-table-${sideBarCollapsed}`}
+      data-tour={PERSONAL_TOKENS_TOUR_TARGET_IDS.tokenList}
       sx={styles.tableContainer}
     >
       <GridTableContainer

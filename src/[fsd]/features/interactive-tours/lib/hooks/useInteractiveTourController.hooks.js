@@ -13,6 +13,7 @@ import {
   FIRST_ELITEA_TOUR_ID,
   MCP_TOUR_ID,
   NOTIFICATIONS_TOUR_ID,
+  PERSONAL_TOKENS_TOUR_ID,
   PIPELINE_TOUR_ID,
   RESOURCES_TOUR_ID,
   SIDEBAR_TOUR_ID,
@@ -31,6 +32,8 @@ const TOUR_LOADERS = {
   [AGENT_TOUR_ID]: () => import('../constants/agentTour.constants').then(m => m.agentTourSteps),
   [NOTIFICATIONS_TOUR_ID]: () =>
     import('../constants/notificationsTour.constants').then(m => m.notificationsTourSteps),
+  [PERSONAL_TOKENS_TOUR_ID]: () =>
+    import('../constants/personalTokensTour.constants').then(m => m.personalTokensTourSteps),
   [PIPELINE_TOUR_ID]: () => import('../constants/pipelineTour.constants').then(m => m.pipelineTourSteps),
   [FIRST_ELITEA_TOUR_ID]: () =>
     import('../constants/firstEliteaTour.constants').then(m => m.firstEliteaTourSteps),

@@ -19,7 +19,7 @@ const DrawerPageHeader = memo(props => {
     onBack,
   } = props;
   const { search, onChangeSearch, placeholder = 'Search something amazing!' } = slotProps?.searchInput || {};
-  const { onAdd, disabled, tooltip: addButtonTooltip } = slotProps?.addButton || {};
+  const { onAdd, disabled, tooltip: addButtonTooltip, tourId: addButtonTourId } = slotProps?.addButton || {};
   const styles = getStyles();
   const handleInputChange = useCallback(
     event => {
@@ -64,7 +64,10 @@ const DrawerPageHeader = memo(props => {
             title={addButtonTooltip}
             placement="top"
           >
-            <Box component={'span'}>
+            <Box
+              component={'span'}
+              {...(addButtonTourId ? { 'data-tour': addButtonTourId } : {})}
+            >
               <IconButton
                 disabled={!!disabled}
                 disableRipple

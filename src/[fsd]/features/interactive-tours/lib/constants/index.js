@@ -36,6 +36,15 @@ export {
   NOTIFICATIONS_TOUR_TARGET_IDS,
   NOTIFICATIONS_TOUR_TARGETS,
 } from './notificationsTourTargets.constants.js';
+export {
+  PERSONAL_TOKENS_TOUR_COMPLETION,
+  PERSONAL_TOKENS_TOUR_ID,
+  personalTokensTourSteps,
+} from './personalTokensTour.constants';
+export {
+  PERSONAL_TOKENS_TOUR_TARGET_IDS,
+  PERSONAL_TOKENS_TOUR_TARGETS,
+} from './personalTokensTourTargets.constants.js';
 export { PIPELINE_TOUR_COMPLETION, PIPELINE_TOUR_ID, pipelineTourSteps } from './pipelineTour.constants';
 export { PIPELINE_TOUR_TARGET_IDS, PIPELINE_TOUR_TARGETS } from './pipelineTourTargets.constants.js';
 export { SIDEBAR_TOUR_COMPLETION, SIDEBAR_TOUR_ID, sidebarTourSteps } from './sidebarTour.constants';
