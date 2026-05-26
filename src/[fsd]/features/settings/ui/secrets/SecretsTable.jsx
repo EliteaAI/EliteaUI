@@ -14,7 +14,7 @@ import {
   GridTablePagination,
   GridTableRow,
 } from '@/[fsd]/entities/grid-table/ui';
-import { SECRETS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/secretsTourTargets.constants';
+import { SECRETS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import {
   useSecretRowActions,
   useSecretRowUpdate,

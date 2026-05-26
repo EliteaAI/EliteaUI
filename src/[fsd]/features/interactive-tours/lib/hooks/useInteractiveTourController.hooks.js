@@ -19,6 +19,7 @@ import {
   SECRETS_TOUR_ID,
   SIDEBAR_TOUR_ID,
   TOOLKIT_TOUR_ID,
+  USERS_TOUR_ID,
 } from '../constants';
 import { initialState, lsCompletedKey, lsPromptKey, tourReducer } from '../helpers';
 
@@ -37,6 +38,7 @@ const TOUR_LOADERS = {
     import('../constants/personalTokensTour.constants').then(m => m.personalTokensTourSteps),
   [PIPELINE_TOUR_ID]: () => import('../constants/pipelineTour.constants').then(m => m.pipelineTourSteps),
   [SECRETS_TOUR_ID]: () => import('../constants/secretsTour.constants').then(m => m.secretsTourSteps),
+  [USERS_TOUR_ID]: () => import('../constants/usersTour.constants').then(m => m.usersTourSteps),
   [FIRST_ELITEA_TOUR_ID]: () =>
     import('../constants/firstEliteaTour.constants').then(m => m.firstEliteaTourSteps),
   [MCP_TOUR_ID]: () => import('../constants/mcpTour.constants.js').then(m => m.mcpTourSteps),

@@ -4,6 +4,7 @@ import { useLocation, useSearchParams } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
+import { USERS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { DrawerPage, DrawerPageHeader } from '@/[fsd]/features/settings/ui/drawer-page';
 import { DeleteUserButton, EditUsersButton, UsersTable } from '@/[fsd]/features/settings/ui/users';
 import { useRoleListQuery, useUserCreateMutation, useUserListQuery } from '@/api/admin';
@@ -202,6 +203,7 @@ const Users = memo(() => {
             addButton: {
               onAdd: handleOpenInviteDialog,
               tooltip: 'Invite users',
+              tourId: USERS_TOUR_TARGET_IDS.inviteButton,
             },
           }}
           extraContent={
@@ -232,7 +234,10 @@ const Users = memo(() => {
         />
         {checkPermission(PERMISSIONS.users.view) && (
           <>
-            <Box sx={styles.tableContainer}>
+            <Box
+              data-tour={USERS_TOUR_TARGET_IDS.page}
+              sx={styles.tableContainer}
+            >
               <UsersTable
                 users={isError ? [] : visibleRows}
                 total={!search ? total : filteredUsers.length}

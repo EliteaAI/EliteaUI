@@ -55,3 +55,5 @@ export { TOOLKIT_TOUR_COMPLETION, TOOLKIT_TOUR_ID, toolkitTourSteps } from './to
 export { TOOLKIT_TOUR_TARGET_IDS, TOOLKIT_TOUR_TARGETS } from './toolkitTourTargets.constants.js';
 export { RESOURCES_TOUR_COMPLETION, RESOURCES_TOUR_ID, resourcesTourSteps } from './resourcesTour.constants';
 export { RESOURCES_TOUR_TARGET_IDS, RESOURCES_TOUR_TARGETS } from './resourcesTourTargets.constants.js';
+export { USERS_TOUR_COMPLETION, USERS_TOUR_ID, usersTourSteps } from './usersTour.constants';
+export { USERS_TOUR_TARGET_IDS, USERS_TOUR_TARGETS } from './usersTourTargets.constants.js';

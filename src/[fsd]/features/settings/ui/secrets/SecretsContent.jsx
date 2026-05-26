@@ -6,7 +6,7 @@ import { useLocation, useSearchParams } from 'react-router-dom';
 import { Box } from '@mui/material';
 import { GridRowModes } from '@mui/x-data-grid';
 
-import { SECRETS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/secretsTourTargets.constants';
+import { SECRETS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { DrawerPageHeader } from '@/[fsd]/features/settings/ui/drawer-page';
 import { SecretsTable } from '@/[fsd]/features/settings/ui/secrets';
 import { useSecretsListQuery } from '@/api/secrets.js';

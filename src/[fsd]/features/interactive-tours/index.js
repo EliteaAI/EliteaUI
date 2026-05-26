@@ -21,4 +21,5 @@ export {
   RESOURCES_TOUR_ID,
   SECRETS_TOUR_ID,
   TOOLKIT_TOUR_ID,
+  USERS_TOUR_ID,
 } from './lib/constants';

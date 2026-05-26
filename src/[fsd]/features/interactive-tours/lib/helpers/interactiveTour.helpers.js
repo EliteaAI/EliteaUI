@@ -25,6 +25,8 @@ import {
   SIDEBAR_TOUR_ID,
   TOOLKIT_TOUR_COMPLETION,
   TOOLKIT_TOUR_ID,
+  USERS_TOUR_COMPLETION,
+  USERS_TOUR_ID,
 } from '../constants';
 
 // ─── Tour completion configs ───────────────────────────────────────────────────
@@ -42,6 +44,7 @@ export const TOUR_COMPLETION_CONFIGS = {
   [SECRETS_TOUR_ID]: SECRETS_TOUR_COMPLETION,
   [SIDEBAR_TOUR_ID]: SIDEBAR_TOUR_COMPLETION,
   [TOOLKIT_TOUR_ID]: TOOLKIT_TOUR_COMPLETION,
+  [USERS_TOUR_ID]: USERS_TOUR_COMPLETION,
 };
 
 // ─── localStorage helpers ──────────────────────────────────────────────────────

@@ -12,6 +12,7 @@ import {
   GridTablePagination,
   GridTableRow,
 } from '@/[fsd]/entities/grid-table/ui';
+import { USERS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { Text } from '@/[fsd]/shared/ui';
 import { PERMISSIONS } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
@@ -142,7 +143,10 @@ const UsersTable = memo(props => {
   const renderActions = useCallback(
     row => {
       return (
-        <Box sx={styles.actionsContainer}>
+        <Box
+          data-tour={USERS_TOUR_TARGET_IDS.userActions}
+          sx={styles.actionsContainer}
+        >
           {checkPermission(PERMISSIONS.users.edit) && (
             <EditUsersButton
               users={row}
@@ -166,6 +170,7 @@ const UsersTable = memo(props => {
   return !isFetching ? (
     <Box
       key={`users-table-${sideBarCollapsed}`}
+      data-tour={USERS_TOUR_TARGET_IDS.userList}
       sx={styles.tableContainer}
     >
       <GridTableContainer
