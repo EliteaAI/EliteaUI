@@ -96,12 +96,24 @@ const NewChatInput = forwardRef((props, ref) => {
   const voiceButtonRef = useRef(null);
   const [isRecording, setIsRecording] = useState(false);
 
-  const { isRecording: isSpeakingModeRecording } = useSpeakingModeLoop({
+  const {
+    isRecording: isSpeakingModeRecording,
+    pauseForRegeneration,
+    notifyManualEdit,
+  } = useSpeakingModeLoop({
     isSpeakingMode,
     inputRef: userInputRef,
     isStreaming,
     isTTSPlaying,
   });
+
+  const handleInputChange = useCallback(
+    value => {
+      onInputChange?.(value);
+      notifyManualEdit();
+    },
+    [onInputChange, notifyManualEdit],
+  );
 
   // Expose a stable imperative API while delegating each call to the latest UserInput handle.
   useImperativeHandle(
@@ -117,8 +129,9 @@ const NewChatInput = forwardRef((props, ref) => {
       sendQuestion: (...args) => userInputRef.current?.sendQuestion?.(...args),
       insertTextAtCursor: (...args) => userInputRef.current?.insertTextAtCursor?.(...args),
       mentionUser: (...args) => userInputRef.current?.mentionUser?.(...args),
+      pauseSpeakingMode: () => pauseForRegeneration(),
     }),
-    [],
+    [pauseForRegeneration],
   );
 
   const handleVoiceRecordingChange = useCallback(
@@ -372,7 +385,7 @@ const NewChatInput = forwardRef((props, ref) => {
       disabledInput={isLoading}
       onSend={handleSend}
       onNormalKeyDown={onNormalKeyDown}
-      onInputChange={onInputChange}
+      onInputChange={handleInputChange}
       tooltipOfSendButton={tooltipOfSendButton}
       showLoading={isLoading}
       onFilePaste={handleFilePaste}

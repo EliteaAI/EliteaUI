@@ -502,6 +502,37 @@ export const clearIgnoredServers = () => {
 };
 
 /**
+ * Start a background scheduler that proactively refreshes OAuth tokens before they expire.
+ *
+ * The scheduler runs independently of user activity — tokens are refreshed when they
+ * cross the 75% lifetime threshold even when the user is idle (not sending messages).
+ * This complements the per-message refresh check in getAllTokens(), which only fires
+ * during active use.
+ *
+ * The interval matches REFRESH_CHECK_INTERVAL_MS (60 s) so both paths share the same
+ * cadence. lastRefreshCheckTime is updated on each scheduler tick to prevent getAllTokens()
+ * from issuing a duplicate refresh check within the same window.
+ *
+ * @returns {Function} Cleanup function that clears the interval (call on app unmount).
+ */
+export const startTokenRefreshScheduler = () => {
+  if (!isStorageAvailable()) return () => {};
+
+  const intervalId = setInterval(() => {
+    const serversToRefresh = getServersNeedingRefresh();
+    if (serversToRefresh.length > 0) {
+      addToRefreshQueue(serversToRefresh);
+      processRefreshQueue();
+    }
+    // Keep getAllTokens() rate-limiter in sync so it skips the next check
+    // if the scheduler just ran, avoiding a double-refresh burst on message send.
+    lastRefreshCheckTime = Date.now();
+  }, REFRESH_CHECK_INTERVAL_MS);
+
+  return () => clearInterval(intervalId);
+};
+
+/**
  * Mark a server/toolkit as "connection verified" for header-based auth MCP servers
  * that don't require OAuth tokens on the client side.
  * This stores a minimal marker that makes getAccessToken return truthy,
