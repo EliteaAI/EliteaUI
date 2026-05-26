@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 
 import { Box } from '@mui/material';
 
+import { NOTIFICATIONS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/notificationsTourTargets.constants';
 import { useNotificationListQuery } from '@/api/notifications';
 import { SortOrderOptions } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
@@ -64,7 +65,10 @@ export default function NotificationCenter() {
   const styles = notificationCenterStyles();
 
   return (
-    <Box sx={styles.container}>
+    <Box
+      data-tour={NOTIFICATIONS_TOUR_TARGET_IDS.page}
+      sx={styles.container}
+    >
       <NotificationTable
         rows={isError ? [] : (data?.rows ?? [])}
         rowCount={data?.total || 0}
