@@ -10,7 +10,7 @@ import OfflineIcon from '@/assets/offline-icon.svg?react';
 import OnlineIcon from '@/assets/online-icon.svg?react';
 
 const OpenApiDelegatedLoginButton = memo(props => {
-  const { projectId, openApiConfig, toolName } = props;
+  const { projectId, openApiConfig, toolName, toolkitId } = props;
   const oauthEndpoint = openApiConfig?.oauth_discovery_endpoint ?? '';
   const configUuid = openApiConfig?.configuration_uuid || openApiConfig?.id;
   const tokenKey = useMemo(
@@ -26,6 +26,7 @@ const OpenApiDelegatedLoginButton = memo(props => {
       client_secret: openApiConfig?.client_secret,
       scopes: openApiConfig?.scope,
     },
+    toolkitId,
   });
 
   const { runCheck, isRunning } = useOpenApiCheckConnection({ projectId, settings: openApiConfig });

@@ -20,9 +20,11 @@ import { FilePreviewNavigationProvider } from '@/contexts/FilePreviewNavigationC
 import SocketContext from '@/contexts/SocketContext';
 import useEliteATheme from '@/hooks/useEliteATheme';
 import { actions as settingsActions } from '@/slices/settings.js';
+import { startTokenRefreshScheduler } from '@/[fsd]/features/mcp/lib/helpers/mcpAuth.helpers';
 import { logVersion } from '@/utils.js';
 
 logVersion();
+startTokenRefreshScheduler();
 
 const RootComponent = memo(() => {
   const { globalTheme } = useEliteATheme();

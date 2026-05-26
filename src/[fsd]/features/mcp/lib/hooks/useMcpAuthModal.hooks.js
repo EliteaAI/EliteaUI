@@ -247,7 +247,7 @@ export const useMcpAuthModal = (options = {}) => {
  * @param {string|string[]} [options.credentials.scopes] - OAuth scopes from credential settings
  */
 export const useConfigOAuthModal = (options = {}) => {
-  const { onSuccess, credentials } = options;
+  const { onSuccess, credentials, toolkitId } = options;
   const projectId = useSelectedProjectId();
   const { toastSuccess } = useToast();
 
@@ -303,7 +303,7 @@ export const useConfigOAuthModal = (options = {}) => {
       formClientSecret: credentials?.client_secret || '',
       formScopes: credentials?.scopes,
       projectId,
-      toolkitId: undefined,
+      toolkitId: toolkitId || undefined,
       toolkitType: undefined,
       title: 'Configuration OAuth',
       onClose: handleCloseModal,
@@ -318,6 +318,7 @@ export const useConfigOAuthModal = (options = {}) => {
       credentials?.client_secret,
       credentials?.scopes,
       projectId,
+      toolkitId,
       handleCloseModal,
       handleCancelModal,
     ],
