@@ -1,5 +1,7 @@
 import { memo, useCallback } from 'react';
 
+import { useNavigate } from 'react-router-dom';
+
 import { Box, Unstable_TrapFocus as TrapFocus, Typography } from '@mui/material';
 
 import { useInteractiveTour } from '@/[fsd]/app/providers/InteractiveTourProvider';
@@ -17,6 +19,7 @@ const TITLE_ID = 'tour-complete-title';
 const TourCompleteCard = memo(props => {
   const { keepExploring = [] } = props;
   const { closeComplete, startTour } = useInteractiveTour();
+  const navigate = useNavigate();
   const theme = useTheme();
   const styles = tourCompleteCardStyles();
   const TutorialsSuccessIcon =
@@ -33,12 +36,15 @@ const TourCompleteCard = memo(props => {
 
   const handleKeepExploring = useCallback(
     e => {
-      const { tourId } = e.currentTarget.dataset;
-      if (tourId) {
+      const { tourId, path } = e.currentTarget.dataset;
+      if (path && tourId) {
+        const params = new URLSearchParams({ tour: tourId });
+        navigate({ pathname: path, search: `?${params.toString()}` });
+      } else if (tourId) {
         startTour(tourId);
       }
     },
-    [startTour],
+    [navigate, startTour],
   );
 
   return (
@@ -73,6 +79,7 @@ const TourCompleteCard = memo(props => {
                   <BaseBtn
                     key={item.tourId}
                     data-tour-id={item.tourId}
+                    data-path={item.path}
                     variant={BUTTON_VARIANTS.secondary}
                     onClick={handleKeepExploring}
                     sx={styles.keepExploringBtn}

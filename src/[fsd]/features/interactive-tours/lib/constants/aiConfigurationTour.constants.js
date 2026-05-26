@@ -1,9 +1,18 @@
-import { AI_CONFIG_TOUR_TARGETS } from './aiConfigurationTourTargets.constants';
+import RouteDefinitions from '@/routes';
 
-export const AI_CONFIG_TOUR_ID = 'ai-configuration';
+import { AI_CONFIG_TOUR_TARGETS } from './aiConfigurationTourTargets.constants';
+import { AI_CONFIG_TOUR_ID, PERSONAL_TOKENS_TOUR_ID } from './tourIds.constants';
+
+export { AI_CONFIG_TOUR_ID };
 
 export const AI_CONFIG_TOUR_COMPLETION = {
-  keepExploring: [],
+  keepExploring: [
+    {
+      label: 'Personal Tokens',
+      tourId: PERSONAL_TOKENS_TOUR_ID,
+      path: RouteDefinitions.SettingsWithTab.replace(':tab', 'tokens'),
+    },
+  ],
 };
 
 export const aiConfigurationTourSteps = [
