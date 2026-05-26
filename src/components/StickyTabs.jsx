@@ -203,6 +203,7 @@ const StickyTabs = memo(props => {
                         }
                         icon={tab.icon}
                         key={index}
+                        {...(tab.tabProps || {})}
                         {...AccessibilityAriaHelpers.getTabAccessibilityProps(index)}
                       />
                     ))}

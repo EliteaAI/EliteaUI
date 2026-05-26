@@ -2,6 +2,7 @@ import { memo, useCallback, useMemo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
+import { AI_CONFIG_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/aiConfigurationTourTargets.constants';
 import AddModelButton from '@/[fsd]/features/settings/ui/ai-configuration/Configuration/AddModelButton';
 import ConfigurationSection from '@/[fsd]/features/settings/ui/ai-configuration/Configuration/ConfigurationSection';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
@@ -48,7 +49,10 @@ const ConfigurationsPanel = memo(props => {
           >
             {label}
           </Typography>
-          <InfoTooltip infoTooltip={tooltipText} sx={styles.inlineInfoIconWrapper} />
+          <InfoTooltip
+            infoTooltip={tooltipText}
+            sx={styles.inlineInfoIconWrapper}
+          />
         </Box>
       );
     },
@@ -70,7 +74,10 @@ const ConfigurationsPanel = memo(props => {
 
   return (
     <Box sx={styles.configurationsSection}>
-      <Box sx={styles.configurationsHeader}>
+      <Box
+        data-tour={AI_CONFIG_TOUR_TARGET_IDS.integrations}
+        sx={styles.configurationsHeader}
+      >
         <Box sx={styles.configurationsContent}>
           <Typography
             variant="headingMedium"
@@ -83,6 +90,7 @@ const ConfigurationsPanel = memo(props => {
       </Box>
 
       <ConfigurationSection
+        tourTargetId={AI_CONFIG_TOUR_TARGET_IDS.llmModels}
         hasDefaultSetting
         title="LLM Models"
         configurations={configurationsBySections.llm}
@@ -114,6 +122,7 @@ const ConfigurationsPanel = memo(props => {
       />
 
       <ConfigurationSection
+        tourTargetId={AI_CONFIG_TOUR_TARGET_IDS.embeddingModels}
         title="Embedding Models"
         configurations={configurationsBySections.embedding}
         isLoading={configurationsLoading}
@@ -126,6 +135,7 @@ const ConfigurationsPanel = memo(props => {
       />
 
       <ConfigurationSection
+        tourTargetId={AI_CONFIG_TOUR_TARGET_IDS.vectorStorage}
         title="Vector Storage"
         configurations={configurationsBySections.vectorstorage}
         isLoading={configurationsLoading}
@@ -138,6 +148,7 @@ const ConfigurationsPanel = memo(props => {
       />
 
       <ConfigurationSection
+        tourTargetId={AI_CONFIG_TOUR_TARGET_IDS.imageGeneration}
         title="Image Generation"
         configurations={configurationsBySections.image_generation}
         isLoading={configurationsLoading}
@@ -171,6 +182,7 @@ const ConfigurationsPanel = memo(props => {
       />
 
       <ConfigurationSection
+        tourTargetId={AI_CONFIG_TOUR_TARGET_IDS.aiCredentials}
         title="AI Credentials"
         configurations={configurationsBySections.ai_credentials}
         isLoading={configurationsLoading}

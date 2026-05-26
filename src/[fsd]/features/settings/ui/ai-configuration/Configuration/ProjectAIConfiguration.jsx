@@ -2,6 +2,7 @@ import { memo, useMemo } from 'react';
 
 import { Box } from '@mui/material';
 
+import { AI_CONFIG_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/aiConfigurationTourTargets.constants';
 import FieldWithCopy from '@/[fsd]/features/settings/ui/ai-configuration/Configuration/FieldWithCopy';
 
 const ProjectAIConfiguration = memo(props => {
@@ -10,7 +11,10 @@ const ProjectAIConfiguration = memo(props => {
   const styles = useMemo(() => projectAIConfigurationStyles(), []);
 
   return (
-    <Box sx={styles.projectConfigSection}>
+    <Box
+      data-tour={AI_CONFIG_TOUR_TARGET_IDS.serverConfig}
+      sx={styles.projectConfigSection}
+    >
       <Box sx={styles.fieldsGrid}>
         <FieldWithCopy
           label="OpenAI-BaseURL:"

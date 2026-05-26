@@ -28,6 +28,7 @@ const ConfigurationSection = memo(props => {
     additionalDefaultSettings = [],
     defaultSettingsLayout = DEFAULT_SETTINGS_LAYOUT.STACK,
     groupTheModelsByProvider = false,
+    tourTargetId,
   } = props;
 
   const groupedConfigurations = useMemo(() => {
@@ -89,7 +90,10 @@ const ConfigurationSection = memo(props => {
   }
 
   return (
-    <Box sx={styles.container}>
+    <Box
+      data-tour={tourTargetId}
+      sx={styles.container}
+    >
       <Typography
         variant="headingSmall"
         sx={styles.title}

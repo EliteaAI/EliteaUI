@@ -1,5 +1,8 @@
 import { memo, useCallback, useMemo, useState } from 'react';
 
+import { Box } from '@mui/material';
+
+import { AI_CONFIG_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/aiConfigurationTourTargets.constants';
 import ModelConfiguration from '@/[fsd]/features/settings/ui/ai-configuration/Configuration/ModelConfiguration';
 import { OpenAITemplate } from '@/[fsd]/features/settings/ui/ai-configuration/OpenAITemplate';
 import { DrawerPage } from '@/[fsd]/features/settings/ui/drawer-page';
@@ -20,6 +23,7 @@ const AIConfiguration = memo(() => {
       },
       {
         label: 'OpenAI Template',
+        tabProps: { 'data-tour': AI_CONFIG_TOUR_TARGET_IDS.openaiTemplateTab },
         content: (
           <DrawerPage>
             <OpenAITemplate />
@@ -33,15 +37,20 @@ const AIConfiguration = memo(() => {
     setSelectedTab(newTab);
   }, []);
   return (
-    <StickyTabs
-      tabs={tabs}
-      value={selectedTab}
-      onChangeTab={onTabChange}
-      title={tabs[selectedTab]?.label || 'Settings'}
-      tabBarStyle={styles.tabBar}
-      tabPanelStyle={styles.tabPanel}
-      containerStyle={styles.tabContainer}
-    />
+    <Box
+      data-tour={AI_CONFIG_TOUR_TARGET_IDS.page}
+      sx={styles.pageWrapper}
+    >
+      <StickyTabs
+        tabs={tabs}
+        value={selectedTab}
+        onChangeTab={onTabChange}
+        title={tabs[selectedTab]?.label || 'Settings'}
+        tabBarStyle={styles.tabBar}
+        tabPanelStyle={styles.tabPanel}
+        containerStyle={styles.tabContainer}
+      />
+    </Box>
   );
 });
 
@@ -49,6 +58,9 @@ AIConfiguration.displayName = 'AIConfiguration';
 
 /** @type {MuiSx} */
 const getStyles = () => ({
+  pageWrapper: {
+    height: '100%',
+  },
   tabBar: ({ palette }) => ({
     width: '100% !important',
     padding: '0rem 1rem 0rem 1rem',

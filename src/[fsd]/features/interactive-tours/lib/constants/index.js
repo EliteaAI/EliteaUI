@@ -8,6 +8,12 @@ export {
   AGENT_STUDIO_TOUR_TARGET_IDS,
   AGENT_STUDIO_TOUR_TARGETS,
 } from './agentStudioTourTargets.constants.js';
+export {
+  AI_CONFIG_TOUR_COMPLETION,
+  AI_CONFIG_TOUR_ID,
+  aiConfigurationTourSteps,
+} from './aiConfigurationTour.constants';
+export { AI_CONFIG_TOUR_TARGET_IDS, AI_CONFIG_TOUR_TARGETS } from './aiConfigurationTourTargets.constants.js';
 export { ARTIFACT_TOUR_COMPLETION, ARTIFACT_TOUR_ID, artifactTourSteps } from './artifactTour.constants';
 export { ARTIFACT_TOUR_TARGET_IDS, ARTIFACT_TOUR_TARGETS } from './artifactTourTargets.constants.js';
 export { AGENT_TOUR_COMPLETION, AGENT_TOUR_ID, agentTourSteps } from './agentTour.constants';

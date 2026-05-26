@@ -7,6 +7,7 @@ import { actions as settingsActions } from '@/slices/settings';
 import {
   AGENT_STUDIO_TOUR_ID,
   AGENT_TOUR_ID,
+  AI_CONFIG_TOUR_ID,
   ARTIFACT_TOUR_ID,
   CHAT_TOUR_ID,
   FIRST_ELITEA_TOUR_ID,
@@ -23,6 +24,8 @@ import { initialState, lsCompletedKey, lsPromptKey, tourReducer } from '../helpe
 const TOUR_LOADERS = {
   [AGENT_STUDIO_TOUR_ID]: () =>
     import('../constants/agentStudioTour.constants').then(m => m.agentStudioTourSteps),
+  [AI_CONFIG_TOUR_ID]: () =>
+    import('../constants/aiConfigurationTour.constants').then(m => m.aiConfigurationTourSteps),
   [ARTIFACT_TOUR_ID]: () => import('../constants/artifactTour.constants').then(m => m.artifactTourSteps),
   [CHAT_TOUR_ID]: () => import('../constants/chatTour.constants').then(m => m.chatTourSteps),
   [AGENT_TOUR_ID]: () => import('../constants/agentTour.constants').then(m => m.agentTourSteps),
