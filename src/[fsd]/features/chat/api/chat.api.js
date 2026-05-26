@@ -2,7 +2,6 @@ import { normalizeFileExtension } from '@/[fsd]/entities/attachment/lib';
 import { eliteaApi } from '@/api';
 import { removeDuplicateObjects } from '@/common/utils.jsx';
 
-const TAG_TYPE_FOLDERS = 'TAG_TYPE_FOLDERS';
 const TAG_TYPE_CONVERSATIONS = 'TAG_TYPE_CONVERSATIONS';
 const TAG_TYPE_CONVERSATION_DETAILS = 'TAG_TYPE_CONVERSATION_DETAILS';
 const TAG_TYPE_TOTAL_CONVERSATIONS = 'TAG_TYPE_TOTAL_CONVERSATIONS';
@@ -259,7 +258,7 @@ export const apiSlice = eliteaApi
           }
           return [];
         },
-        invalidatesTags: [TAG_TYPE_FOLDERS],
+        invalidatesTags: [],
       }),
       unselectConversation: build.mutation({
         query: ({ projectId }) => {
@@ -269,7 +268,7 @@ export const apiSlice = eliteaApi
             headers,
           };
         },
-        providesTags: (result, error) => {
+        providesTags: (_, error) => {
           if (error) {
             return [];
           }
@@ -286,7 +285,7 @@ export const apiSlice = eliteaApi
             body,
           };
         },
-        providesTags: (result, error) => {
+        providesTags: (_, error) => {
           if (error) {
             return [];
           }
