@@ -1,16 +1,16 @@
 import RouteDefinitions from '@/routes';
 
 import { PERSONAL_TOKENS_TOUR_TARGETS } from './personalTokensTourTargets.constants';
-import { AI_CONFIG_TOUR_ID, PERSONAL_TOKENS_TOUR_ID } from './tourIds.constants';
+import { PERSONAL_TOKENS_TOUR_ID, SECRETS_TOUR_ID } from './tourIds.constants';
 
 export { PERSONAL_TOKENS_TOUR_ID };
 
 export const PERSONAL_TOKENS_TOUR_COMPLETION = {
   keepExploring: [
     {
-      label: 'AI Configuration',
-      tourId: AI_CONFIG_TOUR_ID,
-      path: RouteDefinitions.SettingsWithTab.replace(':tab', 'model-configuration'),
+      label: 'Secrets',
+      tourId: SECRETS_TOUR_ID,
+      path: RouteDefinitions.SettingsWithTab.replace(':tab', 'secrets'),
     },
   ],
 };

@@ -16,6 +16,7 @@ import {
   PERSONAL_TOKENS_TOUR_ID,
   PIPELINE_TOUR_ID,
   RESOURCES_TOUR_ID,
+  SECRETS_TOUR_ID,
   SIDEBAR_TOUR_ID,
   TOOLKIT_TOUR_ID,
 } from '../constants';
@@ -35,6 +36,7 @@ const TOUR_LOADERS = {
   [PERSONAL_TOKENS_TOUR_ID]: () =>
     import('../constants/personalTokensTour.constants').then(m => m.personalTokensTourSteps),
   [PIPELINE_TOUR_ID]: () => import('../constants/pipelineTour.constants').then(m => m.pipelineTourSteps),
+  [SECRETS_TOUR_ID]: () => import('../constants/secretsTour.constants').then(m => m.secretsTourSteps),
   [FIRST_ELITEA_TOUR_ID]: () =>
     import('../constants/firstEliteaTour.constants').then(m => m.firstEliteaTourSteps),
   [MCP_TOUR_ID]: () => import('../constants/mcpTour.constants.js').then(m => m.mcpTourSteps),

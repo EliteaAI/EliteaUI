@@ -46,6 +46,8 @@ export {
   PERSONAL_TOKENS_TOUR_TARGETS,
 } from './personalTokensTourTargets.constants.js';
 export { PIPELINE_TOUR_COMPLETION, PIPELINE_TOUR_ID, pipelineTourSteps } from './pipelineTour.constants';
+export { SECRETS_TOUR_COMPLETION, SECRETS_TOUR_ID, secretsTourSteps } from './secretsTour.constants';
+export { SECRETS_TOUR_TARGET_IDS, SECRETS_TOUR_TARGETS } from './secretsTourTargets.constants.js';
 export { PIPELINE_TOUR_TARGET_IDS, PIPELINE_TOUR_TARGETS } from './pipelineTourTargets.constants.js';
 export { SIDEBAR_TOUR_COMPLETION, SIDEBAR_TOUR_ID, sidebarTourSteps } from './sidebarTour.constants';
 export { SIDEBAR_TOUR_TARGET_IDS, SIDEBAR_TOUR_TARGETS } from './sidebarTourTargets.constants.js';

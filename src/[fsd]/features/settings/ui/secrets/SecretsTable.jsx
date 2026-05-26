@@ -14,6 +14,7 @@ import {
   GridTablePagination,
   GridTableRow,
 } from '@/[fsd]/entities/grid-table/ui';
+import { SECRETS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/secretsTourTargets.constants';
 import {
   useSecretRowActions,
   useSecretRowUpdate,
@@ -445,7 +446,10 @@ const SecretsTable = memo(props => {
       }
 
       return (
-        <Box sx={styles.actionsContainer}>
+        <Box
+          data-tour={SECRETS_TOUR_TARGET_IDS.secretActions}
+          sx={styles.actionsContainer}
+        >
           {/* Safari-specific copy action - only show when secret is visible */}
           {isSafariBrowser && !row.isNew && isSecretVisible && (
             <IconButton
@@ -503,6 +507,7 @@ const SecretsTable = memo(props => {
   return !isFetching ? (
     <Box
       key={`secrets-table-${windowSize.width}-${windowSize.height}-${sideBarCollapsed}`}
+      data-tour={SECRETS_TOUR_TARGET_IDS.secretList}
       sx={styles.container}
     >
       <GridTableContainer
