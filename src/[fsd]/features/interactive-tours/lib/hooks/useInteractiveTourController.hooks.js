@@ -8,6 +8,7 @@ import {
   AGENT_STUDIO_TOUR_ID,
   AGENT_TOUR_ID,
   AI_CONFIG_TOUR_ID,
+  ANALYTICS_TOUR_ID,
   ARTIFACT_TOUR_ID,
   CHAT_TOUR_ID,
   FIRST_ELITEA_TOUR_ID,
@@ -29,6 +30,7 @@ const TOUR_LOADERS = {
     import('../constants/agentStudioTour.constants').then(m => m.agentStudioTourSteps),
   [AI_CONFIG_TOUR_ID]: () =>
     import('../constants/aiConfigurationTour.constants').then(m => m.aiConfigurationTourSteps),
+  [ANALYTICS_TOUR_ID]: () => import('../constants/analyticsTour.constants').then(m => m.analyticsTourSteps),
   [ARTIFACT_TOUR_ID]: () => import('../constants/artifactTour.constants').then(m => m.artifactTourSteps),
   [CHAT_TOUR_ID]: () => import('../constants/chatTour.constants').then(m => m.chatTourSteps),
   [AGENT_TOUR_ID]: () => import('../constants/agentTour.constants').then(m => m.agentTourSteps),

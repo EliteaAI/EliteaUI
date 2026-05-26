@@ -7,6 +7,7 @@ import { Box, Typography, useTheme } from '@mui/material';
 import { AnalyticsCommonConstants } from '@/[fsd]/features/analytics/lib/constants';
 import { AnalyticCommonHelpers } from '@/[fsd]/features/analytics/lib/helpers';
 import { ChartTooltip, KPICard, ModelUsageTable } from '@/[fsd]/features/analytics/ui';
+import { ANALYTICS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 
 const AnalyticsOverview = memo(props => {
   const { data, onUserClick } = props;
@@ -22,7 +23,10 @@ const AnalyticsOverview = memo(props => {
 
   return (
     <Box sx={styles.overviewContent}>
-      <Box sx={styles.kpiRow}>
+      <Box
+        sx={styles.kpiRow}
+        data-tour={ANALYTICS_TOUR_TARGET_IDS.kpiCards}
+      >
         <KPICard
           label="TEAM"
           value={AnalyticCommonHelpers.fmtNum(kpis.unique_users)}
@@ -56,7 +60,6 @@ const AnalyticsOverview = memo(props => {
           subtitle="agents and pipelines interactions"
         />
       </Box>
-
       <Box sx={styles.chartsRowEqual}>
         <Box sx={styles.chartCard}>
           <Typography
@@ -203,7 +206,6 @@ const AnalyticsOverview = memo(props => {
           )}
         </Box>
       </Box>
-
       <ModelUsageTable
         models={models}
         totalCalls={totalModelCalls}

@@ -3,9 +3,16 @@ import { memo } from 'react';
 import { Box } from '@mui/material';
 
 const DrawerPage = memo(props => {
-  const { sx, children } = props;
+  const { sx, children, ...rest } = props;
   const styles = getStyles();
-  return <Box sx={[styles.page, sx]}>{children}</Box>;
+  return (
+    <Box
+      {...rest}
+      sx={[styles.page, sx]}
+    >
+      {children}
+    </Box>
+  );
 });
 
 DrawerPage.displayName = 'DrawerPage';

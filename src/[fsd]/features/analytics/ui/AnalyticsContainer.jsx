@@ -1,8 +1,9 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Box, CircularProgress, Typography } from '@mui/material';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 
+import { useInteractiveTour } from '@/[fsd]/app/providers';
 import { useProjectAnalyticsQuery } from '@/[fsd]/features/analytics/api';
 import {
   AnalyticsAgents,
@@ -12,6 +13,7 @@ import {
   AnalyticsTools,
   AnalyticsUsers,
 } from '@/[fsd]/features/analytics/ui';
+import { ANALYTICS_TOUR_ID, ANALYTICS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { DrawerPage } from '@/[fsd]/features/settings/ui/drawer-page';
 import TabGroupButton from '@/[fsd]/shared/ui/tab-group-button/TabGroupButton';
 import { BaseTab, BaseTabs } from '@/[fsd]/shared/ui/tabs';
@@ -32,6 +34,8 @@ const DATE_FILTER_PRESETS = [
 const AnalyticsContainer = memo(() => {
   const projectId = useSelectedProjectId();
   const projectName = useSelectedProjectName();
+
+  const { currentStep, tourId } = useInteractiveTour() ?? {};
 
   const styles = analyticsContainerStyles();
 
@@ -91,6 +95,14 @@ const AnalyticsContainer = memo(() => {
     setActiveTab(0);
   }, []);
 
+  useEffect(() => {
+    if (tourId !== ANALYTICS_TOUR_ID || !currentStep) return;
+    if (typeof currentStep.tabIndex === 'number') {
+      setPendingUserId(null);
+      setActiveTab(currentStep.tabIndex);
+    }
+  }, [currentStep, tourId]);
+
   const datePickerCommonProps = {
     ampm: false,
     format: 'dd/MM/yyyy HH:mm',
@@ -112,7 +124,7 @@ const AnalyticsContainer = memo(() => {
   };
 
   return (
-    <DrawerPage>
+    <DrawerPage data-tour={ANALYTICS_TOUR_TARGET_IDS.page}>
       <Box sx={styles.header}>
         <Typography
           variant="headingSmall"
@@ -127,7 +139,10 @@ const AnalyticsContainer = memo(() => {
           </Box>
         )}
       </Box>
-      <Box sx={styles.filterBar}>
+      <Box
+        sx={styles.filterBar}
+        data-tour={ANALYTICS_TOUR_TARGET_IDS.dateFilter}
+      >
         <TabGroupButton
           exclusive
           disableTooltip
@@ -163,72 +178,80 @@ const AnalyticsContainer = memo(() => {
           </Box>
         </Box>
       </Box>
-      <Box sx={styles.tabsContainer}>
-        <BaseTabs
-          value={activeTab}
-          onChange={handleTabChange}
+      <Box
+        sx={styles.tabSection}
+        data-tour={ANALYTICS_TOUR_TARGET_IDS.tabSection}
+      >
+        <Box
+          sx={styles.tabsContainer}
+          data-tour={ANALYTICS_TOUR_TARGET_IDS.tabs}
         >
-          {['Overview', 'Agents', 'Tools', 'Users', 'Health', 'Guide'].map(label => (
-            <BaseTab
-              key={label}
-              label={label}
-            />
-          ))}
-        </BaseTabs>
-      </Box>
+          <BaseTabs
+            value={activeTab}
+            onChange={handleTabChange}
+          >
+            {['Overview', 'Agents', 'Tools', 'Users', 'Health', 'Guide'].map(label => (
+              <BaseTab
+                key={label}
+                label={label}
+              />
+            ))}
+          </BaseTabs>
+        </Box>
 
-      <Box sx={styles.contentArea}>
-        {needsOverview && isFetching && (
-          <Box sx={styles.loadingState}>
-            <CircularProgress size={32} />
-          </Box>
-        )}
-        {needsOverview && isError && !isFetching && (
-          <Box sx={styles.emptyState}>
-            <Typography
-              variant="bodyMedium"
-              sx={styles.emptyText}
-            >
-              Failed to load analytics data.
-            </Typography>
-          </Box>
-        )}
-        {data && !isFetching && activeTab === 0 && (
-          <AnalyticsOverview
-            data={data}
-            onUserClick={handleOverviewUserClick}
-          />
-        )}
-        {activeTab === 1 && (
-          <AnalyticsAgents
-            projectId={projectId}
-            dateFrom={dateFromISO}
-            dateTo={dateToISO}
-          />
-        )}
-        {activeTab === 2 && (
-          <AnalyticsTools
-            projectId={projectId}
-            dateFrom={dateFromISO}
-            dateTo={dateToISO}
-          />
-        )}
-        {activeTab === 3 && (
-          <AnalyticsUsers
-            projectId={projectId}
-            dateFrom={dateFromISO}
-            dateTo={dateToISO}
-            initialUserId={pendingUserId}
-            onBackToSource={handleBackToOverview}
-          />
-        )}
-        {data && !isFetching && activeTab === 4 && (
-          <AnalyticsHealth
-            health={data.health}
-            daily_activity={data.daily_activity}
-          />
-        )}
-        {activeTab === 5 && <AnalyticsGuide />}
+        <Box sx={styles.contentArea}>
+          {needsOverview && isFetching && (
+            <Box sx={styles.loadingState}>
+              <CircularProgress size={32} />
+            </Box>
+          )}
+          {needsOverview && isError && !isFetching && (
+            <Box sx={styles.emptyState}>
+              <Typography
+                variant="bodyMedium"
+                sx={styles.emptyText}
+              >
+                Failed to load analytics data.
+              </Typography>
+            </Box>
+          )}
+          {data && !isFetching && activeTab === 0 && (
+            <AnalyticsOverview
+              data={data}
+              onUserClick={handleOverviewUserClick}
+            />
+          )}
+          {activeTab === 1 && (
+            <AnalyticsAgents
+              projectId={projectId}
+              dateFrom={dateFromISO}
+              dateTo={dateToISO}
+            />
+          )}
+          {activeTab === 2 && (
+            <AnalyticsTools
+              projectId={projectId}
+              dateFrom={dateFromISO}
+              dateTo={dateToISO}
+            />
+          )}
+          {activeTab === 3 && (
+            <AnalyticsUsers
+              projectId={projectId}
+              dateFrom={dateFromISO}
+              dateTo={dateToISO}
+              initialUserId={pendingUserId}
+              onBackToSource={handleBackToOverview}
+            />
+          )}
+          {data && !isFetching && activeTab === 4 && (
+            <AnalyticsHealth
+              health={data.health}
+              daily_activity={data.daily_activity}
+            />
+          )}
+          {activeTab === 5 && <AnalyticsGuide />}
+        </Box>
       </Box>
     </DrawerPage>
   );
@@ -508,6 +531,7 @@ const analyticsContainerStyles = () => ({
       },
     },
   }),
+  tabSection: { display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' },
   tabsContainer: ({ palette }) => ({
     padding: '0 1.5rem',
     borderBottom: `1px solid ${palette.border.table}`,
