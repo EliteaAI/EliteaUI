@@ -98,7 +98,7 @@ const IWModaSucceedlContent = memo(props => {
                     variant="bodyMedium"
                     component="p"
                   >
-                    {(key === 'toolkits' ? importedItems[key].map(t => t.name) : importedItems[key]).join(
+                    {(key === 'toolkits' ? importedItems[key].map(t => t.name) : importedItems[key])?.join(
                       ', ',
                     )}
                   </Typography>

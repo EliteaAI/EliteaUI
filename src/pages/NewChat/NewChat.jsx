@@ -47,6 +47,7 @@ import {
   useChatParticipantDeleteSocket,
   useChatParticipantUpdateSocket,
 } from '@/components/Chat/hooks';
+import AttentionIcon from '@/components/Icons/AttentionIcon';
 import useActiveParticipantDetails from '@/hooks/chat/useActiveParticipantDetails';
 import useAddNewParticipants, { canParticipantBeActiveInChat } from '@/hooks/chat/useAddNewParticipants';
 import useAgentCreation from '@/hooks/chat/useAgentCreation';
@@ -1608,7 +1609,23 @@ const NewChat = props => {
       />
       <AlertDialog
         open={conversationNotFound}
-        title="Conversation not found"
+        title={
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'flex-start',
+              alignItems: 'center',
+              gap: '.25rem',
+            }}
+          >
+            <AttentionIcon
+              width={16}
+              height={16}
+              fill={theme.palette.status.onModeration}
+            />
+            Conversation not found
+          </Box>
+        }
         alertContent="The conversation you are looking for does not exist in your project or you don't have access to it. For sharing links, please use the Share option in the conversation menu."
         confirmButtonText="Got it"
         cancelButtonText=""
