@@ -65,6 +65,9 @@ registerProcessor('audio-chunk-processor', AudioChunkProcessor);
 
 export const useStreamingSpeechRecognition = ({
   onTranscript,
+  onTranscriptDone,
+  onSpeechStarted,
+  onVadFlush,
   onError,
   socket,
   projectId,
@@ -75,6 +78,9 @@ export const useStreamingSpeechRecognition = ({
   const streamRef = useRef(null);
   const workletNodeRef = useRef(null);
   const onTranscriptRef = useRef(onTranscript);
+  const onTranscriptDoneRef = useRef(onTranscriptDone);
+  const onSpeechStartedRef = useRef(onSpeechStarted);
+  const onVadFlushRef = useRef(onVadFlush);
   const onErrorRef = useRef(onError);
   // Set to false at the start of each new recording session to discard stale
   // events that arrive from the previous session before the new one is ready.
@@ -83,6 +89,18 @@ export const useStreamingSpeechRecognition = ({
   useEffect(() => {
     onTranscriptRef.current = onTranscript;
   }, [onTranscript]);
+
+  useEffect(() => {
+    onTranscriptDoneRef.current = onTranscriptDone;
+  }, [onTranscriptDone]);
+
+  useEffect(() => {
+    onSpeechStartedRef.current = onSpeechStarted;
+  }, [onSpeechStarted]);
+
+  useEffect(() => {
+    onVadFlushRef.current = onVadFlush;
+  }, [onVadFlush]);
 
   useEffect(() => {
     onErrorRef.current = onError;
@@ -99,7 +117,20 @@ export const useStreamingSpeechRecognition = ({
 
     const onDone = ({ transcript }) => {
       if (!acceptEventsRef.current) return;
-      onTranscriptRef.current?.({ interim: '', final: transcript });
+      if (transcript) onTranscriptRef.current?.({ interim: '', final: transcript });
+      // Always notify so the caller can decrement its pending-speech counter,
+      // even when the transcript is empty (short audio, rate-limited, errors).
+      onTranscriptDoneRef.current?.();
+    };
+
+    const onSpeechStart = () => {
+      if (!acceptEventsRef.current) return;
+      onSpeechStartedRef.current?.();
+    };
+
+    const onVadFlushEvent = () => {
+      if (!acceptEventsRef.current) return;
+      onVadFlushRef.current?.();
     };
 
     const onErr = ({ error }) => {
@@ -108,11 +139,15 @@ export const useStreamingSpeechRecognition = ({
 
     socket.on(sioEvents.asr_transcript_delta, onDelta);
     socket.on(sioEvents.asr_transcript_done, onDone);
+    socket.on(sioEvents.asr_speech_started, onSpeechStart);
+    socket.on(sioEvents.asr_vad_flush, onVadFlushEvent);
     socket.on(sioEvents.asr_error, onErr);
 
     return () => {
       socket.off(sioEvents.asr_transcript_delta, onDelta);
       socket.off(sioEvents.asr_transcript_done, onDone);
+      socket.off(sioEvents.asr_speech_started, onSpeechStart);
+      socket.off(sioEvents.asr_vad_flush, onVadFlushEvent);
       socket.off(sioEvents.asr_error, onErr);
     };
   }, [socket]);
