@@ -7,15 +7,17 @@ import { useCallback } from 'react';
 export const useAttachmentToolChange = ({ activeParticipant, refetchParticipantDetails }) => {
   const handleAttachmentToolChange = useCallback(
     async participantId => {
-      // Only refetch if the changed participant is the currently active one
-      if (!activeParticipant?.id || activeParticipant?.id !== participantId) {
+      // The chat editor callback for the pipeline path passes the entity id,
+      // which corresponds to activeParticipant.entity_meta.id — NOT activeParticipant.id
+      // (the latter is the conversation participant row id and never matches).
+      const activeEntityId = activeParticipant?.entity_meta?.id;
+      if (!activeEntityId || activeEntityId !== participantId) {
         return;
       }
 
-      // Refetch participant details to get updated attachment settings
       await refetchParticipantDetails?.();
     },
-    [activeParticipant?.id, refetchParticipantDetails],
+    [activeParticipant?.entity_meta?.id, refetchParticipantDetails],
   );
 
   return { handleAttachmentToolChange };
