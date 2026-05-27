@@ -173,15 +173,7 @@ const InputMappingItem = memo(props => {
         (type === 'fstring' && newType === 'fixed') || (type === 'fixed' && newType === 'fstring');
       const newValue = shouldPreserveValue ? value : defaultValue;
       const formattedValue =
-        newType === 'fstring'
-          ? (() => {
-              try {
-                return typeof newValue === 'string' ? newValue : JSON.stringify(newValue);
-              } catch {
-                return String(newValue);
-              }
-            })()
-          : newValue;
+        newType === 'fstring' ? FlowEditorHelpers.formatFStringValue(newValue) : newValue;
       onChangeMapping(
         variable,
         {
