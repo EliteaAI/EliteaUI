@@ -11,30 +11,45 @@ export const getArrayOptions = (schema, itemRef) => {
   return prop?.enum || [];
 };
 
+/**
+ * Get the initial value for a property based on its schema.
+ *
+ * @param {object} params
+ * @param {*} params.defaultValue - Standard JSON Schema 'default' attribute
+ * @param {*} params.prefillValue - Custom 'prefill_value' attribute for pre-filling required fields.
+ *   Unlike 'default', prefill_value is a UI hint that doesn't affect Pydantic validation.
+ *   This allows fields to be truly required (in 'required' array) while still showing
+ *   a sensible initial value in the form. Used when a field must not be empty but has
+ *   a common/recommended value (e.g., GitHub API URL: https://api.github.com).
+ */
 export const getPropValue = ({
   schema,
   name,
   type,
   format,
   defaultValue,
+  prefillValue,
   items,
   configuration_types,
   defaultVectorStorage,
   defaultEmbeddingModel,
   defaultImageGenerationModel,
 }) => {
+  // prefill_value takes precedence as it's explicitly set for UI pre-filling
+  const effectiveDefault = prefillValue ?? defaultValue;
+
   switch (type) {
     case 'string':
       if (format === 'password') {
         return null;
       } else {
-        return defaultValue || '';
+        return effectiveDefault || '';
       }
     case 'integer':
-      return defaultValue !== undefined ? defaultValue : undefined;
+      return effectiveDefault !== undefined ? effectiveDefault : undefined;
     case 'array': {
       if (name !== 'selected_tools') {
-        return defaultValue || [];
+        return effectiveDefault || [];
       } else {
         if (items) {
           return (
@@ -42,28 +57,28 @@ export const getPropValue = ({
             (items.const ? [items.const] : items.itemRef ? getArrayOptions(schema, items.itemRef) : [])
           );
         } else {
-          return defaultValue || [];
+          return effectiveDefault || [];
         }
       }
     }
     case 'boolean':
-      return defaultValue || false;
+      return effectiveDefault || false;
     case 'object':
-      return defaultValue || {};
+      return effectiveDefault || {};
     case 'embedding_model':
-      return defaultValue || defaultEmbeddingModel || '';
+      return effectiveDefault || defaultEmbeddingModel || '';
     case 'image_generation_model':
-      return defaultValue || defaultImageGenerationModel || '';
+      return effectiveDefault || defaultImageGenerationModel || '';
     default:
       if (configuration_types) {
         if (name === 'pgvector_configuration' && defaultVectorStorage?.elitea_title) {
           return defaultVectorStorage;
         }
-        return defaultValue || defaultVectorStorage?.[name]?.[0] || null;
-      } else if (defaultValue === null) {
+        return effectiveDefault || defaultVectorStorage?.[name]?.[0] || null;
+      } else if (effectiveDefault === null) {
         return null;
       }
-      return defaultValue || '';
+      return effectiveDefault || '';
   }
 };
 
@@ -75,20 +90,31 @@ export const genInitialToolSettings = (
 ) => {
   const settings = {};
   const properties = getToolProperties(schema);
-  properties.forEach(({ name, type, format, default: defaultValue, items, configuration_types }) => {
-    settings[name] = getPropValue({
-      schema,
+  properties.forEach(
+    ({
       name,
       type,
       format,
-      defaultValue,
+      default: defaultValue,
+      prefill_value: prefillValue,
       items,
       configuration_types,
-      defaultVectorStorage,
-      defaultEmbeddingModel,
-      defaultImageGenerationModel,
-    });
-  });
+    }) => {
+      settings[name] = getPropValue({
+        schema,
+        name,
+        type,
+        format,
+        defaultValue,
+        prefillValue,
+        items,
+        configuration_types,
+        defaultVectorStorage,
+        defaultEmbeddingModel,
+        defaultImageGenerationModel,
+      });
+    },
+  );
   return settings;
 };
 
