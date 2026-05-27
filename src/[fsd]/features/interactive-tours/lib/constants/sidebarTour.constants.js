@@ -16,9 +16,9 @@ export const sidebarTourSteps = [
     target: SIDEBAR_TOUR_TARGETS.logo,
     placement: 'right',
     title: 'ELITEA Logo',
-    content: `The **ELITEA Logo** 
-    
-Green mark points that server is working
+    content: `The **ELITEA Logo** in the sidebar shows the server status.
+
+Green mark points that server is working.
 Red mark points that server is updating.`,
     skip: false,
   },
@@ -60,9 +60,9 @@ The button detects your current page and adjusts its action accordingly:
 - **Chat** — starts a new conversation
 - **Agents** — opens the new agent creation form
 - **Pipelines** — opens the new pipeline creation form
+- **Credentials** — opens the new credential creation form
 - **Toolkits** — opens the new toolkit creation form
 - **MCPs** — opens the new MCP creation form
-- **Credentials** — opens the new credential creation form
 - **Artifacts** — opens the new bucket creation form
 - **Settings → AI Configuration** — opens the new model integration creation form
 - **Settings → Personal Tokens** — opens the new personal token creation form
@@ -125,10 +125,7 @@ Once configured, a toolkit can be attached to any agent or pipeline and used dir
     target: SIDEBAR_TOUR_TARGETS.navApplications,
     placement: 'right',
     title: 'Applications',
-    content: `## What is Applications?
-
-The Applications menu is where you discover, request, and manage purpose-built AI applications that extend ELITEA beyond agents and pipelines. Each application provides a dedicated interface and a ready-to-use set of tools that can also be referenced in agents and pipelines.`,
-    skip: false,
+    content: `**ELITEA Applications** are purpose-built AI applications that extend ELITEA beyond agents and pipelines. Each application provides a dedicated interface and a ready-to-use set of tools that can also be referenced in agents and pipelines.`,
   },
   {
     id: 'mcps',
