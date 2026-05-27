@@ -523,6 +523,17 @@ const ChatBox = forwardRef((props, boxRef) => {
 
   const getPayload = useCallback(
     ({ question, question_id, participant, conversationUuid, attachmentList }) => {
+      // For published agent/pipeline participants on the Chat page, use their entity_settings.llm_settings
+      // as fallback so the predict payload carries the correct model override
+      const isPublishedAgentParticipant =
+        !isAgentsPage &&
+        activeParticipant?.entity_meta?.project_id === PUBLIC_PROJECT_ID &&
+        (activeParticipant?.entity_name === ChatParticipantType.Applications ||
+          activeParticipant?.entity_name === ChatParticipantType.Pipelines);
+      const participantLlmSettings = isPublishedAgentParticipant
+        ? activeParticipant?.entity_settings?.llm_settings
+        : undefined;
+
       return generateMessagePayload({
         attachmentList,
         question,
@@ -544,9 +555,9 @@ const ChatBox = forwardRef((props, boxRef) => {
               )
               .map(it => it.id) || []
           : selectedUsers.map(user => user.user.id),
-        unsavedLLMSettings,
+        unsavedLLMSettings: unsavedLLMSettings || participantLlmSettings,
         participants: activeConversation?.participants || [],
-        allowLLMSettingsOverride: isAgentsPage,
+        allowLLMSettingsOverride: isAgentsPage || !!participantLlmSettings,
         conversationMeta: activeConversation?.meta,
       });
     },

@@ -622,9 +622,25 @@ const NewConversationView = forwardRef(
             }
             if (selectedParticipant) {
               setTimeout(async () => {
-                const selectedParticipantFiltered = selectedParticipants.filter(
-                  p => !p.meta.added_from_agent,
-                );
+                const selectedParticipantFiltered = selectedParticipants
+                  .filter(p => !p.meta.added_from_agent)
+                  .map(sp => {
+                    if (
+                      sp.entity_meta?.project_id === PUBLIC_PROJECT_ID &&
+                      activeParticipant?.entity_settings?.llm_settings &&
+                      sp.entity_meta?.id === activeParticipant.entity_meta?.id &&
+                      sp.entity_name === activeParticipant.entity_name
+                    ) {
+                      return {
+                        ...sp,
+                        entity_settings: {
+                          ...sp.entity_settings,
+                          ...activeParticipant.entity_settings,
+                        },
+                      };
+                    }
+                    return sp;
+                  });
 
                 await addNewParticipants(selectedParticipantFiltered, createdConversation, participants => {
                   onComplete?.([
@@ -653,9 +669,25 @@ const NewConversationView = forwardRef(
             } else {
               if (selectedParticipants.length) {
                 setTimeout(async () => {
-                  const selectedParticipantFiltered = selectedParticipants.filter(
-                    p => !p.meta.added_from_agent,
-                  );
+                  const selectedParticipantFiltered = selectedParticipants
+                    .filter(p => !p.meta.added_from_agent)
+                    .map(sp => {
+                      if (
+                        sp.entity_meta?.project_id === PUBLIC_PROJECT_ID &&
+                        activeParticipant?.entity_settings?.llm_settings &&
+                        sp.entity_meta?.id === activeParticipant.entity_meta?.id &&
+                        sp.entity_name === activeParticipant.entity_name
+                      ) {
+                        return {
+                          ...sp,
+                          entity_settings: {
+                            ...sp.entity_settings,
+                            ...activeParticipant.entity_settings,
+                          },
+                        };
+                      }
+                      return sp;
+                    });
 
                   await addNewParticipants(
                     selectedParticipantFiltered,

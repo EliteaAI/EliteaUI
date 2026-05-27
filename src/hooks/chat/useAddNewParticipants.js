@@ -11,7 +11,7 @@ import {
   useListModelsQuery,
   useUpdateApplicationVersionMutation,
 } from '@/api';
-import { ChatParticipantType } from '@/common/constants';
+import { ChatParticipantType, PUBLIC_PROJECT_ID } from '@/common/constants';
 import { buildErrorMessage, getChatParticipantUniqueId } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
@@ -74,6 +74,14 @@ export const transformParticipant = (participantType, participant, variables) =>
           ...(participantType === ChatParticipantType.Applications &&
             participant.version_details?.id &&
             !participant.entity_settings?.version_id && { version_id: participant.version_details.id }),
+          // Include llm_settings override for published agents/pipelines from public project
+          ...((participantType === ChatParticipantType.Applications ||
+            participantType === ChatParticipantType.Pipelines) &&
+            participant.entity_meta?.project_id === PUBLIC_PROJECT_ID &&
+            (participant.entity_settings?.llm_settings || participant.version_details?.llm_settings) && {
+              llm_settings:
+                participant.entity_settings?.llm_settings || participant.version_details?.llm_settings,
+            }),
         },
         meta: {
           mcp: participant.meta?.mcp || undefined,
