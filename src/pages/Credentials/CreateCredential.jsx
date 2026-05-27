@@ -95,13 +95,19 @@ const CreateCredential = memo(
         }
       });
 
-      // Also initialize from schema defaults for any property (not only required)
-      // This ensures fields like base_url or url get prefilled when the schema provides a default.
+      // Initialize from schema defaults or prefill_value for any property (not only required).
+      // - 'default': Standard JSON Schema attribute for optional fields
+      // - 'prefill_value': Custom attribute for pre-filling required fields without making them
+      //   optional in Pydantic. This keeps the API schema Pydantic-compliant (field stays in
+      //   'required' array) while allowing UI to show a sensible initial value.
       const props = result.schema?.properties || {};
       Object.entries(props).forEach(([prop, propSchema]) => {
-        // Only apply when schema explicitly provides a default
-        const hasDefault = Object.prototype.hasOwnProperty.call(propSchema || {}, 'default');
-        if (!hasDefault) return;
+        const prefillValue = propSchema?.prefill_value;
+        const defaultValue = propSchema?.default;
+        // prefill_value takes precedence - it's explicitly set for UI pre-filling
+        const effectiveDefault = prefillValue ?? defaultValue;
+
+        if (effectiveDefault === undefined || effectiveDefault === null) return;
 
         const alreadySet =
           result.settings[prop] !== undefined &&
@@ -114,7 +120,8 @@ const CreateCredential = memo(
           name: prop,
           type: propSchema?.type,
           format: propSchema?.format,
-          defaultValue: propSchema?.default,
+          defaultValue,
+          prefillValue,
           items: propSchema?.items,
           configuration_types: propSchema?.configuration_types,
         });
