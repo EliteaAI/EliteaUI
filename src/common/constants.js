@@ -943,6 +943,8 @@ export const sioEvents = {
   asr_transcript_delta: 'asr_transcript_delta',
   asr_transcript_done: 'asr_transcript_done',
   asr_error: 'asr_error',
+  asr_speech_started: 'asr_speech_started',
+  asr_vad_flush: 'asr_vad_flush',
 
   // Server-side TTS (text-to-speech via model API)
   tts_start: 'tts_start',
