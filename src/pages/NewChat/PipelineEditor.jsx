@@ -394,8 +394,7 @@ const PipelineEditor = forwardRef(
       savedFormData => {
         setIsDirty(false);
         setIsYamlDirty(false);
-
-        onAttachmentToolChange?.(pipeline?.id);
+        onAttachmentToolChange?.(pipeline?.entity_meta?.id);
 
         // Notify parent component if needed
         if (onPipelineSaved && savedFormData) {
@@ -409,16 +408,16 @@ const PipelineEditor = forwardRef(
           onPipelineSaved(savedFormData);
         }
       },
-      [onAttachmentToolChange, onPipelineSaved, pipeline?.id, pipelineId, trackEvent],
+      [onAttachmentToolChange, onPipelineSaved, pipeline?.entity_meta?.id, pipelineId, trackEvent],
     );
 
     const handleAttachmentToolChange = useCallback(() => {
-      onAttachmentToolChange?.(pipeline?.id);
+      onAttachmentToolChange?.(pipeline?.entity_meta?.id);
       // Refetch agent details to get updated attachment/tool configuration
       if (refetchVersionDetails && !isCreateMode) {
         refetchVersionDetails();
       }
-    }, [isCreateMode, onAttachmentToolChange, pipeline?.id, refetchVersionDetails]);
+    }, [isCreateMode, onAttachmentToolChange, pipeline?.entity_meta?.id, refetchVersionDetails]);
     // Early return null when pipeline is null and not in create mode
     if (!pipeline && !isCreateMode) {
       return null;
