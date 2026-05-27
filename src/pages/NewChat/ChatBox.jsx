@@ -1064,6 +1064,7 @@ const ChatBox = forwardRef((props, boxRef) => {
   const onRegenerateAnswerStream = useCallback(
     (id, question, questionId) => async () => {
       stopTTS?.();
+      chatInput.current?.pauseSpeakingMode?.();
       const questionIndex = chat_history.findIndex(item => item.id === id) - 1;
       const theQuestion = question || chat_history[questionIndex]?.content;
       const question_id = questionId || chat_history[questionIndex]?.id;
@@ -1087,6 +1088,7 @@ const ChatBox = forwardRef((props, boxRef) => {
   const onRegenerateAnswer = useCallback(
     (uuid, messageParticipant) => async () => {
       stopTTS();
+      chatInput.current?.pauseSpeakingMode?.();
       let prevMessage = {};
       setChatHistory(prevMessages => {
         prevMessage = prevMessages.find(message => message.id === uuid);
