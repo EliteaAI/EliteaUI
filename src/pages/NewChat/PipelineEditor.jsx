@@ -22,6 +22,7 @@ import { useConversationStartersSync } from '@/[fsd]/features/chat/lib/hooks';
 import useRefetchAgentVersionDetailsOnClose from '@/[fsd]/features/chat/lib/hooks/useRefetchAgentVersionDetailsOnClose';
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { LayoutHelpers, ParsePipelineHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import { usePipelineAttachmentYamlSync } from '@/[fsd]/features/pipelines/lib/hooks';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
 import { DEFAULT_REASONING_EFFORT } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
 import { useGetApplicationVersionDetailQuery, usePublicApplicationDetailsQuery } from '@/api/applications';
@@ -65,6 +66,7 @@ const PipelineEditorContent = memo(props => {
   const styles = getStyles();
 
   useConversationStartersSync(onConversationStartersChange);
+  usePipelineAttachmentYamlSync();
 
   // LLM Settings setter for the modal dialog
   const onLLMSettingsChange = useCallback(

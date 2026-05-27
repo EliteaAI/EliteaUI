@@ -33,8 +33,6 @@ export const usePipelineAttachmentYamlSync = () => {
   yamlJsonObjectRef.current = yamlJsonObject;
 
   useEffect(() => {
-    if (!yamlCode) return;
-
     const currentYamlObj = yamlJsonObjectRef.current;
     const currentState = currentYamlObj?.state || {};
     const alreadyHasKey = STATE_INPUT_ATTACHMENTS in currentState;
