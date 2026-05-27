@@ -1,6 +1,7 @@
 import { deepClone } from '@mui/x-data-grid/internals';
 
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+import { isNullOrUndefined } from '@/common/utils';
 import { ToolTypes } from '@/pages/Applications/Components/Tools/consts';
 
 export const measureNodes = (nodes, zoom, editorRef) => {
@@ -547,4 +548,15 @@ export const generateNodeIdByType = (type, nodes) => {
     type,
     ...(FlowEditorConstants.InitialNodeData[type] || {}),
   };
+};
+
+export const formatFStringValue = value => {
+  try {
+    if (typeof value === 'string' || isNullOrUndefined(value)) {
+      return value;
+    }
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
 };
