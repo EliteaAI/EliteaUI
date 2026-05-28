@@ -104,10 +104,23 @@ export const useQueryFoldersList = props => {
     });
   }, []);
 
-  const updatePinnedConversations = useCallback(pinned => {
-    const conversations = pinned?.conversations || [];
-    setPinnedConversationsRef.current?.(conversations.map(c => ({ ...c, isPinned: true })));
-  }, []);
+  const updatePinnedConversations = useCallback(
+    pinned => {
+      const conversations = pinned?.conversations || [];
+      if (!searchQuery) {
+        setPinnedConversationsRef.current?.(conversations.map(c => ({ ...c, isPinned: true })));
+      } else {
+        setPinnedConversationsRef.current?.(prevPinnedItems => {
+          const matchedPinnedItems = prevPinnedItems.filter(c =>
+            c.name.toLowerCase().includes(searchQuery.toLowerCase()),
+          );
+          const filtered = conversations.filter(c => !prevPinnedItems.find(p => p.id === c.id));
+          return [...matchedPinnedItems, ...filtered.map(c => ({ ...c, isPinned: true }))];
+        });
+      }
+    },
+    [searchQuery],
+  );
 
   useEffect(() => {
     if (isSuccess && !isLoadFolders) {
