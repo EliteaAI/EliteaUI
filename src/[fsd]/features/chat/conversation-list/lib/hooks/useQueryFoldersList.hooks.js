@@ -111,7 +111,7 @@ export const useQueryFoldersList = props => {
         setPinnedConversationsRef.current?.(conversations.map(c => ({ ...c, isPinned: true })));
       } else {
         setPinnedConversationsRef.current?.(prevPinnedItems => {
-          const matchedPinnedItems = conversations.filter(c =>
+          const matchedPinnedItems = prevPinnedItems.filter(c =>
             c.name.toLowerCase().includes(searchQuery.toLowerCase()),
           );
           const filtered = conversations.filter(c => !prevPinnedItems.find(p => p.id === c.id));
