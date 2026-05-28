@@ -43,7 +43,7 @@ const ApplicationCatalog = memo(() => {
 
   const handleSubmitRequest = useCallback(
     (application, reason) => {
-      submitRequest(application.type, reason);
+      submitRequest(application.type, reason, application.typeLabel);
       setRequestModalApp(null);
     },
     [submitRequest],

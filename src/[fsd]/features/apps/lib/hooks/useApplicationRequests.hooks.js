@@ -37,7 +37,7 @@ export const useApplicationRequests = () => {
   }, [projectId, triggerModerationStatus]);
 
   const submitRequest = useCallback(
-    async (appType, description) => {
+    async (appType, description, label) => {
       if (!projectId) return;
 
       setIsSubmitting(true);
@@ -46,7 +46,7 @@ export const useApplicationRequests = () => {
         const result = await createModerationRequest({
           projectId,
           entityId: appType,
-          issue_type: 'Application Access Request',
+          issue_type: label ?? 'Application Access Request',
           description,
           status: 'pending',
           meta: {},
