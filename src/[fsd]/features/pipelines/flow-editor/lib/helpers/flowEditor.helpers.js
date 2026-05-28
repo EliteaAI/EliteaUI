@@ -112,7 +112,6 @@ const createApplicationMapping = (existingMapping, selectedToolkit) => {
   return {
     mapping: {
       task: { ...(existingMapping?.task || { type: 'fstring', value: '' }) },
-      chat_history: { ...(existingMapping?.chat_history || { type: 'fixed', value: [], dataType: 'array' }) },
       ...(selectedToolkit?.variables?.reduce((result, variable) => {
         return {
           [variable.name]: {
@@ -130,13 +129,6 @@ const createApplicationMapping = (existingMapping, selectedToolkit) => {
         value: '',
         data_type: 'string',
       },
-      chat_history: {
-        tooltip:
-          "Chat History relevant for agent. Array of messages, each with 'content' and 'type' fields. Example: [{'content': 'Hello', 'type': 'human'}, {'content': 'Hi there!', 'type': 'ai'}]",
-        type: 'fixed',
-        value: Object.keys(existingMapping || {}).includes('chat_history') ? [] : '', // if chat_history already exists in mapping, default to empty array, otherwise default to empty string in order not to confuse the user that chat_history is in the mapping when it's not
-        data_type: 'array',
-      },
       ...(selectedToolkit?.variables?.reduce((result, variable) => {
         return {
           [variable.name]: {
@@ -150,7 +142,6 @@ const createApplicationMapping = (existingMapping, selectedToolkit) => {
     },
     defaultValues: {
       task: '',
-      chat_history: [],
     },
   };
 };
@@ -354,7 +345,6 @@ export const getDefaultInputMappingOfTool = (
 const createApplicationTooltips = selectedToolkit => {
   const tooltips = {
     task: 'Provides the main instruction or task for the agent being called.',
-    chat_history: 'Defines how chat history is passed to the agent being called',
   };
   selectedToolkit?.settings?.variables?.forEach(variable => {
     tooltips[variable.name] = 'This is a variable from the agent';

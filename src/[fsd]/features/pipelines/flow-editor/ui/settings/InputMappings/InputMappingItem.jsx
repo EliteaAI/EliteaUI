@@ -147,13 +147,7 @@ const InputMappingItem = memo(props => {
   } = props;
   const inputOptions = useInputOptions();
   const isStringType = type === 'string' || type === 'fstring' || type === 'fixed';
-  const typeOptions = useMemo(
-    () =>
-      FlowEditorConstants.agentTaskTypeOptions.filter(
-        option => option.value !== 'fstring' || variable !== 'chat_history',
-      ),
-    [variable],
-  );
+  const typeOptions = useMemo(() => FlowEditorConstants.agentTaskTypeOptions, []);
   const onChangeType = useCallback(
     newType => {
       // Preserve value when switching between 'fstring' and 'fixed'
