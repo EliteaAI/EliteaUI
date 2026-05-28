@@ -1,7 +1,9 @@
-import * as React from 'react';
+import { memo, useEffect, useMemo } from 'react';
 
 import { useSelector } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
+
+import { Box } from '@mui/material';
 
 import { AuthorInformation } from '@/[fsd]/entities/author/ui';
 import { ContentType, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
@@ -16,7 +18,6 @@ import useQueryTrendingAuthor from '@/hooks/useQueryTrendingAuthor';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes';
-import { rightInfoPanelStyle } from '@/styles/RightInfoPanelStyle';
 
 import CredentialsTypesPanel from './CredentialsTypesPanel';
 
@@ -24,18 +25,20 @@ const DEFAULT_CREDENTIALS_PATHNAME = RouteDefinitions.CredentialsWithTab.replace
 
 const EmptyListPlaceHolder = ({ query }) => {
   if (!query) {
-    return <div>{`You have no credentials.`}</div>;
+    return <Box>{`You have no credentials.`}</Box>;
   } else {
     return (
-      <div>
+      <Box>
         Nothing found. <br />
         Create yours now!
-      </div>
+      </Box>
     );
   }
 };
 
-export const CredentialsList = ({ rightPanelOffset }) => {
+const CredentialsList = memo(props => {
+  const { rightPanelOffset } = props;
+
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const selectedProjectId = useSelectedProjectId();
@@ -46,6 +49,12 @@ export const CredentialsList = ({ rightPanelOffset }) => {
     selectedProjectId != PUBLIC_PROJECT_ID ? ViewMode.Owner : ViewMode.Public,
     handleClickType,
   );
+  const { toastError } = useToast();
+  const styles = credentialsListStyles();
+
+  const projectId = useSelectedProjectId();
+  const { isLoadingAuthor, authorId } = useQueryTrendingAuthor(projectId);
+  const { personal_project_id: privateProjectId } = useSelector(state => state.user);
 
   const {
     onLoadMore,
@@ -63,20 +72,11 @@ export const CredentialsList = ({ rightPanelOffset }) => {
     setPage,
   } = useLoadAllCredentials({ isTableView, selectedTypeNames: urlSelectedTypes });
 
-  React.useEffect(() => {
-    onRefetch();
-    if (pathname === DEFAULT_CREDENTIALS_PATHNAME) {
-      onRefetch();
-    }
-  }, [pathname, onRefetch]);
+  const total = totalCount;
 
-  const projectId = useSelectedProjectId();
-  const { isLoadingAuthor, authorId } = useQueryTrendingAuthor(projectId);
-  const { personal_project_id: privateProjectId } = useSelector(state => state.user);
-
-  const rightPanelContent = React.useMemo(
+  const rightPanelContent = useMemo(
     () => (
-      <div style={rightInfoPanelStyle}>
+      <Box sx={styles.rightInfoPanelStyle}>
         <CredentialsTypesPanel
           tagList={tagList}
           title="Types"
@@ -87,15 +87,26 @@ export const CredentialsList = ({ rightPanelOffset }) => {
         ) : (
           <TeamMates />
         )}
-      </div>
+      </Box>
     ),
-    [tagList, selectedProjectId, privateProjectId, authorId, isLoadingAuthor],
+    [tagList, selectedProjectId, privateProjectId, authorId, isLoadingAuthor, styles],
   );
 
-  const total = totalCount;
+  useEffect(() => {
+    onRefetch();
+    if (pathname === DEFAULT_CREDENTIALS_PATHNAME) {
+      onRefetch();
+    }
+  }, [pathname, onRefetch]);
+
+  useEffect(() => {
+    if (isMoreCredentialsError) {
+      toastError(buildErrorMessage(credentialsError));
+    }
+  }, [credentialsError, isMoreCredentialsError, toastError]);
 
   // Navigate to New Credential page for private projects with no credentials
-  React.useEffect(() => {
+  useEffect(() => {
     const isPublic = selectedProjectId == PUBLIC_PROJECT_ID;
     const loading = isCredentialsFirstFetching || isCredentialsFetching;
     const hasError = !!isCredentialsError;
@@ -116,7 +127,8 @@ export const CredentialsList = ({ rightPanelOffset }) => {
     total,
     navigate,
   ]);
-  const uniqueDataList = React.useMemo(() => {
+
+  const uniqueDataList = useMemo(() => {
     const getCredentialItemName = item => {
       if (item.label) {
         return item.label;
@@ -143,30 +155,49 @@ export const CredentialsList = ({ rightPanelOffset }) => {
     );
   }, [data]);
 
-  const { toastError } = useToast();
-  React.useEffect(() => {
-    if (isMoreCredentialsError) {
-      toastError(buildErrorMessage(credentialsError));
-    }
-  }, [credentialsError, isMoreCredentialsError, toastError]);
-
   return (
-    <CardList
-      key={ContentType.CredentialAll}
-      cardList={uniqueDataList}
-      total={total}
-      isLoading={isCredentialsFirstFetching}
-      isError={isCredentialsError}
-      rightPanelOffset={rightPanelOffset}
-      rightPanelContent={rightPanelContent}
-      renderCard={renderCard}
-      isLoadingMore={isCredentialsFetching}
-      loadMoreFunc={onLoadMore}
-      cardType={ContentType.CredentialAll}
-      emptyListPlaceHolder={<EmptyListPlaceHolder query={query} />}
-      page={page}
-      pageSize={pageSize}
-      setPage={setPage}
-    />
+    <Box sx={styles.wrapper}>
+      <CardList
+        key={ContentType.CredentialAll}
+        cardList={uniqueDataList}
+        total={total}
+        isLoading={isCredentialsFirstFetching}
+        isError={isCredentialsError}
+        rightPanelOffset={rightPanelOffset}
+        rightPanelContent={rightPanelContent}
+        renderCard={renderCard}
+        isLoadingMore={isCredentialsFetching}
+        loadMoreFunc={onLoadMore}
+        cardType={ContentType.CredentialAll}
+        emptyListPlaceHolder={<EmptyListPlaceHolder query={query} />}
+        page={page}
+        pageSize={pageSize}
+        setPage={setPage}
+      />
+    </Box>
   );
-};
+});
+
+CredentialsList.displayName = 'CredentialsList';
+
+export default CredentialsList;
+
+/** @type {MuiSx} */
+const credentialsListStyles = () => ({
+  rightInfoPanelStyle: {
+    height: `calc(100dvh - 4.375rem)`,
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  wrapper: {
+    width: '100%',
+    '& > .MuiGrid-container': {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fill, minmax(18.75rem, 1fr))',
+    },
+    '& > .MuiGrid-container > .MuiGrid-root': {
+      width: '100%',
+      maxWidth: '100%',
+    },
+  },
+});

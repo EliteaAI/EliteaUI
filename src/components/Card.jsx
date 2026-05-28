@@ -404,16 +404,21 @@ const cardStyles = (hasCardDetails, showCardBottom, isWholeCardClickable, isClic
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
+    gap: '0.5rem',
   },
   bottomLeftSection: {
     display: 'flex',
     alignItems: 'center',
     gap: '0.5rem',
+    minWidth: 0,
+    overflow: 'hidden',
+    flex: 1,
   },
   bottomRightSection: {
     display: 'flex',
     alignItems: 'center',
     gap: '0.25rem',
+    flexShrink: 0,
   },
   authorContainer: {
     minWidth: '1.25rem',

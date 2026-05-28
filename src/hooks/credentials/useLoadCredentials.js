@@ -114,7 +114,10 @@ export const useLoadCredentials = ({
       }
 
       const aid = item.author_id ?? item.authorId;
-      if (!aid) return item;
+      if (!aid) {
+        const placeholder = { id: `unknown-${item.id}`, name: 'Unknown' };
+        return { ...item, author: placeholder, authors: [placeholder] };
+      }
 
       // Resolve via users list when available
       let author = authorMap?.[aid];

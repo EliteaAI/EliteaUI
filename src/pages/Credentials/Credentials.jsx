@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 
 import StickyTabs from '@/components/StickyTabs';
 import ViewToggle from '@/components/ViewToggle';
-import { CredentialsList } from '@/pages/Credentials/CredentialsList';
+import CredentialsList from '@/pages/Credentials/CredentialsList';
 
 export const Credentials = () => {
   const tabs = useMemo(
