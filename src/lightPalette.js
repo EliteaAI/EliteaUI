@@ -459,6 +459,7 @@ const lightPalette = {
       logout: orange,
     },
     link: blue,
+    highlighted: gray60, //magenta,
   },
   icon: {
     main: light10,
