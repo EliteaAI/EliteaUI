@@ -42,6 +42,7 @@ const CreateEntityButton = memo(props => {
   );
   const isSystemPromptsPage = useMemo(() => pathname.includes('/settings/prompts'), [pathname]);
   const isSettingsUsersPage = useMemo(() => pathname.includes('/settings/users'), [pathname]);
+  const isAgentStudioPage = useMemo(() => pathname.startsWith(RouteDefinitions.AgentStudio), [pathname]);
   const shouldDisableCreatingChat = useMemo(
     () => selectedOption === CreateEntityConstants.OptionsMap.Chat && isCreatingNewConversation,
     [selectedOption, isCreatingNewConversation],
@@ -199,6 +200,7 @@ const CreateEntityButton = memo(props => {
       shouldDisablePersonalSpace ||
       !hasPermissionForSelectedOption ||
       isSystemPromptsPage ||
+      isAgentStudioPage ||
       shouldDisableInviteUser ||
       shouldDisableCreatingChat ||
       shouldDisableOwnLLMs ||
@@ -207,6 +209,7 @@ const CreateEntityButton = memo(props => {
       shouldDisablePersonalSpace,
       hasPermissionForSelectedOption,
       isSystemPromptsPage,
+      isAgentStudioPage,
       shouldDisableInviteUser,
       shouldDisableCreatingChat,
       shouldDisableOwnLLMs,
