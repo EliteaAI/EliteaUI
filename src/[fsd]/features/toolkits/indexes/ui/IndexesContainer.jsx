@@ -56,13 +56,13 @@ const IndexesContainer = memo(props => {
   const [deleteIndexModal, setDeleteIndexModal] = useState(false);
   const [indexNotFoundOpen, setIndexNotFoundOpen] = useState(false);
 
-  const { data: indexesList, isLoading, isFetching } = useSelector(selectIndexesList);
+  const { data: indexesList, isLoading, isFetching, hasData } = useSelector(selectIndexesList);
 
   const [deleteIndex, { isLoading: isIndexDeleting }] = useDeleteIndexItemMutation();
 
   // Handle index selection from URL parameter (from notification link)
   useEffect(() => {
-    if (!indexNameFromUrl || isLoading || isFetching || hasSelectedFromUrlRef.current) return;
+    if (!indexNameFromUrl || isLoading || isFetching || !hasData || hasSelectedFromUrlRef.current) return;
 
     const targetIndex = indexesList.find(idx => idx.metadata?.collection === indexNameFromUrl);
 
@@ -74,10 +74,9 @@ const IndexesContainer = memo(props => {
       setSearchParams(newSearchParams, { replace: true });
       setCurrentIndex(targetIndex);
     } else {
-      // Keep URL until user dismisses the dialog so they can see which item is missing
       setIndexNotFoundOpen(true);
     }
-  }, [indexNameFromUrl, indexesList, isLoading, isFetching, searchParams, setSearchParams]);
+  }, [indexNameFromUrl, indexesList, isLoading, isFetching, hasData, searchParams, setSearchParams]);
 
   // Handle index selection on change tab or indexing
   useEffect(() => {
