@@ -112,9 +112,7 @@ export const useQueryFoldersList = props => {
       } else {
         setPinnedConversationsRef.current?.(prevPinnedItems => {
           const filtered = conversations.filter(c => !prevPinnedItems.find(p => p.id === c.id));
-          return [...prevPinnedItems, ...filtered.map(c => ({ ...c, isPinned: true }))].sort(
-            (a, b) => b.id - a.id,
-          );
+          return [...prevPinnedItems, ...filtered.map(c => ({ ...c, isPinned: true }))];
         });
       }
     },
