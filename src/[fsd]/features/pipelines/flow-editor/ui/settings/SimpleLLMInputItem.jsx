@@ -121,13 +121,7 @@ const SimpleLLMInputItem = memo(props => {
     modelConfig = null,
   } = props;
 
-  const typeOptions = useMemo(
-    () =>
-      FlowEditorConstants.agentTaskTypeOptions.filter(
-        option => option.value !== 'fstring' || variable !== 'chat_history',
-      ),
-    [variable],
-  );
+  const typeOptions = useMemo(() => FlowEditorConstants.agentTaskTypeOptions, []);
   const stateVariableOptions = useInputOptions();
   const language =
     (type === 'fstring' || type === 'fixed') && variableName.toLowerCase() === 'code' ? 'python' : undefined;
