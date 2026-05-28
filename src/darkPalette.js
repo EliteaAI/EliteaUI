@@ -460,6 +460,7 @@ const darkPalette = {
       logout: lightOrange,
     },
     link: blue,
+    highlighted: white,
   },
   icon: {
     main: gray10,

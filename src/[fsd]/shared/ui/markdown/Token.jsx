@@ -33,7 +33,7 @@ const Token = memo(props => {
   } = props;
 
   const theme = useTheme();
-  const styles = getStyles();
+  const styles = getStyles(theme);
 
   const overrides = useCallback(
     rawData => ({
@@ -358,14 +358,14 @@ const Token = memo(props => {
 Token.displayName = 'Token';
 
 /**@type {MuiSx} */
-const getStyles = () => ({
+const getStyles = ({ palette }) => ({
   text: { whiteSpace: 'pre-wrap' },
   paragraph: {
     marginBlockStart: '0rem',
     marginBottom: '0.8em',
     whiteSpace: 'pre-wrap',
   },
-  mark: { background: 'transparent', color: 'white', fontWeight: 500 },
+  mark: { background: 'transparent', color: palette.text.highlighted, fontWeight: 500 },
   inline: { display: 'inline' },
 });
 
