@@ -111,7 +111,7 @@ const ApplicationCatalogCard = memo(props => {
             <>
               {canCreate && !isPending && (
                 <BaseBtn
-                  variant={BUTTON_VARIANTS.contained}
+                  variant={BUTTON_VARIANTS.special}
                   startIcon={<GearIcon />}
                   disabled={isLoading}
                   sx={styles.configureButton}

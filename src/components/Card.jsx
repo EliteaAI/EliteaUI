@@ -250,16 +250,6 @@ const Card = memo(props => {
               <Box sx={styles.bottomRightSection}>
                 {!disableCardActions && (
                   <>
-                    {(status === 'published' || status === 'embedded') && isApplicationCard(type) && (
-                      <StyledTooltip
-                        placement="top"
-                        title={status === 'embedded' ? 'Embedded' : 'Published'}
-                      >
-                        <Box sx={styles.publishIconContainer}>
-                          <PublishIcon sx={{ fontSize: '1rem' }} />
-                        </Box>
-                      </StyledTooltip>
-                    )}
                     {isSupportAssistant && (
                       <IconButton
                         disableRipple
@@ -279,6 +269,16 @@ const Card = memo(props => {
                       alwaysVisible={isCardHovered}
                       onPinChange={handlePinChange}
                     />
+                    {(status === 'published' || status === 'embedded') && isApplicationCard(type) && (
+                      <StyledTooltip
+                        placement="top"
+                        title={status === 'embedded' ? 'Embedded' : 'Published'}
+                      >
+                        <Box sx={styles.publishIconContainer}>
+                          <PublishIcon sx={{ fontSize: '1rem' }} />
+                        </Box>
+                      </StyledTooltip>
+                    )}
                     {pageViewMode !== ViewMode.Owner && (
                       <Box sx={styles.likeContainer}>
                         <Like
