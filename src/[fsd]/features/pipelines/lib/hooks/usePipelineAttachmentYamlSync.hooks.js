@@ -5,6 +5,7 @@ import YAML from 'js-yaml';
 import { useDispatch, useSelector } from 'react-redux';
 
 import {
+  DefaultState,
   STATE_INPUT_ATTACHMENTS,
   StateVariableTypes,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/constants/flowEditor.constants';
@@ -34,7 +35,7 @@ export const usePipelineAttachmentYamlSync = () => {
 
   useEffect(() => {
     const currentYamlObj = yamlJsonObjectRef.current;
-    const currentState = currentYamlObj?.state || {};
+    const currentState = currentYamlObj?.state || { ...DefaultState };
     const alreadyHasKey = STATE_INPUT_ATTACHMENTS in currentState;
 
     if (hasAttachments && !alreadyHasKey) {
