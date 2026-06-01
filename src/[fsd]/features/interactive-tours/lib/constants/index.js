@@ -1,4 +1,13 @@
 export { CARD_WIDTH_PX, SHARED_TOUR_TARGET_IDS, SHARED_TOUR_TARGETS } from './interactiveTour.constants';
+export {
+  APPLICATIONS_TOUR_COMPLETION,
+  APPLICATIONS_TOUR_ID,
+  applicationsTourSteps,
+} from '@/[fsd]/features/interactive-tours/lib/constants/applicationsTour.constants.js';
+export {
+  APPLICATIONS_TOUR_TARGET_IDS,
+  APPLICATIONS_TOUR_TARGETS,
+} from '@/[fsd]/features/interactive-tours/lib/constants/applicationsTourTargets.constants.js';
 export { ANALYTICS_TOUR_COMPLETION, ANALYTICS_TOUR_ID, analyticsTourSteps } from './analyticsTour.constants';
 export { ANALYTICS_TOUR_TARGET_IDS, ANALYTICS_TOUR_TARGETS } from './analyticsTourTargets.constants.js';
 export {

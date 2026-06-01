@@ -6,6 +6,7 @@ import { Box } from '@mui/material';
 
 import { REQUEST_STATUS } from '@/[fsd]/features/apps/lib/constants/applicationCatalog.constants';
 import { useApplicationCatalogState, useApplicationRequests } from '@/[fsd]/features/apps/lib/hooks';
+import { APPLICATIONS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import RouteDefinitions from '@/routes';
 
 import ApplicationCatalogCard from './ApplicationCatalogCard';
@@ -44,7 +45,10 @@ const ApplicationCatalog = memo(() => {
 
   return (
     <Box sx={styles.wrapper}>
-      <Box sx={styles.grid}>
+      <Box
+        sx={styles.grid}
+        data-tour={APPLICATIONS_TOUR_TARGET_IDS.catalogGrid}
+      >
         {applications.map(application => {
           const requestStatus = getRequestStatus(application.type);
           const isPending = requestStatus === REQUEST_STATUS.PENDING;

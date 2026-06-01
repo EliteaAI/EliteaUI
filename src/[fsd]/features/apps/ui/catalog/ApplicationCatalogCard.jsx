@@ -3,6 +3,7 @@ import { memo, useCallback } from 'react';
 import { Box, CircularProgress, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
+import { APPLICATIONS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import ClockIcon from '@/assets/clock.svg?react';
 import GearIcon from '@/assets/gear-icon.svg?react';
@@ -11,6 +12,11 @@ import EntityIcon from '@/components/EntityIcon';
 import HighlightQuery from '@/components/HighlightQuery';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { getCardGradientStyles } from '@/utils/cardStyles';
+
+const TYPE_TO_TOUR_TARGET_ID = {
+  wikis_Wikis: APPLICATIONS_TOUR_TARGET_IDS.wikisCard,
+  inventory: APPLICATIONS_TOUR_TARGET_IDS.inventoryCard,
+};
 
 const ApplicationCatalogCard = memo(props => {
   const {
@@ -25,6 +31,8 @@ const ApplicationCatalogCard = memo(props => {
   } = props;
   const projectId = useSelectedProjectId();
   const styles = applicationCatalogCardStyles();
+
+  const cardTourTargetId = TYPE_TO_TOUR_TARGET_ID[application.type];
 
   const handleConfigureClick = useCallback(
     event => {
@@ -43,7 +51,10 @@ const ApplicationCatalogCard = memo(props => {
   );
 
   return (
-    <Box sx={styles.card}>
+    <Box
+      sx={styles.card}
+      {...(cardTourTargetId ? { 'data-tour': cardTourTargetId } : {})}
+    >
       <Box sx={styles.header}>
         <Box sx={styles.iconWrapper}>
           <EntityIcon
@@ -105,49 +116,54 @@ const ApplicationCatalogCard = memo(props => {
         </Box>
 
         <Box sx={styles.actions}>
-          {isFetchingStatus ? (
-            <CircularProgress size={18} />
-          ) : (
-            <>
-              {canCreate && !isPending && (
-                <BaseBtn
-                  variant={BUTTON_VARIANTS.special}
-                  startIcon={<GearIcon />}
-                  disabled={isLoading}
-                  sx={styles.configureButton}
-                  onClick={handleConfigureClick}
-                >
-                  <Typography
-                    component="span"
-                    variant="labelSmall"
+          <Box
+            sx={styles.primaryActions}
+            data-tour={APPLICATIONS_TOUR_TARGET_IDS.catalogActions}
+          >
+            {isFetchingStatus ? (
+              <CircularProgress size={18} />
+            ) : (
+              <>
+                {canCreate && !isPending && (
+                  <BaseBtn
+                    variant={BUTTON_VARIANTS.special}
+                    startIcon={<GearIcon />}
+                    disabled={isLoading}
+                    sx={styles.configureButton}
+                    onClick={handleConfigureClick}
                   >
-                    Configure
-                  </Typography>
-                </BaseBtn>
-              )}
+                    <Typography
+                      component="span"
+                      variant="labelSmall"
+                    >
+                      Configure
+                    </Typography>
+                  </BaseBtn>
+                )}
 
-              {canRequest && !isPending && (
-                <BaseBtn
-                  variant={BUTTON_VARIANTS.auxiliary}
-                  onClick={handleRequestClick}
-                >
-                  <Typography
-                    component="span"
-                    variant="labelSmall"
+                {canRequest && !isPending && (
+                  <BaseBtn
+                    variant={BUTTON_VARIANTS.auxiliary}
+                    onClick={handleRequestClick}
                   >
-                    Request Access
-                  </Typography>
-                </BaseBtn>
-              )}
+                    <Typography
+                      component="span"
+                      variant="labelSmall"
+                    >
+                      Request Access
+                    </Typography>
+                  </BaseBtn>
+                )}
 
-              {isPending && (
-                <Box sx={styles.pendingStatus}>
-                  <ClockIcon />
-                  <Typography variant="labelSmall">Pending approval</Typography>
-                </Box>
-              )}
-            </>
-          )}
+                {isPending && (
+                  <Box sx={styles.pendingStatus}>
+                    <ClockIcon />
+                    <Typography variant="labelSmall">Pending approval</Typography>
+                  </Box>
+                )}
+              </>
+            )}
+          </Box>
 
           <Box
             component="a"
@@ -155,6 +171,7 @@ const ApplicationCatalogCard = memo(props => {
             target="_blank"
             rel="noopener noreferrer"
             onClick={e => e.stopPropagation()}
+            data-tour={APPLICATIONS_TOUR_TARGET_IDS.documentationLink}
             sx={styles.documentationLink}
           >
             <Typography
@@ -243,6 +260,13 @@ const applicationCatalogCardStyles = () => {
       alignItems: 'center',
       gap: '0.5rem',
       minHeight: '2rem',
+    },
+    primaryActions: {
+      display: 'flex',
+      alignItems: 'center',
+      flexWrap: 'wrap',
+      gap: '0.5rem',
+      minHeight: '1.75rem',
     },
     configureButton: ({ palette }) => ({
       '& svg': {

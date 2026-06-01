@@ -9,6 +9,7 @@ import {
   AGENT_TOUR_ID,
   AI_CONFIG_TOUR_ID,
   ANALYTICS_TOUR_ID,
+  APPLICATIONS_TOUR_ID,
   ARTIFACT_TOUR_ID,
   CHAT_TOUR_ID,
   CREDENTIALS_TOUR_ID,
@@ -27,6 +28,8 @@ import { initialState, lsCompletedKey, lsPromptKey, tourReducer } from '../helpe
 
 // ─── Tour loaders (lazy) ───────────────────────────────────────────────────────
 const TOUR_LOADERS = {
+  [APPLICATIONS_TOUR_ID]: () =>
+    import('../constants/applicationsTour.constants').then(m => m.applicationsTourSteps),
   [AGENT_STUDIO_TOUR_ID]: () =>
     import('../constants/agentStudioTour.constants').then(m => m.agentStudioTourSteps),
   [AI_CONFIG_TOUR_ID]: () =>
