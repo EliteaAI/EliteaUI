@@ -11,6 +11,7 @@ import {
   ANALYTICS_TOUR_ID,
   ARTIFACT_TOUR_ID,
   CHAT_TOUR_ID,
+  CREDENTIALS_TOUR_ID,
   FIRST_ELITEA_TOUR_ID,
   MCP_TOUR_ID,
   NOTIFICATIONS_TOUR_ID,
@@ -31,6 +32,8 @@ const TOUR_LOADERS = {
   [AI_CONFIG_TOUR_ID]: () =>
     import('../constants/aiConfigurationTour.constants').then(m => m.aiConfigurationTourSteps),
   [ANALYTICS_TOUR_ID]: () => import('../constants/analyticsTour.constants').then(m => m.analyticsTourSteps),
+  [CREDENTIALS_TOUR_ID]: () =>
+    import('../constants/credentialsTour.constants').then(m => m.credentialsTourSteps),
   [ARTIFACT_TOUR_ID]: () => import('../constants/artifactTour.constants').then(m => m.artifactTourSteps),
   [CHAT_TOUR_ID]: () => import('../constants/chatTour.constants').then(m => m.chatTourSteps),
   [AGENT_TOUR_ID]: () => import('../constants/agentTour.constants').then(m => m.agentTourSteps),
