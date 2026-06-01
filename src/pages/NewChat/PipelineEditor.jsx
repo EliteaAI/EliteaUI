@@ -66,7 +66,6 @@ const PipelineEditorContent = memo(props => {
   const styles = getStyles();
 
   useConversationStartersSync(onConversationStartersChange);
-  usePipelineAttachmentYamlSync();
 
   // LLM Settings setter for the modal dialog
   const onLLMSettingsChange = useCallback(
@@ -104,6 +103,17 @@ const PipelineEditorContent = memo(props => {
 });
 
 PipelineEditorContent.displayName = 'PipelineEditorContent';
+
+// Always-mounted component that keeps input_attachments in sync regardless of active tab.
+// Must live inside BaseEditor's children so it has access to Formik context.
+// memo() prevents re-renders from parent state changes; the component still re-renders
+// when its own Formik/Redux subscriptions change, which is exactly when sync is needed.
+const PipelineAttachmentYamlSync = memo(() => {
+  usePipelineAttachmentYamlSync();
+  return null;
+});
+
+PipelineAttachmentYamlSync.displayName = 'PipelineAttachmentYamlSync';
 
 const PipelineEditor = forwardRef(
   (
@@ -486,6 +496,7 @@ const PipelineEditor = forwardRef(
             projectId={pipeline?.entity_meta?.project_id || projectId}
             isCreateMode={isCreateMode}
           />
+          <PipelineAttachmentYamlSync />
 
           {isCreateMode && (
             <CreateAgentForm

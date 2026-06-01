@@ -5,6 +5,7 @@ import YAML from 'js-yaml';
 import { useDispatch, useSelector } from 'react-redux';
 
 import {
+  DefaultState,
   STATE_INPUT_ATTACHMENTS,
   StateVariableTypes,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/constants/flowEditor.constants';
@@ -64,7 +65,7 @@ const AttachmentSwitch = memo(({ disabled }) => {
 
       // Sync input_attachments state variable in pipeline YAML
       if (isPipeline) {
-        const currentState = yamlJsonObject?.state || {};
+        const currentState = yamlJsonObject?.state || { ...DefaultState };
         const alreadyHasKey = STATE_INPUT_ATTACHMENTS in currentState;
 
         if (checkedValue && !alreadyHasKey) {
