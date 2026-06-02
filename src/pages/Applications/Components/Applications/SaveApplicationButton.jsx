@@ -17,7 +17,7 @@ export default function SaveApplicationButton({ onSuccess }) {
   const isYamlCodeDirty = useIsPipelineYamlCodeDirty();
   const { values } = useFormikContext();
   const isFromChat = useIsFrom(RouteDefinitions.Chat);
-  const { stateValidationErrors } = useSelector(state => state.pipeline);
+  const { stateValidationErrors, hasIrreversibleChanges } = useSelector(state => state.pipeline);
 
   const isFormDirtyExcluding = useFormDirtyExcluding();
 
@@ -46,7 +46,7 @@ export default function SaveApplicationButton({ onSuccess }) {
   );
 
   const isButtonDisabled = useMemo(() => {
-    const hasNoChanges = !isFormDirtyExcluding && !isYamlCodeDirty;
+    const hasNoChanges = !isFormDirtyExcluding && !isYamlCodeDirty && !hasIrreversibleChanges;
 
     // In chat context (edit mode), skip field validation since version data comes without description
     if (isFromChat && !!values?.id) {
@@ -66,6 +66,7 @@ export default function SaveApplicationButton({ onSuccess }) {
     isFromChat,
     hasStateErrors,
     hasEmptyStarters,
+    hasIrreversibleChanges,
   ]);
 
   return (

@@ -1,0 +1,1 @@
+export { PIPELINE_DISCARD_IRREVERSIBLE_CHANGES_MESSAGE } from './lib/constants';

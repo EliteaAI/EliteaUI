@@ -11,7 +11,7 @@ import { actions } from '@/slices/pipeline.js';
 
 import { useIsFrom, useIsFromPipelineDetail } from '../useIsFromSpecificPageHooks';
 
-export default function usePipelineToolsChanges() {
+const usePipelineToolsChanges = () => {
   const isFromPipelineDetail = useIsFromPipelineDetail();
   const isFromChat = useIsFrom(RouteDefinitions.Chat);
   const { yamlJsonObject, yamlCode } = useSelector(state => state.pipeline);
@@ -78,6 +78,7 @@ export default function usePipelineToolsChanges() {
                 }),
               ];
               setYamlJsonObject(newYamlJsonObject);
+              dispatch(actions.syncInitYamlJsonObject({ yamlJsonObject: newYamlJsonObject }));
             }
           } else {
             // agent tool
@@ -111,21 +112,21 @@ export default function usePipelineToolsChanges() {
                 }),
               ];
               setYamlJsonObject(newYamlJsonObject);
+              dispatch(actions.syncInitYamlJsonObject({ yamlJsonObject: newYamlJsonObject }));
             }
           }
         } else {
           // toolkit tool
           const toolkitName = tool.toolkit_name || getToolkitNameFromSchema(tool);
-          if (
-            yamlJsonObject.nodes.find(
-              node =>
-                (node.type !== PipelineNodeTypes.Agent &&
-                  node.type !== PipelineNodeTypes.Pipeline &&
-                  node.type !== PipelineNodeTypes.LLM &&
-                  node.toolkit_name === toolkitName) ||
-                (node.type === PipelineNodeTypes.LLM && node.tool_names?.[toolkitName]),
-            )
-          ) {
+          const affectedToolkitNodes = yamlJsonObject.nodes.filter(
+            node =>
+              (node.type !== PipelineNodeTypes.Agent &&
+                node.type !== PipelineNodeTypes.Pipeline &&
+                node.type !== PipelineNodeTypes.LLM &&
+                node.toolkit_name === toolkitName) ||
+              (node.type === PipelineNodeTypes.LLM && node.tool_names?.[toolkitName]),
+          );
+          if (affectedToolkitNodes.length) {
             const newYamlJsonObject = { ...yamlJsonObject };
             newYamlJsonObject.nodes = [
               ...newYamlJsonObject.nodes.map(node => {
@@ -136,7 +137,7 @@ export default function usePipelineToolsChanges() {
                       ...node,
                       tool: undefined,
                       toolkit_name: undefined,
-                      input_mapping: undefined,
+                      input_mapping: {},
                     }
                   : node.type === PipelineNodeTypes.LLM && node.tool_names?.[toolkitName]
                     ? {
@@ -152,12 +153,27 @@ export default function usePipelineToolsChanges() {
               }),
             ];
             setYamlJsonObject(newYamlJsonObject);
+            dispatch(actions.syncInitYamlJsonObject({ yamlJsonObject: newYamlJsonObject }));
+            const hasIrreversible = affectedToolkitNodes.some(
+              node =>
+                (node.type !== PipelineNodeTypes.Agent &&
+                  node.type !== PipelineNodeTypes.Pipeline &&
+                  node.type !== PipelineNodeTypes.LLM &&
+                  node.toolkit_name === toolkitName &&
+                  (node.tool || Object.keys(node.input_mapping || {}).length > 0)) ||
+                (node.type === PipelineNodeTypes.LLM && node.tool_names?.[toolkitName]),
+            );
+            if (hasIrreversible) {
+              dispatch(actions.markIrreversibleChanges());
+            }
           }
         }
       }
     },
-    [getToolkitNameFromSchema, isFromPipeline, setYamlJsonObject, yamlJsonObject],
+    [dispatch, getToolkitNameFromSchema, isFromPipeline, setYamlJsonObject, yamlJsonObject],
   );
 
   return { onRemoveTool };
-}
+};
+
+export default usePipelineToolsChanges;
