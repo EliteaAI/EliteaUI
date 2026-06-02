@@ -300,7 +300,7 @@ const UserInput = forwardRef((props, ref) => {
   return (
     <Box
       sx={styles.gradientBorder}
-      {...(dataTourTargetId ? { 'data-tour': dataTourTargetId } : {})}
+      data-tour={dataTourTargetId || undefined}
     >
       <Tooltip
         title={tooltip?.title}

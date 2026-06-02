@@ -53,7 +53,7 @@ const ApplicationCatalogCard = memo(props => {
   return (
     <Box
       sx={styles.card}
-      {...(cardTourTargetId ? { 'data-tour': cardTourTargetId } : {})}
+      data-tour={cardTourTargetId || undefined}
     >
       <Box sx={styles.header}>
         <Box sx={styles.iconWrapper}>
