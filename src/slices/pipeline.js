@@ -2,7 +2,8 @@ import {
   ORIENTATION,
   OrientationKey,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/constants/flowEditor.constants';
-import { createSlice } from '@reduxjs/toolkit';
+import { DumpYamlHelpers } from '@/[fsd]/shared/lib/helpers';
+import { createSlice, current } from '@reduxjs/toolkit';
 
 const pipelineSlice = createSlice({
   name: 'pipeline',
@@ -22,34 +23,38 @@ const pipelineSlice = createSlice({
     orientation: localStorage.getItem(OrientationKey) || ORIENTATION.vertical,
     layout_version: '',
     stateValidationErrors: {}, // Store validation errors by variable name
+    hasIrreversibleChanges: false, // True when toolkit disassociation has cleared input mappings
   },
   reducers: {
     initThePipeline: (state, action) => {
       const { nodes, edges, yamlJsonObject, yamlCode, layout_version } = action.payload;
       state.nodes = [...nodes];
       state.edges = [...edges];
-      state.yamlJsonObject = { ...yamlJsonObject };
+      state.yamlJsonObject = structuredClone(yamlJsonObject || {});
       state.yamlCode = yamlCode;
       state.resetFlag = true;
       state.layout_version = layout_version;
       state.stateValidationErrors = {}; // Clear validation errors on init
+      state.hasIrreversibleChanges = false;
       state.initState = {
         nodes: [...nodes],
         edges: [...edges],
-        yamlJsonObject: { ...yamlJsonObject },
+        yamlJsonObject: structuredClone(yamlJsonObject),
         yamlCode,
         layout_version,
       };
     },
-    resetPipeline: state => {
+    resetPipeline: (state, action) => {
+      const { resetAll } = action.payload || {};
       const { nodes, edges, yamlJsonObject, yamlCode, layout_version } = state.initState;
       state.nodes = [...nodes];
       state.edges = [...edges];
-      state.yamlJsonObject = { ...yamlJsonObject };
+      state.yamlJsonObject = structuredClone(current(yamlJsonObject) || {});
       state.yamlCode = yamlCode;
       state.resetFlag = true;
       state.layout_version = layout_version;
       state.stateValidationErrors = {}; // Clear validation errors on reset
+      state.hasIrreversibleChanges = resetAll ? false : state.hasIrreversibleChanges;
     },
     clearResetFlag: state => {
       state.resetFlag = false;
@@ -77,6 +82,17 @@ const pipelineSlice = createSlice({
     setLayoutVersion: (state, action) => {
       state.layout_version = action.payload;
     },
+    syncInitYamlJsonObject: (state, action) => {
+      const newYamlJsonObject = structuredClone(action.payload?.yamlJsonObject || {});
+      let newYamlCode = '';
+      try {
+        newYamlCode = DumpYamlHelpers.dumpYaml(newYamlJsonObject);
+      } catch {
+        newYamlCode = state.yamlCode; // Fallback to current yamlCode if dumping fails
+      }
+      state.initState.yamlJsonObject = newYamlJsonObject;
+      state.initState.yamlCode = newYamlCode; // Keep initState yamlCode in sync with current yamlCode
+    },
     setStateValidationError: (state, action) => {
       const { variableName, error } = action.payload;
       if (error) {
@@ -87,6 +103,9 @@ const pipelineSlice = createSlice({
     },
     clearStateValidationErrors: state => {
       state.stateValidationErrors = {};
+    },
+    markIrreversibleChanges: state => {
+      state.hasIrreversibleChanges = true;
     },
   },
 });
