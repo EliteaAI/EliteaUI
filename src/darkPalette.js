@@ -34,6 +34,7 @@ const blue20 = 'rgba(106, 232, 250, 0.20)';
 const blue24 = 'rgba(106, 232, 250, 0.24)';
 const blue30 = 'rgba(106, 232, 250, 0.30)';
 const blue40 = 'rgba(41, 184, 245, 0.40)';
+const blue70 = 'rgba(41, 184, 245, 0.70)';
 const skyBlue20 = 'rgba(41, 184, 245, 0.20)';
 export const darkBlue = '#006DD1';
 const darkBlueLowOpacity = 'rgba(0, 109, 209, 0.4)';
@@ -460,6 +461,7 @@ const darkPalette = {
       logout: lightOrange,
     },
     link: blue,
+    linkSeen: blue70,
     highlighted: white,
   },
   icon: {

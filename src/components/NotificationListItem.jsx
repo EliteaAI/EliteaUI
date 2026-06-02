@@ -1,12 +1,20 @@
-import { memo } from 'react';
+import { memo, useCallback, useState } from 'react';
 
 import { formatDistanceToNow } from 'date-fns';
 
 import { Box, Typography, useTheme } from '@mui/material';
 
+import Tooltip from '@/ComponentsLib/Tooltip';
 import { NotificationListItemMessage } from '@/[fsd]/entities/notifications/ui';
+import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { useNotificationBulkMarkSeenMutation } from '@/api/notifications';
+import MarkReadIcon from '@/assets/icons/mark-read-icon.svg?react';
+import MarkUnreadIcon from '@/assets/icons/mark-unread-icon.svg?react';
 import { NotificationType } from '@/common/constants';
 import { convertTime } from '@/common/convertChatConversationMessages';
+import { buildErrorMessage } from '@/common/utils';
+import { useSelectedProjectId } from '@/hooks/useSelectedProject';
+import useToast from '@/hooks/useToast';
 
 import AttentionIcon from './Icons/AttentionIcon';
 import CommentIcon from './Icons/CommentIcon';
@@ -136,10 +144,40 @@ const NotificationListItem = memo(props => {
   const theme = useTheme();
   const { event_type } = notification;
   const { textVariant } = NOTIFICATION_CONTEXT_STYLES[context] ?? NOTIFICATION_CONTEXT_STYLES.list;
-  const styles = notificationListItemStyles(clampLines);
+  const styles = notificationListItemStyles(clampLines, context === 'list');
+
+  const [isHovered, setIsHovered] = useState(false);
+  const projectId = useSelectedProjectId();
+  const [bulkMarkSeenNotifications] = useNotificationBulkMarkSeenMutation();
+  const { toastError } = useToast();
+
+  const shouldMarkAsRead = !notification.is_seen;
+  const markToggleLabel = shouldMarkAsRead ? 'Mark as read' : 'Mark as unread';
+  const MarkIcon = shouldMarkAsRead ? MarkReadIcon : MarkUnreadIcon;
+
+  const handleMarkToggle = useCallback(
+    async e => {
+      e.stopPropagation();
+      if (!projectId) return;
+      try {
+        await bulkMarkSeenNotifications({
+          projectId,
+          ids: [notification.id],
+          isSeen: shouldMarkAsRead,
+        }).unwrap();
+      } catch (err) {
+        toastError(buildErrorMessage(err));
+      }
+    },
+    [projectId, notification.id, shouldMarkAsRead, bulkMarkSeenNotifications, toastError],
+  );
 
   return (
-    <Box sx={[styles.container, sx]}>
+    <Box
+      sx={[styles.container, sx]}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       {showIcon && <Box sx={styles.iconContainer}>{getIcon(event_type, theme, notification)}</Box>}
       <Box sx={[styles.content, contentSX]}>
         <Box sx={styles.message}>
@@ -155,6 +193,21 @@ const NotificationListItem = memo(props => {
           </Typography>
         )}
       </Box>
+      {context === 'list' && isHovered && (
+        <Tooltip
+          title={markToggleLabel}
+          enterDelay={1200}
+          placement="top"
+        >
+          <BaseBtn
+            variant={BUTTON_VARIANTS.secondary}
+            startIcon={<MarkIcon />}
+            aria-label={markToggleLabel}
+            onClick={handleMarkToggle}
+            sx={styles.markButton}
+          />
+        </Tooltip>
+      )}
     </Box>
   );
 });
@@ -162,7 +215,7 @@ const NotificationListItem = memo(props => {
 NotificationListItem.displayName = 'NotificationListItem';
 
 /** @type {MuiSx} */
-const notificationListItemStyles = clampLines => ({
+const notificationListItemStyles = (clampLines, isContextList) => ({
   container: ({ palette }) => ({
     display: 'flex',
     padding: '0.5rem 0.75rem',
@@ -173,14 +226,19 @@ const notificationListItemStyles = clampLines => ({
     boxSizing: 'border-box',
     borderBottom: `0.0625rem solid ${palette.border.notificationItem}`,
   }),
+  markButton: {
+    flexShrink: 0,
+    alignSelf: 'center',
+  },
   iconContainer: {
-    width: '1rem',
+    width: '2rem',
     minWidth: '1rem',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
     paddingTop: '0.0625rem',
+    alignSelf: isContextList ? 'center' : 'flex-start',
     '& > svg': {
       width: '1.125rem',
       height: '1.125rem',

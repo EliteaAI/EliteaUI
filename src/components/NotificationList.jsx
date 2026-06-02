@@ -7,7 +7,12 @@ import { useNavigate } from 'react-router-dom';
 import { Box, CircularProgress, Popover, Skeleton, Typography } from '@mui/material';
 
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
-import { TAG_NOTIFICATIONS, notificationsApi, useNotificationListQuery } from '@/api/notifications';
+import {
+  TAG_NOTIFICATIONS,
+  notificationsApi,
+  useNotificationBulkMarkSeenMutation,
+  useNotificationListQuery,
+} from '@/api/notifications';
 import { PAGE_SIZE } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import useToast from '@/hooks/useToast';
@@ -23,6 +28,7 @@ const NotificationList = memo(props => {
   const listRef = useRef();
   const lastAppliedPageRef = useRef(-1);
   const { toastError } = useToast();
+  const [bulkMarkSeenNotifications] = useNotificationBulkMarkSeenMutation();
   const styles = notificationListStyles();
   const { personal_project_id } = useSelector(state => state.user);
   const [page, setPage] = useState(0);
@@ -39,6 +45,21 @@ const NotificationList = memo(props => {
     },
     { refetchOnFocus: !!personal_project_id, skip: !personal_project_id },
   );
+
+  const onMarkAllAsRead = useCallback(async () => {
+    if (!personal_project_id || !allNotifications.length) return;
+    const unreadIds = allNotifications.filter(n => !n.is_seen).map(n => n.id);
+    if (!unreadIds.length) return;
+    try {
+      await bulkMarkSeenNotifications({
+        projectId: personal_project_id,
+        ids: unreadIds,
+        isSeen: true,
+      }).unwrap();
+    } catch (err) {
+      toastError(buildErrorMessage(err));
+    }
+  }, [personal_project_id, allNotifications, bulkMarkSeenNotifications, toastError]);
 
   const onViewAll = useCallback(() => {
     dispatch(notificationsApi.util.invalidateTags([TAG_NOTIFICATIONS]));
@@ -188,6 +209,20 @@ const NotificationList = memo(props => {
               />
             </Box>
           )}
+          {allNotifications.length > 0 && (
+            <BaseBtn
+              variant={BUTTON_VARIANTS.tertiary}
+              onClick={onMarkAllAsRead}
+              sx={styles.markAllButton}
+            >
+              <Typography
+                variant="labelMedium"
+                sx={styles.markAllButtonText}
+              >
+                Mark all as read
+              </Typography>
+            </BaseBtn>
+          )}
           <BaseBtn
             variant={BUTTON_VARIANTS.tertiary}
             onClick={onViewAll}
@@ -259,6 +294,23 @@ const notificationListStyles = () => ({
     gap: '1rem',
     boxSizing: 'border-box',
     borderBottom: `0.0625rem solid ${palette.border.notificationItem}`,
+  }),
+  markAllButton: ({ palette }) => ({
+    width: '100%',
+    padding: '0.75rem 1.25rem',
+    height: '3rem',
+    boxSizing: 'border-box',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderTop: `0.0625rem solid ${palette.border.notificationItem}`,
+    borderRadius: '0px',
+    '&:hover': {
+      borderRadius: '0px',
+    },
+  }),
+  markAllButtonText: ({ palette }) => ({
+    color: palette.text.button.showMore,
   }),
   viewAllButton: ({ palette }) => ({
     width: '100%',

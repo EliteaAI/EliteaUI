@@ -12,6 +12,7 @@ const NotificationListItemMessage = memo(props => {
   const message = notification.meta?.message;
   const segments = useMemo(() => parseMessage(message), [message]);
   const resolvedHref = resolveHref(notification.event_type, notification.meta, notification.project_id);
+  const styles = notificationListItemMessageStyles(notification.is_seen);
 
   if (message) {
     return (
@@ -24,7 +25,7 @@ const NotificationListItemMessage = memo(props => {
             <Link
               key={index}
               variant={textVariant}
-              sx={{ textDecoration: 'underline', cursor: 'pointer' }}
+              sx={styles.link}
               href={resolvedHref}
               target="_blank"
               rel="noopener noreferrer"
@@ -50,5 +51,14 @@ const NotificationListItemMessage = memo(props => {
 });
 
 NotificationListItemMessage.displayName = 'NotificationListItemMessage';
+
+/** @type {MuiSx} */
+const notificationListItemMessageStyles = isSeen => ({
+  link: ({ palette }) => ({
+    textDecoration: 'underline',
+    cursor: 'pointer',
+    color: isSeen ? palette.text.linkSeen : palette.text.link,
+  }),
+});
 
 export default NotificationListItemMessage;
