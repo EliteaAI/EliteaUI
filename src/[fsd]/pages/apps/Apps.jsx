@@ -2,7 +2,10 @@ import { memo, useCallback, useEffect, useMemo } from 'react';
 
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
+import { Box } from '@mui/material';
+
 import { ApplicationCatalog } from '@/[fsd]/features/apps/ui/catalog';
+import { APPLICATIONS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import ToolkitsList from '@/[fsd]/features/toolkits/ui/list/ToolkitsList';
 import { useToolkitsListQuery } from '@/api/toolkits';
 import AppCatalogIcon from '@/assets/app-catalog-icon.svg?react';
@@ -87,17 +90,21 @@ const Apps = memo(() => {
     () => [
       {
         label: 'Applications',
+        tabProps: { 'data-tour': APPLICATIONS_TOUR_TARGET_IDS.applicationsTab },
         content: (
-          <ToolkitsList
-            isApplication={true}
-            cardContentType={ContentType.AppAll}
-            disableEmptyRedirect={true}
-          />
+          <Box data-tour={APPLICATIONS_TOUR_TARGET_IDS.applicationsList}>
+            <ToolkitsList
+              isApplication={true}
+              cardContentType={ContentType.AppAll}
+              disableEmptyRedirect={true}
+            />
+          </Box>
         ),
         icon: <ApplicationsIcon />,
       },
       {
         label: 'App Catalog',
+        tabProps: { 'data-tour': APPLICATIONS_TOUR_TARGET_IDS.catalogTab },
         content: <ApplicationCatalog />,
         icon: <AppCatalogIcon />,
       },
@@ -106,18 +113,30 @@ const Apps = memo(() => {
   );
 
   return (
-    <StickyTabs
-      tabs={tabs}
-      value={selectedTab}
-      containerStyle={{ padding: '0 1.5rem 0 0' }}
-      tabBarStyle={{ padding: '0 0.5rem 0 1.5rem' }}
-      noRightPanel={!isConfiguredTab || shouldCollapseRightToolbar}
-      middleTabComponent={isConfiguredTab ? <ViewToggle /> : undefined}
-      onChangeTab={handleChangeTab}
-    />
+    <Box
+      data-tour={APPLICATIONS_TOUR_TARGET_IDS.page}
+      sx={styles.page}
+    >
+      <StickyTabs
+        tabs={tabs}
+        value={selectedTab}
+        containerStyle={{ padding: '0 1.5rem 0 0' }}
+        tabBarStyle={{ padding: '0 0.5rem 0 1.5rem' }}
+        noRightPanel={!isConfiguredTab || shouldCollapseRightToolbar}
+        middleTabComponent={isConfiguredTab ? <ViewToggle /> : undefined}
+        onChangeTab={handleChangeTab}
+      />
+    </Box>
   );
 });
 
 Apps.displayName = 'Apps';
+
+/** @type {MuiSx} */
+const styles = {
+  page: {
+    height: '100%',
+  },
+};
 
 export default Apps;

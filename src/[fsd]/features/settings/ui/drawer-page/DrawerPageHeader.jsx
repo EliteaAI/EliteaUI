@@ -65,8 +65,8 @@ const DrawerPageHeader = memo(props => {
             placement="top"
           >
             <Box
-              component={'span'}
-              {...(addButtonTourId ? { 'data-tour': addButtonTourId } : {})}
+              component="span"
+              data-tour={addButtonTourId || undefined}
             >
               <IconButton
                 disabled={!!disabled}

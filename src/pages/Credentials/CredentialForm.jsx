@@ -7,6 +7,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Box, Button, CircularProgress, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
+import { CREDENTIALS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { useConfigOAuthModal, useMcpTokenChange } from '@/[fsd]/features/mcp/lib/hooks';
 import { McpAuthModal, McpLogoutModal } from '@/[fsd]/features/mcp/ui';
@@ -276,43 +277,45 @@ const CredentialForm = memo(props => {
           onChangeView={setView}
         />
       )}
-      <ToolComponent
-        editToolDetail={credentialDetails}
-        // editToolDetail={values}
-        setEditToolDetail={onChangeCredentialDetail}
-        editField={editField}
-        toolErrors={toolErrors}
-        setToolErrors={setToolErrors}
-        showValidation={showValidation}
-        configurationErrors={configurationErrors}
-        setConfigurationErrors={setConfigurationErrors}
-        showConfigurationValidateError={showConfigurationValidateError}
-        setShowConfigurationValidateError={setShowConfigurationValidateError}
-        configurationName={configurationName}
-        setConfigurationName={setConfigurationName}
-        configuration={configuration}
-        setConfiguration={setConfiguration}
-        schema={toolSchema}
-        showOnlyRequiredFields={showOnlyRequiredFields}
-        showOnlyConfigurationFields={showOnlyConfigurationFields}
-        showNameFieldForcedly={showNameFieldForcedly}
-        showToolkitIcon={showToolkitIcon}
-        checkboxAsteriskRequired={false}
-        priorityFieldsOrder={['title']}
-        fieldNeedToRenderAtBottom={['shared']}
-        excludedFields={excludedFields}
-        shouldInitRequiredFields={false}
-        showSections
-        showTools={false}
-        validationErrorMessages={validationErrorMessages}
-        setValidationErrorMessages={setValidationErrorMessages}
-      />
+      <Box data-tour={CREDENTIALS_TOUR_TARGET_IDS.form}>
+        <ToolComponent
+          editToolDetail={credentialDetails}
+          // editToolDetail={values}
+          setEditToolDetail={onChangeCredentialDetail}
+          editField={editField}
+          toolErrors={toolErrors}
+          setToolErrors={setToolErrors}
+          showValidation={showValidation}
+          configurationErrors={configurationErrors}
+          setConfigurationErrors={setConfigurationErrors}
+          showConfigurationValidateError={showConfigurationValidateError}
+          setShowConfigurationValidateError={setShowConfigurationValidateError}
+          configurationName={configurationName}
+          setConfigurationName={setConfigurationName}
+          configuration={configuration}
+          setConfiguration={setConfiguration}
+          schema={toolSchema}
+          showOnlyRequiredFields={showOnlyRequiredFields}
+          showOnlyConfigurationFields={showOnlyConfigurationFields}
+          showNameFieldForcedly={showNameFieldForcedly}
+          showToolkitIcon={showToolkitIcon}
+          checkboxAsteriskRequired={false}
+          priorityFieldsOrder={['title']}
+          fieldNeedToRenderAtBottom={['shared']}
+          excludedFields={excludedFields}
+          shouldInitRequiredFields={false}
+          showSections
+          showTools={false}
+          validationErrorMessages={validationErrorMessages}
+          setValidationErrorMessages={setValidationErrorMessages}
+        />
+      </Box>
       <Box sx={styles.testConnectionContainer}>
         <Tooltip
           title={testConnectionTooltipTitle}
           placement="bottom"
         >
-          <span>
+          <span data-tour={CREDENTIALS_TOUR_TARGET_IDS.testConnection}>
             <Button
               variant="elitea"
               color="secondary"
