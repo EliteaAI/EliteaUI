@@ -2,7 +2,7 @@ import React, { memo, useCallback, useMemo } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { Box, Button } from '@mui/material';
+import { Box } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { useImportWizardMutation } from '@/[fsd]/entities/import-wizard/api';
@@ -12,6 +12,7 @@ import {
   getImportedUUIDMap,
   updateValidationStatus,
 } from '@/[fsd]/entities/import-wizard/lib/helpers';
+import { Button } from '@/[fsd]/shared/ui';
 import { buildErrorMessage } from '@/common/utils';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import useToast from '@/hooks/useToast.jsx';
@@ -137,15 +138,14 @@ const IWModalImportButton = memo(props => {
       placement="top"
     >
       <Box component="span">
-        <Button
+        <Button.BaseBtn
           disabled={isDisabled || isLoading}
           variant="elitea"
           onClick={handleClickOnImport}
-          sx={{ marginRight: '0rem' }}
         >
           Import
           {isLoading && <StyledCircleProgress size={18} />}
-        </Button>
+        </Button.BaseBtn>
       </Box>
     </Tooltip>
   );

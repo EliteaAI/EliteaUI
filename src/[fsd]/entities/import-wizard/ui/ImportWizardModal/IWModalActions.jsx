@@ -1,9 +1,10 @@
 import React, { memo } from 'react';
 
-import { Box, Button } from '@mui/material';
+import { Box } from '@mui/material';
 
 import IWModalForkButton from '@/[fsd]/entities/import-wizard/ui/ImportWizardModal/IWModalForkButton';
 import IWModalImportButton from '@/[fsd]/entities/import-wizard/ui/ImportWizardModal/IWModalImportButton';
+import { Button } from '@/[fsd]/shared/ui';
 
 const IWModalActions = memo(props => {
   const {
@@ -21,26 +22,24 @@ const IWModalActions = memo(props => {
 
   if (importSucceedData || forkedData)
     return (
-      <Button
-        disableRipple
+      <Button.BaseBtn
         variant="elitea"
         color="primary"
         onClick={onSucceedImportAgree}
       >
         Got it
-      </Button>
+      </Button.BaseBtn>
     );
 
   return (
     <Box sx={{ display: 'flex', gap: '1rem' }}>
-      <Button
-        disableRipple
+      <Button.BaseBtn
         variant="elitea"
         color="secondary"
         onClick={onCloseHandler}
       >
         Cancel
-      </Button>
+      </Button.BaseBtn>
       {isForking ? (
         <IWModalForkButton
           selectedProject={values.selectedProject}

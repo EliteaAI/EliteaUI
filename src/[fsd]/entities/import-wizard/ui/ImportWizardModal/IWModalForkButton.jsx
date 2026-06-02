@@ -2,8 +2,6 @@ import React, { memo, useCallback, useMemo } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { Button } from '@mui/material';
-
 import { useForkAgentMutation, useForkDatasourceMutation } from '@/[fsd]/entities/import-wizard/api';
 import {
   filterSelected,
@@ -13,6 +11,7 @@ import {
   updateAgentToolImportUUIDs,
   updateValidationStatus,
 } from '@/[fsd]/entities/import-wizard/lib/helpers';
+import { Button } from '@/[fsd]/shared/ui';
 import { useToolkitForkMutation } from '@/api/toolkits.js';
 import { buildErrorMessage, genForkedEntityLink } from '@/common/utils';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
@@ -264,7 +263,7 @@ const IWModalForkButton = memo(({ selectedProject, onSuccess }) => {
   ]);
 
   return (
-    <Button
+    <Button.BaseBtn
       disabled={
         !selectedProjectId ||
         !selectedData?.length ||
@@ -275,11 +274,10 @@ const IWModalForkButton = memo(({ selectedProject, onSuccess }) => {
       }
       variant="elitea"
       onClick={onClickFork}
-      sx={{ marginRight: '0rem' }}
     >
       Fork
       {(isForkingDatasource || isForkingAgent || isForkingToolkit) && <StyledCircleProgress size={18} />}
-    </Button>
+    </Button.BaseBtn>
   );
 });
 
