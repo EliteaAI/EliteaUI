@@ -70,9 +70,12 @@ const UserMessage = React.forwardRef((props, ref) => {
   }, []);
 
   const onClickSubmit = useCallback(() => {
-    onSubmit(messageId, value);
+    const updatedItems = questionItem
+      ? [{ uuid: questionItem.uuid, content: value, item_type: 'text_message' }]
+      : [];
+    onSubmit(messageId, updatedItems);
     setIsEditing(false);
-  }, [messageId, onSubmit, value]);
+  }, [messageId, onSubmit, questionItem, value]);
 
   const isSentToDummyParticipant =
     sentTo &&
@@ -244,7 +247,7 @@ const UserMessage = React.forwardRef((props, ref) => {
               disabled={value === content}
               onClick={onClickSubmit}
             >
-              Submit
+              Save and apply
             </Button>
             <Button
               variant="elitea"

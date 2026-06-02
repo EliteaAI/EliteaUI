@@ -13,7 +13,7 @@ import UserMessage from '@/components/Chat/UserMessage';
 import { isParticipantStillActive } from '@/hooks/chat/useParticipantName';
 import { actions as chatActions, selectMessageIdToView } from '@/slices/chat';
 
-const isEditAPIReady = false;
+const isEditAPIReady = true;
 
 const ChatMessageList = memo(props => {
   const {
@@ -61,6 +61,10 @@ const ChatMessageList = memo(props => {
   const canDeleteAllMessage = useMemo(
     () => activeConversation?.author_id === userId,
     [activeConversation?.author_id, userId],
+  );
+  const lastUserMessageIndex = useMemo(
+    () => chat_history.reduce((last, msg, i) => (msg.role === ROLES.User ? i : last), -1),
+    [chat_history],
   );
   const onClickSentTo = useCallback(
     participant => () => {
@@ -228,7 +232,15 @@ const ChatMessageList = memo(props => {
                   ? onDeleteAnswer(message.id)
                   : undefined
               }
-              onSubmit={isEditAPIReady && userId === message.user_id ? onSubmitEditedMessage : undefined}
+              onSubmit={
+                isEditAPIReady &&
+                userId === message.user_id &&
+                index === lastUserMessageIndex &&
+                !isLoading &&
+                !isStreaming
+                  ? onSubmitEditedMessage
+                  : undefined
+              }
               onRemoveAttachment={onRemoveAttachment}
             />
           ) : (
