@@ -13,8 +13,6 @@ import UserMessage from '@/components/Chat/UserMessage';
 import { isParticipantStillActive } from '@/hooks/chat/useParticipantName';
 import { actions as chatActions, selectMessageIdToView } from '@/slices/chat';
 
-const isEditAPIReady = true;
-
 const ChatMessageList = memo(props => {
   const {
     sx,
@@ -58,14 +56,25 @@ const ChatMessageList = memo(props => {
   // Simplified autoscroll: scroll new message to top of viewport
   const [bottomSpacer, setBottomSpacer] = useState(0);
   const { id: userId } = useSelector(state => state.user);
+
   const canDeleteAllMessage = useMemo(
     () => activeConversation?.author_id === userId,
     [activeConversation?.author_id, userId],
   );
+
   const lastUserMessageIndex = useMemo(
     () => chat_history.reduce((last, msg, i) => (msg.role === ROLES.User ? i : last), -1),
     [chat_history],
   );
+
+  const getOnSubmit = useCallback(
+    (message, index) =>
+      userId === message.user_id && index === lastUserMessageIndex && !isLoading && !isStreaming
+        ? onSubmitEditedMessage
+        : undefined,
+    [userId, lastUserMessageIndex, isLoading, isStreaming, onSubmitEditedMessage],
+  );
+
   const onClickSentTo = useCallback(
     participant => () => {
       if (participant && onSelectParticipant) {
@@ -232,15 +241,7 @@ const ChatMessageList = memo(props => {
                   ? onDeleteAnswer(message.id)
                   : undefined
               }
-              onSubmit={
-                isEditAPIReady &&
-                userId === message.user_id &&
-                index === lastUserMessageIndex &&
-                !isLoading &&
-                !isStreaming
-                  ? onSubmitEditedMessage
-                  : undefined
-              }
+              onSubmit={getOnSubmit(message, index)}
               onRemoveAttachment={onRemoveAttachment}
             />
           ) : (
