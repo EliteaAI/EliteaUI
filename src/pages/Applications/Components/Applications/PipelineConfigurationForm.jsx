@@ -27,7 +27,6 @@ const PipelineConfigurationForm = memo(props => {
     <Box sx={containerStyle}>
       {!isChatView && <ApplicationEditForm />}
       <ApplicationTools
-        title={'Toolkits'}
         style={styles.applicationTools}
         applicationId={applicationId}
         isPipeline

@@ -21,7 +21,7 @@ const ApplicationTools = memo(props => {
     containerSX,
     applicationId,
     disabled,
-    title = 'Toolkits',
+    title = 'Tools',
     hidePythonSandbox = false,
     entityProjectId,
     isPipeline = false,
