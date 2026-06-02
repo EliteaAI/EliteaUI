@@ -1152,6 +1152,7 @@ const ChatBox = forwardRef((props, boxRef) => {
         id: uuid,
       });
       if (regenerateError) {
+        toastError(buildErrorMessage(regenerateError) || 'Regeneration Failed. Please try again.');
         setChatHistory(prevMessages => {
           return prevMessages.map(message => (message.id !== uuid ? message : { ...prevMessage }));
         });
@@ -1166,6 +1167,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       socket?.id,
       projectId,
       stopTTS,
+      toastError,
     ],
   );
 
