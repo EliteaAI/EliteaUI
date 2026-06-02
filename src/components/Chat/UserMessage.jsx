@@ -57,13 +57,14 @@ const UserMessage = React.forwardRef((props, ref) => {
   );
 
   const onEdit = useCallback(() => {
+    setValue(content || questionItem?.item_details?.content || '');
     setIsEditing(true);
-  }, []);
+  }, [content, questionItem]);
 
   const onCancel = useCallback(() => {
     setIsEditing(false);
-    setValue(content);
-  }, [content]);
+    setValue(content || questionItem?.item_details?.content || '');
+  }, [content, questionItem]);
 
   const onChange = useCallback(event => {
     setValue(event.target.value);
@@ -363,6 +364,7 @@ const styles = {
     display: 'flex',
     flexDirection: 'row-reverse',
     alignItems: 'center',
+    gap: '0.5rem',
     marginTop: '0.5rem',
   },
   submitButton: {
