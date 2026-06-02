@@ -12,5 +12,5 @@ export * as ConnectionOperationsHelpers from './connectionOperations.helpers';
 export * as DeletionOperationsHelpers from './deletionOperations.helpers';
 export * as DecisionOutputHelpers from './decisionOutput.helpers';
 export * as StateHelpers from './state.helpers';
-export * as DumpYamlHelpers from './dumpYaml.helpers';
+export { DumpYamlHelpers } from '@/[fsd]/shared/lib/helpers';
 export * as ParsePipelineHelpers from './parsePipeline.helpers';

@@ -143,7 +143,7 @@ export const useFunctionInputMapping = ({ id, isMCP }) => {
       );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dynamicArgsSchemas, mcpArgsSchemas, toolkitTypes, selectedTool, selectedToolkit]);
+  }, [dynamicArgsSchemas, mcpArgsSchemas, toolkitTypes, selectedTool, selectedToolkit, requiredInputs]);
 
   useEffect(() => {
     const { required } = FlowEditorHelpers.getRequiredInputsAndTooltips(

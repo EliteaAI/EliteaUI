@@ -136,6 +136,10 @@ const PipelineEditor = forwardRef(
 
     const dispatch = useDispatch();
     const editorPanelRef = useRef();
+    // Tracks the last instructions string used to initialize Redux pipeline state.
+    // Prevents re-initialization when versionDetails refetches due to toolkit
+    // association changes (only tools[] updated, instructions unchanged on backend).
+    const lastInitializedInstructionsRef = useRef(null);
     const { checkPermission } = useCheckPermission();
     const hasEditPermission = useMemo(() => {
       return checkPermission(PERMISSIONS.applications.update);
@@ -189,6 +193,7 @@ const PipelineEditor = forwardRef(
       setActiveTab(0);
       setIsDirty(false);
       setIsYamlDirty(false);
+      lastInitializedInstructionsRef.current = null;
 
       // Clear Redux pipeline state to prevent stale data
       dispatch(
@@ -352,6 +357,17 @@ const PipelineEditor = forwardRef(
       // Extract instructions from nested or flat API response structure
       const instructions = versionDetails.version_details?.instructions || versionDetails.instructions || '';
 
+      // Skip re-initialization when instructions haven't changed.
+      // This handles the case where versionDetails refetches due to toolkit
+      // association changes (only tools[] is updated, instructions is unchanged on
+      // the backend). Without this guard, initThePipeline would overwrite the
+      // Redux YAML state that onRemoveTool already correctly updated, causing
+      // removed tool node data to reappear when switching to the Flow tab.
+      if (instructions === lastInitializedInstructionsRef.current) {
+        return;
+      }
+      lastInitializedInstructionsRef.current = instructions;
+
       // Parse YAML instructions (empty string is valid - will create just an END node)
       let parsedYamlJson;
       try {
@@ -397,7 +413,7 @@ const PipelineEditor = forwardRef(
       fileReaderEnhancerRef.current?.restoreValue(initialValues?.version_details?.instructions || '');
       setIsDirty(false);
       setIsYamlDirty(false);
-      dispatch(actions.resetPipeline());
+      dispatch(actions.resetPipeline({ resetAll: false }));
       dispatch(editorActions.resetPipelineEditor());
     }, [dispatch, initialValues?.version_details?.instructions]);
 
