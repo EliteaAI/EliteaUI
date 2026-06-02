@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { CodeMirrorEditorHelpers } from '@/[fsd]/shared/lib/helpers';
 import useEliteATheme from '@/hooks/useEliteATheme';
@@ -11,10 +11,14 @@ export const useCodeMirror = props => {
 
   const [code, setCode] = useState(value);
   const [debounceTimeout, setDebounceTimeout] = useState(null);
+  const lastNotifiedValueRef = useRef(value);
   const { isDarkMode } = useEliteATheme();
 
   useEffect(() => {
-    setCode(value);
+    if (value !== lastNotifiedValueRef.current) {
+      setCode(value);
+      lastNotifiedValueRef.current = value;
+    }
   }, [value]);
 
   const basicExtensions = useMemo(
@@ -42,6 +46,7 @@ export const useCodeMirror = props => {
       }
       // Set a new timeout to update Formik's state after a delay
       const timeout = setTimeout(() => {
+        lastNotifiedValueRef.current = newValue;
         notifyChange?.(newValue);
       }, 30);
 
