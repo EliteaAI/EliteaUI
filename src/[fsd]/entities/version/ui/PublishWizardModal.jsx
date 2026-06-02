@@ -3,7 +3,6 @@ import { memo, useCallback, useMemo } from 'react';
 import {
   Alert,
   Box,
-  Button,
   CircularProgress,
   DialogContent,
   DialogTitle,
@@ -14,7 +13,7 @@ import {
   Typography,
 } from '@mui/material';
 
-import { Input } from '@/[fsd]/shared/ui';
+import { Button, Input } from '@/[fsd]/shared/ui';
 import CheckedIcon from '@/assets/checked-icon.svg?react';
 import { useCtrlEnterKeyEventsHandler } from '@/components/Chat/hooks';
 import CloseIcon from '@/components/Icons/CloseIcon';
@@ -237,50 +236,50 @@ const PublishWizardModal = memo(
           disableSpacing
           sx={styles.dialogActions}
         >
-          <Button
+          <Button.BaseBtn
             variant="secondary"
             onClick={onClose}
           >
             Cancel
-          </Button>
+          </Button.BaseBtn>
 
           {isAdminPublish ? (
-            <Button
+            <Button.BaseBtn
               variant="contained"
               disabled={!canAdminPublish}
               onClick={onPublish}
             >
               Publish
-            </Button>
+            </Button.BaseBtn>
           ) : (
             <>
               {step === PUBLISH_STEPS.PREPARATION && (
-                <Button
+                <Button.BaseBtn
                   variant="contained"
                   disabled={!canContinue}
                   onClick={onContinue}
                 >
                   Continue
-                </Button>
+                </Button.BaseBtn>
               )}
 
               {step === PUBLISH_STEPS.VALIDATION && validationResult && (
-                <Button
+                <Button.BaseBtn
                   variant="contained"
                   disabled={!canPublish}
                   onClick={onPublish}
                 >
                   Publish
-                </Button>
+                </Button.BaseBtn>
               )}
 
               {step === PUBLISH_STEPS.PUBLISHING && publishError && (
-                <Button
+                <Button.BaseBtn
                   variant="contained"
                   disabled
                 >
                   Publish
-                </Button>
+                </Button.BaseBtn>
               )}
             </>
           )}

@@ -1,12 +1,12 @@
 import { memo, useCallback, useMemo, useState } from 'react';
 
-import { Box, Button, IconButton, Tooltip, Typography } from '@mui/material';
+import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 
 import IWModalEntityTextField from '@/[fsd]/entities/import-wizard/ui/ImportWizardModal/IWModalEntityTextField';
 import IWModalEntityToolkitsField from '@/[fsd]/entities/import-wizard/ui/ImportWizardModal/IWModalEntityToolkitsField';
 import { parseYamlToMermaid } from '@/[fsd]/features/agent/lib/helpers/parseYamlToMermaid.helpers';
 import { INTERNAL_TOOLS_LIST } from '@/[fsd]/shared/lib/constants/internalTools.constants';
-import { Modal } from '@/[fsd]/shared/ui';
+import { Button, Modal } from '@/[fsd]/shared/ui';
 import AgentIcon from '@/assets/agent.svg?react';
 import FlowIcon from '@/assets/flow-icon.svg?react';
 import FullScreenIconSvg from '@/assets/full-screen-icon.svg?react';
@@ -51,15 +51,13 @@ const IWModalEntityCard = memo(props => {
               {`Type: ${entity?.details?.agent_type === 'pipeline' ? 'pipeline' : 'agent'}`}
             </Typography>
           </Box>
-          <Button
+          <Button.BaseBtn
             sx={styles.actionBtn}
-            variant="text"
-            color="primary"
+            variant="auxiliary"
             onClick={() => setIsExpanded(prev => !prev)}
-            disableRipple
           >
             {isExpanded ? 'Hide details' : 'Show details'}
-          </Button>
+          </Button.BaseBtn>
         </Box>
 
         <Box sx={styles.detailsBlock}>
@@ -288,17 +286,11 @@ const iWModalEntityCardStyles = isExpanded => ({
     lineHeight: '1.25rem',
     color: palette.text.default,
   }),
-  actionBtn: ({ palette }) => ({
-    background: 'transparent !important',
+  actionBtn: {
     border: 'none !important',
-    color: palette.background.button.primary.pressed,
     marginLeft: 'auto',
     whiteSpace: 'nowrap',
-
-    ':hover': {
-      color: palette.background.button.primary.hover,
-    },
-  }),
+  },
   textBlock: ({ palette }) => ({
     border: `0.0625rem solid ${palette.border.lines}`,
     borderRadius: '0.5rem',

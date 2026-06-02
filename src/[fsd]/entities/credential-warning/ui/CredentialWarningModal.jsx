@@ -1,7 +1,8 @@
 import { memo } from 'react';
 
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
+import { Button } from '@/[fsd]/shared/ui';
 import BaseModal from '@/[fsd]/shared/ui/modal/BaseModal';
 import ErrorIcon from '@/assets/error-icon.svg?react';
 
@@ -29,22 +30,20 @@ const CredentialWarningModal = memo(props => {
       }
       actions={
         <>
-          <Button
+          <Button.BaseBtn
             variant="elitea"
             color="secondary"
             onClick={onCancel}
-            disableRipple
           >
             Discard changes
-          </Button>
-          <Button
+          </Button.BaseBtn>
+          <Button.BaseBtn
             variant="elitea"
             color="alarm"
             onClick={onConfirm}
-            disableRipple
           >
             Confirm changes
-          </Button>
+          </Button.BaseBtn>
         </>
       }
     />

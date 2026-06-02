@@ -2,12 +2,12 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import { format } from 'date-fns';
 
-import { Box, Button, Skeleton, Typography, useTheme } from '@mui/material';
+import { Box, Skeleton, Typography, useTheme } from '@mui/material';
 
 import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
 import { RunHistoryTooltipCell } from '@/[fsd]/entities/run-history/ui';
 import { SharedHelpers } from '@/[fsd]/shared/lib/helpers';
-import { Modal } from '@/[fsd]/shared/ui';
+import { Button, Modal } from '@/[fsd]/shared/ui';
 import CopyLinkIcon from '@/assets/copy-link-icon.svg?react';
 import { SearchParams } from '@/common/constants';
 import DotMenu from '@/components/DotMenu';
@@ -218,23 +218,21 @@ const RunHistoryListItem = memo(props => {
         content={<Typography>Are you sure you want to remove this run?</Typography>}
         actions={
           <Box sx={{ display: 'flex', gap: '1rem' }}>
-            <Button
+            <Button.BaseBtn
               variant="elitea"
               color="secondary"
               onClick={closeConfirmationModal}
-              disableRipple
             >
               Cancel
-            </Button>
-            <Button
+            </Button.BaseBtn>
+            <Button.BaseBtn
               variant="elitea"
               color="alarm"
               onClick={confirmHistoryItemRemoval}
-              disableRipple
               disabled={isDeleting}
             >
               Remove
-            </Button>
+            </Button.BaseBtn>
           </Box>
         }
       />

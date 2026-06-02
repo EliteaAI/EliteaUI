@@ -3,13 +3,14 @@ import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { useFormikContext } from 'formik';
 import { useDispatch } from 'react-redux';
 
-import { Button, Typography } from '@mui/material';
+import { Typography } from '@mui/material';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 
 import { useCredentialWarning } from '@/[fsd]/entities/credential-warning/hooks';
 import { CredentialWarningModal } from '@/[fsd]/entities/credential-warning/ui';
 import { ToolkitFormConstants } from '@/[fsd]/features/toolkits/lib/constants';
+import { Button } from '@/[fsd]/shared/ui';
 import { eliteaApi } from '@/api/eliteaApi.js';
 import { useToolkitEditMutation } from '@/api/toolkits.js';
 import eventEmitter from '@/common/eventEmitter';
@@ -292,50 +293,50 @@ const ToolkitsOperationButtons = memo(
           <StyledDialogActions>
             {hasNotSavedToolConfiguration ? (
               <>
-                <Button
-                  color={'alarm'}
+                <Button.BaseBtn
+                  color="alarm"
                   variant="elitea"
                   onClick={handleDiscard}
                 >
                   <Typography variant="labelSmall">
                     {isAdding ? 'Delete toolkit' : 'Discard changes'}
                   </Typography>
-                </Button>
-                <Button
-                  color={'secondary'}
+                </Button.BaseBtn>
+                <Button.BaseBtn
+                  color="secondary"
                   variant="elitea"
                   onClick={handleCancel}
                 >
                   <Typography variant="labelSmall">Cancel</Typography>
-                </Button>
-                <Button
+                </Button.BaseBtn>
+                <Button.BaseBtn
                   color="primary"
                   variant="elitea"
                   onClick={handleCreateToolkitWithConfiguration}
                   autoFocus
                 >
                   <Typography variant="labelSmall">Save</Typography>
-                </Button>
+                </Button.BaseBtn>
               </>
             ) : (
               <>
-                <Button
-                  color={'alarm'}
+                <Button.BaseBtn
+                  color="alarm"
                   variant="elitea"
                   onClick={handleDiscard}
                 >
                   <Typography variant="labelSmall">
                     {isAdding ? 'Delete toolkit' : 'Discard changes'}
                   </Typography>
-                </Button>
-                <Button
+                </Button.BaseBtn>
+                <Button.BaseBtn
                   color="primary"
                   variant="elitea"
                   onClick={onCloseAlert}
                   autoFocus
                 >
-                  <Typography variant="labelSmall">{'Continue editing'}</Typography>
-                </Button>
+                  <Typography variant="labelSmall">Continue editing</Typography>
+                </Button.BaseBtn>
               </>
             )}
           </StyledDialogActions>
