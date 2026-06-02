@@ -1,3 +1,5 @@
+import { memo } from 'react';
+
 import { Form, Formik } from 'formik';
 
 import { Grid } from '@mui/material';
@@ -10,7 +12,7 @@ import getValidateSchema from './Components/Applications/ApplicationCreationVali
 import CreateApplicationTabBar from './Components/Applications/CreateApplicationTabBar';
 import { useCreateApplicationInitialValues } from './useApplicationInitialValues';
 
-export default function CreateApplication() {
+const CreateApplication = memo(() => {
   const { initialValues } = useCreateApplicationInitialValues();
 
   return (
@@ -61,4 +63,8 @@ export default function CreateApplication() {
       />
     </Formik>
   );
-}
+});
+
+CreateApplication.displayName = 'CreateApplication';
+
+export default CreateApplication;

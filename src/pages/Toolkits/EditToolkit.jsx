@@ -38,7 +38,7 @@ import { interpolateUrl } from '@/utils/urlInterpolation';
 const applicationCapabilities = [CapabilityTypes.chat_completion.value];
 const emptyToolDetail = {};
 
-export const EditToolkit = memo(props => {
+const EditToolkit = memo(props => {
   const { isMCP } = props;
 
   // const fileReaderEnhancerRef = useRef();
@@ -472,3 +472,5 @@ const editToolkitStyles = isMCP => ({
     },
   },
 });
+
+export default EditToolkit;

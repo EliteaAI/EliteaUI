@@ -43,7 +43,7 @@ const BucketsListContent = memo(props => {
         [selectedBucketName]: true,
       }));
     }
-  }, [selectedBucketName]);
+  }, [expandedBuckets, selectedBucketName]);
 
   const styles = bucketsListContentStyles();
 

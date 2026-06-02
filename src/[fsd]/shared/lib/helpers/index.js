@@ -1,4 +1,5 @@
 import * as AccessibilityAriaHelpers from './accessibility.helpers.js';
+import * as ChunkHelpers from './chunk.helpers.js';
 import * as CodeMirrorEditorHelpers from './codeMirrorEditor.helpers.js';
 import * as DumpYamlHelpers from './dumpYaml.helpers.js';
 import * as FunctionHelpers from './function.helpers.js';
@@ -14,4 +15,5 @@ export {
   LinkHelpers,
   NavigationHelpers,
   AccessibilityAriaHelpers,
+  ChunkHelpers,
 };

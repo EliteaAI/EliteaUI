@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useDispatch, useSelector } from 'react-redux';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
@@ -45,7 +45,7 @@ const NAVIGATION_STATE_TIMEOUT = {
   BUCKET_FETCH_TIMEOUT: 2000,
 };
 
-export default function Artifacts() {
+const Artifacts = memo(() => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { state: locationState } = useLocation();
@@ -745,7 +745,11 @@ export default function Artifacts() {
       />
     </>
   );
-}
+});
+
+Artifacts.displayName = 'Artifacts';
+
+export default Artifacts;
 
 const artifactsStyles = (collapsedBuckets, leftPanelWidth) => ({
   rootBox: {

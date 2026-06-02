@@ -1,10 +1,10 @@
-import { useCallback } from 'react';
+import { memo, useCallback } from 'react';
 
 import { useDispatch, useSelector } from 'react-redux';
 
 import { actions } from '@/slices/settings';
 
-export default function ModeSwitch() {
+const ModeSwitch = memo(() => {
   const dispatch = useDispatch();
   const mode = useSelector(state => state.settings.mode);
 
@@ -38,4 +38,8 @@ export default function ModeSwitch() {
       {enableToggle ? toggle() : null}
     </div>
   );
-}
+});
+
+ModeSwitch.displayName = 'ModeSwitch';
+
+export default ModeSwitch;

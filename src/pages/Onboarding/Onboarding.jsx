@@ -7,18 +7,20 @@ import { Box, IconButton, LinearProgress, Typography } from '@mui/material';
 
 import { FIRST_ELITEA_TOUR_ID, markTourPending } from '@/[fsd]/features/interactive-tours';
 import { Welcome, WorkspaceIsReady } from '@/[fsd]/features/onboarding/ui';
+import { ChunkHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useLazyProjectListQuery } from '@/api';
 import { useLazyAuthorDetailsQuery } from '@/api/social.js';
 import Logo from '@/assets/logo.svg?react';
 import ArrowBackIcon from '@/components/Icons/ArrowBackIcon';
 import RouteDefinitions from '@/routes';
-import { lazyWithRetry } from '@/utils/lazyWithRetry';
 
 import LoadingPage from '../LoadingPage';
 
 const ONBOARDING_STORAGE_KEY = 'onboarding_state';
 
-const OnboardingTour = lazyWithRetry(() => import('@/[fsd]/features/onboarding/ui/OnboardingTour'));
+const OnboardingTour = ChunkHelpers.lazyWithRetry(
+  () => import('@/[fsd]/features/onboarding/ui/OnboardingTour'),
+);
 
 const Onboarding = memo(() => {
   const user = useSelector(state => state.user);

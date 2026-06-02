@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { memo, useEffect } from 'react';
 
 import { Form, Formik } from 'formik';
 import { useDispatch } from 'react-redux';
@@ -14,7 +14,7 @@ import { useCreateApplicationInitialValues } from '@/pages/Applications/useAppli
 import { actions } from '@/slices/pipeline';
 import { actions as editorActions } from '@/slices/pipelineEditor';
 
-export default function CreatePipeline() {
+const CreatePipeline = memo(() => {
   const { initialValues } = useCreateApplicationInitialValues(true);
   const dispatch = useDispatch();
 
@@ -96,4 +96,8 @@ export default function CreatePipeline() {
       />
     </Formik>
   );
-}
+});
+
+CreatePipeline.displayName = 'CreatePipeline';
+
+export default CreatePipeline;

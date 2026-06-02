@@ -18,7 +18,7 @@ import ToolkitTypeSelector from '@/pages/Toolkits/ToolkitTypeSelector';
 import { formatTitleFromSnakeCase } from '@/utils/stringUtils';
 import { interpolateUrl } from '@/utils/urlInterpolation';
 
-export const CreateToolkit = memo(props => {
+const CreateToolkit = memo(props => {
   const { isMCP, isApplication } = props;
 
   const { toolkitType, mcpType, appType } = useParams();
@@ -268,3 +268,5 @@ const createToolkitStyles = () => ({
     height: '100%',
   },
 });
+
+export default CreateToolkit;

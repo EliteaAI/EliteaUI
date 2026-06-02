@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import * as React from 'react';
 
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -11,7 +12,7 @@ import RouteDefinitions, { PathSessionMap } from '@/routes';
 import StickyTabs from '../../components/StickyTabs';
 import ModerationApplicationList from './ModerationApplicationList';
 
-export default function ModerationSpace() {
+const ModerationSpace = memo(() => {
   const [applicationCount, setApplicationCount] = React.useState(0);
   const navigate = useNavigate();
   const location = useLocation();
@@ -67,4 +68,8 @@ export default function ModerationSpace() {
       middleTabComponent={<ViewToggle />}
     />
   );
-}
+});
+
+ModerationSpace.displayName = 'ModerationSpace';
+
+export default ModerationSpace;

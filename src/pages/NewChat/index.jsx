@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { memo, useEffect, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
@@ -10,7 +10,7 @@ import RouteDefinitions from '@/routes';
 
 import NewChat from './NewChat';
 
-const NewChatWrapper = () => {
+const NewChatWrapper = memo(() => {
   const { permissions } = useSelector(state => state.user);
 
   const projectId = useSelectedProjectId();
@@ -34,6 +34,8 @@ const NewChatWrapper = () => {
       setPreProjectId={setPreProjectId}
     />
   );
-};
+});
+
+NewChatWrapper.displayName = 'NewChatWrapper';
 
 export default NewChatWrapper;

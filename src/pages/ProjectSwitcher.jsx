@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 
 import { useDispatch } from 'react-redux';
 import { useLocation, useParams } from 'react-router-dom';
@@ -12,7 +12,7 @@ import Page404 from '@/pages/Page404.jsx';
 import { getBasename } from '@/routes.js';
 import { actions as settingsActions } from '@/slices/settings.js';
 
-const ProjectSwitcher = () => {
+const ProjectSwitcher = memo(() => {
   const { projectId } = useParams();
   const { data: projectList = [], isLoading: isProjectListLoading } = useProjectListQuery(undefined, {
     skip: !projectId || !parseInt(projectId),
@@ -86,5 +86,8 @@ const ProjectSwitcher = () => {
   ) : (
     <Page404 />
   );
-};
+});
+
+ProjectSwitcher.displayName = 'ProjectSwitcher';
+
 export default ProjectSwitcher;

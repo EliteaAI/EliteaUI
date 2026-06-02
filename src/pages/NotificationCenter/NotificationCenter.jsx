@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 
@@ -15,7 +15,7 @@ import NotificationTable from './NotificationTable';
 
 const MIN_SEARCH_LENGTH = 2;
 
-export default function NotificationCenter() {
+const NotificationCenter = memo(() => {
   const { toastError } = useToast();
   const { personal_project_id } = useSelector(state => state.user);
 
@@ -82,7 +82,11 @@ export default function NotificationCenter() {
       />
     </Box>
   );
-}
+});
+
+NotificationCenter.displayName = 'NotificationCenter';
+
+export default NotificationCenter;
 
 /** @type {MuiSx} */
 const notificationCenterStyles = () => ({

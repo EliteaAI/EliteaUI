@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 
 import ReactGA from 'react-ga4';
 import { useDispatch, useSelector } from 'react-redux';
@@ -8,17 +8,7 @@ import IndexRoute from '@/[fsd]/app/routes/IndexRoute';
 import IntegrationGuard from '@/[fsd]/app/routes/IntegrationGuard';
 import ProtectedRoute from '@/[fsd]/app/routes/ProtectedRoute';
 import { AnalyticsContainer } from '@/[fsd]/features/analytics/ui';
-import { AppDetail, Apps } from '@/[fsd]/pages/apps';
-import McpAuthPage from '@/[fsd]/pages/mcp/index.jsx';
-import Resources from '@/[fsd]/pages/resources';
-import Settings from '@/[fsd]/pages/settings';
-import AIConfiguration from '@/[fsd]/pages/settings/AIConfiguration';
-import CreatePersonalToken from '@/[fsd]/pages/settings/CreatePersonalToken';
-import EnvironmentSettings from '@/[fsd]/pages/settings/EnvironmentSettings';
-import TokensSettings from '@/[fsd]/pages/settings/PersonalTokens';
-import Secrets from '@/[fsd]/pages/settings/Secrets';
-import ServicePromptsPage from '@/[fsd]/pages/settings/ServicePromptsPage';
-import Users from '@/[fsd]/pages/settings/Users';
+import { ChunkHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useLazyPermissionListQuery, useLazyPublicPermissionListQuery } from '@/api/auth';
 import { useLazyAuthorDetailsQuery } from '@/api/social.js';
 import {
@@ -34,32 +24,56 @@ import {
 import RouteChangeResetSearch from '@/components/RouteChangeResetSearch';
 import { PageTitleSetter } from '@/hooks/useBrowserPageTitle';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import AgentsStudio from '@/pages/AgentsStudio/AgentsStudio';
-import Applications from '@/pages/Applications/Applications';
-import CreateApplication from '@/pages/Applications/CreateApplication';
-import EditApplication from '@/pages/Applications/EditApplication.jsx';
-import Artifacts from '@/pages/Artifacts/Artifacts';
-import CreateBucket from '@/pages/Artifacts/CreateBucket';
-import CreateCredentialFromMain from '@/pages/Credentials/CreateCredential';
-import { Credentials } from '@/pages/Credentials/Credentials';
-import EditCredentialFromMain from '@/pages/Credentials/EditCredential';
-import ModeSwitch from '@/pages/ModeSwitch';
-import ModerationSpace from '@/pages/ModerationSpace/ModerationSpace';
-import ChatWrapper from '@/pages/NewChat/index';
-import NotificationCenter from '@/pages/NotificationCenter/NotificationCenter';
-import Onboarding from '@/pages/Onboarding/Onboarding';
+import LoadingPage from '@/pages/LoadingPage';
 import Page404 from '@/pages/Page404.jsx';
-import CreatePipeline from '@/pages/Pipelines/CreatePipeline';
-import EditPipeline from '@/pages/Pipelines/EditPipeline';
-import Pipelines from '@/pages/Pipelines/Pipelines';
-import ProjectSwitcher from '@/pages/ProjectSwitcher.jsx';
-import { CreateToolkit } from '@/pages/Toolkits/CreateToolkit';
-import { EditToolkit } from '@/pages/Toolkits/EditToolkit';
-import { Toolkits } from '@/pages/Toolkits/Toolkits';
-import UserPublic from '@/pages/UserPublic/UserPublic';
-import UserSettings from '@/pages/UserSettings/UserSettings';
 import RouteDefinitions from '@/routes';
 import { actions as chatActions } from '@/slices/chat';
+
+const AppDetail = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/apps/AppDetail'));
+const Apps = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/apps/Apps'));
+const McpAuthPage = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/mcp/index.jsx'));
+const Resources = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/resources'));
+const Settings = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/settings'));
+const AIConfiguration = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/settings/AIConfiguration'));
+const CreatePersonalToken = ChunkHelpers.lazyWithRetry(
+  () => import('@/[fsd]/pages/settings/CreatePersonalToken'),
+);
+const EnvironmentSettings = ChunkHelpers.lazyWithRetry(
+  () => import('@/[fsd]/pages/settings/EnvironmentSettings'),
+);
+const TokensSettings = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/settings/PersonalTokens'));
+const Secrets = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/settings/Secrets'));
+const ServicePromptsPage = ChunkHelpers.lazyWithRetry(
+  () => import('@/[fsd]/pages/settings/ServicePromptsPage'),
+);
+const Users = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/settings/Users'));
+const AgentsStudio = ChunkHelpers.lazyWithRetry(() => import('@/pages/AgentsStudio/AgentsStudio'));
+const Applications = ChunkHelpers.lazyWithRetry(() => import('@/pages/Applications/Applications'));
+const CreateApplication = ChunkHelpers.lazyWithRetry(() => import('@/pages/Applications/CreateApplication'));
+const EditApplication = ChunkHelpers.lazyWithRetry(() => import('@/pages/Applications/EditApplication.jsx'));
+const Artifacts = ChunkHelpers.lazyWithRetry(() => import('@/pages/Artifacts/Artifacts'));
+const CreateBucket = ChunkHelpers.lazyWithRetry(() => import('@/pages/Artifacts/CreateBucket'));
+const CreateCredentialFromMain = ChunkHelpers.lazyWithRetry(
+  () => import('@/pages/Credentials/CreateCredential'),
+);
+const Credentials = ChunkHelpers.lazyWithRetry(() => import('@/pages/Credentials/Credentials'));
+const EditCredentialFromMain = ChunkHelpers.lazyWithRetry(() => import('@/pages/Credentials/EditCredential'));
+const ModeSwitch = ChunkHelpers.lazyWithRetry(() => import('@/pages/ModeSwitch'));
+const ModerationSpace = ChunkHelpers.lazyWithRetry(() => import('@/pages/ModerationSpace/ModerationSpace'));
+const ChatWrapper = ChunkHelpers.lazyWithRetry(() => import('@/pages/NewChat/index'));
+const NotificationCenter = ChunkHelpers.lazyWithRetry(
+  () => import('@/pages/NotificationCenter/NotificationCenter'),
+);
+const Onboarding = ChunkHelpers.lazyWithRetry(() => import('@/pages/Onboarding/Onboarding'));
+const CreatePipeline = ChunkHelpers.lazyWithRetry(() => import('@/pages/Pipelines/CreatePipeline'));
+const EditPipeline = ChunkHelpers.lazyWithRetry(() => import('@/pages/Pipelines/EditPipeline'));
+const Pipelines = ChunkHelpers.lazyWithRetry(() => import('@/pages/Pipelines/Pipelines'));
+const ProjectSwitcher = ChunkHelpers.lazyWithRetry(() => import('@/pages/ProjectSwitcher.jsx'));
+const CreateToolkit = ChunkHelpers.lazyWithRetry(() => import('@/pages/Toolkits/CreateToolkit'));
+const EditToolkit = ChunkHelpers.lazyWithRetry(() => import('@/pages/Toolkits/EditToolkit'));
+const Toolkits = ChunkHelpers.lazyWithRetry(() => import('@/pages/Toolkits/Toolkits'));
+const UserPublic = ChunkHelpers.lazyWithRetry(() => import('@/pages/UserPublic/UserPublic'));
+const UserSettings = ChunkHelpers.lazyWithRetry(() => import('@/pages/UserSettings/UserSettings'));
 
 let userInfoTimer = undefined;
 
@@ -232,124 +246,126 @@ const ProtectedRoutes = () => {
   return (
     <>
       <PageTitleSetter />
-      <Routes>
-        <Route
-          index
-          element={<IndexRoute />}
-        />
-        {routes.map(({ path, element, requiredPermissions }) => (
-          <Route
-            key={path}
-            path={path}
-            element={
-              <ProtectedRoute requiredPermissions={requiredPermissions}>
-                <>
-                  <RouteChangeResetSearch />
-                  {element}
-                </>
-              </ProtectedRoute>
-            }
-          >
-            {path.endsWith('/:agentId') && (
-              <Route
-                path=":version"
-                element={<></>}
-              />
-            )}
-          </Route>
-        ))}
-        <Route
-          path={RouteDefinitions.Settings}
-          element={<Settings />}
-        >
+      <Suspense fallback={<LoadingPage />}>
+        <Routes>
           <Route
             index
-            element={
-              <Navigate
-                to="model-configuration"
-                replace
-              />
-            }
+            element={<IndexRoute />}
           />
+          {routes.map(({ path, element, requiredPermissions }) => (
+            <Route
+              key={path}
+              path={path}
+              element={
+                <ProtectedRoute requiredPermissions={requiredPermissions}>
+                  <>
+                    <RouteChangeResetSearch />
+                    {element}
+                  </>
+                </ProtectedRoute>
+              }
+            >
+              {path.endsWith('/:agentId') && (
+                <Route
+                  path=":version"
+                  element={<></>}
+                />
+              )}
+            </Route>
+          ))}
           <Route
-            path="model-configuration"
-            element={<AIConfiguration />}
-          />
-          <Route
-            path="environment"
-            element={<EnvironmentSettings />}
-          />
-          <Route
-            path="prompts"
-            element={<ServicePromptsPage />}
-          />
-          <Route
-            path="tokens"
-            element={<TokensSettings />}
-          />
-          <Route
-            path="secrets"
-            element={<Secrets />}
-          />
-          <Route
-            path="users"
-            element={<Users />}
-          />
-          <Route
-            path="analytics"
-            element={<AnalyticsContainer />}
-          />
-          <Route
-            path={'create-integration'}
-            element={
-              <IntegrationGuard>
-                <CreateCredentialFromMain
-                  title="New Integration"
-                  typeSelectorTitle="Select the integration Type"
-                  showCategory={false}
-                  searchPlaceholder="Search integrations"
+            path={RouteDefinitions.Settings}
+            element={<Settings />}
+          >
+            <Route
+              index
+              element={
+                <Navigate
+                  to="model-configuration"
+                  replace
+                />
+              }
+            />
+            <Route
+              path="model-configuration"
+              element={<AIConfiguration />}
+            />
+            <Route
+              path="environment"
+              element={<EnvironmentSettings />}
+            />
+            <Route
+              path="prompts"
+              element={<ServicePromptsPage />}
+            />
+            <Route
+              path="tokens"
+              element={<TokensSettings />}
+            />
+            <Route
+              path="secrets"
+              element={<Secrets />}
+            />
+            <Route
+              path="users"
+              element={<Users />}
+            />
+            <Route
+              path="analytics"
+              element={<AnalyticsContainer />}
+            />
+            <Route
+              path={'create-integration'}
+              element={
+                <IntegrationGuard>
+                  <CreateCredentialFromMain
+                    title="New Integration"
+                    typeSelectorTitle="Select the integration Type"
+                    showCategory={false}
+                    searchPlaceholder="Search integrations"
+                    forceShowTitle
+                  />
+                </IntegrationGuard>
+              }
+            />
+            <Route
+              path={'create-integration/:credentialType'}
+              element={
+                <IntegrationGuard>
+                  <CreateCredentialFromMain
+                    title="New Integration"
+                    typeSelectorTitle="Select the integration Type"
+                    showCategory={false}
+                    searchPlaceholder="Search integrations"
+                    forceShowTitle
+                  />
+                </IntegrationGuard>
+              }
+            />
+            <Route
+              path={'edit-integration/:credential_uid'}
+              element={
+                <EditCredentialFromMain
+                  title="Integration"
                   forceShowTitle
                 />
-              </IntegrationGuard>
-            }
+              }
+            />
+            <Route
+              path={'create-personal-token'}
+              element={<CreatePersonalToken />}
+            />
+          </Route>
+          <Route
+            path="/:projectId/*"
+            element={<ProjectSwitcher />}
           />
           <Route
-            path={'create-integration/:credentialType'}
-            element={
-              <IntegrationGuard>
-                <CreateCredentialFromMain
-                  title="New Integration"
-                  typeSelectorTitle="Select the integration Type"
-                  showCategory={false}
-                  searchPlaceholder="Search integrations"
-                  forceShowTitle
-                />
-              </IntegrationGuard>
-            }
+            path="*"
+            element={<Page404 />}
           />
-          <Route
-            path={'edit-integration/:credential_uid'}
-            element={
-              <EditCredentialFromMain
-                title="Integration"
-                forceShowTitle
-              />
-            }
-          />
-          <Route
-            path={'create-personal-token'}
-            element={<CreatePersonalToken />}
-          />
-        </Route>
-        <Route
-          path="/:projectId/*"
-          element={<ProjectSwitcher />}
-        />
-        <Route
-          path="*"
-          element={<Page404 />}
-        />
-      </Routes>
+        </Routes>
+      </Suspense>
     </>
   );
 };

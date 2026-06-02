@@ -1,11 +1,13 @@
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 
 import ToolkitsList from '@/[fsd]/features/toolkits/ui/list/ToolkitsList';
 import { ContentType } from '@/common/constants';
 import StickyTabs from '@/components/StickyTabs';
 import ViewToggle from '@/components/ViewToggle';
 
-export const Toolkits = ({ isMCP }) => {
+const Toolkits = memo(props => {
+  const { isMCP } = props;
+
   const tabs = useMemo(
     () => [
       {
@@ -30,4 +32,8 @@ export const Toolkits = ({ isMCP }) => {
       middleTabComponent={<ViewToggle />}
     />
   );
-};
+});
+
+Toolkits.displayName = 'Toolkits';
+
+export default Toolkits;

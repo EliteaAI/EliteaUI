@@ -4,7 +4,7 @@ import { Alert, Box, CircularProgress } from '@mui/material';
 
 import { useAppDetail } from '@/[fsd]/features/apps/lib/hooks';
 import { buildErrorMessage } from '@/common/utils.jsx';
-import { EditToolkit } from '@/pages/Toolkits/EditToolkit';
+import EditToolkit from '@/pages/Toolkits/EditToolkit';
 
 /**
  * AppDetail page component for displaying application details
@@ -17,23 +17,21 @@ const AppDetail = memo(() => {
 
   const { appName, isFetching, isError, error, iframeUrl, iframeKey, hasCustomUI } = useAppDetail();
 
-  if (isFetching) {
+  if (isFetching)
     return (
       <Box sx={styles.loadingContainer}>
         <CircularProgress />
       </Box>
     );
-  }
 
-  if (isError) {
+  if (isError)
     return (
       <Box sx={styles.errorContainer}>
         <Alert severity="error">{buildErrorMessage(error)}</Alert>
       </Box>
     );
-  }
 
-  if (hasCustomUI) {
+  if (hasCustomUI)
     return (
       <Box sx={styles.iframeContainer}>
         <iframe
@@ -46,7 +44,6 @@ const AppDetail = memo(() => {
         />
       </Box>
     );
-  }
 
   return <EditToolkit />;
 });

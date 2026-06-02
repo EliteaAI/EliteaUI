@@ -1,10 +1,10 @@
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 
 import StickyTabs from '@/components/StickyTabs';
 import ViewToggle from '@/components/ViewToggle';
 import CredentialsList from '@/pages/Credentials/CredentialsList';
 
-export const Credentials = () => {
+const Credentials = memo(() => {
   const tabs = useMemo(
     () => [
       {
@@ -25,4 +25,8 @@ export const Credentials = () => {
       middleTabComponent={<ViewToggle />}
     />
   );
-};
+});
+
+Credentials.displayName = 'Credentials';
+
+export default Credentials;

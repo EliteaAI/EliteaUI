@@ -21,7 +21,7 @@ import {
   ParsePipelineHelpers,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers/index.js';
 import YamlCodeEditor from '@/[fsd]/features/pipelines/yaml-editor/ui/YamlCodeEditor.jsx';
-import { FunctionHelpers } from '@/[fsd]/shared/lib/helpers/index.js';
+import { ChunkHelpers, FunctionHelpers } from '@/[fsd]/shared/lib/helpers/index.js';
 import RefreshIcon from '@/assets/refresh-icon.svg?react';
 import { PipelineEditorMode } from '@/common/constants.js';
 import { handleCopy } from '@/common/utils.jsx';
@@ -33,13 +33,12 @@ import useToast from '@/hooks/useToast.jsx';
 import { ContentContainer } from '@/pages/Common/index.js';
 import RouteDefinitions from '@/routes.js';
 import { actions } from '@/slices/pipeline.js';
-import { lazyWithRetry } from '@/utils/lazyWithRetry';
 import { useTheme } from '@emotion/react';
 
 import useIsPipelineYamlCodeDirty from '../useIsPipelineYamlCodeDirty.js';
 import PipelineAddNodeMenu from './AddNodeMenu.jsx';
 
-const FlowWrapper = lazyWithRetry(() => import('./FlowWrapper.jsx'));
+const FlowWrapper = ChunkHelpers.lazyWithRetry(() => import('./FlowWrapper.jsx'));
 
 // Optimized comparison for yamlJsonObject to prevent unnecessary updates during drag operations
 const areYamlObjectsEqual = (obj1, obj2) => {

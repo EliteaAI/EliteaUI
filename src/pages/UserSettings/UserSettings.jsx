@@ -1,8 +1,10 @@
+import { memo } from 'react';
+
 import { Box, Typography } from '@mui/material';
 
 import Profile from './Profile';
 
-const UserSettings = () => {
+const UserSettings = memo(() => {
   const styles = userSettingsStyles();
 
   return (
@@ -20,7 +22,7 @@ const UserSettings = () => {
       </Box>
     </Box>
   );
-};
+});
 
 UserSettings.displayName = 'UserSettings';
 

@@ -10,8 +10,9 @@ const CHUNK_RELOAD_KEY = 'chunk_load_reload_attempted';
  * @param {Error} error - The error to check
  * @returns {boolean}
  */
-const isChunkLoadError = error => {
+export const isChunkLoadError = error => {
   const message = error?.message || '';
+
   return (
     message.includes('Failed to fetch dynamically imported module') ||
     message.includes('Loading chunk') ||
@@ -42,7 +43,7 @@ const isChunkLoadError = error => {
  * // Use:
  * const MyComponent = lazyWithRetry(() => import('./MyComponent'));
  */
-export function lazyWithRetry(importFn, options = {}) {
+export const lazyWithRetry = (importFn, options = {}) => {
   const { retries = 1, retryDelay = 1000 } = options;
 
   return lazy(async () => {
@@ -51,9 +52,7 @@ export function lazyWithRetry(importFn, options = {}) {
     for (let attempt = 0; attempt <= retries; attempt++) {
       try {
         // Clear reload flag on successful load
-        if (attempt === 0) {
-          sessionStorage.removeItem(CHUNK_RELOAD_KEY);
-        }
+        if (attempt === 0) sessionStorage.removeItem(CHUNK_RELOAD_KEY);
 
         const module = await importFn();
         return module;
@@ -61,9 +60,7 @@ export function lazyWithRetry(importFn, options = {}) {
         lastError = error;
 
         // Only handle chunk loading errors
-        if (!isChunkLoadError(error)) {
-          throw error;
-        }
+        if (!isChunkLoadError(error)) throw error;
 
         // eslint-disable-next-line no-console
         console.warn(
@@ -111,6 +108,4 @@ export function lazyWithRetry(importFn, options = {}) {
 
     throw lastError;
   });
-}
-
-export default lazyWithRetry;
+};
