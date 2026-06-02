@@ -16,10 +16,20 @@ const createMaxLengthExtension = maxLength => {
   }
 
   return EditorState.transactionFilter.of(tr => {
-    if (tr.newDoc.length > maxLength) {
-      return [];
-    }
-    return tr;
+    if (!tr.docChanged) return tr;
+    if (tr.newDoc.length <= maxLength) return tr;
+
+    const truncatedText = tr.newDoc.sliceString(0, maxLength);
+    const cursorPos = Math.min(tr.selection.main.head, truncatedText.length);
+
+    return tr.startState.update({
+      changes: {
+        from: 0,
+        to: tr.startState.doc.length,
+        insert: truncatedText,
+      },
+      selection: { anchor: cursorPos },
+    });
   });
 };
 
