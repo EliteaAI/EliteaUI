@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { Box, CircularProgress, Popover, Skeleton, Typography } from '@mui/material';
 
 import { NotificationListItem } from '@/[fsd]/entities/notifications/ui';
+import { ScrollableContainer } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { useNotificationPopoverPosition } from '@/[fsd]/widgets/Notifications/lib/hooks';
 import {
@@ -123,7 +124,7 @@ const NotificationList = memo(props => {
   const hasMore = data && allNotifications.length < data.total;
 
   const handleScroll = useCallback(() => {
-    const listDom = listRef.current;
+    const listDom = listRef.current?.getScrollElement();
     if (!listDom || isFetching) return;
 
     const { clientHeight, scrollHeight, scrollTop } = listDom;
@@ -136,7 +137,7 @@ const NotificationList = memo(props => {
   const debouncedScroll = useMemo(() => debounce(handleScroll, 300), [handleScroll]);
 
   useEffect(() => {
-    const listDom = listRef.current;
+    const listDom = listRef.current?.getScrollElement();
     if (!listDom) return;
 
     listDom.addEventListener('scroll', debouncedScroll);
@@ -189,8 +190,9 @@ const NotificationList = memo(props => {
             aria-label="Close notifications"
           />
         </Box>
-        <Box
+        <ScrollableContainer
           ref={listRef}
+          fillContainer={false}
           sx={styles.listContainer}
         >
           {allNotifications.map(notification => (
@@ -219,7 +221,7 @@ const NotificationList = memo(props => {
               <Typography variant="bodySmall">No new notifications right now</Typography>
             </Box>
           )}
-        </Box>
+        </ScrollableContainer>
         {isFetching && page > 0 && (
           <Box sx={styles.loadMoreSpinner}>
             <CircularProgress
@@ -278,6 +280,7 @@ const notificationListStyles = () => ({
     display: 'flex',
     flexDirection: 'column',
     maxHeight: 'calc(100vh - 7.5rem)',
+    overflow: 'hidden',
   }),
   header: ({ palette }) => ({
     display: 'flex',
@@ -289,10 +292,8 @@ const notificationListStyles = () => ({
     borderBottom: `0.0625rem solid ${palette.border.notificationItem}`,
   }),
   listContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    maxHeight: 'calc(100vh - 12.125rem)',
-    overflowY: 'scroll',
+    flex: 'none',
+    maxHeight: 'calc(100vh - 16.5rem)',
   },
   skeletonItem: ({ palette }) => ({
     '&:not(:last-of-type)': {
