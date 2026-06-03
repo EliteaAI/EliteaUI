@@ -150,6 +150,7 @@ export default ({ mode }) => {
             'vendor-charts': ['recharts'],
             'vendor-utils': ['axios', 'jszip', 'marked', 'date-fns', 'formik', 'yup', 'js-yaml', 'uuid'],
             'vendor-xyflow': ['@xyflow/react', '@dagrejs/dagre'],
+            'vendor-prism': ['prism-react-renderer'],
           },
         },
       },

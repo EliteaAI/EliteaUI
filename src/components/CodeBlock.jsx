@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { Suspense, lazy, useCallback, useMemo, useState } from 'react';
 
 import { Highlight, themes } from 'prism-react-renderer';
 
@@ -12,7 +12,8 @@ import useToast from '@/hooks/useToast';
 import EditingPlaceholder from './Chat/EditingPlaceholder';
 import EditIcon from './Icons/EditIcon';
 import { useShouldDisableEditCanvas } from './MarkdownTableBlock';
-import MermaidCodeBlock from './MermaidCodeBlock';
+
+const MermaidCodeBlock = lazy(() => import('./MermaidCodeBlock'));
 
 export const useCheckIsBlockEditing = (canvasId, selectedCodeBlockInfo) => {
   const [blockId] = useState(new Date().getTime());
@@ -78,18 +79,20 @@ const CodeBlock = ({
 
   if (markedToken.lang === 'mermaid') {
     return (
-      <MermaidCodeBlock
-        markedToken={markedToken}
-        theme={theme}
-        onEdit={onEdit}
-        startPos={startPos}
-        endPos={endPos}
-        selectedCodeBlockInfo={selectedCodeBlockInfo}
-        canvasId={canvasId}
-        messageItemId={messageItemId}
-        isStreaming={isStreaming}
-        showToolbar={showToolbar}
-      />
+      <Suspense fallback={<Box sx={{ padding: '.5rem' }} />}>
+        <MermaidCodeBlock
+          markedToken={markedToken}
+          theme={theme}
+          onEdit={onEdit}
+          startPos={startPos}
+          endPos={endPos}
+          selectedCodeBlockInfo={selectedCodeBlockInfo}
+          canvasId={canvasId}
+          messageItemId={messageItemId}
+          isStreaming={isStreaming}
+          showToolbar={showToolbar}
+        />
+      </Suspense>
     );
   }
 

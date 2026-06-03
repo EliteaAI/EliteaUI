@@ -1,7 +1,7 @@
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import domtoimage from 'dom-to-image';
-import svgPanZoom from 'svg-pan-zoom';
+const getDomToImage = () => import('dom-to-image').then(m => m.default);
+const getSvgPanZoom = () => import('svg-pan-zoom').then(m => m.default);
 
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import { Box, CircularProgress, IconButton, Typography } from '@mui/material';
@@ -176,13 +176,13 @@ const MermaidDiagramOutput = memo(props => {
           const { canvas, imageId } = await createExportDiagram();
           if (canvas) {
             try {
-              domtoimage.toJpeg(document.querySelector(imageId), { quality: 100 }).then(dataUrl => {
-                const link = document.createElement('a');
-                link.download = 'diagram.jpg';
-                link.href = dataUrl;
-                link.click();
-                canvas.remove();
-              });
+              const domtoimage = await getDomToImage();
+              const dataUrl = await domtoimage.toJpeg(document.querySelector(imageId), { quality: 100 });
+              const link = document.createElement('a');
+              link.download = 'diagram.jpg';
+              link.href = dataUrl;
+              link.click();
+              canvas.remove();
             } catch {
               // Export failed silently
             }
@@ -196,13 +196,13 @@ const MermaidDiagramOutput = memo(props => {
           const { canvas, imageId } = await createExportDiagram();
           if (canvas) {
             try {
-              domtoimage.toPng(document.querySelector(imageId)).then(dataUrl => {
-                const link = document.createElement('a');
-                link.download = 'diagram.png';
-                link.href = dataUrl;
-                link.click();
-                canvas.remove();
-              });
+              const domtoimage = await getDomToImage();
+              const dataUrl = await domtoimage.toPng(document.querySelector(imageId));
+              const link = document.createElement('a');
+              link.download = 'diagram.png';
+              link.href = dataUrl;
+              link.click();
+              canvas.remove();
             } catch {
               // Export failed silently
             }
@@ -301,6 +301,7 @@ const MermaidDiagramOutput = memo(props => {
               panZoomTigerRef.current.destroy();
               panZoomTigerRef.current = null;
             }
+            const svgPanZoom = await getSvgPanZoom();
             panZoomTigerRef.current = svgPanZoom(svgElement, {
               zoomScaleSensitivity: 0.1,
               center: true,

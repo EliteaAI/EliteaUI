@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useDispatch, useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router-dom';
@@ -25,7 +25,9 @@ import {
   useEditConversation,
   useInternalToolsConfig,
 } from '@/[fsd]/features/chat/lib/hooks';
+import { ChatBox } from '@/[fsd]/features/chat/ui';
 import { FIRST_ELITEA_TOUR_ID, useProposePendingTour } from '@/[fsd]/features/interactive-tours';
+import { ChunkHelpers } from '@/[fsd]/shared/lib/helpers';
 import { eliteaApi } from '@/api/eliteaApi';
 import {
   ChatParticipantType,
@@ -87,17 +89,17 @@ import useNavBlocker from '@/hooks/useNavBlocker';
 import { useManualSocket } from '@/hooks/useSocket';
 import useToast from '@/hooks/useToast';
 import { AddNewUserModal } from '@/pages/NewChat/AddNewUser/AddNewUserModal';
-import AgentEditor from '@/pages/NewChat/AgentEditor';
-import CanvasEditor from '@/pages/NewChat/CanvasEditor';
-import { ChatBox } from '@/[fsd]/features/chat/ui';
 import NewConversationView from '@/pages/NewChat/NewConversationView';
-import PipelineEditor from '@/pages/NewChat/PipelineEditor';
-import PlaybackChatBox from '@/pages/NewChat/PlaybackChatBox';
-import ToolkitEditor from '@/pages/NewChat/ToolkitEditor';
 import { actions as chatActions } from '@/slices/chat';
 import { actions } from '@/slices/settings';
 
 import ParticipantsWrapper from './Participants/index';
+
+const AgentEditor = ChunkHelpers.lazyWithRetry(() => import('@/pages/NewChat/AgentEditor'));
+const CanvasEditor = ChunkHelpers.lazyWithRetry(() => import('@/pages/NewChat/CanvasEditor'));
+const PipelineEditor = ChunkHelpers.lazyWithRetry(() => import('@/pages/NewChat/PipelineEditor'));
+const PlaybackChatBox = ChunkHelpers.lazyWithRetry(() => import('@/pages/NewChat/PlaybackChatBox'));
+const ToolkitEditor = ChunkHelpers.lazyWithRetry(() => import('@/pages/NewChat/ToolkitEditor'));
 
 const TAG_TYPE_FOLDERS = 'TAG_TYPE_FOLDERS';
 
@@ -1480,13 +1482,23 @@ const NewChat = props => {
                 newConversationQuestion={newConversationQuestion}
                 {...baseSettings}
               />
-              <PlaybackChatBox
-                hidden={!isPlayback}
-                ref={playbackChatBoxRef}
-                conversation={activeConversation}
-                toastError={toastError}
-                key={'playback' + isPlayback}
-              />
+              {isPlayback && (
+                <Suspense
+                  fallback={
+                    <Box sx={styles.loadingContainer}>
+                      <CircularProgress />
+                    </Box>
+                  }
+                >
+                  <PlaybackChatBox
+                    hidden={!isPlayback}
+                    ref={playbackChatBoxRef}
+                    conversation={activeConversation}
+                    toastError={toastError}
+                    key={'playback' + isPlayback}
+                  />
+                </Suspense>
+              )}
               {shouldShowConversationLoader && (
                 <Box sx={styles.loadingContainer}>
                   <Box sx={styles.loadingInnerContainer}>
@@ -1504,59 +1516,99 @@ const NewChat = props => {
                 paddingLeft: isAnyEditorOpen && !showResizeGutter ? '10px' : undefined,
               }}
             >
-              <AgentEditor
-                agent={editingAgent}
-                versionName={activeVersionName}
-                onCloseAgentEditor={handleCloseAgentEditor}
-                onAgentCreated={onAgentCreated}
-                onAgentSaved={handleAgentSaved}
-                onAttachmentToolChange={handleAttachmentToolChange}
-                isVisible={isEditingAgent}
-                isCreateMode={isCreateMode}
-                onAgentDirtyStateChange={handleEditorDirtyStateChange}
-                onConversationStartersChange={handleEditorConversationStartersChange}
-                onConversationLlmOverride={handleConversationLlmOverride}
-                activeAgentId={
-                  activeParticipant?.entity_name === ChatParticipantType.Applications
-                    ? activeParticipant.entity_meta?.id
-                    : undefined
-                }
-              />
-              <ToolkitEditor
-                toolkit={editingToolkit}
-                onCloseToolkitEditor={onCloseToolkitEditor}
-                onToolkitCreated={onToolkitCreated}
-                onToolkitUpdated={onChangeParticipantSettings}
-                isVisible={isEditingToolkit}
-              />
-              <PipelineEditor
-                ref={pipelineEditorRef}
-                pipeline={editingPipeline}
-                onClosePipelineEditor={handleClosePipelineEditor}
-                onPipelineCreated={onPipelineCreated}
-                onPipelineSaved={onChangeParticipantSettings}
-                isVisible={isEditingPipeline}
-                isCreateMode={isPipelineCreateMode}
-                onPipelineDirtyStateChange={handleEditorDirtyStateChange}
-                onConversationStartersChange={handleEditorConversationStartersChange}
-                activePipelineId={
-                  activeParticipant?.entity_name === ChatParticipantType.Pipelines ||
-                  activeParticipant?.entity_name === ChatParticipantType.Applications
-                    ? activeParticipant.entity_meta?.id
-                    : undefined
-                }
-                activeParticipantId={activeParticipant?.id}
-                stopRunOnNodeStop={onStopRun}
-                onAttachmentToolChange={handleAttachmentToolChange}
-              />
-              <CanvasEditor
-                ref={canvasEditorRef}
-                selectedCodeBlockInfo={selectedCodeBlockInfo}
-                onCloseCanvasEditor={onCloseCanvasEditor}
-                interaction_uuid={interaction_uuid}
-                conversation_uuid={activeConversation.uuid}
-                key={selectedCodeBlockInfo?.blockId}
-              />
+              {isEditingAgent && (
+                <Suspense
+                  fallback={
+                    <Box sx={styles.loadingContainer}>
+                      <CircularProgress />
+                    </Box>
+                  }
+                >
+                  <AgentEditor
+                    agent={editingAgent}
+                    versionName={activeVersionName}
+                    onCloseAgentEditor={handleCloseAgentEditor}
+                    onAgentCreated={onAgentCreated}
+                    onAgentSaved={handleAgentSaved}
+                    onAttachmentToolChange={handleAttachmentToolChange}
+                    isVisible={isEditingAgent}
+                    isCreateMode={isCreateMode}
+                    onAgentDirtyStateChange={handleEditorDirtyStateChange}
+                    onConversationStartersChange={handleEditorConversationStartersChange}
+                    onConversationLlmOverride={handleConversationLlmOverride}
+                    activeAgentId={
+                      activeParticipant?.entity_name === ChatParticipantType.Applications
+                        ? activeParticipant.entity_meta?.id
+                        : undefined
+                    }
+                  />
+                </Suspense>
+              )}
+              {isEditingToolkit && (
+                <Suspense
+                  fallback={
+                    <Box sx={styles.loadingContainer}>
+                      <CircularProgress />
+                    </Box>
+                  }
+                >
+                  <ToolkitEditor
+                    toolkit={editingToolkit}
+                    onCloseToolkitEditor={onCloseToolkitEditor}
+                    onToolkitCreated={onToolkitCreated}
+                    onToolkitUpdated={onChangeParticipantSettings}
+                    isVisible={isEditingToolkit}
+                  />
+                </Suspense>
+              )}
+              {isEditingPipeline && (
+                <Suspense
+                  fallback={
+                    <Box sx={styles.loadingContainer}>
+                      <CircularProgress />
+                    </Box>
+                  }
+                >
+                  <PipelineEditor
+                    ref={pipelineEditorRef}
+                    pipeline={editingPipeline}
+                    onClosePipelineEditor={handleClosePipelineEditor}
+                    onPipelineCreated={onPipelineCreated}
+                    onPipelineSaved={onChangeParticipantSettings}
+                    isVisible={isEditingPipeline}
+                    isCreateMode={isPipelineCreateMode}
+                    onPipelineDirtyStateChange={handleEditorDirtyStateChange}
+                    onConversationStartersChange={handleEditorConversationStartersChange}
+                    activePipelineId={
+                      activeParticipant?.entity_name === ChatParticipantType.Pipelines ||
+                      activeParticipant?.entity_name === ChatParticipantType.Applications
+                        ? activeParticipant.entity_meta?.id
+                        : undefined
+                    }
+                    activeParticipantId={activeParticipant?.id}
+                    stopRunOnNodeStop={onStopRun}
+                    onAttachmentToolChange={handleAttachmentToolChange}
+                  />
+                </Suspense>
+              )}
+              {selectedCodeBlockInfo && (
+                <Suspense
+                  fallback={
+                    <Box sx={styles.loadingContainer}>
+                      <CircularProgress />
+                    </Box>
+                  }
+                >
+                  <CanvasEditor
+                    ref={canvasEditorRef}
+                    selectedCodeBlockInfo={selectedCodeBlockInfo}
+                    onCloseCanvasEditor={onCloseCanvasEditor}
+                    interaction_uuid={interaction_uuid}
+                    conversation_uuid={activeConversation.uuid}
+                    key={selectedCodeBlockInfo?.blockId}
+                  />
+                </Suspense>
+              )}
               {previewingArtifact && (
                 <FilePreviewCanvas
                   key={`${previewingArtifact.name}-${previewingArtifact.bucket}`}
