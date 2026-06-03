@@ -1,10 +1,9 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { debounce } from 'lodash';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
-import { Box, CircularProgress, Popover, Skeleton, Typography } from '@mui/material';
+import { Box, CircularProgress, Popover, Skeleton, Typography, debounce } from '@mui/material';
 
 import { NotificationListItem } from '@/[fsd]/entities/notifications/ui';
 import { ScrollableContainer } from '@/[fsd]/shared/ui';
@@ -143,7 +142,7 @@ const NotificationList = memo(props => {
     listDom.addEventListener('scroll', debouncedScroll);
     return () => {
       listDom.removeEventListener('scroll', debouncedScroll);
-      debouncedScroll.cancel();
+      debouncedScroll.clear();
     };
   }, [debouncedScroll]);
 
