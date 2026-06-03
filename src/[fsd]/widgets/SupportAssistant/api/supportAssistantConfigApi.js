@@ -10,7 +10,7 @@ const supportAssistantConfigApi = eliteaApi
     endpoints: build => ({
       getSupportAssistantConfig: build.query({
         query: () => ({
-          url: '/admin/plugin_config_values/administration/support_assistant',
+          url: '/support_assistant/config/',
         }),
         providesTags: [TAG_SUPPORT_ASSISTANT_CONFIG],
       }),
