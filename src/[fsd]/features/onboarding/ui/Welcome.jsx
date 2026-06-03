@@ -1,7 +1,8 @@
 import { memo } from 'react';
 
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
+import { Button } from '@/[fsd]/shared/ui';
 import WelcomeImage from '@/assets/chat-welcome.png';
 
 const Welcome = memo(props => {
@@ -27,34 +28,34 @@ const Welcome = memo(props => {
           <Box sx={styles.mainPanel}>
             <Typography
               variant="bodyMedium"
-              component={'div'}
+              component="div"
               sx={styles.message}
             >
               {`Hello, ${name}!`}
             </Typography>
             <Typography
               variant="bodyMedium"
-              component={'div'}
+              component="div"
               sx={styles.message}
             >
-              We’re setting up your personal workspace — it’ll be ready in about 5 minutes. While we work our
-              magic, take a quick tour through our onboarding slides!
+              We&apos;re setting up your personal workspace — it&apos;ll be ready in about 5 minutes. While we
+              work our magic, take a quick tour through our onboarding slides!
             </Typography>
             <Typography
               variant="bodyMedium"
-              component={'div'}
+              component="div"
               sx={styles.message}
             >
-              Ready to explore Elitea’s smart tools and tips?
+              Ready to explore Elitea&apos;s smart tools and tips?
             </Typography>
-            <Button
+            <Button.BaseBtn
               variant="elitea"
               color="primary"
               sx={styles.button}
               onClick={onShowTour}
             >
-              Sure, let’s go!
-            </Button>
+              Sure, let&apos;s go!
+            </Button.BaseBtn>
           </Box>
         </Box>
       </Box>

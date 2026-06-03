@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 
-import { Button } from '@mui/material';
+import { Button } from '@/[fsd]/shared/ui';
 import Box from '@mui/material/Box';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -213,20 +213,20 @@ export default function InputVersionDialog({
           />
         </StyledDialogContent>
         <StyledDialogActions>
-          <Button
+          <Button.BaseBtn
             variant="secondary"
             onClick={onCancel}
           >
             Cancel
-          </Button>
-          <Button
+          </Button.BaseBtn>
+          <Button.BaseBtn
             variant="contained"
             disabled={disabled}
             onClick={onConfirm}
             autoFocus
           >
             {doButtonTitle}
-          </Button>
+          </Button.BaseBtn>
         </StyledDialogActions>
       </StyledDialog>
     </React.Fragment>

@@ -1,6 +1,8 @@
 import { useCallback } from 'react';
 
-import { Button, Typography } from '@mui/material';
+import { Typography } from '@mui/material';
+
+import { Button } from '@/[fsd]/shared/ui';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 
@@ -71,7 +73,7 @@ export default function AlertDialogV2({
         {extraContent}
       </DialogContent>
       <StyledDialogActions>
-        <Button
+        <Button.BaseBtn
           disableRipple
           variant="elitea"
           color="secondary"
@@ -79,8 +81,8 @@ export default function AlertDialogV2({
           autoFocus
         >
           Cancel
-        </Button>
-        <Button
+        </Button.BaseBtn>
+        <Button.BaseBtn
           disabled={disabledConfirm}
           sx={confirmButtonSX}
           variant="elitea"
@@ -88,7 +90,7 @@ export default function AlertDialogV2({
           onClick={doConfirm}
         >
           {confirmButtonTitle}
-        </Button>
+        </Button.BaseBtn>
       </StyledDialogActions>
     </StyledDialog>
   );

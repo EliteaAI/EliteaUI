@@ -1,6 +1,6 @@
 import { memo, useState } from 'react';
 
-import { Button } from '@mui/material';
+import BaseBtn from './BaseBtn';
 
 const OneClickButton = memo(props => {
   const { disabled, disableRipple, color, onClick, title = 'Button' } = props;
@@ -13,7 +13,7 @@ const OneClickButton = memo(props => {
   };
 
   return (
-    <Button
+    <BaseBtn
       variant="elitea"
       color={color}
       disabled={isClicked || disabled}
@@ -21,7 +21,7 @@ const OneClickButton = memo(props => {
       disableRipple={disableRipple}
     >
       {title}
-    </Button>
+    </BaseBtn>
   );
 });
 

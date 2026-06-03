@@ -1,4 +1,4 @@
-import { Button } from '@mui/material';
+import { Button } from '@/[fsd]/shared/ui';
 
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import { Create_Personal_Title, Create_Project_Title, Manual_Title } from '@/hooks/useConfigurations';
@@ -15,7 +15,7 @@ export default function ToolConfigurationButtons({
     !!type && (
       <>
         {[Create_Personal_Title, Create_Project_Title].includes(configuration?.configuration_title) && (
-          <Button
+          <Button.BaseBtn
             disabled={isCreatingConfiguration}
             variant="elitea"
             color="primary"
@@ -23,12 +23,12 @@ export default function ToolConfigurationButtons({
           >
             Save configuration
             {isCreatingConfiguration && <StyledCircleProgress size={20} />}
-          </Button>
+          </Button.BaseBtn>
         )}
         {[Create_Personal_Title, Create_Project_Title, Manual_Title].includes(
           configuration?.configuration_title,
         ) && (
-          <Button
+          <Button.BaseBtn
             disabled={isTestingConnection}
             variant="elitea"
             color="secondary"
@@ -36,7 +36,7 @@ export default function ToolConfigurationButtons({
           >
             Test
             {isTestingConnection && <StyledCircleProgress size={20} />}
-          </Button>
+          </Button.BaseBtn>
         )}
       </>
     )

@@ -2,7 +2,7 @@ import { forwardRef, useCallback, useImperativeHandle, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { Button } from '@mui/material';
+import { Button } from '@/[fsd]/shared/ui';
 
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import useSaveNewVersion from '@/hooks/application/useSaveNewVersion';
@@ -79,7 +79,7 @@ const SaveNewVersionButton = forwardRef((props, ref) => {
 
   return (
     <>
-      <Button
+      <Button.BaseBtn
         disabled={isSavingNewVersion || disabled}
         variant="elitea"
         color="secondary"
@@ -87,7 +87,7 @@ const SaveNewVersionButton = forwardRef((props, ref) => {
       >
         Save As Version
         {isSavingNewVersion && <StyledCircleProgress size={20} />}
-      </Button>
+      </Button.BaseBtn>
       <InputVersionDialog
         open={showInputVersion}
         showTips={false}

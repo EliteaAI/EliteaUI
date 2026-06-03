@@ -1,6 +1,8 @@
 import { memo } from 'react';
 
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
+
+import { Button } from '@/[fsd]/shared/ui';
 
 import WelcomeImage from '@/assets/chat-welcome.png';
 
@@ -26,14 +28,14 @@ const WorkspaceIsReady = memo(props => {
               Your Elitea workspace is ready!
             </Typography>
           </Box>
-          <Button
+          <Button.BaseBtn
             variant="elitea"
             color="primary"
             sx={styles.button}
             onClick={onJumpIn}
           >
             Jump in now!
-          </Button>
+          </Button.BaseBtn>
         </Box>
       </Box>
     </Box>

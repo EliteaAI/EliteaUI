@@ -2,7 +2,9 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
+
+import { Button } from '@/[fsd]/shared/ui';
 
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { useConfigOAuthModal, useMcpTokenChange } from '@/[fsd]/features/mcp/lib/hooks';
@@ -82,13 +84,13 @@ const SharepointOAuthStatus = memo(() => {
             {isOAuthLoggedIn ? 'Connected!' : 'Not Connected'}
           </Typography>
         </Box>
-        <Button
+        <Button.BaseBtn
           onClick={isOAuthLoggedIn ? onLogout : onLogin}
           disabled={isRunning}
           variant="secondary"
         >
           {isOAuthLoggedIn ? 'Logout' : isRunning ? 'Logging in...' : 'Login'}
-        </Button>
+        </Button.BaseBtn>
       </Box>
       <McpAuthModal {...authModalProps} />
       <McpLogoutModal

@@ -3,9 +3,11 @@ import { useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
 
-import { Button, Typography } from '@mui/material';
+import { Typography } from '@mui/material';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
+
+import { Button } from '@/[fsd]/shared/ui';
 
 import { StyledDialog, StyledDialogActions, StyledDialogContentText } from './StyledDialog';
 
@@ -78,21 +80,21 @@ const ConfirmRedirectModal = ({ open, toolkitName, toolkitDescription, redirectU
         </StyledDialogContentText>
       </DialogContent>
       <StyledDialogActions>
-        <Button
+        <Button.BaseBtn
           variant="elitea"
           color="secondary"
           onClick={handleCancel}
         >
           <Typography variant="labelSmall">Cancel</Typography>
-        </Button>
-        <Button
+        </Button.BaseBtn>
+        <Button.BaseBtn
           variant="elitea"
           color="primary"
           onClick={handleOpenInNewTab}
           autoFocus
         >
           <Typography variant="labelSmall">Open in New Tab</Typography>
-        </Button>
+        </Button.BaseBtn>
       </StyledDialogActions>
     </StyledDialog>
   );

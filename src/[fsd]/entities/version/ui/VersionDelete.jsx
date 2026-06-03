@@ -3,10 +3,11 @@ import { memo, useCallback, useMemo, useState } from 'react';
 import { useFormikContext } from 'formik';
 import { useParams } from 'react-router-dom';
 
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import { AgentDetails } from '@/[fsd]/features/agent/ui';
+import { Button } from '@/[fsd]/shared/ui';
 import AlertDialog from '@/components/AlertDialog';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
@@ -17,7 +18,7 @@ import useDiscardApplicationChanges from '@/pages/Applications/useDiscardApplica
 const VersionDelete = memo(props => {
   const { disabled, onDiscard, type = 'button' } = props;
   const { version: versionId } = useParams();
-
+  const styles = versionDeleteStyles();
   const { toastError, toastInfo, toastSuccess } = useToast();
 
   const {
@@ -111,23 +112,17 @@ const VersionDelete = memo(props => {
     <>
       {type === 'menuItem' ? (
         <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'flex-start',
-            alignItems: 'center',
-            gap: '0.75rem',
-            fontSize: '1rem',
-          }}
+          sx={styles.container}
           onClick={e => {
             e.stopPropagation();
             onDeleteVersionClick();
           }}
         >
-          <DeleteIcon sx={{ fontSize: '1rem' }} />
-          <Typography sx={{ fontWeight: 500, fontSize: '.875rem', lineHeight: '1.5rem' }}>Delete</Typography>
+          <DeleteIcon sx={styles.deleteIcon} />
+          <Typography sx={styles.deleteText}>Delete</Typography>
         </Box>
       ) : (
-        <Button
+        <Button.BaseBtn
           disabled={isLoading || disabled}
           variant="elitea"
           color="secondary"
@@ -135,7 +130,7 @@ const VersionDelete = memo(props => {
         >
           Delete Version
           {isLoading && <StyledCircleProgress size={20} />}
-        </Button>
+        </Button.BaseBtn>
       )}
 
       <AlertDialog
@@ -163,5 +158,17 @@ const VersionDelete = memo(props => {
 });
 
 VersionDelete.displayName = 'VersionDelete';
+
+const versionDeleteStyles = () => ({
+  container: {
+    display: 'flex',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    gap: '0.75rem',
+    fontSize: '1rem',
+  },
+  deleteIcon: { fontSize: '1rem' },
+  deleteText: { fontWeight: 500, fontSize: '.875rem', lineHeight: '1.5rem' },
+});
 
 export default VersionDelete;

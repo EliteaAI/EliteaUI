@@ -1,9 +1,7 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Button } from '@mui/material';
-
-import { Modal } from '@/[fsd]/shared/ui';
-import { VALIDATION_RULE, validateMaxTokens } from '@/[fsd]/widgets/llm-model-selector/lib';
+import { Button, Modal } from '@/[fsd]/shared/ui';
+import { VALIDATION_RULE, validateMaxTokens } from '@/[fsd]/widgets/LLMModelSelector/lib';
 
 import { LLMSettings } from './LLMSettings';
 
@@ -60,35 +58,31 @@ const LLMSettingsDialog = memo(props => {
       actions={
         <>
           {onResetToDefaults && (
-            <Button
+            <Button.BaseBtn
               variant="elitea"
               color="secondary"
               onClick={() => {
                 onResetToDefaults();
                 onCancel();
               }}
-              disableRipple
-              sx={{ marginRight: 'auto' }}
             >
               Reset to defaults
-            </Button>
+            </Button.BaseBtn>
           )}
-          <Button
+          <Button.BaseBtn
             variant="elitea"
             color="secondary"
             onClick={onCancel}
-            disableRipple
           >
             Cancel
-          </Button>
-          <Button
+          </Button.BaseBtn>
+          <Button.BaseBtn
             variant="elitea"
             onClick={handleOK}
-            disableRipple
             disabled={isDisabled}
           >
             Apply
-          </Button>
+          </Button.BaseBtn>
         </>
       }
     />
