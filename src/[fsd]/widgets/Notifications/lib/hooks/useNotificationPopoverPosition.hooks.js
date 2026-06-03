@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 
 const DEFAULT_POPOVER_POSITION = {
   anchorReference: 'anchorEl',
@@ -13,45 +13,27 @@ const DEFAULT_POPOVER_POSITION = {
   anchorPosition: null,
 };
 
-const POPOVER_VERTICAL_OFFSET = 120;
 const POPOVER_VIEWPORT_MARGIN = 16;
 
 export const useNotificationPopoverPosition = anchorEl => {
-  const popoverPaperRef = useRef(null);
+  const [paperEl, setPaperEl] = useState(null);
   const [popoverPosition, setPopoverPosition] = useState(DEFAULT_POPOVER_POSITION);
 
+  const popoverPaperRef = useCallback(el => setPaperEl(el), []);
+
   const updatePopoverPosition = useCallback(() => {
-    if (!anchorEl) return;
+    if (!anchorEl || !paperEl) return;
 
     const anchorRect = anchorEl.getBoundingClientRect();
-    const paperHeight = popoverPaperRef.current?.offsetHeight ?? 0;
-    const desiredHeight = paperHeight || Math.max(window.innerHeight - POPOVER_VERTICAL_OFFSET, 0);
+    const paperHeight = paperEl.offsetHeight;
+    if (!paperHeight) return;
+
     const spaceAbove = anchorRect.top - POPOVER_VIEWPORT_MARGIN;
     const spaceBelow = window.innerHeight - anchorRect.bottom - POPOVER_VIEWPORT_MARGIN;
-    const isShortPopover = paperHeight > 0 && paperHeight <= window.innerHeight / 2;
+    const fitsBelow = spaceBelow >= paperHeight;
+    const fitsAbove = spaceAbove >= paperHeight;
 
-    if (isShortPopover) {
-      if (spaceBelow >= paperHeight || spaceBelow > spaceAbove) {
-        setPopoverPosition({
-          anchorReference: 'anchorEl',
-          anchorOrigin: {
-            vertical: 'bottom',
-            horizontal: 'right',
-          },
-          transformOrigin: {
-            vertical: 'top',
-            horizontal: 'left',
-          },
-          anchorPosition: null,
-        });
-        return;
-      }
-
-      setPopoverPosition(DEFAULT_POPOVER_POSITION);
-      return;
-    }
-
-    if (spaceBelow >= desiredHeight) {
+    if (fitsBelow) {
       setPopoverPosition({
         anchorReference: 'anchorEl',
         anchorOrigin: {
@@ -67,52 +49,38 @@ export const useNotificationPopoverPosition = anchorEl => {
       return;
     }
 
-    if (spaceAbove >= desiredHeight) {
+    if (fitsAbove) {
       setPopoverPosition(DEFAULT_POPOVER_POSITION);
       return;
     }
 
-    const viewportCenterTop = Math.round(window.innerHeight / 2);
-    const minCenterTop = Math.round(desiredHeight / 2) + POPOVER_VIEWPORT_MARGIN;
-    const maxCenterTop = Math.round(window.innerHeight - desiredHeight / 2) - POPOVER_VIEWPORT_MARGIN;
-    const clampedTop = Math.min(
-      Math.max(viewportCenterTop, minCenterTop),
-      Math.max(minCenterTop, maxCenterTop),
-    );
+    const paperTop = Math.round(Math.max(POPOVER_VIEWPORT_MARGIN, (window.innerHeight - paperHeight) / 2));
 
     setPopoverPosition({
       anchorReference: 'anchorPosition',
       anchorOrigin: {
-        vertical: 'center',
+        vertical: 'top',
         horizontal: 'right',
       },
       anchorPosition: {
-        top: clampedTop,
+        top: paperTop,
         left: Math.round(anchorRect.right),
       },
       transformOrigin: {
-        vertical: 'center',
+        vertical: 'top',
         horizontal: 'left',
       },
     });
-  }, [anchorEl]);
+  }, [anchorEl, paperEl]);
 
   useEffect(() => {
     if (!anchorEl) {
       setPopoverPosition(DEFAULT_POPOVER_POSITION);
-      return;
     }
-
-    updatePopoverPosition();
-    window.addEventListener('resize', updatePopoverPosition);
-
-    return () => {
-      window.removeEventListener('resize', updatePopoverPosition);
-    };
-  }, [anchorEl, updatePopoverPosition]);
+  }, [anchorEl]);
 
   useLayoutEffect(() => {
-    if (!anchorEl) return undefined;
+    if (!anchorEl || !paperEl) return undefined;
 
     updatePopoverPosition();
 
@@ -123,7 +91,22 @@ export const useNotificationPopoverPosition = anchorEl => {
     return () => {
       window.cancelAnimationFrame(frameId);
     };
-  }, [anchorEl, updatePopoverPosition]);
+  }, [anchorEl, paperEl, updatePopoverPosition]);
+
+  useEffect(() => {
+    if (!anchorEl || !paperEl) return undefined;
+
+    updatePopoverPosition();
+    window.addEventListener('resize', updatePopoverPosition);
+
+    const observer = new ResizeObserver(updatePopoverPosition);
+    observer.observe(paperEl);
+
+    return () => {
+      window.removeEventListener('resize', updatePopoverPosition);
+      observer.disconnect();
+    };
+  }, [anchorEl, paperEl, updatePopoverPosition]);
 
   return {
     popoverPaperRef,
