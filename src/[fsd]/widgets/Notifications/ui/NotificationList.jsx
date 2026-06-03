@@ -1,12 +1,14 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { debounce } from 'lodash';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
 import { Box, CircularProgress, Popover, Skeleton, Typography } from '@mui/material';
 
+import { NotificationListItem } from '@/[fsd]/entities/notifications/ui';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { useNotificationPopoverPosition } from '@/[fsd]/widgets/Notifications/lib/hooks';
 import {
   TAG_NOTIFICATIONS,
   notificationsApi,
@@ -15,11 +17,10 @@ import {
 } from '@/api/notifications';
 import { PAGE_SIZE } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
+import CloseIcon from '@/components/Icons/CloseIcon';
+import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 import RouteDefinitions, { PathSessionMap } from '@/routes';
-
-import CloseIcon from './Icons/CloseIcon';
-import NotificationListItem from './NotificationListItem';
 
 const NotificationList = memo(props => {
   const { notificationListAnchorEl, onCloseNotificationList } = props;
@@ -30,29 +31,31 @@ const NotificationList = memo(props => {
   const { toastError } = useToast();
   const [bulkMarkSeenNotifications] = useNotificationBulkMarkSeenMutation();
   const styles = notificationListStyles();
-  const { personal_project_id } = useSelector(state => state.user);
+  const projectId = useSelectedProjectId();
+
   const [page, setPage] = useState(0);
   const [allNotifications, setAllNotifications] = useState([]);
+  const { popoverPaperRef, popoverPosition } = useNotificationPopoverPosition(notificationListAnchorEl);
 
   const { data, isFetching, isError, error, refetch } = useNotificationListQuery(
     {
-      projectId: personal_project_id,
+      projectId,
       page,
       pageSize: PAGE_SIZE,
       params: {
         only_new: true,
       },
     },
-    { refetchOnFocus: !!personal_project_id, skip: !personal_project_id },
+    { refetchOnFocus: !!projectId, skip: !projectId },
   );
 
   const onMarkAllAsRead = useCallback(async () => {
-    if (!personal_project_id || !allNotifications.length) return;
+    if (!projectId || !allNotifications.length) return;
     const unreadIds = allNotifications.filter(n => !n.is_seen).map(n => n.id);
     if (!unreadIds.length) return;
     try {
       await bulkMarkSeenNotifications({
-        projectId: personal_project_id,
+        projectId,
         ids: unreadIds,
         isSeen: true,
       }).unwrap();
@@ -65,7 +68,7 @@ const NotificationList = memo(props => {
     } catch (err) {
       toastError(buildErrorMessage(err));
     }
-  }, [personal_project_id, allNotifications, bulkMarkSeenNotifications, toastError]);
+  }, [projectId, allNotifications, bulkMarkSeenNotifications, toastError]);
 
   const handleNotificationSeenChange = useCallback((notificationId, isSeen) => {
     setAllNotifications(prev =>
@@ -154,107 +157,105 @@ const NotificationList = memo(props => {
   }, [refetch]);
 
   return (
-    <>
-      <Popover
-        id="notificationList"
-        open={Boolean(notificationListAnchorEl)}
-        anchorEl={notificationListAnchorEl}
-        anchorReference="anchorEl"
-        onClose={onCloseNotificationList}
-        anchorOrigin={{
-          vertical: 'top',
-          horizontal: 'right',
-        }}
-        transformOrigin={{
-          vertical: 'bottom',
-          horizontal: 'left',
-        }}
-        sx={styles.popover}
-      >
-        <Box sx={styles.container}>
-          <Box sx={styles.header}>
-            <Typography
-              variant="labelMedium"
-              color="text.secondary"
-            >
-              Notifications
-            </Typography>
-            <BaseBtn
-              variant={BUTTON_VARIANTS.tertiary}
-              startIcon={<CloseIcon />}
-              onClick={onCloseNotificationList}
-              aria-label="Close notifications"
-            />
-          </Box>
-          <Box
-            ref={listRef}
-            sx={styles.listContainer}
+    <Popover
+      id="notificationList"
+      open={Boolean(notificationListAnchorEl)}
+      anchorEl={popoverPosition.anchorReference === 'anchorEl' ? notificationListAnchorEl : null}
+      anchorReference={popoverPosition.anchorReference}
+      anchorPosition={popoverPosition.anchorPosition}
+      onClose={onCloseNotificationList}
+      anchorOrigin={popoverPosition.anchorOrigin}
+      transformOrigin={popoverPosition.transformOrigin}
+      slotProps={{
+        paper: {
+          ref: popoverPaperRef,
+        },
+      }}
+      sx={styles.popover}
+    >
+      <Box sx={styles.container}>
+        <Box sx={styles.header}>
+          <Typography
+            variant="labelMedium"
+            color="text.secondary"
           >
-            {allNotifications.map(notification => (
-              <NotificationListItem
-                key={notification.id}
-                notification={notification}
-                onNotificationSeenChange={handleNotificationSeenChange}
-                onCloseNotificationList={onCloseNotificationList}
-              />
-            ))}
-            {isFetching && !allNotifications.length && (
-              <>
-                {[...Array(8)].map((_, index) => (
-                  <Skeleton
-                    key={`skeleton-${index}`}
-                    sx={styles.skeletonItem}
-                    variant="rectangular"
-                    width="100%"
-                    height="2.5rem"
-                  />
-                ))}
-              </>
-            )}
-            {!allNotifications.length && !isFetching && (
-              <Box sx={styles.emptyState}>
-                <Typography variant="bodySmall">No new notifications right now</Typography>
-              </Box>
-            )}
-          </Box>
-          {isFetching && page > 0 && (
-            <Box sx={styles.loadMoreSpinner}>
-              <CircularProgress
-                size="1.25rem"
-                thickness={4}
-              />
+            Notifications
+          </Typography>
+          <BaseBtn
+            variant={BUTTON_VARIANTS.tertiary}
+            startIcon={<CloseIcon />}
+            onClick={onCloseNotificationList}
+            aria-label="Close notifications"
+          />
+        </Box>
+        <Box
+          ref={listRef}
+          sx={styles.listContainer}
+        >
+          {allNotifications.map(notification => (
+            <NotificationListItem
+              key={notification.id}
+              notification={notification}
+              onNotificationSeenChange={handleNotificationSeenChange}
+              onCloseNotificationList={onCloseNotificationList}
+            />
+          ))}
+          {isFetching && !allNotifications.length && (
+            <>
+              {[...Array(8)].map((_, index) => (
+                <Skeleton
+                  key={`skeleton-${index}`}
+                  sx={styles.skeletonItem}
+                  variant="rectangular"
+                  width="100%"
+                  height="2.5rem"
+                />
+              ))}
+            </>
+          )}
+          {!allNotifications.length && !isFetching && (
+            <Box sx={styles.emptyState}>
+              <Typography variant="bodySmall">No new notifications right now</Typography>
             </Box>
           )}
-          {allNotifications.length > 0 && (
-            <BaseBtn
-              variant={BUTTON_VARIANTS.auxiliary}
-              onClick={onMarkAllAsRead}
-              sx={styles.markAllButton}
-              disabled={!allNotifications.some(n => !n.is_seen)}
-            >
-              <Typography
-                variant="labelMedium"
-                sx={styles.markAllButtonText}
-              >
-                Mark all as read
-              </Typography>
-            </BaseBtn>
-          )}
+        </Box>
+        {isFetching && page > 0 && (
+          <Box sx={styles.loadMoreSpinner}>
+            <CircularProgress
+              size="1.25rem"
+              thickness={4}
+            />
+          </Box>
+        )}
+        {allNotifications.length > 0 && (
           <BaseBtn
             variant={BUTTON_VARIANTS.auxiliary}
-            onClick={onViewAll}
-            sx={styles.viewAllButton}
+            onClick={onMarkAllAsRead}
+            sx={styles.markAllButton}
+            disabled={!allNotifications.some(n => !n.is_seen)}
           >
             <Typography
               variant="labelMedium"
-              sx={styles.viewAllButtonText}
+              sx={styles.markAllButtonText}
             >
-              View all
+              Mark all as read
             </Typography>
           </BaseBtn>
-        </Box>
-      </Popover>
-    </>
+        )}
+        <BaseBtn
+          variant={BUTTON_VARIANTS.auxiliary}
+          onClick={onViewAll}
+          sx={styles.viewAllButton}
+        >
+          <Typography
+            variant="labelMedium"
+            sx={styles.viewAllButtonText}
+          >
+            View all
+          </Typography>
+        </BaseBtn>
+      </Box>
+    </Popover>
   );
 });
 

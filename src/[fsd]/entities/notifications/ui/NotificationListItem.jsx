@@ -5,121 +5,17 @@ import { formatDistanceToNow } from 'date-fns';
 import { Box, Typography, useTheme } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
-import { NotificationListItemMessage } from '@/[fsd]/entities/notifications/ui';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { useNotificationBulkMarkSeenMutation } from '@/api/notifications';
 import MarkReadIcon from '@/assets/icons/mark-read-icon.svg?react';
 import MarkUnreadIcon from '@/assets/icons/mark-unread-icon.svg?react';
-import { NotificationType } from '@/common/constants';
 import { convertTime } from '@/common/convertChatConversationMessages';
 import { buildErrorMessage } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 
-import AttentionIcon from './Icons/AttentionIcon';
-import CommentIcon from './Icons/CommentIcon';
-import ErrorIcon from './Icons/ErrorIcon';
-import HeartIcon from './Icons/HeartIcon';
-import MedalIcon from './Icons/MedalIcon';
-import RemoveIcon from './Icons/RemoveIcon';
-import SuccessIcon from './Icons/SuccessIcon';
-import TrophyOutlinedIcon from './Icons/TrophyOutlinedIcon';
-
-export const getIcon = (type, theme, notification) => {
-  switch (type) {
-    case NotificationType.PromptModeratorApproval:
-    case NotificationType.AuthorApproval:
-    case NotificationType.ModeratorApprovalOfVersion:
-    case NotificationType.PromptOfSomeProjectWasPublished:
-    case NotificationType.NewPromptVersionOfSomeProjectWasPublished:
-    case NotificationType.ChatUserAdded:
-    case NotificationType.ChatUserMentioned:
-    case NotificationType.PrivateProjectCreated:
-    case NotificationType.ModerationApproved:
-      return <SuccessIcon fill={theme.palette.status.published} />;
-
-    case NotificationType.IndexDataChanged:
-      // Show error icon if index operation failed
-      return notification?.meta?.error && notification.meta.error.trim() ? (
-        <ErrorIcon
-          fill={theme.palette.status.rejected}
-          size={16}
-        />
-      ) : (
-        <SuccessIcon fill={theme.palette.status.published} />
-      );
-
-    case NotificationType.PromptHasAddedToSomeProject:
-    case NotificationType.NewPromptVersionOfSomeProjectWasCreated:
-    case NotificationType.UserWasAddedToSomeProjectAsTeammate:
-      return <SuccessIcon fill={theme.palette.icon.fill.tips} />;
-
-    case NotificationType.PromptModeratorReject:
-    case NotificationType.ModeratorUnpublish:
-    case NotificationType.AgentUnpublished:
-    case NotificationType.AuthorReject:
-    case NotificationType.ModeratorRejectOfVersion:
-    case NotificationType.PromptOfSomeProjectWasRejected:
-    case NotificationType.NewPromptVersionOfSomeProjectWasRejected:
-    case NotificationType.ModerationRejected:
-      return <RemoveIcon fill={theme.palette.status.rejected} />;
-
-    case NotificationType.TokenIsExpired:
-    case NotificationType.SpendingLimitIsExpired:
-      return (
-        <ErrorIcon
-          fill={theme.palette.status.rejected}
-          size={16}
-        />
-      );
-
-    case NotificationType.TokenExpiring:
-    case NotificationType.SpendingLimitExpiring:
-    case NotificationType.BucketExpirationWarning:
-    case NotificationType.PersonalAccessTokenExpiring:
-      return (
-        <AttentionIcon
-          fill={theme.palette.status.onModeration}
-          size={16}
-        />
-      );
-
-    case NotificationType.Rates:
-      return (
-        <HeartIcon
-          fill={theme.palette.icon.fill.tips}
-          size={16}
-        />
-      );
-
-    case NotificationType.Comments:
-      return (
-        <CommentIcon
-          fill={theme.palette.icon.fill.tips}
-          size={16}
-        />
-      );
-
-    case NotificationType.RewardNewLevel:
-      return (
-        <MedalIcon
-          fill={theme.palette.status.published}
-          size={16}
-        />
-      );
-
-    case NotificationType.RewardBadgeToPrompt:
-      return (
-        <TrophyOutlinedIcon
-          fill={theme.palette.status.published}
-          size={16}
-        />
-      );
-
-    default:
-      return null;
-  }
-};
+import { getIcon } from '../lib/helpers';
+import NotificationListItemMessage from './NotificationListItemMessage';
 
 const NOTIFICATION_CONTEXT_STYLES = {
   list: {
@@ -145,7 +41,7 @@ const NotificationListItem = memo(props => {
   const theme = useTheme();
   const { event_type } = notification;
   const { textVariant } = NOTIFICATION_CONTEXT_STYLES[context] ?? NOTIFICATION_CONTEXT_STYLES.list;
-  const styles = notificationListItemStyles(clampLines, context === 'list', notification.is_seen);
+  const styles = notificationListItemStyles(clampLines, context === 'list');
 
   const [isHovered, setIsHovered] = useState(false);
   const projectId = useSelectedProjectId();
@@ -232,7 +128,7 @@ const NotificationListItem = memo(props => {
 NotificationListItem.displayName = 'NotificationListItem';
 
 /** @type {MuiSx} */
-const notificationListItemStyles = (clampLines, isContextList, isSeen) => ({
+const notificationListItemStyles = (clampLines, isContextList) => ({
   container: ({ palette }) => ({
     display: 'flex',
     padding: '0.5rem 0.75rem',
@@ -243,7 +139,7 @@ const notificationListItemStyles = (clampLines, isContextList, isSeen) => ({
     boxSizing: 'border-box',
     borderBottom: `0.0625rem solid ${palette.border.notificationItem}`,
     '&:hover': {
-      backgroundColor: isContextList && isSeen ? palette.background.tabButton.default : undefined,
+      backgroundColor: isContextList ? palette.background.tabButton.default : undefined,
     },
   }),
   markButton: {

@@ -13,10 +13,11 @@ import {
   GridTablePagination,
   GridTableRow,
 } from '@/[fsd]/entities/grid-table/ui';
+import { getIcon } from '@/[fsd]/entities/notifications/lib/helpers';
+import { NotificationListItem } from '@/[fsd]/entities/notifications/ui';
 import { useNotificationBulkDeleteMutation, useNotificationBulkMarkSeenMutation } from '@/api/notifications';
 import { SortOrderOptions } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
-import NotificationListItem, { getIcon } from '@/components/NotificationListItem';
 import useToast from '@/hooks/useToast';
 import { useTheme } from '@emotion/react';
 
