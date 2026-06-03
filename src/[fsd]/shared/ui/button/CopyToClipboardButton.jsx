@@ -1,6 +1,8 @@
 import { memo, useCallback } from 'react';
 
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
+
+import BaseBtn from './BaseBtn';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import useToast from '@/hooks/useToast';
@@ -23,7 +25,7 @@ const CopyToClipboardButton = memo(props => {
         title={tooltip}
         placement="top"
       >
-        <Button
+        <BaseBtn
           variant="elitea"
           color="tertiary"
           onClick={onClick}
@@ -34,7 +36,7 @@ const CopyToClipboardButton = memo(props => {
           >
             {value}
           </Typography>
-        </Button>
+        </BaseBtn>
       </StyledTooltip>
     </Box>
   );

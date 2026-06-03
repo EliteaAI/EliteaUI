@@ -1,6 +1,6 @@
 import { memo, useCallback, useMemo, useState } from 'react';
 
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import { extractMcpAuthMetadata } from '@/[fsd]/features/mcp/lib/hooks';
 import { McpAuthModal } from '@/[fsd]/features/mcp/ui';
@@ -63,14 +63,14 @@ const ChatContinue = memo(props => {
         </Typography>
         <Box sx={styles.buttonContainer}>
           {needToShowAuthButton && (
-            <Button
+            <BaseBtn
               variant="contained"
               sx={styles.button}
               onClick={handleAuthorize}
               disabled={disabled}
             >
               Authorize
-            </Button>
+            </BaseBtn>
           )}
           <BaseBtn
             variant="neutral"

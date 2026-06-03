@@ -1,6 +1,6 @@
 import { memo } from 'react';
 
-import { Button } from '@mui/material';
+import { Button } from '@/[fsd]/shared/ui';
 
 import { useMcpLogin } from '@/[fsd]/features/mcp/lib/hooks';
 import { McpAuthModal } from '@/[fsd]/features/mcp/ui';
@@ -17,7 +17,7 @@ const McpLogInButton = memo(props => {
 
   return (
     <>
-      <Button
+      <Button.BaseBtn
         color="tertiary"
         variant="elitea"
         onClick={onLogin}
@@ -25,7 +25,7 @@ const McpLogInButton = memo(props => {
         sx={[styles.loginText, sx]}
       >
         {isRunning ? 'Logging in...' : title}
-      </Button>
+      </Button.BaseBtn>
       <McpAuthModal {...modalProps} />
     </>
   );

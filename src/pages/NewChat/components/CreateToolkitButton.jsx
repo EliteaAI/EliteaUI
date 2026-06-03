@@ -2,7 +2,7 @@ import { useCallback, useMemo } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { Button } from '@mui/material';
+import { Button } from '@/[fsd]/shared/ui';
 
 import { useToolkitCreateMutation } from '@/api/toolkits';
 import { buildErrorMessage } from '@/common/utils';
@@ -69,7 +69,7 @@ export default function CreateToolkitButton({ toolSchema, onToolkitCreated, hasE
   }, [isCreating, isFormDirty, values?.type]);
 
   return (
-    <Button
+    <Button.BaseBtn
       disabled={shouldDisableSave}
       variant="elitea"
       color="primary"
@@ -77,6 +77,6 @@ export default function CreateToolkitButton({ toolSchema, onToolkitCreated, hasE
     >
       {isCreating && <StyledCircleProgress size={16} />}
       Create
-    </Button>
+    </Button.BaseBtn>
   );
 }

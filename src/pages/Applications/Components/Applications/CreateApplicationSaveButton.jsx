@@ -2,7 +2,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { Button } from '@mui/material';
+import { Button } from '@/[fsd]/shared/ui';
 
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import useCreateApplication from '@/hooks/application/useCreateApplication';
@@ -51,7 +51,7 @@ const CreateApplicationSaveButton = ({
   );
 
   return (
-    <Button
+    <Button.BaseBtn
       variant="elitea"
       color="primary"
       disabled={shouldDisableSave}
@@ -60,7 +60,7 @@ const CreateApplicationSaveButton = ({
     >
       {'Save'}
       {isLoading && <StyledCircleProgress size={20} />}
-    </Button>
+    </Button.BaseBtn>
   );
 };
 

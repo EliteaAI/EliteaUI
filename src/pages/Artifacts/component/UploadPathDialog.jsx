@@ -1,6 +1,8 @@
 import React, { memo, useCallback, useMemo, useState } from 'react';
 
-import { Box, Button, InputAdornment, TextField, Typography } from '@mui/material';
+import { Box, InputAdornment, TextField, Typography } from '@mui/material';
+
+import { Button } from '@/[fsd]/shared/ui';
 
 import { PathValidationHelpers } from '@/[fsd]/features/artifacts/lib/helpers';
 import BaseModal from '@/[fsd]/shared/ui/modal/BaseModal';
@@ -101,15 +103,15 @@ const UploadPathDialog = memo(props => {
 
   const actions = (
     <>
-      <Button
+      <Button.BaseBtn
         variant="elitea"
         color="secondary"
         onClick={handleCancel}
         sx={styles.cancelButton}
       >
         Cancel
-      </Button>
-      <Button
+      </Button.BaseBtn>
+      <Button.BaseBtn
         variant="elitea"
         color="primary"
         onClick={handleConfirm}
@@ -117,7 +119,7 @@ const UploadPathDialog = memo(props => {
         sx={styles.confirmButton}
       >
         Upload
-      </Button>
+      </Button.BaseBtn>
     </>
   );
 

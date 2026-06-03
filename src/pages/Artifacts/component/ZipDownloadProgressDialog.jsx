@@ -1,7 +1,8 @@
 import { memo } from 'react';
 
-import { Box, Button, LinearProgress, Typography } from '@mui/material';
+import { Box, LinearProgress, Typography } from '@mui/material';
 
+import { Button } from '@/[fsd]/shared/ui';
 import { BaseModal } from '@/[fsd]/shared/ui/modal';
 
 const ZipDownloadProgressDialog = memo(props => {
@@ -42,14 +43,13 @@ const ZipDownloadProgressDialog = memo(props => {
   );
 
   const actions = (
-    <Button
+    <Button.BaseBtn
       variant="elitea"
       color="alarm"
       onClick={onCancel}
-      disableRipple
     >
       Cancel
-    </Button>
+    </Button.BaseBtn>
   );
 
   return (

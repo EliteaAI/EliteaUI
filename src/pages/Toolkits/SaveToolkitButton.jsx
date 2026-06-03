@@ -2,8 +2,7 @@ import { useCallback, useMemo } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { Button } from '@mui/material';
-
+import { Button } from '@/[fsd]/shared/ui';
 import { useToolkitEditMutation } from '@/api/toolkits';
 import { buildErrorMessage } from '@/common/utils';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
@@ -88,14 +87,14 @@ export default function SaveToolkitButton({
   }, [isSaving, isFormDirty]);
 
   return (
-    <Button
+    <Button.BaseBtn
       disabled={shouldDisableSave}
       variant="elitea"
       color="primary"
       onClick={onSaveToolkit}
     >
-      {'Save'}
+      Save
       {isSaving && <StyledCircleProgress size={20} />}
-    </Button>
+    </Button.BaseBtn>
   );
 }

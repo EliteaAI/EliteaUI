@@ -3,7 +3,7 @@ import { useCallback, useMemo } from 'react';
 import { useFormikContext } from 'formik';
 import { useSelector } from 'react-redux';
 
-import { Button } from '@mui/material';
+import { Button } from '@/[fsd]/shared/ui';
 
 import { conversationStartersHelpers } from '@/[fsd]/features/agent/lib/helpers';
 import { useFormDirtyExcluding } from '@/[fsd]/shared/lib/hooks';
@@ -70,7 +70,7 @@ export default function SaveApplicationButton({ onSuccess }) {
   ]);
 
   return (
-    <Button
+    <Button.BaseBtn
       disabled={isButtonDisabled}
       variant="elitea"
       color="primary"
@@ -78,6 +78,6 @@ export default function SaveApplicationButton({ onSuccess }) {
     >
       Save
       {isSaving && <StyledCircleProgress size={20} />}
-    </Button>
+    </Button.BaseBtn>
   );
 }

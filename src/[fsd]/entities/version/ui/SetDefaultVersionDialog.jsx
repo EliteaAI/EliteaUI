@@ -1,7 +1,8 @@
 import { memo } from 'react';
 
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
+import { Button } from '@/[fsd]/shared/ui';
 import BaseModal from '@/[fsd]/shared/ui/modal/BaseModal';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
 
@@ -37,24 +38,22 @@ const SetDefaultVersionDialog = memo(props => {
       }
       actions={
         <>
-          <Button
+          <Button.BaseBtn
             variant="elitea"
             color="secondary"
             onClick={onClose}
             autoFocus
-            disableRipple
           >
             Cancel
-          </Button>
-          <Button
-            disableRipple
+          </Button.BaseBtn>
+          <Button.BaseBtn
             variant="elitea"
             color="primary"
             onClick={onConfirm}
             disabled={confirming}
           >
             Set as a default
-          </Button>
+          </Button.BaseBtn>
         </>
       }
       sx={styles.dialog}

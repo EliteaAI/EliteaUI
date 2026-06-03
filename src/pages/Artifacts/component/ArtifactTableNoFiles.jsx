@@ -1,7 +1,8 @@
 import { memo, useCallback } from 'react';
 
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
+import { Button } from '@/[fsd]/shared/ui';
 import UnavailableIcon from '@/assets/icons/unavailable-icon.svg?react';
 
 const ArtifactTableNoFiles = memo(props => {
@@ -26,15 +27,14 @@ const ArtifactTableNoFiles = memo(props => {
           {message}
         </Typography>
         {onUpload && (
-          <Button
+          <Button.BaseBtn
             variant="elitea"
             color="secondary"
             sx={styles.downloadButton}
             onClick={handleUpload}
-            disableRipple
           >
             Upload files
-          </Button>
+          </Button.BaseBtn>
         )}
       </Box>
     </Box>
