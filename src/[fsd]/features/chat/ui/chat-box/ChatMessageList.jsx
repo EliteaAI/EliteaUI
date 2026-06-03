@@ -4,13 +4,12 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { Box, Skeleton } from '@mui/material';
 
-import { ChatHelpers } from '@/[fsd]/features/chat/lib/helpers';
-import { ApplicationAnswer, UserMessage } from '@/[fsd]/features/chat/ui/chat-box';
 import { ScrollableContainer } from '@/[fsd]/shared/ui';
-import { ChatParticipantType, ROLES, WELCOME_MESSAGE_ID } from '@/common/constants';
+import { ChatParticipantType, ROLES } from '@/common/constants';
 import { MessageList } from '@/components/Chat/StyledComponents';
-import { isParticipantStillActive } from '@/hooks/chat/useParticipantName';
 import { actions as chatActions, selectMessageIdToView } from '@/slices/chat';
+
+import ChatMessageWrapper from './ChatMessageWrapper';
 
 const ChatMessageList = memo(props => {
   const {
@@ -66,25 +65,15 @@ const ChatMessageList = memo(props => {
     [chat_history],
   );
 
-  const getOnSubmit = useCallback(
-    (message, index) =>
-      userId === message.user_id && index === lastUserMessageIndex && !isLoading && !isStreaming
-        ? onSubmitEditedMessage
-        : undefined,
-    [userId, lastUserMessageIndex, isLoading, isStreaming, onSubmitEditedMessage],
-  );
-
   const onClickSentTo = useCallback(
-    participant => () => {
-      if (participant && onSelectParticipant) {
-        onSelectParticipant(participant);
-      }
+    participant => {
+      if (participant && onSelectParticipant) onSelectParticipant(participant);
     },
     [onSelectParticipant],
   );
 
   const onClickReplyTo = useCallback(
-    replyTo => () => {
+    replyTo => {
       const index = chat_history.findIndex(
         message => message.id === replyTo?.uuid || message.id === replyTo?.id,
       );
@@ -209,135 +198,48 @@ const ChatMessageList = memo(props => {
           </Box>
         )}
         {/* Messages */}
-        {chat_history.map((message, index) => {
-          const messageParticipant =
-            message.role !== ROLES.User
-              ? ChatHelpers.getParticipantById(activeConversation, message.participant_id)
-              : { entity_meta: {}, meta: {} };
-
-          return message.role === ROLES.User ? (
-            <UserMessage
-              verticalMode
-              key={message.id || message.internal_id}
-              messageId={message.id}
-              name={message.name}
-              avatar={message.avatar}
-              ref={ref => {
-                if (message.id === askingQuestionId) {
-                  questionItemRef.current = ref;
-                }
-                listRefs.current[index] = ref;
-              }}
-              content={message.content}
-              message_items={message.message_items}
-              created_at={message.created_at}
-              sentTo={message.sentTo}
-              onClickSentTo={onClickSentTo(message.sentTo)}
-              onCopy={onCopyToClipboard ? () => onCopyToClipboard(message.id) : undefined}
-              onDelete={
-                index === chat_history.length - 1 &&
-                (canDeleteAllMessage || message.user_id === userId) &&
-                onDeleteAnswer
-                  ? onDeleteAnswer(message.id)
-                  : undefined
-              }
-              onSubmit={getOnSubmit(message, index)}
-              onRemoveAttachment={onRemoveAttachment}
-            />
-          ) : (
-            <ApplicationAnswer
-              key={message.id || message.internal_id}
-              verticalMode
-              ref={ref => (listRefs.current[index] = ref)}
-              answer={message.content}
-              message_items={message.message_items}
-              created_at={message.created_at}
-              participant={messageParticipant}
-              onClickReplyTo={onClickReplyTo(message.replyTo)}
-              onCopy={onCopyToClipboard ? () => onCopyToClipboard(message.id) : undefined}
-              onDelete={
-                index === chat_history.length - 1 &&
-                !message.archivedFromHitl &&
-                !message.isSummarized &&
-                message.id !== WELCOME_MESSAGE_ID &&
-                (canDeleteAllMessage || ChatHelpers.canDeleteThisAIMessage(chat_history, message, userId)) &&
-                onDeleteAnswer
-                  ? onDeleteAnswer(message.id)
-                  : undefined
-              }
-              onEdit={onEditCanvas?.(message)}
-              selectedCodeBlockInfo={
-                selectedCodeBlockInfo?.selectedMessage?.id === message.id ? selectedCodeBlockInfo : undefined
-              }
-              onRegenerate={
-                !message.archivedFromHitl &&
-                !message.isSummarized &&
-                chat_history.length - 1 === index &&
-                isParticipantStillActive(messageParticipant) &&
-                !message.isLoading &&
-                !message.isRegenerating &&
-                ChatHelpers.canDeleteThisAIMessage(chat_history, message, userId)
-                  ? () => onRegenerateAnswer(message.id, messageParticipant)
-                  : undefined
-              }
-              isRegenerating={message.isRegenerating}
-              shouldDisableRegenerate={
-                isLoading ||
-                isStreaming ||
-                Boolean(message.isLoading) ||
-                !messageParticipant?.entity_name ||
-                message.id === WELCOME_MESSAGE_ID
-              }
-              references={message.references}
-              exception={message.exception}
-              toolActions={message.toolActions || []}
-              tools={messageParticipant?.meta?.tools || toolsFromConversation}
-              isLoading={Boolean(message.isLoading)}
-              isStreaming={message.isStreaming}
-              userId={userId}
-              messageId={message.id}
-              likes={message.likes}
-              interaction_uuid={message.internal_id}
-              conversation_uuid={activeConversation?.uuid}
-              onRemoveAttachment={onRemoveAttachment}
-              onOpenArtifactPreview={onOpenArtifactPreview}
-              onContinueMcpExecution={
-                chat_history.length - 1 === index && onContinueMcpExecution
-                  ? onContinueMcpExecution
-                  : undefined
-              }
-              onContinueTokenLimitExecution={
-                chat_history.length - 1 === index && onContinueTokenLimitExecution
-                  ? onContinueTokenLimitExecution
-                  : undefined
-              }
-              requiresConfirmation={message.requiresConfirmation}
-              hitlInterrupt={hideHitlActions ? null : message.hitlInterrupt}
-              onHitlResume={
-                !hideHitlActions && chat_history.length - 1 === index && onHitlResume
-                  ? onHitlResume
-                  : undefined
-              }
-              onHitlEditClick={
-                !hideHitlActions && chat_history.length - 1 === index && onHitlEditClick
-                  ? onHitlEditClick
-                  : undefined
-              }
-              hideContinueButton={hideContinueButton}
-              // Swarm mode props
-              isSwarmChild={message.isSwarmChild}
-              swarmAgentName={message.swarmAgentName}
-              parentMessageId={message.parentMessageId}
-              // Speaking mode TTS
-              isSpeakingMode={isSpeakingMode}
-              isLastMessage={chat_history.length - 1 === index}
-              onAutoSpeak={onAutoSpeak}
-              speakingMessageId={speakingMessageId}
-              speakingSegments={speakingSegments}
-              spokenRange={spokenRange}
-            />
-          );
-        })}
+        {chat_history.map((message, index) => (
+          <ChatMessageWrapper
+            key={message.id || message.internal_id}
+            message={message}
+            index={index}
+            chat_history={chat_history}
+            activeConversation={activeConversation}
+            askingQuestionId={askingQuestionId}
+            questionItemRef={questionItemRef}
+            listRefs={listRefs}
+            onClickSentTo={onClickSentTo}
+            onCopyToClipboard={onCopyToClipboard}
+            canDeleteAllMessage={canDeleteAllMessage}
+            userId={userId}
+            onDeleteAnswer={onDeleteAnswer}
+            getOnSubmit={
+              userId === message.user_id && index === lastUserMessageIndex && !isLoading && !isStreaming
+                ? onSubmitEditedMessage
+                : undefined
+            }
+            onRemoveAttachment={onRemoveAttachment}
+            onClickReplyTo={onClickReplyTo}
+            onEditCanvas={onEditCanvas}
+            selectedCodeBlockInfo={selectedCodeBlockInfo}
+            onRegenerateAnswer={onRegenerateAnswer}
+            isLoading={isLoading}
+            isStreaming={isStreaming}
+            toolsFromConversation={toolsFromConversation}
+            onOpenArtifactPreview={onOpenArtifactPreview}
+            onContinueMcpExecution={onContinueMcpExecution}
+            onContinueTokenLimitExecution={onContinueTokenLimitExecution}
+            onHitlResume={onHitlResume}
+            onHitlEditClick={onHitlEditClick}
+            hideHitlActions={hideHitlActions}
+            hideContinueButton={hideContinueButton}
+            isSpeakingMode={isSpeakingMode}
+            onAutoSpeak={onAutoSpeak}
+            speakingMessageId={speakingMessageId}
+            speakingSegments={speakingSegments}
+            spokenRange={spokenRange}
+          />
+        ))}
         {/* Spacer placed AFTER messages to create extra scrollable area below target */}
         {bottomSpacer > 0 && (
           <Box

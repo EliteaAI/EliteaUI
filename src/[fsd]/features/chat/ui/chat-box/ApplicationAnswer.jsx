@@ -1,13 +1,19 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import SmartToyIcon from '@mui/icons-material/SmartToy';
-import { Box, Chip, Typography } from '@mui/material';
-import IconButton from '@mui/material/IconButton';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemAvatar from '@mui/material/ListItemAvatar';
-import ListItemText from '@mui/material/ListItemText';
+import {
+  Box,
+  Chip,
+  IconButton,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
+  Typography,
+  useTheme,
+} from '@mui/material';
 
+import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { buildAttachmentSummary } from '@/[fsd]/entities/attachment/lib';
 import { toSpeakableText, translateSpokenPos } from '@/[fsd]/features/chat/lib/helpers';
 import { ChatAttachment, ChatContinue, ChatHitlActions } from '@/[fsd]/features/chat/ui';
@@ -27,48 +33,33 @@ import {
 } from '@/common/constants.js';
 import { getToolIcon } from '@/common/toolkitUtils';
 import { convertJsonToString, isImageFile, isNullOrUndefined } from '@/common/utils';
-import DownloadIcon from '@/components/Icons/DownloadIcon';
-import RotatingMessages from '@/components/RotatingMessages';
-import useCopyDownloadHandlers from '@/hooks/chat/useCopyEventHandlers';
-import useParticipantEntityIcon from '@/hooks/chat/useParticipantEntityIcon';
-import useParticipantName from '@/hooks/chat/useParticipantName';
-import useGetComponentWidth from '@/hooks/useGetComponentWidth';
-import { useTheme } from '@emotion/react';
-
-import StyledTooltip from '@/ComponentsLib/Tooltip';
 import Canvas from '@/components/Canvas';
-import EntityIcon from '@/components/EntityIcon';
-import CopyIcon from '@/components/Icons/CopyIcon';
-import CopyMoveIcon from '@/components/Icons/CopyMoveIcon';
-import DeleteIcon from '@/components/Icons/DeleteIcon';
-import EditIcon from '@/components/Icons/EditIcon';
-import EliteAIcon from '@/components/Icons/EliteAIcon';
-import RegenerateIcon from '@/components/Icons/RegenerateIcon';
 import ApplicationThinkView from '@/components/Chat/ApplicationThinkView';
 import CreatedTimeInfo from '@/components/Chat/CreatedTimeInfo';
 import EditingPlaceholder from '@/components/Chat/EditingPlaceholder';
 import NormalAttachment from '@/components/Chat/NormalAttachment';
 import { Answer, ButtonsContainer, UserMessageContainer } from '@/components/Chat/StyledComponents';
+import EntityIcon from '@/components/EntityIcon';
+import CopyIcon from '@/components/Icons/CopyIcon';
+import CopyMoveIcon from '@/components/Icons/CopyMoveIcon';
+import DeleteIcon from '@/components/Icons/DeleteIcon';
+import DownloadIcon from '@/components/Icons/DownloadIcon';
+import EditIcon from '@/components/Icons/EditIcon';
+import EliteAIcon from '@/components/Icons/EliteAIcon';
+import RegenerateIcon from '@/components/Icons/RegenerateIcon';
+import RotatingMessages from '@/components/RotatingMessages';
+import useCopyDownloadHandlers from '@/hooks/chat/useCopyEventHandlers';
+import useParticipantEntityIcon from '@/hooks/chat/useParticipantEntityIcon';
+import useParticipantName from '@/hooks/chat/useParticipantName';
+import useGetComponentWidth from '@/hooks/useGetComponentWidth';
 
-// import AgentException from './AgentException';
 const COMPACT_VIEW_BREAKPOINT = 340;
 
 export const ALLOW_EDIT_WHOLE_MESSAGE = false;
 
-export const ReferenceList = ({ references }) => {
-  return (
-    <List dense>
-      {references.map(i => (
-        <ListItem key={i}>
-          <ListItemText primary={<Markdown>{i}</Markdown>} />
-        </ListItem>
-      ))}
-    </List>
-  );
-};
-
 const ApplicationAnswer = React.forwardRef((props, ref) => {
   const theme = useTheme();
+
   const {
     answer,
     message_items,
@@ -114,6 +105,13 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
     speakingSegments,
     spokenRange,
   } = props;
+
+  // Ref for scrolling to message header after clicking continue
+  const headerRef = useRef(null);
+
+  const participantName = useParticipantName(participant);
+  const entityIcon = useParticipantEntityIcon(participant);
+
   const [isErrorExpanded, setIsErrorExpanded] = useState(false);
 
   const downloadErrorTrace = useCallback(() => {
@@ -128,9 +126,6 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
     document.body.removeChild(element);
     URL.revokeObjectURL(element.href);
   }, [exception, messageId]);
-
-  // Ref for scrolling to message header after clicking continue
-  const headerRef = useRef(null);
 
   // Find the single toolAction that requires auth (should only be one)
   const authRequiredAction = useMemo(
@@ -160,11 +155,10 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
     }
   }, [onContinueTokenLimitExecution, messageId, requiresConfirmation]);
 
-  const participantName = useParticipantName(participant);
-  const entityIcon = useParticipantEntityIcon(participant);
   const { onClickCopy } = useCopyDownloadHandlers({
     onCopy,
   });
+
   const itemToSpeakableText = item => {
     if (item.item_type === 'canvas_message') {
       return item.item_details.latest_version?.canvas_content || '';
@@ -297,6 +291,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
       !selectedCodeBlockInfo?.isBlock,
     [messageId, selectedCodeBlockInfo?.isBlock, selectedCodeBlockInfo?.selectedMessage?.id],
   );
+
   const onClickEdit = useCallback(() => {
     onEdit?.({
       rawData: rawAnswer,
@@ -312,6 +307,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
 
   const { componentRef: actionButtonsWrapperRef, componentWidth: actionButtonsWrapperWidth } =
     useGetComponentWidth();
+
   const hasCanvasBeingEdited = useMemo(
     () =>
       !!message_items?.find(
@@ -710,7 +706,20 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
               {references?.length > 0 && !(isLoading || isRegenerating) && (
                 <BasicAccordion
                   style={{ marginTop: answer ? '0.9375rem' : '2.3125rem' }}
-                  items={[{ title: 'References', content: <ReferenceList references={references} /> }]}
+                  items={[
+                    {
+                      title: 'References',
+                      content: (
+                        <List dense>
+                          {references.map(i => (
+                            <ListItem key={i}>
+                              <ListItemText primary={<Markdown>{i}</Markdown>} />
+                            </ListItem>
+                          ))}
+                        </List>
+                      ),
+                    },
+                  ]}
                 />
               )}
               <Box
@@ -1141,4 +1150,4 @@ const applicationAnswerStyles = (
   },
 });
 
-export default ApplicationAnswer;
+export default memo(ApplicationAnswer);

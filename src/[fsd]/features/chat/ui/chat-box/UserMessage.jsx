@@ -4,17 +4,9 @@ import { Box, Button, Typography } from '@mui/material';
 import IconButton from '@mui/material/IconButton';
 import ListItemAvatar from '@mui/material/ListItemAvatar';
 
+import StyledTooltip from '@/ComponentsLib/Tooltip';
 import Markdown from '@/[fsd]/shared/ui/markdown';
 import { ChatParticipantType } from '@/common/constants';
-import UserAvatar from '@/components/UserAvatar';
-import useHighlightUserMessage from '@/hooks/chat/useHighlightUserMessage';
-import useParticipantName from '@/hooks/chat/useParticipantName';
-
-import StyledTooltip from '@/ComponentsLib/Tooltip';
-import CopyIcon from '@/components/Icons/CopyIcon';
-import CopyMoveIcon from '@/components/Icons/CopyMoveIcon';
-import DeleteIcon from '@/components/Icons/DeleteIcon';
-import EditIcon from '@/components/Icons/EditIcon';
 import CreatedTimeInfo from '@/components/Chat/CreatedTimeInfo';
 import MessageAttachmentList from '@/components/Chat/MessageAttachmentList';
 import {
@@ -23,6 +15,13 @@ import {
   StyledTextField,
   UserMessageContainerWithMargin as UserMessageContainer,
 } from '@/components/Chat/StyledComponents';
+import CopyIcon from '@/components/Icons/CopyIcon';
+import CopyMoveIcon from '@/components/Icons/CopyMoveIcon';
+import DeleteIcon from '@/components/Icons/DeleteIcon';
+import EditIcon from '@/components/Icons/EditIcon';
+import UserAvatar from '@/components/UserAvatar';
+import useHighlightUserMessage from '@/hooks/chat/useHighlightUserMessage';
+import useParticipantName from '@/hooks/chat/useParticipantName';
 
 const UserMessage = React.forwardRef((props, ref) => {
   const {
@@ -116,7 +115,7 @@ const UserMessage = React.forwardRef((props, ref) => {
                     variant="bodySmall"
                     sx={styles.sentToName(isSentToDummyParticipant)}
                   >
-                    {participantName}
+                    {participantName} sss
                   </Typography>
                 </StyledTooltip>
               </>

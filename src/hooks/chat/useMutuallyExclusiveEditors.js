@@ -111,39 +111,15 @@ export function useMutuallyExclusiveEditors({
   }, [isEditingCanvas, isEditingAgent, isEditingToolkit, isEditingPipeline, isEditingArtifact]);
 
   const onEditCanvas = useCallback(
-    message =>
-      ({
-        rawData,
-        codeBlock,
-        language,
-        isBlock,
-        startPos,
-        endPos,
-        canvasId,
-        messageItemId,
-        blockId,
-        viewOnly,
-      }) => {
-        if (isAnyEditorOpen) {
-          setEditingAlert(true);
-          setNewEditingBlockInfo({
-            forCanvas: true,
-            information: {
-              message,
-              rawData,
-              codeBlock,
-              language,
-              isBlock,
-              startPos,
-              endPos,
-              canvasId,
-              messageItemId,
-              blockId,
-              viewOnly,
-            },
-          });
-        } else {
-          onShowCanvasEditor({
+    (
+      message,
+      { rawData, codeBlock, language, isBlock, startPos, endPos, canvasId, messageItemId, blockId, viewOnly },
+    ) => {
+      if (isAnyEditorOpen) {
+        setEditingAlert(true);
+        setNewEditingBlockInfo({
+          forCanvas: true,
+          information: {
             message,
             rawData,
             codeBlock,
@@ -155,9 +131,24 @@ export function useMutuallyExclusiveEditors({
             messageItemId,
             blockId,
             viewOnly,
-          });
-        }
-      },
+          },
+        });
+      } else {
+        onShowCanvasEditor({
+          message,
+          rawData,
+          codeBlock,
+          language,
+          isBlock,
+          startPos,
+          endPos,
+          canvasId,
+          messageItemId,
+          blockId,
+          viewOnly,
+        });
+      }
+    },
     [isAnyEditorOpen, onShowCanvasEditor],
   );
 
