@@ -138,13 +138,14 @@ const NotificationListItem = memo(props => {
     showIcon = true,
     sx = {},
     contentSX = {},
+    onNotificationSeenChange,
     onCloseNotificationList,
     context = 'list',
   } = props;
   const theme = useTheme();
   const { event_type } = notification;
   const { textVariant } = NOTIFICATION_CONTEXT_STYLES[context] ?? NOTIFICATION_CONTEXT_STYLES.list;
-  const styles = notificationListItemStyles(clampLines, context === 'list');
+  const styles = notificationListItemStyles(clampLines, context === 'list', notification.is_seen);
 
   const [isHovered, setIsHovered] = useState(false);
   const projectId = useSelectedProjectId();
@@ -154,6 +155,14 @@ const NotificationListItem = memo(props => {
   const shouldMarkAsRead = !notification.is_seen;
   const markToggleLabel = shouldMarkAsRead ? 'Mark as read' : 'Mark as unread';
   const MarkIcon = shouldMarkAsRead ? MarkReadIcon : MarkUnreadIcon;
+
+  const handleMouseEnter = useCallback(() => {
+    setIsHovered(true);
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    setIsHovered(false);
+  }, []);
 
   const handleMarkToggle = useCallback(
     async e => {
@@ -165,18 +174,26 @@ const NotificationListItem = memo(props => {
           ids: [notification.id],
           isSeen: shouldMarkAsRead,
         }).unwrap();
+        onNotificationSeenChange?.(notification.id, shouldMarkAsRead);
       } catch (err) {
         toastError(buildErrorMessage(err));
       }
     },
-    [projectId, notification.id, shouldMarkAsRead, bulkMarkSeenNotifications, toastError],
+    [
+      projectId,
+      notification.id,
+      shouldMarkAsRead,
+      bulkMarkSeenNotifications,
+      onNotificationSeenChange,
+      toastError,
+    ],
   );
 
   return (
     <Box
       sx={[styles.container, sx]}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       {showIcon && <Box sx={styles.iconContainer}>{getIcon(event_type, theme, notification)}</Box>}
       <Box sx={[styles.content, contentSX]}>
@@ -215,7 +232,7 @@ const NotificationListItem = memo(props => {
 NotificationListItem.displayName = 'NotificationListItem';
 
 /** @type {MuiSx} */
-const notificationListItemStyles = (clampLines, isContextList) => ({
+const notificationListItemStyles = (clampLines, isContextList, isSeen) => ({
   container: ({ palette }) => ({
     display: 'flex',
     padding: '0.5rem 0.75rem',
@@ -225,6 +242,9 @@ const notificationListItemStyles = (clampLines, isContextList) => ({
     gap: '0.7rem',
     boxSizing: 'border-box',
     borderBottom: `0.0625rem solid ${palette.border.notificationItem}`,
+    '&:hover': {
+      backgroundColor: isContextList && isSeen ? palette.background.tabButton.default : undefined,
+    },
   }),
   markButton: {
     flexShrink: 0,

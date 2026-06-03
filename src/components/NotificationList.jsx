@@ -56,10 +56,24 @@ const NotificationList = memo(props => {
         ids: unreadIds,
         isSeen: true,
       }).unwrap();
+      const unreadIdsSet = new Set(unreadIds);
+      setAllNotifications(prev =>
+        prev.map(notification =>
+          unreadIdsSet.has(notification.id) ? { ...notification, is_seen: true } : notification,
+        ),
+      );
     } catch (err) {
       toastError(buildErrorMessage(err));
     }
   }, [personal_project_id, allNotifications, bulkMarkSeenNotifications, toastError]);
+
+  const handleNotificationSeenChange = useCallback((notificationId, isSeen) => {
+    setAllNotifications(prev =>
+      prev.map(notification =>
+        notification.id === notificationId ? { ...notification, is_seen: isSeen } : notification,
+      ),
+    );
+  }, []);
 
   const onViewAll = useCallback(() => {
     dispatch(notificationsApi.util.invalidateTags([TAG_NOTIFICATIONS]));
@@ -85,6 +99,7 @@ const NotificationList = memo(props => {
     if (!data?.rows) return;
     if (isFetching) return;
     if (page === 0) {
+      if (lastAppliedPageRef.current === 0 && allNotifications.length) return;
       lastAppliedPageRef.current = 0;
       setAllNotifications(data.rows);
       return;
@@ -92,7 +107,7 @@ const NotificationList = memo(props => {
     if (lastAppliedPageRef.current === page) return;
     lastAppliedPageRef.current = page;
     setAllNotifications(prev => [...prev, ...data.rows]);
-  }, [data?.rows, notificationListAnchorEl, page, isFetching]);
+  }, [allNotifications.length, data?.rows, notificationListAnchorEl, page, isFetching]);
 
   useEffect(() => {
     if (!notificationListAnchorEl) {
@@ -179,6 +194,7 @@ const NotificationList = memo(props => {
               <NotificationListItem
                 key={notification.id}
                 notification={notification}
+                onNotificationSeenChange={handleNotificationSeenChange}
                 onCloseNotificationList={onCloseNotificationList}
               />
             ))}
@@ -197,7 +213,7 @@ const NotificationList = memo(props => {
             )}
             {!allNotifications.length && !isFetching && (
               <Box sx={styles.emptyState}>
-                <Typography variant="bodySmall">No notifications right now</Typography>
+                <Typography variant="bodySmall">No new notifications right now</Typography>
               </Box>
             )}
           </Box>
@@ -211,9 +227,10 @@ const NotificationList = memo(props => {
           )}
           {allNotifications.length > 0 && (
             <BaseBtn
-              variant={BUTTON_VARIANTS.tertiary}
+              variant={BUTTON_VARIANTS.auxiliary}
               onClick={onMarkAllAsRead}
               sx={styles.markAllButton}
+              disabled={!allNotifications.some(n => !n.is_seen)}
             >
               <Typography
                 variant="labelMedium"
@@ -224,7 +241,7 @@ const NotificationList = memo(props => {
             </BaseBtn>
           )}
           <BaseBtn
-            variant={BUTTON_VARIANTS.tertiary}
+            variant={BUTTON_VARIANTS.auxiliary}
             onClick={onViewAll}
             sx={styles.viewAllButton}
           >
@@ -296,16 +313,14 @@ const notificationListStyles = () => ({
     borderBottom: `0.0625rem solid ${palette.border.notificationItem}`,
   }),
   markAllButton: ({ palette }) => ({
-    width: '100%',
-    padding: '0.75rem 1.25rem',
     height: '3rem',
-    boxSizing: 'border-box',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderTop: `0.0625rem solid ${palette.border.notificationItem}`,
-    borderRadius: '0px',
+    '&:disabled': {
+      '& > span': {
+        color: palette.text.disabled,
+      },
+    },
     '&:hover': {
+      backgroundColor: palette.background.tabButton.default,
       borderRadius: '0px',
     },
   }),
@@ -313,16 +328,11 @@ const notificationListStyles = () => ({
     color: palette.text.button.showMore,
   }),
   viewAllButton: ({ palette }) => ({
-    width: '100%',
-    padding: '0.75rem 1.25rem',
     height: '3rem',
-    boxSizing: 'border-box',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
     borderTop: `0.0625rem solid ${palette.border.notificationItem}`,
     borderRadius: '0px',
     '&:hover': {
+      backgroundColor: palette.background.tabButton.default,
       borderRadius: '0px',
     },
   }),

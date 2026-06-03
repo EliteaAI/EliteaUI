@@ -68,10 +68,10 @@ const blue02 = 'rgba(110, 177, 255, 1)';
 const blue03 = 'rgba(99, 144, 254, 1)';
 
 const blue = 'rgba(41, 184, 245, 1)';
-const blue70 = 'rgba(41, 184, 245, 0.70)';
 
 const darkBlue = '#006DD1';
 const darkBlueLowOpacity = 'rgba(0, 109, 209, 0.4)';
+const darkBlue70 = 'rgba(0, 109, 209, 0.7)';
 const completedBlue = '#036ED033';
 const hoverBlue = '#2783D8';
 const almostWhite = '#FAFAFA';
@@ -462,7 +462,7 @@ const lightPalette = {
       logout: orange,
     },
     link: blue,
-    linkSeen: blue70,
+    linkSeen: darkBlue70,
     highlighted: gray60, //magenta,
   },
   icon: {
