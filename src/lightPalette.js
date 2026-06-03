@@ -461,7 +461,7 @@ const lightPalette = {
       loginSuccess: green,
       logout: orange,
     },
-    link: blue,
+    link: darkBlue,
     linkSeen: darkBlue70,
     highlighted: gray60, //magenta,
   },

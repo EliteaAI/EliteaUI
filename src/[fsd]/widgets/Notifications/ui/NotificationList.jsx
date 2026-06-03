@@ -169,6 +169,7 @@ const NotificationList = memo(props => {
       slotProps={{
         paper: {
           ref: popoverPaperRef,
+          sx: styles.popoverPaper,
         },
       }}
       sx={styles.popover}
@@ -267,6 +268,9 @@ const notificationListStyles = () => ({
     background: 'transparent',
     marginLeft: '1.875rem',
   },
+  popoverPaper: {
+    borderRadius: '0.5rem',
+  },
   container: ({ palette }) => ({
     background: palette.background.notificationList,
     borderRadius: '0.5rem',
@@ -315,6 +319,8 @@ const notificationListStyles = () => ({
   }),
   markAllButton: ({ palette }) => ({
     height: '3rem',
+    borderTop: `0.0625rem solid ${palette.border.notificationItem}`,
+    borderRadius: 0,
     '&:disabled': {
       '& > span': {
         color: palette.text.disabled,
@@ -322,7 +328,7 @@ const notificationListStyles = () => ({
     },
     '&:hover': {
       backgroundColor: palette.background.tabButton.default,
-      borderRadius: '0px',
+      borderRadius: 0,
     },
   }),
   markAllButtonText: ({ palette }) => ({
