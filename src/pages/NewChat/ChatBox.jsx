@@ -1072,32 +1072,8 @@ const ChatBox = forwardRef((props, boxRef) => {
     [chat_history, toastError, toastSuccess],
   );
 
-  const onRegenerateAnswerStream = useCallback(
-    (id, question, questionId) => async () => {
-      stopTTS?.();
-      chatInput.current?.pauseSpeakingMode?.();
-      const questionIndex = chat_history.findIndex(item => item.id === id) - 1;
-      const theQuestion = question || chat_history[questionIndex]?.content;
-      const question_id = questionId || chat_history[questionIndex]?.id;
-      const leftChatHistory = chat_history.slice(0, questionIndex);
-      const { participant_id } = chat_history.find(item => item.question_id === question_id) || {};
-      const participant = getParticipantById(activeConversation, participant_id);
-
-      const payload = getPayload({
-        question: theQuestion,
-        question_id,
-        chatHistory: leftChatHistory,
-        participant,
-        attachmentList: [],
-      });
-      payload.payload.message_id = id;
-      emit(payload);
-    },
-    [chat_history, activeConversation, getPayload, emit, stopTTS],
-  );
-
   const onRegenerateAnswer = useCallback(
-    (uuid, messageParticipant) => async () => {
+    (uuid, messageParticipant, updatedItems) => async () => {
       stopTTS();
       chatInput.current?.pauseSpeakingMode?.();
       let prevMessage = {};
@@ -1142,6 +1118,9 @@ const ChatBox = forwardRef((props, boxRef) => {
       });
       payload.message_id = uuid;
       payload.stream_id = uuid;
+      if (updatedItems?.length) {
+        payload.updated_items = updatedItems;
+      }
       setTimeout(() => {
         setStreamingInfo(question_id);
       }, 20);
@@ -1473,12 +1452,32 @@ const ChatBox = forwardRef((props, boxRef) => {
   );
 
   const onSubmitEditedMessage = useCallback(
-    (id, question) => {
-      const { id: answerId } = chat_history.find(item => item.question_id === id) || {};
-      setChatHistory(prev => prev.map(item => (item.id === id ? { ...item, content: question } : item)));
-      answerId ? onRegenerateAnswerStream(answerId, question)() : onResendQuestionStream(id, question);
+    (id, updatedItems) => {
+      const textUpdate = updatedItems?.find(u => u.item_type === 'text_message');
+      setChatHistory(prev =>
+        prev.map(item => {
+          if (item.id !== id) return item;
+          return {
+            ...item,
+            ...(textUpdate ? { content: textUpdate.content } : {}),
+            message_items: (item.message_items || []).map(mi => {
+              const update = updatedItems?.find(u => u.uuid === mi.uuid);
+              if (!update) return mi;
+              return { ...mi, item_details: { ...mi.item_details, content: update.content } };
+            }),
+          };
+        }),
+      );
+      const { id: answerId, participant_id } = chat_history.find(item => item.question_id === id) || {};
+      const participant = getParticipantById(activeConversation, participant_id);
+      if (answerId) {
+        onRegenerateAnswer(answerId, participant, updatedItems)();
+      } else {
+        const question = textUpdate?.content || '';
+        onResendQuestionStream(id, question);
+      }
     },
-    [chat_history, onRegenerateAnswerStream, onResendQuestionStream, setChatHistory],
+    [chat_history, activeConversation, onRegenerateAnswer, onResendQuestionStream, setChatHistory],
   );
 
   const { onLoadMoreMessages, isLoadingMore } = useLoadMoreMessages({
