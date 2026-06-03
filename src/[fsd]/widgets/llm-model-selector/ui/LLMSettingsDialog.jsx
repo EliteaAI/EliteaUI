@@ -1,7 +1,7 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Button, Modal } from '@/[fsd]/shared/ui';
-import { VALIDATION_RULE, validateMaxTokens } from '@/[fsd]/widgets/LLMModelSelector/lib';
+import { VALIDATION_RULE, validateMaxTokens } from '@/[fsd]/widgets/llm-model-selector/lib';
 
 import { LLMSettings } from './LLMSettings';
 
