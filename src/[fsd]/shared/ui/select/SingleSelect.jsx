@@ -77,6 +77,7 @@ const SingleSelect = memo(props => {
     onMenuActionClick,
     infoIconDescription,
     shrinkLabel = false,
+    valueItemSX,
   } = props;
 
   const [menuOpen, setMenuOpen] = useState(false);
@@ -244,7 +245,7 @@ const SingleSelect = memo(props => {
 
       const foundOption = flatOptions.find(({ value: itemValue }) => itemValue === selectedValue);
       if (!foundOption && customRenderValue) {
-        return <Box sx={styles.valueItem}>{customRenderValue(undefined)}</Box>;
+        return <Box sx={[styles.valueItem, valueItemSX]}>{customRenderValue(undefined)}</Box>;
       }
       if (!foundOption) return showEmptyPlaceholder ? emptyPlaceholder : '';
 
@@ -278,7 +279,7 @@ const SingleSelect = memo(props => {
         <Box
           key={foundOption.value}
           value={foundOption.value}
-          sx={styles.valueItem}
+          sx={[styles.valueItem, valueItemSX]}
         >
           {content}
         </Box>
@@ -294,6 +295,7 @@ const SingleSelect = memo(props => {
       customRenderValue,
       showOptionIcon,
       styles,
+      valueItemSX,
     ],
   );
 

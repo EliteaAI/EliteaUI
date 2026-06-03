@@ -2,13 +2,18 @@ import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from '
 
 import { useSelector } from 'react-redux';
 
-import { Box, FormControl, FormHelperText, IconButton, Tooltip, Typography } from '@mui/material';
+import { Box, FormControl, FormHelperText, Tooltip, Typography } from '@mui/material';
 
 import { useTrackEvent } from '@/GA';
+import { useCredentialValidation } from '@/[fsd]/features/credentials/lib/hooks';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
 import { useContextExecutionEntity } from '@/[fsd]/shared/lib/hooks';
 import { Select } from '@/[fsd]/shared/ui';
+import { BaseBtn } from '@/[fsd]/shared/ui/button';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { useLazyGetConfigurationsListQuery, useListModelsQuery } from '@/api/configurations';
+import AttentionIcon from '@/assets/attention-icon.svg?react';
+import OpenInNewIcon from '@/assets/open-new-icon.svg?react';
 import RefreshIcon from '@/assets/refresh-icon.svg?react';
 import BriefcaseIcon from '@/components/Icons/BriefcaseIcon.jsx';
 import { Create_Personal_Title, Create_Project_Title, Manual_Title } from '@/hooks/useConfigurations';
@@ -92,7 +97,6 @@ const CredentialsSelect = memo(
     presetOptions,
   }) => {
     const trackEvent = useTrackEvent();
-
     const { personal_project_id } = useSelector(state => state.user);
     const selectedProjectId = useSelectedProjectId();
     const { contextExecutionEntity } = useContextExecutionEntity();
@@ -100,6 +104,14 @@ const CredentialsSelect = memo(
     const [hasFetchedData, setHasFetchedData] = useState(false);
     const [configurations, setConfigurations] = useState([]);
     const hasAutoSelectedRef = useRef(false);
+    const {
+      validateCredential,
+      batchValidateCredentials,
+      getCredentialStatus,
+      getCredentialMessage,
+      resetStatus,
+      resetStatuses,
+    } = useCredentialValidation();
 
     const {
       data: vectorStorageData = { items: [], total: 0, default_model_name: '', default_model_project_id: '' },
@@ -135,6 +147,7 @@ const CredentialsSelect = memo(
         setConfigurations([]);
         setHasFetchedData(false);
         hasAutoSelectedRef.current = false;
+        resetStatuses();
         let teamProjectConfigurations = [];
         if (selectedProjectId) {
           const { data } = await getConfigurations({
@@ -175,13 +188,23 @@ const CredentialsSelect = memo(
         setConfigurations(teamProjectConfigurations);
         setHasFetchedData(true);
       },
-      [getConfigurations, personal_project_id, section, selectedProjectId, type, onlyPublic],
+      [getConfigurations, personal_project_id, resetStatuses, section, selectedProjectId, type, onlyPublic],
     );
 
     useEffect(() => {
       onRefresh();
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedProjectId, personal_project_id, type, section, onlyPublic]);
+
+    useEffect(() => {
+      if (!hasFetchedData || configurations.length === 0) return;
+      batchValidateCredentials(
+        configurations.map(config => ({
+          projectId: config.project_id || selectedProjectId,
+          credential: config,
+        })),
+      );
+    }, [hasFetchedData, configurations, batchValidateCredentials, selectedProjectId]);
 
     const createMenuData = useMemo(() => {
       const options = [];
@@ -194,10 +217,13 @@ const CredentialsSelect = memo(
             elitea_title: Create_Personal_Title,
             private: true,
             label: (
-              <span style={styles.labelContainer}>
+              <Box
+                component="span"
+                sx={styles.labelContainer}
+              >
                 <Person fontSize="1rem" />
                 {`New private ${type ? type + ' ' : ''}credentials`}
-              </span>
+              </Box>
             ),
             settings: initialToolTypeState || {},
           });
@@ -207,10 +233,13 @@ const CredentialsSelect = memo(
             elitea_title: Create_Project_Title,
             private: false,
             label: (
-              <span style={styles.labelContainer}>
+              <Box
+                component="span"
+                sx={styles.labelContainer}
+              >
                 <BriefcaseIcon fontSize="1rem" />
                 {`New project ${type ? type + ' ' : ''}credentials`}
-              </span>
+              </Box>
             ),
             settings: initialToolTypeState || {},
           });
@@ -237,6 +266,34 @@ const CredentialsSelect = memo(
         })
         .map(configuration => {
           const isConfigurationPersonal = configuration.project_id === personal_project_id;
+          const configUid = configuration.id || configuration.uuid;
+          const credentialUrl = configUid
+            ? (() => {
+                const baseUrl = `${window.location.protocol}//${window.location.host}`;
+                const basename = getBasename();
+                const credProjectId = configuration.project_id || selectedProjectId;
+                const path = RouteDefinitions.EditCredentialFromMain.replace(':tab', 'all').replace(
+                  ':credential_uid',
+                  configUid,
+                );
+                return `${baseUrl}${basename}/${credProjectId}${path}`;
+              })()
+            : null;
+
+          const credStatus = getCredentialStatus(configUid);
+          const isCredentialInvalid = credStatus === 'invalid';
+          const isChecking = credStatus === 'checking';
+          const credentialMessage = getCredentialMessage(configUid);
+
+          const handleRevalidate = event => {
+            event.stopPropagation();
+            resetStatus(configUid);
+            validateCredential({
+              projectId: configuration.project_id || selectedProjectId,
+              credential: configuration,
+            });
+          };
+
           return {
             id: `${configuration.elitea_title}_${configuration.project_id}`,
             elitea_title: configuration.elitea_title || configuration.data?.title,
@@ -244,7 +301,10 @@ const CredentialsSelect = memo(
             settings: configuration.data || {},
             shared: configuration.shared || false,
             label: (
-              <span style={styles.labelContainer}>
+              <Box
+                component="span"
+                sx={styles.labelContainer}
+              >
                 {isConfigurationPersonal ? (
                   <Person
                     key="person-icon"
@@ -256,14 +316,84 @@ const CredentialsSelect = memo(
                     fontSize="1rem"
                   />
                 )}
-                <span key="label-text">
+                <Box
+                  component="span"
+                  key="label-text"
+                  sx={styles.labelText}
+                >
                   {configuration.label || configuration.elitea_title || configuration.data?.title}
-                </span>
-              </span>
+                </Box>
+                {isCredentialInvalid && (
+                  <Tooltip
+                    key="invalid-credential-tooltip"
+                    title={credentialMessage || 'Credential is unavailable or misconfigured'}
+                    placement="top"
+                  >
+                    <Box
+                      key="invalid-credential-icon"
+                      sx={styles.attentionIconBox}
+                    >
+                      <AttentionIcon />
+                    </Box>
+                  </Tooltip>
+                )}
+                {credentialUrl && (
+                  <Tooltip
+                    key="open-in-new-tab-tooltip"
+                    title="Open in new tab"
+                    placement="top"
+                  >
+                    <BaseBtn
+                      key="open-in-new-tab"
+                      className="credential-action"
+                      variant={BUTTON_VARIANTS.tertiary}
+                      size="small"
+                      onMouseDown={event => event.stopPropagation()}
+                      onClick={event => {
+                        event.stopPropagation();
+                        window.open(credentialUrl, '_blank', 'noopener,noreferrer');
+                      }}
+                      sx={styles.optionActionButton}
+                    >
+                      <OpenInNewIcon />
+                    </BaseBtn>
+                  </Tooltip>
+                )}
+                {isCredentialInvalid && (
+                  <Tooltip
+                    key="revalidate-tooltip"
+                    title="Reload and apply changes"
+                    placement="top"
+                  >
+                    <BaseBtn
+                      key="revalidate-btn"
+                      className="credential-action"
+                      variant={BUTTON_VARIANTS.tertiary}
+                      size="small"
+                      disabled={isChecking}
+                      onMouseDown={event => event.stopPropagation()}
+                      onClick={handleRevalidate}
+                      sx={styles.optionActionButton}
+                    >
+                      <RefreshIcon />
+                    </BaseBtn>
+                  </Tooltip>
+                )}
+              </Box>
             ),
           };
         });
-    }, [configurations, personal_project_id, onlyPublic, presetOptions]);
+    }, [
+      presetOptions,
+      configurations,
+      personal_project_id,
+      onlyPublic,
+      getCredentialStatus,
+      getCredentialMessage,
+      resetStatus,
+      validateCredential,
+      selectedProjectId,
+    ]);
 
     const menuData = useMemo(
       () => ({
@@ -380,13 +510,14 @@ const CredentialsSelect = memo(
           title="Refresh the configurations"
           placement="top"
         >
-          <IconButton
+          <BaseBtn
+            variant={BUTTON_VARIANTS.tertiary}
             size="small"
             onClick={onRefresh}
             sx={styles.refreshIcon}
           >
             <RefreshIcon />
-          </IconButton>
+          </BaseBtn>
         </Tooltip>
       );
 
@@ -466,6 +597,12 @@ const CredentialsSelect = memo(
       [savedCredentialsMenuData, onSelectItem, createMenuData, createSelectHandler],
     );
 
+    const showMismatchFooter = Boolean(
+      value && !isBlankEliteaTitle(value?.elitea_title) && !selectedOption && hasFetchedData,
+    );
+
+    const selectError = error || showMismatchFooter;
+
     const customRenderSelectValue = useCallback(
       foundOption => {
         if (!foundOption) {
@@ -489,6 +626,17 @@ const CredentialsSelect = memo(
               >
                 {value.elitea_title}
               </Typography>
+              {hasFetchedData && (
+                <Tooltip
+                  key="not-found-tooltip"
+                  title="Credential not found"
+                  placement="top"
+                >
+                  <Box sx={styles.attentionIconBox}>
+                    <AttentionIcon />
+                  </Box>
+                </Tooltip>
+              )}
             </Box>
           );
         }
@@ -504,17 +652,11 @@ const CredentialsSelect = memo(
           </Typography>
         );
       },
-      [renderValue, value, hasFetchedData],
-    );
-
-    const selectError = error || (mismatchedPrivateCredential && hasFetchedData);
-
-    const showMismatchFooter = Boolean(
-      value && !isBlankEliteaTitle(value?.elitea_title) && !selectedOption && hasFetchedData,
+      [renderValue, value.elitea_title, value?.private, hasFetchedData],
     );
 
     return (
-      <Box sx={[{ marginTop: '0.5rem' }, sx]}>
+      <Box sx={[styles.container, sx]}>
         <Select.SingleSelect
           label={label}
           shrinkLabel
@@ -534,6 +676,7 @@ const CredentialsSelect = memo(
           displayEmpty
           showEmptyPlaceholder={false}
           isListFetching={isFetching}
+          valueItemSX={styles.valueItemSX}
         />
         {showMismatchFooter && mismatchedPrivateCredential && (
           <CredentialWarningBanner
@@ -559,11 +702,47 @@ CredentialsSelect.displayName = 'CredentialsSelect';
 
 /** @type {MuiSx} */
 const styles = {
+  container: { marginTop: '0.5rem' },
   labelContainer: {
     display: 'inline-flex',
     alignItems: 'center',
     gap: '0.5rem',
+    flex: 1,
+    width: '100%',
+    '& .credential-action': { display: 'none' },
+    '&:hover .credential-action': { display: 'inline-flex' },
   },
+  labelText: {
+    flex: 1,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  optionActionButton: ({ palette }) => ({
+    padding: '0.125rem',
+    marginLeft: 'auto',
+    flexShrink: 0,
+    '& svg': {
+      width: '0.875rem',
+      height: '0.875rem',
+    },
+    '&:hover': {
+      opacity: 1,
+      backgroundColor: palette.background.userInputBackgroundActive,
+    },
+  }),
+  attentionIconBox: ({ palette }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    flexShrink: 0,
+    width: '1rem',
+    height: '1rem',
+    color: palette.icon.fill.attention,
+    '& svg': {
+      width: '0.875rem',
+      height: '0.875rem',
+    },
+  }),
   refreshIcon: ({ palette }) => ({
     color: palette.text.default,
     padding: 0,
@@ -588,6 +767,7 @@ const styles = {
     },
   }),
   selectedValueTypography: selectedOption => ({
+    flex: 1,
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
@@ -595,14 +775,22 @@ const styles = {
     color: ({ palette }) => (selectedOption?.label ? palette.text.secondary : palette.text.disabled),
   }),
   unmatchedValueBox: mismatch => ({
+    flex: 1,
     display: 'flex',
     alignItems: 'center',
     gap: '0.5rem',
     color: ({ palette }) => (mismatch ? palette.status.rejected : palette.text.secondary),
   }),
   unmatchedValueTypography: mismatch => ({
+    flex: 1,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
     color: ({ palette }) => (mismatch ? palette.status.rejected : palette.text.disabled),
   }),
+  valueItemSX: {
+    flex: 1,
+  },
 };
 
 export default CredentialsSelect;

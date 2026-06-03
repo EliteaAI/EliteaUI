@@ -390,6 +390,20 @@ export const configurationsApi = eliteaApi
         }),
       }),
 
+      // Batch test configuration connections
+      // items: Array<{ id: string, type: string, data: object }>
+      // Returns: Array<{ id: string, success: boolean, message?: string, unsupported?: boolean }>
+      batchTestConfigurationConnection: build.mutation({
+        query: ({ projectId, items }) => ({
+          method: 'POST',
+          url: `/configurations/check_connections/${projectId}`,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: items,
+        }),
+      }),
+
       // Toggle configuration sharing status
       toggleConfigurationSharing: build.mutation({
         query: ({ projectId, configId, shared }) => ({
@@ -474,6 +488,7 @@ export const {
   useUpdateConfigurationMutation,
   useDeleteConfigurationMutation,
   useTestConfigurationConnectionMutation,
+  useBatchTestConfigurationConnectionMutation,
   useToggleConfigurationSharingMutation,
   useListCredentialTypesQuery,
   useSetProjectDefaultModelMutation,
