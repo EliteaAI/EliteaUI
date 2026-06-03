@@ -4,10 +4,10 @@ import { useSelector } from 'react-redux';
 import { useMatch, useNavigate } from 'react-router-dom';
 
 import { SIDEBAR_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
+import NotificationList from '@/[fsd]/widgets/Notifications/ui';
 import { useNotificationListQuery } from '@/api/notifications';
 import { sioEvents } from '@/common/constants';
 import BellIcon from '@/components/Icons/BellIcon';
-import NotificationList from '@/components/NotificationList';
 import useSocket from '@/hooks/useSocket';
 import RouteDefinitions from '@/routes';
 import { useTheme } from '@emotion/react';
@@ -54,7 +54,7 @@ const NotificationButton = memo(() => {
       if (!personal_project_id) {
         navigate(RouteDefinitions.Chat);
       } else {
-        setNotificationListAnchorEl(event.target);
+        setNotificationListAnchorEl(event.currentTarget);
       }
     },
     [navigate, personal_project_id],

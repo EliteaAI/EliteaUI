@@ -6,6 +6,7 @@ import 'simplebar-react/dist/simplebar.min.css';
 import { Box } from '@mui/material';
 
 const SIMPLEBAR_FILL_STYLE = { height: '100%', width: '100%' };
+const SIMPLEBAR_FIT_CONTENT_STYLE = { height: 'auto', maxHeight: 'inherit', width: '100%' };
 
 /**
  * A scrollable container backed by SimpleBar.
@@ -13,10 +14,16 @@ const SIMPLEBAR_FILL_STYLE = { height: '100%', width: '100%' };
  * The `ref` is forwarded to the underlying SimpleBar instance so consumers
  * can call SimpleBar methods (e.g. `ref.current.getScrollElement()`).
  *
+ * `fillContainer` defaults to `true` and makes the SimpleBar instance fill
+ * the outer container height. When `fillContainer={false}`, the scroll area
+ * sizes to its content instead. In that mode, provide a height constraint
+ * such as `maxHeight` via `sx` on the outer container when scrolling should
+ * activate after the content grows past a limit.
+ *
  * Use the `sx` prop to extend or override the outer container layout.
  */
 const ScrollableContainer = forwardRef((props, ref) => {
-  const { children, sx } = props;
+  const { children, fillContainer = true, sx } = props;
 
   let resolvedSx;
 
@@ -33,7 +40,7 @@ const ScrollableContainer = forwardRef((props, ref) => {
       <SimpleBar
         ref={ref}
         autoHide={false}
-        style={SIMPLEBAR_FILL_STYLE}
+        style={fillContainer ? SIMPLEBAR_FILL_STYLE : SIMPLEBAR_FIT_CONTENT_STYLE}
       >
         {children}
       </SimpleBar>
