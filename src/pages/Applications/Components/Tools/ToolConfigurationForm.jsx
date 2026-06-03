@@ -2,10 +2,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 
+import { CredentialsSelect } from '@/[fsd]/features/credentials/ui';
 import { genInitialToolSettings } from '@/common/getToolInitialValueBySchema.js';
 import { isNullOrUndefined } from '@/common/utils';
 import ConfigurationSelect from '@/components/ConfigurationSelect';
-import CredentialsSelect from '@/components/CredentialsSelect';
 import FormInput from '@/components/FormInput.jsx';
 import useConfigurations, {
   Create_Personal_Title,

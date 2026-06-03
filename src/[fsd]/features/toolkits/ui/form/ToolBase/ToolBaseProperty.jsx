@@ -4,6 +4,7 @@ import YAML from 'js-yaml';
 
 import { Box, FormControlLabel, Typography } from '@mui/material';
 
+import { CredentialsSelect } from '@/[fsd]/features/credentials/ui';
 import { OpenApiHelpers, ToolBaseHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { ArrayFieldInput } from '@/[fsd]/features/toolkits/ui/form/ToolBase';
@@ -15,7 +16,6 @@ import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import { MAX_NAME_LENGTH } from '@/common/constants';
 import AgentSelect from '@/components/AgentSelect';
-import CredentialsSelect from '@/components/CredentialsSelect';
 import EmbeddingModelSelect from '@/components/EmbeddingModelSelect';
 import FormInput from '@/components/FormInput.jsx';
 import ImageGenerationModelSelect from '@/components/ImageGenerationModelSelect';
