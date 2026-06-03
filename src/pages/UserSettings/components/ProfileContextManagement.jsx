@@ -7,7 +7,7 @@ import { Box } from '@mui/material';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { Label, Switch } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
-import { handleConvertToNumberChange } from '@/[fsd]/widgets/ContextBudget/lib/validation';
+import { handleConvertToNumberChange } from '@/[fsd]/widgets/context-budget/lib/validation';
 import FormInput from '@/components/FormInput';
 
 const ProfileContextManagement = memo(() => {

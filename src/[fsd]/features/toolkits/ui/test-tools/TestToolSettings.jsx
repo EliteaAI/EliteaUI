@@ -10,7 +10,7 @@ import { IndexesToolsEnum } from '@/[fsd]/features/toolkits/indexes/lib/constant
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { Select } from '@/[fsd]/shared/ui/';
-import LLMModelSelector from '@/[fsd]/widgets/LLMModelSelector/ui/LLMModelSelector';
+import { LLMModelSelector } from '@/[fsd]/widgets/llm-model-selector';
 import { useToolkitAvailableToolsQuery } from '@/api/toolkits.js';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { ContentContainer } from '@/pages/Common/Components';

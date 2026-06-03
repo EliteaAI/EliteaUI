@@ -3,7 +3,7 @@ import { memo } from 'react';
 import { Box, LinearProgress, Typography } from '@mui/material';
 
 import { Tooltip } from '@/[fsd]/shared/ui';
-import { DataTableNameCell } from '@/[fsd]/widgets/DataTable';
+import { DataTableNameCell } from '@/[fsd]/widgets/data-table';
 
 const DefaultNameCellContent = memo(props => {
   const { namePrefix, isLoading, loadingProgress, rowName, styles } = props;

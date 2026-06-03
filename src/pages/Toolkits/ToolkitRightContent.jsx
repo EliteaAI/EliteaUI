@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Box, Grid } from '@mui/material';
 
 import { ChatButton } from '@/[fsd]/features/chat/ui';
+import { ChatMessageList } from '@/[fsd]/features/chat/ui/chat-box';
 import { IndexesToolsEnum } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import {
   DEFAULT_MAX_TOKENS,
@@ -22,7 +23,6 @@ import {
   WELCOME_MESSAGE_ID,
 } from '@/common/constants.js';
 import { convertJsonToString } from '@/common/utils';
-import ChatMessageList from '@/components/Chat/ChatMessageList';
 import FullScreenToggle from '@/components/Chat/FullScreenToggle';
 import { ChatBodyContainer } from '@/components/Chat/StyledComponents';
 import useChatCopyToClipboard from '@/hooks/chat/useChatCopyToClipboard';

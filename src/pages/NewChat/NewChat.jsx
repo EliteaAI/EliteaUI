@@ -89,7 +89,7 @@ import useToast from '@/hooks/useToast';
 import { AddNewUserModal } from '@/pages/NewChat/AddNewUser/AddNewUserModal';
 import AgentEditor from '@/pages/NewChat/AgentEditor';
 import CanvasEditor from '@/pages/NewChat/CanvasEditor';
-import ChatBox from '@/pages/NewChat/ChatBox';
+import { ChatBox } from '@/[fsd]/features/chat/ui';
 import NewConversationView from '@/pages/NewChat/NewConversationView';
 import PipelineEditor from '@/pages/NewChat/PipelineEditor';
 import PlaybackChatBox from '@/pages/NewChat/PlaybackChatBox';

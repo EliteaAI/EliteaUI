@@ -7,7 +7,7 @@ import { Box } from '@mui/material';
 import { actions as importWizardActions } from '@/[fsd]/entities/import-wizard/model/importWizard.slice';
 import { ImportWizardModal } from '@/[fsd]/entities/import-wizard/ui';
 import { useIsOnboarding } from '@/[fsd]/shared/lib/hooks';
-import { Sidebar } from '@/[fsd]/widgets/Sidebar/ui';
+import { Sidebar } from '@/[fsd]/widgets/sidebar-root/ui';
 import { COLLAPSED_SIDE_BAR_WIDTH, SIDE_BAR_WIDTH } from '@/common/constants';
 import { actions } from '@/slices/settings';
 

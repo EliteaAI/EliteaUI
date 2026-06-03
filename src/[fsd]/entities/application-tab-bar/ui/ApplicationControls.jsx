@@ -9,8 +9,8 @@ import { useSetDefaultVersion, useUnpublishVersionMenu } from '@/[fsd]/entities/
 import { usePublishApplicationMenu } from '@/[fsd]/entities/version/lib/hooks/usePublishVersionMenu.hooks';
 import VersionDelete from '@/[fsd]/entities/version/ui/VersionDelete';
 import { Controls } from '@/[fsd]/shared/ui';
-import { PinEntityType } from '@/[fsd]/widgets/PinToggler/lib/constants';
-import { usePin, usePinMenu } from '@/[fsd]/widgets/PinToggler/lib/hooks';
+import { PinEntityType } from '@/[fsd]/widgets/pin-toggler/lib/constants';
+import { usePin, usePinMenu } from '@/[fsd]/widgets/pin-toggler/lib/hooks';
 import { PERMISSIONS, ViewMode } from '@/common/constants';
 import { useCopyLinkMenu } from '@/components/CopyLinkToEntityButton.jsx';
 import { useForkEntityMenu } from '@/components/Fork/ForkEntityButton';

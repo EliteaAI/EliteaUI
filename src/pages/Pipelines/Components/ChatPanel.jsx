@@ -4,15 +4,14 @@ import { useSelector } from 'react-redux';
 
 import { Box, IconButton } from '@mui/material';
 
-import { ChatButton } from '@/[fsd]/features/chat/ui';
+import { ChatBox, ChatButton } from '@/[fsd]/features/chat/ui';
 import { ViewRunHistoryButton } from '@/[fsd]/shared/ui/button';
-import { ContextBudgetUI } from '@/[fsd]/widgets/ContextBudget';
+import { ContextBudgetUI } from '@/[fsd]/widgets/context-budget';
 import { WELCOME_MESSAGE_ID } from '@/common/constants';
 import DoubleLeftIcon from '@/components/Icons/DoubleLeftIcon';
 import DoubleRightIcon from '@/components/Icons/DoubleRightIcon';
 import useIsSmallWindow from '@/hooks/useIsSmallWindow';
 import { ContentContainer } from '@/pages/Common/index.js';
-import ChatBox from '@/pages/NewChat/ChatBox.jsx';
 import { useTheme } from '@emotion/react';
 
 /**

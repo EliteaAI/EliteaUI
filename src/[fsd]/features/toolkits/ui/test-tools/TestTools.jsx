@@ -5,6 +5,7 @@ import { useFormikContext } from 'formik';
 import { Box, Grid } from '@mui/material';
 
 import { ChatButton } from '@/[fsd]/features/chat/ui';
+import { ChatMessageList } from '@/[fsd]/features/chat/ui/chat-box';
 import { useMcpAuthModal } from '@/[fsd]/features/mcp/lib/hooks';
 import { McpAuthModal } from '@/[fsd]/features/mcp/ui';
 import { IndexesToolsEnum } from '@/[fsd]/features/toolkits/indexes/lib/constants';
@@ -18,7 +19,6 @@ import { ToolkitChatHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useToolkitChat } from '@/[fsd]/features/toolkits/lib/hooks';
 import { TestToolSettings } from '@/[fsd]/features/toolkits/ui';
 import { ViewRunHistoryButton } from '@/[fsd]/shared/ui/button';
-import ChatMessageList from '@/components/Chat/ChatMessageList';
 import FullScreenToggle from '@/components/Chat/FullScreenToggle';
 import { ChatBodyContainer } from '@/components/Chat/StyledComponents';
 import useChatCopyToClipboard from '@/hooks/chat/useChatCopyToClipboard';

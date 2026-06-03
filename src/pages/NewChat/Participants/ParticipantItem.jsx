@@ -10,7 +10,7 @@ import { McpLogInLink } from '@/[fsd]/features/mcp/ui';
 import { useGetToolkitNameFromSchema } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
 import { useResolvedSharepointConfig } from '@/[fsd]/features/sharepoint/lib/hooks/useResolvedSharepointConfig.hooks';
 import { SharepointLogInLink } from '@/[fsd]/features/sharepoint/ui';
-import { useEliteaAssistantRef } from '@/[fsd]/widgets/SupportAssistant';
+import { useEliteaAssistantRef } from '@/[fsd]/widgets/support-assistant';
 import AttachIcon from '@/assets/attach-icon.svg?react';
 import OfflineIcon from '@/assets/offline-icon.svg?react';
 import OnlineIcon from '@/assets/online-icon.svg?react';

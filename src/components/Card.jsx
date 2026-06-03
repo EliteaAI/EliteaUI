@@ -5,8 +5,8 @@ import { Box, CardContent, Divider, IconButton, Card as MuiCard, Typography } fr
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { useMcpTokenChange } from '@/[fsd]/features/mcp/lib/hooks';
-import { PinButton } from '@/[fsd]/widgets/PinToggler/ui';
-import { useEliteaAssistantRef, useGetSupportAssistantConfigQuery } from '@/[fsd]/widgets/SupportAssistant';
+import { PinButton } from '@/[fsd]/widgets/pin-toggler/ui';
+import { useEliteaAssistantRef, useGetSupportAssistantConfigQuery } from '@/[fsd]/widgets/support-assistant';
 import EliteaAssistantIcon from '@/assets/icons/elitea-assistant-icon.svg?react';
 import OfflineIcon from '@/assets/offline-icon.svg?react';
 import OnlineIcon from '@/assets/online-icon.svg?react';

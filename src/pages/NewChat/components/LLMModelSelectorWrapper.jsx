@@ -5,7 +5,7 @@ import { useFormikContext } from 'formik';
 import { Box } from '@mui/material';
 
 import { DEFAULT_MAX_TOKENS, DEFAULT_TEMPERATURE } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
-import LLMModelSelector from '@/[fsd]/widgets/LLMModelSelector/ui/LLMModelSelector';
+import { LLMModelSelector } from '@/[fsd]/widgets/llm-model-selector';
 import { useListModelsQuery } from '@/api/configurations';
 import { PROMPT_PAYLOAD_KEY } from '@/common/constants';
 

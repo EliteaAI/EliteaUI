@@ -6,8 +6,8 @@ import { Box } from '@mui/material';
 
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
-import { ContextBudgetUI } from '@/[fsd]/widgets/ContextBudget';
-import { handleConvertToNumberChange } from '@/[fsd]/widgets/ContextBudget/lib/validation';
+import { ContextBudgetUI } from '@/[fsd]/widgets/context-budget';
+import { handleConvertToNumberChange } from '@/[fsd]/widgets/context-budget/lib/validation';
 
 import { createContextStrategyFormData, parseModelValue } from '../profileUtils';
 

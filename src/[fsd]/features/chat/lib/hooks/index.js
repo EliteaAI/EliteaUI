@@ -16,3 +16,4 @@ export {
   useNewInputKeyDownHandler,
   useNewStartConversationInputKeyDownHandler,
 } from './useInputKeyDownHandler.hooks';
+export { default as useDeleteMessageAlert } from './useDeleteMessageAlert.hooks';

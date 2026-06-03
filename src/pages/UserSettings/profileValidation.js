@@ -1,6 +1,6 @@
 import * as yup from 'yup';
 
-import { VALIDATION_LIMITS } from '@/[fsd]/widgets/ContextBudget/lib/constants';
+import { VALIDATION_LIMITS } from '@/[fsd]/widgets/context-budget/lib/constants';
 
 /**
  * Validation schema for profile settings form

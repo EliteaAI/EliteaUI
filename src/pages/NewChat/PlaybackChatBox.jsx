@@ -2,11 +2,11 @@ import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useSta
 
 import { useSelector } from 'react-redux';
 
+import { ChatMessageList } from '@/[fsd]/features/chat/ui/chat-box';
 import { ROLES } from '@/common/constants';
 import { ChatBodyContainer, ChatBoxContainer } from '@/components/Chat/StyledComponents';
 import useLoadPlaybackMessages from '@/hooks/chat/useLoadPlaybackMessages';
 
-import ChatMessageList from '../../components/Chat/ChatMessageList';
 import PlaybackToolBar from './PlaybackToolBar';
 
 const PlaybackChatBox = forwardRef((props, ref) => {

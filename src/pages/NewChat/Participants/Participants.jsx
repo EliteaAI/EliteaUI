@@ -7,7 +7,7 @@ import { Box, Button, IconButton, Typography } from '@mui/material';
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { ParticipantEntityTypes } from '@/[fsd]/features/chat/lib/constants/participant.constants';
 import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
-import { ContextBudgetUI } from '@/[fsd]/widgets/ContextBudget';
+import { ContextBudgetUI } from '@/[fsd]/widgets/context-budget';
 import AddAgentIcon from '@/assets/add-agent-icon.svg?react';
 import AddMCPIcon from '@/assets/add-mcp-icon.svg?react';
 import AddPipelineIcon from '@/assets/add-pipeline-icon.svg?react';

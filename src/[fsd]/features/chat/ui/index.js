@@ -5,3 +5,4 @@ export { ChatContinue } from './chat-continue';
 export { ChatHitlActions } from './chat-hitl-actions';
 export { SlashSuggestionList } from './slash-suggestion-list';
 export { VoiceMiniPlayer } from './voice-mini-player';
+export { ChatBox } from './chat-box';

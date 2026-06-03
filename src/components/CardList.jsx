@@ -2,7 +2,7 @@ import { memo, useMemo } from 'react';
 
 import { Box } from '@mui/material';
 
-import DataTable from '@/[fsd]/widgets/DataTable';
+import DataTable from '@/[fsd]/widgets/data-table';
 import { RIGHT_PANEL_WIDTH } from '@/common/constants';
 import EmptyListBox from '@/components/EmptyListBox';
 import useIsTableView from '@/hooks/useIsTableView';

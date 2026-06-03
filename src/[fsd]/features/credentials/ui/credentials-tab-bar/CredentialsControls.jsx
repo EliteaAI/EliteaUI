@@ -8,8 +8,8 @@ import { Box } from '@mui/material';
 
 import { CredentialNameHelpers } from '@/[fsd]/features/credentials/lib/helpers';
 import { Controls } from '@/[fsd]/shared/ui';
-import { PinEntityType } from '@/[fsd]/widgets/PinToggler/lib/constants';
-import { usePin, usePinMenu } from '@/[fsd]/widgets/PinToggler/lib/hooks';
+import { PinEntityType } from '@/[fsd]/widgets/pin-toggler/lib/constants';
+import { usePin, usePinMenu } from '@/[fsd]/widgets/pin-toggler/lib/hooks';
 import { TAG_MODELS, useDeleteConfigurationMutation } from '@/api';
 import { eliteaApi } from '@/api/eliteaApi';
 import { PERMISSIONS } from '@/common/constants';

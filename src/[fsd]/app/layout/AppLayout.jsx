@@ -7,7 +7,7 @@ import MainSidebar from '@/[fsd]/app/layout/MainSidebar';
 import { InteractiveTourProvider } from '@/[fsd]/app/providers/InteractiveTourProvider';
 import { useInteractiveTourController, useTourFromUrl } from '@/[fsd]/features/interactive-tours';
 import InteractiveTourRoot from '@/[fsd]/features/interactive-tours/ui/InteractiveTourRoot';
-import { SupportAssistantWidget } from '@/[fsd]/widgets/SupportAssistant';
+import { SupportAssistantWidget } from '@/[fsd]/widgets/support-assistant';
 
 const AppLayoutInner = memo(props => {
   const { onToggleAssistant } = props;

@@ -1,5 +1,5 @@
 import { DEFAULT_MAX_TOKENS_CUSTOM } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
-import { DEFAULT_CONTEXT_STRATEGY, SEPARATOR } from '@/[fsd]/widgets/ContextBudget/lib/constants';
+import { DEFAULT_CONTEXT_STRATEGY, SEPARATOR } from '@/[fsd]/widgets/context-budget/lib/constants';
 import { DEFAULT_PERSONA } from '@/common/constants';
 
 export const PROFILE_INITIAL_VALUES = {

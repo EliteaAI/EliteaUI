@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 
 import { Box, Link, Typography } from '@mui/material';
 
-import { useEliteaAssistantRef } from '@/[fsd]/widgets/SupportAssistant';
+import { useEliteaAssistantRef } from '@/[fsd]/widgets/support-assistant';
 import ErrorIcon from '@/assets/error-icon.svg?react';
 import { BORDER_RADIUS } from '@/common/designTokens';
 import RouteDefinitions, { getBasename } from '@/routes';

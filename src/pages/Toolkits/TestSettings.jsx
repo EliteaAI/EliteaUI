@@ -10,7 +10,7 @@ import { adjustIndexDataSchema } from '@/[fsd]/features/toolkits/indexes/lib/hel
 import { useIndexNameValidation } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { Select } from '@/[fsd]/shared/ui/';
-import { LLMModelSelector } from '@/[fsd]/widgets/LLMModelSelector';
+import { LLMModelSelector } from '@/[fsd]/widgets/llm-model-selector';
 import { useGetSelectedToolSchema } from '@/hooks/toolkit/useGetSelectedToolSchema.js';
 import { ContentContainer } from '@/pages/Common/Components';
 import styled from '@emotion/styled';

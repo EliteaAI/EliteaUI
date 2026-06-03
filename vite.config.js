@@ -117,7 +117,17 @@ export default ({ mode }) => {
     build: {
       outDir: 'dist',
       sourcemap: false,
+      chunkSizeWarningLimit: 1500,
       rollupOptions: {
+        onwarn(warning, warn) {
+          if (warning.code === 'CIRCULAR_DEPENDENCY') return;
+          if (warning.code === 'MODULE_LEVEL_DIRECTIVE') return;
+          if (warning.message?.includes('dynamic import will not move module')) return;
+          if (warning.message?.includes('while both modules are dependencies of each other')) return;
+          if (warning.message?.includes('has been externalized for browser compatibility')) return;
+          if (warning.code === 'PLUGIN_WARNING' && warning.plugin === 'vite:resolve') return;
+          warn(warning);
+        },
         output: {
           manualChunks: {
             'vendor-react-mui': [

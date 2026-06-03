@@ -7,7 +7,7 @@ import Tooltip from '@/ComponentsLib/Tooltip';
 import { useSpeakingModeLoop } from '@/[fsd]/features/chat/lib/hooks';
 import { ChatButton } from '@/[fsd]/features/chat/ui';
 import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
-import { LLMModelSelector } from '@/[fsd]/widgets/LLMModelSelector';
+import { LLMModelSelector } from '@/[fsd]/widgets/llm-model-selector';
 import ChatBotIcon from '@/assets/chatbot-icon.svg?react';
 import ModelIcon from '@/components/Icons/ModelIcon.jsx';
 import { useChatConfig } from '@/hooks/useChatConfig';

@@ -7,11 +7,11 @@ import { Box, CircularProgress, Typography } from '@mui/material';
 import RunHistoryContainer from '@/[fsd]/entities/run-history/ui/RunHistoryContainer';
 import { useApplicationChat } from '@/[fsd]/features/agent/lib/hooks';
 import { ParticipantEntityTypes } from '@/[fsd]/features/chat/lib/constants/participant.constants';
-import { ChatButton } from '@/[fsd]/features/chat/ui';
+import { ChatBox, ChatButton } from '@/[fsd]/features/chat/ui';
 import { AGENT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { useShowRunHistoryFromUrl } from '@/[fsd]/shared/lib/hooks';
 import { ViewRunHistoryButton } from '@/[fsd]/shared/ui/button';
-import { ContextBudgetUI } from '@/[fsd]/widgets/ContextBudget';
+import { ContextBudgetUI } from '@/[fsd]/widgets/context-budget';
 import { WELCOME_MESSAGE_ID } from '@/common/constants';
 import FullScreenToggle from '@/components/Chat/FullScreenToggle';
 import DirtyDetector from '@/components/Formik/DirtyDetector';
@@ -25,7 +25,6 @@ import {
   RightGridItem,
   StyledGridContainer,
 } from '@/pages/Common/Components/StyledComponents';
-import ChatBox from '@/pages/NewChat/ChatBox';
 
 import ApplicationConfigurationForm from './ApplicationConfigurationForm';
 
