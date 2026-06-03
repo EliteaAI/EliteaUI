@@ -1010,30 +1010,37 @@ const NewChat = props => {
       setConversationNotFound(false);
       return;
     }
-    if (!isConversationsLoaded || isSelectingConversation) return;
+    if (isSelectingConversation || activeConversation?.id) return;
 
-    const folderConversations = folders?.map(folder => folder.conversations) || [];
-    const conversationList = [...conversations, ...folderConversations.flat()];
-    const conversationFromUrl = conversationList.find(
-      conversation => conversation.id == conversationIdFromUrl,
-    );
+    // If conversations are loaded, try to find the conversation in the list first
+    if (isConversationsLoaded) {
+      const folderConversations = folders?.map(folder => folder.conversations) || [];
+      const conversationList = [...conversations, ...folderConversations.flat()];
+      const conversationFromUrl = conversationList.find(
+        conversation => conversation.id == conversationIdFromUrl,
+      );
 
-    if (conversationFromUrl) {
-      setConversationNotFound(false);
-      if (!activeConversation?.id) {
+      if (conversationFromUrl) {
+        setConversationNotFound(false);
         onSelectConversation(conversationFromUrl);
+        return;
       }
-    } else if (!activeConversation?.id) {
+
+      // Conversations loaded but not found — check if we already tried
       if (hasAttemptedUrlConversationRef.current) {
         setConversationNotFound(true);
+        return;
+      }
+    }
+
+    // Fire immediately with URL ID — don't wait for sidebar to load
+    if (!hasAttemptedUrlConversationRef.current) {
+      const numericId = parseInt(conversationIdFromUrl, 10);
+      if (!isNaN(numericId)) {
+        hasAttemptedUrlConversationRef.current = true;
+        onSelectConversation({ id: numericId });
       } else {
-        const numericId = parseInt(conversationIdFromUrl, 10);
-        if (!isNaN(numericId)) {
-          hasAttemptedUrlConversationRef.current = true;
-          onSelectConversation({ id: numericId });
-        } else {
-          setConversationNotFound(true);
-        }
+        setConversationNotFound(true);
       }
     }
   }, [

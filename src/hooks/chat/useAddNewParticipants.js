@@ -156,9 +156,7 @@ const useAddNewParticipants = ({
           );
         });
 
-        for (let index = 0; index < agentOrPipelineWithoutLLM.length; index++) {
-          const element = agentOrPipelineWithoutLLM[index];
-          // Save the version details
+        agentOrPipelineWithoutLLM.forEach(element =>
           saveFn({
             projectId,
             applicationId: element.id,
@@ -169,8 +167,8 @@ const useAddNewParticipants = ({
               model_name: defaultModel?.name,
               model_project_id: defaultModel?.project_id,
             },
-          });
-        }
+          }),
+        );
         const result = await addParticipant({
           projectId,
           id: newConversation?.id || activeConversation.id,

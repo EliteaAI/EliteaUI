@@ -69,22 +69,23 @@ export default function useSelectConversation({
         }
         if (!conversation.isPlayback) {
           setIsSelectingConversation(true);
-          const result = await getConversationDetail({
-            projectId,
-            id: conversation.id,
-            ...(enableMessagesPagination && {
-              messages_offset: 0,
-              messages_limit: 10,
-              sort_order: 'desc',
+
+          const [result] = await Promise.all([
+            getConversationDetail({
+              projectId,
+              id: conversation.id,
+              ...(enableMessagesPagination && {
+                messages_offset: 0,
+                messages_limit: 10,
+                sort_order: 'desc',
+              }),
             }),
-          });
+            selectConversation({ projectId, conversationId: conversation.id }),
+          ]);
 
           changeUrlByConversation(conversation.id, result.data?.name || conversation.name);
+
           if (result.data) {
-            selectConversation({
-              projectId,
-              conversationId: conversation.id,
-            });
             setActiveConversation({
               ...conversation,
               ...result.data,
