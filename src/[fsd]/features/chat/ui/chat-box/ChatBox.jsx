@@ -1,5 +1,6 @@
 import {
   forwardRef,
+  memo,
   useCallback,
   useContext,
   useEffect,
@@ -15,8 +16,15 @@ import { v4 as uuidv4 } from 'uuid';
 import { Box } from '@mui/system';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
-import { ChatHelpers, NewConversationHelpers, toSpeakableText } from '@/[fsd]/features/chat/lib/helpers';
-import { useNewInputKeyDownHandler, useSlashMention, useTextToSpeech } from '@/[fsd]/features/chat/lib/hooks';
+import * as ChatHelpers from '@/[fsd]/features/chat/lib/helpers/chat.helpers';
+import * as NewConversationHelpers from '@/[fsd]/features/chat/lib/helpers/newConversation.helpers';
+import { toSpeakableText } from '@/[fsd]/features/chat/lib/helpers/tts.helpers';
+import {
+  useDeleteMessageAlert,
+  useNewInputKeyDownHandler,
+  useSlashMention,
+  useTextToSpeech,
+} from '@/[fsd]/features/chat/lib/hooks';
 import { SlashSuggestionList, VoiceMiniPlayer } from '@/[fsd]/features/chat/ui';
 import { ChatMessageList } from '@/[fsd]/features/chat/ui/chat-box';
 import { UserMentionList } from '@/[fsd]/features/chat/ui/user-mention-list';
@@ -40,7 +48,6 @@ import {
   ChatParticipantType,
   PROMPT_PAYLOAD_KEY,
   PUBLIC_PROJECT_ID,
-  ROLES,
   ToolActionStatus,
   WELCOME_MESSAGE_ID,
   sioEvents,
@@ -69,109 +76,6 @@ import NewChatInput from '@/pages/NewChat/NewChatInput';
 import RecommendationList from '@/pages/NewChat/Recommendations/RecommendationList';
 import SearchResultList from '@/pages/NewChat/Recommendations/SearchResultList';
 import { actions as chatActions } from '@/slices/chat';
-
-import useDeleteMessageAlert from '../../lib/hooks/useDeleteMessageAlert.hooks';
-
-const getParticipantById = (conversation, participantId) => {
-  return conversation?.participants.find(({ id }) => id === participantId) || {};
-};
-
-const createHitlEditUserMessage = ({ question, userId, name, avatar, participant }) => {
-  const messageId = uuidv4();
-  const itemId = new Date().getTime();
-
-  return {
-    id: messageId,
-    role: ROLES.User,
-    name,
-    avatar,
-    content: question,
-    created_at: new Date().getTime(),
-    user_id: userId,
-    participant_id: participant?.id,
-    sentTo: participant ?? {},
-    message_items: [
-      {
-        id: itemId,
-        uuid: messageId,
-        meta: {},
-        order_index: 0,
-        item_type: 'text_message',
-        item_details: {
-          content: question,
-          id: itemId,
-          item_type: 'text_message',
-        },
-      },
-    ],
-  };
-};
-
-const createArchivedHitlAssistantMessage = assistantMessage => ({
-  ...assistantMessage,
-  id: `archived-hitl-${uuidv4()}`,
-  question_id: undefined,
-  hitlInterrupt: undefined,
-  requiresConfirmation: undefined,
-  isLoading: false,
-  isStreaming: false,
-  isRegenerating: false,
-  archivedFromHitl: true,
-});
-
-const getModelSettings = participant => {
-  if (participant.entity_name === ChatParticipantType.Applications) {
-    const {
-      max_tokens = DEFAULT_MAX_TOKENS,
-      temperature = DEFAULT_TEMPERATURE,
-      reasoning_effort, // Don't provide default here - let cleanLLMSettings handle it
-      model_project_id,
-      model_name,
-    } = participant.entity_settings.llm_settings || {};
-
-    const settings = {
-      max_tokens,
-      temperature,
-      model_name,
-      model_project_id,
-    };
-
-    // Only include reasoning_effort if it was explicitly set
-    if (reasoning_effort !== undefined) {
-      settings.reasoning_effort = reasoning_effort;
-    }
-
-    return settings;
-  }
-  return {};
-};
-
-/**
- * Get the selected model for a conversation based on user settings
- * @param {Object} conversation - The conversation object
- * @param {Array} availableModels - List of available models
- * @param {string} userId - The user ID
- * @returns {Object|null} The selected model or null if not found
- */
-const getSelectedConversationModel = (conversation, availableModels, userId) => {
-  const userSettings = NewConversationHelpers.getChatUserSettings(conversation, userId);
-
-  if (!userSettings?.model_name || !availableModels?.length) {
-    return null;
-  }
-
-  // First try to find the model with exact project_id match
-  let model = availableModels.find(
-    m => m.name === userSettings.model_name && m.project_id === userSettings.model_project_id,
-  );
-
-  // If not found, try to find by name only (for shared models)
-  if (!model) {
-    model = availableModels.find(m => m.name === userSettings.model_name);
-  }
-
-  return model || null;
-};
 
 const ChatBox = forwardRef((props, boxRef) => {
   const {
@@ -211,11 +115,13 @@ const ChatBox = forwardRef((props, boxRef) => {
     showWebhookSecret = false,
     onSend = () => true,
     inputPlaceholder = '',
+
     // For pipeline running
     onRcvAgentEvent,
     deleteAllRunNodes,
     onHandleAttachment,
     onStopRun,
+
     //Attachment
     onAttachFiles,
     attachments,
@@ -223,9 +129,11 @@ const ChatBox = forwardRef((props, boxRef) => {
     disableAttachments = false,
     hideAttachments = false,
     onClearAttachments,
+
     // Internal tools config
     onInternalToolsConfigChange,
     isUpdatingInternalToolsConfig,
+
     //Unsaved LLM settings
     unsavedLLMSettings,
     setUnsavedLLMSettings,
@@ -235,35 +143,72 @@ const ChatBox = forwardRef((props, boxRef) => {
     onOpenArtifactPreview,
   } = props;
 
-  const socket = useContext(SocketContext);
-  const projectId = useSelectedProjectId();
-  const [regenerate] = useRegenerateMutation();
+  const styles = chatBoxStyles();
+
+  const chatInput = useRef(null);
+  const setActiveConversationRef = useRef(setActiveConversation);
+  const questionItemRef = useRef();
+  const activeConversationRef = useRef(activeConversation);
+  // Store the participant_id from conversation creation to use for subsequent messages
+  // This ensures we use the correct participant_id even before React state update propagates
+  const participantIdRef = useRef(null);
+
   const dispatch = useDispatch();
+  const { toastError, toastSuccess } = useToast();
+
+  // Sockets
+  const socket = useContext(SocketContext);
+  const { emit: emitContinue } = useSocket(sioEvents.chat_continue_predict);
+
+  const projectId = useSelectedProjectId();
+
+  const [regenerate] = useRegenerateMutation();
+  const [conversationEdit] = useConversationEditMutation();
+  const [removeAttachment] = useRemoveAttachmentsMutation();
+  const [updateChatLlmSettings, { isLoading: modelSettingsAreSaving }] =
+    useUpdateParticipantLlmSettingsMutation();
+
   const { name, id: userId, avatar } = useSelector(state => state.user);
 
-  const chat_history = useMemo(
-    () => activeConversation?.chat_history || [],
-    [activeConversation?.chat_history],
-  );
-  const { toastError, toastSuccess } = useToast();
-  const [isRegenerating, setIsRegenerating] = useState(false);
-  const chatInput = useRef(null);
-  const [hitlEditMode, setHitlEditMode] = useState(false);
-  const pendingHitlMessage = useMemo(
-    () => [...chat_history].reverse().find(item => item.hitlInterrupt),
-    [chat_history],
-  );
+  const { chat_history, pendingHitlMessage } = useMemo(() => {
+    const history = activeConversation?.chat_history || [];
+
+    return {
+      chat_history: history,
+      pendingHitlMessage: [...history].reverse().find(item => item.hitlInterrupt),
+    };
+  }, [activeConversation?.chat_history]);
+
   const hasPendingHitlInterrupt = Boolean(pendingHitlMessage?.hitlInterrupt);
-  const [isMentioningEveryone, setIsMentioningEveryone] = useState(false);
+
+  // Chat states
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [hasStarterBeenSent, setHasStarterBeenSent] = useState(false);
+  const [isRegenerating, setIsRegenerating] = useState(false);
+
+  // Mentions states
+  const [hitlEditMode, setHitlEditMode] = useState(false);
+  const [isMentioningEveryone, setIsMentioningEveryone] = useState(false);
+
+  // Speaking mode states
   const [isSpeakingMode, setIsSpeakingMode] = useState(false);
   const [speakingMessageId, setSpeakingMessageId] = useState(null);
   const [speakingSegments, setSpeakingSegments] = useState(null);
+
+  // Chat model
+  const [selectedModel, setSelectedModel] = useState(null);
+
+  // Query models data
   const { data: ttsModelsData } = useListModelsQuery(
     { projectId, section: 'tts', include_shared: true },
     { skip: !projectId },
   );
+
+  const { data: modelsData = { items: [], total: 0 } } = useListModelsQuery(
+    { projectId, include_shared: true },
+    { skip: !projectId },
+  );
+
   const ttsModel = useMemo(
     () => ttsModelsData?.items?.find(m => m.default) ?? ttsModelsData?.items?.[0] ?? null,
     [ttsModelsData],
@@ -288,8 +233,10 @@ const ChatBox = forwardRef((props, boxRef) => {
       setSpeakingSegments(null);
     }
   }, [isPlaying]);
+
   const isTheUserChattingNow = useMemo(() => {
     const latest40Messages = chat_history.slice(-40);
+
     let isChatting = false;
     for (let index = 0; index < latest40Messages.length; index++) {
       const message = latest40Messages[index];
@@ -302,13 +249,6 @@ const ChatBox = forwardRef((props, boxRef) => {
     }
     return isChatting;
   }, [activeParticipant?.id, chat_history, userId]);
-
-  const { data: modelsData = { items: [], total: 0 } } = useListModelsQuery(
-    { projectId, include_shared: true },
-    { skip: !projectId },
-  );
-
-  const [selectedModel, setSelectedModel] = useState(null);
 
   const defaultModel = useMemo(() => {
     return modelsData.items.find(model => model.default) || modelsData.items[0] || null;
@@ -343,7 +283,11 @@ const ChatBox = forwardRef((props, boxRef) => {
       baseSettings.reasoning_effort = userSettings.reasoning_effort;
     } else {
       // Find the selected model to check if it supports reasoning
-      const model = getSelectedConversationModel(activeConversation, modelsData.items || [], userId);
+      const model = ChatHelpers.getSelectedConversationModel(
+        activeConversation,
+        modelsData.items || [],
+        userId,
+      );
       if (model?.supports_reasoning) {
         baseSettings.reasoning_effort = DEFAULT_REASONING_EFFORT;
       }
@@ -463,7 +407,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       // Otherwise use agent's configured model
       const llm_settings = isAgentsPage
         ? unsavedLLMSettings || { model_name: selectedModel.name, model_project_id: selectedModel.project_id }
-        : getModelSettings(realParticipant);
+        : ChatHelpers.getModelSettings(realParticipant);
       switch (realParticipant.entity_name) {
         case ChatParticipantType.Pipelines:
         case ChatParticipantType.Applications:
@@ -577,8 +521,6 @@ const ChatBox = forwardRef((props, boxRef) => {
     ],
   );
 
-  const [conversationEdit] = useConversationEditMutation();
-
   const handleError = useCallback(() => {
     if (isRegenerating) {
       setIsRegenerating(false);
@@ -613,8 +555,6 @@ const ChatBox = forwardRef((props, boxRef) => {
     onRcvAgentEvent,
     isMonoChatting: isAgentsPage,
   });
-
-  const { emit: emitContinue } = useSocket(sioEvents.chat_continue_predict);
 
   const userParticipantId = useMemo(
     () =>
@@ -655,12 +595,8 @@ const ChatBox = forwardRef((props, boxRef) => {
       isChatStreaming: !isAgentsPage,
     });
 
-  const setActiveConversationRef = useRef(setActiveConversation);
   const stopStreamingRef = useRef(stopStreaming);
-  const activeConversationRef = useRef(activeConversation);
-  // Store the participant_id from conversation creation to use for subsequent messages
-  // This ensures we use the correct participant_id even before React state update propagates
-  const participantIdRef = useRef(null);
+
   useEffect(() => {
     setActiveConversationRef.current = setActiveConversation;
   }, [setActiveConversation]);
@@ -789,30 +725,32 @@ const ChatBox = forwardRef((props, boxRef) => {
   const isSendingToUser = isMentioningEveryone || selectedUsers.length > 0;
   // Direct state management instead of useScrollUserInputEffect hook
   const [askingQuestionId, setAskingQuestionId] = useState();
-  const questionItemRef = useRef();
-  const [removeAttachment] = useRemoveAttachmentsMutation();
-  const onRemoveAttachment = async (fileName, needToRemoveFromStorage) => {
-    try {
-      // If the attachment has been uploaded (has URL), call API to remove it from server
-      if (activeConversation?.id) {
-        await removeAttachment({
-          projectId,
-          conversationId: activeConversation.id,
-          attachments: [{ name: fileName }],
-          keep_in_storage: !needToRemoveFromStorage,
-        }).unwrap();
-      }
-      if (attachments.length) {
-        // Remove from local state
-        const localIndex = attachments.findIndex(item => item.name === fileName);
-        if (localIndex !== -1) {
-          onDeleteAttachment?.(localIndex);
+
+  const onRemoveAttachment = useCallback(
+    async (fileName, needToRemoveFromStorage) => {
+      try {
+        // If the attachment has been uploaded (has URL), call API to remove it from server
+        if (activeConversation?.id) {
+          await removeAttachment({
+            projectId,
+            conversationId: activeConversation.id,
+            attachments: [{ name: fileName }],
+            keep_in_storage: !needToRemoveFromStorage,
+          }).unwrap();
         }
+
+        if (attachments.length) {
+          // Remove from local state
+          const localIndex = attachments.findIndex(item => item.name === fileName);
+
+          if (localIndex !== -1) onDeleteAttachment?.(localIndex);
+        }
+      } catch (error) {
+        toastError(buildErrorMessage(error) || 'Failed to remove attachment');
       }
-    } catch (error) {
-      toastError(buildErrorMessage(error) || 'Failed to remove attachment');
-    }
-  };
+    },
+    [activeConversation?.id, attachments, onDeleteAttachment, projectId, removeAttachment, toastError],
+  );
 
   const {
     slashPhase,
@@ -1026,8 +964,9 @@ const ChatBox = forwardRef((props, boxRef) => {
   );
 
   const onCopyToClipboard = useCallback(
-    id => async () => {
+    async id => {
       const message = chat_history.find(item => item.id === id);
+
       if (message) {
         if (message.exception) {
           try {
@@ -1073,7 +1012,7 @@ const ChatBox = forwardRef((props, boxRef) => {
   );
 
   const onRegenerateAnswer = useCallback(
-    (uuid, messageParticipant, updatedItems) => async () => {
+    async (uuid, messageParticipant, updatedItems) => {
       stopTTS();
       chatInput.current?.pauseSpeakingMode?.();
       let prevMessage = {};
@@ -1265,10 +1204,10 @@ const ChatBox = forwardRef((props, boxRef) => {
       if (!lastMessage) return;
 
       const { question_id, threadId, participant_id } = lastMessage;
-      const participant = getParticipantById(activeConversation, participant_id);
+      const participant = ChatHelpers.getParticipantById(activeConversation, participant_id);
       const editMessage =
         action === 'edit'
-          ? createHitlEditUserMessage({
+          ? ChatHelpers.createHitlEditUserMessage({
               question: value ?? '',
               userId,
               name,
@@ -1302,7 +1241,7 @@ const ChatBox = forwardRef((props, boxRef) => {
 
         const nextMessages = [...prevMessages];
         const assistantMessage = nextMessages[assistantIndex];
-        const archivedAssistantMessage = createArchivedHitlAssistantMessage(assistantMessage);
+        const archivedAssistantMessage = ChatHelpers.createArchivedHitlAssistantMessage(assistantMessage);
         const resumedAssistantMessage = {
           ...assistantMessage,
           content: '',
@@ -1438,7 +1377,7 @@ const ChatBox = forwardRef((props, boxRef) => {
         chat_history.findIndex(item => item.id === question_id),
       );
       const { participant_id } = chat_history.find(item => item.id === question_id) || {};
-      const participant = getParticipantById(activeConversation, participant_id);
+      const participant = ChatHelpers.getParticipantById(activeConversation, participant_id);
       const payload = getPayload({
         question,
         question_id,
@@ -1469,7 +1408,7 @@ const ChatBox = forwardRef((props, boxRef) => {
         }),
       );
       const { id: answerId, participant_id } = chat_history.find(item => item.question_id === id) || {};
-      const participant = getParticipantById(activeConversation, participant_id);
+      const participant = ChatHelpers.getParticipantById(activeConversation, participant_id);
       if (answerId) {
         onRegenerateAnswer(answerId, participant, updatedItems)();
       } else {
@@ -1654,9 +1593,6 @@ const ChatBox = forwardRef((props, boxRef) => {
     },
     [activeParticipant, fetchOriginalVersionDetails, onChangeParticipantSettings],
   );
-
-  const [updateChatLlmSettings, { isLoading: modelSettingsAreSaving }] =
-    useUpdateParticipantLlmSettingsMutation();
 
   // Handler for updating LLM settings on conversation pages
   const handleSetLLMSettings = useCallback(
@@ -1859,7 +1795,6 @@ const ChatBox = forwardRef((props, boxRef) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeParticipant]);
 
-  const styles = chatBoxStyles();
   const displayConversationStarters = !isProcessingSymbols && conversationStarters?.length > 0;
 
   const isInputLoading = useMemo(
@@ -2152,4 +2087,4 @@ const chatBoxStyles = () => ({
   },
 });
 
-export default ChatBox;
+export default memo(ChatBox);

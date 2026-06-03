@@ -18,7 +18,7 @@ const useChatCopyToClipboard = chatHistory => {
   const { toastInfo, toastError } = useToast();
 
   const onCopyToClipboard = useCallback(
-    id => async () => {
+    async id => {
       const message = chatHistory?.find(item => item.id === id);
 
       if (message) {

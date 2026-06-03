@@ -214,6 +214,7 @@ const ChatMessageList = memo(props => {
             message.role !== ROLES.User
               ? ChatHelpers.getParticipantById(activeConversation, message.participant_id)
               : { entity_meta: {}, meta: {} };
+
           return message.role === ROLES.User ? (
             <UserMessage
               verticalMode
@@ -232,7 +233,7 @@ const ChatMessageList = memo(props => {
               created_at={message.created_at}
               sentTo={message.sentTo}
               onClickSentTo={onClickSentTo(message.sentTo)}
-              onCopy={onCopyToClipboard ? onCopyToClipboard(message.id) : undefined}
+              onCopy={onCopyToClipboard ? () => onCopyToClipboard(message.id) : undefined}
               onDelete={
                 index === chat_history.length - 1 &&
                 (canDeleteAllMessage || message.user_id === userId) &&
@@ -253,7 +254,7 @@ const ChatMessageList = memo(props => {
               created_at={message.created_at}
               participant={messageParticipant}
               onClickReplyTo={onClickReplyTo(message.replyTo)}
-              onCopy={onCopyToClipboard ? onCopyToClipboard(message.id) : undefined}
+              onCopy={onCopyToClipboard ? () => onCopyToClipboard(message.id) : undefined}
               onDelete={
                 index === chat_history.length - 1 &&
                 !message.archivedFromHitl &&
@@ -276,7 +277,7 @@ const ChatMessageList = memo(props => {
                 !message.isLoading &&
                 !message.isRegenerating &&
                 ChatHelpers.canDeleteThisAIMessage(chat_history, message, userId)
-                  ? onRegenerateAnswer(message.id, messageParticipant)
+                  ? () => onRegenerateAnswer(message.id, messageParticipant)
                   : undefined
               }
               isRegenerating={message.isRegenerating}

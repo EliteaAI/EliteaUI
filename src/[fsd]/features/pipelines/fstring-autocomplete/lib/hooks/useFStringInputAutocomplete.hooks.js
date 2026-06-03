@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 
 import { FStringAutocompleteHelpers } from '@/[fsd]/features/pipelines/fstring-autocomplete/lib/helpers';
-import { useFStringAutocomplete } from '@/[fsd]/features/pipelines/fstring-autocomplete/lib/hooks';
+import { useFStringAutocomplete } from './useFStringAutocomplete.hooks';
 
 export const useFStringInputAutocomplete = props => {
   const { resolvedValue, onInput, enabled, options } = props;

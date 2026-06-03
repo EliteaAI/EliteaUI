@@ -1,4 +1,4 @@
-import { CredentialNameHelpers } from '@/[fsd]/features/credentials/lib/helpers';
+import * as CredentialNameHelpers from './credentialName.helpers';
 import { getToolIconByType } from '@/common/toolkitUtils';
 
 const getCredentialIcon = (integrationType, theme, toolkitSchemas, configurationsAsSchema) => {

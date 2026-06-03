@@ -1,6 +1,6 @@
 import YAML from 'js-yaml';
 
-import { MermaidHelpers } from '@/[fsd]/shared/lib/helpers';
+import * as MermaidHelpers from './mermaid.helpers';
 import { json, jsonParseLinter } from '@codemirror/lang-json';
 import { StreamLanguage } from '@codemirror/language';
 import { linter } from '@codemirror/lint';

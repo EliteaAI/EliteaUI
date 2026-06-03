@@ -12,7 +12,8 @@ import {
   STATE_INPUT,
   STATE_MESSAGES,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/constants/flowEditor.constants';
-import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+
+import * as FlowEditorHelpers from './flowEditor.helpers';
 
 export const parseState = yamlJson => {
   if (yamlJson?.state) {

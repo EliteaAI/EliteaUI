@@ -1,4 +1,4 @@
-import { NodeOperationsHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import * as NodeOperationsHelpers from './nodeOperations.helpers';
 
 /**
  * Updates or clears a property on a YAML node

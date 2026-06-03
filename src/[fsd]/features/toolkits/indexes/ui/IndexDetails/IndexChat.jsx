@@ -31,7 +31,7 @@ const IndexChatContainer = memo(props => {
   const { isHistoryMode, historyMessages, historyConversation, isHistoryLoading } = useIndexHistory();
 
   const onCopyToClipboard = useCallback(
-    id => async () => {
+    async id => {
       const messages = isHistoryMode ? historyMessages : chatHistory;
       const message = messages.find(item => item.id === id);
 

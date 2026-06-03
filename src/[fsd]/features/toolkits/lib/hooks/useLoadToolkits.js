@@ -5,7 +5,7 @@ import { useTheme } from '@mui/material';
 import { CredentialNameHelpers } from '@/[fsd]/features/credentials/lib/helpers';
 import { McpConstants } from '@/[fsd]/features/toolkits/lib/constants';
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
-import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
+import { useGetCurrentToolkitSchemas } from './useGetCurrentToolkitSchemas.hooks';
 import { useListToolkitTypesQuery, useToolkitsListQuery } from '@/api/toolkits.js';
 import useTypes from '@/hooks/toolkit/useTypes';
 import usePageQuery from '@/hooks/usePageQuery';

@@ -3,8 +3,8 @@ import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useFormikContext } from 'formik';
 
 import { FlowEditorContext } from '@/[fsd]/app/providers';
-import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
-import { useGetToolkitNameFromSchema } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
+import * as FlowEditorHelpers from '@/[fsd]/features/pipelines/flow-editor/lib/helpers/flowEditor.helpers';
+import { useGetToolkitNameFromSchema } from './useGetToolkitNameFromSchema.hooks';
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
 import { useToolkitAvailableToolsQuery } from '@/api/toolkits.js';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';

@@ -4,8 +4,8 @@ import { v4 as uuidv4 } from 'uuid';
 import {
   setDefaultModelsForImportedAgents,
   setDefaultModelsForImportedDatasources,
-  setDefaultStorageForImportedDatasources,
-} from '@/[fsd]/entities/import-wizard/lib/helpers';
+} from './importWizardModels.helpers';
+import { setDefaultStorageForImportedDatasources } from './importWizardStorage.helpers';
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import {
   LAYOUT_VERSION,

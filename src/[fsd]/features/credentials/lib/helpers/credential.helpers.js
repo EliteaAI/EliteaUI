@@ -1,4 +1,5 @@
-import { CredentialIconHelpers, CredentialNameHelpers } from '@/[fsd]/features/credentials/lib/helpers';
+import * as CredentialIconHelpers from './credentialIcon.helpers';
+import * as CredentialNameHelpers from './credentialName.helpers';
 
 export const generateCredentialTagList = credentials => {
   if (!credentials || !Array.isArray(credentials)) return [];

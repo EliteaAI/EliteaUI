@@ -1,7 +1,9 @@
 import { useCallback, useMemo } from 'react';
 
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
-import { useMcpAuthCheck, useMcpAuthModal, useMcpTokenChange } from '@/[fsd]/features/mcp/lib/hooks';
+import { useMcpAuthCheck } from './useMcpAuthCheck.hooks';
+import { useMcpAuthModal } from './useMcpAuthModal.hooks';
+import { useMcpTokenChange } from './useMcpTokenChange.hooks';
 
 export const useMcpLogin = ({ values, onSuccess, authConfig }) => {
   const { id, type: toolkitType, settings: { url, client_id, client_secret, scopes } = {} } = values ?? {};

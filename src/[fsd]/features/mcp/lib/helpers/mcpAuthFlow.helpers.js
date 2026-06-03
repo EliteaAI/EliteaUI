@@ -1,10 +1,8 @@
 import store from '@/[fsd]/app/store';
-import {
-  McpAuthHelpers,
-  McpAuthWindowHelpers,
-  McpCryptoHelpers,
-  McpDiscoveryHelpers,
-} from '@/[fsd]/features/mcp/lib/helpers';
+import * as McpAuthHelpers from './mcpAuth.helpers';
+import * as McpAuthWindowHelpers from './mcpAuthWindow.helpers';
+import * as McpCryptoHelpers from './mcpCrypto.helpers';
+import * as McpDiscoveryHelpers from './mcpDiscovery.helpers';
 import { mcpOAuthApi } from '@/api/mcpOAuth';
 import { toolkitsApi } from '@/api/toolkits';
 import RouteDefinitions, { getBasename } from '@/routes';

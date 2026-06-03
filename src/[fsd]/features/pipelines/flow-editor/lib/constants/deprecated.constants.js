@@ -1,4 +1,4 @@
-import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+import * as FlowEditorConstants from './flowEditor.constants';
 
 const DeprecatedTip = 'This node is deprecated and will be removed in a future version. ';
 const ViewMigrationGuideText = 'View Migration Guide';

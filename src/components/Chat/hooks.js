@@ -5,7 +5,7 @@ import { v4 as uuidv4, v4 } from 'uuid';
 import { useTrackEvent } from '@/GA';
 import { ChatHelpers } from '@/[fsd]/features/chat/lib/helpers';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
-import { ParsePipelineHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import * as ParsePipelineHelpers from '@/[fsd]/features/pipelines/flow-editor/lib/helpers/parsePipeline.helpers';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
 import { useContextExecutionEntity, useProjectType } from '@/[fsd]/shared/lib/hooks';
 import useCtrlEnterKeyEventsHandler from '@/[fsd]/shared/lib/hooks/useCtrlEnterKeyEventsHandler.hooks';
