@@ -68,21 +68,6 @@ export const useDropdownData = ({ agentQuery, pipelineQuery, toolkitQuery, mcpQu
     agents_type: 'classic',
   });
 
-  // Load public pipelines (applications) with type 'pipeline'
-  const {
-    publicApplicationData: publicPipelinesData,
-    isPublicApplicationsFetching: isPublicPipelinesLoading,
-    refetchPublicApplications: refetchPublicPipelines,
-    onLoadMorePublicApplications: onLoadMorePublicPipelines,
-  } = usePublicApplicationParticipants({
-    sortBy: 'created_at',
-    sortOrder: 'desc',
-    query: pipelineQuery,
-    pageSize,
-    selectedTagIds: emptyTagIds,
-    agents_type: 'pipeline',
-  });
-
   // Load toolkits
   const [toolkitPage, setToolkitPage] = useState(0);
   const {
@@ -149,53 +134,20 @@ export const useDropdownData = ({ agentQuery, pipelineQuery, toolkitQuery, mcpQu
     },
   );
 
-  // Load public mcps
-  const [publicMCPPage, setPublicMCPPage] = useState(0);
-  const {
-    data: publicMCPsData,
-    isFetching: isPublicMCPsLoading,
-    isError: isPublicMCPsError,
-    isSuccess: isPublicMCPsSuccess,
-    refetch: refetchPublicMCPs,
-  } = useToolkitsListQuery(
-    {
-      projectId: PUBLIC_PROJECT_ID,
-      page: publicMCPPage,
-      page_size: pageSize,
-      params: {
-        sort_by: 'created_at',
-        sort_order: 'desc',
-        mcp: true,
-        query: mcpQuery,
-      },
-    },
-    {
-      skip: !PUBLIC_PROJECT_ID,
-    },
-  );
-
   const onLoadMoreMCPs = useCallback(() => {
     if (isMCPsLoading || isLoadingMoreMCP || mcpPage * pageSize >= (mcpsData?.total || 0)) return;
     setMCPPage(prev => prev + 1);
     setIsLoadingMoreMCP(true);
   }, [isMCPsLoading, isLoadingMoreMCP, mcpPage, mcpsData?.total]);
 
-  const onLoadMorePublicMCPs = useCallback(() => {
-    if (isPublicMCPsLoading || isLoadingMoreMCP || publicMCPPage * pageSize >= (publicMCPsData?.total || 0))
-      return;
-    setPublicMCPPage(prev => prev + 1);
-    setIsLoadingMoreMCP(true);
-  }, [isPublicMCPsLoading, isLoadingMoreMCP, publicMCPPage, publicMCPsData?.total]);
-
   useEffect(() => {
-    if (isLoadingMoreMCP && (isMCPsSuccess || isMCPsError || isPublicMCPsSuccess || isPublicMCPsError)) {
+    if (isLoadingMoreMCP && (isMCPsSuccess || isMCPsError)) {
       setIsLoadingMoreMCP(false);
     }
-  }, [isMCPsSuccess, isMCPsError, isPublicMCPsSuccess, isPublicMCPsError, isLoadingMoreMCP]);
+  }, [isMCPsSuccess, isMCPsError, isLoadingMoreMCP]);
 
   useEffect(() => {
     setMCPPage(0);
-    setPublicMCPPage(0);
   }, [mcpQuery]);
 
   // Shared EntityIcon styles for dropdown items
@@ -262,11 +214,8 @@ export const useDropdownData = ({ agentQuery, pipelineQuery, toolkitQuery, mcpQu
       ...item,
       project_id: projectId,
     }));
-    const publicPipelines = (publicPipelinesData?.rows || []).map(item => ({
-      ...item,
-      project_id: PUBLIC_PROJECT_ID,
-    }));
-    const allPipelines = [...regularPipelines, ...publicPipelines];
+
+    const allPipelines = [...regularPipelines];
 
     return allPipelines.map(pipeline => ({
       key: `pipeline-${pipeline.project_id}-${pipeline.id}`,
@@ -285,7 +234,7 @@ export const useDropdownData = ({ agentQuery, pipelineQuery, toolkitQuery, mcpQu
         />
       ),
     }));
-  }, [pipelinesData?.rows, projectId, publicPipelinesData?.rows, entityIconSx, entityImageStyle]);
+  }, [pipelinesData?.rows, projectId, entityIconSx, entityImageStyle]);
 
   // Transform toolkits data for dropdown display (combine regular + public)
   const toolkitMenuItems = useMemo(() => {
@@ -332,11 +281,8 @@ export const useDropdownData = ({ agentQuery, pipelineQuery, toolkitQuery, mcpQu
       ...item,
       project_id: projectId,
     }));
-    const publicMCPs = (publicMCPsData?.rows || []).map(item => ({
-      ...item,
-      project_id: PUBLIC_PROJECT_ID,
-    }));
-    const allMCPs = [...regularMCPs, ...publicMCPs];
+
+    const allMCPs = [...regularMCPs];
 
     return allMCPs.map(mcp => {
       // Get the preferred title following the hierarchy used in MCPsList
@@ -368,7 +314,7 @@ export const useDropdownData = ({ agentQuery, pipelineQuery, toolkitQuery, mcpQu
         ),
       };
     });
-  }, [mcpsData?.rows, publicMCPsData?.rows, projectId, theme, entityIconSx, entityImageStyle]);
+  }, [mcpsData?.rows, projectId, theme, entityIconSx, entityImageStyle]);
 
   // Refresh callback functions - wrapped in useCallback with query state guards
   const refreshAgents = useCallback(async () => {
@@ -391,13 +337,11 @@ export const useDropdownData = ({ agentQuery, pipelineQuery, toolkitQuery, mcpQu
     if (projectId && refetchPipelines && pipelinesData !== undefined) {
       promises.push(refetchPipelines());
     }
-    if (refetchPublicPipelines && publicPipelinesData !== undefined) {
-      promises.push(refetchPublicPipelines());
-    }
+
     if (promises.length > 0) {
       await Promise.all(promises);
     }
-  }, [projectId, refetchPipelines, pipelinesData, refetchPublicPipelines, publicPipelinesData]);
+  }, [projectId, refetchPipelines, pipelinesData]);
 
   const refreshToolkits = useCallback(async () => {
     // Refresh regular toolkits
@@ -417,13 +361,11 @@ export const useDropdownData = ({ agentQuery, pipelineQuery, toolkitQuery, mcpQu
     if (projectId && refetchMCPs && mcpsData !== undefined) {
       promises.push(refetchMCPs());
     }
-    if (refetchPublicMCPs && publicMCPsData !== undefined) {
-      promises.push(refetchPublicMCPs());
-    }
+
     if (promises.length > 0) {
       await Promise.all(promises);
     }
-  }, [projectId, refetchMCPs, mcpsData, refetchPublicMCPs, publicMCPsData]);
+  }, [projectId, refetchMCPs, mcpsData]);
 
   // Refresh all data sources - also wrapped in useCallback with proper guards
   const refreshAll = useCallback(async () => {
@@ -440,17 +382,12 @@ export const useDropdownData = ({ agentQuery, pipelineQuery, toolkitQuery, mcpQu
       if (refetchPipelines && pipelinesData !== undefined) {
         refreshPromises.push(refetchPipelines());
       }
-      if (refetchPublicPipelines && publicPipelinesData !== undefined) {
-        refreshPromises.push(refetchPublicPipelines());
-      }
+
       if (refetchToolkits && toolkitsData !== undefined) {
         refreshPromises.push(refetchToolkits());
       }
       if (refetchMCPs && mcpsData !== undefined) {
         refreshPromises.push(refetchMCPs());
-      }
-      if (refetchPublicMCPs && publicMCPsData !== undefined) {
-        refreshPromises.push(refetchPublicMCPs());
       }
 
       // Only execute if we have at least one query to refresh
@@ -466,14 +403,10 @@ export const useDropdownData = ({ agentQuery, pipelineQuery, toolkitQuery, mcpQu
     publicAgentsData,
     refetchPipelines,
     pipelinesData,
-    refetchPublicPipelines,
-    publicPipelinesData,
     refetchToolkits,
     toolkitsData,
     refetchMCPs,
     mcpsData,
-    refetchPublicMCPs,
-    publicMCPsData,
   ]);
 
   // Combined load more functions
@@ -484,8 +417,7 @@ export const useDropdownData = ({ agentQuery, pipelineQuery, toolkitQuery, mcpQu
 
   const handleLoadMorePipelines = useCallback(() => {
     onLoadMorePipelines();
-    onLoadMorePublicPipelines();
-  }, [onLoadMorePipelines, onLoadMorePublicPipelines]);
+  }, [onLoadMorePipelines]);
 
   const handleLoadMoreToolkits = useCallback(() => {
     onLoadMoreToolkits();
@@ -493,8 +425,7 @@ export const useDropdownData = ({ agentQuery, pipelineQuery, toolkitQuery, mcpQu
 
   const handleLoadMoreMCPs = useCallback(() => {
     onLoadMoreMCPs();
-    onLoadMorePublicMCPs();
-  }, [onLoadMoreMCPs, onLoadMorePublicMCPs]);
+  }, [onLoadMoreMCPs]);
 
   return {
     // Agents (combined regular + public)
@@ -503,7 +434,7 @@ export const useDropdownData = ({ agentQuery, pipelineQuery, toolkitQuery, mcpQu
 
     // Pipelines (combined regular + public)
     pipelineMenuItems,
-    isPipelinesLoading: isPipelinesLoading || isPublicPipelinesLoading,
+    isPipelinesLoading,
 
     // Toolkits (combined regular)
     toolkitMenuItems,
@@ -511,7 +442,7 @@ export const useDropdownData = ({ agentQuery, pipelineQuery, toolkitQuery, mcpQu
 
     // MCPs (combined regular + public)
     mcpMenuItems,
-    isMCPsLoading: isMCPsLoading || isPublicMCPsLoading || isLoadingMoreMCP,
+    isMCPsLoading: isMCPsLoading || isLoadingMoreMCP,
 
     // Refresh callbacks
     refreshAgents,

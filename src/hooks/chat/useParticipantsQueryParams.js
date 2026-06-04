@@ -36,10 +36,10 @@ export function useParticipantsQueryParams({
   useEffect(() => {
     setQueryParams(prev => ({
       ...prev,
-      projectId,
+      projectId: forPublic ? undefined : projectId,
       page: 0,
     }));
-  }, [projectId]);
+  }, [projectId, forPublic]);
 
   useEffect(() => {
     setQueryParams(prev => ({
