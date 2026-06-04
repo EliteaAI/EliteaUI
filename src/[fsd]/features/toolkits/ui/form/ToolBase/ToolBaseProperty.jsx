@@ -12,6 +12,7 @@ import { CodeMirrorLinterHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useFieldFocus } from '@/[fsd]/shared/lib/hooks';
 import { Checkbox, Field, Input } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
+import { SecretManagementInput } from '@/[fsd]/shared/ui/secret-field';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import { MAX_NAME_LENGTH } from '@/common/constants';
@@ -21,7 +22,6 @@ import EmbeddingModelSelect from '@/components/EmbeddingModelSelect';
 import FormInput from '@/components/FormInput.jsx';
 import ImageGenerationModelSelect from '@/components/ImageGenerationModelSelect';
 import LlmModelSelect from '@/components/LlmModelSelect';
-import SecretManagementInput from '@/components/SecretManagementInput.jsx';
 import ToolkitSelect from '@/components/ToolkitSelect';
 
 const ToolBaseProperty = memo(props => {

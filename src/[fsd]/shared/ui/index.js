@@ -19,3 +19,4 @@ export { default as ScrollableContainer } from './scrollable-container';
 export * as Icon from './icon';
 export { default as Markdown } from './markdown';
 export * as Mention from './mention';
+export * as SecretField from './secret-field';

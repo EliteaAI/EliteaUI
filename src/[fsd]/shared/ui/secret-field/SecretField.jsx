@@ -1,14 +1,21 @@
-import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
+import { useSelector } from 'react-redux';
 
 import { Visibility, VisibilityOff } from '@mui/icons-material';
-import { Box, InputAdornment, TextField } from '@mui/material';
-import IconButton from '@mui/material/IconButton';
+import { Box, InputAdornment, TextField, Tooltip } from '@mui/material';
 
+import { BaseBtn } from '@/[fsd]/shared/ui/button';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import { useSecretsListQuery } from '@/api/secrets.js';
+import RefreshIcon from '@/assets/refresh-icon.svg?react';
+import { PERMISSIONS } from '@/common/constants';
 import Toggle from '@/components/Toggle.jsx';
+import useCheckPermission from '@/hooks/useCheckPermission';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
+import RouteDefinitions, { getBasename } from '@/routes';
 
 export const secretRegex = /^{{secret\.([A-Za-z0-9_]+)}}$/;
 
@@ -35,7 +42,7 @@ const updateRawPassword = ({ value, isUserInputRef, setRawPasswordInput, isLoade
   }
 };
 
-export const SecretField = memo(props => {
+const SecretField = memo(props => {
   const {
     value,
     onChange = () => {},
@@ -85,9 +92,17 @@ export const SecretField = memo(props => {
     [selectedProjectId, specifiedProjectId],
   );
 
+  const { personal_project_id } = useSelector(state => state.user);
+  const { checkPermission } = useCheckPermission();
+  const canCreateSecret = checkPermission(PERMISSIONS.secrets.create);
+
   const skip = !projectId || (!isSecret && activeTab === toggleOptions[1].value);
 
-  const { data = [], isError } = useSecretsListQuery(projectId, {
+  const {
+    data = [],
+    isError,
+    refetch,
+  } = useSecretsListQuery(projectId, {
     skip,
   });
 
@@ -103,13 +118,78 @@ export const SecretField = memo(props => {
     handleSwitchToSecretTab();
   }, [handleSwitchToSecretTab]);
 
-  const secretsOptions = useMemo(() => {
-    return isError
-      ? []
-      : data
-          ?.map(item => ({ label: item.name, value: item.secret_name }))
-          .sort((a, b) => a.label.localeCompare(b.label)) || [];
+  const savedSecretsOptions = useMemo(() => {
+    if (isError) return [];
+    return (data || [])
+      .map(item => ({ label: item.name, value: item.secret_name }))
+      .sort((a, b) => a.label.localeCompare(b.label));
   }, [data, isError]);
+
+  const createSecretsOptions = useMemo(() => {
+    if (!canCreateSecret) return [];
+    const secretsPath = RouteDefinitions.SettingsWithTab.replace(':tab', 'secrets');
+    const baseUrl = `${window.location.protocol}//${window.location.host}`;
+    const basename = getBasename();
+    const buildUrl = targetProjectId =>
+      `${baseUrl}${basename}/${targetProjectId}${secretsPath}?createSecret=1`;
+
+    const options = [
+      {
+        value: '__create_private_secret__',
+        label: 'New Private Secret',
+        variant: 'action',
+        onActivate: () => window.open(buildUrl(personal_project_id), '_blank', 'noopener,noreferrer'),
+      },
+    ];
+
+    if (selectedProjectId !== personal_project_id) {
+      options.push({
+        value: '__create_project_secret__',
+        label: 'New Project Secret',
+        variant: 'action',
+        onActivate: () => window.open(buildUrl(selectedProjectId), '_blank', 'noopener,noreferrer'),
+      });
+    }
+
+    return options;
+  }, [canCreateSecret, selectedProjectId, personal_project_id]);
+
+  const refreshButton = useMemo(
+    () => (
+      <Tooltip
+        title="Refresh secrets"
+        placement="top"
+      >
+        <BaseBtn
+          variant={BUTTON_VARIANTS.tertiary}
+          size="small"
+          onClick={refetch}
+          sx={styles.refreshIcon}
+        >
+          <RefreshIcon />
+        </BaseBtn>
+      </Tooltip>
+    ),
+    [refetch, styles.refreshIcon],
+  );
+
+  const secretOptionGroups = useMemo(() => {
+    const groups = [];
+    if (createSecretsOptions.length > 0) {
+      groups.push({
+        key: 'Create',
+        title: 'Create',
+        options: createSecretsOptions,
+      });
+    }
+    groups.push({
+      key: 'Saved Secrets',
+      title: 'Saved Secrets',
+      headerEnd: refreshButton,
+      options: savedSecretsOptions,
+    });
+    return groups;
+  }, [createSecretsOptions, savedSecretsOptions, refreshButton]);
 
   const handlePasswordInputChange = useCallback(
     (e, rawNewValue) => {
@@ -174,12 +254,12 @@ export const SecretField = memo(props => {
           value={value}
           label={label}
           onChange={handleChangeValue}
-          options={secretsOptions}
+          optionGroups={secretOptionGroups}
+          options={[]}
           disabled={disabled}
           required={required}
           error={error}
           helperText={helperText}
-          // customSelectedFontSize={'0.875rem'}
           sx={styles.select}
           {...inputProps}
           {...selectProps}
@@ -218,23 +298,28 @@ export const SecretField = memo(props => {
                     sx: styles.inputLabel,
                     shrink: true,
                   },
-            }}
-            InputProps={{
-              endAdornment: passwordVisibilityToggle && (
-                <InputAdornment position="end">
-                  <IconButton
-                    size="small"
-                    color="secondary"
-                    aria-label="toggle password visibility"
-                    edge="end"
-                    onClick={() => {
-                      setShowPassword(prevState => !prevState);
-                    }}
-                  >
-                    {showPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
-                </InputAdornment>
-              ),
+              input: {
+                endAdornment: passwordVisibilityToggle && (
+                  <InputAdornment position="end">
+                    <BaseBtn
+                      variant={BUTTON_VARIANTS.secondary}
+                      size="small"
+                      aria-label="toggle password visibility"
+                      edge="end"
+                      onClick={() => {
+                        setShowPassword(prevState => !prevState);
+                      }}
+                      sx={styles.passwordVisibilityToggle}
+                    >
+                      {showPassword ? (
+                        <VisibilityOff sx={styles.visibilityToggleIcon} />
+                      ) : (
+                        <Visibility sx={styles.visibilityToggleIcon} />
+                      )}
+                    </BaseBtn>
+                  </InputAdornment>
+                ),
+              },
             }}
             {...inputProps}
             {...textFieldProps}
@@ -295,96 +380,42 @@ const secretFieldStyles = error => ({
       display: 'none',
     },
   },
+  refreshIcon: ({ palette }) => ({
+    color: palette.text.default,
+    padding: 0,
+    position: 'relative',
+    backgroundColor: 'transparent',
+    '&:hover, &:active, &.Mui-focusVisible': {
+      backgroundColor: 'transparent',
+    },
+    '&:hover': {
+      color: palette.text.secondary,
+    },
+    '&:hover::before': {
+      content: '""',
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      width: '1.625rem',
+      height: '1.625rem',
+      transform: 'translate(-21%, -18%)',
+      borderRadius: '50%',
+      backgroundColor: palette.background.userInputBackgroundActive,
+    },
+  }),
+  passwordVisibilityToggle: {
+    minWidth: '1.5rem !important',
+    maxWidth: '1.5rem !important',
+    maxHeight: '1.5rem !important',
+    minHeight: '1.5rem !important',
+    padding: 0,
+  },
+  visibilityToggleIcon: {
+    width: '0.875rem',
+    height: '0.875rem',
+  },
 });
 
 SecretField.displayName = 'SecretField';
 
-const SecretManagementInput = memo(props => {
-  const {
-    sx = {},
-    authType,
-    authTypes,
-    fieldPath,
-    editField,
-    onInputBlur = () => {},
-    inputValue,
-    error,
-    helperText,
-    required = true,
-    disabled = false,
-    passwordVisibilityToggle = false,
-    disableSecret = false,
-    id,
-    name,
-    specifiedProjectId,
-    description,
-  } = props;
-
-  const [inputLabel, setInputLabel] = useState('API Key');
-
-  const handleChangeToggleValue = useCallback(() => {
-    if (disableSecret) return null;
-    editField(fieldPath, '');
-  }, [disableSecret, fieldPath, editField]);
-
-  const authenticationType = useMemo(() => {
-    if (!authTypes || typeof authTypes !== 'object') {
-      return {
-        label: inputLabel,
-      };
-    }
-
-    const authenticationTypes = Object.values(authTypes) || [];
-
-    return authenticationTypes.find(authTypeItem => authTypeItem.value === authType);
-  }, [inputLabel, authType, authTypes]);
-
-  useEffect(() => {
-    setInputLabel(authenticationType.label);
-  }, [authType, authenticationType.label]);
-
-  const handleInputChange = useCallback(
-    field => (e, value) => {
-      editField(field, value);
-    },
-    [editField],
-  );
-
-  return (
-    <SecretField
-      containerProps={{
-        sx: [secretManagementInputStyles.container, sx],
-      }}
-      inputProps={{ name: name || 'api_key' }}
-      label={inputLabel}
-      value={inputValue}
-      onChange={handleInputChange(fieldPath)}
-      onChangeToggle={handleChangeToggleValue}
-      textFieldProps={{ onBlur: onInputBlur }}
-      error={error}
-      helperText={helperText}
-      disabled={disabled}
-      required={required}
-      passwordVisibilityToggle={passwordVisibilityToggle}
-      disableSecret={disableSecret}
-      id={id}
-      specifiedProjectId={specifiedProjectId}
-      tooltipDescription={description}
-    />
-  );
-});
-
-/** @type {MuiSx} */
-const secretManagementInputStyles = {
-  container: {
-    width: '100%',
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-  },
-};
-
-SecretManagementInput.displayName = 'SecretManagementInput';
-
-export default SecretManagementInput;
+export default SecretField;

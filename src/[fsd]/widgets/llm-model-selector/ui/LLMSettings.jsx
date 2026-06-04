@@ -9,6 +9,7 @@ import {
   DEFAULT_STEPS_LIMIT,
   DEFAULT_TEMPERATURE,
 } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
+import { SecretField } from '@/[fsd]/shared/ui/secret-field';
 import {
   VALIDATION_RULE,
   getMaxTokensHelperText,
@@ -23,7 +24,6 @@ import {
 } from '@/[fsd]/widgets/llm-model-selector/ui/settings';
 import { PROMPT_PAYLOAD_KEY } from '@/common/constants';
 import { isNullOrUndefined, parseValueToIntNumber } from '@/common/utils';
-import { SecretField } from '@/components/SecretManagementInput';
 
 const LLMSettings = memo(props => {
   const {
