@@ -1,20 +1,17 @@
-import { memo, useCallback, useMemo } from 'react';
+import { memo } from 'react';
 
-import { Box, Link, Skeleton, Tooltip, Typography, useTheme } from '@mui/material';
+import { Box, Link, Skeleton, Typography } from '@mui/material';
 
 import { RESOURCES_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/resourcesTourTargets.constants';
 import { LinkHelpers } from '@/[fsd]/shared/lib/helpers';
-import { BaseBtn } from '@/[fsd]/shared/ui/button';
 import { useGetResourcesConfigQuery, useGetSystemInfoQuery } from '@/api/resources';
 import FileIcon from '@/assets/file.svg?react';
-import InfoIcon from '@/assets/info.svg?react';
 import RocketIcon from '@/assets/rocket-icon.svg?react';
 import TutorialsIcon from '@/assets/tutorials-icon.svg?react';
 import VideoIcon from '@/assets/video-icon.svg?react';
-import CopyIcon from '@/components/Icons/CopyIcon';
-import useToast from '@/hooks/useToast';
 
 import ResourceCard from './ui/ResourceCard';
+import ResourceVersionInfo from './ui/ResourceVersionInfo';
 
 const RESOURCE_CARD_CONFIGS = [
   {
@@ -79,121 +76,21 @@ const { openExternalLink } = LinkHelpers;
 const ResourcesPage = memo(() => {
   const { data: systemInfo, isLoading: isSystemInfoLoading } = useGetSystemInfoQuery();
   const { data: resourcesConfig, isLoading: isConfigLoading } = useGetResourcesConfigQuery();
-  const { toastInfo } = useToast();
-  const theme = useTheme();
 
   const configValues = resourcesConfig?.values ?? {};
   const styles = resourcesPageStyles();
-
-  const plugins = useMemo(() => systemInfo?.plugins ?? [], [systemInfo?.plugins]);
-
-  const versionLabel = useMemo(() => {
-    const version = configValues.resources_information_version;
-    const date = configValues.resources_information_upgrade_date;
-    if (!version && !date) return null;
-    const parts = [version && `Version: ${version}`, date && `(${date})`].filter(Boolean);
-    return parts.join(' ');
-  }, [configValues.resources_information_version, configValues.resources_information_upgrade_date]);
-
-  const onCopyToClipboard = useCallback(async () => {
-    if (!systemInfo) return;
-    try {
-      const version = configValues.resources_information_version;
-      const date = configValues.resources_information_upgrade_date;
-      const versionInfo = version ? `Version: ${version}${date ? ` (${date})` : ''}` : '';
-      const infoToCopy =
-        `${versionInfo}\n` + plugins.map(p => `${p.name}: ${p.version || '\u2014'}`).join('\n');
-      await navigator.clipboard.writeText(infoToCopy);
-      toastInfo('The version information has been copied to clipboard');
-    } catch {
-      // Optionally, handle copy failure (e.g., show an error toast)
-    }
-  }, [
-    systemInfo,
-    configValues.resources_information_version,
-    configValues.resources_information_upgrade_date,
-    plugins,
-    toastInfo,
-  ]);
 
   return (
     <Box
       data-tour={RESOURCES_TOUR_TARGET_IDS.page}
       sx={styles.page}
     >
-      <Box sx={styles.header}>
-        <Typography
-          variant="headingMedium"
-          color="text.secondary"
-        >
-          Resources
-        </Typography>
-        <Box sx={styles.headerRight}>
-          {isConfigLoading ? (
-            <Skeleton
-              variant="text"
-              width="12rem"
-            />
-          ) : (
-            configValues.resources_information_enabled !== false &&
-            versionLabel && (
-              <Box sx={styles.headerVersionInfo}>
-                <Typography
-                  variant="bodyMedium"
-                  color="text.secondary"
-                >
-                  {versionLabel}
-                </Typography>
-                <Tooltip
-                  placement="bottom-end"
-                  title={
-                    isSystemInfoLoading ? (
-                      <Skeleton
-                        variant="text"
-                        width="8rem"
-                      />
-                    ) : plugins.length > 0 ? (
-                      <Box sx={styles.tooltipContent}>
-                        {plugins.map(plugin => (
-                          <Box
-                            key={plugin.name}
-                            sx={styles.tooltipRow}
-                          >
-                            <Typography variant="bodySmall">{plugin.name}:</Typography>
-                            <Typography variant="bodySmallBold">{plugin.version || '\u2014'}</Typography>
-                          </Box>
-                        ))}
-                        <BaseBtn
-                          variant="icon"
-                          size="small"
-                          onClick={onCopyToClipboard}
-                          aria-label="copy version info"
-                          sx={styles.copyButton}
-                        >
-                          <CopyIcon
-                            sx={styles.icon}
-                            fill={theme.palette.text.link}
-                          />
-                        </BaseBtn>
-                      </Box>
-                    ) : null
-                  }
-                >
-                  <Box
-                    component="span"
-                    sx={styles.infoIcon}
-                  >
-                    <Box
-                      component={InfoIcon}
-                      sx={styles.infoIconSvg}
-                    />
-                  </Box>
-                </Tooltip>
-              </Box>
-            )
-          )}
-        </Box>
-      </Box>
+      <ResourceVersionInfo
+        configValues={configValues}
+        isConfigLoading={isConfigLoading}
+        systemInfo={systemInfo}
+        isSystemInfoLoading={isSystemInfoLoading}
+      />
 
       <Box sx={styles.content}>
         <Box sx={styles.intro}>
@@ -292,49 +189,6 @@ const resourcesPageStyles = () => ({
     overflow: 'hidden',
     backgroundColor: palette.background.tabPanel,
   }),
-  headerRight: {
-    display: 'flex',
-    alignItems: 'center',
-  },
-  headerVersionInfo: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.375rem',
-  },
-  infoIcon: ({ palette }) => ({
-    display: 'inline-flex',
-    alignItems: 'center',
-    flexShrink: 0,
-    cursor: 'pointer',
-    color: palette.text.primary,
-  }),
-  infoIconSvg: {
-    width: '0.875rem',
-    height: '0.875rem',
-    display: 'block',
-  },
-  tooltipContent: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.25rem',
-    padding: '0.125rem 0',
-  },
-  tooltipRow: {
-    display: 'flex',
-    gap: '0.25rem',
-    alignItems: 'baseline',
-  },
-  header: ({ palette, spacing }) => ({
-    flexShrink: 0,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    px: spacing(3),
-    height: '3.75rem',
-    minHeight: '3.75rem',
-    borderBottom: `0.0625rem solid ${palette.border.lines}`,
-    backgroundColor: palette.background.tabPanel,
-  }),
   content: ({ spacing }) => ({
     flex: 1,
     overflowY: 'auto',
@@ -375,13 +229,6 @@ const resourcesPageStyles = () => ({
     display: 'block',
     fontStyle: 'italic',
   }),
-  copyButton: {
-    justifySelf: 'end',
-    alignSelf: 'end',
-  },
-  icon: {
-    fontSize: '1rem',
-  },
 });
 
 export default ResourcesPage;
