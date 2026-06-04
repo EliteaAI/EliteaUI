@@ -16,6 +16,50 @@ export const OptionsMap = {
   MCP: 'MCP', // For MCPs
 };
 
+export const RouteToLabelMap = [
+  { route: RouteDefinitions.AgentStudio, label: null },
+  { route: RouteDefinitions.CreateIntegration, label: 'Integration' },
+  { route: 'settings/model-configuration', label: 'Integration' },
+  { route: RouteDefinitions.CreatePersonalToken, label: 'Token' },
+  { route: 'settings/tokens', label: 'Token' },
+  { route: 'settings/secrets', label: 'Secret' },
+  { route: 'settings/users', label: 'Invite User' },
+  { route: RouteDefinitions.AppsApplications, label: 'Application' },
+  { route: RouteDefinitions.AppsCatalog, label: 'Application' },
+  { route: RouteDefinitions.Chat, label: 'Conversation' },
+  { route: RouteDefinitions.Applications, label: 'Agent' },
+  { route: RouteDefinitions.Pipelines, label: 'Pipeline' },
+  { route: RouteDefinitions.Credentials, label: 'Credential' },
+  { route: RouteDefinitions.Toolkits, label: 'Toolkit' },
+  { route: RouteDefinitions.MCPs, label: 'MCP' },
+  { route: RouteDefinitions.Artifacts, label: 'Artifact Bucket' },
+];
+
+export const DropdownItems = [
+  { label: 'Conversation', route: RouteDefinitions.Chat, option: 'Conversation' },
+  { label: 'Agent', route: RouteDefinitions.Applications, option: 'Agent' },
+  { label: 'Pipeline', route: RouteDefinitions.Pipelines, option: 'Pipeline' },
+  { label: 'Credential', route: RouteDefinitions.Credentials, option: 'Credential' },
+  { label: 'Toolkit', route: RouteDefinitions.Toolkits, option: 'Toolkit' },
+  { label: 'Application', route: RouteDefinitions.AppsApplications, option: 'Application' },
+  { label: 'MCP', route: RouteDefinitions.MCPs, option: 'MCP' },
+  { label: 'Artifact Bucket', route: RouteDefinitions.Artifacts, option: 'Bucket' },
+  { label: 'Integration', route: 'settings/model-configuration', option: 'Integration' },
+  { label: 'Token', route: 'settings/tokens', option: 'Personal Token' },
+  { label: 'Secret', route: 'settings/secrets', option: 'Secret' },
+  { label: 'Invite User', route: 'settings/users', option: 'User' },
+];
+
+export const SimpleCreateRoutes = [
+  'settings/analytics',
+  'settings/prompts',
+  'settings/environment',
+  RouteDefinitions.AgentStudio,
+  RouteDefinitions.Resources,
+  RouteDefinitions.NotificationCenter,
+  RouteDefinitions.AppsCatalog,
+];
+
 export const CreationPermissions = {
   Chat: [PERMISSIONS.chat.folders.create, PERMISSIONS.chat.create],
   Conversation: [PERMISSIONS.chat.folders.create, PERMISSIONS.chat.create],
@@ -25,10 +69,11 @@ export const CreationPermissions = {
   App: [PERMISSIONS.toolkits.create],
   MCP: [PERMISSIONS.toolkits.create],
   Credential: undefined, // No specific permission needed for credentials
-  Bucket: [PERMISSIONS.artifacts.buckets.create],
+  Bucket: [PERMISSIONS.artifacts.buckets.create, PERMISSIONS.artifacts.create],
   Model: undefined, // No specific permission needed for model credentials
   'Personal Token': undefined, // Personal tokens creation allowed from settings
   Secret: [PERMISSIONS.secrets.list], // Allow if user can access secrets page
+  User: [PERMISSIONS.users.create],
 };
 
 export const CommandPathMap = {
@@ -83,7 +128,9 @@ export const PrevUrlPathMap = {
 };
 
 export const PathToOptionMap = [
+  { path: RouteDefinitions.CreateIntegration, option: 'Integration' },
   { path: 'settings/model-configuration', option: 'Integration' },
+  { path: RouteDefinitions.CreatePersonalToken, option: 'Personal Token' },
   { path: 'settings/tokens', option: 'Personal Token' },
   { path: 'settings/secrets', option: 'Secret' },
   { path: 'settings/users', option: 'User' },

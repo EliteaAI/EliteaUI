@@ -584,6 +584,7 @@ export const PERMISSIONS = {
     unsecret: 'configuration.secrets.secret.unsecret', //show/hide unsecret button
   },
   artifacts: {
+    create: 'configuration.artifacts.artifacts.create',
     delete: 'configuration.artifacts.artifacts.delete',
     view: 'configuration.artifacts.artifacts.view',
     buckets: {
