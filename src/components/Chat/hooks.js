@@ -1184,7 +1184,6 @@ export const useChatSocket = ({
           setChatHistoryRef.current?.(prevHistory => [...prevHistory]);
           return;
         }
-        case SocketMessageType.AgentMessages:
         case SocketMessageType.AgentOnFunctionToolNode:
         case SocketMessageType.AgentOnToolNode:
         case SocketMessageType.AgentOnTransitionalEdge:

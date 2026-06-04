@@ -146,7 +146,6 @@ export const RoleOptions = [
 export const SocketMessageType = {
   AgentStart: 'agent_start',
   AgentResponse: 'agent_response',
-  AgentMessages: 'agent_messages',
   AgentException: 'agent_exception',
   AgentToolStart: 'agent_tool_start',
   AgentToolEnd: 'agent_tool_end',
