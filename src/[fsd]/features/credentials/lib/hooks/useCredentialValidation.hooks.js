@@ -121,22 +121,17 @@ export const useCredentialValidation = () => {
 
       if (toValidate.length === 0) return;
 
-      // Mark all pending credentials as checking immediately
       const checkingUpdates = {};
-      toValidate.forEach(({ credential }) => {
+      const byProject = {};
+      toValidate.forEach(({ projectId, credential }) => {
         const key = String(credential.originalId || credential.id || credential.uuid);
         checkingUpdates[key] = 'checking';
         statusesRef.current[key] = 'checking';
-      });
-      setStatuses(prev => ({ ...prev, ...checkingUpdates }));
-
-      // Group by projectId for one batch request per project
-      const byProject = {};
-      toValidate.forEach(({ projectId, credential }) => {
         const pid = String(projectId);
         if (!byProject[pid]) byProject[pid] = [];
         byProject[pid].push(credential);
       });
+      setStatuses(prev => ({ ...prev, ...checkingUpdates }));
 
       await Promise.all(
         Object.entries(byProject).map(([projectId, creds]) => validateProjectBatch(projectId, creds)),

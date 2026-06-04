@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux';
 import { Box, Tooltip, Typography } from '@mui/material';
 
 import { useTrackEvent } from '@/GA';
-import { useCredentialValidation } from '@/[fsd]/features/credentials/lib/hooks';
+import { useCredentialValidation, useCredentialsData } from '@/[fsd]/features/credentials/lib/hooks';
 import { CredentialOptionLabel } from '@/[fsd]/features/credentials/ui';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
 import { useContextExecutionEntity } from '@/[fsd]/shared/lib/hooks';
@@ -20,7 +20,6 @@ import RouteDefinitions, { getBasename } from '@/routes';
 import CredentialCreateLabel from './CredentialCreateLabel';
 import CredentialMismatchFooter from './CredentialMismatchFooter';
 import CredentialNotFoundValue from './CredentialNotFoundValue';
-import { useCredentialsData } from './hooks/useCredentialsData';
 
 const credentialMenuItemValue = Object.freeze({
   keyKind: 'kind',
