@@ -96,6 +96,9 @@ export default function useCreateConversation({
           changeUrlByConversation(result.data.id, result.data.name);
           setActiveConversation(prev => ({
             ...result.data,
+            participants: result.data.participants?.length
+              ? result.data.participants
+              : prev.participants || [],
             // Only keep isNamingPending if server returned the default name (meaning it's still generating a real name)
             isNamingPending: result.data.name === DefaultConversationName,
             ...(prev?.attachment_participant_id && {
