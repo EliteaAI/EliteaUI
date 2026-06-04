@@ -1,11 +1,12 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useDispatch, useSelector } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-import { Box, IconButton, Typography } from '@mui/material';
+import { Box, ClickAwayListener, Paper, Popper, useTheme } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
+import { Button } from '@/[fsd]/shared/ui';
 import { CreateEntityConstants } from '@/[fsd]/widgets/sidebar-root/lib/constants';
 import { useDisablePersonalSpace } from '@/[fsd]/widgets/sidebar-root/lib/hooks';
 import PlusIcon from '@/assets/plus-icon.svg?react';
@@ -16,6 +17,8 @@ import {
   SearchParams,
   ViewMode,
 } from '@/common/constants';
+import ArrowDownIcon from '@/components/Icons/ArrowDownIcon';
+import CheckIcon from '@/components/Icons/CheckIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import RouteDefinitions from '@/routes';
@@ -25,14 +28,18 @@ const CreateEntityButton = memo(props => {
   const { tourId } = props;
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const theme = useTheme();
   const { checkPermission } = useCheckPermission();
   const isCreatingNewConversation = useSelector(state => state.chat.isCreatingNewConversation);
 
   const sideBarCollapsed = useSelector(state => state.settings.sideBarCollapsed);
   const [selectedOption, setSelectedOption] = useState('Chat');
+  const [openMenu, setOpenMenu] = useState(false);
   const { pathname, state } = useLocation();
-  const locationState = useMemo(() => state || { from: [], routeStack: [] }, [state]);
+  const locationState = useMemo(() => ({ from: [], routeStack: [], ...state }), [state]);
   const styles = createEntityButtonStyles(sideBarCollapsed);
+  const anchorRef = useRef(null);
+
   const isFromApplicationDetailPage = useMemo(() => !!pathname.match(/\/agents\/\d+/g), [pathname]);
   const isFromPipelineDetailPage = useMemo(() => !!pathname.match(/\/pipelines\/\d+/g), [pathname]);
   const isFromToolkitDetailPage = useMemo(() => !!pathname.match(/\/toolkits\/\d+/g), [pathname]);
@@ -42,7 +49,6 @@ const CreateEntityButton = memo(props => {
   );
   const isSystemPromptsPage = useMemo(() => pathname.includes('/settings/prompts'), [pathname]);
   const isSettingsUsersPage = useMemo(() => pathname.includes('/settings/users'), [pathname]);
-  const isAgentStudioPage = useMemo(() => pathname.startsWith(RouteDefinitions.AgentStudio), [pathname]);
   const shouldDisableCreatingChat = useMemo(
     () => selectedOption === CreateEntityConstants.OptionsMap.Chat && isCreatingNewConversation,
     [selectedOption, isCreatingNewConversation],
@@ -75,99 +81,121 @@ const CreateEntityButton = memo(props => {
       selectedOption === 'Integration' && ALLOW_PROJECT_OWN_LLMS === false && projectId != PUBLIC_PROJECT_ID,
     [selectedOption, projectId],
   );
-  const handleCommand = useCallback(() => {
-    if (pathname.startsWith(RouteDefinitions.AppsApplications)) {
-      navigate(RouteDefinitions.AppsCatalog, { state: locationState });
-      return;
-    }
 
-    // Special inline action for creating a Secret from Settings -> Secrets
-    switch (selectedOption) {
-      case 'Secret':
-        {
-          // Navigate to settings/secrets with a flag to trigger row creation
-          const secretsPath = RouteDefinitions.SettingsWithTab.replace(':tab', 'secrets');
-          const search = 'createSecret=1';
-          navigate(
-            { pathname: secretsPath, search: search ? `?${search}` : '' },
-            {
-              replace: false,
-              state: locationState,
-            },
-          );
-        }
+  const isSimpleCreateRoute = useMemo(() => {
+    const lowerPathname = pathname.toLowerCase();
+    return CreateEntityConstants.SimpleCreateRoutes.some(route => lowerPathname.includes(route));
+  }, [pathname]);
+
+  const currentLabel = useMemo(() => {
+    const lowerPathname = pathname.toLowerCase();
+    const match = CreateEntityConstants.RouteToLabelMap.find(({ route }) => lowerPathname.includes(route));
+    return match?.label || null;
+  }, [pathname]);
+
+  const currentDropdownItem = useMemo(() => {
+    if (!currentLabel) return null;
+    return CreateEntityConstants.DropdownItems.find(item => item.label === currentLabel) || null;
+  }, [currentLabel]);
+
+  const handleCommand = useCallback(
+    (optionOverride = null) => {
+      const stateOption = optionOverride ?? selectedOption;
+      if (!optionOverride && pathname.startsWith(RouteDefinitions.AppsApplications)) {
+        navigate(RouteDefinitions.AppsCatalog, { state: locationState });
         return;
-      case 'User':
-        {
-          // Navigate to settings/users with a flag to trigger invite user dialog
-          const usersPath = RouteDefinitions.SettingsWithTab.replace(':tab', 'users');
-          const search = 'inviteUsers=1';
-          navigate(
-            { pathname: usersPath, search: search ? `?${search}` : '' },
-            {
-              replace: false,
-              state: locationState,
-            },
-          );
-        }
-        return;
-      default: {
-        const destUrl = CreateEntityConstants.CommandPathMap[selectedOption];
-        const breadCrumb = CreateEntityConstants.BreadCrumbMap[selectedOption];
-        let search =
-          selectedOption === CreateEntityConstants.OptionsMap.Chat
-            ? 'create=1'
-            : `${SearchParams.ViewMode}=${ViewMode.Owner}`;
+      }
 
-        // Add special parameter for Model creation from Model Configuration Settings
-        if (selectedOption === 'Integration') {
-          search += '&from=model-configuration';
-        }
+      switch (stateOption) {
+        case 'Secret':
+          {
+            // Navigate to settings/secrets with a flag to trigger row creation
+            const secretsPath = RouteDefinitions.SettingsWithTab.replace(':tab', 'secrets');
+            const search = 'createSecret=1';
+            navigate(
+              { pathname: secretsPath, search: search ? `?${search}` : '' },
+              {
+                replace: false,
+                state: locationState,
+              },
+            );
+          }
+          return;
+        case 'User':
+          {
+            // Navigate to settings/users with a flag to trigger invite user dialog
+            const usersPath = RouteDefinitions.SettingsWithTab.replace(':tab', 'users');
+            const search = 'inviteUsers=1';
+            navigate(
+              { pathname: usersPath, search: search ? `?${search}` : '' },
+              {
+                replace: false,
+                state: locationState,
+              },
+            );
+          }
+          return;
+        case 'Application':
+          navigate(RouteDefinitions.AppsCatalog, { state: locationState });
+          return;
+        default: {
+          const destUrl = CreateEntityConstants.CommandPathMap[stateOption];
+          const breadCrumb = CreateEntityConstants.BreadCrumbMap[stateOption];
+          let search =
+            stateOption === CreateEntityConstants.OptionsMap.Chat
+              ? 'create=1'
+              : `${SearchParams.ViewMode}=${ViewMode.Owner}`;
 
-        if (destUrl !== pathname || selectedOption === CreateEntityConstants.OptionsMap.Chat) {
-          let newRouteStack = [...locationState.routeStack];
+          if (stateOption === 'Integration') {
+            search += '&from=model-configuration';
+          }
 
-          //For opening creating page from solo url or from Discover, we treat it as opening it from My Library
-          newRouteStack =
-            selectedOption === CreateEntityConstants.OptionsMap.Chat
-              ? [
-                  {
-                    breadCrumb,
-                    viewMode: ViewMode.Owner,
-                    pagePath: destUrl,
-                  },
-                ]
-              : [
-                  {
-                    breadCrumb: CreateEntityConstants.BreadCrumbMap[destUrl],
-                    pagePath:
-                      destUrl === RouteDefinitions.CreatePersonalToken
-                        ? RouteDefinitions.SettingsWithTab.replace(':tab', 'tokens')
-                        : `${CreateEntityConstants.PrevUrlPathMap[destUrl]}?${SearchParams.ViewMode}=${ViewMode.Owner}`,
-                  },
-                  {
-                    breadCrumb,
-                    viewMode: ViewMode.Owner,
-                    pagePath: `${destUrl}${search ? `?${search}` : ''}`,
-                  },
-                ];
-          navigate(
-            { pathname: destUrl, search },
-            {
-              replace: shouldReplaceThePage,
-              state: { routeStack: newRouteStack },
-            },
-          );
-          if (destUrl === RouteDefinitions.CreateBucket) {
-            dispatch(artifactActions.setBucket(null));
+          if (destUrl !== pathname || stateOption === CreateEntityConstants.OptionsMap.Chat) {
+            let newRouteStack = [...locationState.routeStack];
+
+            newRouteStack =
+              stateOption === CreateEntityConstants.OptionsMap.Chat
+                ? [
+                    {
+                      breadCrumb,
+                      viewMode: ViewMode.Owner,
+                      pagePath: destUrl,
+                    },
+                  ]
+                : [
+                    {
+                      breadCrumb: CreateEntityConstants.BreadCrumbMap[destUrl],
+                      pagePath:
+                        destUrl === RouteDefinitions.CreatePersonalToken
+                          ? RouteDefinitions.SettingsWithTab.replace(':tab', 'tokens')
+                          : `${CreateEntityConstants.PrevUrlPathMap[destUrl]}?${SearchParams.ViewMode}=${ViewMode.Owner}`,
+                    },
+                    {
+                      breadCrumb,
+                      viewMode: ViewMode.Owner,
+                      pagePath: `${destUrl}${search ? `?${search}` : ''}`,
+                    },
+                  ];
+            navigate(
+              { pathname: destUrl, search },
+              {
+                replace: shouldReplaceThePage,
+                state: { routeStack: newRouteStack },
+              },
+            );
+            if (destUrl === RouteDefinitions.CreateBucket) {
+              dispatch(artifactActions.setBucket(null));
+            }
           }
         }
       }
-    }
-  }, [dispatch, selectedOption, pathname, locationState, navigate, shouldReplaceThePage]);
-  const handleClick = useCallback(() => {
-    handleCommand();
-  }, [handleCommand]);
+    },
+    [dispatch, selectedOption, pathname, locationState, navigate, shouldReplaceThePage],
+  );
+
+  const handleOpenMenu = useCallback(() => {
+    setOpenMenu(prev => !prev);
+  }, []);
 
   useEffect(() => {
     const lowerPathname = pathname.toLocaleLowerCase();
@@ -200,123 +228,207 @@ const CreateEntityButton = memo(props => {
       shouldDisablePersonalSpace ||
       !hasPermissionForSelectedOption ||
       isSystemPromptsPage ||
-      isAgentStudioPage ||
       shouldDisableInviteUser ||
       shouldDisableCreatingChat ||
-      shouldDisableOwnLLMs ||
-      isAppCatalogTab,
+      shouldDisableOwnLLMs,
     [
       shouldDisablePersonalSpace,
       hasPermissionForSelectedOption,
       isSystemPromptsPage,
-      isAgentStudioPage,
       shouldDisableInviteUser,
       shouldDisableCreatingChat,
       shouldDisableOwnLLMs,
-      isAppCatalogTab,
     ],
   );
 
-  const tootip = useMemo(() => {
+  const tooltip = useMemo(() => {
     if (isCreatingNewConversation) {
       return 'Creating conversation...';
     }
     if (isSettingsUsersPage) {
       return 'Invite users';
     }
-    return `Create ${selectedOption || 'entity'}`;
-  }, [isCreatingNewConversation, isSettingsUsersPage, selectedOption]);
+    if (isSimpleCreateRoute) {
+      return 'Create';
+    }
+    return `Create ${currentLabel || selectedOption || 'entity'}`;
+  }, [isCreatingNewConversation, isSettingsUsersPage, isSimpleCreateRoute, currentLabel, selectedOption]);
+
+  const handleDropdownItemClick = useCallback(
+    item => {
+      const permissions = CreateEntityConstants.CreationPermissions[item.option];
+      if (permissions?.length && !permissions.some(p => checkPermission(p))) {
+        return;
+      }
+      setOpenMenu(false);
+      handleCommand(item.option);
+    },
+    [handleCommand, checkPermission],
+  );
+
+  const handleClickAway = useCallback(() => {
+    setOpenMenu(false);
+  }, []);
+
+  const handleMainButtonClick = useCallback(() => {
+    if (isAppCatalogTab) {
+      navigate(RouteDefinitions.AppsCatalog, { state: locationState });
+      return;
+    }
+    handleCommand();
+  }, [isAppCatalogTab, navigate, locationState, handleCommand]);
+
+  const showSimpleButton = sideBarCollapsed || isSimpleCreateRoute;
 
   return (
-    <StyledTooltip
-      placement="right"
-      title={tootip}
-      enterDelay={500}
-      enterNextDelay={500}
-    >
+    <ClickAwayListener onClickAway={handleClickAway}>
       <Box
         component="span"
         data-tour={tourId}
-        sx={styles.span}
+        sx={styles.wrapper}
+        ref={anchorRef}
       >
-        <IconButton
-          disabled={disableCreateButton}
-          disableRipple
-          sx={styles.button}
-          onClick={handleClick}
+        <StyledTooltip
+          placement="right"
+          title={tooltip}
+          enterDelay={500}
+          enterNextDelay={500}
         >
-          <Box sx={styles.iconBox(disableCreateButton)}>
-            <PlusIcon />
+          <Box sx={styles.span}>
+            {showSimpleButton ? (
+              <Button.BaseBtn
+                variant="special"
+                disabled={disableCreateButton}
+                startIcon={<PlusIcon />}
+                sx={styles.simpleButton}
+                onClick={handleOpenMenu}
+              >
+                {!sideBarCollapsed ? 'Create' : null}
+              </Button.BaseBtn>
+            ) : (
+              <>
+                <Button.BaseBtn
+                  variant="special"
+                  disabled={disableCreateButton}
+                  startIcon={<PlusIcon />}
+                  sx={styles.mainButton}
+                  onClick={handleMainButtonClick}
+                >
+                  {currentLabel}
+                </Button.BaseBtn>
+                <Button.BaseBtn
+                  variant="special"
+                  disabled={disableCreateButton}
+                  sx={styles.chevronButton}
+                  onClick={handleOpenMenu}
+                >
+                  <ArrowDownIcon
+                    fill="currentColor"
+                    style={{ transform: openMenu ? 'rotate(180deg)' : 'none' }}
+                  />
+                </Button.BaseBtn>
+              </>
+            )}
           </Box>
-          {!sideBarCollapsed && (
-            <Typography
-              sx={styles.typography}
-              variant="labelSmall"
-            >
-              Create
-            </Typography>
-          )}
-        </IconButton>
+        </StyledTooltip>
+
+        <Popper
+          open={openMenu}
+          anchorEl={anchorRef.current}
+          placement={sideBarCollapsed ? 'right-start' : 'bottom-start'}
+          sx={styles.popper}
+        >
+          <Paper sx={styles.dropdown}>
+            {CreateEntityConstants.DropdownItems.map(item => (
+              <Box
+                key={item.label}
+                sx={styles.dropdownItem(currentDropdownItem?.label === item.label)}
+                onClick={() => handleDropdownItemClick(item)}
+              >
+                {item.label}
+                {currentDropdownItem?.label === item.label && (
+                  <CheckIcon
+                    fill={theme.palette.text.secondary}
+                    sx={styles.checkIcon}
+                  />
+                )}
+              </Box>
+            ))}
+          </Paper>
+        </Popper>
       </Box>
-    </StyledTooltip>
+    </ClickAwayListener>
   );
 });
 
 CreateEntityButton.displayName = 'CreateEntityButton';
 
-/** @type {MuiSx} */
 const createEntityButtonStyles = sideBarCollapsed => ({
-  span: {
+  wrapper: {
+    position: 'relative',
     display: 'flex',
     justifyContent: 'center',
     width: '100%',
     boxSizing: 'border-box',
   },
-  button: ({ palette }) => ({
-    boxSizing: 'border-box',
+  span: {
     display: 'flex',
-    width: '100%',
-    gap: '0.5rem',
     justifyContent: 'center',
-    alignItems: 'center',
-    height: '1.75rem',
-    color: palette.split.text.default,
-    background: palette.split.default,
-    borderRadius: '1.5rem',
-    ...(sideBarCollapsed
-      ? {
-          maxWidth: '1.75rem !important',
-          width: '1.75rem !important',
-          minWidth: '1.75rem !important',
-          borderRadius: '50%',
-          padding: 0,
-        }
-      : {}),
-    '&:hover': {
-      background: palette.split.hover,
-    },
-    '&:active': {
-      color: palette.split.text.pressed,
-      backgroundColor: palette.split.pressed,
-    },
-    '&:disabled': {
-      color: palette.split.text.disabled,
-      backgroundColor: palette.split.disabled,
-    },
+    width: '100%',
+    boxSizing: 'border-box',
+    gap: '0.0625rem',
+  },
+  simpleButton: {
+    width: '100%',
+    ...(sideBarCollapsed && {
+      width: '1.75rem !important',
+      minWidth: '1.75rem !important',
+    }),
+  },
+  mainButton: {
+    flex: '1 1 auto',
+    borderRadius: '0.875rem 0.125rem 0.125rem 0.875rem',
+  },
+  chevronButton: {
+    borderRadius: '0.125rem 0.875rem 0.875rem 0.125rem',
+    padding: '0 0.5rem',
+    minWidth: 'unset',
+    width: 'fit-content',
+  },
+  popper: {
+    zIndex: 1300,
+  },
+  dropdown: ({ palette }) => ({
+    backgroundColor: palette.background.secondary,
+    borderRadius: '0.5rem',
+    border: `0.0625rem solid ${palette.border.lines}`,
+    padding: '0.5rem 0',
+    minWidth: '11.5rem',
+    boxShadow: '0 0.5rem 0.75rem rgba(0, 0, 0, 0.30)',
+    marginTop: sideBarCollapsed ? 0 : '0.25rem',
+    marginLeft: sideBarCollapsed ? '0.25rem' : 0,
   }),
-  iconBox:
-    disableCreateButton =>
-    ({ palette }) => ({
+  dropdownItem:
+    isSelected =>
+    ({ palette, spacing }) => ({
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'center',
-      color: disableCreateButton ? palette.text.disabled : palette.text.createButton,
+      justifyContent: 'space-between',
+      padding: spacing(1, 2),
+      cursor: 'pointer',
+      color: palette.text.secondary,
+      fontSize: '0.875rem',
+      '&:hover': {
+        backgroundColor: palette.action.hover,
+      },
+      ...(isSelected && {
+        backgroundColor: palette.split.pressed,
+      }),
     }),
-  typography: ({ typography }) => ({
-    color: 'inherit',
-    fontFamily: typography.fontFamily,
-    fontFeatureSettings: typography.fontFeatureSettings,
-  }),
+  checkIcon: {
+    width: '1rem',
+    height: '1rem',
+  },
 });
 
 export default CreateEntityButton;
