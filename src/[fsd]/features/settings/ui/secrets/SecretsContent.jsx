@@ -66,7 +66,10 @@ const SecretsContent = memo(() => {
 
   useEffect(() => {
     if (!isFetching) {
-      setSecretRows(filteredSecrets);
+      setSecretRows(oldRows => {
+        const pendingNewRows = oldRows.filter(row => row.isNew);
+        return [...pendingNewRows, ...filteredSecrets];
+      });
     }
   }, [isFetching, filteredSecrets]);
 

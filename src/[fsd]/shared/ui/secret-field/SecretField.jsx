@@ -136,20 +136,11 @@ const SecretField = memo(props => {
     const options = [
       {
         value: '__create_private_secret__',
-        label: 'New Private Secret',
-        variant: 'action',
-        onActivate: () => window.open(buildUrl(personal_project_id), '_blank', 'noopener,noreferrer'),
-      },
-    ];
-
-    if (selectedProjectId !== personal_project_id) {
-      options.push({
-        value: '__create_project_secret__',
-        label: 'New Project Secret',
+        label: personal_project_id === selectedProjectId ? 'New Private Secret' : 'New Project Secret',
         variant: 'action',
         onActivate: () => window.open(buildUrl(selectedProjectId), '_blank', 'noopener,noreferrer'),
-      });
-    }
+      },
+    ];
 
     return options;
   }, [canCreateSecret, selectedProjectId, personal_project_id]);
