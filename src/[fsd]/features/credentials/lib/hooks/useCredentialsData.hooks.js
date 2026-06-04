@@ -86,13 +86,14 @@ export const useCredentialsData = ({
 
   useEffect(() => {
     if (!hasFetchedData || configurations.length === 0) return;
+    if (section !== 'credentials') return;
     batchValidateCredentials(
       configurations.map(config => ({
         projectId: config.project_id || selectedProjectId,
         credential: config,
       })),
     );
-  }, [hasFetchedData, configurations, batchValidateCredentials, selectedProjectId]);
+  }, [hasFetchedData, configurations, batchValidateCredentials, selectedProjectId, section]);
 
   return {
     configurations,
