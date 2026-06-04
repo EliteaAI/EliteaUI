@@ -1409,8 +1409,9 @@ const ChatBox = forwardRef((props, boxRef) => {
       );
       const { id: answerId, participant_id } = chat_history.find(item => item.question_id === id) || {};
       const participant = ChatHelpers.getParticipantById(activeConversation, participant_id);
+
       if (answerId) {
-        onRegenerateAnswer(answerId, participant, updatedItems)();
+        onRegenerateAnswer(answerId, participant, updatedItems);
       } else {
         const question = textUpdate?.content || '';
         onResendQuestionStream(id, question);

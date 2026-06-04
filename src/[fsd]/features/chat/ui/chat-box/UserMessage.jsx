@@ -73,8 +73,8 @@ const UserMessage = React.forwardRef((props, ref) => {
     const updatedItems = questionItem
       ? [{ uuid: questionItem.uuid, content: value, item_type: 'text_message' }]
       : [];
-    onSubmit(messageId, updatedItems);
     setIsEditing(false);
+    onSubmit(messageId, updatedItems);
   }, [messageId, onSubmit, questionItem, value]);
 
   const isSentToDummyParticipant =
@@ -232,10 +232,12 @@ const UserMessage = React.forwardRef((props, ref) => {
               variant="standard"
               onChange={onChange}
               placeholder=""
-              InputProps={{
-                sx: styles.editInputField,
-                disableUnderline: true,
-                endAdornment: null,
+              slotProps={{
+                input: {
+                  sx: styles.editInputField,
+                  disableUnderline: true,
+                  endAdornment: null,
+                },
               }}
             />
           </ChatInputContainer>
