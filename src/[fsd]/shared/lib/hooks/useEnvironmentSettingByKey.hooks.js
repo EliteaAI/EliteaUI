@@ -4,16 +4,17 @@ import { ENVIRONMENT_KEYS, ENVIRONMENT_SECTION } from '@/[fsd]/shared/lib/consta
 import { useGetConfigurationsListQuery } from '@/api/configurations.js';
 import { DEFAULT_PARTICIPANT_NAME, PUBLIC_PROJECT_ID, TOAST_DURATION } from '@/common/constants.js';
 
+const ENVIRONMENT_QUERY_ARGS = {
+  projectId: PUBLIC_PROJECT_ID,
+  section: ENVIRONMENT_SECTION,
+  includeShared: false,
+  pageSize: 100,
+};
+
 export const useEnvironmentSettingByKey = key => {
-  const { data, isLoading, isFetching, error } = useGetConfigurationsListQuery(
-    {
-      projectId: PUBLIC_PROJECT_ID,
-      section: ENVIRONMENT_SECTION,
-      includeShared: false,
-      pageSize: 100,
-    },
-    { skip: !key },
-  );
+  const { data, isLoading, isFetching, error } = useGetConfigurationsListQuery(ENVIRONMENT_QUERY_ARGS, {
+    skip: !key,
+  });
 
   const value = useMemo(() => {
     const items = data?.items || [];
