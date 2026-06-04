@@ -363,7 +363,7 @@ const NewConversationView = forwardRef(
     useEffect(() => {
       selectedParticipants?.length &&
         setActiveConversation(prev => {
-          return prev.isNew
+          return prev.isNew || !prev.id
             ? {
                 ...prev,
                 participants: [...selectedParticipants],
@@ -578,7 +578,7 @@ const NewConversationView = forwardRef(
         id: activeConversationRef.current?.id || uuidv4(),
         name: activeConversationRef.current?.name || DefaultConversationName,
         is_private: true,
-        participants: [],
+        participants: selectedParticipants ?? [],
         chat_history: [],
         isNew: true,
         isNamingPending: true, // Show "Naming…" spinner
