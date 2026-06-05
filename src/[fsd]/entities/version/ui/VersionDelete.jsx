@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { forwardRef, memo, useCallback, useImperativeHandle, useMemo, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 import { useParams } from 'react-router-dom';
@@ -15,147 +15,158 @@ import useDeleteVersion from '@/hooks/application/useDeleteVersion';
 import useToast from '@/hooks/useToast';
 import useDiscardApplicationChanges from '@/pages/Applications/useDiscardApplicationChanges';
 
-const VersionDelete = memo(props => {
-  const { disabled, onDiscard, type = 'button' } = props;
-  const { version: versionId } = useParams();
-  const styles = versionDeleteStyles();
-  const { toastError, toastInfo, toastSuccess } = useToast();
+const VersionDelete = memo(
+  forwardRef((props, ref) => {
+    const { disabled, onDiscard, type = 'button' } = props;
+    const { version: versionId } = useParams();
+    const styles = versionDeleteStyles();
+    const { toastError, toastInfo, toastSuccess } = useToast();
 
-  const {
-    values: {
-      id: applicationId,
-      version_details: { id: versionIdFromDetail } = {},
-      versions = [],
-      meta: { default_version_id: defaultVersionID } = {},
-    } = {},
-  } = useFormikContext();
+    const {
+      values: {
+        id: applicationId,
+        version_details: { id: versionIdFromDetail } = {},
+        versions = [],
+        meta: { default_version_id: defaultVersionID } = {},
+      } = {},
+    } = useFormikContext();
 
-  const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
-  const [openReplacementModal, setOpenReplacementModal] = useState(false);
+    const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
+    const [openReplacementModal, setOpenReplacementModal] = useState(false);
 
-  const currentVersionId = useMemo(() => versionId || versionIdFromDetail, [versionId, versionIdFromDetail]);
-  const currentVersionName = useMemo(
-    () => versions?.find(version => version.id == currentVersionId)?.name,
-    [currentVersionId, versions],
-  );
-  const latestVersionId = useMemo(
-    () => versions?.find(version => version.name === LATEST_VERSION_NAME)?.id,
-    [versions],
-  );
+    const currentVersionId = useMemo(
+      () => versionId || versionIdFromDetail,
+      [versionId, versionIdFromDetail],
+    );
+    const currentVersionName = useMemo(
+      () => versions?.find(version => version.id == currentVersionId)?.name,
+      [currentVersionId, versions],
+    );
+    const latestVersionId = useMemo(
+      () => versions?.find(version => version.name === LATEST_VERSION_NAME)?.id,
+      [versions],
+    );
 
-  const { discardApplicationChanges } = useDiscardApplicationChanges(onDiscard);
+    const { discardApplicationChanges } = useDiscardApplicationChanges(onDiscard);
 
-  const {
-    doCheckVersionInUse,
-    isCheckingInUse,
-    versionInUseData,
-    resetVersionInUseData,
-    doDeleteVersion,
-    isDeletingVersion,
-  } = useDeleteVersion({
-    versionId: currentVersionId,
-    applicationId,
-    toastError,
-    toastInfo,
-    toastSuccess,
-    versions,
-    defaultVersionID,
-  });
+    const {
+      doCheckVersionInUse,
+      isCheckingInUse,
+      versionInUseData,
+      resetVersionInUseData,
+      doDeleteVersion,
+      isDeletingVersion,
+    } = useDeleteVersion({
+      versionId: currentVersionId,
+      applicationId,
+      toastError,
+      toastInfo,
+      toastSuccess,
+      versions,
+      defaultVersionID,
+    });
 
-  const isLoading = useMemo(() => isCheckingInUse || isDeletingVersion, [isCheckingInUse, isDeletingVersion]);
+    const isLoading = useMemo(
+      () => isCheckingInUse || isDeletingVersion,
+      [isCheckingInUse, isDeletingVersion],
+    );
 
-  const onDeleteVersionClick = useCallback(async () => {
-    if (isLoading) return;
+    const onDeleteVersionClick = useCallback(async () => {
+      if (isLoading) return;
 
-    const checkResult = await doCheckVersionInUse();
+      const checkResult = await doCheckVersionInUse();
 
-    if (!checkResult) return;
+      if (!checkResult) return;
 
-    if (checkResult.in_use) setOpenReplacementModal(true);
-    else setOpenConfirmDialog(true);
-  }, [doCheckVersionInUse, isLoading]);
+      if (checkResult.in_use) setOpenReplacementModal(true);
+      else setOpenConfirmDialog(true);
+    }, [doCheckVersionInUse, isLoading]);
 
-  const onCloseConfirmDialog = useCallback(() => {
-    setOpenConfirmDialog(false);
-    resetVersionInUseData();
-  }, [resetVersionInUseData]);
+    useImperativeHandle(ref, () => ({ triggerDelete: onDeleteVersionClick }), [onDeleteVersionClick]);
 
-  const onCloseReplacementModal = useCallback(() => {
-    setOpenReplacementModal(false);
-    resetVersionInUseData();
-  }, [resetVersionInUseData]);
+    const onCloseConfirmDialog = useCallback(() => {
+      setOpenConfirmDialog(false);
+      resetVersionInUseData();
+    }, [resetVersionInUseData]);
 
-  const onConfirmSimpleDelete = useCallback(async () => {
-    setOpenConfirmDialog(false);
-    discardApplicationChanges();
+    const onCloseReplacementModal = useCallback(() => {
+      setOpenReplacementModal(false);
+      resetVersionInUseData();
+    }, [resetVersionInUseData]);
 
-    await doDeleteVersion(null);
-  }, [discardApplicationChanges, doDeleteVersion]);
-
-  const onConfirmReplaceAndDelete = useCallback(
-    async newVersionId => {
+    const onConfirmSimpleDelete = useCallback(async () => {
+      setOpenConfirmDialog(false);
       discardApplicationChanges();
 
-      const success = await doDeleteVersion(newVersionId);
+      await doDeleteVersion(null);
+    }, [discardApplicationChanges, doDeleteVersion]);
 
-      if (success) {
-        setOpenReplacementModal(false);
-        resetVersionInUseData();
-      }
-    },
-    [discardApplicationChanges, doDeleteVersion, resetVersionInUseData],
-  );
+    const onConfirmReplaceAndDelete = useCallback(
+      async newVersionId => {
+        discardApplicationChanges();
 
-  if (currentVersionId === latestVersionId && type === 'button') return null;
+        const success = await doDeleteVersion(newVersionId);
 
-  return (
-    <>
-      {type === 'menuItem' ? (
-        <Box
-          sx={styles.container}
-          onClick={e => {
-            e.stopPropagation();
-            onDeleteVersionClick();
-          }}
-        >
-          <DeleteIcon sx={styles.deleteIcon} />
-          <Typography sx={styles.deleteText}>Delete</Typography>
-        </Box>
-      ) : (
-        <Button.BaseBtn
-          disabled={isLoading || disabled}
-          variant="elitea"
-          color="secondary"
-          onClick={onDeleteVersionClick}
-        >
-          Delete Version
-          {isLoading && <StyledCircleProgress size={20} />}
-        </Button.BaseBtn>
-      )}
+        if (success) {
+          setOpenReplacementModal(false);
+          resetVersionInUseData();
+        }
+      },
+      [discardApplicationChanges, doDeleteVersion, resetVersionInUseData],
+    );
 
-      <AlertDialog
-        title="Delete version"
-        alertContent={`Are you sure to delete ${currentVersionName}?`}
-        open={openConfirmDialog}
-        alarm
-        onClose={onCloseConfirmDialog}
-        onCancel={onCloseConfirmDialog}
-        onConfirm={onConfirmSimpleDelete}
-      />
+    if (currentVersionId === latestVersionId && type === 'button') return null;
 
-      <AgentDetails.VersionReplacementModal
-        open={openReplacementModal}
-        onClose={onCloseReplacementModal}
-        versionName={versionInUseData?.version_name || currentVersionName}
-        referencingParents={versionInUseData?.referencing_parents || []}
-        replacementVersions={versionInUseData?.replacement_versions || []}
-        onReplace={onConfirmReplaceAndDelete}
-        isReplacing={isDeletingVersion}
-        defaultVersionId={defaultVersionID}
-      />
-    </>
-  );
-});
+    return (
+      <>
+        {type === 'menuItem' && (
+          <Box
+            sx={styles.container}
+            onClick={e => {
+              e.stopPropagation();
+              onDeleteVersionClick();
+            }}
+          >
+            <DeleteIcon sx={styles.deleteIcon} />
+            <Typography sx={styles.deleteText}>Delete</Typography>
+          </Box>
+        )}
+        {type === 'button' && (
+          <Button.BaseBtn
+            disabled={isLoading || disabled}
+            variant="elitea"
+            color="secondary"
+            onClick={onDeleteVersionClick}
+          >
+            Delete Version
+            {isLoading && <StyledCircleProgress size={20} />}
+          </Button.BaseBtn>
+        )}
+
+        <AlertDialog
+          title="Delete version"
+          alertContent={`Are you sure to delete ${currentVersionName}?`}
+          open={openConfirmDialog}
+          alarm
+          onClose={onCloseConfirmDialog}
+          onCancel={onCloseConfirmDialog}
+          onConfirm={onConfirmSimpleDelete}
+        />
+
+        <AgentDetails.VersionReplacementModal
+          open={openReplacementModal}
+          onClose={onCloseReplacementModal}
+          versionName={versionInUseData?.version_name || currentVersionName}
+          referencingParents={versionInUseData?.referencing_parents || []}
+          replacementVersions={versionInUseData?.replacement_versions || []}
+          onReplace={onConfirmReplaceAndDelete}
+          isReplacing={isDeletingVersion}
+          defaultVersionId={defaultVersionID}
+        />
+      </>
+    );
+  }),
+);
 
 VersionDelete.displayName = 'VersionDelete';
 
