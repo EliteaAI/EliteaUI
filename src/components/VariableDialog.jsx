@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import { Button, DialogContent, DialogTitle, Typography, useTheme } from '@mui/material';
+import { DialogContent, DialogTitle, Typography, useTheme } from '@mui/material';
+
+import { Button } from '@/[fsd]/shared/ui';
 
 import { StyledDialog, StyledDialogActions } from '@/components/StyledDialog';
 import VariableList from '@/components/VariableList';
@@ -93,21 +95,18 @@ export default function VariableDialog({
           height: '60px',
         }}
       >
-        <Button
+        <Button.BaseBtn
           variant="secondary"
-          color="secondary"
           onClick={handleCancel}
-          disableRipple
         >
           Cancel
-        </Button>
-        <Button
+        </Button.BaseBtn>
+        <Button.BaseBtn
           variant="contained"
           onClick={handleOK}
-          disableRipple
         >
           Apply
-        </Button>
+        </Button.BaseBtn>
       </StyledDialogActions>
     </StyledDialog>
   );

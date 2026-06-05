@@ -29,11 +29,12 @@ export const BUTTON_VARIANTS = {
 
 const BaseBtn = memo(
   forwardRef((props, ref) => {
-    const { children, ...restProps } = props;
+    const { children, loadingPosition = 'end', ...restProps } = props;
 
     return (
       <MuiButton
         ref={ref}
+        loadingPosition={loadingPosition}
         {...restProps}
       >
         {children}
@@ -798,6 +799,7 @@ export const MuiButtonStyles = {
   },
   styleOverrides: {
     root: ({ theme }) => ({
+      position: 'relative',
       '&::before': {
         display: 'none',
       },

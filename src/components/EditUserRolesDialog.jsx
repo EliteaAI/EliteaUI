@@ -1,8 +1,8 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
-import { Modal, Select } from '@/[fsd]/shared/ui';
+import { Button, Modal, Select } from '@/[fsd]/shared/ui';
 
 const EditUserRolesDialog = memo(props => {
   const {
@@ -78,23 +78,21 @@ const EditUserRolesDialog = memo(props => {
       }
       actions={
         <Box sx={styles.actionsWrapper}>
-          <Button
+          <Button.BaseBtn
             variant="elitea"
             color="secondary"
             onClick={onCancel}
-            disableRipple
           >
             Cancel
-          </Button>
-          <Button
+          </Button.BaseBtn>
+          <Button.BaseBtn
             variant="elitea"
             color="primary"
             onClick={handleConfirm}
-            disableRipple
             disabled={!selectedRoles.length || !hasChangedRoles}
           >
             {confirmButtonText}
-          </Button>
+          </Button.BaseBtn>
         </Box>
       }
     />

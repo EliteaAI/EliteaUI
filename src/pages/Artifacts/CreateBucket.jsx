@@ -5,9 +5,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import * as yup from 'yup';
 
-import { Box, Button, TextField, Typography } from '@mui/material';
+import { Box, TextField, Typography } from '@mui/material';
 
-import { SingleSelect } from '@/[fsd]/shared/ui/select';
+import { Button, Select } from '@/[fsd]/shared/ui';
 import { useArtifactListQuery, useCreateBucketMutation, useEditBucketMutation } from '@/api/artifacts';
 import { PENDING_BUCKET_SESSION_KEY } from '@/common/artifactConstants';
 import { DEFAULT_RETENTION_VALUE, RETENTION_MEASURES } from '@/common/constants';
@@ -232,7 +232,7 @@ const CreateBucket = memo(() => {
               </Box>
               <Box sx={styles.retentionPolicyWrapper}>
                 <Box sx={styles.selectWrapper}>
-                  <SingleSelect
+                  <Select.SingleSelect
                     showBorder
                     id="expiration_measure"
                     name="expiration_measure"
@@ -263,7 +263,7 @@ const CreateBucket = memo(() => {
                 </Box>
               </Box>
               <Box sx={styles.buttonWrapper}>
-                <Button
+                <Button.BaseBtn
                   onClick={onSave}
                   variant="elitea"
                   color="primary"
@@ -277,14 +277,14 @@ const CreateBucket = memo(() => {
                 >
                   Save
                   {(isCreating || isUpdating) && <StyledCircleProgress size={20} />}
-                </Button>
-                <Button
+                </Button.BaseBtn>
+                <Button.BaseBtn
                   onClick={onCancel}
                   variant="elitea"
                   color="secondary"
                 >
                   Cancel
-                </Button>
+                </Button.BaseBtn>
               </Box>
             </Box>
           </Box>

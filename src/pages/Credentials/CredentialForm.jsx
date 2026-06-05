@@ -4,7 +4,7 @@ import { useFormikContext } from 'formik';
 import { useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router-dom';
 
-import { Box, Button, CircularProgress, Typography } from '@mui/material';
+import { Box, CircularProgress, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { CREDENTIALS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
@@ -13,9 +13,9 @@ import { useConfigOAuthModal, useMcpTokenChange } from '@/[fsd]/features/mcp/lib
 import { McpAuthModal, McpLogoutModal } from '@/[fsd]/features/mcp/ui';
 import { ToolComponentHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
+import { Button } from '@/[fsd]/shared/ui';
 import { PUBLIC_PROJECT_ID, ToolkitViewOptions } from '@/common/constants';
 import { updateObjectByPath } from '@/common/utils.jsx';
-import { StyledCircleProgress } from '@/components/Chat/StyledComponents.jsx';
 import { FormViewToggle } from '@/components/FormViewToggle';
 import useCreateConfiguration from '@/hooks/application/useCreateConfiguration';
 import { Create_Personal_Title, Create_Project_Title, Manual_Title } from '@/hooks/useConfigurations';
@@ -316,37 +316,37 @@ const CredentialForm = memo(props => {
           placement="bottom"
         >
           <span data-tour={CREDENTIALS_TOUR_TARGET_IDS.testConnection}>
-            <Button
+            <Button.BaseBtn
               variant="elitea"
               color="secondary"
               onClick={onClickTestConnection}
               disabled={
                 !credentialDetails?.has_test_connection || !isTestConnectionAllowed || isTestingConnection
               }
+              loading={isTestingConnection}
             >
               {credentialDetails?.check_connection_label || 'Test connection'}
-              {isTestingConnection && <StyledCircleProgress size={20} />}
-            </Button>
+            </Button.BaseBtn>
           </span>
         </Tooltip>
         {isOAuthLoggedIn && oauthTokenKey && (
-          <Button
+          <Button.BaseBtn
             variant="elitea"
             color="secondary"
             onClick={onLogout}
           >
             Logout
-          </Button>
+          </Button.BaseBtn>
         )}
         {!isOAuthLoggedIn && oauthTokenKey && (
-          <Button
+          <Button.BaseBtn
             variant="elitea"
             color="secondary"
             onClick={onClickTestConnection}
             disabled={isTestingConnection}
           >
             Login
-          </Button>
+          </Button.BaseBtn>
         )}
       </Box>
       {apiError && (

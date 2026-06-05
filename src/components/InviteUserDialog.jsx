@@ -1,9 +1,9 @@
 import { memo, useCallback, useEffect, useState } from 'react';
 
-import { Box, Button, FormControl, FormHelperText, Typography } from '@mui/material';
+import { Box, FormControl, FormHelperText, Typography } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
-import { Input, Modal, Select } from '@/[fsd]/shared/ui';
+import { Button, Input, Modal, Select } from '@/[fsd]/shared/ui';
 import { filterProps } from '@/common/utils';
 
 const StyledFormControl = styled(
@@ -210,23 +210,21 @@ const InviteUserDialog = memo(props => {
       }
       actions={
         <Box sx={styles.actionsWrapper}>
-          <Button
+          <Button.BaseBtn
             variant="elitea"
             color="secondary"
             onClick={onCancel}
-            disableRipple
           >
             Cancel
-          </Button>
-          <Button
+          </Button.BaseBtn>
+          <Button.BaseBtn
             variant="elitea"
             color="primary"
             onClick={handleConfirm}
-            disableRipple
             disabled={!emails.length || !selectedRoles.length || error}
           >
             {confirmButtonText}
-          </Button>
+          </Button.BaseBtn>
         </Box>
       }
     />
