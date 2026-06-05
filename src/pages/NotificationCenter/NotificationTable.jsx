@@ -207,7 +207,7 @@ const NotificationTable = memo(props => {
       if (column.field === 'created_at') {
         return (
           <Typography
-            variant="bodyMedium"
+            variant="labelMedium"
             color={row.is_seen ? 'text.primary' : 'text.secondary'}
             sx={styles.dateCell}
           >
