@@ -241,19 +241,6 @@ const CreateEntityButton = memo(props => {
     ],
   );
 
-  const tooltip = useMemo(() => {
-    if (isCreatingNewConversation) {
-      return 'Creating conversation...';
-    }
-    if (isSettingsUsersPage) {
-      return 'Invite users';
-    }
-    if (isSimpleCreateRoute) {
-      return 'Create';
-    }
-    return `Create ${currentLabel || selectedOption || 'entity'}`;
-  }, [isCreatingNewConversation, isSettingsUsersPage, isSimpleCreateRoute, currentLabel, selectedOption]);
-
   const handleDropdownItemClick = useCallback(
     item => {
       const permissions = CreateEntityConstants.CreationPermissions[item.option];
@@ -290,7 +277,7 @@ const CreateEntityButton = memo(props => {
       >
         <StyledTooltip
           placement="right"
-          title={tooltip}
+          title={sideBarCollapsed ? 'Create new...' : ''}
           enterDelay={500}
           enterNextDelay={500}
         >
