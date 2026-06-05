@@ -6,13 +6,13 @@ import { useSelector } from 'react-redux';
 import { Box } from '@mui/material';
 
 import { ApplicationVersionSelect } from '@/[fsd]/entities/application-tab-bar/ui';
+import { useRefetchAgentDetails } from '@/[fsd]/features/agent/lib/hooks';
 import { AGENT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { PIPELINE_DISCARD_IRREVERSIBLE_CHANGES_MESSAGE } from '@/[fsd]/features/pipelines';
 import { useFormDirtyExcluding } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { ViewMode } from '@/common/constants';
 import useFromApplications from '@/hooks/application/useIsFromApplication';
-import useRefetchAgentDetails from '@/hooks/application/useRefetchAgentDetails';
 import { useIsFromPipelineDetail } from '@/hooks/useIsFromSpecificPageHooks';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useViewMode from '@/hooks/useViewMode';

@@ -2,6 +2,7 @@ import { useCallback, useMemo } from 'react';
 
 import { useTheme } from '@mui/material';
 
+import { useSetRefetchDetails } from '@/[fsd]/features/agent/lib/hooks';
 import { useGetCurrentMCPSchemas, useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
 import { useApplicationDetailsQuery } from '@/api/applications';
 import { useToolkitAssociateMutation, useToolkitsListQuery } from '@/api/toolkits.js';
@@ -12,8 +13,6 @@ import usePageQuery from '@/hooks/usePageQuery';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useSortQueryParamsFromUrl from '@/hooks/useSortQueryParamsFromUrl';
 import useToast from '@/hooks/useToast';
-
-import { useSetRefetchDetails } from './useRefetchAgentDetails';
 
 export const useAssociateToolkit = ({ applicationId, versionId, onSelectToolkit, formik, entityType }) => {
   const [associateToolkit, { isLoading: isAssociating, isError: isAssociateError, error: associateError }] =
