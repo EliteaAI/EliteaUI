@@ -191,12 +191,6 @@ export const useAgentsStudioData = (query, selectedTagNames) => {
     dispatch(agentsStudioActions.clearCache());
   }, [dispatch]);
 
-  const createFetchApplications = useCallback(() => {
-    fetchTrendingApplications(0);
-    fetchMyLikedApplications(0);
-    fetchApplicationsWithoutTags(0);
-  }, [fetchTrendingApplications, fetchMyLikedApplications, fetchApplicationsWithoutTags]);
-
   const addAppToCategory = useCallback((categoryName, app, newAppsByTag) => {
     if (!newAppsByTag[categoryName]) {
       newAppsByTag[categoryName] = [];
@@ -230,6 +224,34 @@ export const useAgentsStudioData = (query, selectedTagNames) => {
       return newAppsByTag;
     },
     [addAppToCategory],
+  );
+
+  const fetchAllAndCategorize = useCallback(
+    async () => {
+      setLoading('bulk_fetch', true);
+      try {
+        const result = await fetchApplications({
+          page: 0,
+          pageSize: 1000,
+          params: {
+            query,
+            statuses: CollectionStatus.Published,
+            agents_type: 'classic',
+          },
+        }).unwrap();
+
+        if (!result?.rows) return;
+
+        const newAppsByTag = createNewAppsByTag(result);
+
+        Object.entries(newAppsByTag).forEach(([categoryName, rows]) => {
+          updateApplicationData(categoryName, 0, rows, rows.length);
+        });
+      } finally {
+        setLoading('bulk_fetch', false);
+      }
+    },
+    [fetchApplications, query, setLoading, createNewAppsByTag, updateApplicationData],
   );
 
   const createNewTotalsByTag = useCallback(newAppsByTag => {
@@ -329,16 +351,14 @@ export const useAgentsStudioData = (query, selectedTagNames) => {
     }
 
     if (!isCacheValid) {
-      // Cache is invalid, clear tracking and refetch everything
+      // Cache is invalid — fetch all tag categories in one bulk request
       fetchedTagNamesRef.current = new Set();
-      createFetchApplications();
-      Promise.all(
-        allTags.map(tag => {
-          const formattedName = TagHelpers.formatTagName(tag.name);
-          fetchedTagNamesRef.current.add(formattedName);
-          return fetchApplicationsForTag(tag, 0);
-        }),
-      );
+      fetchAllAndCategorize();
+      fetchTrendingApplications(0);
+      fetchMyLikedApplications(0);
+      allTags.forEach(tag => {
+        fetchedTagNamesRef.current.add(TagHelpers.formatTagName(tag.name));
+      });
     } else {
       // Cache is valid - initialize fetchedTagNamesRef from Redux if empty
       if (fetchedTagNamesRef.current.size === 0) {
@@ -367,7 +387,7 @@ export const useAgentsStudioData = (query, selectedTagNames) => {
         );
       }
     }
-  }, [allTags, query, isCacheValid, searchAndCategorize, createFetchApplications, fetchApplicationsForTag]);
+  }, [allTags, query, isCacheValid, searchAndCategorize, fetchAllAndCategorize, fetchTrendingApplications, fetchMyLikedApplications, fetchApplicationsForTag]);
 
   const filteredApplicationsByTag = useMemo(() => {
     if (selectedTagNames.length === 0) {
