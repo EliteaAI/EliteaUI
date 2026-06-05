@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 
 import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 
+import { useDisassociateToolkit } from '@/[fsd]/features/agent/lib/hooks';
 import { useSaveAgentToolVariables } from '@/[fsd]/features/agent/lib/hooks/useSaveAgentToolVariables.js';
 import { useMcpTokenChange } from '@/[fsd]/features/mcp/lib/hooks';
 import { McpLogInButton } from '@/[fsd]/features/mcp/ui';
@@ -28,7 +29,6 @@ import CredentialWarningBanner from '@/components/CredentialWarningBanner';
 import EntityIcon from '@/components/EntityIcon';
 import AttentionIcon from '@/components/Icons/AttentionIcon.jsx';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
-import useDisassociateToolkit from '@/hooks/application/useDisassociateToolkit.js';
 import { useGetToolkitIconMeta } from '@/hooks/application/useLibraryToolkits';
 import {
   useManualValidateApplicationVersion,
