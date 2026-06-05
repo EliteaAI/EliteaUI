@@ -39,6 +39,58 @@ export const useDisassociateToolkit = ({ applicationId, versionId, onDeleteAttac
     setRefetch();
   }, [dispatch, setRefetch]);
 
+  // Updates both Formik initialValues (Discard baseline) and current values after toolkit removal.
+  // resetForm sets initialValues so that Discard does not restore the toolkit.
+  // setValues re-applies the user's current changes, preserving other pending edits.
+  const applyToolRemoval = useCallback(
+    (tool, toolIndex, isAttachmentToolkit = false) => {
+      const filteredCurrentTools = (values.version_details?.tools || []).filter((_, i) => i !== toolIndex);
+      const filteredInitialTools = (initialValues?.version_details?.tools || []).filter(
+        t => t.id !== tool.id,
+      );
+      const updatedCurrentVersionDetails = isAttachmentToolkit
+        ? {
+            ...(values.version_details || {}),
+            tools: filteredCurrentTools,
+            meta: {
+              ...(values.version_details?.meta || {}),
+              attachment_toolkit_id: undefined,
+            },
+          }
+        : {
+            ...(values.version_details || {}),
+            tools: filteredCurrentTools,
+          };
+      const updatedInitialVersionDetails = isAttachmentToolkit
+        ? {
+            ...(initialValues?.version_details || {}),
+            tools: filteredInitialTools,
+            meta: {
+              ...(initialValues?.version_details?.meta || {}),
+              attachment_toolkit_id: undefined,
+            },
+          }
+        : {
+            ...(initialValues?.version_details || {}),
+            tools: filteredInitialTools,
+          };
+      resetForm({
+        values: {
+          ...(initialValues || {}),
+          version_details: updatedInitialVersionDetails,
+        },
+      });
+      setValues({
+        ...(values || {}),
+        version_details: updatedCurrentVersionDetails,
+      });
+      if (!dirty) {
+        setRefetch();
+      }
+    },
+    [dirty, initialValues, resetForm, setRefetch, setValues, values],
+  );
+
   const onDisassociateTool = useCallback(
     async ({ tool, isAttachmentToolkit }) => {
       if (applicationId && tool?.id && versionId) {
@@ -56,53 +108,7 @@ export const useDisassociateToolkit = ({ applicationId, versionId, onDeleteAttac
           // Update cache to remove the tool from the application
           if (!result.error) {
             onRemoveTool(tool);
-            // Filter toolkit from current values (by index) and from the server baseline (by id).
-            // resetForm sets initialValues to the server baseline without the toolkit so that
-            // Discard does not restore it. setValues then re-applies the user's current changes,
-            // preserving other pending edits and keeping dirty=true when applicable.
-            const filteredCurrentTools = (values.version_details?.tools || []).filter((_, i) => i !== index);
-            const filteredInitialTools = (initialValues?.version_details?.tools || []).filter(
-              t => t.id !== tool.id,
-            );
-            const updatedCurrentVersionDetails = !isAttachmentToolkit
-              ? {
-                  ...(values.version_details || {}),
-                  tools: filteredCurrentTools,
-                }
-              : {
-                  ...(values.version_details || {}),
-                  tools: filteredCurrentTools,
-                  meta: {
-                    ...(values.version_details?.meta || {}),
-                    attachment_toolkit_id: undefined,
-                  },
-                };
-            const updatedInitialVersionDetails = !isAttachmentToolkit
-              ? {
-                  ...(initialValues?.version_details || {}),
-                  tools: filteredInitialTools,
-                }
-              : {
-                  ...(initialValues?.version_details || {}),
-                  tools: filteredInitialTools,
-                  meta: {
-                    ...(initialValues?.version_details?.meta || {}),
-                    attachment_toolkit_id: undefined,
-                  },
-                };
-            resetForm({
-              values: {
-                ...(initialValues || {}),
-                version_details: updatedInitialVersionDetails,
-              },
-            });
-            setValues({
-              ...(values || {}),
-              version_details: updatedCurrentVersionDetails,
-            });
-            if (!dirty) {
-              setRefetch();
-            }
+            applyToolRemoval(tool, index, isAttachmentToolkit);
             reset();
             if (isAttachmentToolkit) {
               onDeleteAttachmentTool?.();
@@ -129,31 +135,7 @@ export const useDisassociateToolkit = ({ applicationId, versionId, onDeleteAttac
             }).unwrap();
             if (!result?.error) {
               onRemoveTool(tool);
-              const filteredCurrentTools = (values.version_details?.tools || []).filter(
-                (_, i) => i !== index,
-              );
-              const filteredInitialTools = (initialValues?.version_details?.tools || []).filter(
-                t => t.id !== tool.id,
-              );
-              resetForm({
-                values: {
-                  ...(initialValues || {}),
-                  version_details: {
-                    ...(initialValues?.version_details || {}),
-                    tools: filteredInitialTools,
-                  },
-                },
-              });
-              setValues({
-                ...(values || {}),
-                version_details: {
-                  ...(values.version_details || {}),
-                  tools: filteredCurrentTools,
-                },
-              });
-              if (!dirty) {
-                setRefetch();
-              }
+              applyToolRemoval(tool, index);
               reset();
             } else {
               toastError(
@@ -191,29 +173,7 @@ export const useDisassociateToolkit = ({ applicationId, versionId, onDeleteAttac
           }).unwrap();
           if (!result?.error) {
             onRemoveTool(tool);
-            const filteredCurrentTools = (values.version_details?.tools || []).filter((_, i) => i !== index);
-            const filteredInitialTools = (initialValues?.version_details?.tools || []).filter(
-              t => t.id !== tool.id,
-            );
-            resetForm({
-              values: {
-                ...(initialValues || {}),
-                version_details: {
-                  ...(initialValues?.version_details || {}),
-                  tools: filteredInitialTools,
-                },
-              },
-            });
-            setValues({
-              ...(values || {}),
-              version_details: {
-                ...(values.version_details || {}),
-                tools: filteredCurrentTools,
-              },
-            });
-            if (!dirty) {
-              setRefetch();
-            }
+            applyToolRemoval(tool, index);
             reset();
           } else {
             toastError(
@@ -240,23 +200,18 @@ export const useDisassociateToolkit = ({ applicationId, versionId, onDeleteAttac
     },
     [
       applicationId,
-      dirty,
+      applyToolRemoval,
       disassociateToolkit,
       index,
-      initialValues,
+      invalidateCacheAndRefresh,
+      onDeleteAttachmentTool,
+      onRemoveTool,
       projectId,
       reset,
-      resetForm,
-      setRefetch,
-      setValues,
       toastError,
       toastInfo,
-      onRemoveTool,
       updateApplicationRelation,
-      values,
       versionId,
-      onDeleteAttachmentTool,
-      invalidateCacheAndRefresh,
     ],
   );
 
