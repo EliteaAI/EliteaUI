@@ -50,25 +50,19 @@ const NotificationList = memo(props => {
   );
 
   const onMarkAllAsRead = useCallback(async () => {
-    if (!projectId || !allNotifications.length) return;
-    const unreadIds = allNotifications.filter(n => !n.is_seen).map(n => n.id);
-    if (!unreadIds.length) return;
+    if (!projectId) return;
     try {
       await bulkMarkSeenNotifications({
         projectId,
-        ids: unreadIds,
+        ids: 'all',
         isSeen: true,
       }).unwrap();
-      const unreadIdsSet = new Set(unreadIds);
-      setAllNotifications(prev =>
-        prev.map(notification =>
-          unreadIdsSet.has(notification.id) ? { ...notification, is_seen: true } : notification,
-        ),
-      );
+      setPage(0);
+      setAllNotifications([]);
     } catch (err) {
       toastError(buildErrorMessage(err));
     }
-  }, [projectId, allNotifications, bulkMarkSeenNotifications, toastError]);
+  }, [projectId, bulkMarkSeenNotifications, toastError]);
 
   const handleNotificationSeenChange = useCallback((notificationId, isSeen) => {
     setAllNotifications(prev =>
