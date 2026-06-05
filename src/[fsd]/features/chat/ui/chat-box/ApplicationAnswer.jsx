@@ -29,6 +29,8 @@ import {
   TOOL_ACTION_NAMES,
   TOOL_ACTION_TYPES,
   ToolActionStatus,
+  VOICE_FEATURES_ENABLED,
+  VOICE_FEATURES_TEMPORARILY_DISABLED,
   WELCOME_MESSAGE_ID,
 } from '@/common/constants.js';
 import { getToolIcon } from '@/common/toolkitUtils';
@@ -730,19 +732,30 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                   className="actionButtons"
                   sx={styles.buttonsContainer}
                 >
-                  {onAutoSpeak && hasSpeakableText && (
+                  {onAutoSpeak && hasSpeakableText && VOICE_FEATURES_ENABLED && (
                     <StyledTooltip
-                      title="Read out"
+                      title={
+                        VOICE_FEATURES_TEMPORARILY_DISABLED
+                          ? 'Voice features temporarily disabled'
+                          : 'Read out'
+                      }
                       placement="top"
                     >
-                      <BaseBtn
-                        disabled={isProcessing || !realAnswer || !!speakingMessageId}
-                        sx={styles.iconButton}
-                        variant="tertiary"
-                        onClick={() => onAutoSpeak(realAnswer, messageId)}
-                      >
-                        <MicphoneIcon sx={styles.icon} />
-                      </BaseBtn>
+                      <Box component="span">
+                        <BaseBtn
+                          disabled={
+                            VOICE_FEATURES_TEMPORARILY_DISABLED ||
+                            isProcessing ||
+                            !realAnswer ||
+                            !!speakingMessageId
+                          }
+                          sx={styles.iconButton}
+                          variant="tertiary"
+                          onClick={() => onAutoSpeak(realAnswer, messageId)}
+                        >
+                          <MicphoneIcon sx={styles.icon} />
+                        </BaseBtn>
+                      </Box>
                     </StyledTooltip>
                   )}
                   {onCopy && (!!answer || !!message_items?.length || !!exception) && (
