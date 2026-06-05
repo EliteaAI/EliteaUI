@@ -5,11 +5,13 @@ import { Box } from '@mui/material';
 import BaseBtn from '@/[fsd]/shared/ui/button/BaseBtn';
 import MicphoneIcon from '@/assets/megaphone.svg?react';
 import StopIcon from '@/assets/stop_record.svg?react';
+import { VOICE_FEATURES_ENABLED } from '@/common/constants';
 
 const VoiceMiniPlayer = memo(props => {
   const { isPlaying, onStop } = props;
   const styles = getStyles();
 
+  if (!VOICE_FEATURES_ENABLED) return null;
   if (!isPlaying) return null;
 
   return (
