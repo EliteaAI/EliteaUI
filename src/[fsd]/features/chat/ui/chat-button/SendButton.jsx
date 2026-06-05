@@ -6,6 +6,7 @@ import { Box } from '@mui/material';
 import Tooltip from '@/ComponentsLib/Tooltip';
 import BaseBtn from '@/[fsd]/shared/ui/button/BaseBtn';
 import SpeakingModeIcon from '@/assets/voicewave.svg?react';
+import { VOICE_FEATURES_ENABLED, VOICE_FEATURES_TEMPORARILY_DISABLED } from '@/common/constants';
 import SendIcon from '@/components/Icons/SendIcon';
 
 const SendButton = memo(props => {
@@ -45,10 +46,15 @@ const SendButton = memo(props => {
     );
   }
 
-  if (!question && !isCreatingConversation) {
+  if (
+    !question &&
+    !isCreatingConversation &&
+    VOICE_FEATURES_ENABLED &&
+    !VOICE_FEATURES_TEMPORARILY_DISABLED
+  ) {
     return (
       <Tooltip
-        title="Speaking mode"
+        title={VOICE_FEATURES_TEMPORARILY_DISABLED ? 'Temporarily disabled by admin' : 'Speaking mode'}
         placement="top"
       >
         <Box component="span">

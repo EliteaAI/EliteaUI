@@ -9,6 +9,7 @@ import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { useListModelsQuery } from '@/api/configurations';
 import MicIcon from '@/assets/microphone.svg?react';
 import StopIcon from '@/assets/stop_record.svg?react';
+import { VOICE_FEATURES_ENABLED, VOICE_FEATURES_TEMPORARILY_DISABLED } from '@/common/constants';
 import SocketContext from '@/contexts/SocketContext';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
@@ -161,8 +162,10 @@ const VoiceButton = memo(
     useImperativeHandle(ref, () => ({ stop: handleStopRecording }), [handleStopRecording]);
 
     if (!isSupported) return null;
+    if (!VOICE_FEATURES_ENABLED) return null;
 
-    const styles = getStyles(isRecording, disabled);
+    const isAdminDisabled = VOICE_FEATURES_TEMPORARILY_DISABLED;
+    const styles = getStyles(isRecording, disabled || isAdminDisabled);
 
     return (
       <Box
@@ -170,17 +173,23 @@ const VoiceButton = memo(
         sx={styles.wrapper}
       >
         <Tooltip
-          title={isRecording ? 'Voice input active' : 'Start voice input'}
+          title={
+            isAdminDisabled
+              ? 'Temporarily disabled by admin'
+              : isRecording
+                ? 'Voice input active'
+                : 'Start voice input'
+          }
           placement="top"
         >
           <Box component="span">
             <BaseBtn
               variant={BUTTON_VARIANTS.icon}
               color={isRecording ? 'tertiary' : 'secondary'}
-              onClick={isRecording ? undefined : handleStartRecording}
+              onClick={isAdminDisabled || isRecording ? undefined : handleStartRecording}
               aria-label={isRecording ? 'voice input active' : 'start voice input'}
               aria-pressed={isRecording}
-              disabled={disabled || isRecording}
+              disabled={disabled || isRecording || isAdminDisabled}
               sx={styles.micButton}
             >
               <MicIcon sx={styles.icon} />
