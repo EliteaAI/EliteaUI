@@ -173,6 +173,7 @@ const ChatMessageWrapper = memo(props => {
       }
       requiresConfirmation={message.requiresConfirmation}
       hitlInterrupt={hideHitlActions ? null : message.hitlInterrupt}
+      hitlInterrupts={hideHitlActions ? null : message.hitlInterrupts}
       onHitlResume={!hideHitlActions && isLastMessage && onHitlResume ? onHitlResume : undefined}
       onHitlEditClick={!hideHitlActions && isLastMessage && onHitlEditClick ? onHitlEditClick : undefined}
       hideContinueButton={hideContinueButton}

@@ -87,18 +87,20 @@ const SensitiveToolParams = memo(props => {
 SensitiveToolParams.displayName = 'SensitiveToolParams';
 
 const ChatHitlActions = memo(props => {
-  const { hitlInterrupt, onHitlResume, onHitlEditClick, disabled } = props;
+  const { hitlInterrupt, onHitlResume, onHitlEditClick, disabled, toolCallId } = props;
   const { available_actions = [], guardrail_type } = hitlInterrupt || {};
-  const isSensitiveTool = guardrail_type === 'sensitive_tool';
+  // Parallel sub-agent fan-out surfaces multiple sensitive-tool pauses at once.
+  const isSensitiveTool =
+    guardrail_type === 'sensitive_tool' || guardrail_type === 'parallel_sensitive_tools';
   const styles = getStyles();
 
   const handleApprove = useCallback(() => {
-    onHitlResume?.({ action: 'approve' });
-  }, [onHitlResume]);
+    onHitlResume?.({ action: 'approve', toolCallId });
+  }, [onHitlResume, toolCallId]);
 
   const handleReject = useCallback(() => {
-    onHitlResume?.({ action: 'reject' });
-  }, [onHitlResume]);
+    onHitlResume?.({ action: 'reject', toolCallId });
+  }, [onHitlResume, toolCallId]);
 
   const handleEditClick = useCallback(() => {
     onHitlEditClick?.();

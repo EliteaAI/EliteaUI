@@ -1023,21 +1023,63 @@ export const useChatSocket = ({
             msg.threadId = hitlThreadId;
           }
           message.threadId = msg.threadId;
-          msg.content = response_metadata?.message || message.content || 'Please review and take action.';
-          msg.hitlInterrupt = {
-            message: response_metadata?.message || message.content || 'Please review and take action.',
-            node_name: response_metadata?.node_name || '',
-            available_actions: response_metadata?.available_actions || ['approve', 'reject'],
-            routes: response_metadata?.routes || {},
-            edit_state_key: response_metadata?.edit_state_key || '',
-            guardrail_type: response_metadata?.hitl_interrupt?.guardrail_type || '',
-            tool_name: response_metadata?.hitl_interrupt?.tool_name || '',
-            toolkit_name: response_metadata?.hitl_interrupt?.toolkit_name || '',
-            toolkit_type: response_metadata?.hitl_interrupt?.toolkit_type || '',
-            action_label: response_metadata?.hitl_interrupt?.action_label || '',
-            tool_args: response_metadata?.hitl_interrupt?.tool_args || null,
-            policy_message: response_metadata?.hitl_interrupt?.policy_message || '',
-          };
+          // Do NOT overwrite msg.content with the interrupt text. The pause
+          // state is rendered from the inline HITL card(s) below; leaving
+          // content empty until the real agent_response streams avoids a
+          // leftover "...requires approval..." bubble lingering after resume.
+
+          // Build a single UI-shaped interrupt entry from a raw interrupt
+          // object. A parallel sub-agent fan-out sends one entry per paused
+          // child (each carrying its own tool_call_id) in hitl_interrupts;
+          // a single pause sends only the legacy top-level fields.
+          const buildHitlInterrupt = (raw, fallbackMessage) => ({
+            message: raw?.message || fallbackMessage || 'Please review and take action.',
+            node_name: raw?.node_name || '',
+            available_actions: raw?.available_actions || ['approve', 'reject'],
+            routes: raw?.routes || {},
+            edit_state_key: raw?.edit_state_key || '',
+            guardrail_type: raw?.guardrail_type || '',
+            tool_name: raw?.tool_name || '',
+            toolkit_name: raw?.toolkit_name || '',
+            toolkit_type: raw?.toolkit_type || '',
+            action_label: raw?.action_label || '',
+            tool_args: raw?.tool_args || null,
+            policy_message: raw?.policy_message || '',
+            tool_call_id: raw?.tool_call_id || '',
+            child_thread_id: raw?.child_thread_id || '',
+          });
+
+          const fallbackMessage = response_metadata?.message || message.content;
+          const rawInterrupts = Array.isArray(response_metadata?.hitl_interrupts)
+            ? response_metadata.hitl_interrupts
+            : [];
+
+          if (rawInterrupts.length > 0) {
+            msg.hitlInterrupts = rawInterrupts.map(raw => buildHitlInterrupt(raw, fallbackMessage));
+            // Keep the singular field populated with the first entry for
+            // back-compat with any consumer that still reads hitlInterrupt.
+            msg.hitlInterrupt = msg.hitlInterrupts[0];
+          } else {
+            // Single-pause path: synthesize one entry from the legacy
+            // top-level + nested hitl_interrupt fields.
+            const singleRaw = {
+              message: response_metadata?.message,
+              node_name: response_metadata?.node_name,
+              available_actions: response_metadata?.available_actions,
+              routes: response_metadata?.routes,
+              edit_state_key: response_metadata?.edit_state_key,
+              guardrail_type: response_metadata?.hitl_interrupt?.guardrail_type,
+              tool_name: response_metadata?.hitl_interrupt?.tool_name,
+              toolkit_name: response_metadata?.hitl_interrupt?.toolkit_name,
+              toolkit_type: response_metadata?.hitl_interrupt?.toolkit_type,
+              action_label: response_metadata?.hitl_interrupt?.action_label,
+              tool_args: response_metadata?.hitl_interrupt?.tool_args,
+              policy_message: response_metadata?.hitl_interrupt?.policy_message,
+              tool_call_id: response_metadata?.hitl_interrupt?.tool_call_id,
+            };
+            msg.hitlInterrupt = buildHitlInterrupt(singleRaw, fallbackMessage);
+            msg.hitlInterrupts = [msg.hitlInterrupt];
+          }
           trackEvent(GA_EVENT_NAMES.HITL_INTERRUPT, {
             [GA_EVENT_PARAMS.AGENT_ID]:
               (participantsRef.current?.find(p => p.id === participant_id) || activeParticipantRef.current)

@@ -90,6 +90,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
     onContinueTokenLimitExecution,
     requiresConfirmation = null,
     hitlInterrupt = null,
+    hitlInterrupts = null,
     onHitlResume,
     onHitlEditClick,
     hideContinueButton = false,
@@ -344,6 +345,15 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
 
   const canRenderContent = !exception && !(isLoading || isRegenerating);
 
+  // Normalize to a list: a parallel sub-agent fan-out surfaces one paused
+  // child per entry; a single pause is wrapped into a one-element list.
+  const effectiveHitlInterrupts = useMemo(() => {
+    if (Array.isArray(hitlInterrupts) && hitlInterrupts.length) {
+      return hitlInterrupts;
+    }
+    return hitlInterrupt ? [hitlInterrupt] : [];
+  }, [hitlInterrupts, hitlInterrupt]);
+
   const shouldRenderAnswerBlock = useMemo(() => {
     const hasRenderableMessageItems =
       message_items?.length && canRenderContent && (!!nonAttachmentItems?.length || hasAttachments);
@@ -354,7 +364,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
       !!exception ||
       (authRequiredAction && !!onContinueMcpExecution) ||
       (requiresConfirmation && !!onContinueTokenLimitExecution) ||
-      !!hitlInterrupt
+      effectiveHitlInterrupts.length > 0
     );
   }, [
     answer,
@@ -367,7 +377,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
     onContinueMcpExecution,
     requiresConfirmation,
     onContinueTokenLimitExecution,
-    hitlInterrupt,
+    effectiveHitlInterrupts.length,
   ]);
 
   const isWideView = actionButtonsWrapperWidth > COMPACT_VIEW_BREAKPOINT;
@@ -693,14 +703,19 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                   onContinue={onContinueWithConfirmation}
                 />
               )}
-              {!!hitlInterrupt && (
-                <ChatHitlActions
-                  hitlInterrupt={hitlInterrupt}
-                  onHitlResume={onHitlResume}
-                  onHitlEditClick={onHitlEditClick}
-                  disabled={!onHitlResume}
-                />
-              )}
+              {effectiveHitlInterrupts.map((interrupt, index) => {
+                const toolCallId = interrupt?.tool_call_id || '';
+                return (
+                  <ChatHitlActions
+                    key={toolCallId || `hitl-${index}`}
+                    hitlInterrupt={interrupt}
+                    toolCallId={toolCallId}
+                    onHitlResume={onHitlResume}
+                    onHitlEditClick={onHitlEditClick}
+                    disabled={!onHitlResume || Boolean(interrupt?.decided)}
+                  />
+                );
+              })}
               {/* Add ref for ApplicationAnswer compatibility */}
               {isApplicationParticipant && <Box ref={ref} />}
               {references?.length > 0 && !(isLoading || isRegenerating) && (

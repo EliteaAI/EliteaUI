@@ -175,11 +175,15 @@ const ChatBox = forwardRef((props, boxRef) => {
 
     return {
       chat_history: history,
-      pendingHitlMessage: [...history].reverse().find(item => item.hitlInterrupt),
+      pendingHitlMessage: [...history]
+        .reverse()
+        .find(item => item.hitlInterrupt || item.hitlInterrupts?.length),
     };
   }, [activeConversation?.chat_history]);
 
-  const hasPendingHitlInterrupt = Boolean(pendingHitlMessage?.hitlInterrupt);
+  const hasPendingHitlInterrupt = Boolean(
+    pendingHitlMessage?.hitlInterrupt || pendingHitlMessage?.hitlInterrupts?.length,
+  );
 
   // Chat states
   const [selectedUsers, setSelectedUsers] = useState([]);
@@ -1198,10 +1202,56 @@ const ChatBox = forwardRef((props, boxRef) => {
     [chat_history, activeConversation, projectId, setChatHistory, setStreamingInfo, emitContinue],
   );
 
+  // Accumulates per-child decisions for a parallel sub-agent fan-out so the
+  // single resume call carries every approve/reject once all N cards are
+  // actioned. Keyed by message id so a fresh interrupt resets the buffer.
+  const pendingDecisionsRef = useRef({ messageId: null, decisions: {} });
+
   const onHitlResume = useCallback(
-    async ({ action, value }) => {
+    async ({ action, value, toolCallId }) => {
       const lastMessage = pendingHitlMessage;
       if (!lastMessage) return;
+
+      const interrupts = Array.isArray(lastMessage.hitlInterrupts)
+        ? lastMessage.hitlInterrupts
+        : lastMessage.hitlInterrupt
+          ? [lastMessage.hitlInterrupt]
+          : [];
+      const isParallel = interrupts.length > 1 && Boolean(toolCallId);
+
+      // Parallel fan-out: buffer this child's decision and disable its card.
+      // Defer the actual resume emit until every child has been actioned.
+      if (isParallel) {
+        if (pendingDecisionsRef.current.messageId !== lastMessage.id) {
+          pendingDecisionsRef.current = { messageId: lastMessage.id, decisions: {} };
+        }
+        pendingDecisionsRef.current.decisions[toolCallId] = {
+          tool_call_id: toolCallId,
+          action,
+          value: value ?? '',
+        };
+
+        // Mark the just-decided card disabled in place.
+        setChatHistory(prevMessages =>
+          prevMessages.map(msg => {
+            if (msg.id !== lastMessage.id || !Array.isArray(msg.hitlInterrupts)) {
+              return msg;
+            }
+            return {
+              ...msg,
+              hitlInterrupts: msg.hitlInterrupts.map(entry =>
+                entry.tool_call_id === toolCallId ? { ...entry, decided: true } : entry,
+              ),
+            };
+          }),
+        );
+
+        const decidedCount = Object.keys(pendingDecisionsRef.current.decisions).length;
+        if (decidedCount < interrupts.length) {
+          // Still waiting on sibling card(s); do not emit yet.
+          return;
+        }
+      }
 
       const { question_id, threadId, participant_id } = lastMessage;
       const participant = ChatHelpers.getParticipantById(activeConversation, participant_id);
@@ -1226,9 +1276,15 @@ const ChatBox = forwardRef((props, boxRef) => {
       });
 
       payload.hitl_resume = true;
-      payload.hitl_action = action;
-      if (action === 'edit') {
-        payload.hitl_value = value ?? '';
+      if (isParallel) {
+        // One resume carrying every child's decision.
+        payload.hitl_decisions = Object.values(pendingDecisionsRef.current.decisions);
+        pendingDecisionsRef.current = { messageId: null, decisions: {} };
+      } else {
+        payload.hitl_action = action;
+        if (action === 'edit') {
+          payload.hitl_value = value ?? '';
+        }
       }
 
       setHitlEditMode(false);
@@ -1241,7 +1297,10 @@ const ChatBox = forwardRef((props, boxRef) => {
 
         const nextMessages = [...prevMessages];
         const assistantMessage = nextMessages[assistantIndex];
-        const archivedAssistantMessage = ChatHelpers.createArchivedHitlAssistantMessage(assistantMessage);
+        // Clear the interrupt state in place on the existing assistant
+        // message. We intentionally do NOT clone it into a content-bearing
+        // "archived" bubble — that left a stale "...requires approval..."
+        // message lingering in the view until reload.
         const resumedAssistantMessage = {
           ...assistantMessage,
           content: '',
@@ -1252,22 +1311,19 @@ const ChatBox = forwardRef((props, boxRef) => {
           requiresConfirmation: undefined,
           exception: undefined,
           hitlInterrupt: undefined,
+          hitlInterrupts: undefined,
           references: [],
           toolActions: [],
           replyTo: editMessage ? { ...editMessage } : assistantMessage.replyTo,
           archivedFromHitl: false,
         };
 
-        nextMessages.splice(assistantIndex, 1, archivedAssistantMessage);
-
-        let insertionIndex = assistantIndex + 1;
+        nextMessages.splice(assistantIndex, 1, resumedAssistantMessage);
 
         if (editMessage) {
-          nextMessages.splice(insertionIndex, 0, editMessage);
-          insertionIndex += 1;
+          nextMessages.splice(assistantIndex, 0, editMessage);
         }
 
-        nextMessages.splice(insertionIndex, 0, resumedAssistantMessage);
         return nextMessages;
       });
 
