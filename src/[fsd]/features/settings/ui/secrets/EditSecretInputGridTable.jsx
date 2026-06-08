@@ -1,11 +1,26 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Input } from '@/[fsd]/shared/ui';
+import { MAX_VARIABLES_LENGTH } from '@/common/constants';
+
+const SECRET_NAME_PATTERN = /^[a-zA-Z0-9_-]*$/;
 
 const EditSecretInputGridTable = memo(props => {
-  const { id, field, value, row, setRows, setRowModesModel } = props;
+  const { id, field, value, row, setRows, setRowModesModel, onValidationChange } = props;
 
   const [inputValue, setInputValue] = useState(value ?? '');
+
+  const validationError = useMemo(() => {
+    const hasInvalidNameChars = field === 'name' && inputValue && !SECRET_NAME_PATTERN.test(inputValue);
+
+    if (hasInvalidNameChars) return 'Only alphanumeric characters, underscore and hyphen are allowed';
+    if (inputValue.length >= MAX_VARIABLES_LENGTH) return 'Maximum character limit reached';
+    return null;
+  }, [field, inputValue]);
+
+  useEffect(() => {
+    onValidationChange?.(id, field, Boolean(validationError));
+  }, [id, field, validationError, onValidationChange]);
 
   const handleOnChange = useCallback(
     event => {
@@ -69,6 +84,9 @@ const EditSecretInputGridTable = memo(props => {
       onChange={handleOnChange}
       onKeyDown={handleKeyDown}
       value={inputValue}
+      error={Boolean(validationError)}
+      helperText={validationError}
+      inputProps={{ maxLength: MAX_VARIABLES_LENGTH }}
     />
   );
 });

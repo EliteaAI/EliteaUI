@@ -4,19 +4,24 @@ import { useFormik } from 'formik';
 import { useNavigate } from 'react-router-dom';
 import * as yup from 'yup';
 
-import { Box, CircularProgress, TextField, Tooltip } from '@mui/material';
+import { Box, CircularProgress, Tooltip } from '@mui/material';
 
 import { DrawerPage, DrawerPageHeader } from '@/[fsd]/features/settings/ui/drawer-page';
 import { GeneratedTokenDialog } from '@/[fsd]/features/settings/ui/personal-tokes';
-import { Button } from '@/[fsd]/shared/ui';
+import { Button, Input } from '@/[fsd]/shared/ui';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { useTokenCreateMutation, useTokenListQuery } from '@/api/auth';
-import { DEFAULT_TOKEN_EXPIRATION_DAYS, EXPIRATION_MEASURES } from '@/common/constants';
+import { DEFAULT_TOKEN_EXPIRATION_DAYS, EXPIRATION_MEASURES, MAX_VARIABLES_LENGTH } from '@/common/constants';
 import { capitalizeFirstChar } from '@/common/utils';
 import useNavBlocker from '@/hooks/useNavBlocker';
 
+const TOKEN_NAME_PATTERN = /^[a-zA-Z0-9_-]*$/;
+
 const validationSchema = yup.object({
-  name: yup.string('Enter token name').required('Name is required'),
+  name: yup
+    .string('Enter token name')
+    .matches(TOKEN_NAME_PATTERN, 'Only alphanumeric characters, underscore and hyphen are allowed')
+    .required('Name is required'),
 });
 
 const CreatePersonalToken = memo(() => {
@@ -80,6 +85,21 @@ const CreatePersonalToken = memo(() => {
     blockCondition: !data.uuid && hasChanged && !wantToCancel,
   });
 
+  const nameHasError =
+    (formik.touched.name && Boolean(formik.errors.name)) || formik.values.name.length >= MAX_VARIABLES_LENGTH;
+
+  const isGenerateDisabled = !formik.values.name || nameHasError || isGenerating || !!data.uuid;
+
+  const getNameHelperText = useCallback(() => {
+    if (formik.touched.name && formik.errors.name) {
+      return formik.errors.name;
+    }
+    if (formik.values.name.length >= MAX_VARIABLES_LENGTH) {
+      return 'Maximum character limit reached';
+    }
+    return undefined;
+  }, [formik.touched.name, formik.errors.name, formik.values.name.length]);
+
   const styles = createPersonalTokenStyles();
 
   return (
@@ -99,7 +119,7 @@ const CreatePersonalToken = memo(() => {
                 <Button.BaseBtn
                   variant="elitea"
                   color="primary"
-                  disabled={!formik.values.name || isGenerating || !!data.uuid}
+                  disabled={isGenerateDisabled}
                   onClick={() => formik.handleSubmit()}
                 >
                   Generate
@@ -126,7 +146,7 @@ const CreatePersonalToken = memo(() => {
           <form onSubmit={formik.handleSubmit}>
             <Box sx={styles.formFields}>
               <Box sx={styles.nameField}>
-                <TextField
+                <Input.InputBase
                   variant="standard"
                   fullWidth
                   id="name"
@@ -135,8 +155,9 @@ const CreatePersonalToken = memo(() => {
                   value={formik.values.name}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
-                  error={formik.touched.name && Boolean(formik.errors.name)}
-                  helperText={formik.touched.name && formik.errors.name}
+                  error={nameHasError}
+                  helperText={getNameHelperText()}
+                  inputProps={{ maxLength: MAX_VARIABLES_LENGTH }}
                 />
               </Box>
               <Box sx={styles.expirationRow}>
@@ -157,7 +178,7 @@ const CreatePersonalToken = memo(() => {
                 </Box>
                 <Box sx={styles.valueField}>
                   {formik.values.measure !== EXPIRATION_MEASURES[0] && (
-                    <TextField
+                    <Input.InputBase
                       variant="standard"
                       fullWidth
                       id="expiration"
