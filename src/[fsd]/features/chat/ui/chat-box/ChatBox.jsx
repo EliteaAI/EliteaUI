@@ -443,6 +443,7 @@ const ChatBox = forwardRef((props, boxRef) => {
               projectId,
               selectedModel,
               participants: activeConversation?.participants || [],
+              attachmentList,
             }),
             project_id: projectId,
             participant_id: realParticipant.id,
@@ -1044,7 +1045,7 @@ const ChatBox = forwardRef((props, boxRef) => {
           chat_history[questionIndex]?.message_items?.filter(
             item => item.item_type === 'attachment_message',
           ) || []
-        ).map(i => ({ name: i.item_details.name })) || [];
+        ).map(i => ({ filepath: i.item_details.filepath })) || [];
       const question_id = chat_history[questionIndex]?.id;
       const leftChatHistory = chat_history.slice(0, questionIndex);
 
