@@ -241,6 +241,7 @@ const UserMessage = React.forwardRef((props, ref) => {
               }}
             />
           </ChatInputContainer>
+          {attachmentItems?.length > 0 && <MessageAttachmentList items={attachmentItems} />}
           <Box sx={styles.editButtonsContainer}>
             <Button
               variant="elitea"

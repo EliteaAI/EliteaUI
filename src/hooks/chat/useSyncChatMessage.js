@@ -91,7 +91,8 @@ const useSynChatMessage = ({
         }
 
         messageWasFound = true;
-        const { author_participant_id, sent_to_id, reply_to_id, sent_to } = message_group;
+        const { author_participant_id, sent_to_id, reply_to_id, sent_to, reply_to_first_message_item_uuid } =
+          message_group;
         const users = prev?.participants?.filter(p => p.entity_name === ChatParticipantType.Users) || [];
         const forUser = isUserMessage(
           author_participant_id,
@@ -100,13 +101,14 @@ const useSynChatMessage = ({
           reply_to_id,
           sent_to,
         );
+        const existingMessage = prev.chat_history.find(
+          message => message.id == message_group.id || message.id == message_group.uuid,
+        );
         const convertedMessageGroup = !forUser
           ? convertToAIAnswer(
               {
                 ...message_group,
-                question_id: prev.chat_history.find(
-                  message => message.id == message_group.id || message.id == message_group.uuid,
-                )?.question_id,
+                question_id: existingMessage?.question_id,
               },
               prev.chat_history,
               prev.participants,
@@ -135,6 +137,18 @@ const useSynChatMessage = ({
           const mergedToolActions = [...(convertedMessageGroup.toolActions || []), ...preservedSwarmChildren];
           return { ...message, ...convertedMessageGroup, toolActions: mergedToolActions };
         });
+
+        if (reply_to_first_message_item_uuid && existingMessage?.question_id) {
+          newChatHistory = newChatHistory.map(message => {
+            if (message.id !== existingMessage.question_id || !message.message_items) return message;
+
+            const updatedItems = message.message_items.map(item =>
+              item.item_type === 'text_message' ? { ...item, uuid: reply_to_first_message_item_uuid } : item,
+            );
+            return { ...message, message_items: updatedItems };
+          });
+        }
+
         newMessageGroups =
           prev.message_groups?.map(message =>
             message.id != message_group.id && message.id != message_group.uuid

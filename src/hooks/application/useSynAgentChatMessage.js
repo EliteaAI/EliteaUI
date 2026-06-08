@@ -16,18 +16,20 @@ const useSynAgentChatMessage = ({ setActiveConversation }) => {
       setActiveConversation(prevConversation => {
         if (!prevConversation) return prevConversation;
 
+        const existingMessage = prevConversation.chat_history.find(
+          message => message.id == message_group.id || message.id == message_group.uuid,
+        );
+
         const convertedMessageGroup = convertToAIAnswer(
           {
             ...message_group,
-            question_id: prevConversation.chat_history.find(
-              message => message.id == message_group.id || message.id == message_group.uuid,
-            )?.question_id,
+            question_id: existingMessage?.question_id,
           },
           prevConversation.chat_history,
           prevConversation.participants,
         );
 
-        const newChatHistory = prevConversation.chat_history.map(message => {
+        let newChatHistory = prevConversation.chat_history.map(message => {
           if (message.id != message_group.id && message.id != message_group.uuid) {
             return message;
           }
@@ -50,6 +52,19 @@ const useSynAgentChatMessage = ({ setActiveConversation }) => {
           const mergedToolActions = [...(convertedMessageGroup.toolActions || []), ...preservedSwarmChildren];
           return { ...message, ...convertedMessageGroup, toolActions: mergedToolActions };
         });
+
+        const { reply_to_first_message_item_uuid } = message_group;
+
+        if (reply_to_first_message_item_uuid && existingMessage?.question_id) {
+          newChatHistory = newChatHistory.map(message => {
+            if (message.id !== existingMessage.question_id || !message.message_items) return message;
+
+            const updatedItems = message.message_items.map(item =>
+              item.item_type === 'text_message' ? { ...item, uuid: reply_to_first_message_item_uuid } : item,
+            );
+            return { ...message, message_items: updatedItems };
+          });
+        }
 
         return {
           ...prevConversation,
