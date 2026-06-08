@@ -28,7 +28,9 @@ import Page404 from '@/pages/Page404.jsx';
 import RouteDefinitions from '@/routes';
 import { actions as chatActions } from '@/slices/chat';
 
-const AnalyticsContainer = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/features/analytics/ui/AnalyticsContainer'));
+const AnalyticsContainer = ChunkHelpers.lazyWithRetry(
+  () => import('@/[fsd]/features/analytics/ui/AnalyticsContainer'),
+);
 const AppDetail = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/apps/AppDetail'));
 const Apps = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/apps/Apps'));
 const McpAuthPage = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/mcp/index.jsx'));
@@ -43,6 +45,9 @@ const EnvironmentSettings = ChunkHelpers.lazyWithRetry(
 );
 const TokensSettings = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/settings/PersonalTokens'));
 const Secrets = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/settings/Secrets'));
+const ProjectContextSettings = ChunkHelpers.lazyWithRetry(
+  () => import('@/[fsd]/pages/settings/ProjectContext'),
+);
 const ServicePromptsPage = ChunkHelpers.lazyWithRetry(
   () => import('@/[fsd]/pages/settings/ServicePromptsPage'),
 );
@@ -293,6 +298,10 @@ const ProtectedRoutes = () => {
             <Route
               path="environment"
               element={<EnvironmentSettings />}
+            />
+            <Route
+              path="project-context"
+              element={<ProjectContextSettings />}
             />
             <Route
               path="prompts"

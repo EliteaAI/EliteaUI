@@ -583,6 +583,10 @@ export const PERMISSIONS = {
     create: 'configuration.users.users.create',
     delete: 'configuration.users.users.delete',
   },
+  projectContext: {
+    view: 'models.project_context.view',
+    edit: 'models.project_context.edit',
+  },
   secrets: {
     view: 'configuration.secrets.secret.view',
     list: 'configuration.secrets.secret.list', //show/hide secrets tab

@@ -11,6 +11,7 @@ import AnalyticsIcon from '@/assets/analytics-icon.svg?react';
 import ConfigurationIcon from '@/assets/configuration-icon.svg?react';
 import EnvironmentIcon from '@/assets/environment-icon.svg?react';
 import KeyIcon from '@/assets/key-icon.svg?react';
+import PromptIcon from '@/assets/prompt.svg?react';
 import { PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';
 import Lock from '@/components/Icons/Lock.jsx';
 import ModelIcon from '@/components/Icons/ModelIcon';
@@ -23,6 +24,7 @@ const VALID_TAB_IDS = [
   'model-configuration',
   'prompts',
   'environment',
+  'project-context',
   'tokens',
   'integrations',
   'secrets',
@@ -45,6 +47,12 @@ const SETTINGS_TABS_CONFIG = [
     id: 'environment',
     label: 'Environment',
     icon: <EnvironmentIcon />,
+  },
+  {
+    id: 'project-context',
+    label: 'Project Context',
+    icon: <PromptIcon />,
+    permission: PERMISSIONS.projectContext.view,
   },
   {
     id: 'tokens',
@@ -86,6 +94,7 @@ const Settings = memo(() => {
       SETTINGS_TABS_CONFIG.filter(item => {
         if (!checkPermission(item.permission)) return false;
         if (item.id === 'prompts' || item.id === 'environment') return projectId == PUBLIC_PROJECT_ID;
+        if (item.id === 'project-context') return projectId !== PUBLIC_PROJECT_ID;
         if (item.id === 'analytics' && platformSettings?.analytics_enabled === false) return false;
         return true;
       }),

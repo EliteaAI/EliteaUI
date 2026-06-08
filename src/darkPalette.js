@@ -412,6 +412,7 @@ const darkPalette = {
     primary: gray10,
     secondary: white,
     tooltip: gray60,
+    error: dangerRed,
     groupedTitle: {
       default: gray10,
     },

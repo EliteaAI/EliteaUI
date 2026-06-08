@@ -3,6 +3,7 @@ import { memo, useCallback, useState } from 'react';
 import { Box, Tooltip, Typography, useTheme } from '@mui/material';
 
 import ErrorIcon from '@/assets/error-icon.svg?react';
+import InfoIcon from '@/assets/info.svg?react';
 import { BORDER_RADIUS } from '@/common/designTokens';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
 
@@ -17,6 +18,7 @@ const VARIANT_MAPPING = {
 const ICON_MAPPING = {
   [VARIANT_MAPPING.WARNING]: AttentionIcon,
   [VARIANT_MAPPING.ERROR]: ErrorIcon,
+  [VARIANT_MAPPING.INFO]: InfoIcon,
 };
 
 const BannerMessage = memo(props => {
@@ -71,6 +73,12 @@ const variantBannerMessagePalette = ({ palette }) => ({
     background: palette.background.errorBkg,
     border: palette.background.wrongBkg,
     text: palette.text.warningText,
+  },
+  [VARIANT_MAPPING.INFO]: {
+    iconColor: palette.icon.fill.tips,
+    border: palette.border.tips,
+    text: palette.text.tips,
+    background: palette.background.tips,
   },
 });
 
