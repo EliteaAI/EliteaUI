@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react';
+import { memo, useMemo, useRef } from 'react';
 
 import { useFormikContext } from 'formik';
 
@@ -14,6 +14,7 @@ import { usePin, usePinMenu } from '@/[fsd]/widgets/pin-toggler/lib/hooks';
 import { PERMISSIONS, ViewMode } from '@/common/constants';
 import { useCopyLinkMenu } from '@/components/CopyLinkToEntityButton.jsx';
 import { useForkEntityMenu } from '@/components/Fork/ForkEntityButton';
+import DeleteIcon from '@/components/Icons/DeleteIcon';
 import PinIcon from '@/components/Icons/PinIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import { useIsFromPipelineDetail } from '@/hooks/useIsFromSpecificPageHooks';
@@ -28,6 +29,7 @@ const ApplicationControls = memo(({ setBlockNav, onSuccess }) => {
   const isFromPipeline = useIsFromPipelineDetail();
   const formik = useFormikContext();
   const viewMode = useViewMode();
+  const versionDeleteRef = useRef(null);
 
   const { values: { id } = {} } = formik;
 
@@ -138,9 +140,11 @@ const ApplicationControls = memo(({ setBlockNav, onSuccess }) => {
       ...(unpublishVersionMenuItem && !isFromPipeline ? [unpublishVersionMenuItem] : []),
       {
         key: 'delete-version',
-        label: <VersionDelete type="menuItem" />,
+        icon: <DeleteIcon sx={{ fontSize: '1rem' }} />,
+        label: 'Delete',
         disabled: disableDelete,
         addSeparator: true,
+        onClick: () => versionDeleteRef.current?.triggerDelete(),
       },
       {
         key: isFromPipeline ? 'pipeline' : 'agent',
@@ -212,6 +216,10 @@ const ApplicationControls = memo(({ setBlockNav, onSuccess }) => {
         </Box>
       )}
       <Controls.ControlsDropdown menuItems={menuItems} />
+      <VersionDelete
+        ref={versionDeleteRef}
+        type="standalone"
+      />
       {publishDialog}
       {unpublishDialog}
       {setDefaultVersionDialog}
