@@ -1,17 +1,16 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 
 import { useFormikContext } from 'formik';
 import { useDispatch } from 'react-redux';
 
+import { useSetRefetchDetails } from '@/[fsd]/features/agent/lib/hooks/useRefetchAgentDetails.hooks';
 import { TAG_TYPE_APPLICATION_DETAILS, useUpdateApplicationRelationMutation } from '@/api/applications';
 import { eliteaApi } from '@/api/eliteaApi';
 import { useToolkitAssociateMutation } from '@/api/toolkits';
 import { buildErrorMessage } from '@/common/utils';
-
-import usePipelineToolsChanges from '../pipeline/usePipelineToolsChanges';
-import { useSelectedProjectId } from '../useSelectedProject';
-import useToast from '../useToast';
-import { useSetRefetchDetails } from './useRefetchAgentDetails';
+import usePipelineToolsChanges from '@/hooks/pipeline/usePipelineToolsChanges';
+import { useSelectedProjectId } from '@/hooks/useSelectedProject';
+import useToast from '@/hooks/useToast';
 
 /**
  * Checks if an error is due to a stale version reference (version was deleted/replaced)
@@ -23,14 +22,13 @@ const isStaleVersionReferenceError = error => {
   return errorMessage.includes('Already removed relation');
 };
 
-export default function useDisassociateToolkit({ applicationId, versionId, onDeleteAttachmentTool, index }) {
+export const useDisassociateToolkit = ({ applicationId, versionId, onDeleteAttachmentTool, index }) => {
   const projectId = useSelectedProjectId();
   const dispatch = useDispatch();
   const { onRemoveTool } = usePipelineToolsChanges();
   const { setRefetch } = useSetRefetchDetails();
   const { toastError, toastInfo } = useToast();
-  const { setFieldValue, resetForm, values, dirty } = useFormikContext();
-  const tools = useMemo(() => values?.version_details?.tools || [], [values?.version_details?.tools]);
+  const { resetForm, setValues, values, initialValues, dirty } = useFormikContext();
   const [disassociateToolkit, { isLoading, isError: isDisassociateError, error: disassociateError, reset }] =
     useToolkitAssociateMutation();
   const [updateApplicationRelation] = useUpdateApplicationRelationMutation();
@@ -40,6 +38,58 @@ export default function useDisassociateToolkit({ applicationId, versionId, onDel
     dispatch(eliteaApi.util.invalidateTags([TAG_TYPE_APPLICATION_DETAILS]));
     setRefetch();
   }, [dispatch, setRefetch]);
+
+  // Updates both Formik initialValues (Discard baseline) and current values after toolkit removal.
+  // resetForm sets initialValues so that Discard does not restore the toolkit.
+  // setValues re-applies the user's current changes, preserving other pending edits.
+  const applyToolRemoval = useCallback(
+    (tool, toolIndex, isAttachmentToolkit = false) => {
+      const filteredCurrentTools = (values.version_details?.tools || []).filter((_, i) => i !== toolIndex);
+      const filteredInitialTools = (initialValues?.version_details?.tools || []).filter(
+        t => t.id !== tool.id,
+      );
+      const updatedCurrentVersionDetails = isAttachmentToolkit
+        ? {
+            ...(values.version_details || {}),
+            tools: filteredCurrentTools,
+            meta: {
+              ...(values.version_details?.meta || {}),
+              attachment_toolkit_id: undefined,
+            },
+          }
+        : {
+            ...(values.version_details || {}),
+            tools: filteredCurrentTools,
+          };
+      const updatedInitialVersionDetails = isAttachmentToolkit
+        ? {
+            ...(initialValues?.version_details || {}),
+            tools: filteredInitialTools,
+            meta: {
+              ...(initialValues?.version_details?.meta || {}),
+              attachment_toolkit_id: undefined,
+            },
+          }
+        : {
+            ...(initialValues?.version_details || {}),
+            tools: filteredInitialTools,
+          };
+      resetForm({
+        values: {
+          ...(initialValues || {}),
+          version_details: updatedInitialVersionDetails,
+        },
+      });
+      setValues({
+        ...(values || {}),
+        version_details: updatedCurrentVersionDetails,
+      });
+      if (!dirty) {
+        setRefetch();
+      }
+    },
+    [dirty, initialValues, resetForm, setRefetch, setValues, values],
+  );
 
   const onDisassociateTool = useCallback(
     async ({ tool, isAttachmentToolkit }) => {
@@ -58,50 +108,7 @@ export default function useDisassociateToolkit({ applicationId, versionId, onDel
           // Update cache to remove the tool from the application
           if (!result.error) {
             onRemoveTool(tool);
-            if (dirty) {
-              if (isAttachmentToolkit) {
-                setFieldValue('version_details', {
-                  ...values.version_details,
-                  tools: values?.version_details?.tools.filter((_, i) => i.id !== index),
-                  meta: {
-                    ...(values.version_details?.meta || {}),
-                    attachment_toolkit_id: undefined,
-                  },
-                });
-              } else {
-                setFieldValue(
-                  `version_details.tools`,
-                  values?.version_details.tools.filter((_, i) => i !== index),
-                );
-              }
-            } else {
-              resetForm(
-                !isAttachmentToolkit
-                  ? {
-                      values: {
-                        ...(values || {}),
-                        version_details: {
-                          ...(values.version_details || {}),
-                          tools: (values.version_details.tools || []).filter((_, i) => i !== index),
-                        },
-                      },
-                    }
-                  : {
-                      values: {
-                        ...(values || {}),
-                        version_details: {
-                          ...(values.version_details || {}),
-                          tools: (values.version_details.tools || []).filter((_, i) => i !== index),
-                          meta: {
-                            ...(values.version_details?.meta || {}),
-                            attachment_toolkit_id: undefined,
-                          },
-                        },
-                      },
-                    },
-              );
-              setRefetch();
-            }
+            applyToolRemoval(tool, index, isAttachmentToolkit);
             reset();
             if (isAttachmentToolkit) {
               onDeleteAttachmentTool?.();
@@ -128,24 +135,7 @@ export default function useDisassociateToolkit({ applicationId, versionId, onDel
             }).unwrap();
             if (!result?.error) {
               onRemoveTool(tool);
-              if (dirty) {
-                // Update local state to remove the tool
-                setFieldValue(
-                  'version_details.tools',
-                  tools.filter((_, i) => i !== index),
-                );
-              } else {
-                resetForm({
-                  values: {
-                    ...(values || {}),
-                    version_details: {
-                      ...(values.version_details || {}),
-                      tools: (values.version_details.tools || []).filter((_, i) => i !== index),
-                    },
-                  },
-                });
-                setRefetch();
-              }
+              applyToolRemoval(tool, index);
               reset();
             } else {
               toastError(
@@ -183,24 +173,7 @@ export default function useDisassociateToolkit({ applicationId, versionId, onDel
           }).unwrap();
           if (!result?.error) {
             onRemoveTool(tool);
-            if (dirty) {
-              // Update local state to remove the tool
-              setFieldValue(
-                'version_details.tools',
-                tools.filter((_, i) => i !== index),
-              );
-            } else {
-              resetForm({
-                values: {
-                  ...(values || {}),
-                  version_details: {
-                    ...(values.version_details || {}),
-                    tools: (values.version_details.tools || []).filter((_, i) => i !== index),
-                  },
-                },
-              });
-              setRefetch();
-            }
+            applyToolRemoval(tool, index);
             reset();
           } else {
             toastError(
@@ -227,25 +200,20 @@ export default function useDisassociateToolkit({ applicationId, versionId, onDel
     },
     [
       applicationId,
-      dirty,
+      applyToolRemoval,
       disassociateToolkit,
       index,
+      invalidateCacheAndRefresh,
+      onDeleteAttachmentTool,
+      onRemoveTool,
       projectId,
       reset,
-      resetForm,
-      setFieldValue,
-      setRefetch,
       toastError,
       toastInfo,
-      onRemoveTool,
-      tools,
       updateApplicationRelation,
-      values,
       versionId,
-      onDeleteAttachmentTool,
-      invalidateCacheAndRefresh,
     ],
   );
 
   return { onDisassociateTool, isLoading, isDisassociateError, disassociateError };
-}
+};

@@ -4,11 +4,10 @@ import { useFormikContext } from 'formik';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { eliteaApi } from '@/api/eliteaApi';
+import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { actions } from '@/slices/applications';
 
-import { useSelectedProjectId } from '../useSelectedProject';
-
-export default function useRefetchAgentDetails() {
+export const useRefetchAgentDetails = () => {
   const dispatch = useDispatch();
   const { values } = useFormikContext();
   const selectedProjectId = useSelectedProjectId();
@@ -40,7 +39,7 @@ export default function useRefetchAgentDetails() {
       updateDataRef.current();
     };
   }, []);
-}
+};
 
 export const useSetRefetchDetails = () => {
   const dispatch = useDispatch();
