@@ -3,8 +3,8 @@ import { memo, useMemo } from 'react';
 import { Box } from '@mui/material';
 
 import { AgentInput, ApplicationTools } from '@/[fsd]/features/agent/ui/agent-details/configurations';
+import ApplicationAdvanceSettings from '@/[fsd]/features/agent/ui/agent-details/configurations/ApplicationAdvanceSettings';
 import { ViewMode } from '@/common/constants.js';
-import ApplicationAdvanceSettings from '@/components/ApplicationAdvanceSettings';
 import ConversationStarters from '@/components/ConversationStarters';
 import ApplicationEditForm from '@/pages/Applications/Components/Applications/ApplicationEditForm';
 import ApplicationInformation from '@/pages/Applications/Components/Applications/ApplicationInformation';

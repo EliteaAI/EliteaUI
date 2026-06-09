@@ -5,11 +5,9 @@ import { useFormikContext } from 'formik';
 import { Box } from '@mui/material';
 
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
-import { Checkbox, Label } from '@/[fsd]/shared/ui';
+import { Checkbox, Input, Label } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { MAX_STEP_LIMIT, MIN_STEP_LIMIT } from '@/common/constants';
-
-import FormInput from './FormInput';
 
 const ApplicationAdvanceSettings = memo(props => {
   const { style, disabled, showIgnoreProjectContext = false } = props;
@@ -81,7 +79,7 @@ const ApplicationAdvanceSettings = memo(props => {
     [setFieldValue],
   );
 
-  const styles = useMemo(() => agentAdvanceSettingsStyles(), []);
+  const styles = useMemo(() => applicationAdvanceSettingsStyles(), []);
 
   const accordionItems = useMemo(
     () => [
@@ -89,7 +87,7 @@ const ApplicationAdvanceSettings = memo(props => {
         title: 'Advanced',
         content: (
           <Box sx={styles.fieldContainer}>
-            <FormInput
+            <Input.StyledInputEnhancer
               value={version_details?.meta?.step_limit ?? ''}
               onChange={handleChange}
               onKeyDown={handleKeyDown}
@@ -153,7 +151,7 @@ const ApplicationAdvanceSettings = memo(props => {
 ApplicationAdvanceSettings.displayName = 'ApplicationAdvanceSettings';
 
 /** @type {MuiSx} */
-const agentAdvanceSettingsStyles = () => ({
+const applicationAdvanceSettingsStyles = () => ({
   accordion: ({ palette }) => ({
     background: `${palette.background.tabPanel} !important`,
   }),
