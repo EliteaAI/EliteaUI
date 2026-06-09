@@ -14,9 +14,13 @@ const EditSecretInputGridTable = memo(props => {
     const hasInvalidNameChars = field === 'name' && inputValue && !SECRET_NAME_PATTERN.test(inputValue);
 
     if (hasInvalidNameChars) return 'Only alphanumeric characters, underscore and hyphen are allowed';
-    if (inputValue.length >= MAX_VARIABLES_LENGTH) return 'Maximum character limit reached';
     return null;
   }, [field, inputValue]);
+
+  const isAtCharacterLimit = inputValue.length >= MAX_VARIABLES_LENGTH;
+
+  const helperText =
+    validationError || (isAtCharacterLimit ? `Maximum ${MAX_VARIABLES_LENGTH} characters reached` : null);
 
   useEffect(() => {
     onValidationChange?.(id, field, Boolean(validationError));
@@ -84,8 +88,8 @@ const EditSecretInputGridTable = memo(props => {
       onChange={handleOnChange}
       onKeyDown={handleKeyDown}
       value={inputValue}
-      error={Boolean(validationError)}
-      helperText={validationError}
+      error={Boolean(validationError) || isAtCharacterLimit}
+      helperText={helperText}
       inputProps={{ maxLength: MAX_VARIABLES_LENGTH }}
     />
   );

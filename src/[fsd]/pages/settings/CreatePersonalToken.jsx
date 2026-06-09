@@ -85,8 +85,8 @@ const CreatePersonalToken = memo(() => {
     blockCondition: !data.uuid && hasChanged && !wantToCancel,
   });
 
-  const nameHasError =
-    (formik.touched.name && Boolean(formik.errors.name)) || formik.values.name.length >= MAX_VARIABLES_LENGTH;
+  const nameHasError = formik.touched.name && Boolean(formik.errors.name);
+  const isAtCharacterLimit = formik.values.name.length >= MAX_VARIABLES_LENGTH;
 
   const isGenerateDisabled = !formik.values.name || nameHasError || isGenerating || !!data.uuid;
 
@@ -95,7 +95,7 @@ const CreatePersonalToken = memo(() => {
       return formik.errors.name;
     }
     if (formik.values.name.length >= MAX_VARIABLES_LENGTH) {
-      return 'Maximum character limit reached';
+      return `Maximum character limit reached (${MAX_VARIABLES_LENGTH})`;
     }
     return undefined;
   }, [formik.touched.name, formik.errors.name, formik.values.name.length]);
@@ -155,7 +155,7 @@ const CreatePersonalToken = memo(() => {
                   value={formik.values.name}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
-                  error={nameHasError}
+                  error={nameHasError || isAtCharacterLimit}
                   helperText={getNameHelperText()}
                   inputProps={{ maxLength: MAX_VARIABLES_LENGTH }}
                 />
