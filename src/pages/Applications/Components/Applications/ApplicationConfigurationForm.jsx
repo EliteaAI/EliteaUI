@@ -51,6 +51,7 @@ const ApplicationConfigurationForm = memo(props => {
       <ApplicationAdvanceSettings
         style={styles.section}
         disabled={isDisabled}
+        showIgnoreProjectContext
       />
       <ApplicationInformation style={styles.section} />
     </Box>
