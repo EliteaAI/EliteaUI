@@ -1,7 +1,7 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Form, Formik } from 'formik';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { useParams, useSearchParams } from 'react-router-dom';
 
 import { InstructionsInputRefProvider } from '@/[fsd]/app/providers';
@@ -36,13 +36,11 @@ const EditPipeline = memo(() => {
   const [dirty, setDirty] = useState(false);
   const [isYamlDirty, setIsYamlDirty] = useState(false);
   const [unsavedLLMSettings, setUnsavedLLMSettings] = useState();
-  const { hasIrreversibleChanges } = useSelector(state => state.pipeline);
-
   const styles = useMemo(() => editPipelineStyles(), []);
 
   const handleDiscard = useCallback(() => {
     setDirty(false);
-    dispatch(actions.resetPipeline({ resetAll: false }));
+    dispatch(actions.resetPipeline());
     dispatch(editorActions.resetPipelineEditor());
     setUnsavedLLMSettings(undefined);
   }, [dispatch]);
@@ -54,9 +52,9 @@ const EditPipeline = memo(() => {
 
   const blockOptions = useMemo(
     () => ({
-      blockCondition: viewMode === ViewMode.Owner && (dirty || isYamlDirty || hasIrreversibleChanges),
+      blockCondition: viewMode === ViewMode.Owner && (dirty || isYamlDirty),
     }),
-    [dirty, isYamlDirty, viewMode, hasIrreversibleChanges],
+    [dirty, isYamlDirty, viewMode],
   );
 
   const { setBlockNav } = useNavBlocker(blockOptions);

@@ -8,7 +8,6 @@ import { Box } from '@mui/material';
 import { ApplicationVersionSelect } from '@/[fsd]/entities/application-tab-bar/ui';
 import { useRefetchAgentDetails } from '@/[fsd]/features/agent/lib/hooks';
 import { AGENT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
-import { PIPELINE_DISCARD_IRREVERSIBLE_CHANGES_MESSAGE } from '@/[fsd]/features/pipelines';
 import { useFormDirtyExcluding } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { ViewMode } from '@/common/constants';
@@ -39,13 +38,8 @@ const ApplicationTabBar = memo(({ onSuccess, onDiscard }) => {
   const selectedProjectId = useSelectedProjectId();
 
   const { discardApplicationChanges } = useDiscardApplicationChanges(onDiscard);
-  const { hasIrreversibleChanges } = useSelector(state => state.pipeline);
 
   const isPublic = useMemo(() => viewMode === ViewMode.Public, [viewMode]);
-
-  const discardAlertContent = hasIrreversibleChanges
-    ? PIPELINE_DISCARD_IRREVERSIBLE_CHANGES_MESSAGE
-    : undefined;
 
   useRefetchAgentDetails();
 
@@ -78,7 +72,6 @@ const ApplicationTabBar = memo(({ onSuccess, onDiscard }) => {
           <Button.DiscardButton
             disabled={!isFormDirtyExcluding && !isYamlCodeDirty}
             onDiscard={discardApplicationChanges}
-            alertContent={discardAlertContent}
           />
         </Box>
       </Box>
