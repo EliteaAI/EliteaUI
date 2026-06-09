@@ -231,7 +231,7 @@ const ProjectContextContent = memo(() => {
                   height="100%"
                   minHeight="0"
                   maxLength={MAX_CHARS}
-                  readOnly={!canEditProjectContext || !enabled}
+                  readOnly={!canEditProjectContext}
                 />
               </Box>
             ) : (
@@ -341,11 +341,20 @@ const componentStyles = () => ({
       minHeight: 0,
       borderRadius: '0.375rem',
       border: `0.0625rem solid ${charError ? palette.error.main : palette.border.table}`,
-      backgroundColor: palette.background.userInputBackground,
       overflow: 'hidden',
       opacity: isMuted ? 0.55 : 1,
       '&:focus-within': {
         borderColor: charError ? palette.error.main : palette.primary.main,
+      },
+      '& .cm-gutters': {
+        backgroundColor: 'transparent',
+        borderRight: `0.0625rem solid ${palette.border.table}`,
+      },
+      '& .cm-activeLine': {
+        backgroundColor: 'transparent',
+      },
+      '& .cm-activeLineGutter': {
+        backgroundColor: palette.background.userInputBackground,
       },
     }),
   preview:
