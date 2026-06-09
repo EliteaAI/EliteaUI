@@ -262,7 +262,7 @@ const ProjectContextContent = memo(() => {
                   Save
                 </Button.BaseBtn>
                 <Button.BaseBtn
-                  variant={BUTTON_VARIANTS.outlined}
+                  variant={BUTTON_VARIANTS.secondary}
                   color="secondary"
                   disabled={!isDirty}
                   onClick={handleDiscard}
