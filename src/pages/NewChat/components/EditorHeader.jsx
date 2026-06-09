@@ -1,10 +1,8 @@
 import { useFormikContext } from 'formik';
-import { useSelector } from 'react-redux';
 
 import { Box, IconButton, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 
-import { PIPELINE_DISCARD_IRREVERSIBLE_CHANGES_MESSAGE } from '@/[fsd]/features/pipelines';
 import { Button } from '@/[fsd]/shared/ui';
 import CloseIcon from '@/components/Icons/CloseIcon';
 import useDiscardApplicationChanges from '@/pages/Applications/useDiscardApplicationChanges';
@@ -24,10 +22,6 @@ const EditorHeader = ({ title, subtitle, onCancel, onDiscard, saveButton, isPubl
   const { discardApplicationChanges } = useDiscardApplicationChanges(onDiscard);
   const { dirty: isFormDirty } = useFormikContext();
   const isYamlCodeDirty = useIsPipelineYamlCodeDirty();
-  const { hasIrreversibleChanges } = useSelector(state => state.pipeline);
-  const discardAlertContent = hasIrreversibleChanges
-    ? PIPELINE_DISCARD_IRREVERSIBLE_CHANGES_MESSAGE
-    : undefined;
 
   return (
     <Box sx={styles.container}>
@@ -69,7 +63,6 @@ const EditorHeader = ({ title, subtitle, onCancel, onDiscard, saveButton, isPubl
         <TabBarItems>
           {!isPublic && (
             <Button.DiscardButton
-              alertContent={discardAlertContent}
               disabled={!isFormDirty && !isYamlCodeDirty}
               onDiscard={discardApplicationChanges}
               size="small"
