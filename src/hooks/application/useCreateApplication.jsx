@@ -112,7 +112,7 @@ const useCreateApplication = (formik, resetBlockNav, options = {}) => {
       const isForPipeline = !!formik.values?.version_details?.pipeline_settings;
       formik.resetForm(data);
       if (isForPipeline) {
-        dispatch(actions.resetPipeline({ resetAll: true })); // Reset pipeline state to clear out any leftover data from the template used for creation
+        dispatch(actions.resetPipeline());
       }
 
       // Call custom onSuccess callback if provided (for chat context)

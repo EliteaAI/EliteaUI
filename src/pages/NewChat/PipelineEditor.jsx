@@ -413,7 +413,7 @@ const PipelineEditor = forwardRef(
       fileReaderEnhancerRef.current?.restoreValue(initialValues?.version_details?.instructions || '');
       setIsDirty(false);
       setIsYamlDirty(false);
-      dispatch(actions.resetPipeline({ resetAll: false }));
+      dispatch(actions.resetPipeline());
       dispatch(editorActions.resetPipelineEditor());
     }, [dispatch, initialValues?.version_details?.instructions]);
 

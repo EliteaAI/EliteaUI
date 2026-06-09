@@ -1,12 +1,17 @@
 import { useCallback } from 'react';
 
 import { useFormikContext } from 'formik';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
 import { useSetRefetchDetails } from '@/[fsd]/features/agent/lib/hooks/useRefetchAgentDetails.hooks';
-import { TAG_TYPE_APPLICATION_DETAILS, useUpdateApplicationRelationMutation } from '@/api/applications';
+import {
+  TAG_TYPE_APPLICATION_DETAILS,
+  useApplicationEditMutation,
+  useUpdateApplicationRelationMutation,
+} from '@/api/applications';
 import { eliteaApi } from '@/api/eliteaApi';
 import { useToolkitAssociateMutation } from '@/api/toolkits';
+import clearTools from '@/common/applicationUtils';
 import { buildErrorMessage } from '@/common/utils';
 import usePipelineToolsChanges from '@/hooks/pipeline/usePipelineToolsChanges';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -25,19 +30,109 @@ const isStaleVersionReferenceError = error => {
 export const useDisassociateToolkit = ({ applicationId, versionId, onDeleteAttachmentTool, index }) => {
   const projectId = useSelectedProjectId();
   const dispatch = useDispatch();
-  const { onRemoveTool } = usePipelineToolsChanges();
+  const { onRemoveTool, isFromPipeline, getCleanYamlForInitial, syncInitStateWithCleanYaml } =
+    usePipelineToolsChanges();
   const { setRefetch } = useSetRefetchDetails();
   const { toastError, toastInfo } = useToast();
   const { resetForm, setValues, values, initialValues, dirty } = useFormikContext();
+  const { id: currentUserId } = useSelector(state => state.user);
   const [disassociateToolkit, { isLoading, isError: isDisassociateError, error: disassociateError, reset }] =
     useToolkitAssociateMutation();
   const [updateApplicationRelation] = useUpdateApplicationRelationMutation();
+  const [saveApplication] = useApplicationEditMutation();
 
   // Helper function to invalidate cache and trigger refetch
   const invalidateCacheAndRefresh = useCallback(() => {
     dispatch(eliteaApi.util.invalidateTags([TAG_TYPE_APPLICATION_DETAILS]));
     setRefetch();
   }, [dispatch, setRefetch]);
+
+  // Saves the pipeline to DB immediately after toolkit removal, using the last-saved state as base
+  // with only the toolkit removal applied. Other pending unsaved changes are NOT included.
+  const savePipelineAfterToolkitRemoval = useCallback(
+    async (updatedInitialVersionDetails, tool, isAttachmentToolkit = false) => {
+      // Derive clean YAML from the last-saved instructions, not from the current Redux YAML state
+      // which may contain other unsaved edits unrelated to this toolkit removal.
+      const newYamlCode = getCleanYamlForInitial(initialValues.version_details?.instructions, tool);
+      if (!newYamlCode) return;
+      const { error, data } = await saveApplication({
+        name: initialValues.name?.trim() || '',
+        description: initialValues.description,
+        id: applicationId,
+        projectId,
+        owner_id: initialValues.owner_id,
+        webhook_secret: initialValues.webhook_secret || null,
+        version: {
+          ...updatedInitialVersionDetails,
+          tools: clearTools(updatedInitialVersionDetails.tools || [], currentUserId),
+          instructions: newYamlCode,
+          pipeline_settings: initialValues.version_details?.pipeline_settings,
+        },
+      });
+      if (!error && data) {
+        // Only update the version detail cache — not applicationDetails, which would trigger
+        // enableReinitialize on the Formik form and discard the user's unsaved changes.
+        dispatch(
+          eliteaApi.util.updateQueryData(
+            'getApplicationVersionDetail',
+            { applicationId, projectId, versionId: updatedInitialVersionDetails?.id },
+            () => ({
+              ...updatedInitialVersionDetails,
+              instructions: newYamlCode,
+            }),
+          ),
+        );
+        // Update Formik baseline so Discard restores to the auto-saved state (toolkit removed + clean YAML).
+        resetForm({
+          values: {
+            ...(initialValues || {}),
+            version_details: {
+              ...updatedInitialVersionDetails,
+              instructions: newYamlCode,
+            },
+          },
+        });
+        // Restore user's current unsaved changes (name, LLM settings, etc.) on top of the new baseline.
+        // `values` is the pre-removal snapshot from the closure; we recompute the toolkit removal here.
+        const filteredCurrentTools = (values.version_details?.tools || []).filter(t => t.id !== tool.id);
+        const currentVersionDetails = isAttachmentToolkit
+          ? {
+              ...(values.version_details || {}),
+              tools: filteredCurrentTools,
+              instructions: newYamlCode,
+              meta: {
+                ...(values.version_details?.meta || {}),
+                attachment_toolkit_id: undefined,
+              },
+            }
+          : {
+              ...(values.version_details || {}),
+              tools: filteredCurrentTools,
+              instructions: newYamlCode,
+            };
+        setValues({
+          ...(values || {}),
+          version_details: currentVersionDetails,
+        });
+        // Sync Redux initState with the clean saved YAML so Discard resets to the
+        // saved state and does not re-include unsaved flow editor changes.
+        syncInitStateWithCleanYaml(newYamlCode);
+      }
+    },
+    [
+      applicationId,
+      currentUserId,
+      dispatch,
+      getCleanYamlForInitial,
+      initialValues,
+      projectId,
+      resetForm,
+      saveApplication,
+      setValues,
+      syncInitStateWithCleanYaml,
+      values,
+    ],
+  );
 
   // Updates both Formik initialValues (Discard baseline) and current values after toolkit removal.
   // resetForm sets initialValues so that Discard does not restore the toolkit.
@@ -91,27 +186,100 @@ export const useDisassociateToolkit = ({ applicationId, versionId, onDeleteAttac
     [dirty, initialValues, resetForm, setRefetch, setValues, values],
   );
 
+  const handleApplicationRelationRemoval = useCallback(
+    async (tool, updatedInitialVersionDetails) => {
+      try {
+        const result = await updateApplicationRelation({
+          projectId,
+          selectedApplicationId: tool.settings?.application_id,
+          selectedVersionId: tool.settings?.application_version_id,
+          application_id: applicationId,
+          version_id: versionId,
+          has_relation: false,
+        }).unwrap();
+        if (!result?.error) {
+          onRemoveTool(tool);
+          applyToolRemoval(tool, index);
+          reset();
+          if (isFromPipeline) {
+            await savePipelineAfterToolkitRemoval(updatedInitialVersionDetails, tool);
+          }
+        } else {
+          toastError(
+            buildErrorMessage(
+              result?.error?.data?.error || result?.error?.message || 'Failed to update application relation',
+            ),
+          );
+        }
+      } catch (error) {
+        if (isStaleVersionReferenceError(error)) {
+          invalidateCacheAndRefresh();
+          toastInfo('Tool reference was outdated. Page has been refreshed with current state.');
+          reset();
+        } else {
+          toastError(buildErrorMessage(error));
+        }
+      }
+    },
+    [
+      applicationId,
+      applyToolRemoval,
+      index,
+      invalidateCacheAndRefresh,
+      isFromPipeline,
+      onRemoveTool,
+      projectId,
+      reset,
+      savePipelineAfterToolkitRemoval,
+      toastError,
+      toastInfo,
+      updateApplicationRelation,
+      versionId,
+    ],
+  );
+
   const onDisassociateTool = useCallback(
     async ({ tool, isAttachmentToolkit }) => {
+      // Compute updated initialVersionDetails before any state mutations so we can use it
+      // as the base for the pipeline auto-save (last-saved state minus the removed toolkit).
+      const filteredInitialTools = (initialValues?.version_details?.tools || []).filter(
+        t => t.id !== tool.id,
+      );
+      const updatedInitialVersionDetails = isAttachmentToolkit
+        ? {
+            ...(initialValues?.version_details || {}),
+            tools: filteredInitialTools,
+            meta: {
+              ...(initialValues?.version_details?.meta || {}),
+              attachment_toolkit_id: undefined,
+            },
+          }
+        : {
+            ...(initialValues?.version_details || {}),
+            tools: filteredInitialTools,
+          };
+
       if (applicationId && tool?.id && versionId) {
-        // For regular toolkits, use the disassociate API
         if (tool.type !== 'application') {
+          // For regular toolkits, use the disassociate API
           const result = await disassociateToolkit({
             projectId,
             toolkitId: tool?.id,
             entity_version_id: versionId,
             entity_id: applicationId,
             entity_type: 'agent',
-            has_relation: false, // This removes the association
+            has_relation: false,
           });
 
-          // Update cache to remove the tool from the application
           if (!result.error) {
             onRemoveTool(tool);
             applyToolRemoval(tool, index, isAttachmentToolkit);
             reset();
             if (isAttachmentToolkit) {
               onDeleteAttachmentTool?.();
+            }
+            if (isFromPipeline) {
+              await savePipelineAfterToolkitRemoval(updatedInitialVersionDetails, tool, isAttachmentToolkit);
             }
           } else {
             toastError(
@@ -123,94 +291,27 @@ export const useDisassociateToolkit = ({ applicationId, versionId, onDeleteAttac
             );
           }
         } else {
-          // For agents and pipelines (type 'application'), use the new API to remove relation
-          try {
-            const result = await updateApplicationRelation({
-              projectId,
-              selectedApplicationId: tool.settings?.application_id,
-              selectedVersionId: tool.settings?.application_version_id,
-              application_id: applicationId,
-              version_id: versionId,
-              has_relation: false,
-            }).unwrap();
-            if (!result?.error) {
-              onRemoveTool(tool);
-              applyToolRemoval(tool, index);
-              reset();
-            } else {
-              toastError(
-                buildErrorMessage(
-                  result?.error?.data?.error ||
-                    result?.error?.message ||
-                    'Failed to update application relation',
-                ),
-              );
-            }
-          } catch (error) {
-            // Check if error is due to stale version reference (version was already deleted/replaced)
-            // In this case, the local state is out of sync with the backend - trigger a refresh
-            if (isStaleVersionReferenceError(error)) {
-              // The tool reference was outdated - force invalidate cache and refresh from server
-              invalidateCacheAndRefresh();
-              toastInfo('Tool reference was outdated. Page has been refreshed with current state.');
-              reset();
-            } else {
-              toastError(buildErrorMessage(error));
-            }
-          }
+          // For agents and pipelines (type 'application'), use the relation API
+          await handleApplicationRelationRemoval(tool, updatedInitialVersionDetails);
         }
       } else {
-        // Fallback for local state update when no applicationId
-        // For agents and pipelines (type 'application'), use the new API to remove relation
-        try {
-          const result = await updateApplicationRelation({
-            projectId,
-            selectedApplicationId: tool.settings?.application_id,
-            selectedVersionId: tool.settings?.application_version_id,
-            application_id: applicationId,
-            version_id: versionId,
-            has_relation: false,
-          }).unwrap();
-          if (!result?.error) {
-            onRemoveTool(tool);
-            applyToolRemoval(tool, index);
-            reset();
-          } else {
-            toastError(
-              buildErrorMessage(
-                result?.error?.data?.error ||
-                  result?.error?.message ||
-                  'Failed to update application relation',
-              ),
-            );
-          }
-        } catch (error) {
-          // Check if error is due to stale version reference (version was already deleted/replaced)
-          // In this case, the local state is out of sync with the backend - trigger a refresh
-          if (isStaleVersionReferenceError(error)) {
-            // The tool reference was outdated - force invalidate cache and refresh from server
-            invalidateCacheAndRefresh();
-            toastInfo('Tool reference was outdated. Page has been refreshed with current state.');
-            reset();
-          } else {
-            toastError(buildErrorMessage(error));
-          }
-        }
+        await handleApplicationRelationRemoval(tool, updatedInitialVersionDetails);
       }
     },
     [
       applicationId,
       applyToolRemoval,
       disassociateToolkit,
+      handleApplicationRelationRemoval,
       index,
-      invalidateCacheAndRefresh,
+      initialValues,
+      isFromPipeline,
       onDeleteAttachmentTool,
       onRemoveTool,
       projectId,
       reset,
+      savePipelineAfterToolkitRemoval,
       toastError,
-      toastInfo,
-      updateApplicationRelation,
       versionId,
     ],
   );

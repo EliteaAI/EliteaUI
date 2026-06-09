@@ -23,7 +23,6 @@ const pipelineSlice = createSlice({
     orientation: localStorage.getItem(OrientationKey) || ORIENTATION.vertical,
     layout_version: '',
     stateValidationErrors: {}, // Store validation errors by variable name
-    hasIrreversibleChanges: false, // True when toolkit disassociation has cleared input mappings
   },
   reducers: {
     initThePipeline: (state, action) => {
@@ -35,7 +34,6 @@ const pipelineSlice = createSlice({
       state.resetFlag = true;
       state.layout_version = layout_version;
       state.stateValidationErrors = {}; // Clear validation errors on init
-      state.hasIrreversibleChanges = false;
       state.initState = {
         nodes: [...nodes],
         edges: [...edges],
@@ -44,8 +42,7 @@ const pipelineSlice = createSlice({
         layout_version,
       };
     },
-    resetPipeline: (state, action) => {
-      const { resetAll } = action.payload || {};
+    resetPipeline: state => {
       const { nodes, edges, yamlJsonObject, yamlCode, layout_version } = state.initState;
       state.nodes = [...nodes];
       state.edges = [...edges];
@@ -54,7 +51,6 @@ const pipelineSlice = createSlice({
       state.resetFlag = true;
       state.layout_version = layout_version;
       state.stateValidationErrors = {}; // Clear validation errors on reset
-      state.hasIrreversibleChanges = resetAll ? false : state.hasIrreversibleChanges;
     },
     clearResetFlag: state => {
       state.resetFlag = false;
@@ -103,9 +99,6 @@ const pipelineSlice = createSlice({
     },
     clearStateValidationErrors: state => {
       state.stateValidationErrors = {};
-    },
-    markIrreversibleChanges: state => {
-      state.hasIrreversibleChanges = true;
     },
   },
 });
