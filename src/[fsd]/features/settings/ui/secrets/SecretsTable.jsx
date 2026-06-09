@@ -144,12 +144,10 @@ const SecretsTable = memo(props => {
 
   const filteredRows = useMemo(() => rows.filter(row => row && row.id != null), [rows]);
   const sortedRows = useMemo(() => {
-    // Don't sort when there's a new row being created to avoid disrupting the editing state
-    if (hasNewRow) {
-      return filteredRows;
-    }
-    return sortData(filteredRows);
-  }, [hasNewRow, filteredRows, sortData]);
+    const newRows = filteredRows.filter(row => row.isNew);
+    const existingRows = filteredRows.filter(row => !row.isNew);
+    return [...newRows, ...sortData(existingRows)];
+  }, [filteredRows, sortData]);
 
   const pagination = usePagination({
     totalRows: sortedRows.length,
