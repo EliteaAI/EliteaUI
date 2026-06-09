@@ -209,6 +209,8 @@ const CreateEntityButton = memo(props => {
   }, [pathname]);
 
   const hasPermissionForSelectedOption = useMemo(() => {
+    if (isSimpleCreateRoute) return true;
+
     const permissions = CreateEntityConstants.CreationPermissions[selectedOption];
     if (!permissions || !permissions.length) return true;
 
@@ -221,7 +223,7 @@ const CreateEntityButton = memo(props => {
 
     // Check if user has any of the required permissions for other entities
     return permissions.some(permission => checkPermission(permission));
-  }, [selectedOption, checkPermission]);
+  }, [selectedOption, checkPermission, isSimpleCreateRoute]);
 
   const disableCreateButton = useMemo(
     () =>

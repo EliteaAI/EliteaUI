@@ -57,7 +57,6 @@ export const SimpleCreateRoutes = [
   RouteDefinitions.AgentStudio,
   RouteDefinitions.Resources,
   RouteDefinitions.NotificationCenter,
-  RouteDefinitions.AppsCatalog,
 ];
 
 export const CreationPermissions = {
