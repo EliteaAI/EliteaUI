@@ -1,0 +1,1 @@
+export { VoicePersonalizationSection } from './VoicePersonalizationSection';

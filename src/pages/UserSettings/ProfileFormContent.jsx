@@ -2,6 +2,7 @@ import { memo } from 'react';
 
 import { Box } from '@mui/material';
 
+import { VoicePersonalizationSection } from '@/[fsd]/features/chat/ui';
 import { useFormikAutoSaveOnBlur } from '@/[fsd]/shared/lib/hooks';
 
 import {
@@ -35,6 +36,7 @@ const ProfileFormContent = memo(props => {
         <ProfileContextManagement />
         <ProfileSummarization modelList={modelList} />
         <ProfileLongTermMemory />
+        <VoicePersonalizationSection />
       </Box>
     </Box>
   );

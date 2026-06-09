@@ -17,3 +17,4 @@ export {
   useNewStartConversationInputKeyDownHandler,
 } from './useInputKeyDownHandler.hooks';
 export { useDeleteMessageAlert } from './useDeleteMessageAlert.hooks';
+export { useVoiceConfig } from './useVoiceConfig.hooks';
