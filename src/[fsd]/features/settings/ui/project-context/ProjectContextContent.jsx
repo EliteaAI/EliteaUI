@@ -188,23 +188,18 @@ const ProjectContextContent = memo(() => {
                 >
                   Project Background
                 </Typography>
-                <Typography
-                  variant="bodySmall"
-                  sx={styles.toggleDescription}
-                >
+                <Typography variant="bodySmall">
                   Include goals, terminology, workflows, or constraints relevant to the project.
                 </Typography>
               </Box>
               {showEditorControls && (
                 <Box sx={styles.toolbar}>
                   <Button.BaseBtn
-                    variant={BUTTON_VARIANTS.icon}
-                    color="secondary"
+                    variant={BUTTON_VARIANTS.secondary}
+                    startIcon={<ImportIcon />}
                     onClick={handleImportClick}
                     title="Import markdown file"
-                  >
-                    <ImportIcon />
-                  </Button.BaseBtn>
+                  />
                   <input
                     ref={fileInputRef}
                     type="file"
