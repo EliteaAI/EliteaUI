@@ -24,11 +24,11 @@ import {
   useNewInputKeyDownHandler,
   useSlashMention,
   useTextToSpeech,
-  useVoiceConfig,
 } from '@/[fsd]/features/chat/lib/hooks';
 import { SlashSuggestionList, VoiceMiniPlayer } from '@/[fsd]/features/chat/ui';
 import { ChatMessageList } from '@/[fsd]/features/chat/ui/chat-box';
 import { UserMentionList } from '@/[fsd]/features/chat/ui/user-mention-list';
+import { useVoiceConfig } from '@/[fsd]/features/chat/voice-config';
 import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import {

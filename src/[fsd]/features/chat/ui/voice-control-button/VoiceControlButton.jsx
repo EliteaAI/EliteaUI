@@ -3,7 +3,7 @@ import { memo, useCallback, useState } from 'react';
 import { Box } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
-import { VoiceConfigDialog } from '@/[fsd]/features/chat/ui/voice-config';
+import { VoiceConfigDialog } from '@/[fsd]/features/chat/voice-config';
 import { BaseBtn } from '@/[fsd]/shared/ui/button';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import StopIcon from '@/assets/stop_record.svg?react';

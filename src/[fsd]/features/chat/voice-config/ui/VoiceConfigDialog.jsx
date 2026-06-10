@@ -1,9 +1,9 @@
 import { memo, useCallback, useContext, useEffect, useState } from 'react';
 
-import { useVoiceConfig } from '@/[fsd]/features/chat/lib/hooks';
 import { Button, Modal } from '@/[fsd]/shared/ui';
 import SocketContext from '@/contexts/SocketContext';
 
+import { useVoiceConfig } from '../lib/hooks/useVoiceConfig.hooks';
 import { VoiceConfigControls } from './VoiceConfigControls';
 
 const VoiceConfigDialog = memo(props => {

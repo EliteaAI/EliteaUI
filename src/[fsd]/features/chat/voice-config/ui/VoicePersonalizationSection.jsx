@@ -1,12 +1,13 @@
 import { memo, useContext, useMemo } from 'react';
 
-import { useVoiceConfig } from '@/[fsd]/features/chat/lib/hooks';
-import { VoiceConfigControls } from '@/[fsd]/features/chat/ui/voice-config';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { useGetTtsVoicesQuery, useListModelsQuery } from '@/api/configurations.js';
 import SocketContext from '@/contexts/SocketContext';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
+
+import { useVoiceConfig } from '../lib/hooks/useVoiceConfig.hooks';
+import { VoiceConfigControls } from './VoiceConfigControls';
 
 const VoicePersonalizationSection = memo(() => {
   const { config, setConfig, browserVoices } = useVoiceConfig({ persist: true });
