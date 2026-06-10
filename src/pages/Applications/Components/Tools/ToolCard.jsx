@@ -14,6 +14,7 @@ import { OpenApiDelegatedLoginButton } from '@/[fsd]/features/openapi/ui';
 import { useGetToolkitNameFromSchema } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks/useGetToolkitNameFromSchema.hooks.js';
 import { useResolvedSharepointConfig } from '@/[fsd]/features/sharepoint/lib/hooks/useResolvedSharepointConfig.hooks';
 import { SharepointDelegatedLoginButton } from '@/[fsd]/features/sharepoint/ui';
+import { ToolkitFormHelpers } from '@/[fsd]/features/toolkits/lib/helpers/index.js';
 import { Banner } from '@/[fsd]/shared/ui';
 import { TypographyWithConditionalTooltip } from '@/[fsd]/shared/ui/tooltip';
 import AttachIcon from '@/assets/attach-icon.svg?react';
@@ -290,8 +291,14 @@ const ToolCard = memo(props => {
     if (tool?.type === 'application') {
       return `Misconfiguration error found. Check the ${entityType}.`;
     }
-
-    return validationInfo;
+    const parsedErrorMessage = ToolkitFormHelpers.parseValidationError(
+      typeof validationInfo === 'object'
+        ? validationInfo
+        : {
+            msg: validationInfo || '',
+          },
+    );
+    return parsedErrorMessage?.message || validationInfo;
   }, [validationInfo, tool, entityType]);
 
   const validationBanner = useMemo(() => {
