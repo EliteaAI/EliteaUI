@@ -28,6 +28,7 @@ const ToolSection = memo(props => {
     disabled,
     validationErrorMessages,
     checkboxAsteriskRequired = true,
+    onCredentialReload,
   } = props;
 
   const styles = sectionStyles();
@@ -263,6 +264,7 @@ const ToolSection = memo(props => {
                 disableConfigFields={v.configuration === true} // Only disable configuration fields
                 disabled={disabled && v.type !== 'configuration'} // Disable non-configuration fields if overall disabled
                 validationErrorMessages={validationErrorMessages}
+                onCredentialReload={onCredentialReload}
               />
             );
           })}
@@ -309,6 +311,7 @@ const ToolSection = memo(props => {
             disableConfigFields={disableConfigFields}
             disabled={disabled && v.type !== 'configuration'}
             validationErrorMessages={validationErrorMessages}
+            onCredentialReload={onCredentialReload}
           />
         );
       })}

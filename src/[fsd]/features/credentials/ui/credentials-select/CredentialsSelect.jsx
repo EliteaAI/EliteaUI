@@ -93,6 +93,7 @@ const CredentialsSelect = memo(
     disabled,
     onlyPublic = false,
     presetOptions,
+    onReload,
   }) => {
     const trackEvent = useTrackEvent();
     const { personal_project_id } = useSelector(state => state.user);
@@ -212,13 +213,20 @@ const CredentialsSelect = memo(
           const isChecking = credStatus === 'checking';
           const credentialMessage = getCredentialMessage(configUid);
 
-          const handleRevalidate = event => {
+          const handleRevalidate = async event => {
             event.stopPropagation();
-            resetStatus(configUid);
-            validateCredential({
-              projectId: configuration.project_id || selectedProjectId,
-              credential: configuration,
-            });
+            const freshConfigurations = await onRefresh();
+            const freshConfig = freshConfigurations?.find(c => (c.id || c.uuid) === configUid);
+            if (freshConfig) {
+              resetStatus(configUid);
+              validateCredential({
+                projectId: freshConfig.project_id || selectedProjectId,
+                credential: freshConfig,
+              });
+              if (freshConfig.elitea_title === value?.elitea_title) {
+                onReload?.();
+              }
+            }
           };
 
           return {
@@ -247,9 +255,12 @@ const CredentialsSelect = memo(
       onlyPublic,
       getCredentialStatus,
       getCredentialMessage,
+      onRefresh,
+      onReload,
       resetStatus,
       validateCredential,
       selectedProjectId,
+      value?.elitea_title,
     ]);
 
     const menuData = useMemo(

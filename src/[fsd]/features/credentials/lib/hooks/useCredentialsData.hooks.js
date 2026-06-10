@@ -75,6 +75,7 @@ export const useCredentialsData = ({
       }
       setConfigurations(teamProjectConfigurations);
       setHasFetchedData(true);
+      return teamProjectConfigurations;
     },
     [getConfigurations, personal_project_id, resetStatuses, section, selectedProjectId, type, onlyPublic],
   );

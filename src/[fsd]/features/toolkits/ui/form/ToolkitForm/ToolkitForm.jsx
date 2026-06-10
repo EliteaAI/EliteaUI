@@ -62,6 +62,7 @@ export const ToolkitForm = memo(props => {
   const [searchParams] = useSearchParams();
   const [showValidation, setShowValidation] = useState(false);
   const [toolErrors, setToolErrors] = useState({});
+  const [serverToolErrors, setServerToolErrors] = useState({});
   const [configurationErrors, setConfigurationErrors] = useState({});
   const [showConfigurationValidateError, setShowConfigurationValidateError] = useState(false);
   const [configurationName, setConfigurationName] = useState('');
@@ -236,9 +237,10 @@ export const ToolkitForm = memo(props => {
   const mergedToolErrors = useMemo(
     () => ({
       ...toolErrors,
+      ...serverToolErrors,
       name: computedNameError,
     }),
-    [toolErrors, computedNameError],
+    [toolErrors, serverToolErrors, computedNameError],
   );
 
   const hasErrors = useMemo(() => !!Object.values(mergedToolErrors).some(i => i), [mergedToolErrors]);
@@ -430,7 +432,11 @@ export const ToolkitForm = memo(props => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [updateKey]);
 
-  const { error, isError } = useValidateToolkitQuery(
+  const {
+    error,
+    isError,
+    refetch: refetchToolkitValidation,
+  } = useValidateToolkitQuery(
     {
       toolkitId: editToolDetail?.id,
       projectId: selectedProjectId,
@@ -439,12 +445,15 @@ export const ToolkitForm = memo(props => {
   );
 
   useEffect(() => {
-    if (!isError) return;
+    if (!isError) {
+      setServerToolErrors({});
+      return;
+    }
 
     const validationErrors = ToolkitFormHelpers.parseValidationErrors(error.data?.settings_errors);
 
     if (Object.keys(validationErrors).length > 0) {
-      setToolErrors(prevState => ({ ...prevState, ...validationErrors }));
+      setServerToolErrors(validationErrors);
       setShowValidation(true);
     }
   }, [error, isError]);
@@ -522,6 +531,7 @@ export const ToolkitForm = memo(props => {
         disabled={disabled}
         onSyntaxError={onSyntaxError}
         excludedFields={toolType !== 'mcp' ? [] : ['discovery_mode', 'discovery_interval']}
+        onCredentialReload={refetchToolkitValidation}
       />
     </Box>
   );

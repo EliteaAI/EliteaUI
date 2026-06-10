@@ -45,6 +45,7 @@ const ToolBaseProperty = memo(props => {
     validationErrorMessages,
     options: presetOptions,
     noAccordionWrapper = false,
+    onCredentialReload,
   } = props;
 
   const styles = toolBasePropertyStyles(theme);
@@ -496,6 +497,7 @@ const ToolBaseProperty = memo(props => {
           label={label}
           description={v.description}
           onSelectConfiguration={value => editField(buildEditFieldPath(k), value)}
+          onReload={onCredentialReload}
           value={settings[k]}
           configurations={v.options}
           error={!!toastError}

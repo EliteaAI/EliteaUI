@@ -53,6 +53,7 @@ const ToolBase = memo(props => {
     disabled = false,
     validationErrorMessages = {},
     advancedFields = [],
+    onCredentialReload,
   } = props;
   const {
     name = '',
@@ -283,6 +284,7 @@ const ToolBase = memo(props => {
             disabled={disabled && v.type !== 'configuration'}
             validationErrorMessages={validationErrorMessages}
             options={editToolDetail.options?.[k]}
+            onCredentialReload={onCredentialReload}
           />
         );
       })}
@@ -344,6 +346,7 @@ const ToolBase = memo(props => {
               disabled={disabled && v.type !== 'configuration'}
               validationErrorMessages={validationErrorMessages}
               options={editToolDetail.options?.[k]}
+              onCredentialReload={onCredentialReload}
             />
           );
         })}
@@ -396,6 +399,7 @@ const ToolBase = memo(props => {
                             checkboxAsteriskRequired={checkboxAsteriskRequired}
                             disabled={disabled && v.type !== 'configuration'}
                             validationErrorMessages={validationErrorMessages}
+                            onCredentialReload={onCredentialReload}
                           />
                         );
                       })}
@@ -431,6 +435,7 @@ const ToolBase = memo(props => {
               checkboxAsteriskRequired={checkboxAsteriskRequired}
               disabled={disabled}
               validationErrorMessages={validationErrorMessages}
+              onCredentialReload={onCredentialReload}
             />
           );
         })}
@@ -474,6 +479,7 @@ const ToolBase = memo(props => {
               checkboxAsteriskRequired={checkboxAsteriskRequired}
               disabled={disabled && v.type !== 'configuration'}
               validationErrorMessages={validationErrorMessages}
+              onCredentialReload={onCredentialReload}
             />
           );
         })}
