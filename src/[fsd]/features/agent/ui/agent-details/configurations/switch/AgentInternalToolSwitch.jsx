@@ -9,6 +9,7 @@ import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import AttachSvgIcon from '@/assets/attach-icon.svg?react';
 import CalendarIcon from '@/assets/calendar.svg?react';
 import ImageSvgIcon from '@/assets/image.svg?react';
+import McpIconSVG from '@/assets/mcp-icon.svg?react';
 import PieChartIcon from '@/assets/pie-chart-icon.svg?react';
 import PythonIcon from '@/assets/python.svg?react';
 import SwarmIconSVG from '@/assets/swarm-icon.svg?react';
@@ -50,6 +51,7 @@ const AgentInternalToolSwitch = memo(props => {
       ImageSvgIcon,
       UsersIcon: SwarmIconSVG,
       AttachSvgIcon,
+      McpIcon: McpIconSVG,
     }),
     [],
   );

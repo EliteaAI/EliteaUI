@@ -78,4 +78,13 @@ export const INTERNAL_TOOLS_LIST = [
     },
     toolkitNames: ['lazy_tools_mode'],
   },
+  {
+    name: 'internal_mcp',
+    title: 'Elitea MCP Tools',
+    icon: 'McpIcon',
+    infoTooltip: {
+      text: 'Enable Elitea platform MCP tools for managing applications, chat, and toolkits directly from conversations.',
+    },
+    toolkitNames: ['internal_mcp'],
+  },
 ];
