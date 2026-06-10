@@ -17,6 +17,7 @@ import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { buildAttachmentSummary } from '@/[fsd]/entities/attachment/lib';
 import { toSpeakableText, translateSpokenPos } from '@/[fsd]/features/chat/lib/helpers';
 import { ChatAttachment, ChatContinue, ChatHitlActions } from '@/[fsd]/features/chat/ui';
+import { SubAgentSection } from '@/[fsd]/features/chat/ui/sub-agent-section';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
 import { BaseBtn } from '@/[fsd]/shared/ui/button';
 import Markdown from '@/[fsd]/shared/ui/markdown';
@@ -353,6 +354,51 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
     }
     return hitlInterrupt ? [hitlInterrupt] : [];
   }, [hitlInterrupts, hitlInterrupt]);
+
+  // Group paused approvals by the sub-agent they originated from so a parallel
+  // fan-out renders one stacked-card section per sub-agent under a name header
+  // (issue #4993). Interrupts with no parent_agent_name (single/coordinator
+  // pause) stay ungrouped and the legacy flat list is used.
+  const hitlBuckets = useMemo(() => {
+    const coordinator = [];
+    const order = [];
+    const byName = new Map();
+    effectiveHitlInterrupts.forEach((interrupt, index) => {
+      const key = interrupt?.parent_agent_name || '';
+      const entry = { interrupt, index };
+      if (!key) {
+        coordinator.push(entry);
+        return;
+      }
+      if (!byName.has(key)) {
+        byName.set(key, []);
+        order.push(key);
+      }
+      byName.get(key).push(entry);
+    });
+    return {
+      coordinator,
+      subAgents: order.map(name => ({ name, entries: byName.get(name) })),
+      hasSubAgents: order.length > 0,
+    };
+  }, [effectiveHitlInterrupts]);
+
+  const renderHitlCard = useCallback(
+    ({ interrupt, index }) => {
+      const toolCallId = interrupt?.tool_call_id || '';
+      return (
+        <ChatHitlActions
+          key={toolCallId || `hitl-${index}`}
+          hitlInterrupt={interrupt}
+          toolCallId={toolCallId}
+          onHitlResume={onHitlResume}
+          onHitlEditClick={onHitlEditClick}
+          disabled={!onHitlResume || Boolean(interrupt?.decided)}
+        />
+      );
+    },
+    [onHitlResume, onHitlEditClick],
+  );
 
   const shouldRenderAnswerBlock = useMemo(() => {
     const hasRenderableMessageItems =
@@ -703,19 +749,22 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                   onContinue={onContinueWithConfirmation}
                 />
               )}
-              {effectiveHitlInterrupts.map((interrupt, index) => {
-                const toolCallId = interrupt?.tool_call_id || '';
-                return (
-                  <ChatHitlActions
-                    key={toolCallId || `hitl-${index}`}
-                    hitlInterrupt={interrupt}
-                    toolCallId={toolCallId}
-                    onHitlResume={onHitlResume}
-                    onHitlEditClick={onHitlEditClick}
-                    disabled={!onHitlResume || Boolean(interrupt?.decided)}
-                  />
-                );
-              })}
+              {hitlBuckets.hasSubAgents ? (
+                <Box sx={styles.hitlGroupsContainer}>
+                  {hitlBuckets.coordinator.map(renderHitlCard)}
+                  {hitlBuckets.subAgents.map(bucket => (
+                    <Box
+                      key={`hitl-sa-${bucket.name}`}
+                      sx={styles.hitlSubAgentGroup}
+                    >
+                      <SubAgentSection name={bucket.name} />
+                      {bucket.entries.map(renderHitlCard)}
+                    </Box>
+                  ))}
+                </Box>
+              ) : (
+                effectiveHitlInterrupts.map((interrupt, index) => renderHitlCard({ interrupt, index }))
+              )}
               {/* Add ref for ApplicationAnswer compatibility */}
               {isApplicationParticipant && <Box ref={ref} />}
               {references?.length > 0 && !(isLoading || isRegenerating) && (
@@ -1111,6 +1160,18 @@ const applicationAnswerStyles = (
     flexDirection: 'column',
     gap: '0.5rem',
     marginTop: '0.5rem',
+    width: '100%',
+  },
+  hitlGroupsContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem',
+    width: '100%',
+  },
+  hitlSubAgentGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
     width: '100%',
   },
   swarmChildAccordion: ({ palette }) => ({

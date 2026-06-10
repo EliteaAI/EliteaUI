@@ -1047,6 +1047,9 @@ export const useChatSocket = ({
             policy_message: raw?.policy_message || '',
             tool_call_id: raw?.tool_call_id || '',
             child_thread_id: raw?.child_thread_id || '',
+            // Sub-agent the paused action originated from; used to group N
+            // stacked approval cards by sub-agent name (issue #4993).
+            parent_agent_name: raw?.parent_agent_name || '',
           });
 
           const fallbackMessage = response_metadata?.message || message.content;

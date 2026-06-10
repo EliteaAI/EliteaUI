@@ -11,7 +11,8 @@ const SENSITIVE_PARAM_MASK = '***';
 
 const SensitiveToolParams = memo(props => {
   const { toolArgs } = props;
-  const [expanded, setExpanded] = useState(true);
+  // Shown collapsed by default to keep the authorization card compact (#4993).
+  const [expanded, setExpanded] = useState(false);
   const contentId = useId();
 
   const toggleExpanded = useCallback(() => {
@@ -276,8 +277,8 @@ const getStyles = () => ({
     width: '100%',
     display: 'flex',
     flexDirection: 'column',
-    padding: '0.875rem 1rem 0.9375rem',
-    gap: '0.625rem',
+    padding: '0.625rem 0.75rem',
+    gap: '0.375rem',
     borderRadius: '0.625rem',
     background: palette.background.userInputBackgroundActive,
     border: `0.0625rem solid ${palette.warning.main}`,
