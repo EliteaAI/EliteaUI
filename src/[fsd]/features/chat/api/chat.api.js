@@ -185,7 +185,7 @@ export const apiSlice = eliteaApi
       deleteConversation: build.mutation({
         query: ({ projectId, id }) => {
           return {
-            url: apiSlicePath + '/conversations/prompt_lib/' + projectId + '/' + id,
+            url: apiSlicePath + '/conversation/prompt_lib/' + projectId + '/' + id,
             method: 'DELETE',
           };
         },
