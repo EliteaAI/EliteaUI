@@ -8,7 +8,7 @@ import { Box, Button, GlobalStyles, Typography } from '@mui/material';
 
 import { CredentialsSelect } from '@/[fsd]/features/credentials/ui';
 import { IndexCronDefault } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
-import { validateCronExpression } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexSchedule.helpers.js';
+import { validateCronExpressionDaily as validateCronExpression } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexSchedule.helpers.js';
 import { Checkbox, Modal } from '@/[fsd]/shared/ui';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import FormInput from '@/components/FormInput';
