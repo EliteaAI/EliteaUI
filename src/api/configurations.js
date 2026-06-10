@@ -461,6 +461,14 @@ export const configurationsApi = eliteaApi
         },
         invalidatesTags: [TAG_MODELS],
       }),
+
+      getTtsVoices: build.query({
+        query: ({ projectId, modelName }) => ({
+          url: `/configurations/tts_voices/${projectId}`,
+          params: { model_name: modelName },
+        }),
+        keepUnusedDataFor: 300,
+      }),
     }),
   });
 
@@ -492,4 +500,6 @@ export const {
   useToggleConfigurationSharingMutation,
   useListCredentialTypesQuery,
   useSetProjectDefaultModelMutation,
+  useGetTtsVoicesQuery,
+  useLazyGetTtsVoicesQuery,
 } = configurationsApi;
