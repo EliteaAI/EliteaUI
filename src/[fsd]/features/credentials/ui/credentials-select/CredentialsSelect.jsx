@@ -94,6 +94,7 @@ const CredentialsSelect = memo(
     onlyPublic = false,
     presetOptions,
     onReload,
+    propKey,
   }) => {
     const trackEvent = useTrackEvent();
     const { personal_project_id } = useSelector(state => state.user);
@@ -235,6 +236,8 @@ const CredentialsSelect = memo(
             private: isConfigurationPersonal,
             settings: configuration.data || {},
             shared: configuration.shared || false,
+            isCredentialInvalid,
+            credentialMessage,
             label: (
               <CredentialOptionLabel
                 isPersonal={isConfigurationPersonal}
@@ -435,7 +438,15 @@ const CredentialsSelect = memo(
               credentialOption.elitea_title === savedRow.elitea_title &&
               credentialOption.private === savedRow.private,
           );
-          if (matchingSaved) onSelectItem(matchingSaved);
+          if (matchingSaved) {
+            onSelectItem(matchingSaved);
+            onReload?.({
+              notReload: true,
+              clearValidationError: !matchingSaved.isCredentialInvalid,
+              key: propKey,
+              credentialMessage: matchingSaved.credentialMessage,
+            });
+          }
           return;
         }
         const createAction = selectValueToCreateAction(newValue);
@@ -446,7 +457,7 @@ const CredentialsSelect = memo(
           if (matchingCreate) createSelectHandler('Create', matchingCreate);
         }
       },
-      [savedCredentialsMenuData, onSelectItem, createMenuData, createSelectHandler],
+      [savedCredentialsMenuData, onSelectItem, onReload, propKey, createMenuData, createSelectHandler],
     );
 
     const customRenderSelectValue = useCallback(

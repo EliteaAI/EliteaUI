@@ -444,6 +444,30 @@ export const ToolkitForm = memo(props => {
     { skip: !editToolDetail?.id || !selectedProjectId || !isEditing },
   );
 
+  const onCredentialReload = useCallback(
+    ({ notReload, clearValidationError, key, credentialMessage } = {}) => {
+      if (!notReload) {
+        refetchToolkitValidation();
+      } else {
+        if (clearValidationError) {
+          setServerToolErrors(prev => {
+            if (!prev[key]) return prev;
+            const next = { ...prev };
+            next[key] = undefined; // Clear error for this credential field
+            return next;
+          });
+        } else {
+          setServerToolErrors(prev => {
+            const next = { ...prev };
+            next[key] = credentialMessage; // set error for this credential field
+            return next;
+          });
+        }
+      }
+    },
+    [refetchToolkitValidation],
+  );
+
   useEffect(() => {
     if (!isError) {
       setServerToolErrors({});
@@ -531,7 +555,7 @@ export const ToolkitForm = memo(props => {
         disabled={disabled}
         onSyntaxError={onSyntaxError}
         excludedFields={toolType !== 'mcp' ? [] : ['discovery_mode', 'discovery_interval']}
-        onCredentialReload={refetchToolkitValidation}
+        onCredentialReload={onCredentialReload}
       />
     </Box>
   );

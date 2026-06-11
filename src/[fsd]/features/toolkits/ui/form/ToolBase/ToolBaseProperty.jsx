@@ -507,6 +507,7 @@ const ToolBaseProperty = memo(props => {
           section={v.section || v.configuration_sections?.[0] || 'credentials'}
           disabled={disabled}
           presetOptions={presetOptions}
+          propKey={k}
         />
       );
     } else if (type === 'llm_model') {
