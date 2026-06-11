@@ -80,6 +80,7 @@ import { actions as chatActions } from '@/slices/chat';
 
 const ChatBox = forwardRef((props, boxRef) => {
   const {
+    fromTheChat,
     hidden = false,
     messageListSX,
     activeParticipant,
@@ -133,6 +134,7 @@ const ChatBox = forwardRef((props, boxRef) => {
 
     // Internal tools config
     onInternalToolsConfigChange,
+    onAddNewUsers,
     isUpdatingInternalToolsConfig,
 
     //Unsaved LLM settings
@@ -1997,6 +1999,7 @@ const ChatBox = forwardRef((props, boxRef) => {
             />
           )}
           <NewChatInput
+            fromTheChat={fromTheChat}
             conversationId={activeConversation?.id}
             placeholder={inputPlaceholder}
             ref={chatInput}
@@ -2053,6 +2056,7 @@ const ChatBox = forwardRef((props, boxRef) => {
             clearInputAfterSubmit={false}
             //internal tools config
             onInternalToolsConfigChange={onInternalToolsConfigChange}
+            onAddNewUsers={onAddNewUsers}
             internal_tools={activeConversation?.meta?.internal_tools || []}
             projectId={projectId}
             slashHighlights={slashHighlightRanges}

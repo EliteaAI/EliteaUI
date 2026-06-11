@@ -544,7 +544,8 @@ const userInputStyles = (isFocused, isDragOver, isRecording) => {
       justifyContent: 'space-between',
       width: '100%',
       alignItems: 'center',
-      gap: { xs: '.5rem', sm: '1rem' },
+      minHeight: '2.5rem',
+      gap: { xs: '.5rem', sm: '0.5rem' },
     },
     sendButtonContainer: {
       display: 'flex',

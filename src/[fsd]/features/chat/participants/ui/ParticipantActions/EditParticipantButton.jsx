@@ -48,10 +48,10 @@ const EditParticipantButton = memo(props => {
         sx={[styles.listItemIcon, sx]}
       >
         {canEdit ? (
-          <EditPenIcon sx={{ fontSize: '16px' }} />
+          <EditPenIcon sx={{ fontSize: '1rem' }} />
         ) : (
           <SettingIcon
-            sx={{ fontSize: '16px' }}
+            sx={{ fontSize: '1rem' }}
             fill={disabled ? theme.palette.icon.fill.disabled : undefined}
           />
         )}

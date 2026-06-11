@@ -29,7 +29,10 @@ import {
   canParticipantBeActiveInChat,
   getChatParticipantUniqueId,
 } from '@/[fsd]/features/chat/participants/lib/helpers';
-import { useAddNewParticipants } from '@/[fsd]/features/chat/participants/lib/hooks';
+import {
+  useActiveParticipantDetails,
+  useAddNewParticipants,
+} from '@/[fsd]/features/chat/participants/lib/hooks';
 import { ParticipantsWrapper } from '@/[fsd]/features/chat/participants/ui';
 import { ChatBox } from '@/[fsd]/features/chat/ui';
 import { FIRST_ELITEA_TOUR_ID, useProposePendingTour } from '@/[fsd]/features/interactive-tours';
@@ -56,7 +59,6 @@ import {
   useChatParticipantUpdateSocket,
 } from '@/components/Chat/hooks';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
-import useActiveParticipantDetails from '@/hooks/chat/useActiveParticipantDetails';
 import useAgentCreation from '@/hooks/chat/useAgentCreation';
 import { useAgentEditorUrlSync } from '@/hooks/chat/useAgentEditorUrlSync';
 import useAttachments from '@/hooks/chat/useAttachments';
@@ -549,6 +551,10 @@ const NewChat = props => {
     [addNewParticipants],
   );
 
+  const onAddNewUsers = useCallback(() => {
+    setShowAddUserModal(true);
+  }, []);
+
   const onSelectParticipant = useCallback(
     (participant, shouldMentionUser = true) => {
       // If AgentEditor is open, update it to show the new participant only if different
@@ -926,6 +932,7 @@ const NewChat = props => {
       onClearAttachments,
       setActiveConversation,
       onInternalToolsConfigChange,
+      onAddNewUsers,
     }),
     [
       onChangeParticipantSettings,
@@ -944,6 +951,7 @@ const NewChat = props => {
       onSelectAttachmentManager,
       onClearAttachments,
       onInternalToolsConfigChange,
+      onAddNewUsers,
     ],
   );
 
@@ -1446,6 +1454,7 @@ const NewChat = props => {
                 setNewConversationQuestion={setNewConversationQuestion}
               />
               <ChatBox
+                fromTheChat
                 hidden={!showChatBox}
                 key={'chatBox' + showChatBox}
                 ref={boxRef}
@@ -1455,10 +1464,8 @@ const NewChat = props => {
                 onShowPipelineEditor={onEditPipeline}
                 onCloseAgentEditor={handleCloseAgentEditor}
                 onClosePipelineEditor={handleClosePipelineEditor}
-                // TODO: Confirm with Hawk START
                 isEditorDirty={editorIsDirty}
                 onShowVersionChangeAlert={handleShowVersionChangeAlert}
-                // TODO: Confirm with Hawk END
                 inputPlaceholder="Type your message. Use # to search and add AI assistants to conversation."
                 uploadAttachments={uploadAttachments}
                 isUploadingAttachments={isUploadingAttachments}

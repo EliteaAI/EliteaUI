@@ -1,22 +1,21 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
-import { Box, IconButton } from '@mui/material';
+import { Box } from '@mui/material';
 
 import UserInput from '@/ComponentsLib/Chat/UserInput';
-import Tooltip from '@/ComponentsLib/Tooltip';
 import { useSpeakingModeLoop } from '@/[fsd]/features/chat/lib/hooks';
 import { ChatButton } from '@/[fsd]/features/chat/ui';
+import { PlusChatButton } from '@/[fsd]/features/chat/ui/chat-button';
+import AgentEditorPanel from '@/[fsd]/features/chat/ui/chat-input/AgentEditorPanel.jsx';
 import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { LLMModelSelector } from '@/[fsd]/widgets/llm-model-selector';
-import ChatBotIcon from '@/assets/chatbot-icon.svg?react';
-import ModelIcon from '@/components/Icons/ModelIcon.jsx';
 import { useChatConfig } from '@/hooks/useChatConfig';
 import useToast from '@/hooks/useToast';
-import AgentEditorPanel from '@/pages/NewChat/AgentEditorPanel.jsx';
 import { useTheme } from '@emotion/react';
 
 const NewChatInput = forwardRef((props, ref) => {
   const {
+    fromTheChat,
     conversationId,
     onSend,
     isLoading,
@@ -78,6 +77,7 @@ const NewChatInput = forwardRef((props, ref) => {
 
     //internal tools config
     onInternalToolsConfigChange,
+    onAddNewUsers,
     internal_tools = [],
     projectId,
 
@@ -156,10 +156,6 @@ const NewChatInput = forwardRef((props, ref) => {
     voiceButtonRef.current?.stop();
   }, [conversationId]);
 
-  const onClickChatBot = useCallback(() => {
-    onShowParticipantsList();
-  }, [onShowParticipantsList]);
-
   const onDrop = useCallback(
     event => {
       event.preventDefault();
@@ -232,18 +228,26 @@ const NewChatInput = forwardRef((props, ref) => {
                 flexShrink: 0,
               }}
             >
-              {!hideAttachments && (
+              {fromTheChat && (
+                <PlusChatButton
+                  attachmentButtonRef={attachmentButtonRef}
+                  onAttachFiles={onAttachFiles}
+                  disableAttachments={disableAttachments || isLoading || isStreaming}
+                  attachments={attachments}
+                  limits={limits}
+                  onInviteUsers={onAddNewUsers}
+                />
+              )}
+              {!hideAttachments && !fromTheChat && (
                 <ChatButton.AttachmentButton
                   ref={attachmentButtonRef}
                   onAttachFiles={onAttachFiles}
                   disableAttachments={disableAttachments || isLoading || isStreaming}
                   attachments={attachments}
                   limits={limits}
-                  isUploadingAttachments={isUploadingAttachments}
-                  uploadProgress={uploadProgress}
                 />
               )}
-              {!isAgentsPage && (
+              {!isAgentsPage && !fromTheChat && (
                 <ChatButton.ChatInternalToolsConfigButton
                   onInternalToolsConfigChange={onInternalToolsConfigChange}
                   internal_tools={internal_tools}
@@ -251,19 +255,13 @@ const NewChatInput = forwardRef((props, ref) => {
                   disabled={isLoading || isStreaming}
                 />
               )}
-              <ChatButton.VoiceButton
-                ref={voiceButtonRef}
-                inputRef={userInputRef}
-                disabled={isLoading || isStreaming || isSpeakingMode}
-                onRecordingChange={handleVoiceRecordingChange}
-              />
             </Box>
             <Box
               flex={1}
               display="flex"
               alignItems="center"
               justifyContent="flex-end"
-              gap={{ xs: '.25rem', sm: '.5rem', md: '1rem' }}
+              gap={{ xs: '.25rem', sm: '.5rem' }}
               sx={{
                 minWidth: 0,
                 flexShrink: 1,
@@ -271,26 +269,6 @@ const NewChatInput = forwardRef((props, ref) => {
                 overflow: 'hidden',
               }}
             >
-              {!activeParticipant && !isAgentsPage && (
-                <Tooltip
-                  placement="top"
-                  title="Switch to assistant"
-                >
-                  <IconButton
-                    variant="elitea"
-                    color="secondary"
-                    aria-label="chatbot"
-                    onClick={onClickChatBot}
-                    disabled={disableSwitchingParticipant}
-                    sx={{ marginLeft: '0rem' }}
-                  >
-                    <ChatBotIcon
-                      sx={{ fontSize: '1rem' }}
-                      fill={theme.palette.icon.fill.secondary}
-                    />
-                  </IconButton>
-                </Tooltip>
-              )}
               {(activeParticipant?.entity_name === 'application' ||
                 activeParticipant?.entity_name === 'pipeline') &&
                 !isAgentsPage && (
@@ -310,6 +288,8 @@ const NewChatInput = forwardRef((props, ref) => {
                     isEditorDirty={isEditorDirty}
                     onShowVersionChangeAlert={onShowVersionChangeAlert}
                     onRefreshParticipantDetails={onRefreshParticipantDetails}
+                    onSwitchToModel={selectSavedOrDefaultModel}
+                    disableSwitchToModel={disableSwitchingParticipant || isLoading || isStreaming}
                   />
                 )}
               {(isAgentsPage || !activeParticipant) && (
@@ -325,28 +305,12 @@ const NewChatInput = forwardRef((props, ref) => {
                   showStepsLimit={showStepsLimit}
                 />
               )}
-              {!isAgentsPage && activeParticipant && (
-                <Tooltip title="Switch to model">
-                  <Box component="span">
-                    <IconButton
-                      data-tour={CHAT_TOUR_TARGET_IDS.modelSettings}
-                      onClick={selectSavedOrDefaultModel}
-                      color="secondary"
-                      variant="elitea"
-                      disabled={disableSwitchingParticipant || isLoading || isStreaming}
-                    >
-                      <ModelIcon
-                        fontSize="inherit"
-                        fill={
-                          disableSwitchingParticipant || isLoading || isStreaming
-                            ? theme.palette.icon.fill.disabled
-                            : theme.palette.icon.fill.secondary
-                        }
-                      />
-                    </IconButton>
-                  </Box>
-                </Tooltip>
-              )}
+              <ChatButton.VoiceButton
+                ref={voiceButtonRef}
+                inputRef={userInputRef}
+                disabled={isLoading || isStreaming || isSpeakingMode}
+                onRecordingChange={handleVoiceRecordingChange}
+              />
             </Box>
           </Box>
         ),
