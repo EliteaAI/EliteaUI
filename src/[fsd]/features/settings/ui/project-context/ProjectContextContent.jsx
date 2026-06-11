@@ -341,15 +341,12 @@ const componentStyles = () => ({
       '&:focus-within': {
         borderColor: charError ? palette.error.main : palette.primary.main,
       },
+      '& .cm-theme': {
+        width: '100%',
+      },
       '& .cm-gutters': {
         backgroundColor: 'transparent',
         borderRight: `0.0625rem solid ${palette.border.table}`,
-      },
-      '& .cm-activeLine': {
-        backgroundColor: 'transparent',
-      },
-      '& .cm-activeLineGutter': {
-        backgroundColor: palette.background.userInputBackground,
       },
     }),
   preview:
