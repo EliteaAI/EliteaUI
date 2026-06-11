@@ -37,13 +37,21 @@ const BucketsListContent = memo(props => {
   }, []);
 
   useEffect(() => {
-    if (selectedBucketName && !expandedBuckets[selectedBucketName]) {
-      setExpandedBuckets(prev => ({
+    if (!selectedBucketName) {
+      return;
+    }
+
+    setExpandedBuckets(prev => {
+      if (prev[selectedBucketName]) {
+        return prev;
+      }
+
+      return {
         ...prev,
         [selectedBucketName]: true,
-      }));
-    }
-  }, [expandedBuckets, selectedBucketName]);
+      };
+    });
+  }, [selectedBucketName]);
 
   const styles = bucketsListContentStyles();
 
