@@ -100,7 +100,7 @@ export default function SuggestionList({
     if (isToolkitsPage) return ['toolkit'];
     if (isMCPsPage) return ['mcp'];
     if (isCredentialsPage) return ['credential'];
-    if (isUserPublicPage) return ['tag', 'application', 'pipeline', 'collection', 'toolkit', 'credential'];
+    if (isUserPublicPage) return ['tag', 'application', 'pipeline', 'toolkit', 'credential'];
     return [];
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

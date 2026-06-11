@@ -1,8 +1,5 @@
 /**
  * Styled search input components
- *
- * Extracted from AddToCollectionDialog.jsx during collections removal (EL-2547).
- * TODO: Replace with generic project-level input component for better consistency.
  */
 import { FormControl, Input } from '@mui/material';
 import { styled } from '@mui/material/styles';
