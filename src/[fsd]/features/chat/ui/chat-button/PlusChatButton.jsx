@@ -15,6 +15,8 @@ import {
   useTheme,
 } from '@mui/material';
 
+import { useAvailableInternalTools } from '@/[fsd]/shared/lib/hooks';
+import { Switch, Text } from '@/[fsd]/shared/ui';
 import FlowIcon from '@/assets/flow-icon.svg?react';
 import MCPIcon from '@/assets/mcp-icon.svg?react';
 import ToolIcon from '@/assets/tool-icon.svg?react';
@@ -43,11 +45,16 @@ const PlusChatButton = forwardRef(props => {
     attachments = [],
     limits,
     onInviteUsers,
+    onInternalToolsConfigChange,
+    internal_tools = [],
+    disableInternalTools = false,
   } = props;
 
   const theme = useTheme();
+  const availableTools = useAvailableInternalTools();
   const buttonRef = useRef(null);
   const hoverTimeoutRef = useRef(null);
+  const subMenuRef = useRef(null);
 
   const selectedProjectId = useSelectedProjectId();
   const personalProjectId = useSelector(state => state.user.personal_project_id);
@@ -69,6 +76,14 @@ const PlusChatButton = forwardRef(props => {
     setHoveredItem(null);
     setHoveredAnchorEl(null);
   }, []);
+
+  const handleClickAway = useCallback(
+    event => {
+      if (subMenuRef.current?.contains(event.target)) return;
+      handleClose();
+    },
+    [handleClose],
+  );
 
   const handleItemHover = useCallback((key, event) => {
     clearTimeout(hoverTimeoutRef.current);
@@ -132,20 +147,19 @@ const PlusChatButton = forwardRef(props => {
         style={styles.popper}
         modifiers={popperModifiers}
       >
-        <ClickAwayListener onClickAway={handleClose}>
+        <ClickAwayListener onClickAway={handleClickAway}>
           <Paper
             elevation={8}
             sx={styles.paper}
           >
             <MenuList sx={styles.menuList}>
-              {!disableAttachments && (
-                <AttachmentButton
-                  showLabel
-                  onAttachFiles={onAttachFiles}
-                  attachments={attachments}
-                  limits={limits}
-                />
-              )}
+              <AttachmentButton
+                showLabel
+                onAttachFiles={onAttachFiles}
+                disableAttachments={disableAttachments}
+                attachments={attachments}
+                limits={limits}
+              />
 
               {EXPANDABLE_ITEMS.map(({ key, label, Icon }) => (
                 <MenuItem
@@ -184,12 +198,36 @@ const PlusChatButton = forwardRef(props => {
           style={styles.subPopper}
         >
           <Paper
+            ref={subMenuRef}
             elevation={8}
-            sx={styles.subPaper}
+            sx={hoveredItem === 'internalTools' ? styles.internalToolsPaper : styles.subPaper}
             onMouseEnter={handleSubMenuEnter}
             onMouseLeave={handleSubMenuLeave}
           >
-            <Typography sx={styles.comingSoon}>Coming soon</Typography>
+            {hoveredItem === 'internalTools' && availableTools.length > 0 ? (
+              availableTools.map(tool => (
+                <Switch.BaseSwitch
+                  key={tool.name}
+                  label={tool.title}
+                  checked={internal_tools.includes(tool.name)}
+                  disabled={disableInternalTools}
+                  onChange={(_, checkedValue) =>
+                    onInternalToolsConfigChange?.({ key: tool.name, value: checkedValue })
+                  }
+                  width="100%"
+                  infoTooltip={<Text.TextWithLink {...tool.infoTooltip} />}
+                  slotProps={{
+                    formControlLabel: {
+                      sx: styles.toolFormControlLabel,
+                      labelPlacement: 'start',
+                    },
+                    switch: { size: 'small' },
+                  }}
+                />
+              ))
+            ) : (
+              <Typography sx={styles.comingSoon}>Coming soon</Typography>
+            )}
           </Paper>
         </Popper>
       )}
@@ -233,6 +271,11 @@ const plusChatButtonStyles = theme => ({
       borderBottom: `.0625rem solid ${theme.palette.border.lines}`,
       '&:hover': {
         backgroundColor: `${theme.palette.action.hover} !important`,
+      },
+      '&.Mui-disabled': {
+        background: 'transparent !important',
+        color: theme.palette.text.disabled,
+        opacity: 1,
       },
     },
     '& > .MuiIconButton-root svg': {
@@ -283,6 +326,28 @@ const plusChatButtonStyles = theme => ({
     backgroundColor: theme.palette.background.secondary,
     padding: '1rem',
     ml: '.25rem',
+  },
+  internalToolsPaper: {
+    minWidth: '12rem',
+    borderRadius: '.75rem',
+    border: `.0625rem solid ${theme.palette.border.lines}`,
+    backgroundColor: theme.palette.background.secondary,
+    padding: '.5rem 0',
+    ml: '.25rem',
+  },
+  toolFormControlLabel: {
+    margin: 0,
+    width: '15.75rem',
+    height: '2.75rem',
+    boxSizing: 'border-box',
+    display: 'flex',
+    padding: '.5rem 1rem',
+    gap: '.5rem',
+    justifyContent: 'space-between',
+
+    '& .MuiFormControlLabel-label': {
+      marginLeft: '.5rem',
+    },
   },
   comingSoon: {
     color: theme.palette.text.disabled,

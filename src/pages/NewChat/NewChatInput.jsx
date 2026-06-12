@@ -236,6 +236,9 @@ const NewChatInput = forwardRef((props, ref) => {
                   attachments={attachments}
                   limits={limits}
                   onInviteUsers={onAddNewUsers}
+                  onInternalToolsConfigChange={onInternalToolsConfigChange}
+                  internal_tools={internal_tools}
+                  disableInternalTools={isLoading || isStreaming}
                 />
               )}
               {!hideAttachments && !fromTheChat && (
