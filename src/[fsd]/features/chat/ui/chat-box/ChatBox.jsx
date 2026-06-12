@@ -1931,15 +1931,16 @@ const ChatBox = forwardRef((props, boxRef) => {
             conversation_starters={hasStarterBeenSent || isTheUserChattingNow ? [] : conversationStarters}
           />
         )}
-        <VoiceMiniPlayer
-          isPlaying={isPlaying}
-          voiceConfig={voiceConfig}
-          voices={displayVoices}
-          onVoiceConfigChange={setVoiceConfig}
-          ttsModel={ttsModel}
-          hasModelTTS={hasModelTTS}
-          onStop={stopTTS}
-        />
+        {isPlaying && (
+          <VoiceMiniPlayer
+            voiceConfig={voiceConfig}
+            voices={displayVoices}
+            onVoiceConfigChange={setVoiceConfig}
+            ttsModel={ttsModel}
+            hasModelTTS={hasModelTTS}
+            onStop={stopTTS}
+          />
+        )}
         <Box sx={hitlEditMode ? styles.inputWrapperHitl : styles.inputWrapper}>
           {hitlEditMode && (
             <Box sx={styles.hitlInfoBanner}>
@@ -2079,11 +2080,8 @@ ChatBox.displayName = 'ChatBox';
 /** @type {MuiSx} */
 const chatBoxStyles = () => ({
   container: ({ breakpoints }) => ({
-    [breakpoints.up('lg')]: {
-      height: 'calc(100vh - 10rem)',
-    },
     [breakpoints.down('lg')]: {
-      height: '100vh !important',
+      minHeight: '100vh !important',
     },
   }),
   inputWrapper: {

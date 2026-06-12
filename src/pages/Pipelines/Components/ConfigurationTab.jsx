@@ -370,7 +370,7 @@ const configurationTabStyles = (isSmallWindow, isChatPaneCollapsed, maxWidthOfEd
   mainContainer: {
     height: 'calc(100vh - 3.8125rem)',
     overflow: 'scroll',
-    paddingBottom: '0.75rem',
+    paddingBottom: '1.5rem',
     paddingTop: '0.75rem',
     paddingLeft: '1.5rem',
     paddingRight: '1.5rem',

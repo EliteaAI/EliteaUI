@@ -129,6 +129,17 @@ const useTextToSpeech = ({ ttsModel, socket, voiceConfig } = {}) => {
   const allChunksReceivedRef = useRef(false);
   // True only when the user explicitly paused — distinguishes user-pause from browser auto-suspend
   const userPausedRef = useRef(false);
+  // Mirror of voiceConfig as a ref so the tts_done handler (closed over at mount)
+  // can read the latest value without being in the effect's dependency list.
+  const voiceConfigRef = useRef(voiceConfig);
+  // Mirror of socket so the RAF loop can emit tts_next without being in its dep array.
+  const socketRef = useRef(socket);
+  // Index of the next sentence waypoint for which tts_next has not yet been emitted.
+  // Counts up as the RAF loop emits ACKs; reset to 0 at the start of each session.
+  const sentenceNextAckedRef = useRef(0);
+  // Set to true when voice/speed settings change during playback so the RAF loop
+  // emits tts_next immediately instead of waiting for the buffer to drain.
+  const forceNextAckRef = useRef(false);
   const rafRef = useRef(null);
   // Self-calibrating chars/second rate. Measured from the previous session's
   // (text.length / totalDuration) and reused for the linear estimation phase
@@ -195,6 +206,25 @@ const useTextToSpeech = ({ ttsModel, socket, voiceConfig } = {}) => {
     [voiceConfig?.volume],
   );
 
+  // Keep voiceConfigRef and socketRef in sync so RAF-loop closures always read current values
+  useEffect(() => {
+    voiceConfigRef.current = voiceConfig;
+  }, [voiceConfig]);
+
+  useEffect(() => {
+    socketRef.current = socket;
+  }, [socket]);
+
+  // When voice or speed changes DURING active playback, signal the RAF loop to
+  // emit tts_next immediately so the new settings reach the backend without delay.
+  // Guard with playStartTimeRef so changes before playback begins are ignored —
+  // they would otherwise set force=true and fire the first ACK prematurely.
+  useEffect(() => {
+    if (playStartTimeRef.current !== null) {
+      forceNextAckRef.current = true;
+    }
+  }, [voiceConfig?.voiceId, voiceConfig?.rate]);
+
   // Live volume change — ramp to avoid click artifact when volume slider moves during playback
   useEffect(() => {
     const ctx = audioContextRef.current;
@@ -226,6 +256,8 @@ const useTextToSpeech = ({ ttsModel, socket, voiceConfig } = {}) => {
     allChunksReceivedRef.current = false;
     charTimelineRef.current = null;
     sentenceWaypointsRef.current = [];
+    sentenceNextAckedRef.current = 0;
+    forceNextAckRef.current = false;
     pendingChunkRef.current = null;
     newSentenceRef.current = true;
     clearInterval(schedulerTimerRef.current);
@@ -427,6 +459,8 @@ const useTextToSpeech = ({ ttsModel, socket, voiceConfig } = {}) => {
         socket.emit(sioEvents.tts_stop, {});
         stopModelAudio();
         sentenceWaypointsRef.current = [];
+        sentenceNextAckedRef.current = 0;
+        forceNextAckRef.current = false;
         fullTextRef.current = text;
         // Build punctuation-aware timeline for this session's text.
         // Uses the calibrated rate from the previous session (or the default
@@ -587,6 +621,8 @@ const useTextToSpeech = ({ ttsModel, socket, voiceConfig } = {}) => {
         // yet — using enqueued count gives the correct absolute playback position
         // regardless of scheduling lag.
         const audioTime = totalEnqueuedSamplesRef.current / sampleRateRef.current;
+        // Record waypoint — the RAF loop will emit tts_next when playback
+        // approaches this boundary, pacing the backend to actual playback speed.
         sentenceWaypointsRef.current.push({ charPos: char_end, audioTime });
         return;
       }
@@ -662,6 +698,39 @@ const useTextToSpeech = ({ ttsModel, socket, voiceConfig } = {}) => {
       // Subtract outputLatency so the highlight tracks what the user actually hears,
       // not what has been sent to the audio hardware buffer.
       const elapsed = ctx.currentTime - (ctx.outputLatency ?? 0) - playStartTimeRef.current;
+
+      // ── tts_next pacing ──────────────────────────────────────────────────────
+      // ACK the backend when elapsed playback time reaches LEAD_TIME_S seconds
+      // before the END of the PREVIOUS sentence.  This keeps the backend exactly
+      // 1 sentence ahead: it starts generating sentence N+1 while sentence N-1
+      // still has LEAD_TIME_S seconds left to play.
+      //
+      //   nextAcked == 0  → no previous boundary; fire immediately so sentence 2
+      //                     is ready before sentence 1 ends.
+      //   nextAcked >  0  → fire when elapsed >=
+      //                       waypoints[nextAcked-1].audioTime – LEAD_TIME_S
+      //
+      // Short sentences (duration < LEAD_TIME_S) will still cascade immediately
+      // because the condition is negative — unavoidable without risking a gap.
+      // Longer sentences are paced one-per-sentence so the backend never runs
+      // far ahead of playback, keeping voice/speed changes responsive.
+      //
+      // forceNextAckRef: fires immediately when voice/speed changes mid-playback
+      // so the new settings take effect at the very next sentence boundary.
+      const LEAD_TIME_S = 3;
+      const nextAcked = sentenceNextAckedRef.current;
+      if (nextAcked < sentenceWaypointsRef.current.length) {
+        const prevAudioTime = nextAcked > 0 ? sentenceWaypointsRef.current[nextAcked - 1].audioTime : 0;
+        if (forceNextAckRef.current || elapsed >= prevAudioTime - LEAD_TIME_S) {
+          socketRef.current?.emit(sioEvents.tts_next, {
+            voice: voiceConfigRef.current?.voiceId || undefined,
+            speed: voiceConfigRef.current?.rate ?? 1.0,
+          });
+          sentenceNextAckedRef.current = nextAcked + 1;
+          forceNextAckRef.current = false;
+        }
+      }
+
       const text = fullTextRef.current;
       const totalDuration = totalDurationRef.current;
       const allReceived = allChunksReceivedRef.current;
