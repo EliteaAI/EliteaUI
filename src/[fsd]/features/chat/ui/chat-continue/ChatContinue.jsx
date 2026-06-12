@@ -91,6 +91,7 @@ const ChatContinue = memo(props => {
           mcpAuthMetadata={mcpAuthMetadata}
           projectId={projectId}
           toolkitId={mcpAuthMetadata?.toolkitId}
+          toolkitType={authRequiredAction.toolMeta?.toolkit_type}
           onClose={handleCloseModal}
           onCancel={handleCancelModal}
         />
