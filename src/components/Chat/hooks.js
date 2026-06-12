@@ -910,13 +910,20 @@ export const useChatSocket = ({
 
           // Token storage key must match what get_toolkit() looks up in kwargs['tokens'].
           // SharePoint and OpenAPI use a composite key or the oauth discovery endpoint (not server URL).
+          // Pre-built MCPs (type starts with "mcp_") use toolkit_type as the key — the backend
+          // looks up tokens by server_name / toolkit_name, not by the OAuth server URL.
           // All other toolkits (regular MCP) use serverUrl (the MCP server URL = oauth endpoint).
           const isSharePoint = response_metadata?.resource_metadata?.resource_name === 'SharePoint';
           const isOpenApi = response_metadata?.resource_metadata?.resource_name === 'OpenAPI';
           const configUuid = response_metadata?.resource_metadata?.configuration_uuid;
           const oauthEndpoint = authServers?.[0];
-          const effectiveServerUrl =
-            configUuid && oauthEndpoint
+          const toolkitType = response_metadata?.toolkit_type;
+          const isPrebuildMcpToolkit =
+            typeof toolkitType === 'string' && toolkitType.startsWith('mcp_') && toolkitType !== 'mcp';
+          const effectiveServerUrl = isPrebuildMcpToolkit
+            ? // Pre-built MCP: use toolkit type as token storage key so backend can match it.
+              toolkitType
+            : configUuid && oauthEndpoint
               ? // Composite key "{configUuid}:{oauthEndpoint}" — matches SDK primary lookup for
                 // any delegated OAuth toolkit where configuration_uuid is present.
                 `${configUuid}:${oauthEndpoint}`
