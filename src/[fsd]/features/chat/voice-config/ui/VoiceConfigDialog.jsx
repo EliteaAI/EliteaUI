@@ -7,7 +7,7 @@ import { useVoiceConfig } from '../lib/hooks/useVoiceConfig.hooks';
 import { VoiceConfigControls } from './VoiceConfigControls';
 
 const VoiceConfigDialog = memo(props => {
-  const { config, voices, open, onApply, onCancel, ttsModel, hasModelTTS } = props;
+  const { config, voices, open, onApply, onCancel, ttsModel, hasModelTTS, isPlaying } = props;
   const [localConfig, setLocalConfig] = useState(config);
 
   const socket = useContext(SocketContext);
@@ -38,6 +38,7 @@ const VoiceConfigDialog = memo(props => {
           socket={socket}
           browserVoices={browserVoices}
           voices={voices}
+          isPlaying={isPlaying}
         />
       }
       actions={

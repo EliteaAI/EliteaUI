@@ -11,7 +11,7 @@ import * as VoiceConstants from '../constants/voice.constants';
 const { VOICE_PREVIEW_TEXT, VOICE_SPEED_MARKS, VOICE_VOLUME_MARKS } = VoiceConstants;
 
 const VoiceConfigControls = memo(props => {
-  const { config, onConfigChange, hasModelTTS, ttsModel, socket, browserVoices, voices } = props;
+  const { config, onConfigChange, hasModelTTS, ttsModel, socket, browserVoices, voices, isPlaying } = props;
   const styles = voiceConfigControlsStyles();
 
   const previewVoiceConfig = useMemo(
@@ -106,16 +106,18 @@ const VoiceConfigControls = memo(props => {
           size="small"
         />
       </Box>
-      <Box>
-        <Button.BaseBtn
-          variant="elitea"
-          color="secondary"
-          loading={isPreviewPlaying}
-          onClick={handlePreview}
-        >
-          Preview Voice
-        </Button.BaseBtn>
-      </Box>
+      {!isPlaying && (
+        <Box>
+          <Button.BaseBtn
+            variant="elitea"
+            color="secondary"
+            loading={isPreviewPlaying}
+            onClick={handlePreview}
+          >
+            Preview Voice
+          </Button.BaseBtn>
+        </Box>
+      )}
     </Box>
   );
 });

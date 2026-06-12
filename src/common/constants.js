@@ -959,6 +959,7 @@ export const sioEvents = {
   // Server-side TTS (text-to-speech via model API)
   tts_start: 'tts_start',
   tts_stop: 'tts_stop',
+  tts_next: 'tts_next',
   tts_audio_chunk: 'tts_audio_chunk',
   tts_done: 'tts_done',
   tts_error: 'tts_error',

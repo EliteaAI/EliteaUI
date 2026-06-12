@@ -11,7 +11,7 @@ import { VOICE_FEATURES_ENABLED, VOICE_FEATURES_TEMPORARILY_DISABLED } from '@/c
 import SettingIcon from '@/components/Icons/SettingIcon';
 
 const VoiceControlButton = memo(props => {
-  const { onStop, voiceConfig, voices, onVoiceConfigChange, ttsModel, hasModelTTS, isPlaying } = props;
+  const { onStop, voiceConfig, voices, onVoiceConfigChange, ttsModel, hasModelTTS } = props;
   const [dialogOpen, setDialogOpen] = useState(false);
   const styles = getStyles();
 
@@ -46,7 +46,6 @@ const VoiceControlButton = memo(props => {
               variant={BUTTON_VARIANTS.icon}
               color="tertiary"
               size="small"
-              disabled={!isPlaying}
               onClick={onStop}
               sx={styles.button}
             >
@@ -63,7 +62,6 @@ const VoiceControlButton = memo(props => {
             <BaseBtn
               variant={BUTTON_VARIANTS.tertiary}
               size="small"
-              disabled={isPlaying}
               onClick={handleDialogOpen}
               aria-label="Voice settings"
               sx={styles.button}
@@ -81,6 +79,7 @@ const VoiceControlButton = memo(props => {
         onCancel={handleDialogClose}
         ttsModel={ttsModel}
         hasModelTTS={hasModelTTS}
+        isPlaying
       />
     </>
   );
@@ -109,6 +108,7 @@ const getStyles = () => ({
     '&.Mui-disabled path': {
       fill: ({ palette }) => palette.icon.fill.disabled,
     },
+    color: ({ palette }) => `${palette.text.primary} !important`,
     minWidth: '1.75rem !important',
     minHeight: '1.75rem !important',
     maxWidth: '1.75rem !important',

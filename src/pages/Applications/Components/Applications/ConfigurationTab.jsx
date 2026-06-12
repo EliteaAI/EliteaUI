@@ -417,7 +417,7 @@ const configurationTabStyles = () => ({
     height: '100%',
   },
   gridContainer: {
-    paddingBottom: '0.75rem',
+    paddingBottom: '1.5rem',
     paddingTop: '0.75rem',
     paddingRight: '1.5rem',
     paddingLeft: '1.5rem',
