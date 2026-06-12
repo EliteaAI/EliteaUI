@@ -1,1 +1,1 @@
-export { default as SubAgentSection } from './SubAgentSection';
+export { default as SubAgentAccordion } from './SubAgentAccordion';

@@ -1217,7 +1217,16 @@ const ChatBox = forwardRef((props, boxRef) => {
         : lastMessage.hitlInterrupt
           ? [lastMessage.hitlInterrupt]
           : [];
-      const isParallel = interrupts.length > 1 && Boolean(toolCallId);
+      // Detect a parallel aggregate by the PRESENCE of the hitlInterrupts array
+      // (hooks.js sets it only for backend `hitl_interrupts`), not by length > 1.
+      // A multi-round batch may have only ONE still-pending child yet must still
+      // resume via `hitl_decisions` (routed by tool_call_id) — the single
+      // `hitl_action` path would drop the SDK to the sequential resume and the
+      // suffixed child thread_id would never match.
+      const isParallel =
+        Array.isArray(lastMessage.hitlInterrupts) &&
+        lastMessage.hitlInterrupts.length > 0 &&
+        Boolean(toolCallId);
 
       // Parallel fan-out: buffer this child's decision and disable its card.
       // Defer the actual resume emit until every child has been actioned.

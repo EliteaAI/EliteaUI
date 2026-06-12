@@ -3,7 +3,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import { ChatHelpers } from '@/[fsd]/features/chat/lib/helpers';
-import { SubAgentSection } from '@/[fsd]/features/chat/ui/sub-agent-section';
+import { SubAgentAccordion } from '@/[fsd]/features/chat/ui/sub-agent-section';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { StyledAccordion, StyledAccordionDetails, StyledAccordionSummary } from '@/[fsd]/shared/ui/accordion';
 import ArrowRightIcon from '@/assets/arrow-right-icon.svg?react';
@@ -156,42 +156,73 @@ const ApplicationThinkView = memo(props => {
     return '';
   }, []);
 
-  // Partition the raw ACTIONS (not turn-groups) by originating sub-agent, then
-  // group each partition independently. A single parallel-fan-out turn-group can
-  // interleave tools from multiple sub-agents, so bucketing must happen at the
-  // action level — otherwise one sub-agent's chips land under another's header
-  // (issue #4993). Coordinator actions (no sub-agent key) group first/ungrouped.
-  const partitionBySubAgent = useCallback(
+  // Partition the raw ACTIONS into an ORDERED list of blocks that preserves the
+  // chronological turn order: a coordinator (orchestrator) run, then the
+  // sub-agents it fanned out to, then the orchestrator's closing run — exactly
+  // the sequence the model produced (issue #4993). A coordinator block is a run
+  // of consecutive orchestrator actions (no sub-agent key); it closes as soon as
+  // a sub-agent action appears, so a later orchestrator turn (e.g. the final
+  // summary after a parallel fan-out) becomes its OWN block at the bottom rather
+  // than being pulled to the top. Each sub-agent gets ONE accordion slot anchored
+  // at its first action; later same-name actions (interleaved in a parallel turn)
+  // append to that slot so the chips don't scatter.
+  const partitionIntoBlocks = useCallback(
     actionsList => {
-      const coordinator = [];
-      const order = [];
-      const byName = new Map();
+      const blocks = [];
+      const subBlockByName = new Map();
+      let coordRun = [];
+      const flushCoord = () => {
+        if (coordRun.length > 0) {
+          blocks.push({ kind: 'coord', actions: coordRun });
+          coordRun = [];
+        }
+      };
       actionsList.forEach(action => {
         const key = deriveSubAgentName(action);
         if (!key) {
-          coordinator.push(action);
+          coordRun.push(action);
           return;
         }
-        if (!byName.has(key)) {
-          byName.set(key, []);
-          order.push(key);
+        flushCoord();
+        const existing = subBlockByName.get(key);
+        if (existing) {
+          existing.actions.push(action);
+        } else {
+          const block = { kind: 'sub', name: key, actions: [action] };
+          subBlockByName.set(key, block);
+          blocks.push(block);
         }
-        byName.get(key).push(action);
       });
-      return {
-        coordinatorGroups: groupActions(coordinator).groups,
-        subAgents: order.map(name => ({ name, groups: groupActions(byName.get(name)).groups })),
-      };
+      flushCoord();
+      return blocks.map(block =>
+        block.kind === 'coord'
+          ? { kind: 'coord', groups: groupActions(block.actions).groups }
+          : { kind: 'sub', name: block.name, groups: groupActions(block.actions).groups },
+      );
     },
     [deriveSubAgentName, groupActions],
   );
 
   // Revealed (finished) actions for streaming view; all actions for history view.
-  const streamingPartition = useMemo(
-    () => partitionBySubAgent(finishedActions),
-    [partitionBySubAgent, finishedActions],
+  const streamingBlocks = useMemo(
+    () => partitionIntoBlocks(finishedActions),
+    [partitionIntoBlocks, finishedActions],
   );
-  const historyPartition = useMemo(() => partitionBySubAgent(actions), [partitionBySubAgent, actions]);
+  const historyBlocks = useMemo(() => partitionIntoBlocks(actions), [partitionIntoBlocks, actions]);
+
+  // Sub-agent accordions are collapsed by default and opened on demand to inspect
+  // the child's activity. Their chips therefore render from the FULL set of
+  // arrived actions (keyed by sub-agent name), NOT the throttled reveal window —
+  // so an expanded running sub-agent shows every tool it has executed so far,
+  // matching the history view (issue #4993). The reveal throttle still governs
+  // the coordinator's inline chips and live content box only.
+  const streamingSubGroupsFull = useMemo(() => {
+    const map = new Map();
+    historyBlocks.forEach(block => {
+      if (block.kind === 'sub') map.set(block.name, block.groups);
+    });
+    return map;
+  }, [historyBlocks]);
 
   // In-flight streaming LLM action per sub-agent → drives the parallel content
   // boxes (one per sub-agent, each ~5 lines). Keyed by sub-agent so two children
@@ -345,7 +376,7 @@ const ApplicationThinkView = memo(props => {
   // when it's the same node as the in-flight action" behavior and shows tool
   // chips as toolkit-only; history shows full tool chips (click → modal).
   const renderGroupChips = useCallback(
-    (group, keyPrefix, streaming, inflightAction) => {
+    (group, keyPrefix, streaming, inflightAction, fullToolNames = false) => {
       const items = [];
       let skipReasoning = false;
       if (streaming) {
@@ -376,7 +407,7 @@ const ApplicationThinkView = memo(props => {
             action={action}
             tools={tools}
             isStreaming={streaming}
-            onlyShowToolkit={streaming}
+            onlyShowToolkit={streaming && !fullToolNames}
             width="auto"
           />,
         );
@@ -412,51 +443,77 @@ const ApplicationThinkView = memo(props => {
           They will be rendered as separate accordions in ApplicationAnswer
           after streaming completes (!isProcessing). */}
       {(() => {
-        const { coordinatorGroups, subAgents } = streamingPartition;
-        // Union: sub-agents with revealed chips + any with only an in-flight box
-        // (and the coordinator's current action if it belongs to a sub-agent).
-        const order = subAgents.map(s => s.name);
-        const addName = name => {
-          if (name && !order.includes(name)) order.push(name);
+        const blocks = streamingBlocks;
+        // Sub-agents already represented by a revealed block render their in-flight
+        // box inline. Any sub-agent that ONLY has an in-flight box (no revealed
+        // chips yet, so absent from blocks) is the newest activity → append after
+        // the ordered blocks. The orchestrator's own in-flight box sits at the very
+        // bottom (its natural chronological turn — bottom of the thinking block).
+        const renderedSubNames = new Set(blocks.filter(b => b.kind === 'sub').map(b => b.name));
+        const extraSub = [];
+        const addExtra = name => {
+          if (name && !renderedSubNames.has(name) && !extraSub.includes(name)) {
+            extraSub.push(name);
+          }
         };
-        subAgentInflight.forEach((_, key) => addName(key));
-        if (currentActionKey) addName(currentActionKey);
-        const groupsByName = new Map(subAgents.map(s => [s.name, s.groups]));
-        return (
-          <>
-            {coordinatorGroups.length > 0 && (
-              <Box sx={styles.badgesContainer}>
-                {coordinatorGroups.flatMap((group, i) => renderGroupChips(group, `coord-${i}`, true))}
-              </Box>
-            )}
-            {currentActionKey === '' && currentActionBox}
-            {order.map(name => {
-              const groups = groupsByName.get(name) || [];
-              const inflight = subAgentInflight.get(name);
-              return (
-                <Box
-                  key={`sa-${name}`}
-                  sx={styles.subAgentGroup}
-                >
-                  <SubAgentSection name={name} />
-                  {groups.length > 0 && (
-                    <Box sx={styles.badgesContainer}>
-                      {groups.flatMap((group, i) => renderGroupChips(group, `${name}-${i}`, true, inflight))}
-                    </Box>
-                  )}
-                  {inflight ? (
-                    <ActionView
-                      showProgress
-                      action={inflight}
-                      tools={tools}
-                      isStreaming
-                    />
-                  ) : (
-                    currentActionKey === name && currentActionBox
+        // Any sub-agent with arrived actions that the throttled reveal hasn't
+        // surfaced yet still gets an accordion (its chips come from the full
+        // groups below), so a running child is never missing from the view.
+        streamingSubGroupsFull.forEach((_, key) => addExtra(key));
+        subAgentInflight.forEach((_, key) => addExtra(key));
+        if (currentActionKey) addExtra(currentActionKey);
+
+        const renderSub = name => {
+          // Chips from the FULL per-sub-agent groups (not the throttled window)
+          // so every executed tool shows while the child is still running, with
+          // full tool names (matching history) rather than toolkit-only chips.
+          const groups = streamingSubGroupsFull.get(name) || [];
+          const inflight = subAgentInflight.get(name);
+          const running = !!inflight || currentActionKey === name;
+          return (
+            <SubAgentAccordion
+              key={`sa-${name}`}
+              name={name}
+              tools={tools}
+              running={running}
+            >
+              {groups.length > 0 && (
+                <Box sx={styles.badgesContainer}>
+                  {groups.flatMap((group, i) =>
+                    renderGroupChips(group, `${name}-${i}`, true, inflight, true),
                   )}
                 </Box>
-              );
-            })}
+              )}
+              {inflight ? (
+                <ActionView
+                  showProgress
+                  action={inflight}
+                  tools={tools}
+                  isStreaming
+                />
+              ) : (
+                currentActionKey === name && currentActionBox
+              )}
+            </SubAgentAccordion>
+          );
+        };
+
+        return (
+          <>
+            {blocks.map((block, bi) =>
+              block.kind === 'coord'
+                ? block.groups.length > 0 && (
+                    <Box
+                      key={`coord-${bi}`}
+                      sx={styles.badgesContainer}
+                    >
+                      {block.groups.flatMap((group, i) => renderGroupChips(group, `coord-${bi}-${i}`, true))}
+                    </Box>
+                  )
+                : renderSub(block.name),
+            )}
+            {extraSub.map(name => renderSub(name))}
+            {currentActionKey === '' && currentActionBox}
           </>
         );
       })()}
@@ -488,31 +545,28 @@ const ApplicationThinkView = memo(props => {
       <StyledAccordionDetails sx={styles.accordionDetails}>
         {/* SwarmChild actions are NOT rendered here in history view.
             They are rendered as separate accordions in ApplicationAnswer. */}
-        {(() => {
-          const { coordinatorGroups, subAgents } = historyPartition;
-          return (
-            <>
-              {coordinatorGroups.length > 0 && (
-                <Box sx={styles.badgesContainer}>
-                  {coordinatorGroups.flatMap((group, i) => renderGroupChips(group, `coord-${i}`, false))}
-                </Box>
-              )}
-              {subAgents.map(bucket => (
-                <Box
-                  key={`sa-${bucket.name}`}
-                  sx={styles.subAgentGroup}
-                >
-                  <SubAgentSection name={bucket.name} />
-                  <Box sx={styles.badgesContainer}>
-                    {bucket.groups.flatMap((group, i) =>
-                      renderGroupChips(group, `${bucket.name}-${i}`, false),
-                    )}
-                  </Box>
-                </Box>
-              ))}
-            </>
-          );
-        })()}
+        {historyBlocks.map((block, bi) =>
+          block.kind === 'coord' ? (
+            block.groups.length > 0 && (
+              <Box
+                key={`coord-${bi}`}
+                sx={styles.badgesContainer}
+              >
+                {block.groups.flatMap((group, i) => renderGroupChips(group, `coord-${bi}-${i}`, false))}
+              </Box>
+            )
+          ) : (
+            <SubAgentAccordion
+              key={`sa-${block.name}`}
+              name={block.name}
+              tools={tools}
+            >
+              <Box sx={styles.badgesContainer}>
+                {block.groups.flatMap((group, i) => renderGroupChips(group, `${block.name}-${i}`, false))}
+              </Box>
+            </SubAgentAccordion>
+          ),
+        )}
       </StyledAccordionDetails>
     </StyledAccordion>
   );
@@ -529,23 +583,12 @@ const applicationThinkViewStyles = () => ({
     flexDirection: 'column',
     gap: '0.75rem',
   },
-  turnContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.5rem',
-  },
   badgesContainer: {
     display: 'flex',
     justifyContent: 'flex-start',
     alignItems: 'center',
     gap: '0.75rem',
     flexWrap: 'wrap',
-  },
-  subAgentGroup: {
-    width: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.5rem',
   },
   accordion: ({ palette }) => ({
     borderBottom: `0.0625rem solid ${palette.border.table}`,

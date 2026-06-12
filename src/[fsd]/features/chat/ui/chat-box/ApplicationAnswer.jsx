@@ -17,7 +17,7 @@ import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { buildAttachmentSummary } from '@/[fsd]/entities/attachment/lib';
 import { toSpeakableText, translateSpokenPos } from '@/[fsd]/features/chat/lib/helpers';
 import { ChatAttachment, ChatContinue, ChatHitlActions } from '@/[fsd]/features/chat/ui';
-import { SubAgentSection } from '@/[fsd]/features/chat/ui/sub-agent-section';
+import { SubAgentAccordion } from '@/[fsd]/features/chat/ui/sub-agent-section';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
 import { BaseBtn } from '@/[fsd]/shared/ui/button';
 import Markdown from '@/[fsd]/shared/ui/markdown';
@@ -753,13 +753,15 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                 <Box sx={styles.hitlGroupsContainer}>
                   {hitlBuckets.coordinator.map(renderHitlCard)}
                   {hitlBuckets.subAgents.map(bucket => (
-                    <Box
+                    <SubAgentAccordion
                       key={`hitl-sa-${bucket.name}`}
-                      sx={styles.hitlSubAgentGroup}
+                      name={bucket.name}
+                      tools={tools}
+                      paused
+                      transparent
                     >
-                      <SubAgentSection name={bucket.name} />
                       {bucket.entries.map(renderHitlCard)}
-                    </Box>
+                    </SubAgentAccordion>
                   ))}
                 </Box>
               ) : (
@@ -1166,12 +1168,6 @@ const applicationAnswerStyles = (
     display: 'flex',
     flexDirection: 'column',
     gap: '0.75rem',
-    width: '100%',
-  },
-  hitlSubAgentGroup: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.5rem',
     width: '100%',
   },
   swarmChildAccordion: ({ palette }) => ({
