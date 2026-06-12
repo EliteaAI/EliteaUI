@@ -1,10 +1,12 @@
 import { memo, useCallback, useMemo, useState } from 'react';
 
-import { IconButton, Typography, useTheme } from '@mui/material';
+import { Box, IconButton, Typography, useTheme } from '@mui/material';
 
+import Tooltip from '@/ComponentsLib/Tooltip';
 import { useParticipantName } from '@/[fsd]/features/chat/participants/lib/hooks';
 import { ChatParticipantType } from '@/common/constants';
 import AlertDialog from '@/components/AlertDialog';
+import AttentionIcon from '@/components/Icons/AttentionIcon';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 
 const DeleteParticipantButton = memo(props => {
@@ -25,23 +27,20 @@ const DeleteParticipantButton = memo(props => {
     return undefined;
   }, [participant?.agent_type, participant?.entity_name, participant?.entity_settings?.agent_type]);
 
-  const dialogTitle = useMemo(() => {
-    if (!warningMessage) {
-      switch (entityType) {
-        case 'agent':
-          return 'Remove agent?';
-        case 'pipeline':
-          return 'Remove pipeline?';
-        case 'toolkit':
-          return 'Remove toolkit?';
-        case 'user':
-          return 'Remove user?';
-        default:
-          return 'Remove participant?';
-      }
-    }
-    return 'Remove participant?';
-  }, [entityType, warningMessage]);
+  const removeLabel = `Remove ${entityType || 'participant'}`;
+
+  const dialogTitle = useMemo(
+    () => (
+      <Box sx={styles.dialogTitleWrapper}>
+        <Box
+          component={AttentionIcon}
+          sx={styles.attentionIcon}
+        />
+        {`${removeLabel}?`}
+      </Box>
+    ),
+    [removeLabel],
+  );
 
   const styledEntityName = useMemo(
     () => (
@@ -58,18 +57,13 @@ const DeleteParticipantButton = memo(props => {
 
   const dialogContent = useMemo(() => {
     if (warningMessage) return warningMessage;
-    switch (entityType) {
-      case 'agent':
-        return <>Are you sure to remove the {styledEntityName} agent?</>;
-      case 'pipeline':
-        return <>Are you sure to remove the {styledEntityName} pipeline?</>;
-      case 'toolkit':
-        return <>Are you sure to remove the {styledEntityName} toolkit?</>;
-      case 'user':
-        return <>Are you sure to remove the {styledEntityName} user?</>;
-      default:
-        return `Are you sure to remove this participant ${participantName} from the conversation?`;
-    }
+    if (!entityType)
+      return `Are you sure to remove this participant ${participantName} from the conversation?`;
+    return (
+      <>
+        Are you sure to remove the {styledEntityName} {entityType} from conversation?
+      </>
+    );
   }, [entityType, participantName, styledEntityName, warningMessage]);
 
   const [openAlert, setOpenAlert] = useState(false);
@@ -95,16 +89,21 @@ const DeleteParticipantButton = memo(props => {
 
   return (
     <>
-      <IconButton
-        disabled={disabled}
-        onClick={onClickDelete}
-        variant="elitea"
-        color="tertiary"
-        id="DeleteButton"
-        sx={sx}
+      <Tooltip
+        title={removeLabel}
+        placement="top"
       >
-        <DeleteIcon sx={styles.deleteIcon} />
-      </IconButton>
+        <IconButton
+          disabled={disabled}
+          onClick={onClickDelete}
+          variant="elitea"
+          color="tertiary"
+          id="DeleteButton"
+          sx={sx}
+        >
+          <DeleteIcon sx={styles.deleteIcon} />
+        </IconButton>
+      </Tooltip>
       <AlertDialog
         title={dialogTitle}
         alertContent={dialogContent}
@@ -125,6 +124,16 @@ DeleteParticipantButton.displayName = 'DeleteParticipantButton';
 const styles = {
   deleteIcon: {
     fontSize: '1rem',
+  },
+  dialogTitleWrapper: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '.5rem',
+  },
+  attentionIcon: {
+    width: '1.125rem',
+    height: '1.125rem',
+    fill: theme => theme.palette.icon.fill.attention,
   },
 };
 

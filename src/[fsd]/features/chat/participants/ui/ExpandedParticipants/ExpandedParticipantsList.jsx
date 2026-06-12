@@ -79,7 +79,7 @@ const ExpandedPerticapantsList = memo(props => {
 
   return (
     <>
-      {!isPrivateProject && (
+      {!isPrivateProject && !!usersToDisplay?.length && (
         <ParticipantsAccordion title="Users">
           <Box
             sx={styles.usersSection}

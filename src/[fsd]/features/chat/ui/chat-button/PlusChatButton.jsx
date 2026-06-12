@@ -311,7 +311,7 @@ const PlusChatButton = forwardRef(props => {
       </Box>
 
       <Tooltip
-        title="Add files, agents, tools and more..."
+        title="Add files, agents, toolkits and more..."
         placement="top"
       >
         <IconButton

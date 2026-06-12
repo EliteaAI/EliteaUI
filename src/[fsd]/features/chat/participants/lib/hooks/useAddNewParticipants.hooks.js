@@ -203,7 +203,7 @@ export const useAddNewParticipants = props => {
       if (activeConversation?.isPlayback) return;
 
       if (!activeConversation?.id || activeConversation?.isNew) {
-        newConversationViewRef.current?.onSelectParticipant?.(participants[0]);
+        participants.forEach(p => newConversationViewRef.current?.onSelectParticipant?.(p));
         return;
       }
 

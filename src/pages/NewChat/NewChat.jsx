@@ -561,9 +561,16 @@ const NewChat = props => {
       if (isEditingAgent) return;
 
       if (participant?.entity_name === ChatParticipantType.Users) {
-        shouldMentionUser && boxRef.current?.mentionUser?.(`@${participant.meta.user_name} `);
+        const mentionTarget = activeConversation?.isNew || !activeConversation?.id
+          ? newConversationViewRef.current
+          : boxRef.current;
+        shouldMentionUser && mentionTarget?.mentionUser?.(`@${participant.meta.user_name} `);
+        return;
       } else if (participant === 'All users') {
-        shouldMentionUser && boxRef.current?.mentionUser?.(`@Everyone `);
+        const mentionTarget = activeConversation?.isNew || !activeConversation?.id
+          ? newConversationViewRef.current
+          : boxRef.current;
+        shouldMentionUser && mentionTarget?.mentionUser?.(`@Everyone `);
         return;
       }
 
@@ -720,9 +727,7 @@ const NewChat = props => {
     // Participant management
     addNewParticipants,
     onSetActiveParticipant: participant => {
-      setActiveParticipant(prev =>
-        getChatParticipantUniqueId(prev) === getChatParticipantUniqueId(participant) ? participant : prev,
-      );
+      setActiveParticipant(participant);
       if (activeConversation?.id) {
         setLocalActiveParticipant(activeConversation.id, getChatParticipantUniqueId(participant));
       }
@@ -746,9 +751,7 @@ const NewChat = props => {
     // Participant management
     addNewParticipants,
     onSetActiveParticipant: participant => {
-      setActiveParticipant(prev =>
-        getChatParticipantUniqueId(prev) === getChatParticipantUniqueId(participant) ? participant : prev,
-      );
+      setActiveParticipant(participant);
       if (activeConversation?.id) {
         setLocalActiveParticipant(activeConversation.id, getChatParticipantUniqueId(participant));
       }
@@ -1458,6 +1461,10 @@ const NewChat = props => {
                 onShowAgentEditor={onEditAgent}
                 onShowPipelineEditor={onEditPipeline}
                 onCloseAgentEditor={handleCloseAgentEditor}
+                onCreateAgent={onCreateAgent}
+                onCreatePipeline={onCreatePipeline}
+                onCreateToolkit={onCreateToolkit}
+                onAddNewUsers={onAddNewUsers}
                 ref={newConversationViewRef}
                 uploadAttachments={uploadAttachments}
                 isUploadingAttachments={isUploadingAttachments}
