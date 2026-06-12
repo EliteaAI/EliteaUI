@@ -1019,14 +1019,30 @@ export const useChatSocket = ({
           break;
         }
         case SocketMessageType.AgentHitlInterrupt: {
-          msg.isLoading = false;
-          msg.isStreaming = false;
-          msg.isRegenerating = false;
-          msg.isSending = false;
+          // Track 2 fan-out child (#4993): the indexer stamps the child's own
+          // thread + sub-agent name into event metadata. Such a pause belongs to
+          // ONE child that streams onto the parent's message while its siblings
+          // keep running — so it arrives as a separate event per child, must be
+          // ACCUMULATED (not replace the others), carries its OWN thread_id for
+          // resume routing, and must NOT stop the message's streaming state (the
+          // running siblings still need their live boxes + shimmer).
+          const hitlMeta = response_metadata?.metadata || {};
+          const childThreadId = hitlMeta.child_thread_id || '';
+          const isFanoutChild = Boolean(hitlMeta.parent_agent_name && childThreadId);
 
-          const hitlThreadId =
-            message.threadId || response_metadata?.metadata?.thread_id || response_metadata?.thread_id;
-          if (hitlThreadId) {
+          if (!isFanoutChild) {
+            msg.isLoading = false;
+            msg.isStreaming = false;
+            msg.isRegenerating = false;
+            msg.isSending = false;
+          }
+
+          const hitlThreadId = message.threadId || hitlMeta.thread_id || response_metadata?.thread_id;
+          // Only the single-thread (non-fan-out) case parks the whole message on
+          // one threadId. A fan-out child resumes on its OWN thread carried per
+          // interrupt entry below, so don't clobber msg.threadId with whichever
+          // child happened to pause last.
+          if (hitlThreadId && !isFanoutChild) {
             msg.threadId = hitlThreadId;
           }
           message.threadId = msg.threadId;
@@ -1038,7 +1054,10 @@ export const useChatSocket = ({
           // Build a single UI-shaped interrupt entry from a raw interrupt
           // object. A parallel sub-agent fan-out sends one entry per paused
           // child (each carrying its own tool_call_id) in hitl_interrupts;
-          // a single pause sends only the legacy top-level fields.
+          // a single pause sends only the legacy top-level fields. For a fan-out
+          // child the parent_agent_name / child thread are NOT on the raw
+          // interrupt (the child doesn't know it's a child) — they come from the
+          // indexer's event-metadata stamp (hitlMeta).
           const buildHitlInterrupt = (raw, fallbackMessage) => ({
             message: raw?.message || fallbackMessage || 'Please review and take action.',
             node_name: raw?.node_name || '',
@@ -1053,10 +1072,13 @@ export const useChatSocket = ({
             tool_args: raw?.tool_args || null,
             policy_message: raw?.policy_message || '',
             tool_call_id: raw?.tool_call_id || '',
-            child_thread_id: raw?.child_thread_id || '',
+            child_thread_id: raw?.child_thread_id || childThreadId || '',
             // Sub-agent the paused action originated from; used to group N
             // stacked approval cards by sub-agent name (issue #4993).
-            parent_agent_name: raw?.parent_agent_name || '',
+            parent_agent_name: raw?.parent_agent_name || hitlMeta.parent_agent_name || '',
+            // Per-entry thread to route resume to this child's OWN thread
+            // (Track 2). Empty for single-thread pauses (resume uses msg.threadId).
+            thread_id: raw?.thread_id || childThreadId || '',
           });
 
           const fallbackMessage = response_metadata?.message || message.content;
@@ -1064,11 +1086,9 @@ export const useChatSocket = ({
             ? response_metadata.hitl_interrupts
             : [];
 
+          let incomingInterrupts;
           if (rawInterrupts.length > 0) {
-            msg.hitlInterrupts = rawInterrupts.map(raw => buildHitlInterrupt(raw, fallbackMessage));
-            // Keep the singular field populated with the first entry for
-            // back-compat with any consumer that still reads hitlInterrupt.
-            msg.hitlInterrupt = msg.hitlInterrupts[0];
+            incomingInterrupts = rawInterrupts.map(raw => buildHitlInterrupt(raw, fallbackMessage));
           } else {
             // Single-pause path: synthesize one entry from the legacy
             // top-level + nested hitl_interrupt fields.
@@ -1087,9 +1107,28 @@ export const useChatSocket = ({
               policy_message: response_metadata?.hitl_interrupt?.policy_message,
               tool_call_id: response_metadata?.hitl_interrupt?.tool_call_id,
             };
-            msg.hitlInterrupt = buildHitlInterrupt(singleRaw, fallbackMessage);
-            msg.hitlInterrupts = [msg.hitlInterrupt];
+            incomingInterrupts = [buildHitlInterrupt(singleRaw, fallbackMessage)];
           }
+
+          if (isFanoutChild) {
+            // Merge this child's pause into the running set (keyed by its own
+            // thread, falling back to tool_call_id) so a second child pausing
+            // doesn't erase the first child's still-pending card.
+            const keyOf = e => e.child_thread_id || e.thread_id || e.tool_call_id;
+            const merged = Array.isArray(msg.hitlInterrupts) ? [...msg.hitlInterrupts] : [];
+            incomingInterrupts.forEach(inc => {
+              const k = keyOf(inc);
+              const at = k ? merged.findIndex(e => keyOf(e) === k) : -1;
+              if (at >= 0) merged[at] = inc;
+              else merged.push(inc);
+            });
+            msg.hitlInterrupts = merged;
+          } else {
+            msg.hitlInterrupts = incomingInterrupts;
+          }
+          // Keep the singular field populated with the first entry for
+          // back-compat with any consumer that still reads hitlInterrupt.
+          msg.hitlInterrupt = msg.hitlInterrupts[0];
           trackEvent(GA_EVENT_NAMES.HITL_INTERRUPT, {
             [GA_EVENT_PARAMS.AGENT_ID]:
               (participantsRef.current?.find(p => p.id === participant_id) || activeParticipantRef.current)

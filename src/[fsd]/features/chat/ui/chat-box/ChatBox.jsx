@@ -1248,16 +1248,73 @@ const ChatBox = forwardRef((props, boxRef) => {
         : lastMessage.hitlInterrupt
           ? [lastMessage.hitlInterrupt]
           : [];
-      // Detect a parallel aggregate by the PRESENCE of the hitlInterrupts array
-      // (hooks.js sets it only for backend `hitl_interrupts`), not by length > 1.
-      // A multi-round batch may have only ONE still-pending child yet must still
-      // resume via `hitl_decisions` (routed by tool_call_id) — the single
-      // `hitl_action` path would drop the SDK to the sequential resume and the
-      // suffixed child thread_id would never match.
+
+      // The interrupt entry being decided (matched by tool_call_id).
+      const decidedEntry = toolCallId ? interrupts.find(e => e?.tool_call_id === toolCallId) : undefined;
+      // Track 2 fan-out child: each paused child carries its OWN thread_id and
+      // resumes INDEPENDENTLY — emit immediately on that child's thread while
+      // siblings keep running, instead of batching until every card is decided.
+      const childThreadId = decidedEntry?.thread_id || decidedEntry?.child_thread_id || '';
+      const isFanoutChild = Boolean(childThreadId);
+
+      // Detect a (Track 1) parallel aggregate by the PRESENCE of the
+      // hitlInterrupts array (hooks.js sets it only for backend
+      // `hitl_interrupts`), not by length > 1. A multi-round batch may have only
+      // ONE still-pending child yet must still resume via `hitl_decisions`
+      // (routed by tool_call_id) — the single `hitl_action` path would drop the
+      // SDK to the sequential resume and the suffixed child thread_id would
+      // never match. Fan-out children take the independent path above instead.
       const isParallel =
+        !isFanoutChild &&
         Array.isArray(lastMessage.hitlInterrupts) &&
         lastMessage.hitlInterrupts.length > 0 &&
         Boolean(toolCallId);
+
+      // Track 2 independent child resume: emit this child's decision NOW on its
+      // own thread; clear ONLY this child's card and leave the parent message
+      // streaming so running siblings keep their live boxes + shimmer.
+      if (isFanoutChild) {
+        const childPayload = generateChatContinuePayload({
+          conversation_uuid: activeConversation?.uuid,
+          projectId,
+          message_id: lastMessage.id,
+          thread_id: childThreadId,
+          participants: activeConversation?.participants || [],
+          question: action === 'edit' ? (value ?? '') : action,
+        });
+        childPayload.hitl_resume = true;
+        childPayload.thread_id = childThreadId;
+        childPayload.hitl_decisions = [
+          {
+            thread_id: childThreadId,
+            tool_call_id: toolCallId,
+            action,
+            value: value ?? '',
+          },
+        ];
+
+        // Remove the resumed child's card in place (do NOT blank the message).
+        setChatHistory(prevMessages =>
+          prevMessages.map(msg => {
+            if (msg.id !== lastMessage.id || !Array.isArray(msg.hitlInterrupts)) {
+              return msg;
+            }
+            const remaining = msg.hitlInterrupts.filter(e => e?.tool_call_id !== toolCallId);
+            return {
+              ...msg,
+              hitlInterrupts: remaining,
+              hitlInterrupt: remaining[0],
+              // Keep the message in the streaming state: this child resumes and
+              // its siblings are still running.
+              isStreaming: true,
+              isLoading: true,
+            };
+          }),
+        );
+        setHitlEditMode(false);
+        emitContinue(childPayload);
+        return;
+      }
 
       // Parallel fan-out: buffer this child's decision and disable its card.
       // Defer the actual resume emit until every child has been actioned.
