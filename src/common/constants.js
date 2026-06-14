@@ -1,4 +1,3 @@
-import RouteDefinitions from '@/routes';
 import { getEnvVar } from '@/utils/env';
 
 export const VITE_GAID = getEnvVar('VITE_GAID');
@@ -682,13 +681,6 @@ export const ConfigurationTypes = {
     value: 'project',
   },
 };
-
-export const FULL_WIDTH_FLEX_GRID_PAGE = [
-  `${RouteDefinitions.ModerationSpace}/${ModerationTabs[0]}`,
-  `${RouteDefinitions.ModerationSpace}/${ModerationTabs[1]}`,
-  `${RouteDefinitions.ModerationSpace}/${ModerationTabs[2]}`,
-  `${RouteDefinitions.ModerationSpace}/${ModerationTabs[3]}`,
-];
 
 export const ProjectIdStorageKey = 'elitea_ui.project.id';
 export const ProjectNameStorageKey = 'elitea_ui.project.name';
