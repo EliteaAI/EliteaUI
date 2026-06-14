@@ -30,7 +30,6 @@ import {
 import ApplicationsIcon from '@/components/Icons/ApplicationsIcon';
 import ChatIcon from '@/components/Icons/ChatIcon';
 import EliteAIcon from '@/components/Icons/EliteAIcon';
-import ModeratorIcon from '@/components/Icons/ModeratorIcon';
 import Person from '@/components/Icons/Person';
 import ProjectSelect from '@/components/ProjectSelect';
 import ThemeModeToggle from '@/components/ThemeModeToggle';
@@ -175,17 +174,6 @@ const SidebarBody = memo(props => {
           breadCrumb: 'Artifacts',
           tooltip: 'Artifacts',
           tourId: SIDEBAR_TOUR_TARGET_IDS.navArtifacts,
-        },
-      ],
-      [
-        {
-          value: 'moderation',
-          label: 'Moderation Space',
-          icon: <ModeratorIcon />,
-          url: RouteDefinitions.ModerationSpace,
-          breadCrumb: 'Moderation Space',
-          tooltip: 'Moderation Space',
-          publicPermission: true,
         },
       ],
     ];
