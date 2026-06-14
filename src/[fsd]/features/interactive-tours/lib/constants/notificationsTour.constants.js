@@ -39,8 +39,6 @@ The panel does not mark notifications as read when opened — notifications are 
 
 Notifications are generated automatically by platform events. Current notification types include:
 
-- **Moderator approved version** — an agent version you submitted was approved for publishing
-- **Moderator rejected version** — an agent version you submitted was rejected
 - **Agent unpublished** — a published agent version was removed from Agents Studio
 - **User added to conversation** — you were added to a shared conversation
 - **Project created** — a new project was successfully created

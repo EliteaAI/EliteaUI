@@ -9,7 +9,6 @@ export const VITE_DEV_SERVER = getEnvVar('VITE_DEV_SERVER');
 export const VITE_SOCKET_SERVER = getEnvVar('VITE_SOCKET_SERVER');
 export const VITE_SOCKET_PATH = getEnvVar('VITE_SOCKET_PATH');
 export const VITE_USE_DATASOURCE_MODERATION = getEnvVar('VITE_USE_DATASOURCE_MODERATION');
-export const VITE_USE_AGENT_MODERATION = getEnvVar('VITE_USE_AGENT_MODERATION');
 export const BASE_URL = getEnvVar('BASE_URL');
 export const DEV = getEnvVar('DEV');
 export const MODE = getEnvVar('MODE');
@@ -478,8 +477,6 @@ export const ContentType = {
   MCPAdmin: 'MCPAdmin',
   MCPAll: 'MCPAll',
   CredentialAll: 'CredentialAll',
-  ModerationSpaceApplication: 'ModerationSpaceApplication',
-  ModerationSpacePipeline: 'ModerationSpacePipeline',
 };
 
 export const PERSONAL_SPACE_PERIOD_FOR_NEW_USER = 5 * 60 * 1000;

@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 
 import { useFormikContext } from 'formik';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
@@ -19,18 +19,13 @@ export const useUnpublishVersionMenu = onSuccess => {
   const isFromPipeline = useIsFromPipelineDetail();
   const trackEvent = useTrackEvent();
   const navigate = useNavigate();
-  const { pathname } = useLocation();
 
   const { version: versionId, tab } = useParams();
 
   const projectId = useSelectedProjectId();
   const { toastError, toastInfo } = useToast();
 
-  const isModerationSpace = useMemo(() => pathname.startsWith('/moderation-space'), [pathname]);
-  const isAdminContext = useMemo(
-    () => isModerationSpace || projectId == PUBLIC_PROJECT_ID,
-    [isModerationSpace, projectId],
-  );
+  const isAdminContext = useMemo(() => projectId == PUBLIC_PROJECT_ID, [projectId]);
 
   const {
     values: {
@@ -65,11 +60,7 @@ export const useUnpublishVersionMenu = onSuccess => {
           reset();
         }, 0);
         if (isAdminContext) {
-          if (isModerationSpace) {
-            navigate('/moderation-space/agents');
-          } else {
-            navigate(`/agents/${tab || 'latest'}`);
-          }
+          navigate(`/agents/${tab || 'latest'}`);
         }
       } else {
         const errorMsg = error.data?.msg || error.data?.error || 'Failed to unpublish';
@@ -83,7 +74,6 @@ export const useUnpublishVersionMenu = onSuccess => {
       agentName,
       applicationId,
       isAdminContext,
-      isModerationSpace,
       navigate,
       onSuccess,
       projectId,

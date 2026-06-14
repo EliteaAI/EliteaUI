@@ -8,31 +8,23 @@ export const usePageDetails = () => {
   const { pathname, search } = useLocation();
 
   const isApplicationDetailPage = useMatch({ path: RouteDefinitions.ApplicationsDetail });
-  const isModerationSpaceApplicationDetailPage = useMatch({
-    path: RouteDefinitions.ModerationSpaceApplication,
-  });
+
   const isUserPublicApplicationDetailPage = useMatch({ path: RouteDefinitions.UserPublicApplicationDetail });
   const isApplicationsWithTab = useMatch({ path: RouteDefinitions.ApplicationsWithTab });
 
   const isApplicationVersionDetailPage = useMatch({
     path: `${RouteDefinitions.ApplicationsDetail}/:versionId`,
   });
-  const isModerationSpaceApplicationVersionDetailPage = useMatch({
-    path: `${RouteDefinitions.ModerationSpaceApplication}/:versionId`,
-  });
+
   const isUserPublicApplicationVersionDetailPage = useMatch({
     path: `${RouteDefinitions.UserPublicApplicationDetail}/:versionId`,
   });
 
   const isPipelineDetailPage = useMatch({ path: RouteDefinitions.PipelineDetail });
-  const isModerationSpacePipelineDetailPage = useMatch({ path: RouteDefinitions.ModerationSpacePipeline });
   const isUserPublicPipelineDetailPage = useMatch({ path: RouteDefinitions.UserPublicPipelineDetail });
   const isPipelinesWithTab = useMatch({ path: RouteDefinitions.PipelinesWithTab });
 
   const isPipelineVersionDetailPage = useMatch({ path: `${RouteDefinitions.PipelineDetail}/:versionId` });
-  const isModerationSpacePipelineVersionDetailPage = useMatch({
-    path: `${RouteDefinitions.ModerationSpacePipeline}/:versionId`,
-  });
   const isUserPublicPipelineVersionDetailPage = useMatch({
     path: `${RouteDefinitions.UserPublicPipelineDetail}/:versionId`,
   });
@@ -65,19 +57,15 @@ export const usePageDetails = () => {
 
   const isApplicationPage =
     isApplicationDetailPage ||
-    isModerationSpaceApplicationDetailPage ||
     isUserPublicApplicationDetailPage ||
     isApplicationVersionDetailPage ||
-    isModerationSpaceApplicationVersionDetailPage ||
     isUserPublicApplicationVersionDetailPage ||
     isApplicationsWithTab;
 
   const isPipelinePage =
     isPipelineDetailPage ||
-    isModerationSpacePipelineDetailPage ||
     isUserPublicPipelineDetailPage ||
     isPipelineVersionDetailPage ||
-    isModerationSpacePipelineVersionDetailPage ||
     isUserPublicPipelineVersionDetailPage ||
     isPipelinesWithTab;
 
@@ -107,9 +95,13 @@ export const usePageDetails = () => {
 
   if (isApplicationPage) {
     pageType = 'ApplicationDetails';
-    matchParams = (isApplicationDetailPage || isApplicationVersionDetailPage ||
-      isModerationSpaceApplicationDetailPage || isModerationSpaceApplicationVersionDetailPage ||
-      isUserPublicApplicationDetailPage || isUserPublicApplicationVersionDetailPage)?.params || {};
+    matchParams =
+      (
+        isApplicationDetailPage ||
+        isApplicationVersionDetailPage ||
+        isUserPublicApplicationDetailPage ||
+        isUserPublicApplicationVersionDetailPage
+      )?.params || {};
     details = {
       projectPath: agentId
         ? replacePathParams(PROJECT_ID_URL_PREFIX + RouteDefinitions.ApplicationsDetail, {
@@ -124,9 +116,13 @@ export const usePageDetails = () => {
     };
   } else if (isPipelinePage) {
     pageType = 'PipelineDetails';
-    matchParams = (isPipelineDetailPage || isPipelineVersionDetailPage ||
-      isModerationSpacePipelineDetailPage || isModerationSpacePipelineVersionDetailPage ||
-      isUserPublicPipelineDetailPage || isUserPublicPipelineVersionDetailPage)?.params || {};
+    matchParams =
+      (
+        isPipelineDetailPage ||
+        isPipelineVersionDetailPage ||
+        isUserPublicPipelineDetailPage ||
+        isUserPublicPipelineVersionDetailPage
+      )?.params || {};
     details = {
       projectPath: agentId
         ? replacePathParams(PROJECT_ID_URL_PREFIX + RouteDefinitions.PipelineDetail, {
