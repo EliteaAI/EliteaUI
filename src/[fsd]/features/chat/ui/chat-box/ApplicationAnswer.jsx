@@ -360,7 +360,9 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
   // Group paused approvals by the sub-agent they originated from so a parallel
   // fan-out renders one stacked-card section per sub-agent under a name header
   // (issue #4993). Interrupts with no parent_agent_name (single/coordinator
-  // pause) stay ungrouped and the legacy flat list is used.
+  // pause) stay ungrouped and the legacy flat list is used. Track 2 fan-out
+  // children carry parent_agent_name + their own tool_call_id, so they bucket
+  // here exactly like Track 1 aggregates — one bordered accordion per child.
   const hitlBuckets = useMemo(() => {
     const coordinator = [];
     const order = [];
@@ -537,6 +539,9 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
           </ListItemAvatar>
         )}
         <Box sx={styles.contentWrapper}>
+          {/* Live thinking view shows tool-call chips only. HITL approval cards
+              (including Track 2 fan-out children) render in the message box below
+              via hitlBuckets, so they survive the per-turn StartTask (#4993). */}
           {nonSwarmChildActions?.length > 0 && (
             <ApplicationThinkView
               actions={[...nonSwarmChildActions]}
@@ -934,7 +939,11 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
             !answer &&
             !message_items?.length &&
             !exception &&
-            !filteredToolActions?.length && (
+            !filteredToolActions?.length &&
+            // While an approval card is pending (e.g. a fan-out sibling awaiting a
+            // decision while another child re-runs after resume) the loading
+            // placeholder must not cover the cards (#4993).
+            effectiveHitlInterrupts.length === 0 && (
               <RotatingMessages
                 sx={styles.rotatingMessages}
                 duration={2000}

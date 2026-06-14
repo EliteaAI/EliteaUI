@@ -1035,6 +1035,16 @@ export const useChatSocket = ({
             msg.isStreaming = false;
             msg.isRegenerating = false;
             msg.isSending = false;
+          } else {
+            // A fan-out child pausing for approval means the overall run is still
+            // active: siblings keep streaming and this child awaits a human
+            // decision. The parent's park-by-return may have already emitted an
+            // AgentResponse/finish_reason that flipped this message to
+            // non-streaming — re-arm it so the live thinking view (which hosts the
+            // per-child approval cards) keeps rendering instead of stalling.
+            msg.isStreaming = true;
+            msg.isLoading = false;
+            msg.isSending = false;
           }
 
           const hitlThreadId = message.threadId || hitlMeta.thread_id || response_metadata?.thread_id;
@@ -1071,7 +1081,12 @@ export const useChatSocket = ({
             action_label: raw?.action_label || '',
             tool_args: raw?.tool_args || null,
             policy_message: raw?.policy_message || '',
-            tool_call_id: raw?.tool_call_id || '',
+            // A fan-out child's tool_call_id arrives in the event-metadata
+            // overlay (hitlMeta), NOT on the raw interrupt — the child doesn't
+            // know it's a child. Without this fallback the card carries an empty
+            // tool_call_id, so onHitlResume can't match the decided entry, falls
+            // out of the fan-out branch, and blanks the whole message (#4993).
+            tool_call_id: raw?.tool_call_id || hitlMeta.tool_call_id || '',
             child_thread_id: raw?.child_thread_id || childThreadId || '',
             // Sub-agent the paused action originated from; used to group N
             // stacked approval cards by sub-agent name (issue #4993).
