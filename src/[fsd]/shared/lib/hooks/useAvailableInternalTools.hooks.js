@@ -3,6 +3,8 @@ import { useMemo } from 'react';
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
 import { InternalToolsConstants } from '@/[fsd]/shared/lib/constants';
 
+import { useIsMcpVisible } from './useMcpVisibility.hooks';
+
 /**
  * Hook that returns the list of available internal tools based on toolkit availability.
  * Filters out tools that require specific toolkit types that are not available.
@@ -19,11 +21,17 @@ import { InternalToolsConstants } from '@/[fsd]/shared/lib/constants';
 export const useAvailableInternalTools = (options = {}) => {
   const { includeAgentOnly = false } = options;
   const { toolkitSchemas } = useGetCurrentToolkitSchemas();
+  const isMcpVisible = useIsMcpVisible();
 
   const availableTools = useMemo(() => {
     return InternalToolsConstants.INTERNAL_TOOLS_LIST.filter(tool => {
       // Filter out agent-only tools if not in agent context
       if (tool.agentOnly && !includeAgentOnly) {
+        return false;
+      }
+
+      // Hide the internal MCP tool when MCP is disabled or hidden in UI
+      if (tool.name === 'internal_mcp' && !isMcpVisible) {
         return false;
       }
 
@@ -34,7 +42,7 @@ export const useAvailableInternalTools = (options = {}) => {
       // Check if the required toolkit type exists in schemas
       return Boolean(toolkitSchemas?.[tool.requiredToolkitType]);
     });
-  }, [toolkitSchemas, includeAgentOnly]);
+  }, [toolkitSchemas, includeAgentOnly, isMcpVisible]);
 
   return availableTools;
 };

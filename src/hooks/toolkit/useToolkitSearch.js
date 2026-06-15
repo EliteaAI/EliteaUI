@@ -4,9 +4,10 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import { useTheme } from '@mui/material';
 
+import { McpAuthConstants } from '@/[fsd]/features/mcp/lib/constants';
 import { McpConstants } from '@/[fsd]/features/toolkits/lib/constants';
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
-import { useGroupedCategories } from '@/[fsd]/shared/lib/hooks';
+import { useGroupedCategories, useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
 import { getToolIcon } from '@/common/toolkitUtils';
 import RouteDefinitions from '@/routes.js';
 
@@ -20,6 +21,7 @@ export const useToolkitSearch = ({
   const navigate = useNavigate();
   const { toolkitType } = useParams();
   const [searchParams] = useSearchParams();
+  const isMcpVisible = useIsMcpVisible();
 
   // Get toolkit schemas from backend for category extraction
   const { toolkitSchemas } = useGetCurrentToolkitSchemas();
@@ -49,14 +51,16 @@ export const useToolkitSearch = ({
     [isMCP, toolkitSchemas],
   );
 
-  // Process children to add icons and categories
+  // Process children to add icons and categories, filtering out pre-built MCPs when MCP is hidden
   const processedChildren = useMemo(
     () =>
-      toolMenuItems?.map(child => ({
-        ...child,
-        icon: child.icon || getToolIcon(child.key, theme),
-      })) || [],
-    [toolMenuItems, theme],
+      (toolMenuItems || [])
+        .filter(child => isMcpVisible || !child?.key.startsWith(McpAuthConstants.MCP_PREBUILD_PREFIX))
+        .map(child => ({
+          ...child,
+          icon: child.icon || getToolIcon(child?.key, theme),
+        })),
+    [toolMenuItems, theme, isMcpVisible],
   );
 
   // Handle toolkit selection

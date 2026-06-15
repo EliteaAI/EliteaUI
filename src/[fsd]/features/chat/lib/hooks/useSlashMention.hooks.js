@@ -3,6 +3,8 @@ import { useCallback, useMemo, useState } from 'react';
 import { useTheme } from '@mui/system';
 
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
+import { isMcpToolkitType } from '@/[fsd]/shared/lib/helpers';
+import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
 import { ChatParticipantType } from '@/common/constants';
 import { getToolIconByType } from '@/common/toolkitUtils';
 
@@ -43,6 +45,7 @@ export const useSlashMention = ({ chatInput, activeConversation }) => {
     onConfirmActiveRef: slashOnConfirmActiveRef,
   } = useSlashCommandHandler({ setInputContent });
   const theme = useTheme();
+  const isMcpVisible = useIsMcpVisible();
 
   // IDs of toolkit participants in the current conversation, used by SlashSuggestionList
   // to filter the autosuggest to only those already added (AC1).
@@ -50,6 +53,10 @@ export const useSlashMention = ({ chatInput, activeConversation }) => {
     () =>
       (activeConversation?.participants || [])
         .filter(p => p.entity_name === ChatParticipantType.Toolkits)
+        .filter(p => {
+          const toolkitType = p.entity_settings?.toolkit_type;
+          return isMcpVisible || !isMcpToolkitType(toolkitType);
+        })
         .map(p => ({
           id: p.entity_meta.id,
           project_id: p.entity_meta.project_id,
@@ -65,7 +72,7 @@ export const useSlashMention = ({ chatInput, activeConversation }) => {
               },
           participantType: p.entity_name,
         })),
-    [activeConversation?.participants, theme, toolkitSchemas],
+    [activeConversation?.participants, theme, toolkitSchemas, isMcpVisible],
   );
   // Replace the typed "/query" or "/query/" fragment with "/toolkit.name" in the input.
   // Uses mentionAnchorRef so that editing an earlier mention in the middle of the text

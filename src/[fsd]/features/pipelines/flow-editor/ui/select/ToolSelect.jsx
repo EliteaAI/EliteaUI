@@ -3,6 +3,8 @@ import { memo, useCallback, useMemo } from 'react';
 import { useFormikContext } from 'formik';
 
 import { useGetToolkitNameFromSchema } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
+import { isMcpToolkit } from '@/[fsd]/shared/lib/helpers';
+import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import EntityIcon from '@/components/EntityIcon';
 import { useGetToolkitIconMeta } from '@/hooks/application/useLibraryToolkits';
@@ -20,6 +22,7 @@ const ToolSelect = memo(props => {
   } = props;
   const { getToolkitNameFromSchema } = useGetToolkitNameFromSchema();
   const getToolkitIconMeta = useGetToolkitIconMeta();
+  const isMcpVisible = useIsMcpVisible();
 
   const {
     values: { version_details },
@@ -29,6 +32,7 @@ const ToolSelect = memo(props => {
     () =>
       (version_details?.tools || [])
         .filter(filterTypes)
+        .filter(tool => isMcpVisible || !isMcpToolkit(tool))
         .map(tool => ({
           label:
             tool.type === ToolTypes.application.value
@@ -58,7 +62,7 @@ const ToolSelect = memo(props => {
           originalTool: tool,
         }))
         .sort((a, b) => a.label.localeCompare(b.label)),
-    [filterTypes, getToolkitIconMeta, getToolkitNameFromSchema, version_details?.tools],
+    [filterTypes, getToolkitIconMeta, getToolkitNameFromSchema, version_details?.tools, isMcpVisible],
   );
 
   const onChangeTool = useCallback(

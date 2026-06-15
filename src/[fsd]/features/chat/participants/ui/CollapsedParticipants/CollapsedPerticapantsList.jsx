@@ -6,6 +6,8 @@ import { Box, IconButton, SvgIcon } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { useParticipantDetailsContext } from '@/[fsd]/features/chat/participants/lib/context/ParticipantDetailsContext';
+import { isMcpToolkitType } from '@/[fsd]/shared/lib/helpers';
+import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
 import AgentSvg from '@/assets/agent.svg?react';
 import FlowSvg from '@/assets/flow-icon.svg?react';
 import MCPSvg from '@/assets/mcp-icon.svg?react';
@@ -75,6 +77,7 @@ const CollapsedPerticapantsList = memo(props => {
   const sectionAnchorsRef = useRef({});
 
   const selectedProjectId = useSelectedProjectId();
+  const isMcpVisible = useIsMcpVisible();
   const user = useSelector(state => state.user);
   const isPrivateProject = selectedProjectId == user.personal_project_id;
   const showUsersSection = !isPrivateProject;
@@ -93,10 +96,12 @@ const CollapsedPerticapantsList = memo(props => {
 
         if (!acc[key]) acc[key] = { count: 0, participants: [] };
         acc[key].count += 1;
-        acc[key].participants.push(p);
+        if (isMcpVisible || !isMcpToolkitType(p.entity_settings?.toolkit_type)) {
+          acc[key].participants.push(p);
+        }
         return acc;
       }, {}),
-    [participants],
+    [isMcpVisible, participants],
   );
 
   const usersGroup = groupedByType[USERS_SECTION.type];
@@ -166,7 +171,8 @@ const CollapsedPerticapantsList = memo(props => {
       {ENTITY_SECTIONS.map(entity => {
         const group = groupedByType[entity.type];
 
-        if (!group) return null;
+        if (!group || group.participants?.length === 0) return null;
+        if (entity.type === 'mcp' && !isMcpVisible) return null;
 
         const sectionHasError = group.participants.some(p =>
           hasParticipantError(p.entity_name, p.entity_meta?.id, p.entity_meta?.project_id),

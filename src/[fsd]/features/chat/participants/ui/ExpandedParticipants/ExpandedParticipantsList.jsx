@@ -4,6 +4,8 @@ import { useSelector } from 'react-redux';
 
 import { Box, Typography } from '@mui/material';
 
+import { isMcpToolkitType } from '@/[fsd]/shared/lib/helpers';
+import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
 import { ChatParticipantType } from '@/common/constants';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
@@ -35,6 +37,7 @@ const ExpandedPerticapantsList = memo(props => {
   } = props;
 
   const selectedProjectId = useSelectedProjectId();
+  const isMcpVisible = useIsMcpVisible();
 
   const styles = expandedPerticapantsListStyles();
 
@@ -71,10 +74,12 @@ const ExpandedPerticapantsList = memo(props => {
           key = 'mcp';
 
         if (!acc[key]) acc[key] = [];
-        acc[key].push(p);
+        if (isMcpVisible || !isMcpToolkitType(p.entity_settings?.toolkit_type)) {
+          acc[key].push(p);
+        }
         return acc;
       }, {}),
-    [participants],
+    [isMcpVisible, participants],
   );
 
   return (
@@ -125,7 +130,8 @@ const ExpandedPerticapantsList = memo(props => {
 
       {ENTITY_SECTIONS.map(section => {
         const group = groupedByType[section.type];
-        if (!group?.length) return null;
+        if (!group || group.participants?.length === 0) return null;
+        if (section.type === 'mcp' && !isMcpVisible) return null;
 
         return (
           <ParticipantSection

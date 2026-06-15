@@ -9,7 +9,8 @@ import { AGENT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/co
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
-import { useAvailableInternalTools } from '@/[fsd]/shared/lib/hooks';
+import { isMcpToolkit } from '@/[fsd]/shared/lib/helpers';
+import { useAvailableInternalTools, useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { markAllDuplicatesByMultipleKeys } from '@/common/utils';
 import ToolCard from '@/pages/Applications/Components/Tools/ToolCard';
@@ -30,6 +31,7 @@ const ApplicationTools = memo(props => {
 
   const { values } = useFormikContext();
   const { toolkitSchemas } = useGetCurrentToolkitSchemas();
+  const isMcpVisible = useIsMcpVisible();
   // Use POC approach: get available internal tools based on toolkit availability
   // Include agent-only tools since this is agent configuration
   const availableInternalTools = useAvailableInternalTools({ includeAgentOnly: true });
@@ -96,15 +98,17 @@ const ApplicationTools = memo(props => {
   const markedDuplicateTools = useMemo(
     () =>
       markAllDuplicatesByMultipleKeys(
-        tools.map((tool, originalIndex) => ({
-          tool,
-          originalIndex, // Keep track of the original index in the tools array
-          type: tool.type,
-          label: ToolkitsHelpers.genToolkitName(tool, toolkitSchemas || {}),
-        })),
+        tools
+          .map((tool, originalIndex) => ({
+            tool,
+            originalIndex, // Keep track of the original index in the tools array
+            type: tool.type,
+            label: ToolkitsHelpers.genToolkitName(tool, toolkitSchemas || {}),
+          }))
+          .filter(({ tool }) => isMcpVisible || !isMcpToolkit(tool)),
         ['type', 'label'],
       ),
-    [toolkitSchemas, tools],
+    [toolkitSchemas, tools, isMcpVisible],
   );
 
   return (
