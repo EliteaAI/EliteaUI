@@ -47,7 +47,6 @@ const hoverRed = '#E74444';
 const pressedRed = '#C51111';
 const red8 = 'rgba(215, 22, 22, 0.08)';
 const red15 = 'rgba(215, 22, 22, 0.15)';
-const red20 = 'rgba(215, 22, 22, 0.20)';
 const red40 = 'rgba(215, 22, 22, 0.4)';
 const lightRed = 'rgba(255, 223, 223, 1)';
 const primaryHover = '#83EFFF';
@@ -312,7 +311,6 @@ const darkPalette = {
     conversationEditor: gray40,
     conversationTopCover: 'linear-gradient(360deg, rgba(16, 23, 33, 0) 0%, #0E131D 100%)',
     conversationBottomCover: 'linear-gradient(180deg, rgba(16, 23, 33, 0) 0%, #0E131D 100%)',
-    moderator: red20,
     avatar: deepGrey,
     categoryHeader: gray60,
     tag: {

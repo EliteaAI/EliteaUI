@@ -6,7 +6,7 @@ import {
   useTotalPublicApplicationsQuery,
   useTotalTrendingPublicApplicationsQuery,
 } from '@/api/applications';
-import { CollectionStatus, PUBLIC_PROJECT_ID, VITE_USE_AGENT_MODERATION } from '@/common/constants';
+import { CollectionStatus, PUBLIC_PROJECT_ID } from '@/common/constants';
 import useTags from '@/hooks/useTags';
 
 export const useApplicationsData = (projectId, trendRange, hasAdminPermission) => {
@@ -65,7 +65,7 @@ export const useApplicationsData = (projectId, trendRange, hasAdminPermission) =
       },
     },
     {
-      skip: !projectId || projectId == PUBLIC_PROJECT_ID || !VITE_USE_AGENT_MODERATION,
+      skip: !projectId || projectId == PUBLIC_PROJECT_ID,
     },
   );
 
@@ -78,7 +78,7 @@ export const useApplicationsData = (projectId, trendRange, hasAdminPermission) =
       },
     },
     {
-      skip: !projectId || projectId == PUBLIC_PROJECT_ID || !VITE_USE_AGENT_MODERATION,
+      skip: !projectId || projectId == PUBLIC_PROJECT_ID,
     },
   );
 
@@ -91,7 +91,7 @@ export const useApplicationsData = (projectId, trendRange, hasAdminPermission) =
       },
     },
     {
-      skip: !projectId || projectId == PUBLIC_PROJECT_ID || !VITE_USE_AGENT_MODERATION,
+      skip: !projectId || projectId == PUBLIC_PROJECT_ID,
     },
   );
 
@@ -104,7 +104,7 @@ export const useApplicationsData = (projectId, trendRange, hasAdminPermission) =
       },
     },
     {
-      skip: !projectId || projectId == PUBLIC_PROJECT_ID || !VITE_USE_AGENT_MODERATION,
+      skip: !projectId || projectId == PUBLIC_PROJECT_ID,
     },
   );
 
@@ -117,7 +117,7 @@ export const useApplicationsData = (projectId, trendRange, hasAdminPermission) =
       },
     },
     {
-      skip: !projectId || projectId == PUBLIC_PROJECT_ID || !VITE_USE_AGENT_MODERATION,
+      skip: !projectId || projectId == PUBLIC_PROJECT_ID,
     },
   );
 

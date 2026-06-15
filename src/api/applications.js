@@ -15,7 +15,6 @@ const TAG_TYPE_APPLICATION_DEFAULT_ICONS = 'TAG_TYPE_APPLICATION_DEFAULT_ICONS';
 const TAG_TYPE_APPLICATION_ICONS = 'TAG_TYPE_APPLICATION_ICONS';
 const TAG_TYPE_DOCUMENT_LOADERS = 'TAG_TYPE_DOCUMENT_LOADERS';
 const apiSlicePath = '/elitea_core';
-const apiSlicePathForModeration = '/prompt_lib';
 const apiSlicePathForLike = '/social/like/prompt_lib/';
 const headers = {
   'Content-Type': 'application/json',
@@ -569,24 +568,6 @@ export const apiSlice = eliteaApi
         },
         invalidatesTags: [TAG_TYPE_APPLICATION_DETAILS, TAG_TYPE_APPLICATIONS],
       }),
-      approveVersion: build.mutation({
-        query: ({ versionId }) => {
-          return {
-            url: apiSlicePathForModeration + '/approve_application/prompt_lib/' + versionId,
-            method: 'POST',
-          };
-        },
-        invalidatesTags: [TAG_TYPE_APPLICATION_DETAILS],
-      }),
-      rejectVersion: build.mutation({
-        query: ({ versionId }) => {
-          return {
-            url: apiSlicePathForModeration + '/reject_application/prompt_lib/' + versionId,
-            method: 'POST',
-          };
-        },
-        invalidatesTags: [TAG_TYPE_APPLICATION_DETAILS],
-      }),
       applicationExport: build.query({
         query: ({ projectId, id, fork, follow_version_ids, format = 'json' }) => {
           const params = new URLSearchParams();
@@ -931,8 +912,6 @@ export const {
   useLazyCheckVersionInUseQuery,
   useBatchReplaceVersionReferencesMutation,
   useStopApplicationTaskMutation,
-  useApproveVersionMutation,
-  useRejectVersionMutation,
   useLazyApplicationExportQuery,
   useLazyApplicationExportMdQuery,
   useUploadApplicationIconMutation,

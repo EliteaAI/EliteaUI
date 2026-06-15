@@ -14,8 +14,6 @@ import {
   ApplicationsTabs,
   CredentialsTabs,
   MISSING_ENVS,
-  ModerationTabs,
-  PERMISSION_GROUPS,
   PERSONAL_SPACE_PERIOD_FOR_NEW_USER,
   ToolkitsTabs,
   UserProfileTabs,
@@ -64,7 +62,6 @@ const CreateCredentialFromMain = ChunkHelpers.lazyWithRetry(
 const Credentials = ChunkHelpers.lazyWithRetry(() => import('@/pages/Credentials/Credentials'));
 const EditCredentialFromMain = ChunkHelpers.lazyWithRetry(() => import('@/pages/Credentials/EditCredential'));
 const ModeSwitch = ChunkHelpers.lazyWithRetry(() => import('@/pages/ModeSwitch'));
-const ModerationSpace = ChunkHelpers.lazyWithRetry(() => import('@/pages/ModerationSpace/ModerationSpace'));
 const ChatWrapper = ChunkHelpers.lazyWithRetry(() => import('@/pages/NewChat/index'));
 const NotificationCenter = ChunkHelpers.lazyWithRetry(
   () => import('@/pages/NotificationCenter/NotificationCenter'),
@@ -213,27 +210,6 @@ const ProtectedRoutes = () => {
       { path: RouteDefinitions.ModeSwitch, element: <ModeSwitch /> },
       { path: RouteDefinitions.UserSettings, element: getIndexElement(UserProfileTabs[0]) },
       { path: RouteDefinitions.UserSettingsWithTab, element: <UserSettings /> },
-
-      // moderation application:
-      {
-        path: RouteDefinitions.ModerationSpaceApplication,
-        element: <EditApplication />,
-        publicPage: true,
-        requiredPermissions: PERMISSION_GROUPS.moderation,
-      },
-
-      {
-        path: RouteDefinitions.ModerationSpace,
-        element: getIndexElement(ModerationTabs[0]),
-        publicPage: true,
-        requiredPermissions: PERMISSION_GROUPS.moderation,
-      },
-      {
-        path: RouteDefinitions.ModerationSpaceWithTab,
-        element: <ModerationSpace />,
-        publicPage: true,
-        requiredPermissions: PERMISSION_GROUPS.moderation,
-      },
 
       // notification center
       { path: RouteDefinitions.NotificationCenter, element: <NotificationCenter /> },

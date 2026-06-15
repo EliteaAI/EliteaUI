@@ -12,10 +12,6 @@ const useNotificationNavigate = ({ viewMode, id, event_type, name, replace = fal
   const doNavigate = useCallback(() => {
     // const query = `?${SearchParams.ViewMode}=${viewMode}&${SearchParams.Name}=${encodeURIComponent(name)}`;
     const urlMap = {
-      // [NotificationType.PromptModeratorApproval]:
-      //   `${RouteDefinitions.Prompts}/latest/${id}/${encodeURIComponent(version_name)}`,
-      // [NotificationType.PromptModeratorReject]:
-      //   `${RouteDefinitions.Prompts}/all/${id}/${encodeURIComponent(version_name)}`,
       [NotificationType.ChatUserAdded]: `${RouteDefinitions.Chat}`,
       [NotificationType.PersonalAccessTokenExpiring]: RouteDefinitions.SettingsWithTab.replace(
         ':tab',
@@ -27,8 +23,6 @@ const useNotificationNavigate = ({ viewMode, id, event_type, name, replace = fal
       ),
     };
     const searchMap = {
-      // [NotificationType.PromptModeratorApproval]: query,
-      // [NotificationType.PromptModeratorReject]: query,
       [NotificationType.ChatUserAdded]: `?${SearchParams.Conversation}=${id}`,
       [NotificationType.PersonalAccessTokenExpiring]: '',
       [NotificationType.IndexDataChanged]: indexName

@@ -239,10 +239,6 @@ const Card = memo(props => {
                   tags={processedTags}
                   allTags={data.tags}
                   extraTagsCount={extraTagsCount}
-                  disableClickTags={
-                    type === ContentType.ModerationSpaceApplication ||
-                    type === ContentType.ModerationSpacePipeline
-                  }
                   dynamic={false}
                   customTagClickHandler={customTagClickHandler}
                 />
