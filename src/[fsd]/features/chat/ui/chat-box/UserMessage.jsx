@@ -117,7 +117,7 @@ const UserMessage = React.forwardRef((props, ref) => {
                     variant="bodySmall"
                     sx={styles.sentToName(isSentToDummyParticipant)}
                   >
-                    {participantName} sss
+                    {participantName}
                   </Typography>
                 </StyledTooltip>
               </>
