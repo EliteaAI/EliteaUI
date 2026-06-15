@@ -13,7 +13,7 @@ import YAML from 'js-yaml';
 import { ErrorBoundary } from 'react-error-boundary';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { Box, Button, IconButton, Typography } from '@mui/material';
+import { Box, IconButton, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip.jsx';
 import {
@@ -22,6 +22,8 @@ import {
 } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers/index.js';
 import YamlCodeEditor from '@/[fsd]/features/pipelines/yaml-editor/ui/YamlCodeEditor.jsx';
 import { ChunkHelpers, FunctionHelpers } from '@/[fsd]/shared/lib/helpers/index.js';
+import { Button } from '@/[fsd]/shared/ui';
+import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import RefreshIcon from '@/assets/refresh-icon.svg?react';
 import { PipelineEditorMode } from '@/common/constants.js';
 import { handleCopy } from '@/common/utils.jsx';
@@ -243,9 +245,9 @@ const EditorPanel = forwardRef(({ setYamlDirty, stopRun, display, sx, disabled }
                     title="Reload page"
                     placement="top"
                   >
-                    <Button
-                      variant="elitea"
-                      color="secondary"
+                    <Button.BaseBtn
+                      variant={BUTTON_VARIANTS.elitea}
+                      color={BUTTON_COLORS.secondary}
                       onClick={() => window.location.reload()}
                     >
                       <RefreshIcon sx={styles.refreshIcon} />
@@ -255,7 +257,7 @@ const EditorPanel = forwardRef(({ setYamlDirty, stopRun, display, sx, disabled }
                       >
                         Reload the page
                       </Typography>
-                    </Button>
+                    </Button.BaseBtn>
                   </StyledTooltip>
                 </Box>
               </Box>

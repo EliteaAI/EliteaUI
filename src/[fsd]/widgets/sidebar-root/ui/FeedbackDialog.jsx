@@ -1,16 +1,18 @@
-import { memo, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 import { useLocation } from 'react-router-dom';
 
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FeedbackIcon from '@mui/icons-material/Feedback';
-import { Button, Fab, Rating, Typography } from '@mui/material';
+import { Fab, Rating, Typography } from '@mui/material';
 import Box from '@mui/material/Box';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import TextField from '@mui/material/TextField';
 
+import { Button } from '@/[fsd]/shared/ui';
+import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { FeedbackConstants } from '@/[fsd]/widgets/sidebar-root/lib/constants';
 import { useFeedbackMutation } from '@/api/social.js';
 import {
@@ -28,31 +30,34 @@ const FeedbackDialog = memo(() => {
   const [sendFeedback, { isSuccess, isError }] = useFeedbackMutation();
   const [ratingError, setRatingError] = useState('');
 
-  const setInitialState = () => {
+  const setInitialState = useCallback(() => {
     setOpen(false);
     setFeedbackText('');
     setRating(null);
     setRatingError('');
-  };
+  }, []);
 
   useEffect(() => {
     setInitialState();
-  }, [location.pathname]);
+  }, [location.pathname, setInitialState]);
 
-  const handleClickOpen = () => {
+  const handleClickOpen = useCallback(() => {
     setOpen(true);
-  };
+  }, []);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     thanks ? setInitialState() : setOpen(false);
-  };
+  }, [thanks, setInitialState]);
 
-  const handleSubmit = async e => {
-    e.preventDefault();
-    rating === null
-      ? setRatingError('Please rate the application')
-      : await sendFeedback({ description: feedbackText, rating, location: decodeURI(location.pathname) });
-  };
+  const handleSubmit = useCallback(
+    async e => {
+      e.preventDefault();
+      rating === null
+        ? setRatingError('Please rate the application')
+        : await sendFeedback({ description: feedbackText, rating, location: decodeURI(location.pathname) });
+    },
+    [rating, feedbackText, location.pathname, sendFeedback],
+  );
   useEffect(() => {
     isSuccess && setThanks(true);
   }, [isSuccess]);
@@ -117,7 +122,7 @@ const FeedbackDialog = memo(() => {
               label="Feedback"
               type="text"
               fullWidth
-              variant={'outlined'}
+              variant="outlined"
               multiline
               minRows={5}
               value={feedbackText}
@@ -127,20 +132,20 @@ const FeedbackDialog = memo(() => {
             />
           </DialogContent>
           <StyledDialogActions>
-            <Button
-              variant="elitea"
-              color="secondary"
+            <Button.BaseBtn
+              variant={BUTTON_VARIANTS.elitea}
+              color={BUTTON_COLORS.secondary}
               onClick={handleClose}
             >
               Cancel
-            </Button>
-            <Button
-              variant="elitea"
-              color="primary"
+            </Button.BaseBtn>
+            <Button.BaseBtn
+              variant={BUTTON_VARIANTS.elitea}
+              color={BUTTON_COLORS.primary}
               onClick={handleSubmit}
             >
               Send
-            </Button>
+            </Button.BaseBtn>
           </StyledDialogActions>
         </Box>
       </StyledDialogBase>

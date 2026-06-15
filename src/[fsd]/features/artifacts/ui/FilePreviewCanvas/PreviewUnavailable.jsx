@@ -1,7 +1,9 @@
 import React, { memo, useCallback } from 'react';
 
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
+import { Button } from '@/[fsd]/shared/ui';
+import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import UnavailableIcon from '@/assets/icons/unavailable-icon.svg?react';
 
 const PreviewUnavailable = memo(props => {
@@ -40,15 +42,14 @@ const PreviewUnavailable = memo(props => {
           files.
         </Typography>
         {onDownload && (
-          <Button
-            variant="elitea"
-            color="secondary"
+          <Button.BaseBtn
+            variant={BUTTON_VARIANTS.elitea}
+            color={BUTTON_COLORS.secondary}
             sx={styles.downloadButton}
             onClick={handleDownload}
-            disableRipple
           >
             Download
-          </Button>
+          </Button.BaseBtn>
         )}
       </Box>
     </Box>

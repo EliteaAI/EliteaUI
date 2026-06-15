@@ -3,13 +3,14 @@ import React, { memo, useCallback, useMemo } from 'react';
 import { useFormikContext } from 'formik';
 
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import { SHARED_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { IndexesToolsEnum } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
-import { Select } from '@/[fsd]/shared/ui/';
+import { Button, Select } from '@/[fsd]/shared/ui/';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { LLMModelSelector } from '@/[fsd]/widgets/llm-model-selector';
 import { useToolkitAvailableToolsQuery } from '@/api/toolkits.js';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -41,6 +42,7 @@ const TestToolSettings = memo(props => {
   const projectId = useSelectedProjectId();
   const { toolkitSchemas } = useGetCurrentToolkitSchemas();
   const selectedToolsSchema = toolkitSchemas?.[values?.type]?.properties?.selected_tools;
+  const disabledRunTool = !isValidForm || isRunning || indexNameError;
 
   const schemaToolNames = useMemo(() => {
     const argsSchemasKeys = Object.keys(selectedToolsSchema?.args_schemas || {});
@@ -152,15 +154,15 @@ const TestToolSettings = memo(props => {
             </Box>
 
             <Box sx={styles.runToolBtn}>
-              <Button
-                variant="special"
+              <Button.BaseBtn
+                variant={BUTTON_VARIANTS.special}
                 fullWidth
-                disabled={!isValidForm || isRunning || indexNameError}
+                disabled={disabledRunTool}
                 onClick={onRunTool}
                 startIcon={<PlayArrowIcon />}
               >
                 RUN TOOL
-              </Button>
+              </Button.BaseBtn>
             </Box>
           </Box>
         )}

@@ -1,6 +1,6 @@
 import { memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Box, Button, IconButton, useTheme } from '@mui/material';
+import { Box, IconButton, useTheme } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { FlowEditorContext } from '@/[fsd]/app/providers';
@@ -13,7 +13,8 @@ import {
 } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers/state.helpers';
 import { CodeMirrorEditorHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useLanguageLinter } from '@/[fsd]/shared/lib/hooks';
-import { Modal, Text } from '@/[fsd]/shared/ui';
+import { Button, Modal, Text } from '@/[fsd]/shared/ui';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { capitalizeFirstChar } from '@/common/utils';
 import CloseIcon from '@/components/Icons/CloseIcon';
 import CopyIcon from '@/components/Icons/CopyIcon';
@@ -349,13 +350,13 @@ const AIAssistantModal = memo(props => {
                       component="span"
                       sx={styles.buttonWrapper}
                     >
-                      <Button
-                        variant="secondary"
+                      <Button.BaseBtn
+                        variant={BUTTON_VARIANTS.secondary}
                         onClick={handleApply}
                         disabled={isGenerating}
                       >
                         Apply
-                      </Button>
+                      </Button.BaseBtn>
                     </Box>
                     <StyledTooltip
                       title="Copy improved version"

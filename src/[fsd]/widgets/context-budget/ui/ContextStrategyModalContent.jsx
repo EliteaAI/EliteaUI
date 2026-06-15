@@ -2,11 +2,12 @@ import { memo, useCallback, useEffect } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { Box, Button, DialogContent, DialogTitle, IconButton } from '@mui/material';
+import { Box, DialogContent, DialogTitle, IconButton } from '@mui/material';
 
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
-import { Switch } from '@/[fsd]/shared/ui';
+import { Button, Switch } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
+import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { SEPARATOR } from '@/[fsd]/widgets/context-budget/lib/constants';
 import { handleConvertToNumberChange } from '@/[fsd]/widgets/context-budget/lib/validation';
 import {
@@ -260,20 +261,20 @@ const ContextStrategyModalContent = memo(props => {
       </DialogContent>
 
       <StyledDialogActions sx={styles.dialogActions}>
-        <Button
-          variant="elitea"
+        <Button.BaseBtn
+          variant={BUTTON_VARIANTS.elitea}
           onClick={onClose}
-          color="secondary"
+          color={BUTTON_COLORS.secondary}
         >
           Cancel
-        </Button>
-        <Button
+        </Button.BaseBtn>
+        <Button.BaseBtn
           type="submit"
-          variant="contained"
+          variant={BUTTON_VARIANTS.contained}
           disabled={isUpdating || !dirty || !isValid || isSubmitting}
         >
           {isUpdating ? 'Saving...' : 'Save'}
-        </Button>
+        </Button.BaseBtn>
       </StyledDialogActions>
 
       <AlertDialog
