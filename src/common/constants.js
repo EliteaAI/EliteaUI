@@ -7,7 +7,6 @@ export const VITE_DEV_TOKEN = getEnvVar('VITE_DEV_TOKEN');
 export const VITE_DEV_SERVER = getEnvVar('VITE_DEV_SERVER');
 export const VITE_SOCKET_SERVER = getEnvVar('VITE_SOCKET_SERVER');
 export const VITE_SOCKET_PATH = getEnvVar('VITE_SOCKET_PATH');
-export const VITE_USE_DATASOURCE_MODERATION = getEnvVar('VITE_USE_DATASOURCE_MODERATION');
 export const BASE_URL = getEnvVar('BASE_URL');
 export const DEV = getEnvVar('DEV');
 export const MODE = getEnvVar('MODE');
@@ -327,7 +326,6 @@ export const ComponentMode = {
 export const ViewMode = {
   Owner: 'owner',
   Public: 'public',
-  Moderator: 'moderator',
 };
 
 export const TOAST_DURATION = 3000;
@@ -488,7 +486,6 @@ export const DEFAULT_RETENTION_VALUE = 1;
 export const RETENTION_MEASURES = ['days', 'weeks', 'months', 'years'];
 
 export const publicTabs = ['latest', 'my-liked', 'trending'];
-export const ModerationTabs = ['all', 'agents'];
 export const ApplicationsTabs = ['latest', 'my-liked', 'trending', 'admin'];
 export const ToolkitsTabs = ['all', 'my-liked', 'trending', 'admin'];
 export const AppsTabs = ['applications', 'catalog'];
@@ -569,10 +566,7 @@ export const PERMISSIONS = {
     // webhook: 'models.applications.webhook.post', // According to Mikhail's comment, this permission is not used
     delete: 'models.applications.application.delete',
   },
-  moderation: {
-    approve: 'models.prompt_lib.approve.post',
-    reject: 'models.prompt_lib.reject.post',
-  },
+
   users: {
     view: 'configuration.users.users.view',
     edit: 'configuration.users.users.edit',
@@ -632,7 +626,6 @@ export const PERMISSION_GROUPS = {
   agents: [PERMISSIONS.applications.list],
   pipelines: [PERMISSIONS.pipelines.list],
   credentials: [PERMISSIONS.toolkits.list],
-  moderation: [PERMISSIONS.moderation.approve, PERMISSIONS.moderation.reject],
   artifacts: [PERMISSIONS.artifacts.view],
   toolkits: [PERMISSIONS.toolkits.list],
 };

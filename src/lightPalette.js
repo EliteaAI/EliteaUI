@@ -15,7 +15,6 @@ const hoverRed = '#E74444';
 const pressedRed = '#C51111';
 const red8 = 'rgba(215, 22, 22, 0.08)';
 const red15 = 'rgba(215, 22, 22, 0.15)';
-const red20 = 'rgba(215, 22, 22, 0.20)';
 const red40 = 'rgba(215, 22, 22, 0.4)';
 const red = 'rgba(215, 22, 22, 1)';
 const orange = '#F2994A';
@@ -311,7 +310,6 @@ const lightPalette = {
     conversationEditor: light40,
     conversationTopCover: 'linear-gradient(360deg, rgba(255, 255, 255, 0) 0%, #FFFFFF 100%)',
     conversationBottomCover: 'linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, #FFFFFF 100%)',
-    moderator: red20,
     avatar: lightGrey,
     categoryHeader: blue01,
     tag: {
