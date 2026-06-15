@@ -56,6 +56,7 @@ const Buckets = memo(props => {
     isError,
     error,
     isLoading: isLoadingBuckets,
+    isFetching: isBucketsRefreshing,
     refetch,
   } = useBucketListQuery(
     {
@@ -104,16 +105,13 @@ const Buckets = memo(props => {
   // Provide bucket data to parent component
   useEffect(() => {
     if (onBucketsDataChange) {
-      onBucketsDataChange(buckets, refetch);
+      onBucketsDataChange({
+        buckets,
+        refetch,
+        isFetching: isBucketsRefreshing || isLoadingBuckets,
+      });
     }
-    // eslint-disable-next-line no-console
-    console.info('[Buckets] query state:', {
-      isLoadingBuckets,
-      isError,
-      bucketsCount: buckets?.length || 0,
-      dataPresent: !!data,
-    });
-  }, [buckets, refetch, onBucketsDataChange, isLoadingBuckets, isError, data]);
+  }, [buckets, refetch, onBucketsDataChange, isLoadingBuckets, isBucketsRefreshing]);
 
   // Handle bucket edit navigation
   const handleEdit = useCallback(
@@ -194,7 +192,6 @@ const Buckets = memo(props => {
         }
       }
 
-      // Clear the deleting bucket tracker
       setDeletingBucket(null);
     }
   }, [isDeleteSuccess, deletingBucket, selectedBucket, buckets, onSelectBucket]);
