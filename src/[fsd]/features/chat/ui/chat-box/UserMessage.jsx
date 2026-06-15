@@ -1,11 +1,13 @@
 import React, { memo, useCallback, useMemo, useState } from 'react';
 
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import IconButton from '@mui/material/IconButton';
 import ListItemAvatar from '@mui/material/ListItemAvatar';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { useParticipantName } from '@/[fsd]/features/chat/participants/lib/hooks';
+import { Button } from '@/[fsd]/shared/ui';
+import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import Markdown from '@/[fsd]/shared/ui/markdown';
 import { ChatParticipantType } from '@/common/constants';
 import CreatedTimeInfo from '@/components/Chat/CreatedTimeInfo';
@@ -243,22 +245,22 @@ const UserMessage = React.forwardRef((props, ref) => {
           </ChatInputContainer>
           {attachmentItems?.length > 0 && <MessageAttachmentList items={attachmentItems} />}
           <Box sx={styles.editButtonsContainer}>
-            <Button
-              variant="elitea"
-              color="primary"
+            <Button.BaseBtn
+              variant={BUTTON_VARIANTS.elitea}
+              color={BUTTON_COLORS.primary}
               sx={styles.submitButton}
               disabled={value === content || !value.trim()}
               onClick={onClickSubmit}
             >
               Save and apply
-            </Button>
-            <Button
-              variant="elitea"
-              color="secondary"
+            </Button.BaseBtn>
+            <Button.BaseBtn
+              variant={BUTTON_VARIANTS.elitea}
+              color={BUTTON_COLORS.secondary}
               onClick={onCancel}
             >
               Cancel
-            </Button>
+            </Button.BaseBtn>
           </Box>
         </Box>
       )}

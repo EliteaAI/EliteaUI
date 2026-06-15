@@ -2,11 +2,11 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 
-import { Button, DialogContent, DialogTitle, Typography } from '@mui/material';
+import { Box } from '@mui/material';
 
+import { Button, Modal } from '@/[fsd]/shared/ui';
+import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { ChatParticipantType } from '@/common/constants';
-import { StyledDialog, StyledDialogActions } from '@/components/StyledDialog';
-import useGetComponentHeight from '@/hooks/useGetComponentHeight';
 import { useUserList } from '@/hooks/useUserList';
 import UserSearchSelect from '@/pages/NewChat/AddNewUser/UserSearchSelect';
 
@@ -20,8 +20,6 @@ const AddNewUserModal = memo(props => {
   const currentUserId = useSelector(state => state.user.id);
 
   const [localUsers, setLocalUsers] = useState([]);
-
-  const { componentHeight, componentRef } = useGetComponentHeight();
 
   const excludedUserIds = useMemo(
     () => [
@@ -64,11 +62,10 @@ const AddNewUserModal = memo(props => {
     onLoadMoreUsers();
   }, [usersTotal, users.length, onLoadMoreUsers]);
 
-  // Handle scroll to bottom
   const handleScroll = useCallback(
     event => {
       const listbox = event.currentTarget;
-      const threshold = 10; // pixels from bottom to trigger load more
+      const threshold = 10;
 
       if (listbox.scrollTop + listbox.clientHeight >= listbox.scrollHeight - threshold && !isUsersFetching)
         loadMoreUsers();
@@ -87,12 +84,9 @@ const AddNewUserModal = memo(props => {
       if (event.key === 'Enter' && localUsers.length > 0) {
         event.preventDefault();
         handleOK();
-      } else if (event.key === 'Escape') {
-        event.preventDefault();
-        onCancel();
       }
     },
-    [localUsers.length, handleOK, onCancel],
+    [localUsers.length, handleOK],
   );
 
   useEffect(() => {
@@ -100,59 +94,50 @@ const AddNewUserModal = memo(props => {
   }, [open]);
 
   return (
-    <StyledDialog
+    <Modal.BaseModal
       open={open}
+      title="Add users"
+      onClose={onCancel}
       onKeyDown={handleKeyDown}
-      aria-labelledby="alert-dialog-title"
-      aria-describedby="alert-dialog-description"
       sx={styles.dialog}
-    >
-      <DialogTitle
-        id="variables-dialog-title"
-        sx={{ height: '60px' }}
-      >
-        <Typography variant="headingSmall">Add users</Typography>
-      </DialogTitle>
-      <DialogContent
-        ref={componentRef}
-        sx={styles.dialogContent}
-      >
-        <UserSearchSelect
-          userList={usersList}
-          selectedUsers={localUsers}
-          onChangeUsers={onChangeUsers}
-          slotProps={{
-            listBox: {
-              ref: listboxRef,
-              onScroll: handleScroll,
-              style: {
-                height: `calc(50vh - ${(componentHeight || 96) / 2 + 20}px)`,
-                maxHeight: `calc(50vh - 2.5rem)`,
-                overflowY: 'auto',
+      content={
+        <Box>
+          <UserSearchSelect
+            userList={usersList}
+            selectedUsers={localUsers}
+            onChangeUsers={onChangeUsers}
+            slotProps={{
+              listBox: {
+                ref: listboxRef,
+                onScroll: handleScroll,
+                style: {
+                  maxHeight: '40rem',
+                  overflowY: 'auto',
+                },
               },
-            },
-          }}
-        />
-      </DialogContent>
-      <StyledDialogActions sx={styles.actions}>
-        <Button
-          variant="elitea"
-          color="secondary"
-          onClick={onCancel}
-          disableRipple
-        >
-          Cancel
-        </Button>
-        <Button
-          disabled={!localUsers.length}
-          variant="elitea"
-          onClick={handleOK}
-          disableRipple
-        >
-          Add
-        </Button>
-      </StyledDialogActions>
-    </StyledDialog>
+            }}
+          />
+        </Box>
+      }
+      actions={
+        <>
+          <Button.BaseBtn
+            variant={BUTTON_VARIANTS.elitea}
+            color={BUTTON_COLORS.secondary}
+            onClick={onCancel}
+          >
+            Cancel
+          </Button.BaseBtn>
+          <Button.BaseBtn
+            disabled={!localUsers.length}
+            variant={BUTTON_VARIANTS.elitea}
+            onClick={handleOK}
+          >
+            Add
+          </Button.BaseBtn>
+        </>
+      }
+    />
   );
 });
 
@@ -162,30 +147,12 @@ AddNewUserModal.displayName = 'AddNewUserModal';
 const addNewUserModalStyles = () => ({
   dialog: ({ palette }) => ({
     '& .MuiDialog-paper': {
-      width: '30.625rem !important', // or any custom width
-      maxWidth: '60% !important', // or any custom width
+      width: '30.625rem !important',
+      maxWidth: '60% !important',
       background: `${palette.background.tabPanel} !important`,
       backgroundColor: `${palette.background.tabPanel} !important`,
     },
   }),
-  dialogContent: ({ palette }) => ({
-    width: '100%',
-    overflow: 'auto',
-    background: `${palette.background.secondary} !important`,
-    borderTop: `.0625rem solid ${palette.border.lines}`,
-    borderBottom: `.0625rem solid ${palette.border.lines}`,
-    maxHeight: 'calc(100vh - 23.75rem)',
-    boxSizing: 'border-box',
-    padding: '1.5rem !important',
-    overflowY: 'scroll',
-  }),
-  actions: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    padding: '.75rem 1.5rem !important',
-    gap: '.75rem',
-    height: '3.75rem',
-  },
 });
 
 export default AddNewUserModal;

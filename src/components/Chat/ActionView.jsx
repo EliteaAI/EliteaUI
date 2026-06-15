@@ -2,8 +2,10 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { Box, Button, Collapse, Typography } from '@mui/material';
+import { Box, Collapse, Typography } from '@mui/material';
 
+import { Button } from '@/[fsd]/shared/ui';
+import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import Markdown from '@/[fsd]/shared/ui/markdown';
 import { useListModelsQuery } from '@/api/configurations';
 import { TOOL_ACTION_TYPES, ToolActionStatus } from '@/common/constants';
@@ -310,14 +312,14 @@ const ActionView = memo(props => {
               </Typography>
             </Box>
             {needAuthAction && onAuth && (
-              <Button
-                variant="elitea"
-                color="secondary"
+              <Button.BaseBtn
+                variant={BUTTON_VARIANTS.elitea}
+                color={BUTTON_COLORS.secondary}
                 onClick={onAuth}
                 sx={styles.authButton}
               >
                 Authorize
-              </Button>
+              </Button.BaseBtn>
             )}
           </Box>
         )}

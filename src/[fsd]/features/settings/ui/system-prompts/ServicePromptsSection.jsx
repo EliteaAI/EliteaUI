@@ -1,12 +1,13 @@
 import { memo, useCallback, useMemo, useRef, useState } from 'react';
 
 import RestoreOutlinedIcon from '@mui/icons-material/RestoreOutlined';
-import { Box, Button, IconButton, MenuItem, TextField, Typography } from '@mui/material';
+import { Box, IconButton, MenuItem, TextField, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { DrawerPageHeader } from '@/[fsd]/features/settings/ui/drawer-page';
 import { useLanguageLinter } from '@/[fsd]/shared/lib/hooks';
-import { Field, Modal } from '@/[fsd]/shared/ui';
+import { Button, Field, Modal } from '@/[fsd]/shared/ui';
+import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import {
   useCreateConfigurationMutation,
   useGetAvailableConfigurationsTypeQuery,
@@ -511,22 +512,22 @@ const ServicePromptsSection = memo(() => {
               </Box>
 
               <Box sx={styles.modalFooter}>
-                <Button
-                  variant="elitea"
-                  color="secondary"
+                <Button.BaseBtn
+                  variant={BUTTON_VARIANTS.elitea}
+                  color={BUTTON_COLORS.secondary}
                   onClick={handleDiscard}
                   disabled={isBusy}
                 >
                   Discard
-                </Button>
-                <Button
-                  variant="elitea"
-                  color="primary"
+                </Button.BaseBtn>
+                <Button.BaseBtn
+                  variant={BUTTON_VARIANTS.elitea}
+                  color={BUTTON_COLORS.primary}
                   onClick={handleSave}
                   disabled={isBusy || !canEdit || !hasChanges}
                 >
                   Save
-                </Button>
+                </Button.BaseBtn>
               </Box>
             </Box>
           </Modal.StyledInputModalBase>

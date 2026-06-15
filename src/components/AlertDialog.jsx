@@ -3,6 +3,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 
 import { Button } from '@/[fsd]/shared/ui';
+import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 
 import { StyledDialog, StyledDialogActions, StyledDialogContentText } from './StyledDialog';
 
@@ -64,8 +65,8 @@ export default function AlertDialog({
       <StyledDialogActions>
         {cancelButtonText && (
           <Button.BaseBtn
-            variant="elitea"
-            color="secondary"
+            variant={BUTTON_VARIANTS.elitea}
+            color={BUTTON_COLORS.secondary}
             onClick={onCancel}
             autoFocus
             disableRipple
@@ -76,8 +77,8 @@ export default function AlertDialog({
         <Button.BaseBtn
           disableRipple
           autoFocus={!cancelButtonText}
-          variant="elitea"
-          color={alarm ? 'alarm' : 'primary'}
+          variant={BUTTON_VARIANTS.elitea}
+          color={alarm ? BUTTON_COLORS.alarm : BUTTON_COLORS.primary}
           onClick={onConfirm}
           disabled={confirming}
         >

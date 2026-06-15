@@ -1,13 +1,13 @@
 import React, { memo, useCallback, useMemo } from 'react';
 
-import { Box, Button, IconButton, ToggleButton, ToggleButtonGroup, Tooltip, Typography } from '@mui/material';
+import { Box, IconButton, ToggleButton, ToggleButtonGroup, Tooltip, Typography } from '@mui/material';
 
 import { useTrackEvent } from '@/GA';
 import { FilePreviewCanvasConstants } from '@/[fsd]/features/artifacts/lib/constants';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
 import { CodeMirrorEditorHelpers } from '@/[fsd]/shared/lib/helpers';
-import { DiscardButton } from '@/[fsd]/shared/ui/button';
-import { SingleSelect } from '@/[fsd]/shared/ui/select';
+import { Button, Select } from '@/[fsd]/shared/ui';
+import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import DotMenu from '@/components/DotMenu';
 import CloseIcon from '@/components/Icons/CloseIcon';
 import CopyIcon from '@/components/Icons/CopyIcon';
@@ -191,16 +191,15 @@ const PreviewHeader = memo(props => {
         <Box sx={styles.canvasControlsWrapper}>
           {canPreview && (
             <>
-              <Button
-                variant="elitea"
-                color="primary"
+              <Button.BaseBtn
+                variant={BUTTON_VARIANTS.elitea}
+                color={BUTTON_COLORS.primary}
                 onClick={handleSaveChanges}
-                disableRipple
                 disabled={isSaving || !hasUnsavedChanges}
               >
                 Save
-              </Button>
-              <DiscardButton
+              </Button.BaseBtn>
+              <Button.DiscardButton
                 onDiscard={onDiscard}
                 disabled={isSaving || !hasUnsavedChanges}
                 discarding={false}
@@ -267,7 +266,7 @@ const PreviewHeader = memo(props => {
 
           {shouldDetectLanguage && (
             <Box>
-              <SingleSelect
+              <Select.SingleSelect
                 value={currentLanguage}
                 onValueChange={handleLanguageSelect}
                 options={availableLanguages.map(lang => ({

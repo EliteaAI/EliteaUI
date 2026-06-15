@@ -2,7 +2,7 @@ import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useRef, 
 
 import { useDispatch, useSelector } from 'react-redux';
 
-import { Box, Button, Tooltip } from '@mui/material';
+import { Box, Tooltip } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { deepClone } from '@mui/x-data-grid/internals';
 
@@ -30,6 +30,8 @@ import {
   FlowEditorState,
 } from '@/[fsd]/features/pipelines/flow-editor/ui';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
+import { Button } from '@/[fsd]/shared/ui';
+import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import ClipboardIcon from '@/assets/clipboard-icon.svg?react';
 import CollapseIcon from '@/assets/collapse-second-icon.svg?react';
 import ExpandIcon from '@/assets/expand-third-icon.svg?react';
@@ -502,9 +504,9 @@ const FlowEditor = forwardRef((props, ref) => {
           zIndex={100}
           data-tour={PIPELINE_TOUR_TARGET_IDS.state}
         >
-          <Button
-            variant="elitea"
-            color="secondary"
+          <Button.BaseBtn
+            variant={BUTTON_VARIANTS.elitea}
+            color={BUTTON_COLORS.secondary}
             onClick={onToggleStateDrawer}
             startIcon={
               <Box sx={styles.iconScale}>
@@ -514,7 +516,7 @@ const FlowEditor = forwardRef((props, ref) => {
             sx={styles.stateDrawerButton}
           >
             State
-          </Button>
+          </Button.BaseBtn>
         </Box>
       )}
       <FlowEditorProvider
