@@ -30,7 +30,7 @@ export const GUIDE_SECTIONS = [
       {
         name: 'TEAM',
         description:
-          'Shown as "X of Y" where X is the number of unique users active during the selected time period, and Y is the total number of users ever seen in this project. This helps understand what portion of your team is currently active.',
+          'Shown as "X of Y" where X is the number of unique active users, and Y is the total number of users in the project during the selected time period. This helps understand what portion of your team is currently active.',
         calculation:
           'X = Count of distinct user IDs with at least one event in the date range. Y = Count of distinct user IDs in the project (all time, no date filter).',
         source: 'All event types (api, socketio, llm, tool, agent, rpc).',
