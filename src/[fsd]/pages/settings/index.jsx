@@ -11,8 +11,8 @@ import AnalyticsIcon from '@/assets/analytics-icon.svg?react';
 import ConfigurationIcon from '@/assets/configuration-icon.svg?react';
 import EnvironmentIcon from '@/assets/environment-icon.svg?react';
 import KeyIcon from '@/assets/key-icon.svg?react';
-import PromptIcon from '@/assets/prompt.svg?react';
 import { PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';
+import BriefcaseIcon from '@/components/Icons/BriefcaseIcon';
 import Lock from '@/components/Icons/Lock.jsx';
 import ModelIcon from '@/components/Icons/ModelIcon';
 import UsersIcon from '@/components/Icons/UsersIcon';
@@ -51,7 +51,7 @@ const SETTINGS_TABS_CONFIG = [
   {
     id: 'project-context',
     label: 'Project Context',
-    icon: <PromptIcon />,
+    icon: <BriefcaseIcon />,
     permission: PERMISSIONS.projectContext.view,
   },
   {
