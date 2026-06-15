@@ -414,6 +414,7 @@ const lightPalette = {
     groupedTitle: {
       default: light10,
     },
+    error: dangerRed,
     button: {
       primary: blue01,
       secondary: blue01,

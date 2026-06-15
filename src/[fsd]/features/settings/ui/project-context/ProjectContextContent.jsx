@@ -251,7 +251,8 @@ const ProjectContextContent = memo(() => {
                   variant="bodySmall"
                   sx={styles.charCounter}
                 >
-                  {MAX_CHARS - content.length} characters left
+                  {MAX_CHARS - content.length} characters left.{' '}
+                  {charError && 'You have reached the maximum character limit.'}
                 </Typography>
               </Box>
             )}
@@ -343,14 +344,14 @@ const componentStyles = (charError, isEditorFocused, isMuted) => ({
     flex: 1,
     minHeight: 0,
     borderRadius: '0.375rem',
-    border: `0.0625rem solid ${charError ? palette.error.main : palette.border.table}`,
+    border: `0.0625rem solid ${palette.border.table}`,
     overflow: 'hidden',
     opacity: isMuted ? 0.55 : 1,
     '& .cm-editor': {
       backgroundColor: palette.background.codeMirrorEditor,
     },
     '&:focus-within': {
-      borderColor: charError ? palette.error.main : palette.primary.main,
+      borderColor: palette.primary.main,
     },
     '& .cm-theme': {
       width: '100%',
