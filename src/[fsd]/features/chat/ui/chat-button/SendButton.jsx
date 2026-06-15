@@ -20,7 +20,6 @@ const SendButton = memo(props => {
     tooltipOfSendButton,
     sendButton,
     styles,
-    isCreatingConversation = false,
   } = props;
 
   if (isSpeakingMode) {
@@ -48,7 +47,6 @@ const SendButton = memo(props => {
 
   if (
     !question &&
-    !isCreatingConversation &&
     VOICE_FEATURES_ENABLED &&
     !VOICE_FEATURES_TEMPORARILY_DISABLED
   ) {
