@@ -1,5 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 
+import { isMcpToolkit } from '@/[fsd]/shared/lib/helpers';
+import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
 import { ChatParticipantType } from '@/common/constants';
 import useFilteredEntityItems from '@/hooks/chat/useFilteredEntityItems';
 import { useDropdownData } from '@/hooks/useDropdownData';
@@ -8,6 +10,7 @@ export const useApplicationSubmenu = props => {
   const { participants = [], onSelectParticipant, onDeleteParticipant, onClose, isOpen = false } = props;
 
   const hasBeenOpenedRef = useRef(false);
+  const isMcpVisible = useIsMcpVisible();
 
   if (isOpen) hasBeenOpenedRef.current = true;
 
@@ -155,15 +158,17 @@ export const useApplicationSubmenu = props => {
 
   const toolkitItems = useMemo(
     () =>
-      toolkitMenuItems.map(item => {
-        const key = `${item.data.id}_${item.data.project_id || ''}`;
-        return {
-          ...item,
-          checked: toolkitParticipantIds.has(key),
-          onToggle: () => handleToolkitToggle(item, false),
-        };
-      }),
-    [toolkitMenuItems, toolkitParticipantIds, handleToolkitToggle],
+      toolkitMenuItems
+        .map(item => {
+          const key = `${item.data.id}_${item.data.project_id || ''}`;
+          return {
+            ...item,
+            checked: toolkitParticipantIds.has(key),
+            onToggle: () => handleToolkitToggle(item, false),
+          };
+        })
+        .filter(({ tool }) => isMcpVisible || !isMcpToolkit(tool)),
+    [toolkitMenuItems, toolkitParticipantIds, handleToolkitToggle, isMcpVisible],
   );
 
   const mcpItems = useMemo(

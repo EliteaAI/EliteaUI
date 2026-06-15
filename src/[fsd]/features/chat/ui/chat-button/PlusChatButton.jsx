@@ -16,7 +16,7 @@ import {
 } from '@mui/material';
 
 import { useApplicationSubmenu } from '@/[fsd]/features/chat/lib/hooks';
-import { useAvailableInternalTools } from '@/[fsd]/shared/lib/hooks';
+import { useAvailableInternalTools, useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
 import { Switch, Text } from '@/[fsd]/shared/ui';
 import FlowIcon from '@/assets/flow-icon.svg?react';
 import MCPIcon from '@/assets/mcp-icon.svg?react';
@@ -82,6 +82,7 @@ const PlusChatButton = forwardRef(props => {
   } = props;
 
   const theme = useTheme();
+  const isMcpVisible = useIsMcpVisible();
   const availableTools = useAvailableInternalTools();
   const buttonRef = useRef(null);
   const hoverTimeoutRef = useRef(null);
@@ -121,9 +122,9 @@ const PlusChatButton = forwardRef(props => {
       [SUBMENU_KEYS.AGENTS]: agents,
       [SUBMENU_KEYS.PIPELINES]: pipelines,
       [SUBMENU_KEYS.TOOLKITS]: toolkits,
-      [SUBMENU_KEYS.MCPS]: mcps,
+      ...(isMcpVisible && { [SUBMENU_KEYS.MCPS]: mcps }),
     }),
-    [agents, pipelines, toolkits, mcps],
+    [agents, pipelines, toolkits, mcps, isMcpVisible],
   );
 
   const handleClickAway = useCallback(
@@ -225,16 +226,18 @@ const PlusChatButton = forwardRef(props => {
         showToggle: true,
         showPublicLabel: false,
       },
-      [SUBMENU_KEYS.MCPS]: {
-        searchPlaceholder: 'Search MCPs...',
-        showCreateNew: !!onCreateToolkit,
-        createNewLabel: 'Create New MCP',
-        onCreateNew: handleCreateMCP,
-        emptyMessage: 'No MCPs available',
-        noResultsMessage: 'No MCPs found',
-        showToggle: true,
-        showPublicLabel: false,
-      },
+      ...(isMcpVisible && {
+        [SUBMENU_KEYS.MCPS]: {
+          searchPlaceholder: 'Search MCPs...',
+          showCreateNew: !!onCreateToolkit,
+          createNewLabel: 'Create New MCP',
+          onCreateNew: handleCreateMCP,
+          emptyMessage: 'No MCPs available',
+          noResultsMessage: 'No MCPs found',
+          showToggle: true,
+          showPublicLabel: false,
+        },
+      }),
     }),
     [
       onCreateAgent,
@@ -244,6 +247,7 @@ const PlusChatButton = forwardRef(props => {
       handleCreatePipeline,
       handleCreateToolkit,
       handleCreateMCP,
+      isMcpVisible,
     ],
   );
 
@@ -275,8 +279,10 @@ const PlusChatButton = forwardRef(props => {
     }
 
     if (SEARCHABLE_KEYS.includes(hoveredItem)) {
+      if (hoveredItem === SUBMENU_KEYS.MCPS && !isMcpVisible) return null;
       const data = submenuMap[hoveredItem];
       const config = submenuConfigs[hoveredItem];
+      if (!data || !config) return null;
       return (
         <PlusChatSubmenu
           items={data.items}
@@ -290,6 +296,7 @@ const PlusChatButton = forwardRef(props => {
     }
   }, [
     hoveredItem,
+    isMcpVisible,
     availableTools,
     internal_tools,
     disableInternalTools,
@@ -346,21 +353,23 @@ const PlusChatButton = forwardRef(props => {
                 limits={limits}
               />
 
-              {EXPANDABLE_ITEMS.map(({ key, label, Icon }) => (
-                <MenuItem
-                  key={key}
-                  sx={styles.menuItem}
-                  onMouseEnter={e => handleItemHover(key, e)}
-                  onMouseLeave={handleItemLeave}
-                >
-                  <Box
-                    component={Icon}
-                    sx={styles.menuIcon}
-                  />
-                  <Typography sx={styles.menuLabel}>{label}</Typography>
-                  <ArrowRightIcon sx={styles.chevron} />
-                </MenuItem>
-              ))}
+              {EXPANDABLE_ITEMS.filter(item => item.key !== SUBMENU_KEYS.MCPS || isMcpVisible).map(
+                ({ key, label, Icon }) => (
+                  <MenuItem
+                    key={key}
+                    sx={styles.menuItem}
+                    onMouseEnter={e => handleItemHover(key, e)}
+                    onMouseLeave={handleItemLeave}
+                  >
+                    <Box
+                      component={Icon}
+                      sx={styles.menuIcon}
+                    />
+                    <Typography sx={styles.menuLabel}>{label}</Typography>
+                    <ArrowRightIcon sx={styles.chevron} />
+                  </MenuItem>
+                ),
+              )}
 
               <MenuItem
                 sx={styles.menuItem}
