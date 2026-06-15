@@ -241,6 +241,7 @@ const NewChatInput = forwardRef((props, ref) => {
                   attachmentButtonRef={attachmentButtonRef}
                   onAttachFiles={onAttachFiles}
                   disableAttachments={disableAttachments || isLoading || isStreaming}
+                  participantDisablesAttachments={disableAttachments}
                   attachments={attachments}
                   limits={limits}
                   onInviteUsers={onAddNewUsers}

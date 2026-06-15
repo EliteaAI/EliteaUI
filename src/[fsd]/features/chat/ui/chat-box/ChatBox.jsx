@@ -1976,9 +1976,9 @@ const ChatBox = forwardRef((props, boxRef) => {
               onClose={stopProcessingAtSymbol}
             />
           )}
-          {enableMentions && !!query?.slice(1) && (
+          {enableMentions && query && (
             <SearchResultList
-              query={query ? query.slice(1) : ''}
+              query={query.slice(1)}
               onSelectParticipant={onSelectParticipant}
               stopProcessingSymbols={stopProcessingSymbols}
               existingParticipants={activeConversation?.participants || []}

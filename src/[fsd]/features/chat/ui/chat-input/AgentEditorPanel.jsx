@@ -208,7 +208,7 @@ const AgentEditorPanel = memo(props => {
       >
         <Tooltip
           placement="top"
-          title="Switch assistant"
+          title={`Switch ${isPipeline ? 'Pipeline' : 'Agent'}`}
         >
           <Button onClick={onClickParticipant}>
             <EntityIcon

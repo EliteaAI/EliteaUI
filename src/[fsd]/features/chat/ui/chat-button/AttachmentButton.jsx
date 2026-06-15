@@ -32,6 +32,7 @@ const AttachmentButton = forwardRef((props, ref) => {
     maxFileSize = limits.DEFAULT_MAX_FILE_SIZE,
     attachments = [],
     showLabel = false,
+    disabledTooltip,
   } = props;
 
   const buttonRef = useRef(null);
@@ -186,10 +187,12 @@ const AttachmentButton = forwardRef((props, ref) => {
     if (isAtMaxCapacity) return `Max ${limits.MAX_ATTACHMENTS} attachments`;
     if (isAtMaxSize) return 'Size limit reached';
 
-    return `Attach files (${remainingAttachments} left)`;
+    return `Attach Files (${remainingAttachments} left)`;
   }, [isProcessing, isAtMaxCapacity, isAtMaxSize, remainingAttachments, limits.MAX_ATTACHMENTS]);
 
   const remainingLabel = `${remainingAttachments} left`;
+
+  const showDisabledTooltip = showLabel && isDisabled && !!disabledTooltip;
 
   const button = (
     <IconButton
@@ -199,7 +202,10 @@ const AttachmentButton = forwardRef((props, ref) => {
       aria-label="attach files"
       onClick={handleClickAttach}
       disabled={isDisabled}
-      sx={styles.iconButton}
+      sx={{
+        ...styles.iconButton,
+        ...(showDisabledTooltip && { pointerEvents: 'auto !important' }),
+      }}
     >
       <Box
         hidden
@@ -221,7 +227,7 @@ const AttachmentButton = forwardRef((props, ref) => {
             variant="labelSmall"
             sx={styles.label}
           >
-            Attach files
+            Attach Files
           </Typography>
           <Typography
             variant="labelSmall"
@@ -234,7 +240,19 @@ const AttachmentButton = forwardRef((props, ref) => {
     </IconButton>
   );
 
-  if (showLabel) return button;
+  if (showLabel) {
+    if (showDisabledTooltip) {
+      return (
+        <Tooltip
+          title={disabledTooltip}
+          placement="top"
+        >
+          {button}
+        </Tooltip>
+      );
+    }
+    return button;
+  }
 
   return (
     <Tooltip

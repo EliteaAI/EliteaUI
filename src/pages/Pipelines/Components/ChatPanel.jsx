@@ -177,7 +177,7 @@ const ChatPanel = forwardRef((props, ref) => {
               type="chat"
               isAgentsPage={true}
               ref={boxRef}
-              inputPlaceholder="Type your message."
+              inputPlaceholder="Type your message..."
             />
           )}
         </Box>

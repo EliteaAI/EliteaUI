@@ -67,6 +67,7 @@ const PlusChatButton = forwardRef(props => {
     attachmentButtonRef,
     onAttachFiles,
     disableAttachments = false,
+    participantDisablesAttachments = false,
     attachments = [],
     limits,
     onInviteUsers,
@@ -351,6 +352,11 @@ const PlusChatButton = forwardRef(props => {
                 disableAttachments={disableAttachments}
                 attachments={attachments}
                 limits={limits}
+                disabledTooltip={
+                  participantDisablesAttachments
+                    ? "Attachments aren't available for the selected agent or pipeline."
+                    : undefined
+                }
               />
 
               {EXPANDABLE_ITEMS.filter(item => item.key !== SUBMENU_KEYS.MCPS || isMcpVisible).map(
@@ -371,14 +377,16 @@ const PlusChatButton = forwardRef(props => {
                 ),
               )}
 
-              <MenuItem
-                sx={styles.menuItem}
-                disabled={!canInviteUsers}
-                onClick={handleInviteUsers}
-              >
-                <UsersIcon sx={styles.menuIcon} />
-                <Typography sx={styles.menuLabel}>Invite Users</Typography>
-              </MenuItem>
+              {!isPrivateProject && (
+                <MenuItem
+                  sx={styles.menuItem}
+                  disabled={!canInviteUsers}
+                  onClick={handleInviteUsers}
+                >
+                  <UsersIcon sx={styles.menuIcon} />
+                  <Typography sx={styles.menuLabel}>Invite Users</Typography>
+                </MenuItem>
+              )}
             </MenuList>
           </Paper>
         </ClickAwayListener>

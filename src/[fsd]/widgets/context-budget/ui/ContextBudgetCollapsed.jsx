@@ -72,7 +72,7 @@ const contextBudgetCollapsedStyles = isHighUtilization => {
       flexDirection: 'column',
       alignItems: 'center',
       gap: '0.2rem',
-      cursor: 'pointer',
+      cursor: 'default',
     },
     percentageWrapper: {
       display: 'flex',

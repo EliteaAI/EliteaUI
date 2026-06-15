@@ -36,12 +36,12 @@ const ParticipantActions = memo(props => {
           onEdit={onEdit}
           tooltip={
             participant.entity_settings?.agent_type === 'pipeline'
-              ? 'Edit Pipeline'
+              ? 'Edit pipeline'
               : participant.entity_name === ChatParticipantType.Applications
-                ? 'Edit Agent'
-                : participant.meta?.mcp
-                  ? 'Edit MCP'
-                  : 'Edit Toolkit'
+                ? 'Edit agent'
+                : participant.meta?.mcp || participant?.entity_settings?.toolkit_type === 'mcp'
+                  ? 'Edit mcp'
+                  : 'Edit toolkit'
           }
           disabled={disabledEdit}
           isPublic={isPublic}
