@@ -123,6 +123,7 @@ const PlusChatSubmenu = memo(props => {
             <MenuItem
               key={item.key}
               onClick={showToggle ? handleToggle(item) : handleItemClick(item)}
+              disabled={showToggle && item.pending}
               sx={showToggle ? styles.toggleItem : styles.listItem}
             >
               <Box sx={styles.iconContainer}>{item.icon}</Box>
@@ -150,6 +151,7 @@ const PlusChatSubmenu = memo(props => {
                 <Switch
                   size="small"
                   checked={!!item.checked}
+                  disabled={item.pending}
                   onChange={handleToggle(item)}
                   onClick={e => e.stopPropagation()}
                 />

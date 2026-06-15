@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { isMcpToolkit } from '@/[fsd]/shared/lib/helpers';
 import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
@@ -10,6 +10,8 @@ export const useApplicationSubmenu = props => {
   const { participants = [], onSelectParticipant, onDeleteParticipant, onClose, isOpen = false } = props;
 
   const hasBeenOpenedRef = useRef(false);
+  const pendingTogglesRef = useRef(new Set());
+
   const isMcpVisible = useIsMcpVisible();
 
   if (isOpen) hasBeenOpenedRef.current = true;
@@ -18,6 +20,7 @@ export const useApplicationSubmenu = props => {
   const [pipelineSearch, setPipelineSearch] = useState('');
   const [toolkitSearch, setToolkitSearch] = useState('');
   const [mcpSearch, setMcpSearch] = useState('');
+  const [pendingToggles, setPendingToggles] = useState(new Set());
 
   const {
     agentMenuItems,
@@ -126,9 +129,21 @@ export const useApplicationSubmenu = props => {
     [participants],
   );
 
+  useEffect(() => {
+    if (pendingTogglesRef.current.size > 0) {
+      pendingTogglesRef.current = new Set();
+      setPendingToggles(new Set());
+    }
+  }, [participants]);
+
   const handleToolkitToggle = useCallback(
     (item, isMCP) => {
       const key = `${item.data.id}_${item.data.project_id || ''}`;
+      if (pendingTogglesRef.current.has(key)) return;
+
+      pendingTogglesRef.current.add(key);
+      setPendingToggles(new Set(pendingTogglesRef.current));
+
       const isChecked = isMCP ? mcpParticipantIds.has(key) : toolkitParticipantIds.has(key);
 
       if (isChecked) {
@@ -165,10 +180,11 @@ export const useApplicationSubmenu = props => {
             ...item,
             checked: toolkitParticipantIds.has(key),
             onToggle: () => handleToolkitToggle(item, false),
+            pending: pendingToggles.has(key),
           };
         })
         .filter(({ tool }) => isMcpVisible || !isMcpToolkit(tool)),
-    [toolkitMenuItems, toolkitParticipantIds, handleToolkitToggle, isMcpVisible],
+    [toolkitMenuItems, toolkitParticipantIds, handleToolkitToggle, isMcpVisible, pendingToggles],
   );
 
   const mcpItems = useMemo(
@@ -179,9 +195,10 @@ export const useApplicationSubmenu = props => {
           ...item,
           checked: mcpParticipantIds.has(key),
           onToggle: () => handleToolkitToggle(item, true),
+          pending: pendingToggles.has(key),
         };
       }),
-    [mcpMenuItems, mcpParticipantIds, handleToolkitToggle],
+    [mcpMenuItems, mcpParticipantIds, handleToolkitToggle, pendingToggles],
   );
 
   const resetAgentSearch = useCallback(() => setAgentSearch(''), []);

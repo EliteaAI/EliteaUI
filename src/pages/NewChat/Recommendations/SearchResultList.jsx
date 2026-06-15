@@ -21,7 +21,7 @@ export default function SearchResultList({
     query,
     types: [ChatParticipantType.Applications],
     projectFilter: 'all',
-    forceSkip: !query,
+    forceSkip: false,
   });
   const existingParticipantUids = useMemo(
     () => existingParticipants?.map(participant => getChatParticipantUniqueId(participant) || []),

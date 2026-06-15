@@ -21,7 +21,7 @@ export const INTERNAL_TOOLS_LIST = [
     title: 'Image creation',
     icon: 'ImageSvgIcon',
     infoTooltip: {
-      text: 'Enable AI-powered image generation capabilities',
+      text: 'Enable AI-powered image generation capabilities.',
     },
     // Requires ImageGenServiceProvider_ImageGen toolkit to be available
     requiredToolkitType: IMAGE_GENERATION_TOOLKIT_TYPE,
@@ -32,7 +32,7 @@ export const INTERNAL_TOOLS_LIST = [
     title: 'Data Analysis',
     icon: 'DatabaseIcon',
     infoTooltip: {
-      text: 'Enable data analysis capabilities using',
+      text: 'Enable data analysis capabilities using.',
       linkText: 'Pandas',
       linkUrl: 'https://pandas.pydata.org/docs/',
       suffix: '. Works with files from conversation attachments.',
@@ -40,11 +40,20 @@ export const INTERNAL_TOOLS_LIST = [
     toolkitNames: ['data_analysis'],
   },
   {
+    name: 'internal_mcp',
+    title: 'Elitea MCP Tools',
+    icon: 'McpIcon',
+    infoTooltip: {
+      text: 'Enable Elitea platform MCP tools for managing applications (agents and pipelines), chat, and toolkits directly from conversations.',
+    },
+    toolkitNames: ['internal_mcp'],
+  },
+  {
     name: 'planner',
     title: 'Planner',
     icon: 'CalendarIcon',
     infoTooltip: {
-      text: 'Enable managing and tracking todo items for task planning',
+      text: 'Enable managing and tracking todo items for task planning.',
     },
     toolkitNames: ['planner'],
   },
@@ -77,14 +86,5 @@ export const INTERNAL_TOOLS_LIST = [
       text: 'Reduces token usage by using meta-tools instead of binding all tools directly. Recommended when using many toolkits.',
     },
     toolkitNames: ['lazy_tools_mode'],
-  },
-  {
-    name: 'internal_mcp',
-    title: 'Elitea MCP Tools',
-    icon: 'McpIcon',
-    infoTooltip: {
-      text: 'Enable Elitea platform MCP tools for managing applications, chat, and toolkits directly from conversations.',
-    },
-    toolkitNames: ['internal_mcp'],
   },
 ];

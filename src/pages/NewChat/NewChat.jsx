@@ -35,6 +35,7 @@ import {
 } from '@/[fsd]/features/chat/participants/lib/hooks';
 import { ParticipantsWrapper } from '@/[fsd]/features/chat/participants/ui';
 import { ChatBox } from '@/[fsd]/features/chat/ui';
+import { AddNewUserModal } from '@/[fsd]/features/chat/ui/chat-modal';
 import { FIRST_ELITEA_TOUR_ID, useProposePendingTour } from '@/[fsd]/features/interactive-tours';
 import { ChunkHelpers } from '@/[fsd]/shared/lib/helpers';
 import { eliteaApi } from '@/api/eliteaApi';
@@ -95,7 +96,6 @@ import useIsSmallWindow from '@/hooks/useIsSmallWindow';
 import useNavBlocker from '@/hooks/useNavBlocker';
 import { useManualSocket } from '@/hooks/useSocket';
 import useToast from '@/hooks/useToast';
-import { AddNewUserModal } from '@/pages/NewChat/AddNewUser/AddNewUserModal';
 import NewConversationView from '@/pages/NewChat/NewConversationView';
 import { actions as chatActions } from '@/slices/chat';
 import { actions } from '@/slices/settings';
@@ -561,15 +561,17 @@ const NewChat = props => {
       if (isEditingAgent) return;
 
       if (participant?.entity_name === ChatParticipantType.Users) {
-        const mentionTarget = activeConversation?.isNew || !activeConversation?.id
-          ? newConversationViewRef.current
-          : boxRef.current;
+        const mentionTarget =
+          activeConversation?.isNew || !activeConversation?.id
+            ? newConversationViewRef.current
+            : boxRef.current;
         shouldMentionUser && mentionTarget?.mentionUser?.(`@${participant.meta.user_name} `);
         return;
       } else if (participant === 'All users') {
-        const mentionTarget = activeConversation?.isNew || !activeConversation?.id
-          ? newConversationViewRef.current
-          : boxRef.current;
+        const mentionTarget =
+          activeConversation?.isNew || !activeConversation?.id
+            ? newConversationViewRef.current
+            : boxRef.current;
         shouldMentionUser && mentionTarget?.mentionUser?.(`@Everyone `);
         return;
       }

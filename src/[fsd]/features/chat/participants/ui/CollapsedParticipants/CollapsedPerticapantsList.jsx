@@ -183,7 +183,7 @@ const CollapsedPerticapantsList = memo(props => {
             key={entity.section}
             title={
               sectionHasError
-                ? `Misconfiguration error in ${entity.label}`
+                ? `Misconfiguration error in ${entity?.label?.toLowerCase()}`
                 : `${entity.label} in this conversation`
             }
             placement="right"

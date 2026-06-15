@@ -190,7 +190,7 @@ const ConfigurationRightContent = memo(props => {
             <ChatBox
               {...enhancedSettings}
               ref={boxRef}
-              inputPlaceholder="Type your message."
+              inputPlaceholder="Type your message..."
             />
           </Box>
         )}
