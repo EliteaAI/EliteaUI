@@ -6,6 +6,7 @@ import { useParams } from 'react-router-dom';
 import { Link, Typography } from '@mui/material';
 
 import { useGetToolkitNameFromSchema } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
+import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
 import { Category } from '@/[fsd]/shared/ui';
 import { useLazyListModelsQuery } from '@/api/configurations';
 import getToolInitialValueBySchema from '@/common/getToolInitialValueBySchema.js';
@@ -146,6 +147,8 @@ const ToolkitTypeSelector = memo(
       ],
     );
 
+    const isMcpVisible = useIsMcpVisible();
+
     const { toolMenuItems, isFetchingToolkitTypes } = useToolMenuItems({ onAddTool, isMCP, isApplication });
     const searchProps = useToolkitSearch({ toolMenuItems, isMCP, isApplication, disableNavigation });
 
@@ -197,6 +200,10 @@ const ToolkitTypeSelector = memo(
       ),
       [],
     );
+
+    if (isMCP && !isMcpVisible) {
+      return null;
+    }
 
     return (
       <>

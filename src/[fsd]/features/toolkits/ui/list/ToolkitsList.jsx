@@ -9,6 +9,8 @@ import { AuthorInformation } from '@/[fsd]/entities/author/ui';
 import { EmptyStatePage } from '@/[fsd]/entities/empty-state-page';
 import { useLoadToolkits } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitTypesPanel, ToolkitsEmptyListPlaceHolder } from '@/[fsd]/features/toolkits/ui/list';
+import { isMcpToolkit } from '@/[fsd]/shared/lib/helpers';
+import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
 import { ContentType, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
 import { buildErrorMessage, uniqueArrayByProp } from '@/common/utils';
 import CardList from '@/components/CardList';
@@ -38,6 +40,7 @@ const ToolkitsList = memo(props => {
   const dispatch = useDispatch();
   const { query } = useSelector(state => state.search);
   const selectedProjectId = useSelectedProjectId();
+  const isMcpVisible = useIsMcpVisible();
 
   const { renderCard } = useCardList(
     selectedProjectId != PUBLIC_PROJECT_ID ? ViewMode.Owner : ViewMode.Public,
@@ -141,15 +144,17 @@ const ToolkitsList = memo(props => {
     };
 
     const items = uniqueArrayByProp(
-      (data || []).map(item => ({
-        ...item,
-        name: getToolkitItemName(item),
-      })),
+      (data || [])
+        .filter(item => isMcpVisible || !isMcpToolkit(item))
+        .map(item => ({
+          ...item,
+          name: getToolkitItemName(item),
+        })),
       'id',
     );
 
     return items;
-  }, [data]);
+  }, [data, isMcpVisible]);
 
   const loadMore = useCallback(() => {
     const existsMore = totalCount && uniqueDataList.length < totalCount && (page + 1) * pageSize < totalCount;

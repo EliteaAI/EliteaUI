@@ -9,9 +9,9 @@ import { SharepointOAuthStatus } from '@/[fsd]/features/sharepoint/ui';
 import { ToolBaseHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
+import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
 import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
-import { useGetPlatformSettingsQuery } from '@/api/platformSettings';
 import {
   convertToValidEliteaTitle,
   getEliteATitleValidationError,
@@ -73,8 +73,7 @@ const ToolBase = memo(props => {
   const { sections, sectionProps } = useToolkitConfigurationProperties({ toolType: editToolDetail?.type });
 
   // Get platform settings to check if MCP exposure is enabled
-  const { data: platformSettings } = useGetPlatformSettingsQuery();
-  const isMcpExposureEnabled = platformSettings?.mcp_exposure_enabled !== false;
+  const isMcpExposureEnabled = useIsMcpVisible();
 
   // Check if we need to show disabled configuration fields for old toolkits
   useEffect(() => {

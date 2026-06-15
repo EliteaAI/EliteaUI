@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useTheme } from '@mui/material';
 
+import { isMcpToolkit } from '@/[fsd]/shared/lib/helpers';
+import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
 import { useToolkitsListQuery } from '@/api/toolkits';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
 import { getToolIconByType } from '@/common/toolkitUtils';
@@ -20,6 +22,7 @@ const emptyTagIds = []; // Stable reference to prevent infinite re-renders
 export const useDropdownData = ({ agentQuery, pipelineQuery, toolkitQuery, mcpQuery, skip = false }) => {
   const projectId = useSelectedProjectId();
   const theme = useTheme();
+  const isMcpVisible = useIsMcpVisible();
   const [isLoadingMoreToolkit, setIsLoadingMoreToolkit] = useState(false);
   const [isLoadingMoreMCP, setIsLoadingMoreMCP] = useState(false);
 
@@ -241,10 +244,12 @@ export const useDropdownData = ({ agentQuery, pipelineQuery, toolkitQuery, mcpQu
 
   // Transform toolkits data for dropdown display (combine regular + public)
   const toolkitMenuItems = useMemo(() => {
-    const regularToolkits = (toolkitsData?.rows || []).map(item => ({
-      ...item,
-      project_id: projectId,
-    }));
+    const regularToolkits = (toolkitsData?.rows || [])
+      .filter(item => isMcpVisible || !isMcpToolkit(item))
+      .map(item => ({
+        ...item,
+        project_id: projectId,
+      }));
 
     return regularToolkits.map(toolkit => {
       // Get the preferred title following the hierarchy used in ToolkitsList
@@ -276,7 +281,7 @@ export const useDropdownData = ({ agentQuery, pipelineQuery, toolkitQuery, mcpQu
         ),
       };
     });
-  }, [toolkitsData?.rows, projectId, theme, entityIconSx, entityImageStyle]);
+  }, [toolkitsData?.rows, projectId, theme, entityIconSx, entityImageStyle, isMcpVisible]);
 
   // Transform MCPs data for dropdown display (combine regular + public)
   const mcpMenuItems = useMemo(() => {
