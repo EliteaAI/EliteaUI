@@ -402,7 +402,6 @@ const UserInput = forwardRef((props, ref) => {
                   tooltipOfSendButton={tooltipOfSendButton}
                   sendButton={sendButton}
                   styles={styles}
-                  isCreatingConversation={isCreatingConversation}
                 />
                 {showLoading && (
                   <StyledCircleProgress {...(isUploadingAttachments && { progress: uploadProgress })} />

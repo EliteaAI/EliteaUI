@@ -274,6 +274,7 @@ const NewConversationView = forwardRef(
     }, [onPredictStream]);
 
     const [isSending, setIsSending] = useState(false);
+    const [isSpeakingMode, setIsSpeakingMode] = useState(false);
 
     const { fetchOriginalDetails, isFetchingParticipant, fetchOriginalVersionDetails } =
       useFetchParticipantDetails();
@@ -900,6 +901,8 @@ const NewConversationView = forwardRef(
               onDeleteParticipant={onDeleteParticipant}
               participants={selectedParticipants}
               onAddNewUsers={onAddNewUsers}
+              isSpeakingMode={isSpeakingMode}
+              onSpeakingModeToggle={() => setIsSpeakingMode(v => !v)}
             />
           </Box>
           <Box sx={styles.recommendationsContainer}>
