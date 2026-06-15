@@ -127,6 +127,7 @@ const lightPalette = {
     warning,
     warning40,
     warning8,
+    codeMirrorEditor: almostWhite,
     card: {
       default: white,
       hover: white,

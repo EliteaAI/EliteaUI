@@ -128,6 +128,7 @@ const darkPalette = {
     warning,
     warning40,
     warning8,
+    codeMirrorEditor: gray55,
     card: {
       default: gray50,
       hover: gray58,
