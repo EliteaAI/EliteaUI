@@ -22,6 +22,7 @@ import { actions } from '@/slices/artifact';
 
 import Buckets from './Components/Buckets';
 import ArtifactTable from './component/ArtifactTable';
+import ArtifactTableNoFiles from './component/ArtifactTableNoFiles';
 import DuplicateDialogContent from './component/DuplicateDialogContent';
 import UploadPathDialog from './component/UploadPathDialog';
 import UploadingStatus from './component/UploadingStatus';
@@ -94,12 +95,14 @@ const Artifacts = memo(() => {
 
   // Bucket data will be provided by Buckets component via callback
   const [allBuckets, setAllBuckets] = useState([]);
+  const [isBucketsFetching, setIsBucketsFetching] = useState(false);
   const [refetchBuckets, setRefetchBuckets] = useState(() => () => {});
 
   // Callback to receive bucket data from Buckets component
-  const onBucketsDataChange = useCallback((buckets, refetchFunction) => {
+  const onBucketsDataChange = useCallback(({ buckets, refetch, isFetching }) => {
     setAllBuckets(buckets);
-    setRefetchBuckets(() => refetchFunction);
+    setRefetchBuckets(() => refetch);
+    setIsBucketsFetching(isFetching ?? false);
   }, []);
 
   const { data: configurationsResponse = {}, isSuccess } = useGetConfigurationsListQuery(
@@ -469,6 +472,7 @@ const Artifacts = memo(() => {
         allBuckets.length > 0 &&
         !queryParams.selectedBucket &&
         !isHandlingNavigationState &&
+        !isBucketsFetching &&
         queryParams.configurationTitle
       ) {
         let bucketToSelect = null;
@@ -508,6 +512,7 @@ const Artifacts = memo(() => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       allBuckets,
+      isBucketsFetching,
       isHandlingNavigationState,
       queryParams.configurationTitle,
       queryParams.projectId,
@@ -686,7 +691,7 @@ const Artifacts = memo(() => {
                   onUnsavedChangesUpdate={onUnsavedChangesUpdate}
                 />
               </Box>
-            ) : (
+            ) : queryParams.selectedBucket ? (
               <Box sx={styles.contentBox}>
                 <ArtifactTable
                   bucket={queryParams.selectedBucket?.name}
@@ -699,6 +704,10 @@ const Artifacts = memo(() => {
                   onPrefixChange={handlePrefixChange}
                   onUploadRequest={handleTableUploadRequest}
                 />
+              </Box>
+            ) : (
+              <Box sx={styles.contentBox}>
+                <ArtifactTableNoFiles message="No buckets created yet" />
               </Box>
             )}
           </Box>
