@@ -198,29 +198,31 @@ const ProjectContextContent = memo(() => {
                   Include goals, terminology, workflows, or constraints relevant to the project.
                 </Typography>
               </Box>
-              {showEditorControls && (
-                <Box sx={styles.toolbar}>
-                  <Button.BaseBtn
-                    variant={BUTTON_VARIANTS.secondary}
-                    startIcon={<ImportIcon />}
-                    onClick={handleImportClick}
-                    title="Import markdown file"
-                  />
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".md,text/markdown"
-                    style={{ display: 'none' }}
-                    onChange={handleFileUpload}
-                  />
-                  <TabGroupButton
-                    value={mode}
-                    onChange={handleModeChange}
-                    size="small"
-                    arrayBtn={modeButtons}
-                  />
-                </Box>
-              )}
+              <Box sx={styles.toolbar}>
+                {showEditorControls && (
+                  <>
+                    <Button.BaseBtn
+                      variant={BUTTON_VARIANTS.secondary}
+                      startIcon={<ImportIcon />}
+                      onClick={handleImportClick}
+                      title="Import markdown file"
+                    />
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".md,text/markdown"
+                      style={{ display: 'none' }}
+                      onChange={handleFileUpload}
+                    />
+                  </>
+                )}
+                <TabGroupButton
+                  value={mode}
+                  onChange={handleModeChange}
+                  size="small"
+                  arrayBtn={modeButtons}
+                />
+              </Box>
             </Box>
 
             {mode === 'edit' ? (
