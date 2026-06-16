@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
@@ -6,10 +6,13 @@ import { Box, Typography } from '@mui/material';
 
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { useFieldFocus } from '@/[fsd]/shared/lib/hooks';
-import { Input } from '@/[fsd]/shared/ui';
+import { Input, Markdown } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { FileReaderEnhancer } from '@/[fsd]/shared/ui/input';
+import TabGroupButton from '@/[fsd]/shared/ui/tab-group-button/TabGroupButton';
 import { useTagListQuery } from '@/api/tags.js';
+import CodeIcon from '@/assets/code-icon.svg?react';
+import OpenEyeIcon from '@/assets/open-eye-icon.svg?react';
 import {
   MAX_DESCRIPTION_LENGTH,
   MAX_INSTRUCTIONS_LENGTH,
@@ -29,8 +32,25 @@ const CreateSkillForm = memo(props => {
   const projectId = useSelectedProjectId();
   const { data: tagList = {} } = useTagListQuery({ projectId }, { skip: !projectId });
   const [name, setName] = useState(formik.values?.name || '');
+  const [instructionsViewMode, setInstructionsViewMode] = useState('edit');
   const styles = skillCreateFormStyles();
   const { toggleFieldFocus, isFocused } = useFieldFocus();
+
+  const modeButtons = useMemo(
+    () => [
+      {
+        value: 'edit',
+        icon: t => <CodeIcon fill={t.palette.icon.fill.secondary} />,
+        tooltip: 'Edit mode',
+      },
+      {
+        value: 'preview',
+        icon: t => <OpenEyeIcon fill={t.palette.icon.fill.secondary} />,
+        tooltip: 'Preview mode',
+      },
+    ],
+    [],
+  );
 
   const formikName = formik.values?.name;
   useEffect(() => {
@@ -172,34 +192,62 @@ const CreateSkillForm = memo(props => {
         items={[
           {
             title: 'Instructions',
-            content: (
-              <Box sx={styles.instructionsWrapper}>
-                <FileReaderEnhancer
-                  key={instructionsKey}
-                  showexpandicon="true"
-                  id="skill-instructions"
-                  placeholder="Markdown instructions for the skill"
-                  defaultValue={instructions}
-                  onChange={onChangeInstructions}
-                  updateVariableList={noop}
-                  onFocus={() => toggleFieldFocus(PROMPT_PAYLOAD_KEY.instructions || 'instructions')}
-                  onBlur={() => toggleFieldFocus(null)}
-                  multiline
-                  maxRows={20}
-                  disabled={disabled}
-                  fieldName="Instructions"
-                  inputProps={{ maxLength: MAX_INSTRUCTIONS_LENGTH }}
+            summaryAction: (
+              <Box
+                component="span"
+                onClick={e => e.stopPropagation()}
+              >
+                <TabGroupButton
+                  value={instructionsViewMode}
+                  onChange={(_e, m) => m && setInstructionsViewMode(m)}
+                  size="small"
+                  arrayBtn={modeButtons}
                 />
-                {isFocused(PROMPT_PAYLOAD_KEY.instructions || 'instructions') && instructions.length > 0 && (
-                  <Typography
-                    variant="bodySmall"
-                    sx={styles.descriptionCharactersLabel}
-                  >
-                    {`${MAX_INSTRUCTIONS_LENGTH - instructions.length} characters left`}
-                  </Typography>
-                )}
               </Box>
             ),
+            content:
+              instructionsViewMode === 'edit' ? (
+                <Box sx={styles.instructionsWrapper}>
+                  <FileReaderEnhancer
+                    key={instructionsKey}
+                    showexpandicon="true"
+                    id="skill-instructions"
+                    placeholder="Markdown instructions for the skill"
+                    defaultValue={instructions}
+                    onChange={onChangeInstructions}
+                    updateVariableList={noop}
+                    onFocus={() => toggleFieldFocus(PROMPT_PAYLOAD_KEY.instructions || 'instructions')}
+                    onBlur={() => toggleFieldFocus(null)}
+                    multiline
+                    maxRows={20}
+                    disabled={disabled}
+                    fieldName="Instructions"
+                    inputProps={{ maxLength: MAX_INSTRUCTIONS_LENGTH }}
+                  />
+                  {isFocused(PROMPT_PAYLOAD_KEY.instructions || 'instructions') &&
+                    instructions.length > 0 && (
+                      <Typography
+                        variant="bodySmall"
+                        sx={styles.descriptionCharactersLabel}
+                      >
+                        {`${MAX_INSTRUCTIONS_LENGTH - instructions.length} characters left`}
+                      </Typography>
+                    )}
+                </Box>
+              ) : (
+                <Box sx={styles.instructionsPreview}>
+                  {instructions ? (
+                    <Markdown>{instructions}</Markdown>
+                  ) : (
+                    <Typography
+                      variant="bodyMedium"
+                      sx={styles.emptyPreview}
+                    >
+                      No instructions yet.
+                    </Typography>
+                  )}
+                </Box>
+              ),
           },
         ]}
       />
@@ -249,6 +297,19 @@ const skillCreateFormStyles = () => ({
     gap: '0.5rem',
     paddingBottom: '1rem',
   },
+  instructionsPreview: ({ palette }) => ({
+    minHeight: '12rem',
+    marginBottom: '1rem',
+    padding: '0.75rem',
+    borderRadius: '0.375rem',
+    border: `0.0625rem solid ${palette.border.table}`,
+    backgroundColor: palette.background.userInputBackground,
+    overflow: 'auto',
+  }),
+  emptyPreview: ({ palette }) => ({
+    color: palette.text.metrics,
+    fontStyle: 'italic',
+  }),
 });
 
 CreateSkillForm.displayName = 'CreateSkillForm';

@@ -10,9 +10,9 @@ import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import { useSkillDetailsQuery } from '@/[fsd]/features/skill/api';
 import { SkillValidateSchema } from '@/[fsd]/features/skill/lib/validation';
 import SkillInformation from '@/[fsd]/features/skill/ui/SkillInformation';
-import SkillInstructionsPreview from '@/[fsd]/features/skill/ui/SkillInstructionsPreview';
 import SkillRowAction from '@/[fsd]/features/skill/ui/SkillRowAction';
 import CreateSkillForm from '@/[fsd]/features/skill/ui/skill-details/form/CreateSkillForm';
+import SkillTestPanel from '@/[fsd]/features/skill/ui/skill-test-panel/SkillTestPanel';
 import { SkillsTabs, ViewMode } from '@/common/constants';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils.jsx';
 import DirtyDetector from '@/components/Formik/DirtyDetector';
@@ -169,7 +169,7 @@ const EditSkill = memo(() => {
                     size={{ xs: 12, lg: 6 }}
                     sx={styles.rightGridItem}
                   >
-                    <SkillInstructionsPreview />
+                    <SkillTestPanel />
                   </RightGridItem>
                 </StyledGridContainer>
               </Form>

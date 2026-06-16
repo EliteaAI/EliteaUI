@@ -3,6 +3,7 @@ import { memo, useCallback, useMemo } from 'react';
 import { Box } from '@mui/material';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
+import DiscardSkillButton from '@/[fsd]/features/skill/ui/DiscardSkillButton';
 import SaveSkillButton from '@/[fsd]/features/skill/ui/SaveSkillButton';
 import SaveSkillVersionButton from '@/[fsd]/features/skill/ui/SaveSkillVersionButton';
 import { Select } from '@/[fsd]/shared/ui';
@@ -54,6 +55,7 @@ const SkillTabBar = memo(props => {
           onSuccess={onSuccess}
           onChangeVersion={onChangeVersion}
         />
+        <DiscardSkillButton />
       </Box>
     </Box>
   );
