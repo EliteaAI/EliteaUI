@@ -96,6 +96,9 @@ const spokenRangeReducer = (prev, next) => {
 };
 
 const useTextToSpeech = ({ ttsModel, socket, voiceConfig } = {}) => {
+  const [showPlayer, setShowPlayer] = useState(false); // idle | playing | paused | done | error
+  const [speakableText, setSpeakableText] = useState(''); // idle | playing | paused | done | error
+
   const [status, setStatus] = useState('idle'); // idle | playing | paused | done | error
   const [spokenRange, setSpokenRange] = useReducer(spokenRangeReducer, null);
 
@@ -169,6 +172,13 @@ const useTextToSpeech = ({ ttsModel, socket, voiceConfig } = {}) => {
 
   const isPlaying = status === 'playing';
   const isPaused = status === 'paused';
+
+  const resetStatus = useCallback((newStatus = 'done') => {
+    setStatus(newStatus);
+    setSpokenRange(null);
+    setShowPlayer(false);
+    setSpeakableText('');
+  }, []);
 
   // ─────────────────────────────────────────────────────────────────────────
   // Model TTS helpers
@@ -365,7 +375,7 @@ const useTextToSpeech = ({ ttsModel, socket, voiceConfig } = {}) => {
       const textToSpeak = offset > 0 ? text.slice(offset) : text;
       if (!textToSpeak.trim()) {
         setStatus('done');
-        setSpokenRange(null);
+        resetStatus('done');
         return;
       }
 
@@ -396,7 +406,7 @@ const useTextToSpeech = ({ ttsModel, socket, voiceConfig } = {}) => {
         if (utteranceRef.current !== utterance) return;
         utteranceRef.current = null;
         setStatus('done');
-        setSpokenRange(null);
+        resetStatus('done');
       };
 
       utterance.onerror = e => {
@@ -418,7 +428,7 @@ const useTextToSpeech = ({ ttsModel, socket, voiceConfig } = {}) => {
       setStatus('playing');
       window.speechSynthesis.speak(utterance);
     },
-    [voiceConfig],
+    [resetStatus, voiceConfig?.rate, voiceConfig?.voice, voiceConfig?.volume],
   );
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -522,9 +532,8 @@ const useTextToSpeech = ({ ttsModel, socket, voiceConfig } = {}) => {
     startOffsetRef.current = 0;
     lastBoundaryRef.current = 0;
     pausedOffsetRef.current = 0;
-    setStatus('idle');
-    setSpokenRange(null);
-  }, [hasModelTTS, socket, stopModelAudio]);
+    resetStatus('idle');
+  }, [hasModelTTS, resetStatus, socket, stopModelAudio]);
 
   // ─────────────────────────────────────────────────────────────────────────
   // Socket event listeners for model TTS
@@ -620,8 +629,7 @@ const useTextToSpeech = ({ ttsModel, socket, voiceConfig } = {}) => {
       // eslint-disable-next-line no-console
       console.error('[TTS] Server error:', error);
       stopModelAudio();
-      setStatus('error');
-      setSpokenRange(null);
+      resetStatus('error');
     };
 
     socket.on(sioEvents.tts_audio_chunk, handleChunk);
@@ -633,7 +641,7 @@ const useTextToSpeech = ({ ttsModel, socket, voiceConfig } = {}) => {
       socket.off(sioEvents.tts_done, handleDone);
       socket.off(sioEvents.tts_error, handleError);
     };
-  }, [hasModelTTS, socket, enqueueSamples, stopModelAudio]);
+  }, [hasModelTTS, socket, enqueueSamples, stopModelAudio, resetStatus]);
 
   // ─────────────────────────────────────────────────────────────────────────
   // RAF loop — word highlighting + completion detection for model TTS
@@ -662,7 +670,7 @@ const useTextToSpeech = ({ ttsModel, socket, voiceConfig } = {}) => {
         // complete immediately rather than spinning forever.
         if (allChunksReceivedRef.current) {
           setStatus('done');
-          setSpokenRange(null);
+          resetStatus('done');
           rafRef.current = null;
           return;
         }
@@ -740,8 +748,7 @@ const useTextToSpeech = ({ ttsModel, socket, voiceConfig } = {}) => {
 
       // Detect audio completion: all chunks received and playback time elapsed
       if (allReceived && (totalDuration <= 0 || elapsed >= totalDuration)) {
-        setStatus('done');
-        setSpokenRange(null);
+        resetStatus('done');
         rafRef.current = null;
         return;
       }
@@ -757,7 +764,7 @@ const useTextToSpeech = ({ ttsModel, socket, voiceConfig } = {}) => {
         rafRef.current = null;
       }
     };
-  }, [hasModelTTS, status]);
+  }, [hasModelTTS, resetStatus, status]);
 
   // ─────────────────────────────────────────────────────────────────────────
   // RAF loop — word highlighting fallback for browser SpeechSynthesis
@@ -844,7 +851,20 @@ const useTextToSpeech = ({ ttsModel, socket, voiceConfig } = {}) => {
 
   const isSupported = hasModelTTS || isSpeechSynthesisSupported;
 
-  return { speak, stop, pause, resume, isPlaying, isPaused, isSupported, spokenRange };
+  return {
+    speak,
+    stop,
+    pause,
+    resume,
+    isPlaying,
+    isPaused,
+    isSupported,
+    spokenRange,
+    showPlayer,
+    setShowPlayer,
+    speakableText,
+    setSpeakableText,
+  };
 };
 
 export { useTextToSpeech };
