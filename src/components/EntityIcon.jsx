@@ -6,6 +6,7 @@ import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSett
 import WelcomeImage from '@/assets/chat-welcome.png';
 import FlowIcon from '@/assets/flow-icon.svg?react';
 import MCPIcon from '@/assets/mcp-icon.svg?react';
+import SkillIcon from '@/assets/skill-icon.svg?react';
 import { ChatParticipantType, DEFAULT_PARTICIPANT_NAME } from '@/common/constants';
 import ApplicationsIcon from '@/components/Icons/ApplicationsIcon';
 import DatabaseIcon from '@/components/Icons/DatabaseIcon';
@@ -110,6 +111,14 @@ export const EntityTypeIcon = memo(props => {
         <MCPIcon
           fill={fill}
           sx={{ color: fill, fontSize: sizeString }}
+        />
+      );
+
+    case 'skill':
+      return (
+        <Box
+          component={SkillIcon}
+          sx={{ color: fill, width: sizeNumeric, height: sizeNumeric }}
         />
       );
 

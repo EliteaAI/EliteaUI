@@ -4,6 +4,7 @@ import RouteDefinitions from '@/routes';
 export const OptionsMap = {
   Chat: 'Conversation',
   Agent: 'Agent',
+  Skill: 'Skill',
   Pipeline: 'Pipeline',
   Toolkit: 'Toolkit',
   App: 'App',
@@ -28,6 +29,7 @@ export const RouteToLabelMap = [
   { route: RouteDefinitions.AppsCatalog, label: 'Application' },
   { route: RouteDefinitions.Chat, label: 'Conversation' },
   { route: RouteDefinitions.Applications, label: 'Agent' },
+  { route: RouteDefinitions.Skills, label: 'Skill' },
   { route: RouteDefinitions.Pipelines, label: 'Pipeline' },
   { route: RouteDefinitions.Credentials, label: 'Credential' },
   { route: RouteDefinitions.Toolkits, label: 'Toolkit' },
@@ -38,6 +40,7 @@ export const RouteToLabelMap = [
 export const DropdownItems = [
   { label: 'Conversation', route: RouteDefinitions.Chat, option: 'Conversation' },
   { label: 'Agent', route: RouteDefinitions.Applications, option: 'Agent' },
+  { label: 'Skill', route: RouteDefinitions.Skills, option: 'Skill' },
   { label: 'Pipeline', route: RouteDefinitions.Pipelines, option: 'Pipeline' },
   { label: 'Credential', route: RouteDefinitions.Credentials, option: 'Credential' },
   { label: 'Toolkit', route: RouteDefinitions.Toolkits, option: 'Toolkit' },
@@ -65,6 +68,7 @@ export const CreationPermissions = {
   Chat: [PERMISSIONS.chat.folders.create, PERMISSIONS.chat.create],
   Conversation: [PERMISSIONS.chat.folders.create, PERMISSIONS.chat.create],
   Agent: [PERMISSIONS.applications.create],
+  Skill: [PERMISSIONS.applications.create],
   Pipeline: [PERMISSIONS.applications.create],
   Toolkit: [PERMISSIONS.toolkits.create],
   App: [PERMISSIONS.toolkits.create],
@@ -80,6 +84,7 @@ export const CreationPermissions = {
 export const CommandPathMap = {
   Conversation: RouteDefinitions.Chat,
   Agent: RouteDefinitions.CreateApplication,
+  Skill: RouteDefinitions.CreateSkill,
   Pipeline: RouteDefinitions.CreatePipeline,
   Toolkit: RouteDefinitions.CreateToolkit,
   App: RouteDefinitions.CreateApp,
@@ -95,6 +100,7 @@ export const CommandPathMap = {
 export const BreadCrumbMap = {
   Conversation: 'Chat',
   Agent: 'New Agent',
+  Skill: 'New Skill',
   Pipeline: 'New Pipeline',
   Toolkit: 'New Toolkit',
   App: 'New App',
@@ -104,6 +110,7 @@ export const BreadCrumbMap = {
   'Personal Token': 'New Personal Token',
   Secret: 'New Secret',
   [RouteDefinitions.CreateApplication]: 'Agents',
+  [RouteDefinitions.CreateSkill]: 'Skills',
   [RouteDefinitions.CreatePipeline]: 'Pipelines',
   [RouteDefinitions.CreateToolkit]: 'Toolkits',
   [RouteDefinitions.CreateApp]: 'Apps',
@@ -114,6 +121,7 @@ export const BreadCrumbMap = {
 
 export const PrevUrlPathMap = {
   [RouteDefinitions.CreateApplication]: RouteDefinitions.Applications,
+  [RouteDefinitions.CreateSkill]: RouteDefinitions.Skills,
   [RouteDefinitions.CreatePipeline]: RouteDefinitions.Pipelines,
   [RouteDefinitions.CreateToolkit]: RouteDefinitions.Toolkits,
   [RouteDefinitions.CreateApp]: RouteDefinitions.Apps,
@@ -137,6 +145,7 @@ export const PathToOptionMap = [
   { path: 'settings/users', option: 'User' },
   { path: 'chat', option: OptionsMap.Chat },
   { path: 'agent', option: OptionsMap.Agent },
+  { path: 'skill', option: OptionsMap.Skill },
   { path: 'pipeline', option: OptionsMap.Pipeline },
   { path: 'app', option: OptionsMap.App },
   { path: 'toolkit', option: OptionsMap.Toolkit },

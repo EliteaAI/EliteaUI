@@ -19,6 +19,7 @@ import BriefcaseIcon from '@/assets/briefcase-icon.svg?react';
 import FlowIcon from '@/assets/flow-icon.svg?react';
 import KeyIcon from '@/assets/key-icon.svg?react';
 import MCPIcon from '@/assets/mcp-icon.svg?react';
+import SkillsIcon from '@/assets/skill-icon.svg?react';
 import ToolIcon from '@/assets/tool-icon.svg?react';
 import {
   COLLAPSED_SIDE_BAR_WIDTH,
@@ -115,6 +116,15 @@ const SidebarBody = memo(props => {
           breadCrumb: 'Agents',
           tooltip: 'Agents',
           tourId: SIDEBAR_TOUR_TARGET_IDS.navAgents,
+        },
+        {
+          value: 'skills',
+          label: 'Skills',
+          icon: <SkillsIcon />,
+          url: RouteDefinitions.Skills,
+          breadCrumb: 'Skills',
+          tooltip: 'Skills',
+          tourId: SIDEBAR_TOUR_TARGET_IDS.navSkills,
         },
         {
           value: 'pipelines',

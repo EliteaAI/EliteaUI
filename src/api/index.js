@@ -16,6 +16,7 @@ export * from './platformSettings';
 export * from './project';
 export * from './search';
 export * from './secrets';
+export * from './skills';
 export * from './social';
 export * from './tags';
 export * from './toolkits';

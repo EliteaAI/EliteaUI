@@ -36,4 +36,6 @@ export const isMCPCard = type => type === ContentType.MCPAdmin || type === Conte
 
 export const isCredentialCard = type => type === ContentType.CredentialAll;
 
+export const isSkillCard = type => type === ContentType.SkillAll;
+
 export const isAppAllCard = type => type === ContentType.AppAll;

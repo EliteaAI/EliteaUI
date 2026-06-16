@@ -2,7 +2,13 @@ import { Typography } from '@mui/material';
 
 import { filterProps } from '@/ComponentsLib/utils/common';
 import store from '@/[fsd]/app/store';
-import { isApplicationCard, isMCPCard, isPipelineCard, isToolkitCard } from '@/common/checkCardType';
+import {
+  isApplicationCard,
+  isMCPCard,
+  isPipelineCard,
+  isSkillCard,
+  isToolkitCard,
+} from '@/common/checkCardType';
 import {
   ChatParticipantType,
   CollectionStatus,
@@ -1018,6 +1024,8 @@ export const getEntityType = type => {
     return 'toolkit';
   } else if (isMCPCard(type)) {
     return 'mcp';
+  } else if (isSkillCard(type)) {
+    return 'skill';
   }
   return ChatParticipantType.Applications;
 };

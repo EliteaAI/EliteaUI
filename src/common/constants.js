@@ -474,6 +474,7 @@ export const ContentType = {
   MCPAdmin: 'MCPAdmin',
   MCPAll: 'MCPAll',
   CredentialAll: 'CredentialAll',
+  SkillAll: 'SkillAll',
 };
 
 export const PERSONAL_SPACE_PERIOD_FOR_NEW_USER = 5 * 60 * 1000;
@@ -487,6 +488,7 @@ export const RETENTION_MEASURES = ['days', 'weeks', 'months', 'years'];
 
 export const publicTabs = ['latest', 'my-liked', 'trending'];
 export const ApplicationsTabs = ['latest', 'my-liked', 'trending', 'admin'];
+export const SkillsTabs = ['all'];
 export const ToolkitsTabs = ['all', 'my-liked', 'trending', 'admin'];
 export const AppsTabs = ['applications', 'catalog'];
 

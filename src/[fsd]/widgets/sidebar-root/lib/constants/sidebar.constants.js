@@ -3,6 +3,7 @@ import RouteDefinitions from '@/routes';
 export const RouteToSideBarItemMap = [
   { route: RouteDefinitions.Chat, item: 'chat' },
   { route: RouteDefinitions.Applications, item: 'agents' },
+  { route: RouteDefinitions.Skills, item: 'skills' },
   { route: RouteDefinitions.Pipelines, item: 'pipelines' },
   { route: RouteDefinitions.Artifacts, item: 'artifacts' },
   { route: RouteDefinitions.Credentials, item: 'credentials' },

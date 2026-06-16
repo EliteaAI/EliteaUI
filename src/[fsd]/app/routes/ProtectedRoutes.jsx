@@ -15,6 +15,7 @@ import {
   CredentialsTabs,
   MISSING_ENVS,
   PERSONAL_SPACE_PERIOD_FOR_NEW_USER,
+  SkillsTabs,
   ToolkitsTabs,
   UserProfileTabs,
 } from '@/common/constants';
@@ -54,6 +55,9 @@ const AgentsStudio = ChunkHelpers.lazyWithRetry(() => import('@/pages/AgentsStud
 const Applications = ChunkHelpers.lazyWithRetry(() => import('@/pages/Applications/Applications'));
 const CreateApplication = ChunkHelpers.lazyWithRetry(() => import('@/pages/Applications/CreateApplication'));
 const EditApplication = ChunkHelpers.lazyWithRetry(() => import('@/pages/Applications/EditApplication.jsx'));
+const Skills = ChunkHelpers.lazyWithRetry(() => import('@/pages/Skills/Skills'));
+const CreateSkill = ChunkHelpers.lazyWithRetry(() => import('@/pages/Skills/CreateSkill'));
+const EditSkill = ChunkHelpers.lazyWithRetry(() => import('@/pages/Skills/EditSkill'));
 const Artifacts = ChunkHelpers.lazyWithRetry(() => import('@/pages/Artifacts/Artifacts'));
 const CreateBucket = ChunkHelpers.lazyWithRetry(() => import('@/pages/Artifacts/CreateBucket'));
 const CreateCredentialFromMain = ChunkHelpers.lazyWithRetry(
@@ -166,6 +170,12 @@ const ProtectedRoutes = () => {
       { path: RouteDefinitions.ApplicationsWithTab, element: <Applications /> },
       { path: RouteDefinitions.ApplicationsDetail, element: <EditApplication /> },
 
+      /* skills */
+      { path: RouteDefinitions.Skills, element: getIndexElement(SkillsTabs[0]) },
+      { path: RouteDefinitions.CreateSkill, element: <CreateSkill /> },
+      { path: RouteDefinitions.SkillsWithTab, element: <Skills /> },
+      { path: RouteDefinitions.SkillsDetail, element: <EditSkill /> },
+
       /* pipelines */
       { path: RouteDefinitions.Pipelines, element: getIndexElement(ApplicationsTabs[0]) },
       { path: RouteDefinitions.CreatePipeline, element: <CreatePipeline /> },
@@ -246,7 +256,7 @@ const ProtectedRoutes = () => {
                 </ProtectedRoute>
               }
             >
-              {path.endsWith('/:agentId') && (
+              {(path.endsWith('/:agentId') || path.endsWith('/:skillId')) && (
                 <Route
                   path=":version"
                   element={<></>}
