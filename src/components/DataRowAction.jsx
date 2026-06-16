@@ -5,12 +5,14 @@ import { useSelector } from 'react-redux';
 import { IconButton, Menu, MenuItem, Typography } from '@mui/material';
 import { Box } from '@mui/system';
 
+import SkillRowAction from '@/[fsd]/features/skill/ui/SkillRowAction';
 import { useDeleteConfirmationDisabled } from '@/[fsd]/shared/lib/hooks';
 import { Modal } from '@/[fsd]/shared/ui';
 import { useDeleteApplicationMutation } from '@/api/applications';
 import { useDeleteConfigurationMutation } from '@/api/configurations';
 import { useDeleteDatasourceMutation } from '@/api/datasources';
 import { useToolkitDeleteMutation } from '@/api/toolkits.js';
+import { isSkillCard } from '@/common/checkCardType';
 import { PERMISSIONS, ViewMode } from '@/common/constants';
 import { getEntityNameByCardType } from '@/components/Fork/useForkEntity';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
@@ -93,6 +95,7 @@ const DataRowAction = memo(props => {
   const { cardType } = data;
   const realCardType = useMemo(() => cardType || type, [cardType, type]);
   const entity_name = getEntityNameByCardType(realCardType);
+  const isSkill = isSkillCard(realCardType);
 
   const { toastError, toastSuccess } = useToast();
   const [anchorEl, setAnchorEl] = useState(null);
@@ -295,6 +298,16 @@ const DataRowAction = memo(props => {
   }, [entity_name, applicationMenu, toolkitsMenu, credentialsMenu, withClose, open, handleClose, data?.name]);
 
   const styles = dataRowActionStyles(menuList.length > 0);
+
+  if (isSkill) {
+    return (
+      <SkillRowAction
+        skillId={data?.id}
+        skillName={data?.name}
+        versionName={data?.version_details?.name || data?.version?.name}
+      />
+    );
+  }
 
   return (
     <Box sx={styles.container}>
