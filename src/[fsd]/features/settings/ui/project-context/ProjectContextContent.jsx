@@ -207,11 +207,12 @@ const ProjectContextContent = memo(() => {
                       onClick={handleImportClick}
                       title="Import markdown file"
                     />
-                    <input
+                    <Box
+                      hidden
+                      component="input"
                       ref={fileInputRef}
                       type="file"
                       accept=".md,text/markdown"
-                      style={{ display: 'none' }}
                       onChange={handleFileUpload}
                     />
                   </>
