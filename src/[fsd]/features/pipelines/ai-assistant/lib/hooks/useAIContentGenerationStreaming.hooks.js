@@ -79,6 +79,12 @@ export const useAIContentGenerationStreaming = ({
   const chunkBufferRef = useRef([]);
   const rafPendingRef = useRef(false);
   const finalizeTimerRef = useRef(null);
+  const safetyTimerRef = useRef(null);
+
+  // Backstop: if no completion event arrives (events dropped, network drop,
+  // backend silently aborted), unblock the UI so the user is not stuck on
+  // "Thinking..." forever.
+  const SAFETY_TIMEOUT_MS = 60_000;
 
   useEffect(() => {
     toastErrorRef.current = toastError;
@@ -115,6 +121,8 @@ export const useAIContentGenerationStreaming = ({
     activeStreamIdRef.current = null;
     clearTimeout(finalizeTimerRef.current);
     finalizeTimerRef.current = null;
+    clearTimeout(safetyTimerRef.current);
+    safetyTimerRef.current = null;
 
     // Flush any remaining chunks and check for errors
     const remaining = chunkBufferRef.current.join('');
@@ -205,6 +213,8 @@ export const useAIContentGenerationStreaming = ({
       unsubscribe();
       clearTimeout(finalizeTimerRef.current);
       finalizeTimerRef.current = null;
+      clearTimeout(safetyTimerRef.current);
+      safetyTimerRef.current = null;
     };
   }, [subscribe, unsubscribe]);
 
@@ -222,6 +232,8 @@ export const useAIContentGenerationStreaming = ({
     chunkBufferRef.current = [];
     clearTimeout(finalizeTimerRef.current);
     finalizeTimerRef.current = null;
+    clearTimeout(safetyTimerRef.current);
+    safetyTimerRef.current = null;
   }, [projectId, stopLlmTask]);
 
   const generateContent = useCallback(
@@ -255,6 +267,16 @@ export const useAIContentGenerationStreaming = ({
         genTokenRef.current += 1;
         const myToken = genTokenRef.current;
         setIsGenerating(true);
+
+        clearTimeout(safetyTimerRef.current);
+        safetyTimerRef.current = setTimeout(() => {
+          if (activeStreamIdRef.current === streamId) {
+            toastErrorRef.current?.('AI assistant timed out: no response received. Please try again.');
+            setHasError(true);
+            finalize();
+          }
+        }, SAFETY_TIMEOUT_MS);
+
         const payload = {
           projectId,
           sid: socket.id,
@@ -289,6 +311,7 @@ export const useAIContentGenerationStreaming = ({
       socket?.id,
       resetContent,
       cancel,
+      finalize,
       fieldName,
       stateVariablesInfo,
       availableNodesInfo,
