@@ -241,7 +241,7 @@ const ProjectContextContent = memo(() => {
               </Box>
             ) : (
               <Box sx={styles.preview}>
-                <Markdown>{content}</Markdown>
+                <Markdown renderHtml={false}>{content}</Markdown>
               </Box>
             )}
 
