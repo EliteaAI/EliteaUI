@@ -2,19 +2,11 @@ import { useCallback } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { useSkillCreateVersionMutation } from '@/api/skills';
+import { useSkillCreateVersionMutation } from '@/[fsd]/features/skill/api';
 import { buildErrorMessage } from '@/common/utils.jsx';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 
-/**
- * Create a new named skill version from the current form content. Mirrors the
- * agents' useSaveNewVersion — the mutation lives in a hook consumed by a
- * page-level button. Name validation (reserved/duplicate) stays in the button,
- * next to the dialog input.
- *
- * @returns {{ onCreateNewVersion: (name: string) => Promise<boolean>, isSavingNewVersion: boolean }}
- */
 const useSaveSkillVersion = () => {
   const projectId = useSelectedProjectId();
   const { values, resetForm } = useFormikContext();

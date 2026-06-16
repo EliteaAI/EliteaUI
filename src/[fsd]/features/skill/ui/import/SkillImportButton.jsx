@@ -3,9 +3,9 @@ import { memo } from 'react';
 import { useSelector } from 'react-redux';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
-import { useSkillImport } from '@/[fsd]/features/skill/lib/useSkillImport';
+import { useSkillImport } from '@/[fsd]/features/skill/lib/hooks';
 import SkillImportModal from '@/[fsd]/features/skill/ui/import/SkillImportModal';
-import BaseBtn from '@/[fsd]/shared/ui/button/BaseBtn';
+import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import ImportIcon from '@/assets/import-icon.svg?react';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
 
@@ -33,7 +33,7 @@ const SkillImportButton = memo(() => {
         placement="top"
       >
         <BaseBtn
-          variant="icon"
+          variant={BUTTON_VARIANTS.icon}
           onClick={openFileDialog}
           disabled={isImporting}
           sx={styles.importBtn}

@@ -1,18 +1,16 @@
-import { useCallback, useState } from 'react';
+import { memo, useCallback, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
+import { useSaveSkillVersion } from '@/[fsd]/features/skill/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
-import useSaveSkillVersion from '@/hooks/skill/useSaveSkillVersion';
 import useToast from '@/hooks/useToast';
 import InputVersionDialog from '@/pages/Common/Components/InputVersionDialog';
 
-// Page-level "Save As Version" button (mirrors SaveNewVersionButton): owns the
-// version-name dialog + validation and delegates the mutation to
-// useSaveSkillVersion. On success it navigates to the new version via onChangeVersion.
-export default function SaveSkillVersionButton({ onSuccess, onChangeVersion }) {
+const SaveSkillVersionButton = memo(({ onSuccess, onChangeVersion }) => {
   const { values } = useFormikContext();
   const { toastError } = useToast();
   const { onCreateNewVersion, isSavingNewVersion } = useSaveSkillVersion();
@@ -63,7 +61,7 @@ export default function SaveSkillVersionButton({ onSuccess, onChangeVersion }) {
     <>
       <Button.BaseBtn
         disabled={isSavingNewVersion}
-        variant="elitea"
+        variant={BUTTON_VARIANTS.elitea}
         color="secondary"
         onClick={onOpen}
       >
@@ -84,4 +82,8 @@ export default function SaveSkillVersionButton({ onSuccess, onChangeVersion }) {
       />
     </>
   );
-}
+});
+
+SaveSkillVersionButton.displayName = 'SaveSkillVersionButton';
+
+export default SaveSkillVersionButton;

@@ -3,9 +3,9 @@ import { memo, useCallback, useMemo } from 'react';
 import { Box } from '@mui/material';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
+import SaveSkillButton from '@/[fsd]/features/skill/ui/SaveSkillButton';
+import SaveSkillVersionButton from '@/[fsd]/features/skill/ui/SaveSkillVersionButton';
 import { Select } from '@/[fsd]/shared/ui';
-import SaveSkillButton from '@/pages/Skills/Components/SaveSkillButton';
-import SaveSkillVersionButton from '@/pages/Skills/Components/SaveSkillVersionButton';
 
 const SkillTabBar = memo(props => {
   const { versions = [], currentVersionName, onChangeVersion, onSuccess } = props;

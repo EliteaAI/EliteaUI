@@ -2,13 +2,12 @@ import { memo, useCallback, useEffect, useMemo } from 'react';
 
 import { useLocation, useMatch, useNavigate, useParams } from 'react-router-dom';
 
+import PrivateSkillsList from '@/[fsd]/features/skill/ui/PrivateSkillsList';
 import { SkillImportButton } from '@/[fsd]/features/skill/ui/import';
 import { ContentType, SkillsTabs } from '@/common/constants';
 import StickyTabs from '@/components/StickyTabs';
 import ViewToggle from '@/components/ViewToggle';
 import RouteDefinitions, { PathSessionMap } from '@/routes';
-
-import PrivateSkillsList from './PrivateSkillsList';
 
 const Skills = memo(() => {
   const navigate = useNavigate();

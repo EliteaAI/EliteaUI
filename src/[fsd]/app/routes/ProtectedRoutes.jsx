@@ -55,9 +55,9 @@ const AgentsStudio = ChunkHelpers.lazyWithRetry(() => import('@/pages/AgentsStud
 const Applications = ChunkHelpers.lazyWithRetry(() => import('@/pages/Applications/Applications'));
 const CreateApplication = ChunkHelpers.lazyWithRetry(() => import('@/pages/Applications/CreateApplication'));
 const EditApplication = ChunkHelpers.lazyWithRetry(() => import('@/pages/Applications/EditApplication.jsx'));
-const Skills = ChunkHelpers.lazyWithRetry(() => import('@/pages/Skills/Skills'));
-const CreateSkill = ChunkHelpers.lazyWithRetry(() => import('@/pages/Skills/CreateSkill'));
-const EditSkill = ChunkHelpers.lazyWithRetry(() => import('@/pages/Skills/EditSkill'));
+const Skills = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/skills/Skills'));
+const CreateSkill = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/skills/CreateSkill'));
+const EditSkill = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/skills/EditSkill'));
 const Artifacts = ChunkHelpers.lazyWithRetry(() => import('@/pages/Artifacts/Artifacts'));
 const CreateBucket = ChunkHelpers.lazyWithRetry(() => import('@/pages/Artifacts/CreateBucket'));
 const CreateCredentialFromMain = ChunkHelpers.lazyWithRetry(

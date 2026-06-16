@@ -1,8 +1,8 @@
 import { useCallback } from 'react';
 
 import { useTrackEvent } from '@/GA';
+import { useLazySkillExportMdQuery } from '@/[fsd]/features/skill/api';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
-import { useLazySkillExportMdQuery } from '@/api/skills';
 import { buildErrorMessage, downloadBlobFile } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';

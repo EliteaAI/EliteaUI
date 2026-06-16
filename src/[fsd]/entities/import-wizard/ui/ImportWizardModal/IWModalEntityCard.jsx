@@ -2,11 +2,10 @@ import { memo, useMemo } from 'react';
 
 import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 
+import IWModalEntityCardFullscreenText from '@/[fsd]/entities/import-wizard/ui/ImportWizardModal/IWModalEntityCardFullscreenText';
+import IWModalEntityCardWrapper from '@/[fsd]/entities/import-wizard/ui/ImportWizardModal/IWModalEntityCardWrapper';
 import IWModalEntityTextField from '@/[fsd]/entities/import-wizard/ui/ImportWizardModal/IWModalEntityTextField';
 import IWModalEntityToolkitsField from '@/[fsd]/entities/import-wizard/ui/ImportWizardModal/IWModalEntityToolkitsField';
-import ImportEntityCard, {
-  ImportEntityFullscreenText,
-} from '@/[fsd]/entities/import-wizard/ui/ImportWizardModal/ImportEntityCard';
 import { parseYamlToMermaid } from '@/[fsd]/features/agent/lib/helpers/parseYamlToMermaid.helpers';
 import { INTERNAL_TOOLS_LIST } from '@/[fsd]/shared/lib/constants/internalTools.constants';
 import AgentIcon from '@/assets/agent.svg?react';
@@ -34,7 +33,7 @@ const IWModalEntityCard = memo(props => {
   }, [isPipeline, entity]);
 
   return (
-    <ImportEntityCard
+    <IWModalEntityCardWrapper
       icon={isPipeline ? <FlowIcon /> : <AgentIcon />}
       title={entity.name}
       subtitle={`Type: ${isPipeline ? 'pipeline' : 'agent'}`}
@@ -44,7 +43,7 @@ const IWModalEntityCard = memo(props => {
             <MermaidDiagramOutput code={mermaidCode} />
           </Box>
         ) : (
-          <ImportEntityFullscreenText content={fullscreenData?.content} />
+          <IWModalEntityCardFullscreenText content={fullscreenData?.content} />
         )
       }
     >
@@ -155,7 +154,7 @@ const IWModalEntityCard = memo(props => {
           </Box>
         </>
       )}
-    </ImportEntityCard>
+    </IWModalEntityCardWrapper>
   );
 });
 

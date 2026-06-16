@@ -2,10 +2,9 @@ import { useCallback, useMemo } from 'react';
 
 import { useSelector } from 'react-redux';
 
-import { useSkillListQuery } from '@/api/skills';
+import { useSkillListQuery } from '@/[fsd]/features/skill/api';
+import usePageQuery from '@/hooks/usePageQuery';
 import { useAuthorIdFromUrl } from '@/hooks/useSearchParamValue';
-
-import usePageQuery from './usePageQuery';
 
 export const useLoadSkills = (sortBy = 'created_at', sortOrder = 'desc', forceSkip = false) => {
   const { page, pageSize, setPage, tagList, selectedTagIds, projectId } = usePageQuery();

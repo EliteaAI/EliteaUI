@@ -4,10 +4,11 @@ import { useSelector } from 'react-redux';
 
 import { Box, Divider, Typography } from '@mui/material';
 
-import { IWModalEntityTextField, ImportEntityCard } from '@/[fsd]/entities/import-wizard/ui';
+import { IWModalEntityCardWrapper, IWModalEntityTextField } from '@/[fsd]/entities/import-wizard/ui';
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import { ProjectSelectShowMode } from '@/[fsd]/features/project/lib/constants';
 import { Button, Modal } from '@/[fsd]/shared/ui';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import SkillIcon from '@/assets/skill-icon.svg?react';
 import ProjectSelect from '@/components/ProjectSelect';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -57,7 +58,7 @@ const SkillImportModal = memo(props => {
 
           <Typography sx={styles.sectionLabel}>MAIN ENTITY</Typography>
 
-          <ImportEntityCard
+          <IWModalEntityCardWrapper
             icon={<SkillIcon />}
             title={skill.name}
             subtitle={`Type: Skill | Version: ${versionName}`}
@@ -81,20 +82,20 @@ const SkillImportModal = memo(props => {
                 />
               </>
             )}
-          </ImportEntityCard>
+          </IWModalEntityCardWrapper>
         </Box>
       }
       actions={
         <>
           <Button.BaseBtn
-            variant="secondary"
+            variant={BUTTON_VARIANTS.secondary}
             onClick={onClose}
             disabled={isImporting}
           >
             Cancel
           </Button.BaseBtn>
           <Button.BaseBtn
-            variant="elitea"
+            variant={BUTTON_VARIANTS.elitea}
             onClick={() => onConfirm(targetProject?.id)}
             disabled={isImporting}
           >

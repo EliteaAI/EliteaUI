@@ -1,19 +1,18 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Form, Formik, useFormikContext } from 'formik';
+import { Form, Formik } from 'formik';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { Box, CircularProgress, Typography } from '@mui/material';
+import { Box, CircularProgress } from '@mui/material';
 
 import SkillTabBar from '@/[fsd]/entities/skill-tab-bar/ui/SkillTabBar';
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
+import { useSkillDetailsQuery } from '@/[fsd]/features/skill/api';
+import { SkillValidateSchema } from '@/[fsd]/features/skill/lib/validation';
+import SkillInformation from '@/[fsd]/features/skill/ui/SkillInformation';
+import SkillInstructionsPreview from '@/[fsd]/features/skill/ui/SkillInstructionsPreview';
 import SkillRowAction from '@/[fsd]/features/skill/ui/SkillRowAction';
 import CreateSkillForm from '@/[fsd]/features/skill/ui/skill-details/form/CreateSkillForm';
-import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
-import { Markdown } from '@/[fsd]/shared/ui';
-import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
-import { CopyToClipboardButton } from '@/[fsd]/shared/ui/button';
-import { useSkillDetailsQuery } from '@/api/skills';
 import { SkillsTabs, ViewMode } from '@/common/constants';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils.jsx';
 import DirtyDetector from '@/components/Formik/DirtyDetector';
@@ -28,7 +27,6 @@ import {
   StyledGridContainer,
 } from '@/pages/Common/Components/StyledComponents';
 import Page404 from '@/pages/Page404.jsx';
-import SkillValidateSchema from '@/pages/Skills/SkillValidateSchema';
 import RouteDefinitions from '@/routes';
 
 const buildInitialValues = data => ({
@@ -43,82 +41,8 @@ const buildInitialValues = data => ({
   },
 });
 
-// Right-column Information accordion: Skill ID + Version with copy buttons.
-const SkillInformation = memo(({ id, versionName }) => {
-  const items = useMemo(
-    () => [
-      {
-        title: 'Information',
-        content: (
-          <Box sx={infoStyles.content}>
-            {id !== null && id !== undefined && (
-              <CopyToClipboardButton
-                label="Skill ID:"
-                value={String(id)}
-                tooltip="Copy ID"
-                copyMessage="The ID has been copied to the clipboard"
-              />
-            )}
-            {versionName && (
-              <CopyToClipboardButton
-                label="Version:"
-                value={String(versionName)}
-                tooltip="Copy version"
-                copyMessage="The version has been copied to the clipboard"
-              />
-            )}
-          </Box>
-        ),
-      },
-    ],
-    [id, versionName],
-  );
-
-  return (
-    <BasicAccordion
-      accordionSX={({ palette }) => ({ background: `${palette.background.tabPanel} !important` })}
-      showMode={AccordionConstants.AccordionShowMode.LeftMode}
-      items={items}
-    />
-  );
-});
-
-SkillInformation.displayName = 'SkillInformation';
-
-const SkillInstructionsPreview = memo(() => {
-  const { values } = useFormikContext();
-  const instructions = values?.version_details?.instructions || '';
-
-  return (
-    <ContentContainer
-      height="100%"
-      sx={editSkillStyles.previewContainer}
-    >
-      <Typography
-        variant="labelMedium"
-        color="text.secondary"
-        sx={editSkillStyles.previewTitle}
-      >
-        Instructions preview
-      </Typography>
-      {instructions ? (
-        <Box sx={editSkillStyles.previewBody}>
-          <Markdown>{instructions}</Markdown>
-        </Box>
-      ) : (
-        <Typography
-          variant="bodyMedium"
-          color="text.default"
-        >
-          Nothing to preview yet. Add markdown instructions on the left.
-        </Typography>
-      )}
-    </ContentContainer>
-  );
-});
-SkillInstructionsPreview.displayName = 'SkillInstructionsPreview';
-
 const EditSkill = memo(() => {
+  const styles = editSkillStyles();
   const navigate = useNavigate();
   const { tab = SkillsTabs[0], skillId, version } = useParams();
   const projectId = useSelectedProjectId();
@@ -211,20 +135,20 @@ const EditSkill = memo(() => {
               />
             ),
             content: isFetching ? (
-              <Box sx={editSkillStyles.loadingContainer}>
+              <Box sx={styles.loadingContainer}>
                 <CircularProgress />
               </Box>
             ) : (
               <Form style={{ height: '100%' }}>
                 <DirtyDetector setDirty={setDirty} />
                 <StyledGridContainer
-                  sx={editSkillStyles.gridContainer}
+                  sx={styles.gridContainer}
                   columnSpacing="32px"
                   container
                 >
                   <LeftGridItem
                     size={{ xs: 12, lg: 6 }}
-                    sx={editSkillStyles.leftGridItem}
+                    sx={styles.leftGridItem}
                   >
                     <ContentContainer height="100%">
                       <CreateSkillForm
@@ -233,7 +157,7 @@ const EditSkill = memo(() => {
                           (data?.version_details?.instructions ?? data?.instructions ?? '').length
                         }`}
                       />
-                      <Box sx={editSkillStyles.informationWrapper}>
+                      <Box sx={styles.informationWrapper}>
                         <SkillInformation
                           id={data?.id}
                           versionName={currentVersionName}
@@ -243,7 +167,7 @@ const EditSkill = memo(() => {
                   </LeftGridItem>
                   <RightGridItem
                     size={{ xs: 12, lg: 6 }}
-                    sx={editSkillStyles.rightGridItem}
+                    sx={styles.rightGridItem}
                   >
                     <SkillInstructionsPreview />
                   </RightGridItem>
@@ -260,18 +184,7 @@ const EditSkill = memo(() => {
 EditSkill.displayName = 'EditSkill';
 
 /** @type {MuiSx} */
-const infoStyles = {
-  content: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'flex-start',
-    gap: '0.5rem',
-    paddingBottom: '1.5rem',
-  },
-};
-
-/** @type {MuiSx} */
-const editSkillStyles = {
+const editSkillStyles = () => ({
   loadingContainer: {
     height: '100%',
     width: '100%',
@@ -297,20 +210,6 @@ const editSkillStyles = {
     margin: '0.75rem auto 0',
     maxWidth: '40.1875rem',
   },
-  previewContainer: {
-    height: '100%',
-    padding: '1rem',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.75rem',
-  },
-  previewTitle: {
-    flexShrink: 0,
-  },
-  previewBody: {
-    flex: 1,
-    overflowY: 'auto',
-  },
-};
+});
 
 export default EditSkill;

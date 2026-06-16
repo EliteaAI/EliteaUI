@@ -1,12 +1,11 @@
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
+import { eliteaApi } from '@/api/eliteaApi.js';
 import { PAGE_SIZE } from '@/common/constants';
 import { convertToJson, removeDuplicateObjects } from '@/common/utils.jsx';
 
-import { eliteaApi } from './eliteaApi.js';
-
-export const TAG_TYPE_SKILLS = 'TAG_TYPE_SKILLS';
-export const TAG_TYPE_SKILL_DETAILS = 'TAG_TYPE_SKILL_DETAILS';
-export const TAG_TYPE_TOTAL_SKILLS = 'TAG_TYPE_TOTAL_SKILLS';
+const TAG_TYPE_SKILLS = 'TAG_TYPE_SKILLS';
+const TAG_TYPE_SKILL_DETAILS = 'TAG_TYPE_SKILL_DETAILS';
+const TAG_TYPE_TOTAL_SKILLS = 'TAG_TYPE_TOTAL_SKILLS';
 
 const apiSlicePath = '/elitea_core';
 const mode = 'prompt_lib';
@@ -40,7 +39,7 @@ const patchSkillListCache = (state, dispatch, endpointName, skillId) => {
   return patchResults;
 };
 
-export const skillsApiSlice = eliteaApi
+const skillsApi = eliteaApi
   .enhanceEndpoints({
     addTagTypes: [TAG_TYPE_SKILLS, TAG_TYPE_SKILL_DETAILS, TAG_TYPE_TOTAL_SKILLS],
   })
@@ -292,4 +291,4 @@ export const {
   useDeleteSkillMutation,
   useLazySkillExportMdQuery,
   useSkillImportMutation,
-} = skillsApiSlice;
+} = skillsApi;

@@ -3,7 +3,7 @@ import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { parseMdFrontmatter } from '@/[fsd]/entities/import-wizard/lib/helpers';
-import { useSkillImportMutation } from '@/api/skills';
+import { useSkillImportMutation } from '@/[fsd]/features/skill/api';
 import { SkillsTabs } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';

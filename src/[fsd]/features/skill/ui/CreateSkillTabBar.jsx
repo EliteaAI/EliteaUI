@@ -1,37 +1,22 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Form, Formik, useFormikContext } from 'formik';
+import { useFormikContext } from 'formik';
 import { useNavigate } from 'react-router-dom';
 
-import { Grid, Button as MuiButton } from '@mui/material';
+import { Button as MuiButton } from '@mui/material';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
-import CreateSkillForm from '@/[fsd]/features/skill/ui/skill-details/form/CreateSkillForm';
+import { useSkillCreateMutation } from '@/[fsd]/features/skill/api';
 import { Button } from '@/[fsd]/shared/ui';
-import { useSkillCreateMutation } from '@/api/skills';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { SkillsTabs } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils.jsx';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
-import StyledTabs from '@/components/StyledTabs';
 import useNavBlocker from '@/hooks/useNavBlocker';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast.jsx';
-import { StyledGridContainer, TabBarItems } from '@/pages/Common/Components';
-import SkillValidateSchema from '@/pages/Skills/SkillValidateSchema';
+import { TabBarItems } from '@/pages/Common/Components';
 import RouteDefinitions from '@/routes';
-
-const useCreateSkillInitialValues = () =>
-  useMemo(
-    () => ({
-      name: '',
-      description: '',
-      version_details: {
-        tags: [],
-        instructions: '',
-      },
-    }),
-    [],
-  );
 
 const CreateSkillTabBar = memo(() => {
   const formik = useFormikContext();
@@ -97,7 +82,7 @@ const CreateSkillTabBar = memo(() => {
   return (
     <TabBarItems>
       <MuiButton
-        variant="elitea"
+        variant={BUTTON_VARIANTS.elitea}
         color="primary"
         disabled={shouldDisableSave}
         onClick={onSave}
@@ -116,59 +101,4 @@ const CreateSkillTabBar = memo(() => {
 
 CreateSkillTabBar.displayName = 'CreateSkillTabBar';
 
-const CreateSkill = memo(() => {
-  const initialValues = useCreateSkillInitialValues();
-
-  return (
-    <Formik
-      enableReinitialize
-      initialValues={initialValues}
-      validationSchema={SkillValidateSchema}
-      onSubmit={() => {}}
-    >
-      <StyledTabs
-        fullWidth
-        tabSX={{ paddingX: '24px' }}
-        tabs={[
-          {
-            label: 'New Skill',
-            tabBarItems: <CreateSkillTabBar />,
-            rightToolbar: <div />,
-            content: (
-              <Form style={{ height: '100%' }}>
-                <StyledGridContainer
-                  columnSpacing={'32px'}
-                  container
-                >
-                  <Grid
-                    size={{ xs: 12 }}
-                    sx={theme => ({
-                      [theme.breakpoints.up('lg')]: {
-                        overflowY: 'scroll',
-                        msOverflowStyle: 'none',
-                        scrollbarWidth: 'none',
-                        height: '100%',
-                        '::-webkit-scrollbar': {
-                          display: 'none',
-                        },
-                      },
-                      [theme.breakpoints.down('lg')]: {
-                        marginBottom: '24px',
-                      },
-                    })}
-                  >
-                    <CreateSkillForm />
-                  </Grid>
-                </StyledGridContainer>
-              </Form>
-            ),
-          },
-        ]}
-      />
-    </Formik>
-  );
-});
-
-CreateSkill.displayName = 'CreateSkill';
-
-export default CreateSkill;
+export default CreateSkillTabBar;

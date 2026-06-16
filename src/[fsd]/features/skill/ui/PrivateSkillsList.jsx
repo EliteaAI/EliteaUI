@@ -3,29 +3,17 @@ import { memo, useCallback, useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
-import { Box } from '@mui/material';
-
 import { EmptyStatePage } from '@/[fsd]/entities/empty-state-page';
+import { useLoadSkills } from '@/[fsd]/features/skill/lib/hooks';
 import { ContentType, ViewMode } from '@/common/constants';
 import { buildErrorMessage, uniqueArrayByProp } from '@/common/utils';
 import CardList from '@/components/CardList';
 import RightInfoPanel from '@/components/RightInfoPanel';
 import useCardList from '@/hooks/useCardList';
-import { useLoadSkills } from '@/hooks/useLoadSkills';
 import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes';
 
-const EmptyListPlaceHolder = ({ query }) => {
-  if (!query) {
-    return <Box>{`You have no skills.`}</Box>;
-  }
-  return (
-    <Box>
-      Nothing found. <br />
-      Create yours now!
-    </Box>
-  );
-};
+import PrivateSkillsListEmptyState from './PrivateSkillsListEmptyState';
 
 const PrivateSkillsList = memo(props => {
   const {
@@ -108,7 +96,7 @@ const PrivateSkillsList = memo(props => {
       loadMoreFunc={loadMore}
       cardType={cardContentType}
       customEmptyState={<EmptyStatePage {...EmptyStateConfig} />}
-      emptyListPlaceHolder={<EmptyListPlaceHolder query={query} />}
+      emptyListPlaceHolder={<PrivateSkillsListEmptyState query={query} />}
     />
   );
 });

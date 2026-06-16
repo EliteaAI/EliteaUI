@@ -2,111 +2,20 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import { useNavigate } from 'react-router-dom';
 
-import { IconButton, Menu, MenuItem, Tooltip, Typography } from '@mui/material';
-import { Box } from '@mui/system';
+import { Box, IconButton, Menu } from '@mui/material';
 
-import { useSkillExport } from '@/[fsd]/features/skill/lib/useSkillExport';
-import { useDeleteConfirmationDisabled } from '@/[fsd]/shared/lib/hooks';
-import { Modal } from '@/[fsd]/shared/ui';
-import { useDeleteSkillMutation } from '@/api/skills';
-import PublishIcon from '@/assets/publish-icon.svg?react';
+import { useDeleteSkillMutation } from '@/[fsd]/features/skill/api';
+import { useSkillExport } from '@/[fsd]/features/skill/lib/hooks';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { SkillsTabs } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils.jsx';
-import DeleteIcon from '@/components/Icons/DeleteIcon';
 import DotsMenuIcon from '@/components/Icons/DotsMenuIcon';
 import ExportIcon from '@/components/Icons/ExportIcon';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes';
 
-const PUBLISH_DISABLED_TOOLTIP = 'Available in future release';
-
-const BasicMenuItem = memo(props => {
-  const { icon, label, onClick, disabled } = props;
-  const styles = basicMenuItemStyles();
-
-  return (
-    <MenuItem
-      onClick={onClick}
-      sx={styles.menuItem}
-      disabled={disabled}
-    >
-      {icon}
-      <Typography variant="labelMedium">{label}</Typography>
-    </MenuItem>
-  );
-});
-
-BasicMenuItem.displayName = 'SkillBasicMenuItem';
-
-const DisabledPublishMenuItem = memo(() => {
-  const styles = basicMenuItemStyles();
-
-  return (
-    <Tooltip
-      title={PUBLISH_DISABLED_TOOLTIP}
-      placement="left"
-      arrow
-    >
-      <span>
-        <MenuItem
-          disabled
-          sx={styles.menuItem}
-        >
-          <PublishIcon />
-          <Typography variant="labelMedium">Publish</Typography>
-        </MenuItem>
-      </span>
-    </Tooltip>
-  );
-});
-
-DisabledPublishMenuItem.displayName = 'DisabledPublishMenuItem';
-
-const DeleteActionWithDialog = memo(props => {
-  const { name, onConfirm, closeMenu } = props;
-  const [open, setOpen] = useState(false);
-  const skipConfirmation = useDeleteConfirmationDisabled();
-
-  const openDialog = useCallback(() => {
-    if (skipConfirmation) {
-      onConfirm?.();
-      closeMenu();
-      return;
-    }
-    closeMenu();
-    setOpen(true);
-  }, [closeMenu, skipConfirmation, onConfirm]);
-
-  const onClose = useCallback(() => {
-    setOpen(false);
-  }, []);
-
-  const onClickConfirm = useCallback(() => {
-    onConfirm?.();
-    setOpen(false);
-  }, [onConfirm]);
-
-  return (
-    <>
-      <BasicMenuItem
-        icon={<DeleteIcon fontSize="inherit" />}
-        label="Delete"
-        onClick={openDialog}
-      />
-      <Modal.DeleteEntityModal
-        name={name}
-        open={open}
-        onClose={onClose}
-        onCancel={onClose}
-        onConfirm={onClickConfirm}
-        shouldRequestInputName
-      />
-    </>
-  );
-});
-
-DeleteActionWithDialog.displayName = 'SkillDeleteActionWithDialog';
+import { DisabledPublishMenuItem, SkillDeleteActionWithDialog, SkillRowMenuItem } from './skill-row-action';
 
 const SkillRowAction = memo(props => {
   const {
@@ -186,7 +95,7 @@ const SkillRowAction = memo(props => {
   return (
     <Box sx={[styles.container, ...(Array.isArray(sx) ? sx : [sx])]}>
       <IconButton
-        variant="elitea"
+        variant={BUTTON_VARIANTS.elitea}
         color="tertiary"
         sx={styles.iconButton}
         id={`${skillId}-skill-action`}
@@ -210,13 +119,13 @@ const SkillRowAction = memo(props => {
         }}
         keepMounted
       >
-        <BasicMenuItem
+        <SkillRowMenuItem
           icon={<ExportIcon fontSize="inherit" />}
           label="Export"
           onClick={withClose(onExport)}
         />
         <DisabledPublishMenuItem />
-        <DeleteActionWithDialog
+        <SkillDeleteActionWithDialog
           name={skillName}
           onConfirm={withClose(onDelete)}
           closeMenu={handleClose}
@@ -227,20 +136,6 @@ const SkillRowAction = memo(props => {
 });
 
 SkillRowAction.displayName = 'SkillRowAction';
-
-/** @type {MuiSx} */
-const basicMenuItemStyles = () => ({
-  menuItem: ({ palette }) => ({
-    minWidth: '13.75rem',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.75rem',
-    padding: '0.5rem 1.25rem',
-    '& .MuiTypography-root': {
-      color: palette.text.secondary,
-    },
-  }),
-});
 
 /** @type {MuiSx} */
 const skillRowActionStyles = () => ({

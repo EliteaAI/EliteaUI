@@ -10,15 +10,15 @@ import { Input } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { FileReaderEnhancer } from '@/[fsd]/shared/ui/input';
 import { useTagListQuery } from '@/api/tags.js';
-import { MAX_NAME_LENGTH, PROMPT_PAYLOAD_KEY } from '@/common/constants';
+import {
+  MAX_DESCRIPTION_LENGTH,
+  MAX_INSTRUCTIONS_LENGTH,
+  MAX_NAME_LENGTH,
+  PROMPT_PAYLOAD_KEY,
+} from '@/common/constants';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import TagEditor from '@/pages/Common/Components/TagEditor';
 import { useTheme } from '@emotion/react';
-
-// Description follows the platform-wide cap (API allows 1-2304).
-// Instructions get a Skills-specific visible counter capped at 2500 characters.
-export const MAX_SKILL_DESCRIPTION_LENGTH = 2304;
-export const MAX_SKILL_INSTRUCTIONS_LENGTH = 2500;
 
 const noop = () => {};
 
@@ -137,7 +137,7 @@ const CreateSkillForm = memo(props => {
                     error={formik.touched?.description && Boolean(formik.errors.description)}
                     helperText={formik.touched?.description && formik.errors.description}
                     disabled={disabled}
-                    inputProps={{ maxLength: MAX_SKILL_DESCRIPTION_LENGTH }}
+                    inputProps={{ maxLength: MAX_DESCRIPTION_LENGTH }}
                     hasActionsToolBar
                     fieldName="Description"
                   />
@@ -146,7 +146,7 @@ const CreateSkillForm = memo(props => {
                       variant="bodySmall"
                       sx={styles.descriptionCharactersLabel}
                     >
-                      {`${MAX_SKILL_DESCRIPTION_LENGTH - formik.values.description.length} characters left`}
+                      {`${MAX_DESCRIPTION_LENGTH - formik.values.description.length} characters left`}
                     </Typography>
                   )}
                 </Box>
@@ -188,14 +188,14 @@ const CreateSkillForm = memo(props => {
                   maxRows={20}
                   disabled={disabled}
                   fieldName="Instructions"
-                  inputProps={{ maxLength: MAX_SKILL_INSTRUCTIONS_LENGTH }}
+                  inputProps={{ maxLength: MAX_INSTRUCTIONS_LENGTH }}
                 />
                 {isFocused(PROMPT_PAYLOAD_KEY.instructions || 'instructions') && instructions.length > 0 && (
                   <Typography
                     variant="bodySmall"
                     sx={styles.descriptionCharactersLabel}
                   >
-                    {`${MAX_SKILL_INSTRUCTIONS_LENGTH - instructions.length} characters left`}
+                    {`${MAX_INSTRUCTIONS_LENGTH - instructions.length} characters left`}
                   </Typography>
                 )}
               </Box>

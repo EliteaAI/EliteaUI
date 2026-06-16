@@ -2,10 +2,11 @@ import { memo, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
+import IWModalEntityCardFullscreenText from '@/[fsd]/entities/import-wizard/ui/ImportWizardModal/IWModalEntityCardFullscreenText';
 import { Button, Modal } from '@/[fsd]/shared/ui';
 
 /**
- * Shared, presentational import "entity card" used by the import flows
+ * Shared, presentational import "entity card" wrapper used by the import flows
  * (Agents/Pipelines and Skills) so the look & feel stays consistent in one place.
  *
  * It renders the card header (icon + title + subtitle + Show/Hide details), an
@@ -22,13 +23,13 @@ import { Button, Modal } from '@/[fsd]/shared/ui';
  * @param {(setFullscreenData: Function) => React.ReactNode} props.children  Detail fields.
  * @param {(fullscreenData: object) => React.ReactNode} [props.renderFullscreenContent]
  */
-const ImportEntityCard = memo(props => {
+const IWModalEntityCardWrapper = memo(props => {
   const { icon, title, subtitle, defaultExpanded = false, children, renderFullscreenContent } = props;
 
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [fullscreenData, setFullscreenData] = useState(null);
 
-  const styles = importEntityCardStyles(isExpanded);
+  const styles = iWModalEntityCardWrapperStyles(isExpanded);
 
   return (
     <>
@@ -65,7 +66,7 @@ const ImportEntityCard = memo(props => {
           renderFullscreenContent ? (
             renderFullscreenContent(fullscreenData)
           ) : (
-            <ImportEntityFullscreenText content={fullscreenData?.content} />
+            <IWModalEntityCardFullscreenText content={fullscreenData?.content} />
           )
         }
       />
@@ -73,28 +74,10 @@ const ImportEntityCard = memo(props => {
   );
 });
 
-ImportEntityCard.displayName = 'ImportEntityCard';
-
-/** Standard text body for the full-screen previewer (shared so it stays consistent). */
-export const ImportEntityFullscreenText = memo(({ content }) => {
-  const styles = importEntityCardStyles(false);
-  return (
-    <Box sx={[styles.textBlock, { height: '34rem', overflowY: 'auto' }]}>
-      <Typography
-        variant="bodySmall"
-        sx={styles.fullScreenText}
-        component="p"
-      >
-        {content}
-      </Typography>
-    </Box>
-  );
-});
-
-ImportEntityFullscreenText.displayName = 'ImportEntityFullscreenText';
+IWModalEntityCardWrapper.displayName = 'IWModalEntityCardWrapper';
 
 /** @type {(isExpanded: boolean) => MuiSx} */
-export const importEntityCardStyles = isExpanded => ({
+const iWModalEntityCardWrapperStyles = isExpanded => ({
   entityCard: ({ palette }) => ({
     display: 'flex',
     flexDirection: 'column',
@@ -172,17 +155,6 @@ export const importEntityCardStyles = isExpanded => ({
     marginLeft: 'auto',
     whiteSpace: 'nowrap',
   },
-  textBlock: ({ palette }) => ({
-    border: `0.0625rem solid ${palette.border.lines}`,
-    borderRadius: '0.5rem',
-    padding: '.5rem 1rem',
-  }),
-  fullScreenText: ({ palette }) => ({
-    color: palette.text.secondary,
-    lineHeight: '1rem',
-    whiteSpace: 'pre-wrap',
-    wordBreak: 'break-word',
-  }),
 });
 
-export default ImportEntityCard;
+export default IWModalEntityCardWrapper;

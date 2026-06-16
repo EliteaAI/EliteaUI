@@ -1,14 +1,13 @@
-import { useCallback, useMemo } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 
 import { useFormikContext } from 'formik';
 
+import { useSaveSkill } from '@/[fsd]/features/skill/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
-import useSaveSkill from '@/hooks/skill/useSaveSkill';
 
-// Page-level Save button for a skill (mirrors SaveApplicationButton): owns the
-// disabled logic and delegates the mutation to useSaveSkill.
-export default function SaveSkillButton({ onSuccess }) {
+const SaveSkillButton = memo(({ onSuccess }) => {
   const { values, dirty } = useFormikContext();
   const { onSave, isSaving } = useSaveSkill();
 
@@ -25,7 +24,7 @@ export default function SaveSkillButton({ onSuccess }) {
   return (
     <Button.BaseBtn
       disabled={isDisabled}
-      variant="elitea"
+      variant={BUTTON_VARIANTS.elitea}
       color="primary"
       onClick={handleSave}
     >
@@ -33,4 +32,8 @@ export default function SaveSkillButton({ onSuccess }) {
       {isSaving && <StyledCircleProgress size={20} />}
     </Button.BaseBtn>
   );
-}
+});
+
+SaveSkillButton.displayName = 'SaveSkillButton';
+
+export default SaveSkillButton;
