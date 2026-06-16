@@ -242,6 +242,10 @@ const ChatBox = forwardRef((props, boxRef) => {
     stop: stopTTS,
     isPlaying,
     spokenRange,
+    showPlayer,
+    setShowPlayer,
+    speakableText,
+    setSpeakableText,
   } = useTextToSpeech({
     ttsModel,
     socket,
@@ -256,20 +260,27 @@ const ChatBox = forwardRef((props, boxRef) => {
   const handleAutoSpeak = useCallback(
     (text, msgId) => {
       if (!text) return;
-      const { text: speakableText, segments } = toSpeakableText(text);
-      if (!speakableText) return;
+      const { text: convertedText, segments } = toSpeakableText(text);
+      if (!convertedText) return;
       setSpeakingMessageId(msgId ?? null);
       setSpeakingSegments(segments);
-      speak(speakableText);
+      setSpeakableText(convertedText);
+      setShowPlayer(true);
     },
-    [speak],
+    [setShowPlayer, setSpeakableText],
   );
+
+  const handlePlay = useCallback(() => {
+    speak(speakableText);
+  }, [speak, speakableText]);
 
   useEffect(() => {
     if (!isPlaying) {
       setSpeakingMessageId(null);
       setSpeakingSegments(null);
+      setShowPlayer(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPlaying]);
 
   const isTheUserChattingNow = useMemo(() => {
@@ -1939,14 +1950,16 @@ const ChatBox = forwardRef((props, boxRef) => {
             conversation_starters={hasStarterBeenSent || isTheUserChattingNow ? [] : conversationStarters}
           />
         )}
-        {isPlaying && (
+        {showPlayer && (
           <VoiceMiniPlayer
             voiceConfig={voiceConfig}
             voices={displayVoices}
             onVoiceConfigChange={setVoiceConfig}
             ttsModel={ttsModel}
             hasModelTTS={hasModelTTS}
+            isPlaying={isPlaying}
             onStop={stopTTS}
+            onPlay={handlePlay}
           />
         )}
         <Box sx={hitlEditMode ? styles.inputWrapperHitl : styles.inputWrapper}>
