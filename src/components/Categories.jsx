@@ -169,6 +169,7 @@ const Categories = ({
   const isOnUserPublic = useIsFrom(RouteDefinitions.UserPublic);
   const isFromApplications = useIsFrom(RouteDefinitions.Applications);
   const isFromPipelines = useIsFrom(RouteDefinitions.Pipelines);
+  const isFromSkills = useIsFrom(RouteDefinitions.Skills);
   const { tab } = useParams();
 
   React.useEffect(() => {
@@ -227,6 +228,8 @@ const Categories = ({
       if (my_liked) {
         tagListParams.my_liked = my_liked;
       }
+    } else if (isFromSkills) {
+      tagListParams.entity_coverage = 'skill';
     }
     if (tagListParams.query && tagListParams.collection_phrase) {
       tagListParams.splitRequest = true;
@@ -253,6 +256,7 @@ const Categories = ({
     my_liked,
     isFromApplications,
     isFromPipelines,
+    isFromSkills,
     specifiedStatus,
   ]);
 

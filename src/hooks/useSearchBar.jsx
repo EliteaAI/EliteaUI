@@ -7,6 +7,7 @@ import RouteDefinitions from '@/routes';
 const useSearchBar = () => {
   const { pathname } = useLocation();
   const isPublicApplicationsPage = useMatch({ path: RouteDefinitions.ApplicationsWithTab });
+  const isSkillsPage = useMatch({ path: RouteDefinitions.SkillsWithTab });
   const isPipelinesPage = useMatch({ path: RouteDefinitions.PipelinesWithTab });
   const isToolkitsPage = useMatch({ path: RouteDefinitions.ToolkitsWithTab });
   const isMCPsPage = useMatch({ path: RouteDefinitions.MCPsWithTab });
@@ -18,6 +19,7 @@ const useSearchBar = () => {
     return (
       !isCreatingNow &&
       (isPublicApplicationsPage ||
+        isSkillsPage ||
         isPipelinesPage ||
         isToolkitsPage ||
         isCredentialsPage ||
@@ -27,6 +29,7 @@ const useSearchBar = () => {
   }, [
     isCreatingNow,
     isPublicApplicationsPage,
+    isSkillsPage,
     isPipelinesPage,
     isToolkitsPage,
     isCredentialsPage,
@@ -36,6 +39,7 @@ const useSearchBar = () => {
   return {
     showSearchBar,
     isPublicApplicationsPage,
+    isSkillsPage,
     isUserPublicPage,
     isPipelinesPage,
     isToolkitsPage,
