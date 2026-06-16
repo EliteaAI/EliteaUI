@@ -194,7 +194,6 @@ const EditSkill = memo(() => {
             label: data?.name || 'Skill',
             tabBarItems: isFetching ? null : (
               <SkillTabBar
-                skillId={skillId}
                 versions={data?.versions || []}
                 currentVersionName={currentVersionName}
                 onChangeVersion={handleChangeVersion}
