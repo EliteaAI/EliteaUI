@@ -243,10 +243,15 @@ const UserMessage = React.forwardRef((props, ref) => {
               }}
             />
           </ChatInputContainer>
-          {attachmentItems?.length > 0 && <MessageAttachmentList items={attachmentItems} />}
+          {attachmentItems?.length > 0 && (
+            <MessageAttachmentList
+              items={attachmentItems}
+              onRemoveAttachment={onRemoveAttachment}
+            />
+          )}
           <Box sx={styles.editButtonsContainer}>
             <Button.BaseBtn
-              variant={BUTTON_VARIANTS.elitea}
+              variant={BUTTON_VARIANTS.contained}
               color={BUTTON_COLORS.primary}
               sx={styles.submitButton}
               disabled={value === content || !value.trim()}
@@ -255,7 +260,7 @@ const UserMessage = React.forwardRef((props, ref) => {
               Save and apply
             </Button.BaseBtn>
             <Button.BaseBtn
-              variant={BUTTON_VARIANTS.elitea}
+              variant={BUTTON_VARIANTS.secondary}
               color={BUTTON_COLORS.secondary}
               onClick={onCancel}
             >
