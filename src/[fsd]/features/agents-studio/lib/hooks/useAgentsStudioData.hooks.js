@@ -2,9 +2,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useDispatch, useSelector } from 'react-redux';
 
+import { useGetAgentCategoriesQuery } from '@/[fsd]/features/agent/api/agentCategoriesApi';
 import { AgentsStudioConstants } from '@/[fsd]/features/agents-studio/lib/constants';
 import { useLazyPublicApplicationsListQuery } from '@/api/applications';
-import { useGetAgentCategoriesQuery } from '@/api/categories';
 import { CollectionStatus, PUBLIC_PROJECT_ID } from '@/common/constants';
 import {
   actions as agentsStudioActions,

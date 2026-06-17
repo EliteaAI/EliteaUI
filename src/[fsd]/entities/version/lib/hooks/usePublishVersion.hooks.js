@@ -6,9 +6,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { useTrackEvent } from '@/GA';
 import { PUBLISH_STEPS } from '@/[fsd]/entities/version/ui/PublishWizardModal';
+import { useGetAgentCategoriesQuery } from '@/[fsd]/features/agent/api/agentCategoriesApi';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
 import { usePublishApplicationMutation, useValidateForPublishMutation } from '@/api';
-import { useGetAgentCategoriesQuery } from '@/api/categories';
 import { useGetPlatformSettingsQuery } from '@/api/platformSettings';
 import { CollectionStatus, PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';
 import { useIsFromPipelineDetail } from '@/hooks/useIsFromSpecificPageHooks';

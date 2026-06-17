@@ -1,10 +1,10 @@
-import { eliteaApi } from './eliteaApi.js';
+import { eliteaApi } from '@/api/eliteaApi.js';
 
 const apiSlicePath = '/elitea_core/agent_categories';
 
 export const TAG_AGENT_CATEGORIES = 'TAG_AGENT_CATEGORIES';
 
-export const agentCategoriesApi = eliteaApi
+const agentCategoriesApi = eliteaApi
   .enhanceEndpoints({
     addTagTypes: [TAG_AGENT_CATEGORIES],
   })
