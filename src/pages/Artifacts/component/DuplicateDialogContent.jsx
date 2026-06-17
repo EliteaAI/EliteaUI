@@ -1,38 +1,56 @@
-import React from 'react';
+import { Box, Typography } from '@mui/material';
 
-import { Typography } from '@mui/material';
+const DuplicateDialogContent = props => {
+  const { duplicateFilenames = [] } = props;
 
-const DuplicateDialogContent = ({ duplicateFilenames = [] }) => {
   if (!duplicateFilenames.length) {
     return null;
   }
 
   const isMultiple = duplicateFilenames.length > 1;
+  const styles = duplicateDialogContentStyles();
 
   return (
-    <Typography
-      variant="bodyMedium"
-      color="text.secondary"
-    >
-      A file with the same name already exists in the bucket{isMultiple ? 's' : ''}:{' '}
+    <Box sx={styles.wrapper}>
+      <Typography
+        variant="bodyMedium"
+        color="text.secondary"
+      >
+        {`${isMultiple ? 'Files' : 'A file'} with the same name already exist${isMultiple ? '' : 's'} in the
+        bucket.`}
+      </Typography>
       {duplicateFilenames.map((filename, index) => (
-        <React.Fragment key={filename}>
-          <Typography
-            component="span"
-            variant="headingSmall"
-            sx={({ palette }) => ({
-              color: palette.text.deleteAlertEntityName,
-            })}
-          >
-            {filename}
-          </Typography>
-          {index < duplicateFilenames.length - 1 && ', '}
-        </React.Fragment>
+        <Typography
+          key={`${index}-${filename}`}
+          variant="headingSmall"
+          sx={styles.filename}
+        >
+          {filename}
+        </Typography>
       ))}
-      . Uploading {isMultiple ? 'these files' : 'this file'} will override the existing{' '}
-      {isMultiple ? 'files' : 'file'}. Do you want to proceed?
-    </Typography>
+      <Typography
+        variant="bodyMedium"
+        color="text.secondary"
+      >
+        Uploading {isMultiple ? 'these files' : 'this file'} will override the existing{' '}
+        {isMultiple ? 'files' : 'file'}. Do you want to proceed?
+      </Typography>
+    </Box>
   );
 };
 
 export default DuplicateDialogContent;
+
+/** @type {MuiSx} */
+const duplicateDialogContentStyles = () => ({
+  wrapper: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem',
+  },
+  filename: ({ palette }) => ({
+    color: palette.text.deleteAlertEntityName,
+    wordBreak: 'break-word',
+    overflowWrap: 'break-word',
+  }),
+});
