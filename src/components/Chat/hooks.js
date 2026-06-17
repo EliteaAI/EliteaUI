@@ -1063,6 +1063,10 @@ export const useChatSocket = ({
             msg.isStreaming = true;
             msg.isLoading = false;
             msg.isSending = false;
+            // Clear any leftover regenerating flag: if this message was being
+            // regenerated when a child paused, leaving it set keeps the UI in a
+            // processing state and suppresses the live thinking view.
+            msg.isRegenerating = false;
           }
 
           const hitlThreadId = message.threadId || hitlMeta.thread_id || response_metadata?.thread_id;
@@ -1156,12 +1160,24 @@ export const useChatSocket = ({
               else merged.push(inc);
             });
             msg.hitlInterrupts = merged;
-          } else {
+          } else if (rawInterrupts.length > 0) {
+            // True backend parallel aggregate (Track 1): N entries arrive in
+            // hitl_interrupts. Populate the array so ChatBox routes resume via
+            // hitl_decisions (keyed by tool_call_id).
             msg.hitlInterrupts = incomingInterrupts;
+          } else {
+            // Legacy single pause: leave hitlInterrupts UNSET. ChatBox's
+            // isParallel detection keys off the mere presence of the array; a
+            // single pause must keep the sequential hitl_action resume shape.
+            // ApplicationAnswer falls back to [hitlInterrupt] for rendering.
+            msg.hitlInterrupts = undefined;
           }
           // Keep the singular field populated with the first entry for
-          // back-compat with any consumer that still reads hitlInterrupt.
-          msg.hitlInterrupt = msg.hitlInterrupts[0];
+          // back-compat with consumers that read hitlInterrupt, and as the sole
+          // carrier for the legacy single-pause path above. Prefer the merged
+          // array head (fan-out) so it tracks the first still-pending child.
+          msg.hitlInterrupt =
+            (Array.isArray(msg.hitlInterrupts) && msg.hitlInterrupts[0]) || incomingInterrupts[0];
           trackEvent(GA_EVENT_NAMES.HITL_INTERRUPT, {
             [GA_EVENT_PARAMS.AGENT_ID]:
               (participantsRef.current?.find(p => p.id === participant_id) || activeParticipantRef.current)

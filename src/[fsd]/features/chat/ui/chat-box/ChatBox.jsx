@@ -1239,7 +1239,7 @@ const ChatBox = forwardRef((props, boxRef) => {
   const pendingDecisionsRef = useRef({ messageId: null, decisions: {} });
 
   const onHitlResume = useCallback(
-    async ({ action, value, toolCallId }) => {
+    async ({ action, value, toolCallId: providedToolCallId }) => {
       const lastMessage = pendingHitlMessage;
       if (!lastMessage) return;
 
@@ -1248,6 +1248,15 @@ const ChatBox = forwardRef((props, boxRef) => {
         : lastMessage.hitlInterrupt
           ? [lastMessage.hitlInterrupt]
           : [];
+
+      // The edit path (chat input -> onHitlResume({ action: 'edit', value }))
+      // carries no toolCallId. When exactly one interrupt remains, derive it
+      // from that sole entry so a single still-pending parallel/fan-out child
+      // keeps its tool_call_id-routed resume path instead of falling back to
+      // the legacy hitl_action shape (which the SDK can't match to the child).
+      const toolCallId =
+        providedToolCallId ||
+        (interrupts.length === 1 ? interrupts[0]?.tool_call_id || undefined : undefined);
 
       // The interrupt entry being decided (matched by tool_call_id).
       const decidedEntry = toolCallId ? interrupts.find(e => e?.tool_call_id === toolCallId) : undefined;

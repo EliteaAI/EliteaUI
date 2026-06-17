@@ -9,8 +9,8 @@ const iconStyles = {
     flexShrink: 0,
   },
   iconImage: {
-    width: 16,
-    height: 16,
+    width: '1rem',
+    height: '1rem',
     borderRadius: '50%',
     overflow: 'hidden',
     flexShrink: 0,
