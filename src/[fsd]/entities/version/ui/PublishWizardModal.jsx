@@ -13,7 +13,7 @@ import {
   Typography,
 } from '@mui/material';
 
-import { Button, Input } from '@/[fsd]/shared/ui';
+import { Button, Input, Select } from '@/[fsd]/shared/ui';
 import CheckedIcon from '@/assets/checked-icon.svg?react';
 import { useCtrlEnterKeyEventsHandler } from '@/components/Chat/hooks';
 import CloseIcon from '@/components/Icons/CloseIcon';
@@ -40,6 +40,9 @@ const PublishWizardModal = memo(
     step,
     versionName,
     onVersionNameChange,
+    category,
+    onCategoryChange,
+    categoryOptions,
     agreed,
     onAgreedChange,
     validationResult,
@@ -52,13 +55,21 @@ const PublishWizardModal = memo(
   }) => {
     const canContinue = useMemo(
       () =>
-        versionName.trim().length > 0 && agreed && /^[a-zA-Z0-9._-]+$/.test(versionName) && !versionNameError,
-      [versionName, agreed, versionNameError],
+        versionName.trim().length > 0 &&
+        !!category &&
+        agreed &&
+        /^[a-zA-Z0-9._-]+$/.test(versionName) &&
+        !versionNameError,
+      [versionName, category, agreed, versionNameError],
     );
 
     const canAdminPublish = useMemo(
-      () => versionName.trim().length > 0 && /^[a-zA-Z0-9._-]+$/.test(versionName) && !versionNameError,
-      [versionName, versionNameError],
+      () =>
+        versionName.trim().length > 0 &&
+        !!category &&
+        /^[a-zA-Z0-9._-]+$/.test(versionName) &&
+        !versionNameError,
+      [versionName, category, versionNameError],
     );
 
     const canPublish = useMemo(
@@ -187,6 +198,22 @@ const PublishWizardModal = memo(
                 }
                 inputProps={{ maxLength: VERSION_NAME_MAX_LENGTH }}
               />
+              <Select.SingleSelect
+                showBorder
+                displayEmpty
+                emptyPlaceholder={
+                  <Typography
+                    variant="labelMedium"
+                    color="text.secondary"
+                  >
+                    Category
+                  </Typography>
+                }
+                value={category}
+                options={categoryOptions}
+                onValueChange={onCategoryChange}
+                helperText="Select a category to help users discover your agent."
+              />
             </Box>
           ) : (
             <Box sx={styles.stepsContentWrapper}>
@@ -194,6 +221,9 @@ const PublishWizardModal = memo(
                 <PreparationStep
                   versionName={versionName}
                   onVersionNameChange={onVersionNameChange}
+                  category={category}
+                  onCategoryChange={onCategoryChange}
+                  categoryOptions={categoryOptions}
                   agreed={agreed}
                   onAgreedChange={onAgreedChange}
                   error={versionNameError || (step === PUBLISH_STEPS.PREPARATION ? publishError : undefined)}
