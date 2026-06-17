@@ -11,6 +11,7 @@ import { INTERNAL_TOOLS_LIST } from '@/[fsd]/shared/lib/constants/internalTools.
 import AgentIcon from '@/assets/agent.svg?react';
 import FlowIcon from '@/assets/flow-icon.svg?react';
 import FullScreenIconSvg from '@/assets/full-screen-icon.svg?react';
+import SkillIcon from '@/assets/skill-icon.svg?react';
 import MermaidDiagramOutput from '@/components/MermaidDiagramOutput/DiagramOutput';
 
 const IWModalEntityCard = memo(props => {
@@ -19,6 +20,7 @@ const IWModalEntityCard = memo(props => {
   const styles = iWModalEntityCardStyles();
 
   const isPipeline = entity?.details?.agent_type === 'pipeline';
+  const isSkill = entity?.entity === 'skills';
 
   const toolkits = useMemo(
     () => entity?.details?.tools?.filter(t => t.type !== 'application') ?? [],
@@ -34,9 +36,9 @@ const IWModalEntityCard = memo(props => {
 
   return (
     <IWModalEntityCardWrapper
-      icon={isPipeline ? <FlowIcon /> : <AgentIcon />}
+      icon={isSkill ? <SkillIcon /> : isPipeline ? <FlowIcon /> : <AgentIcon />}
       title={entity.name}
-      subtitle={`Type: ${isPipeline ? 'pipeline' : 'agent'}`}
+      subtitle={`Type: ${isSkill ? 'skill' : isPipeline ? 'pipeline' : 'agent'}`}
       renderFullscreenContent={fullscreenData =>
         fullscreenData?.isDiagram ? (
           <Box sx={{ height: '34rem', borderRadius: '.5rem', overflow: 'hidden' }}>
@@ -108,50 +110,66 @@ const IWModalEntityCard = memo(props => {
 
           {Boolean(toolkits.length) && <IWModalEntityToolkitsField toolkits={toolkits} />}
 
-          <IWModalEntityTextField
-            title="Welcome message"
-            description={entity.details.welcome_message}
-            lineClamp={3}
-            setFullscreenData={setFullscreenData}
-            height="4rem"
-            type="markdown"
-          />
-
-          <IWModalEntityTextField
-            title="Conversation starters"
-            description={entity.details.conversation_starters?.join('\n\n')}
-            lineClamp={3}
-            setFullscreenData={setFullscreenData}
-            height="4rem"
-            type="markdown"
-          />
-
-          {Boolean(entity?.details?.internal_tools?.length) && (
+          {isSkill && (
             <Box>
-              <Typography sx={styles.label}>Internal tools:</Typography>
+              <Typography sx={styles.label}>Version:</Typography>
               <Typography
                 variant="bodyMedium"
                 sx={({ palette }) => ({ color: palette.text.secondary })}
               >
-                {entity.details.internal_tools
-                  .map(it => INTERNAL_TOOLS_LIST.find(i => i.name === it)?.title ?? it)
-                  .join(',')}
+                {entity?.details?.name || 'base'}
               </Typography>
             </Box>
           )}
 
-          <Box>
-            <Typography sx={styles.label}>Other:</Typography>
-            <Box sx={{ display: 'flex', flexDirection: 'row', gap: '.35rem', alignItems: 'center' }}>
-              <Typography variant="bodyMedium">Step Limit:</Typography>
-              <Typography
-                variant="bodyMedium"
-                sx={({ palette }) => ({ color: palette.text.secondary })}
-              >
-                {entity?.details?.meta.step_limit}
-              </Typography>
-            </Box>
-          </Box>
+          {!isSkill && (
+            <>
+              <IWModalEntityTextField
+                title="Welcome message"
+                description={entity.details.welcome_message}
+                lineClamp={3}
+                setFullscreenData={setFullscreenData}
+                height="4rem"
+                type="markdown"
+              />
+
+              <IWModalEntityTextField
+                title="Conversation starters"
+                description={entity.details.conversation_starters?.join('\n\n')}
+                lineClamp={3}
+                setFullscreenData={setFullscreenData}
+                height="4rem"
+                type="markdown"
+              />
+
+              {Boolean(entity?.details?.internal_tools?.length) && (
+                <Box>
+                  <Typography sx={styles.label}>Internal tools:</Typography>
+                  <Typography
+                    variant="bodyMedium"
+                    sx={({ palette }) => ({ color: palette.text.secondary })}
+                  >
+                    {entity.details.internal_tools
+                      .map(it => INTERNAL_TOOLS_LIST.find(i => i.name === it)?.title ?? it)
+                      .join(',')}
+                  </Typography>
+                </Box>
+              )}
+
+              <Box>
+                <Typography sx={styles.label}>Other:</Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'row', gap: '.35rem', alignItems: 'center' }}>
+                  <Typography variant="bodyMedium">Step Limit:</Typography>
+                  <Typography
+                    variant="bodyMedium"
+                    sx={({ palette }) => ({ color: palette.text.secondary })}
+                  >
+                    {entity?.details?.meta.step_limit}
+                  </Typography>
+                </Box>
+              </Box>
+            </>
+          )}
         </>
       )}
     </IWModalEntityCardWrapper>
