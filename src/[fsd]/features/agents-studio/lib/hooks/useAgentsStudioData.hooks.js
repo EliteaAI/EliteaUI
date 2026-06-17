@@ -12,17 +12,20 @@ import {
   selectIsCacheValid,
 } from '@/slices/agentsStudio';
 
+/** Single bulk-fetch limit — covers realistic max deployments (≤200 published agents). */
+const ALL_AGENTS_LIMIT = 1000;
+/** Search results limit. */
+const SEARCH_AGENTS_LIMIT = 100;
+
 /**
  * Custom hook to manage Agent Studio data fetching and state.
  *
- * Categories are a predefined, constrained set (served by the agent categories
- * endpoint). Each category is fetched independently from the public listing via
- * the server-side `category` filter (which also resolves the "Other" catch-all),
- * plus the special Trending and My Liked buckets.
+ * Strategy: fetch ALL published agents in a single request, then bucket them
+ * client-side by their category tag. This avoids N separate requests (one per
+ * category) and restores the pre-EL-5204 performance profile.
  *
- * Optimization: Uses Redux for state persistence across navigation. Data is
- * cached for 5 minutes, preventing unnecessary API calls when users navigate
- * away and return to the Agent Studio page.
+ * Special buckets (Trending, My Liked) still use their own targeted requests.
+ * Redux caching (60 min) prevents re-fetching on navigation.
  */
 export const useAgentsStudioData = (query, selectedTagNames) => {
   const dispatch = useDispatch();
@@ -32,7 +35,6 @@ export const useAgentsStudioData = (query, selectedTagNames) => {
   const [loadingTags, setLoadingTags] = useState(new Set());
   const [refreshingTags, setRefreshingTags] = useState(new Set());
   const isRefetchingTrendingRef = useRef(false);
-  const fetchedCategoryNamesRef = useRef(new Set());
   const lastQueryRef = useRef(query);
   const stateRef = useRef({ applicationsByTag, totalCountsByTag, currentPageByTag });
   stateRef.current = { applicationsByTag, totalCountsByTag, currentPageByTag };
@@ -49,73 +51,80 @@ export const useAgentsStudioData = (query, selectedTagNames) => {
       if (categoryName === AgentsStudioConstants.TRENDING_CATEGORY) {
         isRefetchingTrendingRef.current = false;
       }
-
-      dispatch(
-        agentsStudioActions.updateCategoryData({
-          categoryName,
-          page,
-          rows,
-          total,
-        }),
-      );
+      dispatch(agentsStudioActions.updateCategoryData({ categoryName, page, rows, total }));
     },
     [dispatch],
   );
 
-  const setLoading = useCallback((categoryId, isLoading) => {
+  const setLoading = useCallback((id, isLoading) => {
     setLoadingTags(prev => {
-      const newSet = new Set(prev);
-      if (isLoading) {
-        newSet.add(categoryId);
-      } else {
-        newSet.delete(categoryId);
-      }
-      return newSet;
+      const s = new Set(prev);
+      isLoading ? s.add(id) : s.delete(id);
+      return s;
     });
   }, []);
 
-  const setRefreshing = useCallback((categoryId, isRefreshing) => {
+  const setRefreshing = useCallback((id, isRefreshing) => {
     setRefreshingTags(prev => {
-      const newSet = new Set(prev);
-      if (isRefreshing) {
-        newSet.add(categoryId);
-      } else {
-        newSet.delete(categoryId);
-      }
-      return newSet;
+      const s = new Set(prev);
+      isRefreshing ? s.add(id) : s.delete(id);
+      return s;
     });
   }, []);
 
-  const fetchApplicationsForCategoryName = useCallback(
-    async (categoryName, page = 0) => {
-      setLoading(categoryName, true);
+  /**
+   * Bucket a flat list of apps into category buckets using their tags.
+   * Each app is placed in the bucket matching its category tag name.
+   * Apps with no active-category tag fall into "Other".
+   */
+  const bucketAppsByCategory = useCallback((rows, activeCategoryNames) => {
+    const activeSet = new Set(activeCategoryNames);
+    const buckets = {};
 
+    rows.forEach(app => {
+      const categoryTag = app.tags?.find(tag => activeSet.has(tag.name));
+      const bucket = categoryTag ? categoryTag.name : AgentsStudioConstants.OTHER_CATEGORY;
+      if (!buckets[bucket]) buckets[bucket] = [];
+      buckets[bucket].push(app);
+    });
+
+    return buckets;
+  }, []);
+
+  /**
+   * Single bulk fetch: one request for all published agents, categorized client-side.
+   */
+  const fetchAllAndCategorize = useCallback(
+    async activeCategoryNames => {
+      setLoading('bulk_fetch', true);
       try {
         const result = await fetchApplications({
-          page,
-          pageSize: AgentsStudioConstants.PAGE_SIZE,
+          page: 0,
+          pageSize: ALL_AGENTS_LIMIT,
           params: {
             query,
-            category: categoryName,
             statuses: CollectionStatus.Published,
             agents_type: 'classic',
           },
         }).unwrap();
 
-        if (result?.rows) {
-          updateApplicationData(categoryName, page, result.rows, result.total);
-        }
+        if (!result?.rows) return;
+
+        const buckets = bucketAppsByCategory(result.rows, activeCategoryNames);
+
+        Object.entries(buckets).forEach(([categoryName, rows]) => {
+          updateApplicationData(categoryName, 0, rows, rows.length);
+        });
       } finally {
-        setLoading(categoryName, false);
+        setLoading('bulk_fetch', false);
       }
     },
-    [fetchApplications, query, setLoading, updateApplicationData],
+    [fetchApplications, query, setLoading, bucketAppsByCategory, updateApplicationData],
   );
 
   const fetchTrendingApplications = useCallback(
     async (page = 0) => {
       setLoading(AgentsStudioConstants.TRENDING_CATEGORY, true);
-
       try {
         const result = await fetchApplications({
           page,
@@ -143,7 +152,6 @@ export const useAgentsStudioData = (query, selectedTagNames) => {
   const fetchMyLikedApplications = useCallback(
     async (page = 0) => {
       setLoading(AgentsStudioConstants.MY_LIKED_CATEGORY, true);
-
       try {
         const result = await fetchApplications({
           page,
@@ -170,17 +178,35 @@ export const useAgentsStudioData = (query, selectedTagNames) => {
     dispatch(agentsStudioActions.clearCache());
   }, [dispatch]);
 
-  const fetchAllCategories = useCallback(async () => {
-    if (categoryNames.length === 0) return;
-    await Promise.all(categoryNames.map(name => fetchApplicationsForCategoryName(name, 0)));
-  }, [categoryNames, fetchApplicationsForCategoryName]);
-
+  /**
+   * Search: single request for up to 100 results, then bucket client-side.
+   */
   const searchAndCategorize = useCallback(async () => {
     setLoading('global_search', true);
     resetSearchByTag();
-
     try {
-      await Promise.all(categoryNames.map(name => fetchApplicationsForCategoryName(name, 0)));
+      const result = await fetchApplications({
+        page: 0,
+        pageSize: SEARCH_AGENTS_LIMIT,
+        params: {
+          query,
+          statuses: CollectionStatus.Published,
+          agents_type: 'classic',
+        },
+      }).unwrap();
+
+      if (!result?.rows) return;
+
+      const buckets = bucketAppsByCategory(result.rows, categoryNames);
+
+      dispatch(
+        agentsStudioActions.setApplicationsData({
+          applicationsByTag: buckets,
+          totalCountsByTag: Object.fromEntries(Object.entries(buckets).map(([k, v]) => [k, v.length])),
+          currentPageByTag: {},
+          query,
+        }),
+      );
     } catch (error) {
       if (error.status !== 404) {
         // eslint-disable-next-line no-console
@@ -189,20 +215,23 @@ export const useAgentsStudioData = (query, selectedTagNames) => {
     } finally {
       setLoading('global_search', false);
     }
-  }, [categoryNames, fetchApplicationsForCategoryName, setLoading, resetSearchByTag]);
+  }, [fetchApplications, query, setLoading, resetSearchByTag, bucketAppsByCategory, categoryNames, dispatch]);
 
-  // Main data fetching effect - uses Redux cache when valid
+  /**
+   * Exposed for load-more compatibility. Since all category data is fetched
+   * upfront (totalCount == items.length), this is only called on manual refresh.
+   */
+  const fetchApplicationsForCategoryName = useCallback(async () => {
+    await fetchAllAndCategorize(categoryNames);
+  }, [fetchAllAndCategorize, categoryNames]);
+
+  // Main data fetching effect
   useEffect(() => {
-    // If query changed, reset tracking
     if (query !== lastQueryRef.current) {
       lastQueryRef.current = query;
-      fetchedCategoryNamesRef.current = new Set();
     }
 
-    // Skip until the predefined category list has loaded
-    if (categoryNames.length === 0) {
-      return;
-    }
+    if (categoryNames.length === 0) return;
 
     if (query) {
       if (!isCacheValid) {
@@ -212,68 +241,34 @@ export const useAgentsStudioData = (query, selectedTagNames) => {
     }
 
     if (!isCacheValid) {
-      // Cache is invalid — fetch every predefined category plus the special buckets
-      fetchedCategoryNamesRef.current = new Set();
-      fetchAllCategories();
+      fetchAllAndCategorize(categoryNames);
       fetchTrendingApplications(0);
       fetchMyLikedApplications(0);
-      categoryNames.forEach(name => fetchedCategoryNamesRef.current.add(name));
-    } else {
-      // Cache is valid - initialize tracking from Redux if empty
-      if (fetchedCategoryNamesRef.current.size === 0) {
-        Object.keys(stateRef.current.applicationsByTag).forEach(categoryName => {
-          if (stateRef.current.applicationsByTag[categoryName]?.length > 0) {
-            fetchedCategoryNamesRef.current.add(categoryName);
-          }
-        });
-      }
-
-      // Fetch only categories not yet present
-      const newCategories = categoryNames.filter(name => !fetchedCategoryNamesRef.current.has(name));
-      if (newCategories.length > 0) {
-        Promise.all(
-          newCategories.map(name => {
-            fetchedCategoryNamesRef.current.add(name);
-            return fetchApplicationsForCategoryName(name, 0);
-          }),
-        );
-      }
     }
   }, [
     categoryNames,
     query,
     isCacheValid,
     searchAndCategorize,
-    fetchAllCategories,
+    fetchAllAndCategorize,
     fetchTrendingApplications,
     fetchMyLikedApplications,
-    fetchApplicationsForCategoryName,
   ]);
 
   const filteredApplicationsByTag = useMemo(() => {
-    if (selectedTagNames.length === 0) {
-      return applicationsByTag;
-    }
-
+    if (selectedTagNames.length === 0) return applicationsByTag;
     const filtered = {};
     selectedTagNames.forEach(tagName => {
-      if (applicationsByTag[tagName]) {
-        filtered[tagName] = applicationsByTag[tagName];
-      }
+      if (applicationsByTag[tagName]) filtered[tagName] = applicationsByTag[tagName];
     });
     return filtered;
   }, [applicationsByTag, selectedTagNames]);
 
   const filteredTotalCountsByTag = useMemo(() => {
-    if (selectedTagNames.length === 0) {
-      return totalCountsByTag;
-    }
-
+    if (selectedTagNames.length === 0) return totalCountsByTag;
     const filtered = {};
     selectedTagNames.forEach(tagName => {
-      if (totalCountsByTag[tagName] !== undefined) {
-        filtered[tagName] = totalCountsByTag[tagName];
-      }
+      if (totalCountsByTag[tagName] !== undefined) filtered[tagName] = totalCountsByTag[tagName];
     });
     return filtered;
   }, [totalCountsByTag, selectedTagNames]);
@@ -301,16 +296,9 @@ export const useAgentsStudioData = (query, selectedTagNames) => {
 
   const updateApplicationInCategoriesHelper = useCallback((appsByTag, applicationId, updateFn) => {
     const updated = { ...appsByTag };
-
     Object.keys(updated).forEach(category => {
-      updated[category] = updated[category].map(app => {
-        if (app.id === applicationId) {
-          return updateFn(app);
-        }
-        return app;
-      });
+      updated[category] = updated[category].map(app => (app.id === applicationId ? updateFn(app) : app));
     });
-
     return updated;
   }, []);
 
@@ -323,9 +311,8 @@ export const useAgentsStudioData = (query, selectedTagNames) => {
       } = stateRef.current;
       const trendingCategory = currentAppsByTag[AgentsStudioConstants.TRENDING_CATEGORY] || [];
       const currentApp = trendingCategory.find(app => app.id === applicationId);
-      const isInTrending = !!currentApp;
       const currentLikes = currentApp?.likes || 0;
-      const conditionForRefetching = isInTrending && currentApp && !isRefetchingTrendingRef.current;
+      const conditionForRefetching = !!currentApp && !isRefetchingTrendingRef.current;
 
       const updated = updateApplicationInCategoriesHelper(currentAppsByTag, applicationId, updateFn);
 
@@ -376,13 +363,19 @@ export const useAgentsStudioData = (query, selectedTagNames) => {
         } else if (categoryName === AgentsStudioConstants.MY_LIKED_CATEGORY) {
           await fetchMyLikedApplications(0);
         } else {
-          await fetchApplicationsForCategoryName(categoryName, 0);
+          await fetchAllAndCategorize(categoryNames);
         }
       } finally {
         setRefreshing(categoryName, false);
       }
     },
-    [setRefreshing, fetchTrendingApplications, fetchMyLikedApplications, fetchApplicationsForCategoryName],
+    [
+      categoryNames,
+      setRefreshing,
+      fetchTrendingApplications,
+      fetchMyLikedApplications,
+      fetchAllAndCategorize,
+    ],
   );
 
   return {
