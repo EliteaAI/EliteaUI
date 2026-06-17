@@ -8,6 +8,7 @@ import { useTrackEvent } from '@/GA';
 import { PUBLISH_STEPS } from '@/[fsd]/entities/version/ui/PublishWizardModal';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
 import { usePublishApplicationMutation, useValidateForPublishMutation } from '@/api';
+import { useGetAgentCategoriesQuery } from '@/api/categories';
 import { useGetPlatformSettingsQuery } from '@/api/platformSettings';
 import { CollectionStatus, PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';
 import { useIsFromPipelineDetail } from '@/hooks/useIsFromSpecificPageHooks';
@@ -57,10 +58,17 @@ export const usePublishVersion = onSuccess => {
   const [showModal, setShowModal] = useState(false);
   const [step, setStep] = useState(PUBLISH_STEPS.PREPARATION);
   const [versionName, setVersionName] = useState('');
+  const [category, setCategory] = useState('');
   const [agreed, setAgreed] = useState(false);
   const [validationResult, setValidationResult] = useState(null);
   const [validationToken, setValidationToken] = useState(null);
   const [publishError, setPublishError] = useState(null);
+
+  const { data: categoriesData } = useGetAgentCategoriesQuery({ projectId }, { skip: !projectId });
+  const categoryOptions = useMemo(
+    () => (categoriesData?.categories || []).map(c => ({ label: c.name, value: c.name })),
+    [categoriesData],
+  );
 
   const versionNameError = useMemo(() => {
     const trimmed = versionName.trim();
@@ -77,6 +85,7 @@ export const usePublishVersion = onSuccess => {
   const resetState = useCallback(() => {
     setStep(PUBLISH_STEPS.PREPARATION);
     setVersionName('');
+    setCategory('');
     setAgreed(false);
     setValidationResult(null);
     setValidationToken(null);
@@ -121,7 +130,7 @@ export const usePublishVersion = onSuccess => {
     const { data, error } = await callWithAIRetry(validateForPublish, {
       projectId,
       versionId: currentVersionId,
-      body: { version_name: versionName },
+      body: { version_name: versionName, category },
     });
 
     if (error) {
@@ -147,7 +156,7 @@ export const usePublishVersion = onSuccess => {
       setValidationResult(data);
       setValidationToken(data.validation_token);
     }
-  }, [projectId, currentVersionId, versionName, validateForPublish, callWithAIRetry, toastError]);
+  }, [projectId, currentVersionId, versionName, category, validateForPublish, callWithAIRetry, toastError]);
 
   const handlePublish = useCallback(async () => {
     setPublishError(null);
@@ -160,6 +169,7 @@ export const usePublishVersion = onSuccess => {
       versionId: currentVersionId,
       body: {
         version_name: versionName,
+        category,
         ...(validationToken ? { validation_token: validationToken } : {}),
       },
     });
@@ -192,6 +202,7 @@ export const usePublishVersion = onSuccess => {
     projectId,
     currentVersionId,
     versionName,
+    category,
     validationToken,
     isAdminPublish,
     publish,
@@ -216,6 +227,9 @@ export const usePublishVersion = onSuccess => {
     step,
     versionName,
     setVersionName,
+    category,
+    setCategory,
+    categoryOptions,
     agreed,
     setAgreed,
     validationResult,
