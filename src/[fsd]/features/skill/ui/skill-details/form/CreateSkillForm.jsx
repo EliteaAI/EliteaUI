@@ -1,17 +1,19 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { Box, Typography } from '@mui/material';
+import { Box, IconButton, Typography } from '@mui/material';
 
+import StyledTooltip from '@/ComponentsLib/Tooltip';
+import { parseMdFrontmatter } from '@/[fsd]/entities/import-wizard/lib/helpers';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { useFieldFocus } from '@/[fsd]/shared/lib/hooks';
-import { Input, Markdown } from '@/[fsd]/shared/ui';
+import { Field, Input, Markdown } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
-import { FileReaderEnhancer } from '@/[fsd]/shared/ui/input';
 import TabGroupButton from '@/[fsd]/shared/ui/tab-group-button/TabGroupButton';
 import { useTagListQuery } from '@/api/tags.js';
 import CodeIcon from '@/assets/code-icon.svg?react';
+import ImportIcon from '@/assets/import-icon.svg?react';
 import OpenEyeIcon from '@/assets/open-eye-icon.svg?react';
 import {
   MAX_DESCRIPTION_LENGTH,
@@ -20,19 +22,21 @@ import {
   PROMPT_PAYLOAD_KEY,
 } from '@/common/constants';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
+import useToast from '@/hooks/useToast';
 import TagEditor from '@/pages/Common/Components/TagEditor';
+import { markdown } from '@codemirror/lang-markdown';
 import { useTheme } from '@emotion/react';
-
-const noop = () => {};
 
 const CreateSkillForm = memo(props => {
   const { accordionStyle, sx, disabled = false, instructionsKey } = props;
   const formik = useFormikContext();
   const theme = useTheme();
   const projectId = useSelectedProjectId();
+  const { toastError } = useToast();
   const { data: tagList = {} } = useTagListQuery({ projectId }, { skip: !projectId });
   const [name, setName] = useState(formik.values?.name || '');
   const [instructionsViewMode, setInstructionsViewMode] = useState('edit');
+  const importInputRef = useRef(null);
   const styles = skillCreateFormStyles();
   const { toggleFieldFocus, isFocused } = useFieldFocus();
 
@@ -51,6 +55,8 @@ const CreateSkillForm = memo(props => {
     ],
     [],
   );
+
+  const markdownExtensions = useMemo(() => [markdown()], []);
 
   const formikName = formik.values?.name;
   useEffect(() => {
@@ -98,6 +104,45 @@ const CreateSkillForm = memo(props => {
       formik.setFieldValue('version_details.instructions', value);
     },
     [formik],
+  );
+
+  // Import a .md file straight into the Instructions field (reuses the same
+  // FileReader.readAsText logic as FileReaderEnhancer.handleDrop).
+  const onClickImport = useCallback(() => {
+    importInputRef.current?.click();
+  }, []);
+
+  const onImportFile = useCallback(
+    event => {
+      const file = event.target.files?.[0];
+      event.target.value = '';
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const raw = String(reader.result ?? '');
+        try {
+          const { frontmatter, body } = parseMdFrontmatter(raw);
+          // Strip frontmatter: instructions become the body only.
+          formik.setFieldValue('version_details.instructions', body || '');
+          // Fill Name only when the field is currently empty.
+          if (!formik.values.name?.trim() && frontmatter?.name) {
+            setName(frontmatter.name);
+            formik.setFieldValue('name', frontmatter.name);
+          }
+          // Fill Description only when the field is currently empty.
+          if (!formik.values.description?.trim() && frontmatter?.description) {
+            formik.setFieldValue('description', frontmatter.description);
+          }
+          // Ignore all other frontmatter (tags, version, type, etc.).
+        } catch {
+          // No frontmatter / parse failure: fall back to pasting the raw text.
+          formik.setFieldValue('version_details.instructions', raw);
+        }
+      };
+      reader.onerror = () => toastError('Failed to read the file.');
+      reader.readAsText(file);
+    },
+    [formik, toastError],
   );
 
   const instructions = formik.values?.version_details?.instructions || '';
@@ -195,8 +240,30 @@ const CreateSkillForm = memo(props => {
             summaryAction: (
               <Box
                 component="span"
+                sx={styles.summaryActions}
                 onClick={e => e.stopPropagation()}
               >
+                <StyledTooltip
+                  title="Import from a .md file"
+                  placement="top"
+                >
+                  <IconButton
+                    size="small"
+                    aria-label="Import instructions from file"
+                    disabled={disabled}
+                    onClick={onClickImport}
+                    sx={styles.importButton}
+                  >
+                    <ImportIcon />
+                  </IconButton>
+                </StyledTooltip>
+                <input
+                  ref={importInputRef}
+                  type="file"
+                  accept=".md,text/markdown"
+                  hidden
+                  onChange={onImportFile}
+                />
                 <TabGroupButton
                   value={instructionsViewMode}
                   onChange={(_e, m) => m && setInstructionsViewMode(m)}
@@ -208,31 +275,26 @@ const CreateSkillForm = memo(props => {
             content:
               instructionsViewMode === 'edit' ? (
                 <Box sx={styles.instructionsWrapper}>
-                  <FileReaderEnhancer
-                    key={instructionsKey}
-                    showexpandicon="true"
-                    id="skill-instructions"
-                    placeholder="Markdown instructions for the skill"
-                    defaultValue={instructions}
-                    onChange={onChangeInstructions}
-                    updateVariableList={noop}
-                    onFocus={() => toggleFieldFocus(PROMPT_PAYLOAD_KEY.instructions || 'instructions')}
-                    onBlur={() => toggleFieldFocus(null)}
-                    multiline
-                    maxRows={20}
-                    disabled={disabled}
-                    fieldName="Instructions"
-                    inputProps={{ maxLength: MAX_INSTRUCTIONS_LENGTH }}
-                  />
-                  {isFocused(PROMPT_PAYLOAD_KEY.instructions || 'instructions') &&
-                    instructions.length > 0 && (
-                      <Typography
-                        variant="bodySmall"
-                        sx={styles.descriptionCharactersLabel}
-                      >
-                        {`${MAX_INSTRUCTIONS_LENGTH - instructions.length} characters left`}
-                      </Typography>
-                    )}
+                  <Box sx={styles.editorWrapper}>
+                    <Field.CodeMirrorEditor
+                      key={instructionsKey}
+                      value={instructions}
+                      notifyChange={onChangeInstructions}
+                      extensions={markdownExtensions}
+                      height="100%"
+                      minHeight="0"
+                      maxLength={MAX_INSTRUCTIONS_LENGTH}
+                      readOnly={disabled}
+                    />
+                  </Box>
+                  <Box sx={styles.charCounterWrapper}>
+                    <Typography
+                      variant="bodySmall"
+                      sx={styles.charCounter}
+                    >
+                      {`${MAX_INSTRUCTIONS_LENGTH - instructions.length} characters left`}
+                    </Typography>
+                  </Box>
                 </Box>
               ) : (
                 <Box sx={styles.instructionsPreview}>
@@ -291,12 +353,50 @@ const skillCreateFormStyles = () => ({
     position: 'relative',
     top: '0.5rem',
   },
+  summaryActions: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+  },
+  importButton: ({ palette }) => ({
+    width: '1.75rem',
+    height: '1.75rem',
+    '& svg': {
+      fontSize: '1rem',
+      width: '1rem',
+      height: '1rem',
+      fill: palette.icon.fill.secondary,
+    },
+  }),
   instructionsWrapper: {
     display: 'flex',
     flexDirection: 'column',
     gap: '0.5rem',
     paddingBottom: '1rem',
   },
+  // Code-style editor with line numbers (CodeMirror), matching Figma. Reuses the
+  // same Field.CodeMirrorEditor as the Project Context editor, so there is no MUI
+  // hover toolbar (copy/expand/fullscreen) overlapping the content.
+  editorWrapper: ({ palette }) => ({
+    display: 'flex',
+    height: '24rem',
+    borderRadius: '0.375rem',
+    border: `0.0625rem solid ${palette.border.table}`,
+    overflow: 'hidden',
+    '&:focus-within': { borderColor: palette.primary.main },
+    '& .cm-theme': { width: '100%' },
+    '& .cm-gutters': {
+      backgroundColor: 'transparent',
+      borderRight: `0.0625rem solid ${palette.border.table}`,
+    },
+  }),
+  charCounterWrapper: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+  },
+  charCounter: ({ palette }) => ({
+    color: palette.text.primary,
+  }),
   instructionsPreview: ({ palette }) => ({
     minHeight: '12rem',
     marginBottom: '1rem',

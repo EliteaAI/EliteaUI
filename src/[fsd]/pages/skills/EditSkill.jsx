@@ -9,8 +9,8 @@ import SkillTabBar from '@/[fsd]/entities/skill-tab-bar/ui/SkillTabBar';
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import { useSkillDetailsQuery } from '@/[fsd]/features/skill/api';
 import { SkillValidateSchema } from '@/[fsd]/features/skill/lib/validation';
+import SkillControls from '@/[fsd]/features/skill/ui/SkillControls';
 import SkillInformation from '@/[fsd]/features/skill/ui/SkillInformation';
-import SkillRowAction from '@/[fsd]/features/skill/ui/SkillRowAction';
 import CreateSkillForm from '@/[fsd]/features/skill/ui/skill-details/form/CreateSkillForm';
 import SkillTestPanel from '@/[fsd]/features/skill/ui/skill-test-panel/SkillTestPanel';
 import { SkillsTabs, ViewMode } from '@/common/constants';
@@ -34,7 +34,9 @@ const buildInitialValues = data => ({
   name: data?.name || '',
   description: data?.description || '',
   versions: data?.versions || [],
+  meta: data?.meta || {},
   version_details: {
+    id: data?.version_details?.id ?? null,
     name: data?.version_details?.name || data?.version?.name || LATEST_VERSION_NAME,
     tags: data?.version_details?.tags || data?.tags || [],
     instructions: data?.version_details?.instructions ?? data?.instructions ?? '',
@@ -49,6 +51,8 @@ const EditSkill = memo(() => {
   const { toastError } = useToast();
 
   const [dirty, setDirty] = useState(false);
+  const [isFullScreenChat, setIsFullScreenChat] = useState(false);
+  const lgGridColumns = useMemo(() => (isFullScreenChat ? 12 : 6), [isFullScreenChat]);
 
   const { data, isFetching, isError, error } = useSkillDetailsQuery(
     { projectId, skillId, versionName: version },
@@ -120,18 +124,20 @@ const EditSkill = memo(() => {
               <SkillTabBar
                 versions={data?.versions || []}
                 currentVersionName={currentVersionName}
+                defaultVersionId={data?.meta?.default_version_id}
                 onChangeVersion={handleChangeVersion}
                 onSuccess={handleSuccess}
               />
             ),
-            // Overflow action menu: Export (selected version) / Delete + the
-            // visible-but-disabled "Publish" item (work item [10]).
+            // Overflow action menu mirroring the agent's ApplicationControls:
+            // a VERSION section (Set as default / Export / Share / Fork / Publish / Delete)
+            // and a SKILL section (Share / Pin / Delete).
             rightToolbar: isFetching ? null : (
-              <SkillRowAction
+              <SkillControls
                 skillId={skillId}
                 skillName={data?.name}
-                versionName={currentVersionName}
-                navigateToListAfterDelete
+                currentVersionName={currentVersionName}
+                onChangeVersion={handleChangeVersion}
               />
             ),
             content: isFetching ? (
@@ -147,7 +153,8 @@ const EditSkill = memo(() => {
                   container
                 >
                   <LeftGridItem
-                    size={{ xs: 12, lg: 6 }}
+                    size={{ xs: 12, lg: lgGridColumns }}
+                    hidden={isFullScreenChat}
                     sx={styles.leftGridItem}
                   >
                     <ContentContainer height="100%">
@@ -160,16 +167,19 @@ const EditSkill = memo(() => {
                       <Box sx={styles.informationWrapper}>
                         <SkillInformation
                           id={data?.id}
-                          versionName={currentVersionName}
+                          versionId={data?.version_details?.id}
                         />
                       </Box>
                     </ContentContainer>
                   </LeftGridItem>
                   <RightGridItem
-                    size={{ xs: 12, lg: 6 }}
+                    size={{ xs: 12, lg: lgGridColumns }}
                     sx={styles.rightGridItem}
                   >
-                    <SkillTestPanel />
+                    <SkillTestPanel
+                      isFullScreenChat={isFullScreenChat}
+                      setIsFullScreenChat={setIsFullScreenChat}
+                    />
                   </RightGridItem>
                 </StyledGridContainer>
               </Form>

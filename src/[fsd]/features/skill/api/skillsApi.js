@@ -223,6 +223,23 @@ const skillsApi = eliteaApi
           }
         },
       }),
+      // Set the default version of a skill -> returns the updated skill details.
+      setSkillDefaultVersion: build.mutation({
+        query: ({ projectId, skillId, versionId }) => ({
+          url: `${apiSlicePath}/skill_default_version/${mode}/${projectId}/${skillId}`,
+          method: 'PATCH',
+          headers,
+          body: { version_id: versionId },
+        }),
+        invalidatesTags: (result, error, arg) => {
+          if (error) return [];
+          return [
+            TAG_TYPE_SKILLS,
+            TAG_TYPE_SKILL_DETAILS,
+            { type: TAG_TYPE_SKILL_DETAILS, id: arg?.skillId },
+          ];
+        },
+      }),
       // Export the selected version as a .md file (YAML frontmatter + markdown body).
       skillExportMd: build.query({
         query: ({ projectId, skillId, versionName }) => {
@@ -289,6 +306,7 @@ export const {
   useSkillCreateVersionMutation,
   useSkillUpdateMutation,
   useDeleteSkillMutation,
+  useSetSkillDefaultVersionMutation,
   useLazySkillExportMdQuery,
   useSkillImportMutation,
 } = skillsApi;

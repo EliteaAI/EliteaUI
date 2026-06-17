@@ -53,7 +53,9 @@ export const useSkillImport = () => {
             description: frontmatter.description,
             instructions: body || '',
             tags: Array.isArray(frontmatter.tags) ? frontmatter.tags : [],
-            version: frontmatter.version,
+            // Backend export emits the version under `elitea_version`; fall back
+            // to `version` for hand-authored files.
+            version: frontmatter.elitea_version ?? frontmatter.version,
           },
         });
       } catch (error) {

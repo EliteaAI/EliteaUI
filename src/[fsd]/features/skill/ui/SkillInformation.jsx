@@ -6,7 +6,7 @@ import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { CopyToClipboardButton } from '@/[fsd]/shared/ui/button';
 
-const SkillInformation = memo(({ id, versionName }) => {
+const SkillInformation = memo(({ id, versionId }) => {
   const styles = skillInformationStyles();
 
   const items = useMemo(
@@ -23,19 +23,19 @@ const SkillInformation = memo(({ id, versionName }) => {
                 copyMessage="The ID has been copied to the clipboard"
               />
             )}
-            {versionName && (
+            {versionId !== null && versionId !== undefined && (
               <CopyToClipboardButton
-                label="Version:"
-                value={String(versionName)}
-                tooltip="Copy version"
-                copyMessage="The version has been copied to the clipboard"
+                label="Version ID:"
+                value={String(versionId)}
+                tooltip="Copy version ID"
+                copyMessage="The version ID has been copied to the clipboard"
               />
             )}
           </Box>
         ),
       },
     ],
-    [id, styles.content, versionName],
+    [id, styles.content, versionId],
   );
 
   return (
