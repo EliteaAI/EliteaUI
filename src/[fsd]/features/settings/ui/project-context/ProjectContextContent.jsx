@@ -102,7 +102,7 @@ const ProjectContextContent = memo(() => {
       if (!file) return;
       const reader = new FileReader();
       reader.onload = ev => {
-        const text = ev.target.result;
+        const text = ev.target.result.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
         if (text.length > MAX_CHARS) {
           toastError(`File content exceeds ${MAX_CHARS} characters`);
           return;
