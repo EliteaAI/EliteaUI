@@ -122,7 +122,7 @@ const styles = {
     },
   },
   termsContainer: {
-    maxHeight: '15rem',
+    maxHeight: '10rem',
     overflowY: 'auto',
     display: 'flex',
     flexDirection: 'column',
