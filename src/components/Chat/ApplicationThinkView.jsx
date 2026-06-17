@@ -106,7 +106,14 @@ const StreamingThinkBlocks = memo(props => {
 StreamingThinkBlocks.displayName = 'StreamingThinkBlocks';
 
 const ApplicationThinkView = memo(props => {
-  const { defaultExpanded = false, actions, originalActions, isStreaming = false, tools } = props;
+  const {
+    defaultExpanded = false,
+    actions,
+    originalActions,
+    isStreaming = false,
+    tools,
+    subAgentTypeByName,
+  } = props;
 
   const [expanded, setExpanded] = useState(defaultExpanded);
   const [displayedActionIndex, setDisplayedActionIndex] = useState(0);
@@ -268,24 +275,43 @@ const ApplicationThinkView = memo(props => {
   // carries agent_type/toolkit_type in toolMeta (#4993).
   const deriveSubAgentType = useCallback(
     (name, blockActions) => {
-      const self = blockActions.find(a => {
+      // Primary signal: the conversation participant's authoritative kind, keyed
+      // by display name. Available from page load in every mode, so the header
+      // icon resolves correctly DURING streaming — unlike the invocation chip's
+      // agent_type='pipeline', which the SDK only emits on the LAST chip of a
+      // fan-out (mid-stream the only self-chips carry the inner node's
+      // agent_type='openai'). In ad-hoc mode the participant `tools` list is
+      // empty, so this map is the only early pipeline signal (#4993).
+      const participantType = subAgentTypeByName?.[name];
+      if (participantType === 'pipeline') return 'pipeline';
+      if (participantType) return 'application';
+
+      const stripped = name.replace(/\s/g, '');
+      // Fallback (no participant entry, e.g. nested/dynamic sub-agents): a
+      // sub-agent's block contains MULTIPLE self-named chips — the outer
+      // delegation invocation (tool name === the sub-agent's display name, e.g.
+      // "Name Resolver", carrying agent_type='pipeline') AND, for a pipeline,
+      // the pipeline's own inner LLM node whose whitespace-stripped name also
+      // matches ("NameResolver", langgraph_node='Agent1', agent_type='openai').
+      // Scan ALL self-named chips and let 'pipeline' win; 'application' is the
+      // fallback. (Taking the first .find() match grabbed the inner node →
+      // 'application' → grid icon while the real chip resolved to 'pipeline'.)
+      const selfs = blockActions.filter(a => {
         const an = (a?.name || '').trim();
-        return an === name || an === name.replace(/\s/g, '');
+        return an === name || an === stripped;
       });
-      if (!self) return '';
-      // Resolve through the SAME authoritative path the self-invocation chip
-      // uses (getToolInfoFromAction → resolveToolkitType), so the accordion
-      // header icon always matches the chip inside it. The previous inline
-      // checks only looked at toolMeta.agent_type/toolkit_type — a strict
-      // subset of resolveToolkitType's fallback chain — so a pipeline that
-      // resolved via a later fallback (e.g. entity_settings.toolkit_type)
-      // returned '' here and the header fell back to the grid icon while the
-      // chip correctly showed the flow icon (#4993).
-      const resolvedType = getToolInfoFromAction(self, tools)?.toolkitType;
-      if (resolvedType === 'pipeline' || resolvedType === 'application') return resolvedType;
-      return '';
+      let best = '';
+      for (const self of selfs) {
+        // Resolve through the SAME authoritative path the self-invocation chip
+        // uses (getToolInfoFromAction → resolveToolkitType), so the accordion
+        // header icon always matches the chip inside it.
+        const resolvedType = getToolInfoFromAction(self, tools)?.toolkitType;
+        if (resolvedType === 'pipeline') return 'pipeline';
+        if (resolvedType === 'application') best = 'application';
+      }
+      return best;
     },
-    [tools],
+    [tools, subAgentTypeByName],
   );
 
   const partitionIntoBlocks = useCallback(

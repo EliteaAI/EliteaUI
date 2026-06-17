@@ -88,6 +88,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
     minHeight,
     toolActions = [],
     tools,
+    subAgentTypeByName,
     onRemoveAttachment,
     onContinueMcpExecution,
     onContinueTokenLimitExecution,
@@ -380,12 +381,32 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
       }
       byName.get(key).push(entry);
     });
+    // Resolve each paused sub-agent's kind (pipeline vs agent) the same way the
+    // thinking view does: the conversation participant's authoritative
+    // agent_type keyed by display name. Without it the HITL accordion header
+    // falls back to the participant `tools` entry, which for a pipeline often
+    // lacks agent_type and mis-renders the flow icon as the generic agent grid
+    // (issue #4993). Fall back to any agent_type carried on the interrupt.
+    const resolveType = (name, entries) => {
+      const participantType = subAgentTypeByName?.[name];
+      if (participantType === 'pipeline') return 'pipeline';
+      if (participantType) return 'application';
+      const fromInterrupt = entries.find(e => e?.interrupt?.agent_type || e?.interrupt?.toolMeta?.agent_type);
+      const at = fromInterrupt?.interrupt?.agent_type || fromInterrupt?.interrupt?.toolMeta?.agent_type;
+      if (at === 'pipeline') return 'pipeline';
+      if (at) return 'application';
+      return '';
+    };
     return {
       coordinator,
-      subAgents: order.map(name => ({ name, entries: byName.get(name) })),
+      subAgents: order.map(name => ({
+        name,
+        entries: byName.get(name),
+        agentType: resolveType(name, byName.get(name)),
+      })),
       hasSubAgents: order.length > 0,
     };
-  }, [effectiveHitlInterrupts]);
+  }, [effectiveHitlInterrupts, subAgentTypeByName]);
 
   const renderHitlCard = useCallback(
     ({ interrupt, index }) => {
@@ -548,6 +569,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
               originalActions={toolActions.filter(a => a.type !== TOOL_ACTION_TYPES.SwarmChild)}
               isStreaming={isProcessing}
               tools={tools}
+              subAgentTypeByName={subAgentTypeByName}
             />
           )}
 
@@ -764,6 +786,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                       key={`hitl-sa-${bucket.name}`}
                       name={bucket.name}
                       tools={tools}
+                      agentType={bucket.agentType}
                       paused
                       transparent
                     >
