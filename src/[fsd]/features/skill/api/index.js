@@ -11,4 +11,7 @@ export {
   useSetSkillDefaultVersionMutation,
   useLazySkillExportMdQuery,
   useSkillImportMutation,
+  useUpdateSkillRelationMutation,
+  useGetApplicationSkillsQuery,
+  useLazyGetApplicationSkillsQuery,
 } from './skillsApi';

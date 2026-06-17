@@ -20,18 +20,20 @@ import * as ChatHelpers from '@/[fsd]/features/chat/lib/helpers/chat.helpers';
 import * as NewConversationHelpers from '@/[fsd]/features/chat/lib/helpers/newConversation.helpers';
 import { toSpeakableText } from '@/[fsd]/features/chat/lib/helpers/tts.helpers';
 import {
+  useChatSkillMention,
   useDeleteMessageAlert,
   useNewInputKeyDownHandler,
   useSlashMention,
   useTextToSpeech,
 } from '@/[fsd]/features/chat/lib/hooks';
 import { useFetchParticipantDetails } from '@/[fsd]/features/chat/participants/lib/hooks';
-import { SlashSuggestionList, VoiceMiniPlayer } from '@/[fsd]/features/chat/ui';
+import { SkillSuggestionList, SlashSuggestionList, VoiceMiniPlayer } from '@/[fsd]/features/chat/ui';
 import { ChatMessageList } from '@/[fsd]/features/chat/ui/chat-box';
 import { UserMentionList } from '@/[fsd]/features/chat/ui/user-mention-list';
 import { useVoiceConfig } from '@/[fsd]/features/chat/voice-config';
 import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
+import { MentionConstants } from '@/[fsd]/shared/lib/constants';
 import {
   DEFAULT_MAX_TOKENS,
   DEFAULT_REASONING_EFFORT,
@@ -811,6 +813,20 @@ const ChatBox = forwardRef((props, boxRef) => {
     slashOnConfirmActiveRef,
   } = useSlashMention({ chatInput, activeConversation });
 
+  const {
+    skillPhase,
+    filteredItems: skillFilteredItems,
+    committedMentions: skillCommittedMentions,
+    highlightedIndex: skillHighlightedIndex,
+    onSkillInputChange,
+    onSkillKeyDown,
+    onSelectSkill,
+    resetSkill,
+    skillHighlightRanges,
+  } = useChatSkillMention({ chatInput, activeParticipant, activeParticipantDetails, projectId });
+
+  const isSkillPhaseActive = skillPhase !== MentionConstants.MentionPhase.Idle;
+
   const onPredictStream = useCallback(
     async question => {
       // Before sending a new message, add any pending MCP server (that required auth) to ignored list
@@ -1376,9 +1392,26 @@ const ChatBox = forwardRef((props, boxRef) => {
   const combinedKeyDown = useCallback(
     event => {
       onKeyDown(event);
+      if (isSkillPhaseActive) {
+        onSkillKeyDown(event);
+        return;
+      }
       slashOnKeyDown(event);
     },
-    [onKeyDown, slashOnKeyDown],
+    [onKeyDown, slashOnKeyDown, isSkillPhaseActive, onSkillKeyDown],
+  );
+
+  const combinedInputChange = useCallback(
+    value => {
+      onSlashInputChange(value);
+      onSkillInputChange(value);
+    },
+    [onSlashInputChange, onSkillInputChange],
+  );
+
+  const combinedHighlightRanges = useMemo(
+    () => [...slashHighlightRanges, ...skillHighlightRanges].sort((a, b) => a.start - b.start),
+    [slashHighlightRanges, skillHighlightRanges],
   );
 
   const onSelectParticipant = selectedParticipant => {
@@ -2004,6 +2037,16 @@ const ChatBox = forwardRef((props, boxRef) => {
               onConfirmActiveRef={slashOnConfirmActiveRef}
             />
           )}
+          {isSkillPhaseActive && (
+            <SkillSuggestionList
+              phase={skillPhase}
+              filteredItems={skillFilteredItems}
+              committedMentions={skillCommittedMentions}
+              highlightedIndex={skillHighlightedIndex}
+              onSelectItem={onSelectSkill}
+              onClose={resetSkill}
+            />
+          )}
           <NewChatInput
             fromTheChat={fromTheChat}
             conversationId={activeConversation?.id}
@@ -2013,7 +2056,7 @@ const ChatBox = forwardRef((props, boxRef) => {
             isLoading={isInputLoading}
             disabledSend={isInputDisabled}
             onNormalKeyDown={combinedKeyDown}
-            onInputChange={onSlashInputChange}
+            onInputChange={combinedInputChange}
             shouldHandleEnter
             tooltipOfSendButton=""
             onShowParticipantsList={onShowParticipantsList}
@@ -2072,7 +2115,7 @@ const ChatBox = forwardRef((props, boxRef) => {
             onCreateToolkit={onCreateToolkit}
             onDeleteParticipant={onDeleteParticipant}
             participants={activeConversation?.participants || []}
-            slashHighlights={slashHighlightRanges}
+            slashHighlights={combinedHighlightRanges}
             isSpeakingMode={isSpeakingMode}
             onSpeakingModeToggle={() => setIsSpeakingMode(v => !v)}
             isTTSPlaying={isPlaying}
