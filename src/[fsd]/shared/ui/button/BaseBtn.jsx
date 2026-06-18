@@ -203,6 +203,7 @@ const baseVariantStyle = (theme, ownerState, options = {}) => {
     ...theme.typography.labelSmall,
     height: '1.75rem',
     boxShadow: 'none',
+    border: '0.0625rem solid transparent',
     gap: '0.5rem',
     '& .MuiButton-startIcon': {
       margin: 0,
