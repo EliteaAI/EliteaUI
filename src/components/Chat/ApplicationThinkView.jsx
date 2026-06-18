@@ -480,6 +480,13 @@ const ApplicationThinkView = memo(props => {
         (a.name === key || a.original_name === key || a.name === a.parent_agent_name);
       if (isWrapper) {
         if (terminal) wrapperTerminal.set(key, true);
+        // A still-processing wrapper means the child is running. In the simple
+        // sequential (in-process) path the child runs as a single TOOL whose inner
+        // llm/tool events are stripped, so this wrapper is the child's ONLY action —
+        // without this the accordion never shimmers/spins during the run. In parallel
+        // mode the child's own inner actions already light hasNonTerminal, so this is
+        // harmless there (#4993).
+        else hasNonTerminal.set(key, true);
       } else if (!terminal) {
         hasNonTerminal.set(key, true);
       }
