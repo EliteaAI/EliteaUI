@@ -1,4 +1,4 @@
-import { memo, useCallback } from 'react';
+import { memo } from 'react';
 
 import { Box } from '@mui/material';
 
@@ -13,26 +13,10 @@ const DuplicateResolutionDialog = memo(props => {
   const { open, duplicateFilenames, onCancel, onSkip, onReplace, onKeepBoth } = props;
   const styles = duplicateResolutionDialogStyles();
 
-  const handleCancel = useCallback(() => {
-    onCancel?.();
-  }, [onCancel]);
-
-  const handleSkip = useCallback(() => {
-    onSkip?.();
-  }, [onSkip]);
-
-  const handleReplace = useCallback(() => {
-    onReplace?.();
-  }, [onReplace]);
-
-  const handleKeepBoth = useCallback(() => {
-    onKeepBoth?.();
-  }, [onKeepBoth]);
-
   return (
     <BaseModal
       open={open}
-      onClose={handleCancel}
+      onClose={onCancel}
       title="Resolve duplicates"
       hideSections
       sx={styles.modal}
@@ -51,26 +35,26 @@ const DuplicateResolutionDialog = memo(props => {
         <Box sx={styles.actions}>
           <Button.BaseBtn
             variant={BUTTON_VARIANTS.secondary}
-            onClick={handleCancel}
+            onClick={onCancel}
           >
             Cancel
           </Button.BaseBtn>
           <Box sx={styles.primaryActions}>
             <Button.BaseBtn
               variant={BUTTON_VARIANTS.secondary}
-              onClick={handleSkip}
+              onClick={onSkip}
             >
               Skip
             </Button.BaseBtn>
             <Button.BaseBtn
               variant={BUTTON_VARIANTS.secondary}
-              onClick={handleReplace}
+              onClick={onReplace}
             >
               Replace
             </Button.BaseBtn>
             <Button.BaseBtn
               variant={BUTTON_VARIANTS.contained}
-              onClick={handleKeepBoth}
+              onClick={onKeepBoth}
             >
               Keep both
             </Button.BaseBtn>

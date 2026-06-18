@@ -23,7 +23,7 @@ const Modal = props => {
   const handleKeyDown = event => {
     if (event.key === 'Escape') {
       event.preventDefault();
-      onClose();
+      onClose?.();
     }
     onKeyDown?.(event);
   };
