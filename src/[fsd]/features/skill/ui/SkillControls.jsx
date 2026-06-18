@@ -7,15 +7,16 @@ import { Box } from '@mui/material';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import { useSkillExport } from '@/[fsd]/features/skill/lib/hooks';
-import { Controls } from '@/[fsd]/shared/ui';
+import { Controls, SoonLabel } from '@/[fsd]/shared/ui';
 import { PinEntityType } from '@/[fsd]/widgets/pin-toggler/lib/constants';
 import { usePin, usePinMenu } from '@/[fsd]/widgets/pin-toggler/lib/hooks';
-import PublishIcon from '@/assets/publish-icon.svg?react';
+import PublishIcon from '@/assets/publish-version.svg?react';
 import { SkillsTabs } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils.jsx';
 import { useCopyLinkMenu } from '@/components/CopyLinkToEntityButton.jsx';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import ExportIcon from '@/components/Icons/ExportIcon';
+import ForkIcon from '@/components/Icons/ForkIcon';
 import PinIcon from '@/components/Icons/PinIcon';
 import { useProjectEntityLink } from '@/hooks/useProjectEntityLink';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -23,8 +24,6 @@ import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes';
 
 import { useDeleteSkillMutation, useSetSkillDefaultVersionMutation } from '../api';
-
-const SOON_TOOLTIP = 'Available in future release';
 
 const sectionLabelSx = ({ palette }) => ({
   color: palette.text.default,
@@ -160,17 +159,15 @@ const SkillControls = memo(props => {
       shareVersionMenuItem,
       {
         key: 'fork',
-        label: 'Fork',
+        label: <SoonLabel text="Fork" />,
         disabled: true,
-        tooltip: SOON_TOOLTIP,
-        icon: <PublishIcon style={{ fontSize: '1rem' }} />,
+        icon: <ForkIcon sx={{ fontSize: '1rem' }} />,
       },
       {
         key: 'publish',
-        label: 'Publish',
+        label: <SoonLabel text="Publish" />,
         disabled: true,
-        tooltip: SOON_TOOLTIP,
-        icon: <PublishIcon style={{ fontSize: '1rem' }} />,
+        icon: <PublishIcon sx={{ fontSize: '1rem' }} />,
       },
       {
         key: 'delete-version',

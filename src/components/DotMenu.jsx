@@ -165,6 +165,7 @@ const ActionWithDialog = ({
   setActiveDialog,
   dialogKey,
   skipConfirmation,
+  addSeparator,
 }) => {
   const openDialog = useCallback(
     event => {
@@ -219,6 +220,7 @@ const ActionWithDialog = ({
       onClick={openDialog}
       disabled={disabled}
       showCheckIcon={showCheckIcon}
+      addSeparator={addSeparator}
     />
   );
 };
