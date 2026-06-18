@@ -21,3 +21,4 @@ export * from './tags';
 export * from './toolkits';
 export * from './trendingAuthor';
 export * from '@/[fsd]/features/toolkits/indexes/api/indexesApi';
+export * from '@/[fsd]/features/agent/api/generateAgentDraftApi';

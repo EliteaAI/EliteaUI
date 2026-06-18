@@ -6,6 +6,7 @@ import { Box, Typography } from '@mui/material';
 
 import { AgentInput } from '@/[fsd]/features/agent/ui/agent-details/configurations';
 import ApplicationAdvanceSettings from '@/[fsd]/features/agent/ui/agent-details/configurations/ApplicationAdvanceSettings';
+import { GenerateAgentButton } from '@/[fsd]/features/agent/ui/generate-agent-modal';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { useFieldFocus } from '@/[fsd]/shared/lib/hooks';
 import { Input } from '@/[fsd]/shared/ui';
@@ -101,6 +102,7 @@ const CreateAgentForm = memo(props => {
         items={[
           {
             title: 'General',
+            summaryAction: <GenerateAgentButton />,
             content: (
               <Box sx={styles.accordionContent}>
                 <Box sx={styles.nameContainer}>
