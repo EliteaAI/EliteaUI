@@ -75,7 +75,7 @@ const DuplicateDialogContent = memo(props => {
             <Box sx={styles.filenameContent}>
               <Typography
                 variant="bodyMedium"
-                color="text.primary"
+                color="text.secondary"
                 sx={styles.filenameBase}
               >
                 {baseName}
@@ -83,7 +83,7 @@ const DuplicateDialogContent = memo(props => {
               {extension && (
                 <Typography
                   variant="bodyMedium"
-                  color="text.primary"
+                  color="text.secondary"
                   sx={styles.filenameExtension}
                 >
                   {extension}
