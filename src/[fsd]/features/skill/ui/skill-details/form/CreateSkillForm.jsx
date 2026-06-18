@@ -357,6 +357,10 @@ const skillCreateFormStyles = () => ({
     display: 'inline-flex',
     alignItems: 'center',
     gap: '0.5rem',
+    // TabGroupButton hardcodes zIndex: 2000, which otherwise paints the
+    // edit/preview toggle above modals (zIndex 1300). Scope it with a local
+    // stacking context so it can't escape over dialogs.
+    isolation: 'isolate',
   },
   importButton: ({ palette }) => ({
     width: '1.75rem',
