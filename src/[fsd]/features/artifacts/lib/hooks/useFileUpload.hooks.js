@@ -292,8 +292,35 @@ export const useFileUpload = props => {
 
   // Duplicate dialog: skip upload
   const handleSkipDuplicate = useCallback(() => {
-    resetDuplicateState();
-  }, [resetDuplicateState]);
+    if (!pendingUploadFiles || !pendingUploadBucket || pendingFolderPath === null) {
+      resetDuplicateState();
+      return;
+    }
+
+    const fullPath = computeFullPath(pendingFolderPath);
+    const targetPrefix = fullPath ? `${fullPath}/` : '';
+    const existingKeys = new Set((bucketData?.contents || []).map(item => item.key));
+    const filesToUpload = pendingUploadFiles.filter(file => !existingKeys.has(`${targetPrefix}${file.name}`));
+
+    setShowDuplicateWarning(false);
+    setDuplicateFilenames([]);
+
+    if (!filesToUpload.length) {
+      resetDuplicateState();
+      return;
+    }
+
+    executeUpload(filesToUpload, pendingUploadBucket, pendingFolderPath, pendingOnSelectFolder);
+  }, [
+    pendingUploadFiles,
+    pendingUploadBucket,
+    pendingFolderPath,
+    pendingOnSelectFolder,
+    bucketData?.contents,
+    computeFullPath,
+    executeUpload,
+    resetDuplicateState,
+  ]);
 
   // Duplicate dialog: keep both → rename files with " - Copy" suffix
   const handleKeepBothDuplicate = useCallback(() => {
