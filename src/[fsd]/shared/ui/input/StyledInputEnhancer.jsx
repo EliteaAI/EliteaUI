@@ -4,9 +4,6 @@ import { CodeMirrorEditorHelpers } from '@/[fsd]/shared/lib/helpers';
 import { Input } from '@/[fsd]/shared/ui';
 import StyledInputModal from '@/components/StyledInputModal';
 
-// Styled components exported for backward compatibility
-// These are used by other components like ModerationActions
-
 /**
  * StyledInputEnhancer - Enhanced input field with full-screen modal
  *

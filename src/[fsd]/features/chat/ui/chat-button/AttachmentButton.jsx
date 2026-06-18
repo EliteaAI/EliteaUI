@@ -1,6 +1,6 @@
 import React, { forwardRef, memo, useImperativeHandle, useMemo, useRef, useState } from 'react';
 
-import { Box, IconButton, Tooltip } from '@mui/material';
+import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 
 import AttachIcon from '@/assets/attach-icon.svg?react';
 import {
@@ -31,6 +31,8 @@ const AttachmentButton = forwardRef((props, ref) => {
     limits = ATTACHMENT_LIMITS,
     maxFileSize = limits.DEFAULT_MAX_FILE_SIZE,
     attachments = [],
+    showLabel = false,
+    disabledTooltip,
   } = props;
 
   const buttonRef = useRef(null);
@@ -185,8 +187,72 @@ const AttachmentButton = forwardRef((props, ref) => {
     if (isAtMaxCapacity) return `Max ${limits.MAX_ATTACHMENTS} attachments`;
     if (isAtMaxSize) return 'Size limit reached';
 
-    return `Attach files (${remainingAttachments} left)`;
+    return `Attach Files (${remainingAttachments} left)`;
   }, [isProcessing, isAtMaxCapacity, isAtMaxSize, remainingAttachments, limits.MAX_ATTACHMENTS]);
+
+  const remainingLabel = `${remainingAttachments} left`;
+
+  const showDisabledTooltip = showLabel && isDisabled && !!disabledTooltip;
+
+  const button = (
+    <IconButton
+      ref={buttonRef}
+      variant="elitea"
+      color="secondary"
+      aria-label="attach files"
+      onClick={handleClickAttach}
+      disabled={isDisabled}
+      sx={{
+        ...styles.iconButton,
+        ...(showDisabledTooltip && { pointerEvents: 'auto !important' }),
+      }}
+    >
+      <Box
+        hidden
+        component="input"
+        ref={fileInputRef}
+        type="file"
+        id={id}
+        multiple={multiple}
+        onChange={event => handleFileChange(event, false)}
+        accept={accept}
+      />
+      <Box
+        component={AttachIcon}
+        sx={styles.attachIcon}
+      />
+      {showLabel && (
+        <>
+          <Typography
+            variant="labelSmall"
+            sx={styles.label}
+          >
+            Attach Files
+          </Typography>
+          <Typography
+            variant="labelSmall"
+            sx={styles.counter}
+          >
+            {remainingLabel}
+          </Typography>
+        </>
+      )}
+    </IconButton>
+  );
+
+  if (showLabel) {
+    if (showDisabledTooltip) {
+      return (
+        <Tooltip
+          title={disabledTooltip}
+          placement="top"
+        >
+          {button}
+        </Tooltip>
+      );
+    }
+    return button;
+  }
 
   return (
     <Tooltip
@@ -197,30 +263,7 @@ const AttachmentButton = forwardRef((props, ref) => {
         component="span"
         sx={styles.tooltipWrapper}
       >
-        <IconButton
-          ref={buttonRef}
-          variant="elitea"
-          color="secondary"
-          aria-label="attach files"
-          onClick={handleClickAttach}
-          disabled={isDisabled}
-          sx={styles.iconButton}
-        >
-          <Box
-            hidden
-            component="input"
-            ref={fileInputRef}
-            type="file"
-            id={id}
-            multiple={multiple}
-            onChange={event => handleFileChange(event, false)}
-            accept={accept}
-          />
-          <Box
-            component={AttachIcon}
-            sx={styles.attachIcon}
-          />
-        </IconButton>
+        {button}
       </Box>
     </Tooltip>
   );
@@ -238,6 +281,14 @@ const styles = {
   },
   attachIcon: {
     fontSize: '1rem',
+  },
+  label: {
+    flex: 1,
+    textAlign: 'left',
+  },
+  counter: {
+    color: 'text.disabled',
+    flexShrink: 0,
   },
 };
 

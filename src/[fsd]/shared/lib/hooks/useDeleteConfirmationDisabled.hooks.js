@@ -1,49 +1,23 @@
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 
-import { useLazySecretShowQuery, useSecretsListQuery } from '@/api/secrets';
+import { useSecretShowQuery, useSecretsListQuery } from '@/api';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const SECRET_NAME = 'disable_confirmation_delete_mode';
 
 export const useDeleteConfirmationDisabled = () => {
-  const [isDisabled, setIsDisabled] = useState(false);
   const projectId = useSelectedProjectId();
 
   const { data: secrets = [] } = useSecretsListQuery(projectId, {
     skip: !projectId,
   });
 
-  const [showSecret] = useLazySecretShowQuery();
+  const secretExists = useMemo(() => secrets.some(s => s.name === SECRET_NAME), [secrets]);
 
-  useEffect(() => {
-    const checkSecret = async () => {
-      const secret = secrets.find(s => s.name === SECRET_NAME);
+  const { data: secretData } = useSecretShowQuery(
+    { projectId, name: SECRET_NAME },
+    { skip: !projectId || !secretExists },
+  );
 
-      if (!secret) {
-        setIsDisabled(false);
-        return;
-      }
-
-      try {
-        const { data, error } = await showSecret({ projectId, name: SECRET_NAME });
-
-        if (error) {
-          setIsDisabled(false);
-          return;
-        }
-
-        setIsDisabled((data?.value || '').toLowerCase() === 'true');
-      } catch {
-        setIsDisabled(false);
-      }
-    };
-
-    if (projectId && secrets.length > 0) {
-      checkSecret();
-    } else {
-      setIsDisabled(false);
-    }
-  }, [secrets, projectId, showSecret]);
-
-  return isDisabled;
+  return useMemo(() => (secretData?.value || '').toLowerCase() === 'true', [secretData]);
 };

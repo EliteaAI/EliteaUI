@@ -1,15 +1,19 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
-import { Box, Button, ListItemIcon, Typography } from '@mui/material';
+import { Box, ListItemIcon, Typography } from '@mui/material';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 
+import { Button } from '@/[fsd]/shared/ui';
+import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { TypographyWithConditionalTooltip } from '@/[fsd]/shared/ui/tooltip';
 import AttachedFileIcon from '@/assets/attached-file-icon.svg?react';
 import CloseIcon from '@/components/Icons/CloseIcon';
 import useGetComponentWidth from '@/hooks/useGetComponentWidth';
 
-const FileList = memo(({ files = [], onDeleteFile, disabledDelete }) => {
+const FileList = memo(props => {
+  const { files = [], onDeleteFile, disabledDelete } = props;
+
   const { componentWidth, componentRef } = useGetComponentWidth();
   const [maxItemsToShow, setMaxItemsToShow] = useState(3);
   const anchorRef = useRef(null);
@@ -25,13 +29,13 @@ const FileList = memo(({ files = [], onDeleteFile, disabledDelete }) => {
     [disabledDelete, onDeleteFile],
   );
 
-  const handleMoreClick = () => {
+  const handleMoreClick = useCallback(() => {
     setAnchorEl(anchorRef.current);
-  };
+  }, []);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setAnchorEl(null);
-  };
+  }, []);
 
   const handleMenuItemRemove = useCallback(
     index => event => {
@@ -45,11 +49,10 @@ const FileList = memo(({ files = [], onDeleteFile, disabledDelete }) => {
 
   useEffect(() => {
     const maxCount = Math.floor((componentWidth || 0) / 208) || 1;
-    if (maxCount < files.length) {
-      setMaxItemsToShow(Math.floor((componentWidth > 60 ? componentWidth - 60 : 0) / 208) || 1);
-    } else {
-      setMaxItemsToShow(maxCount);
-    }
+    const needsMoreButton = maxCount < files.length;
+    const availableWidth = needsMoreButton ? Math.max(componentWidth - 60, 0) : componentWidth || 0;
+
+    setMaxItemsToShow(Math.floor(availableWidth / 208) || 1);
   }, [files.length, componentWidth]);
 
   const visibleAttachments = files.slice(0, maxItemsToShow);
@@ -102,10 +105,10 @@ const FileList = memo(({ files = [], onDeleteFile, disabledDelete }) => {
 
       {hiddenAttachments.length > 0 && (
         <>
-          <Button
+          <Button.BaseBtn
             ref={anchorRef}
-            variant="elitea"
-            color="secondary"
+            variant={BUTTON_VARIANTS.elitea}
+            color={BUTTON_COLORS.secondary}
             onClick={handleMoreClick}
             aria-label="Show more files"
             aria-expanded={open ? 'true' : undefined}
@@ -113,7 +116,7 @@ const FileList = memo(({ files = [], onDeleteFile, disabledDelete }) => {
             sx={styles.showMoreButton}
           >
             {`+${hiddenAttachments.length}`}
-          </Button>
+          </Button.BaseBtn>
 
           <Menu
             anchorEl={anchorEl}

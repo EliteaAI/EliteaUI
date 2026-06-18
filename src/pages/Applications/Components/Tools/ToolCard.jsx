@@ -288,9 +288,8 @@ const ToolCard = memo(props => {
   const toolValidationMessage = useMemo(() => {
     if (!validationInfo) return null;
 
-    if (tool?.type === 'application') {
-      return `Misconfiguration error found. Check the ${entityType}.`;
-    }
+    if (tool?.type === 'application') return `Misconfiguration error found. Check the ${entityType}.`;
+
     const parsedErrorMessage = ToolkitFormHelpers.parseValidationError(
       typeof validationInfo === 'object'
         ? validationInfo

@@ -6,7 +6,7 @@ import { Box, CircularProgress, Typography } from '@mui/material';
 
 import RunHistoryContainer from '@/[fsd]/entities/run-history/ui/RunHistoryContainer';
 import { useApplicationChat } from '@/[fsd]/features/agent/lib/hooks';
-import { ParticipantEntityTypes } from '@/[fsd]/features/chat/lib/constants/participant.constants';
+import { ParticipantEntityTypes } from '@/[fsd]/features/chat/participants/lib/constants/participant.constants';
 import { ChatBox, ChatButton } from '@/[fsd]/features/chat/ui';
 import { AGENT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { useShowRunHistoryFromUrl } from '@/[fsd]/shared/lib/hooks';
@@ -190,7 +190,7 @@ const ConfigurationRightContent = memo(props => {
             <ChatBox
               {...enhancedSettings}
               ref={boxRef}
-              inputPlaceholder="Type your message."
+              inputPlaceholder="Type your message..."
             />
           </Box>
         )}

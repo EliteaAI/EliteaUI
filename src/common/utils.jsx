@@ -878,26 +878,6 @@ export const uniqueObjectArray = (array, uniqueProp = 'id') => {
   return result;
 };
 
-export const getChatParticipantUniqueId = participant => {
-  if (participant) {
-    const entity_name =
-      participant.entity_name === ChatParticipantType.Applications &&
-      participant.entity_settings?.agent_type === ChatParticipantType.Pipelines
-        ? ChatParticipantType.Pipelines
-        : participant.entity_name;
-    return (
-      entity_name +
-      '_' +
-      (participant.entity_name === ChatParticipantType.Models
-        ? participant.entity_meta?.model_name + '-' + participant.entity_meta?.integration_uid
-        : participant.entity_meta?.id) +
-      '_' +
-      (participant.entity_meta?.project_id || '')
-    );
-  }
-  return '';
-};
-
 export const getRawParticipantUniqueId = participant => {
   if (participant) {
     const participantType =

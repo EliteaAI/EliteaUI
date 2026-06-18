@@ -22,8 +22,7 @@ const ContextBudgetStatsDisplay = memo(props => {
   // Map isCompact prop to appropriate Typography variant
   const typographyVariant = isCompact ? 'bodySmall2' : 'labelSmall';
 
-  const { strategyName, messageGroups, summariesGenerated, tokensDisplay, utilizationPercentage, maxTokens } =
-    stats;
+  const { messageGroups, summariesGenerated, tokensDisplay, utilizationPercentage, maxTokens } = stats;
 
   const statItems = useMemo(() => {
     // If maxTokens is 0, only show messages (context manager disabled)
@@ -41,21 +40,12 @@ const ContextBudgetStatsDisplay = memo(props => {
     }
 
     items.push(
-      { label: 'Strategy', value: strategyName },
       { label: 'Messages', value: messageGroups },
       { label: 'Summaries', value: summariesGenerated, isSummaries: true },
     );
 
     return items;
-  }, [
-    maxTokens,
-    messageGroups,
-    showTokens,
-    tokensDisplay,
-    utilizationPercentage,
-    strategyName,
-    summariesGenerated,
-  ]);
+  }, [maxTokens, messageGroups, showTokens, tokensDisplay, utilizationPercentage, summariesGenerated]);
 
   return (
     <>

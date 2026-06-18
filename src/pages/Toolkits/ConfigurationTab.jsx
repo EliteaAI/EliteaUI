@@ -3,7 +3,7 @@ import { memo, useCallback, useState } from 'react';
 import { Box, CircularProgress, Grid } from '@mui/material';
 
 import { RunHistoryContainer } from '@/[fsd]/entities/run-history/ui';
-import { ParticipantEntityTypes } from '@/[fsd]/features/chat/lib/constants/participant.constants';
+import { ParticipantEntityTypes } from '@/[fsd]/features/chat/participants/lib/constants/participant.constants';
 import { TestTools } from '@/[fsd]/features/toolkits/ui';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui/form/ToolkitForm';
 import { useShowRunHistoryFromUrl } from '@/[fsd]/shared/lib/hooks';

@@ -1,10 +1,13 @@
 import React, { memo, useCallback, useMemo, useState } from 'react';
 
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import IconButton from '@mui/material/IconButton';
 import ListItemAvatar from '@mui/material/ListItemAvatar';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
+import { useParticipantName } from '@/[fsd]/features/chat/participants/lib/hooks';
+import { Button } from '@/[fsd]/shared/ui';
+import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import Markdown from '@/[fsd]/shared/ui/markdown';
 import { ChatParticipantType } from '@/common/constants';
 import CreatedTimeInfo from '@/components/Chat/CreatedTimeInfo';
@@ -21,7 +24,6 @@ import DeleteIcon from '@/components/Icons/DeleteIcon';
 import EditIcon from '@/components/Icons/EditIcon';
 import UserAvatar from '@/components/UserAvatar';
 import useHighlightUserMessage from '@/hooks/chat/useHighlightUserMessage';
-import useParticipantName from '@/hooks/chat/useParticipantName';
 
 const UserMessage = React.forwardRef((props, ref) => {
   const {
@@ -115,7 +117,7 @@ const UserMessage = React.forwardRef((props, ref) => {
                     variant="bodySmall"
                     sx={styles.sentToName(isSentToDummyParticipant)}
                   >
-                    {participantName} sss
+                    {participantName}
                   </Typography>
                 </StyledTooltip>
               </>
@@ -241,24 +243,29 @@ const UserMessage = React.forwardRef((props, ref) => {
               }}
             />
           </ChatInputContainer>
-          {attachmentItems?.length > 0 && <MessageAttachmentList items={attachmentItems} />}
+          {attachmentItems?.length > 0 && (
+            <MessageAttachmentList
+              items={attachmentItems}
+              onRemoveAttachment={onRemoveAttachment}
+            />
+          )}
           <Box sx={styles.editButtonsContainer}>
-            <Button
-              variant="elitea"
-              color="primary"
+            <Button.BaseBtn
+              variant={BUTTON_VARIANTS.contained}
+              color={BUTTON_COLORS.primary}
               sx={styles.submitButton}
               disabled={value === content || !value.trim()}
               onClick={onClickSubmit}
             >
               Save and apply
-            </Button>
-            <Button
-              variant="elitea"
-              color="secondary"
+            </Button.BaseBtn>
+            <Button.BaseBtn
+              variant={BUTTON_VARIANTS.secondary}
+              color={BUTTON_COLORS.secondary}
               onClick={onCancel}
             >
               Cancel
-            </Button>
+            </Button.BaseBtn>
           </Box>
         </Box>
       )}

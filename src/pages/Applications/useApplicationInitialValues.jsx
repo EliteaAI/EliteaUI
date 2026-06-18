@@ -125,23 +125,22 @@ const useApplicationInitialValues = forPipeline => {
   );
   const applicationData = useMemo(
     () =>
-      viewMode === ViewMode.Owner || viewMode === ViewMode.Moderator
+      viewMode === ViewMode.Owner
         ? privateApplicationData || EMPTY_APPLICATION_DATA
         : publicApplicationData || EMPTY_APPLICATION_DATA,
     [privateApplicationData, publicApplicationData, viewMode],
   );
 
   const isFetching = useMemo(
-    () =>
-      viewMode === ViewMode.Owner || viewMode === ViewMode.Moderator ? isFetchingPrivate : isFetchingPublic,
+    () => (viewMode === ViewMode.Owner ? isFetchingPrivate : isFetchingPublic),
     [isFetchingPrivate, isFetchingPublic, viewMode],
   );
   const isError = useMemo(
-    () => (viewMode === ViewMode.Owner || viewMode === ViewMode.Moderator ? isPrivateError : isPublicError),
+    () => (viewMode === ViewMode.Owner ? isPrivateError : isPublicError),
     [isPrivateError, isPublicError, viewMode],
   );
   const error = useMemo(
-    () => (viewMode === ViewMode.Owner || viewMode === ViewMode.Moderator ? privateError : publicError),
+    () => (viewMode === ViewMode.Owner ? privateError : publicError),
     [viewMode, privateError, publicError],
   );
 

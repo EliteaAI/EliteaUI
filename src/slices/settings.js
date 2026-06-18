@@ -72,7 +72,7 @@ const getMessage = (
 const settingsSlice = createSlice({
   name: 'settings',
   initialState: {
-    sideBarCollapsed: localStorage.getItem('sideBarCollapsed') !== 'false',
+    sideBarCollapsed: '',
     mode: localStorage.getItem('mode') || 'dark',
     pageSize: 20,
     navBlocker: {

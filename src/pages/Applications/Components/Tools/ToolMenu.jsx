@@ -9,6 +9,7 @@ import { Box } from '@mui/material';
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { useTrackEvent } from '@/GA';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
+import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { useApplicationListQuery } from '@/api/applications';
 import { useLazyToolkitsDetailsQuery } from '@/api/toolkits';
@@ -89,6 +90,8 @@ const ToolMenu = memo(props => {
   // Determine if the current entity is unsaved (newly created but not yet persisted)
   // An entity is considered unsaved if it doesn't have an ID or version_details.id
   const isEntityUnsaved = !values?.id || !values?.version_details?.id;
+
+  const isMcpVisible = useIsMcpVisible();
 
   // Use the hook to filter out already-added items
   const { filterToolkits, filterAgents, filterPipelines } = useFilterAddedItems();
@@ -578,27 +581,29 @@ const ToolMenu = memo(props => {
             </BaseBtn>
           </Box>
         </Tooltip>
-        {/* Toolkit Button */}
-        <Tooltip
-          title={
-            isEntityUnsaved
-              ? `Save the ${values?.version_details?.agent_type === 'pipeline' ? 'pipeline' : 'agent'} first, then add mcps`
-              : ''
-          }
-          placement="top"
-        >
-          <Box component="span">
-            <BaseBtn
-              variant={BUTTON_VARIANTS.iconLabel}
-              startIcon={<PlusIcon />}
-              disableRipple
-              disabled={isEntityUnsaved}
-              onClick={isEntityUnsaved ? undefined : handleMCPButtonClick}
-            >
-              MCP
-            </BaseBtn>
-          </Box>
-        </Tooltip>
+        {/* MCP Button */}
+        {isMcpVisible && (
+          <Tooltip
+            title={
+              isEntityUnsaved
+                ? `Save the ${values?.version_details?.agent_type === 'pipeline' ? 'pipeline' : 'agent'} first, then add mcps`
+                : ''
+            }
+            placement="top"
+          >
+            <Box component="span">
+              <BaseBtn
+                variant={BUTTON_VARIANTS.iconLabel}
+                startIcon={<PlusIcon />}
+                disableRipple
+                disabled={isEntityUnsaved}
+                onClick={isEntityUnsaved ? undefined : handleMCPButtonClick}
+              >
+                MCP
+              </BaseBtn>
+            </Box>
+          </Tooltip>
+        )}
         {/* Agent Button */}
         <Tooltip
           title={
@@ -665,24 +670,26 @@ const ToolMenu = memo(props => {
       />
 
       {/* MCP Dropdown */}
-      <UnifiedDropdown
-        anchorEl={mcpAnchor}
-        open={Boolean(mcpAnchor)}
-        onClose={handleMCPMenuClose}
-        items={allMCPItems}
-        searchValue={mcpSearch}
-        onSearchChange={handleMCPSearchChange}
-        searchPlaceholder="Search mcps..."
-        onCreateNew={handleCreateNewToolkit(true)}
-        createNewLabel="Create new"
-        showCreateNew={true}
-        isLoading={isFetchingMCPs}
-        emptyMessage="No mcps available"
-        noResultsMessage="No mcps found"
-        onScroll={handleMCPScroll}
-        autoFocus={true}
-        showDivider={true}
-      />
+      {isMcpVisible && (
+        <UnifiedDropdown
+          anchorEl={mcpAnchor}
+          open={Boolean(mcpAnchor)}
+          onClose={handleMCPMenuClose}
+          items={allMCPItems}
+          searchValue={mcpSearch}
+          onSearchChange={handleMCPSearchChange}
+          searchPlaceholder="Search mcps..."
+          onCreateNew={handleCreateNewToolkit(true)}
+          createNewLabel="Create new"
+          showCreateNew={true}
+          isLoading={isFetchingMCPs}
+          emptyMessage="No mcps available"
+          noResultsMessage="No mcps found"
+          onScroll={handleMCPScroll}
+          autoFocus={true}
+          showDivider={true}
+        />
+      )}
 
       {/* Agent Dropdown */}
       <UnifiedDropdown

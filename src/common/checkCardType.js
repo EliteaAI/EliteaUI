@@ -7,7 +7,6 @@ export const isApplicationCard = type =>
   type === ContentType.ApplicationMyLiked ||
   type === ContentType.ApplicationTrending ||
   type === ContentType.UserPublicApplications ||
-  type === ContentType.ModerationSpaceApplication ||
   type === ContentType.ApplicationAdmin ||
   type === ContentType.ApplicationAll ||
   type === ContentType.ApplicationApproval ||
@@ -22,7 +21,6 @@ export const isPipelineCard = type =>
   type === ContentType.PipelineMyLiked ||
   type === ContentType.PipelineTrending ||
   type === ContentType.UserPublicPipelines ||
-  type === ContentType.ModerationSpaceApplication ||
   type === ContentType.PipelineAdmin ||
   type === ContentType.PipelineAll ||
   type === ContentType.PipelineApproval ||

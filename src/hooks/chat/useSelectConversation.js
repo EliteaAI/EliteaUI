@@ -3,9 +3,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
 
 import { useConversationNavigation } from '@/[fsd]/features/chat/lib/hooks';
+import { getChatParticipantUniqueId } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { useLazyConversationDetailsQuery, useSelectConversationMutation } from '@/api';
 import { convertConversationToChatHistory } from '@/common/convertChatConversationMessages';
-import { areTheSameConversations, buildErrorMessage, getChatParticipantUniqueId } from '@/common/utils';
+import { areTheSameConversations, buildErrorMessage } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { actions as chatActions } from '@/slices/chat';
 

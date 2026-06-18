@@ -1,4 +1,4 @@
-import { ParticipantEntityTypes } from '@/[fsd]/features/chat/lib/constants/participant.constants';
+import { ParticipantEntityTypes } from '@/[fsd]/features/chat/participants/lib/constants/participant.constants';
 import { CredentialNameHelpers } from '@/[fsd]/features/credentials/lib/helpers';
 import { McpConstants } from '@/[fsd]/features/toolkits/lib/constants';
 import { getToolIconByType } from '@/common/toolkitUtils';
@@ -153,7 +153,9 @@ const prettifyIndexingResultMessage = parsed => {
   const output = [];
 
   if (summaryLines.length > 0) {
-    const isNeutral = summaryLines.some(line => /^no\s+new\b/i.test(line.trim()) || /\b0\s+\w+/i.test(line.trim()));
+    const isNeutral = summaryLines.some(
+      line => /^no\s+new\b/i.test(line.trim()) || /\b0\s+\w+/i.test(line.trim()),
+    );
     const summaryIcon = status === 'error' ? '❌ ' : isNeutral ? 'ℹ️ ' : status === 'ok' ? '✅ ' : '';
     // Reformat "Successfully indexed 40 documents." → "40 documents - Successfully indexed."
     const reformatted = summaryLines.map(line => {

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 
-import { ATTACHMENT_ALLOWED_TOOLS } from '@/[fsd]/features/chat/lib/constants/participant.constants';
+import { ATTACHMENT_ALLOWED_TOOLS } from '@/[fsd]/features/chat/participants/lib/constants/participant.constants';
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
 import { useLazyListModelsQuery } from '@/api/configurations';
 import { useToolkitCreateMutation } from '@/api/toolkits';

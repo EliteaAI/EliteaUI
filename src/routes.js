@@ -42,11 +42,6 @@ const RouteDefinitions = {
   CreateMCPType: '/mcps/create/:mcpType',
   MCPDetail: '/mcps/:tab/:mcpId',
 
-  ModerationSpace: '/moderation-space',
-  ModerationSpaceWithTab: '/moderation-space/:tab',
-  ModerationSpaceApplication: '/moderation-space/agents/:agentId',
-  ModerationSpacePipeline: '/moderation-space/pipelines/:agentId',
-
   UserPublic: '/user-public',
   UserPublicWithTab: '/user-public/:tab',
   UserPublicApplicationDetail: '/user-public/agents/:agentId',
@@ -124,7 +119,6 @@ export const PathSessionMap = {
   [RouteDefinitions.Toolkits]: 'Toolkits',
   [RouteDefinitions.Apps]: 'Apps',
   [RouteDefinitions.Credentials]: 'Credentials',
-  [RouteDefinitions.ModerationSpace]: 'Moderation Space',
   [RouteDefinitions.NotificationCenter]: 'Notification Center',
   [RouteDefinitions.Resources]: 'Resources',
 };

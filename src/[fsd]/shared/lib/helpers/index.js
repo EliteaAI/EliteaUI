@@ -21,3 +21,5 @@ export {
   MermaidHelpers,
   CodeMirrorLinterHelpers,
 };
+
+export { isMcpToolkitType, isMcpToolkit } from './mcp.helpers';

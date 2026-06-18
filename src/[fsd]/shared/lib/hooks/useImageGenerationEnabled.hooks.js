@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 
-import { useLazySecretShowQuery, useSecretsListQuery } from '@/api/secrets';
+import { useSecretShowQuery, useSecretsListQuery } from '@/api/secrets';
+
+const SECRET_NAME = 'enable_image_generation';
 
 /**
  * Hook to check if image generation is enabled via project secrets
@@ -8,48 +10,16 @@ import { useLazySecretShowQuery, useSecretsListQuery } from '@/api/secrets';
  * @returns {boolean} - True if enable_image_generation secret is set to 'true', false otherwise
  */
 export const useImageGenerationEnabled = projectId => {
-  const [isEnabled, setIsEnabled] = useState(false);
-
   const { data: secrets = [] } = useSecretsListQuery(projectId, {
     skip: !projectId,
   });
 
-  const [showSecret] = useLazySecretShowQuery();
+  const secretExists = useMemo(() => secrets.some(s => s.name === SECRET_NAME), [secrets]);
 
-  useEffect(() => {
-    const checkImageGenerationSecret = async () => {
-      const imageGenerationSecret = secrets.find(secret => secret.name === 'enable_image_generation');
+  const { data: secretData } = useSecretShowQuery(
+    { projectId, name: SECRET_NAME },
+    { skip: !projectId || !secretExists },
+  );
 
-      if (!imageGenerationSecret) {
-        setIsEnabled(false);
-        return;
-      }
-
-      try {
-        const { data, error } = await showSecret({
-          projectId,
-          name: 'enable_image_generation',
-        });
-
-        if (error) {
-          setIsEnabled(false);
-          return;
-        }
-
-        const secretValue = data?.value || '';
-        const isImageGenerationEnabled = secretValue.toLowerCase() === 'true';
-        setIsEnabled(isImageGenerationEnabled);
-      } catch {
-        setIsEnabled(false);
-      }
-    };
-
-    if (projectId && secrets.length > 0) {
-      checkImageGenerationSecret();
-    } else {
-      setIsEnabled(false);
-    }
-  }, [secrets, projectId, showSecret]);
-
-  return isEnabled;
+  return useMemo(() => (secretData?.value || '').toLowerCase() === 'true', [secretData]);
 };

@@ -1,10 +1,10 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
+import { Box, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
-import { SingleSelect } from '@/[fsd]/shared/ui/select';
-import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
+import { Button, Select } from '@/[fsd]/shared/ui';
+import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 
 const VersionReplacementModal = memo(props => {
   const {
@@ -100,15 +100,18 @@ const VersionReplacementModal = memo(props => {
     setSelectedVersionId(newVersion);
   }, []);
 
-  const handleKeyDown = event => {
-    if (event.key === 'Enter' && selectedVersionId && !isReplacing) {
-      event.preventDefault();
-      handleReplace();
-    } else if (event.key === 'Escape' && !isReplacing) {
-      event.preventDefault();
-      handleClose();
-    }
-  };
+  const handleKeyDown = useCallback(
+    event => {
+      if (event.key === 'Enter' && selectedVersionId && !isReplacing) {
+        event.preventDefault();
+        handleReplace();
+      } else if (event.key === 'Escape' && !isReplacing) {
+        event.preventDefault();
+        handleClose();
+      }
+    },
+    [selectedVersionId, isReplacing, handleReplace, handleClose],
+  );
 
   return (
     <Dialog
@@ -165,7 +168,7 @@ const VersionReplacementModal = memo(props => {
           ))}
         </Box>
         <Box>
-          <SingleSelect
+          <Select.SingleSelect
             onValueChange={onSelectVersion}
             value={selectedVersionId}
             options={versionSelectOptions}
@@ -178,32 +181,23 @@ const VersionReplacementModal = memo(props => {
         </Box>
       </DialogContent>
       <DialogActions sx={styles.dialogActions}>
-        <Button
+        <Button.BaseBtn
           onClick={handleClose}
           disabled={isReplacing}
-          variant="elitea"
-          color="secondary"
+          variant={BUTTON_VARIANTS.elitea}
+          color={BUTTON_COLORS.secondary}
         >
           Cancel
-        </Button>
-        <Button
+        </Button.BaseBtn>
+        <Button.BaseBtn
           onClick={handleReplace}
           disabled={!selectedVersionId || isReplacing}
-          variant="elitea"
-          color="alarm"
+          loading={isReplacing}
+          variant={BUTTON_VARIANTS.elitea}
+          color={BUTTON_COLORS.alarm}
         >
-          {isReplacing ? (
-            <>
-              Replacing...
-              <StyledCircleProgress
-                size={16}
-                sx={styles.replaceProgress}
-              />
-            </>
-          ) : (
-            'Replace & Delete'
-          )}
-        </Button>
+          {isReplacing ? 'Replacing...' : 'Replace & Delete'}
+        </Button.BaseBtn>
       </DialogActions>
     </Dialog>
   );
@@ -239,7 +233,6 @@ const getStyles = () => ({
     left: '.5rem',
   },
   dialogActions: { p: '1.25rem', pt: 0 },
-  replaceProgress: { ml: 1 },
 });
 
 export default VersionReplacementModal;

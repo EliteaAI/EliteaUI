@@ -1,32 +1,26 @@
-import { useEffect } from 'react';
-
 import { useSelector } from 'react-redux';
 
-import { useLazyGetAvailableConfigurationsTypeQuery } from '@/api/configurations';
+import { useGetAvailableConfigurationsTypeQuery } from '@/api/configurations';
+
+const ALL_SECTIONS = [
+  'credentials',
+  'ai_credentials',
+  'llm',
+  'embedding',
+  'vectorstorage',
+  'image_generation',
+  'storage',
+  'asr',
+  'tts',
+];
 
 export default function useGetCurrentConfigurationAsSchemas({ skip = false } = {}) {
-  const [getConfigurationsAsSchema, { isFetching, isLoading }] = useLazyGetAvailableConfigurationsTypeQuery();
-  // const {data} = useGetConfigurationsListQuery({projectId});
-  // console.log("data: ", data)
+  const { isFetching, isLoading } = useGetAvailableConfigurationsTypeQuery(
+    { section: ALL_SECTIONS },
+    { skip },
+  );
 
   const configurationsAsSchema = useSelector(state => state.applications.configurationsAsSchema);
-
-  useEffect(() => {
-    // Fetch schemas from multiple sections to support all credential types
-    // including AI credentials (Azure OpenAI, etc.) which are in ai_credentials section
-    if (skip) {
-      return;
-    }
-    getConfigurationsAsSchema({ section: 'credentials' });
-    getConfigurationsAsSchema({ section: 'ai_credentials' });
-    getConfigurationsAsSchema({ section: 'llm' });
-    getConfigurationsAsSchema({ section: 'embedding' });
-    getConfigurationsAsSchema({ section: 'vectorstorage' });
-    getConfigurationsAsSchema({ section: 'image_generation' });
-    getConfigurationsAsSchema({ section: 'storage' });
-    getConfigurationsAsSchema({ section: 'asr' });
-    getConfigurationsAsSchema({ section: 'tts' });
-  }, [getConfigurationsAsSchema, skip]);
 
   return {
     configurationsAsSchema,

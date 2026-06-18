@@ -25,7 +25,17 @@ import {
   useEditConversation,
   useInternalToolsConfig,
 } from '@/[fsd]/features/chat/lib/hooks';
+import {
+  canParticipantBeActiveInChat,
+  getChatParticipantUniqueId,
+} from '@/[fsd]/features/chat/participants/lib/helpers';
+import {
+  useActiveParticipantDetails,
+  useAddNewParticipants,
+} from '@/[fsd]/features/chat/participants/lib/hooks';
+import { ParticipantsWrapper } from '@/[fsd]/features/chat/participants/ui';
 import { ChatBox } from '@/[fsd]/features/chat/ui';
+import { AddNewUserModal } from '@/[fsd]/features/chat/ui/chat-modal';
 import { FIRST_ELITEA_TOUR_ID, useProposePendingTour } from '@/[fsd]/features/interactive-tours';
 import { ChunkHelpers } from '@/[fsd]/shared/lib/helpers';
 import { eliteaApi } from '@/api/eliteaApi';
@@ -39,7 +49,7 @@ import {
   dummyFolder,
   sioEvents,
 } from '@/common/constants';
-import { genConversationId, getChatParticipantUniqueId, getRawParticipantUniqueId } from '@/common/utils';
+import { genConversationId, getRawParticipantUniqueId } from '@/common/utils';
 import AlertDialog from '@/components/AlertDialog';
 import {
   useChatConversationNameUpdateSocket,
@@ -50,8 +60,6 @@ import {
   useChatParticipantUpdateSocket,
 } from '@/components/Chat/hooks';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
-import useActiveParticipantDetails from '@/hooks/chat/useActiveParticipantDetails';
-import useAddNewParticipants, { canParticipantBeActiveInChat } from '@/hooks/chat/useAddNewParticipants';
 import useAgentCreation from '@/hooks/chat/useAgentCreation';
 import { useAgentEditorUrlSync } from '@/hooks/chat/useAgentEditorUrlSync';
 import useAttachments from '@/hooks/chat/useAttachments';
@@ -88,12 +96,9 @@ import useIsSmallWindow from '@/hooks/useIsSmallWindow';
 import useNavBlocker from '@/hooks/useNavBlocker';
 import { useManualSocket } from '@/hooks/useSocket';
 import useToast from '@/hooks/useToast';
-import { AddNewUserModal } from '@/pages/NewChat/AddNewUser/AddNewUserModal';
 import NewConversationView from '@/pages/NewChat/NewConversationView';
 import { actions as chatActions } from '@/slices/chat';
 import { actions } from '@/slices/settings';
-
-import ParticipantsWrapper from './Participants/index';
 
 const AgentEditor = ChunkHelpers.lazyWithRetry(() => import('@/pages/NewChat/AgentEditor'));
 const CanvasEditor = ChunkHelpers.lazyWithRetry(() => import('@/pages/NewChat/CanvasEditor'));
@@ -158,7 +163,7 @@ const NewChat = props => {
   const showChatBox = useMemo(() => !isPlayback && !isNewConversation, [isNewConversation, isPlayback]);
 
   const [activeParticipant, setActiveParticipant] = useState();
-  const [collapsedParticipants, setCollapsedParticipants] = useState(false);
+  const [collapsedParticipants, setCollapsedParticipants] = useState(true);
 
   const [isStreaming, setIsStreaming] = useState(false);
   const [showAddUserModal, setShowAddUserModal] = useState(false);
@@ -179,10 +184,7 @@ const NewChat = props => {
     [sideBarCollapsed, windowWidth],
   );
 
-  const rightPanelWidth = useMemo(
-    () => (sideBarCollapsed ? 252 : windowWidth > 1700 ? 252 : 332 - SIDE_BAR_WIDTH / 2),
-    [sideBarCollapsed, windowWidth],
-  );
+  const rightPanelWidth = 276;
 
   const { clearLocalActiveParticipant, getLocalActiveParticipant, setLocalActiveParticipant } =
     useLocalActiveParticipant();
@@ -549,15 +551,28 @@ const NewChat = props => {
     [addNewParticipants],
   );
 
+  const onAddNewUsers = useCallback(() => {
+    setShowAddUserModal(true);
+  }, []);
+
   const onSelectParticipant = useCallback(
     (participant, shouldMentionUser = true) => {
       // If AgentEditor is open, update it to show the new participant only if different
       if (isEditingAgent) return;
 
       if (participant?.entity_name === ChatParticipantType.Users) {
-        shouldMentionUser && boxRef.current?.mentionUser?.(`@${participant.meta.user_name} `);
+        const mentionTarget =
+          activeConversation?.isNew || !activeConversation?.id
+            ? newConversationViewRef.current
+            : boxRef.current;
+        shouldMentionUser && mentionTarget?.mentionUser?.(`@${participant.meta.user_name} `);
+        return;
       } else if (participant === 'All users') {
-        shouldMentionUser && boxRef.current?.mentionUser?.(`@Everyone `);
+        const mentionTarget =
+          activeConversation?.isNew || !activeConversation?.id
+            ? newConversationViewRef.current
+            : boxRef.current;
+        shouldMentionUser && mentionTarget?.mentionUser?.(`@Everyone `);
         return;
       }
 
@@ -680,8 +695,8 @@ const NewChat = props => {
     onEditPipeline,
     onEditArtifact,
     onCreateAgent,
-    onCreateToolkit,
     onCreatePipeline,
+    onCreateToolkit,
   } = useMutuallyExclusiveEditors({
     //AgentEditor
     onCloseAgentEditor: handleCloseAgentEditor,
@@ -714,9 +729,7 @@ const NewChat = props => {
     // Participant management
     addNewParticipants,
     onSetActiveParticipant: participant => {
-      setActiveParticipant(prev =>
-        getChatParticipantUniqueId(prev) === getChatParticipantUniqueId(participant) ? participant : prev,
-      );
+      setActiveParticipant(participant);
       if (activeConversation?.id) {
         setLocalActiveParticipant(activeConversation.id, getChatParticipantUniqueId(participant));
       }
@@ -740,9 +753,7 @@ const NewChat = props => {
     // Participant management
     addNewParticipants,
     onSetActiveParticipant: participant => {
-      setActiveParticipant(prev =>
-        getChatParticipantUniqueId(prev) === getChatParticipantUniqueId(participant) ? participant : prev,
-      );
+      setActiveParticipant(participant);
       if (activeConversation?.id) {
         setLocalActiveParticipant(activeConversation.id, getChatParticipantUniqueId(participant));
       }
@@ -760,10 +771,6 @@ const NewChat = props => {
   useChatMessageSyncSocket({
     onRemoteChatMessageSync,
   });
-
-  const onAddNewUsers = useCallback(() => {
-    setShowAddUserModal(true);
-  }, []);
 
   const onSelectThisParticipant = useCallback(
     selectedParticipant => {
@@ -886,7 +893,7 @@ const NewChat = props => {
 
   // Collapse tabs when any editor (CanvasEditor, AgentEditor, or ToolkitEditor) is open
   useEffect(() => {
-    setCollapsedParticipants(isAnyEditorOpen);
+    if (isAnyEditorOpen) setCollapsedParticipants(isAnyEditorOpen);
     setCollapsedConversations(isAnyEditorOpen);
   }, [isAnyEditorOpen]);
 
@@ -933,6 +940,11 @@ const NewChat = props => {
       onClearAttachments,
       setActiveConversation,
       onInternalToolsConfigChange,
+      onAddNewUsers,
+      onCreateAgent,
+      onCreatePipeline,
+      onCreateToolkit,
+      onDeleteParticipant,
     }),
     [
       onChangeParticipantSettings,
@@ -951,6 +963,11 @@ const NewChat = props => {
       onSelectAttachmentManager,
       onClearAttachments,
       onInternalToolsConfigChange,
+      onAddNewUsers,
+      onCreateAgent,
+      onCreatePipeline,
+      onCreateToolkit,
+      onDeleteParticipant,
     ],
   );
 
@@ -1219,10 +1236,6 @@ const NewChat = props => {
     }
   }, [isStreaming, activeFolder?.isNew]);
 
-  const onClickClearChat = useCallback(() => {
-    boxRef.current?.onClear?.();
-  }, []);
-
   useEffect(() => {
     if (preProjectId !== projectId) {
       clearUrlConversation();
@@ -1322,12 +1335,6 @@ const NewChat = props => {
         onSelectParticipant,
         onChangeParticipantSettings,
         onEditParticipant,
-        onAddNewUsers,
-        addNewParticipants,
-        onClickClearChat,
-        onShowAgentCreator: onCreateAgent,
-        onShowToolkitCreator: onCreateToolkit,
-        onShowPipelineCreator: onCreatePipeline,
         setActiveConversation,
         selectedManager,
         newConversationSelectedManager,
@@ -1347,12 +1354,6 @@ const NewChat = props => {
       onSelectParticipant,
       onChangeParticipantSettings,
       onEditParticipant,
-      onAddNewUsers,
-      addNewParticipants,
-      onClickClearChat,
-      onCreateAgent,
-      onCreateToolkit,
-      onCreatePipeline,
     ],
   );
 
@@ -1462,6 +1463,10 @@ const NewChat = props => {
                 onShowAgentEditor={onEditAgent}
                 onShowPipelineEditor={onEditPipeline}
                 onCloseAgentEditor={handleCloseAgentEditor}
+                onCreateAgent={onCreateAgent}
+                onCreatePipeline={onCreatePipeline}
+                onCreateToolkit={onCreateToolkit}
+                onAddNewUsers={onAddNewUsers}
                 ref={newConversationViewRef}
                 uploadAttachments={uploadAttachments}
                 isUploadingAttachments={isUploadingAttachments}
@@ -1469,6 +1474,7 @@ const NewChat = props => {
                 setNewConversationQuestion={setNewConversationQuestion}
               />
               <ChatBox
+                fromTheChat
                 hidden={!showChatBox}
                 key={'chatBox' + showChatBox}
                 ref={boxRef}
@@ -1478,11 +1484,9 @@ const NewChat = props => {
                 onShowPipelineEditor={onEditPipeline}
                 onCloseAgentEditor={handleCloseAgentEditor}
                 onClosePipelineEditor={handleClosePipelineEditor}
-                // TODO: Confirm with Hawk START
                 isEditorDirty={editorIsDirty}
                 onShowVersionChangeAlert={handleShowVersionChangeAlert}
-                // TODO: Confirm with Hawk END
-                inputPlaceholder="Type your message. Use # to search and add AI assistants to conversation."
+                inputPlaceholder="Type your message..."
                 uploadAttachments={uploadAttachments}
                 isUploadingAttachments={isUploadingAttachments}
                 uploadProgress={uploadProgress}
@@ -1712,23 +1716,23 @@ const chatStyles = ({
   const somethingCollapsed = collapsedConversations || collapsedParticipants;
 
   const getChatWidthLG = () => {
-    if (everythingCollapsed) return 'calc(100% - 120px) !important';
+    if (everythingCollapsed) return 'calc(100% - 8.25rem - 1.25rem) !important';
     if (onlyConversationCollapsed) return `calc(100% - ${rightPanelWidth + 60}px) !important`;
-    if (onlyParticipantsCollapsed) return `calc(100% - ${leftPanelWidth + 60}px) !important`;
+    if (onlyParticipantsCollapsed) return `calc(100% - ${leftPanelWidth + 60}px - 1.25rem) !important`;
 
-    return `calc(100% - ${rightPanelWidth + leftPanelWidth}px) !important`;
+    return `calc(100% - ${rightPanelWidth}px - ${leftPanelWidth}px) !important`;
   };
 
   const getChatWidthSM = () => {
-    if (everythingCollapsed) return 'calc(100% - 120px) !important';
-    if (somethingCollapsed) return 'calc(75% - 60px) !important';
+    if (everythingCollapsed) return 'calc(100% - 7.5rem) !important';
+    if (somethingCollapsed) return 'calc(75% - 3.75rem - 1.25rem) !important';
 
-    return '50% !important';
+    return `calc(75% - ${rightPanelWidth}px) !important`;
   };
 
   return {
     container: {
-      padding: '1rem 1.5rem',
+      padding: isSmallWindow ? '1rem 1.5rem' : '1rem 0rem 1rem 1.5rem',
       boxSizing: 'border-box',
       height: '100vh',
       marginLeft: 0,

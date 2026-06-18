@@ -7,12 +7,12 @@ import { Box, Divider, IconButton, Tooltip, Typography, useTheme } from '@mui/ma
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { SIDEBAR_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
+import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
 import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
 import { SidebarConstants, SocketConstants } from '@/[fsd]/widgets/sidebar-root/lib/constants';
 import { useSocketIcon } from '@/[fsd]/widgets/sidebar-root/lib/hooks';
 import { Buttons, SidebarMenuItem } from '@/[fsd]/widgets/sidebar-root/ui';
 import { useGetSupportAssistantConfigQuery } from '@/[fsd]/widgets/support-assistant';
-import { useGetPlatformSettingsQuery } from '@/api/platformSettings';
 import AppsIcon from '@/assets/applications-icon.svg?react';
 import ArtifactsIcon from '@/assets/artifacts-icon.svg?react';
 import BriefcaseIcon from '@/assets/briefcase-icon.svg?react';
@@ -30,7 +30,6 @@ import {
 import ApplicationsIcon from '@/components/Icons/ApplicationsIcon';
 import ChatIcon from '@/components/Icons/ChatIcon';
 import EliteAIcon from '@/components/Icons/EliteAIcon';
-import ModeratorIcon from '@/components/Icons/ModeratorIcon';
 import Person from '@/components/Icons/Person';
 import ProjectSelect from '@/components/ProjectSelect';
 import ThemeModeToggle from '@/components/ThemeModeToggle';
@@ -48,7 +47,7 @@ const SidebarBody = memo(props => {
   const { isBlockNav, isStreaming, setIsResetApiState, resetApiState } = useNavBlocker();
   const { isSocketIconVisible, socketStatus } = useSocketIcon();
   const { personal_project_id } = useSelector(state => state.user);
-  const { data: platformSettings } = useGetPlatformSettingsQuery();
+  const isMcpVisible = useIsMcpVisible();
 
   useGetSupportAssistantConfigQuery();
 
@@ -177,22 +176,10 @@ const SidebarBody = memo(props => {
           tourId: SIDEBAR_TOUR_TARGET_IDS.navArtifacts,
         },
       ],
-      [
-        {
-          value: 'moderation',
-          label: 'Moderation Space',
-          icon: <ModeratorIcon />,
-          url: RouteDefinitions.ModerationSpace,
-          breadCrumb: 'Moderation Space',
-          tooltip: 'Moderation Space',
-          publicPermission: true,
-        },
-      ],
     ];
     const filteredSections = allSections.map(section => {
       return section.filter(i => {
-        // Hide MCPs menu item when mcp_in_menu is disabled at platform level
-        if (i.value === 'mcps' && platformSettings?.mcp_in_menu_enabled === false) {
+        if (i.value === 'mcps' && !isMcpVisible) {
           return false;
         }
         const perms = i.publicPermission ? publicPermissionsSet : permissionsSet;
@@ -203,7 +190,7 @@ const SidebarBody = memo(props => {
       });
     });
     return filteredSections.filter(section => section.length > 0);
-  }, [permissionsSet, publicPermissionsSet, platformSettings?.mcp_in_menu_enabled]);
+  }, [permissionsSet, publicPermissionsSet, isMcpVisible]);
 
   const customRenderProject = useCallback(
     option => {

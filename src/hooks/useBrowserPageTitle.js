@@ -57,15 +57,6 @@ function useBrowserPageTitle() {
       return `Credentials - ${projectName}`;
     } else if (location.pathname.startsWith('/artifacts')) {
       return `Artifacts - ${projectName}`;
-    } else if (location.pathname.startsWith('/moderation-space')) {
-      if (params.toolkitId) {
-        return `Moderation space toolkit: ${name || params.toolkitId} - ${projectName}`;
-      } else if (params.agentId) {
-        return `Moderation space agent: ${name || params.agentId} - ${projectName}`;
-      } else if (params.tab) {
-        return `Moderation space: ${params.tab} - ${projectName}`;
-      }
-      return `Moderation space - ${projectName}`;
     } else if (location.pathname.startsWith('/datasources')) {
       if (params.datasourceId) {
         return `Datasource: ${name || params.datasourceId} - ${projectName}`;

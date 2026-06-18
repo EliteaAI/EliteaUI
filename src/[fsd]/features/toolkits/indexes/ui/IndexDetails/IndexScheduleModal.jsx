@@ -1,15 +1,16 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Cron } from 'react-js-cron';
 import 'react-js-cron/dist/styles.css';
 import { useSelector } from 'react-redux';
 
-import { Box, Button, GlobalStyles, Typography } from '@mui/material';
+import { Box, GlobalStyles, Typography } from '@mui/material';
 
 import { CredentialsSelect } from '@/[fsd]/features/credentials/ui';
 import { IndexCronDefault } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import { validateCronExpressionDaily as validateCronExpression } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexSchedule.helpers.js';
-import { Checkbox, Modal } from '@/[fsd]/shared/ui';
+import { Button, Checkbox, Modal } from '@/[fsd]/shared/ui';
+import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import FormInput from '@/components/FormInput';
 import { useSelectedProject } from '@/hooks/useSelectedProject';
@@ -52,7 +53,7 @@ const IndexScheduleModal = props => {
     [cronState.isValid, toolkitSchemaFetching],
   );
 
-  const applyChanges = () => {
+  const applyChanges = useCallback(() => {
     if (!innerCredentials && credentialsData) {
       setCredentialsError(true);
       return;
@@ -60,7 +61,7 @@ const IndexScheduleModal = props => {
 
     onSubmit(cronExpression, innerCredentials);
     onClose();
-  };
+  }, [innerCredentials, credentialsData, onSubmit, cronExpression, onClose]);
 
   return (
     <>
@@ -146,23 +147,23 @@ const IndexScheduleModal = props => {
         }
         actions={
           <Box sx={styles.actionsWrapper}>
-            <Button
+            <Button.BaseBtn
               sx={styles.actionBtn}
-              variant="elitea"
-              color="secondary"
+              variant={BUTTON_VARIANTS.elitea}
+              color={BUTTON_COLORS.secondary}
               onClick={onClose}
             >
               Cancel
-            </Button>
-            <Button
+            </Button.BaseBtn>
+            <Button.BaseBtn
               sx={styles.actionBtn}
-              variant="elitea"
-              color="primary"
+              variant={BUTTON_VARIANTS.elitea}
+              color={BUTTON_COLORS.primary}
               onClick={applyChanges}
               disabled={applyIsDisabled}
             >
               Apply
-            </Button>
+            </Button.BaseBtn>
           </Box>
         }
       />

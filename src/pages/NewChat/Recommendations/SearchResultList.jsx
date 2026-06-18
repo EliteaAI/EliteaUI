@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 
+import { getChatParticipantUniqueId } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { ChatParticipantType, PAGE_SIZE } from '@/common/constants';
-import { getChatParticipantUniqueId } from '@/common/utils';
 import useParticipants from '@/hooks/chat/useParticipants';
 
 import NewParticipantList from './NewParticipantList';
@@ -21,7 +21,7 @@ export default function SearchResultList({
     query,
     types: [ChatParticipantType.Applications],
     projectFilter: 'all',
-    forceSkip: !query,
+    forceSkip: false,
   });
   const existingParticipantUids = useMemo(
     () => existingParticipants?.map(participant => getChatParticipantUniqueId(participant) || []),

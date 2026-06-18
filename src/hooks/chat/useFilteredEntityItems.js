@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 
+import { getChatParticipantUniqueId } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { ChatParticipantType, PUBLIC_PROJECT_ID } from '@/common/constants';
-import { getChatParticipantUniqueId } from '@/common/utils';
 
 const transformEntityItemToParticipant = (entityItem, participantType) => {
   const entity_name =

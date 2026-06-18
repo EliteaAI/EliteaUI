@@ -1,7 +1,6 @@
 import { memo, useEffect } from 'react';
 
 import { useSelector } from 'react-redux';
-import { useLocation } from 'react-router-dom';
 
 import { Grid, Skeleton } from '@mui/material';
 
@@ -9,7 +8,6 @@ import ListInfiniteMoreLoader from '@/ComponentsLib/ListInfiniteMoreLoader';
 import {
   CARD_LIST_WIDTH,
   CARD_LIST_WIDTH_FULL,
-  FULL_WIDTH_FLEX_GRID_PAGE,
   MARGIN_COMPENSATION,
   MIN_CARD_WIDTH,
 } from '@/common/constants';
@@ -28,23 +26,21 @@ const DataCards = memo(props => {
     cardType,
     dynamicTags,
     total,
-    isFullWidth,
+    isFullWidth = false,
     cardHeight = '7rem',
     cardWidthOverride,
   } = props;
 
-  const { pathname } = useLocation();
   const { tagList } = useSelector(state => state.tags);
   const { calculateTagsWidthOnCard, setGetElement } = useTags(tagList);
   const { componentRef: gridRef, componentWidth: cardListWidth } = useGetComponentWidth();
 
-  const isFullWidthPage = isFullWidth || FULL_WIDTH_FLEX_GRID_PAGE.includes(pathname);
   const isDefaultCardHeight = cardHeight === '7rem';
 
-  const layoutCardWidth = useCardLayout(cardListWidth, cardList.length, isFullWidthPage);
+  const layoutCardWidth = useCardLayout(cardListWidth, cardList.length, isFullWidth);
   const cardWidth = cardWidthOverride || layoutCardWidth;
 
-  const styles = dataCardStyles(cardWidth, isFullWidthPage, cardHeight, isDefaultCardHeight);
+  const styles = dataCardStyles(cardWidth, isFullWidth, cardHeight, isDefaultCardHeight);
 
   useEffect(() => {
     if (isLoading) return;
@@ -101,10 +97,10 @@ const DataCards = memo(props => {
 DataCards.displayName = 'DataCards';
 
 /** @type {MuiSx} */
-const dataCardStyles = (cardWidth, isFullWidthPage, cardHeight, isDefaultCardHeight) => ({
+const dataCardStyles = (cardWidth, isFullWidth, cardHeight, isDefaultCardHeight) => ({
   cardListContainer: {
     flexGrow: 1,
-    width: isFullWidthPage ? CARD_LIST_WIDTH_FULL : CARD_LIST_WIDTH,
+    width: isFullWidth ? CARD_LIST_WIDTH_FULL : CARD_LIST_WIDTH,
     overflowY: 'hidden',
     marginRight: `-${MARGIN_COMPENSATION}`,
     padding: '1.25rem 0 0 1.5rem',

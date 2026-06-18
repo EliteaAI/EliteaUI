@@ -206,16 +206,18 @@ const EntityIcon = memo(props => {
           />
         )}
       </Box>
-      <SelectIconDialog
-        open={openSelectIconDialog}
-        onClose={onCloseDialog}
-        selectedIcon={icon}
-        entityType={entityType}
-        onSelectIcon={onSelectIcon}
-        projectId={projectId}
-        versionId={versionId}
-        entityId={entityId}
-      />
+      {editable && (
+        <SelectIconDialog
+          open={openSelectIconDialog}
+          onClose={onCloseDialog}
+          selectedIcon={icon}
+          entityType={entityType}
+          onSelectIcon={onSelectIcon}
+          projectId={projectId}
+          versionId={versionId}
+          entityId={entityId}
+        />
+      )}
     </>
   );
 });

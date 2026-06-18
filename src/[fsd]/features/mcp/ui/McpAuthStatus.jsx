@@ -2,12 +2,14 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import { MCP_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { useMcpAuthCheck, useMcpAuthModal, useMcpTokenChange } from '@/[fsd]/features/mcp/lib/hooks';
 import { McpAuthModal, McpLogoutModal } from '@/[fsd]/features/mcp/ui';
+import { Button } from '@/[fsd]/shared/ui';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import OnlineIcon from '@/assets/online-icon.svg?react';
 import { useIsFrom } from '@/hooks/useIsFromSpecificPageHooks';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -94,6 +96,8 @@ const McpAuthStatus = memo(({ authConfig } = {}) => {
   // For pre-built MCPs, we don't require URL to show the auth status.
   // authConfig implies an external flow (e.g. SharePoint) that is always capable of login.
   const canLogin = !!(authConfig || isPrebuildMcp || url);
+  const isButtonDisabled = !canLogin || isRunning || authConfig?.isRunning;
+  const buttonLabel = hasLoggedInToMcp ? 'Logout' : isRunning ? 'Logging in...' : 'Login';
 
   // For injected auth flows (authConfig), always render regardless of id/create-mode,
   // since the parent (e.g. SharepointOAuthStatus) already gates rendering on OAuth mode.
@@ -114,13 +118,13 @@ const McpAuthStatus = memo(({ authConfig } = {}) => {
             {hasLoggedInToMcp ? 'Connected!' : 'Not Connected'}
           </Typography>
         </Box>
-        <Button
+        <Button.BaseBtn
           onClick={hasLoggedInToMcp ? onLogout : onLogin}
-          disabled={!canLogin || isRunning || authConfig?.isRunning}
-          variant="secondary"
+          disabled={isButtonDisabled}
+          variant={BUTTON_VARIANTS.secondary}
         >
-          {hasLoggedInToMcp ? 'Logout' : isRunning ? 'Logging in...' : 'Login'}
-        </Button>
+          {buttonLabel}
+        </Button.BaseBtn>
       </Box>
       {showModal && (
         <McpAuthModal

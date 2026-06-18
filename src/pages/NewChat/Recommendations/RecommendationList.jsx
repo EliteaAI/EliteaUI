@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react';
 
-import { getChatParticipantUniqueId } from '@/common/utils';
+import { getChatParticipantUniqueId } from '@/[fsd]/features/chat/participants/lib/helpers';
 
 import NewParticipantList from './NewParticipantList';
 import useRecommendations from './useRecommendations';

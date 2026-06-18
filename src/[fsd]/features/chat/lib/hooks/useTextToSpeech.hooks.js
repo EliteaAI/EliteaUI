@@ -96,6 +96,9 @@ const spokenRangeReducer = (prev, next) => {
 };
 
 const useTextToSpeech = ({ ttsModel, socket, voiceConfig } = {}) => {
+  const [showPlayer, setShowPlayer] = useState(false); // idle | playing | paused | done | error
+  const [speakableText, setSpeakableText] = useState(''); // idle | playing | paused | done | error
+
   const [status, setStatus] = useState('idle'); // idle | playing | paused | done | error
   const [spokenRange, setSpokenRange] = useReducer(spokenRangeReducer, null);
 
@@ -132,14 +135,7 @@ const useTextToSpeech = ({ ttsModel, socket, voiceConfig } = {}) => {
   // Mirror of voiceConfig as a ref so the tts_done handler (closed over at mount)
   // can read the latest value without being in the effect's dependency list.
   const voiceConfigRef = useRef(voiceConfig);
-  // Mirror of socket so the RAF loop can emit tts_next without being in its dep array.
-  const socketRef = useRef(socket);
-  // Index of the next sentence waypoint for which tts_next has not yet been emitted.
-  // Counts up as the RAF loop emits ACKs; reset to 0 at the start of each session.
-  const sentenceNextAckedRef = useRef(0);
-  // Set to true when voice/speed settings change during playback so the RAF loop
-  // emits tts_next immediately instead of waiting for the buffer to drain.
-  const forceNextAckRef = useRef(false);
+
   const rafRef = useRef(null);
   // Self-calibrating chars/second rate. Measured from the previous session's
   // (text.length / totalDuration) and reused for the linear estimation phase
@@ -177,6 +173,13 @@ const useTextToSpeech = ({ ttsModel, socket, voiceConfig } = {}) => {
   const isPlaying = status === 'playing';
   const isPaused = status === 'paused';
 
+  const resetStatus = useCallback((newStatus = 'done') => {
+    setStatus(newStatus);
+    setSpokenRange(null);
+    setShowPlayer(false);
+    setSpeakableText('');
+  }, []);
+
   // ─────────────────────────────────────────────────────────────────────────
   // Model TTS helpers
   // ─────────────────────────────────────────────────────────────────────────
@@ -211,20 +214,6 @@ const useTextToSpeech = ({ ttsModel, socket, voiceConfig } = {}) => {
     voiceConfigRef.current = voiceConfig;
   }, [voiceConfig]);
 
-  useEffect(() => {
-    socketRef.current = socket;
-  }, [socket]);
-
-  // When voice or speed changes DURING active playback, signal the RAF loop to
-  // emit tts_next immediately so the new settings reach the backend without delay.
-  // Guard with playStartTimeRef so changes before playback begins are ignored —
-  // they would otherwise set force=true and fire the first ACK prematurely.
-  useEffect(() => {
-    if (playStartTimeRef.current !== null) {
-      forceNextAckRef.current = true;
-    }
-  }, [voiceConfig?.voiceId, voiceConfig?.rate]);
-
   // Live volume change — ramp to avoid click artifact when volume slider moves during playback
   useEffect(() => {
     const ctx = audioContextRef.current;
@@ -256,8 +245,6 @@ const useTextToSpeech = ({ ttsModel, socket, voiceConfig } = {}) => {
     allChunksReceivedRef.current = false;
     charTimelineRef.current = null;
     sentenceWaypointsRef.current = [];
-    sentenceNextAckedRef.current = 0;
-    forceNextAckRef.current = false;
     pendingChunkRef.current = null;
     newSentenceRef.current = true;
     clearInterval(schedulerTimerRef.current);
@@ -388,7 +375,7 @@ const useTextToSpeech = ({ ttsModel, socket, voiceConfig } = {}) => {
       const textToSpeak = offset > 0 ? text.slice(offset) : text;
       if (!textToSpeak.trim()) {
         setStatus('done');
-        setSpokenRange(null);
+        resetStatus('done');
         return;
       }
 
@@ -419,7 +406,7 @@ const useTextToSpeech = ({ ttsModel, socket, voiceConfig } = {}) => {
         if (utteranceRef.current !== utterance) return;
         utteranceRef.current = null;
         setStatus('done');
-        setSpokenRange(null);
+        resetStatus('done');
       };
 
       utterance.onerror = e => {
@@ -441,7 +428,7 @@ const useTextToSpeech = ({ ttsModel, socket, voiceConfig } = {}) => {
       setStatus('playing');
       window.speechSynthesis.speak(utterance);
     },
-    [voiceConfig],
+    [resetStatus, voiceConfig?.rate, voiceConfig?.voice, voiceConfig?.volume],
   );
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -459,8 +446,6 @@ const useTextToSpeech = ({ ttsModel, socket, voiceConfig } = {}) => {
         socket.emit(sioEvents.tts_stop, {});
         stopModelAudio();
         sentenceWaypointsRef.current = [];
-        sentenceNextAckedRef.current = 0;
-        forceNextAckRef.current = false;
         fullTextRef.current = text;
         // Build punctuation-aware timeline for this session's text.
         // Uses the calibrated rate from the previous session (or the default
@@ -547,9 +532,8 @@ const useTextToSpeech = ({ ttsModel, socket, voiceConfig } = {}) => {
     startOffsetRef.current = 0;
     lastBoundaryRef.current = 0;
     pausedOffsetRef.current = 0;
-    setStatus('idle');
-    setSpokenRange(null);
-  }, [hasModelTTS, socket, stopModelAudio]);
+    resetStatus('idle');
+  }, [hasModelTTS, resetStatus, socket, stopModelAudio]);
 
   // ─────────────────────────────────────────────────────────────────────────
   // Socket event listeners for model TTS
@@ -645,8 +629,7 @@ const useTextToSpeech = ({ ttsModel, socket, voiceConfig } = {}) => {
       // eslint-disable-next-line no-console
       console.error('[TTS] Server error:', error);
       stopModelAudio();
-      setStatus('error');
-      setSpokenRange(null);
+      resetStatus('error');
     };
 
     socket.on(sioEvents.tts_audio_chunk, handleChunk);
@@ -658,7 +641,7 @@ const useTextToSpeech = ({ ttsModel, socket, voiceConfig } = {}) => {
       socket.off(sioEvents.tts_done, handleDone);
       socket.off(sioEvents.tts_error, handleError);
     };
-  }, [hasModelTTS, socket, enqueueSamples, stopModelAudio]);
+  }, [hasModelTTS, socket, enqueueSamples, stopModelAudio, resetStatus]);
 
   // ─────────────────────────────────────────────────────────────────────────
   // RAF loop — word highlighting + completion detection for model TTS
@@ -687,7 +670,7 @@ const useTextToSpeech = ({ ttsModel, socket, voiceConfig } = {}) => {
         // complete immediately rather than spinning forever.
         if (allChunksReceivedRef.current) {
           setStatus('done');
-          setSpokenRange(null);
+          resetStatus('done');
           rafRef.current = null;
           return;
         }
@@ -698,38 +681,6 @@ const useTextToSpeech = ({ ttsModel, socket, voiceConfig } = {}) => {
       // Subtract outputLatency so the highlight tracks what the user actually hears,
       // not what has been sent to the audio hardware buffer.
       const elapsed = ctx.currentTime - (ctx.outputLatency ?? 0) - playStartTimeRef.current;
-
-      // ── tts_next pacing ──────────────────────────────────────────────────────
-      // ACK the backend when elapsed playback time reaches LEAD_TIME_S seconds
-      // before the END of the PREVIOUS sentence.  This keeps the backend exactly
-      // 1 sentence ahead: it starts generating sentence N+1 while sentence N-1
-      // still has LEAD_TIME_S seconds left to play.
-      //
-      //   nextAcked == 0  → no previous boundary; fire immediately so sentence 2
-      //                     is ready before sentence 1 ends.
-      //   nextAcked >  0  → fire when elapsed >=
-      //                       waypoints[nextAcked-1].audioTime – LEAD_TIME_S
-      //
-      // Short sentences (duration < LEAD_TIME_S) will still cascade immediately
-      // because the condition is negative — unavoidable without risking a gap.
-      // Longer sentences are paced one-per-sentence so the backend never runs
-      // far ahead of playback, keeping voice/speed changes responsive.
-      //
-      // forceNextAckRef: fires immediately when voice/speed changes mid-playback
-      // so the new settings take effect at the very next sentence boundary.
-      const LEAD_TIME_S = 3;
-      const nextAcked = sentenceNextAckedRef.current;
-      if (nextAcked < sentenceWaypointsRef.current.length) {
-        const prevAudioTime = nextAcked > 0 ? sentenceWaypointsRef.current[nextAcked - 1].audioTime : 0;
-        if (forceNextAckRef.current || elapsed >= prevAudioTime - LEAD_TIME_S) {
-          socketRef.current?.emit(sioEvents.tts_next, {
-            voice: voiceConfigRef.current?.voiceId || undefined,
-            speed: voiceConfigRef.current?.rate ?? 1.0,
-          });
-          sentenceNextAckedRef.current = nextAcked + 1;
-          forceNextAckRef.current = false;
-        }
-      }
 
       const text = fullTextRef.current;
       const totalDuration = totalDurationRef.current;
@@ -797,8 +748,7 @@ const useTextToSpeech = ({ ttsModel, socket, voiceConfig } = {}) => {
 
       // Detect audio completion: all chunks received and playback time elapsed
       if (allReceived && (totalDuration <= 0 || elapsed >= totalDuration)) {
-        setStatus('done');
-        setSpokenRange(null);
+        resetStatus('done');
         rafRef.current = null;
         return;
       }
@@ -814,7 +764,7 @@ const useTextToSpeech = ({ ttsModel, socket, voiceConfig } = {}) => {
         rafRef.current = null;
       }
     };
-  }, [hasModelTTS, status]);
+  }, [hasModelTTS, resetStatus, status]);
 
   // ─────────────────────────────────────────────────────────────────────────
   // RAF loop — word highlighting fallback for browser SpeechSynthesis
@@ -901,7 +851,20 @@ const useTextToSpeech = ({ ttsModel, socket, voiceConfig } = {}) => {
 
   const isSupported = hasModelTTS || isSpeechSynthesisSupported;
 
-  return { speak, stop, pause, resume, isPlaying, isPaused, isSupported, spokenRange };
+  return {
+    speak,
+    stop,
+    pause,
+    resume,
+    isPlaying,
+    isPaused,
+    isSupported,
+    spokenRange,
+    showPlayer,
+    setShowPlayer,
+    speakableText,
+    setSpeakableText,
+  };
 };
 
 export { useTextToSpeech };

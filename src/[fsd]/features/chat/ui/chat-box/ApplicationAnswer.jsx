@@ -16,6 +16,7 @@ import {
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { buildAttachmentSummary } from '@/[fsd]/entities/attachment/lib';
 import { toSpeakableText, translateSpokenPos } from '@/[fsd]/features/chat/lib/helpers';
+import { useParticipantEntityIcon, useParticipantName } from '@/[fsd]/features/chat/participants/lib/hooks';
 import { ChatAttachment, ChatContinue, ChatHitlActions, ErrorTrace } from '@/[fsd]/features/chat/ui';
 import { SubAgentAccordion } from '@/[fsd]/features/chat/ui/sub-agent-section';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
@@ -50,8 +51,6 @@ import EliteAIcon from '@/components/Icons/EliteAIcon';
 import RegenerateIcon from '@/components/Icons/RegenerateIcon';
 import RotatingMessages from '@/components/RotatingMessages';
 import useCopyDownloadHandlers from '@/hooks/chat/useCopyEventHandlers';
-import useParticipantEntityIcon from '@/hooks/chat/useParticipantEntityIcon';
-import useParticipantName from '@/hooks/chat/useParticipantName';
 import useGetComponentWidth from '@/hooks/useGetComponentWidth';
 
 const COMPACT_VIEW_BREAKPOINT = 340;

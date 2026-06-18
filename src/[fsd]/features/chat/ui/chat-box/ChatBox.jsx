@@ -25,6 +25,7 @@ import {
   useSlashMention,
   useTextToSpeech,
 } from '@/[fsd]/features/chat/lib/hooks';
+import { useFetchParticipantDetails } from '@/[fsd]/features/chat/participants/lib/hooks';
 import { SlashSuggestionList, VoiceMiniPlayer } from '@/[fsd]/features/chat/ui';
 import { ChatMessageList } from '@/[fsd]/features/chat/ui/chat-box';
 import { UserMentionList } from '@/[fsd]/features/chat/ui/user-mention-list';
@@ -67,7 +68,6 @@ import { useChatSocket, useStopStreaming } from '@/components/Chat/hooks';
 import InfoIcon from '@/components/Icons/InfoIcon';
 import SocketContext from '@/contexts/SocketContext';
 import useChatStreaming from '@/hooks/chat/useChatStreaming';
-import useFetchParticipantDetails from '@/hooks/chat/useFetchParticipantDetails';
 import useLoadMoreMessages from '@/hooks/chat/useLoadMoreMessages';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useSocket from '@/hooks/useSocket';
@@ -80,6 +80,7 @@ import { actions as chatActions } from '@/slices/chat';
 
 const ChatBox = forwardRef((props, boxRef) => {
   const {
+    fromTheChat,
     hidden = false,
     messageListSX,
     activeParticipant,
@@ -133,7 +134,14 @@ const ChatBox = forwardRef((props, boxRef) => {
 
     // Internal tools config
     onInternalToolsConfigChange,
+    onAddNewUsers,
     isUpdatingInternalToolsConfig,
+
+    // Participant management (for PlusChatButton submenus)
+    onCreateAgent,
+    onCreatePipeline,
+    onCreateToolkit,
+    onDeleteParticipant,
 
     //Unsaved LLM settings
     unsavedLLMSettings,
@@ -238,6 +246,10 @@ const ChatBox = forwardRef((props, boxRef) => {
     stop: stopTTS,
     isPlaying,
     spokenRange,
+    showPlayer,
+    setShowPlayer,
+    speakableText,
+    setSpeakableText,
   } = useTextToSpeech({
     ttsModel,
     socket,
@@ -252,20 +264,27 @@ const ChatBox = forwardRef((props, boxRef) => {
   const handleAutoSpeak = useCallback(
     (text, msgId) => {
       if (!text) return;
-      const { text: speakableText, segments } = toSpeakableText(text);
-      if (!speakableText) return;
+      const { text: convertedText, segments } = toSpeakableText(text);
+      if (!convertedText) return;
       setSpeakingMessageId(msgId ?? null);
       setSpeakingSegments(segments);
-      speak(speakableText);
+      setSpeakableText(convertedText);
+      setShowPlayer(true);
     },
-    [speak],
+    [setShowPlayer, setSpeakableText],
   );
+
+  const handlePlay = useCallback(() => {
+    speak(speakableText);
+  }, [speak, speakableText]);
 
   useEffect(() => {
     if (!isPlaying) {
       setSpeakingMessageId(null);
       setSpeakingSegments(null);
+      setShowPlayer(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPlaying]);
 
   const isTheUserChattingNow = useMemo(() => {
@@ -2062,14 +2081,16 @@ const ChatBox = forwardRef((props, boxRef) => {
             conversation_starters={hasStarterBeenSent || isTheUserChattingNow ? [] : conversationStarters}
           />
         )}
-        {isPlaying && (
+        {showPlayer && (
           <VoiceMiniPlayer
             voiceConfig={voiceConfig}
             voices={displayVoices}
             onVoiceConfigChange={setVoiceConfig}
             ttsModel={ttsModel}
             hasModelTTS={hasModelTTS}
+            isPlaying={isPlaying}
             onStop={stopTTS}
+            onPlay={handlePlay}
           />
         )}
         <Box sx={hitlEditMode ? styles.inputWrapperHitl : styles.inputWrapper}>
@@ -2099,9 +2120,9 @@ const ChatBox = forwardRef((props, boxRef) => {
               onClose={stopProcessingAtSymbol}
             />
           )}
-          {enableMentions && !!query?.slice(1) && (
+          {enableMentions && query && (
             <SearchResultList
-              query={query ? query.slice(1) : ''}
+              query={query.slice(1)}
               onSelectParticipant={onSelectParticipant}
               stopProcessingSymbols={stopProcessingSymbols}
               existingParticipants={activeConversation?.participants || []}
@@ -2128,6 +2149,7 @@ const ChatBox = forwardRef((props, boxRef) => {
             />
           )}
           <NewChatInput
+            fromTheChat={fromTheChat}
             conversationId={activeConversation?.id}
             placeholder={inputPlaceholder}
             ref={chatInput}
@@ -2184,8 +2206,16 @@ const ChatBox = forwardRef((props, boxRef) => {
             clearInputAfterSubmit={false}
             //internal tools config
             onInternalToolsConfigChange={onInternalToolsConfigChange}
+            onAddNewUsers={onAddNewUsers}
             internal_tools={activeConversation?.meta?.internal_tools || []}
             projectId={projectId}
+            // Participant management (for PlusChatButton submenus)
+            onSelectParticipant={onSelectThisParticipant}
+            onCreateAgent={onCreateAgent}
+            onCreatePipeline={onCreatePipeline}
+            onCreateToolkit={onCreateToolkit}
+            onDeleteParticipant={onDeleteParticipant}
+            participants={activeConversation?.participants || []}
             slashHighlights={slashHighlightRanges}
             isSpeakingMode={isSpeakingMode}
             onSpeakingModeToggle={() => setIsSpeakingMode(v => !v)}

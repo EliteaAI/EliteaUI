@@ -2,6 +2,8 @@ import { memo, useEffect, useMemo } from 'react';
 
 import { useSelector } from 'react-redux';
 
+import { isMcpToolkit } from '@/[fsd]/shared/lib/helpers';
+import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
 import { useToolkitsDetailsQuery } from '@/api/toolkits';
 import NewParticipantList from '@/pages/NewChat/Recommendations/NewParticipantList';
 
@@ -25,6 +27,7 @@ const SlashSuggestionList = memo(props => {
     onConfirmActiveRef,
   } = props;
 
+  const isMcpVisible = useIsMcpVisible();
   const toolkitValidationInfo = useSelector(state => state.chat.toolkitValidationInfo);
 
   // Only show toolkits that are added as conversation participants (AC1)
@@ -33,13 +36,14 @@ const SlashSuggestionList = memo(props => {
   const filteredParticipants = useMemo(() => {
     if (!participantToolkits?.length) return [];
     return participantToolkits.filter(p => {
+      if (!isMcpVisible && isMcpToolkit(p)) return false;
       const key = `${p.project_id}_${p.id}`;
       const validationInfo = toolkitValidationInfo?.[key];
       if (validationInfo?.length) return false;
       if (toolkitQuery && !p.name.toLowerCase().includes(toolkitQuery.toLowerCase())) return false;
       return true;
     });
-  }, [participantToolkits, toolkitValidationInfo, toolkitQuery]);
+  }, [participantToolkits, toolkitValidationInfo, toolkitQuery, isMcpVisible]);
 
   const { data: toolkitDetails, isFetching: isToolsFetching } = useToolkitsDetailsQuery(
     { projectId: selectedToolkit?.project_id, toolkitId: selectedToolkit?.id },
@@ -48,7 +52,7 @@ const SlashSuggestionList = memo(props => {
 
   const availableTools = useMemo(() => {
     if (!toolkitDetails?.settings) return [];
-    const isMcp = toolkitDetails.type === 'mcp' || toolkitDetails.type?.startsWith('mcp_');
+    const isMcp = isMcpToolkit(toolkitDetails);
     if (isMcp) {
       return (toolkitDetails.settings.available_mcp_tools || []).map(item => ({
         name: item.value || item.label,
@@ -149,7 +153,7 @@ const SlashSuggestionList = memo(props => {
           existingParticipantUids={[]}
           onClose={onClose}
           total={participantToolkits.length}
-          title="Mention Toolkit or MCP"
+          title={isMcpVisible ? 'Mention Toolkit or MCP' : 'Mention Toolkit'}
           activeIndex={activeIndex}
         />
       </>

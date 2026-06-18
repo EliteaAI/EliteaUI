@@ -402,7 +402,6 @@ const UserInput = forwardRef((props, ref) => {
                   tooltipOfSendButton={tooltipOfSendButton}
                   sendButton={sendButton}
                   styles={styles}
-                  isCreatingConversation={isCreatingConversation}
                 />
                 {showLoading && (
                   <StyledCircleProgress {...(isUploadingAttachments && { progress: uploadProgress })} />
@@ -544,7 +543,8 @@ const userInputStyles = (isFocused, isDragOver, isRecording) => {
       justifyContent: 'space-between',
       width: '100%',
       alignItems: 'center',
-      gap: { xs: '.5rem', sm: '1rem' },
+      minHeight: '2.5rem',
+      gap: { xs: '.5rem', sm: '0.5rem' },
     },
     sendButtonContainer: {
       display: 'flex',
