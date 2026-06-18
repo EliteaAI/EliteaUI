@@ -115,6 +115,7 @@ export default DuplicateDialogContent;
 /** @type {MuiSx} */
 const duplicateDialogContentStyles = () => ({
   wrapper: {
+    flex: 1,
     display: 'flex',
     flexDirection: 'column',
     gap: '0.75rem',
@@ -125,11 +126,11 @@ const duplicateDialogContentStyles = () => ({
     borderBottom: `0.0625rem solid ${palette.border.lines}`,
   }),
   filenamesList: {
+    flex: 1,
     display: 'flex',
     flexDirection: 'column',
     gap: '0.5rem',
     minHeight: 0,
-    maxHeight: '14rem',
     overflowY: 'auto',
   },
   filenameRow: {

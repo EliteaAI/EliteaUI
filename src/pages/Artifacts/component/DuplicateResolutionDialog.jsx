@@ -75,6 +75,7 @@ const duplicateResolutionDialogStyles = () => ({
     '& .MuiDialog-paper': {
       width: '31.25rem !important',
       maxWidth: '31.25rem !important',
+      maxHeight: 'calc(100dvh - 9rem) !important',
     },
     '& .MuiDialogActions-root': {
       width: '100%',
@@ -83,9 +84,12 @@ const duplicateResolutionDialogStyles = () => ({
     },
   },
   content: {
+    flex: 1,
+    minHeight: 0,
     display: 'flex',
     flexDirection: 'column',
     overflow: 'hidden',
+    maxHeight: 'none !important',
     padding: '0.5rem 1.75rem !important',
     marginBottom: '0.75rem',
   },
