@@ -1209,9 +1209,31 @@ export const useChatSocket = ({
           handleError({ data: message.content || [] });
           return;
         case SocketMessageType.AgentException: {
-          msg.isLoading = false;
-          msg.isStreaming = false;
-          msg.exception = message.content;
+          // A fan-out child (#4993) carries its own thread + sub-agent name in
+          // the event-metadata overlay. Its hard LLM/provider exception belongs
+          // to ONE child whose siblings may still be running — route it into
+          // that child's accordion (keyed by sub-agent name) instead of the
+          // whole-message exception box, which would misleadingly mark the
+          // entire orchestrator run as failed. Keep the message streaming so the
+          // running siblings retain their live view (mirrors the HITL re-arm).
+          const exMeta = response_metadata?.metadata || {};
+          const exChildName = exMeta.parent_agent_name || '';
+          const isFanoutChildException = Boolean(exChildName && exMeta.child_thread_id);
+
+          if (isFanoutChildException) {
+            msg.isLoading = false;
+            msg.isSending = false;
+            msg.isRegenerating = false;
+            msg.isStreaming = true;
+            msg.subAgentErrors = {
+              ...(msg.subAgentErrors || {}),
+              [exChildName]: { exception: message.content },
+            };
+          } else {
+            msg.isLoading = false;
+            msg.isStreaming = false;
+            msg.exception = message.content;
+          }
           trackEvent(GA_EVENT_NAMES.AGENT_EXCEPTION, {
             [GA_EVENT_PARAMS.ERROR_TYPE]: 'agent_exception',
             [GA_EVENT_PARAMS.ERROR_CONTENT]: String(message.content || '').substring(0, 100),

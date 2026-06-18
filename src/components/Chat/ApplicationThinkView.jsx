@@ -3,6 +3,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import { ChatHelpers } from '@/[fsd]/features/chat/lib/helpers';
+import { ErrorTrace } from '@/[fsd]/features/chat/ui/error-trace';
 import { SubAgentAccordion } from '@/[fsd]/features/chat/ui/sub-agent-section';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { StyledAccordion, StyledAccordionDetails, StyledAccordionSummary } from '@/[fsd]/shared/ui/accordion';
@@ -22,8 +23,14 @@ const StreamingThinkBlocks = memo(props => {
     blocks,
     streamingSubGroupsFull,
     subAgentInflight,
+    subAgentRunning,
+    subAgentDone,
     currentActionKey,
+    currentActionRunning,
     currentActionBox,
+    subAgentErrors,
+    messageId,
+    onCopy,
     tools,
     renderGroupChips,
     badgesContainerSx,
@@ -46,7 +53,11 @@ const StreamingThinkBlocks = memo(props => {
   // groups below), so a running child is never missing from the view.
   streamingSubGroupsFull.forEach((_, key) => addExtra(key));
   subAgentInflight.forEach((_, key) => addExtra(key));
+  if (subAgentRunning) subAgentRunning.forEach((_, key) => addExtra(key));
   if (currentActionKey) addExtra(currentActionKey);
+  // A child that hard-failed before producing any revealed chip still needs an
+  // accordion to host its error trace (#4993).
+  if (subAgentErrors) Object.keys(subAgentErrors).forEach(name => addExtra(name));
 
   const renderSub = name => {
     // Chips from the FULL per-sub-agent groups (not the throttled window)
@@ -55,7 +66,24 @@ const StreamingThinkBlocks = memo(props => {
     const subEntry = streamingSubGroupsFull.get(name);
     const groups = subEntry?.groups || [];
     const inflight = subAgentInflight.get(name);
-    const running = !!inflight || currentActionKey === name;
+    const childError = subAgentErrors?.[name];
+    // `done` = the child returned to its parent (invocation wrapper terminal).
+    // Once done, NOTHING about the child should still animate, even if a stray
+    // inner LLM action is stuck at `processing` because its `agent_llm_end` was
+    // lost — that orphan otherwise keeps both the header shimmer (via `inflight`)
+    // and the content-box spinner alive until the whole message stops streaming.
+    const done = !!subAgentDone.get(name);
+    // Shimmer/spinner track the child's WHOLE lifecycle, not just live LLM
+    // content. subAgentRunning is true while the child has any non-terminal
+    // action (LLM processing OR a tool call executing) AND has not yet returned,
+    // so a child running tools keeps spinning instead of looking finished.
+    // `inflight`/current action are placement fallbacks, but a finished child
+    // (`done`) never counts as running. A hard-failed child is terminal
+    // (handled via subAgentErrors) → never shimmer it (#4993).
+    const running =
+      !childError &&
+      !done &&
+      (!!subAgentRunning.get(name) || !!inflight || (currentActionKey === name && currentActionRunning));
     return (
       <SubAgentAccordion
         key={`sa-${name}`}
@@ -63,6 +91,7 @@ const StreamingThinkBlocks = memo(props => {
         tools={tools}
         agentType={subEntry?.agentType}
         running={running}
+        defaultExpanded={!!childError}
       >
         {groups.length > 0 && (
           <Box sx={badgesContainerSx}>
@@ -70,14 +99,26 @@ const StreamingThinkBlocks = memo(props => {
           </Box>
         )}
         {inflight ? (
+          // A finished child still keeps its streamed content visible, but with
+          // no spinner / streaming footer — the orphan-`processing` LLM is shown
+          // as settled output, not as live progress.
           <ActionView
-            showProgress
+            showProgress={!done}
             action={inflight}
             tools={tools}
-            isStreaming
+            isStreaming={!done}
           />
         ) : (
           currentActionKey === name && currentActionBox
+        )}
+        {childError && (
+          <ErrorTrace
+            compact
+            headline={childError.headline || childError.exception}
+            trace={childError.exception}
+            messageId={messageId}
+            onCopy={onCopy}
+          />
         )}
       </SubAgentAccordion>
     );
@@ -113,6 +154,9 @@ const ApplicationThinkView = memo(props => {
     isStreaming = false,
     tools,
     subAgentTypeByName,
+    subAgentErrors = null,
+    messageId,
+    onCopy,
   } = props;
 
   const [expanded, setExpanded] = useState(defaultExpanded);
@@ -398,6 +442,55 @@ const ApplicationThinkView = memo(props => {
     return map;
   }, [actions, deriveSubAgentName]);
 
+  // Per-sub-agent progress signals that span the child's WHOLE lifecycle (LLM +
+  // tool-call phases) and — critically — stop the moment the child is truly done,
+  // even when a stray inner LLM action never receives its terminal `agent_llm_end`
+  // (an intermittent run-id mismatch on Anthropic that otherwise leaves the action
+  // stuck at `processing` forever, spinning until the whole message stops).
+  //
+  // The authoritative "child returned" signal is the parent's invocation-wrapper
+  // tool action — a `tool`-type action whose name IS the child's own name
+  // (`tool:<ChildName>`), emitted by the parent's ToolNode and completed via
+  // `agent_tool_end` when the child hands its result back. This is a SEPARATE
+  // event from the child's inner `agent_llm_end`, so it lands reliably even when
+  // an inner LLM end is lost.
+  //
+  // - `subAgentDone`: wrapper is terminal → the child has returned. Suppresses
+  //   BOTH the accordion-header shimmer AND the inflight content-box spinner,
+  //   regardless of any dangling `processing` inner action (the lost-event orphan).
+  // - `subAgentRunning`: the child has a non-terminal action AND has NOT yet
+  //   returned (wrapper not terminal) → genuinely working. The wrapper is itself
+  //   `processing` (or absent) during the run, so this stays true through the LLM
+  //   and tool phases. A hard-failed child is handled via subAgentErrors (#4993).
+  const { subAgentRunning, subAgentDone } = useMemo(() => {
+    const hasNonTerminal = new Map();
+    const wrapperTerminal = new Map();
+    actions.forEach(a => {
+      if (!a) return;
+      const key = deriveSubAgentName(a);
+      if (!key) return;
+      const terminal =
+        a.status === ToolActionStatus.complete ||
+        a.status === ToolActionStatus.error ||
+        a.status === ToolActionStatus.cancelled;
+      // The invocation wrapper: the parent's tool call that ran this child, so its
+      // tool name matches the child's own name (not an inner toolkit/LLM action).
+      const isWrapper =
+        a.type === TOOL_ACTION_TYPES.Tool &&
+        (a.name === key || a.original_name === key || a.name === a.parent_agent_name);
+      if (isWrapper) {
+        if (terminal) wrapperTerminal.set(key, true);
+      } else if (!terminal) {
+        hasNonTerminal.set(key, true);
+      }
+    });
+    const running = new Map();
+    hasNonTerminal.forEach((_, key) => {
+      if (!wrapperTerminal.get(key)) running.set(key, true);
+    });
+    return { subAgentRunning: running, subAgentDone: wrapperTerminal };
+  }, [actions, deriveSubAgentName]);
+
   const thinkStepStatus = useMemo(
     () =>
       actions.map(action => ({
@@ -590,12 +683,22 @@ const ApplicationThinkView = memo(props => {
     );
   const currentActionKey = showCurrentAction ? deriveSubAgentName(mergedCurrentAction) : '';
 
+  // The reveal throttle can park displayedActionIndex on an action that has
+  // already gone terminal (a child that finished first while a sibling is at
+  // HITL keeps the streaming view mounted). Drive the spinner + streaming
+  // footer off the action's real status so a settled box stops spinning (#4993).
+  const currentActionIsLive =
+    showCurrentAction &&
+    mergedCurrentAction?.status !== ToolActionStatus.complete &&
+    mergedCurrentAction?.status !== ToolActionStatus.error &&
+    mergedCurrentAction?.status !== ToolActionStatus.cancelled;
+
   const currentActionBox = showCurrentAction ? (
     <ActionView
-      showProgress
+      showProgress={currentActionIsLive}
       action={mergedCurrentAction}
       tools={tools}
-      isStreaming
+      isStreaming={currentActionIsLive}
     />
   ) : null;
 
@@ -608,8 +711,14 @@ const ApplicationThinkView = memo(props => {
         blocks={streamingBlocks}
         streamingSubGroupsFull={streamingSubGroupsFull}
         subAgentInflight={subAgentInflight}
+        subAgentRunning={subAgentRunning}
+        subAgentDone={subAgentDone}
         currentActionKey={currentActionKey}
+        currentActionRunning={currentActionIsLive}
         currentActionBox={currentActionBox}
+        subAgentErrors={subAgentErrors}
+        messageId={messageId}
+        onCopy={onCopy}
         tools={tools}
         renderGroupChips={renderGroupChips}
         badgesContainerSx={styles.badgesContainer}
@@ -658,10 +767,20 @@ const ApplicationThinkView = memo(props => {
               name={block.name}
               tools={tools}
               agentType={block.agentType}
+              defaultExpanded={!!subAgentErrors?.[block.name]}
             >
               <Box sx={styles.badgesContainer}>
                 {block.groups.flatMap((group, i) => renderGroupChips(group, `${block.name}-${i}`, false))}
               </Box>
+              {subAgentErrors?.[block.name] && (
+                <ErrorTrace
+                  compact
+                  headline={subAgentErrors[block.name].headline || subAgentErrors[block.name].exception}
+                  trace={subAgentErrors[block.name].exception}
+                  messageId={messageId}
+                  onCopy={onCopy}
+                />
+              )}
             </SubAgentAccordion>
           ),
         )}
