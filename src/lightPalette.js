@@ -476,6 +476,7 @@ const lightPalette = {
       tips: darkBlue,
       disabled: light20,
       attention: orange,
+      warning,
       is_default: green20,
       success: green,
       active: magentaDefault,

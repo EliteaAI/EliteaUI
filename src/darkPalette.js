@@ -475,6 +475,7 @@ const darkPalette = {
       tips: skyBlue,
       disabled: gray20,
       attention: orange,
+      warning: warningStatus,
       is_default: green20,
       success: green,
       active: primaryPressed,

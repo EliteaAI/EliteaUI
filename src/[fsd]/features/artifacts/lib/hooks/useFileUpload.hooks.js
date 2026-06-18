@@ -208,6 +208,27 @@ export const useFileUpload = props => {
     }, []);
   }, []);
 
+  const getExistingNamesForPrefix = useCallback((contents, targetPrefix = '') => {
+    const existingNames = new Set();
+
+    contents.forEach(item => {
+      const key = item?.key || '';
+
+      if (targetPrefix) {
+        if (!key.startsWith(targetPrefix)) return;
+
+        const scopedName = key.slice(targetPrefix.length);
+        if (scopedName && !scopedName.includes('/')) existingNames.add(scopedName);
+
+        return;
+      }
+
+      if (key && !key.includes('/')) existingNames.add(key);
+    });
+
+    return existingNames;
+  }, []);
+
   // Path dialog confirmed → check duplicates in the TARGET folder, then upload or warn
   const handlePathConfirm = useCallback(
     (folderPath, onSelectFolder) => {
@@ -246,8 +267,7 @@ export const useFileUpload = props => {
     ],
   );
 
-  // Duplicate dialog: cancel
-  const handleCancelDuplicate = useCallback(() => {
+  const resetDuplicateState = useCallback(() => {
     setShowDuplicateWarning(false);
     setDuplicateFilenames([]);
     setPendingUploadFiles(null);
@@ -255,6 +275,11 @@ export const useFileUpload = props => {
     setPendingFolderPath(null);
     setPendingOnSelectFolder(null);
   }, []);
+
+  // Duplicate dialog: cancel
+  const handleCancelDuplicate = useCallback(() => {
+    resetDuplicateState();
+  }, [resetDuplicateState]);
 
   // Duplicate dialog: confirm override → proceed with upload
   const handleConfirmDuplicate = useCallback(() => {
@@ -264,6 +289,55 @@ export const useFileUpload = props => {
     if (pendingUploadFiles && pendingUploadBucket && pendingFolderPath !== null)
       executeUpload(pendingUploadFiles, pendingUploadBucket, pendingFolderPath, pendingOnSelectFolder);
   }, [pendingUploadFiles, pendingUploadBucket, pendingFolderPath, pendingOnSelectFolder, executeUpload]);
+
+  // Duplicate dialog: skip upload
+  const handleSkipDuplicate = useCallback(() => {
+    resetDuplicateState();
+  }, [resetDuplicateState]);
+
+  // Duplicate dialog: keep both → rename files with " - Copy" suffix
+  const handleKeepBothDuplicate = useCallback(() => {
+    setShowDuplicateWarning(false);
+    setDuplicateFilenames([]);
+
+    if (!pendingUploadFiles || !pendingUploadBucket || pendingFolderPath === null) return;
+
+    const fullPath = computeFullPath(pendingFolderPath);
+    const targetPrefix = fullPath ? `${fullPath}/` : '';
+
+    // Build an existing names set scoped to the target folder only.
+    const existingKeys = getExistingNamesForPrefix(bucketData?.contents || [], targetPrefix);
+
+    // Rename each file with Windows-style " - Copy" / " - Copy (2)" / " - Copy (3)" suffix
+    const renamedFiles = pendingUploadFiles.map(file => {
+      const { name } = file;
+      const lastDotIndex = name.lastIndexOf('.');
+      const extension = lastDotIndex !== -1 ? name.slice(lastDotIndex) : '';
+      const baseName = lastDotIndex !== -1 ? name.slice(0, lastDotIndex) : name;
+
+      let copyIndex = 1;
+      let newName = `${baseName} - Copy${extension}`;
+      while (existingKeys.has(newName)) {
+        copyIndex++;
+        newName = `${baseName} - Copy (${copyIndex})${extension}`;
+      }
+
+      existingKeys.add(newName);
+
+      return new File([file], newName, { type: file.type });
+    });
+
+    executeUpload(renamedFiles, pendingUploadBucket, pendingFolderPath, pendingOnSelectFolder);
+  }, [
+    pendingUploadFiles,
+    pendingUploadBucket,
+    pendingFolderPath,
+    pendingOnSelectFolder,
+    bucketData?.contents,
+    computeFullPath,
+    executeUpload,
+    getExistingNamesForPrefix,
+  ]);
 
   return {
     // Ref for file input
@@ -283,5 +357,7 @@ export const useFileUpload = props => {
     handleTableUploadRequest,
     handleCancelDuplicate,
     handleConfirmDuplicate,
+    handleSkipDuplicate,
+    handleKeepBothDuplicate,
   };
 };
