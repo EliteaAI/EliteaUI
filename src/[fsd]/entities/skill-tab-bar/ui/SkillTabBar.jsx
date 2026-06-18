@@ -7,6 +7,8 @@ import DiscardSkillButton from '@/[fsd]/features/skill/ui/DiscardSkillButton';
 import SaveSkillButton from '@/[fsd]/features/skill/ui/SaveSkillButton';
 import SaveSkillVersionButton from '@/[fsd]/features/skill/ui/SaveSkillVersionButton';
 import { Select } from '@/[fsd]/shared/ui';
+import { TIME_FORMAT } from '@/common/constants';
+import { timeFormatter } from '@/common/utils';
 import PinIcon from '@/components/Icons/PinIcon';
 
 const SkillTabBar = memo(props => {
@@ -22,15 +24,23 @@ const SkillTabBar = memo(props => {
     return LATEST_VERSION_NAME;
   }, [versions, defaultVersionId]);
 
-  const versionOptions = useMemo(
-    () =>
-      (versions.length ? versions : [{ name: LATEST_VERSION_NAME }]).map(v => ({
-        value: v.name,
-        label: v.name,
-        ...(v.name === defaultVersionName ? { icon: <PinIcon sx={{ fontSize: '1rem' }} /> } : {}),
-      })),
-    [versions, defaultVersionName],
-  );
+  const versionOptions = useMemo(() => {
+    const list = versions.length ? versions : [{ name: LATEST_VERSION_NAME }];
+    const sorted = [...list].sort((a, b) => {
+      if (a.name === defaultVersionName) return -1;
+      if (b.name === defaultVersionName) return 1;
+      if (a.name === LATEST_VERSION_NAME) return 1;
+      if (b.name === LATEST_VERSION_NAME) return -1;
+      return new Date(b.created_at) - new Date(a.created_at);
+    });
+    return sorted.map(v => ({
+      value: v.name,
+      label: v.name,
+      // Show "name - date" in the dropdown like agents (same TIME_FORMAT).
+      ...(v.created_at ? { date: timeFormatter(v.created_at, TIME_FORMAT.DDMMYYYY) } : {}),
+      ...(v.name === defaultVersionName ? { icon: <PinIcon sx={{ fontSize: '1rem' }} /> } : {}),
+    }));
+  }, [versions, defaultVersionName]);
 
   const selectedVersionName = useMemo(
     () => currentVersionName || versions[0]?.name || LATEST_VERSION_NAME,
