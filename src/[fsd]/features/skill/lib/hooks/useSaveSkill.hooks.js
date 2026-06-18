@@ -21,27 +21,21 @@ const useSaveSkill = () => {
     const description = values?.description?.trim() || '';
     const instructions = values?.version_details?.instructions || '';
     const tags = values?.version_details?.tags || [];
-    const isDefaultVersion = !selectedVersionName || selectedVersionName === LATEST_VERSION_NAME;
 
     try {
-      if (isDefaultVersion) {
-        await updateSkill({
-          projectId,
-          skillId,
-          name,
-          description,
-          version: { instructions, tags },
-        }).unwrap();
-      } else {
-        await updateSkill({ projectId, skillId, name, description }).unwrap();
-        await updateSkill({
-          projectId,
-          skillId,
-          versionName: selectedVersionName,
-          instructions,
-          tags,
-        }).unwrap();
-      }
+      // Update skill-level metadata, then the content of the version actually
+      // being viewed, addressed by name. Do NOT route `base` through the
+      // version-less endpoint: a version-less write targets the skill's default
+      // version, which may be a non-base version — so editing `base` would
+      // silently land the instructions/tags on the default version instead.
+      await updateSkill({ projectId, skillId, name, description }).unwrap();
+      await updateSkill({
+        projectId,
+        skillId,
+        versionName: selectedVersionName,
+        instructions,
+        tags,
+      }).unwrap();
 
       resetForm({ values });
       toastSuccess('Skill saved');

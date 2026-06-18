@@ -28,7 +28,7 @@ import { markdown } from '@codemirror/lang-markdown';
 import { useTheme } from '@emotion/react';
 
 const CreateSkillForm = memo(props => {
-  const { accordionStyle, sx, disabled = false, instructionsKey } = props;
+  const { accordionStyle, sx, disabled = false, instructionsKey, isCreate = false } = props;
   const formik = useFormikContext();
   const theme = useTheme();
   const projectId = useSelectedProjectId();
@@ -243,27 +243,31 @@ const CreateSkillForm = memo(props => {
                 sx={styles.summaryActions}
                 onClick={e => e.stopPropagation()}
               >
-                <StyledTooltip
-                  title="Import from a .md file"
-                  placement="top"
-                >
-                  <IconButton
-                    size="small"
-                    aria-label="Import instructions from file"
-                    disabled={disabled}
-                    onClick={onClickImport}
-                    sx={styles.importButton}
-                  >
-                    <ImportIcon />
-                  </IconButton>
-                </StyledTooltip>
-                <input
-                  ref={importInputRef}
-                  type="file"
-                  accept=".md,text/markdown"
-                  hidden
-                  onChange={onImportFile}
-                />
+                {isCreate && (
+                  <>
+                    <StyledTooltip
+                      title="Import from a .md file"
+                      placement="top"
+                    >
+                      <IconButton
+                        size="small"
+                        aria-label="Import instructions from file"
+                        disabled={disabled}
+                        onClick={onClickImport}
+                        sx={styles.importButton}
+                      >
+                        <ImportIcon />
+                      </IconButton>
+                    </StyledTooltip>
+                    <input
+                      ref={importInputRef}
+                      type="file"
+                      accept=".md,text/markdown"
+                      hidden
+                      onChange={onImportFile}
+                    />
+                  </>
+                )}
                 <TabGroupButton
                   value={instructionsViewMode}
                   onChange={(_e, m) => m && setInstructionsViewMode(m)}
@@ -357,6 +361,10 @@ const skillCreateFormStyles = () => ({
     display: 'inline-flex',
     alignItems: 'center',
     gap: '0.5rem',
+    // TabGroupButton hardcodes zIndex: 2000, which otherwise paints the
+    // edit/preview toggle above modals (zIndex 1300). Scope it with a local
+    // stacking context so it can't escape over dialogs.
+    isolation: 'isolate',
   },
   importButton: ({ palette }) => ({
     width: '1.75rem',

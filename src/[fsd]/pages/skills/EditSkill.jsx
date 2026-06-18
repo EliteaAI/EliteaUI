@@ -88,10 +88,10 @@ const EditSkill = memo(() => {
   const handleChangeVersion = useCallback(
     nextVersionName => {
       const base = `${RouteDefinitions.Skills}/${tab}/${skillId}`;
-      const pathname =
-        nextVersionName && nextVersionName !== LATEST_VERSION_NAME
-          ? `${base}/${encodeURIComponent(nextVersionName)}`
-          : base;
+      // Always carry the version name (including `base`). A version-less URL
+      // resolves to the skill's default version on the backend, so when a
+      // non-base version is the default, omitting it makes `base` unreachable.
+      const pathname = nextVersionName ? `${base}/${encodeURIComponent(nextVersionName)}` : base;
       navigate(pathname);
     },
     [navigate, skillId, tab],
