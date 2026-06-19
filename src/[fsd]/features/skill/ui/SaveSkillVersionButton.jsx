@@ -7,12 +7,14 @@ import { useSaveSkillVersion } from '@/[fsd]/features/skill/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
+import useNavBlocker from '@/hooks/useNavBlocker';
 import useToast from '@/hooks/useToast';
 import InputVersionDialog from '@/pages/Common/Components/InputVersionDialog';
 
 const SaveSkillVersionButton = memo(({ onSuccess, onChangeVersion }) => {
-  const { values } = useFormikContext();
+  const { values, isValid, validateForm, setTouched } = useFormikContext();
   const { toastError } = useToast();
+  const { setBlockNav } = useNavBlocker();
   const { onCreateNewVersion, isSavingNewVersion } = useSaveSkillVersion();
 
   const [showInputVersion, setShowInputVersion] = useState(false);
@@ -34,6 +36,11 @@ const SaveSkillVersionButton = memo(({ onSuccess, onChangeVersion }) => {
   }, []);
 
   const onConfirm = useCallback(async () => {
+    const validationErrors = await validateForm();
+    if (Object.keys(validationErrors).length) {
+      setTouched({ name: true, description: true });
+      return;
+    }
     const candidate = newVersion?.trim();
     if (!candidate) {
       toastError('Empty version name is not allowed!');
@@ -53,14 +60,25 @@ const SaveSkillVersionButton = memo(({ onSuccess, onChangeVersion }) => {
       setShowInputVersion(false);
       setNewVersion('');
       onSuccess?.();
-      onChangeVersion?.(candidate);
+      setBlockNav(false);
+      setTimeout(() => onChangeVersion?.(candidate), 0);
     }
-  }, [newVersion, values?.versions, onCreateNewVersion, onSuccess, onChangeVersion, toastError]);
+  }, [
+    newVersion,
+    values?.versions,
+    onCreateNewVersion,
+    onSuccess,
+    onChangeVersion,
+    setBlockNav,
+    validateForm,
+    setTouched,
+    toastError,
+  ]);
 
   return (
     <>
       <Button.BaseBtn
-        disabled={isSavingNewVersion}
+        disabled={isSavingNewVersion || !isValid}
         variant={BUTTON_VARIANTS.elitea}
         color="secondary"
         onClick={onOpen}
