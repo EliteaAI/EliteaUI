@@ -102,7 +102,7 @@ const CreateAgentForm = memo(props => {
         items={[
           {
             title: 'General',
-            summaryAction: <GenerateAgentButton />,
+            summaryAction: entityType !== 'pipeline' ? <GenerateAgentButton /> : null,
             content: (
               <Box sx={styles.accordionContent}>
                 <Box sx={styles.nameContainer}>

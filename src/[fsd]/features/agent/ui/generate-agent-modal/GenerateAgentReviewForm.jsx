@@ -16,8 +16,12 @@ const GenerateAgentReviewForm = memo(props => {
     onChange,
     selectedToolkitIds,
     onToggleToolkit,
-    selectedApplicationIds,
-    onToggleApplication,
+    selectedAgentIds,
+    onToggleAgent,
+    selectedMcpIds,
+    onToggleMcp,
+    selectedPipelineIds,
+    onTogglePipeline,
   } = props;
 
   const styles = generateAgentReviewFormStyles();
@@ -181,10 +185,26 @@ const GenerateAgentReviewForm = memo(props => {
       />
 
       <ResourceSuggestions
+        title="Suggested MCP:"
+        items={draft.suggested_mcp}
+        selectedIds={selectedMcpIds}
+        onToggle={onToggleMcp}
+        entityType="mcp"
+      />
+
+      <ResourceSuggestions
+        title="Suggested Pipelines:"
+        items={draft.suggested_pipelines}
+        selectedIds={selectedPipelineIds}
+        onToggle={onTogglePipeline}
+        entityType="pipeline"
+      />
+
+      <ResourceSuggestions
         title="Suggested Agents:"
-        items={draft.suggested_applications}
-        selectedIds={selectedApplicationIds}
-        onToggle={onToggleApplication}
+        items={draft.suggested_agents}
+        selectedIds={selectedAgentIds}
+        onToggle={onToggleAgent}
         entityType="agent"
       />
     </Box>
