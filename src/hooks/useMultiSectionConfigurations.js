@@ -41,8 +41,8 @@ export const useMultiSectionConfigurations = (sections = [], projectId) => {
       projectId,
       section: allSections,
       includeShared: true,
-      pageSize: 50,
-      sharedLimit: 50,
+      pageSize: 200,
+      sharedLimit: 200,
     },
     { skip: !projectId || allSections.length === 0 },
   );
