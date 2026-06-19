@@ -50,6 +50,7 @@ const CreateSkillForm = memo(props => {
     event => {
       setName(event.target.value);
       formik.setFieldValue('name', event.target.value);
+      formik.setFieldTouched('name', true, false);
     },
     [formik],
   );

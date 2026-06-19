@@ -33,11 +33,21 @@ const CreateSkillTabBar = memo(() => {
   useNavBlocker(blockOptions);
 
   const shouldDisableSave = useMemo(
-    () => isLoading || !formik.values.name?.trim() || !formik.values.description?.trim() || !formik.dirty,
-    [formik.dirty, formik.values.description, formik.values.name, isLoading],
+    () =>
+      isLoading ||
+      !formik.isValid ||
+      !formik.values.name?.trim() ||
+      !formik.values.description?.trim() ||
+      !formik.dirty,
+    [formik.dirty, formik.isValid, formik.values.description, formik.values.name, isLoading],
   );
 
   const onSave = useCallback(async () => {
+    const validationErrors = await formik.validateForm();
+    if (Object.keys(validationErrors).length) {
+      formik.setTouched({ name: true, description: true });
+      return;
+    }
     try {
       const result = await createSkill({
         projectId,
