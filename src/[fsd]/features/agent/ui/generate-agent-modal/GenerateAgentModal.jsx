@@ -58,7 +58,9 @@ const GenerateAgentModal = memo(props => {
   const [description, setDescription] = useState('');
   const [draftData, setDraftData] = useState(null);
   const [selectedToolkitIds, setSelectedToolkitIds] = useState(new Set());
-  const [selectedApplicationIds, setSelectedApplicationIds] = useState(new Set());
+  const [selectedAgentIds, setSelectedAgentIds] = useState(new Set());
+  const [selectedMcpIds, setSelectedMcpIds] = useState(new Set());
+  const [selectedPipelineIds, setSelectedPipelineIds] = useState(new Set());
   const [isApproving, setIsApproving] = useState(false);
 
   const handleGenerate = useCallback(async () => {
@@ -75,7 +77,9 @@ const GenerateAgentModal = memo(props => {
 
       setDraftData(result);
       setSelectedToolkitIds(new Set());
-      setSelectedApplicationIds(new Set());
+      setSelectedAgentIds(new Set());
+      setSelectedMcpIds(new Set());
+      setSelectedPipelineIds(new Set());
       setStep(STEPS.REVIEW);
     } catch {
       setStep(STEPS.INPUT);
@@ -97,8 +101,26 @@ const GenerateAgentModal = memo(props => {
     });
   }, []);
 
-  const handleToggleApplication = useCallback(id => {
-    setSelectedApplicationIds(prev => {
+  const handleToggleAgent = useCallback(id => {
+    setSelectedAgentIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const handleToggleMcp = useCallback(id => {
+    setSelectedMcpIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const handleTogglePipeline = useCallback(id => {
+    setSelectedPipelineIds(prev => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
@@ -206,12 +228,14 @@ const GenerateAgentModal = memo(props => {
       const versionId = result.version_details?.id;
 
       const selectedToolkits = (draftData.suggested_toolkits || []).filter(t => selectedToolkitIds.has(t.id));
-      const selectedApps = (draftData.suggested_applications || []).filter(a =>
-        selectedApplicationIds.has(a.id),
+      const selectedMcps = (draftData.suggested_mcp || []).filter(m => selectedMcpIds.has(m.id));
+      const selectedAgents = (draftData.suggested_agents || []).filter(a => selectedAgentIds.has(a.id));
+      const selectedPipelines = (draftData.suggested_pipelines || []).filter(p =>
+        selectedPipelineIds.has(p.id),
       );
 
-      await associateToolkits(versionId, entityId, selectedToolkits);
-      await associateApplications(versionId, entityId, selectedApps);
+      await associateToolkits(versionId, entityId, [...selectedToolkits, ...selectedMcps]);
+      await associateApplications(versionId, entityId, [...selectedAgents, ...selectedPipelines]);
 
       onClose();
       redirectToAgent(entityId, result.name);
@@ -222,7 +246,9 @@ const GenerateAgentModal = memo(props => {
   }, [
     draftData,
     selectedToolkitIds,
-    selectedApplicationIds,
+    selectedAgentIds,
+    selectedMcpIds,
+    selectedPipelineIds,
     createApplication,
     associateToolkits,
     associateApplications,
@@ -238,7 +264,9 @@ const GenerateAgentModal = memo(props => {
     setDescription('');
     setDraftData(null);
     setSelectedToolkitIds(new Set());
-    setSelectedApplicationIds(new Set());
+    setSelectedAgentIds(new Set());
+    setSelectedMcpIds(new Set());
+    setSelectedPipelineIds(new Set());
     setIsApproving(false);
     resetGenerate();
     onClose();
@@ -276,8 +304,12 @@ const GenerateAgentModal = memo(props => {
           onChange={setDraftData}
           selectedToolkitIds={selectedToolkitIds}
           onToggleToolkit={handleToggleToolkit}
-          selectedApplicationIds={selectedApplicationIds}
-          onToggleApplication={handleToggleApplication}
+          selectedAgentIds={selectedAgentIds}
+          onToggleAgent={handleToggleAgent}
+          selectedMcpIds={selectedMcpIds}
+          onToggleMcp={handleToggleMcp}
+          selectedPipelineIds={selectedPipelineIds}
+          onTogglePipeline={handleTogglePipeline}
         />
       );
     }
