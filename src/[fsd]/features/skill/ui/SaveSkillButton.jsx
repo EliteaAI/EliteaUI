@@ -8,18 +8,23 @@ import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 
 const SaveSkillButton = memo(({ onSuccess }) => {
-  const { values, dirty } = useFormikContext();
+  const { values, dirty, isValid, validateForm, setTouched } = useFormikContext();
   const { onSave, isSaving } = useSaveSkill();
 
   const isDisabled = useMemo(
-    () => isSaving || !dirty || !values?.name?.trim() || !values?.description?.trim(),
-    [isSaving, dirty, values?.name, values?.description],
+    () => isSaving || !dirty || !isValid || !values?.name?.trim() || !values?.description?.trim(),
+    [isSaving, dirty, isValid, values?.name, values?.description],
   );
 
   const handleSave = useCallback(async () => {
+    const validationErrors = await validateForm();
+    if (Object.keys(validationErrors).length) {
+      setTouched({ name: true, description: true });
+      return;
+    }
     const ok = await onSave();
     if (ok) onSuccess?.();
-  }, [onSave, onSuccess]);
+  }, [onSave, onSuccess, validateForm, setTouched]);
 
   return (
     <Button.BaseBtn
