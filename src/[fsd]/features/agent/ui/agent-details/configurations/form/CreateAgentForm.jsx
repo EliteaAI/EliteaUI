@@ -200,10 +200,7 @@ const CreateAgentForm = memo(props => {
       />
       <AgentInput.WelcomeMessageInput style={styles.welcomeMessageInput} />
       <ConversationStarters style={styles.conversationStarters} />
-      <ApplicationAdvanceSettings
-        style={styles.advanceSettings}
-        showIgnoreProjectContext
-      />
+      <ApplicationAdvanceSettings style={styles.advanceSettings} />
     </Box>
   );
 });
