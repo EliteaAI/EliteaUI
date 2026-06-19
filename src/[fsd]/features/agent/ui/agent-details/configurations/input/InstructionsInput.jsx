@@ -8,6 +8,7 @@ import { useInstructionsInputRefContext } from '@/[fsd]/app/providers';
 import { useInstructionsMention } from '@/[fsd]/features/agent/lib/hooks/useInstructionsMention.hooks';
 import { useInstructionsSkillMention } from '@/[fsd]/features/agent/lib/hooks/useInstructionsSkillMention.hooks';
 import { AGENT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
+import { MentionSkillList } from '@/[fsd]/features/skill/ui';
 import { AccordionConstants, MentionConstants } from '@/[fsd]/shared/lib/constants';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { FileReaderEnhancer } from '@/[fsd]/shared/ui/input';
@@ -15,7 +16,6 @@ import { contextResolver } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { useTheme } from '@emotion/react';
 
-import InstructionsSkillSuggestionList from './InstructionsSkillSuggestionList';
 import InstructionsSlashSuggestionList from './InstructionsSlashSuggestionList';
 
 /**
@@ -274,7 +274,7 @@ const InstructionsInput = memo(props => {
   );
 
   const skillSuggestionList = (
-    <InstructionsSkillSuggestionList
+    <MentionSkillList
       phase={skillPhase}
       filteredItems={skillFilteredItems}
       committedMentions={skillCommittedMentions}

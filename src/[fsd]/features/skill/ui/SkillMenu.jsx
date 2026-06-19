@@ -36,166 +36,165 @@ const NEW_SKILL_ID_PARAM = 'newSkillId';
  * @param {boolean} [props.disabled] - Disable when at limit / read-only.
  * @param {boolean} [props.isEntityUnsaved] - True when the agent has no persisted version yet.
  */
-const SkillMenu = memo(
-  ({ applicationId, entityVersionId, attachedSkillIds = [], disabled, isEntityUnsaved }) => {
-    const projectId = useSelectedProjectId();
-    const navigate = useNavigate();
-    const [searchParams, setSearchParams] = useSearchParams();
-    const { toastError } = useToast();
-    const styles = useMemo(() => skillMenuStyles(), []);
+const SkillMenu = memo(props => {
+  const { applicationId, entityVersionId, attachedSkillIds = [], disabled, isEntityUnsaved } = props;
+  const projectId = useSelectedProjectId();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { toastError } = useToast();
+  const styles = useMemo(() => skillMenuStyles(), []);
 
-    const [anchorEl, setAnchorEl] = useState(null);
-    const [search, setSearch] = useState('');
-    const debouncedSearch = useDebounceValue(search, SEARCH_DEBOUNCE_MS);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounceValue(search, SEARCH_DEBOUNCE_MS);
 
-    const { attachSkill } = useAttachSkill({ entityVersionId });
-    const [fetchSkillDetails] = useLazySkillDetailsQuery();
-    const processedSkillIds = useRef(new Set());
+  const { attachSkill } = useAttachSkill({ entityVersionId });
+  const [fetchSkillDetails] = useLazySkillDetailsQuery();
+  const processedSkillIds = useRef(new Set());
 
-    const { data: skillListData, isFetching } = useSkillListQuery(
-      { projectId, params: { query: debouncedSearch } },
-      { skip: !projectId || !anchorEl },
-    );
+  const { data: skillListData, isFetching } = useSkillListQuery(
+    { projectId, params: { query: debouncedSearch } },
+    { skip: !projectId || !anchorEl },
+  );
 
-    const attachedIdSet = useMemo(() => new Set(attachedSkillIds), [attachedSkillIds]);
+  const attachedIdSet = useMemo(() => new Set(attachedSkillIds), [attachedSkillIds]);
 
-    const handleClose = useCallback(() => {
-      setAnchorEl(null);
-      setSearch('');
-    }, []);
+  const handleClose = useCallback(() => {
+    setAnchorEl(null);
+    setSearch('');
+  }, []);
 
-    const attachSkillById = useCallback(
-      async skillId => {
-        const details = await fetchSkillDetails({ projectId, skillId }).unwrap();
-        const baseVersion =
-          (details?.versions || []).find(v => v.name === LATEST_VERSION_NAME) || details?.versions?.[0];
-        if (!baseVersion) {
-          toastError('The selected skill has no available version.');
-          return;
-        }
-        await attachSkill({ skillId, skillVersionId: baseVersion.id });
-      },
-      [attachSkill, fetchSkillDetails, projectId, toastError],
-    );
-
-    const handleSelectSkill = useCallback(
-      skill => async () => {
-        setAnchorEl(null);
-        setSearch('');
-        try {
-          await attachSkillById(skill.id);
-        } catch (error) {
-          toastError(buildErrorMessage(error));
-        }
-      },
-      [attachSkillById, toastError],
-    );
-
-    useEffect(() => {
-      const newSkillId = searchParams.get(NEW_SKILL_ID_PARAM);
-      if (!newSkillId || isEntityUnsaved || !entityVersionId) return;
-      if (processedSkillIds.current.has(newSkillId)) return;
-      processedSkillIds.current.add(newSkillId);
-
-      const stripParam = () => {
-        const next = new URLSearchParams(searchParams);
-        next.delete(NEW_SKILL_ID_PARAM);
-        setSearchParams(next, { replace: true });
-      };
-
-      if (attachedIdSet.has(Number(newSkillId))) {
-        stripParam();
+  const attachSkillById = useCallback(
+    async skillId => {
+      const details = await fetchSkillDetails({ projectId, skillId }).unwrap();
+      const baseVersion =
+        (details?.versions || []).find(v => v.name === LATEST_VERSION_NAME) || details?.versions?.[0];
+      if (!baseVersion) {
+        toastError('The selected skill has no available version.');
         return;
       }
-      attachSkillById(Number(newSkillId))
-        .catch(error => toastError(buildErrorMessage(error)))
-        .finally(stripParam);
-    }, [
-      searchParams,
-      setSearchParams,
-      isEntityUnsaved,
-      entityVersionId,
-      attachedIdSet,
-      attachSkillById,
-      toastError,
-    ]);
+      await attachSkill({ skillId, skillVersionId: baseVersion.id });
+    },
+    [attachSkill, fetchSkillDetails, projectId, toastError],
+  );
 
-    const items = useMemo(() => {
-      const rows = skillListData?.rows || [];
-      return rows
-        .filter(skill => !attachedIdSet.has(skill.id))
-        .map(skill => ({
-          key: `skill-${skill.id}`,
-          label: skill.name,
-          description: skill.description,
-          icon: <SkillIcon style={styles.itemIcon} />,
-          onClick: handleSelectSkill(skill),
-        }));
-    }, [skillListData?.rows, attachedIdSet, handleSelectSkill, styles.itemIcon]);
+  const handleSelectSkill = useCallback(
+    skill => async () => {
+      setAnchorEl(null);
+      setSearch('');
+      try {
+        await attachSkillById(skill.id);
+      } catch (error) {
+        toastError(buildErrorMessage(error));
+      }
+    },
+    [attachSkillById, toastError],
+  );
 
-    const handleSearchChange = useCallback(e => setSearch(e.target.value), []);
-    const handleButtonClick = useCallback(e => setAnchorEl(e.currentTarget), []);
+  useEffect(() => {
+    const newSkillId = searchParams.get(NEW_SKILL_ID_PARAM);
+    if (!newSkillId || isEntityUnsaved || !entityVersionId) return;
+    if (processedSkillIds.current.has(newSkillId)) return;
+    processedSkillIds.current.add(newSkillId);
 
-    // "Create new": navigate to the skill create page with the agent context so it can return
-    // here after save and auto-attach the new skill (mirrors the toolkit create-new round-trip).
-    const handleCreateNew = useCallback(() => {
-      handleClose();
-      const currentParams = new URLSearchParams(window.location.search);
-      const returnUrl = encodeURIComponent(window.location.pathname + '?' + currentParams.toString());
-      const strippedReturnUrl = returnUrl.replace(encodeURIComponent(`${VITE_BASE_URI}/`), '');
-      const url = `${RouteDefinitions.CreateSkill}?${SearchParams.SourceApplicationId}=${applicationId}&${SearchParams.ReturnUrl}=${strippedReturnUrl}`;
-      navigate(url);
-    }, [handleClose, navigate, applicationId]);
+    const stripParam = () => {
+      const next = new URLSearchParams(searchParams);
+      next.delete(NEW_SKILL_ID_PARAM);
+      setSearchParams(next, { replace: true });
+    };
 
-    const tooltipTitle = isEntityUnsaved
-      ? 'Save the agent first, then add skills'
-      : disabled
-        ? 'Maximum number of skills reached'
-        : '';
-    const isButtonDisabled = disabled || isEntityUnsaved;
+    if (attachedIdSet.has(Number(newSkillId))) {
+      stripParam();
+      return;
+    }
+    attachSkillById(Number(newSkillId))
+      .catch(error => toastError(buildErrorMessage(error)))
+      .finally(stripParam);
+  }, [
+    searchParams,
+    setSearchParams,
+    isEntityUnsaved,
+    entityVersionId,
+    attachedIdSet,
+    attachSkillById,
+    toastError,
+  ]);
 
-    return (
-      <>
-        <Box sx={styles.container}>
-          <Tooltip
-            title={tooltipTitle}
-            placement="top"
-          >
-            <Box component="span">
-              <BaseBtn
-                variant={BUTTON_VARIANTS.iconLabel}
-                startIcon={<PlusIcon />}
-                disableRipple
-                disabled={isButtonDisabled}
-                onClick={isButtonDisabled ? undefined : handleButtonClick}
-              >
-                Skill
-              </BaseBtn>
-            </Box>
-          </Tooltip>
-        </Box>
+  const items = useMemo(() => {
+    const rows = skillListData?.rows || [];
+    return rows
+      .filter(skill => !attachedIdSet.has(skill.id))
+      .map(skill => ({
+        key: `skill-${skill.id}`,
+        label: skill.name,
+        description: skill.description,
+        icon: <SkillIcon style={styles.itemIcon} />,
+        onClick: handleSelectSkill(skill),
+      }));
+  }, [skillListData?.rows, attachedIdSet, handleSelectSkill, styles.itemIcon]);
 
-        <UnifiedDropdown
-          anchorEl={anchorEl}
-          open={Boolean(anchorEl)}
-          onClose={handleClose}
-          items={items}
-          searchValue={search}
-          onSearchChange={handleSearchChange}
-          searchPlaceholder="Search skills..."
-          showCreateNew
-          onCreateNew={handleCreateNew}
-          createNewLabel="Create new"
-          isLoading={isFetching}
-          emptyMessage="No skills available"
-          noResultsMessage="No skills found"
-          autoFocus
-          showDivider={false}
-        />
-      </>
-    );
-  },
-);
+  const handleSearchChange = useCallback(e => setSearch(e.target.value), []);
+  const handleButtonClick = useCallback(e => setAnchorEl(e.currentTarget), []);
+
+  // "Create new": navigate to the skill create page with the agent context so it can return
+  // here after save and auto-attach the new skill (mirrors the toolkit create-new round-trip).
+  const handleCreateNew = useCallback(() => {
+    handleClose();
+    const currentParams = new URLSearchParams(window.location.search);
+    const returnUrl = encodeURIComponent(window.location.pathname + '?' + currentParams.toString());
+    const strippedReturnUrl = returnUrl.replace(encodeURIComponent(`${VITE_BASE_URI}/`), '');
+    const url = `${RouteDefinitions.CreateSkill}?${SearchParams.SourceApplicationId}=${applicationId}&${SearchParams.ReturnUrl}=${strippedReturnUrl}`;
+    navigate(url);
+  }, [handleClose, navigate, applicationId]);
+
+  const tooltipTitle = isEntityUnsaved
+    ? 'Save the agent first, then add skills'
+    : disabled
+      ? 'Maximum number of skills reached'
+      : '';
+  const isButtonDisabled = disabled || isEntityUnsaved;
+
+  return (
+    <>
+      <Box sx={styles.container}>
+        <Tooltip
+          title={tooltipTitle}
+          placement="top"
+        >
+          <Box component="span">
+            <BaseBtn
+              variant={BUTTON_VARIANTS.iconLabel}
+              startIcon={<PlusIcon />}
+              disableRipple
+              disabled={isButtonDisabled}
+              onClick={isButtonDisabled ? undefined : handleButtonClick}
+            >
+              Skill
+            </BaseBtn>
+          </Box>
+        </Tooltip>
+      </Box>
+
+      <UnifiedDropdown
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleClose}
+        items={items}
+        searchValue={search}
+        onSearchChange={handleSearchChange}
+        searchPlaceholder="Search skills..."
+        showCreateNew
+        onCreateNew={handleCreateNew}
+        createNewLabel="Create new"
+        isLoading={isFetching}
+        emptyMessage="No skills available"
+        noResultsMessage="No skills found"
+        autoFocus
+        showDivider={false}
+      />
+    </>
+  );
+});
 
 SkillMenu.displayName = 'SkillMenu';
 

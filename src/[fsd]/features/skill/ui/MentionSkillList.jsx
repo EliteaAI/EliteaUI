@@ -9,21 +9,21 @@ const HEADER_LABEL = 'Mention skill';
 const EMPTY_LABEL = 'No skills attached to this agent';
 
 /**
- * Dropdown rendered below the Instructions textarea while the user is in the
- * "~" skill-mention 'items' phase. Lists ONLY the skills attached to the current
- * agent version.
+ * Dropdown listing the skills attached to the current agent, rendered while the
+ * user is in the "~" skill-mention 'items' phase. Shared by the chat composer
+ * (ChatBox) and the agent Instructions textarea (InstructionsInput).
  *
- * Props:
- *   phase            — 'idle' | 'items'
- *   filteredItems    — pre-filtered attached-skill list (from useInstructionsSkillMention)
- *   committedMentions — [{name, tool_name}] already mentioned in instructions
- *   highlightedIndex — keyboard-highlighted row index (-1 = none)
- *   onSelectItem     — (item) => void
- *   onClose          — () => void  (dismiss the dropdown)
+ * @param {Object} props
+ * @param {string} props.phase - Mention phase ('idle' | 'items'); renders nothing when idle.
+ * @param {Array<{name: string, description?: string}>} props.filteredItems - Pre-filtered attached-skill list.
+ * @param {Array<{name: string}>} [props.committedMentions] - Skills already mentioned (rendered as selected).
+ * @param {number} props.highlightedIndex - Keyboard-highlighted row index (-1 = none).
+ * @param {(item: Object) => void} props.onSelectItem - Called when a skill is chosen.
+ * @param {() => void} props.onClose - Dismiss the dropdown.
  */
-const InstructionsSkillSuggestionList = memo(props => {
+const MentionSkillList = memo(props => {
   const { phase, filteredItems, committedMentions, highlightedIndex, onSelectItem, onClose } = props;
-  const styles = instructionsSkillSuggestionListStyles();
+  const styles = mentionSkillListStyles();
   const containerRef = useRef(null);
 
   useEffect(() => {
@@ -86,12 +86,12 @@ const InstructionsSkillSuggestionList = memo(props => {
   );
 });
 
-InstructionsSkillSuggestionList.displayName = 'InstructionsSkillSuggestionList';
+MentionSkillList.displayName = 'MentionSkillList';
 
-export default InstructionsSkillSuggestionList;
+export default MentionSkillList;
 
 /** @type {MuiSx} */
-const instructionsSkillSuggestionListStyles = () => ({
+const mentionSkillListStyles = () => ({
   container: ({ palette }) => ({
     border: `1px solid ${palette.border.lines}`,
     width: '100%',
