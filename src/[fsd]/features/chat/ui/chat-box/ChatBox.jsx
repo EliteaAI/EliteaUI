@@ -27,12 +27,13 @@ import {
   useTextToSpeech,
 } from '@/[fsd]/features/chat/lib/hooks';
 import { useFetchParticipantDetails } from '@/[fsd]/features/chat/participants/lib/hooks';
-import { SkillSuggestionList, SlashSuggestionList, VoiceMiniPlayer } from '@/[fsd]/features/chat/ui';
+import { SlashSuggestionList, VoiceMiniPlayer } from '@/[fsd]/features/chat/ui';
 import { ChatMessageList } from '@/[fsd]/features/chat/ui/chat-box';
 import { UserMentionList } from '@/[fsd]/features/chat/ui/user-mention-list';
 import { useVoiceConfig } from '@/[fsd]/features/chat/voice-config';
 import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
+import { MentionSkillList } from '@/[fsd]/features/skill/ui';
 import { MentionConstants } from '@/[fsd]/shared/lib/constants';
 import {
   DEFAULT_MAX_TOKENS,
@@ -2038,7 +2039,7 @@ const ChatBox = forwardRef((props, boxRef) => {
             />
           )}
           {isSkillPhaseActive && (
-            <SkillSuggestionList
+            <MentionSkillList
               phase={skillPhase}
               filteredItems={skillFilteredItems}
               committedMentions={skillCommittedMentions}

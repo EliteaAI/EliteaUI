@@ -13,8 +13,9 @@ import {
 } from '@/[fsd]/features/chat/lib/hooks';
 import { getChatParticipantUniqueId } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { useFetchParticipantDetails } from '@/[fsd]/features/chat/participants/lib/hooks';
-import { SkillSuggestionList, SlashSuggestionList } from '@/[fsd]/features/chat/ui';
+import { SlashSuggestionList } from '@/[fsd]/features/chat/ui';
 import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
+import { MentionSkillList } from '@/[fsd]/features/skill/ui';
 import { MentionConstants } from '@/[fsd]/shared/lib/constants';
 import { DEFAULT_STEPS_LIMIT } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
 import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
@@ -894,7 +895,7 @@ const NewConversationView = forwardRef(
             />
           )}
           {isSkillPhaseActive && (
-            <SkillSuggestionList
+            <MentionSkillList
               phase={skillPhase}
               filteredItems={skillFilteredItems}
               committedMentions={skillCommittedMentions}
