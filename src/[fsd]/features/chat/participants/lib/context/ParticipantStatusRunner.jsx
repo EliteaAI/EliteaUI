@@ -4,6 +4,7 @@ import { isParticipantOKForChat } from '@/[fsd]/features/chat/participants/lib/h
 import { useMcpTokenChange } from '@/[fsd]/features/mcp/lib/hooks';
 import { useGetToolkitNameFromSchema } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks/useGetToolkitNameFromSchema.hooks';
 import { useResolvedSharepointConfig } from '@/[fsd]/features/sharepoint/lib/hooks/useResolvedSharepointConfig.hooks';
+import { isToolkitTypeBlocked } from '@/[fsd]/features/toolkits/lib/helpers/toolkits.helpers';
 import { ChatParticipantType, PUBLIC_PROJECT_ID } from '@/common/constants';
 import useValidateApplicationVersion, {
   useToolsValidationInfo,
@@ -74,7 +75,7 @@ const ParticipantStatusRunner = memo(props => {
   );
 
   //  Tool availability
-  const { getSelectedTools } = useGetToolkitNameFromSchema();
+  const { getSelectedTools, getToolkitNameFromSchema } = useGetToolkitNameFromSchema();
 
   const someToolsAreUnavailable = useMemo(() => {
     if (type === ChatParticipantType.Applications || type === ChatParticipantType.Pipelines) {
@@ -88,6 +89,19 @@ const ParticipantStatusRunner = memo(props => {
     }
     return false;
   }, [getSelectedTools, originalDetails?.version_details?.tools, type]);
+
+  // Names of configured toolkits whose type is blocked by org guardrails, so the
+  // warning can name them. Blocked toolkits are absent from the schema catalog, so
+  // someToolsAreUnavailable can't detect them — this is a separate signal.
+  const blockedToolkitNames = useMemo(() => {
+    if (type !== ChatParticipantType.Applications && type !== ChatParticipantType.Pipelines) {
+      return [];
+    }
+    return (originalDetails?.version_details?.tools || [])
+      .filter(tool => tool?.type !== 'application' && isToolkitTypeBlocked(tool?.type))
+      .map(tool => getToolkitNameFromSchema(tool) || tool?.type)
+      .filter(Boolean);
+  }, [getToolkitNameFromSchema, originalDetails?.version_details?.tools, type]);
 
   // MCP token state
   const mcpServerUrl = participant.entity_settings?.mcp_server_url || originalDetails?.settings?.url || '';
@@ -135,6 +149,7 @@ const ParticipantStatusRunner = memo(props => {
     remoteMcpLoggedOut ||
     spOAuthLoggedOut ||
     someToolsAreUnavailable ||
+    blockedToolkitNames.length > 0 ||
     isPublishedAgentGone ||
     isVersionUnavailable;
 
@@ -144,6 +159,7 @@ const ParticipantStatusRunner = memo(props => {
       shouldDisableThisItem,
       hasMisconfigurationErrors,
       someToolsAreUnavailable,
+      blockedToolkitNames,
       isPublishedAgentGone,
       isVersionUnavailable,
       mcpIsDisconnected,
@@ -160,6 +176,7 @@ const ParticipantStatusRunner = memo(props => {
     shouldDisableThisItem,
     hasMisconfigurationErrors,
     someToolsAreUnavailable,
+    blockedToolkitNames,
     isPublishedAgentGone,
     isVersionUnavailable,
     mcpIsDisconnected,
