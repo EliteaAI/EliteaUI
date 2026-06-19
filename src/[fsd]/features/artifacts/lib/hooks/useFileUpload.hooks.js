@@ -332,11 +332,17 @@ export const useFileUpload = props => {
     const fullPath = computeFullPath(pendingFolderPath);
     const targetPrefix = fullPath ? `${fullPath}/` : '';
 
-    // Build an existing names set scoped to the target folder only.
-    const existingKeys = getExistingNamesForPrefix(bucketData?.contents || [], targetPrefix);
+    // Track names already in the folder plus names claimed in this batch to avoid collisions.
+    const reservedNames = getExistingNamesForPrefix(bucketData?.contents || [], targetPrefix);
 
-    // Rename each file with Windows-style " - Copy" / " - Copy (2)" / " - Copy (3)" suffix
+    // Rename only duplicate files with Windows-style " - Copy" / " - Copy (2)" / " - Copy (3)" suffix.
     const renamedFiles = pendingUploadFiles.map(file => {
+      if (!reservedNames.has(file.name)) {
+        reservedNames.add(file.name);
+
+        return file;
+      }
+
       const { name } = file;
       const lastDotIndex = name.lastIndexOf('.');
       const extension = lastDotIndex !== -1 ? name.slice(lastDotIndex) : '';
@@ -344,14 +350,14 @@ export const useFileUpload = props => {
 
       let copyIndex = 1;
       let newName = `${baseName} - Copy${extension}`;
-      while (existingKeys.has(newName)) {
+      while (reservedNames.has(newName)) {
         copyIndex++;
         newName = `${baseName} - Copy (${copyIndex})${extension}`;
       }
 
-      existingKeys.add(newName);
+      reservedNames.add(newName);
 
-      return new File([file], newName, { type: file.type });
+      return new File([file], newName, { type: file.type, lastModified: file.lastModified });
     });
 
     executeUpload(renamedFiles, pendingUploadBucket, pendingFolderPath, pendingOnSelectFolder);
