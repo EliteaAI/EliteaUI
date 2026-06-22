@@ -22,7 +22,7 @@ import TagEditor from '@/pages/Common/Components/TagEditor';
 import { useTheme } from '@emotion/react';
 
 const CreateAgentForm = memo(props => {
-  const { accordionStyle, sx, showInstructions = true, entityType = 'application' } = props;
+  const { accordionStyle, sx, showInstructions = true, entityType = 'application', onAgentCreated } = props;
   const formik = useFormikContext();
   const theme = useTheme();
   const projectId = useSelectedProjectId();
@@ -102,7 +102,7 @@ const CreateAgentForm = memo(props => {
         items={[
           {
             title: 'General',
-            summaryAction: entityType !== 'pipeline' ? <GenerateAgentButton /> : null,
+            summaryAction: entityType !== 'pipeline' ? <GenerateAgentButton onAgentCreated={onAgentCreated} /> : null,
             content: (
               <Box sx={styles.accordionContent}>
                 <Box sx={styles.nameContainer}>

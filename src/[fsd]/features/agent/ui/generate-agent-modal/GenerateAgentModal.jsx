@@ -32,7 +32,7 @@ const STEPS = {
 };
 
 const GenerateAgentModal = memo(props => {
-  const { open, onClose } = props;
+  const { open, onClose, onAgentCreated } = props;
 
   const navigate = useNavigate();
   const projectId = useSelectedProjectId();
@@ -238,7 +238,8 @@ const GenerateAgentModal = memo(props => {
       await associateApplications(versionId, entityId, [...selectedAgents, ...selectedPipelines]);
 
       onClose();
-      redirectToAgent(entityId, result.name);
+      if (onAgentCreated) onAgentCreated(result);
+      else redirectToAgent(entityId, result.name);
     } catch (err) {
       setIsApproving(false);
       toastError(buildErrorMessage(err));
@@ -253,6 +254,7 @@ const GenerateAgentModal = memo(props => {
     associateToolkits,
     associateApplications,
     redirectToAgent,
+    onAgentCreated,
     projectId,
     onClose,
     toastError,

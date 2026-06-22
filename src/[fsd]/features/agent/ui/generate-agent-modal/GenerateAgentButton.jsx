@@ -10,7 +10,8 @@ import useCheckPermission from '@/hooks/useCheckPermission';
 
 import GenerateAgentModal from './GenerateAgentModal';
 
-const GenerateAgentButton = memo(() => {
+const GenerateAgentButton = memo(props => {
+  const { onAgentCreated } = props;
   const { isOpen, handleOpen, handleClose } = useModal();
   const { checkPermission } = useCheckPermission();
 
@@ -36,6 +37,7 @@ const GenerateAgentButton = memo(() => {
         <GenerateAgentModal
           open={isOpen}
           onClose={handleClose}
+          onAgentCreated={onAgentCreated}
         />
       </Box>
     </>
