@@ -1,15 +1,17 @@
 import { AgentsStudioConstants } from '@/[fsd]/features/agents-studio/lib/constants';
-import { formatTagName } from '@/[fsd]/features/agents-studio/lib/helpers/tag.helpers';
 
 /**
- * Build all categories including special categories and tag-based categories
+ * Build the ordered category list shown in Agent Studio: the special Trending
+ * and My Liked buckets first, then the predefined categories (with the "Other"
+ * catch-all moved to the end).
  */
-export const buildAllCategories = tags => {
-  const tagNames = tags?.rows?.map(tag => formatTagName(tag.name)).sort() || [];
+export const buildAllCategories = categoryNames => {
+  const names = (categoryNames || []).filter(name => name !== AgentsStudioConstants.OTHER_CATEGORY);
+  names.sort();
   return [
     AgentsStudioConstants.TRENDING_CATEGORY,
     AgentsStudioConstants.MY_LIKED_CATEGORY,
-    ...tagNames,
+    ...names,
     AgentsStudioConstants.OTHER_CATEGORY,
   ];
 };
@@ -49,8 +51,8 @@ export const buildApplicationMenuItems = (applicationsByTag, selectedTagNames) =
 
       const appData = appCategoriesMap.get(app.id);
 
-      // Assign category based on where the app came from
-      assignCategory(appData, tagName, app);
+      // Assign category based on the bucket it was fetched into
+      assignCategory(appData, tagName);
 
       if (!categoryOrderMap.get(tagName).includes(app.id)) {
         categoryOrderMap.get(tagName).push(app.id);
@@ -88,15 +90,10 @@ export const buildApplicationMenuItems = (applicationsByTag, selectedTagNames) =
 };
 
 /**
- * Assign category to an application based on its source
+ * Assign category to an application based on the bucket it was fetched into.
  */
-const assignCategory = (appData, tagName, app) => {
+const assignCategory = (appData, tagName) => {
   appData.categories.add(tagName);
-  if (app.tags && app.tags.length > 0) {
-    app.tags.forEach(tag => {
-      appData.categories.add(formatTagName(tag.name));
-    });
-  }
 };
 
 /**
@@ -104,13 +101,7 @@ const assignCategory = (appData, tagName, app) => {
  */
 export const getFetchFunctionForCategory = (
   category,
-  {
-    fetchTrendingApplications,
-    fetchMyLikedApplications,
-    fetchApplicationsWithoutTags,
-    fetchApplicationsForTag,
-    tags,
-  },
+  { fetchTrendingApplications, fetchMyLikedApplications, fetchApplicationsForCategoryName },
 ) => {
   if (category === AgentsStudioConstants.TRENDING_CATEGORY) {
     return fetchTrendingApplications;
@@ -120,17 +111,7 @@ export const getFetchFunctionForCategory = (
     return fetchMyLikedApplications;
   }
 
-  if (category === AgentsStudioConstants.OTHER_CATEGORY) {
-    return fetchApplicationsWithoutTags;
-  }
-
-  // Find the tag for this category
-  const tag = tags?.rows?.find(t => formatTagName(t.name) === category);
-  if (tag) {
-    return page => fetchApplicationsForTag(tag, page);
-  }
-
-  return null;
+  return page => fetchApplicationsForCategoryName(category, page);
 };
 
 export const getCategoryForApplication = app => app.category;

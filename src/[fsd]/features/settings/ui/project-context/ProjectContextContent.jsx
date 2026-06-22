@@ -37,6 +37,7 @@ const ProjectContextContent = memo(() => {
   const [enabled, setEnabled] = useState(true);
   const [mode, setMode] = useState('edit');
   const [isDirty, setIsDirty] = useState(false);
+  const [isEditorFocused, setIsEditorFocused] = useState(false);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -47,7 +48,7 @@ const ProjectContextContent = memo(() => {
     }
   }, [serverData]);
 
-  const charError = content.length > MAX_CHARS;
+  const charError = content.length >= MAX_CHARS;
   const hasContextContent = Boolean(content.trim());
   const showReadOnlyBanner = canViewProjectContext && !canEditProjectContext;
   const showDisabledBanner = canViewProjectContext && !enabled && hasContextContent;
@@ -101,7 +102,7 @@ const ProjectContextContent = memo(() => {
       if (!file) return;
       const reader = new FileReader();
       reader.onload = ev => {
-        const text = ev.target.result;
+        const text = ev.target.result.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
         if (text.length > MAX_CHARS) {
           toastError(`File content exceeds ${MAX_CHARS} characters`);
           return;
@@ -137,7 +138,12 @@ const ProjectContextContent = memo(() => {
     }
   }, [canEditProjectContext, serverData]);
 
-  const styles = componentStyles();
+  const handleEditorFocus = () => setIsEditorFocused(true);
+  const handleEditorBlur = e => {
+    if (!e.currentTarget.contains(e.relatedTarget)) setIsEditorFocused(false);
+  };
+
+  const styles = componentStyles(charError, isEditorFocused, !enabled || !canEditProjectContext);
 
   if (isLoading) {
     return (
@@ -192,33 +198,40 @@ const ProjectContextContent = memo(() => {
                   Include goals, terminology, workflows, or constraints relevant to the project.
                 </Typography>
               </Box>
-              {showEditorControls && (
-                <Box sx={styles.toolbar}>
-                  <Button.BaseBtn
-                    variant={BUTTON_VARIANTS.secondary}
-                    startIcon={<ImportIcon />}
-                    onClick={handleImportClick}
-                    title="Import markdown file"
-                  />
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".md,text/markdown"
-                    style={{ display: 'none' }}
-                    onChange={handleFileUpload}
-                  />
-                  <TabGroupButton
-                    value={mode}
-                    onChange={handleModeChange}
-                    size="small"
-                    arrayBtn={modeButtons}
-                  />
-                </Box>
-              )}
+              <Box sx={styles.toolbar}>
+                {showEditorControls && (
+                  <>
+                    <Button.BaseBtn
+                      variant={BUTTON_VARIANTS.secondary}
+                      startIcon={<ImportIcon />}
+                      onClick={handleImportClick}
+                      title="Import markdown file"
+                    />
+                    <Box
+                      hidden
+                      component="input"
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".md,text/markdown"
+                      onChange={handleFileUpload}
+                    />
+                  </>
+                )}
+                <TabGroupButton
+                  value={mode}
+                  onChange={handleModeChange}
+                  size="small"
+                  arrayBtn={modeButtons}
+                />
+              </Box>
             </Box>
 
             {mode === 'edit' ? (
-              <Box sx={styles.editorWrapper(charError, !enabled || !canEditProjectContext)}>
+              <Box
+                sx={styles.editorWrapper}
+                onFocus={handleEditorFocus}
+                onBlur={handleEditorBlur}
+              >
                 <Field.CodeMirrorEditor
                   value={content}
                   notifyChange={handleContentChange}
@@ -230,8 +243,8 @@ const ProjectContextContent = memo(() => {
                 />
               </Box>
             ) : (
-              <Box sx={styles.preview(!enabled || !canEditProjectContext)}>
-                <Markdown>{content}</Markdown>
+              <Box sx={styles.preview}>
+                <Markdown renderHtml={false}>{content}</Markdown>
               </Box>
             )}
 
@@ -239,9 +252,10 @@ const ProjectContextContent = memo(() => {
               <Box sx={styles.charCounterWrapper}>
                 <Typography
                   variant="bodySmall"
-                  sx={styles.charCounter(charError)}
+                  sx={styles.charCounter}
                 >
-                  {MAX_CHARS - content.length} characters left
+                  {MAX_CHARS - content.length} characters left.{' '}
+                  {charError && 'You have reached the maximum character limit.'}
                 </Typography>
               </Box>
             )}
@@ -277,7 +291,7 @@ ProjectContextContent.displayName = 'ProjectContextContent';
 export default ProjectContextContent;
 
 /** @type {MuiSx} */
-const componentStyles = () => ({
+const componentStyles = (charError, isEditorFocused, isMuted) => ({
   root: {
     display: 'flex',
     flexDirection: 'column',
@@ -305,7 +319,6 @@ const componentStyles = () => ({
   editorSection: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.75rem',
     flex: 1,
     minHeight: 0,
     marginTop: '0.5rem',
@@ -315,6 +328,7 @@ const componentStyles = () => ({
     alignItems: 'flex-start',
     justifyContent: 'space-between',
     gap: '1rem',
+    paddingBottom: '0.75rem',
   },
   editorText: {
     display: 'flex',
@@ -328,39 +342,38 @@ const componentStyles = () => ({
     flexShrink: 0,
     alignSelf: 'center',
   },
-  editorWrapper:
-    (charError, isMuted) =>
-    ({ palette }) => ({
-      display: 'flex',
-      flex: 1,
-      minHeight: 0,
-      borderRadius: '0.375rem',
-      border: `0.0625rem solid ${charError ? palette.error.main : palette.border.table}`,
-      overflow: 'hidden',
-      opacity: isMuted ? 0.55 : 1,
-      '&:focus-within': {
-        borderColor: charError ? palette.error.main : palette.primary.main,
-      },
-      '& .cm-theme': {
-        width: '100%',
-      },
-      '& .cm-gutters': {
-        backgroundColor: 'transparent',
-        borderRight: `0.0625rem solid ${palette.border.table}`,
-      },
-    }),
-  preview:
-    isMuted =>
-    ({ palette }) => ({
-      flex: 1,
-      minHeight: 0,
-      padding: '0.75rem',
-      borderRadius: '0.375rem',
-      border: `0.0625rem solid ${palette.border.table}`,
-      backgroundColor: palette.background.userInputBackground,
-      overflow: 'auto',
-      opacity: isMuted ? 0.55 : 1,
-    }),
+  editorWrapper: ({ palette }) => ({
+    display: 'flex',
+    flex: 1,
+    minHeight: 0,
+    borderRadius: '0.375rem',
+    border: `0.0625rem solid ${palette.border.table}`,
+    overflow: 'hidden',
+    opacity: isMuted ? 0.55 : 1,
+    '& .cm-editor': {
+      backgroundColor: palette.background.codeMirrorEditor,
+    },
+    '&:focus-within': {
+      borderColor: palette.primary.main,
+    },
+    '& .cm-theme': {
+      width: '100%',
+    },
+    '& .cm-gutters': {
+      backgroundColor: 'transparent',
+      borderRight: `0.0625rem solid ${palette.border.table}`,
+    },
+  }),
+  preview: ({ palette }) => ({
+    flex: 1,
+    minHeight: 0,
+    padding: '0.75rem',
+    borderRadius: '0.375rem',
+    border: `0.0625rem solid ${palette.border.table}`,
+    backgroundColor: palette.background.userInputBackground,
+    overflow: 'auto',
+    opacity: isMuted ? 0.55 : 1,
+  }),
   emptyPreview: ({ palette }) => ({
     color: palette.text.metrics,
     fontStyle: 'italic',
@@ -368,17 +381,17 @@ const componentStyles = () => ({
   charCounterWrapper: {
     display: 'flex',
     justifyContent: 'flex-end',
+    paddingTop: '0.25rem',
   },
-  charCounter:
-    charError =>
-    ({ palette }) => ({
-      color: charError ? palette.text.error : palette.text.primary,
-    }),
+  charCounter: ({ palette }) => ({
+    color: charError ? palette.text.error : palette.text.primary,
+    visibility: isEditorFocused ? 'visible' : 'hidden',
+  }),
   actions: {
     display: 'flex',
     gap: '0.75rem',
-    padding: '1rem 1.5rem',
     paddingLeft: 0,
+    paddingTop: '0.25rem',
     width: '100%',
   },
 });

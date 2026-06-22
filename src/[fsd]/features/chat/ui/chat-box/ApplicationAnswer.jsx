@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { memo, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import {
@@ -17,11 +17,11 @@ import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { buildAttachmentSummary } from '@/[fsd]/entities/attachment/lib';
 import { toSpeakableText, translateSpokenPos } from '@/[fsd]/features/chat/lib/helpers';
 import { useParticipantEntityIcon, useParticipantName } from '@/[fsd]/features/chat/participants/lib/hooks';
-import { ChatAttachment, ChatContinue, ChatHitlActions } from '@/[fsd]/features/chat/ui';
+import { ChatAttachment, ChatContinue, ChatHitlActions, ErrorTrace } from '@/[fsd]/features/chat/ui';
+import { SubAgentAccordion } from '@/[fsd]/features/chat/ui/sub-agent-section';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
 import { BaseBtn } from '@/[fsd]/shared/ui/button';
 import Markdown from '@/[fsd]/shared/ui/markdown';
-import ArrowRightIcon from '@/assets/arrow-right-icon.svg?react';
 import MicphoneIcon from '@/assets/megaphone.svg?react';
 import {
   CANVAS_ADMIN_USER,
@@ -46,7 +46,6 @@ import EntityIcon from '@/components/EntityIcon';
 import CopyIcon from '@/components/Icons/CopyIcon';
 import CopyMoveIcon from '@/components/Icons/CopyMoveIcon';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
-import DownloadIcon from '@/components/Icons/DownloadIcon';
 import EditIcon from '@/components/Icons/EditIcon';
 import EliteAIcon from '@/components/Icons/EliteAIcon';
 import RegenerateIcon from '@/components/Icons/RegenerateIcon';
@@ -75,6 +74,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
     shouldDisableRegenerate,
     references = [],
     exception,
+    subAgentErrors = null,
     isLoading = false,
     isStreaming,
     verticalMode,
@@ -86,11 +86,13 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
     minHeight,
     toolActions = [],
     tools,
+    subAgentTypeByName,
     onRemoveAttachment,
     onContinueMcpExecution,
     onContinueTokenLimitExecution,
     requiresConfirmation = null,
     hitlInterrupt = null,
+    hitlInterrupts = null,
     onHitlResume,
     onHitlEditClick,
     hideContinueButton = false,
@@ -112,21 +114,6 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
 
   const participantName = useParticipantName(participant);
   const entityIcon = useParticipantEntityIcon(participant);
-
-  const [isErrorExpanded, setIsErrorExpanded] = useState(false);
-
-  const downloadErrorTrace = useCallback(() => {
-    if (!exception) return;
-
-    const element = document.createElement('a');
-    const file = new Blob([exception], { type: 'text/plain' });
-    element.href = URL.createObjectURL(file);
-    element.download = `error-trace-${messageId || 'unknown'}-${Date.now()}.txt`;
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
-    URL.revokeObjectURL(element.href);
-  }, [exception, messageId]);
 
   // Find the single toolAction that requires auth (should only be one)
   const authRequiredAction = useMemo(
@@ -345,6 +332,82 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
 
   const canRenderContent = !exception && !(isLoading || isRegenerating);
 
+  // Normalize to a list: a parallel sub-agent fan-out surfaces one paused
+  // child per entry; a single pause is wrapped into a one-element list.
+  const effectiveHitlInterrupts = useMemo(() => {
+    if (Array.isArray(hitlInterrupts) && hitlInterrupts.length) {
+      return hitlInterrupts;
+    }
+    return hitlInterrupt ? [hitlInterrupt] : [];
+  }, [hitlInterrupts, hitlInterrupt]);
+
+  // Group paused approvals by the sub-agent they originated from so a parallel
+  // fan-out renders one stacked-card section per sub-agent under a name header
+  // (issue #4993). Interrupts with no parent_agent_name (single/coordinator
+  // pause) stay ungrouped and the legacy flat list is used. Track 2 fan-out
+  // children carry parent_agent_name + their own tool_call_id, so they bucket
+  // here exactly like Track 1 aggregates — one bordered accordion per child.
+  const hitlBuckets = useMemo(() => {
+    const coordinator = [];
+    const order = [];
+    const byName = new Map();
+    effectiveHitlInterrupts.forEach((interrupt, index) => {
+      const key = interrupt?.parent_agent_name || '';
+      const entry = { interrupt, index };
+      if (!key) {
+        coordinator.push(entry);
+        return;
+      }
+      if (!byName.has(key)) {
+        byName.set(key, []);
+        order.push(key);
+      }
+      byName.get(key).push(entry);
+    });
+    // Resolve each paused sub-agent's kind (pipeline vs agent) the same way the
+    // thinking view does: the conversation participant's authoritative
+    // agent_type keyed by display name. Without it the HITL accordion header
+    // falls back to the participant `tools` entry, which for a pipeline often
+    // lacks agent_type and mis-renders the flow icon as the generic agent grid
+    // (issue #4993). Fall back to any agent_type carried on the interrupt.
+    const resolveType = (name, entries) => {
+      const participantType = subAgentTypeByName?.[name];
+      if (participantType === 'pipeline') return 'pipeline';
+      if (participantType) return 'application';
+      const fromInterrupt = entries.find(e => e?.interrupt?.agent_type || e?.interrupt?.toolMeta?.agent_type);
+      const at = fromInterrupt?.interrupt?.agent_type || fromInterrupt?.interrupt?.toolMeta?.agent_type;
+      if (at === 'pipeline') return 'pipeline';
+      if (at) return 'application';
+      return '';
+    };
+    return {
+      coordinator,
+      subAgents: order.map(name => ({
+        name,
+        entries: byName.get(name),
+        agentType: resolveType(name, byName.get(name)),
+      })),
+      hasSubAgents: order.length > 0,
+    };
+  }, [effectiveHitlInterrupts, subAgentTypeByName]);
+
+  const renderHitlCard = useCallback(
+    ({ interrupt, index }) => {
+      const toolCallId = interrupt?.tool_call_id || '';
+      return (
+        <ChatHitlActions
+          key={toolCallId || `hitl-${index}`}
+          hitlInterrupt={interrupt}
+          toolCallId={toolCallId}
+          onHitlResume={onHitlResume}
+          onHitlEditClick={onHitlEditClick}
+          disabled={!onHitlResume || Boolean(interrupt?.decided)}
+        />
+      );
+    },
+    [onHitlResume, onHitlEditClick],
+  );
+
   const shouldRenderAnswerBlock = useMemo(() => {
     const hasRenderableMessageItems =
       message_items?.length && canRenderContent && (!!nonAttachmentItems?.length || hasAttachments);
@@ -355,7 +418,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
       !!exception ||
       (authRequiredAction && !!onContinueMcpExecution) ||
       (requiresConfirmation && !!onContinueTokenLimitExecution) ||
-      !!hitlInterrupt
+      effectiveHitlInterrupts.length > 0
     );
   }, [
     answer,
@@ -368,7 +431,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
     onContinueMcpExecution,
     requiresConfirmation,
     onContinueTokenLimitExecution,
-    hitlInterrupt,
+    effectiveHitlInterrupts.length,
   ]);
 
   const isWideView = actionButtonsWrapperWidth > COMPACT_VIEW_BREAKPOINT;
@@ -380,7 +443,6 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
     nonAttachmentItems.length > 0,
     imageAttachments.length,
     isWideView,
-    isErrorExpanded,
   );
 
   // Swarm child message styles
@@ -480,12 +542,19 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
           </ListItemAvatar>
         )}
         <Box sx={styles.contentWrapper}>
+          {/* Live thinking view shows tool-call chips only. HITL approval cards
+              (including Track 2 fan-out children) render in the message box below
+              via hitlBuckets, so they survive the per-turn StartTask (#4993). */}
           {nonSwarmChildActions?.length > 0 && (
             <ApplicationThinkView
               actions={[...nonSwarmChildActions]}
               originalActions={toolActions.filter(a => a.type !== TOOL_ACTION_TYPES.SwarmChild)}
               isStreaming={isProcessing}
               tools={tools}
+              subAgentTypeByName={subAgentTypeByName}
+              subAgentErrors={subAgentErrors}
+              messageId={messageId}
+              onCopy={onCopy}
             />
           )}
 
@@ -616,65 +685,12 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                 </Box>
               )}
               {!!exception && (
-                <>
-                  <Box sx={styles.errorWrapper}>{realAnswer || 'Unknown error'}</Box>
-
-                  {realAnswer !== exception && (
-                    <Box sx={styles.errorStackTrace}>
-                      <Box
-                        sx={styles.errorStackTraceHeader}
-                        onClick={() => setIsErrorExpanded(prev => !prev)}
-                      >
-                        <ArrowRightIcon />
-                        <Typography
-                          variant="bodyMedium"
-                          sx={styles.errorDebugText}
-                        >
-                          Error debugging info
-                        </Typography>
-                      </Box>
-
-                      {isErrorExpanded && (
-                        <Box sx={styles.errorContent}>
-                          <Box sx={styles.errorTraceActions}>
-                            <StyledTooltip
-                              title="Download error trace"
-                              placement="top"
-                            >
-                              <IconButton
-                                sx={styles.iconButton}
-                                variant="elitea"
-                                color="tertiary"
-                                onClick={downloadErrorTrace}
-                              >
-                                <DownloadIcon sx={styles.icon} />
-                              </IconButton>
-                            </StyledTooltip>
-                            <StyledTooltip
-                              title="Copy to clipboard"
-                              placement="top"
-                            >
-                              <IconButton
-                                sx={styles.iconButton}
-                                variant="elitea"
-                                color="tertiary"
-                                onClick={onClickCopy}
-                              >
-                                <CopyIcon sx={styles.icon} />
-                              </IconButton>
-                            </StyledTooltip>
-                          </Box>
-                          <Typography
-                            component="pre"
-                            sx={styles.errorTraceContent}
-                          >
-                            {exception}
-                          </Typography>
-                        </Box>
-                      )}
-                    </Box>
-                  )}
-                </>
+                <ErrorTrace
+                  headline={realAnswer}
+                  trace={exception}
+                  messageId={messageId}
+                  onCopy={onCopy}
+                />
               )}
               {!!authRequiredAction && (
                 <ChatContinue
@@ -694,13 +710,24 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                   onContinue={onContinueWithConfirmation}
                 />
               )}
-              {!!hitlInterrupt && (
-                <ChatHitlActions
-                  hitlInterrupt={hitlInterrupt}
-                  onHitlResume={onHitlResume}
-                  onHitlEditClick={onHitlEditClick}
-                  disabled={!onHitlResume}
-                />
+              {hitlBuckets.hasSubAgents ? (
+                <Box sx={styles.hitlGroupsContainer}>
+                  {hitlBuckets.coordinator.map(renderHitlCard)}
+                  {hitlBuckets.subAgents.map(bucket => (
+                    <SubAgentAccordion
+                      key={`hitl-sa-${bucket.name}`}
+                      name={bucket.name}
+                      tools={tools}
+                      agentType={bucket.agentType}
+                      paused
+                      transparent
+                    >
+                      {bucket.entries.map(renderHitlCard)}
+                    </SubAgentAccordion>
+                  ))}
+                </Box>
+              ) : (
+                effectiveHitlInterrupts.map((interrupt, index) => renderHitlCard({ interrupt, index }))
               )}
               {/* Add ref for ApplicationAnswer compatibility */}
               {isApplicationParticipant && <Box ref={ref} />}
@@ -867,7 +894,11 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
             !answer &&
             !message_items?.length &&
             !exception &&
-            !filteredToolActions?.length && (
+            !filteredToolActions?.length &&
+            // While an approval card is pending (e.g. a fan-out sibling awaiting a
+            // decision while another child re-runs after resume) the loading
+            // placeholder must not cover the cards (#4993).
+            effectiveHitlInterrupts.length === 0 && (
               <RotatingMessages
                 sx={styles.rotatingMessages}
                 duration={2000}
@@ -890,7 +921,6 @@ const applicationAnswerStyles = (
   hasNonAttachmentItems,
   imageAttachmentsLength,
   isWideView,
-  isErrorExpanded,
 ) => ({
   userMessageContainer: verticalMode
     ? {
@@ -1011,73 +1041,6 @@ const applicationAnswerStyles = (
     marginTop: '0.5rem',
     gap: isWideView ? '0' : '0.5rem',
   },
-  errorWrapper: {
-    display: 'flex',
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: '.75rem 1rem',
-    border: ({ palette }) => `1px solid ${palette.background.wrongBkg}`,
-    background: ({ palette }) => palette.background.errorBkg,
-    borderRadius: '0.5rem',
-    color: ({ palette }) => palette.text.warningText,
-    fontSize: '.875rem',
-    marginBottom: '0.5rem',
-  },
-  errorStackTrace: {
-    width: '100%',
-    marginTop: '0.5rem',
-  },
-  errorStackTraceHeader: ({ palette }) => ({
-    display: 'flex',
-    alignItems: 'center',
-    gap: '.375rem',
-    padding: '.25rem .5rem',
-    borderRadius: '1rem',
-    cursor: 'pointer',
-    transition: 'background-color 0.2s ease-in-out',
-    width: '11.875rem',
-    height: '1.5rem',
-    marginBottom: isErrorExpanded ? '0.5rem' : '0',
-
-    span: {
-      color: palette.text.default,
-      fontSize: '.875rem',
-    },
-
-    svg: {
-      transition: 'transform 0.2s ease-in-out',
-      transform: isErrorExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
-
-      path: {
-        fill: palette.text.default,
-      },
-    },
-
-    '&:hover': {
-      backgroundColor: palette.background.userInputBackgroundActive,
-      span: {
-        color: palette.text.secondary,
-      },
-    },
-  }),
-  errorTraceActions: {
-    display: 'flex',
-    justifyContent: 'flex-end',
-    gap: '0.5rem',
-    marginBottom: '.625rem',
-    height: '1.75rem',
-  },
-  errorContent: ({ palette }) => ({
-    padding: '.5rem 1rem 2.875rem 1rem',
-    backgroundColor: palette.background.userInputBackground,
-  }),
-  errorTraceContent: {
-    whiteSpace: 'pre-wrap',
-    fontFamily: 'monospace',
-    fontSize: '0.875rem',
-    color: 'inherit',
-    fontWeight: '400',
-  },
   buttonsContainer: {
     position: 'relative',
     top: '0',
@@ -1108,6 +1071,12 @@ const applicationAnswerStyles = (
     flexDirection: 'column',
     gap: '0.5rem',
     marginTop: '0.5rem',
+    width: '100%',
+  },
+  hitlGroupsContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem',
     width: '100%',
   },
   swarmChildAccordion: ({ palette }) => ({

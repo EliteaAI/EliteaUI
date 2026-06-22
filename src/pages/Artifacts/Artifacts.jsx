@@ -13,7 +13,6 @@ import { PENDING_BUCKET_SESSION_KEY } from '@/common/artifactConstants';
 import { sortBucketsByRecent } from '@/common/bucketSortingUtils';
 import { SIDE_BAR_WIDTH, ViewMode } from '@/common/constants';
 import AlertDialog from '@/components/AlertDialog';
-import AlertDialogV2 from '@/components/AlertDialogV2';
 import { useFilePreviewNavigation } from '@/contexts/FilePreviewNavigationContext';
 import useGetWindowWidth from '@/hooks/useGetWindowWidth';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -23,7 +22,7 @@ import { actions } from '@/slices/artifact';
 import Buckets from './Components/Buckets';
 import ArtifactTable from './component/ArtifactTable';
 import ArtifactTableNoFiles from './component/ArtifactTableNoFiles';
-import DuplicateDialogContent from './component/DuplicateDialogContent';
+import DuplicateResolutionDialog from './component/DuplicateResolutionDialog';
 import UploadPathDialog from './component/UploadPathDialog';
 import UploadingStatus from './component/UploadingStatus';
 
@@ -212,7 +211,6 @@ const Artifacts = memo(() => {
     showUploadPathDialog,
     pendingUploadBucket,
     showDuplicateWarning,
-    setShowDuplicateWarning,
     duplicateFilenames,
     onBucketUpload,
     handleBucketFileChange,
@@ -221,6 +219,8 @@ const Artifacts = memo(() => {
     handleTableUploadRequest,
     handleCancelDuplicate,
     handleConfirmDuplicate,
+    handleSkipDuplicate,
+    handleKeepBothDuplicate,
   } = useFileUpload({
     selectedProjectId,
     allBuckets,
@@ -734,15 +734,13 @@ const Artifacts = memo(() => {
         onConfirm={handleCloseBucketNotFound}
       />
 
-      <AlertDialogV2
-        alarm
-        title="Warning"
+      <DuplicateResolutionDialog
         open={showDuplicateWarning}
-        setOpen={setShowDuplicateWarning}
-        extraContent={<DuplicateDialogContent duplicateFilenames={duplicateFilenames} />}
-        onConfirm={handleConfirmDuplicate}
+        duplicateFilenames={duplicateFilenames}
         onCancel={handleCancelDuplicate}
-        confirmButtonTitle="Proceed"
+        onSkip={handleSkipDuplicate}
+        onReplace={handleConfirmDuplicate}
+        onKeepBoth={handleKeepBothDuplicate}
       />
 
       <UploadPathDialog
@@ -760,6 +758,7 @@ Artifacts.displayName = 'Artifacts';
 
 export default Artifacts;
 
+/** @type {MuiSx} */
 const artifactsStyles = (collapsedBuckets, leftPanelWidth) => ({
   rootBox: {
     width: '100%',
@@ -799,8 +798,5 @@ const artifactsStyles = (collapsedBuckets, leftPanelWidth) => ({
     width: '100%',
     height: '100%',
     overflow: 'hidden',
-  },
-  deleteModal: {
-    paper: { maxWidth: '30rem' },
   },
 });

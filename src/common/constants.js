@@ -1110,6 +1110,11 @@ export const PERSONA_OPTIONS = [
   { label: 'Quirky', value: 'quirky', description: 'Creative, playful, thinking outside the box' },
   { label: 'Cynical', value: 'cynical', description: 'Skeptical, challenges assumptions' },
   { label: 'None', value: 'none', description: 'No personality overlay applied' },
+  {
+    label: 'Bare',
+    value: 'bare',
+    description: 'No Elitea identity — only your instructions plus tool-required guidance',
+  },
 ];
 
 export const DEFAULT_PERSONA = 'generic';

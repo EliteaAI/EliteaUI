@@ -6,12 +6,14 @@ import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { VoiceConfigDialog } from '@/[fsd]/features/chat/voice-config';
 import { BaseBtn } from '@/[fsd]/shared/ui/button';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import PlayIcon from '@/assets/play.svg?react';
 import StopIcon from '@/assets/stop_record.svg?react';
 import { VOICE_FEATURES_ENABLED, VOICE_FEATURES_TEMPORARILY_DISABLED } from '@/common/constants';
 import SettingIcon from '@/components/Icons/SettingIcon';
 
 const VoiceControlButton = memo(props => {
-  const { onStop, voiceConfig, voices, onVoiceConfigChange, ttsModel, hasModelTTS } = props;
+  const { onStop, voiceConfig, voices, onVoiceConfigChange, ttsModel, hasModelTTS, isPlaying, onPlay } =
+    props;
   const [dialogOpen, setDialogOpen] = useState(false);
   const styles = getStyles();
 
@@ -37,7 +39,11 @@ const VoiceControlButton = memo(props => {
       >
         <StyledTooltip
           title={
-            VOICE_FEATURES_TEMPORARILY_DISABLED ? 'Voice features temporarily disabled' : 'Stop speaking'
+            VOICE_FEATURES_TEMPORARILY_DISABLED
+              ? 'Voice features temporarily disabled'
+              : isPlaying
+                ? 'Stop speaking'
+                : 'Start speaking'
           }
           placement="top"
         >
@@ -46,10 +52,10 @@ const VoiceControlButton = memo(props => {
               variant={BUTTON_VARIANTS.icon}
               color="tertiary"
               size="small"
-              onClick={onStop}
+              onClick={isPlaying ? onStop : onPlay}
               sx={styles.button}
             >
-              <StopIcon sx={styles.icon} />
+              {isPlaying ? <StopIcon sx={styles.icon} /> : <PlayIcon sx={styles.icon} />}
             </BaseBtn>
           </Box>
         </StyledTooltip>
@@ -64,6 +70,7 @@ const VoiceControlButton = memo(props => {
               size="small"
               onClick={handleDialogOpen}
               aria-label="Voice settings"
+              disabled={isPlaying}
               sx={styles.button}
             >
               <SettingIcon sx={styles.icon} />
@@ -115,6 +122,9 @@ const getStyles = () => ({
     maxHeight: '1.75rem !important',
     borderRadius: '1.75rem',
     padding: '0 !important',
+    '&:hover': {
+      color: ({ palette }) => `${palette.text.secondary} !important`,
+    },
   },
   icon: {
     fontSize: '1rem',

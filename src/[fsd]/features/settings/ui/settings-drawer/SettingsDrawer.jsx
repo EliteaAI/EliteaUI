@@ -21,7 +21,7 @@ const ICON_COMPONENTS = {
   tokens: KeyIcon,
   integrations: IntegrationIcon,
   environment: EnvironmentIcon,
-  'project-context': PromptIcon,
+  'project-context': BriefcaseIcon,
   secrets: Lock,
   projects: BriefcaseIcon,
   users: UsersIcon,

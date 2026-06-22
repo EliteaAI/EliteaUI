@@ -2,9 +2,10 @@ import { useMemo } from 'react';
 
 import { Box } from '@mui/material';
 
-import { usePublishVersion } from './usePublishVersion.hooks';
 import PublishWizardModal from '@/[fsd]/entities/version/ui/PublishWizardModal';
 import PublishIcon from '@/assets/publish-version.svg?react';
+
+import { usePublishVersion } from './usePublishVersion.hooks';
 
 export const usePublishApplicationMenu = onSuccess => {
   const {
@@ -15,6 +16,9 @@ export const usePublishApplicationMenu = onSuccess => {
     step,
     versionName,
     setVersionName,
+    category,
+    setCategory,
+    categoryOptions,
     agreed,
     setAgreed,
     validationResult,
@@ -35,6 +39,9 @@ export const usePublishApplicationMenu = onSuccess => {
         step={step}
         versionName={versionName}
         onVersionNameChange={setVersionName}
+        category={category}
+        onCategoryChange={setCategory}
+        categoryOptions={categoryOptions}
         agreed={agreed}
         onAgreedChange={setAgreed}
         validationResult={validationResult}
@@ -52,6 +59,9 @@ export const usePublishApplicationMenu = onSuccess => {
       step,
       versionName,
       setVersionName,
+      category,
+      setCategory,
+      categoryOptions,
       agreed,
       setAgreed,
       validationResult,

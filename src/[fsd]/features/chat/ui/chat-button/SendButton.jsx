@@ -45,11 +45,7 @@ const SendButton = memo(props => {
     );
   }
 
-  if (
-    !question &&
-    VOICE_FEATURES_ENABLED &&
-    !VOICE_FEATURES_TEMPORARILY_DISABLED
-  ) {
+  if (!question && VOICE_FEATURES_ENABLED && !VOICE_FEATURES_TEMPORARILY_DISABLED) {
     return (
       <Tooltip
         title={VOICE_FEATURES_TEMPORARILY_DISABLED ? 'Temporarily disabled by admin' : 'Speaking mode'}
