@@ -455,7 +455,9 @@ const NewConversationView = forwardRef(
           meta: { user_name: participant.name, user_avatar: participant.avatar, email: participant.email },
         };
         setSelectedParticipants(prev => {
-          if (prev.find(p => p.entity_name === ChatParticipantType.Users && p.entity_meta.id === participant.id)) {
+          if (
+            prev.find(p => p.entity_name === ChatParticipantType.Users && p.entity_meta.id === participant.id)
+          ) {
             return prev;
           }
           return [...prev, userParticipant];
@@ -474,21 +476,24 @@ const NewConversationView = forwardRef(
       }, 0);
     };
 
-    const onDeleteParticipant = useCallback(participantToDelete => {
-      if (
-        selectedParticipant?.entity_name === participantToDelete.entity_name &&
-        selectedParticipant?.entity_meta.id === participantToDelete.entity_meta.id
-      ) {
-        onClearSelectedParticipant();
-      }
-      setSelectedParticipants(prev =>
-        prev.filter(
-          p =>
-            p.entity_name !== participantToDelete.entity_name ||
-            p.entity_meta.id !== participantToDelete.entity_meta.id,
-        ),
-      );
-    }, [selectedParticipant, onClearSelectedParticipant]);
+    const onDeleteParticipant = useCallback(
+      participantToDelete => {
+        if (
+          selectedParticipant?.entity_name === participantToDelete.entity_name &&
+          selectedParticipant?.entity_meta.id === participantToDelete.entity_meta.id
+        ) {
+          onClearSelectedParticipant();
+        }
+        setSelectedParticipants(prev =>
+          prev.filter(
+            p =>
+              p.entity_name !== participantToDelete.entity_name ||
+              p.entity_meta.id !== participantToDelete.entity_meta.id,
+          ),
+        );
+      },
+      [selectedParticipant, onClearSelectedParticipant],
+    );
 
     useImperativeHandle(ref, () => ({
       onSelectParticipant,

@@ -128,6 +128,7 @@ const darkPalette = {
     warning,
     warning40,
     warning8,
+    codeMirrorEditor: gray55,
     card: {
       default: gray50,
       hover: gray58,
@@ -474,6 +475,7 @@ const darkPalette = {
       tips: skyBlue,
       disabled: gray20,
       attention: orange,
+      warning: warningStatus,
       is_default: green20,
       success: green,
       active: primaryPressed,

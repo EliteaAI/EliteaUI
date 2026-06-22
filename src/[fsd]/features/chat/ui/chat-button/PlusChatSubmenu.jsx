@@ -57,10 +57,13 @@ const PlusChatSubmenu = memo(props => {
 
   const handleItemClick = useCallback(item => () => item.onClick?.(), []);
 
-  const handleToggle = useCallback(item => event => {
-    event.stopPropagation();
-    item.onToggle?.();
-  }, []);
+  const handleToggle = useCallback(
+    item => event => {
+      event.stopPropagation();
+      item.onToggle?.();
+    },
+    [],
+  );
 
   const styles = submenuStyles(theme);
 
@@ -127,7 +130,15 @@ const PlusChatSubmenu = memo(props => {
               sx={showToggle ? styles.toggleItem : styles.listItem}
             >
               <Box sx={styles.iconContainer}>{item.icon}</Box>
-              <Box sx={isPublic ? styles.labelContainerWithPublic : showToggle ? styles.toggleLabelContainer : styles.labelContainer}>
+              <Box
+                sx={
+                  isPublic
+                    ? styles.labelContainerWithPublic
+                    : showToggle
+                      ? styles.toggleLabelContainer
+                      : styles.labelContainer
+                }
+              >
                 <TypographyWithConditionalTooltip
                   title={item.label}
                   placement="right"

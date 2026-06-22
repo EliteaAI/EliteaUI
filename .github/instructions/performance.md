@@ -21,6 +21,14 @@ capabilities. Follow these performance best practices to maintain optimal user e
 
 ## React Performance Patterns
 
+### Callback Discipline
+
+- Do not treat `useCallback` as a default optimization.
+- Use `useCallback` only when function identity materially affects behavior or rendering, such as memoized
+  child props, hook dependencies, or expensive re-subscription boundaries.
+- If a callback only forwards an existing prop and adds no local behavior, pass the prop directly instead of
+  wrapping it.
+
 ### Component Memoization Strategy
 
 ```javascript

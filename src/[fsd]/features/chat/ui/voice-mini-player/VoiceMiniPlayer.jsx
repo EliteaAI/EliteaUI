@@ -8,7 +8,8 @@ import { VOICE_FEATURES_ENABLED } from '@/common/constants';
 import { VoiceControlButton } from '../voice-control-button';
 
 const VoiceMiniPlayer = memo(props => {
-  const { onStop, voiceConfig, voices, onVoiceConfigChange, ttsModel, hasModelTTS } = props;
+  const { onStop, voiceConfig, voices, onVoiceConfigChange, ttsModel, hasModelTTS, isPlaying, onPlay } =
+    props;
   const styles = getStyles();
 
   if (!VOICE_FEATURES_ENABLED) return null;
@@ -17,7 +18,9 @@ const VoiceMiniPlayer = memo(props => {
     <Box sx={styles.pill}>
       <MicphoneIcon sx={styles.icon} />
       <VoiceControlButton
+        isPlaying={isPlaying}
         onStop={onStop}
+        onPlay={onPlay}
         voiceConfig={voiceConfig}
         voices={voices}
         onVoiceConfigChange={onVoiceConfigChange}

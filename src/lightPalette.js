@@ -127,6 +127,7 @@ const lightPalette = {
     warning,
     warning40,
     warning8,
+    codeMirrorEditor: almostWhite,
     card: {
       default: white,
       hover: white,
@@ -413,6 +414,7 @@ const lightPalette = {
     groupedTitle: {
       default: light10,
     },
+    error: dangerRed,
     button: {
       primary: blue01,
       secondary: blue01,
@@ -474,6 +476,7 @@ const lightPalette = {
       tips: darkBlue,
       disabled: light20,
       attention: orange,
+      warning,
       is_default: green20,
       success: green,
       active: magentaDefault,

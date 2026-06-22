@@ -731,7 +731,10 @@ import FileUploadIcon from '@/assets/icons/FileUploadIcon.svg?react';
 - [ ] Set a `displayName` for the component.
 - [ ] Destructure `props` inside the component body, not in the function signature.
 - [ ] Use `useMemo` for expensive computations or derived data.
-- [ ] Use `useCallback` for all event handlers passed to child components.
+- [ ] Use `useCallback` only when referential stability is actually needed (for example, memoized child props
+      or hook dependencies).
+- [ ] If a callback only forwards an existing prop and adds no behavior, pass the prop directly instead of
+      wrapping it.
 - [ ] Follow the standard import organization.
 - [ ] Extract inline styles into a style function at the bottom of the file.
 - [ ] Use `/** @type {MuiSx} */` JSDoc annotation for style functions.
@@ -1077,7 +1080,12 @@ Use `data-testid` for test selectors:
 ### Memoization Guidelines
 
 - Use `useMemo` for expensive calculations and derived data.
-- Use `useCallback` for event handlers passed as props to child components.
+- Do not introduce `useCallback` by default; first verify that referential stability is needed for a memoized
+  child prop, a hook dependency, or another behavior-sensitive boundary.
+- If a callback only forwards an existing prop and adds no local behavior, pass the prop directly instead of
+  wrapping it in `useCallback`.
+- Use `useCallback` for event handlers passed as props to child components only when that stability materially
+  matters.
 - Use `React.memo` on components to prevent re-renders when props have not changed.
 - **Always add a `displayName` to memoized components for better debugging.**
 - Apply `memo` at definition time. If using `forwardRef`, wrap with `memo` at export.
