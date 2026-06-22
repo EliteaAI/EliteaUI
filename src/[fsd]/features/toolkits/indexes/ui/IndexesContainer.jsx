@@ -215,7 +215,6 @@ const IndexesContainer = memo(props => {
           shouldRequestInputName
           open={deleteIndexModal}
           onClose={closeDeleteIndexModal}
-          onCancel={closeDeleteIndexModal}
           onConfirm={confirmIndexDeleting}
         />
       )}

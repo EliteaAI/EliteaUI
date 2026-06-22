@@ -505,7 +505,6 @@ const FilePreviewCanvas = memo(props => {
         name={file?.name}
         open={deleteModalOpen}
         onClose={handleCancelDelete}
-        onCancel={handleCancelDelete}
         onConfirm={handleConfirmDelete}
         shouldRequestInputName={false}
       />

@@ -12,12 +12,6 @@ import {
   useReplaceApplicationIconMutation,
   useUploadApplicationIconMutation,
 } from '@/api/applications';
-import {
-  useDeleteDatasourceIconMutation,
-  useGetDatasourceIconsQuery,
-  useReplaceDatasourceIconMutation,
-  useUploadDatasourceIconMutation,
-} from '@/api/datasources';
 import ImportIcon from '@/assets/import-icon.svg?react';
 import { buildErrorMessage, filterProps } from '@/common/utils';
 import useToast from '@/hooks/useToast';
@@ -156,73 +150,50 @@ export default function SelectIconDialog({
     { projectId, page },
     { skip: !projectId || (entityType !== 'application' && entityType !== 'pipeline') },
   );
-  const {
-    data: { rows: datasourceIcons = [], total: totalDatasourceIcons } = { rows: [], total: 0 },
-    isFetching: isFetchingDatasourceIcons,
-    error: fetchDatasourceIconsError,
-    isError: isFetchDatasourceIconsError,
-  } = useGetDatasourceIconsQuery({ projectId, page }, { skip: !projectId || entityType !== 'datasource' });
   const [uploadApplicationIcon] = useUploadApplicationIconMutation();
   const [replaceApplicationIcon] = useReplaceApplicationIconMutation();
   const [deleteApplicationIcon] = useDeleteApplicationIconMutation();
-  const [uploadDatasourceIcon] = useUploadDatasourceIconMutation();
-  const [replaceDatasourceIcon] = useReplaceDatasourceIconMutation();
-  const [deleteDatasourceIcon] = useDeleteDatasourceIconMutation();
 
   const totalMap = useMemo(
     () => ({
       application: totalApplicationIcons,
       pipeline: totalApplicationIcons,
-      datasource: totalDatasourceIcons,
     }),
-    [totalApplicationIcons, totalDatasourceIcons],
+    [totalApplicationIcons],
   );
 
   const uploadFunctionMap = useMemo(
     () => ({
       application: uploadApplicationIcon,
       pipeline: uploadApplicationIcon,
-      datasource: uploadDatasourceIcon,
     }),
-    [uploadApplicationIcon, uploadDatasourceIcon],
+    [uploadApplicationIcon],
   );
 
   const replaceFunctionMap = useMemo(
     () => ({
       application: replaceApplicationIcon,
       pipeline: replaceApplicationIcon,
-      datasource: replaceDatasourceIcon,
     }),
-    [replaceApplicationIcon, replaceDatasourceIcon],
+    [replaceApplicationIcon],
   );
 
   const deleteFunctionMap = useMemo(
     () => ({
       application: deleteApplicationIcon,
       pipeline: deleteApplicationIcon,
-      datasource: deleteDatasourceIcon,
     }),
-    [deleteApplicationIcon, deleteDatasourceIcon],
+    [deleteApplicationIcon],
   );
 
   const iconList = useMemo(
-    () =>
-      entityType === 'application' || entityType === 'pipeline'
-        ? applicationIcons
-        : entityType === 'datasource'
-          ? datasourceIcons
-          : [],
-    [applicationIcons, datasourceIcons, entityType],
+    () => (entityType === 'application' || entityType === 'pipeline' ? applicationIcons : []),
+    [applicationIcons, entityType],
   );
 
   const uploadedIconList = useMemo(
-    () =>
-      entityType === 'application' || entityType === 'pipeline'
-        ? applicationIcons
-        : entityType === 'datasource'
-          ? datasourceIcons
-          : [],
-    [applicationIcons, datasourceIcons, entityType],
+    () => (entityType === 'application' || entityType === 'pipeline' ? applicationIcons : []),
+    [applicationIcons, entityType],
   );
 
   const onImport = useCallback(() => {

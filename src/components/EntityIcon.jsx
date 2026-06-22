@@ -9,7 +9,6 @@ import MCPIcon from '@/assets/mcp-icon.svg?react';
 import SkillIcon from '@/assets/skill-icon.svg?react';
 import { ChatParticipantType, DEFAULT_PARTICIPANT_NAME } from '@/common/constants';
 import ApplicationsIcon from '@/components/Icons/ApplicationsIcon';
-import DatabaseIcon from '@/components/Icons/DatabaseIcon';
 import EmojiIcon from '@/components/Icons/EmojiIcon';
 import FolderIcon from '@/components/Icons/FolderIcon';
 import ModelIcon from '@/components/Icons/ModelIcon';
@@ -54,9 +53,6 @@ export const EntityTypeIcon = memo(props => {
   const sizeString = getIconSizeString(specifiedFontSize, showBigIcon);
 
   switch (type) {
-    case ChatParticipantType.Datasources:
-      return <DatabaseIcon sx={{ color: fill, fontSize: sizeString }} />;
-
     case 'agent':
     case ChatParticipantType.Applications:
       return <ApplicationsIcon sx={{ color: fill, fontSize: sizeNumeric }} />;

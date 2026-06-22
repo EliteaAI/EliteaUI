@@ -10,7 +10,6 @@ import { useDeleteConfirmationDisabled } from '@/[fsd]/shared/lib/hooks';
 import { Modal } from '@/[fsd]/shared/ui';
 import { useDeleteApplicationMutation } from '@/api/applications';
 import { useDeleteConfigurationMutation } from '@/api/configurations';
-import { useDeleteDatasourceMutation } from '@/api/datasources';
 import { useToolkitDeleteMutation } from '@/api/toolkits.js';
 import { isSkillCard } from '@/common/checkCardType';
 import { PERMISSIONS, ViewMode } from '@/common/constants';
@@ -78,7 +77,6 @@ const ActionWithDialog = memo(props => {
         name={name}
         open={open}
         onClose={onClose}
-        onCancel={onClose}
         onConfirm={onClickConfirm}
         shouldRequestInputName
       />
@@ -128,13 +126,9 @@ const DataRowAction = memo(props => {
   }, [viewMode, entity_name, data, myAuthorId, projectId]);
 
   /** Prompt? Actions start*/
-  const [deleteDatasouce] = useDeleteDatasourceMutation();
   const [deleteApplication] = useDeleteApplicationMutation();
   const [deleteToolkit] = useToolkitDeleteMutation();
   const [deleteCredential] = useDeleteConfigurationMutation();
-  const doDeleteDatasource = useCallback(async () => {
-    await deleteDatasouce({ projectId, datasourceId: data?.id });
-  }, [data?.id, deleteDatasouce, projectId]);
   const doDeleteApplication = useCallback(async () => {
     await deleteApplication({ projectId, applicationId: data?.id });
   }, [data?.id, deleteApplication, projectId]);
@@ -155,16 +149,14 @@ const DataRowAction = memo(props => {
   }, [data?.id, data?.originalId, data?.section, deleteCredential, projectId, toastSuccess, toastError]);
 
   const onDelete = useCallback(() => {
-    if (entity_name === 'datasources') {
-      doDeleteDatasource();
-    } else if (entity_name === 'applications' || entity_name === 'pipelines') {
+    if (entity_name === 'applications' || entity_name === 'pipelines') {
       doDeleteApplication();
     } else if (entity_name === 'toolkits') {
       doDeleteToolkit();
     } else if (entity_name === 'credentials') {
       doDeleteCredential();
     }
-  }, [doDeleteApplication, doDeleteToolkit, doDeleteDatasource, doDeleteCredential, entity_name]);
+  }, [doDeleteApplication, doDeleteToolkit, doDeleteCredential, entity_name]);
 
   const deleteMenuItem = useMemo(
     () => ({

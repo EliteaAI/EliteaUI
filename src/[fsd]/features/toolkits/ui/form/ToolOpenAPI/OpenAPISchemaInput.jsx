@@ -192,7 +192,7 @@ const OpenAPISchemaInput = memo(props => {
       />
 
       {isFullScreen && (
-        <Modal.StyledInputModalBase
+        <Modal.ExpandedViewerModal
           open={isFullScreen}
           onClose={handleCloseFullScreen}
           title="Schema"
@@ -211,7 +211,7 @@ const OpenAPISchemaInput = memo(props => {
               />
             </Box>
           </Box>
-        </Modal.StyledInputModalBase>
+        </Modal.ExpandedViewerModal>
       )}
     </Box>
   );

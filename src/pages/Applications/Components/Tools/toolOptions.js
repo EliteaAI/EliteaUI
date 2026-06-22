@@ -1,8 +1,3 @@
-export const datasourceToolOptions = [
-  { label: 'Chat', value: 'chat' },
-  { label: 'Search', value: 'search' },
-];
-
 export const browserToolOptions = [
   { label: 'Wiki', value: 'wiki' },
   { label: 'Single URL Crawler', value: 'single_url_crawler' },

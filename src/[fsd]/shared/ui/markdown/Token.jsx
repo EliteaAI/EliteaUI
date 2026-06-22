@@ -1,15 +1,12 @@
 import { memo, useCallback, useMemo } from 'react';
 
+import DOMPurify from 'dompurify';
 import { MuiMarkdown, getOverrides } from 'mui-markdown';
 
 import { Box } from '@mui/material';
 
-import {
-  MarkdownMapping,
-  extractFirstHTMLTag,
-  isValidHTMLTag,
-  removeHTMLTags,
-} from '@/[fsd]/shared/lib/utils';
+import { MarkdownConstants } from '@/[fsd]/shared/lib/constants';
+import { MarkdownMapping, removeHTMLTags } from '@/[fsd]/shared/lib/utils';
 import CodeBlock from '@/components/CodeBlock';
 import MarkdownTableBlock from '@/components/MarkdownTableBlock';
 import { useTheme } from '@emotion/react';
@@ -219,24 +216,16 @@ const Token = memo(props => {
       }
       return fallback;
     case 'html': {
-      try {
-        const isValidHtml = isValidHTMLTag(extractFirstHTMLTag(markedToken.raw)?.slice(1, -1));
-        return (
-          <MuiMarkdown
-            options={{ disableParsingRawHTML: !isValidHtml, overrides: overrides(markedToken.raw) }}
-          >
-            {markedToken.raw}
-          </MuiMarkdown>
-        );
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error('render html markdown error: ', error);
-        return (
-          <MuiMarkdown options={{ disableParsingRawHTML: true, overrides: overrides(markedToken.raw) }}>
-            {markedToken.raw}
-          </MuiMarkdown>
-        );
-      }
+      // DOMPurify default config already strips all on* event attributes and javascript:/data: URLs.
+      // FORBID_TAGS adds explicit belt-and-suspenders for tags that could inject executable content.
+      const clean = DOMPurify.sanitize(markedToken.raw, {
+        FORBID_TAGS: MarkdownConstants.FORBIDDEN_HTML_TAGS,
+      });
+      return (
+        <MuiMarkdown options={{ disableParsingRawHTML: false, overrides: overrides(clean) }}>
+          {clean}
+        </MuiMarkdown>
+      );
     }
     case 'paragraph': {
       try {

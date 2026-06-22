@@ -13,11 +13,7 @@ import {
 } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { deepCloneObject } from '@/common/utils';
 
-import {
-  setDefaultModelsForImportedAgents,
-  setDefaultModelsForImportedDatasources,
-} from './importWizardModels.helpers';
-import { setDefaultStorageForImportedDatasources } from './importWizardStorage.helpers';
+import { setDefaultModelsForImportedAgents } from './importWizardModels.helpers';
 
 export const parseMdFrontmatter = content => {
   // Remove BOM and trim leading whitespace
@@ -229,25 +225,13 @@ export const mdToApplicationJson = (frontmatter, body) => {
   };
 };
 
-export const prepareImportWizardData = (data, modelOptions, embeddingModelOptions, storageOptions) => {
+export const prepareImportWizardData = (data, modelOptions) => {
   if (!modelOptions) return [];
 
   const clonedData = deepCloneObject(data);
 
   const result = Object.entries(clonedData).reduce((acc, [k, v]) => {
     switch (k) {
-      case 'datasources':
-        acc = [
-          ...acc,
-          ...setDefaultStorageForImportedDatasources(
-            setDefaultModelsForImportedDatasources(v, modelOptions, embeddingModelOptions),
-            storageOptions,
-          ).map(i => {
-            i.entity = k;
-            return i;
-          }),
-        ];
-        break;
       default:
         if (v && Array.isArray(v)) {
           // {key:[]}

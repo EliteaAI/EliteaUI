@@ -57,13 +57,6 @@ function useBrowserPageTitle() {
       return `Credentials - ${projectName}`;
     } else if (location.pathname.startsWith('/artifacts')) {
       return `Artifacts - ${projectName}`;
-    } else if (location.pathname.startsWith('/datasources')) {
-      if (params.datasourceId) {
-        return `Datasource: ${name || params.datasourceId} - ${projectName}`;
-      } else if (params.tab) {
-        return `Datasources: ${params.tab} - ${projectName}`;
-      }
-      return `Datasources - ${projectName}`;
     } else if (location.pathname.startsWith('/user-public')) {
       if (params.toolkitId) {
         return `User public toolkit: ${name || params.toolkitId} - ${projectName}`;
@@ -97,7 +90,6 @@ function useBrowserPageTitle() {
     params.toolkitId,
     params.mcpId,
     params.credential_uid,
-    params.datasourceId,
     projectName,
     name,
   ]);

@@ -2,7 +2,7 @@ import React, { memo, useCallback, useMemo } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { useForkAgentMutation, useForkDatasourceMutation } from '@/[fsd]/entities/import-wizard/api';
+import { useForkAgentMutation } from '@/[fsd]/entities/import-wizard/api';
 import {
   filterSelected,
   getErrorImportUUID,
@@ -24,7 +24,6 @@ const IWModalForkButton = memo(({ selectedProject, onSuccess }) => {
 
   const { values, setFieldValue } = useFormikContext();
 
-  const [forkDatasource, { isLoading: isForkingDatasource }] = useForkDatasourceMutation();
   const [forkAgent, { isLoading: isForkingAgent }] = useForkAgentMutation();
   const [forkToolkit, { isLoading: isForkingToolkit }] = useToolkitForkMutation();
 
@@ -107,7 +106,7 @@ const IWModalForkButton = memo(({ selectedProject, onSuccess }) => {
                 name: foundInAlreadyExists.name,
               });
 
-              if (item.entity !== 'datasources' && item.entity !== 'toolkits') {
+              if (item.entity !== 'toolkits') {
                 importedData[index].versions.map(async (versionItem, versionItemIndex) => {
                   const foundVersion = foundInAlreadyExists.versions.find(
                     version => version.name === versionItem.name,
@@ -150,11 +149,9 @@ const IWModalForkButton = memo(({ selectedProject, onSuccess }) => {
             for (let tIndex = 0; tIndex < tools.length; tIndex++) {
               const {
                 settings: { import_uuid, import_version_uuid },
-                type,
               } = tools[tIndex];
               if (import_uuid) {
                 await updateAgentToolImportUUIDs({
-                  type,
                   index,
                   vIndex,
                   tIndex,
@@ -163,7 +160,6 @@ const IWModalForkButton = memo(({ selectedProject, onSuccess }) => {
                   setFieldValue,
                 });
                 await updateAgentToolImportUUIDs({
-                  type,
                   index,
                   vIndex,
                   tIndex,
@@ -184,7 +180,6 @@ const IWModalForkButton = memo(({ selectedProject, onSuccess }) => {
   const onClickFork = useCallback(async () => {
     const forkFuncMap = {
       toolkits: forkToolkit,
-      datasources: forkDatasource,
       agents: forkAgent,
     };
 
@@ -207,9 +202,9 @@ const IWModalForkButton = memo(({ selectedProject, onSuccess }) => {
 
     if (isValidResponse) {
       const {
-        errors = { agents: [], datasources: [], toolkits: [] },
-        result = { agents: [], datasources: [], toolkits: [] },
-        already_exists = { agents: [], datasources: [], toolkits: [] },
+        errors = { agents: [], toolkits: [] },
+        result = { agents: [], toolkits: [] },
+        already_exists = { agents: [], toolkits: [] },
       } = response.data || response?.error?.data || { errors: {} };
       const errorImportUUID = getErrorImportUUID(errors, selectedData);
       const importedUUIDMap = getImportedUUIDMap(result, selectedData);
@@ -250,7 +245,6 @@ const IWModalForkButton = memo(({ selectedProject, onSuccess }) => {
     }
   }, [
     forkToolkit,
-    forkDatasource,
     forkAgent,
     mainEntityName,
     selectedProjectId,
@@ -267,7 +261,6 @@ const IWModalForkButton = memo(({ selectedProject, onSuccess }) => {
       disabled={
         !selectedProjectId ||
         !selectedData?.length ||
-        isForkingDatasource ||
         isForkingAgent ||
         isForkingToolkit ||
         mainItemImportUUID !== selectedData[0]?.import_uuid
@@ -276,7 +269,7 @@ const IWModalForkButton = memo(({ selectedProject, onSuccess }) => {
       onClick={onClickFork}
     >
       Fork
-      {(isForkingDatasource || isForkingAgent || isForkingToolkit) && <StyledCircleProgress size={18} />}
+      {(isForkingAgent || isForkingToolkit) && <StyledCircleProgress size={18} />}
     </Button.BaseBtn>
   );
 });

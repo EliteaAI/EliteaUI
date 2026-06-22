@@ -1,10 +1,4 @@
-import {
-  TAG_TYPE_APPLICATIONS,
-  TAG_TYPE_DATA_SOURCES,
-  TAG_TYPE_TOTAL_APPLICATIONS,
-  TAG_TYPE_TOTAL_DATASOURCES,
-  eliteaApi,
-} from '@/api';
+import { TAG_TYPE_APPLICATIONS, TAG_TYPE_TOTAL_APPLICATIONS, eliteaApi } from '@/api';
 
 const apiSlicePath = '/elitea_core';
 
@@ -25,22 +19,7 @@ export const importWizardApi = eliteaApi
           headers,
           body,
         }),
-        invalidatesTags: [
-          TAG_TYPE_DATA_SOURCES,
-          TAG_TYPE_TOTAL_DATASOURCES,
-          TAG_TYPE_APPLICATIONS,
-          TAG_TYPE_TOTAL_APPLICATIONS,
-        ],
-      }),
-
-      forkDatasource: build.mutation({
-        query: ({ projectId, body }) => ({
-          url: `datasources/fork/prompt_lib/${projectId}`,
-          method: 'POST',
-          headers,
-          body,
-        }),
-        invalidatesTags: [],
+        invalidatesTags: [TAG_TYPE_APPLICATIONS, TAG_TYPE_TOTAL_APPLICATIONS],
       }),
 
       forkAgent: build.mutation({
@@ -55,4 +34,4 @@ export const importWizardApi = eliteaApi
     }),
   });
 
-export const { useImportWizardMutation, useForkDatasourceMutation, useForkAgentMutation } = importWizardApi;
+export const { useImportWizardMutation, useForkAgentMutation } = importWizardApi;

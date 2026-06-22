@@ -491,9 +491,10 @@ const ToolBaseProperty = memo(props => {
         />
       );
     } else if (type === 'configuration') {
+      const section = v.section || v.configuration_sections?.[0] || 'credentials';
       return (
         <CredentialsSelect
-          isCreationAllowed
+          isCreationAllowed={section !== 'vectorstorage'}
           label={label}
           description={v.description}
           onSelectConfiguration={value => editField(buildEditFieldPath(k), value)}
@@ -504,7 +505,7 @@ const ToolBaseProperty = memo(props => {
           helperText={errorText}
           required={required}
           type={v.configuration_types?.[0] || ''}
-          section={v.section || v.configuration_sections?.[0] || 'credentials'}
+          section={section}
           disabled={disabled}
           presetOptions={presetOptions}
           propKey={k}

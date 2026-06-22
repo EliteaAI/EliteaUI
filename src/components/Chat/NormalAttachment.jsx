@@ -220,7 +220,6 @@ const NormalAttachment = ({
         name={fileName}
         open={openAlert}
         onClose={onClose}
-        onCancel={onClose}
         onConfirm={onConfirm}
         shouldRequestInputName={false}
         extraContent={

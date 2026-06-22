@@ -114,6 +114,9 @@ const darkPalette = {
     eliteaDefault: gray60,
     secondary: gray50,
     tabPanel: gray55,
+    modal: {
+      simple: gray50,
+    },
     chatBkg: gray55,
     dragging: blue10,
     userInputBackground: white5,
@@ -473,6 +476,8 @@ const darkPalette = {
       send: gray60,
       trophy: '#FFD3A0',
       tips: skyBlue,
+      info: skyBlue,
+      successModal: greenHoverBtn,
       disabled: gray20,
       attention: orange,
       warning: warningStatus,

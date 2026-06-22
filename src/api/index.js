@@ -7,7 +7,6 @@ export * from './auth';
 export * from '@/[fsd]/features/chat/api';
 export * from '@/[fsd]/features/chat/conversation-list/api';
 export * from './configurations';
-export * from './datasources';
 export * from '../[fsd]/entities/import-wizard/api/importWizardApi';
 export * from './llm';
 export * from './mcpOAuth';

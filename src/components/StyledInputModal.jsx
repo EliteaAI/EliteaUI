@@ -102,7 +102,7 @@ const StyledInputModal = forwardRef((props, ref) => {
   }));
 
   return (
-    <Modal.StyledInputModalBase
+    <Modal.ExpandedViewerModal
       open={open}
       onClose={onClickClose}
       title={title}
@@ -147,7 +147,7 @@ const StyledInputModal = forwardRef((props, ref) => {
         </Box>
       </Box>
       {afterContent}
-    </Modal.StyledInputModalBase>
+    </Modal.ExpandedViewerModal>
   );
 });
 

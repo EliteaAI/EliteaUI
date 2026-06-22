@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { useForkedFromApplicationDetailsQuery } from '@/api/applications';
-import { useDatasourceDetailsQuery } from '@/api/datasources.js';
 import { ViewMode } from '@/common/constants';
 import UserAvatar from '@/components/UserAvatar';
 import { useNavigateToAuthorPublicPage } from '@/hooks/useCardNavigate.js';
@@ -19,10 +18,6 @@ export function ForkedVersionAuthorAvatar({
     { projectId: forkedProjectId, applicationId: forkedEntityId },
     { skip: !forkedProjectId || !forkedEntityId || forkedEntityType !== 'agent' },
   );
-  const dataSourceData = useDatasourceDetailsQuery(
-    { projectId: forkedProjectId, datasourceId: forkedEntityId },
-    { skip: forkedEntityType !== 'datasource' },
-  );
 
   const updateEntityDetails = useCallback(
     (entityType, entityData) => {
@@ -34,9 +29,8 @@ export function ForkedVersionAuthorAvatar({
   );
 
   useEffect(() => {
-    updateEntityDetails('datasource', dataSourceData);
     updateEntityDetails('agent', applicationDetails);
-  }, [dataSourceData, forkedEntityType, updateEntityDetails, applicationDetails]);
+  }, [forkedEntityType, updateEntityDetails, applicationDetails]);
 
   const author = entityDetails?.version_details?.author || {};
   const { id: authorId = '', name: authorName = '', avatar: authorAvatar = '' } = author;

@@ -973,7 +973,7 @@ export const collectIndexPaths = dataObject => {
   const indexPaths = [];
 
   importItems.forEach((item, importItemsIndex) => {
-    if (item.entity === 'datasources' || item.entity === 'toolkits' || !item.versions) {
+    if (item.entity === 'toolkits' || !item.versions) {
       indexPaths.push(`${importItemsIndex}`);
     } else {
       item.versions.forEach((_version, versionIndex) => {
@@ -996,7 +996,7 @@ export { isAttachmentImage as isImageFile } from '@/utils/attachmentImageUtils';
 
 export const buildForkedEntityHref = (entity, meta) => {
   if (
-    !['prompts', 'datasources', 'agents', 'pipelines'].includes(entity) ||
+    !['prompts', 'agents', 'pipelines'].includes(entity) ||
     !meta?.parent_project_id ||
     !meta?.parent_entity_id
   ) {

@@ -3,7 +3,6 @@ import React, { memo, useMemo } from 'react';
 import { Formik } from 'formik';
 
 import { prepareImportWizardData } from '@/[fsd]/entities/import-wizard/lib/helpers';
-import { useStorages } from '@/[fsd]/entities/import-wizard/lib/hooks';
 import { useListModelsQuery } from '@/api/configurations.js';
 import { useSelectedProject } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast.jsx';
@@ -25,14 +24,9 @@ const IWModalFormikWrapper = memo(props => {
     { skip: !selectedGlobalProject?.id },
   );
 
-  const { storageOptions } = useStorages({
-    specifiedProjectId: selectedGlobalProject.id,
-    skip: !data['datasources']?.length,
-  });
-
   const preparedData = useMemo(() => {
     try {
-      return prepareImportWizardData(data, modelsData, embeddingModelOptions, storageOptions);
+      return prepareImportWizardData(data, modelsData);
     } catch (e) {
       // eslint-disable-next-line no-console
       console.error('Error preparing data for import wizard:', e);
@@ -46,7 +40,7 @@ const IWModalFormikWrapper = memo(props => {
 
       return null;
     }
-  }, [data, embeddingModelOptions, modelsData, onClose, storageOptions, toastError]);
+  }, [data, modelsData, onClose, toastError]);
 
   return (
     <>
@@ -62,7 +56,6 @@ const IWModalFormikWrapper = memo(props => {
             activeItemId: undefined,
             modelOptions: modelsData,
             embeddingModelOptions,
-            storageOptions,
             version: data?._metadata?.version,
           }}
         >

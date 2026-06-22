@@ -1,7 +1,6 @@
 import { eliteaApi } from './eliteaApi.js';
 
 const apiSlicePath = '/elitea_core';
-const apiSlicePathForDatasource = '/datasources';
 const TAG_TYPE_AUTHOR = 'Author';
 const TAG_TYPE_AUTHOR_DETAIL = 'AuthorDetail';
 
@@ -33,17 +32,6 @@ export const trendingAuthor = eliteaApi
           return result?.map(i => ({ type: TAG_TYPE_AUTHOR, id: i.id }));
         },
       }),
-      datasourceTrendingAuthorsList: build.query({
-        query: projectId => ({
-          url: apiSlicePathForDatasource + '/trending_authors/prompt_lib/' + projectId,
-        }),
-        providesTags: (result, error) => {
-          if (error) {
-            return [];
-          }
-          return result?.map(i => ({ type: TAG_TYPE_AUTHOR, id: i.id }));
-        },
-      }),
       trendingAuthorsDetails: build.query({
         query: authorId => ({
           url: apiSlicePath + '/author/prompt_lib/' + authorId,
@@ -63,5 +51,4 @@ export const {
   useTrendingAuthorsDetailsQuery,
   useLazyTrendingAuthorsDetailsQuery,
   useApplicationTrendingAuthorsListQuery,
-  useDatasourceTrendingAuthorsListQuery,
 } = trendingAuthor;

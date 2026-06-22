@@ -55,8 +55,8 @@ const useToolMenuItems = ({ onAddTool, isMCP, isApplication } = {}) => {
 
         return (
           !value?.metadata?.hidden &&
-          !['agent', 'datasource', 'application'].includes(keyLower) &&
-          !['agent', 'datasource', 'application'].includes(labelLower) &&
+          !['agent', 'application'].includes(keyLower) &&
+          !['agent', 'application'].includes(labelLower) &&
           !isInternalTool &&
           shouldInclude
         );

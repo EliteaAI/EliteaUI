@@ -26,7 +26,7 @@ export const eliteaSingleSelectColorStyle = theme => ({
         color: theme.palette.border.hover,
       },
       withoutBorder: {
-        color: theme.palette.border.flowNode,
+        color: theme.palette.border.hover,
       },
     },
     active: {
