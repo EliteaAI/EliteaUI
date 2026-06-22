@@ -9,10 +9,10 @@ import SkillTabBar from '@/[fsd]/entities/skill-tab-bar/ui/SkillTabBar';
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import { useSkillDetailsQuery } from '@/[fsd]/features/skill/api';
 import { SkillValidateSchema } from '@/[fsd]/features/skill/lib/validation';
+import SkillControls from '@/[fsd]/features/skill/ui/SkillControls';
 import SkillInformation from '@/[fsd]/features/skill/ui/SkillInformation';
-import SkillInstructionsPreview from '@/[fsd]/features/skill/ui/SkillInstructionsPreview';
-import SkillRowAction from '@/[fsd]/features/skill/ui/SkillRowAction';
 import CreateSkillForm from '@/[fsd]/features/skill/ui/skill-details/form/CreateSkillForm';
+import SkillTestPanel from '@/[fsd]/features/skill/ui/skill-test-panel/SkillTestPanel';
 import { SkillsTabs, ViewMode } from '@/common/constants';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils.jsx';
 import DirtyDetector from '@/components/Formik/DirtyDetector';
@@ -34,7 +34,9 @@ const buildInitialValues = data => ({
   name: data?.name || '',
   description: data?.description || '',
   versions: data?.versions || [],
+  meta: data?.meta || {},
   version_details: {
+    id: data?.version_details?.id ?? null,
     name: data?.version_details?.name || data?.version?.name || LATEST_VERSION_NAME,
     tags: data?.version_details?.tags || data?.tags || [],
     instructions: data?.version_details?.instructions ?? data?.instructions ?? '',
@@ -49,6 +51,8 @@ const EditSkill = memo(() => {
   const { toastError } = useToast();
 
   const [dirty, setDirty] = useState(false);
+  const [isFullScreenChat, setIsFullScreenChat] = useState(false);
+  const lgGridColumns = useMemo(() => (isFullScreenChat ? 12 : 6), [isFullScreenChat]);
 
   const { data, isFetching, isError, error } = useSkillDetailsQuery(
     { projectId, skillId, versionName: version },
@@ -84,10 +88,10 @@ const EditSkill = memo(() => {
   const handleChangeVersion = useCallback(
     nextVersionName => {
       const base = `${RouteDefinitions.Skills}/${tab}/${skillId}`;
-      const pathname =
-        nextVersionName && nextVersionName !== LATEST_VERSION_NAME
-          ? `${base}/${encodeURIComponent(nextVersionName)}`
-          : base;
+      // Always carry the version name (including `base`). A version-less URL
+      // resolves to the skill's default version on the backend, so when a
+      // non-base version is the default, omitting it makes `base` unreachable.
+      const pathname = nextVersionName ? `${base}/${encodeURIComponent(nextVersionName)}` : base;
       navigate(pathname);
     },
     [navigate, skillId, tab],
@@ -120,18 +124,20 @@ const EditSkill = memo(() => {
               <SkillTabBar
                 versions={data?.versions || []}
                 currentVersionName={currentVersionName}
+                defaultVersionId={data?.meta?.default_version_id}
                 onChangeVersion={handleChangeVersion}
                 onSuccess={handleSuccess}
               />
             ),
-            // Overflow action menu: Export (selected version) / Delete + the
-            // visible-but-disabled "Publish" item (work item [10]).
+            // Overflow action menu mirroring the agent's ApplicationControls:
+            // a VERSION section (Set as default / Export / Share / Fork / Publish / Delete)
+            // and a SKILL section (Share / Pin / Delete).
             rightToolbar: isFetching ? null : (
-              <SkillRowAction
+              <SkillControls
                 skillId={skillId}
                 skillName={data?.name}
-                versionName={currentVersionName}
-                navigateToListAfterDelete
+                currentVersionName={currentVersionName}
+                onChangeVersion={handleChangeVersion}
               />
             ),
             content: isFetching ? (
@@ -147,7 +153,8 @@ const EditSkill = memo(() => {
                   container
                 >
                   <LeftGridItem
-                    size={{ xs: 12, lg: 6 }}
+                    size={{ xs: 12, lg: lgGridColumns }}
+                    hidden={isFullScreenChat}
                     sx={styles.leftGridItem}
                   >
                     <ContentContainer height="100%">
@@ -160,16 +167,19 @@ const EditSkill = memo(() => {
                       <Box sx={styles.informationWrapper}>
                         <SkillInformation
                           id={data?.id}
-                          versionName={currentVersionName}
+                          versionId={data?.version_details?.id}
                         />
                       </Box>
                     </ContentContainer>
                   </LeftGridItem>
                   <RightGridItem
-                    size={{ xs: 12, lg: 6 }}
+                    size={{ xs: 12, lg: lgGridColumns }}
                     sx={styles.rightGridItem}
                   >
-                    <SkillInstructionsPreview />
+                    <SkillTestPanel
+                      isFullScreenChat={isFullScreenChat}
+                      setIsFullScreenChat={setIsFullScreenChat}
+                    />
                   </RightGridItem>
                 </StyledGridContainer>
               </Form>

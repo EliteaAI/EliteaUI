@@ -34,9 +34,10 @@ const getValidToolNames = item => {
  *
  * @param {string} text
  * @param {Array}  mentionableItems - [{name, isToolkit, ...}]
+ * @param {string} triggerChar - leading mention char ("/" for tools, "~" for skills). Default "/".
  * @returns {Array<{start: number, end: number}>} sorted ascending
  */
-export const parseMentionRanges = (text, mentionableItems) => {
+export const parseMentionRanges = (text, mentionableItems, triggerChar = '/') => {
   if (!text || !mentionableItems?.length) return [];
 
   const ranges = [];
@@ -44,7 +45,7 @@ export const parseMentionRanges = (text, mentionableItems) => {
   const sortedItems = [...mentionableItems].sort((a, b) => b.name.length - a.name.length);
 
   for (const item of sortedItems) {
-    const baseToken = '/' + item.name;
+    const baseToken = triggerChar + item.name;
     let pos = text.indexOf(baseToken);
     while (pos !== -1) {
       const prevChar = pos > 0 ? text[pos - 1] : '';
@@ -88,16 +89,17 @@ export const parseMentionRanges = (text, mentionableItems) => {
  *
  * @param {Array}  mentionableItems - [{name, isToolkit, ...}]
  * @param {string} primaryColor     - CSS color for highlighted text
+ * @param {string} triggerChar      - leading mention char ("/" or "~"). Default "/".
  * @returns {Array} CodeMirror extensions (empty array if nothing to highlight)
  */
-export const createMentionCmExtension = (mentionableItems, primaryColor) => {
+export const createMentionCmExtension = (mentionableItems, primaryColor, triggerChar = '/') => {
   if (!mentionableItems?.length) return [];
 
   const highlightMark = Decoration.mark({ class: 'cm-mention-highlight' });
 
   const computeDecorations = state => {
     const text = state.doc.toString();
-    const decorationRanges = parseMentionRanges(text, mentionableItems);
+    const decorationRanges = parseMentionRanges(text, mentionableItems, triggerChar);
     const builder = new RangeSetBuilder();
     for (const { start, end } of decorationRanges) {
       builder.add(start, end, highlightMark);

@@ -8,6 +8,10 @@ export {
   useSkillCreateVersionMutation,
   useSkillUpdateMutation,
   useDeleteSkillMutation,
+  useSetSkillDefaultVersionMutation,
   useLazySkillExportMdQuery,
   useSkillImportMutation,
+  useUpdateSkillRelationMutation,
+  useGetApplicationSkillsQuery,
+  useLazyGetApplicationSkillsQuery,
 } from './skillsApi';

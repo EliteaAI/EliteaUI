@@ -52,6 +52,11 @@ export const usePageDetails = () => {
   const isCreateAppTypePage = useMatch({ path: RouteDefinitions.CreateAppType });
   const isAppsWithTab = useMatch({ path: RouteDefinitions.AppsWithTab });
 
+  const isSkillDetailPage = useMatch({ path: RouteDefinitions.SkillsDetail });
+  const isSkillVersionDetailPage = useMatch({ path: `${RouteDefinitions.SkillsDetail}/:versionId` });
+
+  const isSkillPage = isSkillDetailPage || isSkillVersionDetailPage;
+
   const isChatPage = useMatch({ path: RouteDefinitions.Chat });
   const isChatConversationPage = useMatch({ path: RouteDefinitions.ChatConversation });
 
@@ -86,7 +91,7 @@ export const usePageDetails = () => {
     isCredentialDetailPage || isCreateCredentialPage || isCreateCredentialTypePage || isCredentialsWithTab;
 
   const projectId = useSelectedProjectId();
-  const { agentId, toolkitId, credential_uid, mcpId, appId } = useParams();
+  const { agentId, toolkitId, credential_uid, mcpId, appId, skillId, tab } = useParams();
 
   let pageType = null;
   // let details = {projectPath: ''}; //@todo: consider to add this || or add details for toolkits
@@ -174,6 +179,21 @@ export const usePageDetails = () => {
             projectId,
             tab: DEFAULT_ENTITY_TAB,
             credential_uid,
+          })
+        : replacePathParams(PROJECT_ID_URL_PREFIX + pathname, {
+            projectId,
+          }),
+      search,
+    };
+  } else if (isSkillPage) {
+    pageType = 'SkillDetails';
+    matchParams = (isSkillDetailPage || isSkillVersionDetailPage)?.params || {};
+    details = {
+      projectPath: skillId
+        ? replacePathParams(PROJECT_ID_URL_PREFIX + RouteDefinitions.SkillsDetail, {
+            projectId,
+            tab,
+            skillId,
           })
         : replacePathParams(PROJECT_ID_URL_PREFIX + pathname, {
             projectId,

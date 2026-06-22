@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
@@ -6,10 +6,12 @@ import { Box, Typography } from '@mui/material';
 
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { useFieldFocus } from '@/[fsd]/shared/lib/hooks';
-import { Input } from '@/[fsd]/shared/ui';
+import { Field, Input, Markdown } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
-import { FileReaderEnhancer } from '@/[fsd]/shared/ui/input';
+import TabGroupButton from '@/[fsd]/shared/ui/tab-group-button/TabGroupButton';
 import { useTagListQuery } from '@/api/tags.js';
+import CodeIcon from '@/assets/code-icon.svg?react';
+import OpenEyeIcon from '@/assets/open-eye-icon.svg?react';
 import {
   MAX_DESCRIPTION_LENGTH,
   MAX_INSTRUCTIONS_LENGTH,
@@ -18,9 +20,8 @@ import {
 } from '@/common/constants';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import TagEditor from '@/pages/Common/Components/TagEditor';
+import { markdown } from '@codemirror/lang-markdown';
 import { useTheme } from '@emotion/react';
-
-const noop = () => {};
 
 const CreateSkillForm = memo(props => {
   const { accordionStyle, sx, disabled = false, instructionsKey } = props;
@@ -29,8 +30,27 @@ const CreateSkillForm = memo(props => {
   const projectId = useSelectedProjectId();
   const { data: tagList = {} } = useTagListQuery({ projectId }, { skip: !projectId });
   const [name, setName] = useState(formik.values?.name || '');
+  const [instructionsViewMode, setInstructionsViewMode] = useState('edit');
   const styles = skillCreateFormStyles();
   const { toggleFieldFocus, isFocused } = useFieldFocus();
+
+  const modeButtons = useMemo(
+    () => [
+      {
+        value: 'edit',
+        icon: t => <CodeIcon fill={t.palette.icon.fill.secondary} />,
+        tooltip: 'Edit mode',
+      },
+      {
+        value: 'preview',
+        icon: t => <OpenEyeIcon fill={t.palette.icon.fill.secondary} />,
+        tooltip: 'Preview mode',
+      },
+    ],
+    [],
+  );
+
+  const markdownExtensions = useMemo(() => [markdown()], []);
 
   const formikName = formik.values?.name;
   useEffect(() => {
@@ -173,34 +193,58 @@ const CreateSkillForm = memo(props => {
         items={[
           {
             title: 'Instructions',
-            content: (
-              <Box sx={styles.instructionsWrapper}>
-                <FileReaderEnhancer
-                  key={instructionsKey}
-                  showexpandicon="true"
-                  id="skill-instructions"
-                  placeholder="Markdown instructions for the skill"
-                  defaultValue={instructions}
-                  onChange={onChangeInstructions}
-                  updateVariableList={noop}
-                  onFocus={() => toggleFieldFocus(PROMPT_PAYLOAD_KEY.instructions || 'instructions')}
-                  onBlur={() => toggleFieldFocus(null)}
-                  multiline
-                  maxRows={20}
-                  disabled={disabled}
-                  fieldName="Instructions"
-                  inputProps={{ maxLength: MAX_INSTRUCTIONS_LENGTH }}
+            summaryAction: (
+              <Box
+                component="span"
+                sx={styles.summaryActions}
+                onClick={e => e.stopPropagation()}
+              >
+                <TabGroupButton
+                  value={instructionsViewMode}
+                  onChange={(_e, m) => m && setInstructionsViewMode(m)}
+                  size="small"
+                  arrayBtn={modeButtons}
                 />
-                {isFocused(PROMPT_PAYLOAD_KEY.instructions || 'instructions') && instructions.length > 0 && (
-                  <Typography
-                    variant="bodySmall"
-                    sx={styles.descriptionCharactersLabel}
-                  >
-                    {`${MAX_INSTRUCTIONS_LENGTH - instructions.length} characters left`}
-                  </Typography>
-                )}
               </Box>
             ),
+            content:
+              instructionsViewMode === 'edit' ? (
+                <Box sx={styles.instructionsWrapper}>
+                  <Box sx={styles.editorWrapper}>
+                    <Field.CodeMirrorEditor
+                      key={instructionsKey}
+                      value={instructions}
+                      notifyChange={onChangeInstructions}
+                      extensions={markdownExtensions}
+                      height="100%"
+                      minHeight="0"
+                      maxLength={MAX_INSTRUCTIONS_LENGTH}
+                      readOnly={disabled}
+                    />
+                  </Box>
+                  <Box sx={styles.charCounterWrapper}>
+                    <Typography
+                      variant="bodySmall"
+                      sx={styles.charCounter}
+                    >
+                      {`${MAX_INSTRUCTIONS_LENGTH - instructions.length} characters left`}
+                    </Typography>
+                  </Box>
+                </Box>
+              ) : (
+                <Box sx={styles.instructionsPreview}>
+                  {instructions ? (
+                    <Markdown>{instructions}</Markdown>
+                  ) : (
+                    <Typography
+                      variant="bodyMedium"
+                      sx={styles.emptyPreview}
+                    >
+                      No instructions yet.
+                    </Typography>
+                  )}
+                </Box>
+              ),
           },
         ]}
       />
@@ -244,12 +288,57 @@ const skillCreateFormStyles = () => ({
     position: 'relative',
     top: '0.5rem',
   },
+  summaryActions: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    // TabGroupButton hardcodes zIndex: 2000, which otherwise paints the
+    // edit/preview toggle above modals (zIndex 1300). Scope it with a local
+    // stacking context so it can't escape over dialogs.
+    isolation: 'isolate',
+  },
   instructionsWrapper: {
     display: 'flex',
     flexDirection: 'column',
     gap: '0.5rem',
     paddingBottom: '1rem',
   },
+  // Code-style editor with line numbers (CodeMirror), matching Figma. Reuses the
+  // same Field.CodeMirrorEditor as the Project Context editor, so there is no MUI
+  // hover toolbar (copy/expand/fullscreen) overlapping the content.
+  editorWrapper: ({ palette }) => ({
+    display: 'flex',
+    height: '24rem',
+    borderRadius: '0.375rem',
+    border: `0.0625rem solid ${palette.border.table}`,
+    overflow: 'hidden',
+    '&:focus-within': { borderColor: palette.primary.main },
+    '& .cm-theme': { width: '100%' },
+    '& .cm-gutters': {
+      backgroundColor: 'transparent',
+      borderRight: `0.0625rem solid ${palette.border.table}`,
+    },
+  }),
+  charCounterWrapper: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+  },
+  charCounter: ({ palette }) => ({
+    color: palette.text.primary,
+  }),
+  instructionsPreview: ({ palette }) => ({
+    minHeight: '12rem',
+    marginBottom: '1rem',
+    padding: '0.75rem',
+    borderRadius: '0.375rem',
+    border: `0.0625rem solid ${palette.border.table}`,
+    backgroundColor: palette.background.userInputBackground,
+    overflow: 'auto',
+  }),
+  emptyPreview: ({ palette }) => ({
+    color: palette.text.metrics,
+    fontStyle: 'italic',
+  }),
 });
 
 CreateSkillForm.displayName = 'CreateSkillForm';

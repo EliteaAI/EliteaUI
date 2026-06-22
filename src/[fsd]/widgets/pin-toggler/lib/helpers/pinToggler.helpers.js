@@ -13,6 +13,10 @@ const CONTENT_TYPE_MAPPING = [
     match: ['credential', 'configuration'],
     type: PinEntityType.Configuration,
   },
+  {
+    match: ['skill'],
+    type: PinEntityType.Skill,
+  },
 ];
 
 export const mapContentTypeToEntityType = contentType => {

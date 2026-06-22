@@ -6,6 +6,9 @@ import { convertToJson, removeDuplicateObjects } from '@/common/utils.jsx';
 const TAG_TYPE_SKILLS = 'TAG_TYPE_SKILLS';
 const TAG_TYPE_SKILL_DETAILS = 'TAG_TYPE_SKILL_DETAILS';
 const TAG_TYPE_TOTAL_SKILLS = 'TAG_TYPE_TOTAL_SKILLS';
+const TAG_TYPE_APPLICATION_SKILLS = 'TAG_TYPE_APPLICATION_SKILLS';
+
+const SKILL_ENTITY_TYPE_AGENT = 'agent';
 
 const apiSlicePath = '/elitea_core';
 const mode = 'prompt_lib';
@@ -41,7 +44,12 @@ const patchSkillListCache = (state, dispatch, endpointName, skillId) => {
 
 const skillsApi = eliteaApi
   .enhanceEndpoints({
-    addTagTypes: [TAG_TYPE_SKILLS, TAG_TYPE_SKILL_DETAILS, TAG_TYPE_TOTAL_SKILLS],
+    addTagTypes: [
+      TAG_TYPE_SKILLS,
+      TAG_TYPE_SKILL_DETAILS,
+      TAG_TYPE_TOTAL_SKILLS,
+      TAG_TYPE_APPLICATION_SKILLS,
+    ],
   })
   .injectEndpoints({
     endpoints: build => ({
@@ -223,6 +231,23 @@ const skillsApi = eliteaApi
           }
         },
       }),
+      // Set the default version of a skill -> returns the updated skill details.
+      setSkillDefaultVersion: build.mutation({
+        query: ({ projectId, skillId, versionId }) => ({
+          url: `${apiSlicePath}/skill_default_version/${mode}/${projectId}/${skillId}`,
+          method: 'PATCH',
+          headers,
+          body: { version_id: versionId },
+        }),
+        invalidatesTags: (result, error, arg) => {
+          if (error) return [];
+          return [
+            TAG_TYPE_SKILLS,
+            TAG_TYPE_SKILL_DETAILS,
+            { type: TAG_TYPE_SKILL_DETAILS, id: arg?.skillId },
+          ];
+        },
+      }),
       // Export the selected version as a .md file (YAML frontmatter + markdown body).
       skillExportMd: build.query({
         query: ({ projectId, skillId, versionName }) => {
@@ -276,6 +301,39 @@ const skillsApi = eliteaApi
           return [TAG_TYPE_SKILLS, TAG_TYPE_TOTAL_SKILLS];
         },
       }),
+      // Attach/detach a skill to an agent (application) version via has_relation toggle.
+      // has_relation:true -> attach (skill_version_id REQUIRED); false -> detach.
+      updateSkillRelation: build.mutation({
+        query: ({
+          projectId,
+          skillId,
+          entity_version_id,
+          skill_version_id,
+          has_relation,
+          entity_type = SKILL_ENTITY_TYPE_AGENT,
+        }) => ({
+          url: `${apiSlicePath}/skill/${mode}/${projectId}/${skillId}`,
+          method: 'PATCH',
+          headers,
+          body: {
+            has_relation,
+            entity_version_id,
+            skill_version_id,
+            entity_type,
+          },
+        }),
+        invalidatesTags: (result, error, arg) => {
+          if (error) return [];
+          return [TAG_TYPE_SKILLS, { type: TAG_TYPE_APPLICATION_SKILLS, id: arg?.entity_version_id }];
+        },
+      }),
+      // List the skills attached to an agent (application) version.
+      getApplicationSkills: build.query({
+        query: ({ projectId, appVersionId }) => ({
+          url: `${apiSlicePath}/application_skills/${mode}/${projectId}/${appVersionId}`,
+        }),
+        providesTags: (result, error, arg) => [{ type: TAG_TYPE_APPLICATION_SKILLS, id: arg?.appVersionId }],
+      }),
     }),
   });
 
@@ -289,6 +347,10 @@ export const {
   useSkillCreateVersionMutation,
   useSkillUpdateMutation,
   useDeleteSkillMutation,
+  useSetSkillDefaultVersionMutation,
   useLazySkillExportMdQuery,
   useSkillImportMutation,
+  useUpdateSkillRelationMutation,
+  useGetApplicationSkillsQuery,
+  useLazyGetApplicationSkillsQuery,
 } = skillsApi;

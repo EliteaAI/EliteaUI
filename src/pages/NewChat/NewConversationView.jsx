@@ -6,11 +6,17 @@ import { v4 as uuidv4 } from 'uuid';
 import { Box, Typography } from '@mui/material';
 
 import { NewConversationHelpers } from '@/[fsd]/features/chat/lib/helpers';
-import { useNewStartConversationInputKeyDownHandler, useSlashMention } from '@/[fsd]/features/chat/lib/hooks';
+import {
+  useChatSkillMention,
+  useNewStartConversationInputKeyDownHandler,
+  useSlashMention,
+} from '@/[fsd]/features/chat/lib/hooks';
 import { getChatParticipantUniqueId } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { useFetchParticipantDetails } from '@/[fsd]/features/chat/participants/lib/hooks';
 import { SlashSuggestionList } from '@/[fsd]/features/chat/ui';
 import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
+import { MentionSkillList } from '@/[fsd]/features/skill/ui';
+import { MentionConstants } from '@/[fsd]/shared/lib/constants';
 import { DEFAULT_STEPS_LIMIT } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
 import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
 import { cleanLLMSettings, generateLLMSettings } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
@@ -192,6 +198,25 @@ const NewConversationView = forwardRef(
       slashOnConfirmActiveRef,
     } = useSlashMention({ chatInput, activeConversation });
 
+    const {
+      skillPhase,
+      filteredItems: skillFilteredItems,
+      committedMentions: skillCommittedMentions,
+      highlightedIndex: skillHighlightedIndex,
+      onSkillInputChange,
+      onSkillKeyDown,
+      onSelectSkill,
+      resetSkill,
+      skillHighlightRanges,
+    } = useChatSkillMention({
+      chatInput,
+      activeParticipant: selectedParticipant,
+      activeParticipantDetails: selectedParticipantDetails,
+      projectId: selectedProjectId,
+    });
+
+    const isSkillPhaseActive = skillPhase !== MentionConstants.MentionPhase.Idle;
+
     const onPredictStream = useCallback(
       (question, specifiedParticipant, conversation) => {
         // Guard: ensure conversation and uuid exist before emitting
@@ -337,9 +362,26 @@ const NewConversationView = forwardRef(
     const combinedKeyDown = useCallback(
       event => {
         onKeyDown(event);
+        if (isSkillPhaseActive) {
+          onSkillKeyDown(event);
+          return;
+        }
         slashOnKeyDown(event);
       },
-      [onKeyDown, slashOnKeyDown],
+      [onKeyDown, slashOnKeyDown, isSkillPhaseActive, onSkillKeyDown],
+    );
+
+    const combinedInputChange = useCallback(
+      value => {
+        onSlashInputChange(value);
+        onSkillInputChange(value);
+      },
+      [onSlashInputChange, onSkillInputChange],
+    );
+
+    const combinedHighlightRanges = useMemo(
+      () => [...slashHighlightRanges, ...skillHighlightRanges].sort((a, b) => a.start - b.start),
+      [slashHighlightRanges, skillHighlightRanges],
     );
 
     const onClearSelectedParticipant = useCallback(() => {
@@ -852,6 +894,16 @@ const NewConversationView = forwardRef(
               onConfirmActiveRef={slashOnConfirmActiveRef}
             />
           )}
+          {isSkillPhaseActive && (
+            <MentionSkillList
+              phase={skillPhase}
+              filteredItems={skillFilteredItems}
+              committedMentions={skillCommittedMentions}
+              highlightedIndex={skillHighlightedIndex}
+              onSelectItem={onSelectSkill}
+              onClose={resetSkill}
+            />
+          )}
           <Box sx={styles.inputContainer}>
             <NewChatInput
               fromTheChat
@@ -867,7 +919,7 @@ const NewConversationView = forwardRef(
                 toolkitValidationInfoList?.length
               }
               onNormalKeyDown={combinedKeyDown}
-              onInputChange={onSlashInputChange}
+              onInputChange={combinedInputChange}
               shouldHandleEnter
               tooltipOfSendButton={isConversationNameInvalid ? ConversationNameWarningMessage : ''}
               onShowParticipantsList={onShowParticipantsList}
@@ -898,7 +950,7 @@ const NewConversationView = forwardRef(
               disableAttachments={disableAttachments}
               onInternalToolsConfigChange={onInternalToolsConfigChange}
               internal_tools={internalTools}
-              slashHighlights={slashHighlightRanges}
+              slashHighlights={combinedHighlightRanges}
               onSelectParticipant={onSelectParticipant}
               onCreateAgent={onCreateAgent}
               onCreatePipeline={onCreatePipeline}

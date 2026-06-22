@@ -56,6 +56,7 @@ export const useImport = () => {
 
         const applications = [];
         const toolkits = [];
+        const skills = [];
         const parsePromises = [];
 
         zip.forEach((relativePath, zipEntry) => {
@@ -76,6 +77,7 @@ export const useImport = () => {
           if (!parsed) continue;
 
           if (parsed.toolkits) toolkits.push(...parsed.toolkits);
+          if (parsed.skills) skills.push(...parsed.skills);
           if (parsed.applications) {
             for (const app of parsed.applications) {
               const appName = app.name;
@@ -127,11 +129,20 @@ export const useImport = () => {
           }
         }
 
+        // Dedupe skill entities by import_uuid (per-version refs point to these uuids).
+        const skillsByUuid = new Map();
+        for (const skill of skills) {
+          if (skill.import_uuid && !skillsByUuid.has(skill.import_uuid))
+            skillsByUuid.set(skill.import_uuid, skill);
+        }
+        const dedupedSkills = [...skillsByUuid.values()];
+
         // Create combined import data
         const requestBody = {
           _metadata: { version: 2, format: 'zip' },
           applications,
           toolkits,
+          ...(dedupedSkills.length ? { skills: dedupedSkills } : {}),
         };
 
         dispatch(

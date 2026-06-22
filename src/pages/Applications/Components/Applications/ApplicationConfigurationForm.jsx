@@ -4,6 +4,7 @@ import { Box } from '@mui/material';
 
 import { AgentInput, ApplicationTools } from '@/[fsd]/features/agent/ui/agent-details/configurations';
 import ApplicationAdvanceSettings from '@/[fsd]/features/agent/ui/agent-details/configurations/ApplicationAdvanceSettings';
+import { ApplicationSkills } from '@/[fsd]/features/skill/ui';
 import { ViewMode } from '@/common/constants.js';
 import ApplicationVariables from '@/components/ApplicationVariables.jsx';
 import ConversationStarters from '@/components/ConversationStarters';
@@ -42,6 +43,11 @@ const ApplicationConfigurationForm = memo(props => {
         applicationId={applicationId}
         disabled={isDisabled}
         onAttachmentToolChange={onAttachmentToolChange}
+        entityProjectId={entityProjectId}
+      />
+      <ApplicationSkills
+        style={styles.section}
+        disabled={isDisabled}
         entityProjectId={entityProjectId}
       />
       <ConversationStarters
