@@ -10,7 +10,7 @@ export const useCredentialSearch = ({ credentialsMenuItems } = {}) => {
   const location = useLocation();
   const { credentialType } = useParams();
   const [searchParams] = useSearchParams();
-  const isFromSettings = useMatch({ path: RouteDefinitions.CreateIntegration });
+  const isFromSettings = useMatch({ path: RouteDefinitions.CreateConfiguration, end: false });
 
   // Helper function to get category for credentials
   const getCategoryForCredential = useCallback(credential => {
@@ -27,7 +27,7 @@ export const useCredentialSearch = ({ credentialsMenuItems } = {}) => {
         const routeStack = locationState.routeStack || [];
         const destRoute = !isFromSettings
           ? RouteDefinitions.CreateCredentialTypeFromMain
-          : RouteDefinitions.CreateIntegrationWithType;
+          : RouteDefinitions.CreateConfigurationWithType;
         const newPagePath = destRoute.replace(':credentialType', credential.key);
         // Create new route stack entry for credentials page
         const newRouteStack = [...routeStack];

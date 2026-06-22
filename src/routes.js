@@ -57,10 +57,10 @@ const RouteDefinitions = {
 
   Settings: '/settings',
   SettingsWithTab: '/settings/:tab',
-  CreateIntegration: '/settings/create-integration',
-  CreateIntegrationWithType: '/settings/create-integration/:credentialType',
+  CreateConfiguration: '/settings/create-configuration',
+  CreateConfigurationWithType: '/settings/create-configuration/:credentialType',
   CreatePersonalToken: '/settings/create-personal-token',
-  EditIntegration: '/settings/edit-integration/:uid',
+  EditConfiguration: '/settings/edit-configuration/:uid',
   ModeSwitch: '/mode-switch',
 
   UserSettings: '/user-settings',
@@ -89,7 +89,7 @@ export const BLOCK_NAV_PATTERNS = [
   `${RouteDefinitions.SkillsDetail}/:versionId`,
   RouteDefinitions.UserPublicApplicationDetail,
   RouteDefinitions.CreatePersonalToken,
-  RouteDefinitions.EditIntegration,
+  RouteDefinitions.EditConfiguration,
   RouteDefinitions.PipelineDetail,
   `${RouteDefinitions.PipelineDetail}/:versionId`,
   RouteDefinitions.CreatePipeline,

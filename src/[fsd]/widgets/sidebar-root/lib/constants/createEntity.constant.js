@@ -19,8 +19,8 @@ export const OptionsMap = {
 
 export const RouteToLabelMap = [
   { route: RouteDefinitions.AgentStudio, label: null },
-  { route: RouteDefinitions.CreateIntegration, label: 'Integration' },
-  { route: 'settings/model-configuration', label: 'Integration' },
+  { route: RouteDefinitions.CreateConfiguration, label: 'Configuration' },
+  { route: 'settings/model-configuration', label: 'Configuration' },
   { route: RouteDefinitions.CreatePersonalToken, label: 'Token' },
   { route: 'settings/tokens', label: 'Token' },
   { route: 'settings/secrets', label: 'Secret' },
@@ -47,7 +47,7 @@ export const DropdownItems = [
   { label: 'Application', route: RouteDefinitions.AppsApplications, option: 'Application' },
   { label: 'MCP', route: RouteDefinitions.MCPs, option: 'MCP' },
   { label: 'Artifact Bucket', route: RouteDefinitions.Artifacts, option: 'Bucket' },
-  { label: 'Integration', route: 'settings/model-configuration', option: 'Integration' },
+  { label: 'Configuration', route: 'settings/model-configuration', option: 'Configuration' },
   { label: 'Token', route: 'settings/tokens', option: 'Personal Token' },
   { label: 'Secret', route: 'settings/secrets', option: 'Secret' },
   { label: 'Invite User', route: 'settings/users', option: 'User' },
@@ -90,7 +90,7 @@ export const CommandPathMap = {
   App: RouteDefinitions.CreateApp,
   Credential: RouteDefinitions.CreateCredentialFromMain,
   Bucket: RouteDefinitions.CreateBucket,
-  Integration: RouteDefinitions.CreateIntegration, // Route to filtered credential creation
+  Configuration: RouteDefinitions.CreateConfiguration, // Route to filtered credential creation
   'Personal Token': RouteDefinitions.CreatePersonalToken,
   // For Secret we stay on settings/secrets but add a query param to trigger row creation
   Secret: undefined,
@@ -106,7 +106,7 @@ export const BreadCrumbMap = {
   App: 'New App',
   Credential: 'New Credential',
   Bucket: 'New Bucket',
-  Integration: 'New Integration',
+  Configuration: 'New Configuration',
   'Personal Token': 'New Personal Token',
   Secret: 'New Secret',
   [RouteDefinitions.CreateApplication]: 'Agents',
@@ -130,15 +130,15 @@ export const PrevUrlPathMap = {
   [RouteDefinitions.CreateBucket]: RouteDefinitions.Artifacts,
   // For personal tokens, previous path should be Settings -> tokens tab
   [RouteDefinitions.CreatePersonalToken]: RouteDefinitions.SettingsWithTab.replace(':tab', 'tokens'),
-  [RouteDefinitions.CreateIntegration]: RouteDefinitions.SettingsWithTab.replace(
+  [RouteDefinitions.CreateConfiguration]: RouteDefinitions.SettingsWithTab.replace(
     ':tab',
     'model-configuration',
   ),
 };
 
 export const PathToOptionMap = [
-  { path: RouteDefinitions.CreateIntegration, option: 'Integration' },
-  { path: 'settings/model-configuration', option: 'Integration' },
+  { path: RouteDefinitions.CreateConfiguration, option: 'Configuration' },
+  { path: 'settings/model-configuration', option: 'Configuration' },
   { path: RouteDefinitions.CreatePersonalToken, option: 'Personal Token' },
   { path: 'settings/tokens', option: 'Personal Token' },
   { path: 'settings/secrets', option: 'Secret' },

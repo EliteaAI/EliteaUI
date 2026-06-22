@@ -310,38 +310,38 @@ const ProtectedRoutes = () => {
               element={<AnalyticsContainer />}
             />
             <Route
-              path={'create-integration'}
+              path={'create-configuration'}
               element={
                 <IntegrationGuard>
                   <CreateCredentialFromMain
-                    title="New Integration"
-                    typeSelectorTitle="Select the integration Type"
+                    title="New Configuration"
+                    typeSelectorTitle="Select the Configuration Type"
                     showCategory={false}
-                    searchPlaceholder="Search integrations"
+                    searchPlaceholder="Search configurations"
                     forceShowTitle
                   />
                 </IntegrationGuard>
               }
             />
             <Route
-              path={'create-integration/:credentialType'}
+              path={'create-configuration/:credentialType'}
               element={
                 <IntegrationGuard>
                   <CreateCredentialFromMain
-                    title="New Integration"
-                    typeSelectorTitle="Select the integration Type"
+                    title="New Configuration"
+                    typeSelectorTitle="Select the Configuration Type"
                     showCategory={false}
-                    searchPlaceholder="Search integrations"
+                    searchPlaceholder="Search configurations"
                     forceShowTitle
                   />
                 </IntegrationGuard>
               }
             />
             <Route
-              path={'edit-integration/:credential_uid'}
+              path={'edit-configuration/:credential_uid'}
               element={
                 <EditCredentialFromMain
-                  title="Integration"
+                  title="Configuration"
                   forceShowTitle
                 />
               }
@@ -351,6 +351,7 @@ const ProtectedRoutes = () => {
               element={<CreatePersonalToken />}
             />
           </Route>
+
           <Route
             path="/:projectId/*"
             element={<ProjectSwitcher />}

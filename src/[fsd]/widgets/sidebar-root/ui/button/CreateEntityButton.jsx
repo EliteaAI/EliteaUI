@@ -78,13 +78,21 @@ const CreateEntityButton = memo(props => {
   const projectId = useSelectedProjectId();
   const shouldDisableOwnLLMs = useMemo(
     () =>
-      selectedOption === 'Integration' && ALLOW_PROJECT_OWN_LLMS === false && projectId != PUBLIC_PROJECT_ID,
+      selectedOption === 'Configuration' &&
+      ALLOW_PROJECT_OWN_LLMS === false &&
+      projectId != PUBLIC_PROJECT_ID,
     [selectedOption, projectId],
   );
 
   const isSimpleCreateRoute = useMemo(() => {
     const lowerPathname = pathname.toLowerCase();
-    return CreateEntityConstants.SimpleCreateRoutes.some(route => lowerPathname.includes(route));
+    const isSimple = CreateEntityConstants.SimpleCreateRoutes.some(route => lowerPathname.includes(route));
+
+    const isKnownRoute =
+      CreateEntityConstants.RouteToLabelMap.some(({ route }) => lowerPathname.includes(route)) ||
+      CreateEntityConstants.SimpleCreateRoutes.some(route => lowerPathname.includes(route)) ||
+      CreateEntityConstants.DropdownItems.some(item => pathname.includes(item.route));
+    return isSimple || !isKnownRoute;
   }, [pathname]);
 
   const currentLabel = useMemo(() => {
@@ -146,7 +154,7 @@ const CreateEntityButton = memo(props => {
               ? 'create=1'
               : `${SearchParams.ViewMode}=${ViewMode.Owner}`;
 
-          if (stateOption === 'Integration') {
+          if (stateOption === 'Configuration') {
             search += '&from=model-configuration';
           }
 

@@ -37,8 +37,8 @@ const getPrevPathName = (routeStack, currentPath, name, authorName) => {
       return PathSessionMap[RouteDefinitions.UserPublic];
     } else if (
       currentPath.startsWith(RouteDefinitions.CreatePersonalToken) ||
-      currentPath.startsWith(RouteDefinitions.CreateIntegration) ||
-      currentPath.match(/\/settings\/edit-integration\/\d+/g)
+      currentPath.startsWith(RouteDefinitions.CreateConfiguration) ||
+      currentPath.match(/\/settings\/edit-configuration\/\d+/g)
     ) {
       return PathSessionMap[RouteDefinitions.Settings];
     }
@@ -89,8 +89,8 @@ const getPrevPath = (routeStack, currentPath, search, viewMode, authorId, author
     } else if (currentPath.startsWith(RouteDefinitions.CreatePersonalToken)) {
       return `${RouteDefinitions.Settings}/information`;
     } else if (
-      currentPath.startsWith(RouteDefinitions.CreateIntegration) ||
-      currentPath.match(/\/settings\/edit-integration\/\d+/g)
+      currentPath.startsWith(RouteDefinitions.CreateConfiguration) ||
+      currentPath.match(/\/settings\/edit-configuration\/\d+/g)
     ) {
       return `${RouteDefinitions.Settings}/${UserSettingsTabs[1]}`;
     }
@@ -157,9 +157,9 @@ export default function useBackPath() {
         return true;
       } else if (pathname.startsWith(RouteDefinitions.CreatePersonalToken)) {
         return true;
-      } else if (pathname.startsWith(RouteDefinitions.CreateIntegration)) {
+      } else if (pathname.startsWith(RouteDefinitions.CreateConfiguration)) {
         return true;
-      } else if (pathname.match(/\/settings\/edit-integration\/\d+/g)) {
+      } else if (pathname.match(/\/settings\/edit-configuration\/\d+/g)) {
         return true;
       }
       return false;

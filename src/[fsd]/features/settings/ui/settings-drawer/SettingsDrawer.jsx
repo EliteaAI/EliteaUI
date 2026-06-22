@@ -50,8 +50,8 @@ const SettingsDrawer = props => {
       }
       if (
         tabId === 'model-configuration' &&
-        (lastSegment === 'create-integration' ||
-          pathSegments[pathSegments.length - 2] === 'create-integration')
+        (lastSegment === 'create-configuration' ||
+          pathSegments[pathSegments.length - 2] === 'create-configuration')
       ) {
         return true;
       }

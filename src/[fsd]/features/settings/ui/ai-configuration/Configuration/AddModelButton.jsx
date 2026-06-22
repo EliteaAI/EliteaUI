@@ -18,13 +18,13 @@ const AddModelButton = memo(() => {
       pagePath: RouteDefinitions.SettingsWithTab.replace(':tab', 'model-configuration'),
     });
     newRouteStack.push({
-      breadCrumb: 'New Integration',
-      pagePath: `${RouteDefinitions.Settings}/create-integration?from=model-configuration`,
+      breadCrumb: 'New Configuration',
+      pagePath: `${RouteDefinitions.Settings}/create-configuration?from=model-configuration`,
     });
 
     navigate(
       {
-        pathname: `${RouteDefinitions.Settings}/create-integration`,
+        pathname: `${RouteDefinitions.Settings}/create-configuration`,
         search: 'from=model-configuration',
       },
       {
@@ -35,7 +35,7 @@ const AddModelButton = memo(() => {
 
   return (
     <Button.AddButton
-      tooltip="Create integration"
+      tooltip="Create configuration"
       onAdd={addModelCredential}
     />
   );

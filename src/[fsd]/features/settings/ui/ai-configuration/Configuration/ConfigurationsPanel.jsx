@@ -33,7 +33,7 @@ const ConfigurationsPanel = memo(props => {
   } = props;
   const styles = getStyles();
   const projectId = useSelectedProjectId();
-  const canCreateIntegration = useMemo(
+  const canCreateConfiguration = useMemo(
     () => ALLOW_PROJECT_OWN_LLMS !== false || projectId == PUBLIC_PROJECT_ID,
     [projectId],
   );
@@ -83,9 +83,9 @@ const ConfigurationsPanel = memo(props => {
             variant="headingMedium"
             sx={styles.sectionTitle}
           >
-            Integrations
+            Configurations
           </Typography>
-          {canCreateIntegration && <AddModelButton />}
+          {canCreateConfiguration && <AddModelButton />}
         </Box>
       </Box>
 

@@ -12,7 +12,7 @@ export const useConfigurationNavigation = () => {
   const navigateToConfiguration = useCallback(
     configurationId => {
       const newRouteStack = [...locationState.routeStack];
-      const newPagePath = RouteDefinitions.EditIntegration.replace(':uid', configurationId);
+      const newPagePath = RouteDefinitions.EditConfiguration.replace(':uid', configurationId);
 
       newRouteStack.push({
         breadCrumb: 'Model Configuration',
