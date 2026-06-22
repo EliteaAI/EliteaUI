@@ -4,7 +4,10 @@ import { isParticipantOKForChat } from '@/[fsd]/features/chat/participants/lib/h
 import { useMcpTokenChange } from '@/[fsd]/features/mcp/lib/hooks';
 import { useGetToolkitNameFromSchema } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks/useGetToolkitNameFromSchema.hooks';
 import { useResolvedSharepointConfig } from '@/[fsd]/features/sharepoint/lib/hooks/useResolvedSharepointConfig.hooks';
-import { isToolkitTypeBlocked } from '@/[fsd]/features/toolkits/lib/helpers/toolkits.helpers';
+import {
+  getToolkitTypeLabel,
+  isToolkitTypeBlocked,
+} from '@/[fsd]/features/toolkits/lib/helpers/toolkits.helpers';
 import { ChatParticipantType, PUBLIC_PROJECT_ID } from '@/common/constants';
 import useValidateApplicationVersion, {
   useToolsValidationInfo,
@@ -75,7 +78,7 @@ const ParticipantStatusRunner = memo(props => {
   );
 
   //  Tool availability
-  const { getSelectedTools, getToolkitNameFromSchema } = useGetToolkitNameFromSchema();
+  const { getSelectedTools } = useGetToolkitNameFromSchema();
 
   const someToolsAreUnavailable = useMemo(() => {
     if (type === ChatParticipantType.Applications || type === ChatParticipantType.Pipelines) {
@@ -90,18 +93,20 @@ const ParticipantStatusRunner = memo(props => {
     return false;
   }, [getSelectedTools, originalDetails?.version_details?.tools, type]);
 
-  // Names of configured toolkits whose type is blocked by org guardrails, so the
-  // warning can name them. Blocked toolkits are absent from the schema catalog, so
-  // someToolsAreUnavailable can't detect them — this is a separate signal.
+  // Toolkit TYPE labels (not instance names) whose type is blocked by org
+  // guardrails, so the warning can name the type — blocking is by type, so every
+  // toolkit of that type is blocked regardless of its instance name. Blocked
+  // toolkits are absent from the schema catalog, so someToolsAreUnavailable can't
+  // detect them — this is a separate signal. Deduped (two github toolkits → one).
   const blockedToolkitNames = useMemo(() => {
     if (type !== ChatParticipantType.Applications && type !== ChatParticipantType.Pipelines) {
       return [];
     }
-    return (originalDetails?.version_details?.tools || [])
+    const labels = (originalDetails?.version_details?.tools || [])
       .filter(tool => tool?.type !== 'application' && isToolkitTypeBlocked(tool?.type))
-      .map(tool => getToolkitNameFromSchema(tool) || tool?.type)
-      .filter(Boolean);
-  }, [getToolkitNameFromSchema, originalDetails?.version_details?.tools, type]);
+      .map(tool => getToolkitTypeLabel(tool?.type));
+    return [...new Set(labels)];
+  }, [originalDetails?.version_details?.tools, type]);
 
   // MCP token state
   const mcpServerUrl = participant.entity_settings?.mcp_server_url || originalDetails?.settings?.url || '';

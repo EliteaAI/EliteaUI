@@ -579,7 +579,9 @@ const ToolCard = memo(props => {
             </Box>
           </Box>
           {isBlockedToolkit && !validationInfo && !showActions && (
-            <Banner.BannerMessage message={`${toolkitName} toolkit is blocked by your organization.`} />
+            <Banner.BannerMessage
+              message={`${ToolkitsHelpers.getToolkitTypeLabel(tool?.type)} toolkit is blocked by your organization.`}
+            />
           )}
           {!isBlockedToolkit && someToolsAreUnavailable && !validationInfo && !showActions && (
             <Banner.BannerMessage message="Some tools are not available anymore." />
