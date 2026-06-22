@@ -57,13 +57,15 @@ const IWModalDetails = memo(props => {
     [isForking, prepareApplicationEntity],
   );
 
-  const { mainEntity, nestedEntities } = useMemo(() => {
+  const { mainEntity, nestedEntities, skillEntities } = useMemo(() => {
     const mainItem = values?.importItems?.[0];
     const nestedItems = values?.importItems?.slice(1);
+    const prepared = prepareNestedApplications(nestedItems);
 
     return {
       mainEntity: prepareApplicationEntity(mainItem),
-      nestedEntities: prepareNestedApplications(nestedItems),
+      nestedEntities: prepared.filter(item => item?.entity !== 'skills'),
+      skillEntities: prepared.filter(item => item?.entity === 'skills'),
     };
   }, [prepareApplicationEntity, prepareNestedApplications, values?.importItems]);
 
@@ -79,6 +81,20 @@ const IWModalDetails = memo(props => {
           <Typography sx={styles.label}>Nested entities</Typography>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             {nestedEntities.map((entity, index) => (
+              <IWModalEntityCard
+                key={index}
+                entity={entity}
+              />
+            ))}
+          </Box>
+        </Box>
+      )}
+
+      {skillEntities.length > 0 && (
+        <Box sx={styles.entityBlock}>
+          <Typography sx={styles.label}>Skills</Typography>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {skillEntities.map((entity, index) => (
               <IWModalEntityCard
                 key={index}
                 entity={entity}
