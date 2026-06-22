@@ -150,15 +150,3 @@ export const getModelSettings = participant => {
   }
   return {};
 };
-
-export const createArchivedHitlAssistantMessage = assistantMessage => ({
-  ...assistantMessage,
-  id: `archived-hitl-${uuidv4()}`,
-  question_id: undefined,
-  hitlInterrupt: undefined,
-  requiresConfirmation: undefined,
-  isLoading: false,
-  isStreaming: false,
-  isRegenerating: false,
-  archivedFromHitl: true,
-});

@@ -1,5 +1,7 @@
-import { DialogContent, DialogTitle, IconButton, Typography } from '@mui/material';
+import { Box, DialogContent, DialogTitle, Typography } from '@mui/material';
 
+import { Button } from '@/[fsd]/shared/ui';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import CloseIcon from '@/components/Icons/CloseIcon';
 import { StyledDialog, StyledDialogActions } from '@/components/StyledDialog';
 
@@ -7,6 +9,7 @@ const Modal = props => {
   const {
     open,
     title,
+    titleIcon,
     onClose,
     content,
     actions,
@@ -20,7 +23,7 @@ const Modal = props => {
   const handleKeyDown = event => {
     if (event.key === 'Escape') {
       event.preventDefault();
-      onClose();
+      onClose?.();
     }
     onKeyDown?.(event);
   };
@@ -40,22 +43,23 @@ const Modal = props => {
         id="variables-dialog-title"
         sx={styles.dialogTitle}
       >
-        <Typography
-          variant={titleVariant}
-          color="text.secondary"
-        >
-          {title}
-        </Typography>
-        <IconButton
-          variant="elitea"
-          color="tertiary"
-          aria-label="close"
+        <Box sx={styles.titleWrapper}>
+          {titleIcon && titleIcon}
+          <Typography
+            variant={titleVariant}
+            color="text.secondary"
+          >
+            {title}
+          </Typography>
+        </Box>
+        <Button.BaseBtn
+          variant={BUTTON_VARIANTS.tertiary}
+          aria-label="Close"
+          startIcon={<CloseIcon />}
           onClick={onClose}
-          sx={{ padding: 0, margin: 0 }}
-        >
-          <CloseIcon sx={{ fontSize: '1rem' }} />
-        </IconButton>
+        />
       </DialogTitle>
+
       <DialogContent sx={[styles.dialogContent, dialogSx]}>{content}</DialogContent>
       {actions && <StyledDialogActions sx={styles.dialogActions}>{actions}</StyledDialogActions>}
     </StyledDialog>
@@ -72,6 +76,11 @@ const modalStyles = (hideSections, actions) => ({
       backgroundColor: `${palette.background.tabPanel} !important`,
     },
   }),
+  titleWrapper: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+  },
   dialogTitle: {
     width: '100%',
     display: 'flex',

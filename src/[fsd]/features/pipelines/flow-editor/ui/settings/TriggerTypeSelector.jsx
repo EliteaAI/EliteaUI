@@ -1,12 +1,12 @@
-import { memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useFormikContext } from 'formik';
+import YAML from 'js-yaml';
 
 import LinkIcon from '@mui/icons-material/Link';
 import { Box, IconButton } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
-import { FlowEditorContext } from '@/[fsd]/app/providers';
 import { PipelineNodeTypes } from '@/[fsd]/features/pipelines/flow-editor/lib/constants/flowEditor.constants';
 import { InfoLabelWithTooltip } from '@/[fsd]/shared/ui/label';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
@@ -48,27 +48,35 @@ const TriggerTypeSelector = memo(props => {
   const { toastSuccess, toastError } = useToast();
   const selectedProject = useSelectedProject();
   const { values } = useFormikContext();
-  const { yamlJsonObject } = useContext(FlowEditorContext);
 
   const versionId = values?.version_details?.id;
   const projectId = selectedProject?.id;
+  const versionInstructions = values?.version_details?.instructions;
 
-  // Check if pipeline has interactive nodes or interrupts that require Chat Message trigger
+  // Check if the saved version content has nodes/interrupts that require Chat Message trigger.
+  // We parse `version_details.instructions` (the saved YAML for this exact versionId) instead of
+  // the editor's working copy so the restriction tracks the version we're configuring the trigger
+  // for, not whatever pipeline is loaded in the flow editor or the user's unsaved edits.
   const hasInteractiveElements = useMemo(() => {
-    if (!yamlJsonObject) return false;
+    if (!versionInstructions) return false;
 
-    // Check for HITL or Printer nodes
-    const hasInteractiveNodes = yamlJsonObject.nodes?.some(node =>
-      INTERACTIVE_NODE_TYPES.includes(node.type),
-    );
+    let parsed;
+    try {
+      parsed = YAML.load(versionInstructions);
+    } catch {
+      return false;
+    }
+    if (!parsed) return false;
 
-    // Check for interrupt_before or interrupt_after
+    const hasInteractiveNodes =
+      Array.isArray(parsed.nodes) && parsed.nodes.some(node => INTERACTIVE_NODE_TYPES.includes(node?.type));
+
     const hasInterrupts =
-      (Array.isArray(yamlJsonObject.interrupt_before) && yamlJsonObject.interrupt_before.length > 0) ||
-      (Array.isArray(yamlJsonObject.interrupt_after) && yamlJsonObject.interrupt_after.length > 0);
+      (Array.isArray(parsed.interrupt_before) && parsed.interrupt_before.length > 0) ||
+      (Array.isArray(parsed.interrupt_after) && parsed.interrupt_after.length > 0);
 
     return hasInteractiveNodes || hasInterrupts;
-  }, [yamlJsonObject]);
+  }, [versionInstructions]);
 
   // Filter trigger options based on pipeline content
   const availableTriggerOptions = useMemo(() => {

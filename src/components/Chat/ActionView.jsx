@@ -20,8 +20,9 @@ import ModelIcon from '../Icons/ModelIcon';
 import { StyledCircleProgress } from './StyledComponents';
 import ToolModal from './ToolModal';
 
-// Number of visible lines in streaming content window (collapsed/expanded)
-const STREAMING_WINDOW_LINES_COLLAPSED = 15;
+// Number of visible lines in streaming content window (collapsed/expanded).
+// Collapsed shows a compact ~5-row preview; "Show more" expands it.
+const STREAMING_WINDOW_LINES_COLLAPSED = 5;
 const STREAMING_WINDOW_LINES_EXPANDED = 30;
 // Approximate line height in pixels for calculating window height
 const LINE_HEIGHT_PX = 20;

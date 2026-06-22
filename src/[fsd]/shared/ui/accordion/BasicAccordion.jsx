@@ -64,7 +64,15 @@ const BasicAccordion = memo(props => {
             >
               {title}
             </StyledTypography>
-            {summaryAction && <Box sx={styles.summaryAction}>{summaryAction}</Box>}
+            {summaryAction && (
+              <Box
+                sx={styles.summaryAction}
+                onClick={e => e.stopPropagation()}
+                onMouseDown={e => e.stopPropagation()}
+              >
+                {summaryAction}
+              </Box>
+            )}
           </StyledAccordionSummary>
           <StyledAccordionDetails sx={accordionDetailsSX}>{content}</StyledAccordionDetails>
         </StyledAccordion>

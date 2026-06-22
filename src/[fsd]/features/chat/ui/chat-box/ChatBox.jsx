@@ -184,11 +184,15 @@ const ChatBox = forwardRef((props, boxRef) => {
 
     return {
       chat_history: history,
-      pendingHitlMessage: [...history].reverse().find(item => item.hitlInterrupt),
+      pendingHitlMessage: [...history]
+        .reverse()
+        .find(item => item.hitlInterrupt || item.hitlInterrupts?.length),
     };
   }, [activeConversation?.chat_history]);
 
-  const hasPendingHitlInterrupt = Boolean(pendingHitlMessage?.hitlInterrupt);
+  const hasPendingHitlInterrupt = Boolean(
+    pendingHitlMessage?.hitlInterrupt || pendingHitlMessage?.hitlInterrupts?.length,
+  );
 
   // Chat states
   const [selectedUsers, setSelectedUsers] = useState([]);
@@ -242,6 +246,10 @@ const ChatBox = forwardRef((props, boxRef) => {
     stop: stopTTS,
     isPlaying,
     spokenRange,
+    showPlayer,
+    setShowPlayer,
+    speakableText,
+    setSpeakableText,
   } = useTextToSpeech({
     ttsModel,
     socket,
@@ -256,20 +264,27 @@ const ChatBox = forwardRef((props, boxRef) => {
   const handleAutoSpeak = useCallback(
     (text, msgId) => {
       if (!text) return;
-      const { text: speakableText, segments } = toSpeakableText(text);
-      if (!speakableText) return;
+      const { text: convertedText, segments } = toSpeakableText(text);
+      if (!convertedText) return;
       setSpeakingMessageId(msgId ?? null);
       setSpeakingSegments(segments);
-      speak(speakableText);
+      setSpeakableText(convertedText);
+      setShowPlayer(true);
     },
-    [speak],
+    [setShowPlayer, setSpeakableText],
   );
+
+  const handlePlay = useCallback(() => {
+    speak(speakableText);
+  }, [speak, speakableText]);
 
   useEffect(() => {
     if (!isPlaying) {
       setSpeakingMessageId(null);
       setSpeakingSegments(null);
+      setShowPlayer(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPlaying]);
 
   const isTheUserChattingNow = useMemo(() => {
@@ -1237,10 +1252,131 @@ const ChatBox = forwardRef((props, boxRef) => {
     [chat_history, activeConversation, projectId, setChatHistory, setStreamingInfo, emitContinue],
   );
 
+  // Accumulates per-child decisions for a parallel sub-agent fan-out so the
+  // single resume call carries every approve/reject once all N cards are
+  // actioned. Keyed by message id so a fresh interrupt resets the buffer.
+  const pendingDecisionsRef = useRef({ messageId: null, decisions: {} });
+
   const onHitlResume = useCallback(
-    async ({ action, value }) => {
+    async ({ action, value, toolCallId: providedToolCallId }) => {
       const lastMessage = pendingHitlMessage;
       if (!lastMessage) return;
+
+      const interrupts = Array.isArray(lastMessage.hitlInterrupts)
+        ? lastMessage.hitlInterrupts
+        : lastMessage.hitlInterrupt
+          ? [lastMessage.hitlInterrupt]
+          : [];
+
+      // The edit path (chat input -> onHitlResume({ action: 'edit', value }))
+      // carries no toolCallId. When exactly one interrupt remains, derive it
+      // from that sole entry so a single still-pending parallel/fan-out child
+      // keeps its tool_call_id-routed resume path instead of falling back to
+      // the legacy hitl_action shape (which the SDK can't match to the child).
+      const toolCallId =
+        providedToolCallId ||
+        (interrupts.length === 1 ? interrupts[0]?.tool_call_id || undefined : undefined);
+
+      // The interrupt entry being decided (matched by tool_call_id).
+      const decidedEntry = toolCallId ? interrupts.find(e => e?.tool_call_id === toolCallId) : undefined;
+      // Track 2 fan-out child: each paused child carries its OWN thread_id and
+      // resumes INDEPENDENTLY — emit immediately on that child's thread while
+      // siblings keep running, instead of batching until every card is decided.
+      const childThreadId = decidedEntry?.thread_id || decidedEntry?.child_thread_id || '';
+      const isFanoutChild = Boolean(childThreadId);
+
+      // Detect a (Track 1) parallel aggregate by the PRESENCE of the
+      // hitlInterrupts array (hooks.js sets it only for backend
+      // `hitl_interrupts`), not by length > 1. A multi-round batch may have only
+      // ONE still-pending child yet must still resume via `hitl_decisions`
+      // (routed by tool_call_id) — the single `hitl_action` path would drop the
+      // SDK to the sequential resume and the suffixed child thread_id would
+      // never match. Fan-out children take the independent path above instead.
+      const isParallel =
+        !isFanoutChild &&
+        Array.isArray(lastMessage.hitlInterrupts) &&
+        lastMessage.hitlInterrupts.length > 0 &&
+        Boolean(toolCallId);
+
+      // Track 2 independent child resume: emit this child's decision NOW on its
+      // own thread; clear ONLY this child's card and leave the parent message
+      // streaming so running siblings keep their live boxes + shimmer.
+      if (isFanoutChild) {
+        const childPayload = generateChatContinuePayload({
+          conversation_uuid: activeConversation?.uuid,
+          projectId,
+          message_id: lastMessage.id,
+          thread_id: childThreadId,
+          participants: activeConversation?.participants || [],
+          question: action === 'edit' ? (value ?? '') : action,
+        });
+        childPayload.hitl_resume = true;
+        childPayload.thread_id = childThreadId;
+        childPayload.hitl_decisions = [
+          {
+            thread_id: childThreadId,
+            tool_call_id: toolCallId,
+            action,
+            value: value ?? '',
+          },
+        ];
+
+        // Remove the resumed child's card in place (do NOT blank the message).
+        setChatHistory(prevMessages =>
+          prevMessages.map(msg => {
+            if (msg.id !== lastMessage.id || !Array.isArray(msg.hitlInterrupts)) {
+              return msg;
+            }
+            const remaining = msg.hitlInterrupts.filter(e => e?.tool_call_id !== toolCallId);
+            return {
+              ...msg,
+              hitlInterrupts: remaining,
+              hitlInterrupt: remaining[0],
+              // Keep the message in the streaming state: this child resumes and
+              // its siblings are still running.
+              isStreaming: true,
+              isLoading: true,
+            };
+          }),
+        );
+        setHitlEditMode(false);
+        emitContinue(childPayload);
+        return;
+      }
+
+      // Parallel fan-out: buffer this child's decision and disable its card.
+      // Defer the actual resume emit until every child has been actioned.
+      if (isParallel) {
+        if (pendingDecisionsRef.current.messageId !== lastMessage.id) {
+          pendingDecisionsRef.current = { messageId: lastMessage.id, decisions: {} };
+        }
+        pendingDecisionsRef.current.decisions[toolCallId] = {
+          tool_call_id: toolCallId,
+          action,
+          value: value ?? '',
+        };
+
+        // Mark the just-decided card disabled in place.
+        setChatHistory(prevMessages =>
+          prevMessages.map(msg => {
+            if (msg.id !== lastMessage.id || !Array.isArray(msg.hitlInterrupts)) {
+              return msg;
+            }
+            return {
+              ...msg,
+              hitlInterrupts: msg.hitlInterrupts.map(entry =>
+                entry.tool_call_id === toolCallId ? { ...entry, decided: true } : entry,
+              ),
+            };
+          }),
+        );
+
+        const decidedCount = Object.keys(pendingDecisionsRef.current.decisions).length;
+        if (decidedCount < interrupts.length) {
+          // Still waiting on sibling card(s); do not emit yet.
+          return;
+        }
+      }
 
       const { question_id, threadId, participant_id } = lastMessage;
       const participant = ChatHelpers.getParticipantById(activeConversation, participant_id);
@@ -1265,9 +1401,15 @@ const ChatBox = forwardRef((props, boxRef) => {
       });
 
       payload.hitl_resume = true;
-      payload.hitl_action = action;
-      if (action === 'edit') {
-        payload.hitl_value = value ?? '';
+      if (isParallel) {
+        // One resume carrying every child's decision.
+        payload.hitl_decisions = Object.values(pendingDecisionsRef.current.decisions);
+        pendingDecisionsRef.current = { messageId: null, decisions: {} };
+      } else {
+        payload.hitl_action = action;
+        if (action === 'edit') {
+          payload.hitl_value = value ?? '';
+        }
       }
 
       setHitlEditMode(false);
@@ -1280,7 +1422,10 @@ const ChatBox = forwardRef((props, boxRef) => {
 
         const nextMessages = [...prevMessages];
         const assistantMessage = nextMessages[assistantIndex];
-        const archivedAssistantMessage = ChatHelpers.createArchivedHitlAssistantMessage(assistantMessage);
+        // Clear the interrupt state in place on the existing assistant
+        // message. We intentionally do NOT clone it into a content-bearing
+        // "archived" bubble — that left a stale "...requires approval..."
+        // message lingering in the view until reload.
         const resumedAssistantMessage = {
           ...assistantMessage,
           content: '',
@@ -1291,22 +1436,19 @@ const ChatBox = forwardRef((props, boxRef) => {
           requiresConfirmation: undefined,
           exception: undefined,
           hitlInterrupt: undefined,
+          hitlInterrupts: undefined,
           references: [],
           toolActions: [],
           replyTo: editMessage ? { ...editMessage } : assistantMessage.replyTo,
           archivedFromHitl: false,
         };
 
-        nextMessages.splice(assistantIndex, 1, archivedAssistantMessage);
-
-        let insertionIndex = assistantIndex + 1;
+        nextMessages.splice(assistantIndex, 1, resumedAssistantMessage);
 
         if (editMessage) {
-          nextMessages.splice(insertionIndex, 0, editMessage);
-          insertionIndex += 1;
+          nextMessages.splice(assistantIndex, 0, editMessage);
         }
 
-        nextMessages.splice(insertionIndex, 0, resumedAssistantMessage);
         return nextMessages;
       });
 
@@ -1939,14 +2081,16 @@ const ChatBox = forwardRef((props, boxRef) => {
             conversation_starters={hasStarterBeenSent || isTheUserChattingNow ? [] : conversationStarters}
           />
         )}
-        {isPlaying && (
+        {showPlayer && (
           <VoiceMiniPlayer
             voiceConfig={voiceConfig}
             voices={displayVoices}
             onVoiceConfigChange={setVoiceConfig}
             ttsModel={ttsModel}
             hasModelTTS={hasModelTTS}
+            isPlaying={isPlaying}
             onStop={stopTTS}
+            onPlay={handlePlay}
           />
         )}
         <Box sx={hitlEditMode ? styles.inputWrapperHitl : styles.inputWrapper}>

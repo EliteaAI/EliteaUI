@@ -72,15 +72,13 @@ const DeleteEntityModal = memo(props => {
           id="alert-dialog-description"
           color="text.deleteAlertText"
           variant="bodyMedium"
-          sx={{
-            whiteSpaceCollapse: 'preserve',
-          }}
+          sx={styles.description}
         >
           Are you sure to delete{' '}
           <Typography
             component={'span'}
             variant="headingSmall"
-            sx={({ palette }) => ({ color: palette.text.deleteAlertEntityName })}
+            sx={styles.entityName}
           >
             {name}
           </Typography>
@@ -134,6 +132,14 @@ const deleteEntityModalStyles = () => ({
     maxWidth: '100%',
     width: '100%',
   },
+  description: {
+    whiteSpaceCollapse: 'preserve',
+  },
+  entityName: ({ palette }) => ({
+    color: palette.text.deleteAlertEntityName,
+    wordBreak: 'break-word',
+    overflowWrap: 'anywhere',
+  }),
   dialogActions: {
     justifyContent: 'flex-end',
     alignSelf: 'flex-end',

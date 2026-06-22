@@ -2,81 +2,109 @@ import { memo, useCallback } from 'react';
 
 import { Box, FormControlLabel, Typography } from '@mui/material';
 
-import { Checkbox, Input } from '@/[fsd]/shared/ui';
+import { Checkbox, Input, Select } from '@/[fsd]/shared/ui';
 
 import { VERSION_NAME_MAX_LENGTH, VERSION_NAME_REGEX } from '../lib/constants/version.constants';
 import PublishingTerms from './PublishingTerms';
 
-const PreparationStep = memo(({ versionName, onVersionNameChange, agreed, onAgreedChange, error }) => {
-  const handleVersionNameChange = useCallback(
-    e => {
-      const value = e.target.value;
-      if (VERSION_NAME_REGEX.test(value)) {
-        onVersionNameChange(value);
-      }
-    },
-    [onVersionNameChange],
-  );
+const PreparationStep = memo(
+  ({
+    versionName,
+    onVersionNameChange,
+    category,
+    onCategoryChange,
+    categoryOptions,
+    agreed,
+    onAgreedChange,
+    error,
+  }) => {
+    const handleVersionNameChange = useCallback(
+      e => {
+        const value = e.target.value;
+        if (VERSION_NAME_REGEX.test(value)) {
+          onVersionNameChange(value);
+        }
+      },
+      [onVersionNameChange],
+    );
 
-  const handleAgreedChange = useCallback(
-    (_, checked) => {
-      onAgreedChange(checked);
-    },
-    [onAgreedChange],
-  );
+    const handleAgreedChange = useCallback(
+      (_, checked) => {
+        onAgreedChange(checked);
+      },
+      [onAgreedChange],
+    );
 
-  return (
-    <Box sx={styles.root}>
-      <Typography
-        variant="headingSmall"
-        color="text.secondary"
-        sx={{ textAlign: 'center' }}
-      >
-        Enter a version name and accept the Publishing Terms to continue.
-      </Typography>
-
-      <Input.InputBase
-        label="Version name"
-        autoComplete="off"
-        value={versionName}
-        onChange={handleVersionNameChange}
-        error={!!error}
-        helperText={error || 'Only letters, numbers, dots, hyphens and underscores allowed.'}
-        inputProps={{ maxLength: VERSION_NAME_MAX_LENGTH }}
-        sx={styles.textField}
-      />
-
-      <Box sx={styles.termsContainer}>
+    return (
+      <Box sx={styles.root}>
         <Typography
-          variant="labelSmall"
+          variant="headingSmall"
           color="text.secondary"
-          sx={{ fontWeight: 600, marginLeft: '0.75rem' }}
+          sx={{ textAlign: 'center' }}
         >
-          Publishing Terms
+          Enter a version name, choose a category and accept the Publishing Terms to continue.
         </Typography>
-        <PublishingTerms />
-      </Box>
 
-      <FormControlLabel
-        control={
-          <Checkbox.BaseCheckbox
-            checked={agreed}
-            onChange={handleAgreedChange}
-          />
-        }
-        label={
+        <Input.InputBase
+          label="Version name"
+          autoComplete="off"
+          value={versionName}
+          onChange={handleVersionNameChange}
+          error={!!error}
+          helperText={error || 'Only letters, numbers, dots, hyphens and underscores allowed.'}
+          inputProps={{ maxLength: VERSION_NAME_MAX_LENGTH }}
+          sx={styles.textField}
+        />
+
+        <Select.SingleSelect
+          showBorder
+          displayEmpty
+          emptyPlaceholder={
+            <Typography
+              variant="labelMedium"
+              color="text.secondary"
+            >
+              Category
+            </Typography>
+          }
+          value={category}
+          options={categoryOptions}
+          onValueChange={onCategoryChange}
+          helperText="Select a category to help users discover your agent."
+        />
+
+        <Box sx={styles.termsContainer}>
           <Typography
-            variant="bodySmall"
+            variant="labelSmall"
             color="text.secondary"
+            sx={{ fontWeight: 600, marginLeft: '0.75rem' }}
           >
-            I agree with the Publishing Terms.
+            Publishing Terms
           </Typography>
-        }
-        sx={styles.checkbox}
-      />
-    </Box>
-  );
-});
+          <PublishingTerms />
+        </Box>
+
+        <FormControlLabel
+          control={
+            <Checkbox.BaseCheckbox
+              checked={agreed}
+              onChange={handleAgreedChange}
+            />
+          }
+          label={
+            <Typography
+              variant="bodySmall"
+              color="text.secondary"
+            >
+              I agree with the Publishing Terms.
+            </Typography>
+          }
+          sx={styles.checkbox}
+        />
+      </Box>
+    );
+  },
+);
 
 PreparationStep.displayName = 'PreparationStep';
 
@@ -94,7 +122,7 @@ const styles = {
     },
   },
   termsContainer: {
-    maxHeight: '15rem',
+    maxHeight: '10rem',
     overflowY: 'auto',
     display: 'flex',
     flexDirection: 'column',

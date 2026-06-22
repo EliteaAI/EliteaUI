@@ -275,6 +275,12 @@ export const ToolkitForm = memo(props => {
         delete next[fieldKey];
         return next;
       });
+      setServerToolErrors(prev => {
+        if (!prev[fieldKey]) return prev;
+        const next = { ...prev };
+        delete next[fieldKey];
+        return next;
+      });
       onChangeToolDetail(prevState => updateObjectByPath(prevState, field, value, replace));
     },
     [onChangeToolDetail, setFieldValue, toolType, values?.settings?.url],

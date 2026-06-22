@@ -28,6 +28,7 @@ const ChatMessageWrapper = memo(props => {
     isLoading,
     isStreaming,
     toolsFromConversation,
+    subAgentTypeByName,
     onOpenArtifactPreview,
     onContinueMcpExecution,
     onContinueTokenLimitExecution,
@@ -156,8 +157,10 @@ const ChatMessageWrapper = memo(props => {
       shouldDisableRegenerate={shouldDisableRegenerate}
       references={message.references}
       exception={message.exception}
+      subAgentErrors={message.subAgentErrors}
       toolActions={message.toolActions || []}
       tools={messageParticipant?.meta?.tools || toolsFromConversation}
+      subAgentTypeByName={subAgentTypeByName}
       isLoading={Boolean(message.isLoading)}
       isStreaming={message.isStreaming}
       userId={userId}
@@ -173,6 +176,7 @@ const ChatMessageWrapper = memo(props => {
       }
       requiresConfirmation={message.requiresConfirmation}
       hitlInterrupt={hideHitlActions ? null : message.hitlInterrupt}
+      hitlInterrupts={hideHitlActions ? null : message.hitlInterrupts}
       onHitlResume={!hideHitlActions && isLastMessage && onHitlResume ? onHitlResume : undefined}
       onHitlEditClick={!hideHitlActions && isLastMessage && onHitlEditClick ? onHitlEditClick : undefined}
       hideContinueButton={hideContinueButton}

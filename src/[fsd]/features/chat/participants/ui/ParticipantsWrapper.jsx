@@ -36,9 +36,7 @@ const ParticipantsWrapper = memo(props => {
   const { checkPermission } = useCheckPermission();
 
   const disabledAdd = useMemo(
-    () =>
-      activeConversation?.isPlayback ||
-      !checkPermission(PERMISSIONS.users.view),
+    () => activeConversation?.isPlayback || !checkPermission(PERMISSIONS.users.view),
     [activeConversation, checkPermission],
   );
 

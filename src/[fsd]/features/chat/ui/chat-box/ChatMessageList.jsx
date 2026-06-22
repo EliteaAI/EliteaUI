@@ -179,6 +179,26 @@ const ChatMessageList = memo(props => {
     [activeConversation?.participants],
   );
 
+  // Authoritative sub-agent kind (pipeline vs agent) keyed by display name, built
+  // once from the conversation's added participants. A participant's meta.name is
+  // the delegated sub-agent's display name (== parent_agent_name) and
+  // meta.agent_type is its real kind (e.g. 'pipeline' vs 'openai'). Available from
+  // page load — unlike the invocation chip's agent_type='pipeline', which the SDK
+  // only emits on the LAST chip of a fan-out, so mid-stream the thinking-view
+  // header has no other pipeline signal (in ad-hoc mode the participant `tools`
+  // list is empty too). Lets the sub-agent header/HITL icons resolve correctly in
+  // real time, not just after the run finishes (#4993). Computed here (not per
+  // message) so the map is built once and shared across every message row.
+  const subAgentTypeByName = useMemo(() => {
+    const map = {};
+    (activeConversation?.participants || []).forEach(p => {
+      const name = p?.meta?.name;
+      const agentType = p?.meta?.agent_type;
+      if (name && agentType) map[name] = agentType;
+    });
+    return map;
+  }, [activeConversation?.participants]);
+
   const styles = chatMessageListStyles(bottomSpacer);
 
   return (
@@ -226,6 +246,7 @@ const ChatMessageList = memo(props => {
             isLoading={isLoading}
             isStreaming={isStreaming}
             toolsFromConversation={toolsFromConversation}
+            subAgentTypeByName={subAgentTypeByName}
             onOpenArtifactPreview={onOpenArtifactPreview}
             onContinueMcpExecution={onContinueMcpExecution}
             onContinueTokenLimitExecution={onContinueTokenLimitExecution}

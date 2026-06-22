@@ -2,6 +2,13 @@ import { eliteaApi } from './eliteaApi.js';
 
 const TAG_BUCKETS = 'TAG_BUCKETS';
 const TAG_ARTIFACTS = 'TAG_ARTIFACTS';
+
+// Maximum length for the path + query string portion passed to baseQuery.
+// Does not include the base URL (which varies per environment / proxy).
+// Budget of 1500 chars for path+query leaves ~500 chars for any base URL,
+// keeping the full resolved URL safely under the 2000-char practical minimum
+// across browsers and nginx (default large_client_header_buffers of 4096 bytes).
+const DELETE_ARTIFACTS_MAX_PATH_LENGTH = 1500;
 const headers = {
   'Content-Type': 'application/json',
 };
@@ -125,11 +132,37 @@ export const artifactsApi = eliteaApi
         invalidatesTags: [TAG_ARTIFACTS, TAG_BUCKETS], // Also invalidate buckets when files are deleted
       }),
       deleteArtifacts: build.mutation({
-        query: ({ projectId, bucket, fname }) => ({
-          url: `/artifacts/artifacts/default/${projectId}/${encodeURI(bucket)}?${fname.map(name => `fname[]=${encodeURI(name)}`).join('&')}`,
-          method: 'DELETE',
-        }),
-        invalidatesTags: [TAG_ARTIFACTS, TAG_BUCKETS], // Also invalidate buckets when files are deleted
+        queryFn: async ({ projectId, bucket, fname }, _queryApi, _extraOptions, baseQuery) => {
+          const base = `/artifacts/artifacts/default/${projectId}/${encodeURI(bucket)}`;
+
+          const chunks = [];
+          let current = [];
+          let currentLen = base.length + 1; // +1 for '?'
+
+          for (const name of fname) {
+            const param = `fname[]=${encodeURIComponent(name)}&`;
+            if (currentLen + param.length > DELETE_ARTIFACTS_MAX_PATH_LENGTH && current.length > 0) {
+              chunks.push(current);
+              current = [];
+              currentLen = base.length + 1;
+            }
+            current.push(name);
+            currentLen += param.length;
+          }
+          if (current.length > 0) chunks.push(current);
+
+          // Execute sequentially so a failure stops further deletions immediately,
+          // avoiding partial deletes continuing after an error.
+          for (const chunk of chunks) {
+            const result = await baseQuery({
+              url: `${base}?${chunk.map(n => `fname[]=${encodeURIComponent(n)}`).join('&')}`,
+              method: 'DELETE',
+            });
+            if (result.error) return { error: result.error };
+          }
+          return { data: null };
+        },
+        invalidatesTags: [TAG_ARTIFACTS, TAG_BUCKETS],
       }),
     }),
   });

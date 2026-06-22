@@ -6,6 +6,7 @@ import { Box, Typography } from '@mui/material';
 
 import { AgentInput } from '@/[fsd]/features/agent/ui/agent-details/configurations';
 import ApplicationAdvanceSettings from '@/[fsd]/features/agent/ui/agent-details/configurations/ApplicationAdvanceSettings';
+import { GenerateAgentButton } from '@/[fsd]/features/agent/ui/generate-agent-modal';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { useFieldFocus } from '@/[fsd]/shared/lib/hooks';
 import { Input } from '@/[fsd]/shared/ui';
@@ -101,6 +102,7 @@ const CreateAgentForm = memo(props => {
         items={[
           {
             title: 'General',
+            summaryAction: entityType !== 'pipeline' ? <GenerateAgentButton /> : null,
             content: (
               <Box sx={styles.accordionContent}>
                 <Box sx={styles.nameContainer}>
@@ -198,10 +200,7 @@ const CreateAgentForm = memo(props => {
       />
       <AgentInput.WelcomeMessageInput style={styles.welcomeMessageInput} />
       <ConversationStarters style={styles.conversationStarters} />
-      <ApplicationAdvanceSettings
-        style={styles.advanceSettings}
-        showIgnoreProjectContext
-      />
+      <ApplicationAdvanceSettings style={styles.advanceSettings} />
     </Box>
   );
 });

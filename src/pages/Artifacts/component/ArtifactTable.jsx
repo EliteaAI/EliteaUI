@@ -3,6 +3,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { format } from 'date-fns';
 import { useSelector } from 'react-redux';
 
+import { Box, LinearProgress, Typography } from '@mui/material';
+
 import {
   SortComparators,
   usePagination,
@@ -102,7 +104,12 @@ export default function ArtifactTable(props) {
 
   const [
     deleteArtifacts,
-    { isError: isDeleteArtifactsError, isSuccess: isDeleteArtifactsSuccess, error: deleteArtifactsError },
+    {
+      isLoading: isDeleteArtifactsLoading,
+      isError: isDeleteArtifactsError,
+      isSuccess: isDeleteArtifactsSuccess,
+      error: deleteArtifactsError,
+    },
   ] = useDeleteArtifactsMutation();
 
   const { data, isFetching, isError, error, refetch } = useArtifactListQuery(
@@ -541,6 +548,29 @@ export default function ArtifactTable(props) {
               ))}
             </GridTableBody>
 
+            {isDeleteArtifactsLoading &&
+              rowSelectionModel.length > ARTIFACT_TABLE_CONFIG.DEFAULT_PAGE_SIZE && (
+                <Box sx={styles.batchProgress}>
+                  <Typography
+                    variant="caption"
+                    sx={styles.batchProgressLabel}
+                  >
+                    Deleting {rowSelectionModel.length} files…
+                  </Typography>
+                  <LinearProgress sx={styles.batchProgressBar} />
+                </Box>
+              )}
+            {isUploading && fileStatuses.length > ARTIFACT_TABLE_CONFIG.DEFAULT_PAGE_SIZE && (
+              <Box sx={styles.batchProgress}>
+                <Typography
+                  variant="caption"
+                  sx={styles.batchProgressLabel}
+                >
+                  Uploading {fileStatuses.length} files…
+                </Typography>
+                <LinearProgress sx={styles.batchProgressBar} />
+              </Box>
+            )}
             {filteredRows.length > 0 && <GridTablePagination {...pagination} />}
           </>
         )}
@@ -558,6 +588,19 @@ export default function ArtifactTable(props) {
 
 /** @type {MuiSx} */
 const artifactTableStyles = () => ({
+  batchProgress: ({ palette, spacing }) => ({
+    display: 'flex',
+    flexDirection: 'column',
+    gap: spacing(0.5),
+    padding: spacing(1, 2),
+    borderTop: `0.0625rem solid ${palette.border.lines}`,
+  }),
+  batchProgressLabel: ({ palette }) => ({
+    color: palette.text.secondary,
+  }),
+  batchProgressBar: {
+    borderRadius: '0.25rem',
+  },
   folderIcon: ({ palette }) => ({
     fontSize: '1.125rem',
     color: palette.icon.fill.secondary,
