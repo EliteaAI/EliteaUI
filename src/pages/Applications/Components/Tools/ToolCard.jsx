@@ -14,7 +14,7 @@ import { OpenApiDelegatedLoginButton } from '@/[fsd]/features/openapi/ui';
 import { useGetToolkitNameFromSchema } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks/useGetToolkitNameFromSchema.hooks.js';
 import { useResolvedSharepointConfig } from '@/[fsd]/features/sharepoint/lib/hooks/useResolvedSharepointConfig.hooks';
 import { SharepointDelegatedLoginButton } from '@/[fsd]/features/sharepoint/ui';
-import { ToolkitFormHelpers } from '@/[fsd]/features/toolkits/lib/helpers/index.js';
+import { ToolkitFormHelpers, ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers/index.js';
 import { Banner } from '@/[fsd]/shared/ui';
 import { TypographyWithConditionalTooltip } from '@/[fsd]/shared/ui/tooltip';
 import AttachIcon from '@/assets/attach-icon.svg?react';
@@ -179,6 +179,14 @@ const ToolCard = memo(props => {
       !!availableTools?.length &&
       tool?.settings?.selected_tools?.some(item => !availableTools.includes(item)),
     [availableTools, tool?.settings?.selected_tools],
+  );
+
+  // Whole toolkit blocked by org guardrails. Distinct from someToolsAreUnavailable
+  // (which only fires for a partial tool removal): when the whole toolkit type is
+  // blocked, its schema is absent so availableTools is empty and that flag is false.
+  const isBlockedToolkit = useMemo(
+    () => tool?.type !== 'application' && ToolkitsHelpers.isToolkitTypeBlocked(tool?.type),
+    [tool?.type],
   );
 
   const { doValidateVersion } = useManualValidateApplicationVersion({
@@ -570,7 +578,12 @@ const ToolCard = memo(props => {
               )}
             </Box>
           </Box>
-          {someToolsAreUnavailable && !validationInfo && !showActions && (
+          {isBlockedToolkit && !validationInfo && !showActions && (
+            <Banner.BannerMessage
+              message={`${ToolkitsHelpers.getToolkitTypeLabel(tool?.type)} toolkit is blocked by your organization.`}
+            />
+          )}
+          {!isBlockedToolkit && someToolsAreUnavailable && !validationInfo && !showActions && (
             <Banner.BannerMessage message="Some tools are not available anymore." />
           )}
           {showVariables && (

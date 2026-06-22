@@ -56,6 +56,7 @@ const ParticipantItem = memo(props => {
     shouldDisableThisItem,
     hasMisconfigurationErrors,
     someToolsAreUnavailable,
+    blockedToolkitNames,
     isPublishedAgentGone,
     isVersionUnavailable,
     mcpIsDisconnected,
@@ -402,6 +403,7 @@ const ParticipantItem = memo(props => {
               shouldDisableThisItem={shouldDisableThisItem}
               mcpIsDisconnected={mcpIsDisconnected}
               someToolsAreUnavailable={someToolsAreUnavailable}
+              blockedToolkitNames={blockedToolkitNames}
               remoteMcpLoggedOut={remoteMcpLoggedOut}
               spOAuthLoggedOut={spOAuthLoggedOut}
               participant={participant}

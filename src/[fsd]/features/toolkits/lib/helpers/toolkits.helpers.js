@@ -1,8 +1,36 @@
 import { ParticipantEntityTypes } from '@/[fsd]/features/chat/participants/lib/constants/participant.constants';
 import { CredentialNameHelpers } from '@/[fsd]/features/credentials/lib/helpers';
 import { McpConstants } from '@/[fsd]/features/toolkits/lib/constants';
+import { BLOCKED_TOOLKITS } from '@/common/constants';
 import { getToolIconByType } from '@/common/toolkitUtils';
 import { ToolTypes } from '@/pages/Applications/Components/Tools/consts';
+
+// Separator/case-insensitive key, matching the SDK/admin guardrail normalization
+// so 'GitHub', 'github' and 'git_hub' all collapse to the same comparison key.
+const canonToolkitKey = value =>
+  String(value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
+
+/**
+ * True when a toolkit type is on the org guardrails blocklist (BLOCKED_TOOLKITS).
+ * Matching is case/separator-insensitive.
+ */
+export const isToolkitTypeBlocked = type => {
+  const key = canonToolkitKey(type);
+  return !!key && (BLOCKED_TOOLKITS || []).some(blocked => canonToolkitKey(blocked) === key);
+};
+
+/**
+ * Display label for a toolkit TYPE (e.g. 'github' -> 'Github'). Blocking is done
+ * by type, so the blocked-toolkit warning must name the type — never the user's
+ * instance/configuration name (every toolkit of this type is blocked regardless).
+ */
+export const getToolkitTypeLabel = type => {
+  const t = typeof type === 'string' ? type.trim() : '';
+  if (!t) return 'Toolkit';
+  return t.charAt(0).toUpperCase() + t.slice(1);
+};
 
 const parseParametersString = parametersString => {
   // Handle the case where parameters are already in proper format

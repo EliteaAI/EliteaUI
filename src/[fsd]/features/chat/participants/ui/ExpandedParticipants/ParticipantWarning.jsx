@@ -14,6 +14,7 @@ const ParticipantWarning = memo(props => {
     shouldDisableThisItem,
     mcpIsDisconnected,
     someToolsAreUnavailable,
+    blockedToolkitNames,
     remoteMcpLoggedOut,
     spOAuthLoggedOut,
     participant,
@@ -64,6 +65,11 @@ const ParticipantWarning = memo(props => {
 
   if (mcpIsDisconnected) {
     return `The ${originalDetails.name} mcp server is disconnected. Reconnect it to use.`;
+  }
+
+  if (blockedToolkitNames?.length) {
+    const plural = blockedToolkitNames.length > 1 ? 's are' : ' is';
+    return `${blockedToolkitNames.join(', ')} toolkit${plural} blocked by your organization.`;
   }
 
   if (someToolsAreUnavailable) {
