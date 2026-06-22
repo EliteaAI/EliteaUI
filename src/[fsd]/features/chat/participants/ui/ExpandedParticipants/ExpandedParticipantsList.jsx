@@ -70,7 +70,10 @@ const ExpandedPerticapantsList = memo(props => {
           p.entity_settings?.agent_type === ChatParticipantType.Pipelines
         )
           key = ChatParticipantType.Pipelines;
-        else if (p.entity_name === ChatParticipantType.Toolkits && p.entity_settings?.toolkit_type === 'mcp')
+        else if (
+          p.entity_name === ChatParticipantType.Toolkits &&
+          (isMcpToolkitType(p.entity_settings?.toolkit_type) || p.meta?.mcp === true)
+        )
           key = 'mcp';
 
         if (!acc[key]) acc[key] = [];
