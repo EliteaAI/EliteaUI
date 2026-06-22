@@ -63,13 +63,10 @@ const usePlaybackConversation = ({
           firstUserMessage,
         });
 
-        const newParticipants = (result.data.participants ?? []).filter(
-          participant => participant.id !== firstUserMessage?.author_participant_id,
-        );
         const newPlaybackConversation = {
           ...conversation,
           ...result.data,
-          participants: newParticipants,
+          participants: result.data.participants ?? [],
           chat_history: chatHistory,
           isPlayback: true,
           messages_count: messages.total,
