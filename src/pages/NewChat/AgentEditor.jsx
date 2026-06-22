@@ -40,6 +40,7 @@ const AgentEditorContent = memo(props => {
     entityProjectId,
     // When provided, public-agent model changes save to entity_settings (per-conversation override)
     onPublicLlmOverride,
+    onAgentCreated,
   } = props;
   const { setFieldValue } = useFormikContext();
 
@@ -83,7 +84,10 @@ const AgentEditorContent = memo(props => {
           />
         )}
         {isCreateMode ? (
-          <CreateAgentForm sx={styles.createForm} />
+          <CreateAgentForm
+            sx={styles.createForm}
+            onAgentCreated={onAgentCreated}
+          />
         ) : (
           <ApplicationConfigurationForm
             applicationId={agentId}
@@ -344,6 +348,7 @@ const AgentEditor = memo(
             onPublicLlmOverride={
               isPublic && onConversationLlmOverride ? onConversationLlmOverride : undefined
             }
+            onAgentCreated={isCreateMode ? handleAgentCreated : undefined}
           />
         </BaseEditor>
       </InstructionsInputRefProvider>
