@@ -387,7 +387,7 @@ const SingleSelect = memo(props => {
                         disabled
                         sx={{ justifyContent: 'flex-start', padding: '0.5rem 1rem', fontSize: '0.875rem' }}
                       >
-                        {isListFetching ? '' : 'Still no saved credentials'}
+                        {isListFetching ? '' : (group.emptyLabel || 'Still no saved credentials')}
                       </MenuItem>,
                     ]
                   : groupOptions.map((option, index) => {
