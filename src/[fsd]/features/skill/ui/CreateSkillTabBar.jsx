@@ -1,7 +1,7 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useFormikContext } from 'formik';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { Button as MuiButton } from '@mui/material';
 
@@ -9,7 +9,7 @@ import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import { useSkillCreateMutation } from '@/[fsd]/features/skill/api';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
-import { SkillsTabs } from '@/common/constants';
+import { SearchParams, SkillsTabs } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils.jsx';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import useNavBlocker from '@/hooks/useNavBlocker';
@@ -21,6 +21,7 @@ import RouteDefinitions from '@/routes';
 const CreateSkillTabBar = memo(() => {
   const formik = useFormikContext();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const projectId = useSelectedProjectId();
   const { toastError } = useToast();
   const [createSkill, { isLoading, error, isError }] = useSkillCreateMutation();
@@ -64,6 +65,22 @@ const CreateSkillTabBar = memo(() => {
 
       formik.resetForm({ values: formik.values });
       const skillId = result?.id;
+
+      // Came from an agent's "+ Skill > Create new": return to the agent with the new skill id
+      // so the SKILLS section auto-attaches it.
+      const returnUrl = searchParams.get(SearchParams.ReturnUrl);
+      const sourceApplicationId = searchParams.get(SearchParams.SourceApplicationId);
+      if (returnUrl && sourceApplicationId && skillId) {
+        const urlObj = new URL(decodeURIComponent(returnUrl), window.location.origin);
+        urlObj.searchParams.set('newSkillId', String(skillId));
+        // Defer so the resetForm above clears before navigating, otherwise the
+        // unsaved-changes nav blocker intercepts the return.
+        setTimeout(() => {
+          navigate({ pathname: urlObj.pathname, search: urlObj.search }, { replace: true });
+        }, 0);
+        return;
+      }
+
       const pathname = `${RouteDefinitions.Skills}/${SkillsTabs[0]}/${skillId}`;
       setTimeout(() => {
         navigate(pathname, { replace: true });
@@ -71,17 +88,23 @@ const CreateSkillTabBar = memo(() => {
     } catch (e) {
       toastError(buildErrorMessage(e));
     }
-  }, [createSkill, formik, navigate, projectId, toastError]);
+  }, [createSkill, formik, navigate, projectId, searchParams, toastError]);
 
   const onCancel = useCallback(() => {
     setWantToCancel(true);
   }, []);
 
   useEffect(() => {
-    if (wantToCancel) {
+    if (!wantToCancel) return;
+    // If we came from an agent's "Create new", return to that agent; else the skills list.
+    const returnUrl = searchParams.get(SearchParams.ReturnUrl);
+    if (returnUrl) {
+      const urlObj = new URL(decodeURIComponent(returnUrl), window.location.origin);
+      navigate({ pathname: urlObj.pathname, search: urlObj.search }, { replace: true });
+    } else {
       navigate(RouteDefinitions.Skills);
     }
-  }, [navigate, wantToCancel]);
+  }, [navigate, wantToCancel, searchParams]);
 
   useEffect(() => {
     if (isError) {

@@ -1,11 +1,6 @@
 import yaml from 'js-yaml';
 import { v4 as uuidv4 } from 'uuid';
 
-import {
-  setDefaultModelsForImportedAgents,
-  setDefaultModelsForImportedDatasources,
-} from './importWizardModels.helpers';
-import { setDefaultStorageForImportedDatasources } from './importWizardStorage.helpers';
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import {
   LAYOUT_VERSION,
@@ -17,6 +12,12 @@ import {
   ParsePipelineHelpers,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { deepCloneObject } from '@/common/utils';
+
+import {
+  setDefaultModelsForImportedAgents,
+  setDefaultModelsForImportedDatasources,
+} from './importWizardModels.helpers';
+import { setDefaultStorageForImportedDatasources } from './importWizardStorage.helpers';
 
 export const parseMdFrontmatter = content => {
   // Remove BOM and trim leading whitespace
@@ -131,9 +132,35 @@ const buildToolsFromNestedPipelines = frontmatter =>
     ...(nested.version ? { application_version: nested.version } : {}),
   }));
 
+// Reconstruct attached skills from an agent's MD frontmatter so import recreates and
+// re-attaches them, mirroring the JSON export shape: a top-level skills entity list
+// plus per-version { import_uuid, version_name } refs the backend uses to re-attach.
+// Returns empty arrays for skill-less agents (frontmatter has no `skills`).
+const buildSkillsFromFrontmatter = frontmatter => {
+  const skillsByName = new Map();
+  const skillRefs = [];
+
+  (frontmatter.skills || []).forEach(block => {
+    const name = block?.name;
+    if (!name) return;
+    // Skills default to their 'base' version (matches the backend skill version default).
+    const versionName = block.version || 'base';
+    let skill = skillsByName.get(name);
+    if (!skill) {
+      skill = { import_uuid: uuidv4(), name, description: block.description || '', versions: [] };
+      skillsByName.set(name, skill);
+    }
+    if (!skill.versions.some(v => v.name === versionName))
+      skill.versions.push({ name: versionName, instructions: block.instructions || '' });
+    skillRefs.push({ import_uuid: skill.import_uuid, version_name: versionName });
+  });
+
+  return { skills: [...skillsByName.values()], skillRefs };
+};
+
 //   Always generate import_uuid for linking
 const buildApplicationObject = props => {
-  const { frontmatter, versionName, instructions, agentType, allTools, pipelineSettings } = props;
+  const { frontmatter, versionName, instructions, agentType, allTools, pipelineSettings, skillRefs } = props;
 
   return {
     name: frontmatter.name || 'Imported Application',
@@ -162,6 +189,8 @@ const buildApplicationObject = props => {
         pipeline_settings: pipelineSettings,
         conversation_starters: frontmatter.conversation_starters || [],
         welcome_message: frontmatter.welcome_message || '',
+        // Per-version skill refs so the backend re-attaches imported skills (omitted when none).
+        ...(skillRefs?.length ? { skills: skillRefs } : {}),
       },
     ],
   };
@@ -179,6 +208,8 @@ export const mdToApplicationJson = (frontmatter, body) => {
   const allTools = [...tools, ...nestedAgentTools, ...nestedPipelineTools];
   const versionName = frontmatter.version || LATEST_VERSION_NAME;
 
+  const { skills, skillRefs } = buildSkillsFromFrontmatter(frontmatter);
+
   const application = buildApplicationObject({
     frontmatter,
     versionName,
@@ -186,12 +217,15 @@ export const mdToApplicationJson = (frontmatter, body) => {
     agentType,
     allTools,
     pipelineSettings,
+    skillRefs,
   });
 
   return {
     _metadata: { version: 2, format: 'md' },
     applications: [application],
     toolkits: [],
+    // Top-level skill entities the backend recreates (new IDs) then re-attaches via the refs above.
+    ...(skills.length ? { skills } : {}),
   };
 };
 

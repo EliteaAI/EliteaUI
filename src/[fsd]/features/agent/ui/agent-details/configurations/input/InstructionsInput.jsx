@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
@@ -6,8 +6,10 @@ import { Box } from '@mui/material';
 
 import { useInstructionsInputRefContext } from '@/[fsd]/app/providers';
 import { useInstructionsMention } from '@/[fsd]/features/agent/lib/hooks/useInstructionsMention.hooks';
+import { useInstructionsSkillMention } from '@/[fsd]/features/agent/lib/hooks/useInstructionsSkillMention.hooks';
 import { AGENT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
-import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
+import { MentionSkillList } from '@/[fsd]/features/skill/ui';
+import { AccordionConstants, MentionConstants } from '@/[fsd]/shared/lib/constants';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { FileReaderEnhancer } from '@/[fsd]/shared/ui/input';
 import { contextResolver } from '@/common/utils';
@@ -114,7 +116,57 @@ const InstructionsInput = memo(props => {
     versionDetails: version_details,
   });
 
-  const hasHighlights = highlightRanges.length > 0;
+  const {
+    phase: skillPhase,
+    committedMentions: skillCommittedMentions,
+    filteredItems: skillFilteredItems,
+    highlightedIndex: skillHighlightedIndex,
+    highlightRanges: skillHighlightRanges,
+    codeMirrorExtensions: skillCodeMirrorExtensions,
+    onKeyDown: skillMentionOnKeyDown,
+    onInstructionsInputChange: onSkillInstructionsInputChange,
+    onSelectItem: onSelectSkill,
+    resetSlash: resetSkill,
+  } = useInstructionsSkillMention({
+    fileReaderRef: inputRef,
+    projectId,
+    versionDetails: version_details,
+  });
+
+  // Merge "/" tool-mention and "~" skill-mention highlights so both render in the
+  // mirror overlay (textarea) and the full-screen CodeMirror surface simultaneously.
+  const mergedHighlightRanges = useMemo(
+    () => [...highlightRanges, ...skillHighlightRanges].sort((a, b) => a.start - b.start),
+    [highlightRanges, skillHighlightRanges],
+  );
+  const mergedCodeMirrorExtensions = useMemo(
+    () => [...codeMirrorExtensions, ...skillCodeMirrorExtensions],
+    [codeMirrorExtensions, skillCodeMirrorExtensions],
+  );
+
+  const isSkillPhaseActive = skillPhase !== MentionConstants.MentionPhase.Idle;
+  const isSlashPhaseActive = phase !== MentionConstants.MentionPhase.Idle;
+
+  // Route keydown to the active machine; when both idle, let both see the keypress so
+  // each can detect ONLY its own trigger ("/" vs "~"). They never cross-talk because
+  // a machine ignores keys that are not its trigger while idle.
+  const combinedOnKeyDown = useCallback(
+    event => {
+      if (isSkillPhaseActive) {
+        skillMentionOnKeyDown(event);
+        return;
+      }
+      if (isSlashPhaseActive) {
+        mentionOnKeyDown(event);
+        return;
+      }
+      mentionOnKeyDown(event);
+      skillMentionOnKeyDown(event);
+    },
+    [isSkillPhaseActive, isSlashPhaseActive, mentionOnKeyDown, skillMentionOnKeyDown],
+  );
+
+  const hasHighlights = mergedHighlightRanges.length > 0;
 
   // Sync the mirror div's geometry (position, size, padding) and scroll with the textarea.
   useEffect(() => {
@@ -178,7 +230,7 @@ const InstructionsInput = memo(props => {
     >
       {renderMirrorHighlights(
         version_details?.instructions ?? '',
-        highlightRanges,
+        mergedHighlightRanges,
         theme.palette.text.secondary,
         theme.palette.primary.main,
       )}
@@ -189,13 +241,22 @@ const InstructionsInput = memo(props => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Intercept onChange so the mention hook tracks the current textarea content.
+  // Intercept onChange so BOTH mention hooks track the current textarea content.
   const handleInstructionsChange = useCallback(
     value => {
       handleChange('version_details.instructions')(value);
       onInstructionsInputChange(value);
+      onSkillInstructionsInputChange(value);
     },
-    [handleChange, onInstructionsInputChange],
+    [handleChange, onInstructionsInputChange, onSkillInstructionsInputChange],
+  );
+
+  const handleRealtimeChange = useCallback(
+    value => {
+      onInstructionsInputChange(value);
+      onSkillInstructionsInputChange(value);
+    },
+    [onInstructionsInputChange, onSkillInstructionsInputChange],
   );
 
   const suggestionList = (
@@ -211,6 +272,19 @@ const InstructionsInput = memo(props => {
       onClose={resetSlash}
     />
   );
+
+  const skillSuggestionList = (
+    <MentionSkillList
+      phase={skillPhase}
+      filteredItems={skillFilteredItems}
+      committedMentions={skillCommittedMentions}
+      highlightedIndex={skillHighlightedIndex}
+      onSelectItem={onSelectSkill}
+      onClose={resetSkill}
+    />
+  );
+
+  const activeSuggestionList = isSkillPhaseActive ? skillSuggestionList : suggestionList;
 
   return (
     <BasicAccordion
@@ -238,16 +312,16 @@ const InstructionsInput = memo(props => {
                   multiline
                   disabled={disabled}
                   fieldName={'Instructions'}
-                  onKeyDown={mentionOnKeyDown}
-                  onRealtimeChange={onInstructionsInputChange}
+                  onKeyDown={combinedOnKeyDown}
+                  onRealtimeChange={handleRealtimeChange}
                   onFullScreenChange={setIsModalOpen}
-                  afterContent={suggestionList}
+                  afterContent={activeSuggestionList}
                   overlayContent={overlayContent}
-                  codeMirrorExtensions={codeMirrorExtensions}
+                  codeMirrorExtensions={mergedCodeMirrorExtensions}
                   sx={hasHighlights ? styles.transparentInput : undefined}
                 />
               </Box>
-              {!isModalOpen && suggestionList}
+              {!isModalOpen && activeSuggestionList}
             </Box>
           ),
         },

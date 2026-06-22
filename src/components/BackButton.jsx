@@ -66,22 +66,19 @@ const BackButton = memo(() => {
         }
       }
 
-      // Special handling for CreateToolkit pages - check for ReturnUrl parameter first
-      if (pageType === 'ToolkitDetails' || pageType === 'MCPDetails') {
-        const returnUrl = searchParams.get(SearchParams.ReturnUrl);
-        if (returnUrl) {
-          // Return to the source application page
-          const decodedReturnUrl = decodeURIComponent(returnUrl);
-          const url = new URL(decodedReturnUrl, window.location.origin);
-          navigate(
-            {
-              pathname: url.pathname,
-              search: url.search,
-            },
-            { replace: true },
-          );
-          return;
-        }
+      const returnUrl = searchParams.get(SearchParams.ReturnUrl);
+      if (returnUrl) {
+        // Return to the source application page
+        const decodedReturnUrl = decodeURIComponent(returnUrl);
+        const url = new URL(decodedReturnUrl, window.location.origin);
+        navigate(
+          {
+            pathname: url.pathname,
+            search: url.search,
+          },
+          { replace: true },
+        );
+        return;
       }
 
       if (prevPath) {
