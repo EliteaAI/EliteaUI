@@ -8,7 +8,6 @@ import {
   bitbucketToolOptions,
   browserToolOptions,
   confluenceToolOptions,
-  datasourceToolOptions,
   githubToolOptions,
   gitlabToolOptions,
   googleToolOptions,
@@ -84,10 +83,6 @@ export const ToolTypes = {
   custom: {
     label: 'Custom',
     value: 'custom',
-  },
-  datasource: {
-    label: 'Datasource',
-    value: 'datasource',
   },
   github: {
     label: 'GitHub',
@@ -202,13 +197,6 @@ export const ToolInitialValues = {
     settings: {
       bucket: '',
       selected_tools: artifactToolOptions.map(i => i.value),
-    },
-  },
-  [ToolTypes.datasource.value]: {
-    type: ToolTypes.datasource.value,
-    settings: {
-      datasource_id: '',
-      selected_tools: datasourceToolOptions.map(i => i.value),
     },
   },
   [ToolTypes.open_api.value]: {

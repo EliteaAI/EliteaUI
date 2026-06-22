@@ -15,7 +15,6 @@ import agentsStudioReducer, { name as agentsStudioReducerName } from '@/slices/a
 import applicationsReducer, { name as applicationsReducerName } from '@/slices/applications';
 import artifactReducer, { name as artifactReducerName } from '@/slices/artifact';
 import chatReducer, { name as chatReducerName } from '@/slices/chat';
-import datasourcesReducer, { name as datasourcesReducerName } from '@/slices/datasources';
 import fileTypesReducer, { name as fileTypesReducerName } from '@/slices/fileTypes';
 import pipelineReducer, { name as pipelineReducerName } from '@/slices/pipeline';
 import pipelineEditorReducer, { name as pipelineEditorReducerName } from '@/slices/pipelineEditor';
@@ -35,7 +34,6 @@ const store = configureStore({
     [artifactReducerName]: artifactReducer,
     [authorReducerName]: authorReducer,
     [chatReducerName]: chatReducer,
-    [datasourcesReducerName]: datasourcesReducer,
     [fileTypesReducerName]: fileTypesReducer,
     [importWizardReducerName]: importWizardReducer,
     [pipelineEditorReducerName]: pipelineEditorReducer,

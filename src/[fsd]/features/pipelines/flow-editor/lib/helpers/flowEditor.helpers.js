@@ -167,13 +167,6 @@ export const getEnumList = (type, schemaEnum, inputOptions) => {
 };
 
 /**
- * Creates default mapping for datasource toolkit
- */
-const createDatasourceMapping = existingMapping => ({
-  query: { ...(existingMapping?.query || { type: 'variable', value: '' }) },
-});
-
-/**
  * Gets appropriate default value based on property type
  * @param {Object} property - The property schema object with type and enum
  * @returns {*} Default value appropriate for the type
@@ -248,26 +241,12 @@ export const getDefaultInputMappingOfTool = (
   selectedToolkit,
   dynamicArgsSchemas = {},
 ) => {
-  if (
-    selectedToolkit?.type === ToolTypes.application.value ||
-    selectedToolkit?.type === ToolTypes.datasource.value
-  ) {
-    switch (selectedToolkit?.type) {
-      case ToolTypes.application.value: {
-        const { mapping, mappingInfo, defaultValues } = createApplicationMapping(
-          existingMapping,
-          selectedToolkit,
-        );
-        return { mapping, mappingInfo, defaultValues };
-      }
-      case ToolTypes.datasource.value: {
-        const mapping = createDatasourceMapping(existingMapping);
-        return { mapping };
-      }
-      default:
-        break;
-    }
-    return { mapping: {} };
+  if (selectedToolkit?.type === ToolTypes.application.value) {
+    const { mapping, mappingInfo, defaultValues } = createApplicationMapping(
+      existingMapping,
+      selectedToolkit,
+    );
+    return { mapping, mappingInfo, defaultValues };
   }
 
   // For Remote MCP tools, extract args_schema from available_mcp_tools
@@ -353,35 +332,14 @@ const createApplicationTooltips = selectedToolkit => {
   return tooltips;
 };
 
-/**
- * Creates tooltips for datasource toolkit
- */
-const createDatasourceTooltips = () => ({
-  query: 'Defines the query to be executed against the datasource.',
-});
-
 export const getRequiredInputsAndTooltips = (
   toolkitTypes,
   selectedTool,
   selectedToolkit,
   dynamicArgsSchemas = {},
 ) => {
-  if (
-    selectedToolkit?.type === ToolTypes.application.value ||
-    selectedToolkit?.type === ToolTypes.datasource.value
-  ) {
-    let tooltips = {};
-    switch (selectedToolkit?.type) {
-      case ToolTypes.application.value:
-        tooltips = createApplicationTooltips(selectedToolkit);
-        break;
-      case ToolTypes.datasource.value:
-        tooltips = createDatasourceTooltips();
-        break;
-      default:
-        break;
-    }
-
+  if (selectedToolkit?.type === ToolTypes.application.value) {
+    const tooltips = createApplicationTooltips(selectedToolkit);
     return { required: [], tooltips, enums: {} };
   }
 

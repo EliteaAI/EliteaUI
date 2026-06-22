@@ -19,7 +19,6 @@ export const ToolTypes = {
   browser: { label: 'Browser', value: 'browser' },
   confluence: { label: 'Confluence', value: 'confluence' },
   custom: { label: 'Custom', value: 'custom' },
-  datasource: { label: 'Datasource', value: 'datasource' },
   github: { label: 'GitHub', value: 'github' },
   gitlab: { label: 'GitLab', value: 'gitlab' },
   gitlab_org: { label: 'GitLab Org', value: 'gitlab_org' },

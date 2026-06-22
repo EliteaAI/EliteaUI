@@ -23,7 +23,6 @@ export const getChatParticipantUniqueId = participant => {
 export const getParticipantName = (participant, systemSenderName = DEFAULT_PARTICIPANT_NAME) => {
   switch (participant?.entity_name) {
     case ChatParticipantType.Applications:
-    case ChatParticipantType.Datasources:
       // Prefer entity_meta.name if present (set when adding participants),
       // otherwise fall back to meta.name
       return participant?.entity_meta?.name || participant?.meta?.name || '';
@@ -45,7 +44,6 @@ export const getParticipantName = (participant, systemSenderName = DEFAULT_PARTI
 export const isParticipantStillActive = participant => {
   switch (participant?.entity_name) {
     case ChatParticipantType.Applications:
-    case ChatParticipantType.Datasources:
       return !!participant?.meta?.name;
     case ChatParticipantType.Models:
       return !!participant?.entity_meta?.model_name;

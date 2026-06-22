@@ -429,23 +429,12 @@ export const URL_PARAMS_KEY_TAGS = 'tags[]';
 
 export const ContentType = {
   MyLibraryAll: 'MyLibraryAll',
-  MyLibraryDatasources: 'MyLibraryDatasources',
   MyLibraryApplications: 'MyLibraryApplications',
   UserPublicAll: 'UserPublicAll',
   UserPublicApplications: 'UserPublicApplications',
   UserPublicPipelines: 'UserPublicPipelines',
   UserPublicToolkits: 'UserPublicToolkits',
   UserPublicMCPs: 'UserPublicMCPs',
-  DatasourcesLatest: 'DatasourcesLatest',
-  DatasourcesMyLiked: 'DatasourcesMyLiked',
-  DatasourcesTrending: 'DatasourcesTrending',
-  DatasourcesAdmin: 'DatasourcesAdmin',
-  DatasourcesAll: 'DatasourcesAll',
-  DatasourcesDraft: 'DatasourcesDraft',
-  DatasourcesPublished: 'DatasourcesPublished',
-  DatasourcesModeration: 'DatasourcesModeration',
-  DatasourcesApproval: 'DatasourcesApproval',
-  DatasourcesRejected: 'DatasourcesRejected',
   ApplicationTop: 'ApplicationTop',
   ApplicationLatest: 'ApplicationLatest',
   ApplicationMyLiked: 'ApplicationMyLiked',
@@ -538,15 +527,6 @@ export const PERMISSIONS = {
       delete: 'models.chat.folders.delete',
     },
   },
-  datasources: {
-    list: 'models.datasources.public_datasources.list',
-    create: 'models.datasources.datasources.create',
-    delete: 'models.datasources.datasource.delete',
-    export: 'models.datasources.export_import.export',
-    fork: 'models.datasources.fork.post',
-    update: 'models.datasources.datasources.update',
-    // webhook: 'models.datasources.webhook.post' // According to Mikhail's comment, this permission is not used
-  },
   applications: {
     list: 'models.applications.public_applications.list',
     create: 'models.applications.applications.create',
@@ -622,7 +602,6 @@ export const PERMISSIONS = {
 
 export const PERMISSION_GROUPS = {
   chat: [PERMISSIONS.chat.folders.get],
-  datasources: [PERMISSIONS.datasources.list],
   agents: [PERMISSIONS.applications.list],
   pipelines: [PERMISSIONS.pipelines.list],
   credentials: [PERMISSIONS.toolkits.list],
@@ -630,7 +609,7 @@ export const PERMISSION_GROUPS = {
   toolkits: [PERMISSIONS.toolkits.list],
 };
 
-export const AutoSuggestionTypes = ['tag', 'application', 'datasource', 'pipeline', 'toolkit'];
+export const AutoSuggestionTypes = ['tag', 'application', 'pipeline', 'toolkit'];
 
 export const AutoSuggestionTitles = {
   TOP: 'Top Search Requests',
@@ -908,9 +887,6 @@ export const sioEvents = {
   application_leave_rooms: 'application_leave_rooms',
   promptlib_predict: 'promptlib_predict',
   promptlib_leave_rooms: 'promptlib_leave_rooms',
-  datasource_predict: 'datasource_predict',
-  datasource_dataset_status: 'datasource_dataset_status',
-  datasource_leave_rooms: 'datasource_leave_rooms',
   notifications_notify: 'notifications_notify',
 
   //Canvas
@@ -966,7 +942,6 @@ export const ChatSearchEvents = {
 export const ChatParticipantType = {
   Applications: 'application',
   Toolkits: 'toolkit',
-  Datasources: 'datasource',
   Models: 'llm',
   Users: 'user',
   Pipelines: 'pipeline',
@@ -975,26 +950,23 @@ export const ChatParticipantType = {
 
 export const ChatParticipantTypeLabel = {
   application: 'Agents',
-  datasource: 'Datasources',
   llm: 'Models',
   user: 'Users',
   pipeline: 'Pipelines',
 };
 
 export const ChatMentionSymbols = {
-  Datasources: '#',
   Applications: '@',
   Models: '>',
 };
 
 export const ChatMentionSymbolTypeMap = {
-  '#': ChatParticipantType.Datasources,
   '@': ChatParticipantType.Applications,
   '>': ChatParticipantType.Models,
 };
 
 export const NewChatMentionSymbolTypeMap = {
-  '#': [ChatParticipantType.Applications, ChatParticipantType.Datasources],
+  '#': [ChatParticipantType.Applications],
   '@': ChatParticipantType.Users,
 };
 

@@ -506,7 +506,6 @@ export const ToolkitForm = memo(props => {
       )}
       {!hideOperationButtons && (
         <ToolkitsOperationButtons
-          editToolDetail={editToolDetail}
           isAdding={!isEditing}
           isDirty={isToolDirty}
           handleGoBack={handleGoBack}

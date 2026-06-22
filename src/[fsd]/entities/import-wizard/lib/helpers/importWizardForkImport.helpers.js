@@ -57,11 +57,7 @@ export const getImportedUUIDMap = (result, selectedData) => {
 export const updateValidationStatus = async params => {
   const { data, index, validationStatus, setFieldValue, entityLink } = params;
 
-  if (
-    data[index].versions?.length &&
-    data[index].entity !== 'datasources' &&
-    data[index].entity !== 'toolkits'
-  ) {
+  if (data[index].versions?.length && data[index].entity !== 'toolkits') {
     data[index].versions.map(async (_, versionItemIndex) => {
       await setFieldValue(
         `importItems[${index}].versions[${versionItemIndex}].validationStatus`,
@@ -118,27 +114,25 @@ export const getExistingUUIDMap = (already_exists, selectedData) => {
 };
 
 export const updateAgentToolImportUUIDs = async params => {
-  const { type, index, vIndex, tIndex, import_version_uuid, uuidMap, setFieldValue } = params;
+  const { index, vIndex, tIndex, import_version_uuid, uuidMap, setFieldValue } = params;
 
   if (uuidMap) {
     const { id, versions } = uuidMap;
-    const idFieldName = type === 'application' ? 'application_id' : 'datasource_id';
-    const versionFieldName = type === 'application' ? 'application_version_id' : '';
     await setFieldValue(
       `importItems[${index}].versions[${vIndex}].tools[${tIndex}].settings.import_uuid`,
       undefined,
     );
     await setFieldValue(
-      `importItems[${index}].versions[${vIndex}].tools[${tIndex}].settings.${idFieldName}`,
+      `importItems[${index}].versions[${vIndex}].tools[${tIndex}].settings.application_id`,
       id,
     );
-    if (type !== 'datasource' && versions[import_version_uuid]) {
+    if (versions[import_version_uuid]) {
       await setFieldValue(
         `importItems[${index}].versions[${vIndex}].tools[${tIndex}].settings.import_version_uuid`,
         undefined,
       );
       await setFieldValue(
-        `importItems[${index}].versions[${vIndex}].tools[${tIndex}].settings.${versionFieldName}`,
+        `importItems[${index}].versions[${vIndex}].tools[${tIndex}].settings.application_version_id`,
         versions[import_version_uuid],
       );
     }

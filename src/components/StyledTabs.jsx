@@ -161,8 +161,6 @@ const StyledPureTabs = memo(
 
     const warningMessage = useMemo(() => {
       switch (streamingType) {
-        case 'datasource':
-          return 'The datasource is being executed. Are you sure you want to leave?';
         case 'application':
           return 'The agent is being executed. Are you sure you want to leave?';
         default:
