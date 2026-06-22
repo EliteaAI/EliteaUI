@@ -1,11 +1,9 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { Box, IconButton, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
-import StyledTooltip from '@/ComponentsLib/Tooltip';
-import { parseMdFrontmatter } from '@/[fsd]/entities/import-wizard/lib/helpers';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { useFieldFocus } from '@/[fsd]/shared/lib/hooks';
 import { Field, Input, Markdown } from '@/[fsd]/shared/ui';
@@ -13,7 +11,6 @@ import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import TabGroupButton from '@/[fsd]/shared/ui/tab-group-button/TabGroupButton';
 import { useTagListQuery } from '@/api/tags.js';
 import CodeIcon from '@/assets/code-icon.svg?react';
-import ImportIcon from '@/assets/import-icon.svg?react';
 import OpenEyeIcon from '@/assets/open-eye-icon.svg?react';
 import {
   MAX_DESCRIPTION_LENGTH,
@@ -22,21 +19,18 @@ import {
   PROMPT_PAYLOAD_KEY,
 } from '@/common/constants';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast';
 import TagEditor from '@/pages/Common/Components/TagEditor';
 import { markdown } from '@codemirror/lang-markdown';
 import { useTheme } from '@emotion/react';
 
 const CreateSkillForm = memo(props => {
-  const { accordionStyle, sx, disabled = false, instructionsKey, isCreate = false } = props;
+  const { accordionStyle, sx, disabled = false, instructionsKey } = props;
   const formik = useFormikContext();
   const theme = useTheme();
   const projectId = useSelectedProjectId();
-  const { toastError } = useToast();
   const { data: tagList = {} } = useTagListQuery({ projectId }, { skip: !projectId });
   const [name, setName] = useState(formik.values?.name || '');
   const [instructionsViewMode, setInstructionsViewMode] = useState('edit');
-  const importInputRef = useRef(null);
   const styles = skillCreateFormStyles();
   const { toggleFieldFocus, isFocused } = useFieldFocus();
 
@@ -105,45 +99,6 @@ const CreateSkillForm = memo(props => {
       formik.setFieldValue('version_details.instructions', value);
     },
     [formik],
-  );
-
-  // Import a .md file straight into the Instructions field (reuses the same
-  // FileReader.readAsText logic as FileReaderEnhancer.handleDrop).
-  const onClickImport = useCallback(() => {
-    importInputRef.current?.click();
-  }, []);
-
-  const onImportFile = useCallback(
-    event => {
-      const file = event.target.files?.[0];
-      event.target.value = '';
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        const raw = String(reader.result ?? '');
-        try {
-          const { frontmatter, body } = parseMdFrontmatter(raw);
-          // Strip frontmatter: instructions become the body only.
-          formik.setFieldValue('version_details.instructions', body || '');
-          // Fill Name only when the field is currently empty.
-          if (!formik.values.name?.trim() && frontmatter?.name) {
-            setName(frontmatter.name);
-            formik.setFieldValue('name', frontmatter.name);
-          }
-          // Fill Description only when the field is currently empty.
-          if (!formik.values.description?.trim() && frontmatter?.description) {
-            formik.setFieldValue('description', frontmatter.description);
-          }
-          // Ignore all other frontmatter (tags, version, type, etc.).
-        } catch {
-          // No frontmatter / parse failure: fall back to pasting the raw text.
-          formik.setFieldValue('version_details.instructions', raw);
-        }
-      };
-      reader.onerror = () => toastError('Failed to read the file.');
-      reader.readAsText(file);
-    },
-    [formik, toastError],
   );
 
   const instructions = formik.values?.version_details?.instructions || '';
@@ -244,31 +199,6 @@ const CreateSkillForm = memo(props => {
                 sx={styles.summaryActions}
                 onClick={e => e.stopPropagation()}
               >
-                {isCreate && (
-                  <>
-                    <StyledTooltip
-                      title="Import from a .md file"
-                      placement="top"
-                    >
-                      <IconButton
-                        size="small"
-                        aria-label="Import instructions from file"
-                        disabled={disabled}
-                        onClick={onClickImport}
-                        sx={styles.importButton}
-                      >
-                        <ImportIcon />
-                      </IconButton>
-                    </StyledTooltip>
-                    <input
-                      ref={importInputRef}
-                      type="file"
-                      accept=".md,text/markdown"
-                      hidden
-                      onChange={onImportFile}
-                    />
-                  </>
-                )}
                 <TabGroupButton
                   value={instructionsViewMode}
                   onChange={(_e, m) => m && setInstructionsViewMode(m)}
@@ -367,16 +297,6 @@ const skillCreateFormStyles = () => ({
     // stacking context so it can't escape over dialogs.
     isolation: 'isolate',
   },
-  importButton: ({ palette }) => ({
-    width: '1.75rem',
-    height: '1.75rem',
-    '& svg': {
-      fontSize: '1rem',
-      width: '1rem',
-      height: '1rem',
-      fill: palette.icon.fill.secondary,
-    },
-  }),
   instructionsWrapper: {
     display: 'flex',
     flexDirection: 'column',
