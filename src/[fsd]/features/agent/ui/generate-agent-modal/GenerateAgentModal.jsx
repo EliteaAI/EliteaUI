@@ -1,4 +1,4 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useRef, useState } from 'react';
 
 import { useNavigate } from 'react-router-dom';
 
@@ -62,6 +62,7 @@ const GenerateAgentModal = memo(props => {
   const [selectedMcpIds, setSelectedMcpIds] = useState(new Set());
   const [selectedPipelineIds, setSelectedPipelineIds] = useState(new Set());
   const [isApproving, setIsApproving] = useState(false);
+  const generatePromiseRef = useRef(null);
 
   const handleGenerate = useCallback(async () => {
     if (!description.trim()) return;
@@ -70,11 +71,14 @@ const GenerateAgentModal = memo(props => {
     resetGenerate();
 
     try {
-      const result = await generateDraft({
+      const promise = generateDraft({
         projectId,
         user_description: description,
-      }).unwrap();
+      });
+      generatePromiseRef.current = promise;
+      const result = await promise.unwrap();
 
+      generatePromiseRef.current = null;
       setDraftData(result);
       setSelectedToolkitIds(new Set());
       setSelectedAgentIds(new Set());
@@ -82,6 +86,7 @@ const GenerateAgentModal = memo(props => {
       setSelectedPipelineIds(new Set());
       setStep(STEPS.REVIEW);
     } catch {
+      generatePromiseRef.current = null;
       setStep(STEPS.INPUT);
     }
   }, [description, generateDraft, projectId, resetGenerate]);
@@ -262,6 +267,10 @@ const GenerateAgentModal = memo(props => {
   ]);
 
   const handleClose = useCallback(() => {
+    if (generatePromiseRef.current) {
+      generatePromiseRef.current.abort();
+      generatePromiseRef.current = null;
+    }
     setStep(STEPS.INPUT);
     setDescription('');
     setDraftData(null);
