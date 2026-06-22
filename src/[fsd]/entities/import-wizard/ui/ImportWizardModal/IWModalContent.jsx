@@ -4,10 +4,10 @@ import { useFormikContext } from 'formik';
 
 import { Box, Typography } from '@mui/material';
 
-import { rematchModels, rematchStorage } from '@/[fsd]/entities/import-wizard/lib/helpers';
+import { rematchModels } from '@/[fsd]/entities/import-wizard/lib/helpers';
 import IWModalDetails from '@/[fsd]/entities/import-wizard/ui/ImportWizardModal/IWModalDetails';
 import { ProjectSelectShowMode } from '@/[fsd]/features/project/lib/constants';
-import { useLazyGetConfigurationsListQuery, useListModelsQuery } from '@/api';
+import { useListModelsQuery } from '@/api';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
 import ProjectSelect from '@/components/ProjectSelect';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -19,9 +19,6 @@ const IWModalContent = memo(props => {
   const styles = iwModalContentStyles();
 
   const { values, ...formikProps } = useFormikContext();
-
-  const [getStorages, { data: storages, isError: isStorageError, isSuccess: isStorageSuccess }] =
-    useLazyGetConfigurationsListQuery();
 
   const {
     data: integrations,
@@ -41,15 +38,6 @@ const IWModalContent = memo(props => {
   );
 
   useEffect(() => {
-    if (values.selectedProject?.id) {
-      // Models are now fetched via regular query based on selectedProjectId
-      // getModels(values.selectedProject.id);
-      getStorages({ projectId: values.selectedProject.id, type: 's3' });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [values.selectedProject?.id]);
-
-  useEffect(() => {
     const updateModels = async () => {
       const newImportItems = rematchModels({
         importItems: values.importItems,
@@ -67,22 +55,6 @@ const IWModalContent = memo(props => {
   }, [integrations, isSuccess, embeddingModelOptions, isEmbeddingSuccess]);
 
   useEffect(() => {
-    const updateStorage = async () => {
-      const storageOptions = storages.items.map(item => ({
-        label: `${item.label}`,
-        value: item.uuid,
-      }));
-      const newImportItems = rematchStorage(values.importItems, storageOptions);
-      await formikProps.setFieldValue('importItems', newImportItems);
-      await formikProps.setFieldValue('storageOptions', storageOptions);
-    };
-    if (isStorageSuccess) {
-      updateStorage();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [storages, isStorageSuccess]);
-
-  useEffect(() => {
     const updateModels = async () => {
       const newImportItems = rematchModels(values.importItems, integrations, embeddingModelOptions);
       await formikProps.setFieldValue('importItems', newImportItems);
@@ -95,19 +67,6 @@ const IWModalContent = memo(props => {
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isError, isEmbeddingError]);
-
-  useEffect(() => {
-    const updateStorage = async () => {
-      const newImportItems = rematchStorage(values.importItems, []);
-
-      await formikProps.setFieldValue('importItems', newImportItems);
-      await formikProps.setFieldValue('storageOptions', []);
-    };
-
-    if (isStorageError) updateStorage();
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isStorageError]);
 
   const handleProjectSelectChange = useCallback(
     async value => {

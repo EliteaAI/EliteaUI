@@ -57,7 +57,6 @@ const ParticipantWarning = memo(props => {
   }
 
   if (shouldDisableThisItem) {
-    if (type === ChatParticipantType.Datasources) return 'Please configure datasource chat settings';
     if (type === ChatParticipantType.Applications) return 'Please configure agent chat settings';
 
     return '';

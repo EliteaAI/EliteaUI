@@ -67,30 +67,27 @@ const IWModalImportButton = memo(props => {
             for (let tIndex = 0; tIndex < tools.length; tIndex++) {
               const {
                 settings: { import_uuid, import_version_uuid },
-                type,
               } = tools[tIndex];
 
               if (import_uuid && importedUUIDMap[import_uuid]) {
                 const { id, versions } = importedUUIDMap[import_uuid];
-                const idFieldName = type === 'application' ? 'application_id' : 'datasource_id';
-                const versionFieldName = type === 'application' ? 'application_version_id' : '';
 
                 await setFieldValue(
                   `importItems[${index}].versions[${vIndex}].tools[${tIndex}].settings.import_uuid`,
                   undefined,
                 );
                 await setFieldValue(
-                  `importItems[${index}].versions[${vIndex}].tools[${tIndex}].settings.${idFieldName}`,
+                  `importItems[${index}].versions[${vIndex}].tools[${tIndex}].settings.application_id`,
                   id,
                 );
 
-                if (type !== 'datasource') {
+                {
                   await setFieldValue(
                     `importItems[${index}].versions[${vIndex}].tools[${tIndex}].settings.import_version_uuid`,
                     undefined,
                   );
                   await setFieldValue(
-                    `importItems[${index}].versions[${vIndex}].tools[${tIndex}].settings.${versionFieldName}`,
+                    `importItems[${index}].versions[${vIndex}].tools[${tIndex}].settings.application_version_id`,
                     versions[import_version_uuid],
                   );
                 }

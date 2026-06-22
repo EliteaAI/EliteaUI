@@ -1670,7 +1670,6 @@ const ChatBox = forwardRef((props, boxRef) => {
         activeParticipant?.entity_meta.project_id,
       );
       if (
-        activeParticipant.participantType !== ChatParticipantType.Datasources &&
         activeParticipant.participantType !== ChatParticipantType.Toolkits &&
         details?.version_details?.name !== LATEST_VERSION_NAME
       ) {

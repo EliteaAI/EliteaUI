@@ -10,7 +10,6 @@ import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/an
 import { useContextExecutionEntity, useProjectType } from '@/[fsd]/shared/lib/hooks';
 import useCtrlEnterKeyEventsHandler from '@/[fsd]/shared/lib/hooks/useCtrlEnterKeyEventsHandler.hooks';
 import { useStopChatTaskMutation } from '@/api';
-import { useStopDatasourceTaskMutation } from '@/api/datasources';
 import {
   ChatParticipantType,
   ROLES,
@@ -59,31 +58,16 @@ export const useStopStreaming = ({
     }
   }, [chatHistory, isFromChat, userId, userParticipantId]);
 
-  const [stopDatasourceTask, { isError: isStopDatasourceTaskError, error: stopDatasourceError }] =
-    useStopDatasourceTaskMutation();
   const [stopChatTask, { isError: isStopChatTaskError, error: stopChatTaskError }] =
     useStopChatTaskMutation();
-  const isStopError = useMemo(
-    () => isStopChatTaskError || isStopDatasourceTaskError,
-    [isStopChatTaskError, isStopDatasourceTaskError],
-  );
-  const stopError = useMemo(
-    () => stopChatTaskError || stopDatasourceError,
-    [stopChatTaskError, stopDatasourceError],
-  );
+  const isStopError = isStopChatTaskError;
+  const stopError = stopChatTaskError;
   const projectId = useSelectedProjectId();
   const onStopStreaming = useCallback(
     message => async () => {
-      const { id: streamId, task_id, participant = {} } = message;
-      const { entity_name } = participant || {};
+      const { id: streamId, task_id } = message;
       if (task_id) {
-        if (entity_name == ChatParticipantType.Datasources) {
-          await stopDatasourceTask({ projectId, task_id });
-        } else if (entity_name === ChatParticipantType.Applications) {
-          await stopChatTask({ projectId, messageGroupUuid: streamId });
-        } else {
-          await stopChatTask({ projectId, messageGroupUuid: streamId });
-        }
+        await stopChatTask({ projectId, messageGroupUuid: streamId });
       }
       emitLeaveRoom([streamId]);
       setTimeout(
@@ -109,7 +93,7 @@ export const useStopStreaming = ({
         200,
       );
     },
-    [emitLeaveRoom, projectId, setChatHistory, stopChatTask, stopDatasourceTask],
+    [emitLeaveRoom, projectId, setChatHistory, stopChatTask],
   );
 
   const onStopAll = useCallback(async () => {
@@ -120,12 +104,7 @@ export const useStopStreaming = ({
       message => message.role !== ROLES.User && message.task_id && message.isStreaming,
     );
     messagesWithTaskId.forEach(async message => {
-      const { participant: { entity_name } = {}, task_id } = message;
-      if (entity_name == ChatParticipantType.Datasources) {
-        await stopDatasourceTask({ projectId, task_id });
-      } else {
-        await stopChatTask({ projectId, messageGroupUuid: message.id });
-      }
+      await stopChatTask({ projectId, messageGroupUuid: message.id });
     });
     if (streamIds?.length) {
       emitLeaveRoom(streamIds);
@@ -145,7 +124,7 @@ export const useStopStreaming = ({
         ),
       200,
     );
-  }, [chatHistoryRef, emitLeaveRoom, projectId, setChatHistory, stopChatTask, stopDatasourceTask]);
+  }, [chatHistoryRef, emitLeaveRoom, projectId, setChatHistory, stopChatTask]);
 
   const stopAllRef = useRef(onStopAll);
   const shouldCleanupRef = useRef(true);

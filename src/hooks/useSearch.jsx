@@ -25,18 +25,10 @@ export default function useSearch() {
 
   const [getSuggestions, { data: suggestion = {}, isFetching, error: suggestionError }] =
     useLazyAutoSuggestQuery();
-  const {
-    tag = {},
-    application = {},
-    datasource = {},
-    pipeline = {},
-    credential = {},
-    toolkit = {},
-  } = suggestion || {};
+  const { tag = {}, application = {}, pipeline = {}, credential = {}, toolkit = {} } = suggestion || {};
 
   const { rows: tagResult = [], total: tagTotal } = tag || {};
   const { rows: agentResult = [], total: agentTotal } = application || {};
-  const { rows: datasourceResult = [], total: datasourceTotal } = datasource || {};
   const { rows: pipelineResult = [], total: pipelineTotal } = pipeline || {};
   const { rows: toolkitResult = [], total: toolkitTotal } = toolkit || {};
   const { rows: mcpResults = [], total: mcpTotal } = mcps || {};
@@ -48,10 +40,6 @@ export default function useSearch() {
   const sortedAgents = useMemo(
     () => [...agentResult].sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase())),
     [agentResult],
-  );
-  const sortedDatasources = useMemo(
-    () => [...datasourceResult].sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase())),
-    [datasourceResult],
   );
   const sortedPipelines = useMemo(
     () => [...pipelineResult].sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase())),
@@ -147,8 +135,6 @@ export default function useSearch() {
     tagTotal,
     agentResult: sortedAgents,
     agentTotal,
-    datasourceResult: sortedDatasources,
-    datasourceTotal,
     pipelineResult: sortedPipelines,
     pipelineTotal,
     toolkitResult: sortedToolkits,

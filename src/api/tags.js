@@ -67,89 +67,6 @@ export const tagApi = eliteaApi
           return currentArg !== previousArg;
         },
       }),
-      chatDatasourceTagList: build.query({
-        query: ({ projectId, query, page, pageSize = PAGE_SIZE, params }) => {
-          const isLoadMore = page > 0;
-          return {
-            url: apiSlicePath + '/tags/prompt_lib/' + projectId,
-            params: {
-              offset: isLoadMore ? page * pageSize : 0,
-              limit: pageSize,
-              entity_coverage: 'datasource',
-              search: query,
-              ...params,
-            },
-          };
-        },
-        providesTags: (result, error) => {
-          if (error) {
-            return [];
-          }
-          return result?.rows?.map(i => ({ type: TAG_TYPE_TAG, id: i.id }));
-        },
-        transformResponse: (response, meta, args) => {
-          return {
-            ...response,
-            isLoadMore: args.page > 0,
-          };
-        },
-        serializeQueryArgs: ({ endpointName }) => {
-          return endpointName;
-        },
-        merge: (currentCache, newItems) => {
-          if (newItems.isLoadMore) {
-            currentCache.rows.push(...newItems.rows);
-          } else {
-            currentCache.rows = newItems.rows;
-            currentCache.total = newItems.total;
-          }
-        },
-        forceRefetch({ currentArg, previousArg }) {
-          return currentArg !== previousArg;
-        },
-      }),
-      chatPublicDatasourceTagList: build.query({
-        query: ({ query, page, pageSize = PAGE_SIZE, params }) => {
-          const isLoadMore = page > 0;
-          return {
-            url: apiSlicePath + '/tags/prompt_lib/' + PUBLIC_PROJECT_ID,
-            params: {
-              offset: isLoadMore ? page * pageSize : 0,
-              limit: pageSize,
-              entity_coverage: 'datasource',
-              statuses: CollectionStatus.Published,
-              search: query,
-              ...params,
-            },
-          };
-        },
-        providesTags: (result, error) => {
-          if (error) {
-            return [];
-          }
-          return result?.rows?.map(i => ({ type: TAG_TYPE_TAG, id: i.id }));
-        },
-        transformResponse: (response, meta, args) => {
-          return {
-            ...response,
-            isLoadMore: args.page > 0,
-          };
-        },
-        serializeQueryArgs: ({ endpointName }) => {
-          return endpointName;
-        },
-        merge: (currentCache, newItems) => {
-          if (newItems.isLoadMore) {
-            currentCache.rows.push(...newItems.rows);
-          } else {
-            currentCache.rows = newItems.rows;
-            currentCache.total = newItems.total;
-          }
-        },
-        forceRefetch({ currentArg, previousArg }) {
-          return currentArg !== previousArg;
-        },
-      }),
       chatApplicationTagList: build.query({
         query: ({ projectId, query, page, pageSize = PAGE_SIZE, params }) => {
           const isLoadMore = page > 0;
@@ -239,8 +156,6 @@ export const tagApi = eliteaApi
 export const {
   useTagListQuery,
   useLazyTagListQuery,
-  useChatDatasourceTagListQuery,
-  useChatPublicDatasourceTagListQuery,
   useChatApplicationTagListQuery,
   useChatPublicApplicationTagListQuery,
 } = tagApi;

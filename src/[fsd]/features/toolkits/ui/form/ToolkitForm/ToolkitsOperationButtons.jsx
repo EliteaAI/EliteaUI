@@ -16,7 +16,6 @@ import { useToolkitEditMutation } from '@/api/toolkits.js';
 import eventEmitter from '@/common/eventEmitter';
 import { buildErrorMessage } from '@/common/utils.jsx';
 import { StyledDialog, StyledDialogActions, StyledDialogContentText } from '@/components/StyledDialog';
-import { useExtraValidation } from '@/hooks/application/useExtraValidation';
 import useConfigurations from '@/hooks/useConfigurations.js';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast.jsx';
@@ -33,7 +32,6 @@ const getToolkitName = (values, toolSchema) => {
 
 const ToolkitsOperationButtons = memo(
   ({
-    editToolDetail,
     isAdding,
     hasErrors = false,
     hasNotSavedToolConfiguration = false,
@@ -49,7 +47,6 @@ const ToolkitsOperationButtons = memo(
     const projectId = useSelectedProjectId();
     const dispatch = useDispatch();
     const [openAlert, setOpenAlert] = useState(false);
-    const [errorMessage, setErrorMessage] = useState('Some fields have missing or invalid data!');
 
     // Keep revertCredentialsRef updated
     useEffect(() => {
@@ -101,12 +98,6 @@ const ToolkitsOperationButtons = memo(
       }
     }, [values, toolSchema, projectId, onSave, setValues, dispatch, toastError]);
 
-    const doValidate = useExtraValidation(editToolDetail);
-    const doValidateRef = useRef(doValidate);
-    useEffect(() => {
-      doValidateRef.current = doValidate;
-    }, [doValidate]);
-
     const onCloseAlert = useCallback(() => {
       setOpenAlert(false);
       onValidateFailure();
@@ -139,16 +130,7 @@ const ToolkitsOperationButtons = memo(
           onValidateFailure();
           return;
         }
-
-        const { isValid, message } = await doValidateRef.current();
-
-        if (isValid) {
-          eventEmitter.emit(ToolEvents.SaveEvent, validateReasonRef.current);
-          validateReasonRef.current = '';
-        } else {
-          setErrorMessage(message);
-          onValidateFailure();
-        }
+        eventEmitter.emit(ToolEvents.SaveEvent, validateReasonRef.current);
       },
       [hasErrors, hasNotSavedToolConfiguration, onValidateFailure, setShowValidation],
     );
@@ -183,15 +165,7 @@ const ToolkitsOperationButtons = memo(
           return;
         }
 
-        const { isValid, message } = await doValidateRef.current();
-
-        if (isValid) {
-          eventEmitter.emit(ToolEvents.SaveEvent, validateReasonRef.current);
-          validateReasonRef.current = '';
-        } else {
-          setErrorMessage(message);
-          onValidateFailure();
-        }
+        eventEmitter.emit(ToolEvents.SaveEvent, validateReasonRef.current);
       },
       [
         hasErrors,
@@ -282,7 +256,7 @@ const ToolkitsOperationButtons = memo(
               color={'text.secondary'}
               variant="headingSmall"
             >
-              {errorMessage}
+              Some fields have missing or invalid data!
             </Typography>
           </DialogTitle>
           <DialogContent>

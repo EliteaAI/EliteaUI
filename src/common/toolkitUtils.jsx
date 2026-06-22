@@ -69,7 +69,6 @@ import { capitalizeFirstChar } from '@/common/utils';
 import ApplicationsIcon from '@/components/Icons/ApplicationsIcon.jsx';
 import BrowserIcon from '@/components/Icons/BrowserIcon.jsx';
 import ConfluenceIcon from '@/components/Icons/ConfluenceIcon.jsx';
-import DatabaseIcon from '@/components/Icons/DatabaseIcon.jsx';
 import FileCodeIcon from '@/components/Icons/FileCodeIcon.jsx';
 import GitHubIcon from '@/components/Icons/GitHubIcon.jsx';
 import GitLabIcon from '@/components/Icons/GitLabIcon.jsx';
@@ -205,8 +204,6 @@ const getPredefinedIcon = (type, iconProps) => {
       return <JsonIcon {...iconProps} />;
     case ToolTypes.confluence.value:
       return <ConfluenceIcon {...iconProps} />;
-    case ToolTypes.datasource.value:
-      return <DatabaseIcon {...iconProps} />;
     case ToolTypes.github.value:
       return <GitHubIcon {...iconProps} />;
     case ToolTypes.gitlab.value:
@@ -389,8 +386,6 @@ export const getToolIconByType = (
 
 export const getToolIcon = toolType => {
   switch (toolType) {
-    case ToolTypes.datasource.value:
-      return DatabaseIcon;
     case ToolTypes.open_api.value:
       return FileCodeIcon;
     case ToolTypes.browser.value:

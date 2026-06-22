@@ -3,7 +3,6 @@ import * as React from 'react';
 import { useTrackEvent } from '@/GA';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
 import { useLazyApplicationDetailsQuery } from '@/api/applications';
-import { useLazyDatasourceExportQuery } from '@/api/datasources';
 import { useLazyToolkitExportQuery } from '@/api/toolkits';
 import {
   CollectionStatus,
@@ -28,10 +27,6 @@ export const ExportFormat = {
 export const useExport = ({ id, name, entity_name, owner_id, toastError, versions, currentVersionId }) => {
   const trackEvent = useTrackEvent();
   const [
-    exportDatasource,
-    { isError: isExportDatasourceError, error: exportDatasourceError, isFetching: isFetchingDatasource },
-  ] = useLazyDatasourceExportQuery();
-  const [
     exportToolkit,
     { isError: isExportToolkitError, error: exportToolkitError, isFetching: isFetchingToolkit },
   ] = useLazyToolkitExportQuery();
@@ -55,20 +50,6 @@ export const useExport = ({ id, name, entity_name, owner_id, toastError, version
     () => async () => {
       let data;
       switch (entity_name) {
-        case 'datasources':
-          // Datasources use JSON export
-          data = await exportDatasource({ projectId, id });
-          if (data?.error) return;
-          downloadJSONFile(data, name);
-          trackEvent(GA_EVENT_NAMES.ENTITY_EXPORTED, {
-            [GA_EVENT_PARAMS.ENTITY_ID]: id || 'unknown',
-            [GA_EVENT_PARAMS.ENTITY_NAME]: name || 'unknown',
-            [GA_EVENT_PARAMS.ENTITY_TYPE]: 'datasources',
-            [GA_EVENT_PARAMS.EXPORT_FORMAT]: 'json',
-            [GA_EVENT_PARAMS.TIMESTAMP]: new Date().toISOString(),
-          });
-          break;
-
         case 'applications':
         case 'pipelines': {
           // Applications/Pipelines use MD export only
@@ -152,7 +133,6 @@ export const useExport = ({ id, name, entity_name, owner_id, toastError, version
     [
       currentVersionId,
       entity_name,
-      exportDatasource,
       exportToolkit,
       getApplicationDetail,
       id,
@@ -166,14 +146,13 @@ export const useExport = ({ id, name, entity_name, owner_id, toastError, version
   );
 
   React.useEffect(() => {
-    const hasError = isExportDatasourceError || isExportToolkitError;
-    if (hasError) {
-      toastError(buildErrorMessage(exportDatasourceError || exportToolkitError));
+    if (isExportToolkitError) {
+      toastError(buildErrorMessage(exportToolkitError));
     }
-  }, [exportToolkitError, exportDatasourceError, isExportToolkitError, isExportDatasourceError, toastError]);
+  }, [exportToolkitError, isExportToolkitError, toastError]);
 
   return {
     doExport,
-    isExporting: isFetchingDatasource || isFetchingToolkit || isFetchingApplication,
+    isExporting: isFetchingToolkit || isFetchingApplication,
   };
 };
