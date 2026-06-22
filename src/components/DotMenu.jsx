@@ -495,7 +495,6 @@ export default function DotMenu({
           name={activeDialog.props.entityName}
           open={true}
           onClose={handleDialogClose}
-          onCancel={handleDialogClose}
           onConfirm={handleDialogConfirm}
           extraContent={activeDialog.props.extraContent}
           inlineExtraContent={activeDialog.props.inlineExtraContent}

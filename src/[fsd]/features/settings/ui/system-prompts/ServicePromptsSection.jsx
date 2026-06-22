@@ -450,7 +450,7 @@ const ServicePromptsSection = memo(() => {
         </Box>
 
         {isOpen && (
-          <Modal.StyledInputModalBase
+          <Modal.ExpandedViewerModal
             open={isOpen}
             onClose={handleDiscard}
             title={
@@ -530,7 +530,7 @@ const ServicePromptsSection = memo(() => {
                 </Button.BaseBtn>
               </Box>
             </Box>
-          </Modal.StyledInputModalBase>
+          </Modal.ExpandedViewerModal>
         )}
       </Box>
     </>

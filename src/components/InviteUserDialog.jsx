@@ -136,12 +136,9 @@ const InviteUserDialog = memo(props => {
       if (event.key === 'Enter' && emails.length > 0 && selectedRoles.length > 0 && !error) {
         event.preventDefault();
         handleConfirm();
-      } else if (event.key === 'Escape') {
-        event.preventDefault();
-        onCancel();
       }
     },
-    [emails.length, selectedRoles.length, error, handleConfirm, onCancel],
+    [emails.length, selectedRoles.length, error, handleConfirm],
   );
 
   useEffect(() => {

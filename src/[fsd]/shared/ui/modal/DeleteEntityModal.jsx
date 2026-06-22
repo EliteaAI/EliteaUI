@@ -1,33 +1,34 @@
-import { memo, useMemo, useState } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
 
-import {
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Button as MuiButton,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Box, TextField, Typography } from '@mui/material';
 
-import { Button } from '@/[fsd]/shared/ui';
+import { ModalConstants } from '@/[fsd]/shared/lib/constants';
+import { Button, Modal } from '@/[fsd]/shared/ui';
 
 const DeleteEntityModal = memo(props => {
   const {
     name,
     open,
     onClose,
-    onCancel,
     onConfirm,
     shouldRequestInputName,
     extraContent,
     inlineExtraContent,
     sx,
+    titleIcon = ModalConstants.MODAL_ICON_TYPE.destructive,
+    title = 'Delete confirmation',
+    actions,
   } = props;
 
   const styles = deleteEntityModalStyles();
 
   const [inputName, setInputName] = useState('');
+
+  useEffect(() => {
+    if (!open) {
+      setInputName('');
+    }
+  }, [open]);
 
   const isButtonDisabled = useMemo(
     () => shouldRequestInputName && !!name && name !== inputName,
@@ -43,81 +44,78 @@ const DeleteEntityModal = memo(props => {
     if (event.key === 'Enter' && !isButtonDisabled) {
       event.preventDefault();
       onConfirm();
-    } else if (event.key === 'Escape') {
-      event.preventDefault();
-      resetButtonState(event, onCancel);
     }
   };
 
+  const contentNode = (
+    <Box
+      sx={styles.contentWrapper}
+      onClick={event => event.stopPropagation()}
+    >
+      <Typography
+        id="alert-dialog-description"
+        color="text.deleteAlertText"
+        variant="bodyMedium"
+        sx={{ whiteSpaceCollapse: 'preserve' }}
+      >
+        Are you sure to delete{' '}
+        <Typography
+          component="span"
+          variant="headingSmall"
+          sx={({ palette }) => ({ color: palette.text.deleteAlertEntityName })}
+        >
+          {name}
+        </Typography>
+        ?{inlineExtraContent}
+        {shouldRequestInputName && ' Enter the name to complete the action.'}
+      </Typography>
+      {extraContent}
+      {shouldRequestInputName && (
+        <TextField
+          fullWidth
+          autoComplete="off"
+          variant="standard"
+          id="name"
+          name="name"
+          label="Name"
+          value={inputName}
+          onChange={event => setInputName(event.target.value)}
+        />
+      )}
+    </Box>
+  );
+
+  const actionsNode = (
+    <>
+      <Button.BaseBtn
+        autoFocus
+        variant="elitea"
+        color="secondary"
+        onClick={e => resetButtonState(e, onClose)}
+      >
+        Cancel
+      </Button.BaseBtn>
+      <Button.OneClickButton
+        title="Delete"
+        color="alarm"
+        disabled={isButtonDisabled}
+        onClick={onConfirm}
+      />
+    </>
+  );
+
   return (
-    <Dialog
+    <Modal.BaseModal
       open={open}
+      variant={ModalConstants.MODAL_VARIANT.simple}
+      titleIcon={titleIcon}
+      title={title}
+      content={contentNode}
+      actions={actions ?? actionsNode}
       onClose={e => resetButtonState(e, onClose)}
       onKeyDown={handleKeyDown}
-      onClick={event => event.stopPropagation()}
-      aria-labelledby="alert-dialog-title"
-      aria-describedby="alert-dialog-description"
-      slotProps={{ paper: { sx: { width: '37.5rem', ...sx?.paper } } }}
-    >
-      <DialogTitle id="alert-dialog-title">
-        <Typography
-          variant="headingSmall"
-          color="text.deleteAlertText"
-        >
-          Delete confirmation
-        </Typography>
-      </DialogTitle>
-      <DialogContent sx={styles.dialogContent}>
-        <Typography
-          id="alert-dialog-description"
-          color="text.deleteAlertText"
-          variant="bodyMedium"
-          sx={styles.description}
-        >
-          Are you sure to delete{' '}
-          <Typography
-            component={'span'}
-            variant="headingSmall"
-            sx={styles.entityName}
-          >
-            {name}
-          </Typography>
-          ?{inlineExtraContent}
-          {shouldRequestInputName && ' Enter the name to complete the action.'}
-        </Typography>
-        {extraContent}
-        {shouldRequestInputName && (
-          <TextField
-            fullWidth
-            autoComplete="off"
-            variant="standard"
-            id="name"
-            name="name"
-            label="Name"
-            value={inputName}
-            onChange={event => setInputName(event.target.value)}
-          />
-        )}
-      </DialogContent>
-      <DialogActions sx={styles.dialogActions}>
-        <MuiButton
-          autoFocus
-          disableRipple
-          variant="elitea"
-          color="secondary"
-          onClick={e => resetButtonState(e, onCancel)}
-        >
-          Cancel
-        </MuiButton>
-        <Button.OneClickButton
-          disableRipple
-          title="Delete"
-          color="alarm"
-          disabled={isButtonDisabled}
-          onClick={onConfirm}
-        />
-      </DialogActions>
-    </Dialog>
+      sx={sx}
+    />
   );
 });
 
@@ -125,25 +123,10 @@ DeleteEntityModal.displayName = 'DeleteEntityModal';
 
 /** @type {MuiSx} */
 const deleteEntityModalStyles = () => ({
-  dialogContent: {
+  contentWrapper: {
     display: 'flex',
     flexDirection: 'column',
     gap: '.75rem',
-    maxWidth: '100%',
-    width: '100%',
-  },
-  description: {
-    whiteSpaceCollapse: 'preserve',
-  },
-  entityName: ({ palette }) => ({
-    color: palette.text.deleteAlertEntityName,
-    wordBreak: 'break-word',
-    overflowWrap: 'anywhere',
-  }),
-  dialogActions: {
-    justifyContent: 'flex-end',
-    alignSelf: 'flex-end',
-    padding: '0.5rem 1.5rem 1.5rem 1.5rem',
   },
 });
 

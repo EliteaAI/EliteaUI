@@ -1,3 +1,3 @@
 export { default as DeleteEntityModal } from './DeleteEntityModal';
 export { default as BaseModal } from './BaseModal';
-export { default as StyledInputModalBase } from './StyledInputModalBase';
+export { default as ExpandedViewerModal } from './ExpandedViewerModal';

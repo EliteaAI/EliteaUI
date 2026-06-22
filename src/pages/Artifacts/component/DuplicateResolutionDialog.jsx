@@ -2,10 +2,9 @@ import { memo } from 'react';
 
 import { Box } from '@mui/material';
 
-import { Button } from '@/[fsd]/shared/ui';
+import { Button, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
-import BaseModal from '@/[fsd]/shared/ui/modal/BaseModal';
-import AttentionIcon from '@/components/Icons/AttentionIcon';
+import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 
 import DuplicateDialogContent from './DuplicateDialogContent';
 
@@ -14,22 +13,14 @@ const DuplicateResolutionDialog = memo(props => {
   const styles = duplicateResolutionDialogStyles();
 
   return (
-    <BaseModal
+    <Modal.BaseModal
       open={open}
       onClose={onCancel}
       title="Resolve duplicates"
       hideSections
       sx={styles.modal}
       dialogSx={styles.content}
-      titleIcon={
-        <Box sx={styles.titleIcon}>
-          <AttentionIcon
-            fill="currentColor"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        </Box>
-      }
+      titleIcon={ModalConstants.MODAL_ICON_TYPE.warning}
       content={<DuplicateDialogContent duplicateFilenames={duplicateFilenames} />}
       actions={
         <Box sx={styles.actions}>
@@ -108,8 +99,4 @@ const duplicateResolutionDialogStyles = () => ({
     justifyContent: 'flex-end',
     alignItems: 'center',
   },
-  titleIcon: ({ palette }) => ({
-    color: palette.icon.fill.warning,
-    fontSize: '2.5rem',
-  }),
 });

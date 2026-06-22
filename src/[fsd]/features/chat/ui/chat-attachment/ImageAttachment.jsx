@@ -173,7 +173,6 @@ const ImageAttachment = memo(props => {
         name={fileName}
         open={openAlert}
         onClose={onCloseAlert}
-        onCancel={onCloseAlert}
         onConfirm={onConfirmDelete}
         shouldRequestInputName={false}
         extraContent={
@@ -255,7 +254,6 @@ const imageAttachmentStyles = () => ({
   },
   extraContentBox: {
     boxSizing: 'border-box',
-    marginTop: '-0.5rem',
     width: '34.5rem',
     flexDirection: 'row',
     display: 'flex',

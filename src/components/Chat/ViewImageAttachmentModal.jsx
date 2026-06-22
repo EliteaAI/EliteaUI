@@ -168,7 +168,6 @@ const ViewImageAttachmentModal = memo(props => {
         name={fileName}
         open={openAlert}
         onClose={onCloseAlert}
-        onCancel={onCloseAlert}
         onConfirm={onConfirmDelete}
         shouldRequestInputName={false}
         extraContent={

@@ -291,7 +291,7 @@ const AIAssistantModal = memo(props => {
       });
 
   return (
-    <Modal.StyledInputModalBase
+    <Modal.ExpandedViewerModal
       open={open}
       onClose={onClickClose}
       title={capitalizeFirstChar(title)}
@@ -439,7 +439,7 @@ const AIAssistantModal = memo(props => {
         isLoading={isGenerating}
         promptValueRef={promptInputRef}
       />
-    </Modal.StyledInputModalBase>
+    </Modal.ExpandedViewerModal>
   );
 });
 

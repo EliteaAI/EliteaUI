@@ -21,7 +21,7 @@ const orange = '#F2994A';
 const orange8 = 'rgba(233, 121, 18, 0.08)';
 const orange40 = 'rgba(233, 121, 18, 0.4)';
 
-const warning = 'rgba(233, 121, 18, 1)';
+const warning = '#E97912';
 const warningStatusText = '#D37015';
 const warning8 = 'rgba(233, 121, 18, 0.08)';
 const warning40 = 'rgba(233, 121, 18, 0.4)';
@@ -66,7 +66,7 @@ export const blue01 = 'rgba(248, 252, 255, 1)';
 const blue02 = 'rgba(110, 177, 255, 1)';
 const blue03 = 'rgba(99, 144, 254, 1)';
 
-const blue = 'rgba(41, 184, 245, 1)';
+const blue = '#29B8F5';
 
 const darkBlue = '#006DD1';
 const darkBlueLowOpacity = 'rgba(0, 109, 209, 0.4)';
@@ -113,6 +113,9 @@ const lightPalette = {
     eliteaDefault: gradient,
     secondary: white,
     tabPanel: white01,
+    modal: {
+      simple: white,
+    },
     chatBkg: almostWhite,
     dragging: blue12,
     userInputBorderLight: purpleLight,
@@ -477,6 +480,8 @@ const lightPalette = {
       disabled: light20,
       attention: orange,
       warning,
+      info: blue,
+      successModal: greenHoverBtn,
       is_default: green20,
       success: green,
       active: magentaDefault,

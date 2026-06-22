@@ -41,12 +41,9 @@ const EditUserRolesDialog = memo(props => {
       if (event.key === 'Enter' && selectedRoles.length > 0) {
         event.preventDefault();
         handleConfirm();
-      } else if (event.key === 'Escape') {
-        event.preventDefault();
-        onCancel();
       }
     },
-    [selectedRoles.length, handleConfirm, onCancel],
+    [selectedRoles.length, handleConfirm],
   );
 
   const styles = editUserRolesDialogStyles();

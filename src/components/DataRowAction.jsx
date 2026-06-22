@@ -75,7 +75,6 @@ const ActionWithDialog = memo(props => {
         name={name}
         open={open}
         onClose={onClose}
-        onCancel={onClose}
         onConfirm={onClickConfirm}
         shouldRequestInputName
       />

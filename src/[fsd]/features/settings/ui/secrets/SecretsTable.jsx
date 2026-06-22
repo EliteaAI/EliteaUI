@@ -592,7 +592,6 @@ const SecretsTable = memo(props => {
               name={row.name}
               open={openAlert === row.id && openAlertType === 'delete'}
               onClose={onCloseAlert()}
-              onCancel={onCloseAlert()}
               onConfirm={onConfirmAlert(row.id, handleHideSecretPermanently)}
             />
             <AlertDialog

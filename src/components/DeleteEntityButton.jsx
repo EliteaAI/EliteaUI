@@ -118,7 +118,6 @@ const DeleteEntityButton = memo(props => {
           name={name}
           open={openAlert}
           onClose={onClose}
-          onCancel={onClose}
           onConfirm={onConfirm}
           shouldRequestInputName={shouldRequestInputName}
           sx={modalSx}
