@@ -93,7 +93,7 @@ export default function AutoCompleteDropDown({
         onChangedSelectedOptions(
           uniqueOptions.map(option =>
             useInitialValue
-              ? { [nameField]: option[nameField], ...initialValue }
+              ? { [nameField]: option[nameField], [idField]: option[idField], ...initialValue }
               : optionList.find(item => item[idField] === option[idField]) || {
                   [nameField]: option[nameField],
                 },
@@ -304,7 +304,7 @@ export default function AutoCompleteDropDown({
       const filterNewValues = Array.isArray(newValue)
         ? newValue
             .filter(option => typeof option !== 'string' || !!option.match(singleValueValidationRegExp))
-            .map(option => (typeof option === 'string' ? { [nameField]: option } : option))
+            .map(option => (typeof option === 'string' ? { [nameField]: option, [idField]: option } : option))
         : typeof newValue === 'string' && newValue.match(singleValueValidationRegExp)
           ? [{ [nameField]: newValue }]
           : [];
@@ -312,7 +312,7 @@ export default function AutoCompleteDropDown({
       onSetNewOptions(filterNewValues);
       setInputValue('');
     },
-    [nameField, onSetNewOptions, singleValueValidationRegExp],
+    [nameField, onSetNewOptions, singleValueValidationRegExp, idField],
   );
 
   const getOptionLabel = useCallback(
