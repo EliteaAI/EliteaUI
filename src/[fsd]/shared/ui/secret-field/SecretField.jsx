@@ -185,13 +185,7 @@ const SecretField = memo(props => {
   const handlePasswordInputChange = useCallback(
     (e, rawNewValue) => {
       const newValue = rawNewValue.replace(/[^\x20-\x7E]/g, '');
-      if (isLoadedSecretRef.current) {
-        isLoadedSecretRef.current = false;
-        isUserInputRef.current = true;
-        setRawPasswordInput('');
-        onChange?.(e, '');
-        return;
-      }
+      if (isLoadedSecretRef.current) isLoadedSecretRef.current = false;
       setRawPasswordInput(newValue);
       isUserInputRef.current = true;
       if (newValue) {

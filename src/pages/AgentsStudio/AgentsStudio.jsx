@@ -6,7 +6,7 @@ import { Box } from '@mui/material';
 
 import { AgentsStudioContext, useInteractiveTour } from '@/[fsd]/app/providers';
 import { AgentsStudioConstants } from '@/[fsd]/features/agents-studio/lib/constants';
-import { AgentsStudioHelpers, TagHelpers } from '@/[fsd]/features/agents-studio/lib/helpers';
+import { AgentsStudioHelpers } from '@/[fsd]/features/agents-studio/lib/helpers';
 import { useAgentsStudioData } from '@/[fsd]/features/agents-studio/lib/hooks';
 import { AgentCategorySection, AgentModal } from '@/[fsd]/features/agents-studio/ui';
 import { AGENT_STUDIO_TOUR_ID } from '@/[fsd]/features/interactive-tours/lib/constants';
@@ -42,24 +42,23 @@ const AgentsStudio = memo(() => {
   }, [searchParams, selectedApplication]);
 
   const {
-    tags,
+    categoryNames,
     applicationsByTag,
     totalCountsByTag,
     currentPageByTag,
     loadingTags,
     refreshingTags,
     isFetching,
-    fetchApplicationsForTag,
+    fetchApplicationsForCategoryName,
     fetchTrendingApplications,
     fetchMyLikedApplications,
-    fetchApplicationsWithoutTags,
     updateApplicationInState,
     addToMyLiked,
     removeFromMyLiked,
     onRefresh,
   } = useAgentsStudioData(debouncedQuery, selectedTagNames);
 
-  const allCategories = useMemo(() => AgentsStudioHelpers.buildAllCategories(tags), [tags]);
+  const allCategories = useMemo(() => AgentsStudioHelpers.buildAllCategories(categoryNames), [categoryNames]);
   const applicationMenuItems = useMemo(
     () => AgentsStudioHelpers.buildApplicationMenuItems(applicationsByTag, selectedTagNames),
     [applicationsByTag, selectedTagNames],
@@ -124,23 +123,14 @@ const AgentsStudio = memo(() => {
       const fetchFunction = AgentsStudioHelpers.getFetchFunctionForCategory(category, {
         fetchTrendingApplications,
         fetchMyLikedApplications,
-        fetchApplicationsWithoutTags,
-        fetchApplicationsForTag,
-        tags,
+        fetchApplicationsForCategoryName,
       });
 
       if (fetchFunction) {
         fetchFunction(currentPage + 1);
       }
     },
-    [
-      currentPageByTag,
-      fetchApplicationsForTag,
-      fetchTrendingApplications,
-      fetchMyLikedApplications,
-      fetchApplicationsWithoutTags,
-      tags,
-    ],
+    [currentPageByTag, fetchApplicationsForCategoryName, fetchTrendingApplications, fetchMyLikedApplications],
   );
 
   const renderCategory = useCallback(
@@ -152,24 +142,14 @@ const AgentsStudio = memo(() => {
           items={items}
           totalCount={totalCountsByTag[category] || 0}
           isLoading={refreshingTags.has(category)}
-          isLoadingMore={loadingTags.has(
-            tags?.rows?.find(t => TagHelpers.formatTagName(t.name) === category)?.id || category,
-          )}
+          isLoadingMore={loadingTags.has(category)}
           onSelectItem={handleApplicationSelect}
           onLoadMore={handleLoadMore}
           onRefresh={onRefresh}
         />
       );
     },
-    [
-      handleApplicationSelect,
-      handleLoadMore,
-      loadingTags,
-      onRefresh,
-      refreshingTags,
-      tags?.rows,
-      totalCountsByTag,
-    ],
+    [handleApplicationSelect, handleLoadMore, loadingTags, onRefresh, refreshingTags, totalCountsByTag],
   );
 
   const renderNoResults = useCallback(

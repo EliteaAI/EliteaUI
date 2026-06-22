@@ -86,6 +86,7 @@ export const {
   useSecretAddingMutation,
   useSecretEditingMutation,
   useSecretDeleteMutation,
+  useSecretShowQuery,
   useLazySecretShowQuery,
   useSecretHideMutation,
 } = apis;

@@ -1,4 +1,4 @@
-import React, { forwardRef, memo, useCallback, useMemo, useRef, useState } from 'react';
+import React, { memo, useCallback, useMemo, useRef, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 
@@ -62,7 +62,7 @@ const PAPER_STYLE_MAP = {
   [SUBMENU_KEYS.PIPELINES]: 'entitySubmenuPaper',
 };
 
-const PlusChatButton = forwardRef(props => {
+const PlusChatButton = memo(props => {
   const {
     attachmentButtonRef,
     onAttachFiles,
@@ -162,6 +162,7 @@ const PlusChatButton = forwardRef(props => {
   }, []);
 
   const handleSubMenuLeave = useCallback(() => {
+    if (subMenuRef.current?.contains(document.activeElement)) return;
     setHoveredItem(null);
     setHoveredAnchorEl(null);
   }, []);
@@ -566,4 +567,4 @@ const popperModifiers = [
   },
 ];
 
-export default memo(PlusChatButton);
+export default PlusChatButton;

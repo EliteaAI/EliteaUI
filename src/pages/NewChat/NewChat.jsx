@@ -1720,14 +1720,14 @@ const chatStyles = ({
     if (onlyConversationCollapsed) return `calc(100% - ${rightPanelWidth + 60}px) !important`;
     if (onlyParticipantsCollapsed) return `calc(100% - ${leftPanelWidth + 60}px - 1.25rem) !important`;
 
-    return `calc(100% - ${rightPanelWidth + leftPanelWidth}px) !important`;
+    return `calc(100% - ${rightPanelWidth}px - ${leftPanelWidth}px) !important`;
   };
 
   const getChatWidthSM = () => {
     if (everythingCollapsed) return 'calc(100% - 7.5rem) !important';
     if (somethingCollapsed) return 'calc(75% - 3.75rem - 1.25rem) !important';
 
-    return `calc(100% - ${rightPanelWidth}px - ${leftPanelWidth}px) !important`;
+    return `calc(75% - ${rightPanelWidth}px) !important`;
   };
 
   return {

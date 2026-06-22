@@ -1,11 +1,10 @@
 import { forwardRef, memo } from 'react';
 
 import { Button as MuiButton } from '@mui/material';
-import { buttonClasses } from '@mui/material/Button';
 
 export const BUTTON_COLORS = {
-  primary: buttonClasses.colorPrimary,
-  secondary: buttonClasses.colorSecondary,
+  primary: 'primary',
+  secondary: 'secondary',
   tertiary: 'tertiary',
   alarm: 'alarm',
 };
@@ -204,6 +203,7 @@ const baseVariantStyle = (theme, ownerState, options = {}) => {
     ...theme.typography.labelSmall,
     height: '1.75rem',
     boxShadow: 'none',
+    border: '0.0625rem solid transparent',
     gap: '0.5rem',
     '& .MuiButton-startIcon': {
       margin: 0,
@@ -524,7 +524,7 @@ export const eliteaButtonVariants = [
       padding: '0.375rem 1rem',
       borderRadius: '1.75rem',
 
-      ['&.' + BUTTON_COLORS.primary]: {
+      ...(color === BUTTON_COLORS.primary && {
         height: '1.75rem',
         color: theme.palette.text.button.primary,
         background: theme.palette.background.button.primary.default,
@@ -542,9 +542,9 @@ export const eliteaButtonVariants = [
           color: theme.palette.text.button.primary,
           background: theme.palette.background.button.primary.disabled,
         },
-      },
+      }),
 
-      ['&.' + BUTTON_COLORS.secondary]: {
+      ...(color === BUTTON_COLORS.secondary && {
         color: theme.palette.text.secondary,
         background: theme.palette.background.button.secondary.default,
         '&:hover': {
@@ -562,7 +562,7 @@ export const eliteaButtonVariants = [
           color: theme.palette.text.button.disabled,
           background: theme.palette.background.button.default,
         },
-      },
+      }),
 
       ...(color === BUTTON_COLORS.tertiary && {
         color: theme.palette.text.default,

@@ -158,7 +158,10 @@ export default MyComponent;
 - [ ] Set a `displayName` for the component.
 - [ ] Destructure `props` inside the component body, not in the function signature.
 - [ ] Use `useMemo` for expensive computations or derived data.
-- [ ] Use `useCallback` for all event handlers passed to child components.
+- [ ] Use `useCallback` only when referential stability is actually needed, such as memoized child props or
+      hook dependencies.
+- [ ] If a callback only forwards an existing prop and adds no local behavior, pass the prop directly instead
+      of wrapping it.
 - [ ] Follow the standard import organization with explicit FSD layer paths.
 - [ ] Extract inline styles into style function at bottom of file.
 - [ ] Use `/** @type {MuiSx} */` JSDoc annotation for style functions.
@@ -167,6 +170,13 @@ export default MyComponent;
 - [ ] Use named exports for components in FSD structure (when appropriate).
 
 ### Component Extraction and Organization
+
+### Callback Usage
+
+- Do not introduce `useCallback` by default.
+- Before adding a callback wrapper, verify that referential stability is required for a memoized child prop, a
+  hook dependency, or another behavior-sensitive boundary.
+- If a callback only forwards an existing prop and adds no local behavior, pass the prop directly.
 
 #### When to Extract a Component
 

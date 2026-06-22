@@ -89,12 +89,22 @@ export const useStopStreaming = ({
       setTimeout(
         () =>
           setChatHistory?.(prevState =>
-            prevState.map(msg => ({
-              ...msg,
-              isStreaming: msg.id === streamId ? false : msg.isStreaming,
-              isLoading: msg.id === streamId ? false : msg.isLoading,
-              task_id: undefined,
-            })),
+            prevState.map(msg =>
+              msg.id === streamId
+                ? {
+                    ...msg,
+                    isStreaming: false,
+                    isLoading: false,
+                    task_id: undefined,
+                    // Stop freezes the run: drop any pending HITL approval cards
+                    // (#4993 Track 2). They are client-side only, so the backend
+                    // sync can't clear them — and a click on a stale card would
+                    // re-invoke the parent and re-fan-out every child.
+                    hitlInterrupts: undefined,
+                    hitlInterrupt: undefined,
+                  }
+                : { ...msg, task_id: undefined },
+            ),
           ),
         200,
       );
@@ -123,7 +133,15 @@ export const useStopStreaming = ({
     setTimeout(
       () =>
         setChatHistory?.(prevState =>
-          prevState.map(msg => ({ ...msg, isStreaming: false, isLoading: false, task_id: undefined })),
+          prevState.map(msg => ({
+            ...msg,
+            isStreaming: false,
+            isLoading: false,
+            task_id: undefined,
+            // Stop freezes the run — drop pending HITL cards (#4993 Track 2).
+            hitlInterrupts: undefined,
+            hitlInterrupt: undefined,
+          })),
         ),
       200,
     );
@@ -1019,32 +1037,147 @@ export const useChatSocket = ({
           break;
         }
         case SocketMessageType.AgentHitlInterrupt: {
-          msg.isLoading = false;
-          msg.isStreaming = false;
-          msg.isRegenerating = false;
-          msg.isSending = false;
+          // Track 2 fan-out child (#4993): the indexer stamps the child's own
+          // thread + sub-agent name into event metadata. Such a pause belongs to
+          // ONE child that streams onto the parent's message while its siblings
+          // keep running — so it arrives as a separate event per child, must be
+          // ACCUMULATED (not replace the others), carries its OWN thread_id for
+          // resume routing, and must NOT stop the message's streaming state (the
+          // running siblings still need their live boxes + shimmer).
+          const hitlMeta = response_metadata?.metadata || {};
+          const childThreadId = hitlMeta.child_thread_id || '';
+          const isFanoutChild = Boolean(hitlMeta.parent_agent_name && childThreadId);
 
-          const hitlThreadId =
-            message.threadId || response_metadata?.metadata?.thread_id || response_metadata?.thread_id;
-          if (hitlThreadId) {
+          if (!isFanoutChild) {
+            msg.isLoading = false;
+            msg.isStreaming = false;
+            msg.isRegenerating = false;
+            msg.isSending = false;
+          } else {
+            // A fan-out child pausing for approval means the overall run is still
+            // active: siblings keep streaming and this child awaits a human
+            // decision. The parent's park-by-return may have already emitted an
+            // AgentResponse/finish_reason that flipped this message to
+            // non-streaming — re-arm it so the live thinking view (which hosts the
+            // per-child approval cards) keeps rendering instead of stalling.
+            msg.isStreaming = true;
+            msg.isLoading = false;
+            msg.isSending = false;
+            // Clear any leftover regenerating flag: if this message was being
+            // regenerated when a child paused, leaving it set keeps the UI in a
+            // processing state and suppresses the live thinking view.
+            msg.isRegenerating = false;
+          }
+
+          const hitlThreadId = message.threadId || hitlMeta.thread_id || response_metadata?.thread_id;
+          // Only the single-thread (non-fan-out) case parks the whole message on
+          // one threadId. A fan-out child resumes on its OWN thread carried per
+          // interrupt entry below, so don't clobber msg.threadId with whichever
+          // child happened to pause last.
+          if (hitlThreadId && !isFanoutChild) {
             msg.threadId = hitlThreadId;
           }
           message.threadId = msg.threadId;
-          msg.content = response_metadata?.message || message.content || 'Please review and take action.';
-          msg.hitlInterrupt = {
-            message: response_metadata?.message || message.content || 'Please review and take action.',
-            node_name: response_metadata?.node_name || '',
-            available_actions: response_metadata?.available_actions || ['approve', 'reject'],
-            routes: response_metadata?.routes || {},
-            edit_state_key: response_metadata?.edit_state_key || '',
-            guardrail_type: response_metadata?.hitl_interrupt?.guardrail_type || '',
-            tool_name: response_metadata?.hitl_interrupt?.tool_name || '',
-            toolkit_name: response_metadata?.hitl_interrupt?.toolkit_name || '',
-            toolkit_type: response_metadata?.hitl_interrupt?.toolkit_type || '',
-            action_label: response_metadata?.hitl_interrupt?.action_label || '',
-            tool_args: response_metadata?.hitl_interrupt?.tool_args || null,
-            policy_message: response_metadata?.hitl_interrupt?.policy_message || '',
-          };
+          // Do NOT overwrite msg.content with the interrupt text. The pause
+          // state is rendered from the inline HITL card(s) below; leaving
+          // content empty until the real agent_response streams avoids a
+          // leftover "...requires approval..." bubble lingering after resume.
+
+          // Build a single UI-shaped interrupt entry from a raw interrupt
+          // object. A parallel sub-agent fan-out sends one entry per paused
+          // child (each carrying its own tool_call_id) in hitl_interrupts;
+          // a single pause sends only the legacy top-level fields. For a fan-out
+          // child the parent_agent_name / child thread are NOT on the raw
+          // interrupt (the child doesn't know it's a child) — they come from the
+          // indexer's event-metadata stamp (hitlMeta).
+          const buildHitlInterrupt = (raw, fallbackMessage) => ({
+            message: raw?.message || fallbackMessage || 'Please review and take action.',
+            node_name: raw?.node_name || '',
+            available_actions: raw?.available_actions || ['approve', 'reject'],
+            routes: raw?.routes || {},
+            edit_state_key: raw?.edit_state_key || '',
+            guardrail_type: raw?.guardrail_type || '',
+            tool_name: raw?.tool_name || '',
+            toolkit_name: raw?.toolkit_name || '',
+            toolkit_type: raw?.toolkit_type || '',
+            action_label: raw?.action_label || '',
+            tool_args: raw?.tool_args || null,
+            policy_message: raw?.policy_message || '',
+            // A fan-out child's tool_call_id arrives in the event-metadata
+            // overlay (hitlMeta), NOT on the raw interrupt — the child doesn't
+            // know it's a child. Without this fallback the card carries an empty
+            // tool_call_id, so onHitlResume can't match the decided entry, falls
+            // out of the fan-out branch, and blanks the whole message (#4993).
+            tool_call_id: raw?.tool_call_id || hitlMeta.tool_call_id || '',
+            child_thread_id: raw?.child_thread_id || childThreadId || '',
+            // Sub-agent the paused action originated from; used to group N
+            // stacked approval cards by sub-agent name (issue #4993).
+            parent_agent_name: raw?.parent_agent_name || hitlMeta.parent_agent_name || '',
+            // Per-entry thread to route resume to this child's OWN thread
+            // (Track 2). Empty for single-thread pauses (resume uses msg.threadId).
+            thread_id: raw?.thread_id || childThreadId || '',
+          });
+
+          const fallbackMessage = response_metadata?.message || message.content;
+          const rawInterrupts = Array.isArray(response_metadata?.hitl_interrupts)
+            ? response_metadata.hitl_interrupts
+            : [];
+
+          let incomingInterrupts;
+          if (rawInterrupts.length > 0) {
+            incomingInterrupts = rawInterrupts.map(raw => buildHitlInterrupt(raw, fallbackMessage));
+          } else {
+            // Single-pause path: synthesize one entry from the legacy
+            // top-level + nested hitl_interrupt fields.
+            const singleRaw = {
+              message: response_metadata?.message,
+              node_name: response_metadata?.node_name,
+              available_actions: response_metadata?.available_actions,
+              routes: response_metadata?.routes,
+              edit_state_key: response_metadata?.edit_state_key,
+              guardrail_type: response_metadata?.hitl_interrupt?.guardrail_type,
+              tool_name: response_metadata?.hitl_interrupt?.tool_name,
+              toolkit_name: response_metadata?.hitl_interrupt?.toolkit_name,
+              toolkit_type: response_metadata?.hitl_interrupt?.toolkit_type,
+              action_label: response_metadata?.hitl_interrupt?.action_label,
+              tool_args: response_metadata?.hitl_interrupt?.tool_args,
+              policy_message: response_metadata?.hitl_interrupt?.policy_message,
+              tool_call_id: response_metadata?.hitl_interrupt?.tool_call_id,
+            };
+            incomingInterrupts = [buildHitlInterrupt(singleRaw, fallbackMessage)];
+          }
+
+          if (isFanoutChild) {
+            // Merge this child's pause into the running set (keyed by its own
+            // thread, falling back to tool_call_id) so a second child pausing
+            // doesn't erase the first child's still-pending card.
+            const keyOf = e => e.child_thread_id || e.thread_id || e.tool_call_id;
+            const merged = Array.isArray(msg.hitlInterrupts) ? [...msg.hitlInterrupts] : [];
+            incomingInterrupts.forEach(inc => {
+              const k = keyOf(inc);
+              const at = k ? merged.findIndex(e => keyOf(e) === k) : -1;
+              if (at >= 0) merged[at] = inc;
+              else merged.push(inc);
+            });
+            msg.hitlInterrupts = merged;
+          } else if (rawInterrupts.length > 0) {
+            // True backend parallel aggregate (Track 1): N entries arrive in
+            // hitl_interrupts. Populate the array so ChatBox routes resume via
+            // hitl_decisions (keyed by tool_call_id).
+            msg.hitlInterrupts = incomingInterrupts;
+          } else {
+            // Legacy single pause: leave hitlInterrupts UNSET. ChatBox's
+            // isParallel detection keys off the mere presence of the array; a
+            // single pause must keep the sequential hitl_action resume shape.
+            // ApplicationAnswer falls back to [hitlInterrupt] for rendering.
+            msg.hitlInterrupts = undefined;
+          }
+          // Keep the singular field populated with the first entry for
+          // back-compat with consumers that read hitlInterrupt, and as the sole
+          // carrier for the legacy single-pause path above. Prefer the merged
+          // array head (fan-out) so it tracks the first still-pending child.
+          msg.hitlInterrupt =
+            (Array.isArray(msg.hitlInterrupts) && msg.hitlInterrupts[0]) || incomingInterrupts[0];
           trackEvent(GA_EVENT_NAMES.HITL_INTERRUPT, {
             [GA_EVENT_PARAMS.AGENT_ID]:
               (participantsRef.current?.find(p => p.id === participant_id) || activeParticipantRef.current)
@@ -1076,9 +1209,31 @@ export const useChatSocket = ({
           handleError({ data: message.content || [] });
           return;
         case SocketMessageType.AgentException: {
-          msg.isLoading = false;
-          msg.isStreaming = false;
-          msg.exception = message.content;
+          // A fan-out child (#4993) carries its own thread + sub-agent name in
+          // the event-metadata overlay. Its hard LLM/provider exception belongs
+          // to ONE child whose siblings may still be running — route it into
+          // that child's accordion (keyed by sub-agent name) instead of the
+          // whole-message exception box, which would misleadingly mark the
+          // entire orchestrator run as failed. Keep the message streaming so the
+          // running siblings retain their live view (mirrors the HITL re-arm).
+          const exMeta = response_metadata?.metadata || {};
+          const exChildName = exMeta.parent_agent_name || '';
+          const isFanoutChildException = Boolean(exChildName && exMeta.child_thread_id);
+
+          if (isFanoutChildException) {
+            msg.isLoading = false;
+            msg.isSending = false;
+            msg.isRegenerating = false;
+            msg.isStreaming = true;
+            msg.subAgentErrors = {
+              ...(msg.subAgentErrors || {}),
+              [exChildName]: { exception: message.content },
+            };
+          } else {
+            msg.isLoading = false;
+            msg.isStreaming = false;
+            msg.exception = message.content;
+          }
           trackEvent(GA_EVENT_NAMES.AGENT_EXCEPTION, {
             [GA_EVENT_PARAMS.ERROR_TYPE]: 'agent_exception',
             [GA_EVENT_PARAMS.ERROR_CONTENT]: String(message.content || '').substring(0, 100),
