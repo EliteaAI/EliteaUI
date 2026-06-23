@@ -216,16 +216,16 @@ const Token = memo(props => {
       }
       return fallback;
     case 'html': {
-      // DOMPurify default config already strips all on* event attributes and javascript:/data: URLs.
-      // FORBID_TAGS adds explicit belt-and-suspenders for tags that could inject executable content.
       const clean = DOMPurify.sanitize(markedToken.raw, {
         FORBID_TAGS: MarkdownConstants.FORBIDDEN_HTML_TAGS,
       });
-      return (
-        <MuiMarkdown options={{ disableParsingRawHTML: false, overrides: overrides(clean) }}>
-          {clean}
-        </MuiMarkdown>
-      );
+      return clean ? (
+        <Box
+          component="span"
+          sx={styles.htmlContainer}
+          dangerouslySetInnerHTML={{ __html: clean }}
+        />
+      ) : null;
     }
     case 'paragraph': {
       try {
@@ -356,6 +356,69 @@ const getStyles = ({ palette }) => ({
   },
   mark: { background: 'transparent', color: palette.text.highlighted, fontWeight: 500 },
   inline: { display: 'inline' },
+  htmlContainer: {
+    '& h1': {
+      color: palette.text.secondary,
+      fontWeight: 600,
+      fontSize: '1rem',
+      lineHeight: '1.5rem',
+      borderBottom: `1px solid ${palette.border.lines}`,
+      paddingBottom: '0.4em',
+      marginTop: '1.2em',
+    },
+    '& h2': {
+      color: palette.text.secondary,
+      fontWeight: 600,
+      fontSize: '0.875rem',
+      lineHeight: '1.5rem',
+      borderBottom: `1px solid ${palette.border.lines}`,
+      paddingBottom: '0.4em',
+      marginTop: '1.2em',
+    },
+    '& h3': {
+      fontWeight: 500,
+      fontSize: '0.875rem',
+      lineHeight: '1.5rem',
+      paddingBottom: '0.4em',
+      marginTop: '1.2em',
+    },
+    '& h4': {
+      fontWeight: 500,
+      fontSize: '0.75rem',
+      lineHeight: '1rem',
+      paddingBottom: '0.4em',
+      marginTop: '1.2em',
+    },
+    '& h5, & h6': {
+      fontWeight: 400,
+      fontSize: '0.875rem',
+      paddingBottom: '0.4em',
+      marginTop: '1.2em',
+    },
+    '& p': {
+      marginBlockStart: '0px',
+      marginBottom: '0.8em',
+      whiteSpace: 'pre-wrap',
+    },
+    '& a': {
+      color: palette.primary.main,
+      textDecoration: 'none',
+      '&:hover': { textDecoration: 'underline' },
+    },
+    '& ol, & ul': {
+      fontSize: '0.875rem',
+      paddingLeft: '24px',
+      margin: '8px 0',
+    },
+    '& li': {
+      display: 'list-item',
+      paddingLeft: '4px',
+      marginBottom: '4px',
+    },
+    '& strong': { whiteSpace: 'pre-wrap' },
+    '& em': { whiteSpace: 'pre-wrap' },
+    '& span': { whiteSpace: 'pre-wrap' },
+  },
 });
 
 export default Token;
