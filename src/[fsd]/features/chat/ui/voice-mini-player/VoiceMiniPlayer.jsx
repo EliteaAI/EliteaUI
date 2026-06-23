@@ -15,7 +15,10 @@ const VoiceMiniPlayer = memo(props => {
   if (!VOICE_FEATURES_ENABLED) return null;
 
   return (
-    <Box sx={styles.pill}>
+    <Box
+      data-testid="chat-voice-mini-player"
+      sx={styles.pill}
+    >
       <MicphoneIcon sx={styles.icon} />
       <VoiceControlButton
         isPlaying={isPlaying}

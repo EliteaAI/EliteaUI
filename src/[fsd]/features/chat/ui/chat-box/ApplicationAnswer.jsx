@@ -769,6 +769,8 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                     >
                       <Box component="span">
                         <BaseBtn
+                          data-testid="chat-read-out-button"
+                          aria-label="Read out"
                           disabled={
                             VOICE_FEATURES_TEMPORARILY_DISABLED ||
                             isProcessing ||

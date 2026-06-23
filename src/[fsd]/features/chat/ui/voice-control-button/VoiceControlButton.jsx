@@ -49,6 +49,7 @@ const VoiceControlButton = memo(props => {
         >
           <Box component="span">
             <BaseBtn
+              data-testid="chat-voice-play-stop-button"
               variant={BUTTON_VARIANTS.icon}
               color="tertiary"
               size="small"
@@ -66,6 +67,7 @@ const VoiceControlButton = memo(props => {
         >
           <Box component="span">
             <BaseBtn
+              data-testid="chat-voice-settings-button"
               variant={BUTTON_VARIANTS.tertiary}
               size="small"
               onClick={handleDialogOpen}
