@@ -9,6 +9,7 @@ import {
   ProfileContextManagement,
   ProfileLongTermMemory,
   ProfilePersonalization,
+  ProfileSoundNotifications,
   ProfileSummarization,
   ProfileUserInfo,
 } from './components';
@@ -37,6 +38,7 @@ const ProfileFormContent = memo(props => {
         <ProfileSummarization modelList={modelList} />
         <ProfileLongTermMemory />
         <VoicePersonalizationSection />
+        <ProfileSoundNotifications />
       </Box>
     </Box>
   );

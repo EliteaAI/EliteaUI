@@ -17,3 +17,4 @@ export * from './useDeleteConfirmationDisabled.hooks';
 export * from './useMentionHighlights.hooks';
 export * from './useLanguageLinter.hooks';
 export * from './useMcpVisibility.hooks';
+export * from './useSoundNotification.hooks';
