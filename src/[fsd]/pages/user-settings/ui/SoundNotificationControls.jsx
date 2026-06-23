@@ -10,7 +10,8 @@ const VOLUME_MARKS = [
   { value: 1, label: '100%' },
 ];
 
-const SoundNotificationControls = memo(({ config, setConfig, playCompletionSound }) => {
+const SoundNotificationControls = memo(props => {
+  const { config, setConfig, playCompletionSound } = props;
   const styles = soundNotificationControlsStyles();
 
   const handleToggle = useCallback((_, checked) => setConfig({ enabled: checked }), [setConfig]);

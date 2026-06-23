@@ -6,7 +6,7 @@ import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 
 import { SoundNotificationControls } from './SoundNotificationControls';
 
-const ProfileSoundNotifications = memo(() => {
+const SoundNotificationSection = memo(() => {
   const { config, setConfig, playCompletionSound } = useSoundNotification();
 
   return (
@@ -29,9 +29,9 @@ const ProfileSoundNotifications = memo(() => {
   );
 });
 
-ProfileSoundNotifications.displayName = 'ProfileSoundNotifications';
+SoundNotificationSection.displayName = 'SoundNotificationSection';
 
-export default ProfileSoundNotifications;
+export { SoundNotificationSection };
 
 /** @type {MuiSx} */
 const styles = {
