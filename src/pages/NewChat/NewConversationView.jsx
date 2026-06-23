@@ -95,7 +95,7 @@ const NewConversationView = forwardRef(
     const [selectedParticipant, setSelectedParticipant] = useState(activeParticipant || null);
     const [selectedParticipantDetails, setSelectedParticipantDetails] = useState(activeParticipant || null);
     const [prevConversation, setPrevConversation] = useState(activeConversation);
-    const [internalTools, setInternalTools] = useState([]);
+    const [internalTools, setInternalTools] = useState(['internal_mcp', 'lazy_tools_mode']);
     const [showRecommendationList, setShowRecommendationList] = useState(false);
     const { data: modelsData = { items: [], total: 0 } } = useListModelsQuery(
       { projectId: selectedProjectId, include_shared: true },
