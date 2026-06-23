@@ -9,7 +9,7 @@ import RouteDefinitions from '@/routes';
 import SidebarButton from './SidebarButton';
 
 const ResourcesButton = memo(() => {
-  const isOnResources = useMatch({ path: RouteDefinitions.Resources });
+  const isOnResources = useMatch({ path: RouteDefinitions.HelpCenter });
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -18,7 +18,7 @@ const ResourcesButton = memo(() => {
       return;
     }
 
-    navigate(RouteDefinitions.Resources, {
+    navigate(RouteDefinitions.HelpCenter, {
       state: { from: location.pathname },
     });
   }, [isOnResources, navigate, location.pathname]);
@@ -28,8 +28,8 @@ const ResourcesButton = memo(() => {
   return (
     <SidebarButton
       icon={<ResourcesIcon style={styles.icon} />}
-      label="Resources"
-      tooltip="Resources"
+      label="Help Center"
+      tooltip="Help Center"
       tourId={SIDEBAR_TOUR_TARGET_IDS.resources}
       onClick={handleResourcesClick}
       isActive={!!isOnResources}

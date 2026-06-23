@@ -60,7 +60,7 @@ export const SimpleCreateRoutes = [
   RouteDefinitions.Onboarding,
   RouteDefinitions.UserSettings,
   RouteDefinitions.AgentStudio,
-  RouteDefinitions.Resources,
+  RouteDefinitions.HelpCenter,
   RouteDefinitions.NotificationCenter,
 ];
 

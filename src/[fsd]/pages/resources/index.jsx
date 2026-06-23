@@ -94,7 +94,7 @@ const ResourcesPage = memo(() => {
 
       <Box sx={styles.content}>
         <Box sx={styles.intro}>
-          <Typography variant="headingLarge">Explore Resources</Typography>
+          <Typography variant="headingLarge">Explore Help Center</Typography>
           <Typography variant="bodyMedium">
             Guides, documentation, and release notes to support your work.
           </Typography>

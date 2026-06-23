@@ -167,8 +167,8 @@ Settings are project-specific — the sections available depend on which project
     id: 'resources',
     target: SIDEBAR_TOUR_TARGETS.resources,
     placement: 'right',
-    title: 'Resources',
-    content: `The **Resources** page is a central hub for learning and reference material. It provides quick access to documentation, release notes, video walkthroughs, tutorials, and interactive tours — all in one place, without leaving the platform.
+    title: 'Help Center',
+    content: `The **Help Center** page is a central hub for learning and reference material. It provides quick access to documentation, release notes, video walkthroughs, tutorials, and interactive tours — all in one place, without leaving the platform.
 
 The page also displays the current ELITEA version and any installed plugin versions in the header area.`,
   },

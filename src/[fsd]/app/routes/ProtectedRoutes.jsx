@@ -157,7 +157,7 @@ const ProtectedRoutes = () => {
     () => [
       /* onboarding */
       { path: RouteDefinitions.Onboarding, element: <Onboarding /> },
-      { path: RouteDefinitions.Resources, element: <Resources /> },
+      { path: RouteDefinitions.HelpCenter, element: <Resources /> },
       { path: RouteDefinitions.AgentStudio, element: <AgentsStudio /> },
 
       /* chat */

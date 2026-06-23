@@ -50,7 +50,7 @@ const ResourceVersionInfo = memo(props => {
         variant="headingMedium"
         color="text.secondary"
       >
-        Resources
+        Help Center
       </Typography>
       <Box sx={styles.headerRight}>
         {isConfigLoading ? (
