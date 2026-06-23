@@ -62,6 +62,7 @@ const GenerateAgentModal = memo(props => {
   const [selectedMcpIds, setSelectedMcpIds] = useState(new Set());
   const [selectedPipelineIds, setSelectedPipelineIds] = useState(new Set());
   const [isApproving, setIsApproving] = useState(false);
+  const [isDraftValid, setIsDraftValid] = useState(true);
   const generatePromiseRef = useRef(null);
 
   const handleGenerate = useCallback(async () => {
@@ -313,6 +314,7 @@ const GenerateAgentModal = memo(props => {
         <GenerateAgentReviewForm
           draft={draftData}
           onChange={setDraftData}
+          onValidationChange={setIsDraftValid}
           selectedToolkitIds={selectedToolkitIds}
           onToggleToolkit={handleToggleToolkit}
           selectedAgentIds={selectedAgentIds}
@@ -373,7 +375,7 @@ const GenerateAgentModal = memo(props => {
             variant={BUTTON_VARIANTS.elitea}
             size="small"
             onClick={handleApprove}
-            disabled={isApproving}
+            disabled={isApproving || !isDraftValid}
             sx={{ margin: '0 !important' }}
           >
             {isApproving ? 'Creating...' : 'Create Agent'}

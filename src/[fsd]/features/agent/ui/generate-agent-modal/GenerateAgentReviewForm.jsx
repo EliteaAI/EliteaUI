@@ -1,11 +1,18 @@
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback, useEffect, useMemo } from 'react';
 
 import { Box, IconButton, TextField, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
+import { validateAgentDraft } from '@/[fsd]/features/agent/lib/helpers';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import PlusIcon from '@/assets/plus-icon.svg?react';
-import { MAX_CONVERSATION_STARTERS, MAX_CONVERSATION_STARTER_LENGTH } from '@/common/constants.js';
+import {
+  MAX_CONVERSATION_STARTERS,
+  MAX_CONVERSATION_STARTER_LENGTH,
+  MAX_DESCRIPTION_LENGTH,
+  MAX_NAME_LENGTH,
+  MAX_WELCOME_MESSAGE_LENGTH,
+} from '@/common/constants.js';
 import CloseIcon from '@/components/Icons/CloseIcon';
 
 import ResourceSuggestions from './ResourceSuggestions';
@@ -14,6 +21,7 @@ const GenerateAgentReviewForm = memo(props => {
   const {
     draft,
     onChange,
+    onValidationChange,
     selectedToolkitIds,
     onToggleToolkit,
     selectedAgentIds,
@@ -25,6 +33,14 @@ const GenerateAgentReviewForm = memo(props => {
   } = props;
 
   const styles = generateAgentReviewFormStyles();
+
+  const validationErrors = useMemo(() => validateAgentDraft(draft), [draft]);
+
+  const isValid = useMemo(() => Object.keys(validationErrors).length === 0, [validationErrors]);
+
+  useEffect(() => {
+    onValidationChange?.(isValid);
+  }, [isValid, onValidationChange]);
 
   const handleFieldChange = useCallback(
     (field, value) => {
@@ -77,8 +93,9 @@ const GenerateAgentReviewForm = memo(props => {
           size="small"
           value={draft.name || ''}
           onChange={e => handleFieldChange('name', e.target.value)}
-          slotProps={{ htmlInput: { maxLength: 32 } }}
-          helperText={`${(draft.name || '').length}/32`}
+          slotProps={{ htmlInput: { maxLength: MAX_NAME_LENGTH } }}
+          helperText={validationErrors.name || `${(draft.name || '').length}/${MAX_NAME_LENGTH}`}
+          error={!!validationErrors.name}
           sx={styles.textField}
         />
       </Box>
@@ -93,6 +110,11 @@ const GenerateAgentReviewForm = memo(props => {
           maxRows={4}
           value={draft.description || ''}
           onChange={e => handleFieldChange('description', e.target.value)}
+          slotProps={{ htmlInput: { maxLength: MAX_DESCRIPTION_LENGTH } }}
+          helperText={
+            validationErrors.description || `${(draft.description || '').length}/${MAX_DESCRIPTION_LENGTH}`
+          }
+          error={!!validationErrors.description}
           sx={styles.textField}
         />
       </Box>
@@ -118,6 +140,12 @@ const GenerateAgentReviewForm = memo(props => {
           size="small"
           value={draft.welcome_message || ''}
           onChange={e => handleFieldChange('welcome_message', e.target.value)}
+          slotProps={{ htmlInput: { maxLength: MAX_WELCOME_MESSAGE_LENGTH } }}
+          helperText={
+            validationErrors.welcome_message ||
+            `${(draft.welcome_message || '').length}/${MAX_WELCOME_MESSAGE_LENGTH}`
+          }
+          error={!!validationErrors.welcome_message}
           sx={styles.textField}
         />
       </Box>
@@ -271,6 +299,10 @@ const generateAgentReviewFormStyles = () => ({
     },
     '&:focus-within .MuiFormHelperText-root': {
       visibility: 'visible',
+    },
+    '& .MuiFormHelperText-root.Mui-error': {
+      visibility: 'visible',
+      color: palette.error.main,
     },
   }),
   startersList: {
