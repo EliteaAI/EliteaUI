@@ -4,7 +4,7 @@ import {
   IndexStatuses,
   IndexesToolsEnum,
 } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
-import { playCompletionSound, playErrorSound } from '@/[fsd]/shared/lib/utils/soundNotification.utils';
+import { notifyTaskComplete, notifyTaskError } from '@/[fsd]/shared/lib/utils/soundNotification.utils';
 import {
   ChatParticipantType,
   ROLES,
@@ -225,7 +225,7 @@ export const generateChatMessageBasedOnResponse = ({ message, chatHistory, onFin
         if (response_metadata?.finish_reason) {
           msg.isStreaming = false;
           onFinish(IndexStatuses.success);
-          playCompletionSound();
+          notifyTaskComplete();
 
           // Enrich final message with execution time and status
           // NOTE: This formatting is specific to toolkit testing page only
@@ -270,7 +270,7 @@ export const generateChatMessageBasedOnResponse = ({ message, chatHistory, onFin
         msg.isStreaming = false;
 
         onFinish(IndexStatuses.fail);
-        playErrorSound();
+        notifyTaskError();
       }
       return updatedHistory;
     }
@@ -278,7 +278,7 @@ export const generateChatMessageBasedOnResponse = ({ message, chatHistory, onFin
     case SocketMessageType.Error:
     case SocketMessageType.AgentException: {
       // Handle general errors
-      playErrorSound();
+      notifyTaskError();
       const finalMsgIndex = updatedHistory.findIndex(msg => msg.id === message_id);
 
       if (finalMsgIndex >= 0) {
