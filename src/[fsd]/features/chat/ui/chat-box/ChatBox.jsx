@@ -1424,7 +1424,9 @@ const ChatBox = forwardRef((props, boxRef) => {
         pendingDecisionsRef.current = { messageId: null, decisions: {} };
       } else {
         payload.hitl_action = action;
-        if (action === 'edit') {
+        // `edit` carries the rewritten prompt; `block_with_comment` carries the
+        // user's free-text note (-> SDK blocked-tool `denial_reason`, #5318).
+        if (action === 'edit' || action === 'block_with_comment') {
           payload.hitl_value = value ?? '';
         }
       }
