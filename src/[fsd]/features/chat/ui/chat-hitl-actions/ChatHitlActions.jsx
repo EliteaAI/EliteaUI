@@ -7,7 +7,10 @@ import CheckedIcon from '@/assets/checked-icon.svg?react';
 import EditIcon from '@/assets/edit.svg?react';
 import RejectIcon from '@/assets/reject.svg?react';
 
+import BlockWithCommentControl from './BlockWithCommentControl';
+
 const SENSITIVE_PARAM_MASK = '***';
+const BLOCK_WITH_COMMENT_ACTION = 'block_with_comment';
 
 const SensitiveToolParams = memo(props => {
   const { toolArgs } = props;
@@ -103,6 +106,15 @@ const ChatHitlActions = memo(props => {
     onHitlResume?.({ action: 'reject', toolCallId });
   }, [onHitlResume, toolCallId]);
 
+  const handleBlockWithComment = useCallback(
+    comment => {
+      onHitlResume?.({ action: BLOCK_WITH_COMMENT_ACTION, value: comment, toolCallId });
+    },
+    [onHitlResume, toolCallId],
+  );
+
+  const canBlockWithComment = available_actions.includes(BLOCK_WITH_COMMENT_ACTION);
+
   const handleEditClick = useCallback(() => {
     onHitlEditClick?.();
   }, [onHitlEditClick]);
@@ -160,6 +172,12 @@ const ChatHitlActions = memo(props => {
           >
             Block
           </BaseBtn>
+          {canBlockWithComment && (
+            <BlockWithCommentControl
+              onSubmit={handleBlockWithComment}
+              disabled={disabled}
+            />
+          )}
         </Box>
       </Box>
     );
@@ -206,6 +224,12 @@ const ChatHitlActions = memo(props => {
           >
             Reject
           </BaseBtn>
+        )}
+        {canBlockWithComment && (
+          <BlockWithCommentControl
+            onSubmit={handleBlockWithComment}
+            disabled={disabled}
+          />
         )}
       </Box>
     </Box>
