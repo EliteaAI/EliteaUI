@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { Alert, Box, CircularProgress, TextField, Typography } from '@mui/material';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
+import { useLazySkillDetailsQuery, useUpdateSkillRelationMutation } from '@/[fsd]/features/skill/api';
 import { generateLLMSettings } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
 import { Modal } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
@@ -43,7 +44,9 @@ const GenerateAgentModal = memo(props => {
   const [createApplication] = useApplicationCreateMutation();
   const [associateToolkit] = useToolkitAssociateMutation();
   const [updateApplicationRelation] = useUpdateApplicationRelationMutation();
+  const [updateSkillRelation] = useUpdateSkillRelationMutation();
   const [fetchApplicationDetails] = useLazyApplicationDetailsQuery();
+  const [fetchSkillDetails] = useLazySkillDetailsQuery();
 
   const [generateDraft, { error: generateError, reset: resetGenerate }] = useGenerateAgentDraftMutation();
 
@@ -61,6 +64,7 @@ const GenerateAgentModal = memo(props => {
   const [selectedAgentIds, setSelectedAgentIds] = useState(new Set());
   const [selectedMcpIds, setSelectedMcpIds] = useState(new Set());
   const [selectedPipelineIds, setSelectedPipelineIds] = useState(new Set());
+  const [selectedSkillIds, setSelectedSkillIds] = useState(new Set());
   const [isApproving, setIsApproving] = useState(false);
   const [isDraftValid, setIsDraftValid] = useState(true);
   const generatePromiseRef = useRef(null);
@@ -85,6 +89,7 @@ const GenerateAgentModal = memo(props => {
       setSelectedAgentIds(new Set());
       setSelectedMcpIds(new Set());
       setSelectedPipelineIds(new Set());
+      setSelectedSkillIds(new Set());
       setStep(STEPS.REVIEW);
     } catch {
       generatePromiseRef.current = null;
@@ -134,6 +139,15 @@ const GenerateAgentModal = memo(props => {
     });
   }, []);
 
+  const handleToggleSkill = useCallback(id => {
+    setSelectedSkillIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
   const associateToolkits = useCallback(
     async (versionId, entityId, toolkits) => {
       if (!versionId || !toolkits.length) return;
@@ -175,6 +189,29 @@ const GenerateAgentModal = memo(props => {
       );
     },
     [fetchApplicationDetails, updateApplicationRelation, projectId],
+  );
+
+  const associateSkills = useCallback(
+    async (versionId, skills) => {
+      if (!versionId || !skills.length) return;
+      await Promise.allSettled(
+        skills.map(async skill => {
+          const { data: skillDetails } = await fetchSkillDetails({
+            projectId,
+            skillId: skill.id,
+          });
+          if (!skillDetails?.version_details?.id) return;
+          return updateSkillRelation({
+            projectId,
+            skillId: skill.id,
+            entity_version_id: versionId,
+            skill_version_id: skillDetails.version_details.id,
+            has_relation: true,
+          }).unwrap();
+        }),
+      );
+    },
+    [fetchSkillDetails, updateSkillRelation, projectId],
   );
 
   const redirectToAgent = useCallback(
@@ -239,9 +276,11 @@ const GenerateAgentModal = memo(props => {
       const selectedPipelines = (draftData.suggested_pipelines || []).filter(p =>
         selectedPipelineIds.has(p.id),
       );
+      const selectedSkills = (draftData.suggested_skills || []).filter(s => selectedSkillIds.has(s.id));
 
       await associateToolkits(versionId, entityId, [...selectedToolkits, ...selectedMcps]);
       await associateApplications(versionId, entityId, [...selectedAgents, ...selectedPipelines]);
+      await associateSkills(versionId, selectedSkills);
 
       onClose();
       if (onAgentCreated) onAgentCreated(result);
@@ -256,9 +295,11 @@ const GenerateAgentModal = memo(props => {
     selectedAgentIds,
     selectedMcpIds,
     selectedPipelineIds,
+    selectedSkillIds,
     createApplication,
     associateToolkits,
     associateApplications,
+    associateSkills,
     redirectToAgent,
     onAgentCreated,
     projectId,
@@ -279,6 +320,7 @@ const GenerateAgentModal = memo(props => {
     setSelectedAgentIds(new Set());
     setSelectedMcpIds(new Set());
     setSelectedPipelineIds(new Set());
+    setSelectedSkillIds(new Set());
     setIsApproving(false);
     resetGenerate();
     onClose();
@@ -323,6 +365,8 @@ const GenerateAgentModal = memo(props => {
           onToggleMcp={handleToggleMcp}
           selectedPipelineIds={selectedPipelineIds}
           onTogglePipeline={handleTogglePipeline}
+          selectedSkillIds={selectedSkillIds}
+          onToggleSkill={handleToggleSkill}
         />
       );
     }

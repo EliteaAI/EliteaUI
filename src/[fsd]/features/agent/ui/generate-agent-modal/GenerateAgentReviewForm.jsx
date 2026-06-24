@@ -30,6 +30,8 @@ const GenerateAgentReviewForm = memo(props => {
     onToggleMcp,
     selectedPipelineIds,
     onTogglePipeline,
+    selectedSkillIds,
+    onToggleSkill,
   } = props;
 
   const styles = generateAgentReviewFormStyles();
@@ -234,6 +236,14 @@ const GenerateAgentReviewForm = memo(props => {
         selectedIds={selectedAgentIds}
         onToggle={onToggleAgent}
         entityType="agent"
+      />
+
+      <ResourceSuggestions
+        title="Suggested Skills:"
+        items={draft.suggested_skills}
+        selectedIds={selectedSkillIds}
+        onToggle={onToggleSkill}
+        entityType="skill"
       />
     </Box>
   );

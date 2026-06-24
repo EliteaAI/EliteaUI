@@ -19,7 +19,9 @@ const SuggestionItem = memo(props => {
 
   const secondaryText = entityType === 'toolkit' ? item.type : item.description;
   const showSecondary = secondaryText && secondaryText !== item.name;
-  const resolvedEntityType = entityType === 'toolkit' ? undefined : 'agent';
+
+  const entityTypeMap = { toolkit: undefined, skill: 'skill' };
+  const resolvedEntityType = entityTypeMap[entityType] ?? 'agent';
 
   return (
     <Box
