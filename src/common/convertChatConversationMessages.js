@@ -1,4 +1,5 @@
 import { ChatHelpers } from '@/[fsd]/features/chat/lib/helpers';
+import { collapseSubAgentInvocationKeys } from '@/[fsd]/features/chat/lib/helpers/subAgentGrouping.helpers.js';
 import {
   ChatParticipantType,
   ROLES,
@@ -7,7 +8,6 @@ import {
   ToolActionStatus,
 } from '@/common/constants';
 import { convertJsonToString } from '@/common/utils';
-import { collapseSubAgentInvocationKeys } from '@/components/Chat/subAgentGrouping';
 
 export const isUserMessage = (author_participant_id, sent_to_id, userIds, reply_to_id, sent_to) => {
   return (

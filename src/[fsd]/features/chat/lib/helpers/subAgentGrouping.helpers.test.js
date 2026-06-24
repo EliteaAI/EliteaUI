@@ -7,7 +7,7 @@ import {
   partitionActionsIntoBlocks,
   resolveExtraSubAgentKeys,
   resolveSubAgentLiveness,
-} from './subAgentGrouping';
+} from './subAgentGrouping.helpers.js';
 
 // --- Minimal mirrors of the component's callbacks ------------------------- //
 

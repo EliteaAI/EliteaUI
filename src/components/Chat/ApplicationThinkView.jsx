@@ -3,6 +3,13 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import { ChatHelpers } from '@/[fsd]/features/chat/lib/helpers';
+import {
+  buildPcidAnchorMap,
+  isInvocationId,
+  partitionActionsIntoBlocks,
+  resolveExtraSubAgentKeys,
+  resolveSubAgentLiveness,
+} from '@/[fsd]/features/chat/lib/helpers/subAgentGrouping.helpers.js';
 import { ErrorTrace } from '@/[fsd]/features/chat/ui/error-trace';
 import { SubAgentAccordion } from '@/[fsd]/features/chat/ui/sub-agent-section';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
@@ -12,13 +19,6 @@ import { TOOL_ACTION_NAMES, TOOL_ACTION_TYPES, ToolActionStatus } from '@/common
 import { getToolInfoFromAction } from '@/common/toolActionUitls';
 
 import ActionView from './ActionView';
-import {
-  buildPcidAnchorMap,
-  isInvocationId,
-  partitionActionsIntoBlocks,
-  resolveExtraSubAgentKeys,
-  resolveSubAgentLiveness,
-} from './subAgentGrouping';
 
 // Streaming view of the thinking block: ordered coordinator chip blocks and
 // per-sub-agent accordions, plus any sub-agent whose activity the throttled
