@@ -50,6 +50,8 @@ export default function SuggestionList({
     credentialTotal,
     mcpResult,
     mcpTotal,
+    skillResult,
+    skillTotal,
   } = useSearch();
 
   const {
@@ -59,6 +61,7 @@ export default function SuggestionList({
     isToolkitsPage,
     isMCPsPage,
     isCredentialsPage,
+    isSkillsPage,
   } = useSearchBar();
 
   const userPublicPageTab = useMemo(() => isUserPublicPage?.params?.tab, [isUserPublicPage?.params?.tab]);
@@ -100,6 +103,7 @@ export default function SuggestionList({
     if (isToolkitsPage) return ['toolkit'];
     if (isMCPsPage) return ['mcp'];
     if (isCredentialsPage) return ['credential'];
+    if (isSkillsPage) return ['tag', 'skill'];
     if (isUserPublicPage) return ['tag', 'application', 'pipeline', 'toolkit', 'credential'];
     return [];
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -279,6 +283,16 @@ export default function SuggestionList({
               sectionTitle={AutoSuggestionTitles.CREDENTIALS}
               data={credentialResult}
               total={credentialTotal}
+              isFetching={isFetching}
+              renderItem={renderItem}
+              fetchMoreData={fetchMoreData}
+            />
+          )}
+          {isSkillsPage && (
+            <ListSection
+              sectionTitle={AutoSuggestionTitles.SKILLS}
+              data={skillResult}
+              total={skillTotal}
               isFetching={isFetching}
               renderItem={renderItem}
               fetchMoreData={fetchMoreData}

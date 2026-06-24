@@ -228,6 +228,7 @@ export const useSearchPromptNavigate = () => {
     isToolkitsPage,
     isMCPsPage,
     isCredentialsPage,
+    isSkillsPage,
   } = useSearchBar();
 
   const tab = useMemo(
@@ -238,7 +239,8 @@ export const useSearchPromptNavigate = () => {
         isUserPublicPage ||
         isToolkitsPage ||
         isMCPsPage ||
-        isCredentialsPage
+        isCredentialsPage ||
+        isSkillsPage
       )?.params?.tab,
     [
       isPublicApplicationsPage,
@@ -247,6 +249,7 @@ export const useSearchPromptNavigate = () => {
       isToolkitsPage,
       isMCPsPage,
       isCredentialsPage,
+      isSkillsPage,
     ],
   );
 
@@ -261,8 +264,17 @@ export const useSearchPromptNavigate = () => {
       return RouteDefinitions.MCPs;
     } else if (isCredentialsPage) {
       return RouteDefinitions.Credentials;
+    } else if (isSkillsPage) {
+      return RouteDefinitions.Skills;
     }
-  }, [isPipelinesPage, isPublicApplicationsPage, isToolkitsPage, isMCPsPage, isCredentialsPage]);
+  }, [
+    isPipelinesPage,
+    isPublicApplicationsPage,
+    isToolkitsPage,
+    isMCPsPage,
+    isCredentialsPage,
+    isSkillsPage,
+  ]);
 
   const getDestPath = useCallback(
     userPublicEntityType => {
@@ -271,7 +283,14 @@ export const useSearchPromptNavigate = () => {
         viewMode: publicTabs.includes(tab) ? ViewMode.Public : ViewMode.Owner,
       };
 
-      if (isPublicApplicationsPage || isPipelinesPage || isToolkitsPage || isMCPsPage || isCredentialsPage)
+      if (
+        isPublicApplicationsPage ||
+        isPipelinesPage ||
+        isToolkitsPage ||
+        isMCPsPage ||
+        isCredentialsPage ||
+        isSkillsPage
+      )
         return defaultPath;
 
       if (isUserPublicPage)
@@ -289,6 +308,7 @@ export const useSearchPromptNavigate = () => {
       isToolkitsPage,
       isMCPsPage,
       isCredentialsPage,
+      isSkillsPage,
       tab,
       destRoute,
     ],

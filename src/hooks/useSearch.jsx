@@ -25,7 +25,14 @@ export default function useSearch() {
 
   const [getSuggestions, { data: suggestion = {}, isFetching, error: suggestionError }] =
     useLazyAutoSuggestQuery();
-  const { tag = {}, application = {}, pipeline = {}, credential = {}, toolkit = {} } = suggestion || {};
+  const {
+    tag = {},
+    application = {},
+    pipeline = {},
+    credential = {},
+    toolkit = {},
+    skill = {},
+  } = suggestion || {};
 
   const { rows: tagResult = [], total: tagTotal } = tag || {};
   const { rows: agentResult = [], total: agentTotal } = application || {};
@@ -33,6 +40,7 @@ export default function useSearch() {
   const { rows: toolkitResult = [], total: toolkitTotal } = toolkit || {};
   const { rows: mcpResults = [], total: mcpTotal } = mcps || {};
   const { rows: credentialResult = [], total: credentialTotal } = credential || {};
+  const { rows: skillResult = [], total: skillTotal } = skill || {};
   const sortedTags = useMemo(
     () => [...tagResult].sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase())),
     [tagResult],
@@ -74,6 +82,10 @@ export default function useSearch() {
   const sortedCredentials = useMemo(
     () => [...credentialResult].sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase())),
     [credentialResult],
+  );
+  const sortedSkills = useMemo(
+    () => [...skillResult].sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase())),
+    [skillResult],
   );
 
   useEffect(() => {
@@ -143,5 +155,7 @@ export default function useSearch() {
     credentialTotal: credentialTotal || sortedCredentials.length,
     mcpResult: sortedMCPs,
     mcpTotal,
+    skillResult: sortedSkills,
+    skillTotal,
   };
 }
