@@ -3,6 +3,7 @@ import { memo, useCallback, useId, useMemo, useState } from 'react';
 import { Box, Collapse, Typography } from '@mui/material';
 
 import BaseBtn from '@/[fsd]/shared/ui/button/BaseBtn';
+import Markdown from '@/[fsd]/shared/ui/markdown';
 import CheckedIcon from '@/assets/checked-icon.svg?react';
 import EditIcon from '@/assets/edit.svg?react';
 import RejectIcon from '@/assets/reject.svg?react';
@@ -11,6 +12,7 @@ import BlockWithCommentControl from './BlockWithCommentControl';
 
 const SENSITIVE_PARAM_MASK = '***';
 const BLOCK_WITH_COMMENT_ACTION = 'block_with_comment';
+const DEFAULT_HITL_MESSAGE = 'Here are some results. Choose the action to proceed.';
 
 const SensitiveToolParams = memo(props => {
   const { toolArgs } = props;
@@ -92,7 +94,7 @@ SensitiveToolParams.displayName = 'SensitiveToolParams';
 
 const ChatHitlActions = memo(props => {
   const { hitlInterrupt, onHitlResume, onHitlEditClick, disabled, toolCallId } = props;
-  const { available_actions = [], guardrail_type } = hitlInterrupt || {};
+  const { available_actions = [], guardrail_type, message } = hitlInterrupt || {};
   // Parallel sub-agent fan-out surfaces multiple sensitive-tool pauses at once.
   const isSensitiveTool =
     guardrail_type === 'sensitive_tool' || guardrail_type === 'parallel_sensitive_tools';
@@ -185,12 +187,9 @@ const ChatHitlActions = memo(props => {
 
   return (
     <Box sx={styles.container}>
-      <Typography
-        variant="bodyMedium"
-        color="text.secondary"
-      >
-        Here are some results. Choose the action to proceed.
-      </Typography>
+      <Box sx={styles.message}>
+        <Markdown>{message?.trim() ? message : DEFAULT_HITL_MESSAGE}</Markdown>
+      </Box>
       <Box sx={styles.buttonContainer}>
         {available_actions.includes('approve') && (
           <BaseBtn
