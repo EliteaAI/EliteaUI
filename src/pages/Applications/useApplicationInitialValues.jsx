@@ -68,7 +68,7 @@ export const useCreateApplicationInitialValues = forPipeline => {
         agent_type: forPipeline ? 'pipeline' : undefined,
         meta: {
           step_limit: 25,
-          internal_tools: ['internal_mcp', 'lazy_tools_mode'],
+          internal_tools: ['internal_mcp'],
         },
       },
       yamlJsonObject: undefined,
