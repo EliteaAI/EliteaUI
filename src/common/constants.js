@@ -664,6 +664,7 @@ export const ProjectIdStorageKey = 'elitea_ui.project.id';
 export const ProjectNameStorageKey = 'elitea_ui.project.name';
 export const PublicPermissionStorageKey = 'elitea_ui.public_permission';
 export const PermissionStorageKey = 'elitea_ui.project_permission';
+export const SoundNotificationsStorageKey = 'elitea_ui.sound_notifications';
 
 export const AuthenticationTypes = {
   None: {

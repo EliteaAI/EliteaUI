@@ -7,6 +7,7 @@ import {
   RUN_STATE_NODE,
   StateVariableTypes,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/constants/flowEditor.constants';
+import { notifyTaskComplete } from '@/[fsd]/shared/lib/utils/soundNotification.utils';
 import { SocketMessageType } from '@/common/constants';
 import { convertJsonToString } from '@/common/utils';
 
@@ -164,6 +165,7 @@ export const parseRunEvent = (
       if (isRunningPipeline) {
         // One run finished successfully
         setIsRunningPipeline(false);
+        notifyTaskComplete();
         runPipelineStatus.current.data.status = PipelineStatus.Completed;
         if (runPipelineStatus.current.data.timeline[runPipelineStatus.current.data.timeline.length - 1]) {
           runPipelineStatus.current.data.timeline[runPipelineStatus.current.data.timeline.length - 1].status =
