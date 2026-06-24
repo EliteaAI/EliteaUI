@@ -14,11 +14,11 @@ export const useSkillExport = () => {
   const [exportSkill, { isFetching: isExporting }] = useLazySkillExportMdQuery();
 
   const doExport = useCallback(
-    async ({ skillId, versionName, skillName } = {}) => {
+    async ({ skillId, versionId, skillName } = {}) => {
       if (!skillId) return;
 
       try {
-        const { blob, filename } = await exportSkill({ projectId, skillId, versionName }).unwrap();
+        const { blob, filename } = await exportSkill({ projectId, skillId, versionId }).unwrap();
         // Filename from Content-Disposition (parsed in the slice); fall back to the skill name.
         const downloadName = filename || `${skillName || 'skill'}.md`;
         downloadBlobFile(blob, downloadName);

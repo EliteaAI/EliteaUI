@@ -127,10 +127,10 @@ const skillsApi = eliteaApi
         },
       }),
       skillDetails: build.query({
-        query: ({ projectId, skillId, versionName }) => {
+        query: ({ projectId, skillId, versionId }) => {
           let url = `${apiSlicePath}/skill/${mode}/${projectId}/${skillId}`;
-          if (versionName) {
-            url += '/' + versionName;
+          if (versionId) {
+            url += '/' + versionId;
           }
           return { url };
         },
@@ -173,11 +173,11 @@ const skillsApi = eliteaApi
         },
       }),
       skillUpdate: build.mutation({
-        // Update skill metadata (no versionName) OR a version's content (with versionName).
-        query: ({ projectId, skillId, versionName, ...body }) => {
+        // Update skill metadata (no versionId) OR a version's content (with versionId).
+        query: ({ projectId, skillId, versionId, ...body }) => {
           let url = `${apiSlicePath}/skill/${mode}/${projectId}/${skillId}`;
-          if (versionName) {
-            url += '/' + versionName;
+          if (versionId) {
+            url += '/' + versionId;
           }
           return {
             url,
@@ -196,11 +196,11 @@ const skillsApi = eliteaApi
         },
       }),
       deleteSkill: build.mutation({
-        // Delete the whole skill (204) or a single version when versionName is given.
-        query: ({ projectId, skillId, versionName }) => {
+        // Delete the whole skill (204) or a single version when versionId is given.
+        query: ({ projectId, skillId, versionId }) => {
           let url = `${apiSlicePath}/skill/${mode}/${projectId}/${skillId}`;
-          if (versionName) {
-            url += '/' + versionName;
+          if (versionId) {
+            url += '/' + versionId;
           }
           return {
             url,
@@ -213,7 +213,7 @@ const skillsApi = eliteaApi
         },
         onQueryStarted: async (args, { dispatch, getState, queryFulfilled }) => {
           // Only optimistically remove from list when deleting the whole skill.
-          if (args.versionName) {
+          if (args.versionId) {
             try {
               await queryFulfilled;
             } catch {
@@ -250,10 +250,10 @@ const skillsApi = eliteaApi
       }),
       // Export the selected version as a .md file (YAML frontmatter + markdown body).
       skillExportMd: build.query({
-        query: ({ projectId, skillId, versionName }) => {
+        query: ({ projectId, skillId, versionId }) => {
           let url = `${apiSlicePath}/skill_export/${mode}/${projectId}/${skillId}`;
-          if (versionName) {
-            url += '/' + versionName;
+          if (versionId) {
+            url += '/' + versionId;
           }
           return {
             url,

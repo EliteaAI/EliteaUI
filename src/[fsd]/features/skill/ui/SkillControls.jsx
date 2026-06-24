@@ -37,7 +37,7 @@ const sectionLabelSx = ({ palette }) => ({
  * Controls.ControlsDropdown and reuses the entity-agnostic agent hooks.
  */
 const SkillControls = memo(props => {
-  const { skillId, skillName, currentVersionName, onChangeVersion } = props;
+  const { skillId, skillName, currentVersionId, onChangeVersion } = props;
 
   const navigate = useNavigate();
   const projectId = useSelectedProjectId();
@@ -46,7 +46,6 @@ const SkillControls = memo(props => {
 
   const versionDetails = values?.version_details;
   const defaultVersionId = values?.meta?.default_version_id;
-  const currentVersionId = versionDetails?.id;
 
   const { projectEntityLink: versionLink } = useProjectEntityLink({ versionId: currentVersionId });
 
@@ -104,22 +103,31 @@ const SkillControls = memo(props => {
   }, [setDefaultVersion, projectId, skillId, currentVersionId, toastError, toastSuccess]);
 
   const onExport = useCallback(() => {
-    doExport({ skillId, versionName: currentVersionName, skillName });
-  }, [doExport, skillId, currentVersionName, skillName]);
+    doExport({ skillId, versionId: currentVersionId, skillName });
+  }, [doExport, skillId, currentVersionId, skillName]);
 
   const onDeleteVersion = useCallback(async () => {
     try {
-      const { error } = await deleteSkill({ projectId, skillId, versionName: currentVersionName });
+      const { error } = await deleteSkill({ projectId, skillId, versionId: currentVersionId });
       if (error) {
         toastError(buildErrorMessage(error) || 'Failed to delete the version.');
         return;
       }
       toastSuccess('The version has been deleted');
-      onChangeVersion?.(LATEST_VERSION_NAME);
+      onChangeVersion?.(defaultVersionId);
     } catch (error) {
       toastError(buildErrorMessage(error) || 'Failed to delete the version.');
     }
-  }, [deleteSkill, projectId, skillId, currentVersionName, onChangeVersion, toastError, toastSuccess]);
+  }, [
+    deleteSkill,
+    projectId,
+    skillId,
+    currentVersionId,
+    defaultVersionId,
+    onChangeVersion,
+    toastError,
+    toastSuccess,
+  ]);
 
   const onDeleteSkill = useCallback(async () => {
     try {
