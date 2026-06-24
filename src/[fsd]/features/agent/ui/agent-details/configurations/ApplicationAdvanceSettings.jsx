@@ -9,6 +9,8 @@ import { Checkbox, Input, Label } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { MAX_STEP_LIMIT, MIN_STEP_LIMIT } from '@/common/constants';
 
+const NOTES_MAX_LENGTH = 10000;
+
 const ApplicationAdvanceSettings = memo(props => {
   const { style, disabled, showIgnoreProjectContext = false } = props;
 
@@ -79,6 +81,13 @@ const ApplicationAdvanceSettings = memo(props => {
     [setFieldValue],
   );
 
+  const handleNotesChange = useCallback(
+    e => {
+      setFieldValue('version_details.notes', e.target.value);
+    },
+    [setFieldValue],
+  );
+
   const styles = useMemo(() => applicationAdvanceSettingsStyles(), []);
 
   const accordionItems = useMemo(
@@ -122,6 +131,21 @@ const ApplicationAdvanceSettings = memo(props => {
                 />
               </Box>
             )}
+            <Input.StyledInputEnhancer
+              value={version_details?.notes ?? ''}
+              onChange={handleNotesChange}
+              disabled={disabled}
+              label={
+                <Label.InfoLabelWithTooltip
+                  label="Notes"
+                  tooltip="Free-text notes for documentation only. Not sent to the LLM, chat, or execution; not used in monitoring."
+                  variant="labelLarge"
+                />
+              }
+              minRows={3}
+              maxRows={10}
+              inputProps={{ maxLength: NOTES_MAX_LENGTH }}
+            />
           </Box>
         ),
       },
@@ -129,9 +153,11 @@ const ApplicationAdvanceSettings = memo(props => {
     [
       version_details?.meta?.step_limit,
       version_details?.meta?.ignore_project_context,
+      version_details?.notes,
       handleChange,
       handleKeyDown,
       handleIgnoreToggle,
+      handleNotesChange,
       disabled,
       styles,
       showIgnoreProjectContext,

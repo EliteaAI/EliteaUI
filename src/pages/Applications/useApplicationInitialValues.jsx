@@ -305,6 +305,7 @@ const useApplicationInitialValues = forPipeline => {
           agent_type: versionDetails.agent_type,
           welcome_message: versionDetails.welcome_message || '',
           meta: versionDetails.meta || {},
+          notes: versionDetails.notes,
           pipeline_settings: pipelineSettings,
         })
           .unwrap()
