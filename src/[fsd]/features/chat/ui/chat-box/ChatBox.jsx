@@ -53,6 +53,7 @@ import {
   ChatParticipantType,
   PROMPT_PAYLOAD_KEY,
   PUBLIC_PROJECT_ID,
+  TOOL_ACTION_TYPES,
   ToolActionStatus,
   WELCOME_MESSAGE_ID,
   sioEvents,
@@ -1441,6 +1442,41 @@ const ChatBox = forwardRef((props, boxRef) => {
 
         const nextMessages = [...prevMessages];
         const assistantMessage = nextMessages[assistantIndex];
+        // Preserve the streaming view across the resume instead of wiping it.
+        // On the in-process parallel HITL path LangGraph re-runs ONLY the branches
+        // that are still paused; the sub-agents that already returned a real result
+        // are cached and never re-emit. Clearing toolActions wholesale therefore
+        // made every completed sibling — and the coordinator's own activity —
+        // vanish each round, so the view rebuilt from scratch and flashed "Waking
+        // the agent…", making a parallel run look sequential (#5378/#5379). Drop
+        // only the actions of sub-agent invocations that have NOT returned yet
+        // (their bare invocation wrapper — a tool action carrying the per-call
+        // parent_agent_call_id but NO parent_agent_name — is still deferred or
+        // non-terminal); those branches re-run and re-emit their chips fresh, so
+        // keeping the stale copies would duplicate them. Everything else (the
+        // coordinator's actions and the returned siblings) stays visible.
+        const prevToolActions = assistantMessage.toolActions || [];
+        const unreturnedInvocationIds = new Set();
+        prevToolActions.forEach(a => {
+          if (!a || a.type !== TOOL_ACTION_TYPES.Tool) return;
+          const callId = a.parent_agent_call_id || a.toolMeta?.parent_agent_call_id;
+          // The bare invocation wrapper is the ONLY action for a child that carries
+          // a parent_agent_call_id but NO parent_agent_name (inner chips always
+          // stamp parent_agent_name = the child name). Match it robustly off that
+          // absence so a self-named pipeline node chip can't masquerade as it.
+          const isInnerChip = !!(a.parent_agent_name || a.toolMeta?.parent_agent_name);
+          if (!callId || isInnerChip) return;
+          const terminal =
+            a.status === ToolActionStatus.complete ||
+            a.status === ToolActionStatus.error ||
+            a.status === ToolActionStatus.cancelled;
+          const deferred = !!a.hitlDeferred || !!a.toolMeta?.hitl_deferred;
+          if (!terminal || deferred) unreturnedInvocationIds.add(callId);
+        });
+        const preservedToolActions = prevToolActions.filter(a => {
+          const callId = a?.parent_agent_call_id || a?.toolMeta?.parent_agent_call_id;
+          return !(callId && unreturnedInvocationIds.has(callId));
+        });
         // Clear the interrupt state in place on the existing assistant
         // message. We intentionally do NOT clone it into a content-bearing
         // "archived" bubble — that left a stale "...requires approval..."
@@ -1457,7 +1493,7 @@ const ChatBox = forwardRef((props, boxRef) => {
           hitlInterrupt: undefined,
           hitlInterrupts: undefined,
           references: [],
-          toolActions: [],
+          toolActions: preservedToolActions,
           replyTo: editMessage ? { ...editMessage } : assistantMessage.replyTo,
           archivedFromHitl: false,
         };
