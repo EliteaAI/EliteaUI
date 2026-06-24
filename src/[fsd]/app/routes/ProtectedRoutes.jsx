@@ -7,6 +7,7 @@ import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import IndexRoute from '@/[fsd]/app/routes/IndexRoute';
 import IntegrationGuard from '@/[fsd]/app/routes/IntegrationGuard';
 import ProtectedRoute from '@/[fsd]/app/routes/ProtectedRoute';
+import SkillsGuard from '@/[fsd]/app/routes/SkillsGuard';
 import { ChunkHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useLazyPermissionListQuery, useLazyPublicPermissionListQuery } from '@/api/auth';
 import { useLazyAuthorDetailsQuery } from '@/api/social.js';
@@ -170,11 +171,11 @@ const ProtectedRoutes = () => {
       { path: RouteDefinitions.ApplicationsWithTab, element: <Applications /> },
       { path: RouteDefinitions.ApplicationsDetail, element: <EditApplication /> },
 
-      /* skills */
-      { path: RouteDefinitions.Skills, element: getIndexElement(SkillsTabs[0]) },
-      { path: RouteDefinitions.CreateSkill, element: <CreateSkill /> },
-      { path: RouteDefinitions.SkillsWithTab, element: <Skills /> },
-      { path: RouteDefinitions.SkillsDetail, element: <EditSkill /> },
+      /* skills — hidden for public projects */
+      { path: RouteDefinitions.Skills, element: <SkillsGuard>{getIndexElement(SkillsTabs[0])}</SkillsGuard> },
+      { path: RouteDefinitions.CreateSkill, element: <SkillsGuard><CreateSkill /></SkillsGuard> },
+      { path: RouteDefinitions.SkillsWithTab, element: <SkillsGuard><Skills /></SkillsGuard> },
+      { path: RouteDefinitions.SkillsDetail, element: <SkillsGuard><EditSkill /></SkillsGuard> },
 
       /* pipelines */
       { path: RouteDefinitions.Pipelines, element: getIndexElement(ApplicationsTabs[0]) },

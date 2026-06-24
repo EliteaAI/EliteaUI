@@ -50,7 +50,7 @@ const CreateSkill = memo(() => {
                     size={{ xs: 12 }}
                     sx={styles.gridItem}
                   >
-                    <CreateSkillForm />
+                    <CreateSkillForm showGenerateButton />
                   </Grid>
                 </StyledGridContainer>
               </Form>

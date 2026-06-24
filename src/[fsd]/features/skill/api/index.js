@@ -15,3 +15,5 @@ export {
   useGetApplicationSkillsQuery,
   useLazyGetApplicationSkillsQuery,
 } from './skillsApi';
+
+export { useGenerateSkillDraftMutation } from './generateSkillDraftApi';
