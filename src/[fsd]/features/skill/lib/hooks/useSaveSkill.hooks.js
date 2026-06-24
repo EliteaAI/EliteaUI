@@ -4,6 +4,7 @@ import { useFormikContext } from 'formik';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import { useSkillUpdateMutation } from '@/[fsd]/features/skill/api';
+import { normalizeTagsForSave } from '@/[fsd]/features/skill/lib/helpers';
 import { buildErrorMessage } from '@/common/utils.jsx';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
@@ -20,7 +21,7 @@ const useSaveSkill = () => {
     const name = values?.name?.trim() || '';
     const description = values?.description?.trim() || '';
     const instructions = values?.version_details?.instructions || '';
-    const tags = values?.version_details?.tags || [];
+    const tags = normalizeTagsForSave(values?.version_details?.tags);
 
     try {
       // Update skill-level metadata, then the content of the version actually
