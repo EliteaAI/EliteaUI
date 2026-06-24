@@ -1,14 +1,11 @@
-import { memo, useCallback, useRef, useState } from 'react';
+import { memo, useCallback, useState } from 'react';
 
 import { useNavigate } from 'react-router-dom';
 
-import { Alert, Box, CircularProgress, TextField, Typography } from '@mui/material';
-
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
+import { GenerateEntityModal } from '@/[fsd]/entities/generate-entity-with-ai';
 import { useLazySkillDetailsQuery, useUpdateSkillRelationMutation } from '@/[fsd]/features/skill/api';
 import { generateLLMSettings } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
-import { Modal } from '@/[fsd]/shared/ui';
-import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import {
   useApplicationCreateMutation,
   useGenerateAgentDraftMutation,
@@ -19,27 +16,16 @@ import {
 } from '@/api';
 import { filterEmptyStrings } from '@/common/applicationUtils';
 import { PrivateApplicationTabs, SearchParams, ViewMode } from '@/common/constants';
-import { buildErrorMessage } from '@/common/utils.jsx';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast.jsx';
 import RouteDefinitions from '@/routes';
 
 import GenerateAgentReviewForm from './GenerateAgentReviewForm';
-
-const STEPS = {
-  INPUT: 'input',
-  LOADING: 'loading',
-  REVIEW: 'review',
-};
 
 const GenerateAgentModal = memo(props => {
   const { open, onClose, onAgentCreated } = props;
 
   const navigate = useNavigate();
   const projectId = useSelectedProjectId();
-
-  const { toastError } = useToast();
-  const styles = generateAgentModalStyles();
 
   const [createApplication] = useApplicationCreateMutation();
   const [associateToolkit] = useToolkitAssociateMutation();
@@ -57,51 +43,11 @@ const GenerateAgentModal = memo(props => {
 
   const defaultModel = modelsData.items.find(m => m.default) || modelsData.items[0] || null;
 
-  const [step, setStep] = useState(STEPS.INPUT);
-  const [description, setDescription] = useState('');
-  const [draftData, setDraftData] = useState(null);
   const [selectedToolkitIds, setSelectedToolkitIds] = useState(new Set());
   const [selectedAgentIds, setSelectedAgentIds] = useState(new Set());
   const [selectedMcpIds, setSelectedMcpIds] = useState(new Set());
   const [selectedPipelineIds, setSelectedPipelineIds] = useState(new Set());
   const [selectedSkillIds, setSelectedSkillIds] = useState(new Set());
-  const [isApproving, setIsApproving] = useState(false);
-  const [isDraftValid, setIsDraftValid] = useState(true);
-  const generatePromiseRef = useRef(null);
-
-  const handleGenerate = useCallback(async () => {
-    if (!description.trim()) return;
-
-    setStep(STEPS.LOADING);
-    resetGenerate();
-
-    try {
-      const promise = generateDraft({
-        projectId,
-        user_description: description,
-      });
-      generatePromiseRef.current = promise;
-      const result = await promise.unwrap();
-
-      generatePromiseRef.current = null;
-      setDraftData(result);
-      setSelectedToolkitIds(new Set());
-      setSelectedAgentIds(new Set());
-      setSelectedMcpIds(new Set());
-      setSelectedPipelineIds(new Set());
-      setSelectedSkillIds(new Set());
-      setStep(STEPS.REVIEW);
-    } catch {
-      generatePromiseRef.current = null;
-      setStep(STEPS.INPUT);
-    }
-  }, [description, generateDraft, projectId, resetGenerate]);
-
-  const handleBack = useCallback(() => {
-    setStep(STEPS.INPUT);
-    setDraftData(null);
-    resetGenerate();
-  }, [resetGenerate]);
 
   const handleToggleToolkit = useCallback(id => {
     setSelectedToolkitIds(prev => {
@@ -147,6 +93,24 @@ const GenerateAgentModal = memo(props => {
       return next;
     });
   }, []);
+
+  const handleGenerate = useCallback(
+    description => generateDraft({ projectId, user_description: description }),
+    [generateDraft, projectId],
+  );
+
+  const handleDraftGenerated = useCallback(() => {
+    setSelectedToolkitIds(new Set());
+    setSelectedAgentIds(new Set());
+    setSelectedMcpIds(new Set());
+    setSelectedPipelineIds(new Set());
+    setSelectedSkillIds(new Set());
+  }, []);
+
+  const handleClose = useCallback(() => {
+    handleDraftGenerated();
+    onClose();
+  }, [handleDraftGenerated, onClose]);
 
   const associateToolkits = useCallback(
     async (versionId, entityId, toolkits) => {
@@ -239,11 +203,8 @@ const GenerateAgentModal = memo(props => {
     [navigate],
   );
 
-  const handleApprove = useCallback(async () => {
-    if (!draftData) return;
-    setIsApproving(true);
-
-    try {
+  const handleApprove = useCallback(
+    async draftData => {
       const result = await createApplication({
         projectId,
         name: (draftData.name || '').trim(),
@@ -282,223 +243,74 @@ const GenerateAgentModal = memo(props => {
       await associateApplications(versionId, entityId, [...selectedAgents, ...selectedPipelines]);
       await associateSkills(versionId, selectedSkills);
 
-      onClose();
       if (onAgentCreated) onAgentCreated(result);
       else redirectToAgent(entityId, result.name);
-    } catch (err) {
-      setIsApproving(false);
-      toastError(buildErrorMessage(err));
-    }
-  }, [
-    draftData,
-    selectedToolkitIds,
-    selectedAgentIds,
-    selectedMcpIds,
-    selectedPipelineIds,
-    selectedSkillIds,
-    createApplication,
-    associateToolkits,
-    associateApplications,
-    associateSkills,
-    redirectToAgent,
-    onAgentCreated,
-    projectId,
-    onClose,
-    toastError,
-    defaultModel,
-  ]);
-
-  const handleClose = useCallback(() => {
-    if (generatePromiseRef.current) {
-      generatePromiseRef.current.abort();
-      generatePromiseRef.current = null;
-    }
-    setStep(STEPS.INPUT);
-    setDescription('');
-    setDraftData(null);
-    setSelectedToolkitIds(new Set());
-    setSelectedAgentIds(new Set());
-    setSelectedMcpIds(new Set());
-    setSelectedPipelineIds(new Set());
-    setSelectedSkillIds(new Set());
-    setIsApproving(false);
-    resetGenerate();
-    onClose();
-  }, [onClose, resetGenerate]);
-
-  const handleKeyDown = useCallback(
-    e => {
-      if (e.key === 'Enter' && !e.shiftKey && step === STEPS.INPUT) {
-        e.preventDefault();
-        handleGenerate();
-      }
     },
-    [handleGenerate, step],
+    [
+      selectedToolkitIds,
+      selectedAgentIds,
+      selectedMcpIds,
+      selectedPipelineIds,
+      selectedSkillIds,
+      createApplication,
+      associateToolkits,
+      associateApplications,
+      associateSkills,
+      redirectToAgent,
+      onAgentCreated,
+      projectId,
+      defaultModel,
+    ],
   );
 
-  const renderContent = () => {
-    if (step === STEPS.LOADING) {
-      return (
-        <Box sx={styles.loadingContainer}>
-          <CircularProgress size={24} />
-          <Typography
-            color="text.secondary"
-            sx={{ fontSize: '0.875rem' }}
-          >
-            Generating agent draft...
-          </Typography>
-        </Box>
-      );
-    }
-
-    if (step === STEPS.REVIEW && draftData) {
-      return (
-        <GenerateAgentReviewForm
-          draft={draftData}
-          onChange={setDraftData}
-          onValidationChange={setIsDraftValid}
-          selectedToolkitIds={selectedToolkitIds}
-          onToggleToolkit={handleToggleToolkit}
-          selectedAgentIds={selectedAgentIds}
-          onToggleAgent={handleToggleAgent}
-          selectedMcpIds={selectedMcpIds}
-          onToggleMcp={handleToggleMcp}
-          selectedPipelineIds={selectedPipelineIds}
-          onTogglePipeline={handleTogglePipeline}
-          selectedSkillIds={selectedSkillIds}
-          onToggleSkill={handleToggleSkill}
-        />
-      );
-    }
-
-    return (
-      <Box sx={styles.inputContainer}>
-        <TextField
-          fullWidth
-          multiline
-          minRows={10}
-          maxRows={16}
-          placeholder="Describe your agent's goal, key tasks, and preferred tone or behavior."
-          value={description}
-          onChange={e => setDescription(e.target.value)}
-          onKeyDown={handleKeyDown}
-          autoFocus
-          variant="standard"
-          sx={styles.textField}
-          slotProps={{ input: { disableUnderline: true } }}
-        />
-        {generateError && (
-          <Alert
-            severity="error"
-            sx={styles.errorAlert}
-          >
-            {generateError?.data?.error ||
-              generateError?.data?.detail ||
-              'Failed to generate. Please try again.'}
-          </Alert>
-        )}
-      </Box>
-    );
-  };
-
-  const renderActions = () => {
-    if (step === STEPS.LOADING) return null;
-
-    if (step === STEPS.REVIEW) {
-      return (
-        <>
-          <BaseBtn
-            variant={BUTTON_VARIANTS.secondary}
-            size="small"
-            onClick={handleBack}
-            disabled={isApproving}
-          >
-            Back to prompt
-          </BaseBtn>
-          <BaseBtn
-            variant={BUTTON_VARIANTS.elitea}
-            size="small"
-            onClick={handleApprove}
-            disabled={isApproving || !isDraftValid}
-            sx={{ margin: '0 !important' }}
-          >
-            {isApproving ? 'Creating...' : 'Create Agent'}
-          </BaseBtn>
-        </>
-      );
-    }
-
-    return (
-      <>
-        <Box sx={{ flex: 1 }} />
-        <BaseBtn
-          variant={BUTTON_VARIANTS.secondary}
-          size="small"
-          onClick={handleClose}
-        >
-          Cancel
-        </BaseBtn>
-        <BaseBtn
-          variant={BUTTON_VARIANTS.elitea}
-          size="small"
-          disabled={!description.trim()}
-          onClick={handleGenerate}
-          sx={{ margin: '0 !important' }}
-        >
-          Generate
-        </BaseBtn>
-      </>
-    );
-  };
+  const renderReview = useCallback(
+    (draft, onChange, onValidationChange) => (
+      <GenerateAgentReviewForm
+        draft={draft}
+        onChange={onChange}
+        onValidationChange={onValidationChange}
+        selectedToolkitIds={selectedToolkitIds}
+        onToggleToolkit={handleToggleToolkit}
+        selectedAgentIds={selectedAgentIds}
+        onToggleAgent={handleToggleAgent}
+        selectedMcpIds={selectedMcpIds}
+        onToggleMcp={handleToggleMcp}
+        selectedPipelineIds={selectedPipelineIds}
+        onTogglePipeline={handleTogglePipeline}
+        selectedSkillIds={selectedSkillIds}
+        onToggleSkill={handleToggleSkill}
+      />
+    ),
+    [
+      selectedToolkitIds,
+      handleToggleToolkit,
+      selectedAgentIds,
+      handleToggleAgent,
+      selectedMcpIds,
+      handleToggleMcp,
+      selectedPipelineIds,
+      handleTogglePipeline,
+      selectedSkillIds,
+      handleToggleSkill,
+    ],
+  );
 
   return (
-    <Modal.BaseModal
+    <GenerateEntityModal
       open={open}
-      title="Build with AI"
       onClose={handleClose}
-      content={renderContent()}
-      actions={renderActions()}
-      dialogSx={styles.dialogContent}
-      sx={styles.dialog}
+      entityLabel="agent"
+      placeholder="Describe your agent's goal, key tasks, and preferred tone or behavior."
+      onGenerate={handleGenerate}
+      generateError={generateError}
+      resetGenerate={resetGenerate}
+      onDraftGenerated={handleDraftGenerated}
+      renderReview={renderReview}
+      onApprove={handleApprove}
     />
   );
 });
 
 GenerateAgentModal.displayName = 'GenerateAgentModal';
-
-const generateAgentModalStyles = () => ({
-  dialog: () => ({
-    '& .MuiDialog-paper': {
-      width: '45rem !important',
-      maxWidth: '80% !important',
-    },
-  }),
-  dialogContent: {
-    maxHeight: 'calc(100vh - 16rem)',
-  },
-  loadingContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '0.75rem',
-    padding: '2rem 0',
-  },
-  inputContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    minHeight: '16rem',
-  },
-  textField: ({ palette }) => ({
-    '& .MuiInputBase-root': {
-      padding: 0,
-      fontSize: '0.875rem',
-      color: palette.text.secondary,
-    },
-  }),
-  errorAlert: {
-    mt: 1,
-  },
-});
 
 export default GenerateAgentModal;

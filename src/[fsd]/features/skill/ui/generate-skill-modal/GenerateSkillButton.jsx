@@ -3,25 +3,25 @@ import { memo } from 'react';
 import { GenerateEntityButton } from '@/[fsd]/entities/generate-entity-with-ai';
 import { PERMISSIONS } from '@/common/constants';
 
-import GenerateAgentModal from './GenerateAgentModal';
+import GenerateSkillModal from './GenerateSkillModal';
 
-const GenerateAgentButton = memo(props => {
-  const { onAgentCreated } = props;
+const GenerateSkillButton = memo(props => {
+  const { onSkillCreated } = props;
 
   return (
     <GenerateEntityButton
       permission={PERMISSIONS.applications.update}
       renderModal={({ open, onClose }) => (
-        <GenerateAgentModal
+        <GenerateSkillModal
           open={open}
           onClose={onClose}
-          onAgentCreated={onAgentCreated}
+          onSkillCreated={onSkillCreated}
         />
       )}
     />
   );
 });
 
-GenerateAgentButton.displayName = 'GenerateAgentButton';
+GenerateSkillButton.displayName = 'GenerateSkillButton';
 
-export default GenerateAgentButton;
+export default GenerateSkillButton;

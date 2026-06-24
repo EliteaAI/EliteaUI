@@ -48,6 +48,8 @@ const SidebarBody = memo(props => {
   const { isBlockNav, isStreaming, setIsResetApiState, resetApiState } = useNavBlocker();
   const { isSocketIconVisible, socketStatus } = useSocketIcon();
   const { personal_project_id } = useSelector(state => state.user);
+  const selectedProjectId = useSelector(state => state.settings.project?.id);
+  const isSelectedProjectPublic = selectedProjectId == PUBLIC_PROJECT_ID;
   const isMcpVisible = useIsMcpVisible();
 
   useGetSupportAssistantConfigQuery();
@@ -192,6 +194,9 @@ const SidebarBody = memo(props => {
         if (i.value === 'mcps' && !isMcpVisible) {
           return false;
         }
+        if (i.value === 'skills' && isSelectedProjectPublic) {
+          return false;
+        }
         const perms = i.publicPermission ? publicPermissionsSet : permissionsSet;
         const realValue = i.value === 'mcps' ? 'toolkits' : i.value;
         return PERMISSION_GROUPS[realValue] && PERMISSION_GROUPS[realValue].length
@@ -200,7 +205,7 @@ const SidebarBody = memo(props => {
       });
     });
     return filteredSections.filter(section => section.length > 0);
-  }, [permissionsSet, publicPermissionsSet, isMcpVisible]);
+  }, [permissionsSet, publicPermissionsSet, isMcpVisible, isSelectedProjectPublic]);
 
   const customRenderProject = useCallback(
     option => {

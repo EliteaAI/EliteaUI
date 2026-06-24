@@ -9,6 +9,7 @@ import { useFieldFocus } from '@/[fsd]/shared/lib/hooks';
 import { Field, Input, Markdown } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import TabGroupButton from '@/[fsd]/shared/ui/tab-group-button/TabGroupButton';
+import { GenerateSkillButton } from '@/[fsd]/features/skill/ui/generate-skill-modal';
 import { useTagListQuery } from '@/api/tags.js';
 import CodeIcon from '@/assets/code-icon.svg?react';
 import OpenEyeIcon from '@/assets/open-eye-icon.svg?react';
@@ -24,7 +25,7 @@ import { markdown } from '@codemirror/lang-markdown';
 import { useTheme } from '@emotion/react';
 
 const CreateSkillForm = memo(props => {
-  const { accordionStyle, sx, disabled = false, instructionsKey } = props;
+  const { accordionStyle, sx, disabled = false, instructionsKey, onSkillCreated, showGenerateButton = false } = props;
   const formik = useFormikContext();
   const theme = useTheme();
   const projectId = useSelectedProjectId();
@@ -129,6 +130,7 @@ const CreateSkillForm = memo(props => {
         items={[
           {
             title: 'General',
+            summaryAction: showGenerateButton ? <GenerateSkillButton onSkillCreated={onSkillCreated} /> : null,
             content: (
               <Box sx={styles.accordionContent}>
                 <Box sx={styles.nameWrapperInput}>
