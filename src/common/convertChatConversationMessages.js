@@ -7,6 +7,7 @@ import {
   ToolActionStatus,
 } from '@/common/constants';
 import { convertJsonToString } from '@/common/utils';
+import { collapseSubAgentInvocationKeys } from '@/components/Chat/subAgentGrouping';
 
 export const isUserMessage = (author_participant_id, sent_to_id, userIds, reply_to_id, sent_to) => {
   return (
@@ -213,6 +214,10 @@ export const convertToAIAnswer = (message_group, message_groups, participants) =
             : step.tool_name || step.name || 'Tool Call',
         original_name: ChatHelpers.getToolActionOriginalName(step.metadata),
         parent_agent_name: step.metadata?.parent_agent_name,
+        // Raw per-resume-round pcid as persisted. collapseSubAgentInvocationKeys
+        // (below) normalises the over-split rounds to one epoch-anchor key per
+        // invocation so reload matches the live stream (no flicker, #5386).
+        parent_agent_call_id: step.metadata?.parent_agent_call_id,
         id: step.tool_run_id,
         status: ToolActionStatus.complete,
         toolInputs: step.tool_inputs,
@@ -241,6 +246,21 @@ export const convertToAIAnswer = (message_group, message_groups, participants) =
       });
     }
   }) || [];
+
+  // Normalise the persisted, over-split per-round sub-agent pcids into one stable
+  // epoch-anchor key per logical invocation so the thinking-view grouping yields
+  // the SAME accordions on reload/finalize as it did live — no collapse, no
+  // flicker — while leaving concurrent (parallel) siblings untouched (#5386).
+  collapseSubAgentInvocationKeys(toolActions, {
+    deriveName: a => a.parent_agent_name || a.original_name || '',
+    deriveRawKey: a => a.parent_agent_call_id || '',
+    isWrapperCompletion: (a, name) =>
+      a.type === TOOL_ACTION_TYPES.Tool &&
+      !a.parent_agent_name &&
+      (a.name === name || a.original_name === name) &&
+      !a.isError &&
+      !!a.toolOutputs,
+  });
 
   const displayTime = updated_at || created_at;
   return {

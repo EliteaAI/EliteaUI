@@ -15,6 +15,7 @@ import { resolveSubAgentIcon } from './subAgentIcon.helpers';
 const SubAgentAccordion = memo(props => {
   const {
     name,
+    label,
     tools,
     agentType,
     running = false,
@@ -56,7 +57,7 @@ const SubAgentAccordion = memo(props => {
             variant="bodySmall2"
             sx={shimmer ? subAgentAccordionStyles.labelRunning : subAgentAccordionStyles.label}
           >
-            {name}
+            {label || name}
           </Typography>
           {shimmer && (
             <CircularProgress

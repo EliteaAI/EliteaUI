@@ -12,6 +12,13 @@ import { TOOL_ACTION_NAMES, TOOL_ACTION_TYPES, ToolActionStatus } from '@/common
 import { getToolInfoFromAction } from '@/common/toolActionUitls';
 
 import ActionView from './ActionView';
+import {
+  buildPcidAnchorMap,
+  isInvocationId,
+  partitionActionsIntoBlocks,
+  resolveExtraSubAgentKeys,
+  resolveSubAgentLiveness,
+} from './subAgentGrouping';
 
 // Streaming view of the thinking block: ordered coordinator chip blocks and
 // per-sub-agent accordions, plus any sub-agent whose activity the throttled
@@ -41,53 +48,100 @@ const StreamingThinkBlocks = memo(props => {
   // chips yet, so absent from blocks) is the newest activity → append after
   // the ordered blocks. The orchestrator's own in-flight box sits at the very
   // bottom (its natural chronological turn — bottom of the thinking block).
+  const renderedSubKeys = new Set(blocks.filter(b => b.kind === 'sub').map(b => b.instanceKey));
   const renderedSubNames = new Set(blocks.filter(b => b.kind === 'sub').map(b => b.name));
-  const extraSub = [];
-  const addExtra = name => {
-    if (name && !renderedSubNames.has(name) && !extraSub.includes(name)) {
-      extraSub.push(name);
-    }
-  };
-  // Any sub-agent with arrived actions that the throttled reveal hasn't
-  // surfaced yet still gets an accordion (its chips come from the full
-  // groups below), so a running child is never missing from the view.
-  streamingSubGroupsFull.forEach((_, key) => addExtra(key));
-  subAgentInflight.forEach((_, key) => addExtra(key));
-  if (subAgentRunning) subAgentRunning.forEach((_, key) => addExtra(key));
-  if (currentActionKey) addExtra(currentActionKey);
-  // A child that hard-failed before producing any revealed chip still needs an
-  // accordion to host its error trace (#4993).
-  if (subAgentErrors) Object.keys(subAgentErrors).forEach(name => addExtra(name));
 
-  const renderSub = name => {
-    // Chips from the FULL per-sub-agent groups (not the throttled window)
-    // so every executed tool shows while the child is still running, with
-    // full tool names (matching history) rather than toolkit-only chips.
-    const subEntry = streamingSubGroupsFull.get(name);
+  // A sequential sub-agent that pauses for nested HITL is REPLAYED on resume with
+  // a FRESH parent_agent_call_id (pcid); partitionActionsIntoBlocks folds those
+  // rounds into ONE block anchored at the first pcid. But subAgentRunning /
+  // Inflight / Done are keyed by each action's OWN raw pcid, so the live resume
+  // round's pcid is NOT a block key. Map every raw round pcid back to its anchor
+  // so the union below collapses it onto the real accordion instead of rendering
+  // a spurious spinning `call_<id>` ghost (Bug 2).
+  const pcidToAnchorKey = buildPcidAnchorMap(streamingSubGroupsFull);
+  const resolveAnchor = key => (key && pcidToAnchorKey.get(key)) || key;
+
+  // Keyed by sub-agent INVOCATION (parent_agent_call_id), so two calls to the
+  // same sub-agent each get their own accordion (#5386). Any invocation with
+  // arrived actions that the throttled reveal hasn't surfaced yet still gets an
+  // accordion (its chips come from the full groups below). Each candidate key is
+  // reconciled to its folded anchor and de-duplicated.
+  const extraSub = resolveExtraSubAgentKeys({
+    renderedKeys: renderedSubKeys,
+    candidateKeys: [
+      ...streamingSubGroupsFull.keys(),
+      ...subAgentInflight.keys(),
+      ...(subAgentRunning ? subAgentRunning.keys() : []),
+      ...(currentActionKey ? [currentActionKey] : []),
+    ],
+    pcidToAnchorKey,
+  });
+  // A child that hard-failed before producing any revealed chip still needs an
+  // accordion to host its error trace (#4993). subAgentErrors is keyed by display
+  // NAME; only add a name-fallback slot when no invocation of that name already
+  // renders (otherwise the error shows inside that invocation's accordion).
+  if (subAgentErrors) {
+    const coveredNames = new Set(renderedSubNames);
+    streamingSubGroupsFull.forEach(entry => entry?.name && coveredNames.add(entry.name));
+    Object.keys(subAgentErrors).forEach(name => {
+      if (!coveredNames.has(name) && !renderedSubKeys.has(name) && !extraSub.includes(name)) {
+        extraSub.push(name);
+      }
+    });
+  }
+
+  // The live current-action box belongs to whichever invocation owns it; resolve
+  // its raw pcid to the folded anchor so it renders under the real accordion
+  // (and never keys an orphan call_<id> slot).
+  const currentActionAnchor = resolveAnchor(currentActionKey);
+
+  const renderSub = key => {
+    // Everything about one invocation is keyed by its instance key. The display
+    // entry (full groups, agentType, name, ordinal) comes from the FULL
+    // per-invocation groups (not the throttled window) so every executed tool
+    // shows while the child is still running, with full tool names. When the key
+    // is a name fallback (errored child with no block) subEntry is absent and the
+    // key IS the display name.
+    const subEntry = streamingSubGroupsFull.get(key);
+    // Defense (Bug 2): a key with no block entry is only legitimate as a
+    // subAgentErrors NAME fallback (a real display name). A raw invocation id
+    // here means a folded resume round leaked the union — never surface it as a
+    // `call_<id>` accordion.
+    if (!subEntry && isInvocationId(key)) return null;
+    const displayName = subEntry?.name || key;
+    const ordinal = subEntry?.ordinal || 0;
+    const label = ordinal ? `${displayName} (${ordinal})` : displayName;
     const groups = subEntry?.groups || [];
-    const inflight = subAgentInflight.get(name);
-    const childError = subAgentErrors?.[name];
-    // `done` = the child returned to its parent (invocation wrapper terminal).
-    // Once done, NOTHING about the child should still animate, even if a stray
-    // inner LLM action is stuck at `processing` because its `agent_llm_end` was
-    // lost — that orphan otherwise keeps both the header shimmer (via `inflight`)
-    // and the content-box spinner alive until the whole message stops streaming.
-    const done = !!subAgentDone.get(name);
-    // Shimmer/spinner track the child's WHOLE lifecycle, not just live LLM
-    // content. subAgentRunning is true while the child has any non-terminal
-    // action (LLM processing OR a tool call executing) AND has not yet returned,
-    // so a child running tools keeps spinning instead of looking finished.
-    // `inflight`/current action are placement fallbacks, but a finished child
-    // (`done`) never counts as running. A hard-failed child is terminal
-    // (handled via subAgentErrors) → never shimmer it (#4993).
-    const running =
-      !childError &&
-      !done &&
-      (!!subAgentRunning.get(name) || !!inflight || (currentActionKey === name && currentActionRunning));
+    // One invocation can span several raw pcids: a sequential nested-HITL pause
+    // RESUMES with a fresh pcid each round, and partitionActionsIntoBlocks folds
+    // those rounds into this one block (aliasKeys = anchor + every resume pcid).
+    // The running / done / inflight signals are keyed by each round's OWN raw
+    // pcid, so reconcile across all aliases — the latest round drives liveness.
+    const aliasKeys = subEntry?.aliasKeys?.length ? subEntry.aliasKeys : [key];
+    const lastKey = aliasKeys[aliasKeys.length - 1];
+    const inflight = subAgentInflight.get(lastKey);
+    // Errors are tracked by display name upstream, so look them up by name.
+    const childError = subAgentErrors?.[displayName];
+    // A sequential HITL pause surfaces as the wrapper ERRORING (status=error, not
+    // deferred), which subAgentDone counts as "returned". But the invocation is
+    // NOT finished — it is paused awaiting approval and will resume with a new
+    // round. `pausedForResume` (the grouping's authoritative pause flag) keeps the
+    // accordion shimmering through that gap, mirroring the parallel-deferred case
+    // (#5378). The invocation is truly DONE only when its LATEST round's wrapper
+    // returned for real and nothing is paused or still running.
+    const { running, done } = resolveSubAgentLiveness({
+      paused: !!subEntry?.pausedForResume,
+      lastRoundRunning: !!subAgentRunning.get(lastKey),
+      lastRoundDone: !!subAgentDone.get(lastKey),
+      hasInflight: !!inflight,
+      isLiveCurrent: currentActionAnchor === key && currentActionRunning,
+      hasError: !!childError,
+    });
     return (
       <SubAgentAccordion
-        key={`sa-${name}`}
-        name={name}
+        key={`sa-${key}`}
+        name={displayName}
+        label={label}
         tools={tools}
         agentType={subEntry?.agentType}
         running={running}
@@ -95,13 +149,12 @@ const StreamingThinkBlocks = memo(props => {
       >
         {groups.length > 0 && (
           <Box sx={badgesContainerSx}>
-            {groups.flatMap((group, i) => renderGroupChips(group, `${name}-${i}`, true, inflight, true))}
+            {groups.flatMap((group, i) => renderGroupChips(group, `${key}-${i}`, true, inflight, true))}
           </Box>
         )}
         {inflight ? (
           // A finished child still keeps its streamed content visible, but with
-          // no spinner / streaming footer — the orphan-`processing` LLM is shown
-          // as settled output, not as live progress.
+          // no spinner / streaming footer.
           <ActionView
             showProgress={!done}
             action={inflight}
@@ -109,7 +162,7 @@ const StreamingThinkBlocks = memo(props => {
             isStreaming={!done}
           />
         ) : (
-          currentActionKey === name && currentActionBox
+          currentActionAnchor === key && currentActionBox
         )}
         {childError && (
           <ErrorTrace
@@ -136,10 +189,10 @@ const StreamingThinkBlocks = memo(props => {
                 {block.groups.flatMap((group, i) => renderGroupChips(group, `coord-${bi}-${i}`, true))}
               </Box>
             )
-          : renderSub(block.name),
+          : renderSub(block.instanceKey),
       )}
-      {extraSub.map(name => renderSub(name))}
-      {currentActionKey === '' && currentActionBox}
+      {extraSub.map(key => renderSub(key))}
+      {currentActionAnchor === '' && currentActionBox}
     </>
   );
 });
@@ -301,6 +354,24 @@ const ApplicationThinkView = memo(props => {
     return '';
   }, []);
 
+  // A unique key per sub-agent INVOCATION (not merely per name). Two sequential
+  // or parallel calls to the same sub-agent share a display name (and, on the
+  // in-process path, the same derived thread_id), so name-keying merges their
+  // activity into one accordion (#5386). The backend stamps the parent
+  // tool_call_id on EVERY event of one invocation (the wrapper tool event AND its
+  // inner chips) as parent_agent_call_id; key off it so each invocation owns its
+  // own accordion. Falls back to the display name when the id is absent (older
+  // backend) — i.e. the prior merged behavior, so there is no regression.
+  const deriveSubAgentInstanceKey = useCallback(
+    item => {
+      if (!item) return '';
+      const callId = item.parent_agent_call_id || item.toolMeta?.parent_agent_call_id;
+      if (callId) return callId;
+      return deriveSubAgentName(item);
+    },
+    [deriveSubAgentName],
+  );
+
   // Partition the raw ACTIONS into an ORDERED list of blocks that preserves the
   // chronological turn order: a coordinator (orchestrator) run, then the
   // sub-agents it fanned out to, then the orchestrator's closing run — exactly
@@ -358,46 +429,64 @@ const ApplicationThinkView = memo(props => {
     [tools, subAgentTypeByName],
   );
 
+  // Classify an action's role for the grouping fallback: is it the invocation
+  // WRAPPER, and if so is it paused awaiting a sequential HITL resume? A nested
+  // HITL pause surfaces as a terminal ERROR on the wrapper (on_tool_error) and
+  // is the ONLY state in which a fresh-pcid resume round should fold back into
+  // the same accordion (#5386). A parallel sibling is processing or carries a
+  // deferred sentinel (complete + hitlDeferred), never error-without-defer, so
+  // it is classified 'active' and keeps its own accordion (#5378/#5379).
+  const classifyWrapper = useCallback((a, name) => {
+    const isInnerChip = !!(a.parent_agent_name || a.toolMeta?.parent_agent_name);
+    const isWrapper =
+      a.type === TOOL_ACTION_TYPES.Tool && !isInnerChip && (a.name === name || a.original_name === name);
+    if (!isWrapper) return null;
+    const deferred = !!a.hitlDeferred || !!a.toolMeta?.hitl_deferred;
+    if (a.status === ToolActionStatus.error && !deferred) return 'paused';
+    return 'active';
+  }, []);
+
   const partitionIntoBlocks = useCallback(
     actionsList => {
-      const blocks = [];
-      const subBlockByName = new Map();
-      let coordRun = [];
-      const flushCoord = () => {
-        if (coordRun.length > 0) {
-          blocks.push({ kind: 'coord', actions: coordRun });
-          coordRun = [];
-        }
-      };
-      actionsList.forEach(action => {
-        const key = deriveSubAgentName(action);
-        if (!key) {
-          coordRun.push(action);
-          return;
-        }
-        flushCoord();
-        const existing = subBlockByName.get(key);
-        if (existing) {
-          existing.actions.push(action);
-        } else {
-          const block = { kind: 'sub', name: key, actions: [action] };
-          subBlockByName.set(key, block);
-          blocks.push(block);
-        }
+      // Pure pcid-first / paused-block-fallback grouping lives in subAgentGrouping
+      // (unit-tested). Decorate the raw ordered blocks here with the per-name
+      // ordinal, the header icon kind, and the grouped chips.
+      const blocks = partitionActionsIntoBlocks(actionsList, {
+        deriveName: deriveSubAgentName,
+        deriveInstanceKey: deriveSubAgentInstanceKey,
+        classifyWrapper,
       });
-      flushCoord();
-      return blocks.map(block =>
-        block.kind === 'coord'
-          ? { kind: 'coord', groups: groupActions(block.actions).groups }
-          : {
-              kind: 'sub',
-              name: block.name,
-              agentType: deriveSubAgentType(block.name, block.actions),
-              groups: groupActions(block.actions).groups,
-            },
-      );
+      // Number same-name invocations "(1)", "(2)", … so otherwise-identical
+      // accordions are distinguishable; single invocations keep a bare name.
+      const nameTotals = new Map();
+      blocks.forEach(b => {
+        if (b.kind === 'sub') nameTotals.set(b.name, (nameTotals.get(b.name) || 0) + 1);
+      });
+      const nameSeen = new Map();
+      return blocks.map(block => {
+        if (block.kind === 'coord') return { kind: 'coord', groups: groupActions(block.actions).groups };
+        const seq = (nameSeen.get(block.name) || 0) + 1;
+        nameSeen.set(block.name, seq);
+        const ordinal = nameTotals.get(block.name) > 1 ? seq : 0;
+        return {
+          kind: 'sub',
+          instanceKey: block.instanceKey,
+          // Every raw per-round pcid folded into this invocation (anchor first),
+          // so the live streaming union can map a resume round back to this
+          // block instead of spawning a spurious call_<id> accordion (Bug 2).
+          aliasKeys: block.aliasKeys,
+          // True while the invocation is paused awaiting a sequential HITL resume
+          // (wrapper errored without deferring). Keeps the accordion shimmering
+          // through the approval gap even though that round's wrapper is terminal.
+          pausedForResume: block.pausedForResume,
+          name: block.name,
+          ordinal,
+          agentType: deriveSubAgentType(block.name, block.actions),
+          groups: groupActions(block.actions).groups,
+        };
+      });
     },
-    [deriveSubAgentName, deriveSubAgentType, groupActions],
+    [deriveSubAgentName, deriveSubAgentInstanceKey, classifyWrapper, deriveSubAgentType, groupActions],
   );
 
   // Revealed (finished) actions for streaming view; all actions for history view.
@@ -416,7 +505,15 @@ const ApplicationThinkView = memo(props => {
   const streamingSubGroupsFull = useMemo(() => {
     const map = new Map();
     historyBlocks.forEach(block => {
-      if (block.kind === 'sub') map.set(block.name, { groups: block.groups, agentType: block.agentType });
+      if (block.kind === 'sub')
+        map.set(block.instanceKey, {
+          groups: block.groups,
+          agentType: block.agentType,
+          name: block.name,
+          ordinal: block.ordinal,
+          aliasKeys: block.aliasKeys,
+          pausedForResume: block.pausedForResume,
+        });
     });
     return map;
   }, [historyBlocks]);
@@ -428,8 +525,9 @@ const ApplicationThinkView = memo(props => {
     const map = new Map();
     actions.forEach(a => {
       if (!a || a.type !== TOOL_ACTION_TYPES.Llm) return;
-      const key = deriveSubAgentName(a);
-      if (!key) return;
+      const name = deriveSubAgentName(a);
+      if (!name) return;
+      const key = deriveSubAgentInstanceKey(a);
       const active =
         a.status !== ToolActionStatus.complete &&
         a.status !== ToolActionStatus.error &&
@@ -437,10 +535,10 @@ const ApplicationThinkView = memo(props => {
       const hasContent = (a.content && a.content.trim()) || (a.thinking && a.thinking.trim());
       if (!active || !hasContent) return;
       if (!a.name || a.name === TOOL_ACTION_NAMES.Llm) return;
-      map.set(key, a); // latest active action per sub-agent wins
+      map.set(key, a); // latest active action per sub-agent invocation wins
     });
     return map;
-  }, [actions, deriveSubAgentName]);
+  }, [actions, deriveSubAgentName, deriveSubAgentInstanceKey]);
 
   // Per-sub-agent progress signals that span the child's WHOLE lifecycle (LLM +
   // tool-call phases) and — critically — stop the moment the child is truly done,
@@ -467,19 +565,38 @@ const ApplicationThinkView = memo(props => {
     const wrapperTerminal = new Map();
     actions.forEach(a => {
       if (!a) return;
-      const key = deriveSubAgentName(a);
-      if (!key) return;
+      const name = deriveSubAgentName(a);
+      if (!name) return;
+      const key = deriveSubAgentInstanceKey(a);
       const terminal =
         a.status === ToolActionStatus.complete ||
         a.status === ToolActionStatus.error ||
         a.status === ToolActionStatus.cancelled;
-      // The invocation wrapper: the parent's tool call that ran this child, so its
-      // tool name matches the child's own name (not an inner toolkit/LLM action).
+      // The invocation wrapper that signals the child RETURNED is the parent's
+      // bare tool call — emitted at the parent/coordinator level, so it is the
+      // ONLY action for this child that carries NO parent_agent_name
+      // (emit_subagent_invocation_chip omits it; #4993). EVERY inner chip is
+      // stamped with parent_agent_name = the child name: the child's own LLM/tool
+      // events, AND a PIPELINE child's self-named node chip (tool_name == child
+      // name). That node chip completes (non-deferred) the instant the pipeline's
+      // first node finishes — and because it can surface under a display name
+      // while still reporting original_name == child name, an earlier name-equality
+      // exclusion let it slip through, be mistaken for the wrapper, and flip the
+      // child to "done" the moment it called any tool — killing the accordion
+      // shimmer and rendering a still-paused child as finished (#5378/#5379).
+      // Keying off the ABSENCE of parent_agent_name selects the wrapper robustly,
+      // independent of any display-name vs original_name divergence.
+      const isInnerChip = !!(a.parent_agent_name || a.toolMeta?.parent_agent_name);
       const isWrapper =
-        a.type === TOOL_ACTION_TYPES.Tool &&
-        (a.name === key || a.original_name === key || a.name === a.parent_agent_name);
+        a.type === TOOL_ACTION_TYPES.Tool && !isInnerChip && (a.name === name || a.original_name === name);
+      // A parallel child that paused for sensitive-action approval (#5378) returns
+      // a deferred sentinel: its wrapper ENDS (terminal) but the child is NOT done
+      // — it awaits a human decision, and the aggregate approval card may not have
+      // surfaced yet (siblings still running). Treat such a wrapper as non-terminal
+      // so the child keeps shimmering through the gap instead of looking finished.
+      const deferred = !!a.hitlDeferred || !!a.toolMeta?.hitl_deferred;
       if (isWrapper) {
-        if (terminal) wrapperTerminal.set(key, true);
+        if (terminal && !deferred) wrapperTerminal.set(key, true);
         // A still-processing wrapper means the child is running. In the simple
         // sequential (in-process) path the child runs as a single TOOL whose inner
         // llm/tool events are stripped, so this wrapper is the child's ONLY action —
@@ -496,7 +613,7 @@ const ApplicationThinkView = memo(props => {
       if (!wrapperTerminal.get(key)) running.set(key, true);
     });
     return { subAgentRunning: running, subAgentDone: wrapperTerminal };
-  }, [actions, deriveSubAgentName]);
+  }, [actions, deriveSubAgentName, deriveSubAgentInstanceKey]);
 
   const thinkStepStatus = useMemo(
     () =>
@@ -688,7 +805,7 @@ const ApplicationThinkView = memo(props => {
       mergedCurrentAction.type === TOOL_ACTION_TYPES.Llm &&
       (!mergedCurrentAction.name || mergedCurrentAction.name === TOOL_ACTION_NAMES.Llm)
     );
-  const currentActionKey = showCurrentAction ? deriveSubAgentName(mergedCurrentAction) : '';
+  const currentActionKey = showCurrentAction ? deriveSubAgentInstanceKey(mergedCurrentAction) : '';
 
   // The reveal throttle can park displayedActionIndex on an action that has
   // already gone terminal (a child that finished first while a sibling is at
@@ -770,14 +887,17 @@ const ApplicationThinkView = memo(props => {
             )
           ) : (
             <SubAgentAccordion
-              key={`sa-${block.name}`}
+              key={`sa-${block.instanceKey}`}
               name={block.name}
+              label={block.ordinal ? `${block.name} (${block.ordinal})` : undefined}
               tools={tools}
               agentType={block.agentType}
               defaultExpanded={!!subAgentErrors?.[block.name]}
             >
               <Box sx={styles.badgesContainer}>
-                {block.groups.flatMap((group, i) => renderGroupChips(group, `${block.name}-${i}`, false))}
+                {block.groups.flatMap((group, i) =>
+                  renderGroupChips(group, `${block.instanceKey}-${i}`, false),
+                )}
               </Box>
               {subAgentErrors?.[block.name] && (
                 <ErrorTrace

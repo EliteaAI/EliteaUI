@@ -782,6 +782,10 @@ export const useChatSocket = ({
                   : message.response_metadata?.tool_name,
               original_name: ChatHelpers.getToolActionOriginalName(metadata),
               parent_agent_name: metadata?.parent_agent_name,
+              // Per-invocation discriminator (#5386): distinguishes two calls to
+              // the SAME sub-agent (same name) so the thinking view renders one
+              // accordion per invocation instead of merging their activity.
+              parent_agent_call_id: metadata?.parent_agent_call_id,
               id: message.response_metadata?.tool_run_id,
               status: ToolActionStatus.processing,
               message: '',
@@ -866,6 +870,14 @@ export const useChatSocket = ({
             const metadata = message.response_metadata?.metadata;
             if (metadata?.mcp_session_id && metadata?.mcp_server_url) {
               McpAuthHelpers.setSessionId(metadata.mcp_server_url, metadata.mcp_session_id);
+            }
+
+            // A parallel sub-agent that paused for sensitive-action approval (#5378)
+            // returns a deferred sentinel; its invocation wrapper still ends here.
+            // Flag it so the thinking view keeps the sub-agent's shimmer alive
+            // through the approval gap instead of treating the child as finished.
+            if (metadata?.hitl_deferred) {
+              t.hitlDeferred = true;
             }
 
             Object.assign(t, {
@@ -1030,12 +1042,26 @@ export const useChatSocket = ({
           const childThreadId = hitlMeta.child_thread_id || '';
           const isFanoutChild = Boolean(hitlMeta.parent_agent_name && childThreadId);
 
-          if (!isFanoutChild) {
+          // Track 1 in-process parallel aggregate (#5379): N paused sub-agents
+          // arrive in ONE interrupt, each entry labeled with its parent_agent_name
+          // by the SDK, but with NO child_thread_id (so isFanoutChild is false).
+          // The run is still active — non-HITL siblings are mid-flight and live in
+          // the streaming thinking view — so treat it like the fan-out case for
+          // streaming state. Flipping isStreaming off would collapse the thinking
+          // view into its history accordion and hide every sub-agent that isn't
+          // independently rendered as a HITL card (a sibling that finished without
+          // pausing would simply disappear until the run ends).
+          const isParallelSubAgentAggregate =
+            !isFanoutChild &&
+            Array.isArray(response_metadata?.hitl_interrupts) &&
+            response_metadata.hitl_interrupts.some(r => r?.parent_agent_name);
+
+          if (!isFanoutChild && !isParallelSubAgentAggregate) {
             msg.isLoading = false;
             msg.isStreaming = false;
             msg.isRegenerating = false;
             msg.isSending = false;
-          } else {
+          } else if (isFanoutChild) {
             // A fan-out child pausing for approval means the overall run is still
             // active: siblings keep streaming and this child awaits a human
             // decision. The parent's park-by-return may have already emitted an
@@ -1048,6 +1074,15 @@ export const useChatSocket = ({
             // Clear any leftover regenerating flag: if this message was being
             // regenerated when a child paused, leaving it set keeps the UI in a
             // processing state and suppresses the live thinking view.
+            msg.isRegenerating = false;
+          } else {
+            // Parallel aggregate (Track 1): keep the message streaming so the
+            // thinking view stays mounted and ALL sub-agents (the paused HITL ones
+            // AND any that finished without pausing) remain visible. Resume is
+            // still routed via hitl_decisions (tool_call_id), unaffected here.
+            msg.isStreaming = true;
+            msg.isLoading = false;
+            msg.isSending = false;
             msg.isRegenerating = false;
           }
 
@@ -1421,6 +1456,7 @@ export const useChatSocket = ({
           console.warn('unknown message type', socketMessageType);
           return;
       }
+
       // This runs on EVERY socket message, even if msg hasn't changed
       msgIndex > -1 &&
         setChatHistoryRef.current?.(prevState => {
