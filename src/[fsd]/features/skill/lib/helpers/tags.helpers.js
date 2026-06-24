@@ -11,6 +11,7 @@
  * `name` only (with their `data`, e.g. color) so the backend creates them.
  */
 export const normalizeTagsForSave = tags =>
-  (tags ?? []).map(({ id, name, data }) =>
-    Number.isInteger(id) ? { id, name } : { name, ...(data ? { data } : {}) },
-  );
+  (tags ?? []).map(({ id, name, data }) => ({
+    name,
+    ...(Number.isInteger(id) ? { id } : data && { data }),
+  }));
