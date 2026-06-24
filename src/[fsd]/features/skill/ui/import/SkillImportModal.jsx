@@ -29,7 +29,8 @@ const SkillImportModal = memo(props => {
 
   if (!skill) return null;
 
-  const versionName = skill.version || LATEST_VERSION_NAME;
+  // Imported skills are always created with version 'base', regardless of
+  // what version was in the exported file.
   const targetProject = selectedProject?.id ? selectedProject : defaultProject;
 
   return (
@@ -61,7 +62,7 @@ const SkillImportModal = memo(props => {
           <IWModalEntityCardWrapper
             icon={<SkillIcon />}
             title={skill.name}
-            subtitle={`Type: Skill | Version: ${versionName}`}
+            subtitle={`Type: Skill | Version: ${LATEST_VERSION_NAME}`}
           >
             {setFullscreenData => (
               <>

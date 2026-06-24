@@ -53,9 +53,9 @@ export const useSkillImport = () => {
             description: frontmatter.description,
             instructions: body || '',
             tags: Array.isArray(frontmatter.tags) ? frontmatter.tags : [],
-            // Backend export emits the version under `elitea_version`; fall back
-            // to `version` for hand-authored files.
-            version: frontmatter.elitea_version ?? frontmatter.version,
+            // Imported skills are always created with version 'base', regardless
+            // of what version was in the exported file. No need to extract the
+            // version from frontmatter.
           },
         });
       } catch (error) {
