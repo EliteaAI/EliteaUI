@@ -360,7 +360,7 @@ const SidebarBody = memo(props => {
 
         <Box sx={styles.bottomSection}>
           <Box sx={styles.section}>
-            <Buttons.AgentsStudioButton navigateToPage={navigateToPage} />
+            <Buttons.AgentHubButton navigateToPage={navigateToPage} />
           </Box>
           <Divider sx={styles.sectionDivider} />
           <Box sx={styles.section}>

@@ -1,11 +1,11 @@
 import { createContext, useContext } from 'react';
 
-export const AgentsStudioContext = createContext({
+export const AgentHubContext = createContext({
   updateApplicationInState: null,
   addToMyLiked: null,
   removeFromMyLiked: null,
 });
 
-export const useAgentsStudioContext = () => {
-  return useContext(AgentsStudioContext);
+export const useAgentHubContext = () => {
+  return useContext(AgentHubContext);
 };

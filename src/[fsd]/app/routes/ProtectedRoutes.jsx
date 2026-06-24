@@ -51,7 +51,7 @@ const ServicePromptsPage = ChunkHelpers.lazyWithRetry(
   () => import('@/[fsd]/pages/settings/ServicePromptsPage'),
 );
 const Users = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/settings/Users'));
-const AgentsStudio = ChunkHelpers.lazyWithRetry(() => import('@/pages/AgentsStudio/AgentsStudio'));
+const AgentHub = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/agent-hub'));
 const Applications = ChunkHelpers.lazyWithRetry(() => import('@/pages/Applications/Applications'));
 const CreateApplication = ChunkHelpers.lazyWithRetry(() => import('@/pages/Applications/CreateApplication'));
 const EditApplication = ChunkHelpers.lazyWithRetry(() => import('@/pages/Applications/EditApplication.jsx'));
@@ -158,7 +158,7 @@ const ProtectedRoutes = () => {
       /* onboarding */
       { path: RouteDefinitions.Onboarding, element: <Onboarding /> },
       { path: RouteDefinitions.HelpCenter, element: <Resources /> },
-      { path: RouteDefinitions.AgentHub, element: <AgentsStudio /> },
+      { path: RouteDefinitions.AgentHub, element: <AgentHub /> },
 
       /* chat */
       { path: RouteDefinitions.Chat, element: <ChatWrapper /> },

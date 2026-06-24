@@ -5,7 +5,7 @@ import { useDispatch } from 'react-redux';
 import { actions as settingsActions } from '@/slices/settings';
 
 import {
-  AGENT_STUDIO_TOUR_ID,
+  AGENT_HUB_TOUR_ID,
   AGENT_TOUR_ID,
   AI_CONFIG_TOUR_ID,
   ANALYTICS_TOUR_ID,
@@ -30,8 +30,7 @@ import { initialState, lsCompletedKey, lsPromptKey, tourReducer } from '../helpe
 const TOUR_LOADERS = {
   [APPLICATIONS_TOUR_ID]: () =>
     import('../constants/applicationsTour.constants').then(m => m.applicationsTourSteps),
-  [AGENT_STUDIO_TOUR_ID]: () =>
-    import('../constants/agentStudioTour.constants').then(m => m.agentStudioTourSteps),
+  [AGENT_HUB_TOUR_ID]: () => import('../constants/agentHubTour.constants').then(m => m.agentHubTourSteps),
   [AI_CONFIG_TOUR_ID]: () =>
     import('../constants/aiConfigurationTour.constants').then(m => m.aiConfigurationTourSteps),
   [ANALYTICS_TOUR_ID]: () => import('../constants/analyticsTour.constants').then(m => m.analyticsTourSteps),

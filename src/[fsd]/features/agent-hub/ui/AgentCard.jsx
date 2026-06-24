@@ -3,13 +3,13 @@ import { memo, useCallback, useMemo } from 'react';
 import { Box, Card, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
-import { AGENT_STUDIO_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/agentStudioTourTargets.constants';
+import { AGENT_HUB_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/agentHubTourTargets.constants';
 import { ChatParticipantType, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
 import AuthorContainer from '@/components/AuthorContainer';
 import EntityIcon from '@/components/EntityIcon';
 import { getCardGradientStyles } from '@/utils/cardStyles';
 
-import AgentStudioLike from './AgentStudioLike';
+import AgentHubLike from './AgentHubLike';
 
 const AgentCard = memo(props => {
   const { application, onSelectItem } = props;
@@ -37,7 +37,7 @@ const AgentCard = memo(props => {
 
   return (
     <Card
-      data-tour={AGENT_STUDIO_TOUR_TARGET_IDS.agentCard}
+      data-tour={AGENT_HUB_TOUR_TARGET_IDS.agentCard}
       sx={styles.card}
       onClick={handleClick}
     >
@@ -56,7 +56,7 @@ const AgentCard = memo(props => {
         </Typography>
       </Box>
       <Box
-        data-tour={AGENT_STUDIO_TOUR_TARGET_IDS.likeButton}
+        data-tour={AGENT_HUB_TOUR_TARGET_IDS.likeButton}
         sx={styles.footer}
       >
         <StyledTooltip
@@ -72,7 +72,7 @@ const AgentCard = memo(props => {
             />
           </Box>
         </StyledTooltip>
-        <AgentStudioLike
+        <AgentHubLike
           viewMode={ViewMode.Public}
           data={application}
         />

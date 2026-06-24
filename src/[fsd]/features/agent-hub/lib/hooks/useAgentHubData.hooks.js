@@ -3,14 +3,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { useGetAgentCategoriesQuery } from '@/[fsd]/features/agent/api/agentCategoriesApi';
-import { AgentsStudioConstants } from '@/[fsd]/features/agents-studio/lib/constants';
+import { AgentHubConstants } from '@/[fsd]/features/agent-hub/lib/constants';
 import { useLazyPublicApplicationsListQuery } from '@/api/applications';
 import { CollectionStatus, PUBLIC_PROJECT_ID } from '@/common/constants';
 import {
-  actions as agentsStudioActions,
-  selectAgentsStudioData,
+  actions as agentHubActions,
+  selectAgentHubData,
   selectIsCacheValid,
-} from '@/slices/agentsStudio';
+} from '@/slices/agentHub';
 
 /** Single bulk-fetch limit — covers realistic max deployments (≤200 published agents). */
 const ALL_AGENTS_LIMIT = 1000;
@@ -27,9 +27,9 @@ const SEARCH_AGENTS_LIMIT = 100;
  * Special buckets (Trending, My Liked) still use their own targeted requests.
  * Redux caching (60 min) prevents re-fetching on navigation.
  */
-export const useAgentsStudioData = (query, selectedTagNames) => {
+export const useAgentHubData = (query, selectedTagNames) => {
   const dispatch = useDispatch();
-  const { applicationsByTag, totalCountsByTag, currentPageByTag } = useSelector(selectAgentsStudioData);
+  const { applicationsByTag, totalCountsByTag, currentPageByTag } = useSelector(selectAgentHubData);
   const isCacheValid = useSelector(state => selectIsCacheValid(state, query));
 
   const [loadingTags, setLoadingTags] = useState(new Set());
@@ -48,10 +48,10 @@ export const useAgentsStudioData = (query, selectedTagNames) => {
 
   const updateApplicationData = useCallback(
     (categoryName, page, rows, total) => {
-      if (categoryName === AgentsStudioConstants.TRENDING_CATEGORY) {
+      if (categoryName === AgentHubConstants.TRENDING_CATEGORY) {
         isRefetchingTrendingRef.current = false;
       }
-      dispatch(agentsStudioActions.updateCategoryData({ categoryName, page, rows, total }));
+      dispatch(agentHubActions.updateCategoryData({ categoryName, page, rows, total }));
     },
     [dispatch],
   );
@@ -83,7 +83,7 @@ export const useAgentsStudioData = (query, selectedTagNames) => {
 
     rows.forEach(app => {
       const categoryTag = app.tags?.find(tag => activeSet.has(tag.name));
-      const bucket = categoryTag ? categoryTag.name : AgentsStudioConstants.OTHER_CATEGORY;
+      const bucket = categoryTag ? categoryTag.name : AgentHubConstants.OTHER_CATEGORY;
       if (!buckets[bucket]) buckets[bucket] = [];
       buckets[bucket].push(app);
     });
@@ -124,26 +124,26 @@ export const useAgentsStudioData = (query, selectedTagNames) => {
 
   const fetchTrendingApplications = useCallback(
     async (page = 0) => {
-      setLoading(AgentsStudioConstants.TRENDING_CATEGORY, true);
+      setLoading(AgentHubConstants.TRENDING_CATEGORY, true);
       try {
         const result = await fetchApplications({
           page,
-          pageSize: AgentsStudioConstants.PAGE_SIZE,
+          pageSize: AgentHubConstants.PAGE_SIZE,
           params: {
             query,
             statuses: CollectionStatus.Published,
             agents_type: 'classic',
-            trend_start_period: AgentsStudioConstants.TRENDING_START_PERIOD,
+            trend_start_period: AgentHubConstants.TRENDING_START_PERIOD,
             sort_by: 'likes',
             sort_order: 'desc',
           },
         }).unwrap();
 
         if (result?.rows) {
-          updateApplicationData(AgentsStudioConstants.TRENDING_CATEGORY, page, result.rows, result.total);
+          updateApplicationData(AgentHubConstants.TRENDING_CATEGORY, page, result.rows, result.total);
         }
       } finally {
-        setLoading(AgentsStudioConstants.TRENDING_CATEGORY, false);
+        setLoading(AgentHubConstants.TRENDING_CATEGORY, false);
       }
     },
     [fetchApplications, query, setLoading, updateApplicationData],
@@ -151,11 +151,11 @@ export const useAgentsStudioData = (query, selectedTagNames) => {
 
   const fetchMyLikedApplications = useCallback(
     async (page = 0) => {
-      setLoading(AgentsStudioConstants.MY_LIKED_CATEGORY, true);
+      setLoading(AgentHubConstants.MY_LIKED_CATEGORY, true);
       try {
         const result = await fetchApplications({
           page,
-          pageSize: AgentsStudioConstants.PAGE_SIZE,
+          pageSize: AgentHubConstants.PAGE_SIZE,
           params: {
             query,
             statuses: CollectionStatus.Published,
@@ -165,17 +165,17 @@ export const useAgentsStudioData = (query, selectedTagNames) => {
         }).unwrap();
 
         if (result?.rows) {
-          updateApplicationData(AgentsStudioConstants.MY_LIKED_CATEGORY, page, result.rows, result.total);
+          updateApplicationData(AgentHubConstants.MY_LIKED_CATEGORY, page, result.rows, result.total);
         }
       } finally {
-        setLoading(AgentsStudioConstants.MY_LIKED_CATEGORY, false);
+        setLoading(AgentHubConstants.MY_LIKED_CATEGORY, false);
       }
     },
     [fetchApplications, query, setLoading, updateApplicationData],
   );
 
   const resetSearchByTag = useCallback(() => {
-    dispatch(agentsStudioActions.clearCache());
+    dispatch(agentHubActions.clearCache());
   }, [dispatch]);
 
   /**
@@ -200,7 +200,7 @@ export const useAgentsStudioData = (query, selectedTagNames) => {
       const buckets = bucketAppsByCategory(result.rows, categoryNames);
 
       dispatch(
-        agentsStudioActions.setApplicationsData({
+        agentHubActions.setApplicationsData({
           applicationsByTag: buckets,
           totalCountsByTag: Object.fromEntries(Object.entries(buckets).map(([k, v]) => [k, v.length])),
           currentPageByTag: {},
@@ -309,7 +309,7 @@ export const useAgentsStudioData = (query, selectedTagNames) => {
         totalCountsByTag: currentTotals,
         currentPageByTag: currentPages,
       } = stateRef.current;
-      const trendingCategory = currentAppsByTag[AgentsStudioConstants.TRENDING_CATEGORY] || [];
+      const trendingCategory = currentAppsByTag[AgentHubConstants.TRENDING_CATEGORY] || [];
       const currentApp = trendingCategory.find(app => app.id === applicationId);
       const currentLikes = currentApp?.likes || 0;
       const conditionForRefetching = !!currentApp && !isRefetchingTrendingRef.current;
@@ -317,7 +317,7 @@ export const useAgentsStudioData = (query, selectedTagNames) => {
       const updated = updateApplicationInCategoriesHelper(currentAppsByTag, applicationId, updateFn);
 
       dispatch(
-        agentsStudioActions.setApplicationsData({
+        agentHubActions.setApplicationsData({
           applicationsByTag: updated,
           totalCountsByTag: currentTotals,
           currentPageByTag: currentPages,
@@ -333,9 +333,9 @@ export const useAgentsStudioData = (query, selectedTagNames) => {
   const addToMyLiked = useCallback(
     application => {
       dispatch(
-        agentsStudioActions.addToMyLiked({
+        agentHubActions.addToMyLiked({
           application,
-          categoryName: AgentsStudioConstants.MY_LIKED_CATEGORY,
+          categoryName: AgentHubConstants.MY_LIKED_CATEGORY,
         }),
       );
     },
@@ -345,9 +345,9 @@ export const useAgentsStudioData = (query, selectedTagNames) => {
   const removeFromMyLiked = useCallback(
     applicationId => {
       dispatch(
-        agentsStudioActions.removeFromMyLiked({
+        agentHubActions.removeFromMyLiked({
           applicationId,
-          categoryName: AgentsStudioConstants.MY_LIKED_CATEGORY,
+          categoryName: AgentHubConstants.MY_LIKED_CATEGORY,
         }),
       );
     },
@@ -358,9 +358,9 @@ export const useAgentsStudioData = (query, selectedTagNames) => {
     async categoryName => {
       setRefreshing(categoryName, true);
       try {
-        if (categoryName === AgentsStudioConstants.TRENDING_CATEGORY) {
+        if (categoryName === AgentHubConstants.TRENDING_CATEGORY) {
           await fetchTrendingApplications(0);
-        } else if (categoryName === AgentsStudioConstants.MY_LIKED_CATEGORY) {
+        } else if (categoryName === AgentHubConstants.MY_LIKED_CATEGORY) {
           await fetchMyLikedApplications(0);
         } else {
           await fetchAllAndCategorize(categoryNames);

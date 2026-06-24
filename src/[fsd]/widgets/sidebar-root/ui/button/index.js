@@ -1,5 +1,5 @@
 export { default as SidebarButton } from './SidebarButton';
-export { default as AgentsStudioButton } from './AgentsStudioButton';
+export { default as AgentHubButton } from './AgentHubButton';
 export { default as ResourcesButton } from './ResourcesButton';
 export { default as SettingsButton } from './SettingsButton';
 export { default as NotificationButton } from './NotificationButton';

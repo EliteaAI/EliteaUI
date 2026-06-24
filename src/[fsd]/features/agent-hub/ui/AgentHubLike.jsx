@@ -1,13 +1,13 @@
 import { memo, useCallback, useRef } from 'react';
 
-import { useAgentsStudioContext } from '@/[fsd]/app/providers';
-import { AgentsStudioHelpers } from '@/[fsd]/features/agents-studio/lib/helpers';
+import { useAgentHubContext } from '@/[fsd]/app/providers';
+import { AgentHubHelpers } from '@/[fsd]/features/agent-hub/lib/helpers';
 import { ContentType } from '@/common/constants';
 import Like from '@/components/Like';
 
-const AgentStudioLike = memo(props => {
+const AgentHubLike = memo(props => {
   const { viewMode, data } = props;
-  const { updateApplicationInState, addToMyLiked, removeFromMyLiked } = useAgentsStudioContext();
+  const { updateApplicationInState, addToMyLiked, removeFromMyLiked } = useAgentHubContext();
 
   const dataRef = useRef(data);
   dataRef.current = data;
@@ -29,7 +29,7 @@ const AgentStudioLike = memo(props => {
       if (updateApplicationInState) {
         const currentData = dataRef.current;
         const currentLikes = currentData?.likes || 0;
-        const newLikesCount = AgentsStudioHelpers.calculateNewLikesCount(likesCount, isLiked, currentLikes);
+        const newLikesCount = AgentHubHelpers.calculateNewLikesCount(likesCount, isLiked, currentLikes);
 
         updateApplicationInState(applicationId, app => ({
           ...app,
@@ -53,6 +53,6 @@ const AgentStudioLike = memo(props => {
   );
 });
 
-AgentStudioLike.displayName = 'AgentStudioLike';
+AgentHubLike.displayName = 'AgentHubLike';
 
-export default AgentStudioLike;
+export default AgentHubLike;
