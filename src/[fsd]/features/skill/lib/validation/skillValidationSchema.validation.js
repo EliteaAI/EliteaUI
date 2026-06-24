@@ -33,7 +33,9 @@ const SkillValidateSchema = () =>
     version_details: yup.object({
       instructions: yup
         .string()
-        .max(MAX_INSTRUCTIONS_LENGTH, `Instructions must be at most ${MAX_INSTRUCTIONS_LENGTH} characters`),
+        .trim()
+        .max(MAX_INSTRUCTIONS_LENGTH, `Instructions must be at most ${MAX_INSTRUCTIONS_LENGTH} characters`)
+        .required('Instructions are required'),
     }),
   });
 

@@ -12,14 +12,20 @@ const SaveSkillButton = memo(({ onSuccess }) => {
   const { onSave, isSaving } = useSaveSkill();
 
   const isDisabled = useMemo(
-    () => isSaving || !dirty || !isValid || !values?.name?.trim() || !values?.description?.trim(),
-    [isSaving, dirty, isValid, values?.name, values?.description],
+    () =>
+      isSaving ||
+      !dirty ||
+      !isValid ||
+      !values?.name?.trim() ||
+      !values?.description?.trim() ||
+      !values?.version_details?.instructions?.trim(),
+    [isSaving, dirty, isValid, values?.name, values?.description, values?.version_details?.instructions],
   );
 
   const handleSave = useCallback(async () => {
     const validationErrors = await validateForm();
     if (Object.keys(validationErrors).length) {
-      setTouched({ name: true, description: true });
+      setTouched({ name: true, description: true, version_details: { instructions: true } });
       return;
     }
     const ok = await onSave();

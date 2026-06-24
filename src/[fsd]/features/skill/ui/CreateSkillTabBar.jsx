@@ -39,14 +39,22 @@ const CreateSkillTabBar = memo(() => {
       !formik.isValid ||
       !formik.values.name?.trim() ||
       !formik.values.description?.trim() ||
+      !formik.values?.version_details?.instructions?.trim() ||
       !formik.dirty,
-    [formik.dirty, formik.isValid, formik.values.description, formik.values.name, isLoading],
+    [
+      formik.dirty,
+      formik.isValid,
+      formik.values.description,
+      formik.values.name,
+      formik.values?.version_details?.instructions,
+      isLoading,
+    ],
   );
 
   const onSave = useCallback(async () => {
     const validationErrors = await formik.validateForm();
     if (Object.keys(validationErrors).length) {
-      formik.setTouched({ name: true, description: true });
+      formik.setTouched({ name: true, description: true, version_details: { instructions: true } });
       return;
     }
     try {

@@ -38,7 +38,7 @@ const SaveSkillVersionButton = memo(({ onSuccess, onChangeVersion }) => {
   const onConfirm = useCallback(async () => {
     const validationErrors = await validateForm();
     if (Object.keys(validationErrors).length) {
-      setTouched({ name: true, description: true });
+      setTouched({ name: true, description: true, version_details: { instructions: true } });
       return;
     }
     const candidate = newVersion?.trim();

@@ -97,11 +97,28 @@ const CreateSkillForm = memo(props => {
   const onChangeInstructions = useCallback(
     value => {
       formik.setFieldValue('version_details.instructions', value);
+      if (!formik.touched?.version_details?.instructions) {
+        formik.setFieldTouched('version_details.instructions', true, false);
+      }
     },
     [formik],
   );
 
+  const onInstructionsBlur = useCallback(() => {
+    formik.setFieldTouched('version_details.instructions', true);
+  }, [formik]);
+
   const instructions = formik.values?.version_details?.instructions || '';
+  const instructionsError =
+    formik.touched?.version_details?.instructions && formik.errors?.version_details?.instructions;
+  const instructionsErrorNode = instructionsError ? (
+    <Typography
+      variant="bodySmall"
+      sx={styles.instructionsError}
+    >
+      {instructionsError}
+    </Typography>
+  ) : null;
 
   return (
     <Box sx={[styles.rootContainer, sx]}>
@@ -192,7 +209,7 @@ const CreateSkillForm = memo(props => {
         showMode={AccordionConstants.AccordionShowMode.LeftMode}
         items={[
           {
-            title: 'Instructions',
+            title: 'Instructions *',
             summaryAction: (
               <Box
                 component="span"
@@ -207,44 +224,52 @@ const CreateSkillForm = memo(props => {
                 />
               </Box>
             ),
-            content:
-              instructionsViewMode === 'edit' ? (
-                <Box sx={styles.instructionsWrapper}>
-                  <Box sx={styles.editorWrapper}>
-                    <Field.CodeMirrorEditor
-                      key={instructionsKey}
-                      value={instructions}
-                      notifyChange={onChangeInstructions}
-                      extensions={markdownExtensions}
-                      height="100%"
-                      minHeight="0"
-                      maxLength={MAX_INSTRUCTIONS_LENGTH}
-                      readOnly={disabled}
-                    />
+            content: (
+              <>
+                {instructionsViewMode === 'edit' ? (
+                  <Box sx={styles.instructionsWrapper}>
+                    <Box sx={[styles.editorWrapper, Boolean(instructionsError) && styles.errorBorder]}>
+                      <Field.CodeMirrorEditor
+                        key={instructionsKey}
+                        value={instructions}
+                        notifyChange={onChangeInstructions}
+                        onBlur={onInstructionsBlur}
+                        extensions={markdownExtensions}
+                        height="100%"
+                        minHeight="0"
+                        maxLength={MAX_INSTRUCTIONS_LENGTH}
+                        readOnly={disabled}
+                      />
+                    </Box>
+                    <Box sx={styles.charCounterWrapper}>
+                      {instructionsErrorNode}
+                      <Typography
+                        variant="bodySmall"
+                        sx={styles.charCounter}
+                      >
+                        {`${MAX_INSTRUCTIONS_LENGTH - instructions.length} characters left`}
+                      </Typography>
+                    </Box>
                   </Box>
-                  <Box sx={styles.charCounterWrapper}>
-                    <Typography
-                      variant="bodySmall"
-                      sx={styles.charCounter}
-                    >
-                      {`${MAX_INSTRUCTIONS_LENGTH - instructions.length} characters left`}
-                    </Typography>
+                ) : (
+                  <Box sx={styles.instructionsWrapper}>
+                    <Box sx={[styles.instructionsPreview, Boolean(instructionsError) && styles.errorBorder]}>
+                      {instructions ? (
+                        <Markdown>{instructions}</Markdown>
+                      ) : (
+                        <Typography
+                          variant="bodyMedium"
+                          sx={styles.emptyPreview}
+                        >
+                          No instructions yet.
+                        </Typography>
+                      )}
+                    </Box>
+                    {instructionsErrorNode}
                   </Box>
-                </Box>
-              ) : (
-                <Box sx={styles.instructionsPreview}>
-                  {instructions ? (
-                    <Markdown>{instructions}</Markdown>
-                  ) : (
-                    <Typography
-                      variant="bodyMedium"
-                      sx={styles.emptyPreview}
-                    >
-                      No instructions yet.
-                    </Typography>
-                  )}
-                </Box>
-              ),
+                )}
+              </>
+            ),
           },
         ]}
       />
@@ -319,12 +344,22 @@ const skillCreateFormStyles = () => ({
       borderRight: `0.0625rem solid ${palette.border.table}`,
     },
   }),
+  errorBorder: ({ palette }) => ({
+    borderColor: palette.error.main,
+    '&:focus-within': { borderColor: palette.error.main },
+  }),
   charCounterWrapper: {
     display: 'flex',
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: '0.5rem',
   },
   charCounter: ({ palette }) => ({
     color: palette.text.primary,
+    marginLeft: 'auto',
+  }),
+  instructionsError: ({ palette }) => ({
+    color: palette.error.main,
   }),
   instructionsPreview: ({ palette }) => ({
     minHeight: '12rem',
