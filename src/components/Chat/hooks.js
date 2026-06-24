@@ -9,6 +9,7 @@ import * as ParsePipelineHelpers from '@/[fsd]/features/pipelines/flow-editor/li
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
 import { useContextExecutionEntity, useProjectType } from '@/[fsd]/shared/lib/hooks';
 import useCtrlEnterKeyEventsHandler from '@/[fsd]/shared/lib/hooks/useCtrlEnterKeyEventsHandler.hooks';
+import { notifyTaskComplete, notifyTaskError } from '@/[fsd]/shared/lib/utils/soundNotification.utils';
 import { useStopChatTaskMutation } from '@/api';
 import {
   ChatParticipantType,
@@ -499,6 +500,7 @@ export const useChatSocket = ({
               msg.threadId = threadId;
             }
             msg.isStreaming = false;
+            notifyTaskComplete();
           }
           if (socketMessageType === SocketMessageType.AgentResponse) {
             onRcvAgentEventRef.current && onRcvAgentEventRef.current({ ...message });
@@ -886,6 +888,7 @@ export const useChatSocket = ({
               isError: true,
             });
           }
+          notifyTaskError();
           onRcvAgentEventRef.current && onRcvAgentEventRef.current({ ...message });
           break;
         case SocketMessageType.McpAuthorizationRequired: {
@@ -1228,6 +1231,7 @@ export const useChatSocket = ({
           msg.isLoading = false;
           msg.isStreaming = false;
           msg.exception = message.content;
+          notifyTaskError();
           const llmErrorParticipant =
             participantsRef.current?.find(p => p.id === participant_id) || activeParticipantRef.current;
           trackEvent(GA_EVENT_NAMES.LLM_ERROR, {
