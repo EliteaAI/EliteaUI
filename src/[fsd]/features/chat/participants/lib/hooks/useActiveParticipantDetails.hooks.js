@@ -27,18 +27,24 @@ export const useActiveParticipantDetails = props => {
         });
 
         let versionDetails = null;
+        let versionMissing = false;
         const needsVersionFetch =
           entity_settings.version_id && details.version_details?.id !== entity_settings.version_id;
 
         if (needsVersionFetch) {
-          const versionName = details.versions?.find(v => v.id === entity_settings.version_id)?.name;
-          versionDetails = await fetchOriginalVersionDetails(
-            entity_name,
-            entity_meta.id,
-            entity_settings.version_id,
-            entityProjectId,
-            versionName,
-          );
+          const versionExists = details.versions?.some(v => v.id === entity_settings.version_id);
+          if (versionExists) {
+            const versionName = details.versions.find(v => v.id === entity_settings.version_id).name;
+            versionDetails = await fetchOriginalVersionDetails(
+              entity_name,
+              entity_meta.id,
+              entity_settings.version_id,
+              entityProjectId,
+              versionName,
+            );
+          } else {
+            versionMissing = true;
+          }
         }
 
         setActiveParticipantDetails({

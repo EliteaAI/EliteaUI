@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 
 import { useParticipantEntityIcon } from '@/[fsd]/features/chat/participants/lib/hooks';
+import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import { usePublicProjectAccessCheck } from '@/[fsd]/features/project/lib/hooks';
 import { PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';
 import EntityIcon from '@/components/EntityIcon';
@@ -74,7 +75,11 @@ const AgentEditorPanel = memo(props => {
   }, [isPipeline, onClosePipelineEditor, onCloseAgentEditor]);
 
   const selectedVersion = useMemo(() => {
-    return participantDetails?.versions?.find(version => version.id === selectedVersionId) || {};
+    const found = participantDetails?.versions?.find(version => version.id === selectedVersionId);
+    if (found) return found;
+    const versions = participantDetails?.versions;
+    if (versions?.length) return versions.find(v => v.name === LATEST_VERSION_NAME) || versions[0];
+    return {};
   }, [participantDetails?.versions, selectedVersionId]);
 
   const isSelectedVersionPublished = useMemo(() => {
