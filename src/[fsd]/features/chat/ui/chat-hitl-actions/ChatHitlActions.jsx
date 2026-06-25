@@ -5,10 +5,10 @@ import { Box, Collapse, Typography } from '@mui/material';
 import BaseBtn from '@/[fsd]/shared/ui/button/BaseBtn';
 import Markdown from '@/[fsd]/shared/ui/markdown';
 import CheckedIcon from '@/assets/checked-icon.svg?react';
-import EditIcon from '@/assets/edit.svg?react';
 import RejectIcon from '@/assets/reject.svg?react';
 
 import BlockWithCommentControl from './BlockWithCommentControl';
+import EditControl from './EditControl';
 
 const SENSITIVE_PARAM_MASK = '***';
 const BLOCK_WITH_COMMENT_ACTION = 'block_with_comment';
@@ -93,7 +93,7 @@ const SensitiveToolParams = memo(props => {
 SensitiveToolParams.displayName = 'SensitiveToolParams';
 
 const ChatHitlActions = memo(props => {
-  const { hitlInterrupt, onHitlResume, onHitlEditClick, disabled, toolCallId } = props;
+  const { hitlInterrupt, onHitlResume, disabled, toolCallId } = props;
   const { available_actions = [], guardrail_type, message } = hitlInterrupt || {};
   // Parallel sub-agent fan-out surfaces multiple sensitive-tool pauses at once.
   const isSensitiveTool =
@@ -117,9 +117,12 @@ const ChatHitlActions = memo(props => {
 
   const canBlockWithComment = available_actions.includes(BLOCK_WITH_COMMENT_ACTION);
 
-  const handleEditClick = useCallback(() => {
-    onHitlEditClick?.();
-  }, [onHitlEditClick]);
+  const handleEditSubmit = useCallback(
+    value => {
+      onHitlResume?.({ action: 'edit', value, toolCallId });
+    },
+    [onHitlResume, toolCallId],
+  );
 
   if (!hitlInterrupt) return null;
 
@@ -203,15 +206,10 @@ const ChatHitlActions = memo(props => {
           </BaseBtn>
         )}
         {available_actions.includes('edit') && (
-          <BaseBtn
-            variant="neutral"
-            startIcon={<EditIcon />}
-            onClick={handleEditClick}
+          <EditControl
+            onSubmit={handleEditSubmit}
             disabled={disabled}
-            sx={styles.buttonIcon}
-          >
-            Edit
-          </BaseBtn>
+          />
         )}
         {available_actions.includes('reject') && (
           <BaseBtn
