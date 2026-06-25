@@ -728,7 +728,7 @@ export const detectContentType = content => {
     (lines.some(line => line.startsWith('+ ')) && lines.some(line => line.startsWith('- '))) ||
     trimmed.includes('Index: ') ||
     trimmed.includes('===') ||
-    trimmed.match(/^[+-@]{1,3}\s/m)
+    trimmed.match(/^[+\-@]{1,3}\s/m)
   ) {
     return 'diff';
   }
