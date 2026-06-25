@@ -2051,6 +2051,23 @@ const ChatBox = forwardRef((props, boxRef) => {
     return !versions.some(v => v.id === activeParticipant.entity_settings?.version_id);
   }, [activeParticipant, activeParticipantDetails?.versions]);
 
+  const isActiveParticipantVersionMissing = useMemo(() => {
+    if (!activeParticipant) return false;
+    const versions = activeParticipantDetails?.versions || originalParticipant?.versions;
+    if (!versions?.length) return false;
+    const versionId = activeParticipant.entity_settings?.version_id;
+    if (!versionId) return false;
+    return !versions.some(v => v.id === versionId);
+  }, [activeParticipant, activeParticipantDetails?.versions, originalParticipant?.versions]);
+
+  useEffect(() => {
+    if (!isActiveParticipantVersionMissing) return;
+    const versions = activeParticipantDetails?.versions || originalParticipant?.versions;
+    if (!versions?.length) return;
+    const baseVersion = versions.find(v => v.name === LATEST_VERSION_NAME) || versions[0];
+    onSelectVersion(baseVersion);
+  }, [isActiveParticipantVersionMissing, activeParticipantDetails?.versions, originalParticipant?.versions, onSelectVersion]);
+
   const isInputDisabled = useMemo(
     () =>
       isLoadingConversation ||
