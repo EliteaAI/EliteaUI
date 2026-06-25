@@ -7,6 +7,7 @@ import { Box, Tooltip, Typography } from '@mui/material';
 import { useTrackEvent } from '@/GA';
 import { useCredentialValidation, useCredentialsData } from '@/[fsd]/features/credentials/lib/hooks';
 import { CredentialOptionLabel } from '@/[fsd]/features/credentials/ui';
+import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
 import { useContextExecutionEntity } from '@/[fsd]/shared/lib/hooks';
 import { Select } from '@/[fsd]/shared/ui';
@@ -185,7 +186,7 @@ const CredentialsSelect = memo(
       onlyPublic,
       section,
     ]);
-
+    const tokens = McpAuthHelpers.loadTokens();
     const savedCredentialsMenuData = useMemo(() => {
       return (presetOptions?.length ? presetOptions : configurations)
         .filter(configuration => {
@@ -210,9 +211,19 @@ const CredentialsSelect = memo(
             : null;
 
           const credStatus = getCredentialStatus(configUid);
-          const isCredentialInvalid = credStatus === 'invalid';
+          let isCredentialInvalid = credStatus === 'invalid';
           const isChecking = credStatus === 'checking';
-          const credentialMessage = getCredentialMessage(configUid);
+          let credentialMessage = getCredentialMessage(configUid);
+          const tokenKey = `${configuration.uuid}:${configuration.data?.oauth_discovery_endpoint}`;
+          const tokenInfo = tokens?.[tokenKey];
+          if (
+            isCredentialInvalid &&
+            credentialMessage?.includes('Please complete the OAuth flow to obtain an access token') &&
+            tokenInfo
+          ) {
+            isCredentialInvalid = false;
+            credentialMessage = null;
+          }
 
           const handleRevalidate = async event => {
             event.stopPropagation();
@@ -264,6 +275,7 @@ const CredentialsSelect = memo(
       validateCredential,
       selectedProjectId,
       value?.elitea_title,
+      tokens,
     ]);
 
     const menuData = useMemo(
