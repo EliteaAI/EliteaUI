@@ -144,6 +144,7 @@ const CreateToolkit = memo(props => {
                 hasCredentialsProperties={hasCredentialsProperties}
                 isMCP={isMCP}
                 setShowValidation={setShowValidation}
+                isApplication={isApplication}
               />
             ) : null,
             rightToolbar: <div />,

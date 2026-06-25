@@ -27,6 +27,7 @@ export default function CreateToolkitToolTabBar({
   hasCredentialsProperties,
   isMCP,
   setShowValidation,
+  isApplication,
 }) {
   const trackEvent = useTrackEvent();
 
@@ -110,6 +111,10 @@ export default function CreateToolkitToolTabBar({
               trackEvent(GA_EVENT_NAMES.MCP_CREATED, {
                 [GA_EVENT_PARAMS.MCP_TYPE]: formik.values?.type || 'unknown',
               });
+            else if (isApplication)
+              trackEvent(GA_EVENT_NAMES.APPLICATION_CREATED, {
+                [GA_EVENT_PARAMS.APPLICATION_TYPE]: formik.values?.type || 'unknown',
+              });
             else
               trackEvent(GA_EVENT_NAMES.TOOLKIT_CREATED, {
                 [GA_EVENT_PARAMS.TOOLKIT_TYPE]: formik.values?.type || 'unknown',
@@ -143,14 +148,16 @@ export default function CreateToolkitToolTabBar({
               // For pre-built MCPs (mcp_github, etc.), navigate to MCP page
               const isPrebuildMcp = McpAuthHelpers.isPrebuildMcpType(formik.values?.type);
               const shouldNavigateToMcp = isMCP || isPrebuildMcp;
+              let destinationRoute = RouteDefinitions.ToolkitsWithTab;
+              if (shouldNavigateToMcp) {
+                destinationRoute = RouteDefinitions.MCPsWithTab;
+              } else if (isApplication) {
+                destinationRoute = RouteDefinitions.AppsWithTab;
+              }
 
               navigate(
                 {
-                  pathname:
-                    (!shouldNavigateToMcp
-                      ? RouteDefinitions.ToolkitsWithTab
-                      : RouteDefinitions.MCPsWithTab
-                    ).replace(':tab', 'all') + `/${data.data.id}`,
+                  pathname: destinationRoute.replace(':tab', 'all') + `/${data.data.id}`,
                 },
                 {
                   replace: true,
@@ -161,7 +168,7 @@ export default function CreateToolkitToolTabBar({
         }, 0);
       }
     },
-    [formik.values?.type, isMCP, navigate, searchParams, trackEvent],
+    [formik.values?.type, isMCP, isApplication, navigate, searchParams, trackEvent],
   );
 
   useEffect(() => {
