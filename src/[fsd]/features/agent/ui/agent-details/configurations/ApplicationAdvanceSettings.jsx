@@ -9,7 +9,7 @@ import { Checkbox, Input, Label } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { MAX_STEP_LIMIT, MIN_STEP_LIMIT } from '@/common/constants';
 
-const NOTES_MAX_LENGTH = 10000;
+const NOTES_MAX_LENGTH = 1000;
 
 const ApplicationAdvanceSettings = memo(props => {
   const { style, disabled, showIgnoreProjectContext = false } = props;
