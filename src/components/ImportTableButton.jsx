@@ -24,7 +24,7 @@ const convertToMarkdown = data => {
 
   // Create Markdown rows
   const markdownRows = rows
-    .map(row => `| ${row.map(cell => (cell || '').replace(/\|/g, '\\|')).join(' | ')} |`)
+    .map(row => `| ${row.map(cell => (cell || '').replace(/\\/g, '\\\\').replace(/\|/g, '\\|')).join(' | ')} |`)
     .join('\n');
 
   return { markdown: `${headerRow}\n${separatorRow}\n${markdownRows}`, headers, rows };

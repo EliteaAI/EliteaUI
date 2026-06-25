@@ -76,12 +76,12 @@ export const parseMarkdownTable = markdown => {
 
 // Convert the grid back to Markdown
 const convertToMarkdown = (columns, rows) => {
-  const headers = columns.map(col => col.headerName.replace(/\n/g, '<br>').replace(/\|/g, '\\|')).join(' | ');
+  const headers = columns.map(col => col.headerName.replace(/\\/g, '\\\\').replace(/\n/g, '<br>').replace(/\|/g, '\\|')).join(' | ');
   const separator = columns.map(() => '---').join(' | ');
   const dataRows = rows
     .map(
       row =>
-        `| ${columns.map(col => (row[col.field] || '').replace(/\n/g, '<br>').replace(/\|/g, '\\|')).join(' | ')} |`,
+        `| ${columns.map(col => (row[col.field] || '').replace(/\\/g, '\\\\').replace(/\n/g, '<br>').replace(/\|/g, '\\|')).join(' | ')} |`,
     )
     .join('\n');
 
