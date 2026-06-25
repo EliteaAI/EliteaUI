@@ -4,18 +4,17 @@ import { useLocation, useSearchParams } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
-import { AgentsStudioContext, useInteractiveTour } from '@/[fsd]/app/providers';
-import { AgentsStudioConstants } from '@/[fsd]/features/agents-studio/lib/constants';
-import { AgentsStudioHelpers } from '@/[fsd]/features/agents-studio/lib/helpers';
-import { useAgentsStudioData } from '@/[fsd]/features/agents-studio/lib/hooks';
-import { AgentCategorySection, AgentModal } from '@/[fsd]/features/agents-studio/ui';
-import { AGENT_STUDIO_TOUR_ID } from '@/[fsd]/features/interactive-tours/lib/constants';
-import { AGENT_STUDIO_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/agentStudioTourTargets.constants';
+import { AgentHubContext, useInteractiveTour } from '@/[fsd]/app/providers';
+import { AgentHubConstants } from '@/[fsd]/features/agent-hub/lib/constants';
+import { AgentHubHelpers } from '@/[fsd]/features/agent-hub/lib/helpers';
+import { useAgentHubData } from '@/[fsd]/features/agent-hub/lib/hooks';
+import { AgentCategorySection, AgentModal } from '@/[fsd]/features/agent-hub/ui';
+import { AGENT_HUB_TOUR_ID, AGENT_HUB_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { useGroupedCategories } from '@/[fsd]/shared/lib/hooks';
 import { Category } from '@/[fsd]/shared/ui';
 import useDebounceValue from '@/hooks/useDebounceValue';
 
-const AgentsStudio = memo(() => {
+const AgentHub = memo(() => {
   const [query, setQuery] = useState('');
   const debouncedQuery = useDebounceValue(query, 300);
   const [selectedTagNames, setSelectedTagNames] = useState([]);
@@ -27,10 +26,10 @@ const AgentsStudio = memo(() => {
   const tour = useInteractiveTour();
 
   useEffect(() => {
-    const agentId = searchParams.get(AgentsStudioConstants.AGENT_ID);
+    const agentId = searchParams.get(AgentHubConstants.AGENT_ID);
     if (agentId && !selectedApplication) {
       const newSearchParams = new URLSearchParams(searchParams);
-      newSearchParams.delete(AgentsStudioConstants.AGENT_ID);
+      newSearchParams.delete(AgentHubConstants.AGENT_ID);
       setSelectedApplication({ id: agentId });
       setIsModalOpen(true);
       setSearchParams(newSearchParams, {
@@ -56,11 +55,11 @@ const AgentsStudio = memo(() => {
     addToMyLiked,
     removeFromMyLiked,
     onRefresh,
-  } = useAgentsStudioData(debouncedQuery, selectedTagNames);
+  } = useAgentHubData(debouncedQuery, selectedTagNames);
 
-  const allCategories = useMemo(() => AgentsStudioHelpers.buildAllCategories(categoryNames), [categoryNames]);
+  const allCategories = useMemo(() => AgentHubHelpers.buildAllCategories(categoryNames), [categoryNames]);
   const applicationMenuItems = useMemo(
-    () => AgentsStudioHelpers.buildApplicationMenuItems(applicationsByTag, selectedTagNames),
+    () => AgentHubHelpers.buildApplicationMenuItems(applicationsByTag, selectedTagNames),
     [applicationsByTag, selectedTagNames],
   );
 
@@ -92,7 +91,7 @@ const AgentsStudio = memo(() => {
   const { groupedItems, selectedCategories, searchQuery, onSearchChange, onSelectCategory } =
     useGroupedCategories(
       applicationMenuItems,
-      AgentsStudioHelpers.getCategoryForApplication,
+      AgentHubHelpers.getCategoryForApplication,
       handleApplicationSelect,
       null,
       { isSearchDisabled: true, isSortDisabled: true },
@@ -120,7 +119,7 @@ const AgentsStudio = memo(() => {
   const handleLoadMore = useCallback(
     category => {
       const currentPage = currentPageByTag[category] || 0;
-      const fetchFunction = AgentsStudioHelpers.getFetchFunctionForCategory(category, {
+      const fetchFunction = AgentHubHelpers.getFetchFunctionForCategory(category, {
         fetchTrendingApplications,
         fetchMyLikedApplications,
         fetchApplicationsForCategoryName,
@@ -175,7 +174,7 @@ const AgentsStudio = memo(() => {
   }, [allCategories, groupedItems]);
 
   const isStartingConversationStep = useMemo(
-    () => tour?.tourId === AGENT_STUDIO_TOUR_ID && tour?.currentStep?.id === 'starting-a-conversation',
+    () => tour?.tourId === AGENT_HUB_TOUR_ID && tour?.currentStep?.id === 'starting-a-conversation',
     [tour?.currentStep?.id, tour?.tourId],
   );
 
@@ -197,7 +196,7 @@ const AgentsStudio = memo(() => {
     }
   }, [firstVisibleApplication, isModalOpen, isStartingConversationStep, selectedApplication]);
 
-  const styles = agentsStudioStyles();
+  const styles = agentHubStyles();
 
   const contextValue = useMemo(
     () => ({
@@ -209,9 +208,9 @@ const AgentsStudio = memo(() => {
   );
 
   return (
-    <AgentsStudioContext.Provider value={contextValue}>
+    <AgentHubContext.Provider value={contextValue}>
       <Box
-        data-tour={AGENT_STUDIO_TOUR_TARGET_IDS.workspace}
+        data-tour={AGENT_HUB_TOUR_TARGET_IDS.workspace}
         sx={styles.workspace}
       >
         <Category.GroupedCategory
@@ -241,14 +240,14 @@ const AgentsStudio = memo(() => {
           />
         )}
       </Box>
-    </AgentsStudioContext.Provider>
+    </AgentHubContext.Provider>
   );
 });
 
-AgentsStudio.displayName = 'AgentsStudio';
+AgentHub.displayName = 'AgentHub';
 
 /** @type {MuiSx} */
-const agentsStudioStyles = () => ({
+const agentHubStyles = () => ({
   workspace: {
     display: 'flex',
     flexDirection: 'column',
@@ -262,4 +261,4 @@ const agentsStudioStyles = () => ({
   },
 });
 
-export default AgentsStudio;
+export default AgentHub;

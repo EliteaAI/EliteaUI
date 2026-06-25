@@ -2,8 +2,8 @@ import { createSlice } from '@reduxjs/toolkit';
 
 const CACHE_DURATION_MS = 60 * 60 * 1000; // 60 minutes
 
-const agentsStudioSlice = createSlice({
-  name: 'agentsStudio',
+const agentHubSlice = createSlice({
+  name: 'agentHub',
   initialState: {
     applicationsByTag: {},
     totalCountsByTag: {},
@@ -70,10 +70,10 @@ const agentsStudioSlice = createSlice({
 });
 
 // Selectors
-export const selectAgentsStudioData = state => state.agentsStudio;
+export const selectAgentHubData = state => state.agentHub;
 
 export const selectIsCacheValid = (state, query) => {
-  const { lastFetchedAt, lastQuery } = state.agentsStudio;
+  const { lastFetchedAt, lastQuery } = state.agentHub;
   if (!lastFetchedAt) return false;
   if (lastQuery !== (query || '')) return false;
   const isExpired = Date.now() - lastFetchedAt > CACHE_DURATION_MS;
@@ -81,9 +81,9 @@ export const selectIsCacheValid = (state, query) => {
 };
 
 export const selectHasData = state => {
-  const { applicationsByTag } = state.agentsStudio;
+  const { applicationsByTag } = state.agentHub;
   return Object.keys(applicationsByTag).length > 0;
 };
 
-export const { name, actions } = agentsStudioSlice;
-export default agentsStudioSlice.reducer;
+export const { name, actions } = agentHubSlice;
+export default agentHubSlice.reducer;

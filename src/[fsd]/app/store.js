@@ -11,7 +11,7 @@ import {
   reducer as eliteaReducer,
   reducerPath as eliteaReducerName,
 } from '@/api/eliteaApi';
-import agentsStudioReducer, { name as agentsStudioReducerName } from '@/slices/agentsStudio';
+import agentHubReducer, { name as agentHubReducerName } from '@/slices/agentHub';
 import applicationsReducer, { name as applicationsReducerName } from '@/slices/applications';
 import artifactReducer, { name as artifactReducerName } from '@/slices/artifact';
 import chatReducer, { name as chatReducerName } from '@/slices/chat';
@@ -29,7 +29,7 @@ import { configureStore } from '@reduxjs/toolkit';
 const store = configureStore({
   reducer: {
     [eliteaReducerName]: eliteaReducer,
-    [agentsStudioReducerName]: agentsStudioReducer,
+    [agentHubReducerName]: agentHubReducer,
     [applicationsReducerName]: applicationsReducer,
     [artifactReducerName]: artifactReducer,
     [authorReducerName]: authorReducer,

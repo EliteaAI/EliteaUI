@@ -14,11 +14,11 @@ import {
   Typography,
 } from '@mui/material';
 
+import AgentConversationStarters from '@/[fsd]/features/agent-hub/ui/AgentConversationStarters';
+import AgentHubLike from '@/[fsd]/features/agent-hub/ui/AgentHubLike';
+import AgentWelcomeMessage from '@/[fsd]/features/agent-hub/ui/AgentWelcomeMessage';
 import { ConfigurationModal } from '@/[fsd]/features/agent/ui/agent-details/configurations';
-import AgentConversationStarters from '@/[fsd]/features/agents-studio/ui/AgentConversationStarters';
-import AgentStudioLike from '@/[fsd]/features/agents-studio/ui/AgentStudioLike';
-import AgentWelcomeMessage from '@/[fsd]/features/agents-studio/ui/AgentWelcomeMessage';
-import { AGENT_STUDIO_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/agentStudioTourTargets.constants';
+import { AGENT_HUB_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/agentHubTourTargets.constants';
 import { useLazyPublicApplicationDetailsQuery } from '@/api';
 import { ChatParticipantType, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
 import AuthorContainer from '@/components/AuthorContainer';
@@ -28,7 +28,7 @@ import CloseIcon from '@/components/Icons/CloseIcon';
 import RouteDefinitions, { getBasename } from '@/routes';
 import { actions } from '@/slices/chat';
 
-import { AgentsStudioConstants } from '../lib/constants';
+import { AgentHubConstants } from '../lib/constants';
 
 const getCardAuthors = (agent, agentDetails) => {
   const { authors = [], author = {} } = agent || {};
@@ -67,8 +67,9 @@ const AgentModal = memo(props => {
   const link = useMemo(() => {
     const baseUrl = `${window.location.protocol}//${window.location.host}`;
     const basename = getBasename();
+    const pathPrefix = basename ? basename : '';
     return agent
-      ? `${baseUrl}${basename}/${RouteDefinitions.AgentHub}?${AgentsStudioConstants.AGENT_ID}=${agent.id}`
+      ? `${baseUrl}${pathPrefix}${RouteDefinitions.AgentHub}?${AgentHubConstants.AGENT_ID}=${agent.id}`
       : '';
   }, [agent]);
 
@@ -193,7 +194,7 @@ const AgentModal = memo(props => {
               </Typography>
             </Box>
             <Box sx={styles.authorContainer}>
-              <AgentStudioLike
+              <AgentHubLike
                 viewMode={ViewMode.Public}
                 data={agent?.name ? agent : agentDetails || {}}
               />
@@ -249,7 +250,7 @@ const AgentModal = memo(props => {
           </DialogContent>
           <DialogActions sx={styles.dialogActions}>
             <Button
-              data-tour={AGENT_STUDIO_TOUR_TARGET_IDS.startConversationButton}
+              data-tour={AGENT_HUB_TOUR_TARGET_IDS.startConversationButton}
               variant="elitea"
               color="primary"
               onClick={onStartConversation()}

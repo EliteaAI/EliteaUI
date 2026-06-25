@@ -1,4 +1,4 @@
-import { AgentsStudioConstants } from '@/[fsd]/features/agents-studio/lib/constants';
+import { AgentHubConstants } from '@/[fsd]/features/agent-hub/lib/constants';
 
 /**
  * Build the ordered category list shown in Agent Studio: the special Trending
@@ -6,13 +6,13 @@ import { AgentsStudioConstants } from '@/[fsd]/features/agents-studio/lib/consta
  * catch-all moved to the end).
  */
 export const buildAllCategories = categoryNames => {
-  const names = (categoryNames || []).filter(name => name !== AgentsStudioConstants.OTHER_CATEGORY);
+  const names = (categoryNames || []).filter(name => name !== AgentHubConstants.OTHER_CATEGORY);
   names.sort();
   return [
-    AgentsStudioConstants.TRENDING_CATEGORY,
-    AgentsStudioConstants.MY_LIKED_CATEGORY,
+    AgentHubConstants.TRENDING_CATEGORY,
+    AgentHubConstants.MY_LIKED_CATEGORY,
     ...names,
-    AgentsStudioConstants.OTHER_CATEGORY,
+    AgentHubConstants.OTHER_CATEGORY,
   ];
 };
 
@@ -24,10 +24,10 @@ export const buildApplicationMenuItems = (applicationsByTag, selectedTagNames) =
   let tagsToShow = selectedTagNames.length === 0 ? Object.keys(applicationsByTag) : selectedTagNames;
 
   // First pass: collect all apps and their categories
-  if (selectedTagNames.length === 0 && tagsToShow.includes(AgentsStudioConstants.TRENDING_CATEGORY)) {
+  if (selectedTagNames.length === 0 && tagsToShow.includes(AgentHubConstants.TRENDING_CATEGORY)) {
     tagsToShow = [
-      AgentsStudioConstants.TRENDING_CATEGORY,
-      ...tagsToShow.filter(tag => tag !== AgentsStudioConstants.TRENDING_CATEGORY),
+      AgentHubConstants.TRENDING_CATEGORY,
+      ...tagsToShow.filter(tag => tag !== AgentHubConstants.TRENDING_CATEGORY),
     ];
   }
 
@@ -66,7 +66,7 @@ export const buildApplicationMenuItems = (applicationsByTag, selectedTagNames) =
 
     // Fallback to Other if no categories
     if (categoryArray.length === 0) {
-      categoryArray.push(AgentsStudioConstants.OTHER_CATEGORY);
+      categoryArray.push(AgentHubConstants.OTHER_CATEGORY);
     }
 
     const categoryOrderByServer = {};
@@ -103,11 +103,11 @@ export const getFetchFunctionForCategory = (
   category,
   { fetchTrendingApplications, fetchMyLikedApplications, fetchApplicationsForCategoryName },
 ) => {
-  if (category === AgentsStudioConstants.TRENDING_CATEGORY) {
+  if (category === AgentHubConstants.TRENDING_CATEGORY) {
     return fetchTrendingApplications;
   }
 
-  if (category === AgentsStudioConstants.MY_LIKED_CATEGORY) {
+  if (category === AgentHubConstants.MY_LIKED_CATEGORY) {
     return fetchMyLikedApplications;
   }
 
@@ -119,19 +119,19 @@ export const getCategoryForApplication = app => app.category;
 export const calculateNewLikesCount = (likesCount, isLiked, currentLikes) => {
   let strategy;
   if (likesCount > 0) {
-    strategy = AgentsStudioConstants.LikeUpdateStrategy.USE_SERVER_COUNT;
+    strategy = AgentHubConstants.LikeUpdateStrategy.USE_SERVER_COUNT;
   } else if (isLiked) {
-    strategy = AgentsStudioConstants.LikeUpdateStrategy.OPTIMISTIC_INCREMENT;
+    strategy = AgentHubConstants.LikeUpdateStrategy.OPTIMISTIC_INCREMENT;
   } else {
-    strategy = AgentsStudioConstants.LikeUpdateStrategy.OPTIMISTIC_DECREMENT;
+    strategy = AgentHubConstants.LikeUpdateStrategy.OPTIMISTIC_DECREMENT;
   }
 
   switch (strategy) {
-    case AgentsStudioConstants.LikeUpdateStrategy.USE_SERVER_COUNT:
+    case AgentHubConstants.LikeUpdateStrategy.USE_SERVER_COUNT:
       return likesCount;
-    case AgentsStudioConstants.LikeUpdateStrategy.OPTIMISTIC_INCREMENT:
+    case AgentHubConstants.LikeUpdateStrategy.OPTIMISTIC_INCREMENT:
       return currentLikes + 1;
-    case AgentsStudioConstants.LikeUpdateStrategy.OPTIMISTIC_DECREMENT:
+    case AgentHubConstants.LikeUpdateStrategy.OPTIMISTIC_DECREMENT:
       return Math.max(0, currentLikes - 1);
     default:
       return currentLikes;
