@@ -615,7 +615,7 @@ export const PERMISSION_GROUPS = {
   toolkits: [PERMISSIONS.toolkits.list],
 };
 
-export const AutoSuggestionTypes = ['tag', 'application', 'pipeline', 'toolkit'];
+export const AutoSuggestionTypes = ['tag', 'application', 'pipeline', 'toolkit', 'skill'];
 
 export const AutoSuggestionTitles = {
   TOP: 'Top Search Requests',
@@ -625,6 +625,7 @@ export const AutoSuggestionTitles = {
   TOOLKITS: 'Toolkits',
   CREDENTIALS: 'Credentials',
   MCPs: 'MCPs',
+  SKILLS: 'Skills',
 };
 
 export const SupportedAI = {
