@@ -1,4 +1,5 @@
 export const GA_EVENT_NAMES = {
+  APPLICATION_CREATED: 'application_created',
   AGENT_CREATED_FROM_CHAT: 'agent_created_from_chat',
   AGENT_EXECUTED: 'agent_executed',
   AGENT_MODIFIED_FROM_CHAT: 'agent_modified_from_chat',
@@ -47,6 +48,7 @@ export const GA_EVENT_PARAMS = {
   AGENT_NAME: 'agent_name',
   AGENT_TYPE: 'agent_type',
   AGENT_VERSION: 'agent_version',
+  APPLICATION_TYPE: 'application_type',
   ATTACHMENT_TYPE: 'attachment_type',
   CONTENT_TYPE: 'content_type',
   CONVERSATION_ID: 'conversation_id',
