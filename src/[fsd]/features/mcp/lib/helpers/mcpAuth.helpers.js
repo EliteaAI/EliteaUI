@@ -118,7 +118,7 @@ const loadFromStorage = key => {
 
 // Token storage
 const saveTokens = tokens => saveToStorage(McpAuthConstants.MC_TOKENS_STORAGE_KEY, tokens);
-const loadTokens = () => loadFromStorage(McpAuthConstants.MC_TOKENS_STORAGE_KEY);
+export const loadTokens = () => loadFromStorage(McpAuthConstants.MC_TOKENS_STORAGE_KEY);
 
 // Credentials storage
 const saveCredentials = credentials =>
@@ -492,6 +492,22 @@ export const getFilteredIgnoredServers = (mcpServerUrls = []) => {
   });
 
   return allIgnored;
+};
+
+/**
+ * Returns MCP server URLs from the provided list that do not have a valid token.
+ * Does NOT include servers from the localStorage ignored list.
+ * Use this when you want to skip tools only for servers with no token, without
+ * mixing in session-declined servers (which should be tracked separately).
+ *
+ * @param {string[]} mcpServerUrls - List of MCP server URLs to check
+ * @returns {string[]} Server URLs that lack a valid access token
+ */
+export const getServersWithoutTokens = (mcpServerUrls = []) => {
+  return mcpServerUrls.filter(serverUrl => {
+    if (!serverUrl) return false;
+    return getAccessToken(serverUrl) === null;
+  });
 };
 
 /**
