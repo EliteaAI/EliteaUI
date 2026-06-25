@@ -18,6 +18,7 @@ import useToast from '@/hooks/useToast';
 import { markdown } from '@codemirror/lang-markdown';
 
 import EnableToggleCard from './EnableToggleCard';
+import GenerateProjectContextButton from './GenerateProjectContextButton';
 
 const MAX_CHARS = 2500;
 
@@ -138,6 +139,11 @@ const ProjectContextContent = memo(() => {
     }
   }, [canEditProjectContext, serverData]);
 
+  const handleAIGenerated = useCallback(generatedContent => {
+    setContent(generatedContent);
+    setIsDirty(true);
+  }, []);
+
   const handleEditorFocus = () => setIsEditorFocused(true);
   const handleEditorBlur = e => {
     if (!e.currentTarget.contains(e.relatedTarget)) setIsEditorFocused(false);
@@ -201,6 +207,10 @@ const ProjectContextContent = memo(() => {
               <Box sx={styles.toolbar}>
                 {showEditorControls && (
                   <>
+                    <GenerateProjectContextButton
+                      existingContent={content}
+                      onApply={handleAIGenerated}
+                    />
                     <Button.BaseBtn
                       variant={BUTTON_VARIANTS.secondary}
                       startIcon={<ImportIcon />}

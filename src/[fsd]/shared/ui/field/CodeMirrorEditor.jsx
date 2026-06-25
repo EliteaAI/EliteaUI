@@ -20,7 +20,8 @@ const createMaxLengthExtension = maxLength => {
     if (tr.newDoc.length <= maxLength) return tr;
 
     const truncatedText = tr.newDoc.sliceString(0, maxLength);
-    const cursorPos = Math.min(tr.selection.main.head, truncatedText.length);
+    const selection = tr.selection ?? tr.startState.selection;
+    const cursorPos = Math.min(selection.main.head, truncatedText.length);
 
     return tr.startState.update({
       changes: {

@@ -25,6 +25,8 @@ const GenerateEntityModal = memo(props => {
     onDraftGenerated,
     renderReview,
     onApprove,
+    approveLabel,
+    approvingLabel,
   } = props;
 
   const { toastError } = useToast();
@@ -83,12 +85,12 @@ const GenerateEntityModal = memo(props => {
 
     try {
       await onApprove(draftData);
-      onClose();
+      handleClose();
     } catch (err) {
       setIsApproving(false);
       toastError(buildErrorMessage(err));
     }
-  }, [draftData, onApprove, onClose, toastError]);
+  }, [draftData, onApprove, handleClose, toastError]);
 
   const handleKeyDown = useCallback(
     e => {
@@ -172,7 +174,9 @@ const GenerateEntityModal = memo(props => {
             disabled={isApproving || !isDraftValid}
             sx={{ margin: '0 !important' }}
           >
-            {isApproving ? 'Creating...' : `Create ${entityLabelCapitalized}`}
+            {isApproving
+              ? (approvingLabel || 'Creating...')
+              : (approveLabel || `Create ${entityLabelCapitalized}`)}
           </BaseBtn>
         </>
       );
