@@ -94,7 +94,6 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
     hitlInterrupt = null,
     hitlInterrupts = null,
     onHitlResume,
-    onHitlEditClick,
     hideContinueButton = false,
     onOpenArtifactPreview,
     // Swarm mode props
@@ -400,12 +399,11 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
           hitlInterrupt={interrupt}
           toolCallId={toolCallId}
           onHitlResume={onHitlResume}
-          onHitlEditClick={onHitlEditClick}
           disabled={!onHitlResume || Boolean(interrupt?.decided)}
         />
       );
     },
-    [onHitlResume, onHitlEditClick],
+    [onHitlResume],
   );
 
   const shouldRenderAnswerBlock = useMemo(() => {

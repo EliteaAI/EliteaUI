@@ -24,7 +24,6 @@ const ChatMessageList = memo(props => {
     onContinueMcpExecution,
     onContinueTokenLimitExecution,
     onHitlResume,
-    onHitlEditClick,
     onCopyToClipboard,
     onSelectParticipant,
     onScrollToTop,
@@ -251,7 +250,6 @@ const ChatMessageList = memo(props => {
             onContinueMcpExecution={onContinueMcpExecution}
             onContinueTokenLimitExecution={onContinueTokenLimitExecution}
             onHitlResume={onHitlResume}
-            onHitlEditClick={onHitlEditClick}
             hideHitlActions={hideHitlActions}
             hideContinueButton={hideContinueButton}
             isSpeakingMode={isSpeakingMode}

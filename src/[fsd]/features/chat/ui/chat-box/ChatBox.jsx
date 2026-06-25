@@ -69,7 +69,6 @@ import { buildErrorMessage } from '@/common/utils';
 import AlertDialog from '@/components/AlertDialog';
 import { ChatBodyContainer } from '@/components/Chat/StyledComponents';
 import { useChatSocket, useStopStreaming } from '@/components/Chat/hooks';
-import InfoIcon from '@/components/Icons/InfoIcon';
 import SocketContext from '@/contexts/SocketContext';
 import useChatStreaming from '@/hooks/chat/useChatStreaming';
 import useLoadMoreMessages from '@/hooks/chat/useLoadMoreMessages';
@@ -204,7 +203,6 @@ const ChatBox = forwardRef((props, boxRef) => {
   const [isRegenerating, setIsRegenerating] = useState(false);
 
   // Mentions states
-  const [hitlEditMode, setHitlEditMode] = useState(false);
   const [isMentioningEveryone, setIsMentioningEveryone] = useState(false);
 
   // Speaking mode states
@@ -1357,7 +1355,6 @@ const ChatBox = forwardRef((props, boxRef) => {
             };
           }),
         );
-        setHitlEditMode(false);
         emitContinue(childPayload);
         return;
       }
@@ -1431,8 +1428,6 @@ const ChatBox = forwardRef((props, boxRef) => {
           payload.hitl_value = value ?? '';
         }
       }
-
-      setHitlEditMode(false);
 
       setChatHistory(prevMessages => {
         const assistantIndex = prevMessages.findIndex(msg => msg.id === lastMessage.id);
@@ -1523,38 +1518,18 @@ const ChatBox = forwardRef((props, boxRef) => {
     ],
   );
 
-  useEffect(() => {
-    if (!hasPendingHitlInterrupt && hitlEditMode) {
-      setHitlEditMode(false);
-    }
-  }, [hasPendingHitlInterrupt, hitlEditMode]);
-
-  const onHitlEditClick = useCallback(() => {
-    if (!hasPendingHitlInterrupt) return;
-    setHitlEditMode(true);
-    setTimeout(() => {
-      chatInput.current?.focus();
-    }, 0);
-  }, [hasPendingHitlInterrupt]);
-
   const onSendMessage = useCallback(
     async question => {
       stopTTS?.();
       resetSlash();
 
-      if (hasPendingHitlInterrupt && !hitlEditMode) {
-        return;
-      }
-
-      if (hitlEditMode) {
-        await onHitlResume({ action: 'edit', value: question });
-        chatInput.current?.reset();
+      if (hasPendingHitlInterrupt) {
         return;
       }
 
       return onPredictStream(question);
     },
-    [hasPendingHitlInterrupt, hitlEditMode, onHitlResume, onPredictStream, resetSlash, stopTTS],
+    [hasPendingHitlInterrupt, onPredictStream, resetSlash, stopTTS],
   );
 
   const {
@@ -2084,7 +2059,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       isUploadingAttachments ||
       isUpdatingInternalToolsConfig ||
       activeConversation?.isSending ||
-      (hasPendingHitlInterrupt && !hitlEditMode) ||
+      hasPendingHitlInterrupt ||
       isStreamingNow ||
       isActiveParticipantBroken,
     [
@@ -2095,7 +2070,6 @@ const ChatBox = forwardRef((props, boxRef) => {
       isUpdatingInternalToolsConfig,
       activeConversation?.isSending,
       hasPendingHitlInterrupt,
-      hitlEditMode,
       isStreamingNow,
       isActiveParticipantBroken,
     ],
@@ -2126,7 +2100,6 @@ const ChatBox = forwardRef((props, boxRef) => {
           onContinueMcpExecution={continueMcpExecution}
           onContinueTokenLimitExecution={onContinueTokenLimitExecution}
           onHitlResume={onHitlResume}
-          onHitlEditClick={onHitlEditClick}
           onEditCanvas={onEditCanvas}
           selectedCodeBlockInfo={selectedCodeBlockInfo}
           onSubmitEditedMessage={onSubmitEditedMessage}
@@ -2138,7 +2111,6 @@ const ChatBox = forwardRef((props, boxRef) => {
           questionItemRef={questionItemRef}
           onRemoveAttachment={onRemoveAttachment}
           hideContinueButton={isAgentsPage}
-          hideHitlActions={hitlEditMode}
           onOpenArtifactPreview={onOpenArtifactPreview}
           isSpeakingMode={isSpeakingMode}
           onAutoSpeak={handleAutoSpeak}
@@ -2164,18 +2136,7 @@ const ChatBox = forwardRef((props, boxRef) => {
             onPlay={handlePlay}
           />
         )}
-        <Box sx={hitlEditMode ? styles.inputWrapperHitl : styles.inputWrapper}>
-          {hitlEditMode && (
-            <Box sx={styles.hitlInfoBanner}>
-              <InfoIcon sx={styles.hitlInfoIcon} />
-              <Box
-                component="span"
-                sx={styles.hitlInfoText}
-              >
-                Enter your message to proceed.
-              </Box>
-            </Box>
-          )}
+        <Box sx={styles.inputWrapper}>
           {showRecommendationList && (
             <RecommendationList
               onSelectParticipant={onSelectParticipant}
@@ -2332,35 +2293,6 @@ const chatBoxStyles = () => ({
     flexDirection: 'column',
     padding: '0 0.5rem 0.5rem 0.5rem',
     gap: '0.5rem',
-  },
-  inputWrapperHitl: ({ palette }) => ({
-    width: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    padding: '0 0.5rem 0.5rem 0.5rem',
-    gap: '0.5rem',
-    borderRadius: '1rem',
-    border: `0.0625rem solid ${palette.background.userInputBorderDark}`,
-    boxShadow: `0 0 0 0.125rem ${palette.background.userInputBorderShadow}`,
-  }),
-  hitlInfoBanner: ({ palette }) => ({
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-    padding: '0.625rem 0.75rem',
-    color: palette.info.main,
-    borderRadius: '0.625rem',
-    background: palette.background.info,
-    border: `0.0625rem solid ${palette.info.main}`,
-  }),
-  hitlInfoIcon: {
-    width: '1rem',
-    height: '1rem',
-    flexShrink: 0,
-  },
-  hitlInfoText: {
-    fontSize: '0.8125rem',
-    lineHeight: '1.25rem',
   },
 });
 

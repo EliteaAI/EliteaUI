@@ -33,7 +33,6 @@ const ChatMessageWrapper = memo(props => {
     onContinueMcpExecution,
     onContinueTokenLimitExecution,
     onHitlResume,
-    onHitlEditClick,
     hideHitlActions,
     hideContinueButton,
     isSpeakingMode,
@@ -178,7 +177,6 @@ const ChatMessageWrapper = memo(props => {
       hitlInterrupt={hideHitlActions ? null : message.hitlInterrupt}
       hitlInterrupts={hideHitlActions ? null : message.hitlInterrupts}
       onHitlResume={!hideHitlActions && isLastMessage && onHitlResume ? onHitlResume : undefined}
-      onHitlEditClick={!hideHitlActions && isLastMessage && onHitlEditClick ? onHitlEditClick : undefined}
       hideContinueButton={hideContinueButton}
       // Swarm mode props
       isSwarmChild={message.isSwarmChild}
