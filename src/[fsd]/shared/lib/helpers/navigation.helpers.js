@@ -18,6 +18,7 @@ export const getListRouteByPageType = (pageType, fallbackRoute = null) => {
     MCPDetails: RouteDefinitions.MCPs,
     CredentialDetails: RouteDefinitions.Credentials,
     PipelineDetails: RouteDefinitions.Pipelines,
+    SkillDetails: RouteDefinitions.Skills,
     Chat: RouteDefinitions.Chat,
   };
 
