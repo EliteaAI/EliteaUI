@@ -119,6 +119,8 @@ const EditSkill = memo(() => {
         fullWidth
         forceShowLabel
         tabSX={{ paddingX: '24px' }}
+        tabsSX={styles.tabContainer}
+        leftTabbarSectionSX={styles.leftTabbarSection}
         tabs={[
           {
             label: data?.name || 'Skill',
@@ -197,6 +199,36 @@ EditSkill.displayName = 'EditSkill';
 
 /** @type {MuiSx} */
 const editSkillStyles = () => ({
+  tabContainer: {
+    '& .MuiTabs-indicator': {
+      display: 'none !important',
+    },
+    '& .MuiTab-root': {
+      width: 'calc(100% - 2.215rem)',
+      minWidth: 0,
+    },
+    '& .MuiTab-textColorPrimary': ({ palette }) => ({
+      color: palette.text.secondary,
+    }),
+    '& .Mui-selected': ({ palette }) => ({
+      pointerEvents: 'none',
+      color: `${palette.text.secondary} !important`,
+      minWidth: 0,
+      maxWidth: '100%',
+      width: '100%',
+      justifyContent: 'flex-start !important',
+      paddingLeft: '0rem !important',
+      paddingRight: '0rem !important',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      whiteSpace: 'nowrap',
+      display: 'block',
+    }),
+  },
+  leftTabbarSection: {
+    maxWidth: '33%',
+    width: 'fit-content',
+  },
   loadingContainer: {
     height: '100%',
     width: '100%',
