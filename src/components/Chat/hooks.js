@@ -658,7 +658,7 @@ export const useChatSocket = ({
 
           // Also handle the primary tool_run_id if not in thinking_steps
           t = msg.toolActions?.find(i => i.id === response_metadata?.tool_run_id);
-          if (t && t.status !== ToolActionStatus.complete) {
+          if (t && t.status !== ToolActionStatus.complete && t.status !== ToolActionStatus.actionRequired) {
             t.ended_at = message.created_at;
             t.status = ToolActionStatus.complete;
           }
@@ -883,7 +883,10 @@ export const useChatSocket = ({
             Object.assign(t, {
               message: undefined, // we clear status messages when the tool ends
               content: convertJsonToString(message?.content ?? ''),
-              status: ToolActionStatus.complete,
+              status:
+                t.status === ToolActionStatus.actionRequired
+                  ? ToolActionStatus.actionRequired
+                  : ToolActionStatus.complete,
               ended_at: message.response_metadata.timestamp_finish || message.created_at,
               created_at: message.response_metadata.timestamp_start || t.created_at,
             });
