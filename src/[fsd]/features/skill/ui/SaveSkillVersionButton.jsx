@@ -55,13 +55,13 @@ const SaveSkillVersionButton = memo(({ onSuccess, onChangeVersion }) => {
       return;
     }
 
-    const ok = await onCreateNewVersion(candidate);
-    if (ok) {
+    const created = await onCreateNewVersion(candidate);
+    if (created) {
       setShowInputVersion(false);
       setNewVersion('');
       onSuccess?.();
       setBlockNav(false);
-      setTimeout(() => onChangeVersion?.(candidate), 0);
+      setTimeout(() => onChangeVersion?.(created.id), 0);
     }
   }, [
     newVersion,

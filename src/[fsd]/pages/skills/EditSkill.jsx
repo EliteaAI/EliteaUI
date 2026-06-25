@@ -55,7 +55,7 @@ const EditSkill = memo(() => {
   const lgGridColumns = useMemo(() => (isFullScreenChat ? 12 : 6), [isFullScreenChat]);
 
   const { data, isFetching, isError, error } = useSkillDetailsQuery(
-    { projectId, skillId, versionName: version },
+    { projectId, skillId, versionId: version },
     { skip: !projectId || !skillId },
   );
 
@@ -69,10 +69,12 @@ const EditSkill = memo(() => {
     [skillId, data?.id, data?.version_details?.id, data?.version_details?.instructions, data?.instructions],
   );
 
-  const currentVersionName = useMemo(
-    () => version || data?.version_details?.name || data?.versions?.[0]?.name || LATEST_VERSION_NAME,
-    [data?.version_details?.name, data?.versions, version],
-  );
+  const currentVersionId = useMemo(() => {
+    if (data?.version_details?.id != null) return data.version_details.id;
+    const parsed = Number(version);
+    if (Number.isFinite(parsed)) return parsed;
+    return data?.versions?.[0]?.id;
+  }, [data?.version_details?.id, data?.versions, version]);
 
   const blockOptions = useMemo(() => ({ blockCondition: dirty }), [dirty]);
   useNavBlocker(blockOptions);
@@ -86,12 +88,12 @@ const EditSkill = memo(() => {
   }, [error, isError, shouldShowNotFoundPage, toastError]);
 
   const handleChangeVersion = useCallback(
-    nextVersionName => {
+    nextVersionId => {
       const base = `${RouteDefinitions.Skills}/${tab}/${skillId}`;
-      // Always carry the version name (including `base`). A version-less URL
+      // Always carry the version id (including the default). A version-less URL
       // resolves to the skill's default version on the backend, so when a
-      // non-base version is the default, omitting it makes `base` unreachable.
-      const pathname = nextVersionName ? `${base}/${encodeURIComponent(nextVersionName)}` : base;
+      // non-default version is selected, omitting it makes that version unreachable.
+      const pathname = nextVersionId ? `${base}/${nextVersionId}` : base;
       navigate(pathname);
     },
     [navigate, skillId, tab],
@@ -123,7 +125,7 @@ const EditSkill = memo(() => {
             tabBarItems: isFetching ? null : (
               <SkillTabBar
                 versions={data?.versions || []}
-                currentVersionName={currentVersionName}
+                currentVersionId={currentVersionId}
                 defaultVersionId={data?.meta?.default_version_id}
                 onChangeVersion={handleChangeVersion}
                 onSuccess={handleSuccess}
@@ -136,7 +138,7 @@ const EditSkill = memo(() => {
               <SkillControls
                 skillId={skillId}
                 skillName={data?.name}
-                currentVersionName={currentVersionName}
+                currentVersionId={currentVersionId}
                 onChangeVersion={handleChangeVersion}
               />
             ),
@@ -160,7 +162,7 @@ const EditSkill = memo(() => {
                     <ContentContainer height="100%">
                       <CreateSkillForm
                         viewMode={ViewMode.Owner}
-                        instructionsKey={`${skillId}:${currentVersionName}:${
+                        instructionsKey={`${skillId}:${currentVersionId}:${
                           (data?.version_details?.instructions ?? data?.instructions ?? '').length
                         }`}
                       />

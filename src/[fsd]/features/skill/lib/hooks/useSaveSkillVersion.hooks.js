@@ -17,7 +17,7 @@ const useSaveSkillVersion = () => {
   const onCreateNewVersion = useCallback(
     async name => {
       try {
-        await createVersion({
+        const created = await createVersion({
           projectId,
           skillId: values?.id,
           name,
@@ -27,10 +27,10 @@ const useSaveSkillVersion = () => {
 
         resetForm({ values });
         toastSuccess(`Version "${name}" created`);
-        return true;
+        return created;
       } catch (e) {
         toastError(buildErrorMessage(e));
-        return false;
+        return null;
       }
     },
     [createVersion, projectId, values, resetForm, toastSuccess, toastError],

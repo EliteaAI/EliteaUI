@@ -296,7 +296,7 @@ const DataRowAction = memo(props => {
       <SkillRowAction
         skillId={data?.id}
         skillName={data?.name}
-        versionName={data?.version_details?.name || data?.version?.name}
+        versionId={data?.version_details?.id || data?.version?.id}
       />
     );
   }

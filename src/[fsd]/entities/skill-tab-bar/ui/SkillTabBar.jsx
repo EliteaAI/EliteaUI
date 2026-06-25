@@ -12,59 +12,58 @@ import { timeFormatter } from '@/common/utils';
 import PinIcon from '@/components/Icons/PinIcon';
 
 const SkillTabBar = memo(props => {
-  const { versions = [], currentVersionName, defaultVersionId, onChangeVersion, onSuccess } = props;
+  const { versions = [], currentVersionId, defaultVersionId, onChangeVersion, onSuccess } = props;
 
   const styles = skillTabBarStyles();
 
-  // Name of the default version, to mark its option/value with the bolt (PinIcon).
+  // Id of the default version, to mark its option/value with the bolt (PinIcon).
   // Mirror the agent (ApplicationVersionSelect) + backend get_default_version():
   // when no explicit default is set, `base` is the implicit default.
-  const defaultVersionName = useMemo(() => {
-    if (defaultVersionId) return versions.find(v => v.id === defaultVersionId)?.name;
-    return LATEST_VERSION_NAME;
+  const effectiveDefaultId = useMemo(() => {
+    if (defaultVersionId) return defaultVersionId;
+    return versions.find(v => v.name === LATEST_VERSION_NAME)?.id;
   }, [versions, defaultVersionId]);
 
   const versionOptions = useMemo(() => {
-    const list = versions.length ? versions : [{ name: LATEST_VERSION_NAME }];
-    const sorted = [...list].sort((a, b) => {
-      if (a.name === defaultVersionName) return -1;
-      if (b.name === defaultVersionName) return 1;
+    const sorted = [...versions].sort((a, b) => {
+      if (a.id === effectiveDefaultId) return -1;
+      if (b.id === effectiveDefaultId) return 1;
       if (a.name === LATEST_VERSION_NAME) return 1;
       if (b.name === LATEST_VERSION_NAME) return -1;
       return new Date(b.created_at) - new Date(a.created_at);
     });
     return sorted.map(v => ({
-      value: v.name,
+      value: v.id,
       label: v.name,
       // Show "name - date" in the dropdown like agents (same TIME_FORMAT).
       ...(v.created_at ? { date: timeFormatter(v.created_at, TIME_FORMAT.DDMMYYYY) } : {}),
-      ...(v.name === defaultVersionName ? { icon: <PinIcon sx={{ fontSize: '1rem' }} /> } : {}),
+      ...(v.id === effectiveDefaultId ? { icon: <PinIcon sx={{ fontSize: '1rem' }} /> } : {}),
     }));
-  }, [versions, defaultVersionName]);
+  }, [versions, effectiveDefaultId]);
 
-  const selectedVersionName = useMemo(
-    () => currentVersionName || versions[0]?.name || LATEST_VERSION_NAME,
-    [currentVersionName, versions],
+  const selectedVersionId = useMemo(
+    () => currentVersionId ?? versions[0]?.id ?? '',
+    [currentVersionId, versions],
   );
 
   const handleVersionChange = useCallback(
     event => {
-      const nextName = event?.target?.value;
-      if (nextName && nextName !== selectedVersionName) {
-        onChangeVersion?.(nextName);
+      const nextId = event?.target?.value;
+      if (nextId && nextId !== selectedVersionId) {
+        onChangeVersion?.(nextId);
       }
     },
-    [onChangeVersion, selectedVersionName],
+    [onChangeVersion, selectedVersionId],
   );
 
   const renderVersionValue = useCallback(
     option => (
       <Box sx={styles.selectValueContainer}>
-        {option?.value === defaultVersionName && <PinIcon sx={{ fontSize: '1rem' }} />}
+        {option?.value === effectiveDefaultId && <PinIcon sx={{ fontSize: '1rem' }} />}
         <Typography variant="labelMedium">{option?.label}</Typography>
       </Box>
     ),
-    [defaultVersionName, styles.selectValueContainer],
+    [effectiveDefaultId, styles.selectValueContainer],
   );
 
   return (
@@ -75,7 +74,7 @@ const SkillTabBar = memo(props => {
           separateLabel
           label="VERSION:"
           options={versionOptions}
-          value={selectedVersionName}
+          value={selectedVersionId}
           onChange={handleVersionChange}
           customRenderValue={renderVersionValue}
           showOptionIcon

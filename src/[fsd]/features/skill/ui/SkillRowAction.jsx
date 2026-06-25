@@ -21,7 +21,7 @@ const SkillRowAction = memo(props => {
   const {
     skillId,
     skillName,
-    versionName,
+    versionId,
     deleteVersionOnly = false,
     navigateToListAfterDelete = false,
     onDeleted,
@@ -55,15 +55,15 @@ const SkillRowAction = memo(props => {
   const [deleteSkill] = useDeleteSkillMutation();
 
   const onExport = useCallback(() => {
-    doExport({ skillId, versionName, skillName });
-  }, [doExport, skillId, versionName, skillName]);
+    doExport({ skillId, versionId, skillName });
+  }, [doExport, skillId, versionId, skillName]);
 
   const onDelete = useCallback(async () => {
     try {
       const { error } = await deleteSkill({
         projectId,
         skillId,
-        versionName: deleteVersionOnly ? versionName : undefined,
+        versionId: deleteVersionOnly ? versionId : undefined,
       });
       if (error) {
         toastError(buildErrorMessage(error) || 'Failed to delete skill.');
@@ -81,7 +81,7 @@ const SkillRowAction = memo(props => {
     deleteSkill,
     projectId,
     skillId,
-    versionName,
+    versionId,
     deleteVersionOnly,
     toastError,
     toastSuccess,
