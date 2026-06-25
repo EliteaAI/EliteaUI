@@ -69,10 +69,12 @@ const EditSkill = memo(() => {
     [skillId, data?.id, data?.version_details?.id, data?.version_details?.instructions, data?.instructions],
   );
 
-  const currentVersionId = useMemo(
-    () => data?.version_details?.id ?? (version ? Number(version) : undefined) ?? data?.versions?.[0]?.id,
-    [data?.version_details?.id, data?.versions, version],
-  );
+  const currentVersionId = useMemo(() => {
+    if (data?.version_details?.id != null) return data.version_details.id;
+    const parsed = Number(version);
+    if (Number.isFinite(parsed)) return parsed;
+    return data?.versions?.[0]?.id;
+  }, [data?.version_details?.id, data?.versions, version]);
 
   const blockOptions = useMemo(() => ({ blockCondition: dirty }), [dirty]);
   useNavBlocker(blockOptions);

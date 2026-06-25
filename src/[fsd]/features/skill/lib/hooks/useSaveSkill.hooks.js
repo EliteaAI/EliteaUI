@@ -22,6 +22,14 @@ const useSaveSkill = () => {
     const instructions = values?.version_details?.instructions || '';
     const tags = normalizeTagsForSave(values?.version_details?.tags);
 
+    // Guard: without a version id we cannot address the viewed version. Bail
+    // instead of falling back to the version-less endpoint, which would write
+    // the content to the skill's default version (see comment below).
+    if (!selectedVersionId) {
+      toastError('Unable to determine the skill version to save. Please reload and try again.');
+      return false;
+    }
+
     try {
       // Update skill-level metadata, then the content of the version actually
       // being viewed, addressed by id. Do NOT route through the version-less
