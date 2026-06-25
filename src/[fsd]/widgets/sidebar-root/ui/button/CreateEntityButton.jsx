@@ -251,16 +251,23 @@ const CreateEntityButton = memo(props => {
     ],
   );
 
+  const getHasPermissionForDropdownItem = useCallback(
+    option => {
+      const permissions = CreateEntityConstants.CreationPermissions[option];
+      if (!permissions || !permissions.length) return true;
+      return permissions.some(permission => checkPermission(permission));
+    },
+    [checkPermission],
+  );
+
   const handleDropdownItemClick = useCallback(
     item => {
-      const permissions = CreateEntityConstants.CreationPermissions[item.option];
-      if (permissions?.length && !permissions.some(p => checkPermission(p))) {
-        return;
-      }
+      if (!getHasPermissionForDropdownItem(item.option)) return;
+
       setOpenMenu(false);
       handleCommand(item.option);
     },
-    [handleCommand, checkPermission],
+    [handleCommand, getHasPermissionForDropdownItem],
   );
 
   const handleClickAway = useCallback(() => {
@@ -336,21 +343,24 @@ const CreateEntityButton = memo(props => {
           sx={styles.popper}
         >
           <Paper sx={styles.dropdown}>
-            {CreateEntityConstants.DropdownItems.map(item => (
-              <Box
-                key={item.label}
-                sx={styles.dropdownItem(currentDropdownItem?.label === item.label)}
-                onClick={() => handleDropdownItemClick(item)}
-              >
-                {item.label}
-                {currentDropdownItem?.label === item.label && (
-                  <CheckIcon
-                    fill={theme.palette.text.secondary}
-                    sx={styles.checkIcon}
-                  />
-                )}
-              </Box>
-            ))}
+            {CreateEntityConstants.DropdownItems.map(item => {
+              const isDisabled = !getHasPermissionForDropdownItem(item.option);
+              return (
+                <Box
+                  key={item.label}
+                  sx={styles.dropdownItem(currentDropdownItem?.label === item.label, isDisabled)}
+                  onClick={() => handleDropdownItemClick(item)}
+                >
+                  {item.label}
+                  {currentDropdownItem?.label === item.label && (
+                    <CheckIcon
+                      fill={theme.palette.text.secondary}
+                      sx={styles.checkIcon}
+                    />
+                  )}
+                </Box>
+              );
+            })}
           </Paper>
         </Popper>
       </Box>
@@ -396,7 +406,7 @@ const createEntityButtonStyles = sideBarCollapsed => ({
     zIndex: 1300,
   },
   dropdown: ({ palette }) => ({
-    backgroundColor: palette.background.secondary,
+    background: palette.background.secondary,
     borderRadius: '0.5rem',
     border: `0.0625rem solid ${palette.border.lines}`,
     padding: '0.5rem 0',
@@ -406,21 +416,22 @@ const createEntityButtonStyles = sideBarCollapsed => ({
     marginLeft: sideBarCollapsed ? '0.25rem' : 0,
   }),
   dropdownItem:
-    isSelected =>
+    (isSelected, isDisabled) =>
     ({ palette, spacing }) => ({
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
       padding: spacing(1, 2),
-      cursor: 'pointer',
-      color: palette.text.secondary,
+      cursor: isDisabled ? 'not-allowed' : 'pointer',
+      color: isDisabled ? palette.text.default : palette.text.secondary,
       fontSize: '0.875rem',
-      '&:hover': {
+      '&:hover': !isDisabled && {
         backgroundColor: palette.action.hover,
       },
-      ...(isSelected && {
-        backgroundColor: palette.split.pressed,
-      }),
+      ...(isSelected &&
+        !isDisabled && {
+          backgroundColor: palette.split.pressed,
+        }),
     }),
   checkIcon: {
     width: '1rem',
