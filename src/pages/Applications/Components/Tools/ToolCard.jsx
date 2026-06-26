@@ -402,7 +402,10 @@ const ToolCard = memo(props => {
       placement="top"
     >
       <>
-        <Box sx={styles.cardContainer}>
+        <Box
+          data-testid="agent-toolkit-card"
+          sx={styles.cardContainer}
+        >
           <Box sx={styles.cardHeader}>
             <EntityIcon
               sx={styles.entityIcon}

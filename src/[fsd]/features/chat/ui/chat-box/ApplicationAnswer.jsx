@@ -463,6 +463,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
   return (
     <>
       <UserMessageContainer
+        data-testid="chat-message-item"
         sx={{ ...styles.userMessageContainer, ...swarmChildStyles }}
         ref={ref}
       >
@@ -591,7 +592,10 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
 
           {/* {exception && <AgentException exception={exception} title={!isApplicationParticipant ? 'LLM exception' : undefined} />} */}
           {!isEditing && shouldRenderAnswerBlock && (
-            <Answer sx={styles.answerBlock(messageId === speakingMessageId)}>
+            <Answer
+              data-testid="chat-answer-content"
+              sx={styles.answerBlock(messageId === speakingMessageId)}
+            >
               {canRenderContent && !isNullOrUndefined(answer) && !message_items?.length && (
                 <Markdown
                   interaction_uuid={interaction_uuid}

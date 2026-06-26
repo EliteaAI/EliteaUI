@@ -27,6 +27,7 @@ const BucketSearch = ({ collapsed = false, onExpand, onSearchActivate }) => {
         onClick={handleSearchClick}
         variant="elitea"
         color="secondary"
+        data-testid="artifacts-search-buckets-button"
         sx={{
           minWidth: '28px !important',
           width: '28px !important',

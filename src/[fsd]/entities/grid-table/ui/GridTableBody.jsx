@@ -3,11 +3,18 @@ import { memo } from 'react';
 import { Box } from '@mui/material';
 
 const GridTableBody = memo(props => {
-  const { children, minHeight = '20rem', sx = {} } = props;
+  const { children, minHeight = '20rem', sx = {}, 'data-testid': dataTestId } = props;
 
   const styles = gridTableBodyStyles(minHeight);
 
-  return <Box sx={[styles.body, sx]}>{children}</Box>;
+  return (
+    <Box
+      data-testid={dataTestId}
+      sx={[styles.body, sx]}
+    >
+      {children}
+    </Box>
+  );
 });
 
 GridTableBody.displayName = 'GridTableBody';

@@ -222,6 +222,7 @@ const UnifiedDropdown = memo(
                         fill={theme.palette.text.secondary}
                       />
                       <TextField
+                        data-testid="toolkit-search-input"
                         ref={searchRef}
                         size="small"
                         placeholder={searchPlaceholder}
@@ -299,6 +300,7 @@ const UnifiedDropdown = memo(
                               {' '}
                               {/* Span wrapper needed for disabled MenuItem tooltip */}
                               <MenuItem
+                                data-testid="toolkit-menu-item"
                                 disabled
                                 sx={itemStyles}
                                 onClick={handleItemClick(item)}
@@ -334,6 +336,7 @@ const UnifiedDropdown = memo(
                       // Regular enabled items
                       return (
                         <MenuItem
+                          data-testid="toolkit-menu-item"
                           key={item.key || item.id || item.value || item.label}
                           onClick={handleItemClick(item)}
                           sx={itemStyles}

@@ -113,6 +113,7 @@ const ApplicationTools = memo(props => {
 
   return (
     <BasicAccordion
+      data-testid="agent-toolkits-section"
       style={style}
       showMode={AccordionConstants.AccordionShowMode.LeftMode}
       accordionSX={styles.accordionStyles}

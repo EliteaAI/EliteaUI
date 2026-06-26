@@ -517,10 +517,13 @@ export default function ArtifactTable(props) {
               gridTemplateColumns={gridTemplateColumns}
             />
 
-            <GridTableBody>
+            <GridTableBody data-testid="artifacts-file-list">
               {paginatedRows.map(row => (
                 <GridTableRow
                   key={row.id}
+                  data-testid={
+                    row.type === ARTIFACT_TYPES.FOLDER ? 'artifacts-folder-row' : 'artifacts-file-row'
+                  }
                   row={row}
                   isSelected={rowSelectionModel.includes(row.id)}
                   isHovered={hoveredRowId === row.id}
