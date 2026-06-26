@@ -8,6 +8,7 @@ import { DEFAULT_ATTACHMENT_BUCKET } from '@/[fsd]/shared/lib/constants/internal
 import { useContextExecutionEntity } from '@/[fsd]/shared/lib/hooks';
 import { buildErrorMessage } from '@/common/utils';
 import { useUploadWithProgress } from '@/hooks/chat/useUploadWithProgress';
+import { useChatConfig } from '@/hooks/useChatConfig';
 import { getAttachmentContentType, getAttachmentType } from '@/utils/attachmentImageUtils';
 
 import { useSelectedProjectId } from '../useSelectedProject';
@@ -17,7 +18,10 @@ export default function useUploadAttachments() {
   const { toastError } = useToast();
   const selectedProjectId = useSelectedProjectId();
   const trackEvent = useTrackEvent();
-  const { uploadWithProgress, uploadProgress, isUploading } = useUploadWithProgress();
+  const { limits } = useChatConfig();
+  const { uploadWithProgress, uploadProgress, isUploading } = useUploadWithProgress(
+    limits.DEFAULT_MAX_FILE_SIZE,
+  );
 
   const [uploadingAttachments, setUploadingAttachments] = useState([]);
   const { contextExecutionEntity } = useContextExecutionEntity();

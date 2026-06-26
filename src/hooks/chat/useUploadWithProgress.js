@@ -3,13 +3,13 @@ import { useCallback, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
 import { normalizeFileExtension } from '@/[fsd]/entities/attachment/lib';
-import { DEV, VITE_DEV_TOKEN, VITE_SERVER_URL } from '@/common/constants';
+import { formatFileSize } from '@/common/attachmentValidationUtils';
+import { ATTACHMENT_LIMITS, DEV, VITE_DEV_TOKEN, VITE_SERVER_URL } from '@/common/constants';
 import { clearBaseUrlPrefix } from '@/common/utils';
 
 const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB in bytes
-const MAX_FILE_SIZE = 300 * 1024 * 1024; // 300MB in bytes
 
-export const useUploadWithProgress = () => {
+export const useUploadWithProgress = (maxFileSize = ATTACHMENT_LIMITS.DEFAULT_MAX_FILE_SIZE) => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -153,8 +153,8 @@ export const useUploadWithProgress = () => {
         for (let file of attachments) {
           file = normalizeFileExtension(file);
 
-          if (file.size > MAX_FILE_SIZE)
-            throw new Error(`File "${file.name}" exceeds maximum size limit of 300MB`);
+          if (file.size > maxFileSize)
+            throw new Error(`File "${file.name}" exceeds maximum size of ${formatFileSize(maxFileSize)}`);
 
           if (file.size <= CHUNK_SIZE) {
             const result = await uploadSmallFile({
@@ -220,7 +220,7 @@ export const useUploadWithProgress = () => {
         throw error;
       }
     },
-    [createFileChunks, uploadChunk, uploadSmallFile],
+    [createFileChunks, uploadChunk, uploadSmallFile, maxFileSize],
   );
 
   const resetProgress = useCallback(() => {
@@ -234,6 +234,6 @@ export const useUploadWithProgress = () => {
     isUploading,
     resetProgress,
     chunkSize: CHUNK_SIZE,
-    maxFileSize: MAX_FILE_SIZE,
+    maxFileSize,
   };
 };

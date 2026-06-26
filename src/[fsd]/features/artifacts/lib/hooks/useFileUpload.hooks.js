@@ -7,6 +7,8 @@ import { PathValidationHelpers } from '@/[fsd]/features/artifacts/lib/helpers';
 import { FORBIDDEN_FILENAME_HINT } from '@/[fsd]/features/artifacts/lib/helpers/pathValidation.helpers';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
 import { artifactsApi, useArtifactListQuery } from '@/api/artifacts';
+import { formatFileSize } from '@/common/attachmentValidationUtils';
+import { useChatConfig } from '@/hooks/useChatConfig';
 import useToast from '@/hooks/useToast';
 import { setSkippedFiles, uploadFile } from '@/slices/upload';
 
@@ -31,6 +33,11 @@ export const useFileUpload = props => {
   const dispatch = useDispatch();
   const { toastError } = useToast();
   const trackEvent = useTrackEvent();
+
+  // Per-file size limit, sourced from server config (chat_max_file_upload_size_mb,
+  // default 150 MB) — shared with the chat attachment path.
+  const { limits } = useChatConfig();
+  const maxFileSize = limits.DEFAULT_MAX_FILE_SIZE;
 
   // Use the same cached RTK Query data that ArtifactTable already fetches
   const selectedBucketName = queryParams.selectedBucket?.name;
@@ -74,8 +81,20 @@ export const useFileUpload = props => {
       }
 
       const filesArray = Array.isArray(files) ? files : Array.from(files);
-      const validFileNames = filesArray.filter(file => !PathValidationHelpers.validateFileName(file.name));
-      const invalidFileNames = filesArray
+
+      // Reject files over the server-configured per-file size limit.
+      const oversizedFiles = filesArray.filter(file => file.size > maxFileSize).map(file => file.name);
+      if (oversizedFiles.length > 0) {
+        toastError(
+          `The following files exceed the maximum size of ${formatFileSize(maxFileSize)} and were skipped: ${oversizedFiles.join(', ')}`,
+        );
+      }
+      const sizeValidFiles = filesArray.filter(file => file.size <= maxFileSize);
+
+      const validFileNames = sizeValidFiles.filter(
+        file => !PathValidationHelpers.validateFileName(file.name),
+      );
+      const invalidFileNames = sizeValidFiles
         .filter(file => PathValidationHelpers.validateFileName(file.name))
         .map(file => file.name);
 
@@ -86,6 +105,9 @@ export const useFileUpload = props => {
       }
 
       if (validFileNames.length === 0) {
+        // All files were filtered out. If none had restricted names, the size
+        // check above already surfaced the reason — avoid a misleading toast.
+        if (invalidFileNames.length === 0) return;
         // No upload will happen, so UploadingStatus won't fire — show the warning immediately
         toastError(
           `Upload blocked: The following files contain restricted characters: ${invalidFileNames.join(', ')}. ${FORBIDDEN_FILENAME_HINT}`,
@@ -156,6 +178,7 @@ export const useFileUpload = props => {
       toastError,
       trackEvent,
       handlePrefixChange,
+      maxFileSize,
     ],
   );
 
