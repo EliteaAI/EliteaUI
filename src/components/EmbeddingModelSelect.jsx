@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 
@@ -26,6 +26,7 @@ const EmbeddingModelSelect = memo(props => {
     renderValue,
     disabled,
   } = props;
+  const hasAutoSelectedRef = useRef(false);
 
   const { personal_project_id } = useSelector(state => state.user);
   const selectedProjectId = useSelectedProjectId();
@@ -149,23 +150,40 @@ const EmbeddingModelSelect = memo(props => {
     ];
   }, [newModelsMenuData, onRefresh]);
 
-  const hasModelsOptions = useMemo(() => newModelsMenuData.length > 0, [newModelsMenuData]);
-
   const hasFetchedData = models.length > 0;
   const selectedOption = useMemo(
     () => newModelsMenuData.find(opt => opt.value === value),
     [newModelsMenuData, value],
   );
-  const showMismatchFooter = Boolean(value && !selectedOption && hasFetchedData);
+  const canAutoSwitch = value && !selectedOption && newModelsMenuData.length > 0;
+  const showMismatchFooter = Boolean(value && !selectedOption && hasFetchedData && !canAutoSwitch);
+  const suppressModelError = !hasFetchedData || canAutoSwitch || !!selectedOption;
+
+  useEffect(() => {
+    if (!hasFetchedData || selectedOption || hasAutoSelectedRef.current) return;
+    if (!value) return;
+
+    const fallback =
+      newModelsMenuData.find(opt => opt.value === projectDefaultEmbeddingModel) || newModelsMenuData[0];
+    if (fallback) {
+      hasAutoSelectedRef.current = true;
+      onSelectModel?.(fallback.value, { isAutoSelect: true });
+    }
+  }, [hasFetchedData, selectedOption, value, newModelsMenuData, projectDefaultEmbeddingModel, onSelectModel]);
+
+  useEffect(() => {
+    hasAutoSelectedRef.current = false;
+  }, [value]);
 
   const customRenderSelectValue = useCallback(
     foundOption => {
       if (renderValue) return renderValue(foundOption);
+      if (!foundOption) return null;
 
       return (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          {foundOption?.icon}
-          <Typography variant="labelMedium">{foundOption?.label}</Typography>
+          {foundOption.icon}
+          <Typography variant="labelMedium">{foundOption.label}</Typography>
         </Box>
       );
     },
@@ -181,14 +199,14 @@ const EmbeddingModelSelect = memo(props => {
           required={required}
           label={label}
           infoIconDescription={description}
-          value={hasModelsOptions ? defaultValueForSelect : ''}
+          value={defaultValueForSelect}
           optionGroups={optionGroups}
           options={[]}
           showOptionIcon
           onValueChange={onSelectModel}
           customRenderValue={customRenderSelectValue}
-          error={error || showMismatchFooter}
-          helperText={helperText}
+          error={suppressModelError ? false : error || showMismatchFooter}
+          helperText={suppressModelError ? '' : helperText}
           showEmptyPlaceholder={false}
           isListFetching={isFetching}
         />
