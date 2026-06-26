@@ -44,16 +44,19 @@ const CredentialsControls = memo(props => {
 
   const [deleteCredential, { isLoading: isDeleting }] = useDeleteConfigurationMutation();
 
-  const isVectorStorage = credentialDetails?.section === 'vectorstorage';
-  const { data: vectorStorageConfigs } = useGetConfigurationsBySectionQuery(
+  const section = credentialDetails?.section;
+  const isProtectedSection = section === 'vectorstorage' || section === 'embedding';
+  const { data: sectionConfigs } = useGetConfigurationsBySectionQuery(
     {
       projectId: credentialDetails?.project_id,
-      section: 'vectorstorage',
+      section,
       pageSize: 2,
+      params: { include_shared: true, shared_limit: 2 },
     },
-    { skip: !isVectorStorage || !credentialDetails?.project_id },
+    { skip: !isProtectedSection || !credentialDetails?.project_id },
   );
-  const isLastVectorStorage = isVectorStorage && (vectorStorageConfigs?.total ?? 0) <= 1;
+  const totalAvailable = (sectionConfigs?.total ?? 0) + (sectionConfigs?.shared?.total ?? 0);
+  const isLastInSection = isProtectedSection && totalAvailable <= 1;
 
   const { pinMenuItem } = usePinMenu({
     isPinned,
@@ -140,9 +143,9 @@ const CredentialsControls = memo(props => {
           isDeleting ||
           !credentialDetails?.id ||
           !checkPermission(PERMISSIONS.configuration.delete) ||
-          isLastVectorStorage,
-        tooltip: isLastVectorStorage
-          ? 'Cannot delete the only pgVector. At least one pgVector configuration is required for the project.'
+          isLastInSection,
+        tooltip: isLastInSection
+          ? `Cannot delete the only ${section === 'vectorstorage' ? 'pgVector' : 'embedding model'} configuration. At least one is required for the project.`
           : undefined,
       },
     ],
@@ -156,7 +159,8 @@ const CredentialsControls = memo(props => {
       credentialDetails?.uuid,
       formik.values?.settings?.label,
       isDeleting,
-      isLastVectorStorage,
+      isLastInSection,
+      section,
       onDelete,
       pinMenuItem,
       styles,

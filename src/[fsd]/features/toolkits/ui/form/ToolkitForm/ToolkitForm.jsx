@@ -57,7 +57,7 @@ export const ToolkitForm = memo(props => {
   const hasSetViewManually = useRef(false);
   const [view, setView] = useState(ToolkitViewOptions.Form);
   const { configurationsAsSchema } = useGetCurrentConfigurationAsSchemas();
-  const { values, initialValues, setFieldValue } = useFormikContext();
+  const { values, initialValues, setFieldValue, resetForm } = useFormikContext();
   const { toolkitType } = useParams();
   const [searchParams] = useSearchParams();
   const [showValidation, setShowValidation] = useState(false);
@@ -260,7 +260,7 @@ export const ToolkitForm = memo(props => {
   }, [hasErrors, triggerValidation, onValidationStateChange]);
 
   const editField = useCallback(
-    async (field, value, replace) => {
+    async (field, value, replace, options) => {
       if (field === 'name' || field === 'description' || toolType === 'custom') {
         setFieldValue(field, value);
       }
@@ -281,9 +281,16 @@ export const ToolkitForm = memo(props => {
         delete next[fieldKey];
         return next;
       });
-      onChangeToolDetail(prevState => updateObjectByPath(prevState, field, value, replace));
+      onChangeToolDetail(prevState => updateObjectByPath(prevState, field, value, replace), options);
+
+      // When auto-selecting (e.g., embedding model fallback), update Formik initial values
+      // so the form doesn't appear dirty from the auto-correction
+      if (options?.isAutoSelect) {
+        const updatedValues = updateObjectByPath({ ...currentValuesRef.current }, field, value);
+        resetForm({ values: updatedValues });
+      }
     },
-    [onChangeToolDetail, setFieldValue, toolType, values?.settings?.url],
+    [onChangeToolDetail, setFieldValue, resetForm, toolType, values?.settings?.url],
   );
 
   const isValidSchema = useMemo(

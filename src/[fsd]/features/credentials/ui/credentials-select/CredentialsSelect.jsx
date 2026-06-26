@@ -333,10 +333,13 @@ const CredentialsSelect = memo(
 
       if (isDefaultAutoSelected && !hasAutoSelectedRef.current) {
         hasAutoSelectedRef.current = true;
-        onSelectConfiguration?.({
-          private: selectedOption.private,
-          elitea_title: selectedOption.elitea_title,
-        });
+        onSelectConfiguration?.(
+          {
+            private: selectedOption.private,
+            elitea_title: selectedOption.elitea_title,
+          },
+          { isAutoSelect: true },
+        );
       }
     }, [hasFetchedData, selectedOption, value, onSelectConfiguration, section, hasAutoSelectedRef]);
 

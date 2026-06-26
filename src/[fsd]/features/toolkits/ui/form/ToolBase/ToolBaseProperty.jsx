@@ -497,7 +497,9 @@ const ToolBaseProperty = memo(props => {
           isCreationAllowed={section !== 'vectorstorage'}
           label={label}
           description={v.description}
-          onSelectConfiguration={value => editField(buildEditFieldPath(k), value)}
+          onSelectConfiguration={(value, options) =>
+            editField(buildEditFieldPath(k), value, undefined, options)
+          }
           onReload={onCredentialReload}
           value={settings[k]}
           configurations={v.options}
@@ -529,7 +531,7 @@ const ToolBaseProperty = memo(props => {
         <EmbeddingModelSelect
           showBorder
           label={label}
-          onSelectModel={value => editField(buildEditFieldPath(k), value)}
+          onSelectModel={(value, options) => editField(buildEditFieldPath(k), value, undefined, options)}
           value={settings[k]}
           projectId={specifiedProjectId}
           disabled={disableConfigFields || disabled}

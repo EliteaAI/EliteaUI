@@ -30,9 +30,11 @@ const ConfigurationTab = memo(props => {
   useShowRunHistoryFromUrl({ setShowHistory });
 
   const onChangeToolDetail = useCallback(
-    (...args) => {
-      setIsToolDirty(!!args[0]);
-      setEditToolDetail(args[0]);
+    (updater, options) => {
+      if (!options?.isAutoSelect) {
+        setIsToolDirty(!!updater);
+      }
+      setEditToolDetail(updater);
     },
     [setEditToolDetail, setIsToolDirty],
   );
