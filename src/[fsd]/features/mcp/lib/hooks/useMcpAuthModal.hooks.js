@@ -115,27 +115,33 @@ export const useMcpAuthModal = (options = {}) => {
    * Handler for when MCP auth is required.
    * Pass this to useMcpAuthCheck or useToolkitChat's onMcpAuthRequired callback.
    */
-  const handleMcpAuthRequired = useCallback(message => {
-    const metadata = extractMcpAuthMetadata(message);
-    setMcpAuthMetadata(metadata);
-    const serverUrl = message?.response_metadata?.server_url || '';
-    setRuntimeServerUrl(serverUrl);
-    // Determine the correct token storage key so the backend can find it.
-    // Priority:
-    // 1. Composite "{configUuid}:{oauthEndpoint}" when configuration_uuid is present
-    //    (e.g. SharePoint with credential-scoped isolation).
-    // 2. Plain oauthEndpoint when it differs from server_url
-    //    (e.g. SharePoint without configUuid: site_url ≠ azure AD endpoint).
-    // 3. Empty string — falls back to serverUrl (regular MCP where server_url = oauth endpoint).
-    const configUuid = metadata?.configurationUuid;
-    const oauthEndpoint = metadata?.authServers?.[0];
-    if (configUuid && oauthEndpoint) {
-      setRuntimeTokenStorageKey(`${configUuid}:${oauthEndpoint}`);
-    } else if (oauthEndpoint && oauthEndpoint !== serverUrl) {
-      setRuntimeTokenStorageKey(oauthEndpoint);
-    }
-    setShowModal(true);
-  }, []);
+  const handleMcpAuthRequired = useCallback(
+    message => {
+      const metadata = extractMcpAuthMetadata(message);
+      setMcpAuthMetadata(metadata);
+      const serverUrl = message?.response_metadata?.server_url || '';
+      setRuntimeServerUrl(serverUrl);
+      // Determine the correct token storage key so the backend can find it.
+      // Priority:
+      // 1. Composite "{configUuid}:{oauthEndpoint}" when configuration_uuid is present
+      //    (e.g. SharePoint with credential-scoped isolation).
+      // 2. Plain oauthEndpoint when it differs from server_url AND we are NOT in a standard
+      //    MCP context (e.g. SharePoint without configUuid: site_url ≠ azure AD endpoint).
+      //    For standard MCP toolkits (type 'mcp' or pre-built mcp_*), the backend always
+      //    looks up tokens by server_url, so the override must not apply.
+      // 3. Empty string — falls back to serverUrl (regular MCP where server_url = oauth endpoint).
+      const configUuid = metadata?.configurationUuid;
+      const oauthEndpoint = metadata?.authServers?.[0];
+      const isMcpToolkitType = toolkitType === 'mcp' || isPrebuildMcp;
+      if (configUuid && oauthEndpoint) {
+        setRuntimeTokenStorageKey(`${configUuid}:${oauthEndpoint}`);
+      } else if (!isMcpToolkitType && oauthEndpoint && oauthEndpoint !== serverUrl) {
+        setRuntimeTokenStorageKey(oauthEndpoint);
+      }
+      setShowModal(true);
+    },
+    [toolkitType, isPrebuildMcp],
+  );
 
   /**
    * Handler for when the modal closes (either success or cancel).
