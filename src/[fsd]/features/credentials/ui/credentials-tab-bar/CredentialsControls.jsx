@@ -10,7 +10,7 @@ import { CredentialNameHelpers } from '@/[fsd]/features/credentials/lib/helpers'
 import { Controls } from '@/[fsd]/shared/ui';
 import { PinEntityType } from '@/[fsd]/widgets/pin-toggler/lib/constants';
 import { usePin, usePinMenu } from '@/[fsd]/widgets/pin-toggler/lib/hooks';
-import { TAG_MODELS, useDeleteConfigurationMutation } from '@/api';
+import { TAG_MODELS, useDeleteConfigurationMutation, useGetConfigurationsBySectionQuery } from '@/api';
 import { eliteaApi } from '@/api/eliteaApi';
 import { PERMISSIONS } from '@/common/constants';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
@@ -43,6 +43,17 @@ const CredentialsControls = memo(props => {
   });
 
   const [deleteCredential, { isLoading: isDeleting }] = useDeleteConfigurationMutation();
+
+  const isVectorStorage = credentialDetails?.section === 'vectorstorage';
+  const { data: vectorStorageConfigs } = useGetConfigurationsBySectionQuery(
+    {
+      projectId: credentialDetails?.project_id,
+      section: 'vectorstorage',
+      pageSize: 2,
+    },
+    { skip: !isVectorStorage || !credentialDetails?.project_id },
+  );
+  const isLastVectorStorage = isVectorStorage && (vectorStorageConfigs?.total ?? 0) <= 1;
 
   const { pinMenuItem } = usePinMenu({
     isPinned,
@@ -125,7 +136,14 @@ const CredentialsControls = memo(props => {
           credentialDetails?.elitea_title ||
           CredentialNameHelpers.extraCredentialName(credentialDetails?.name || ''),
         shouldRequestInputName: true,
-        disabled: isDeleting || !credentialDetails?.id || !checkPermission(PERMISSIONS.configuration.delete),
+        disabled:
+          isDeleting ||
+          !credentialDetails?.id ||
+          !checkPermission(PERMISSIONS.configuration.delete) ||
+          isLastVectorStorage,
+        tooltip: isLastVectorStorage
+          ? 'Cannot delete the only pgVector. At least one pgVector configuration is required for the project.'
+          : undefined,
       },
     ],
     [
@@ -138,6 +156,7 @@ const CredentialsControls = memo(props => {
       credentialDetails?.uuid,
       formik.values?.settings?.label,
       isDeleting,
+      isLastVectorStorage,
       onDelete,
       pinMenuItem,
       styles,
