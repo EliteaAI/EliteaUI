@@ -2,8 +2,8 @@ import { memo, useCallback, useState } from 'react';
 
 import { useNavigate } from 'react-router-dom';
 
-import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import { GenerateEntityModal } from '@/[fsd]/entities/generate-entity-with-ai';
+import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import { useLazySkillDetailsQuery, useUpdateSkillRelationMutation } from '@/[fsd]/features/skill/api';
 import { generateLLMSettings } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
 import {
@@ -16,6 +16,7 @@ import {
 } from '@/api';
 import { filterEmptyStrings } from '@/common/applicationUtils';
 import { PrivateApplicationTabs, SearchParams, ViewMode } from '@/common/constants';
+import { contextResolver } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import RouteDefinitions from '@/routes';
 
@@ -214,7 +215,7 @@ const GenerateAgentModal = memo(props => {
           {
             name: LATEST_VERSION_NAME,
             instructions: draftData.instructions || '',
-            variables: [],
+            variables: contextResolver(draftData.instructions).map(name => ({ name, value: '' })),
             tools: [],
             tags: [],
             llm_settings: generateLLMSettings(defaultModel, {}, { includeModelInfo: true }),
