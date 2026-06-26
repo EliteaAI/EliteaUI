@@ -674,7 +674,10 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                   )}
 
                   {normalAttachments.length > 0 && (
-                    <Box sx={styles.normalAttachmentsRow}>
+                    <Box
+                      sx={styles.normalAttachmentsRow}
+                      data-testid="chat-artifact-file-list"
+                    >
                       {normalAttachments.map(item => (
                         <NormalAttachment
                           preview={!!onOpenArtifactPreview}

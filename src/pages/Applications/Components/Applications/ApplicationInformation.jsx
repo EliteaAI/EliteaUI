@@ -190,6 +190,7 @@ const ApplicationInformation = memo(props => {
   return (
     <>
       <BasicAccordion
+        data-testid="agent-information-section"
         style={style}
         showMode={AccordionConstants.AccordionShowMode.LeftMode}
         accordionSX={styles.accordion}
