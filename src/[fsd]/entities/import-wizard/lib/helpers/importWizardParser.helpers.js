@@ -131,27 +131,23 @@ const buildToolsFromNestedPipelines = frontmatter =>
 // Reconstruct attached skills from an agent's MD frontmatter so import recreates and
 // re-attaches them, mirroring the JSON export shape: a top-level skills entity list
 // plus per-version { import_uuid, version_name } refs the backend uses to re-attach.
-// Returns empty arrays for skill-less agents (frontmatter has no `skills`).
+// Returns empty arrays for skill-less agents.
 const buildSkillsFromFrontmatter = frontmatter => {
-  const skillsByName = new Map();
-  const skillRefs = [];
+  const skills = (frontmatter.skills || [])
+    .filter(block => block?.name)
+    .map(block => ({
+      import_uuid: uuidv4(),
+      name: block.name,
+      description: block.description || '',
+      versions: [{ name: block.version || 'base', instructions: block.instructions || '' }],
+    }));
 
-  (frontmatter.skills || []).forEach(block => {
-    const name = block?.name;
-    if (!name) return;
-    // Skills default to their 'base' version (matches the backend skill version default).
-    const versionName = block.version || 'base';
-    let skill = skillsByName.get(name);
-    if (!skill) {
-      skill = { import_uuid: uuidv4(), name, description: block.description || '', versions: [] };
-      skillsByName.set(name, skill);
-    }
-    if (!skill.versions.some(v => v.name === versionName))
-      skill.versions.push({ name: versionName, instructions: block.instructions || '' });
-    skillRefs.push({ import_uuid: skill.import_uuid, version_name: versionName });
-  });
+  const skillRefs = skills.map(skill => ({
+    import_uuid: skill.import_uuid,
+    version_name: skill.versions[0].name,
+  }));
 
-  return { skills: [...skillsByName.values()], skillRefs };
+  return { skills, skillRefs };
 };
 
 //   Always generate import_uuid for linking
