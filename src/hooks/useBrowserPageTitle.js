@@ -20,6 +20,8 @@ function useBrowserPageTitle() {
         return `Chat: ${name || params.conversationId} - ${projectName}`;
       }
       return `Chat - ${projectName}`;
+    } else if (location.pathname.startsWith('/agents-hub')) {
+      return `Agent HUB - ${projectName}`;
     } else if (location.pathname.startsWith('/agents')) {
       if (params.agentId) {
         return `Agent: ${name || params.agentId} - ${projectName}`;
@@ -79,6 +81,22 @@ function useBrowserPageTitle() {
       return `User settings - ${projectName}`;
     } else if (location.pathname.startsWith('/notification-center')) {
       return `Notifications - ${projectName}`;
+    } else if (location.pathname.startsWith('/skills')) {
+      if (params.skillId) {
+        return `Skill: ${name || params.skillId} - ${projectName}`;
+      } else if (params.tab) {
+        return `Skills: ${params.tab} - ${projectName}`;
+      }
+      return `Skills - ${projectName}`;
+    } else if (location.pathname.startsWith('/apps')) {
+      if (params.appId) {
+        return `Application: ${name || params.appId} - ${projectName}`;
+      } else if (params.tab) {
+        return `Applications: ${params.tab} - ${projectName}`;
+      }
+      return `Applications - ${projectName}`;
+    } else if (location.pathname.startsWith('/help-center')) {
+      return `Help Center - ${projectName}`;
     } else {
       return projectName;
     }
@@ -90,6 +108,8 @@ function useBrowserPageTitle() {
     params.toolkitId,
     params.mcpId,
     params.credential_uid,
+    params.skillId,
+    params.appId,
     projectName,
     name,
   ]);

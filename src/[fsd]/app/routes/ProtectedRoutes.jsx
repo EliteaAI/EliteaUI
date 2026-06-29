@@ -2,7 +2,7 @@ import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 
 import ReactGA from 'react-ga4';
 import { useDispatch, useSelector } from 'react-redux';
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom';
 
 import IndexRoute from '@/[fsd]/app/routes/IndexRoute';
 import IntegrationGuard from '@/[fsd]/app/routes/IntegrationGuard';
@@ -173,9 +173,30 @@ const ProtectedRoutes = () => {
 
       /* skills — hidden for public projects */
       { path: RouteDefinitions.Skills, element: <SkillsGuard>{getIndexElement(SkillsTabs[0])}</SkillsGuard> },
-      { path: RouteDefinitions.CreateSkill, element: <SkillsGuard><CreateSkill /></SkillsGuard> },
-      { path: RouteDefinitions.SkillsWithTab, element: <SkillsGuard><Skills /></SkillsGuard> },
-      { path: RouteDefinitions.SkillsDetail, element: <SkillsGuard><EditSkill /></SkillsGuard> },
+      {
+        path: RouteDefinitions.CreateSkill,
+        element: (
+          <SkillsGuard>
+            <CreateSkill />
+          </SkillsGuard>
+        ),
+      },
+      {
+        path: RouteDefinitions.SkillsWithTab,
+        element: (
+          <SkillsGuard>
+            <Skills />
+          </SkillsGuard>
+        ),
+      },
+      {
+        path: RouteDefinitions.SkillsDetail,
+        element: (
+          <SkillsGuard>
+            <EditSkill />
+          </SkillsGuard>
+        ),
+      },
 
       /* pipelines */
       { path: RouteDefinitions.Pipelines, element: getIndexElement(ApplicationsTabs[0]) },
@@ -236,10 +257,16 @@ const ProtectedRoutes = () => {
   );
 
   return (
-    <>
-      <PageTitleSetter />
-      <Suspense fallback={<LoadingPage />}>
-        <Routes>
+    <Suspense fallback={<LoadingPage />}>
+      <Routes>
+        <Route
+          element={
+            <>
+              <PageTitleSetter />
+              <Outlet />
+            </>
+          }
+        >
           <Route
             index
             element={<IndexRoute />}
@@ -361,9 +388,9 @@ const ProtectedRoutes = () => {
             path="*"
             element={<Page404 />}
           />
-        </Routes>
-      </Suspense>
-    </>
+        </Route>
+      </Routes>
+    </Suspense>
   );
 };
 
