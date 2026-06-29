@@ -3,7 +3,6 @@ import { forwardRef, useCallback, useImperativeHandle, useState } from 'react';
 import { useFormikContext } from 'formik';
 
 import { Button } from '@/[fsd]/shared/ui';
-
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import useSaveNewVersion from '@/hooks/application/useSaveNewVersion';
 import useToast from '@/hooks/useToast';
@@ -50,6 +49,7 @@ const SaveNewVersionButton = forwardRef((props, ref) => {
       ...version_details,
       id: undefined,
     },
+    sourceVersionId: version_details?.id,
     webhook_secret,
   });
 
