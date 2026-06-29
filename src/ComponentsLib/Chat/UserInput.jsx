@@ -336,6 +336,7 @@ const UserInput = forwardRef((props, ref) => {
               </Typography>
             )}
             <TextField
+              data-testid="chat-input"
               value={inputContent}
               fullWidth
               id="standard-multiline-static"

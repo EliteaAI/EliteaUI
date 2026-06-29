@@ -87,6 +87,7 @@ const UserMessage = React.forwardRef((props, ref) => {
 
   return (
     <UserMessageContainer
+      data-testid="chat-message-item"
       sx={verticalMode ? styles.containerVertical : styles.containerHorizontal}
       ref={ref}
     >

@@ -144,6 +144,8 @@ const NormalAttachment = ({
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
         sx={[styles.mainContainer, sx]}
+        data-testid="chat-artifact-file-card"
+        data-name={attachmentName}
       >
         <Box
           width="1rem"

@@ -202,7 +202,10 @@ const ChatMessageList = memo(props => {
 
   return (
     <ScrollableContainer ref={listRef}>
-      <MessageList sx={sx}>
+      <MessageList
+        data-testid="chat-message-list"
+        sx={sx}
+      >
         {/* Loading older messages skeleton */}
         {isLoadingMore && (
           <Box sx={styles.loadingMoreContainer}>

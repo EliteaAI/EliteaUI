@@ -36,6 +36,7 @@ const GridTableRow = memo(props => {
     renderCell,
     rowHeight,
     checkboxCellSx,
+    'data-testid': dataTestId,
   } = props;
 
   const styles = gridTableRowStyles(isSelected, isHovered, gridTemplateColumns, showCheckbox, rowHeight);
@@ -52,6 +53,7 @@ const GridTableRow = memo(props => {
 
   return (
     <Box
+      data-testid={dataTestId}
       sx={styles.row}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}

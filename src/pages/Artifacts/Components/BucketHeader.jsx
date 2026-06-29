@@ -40,7 +40,12 @@ const BucketHeader = memo(props => {
         <Box sx={styles.headerActions}>
           {!collapsed && (
             <>
-              <Typography variant="subtitle">Buckets</Typography>
+              <Typography
+                data-testid="artifacts-buckets-heading"
+                variant="subtitle"
+              >
+                Buckets
+              </Typography>
               <Tooltip
                 title="Create bucket"
                 placement="top"
@@ -51,6 +56,7 @@ const BucketHeader = memo(props => {
                     variant="elitea"
                     color="secondary"
                     sx={styles.createBucketButton}
+                    data-testid="artifacts-create-bucket-button"
                   >
                     <NewFolder
                       sx={styles.newFolderIcon}

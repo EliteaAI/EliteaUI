@@ -78,7 +78,10 @@ const ArtifactTableToolbar = memo(props => {
 
       {/* Right side: Search and action buttons */}
       <Box sx={styles.rightSection}>
-        <Box sx={styles.searchWrapper}>
+        <Box
+          sx={styles.searchWrapper}
+          data-testid="artifacts-file-search-input"
+        >
           <SimpleSearchBar
             searchQuery={searchQuery}
             onSearchChange={onSearchChange}
@@ -109,6 +112,7 @@ const ArtifactTableToolbar = memo(props => {
               color="secondary"
               onClick={handleUploadClick}
               data-tour={ARTIFACT_TOUR_TARGET_IDS.uploadButton}
+              data-testid="artifacts-upload-files-button"
             >
               <FileUploadIcon sx={styles.actionIcon} />
             </IconButton>
@@ -127,6 +131,7 @@ const ArtifactTableToolbar = memo(props => {
               color="secondary"
               onClick={onDownloadFiles}
               disabled={!rowSelectionModel.length}
+              data-testid="artifacts-download-files-button"
             >
               <DownloadIcon sx={styles.actionIcon} />
             </IconButton>

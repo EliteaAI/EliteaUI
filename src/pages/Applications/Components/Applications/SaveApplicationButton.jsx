@@ -3,10 +3,9 @@ import { useCallback, useMemo } from 'react';
 import { useFormikContext } from 'formik';
 import { useSelector } from 'react-redux';
 
-import { Button } from '@/[fsd]/shared/ui';
-
 import { conversationStartersHelpers } from '@/[fsd]/features/agent/lib/helpers';
 import { useFormDirtyExcluding } from '@/[fsd]/shared/lib/hooks';
+import { Button } from '@/[fsd]/shared/ui';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import useSaveVersion from '@/hooks/application/useSaveVersion';
 import { useIsFrom } from '@/hooks/useIsFromSpecificPageHooks';
@@ -70,6 +69,7 @@ export default function SaveApplicationButton({ onSuccess }) {
 
   return (
     <Button.BaseBtn
+      data-testid="agent-save-button"
       disabled={isButtonDisabled}
       variant="elitea"
       color="primary"

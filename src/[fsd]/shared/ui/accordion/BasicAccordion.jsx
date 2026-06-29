@@ -37,12 +37,16 @@ const BasicAccordion = memo(props => {
     summarySX,
     titleSX,
     accordionDetailsSX,
+    'data-testid': dataTestId,
   } = props;
 
   const styles = basicAccordionStyles();
 
   return (
-    <Box sx={style}>
+    <Box
+      sx={style}
+      data-testid={dataTestId}
+    >
       {items.map(({ title, content, summaryAction }, index) => (
         <StyledAccordion
           sx={accordionSX}

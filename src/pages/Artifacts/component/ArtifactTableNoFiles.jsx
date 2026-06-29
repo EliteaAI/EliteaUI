@@ -23,6 +23,7 @@ const ArtifactTableNoFiles = memo(props => {
         <Typography
           variant="bodyMedium"
           sx={styles.message}
+          data-testid="artifacts-empty-state"
         >
           {message}
         </Typography>

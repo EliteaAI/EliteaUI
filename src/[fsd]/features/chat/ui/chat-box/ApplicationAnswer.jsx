@@ -461,6 +461,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
   return (
     <>
       <UserMessageContainer
+        data-testid="chat-message-item"
         sx={{ ...styles.userMessageContainer, ...swarmChildStyles }}
         ref={ref}
       >
@@ -589,7 +590,10 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
 
           {/* {exception && <AgentException exception={exception} title={!isApplicationParticipant ? 'LLM exception' : undefined} />} */}
           {!isEditing && shouldRenderAnswerBlock && (
-            <Answer sx={styles.answerBlock(messageId === speakingMessageId)}>
+            <Answer
+              data-testid="chat-answer-content"
+              sx={styles.answerBlock(messageId === speakingMessageId)}
+            >
               {canRenderContent && !isNullOrUndefined(answer) && !message_items?.length && (
                 <Markdown
                   interaction_uuid={interaction_uuid}
@@ -668,7 +672,10 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                   )}
 
                   {normalAttachments.length > 0 && (
-                    <Box sx={styles.normalAttachmentsRow}>
+                    <Box
+                      sx={styles.normalAttachmentsRow}
+                      data-testid="chat-artifact-file-list"
+                    >
                       {normalAttachments.map(item => (
                         <NormalAttachment
                           preview={!!onOpenArtifactPreview}
