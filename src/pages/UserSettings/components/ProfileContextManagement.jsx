@@ -10,14 +10,21 @@ import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { handleConvertToNumberChange } from '@/[fsd]/widgets/context-budget/lib/validation';
 import FormInput from '@/components/FormInput';
 
-const ProfileContextManagement = memo(() => {
+import ProfileLongTermMemory from './ProfileLongTermMemory';
+import ProfileSummarization from './ProfileSummarization';
+
+const ProfileContextManagement = memo(props => {
+  const { modelList, onAutoSaveRequested } = props;
   const { values, errors, setFieldValue } = useFormikContext();
 
   const styles = profileContextManagementStyles();
 
   const handleContextEnabledChange = useCallback(
-    (event, checkedValue) => setFieldValue('context_enabled', checkedValue),
-    [setFieldValue],
+    (event, checkedValue) => {
+      setFieldValue('context_enabled', checkedValue);
+      onAutoSaveRequested?.();
+    },
+    [setFieldValue, onAutoSaveRequested],
   );
 
   const handleNumericInputChange = useCallback(
@@ -99,6 +106,12 @@ const ProfileContextManagement = memo(() => {
                   />
                 </Box>
               </Box>
+
+              {/* Sub-sections nested under Default Context Management */}
+              <Box sx={styles.subSections}>
+                <ProfileSummarization modelList={modelList} />
+                <ProfileLongTermMemory />
+              </Box>
             </Box>
           ),
         },
@@ -134,6 +147,14 @@ const profileContextManagementStyles = () => ({
   fieldsRow: {
     display: 'flex',
     gap: '1.5rem',
+  },
+  subSections: {
+    display: 'flex',
+    flexDirection: 'column',
+    paddingLeft: '1rem',
+    borderLeft: '2px solid',
+    borderColor: 'divider',
+    marginTop: '0.5rem',
   },
   field: {
     display: 'flex',
