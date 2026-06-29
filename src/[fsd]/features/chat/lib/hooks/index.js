@@ -12,6 +12,7 @@ export { useChatSkillMention } from './useChatSkillMention.hooks';
 export { useSpeechRecognition } from './useSpeechRecognition.hooks';
 export { useStreamingSpeechRecognition } from './useStreamingSpeechRecognition.hooks';
 export { useTextToSpeech } from './useTextToSpeech.hooks';
+export { useReadAloud } from './useReadAloud.hooks';
 export { useSpeakingModeLoop } from './useSpeakingModeLoop.hooks';
 export {
   useNewInputKeyDownHandler,

@@ -18,19 +18,17 @@ import { Box } from '@mui/system';
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import * as ChatHelpers from '@/[fsd]/features/chat/lib/helpers/chat.helpers';
 import * as NewConversationHelpers from '@/[fsd]/features/chat/lib/helpers/newConversation.helpers';
-import { toSpeakableText } from '@/[fsd]/features/chat/lib/helpers/tts.helpers';
 import {
   useChatSkillMention,
   useDeleteMessageAlert,
   useNewInputKeyDownHandler,
+  useReadAloud,
   useSlashMention,
-  useTextToSpeech,
 } from '@/[fsd]/features/chat/lib/hooks';
 import { useFetchParticipantDetails } from '@/[fsd]/features/chat/participants/lib/hooks';
 import { SlashSuggestionList, VoiceMiniPlayer } from '@/[fsd]/features/chat/ui';
 import { ChatMessageList } from '@/[fsd]/features/chat/ui/chat-box';
 import { UserMentionList } from '@/[fsd]/features/chat/ui/user-mention-list';
-import { useVoiceConfig } from '@/[fsd]/features/chat/voice-config';
 import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { MentionSkillList } from '@/[fsd]/features/skill/ui';
@@ -48,7 +46,7 @@ import {
   useRemoveAttachmentsMutation,
   useUpdateParticipantLlmSettingsMutation,
 } from '@/api';
-import { useGetTtsVoicesQuery, useListModelsQuery } from '@/api/configurations.js';
+import { useListModelsQuery } from '@/api/configurations.js';
 import {
   ChatParticipantType,
   PROMPT_PAYLOAD_KEY,
@@ -207,87 +205,27 @@ const ChatBox = forwardRef((props, boxRef) => {
 
   // Speaking mode states
   const [isSpeakingMode, setIsSpeakingMode] = useState(false);
-  const [speakingMessageId, setSpeakingMessageId] = useState(null);
-  const [speakingSegments, setSpeakingSegments] = useState(null);
 
   // Chat model
   const [selectedModel, setSelectedModel] = useState(null);
 
   // Query models data
-  const { data: ttsModelsData } = useListModelsQuery(
-    { projectId, section: 'tts', include_shared: true },
-    { skip: !projectId },
-  );
-
   const { data: modelsData = { items: [], total: 0 } } = useListModelsQuery(
     { projectId, include_shared: true },
     { skip: !projectId },
   );
 
-  const ttsModel = useMemo(
-    () => ttsModelsData?.items?.find(m => m.default) ?? ttsModelsData?.items?.[0] ?? null,
-    [ttsModelsData],
-  );
-
-  const hasModelTTS = !!(ttsModel && socket);
+  // Read-aloud / text-to-speech mini-player (shared with the skill test panel).
   const {
-    config: voiceConfig,
-    setConfig: setVoiceConfig,
-    browserVoices,
-    resolvedBrowserVoice,
-  } = useVoiceConfig({ persist: false });
-  const { data: ttsVoicesData } = useGetTtsVoicesQuery(
-    { projectId: ttsModel?.project_id ?? projectId, modelName: ttsModel?.name ?? '' },
-    { skip: !ttsModel },
-  );
-  const serverVoices = ttsVoicesData?.voices ?? [];
-  const displayVoices = hasModelTTS ? serverVoices : browserVoices;
-
-  const {
-    speak,
-    stop: stopTTS,
-    isPlaying,
+    onAutoSpeak: handleAutoSpeak,
+    speakingMessageId,
+    speakingSegments,
     spokenRange,
     showPlayer,
-    setShowPlayer,
-    speakableText,
-    setSpeakableText,
-  } = useTextToSpeech({
-    ttsModel,
-    socket,
-    voiceConfig: {
-      voice: resolvedBrowserVoice,
-      voiceId: voiceConfig.voiceId || undefined,
-      rate: voiceConfig.rate,
-      volume: voiceConfig.volume,
-    },
-  });
-
-  const handleAutoSpeak = useCallback(
-    (text, msgId) => {
-      if (!text) return;
-      const { text: convertedText, segments } = toSpeakableText(text);
-      if (!convertedText) return;
-      setSpeakingMessageId(msgId ?? null);
-      setSpeakingSegments(segments);
-      setSpeakableText(convertedText);
-      setShowPlayer(true);
-    },
-    [setShowPlayer, setSpeakableText],
-  );
-
-  const handlePlay = useCallback(() => {
-    speak(speakableText);
-  }, [speak, speakableText]);
-
-  useEffect(() => {
-    if (!isPlaying) {
-      setSpeakingMessageId(null);
-      setSpeakingSegments(null);
-      setShowPlayer(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPlaying]);
+    isPlaying,
+    stop: stopTTS,
+    voicePlayerProps,
+  } = useReadAloud({ projectId, socket });
 
   const isTheUserChattingNow = useMemo(() => {
     const latest40Messages = chat_history.slice(-40);
@@ -2066,7 +2004,12 @@ const ChatBox = forwardRef((props, boxRef) => {
     if (!versions?.length) return;
     const baseVersion = versions.find(v => v.name === LATEST_VERSION_NAME) || versions[0];
     onSelectVersion(baseVersion);
-  }, [isActiveParticipantVersionMissing, activeParticipantDetails?.versions, originalParticipant?.versions, onSelectVersion]);
+  }, [
+    isActiveParticipantVersionMissing,
+    activeParticipantDetails?.versions,
+    originalParticipant?.versions,
+    onSelectVersion,
+  ]);
 
   const isInputDisabled = useMemo(
     () =>
@@ -2141,18 +2084,7 @@ const ChatBox = forwardRef((props, boxRef) => {
             conversation_starters={hasStarterBeenSent || isTheUserChattingNow ? [] : conversationStarters}
           />
         )}
-        {showPlayer && (
-          <VoiceMiniPlayer
-            voiceConfig={voiceConfig}
-            voices={displayVoices}
-            onVoiceConfigChange={setVoiceConfig}
-            ttsModel={ttsModel}
-            hasModelTTS={hasModelTTS}
-            isPlaying={isPlaying}
-            onStop={stopTTS}
-            onPlay={handlePlay}
-          />
-        )}
+        {showPlayer && <VoiceMiniPlayer {...voicePlayerProps} />}
         <Box sx={styles.inputWrapper}>
           {showRecommendationList && (
             <RecommendationList

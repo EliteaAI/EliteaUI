@@ -6,7 +6,8 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { Box } from '@mui/material';
 
-import { ChatButton } from '@/[fsd]/features/chat/ui';
+import { useReadAloud } from '@/[fsd]/features/chat/lib/hooks';
+import { ChatButton, VoiceMiniPlayer } from '@/[fsd]/features/chat/ui';
 import { ChatMessageList } from '@/[fsd]/features/chat/ui/chat-box';
 import { DEFAULT_MAX_TOKENS, DEFAULT_TEMPERATURE } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
 import { useListModelsQuery } from '@/api/configurations.js';
@@ -150,6 +151,10 @@ const SkillTestPanel = memo(({ isFullScreenChat, setIsFullScreenChat }) => {
   const onSetLLMSettings = useCallback(newSettings => {
     setLlmSettings(prev => ({ ...prev, ...newSettings }));
   }, []);
+
+  // Read-aloud / text-to-speech mini-player (shared with the agent ChatBox).
+  const { onAutoSpeak, speakingMessageId, speakingSegments, spokenRange, showPlayer, voicePlayerProps } =
+    useReadAloud({ projectId, socket });
 
   const [generateContent] = useGenerateContentStreamingMutation();
   const [stopLlmTask] = useStopLlmTaskMutation();
@@ -435,17 +440,6 @@ const SkillTestPanel = memo(({ isFullScreenChat, setIsFullScreenChat }) => {
     [activeConversation.chat_history, buildMessagePair, isStreaming, setChatHistory, streamAnswer],
   );
 
-  // Read-aloud: client-side Web Speech API (no backend).
-  const onAutoSpeak = useCallback(text => {
-    if (!text || typeof window === 'undefined' || !window.speechSynthesis) return;
-    try {
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.speak(new window.SpeechSynthesisUtterance(text));
-    } catch {
-      /* TTS unsupported — ignore */
-    }
-  }, []);
-
   const shouldDisableClear = !chat_history.length || isStreaming;
 
   const styles = useMemo(() => skillTestPanelStyles(isFullScreenChat), [isFullScreenChat]);
@@ -478,7 +472,11 @@ const SkillTestPanel = memo(({ isFullScreenChat, setIsFullScreenChat }) => {
             onRegenerateAnswer={onRegenerateAnswer}
             onSubmitEditedMessage={onSubmitEditedMessage}
             onAutoSpeak={onAutoSpeak}
+            speakingMessageId={speakingMessageId}
+            speakingSegments={speakingSegments}
+            spokenRange={spokenRange}
           />
+          {showPlayer && <VoiceMiniPlayer {...voicePlayerProps} />}
           <Box sx={styles.inputWrapper}>
             <NewChatInput
               isAgentsPage
