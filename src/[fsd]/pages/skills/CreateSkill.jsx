@@ -50,7 +50,10 @@ const CreateSkill = memo(() => {
                     size={{ xs: 12 }}
                     sx={styles.gridItem}
                   >
-                    <CreateSkillForm showGenerateButton />
+                    <CreateSkillForm
+                      sx={styles.formContainer}
+                      showGenerateButton
+                    />
                   </Grid>
                 </StyledGridContainer>
               </Form>
@@ -66,6 +69,10 @@ CreateSkill.displayName = 'CreateSkill';
 
 const createSkillStyles = () => ({
   tab: { paddingX: '24px' },
+  formContainer: {
+    margin: '0.75rem auto 0',
+    maxWidth: '40.1875rem',
+  },
   gridItem: theme => ({
     [theme.breakpoints.up('lg')]: {
       overflowY: 'scroll',
