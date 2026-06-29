@@ -65,11 +65,18 @@ const InstructionsInput = memo(props => {
   const theme = useTheme();
   const inputRef = useInstructionsInputRefContext();
   const mirrorRef = useRef(null);
+  // Tracks the version id whose mirror overlay has been sized to the textarea.
+  // `mirrorReady` is DERIVED from it during render (below), so a version switch flips
+  // the gate off synchronously in the same render — no stale-true frame. While the
+  // gate is off, the real textarea text (correct size) is shown instead of an
+  // unsynced, oversized mirror flashing in.
+  const [syncedVersionId, setSyncedVersionId] = useState(undefined);
   const styles = instructionsInputStyles();
   const {
     values: { version_details },
     setFieldValue,
   } = useFormikContext();
+  const mirrorReady = syncedVersionId === version_details?.id;
   const selectedProjectId = useSelectedProjectId();
   const projectId = entityProjectId || selectedProjectId;
 
@@ -171,11 +178,16 @@ const InstructionsInput = memo(props => {
   // Sync the mirror div's geometry (position, size, padding) and scroll with the textarea.
   useEffect(() => {
     if (!hasHighlights) return;
-    const textareaEl = inputRef.current?.getTextareaElement?.();
     const mirror = mirrorRef.current;
-    if (!textareaEl || !mirror) return;
+    if (!mirror) return;
+
+    // Resolved once the textarea is actually mounted (see attach() below).
+    let textareaEl = null;
+    let rafId = null;
+    let ro = null;
 
     const syncGeometry = () => {
+      if (!textareaEl) return;
       const containerEl = mirror.parentElement;
       const containerRect = containerEl.getBoundingClientRect();
       const textareaRect = textareaEl.getBoundingClientRect();
@@ -197,6 +209,7 @@ const InstructionsInput = memo(props => {
     };
 
     const syncScroll = () => {
+      if (!textareaEl) return;
       mirror.scrollTop = textareaEl.scrollTop;
     };
 
@@ -204,29 +217,55 @@ const InstructionsInput = memo(props => {
     // requestAnimationFrame defers until after the browser finishes the scroll.
     const syncScrollAfterFrame = () => requestAnimationFrame(syncScroll);
 
-    syncGeometry();
-    syncScroll();
-    textareaEl.addEventListener('scroll', syncScroll);
-    textareaEl.addEventListener('keyup', syncScrollAfterFrame);
-    textareaEl.addEventListener('click', syncScrollAfterFrame);
-    const ro = new ResizeObserver(() => {
+    // The textarea may not be mounted yet on the run where hasHighlights first
+    // turns true — notably right after a version switch, which force-remounts the
+    // input via key={version_details.id}. Bailing here permanently would leave the
+    // mirror overlay stuck at its CSS default (16px / origin) while the real textarea
+    // (14px) renders transparent underneath, so the user sees oversized, overflowing,
+    // non-scrolling instructions. Retry on the next frame until the textarea exists.
+    const attach = () => {
+      textareaEl = inputRef.current?.getTextareaElement?.();
+      if (!textareaEl) {
+        rafId = requestAnimationFrame(attach);
+        return;
+      }
+      rafId = null;
       syncGeometry();
       syncScroll();
-    });
-    ro.observe(textareaEl);
-    return () => {
-      textareaEl.removeEventListener('scroll', syncScroll);
-      textareaEl.removeEventListener('keyup', syncScrollAfterFrame);
-      textareaEl.removeEventListener('click', syncScrollAfterFrame);
-      ro.disconnect();
+      // Mirror is now sized to the textarea for THIS version — reveal it and make the
+      // textarea text transparent, so the swap is between two identically-sized
+      // renders (no visible grow/shrink flash).
+      setSyncedVersionId(version_details?.id);
+      textareaEl.addEventListener('scroll', syncScroll);
+      textareaEl.addEventListener('keyup', syncScrollAfterFrame);
+      textareaEl.addEventListener('click', syncScrollAfterFrame);
+      ro = new ResizeObserver(() => {
+        syncGeometry();
+        syncScroll();
+      });
+      ro.observe(textareaEl);
     };
-  }, [hasHighlights, inputRef]);
+    attach();
+
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      if (textareaEl) {
+        textareaEl.removeEventListener('scroll', syncScroll);
+        textareaEl.removeEventListener('keyup', syncScrollAfterFrame);
+        textareaEl.removeEventListener('click', syncScrollAfterFrame);
+      }
+      if (ro) ro.disconnect();
+    };
+    // version_details.id is the key on FileReaderEnhancer: when it changes the input
+    // (and its textarea) remounts, so re-run to tear down the stale element and
+    // re-attach/sync to the new textarea.
+  }, [hasHighlights, inputRef, version_details?.id]);
 
   const overlayContent = hasHighlights ? (
     <Box
       ref={mirrorRef}
       aria-hidden="true"
-      sx={styles.mirrorOverlay}
+      sx={[styles.mirrorOverlay, !mirrorReady && { visibility: 'hidden' }]}
     >
       {renderMirrorHighlights(
         version_details?.instructions ?? '',
@@ -318,7 +357,7 @@ const InstructionsInput = memo(props => {
                   afterContent={activeSuggestionList}
                   overlayContent={overlayContent}
                   codeMirrorExtensions={mergedCodeMirrorExtensions}
-                  sx={hasHighlights ? styles.transparentInput : undefined}
+                  sx={hasHighlights && mirrorReady ? styles.transparentInput : undefined}
                 />
               </Box>
               {!isModalOpen && activeSuggestionList}
