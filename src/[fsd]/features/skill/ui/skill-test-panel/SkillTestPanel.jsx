@@ -155,14 +155,15 @@ const SkillTestPanel = memo(({ isFullScreenChat, setIsFullScreenChat }) => {
   const [stopLlmTask] = useStopLlmTaskMutation();
 
   const finishStreaming = useCallback(() => {
+    // Capture the active message id BEFORE nulling the refs below.
+    const finishedMessageId = activeMessageIdRef.current;
+
     clearTimeout(finalizeTimerRef.current);
     finalizeTimerRef.current = null;
     setIsStreaming(false);
     setChatHistory(prev =>
       prev.map(msg =>
-        msg.internal_id === activeMessageIdRef.current
-          ? { ...msg, isLoading: false, isStreaming: false }
-          : msg,
+        msg.internal_id === finishedMessageId ? { ...msg, isLoading: false, isStreaming: false } : msg,
       ),
     );
     activeStreamIdRef.current = null;
@@ -174,6 +175,7 @@ const SkillTestPanel = memo(({ isFullScreenChat, setIsFullScreenChat }) => {
   const handleSocketEvent = useCallback(
     message => {
       const { type, stream_id, response_metadata } = message || {};
+      const targetMessageId = activeMessageIdRef.current;
       // The predict_llm (application_predict) path does NOT echo the
       // client-minted stream_id: the backend tags every event with its own
       // stream_id (the start_task's id). We can't reliably correlate via the
@@ -197,7 +199,7 @@ const SkillTestPanel = memo(({ isFullScreenChat, setIsFullScreenChat }) => {
         if (!chunk) return;
         setChatHistory(prev =>
           prev.map(msg =>
-            msg.internal_id === activeMessageIdRef.current
+            msg.internal_id === targetMessageId
               ? { ...msg, content: (msg.content || '') + chunk, isLoading: false, isStreaming: true }
               : msg,
           ),
@@ -207,7 +209,7 @@ const SkillTestPanel = memo(({ isFullScreenChat, setIsFullScreenChat }) => {
       const replaceContent = text => {
         setChatHistory(prev =>
           prev.map(msg =>
-            msg.internal_id === activeMessageIdRef.current
+            msg.internal_id === targetMessageId
               ? { ...msg, content: text, isLoading: false, isStreaming: true }
               : msg,
           ),
