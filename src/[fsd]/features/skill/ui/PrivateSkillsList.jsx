@@ -5,6 +5,8 @@ import { useNavigate } from 'react-router-dom';
 
 import { EmptyStatePage } from '@/[fsd]/entities/empty-state-page';
 import { useLoadSkills } from '@/[fsd]/features/skill/lib/hooks';
+import skillsDarkImage from '@/assets/images/Skills_Dark_1.png';
+import skillsLightImage from '@/assets/images/Skills_Light_1.png';
 import { ContentType, ViewMode } from '@/common/constants';
 import { buildErrorMessage, uniqueArrayByProp } from '@/common/utils';
 import CardList from '@/components/CardList';
@@ -70,6 +72,8 @@ const PrivateSkillsList = memo(props => {
       title: 'No skills yet',
       description:
         'Create your first skill to get started. Skills are reusable, markdown-based instructions you can attach to your agents.',
+      imageDark: skillsDarkImage,
+      imageLight: skillsLightImage,
       onCreateClick: () => navigate(RouteDefinitions.CreateSkill),
     }),
     [navigate],
