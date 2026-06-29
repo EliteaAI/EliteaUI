@@ -87,7 +87,7 @@ const ChatContinue = memo(props => {
             disabled={disabled}
             startIcon={<ArrowForwardIcon />}
           >
-            {continueLabel}
+            {needToShowAuthButton ? continueLabel : 'Continue'}
           </BaseBtn>
         </Box>
       </Box>
