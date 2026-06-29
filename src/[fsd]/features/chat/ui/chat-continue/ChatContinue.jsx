@@ -10,7 +10,15 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 
 const ChatContinue = memo(props => {
-  const { onContinue, onAuthSuccess, disabled, message, authRequiredAction, tools } = props;
+  const {
+    onContinue,
+    onAuthSuccess,
+    disabled,
+    message,
+    authRequiredAction,
+    tools,
+    continueLabel = 'Continue',
+  } = props;
   const styles = getStyles();
   const projectId = useSelectedProjectId();
   const { toastSuccess } = useToast();
@@ -21,7 +29,7 @@ const ChatContinue = memo(props => {
     () =>
       authRequiredAction &&
       !tools
-        ?.filter(tool => tool.type === 'mcp')
+        ?.filter(tool => tool.type === 'mcp' || tool.type?.startsWith('mcp_'))
         .find(tool => tool.settings?.url && tool.settings.url === authRequiredAction.toolMeta?.server_url),
     [authRequiredAction, tools],
   );
@@ -79,7 +87,7 @@ const ChatContinue = memo(props => {
             disabled={disabled}
             startIcon={<ArrowForwardIcon />}
           >
-            Continue
+            {needToShowAuthButton ? continueLabel : 'Continue'}
           </BaseBtn>
         </Box>
       </Box>

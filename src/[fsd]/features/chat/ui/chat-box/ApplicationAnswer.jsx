@@ -119,8 +119,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
     () => toolActions.find(action => action.status === ToolActionStatus.actionRequired),
     [toolActions],
   );
-
-  /** Continue without auth - adds server to ignore list */
+  /** Skip auth for this run - adds server to ignore list */
   const onContinueWithoutAuth = useCallback(() => {
     onContinueMcpExecution?.(messageId, true);
   }, [onContinueMcpExecution, messageId]);
@@ -699,12 +698,13 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
               )}
               {!!authRequiredAction && (
                 <ChatContinue
-                  message="Token expired for some remote MCP servers. Re-authenticate now or continue without them?"
+                  message="Authentication required for remote MCP servers. Authenticate now or skip them for this run?"
                   disabled={!onContinueMcpExecution}
                   onContinue={onContinueWithoutAuth}
                   onAuthSuccess={onAuthSuccess}
                   tools={tools}
                   authRequiredAction={authRequiredAction}
+                  continueLabel="Skip"
                 />
               )}
               {/* Agent Requires Confirmation - user needs to confirm to proceed */}

@@ -30,7 +30,6 @@ import { SlashSuggestionList, VoiceMiniPlayer } from '@/[fsd]/features/chat/ui';
 import { ChatMessageList } from '@/[fsd]/features/chat/ui/chat-box';
 import { UserMentionList } from '@/[fsd]/features/chat/ui/user-mention-list';
 import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
-import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { MentionSkillList } from '@/[fsd]/features/skill/ui';
 import { MentionConstants } from '@/[fsd]/shared/lib/constants';
 import {
@@ -162,6 +161,10 @@ const ChatBox = forwardRef((props, boxRef) => {
   // Store the participant_id from conversation creation to use for subsequent messages
   // This ensures we use the correct participant_id even before React state update propagates
   const participantIdRef = useRef(null);
+  // Track MCP servers the user declined this session (scoped to current conversation).
+  // Map<serverUrl, { tool_name, resource_metadata_url, www_authenticate, resource_metadata }>
+  // Resets automatically when the conversation changes — never written to localStorage.
+  const sessionDeclinedMcpServersRef = useRef(new Map());
 
   const dispatch = useDispatch();
   const { toastError, toastSuccess } = useToast();
@@ -603,6 +606,11 @@ const ChatBox = forwardRef((props, boxRef) => {
     activeConversationRef.current = activeConversation;
   }, [activeConversation]);
 
+  // Reset session-declined MCP servers when the conversation changes
+  useEffect(() => {
+    sessionDeclinedMcpServersRef.current = new Map();
+  }, [activeConversation?.id]);
+
   // Sync participantIdRef with activeParticipant.id when it changes
   // Clear the ref when participant is deselected to allow switching back to model-only mode
   useEffect(() => {
@@ -782,16 +790,25 @@ const ChatBox = forwardRef((props, boxRef) => {
 
   const onPredictStream = useCallback(
     async question => {
-      // Before sending a new message, add any pending MCP server (that required auth) to ignored list
-      // This handles the case where user sends a new message instead of clicking Continue
-      // Only the last message can have actionRequired status
+      // Before sending a new message, track any pending MCP server (that required auth) as session-declined.
+      // This handles the case where user sends a new message instead of clicking Continue.
+      // Only the last message can have actionRequired status.
       const lastMessage = chat_history[chat_history.length - 1];
       const authRequiredAction = lastMessage?.toolActions?.find(
         action => action.status === ToolActionStatus.actionRequired,
       );
       const serverUrl = authRequiredAction?.toolOutputs?.server_url;
       if (serverUrl) {
-        McpAuthHelpers.addIgnoredServer(serverUrl);
+        const authOutputs = authRequiredAction?.toolOutputs || {};
+        const authMeta = authRequiredAction?.toolMeta || {};
+        sessionDeclinedMcpServersRef.current.set(serverUrl, {
+          actual_server_url: authMeta.server_url || null,
+          tool_name: authOutputs.tool_name || '',
+          resource_metadata_url: authOutputs.resource_metadata_url || null,
+          www_authenticate: authOutputs.www_authenticate || null,
+          resource_metadata: authOutputs.resource_metadata || null,
+          toolkit_type: authOutputs.toolkit_type || null,
+        });
       }
 
       const participant = activeParticipant;
@@ -1100,7 +1117,7 @@ const ChatBox = forwardRef((props, boxRef) => {
   /**
    * Continue MCP execution - shared logic for both auth success and skip auth flows.
    * @param {string} messageId - The message ID to continue from
-   * @param {boolean} addToIgnoreList - If true, adds the MCP server to ignore list (for "Continue" button)
+   * @param {boolean} addToIgnoreList - If true, adds the MCP server to ignore list (for "Skip" button)
    */
   const continueMcpExecution = useCallback(
     async (messageId, addToIgnoreList = false) => {
@@ -1113,18 +1130,49 @@ const ChatBox = forwardRef((props, boxRef) => {
         return;
       }
 
-      // Only add to ignore list if user chose to skip auth (clicked "Continue")
+      // Track or remove the MCP server in the session-declined ref (never localStorage)
+      const authRequiredAction = message.toolActions?.find(
+        action => action.status === ToolActionStatus.actionRequired,
+      );
+      const serverUrl = authRequiredAction?.toolOutputs?.server_url;
       if (addToIgnoreList) {
-        const authRequiredAction = message.toolActions?.find(
-          action => action.status === ToolActionStatus.actionRequired,
-        );
-        const serverUrl = authRequiredAction?.toolOutputs?.server_url;
+        // User clicked "Skip" — track as declined for this conversation only
         if (serverUrl) {
-          McpAuthHelpers.addIgnoredServer(serverUrl);
+          const outputs = authRequiredAction?.toolOutputs || {};
+          const toolMeta = authRequiredAction?.toolMeta || {};
+          const authorizationServers =
+            outputs.authorization_servers ||
+            toolMeta.authorization_servers ||
+            toolMeta.resource_metadata?.authorization_servers ||
+            null;
+          const skipReason =
+            outputs.skip_reason || outputs.denial_reason || 'User skipped MCP login for this run.';
+          sessionDeclinedMcpServersRef.current.set(serverUrl, {
+            actual_server_url: toolMeta.server_url || null,
+            tool_name: outputs.tool_name || toolMeta.tool_name || authRequiredAction?.name || '',
+            resource_metadata_url: outputs.resource_metadata_url || toolMeta.resource_metadata_url || null,
+            www_authenticate: outputs.www_authenticate || toolMeta.www_authenticate || null,
+            resource_metadata: outputs.resource_metadata || toolMeta.resource_metadata || null,
+            authorization_servers: authorizationServers,
+            toolkit_type: outputs.toolkit_type || toolMeta.toolkit_type || null,
+            skip_reason: skipReason,
+          });
+        }
+      } else {
+        // Auth succeeded — remove from session-declined so the tool is available again
+        if (serverUrl) {
+          sessionDeclinedMcpServersRef.current.delete(serverUrl);
         }
       }
 
       const { question_id, threadId } = message;
+
+      const sessionDeclinedMcpServers = [...sessionDeclinedMcpServersRef.current.entries()].map(
+        ([url, { actual_server_url, ...rest }]) => ({
+          server_url: actual_server_url || url,
+          ...rest,
+        }),
+      );
 
       const payload = generateMcpContinuePayload({
         conversation_uuid: activeConversation?.uuid,
@@ -1133,6 +1181,7 @@ const ChatBox = forwardRef((props, boxRef) => {
         thread_id: threadId,
         participants: activeConversation?.participants || [],
         question: theQuestion,
+        sessionDeclinedMcpServers,
       });
 
       setChatHistory(prevMessages =>
@@ -1970,7 +2019,8 @@ const ChatBox = forwardRef((props, boxRef) => {
       modelSettingsAreSaving ||
       isUploadingAttachments ||
       isUpdatingInternalToolsConfig ||
-      activeConversation?.isSending,
+      activeConversation?.isSending ||
+      isStreamingNow,
     [
       isLoadingConversation,
       isFetchingParticipant,
@@ -1978,6 +2028,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       isUploadingAttachments,
       isUpdatingInternalToolsConfig,
       activeConversation?.isSending,
+      isStreamingNow,
     ],
   );
 

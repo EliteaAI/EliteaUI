@@ -1,9 +1,4 @@
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
-import {
-  DEFAULT_MAX_TOKENS,
-  DEFAULT_REASONING_EFFORT,
-  DEFAULT_TEMPERATURE,
-} from '@/[fsd]/shared/lib/constants/llmSettings.constants';
 import { filterReasoningEffortFromSettings } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
 import { ChatParticipantType } from '@/common/constants';
 
@@ -19,11 +14,6 @@ const getMcpServerUrlsFromParticipants = participants => {
     .map(p => p.entity_settings.url);
 };
 
-const getMcpServerUrlsFromTools = tools => {
-  if (!tools || !Array.isArray(tools)) return [];
-  return tools.filter(tool => tool.type === 'mcp' && tool.settings?.url).map(tool => tool.settings.url);
-};
-
 export const generateMessagePayload = ({
   question,
   question_id,
@@ -37,7 +27,6 @@ export const generateMessagePayload = ({
   userIds = [],
   attachmentList = [],
   unsavedLLMSettings = undefined,
-  participants = [], // Add participants to extract MCP toolkit URLs
   allowLLMSettingsOverride = false, // Whether to allow unsavedLLMSettings to override agent's configured model
   conversationMeta = undefined, // Conversation-level meta (e.g. steps_limit)
 }) => {
@@ -46,10 +35,6 @@ export const generateMessagePayload = ({
   // Keep participant_id from the passed participant if available
   const participantId = participant?.id || activeParticipant?.id;
   const mcpTokens = McpAuthHelpers.getAllTokens();
-  // Get ignored servers: explicitly ignored + MCP servers without valid tokens
-  const ignoredMcpServers = McpAuthHelpers.getFilteredIgnoredServers(
-    getMcpServerUrlsFromParticipants(participants),
-  );
 
   switch (entityName) {
     case ChatParticipantType.Applications:
@@ -82,7 +67,6 @@ export const generateMessagePayload = ({
             : { model_name: selectedModel.name, model_project_id: selectedModel.project_id }
           : undefined,
         mcp_tokens: mcpTokens,
-        ignored_mcp_servers: ignoredMcpServers,
       };
     default: {
       // For default case (regular chat), prefer unsavedLLMSettings if available, else use selectedModel
@@ -115,7 +99,6 @@ export const generateMessagePayload = ({
             filepath: item.filepath,
           })),
         mcp_tokens: mcpTokens,
-        ignored_mcp_servers: ignoredMcpServers,
       };
     }
   }
@@ -150,8 +133,6 @@ const generateApplicationPayload = ({
   tools,
   question_id,
   mcp_tokens: McpAuthHelpers.getAllTokens(),
-  // Get MCP server URLs from application tools to check for valid tokens
-  ignored_mcp_servers: McpAuthHelpers.getFilteredIgnoredServers(getMcpServerUrlsFromTools(tools)),
 });
 
 export const generateApplicationStreamingPayload = ({
@@ -214,81 +195,34 @@ export const generateChatContinuePayload = ({
   thread_id,
   participants = [], // Extract MCP toolkit URLs
   question,
+  sessionDeclinedMcpServers = [], // Servers user declined this session (NOT from localStorage)
 }) => {
   // Get MCP server URLs from toolkit participants to check for valid tokens
   const mcpServerUrls = getMcpServerUrlsFromParticipants(participants);
+
+  const allTokens = McpAuthHelpers.getAllTokens();
+
+  // Only servers missing valid tokens (does NOT read localStorage)
+  const noTokenServers = McpAuthHelpers.getServersWithoutTokens(mcpServerUrls);
+
+  // Merge: no-token servers + session-declined servers (deduplicated)
+  const allIgnored = [
+    ...new Set([...noTokenServers, ...sessionDeclinedMcpServers.map(s => s.server_url)]),
+  ].filter(s => !allTokens[s]);
+
+  // Exclude servers from user_declined_mcp_servers that now have tokens (user authenticated them)
+  const effectiveDeclinedServers = sessionDeclinedMcpServers.filter(s => !allTokens[s.server_url]);
+
   return {
     project_id: projectId,
     conversation_uuid,
     message_id,
     thread_id,
-    mcp_tokens: McpAuthHelpers.getAllTokens(),
-    // Get ignored servers: explicitly ignored + MCP servers without valid tokens
-    ignored_mcp_servers: McpAuthHelpers.getFilteredIgnoredServers(mcpServerUrls),
+    mcp_tokens: allTokens,
+    ignored_mcp_servers: allIgnored,
+    user_declined_mcp_servers: effectiveDeclinedServers,
     user_input: question,
   };
 };
 
 export const generateMcpContinuePayload = payload => generateChatContinuePayload(payload);
-
-export const generateApplicationContinuePayload = ({
-  conversation_uuid,
-  projectId,
-  message_id,
-  thread_id,
-  participant_id,
-  question_id,
-  question,
-  type = 'chat',
-  // Pass the entire conversation to resolve participant internally
-  conversation,
-  // For fallback LLM settings when participant doesn't have them
-  selectedModel,
-  conversationLlmSettings,
-  // Conversation-level meta (e.g. steps_limit)
-  conversationMeta = undefined,
-}) => {
-  // Resolve participant from conversation
-  const participant = conversation?.participants.find(({ id }) => id === participant_id) || {};
-  // Get LLM settings from participant (if it's an Application)
-  let llm_settings = {};
-  if (participant.entity_name === ChatParticipantType.Applications) {
-    llm_settings = participant.entity_settings?.llm_settings || {};
-  }
-
-  // Generate fallback settings if participant doesn't have llm_settings
-  if (!llm_settings || Object.keys(llm_settings).length === 0) {
-    const baseSettings = {
-      model_name: selectedModel?.name || conversationLlmSettings?.model_name,
-      model_project_id: selectedModel?.project_id || conversationLlmSettings?.model_project_id,
-      temperature: conversationLlmSettings?.temperature || DEFAULT_TEMPERATURE,
-      max_tokens: conversationLlmSettings?.max_tokens || DEFAULT_MAX_TOKENS,
-    };
-
-    // Only include reasoning_effort if the model supports it
-    const model = selectedModel || { name: conversationLlmSettings?.model_name, supports_reasoning: false };
-    if (model?.supports_reasoning) {
-      baseSettings.reasoning_effort = conversationLlmSettings?.reasoning_effort || DEFAULT_REASONING_EFFORT;
-    }
-
-    llm_settings = baseSettings;
-  }
-  return {
-    should_continue: true,
-    project_id: projectId,
-    conversation_uuid,
-    message_id,
-    thread_id,
-    participant_id,
-    question_id,
-    application_id: participant?.entity_meta?.id,
-    version_id: participant?.entity_settings?.version_id,
-    type,
-    llm_settings,
-    variables: participant?.entity_settings?.variables || [],
-    format_response: true,
-    user_input: question,
-    mcp_tokens: McpAuthHelpers.getAllTokens(),
-    ...(conversationMeta?.steps_limit !== undefined ? { step_limit: conversationMeta.steps_limit } : {}),
-  };
-};
