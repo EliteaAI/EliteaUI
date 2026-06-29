@@ -22,6 +22,7 @@ const useSaveNewVersion = ({
   toastSuccess,
   applicationId,
   versionDetails,
+  sourceVersionId,
   onSuccess,
   webhook_secret,
 }) => {
@@ -120,6 +121,7 @@ const useSaveNewVersion = ({
       const result = await saveNewVersion({
         ...(versionDetails || {}),
         tools: clearTools(versionDetails?.tools),
+        copy_skills_from_version_id: sourceVersionId,
         name: newVersionName,
         projectId: selectedProjectId,
         webhook_secret: webhook_secret || null,
@@ -151,6 +153,7 @@ const useSaveNewVersion = ({
       yamlCode,
       saveNewVersion,
       versionDetails,
+      sourceVersionId,
       selectedProjectId,
       webhook_secret,
       applicationId,
