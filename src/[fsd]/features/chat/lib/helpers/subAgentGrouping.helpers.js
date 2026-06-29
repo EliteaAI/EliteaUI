@@ -313,3 +313,20 @@ export function resolveSubAgentLiveness({
   const running = !hasError && !done && (!!paused || !!lastRoundRunning || !!hasInflight || !!isLiveCurrent);
   return { running, done };
 }
+
+/**
+ * The in-flight tool action is ALSO rendered as the live spinner/content box
+ * beneath the group chips inside a sub-agent accordion. Returns that action's id
+ * so renderGroupChips can skip its STATIC chip — a streaming tool call then shows
+ * once (the live box), not as a static chip + an identical spinning chip (#5428).
+ * Only fires for tool-type refs; the LLM reasoning duplicate is already handled by
+ * the existing skipReasoning name-match guard.
+ *
+ * @param {any} refAction  the action rendered as the live box (inflight box, or the
+ *                         current-action box = actions[displayedActionIndex])
+ * @param {string} toolType  the component's TOOL_ACTION_TYPES.Tool enum value
+ * @returns {string|null}  the action id to skip, or null when there is nothing to skip
+ */
+export function inflightToolChipId(refAction, toolType) {
+  return refAction && refAction.type === toolType ? (refAction.id ?? null) : null;
+}

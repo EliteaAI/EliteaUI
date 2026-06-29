@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildPcidAnchorMap,
   collapseSubAgentInvocationKeys,
+  inflightToolChipId,
   isInvocationId,
   partitionActionsIntoBlocks,
   resolveExtraSubAgentKeys,
@@ -564,5 +565,29 @@ describe('resolveSubAgentLiveness', () => {
     expect(resolveSubAgentLiveness({ paused: false, lastRoundRunning: false, lastRoundDone: false })).toEqual(
       { running: false, done: false },
     );
+  });
+});
+
+// The in-flight tool action is rendered as the live spinner box AND would appear
+// as a static chip in the full group — so its static chip must be skipped to
+// avoid the duplicate static+spinner pair (#5428).
+describe('inflightToolChipId', () => {
+  const LLM = 'llm';
+
+  it('returns the tool action id when the live ref is a tool (skip its static chip)', () => {
+    expect(inflightToolChipId({ type: TOOL, id: 'run-1' }, TOOL)).toBe('run-1');
+  });
+
+  it('returns null for an LLM ref (the reasoning duplicate is handled elsewhere)', () => {
+    expect(inflightToolChipId({ type: LLM, id: 'run-2' }, TOOL)).toBeNull();
+  });
+
+  it('returns null when there is no live ref', () => {
+    expect(inflightToolChipId(null, TOOL)).toBeNull();
+    expect(inflightToolChipId(undefined, TOOL)).toBeNull();
+  });
+
+  it('returns null when the tool ref has no id', () => {
+    expect(inflightToolChipId({ type: TOOL }, TOOL)).toBeNull();
   });
 });

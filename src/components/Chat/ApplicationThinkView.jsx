@@ -5,6 +5,7 @@ import { Box, Typography } from '@mui/material';
 import { ChatHelpers } from '@/[fsd]/features/chat/lib/helpers';
 import {
   buildPcidAnchorMap,
+  inflightToolChipId,
   isInvocationId,
   partitionActionsIntoBlocks,
   resolveExtraSubAgentKeys,
@@ -765,14 +766,20 @@ const ApplicationThinkView = memo(props => {
     (group, keyPrefix, streaming, inflightAction, fullToolNames = false) => {
       const items = [];
       let skipReasoning = false;
+      // id of the in-flight TOOL action whose static chip must be skipped because
+      // it is already rendered as the live spinner/content box below (#5428).
+      let skipToolId = null;
       if (streaming) {
         // Compare against the in-flight box this bucket renders (sub-agent box,
-        // or the coordinator's mergedCurrentAction) so a reasoning chip isn't
-        // shown twice — once as a chip and once as the live content box.
+        // or the coordinator's mergedCurrentAction) so an action isn't shown
+        // twice — once as a chip and once as the live content box.
         const ref = inflightAction || actions[displayedActionIndex];
         const refIsLlm = ref?.type === TOOL_ACTION_TYPES.Llm;
         skipReasoning =
           refIsLlm && group.reasoning?.name?.trim().toLowerCase() === ref?.name?.trim().toLowerCase();
+        // LLM duplicate is handled by skipReasoning (name match); the tool
+        // duplicate is the in-flight tool action itself — skip its chip by id.
+        skipToolId = inflightToolChipId(ref, TOOL_ACTION_TYPES.Tool);
       }
       if (group.reasoning && !skipReasoning) {
         items.push(
@@ -787,6 +794,9 @@ const ApplicationThinkView = memo(props => {
         );
       }
       group.tools.forEach((action, toolIndex) => {
+        // Skip the in-flight tool action's static chip — it renders as the live
+        // spinner box, so showing the chip too would duplicate it (#5428).
+        if (skipToolId && action.id === skipToolId) return;
         items.push(
           <ActionView
             key={`${action.id}-${keyPrefix}-${toolIndex}`}
