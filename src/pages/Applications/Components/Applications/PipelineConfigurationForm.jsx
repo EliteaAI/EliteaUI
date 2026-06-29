@@ -4,6 +4,7 @@ import { Box } from '@mui/material';
 
 import { AgentInput, ApplicationTools } from '@/[fsd]/features/agent/ui/agent-details/configurations';
 import ApplicationAdvanceSettings from '@/[fsd]/features/agent/ui/agent-details/configurations/ApplicationAdvanceSettings';
+import ApplicationEditorNotes from '@/[fsd]/features/agent/ui/agent-details/configurations/ApplicationEditorNotes';
 import { ViewMode } from '@/common/constants.js';
 import ConversationStarters from '@/components/ConversationStarters';
 import ApplicationEditForm from '@/pages/Applications/Components/Applications/ApplicationEditForm';
@@ -48,6 +49,10 @@ const PipelineConfigurationForm = memo(props => {
         style={styles.advanceSettings}
         disabled={isDisabled}
       />
+      <ApplicationEditorNotes
+        style={styles.editorNotes}
+        disabled={isDisabled}
+      />
       <ApplicationInformation
         style={styles.information}
         showPipeline
@@ -67,6 +72,9 @@ const pipelineConfigurationFormStyles = isChatView => ({
     marginTop: '1rem',
   },
   advanceSettings: {
+    marginTop: '1rem',
+  },
+  editorNotes: {
     marginTop: '1rem',
   },
   information: {

@@ -4,6 +4,7 @@ import { Box } from '@mui/material';
 
 import { AgentInput, ApplicationTools } from '@/[fsd]/features/agent/ui/agent-details/configurations';
 import ApplicationAdvanceSettings from '@/[fsd]/features/agent/ui/agent-details/configurations/ApplicationAdvanceSettings';
+import ApplicationEditorNotes from '@/[fsd]/features/agent/ui/agent-details/configurations/ApplicationEditorNotes';
 import { ApplicationSkills } from '@/[fsd]/features/skill/ui';
 import { ViewMode } from '@/common/constants.js';
 import ApplicationVariables from '@/components/ApplicationVariables.jsx';
@@ -58,6 +59,10 @@ const ApplicationConfigurationForm = memo(props => {
         style={styles.section}
         disabled={isDisabled}
         showIgnoreProjectContext
+      />
+      <ApplicationEditorNotes
+        style={styles.section}
+        disabled={isDisabled}
       />
       <ApplicationInformation style={styles.section} />
     </Box>
