@@ -4,6 +4,7 @@ import { Box, TextField, Typography } from '@mui/material';
 
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { Button, Modal } from '@/[fsd]/shared/ui';
+import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 
 const DeleteEntityModal = memo(props => {
   const {
@@ -18,6 +19,11 @@ const DeleteEntityModal = memo(props => {
     titleIcon = ModalConstants.MODAL_ICON_TYPE.destructive,
     title = 'Delete confirmation',
     actions,
+    alarm = true,
+    confirmButtonText = 'Delete',
+    cancelButtonText = 'Cancel',
+    customContent,
+    textContent = 'Are you sure to delete ',
   } = props;
 
   const styles = deleteEntityModalStyles();
@@ -58,7 +64,7 @@ const DeleteEntityModal = memo(props => {
         variant="bodyMedium"
         sx={{ whiteSpaceCollapse: 'preserve' }}
       >
-        Are you sure to delete{' '}
+        {textContent}
         <Typography
           component="span"
           variant="headingSmall"
@@ -66,7 +72,7 @@ const DeleteEntityModal = memo(props => {
         >
           {name}
         </Typography>
-        ?{inlineExtraContent}
+        {inlineExtraContent || '?'}
         {shouldRequestInputName && ' Enter the name to complete the action.'}
       </Typography>
       {extraContent}
@@ -89,15 +95,15 @@ const DeleteEntityModal = memo(props => {
     <>
       <Button.BaseBtn
         autoFocus
-        variant="elitea"
-        color="secondary"
+        variant={BUTTON_VARIANTS.elitea}
+        color={BUTTON_COLORS.secondary}
         onClick={e => resetButtonState(e, onClose)}
       >
-        Cancel
+        {cancelButtonText}
       </Button.BaseBtn>
       <Button.OneClickButton
-        title="Delete"
-        color="alarm"
+        title={confirmButtonText}
+        color={alarm ? BUTTON_COLORS.alarm : BUTTON_COLORS.primary}
         disabled={isButtonDisabled}
         onClick={onConfirm}
       />
@@ -110,7 +116,7 @@ const DeleteEntityModal = memo(props => {
       variant={ModalConstants.MODAL_VARIANT.simple}
       titleIcon={titleIcon}
       title={title}
-      content={contentNode}
+      content={customContent ?? contentNode}
       actions={actions ?? actionsNode}
       onClose={e => resetButtonState(e, onClose)}
       onKeyDown={handleKeyDown}
