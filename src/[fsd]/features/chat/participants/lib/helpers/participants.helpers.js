@@ -34,6 +34,8 @@ export const getParticipantName = (participant, systemSenderName = DEFAULT_PARTI
       return participant?.entity_meta?.name || participant?.meta?.name || '';
     case ChatParticipantType.Toolkits:
       return participant?.entity_meta?.name || participant?.meta?.name || '';
+    case ChatParticipantType.Skills:
+      return participant?.entity_meta?.name || participant?.meta?.name || '';
     case ChatParticipantType.Dummy:
       return systemSenderName;
     default:
@@ -44,6 +46,8 @@ export const getParticipantName = (participant, systemSenderName = DEFAULT_PARTI
 export const isParticipantStillActive = participant => {
   switch (participant?.entity_name) {
     case ChatParticipantType.Applications:
+      return !!participant?.meta?.name;
+    case ChatParticipantType.Skills:
       return !!participant?.meta?.name;
     case ChatParticipantType.Models:
       return !!participant?.entity_meta?.model_name;

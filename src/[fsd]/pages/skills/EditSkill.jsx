@@ -119,6 +119,7 @@ const EditSkill = memo(() => {
         fullWidth
         forceShowLabel
         tabSX={{ paddingX: '24px' }}
+        panelStyle={styles.tabPanel}
         tabsSX={styles.tabContainer}
         leftTabbarSectionSX={styles.leftTabbarSection}
         tabs={[
@@ -229,6 +230,9 @@ const editSkillStyles = () => ({
     maxWidth: '33%',
     width: 'fit-content',
   },
+  tabPanel: {
+    padding: '0rem !important',
+  },
   loadingContainer: {
     height: '100%',
     width: '100%',
@@ -251,8 +255,7 @@ const editSkillStyles = () => ({
     height: '100%',
   },
   informationWrapper: {
-    margin: '0.75rem auto 0',
-    maxWidth: '40.1875rem',
+    marginTop: '0.75rem',
   },
 });
 

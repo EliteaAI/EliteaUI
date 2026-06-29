@@ -12,7 +12,7 @@ import { ChatMessageList } from '@/[fsd]/features/chat/ui/chat-box';
 import { DEFAULT_MAX_TOKENS, DEFAULT_TEMPERATURE } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
 import { useListModelsQuery } from '@/api/configurations.js';
 import { useGenerateContentStreamingMutation, useStopLlmTaskMutation } from '@/api/llm';
-import { ROLES, SocketMessageType, sioEvents } from '@/common/constants';
+import { ChatParticipantType, ROLES, SocketMessageType, sioEvents } from '@/common/constants';
 import { initializeNewMessages } from '@/common/initializeNewMessages';
 import { buildErrorMessage } from '@/common/utils';
 import FullScreenToggle from '@/components/Chat/FullScreenToggle';
@@ -81,7 +81,7 @@ const SkillTestPanel = memo(({ isFullScreenChat, setIsFullScreenChat }) => {
   const syntheticParticipant = useMemo(
     () => ({
       id: SYNTHETIC_PARTICIPANT_ID,
-      entity_name: 'application',
+      entity_name: ChatParticipantType.Skills,
       entity_meta: { id: SYNTHETIC_PARTICIPANT_ID, name: skillName, project_id: projectId },
       entity_settings: {},
       meta: { name: skillName },

@@ -4,28 +4,37 @@ import { useFormikContext } from 'formik';
 
 import { Box, Typography } from '@mui/material';
 
+import { GenerateSkillButton } from '@/[fsd]/features/skill/ui/generate-skill-modal';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { useFieldFocus } from '@/[fsd]/shared/lib/hooks';
 import { Field, Input, Markdown } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import TabGroupButton from '@/[fsd]/shared/ui/tab-group-button/TabGroupButton';
-import { GenerateSkillButton } from '@/[fsd]/features/skill/ui/generate-skill-modal';
 import { useTagListQuery } from '@/api/tags.js';
 import CodeIcon from '@/assets/code-icon.svg?react';
 import OpenEyeIcon from '@/assets/open-eye-icon.svg?react';
 import {
+  ChatParticipantType,
   MAX_DESCRIPTION_LENGTH,
   MAX_INSTRUCTIONS_LENGTH,
   MAX_NAME_LENGTH,
   PROMPT_PAYLOAD_KEY,
 } from '@/common/constants';
+import EntityIcon from '@/components/EntityIcon';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import TagEditor from '@/pages/Common/Components/TagEditor';
 import { markdown } from '@codemirror/lang-markdown';
 import { useTheme } from '@emotion/react';
 
 const CreateSkillForm = memo(props => {
-  const { accordionStyle, sx, disabled = false, instructionsKey, onSkillCreated, showGenerateButton = false } = props;
+  const {
+    accordionStyle,
+    sx,
+    disabled = false,
+    instructionsKey,
+    onSkillCreated,
+    showGenerateButton = false,
+  } = props;
   const formik = useFormikContext();
   const theme = useTheme();
   const projectId = useSelectedProjectId();
@@ -130,35 +139,44 @@ const CreateSkillForm = memo(props => {
         items={[
           {
             title: 'General',
-            summaryAction: showGenerateButton ? <GenerateSkillButton onSkillCreated={onSkillCreated} /> : null,
+            summaryAction: showGenerateButton ? (
+              <GenerateSkillButton onSkillCreated={onSkillCreated} />
+            ) : null,
             content: (
               <Box sx={styles.accordionContent}>
-                <Box sx={styles.nameWrapperInput}>
-                  <Input.StyledInputEnhancer
-                    autoComplete="off"
-                    id="name"
-                    name="name"
-                    label="Name"
-                    error={formik.touched?.name && Boolean(formik.errors.name)}
-                    helperText={formik.touched?.name && formik.errors.name}
-                    disabled={disabled}
-                    onChange={onChangeName}
-                    onFocus={() => toggleFieldFocus(PROMPT_PAYLOAD_KEY.name)}
-                    onBlur={onNameBlur}
-                    value={name}
-                    required
-                    inputProps={{ maxLength: MAX_NAME_LENGTH }}
-                    containerProps={{ flex: 1 }}
-                    enableAutoBlur={false}
+                <Box sx={styles.nameContainer}>
+                  <EntityIcon
+                    entityType={ChatParticipantType.Skills}
+                    icon={formik.values?.version_details?.meta?.icon_meta}
+                    editable={false}
                   />
-                  {isFocused(PROMPT_PAYLOAD_KEY.name) && name.length > 0 && (
-                    <Typography
-                      variant="bodySmall2"
-                      sx={styles.charactersLabel}
-                    >
-                      {`${MAX_NAME_LENGTH - name.length} characters left`}
-                    </Typography>
-                  )}
+                  <Box sx={styles.nameWrapperInput}>
+                    <Input.StyledInputEnhancer
+                      autoComplete="off"
+                      id="name"
+                      name="name"
+                      label="Name"
+                      error={formik.touched?.name && Boolean(formik.errors.name)}
+                      helperText={formik.touched?.name && formik.errors.name}
+                      disabled={disabled}
+                      onChange={onChangeName}
+                      onFocus={() => toggleFieldFocus(PROMPT_PAYLOAD_KEY.name)}
+                      onBlur={onNameBlur}
+                      value={name}
+                      required
+                      inputProps={{ maxLength: MAX_NAME_LENGTH }}
+                      containerProps={{ flex: 1 }}
+                      enableAutoBlur={false}
+                    />
+                    {isFocused(PROMPT_PAYLOAD_KEY.name) && name.length > 0 && (
+                      <Typography
+                        variant="bodySmall2"
+                        sx={styles.charactersLabel}
+                      >
+                        {`${MAX_NAME_LENGTH - name.length} characters left`}
+                      </Typography>
+                    )}
+                  </Box>
                 </Box>
 
                 <Box sx={styles.descriptionWrapper}>
@@ -281,13 +299,16 @@ const CreateSkillForm = memo(props => {
 
 const skillCreateFormStyles = () => ({
   rootContainer: {
-    margin: '0.75rem auto 0',
-    maxWidth: '40.1875rem',
+    width: '100%',
   },
   accordionContent: {
     paddingBottom: '1.5rem',
+  },
+  nameContainer: {
     display: 'flex',
-    flexDirection: 'column',
+    alignItems: 'center',
+    height: '4.25rem',
+    width: '100%',
     gap: '1rem',
   },
   nameWrapperInput: {

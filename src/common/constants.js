@@ -953,6 +953,7 @@ export const ChatParticipantType = {
   Models: 'llm',
   Users: 'user',
   Pipelines: 'pipeline',
+  Skills: 'skill',
   Dummy: 'dummy',
 };
 
