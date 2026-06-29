@@ -336,21 +336,28 @@ const ApplicationThinkView = memo(props => {
     [isReasoningAction, isMetaTool, isSwarmChildAction],
   );
 
-  // The sub-agent an action originated from — the same signal the chip's
-  // parenthetical "(Agent Name)" uses (see ActionView.buildTitle). Falls back
-  // across the field variants the different socket events populate:
-  // AgentLlmStart/AgentToolStart set top-level parent_agent_name/original_name;
-  // AgentLlmChunk (streaming) sets neither and only exposes the node name via
-  // toolMeta.checkpoint_ns ("{AgentName}:{uuid}") — mirror getToolActionOriginalName.
+  // The sub-agent an action originated from — drives whether the action lands in
+  // a sub-agent ACCORDION (true delegated invocation) or stays a flat coordinator
+  // chip. Only TWO signals mark a true sub-agent, and they are the only ones the
+  // backend stamps exclusively on delegation (never on a plain pipeline node):
+  //   1. parent_agent_name — present on every INNER chip of a nested Application
+  //      invocation (in-process nested config, or durable fan-out event overlay).
+  //   2. the delegation WRAPPER chip — the parent's tool call into the sub-agent,
+  //      identified by toolkit_type 'application'/'pipeline' (or any agent_type);
+  //      its original_name is the sub-agent's display name.
+  // A plain pipeline node (#5389) carries NEITHER: its node name lives only in
+  // langgraph_node / checkpoint_ns ("{Node}:{uuid}") and its tools are
+  // internal/mcp/toolkit-typed — so it resolves to '' (coordinator) and renders
+  // as a flat, node-labeled chip in BOTH streaming and reload, with no accordion.
+  // (Previously a bare original_name/checkpoint_ns fallback misread pipeline nodes
+  // as sub-agents during streaming only, diverging from the flat reload view.)
   const deriveSubAgentName = useCallback(item => {
     if (!item) return '';
-    const explicit = item.parent_agent_name || item.toolMeta?.parent_agent_name || item.original_name;
-    if (explicit) return explicit;
-    const ns = item.toolMeta?.checkpoint_ns;
-    if (ns) {
-      const name = ns.split(':')[0];
-      if (name && name !== 'main_agent' && name !== 'agent') return name;
-    }
+    const parent = item.parent_agent_name || item.toolMeta?.parent_agent_name;
+    if (parent) return parent;
+    const type = item.toolMeta?.toolkit_type;
+    const isDelegationWrapper = type === 'application' || type === 'pipeline' || !!item.toolMeta?.agent_type;
+    if (isDelegationWrapper && item.original_name) return item.original_name;
     return '';
   }, []);
 

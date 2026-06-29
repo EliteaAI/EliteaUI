@@ -14,7 +14,19 @@ import {
 const TOOL = 'tool';
 const SUB = 'Name Resolver';
 
-const deriveName = a => a.parent_agent_name || a.original_name || '';
+// Mirror of ApplicationThinkView.deriveSubAgentName (#5389): a true sub-agent is
+// marked ONLY by parent_agent_name (inner chips) or a delegation WRAPPER tool
+// (toolkit_type application/pipeline, or any agent_type). A plain pipeline node
+// (node name in `name`/checkpoint_ns, internal/toolkit-typed tool) is NOT a
+// sub-agent → resolves to '' (coordinator → flat chip).
+const deriveName = a => {
+  const parent = a.parent_agent_name || a.toolMeta?.parent_agent_name;
+  if (parent) return parent;
+  const type = a.toolMeta?.toolkit_type;
+  const isDelegationWrapper = type === 'application' || type === 'pipeline' || !!a.toolMeta?.agent_type;
+  if (isDelegationWrapper && a.original_name) return a.original_name;
+  return '';
+};
 const deriveInstanceKey = a => a.parent_agent_call_id || deriveName(a);
 const classifyWrapper = (a, name) => {
   const isInner = !!a.parent_agent_name;
@@ -32,12 +44,16 @@ const subBlocks = result => result.filter(b => b.kind === 'sub');
 // --- Action builders ------------------------------------------------------ //
 
 // Invocation wrapper (no parent_agent_name): the orchestrator's call to the sub.
+// A real delegation wrapper carries the sub-agent's kind in toolMeta.toolkit_type
+// ('application' for an agent, 'pipeline' for a pipeline) — that, not the bare
+// name, is what marks it a sub-agent under deriveName (#5389).
 const wrap = (pcid, status, extra = {}) => ({
   type: TOOL,
   name: SUB,
   original_name: SUB,
   parent_agent_call_id: pcid,
   status,
+  toolMeta: { toolkit_type: 'application' },
   ...extra,
 });
 // Inner chip emitted inside the sub-agent (carries parent_agent_name).
@@ -49,6 +65,25 @@ const inner = (pcid, status = 'complete') => ({
   status,
 });
 const coord = () => ({ type: 'llm', name: 'think', status: 'complete' });
+
+// --- Plain pipeline nodes (#5389) — NOT sub-agents ------------------------ //
+// A single-shot LLM node inside a directly-run pipeline: node name in `name` and
+// checkpoint_ns, NO parent_agent_name, NO delegation toolkit_type.
+const pipeLlmNode = (name = 'Executor') => ({
+  type: 'llm',
+  name,
+  status: 'complete',
+  toolMeta: { ls_model_name: 'gpt-4o', checkpoint_ns: `${name}:abc-uuid` },
+});
+// A tool invoked by a pipeline node: original_name carries the node name (from
+// checkpoint_ns) but the tool's own kind is internal/toolkit — never a delegation.
+const pipeToolNode = (node = 'LLM5') => ({
+  type: TOOL,
+  name: 'create_page',
+  original_name: node,
+  status: 'complete',
+  toolMeta: { toolkit_type: 'internal', checkpoint_ns: `${node}:abc-uuid` },
+});
 
 // --- Tests ---------------------------------------------------------------- //
 
@@ -128,6 +163,44 @@ describe('partitionActionsIntoBlocks — parallel must not regress (#5378/#5379)
   });
 });
 
+describe('partitionActionsIntoBlocks — plain pipeline nodes are NOT sub-agents (#5389)', () => {
+  it('keeps a single-shot LLM pipeline node as a coordinator chip (no accordion)', () => {
+    const result = run([pipeLlmNode('Executor')]);
+    expect(result.map(b => b.kind)).toEqual(['coord']);
+    expect(subBlocks(result)).toHaveLength(0);
+  });
+
+  it('keeps a pipeline node tool (original_name = node, internal toolkit) as coordinator', () => {
+    const result = run([pipeToolNode('LLM5')]);
+    expect(result.map(b => b.kind)).toEqual(['coord']);
+    expect(subBlocks(result)).toHaveLength(0);
+  });
+
+  it('keeps a whole multi-node pipeline run flat (one coordinator block, no subs)', () => {
+    const result = run([
+      pipeLlmNode('Start'),
+      pipeLlmNode('Executor'),
+      pipeToolNode('Executor'),
+      pipeLlmNode('LLM5'),
+      pipeToolNode('LLM5'),
+    ]);
+    expect(subBlocks(result)).toHaveLength(0);
+    expect(result).toHaveLength(1);
+    expect(result[0].kind).toBe('coord');
+  });
+
+  it('still groups a TRUE sub-agent (parent_agent_name / delegation wrapper) into an accordion', () => {
+    // A pipeline that ALSO delegates to a real sub-agent: the pipeline nodes stay
+    // flat, the delegated sub-agent gets its own accordion.
+    const result = run([pipeLlmNode('Start'), wrap('p1', 'complete'), inner('p1'), pipeLlmNode('End')]);
+    const subs = subBlocks(result);
+    expect(subs).toHaveLength(1);
+    expect(subs[0].name).toBe(SUB);
+    // pipeline nodes split the coordinator run around the sub-agent block
+    expect(result.map(b => b.kind)).toEqual(['coord', 'sub', 'coord']);
+  });
+});
+
 describe('partitionActionsIntoBlocks — ordering', () => {
   it('keeps coordinator runs as their own blocks between sub-agents', () => {
     const result = run([
@@ -175,6 +248,7 @@ const rwrap = pcid => ({
   status: 'complete',
   toolOutputs: 'sub-agent final answer',
   isError: false,
+  toolMeta: { toolkit_type: 'application' },
 });
 // Reload-shaped inner chip: completed, stamped with the sub-agent name.
 const rinner = pcid => ({

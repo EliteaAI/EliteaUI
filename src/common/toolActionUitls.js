@@ -1,7 +1,12 @@
 import { INTERNAL_TOOLS_LIST } from '@/[fsd]/shared/lib/constants/internalTools.constants';
 import { ToolTypes } from '@/pages/Applications/Components/Tools/consts';
 
-import { TOOL_ACTION_TYPES } from './constants';
+import { TOOL_ACTION_NAMES, TOOL_ACTION_TYPES } from './constants';
+
+// Generic node names that are NOT meaningful pipeline-node labels: the default
+// transition step and the single-node names a plain agent graph reports. A chip
+// with one of these is a bare model chip, not a named pipeline node (#5389).
+const GENERIC_LLM_NODE_NAMES = new Set([TOOL_ACTION_NAMES.Llm, 'agent', 'main_agent']);
 
 /**
  * Backwards-compatibility fallback for internal tools recorded before display_name
@@ -25,14 +30,29 @@ const createBaseToolInfo = action => ({
   markdown: action?.markdown || false,
 });
 
-const handleLlmOrSummaryAction = action => ({
-  ...createBaseToolInfo(action),
-  toolkitName:
-    action?.toolMeta?.ls_model_name ||
-    (action?.type === TOOL_ACTION_TYPES.Summary ? action?.name : undefined),
-  toolkitType: 'model',
-  thinking: action?.thinking || '',
-});
+const handleLlmOrSummaryAction = action => {
+  // A single-shot pipeline LLM node (no tool calls) reports its graph node name
+  // as action.name (e.g. "Executor", "LLM5") in BOTH streaming (agent_llm_end
+  // thinking-step tool_name) and reload (persisted thinking_steps tool_name).
+  // Surface it as originalToolName so ActionView.buildTitle appends the
+  // "(NodeName)" parenthetical the same way tool chips already do — fixing the
+  // long-standing missing-node-label bug (#5389). Generic transition/agent names
+  // are not meaningful labels and stay bare (no "(agent)" on a normal chat).
+  const nodeName = action?.name;
+  const originalToolName =
+    action?.type === TOOL_ACTION_TYPES.Llm && nodeName && !GENERIC_LLM_NODE_NAMES.has(nodeName)
+      ? nodeName
+      : undefined;
+  return {
+    ...createBaseToolInfo(action),
+    toolkitName:
+      action?.toolMeta?.ls_model_name ||
+      (action?.type === TOOL_ACTION_TYPES.Summary ? action?.name : undefined),
+    toolkitType: 'model',
+    thinking: action?.thinking || '',
+    originalToolName,
+  };
+};
 
 const findAgentTool = (action, tools, toolName) => {
   return action?.toolMeta?.langgraph_node === 'agent'
