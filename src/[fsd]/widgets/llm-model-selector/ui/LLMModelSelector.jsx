@@ -74,6 +74,7 @@ const LLMModelSelector = memo(props => {
     <>
       {/*<pre>{JSON.stringify(models, null, 2)}</pre>*/}
       <ButtonGroup
+        data-testid="model-selector-button"
         variant="elitea"
         disableElevation
         color="secondary"
@@ -92,6 +93,7 @@ const LLMModelSelector = memo(props => {
             sx={styles.modelButtonWrapper}
           >
             <Button
+              data-testid="model-selector-name"
               variant="elitea"
               color="secondary"
               disabled={disabled}
@@ -141,6 +143,7 @@ const LLMModelSelector = memo(props => {
             >
               <Box component="span">
                 <Button
+                  data-testid="model-settings-button"
                   size="small"
                   aria-expanded={showLLMSettings ? 'true' : undefined}
                   aria-label="model settings menu"

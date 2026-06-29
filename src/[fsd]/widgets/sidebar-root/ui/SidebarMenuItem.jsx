@@ -33,6 +33,7 @@ const SidebarMenuItem = memo(props => {
         sx={{ ...styles.menuItem, display }}
       >
         <ListItemButton
+          data-testid={menuTitle ? `sidebar-item-${menuTitle.toLowerCase().replace(/\s+/g, '-')}` : undefined}
           disabled={shouldDisablePersonalSpace || disabled}
           selected={selected}
           onClick={onClick}
@@ -55,6 +56,7 @@ const SidebarMenuItem = memo(props => {
         sx={{ ...styles.menuItem, display }}
       >
         <ListItemButton
+          data-testid={menuTitle ? `sidebar-item-${menuTitle.toLowerCase().replace(/\s+/g, '-')}` : undefined}
           disabled={disabled}
           selected={selected}
           onClick={onClick}

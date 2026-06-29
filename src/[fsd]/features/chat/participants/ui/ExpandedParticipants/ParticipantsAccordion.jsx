@@ -58,6 +58,7 @@ const ParticipantsAccordion = memo(props => {
               placement="top"
             >
               <IconButton
+                data-testid={`participant-refresh-${title.toLowerCase().replace(/s$/, '').replace(/\s+/g, '-')}`}
                 variant="elitea"
                 color="tertiary"
                 onClick={handleRefresh}

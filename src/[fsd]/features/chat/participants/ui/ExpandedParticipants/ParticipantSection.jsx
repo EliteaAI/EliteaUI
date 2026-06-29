@@ -27,7 +27,10 @@ const ParticipantSection = memo(props => {
   const { isSmallWindow } = useIsSmallWindow();
 
   return (
-    <Box sx={styles.mainContainer(collapsed, isSmallWindow)}>
+    <Box
+      data-testid={`participant-${entityType.toLowerCase() !== 'mcp' ? entityType.toLowerCase() : 'mcp'}-list`}
+      sx={styles.mainContainer(collapsed, isSmallWindow)}
+    >
       <ParticipantsAccordion
         title={`${entityType.toLowerCase() !== 'mcp' ? entityType : 'MCP'}s`}
         onRefresh={onRefresh}

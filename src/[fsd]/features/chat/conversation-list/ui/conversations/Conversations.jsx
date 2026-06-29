@@ -154,7 +154,9 @@ const Conversations = memo(props => {
             const existingIds = new Set(g.conversations.map(c => c.id));
             const pinnedIds = new Set((pinnedConversations || []).map(c => c.id));
             const rawConversations = result.conversations || [];
-            const newConversations = rawConversations.filter(c => !existingIds.has(c.id) && !pinnedIds.has(c.id));
+            const newConversations = rawConversations.filter(
+              c => !existingIds.has(c.id) && !pinnedIds.has(c.id),
+            );
             const newOffset = (g.offset || g.conversations.length) + rawConversations.length;
 
             return {
@@ -176,7 +178,16 @@ const Conversations = memo(props => {
         });
       }
     },
-    [dateGroups, loadingGroups, pinnedConversations, projectId, setDateGroups, triggerDateGroupFetch, sortBy, sortOrder],
+    [
+      dateGroups,
+      loadingGroups,
+      pinnedConversations,
+      projectId,
+      setDateGroups,
+      triggerDateGroupFetch,
+      sortBy,
+      sortOrder,
+    ],
   );
 
   const onLoadMoreInFolder = useCallback(
@@ -205,7 +216,9 @@ const Conversations = memo(props => {
             const existingIds = new Set(f.conversations.map(c => c.id));
             const pinnedIds = new Set((pinnedConversations || []).map(c => c.id));
             const rawConversations = result.conversations || [];
-            const newConversations = rawConversations.filter(c => !existingIds.has(c.id) && !pinnedIds.has(c.id));
+            const newConversations = rawConversations.filter(
+              c => !existingIds.has(c.id) && !pinnedIds.has(c.id),
+            );
             const newOffset = (f.offset || f.conversations.length) + rawConversations.length;
 
             return {
@@ -227,7 +240,16 @@ const Conversations = memo(props => {
         });
       }
     },
-    [folders, loadingFolders, pinnedConversations, projectId, setFolders, triggerFolderFetch, sortBy, sortOrder],
+    [
+      folders,
+      loadingFolders,
+      pinnedConversations,
+      projectId,
+      setFolders,
+      triggerFolderFetch,
+      sortBy,
+      sortOrder,
+    ],
   );
 
   // Initialize drag and drop functionality
@@ -481,6 +503,7 @@ const Conversations = memo(props => {
       autoScroll={false}
     >
       <Box
+        data-testid="conversation-list"
         data-tour={CHAT_TOUR_TARGET_IDS.conversations}
         sx={{ height: '100%', position: 'relative', width: collapsed && !isSmallWindow ? '36px' : '100%' }}
       >
@@ -538,6 +561,7 @@ const Conversations = memo(props => {
                   </span>
                 </Tooltip>
                 <ConversationSearchButton
+                  data-testid="conversation-search-button"
                   collapsed={collapsed}
                   onExpand={onCollapsed}
                   onSearchActivate={handleSearchActivate}
@@ -624,6 +648,7 @@ const Conversations = memo(props => {
         {isSearchActive && !collapsed && (
           <Box sx={styles.searchBarContainer}>
             <SimpleSearchBar
+              data-testid="conversation-search-input"
               searchQuery={searchQuery}
               onSearchChange={handleSearchChange}
               onSearchClear={handleSearchClear}

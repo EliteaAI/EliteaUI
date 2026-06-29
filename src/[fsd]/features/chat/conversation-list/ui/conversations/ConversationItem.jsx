@@ -357,6 +357,7 @@ const ConversationItem = memo(props => {
 
   const renderConversationContent = () => (
     <Box
+      data-testid="conversation-item"
       sx={styles.conversationContentWrapper}
       onClick={onClickConversation}
       onMouseEnter={onMouseEnter}
@@ -422,6 +423,7 @@ const ConversationItem = memo(props => {
           sx={styles.menuWrapper}
         >
           <DotMenu
+            data-testid="conversation-menu-action"
             id="conversation-menu"
             slotProps={{
               ListItemText: {

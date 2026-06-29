@@ -78,6 +78,7 @@ const SingleSelect = memo(props => {
     infoIconDescription,
     shrinkLabel = false,
     valueItemSX,
+    'data-testid': testId,
   } = props;
 
   const [menuOpen, setMenuOpen] = useState(false);
@@ -614,6 +615,7 @@ const SingleSelect = memo(props => {
   const renderSelectComponent = (selectwithLabelSx, selectIconWithLabelSx) => {
     return (
       <FormControl
+        data-testid={testId}
         fullWidth={showBorder !== false}
         required={required}
         sx={[styles.formControl, sx]}

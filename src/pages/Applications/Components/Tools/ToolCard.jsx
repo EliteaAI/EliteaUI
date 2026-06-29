@@ -418,6 +418,7 @@ const ToolCard = memo(props => {
             <Box sx={styles.contentBox(isAgentOrPipeline)}>
               <Box sx={styles.titleRow}>
                 <TypographyWithConditionalTooltip
+                  data-testid="agent-toolkit-name"
                   title={toolkitName}
                   placement="right"
                   variant="bodyMedium"
@@ -513,6 +514,7 @@ const ToolCard = memo(props => {
                   placement="top"
                 >
                   <IconButton
+                    data-testid="agent-toolkit-open-button"
                     id={'OpenInNewTabButton'}
                     variant="elitea"
                     color="tertiary"
@@ -533,6 +535,7 @@ const ToolCard = memo(props => {
                 placement="top"
               >
                 <IconButton
+                  data-testid="agent-toolkit-delete-button"
                   id={'DeleteButton'}
                   variant="elitea"
                   color="tertiary"

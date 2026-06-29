@@ -44,6 +44,7 @@ const GroupedButton = ({ value, onChange, buttonItems, readOnly, disabled, sx })
       {buttonItems.map((item, index) => (
         <StyledButton
           key={index}
+          data-testid={item.value ? `pipeline-${item.value}-view-button` : undefined}
           sx={{
             '&:hover': {
               backgroundColor: theme.palette.background.button.default,

@@ -333,6 +333,7 @@ export default function DotMenu({
         />
       ) : (
         <IconButton
+          data-testid="entity-actions-menu-button"
           variant="elitea"
           color={iconColor}
           id={id + '-action'}

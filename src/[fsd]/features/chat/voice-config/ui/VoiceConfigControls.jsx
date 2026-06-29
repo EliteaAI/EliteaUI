@@ -59,6 +59,7 @@ const VoiceConfigControls = memo(props => {
     <Box sx={styles.content}>
       {voiceOptions.length > 0 && (
         <SingleSelect
+          data-testid="voice-selector-dropdown"
           label="Voice"
           value={selectedVoiceValue}
           options={voiceOptions}
@@ -109,6 +110,7 @@ const VoiceConfigControls = memo(props => {
       {!isPlaying && (
         <Box>
           <Button.BaseBtn
+            data-testid="voice-preview-button"
             variant="elitea"
             color="secondary"
             loading={isPreviewPlaying}

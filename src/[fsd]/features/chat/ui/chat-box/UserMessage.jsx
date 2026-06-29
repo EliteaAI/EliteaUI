@@ -165,6 +165,7 @@ const UserMessage = React.forwardRef((props, ref) => {
                 placement="top"
               >
                 <IconButton
+                  data-testid="chat-message-copy"
                   sx={styles.iconButton}
                   variant="elitea"
                   color="tertiary"
@@ -195,6 +196,7 @@ const UserMessage = React.forwardRef((props, ref) => {
                 placement="top"
               >
                 <IconButton
+                  data-testid="chat-message-edit"
                   sx={styles.iconButton}
                   variant="elitea"
                   color="tertiary"
@@ -211,6 +213,7 @@ const UserMessage = React.forwardRef((props, ref) => {
                 placement="top"
               >
                 <IconButton
+                  data-testid="chat-message-delete"
                   sx={styles.iconButton}
                   variant="elitea"
                   color="tertiary"

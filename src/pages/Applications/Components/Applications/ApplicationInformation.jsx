@@ -79,6 +79,7 @@ const ApplicationInformation = memo(props => {
         content: (
           <Box sx={styles.contentContainer}>
             <CopyToClipboardButton
+              data-testid="entity-copy-id-button"
               label={`${entityTitle} ID:`}
               value={id}
               tooltip="Copy ID"
@@ -86,6 +87,7 @@ const ApplicationInformation = memo(props => {
             />
             {versionId !== undefined && (
               <CopyToClipboardButton
+                data-testid="entity-copy-version-id-button"
                 label="Version ID:"
                 value={versionId}
                 tooltip="Copy version ID"

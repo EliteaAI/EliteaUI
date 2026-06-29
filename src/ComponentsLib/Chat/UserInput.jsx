@@ -336,7 +336,7 @@ const UserInput = forwardRef((props, ref) => {
               </Typography>
             )}
             <TextField
-              data-testid="chat-input"
+              data-testid="chat-message-input"
               value={inputContent}
               fullWidth
               id="standard-multiline-static"
@@ -415,6 +415,7 @@ const UserInput = forwardRef((props, ref) => {
               >
                 <Box component="span">
                   <BaseBtn
+                    data-testid="chat-stop-button"
                     variant="icon"
                     color="secondary"
                     sx={styles.stopButton(stopButton)}

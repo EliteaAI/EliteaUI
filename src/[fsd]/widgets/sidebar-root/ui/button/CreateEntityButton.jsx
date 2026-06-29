@@ -312,6 +312,7 @@ const CreateEntityButton = memo(props => {
             ) : (
               <>
                 <Button.BaseBtn
+                  data-testid="create-entity-button"
                   variant="special"
                   disabled={disableCreateButton}
                   startIcon={<PlusIcon />}

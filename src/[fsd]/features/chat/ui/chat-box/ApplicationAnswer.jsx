@@ -797,6 +797,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                       placement="top"
                     >
                       <IconButton
+                        data-testid="chat-message-ai-copy"
                         disabled={isProcessing || !realAnswer}
                         sx={styles.iconButton}
                         variant="elitea"
@@ -830,6 +831,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                     >
                       <Box>
                         <IconButton
+                          data-testid="chat-message-regenerate"
                           sx={styles.iconButton}
                           variant="elitea"
                           color="tertiary"
@@ -875,6 +877,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                     >
                       <Box>
                         <IconButton
+                          data-testid="chat-message-ai-delete"
                           disabled={hasCanvasBeingEdited || (isApplicationParticipant ? false : isProcessing)}
                           sx={styles.iconButton}
                           variant="elitea"

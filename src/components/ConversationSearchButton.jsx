@@ -24,6 +24,7 @@ const ConversationSearchButton = ({ collapsed = false, onExpand, onSearchActivat
       placement="top"
     >
       <IconButton
+        data-testid="conversation-search-button"
         onClick={handleSearchClick}
         variant="elitea"
         color="secondary"

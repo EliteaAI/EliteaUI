@@ -240,6 +240,7 @@ export default function SearchBar({ searchString, setSearchString, searchTags, s
               </Box>
             )}
             <StyledInputBase
+              data-testid="agent-search-input"
               placeholder="Let's find something amazing!"
               inputProps={{ 'aria-label': 'search' }}
               inputRef={inputRef}

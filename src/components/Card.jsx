@@ -154,6 +154,7 @@ const Card = memo(props => {
 
   return (
     <Box
+      data-testid="entity-card"
       sx={styles.wrapper}
       ref={cardRef}
       onMouseEnter={handleMouseEnter}

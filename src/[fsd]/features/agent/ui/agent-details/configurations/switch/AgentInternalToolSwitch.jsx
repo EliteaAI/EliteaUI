@@ -70,7 +70,10 @@ const AgentInternalToolSwitch = memo(props => {
   }, [icon, iconMap, styles.toolSvgIcon]);
 
   return (
-    <Box sx={styles.container}>
+    <Box
+      data-testid={`internal-tool-${name.replace(/_/g, '-')}`}
+      sx={styles.container}
+    >
       <Box sx={styles.contentContainer}>
         <EntityIcon
           sx={styles.entityIcon}
@@ -89,6 +92,7 @@ const AgentInternalToolSwitch = memo(props => {
       <FormControlLabel
         control={
           <Switch.BaseSwitch
+            data-testid={`internal-tool-${name.replace(/_/g, '-')}-switch`}
             checked={allowTool}
             onChange={onChange}
             disabled={disabled}
