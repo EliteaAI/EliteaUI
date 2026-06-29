@@ -200,20 +200,27 @@ export const generateChatContinuePayload = ({
   // Get MCP server URLs from toolkit participants to check for valid tokens
   const mcpServerUrls = getMcpServerUrlsFromParticipants(participants);
 
+  const allTokens = McpAuthHelpers.getAllTokens();
+
   // Only servers missing valid tokens (does NOT read localStorage)
   const noTokenServers = McpAuthHelpers.getServersWithoutTokens(mcpServerUrls);
 
   // Merge: no-token servers + session-declined servers (deduplicated)
-  const allIgnored = [...new Set([...noTokenServers, ...sessionDeclinedMcpServers.map(s => s.server_url)])];
+  const allIgnored = [
+    ...new Set([...noTokenServers, ...sessionDeclinedMcpServers.map(s => s.server_url)]),
+  ].filter(s => !allTokens[s]);
+
+  // Exclude servers from user_declined_mcp_servers that now have tokens (user authenticated them)
+  const effectiveDeclinedServers = sessionDeclinedMcpServers.filter(s => !allTokens[s.server_url]);
 
   return {
     project_id: projectId,
     conversation_uuid,
     message_id,
     thread_id,
-    mcp_tokens: McpAuthHelpers.getAllTokens(),
+    mcp_tokens: allTokens,
     ignored_mcp_servers: allIgnored,
-    user_declined_mcp_servers: sessionDeclinedMcpServers, // full metadata for LLM context + re-auth
+    user_declined_mcp_servers: effectiveDeclinedServers,
     user_input: question,
   };
 };
