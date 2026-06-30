@@ -26,6 +26,22 @@ export default {
       control: 'boolean',
       description: 'Fullscreen mode (only for complex variant)',
     },
+    alarm: {
+      control: 'boolean',
+      description: 'Highlight confirm button as alarm (red)',
+    },
+    confirmButtonText: {
+      control: 'text',
+      description: 'Text for confirm button',
+    },
+    cancelButtonText: {
+      control: 'text',
+      description: 'Text for cancel button',
+    },
+    confirming: {
+      control: 'boolean',
+      description: 'Disable confirm button while loading',
+    },
   },
 };
 
@@ -40,6 +56,10 @@ BaseModal.args = {
   titleIcon: 'warning',
   onClose: () => {},
   onConfirm: () => {},
+  alarm: false,
+  confirmButtonText: 'Confirm',
+  cancelButtonText: 'Cancel',
+  confirming: false,
 };
 
 const DeleteEntityTemplate = args => {
@@ -94,6 +114,8 @@ DeleteEntityModal.args = {
   shouldRequestInputName: false,
   withExtraContent: true,
   withCustomActions: false,
+  inlineExtraContent: "? It can't be restored.",
+  textContent: 'Are you sure to delete ',
 };
 DeleteEntityModal.argTypes = {
   variant: { table: { disable: true } },
