@@ -1082,22 +1082,6 @@ export const genForkedEntityLink = ({ entity_project_id, entity_name, entity_id,
   return `${baseUrl}${basename}${projectPath}?viewMode=owner&name=${encodeURIComponent(name)}`;
 };
 
-// Resolve a download filename from a Content-Disposition header. Prefer the
-// RFC 5987 `filename*=UTF-8''...` parameter (carries non-Latin names intact);
-// fall back to the legacy ASCII `filename="..."` only when it is absent.
-export const getFilenameFromContentDisposition = (contentDisposition = '', fallback = '') => {
-  const extended = contentDisposition.match(/filename\*=(?:UTF-8'')?([^;\n]+)/i);
-  if (extended) {
-    try {
-      return decodeURIComponent(extended[1].trim());
-    } catch {
-      return extended[1].trim();
-    }
-  }
-  const plain = contentDisposition.match(/filename="?([^";\n]+)"?/);
-  return plain ? plain[1] : fallback;
-};
-
 export const markAllDuplicatesByMultipleKeys = (array, keys) => {
   const count = array.reduce((acc, item) => {
     const compositeKey = keys

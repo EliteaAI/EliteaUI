@@ -1,5 +1,6 @@
+import { getFilenameFromContentDisposition } from '@/[fsd]/shared/lib/helpers';
 import { PAGE_SIZE, PUBLIC_PROJECT_ID } from '@/common/constants';
-import { convertToJson, getFilenameFromContentDisposition, removeDuplicateObjects } from '@/common/utils.jsx';
+import { convertToJson, removeDuplicateObjects } from '@/common/utils.jsx';
 
 import { eliteaApi } from './eliteaApi.js';
 

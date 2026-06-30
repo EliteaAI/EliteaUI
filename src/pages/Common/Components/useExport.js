@@ -2,6 +2,7 @@ import * as React from 'react';
 
 import { useTrackEvent } from '@/GA';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
+import { getFilenameFromContentDisposition } from '@/[fsd]/shared/lib/helpers';
 import { useLazyApplicationDetailsQuery } from '@/api/applications';
 import { useLazyToolkitExportQuery } from '@/api/toolkits';
 import {
@@ -11,7 +12,7 @@ import {
   VITE_DEV_TOKEN,
   VITE_SERVER_URL,
 } from '@/common/constants';
-import { buildErrorMessage, downloadJSONFile, getFilenameFromContentDisposition } from '@/common/utils';
+import { buildErrorMessage, downloadJSONFile } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 /**
