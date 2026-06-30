@@ -11,7 +11,7 @@ import {
   VITE_DEV_TOKEN,
   VITE_SERVER_URL,
 } from '@/common/constants';
-import { buildErrorMessage, downloadJSONFile } from '@/common/utils';
+import { buildErrorMessage, downloadJSONFile, getFilenameFromContentDisposition } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 /**
@@ -88,8 +88,7 @@ export const useExport = ({ id, name, entity_name, owner_id, toastError, version
             const blob = await response.blob();
             // Extract filename from Content-Disposition header or use default
             const contentDisposition = response.headers.get('Content-Disposition');
-            const filenameMatch = contentDisposition?.match(/filename="?([^";\n]+)"?/);
-            const filename = filenameMatch ? filenameMatch[1] : `${name}.md`;
+            const filename = getFilenameFromContentDisposition(contentDisposition || '', `${name}.md`);
 
             const blobUrl = URL.createObjectURL(blob);
             const anchor = document.createElement('a');

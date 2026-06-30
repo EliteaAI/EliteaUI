@@ -1,5 +1,5 @@
 import { PAGE_SIZE, PUBLIC_PROJECT_ID } from '@/common/constants';
-import { convertToJson, removeDuplicateObjects } from '@/common/utils.jsx';
+import { convertToJson, getFilenameFromContentDisposition, removeDuplicateObjects } from '@/common/utils.jsx';
 
 import { eliteaApi } from './eliteaApi.js';
 
@@ -599,11 +599,7 @@ export const apiSlice = eliteaApi
               const contentDisposition = response.headers.get('content-disposition') || '';
 
               // Extract filename from content-disposition header
-              let filename = 'export.md';
-              const filenameMatch = contentDisposition.match(/filename="?([^";\n]+)"?/);
-              if (filenameMatch) {
-                filename = filenameMatch[1];
-              }
+              const filename = getFilenameFromContentDisposition(contentDisposition, 'export.md');
 
               const blob = await response.blob();
               return { blob, filename, contentType };
