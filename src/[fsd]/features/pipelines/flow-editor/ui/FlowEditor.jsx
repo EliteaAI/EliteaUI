@@ -29,14 +29,14 @@ import {
   FlowEditorSettings,
   FlowEditorState,
 } from '@/[fsd]/features/pipelines/flow-editor/ui';
+import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
-import { Button } from '@/[fsd]/shared/ui';
+import { Button, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import ClipboardIcon from '@/assets/clipboard-icon.svg?react';
 import CollapseIcon from '@/assets/collapse-second-icon.svg?react';
 import ExpandIcon from '@/assets/expand-third-icon.svg?react';
 import PolylineOutlinedIcon from '@/assets/polyline-outline-icon.svg?react';
-import AlertDialogV2 from '@/components/AlertDialogV2';
 import { actions } from '@/slices/pipeline';
 import { useTheme } from '@emotion/react';
 import {
@@ -148,6 +148,7 @@ const FlowEditor = forwardRef((props, ref) => {
   const {
     showDeleteConfirmDlg,
     confirmContent,
+    nodesToDelete,
     onBeforeDelete,
     handleDeleteNode,
     onConfirmDelete,
@@ -612,14 +613,16 @@ const FlowEditor = forwardRef((props, ref) => {
         yamlJsonObject={yamlJsonObject}
         disabled={disabled}
       />
-      <AlertDialogV2
+      <Modal.DeleteEntityModal
         open={showDeleteConfirmDlg}
-        alarm={true}
-        title="Delete"
-        confirmButtonTitle="Delete"
-        content={confirmContent}
+        onClose={onCancelDelete}
         onConfirm={onConfirmDelete}
-        onCancel={onCancelDelete}
+        name={nodesToDelete[0]?.data?.label || nodesToDelete[0]?.id || ''}
+        title="Delete node?"
+        textContent={confirmContent}
+        titleIcon={ModalConstants.MODAL_ICON_TYPE.warning}
+        alarm={false}
+        confirmButtonText="Remove"
       />
 
       {/* Connection dropdown for incomplete edges */}

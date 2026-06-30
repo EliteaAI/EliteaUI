@@ -24,7 +24,7 @@ export const useDeleteItems = ({
     target: null,
   });
   const [showDeleteConfirmDlg, setShowDeleteConfirmDlg] = useState(false);
-  const [confirmContent, setConfirmContent] = useState('Are you sure to delete the selected items?');
+  const [confirmContent, setConfirmContent] = useState('Are you sure to delete the selected items ');
   const [nodesToDelete, setNodesToDelete] = useState([]);
   const [edgesToDelete, setEdgesToDelete] = useState([]);
 
@@ -104,7 +104,7 @@ export const useDeleteItems = ({
       const edges = flowEdges.filter(edge => edge.source === id || edge.target === id);
       setEdgesToDelete(edges);
       setNodesToDelete(nodes);
-      setConfirmContent('Are you sure to delete this node?');
+      setConfirmContent('Are you sure to delete this node ');
       setShowDeleteConfirmDlg(true);
     },
     [flowEdges, flowNodes],
@@ -138,6 +138,7 @@ export const useDeleteItems = ({
   return {
     showDeleteConfirmDlg,
     confirmContent,
+    nodesToDelete,
     onBeforeDelete,
     handleDeleteNode,
     onConfirmDelete,

@@ -5,7 +5,7 @@ import { Box, Dialog, DialogActions, DialogContent, DialogTitle, Typography, use
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { ModalHelpers } from '@/[fsd]/shared/lib/helpers';
 import { Button } from '@/[fsd]/shared/ui';
-import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import CloseIcon from '@/components/Icons/CloseIcon';
 
 const BaseModal = memo(props => {
@@ -25,6 +25,10 @@ const BaseModal = memo(props => {
     variant = ModalConstants.MODAL_VARIANT.complex,
     fullscreen = false,
     headerActions,
+    confirmButtonText = 'Confirm',
+    cancelButtonText = 'Cancel',
+    alarm = false,
+    confirming = false,
   } = props;
 
   const theme = useTheme();
@@ -81,18 +85,24 @@ const BaseModal = memo(props => {
 
     return (
       <>
+        {onClose && (
+          <Button.BaseBtn
+            variant={BUTTON_VARIANTS.elitea}
+            color={BUTTON_COLORS.secondary}
+            onClick={onClose}
+            autoFocus
+          >
+            {cancelButtonText}
+          </Button.BaseBtn>
+        )}
         <Button.BaseBtn
-          variant="elitea"
-          color="secondary"
-          onClick={onClose}
-        >
-          Discard
-        </Button.BaseBtn>
-        <Button.BaseBtn
-          variant="elitea"
+          variant={BUTTON_VARIANTS.elitea}
+          color={alarm ? BUTTON_COLORS.alarm : BUTTON_COLORS.primary}
           onClick={onConfirm}
+          autoFocus={!onClose}
+          disabled={confirming}
         >
-          Confirm
+          {confirmButtonText}
         </Button.BaseBtn>
       </>
     );
