@@ -6,8 +6,15 @@ import { Button } from '@/[fsd]/shared/ui';
 import BaseModal from '@/[fsd]/shared/ui/modal/BaseModal';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
 
+const entityMessages = {
+  agent:
+    'will be automatically used whenever this agent is added to new or existing conversations, other agents or pipelines as a toolkit, or as an MCP toolkit.',
+  skill:
+    'will be automatically used whenever this skill is added to new or existing agents, pipelines, or conversations.',
+};
+
 const SetDefaultVersionDialog = memo(props => {
-  const { open, onClose, onConfirm, confirming = false, versionName } = props;
+  const { open, onClose, onConfirm, confirming = false, versionName, entityType = 'agent' } = props;
 
   return (
     <BaseModal
@@ -31,8 +38,7 @@ const SetDefaultVersionDialog = memo(props => {
             >
               {versionName}
             </Box>{' '}
-            will be automatically used whenever this agent is added to new or existing conversations, other
-            agents or pipelines as a toolkit, or as an MCP toolkit.
+            {entityMessages[entityType] || entityMessages.agent}
           </Typography>
         </Box>
       }
