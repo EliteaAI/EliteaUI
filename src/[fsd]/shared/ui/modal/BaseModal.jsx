@@ -29,6 +29,7 @@ const BaseModal = memo(props => {
     cancelButtonText = 'Cancel',
     alarm = false,
     confirming = false,
+    'data-testid': dataTestId,
   } = props;
 
   const theme = useTheme();
@@ -116,6 +117,7 @@ const BaseModal = memo(props => {
       maxWidth={false}
       slotProps={{
         paper: {
+          'data-testid': dataTestId,
           sx: [styles.dialogPaper, sx],
         },
       }}

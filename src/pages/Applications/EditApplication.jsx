@@ -74,6 +74,7 @@ const EditApplication = memo(() => {
     () => [
       {
         label: initialValues?.name || 'Agent',
+        testid: 'agent-config-tab',
         tabBarItems: !isFetching ? (
           <ApplicationTabBar
             onSuccess={handleSuccess}

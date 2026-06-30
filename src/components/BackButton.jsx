@@ -116,6 +116,7 @@ const BackButton = memo(() => {
   ]);
   return (
     <IconButton
+      data-testid="entity-back-button"
       variant="elitea"
       color={'tertiary'}
       onClick={onBack}

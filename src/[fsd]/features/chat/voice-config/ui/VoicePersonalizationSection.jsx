@@ -37,6 +37,7 @@ const VoicePersonalizationSection = memo(() => {
     <BasicAccordion
       showMode={AccordionConstants.AccordionShowMode.LeftMode}
       accordionSX={styles.accordion}
+      data-testid="voice-personalization-section"
       items={[
         {
           title: 'Voice Personalization',

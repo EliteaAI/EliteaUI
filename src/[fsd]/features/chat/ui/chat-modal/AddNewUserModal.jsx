@@ -96,6 +96,7 @@ const AddNewUserModal = memo(props => {
   return (
     <Modal.BaseModal
       open={open}
+      data-testid="invite-users-dialog"
       title="Add users"
       onClose={onCancel}
       onKeyDown={handleKeyDown}

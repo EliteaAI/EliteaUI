@@ -173,6 +173,7 @@ const ConversationItem = memo(props => {
             alarm: true,
             disabled: userId != author_id || (isActive && isEditingCanvas),
             onConfirm: handleDelete,
+            testid: 'conversation-menu-delete-item',
           },
           {
             label: 'Edit',
@@ -183,6 +184,7 @@ const ConversationItem = memo(props => {
             ),
             disabled: userId != author_id || (isActive && isEditingCanvas),
             onClick: handleEdit,
+            testid: 'conversation-menu-edit-item',
           },
           {
             label: (
@@ -380,6 +382,7 @@ const ConversationItem = memo(props => {
                 thickness={5}
               />
               <Typography
+                data-testid="conversation-naming-placeholder"
                 variant="bodySmall2"
                 color="text.disabled"
               >
@@ -423,7 +426,7 @@ const ConversationItem = memo(props => {
           sx={styles.menuWrapper}
         >
           <DotMenu
-            data-testid="conversation-menu-action"
+            data-testid="conversation-menu-button"
             id="conversation-menu"
             slotProps={{
               ListItemText: {
@@ -481,6 +484,7 @@ const ConversationItem = memo(props => {
         onChange={onChangeConversationName}
         containerProps={{ display: 'flex', flex: 1 }}
         onKeyDown={onKeyDown}
+        inputProps={{ 'data-testid': 'conversation-rename-input' }}
       />
       <Tooltip
         title={isConversationNameValid ? '' : ConversationNameWarningMessage}

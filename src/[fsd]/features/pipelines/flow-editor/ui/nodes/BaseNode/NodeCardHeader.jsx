@@ -283,6 +283,7 @@ const NodeCardHeader = memo(props => {
             variant="labelMedium"
             color="text.secondary"
             onDoubleClick={onDoubleClickName}
+            data-testid="pipeline-node-name-label"
           >
             {inputtedName}
           </Typography>
@@ -298,6 +299,7 @@ const NodeCardHeader = memo(props => {
               onChange={onChange}
               onBlur={onBlur}
               className="nopan nodrag"
+              inputProps={{ 'data-testid': 'pipeline-node-rename-input' }}
             />
           </Box>
         )}

@@ -301,6 +301,7 @@ const CreateEntityButton = memo(props => {
           <Box sx={styles.span}>
             {showSimpleButton ? (
               <Button.BaseBtn
+                data-testid="sidebar-create-button"
                 variant="special"
                 disabled={disableCreateButton}
                 startIcon={<PlusIcon />}
@@ -312,7 +313,9 @@ const CreateEntityButton = memo(props => {
             ) : (
               <>
                 <Button.BaseBtn
-                  data-testid="create-entity-button"
+                  data-testid={
+                    currentLabel === 'Conversation' ? 'create-conversation-button' : 'create-entity-button'
+                  }
                   variant="special"
                   disabled={disableCreateButton}
                   startIcon={<PlusIcon />}
@@ -349,6 +352,7 @@ const CreateEntityButton = memo(props => {
               return (
                 <Box
                   key={item.label}
+                  data-testid={item.label === 'Conversation' ? 'create-conversation-button' : undefined}
                   sx={styles.dropdownItem(currentDropdownItem?.label === item.label, isDisabled)}
                   onClick={() => handleDropdownItemClick(item)}
                 >

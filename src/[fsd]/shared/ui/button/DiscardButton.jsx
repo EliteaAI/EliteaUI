@@ -15,6 +15,7 @@ const DiscardButton = memo(props => {
     disabled,
     discarding,
     color = 'secondary',
+    'data-testid': dataTestId,
   } = props;
 
   const { isSaving } = useSelector(state => state.applications);
@@ -33,6 +34,7 @@ const DiscardButton = memo(props => {
   return (
     <>
       <BaseBtn
+        data-testid={dataTestId}
         disabled={disabled || isSaving}
         variant="elitea"
         color={color}

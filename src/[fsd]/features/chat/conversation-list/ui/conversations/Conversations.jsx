@@ -531,6 +531,7 @@ const Conversations = memo(props => {
                 >
                   <span>
                     <Button
+                      data-testid="create-folder-button"
                       disabled={!checkPermission(PERMISSIONS.chat.folders.create)}
                       onClick={clickCreateNewFolder(false)}
                       variant="elitea"

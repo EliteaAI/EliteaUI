@@ -38,6 +38,7 @@ const BasicAccordion = memo(props => {
     titleSX,
     accordionDetailsSX,
     'data-testid': dataTestId,
+    'data-summary-testid': dataSummaryTestId,
   } = props;
 
   const styles = basicAccordionStyles();
@@ -61,6 +62,7 @@ const BasicAccordion = memo(props => {
             aria-controls={`panel-content-${index}`}
             showMode={showMode}
             sx={summarySX}
+            data-testid={dataSummaryTestId}
           >
             <StyledTypography
               sx={titleSX}

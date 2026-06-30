@@ -507,8 +507,12 @@ const CredentialsSelect = memo(
     );
 
     return (
-      <Box sx={[styles.container, sx]}>
+      <Box
+        data-testid="toolkit-credential-row"
+        sx={[styles.container, sx]}
+      >
         <Select.SingleSelect
+          data-testid="toolkit-configuration-dropdown"
           label={label}
           shrinkLabel
           infoIconDescription={description}

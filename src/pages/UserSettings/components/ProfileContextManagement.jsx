@@ -42,6 +42,7 @@ const ProfileContextManagement = memo(props => {
       showMode={AccordionConstants.AccordionShowMode.LeftMode}
       defaultExpanded
       accordionSX={styles.accordion}
+      data-summary-testid="default-context-management-section"
       items={[
         {
           title: 'Default Context Management',
@@ -50,6 +51,7 @@ const ProfileContextManagement = memo(props => {
               {/* Enable Context Management */}
               <Box sx={styles.toggleSection}>
                 <Switch.BaseSwitch
+                  data-testid="context-management-toggle"
                   checked={values.context_enabled}
                   onChange={handleContextEnabledChange}
                   label="Enable context management for new conversations"
@@ -80,6 +82,7 @@ const ProfileContextManagement = memo(props => {
                     disabled={!isEnabled}
                     inputProps={{
                       pattern: '[1-9][0-9]*',
+                      'data-testid': 'max-context-tokens-input',
                     }}
                   />
                 </Box>
@@ -102,6 +105,7 @@ const ProfileContextManagement = memo(props => {
                     disabled={!isEnabled}
                     inputProps={{
                       pattern: '[1-9][0-9]*',
+                      'data-testid': 'preserve-recent-messages-input',
                     }}
                   />
                 </Box>

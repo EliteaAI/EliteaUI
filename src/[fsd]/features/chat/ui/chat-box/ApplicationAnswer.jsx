@@ -460,7 +460,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
   return (
     <>
       <UserMessageContainer
-        data-testid="chat-message-item"
+        data-testid="chat-message-block"
         sx={{ ...styles.userMessageContainer, ...swarmChildStyles }}
         ref={ref}
       >

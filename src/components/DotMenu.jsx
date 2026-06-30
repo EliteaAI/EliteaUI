@@ -24,6 +24,7 @@ const BasicMenuItem = ({
   showCheckIcon,
   setActiveDialog,
   skipConfirmation,
+  testid,
 }) => {
   const theme = useTheme();
   const [anchorEl, setAnchorEl] = useState(null);
@@ -55,6 +56,7 @@ const BasicMenuItem = ({
       <MenuItem
         onClick={subMenuItems?.length ? onClickMenu : onClick}
         disabled={disabled}
+        data-testid={testid}
         sx={{
           marginTop: addSeparator ? '-4px' : undefined,
           background: isSelected ? theme.palette.background.participant.active : undefined,
@@ -166,6 +168,7 @@ const ActionWithDialog = ({
   dialogKey,
   skipConfirmation,
   addSeparator,
+  testid,
 }) => {
   const openDialog = useCallback(
     event => {
@@ -221,6 +224,7 @@ const ActionWithDialog = ({
       disabled={disabled}
       showCheckIcon={showCheckIcon}
       addSeparator={addSeparator}
+      testid={testid}
     />
   );
 };
@@ -244,6 +248,8 @@ export default function DotMenu({
   anchorButtonProps = {},
   shouldStopPropagation = true,
   disabled,
+  'data-testid': dataTestId,
+  menuTestId,
 }) {
   const [anchorEl, setAnchorEl] = useState(null);
   const [activeDialog, setActiveDialog] = useState(null);
@@ -333,7 +339,7 @@ export default function DotMenu({
         />
       ) : (
         <IconButton
-          data-testid="entity-actions-menu-button"
+          data-testid={dataTestId || 'entity-actions-menu-button'}
           variant="elitea"
           color={iconColor}
           id={id + '-action'}
@@ -350,6 +356,7 @@ export default function DotMenu({
       )}
       <Menu
         id={id + '-dots-menu'}
+        data-testid={menuTestId}
         anchorEl={anchorEl}
         open={open}
         anchorOrigin={anchorOrigin}
@@ -376,6 +383,7 @@ export default function DotMenu({
                 addSeparator: item.addSeparator,
                 isSelected: item.isSelected,
                 showCheckIcon: item.showCheckIcon,
+                testid: item.testid,
               };
 
               return item.onConfirm || item.confirmText ? (
@@ -435,6 +443,7 @@ export default function DotMenu({
                     addSeparator: item.addSeparator,
                     isSelected: item.isSelected,
                     showCheckIcon: item.showCheckIcon,
+                    testid: item.testid,
                   };
                   return item.onConfirm || item.confirmText ? (
                     <TooltipWrapper

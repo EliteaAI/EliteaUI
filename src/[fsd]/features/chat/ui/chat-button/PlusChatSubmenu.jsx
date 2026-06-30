@@ -26,6 +26,9 @@ const PlusChatSubmenu = memo(props => {
     onScroll,
     showPublicLabel = true,
     showToggle = false,
+    searchTestId,
+    itemTestId,
+    emptyTestId,
   } = props;
 
   const searchRef = useRef(null);
@@ -77,6 +80,8 @@ const PlusChatSubmenu = memo(props => {
           />
           <TextField
             ref={searchRef}
+            data-testid={searchTestId}
+            inputProps={searchTestId ? { 'data-testid': searchTestId } : undefined}
             size="small"
             placeholder={searchPlaceholder}
             value={searchValue}
@@ -125,6 +130,7 @@ const PlusChatSubmenu = memo(props => {
           return (
             <MenuItem
               key={item.key}
+              data-testid={itemTestId}
               onClick={showToggle ? handleToggle(item) : handleItemClick(item)}
               disabled={showToggle && item.pending}
               sx={showToggle ? styles.toggleItem : styles.listItem}
@@ -187,6 +193,7 @@ const PlusChatSubmenu = memo(props => {
 
         {!isLoading && items.length === 0 && (
           <MenuItem
+            data-testid={emptyTestId}
             disabled
             sx={styles.listItem}
           >

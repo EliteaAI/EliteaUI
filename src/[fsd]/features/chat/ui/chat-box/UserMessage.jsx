@@ -87,7 +87,7 @@ const UserMessage = React.forwardRef((props, ref) => {
 
   return (
     <UserMessageContainer
-      data-testid="chat-message-item"
+      data-testid="chat-message-block"
       sx={verticalMode ? styles.containerVertical : styles.containerHorizontal}
       ref={ref}
     >
@@ -136,7 +136,10 @@ const UserMessage = React.forwardRef((props, ref) => {
         </ListItemAvatar>
       )}
       {!isEditing ? (
-        <Box sx={[styles.messageBase, verticalMode && styles.messageVertical(highLightMe)]}>
+        <Box
+          sx={[styles.messageBase, verticalMode && styles.messageVertical(highLightMe)]}
+          data-testid="chat-user-message-content"
+        >
           {markdown ? (
             <Markdown>{content}</Markdown>
           ) : (

@@ -209,6 +209,9 @@ const PlusChatButton = memo(props => {
         onCreateNew: handleCreateAgent,
         emptyMessage: 'No agents available',
         noResultsMessage: 'No agents found',
+        searchTestId: 'agent-search-input',
+        itemTestId: 'agent-search-result-item',
+        emptyTestId: 'no-agents-placeholder',
       },
       [SUBMENU_KEYS.PIPELINES]: {
         searchPlaceholder: 'Search pipelines...',
@@ -217,6 +220,9 @@ const PlusChatButton = memo(props => {
         onCreateNew: handleCreatePipeline,
         emptyMessage: 'No pipelines available',
         noResultsMessage: 'No pipelines found',
+        searchTestId: 'pipeline-search-input',
+        itemTestId: 'pipeline-search-result-item',
+        emptyTestId: 'no-pipelines-placeholder',
       },
       [SUBMENU_KEYS.TOOLKITS]: {
         searchPlaceholder: 'Search toolkits...',
@@ -227,6 +233,9 @@ const PlusChatButton = memo(props => {
         noResultsMessage: 'No toolkits found',
         showToggle: true,
         showPublicLabel: false,
+        searchTestId: 'toolkit-search-input',
+        itemTestId: 'toolkit-search-result-item',
+        emptyTestId: 'no-toolkits-placeholder',
       },
       ...(isMcpVisible && {
         [SUBMENU_KEYS.MCPS]: {
@@ -238,6 +247,9 @@ const PlusChatButton = memo(props => {
           noResultsMessage: 'No MCPs found',
           showToggle: true,
           showPublicLabel: false,
+          searchTestId: 'mcp-search-input',
+          itemTestId: 'mcp-search-result-item',
+          emptyTestId: 'no-mcps-placeholder',
         },
       }),
     }),
@@ -261,6 +273,10 @@ const PlusChatButton = memo(props => {
       return availableTools.map(tool => (
         <Switch.BaseSwitch
           key={tool.name}
+          data-testid={`internal-tool-${tool.title
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-|-$/g, '')}-switch`}
           label={tool.title}
           checked={internal_tools.includes(tool.name)}
           disabled={disableInternalTools}
@@ -324,6 +340,7 @@ const PlusChatButton = memo(props => {
         placement="top"
       >
         <IconButton
+          data-testid="plus-menu-button"
           ref={buttonRef}
           variant="elitea"
           color="secondary"
@@ -364,6 +381,7 @@ const PlusChatButton = memo(props => {
                 ({ key, label, Icon }) => (
                   <MenuItem
                     key={key}
+                    data-testid={`plus-menu-${label.toLowerCase().replace(/\s+/g, '-')}-menuitem`}
                     sx={styles.menuItem}
                     onMouseEnter={e => handleItemHover(key, e)}
                     onMouseLeave={handleItemLeave}
@@ -380,6 +398,7 @@ const PlusChatButton = memo(props => {
 
               {!isPrivateProject && (
                 <MenuItem
+                  data-testid="invite-users-menuitem"
                   sx={styles.menuItem}
                   disabled={!canInviteUsers}
                   onClick={handleInviteUsers}
@@ -402,6 +421,7 @@ const PlusChatButton = memo(props => {
         >
           <Paper
             ref={subMenuRef}
+            data-testid={hoveredItem === SUBMENU_KEYS.INTERNAL_TOOLS ? 'internal-tools-panel' : undefined}
             elevation={8}
             sx={styles[paperStyleKey]}
             onMouseEnter={handleSubMenuEnter}
