@@ -250,17 +250,12 @@ export const configurationsApi = eliteaApi
           headers,
           body,
         }),
-        invalidatesTags: (result, error, arg) => {
+        invalidatesTags: (result, error) => {
           // Only invalidate tags if the mutation was successful (no error)
           if (error) {
             return [];
           }
-          const tags = [TAG_CONFIGURATIONS, TAG_SHARED_CONFIGURATIONS, TAG_AVAILABLE_CONFIGURATIONS];
-          const { body: { type } = {} } = arg || {};
-          if (type === 'llm_model') {
-            tags.push(TAG_MODELS);
-          }
-          return tags;
+          return [TAG_CONFIGURATIONS, TAG_SHARED_CONFIGURATIONS, TAG_AVAILABLE_CONFIGURATIONS, TAG_MODELS];
         },
       }),
 
@@ -345,6 +340,7 @@ export const configurationsApi = eliteaApi
           return [
             TAG_CONFIGURATIONS,
             TAG_SHARED_CONFIGURATIONS,
+            TAG_MODELS,
             { type: TAG_CONFIGURATION_DETAILS, id: configId },
           ];
         },
@@ -423,6 +419,7 @@ export const configurationsApi = eliteaApi
           return [
             TAG_CONFIGURATIONS,
             TAG_SHARED_CONFIGURATIONS,
+            TAG_MODELS,
             { type: TAG_CONFIGURATION_DETAILS, id: configId },
           ];
         },
