@@ -31,6 +31,8 @@ const ApplicationEditorNotes = memo(props => {
         content: (
           <Box sx={styles.fieldContainer}>
             <Input.StyledInputEnhancer
+              multiline
+              hasActionsToolBar
               value={version_details?.notes ?? ''}
               onChange={handleNotesChange}
               disabled={disabled}
@@ -43,6 +45,7 @@ const ApplicationEditorNotes = memo(props => {
               }
               minRows={3}
               maxRows={10}
+              fieldName="Editor Notes"
               inputProps={{ maxLength: NOTES_MAX_LENGTH }}
             />
           </Box>
