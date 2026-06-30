@@ -1,18 +1,21 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Form, Formik } from 'formik';
+import { useDispatch } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { Box, CircularProgress } from '@mui/material';
 
 import SkillTabBar from '@/[fsd]/entities/skill-tab-bar/ui/SkillTabBar';
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
-import { useSkillDetailsQuery } from '@/[fsd]/features/skill/api';
+import { SetDefaultVersionDialog } from '@/[fsd]/entities/version/ui';
+import { useSetSkillDefaultVersionMutation, useSkillDetailsQuery } from '@/[fsd]/features/skill/api';
 import { SkillValidateSchema } from '@/[fsd]/features/skill/lib/validation';
 import SkillControls from '@/[fsd]/features/skill/ui/SkillControls';
 import SkillInformation from '@/[fsd]/features/skill/ui/SkillInformation';
 import CreateSkillForm from '@/[fsd]/features/skill/ui/skill-details/form/CreateSkillForm';
 import SkillTestPanel from '@/[fsd]/features/skill/ui/skill-test-panel/SkillTestPanel';
+import { eliteaApi } from '@/api/eliteaApi';
 import { SkillsTabs, ViewMode } from '@/common/constants';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils.jsx';
 import DirtyDetector from '@/components/Formik/DirtyDetector';
@@ -46,12 +49,20 @@ const buildInitialValues = data => ({
 const EditSkill = memo(() => {
   const styles = editSkillStyles();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { tab = SkillsTabs[0], skillId, version } = useParams();
   const projectId = useSelectedProjectId();
-  const { toastError } = useToast();
+  const { toastError, toastSuccess } = useToast();
 
   const [dirty, setDirty] = useState(false);
   const [isFullScreenChat, setIsFullScreenChat] = useState(false);
+
+  const [setDefaultVersion, { isLoading: isSettingDefault, reset: resetDefaultMutation }] =
+    useSetSkillDefaultVersionMutation();
+
+  const [isDefaultDialogOpen, setIsDefaultDialogOpen] = useState(false);
+  const [pendingDefaultVersionId, setPendingDefaultVersionId] = useState(null);
+
   const lgGridColumns = useMemo(() => (isFullScreenChat ? 12 : 6), [isFullScreenChat]);
 
   const { data, isFetching, isError, error } = useSkillDetailsQuery(
@@ -103,96 +114,160 @@ const EditSkill = memo(() => {
     setDirty(false);
   }, []);
 
+  const pendingDefaultVersionName = useMemo(() => {
+    if (!pendingDefaultVersionId) return '';
+    return data?.versions?.find(v => v.id === pendingDefaultVersionId)?.name || '';
+  }, [pendingDefaultVersionId, data?.versions]);
+
+  const handleOpenDefaultDialog = useCallback(versionId => {
+    setPendingDefaultVersionId(versionId);
+    setIsDefaultDialogOpen(true);
+  }, []);
+
+  const handleCloseDefaultDialog = useCallback(() => {
+    setIsDefaultDialogOpen(false);
+    setPendingDefaultVersionId(null);
+  }, []);
+
+  const handleConfirmSetDefault = useCallback(async () => {
+    if (!pendingDefaultVersionId) return;
+    const { error: setDefaultError } = await setDefaultVersion({
+      projectId,
+      skillId,
+      versionId: pendingDefaultVersionId,
+    });
+    if (setDefaultError) {
+      toastError(buildErrorMessage(setDefaultError) || 'Failed to set the default version.');
+    } else {
+      toastSuccess('Default version has been set successfully');
+      dispatch(
+        eliteaApi.util.updateQueryData(
+          'skillDetails',
+          { projectId, skillId, versionId: version },
+          details => {
+            if (!details.meta) details.meta = {};
+            details.meta.default_version_id = pendingDefaultVersionId;
+          },
+        ),
+      );
+    }
+    handleCloseDefaultDialog();
+    setTimeout(() => resetDefaultMutation(), 0);
+  }, [
+    pendingDefaultVersionId,
+    setDefaultVersion,
+    projectId,
+    skillId,
+    version,
+    toastError,
+    toastSuccess,
+    dispatch,
+    handleCloseDefaultDialog,
+    resetDefaultMutation,
+  ]);
+
   if (shouldShowNotFoundPage) {
     return <Page404 />;
   }
 
   return (
-    <Formik
-      key={formKey}
-      enableReinitialize
-      initialValues={initialValues}
-      validationSchema={SkillValidateSchema}
-      onSubmit={() => {}}
-    >
-      <StyledTabs
-        fullWidth
-        forceShowLabel
-        tabSX={{ paddingX: '24px' }}
-        panelStyle={styles.tabPanel}
-        tabsSX={styles.tabContainer}
-        leftTabbarSectionSX={styles.leftTabbarSection}
-        tabs={[
-          {
-            label: data?.name || 'Skill',
-            tabBarItems: isFetching ? null : (
-              <SkillTabBar
-                versions={data?.versions || []}
-                currentVersionId={currentVersionId}
-                defaultVersionId={data?.meta?.default_version_id}
-                onChangeVersion={handleChangeVersion}
-                onSuccess={handleSuccess}
-              />
-            ),
-            // Overflow action menu mirroring the agent's ApplicationControls:
-            // a VERSION section (Set as default / Export / Share / Fork / Publish / Delete)
-            // and a SKILL section (Share / Pin / Delete).
-            rightToolbar: isFetching ? null : (
-              <SkillControls
-                skillId={skillId}
-                skillName={data?.name}
-                currentVersionId={currentVersionId}
-                onChangeVersion={handleChangeVersion}
-              />
-            ),
-            content: isFetching ? (
-              <Box sx={styles.loadingContainer}>
-                <CircularProgress />
-              </Box>
-            ) : (
-              <Form style={{ height: '100%' }}>
-                <DirtyDetector setDirty={setDirty} />
-                <StyledGridContainer
-                  sx={styles.gridContainer}
-                  columnSpacing="32px"
-                  container
-                >
-                  <LeftGridItem
-                    size={{ xs: 12, lg: lgGridColumns }}
-                    hidden={isFullScreenChat}
-                    sx={styles.leftGridItem}
+    <>
+      <Formik
+        key={formKey}
+        enableReinitialize
+        initialValues={initialValues}
+        validationSchema={SkillValidateSchema}
+        onSubmit={() => {}}
+      >
+        <StyledTabs
+          fullWidth
+          forceShowLabel
+          tabSX={{ paddingX: '24px' }}
+          panelStyle={styles.tabPanel}
+          tabsSX={styles.tabContainer}
+          leftTabbarSectionSX={styles.leftTabbarSection}
+          tabs={[
+            {
+              label: data?.name || 'Skill',
+              tabBarItems: isFetching ? null : (
+                <SkillTabBar
+                  versions={data?.versions || []}
+                  currentVersionId={currentVersionId}
+                  defaultVersionId={data?.meta?.default_version_id}
+                  onChangeVersion={handleChangeVersion}
+                  onSuccess={handleSuccess}
+                  handleSetDefaultVersion={handleOpenDefaultDialog}
+                />
+              ),
+              // Overflow action menu mirroring the agent's ApplicationControls:
+              // a VERSION section (Set as default / Export / Share / Fork / Publish / Delete)
+              // and a SKILL section (Share / Pin / Delete).
+              rightToolbar: isFetching ? null : (
+                <SkillControls
+                  skillId={skillId}
+                  skillName={data?.name}
+                  currentVersionId={currentVersionId}
+                  onChangeVersion={handleChangeVersion}
+                  onSetDefault={() => handleOpenDefaultDialog(currentVersionId)}
+                />
+              ),
+              content: isFetching ? (
+                <Box sx={styles.loadingContainer}>
+                  <CircularProgress />
+                </Box>
+              ) : (
+                <Form style={{ height: '100%' }}>
+                  <DirtyDetector setDirty={setDirty} />
+                  <StyledGridContainer
+                    sx={styles.gridContainer}
+                    columnSpacing="32px"
+                    container
                   >
-                    <ContentContainer height="100%">
-                      <CreateSkillForm
-                        viewMode={ViewMode.Owner}
-                        instructionsKey={`${skillId}:${currentVersionId}:${
-                          (data?.version_details?.instructions ?? data?.instructions ?? '').length
-                        }`}
-                      />
-                      <Box sx={styles.informationWrapper}>
-                        <SkillInformation
-                          id={data?.id}
-                          versionId={data?.version_details?.id}
+                    <LeftGridItem
+                      size={{ xs: 12, lg: lgGridColumns }}
+                      hidden={isFullScreenChat}
+                      sx={styles.leftGridItem}
+                    >
+                      <ContentContainer height="100%">
+                        <CreateSkillForm
+                          viewMode={ViewMode.Owner}
+                          instructionsKey={`${skillId}:${currentVersionId}:${
+                            (data?.version_details?.instructions ?? data?.instructions ?? '').length
+                          }`}
                         />
-                      </Box>
-                    </ContentContainer>
-                  </LeftGridItem>
-                  <RightGridItem
-                    size={{ xs: 12, lg: lgGridColumns }}
-                    sx={styles.rightGridItem}
-                  >
-                    <SkillTestPanel
-                      isFullScreenChat={isFullScreenChat}
-                      setIsFullScreenChat={setIsFullScreenChat}
-                    />
-                  </RightGridItem>
-                </StyledGridContainer>
-              </Form>
-            ),
-          },
-        ]}
+                        <Box sx={styles.informationWrapper}>
+                          <SkillInformation
+                            id={data?.id}
+                            versionId={data?.version_details?.id}
+                          />
+                        </Box>
+                      </ContentContainer>
+                    </LeftGridItem>
+                    <RightGridItem
+                      size={{ xs: 12, lg: lgGridColumns }}
+                      sx={styles.rightGridItem}
+                    >
+                      <SkillTestPanel
+                        isFullScreenChat={isFullScreenChat}
+                        setIsFullScreenChat={setIsFullScreenChat}
+                      />
+                    </RightGridItem>
+                  </StyledGridContainer>
+                </Form>
+              ),
+            },
+          ]}
+        />
+      </Formik>
+      <SetDefaultVersionDialog
+        open={isDefaultDialogOpen}
+        onClose={handleCloseDefaultDialog}
+        onConfirm={handleConfirmSetDefault}
+        confirming={isSettingDefault}
+        versionName={pendingDefaultVersionName}
+        entityType="skill"
       />
-    </Formik>
+    </>
   );
 });
 

@@ -23,7 +23,7 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes';
 
-import { useDeleteSkillMutation, useSetSkillDefaultVersionMutation } from '../api';
+import { useDeleteSkillMutation } from '../api';
 
 const sectionLabelSx = ({ palette }) => ({
   color: palette.text.default,
@@ -37,7 +37,7 @@ const sectionLabelSx = ({ palette }) => ({
  * Controls.ControlsDropdown and reuses the entity-agnostic agent hooks.
  */
 const SkillControls = memo(props => {
-  const { skillId, skillName, currentVersionId, onChangeVersion } = props;
+  const { skillId, skillName, currentVersionId, onChangeVersion, onSetDefault } = props;
 
   const navigate = useNavigate();
   const projectId = useSelectedProjectId();
@@ -51,7 +51,6 @@ const SkillControls = memo(props => {
 
   const { doExport } = useSkillExport();
   const [deleteSkill] = useDeleteSkillMutation();
-  const [setDefaultVersion, { isLoading: isSettingDefaultVersion }] = useSetSkillDefaultVersionMutation();
 
   const {
     isPinned,
@@ -78,29 +77,16 @@ const SkillControls = memo(props => {
   });
 
   const disableSetAsDefault = useMemo(() => {
-    if (defaultVersionId === currentVersionId || isSettingDefaultVersion) return true;
+    if (defaultVersionId === currentVersionId) return true;
     if (!defaultVersionId && versionDetails?.name === LATEST_VERSION_NAME) return true;
     return false;
-  }, [defaultVersionId, currentVersionId, isSettingDefaultVersion, versionDetails?.name]);
+  }, [defaultVersionId, currentVersionId, versionDetails?.name]);
 
   const disableDelete = useMemo(() => {
     if (defaultVersionId === currentVersionId) return true;
     if (versionDetails?.name === LATEST_VERSION_NAME) return true;
     return false;
   }, [defaultVersionId, currentVersionId, versionDetails?.name]);
-
-  const onSetDefault = useCallback(async () => {
-    try {
-      const { error } = await setDefaultVersion({ projectId, skillId, versionId: currentVersionId });
-      if (error) {
-        toastError(buildErrorMessage(error) || 'Failed to set the default version.');
-        return;
-      }
-      toastSuccess('The default version has been updated');
-    } catch (error) {
-      toastError(buildErrorMessage(error) || 'Failed to set the default version.');
-    }
-  }, [setDefaultVersion, projectId, skillId, currentVersionId, toastError, toastSuccess]);
 
   const onExport = useCallback(() => {
     doExport({ skillId, versionId: currentVersionId, skillName });
