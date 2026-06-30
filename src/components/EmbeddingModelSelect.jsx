@@ -61,46 +61,21 @@ const EmbeddingModelSelect = memo(props => {
     async event => {
       event?.stopPropagation();
       setModels([]);
-      let teamProjectModels = [];
       if (selectedProjectId) {
         const { data } = await getModels({
           projectId: selectedProjectId,
           include_shared: true,
           section: 'embedding',
         });
-        // Add regular models with unified ID
-        teamProjectModels = [
-          ...(data?.items || []).map(item => ({
+        setModels(
+          (data?.items || []).map(item => ({
             ...item,
-            id: `${item.project_id}_${item.name}`, // Unified ID pattern
+            id: `${item.project_id}_${item.name}`,
           })),
-        ];
+        );
       }
-      if (personal_project_id && personal_project_id !== selectedProjectId) {
-        const { data } = await getModels({
-          projectId: personal_project_id,
-          include_shared: true,
-          section: 'embedding',
-        });
-        // Add personal models with unified ID
-        teamProjectModels = [
-          ...teamProjectModels,
-          ...(data?.items || []).map(item => ({
-            ...item,
-            id: `${item.project_id}_${item.name}`, // Unified ID pattern
-          })),
-        ];
-      }
-      // Remove duplicates by unified ID
-      const uniqueModels = teamProjectModels.reduce((acc, model) => {
-        if (!acc.find(existing => existing.id === model.id)) {
-          acc.push(model);
-        }
-        return acc;
-      }, []);
-      setModels(uniqueModels);
     },
-    [getModels, personal_project_id, selectedProjectId],
+    [getModels, selectedProjectId],
   );
 
   useEffect(() => {
