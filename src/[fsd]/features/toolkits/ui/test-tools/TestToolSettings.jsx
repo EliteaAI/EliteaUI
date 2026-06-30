@@ -112,7 +112,12 @@ const TestToolSettings = memo(props => {
     >
       <ContentContainer sx={styles.contentContainer}>
         <Box>
-          <Typography variant="subtitle">Test Settings</Typography>
+          <Typography
+            variant="subtitle"
+            data-testid="test-settings-panel-title"
+          >
+            Test Settings
+          </Typography>
         </Box>
         <Box sx={styles.llmModelContainer}>
           <LLMModelSelector
@@ -125,6 +130,7 @@ const TestToolSettings = memo(props => {
         </Box>
         <Box sx={styles.toolSelectContainer}>
           <Select.SingleSelect
+            data-testid="test-settings-tool-dropdown"
             value={selectedTool}
             label="Tool"
             onValueChange={onChangeTool}

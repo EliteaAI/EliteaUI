@@ -25,6 +25,7 @@ const VoiceConfigDialog = memo(props => {
 
   return (
     <Modal.BaseModal
+      data-testid="voice-settings-dialog"
       open={open}
       title="Voice settings"
       titleVariant="headingMedium"
@@ -44,6 +45,7 @@ const VoiceConfigDialog = memo(props => {
       actions={
         <>
           <Button.BaseBtn
+            data-testid="voice-settings-cancel-button"
             variant="elitea"
             color="secondary"
             onClick={onCancel}
@@ -51,6 +53,7 @@ const VoiceConfigDialog = memo(props => {
             Cancel
           </Button.BaseBtn>
           <Button.BaseBtn
+            data-testid="voice-settings-apply-button"
             variant="elitea"
             onClick={handleApply}
           >

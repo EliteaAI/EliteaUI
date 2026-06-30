@@ -28,7 +28,7 @@ const ParticipantSection = memo(props => {
 
   return (
     <Box
-      data-testid={`participant-${entityType.toLowerCase() !== 'mcp' ? entityType.toLowerCase() : 'mcp'}-list`}
+      data-testid={`participant-${entityType?.toLowerCase() !== 'mcp' ? entityType?.toLowerCase() : 'mcp'}-list`}
       sx={styles.mainContainer(collapsed, isSmallWindow)}
     >
       <ParticipantsAccordion

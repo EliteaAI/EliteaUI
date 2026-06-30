@@ -60,11 +60,19 @@ const Participants = memo(props => {
         <Box sx={styles.headerContainer(collapsed, isSmallWindow)}>
           {showTitle && (
             <Box sx={styles.titleContainer}>
-              <Typography variant="subtitle">Participants</Typography>
+              <Typography
+                data-testid="participants-panel-title"
+                variant="subtitle"
+              >
+                Participants
+              </Typography>
             </Box>
           )}
           {Boolean(ExpandCollapseButton) && (
             <IconButton
+              data-testid={
+                collapsed ? 'participants-panel-expand-button' : 'participants-panel-collapse-button'
+              }
               sx={styles.collapseButton}
               variant="elitea"
               color="tertiary"

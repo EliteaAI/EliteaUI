@@ -32,8 +32,16 @@ const VoiceConfigControls = memo(props => {
 
   const voiceOptions = (voices ?? []).map(v =>
     hasModelTTS
-      ? { value: v.id, label: v.name }
-      : { value: v.name, label: `${v.name}${v.localService ? '' : ' (online)'}` },
+      ? {
+          value: v.id,
+          label: v.name,
+          'data-testid': `voice-option-${v.name?.toLowerCase().replace(/\s+/g, '-')}`,
+        }
+      : {
+          value: v.name,
+          label: `${v.name}${v.localService ? '' : ' (online)'}`,
+          'data-testid': `voice-option-${v.name?.toLowerCase().replace(/\s+/g, '-')}`,
+        },
   );
 
   const selectedVoiceValue = hasModelTTS ? (config?.voiceId ?? '') : (config?.voiceName ?? '');
@@ -67,6 +75,7 @@ const VoiceConfigControls = memo(props => {
           showBorder
           showEmptyPlaceholder
           emptyPlaceholder={<em>Default</em>}
+          customMenuProps={{ MenuListProps: { 'data-testid': 'voice-selector-listbox' } }}
         />
       )}
       <Box sx={styles.sliderRow}>
@@ -77,6 +86,8 @@ const VoiceConfigControls = memo(props => {
           Speed
         </Typography>
         <Slider
+          data-testid="voice-speed-slider"
+          componentsProps={{ input: { 'data-testid': 'voice-speed-slider' } }}
           value={config?.rate ?? 1.0}
           min={0.5}
           max={2.0}
@@ -96,6 +107,8 @@ const VoiceConfigControls = memo(props => {
           Volume
         </Typography>
         <Slider
+          data-testid="voice-volume-slider"
+          componentsProps={{ input: { 'data-testid': 'voice-volume-slider' } }}
           value={config?.volume ?? 1.0}
           min={0}
           max={1}

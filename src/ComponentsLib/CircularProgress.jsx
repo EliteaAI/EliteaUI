@@ -32,7 +32,12 @@ const CircularProgressWrapper = props => {
     );
   }
 
-  return <StyledCircleProgress {...otherProps} />;
+  return (
+    <StyledCircleProgress
+      data-testid="loading-spinner"
+      {...otherProps}
+    />
+  );
 };
 
 /** @type {MuiSx} */

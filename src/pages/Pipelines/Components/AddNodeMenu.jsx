@@ -73,6 +73,7 @@ const PipelineAddNodeMenu = memo(props => {
         enterDelay={500}
       >
         <IconButton
+          data-testid="pipeline-add-node-button"
           variant="elitea"
           color="primary"
           id="pipeline-add-node-menu-action"

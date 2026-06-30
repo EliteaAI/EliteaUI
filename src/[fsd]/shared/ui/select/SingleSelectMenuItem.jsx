@@ -114,6 +114,7 @@ const SingleSelectMenuItem = memo(props => {
   return (
     <MenuItem
       {...restProps}
+      data-testid={option['data-testid'] || restProps['data-testid']}
       sx={[
         muiSx,
         styles.menuItem,

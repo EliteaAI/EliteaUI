@@ -13,6 +13,7 @@ const SimpleSearchBar = memo(props => {
     autoFocus = true,
     sx,
     onKeyDown: externalOnKeyDown,
+    'data-testid': dataTestId,
   } = props;
 
   const styles = simpleSearchBarStyles();
@@ -56,6 +57,7 @@ const SimpleSearchBar = memo(props => {
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         sx={styles.input}
+        inputProps={dataTestId ? { 'data-testid': dataTestId } : undefined}
       />
     </Box>
   );

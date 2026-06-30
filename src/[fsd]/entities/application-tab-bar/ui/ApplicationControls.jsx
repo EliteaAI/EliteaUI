@@ -133,9 +133,38 @@ const ApplicationControls = memo(({ setBlockNav, onSuccess }) => {
               onClick: () => handleSetDefaultVersion(formik?.values?.version_details?.id),
             },
           ]),
-      { ...exportApplicationMenuItem, disabled: !checkPermission(PERMISSIONS.applications.export) },
+      {
+        ...exportApplicationMenuItem,
+        disabled: !checkPermission(PERMISSIONS.applications.export),
+        slotProps: {
+          ...(exportApplicationMenuItem?.slotProps || {}),
+          MenuItem: {
+            ...(exportApplicationMenuItem?.slotProps?.MenuItem || {}),
+            menuItemProps: {
+              ...(exportApplicationMenuItem?.slotProps?.MenuItem?.menuItemProps || {}),
+              'data-testid': isFromPipeline ? 'pipeline-export-menu-item' : 'agent-export-menu-item',
+            },
+          },
+        },
+      },
       shareVersionMenuItem,
-      ...(forkEntityMenuItem ? [forkEntityMenuItem] : []),
+      ...(forkEntityMenuItem
+        ? [
+            {
+              ...forkEntityMenuItem,
+              slotProps: {
+                ...(forkEntityMenuItem?.slotProps || {}),
+                MenuItem: {
+                  ...(forkEntityMenuItem?.slotProps?.MenuItem || {}),
+                  menuItemProps: {
+                    ...(forkEntityMenuItem?.slotProps?.MenuItem?.menuItemProps || {}),
+                    'data-testid': isFromPipeline ? 'pipeline-fork-menu-item' : 'agent-fork-menu-item',
+                  },
+                },
+              },
+            },
+          ]
+        : []),
       ...(publishApplicationMenuItem && !isFromPipeline ? [publishApplicationMenuItem] : []),
       ...(unpublishVersionMenuItem && !isFromPipeline ? [unpublishVersionMenuItem] : []),
       {
@@ -166,7 +195,20 @@ const ApplicationControls = memo(({ setBlockNav, onSuccess }) => {
       },
       shareAgentMenuItem,
       pinMenuItem,
-      { ...deleteApplicationMenuItem, label: `Delete ${isFromPipeline ? 'pipeline' : 'agent'}` },
+      {
+        ...deleteApplicationMenuItem,
+        label: `Delete ${isFromPipeline ? 'pipeline' : 'agent'}`,
+        slotProps: {
+          ...(deleteApplicationMenuItem?.slotProps || {}),
+          MenuItem: {
+            ...(deleteApplicationMenuItem?.slotProps?.MenuItem || {}),
+            menuItemProps: {
+              ...(deleteApplicationMenuItem?.slotProps?.MenuItem?.menuItemProps || {}),
+              'data-testid': isFromPipeline ? 'pipeline-delete-menu-item' : 'agent-actions-delete-menuitem',
+            },
+          },
+        },
+      },
     ];
 
     return items;

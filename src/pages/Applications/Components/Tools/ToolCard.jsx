@@ -496,6 +496,7 @@ const ToolCard = memo(props => {
                     placement="top"
                   >
                     <IconButton
+                      data-testid="toolkit-refresh-button"
                       id={'RefreshButton'}
                       variant="elitea"
                       color="tertiary"

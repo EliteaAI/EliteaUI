@@ -11,7 +11,7 @@ import EliteaAssistantIcon from '@/assets/icons/elitea-assistant-icon.svg?react'
 import OfflineIcon from '@/assets/offline-icon.svg?react';
 import OnlineIcon from '@/assets/online-icon.svg?react';
 import PublishIcon from '@/assets/publish-version.svg?react';
-import { isApplicationCard } from '@/common/checkCardType';
+import { isApplicationCard, isPipelineCard } from '@/common/checkCardType';
 import { ContentType, ViewMode } from '@/common/constants';
 import { getEntityType, getEntityTypeByCardType } from '@/common/utils';
 import AuthorContainer from '@/components/AuthorContainer';
@@ -203,6 +203,13 @@ const Card = memo(props => {
                 color="text.secondary"
                 variant="headingSmall"
                 sx={styles.cardTitle}
+                data-testid={
+                  isApplicationCard(type)
+                    ? 'agent-card-name'
+                    : isPipelineCard(type)
+                      ? 'pipeline-card-name'
+                      : undefined
+                }
               >
                 <HighlightQuery
                   text={name}

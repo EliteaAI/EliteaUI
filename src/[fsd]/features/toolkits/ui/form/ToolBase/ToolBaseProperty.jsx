@@ -601,7 +601,9 @@ const ToolBaseProperty = memo(props => {
     } else {
       const isInteger = type === 'integer' || anyOf?.some(item => item.type === 'integer');
       const maxLength = k === 'label' ? MAX_NAME_LENGTH : max_toolkit_length;
-      const inputProps = maxLength ? { maxLength } : undefined;
+      const inputProps = maxLength
+        ? { maxLength, 'data-testid': `toolkit-field-${k}` }
+        : { 'data-testid': `toolkit-field-${k}` };
 
       // Get placeholder - use schema placeholder if provided, or default value for integer fields
       // Check both direct property and anyOf (for Optional[int] types)

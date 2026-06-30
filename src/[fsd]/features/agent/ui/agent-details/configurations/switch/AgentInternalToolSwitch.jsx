@@ -71,7 +71,7 @@ const AgentInternalToolSwitch = memo(props => {
 
   return (
     <Box
-      data-testid={`internal-tool-${name.replace(/_/g, '-')}`}
+      data-testid={`internal-tool-${name?.replace(/_/g, '-')}`}
       sx={styles.container}
     >
       <Box sx={styles.contentContainer}>
@@ -92,7 +92,7 @@ const AgentInternalToolSwitch = memo(props => {
       <FormControlLabel
         control={
           <Switch.BaseSwitch
-            data-testid={`internal-tool-${name.replace(/_/g, '-')}-switch`}
+            data-testid={`internal-tool-${name?.replace(/_/g, '-')}-switch`}
             checked={allowTool}
             onChange={onChange}
             disabled={disabled}

@@ -20,6 +20,7 @@ const ControlsDropdown = memo(({ menuItems = [] }) => {
     >
       {menuItems.length > 0 && (
         <DotMenu
+          menuTestId="actions-menu"
           sx={{ backrgound: 'red !important' }}
           anchorOrigin={{
             vertical: 'bottom',

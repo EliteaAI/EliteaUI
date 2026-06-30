@@ -225,6 +225,7 @@ const StyledPureTabs = memo(
                     icon: tab.icon,
                     iconPosition: 'start',
                     ...AccessibilityAriaHelpers.getTabAccessibilityProps(index),
+                    ...(tab.testid ? { 'data-testid': tab.testid } : {}),
                     ...(tab.tabProps || {}),
                   };
 

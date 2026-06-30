@@ -200,6 +200,7 @@ const AttachmentButton = forwardRef((props, ref) => {
       variant="elitea"
       color="secondary"
       aria-label="attach files"
+      data-testid="chat-attach-files-button"
       onClick={handleClickAttach}
       disabled={isDisabled}
       sx={{
@@ -213,6 +214,7 @@ const AttachmentButton = forwardRef((props, ref) => {
         ref={fileInputRef}
         type="file"
         id={id}
+        data-testid="chat-attach-files-input"
         multiple={multiple}
         onChange={event => handleFileChange(event, false)}
         accept={accept}
