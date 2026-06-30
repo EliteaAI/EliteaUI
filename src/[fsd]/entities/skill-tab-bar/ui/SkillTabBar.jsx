@@ -3,16 +3,15 @@ import { memo, useCallback, useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
+import { buildVersionOption } from '@/[fsd]/entities/version/lib/helpers';
 import DiscardSkillButton from '@/[fsd]/features/skill/ui/DiscardSkillButton';
 import SaveSkillButton from '@/[fsd]/features/skill/ui/SaveSkillButton';
 import SaveSkillVersionButton from '@/[fsd]/features/skill/ui/SaveSkillVersionButton';
 import { Select } from '@/[fsd]/shared/ui';
-import { TIME_FORMAT } from '@/common/constants';
-import { timeFormatter } from '@/common/utils';
 import PinIcon from '@/components/Icons/PinIcon';
 
 const SkillTabBar = memo(props => {
-  const { versions = [], currentVersionId, defaultVersionId, onChangeVersion, onSuccess } = props;
+  const { versions = [], currentVersionId, defaultVersionId, onChangeVersion, onSuccess, handleSetDefaultVersion = null } = props;
 
   const styles = skillTabBarStyles();
 
@@ -32,14 +31,10 @@ const SkillTabBar = memo(props => {
       if (b.name === LATEST_VERSION_NAME) return -1;
       return new Date(b.created_at) - new Date(a.created_at);
     });
-    return sorted.map(v => ({
-      value: v.id,
-      label: v.name,
-      // Show "name - date" in the dropdown like agents (same TIME_FORMAT).
-      ...(v.created_at ? { date: timeFormatter(v.created_at, TIME_FORMAT.DDMMYYYY) } : {}),
-      ...(v.id === effectiveDefaultId ? { icon: <PinIcon sx={{ fontSize: '1rem' }} /> } : {}),
-    }));
-  }, [versions, effectiveDefaultId]);
+    return sorted.map(
+      buildVersionOption({ defaultVersionID: effectiveDefaultId, handleSetDefaultVersion }),
+    );
+  }, [versions, effectiveDefaultId, handleSetDefaultVersion]);
 
   const selectedVersionId = useMemo(
     () => currentVersionId ?? versions[0]?.id ?? '',

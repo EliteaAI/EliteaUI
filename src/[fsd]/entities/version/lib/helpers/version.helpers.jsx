@@ -75,7 +75,7 @@ export const buildVersionOption =
                 },
               },
             })}
-            onClick={() => handleSetDefaultVersion(id)}
+            onClick={e => { e.stopPropagation(); handleSetDefaultVersion(id); }}
           >
             <PinIcon sx={{ fontSize: '1rem' }} />
           </Box>
