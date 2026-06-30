@@ -37,7 +37,11 @@ const RootComponent = memo(() => {
 
     const ioOptions = {
       path: VITE_SOCKET_PATH,
-      reconnectionDelayMax: 2000,
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      reconnectionAttempts: 10,
+      randomizationFactor: 0.5,
       extraHeaders: {},
     };
 
@@ -45,24 +49,56 @@ const RootComponent = memo(() => {
 
     const socketIo = io(VITE_SOCKET_SERVER, ioOptions);
 
-    socketIo?.on('connect', () => {
+    socketIo.on('connect', () => {
       // eslint-disable-next-line no-console
       console.debug('sio connected', socketIo);
 
       setSocket(socketIo);
-      dispatch(settingsActions.setSocketConnected(socketIo.connected));
+      dispatch(settingsActions.setSocketConnected(true));
+      dispatch(settingsActions.setSocketReconnecting(false));
     });
 
-    socketIo?.on('connect_error', err => {
+    socketIo.on('connect_error', err => {
       // eslint-disable-next-line no-console
       console.warn(`Connection error due to ${err}`);
-      dispatch(settingsActions.setSocketConnected(socketIo.connected));
+      dispatch(settingsActions.setSocketConnected(false));
     });
 
-    socketIo?.on('disconnect', () => {
+    socketIo.on('server_shutting_down', () => {
       // eslint-disable-next-line no-console
-      console.debug('needs reconnecting', socketIo);
-      dispatch(settingsActions.setSocketConnected(socketIo.connected));
+      console.debug('sio server shutting down, will reconnect to another pod');
+      dispatch(settingsActions.setSocketReconnecting(true));
+    });
+
+    socketIo.on('disconnect', reason => {
+      // eslint-disable-next-line no-console
+      console.debug('sio disconnected, reason:', reason);
+      dispatch(settingsActions.setSocketConnected(false));
+
+      if (!socketIo.active) {
+        // Server forced disconnect (rolling deploy / graceful shutdown) — reconnect manually
+        setTimeout(() => socketIo.connect(), 1000);
+      }
+    });
+
+    socketIo.io.on('reconnect_attempt', attempt => {
+      // eslint-disable-next-line no-console
+      console.debug(`sio reconnect attempt ${attempt}/10`);
+      dispatch(settingsActions.setSocketReconnecting(true));
+      dispatch(settingsActions.setSocketReconnectAttempt(attempt));
+    });
+
+    socketIo.io.on('reconnect', () => {
+      // eslint-disable-next-line no-console
+      console.debug('sio reconnected successfully');
+      dispatch(settingsActions.setSocketConnected(true));
+      dispatch(settingsActions.setSocketReconnecting(false));
+    });
+
+    socketIo.io.on('reconnect_failed', () => {
+      // eslint-disable-next-line no-console
+      console.warn('sio reconnection failed after max attempts');
+      dispatch(settingsActions.setSocketReconnecting(false));
     });
 
     return () => {

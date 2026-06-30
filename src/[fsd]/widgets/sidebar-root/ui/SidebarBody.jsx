@@ -46,7 +46,7 @@ const SidebarBody = memo(props => {
   const { publicPermissions = [], permissions = [] } = useSelector(state => state.user);
   const navigate = useNavigate();
   const { isBlockNav, isStreaming, setIsResetApiState, resetApiState } = useNavBlocker();
-  const { isSocketIconVisible, socketStatus } = useSocketIcon();
+  const { isSocketIconVisible, socketStatus, socketReconnectAttempt } = useSocketIcon();
   const { personal_project_id } = useSelector(state => state.user);
   const selectedProjectId = useSelector(state => state.settings.project?.id);
   const isSelectedProjectPublic = selectedProjectId == PUBLIC_PROJECT_ID;
@@ -276,7 +276,11 @@ const SidebarBody = memo(props => {
             <EliteAIcon sx={styles.eliteaIcon} />
             {isSocketIconVisible && (
               <Tooltip
-                title={`${systemSenderName} is ${socketStatus}`}
+                title={
+                  socketStatus === SocketConstants.SocketStatus.Reconnecting
+                    ? `${systemSenderName} is reconnecting (attempt ${socketReconnectAttempt}/10)`
+                    : `${systemSenderName} is ${socketStatus}`
+                }
                 placement="right"
               >
                 <Box sx={styles.socketIconContainer} />
@@ -477,7 +481,9 @@ const sideBarBodyStyles = (sideBarCollapsed, socketStatus) => ({
     backgroundColor:
       socketStatus === SocketConstants.SocketStatus.Connected
         ? palette.icon.fill.success
-        : palette.icon.fill.error,
+        : socketStatus === SocketConstants.SocketStatus.Reconnecting
+          ? palette.warning.main
+          : palette.icon.fill.error,
     position: 'absolute',
     top: '0rem',
     right: '0rem',
