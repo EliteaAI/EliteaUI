@@ -2,7 +2,8 @@ import { memo, useCallback, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 
-import AlertDialog from '@/components/AlertDialog';
+import { ModalConstants } from '@/[fsd]/shared/lib/constants';
+import { Modal } from '@/[fsd]/shared/ui';
 
 import BaseBtn from './BaseBtn';
 
@@ -39,14 +40,15 @@ const DiscardButton = memo(props => {
       >
         {title}
       </BaseBtn>
-      <AlertDialog
-        alarm
+      <Modal.BaseModal
+        variant={ModalConstants.MODAL_VARIANT.simple}
+        titleIcon={ModalConstants.MODAL_ICON_TYPE.warning}
         title="Warning"
-        alertContent={alertContent}
+        content={alertContent}
         open={openAlert}
         onClose={onCloseAlert}
-        onCancel={onCloseAlert}
         onConfirm={onConfirmDelete}
+        confirmButtonText="Discard"
         confirming={discarding}
       />
     </>

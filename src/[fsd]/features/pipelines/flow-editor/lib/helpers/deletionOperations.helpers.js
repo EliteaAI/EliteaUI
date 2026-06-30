@@ -1,20 +1,21 @@
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+
 import * as FlowNodeUpdateHelpers from './flowNodeUpdate.helpers';
 import * as NodeOperationsHelpers from './nodeOperations.helpers';
 import * as NodeTypeHelpers from './nodeType.helpers';
 import * as YamlUpdateHelpers from './yamlUpdate.helpers';
 
 export const getConfirmContent = (nodes, edges) => {
-  if (nodes.length && edges.length) return 'Are you sure to delete the selected nodes and edges?';
+  if (nodes.length && edges.length) return 'Are you sure to delete the selected nodes and edges ';
 
   if (nodes.length) {
-    if (nodes.length < 2) return 'Are you sure to delete the selected node?';
-    return 'Are you sure to delete the selected nodes?';
+    if (nodes.length < 2) return 'Are you sure to delete the selected node ';
+    return 'Are you sure to delete the selected nodes ';
   }
 
   if (edges.length) {
-    if (edges.length < 2) return 'Are you sure to delete the selected edge?';
-    return 'Are you sure to delete the selected edges?';
+    if (edges.length < 2) return 'Are you sure to delete the selected edge ';
+    return 'Are you sure to delete the selected edges ';
   }
 
   return '';

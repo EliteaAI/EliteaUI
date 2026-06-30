@@ -188,7 +188,7 @@ export const BucketItem = forwardRef((props, ref) => {
         confirmButtonTitle: 'Delete',
         alarm: true,
         disabled: !canDelete,
-        inlineExtraContent: ` It can't be restored.`,
+        inlineExtraContent: `? It can't be restored.`,
         entityName: name,
         shouldRequestInputName: false,
         onConfirm: handleDeleteBucket,
