@@ -49,7 +49,7 @@ const ArtifactRowActions = memo(props => {
         icon: <DeleteIcon sx={styles.menuIcon} />,
         entityName: row.name,
         shouldRequestInputName: false,
-        inlineExtraContent: ` It can't be restored.`,
+        inlineExtraContent: `? It can't be restored.`,
         modalSx: { paper: { width: '30rem' } },
         onConfirm: handleDelete,
       });
