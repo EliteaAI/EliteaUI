@@ -87,9 +87,10 @@ const useSaveVersion = () => {
       version: {
         ...version_details,
         llm_settings: cleanedLlmSettings,
-        tags: version_details.tags?.filter(
-          (tag, index, self) => self.findIndex(t => t.name === tag.name) === index,
-        ) ?? [],
+        tags:
+          version_details.tags?.filter(
+            (tag, index, self) => self.findIndex(t => t.name === tag.name) === index,
+          ) ?? [],
         tools: clearTools(version_details?.tools, currentUserId),
         conversation_starters: filterEmptyStrings(version_details?.conversation_starters),
         instructions: !isFromPipeline ? version_details.instructions : yamlCode,
@@ -116,13 +117,6 @@ const useSaveVersion = () => {
 
     const cloneData = deepClone(data);
     toastSuccess(`The ${isFromPipeline ? 'pipeline' : 'agent'} has been updated`);
-    dispatch(
-      eliteaApi.util.updateQueryData('applicationDetails', { applicationId, projectId }, () => {
-        return {
-          ...cloneData,
-        };
-      }),
-    );
     // savedVersionDetails uses cleanedLlmSettings so downstream callers (e.g. entity_settings PUT)
     // send llm_settings that exactly match what was stored in DB, avoiding the validation mismatch.
     const savedVersionDetails = {
@@ -130,6 +124,17 @@ const useSaveVersion = () => {
       llm_settings: cleanedLlmSettings,
       instructions: !isFromPipeline ? version_details.instructions : yamlCode,
     };
+    // The update application API always returns the base version details,
+    // so we must override version_details with the currently selected version's data.
+    const mergedData = {
+      ...cloneData,
+      version_details: savedVersionDetails,
+    };
+    dispatch(
+      eliteaApi.util.updateQueryData('applicationDetails', { applicationId, projectId }, () => {
+        return mergedData;
+      }),
+    );
     dispatch(
       eliteaApi.util.updateQueryData(
         'getApplicationVersionDetail',
@@ -146,10 +151,7 @@ const useSaveVersion = () => {
       handleChangeName(name);
     }
     resetForm?.({
-      values: {
-        ...cloneData,
-        version_details: savedVersionDetails, // Please note that update application API always returns the base version details, so we need to use the version details from the form which is the selected one.
-      },
+      values: mergedData,
     });
 
     return savedVersionDetails;
