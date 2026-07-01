@@ -202,6 +202,7 @@ const Card = memo(props => {
                 color="text.secondary"
                 variant="headingSmall"
                 sx={styles.cardTitle}
+                data-testid="entity-card-name"
               >
                 <HighlightQuery
                   text={name}

@@ -875,6 +875,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                     >
                       <Box>
                         <IconButton
+                          data-testid="chat-delete-button"
                           disabled={hasCanvasBeingEdited || (isApplicationParticipant ? false : isProcessing)}
                           sx={styles.iconButton}
                           variant="elitea"

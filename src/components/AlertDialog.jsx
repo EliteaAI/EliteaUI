@@ -75,6 +75,7 @@ export default function AlertDialog({
           </Button.BaseBtn>
         )}
         <Button.BaseBtn
+          data-testid="alert-dialog-confirm-button"
           disableRipple
           autoFocus={!cancelButtonText}
           variant={BUTTON_VARIANTS.elitea}
