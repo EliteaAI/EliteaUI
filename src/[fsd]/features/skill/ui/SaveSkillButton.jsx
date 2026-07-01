@@ -38,6 +38,7 @@ const SaveSkillButton = memo(({ onSuccess }) => {
       variant={BUTTON_VARIANTS.elitea}
       color="primary"
       onClick={handleSave}
+      data-testid="skill-save-button"
     >
       Save
       {isSaving && <StyledCircleProgress size={20} />}

@@ -343,6 +343,7 @@ export default function DotMenu({
           onClick={handleClick}
           disabled={disabled}
           sx={[styles.iconButton, menuIconSX]}
+          {...anchorButtonProps}
         >
           {menuIcon || <DotsMenuIcon />}
         </IconButton>

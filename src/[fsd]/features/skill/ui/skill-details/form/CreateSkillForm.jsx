@@ -156,6 +156,7 @@ const CreateSkillForm = memo(props => {
                       id="name"
                       name="name"
                       label="Name"
+                      data-testid="skill-name-input"
                       error={formik.touched?.name && Boolean(formik.errors.name)}
                       helperText={formik.touched?.name && formik.errors.name}
                       disabled={disabled}
@@ -185,6 +186,7 @@ const CreateSkillForm = memo(props => {
                     showexpandicon="true"
                     id="description"
                     label="Description"
+                    data-testid="skill-description-input"
                     required
                     multiline
                     maxRows={15}
@@ -248,7 +250,10 @@ const CreateSkillForm = memo(props => {
               <>
                 {instructionsViewMode === 'edit' ? (
                   <Box sx={styles.instructionsWrapper}>
-                    <Box sx={[styles.editorWrapper, Boolean(instructionsError) && styles.errorBorder]}>
+                    <Box
+                      data-testid="skill-instructions-editor"
+                      sx={[styles.editorWrapper, Boolean(instructionsError) && styles.errorBorder]}
+                    >
                       <Field.CodeMirrorEditor
                         key={instructionsKey}
                         value={instructions}
