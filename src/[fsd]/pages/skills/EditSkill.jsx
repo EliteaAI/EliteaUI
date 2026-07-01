@@ -206,7 +206,6 @@ const EditSkill = memo(() => {
                 <SkillControls
                   skillId={skillId}
                   skillName={data?.name}
-                  initialPinned={data?.is_pinned}
                   currentVersionId={currentVersionId}
                   onChangeVersion={handleChangeVersion}
                   onSetDefault={() => handleOpenDefaultDialog(currentVersionId)}
