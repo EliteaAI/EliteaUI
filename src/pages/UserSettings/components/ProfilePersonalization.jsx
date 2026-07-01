@@ -62,6 +62,7 @@ const ProfilePersonalization = memo(props => {
                 <SingleSelect
                   showBorder
                   value={values.persona}
+                  emptyPlaceholder=""
                   onChange={handlePersonaChange}
                   options={personaOptions}
                   customRenderOption={option => (
