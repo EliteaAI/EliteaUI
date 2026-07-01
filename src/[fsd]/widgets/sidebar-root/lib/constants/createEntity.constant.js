@@ -72,6 +72,7 @@ export const CreationPermissions = {
   Pipeline: [PERMISSIONS.applications.create],
   Toolkit: [PERMISSIONS.toolkits.create],
   App: [PERMISSIONS.toolkits.create],
+  Application: [PERMISSIONS.toolkits.create],
   MCP: [PERMISSIONS.toolkits.create],
   Credential: undefined, // No specific permission needed for credentials
   Bucket: [PERMISSIONS.artifacts.buckets.create, PERMISSIONS.artifacts.create],
