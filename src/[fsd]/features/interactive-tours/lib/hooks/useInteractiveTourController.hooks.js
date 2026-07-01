@@ -79,7 +79,7 @@ export const useInteractiveTourController = () => {
       // (e.g. triggered by a context update) cannot snap the phase back to 'prompt'.
       localStorage.setItem(lsPromptKey(id), 'true');
 
-      if (id === SIDEBAR_TOUR_ID || id === FIRST_ELITEA_TOUR_ID) {
+      if (id === SIDEBAR_TOUR_ID || id === FIRST_ELITEA_TOUR_ID || id === NOTIFICATIONS_TOUR_ID) {
         dispatchRedux(settingsActions.setSideBarCollapsed(false));
       }
 

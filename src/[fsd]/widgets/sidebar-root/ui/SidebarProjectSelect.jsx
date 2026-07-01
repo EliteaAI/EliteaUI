@@ -34,6 +34,7 @@ const SidebarProjectSelect = memo(() => {
           <Box sx={styles.projectRow}>
             <ProjectAvatar
               projectName={option?.label}
+              projectId={option?.value}
               size="1.5rem"
             />
             {!sideBarCollapsed && (
@@ -66,6 +67,7 @@ const SidebarProjectSelect = memo(() => {
       <Box sx={optionStyles.optionRow}>
         <ProjectAvatar
           projectName={option?.label}
+          projectId={option?.value}
           size="1.5rem"
         />
         <Typography

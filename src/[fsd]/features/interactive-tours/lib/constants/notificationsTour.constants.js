@@ -21,7 +21,7 @@ export const notificationsTourSteps = [
     target: SIDEBAR_TOUR_TARGETS.notifications,
     placement: 'right',
     title: 'Quick Panel',
-    content: `Click the **Notifications** button in the sidebar to open a popover panel showing your unread notifications at a glance. Each entry displays an icon, message, and relative timestamp. Click any embedded link to navigate directly to the relevant page.
+    content: `Click the **Notifications** bell icon in the sidebar header to open a popover panel showing your most recent notifications at a glance. Each entry displays an icon, message, and relative timestamp. Click any embedded link to navigate directly to the relevant page.
 
 The panel does not mark notifications as read when opened — notifications are marked read only when you visit the full Notification Center page. Click **View all** to open the full page, or click outside the panel to close it.`,
   },

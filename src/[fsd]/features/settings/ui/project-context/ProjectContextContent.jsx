@@ -3,6 +3,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Box, CircularProgress, Typography } from '@mui/material';
 
 import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
+import ProjectParamsHeader from '@/[fsd]/features/settings/ui/project-context/ProjectParamsHeader';
 import { Banner, Button, Field } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import Markdown from '@/[fsd]/shared/ui/markdown';
@@ -171,6 +172,8 @@ const ProjectContextContent = memo(() => {
       />
 
       <Box sx={styles.body}>
+        <ProjectParamsHeader />
+
         {showReadOnlyBanner && (
           <Banner.BannerMessage
             message="You don't have permission to edit this setting."
