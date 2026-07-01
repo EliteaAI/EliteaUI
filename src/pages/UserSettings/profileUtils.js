@@ -31,6 +31,7 @@ export const serializeProfileFormData = (authorData, defaultModel, selectedProje
   if (!authorData) {
     return {
       ...PROFILE_INITIAL_VALUES,
+      persona: '',
       summary_llm_settings: {
         ...PROFILE_INITIAL_VALUES.summary_llm_settings,
         model_name: defaultModel?.name || '',
