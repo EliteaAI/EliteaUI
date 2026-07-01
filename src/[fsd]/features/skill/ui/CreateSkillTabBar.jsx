@@ -136,6 +136,7 @@ const CreateSkillTabBar = memo(() => {
         title="Cancel"
         disabled={isLoading}
         onDiscard={onCancel}
+        data-testid="skill-cancel-button"
       />
     </TabBarItems>
   );
