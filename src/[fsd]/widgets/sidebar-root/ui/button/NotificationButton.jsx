@@ -1,7 +1,9 @@
 import { memo, useCallback, useEffect, useState } from 'react';
 
 import { useSelector } from 'react-redux';
-import { useMatch, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+
+import { Box } from '@mui/material';
 
 import { SIDEBAR_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import NotificationList from '@/[fsd]/widgets/Notifications/ui';
@@ -10,15 +12,10 @@ import { sioEvents } from '@/common/constants';
 import BellIcon from '@/components/Icons/BellIcon';
 import useSocket from '@/hooks/useSocket';
 import RouteDefinitions from '@/routes';
-import { useTheme } from '@emotion/react';
-
-import SidebarButton from './SidebarButton';
 
 const NotificationButton = memo(() => {
   const navigate = useNavigate();
-  const theme = useTheme();
   const { personal_project_id } = useSelector(state => state.user);
-  const isOnNotification = useMatch({ path: RouteDefinitions.NotificationCenter });
 
   const [hasMessages, setHasMessages] = useState(false);
   const [notificationListAnchorEl, setNotificationListAnchorEl] = useState(null);
@@ -68,19 +65,13 @@ const NotificationButton = memo(() => {
 
   return (
     <>
-      <SidebarButton
-        icon={
-          <BellIcon
-            fill={theme.palette.text.metrics}
-            hasMessages={hasMessages}
-          />
-        }
-        label="Notifications"
-        tooltip="Notifications"
-        tourId={SIDEBAR_TOUR_TARGET_IDS.notifications}
+      <Box
+        data-tour={SIDEBAR_TOUR_TARGET_IDS.notifications}
         onClick={onClickNotificationButton}
-        isActive={!!isOnNotification}
-      />
+        sx={styles.container}
+      >
+        <BellIcon hasMessages={hasMessages} />
+      </Box>
       {notificationListAnchorEl && (
         <NotificationList
           notificationListAnchorEl={notificationListAnchorEl}
@@ -92,5 +83,24 @@ const NotificationButton = memo(() => {
 });
 
 NotificationButton.displayName = 'NotificationButton';
+
+/** @type {MuiSx} */
+const styles = {
+  container: ({ palette }) => ({
+    width: '2rem',
+    height: '2rem',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    '&:hover': {
+      backgroundColor: palette.background.button.tertiary.hover,
+    },
+    '&:active': {
+      backgroundColor: palette.background.button.tertiary.pressed,
+    },
+  }),
+};
 
 export default NotificationButton;

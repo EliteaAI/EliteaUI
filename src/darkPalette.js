@@ -257,6 +257,14 @@ const darkPalette = {
         hover: white5,
         selected: white10,
       },
+      agentHub: {
+        default: 'rgba(56, 83, 164, 0.2)',
+        hover: 'rgba(56, 83, 164, 0.2)',
+        active: 'rgba(56, 83, 164, 0.2)',
+        shadowDefault: '0px 0px 10px 0px rgba(102, 209, 255, 0.15) inset',
+        shadowHover: '0px 0px 16px 0px rgba(102, 209, 255, 0.4) inset',
+        shadowActive: '0px 0px 40px 0px rgba(102, 209, 255, 0.3) inset',
+      },
       iconLabelButton: {
         default: 'transparent',
         hover: white5,

@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { Box, Divider, IconButton, Tooltip, Typography } from '@mui/material';
+
 import { SIDEBAR_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
 import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
@@ -101,8 +102,6 @@ const SidebarBody = memo(props => {
           tooltip: 'Chats',
           tourId: SIDEBAR_TOUR_TARGET_IDS.navChat,
         },
-      ],
-      [
         {
           value: 'agents',
           label: 'Agents',
@@ -111,15 +110,6 @@ const SidebarBody = memo(props => {
           breadCrumb: 'Agents',
           tooltip: 'Agents',
           tourId: SIDEBAR_TOUR_TARGET_IDS.navAgents,
-        },
-        {
-          value: 'skills',
-          label: 'Skills',
-          icon: <SkillsIcon />,
-          url: RouteDefinitions.Skills,
-          breadCrumb: 'Skills',
-          tooltip: 'Skills',
-          tourId: SIDEBAR_TOUR_TARGET_IDS.navSkills,
         },
         {
           value: 'pipelines',
@@ -133,15 +123,14 @@ const SidebarBody = memo(props => {
       ],
       [
         {
-          value: 'credentials',
-          label: 'Credentials',
-          icon: <KeyIcon />,
-          url: RouteDefinitions.Credentials,
-          breadCrumb: 'Credentials',
-          tooltip: 'Credentials',
-          tourId: SIDEBAR_TOUR_TARGET_IDS.navCredentials,
+          value: 'skills',
+          label: 'Skills',
+          icon: <SkillsIcon />,
+          url: RouteDefinitions.Skills,
+          breadCrumb: 'Skills',
+          tooltip: 'Skills',
+          tourId: SIDEBAR_TOUR_TARGET_IDS.navSkills,
         },
-
         {
           value: 'toolkits',
           label: 'Toolkits',
@@ -152,15 +141,6 @@ const SidebarBody = memo(props => {
           tourId: SIDEBAR_TOUR_TARGET_IDS.navToolkits,
         },
         {
-          value: 'applications',
-          label: 'Applications',
-          icon: <AppsIcon />,
-          url: RouteDefinitions.Apps,
-          breadCrumb: 'Applications',
-          tooltip: 'Applications',
-          tourId: SIDEBAR_TOUR_TARGET_IDS.navApplications,
-        },
-        {
           value: 'mcps',
           label: 'MCPs',
           icon: <MCPIcon />,
@@ -168,6 +148,24 @@ const SidebarBody = memo(props => {
           breadCrumb: 'MCP',
           tooltip: 'MCP',
           tourId: SIDEBAR_TOUR_TARGET_IDS.navMcps,
+        },
+        {
+          value: 'credentials',
+          label: 'Credentials',
+          icon: <KeyIcon />,
+          url: RouteDefinitions.Credentials,
+          breadCrumb: 'Credentials',
+          tooltip: 'Credentials',
+          tourId: SIDEBAR_TOUR_TARGET_IDS.navCredentials,
+        },
+        {
+          value: 'applications',
+          label: 'Applications',
+          icon: <AppsIcon />,
+          url: RouteDefinitions.Apps,
+          breadCrumb: 'Applications',
+          tooltip: 'Applications',
+          tourId: SIDEBAR_TOUR_TARGET_IDS.navApplications,
         },
       ],
       [
@@ -231,6 +229,7 @@ const SidebarBody = memo(props => {
               </Tooltip>
             )}
           </IconButton>
+          {!sideBarCollapsed && <Buttons.NotificationButton />}
         </Box>
 
         <Divider sx={styles.divider} />
@@ -273,31 +272,34 @@ const SidebarBody = memo(props => {
 
         <Box sx={styles.bottomSection}>
           <Box sx={styles.section}>
-            <Buttons.AgentHubButton navigateToPage={navigateToPage} />
-          </Box>
-          <Divider sx={styles.sectionDivider} />
-          <Box sx={styles.section}>
             <Buttons.SettingsButton navigateToPage={navigateToPage} />
-            <Buttons.ResourcesButton />
-            <Buttons.NotificationButton />
-            <Buttons.UserButton navigateToPage={navigateToPage} />
+            <Buttons.AgentHubButton />
           </Box>
         </Box>
       </Box>
 
-      {onToggleAssistant && (
-        <Tooltip
-          title={sideBarCollapsed ? 'Support Assistant' : ''}
-          placement="left"
-        >
-          <Box
-            data-tour={SIDEBAR_TOUR_TARGET_IDS.supportAssistant}
-            sx={styles.assistantBlock}
-            onClick={onToggleAssistant}
+      {onToggleAssistant ? (
+        <Box sx={styles.footerBlock}>
+          <Tooltip
+            title={sideBarCollapsed ? 'Support Assistant' : ''}
+            placement="left"
           >
-            {sideBarCollapsed ? null : <Typography component="span">Support Assistant</Typography>}
+            <Box
+              data-tour={SIDEBAR_TOUR_TARGET_IDS.supportAssistant}
+              sx={styles.assistantBlock}
+              onClick={onToggleAssistant}
+            >
+              {sideBarCollapsed ? null : <Typography component="span">Support Bot</Typography>}
+            </Box>
+          </Tooltip>
+          {!sideBarCollapsed && <Buttons.ResourcesButton />}
+        </Box>
+      ) : (
+        !sideBarCollapsed && (
+          <Box sx={styles.helpCenterFooter}>
+            <Buttons.ResourcesButton fullWidth />
           </Box>
-        </Tooltip>
+        )
       )}
     </Box>
   );
@@ -390,27 +392,10 @@ const sideBarBodyStyles = (sideBarCollapsed, socketStatus) => ({
     right: '0rem',
     pointer: 'cursor',
   }),
-  assistantBlock: ({ palette }) => ({
+  helpCenterFooter: ({ palette }) => ({
     position: 'relative',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    height: '3.25rem',
     flexShrink: 0,
-    padding: '.75rem 1rem',
-
-    span: {
-      fontSize: '.75rem',
-      color: palette.text.metrics,
-      fontWeight: 500,
-      marginLeft: '.75rem',
-    },
-
-    ':hover': {
-      background:
-        palette.background.button.assistantButton?.hover ?? palette.background.button.drawerMenu.hover,
-      cursor: 'pointer',
-    },
+    padding: '0.5rem 1rem',
 
     ':before': {
       content: '""',
@@ -420,6 +405,44 @@ const sideBarBodyStyles = (sideBarCollapsed, socketStatus) => ({
       width: '100%',
       height: '1px',
       backgroundColor: palette.border.sidebarDivider,
+    },
+  }),
+  footerBlock: ({ palette }) => ({
+    position: 'relative',
+    display: 'flex',
+    alignItems: 'stretch',
+    height: '3.25rem',
+    flexShrink: 0,
+
+    ':before': {
+      content: '""',
+      position: 'absolute',
+      left: 0,
+      top: 0,
+      width: '100%',
+      height: '1px',
+      backgroundColor: palette.border.sidebarDivider,
+    },
+  }),
+  assistantBlock: ({ palette }) => ({
+    flex: 1,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    minWidth: 0,
+    borderRight: sideBarCollapsed ? 'none' : `1px solid ${palette.border.sidebarDivider}`,
+
+    span: {
+      fontSize: '.75rem',
+      color: palette.text.metrics,
+      fontWeight: 500,
+      marginLeft: '1.5rem',
+    },
+
+    ':hover': {
+      background:
+        palette.background.button.assistantButton?.hover ?? palette.background.button.drawerMenu.hover,
+      cursor: 'pointer',
     },
   }),
 });
