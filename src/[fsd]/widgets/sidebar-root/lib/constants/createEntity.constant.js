@@ -76,6 +76,7 @@ export const CreationPermissions = {
   MCP: [PERMISSIONS.toolkits.create],
   Credential: undefined, // No specific permission needed for credentials
   Bucket: [PERMISSIONS.artifacts.buckets.create, PERMISSIONS.artifacts.create],
+  Configuration: [PERMISSIONS.configuration.update],
   Model: undefined, // No specific permission needed for model credentials
   'Personal Token': undefined, // Personal tokens creation allowed from settings
   Secret: [PERMISSIONS.secrets.list], // Allow if user can access secrets page
