@@ -9,6 +9,7 @@ const PIN_DETAIL_CACHE_BY_ENTITY_TYPE = {
   application: { endpoint: 'applicationDetails', idKey: 'applicationId' },
   toolkit: { endpoint: 'toolkitsDetails', idKey: 'toolkitId' },
   configuration: { endpoint: 'getConfigurationDetail', idKey: 'configId' },
+  skill: { endpoint: 'skillDetails', idKey: 'skillId' },
 };
 
 const CACHE_KEY_REGEX = /^([a-zA-Z]+)(\{.+\})$/;
