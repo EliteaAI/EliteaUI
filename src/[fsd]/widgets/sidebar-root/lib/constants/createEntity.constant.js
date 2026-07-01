@@ -57,11 +57,11 @@ export const SimpleCreateRoutes = [
   'settings/analytics',
   'settings/prompts',
   'settings/environment',
+  'settings/personalization',
+  'settings/notifications',
   RouteDefinitions.Onboarding,
-  RouteDefinitions.UserSettings,
   RouteDefinitions.AgentHub,
   RouteDefinitions.HelpCenter,
-  RouteDefinitions.NotificationCenter,
 ];
 
 export const CreationPermissions = {

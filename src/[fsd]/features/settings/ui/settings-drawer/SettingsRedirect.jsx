@@ -2,7 +2,19 @@ import { memo, useEffect } from 'react';
 
 import { useNavigate, useParams } from 'react-router-dom';
 
-const VALID_TABS = ['model-configuration', 'tokens', 'integrations', 'secrets', 'projects', 'analytics'];
+const VALID_TABS = [
+  'model-configuration',
+  'tokens',
+  'integrations',
+  'secrets',
+  'projects',
+  'analytics',
+  'project-params',
+  'prompts',
+  'environment',
+  'personalization',
+  'notifications',
+];
 const LEGACY_TABS = ['configuration', 'information'];
 const DEFAULT_TAB = 'model-configuration';
 
