@@ -37,6 +37,7 @@ const RootComponent = memo(() => {
 
     const ioOptions = {
       path: VITE_SOCKET_PATH,
+      transports: ['websocket'],
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
