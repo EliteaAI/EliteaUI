@@ -134,7 +134,7 @@ const IWModalEntityCard = memo(props => {
               />
 
               <IWModalEntityTextField
-                title="Conversation starters"
+                title="Chat starters"
                 description={entity.details.conversation_starters?.join('\n\n')}
                 lineClamp={3}
                 setFullscreenData={setFullscreenData}

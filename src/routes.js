@@ -116,7 +116,7 @@ export const shouldBlockNavWithUnsavedChanges = path => {
 };
 
 export const PathSessionMap = {
-  [RouteDefinitions.Chat]: 'Chat',
+  [RouteDefinitions.Chat]: 'Chats',
   // [RouteDefinitions.Profile]: 'Profile',
   [RouteDefinitions.Settings]: 'Settings',
   [RouteDefinitions.CreatePersonalToken]: 'New personal token',

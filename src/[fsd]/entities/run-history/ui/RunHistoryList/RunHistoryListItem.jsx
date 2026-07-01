@@ -92,11 +92,11 @@ const RunHistoryListItem = memo(props => {
         historyId: item.id,
       }).unwrap();
 
-      toastSuccess('Conversation deleted successfully');
+      toastSuccess('Chat deleted successfully');
       setConfirmRemoveModal(false);
       onItemSelect(null);
     } catch {
-      toastError('Failed to delete conversation');
+      toastError('Failed to delete chat');
     }
   }, [deleteHistoryItem, isDeleting, item, onItemSelect, projectId, toastError, toastSuccess]);
 
