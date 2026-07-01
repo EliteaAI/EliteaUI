@@ -1,10 +1,10 @@
 import { memo, useCallback, useMemo, useRef } from 'react';
 
 import { useTheme } from '@mui/material';
-import { EliteaAssistant } from '@eliteaai/elitea-assistant';
 
 import { DEV, ELITEA_ASSISTANT_ENABLED, VITE_DEV_TOKEN, VITE_SERVER_URL } from '@/common/constants';
 import { clearBaseUrlPrefix } from '@/common/utils';
+import { EliteaAssistant } from '@eliteaai/elitea-assistant';
 
 import { EliteaAssistantProvider } from '../lib/context';
 import { useAssistantContext } from '../lib/hooks';
