@@ -92,10 +92,10 @@ export const NormalTagNameInputRegExp = /^[\w,\s]+$/g;
 export const NormalSingleTagNameInputRegExp = /^[ \t]*[\w]*[ \t]*$/g;
 export const ConversationNameRegExp = /^[a-zA-Z0-9_[\].()][a-zA-Z0-9_[\].() -]{2,63}$/;
 export const ConversationNameWarningMessage =
-  'The conversation name should be 3 to 64 characters long. It can include letters (a-z, A-Z), numbers (0-9), underscores (_), brackets ([]), parentheses (()), dots (.), hyphen(-), and spaces. Please note that the first character should not be a space.';
+  'The chat name should be 3 to 64 characters long. It can include letters (a-z, A-Z), numbers (0-9), underscores (_), brackets ([]), parentheses (()), dots (.), hyphen(-), and spaces. Please note that the first character should not be a space.';
 export const FolderNameWarningMessage =
   'The folder name should be 3 to 64 characters long. It can include letters (a-z, A-Z), numbers (0-9), underscores (_), brackets ([]), parentheses (()), dots (.), hyphen(-), and spaces. Please note that the first character should not be a space.';
-export const DefaultConversationName = 'New Conversation';
+export const DefaultConversationName = 'New Chat';
 export const DefaultFolderName = 'New folder';
 
 export const PipelineEditorMode = {

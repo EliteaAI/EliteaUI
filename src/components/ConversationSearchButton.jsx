@@ -20,7 +20,7 @@ const ConversationSearchButton = ({ collapsed = false, onExpand, onSearchActivat
 
   return (
     <Tooltip
-      title="Search conversations"
+      title="Search chats"
       placement="top"
     >
       <IconButton

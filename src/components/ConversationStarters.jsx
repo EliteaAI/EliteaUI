@@ -97,7 +97,7 @@ const ConversationStarters = memo(props => {
       accordionSX={styles.accordionSX}
       items={[
         {
-          title: 'Conversation starters',
+          title: 'Chat starters',
           content: (
             <Box data-tour={AGENT_TOUR_TARGET_IDS.conversationStarters}>
               {values.map((value, index) => {
@@ -113,7 +113,7 @@ const ConversationStarters = memo(props => {
                         autoComplete="off"
                         variant="standard"
                         fullWidth
-                        placeholder="Conversation message"
+                        placeholder="Chat message"
                         name={`${valuesPath}[${index}]`}
                         value={value}
                         label="Starter"
@@ -125,12 +125,12 @@ const ConversationStarters = memo(props => {
                         maxRows={15}
                         hasActionsToolBar
                         disabled={disabled}
-                        fieldName="Conversation starter"
+                        fieldName="Chat starter"
                         inputProps={{ maxLength: MAX_CONVERSATION_STARTER_LENGTH }}
                         showCharacterCounter
                         inputRef={el => (inputRefs.current[index] = el)}
                         error={hasStarterError}
-                        helperText={hasStarterError ? 'Conversation starter cannot be empty' : undefined}
+                        helperText={hasStarterError ? 'Chat starter cannot be empty' : undefined}
                       />
                       {isFocused(starterFocusId) && value.length > 0 && (
                         <Text.CharacterCounter
