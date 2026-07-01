@@ -70,17 +70,16 @@ function useBrowserPageTitle() {
       return `User public - ${projectName}`;
     } else if (location.pathname.startsWith('/settings')) {
       const settingsTab = params.tab || location.pathname.replace(/^\/settings\/?/, '').split('/')[0] || '';
+      if (settingsTab === 'personalization') {
+        return `Settings: Personalization - ${projectName}`;
+      }
+      if (settingsTab === 'notifications') {
+        return `Settings: Notifications - ${projectName}`;
+      }
       if (settingsTab) {
         return `Settings: ${settingsTab} - ${projectName}`;
       }
       return `Settings - ${projectName}`;
-    } else if (location.pathname.startsWith('/user-settings')) {
-      if (params.tab) {
-        return `User settings: ${params.tab} - ${projectName}`;
-      }
-      return `User settings - ${projectName}`;
-    } else if (location.pathname.startsWith('/notification-center')) {
-      return `Notifications - ${projectName}`;
     } else if (location.pathname.startsWith('/skills')) {
       if (params.skillId) {
         return `Skill: ${name || params.skillId} - ${projectName}`;

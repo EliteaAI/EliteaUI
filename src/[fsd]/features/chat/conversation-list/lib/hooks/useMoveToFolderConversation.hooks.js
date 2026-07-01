@@ -185,8 +185,8 @@ export const useMoveToFolderConversation = props => {
         // Show success notification
         if (toastSuccess) {
           const message = targetFolder
-            ? `Conversation moved to "${targetFolder.name}" folder successfully`
-            : 'Conversation moved to ungrouped area successfully';
+            ? `Chat moved to "${targetFolder.name}" folder successfully`
+            : 'Chat moved to ungrouped area successfully';
           toastSuccess(message);
         }
 

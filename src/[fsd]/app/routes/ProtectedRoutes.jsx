@@ -18,7 +18,6 @@ import {
   PERSONAL_SPACE_PERIOD_FOR_NEW_USER,
   SkillsTabs,
   ToolkitsTabs,
-  UserProfileTabs,
 } from '@/common/constants';
 import RouteChangeResetSearch from '@/components/RouteChangeResetSearch';
 import { PageTitleSetter } from '@/hooks/useBrowserPageTitle';
@@ -240,11 +239,6 @@ const ProtectedRoutes = () => {
       { path: RouteDefinitions.UserPublicMCPDetail, element: <EditToolkit isMCP /> },
       { path: RouteDefinitions.UserPublicAppDetail, element: <AppDetail /> },
       { path: RouteDefinitions.ModeSwitch, element: <ModeSwitch /> },
-      { path: RouteDefinitions.UserSettings, element: getIndexElement(UserProfileTabs[0]) },
-      { path: RouteDefinitions.UserSettingsWithTab, element: <UserSettings /> },
-
-      // notification center
-      { path: RouteDefinitions.NotificationCenter, element: <NotificationCenter /> },
 
       // artifacts
       { path: RouteDefinitions.Artifacts, element: <Artifacts /> },
@@ -314,7 +308,7 @@ const ProtectedRoutes = () => {
               element={<EnvironmentSettings />}
             />
             <Route
-              path="project-context"
+              path="project-params"
               element={<ProjectContextSettings />}
             />
             <Route
@@ -336,6 +330,14 @@ const ProtectedRoutes = () => {
             <Route
               path="analytics"
               element={<AnalyticsContainer />}
+            />
+            <Route
+              path="personalization"
+              element={<UserSettings />}
+            />
+            <Route
+              path="notifications"
+              element={<NotificationCenter />}
             />
             <Route
               path={'create-configuration'}

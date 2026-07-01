@@ -1,5 +1,6 @@
 import { memo, useCallback, useEffect, useMemo } from 'react';
 
+import { useDispatch } from 'react-redux';
 import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { Box } from '@mui/material';
@@ -11,7 +12,10 @@ import AnalyticsIcon from '@/assets/analytics-icon.svg?react';
 import ConfigurationIcon from '@/assets/configuration-icon.svg?react';
 import EnvironmentIcon from '@/assets/environment-icon.svg?react';
 import KeyIcon from '@/assets/key-icon.svg?react';
+import LogoutIcon from '@/assets/logout-icon.svg?react';
+import PersonalizationIcon from '@/assets/personalization-icon.svg?react';
 import { PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';
+import BellIcon from '@/components/Icons/BellIcon';
 import BriefcaseIcon from '@/components/Icons/BriefcaseIcon';
 import Lock from '@/components/Icons/Lock.jsx';
 import ModelIcon from '@/components/Icons/ModelIcon';
@@ -19,69 +23,107 @@ import UsersIcon from '@/components/Icons/UsersIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import RouteDefinitions, { PathSessionMap } from '@/routes';
+import { logout } from '@/slices/user.js';
 
 const VALID_TAB_IDS = [
   'model-configuration',
   'prompts',
   'environment',
-  'project-context',
+  'project-params',
   'tokens',
   'integrations',
   'secrets',
   'users',
   'analytics',
+  'personalization',
+  'notifications',
+  'logout',
 ];
+
+const SETTINGS_SECTIONS = {
+  PROJECT: 'PROJECT',
+  PERSONAL: 'PERSONAL',
+};
 
 const SETTINGS_TABS_CONFIG = [
   {
-    id: 'model-configuration',
-    label: 'AI Configuration',
-    icon: <ConfigurationIcon />,
+    section: SETTINGS_SECTIONS.PROJECT,
+    tabs: [
+      {
+        id: 'model-configuration',
+        label: 'AI Configuration',
+        icon: <ConfigurationIcon />,
+      },
+      {
+        id: 'prompts',
+        label: 'Service Prompts',
+        icon: <ModelIcon />,
+        publicOnly: true,
+      },
+      {
+        id: 'environment',
+        label: 'Environment',
+        icon: <EnvironmentIcon />,
+        publicOnly: true,
+      },
+      {
+        id: 'project-params',
+        label: 'Project Params',
+        icon: <BriefcaseIcon />,
+        permission: PERMISSIONS.projectContext.view,
+      },
+      {
+        id: 'secrets',
+        label: 'Secrets',
+        icon: <Lock />,
+        permission: PERMISSIONS.secrets.list,
+      },
+      {
+        id: 'users',
+        label: 'Users',
+        icon: <UsersIcon />,
+      },
+      {
+        id: 'analytics',
+        label: 'Analytics',
+        icon: <AnalyticsIcon />,
+      },
+    ],
   },
   {
-    id: 'prompts',
-    label: 'Service Prompts',
-    icon: <ModelIcon />,
+    section: SETTINGS_SECTIONS.PERSONAL,
+    tabs: [
+      {
+        id: 'personalization',
+        label: 'Personalization',
+        icon: <PersonalizationIcon />,
+      },
+      {
+        id: 'tokens',
+        label: 'Personal Tokens',
+        icon: <KeyIcon />,
+      },
+      {
+        id: 'notifications',
+        label: 'Notifications',
+        icon: <BellIcon />,
+      },
+      {
+        id: 'logout',
+        label: 'Log out',
+        icon: <LogoutIcon />,
+        isAction: true,
+      },
+    ],
   },
-  {
-    id: 'environment',
-    label: 'Environment',
-    icon: <EnvironmentIcon />,
-  },
-  {
-    id: 'project-context',
-    label: 'Project Context',
-    icon: <BriefcaseIcon />,
-    permission: PERMISSIONS.projectContext.view,
-  },
-  {
-    id: 'tokens',
-    label: 'Personal Tokens',
-    icon: <KeyIcon />,
-  },
-  {
-    id: 'secrets',
-    label: 'Secrets',
-    icon: <Lock />,
-    permission: PERMISSIONS.secrets.list,
-  },
-  {
-    id: 'users',
-    label: 'Users',
-    icon: <UsersIcon />,
-  },
-  {
-    id: 'analytics',
-    label: 'Analytics',
-    icon: <AnalyticsIcon />,
-  },
-].filter(tab => VALID_TAB_IDS.includes(tab.id));
+];
 
 const DEFAULT_TAB = 'model-configuration';
 const LEGACY_TAB_REDIRECTS = ['configuration', 'information'];
 
 const Settings = memo(() => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const styles = settingsPageStyles();
   const { state: locationState } = useLocation();
   const { tab = DEFAULT_TAB } = useParams();
@@ -89,20 +131,38 @@ const Settings = memo(() => {
   const { checkPermission } = useCheckPermission();
   const { data: platformSettings } = useGetPlatformSettingsQuery();
 
-  const tabs = useMemo(
+  const sections = useMemo(
     () =>
-      SETTINGS_TABS_CONFIG.filter(item => {
-        if (!checkPermission(item.permission)) return false;
-        if (item.id === 'prompts' || item.id === 'environment') return projectId == PUBLIC_PROJECT_ID;
-        if (item.id === 'project-context') return projectId !== PUBLIC_PROJECT_ID;
-        if (item.id === 'analytics' && platformSettings?.analytics_enabled === false) return false;
-        return true;
-      }),
+      SETTINGS_TABS_CONFIG.map(section => ({
+        ...section,
+        tabs: section.tabs
+          .filter(tabItem => VALID_TAB_IDS.includes(tabItem.id))
+          .filter(item => {
+            if (!checkPermission(item.permission)) return false;
+            if (item.publicOnly) return projectId == PUBLIC_PROJECT_ID;
+            if (item.id === 'project-params') return projectId !== PUBLIC_PROJECT_ID;
+            if (item.id === 'analytics' && platformSettings?.analytics_enabled === false) return false;
+            return true;
+          }),
+      })).filter(section => section.tabs.length > 0),
     [checkPermission, projectId, platformSettings],
   );
 
+  const onLogout = useCallback(() => {
+    dispatch(logout());
+    window.location.href = window.location.origin.toString() + '/forward-auth/logout';
+  }, [dispatch]);
+
   const handleSettingsItemClick = useCallback(
     tabId => {
+      // Find the tab config to check for actions
+      const tabConfig = SETTINGS_TABS_CONFIG.flatMap(s => s.tabs).find(t => t.id === tabId);
+
+      if (tabConfig?.isAction && tabId === 'logout') {
+        onLogout();
+        return;
+      }
+
       const pagePath = `${RouteDefinitions.Settings}/${tabId}`;
       navigate(pagePath, {
         state: locationState || {
@@ -115,7 +175,7 @@ const Settings = memo(() => {
         },
       });
     },
-    [navigate, locationState],
+    [navigate, locationState, onLogout],
   );
 
   // Handle legacy route redirects
@@ -148,7 +208,7 @@ const Settings = memo(() => {
     <Box sx={styles.container}>
       <Box sx={styles.drawer}>
         <SettingsDrawer
-          tabs={tabs}
+          sections={sections}
           activeTab={tab}
           onItemClick={handleSettingsItemClick}
         />

@@ -27,7 +27,7 @@ export const RouteToLabelMap = [
   { route: 'settings/users', label: 'Invite User' },
   { route: RouteDefinitions.AppsApplications, label: 'Application' },
   { route: RouteDefinitions.AppsCatalog, label: 'Application' },
-  { route: RouteDefinitions.Chat, label: 'Conversation' },
+  { route: RouteDefinitions.Chat, label: 'Chat' },
   { route: RouteDefinitions.Applications, label: 'Agent' },
   { route: RouteDefinitions.Skills, label: 'Skill' },
   { route: RouteDefinitions.Pipelines, label: 'Pipeline' },
@@ -38,7 +38,7 @@ export const RouteToLabelMap = [
 ];
 
 export const DropdownItems = [
-  { label: 'Conversation', route: RouteDefinitions.Chat, option: 'Conversation' },
+  { label: 'Chat', route: RouteDefinitions.Chat, option: 'Conversation' },
   { label: 'Agent', route: RouteDefinitions.Applications, option: 'Agent' },
   { label: 'Skill', route: RouteDefinitions.Skills, option: 'Skill' },
   { label: 'Pipeline', route: RouteDefinitions.Pipelines, option: 'Pipeline' },
@@ -57,11 +57,11 @@ export const SimpleCreateRoutes = [
   'settings/analytics',
   'settings/prompts',
   'settings/environment',
+  'settings/personalization',
+  'settings/notifications',
   RouteDefinitions.Onboarding,
-  RouteDefinitions.UserSettings,
   RouteDefinitions.AgentHub,
   RouteDefinitions.HelpCenter,
-  RouteDefinitions.NotificationCenter,
 ];
 
 export const CreationPermissions = {

@@ -126,7 +126,7 @@ export const onboardingTips = [
     image: tip19,
   },
   {
-    tip: '### Tip 20: Add Conversation Starters\n\nIn the CONVERSATION STARTERS section, click "+ Starter" to add helpful prompts (maximum 4). Examples: "Review this code", "Check for security issues", "Explain best practices". Guide users on how to use your agent!\n\n**Quick Action:** Click "+ Starter" and add 2-3 useful prompts.',
+    tip: '### Tip 20: Add Chat Starters\n\nIn the CHAT STARTERS section, click "+ Starter" to add helpful prompts (maximum 4). Examples: "Review this code", "Check for security issues", "Explain best practices". Guide users on how to use your agent!\n\n**Quick Action:** Click "+ Starter" and add 2-3 useful prompts.',
     image: tip20,
   },
   {
@@ -166,7 +166,7 @@ export const onboardingTips = [
     image: tip29,
   },
   {
-    tip: '### Tip 30: Configure Pipeline Basics\n\nIn the Configuration tab, fill the GENERAL section with **Name*** (e.g., "Customer Feedback Pipeline") and **Description***. Add optional Welcome Message and Conversation Starters just like with agents. Configure step limit in ADVANCED section (default: 25 steps).\n\n**Quick Action:** Fill Name and Description, optionally add starters.',
+    tip: '### Tip 30: Configure Pipeline Basics\n\nIn the Configuration tab, fill the GENERAL section with **Name*** (e.g., "Customer Feedback Pipeline") and **Description***. Add optional Welcome Message and Chat Starters just like with agents. Configure step limit in ADVANCED section (default: 25 steps).\n\n**Quick Action:** Fill Name and Description, optionally add starters.',
     image: tip30,
   },
   {
@@ -226,15 +226,15 @@ export const onboardingTips = [
     image: tip44,
   },
   {
-    tip: '### Tip 45: Add Participants from Panel\n\nClick the **+** icon next to any section in the Participants panel (Agents, Pipelines, Toolkits, MCPs, or Users) to browse and add participants. They\'ll appear in the list and be ready to use in your conversation.\n\n**Quick Action:** Click + next to "Agents" in Participants to see available agents.',
+    tip: '### Tip 45: Add Participants from Panel\n\nClick the **+** icon next to any section in the Participants panel (Agents, Pipelines, Toolkits, MCPs, or Users) to browse and add participants. They\'ll appear in the list and be ready to use in your chat.\n\n**Quick Action:** Click + next to "Agents" in Participants to see available agents.',
     image: tip45,
   },
   {
-    tip: '### Tip 46: Search Your Conversations\n\nUse the search bar at the top of the Chat sidebar to find specific conversations by name or content. Filter by date, participants, or project. Never lose track of important conversations!\n\n**Quick Action:** Click search icon in Chat sidebar, enter search terms.',
+    tip: '### Tip 46: Search Your Chats\n\nUse the search bar at the top of the Chats sidebar to find specific chats by name or content. Filter by date, participants, or project. Never lose track of important chats!\n\n**Quick Action:** Click search icon in Chats sidebar, enter search terms.',
     image: tip46,
   },
   {
-    tip: '### Tip 47: Organize Chats with Folders\n\nKeep conversations organized by clicking "+ Create folder" in the Chat sidebar. Name your folder (like "Work Projects" or "Experiments"), then drag conversations into it. Public and private folders help you structure your workspace!\n\n**Quick Action:** Click "+ Create folder" in Chat sidebar and name it.',
+    tip: '### Tip 47: Organize Chats with Folders\n\nKeep chats organized by clicking "+ Create folder" in the Chats sidebar. Name your folder (like "Work Projects" or "Experiments"), then drag chats into it. Public and private folders help you structure your workspace!\n\n**Quick Action:** Click "+ Create folder" in Chats sidebar and name it.',
     image: tip47,
   },
   {
