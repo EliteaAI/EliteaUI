@@ -206,12 +206,17 @@ export const generateChatContinuePayload = ({
   const noTokenServers = McpAuthHelpers.getServersWithoutTokens(mcpServerUrls);
 
   // Merge: no-token servers + session-declined servers (deduplicated)
+  // Only remove a server from the ignore list if the user has authenticated it (valid access_token).
+  // An entry with {access_token: null, refresh_token: "..."} means the token is expired but
+  // refreshable — it is NOT a valid token, so the server must remain ignored.
   const allIgnored = [
     ...new Set([...noTokenServers, ...sessionDeclinedMcpServers.map(s => s.server_url)]),
   ].filter(s => !allTokens[s]);
 
-  // Exclude servers from user_declined_mcp_servers that now have tokens (user authenticated them)
-  const effectiveDeclinedServers = sessionDeclinedMcpServers.filter(s => !allTokens[s.server_url]);
+  // Exclude servers from user_declined_mcp_servers that now have a valid access_token
+  const effectiveDeclinedServers = sessionDeclinedMcpServers.filter(
+    s => !allTokens[s.server_url]?.access_token,
+  );
 
   return {
     project_id: projectId,
