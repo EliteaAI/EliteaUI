@@ -59,12 +59,12 @@ const NotificationList = memo(props => {
 
   const onViewAll = useCallback(() => {
     dispatch(notificationsApi.util.invalidateTags([TAG_NOTIFICATIONS]));
-    navigate(RouteDefinitions.NotificationCenter, {
+    navigate(RouteDefinitions.SettingsWithTab.replace(':tab', 'notifications'), {
       state: {
         routeStack: [
           {
-            pagePath: RouteDefinitions.NotificationCenter,
-            breadCrumb: PathSessionMap[RouteDefinitions.NotificationCenter],
+            pagePath: RouteDefinitions.SettingsWithTab.replace(':tab', 'notifications'),
+            breadCrumb: PathSessionMap[RouteDefinitions.Settings],
           },
         ],
       },

@@ -63,11 +63,6 @@ const RouteDefinitions = {
   EditConfiguration: '/settings/edit-configuration/:uid',
   ModeSwitch: '/mode-switch',
 
-  UserSettings: '/user-settings',
-  UserSettingsWithTab: '/user-settings/:tab',
-
-  NotificationCenter: '/notification-center',
-
   Artifacts: '/artifacts',
   CreateBucket: '/artifacts/create-bucket',
   EditBucket: '/artifacts/edit-bucket',
@@ -128,7 +123,6 @@ export const PathSessionMap = {
   [RouteDefinitions.Toolkits]: 'Toolkits',
   [RouteDefinitions.Apps]: 'Apps',
   [RouteDefinitions.Credentials]: 'Credentials',
-  [RouteDefinitions.NotificationCenter]: 'Notification Center',
   [RouteDefinitions.HelpCenter]: 'Help Center',
 };
 

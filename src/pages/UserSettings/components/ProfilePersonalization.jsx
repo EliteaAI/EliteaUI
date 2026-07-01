@@ -9,6 +9,7 @@ import { Input, Label } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { PERSONA_OPTIONS } from '@/common/constants';
+import ThemeModeToggle from '@/components/ThemeModeToggle';
 
 const ProfilePersonalization = memo(props => {
   const { onAutoSaveRequested } = props;
@@ -52,6 +53,17 @@ const ProfilePersonalization = memo(props => {
           title: 'General',
           content: (
             <Box sx={styles.accordionContent}>
+              {/* Theme Toggle */}
+              <Box sx={styles.section}>
+                <Label.InfoLabelWithTooltip
+                  label="Theme"
+                  sx={styles.label}
+                />
+                <Box sx={styles.themeToggleContainer}>
+                  <ThemeModeToggle />
+                </Box>
+              </Box>
+
               {/* Default Persona Selection */}
               <Box sx={styles.section}>
                 <Label.InfoLabelWithTooltip
@@ -133,6 +145,10 @@ const profilePersonalizationStyles = () => ({
   section: {
     display: 'flex',
     flexDirection: 'column',
+  },
+  themeToggleContainer: {
+    marginTop: '0.5rem',
+    paddingLeft: '0.75rem',
   },
   label: {
     paddingLeft: '0.75rem',

@@ -15,7 +15,7 @@ const SettingsButton = memo(props => {
 
   // Direct navigation to Model Configuration page when Settings is clicked
   const handleSettingsClick = useCallback(() => {
-    navigateToPage(`${RouteDefinitions.Settings}/model-configuration`, 'Settings')();
+    navigateToPage(RouteDefinitions.SettingsWithTab.replace(':tab', 'model-configuration'), 'Settings')();
   }, [navigateToPage]);
 
   return (

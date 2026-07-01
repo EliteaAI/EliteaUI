@@ -50,7 +50,7 @@ const SidebarProjectSelect = memo(() => {
                   variant="labelSmall"
                   sx={styles.projectName}
                 >
-                  {option?.label || ''}
+                  {option?.label || 'Loading...'}
                 </Typography>
               </Box>
             )}
@@ -143,6 +143,7 @@ const sidebarProjectSelectStyles = sideBarCollapsed => ({
     boxSizing: 'border-box',
     borderRadius: '0',
     cursor: 'pointer',
+    minHeight: '3.5rem',
 
     '&:hover': {
       backgroundColor: palette.background.button.drawerMenu.hover,
