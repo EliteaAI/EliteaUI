@@ -48,7 +48,7 @@ const BasicMenuItem = ({
     [handleClose, onCloseSubMenu],
   );
 
-  const { sx: menuItemSX = {}, menuItemProps } = slotProps.MenuItem || {};
+  const { sx: menuItemSX = {}, ...menuItemProps } = slotProps.MenuItem || {};
 
   return (
     <>
