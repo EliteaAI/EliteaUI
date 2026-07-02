@@ -41,7 +41,7 @@ const RootComponent = memo(() => {
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
-      reconnectionAttempts: 10,
+      reconnectionAttempts: Infinity,
       randomizationFactor: 0.5,
       extraHeaders: {},
     };
@@ -84,7 +84,7 @@ const RootComponent = memo(() => {
 
     socketIo.io.on('reconnect_attempt', attempt => {
       // eslint-disable-next-line no-console
-      console.debug(`sio reconnect attempt ${attempt}/10`);
+      console.debug(`sio reconnect attempt ${attempt}`);
       dispatch(settingsActions.setSocketReconnecting(true));
       dispatch(settingsActions.setSocketReconnectAttempt(attempt));
     });

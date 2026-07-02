@@ -278,7 +278,7 @@ const SidebarBody = memo(props => {
               <Tooltip
                 title={
                   socketStatus === SocketConstants.SocketStatus.Reconnecting
-                    ? `${systemSenderName} is reconnecting (attempt ${socketReconnectAttempt}/10)`
+                    ? `${systemSenderName} is reconnecting (attempt ${socketReconnectAttempt})`
                     : `${systemSenderName} is ${socketStatus}`
                 }
                 placement="right"
