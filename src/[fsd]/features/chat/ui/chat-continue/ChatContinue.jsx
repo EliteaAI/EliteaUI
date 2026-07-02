@@ -16,7 +16,6 @@ const ChatContinue = memo(props => {
     disabled,
     message,
     authRequiredAction,
-    tools,
     continueLabel = 'Continue',
   } = props;
   const styles = getStyles();
@@ -24,15 +23,6 @@ const ChatContinue = memo(props => {
   const { toastSuccess } = useToast();
 
   const [showAuthModal, setShowAuthModal] = useState(false);
-
-  const needToShowAuthButton = useMemo(
-    () =>
-      authRequiredAction &&
-      !tools
-        ?.filter(tool => tool.type === 'mcp' || tool.type?.startsWith('mcp_'))
-        .find(tool => tool.settings?.url && tool.settings.url === authRequiredAction.toolMeta?.server_url),
-    [authRequiredAction, tools],
-  );
 
   const mcpAuthMetadata = useMemo(
     () => (authRequiredAction ? extractMcpAuthMetadata(authRequiredAction) : null),
@@ -70,7 +60,7 @@ const ChatContinue = memo(props => {
           {message}
         </Typography>
         <Box sx={styles.buttonContainer}>
-          {needToShowAuthButton && (
+          {authRequiredAction && (
             <BaseBtn
               variant="contained"
               sx={styles.button}
@@ -87,11 +77,11 @@ const ChatContinue = memo(props => {
             disabled={disabled}
             startIcon={<ArrowForwardIcon />}
           >
-            {needToShowAuthButton ? continueLabel : 'Continue'}
+            {authRequiredAction ? continueLabel : 'Continue'}
           </BaseBtn>
         </Box>
       </Box>
-      {needToShowAuthButton && showAuthModal && mcpAuthMetadata && (
+      {authRequiredAction && showAuthModal && mcpAuthMetadata && (
         <McpAuthModal
           open={showAuthModal}
           serverUrl={authRequiredAction.toolMeta?.server_url}

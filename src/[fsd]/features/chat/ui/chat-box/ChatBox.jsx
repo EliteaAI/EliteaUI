@@ -2217,7 +2217,7 @@ const ChatBox = forwardRef((props, boxRef) => {
             onSelectModel={onSelectModel}
             selectedModel={selectedModel}
             selectSavedOrDefaultModel={selectSavedOrDefaultModel}
-            isStreaming={isStreamingNow}
+            isStreaming={isStreamingNow || isStreaming}
             onStopGeneration={handleStopStreaming}
             disableSwitchingParticipant={shouldDisableSwitchingParticipant}
             users={users}
