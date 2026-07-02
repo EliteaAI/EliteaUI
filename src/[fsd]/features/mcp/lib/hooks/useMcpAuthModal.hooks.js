@@ -223,6 +223,7 @@ export const useMcpAuthModal = (options = {}) => {
     // State
     showModal,
     mcpAuthMetadata,
+    runtimeServerUrl,
 
     // Handlers
     handleMcpAuthRequired,

@@ -7,8 +7,9 @@ import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 
 import { useDisassociateToolkit } from '@/[fsd]/features/agent/lib/hooks';
 import { useSaveAgentToolVariables } from '@/[fsd]/features/agent/lib/hooks/useSaveAgentToolVariables.js';
+import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers/index.js';
 import { useMcpTokenChange } from '@/[fsd]/features/mcp/lib/hooks';
-import { McpLogInButton } from '@/[fsd]/features/mcp/ui';
+import { McpLogInButton, McpLogoutButton } from '@/[fsd]/features/mcp/ui';
 import { useResolvedOpenApiConfig } from '@/[fsd]/features/openapi/lib/hooks/useResolvedOpenApiConfig.hooks';
 import { OpenApiDelegatedLoginButton } from '@/[fsd]/features/openapi/ui';
 import { useGetToolkitNameFromSchema } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks/useGetToolkitNameFromSchema.hooks.js';
@@ -62,13 +63,20 @@ const ToolCard = memo(props => {
     tool,
     projectId,
   });
-  const isMcp = tool.meta?.mcp || tool.type === 'mcp';
+  const isPrebuildMcp = McpAuthHelpers.isPrebuildMcpType(tool.type);
+  const isMcp = tool.meta?.mcp || tool.type === 'mcp' || isPrebuildMcp;
+
   const { personal_project_id } = useSelector(state => state.user);
 
   // Monitor MCP token changes for remote MCP toolkits
   const mcpServerUrl = tool?.settings?.url || '';
-  const { isLoggedIn: hasRemoteMcpLoggedIn } = useMcpTokenChange(tool.type === 'mcp' ? mcpServerUrl : null);
-
+  const { isLoggedIn: hasRemoteMcpLoggedIn } = useMcpTokenChange(
+    tool.type === 'mcp' ? mcpServerUrl : isPrebuildMcp ? { toolkitType: tool.type } : null,
+  );
+  const isMcpAuthorized = useMemo(
+    () => tool.online || hasRemoteMcpLoggedIn,
+    [tool.online, hasRemoteMcpLoggedIn],
+  );
   // SharePoint delegated OAuth: sharepoint_configuration only stores a stub
   // { elitea_title, private }. Resolve the full credential via the shared hook.
   const spConfigRef = tool.type === 'sharepoint' ? tool?.settings?.sharepoint_configuration : null;
@@ -87,8 +95,8 @@ const ToolCard = memo(props => {
 
   const mcpDisconnectedTip = useMemo(
     () =>
-      `The ${tool.name} mcp server is ${tool.online || hasRemoteMcpLoggedIn ? 'connected.' : 'disconnected. Reconnect it to use.'}`,
-    [hasRemoteMcpLoggedIn, tool.name, tool.online],
+      `The ${tool.name} mcp server is ${isMcpAuthorized ? 'connected.' : 'disconnected. Reconnect it to use.'}`,
+    [isMcpAuthorized, tool.name],
   );
 
   // If no viewMode in URL, determine view mode based on permissions
@@ -495,7 +503,7 @@ const ToolCard = memo(props => {
                     placement="top"
                   >
                     <IconButton
-                      id={'RefreshButton'}
+                      id="RefreshButton"
                       variant="elitea"
                       color="tertiary"
                       aria-label="refresh toolkit"
@@ -507,33 +515,31 @@ const ToolCard = memo(props => {
                   </Tooltip>
                 </>
               )}
-              {(!tool.meta?.mcp || tool.online || tool.type === 'mcp') && (
-                <Tooltip
-                  title={openTooltipText}
-                  placement="top"
+              <Tooltip
+                title={openTooltipText}
+                placement="top"
+              >
+                <IconButton
+                  id="OpenInNewTabButton"
+                  variant="elitea"
+                  color="tertiary"
+                  aria-label="open in new tab"
+                  onClick={onOpenInNewTab}
+                  disabled={disabled || (!tool?.id && !tool?.settings?.application_id)}
+                  sx={styles.actionButton}
                 >
-                  <IconButton
-                    id={'OpenInNewTabButton'}
-                    variant="elitea"
-                    color="tertiary"
-                    aria-label="open in new tab"
-                    onClick={onOpenInNewTab}
-                    disabled={disabled || (!tool?.id && !tool?.settings?.application_id)}
-                    sx={styles.actionButton}
-                  >
-                    <OpenInNewIcon
-                      sx={styles.actionIcon}
-                      fill={!disabled ? theme.palette.icon.fill.default : theme.palette.icon.fill.disabled}
-                    />
-                  </IconButton>
-                </Tooltip>
-              )}
+                  <OpenInNewIcon
+                    sx={styles.actionIcon}
+                    fill={!disabled ? theme.palette.icon.fill.default : theme.palette.icon.fill.disabled}
+                  />
+                </IconButton>
+              </Tooltip>
               <Tooltip
                 title={removeTooltipText}
                 placement="top"
               >
                 <IconButton
-                  id={'DeleteButton'}
+                  id="DeleteButton"
                   variant="elitea"
                   color="tertiary"
                   aria-label="delete tool"
@@ -548,7 +554,14 @@ const ToolCard = memo(props => {
                   {isLoading && <StyledCircleProgress size={20} />}
                 </IconButton>
               </Tooltip>
-              {tool.type === 'mcp' && <McpLogInButton values={tool} />}
+              {isMcp && <McpLogInButton values={tool} />}
+              {isMcp && isMcpAuthorized && (
+                <McpLogoutButton
+                  serverUrl={mcpServerUrl}
+                  toolkitType={tool?.type}
+                  sx={styles.actionButton}
+                />
+              )}
               {tool.type === 'sharepoint' && spOauthEndpoint && (
                 <SharepointDelegatedLoginButton
                   projectId={projectId}
@@ -570,8 +583,8 @@ const ToolCard = memo(props => {
                   title={mcpDisconnectedTip}
                   placement="top"
                 >
-                  <Box sx={styles.statusIconBox(tool.online || hasRemoteMcpLoggedIn)}>
-                    {tool.online || hasRemoteMcpLoggedIn ? (
+                  <Box sx={styles.statusIconBox(isMcpAuthorized)}>
+                    {isMcpAuthorized ? (
                       <OnlineIcon style={styles.statusIconOnline} />
                     ) : (
                       <OfflineIcon style={styles.statusIconOffline} />
@@ -663,6 +676,9 @@ const toolCardStyles = (showActions, isDuplicate, showVariables, hasVariables) =
         display: 'flex',
       },
       '#RefreshButton': {
+        display: 'flex',
+      },
+      '#LogoutButton': {
         display: 'flex',
       },
     },

@@ -37,10 +37,16 @@ const McpAuthStatus = memo(({ authConfig } = {}) => {
   const { isLoggedIn: hasLoggedInToMcp } = useMcpTokenChange(tokenOptions);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  const { showModal, mcpAuthMetadata, handleMcpAuthRequired, handleCloseModal, handleCancelModal } =
-    useMcpAuthModal({
-      values,
-    });
+  const {
+    showModal,
+    mcpAuthMetadata,
+    runtimeServerUrl,
+    handleMcpAuthRequired,
+    handleCloseModal,
+    handleCancelModal,
+  } = useMcpAuthModal({
+    values,
+  });
 
   // Handle successful connection test (for header-based auth servers without OAuth)
   const handleConnectionSuccess = useCallback(() => {
@@ -128,7 +134,7 @@ const McpAuthStatus = memo(({ authConfig } = {}) => {
       </Box>
       {showModal && (
         <McpAuthModal
-          serverUrl={authConfig?.serverUrl ?? url}
+          serverUrl={authConfig?.serverUrl ?? url ?? runtimeServerUrl}
           tokenStorageKey={authConfig?.tokenStorageKey}
           mcpAuthMetadata={mcpAuthMetadata}
           formClientId={client_id}
@@ -143,7 +149,7 @@ const McpAuthStatus = memo(({ authConfig } = {}) => {
         />
       )}
       <McpLogoutModal
-        serverUrl={authConfig?.tokenStorageKey ?? authConfig?.serverUrl ?? url}
+        serverUrl={authConfig?.tokenStorageKey ?? authConfig?.serverUrl ?? url ?? runtimeServerUrl}
         toolkitType={isPrebuildMcp ? toolkitType : undefined}
         open={showLogoutModal}
         onClose={onCloseLogout}
