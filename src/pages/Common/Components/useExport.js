@@ -2,6 +2,7 @@ import * as React from 'react';
 
 import { useTrackEvent } from '@/GA';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
+import { getFilenameFromContentDisposition } from '@/[fsd]/shared/lib/helpers';
 import { useLazyApplicationDetailsQuery } from '@/api/applications';
 import { useLazyToolkitExportQuery } from '@/api/toolkits';
 import {
@@ -88,8 +89,7 @@ export const useExport = ({ id, name, entity_name, owner_id, toastError, version
             const blob = await response.blob();
             // Extract filename from Content-Disposition header or use default
             const contentDisposition = response.headers.get('Content-Disposition');
-            const filenameMatch = contentDisposition?.match(/filename="?([^";\n]+)"?/);
-            const filename = filenameMatch ? filenameMatch[1] : `${name}.md`;
+            const filename = getFilenameFromContentDisposition(contentDisposition || '', `${name}.md`);
 
             const blobUrl = URL.createObjectURL(blob);
             const anchor = document.createElement('a');

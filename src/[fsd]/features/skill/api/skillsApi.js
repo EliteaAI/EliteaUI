@@ -1,4 +1,5 @@
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
+import { getFilenameFromContentDisposition } from '@/[fsd]/shared/lib/helpers';
 import { eliteaApi } from '@/api/eliteaApi.js';
 import { PAGE_SIZE } from '@/common/constants';
 import { convertToJson, removeDuplicateObjects } from '@/common/utils.jsx';
@@ -262,11 +263,7 @@ const skillsApi = eliteaApi
               const contentDisposition = response.headers.get('content-disposition') || '';
 
               // Extract filename from content-disposition header
-              let filename = 'skill.md';
-              const filenameMatch = contentDisposition.match(/filename="?([^";\n]+)"?/);
-              if (filenameMatch) {
-                filename = filenameMatch[1];
-              }
+              const filename = getFilenameFromContentDisposition(contentDisposition, 'skill.md');
 
               const blob = await response.blob();
               return { blob, filename, contentType };
