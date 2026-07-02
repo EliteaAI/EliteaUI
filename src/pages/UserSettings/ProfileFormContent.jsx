@@ -51,8 +51,9 @@ const profileFormContentStyles = () => ({
   container: {
     display: 'flex',
     flexDirection: 'column',
+    gap: '0.5rem',
     padding: '1.5rem',
-    maxWidth: '37.5rem',
+    maxWidth: '50rem',
     width: '100%',
   },
 });
