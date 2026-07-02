@@ -248,7 +248,11 @@ const MermaidDiagramOutput = memo(props => {
 
   const onReset = useCallback(() => {
     if (panZoomTigerRef.current) {
-      panZoomTigerRef.current.reset();
+      try {
+        panZoomTigerRef.current.reset();
+      } catch {
+        // svg-pan-zoom throws if the SVG matrix is non-invertible
+      }
       setHasBeenChanged(false);
     }
   }, []);
@@ -298,7 +302,11 @@ const MermaidDiagramOutput = memo(props => {
             }
 
             if (panZoomTigerRef.current) {
-              panZoomTigerRef.current.destroy();
+              try {
+                panZoomTigerRef.current.destroy();
+              } catch {
+                // svg-pan-zoom throws if the SVG matrix is non-invertible (zero-size element)
+              }
               panZoomTigerRef.current = null;
             }
             const svgPanZoom = await getSvgPanZoom();
@@ -330,9 +338,12 @@ const MermaidDiagramOutput = memo(props => {
       setIsValidCode(false);
     }
     return () => {
-      // Cleanup: Destroy panZoom instance and clear diagram container
       if (panZoomTigerRef.current) {
-        panZoomTigerRef.current.destroy();
+        try {
+          panZoomTigerRef.current.destroy();
+        } catch {
+          // svg-pan-zoom throws if the SVG matrix is non-invertible (zero-size element)
+        }
         panZoomTigerRef.current = null;
       }
       const diagram = document.getElementById(diagramId);
