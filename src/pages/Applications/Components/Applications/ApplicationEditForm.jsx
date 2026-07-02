@@ -148,7 +148,7 @@ const ApplicationEditForm = memo(props => {
                   InputLabelProps={{ shrink: Boolean(formik.values?.description) }}
                   error={formik.touched?.description && Boolean(formik.errors.description)}
                   helperText={formik.touched?.description && formik.errors.description}
-                  inputProps={{ maxLength: MAX_DESCRIPTION_LENGTH }}
+                  inputProps={{ maxLength: MAX_DESCRIPTION_LENGTH, 'data-testid': 'agent-description-input' }}
                   hasActionsToolBar
                   language="text"
                   fieldName="Description"
