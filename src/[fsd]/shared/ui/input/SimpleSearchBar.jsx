@@ -56,6 +56,7 @@ const SimpleSearchBar = memo(props => {
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         sx={styles.input}
+        inputProps={props['data-testid'] ? { 'data-testid': props['data-testid'] } : undefined}
       />
     </Box>
   );
