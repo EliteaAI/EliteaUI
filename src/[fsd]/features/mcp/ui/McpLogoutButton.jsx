@@ -8,18 +8,18 @@ import LogoutIcon from '@/assets/logout-icon.svg?react';
 import useToast from '@/hooks/useToast';
 
 const McpLogoutButton = memo(props => {
-  const { serverUrl, onSuccess } = props;
+  const { serverUrl, toolkitType, onSuccess, sx } = props;
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { toastSuccess } = useToast();
 
   const onConfirmLogout = useCallback(() => {
     if (serverUrl) {
-      McpAuthHelpers.logout(serverUrl);
+      McpAuthHelpers.logout(serverUrl, toolkitType);
     }
     setShowLogoutModal(false);
     toastSuccess('You have successfully logged out!');
     onSuccess?.();
-  }, [serverUrl, toastSuccess, onSuccess]);
+  }, [serverUrl, toolkitType, toastSuccess, onSuccess]);
 
   const onLogout = useCallback(e => {
     // Stop propagation to prevent parent click handlers from triggering
@@ -43,12 +43,14 @@ const McpLogoutButton = memo(props => {
         placement="top"
       >
         <IconButton
+          id="LogoutButton"
           onClick={onLogout}
           onMouseDown={stopPropagation}
           onMouseEnter={stopPropagation}
           onMouseLeave={stopPropagation}
           variant="elitea"
           color="tertiary"
+          sx={sx}
         >
           <LogoutIcon
             width={16}
@@ -58,6 +60,7 @@ const McpLogoutButton = memo(props => {
       </Tooltip>
       <McpLogoutModal
         serverUrl={serverUrl}
+        toolkitType={toolkitType}
         open={showLogoutModal}
         onClose={onCloseLogout}
         onConfirm={onConfirmLogout}
