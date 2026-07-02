@@ -81,6 +81,7 @@ const WelcomeMessage = memo(props => {
                   <Text.CharacterCounter
                     value={inputValue}
                     maxLength={MAX_WELCOME_MESSAGE_LENGTH}
+                    data-testid="agent-welcome-message-counter"
                   />
                 )}
               </Box>
