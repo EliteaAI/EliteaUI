@@ -27,6 +27,7 @@ const StyledInputModal = forwardRef((props, ref) => {
     afterContent,
     codeMirrorExtensions,
     showCharacterCounter = false,
+    'data-testid': dataTestId,
   } = props;
 
   const { maxLength } = inputProps || {};
@@ -108,6 +109,8 @@ const StyledInputModal = forwardRef((props, ref) => {
       title={title}
       value={value}
       specifiedLanguage={specifiedLanguage}
+      data-testid={dataTestId}
+      closeButtonDataTestId={dataTestId ? `${dataTestId}-close` : undefined}
     >
       <Box sx={styles.editorContainer}>
         <Box sx={styles.editorWrapper}>
@@ -117,6 +120,7 @@ const StyledInputModal = forwardRef((props, ref) => {
                 value={currentValue}
                 maxLength={maxLength}
                 textVariant="bodyMedium"
+                data-testid={dataTestId ? `${dataTestId}-counter` : undefined}
               />
             </Box>
           )}
@@ -133,16 +137,21 @@ const StyledInputModal = forwardRef((props, ref) => {
               stateVariableOptions={stateVariableOptions}
             />
           ) : (
-            <Field.CodeMirrorEditor
-              readOnly={disabled}
-              ref={editorRef}
-              value={currentValue}
-              extensions={extensions}
-              notifyChange={onNotifyChange}
-              onBlur={handleBlur}
-              onKeyDown={onKeyDown}
-              maxLength={maxLength}
-            />
+            <Box
+              data-testid={dataTestId ? `${dataTestId}-textarea` : undefined}
+              sx={styles.editorInner}
+            >
+              <Field.CodeMirrorEditor
+                readOnly={disabled}
+                ref={editorRef}
+                value={currentValue}
+                extensions={extensions}
+                notifyChange={onNotifyChange}
+                onBlur={handleBlur}
+                onKeyDown={onKeyDown}
+                maxLength={maxLength}
+              />
+            </Box>
           )}
         </Box>
       </Box>
@@ -162,6 +171,11 @@ const styles = {
     minHeight: 0,
     overflowY: 'auto',
     display: 'flex',
+  },
+  editorInner: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
   },
   editorWrapper: ({ palette }) => ({
     flex: 1,

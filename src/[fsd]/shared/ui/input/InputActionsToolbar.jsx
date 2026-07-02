@@ -24,6 +24,7 @@ const InputActionsToolbar = memo(props => {
     toolbarSx,
     iconButtonSx,
     iconSizeSx,
+    fullScreenButtonProps = {},
   } = props;
 
   return (
@@ -56,6 +57,7 @@ const InputActionsToolbar = memo(props => {
             placement="top"
           >
             <IconButton
+              {...fullScreenButtonProps}
               sx={iconButtonSx}
               variant="elitea"
               color="tertiary"

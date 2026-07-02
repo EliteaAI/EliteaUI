@@ -96,6 +96,7 @@ const InputBase = memo(props => {
     fullScreenIcon,
     tooltipDescription,
     forceShowActionsToolbar = false,
+    fullScreenButtonProps = {},
     // eslint-disable-next-line no-unused-vars
     fieldName, // Extract but don't use - prevents DOM warning when passed from parent
     sx: externalSx,
@@ -225,6 +226,7 @@ const InputBase = memo(props => {
             toolbarSx={styles.actionsToolbar}
             iconButtonSx={styles.iconButton}
             iconSizeSx={styles.iconSize}
+            fullScreenButtonProps={fullScreenButtonProps}
           />
         )}
         <MuiTextField

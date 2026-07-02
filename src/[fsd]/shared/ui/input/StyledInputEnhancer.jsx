@@ -56,6 +56,8 @@ const StyledInputEnhancer = memo(props => {
     onFullScreenChange,
     codeMirrorExtensions,
     showCharacterCounter,
+    fullScreenButtonProps = {},
+    modalDataTestId,
     ...leftProps
   } = props;
 
@@ -114,6 +116,7 @@ const StyledInputEnhancer = memo(props => {
         variant={variantInput}
         tooltipDescription={tooltipDescription}
         forceShowActionsToolbar={forceShowActionsToolbar}
+        fullScreenButtonProps={fullScreenButtonProps}
       />
       {showFullScreenInputModel && (
         <StyledInputModal
@@ -136,6 +139,7 @@ const StyledInputEnhancer = memo(props => {
           codeMirrorExtensions={codeMirrorExtensions}
           showCharacterCounter={showCharacterCounter}
           {...leftProps}
+          data-testid={modalDataTestId}
         />
       )}
     </>
