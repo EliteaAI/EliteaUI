@@ -127,12 +127,14 @@ const ConversationStarters = memo(props => {
                         hasActionsToolBar
                         disabled={disabled}
                         fieldName="Chat starter"
-                        inputProps={{ maxLength: MAX_CONVERSATION_STARTER_LENGTH }}
+                        inputProps={{
+                          maxLength: MAX_CONVERSATION_STARTER_LENGTH,
+                          'data-testid': 'agent-conversation-starter-input',
+                        }}
                         showCharacterCounter
                         inputRef={el => (inputRefs.current[index] = el)}
                         error={hasStarterError}
                         helperText={hasStarterError ? 'Conversation starter cannot be empty' : undefined}
-                        data-testid="agent-conversation-starter-input"
                         fullScreenButtonProps={{ 'data-testid': 'agent-conversation-starter-expand' }}
                         modalDataTestId="agent-conversation-starter-dialog"
                       />

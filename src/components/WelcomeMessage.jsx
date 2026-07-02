@@ -65,7 +65,10 @@ const WelcomeMessage = memo(props => {
                   id="welcome_message"
                   placeholder="Input your welcome message"
                   value={inputValue}
-                  inputProps={{ maxLength: MAX_WELCOME_MESSAGE_LENGTH }}
+                  inputProps={{
+                    maxLength: MAX_WELCOME_MESSAGE_LENGTH,
+                    'data-testid': 'agent-welcome-message-input',
+                  }}
                   showCharacterCounter
                   onChange={handleInput}
                   onFocus={() => toggleFieldFocus(PROMPT_PAYLOAD_KEY.welcomeMessage)}
