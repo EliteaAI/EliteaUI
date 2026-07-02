@@ -3,7 +3,7 @@ import { memo } from 'react';
 import DotMenu from '@/components/DotMenu';
 import HeaderContainer from '@/components/HeaderContainer';
 
-const ControlsDropdown = memo(({ menuItems = [] }) => {
+const ControlsDropdown = memo(({ menuItems = [], anchorButtonProps = {} }) => {
   const styles = controlsDropdownStyles();
 
   return (
@@ -29,6 +29,7 @@ const ControlsDropdown = memo(({ menuItems = [] }) => {
             vertical: 'top',
             horizontal: 'right',
           }}
+          anchorButtonProps={anchorButtonProps}
           slotProps={{
             Paper: {
               sx: styles.menuPaper,

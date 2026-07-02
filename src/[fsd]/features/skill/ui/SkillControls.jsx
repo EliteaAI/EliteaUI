@@ -190,6 +190,7 @@ const SkillControls = memo(props => {
         shouldRequestInputName: true,
         confirmButtonTitle: 'Delete',
         onConfirm: onDeleteSkill,
+        slotProps: { MenuItem: { 'data-testid': 'skill-delete-menu-item' } },
       },
     ],
     [
@@ -209,7 +210,10 @@ const SkillControls = memo(props => {
 
   return (
     <Box sx={skillControlsStyles.wrapper}>
-      <Controls.ControlsDropdown menuItems={menuItems} />
+      <Controls.ControlsDropdown
+        menuItems={menuItems}
+        anchorButtonProps={{ 'data-testid': 'skill-controls-menu-button' }}
+      />
     </Box>
   );
 });

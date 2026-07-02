@@ -445,7 +445,10 @@ const SkillTestPanel = memo(({ isFullScreenChat, setIsFullScreenChat }) => {
   const styles = useMemo(() => skillTestPanelStyles(isFullScreenChat), [isFullScreenChat]);
 
   return (
-    <ContentContainer sx={styles.container}>
+    <ContentContainer
+      data-testid="skill-test-panel"
+      sx={styles.container}
+    >
       <Box sx={styles.mainContainer}>
         <Box sx={styles.topBarContainer}>
           <Box sx={styles.controlsContainer}>

@@ -357,6 +357,7 @@ const UserInput = forwardRef((props, ref) => {
               onBlur={() => setIsFocused(false)}
               sx={styles.textField}
               slotProps={{
+                htmlInput: { 'data-testid': 'chat-input-textarea' },
                 input: {
                   inputRef,
                   sx: [

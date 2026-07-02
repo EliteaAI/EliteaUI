@@ -127,6 +127,7 @@ const CreateSkillTabBar = memo(() => {
         color="primary"
         disabled={shouldDisableSave}
         onClick={onSave}
+        data-testid="skill-save-button"
       >
         Save
         {isLoading && <StyledCircleProgress size={20} />}
@@ -135,6 +136,7 @@ const CreateSkillTabBar = memo(() => {
         title="Cancel"
         disabled={isLoading}
         onDiscard={onCancel}
+        data-testid="skill-cancel-button"
       />
     </TabBarItems>
   );
