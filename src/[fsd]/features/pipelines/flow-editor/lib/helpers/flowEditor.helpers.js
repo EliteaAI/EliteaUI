@@ -340,7 +340,7 @@ export const getRequiredInputsAndTooltips = (
 ) => {
   if (selectedToolkit?.type === ToolTypes.application.value) {
     const tooltips = createApplicationTooltips(selectedToolkit);
-    return { required: [], tooltips, enums: {} };
+    return { required: ['task'], tooltips, enums: {} };
   }
 
   let schemaForTool =
