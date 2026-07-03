@@ -170,17 +170,6 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
   const realAnswer = useMemo(() => convertJsonToString(rawAnswer || '', true), [rawAnswer]);
   const hasSpeakableText = useMemo(() => !!toSpeakableText(realAnswer).text, [realAnswer]);
 
-  // For a short, single-line exception (a configuration-guidance message such as the #5680
-  // "uses other agents…" guard — not a stack trace), promote it to the headline so the user
-  // sees the actionable text directly instead of a generic "Unknown error" with the message
-  // buried under "Error debugging info". Multi-line / long traces keep the disclosure layout.
-  const exceptionHeadline = useMemo(() => {
-    if (realAnswer) return realAnswer;
-    const text = typeof exception === 'string' ? exception.trim() : '';
-    const isSingleLine = text && !text.includes('\n') && text.length <= 300;
-    return isSingleLine ? text : '';
-  }, [realAnswer, exception]);
-
   // Translate the current TTS word range (in stripped-text coordinates) back to
   // original markdown coordinates for word-level highlight.
   // Fine-grained inline segments in speakingSegments ensure 1:1 char mapping
@@ -701,7 +690,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
               )}
               {!!exception && (
                 <ErrorTrace
-                  headline={exceptionHeadline}
+                  headline={realAnswer}
                   trace={exception}
                   messageId={messageId}
                   onCopy={onCopy}
