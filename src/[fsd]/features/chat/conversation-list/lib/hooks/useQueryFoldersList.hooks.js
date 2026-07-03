@@ -99,8 +99,22 @@ export const useQueryFoldersList = props => {
 
     setFoldersRef.current?.(prevFolders => {
       const newFolders = (prevFolders || []).filter(folder => folder.isNew);
-      const allFolders = [...newFolders, ...folderedConversations];
-      return allFolders;
+
+      const mergedFolders = folderedConversations.map(serverFolder => {
+        const localFolder = (prevFolders || []).find(f => f.id === serverFolder.id && !f.isNew);
+        if (!localFolder?.conversations?.length) return serverFolder;
+
+        const serverConvIds = new Set((serverFolder.conversations || []).map(c => c.id));
+        const localOnly = localFolder.conversations.filter(c => !serverConvIds.has(c.id));
+        if (!localOnly.length) return serverFolder;
+
+        return {
+          ...serverFolder,
+          conversations: sortConversations([...serverFolder.conversations, ...localOnly]),
+        };
+      });
+
+      return [...newFolders, ...mergedFolders];
     });
   }, []);
 
