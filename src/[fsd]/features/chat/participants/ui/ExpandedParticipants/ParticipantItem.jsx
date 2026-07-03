@@ -18,11 +18,11 @@ import OnlineIcon from '@/assets/online-icon.svg?react';
 import { ChatParticipantType, PUBLIC_PROJECT_ID, SearchParams } from '@/common/constants';
 import EntityIcon from '@/components/EntityIcon';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
+import InfoIcon from '@/components/Icons/InfoIcon';
 import useNavBlocker from '@/hooks/useNavBlocker';
 import { StyledTipsContainer } from '@/pages/Common/Components/InputVersionDialog';
 
 import ParticipantActions from '../ParticipantActions/ParticipantActions';
-import ParticipantInfo from './ParticipantInfo';
 import ParticipantWarning from './ParticipantWarning';
 
 const ParticipantItem = memo(props => {
@@ -352,7 +352,20 @@ const ParticipantItem = memo(props => {
             />
           )}
         </Box>
-        {!collapsed && isSkippedContainer && <ParticipantInfo />}
+        {!collapsed && isSkippedContainer && (
+          <Box sx={styles.infoMessageRow}>
+            <Box sx={styles.infoIcon}>
+              <InfoIcon />
+            </Box>
+            <Typography
+              variant="bodySmall"
+              color="text.secondary"
+              sx={styles.attentionMessage}
+            >
+              <ParticipantWarning isSkippedContainer />
+            </Typography>
+          </Box>
+        )}
       </Box>
     ) : (
       <StyledTipsContainer
@@ -577,6 +590,28 @@ const participantItemStyles = ({ collapsed, isActive, maxWidth }) => ({
     flexDirection: 'row',
     gap: '0.9rem',
   },
+  // Neutral (info) notice shown inside the normal interactive card for a skipped container agent
+  // (issue #5680). Same layout as the amber attention row, but grey — a correct container agent
+  // must not read as broken. Sits below the name/version, indented to align under the label.
+  infoMessageRow: {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: '.375rem',
+    padding: '0 .75rem .25rem',
+  },
+  infoIcon: ({ palette }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+    width: '1rem',
+    height: '1rem',
+    marginTop: '.0625rem',
+    '& svg, & path': {
+      fill: palette.icon.fill.secondary,
+    },
+  }),
   attentionIcon: ({ palette }) => ({
     paddingLeft: '0.25rem',
     width: '1rem',
