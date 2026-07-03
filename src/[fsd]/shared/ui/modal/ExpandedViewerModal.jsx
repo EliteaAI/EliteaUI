@@ -27,6 +27,7 @@ const ExpandedViewerModal = memo(props => {
     contentBackgroundSx,
     disableSelectLanguage,
     customButtons,
+    footer,
   } = props;
 
   const theme = useTheme();
@@ -130,6 +131,7 @@ const ExpandedViewerModal = memo(props => {
       onClose={onClose}
       sx={styles.dialogPaper}
       dialogSx={[styles.dialogContent, contentBackgroundSx]}
+      footer={footer}
     />
   );
 });

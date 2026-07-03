@@ -300,6 +300,15 @@ const AIAssistantModal = memo(props => {
       language={language}
       onLanguageChange={onChangeLanguage}
       contentBackgroundSx={contentBackgroundSx}
+      footer={
+        <AIPromptInput
+          disabled={disabled || isGenerating}
+          onGenerate={handleAIGenerate}
+          onStop={handleStop}
+          isLoading={isGenerating}
+          promptValueRef={promptInputRef}
+        />
+      }
     >
       <Box sx={styles.contentWrapper}>
         {showSplitView ? (
@@ -432,13 +441,6 @@ const AIAssistantModal = memo(props => {
           </Box>
         )}
       </Box>
-      <AIPromptInput
-        disabled={disabled || isGenerating}
-        onGenerate={handleAIGenerate}
-        onStop={handleStop}
-        isLoading={isGenerating}
-        promptValueRef={promptInputRef}
-      />
     </Modal.ExpandedViewerModal>
   );
 });
@@ -452,6 +454,7 @@ const aiAssistantModalStyles = () => ({
     display: 'flex',
     flexDirection: 'column',
     minHeight: 0,
+    height: '100%',
     overflowY: 'auto',
   },
   splitViewContainer: {
@@ -497,7 +500,7 @@ const aiAssistantModalStyles = () => ({
     },
     '& .cm-content': {
       paddingTop: spacing(1),
-      paddingBottom: spacing(20),
+      paddingBottom: spacing(2),
     },
     '& .cm-gutters': {
       backgroundColor: palette.background.secondary,
@@ -529,7 +532,7 @@ const aiAssistantModalStyles = () => ({
     },
     '& .cm-content': {
       paddingTop: spacing(1),
-      paddingBottom: spacing(20),
+      paddingBottom: spacing(2),
     },
     '& .cm-gutters': {
       backgroundColor: palette.background.card.hover,
@@ -553,9 +556,12 @@ const aiAssistantModalStyles = () => ({
     flex: 1,
     minHeight: 0,
     position: 'relative',
+    '& .cm-theme': {
+      height: '100%',
+    },
     '& .cm-content': {
       paddingTop: spacing(1),
-      paddingBottom: spacing(10),
+      paddingBottom: spacing(2),
     },
     '& .cm-lineNumbers .cm-gutterElement': {
       paddingTop: spacing(0.1),

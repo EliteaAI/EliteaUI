@@ -38,6 +38,8 @@ const AIAssistantCodeMirrorInput = memo(props => {
         notifyChange={notifyChange}
         onBlur={onBlur}
         onKeyDown={onKeyDown}
+        height="100%"
+        minHeight="100%"
       />
       {enableFStringAutocomplete && <FStringAutocompletePopper {...popperProps} />}
     </Box>
