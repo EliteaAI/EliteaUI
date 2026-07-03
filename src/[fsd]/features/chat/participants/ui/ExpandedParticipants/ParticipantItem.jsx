@@ -6,7 +6,10 @@ import { Box, IconButton, Typography, useTheme } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { useParticipantDetailsContext } from '@/[fsd]/features/chat/participants/lib/context/ParticipantDetailsContext';
-import { canParticipantBeActiveInChat } from '@/[fsd]/features/chat/participants/lib/helpers';
+import {
+  canParticipantBeActiveInChat,
+  isSkippedContainerParticipant,
+} from '@/[fsd]/features/chat/participants/lib/helpers';
 import { useParticipantEntityIcon } from '@/[fsd]/features/chat/participants/lib/hooks';
 import { useEliteaAssistantRef } from '@/[fsd]/widgets/support-assistant';
 import AttachIcon from '@/assets/attach-icon.svg?react';
@@ -88,14 +91,13 @@ const ParticipantItem = memo(props => {
   // Informational hint (issue #5680): a non-pipeline "container" agent (one that itself uses other
   // agents) attached to a chat but NOT the active agent is intentionally NOT bound as a callable
   // tool in adhoc chat — it can only run as the active agent (orchestrator). Surface this so the
-  // skip does not look like a silent no-op. The backend sets meta.is_container mirroring its own
-  // skip rule; here we additionally require this participant to not be the active one and to be a
-  // non-pipeline application (belt-and-suspenders — pipelines are exempt and never flagged).
-  const isSkippedContainer =
-    participant?.meta?.is_container === true &&
-    !isActive &&
-    !isPipelineParticipant &&
-    type === ChatParticipantType.Applications;
+  // skip does not look like a silent no-op. Shared helper is the single client-side definition of
+  // "is a skipped container" (used by the collapsed section indicator too); the hint is only
+  // relevant while this participant is NOT the active orchestrator.
+  const isSkippedContainer = useMemo(
+    () => !isActive && isSkippedContainerParticipant(participant),
+    [isActive, participant],
+  );
 
   // Get Redux state and URL params for checking if this participant is being edited
   const isBeingEdited = useMemo(() => {
