@@ -19,6 +19,7 @@ import useNavBlocker from '@/hooks/useNavBlocker';
 import { StyledTipsContainer } from '@/pages/Common/Components/InputVersionDialog';
 
 import ParticipantActions from '../ParticipantActions/ParticipantActions';
+import ParticipantInfo from './ParticipantInfo';
 import ParticipantWarning from './ParticipantWarning';
 
 const ParticipantItem = memo(props => {
@@ -83,6 +84,18 @@ const ParticipantItem = memo(props => {
   // so a pipeline grouped via the top-level field rendered the generic agent grid
   // icon instead of the flow icon (#4993).
   const isPipelineParticipant = agentType === 'pipeline' || participant.agent_type === 'pipeline';
+
+  // Informational hint (issue #5680): a non-pipeline "container" agent (one that itself uses other
+  // agents) attached to a chat but NOT the active agent is intentionally NOT bound as a callable
+  // tool in adhoc chat — it can only run as the active agent (orchestrator). Surface this so the
+  // skip does not look like a silent no-op. The backend sets meta.is_container mirroring its own
+  // skip rule; here we additionally require this participant to not be the active one and to be a
+  // non-pipeline application (belt-and-suspenders — pipelines are exempt and never flagged).
+  const isSkippedContainer =
+    participant?.meta?.is_container === true &&
+    !isActive &&
+    !isPipelineParticipant &&
+    type === ChatParticipantType.Applications;
 
   // Get Redux state and URL params for checking if this participant is being edited
   const isBeingEdited = useMemo(() => {
@@ -211,130 +224,133 @@ const ParticipantItem = memo(props => {
     !someToolsAreUnavailable &&
     !isVersionUnavailable &&
     !isPublishedAgentGone ? (
-      <Box
-        onClick={onClickHandler}
-        onMouseEnter={onMouseEnter}
-        onMouseLeave={onMouseLeave}
-        sx={styles.contentWrapper}
-      >
-        <EntityIcon
-          icon={entityIcon}
-          entityType={
-            isPipelineParticipant
-              ? 'pipeline'
-              : participant.entity_name !== ChatParticipantType.Toolkits
-                ? participant.entity_name
-                : participant.meta?.mcp
-                  ? 'mcp'
-                  : participant.entity_name
-          }
-          editable={false}
-          sx={{ width: '1.5rem', height: '1.5rem', minWidth: '1.5rem' }}
-          imageStyle={{ width: '1.5rem', height: '1.5rem' }}
-          specifiedFontSize="0.875rem"
-          isActive={isActive}
-        />
-        {!collapsed && (
-          <Box sx={styles.nameWrapper}>
-            <Typography
-              variant="bodyMedium"
-              color="text.secondary"
-              ref={nameTextRef}
-              sx={styles.nameContent}
-            >
-              {displayName}
-              {isAttachement && (
-                <IconButton
-                  variant="elitea"
-                  color="tertiary"
-                  size="small"
-                  disabled
-                  sx={styles.attachmentButton}
-                >
-                  <AttachIcon style={styles.attachIcon} />
-                </IconButton>
-              )}
-              {originalDetails?.meta?.mcp && (
-                <>
-                  {originalDetails?.online ? (
-                    <OnlineIcon
-                      width={14}
-                      style={{
-                        marginLeft: '.5rem',
-                        width: '1rem !important',
-                        height: '1rem',
-                        color: theme.palette.icon.fill.default,
-                      }}
-                    />
-                  ) : (
-                    <OfflineIcon
-                      style={{
-                        marginLeft: '.5rem',
-                        width: '.875rem',
-                        height: '.875rem',
-                        color: theme.palette.icon.fill.attention,
-                      }}
-                    />
-                  )}
-                </>
-              )}
-              {spConfig && (
-                <>
-                  {spOAuthLoggedIn ? (
-                    <OnlineIcon
-                      style={{
-                        marginLeft: '.5rem',
-                        width: '1rem',
-                        height: '1rem',
-                        color: theme.palette.icon.fill.default,
-                      }}
-                    />
-                  ) : (
-                    <OfflineIcon
-                      style={{
-                        marginLeft: '.5rem',
-                        width: '.875rem',
-                        height: '.875rem',
-                        color: theme.palette.icon.fill.attention,
-                      }}
-                    />
-                  )}
-                </>
-              )}
-            </Typography>
-            <Typography
-              variant="bodyMedium"
-              color={isBeingEdited ? 'primary.main' : 'text.primary'}
-              sx={{
-                flexShrink: 0,
-                maxWidth: isBeingEdited ? 'none' : '50%',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpaceCollapse: 'preserve',
-              }}
-            >
-              {isBeingEdited
-                ? participant.entity_meta?.project_id != PUBLIC_PROJECT_ID
-                  ? 'Editing...'
-                  : 'Viewing...'
-                : versionName}
-            </Typography>
-          </Box>
-        )}
-        {!collapsed && !isBeingEdited && (
-          <ParticipantActions
-            participant={participant}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            disabledEdit={disabledEdit}
-            disabledDeleteButton={disabledEdit}
-            showButtons={isHovering}
-            showEditButton={showEditButton}
-            hasRemoteMcpLoggedIn={hasRemoteMcpLoggedIn}
-            serverUrl={originalDetails?.settings?.url}
+      <Box sx={styles.normalItemWrapper}>
+        <Box
+          onClick={onClickHandler}
+          onMouseEnter={onMouseEnter}
+          onMouseLeave={onMouseLeave}
+          sx={styles.contentWrapper}
+        >
+          <EntityIcon
+            icon={entityIcon}
+            entityType={
+              isPipelineParticipant
+                ? 'pipeline'
+                : participant.entity_name !== ChatParticipantType.Toolkits
+                  ? participant.entity_name
+                  : participant.meta?.mcp
+                    ? 'mcp'
+                    : participant.entity_name
+            }
+            editable={false}
+            sx={{ width: '1.5rem', height: '1.5rem', minWidth: '1.5rem' }}
+            imageStyle={{ width: '1.5rem', height: '1.5rem' }}
+            specifiedFontSize="0.875rem"
+            isActive={isActive}
           />
-        )}
+          {!collapsed && (
+            <Box sx={styles.nameWrapper}>
+              <Typography
+                variant="bodyMedium"
+                color="text.secondary"
+                ref={nameTextRef}
+                sx={styles.nameContent}
+              >
+                {displayName}
+                {isAttachement && (
+                  <IconButton
+                    variant="elitea"
+                    color="tertiary"
+                    size="small"
+                    disabled
+                    sx={styles.attachmentButton}
+                  >
+                    <AttachIcon style={styles.attachIcon} />
+                  </IconButton>
+                )}
+                {originalDetails?.meta?.mcp && (
+                  <>
+                    {originalDetails?.online ? (
+                      <OnlineIcon
+                        width={14}
+                        style={{
+                          marginLeft: '.5rem',
+                          width: '1rem !important',
+                          height: '1rem',
+                          color: theme.palette.icon.fill.default,
+                        }}
+                      />
+                    ) : (
+                      <OfflineIcon
+                        style={{
+                          marginLeft: '.5rem',
+                          width: '.875rem',
+                          height: '.875rem',
+                          color: theme.palette.icon.fill.attention,
+                        }}
+                      />
+                    )}
+                  </>
+                )}
+                {spConfig && (
+                  <>
+                    {spOAuthLoggedIn ? (
+                      <OnlineIcon
+                        style={{
+                          marginLeft: '.5rem',
+                          width: '1rem',
+                          height: '1rem',
+                          color: theme.palette.icon.fill.default,
+                        }}
+                      />
+                    ) : (
+                      <OfflineIcon
+                        style={{
+                          marginLeft: '.5rem',
+                          width: '.875rem',
+                          height: '.875rem',
+                          color: theme.palette.icon.fill.attention,
+                        }}
+                      />
+                    )}
+                  </>
+                )}
+              </Typography>
+              <Typography
+                variant="bodyMedium"
+                color={isBeingEdited ? 'primary.main' : 'text.primary'}
+                sx={{
+                  flexShrink: 0,
+                  maxWidth: isBeingEdited ? 'none' : '50%',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpaceCollapse: 'preserve',
+                }}
+              >
+                {isBeingEdited
+                  ? participant.entity_meta?.project_id != PUBLIC_PROJECT_ID
+                    ? 'Editing...'
+                    : 'Viewing...'
+                  : versionName}
+              </Typography>
+            </Box>
+          )}
+          {!collapsed && !isBeingEdited && (
+            <ParticipantActions
+              participant={participant}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              disabledEdit={disabledEdit}
+              disabledDeleteButton={disabledEdit}
+              showButtons={isHovering}
+              showEditButton={showEditButton}
+              hasRemoteMcpLoggedIn={hasRemoteMcpLoggedIn}
+              serverUrl={originalDetails?.settings?.url}
+            />
+          )}
+        </Box>
+        {!collapsed && isSkippedContainer && <ParticipantInfo />}
       </Box>
     ) : (
       <StyledTipsContainer
@@ -449,6 +465,11 @@ const participantItemStyles = ({ collapsed, isActive, maxWidth }) => ({
     '&:hover': {
       color: 'primary.dark',
     },
+  },
+  normalItemWrapper: {
+    display: 'flex',
+    flexDirection: 'column',
+    width: '100%',
   },
   contentWrapper: ({ palette }) => ({
     cursor: 'pointer',
