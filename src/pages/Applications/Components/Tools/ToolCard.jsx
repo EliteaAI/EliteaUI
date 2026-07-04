@@ -534,6 +534,7 @@ const ToolCard = memo(props => {
               >
                 <IconButton
                   id={'DeleteButton'}
+                  data-testid="agent-toolkit-delete-button"
                   variant="elitea"
                   color="tertiary"
                   aria-label="delete tool"

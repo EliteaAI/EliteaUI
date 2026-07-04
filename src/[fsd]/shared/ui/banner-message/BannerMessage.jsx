@@ -39,6 +39,8 @@ const BannerMessage = memo(props => {
       enterDelay={TIME_SHOW_TOOLTIP_MS}
     >
       <Box
+        data-testid="credential-warning-banner"
+        aria-label={message}
         sx={styles.container}
         onClick={handleToggle}
       >

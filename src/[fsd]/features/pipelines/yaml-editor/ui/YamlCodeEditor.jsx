@@ -34,7 +34,10 @@ const YamlCodeEditor = memo(props => {
   }, [resetFlag]);
 
   return (
-    <Box sx={styles.container}>
+    <Box
+      sx={styles.container}
+      data-testid="pipeline-yaml-editor"
+    >
       <StyledCodeMirrorEditor
         className="nopan nodrag nowheel"
         value={code}

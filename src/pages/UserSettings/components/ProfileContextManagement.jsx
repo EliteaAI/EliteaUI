@@ -50,6 +50,7 @@ const ProfileContextManagement = memo(props => {
               {/* Enable Context Management */}
               <Box sx={styles.toggleSection}>
                 <Switch.BaseSwitch
+                  data-testid="context-management-toggle"
                   checked={values.context_enabled}
                   onChange={handleContextEnabledChange}
                   label="Enable context management for new conversations"
@@ -80,6 +81,7 @@ const ProfileContextManagement = memo(props => {
                     disabled={!isEnabled}
                     inputProps={{
                       pattern: '[1-9][0-9]*',
+                      'data-testid': 'max-context-tokens-input',
                     }}
                   />
                 </Box>

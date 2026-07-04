@@ -328,6 +328,7 @@ const PlusChatButton = memo(props => {
           variant="elitea"
           color="secondary"
           aria-label="plus menu"
+          data-testid="plus-menu-button"
           onClick={handleToggle}
         >
           <PlusIcon fill={theme.palette.icon.fill.secondary} />
@@ -365,6 +366,7 @@ const PlusChatButton = memo(props => {
                   <MenuItem
                     key={key}
                     sx={styles.menuItem}
+                    data-testid={key === SUBMENU_KEYS.INTERNAL_TOOLS ? 'internal-tools-menuitem' : undefined}
                     onMouseEnter={e => handleItemHover(key, e)}
                     onMouseLeave={handleItemLeave}
                   >

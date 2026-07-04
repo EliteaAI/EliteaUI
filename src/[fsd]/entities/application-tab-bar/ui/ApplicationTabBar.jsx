@@ -70,6 +70,7 @@ const ApplicationTabBar = memo(({ onSuccess, onDiscard }) => {
           )}
 
           <Button.DiscardButton
+            data-testid={isFromPipeline ? 'pipeline-discard-button' : 'agent-discard-button'}
             disabled={!isFormDirtyExcluding && !isYamlCodeDirty}
             onDiscard={discardApplicationChanges}
           />

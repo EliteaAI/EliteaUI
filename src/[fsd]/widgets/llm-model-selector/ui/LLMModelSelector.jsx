@@ -80,6 +80,7 @@ const LLMModelSelector = memo(props => {
         disabled={disabled}
         ref={anchorRef}
         aria-label="Model Selector Menu"
+        data-testid="model-selector-button"
         sx={styles.buttonGroup}
         data-tour={dataTourTargetId || undefined}
       >
@@ -97,6 +98,7 @@ const LLMModelSelector = memo(props => {
               disabled={disabled}
               onClick={handleModelMenuClick}
               sx={styles.modelButton}
+              data-testid="model-selector-name"
             >
               {!!selectedModel && (
                 <Box

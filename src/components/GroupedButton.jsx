@@ -54,6 +54,7 @@ const GroupedButton = ({ value, onChange, buttonItems, readOnly, disabled, sx })
           disabled={readOnly || item.disabled}
           onClick={onChange}
           value={item.value}
+          data-testid={item.testid || `pipeline-${item.value}-view`}
           className={`MuiToggleButtonGroup-grouped ${value === item.value ? ' Mui-selected' : ''}`}
         >
           {item.label}

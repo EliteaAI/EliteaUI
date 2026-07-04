@@ -240,6 +240,7 @@ const Pipelines = memo(() => {
       onChangeTab={onChangeTab}
       showTitleAndSwitchBySelect
       title="Pipelines"
+      titleTestId="pipelines-page-header"
       containerStyle={{ padding: '0 1.5rem 0 0' }}
       tabBarStyle={{ padding: '0 0.5rem 0 1.5rem' }}
       middleTabComponent={
@@ -269,7 +270,10 @@ const Pipelines = memo(() => {
             </Box>
           )}
           <ToolbarImportButton />
-          <ViewToggle />
+          <ViewToggle
+            tableViewTestId="pipeline-table-view"
+            cardViewTestId="pipeline-card-view"
+          />
         </>
       }
     />

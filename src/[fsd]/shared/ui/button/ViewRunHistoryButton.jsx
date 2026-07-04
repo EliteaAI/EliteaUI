@@ -24,6 +24,7 @@ const ViewRunHistoryButton = memo(props => {
         variant="elitea"
         color="secondary"
         aria-label="view run history"
+        data-testid="pipeline-history-tab"
         data-tour={SHARED_TOUR_TARGET_IDS.runHistory}
         onClick={handleShowHistory}
       >

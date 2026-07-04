@@ -9,7 +9,11 @@ import { useSetUrlSearchParams } from '@/hooks/useCardNavigate';
 import CardsViewIcon from './Icons/CardsViewIcon';
 import TableViewIcon from './Icons/TableViewIcon';
 
-export default function ViewToggle({ defaultView }) {
+export default function ViewToggle({
+  defaultView,
+  tableViewTestId = 'agent-table-view-button',
+  cardViewTestId = 'agent-card-view-button',
+}) {
   const [searchParams] = useSearchParams();
   const setUrlSearchParams = useSetUrlSearchParams();
   const view = useMemo(
@@ -34,14 +38,16 @@ export default function ViewToggle({ defaultView }) {
         value: ViewOptions.Table,
         icon: <TableViewIcon />,
         tooltip: 'Table view',
+        buttonProps: { 'data-testid': tableViewTestId },
       },
       {
         value: ViewOptions.Cards,
         icon: <CardsViewIcon />,
         tooltip: 'Card list view',
+        buttonProps: { 'data-testid': cardViewTestId },
       },
     ],
-    [],
+    [tableViewTestId, cardViewTestId],
   );
 
   return (

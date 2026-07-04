@@ -267,6 +267,7 @@ const SidebarBody = memo(props => {
         <Box sx={styles.header}>
           <IconButton
             data-tour={SIDEBAR_TOUR_TARGET_IDS.logo}
+            data-testid="sidebar-toggle"
             size="large"
             color="inherit"
             aria-label="open drawer"

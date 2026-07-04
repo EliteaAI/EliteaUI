@@ -76,6 +76,8 @@ const WelcomeMessage = memo(props => {
                   hasActionsToolBar
                   fieldName="Welcome message"
                   disabled={disabled}
+                  fullScreenButtonProps={{ 'data-testid': 'agent-welcome-message-expand' }}
+                  modalDataTestId="agent-welcome-message-dialog"
                 />
                 {isFocused(PROMPT_PAYLOAD_KEY.welcomeMessage) && inputValue.length > 0 && (
                   <Text.CharacterCounter

@@ -130,7 +130,7 @@ const CreateAgentForm = memo(props => {
                       onBlur={onNameBlur}
                       value={name}
                       required
-                      inputProps={{ maxLength: MAX_NAME_LENGTH }}
+                      inputProps={{ maxLength: MAX_NAME_LENGTH, 'data-testid': 'agent-name-input' }}
                       containerProps={{ flex: 1 }}
                       enableAutoBlur={false}
                     />

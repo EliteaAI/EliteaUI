@@ -33,6 +33,7 @@ const GeneralFormPanel = ({ applicationId, onCollapsed }) => {
   return (
     <>
       <ContentContainer
+        data-testid="pipeline-config-tab"
         flex={3}
         maxWidth={isSmallWindow ? '100%' : collapsed ? '28px' : '320px'}
         position={'relative'}

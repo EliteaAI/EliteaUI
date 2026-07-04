@@ -45,7 +45,7 @@ const ContainerBox = styled(
 
 export default function RightPanel({ children, offsetFromTop = RIGHT_PANEL_HEIGHT_OFFSET }) {
   const dispatch = useDispatch();
-  const { showSearchBar } = useSearchBar();
+  const { showSearchBar, isPipelinesPage } = useSearchBar();
   const { query, queryTags } = useSelector(state => state.search);
   const [searchString, setSearchString] = useState(query);
   const [searchTags, setSearchTags] = useState(queryTags);
@@ -77,6 +77,7 @@ export default function RightPanel({ children, offsetFromTop = RIGHT_PANEL_HEIGH
             searchTags={searchTags}
             setSearchTags={setSearchTags}
             onClear={onClear}
+            testId={isPipelinesPage ? 'pipeline-search-input' : 'agent-search-input'}
           />
         )}
         {children}

@@ -28,7 +28,10 @@ const ContextBudgetExpanded = memo(props => {
   const styles = contextBudgetExpandedStyles(isSmallWindow);
 
   return (
-    <Box sx={styles.container}>
+    <Box
+      sx={styles.container}
+      data-testid="context-budget-panel"
+    >
       <ContextBudgetHeader onEdit={handleOpen} />
 
       <ContextBudgetProgress

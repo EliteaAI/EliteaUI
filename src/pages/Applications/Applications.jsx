@@ -103,6 +103,7 @@ const Applications = memo(() => {
       onChangeTab={onChangeTab}
       showTitleAndSwitchBySelect
       title="Agents"
+      titleTestId="agents-page-header"
       containerStyle={{ padding: '0 1.5rem 0 0' }}
       tabBarStyle={{ padding: '0 0.5rem 0 1.5rem' }}
       middleTabComponent={

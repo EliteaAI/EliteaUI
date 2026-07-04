@@ -21,7 +21,14 @@ import {
 } from './SearchBarComponents';
 import SuggestionList from './SuggestionList';
 
-export default function SearchBar({ searchString, setSearchString, searchTags, setSearchTags, onClear }) {
+export default function SearchBar({
+  searchString,
+  setSearchString,
+  searchTags,
+  setSearchTags,
+  onClear,
+  testId = 'agent-search-input',
+}) {
   const theme = useTheme();
   const { query } = useSelector(state => state.search);
   const disableSearchButton = useMemo(() => !searchString || query === searchString, [query, searchString]);
@@ -241,7 +248,7 @@ export default function SearchBar({ searchString, setSearchString, searchTags, s
             )}
             <StyledInputBase
               placeholder="Let's find something amazing!"
-              inputProps={{ 'aria-label': 'search' }}
+              inputProps={{ 'aria-label': 'search', 'data-testid': testId }}
               inputRef={inputRef}
               onChange={handleInputChange}
               onFocus={handleFocus}

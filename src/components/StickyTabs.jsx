@@ -109,6 +109,7 @@ const StickyTabs = memo(props => {
     isLoading,
     showTitleAndSwitchBySelect = false,
     title,
+    titleTestId,
     showBackButton,
   } = props;
 
@@ -219,6 +220,7 @@ const StickyTabs = memo(props => {
                     component="div"
                     variant="headingSmall"
                     color="text.secondary"
+                    data-testid={titleTestId}
                   >
                     {title}
                   </Typography>

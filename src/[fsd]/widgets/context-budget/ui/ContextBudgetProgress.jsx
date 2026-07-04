@@ -22,6 +22,7 @@ const ContextBudgetProgress = memo(props => {
         <Typography
           variant="bodySmall2"
           sx={styles.tokensText}
+          data-testid="context-budget-tokens"
         >
           {tokensDisplay} tokens
         </Typography>

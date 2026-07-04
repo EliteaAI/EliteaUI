@@ -344,6 +344,7 @@ const InstructionsInput = memo(props => {
                   showexpandicon="true"
                   id="application-instructions"
                   placeholder="Guidelines for the AI agent"
+                  inputProps={{ 'data-testid': 'agent-instructions-input' }}
                   defaultValue={version_details?.instructions}
                   onChange={handleInstructionsChange}
                   updateVariableList={updateVariableList}
