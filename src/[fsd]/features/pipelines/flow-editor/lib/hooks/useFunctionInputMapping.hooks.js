@@ -5,6 +5,7 @@ import { useFormikContext } from 'formik';
 import { FlowEditorContext } from '@/[fsd]/app/providers';
 import * as FlowEditorHelpers from '@/[fsd]/features/pipelines/flow-editor/lib/helpers/flowEditor.helpers';
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
+import { isMcpToolkit } from '@/[fsd]/shared/lib/helpers';
 import { useToolkitAvailableToolsQuery } from '@/api/toolkits.js';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
@@ -94,8 +95,10 @@ export const useFunctionInputMapping = ({ id, isMCP }) => {
 
   const isSchemaResolved = useMemo(() => {
     if (!selectedToolkit) return false;
-    // MCP toolkits carry their tool schemas synchronously in settings.available_mcp_tools
-    if (selectedToolkit.type === 'mcp') return true;
+    // MCP toolkits (remote, pre-built, or meta-flagged) carry their tool schemas
+    // synchronously in settings.available_mcp_tools. Use the same predicate the
+    // helper uses to classify MCP tools so resolution stays consistent.
+    if (isMcpToolkit(selectedToolkit)) return true;
     // Static schemas are already in toolkitTypes; dynamic schemas are ready once the query returns
     return !shouldFetchDynamicSchemas || Boolean(toolkitAvailableToolsData);
   }, [selectedToolkit, shouldFetchDynamicSchemas, toolkitAvailableToolsData]);
