@@ -4,12 +4,12 @@ import { useFormikContext } from 'formik';
 
 import { FlowEditorContext } from '@/[fsd]/app/providers';
 import * as FlowEditorHelpers from '@/[fsd]/features/pipelines/flow-editor/lib/helpers/flowEditor.helpers';
-import { useGetToolkitNameFromSchema } from './useGetToolkitNameFromSchema.hooks';
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
 import { useToolkitAvailableToolsQuery } from '@/api/toolkits.js';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import { PipelineNodeTypes } from '../constants/flowEditor.constants';
+import { useGetToolkitNameFromSchema } from './useGetToolkitNameFromSchema.hooks';
 
 export const useFunctionInputMapping = ({ id, isMCP }) => {
   const { setYamlJsonObject, yamlJsonObject } = useContext(FlowEditorContext);
@@ -92,6 +92,14 @@ export const useFunctionInputMapping = ({ id, isMCP }) => {
     return tools.map(t => t?.name).filter(name => typeof name === 'string' && name.trim());
   }, [toolkitAvailableToolsData?.tools]);
 
+  const isSchemaResolved = useMemo(() => {
+    if (!selectedToolkit) return false;
+    // MCP toolkits carry their tool schemas synchronously in settings.available_mcp_tools
+    if (selectedToolkit.type === 'mcp') return true;
+    // Static schemas are already in toolkitTypes; dynamic schemas are ready once the query returns
+    return !shouldFetchDynamicSchemas || Boolean(toolkitAvailableToolsData);
+  }, [selectedToolkit, shouldFetchDynamicSchemas, toolkitAvailableToolsData]);
+
   const [requiredInputs, setRequiredInputs] = useState([]);
   const [inputMappings, setInputMappings] = useState({});
   const [defaultValues, setDefaultValues] = useState({});
@@ -108,6 +116,7 @@ export const useFunctionInputMapping = ({ id, isMCP }) => {
       yamlNode?.input_mapping,
       selectedToolkit,
       selectedToolkit?.type !== 'mcp' ? dynamicArgsSchemas : mcpArgsSchemas,
+      isSchemaResolved,
     );
 
     setInputMappings(mapping);
@@ -143,7 +152,15 @@ export const useFunctionInputMapping = ({ id, isMCP }) => {
       );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dynamicArgsSchemas, mcpArgsSchemas, toolkitTypes, selectedTool, selectedToolkit, requiredInputs]);
+  }, [
+    dynamicArgsSchemas,
+    mcpArgsSchemas,
+    toolkitTypes,
+    selectedTool,
+    selectedToolkit,
+    requiredInputs,
+    isSchemaResolved,
+  ]);
 
   useEffect(() => {
     const { required } = FlowEditorHelpers.getRequiredInputsAndTooltips(
@@ -165,6 +182,7 @@ export const useFunctionInputMapping = ({ id, isMCP }) => {
           yamlNode?.input_mapping,
           selectedToolkit,
           argsSchemas,
+          isSchemaResolved,
         );
         FlowEditorHelpers.batchUpdateYamlNode(
           id,
@@ -195,6 +213,7 @@ export const useFunctionInputMapping = ({ id, isMCP }) => {
       toolkitTypes,
       yamlJsonObject,
       yamlNode?.input_mapping,
+      isSchemaResolved,
     ],
   );
 
