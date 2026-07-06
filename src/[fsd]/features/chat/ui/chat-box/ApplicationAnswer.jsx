@@ -590,7 +590,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
           {/* {exception && <AgentException exception={exception} title={!isApplicationParticipant ? 'LLM exception' : undefined} />} */}
           {!isEditing && shouldRenderAnswerBlock && (
             <Answer
-              data-testid={isLastMessage ? 'skill-test-last-response' : 'chat-answer-content'}
+              data-testid="chat-answer-content"
               sx={styles.answerBlock(messageId === speakingMessageId)}
             >
               {canRenderContent && !isNullOrUndefined(answer) && !message_items?.length && (
@@ -875,7 +875,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                     >
                       <Box>
                         <IconButton
-                          data-testid={isLastMessage ? 'skill-test-last-delete-button' : 'chat-delete-button'}
+                          data-testid="chat-delete-button"
                           disabled={hasCanvasBeingEdited || (isApplicationParticipant ? false : isProcessing)}
                           sx={styles.iconButton}
                           variant="elitea"
