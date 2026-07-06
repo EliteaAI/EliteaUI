@@ -17,6 +17,7 @@ const ParticipantWarning = memo(props => {
     blockedToolkitNames,
     remoteMcpLoggedOut,
     spOAuthLoggedOut,
+    isSkippedContainer,
     participant,
     handleEditClick,
     isToolkitParticipant,
@@ -27,6 +28,14 @@ const ParticipantWarning = memo(props => {
   } = props;
 
   const styles = participantWarningStyles();
+
+  // Informational (NOT an error): a non-pipeline "container" agent that itself uses other agents,
+  // attached to a chat but not the active agent, is intentionally not bound as a callable tool in
+  // adhoc chat (issue #5680). It runs only when selected as the active agent. This is the single
+  // source of the notice text; ParticipantItem renders it with a neutral (info) severity so a
+  // correct container never reads as broken. Errors below keep the amber attention treatment.
+  if (isSkippedContainer)
+    return "Uses other agents — runs only as the active agent. Select it to run; it won't be used as a tool.";
 
   if (isPublishedAgentGone) return 'Published agent is no longer available';
 

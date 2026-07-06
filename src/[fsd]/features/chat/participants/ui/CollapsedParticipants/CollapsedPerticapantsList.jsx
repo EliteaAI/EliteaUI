@@ -6,6 +6,10 @@ import { Box, IconButton, SvgIcon } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { useParticipantDetailsContext } from '@/[fsd]/features/chat/participants/lib/context/ParticipantDetailsContext';
+import {
+  getChatParticipantUniqueId,
+  isSkippedContainerParticipant,
+} from '@/[fsd]/features/chat/participants/lib/helpers';
 import { isMcpToolkitType } from '@/[fsd]/shared/lib/helpers';
 import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
 import AgentSvg from '@/assets/agent.svg?react';
@@ -14,6 +18,7 @@ import MCPSvg from '@/assets/mcp-icon.svg?react';
 import ToolSvg from '@/assets/tool-icon.svg?react';
 import { ChatParticipantType } from '@/common/constants';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
+import InfoIcon from '@/components/Icons/InfoIcon';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import UsersParticipantDropdown from '../UsersParticipantDropdown';
@@ -181,13 +186,25 @@ const CollapsedPerticapantsList = memo(props => {
           hasParticipantError(p.entity_name, p.entity_meta?.id, p.entity_meta?.project_id),
         );
 
+        // Skipped-container hint (issue #5680): a non-pipeline container agent that is NOT the
+        // active orchestrator won't be bound as a tool in adhoc chat. Show a neutral info dot in
+        // the same indicator slot as the error icon. Real errors win the slot (more urgent), so
+        // this only shows when the section has no error.
+        const sectionHasSkippedContainer =
+          !sectionHasError &&
+          group.participants.some(
+            p => getChatParticipantUniqueId(p) !== activeParticipantId && isSkippedContainerParticipant(p),
+          );
+
         return (
           <StyledTooltip
             key={entity.section}
             title={
               sectionHasError
                 ? `Misconfiguration error in ${entity?.label?.toLowerCase()}`
-                : `${entity.label} in this conversation`
+                : sectionHasSkippedContainer
+                  ? "Uses other agents — select it to run; it won't be used as a tool."
+                  : `${entity.label} in this conversation`
             }
             placement="right"
             disableInteractive
@@ -204,15 +221,19 @@ const CollapsedPerticapantsList = memo(props => {
                   variant="elitea"
                   color="secondary"
                   onClick={e => onCollapsedTriggerClick(entity.type, e)}
-                  sx={styles.collapsedTriggerButton(group.count, sectionHasError)}
+                  sx={styles.collapsedTriggerButton(group.count, sectionHasError, sectionHasSkippedContainer)}
                 >
                   <entity.icon sx={styles.collapsedIcon} />
                 </IconButton>
-                {sectionHasError && (
+                {sectionHasError ? (
                   <Box sx={styles.warningIcon}>
                     <AttentionIcon />
                   </Box>
-                )}
+                ) : sectionHasSkippedContainer ? (
+                  <Box sx={styles.infoIcon}>
+                    <InfoIcon />
+                  </Box>
+                ) : null}
               </Box>
               <CollapsedParticipantsDropdown
                 preferLeft
@@ -263,7 +284,7 @@ const collapsedPerticapantsListStyles = () => ({
   },
 
   collapsedTriggerButton:
-    (count, hasError) =>
+    (count, hasError, hasInfo) =>
     ({ palette }) => ({
       padding: '.375rem',
       borderRadius: '8px',
@@ -299,6 +320,11 @@ const collapsedPerticapantsListStyles = () => ({
         border: `0.0625rem solid ${palette.border.attention}`,
       }),
 
+      ...(!hasError &&
+        hasInfo && {
+          border: `0.0625rem solid ${palette.border.lines}`,
+        }),
+
       color: `${palette.secondary.main} !important`,
 
       '& .MuiSvgIcon-root path': {
@@ -314,6 +340,19 @@ const collapsedPerticapantsListStyles = () => ({
     height: '1rem',
     '& svg': {
       fill: palette.icon.fill.attention,
+      width: '1rem',
+      height: '1rem',
+    },
+  }),
+
+  infoIcon: ({ palette }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '1rem',
+    height: '1rem',
+    '& svg, & svg path': {
+      fill: palette.icon.fill.secondary,
       width: '1rem',
       height: '1rem',
     },

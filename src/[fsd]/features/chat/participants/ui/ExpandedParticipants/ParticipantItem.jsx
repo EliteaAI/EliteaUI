@@ -6,7 +6,10 @@ import { Box, IconButton, Typography, useTheme } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { useParticipantDetailsContext } from '@/[fsd]/features/chat/participants/lib/context/ParticipantDetailsContext';
-import { canParticipantBeActiveInChat } from '@/[fsd]/features/chat/participants/lib/helpers';
+import {
+  canParticipantBeActiveInChat,
+  isSkippedContainerParticipant,
+} from '@/[fsd]/features/chat/participants/lib/helpers';
 import { useParticipantEntityIcon } from '@/[fsd]/features/chat/participants/lib/hooks';
 import { useEliteaAssistantRef } from '@/[fsd]/widgets/support-assistant';
 import AttachIcon from '@/assets/attach-icon.svg?react';
@@ -15,6 +18,7 @@ import OnlineIcon from '@/assets/online-icon.svg?react';
 import { ChatParticipantType, PUBLIC_PROJECT_ID, SearchParams } from '@/common/constants';
 import EntityIcon from '@/components/EntityIcon';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
+import InfoIcon from '@/components/Icons/InfoIcon';
 import useNavBlocker from '@/hooks/useNavBlocker';
 import { StyledTipsContainer } from '@/pages/Common/Components/InputVersionDialog';
 
@@ -83,6 +87,17 @@ const ParticipantItem = memo(props => {
   // so a pipeline grouped via the top-level field rendered the generic agent grid
   // icon instead of the flow icon (#4993).
   const isPipelineParticipant = agentType === 'pipeline' || participant.agent_type === 'pipeline';
+
+  // Informational hint (issue #5680): a non-pipeline "container" agent (one that itself uses other
+  // agents) attached to a chat but NOT the active agent is intentionally NOT bound as a callable
+  // tool in adhoc chat — it can only run as the active agent (orchestrator). Surface this so the
+  // skip does not look like a silent no-op. Shared helper is the single client-side definition of
+  // "is a skipped container" (used by the collapsed section indicator too); the hint is only
+  // relevant while this participant is NOT the active orchestrator.
+  const isSkippedContainer = useMemo(
+    () => !isActive && isSkippedContainerParticipant(participant),
+    [isActive, participant],
+  );
 
   // Get Redux state and URL params for checking if this participant is being edited
   const isBeingEdited = useMemo(() => {
@@ -202,6 +217,26 @@ const ParticipantItem = memo(props => {
     }
   }, [isHovering]);
 
+  // Neutral (info) notice for a skipped container agent (issue #5680). Rendered independently of the
+  // error/normal card branch below: "is a skipped container" and "has a misconfiguration" are
+  // orthogonal facts — a container agent can be both at once (e.g. Surname Resolver with a broken
+  // toolkit), and both must surface. Kept as a single element so the two branches can't diverge.
+  const containerInfoRow =
+    !collapsed && isSkippedContainer ? (
+      <Box sx={styles.infoMessageRow}>
+        <Box sx={styles.infoIcon}>
+          <InfoIcon />
+        </Box>
+        <Typography
+          variant="bodySmall"
+          color="text.secondary"
+          sx={styles.attentionMessage}
+        >
+          <ParticipantWarning isSkippedContainer />
+        </Typography>
+      </Box>
+    ) : null;
+
   const content =
     !shouldDisableThisItem &&
     !hasMisconfigurationErrors &&
@@ -211,130 +246,133 @@ const ParticipantItem = memo(props => {
     !someToolsAreUnavailable &&
     !isVersionUnavailable &&
     !isPublishedAgentGone ? (
-      <Box
-        onClick={onClickHandler}
-        onMouseEnter={onMouseEnter}
-        onMouseLeave={onMouseLeave}
-        sx={styles.contentWrapper}
-      >
-        <EntityIcon
-          icon={entityIcon}
-          entityType={
-            isPipelineParticipant
-              ? 'pipeline'
-              : participant.entity_name !== ChatParticipantType.Toolkits
-                ? participant.entity_name
-                : participant.meta?.mcp
-                  ? 'mcp'
-                  : participant.entity_name
-          }
-          editable={false}
-          sx={{ width: '1.5rem', height: '1.5rem', minWidth: '1.5rem' }}
-          imageStyle={{ width: '1.5rem', height: '1.5rem' }}
-          specifiedFontSize="0.875rem"
-          isActive={isActive}
-        />
-        {!collapsed && (
-          <Box sx={styles.nameWrapper}>
-            <Typography
-              variant="bodyMedium"
-              color="text.secondary"
-              ref={nameTextRef}
-              sx={styles.nameContent}
-            >
-              {displayName}
-              {isAttachement && (
-                <IconButton
-                  variant="elitea"
-                  color="tertiary"
-                  size="small"
-                  disabled
-                  sx={styles.attachmentButton}
-                >
-                  <AttachIcon style={styles.attachIcon} />
-                </IconButton>
-              )}
-              {originalDetails?.meta?.mcp && (
-                <>
-                  {originalDetails?.online ? (
-                    <OnlineIcon
-                      width={14}
-                      style={{
-                        marginLeft: '.5rem',
-                        width: '1rem !important',
-                        height: '1rem',
-                        color: theme.palette.icon.fill.default,
-                      }}
-                    />
-                  ) : (
-                    <OfflineIcon
-                      style={{
-                        marginLeft: '.5rem',
-                        width: '.875rem',
-                        height: '.875rem',
-                        color: theme.palette.icon.fill.attention,
-                      }}
-                    />
-                  )}
-                </>
-              )}
-              {spConfig && (
-                <>
-                  {spOAuthLoggedIn ? (
-                    <OnlineIcon
-                      style={{
-                        marginLeft: '.5rem',
-                        width: '1rem',
-                        height: '1rem',
-                        color: theme.palette.icon.fill.default,
-                      }}
-                    />
-                  ) : (
-                    <OfflineIcon
-                      style={{
-                        marginLeft: '.5rem',
-                        width: '.875rem',
-                        height: '.875rem',
-                        color: theme.palette.icon.fill.attention,
-                      }}
-                    />
-                  )}
-                </>
-              )}
-            </Typography>
-            <Typography
-              variant="bodyMedium"
-              color={isBeingEdited ? 'primary.main' : 'text.primary'}
-              sx={{
-                flexShrink: 0,
-                maxWidth: isBeingEdited ? 'none' : '50%',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpaceCollapse: 'preserve',
-              }}
-            >
-              {isBeingEdited
-                ? participant.entity_meta?.project_id != PUBLIC_PROJECT_ID
-                  ? 'Editing...'
-                  : 'Viewing...'
-                : versionName}
-            </Typography>
-          </Box>
-        )}
-        {!collapsed && !isBeingEdited && (
-          <ParticipantActions
-            participant={participant}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            disabledEdit={disabledEdit}
-            disabledDeleteButton={disabledEdit}
-            showButtons={isHovering}
-            showEditButton={showEditButton}
-            hasRemoteMcpLoggedIn={hasRemoteMcpLoggedIn}
-            serverUrl={originalDetails?.settings?.url}
+      <Box sx={styles.normalItemWrapper}>
+        <Box
+          onClick={onClickHandler}
+          onMouseEnter={onMouseEnter}
+          onMouseLeave={onMouseLeave}
+          sx={styles.contentWrapper}
+        >
+          <EntityIcon
+            icon={entityIcon}
+            entityType={
+              isPipelineParticipant
+                ? 'pipeline'
+                : participant.entity_name !== ChatParticipantType.Toolkits
+                  ? participant.entity_name
+                  : participant.meta?.mcp
+                    ? 'mcp'
+                    : participant.entity_name
+            }
+            editable={false}
+            sx={{ width: '1.5rem', height: '1.5rem', minWidth: '1.5rem' }}
+            imageStyle={{ width: '1.5rem', height: '1.5rem' }}
+            specifiedFontSize="0.875rem"
+            isActive={isActive}
           />
-        )}
+          {!collapsed && (
+            <Box sx={styles.nameWrapper}>
+              <Typography
+                variant="bodyMedium"
+                color="text.secondary"
+                ref={nameTextRef}
+                sx={styles.nameContent}
+              >
+                {displayName}
+                {isAttachement && (
+                  <IconButton
+                    variant="elitea"
+                    color="tertiary"
+                    size="small"
+                    disabled
+                    sx={styles.attachmentButton}
+                  >
+                    <AttachIcon style={styles.attachIcon} />
+                  </IconButton>
+                )}
+                {originalDetails?.meta?.mcp && (
+                  <>
+                    {originalDetails?.online ? (
+                      <OnlineIcon
+                        width={14}
+                        style={{
+                          marginLeft: '.5rem',
+                          width: '1rem !important',
+                          height: '1rem',
+                          color: theme.palette.icon.fill.default,
+                        }}
+                      />
+                    ) : (
+                      <OfflineIcon
+                        style={{
+                          marginLeft: '.5rem',
+                          width: '.875rem',
+                          height: '.875rem',
+                          color: theme.palette.icon.fill.attention,
+                        }}
+                      />
+                    )}
+                  </>
+                )}
+                {spConfig && (
+                  <>
+                    {spOAuthLoggedIn ? (
+                      <OnlineIcon
+                        style={{
+                          marginLeft: '.5rem',
+                          width: '1rem',
+                          height: '1rem',
+                          color: theme.palette.icon.fill.default,
+                        }}
+                      />
+                    ) : (
+                      <OfflineIcon
+                        style={{
+                          marginLeft: '.5rem',
+                          width: '.875rem',
+                          height: '.875rem',
+                          color: theme.palette.icon.fill.attention,
+                        }}
+                      />
+                    )}
+                  </>
+                )}
+              </Typography>
+              <Typography
+                variant="bodyMedium"
+                color={isBeingEdited ? 'primary.main' : 'text.primary'}
+                sx={{
+                  flexShrink: 0,
+                  maxWidth: isBeingEdited ? 'none' : '50%',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpaceCollapse: 'preserve',
+                }}
+              >
+                {isBeingEdited
+                  ? participant.entity_meta?.project_id != PUBLIC_PROJECT_ID
+                    ? 'Editing...'
+                    : 'Viewing...'
+                  : versionName}
+              </Typography>
+            </Box>
+          )}
+          {!collapsed && !isBeingEdited && (
+            <ParticipantActions
+              participant={participant}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              disabledEdit={disabledEdit}
+              disabledDeleteButton={disabledEdit}
+              showButtons={isHovering}
+              showEditButton={showEditButton}
+              hasRemoteMcpLoggedIn={hasRemoteMcpLoggedIn}
+              serverUrl={originalDetails?.settings?.url}
+            />
+          )}
+        </Box>
+        {containerInfoRow}
       </Box>
     ) : (
       <StyledTipsContainer
@@ -416,6 +454,7 @@ const ParticipantItem = memo(props => {
             />
           </Typography>
         </Box>
+        {containerInfoRow}
       </StyledTipsContainer>
     );
 
@@ -449,6 +488,11 @@ const participantItemStyles = ({ collapsed, isActive, maxWidth }) => ({
     '&:hover': {
       color: 'primary.dark',
     },
+  },
+  normalItemWrapper: {
+    display: 'flex',
+    flexDirection: 'column',
+    width: '100%',
   },
   contentWrapper: ({ palette }) => ({
     cursor: 'pointer',
@@ -554,6 +598,28 @@ const participantItemStyles = ({ collapsed, isActive, maxWidth }) => ({
     flexDirection: 'row',
     gap: '0.9rem',
   },
+  // Neutral (info) notice shown inside the normal interactive card for a skipped container agent
+  // (issue #5680). Same layout as the amber attention row, but grey — a correct container agent
+  // must not read as broken. Sits below the name/version, indented to align under the label.
+  infoMessageRow: {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: '.375rem',
+    padding: '0 .75rem .25rem',
+  },
+  infoIcon: ({ palette }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+    width: '1rem',
+    height: '1rem',
+    marginTop: '.0625rem',
+    '& svg, & path': {
+      fill: palette.icon.fill.secondary,
+    },
+  }),
   attentionIcon: ({ palette }) => ({
     paddingLeft: '0.25rem',
     width: '1rem',

@@ -11,6 +11,29 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 
 /**
+ * Map a backend association error (issue #5680 cycle / leaf-rule rejections and others) to a
+ * clear, actionable toast message. Falls back to the generic builder for unrelated errors.
+ */
+const mapAssociationError = (rawError, agentName) => {
+  const message = typeof rawError === 'string' ? rawError : buildErrorMessage(rawError);
+  const lower = (message || '').toLowerCase();
+  if (lower.includes('circular') || lower.includes('cycle')) {
+    return `Cannot add "${agentName}": this would create a circular agent reference. Remove the circular dependency first.`;
+  }
+  if (
+    lower.includes('uses other agents') ||
+    lower.includes('cannot be nested') ||
+    lower.includes('sub-agent')
+  ) {
+    return `Cannot add "${agentName}": it uses other agents and can only be run directly as a chat participant, not added as a tool.`;
+  }
+  if (lower.includes('bind') && lower.includes('itself')) {
+    return `Cannot add "${agentName}" to itself.`;
+  }
+  return message;
+};
+
+/**
  * Custom hook to handle association of agents and pipelines as "toolkits"
  */
 export const useAgentPipelineAssociation = (applicationId, versionId) => {
@@ -44,6 +67,23 @@ export const useAgentPipelineAssociation = (applicationId, versionId) => {
         toastError(
           `"${agent.name}" has Swarm Mode enabled and cannot be added as a tool. ` +
             `Swarm agents are only supported in direct chat.`,
+        );
+        return;
+      }
+
+      // Block "container" agents from being nested (issue #5680). A non-pipeline agent that
+      // itself uses other agents (has an 'application'-type tool) may only run at the top as a
+      // direct chat participant — nesting it would create an unsupported extra nesting level.
+      // Pipelines are the sanctioned deep-composition primitive and are exempt from this rule.
+      // This mirrors the swarm guard and matches the authoritative backend check; it is
+      // best-effort UI guidance (the backend rejects it too — see the catch/error handling).
+      const candidateAgentType = selectedApplication?.version_details?.agent_type;
+      const candidateTools = selectedApplication?.version_details?.tools || [];
+      const candidateIsContainer = candidateTools.some(tool => tool.type === 'application');
+      if (candidateAgentType !== 'pipeline' && candidateIsContainer) {
+        toastError(
+          `"${agent.name}" uses other agents and cannot be added as a tool. ` +
+            `Agents that use other agents can only be run directly as a chat participant.`,
         );
         return;
       }
@@ -131,7 +171,7 @@ export const useAgentPipelineAssociation = (applicationId, versionId) => {
               `The "${agent.name}" ${isPipeline ? 'pipeline' : 'agent'} is successfully added to the ${values?.name || 'application'} ${values?.version_details?.agent_type === 'pipeline' ? 'pipeline' : 'agent'}.`,
             );
           } else {
-            toastError(buildErrorMessage(result.error?.data?.error || result.error));
+            toastError(mapAssociationError(result.error?.data?.error || result.error, agent.name));
           }
         } else {
           toastError(
@@ -139,7 +179,11 @@ export const useAgentPipelineAssociation = (applicationId, versionId) => {
           );
         }
       } catch (error) {
-        toastError(`Failed to add agent: ${error.message || 'Unknown error'}`);
+        const backendMsg = error?.data?.error || error?.message;
+        toastError(
+          mapAssociationError(backendMsg, agent.name) ||
+            `Failed to add agent: ${error.message || 'Unknown error'}`,
+        );
       }
     },
     [
