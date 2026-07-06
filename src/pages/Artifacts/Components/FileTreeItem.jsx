@@ -161,6 +161,15 @@ const FileTreeItem = memo(props => {
 
 FileTreeItem.displayName = 'FileTreeItem';
 
+const calculateIndent = (depth, { basePadding, maxIndent, minIndent, threshold } = {}) => {
+  if (depth <= threshold) {
+    return basePadding + depth * maxIndent;
+  }
+  const baseIndent = basePadding + threshold * maxIndent;
+  const extraDepth = depth - threshold;
+  return baseIndent + extraDepth * minIndent;
+};
+
 /** @type {MuiSx} */
 const fileTreeItemStyles = ({ isActive, isHovering, depth, theme, nextItemHovered }) => {
   const getBackgroundColor = () => {
@@ -170,7 +179,16 @@ const fileTreeItemStyles = ({ isActive, isHovering, depth, theme, nextItemHovere
   };
 
   const isHighlighted = isActive || isHovering;
-  const indentPadding = 0.5 + depth * 1.5; // Base padding + depth-based indent (fixed indentation per level)
+
+  const settingsIndent = {
+    basePadding: 0.15,
+    maxIndent: 1.25,
+    minIndent: 0.75,
+    threshold: 3,
+  };
+
+  const indentPadding = calculateIndent(depth, settingsIndent);
+  const bottomBorderAlignedMargin = depth <= 9 ? '-3rem' : '0.65rem';
 
   return {
     wrapper: {
@@ -199,7 +217,7 @@ const fileTreeItemStyles = ({ isActive, isHovering, depth, theme, nextItemHovere
       paddingLeft: '1rem',
       paddingTop: '0.375rem',
       paddingBottom: '0.375rem',
-      marginRight: '-3rem',
+      marginRight: bottomBorderAlignedMargin,
       paddingRight: '0.5rem',
       background: getBackgroundColor(),
       borderRadius: isHighlighted ? '0.375rem' : '0',
