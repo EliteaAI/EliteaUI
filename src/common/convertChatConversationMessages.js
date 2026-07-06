@@ -262,6 +262,28 @@ export const convertToAIAnswer = (message_group, message_groups, participants) =
       !!a.toolOutputs,
   });
 
+  // Reconstruct HITL interrupt state persisted at pause time (#4823). The live
+  // socket handler (components/Chat/hooks.js) is the only other place these are
+  // set, and that in-memory state dies on unmount — so without this, the
+  // Approve/Edit/Reject buttons vanish on navigate-away / reload. The backend
+  // clears these meta keys once the resumed run completes, so a resolved message
+  // reconstructs no buttons.
+  const {
+    hitl_interrupt: rawHitlInterrupt,
+    hitl_interrupts: rawHitlInterrupts,
+    thread_id: metaThreadId,
+  } = meta || {};
+  // Only a still-paused message keeps its interrupt meta (is_streaming is false
+  // at a pause). Guard on the raw presence rather than is_streaming so a future
+  // change to the streaming flag can't silently drop the buttons.
+  const hitlInterrupts =
+    Array.isArray(rawHitlInterrupts) && rawHitlInterrupts.length
+      ? rawHitlInterrupts.map(ChatHelpers.buildHitlInterruptFromRaw)
+      : undefined;
+  const hitlInterrupt = rawHitlInterrupt
+    ? ChatHelpers.buildHitlInterruptFromRaw(rawHitlInterrupt)
+    : hitlInterrupts?.[0];
+
   const displayTime = updated_at || created_at;
   return {
     id: uuid,
@@ -282,6 +304,11 @@ export const convertToAIAnswer = (message_group, message_groups, participants) =
     task_id,
     toolActions,
     isSummarized,
+    // HITL resume state (#4823). threadId powers the single-pause resume;
+    // hitlInterrupts (when set) routes parallel/fan-out resume via tool_call_id.
+    ...(hitlInterrupt ? { hitlInterrupt } : {}),
+    ...(hitlInterrupts ? { hitlInterrupts } : {}),
+    ...(metaThreadId ? { threadId: metaThreadId } : {}),
   };
 };
 
