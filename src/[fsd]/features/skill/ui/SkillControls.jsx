@@ -37,7 +37,7 @@ const sectionLabelSx = ({ palette }) => ({
  * Controls.ControlsDropdown and reuses the entity-agnostic agent hooks.
  */
 const SkillControls = memo(props => {
-  const { skillId, skillName, currentVersionId, onChangeVersion, onSetDefault } = props;
+  const { skillId, skillName, initialPinned, currentVersionId, onChangeVersion, onSetDefault } = props;
 
   const navigate = useNavigate();
   const projectId = useSelectedProjectId();
@@ -59,6 +59,7 @@ const SkillControls = memo(props => {
   } = usePin({
     entityId: skillId,
     entityType: PinEntityType.Skill,
+    initialPinned: !!initialPinned,
   });
 
   const { copyLinkMenuItem: shareVersionMenuItem } = useCopyLinkMenu({

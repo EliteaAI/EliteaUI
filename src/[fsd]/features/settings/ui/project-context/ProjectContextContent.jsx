@@ -3,6 +3,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Box, CircularProgress, Typography } from '@mui/material';
 
 import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
+import ProjectParamsHeader from '@/[fsd]/features/settings/ui/project-context/ProjectParamsHeader';
 import { Banner, Button, Field } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import Markdown from '@/[fsd]/shared/ui/markdown';
@@ -49,7 +50,7 @@ const ProjectContextContent = memo(() => {
     }
   }, [serverData]);
 
-  const charError = content.length >= MAX_CHARS;
+  const limitReached = content.length >= MAX_CHARS;
   const hasContextContent = Boolean(content.trim());
   const showReadOnlyBanner = canViewProjectContext && !canEditProjectContext;
   const showDisabledBanner = canViewProjectContext && !enabled && hasContextContent;
@@ -149,7 +150,7 @@ const ProjectContextContent = memo(() => {
     if (!e.currentTarget.contains(e.relatedTarget)) setIsEditorFocused(false);
   };
 
-  const styles = componentStyles(charError, isEditorFocused, !enabled || !canEditProjectContext);
+  const styles = componentStyles(limitReached, isEditorFocused, !enabled || !canEditProjectContext);
 
   if (isLoading) {
     return (
@@ -171,6 +172,8 @@ const ProjectContextContent = memo(() => {
       />
 
       <Box sx={styles.body}>
+        <ProjectParamsHeader />
+
         {showReadOnlyBanner && (
           <Banner.BannerMessage
             message="You don't have permission to edit this setting."
@@ -265,11 +268,10 @@ const ProjectContextContent = memo(() => {
                   sx={styles.charCounter}
                 >
                   {MAX_CHARS - content.length} characters left.{' '}
-                  {charError && 'You have reached the maximum character limit.'}
+                  {limitReached && 'You have reached the maximum character limit.'}
                 </Typography>
               </Box>
             )}
-
           </Box>
         )}
 
@@ -278,7 +280,7 @@ const ProjectContextContent = memo(() => {
             <Button.BaseBtn
               variant={BUTTON_VARIANTS.contained}
               color="primary"
-              disabled={!isDirty || charError || isSaving}
+              disabled={!isDirty || isSaving}
               onClick={handleSave}
             >
               Save
@@ -302,7 +304,7 @@ ProjectContextContent.displayName = 'ProjectContextContent';
 export default ProjectContextContent;
 
 /** @type {MuiSx} */
-const componentStyles = (charError, isEditorFocused, isMuted) => ({
+const componentStyles = (limitReached, isEditorFocused, isMuted) => ({
   root: {
     display: 'flex',
     flexDirection: 'column',
@@ -395,7 +397,7 @@ const componentStyles = (charError, isEditorFocused, isMuted) => ({
     paddingTop: '0.25rem',
   },
   charCounter: ({ palette }) => ({
-    color: charError ? palette.text.error : palette.text.primary,
+    color: limitReached ? palette.text.error : palette.text.primary,
     visibility: isEditorFocused ? 'visible' : 'hidden',
   }),
   actions: {

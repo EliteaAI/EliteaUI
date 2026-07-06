@@ -111,7 +111,7 @@ export const useMcpAuthCheck = ({ toolkitId, values, onMcpAuthRequired, onSucces
       const toolkitConfig = {
         toolkit_id: toolkitId || values?.id,
         toolkit_name: values?.toolkit_name || values?.name || `mcp_toolkit_${toolkitId}`,
-        type: 'mcp',
+        type: values?.type || 'mcp',
         settings: values?.settings || {
           url: values?.url,
           headers: values?.headers,

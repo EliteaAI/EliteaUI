@@ -159,10 +159,10 @@ export const usePipelineChat = ({
           project_id: projectId,
         });
 
-        toastInfo('Conversation restored successfully');
+        toastInfo('Chat restored successfully');
         setHasRestoredConversation(true);
       } else {
-        toastError('Could not find pipeline participant in restored conversation');
+        toastError('Could not find pipeline participant in restored chat');
       }
 
       onRestoreConversationComplete();

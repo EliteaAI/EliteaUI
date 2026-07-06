@@ -181,10 +181,10 @@ export const useApplicationChat = ({
           project_id: projectId,
         });
 
-        toastInfo('Conversation restored successfully');
+        toastInfo('Chat restored successfully');
         setHasRestoredConversation(true);
       } else {
-        toastError('Could not find application participant in restored conversation');
+        toastError('Could not find application participant in restored chat');
       }
 
       onRestoreConversationComplete();

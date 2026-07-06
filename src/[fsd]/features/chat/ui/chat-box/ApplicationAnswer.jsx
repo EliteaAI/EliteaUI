@@ -590,7 +590,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
           {/* {exception && <AgentException exception={exception} title={!isApplicationParticipant ? 'LLM exception' : undefined} />} */}
           {!isEditing && shouldRenderAnswerBlock && (
             <Answer
-              data-testid="chat-answer-content"
+              data-testid={isLastMessage ? 'skill-test-last-response' : 'chat-answer-content'}
               sx={styles.answerBlock(messageId === speakingMessageId)}
             >
               {canRenderContent && !isNullOrUndefined(answer) && !message_items?.length && (

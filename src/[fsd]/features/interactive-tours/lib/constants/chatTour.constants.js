@@ -20,22 +20,22 @@ Each conversation is an independent dialogue session. Context is not shared betw
     id: 'conversation-list',
     target: CHAT_TOUR_TARGETS.conversations,
     placement: 'right',
-    title: 'Conversations',
-    content: `Every interaction in Chat takes place inside a conversation. Conversations are automatically named based on your first message and organized by time period (Today, Yesterday, This Week, Older). Pinned conversations always appear at the top.
+    title: 'Chats',
+    content: `Every interaction in Chats takes place inside a chat. Chats are automatically named based on your first message and organized by time period (Today, Yesterday, This Week, Older). Pinned chats always appear at the top.
 
-Conversations can be **Private** (visible only to you) or **Public** (shared with all project members who can join and collaborate).
+Chats can be **Private** (visible only to you) or **Public** (shared with all project members who can join and collaborate).
 
-Use the **search** icon in the CONVERSATIONS header to filter conversations by name — results update as you type.
+Use the **search** icon in the CHATS header to filter chats by name — results update as you type.
 
-**Conversation actions** (three-dot menu on any conversation):
+**Chat actions** (three-dot menu on any chat):
 
-- **Edit** — Rename the conversation
-- **Move to** — Move the conversation into a folder; create a new folder inline if needed
-- **Make Public** — Share the conversation with all project members; cannot be reversed
-- **Share** — Copy a direct link to the conversation to your clipboard (team projects only)
-- **Playback** — Replay the conversation step by step without re-engaging models; use arrow keys or on-screen controls to navigate; designed for demos
-- **Pin on top** — Pin the conversation to the top of the list
-- **Delete** — Permanently delete the conversation`,
+- **Edit** — Rename the chat
+- **Move to** — Move the chat into a folder; create a new folder inline if needed
+- **Make Public** — Share the chat with all project members; cannot be reversed
+- **Share** — Copy a direct link to the chat to your clipboard (team projects only)
+- **Playback** — Replay the chat step by step without re-engaging models; use arrow keys or on-screen controls to navigate; designed for demos
+- **Pin on top** — Pin the chat to the top of the list
+- **Delete** — Permanently delete the chat`,
   },
   {
     id: 'conversation-participants',

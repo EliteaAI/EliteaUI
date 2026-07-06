@@ -1,53 +1,48 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect } from 'react';
 
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
-import { Box, CircularProgress, Popover, Skeleton, Typography, debounce } from '@mui/material';
+import { Box, Popover, Skeleton, Typography } from '@mui/material';
 
 import { NotificationListItem } from '@/[fsd]/entities/notifications/ui';
-import { ScrollableContainer } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
-import { useNotificationPopoverPosition } from '@/[fsd]/widgets/Notifications/lib/hooks';
 import {
   TAG_NOTIFICATIONS,
   notificationsApi,
   useNotificationBulkMarkSeenMutation,
   useNotificationListQuery,
 } from '@/api/notifications';
-import { PAGE_SIZE } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import CloseIcon from '@/components/Icons/CloseIcon';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 import RouteDefinitions, { PathSessionMap } from '@/routes';
 
+const POPOVER_PAGE_SIZE = 5;
+
 const NotificationList = memo(props => {
   const { notificationListAnchorEl, onCloseNotificationList } = props;
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const listRef = useRef();
-  const lastAppliedPageRef = useRef(-1);
   const { toastError } = useToast();
   const [bulkMarkSeenNotifications] = useNotificationBulkMarkSeenMutation();
   const styles = notificationListStyles();
   const projectId = useSelectedProjectId();
 
-  const [page, setPage] = useState(0);
-  const [allNotifications, setAllNotifications] = useState([]);
-  const { popoverPaperRef, popoverPosition } = useNotificationPopoverPosition(notificationListAnchorEl);
-
   const { data, isFetching, isError, error, refetch } = useNotificationListQuery(
     {
       projectId,
-      page,
-      pageSize: PAGE_SIZE,
+      page: 0,
+      pageSize: POPOVER_PAGE_SIZE,
       params: {
         only_new: true,
       },
     },
     { refetchOnFocus: !!projectId, skip: !projectId },
   );
+
+  const notifications = data?.rows ?? [];
 
   const onMarkAllAsRead = useCallback(async () => {
     if (!projectId) return;
@@ -57,88 +52,25 @@ const NotificationList = memo(props => {
         ids: 'all',
         isSeen: true,
       }).unwrap();
-      setPage(0);
-      setAllNotifications([]);
     } catch (err) {
       toastError(buildErrorMessage(err));
     }
   }, [projectId, bulkMarkSeenNotifications, toastError]);
 
-  const handleNotificationSeenChange = useCallback((notificationId, isSeen) => {
-    setAllNotifications(prev =>
-      prev.map(notification =>
-        notification.id === notificationId ? { ...notification, is_seen: isSeen } : notification,
-      ),
-    );
-  }, []);
-
   const onViewAll = useCallback(() => {
     dispatch(notificationsApi.util.invalidateTags([TAG_NOTIFICATIONS]));
-    navigate(RouteDefinitions.NotificationCenter, {
+    navigate(RouteDefinitions.SettingsWithTab.replace(':tab', 'notifications'), {
       state: {
         routeStack: [
           {
-            pagePath: RouteDefinitions.NotificationCenter,
-            breadCrumb: PathSessionMap[RouteDefinitions.NotificationCenter],
+            pagePath: RouteDefinitions.SettingsWithTab.replace(':tab', 'notifications'),
+            breadCrumb: PathSessionMap[RouteDefinitions.Settings],
           },
         ],
       },
     });
     onCloseNotificationList();
   }, [dispatch, navigate, onCloseNotificationList]);
-
-  const onLoadMore = useCallback(() => {
-    setPage(prev => prev + 1);
-  }, []);
-
-  useEffect(() => {
-    if (!notificationListAnchorEl) return;
-    if (!data?.rows) return;
-    if (isFetching) return;
-    if (page === 0) {
-      if (lastAppliedPageRef.current === 0 && allNotifications.length) return;
-      lastAppliedPageRef.current = 0;
-      setAllNotifications(data.rows);
-      return;
-    }
-    if (lastAppliedPageRef.current === page) return;
-    lastAppliedPageRef.current = page;
-    setAllNotifications(prev => [...prev, ...data.rows]);
-  }, [allNotifications.length, data?.rows, notificationListAnchorEl, page, isFetching]);
-
-  useEffect(() => {
-    if (!notificationListAnchorEl) {
-      setPage(0);
-      setAllNotifications([]);
-      lastAppliedPageRef.current = -1;
-    }
-  }, [notificationListAnchorEl]);
-
-  const hasMore = data && allNotifications.length < data.total;
-
-  const handleScroll = useCallback(() => {
-    const listDom = listRef.current?.getScrollElement();
-    if (!listDom || isFetching) return;
-
-    const { clientHeight, scrollHeight, scrollTop } = listDom;
-    const isReachBottom = scrollTop + clientHeight > scrollHeight - 10;
-    if (isReachBottom && hasMore) {
-      onLoadMore();
-    }
-  }, [hasMore, isFetching, onLoadMore]);
-
-  const debouncedScroll = useMemo(() => debounce(handleScroll, 300), [handleScroll]);
-
-  useEffect(() => {
-    const listDom = listRef.current?.getScrollElement();
-    if (!listDom) return;
-
-    listDom.addEventListener('scroll', debouncedScroll);
-    return () => {
-      listDom.removeEventListener('scroll', debouncedScroll);
-      debouncedScroll.clear();
-    };
-  }, [debouncedScroll]);
 
   useEffect(() => {
     if (isError) {
@@ -154,15 +86,18 @@ const NotificationList = memo(props => {
     <Popover
       id="notificationList"
       open={Boolean(notificationListAnchorEl)}
-      anchorEl={popoverPosition.anchorReference === 'anchorEl' ? notificationListAnchorEl : null}
-      anchorReference={popoverPosition.anchorReference}
-      anchorPosition={popoverPosition.anchorPosition}
+      anchorEl={notificationListAnchorEl}
       onClose={onCloseNotificationList}
-      anchorOrigin={popoverPosition.anchorOrigin}
-      transformOrigin={popoverPosition.transformOrigin}
+      anchorOrigin={{
+        vertical: 'bottom',
+        horizontal: 'left',
+      }}
+      transformOrigin={{
+        vertical: 'top',
+        horizontal: 'left',
+      }}
       slotProps={{
         paper: {
-          ref: popoverPaperRef,
           sx: styles.popoverPaper,
         },
       }}
@@ -183,22 +118,17 @@ const NotificationList = memo(props => {
             aria-label="Close notifications"
           />
         </Box>
-        <ScrollableContainer
-          ref={listRef}
-          fillContainer={false}
-          sx={styles.listContainer}
-        >
-          {allNotifications.map(notification => (
+        <Box sx={styles.listContainer}>
+          {notifications.map(notification => (
             <NotificationListItem
               key={notification.id}
               notification={notification}
-              onNotificationSeenChange={handleNotificationSeenChange}
               onCloseNotificationList={onCloseNotificationList}
             />
           ))}
-          {isFetching && !allNotifications.length && (
+          {isFetching && !notifications.length && (
             <>
-              {[...Array(8)].map((_, index) => (
+              {[...Array(POPOVER_PAGE_SIZE)].map((_, index) => (
                 <Skeleton
                   key={`skeleton-${index}`}
                   sx={styles.skeletonItem}
@@ -209,26 +139,18 @@ const NotificationList = memo(props => {
               ))}
             </>
           )}
-          {!allNotifications.length && !isFetching && (
+          {!notifications.length && !isFetching && (
             <Box sx={styles.emptyState}>
               <Typography variant="bodySmall">No new notifications right now</Typography>
             </Box>
           )}
-        </ScrollableContainer>
-        {isFetching && page > 0 && (
-          <Box sx={styles.loadMoreSpinner}>
-            <CircularProgress
-              size="1.25rem"
-              thickness={4}
-            />
-          </Box>
-        )}
-        {allNotifications.length > 0 && (
+        </Box>
+        {notifications.length > 0 && (
           <BaseBtn
             variant={BUTTON_VARIANTS.auxiliary}
             onClick={onMarkAllAsRead}
             sx={styles.markAllButton}
-            disabled={!allNotifications.some(n => !n.is_seen)}
+            disabled={!notifications.some(n => !n.is_seen)}
           >
             <Typography
               variant="labelMedium"
@@ -261,7 +183,8 @@ NotificationList.displayName = 'NotificationList';
 const notificationListStyles = () => ({
   popover: {
     background: 'transparent',
-    marginLeft: '1.875rem',
+    marginTop: '-1.75rem',
+    marginLeft: '3.15rem',
   },
   popoverPaper: {
     borderRadius: '0.5rem',
@@ -272,7 +195,6 @@ const notificationListStyles = () => ({
     width: '20rem',
     display: 'flex',
     flexDirection: 'column',
-    maxHeight: 'calc(100vh - 7.5rem)',
     overflow: 'hidden',
   }),
   header: ({ palette }) => ({
@@ -286,19 +208,11 @@ const notificationListStyles = () => ({
   }),
   listContainer: {
     flex: 'none',
-    maxHeight: 'calc(100vh - 16.5rem)',
   },
   skeletonItem: ({ palette }) => ({
     '&:not(:last-of-type)': {
       borderBottom: `0.0625rem solid ${palette.border.notificationItem}`,
     },
-  }),
-  loadMoreSpinner: ({ palette }) => ({
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: '0.75rem 0',
-    borderTop: `0.0625rem solid ${palette.border.notificationItem}`,
   }),
   emptyState: ({ palette }) => ({
     display: 'flex',

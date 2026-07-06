@@ -1,40 +1,42 @@
-import React, { useCallback, useMemo } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 
 import { useLocation } from 'react-router-dom';
 
-import { Box, Typography } from '@mui/material';
+import { Box, Divider, Typography } from '@mui/material';
 
 import { SettingsLayoutConstants } from '@/[fsd]/features/settings/lib/constants';
 import AnalyticsIcon from '@/assets/analytics-icon.svg?react';
 import ConfigurationIcon from '@/assets/configuration-icon.svg?react';
 import KeyIcon from '@/assets/key-icon.svg?react';
+import LogoutIcon from '@/assets/logout-icon.svg?react';
 import EnvironmentIcon from '@/assets/new-environment-icon.svg?react';
+import PersonalizationIcon from '@/assets/personalization-icon.svg?react';
 import PromptIcon from '@/assets/prompt.svg?react';
+import BellIcon from '@/components/Icons/BellIcon';
 import BriefcaseIcon from '@/components/Icons/BriefcaseIcon';
-import IntegrationIcon from '@/components/Icons/IntegrationIcon';
 import Lock from '@/components/Icons/Lock.jsx';
-import ModelIcon from '@/components/Icons/ModelIcon';
 import UsersIcon from '@/components/Icons/UsersIcon';
 
 const ICON_COMPONENTS = {
   'model-configuration': ConfigurationIcon,
-  tokens: KeyIcon,
-  integrations: IntegrationIcon,
-  environment: EnvironmentIcon,
-  'project-context': BriefcaseIcon,
-  secrets: Lock,
-  projects: BriefcaseIcon,
-  users: UsersIcon,
   prompts: PromptIcon,
+  environment: EnvironmentIcon,
+  tokens: KeyIcon,
+  'project-params': BriefcaseIcon,
+  secrets: Lock,
+  users: UsersIcon,
   analytics: AnalyticsIcon,
+  personalization: PersonalizationIcon,
+  notifications: BellIcon,
+  logout: LogoutIcon,
 };
 
 const getIconComponent = tabId => {
-  return ICON_COMPONENTS[tabId] || ModelIcon;
+  return ICON_COMPONENTS[tabId] || ConfigurationIcon;
 };
 
-const SettingsDrawer = props => {
-  const { tabs, onItemClick } = props;
+const SettingsDrawer = memo(props => {
+  const { sections, onItemClick } = props;
   const styles = getStyles();
   const location = useLocation();
 
@@ -45,9 +47,6 @@ const SettingsDrawer = props => {
       const pathSegments = location.pathname.split('/');
       const lastSegment = pathSegments[pathSegments.length - 1];
 
-      if (tabId === 'information' && (lastSegment === 'settings' || lastSegment === 'system')) {
-        return true;
-      }
       if (
         tabId === 'model-configuration' &&
         (lastSegment === 'create-configuration' ||
@@ -70,30 +69,44 @@ const SettingsDrawer = props => {
     [onItemClick],
   );
 
-  const renderedTabs = useMemo(
+  const renderedSections = useMemo(
     () =>
-      tabs.map(tab => {
-        const IconComponent = getIconComponent(tab.id);
-        const isActive = isActiveTab(tab.id);
-        return (
+      sections.map((section, sectionIndex) => (
+        <Box
+          key={section.section}
+          sx={styles.sectionGroup}
+        >
+          {sectionIndex > 0 && <Divider sx={styles.sectionDivider} />}
           <Box
-            key={tab.id}
-            onClick={() => handleItemClick(tab.id)}
-            sx={styles.menuItem(isActive)}
+            component="span"
+            sx={styles.sectionHeader}
           >
-            <Box sx={styles.iconWrapper(isActive)}>
-              <IconComponent />
-            </Box>
-            <Typography
-              variant="labelSmall"
-              sx={styles.menuItemText(isActive)}
-            >
-              {tab.label}
-            </Typography>
+            {section.section}
           </Box>
-        );
-      }),
-    [tabs, isActiveTab, styles, handleItemClick],
+          {section.tabs.map(tab => {
+            const IconComponent = getIconComponent(tab.id);
+            const isActive = isActiveTab(tab.id);
+            return (
+              <Box
+                key={tab.id}
+                onClick={() => handleItemClick(tab.id)}
+                sx={styles.menuItem(isActive)}
+              >
+                <Box sx={styles.iconWrapper(isActive)}>
+                  <IconComponent />
+                </Box>
+                <Box
+                  component="span"
+                  sx={styles.menuItemText(isActive)}
+                >
+                  {tab.label}
+                </Box>
+              </Box>
+            );
+          })}
+        </Box>
+      )),
+    [sections, isActiveTab, styles, handleItemClick],
   );
 
   return (
@@ -107,10 +120,10 @@ const SettingsDrawer = props => {
         </Typography>
       </Box>
 
-      <Box sx={styles.menuContainer}>{renderedTabs}</Box>
+      <Box sx={styles.menuContainer}>{renderedSections}</Box>
     </Box>
   );
-};
+});
 
 SettingsDrawer.displayName = 'SettingsDrawer';
 
@@ -140,25 +153,45 @@ const getStyles = () => ({
   }),
 
   menuContainer: {
-    paddingTop: '.5rem',
     display: 'flex',
     flexDirection: 'column',
-    paddingLeft: '1rem',
-    paddingRight: '1rem',
     boxSizing: 'border-box',
-    gap: '0.5rem',
     maxWidth: '100%',
+    overflow: 'auto',
   },
+
+  sectionGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
+  },
+
+  sectionHeader: ({ palette }) => ({
+    display: 'block',
+    color: palette.text.metrics,
+    fontFamily: 'Montserrat, sans-serif',
+    fontWeight: 500,
+    fontSize: '0.75rem',
+    lineHeight: '1rem',
+    letterSpacing: '0.06em',
+    textTransform: 'uppercase',
+    padding: '1rem',
+  }),
+
+  sectionDivider: ({ palette }) => ({
+    borderColor: palette.border.table,
+    margin: 0,
+  }),
 
   menuItem:
     isActive =>
     ({ palette }) => ({
       padding: '0.5rem 1rem',
+      margin: '0 1rem',
       gap: '0.5rem',
       display: 'flex',
       alignItems: 'center',
-      width: '100%',
-      maxWidth: '100%',
+      maxWidth: 'calc(100% - 2rem)',
       height: '2rem',
       background: isActive
         ? palette.background.userInputBackgroundActive
@@ -193,8 +226,13 @@ const getStyles = () => ({
   menuItemText:
     isActive =>
     ({ palette }) => ({
+      fontFamily: 'Montserrat, sans-serif',
+      fontWeight: 500,
+      fontSize: '0.75rem',
+      lineHeight: '1rem',
+      letterSpacing: 0,
       color: isActive ? palette.text.secondary : palette.text.metrics,
     }),
 });
 
-export default React.memo(SettingsDrawer);
+export default SettingsDrawer;

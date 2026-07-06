@@ -12,7 +12,7 @@ const ApplicationCreationValidateSchema = () => {
             .string()
             .test(
               'not-empty-or-whitespace',
-              'Conversation starter cannot be empty',
+              'Chat starter cannot be empty',
               value => value === undefined || value === null || value.trim().length > 0,
             ),
         ),

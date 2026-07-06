@@ -240,6 +240,7 @@ export const getDefaultInputMappingOfTool = (
   existingMapping,
   selectedToolkit,
   dynamicArgsSchemas = {},
+  isSchemaResolved = false,
 ) => {
   if (selectedToolkit?.type === ToolTypes.application.value) {
     const { mapping, mappingInfo, defaultValues } = createApplicationMapping(
@@ -275,7 +276,7 @@ export const getDefaultInputMappingOfTool = (
       ? schemaForTool?.properties || schemaForTool?.inputSchema?.properties || {}
       : schemaForTool?.properties || {};
 
-  if (Object.entries(properties).length === 0 && selectedTool) {
+  if (Object.entries(properties).length === 0 && selectedTool && !isSchemaResolved) {
     return {
       mapping: {
         ...existingMapping,
@@ -340,7 +341,7 @@ export const getRequiredInputsAndTooltips = (
 ) => {
   if (selectedToolkit?.type === ToolTypes.application.value) {
     const tooltips = createApplicationTooltips(selectedToolkit);
-    return { required: [], tooltips, enums: {} };
+    return { required: ['task'], tooltips, enums: {} };
   }
 
   let schemaForTool =

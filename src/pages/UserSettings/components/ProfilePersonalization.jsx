@@ -9,6 +9,7 @@ import { Input, Label } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { PERSONA_OPTIONS } from '@/common/constants';
+import ThemeModeToggle from '@/components/ThemeModeToggle';
 
 const ProfilePersonalization = memo(props => {
   const { onAutoSaveRequested } = props;
@@ -43,75 +44,99 @@ const ProfilePersonalization = memo(props => {
   );
 
   return (
-    <BasicAccordion
-      showMode={AccordionConstants.AccordionShowMode.LeftMode}
-      defaultExpanded
-      accordionSX={styles.accordion}
-      items={[
-        {
-          title: 'General',
-          content: (
-            <Box sx={styles.accordionContent}>
-              {/* Default Persona Selection */}
-              <Box sx={styles.section}>
-                <Label.InfoLabelWithTooltip
-                  label="Default Personality"
-                  tooltip="Select the default assistant personality for your conversations"
-                  sx={styles.label}
-                />
-                <SingleSelect
-                  showBorder
-                  value={values.persona}
-                  onChange={handlePersonaChange}
-                  options={personaOptions}
-                  customRenderOption={option => (
-                    <Box sx={styles.optionContainer}>
-                      <Typography
-                        variant="bodyMedium"
-                        color="text.secondary"
-                      >
-                        {option.label}
-                      </Typography>
-                      <Typography
-                        variant="bodySmall"
-                        color="text.primary"
-                      >
-                        {option.description}
-                      </Typography>
-                    </Box>
-                  )}
-                  sx={styles.inputSelect}
-                />
+    <>
+      <BasicAccordion
+        showMode={AccordionConstants.AccordionShowMode.LeftMode}
+        defaultExpanded
+        accordionSX={styles.accordion}
+        items={[
+          {
+            title: 'General',
+            content: (
+              <Box sx={styles.accordionContent}>
+                <Box sx={styles.section}>
+                  <Label.InfoLabelWithTooltip
+                    label="Theme"
+                    sx={styles.label}
+                  />
+                  <Box sx={styles.themeToggleContainer}>
+                    <ThemeModeToggle />
+                  </Box>
+                </Box>
               </Box>
+            ),
+          },
+        ]}
+      />
+      <BasicAccordion
+        showMode={AccordionConstants.AccordionShowMode.LeftMode}
+        defaultExpanded
+        accordionSX={styles.accordion}
+        items={[
+          {
+            title: 'Default Personality Management',
+            content: (
+              <Box sx={styles.accordionContent}>
+                <Box sx={styles.section}>
+                  <Label.InfoLabelWithTooltip
+                    label="Default Personality"
+                    tooltip="Select the default assistant personality for your conversations"
+                    sx={styles.label}
+                  />
+                  <SingleSelect
+                    showBorder
+                    value={values.persona}
+                    emptyPlaceholder=""
+                    onChange={handlePersonaChange}
+                    options={personaOptions}
+                    customRenderOption={option => (
+                      <Box sx={styles.optionContainer}>
+                        <Typography
+                          variant="bodyMedium"
+                          color="text.secondary"
+                        >
+                          {option.label}
+                        </Typography>
+                        <Typography
+                          variant="bodySmall"
+                          color="text.primary"
+                        >
+                          {option.description}
+                        </Typography>
+                      </Box>
+                    )}
+                    sx={styles.inputSelect}
+                  />
+                </Box>
 
-              {/* Default Instructions */}
-              <Box sx={styles.section}>
-                <Label.InfoLabelWithTooltip
-                  label="Default User Instructions"
-                  tooltip="Custom instructions that will be applied to all new conversations"
-                  sx={styles.label}
-                />
-                <Input.StyledInputEnhancer
-                  autoComplete="off"
-                  variant="standard"
-                  fullWidth
-                  multiline
-                  maxRows={6}
-                  minRows={3}
-                  value={values.default_instructions}
-                  onChange={handleInstructionsChange}
-                  enableAutoBlur={false}
-                  placeholder="Example: Always respond in a concise manner. Focus on practical solutions. Use code examples when explaining technical concepts."
-                  hasActionsToolBar
-                  fieldName="Default Instructions"
-                  containerProps={styles.inputContainer}
-                />
+                <Box sx={styles.section}>
+                  <Label.InfoLabelWithTooltip
+                    label="Default User Instructions"
+                    tooltip="Custom instructions that will be applied to all new conversations"
+                    sx={styles.label}
+                  />
+                  <Input.StyledInputEnhancer
+                    autoComplete="off"
+                    variant="standard"
+                    fullWidth
+                    multiline
+                    maxRows={6}
+                    minRows={3}
+                    value={values.default_instructions}
+                    onChange={handleInstructionsChange}
+                    enableAutoBlur={false}
+                    placeholder="Example: Always respond in a concise manner. Focus on practical solutions. Use code examples when explaining technical concepts."
+                    hasActionsToolBar
+                    fieldName="Default Instructions"
+                    containerProps={styles.inputContainer}
+                  />
+                </Box>
               </Box>
-            </Box>
-          ),
-        },
-      ]}
-    />
+            ),
+          },
+        ]}
+      />
+    </>
   );
 });
 
@@ -128,11 +153,14 @@ const profilePersonalizationStyles = () => ({
     gap: '1.25rem',
     paddingRight: '1rem',
     marginTop: '0.6rem',
-    marginBottom: '1.5rem',
   },
   section: {
     display: 'flex',
     flexDirection: 'column',
+  },
+  themeToggleContainer: {
+    marginTop: '0.5rem',
+    paddingLeft: '0.75rem',
   },
   label: {
     paddingLeft: '0.75rem',

@@ -37,6 +37,6 @@ export { SoundNotificationSection };
 const styles = {
   accordion: {
     background: 'transparent !important',
-    paddingTop: '1rem',
+    paddingTop: '0rem',
   },
 };

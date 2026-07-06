@@ -21,8 +21,13 @@ export const extractMcpAuthMetadata = source => {
   const oauthServer = resourceMetadata?.oauth_authorization_server;
 
   // Extract provided_settings from backend (client_id, client_secret, scopes for pre-built MCPs)
-  // provided_settings is directly under response_metadata, not under resource_metadata
-  const providedSettings = responseMetadata?.provided_settings || resourceMetadata?.provided_settings || {};
+  // provided_settings is directly under response_metadata, not under resource_metadata.
+  // When called with an authRequiredAction (tool action), the response_metadata lives under toolMeta.
+  const providedSettings =
+    responseMetadata?.provided_settings ||
+    toolMeta?.provided_settings ||
+    resourceMetadata?.provided_settings ||
+    {};
 
   return {
     authServers:
@@ -51,8 +56,8 @@ export const extractMcpAuthMetadata = source => {
     // When present, tokens should be stored under "{configUuid}:{oauth_endpoint}" so that
     // two credentials sharing the same Azure AD tenant stay isolated.
     configurationUuid: resourceMetadata?.configuration_uuid,
-    // Toolkit ID for fetching credentials from database
-    toolkitId: resourceMetadata?.toolkit_id,
+    // Toolkit ID for fetching credentials from database (top-level in payload, not inside resource_metadata)
+    toolkitId: responseMetadata?.toolkit_id || toolMeta?.toolkit_id || resourceMetadata?.toolkit_id,
   };
 };
 
@@ -223,6 +228,7 @@ export const useMcpAuthModal = (options = {}) => {
     // State
     showModal,
     mcpAuthMetadata,
+    runtimeServerUrl,
 
     // Handlers
     handleMcpAuthRequired,

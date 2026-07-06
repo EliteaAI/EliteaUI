@@ -20,7 +20,9 @@ const UserButton = memo(props => {
   const dispatch = useDispatch();
   const { name, avatar } = useSelector(state => state.user);
   const sideBarCollapsed = useSelector(state => state.settings.sideBarCollapsed);
-  const isOnUserSettings = useMatch({ path: RouteDefinitions.UserSettingsWithTab });
+  const isOnUserSettings = useMatch({
+    path: RouteDefinitions.SettingsWithTab.replace(':tab', 'personalization'),
+  });
   const theme = useTheme();
 
   const styles = componentStyles(sideBarCollapsed, isOnUserSettings);
@@ -35,8 +37,11 @@ const UserButton = memo(props => {
       {
         label: 'Personalization',
         icon: <UserIcon sx={{ fontSize: '1rem' }} />,
-        onClick: navigateToPage(`${RouteDefinitions.UserSettings}/profile`, 'User settings'),
-        isSelected: isOnUserSettings?.params.tab === 'profile',
+        onClick: navigateToPage(
+          RouteDefinitions.SettingsWithTab.replace(':tab', 'personalization'),
+          'Settings',
+        ),
+        isSelected: !!isOnUserSettings,
         addSeparator: true,
       },
       // TODO: Uncomment for future releases
@@ -61,7 +66,7 @@ const UserButton = memo(props => {
         onClick: onLogout,
       },
     ],
-    [onLogout, navigateToPage, isOnUserSettings?.params.tab],
+    [onLogout, navigateToPage, isOnUserSettings],
   );
 
   const slotProps = useMemo(

@@ -46,18 +46,18 @@ Each agent in HUB is a fully configured AI assistant built for a specific purpos
     id: 'starting-a-conversation',
     target: AGENT_HUB_TOUR_TARGETS.startConversationButton,
     placement: 'left',
-    title: 'Starting a Conversation',
-    content: `From the agent detail view, click **Start Conversation** or click any conversation starter. ELITEA opens a new Chat conversation with the agent already added as a participant and its conversation starters ready to use.
+    title: 'Starting a Chat',
+    content: `From the agent detail view, click **Start Chat** or click any chat starter. ELITEA opens a new chat with the agent already added as a participant and its chat starters ready to use.
 
-Published agents can also be added directly from Chat without visiting Agents HUB. Use the \`#\` mention or the **+** button in the Participants panel to search for and add any published agent to an ongoing conversation.`,
+Published agents can also be added directly from Chats without visiting Agents HUB. Use the \`#\` mention or the **+** button in the Participants panel to search for and add any published agent to an ongoing chat.`,
   },
   {
     id: 'what-you-can-modify-in-a-conversation',
     target: AGENT_HUB_TOUR_TARGETS.workspace,
     skip: true, // No specific target element for this step, so attach to workspace
     placement: 'center',
-    title: 'What You Can Modify in a Conversation',
-    content: `When using a published agent in Chat, you can adjust certain settings for your session without affecting the original agent or how it appears to other users.
+    title: 'What You Can Modify in a Chat',
+    content: `When using a published agent in Chats, you can adjust certain settings for your session without affecting the original agent or how it appears to other users.
 
 Modifiable settings:
 
@@ -69,9 +69,9 @@ Read-only (cannot be changed):
 
 - Agent instructions
 - Welcome message
-- Conversation starters
+- Chat starters
 - Toolkits attached to the agent
 
-All modifications apply only to your current conversation and do not affect the published agent for other users.`,
+All modifications apply only to your current chat and do not affect the published agent for other users.`,
   },
 ];

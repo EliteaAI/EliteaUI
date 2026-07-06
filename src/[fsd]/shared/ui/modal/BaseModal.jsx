@@ -31,6 +31,7 @@ const BaseModal = memo(props => {
     confirming = false,
     'data-testid': dataTestId,
     closeButtonDataTestId,
+    footer,
   } = props;
 
   const theme = useTheme();
@@ -150,6 +151,7 @@ const BaseModal = memo(props => {
       {(actions || onConfirm) && !isFullscreen && (
         <DialogActions sx={styles.dialogActions}>{renderActions()}</DialogActions>
       )}
+      {footer}
     </Dialog>
   );
 });
@@ -209,6 +211,10 @@ const modalStyles = ({ isSimple, isFullscreen, hideSections, hasActions }) => ({
     overflowY: 'scroll',
     gap: '1rem',
     color: palette.text.secondary,
+    ...(isFullscreen && {
+      flex: 1,
+      minHeight: 0,
+    }),
 
     ...(isSimple || hideSections
       ? { background: 'transparent' }

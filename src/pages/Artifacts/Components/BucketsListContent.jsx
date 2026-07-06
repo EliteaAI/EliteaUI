@@ -80,7 +80,7 @@ const BucketsListContent = memo(props => {
       return (
         <>
           {filteredPinnedBuckets?.length > 0 && <>{renderBucketsList(filteredPinnedBuckets)}</>}
-          {renderBucketsList(filteredBuckets)}
+          {filteredBuckets?.length > 0 && renderBucketsList(filteredBuckets)}
         </>
       );
 

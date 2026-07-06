@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from 'react';
 
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
+
 import { useMcpAuthCheck } from './useMcpAuthCheck.hooks';
 import { useMcpAuthModal } from './useMcpAuthModal.hooks';
 import { useMcpTokenChange } from './useMcpTokenChange.hooks';
@@ -28,7 +29,7 @@ export const useMcpLogin = ({ values, onSuccess, authConfig }) => {
     onSuccess?.();
   }, [url, toolkitType, isPrebuildMcp, onSuccess]);
 
-  const { handleMcpAuthRequired, getModalProps } = useMcpAuthModal({
+  const { handleMcpAuthRequired, getModalProps, runtimeServerUrl } = useMcpAuthModal({
     onSuccess,
     values,
   });
@@ -60,7 +61,7 @@ export const useMcpLogin = ({ values, onSuccess, authConfig }) => {
   }, []);
 
   // Effective server URL for McpAuthModal: authConfig override takes priority.
-  const effectiveServerUrl = authConfig?.serverUrl ?? url;
+  const effectiveServerUrl = authConfig?.serverUrl ?? url ?? runtimeServerUrl;
 
   return {
     isLoggedIn,

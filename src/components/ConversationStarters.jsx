@@ -98,7 +98,7 @@ const ConversationStarters = memo(props => {
       accordionSX={styles.accordionSX}
       items={[
         {
-          title: 'Conversation starters',
+          title: 'Chat starters',
           content: (
             <Box data-tour={AGENT_TOUR_TARGET_IDS.conversationStarters}>
               {values.map((value, index) => {
@@ -114,7 +114,7 @@ const ConversationStarters = memo(props => {
                         autoComplete="off"
                         variant="standard"
                         fullWidth
-                        placeholder="Conversation message"
+                        placeholder="Chat message"
                         name={`${valuesPath}[${index}]`}
                         value={value}
                         label="Starter"

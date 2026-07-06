@@ -71,8 +71,8 @@ Once configured, an agent can autonomously execute complex, multi-step tasks suc
     id: 'conversation-starters',
     target: AGENT_TOUR_TARGETS.conversationStarters,
     placement: 'right',
-    title: 'Conversation Starters',
-    content: `**Conversation Starters** are predefined prompt buttons that let users launch common tasks with a single click, without typing anything.
+    title: 'Chat Starters',
+    content: `**Chat Starters** are predefined prompt buttons that let users launch common tasks with a single click, without typing anything.
 
 Add starters that represent the most frequent or useful tasks for your agent. Users can click any starter to send it immediately as their first message.`,
   },

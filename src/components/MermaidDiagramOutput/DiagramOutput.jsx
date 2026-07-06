@@ -1,8 +1,5 @@
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-const getDomToImage = () => import('dom-to-image').then(m => m.default);
-const getSvgPanZoom = () => import('svg-pan-zoom').then(m => m.default);
-
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import { Box, CircularProgress, IconButton, Typography } from '@mui/material';
 
@@ -18,6 +15,9 @@ import DotMenu from '../DotMenu';
 import DownloadIcon from '../Icons/DownloadIcon';
 import PlusIcon from '../Icons/PlusIcon';
 import './DiagramOutput.css';
+
+const getDomToImage = () => import('dom-to-image').then(m => m.default);
+const getSvgPanZoom = () => import('svg-pan-zoom').then(m => m.default);
 
 let diagramCount = 0;
 
@@ -248,7 +248,11 @@ const MermaidDiagramOutput = memo(props => {
 
   const onReset = useCallback(() => {
     if (panZoomTigerRef.current) {
-      panZoomTigerRef.current.reset();
+      try {
+        panZoomTigerRef.current.reset();
+      } catch {
+        // svg-pan-zoom throws if the SVG matrix is non-invertible
+      }
       setHasBeenChanged(false);
     }
   }, []);
@@ -298,7 +302,11 @@ const MermaidDiagramOutput = memo(props => {
             }
 
             if (panZoomTigerRef.current) {
-              panZoomTigerRef.current.destroy();
+              try {
+                panZoomTigerRef.current.destroy();
+              } catch {
+                // svg-pan-zoom throws if the SVG matrix is non-invertible (zero-size element)
+              }
               panZoomTigerRef.current = null;
             }
             const svgPanZoom = await getSvgPanZoom();
@@ -330,9 +338,12 @@ const MermaidDiagramOutput = memo(props => {
       setIsValidCode(false);
     }
     return () => {
-      // Cleanup: Destroy panZoom instance and clear diagram container
       if (panZoomTigerRef.current) {
-        panZoomTigerRef.current.destroy();
+        try {
+          panZoomTigerRef.current.destroy();
+        } catch {
+          // svg-pan-zoom throws if the SVG matrix is non-invertible (zero-size element)
+        }
         panZoomTigerRef.current = null;
       }
       const diagram = document.getElementById(diagramId);
