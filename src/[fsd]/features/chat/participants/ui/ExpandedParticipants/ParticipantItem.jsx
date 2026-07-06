@@ -217,6 +217,26 @@ const ParticipantItem = memo(props => {
     }
   }, [isHovering]);
 
+  // Neutral (info) notice for a skipped container agent (issue #5680). Rendered independently of the
+  // error/normal card branch below: "is a skipped container" and "has a misconfiguration" are
+  // orthogonal facts — a container agent can be both at once (e.g. Surname Resolver with a broken
+  // toolkit), and both must surface. Kept as a single element so the two branches can't diverge.
+  const containerInfoRow =
+    !collapsed && isSkippedContainer ? (
+      <Box sx={styles.infoMessageRow}>
+        <Box sx={styles.infoIcon}>
+          <InfoIcon />
+        </Box>
+        <Typography
+          variant="bodySmall"
+          color="text.secondary"
+          sx={styles.attentionMessage}
+        >
+          <ParticipantWarning isSkippedContainer />
+        </Typography>
+      </Box>
+    ) : null;
+
   const content =
     !shouldDisableThisItem &&
     !hasMisconfigurationErrors &&
@@ -352,20 +372,7 @@ const ParticipantItem = memo(props => {
             />
           )}
         </Box>
-        {!collapsed && isSkippedContainer && (
-          <Box sx={styles.infoMessageRow}>
-            <Box sx={styles.infoIcon}>
-              <InfoIcon />
-            </Box>
-            <Typography
-              variant="bodySmall"
-              color="text.secondary"
-              sx={styles.attentionMessage}
-            >
-              <ParticipantWarning isSkippedContainer />
-            </Typography>
-          </Box>
-        )}
+        {containerInfoRow}
       </Box>
     ) : (
       <StyledTipsContainer
@@ -447,6 +454,7 @@ const ParticipantItem = memo(props => {
             />
           </Typography>
         </Box>
+        {containerInfoRow}
       </StyledTipsContainer>
     );
 
