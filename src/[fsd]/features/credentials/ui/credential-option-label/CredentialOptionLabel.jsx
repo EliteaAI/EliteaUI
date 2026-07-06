@@ -46,6 +46,7 @@ const CredentialOptionLabel = memo(props => {
         >
           <BaseBtn
             aria-label="Open in new tab"
+            data-testid="credential-open-in-new-tab-button"
             className="credential-action"
             variant={BUTTON_VARIANTS.tertiary}
             size="small"
@@ -67,6 +68,7 @@ const CredentialOptionLabel = memo(props => {
         >
           <BaseBtn
             aria-label="Reload and apply changes"
+            data-testid="credential-reload-button"
             className="credential-action"
             variant={BUTTON_VARIANTS.tertiary}
             size="small"
