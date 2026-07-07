@@ -6,10 +6,14 @@ import Split from 'react-split';
 
 import { Box, CircularProgress, useTheme } from '@mui/material';
 
+import { EmptyStatePage } from '@/[fsd]/entities/empty-state-page';
 import { PERSONAL_TOKENS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/personalTokensTourTargets.constants';
 import { DrawerPage, DrawerPageHeader } from '@/[fsd]/features/settings/ui/drawer-page';
 import { SettingsPreview, TokensSection } from '@/[fsd]/features/settings/ui/personal-tokes';
+import { useTokenListQuery } from '@/api/auth';
 import { useListModelsQuery } from '@/api/configurations';
+import credentialsDarkImage from '@/assets/images/Credentials_Dark.png';
+import credentialsLightImage from '@/assets/images/Credentials_Light.png';
 import { PUBLIC_PROJECT_ID, VITE_SERVER_URL, ViewMode } from '@/common/constants';
 import useIsSmallWindow from '@/hooks/useIsSmallWindow';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -26,6 +30,9 @@ const PersonalTokens = memo(() => {
   const { isSmallWindow } = useIsSmallWindow();
   const { toastError } = useToast();
   const [search, setSearch] = useState('');
+  const { data: tokens = [], isFetching: isFetchingTokens } = useTokenListQuery({
+    skip: !user.personal_project_id,
+  });
   const {
     data: modelsData = { items: [], total: 0 },
     isError,
@@ -275,10 +282,24 @@ const PersonalTokens = memo(() => {
     ],
   );
 
-  if (isFetching) {
+  if (isFetching || isFetchingTokens) {
     return (
       <Box sx={styles.loadingContainer}>
         <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (tokens.length === 0) {
+    return (
+      <Box sx={styles.emptyStateContainer}>
+        <EmptyStatePage
+          title="No tokens yet"
+          description="Create your first API token."
+          onCreateClick={onAddPersonalToken}
+          imageDark={credentialsDarkImage}
+          imageLight={credentialsLightImage}
+        />
       </Box>
     );
   }
@@ -327,6 +348,11 @@ const PersonalTokens = memo(() => {
 
 /** @type {MuiSx} */
 const tokensSettingsStyles = (showSettingsPreview, isSmallWindow) => ({
+  emptyStateContainer: {
+    display: 'flex',
+    justifyContent: 'center',
+    height: '100dvh',
+  },
   loadingContainer: ({ palette }) => ({
     height: '50vh',
     display: 'flex',
