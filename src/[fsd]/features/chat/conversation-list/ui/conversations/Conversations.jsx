@@ -650,7 +650,7 @@ const Conversations = memo(props => {
               onSearchChange={handleSearchChange}
               onSearchClear={handleSearchClear}
               placeholder="Search conversations..."
-              data-testid="search-conversations-input"
+              data-testid="conversation-search-input"
             />
             <IconButton
               onClick={handleSearchClear}

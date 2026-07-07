@@ -27,6 +27,7 @@ const ConversationSearchButton = ({ collapsed = false, onExpand, onSearchActivat
         onClick={handleSearchClick}
         variant="elitea"
         color="secondary"
+        data-testid="conversation-search-button"
         sx={{
           minWidth: '28px !important',
           width: '28px !important',
