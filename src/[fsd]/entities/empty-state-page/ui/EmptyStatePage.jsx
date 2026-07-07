@@ -54,12 +54,14 @@ const EmptyStatePage = memo(props => {
         >
           <PlusIcon /> Create
         </BaseBtn>
-        <BaseBtn
-          variant={BUTTON_VARIANTS.secondary}
-          onClick={onGuidedTourClick || handleGuidedTourClick}
-        >
-          Start Guided Tour
-        </BaseBtn>
+        {onGuidedTourClick && (
+          <BaseBtn
+            variant={BUTTON_VARIANTS.secondary}
+            onClick={onGuidedTourClick || handleGuidedTourClick}
+          >
+            Start Guided Tour
+          </BaseBtn>
+        )}
       </Box>
     </Box>
   );
