@@ -39,6 +39,7 @@ const ProfileContextManagement = memo(props => {
 
   return (
     <BasicAccordion
+      data-testid="context-management-section"
       showMode={AccordionConstants.AccordionShowMode.LeftMode}
       defaultExpanded
       accordionSX={styles.accordion}

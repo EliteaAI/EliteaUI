@@ -113,6 +113,7 @@ const VoiceConfigControls = memo(props => {
             color="secondary"
             loading={isPreviewPlaying}
             onClick={handlePreview}
+            data-testid="voice-preview-button"
           >
             Preview Voice
           </Button.BaseBtn>

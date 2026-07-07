@@ -306,6 +306,7 @@ const CreateEntityButton = memo(props => {
                 startIcon={<PlusIcon />}
                 sx={styles.simpleButton}
                 onClick={handleOpenMenu}
+                data-testid="sidebar-create-button"
               >
                 {!sideBarCollapsed ? 'Create' : null}
               </Button.BaseBtn>
@@ -317,6 +318,7 @@ const CreateEntityButton = memo(props => {
                   startIcon={<PlusIcon />}
                   sx={styles.mainButton}
                   onClick={handleMainButtonClick}
+                  data-testid="sidebar-create-button"
                 >
                   {currentLabel}
                 </Button.BaseBtn>
