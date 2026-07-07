@@ -14,7 +14,7 @@ import useToast from '@/hooks/useToast';
  * Map a backend association error (issue #5680 cycle / leaf-rule rejections and others) to a
  * clear, actionable toast message. Falls back to the generic builder for unrelated errors.
  */
-const mapAssociationError = (rawError, agentName) => {
+export const mapAssociationError = (rawError, agentName) => {
   const message = typeof rawError === 'string' ? rawError : buildErrorMessage(rawError);
   const lower = (message || '').toLowerCase();
   if (lower.includes('circular') || lower.includes('cycle')) {
