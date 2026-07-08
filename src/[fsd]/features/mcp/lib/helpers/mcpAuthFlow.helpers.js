@@ -95,8 +95,8 @@ export const triggerProactiveRefresh = serverUrl => {
           clientSecret = clientSecret || tokenInfo.client_secret;
         }
       } else {
-        // DCR: always use the stored dynamic credentials
-        clientId = clientId || tokenInfo.client_id;
+        // DCR: always use the stored dynamic credentials firstly, then fallback to toolkit DB values if missing
+        clientId = tokenInfo.client_id || clientId;
         clientSecret = tokenInfo.client_secret;
       }
 
