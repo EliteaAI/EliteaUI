@@ -18,7 +18,7 @@ import {
   GridTablePagination,
   GridTableRow,
 } from '@/[fsd]/entities/grid-table/ui';
-import { useArtifactListQuery, useDeleteArtifactMutation, useDeleteArtifactsMutation } from '@/api/artifacts';
+import { useDeleteArtifactMutation, useDeleteArtifactsMutation } from '@/api/artifacts';
 import { buildErrorMessage, downloadFileFromArtifact } from '@/common/utils';
 import FolderIcon from '@/components/Icons/FolderIcon';
 import useGetWindowWidth from '@/hooks/useGetWindowWidth';
@@ -32,6 +32,7 @@ import {
   getItemsUnderFolder,
   parsePrefixToBreadcrumbs,
 } from '../Components/utils/getItemsAtCurrentLevel';
+import { useAllArtifacts } from '../hooks/useAllArtifacts.hooks';
 import { useZipDownload } from '../hooks/useZipDownload.hooks';
 import ArtifactRowActions from './ArtifactRowActions';
 import ArtifactTableContainer from './ArtifactTableContainer';
@@ -112,25 +113,19 @@ export default function ArtifactTable(props) {
     },
   ] = useDeleteArtifactsMutation();
 
-  const { data, isFetching, isError, error, refetch } = useArtifactListQuery(
-    {
-      projectId,
-      bucket,
-    },
-    {
-      refetchOnFocus: true,
-      refetchOnMountOrArgChange: true,
-      refetchOnReconnect: true,
-      pollingInterval: 0,
-      skip:
-        !projectId ||
-        !bucket ||
-        typeof bucket !== 'string' ||
-        bucket.trim() === '' ||
-        projectId === 'null' ||
-        projectId === 'undefined',
-    },
-  );
+  const skipQuery =
+    !projectId ||
+    !bucket ||
+    typeof bucket !== 'string' ||
+    bucket.trim() === '' ||
+    projectId === 'null' ||
+    projectId === 'undefined';
+
+  const { data, isFetching, isError, error, refetch } = useAllArtifacts({
+    projectId,
+    bucket,
+    skip: skipQuery,
+  });
 
   const { uploadFinished, isUploading, fileStatuses } = useSelector(state => state.upload);
 

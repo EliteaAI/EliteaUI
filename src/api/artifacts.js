@@ -77,12 +77,12 @@ export const artifactsApi = eliteaApi
         invalidatesTags: [TAG_BUCKETS],
       }),
       artifactList: build.query({
-        queryFn: async ({ projectId, bucket }, { signal }) => {
+        queryFn: async ({ projectId, bucket, continuationToken }, { signal }) => {
           try {
-            const params = new URLSearchParams({
-              project_id: projectId,
-              format: 'json',
-            });
+            const params = new URLSearchParams({ project_id: projectId, format: 'json' });
+            if (continuationToken) {
+              params.set('continuation-token', continuationToken);
+            }
             const url = `/artifacts/s3/${encodeURI(bucket)}?${params.toString()}`;
             const response = await fetch(url, { signal });
             if (!response.ok) {
@@ -170,6 +170,7 @@ export const artifactsApi = eliteaApi
 export const {
   useBucketListQuery,
   useArtifactListQuery,
+  useLazyArtifactListQuery,
   useCreateBucketMutation,
   useEditBucketMutation,
   useUpdateBucketPinMutation,
