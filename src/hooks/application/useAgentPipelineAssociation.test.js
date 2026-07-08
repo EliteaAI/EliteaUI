@@ -128,4 +128,34 @@ describe('mapAssociationError', () => {
     expect(result).toContain('Cannot add "AgentA"');
     expect(result).toContain('circular agent reference');
   });
+
+  // --- status action (inline tool-card message, issue #5717) ----------------
+  it('maps circular error to a status-phrased card message without raw IDs', () => {
+    const rawError =
+      'Adding this agent would create a circular reference: application 801 is already reachable from application 804.';
+    const result = mapAssociationError(rawError, 'AgentA', { action: 'status', entityLabel: 'agent' });
+    expect(result).toContain('use "AgentA"');
+    expect(result).toContain('circular reference');
+    expect(result).not.toContain('801');
+    expect(result).not.toContain('804');
+    expect(result).not.toBe(rawError);
+  });
+
+  it('maps leaf-only / uses-other-agents error to a friendly status card message (not raw)', () => {
+    const rawError =
+      "'base' uses other agents and cannot be added as a sub-agent. Run it directly as a chat participant, or add only leaf agents.";
+    const result = mapAssociationError(rawError, 'AgentA', { action: 'status', entityLabel: 'pipeline' });
+    expect(result).toContain('use "AgentA"');
+    expect(result).toContain('uses other agents');
+    expect(result).toContain('leaf version');
+    expect(result).not.toBe(rawError);
+  });
+
+  it('status action passes unknown errors through unchanged (card keeps generic fallback)', () => {
+    // The consumer relies on the mapper returning the RAW string for unrecognized errors so it can
+    // detect "not recognized" and fall back to its generic sentence.
+    const rawError = 'some unrelated backend failure';
+    const result = mapAssociationError(rawError, 'AgentA', { action: 'status' });
+    expect(result).toBe(rawError);
+  });
 });

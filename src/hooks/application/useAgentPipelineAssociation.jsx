@@ -21,8 +21,10 @@ import useToast from '@/hooks/useToast';
  * @param {string|object} rawError - backend error string or an error object.
  * @param {string} entityName - the agent/pipeline name to name in the message.
  * @param {object} [opts] - contextual phrasing.
- * @param {'add'|'switch'} [opts.action='add'] - "add" (bind a new tool) vs "switch" (change an
- *   existing tool's version). Controls the verb and the actionable suffix.
+ * @param {'add'|'switch'|'status'} [opts.action='add'] - "add" (bind a new tool), "switch" (change
+ *   an existing tool's version), or "status" (an already-attached tool whose sub-agent state has
+ *   since drifted into an invalid config — shown on the tool card, not as an action rejection).
+ *   Controls the verb and the actionable suffix.
  * @param {string} [opts.versionLabel] - human-readable target version (switch action only), e.g.
  *   "base – 06.07.2026", so the message names the exact version being rejected.
  * @param {'agent'|'pipeline'} [opts.entityLabel='agent'] - noun for the rejected entity.
@@ -33,29 +35,48 @@ export const mapAssociationError = (rawError, entityName, opts = {}) => {
   const lower = (message || '').toLowerCase();
 
   const isSwitch = action === 'switch';
+  const isStatus = action === 'status';
   // "…to version X" only when we actually have a label; keep the phrase clean otherwise.
   const target = isSwitch
     ? `switch "${entityName}"${versionLabel ? ` to version ${versionLabel}` : ''}`
-    : `add "${entityName}"`;
+    : isStatus
+      ? `use "${entityName}"`
+      : `add "${entityName}"`;
 
   if (lower.includes('circular') || lower.includes('cycle')) {
-    return isSwitch
-      ? `Cannot ${target}: this ${entityLabel} version is already in the chain and would create a ` +
-          `circular reference. Choose a different version or remove the circular reference first.`
-      : `Cannot ${target}: this would create a circular agent reference. Remove the circular dependency first.`;
+    if (isSwitch)
+      return (
+        `Cannot ${target}: this ${entityLabel} version is already in the chain and would create a ` +
+        `circular reference. Choose a different version or remove the circular reference first.`
+      );
+    if (isStatus)
+      return (
+        `Cannot ${target}: this ${entityLabel} is now part of a circular reference in the agent ` +
+        `chain. Point it to a version that isn't already in the chain, or remove it.`
+      );
+    return `Cannot ${target}: this would create a circular agent reference. Remove the circular dependency first.`;
   }
   if (
     lower.includes('uses other agents') ||
     lower.includes('cannot be nested') ||
     lower.includes('sub-agent')
   ) {
-    return isSwitch
-      ? `Cannot ${target}: that version uses other agents and can only run directly as a chat ` +
-          `participant, not as a sub-agent tool. Choose a leaf version instead.`
-      : `Cannot ${target}: it uses other agents and can only be run directly as a chat participant, not added as a tool.`;
+    if (isSwitch)
+      return (
+        `Cannot ${target}: that version uses other agents and can only run directly as a chat ` +
+        `participant, not as a sub-agent tool. Choose a leaf version instead.`
+      );
+    if (isStatus)
+      return (
+        `Cannot ${target}: it now uses other agents, so it can only run directly as a chat ` +
+        `participant, not as a sub-agent tool. Replace it with a leaf version.`
+      );
+    return `Cannot ${target}: it uses other agents and can only be run directly as a chat participant, not added as a tool.`;
   }
   if (lower.includes('bind') && lower.includes('itself')) {
-    return isSwitch ? `Cannot ${target}: a version cannot reference itself.` : `Cannot ${target} to itself.`;
+    if (isSwitch) return `Cannot ${target}: a version cannot reference itself.`;
+    if (isStatus) return `Cannot ${target}: a ${entityLabel} cannot reference itself.`;
+    return `Cannot ${target} to itself.`;
   }
   return message;
 };

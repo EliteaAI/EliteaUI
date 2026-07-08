@@ -31,6 +31,7 @@ import CredentialWarningBanner from '@/components/CredentialWarningBanner';
 import EntityIcon from '@/components/EntityIcon';
 import AttentionIcon from '@/components/Icons/AttentionIcon.jsx';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
+import { mapAssociationError } from '@/hooks/application/useAgentPipelineAssociation';
 import { useGetToolkitIconMeta } from '@/hooks/application/useLibraryToolkits';
 import {
   useManualValidateApplicationVersion,
@@ -304,7 +305,25 @@ const ToolCard = memo(props => {
   const toolValidationMessage = useMemo(() => {
     if (!validationInfo) return null;
 
-    if (tool?.type === 'application') return `Misconfiguration error found. Check the ${entityType}.`;
+    // For agent/pipeline (application-type) tools the backend already tells us WHY the sub-agent is
+    // invalid (circular reference, "uses other agents" / leaf-only, self-reference). `validationInfo`
+    // carries that message — route it through the shared mapper (issue #5717) so the card shows the
+    // same friendly, ID-free phrasing as the add/switch toasts instead of the vague generic line.
+    // Fall back to the generic sentence only when there is no usable backend message.
+    if (tool?.type === 'application') {
+      const rawMsg = typeof validationInfo === 'string' ? validationInfo : validationInfo?.message;
+      const friendly = rawMsg
+        ? mapAssociationError(rawMsg, tool?.name || entityType, {
+            action: 'status',
+            entityLabel: tool?.agent_type === 'pipeline' ? 'pipeline' : 'agent',
+          })
+        : '';
+      // Only accept the mapper's output if it actually recognized the error (returns something other
+      // than the raw string); otherwise keep the generic, non-misleading fallback.
+      return friendly && friendly !== rawMsg
+        ? friendly
+        : `Misconfiguration error found. Check the ${entityType}.`;
+    }
 
     const parsedErrorMessage = ToolkitFormHelpers.parseValidationError(
       typeof validationInfo === 'object'
