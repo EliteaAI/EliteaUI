@@ -2,10 +2,21 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { useArtifactListQuery, useLazyArtifactListQuery } from '@/api/artifacts';
 
-/**
- * Fetches all pages of an artifact bucket in the background.
- * Returns the accumulated flat contents array, loading state, and error state.
- */
+const fetchRemainingPages = async ({ fetchNextPage, projectId, bucket, token, signal, onPage }) => {
+  const accumulated = [];
+  while (token && !signal.aborted) {
+    const result = await fetchNextPage({ projectId, bucket, continuationToken: token });
+    if (signal.aborted) break;
+    if (result.data) {
+      accumulated.push(...(result.data.contents ?? []));
+      onPage([...accumulated]);
+      token = result.data.isTruncated ? result.data.nextContinuationToken : null;
+    } else {
+      break;
+    }
+  }
+};
+
 export const useAllArtifacts = ({ projectId, bucket, skip = false }) => {
   const skipQuery =
     skip ||
@@ -53,28 +64,16 @@ export const useAllArtifacts = ({ projectId, bucket, skip = false }) => {
 
     if (!firstPage.isTruncated) return;
 
-    let cancelled = false;
-    let token = firstPage.nextContinuationToken;
-    const accumulated = [];
-
-    const fetchAll = async () => {
-      while (token && !cancelled) {
-        const result = await fetchNextPage({ projectId, bucket, continuationToken: token });
-        if (cancelled) break;
-        if (result.data) {
-          accumulated.push(...(result.data.contents ?? []));
-          setExtraContents([...accumulated]);
-          token = result.data.isTruncated ? result.data.nextContinuationToken : null;
-        } else {
-          break;
-        }
-      }
-    };
-
-    fetchAll();
-    return () => {
-      cancelled = true;
-    };
+    const controller = new AbortController();
+    fetchRemainingPages({
+      fetchNextPage,
+      projectId,
+      bucket,
+      token: firstPage.nextContinuationToken,
+      signal: controller.signal,
+      onPage: setExtraContents,
+    });
+    return () => controller.abort();
   }, [firstPage, fetchNextPage, projectId, bucket]);
 
   const data = useMemo(() => {
