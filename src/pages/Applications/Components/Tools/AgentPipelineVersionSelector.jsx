@@ -1,7 +1,6 @@
 import React, { memo, useCallback, useMemo, useState } from 'react';
 
 import { useFormikContext } from 'formik';
-import { useDispatch } from 'react-redux';
 
 import CheckIcon from '@mui/icons-material/Check';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
@@ -12,25 +11,15 @@ import StyledCircleProgress from '@/ComponentsLib/CircularProgress';
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import { useSetRefetchDetails } from '@/[fsd]/features/agent/lib/hooks';
 import {
-  TAG_TYPE_APPLICATION_DETAILS,
   useApplicationDetailsQuery,
   useLazyGetApplicationVersionDetailQuery,
   useUpdateApplicationRelationMutation,
 } from '@/api/applications';
-import { eliteaApi } from '@/api/eliteaApi';
 import RefreshIcon from '@/assets/refresh-icon.svg?react';
+import { buildErrorMessage } from '@/common/utils';
+import { mapAssociationError } from '@/hooks/application/useAgentPipelineAssociation';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
-
-/**
- * Checks if an error is due to a stale version reference (version was deleted/replaced)
- * This happens when a child agent version is deleted and replaced while the parent
- * agent page was still open with cached data.
- */
-const isStaleVersionReferenceError = error => {
-  const errorMessage = error?.data?.error || '';
-  return errorMessage.includes('Already removed relation');
-};
 
 /**
  * Checks if an error is because the relation already exists
@@ -46,7 +35,6 @@ const isRelationAlreadyExistsError = error => {
  * Component for selecting agent/pipeline versions in the toolkit card according to Figma design
  */
 const AgentPipelineVersionSelector = memo(({ tool, index, applicationId, disabled, entityProjectId }) => {
-  const dispatch = useDispatch();
   const { values, setFieldValue, dirty, resetForm } = useFormikContext();
   const [anchorEl, setAnchorEl] = useState(null);
   const selectedProjectId = useSelectedProjectId();
@@ -139,25 +127,6 @@ const AgentPipelineVersionSelector = memo(({ tool, index, applicationId, disable
     return formatVersionDisplayText(selectedVersion);
   }, [selectedVersion, formatVersionDisplayText, isInvalidVersionReference]);
 
-  // Helper function to invalidate cache and trigger refetch
-  const invalidateCacheAndRefresh = useCallback(
-    (childApplicationId = null) => {
-      // Invalidate the application details cache to force a fresh fetch from server
-      // This invalidates both the parent application and optionally the child application cache
-      const tagsToInvalidate = [TAG_TYPE_APPLICATION_DETAILS];
-
-      // If a child application ID is provided, also invalidate its specific cache
-      // This ensures the child version list is refreshed (e.g., after version deletion)
-      if (childApplicationId) {
-        tagsToInvalidate.push({ type: TAG_TYPE_APPLICATION_DETAILS, id: childApplicationId });
-      }
-
-      dispatch(eliteaApi.util.invalidateTags(tagsToInvalidate));
-      setRefetch();
-    },
-    [dispatch, setRefetch],
-  );
-
   // Handle manual refresh of the version list
   // Directly refetch the application details to get fresh version data
   const handleRefresh = useCallback(
@@ -225,40 +194,13 @@ const AgentPipelineVersionSelector = memo(({ tool, index, applicationId, disable
       setAnchorEl(null);
       setIsUpdating(true);
       try {
-        // Call the API with two sequential calls: remove old, then add new
+        // Switch the sub-agent/pipeline version with a SINGLE atomic call (issue #5716).
+        // The backend detects the existing relation to this child app and updates its version
+        // in place inside one transaction, AFTER validation passes — so a rejected switch
+        // (leaf-only / circular reference) leaves the previous binding fully intact. We must
+        // NOT delete-then-add across two requests: the delete commits before the add is
+        // validated, and a validation failure would permanently orphan the tool.
         if (tool.settings?.application_id && version?.id && projectId && applicationId && selectedVersionId) {
-          let staleStateDetected = false;
-
-          // Step 1: Remove existing association if there was a previous version
-          if (tool.settings?.application_version_id && tool.settings.application_version_id !== version.id) {
-            try {
-              await updateApplicationRelation({
-                projectId,
-                selectedApplicationId: tool.settings.application_id, // Tool/subagent app ID
-                selectedVersionId: tool.settings.application_version_id, // Tool/subagent version ID
-                application_id: applicationId, // Main application ID
-                version_id: selectedVersionId, // Main application version ID
-                has_relation: false,
-              }).unwrap();
-            } catch (error) {
-              // Check if error is due to stale version reference (version was deleted/replaced)
-              // This happens when a child agent version is deleted in another tab and the relation
-              // was already updated by the backend to point to a replacement version
-              if (isStaleVersionReferenceError(error)) {
-                // The relation was already removed/updated by the deletion process.
-                // Mark that we detected stale state - we'll continue to step 2 to try
-                // creating the new relation, which will tell us if it already exists.
-                staleStateDetected = true;
-              } else {
-                // For other errors, show the error and stop
-                toastError(error?.data?.error || 'Failed to remove old association');
-                setIsUpdating(false);
-                return;
-              }
-            }
-          }
-
-          // Step 2: Create new association
           try {
             await updateApplicationRelation({
               projectId,
@@ -269,12 +211,10 @@ const AgentPipelineVersionSelector = memo(({ tool, index, applicationId, disable
               has_relation: true,
             }).unwrap();
           } catch (error) {
-            // Check if error is because relation already exists
-            // This happens when the backend already has this exact version set
-            // (e.g., it was set as replacement during version deletion)
+            // The relation already exists with this exact version (e.g. the backend set it as a
+            // replacement during a concurrent version deletion). That is the desired end state —
+            // just sync the local UI to match.
             if (isRelationAlreadyExistsError(error)) {
-              // The relation already exists with this version - this is actually the desired state
-              // Just sync the local UI to match the backend state
               const { data: versionDetail } = await getVersionDetail({
                 projectId,
                 applicationId: tool.settings.application_id,
@@ -284,19 +224,10 @@ const AgentPipelineVersionSelector = memo(({ tool, index, applicationId, disable
               toastInfo('Version is already set correctly. UI has been synchronized.');
               setIsUpdating(false);
               return;
-            } else if (staleStateDetected) {
-              // We detected stale state in step 1 and step 2 also failed
-              // Need to fully refresh from server, including child application cache
-              invalidateCacheAndRefresh(tool.settings.application_id);
-              toastError(
-                'The version reference was outdated. The page has been refreshed with the current state. Please try again.',
-              );
-              setIsUpdating(false);
-              return;
-            } else {
-              // Other error - rethrow to be handled by outer catch
-              throw error;
             }
+            // Anything else (validation rejection, network) — surface via the outer catch.
+            // The previous binding is untouched because the switch never mutated on failure.
+            throw error;
           }
 
           // Success - fetch version details and update local state
@@ -310,13 +241,23 @@ const AgentPipelineVersionSelector = memo(({ tool, index, applicationId, disable
           toastSuccess('Application version updated successfully');
         }
       } catch (error) {
-        toastError(error?.data?.error || 'Failed to update application version');
+        // Route every sub-agent validation rejection (circular AND leaf-only / "uses other
+        // agents") through the shared mapper so the switch flow is consistent with the add flow
+        // and never shows a raw backend string. Unrelated errors pass through unchanged.
+        const rawMsg =
+          error?.data?.error || buildErrorMessage(error) || 'Failed to update application version';
+        toastError(
+          mapAssociationError(rawMsg, tool.name, {
+            action: 'switch',
+            versionLabel: formatVersionDisplayText(version),
+            entityLabel: tool.agent_type === 'pipeline' ? 'pipeline' : 'agent',
+          }),
+        );
       }
       setIsUpdating(false);
     },
     [
       tool.settings.application_id,
-      tool.settings.application_version_id,
       projectId,
       applicationId,
       selectedVersionId,
@@ -326,7 +267,9 @@ const AgentPipelineVersionSelector = memo(({ tool, index, applicationId, disable
       toastError,
       toastInfo,
       syncLocalStateAfterUpdate,
-      invalidateCacheAndRefresh,
+      formatVersionDisplayText,
+      tool.agent_type,
+      tool.name,
     ],
   );
 

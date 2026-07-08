@@ -11,24 +11,77 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 
 /**
- * Map a backend association error (issue #5680 cycle / leaf-rule rejections and others) to a
- * clear, actionable toast message. Falls back to the generic builder for unrelated errors.
+ * Map a backend sub-agent validation error (issue #5680 cycle / leaf-rule rejections and others)
+ * to a clear, actionable toast message. This is the SINGLE source of truth for phrasing these
+ * errors — every flow that binds/switches an agent-or-pipeline tool (add flow, version switch,
+ * AI-generate) must route through here so the user never sees a raw backend string or bare IDs.
+ *
+ * Falls back to the generic builder for unrelated errors.
+ *
+ * @param {string|object} rawError - backend error string or an error object.
+ * @param {string} entityName - the agent/pipeline name to name in the message.
+ * @param {object} [opts] - contextual phrasing.
+ * @param {'add'|'switch'|'status'} [opts.action='add'] - "add" (bind a new tool), "switch" (change
+ *   an existing tool's version), or "status" (an already-attached tool whose sub-agent state has
+ *   since drifted into an invalid config — shown on the tool card, not as an action rejection).
+ *   Controls the verb and the actionable suffix.
+ * @param {string} [opts.versionLabel] - human-readable target version (switch action only), e.g.
+ *   "base – 06.07.2026", so the message names the exact version being rejected.
+ * @param {'agent'|'pipeline'} [opts.entityLabel='agent'] - noun for the rejected entity.
  */
-const mapAssociationError = (rawError, agentName) => {
+export const mapAssociationError = (rawError, entityName, opts = {}) => {
+  const { action = 'add', versionLabel, entityLabel = 'agent' } = opts;
   const message = typeof rawError === 'string' ? rawError : buildErrorMessage(rawError);
   const lower = (message || '').toLowerCase();
+
+  const isSwitch = action === 'switch';
+  const isStatus = action === 'status';
+  // "…to version X" only when we actually have a label; keep the phrase clean otherwise.
+  const target = isSwitch
+    ? `switch "${entityName}"${versionLabel ? ` to version ${versionLabel}` : ''}`
+    : isStatus
+      ? `use "${entityName}"`
+      : `add "${entityName}"`;
+
   if (lower.includes('circular') || lower.includes('cycle')) {
-    return `Cannot add "${agentName}": this would create a circular agent reference. Remove the circular dependency first.`;
+    if (isSwitch)
+      return (
+        `Cannot ${target}: this ${entityLabel} version is already in the chain and would create a ` +
+        `circular reference. Choose a different version or remove the circular reference first.`
+      );
+    if (isStatus)
+      return (
+        `Cannot ${target}: this ${entityLabel} is now part of a circular reference in the agent ` +
+        `chain. Point it to a version that isn't already in the chain, or remove it.`
+      );
+    return `Cannot ${target}: this would create a circular agent reference. Remove the circular dependency first.`;
   }
   if (
     lower.includes('uses other agents') ||
     lower.includes('cannot be nested') ||
     lower.includes('sub-agent')
   ) {
-    return `Cannot add "${agentName}": it uses other agents and can only be run directly as a chat participant, not added as a tool.`;
+    if (isSwitch)
+      return (
+        `Cannot ${target}: that version uses other agents and can only run directly as a chat ` +
+        `participant, not as a sub-agent tool. Choose a leaf version instead.`
+      );
+    if (isStatus)
+      return (
+        `Cannot ${target}: it now uses other agents, so it can only run directly as a chat ` +
+        `participant, not as a sub-agent tool. Replace it with a leaf version.`
+      );
+    // Add path binds the child's DEFAULT version, so the actionable fix is to make a leaf version
+    // (one that doesn't itself use other agents) the default — then it can be attached here.
+    return (
+      `Cannot ${target}: it uses other agents and can only be run directly as a chat participant, ` +
+      `not added as a tool. Tip: make a version of it without sub-agents its default, then add it.`
+    );
   }
   if (lower.includes('bind') && lower.includes('itself')) {
-    return `Cannot add "${agentName}" to itself.`;
+    if (isSwitch) return `Cannot ${target}: a version cannot reference itself.`;
+    if (isStatus) return `Cannot ${target}: a ${entityLabel} cannot reference itself.`;
+    return `Cannot ${target} to itself.`;
   }
   return message;
 };
@@ -81,9 +134,14 @@ export const useAgentPipelineAssociation = (applicationId, versionId) => {
       const candidateTools = selectedApplication?.version_details?.tools || [];
       const candidateIsContainer = candidateTools.some(tool => tool.type === 'application');
       if (candidateAgentType !== 'pipeline' && candidateIsContainer) {
+        // Route the pre-attach guard through the shared mapper so it carries the same friendly
+        // phrasing AND the actionable tip (make a leaf version the default) as the backend
+        // rejection — this guard is the most common trigger, firing before the request is sent.
         toastError(
-          `"${agent.name}" uses other agents and cannot be added as a tool. ` +
-            `Agents that use other agents can only be run directly as a chat participant.`,
+          mapAssociationError('uses other agents and cannot be added as a sub-agent', agent.name, {
+            action: 'add',
+            entityLabel: isPipeline ? 'pipeline' : 'agent',
+          }),
         );
         return;
       }

@@ -87,7 +87,7 @@ const ToolSelect = memo(props => {
       onValueChange={onChangeTool}
       onClear={onClear}
       options={tools}
-      disabled={disabled || !tools?.length}
+      disabled={disabled}
       menuItemIconSX={styles.menuItemIcon}
       className={'nopan nodrag'}
       maxDisplayValueLength={'100%'}
