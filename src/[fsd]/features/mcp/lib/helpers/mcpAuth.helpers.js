@@ -262,6 +262,7 @@ export const setAccessToken = (
     client_secret: getOrExisting('client_secret'),
     project_id: getOrExisting('project_id'),
     toolkit_id: getOrExisting('toolkit_id'),
+    used_dcr: getOrExisting('used_dcr'),
     // Store toolkit_type for pre-built MCPs to enable proper refresh
     toolkit_type: toolkitType || getOrExisting('toolkit_type'),
     // Additional OAuth metadata

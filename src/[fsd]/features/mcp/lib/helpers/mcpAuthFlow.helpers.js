@@ -48,6 +48,7 @@ const buildOAuthMetadata = (tokenInfo, clientId, clientSecret, projectId, toolki
   client_secret: clientSecret,
   project_id: projectId || tokenInfo.project_id,
   toolkit_id: toolkitId || tokenInfo.toolkit_id,
+  used_dcr: tokenInfo.used_dcr || undefined,
   authorization_endpoint: tokenInfo.authorization_endpoint,
   revocation_endpoint: tokenInfo.revocation_endpoint,
   registration_endpoint: tokenInfo.registration_endpoint,
@@ -75,20 +76,28 @@ export const triggerProactiveRefresh = serverUrl => {
       const credentials = resolveCredentials(serverUrl, tokenInfo);
       let { clientId, clientSecret, tokenEndpoint } = credentials;
 
-      // Try fetching from toolkit API if no credentials found
-      if (!clientId && tokenInfo?.toolkit_id && tokenInfo?.project_id) {
-        const apiCredentials = await fetchToolkitCredentials(tokenInfo);
-        if (apiCredentials) {
-          clientId = apiCredentials.clientId;
-          clientSecret = apiCredentials.clientSecret;
-          tokenEndpoint = apiCredentials.tokenEndpoint || tokenEndpoint;
+      // When DCR was used, the stored client_id and client_secret are the dynamically
+      // registered credentials — never overwrite them with toolkit DB values.
+      if (!tokenInfo?.used_dcr) {
+        // Try fetching from toolkit API if no credentials found
+        if (!clientId && tokenInfo?.toolkit_id && tokenInfo?.project_id) {
+          const apiCredentials = await fetchToolkitCredentials(tokenInfo);
+          if (apiCredentials) {
+            clientId = apiCredentials.clientId;
+            clientSecret = apiCredentials.clientSecret;
+            tokenEndpoint = apiCredentials.tokenEndpoint || tokenEndpoint;
+          }
         }
-      }
 
-      // Fallback to stored token info
-      if (!clientId && tokenInfo?.client_id) {
-        clientId = tokenInfo.client_id;
-        clientSecret = clientSecret || tokenInfo.client_secret;
+        // Fallback to stored token info
+        if (!clientId && tokenInfo?.client_id) {
+          clientId = tokenInfo.client_id;
+          clientSecret = clientSecret || tokenInfo.client_secret;
+        }
+      } else {
+        // DCR: always use the stored dynamic credentials
+        clientId = clientId || tokenInfo.client_id;
+        clientSecret = tokenInfo.client_secret;
       }
 
       if (!tokenEndpoint) {
@@ -105,6 +114,7 @@ export const triggerProactiveRefresh = serverUrl => {
         client_id: clientId || undefined,
         client_secret: clientSecret || undefined,
         toolkit_id: tokenInfo.toolkit_id,
+        used_dcr: tokenInfo.used_dcr || undefined,
       };
 
       const tokenResult = await store.dispatch(
@@ -146,7 +156,7 @@ export const triggerProactiveRefresh = serverUrl => {
 };
 
 export const refreshAccessToken = async options => {
-  const { serverUrl, tokenEndpoint, clientId, clientSecret, projectId, toolkitId } = options;
+  const { serverUrl, tokenEndpoint, clientId, clientSecret, projectId, toolkitId, usedDcr } = options;
 
   const refreshToken = McpAuthHelpers.getRefreshToken(serverUrl);
   if (!refreshToken) {
@@ -163,6 +173,7 @@ export const refreshAccessToken = async options => {
     client_id: clientId || undefined,
     client_secret: clientSecret || undefined,
     toolkit_id: toolkitId || undefined,
+    used_dcr: usedDcr || undefined,
   };
 
   const tokenResult = await store.dispatch(mcpOAuthApi.endpoints.refreshMcpOAuthToken.initiate(requestBody));
@@ -199,6 +210,7 @@ export const refreshAccessToken = async options => {
       client_secret: clientSecret,
       project_id: projectId,
       toolkit_id: toolkitId,
+      used_dcr: usedDcr || undefined,
     },
   );
 
@@ -206,7 +218,7 @@ export const refreshAccessToken = async options => {
 };
 
 export const getValidAccessToken = async options => {
-  const { serverUrl, tokenEndpoint, clientId, clientSecret, projectId, toolkitId } = options;
+  const { serverUrl, tokenEndpoint, clientId, clientSecret, projectId, toolkitId, usedDcr } = options;
 
   // Check if we have a valid token
   const accessToken = McpAuthHelpers.getAccessToken(serverUrl);
@@ -224,6 +236,7 @@ export const getValidAccessToken = async options => {
         clientSecret,
         projectId,
         toolkitId,
+        usedDcr,
       });
       return result.access_token;
     } catch (error) {
@@ -496,6 +509,7 @@ export const startMcpAuthFlow = async options => {
         client_secret: effectiveClientSecret,
         project_id: projectId,
         toolkit_id: toolkitId,
+        used_dcr: usedDCR || undefined,
         // Additional OAuth metadata from mcp_authorization_required message
         // These are useful for future operations (revocation, re-auth, etc.)
         ...(providedOauthMetadata && {
