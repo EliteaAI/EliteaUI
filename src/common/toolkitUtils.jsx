@@ -52,6 +52,7 @@ import S3Storage from '@/assets/s3storage-icon.svg?react';
 import SalesForceIcon from '@/assets/salesforce.svg?react';
 import ServiceNowIcon from '@/assets/service_now.svg?react';
 import SharepointIcon from '@/assets/sharepoint.svg?react';
+import ChipSkillIcon from '@/assets/skill-icon.svg?react';
 import SlackIcon from '@/assets/slack-icon.svg?react';
 import SlidevIcon from '@/assets/slidev.svg?react';
 import SonarIcon from '@/assets/sonar-icon.svg?react';
@@ -187,6 +188,8 @@ const getInternalToolIcon = (toolkitName, iconProps) => {
       return <ImageIcon {...iconProps} />;
     case 'memory':
       return <MemoryIcon {...iconProps} />;
+    case 'skills':
+      return <ChipSkillIcon {...iconProps} />;
     default:
       return <BuildIcon {...iconProps} />;
   }

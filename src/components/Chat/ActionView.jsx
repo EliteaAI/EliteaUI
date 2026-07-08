@@ -188,9 +188,26 @@ const ActionView = memo(props => {
   // Previous executions from merged same-name actions (for streaming)
   const previousExecutions = useMemo(() => action.previousExecutions || [], [action.previousExecutions]);
 
+  const loadedSkillName = useMemo(() => {
+    if (action?.toolMeta?.toolkit_name !== 'skills') return null;
+    let inputs = action?.toolInputs;
+    if (typeof inputs === 'string') {
+      try {
+        inputs = JSON.parse(inputs);
+      } catch {
+        return null;
+      }
+    }
+    return typeof inputs?.skill === 'string' && inputs.skill.trim() ? inputs.skill.trim() : null;
+  }, [action?.toolMeta?.toolkit_name, action?.toolInputs]);
+
   // Helper to build title with tool name appended when relevant
   const buildTitle = useCallback(
     (separator, includeToolNameCheck = false) => {
+      if (loadedSkillName) {
+        return `Skill${separator}${loadedSkillName}`;
+      }
+
       let title = resolvedToolkitName;
 
       // Determine if tool name should be appended
@@ -209,7 +226,15 @@ const ActionView = memo(props => {
 
       return title;
     },
-    [resolvedToolkitName, toolName, action.parent_agent_name, action.type, originalToolName, onlyShowToolkit],
+    [
+      loadedSkillName,
+      resolvedToolkitName,
+      toolName,
+      action.parent_agent_name,
+      action.type,
+      originalToolName,
+      onlyShowToolkit,
+    ],
   );
 
   // Badge title uses ": " separator and respects onlyShowToolkit mode
