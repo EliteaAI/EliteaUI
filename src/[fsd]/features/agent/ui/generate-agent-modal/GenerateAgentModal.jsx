@@ -16,8 +16,10 @@ import {
 } from '@/api';
 import { filterEmptyStrings } from '@/common/applicationUtils';
 import { PrivateApplicationTabs, SearchParams, ViewMode } from '@/common/constants';
-import { contextResolver } from '@/common/utils';
+import { buildErrorMessage, contextResolver } from '@/common/utils';
+import { mapAssociationError } from '@/hooks/application/useAgentPipelineAssociation';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
+import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes';
 
 import GenerateAgentReviewForm from './GenerateAgentReviewForm';
@@ -27,6 +29,7 @@ const GenerateAgentModal = memo(props => {
 
   const navigate = useNavigate();
   const projectId = useSelectedProjectId();
+  const { toastWarning } = useToast();
 
   const [createApplication] = useApplicationCreateMutation();
   const [associateToolkit] = useToolkitAssociateMutation();
@@ -135,25 +138,40 @@ const GenerateAgentModal = memo(props => {
   const associateApplications = useCallback(
     async (versionId, entityId, apps) => {
       if (!versionId || !apps.length) return;
-      await Promise.allSettled(
+      const results = await Promise.allSettled(
         apps.map(async a => {
           const { data: appDetails } = await fetchApplicationDetails({
             projectId,
             applicationId: a.id,
           });
           if (!appDetails?.version_details?.id) return;
-          return updateApplicationRelation({
-            projectId,
-            selectedApplicationId: a.id,
-            selectedVersionId: appDetails.version_details.id,
-            application_id: entityId,
-            version_id: versionId,
-            has_relation: true,
-          }).unwrap();
+          try {
+            return await updateApplicationRelation({
+              projectId,
+              selectedApplicationId: a.id,
+              selectedVersionId: appDetails.version_details.id,
+              application_id: entityId,
+              version_id: versionId,
+              has_relation: true,
+            }).unwrap();
+          } catch (error) {
+            // Re-throw with the entity name attached so the aggregate handler can name it.
+            throw { name: a.name, entityLabel: a.agent_type === 'pipeline' ? 'pipeline' : 'agent', error };
+          }
         }),
       );
+      // Surface any rejected bindings instead of silently dropping them (issue #5680 family):
+      // a suggested container/circular agent is rejected by the backend, but the parent agent is
+      // still created with the tools that DID bind — so warn (non-fatal) rather than fail hard.
+      results
+        .filter(r => r.status === 'rejected')
+        .forEach(r => {
+          const { name, entityLabel, error } = r.reason || {};
+          const rawMsg = error?.data?.error || buildErrorMessage(error);
+          toastWarning(mapAssociationError(rawMsg, name || 'agent', { action: 'add', entityLabel }));
+        });
     },
-    [fetchApplicationDetails, updateApplicationRelation, projectId],
+    [fetchApplicationDetails, updateApplicationRelation, projectId, toastWarning],
   );
 
   const associateSkills = useCallback(

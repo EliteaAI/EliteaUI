@@ -17,6 +17,7 @@ import {
 } from '@/api/applications';
 import RefreshIcon from '@/assets/refresh-icon.svg?react';
 import { buildErrorMessage } from '@/common/utils';
+import { mapAssociationError } from '@/hooks/application/useAgentPipelineAssociation';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 
@@ -240,20 +241,18 @@ const AgentPipelineVersionSelector = memo(({ tool, index, applicationId, disable
           toastSuccess('Application version updated successfully');
         }
       } catch (error) {
+        // Route every sub-agent validation rejection (circular AND leaf-only / "uses other
+        // agents") through the shared mapper so the switch flow is consistent with the add flow
+        // and never shows a raw backend string. Unrelated errors pass through unchanged.
         const rawMsg =
           error?.data?.error || buildErrorMessage(error) || 'Failed to update application version';
-        const lower = (rawMsg || '').toLowerCase();
-        if (lower.includes('circular') || lower.includes('cycle')) {
-          const targetVersionLabel = formatVersionDisplayText(version);
-          const entityLabel = tool.agent_type === 'pipeline' ? 'pipeline' : 'agent';
-          toastError(
-            `Cannot switch "${tool.name}" to version ${targetVersionLabel}: ` +
-              `this ${entityLabel} version is already in the chain and would create a circular reference. ` +
-              `Choose a different version or remove the circular reference first.`,
-          );
-        } else {
-          toastError(rawMsg);
-        }
+        toastError(
+          mapAssociationError(rawMsg, tool.name, {
+            action: 'switch',
+            versionLabel: formatVersionDisplayText(version),
+            entityLabel: tool.agent_type === 'pipeline' ? 'pipeline' : 'agent',
+          }),
+        );
       }
       setIsUpdating(false);
     },

@@ -84,4 +84,48 @@ describe('mapAssociationError', () => {
     expect(typeof result).toBe('string');
     expect(result).not.toContain('circular agent reference');
   });
+
+  // --- switch action (version-switch flow, issue #5717) ---------------------
+  it('maps circular error to a switch-phrased message with the version label', () => {
+    const rawError =
+      'Adding this agent would create a circular reference: application 801 version 1424 is already reachable from application 804.';
+    const result = mapAssociationError(rawError, 'PipelineA', {
+      action: 'switch',
+      versionLabel: 'base – 06.07.2026',
+      entityLabel: 'pipeline',
+    });
+    expect(result).toContain('switch "PipelineA"');
+    expect(result).toContain('to version base – 06.07.2026');
+    expect(result).toContain('circular reference');
+    expect(result).not.toContain('801');
+    expect(result).not.toContain('804');
+    expect(result).not.toContain('1424');
+  });
+
+  it('maps leaf-only / uses-other-agents error on a SWITCH to a friendly message (not raw)', () => {
+    const rawError =
+      "'base' uses other agents and cannot be added as a sub-agent. Run it directly as a chat participant, or add only leaf agents.";
+    const result = mapAssociationError(rawError, 'AgentA', {
+      action: 'switch',
+      versionLabel: 'base – 06.07.2026',
+      entityLabel: 'agent',
+    });
+    expect(result).toContain('switch "AgentA"');
+    expect(result).toContain('uses other agents');
+    expect(result).toContain('leaf version');
+    // Must NOT be the raw backend string
+    expect(result).not.toBe(rawError);
+  });
+
+  it('omits the version phrase when no versionLabel is given on a switch', () => {
+    const result = mapAssociationError('circular reference', 'AgentA', { action: 'switch' });
+    expect(result).toContain('switch "AgentA"');
+    expect(result).not.toContain('to version');
+  });
+
+  it('add action is unchanged by the new opts (default behavior)', () => {
+    const result = mapAssociationError('circular', 'AgentA');
+    expect(result).toContain('Cannot add "AgentA"');
+    expect(result).toContain('circular agent reference');
+  });
 });
