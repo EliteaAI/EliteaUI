@@ -1,13 +1,13 @@
 import store from '@/[fsd]/app/store';
-import * as McpAuthHelpers from './mcpAuth.helpers';
-import * as McpAuthWindowHelpers from './mcpAuthWindow.helpers';
-import * as McpCryptoHelpers from './mcpCrypto.helpers';
-import * as McpDiscoveryHelpers from './mcpDiscovery.helpers';
 import { mcpOAuthApi } from '@/api/mcpOAuth';
 import { toolkitsApi } from '@/api/toolkits';
 import RouteDefinitions, { getBasename } from '@/routes';
 
 import { MCP_OAUTH_ERRORS } from '../constants/mcpAuthFlow.constants';
+import * as McpAuthHelpers from './mcpAuth.helpers';
+import * as McpAuthWindowHelpers from './mcpAuthWindow.helpers';
+import * as McpCryptoHelpers from './mcpCrypto.helpers';
+import * as McpDiscoveryHelpers from './mcpDiscovery.helpers';
 
 const getRedirectUri = () => {
   const baseUrl = `${window.location.protocol}//${window.location.host}`;
@@ -343,15 +343,28 @@ export const startMcpAuthFlow = async options => {
     // Track if we used DCR (needed for token exchange logic)
     let usedDCR = false;
 
-    if (supportsDCR && !clientId) {
-      // Flow 1: Server supports DCR and no client credentials provided
+    // Aha! MCP server categorically requires DCR-issued tokens — pre-registered OAuth
+    // app credentials produce REST API tokens that the MCP endpoint will reject.
+    const requiresDCR =
+      supportsDCR && (!clientId || [registrationEndpoint, serverUrl].some(u => u?.includes('aha.io')));
+
+    // dcrClientSecret holds any secret issued by the DCR registration.
+    // Some providers (e.g. Aha!) still issue a client_secret even when
+    // token_endpoint_auth_method=none — it must be sent during token exchange.
+    let dcrClientSecret = null;
+
+    if (requiresDCR) {
+      // Flow 1: Server supports DCR (and either no client_id is set, or the server
+      // mandates DCR regardless of pre-configured credentials, e.g. Aha!)
       // → Use Dynamic Client Registration flow via backend proxy
       const redirectUri = getRedirectUri();
-      clientId = await McpDiscoveryHelpers.registerDynamicClient(
+      const dcrResult = await McpDiscoveryHelpers.registerDynamicClient(
         registrationEndpoint,
         redirectUri,
         projectId,
       );
+      clientId = dcrResult.clientId;
+      dcrClientSecret = dcrResult.clientSecret;
       usedDCR = true;
     } else if (!supportsDCR && !clientId) {
       // Flow 2: Server does NOT support DCR and no client credentials provided
@@ -373,6 +386,7 @@ export const startMcpAuthFlow = async options => {
 
     // Use PKCE if server supports it (regardless of client secret)
     // Many servers require PKCE even for confidential clients
+    // PKCE is only applicable to the code flow
     const serverSupportsPKCE = asMetadata.code_challenge_methods_supported?.includes('S256');
     const usePKCE = serverSupportsPKCE || !clientSecret;
     let codeVerifier, codeChallenge;
@@ -408,7 +422,7 @@ export const startMcpAuthFlow = async options => {
     // Navigate popup to auth URL
     McpAuthWindowHelpers.navigateAuthPopup(authWindow, authUrl);
 
-    // Wait for authorization result (popup will return the authorization code via postMessage)
+    // Wait for authorization result (popup will return the authorization code or token via postMessage)
     const result = await waitForAuthorizationResult(authWindow, state);
 
     // Result should contain the authorization code from the popup
@@ -423,6 +437,11 @@ export const startMcpAuthFlow = async options => {
     // - If remote MCP: Send whatever credentials were provided
     const shouldSendCredentials = usedDCR || !isPrebuildMcp;
 
+    // When DCR was used: send dcrClientSecret (issued during registration, may be null for
+    // true public clients). Never fall back to the pre-configured developer-app clientSecret —
+    // that secret belongs to a different OAuth client and will cause "unknown client".
+    const effectiveClientSecret = usedDCR ? dcrClientSecret : clientSecret;
+
     const requestBody = {
       projectId: projectId || 1,
       token_endpoint: tokenEndpoint,
@@ -431,12 +450,14 @@ export const startMcpAuthFlow = async options => {
       redirect_uri: redirectUri,
       // Send client_id only if: (1) we used DCR, or (2) it's not a pre-built MCP
       client_id: shouldSendCredentials ? clientId || undefined : undefined,
-      // Send client_secret only if: (1) it's not a pre-built MCP, or (2) we used DCR (rare)
-      client_secret: shouldSendCredentials ? clientSecret || undefined : undefined,
+      // When DCR was used: send the secret issued during DCR (null for true public clients).
+      // When DCR was NOT used: send pre-configured clientSecret (if any).
+      client_secret: shouldSendCredentials ? effectiveClientSecret || undefined : undefined,
       code_verifier: usePKCE ? codeVerifier : undefined,
       scope: normalizedScope || undefined,
       toolkit_id: toolkitId || undefined,
       toolkit_type: isPrebuildMcp ? toolkitType : undefined,
+      used_dcr: usedDCR || undefined,
     };
     const tokenResult = await store.dispatch(
       mcpOAuthApi.endpoints.exchangeMcpOAuthToken.initiate(requestBody),

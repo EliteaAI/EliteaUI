@@ -100,5 +100,12 @@ export const registerDynamicClient = async (registrationEndpoint, redirectUri, p
     throw new Error('Registration response missing client_id');
   }
 
-  return registration.client_id;
+  // Return both client_id and client_secret (if issued).
+  // Some providers (e.g. Aha!) issue a client_secret even for DCR public-client requests
+  // with token_endpoint_auth_method=none. If we drop it the token exchange fails with
+  // "unknown client" because the server expects it to be echoed back.
+  return {
+    clientId: registration.client_id,
+    clientSecret: registration.client_secret || null,
+  };
 };
