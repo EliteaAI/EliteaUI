@@ -2,9 +2,9 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { useArtifactListQuery } from '@/api/artifacts';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
+import { useAllArtifacts } from '../hooks/useAllArtifacts.hooks';
 import FileTreeItem from './FileTreeItem';
 import { buildFileTree } from './utils/buildFileTree';
 import { getExpandedPathsFromFileKey } from './utils/getExpandedPathsFromFileKey';
@@ -35,19 +35,13 @@ const BucketContent = memo(props => {
 
   const {
     data: bucketData,
-    isLoading,
+    isFetching: isLoading,
     isError,
-  } = useArtifactListQuery(
-    {
-      projectId,
-      bucket: bucket.name,
-    },
-    {
-      skip: !projectId || !bucket?.name,
-      refetchOnMountOrArgChange: true,
-      refetchOnFocus: true,
-    },
-  );
+  } = useAllArtifacts({
+    projectId,
+    bucket: bucket.name,
+    skip: !projectId || !bucket?.name,
+  });
 
   const contentItems = useMemo(() => bucketData?.contents || [], [bucketData]);
   const fileTree = useMemo(() => buildFileTree(contentItems), [contentItems]);
