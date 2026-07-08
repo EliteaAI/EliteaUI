@@ -71,7 +71,12 @@ export const mapAssociationError = (rawError, entityName, opts = {}) => {
         `Cannot ${target}: it now uses other agents, so it can only run directly as a chat ` +
         `participant, not as a sub-agent tool. Replace it with a leaf version.`
       );
-    return `Cannot ${target}: it uses other agents and can only be run directly as a chat participant, not added as a tool.`;
+    // Add path binds the child's DEFAULT version, so the actionable fix is to make a leaf version
+    // (one that doesn't itself use other agents) the default — then it can be attached here.
+    return (
+      `Cannot ${target}: it uses other agents and can only be run directly as a chat participant, ` +
+      `not added as a tool. Tip: make a version of it without sub-agents its default, then add it.`
+    );
   }
   if (lower.includes('bind') && lower.includes('itself')) {
     if (isSwitch) return `Cannot ${target}: a version cannot reference itself.`;
@@ -129,9 +134,14 @@ export const useAgentPipelineAssociation = (applicationId, versionId) => {
       const candidateTools = selectedApplication?.version_details?.tools || [];
       const candidateIsContainer = candidateTools.some(tool => tool.type === 'application');
       if (candidateAgentType !== 'pipeline' && candidateIsContainer) {
+        // Route the pre-attach guard through the shared mapper so it carries the same friendly
+        // phrasing AND the actionable tip (make a leaf version the default) as the backend
+        // rejection — this guard is the most common trigger, firing before the request is sent.
         toastError(
-          `"${agent.name}" uses other agents and cannot be added as a tool. ` +
-            `Agents that use other agents can only be run directly as a chat participant.`,
+          mapAssociationError('uses other agents and cannot be added as a sub-agent', agent.name, {
+            action: 'add',
+            entityLabel: isPipeline ? 'pipeline' : 'agent',
+          }),
         );
         return;
       }

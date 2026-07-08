@@ -63,6 +63,22 @@ describe('mapAssociationError', () => {
     expect(result).toContain('uses other agents');
   });
 
+  it('adds the make-default-leaf-version tip on the ADD path only', () => {
+    const rawError = 'agent uses other agents and cannot be added as a sub-agent';
+    const addResult = mapAssociationError(rawError, 'ContainerAgent', { action: 'add' });
+    expect(addResult).toContain('make a version');
+    expect(addResult).toContain('default');
+    // The tip is default-version advice; it is WRONG for switch (binds the picked version) and for
+    // status (already-attached). Those must NOT carry it.
+    const switchResult = mapAssociationError(rawError, 'ContainerAgent', {
+      action: 'switch',
+      versionLabel: 'v2',
+    });
+    expect(switchResult).not.toContain('make a version');
+    const statusResult = mapAssociationError(rawError, 'ContainerAgent', { action: 'status' });
+    expect(statusResult).not.toContain('make a version');
+  });
+
   it('maps bind-itself error to self-reference message', () => {
     const rawError = 'Cannot bind agent to itself.';
     const result = mapAssociationError(rawError, 'SelfAgent');
