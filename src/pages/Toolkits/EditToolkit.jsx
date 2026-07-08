@@ -78,8 +78,7 @@ const EditToolkit = memo(props => {
     setUpdateConfigKey(prev => prev + 1);
     setDirty(false);
     setHasValidationErrors(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [publicToolkitData?.id]);
+  }, [publicToolkitData]);
 
   const handleValidationStateChange = useCallback(({ hasErrors }) => {
     setHasValidationErrors(hasErrors);
