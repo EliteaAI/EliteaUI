@@ -23,6 +23,7 @@ const useSaveSkillVersion = () => {
           name,
           instructions: values?.version_details?.instructions || '',
           tags: normalizeTagsForSave(values?.version_details?.tags),
+          meta: values?.version_details?.meta || {},
         }).unwrap();
 
         resetForm({ values });

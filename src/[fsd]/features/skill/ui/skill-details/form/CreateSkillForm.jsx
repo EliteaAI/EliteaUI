@@ -21,6 +21,7 @@ import {
   PROMPT_PAYLOAD_KEY,
 } from '@/common/constants';
 import EntityIcon from '@/components/EntityIcon';
+import useCheckPermission from '@/hooks/useCheckPermission';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import TagEditor from '@/pages/Common/Components/TagEditor';
 import { markdown } from '@codemirror/lang-markdown';
@@ -38,6 +39,9 @@ const CreateSkillForm = memo(props => {
   const formik = useFormikContext();
   const theme = useTheme();
   const projectId = useSelectedProjectId();
+  const { checkPermission } = useCheckPermission();
+  // Same permission key the backend enforces on POST /upload_skill_icon (AC-11).
+  const canUploadIcon = !disabled && checkPermission('models.applications.skills.upload_icon.post');
   const { data: tagList = {} } = useTagListQuery({ projectId }, { skip: !projectId });
   const [name, setName] = useState(formik.values?.name || '');
   const [instructionsViewMode, setInstructionsViewMode] = useState('edit');
@@ -118,6 +122,13 @@ const CreateSkillForm = memo(props => {
     formik.setFieldTouched('version_details.instructions', true);
   }, [formik]);
 
+  const onChangeSkillIcon = useCallback(
+    icon => {
+      formik.setFieldValue('version_details.meta.icon_meta', icon);
+    },
+    [formik],
+  );
+
   const instructions = formik.values?.version_details?.instructions || '';
   const instructionsError =
     formik.touched?.version_details?.instructions && formik.errors?.version_details?.instructions;
@@ -148,7 +159,11 @@ const CreateSkillForm = memo(props => {
                   <EntityIcon
                     entityType={ChatParticipantType.Skills}
                     icon={formik.values?.version_details?.meta?.icon_meta}
-                    editable={false}
+                    editable={canUploadIcon}
+                    onChangeIcon={onChangeSkillIcon}
+                    projectId={projectId}
+                    entityId={formik.values?.id}
+                    versionId={formik.values?.version_details?.id}
                   />
                   <Box sx={styles.nameWrapperInput}>
                     <Input.StyledInputEnhancer

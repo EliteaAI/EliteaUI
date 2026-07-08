@@ -35,6 +35,7 @@ export const useInstructionsSkillMention = ({ fileReaderRef, projectId, versionD
           name: skill.name,
           description: skill.description,
           skill_id: skill.skill_id,
+          icon_meta: skill.icon_meta,
           isToolkit: false,
         }))
         .sort((a, b) => a.name.localeCompare(b.name)),

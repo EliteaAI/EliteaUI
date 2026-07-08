@@ -3,7 +3,7 @@ import { memo } from 'react';
 import { Box, Typography } from '@mui/material';
 
 const MentionToolItem = memo(props => {
-  const { label, description, onClick, isHighlighted } = props;
+  const { label, description, icon, onClick, isHighlighted } = props;
   const styles = mentionToolItemStyles({ isHighlighted });
   return (
     <Box
@@ -11,13 +11,16 @@ const MentionToolItem = memo(props => {
       data-highlighted={isHighlighted ? 'true' : undefined}
       sx={styles.container}
     >
-      <Typography
-        variant="headingSmall"
-        color="text.secondary"
-        sx={styles.label}
-      >
-        {label}
-      </Typography>
+      <Box sx={styles.labelRow}>
+        {icon && <Box sx={styles.iconBox}>{icon}</Box>}
+        <Typography
+          variant="headingSmall"
+          color="text.secondary"
+          sx={styles.label}
+        >
+          {label}
+        </Typography>
+      </Box>
       {description && (
         <Typography
           variant="bodySmall"
@@ -48,6 +51,18 @@ const mentionToolItemStyles = ({ isHighlighted } = {}) => ({
       : palette.background.userInputBackground,
     '&:hover': { background: palette.background.userInputBackgroundActive },
   }),
+  labelRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    minWidth: 0,
+  },
+  iconBox: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
   label: {
     overflow: 'hidden',
     textOverflow: 'ellipsis',

@@ -6,6 +6,12 @@ import ListInfiniteMoreLoader from '@/ComponentsLib/ListInfiniteMoreLoader';
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import ProjectIconItem from '@/[fsd]/features/settings/ui/project-context/ProjectIconItem';
 import UserIconItem from '@/[fsd]/features/settings/ui/project-context/UserIconItem';
+import {
+  useDeleteSkillIconMutation,
+  useGetSkillIconsQuery,
+  useReplaceSkillIconMutation,
+  useUploadSkillIconMutation,
+} from '@/[fsd]/features/skill/api';
 import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
 import BaseModal from '@/[fsd]/shared/ui/modal/BaseModal';
 import {
@@ -52,51 +58,63 @@ export default function SelectIconDialog({
     { skip: !projectId || (entityType !== 'application' && entityType !== 'pipeline') },
   );
 
+  const {
+    data: { rows: skillIcons, total: totalSkillIcons } = { rows: [], total: 0 },
+    isFetching: isFetchingSkillIcons,
+  } = useGetSkillIconsQuery({ projectId, page }, { skip: !projectId || entityType !== 'skill' });
+
   const [uploadApplicationIcon] = useUploadApplicationIconMutation();
   const [replaceApplicationIcon] = useReplaceApplicationIconMutation();
   const [deleteApplicationIcon] = useDeleteApplicationIconMutation();
+  const [uploadSkillIcon] = useUploadSkillIconMutation();
+  const [replaceSkillIcon] = useReplaceSkillIconMutation();
+  const [deleteSkillIcon] = useDeleteSkillIconMutation();
 
   const totalMap = useMemo(
     () => ({
       application: totalApplicationIcons,
       pipeline: totalApplicationIcons,
+      skill: totalSkillIcons,
     }),
-    [totalApplicationIcons],
+    [totalApplicationIcons, totalSkillIcons],
   );
 
   const uploadFunctionMap = useMemo(
     () => ({
       application: uploadApplicationIcon,
       pipeline: uploadApplicationIcon,
+      skill: uploadSkillIcon,
     }),
-    [uploadApplicationIcon],
+    [uploadApplicationIcon, uploadSkillIcon],
   );
 
   const replaceFunctionMap = useMemo(
     () => ({
       application: replaceApplicationIcon,
       pipeline: replaceApplicationIcon,
+      skill: replaceSkillIcon,
     }),
-    [replaceApplicationIcon],
+    [replaceApplicationIcon, replaceSkillIcon],
   );
 
   const deleteFunctionMap = useMemo(
     () => ({
       application: deleteApplicationIcon,
       pipeline: deleteApplicationIcon,
+      skill: deleteSkillIcon,
     }),
-    [deleteApplicationIcon],
+    [deleteApplicationIcon, deleteSkillIcon],
   );
 
-  const iconList = useMemo(
-    () => (entityType === 'application' || entityType === 'pipeline' ? applicationIcons : []),
-    [applicationIcons, entityType],
-  );
+  const isFetchingUploadedIcons = entityType === 'skill' ? isFetchingSkillIcons : isFetchingApplicationIcons;
 
-  const uploadedIconList = useMemo(
-    () => (entityType === 'application' || entityType === 'pipeline' ? applicationIcons : []),
-    [applicationIcons, entityType],
-  );
+  const iconList = useMemo(() => {
+    if (entityType === 'application' || entityType === 'pipeline') return applicationIcons;
+    if (entityType === 'skill') return skillIcons;
+    return [];
+  }, [applicationIcons, skillIcons, entityType]);
+
+  const uploadedIconList = iconList;
 
   const onImport = useCallback(() => {
     setIsUploading(true);
@@ -350,7 +368,7 @@ export default function SelectIconDialog({
           Uploaded
         </Typography>
         <Box sx={styles.iconGrid}>
-          {isFetchingApplicationIcons && (
+          {isFetchingUploadedIcons && (
             <Box sx={styles.loaderWrapper}>
               <StyledCircleProgress size={24} />
             </Box>
@@ -369,7 +387,7 @@ export default function SelectIconDialog({
               />
             </UserIconItem>
           ))}
-          {!isFetchingApplicationIcons && iconList.length === 0 && (
+          {!isFetchingUploadedIcons && iconList.length === 0 && (
             <Typography
               variant="bodySmall"
               color="text.tertiary"

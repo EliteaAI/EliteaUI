@@ -14,6 +14,10 @@ export {
   useUpdateSkillRelationMutation,
   useGetApplicationSkillsQuery,
   useLazyGetApplicationSkillsQuery,
+  useGetSkillIconsQuery,
+  useUploadSkillIconMutation,
+  useReplaceSkillIconMutation,
+  useDeleteSkillIconMutation,
 } from './skillsApi';
 
 export { useGenerateSkillDraftMutation } from './generateSkillDraftApi';

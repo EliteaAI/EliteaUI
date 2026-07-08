@@ -8,6 +8,7 @@ const TAG_TYPE_SKILLS = 'TAG_TYPE_SKILLS';
 const TAG_TYPE_SKILL_DETAILS = 'TAG_TYPE_SKILL_DETAILS';
 const TAG_TYPE_TOTAL_SKILLS = 'TAG_TYPE_TOTAL_SKILLS';
 const TAG_TYPE_APPLICATION_SKILLS = 'TAG_TYPE_APPLICATION_SKILLS';
+const TAG_TYPE_SKILL_ICONS = 'TAG_TYPE_SKILL_ICONS';
 
 const SKILL_ENTITY_TYPE_AGENT = 'agent';
 
@@ -50,6 +51,7 @@ const skillsApi = eliteaApi
       TAG_TYPE_SKILL_DETAILS,
       TAG_TYPE_TOTAL_SKILLS,
       TAG_TYPE_APPLICATION_SKILLS,
+      TAG_TYPE_SKILL_ICONS,
     ],
   })
   .injectEndpoints({
@@ -151,11 +153,14 @@ const skillsApi = eliteaApi
         },
       }),
       skillCreateVersion: build.mutation({
-        // body: { name (NOT 'base'), instructions, tags? } -> 201
-        query: ({ projectId, skillId, name, instructions, tags }) => {
+        // body: { name (NOT 'base'), instructions, tags?, meta? } -> 201
+        query: ({ projectId, skillId, name, instructions, tags, meta }) => {
           const body = { name, instructions };
           if (tags) {
             body.tags = tags;
+          }
+          if (meta) {
+            body.meta = meta;
           }
           return {
             url: `${apiSlicePath}/skill/${mode}/${projectId}/${skillId}`,
@@ -331,6 +336,154 @@ const skillsApi = eliteaApi
         }),
         providesTags: (result, error, arg) => [{ type: TAG_TYPE_APPLICATION_SKILLS, id: arg?.appVersionId }],
       }),
+      // Skill icon gallery + upload/replace/delete (mirrors the application icon endpoints).
+      getSkillIcons: build.query({
+        query: ({ projectId, page, pageSize = PAGE_SIZE }) => ({
+          url: `${apiSlicePath}/upload_skill_icon/${mode}/${projectId}`,
+          params: {
+            limit: pageSize,
+            skip: page * pageSize,
+          },
+        }),
+        transformResponse: (response, meta, args) => {
+          return {
+            ...response,
+            isLoadMore: args.page > 0,
+          };
+        },
+        // Only keep one cacheEntry marked by the query's endpointName
+        serializeQueryArgs: ({ endpointName, queryArgs }) => {
+          const sortedObject = {};
+          Object.keys(queryArgs)
+            .filter(prop => prop !== 'page')
+            .sort()
+            .forEach(prop => {
+              sortedObject[prop] = queryArgs[prop];
+            });
+          return endpointName + JSON.stringify(sortedObject);
+        },
+        // merge new page data into existing cache
+        merge: (currentCache, newItems) => {
+          if (newItems.isLoadMore) {
+            currentCache.rows = removeDuplicateObjects([...currentCache.rows, ...newItems.rows]);
+          } else {
+            currentCache.rows = newItems.rows;
+            currentCache.total = newItems.total;
+          }
+        },
+        forceRefetch({ currentArg, previousArg }) {
+          return currentArg !== previousArg;
+        },
+        providesTags: [TAG_TYPE_SKILL_ICONS],
+      }),
+      uploadSkillIcon: build.mutation({
+        query: ({ projectId, versionId, files, width, height }) => {
+          const form = new FormData();
+          if (files?.length) {
+            for (let i = 0; i < files.length; i++) {
+              form.append('file', files[i]);
+            }
+            form.append('width', width);
+            form.append('height', height);
+          }
+          return {
+            url:
+              apiSlicePath +
+              (versionId
+                ? `/upload_skill_icon/${mode}/${projectId}/${versionId}`
+                : `/upload_skill_icon/${mode}/${projectId}`),
+            method: 'POST',
+            body: form,
+            formData: true,
+          };
+        },
+        invalidatesTags: (result, error) => {
+          if (error) return [];
+          return [TAG_TYPE_SKILL_ICONS];
+        },
+      }),
+      replaceSkillIcon: build.mutation({
+        // eslint-disable-next-line no-unused-vars
+        query: ({ projectId, versionId, entityId, ...body }) => {
+          return {
+            url: `${apiSlicePath}/upload_skill_icon/${mode}/${projectId}/${versionId}`,
+            method: 'PUT',
+            headers,
+            body,
+          };
+        },
+        // List/SkillCard/mention surfaces show the version icon — refetch them.
+        invalidatesTags: (result, error) => {
+          if (error) return [];
+          return [TAG_TYPE_SKILLS, TAG_TYPE_APPLICATION_SKILLS];
+        },
+        onQueryStarted: async (args, { dispatch, getState, queryFulfilled }) => {
+          // eslint-disable-next-line no-unused-vars
+          const { projectId, versionId, entityId, ...icon_meta } = args;
+          const {
+            eliteaApi: { queries },
+          } = getState();
+          const cacheKeys = Object.keys(queries || {});
+          let patchResult = null;
+          const foundSkillDetailKey = cacheKeys.find(
+            key => queries[key].endpointName === 'skillDetails' && key.includes(entityId),
+          );
+          if (foundSkillDetailKey) {
+            const queryParams = foundSkillDetailKey.replace('skillDetails', '');
+            patchResult = dispatch(
+              eliteaApi.util.updateQueryData('skillDetails', convertToJson(queryParams), draft => {
+                draft.version_details.meta = {
+                  ...(draft.version_details.meta || {}),
+                  icon_meta,
+                };
+              }),
+            );
+          }
+          try {
+            await queryFulfilled;
+          } catch {
+            patchResult?.undo();
+          }
+        },
+      }),
+      deleteSkillIcon: build.mutation({
+        query: ({ projectId, name }) => {
+          return {
+            url: `${apiSlicePath}/upload_skill_icon/${mode}/${projectId}/${name}`,
+            method: 'DELETE',
+          };
+        },
+        // Deliberately NOT invalidating TAG_TYPE_SKILL_DETAILS: the open Edit Skill
+        // form subscribes to skillDetails with enableReinitialize — a refetch with
+        // the unlinked icon would reset Formik and destroy unsaved edits.
+        invalidatesTags: (result, error) => {
+          if (error) return [];
+          return [TAG_TYPE_SKILLS, TAG_TYPE_APPLICATION_SKILLS];
+        },
+        onQueryStarted: async (args, { dispatch, getState, queryFulfilled }) => {
+          const { name } = args;
+          const {
+            eliteaApi: { queries },
+          } = getState();
+          const cacheKeys = Object.keys(queries || {});
+          let patchResult = null;
+          const foundKey = cacheKeys.find(key => queries[key].endpointName === 'getSkillIcons');
+          if (foundKey) {
+            const queryParams = foundKey.replace('getSkillIcons', '');
+            patchResult = dispatch(
+              eliteaApi.util.updateQueryData('getSkillIcons', convertToJson(queryParams), draft => {
+                draft.rows = draft.rows.filter(icon => icon.name !== name);
+                draft.total = draft.total - 1;
+              }),
+            );
+          }
+          try {
+            await queryFulfilled;
+          } catch {
+            patchResult?.undo();
+          }
+        },
+      }),
     }),
   });
 
@@ -350,4 +503,8 @@ export const {
   useUpdateSkillRelationMutation,
   useGetApplicationSkillsQuery,
   useLazyGetApplicationSkillsQuery,
+  useGetSkillIconsQuery,
+  useUploadSkillIconMutation,
+  useReplaceSkillIconMutation,
+  useDeleteSkillIconMutation,
 } = skillsApi;

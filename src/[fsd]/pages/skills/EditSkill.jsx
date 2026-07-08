@@ -43,6 +43,7 @@ const buildInitialValues = data => ({
     name: data?.version_details?.name || data?.version?.name || LATEST_VERSION_NAME,
     tags: data?.version_details?.tags || data?.tags || [],
     instructions: data?.version_details?.instructions ?? data?.instructions ?? '',
+    meta: data?.version_details?.meta || {},
   },
 });
 

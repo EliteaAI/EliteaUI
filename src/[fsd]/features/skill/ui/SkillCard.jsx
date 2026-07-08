@@ -10,6 +10,7 @@ import SkillIcon from '@/assets/skill-icon.svg?react';
 import { SkillsTabs } from '@/common/constants';
 import AlertDialog from '@/components/AlertDialog';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
+import EliteAImage from '@/components/EliteAImage';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import RouteDefinitions, { getBasename } from '@/routes';
 import { useTheme } from '@emotion/react';
@@ -55,7 +56,15 @@ const SkillCard = memo(({ skill, entityVersionId, disabled }) => {
       <Box sx={styles.cardContainer}>
         <Box sx={styles.cardHeader}>
           <Box sx={styles.iconBox}>
-            <SkillIcon style={styles.skillIcon} />
+            {skill.icon_meta?.url ? (
+              <EliteAImage
+                style={styles.skillCustomIcon}
+                image={skill.icon_meta}
+                alt={skill.name}
+              />
+            ) : (
+              <SkillIcon style={styles.skillIcon} />
+            )}
           </Box>
           <Box sx={styles.contentBox}>
             <Box sx={styles.titleRow}>
@@ -180,6 +189,12 @@ const skillCardStyles = () => ({
   skillIcon: {
     width: '1.25rem',
     height: '1.25rem',
+  },
+  skillCustomIcon: {
+    width: '2.125rem',
+    height: '2.125rem',
+    borderRadius: '50%',
+    objectFit: 'cover',
   },
   contentBox: {
     display: 'flex',

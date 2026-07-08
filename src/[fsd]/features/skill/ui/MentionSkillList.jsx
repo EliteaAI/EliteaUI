@@ -4,6 +4,8 @@ import { Box, ClickAwayListener, Typography } from '@mui/material';
 
 import { MentionConstants } from '@/[fsd]/shared/lib/constants';
 import { Mention } from '@/[fsd]/shared/ui';
+import SkillIcon from '@/assets/skill-icon.svg?react';
+import EliteAImage from '@/components/EliteAImage';
 
 const HEADER_LABEL = 'Mention skill';
 const EMPTY_LABEL = 'No skills attached to this agent';
@@ -75,6 +77,17 @@ const MentionSkillList = memo(props => {
               key={item.name}
               label={item.name}
               description={item.description}
+              icon={
+                item.icon_meta?.url ? (
+                  <EliteAImage
+                    style={styles.itemCustomIcon}
+                    image={item.icon_meta}
+                    alt={item.name}
+                  />
+                ) : (
+                  <SkillIcon style={styles.itemIcon} />
+                )
+              }
               onClick={() => onSelectItem(item)}
               isHighlighted={index === highlightedIndex}
               isSelected={committedMentions?.some(m => m.name === item.name) ?? false}
@@ -121,5 +134,15 @@ const mentionSkillListStyles = () => ({
     display: 'flex',
     alignItems: 'center',
     padding: '0.5rem 0.75rem',
+  },
+  itemIcon: {
+    width: '1rem',
+    height: '1rem',
+  },
+  itemCustomIcon: {
+    width: '1rem',
+    height: '1rem',
+    borderRadius: '50%',
+    objectFit: 'cover',
   },
 });

@@ -67,6 +67,7 @@ const CreateSkillTabBar = memo(() => {
             name: LATEST_VERSION_NAME,
             instructions: formik.values?.version_details?.instructions || '',
             tags: formik.values?.version_details?.tags || [],
+            meta: formik.values?.version_details?.meta || {},
           },
         ],
       }).unwrap();

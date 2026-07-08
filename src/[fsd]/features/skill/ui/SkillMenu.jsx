@@ -13,6 +13,7 @@ import PlusIcon from '@/assets/plus-icon.svg?react';
 import SkillIcon from '@/assets/skill-icon.svg?react';
 import { SearchParams, VITE_BASE_URI } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
+import EliteAImage from '@/components/EliteAImage';
 import UnifiedDropdown from '@/components/UnifiedDropdown';
 import useDebounceValue from '@/hooks/useDebounceValue';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -128,10 +129,18 @@ const SkillMenu = memo(props => {
         key: `skill-${skill.id}`,
         label: skill.name,
         description: skill.description,
-        icon: <SkillIcon style={styles.itemIcon} />,
+        icon: skill.icon_meta?.url ? (
+          <EliteAImage
+            style={styles.itemCustomIcon}
+            image={skill.icon_meta}
+            alt={skill.name}
+          />
+        ) : (
+          <SkillIcon style={styles.itemIcon} />
+        ),
         onClick: handleSelectSkill(skill),
       }));
-  }, [skillListData?.rows, attachedIdSet, handleSelectSkill, styles.itemIcon]);
+  }, [skillListData?.rows, attachedIdSet, handleSelectSkill, styles.itemIcon, styles.itemCustomIcon]);
 
   const handleSearchChange = useCallback(e => setSearch(e.target.value), []);
   const handleButtonClick = useCallback(e => setAnchorEl(e.currentTarget), []);
@@ -210,6 +219,12 @@ const skillMenuStyles = () => ({
   itemIcon: {
     width: '1rem',
     height: '1rem',
+  },
+  itemCustomIcon: {
+    width: '1rem',
+    height: '1rem',
+    borderRadius: '50%',
+    objectFit: 'cover',
   },
 });
 
