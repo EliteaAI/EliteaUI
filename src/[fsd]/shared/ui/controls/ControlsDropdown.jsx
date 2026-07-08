@@ -3,7 +3,7 @@ import { memo } from 'react';
 import DotMenu from '@/components/DotMenu';
 import HeaderContainer from '@/components/HeaderContainer';
 
-const ControlsDropdown = memo(({ menuItems = [], anchorButtonProps = {} }) => {
+const ControlsDropdown = memo(({ menuItems = [], anchorButtonProps = {}, id = 'controls' }) => {
   const styles = controlsDropdownStyles();
 
   return (
@@ -20,6 +20,7 @@ const ControlsDropdown = memo(({ menuItems = [], anchorButtonProps = {} }) => {
     >
       {menuItems.length > 0 && (
         <DotMenu
+          id={id}
           sx={{ backrgound: 'red !important' }}
           anchorOrigin={{
             vertical: 'bottom',

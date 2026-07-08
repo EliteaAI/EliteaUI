@@ -59,6 +59,7 @@ export const useDeleteApplicationMenu = (setBlockNav, disabled) => {
   const { name, onDelete, isLoading } = useDeleteApplication(setBlockNav);
   const menuItem = useMemo(
     () => ({
+      key: 'delete-agent',
       label: 'Delete',
       icon: (
         <DeleteIcon
