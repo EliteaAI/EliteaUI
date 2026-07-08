@@ -493,7 +493,7 @@ export const startMcpAuthFlow = async options => {
         // Core fields for token refresh
         token_endpoint: tokenEndpoint,
         client_id: clientId,
-        client_secret: clientSecret,
+        client_secret: effectiveClientSecret,
         project_id: projectId,
         toolkit_id: toolkitId,
         // Additional OAuth metadata from mcp_authorization_required message
