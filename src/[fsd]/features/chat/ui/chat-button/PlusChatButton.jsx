@@ -531,7 +531,7 @@ const plusChatButtonStyles = theme => ({
     overflow: 'hidden',
   },
   internalToolsPaper: {
-    minWidth: '18rem',
+    minWidth: '18.75rem',
     borderRadius: '.75rem',
     border: `.0625rem solid ${theme.palette.border.lines}`,
     backgroundColor: theme.palette.background.secondary,
@@ -550,6 +550,7 @@ const plusChatButtonStyles = theme => ({
 
     '& .MuiFormControlLabel-label': {
       marginLeft: '.5rem',
+      whiteSpace: 'nowrap',
     },
   },
   comingSoon: {
