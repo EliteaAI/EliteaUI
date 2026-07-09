@@ -28,12 +28,17 @@ const IWModalForkButton = memo(({ selectedProject, onSuccess }) => {
   const [forkToolkit, { isLoading: isForkingToolkit }] = useToolkitForkMutation();
 
   const importedData = useMemo(() => values?.importItems, [values?.importItems]);
+
+  const selectedSkills = useMemo(
+    () => filterSelected(importedData).filter(item => item.entity === 'skills'),
+    [importedData],
+  );
+
   const selectedData = useMemo(() => {
     const inputData = filterSelected(importedData);
 
-    const skills = inputData.filter(item => item.entity === 'skills');
-    if (skills.length) {
-      return skills;
+    if (importedData[0]?.entity === 'skills') {
+      return inputData.filter(item => item.entity === 'skills');
     }
 
     const applications = inputData.filter(item => item.entity === 'agents');
@@ -197,11 +202,13 @@ const IWModalForkButton = memo(({ selectedProject, onSuccess }) => {
       case 'toolkits':
         response = await forkFunc({ projectId: selectedProjectId, data: selectedData });
         break;
-      default:
-        response = await forkFunc({
-          projectId: selectedProjectId,
-          body: { [mainEntityName === 'agents' ? 'applications' : mainEntityName]: selectedData },
-        });
+      default: {
+        const body =
+          mainEntityName === 'agents'
+            ? { applications: selectedData, ...(selectedSkills.length ? { skills: selectedSkills } : {}) }
+            : { [mainEntityName]: selectedData };
+        response = await forkFunc({ projectId: selectedProjectId, body });
+      }
     }
 
     const isValidResponse = !!response?.data || !!response?.error?.data?.errors;
@@ -255,6 +262,7 @@ const IWModalForkButton = memo(({ selectedProject, onSuccess }) => {
     mainEntityName,
     selectedProjectId,
     selectedData,
+    selectedSkills,
     generateValidationPromises,
     toastError,
     mainItemImportUUID,

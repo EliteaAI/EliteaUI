@@ -241,6 +241,7 @@ const EditSkill = memo(() => {
                           <SkillInformation
                             id={data?.id}
                             versionId={data?.version_details?.id}
+                            meta={data?.version_details?.meta}
                           />
                         </Box>
                       </ContentContainer>
