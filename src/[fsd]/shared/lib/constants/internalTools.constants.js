@@ -41,10 +41,10 @@ export const INTERNAL_TOOLS_LIST = [
   },
   {
     name: 'internal_mcp',
-    title: 'Elitea MCP Tools',
+    title: 'Agents & Pipeline Builder',
     icon: 'McpIcon',
     infoTooltip: {
-      text: 'Enable Elitea platform MCP tools for managing applications (agents and pipelines), chat, and toolkits directly from conversations.',
+      text: 'Create and update agents and pipelines directly from chat.',
     },
     toolkitNames: ['internal_mcp'],
   },
@@ -59,7 +59,7 @@ export const INTERNAL_TOOLS_LIST = [
   },
   {
     name: 'pyodide',
-    title: 'Python sandbox',
+    title: 'Python Sandbox',
     icon: 'CodeIcon',
     infoTooltip: {
       text: 'Enable Python code execution in a secure sandbox using',
@@ -80,7 +80,7 @@ export const INTERNAL_TOOLS_LIST = [
   },
   {
     name: 'lazy_tools_mode',
-    title: 'Smart Tools Selection',
+    title: 'Smart Tool Selection',
     icon: 'GearIcon',
     infoTooltip: {
       text: 'Reduces token usage by using meta-tools instead of binding all tools directly. Recommended when using many toolkits.',

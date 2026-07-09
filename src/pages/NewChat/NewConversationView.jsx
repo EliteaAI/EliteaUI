@@ -95,7 +95,8 @@ const NewConversationView = forwardRef(
     const [selectedParticipant, setSelectedParticipant] = useState(activeParticipant || null);
     const [selectedParticipantDetails, setSelectedParticipantDetails] = useState(activeParticipant || null);
     const [prevConversation, setPrevConversation] = useState(activeConversation);
-    const [internalTools, setInternalTools] = useState(['internal_mcp']);
+    const defaultInternalMcpEnabled = user.personalization?.default_internal_mcp_enabled ?? true;
+    const [internalTools, setInternalTools] = useState(defaultInternalMcpEnabled ? ['internal_mcp'] : []);
     const [showRecommendationList, setShowRecommendationList] = useState(false);
     const { data: modelsData = { items: [], total: 0 } } = useListModelsQuery(
       { projectId: selectedProjectId, include_shared: true },

@@ -5,7 +5,7 @@ import { useFormikContext } from 'formik';
 import { Box, Typography } from '@mui/material';
 
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
-import { Input, Label } from '@/[fsd]/shared/ui';
+import { Input, Label, Switch } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { PERSONA_OPTIONS } from '@/common/constants';
@@ -41,6 +41,14 @@ const ProfilePersonalization = memo(props => {
   const handleInstructionsChange = useCallback(
     e => setFieldValue('default_instructions', e.target.value),
     [setFieldValue],
+  );
+
+  const handleInternalMcpChange = useCallback(
+    (event, checkedValue) => {
+      setFieldValue('default_internal_mcp_enabled', checkedValue);
+      onAutoSaveRequested?.();
+    },
+    [onAutoSaveRequested, setFieldValue],
   );
 
   return (
@@ -131,6 +139,19 @@ const ProfilePersonalization = memo(props => {
                     containerProps={styles.inputContainer}
                   />
                 </Box>
+
+                <Box sx={styles.toggleSection}>
+                  <Switch.BaseSwitch
+                    checked={values.default_internal_mcp_enabled}
+                    onChange={handleInternalMcpChange}
+                    label="Enable Elitea MCP tools by default"
+                    tooltip="When enabled, internal Elitea MCP tools will be pre-enabled for each new conversation"
+                    slotProps={{
+                      switch: { size: 'small' },
+                      formControlLabel: { sx: styles.toggleLabel },
+                    }}
+                  />
+                </Box>
               </Box>
             ),
           },
@@ -171,6 +192,12 @@ const profilePersonalizationStyles = () => ({
   inputContainer: {
     padding: '0rem',
     margin: '0rem',
+  },
+  toggleSection: {
+    paddingLeft: '0.75rem',
+  },
+  toggleLabel: {
+    margin: 0,
   },
   optionContainer: {
     display: 'flex',

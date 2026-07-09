@@ -40,7 +40,7 @@ const SUBMENU_KEYS = {
 };
 
 const EXPANDABLE_ITEMS = [
-  { key: SUBMENU_KEYS.INTERNAL_TOOLS, label: 'Internal Tools', Icon: ValueIcon },
+  { key: SUBMENU_KEYS.INTERNAL_TOOLS, label: 'Modules', Icon: ValueIcon },
   { key: SUBMENU_KEYS.AGENTS, label: 'Agents', Icon: ApplicationsIcon },
   { key: SUBMENU_KEYS.PIPELINES, label: 'Pipelines', Icon: FlowIcon },
   { key: SUBMENU_KEYS.TOOLKITS, label: 'Toolkits', Icon: ToolIcon },
@@ -274,6 +274,7 @@ const PlusChatButton = memo(props => {
               sx: styles.toolFormControlLabel,
               labelPlacement: 'start',
             },
+            label: { sx: { whiteSpace: 'nowrap' } },
             switch: { size: 'small' },
           }}
         />
@@ -530,7 +531,7 @@ const plusChatButtonStyles = theme => ({
     overflow: 'hidden',
   },
   internalToolsPaper: {
-    minWidth: '12rem',
+    minWidth: '18rem',
     borderRadius: '.75rem',
     border: `.0625rem solid ${theme.palette.border.lines}`,
     backgroundColor: theme.palette.background.secondary,
@@ -539,7 +540,7 @@ const plusChatButtonStyles = theme => ({
   },
   toolFormControlLabel: {
     margin: 0,
-    width: '15.75rem',
+    width: '18rem',
     height: '2.75rem',
     boxSizing: 'border-box',
     display: 'flex',

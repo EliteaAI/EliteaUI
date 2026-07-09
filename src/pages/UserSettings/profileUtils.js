@@ -6,6 +6,7 @@ export const PROFILE_INITIAL_VALUES = {
   // Personalization
   persona: DEFAULT_PERSONA,
   default_instructions: '',
+  default_internal_mcp_enabled: true,
 
   // Context Management
   context_enabled: DEFAULT_CONTEXT_STRATEGY.ENABLED,
@@ -48,6 +49,7 @@ export const serializeProfileFormData = (authorData, defaultModel, selectedProje
     // Personalization
     persona: p.persona || DEFAULT_PERSONA,
     default_instructions: p.default_instructions || '',
+    default_internal_mcp_enabled: p.default_internal_mcp_enabled ?? true,
 
     // Context Management
     context_enabled: cm.enabled ?? DEFAULT_CONTEXT_STRATEGY.ENABLED,
@@ -75,6 +77,7 @@ export const deserializeProfileFormData = formValues => ({
   personalization: {
     persona: formValues.persona,
     default_instructions: formValues.default_instructions,
+    default_internal_mcp_enabled: formValues.default_internal_mcp_enabled,
   },
   default_context_management: {
     enabled: formValues.context_enabled,

@@ -206,7 +206,7 @@ const styles = {
   },
   internalToolsGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(max(15rem, calc(50% - 0.25rem)), 1fr))',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(max(18rem, calc(50% - 0.25rem)), 1fr))',
     gap: '0.5rem',
     width: '100%',
   },
