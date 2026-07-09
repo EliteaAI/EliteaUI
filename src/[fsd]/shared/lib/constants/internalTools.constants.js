@@ -41,10 +41,10 @@ export const INTERNAL_TOOLS_LIST = [
   },
   {
     name: 'internal_mcp',
-    title: 'Elitea MCP Tools',
+    title: 'Agents & Pipeline Builder',
     icon: 'McpIcon',
     infoTooltip: {
-      text: 'Enable Elitea platform MCP tools for managing applications (agents and pipelines), chat, and toolkits directly from conversations.',
+      text: 'Create and update agents and pipelines directly from chat.',
     },
     toolkitNames: ['internal_mcp'],
   },

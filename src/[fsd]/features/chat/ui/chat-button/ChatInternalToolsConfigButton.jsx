@@ -110,7 +110,7 @@ const styles = {
     zIndex: 9998,
   },
   paper: {
-    minWidth: 200,
+    minWidth: 288,
     borderRadius: '.5rem',
     border: ({ palette }) => `.0625rem solid ${palette.border.lines}`,
     boxShadow: ({ palette }) => palette.boxShadow.default,
@@ -119,7 +119,7 @@ const styles = {
   },
   formControlLabel: {
     margin: 0,
-    width: '15.75rem',
+    width: '18rem',
     height: '2.75rem',
     boxSizing: 'border-box',
     display: 'flex',
