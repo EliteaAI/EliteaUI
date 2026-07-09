@@ -118,8 +118,16 @@ const ProjectSelect = memo(props => {
     const leftProjects = handledProjects
       .filter(item => item.value != PUBLIC_PROJECT_ID && item.value != privateProjectId)
       .sort((a, b) => a.label.toLowerCase().localeCompare(b.label.toLowerCase()));
-    return [publicProject, privateProject, ...leftProjects].filter(item => item);
-  }, [projects, filterIds, hasPublicProjectAccess, getProjectName, privateProjectId]);
+    const result = [publicProject, privateProject, ...leftProjects].filter(item => item);
+
+    const selectedId = project?.id || privateProjectId;
+    if (selectedId && !result.some(item => item.value === selectedId)) {
+      const selectedName = project?.id ? project.name || `Project ${project.id}` : PRIVATE_PROJECT_NAME;
+      result.push({ label: selectedName, value: selectedId });
+    }
+
+    return result;
+  }, [projects, filterIds, hasPublicProjectAccess, getProjectName, privateProjectId, project]);
 
   const location = useLocation();
 

@@ -60,6 +60,8 @@ const Applications = memo(() => {
     [projectId, tab],
   );
 
+  const safeSelectedTab = selectedTab === -1 ? 0 : selectedTab;
+
   const onChangeTab = useCallback(
     newTab => {
       const pagePath =
@@ -99,7 +101,7 @@ const Applications = memo(() => {
   return (
     <StickyTabs
       tabs={tabs}
-      value={selectedTab}
+      value={safeSelectedTab}
       onChangeTab={onChangeTab}
       showTitleAndSwitchBySelect
       title="Agents"
@@ -113,7 +115,7 @@ const Applications = memo(() => {
           {projectId == PUBLIC_PROJECT_ID && (
             <StatusFilterSelect
               projectId={projectId}
-              selectedTab={selectedTab}
+              selectedTab={safeSelectedTab}
               tabs={tabs}
               onChangeTab={onChangeTab}
             />
@@ -124,8 +126,6 @@ const Applications = memo(() => {
     />
   );
 });
-
-Applications.displayName = 'Applications';
 
 Applications.displayName = 'Applications';
 
