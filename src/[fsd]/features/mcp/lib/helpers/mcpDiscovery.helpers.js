@@ -72,7 +72,7 @@ const DCR_REQUEST_DEFAULTS = {
  * @param {string} registrationEndpoint - The OAuth registration endpoint URL
  * @param {string} redirectUri - The redirect URI for the client
  * @param {number} projectId - The project ID for the proxy API
- * @returns {Promise<string>} - The client_id from the registration response
+ * @returns {Promise<{clientId: string, clientSecret: string|null}>} - The client_id and client_secret (if issued) from the registration response
  */
 export const registerDynamicClient = async (registrationEndpoint, redirectUri, projectId) => {
   const requestBody = {

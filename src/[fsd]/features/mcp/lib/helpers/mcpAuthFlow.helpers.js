@@ -95,7 +95,9 @@ export const triggerProactiveRefresh = serverUrl => {
           clientSecret = clientSecret || tokenInfo.client_secret;
         }
       } else {
-        // DCR: always use the stored dynamic credentials firstly, then fallback to toolkit DB values if missing
+        // DCR: always use the stored dynamic credentials — never fall back to the toolkit DB
+        // values, because the DB holds the developer-app secret which is a different OAuth client.
+        // clientSecret may be null when the DCR client was registered as a true public client.
         clientId = tokenInfo.client_id || clientId;
         clientSecret = tokenInfo.client_secret;
       }
@@ -358,8 +360,15 @@ export const startMcpAuthFlow = async options => {
 
     // Aha! MCP server categorically requires DCR-issued tokens — pre-registered OAuth
     // app credentials produce REST API tokens that the MCP endpoint will reject.
-    const requiresDCR =
-      supportsDCR && (!clientId || [registrationEndpoint, serverUrl].some(u => u?.includes('aha.io')));
+    const isAhaHost = u => {
+      try {
+        const h = new URL(u).hostname;
+        return h === 'aha.io' || h.endsWith('.aha.io');
+      } catch {
+        return false;
+      }
+    };
+    const requiresDCR = supportsDCR && (!clientId || [registrationEndpoint, serverUrl].some(isAhaHost));
 
     // dcrClientSecret holds any secret issued by the DCR registration.
     // Some providers (e.g. Aha!) still issue a client_secret even when
