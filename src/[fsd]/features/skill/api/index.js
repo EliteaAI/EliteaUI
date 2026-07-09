@@ -10,6 +10,7 @@ export {
   useDeleteSkillMutation,
   useSetSkillDefaultVersionMutation,
   useLazySkillExportMdQuery,
+  useLazySkillExportForkQuery,
   useSkillImportMutation,
   useUpdateSkillRelationMutation,
   useGetApplicationSkillsQuery,

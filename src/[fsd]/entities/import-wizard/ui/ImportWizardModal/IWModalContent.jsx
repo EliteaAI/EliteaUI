@@ -20,6 +20,8 @@ const IWModalContent = memo(props => {
 
   const { values, ...formikProps } = useFormikContext();
 
+  const isSkillFork = values?.importItems?.[0]?.entity === 'skills';
+
   const {
     data: integrations,
     isError,
@@ -103,13 +105,15 @@ const IWModalContent = memo(props => {
           isForking={isForking}
         />
       </Box>
-      <Box sx={styles.notificationWrapper}>
-        <AttentionIcon />
-        <Typography sx={styles.warningMessage}>
-          For any toolkits requiring authentication, you will need to manually provide the necessary
-          credentials (API Keys, usernames, tokens, passwords).
-        </Typography>
-      </Box>
+      {!isSkillFork && (
+        <Box sx={styles.notificationWrapper}>
+          <AttentionIcon />
+          <Typography sx={styles.warningMessage}>
+            For any toolkits requiring authentication, you will need to manually provide the necessary
+            credentials (API Keys, usernames, tokens, passwords).
+          </Typography>
+        </Box>
+      )}
     </Box>
   );
 });

@@ -76,14 +76,19 @@ const ImportWizardModal = memo(props => {
 
   const { navigationItemData, navigationType } = useMemo(() => {
     const mainItem = values?.importItems?.[0];
-    const mainEntityFullData = (importSucceedData || forkedData)?.[mainItem?.entity]?.find(
-      item => item.name === mainItem.name && item.description === mainItem.description,
-    );
+    const source = (importSucceedData || forkedData)?.[mainItem?.entity];
+    const isSkill = mainItem?.entity === 'skills';
+
+    // Skill result items carry only { id, name, reused } — no description to match on.
+    const mainEntityFullData = isSkill
+      ? source?.find(item => item.name === mainItem?.name)
+      : source?.find(item => item.name === mainItem?.name && item.description === mainItem?.description);
 
     return {
       navigationItemData: mainEntityFullData,
-      navigationType:
-        mainEntityFullData?.version_details?.agent_type === 'pipeline'
+      navigationType: isSkill
+        ? ContentType.SkillAll
+        : mainEntityFullData?.version_details?.agent_type === 'pipeline'
           ? ContentType.PipelineAll
           : ContentType.ApplicationAll,
     };

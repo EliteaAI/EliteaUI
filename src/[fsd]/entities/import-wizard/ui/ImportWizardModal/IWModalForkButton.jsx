@@ -31,6 +31,11 @@ const IWModalForkButton = memo(({ selectedProject, onSuccess }) => {
   const selectedData = useMemo(() => {
     const inputData = filterSelected(importedData);
 
+    const skills = inputData.filter(item => item.entity === 'skills');
+    if (skills.length) {
+      return skills;
+    }
+
     const applications = inputData.filter(item => item.entity === 'agents');
     const toolkits = inputData.filter(item => item.entity === 'toolkits');
 
@@ -181,6 +186,7 @@ const IWModalForkButton = memo(({ selectedProject, onSuccess }) => {
     const forkFuncMap = {
       toolkits: forkToolkit,
       agents: forkAgent,
+      skills: forkAgent,
     };
 
     const forkFunc = forkFuncMap[mainEntityName] ?? (() => {});
@@ -202,9 +208,9 @@ const IWModalForkButton = memo(({ selectedProject, onSuccess }) => {
 
     if (isValidResponse) {
       const {
-        errors = { agents: [], toolkits: [] },
-        result = { agents: [], toolkits: [] },
-        already_exists = { agents: [], toolkits: [] },
+        errors = { agents: [], toolkits: [], skills: [] },
+        result = { agents: [], toolkits: [], skills: [] },
+        already_exists = { agents: [], toolkits: [], skills: [] },
       } = response.data || response?.error?.data || { errors: {} };
       const errorImportUUID = getErrorImportUUID(errors, selectedData);
       const importedUUIDMap = getImportedUUIDMap(result, selectedData);
