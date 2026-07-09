@@ -540,7 +540,7 @@ const plusChatButtonStyles = theme => ({
   },
   toolFormControlLabel: {
     margin: 0,
-    width: '18rem',
+    width: '18.75rem',
     height: '2.75rem',
     boxSizing: 'border-box',
     display: 'flex',
