@@ -82,7 +82,7 @@ export const useIndexHistory = (progressHistoryOptions = null) => {
       };
 
       const toolExecutionSummary = getExecutionSummary();
-      const content = `{ "reindexed": ${indexHistoryItem.updated}, "indexed": ${indexHistoryItem.indexed} }`;
+      const content = `{ "indexed": ${indexHistoryItem.indexed ?? 0}, "total": ${indexHistoryItem.total ?? indexHistoryItem.indexed ?? 0} }`;
 
       return [
         {
