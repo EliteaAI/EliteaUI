@@ -1070,6 +1070,13 @@ const getProjectPath = ({ entity_project_id, entity_name, entity_id }) => {
         tab: DEFAULT_ENTITY_TAB,
         toolkitId: entity_id,
       });
+    case 'skill':
+    case 'skills':
+      return replacePathParams(PROJECT_ID_URL_PREFIX + RouteDefinitions.SkillsDetail, {
+        projectId: entity_project_id,
+        tab: DEFAULT_ENTITY_TAB,
+        skillId: entity_id,
+      });
     default:
       return '';
   }

@@ -1,12 +1,13 @@
 import { memo, useCallback, useMemo } from 'react';
 
 import { useFormikContext } from 'formik';
+import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
-import { useSkillExport } from '@/[fsd]/features/skill/lib/hooks';
+import { useForkSkill, useSkillExport } from '@/[fsd]/features/skill/lib/hooks';
 import { Controls, SoonLabel } from '@/[fsd]/shared/ui';
 import { PinEntityType } from '@/[fsd]/widgets/pin-toggler/lib/constants';
 import { usePin, usePinMenu } from '@/[fsd]/widgets/pin-toggler/lib/hooks';
@@ -50,6 +51,8 @@ const SkillControls = memo(props => {
   const { projectEntityLink: versionLink } = useProjectEntityLink({ versionId: currentVersionId });
 
   const { doExport } = useSkillExport();
+  const { doFork: doForkSkill, isForking } = useForkSkill();
+  const openWizard = useSelector(state => state.importWizard.openWizard);
   const [deleteSkill] = useDeleteSkillMutation();
 
   const {
@@ -92,6 +95,11 @@ const SkillControls = memo(props => {
   const onExport = useCallback(() => {
     doExport({ skillId, versionId: currentVersionId, skillName });
   }, [doExport, skillId, currentVersionId, skillName]);
+
+  const onFork = useCallback(() => {
+    if (openWizard) return;
+    doForkSkill({ skillId, versionId: currentVersionId, skillName });
+  }, [openWizard, doForkSkill, skillId, currentVersionId, skillName]);
 
   const onDeleteVersion = useCallback(async () => {
     try {
@@ -154,9 +162,10 @@ const SkillControls = memo(props => {
       shareVersionMenuItem,
       {
         key: 'fork',
-        label: <SoonLabel text="Fork" />,
-        disabled: true,
+        label: 'Fork',
         icon: <ForkIcon sx={{ fontSize: '1rem' }} />,
+        disabled: !skillId || !currentVersionId || isForking || openWizard,
+        onClick: onFork,
       },
       {
         key: 'publish',
@@ -199,6 +208,11 @@ const SkillControls = memo(props => {
       onSetDefault,
       onExport,
       shareVersionMenuItem,
+      skillId,
+      currentVersionId,
+      isForking,
+      openWizard,
+      onFork,
       disableDelete,
       versionDetails?.name,
       skillName,

@@ -277,6 +277,17 @@ const skillsApi = eliteaApi
         },
         providesTags: [],
       }),
+      // Build the fork payload (JSON { skills: [...] }) for the import wizard.
+      skillExportFork: build.query({
+        query: ({ projectId, skillId, versionId }) => {
+          let url = `${apiSlicePath}/skill_export_fork/${mode}/${projectId}/${skillId}`;
+          if (versionId) {
+            url += '/' + versionId;
+          }
+          return { url };
+        },
+        providesTags: [],
+      }),
       // Import a skill from a .md file (multipart 'file') OR json { content, filename }.
       // ONLY .md is accepted; wrong extension -> 400 { error }. Duplicate name -> reused + { notice }.
       skillImport: build.mutation({
@@ -499,6 +510,7 @@ export const {
   useDeleteSkillMutation,
   useSetSkillDefaultVersionMutation,
   useLazySkillExportMdQuery,
+  useLazySkillExportForkQuery,
   useSkillImportMutation,
   useUpdateSkillRelationMutation,
   useGetApplicationSkillsQuery,

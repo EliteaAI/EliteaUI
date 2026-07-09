@@ -5,3 +5,4 @@ export { useSkillExport } from './useSkillExport.hooks';
 export { useSkillImport } from './useSkillImport.hooks';
 export { useAttachSkill } from './useAttachSkill.hooks';
 export { useDetachSkill } from './useDetachSkill.hooks';
+export { useForkSkill } from './useForkSkill.hooks';
