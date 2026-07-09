@@ -48,38 +48,42 @@ const BasicAccordion = memo(props => {
       data-testid={dataTestId}
     >
       {items.map(({ title, content, summaryAction }, index) => (
-        <StyledAccordion
-          sx={accordionSX}
-          showMode={showMode}
+        <Box
           key={index}
-          defaultExpanded={defaultExpanded}
-          expanded={expanded}
-          onChange={onChange}
+          sx={styles.accordionWrapper}
         >
-          <StyledAccordionSummary
-            expandIcon={<StyledExpandMoreIcon sx={styles.expandIcon} />}
-            aria-controls={`panel-content-${index}`}
+          <StyledAccordion
+            sx={accordionSX}
             showMode={showMode}
-            sx={summarySX}
+            defaultExpanded={defaultExpanded}
+            expanded={expanded}
+            onChange={onChange}
           >
-            <StyledTypography
-              sx={titleSX}
-              uppercase={uppercase}
+            <StyledAccordionSummary
+              expandIcon={<StyledExpandMoreIcon sx={styles.expandIcon} />}
+              aria-controls={`panel-content-${index}`}
+              showMode={showMode}
+              sx={summarySX}
             >
-              {title}
-            </StyledTypography>
-            {summaryAction && (
-              <Box
-                sx={styles.summaryAction}
-                onClick={e => e.stopPropagation()}
-                onMouseDown={e => e.stopPropagation()}
+              <StyledTypography
+                sx={titleSX}
+                uppercase={uppercase}
               >
-                {summaryAction}
-              </Box>
-            )}
-          </StyledAccordionSummary>
-          <StyledAccordionDetails sx={accordionDetailsSX}>{content}</StyledAccordionDetails>
-        </StyledAccordion>
+                {title}
+              </StyledTypography>
+            </StyledAccordionSummary>
+            <StyledAccordionDetails sx={accordionDetailsSX}>{content}</StyledAccordionDetails>
+          </StyledAccordion>
+          {summaryAction && (
+            <Box
+              sx={styles.summaryAction}
+              onClick={e => e.stopPropagation()}
+              onMouseDown={e => e.stopPropagation()}
+            >
+              {summaryAction}
+            </Box>
+          )}
+        </Box>
       ))}
     </Box>
   );
@@ -89,12 +93,17 @@ BasicAccordion.displayName = 'BasicAccordion';
 
 /** @type {MuiSx} */
 const basicAccordionStyles = () => ({
+  accordionWrapper: {
+    position: 'relative',
+  },
   expandIcon: {
     width: '1rem',
     height: '1rem',
   },
   summaryAction: {
-    marginLeft: 'auto',
+    position: 'absolute',
+    top: '0.35rem',
+    right: '0.1rem',
     display: 'flex',
     alignItems: 'center',
   },
