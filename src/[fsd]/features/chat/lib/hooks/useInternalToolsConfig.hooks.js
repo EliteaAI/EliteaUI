@@ -33,7 +33,7 @@ export const useInternalToolsConfig = ({ activeConversation, setActiveConversati
         meta: newMeta,
       });
       if (!result.error) {
-        toastSuccess('Internal tools configuration updated');
+        toastSuccess('Modules configuration updated');
       } else {
         // if update fails, revert local state
         setActiveConversation({
@@ -44,7 +44,7 @@ export const useInternalToolsConfig = ({ activeConversation, setActiveConversati
           },
         });
         toastError(
-          buildErrorMessage(result.error) || 'Failed to update internal tools config, please try again.',
+          buildErrorMessage(result.error) || 'Failed to update modules config, please try again.',
         );
       }
     }, 0);

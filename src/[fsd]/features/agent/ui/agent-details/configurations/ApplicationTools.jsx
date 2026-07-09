@@ -148,7 +148,7 @@ const ApplicationTools = memo(props => {
                   sx={styles.internalToolsContainer}
                   data-tour={AGENT_TOUR_TARGET_IDS.advancedSettings}
                 >
-                  <Typography sx={styles.internalToolsTitle}>INTERNAL TOOLS</Typography>
+                  <Typography sx={styles.internalToolsTitle}>MODULES</Typography>
                   <Box sx={styles.internalToolsGrid}>
                     {pipelineVisibleTools.map(tool => (
                       <Switch.AgentInternalToolSwitch

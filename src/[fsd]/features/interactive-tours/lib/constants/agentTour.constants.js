@@ -20,7 +20,7 @@ export const agentTourSteps = [
     content: `ELITEA Agents are customizable AI-powered virtual assistants that automate tasks and streamline workflows. Each agent is built around three core components:
 
 - **Instructions** — define what the agent does and how it behaves
-- **Toolkits** — connect external services (GitHub, Jira, Confluence, SQL, and more) and internal tools
+- **Toolkits** — connect external services (GitHub, Jira, Confluence, SQL, and more) and modules
 - **AI Model** — the language model that powers the agent's reasoning and responses
 
 Once configured, an agent can autonomously execute complex, multi-step tasks such as reviewing code, generating documentation, creating Jira tickets, or querying databases — all without constant human input.`,
@@ -51,8 +51,8 @@ Once configured, an agent can autonomously execute complex, multi-step tasks suc
     id: 'advanced-settings',
     target: AGENT_TOUR_TARGETS.advancedSettings,
     placement: 'right',
-    title: 'Internal Tools & AI Model',
-    content: `**Internal Tools** are built-in capabilities available to every agent without external credentials. Enable them directly from the agent configuration:
+    title: 'Modules & AI Model',
+    content: `**Modules** are built-in capabilities available to every agent without external credentials. Enable them directly from the agent configuration:
 
 - **Attachments** — lets users upload files and images for the agent to analyze
 - **Data Analysis** — processes CSV/Excel files, runs statistical analysis, creates charts

@@ -133,7 +133,7 @@ const NewConversationView = forwardRef(
           } else {
             newTools.delete(key);
           }
-          toastSuccess('Internal tools configuration updated');
+          toastSuccess('Modules configuration updated');
           return Array.from(newTools);
         });
       },

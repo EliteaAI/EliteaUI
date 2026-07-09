@@ -91,7 +91,7 @@ Each chat is an independent dialogue session. Context is not shared between sepa
     content: `**ELITEA Agents** are customizable AI-powered virtual assistants that automate tasks and streamline workflows. Each agent is built around three core components:
 
 - **Instructions** — define what the agent does and how it behaves
-- **Toolkits** — connect external services (GitHub, Jira, Confluence, SQL, and more) and internal tools
+- **Toolkits** — connect external services (GitHub, Jira, Confluence, SQL, and more) and modules
 - **AI Model** — the language model that powers the agent's reasoning and responses
 
 Once configured, an agent can autonomously execute complex, multi-step tasks such as reviewing code, generating documentation, creating Jira tickets, or querying databases — all without constant human input.`,

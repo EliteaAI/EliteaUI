@@ -40,7 +40,7 @@ const SUBMENU_KEYS = {
 };
 
 const EXPANDABLE_ITEMS = [
-  { key: SUBMENU_KEYS.INTERNAL_TOOLS, label: 'Internal Tools', Icon: ValueIcon },
+  { key: SUBMENU_KEYS.INTERNAL_TOOLS, label: 'Modules', Icon: ValueIcon },
   { key: SUBMENU_KEYS.AGENTS, label: 'Agents', Icon: ApplicationsIcon },
   { key: SUBMENU_KEYS.PIPELINES, label: 'Pipelines', Icon: FlowIcon },
   { key: SUBMENU_KEYS.TOOLKITS, label: 'Toolkits', Icon: ToolIcon },

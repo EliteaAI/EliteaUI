@@ -67,8 +67,8 @@ Agents, pipelines, toolkits, and MCPs can also be created or edited directly fro
     id: 'conversation-internal-tools',
     target: CHAT_TOUR_TARGETS.internalTools,
     placement: 'bottom',
-    title: 'Internal Tools',
-    content: `Use this button to enable built-in tools for the current conversation. The popup shows only the tools available in the current project configuration.
+    title: 'Modules',
+    content: `Use this button to enable built-in modules for the current conversation. The popup shows only the modules available in the current project configuration.
 
 - **Data Analysis** — work with CSV and Excel files using natural language
 - **Python Sandbox** — execute Python code securely with Pyodide
