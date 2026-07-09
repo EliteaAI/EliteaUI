@@ -996,7 +996,7 @@ export { isAttachmentImage as isImageFile } from '@/utils/attachmentImageUtils';
 
 export const buildForkedEntityHref = (entity, meta) => {
   if (
-    !['prompts', 'agents', 'pipelines'].includes(entity) ||
+    !['prompts', 'agents', 'pipelines', 'skills'].includes(entity) ||
     !meta?.parent_project_id ||
     !meta?.parent_entity_id
   ) {
@@ -1013,6 +1013,7 @@ export const buildForkedEntityHref = (entity, meta) => {
 export const getEntityTypeByCardType = cardType => {
   if (isApplicationCard(cardType)) return 'agents';
   if (isPipelineCard(cardType)) return 'pipelines';
+  if (isSkillCard(cardType)) return 'skills';
 };
 
 export const getEntityType = type => {
