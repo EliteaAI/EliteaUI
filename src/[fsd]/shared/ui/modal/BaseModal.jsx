@@ -147,7 +147,7 @@ const BaseModal = memo(props => {
         </Box>
       </DialogTitle>
 
-      <DialogContent sx={[styles.dialogContent, dialogSx]}>{content}</DialogContent>
+      <DialogContent sx={[styles.dialogContent, dialogSx].flat().filter(Boolean)}>{content}</DialogContent>
       {(actions || onConfirm) && !isFullscreen && (
         <DialogActions sx={styles.dialogActions}>{renderActions()}</DialogActions>
       )}

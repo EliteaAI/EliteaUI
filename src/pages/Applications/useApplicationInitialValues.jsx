@@ -70,6 +70,7 @@ export const useCreateApplicationInitialValues = forPipeline => {
           step_limit: 25,
           internal_tools: ['internal_mcp'],
         },
+        notes: '',
       },
       yamlJsonObject: undefined,
     }),
@@ -147,8 +148,17 @@ const useApplicationInitialValues = forPipeline => {
 
   const { initialValues, initialPipeline } = useMemo(() => {
     if (!forPipeline) {
+      if (!applicationData?.version_details) {
+        return { initialValues: applicationData };
+      }
       return {
-        initialValues: applicationData,
+        initialValues: {
+          ...applicationData,
+          version_details: {
+            ...applicationData.version_details,
+            notes: applicationData.version_details.notes ?? '',
+          },
+        },
       };
     } else {
       let parsedYamlJson = undefined;
@@ -180,6 +190,7 @@ const useApplicationInitialValues = forPipeline => {
             ...applicationData,
             version_details: {
               ...applicationData.version_details,
+              notes: applicationData.version_details?.notes ?? '',
               pipeline_settings: {
                 nodes: nodes.map(node =>
                   FlowEditorHelpers.convertNode(
@@ -221,6 +232,7 @@ const useApplicationInitialValues = forPipeline => {
             ...applicationData,
             version_details: {
               ...applicationData.version_details,
+              notes: applicationData.version_details?.notes ?? '',
               pipeline_settings: {
                 ...applicationData.version_details?.pipeline_settings,
                 nodes: [...cloneNodes],
