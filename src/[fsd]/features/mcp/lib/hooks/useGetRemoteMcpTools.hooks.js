@@ -20,6 +20,7 @@ export const useGetRemoteMcpTools = ({ values, toolkitType, onToolsFetched }) =>
   const onToolsFetchedRef = useRef(onToolsFetched);
   const pendingRetryRef = useRef(false);
   const executeFetchRef = useRef(null);
+  const retryTimerRef = useRef(null);
 
   const { toastError, toastSuccess } = useToast();
 
@@ -174,9 +175,22 @@ export const useGetRemoteMcpTools = ({ values, toolkitType, onToolsFetched }) =>
   useEffect(() => {
     if (!showModal && pendingRetryRef.current) {
       pendingRetryRef.current = false;
-      setTimeout(() => executeFetchRef.current?.(), 500);
+      if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+      retryTimerRef.current = setTimeout(() => {
+        executeFetchRef.current?.();
+        retryTimerRef.current = null;
+      }, 500);
     }
   }, [showModal]);
+
+  useEffect(() => {
+    return () => {
+      if (retryTimerRef.current) {
+        clearTimeout(retryTimerRef.current);
+        retryTimerRef.current = null;
+      }
+    };
+  }, []);
 
   const fetchTools = useCallback(() => {
     const serverUrl = values?.settings?.url;
