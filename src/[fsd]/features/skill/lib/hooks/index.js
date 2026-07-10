@@ -6,3 +6,6 @@ export { useSkillImport } from './useSkillImport.hooks';
 export { useAttachSkill } from './useAttachSkill.hooks';
 export { useDetachSkill } from './useDetachSkill.hooks';
 export { useForkSkill } from './useForkSkill.hooks';
+export { usePublishSkill } from './usePublishSkill.hooks';
+export { usePublishSkillMenu } from './usePublishSkillMenu.hooks';
+export { useUnpublishSkillMenu } from './useUnpublishSkillMenu.hooks';

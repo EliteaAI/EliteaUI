@@ -457,6 +457,47 @@ const skillsApi = eliteaApi
           }
         },
       }),
+      validateSkillForPublish: build.mutation({
+        query: ({ projectId, skillId, versionId, body }) => ({
+          url: `${apiSlicePath}/publish_skill_validate/${mode}/${projectId}/${skillId}/${versionId}`,
+          method: 'POST',
+          headers,
+          body,
+        }),
+        invalidatesTags: [],
+      }),
+      publishSkill: build.mutation({
+        query: ({ projectId, skillId, versionId, body }) => ({
+          url: `${apiSlicePath}/publish_skill/${mode}/${projectId}/${skillId}/${versionId}`,
+          method: 'POST',
+          headers,
+          body,
+        }),
+        invalidatesTags: (result, error, arg) => {
+          if (error) return [];
+          return [
+            TAG_TYPE_SKILLS,
+            TAG_TYPE_SKILL_DETAILS,
+            { type: TAG_TYPE_SKILL_DETAILS, id: arg?.skillId },
+          ];
+        },
+      }),
+      unpublishSkill: build.mutation({
+        query: ({ projectId, skillId, versionId, body }) => ({
+          url: `${apiSlicePath}/unpublish_skill/${mode}/${projectId}/${skillId}/${versionId}`,
+          method: 'POST',
+          headers,
+          body,
+        }),
+        invalidatesTags: (result, error, arg) => {
+          if (error) return [];
+          return [
+            TAG_TYPE_SKILLS,
+            TAG_TYPE_SKILL_DETAILS,
+            { type: TAG_TYPE_SKILL_DETAILS, id: arg?.skillId },
+          ];
+        },
+      }),
       deleteSkillIcon: build.mutation({
         query: ({ projectId, name }) => {
           return {
@@ -519,4 +560,7 @@ export const {
   useUploadSkillIconMutation,
   useReplaceSkillIconMutation,
   useDeleteSkillIconMutation,
+  useValidateSkillForPublishMutation,
+  usePublishSkillMutation,
+  useUnpublishSkillMutation,
 } = skillsApi;

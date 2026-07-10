@@ -552,6 +552,9 @@ export const PERMISSIONS = {
     // webhook: 'models.applications.webhook.post', // According to Mikhail's comment, this permission is not used
     delete: 'models.applications.application.delete',
   },
+  skills: {
+    publish: 'models.applications.skills.publish',
+  },
 
   users: {
     view: 'configuration.users.users.view',
