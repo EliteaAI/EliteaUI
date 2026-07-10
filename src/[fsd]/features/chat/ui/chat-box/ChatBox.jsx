@@ -1588,7 +1588,7 @@ const ChatBox = forwardRef((props, boxRef) => {
   );
 
   const onResendQuestionStream = useCallback(
-    async (question_id, question) => {
+    async (question_id, question, attachmentList = []) => {
       const leftChatHistory = chat_history.slice(
         0,
         chat_history.findIndex(item => item.id === question_id),
@@ -1600,7 +1600,7 @@ const ChatBox = forwardRef((props, boxRef) => {
         question_id,
         chatHistory: leftChatHistory,
         participant,
-        attachmentList: [],
+        attachmentList,
       });
       emit(payload);
     },
@@ -1632,11 +1632,13 @@ const ChatBox = forwardRef((props, boxRef) => {
             ...item,
             ...(textUpdate ? { content: textUpdate.content } : {}),
             message_items: [
-              ...(item.message_items || []).map(mi => {
-                const update = updatedItems?.find(u => u.uuid === mi.uuid);
-                if (!update) return mi;
-                return { ...mi, item_details: { ...mi.item_details, content: update.content } };
-              }),
+              ...(item.message_items || [])
+                .filter(mi => mi.item_type !== 'attachment_message')
+                .map(mi => {
+                  const update = updatedItems?.find(u => u.uuid === mi.uuid);
+                  if (!update) return mi;
+                  return { ...mi, item_details: { ...mi.item_details, content: update.content } };
+                }),
               ...newAttachmentItems,
             ],
           };
@@ -1649,7 +1651,17 @@ const ChatBox = forwardRef((props, boxRef) => {
         onRegenerateAnswer(answerId, participant, updatedItems, newAttachmentItems);
       } else {
         const question = textUpdate?.content || '';
-        onResendQuestionStream(id, question);
+        const questionIndex = chat_history.findIndex(item => item.id === id);
+        const existingAttachments = (
+          chat_history[questionIndex]?.message_items?.filter(
+            item => item.item_type === 'attachment_message',
+          ) || []
+        ).map(i => ({ filepath: i.item_details.filepath }));
+        const attachmentList = [
+          ...existingAttachments,
+          ...newAttachmentItems.map(i => ({ filepath: i.item_details.filepath })),
+        ];
+        onResendQuestionStream(id, question, attachmentList);
       }
     },
     [chat_history, activeConversation, onRegenerateAnswer, onResendQuestionStream, setChatHistory],
