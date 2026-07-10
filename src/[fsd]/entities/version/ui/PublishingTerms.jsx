@@ -5,7 +5,12 @@ import { Box, Dialog, DialogContent, DialogTitle, IconButton, Typography } from 
 import InputActionsToolbar from '@/[fsd]/shared/ui/input/InputActionsToolbar';
 import CloseIcon from '@/components/Icons/CloseIcon';
 
-const TERMS_SECTIONS = [
+const ENTITY_STUDIO = { agent: 'Agent Studio', skill: 'Skills' };
+const ENTITY_PLURAL = { agent: 'Agents', skill: 'Skills' };
+
+const capitalize = value => value.charAt(0).toUpperCase() + value.slice(1);
+
+const buildAgentTermsSections = (entityLabel, studioName, entityPlural) => [
   {
     heading: '1 - Exclusions Notice',
     lines: [
@@ -15,39 +20,81 @@ const TERMS_SECTIONS = [
       '• Environment-specific configurations',
       '• Internal tool endpoints',
       '',
-      'Consumers of your published agent will need to provide their own credentials and configurations.',
+      `Consumers of your published ${entityLabel} will need to provide their own credentials and configurations.`,
     ],
   },
   {
     heading: '2 - Best Practices Requirements',
     lines: [
-      'To ensure a quality experience for consumers, your agent should include:',
+      `To ensure a quality experience for consumers, your ${entityLabel} should include:`,
       '• A clear, descriptive name (not generic)',
       '• A detailed description explaining capabilities',
       '• At least one tag for discoverability',
       '• Comprehensive instructions for the model',
       '• Welcome message and conversation starters',
       '',
-      'Agents that do not meet these requirements may fail validation.',
+      `${entityPlural} that do not meet these requirements may fail validation.`,
     ],
   },
   {
     heading: '3 - Administrative Rights',
     lines: [
       'By publishing, you acknowledge that:',
-      '• Platform administrators may unpublish your agent at any time',
-      '• You retain the ability to unpublish your own agent',
-      '• Published agents are visible to all users in Agent Studio',
-      '• Usage metrics may be collected for published agents',
+      `• Platform administrators may unpublish your ${entityLabel} at any time`,
+      `• You retain the ability to unpublish your own ${entityLabel}`,
+      `• Published ${entityLabel}s are visible to all users in ${studioName}`,
+      `• Usage metrics may be collected for published ${entityLabel}s`,
+    ],
+  },
+];
+
+const buildSkillTermsSections = () => [
+  {
+    heading: '1 - Content Notice',
+    lines: [
+      'Skills are published as pure prompt instruction sets. The published version is a read-only snapshot of your skill at the time of publishing.',
+      'No external integrations, credentials, or project-specific references are carried over.',
+    ],
+  },
+  {
+    heading: '2 - Best Practices Requirements',
+    lines: [
+      'For an optimal experience, your published skill should include:',
+      '• A clear, descriptive name (not generic)',
+      '• A comprehensive description covering purpose and use cases',
+      '• A distinctive icon that identifies the skill',
+      '• Complete, actionable instructions',
+      '• A descriptive version name following semantic versioning',
+      '',
+      'Skills that do not meet these requirements may fail validation.',
+    ],
+  },
+  {
+    heading: '3 - Administrative Rights',
+    lines: [
+      'Elitea administrators reserve the right to unpublish skills that:',
+      '• Violate platform rules or guidelines',
+      '• Do not meet quality standards',
+      '• Contain inappropriate, harmful, or offensive content',
+      '• Embed credentials, API keys, or security-sensitive information',
+      '• Fail to satisfy publishing requirements',
     ],
   },
 ];
 
 const COLLAPSED_HEIGHT = '10rem';
 
-const PublishingTerms = memo(() => {
+const PublishingTerms = memo(({ entityLabel = 'agent' }) => {
   const [isHovering, setIsHovering] = useState(false);
   const [showFullScreen, setShowFullScreen] = useState(false);
+
+  const sections = entityLabel === 'skill'
+    ? buildSkillTermsSections()
+    : buildAgentTermsSections(
+        entityLabel,
+        ENTITY_STUDIO[entityLabel] || ENTITY_STUDIO.agent,
+        ENTITY_PLURAL[entityLabel] || capitalize(`${entityLabel}s`),
+      );
 
   return (
     <>
@@ -69,7 +116,7 @@ const PublishingTerms = memo(() => {
           />
         )}
         <Box sx={{ ...styles.scrollArea, maxHeight: COLLAPSED_HEIGHT }}>
-          <TermsContent />
+          <TermsContent sections={sections} />
         </Box>
       </Box>
 
@@ -92,7 +139,7 @@ const PublishingTerms = memo(() => {
             </IconButton>
           </DialogTitle>
           <DialogContent sx={styles.fullScreenContent}>
-            <TermsContent />
+            <TermsContent sections={sections} />
           </DialogContent>
         </Dialog>
       )}
@@ -102,9 +149,9 @@ const PublishingTerms = memo(() => {
 
 PublishingTerms.displayName = 'PublishingTerms';
 
-const TermsContent = memo(() => (
+const TermsContent = memo(({ sections }) => (
   <Box sx={styles.termsContent}>
-    {TERMS_SECTIONS.map((section, idx) => (
+    {sections.map((section, idx) => (
       <Box
         key={idx}
         sx={styles.section}

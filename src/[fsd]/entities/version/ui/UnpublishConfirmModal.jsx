@@ -6,9 +6,25 @@ import { Button } from '@/[fsd]/shared/ui';
 import CloseIcon from '@/components/Icons/CloseIcon';
 import { StyledDialog, StyledDialogActions } from '@/components/StyledDialog';
 
+const ENTITY_STUDIO = { agent: 'Agents Studio', skill: 'Skills' };
+
+const capitalize = value => value.charAt(0).toUpperCase() + value.slice(1);
+
 const UnpublishConfirmModal = memo(props => {
-  const { open, onClose, onConfirm, isLoading, showReason = false, agentName, versionName } = props;
+  const {
+    open,
+    onClose,
+    onConfirm,
+    isLoading,
+    showReason = false,
+    agentName,
+    versionName,
+    entityLabel = 'agent',
+  } = props;
   const [reason, setReason] = useState('');
+
+  const entityTitle = capitalize(entityLabel);
+  const studioName = ENTITY_STUDIO[entityLabel] || ENTITY_STUDIO.agent;
 
   const handleConfirm = useCallback(() => {
     onConfirm(showReason ? reason.trim() || undefined : undefined);
@@ -46,7 +62,7 @@ const UnpublishConfirmModal = memo(props => {
           variant="headingSmall"
           color="text.secondary"
         >
-          Unpublish Agent
+          Unpublish {entityTitle}
         </Typography>
         <IconButton
           variant="elitea"
@@ -88,8 +104,8 @@ const UnpublishConfirmModal = memo(props => {
             >
               {versionName})?
             </Typography>{' '}
-            The agent will be removed from Agents Studio immediately. Existing conversations using this agent
-            version may be affected.
+            The {entityLabel} will be removed from {studioName} immediately. Existing conversations using this{' '}
+            {entityLabel} version may be affected.
           </Typography>
         )}
       </DialogContent>

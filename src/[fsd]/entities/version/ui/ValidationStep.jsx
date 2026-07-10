@@ -20,10 +20,12 @@ import InfoIcon from '@/components/Icons/InfoIcon';
 import SuccessIcon from '@/components/Icons/SuccessIcon';
 import useToast from '@/hooks/useToast';
 
+const ENTITY_STUDIO = { agent: 'Agent Studio', skill: 'Skills' };
+
 const STATUS_CONFIG = {
   PASS: {
-    message:
-      'Your agent version meets all the necessary requirements and is ready to publish to Agent Studio!',
+    message: (entityLabel, studioName) =>
+      `Your ${entityLabel} version meets all the necessary requirements and is ready to publish to ${studioName}!`,
     color: (palette, alphaMui) => ({
       iconColor: palette.status.publishedIcon,
       message: palette.status.publishedText,
@@ -34,8 +36,8 @@ const STATUS_CONFIG = {
     iconColor: theme => theme.palette.status.published,
   },
   WARN: {
-    message:
-      'Your agent version meets the necessary requirements, but has some points for improvement. Follow summary details to improve.',
+    message: entityLabel =>
+      `Your ${entityLabel} version meets the necessary requirements, but has some points for improvement. Follow summary details to improve.`,
     color: (palette, alphaMui) => ({
       iconColor: palette.status.onModeration,
       message: palette.status.warningText,
@@ -45,8 +47,8 @@ const STATUS_CONFIG = {
     Icon: AttentionIcon,
   },
   FAIL: {
-    message:
-      "Sorry, your agent version doesn't meet all the necessary requirements. Follow summary details to fix the issues and try again.",
+    message: entityLabel =>
+      `Sorry, your ${entityLabel} version doesn't meet all the necessary requirements. Follow summary details to fix the issues and try again.`,
     color: (palette, alphaMui) => ({
       iconColor: palette.status.rejected,
       message: palette.status.rejectedText,
@@ -97,7 +99,7 @@ const buildPlainText = (critical_issues = [], warnings = [], recommendations = [
   return parts.join('\n').trimEnd();
 };
 
-const ValidationStep = memo(({ isValidating, validationResult }) => {
+const ValidationStep = memo(({ isValidating, validationResult, entityLabel = 'agent' }) => {
   if (isValidating) {
     return (
       <Box sx={styles.loadingRoot}>
@@ -106,7 +108,7 @@ const ValidationStep = memo(({ isValidating, validationResult }) => {
           color="text.secondary"
           sx={{ textAlign: 'center' }}
         >
-          Reviewing your agent version to ensure it meets publication rules.
+          Reviewing your {entityLabel} version to ensure it meets publication rules.
         </Typography>
         <CircularProgress size={48} />
       </Box>
@@ -117,14 +119,20 @@ const ValidationStep = memo(({ isValidating, validationResult }) => {
     return null;
   }
 
-  return <ValidationResult result={validationResult} />;
+  return (
+    <ValidationResult
+      result={validationResult}
+      entityLabel={entityLabel}
+    />
+  );
 });
 
 ValidationStep.displayName = 'ValidationStep';
 
-const ValidationResult = memo(({ result }) => {
+const ValidationResult = memo(({ result, entityLabel = 'agent' }) => {
   const { status, counts = {}, critical_issues = [], warnings = [], recommendations = [] } = result;
   const config = STATUS_CONFIG[status] || STATUS_CONFIG.FAIL;
+  const studioName = ENTITY_STUDIO[entityLabel] || ENTITY_STUDIO.agent;
   const theme = useTheme();
   const scrollRef = useRef(null);
   const { toastInfo, toastError } = useToast();
@@ -174,7 +182,7 @@ const ValidationResult = memo(({ result }) => {
           variant="labelMedium"
           sx={{ color: config.color(theme.palette, alpha).message }}
         >
-          {config.message}
+          {config.message(entityLabel, studioName)}
         </Typography>
       </Box>
 
