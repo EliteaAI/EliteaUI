@@ -19,6 +19,7 @@ export const useGetRemoteMcpTools = ({ values, toolkitType, onToolsFetched }) =>
 
   const onToolsFetchedRef = useRef(onToolsFetched);
   const pendingRetryRef = useRef(false);
+  const executeFetchRef = useRef(null);
 
   const { toastError, toastSuccess } = useToast();
 
@@ -163,12 +164,19 @@ export const useGetRemoteMcpTools = ({ values, toolkitType, onToolsFetched }) =>
     effectiveToolkitType,
   ]);
 
+  // Keep ref current so the retry timeout always calls the latest executeFetch
+  // without adding it to the effect dependency array (which would re-trigger the
+  // effect on every render instead of only when the modal closes).
+  useEffect(() => {
+    executeFetchRef.current = executeFetch;
+  });
+
   useEffect(() => {
     if (!showModal && pendingRetryRef.current) {
       pendingRetryRef.current = false;
-      setTimeout(executeFetch, 500);
+      setTimeout(() => executeFetchRef.current?.(), 500);
     }
-  }, [showModal, executeFetch]);
+  }, [showModal]);
 
   const fetchTools = useCallback(() => {
     const serverUrl = values?.settings?.url;
