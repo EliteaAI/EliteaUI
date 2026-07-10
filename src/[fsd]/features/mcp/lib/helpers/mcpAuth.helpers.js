@@ -139,12 +139,14 @@ export const canonicalizeServerUrl = url => {
     const scheme = parsed.protocol.replace(':', '').toLowerCase();
     const host = parsed.hostname.toLowerCase();
     const port = parsed.port ? `:${parsed.port}` : '';
-    const path = parsed.pathname || '';
-    const normalized = `${scheme}://${host}${port}${path}`;
-    // Prefer no trailing slash unless path is meaningful
-    return normalized.endsWith('/') && (path === '/' || path === '') ? normalized.slice(0, -1) : normalized;
+    // Normalize path: lowercase, collapse double slashes, strip trailing slash
+    const rawPath = parsed.pathname || '/';
+    const segments = rawPath.split('/').filter((seg, i) => i === 0 || seg !== '');
+    const normalizedPath = segments.join('/').toLowerCase();
+    const path = normalizedPath === '/' ? '' : normalizedPath;
+    return `${scheme}://${host}${port}${path}`;
   } catch {
-    return url;
+    return url.toLowerCase().replace(/\/$/, '');
   }
 };
 

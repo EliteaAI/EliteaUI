@@ -31,7 +31,13 @@ const McpAuthStatus = memo(({ authConfig } = {}) => {
   // Use the token change hook to monitor login status.
   // authConfig.tokenOptions overrides the default derivation for non-MCP toolkits (e.g. SharePoint).
   const tokenOptions = useMemo(
-    () => authConfig?.tokenOptions ?? (isPrebuildMcp ? { toolkitType } : { serverUrl: url }),
+    () =>
+      authConfig?.tokenOptions ??
+      (isPrebuildMcp
+        ? { toolkitType }
+        : authConfig?.tokenStorageKey
+          ? { serverUrl: authConfig.tokenStorageKey }
+          : { serverUrl: url }),
     [authConfig, isPrebuildMcp, toolkitType, url],
   );
   const { isLoggedIn: hasLoggedInToMcp } = useMcpTokenChange(tokenOptions);
