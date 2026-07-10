@@ -24,6 +24,7 @@ const BasicMenuItem = ({
   showCheckIcon,
   setActiveDialog,
   skipConfirmation,
+  testId,
 }) => {
   const theme = useTheme();
   const [anchorEl, setAnchorEl] = useState(null);
@@ -53,6 +54,7 @@ const BasicMenuItem = ({
   return (
     <>
       <MenuItem
+        data-testid={testId ? `${testId}-menuitem` : undefined}
         onClick={subMenuItems?.length ? onClickMenu : onClick}
         disabled={disabled}
         sx={{
@@ -166,6 +168,7 @@ const ActionWithDialog = ({
   dialogKey,
   skipConfirmation,
   addSeparator,
+  testId,
 }) => {
   const openDialog = useCallback(
     event => {
@@ -221,6 +224,7 @@ const ActionWithDialog = ({
       disabled={disabled}
       showCheckIcon={showCheckIcon}
       addSeparator={addSeparator}
+      testId={testId}
     />
   );
 };
@@ -333,6 +337,7 @@ export default function DotMenu({
         />
       ) : (
         <IconButton
+          data-testid={id ? `${id}-menu-button` : undefined}
           variant="elitea"
           color={iconColor}
           id={id + '-action'}
@@ -349,6 +354,7 @@ export default function DotMenu({
         </IconButton>
       )}
       <Menu
+        data-testid={id ? `${id}-menu` : undefined}
         id={id + '-dots-menu'}
         anchorEl={anchorEl}
         open={open}
@@ -376,6 +382,7 @@ export default function DotMenu({
                 addSeparator: item.addSeparator,
                 isSelected: item.isSelected,
                 showCheckIcon: item.showCheckIcon,
+                testId: item.key,
               };
 
               return item.onConfirm || item.confirmText ? (
@@ -435,6 +442,7 @@ export default function DotMenu({
                     addSeparator: item.addSeparator,
                     isSelected: item.isSelected,
                     showCheckIcon: item.showCheckIcon,
+                    testId: item.key,
                   };
                   return item.onConfirm || item.confirmText ? (
                     <TooltipWrapper
