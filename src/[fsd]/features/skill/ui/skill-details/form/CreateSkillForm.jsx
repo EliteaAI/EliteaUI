@@ -228,6 +228,7 @@ const CreateSkillForm = memo(props => {
 
                 <TagEditor
                   id="tags"
+                  data-testid="skill-tags-input"
                   label="Tags"
                   tagList={tagList || []}
                   stateTags={formik.values?.version_details?.tags || []}
