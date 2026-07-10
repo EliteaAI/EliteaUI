@@ -17,6 +17,7 @@ const SidebarProjectSelect = memo(() => {
 
   const handleContainerMouseDown = useCallback(e => {
     if (e.target.closest('[role="combobox"]')) return;
+    if (e.target.closest('[role="dialog"]')) return;
     const select = containerRef.current?.querySelector('[role="combobox"]');
     if (select?.getAttribute('aria-expanded') === 'true') return;
     select?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
