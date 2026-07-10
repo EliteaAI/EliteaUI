@@ -20,6 +20,7 @@ const ChatMessageWrapper = memo(props => {
     userId,
     onDeleteAnswer,
     getOnSubmit,
+    onAddEditAttachment,
     onRemoveAttachment,
     onClickReplyTo,
     onEditCanvas,
@@ -113,6 +114,7 @@ const ChatMessageWrapper = memo(props => {
             : undefined
         }
         onSubmit={getOnSubmit}
+        onAddEditAttachment={onAddEditAttachment}
         onRemoveAttachment={onRemoveAttachment}
       />
     );

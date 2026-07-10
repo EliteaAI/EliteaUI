@@ -17,6 +17,7 @@ const ChatMessageList = memo(props => {
     chat_history,
     activeConversation,
     onSubmitEditedMessage,
+    onAddEditAttachment,
     onDeleteAnswer,
     onEditCanvas,
     selectedCodeBlockInfo,
@@ -238,6 +239,11 @@ const ChatMessageList = memo(props => {
             getOnSubmit={
               userId === message.user_id && index === lastUserMessageIndex && !isLoading && !isStreaming
                 ? onSubmitEditedMessage
+                : undefined
+            }
+            onAddEditAttachment={
+              userId === message.user_id && index === lastUserMessageIndex && !isLoading && !isStreaming
+                ? onAddEditAttachment
                 : undefined
             }
             onRemoveAttachment={onRemoveAttachment}

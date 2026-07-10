@@ -6,6 +6,7 @@ import ListItemAvatar from '@mui/material/ListItemAvatar';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { useParticipantName } from '@/[fsd]/features/chat/participants/lib/hooks';
+import { ChatButton } from '@/[fsd]/features/chat/ui';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import Markdown from '@/[fsd]/shared/ui/markdown';
@@ -43,9 +44,11 @@ const UserMessage = React.forwardRef((props, ref) => {
     onClickSentTo,
     markdown = false,
     onRemoveAttachment,
+    onAddEditAttachment,
   } = props;
   const [value, setValue] = useState(content);
   const [isEditing, setIsEditing] = useState(false);
+  const [editAttachments, setEditAttachments] = useState([]);
   const { highLightMe } = useHighlightUserMessage(messageId);
   const participantName = useParticipantName(sentTo);
   const questionItem = useMemo(
@@ -59,25 +62,39 @@ const UserMessage = React.forwardRef((props, ref) => {
 
   const onEdit = useCallback(() => {
     setValue(content || questionItem?.item_details?.content || '');
+    setEditAttachments([]);
     setIsEditing(true);
   }, [content, questionItem]);
 
   const onCancel = useCallback(() => {
     setIsEditing(false);
     setValue(content || questionItem?.item_details?.content || '');
+    setEditAttachments([]);
   }, [content, questionItem]);
 
   const onChange = useCallback(event => {
     setValue(event.target.value);
   }, []);
 
+  const onHandleAddFiles = useCallback(
+    async files => {
+      if (!onAddEditAttachment) return;
+      const uploaded = await onAddEditAttachment(files);
+      if (uploaded?.length) {
+        setEditAttachments(prev => [...prev, ...uploaded]);
+      }
+    },
+    [onAddEditAttachment],
+  );
+
   const onClickSubmit = useCallback(() => {
     const updatedItems = questionItem
       ? [{ uuid: questionItem.uuid, content: value, item_type: 'text_message' }]
       : [];
     setIsEditing(false);
-    onSubmit(messageId, updatedItems);
-  }, [messageId, onSubmit, questionItem, value]);
+    setEditAttachments([]);
+    onSubmit(messageId, updatedItems, editAttachments);
+  }, [editAttachments, messageId, onSubmit, questionItem, value]);
 
   const isSentToDummyParticipant =
     sentTo &&
@@ -225,6 +242,12 @@ const UserMessage = React.forwardRef((props, ref) => {
       ) : (
         <Box sx={styles.editContainer}>
           <ChatInputContainer sx={styles.editInputContainer}>
+            {onAddEditAttachment && (
+              <ChatButton.AttachmentButton
+                attachments={editAttachments}
+                onAttachFiles={onHandleAddFiles}
+              />
+            )}
             <StyledTextField
               value={value}
               fullWidth
@@ -255,7 +278,7 @@ const UserMessage = React.forwardRef((props, ref) => {
               variant={BUTTON_VARIANTS.contained}
               color={BUTTON_COLORS.primary}
               sx={styles.submitButton}
-              disabled={value === content || !value.trim()}
+              disabled={!editAttachments.length && (value === content || !value.trim())}
               onClick={onClickSubmit}
             >
               Save and apply

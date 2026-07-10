@@ -1037,7 +1037,7 @@ const ChatBox = forwardRef((props, boxRef) => {
   );
 
   const onRegenerateAnswer = useCallback(
-    async (uuid, messageParticipant, updatedItems) => {
+    async (uuid, messageParticipant, updatedItems, newAttachmentItems = []) => {
       stopTTS();
       chatInput.current?.pauseSpeakingMode?.();
       let prevMessage = {};
@@ -1064,12 +1064,14 @@ const ChatBox = forwardRef((props, boxRef) => {
       const theQuestion =
         chat_history[questionIndex]?.message_items?.find(item => item.item_type === 'text_message')
           ?.item_details?.content || '';
-      const attachmentList =
-        (
+      const attachmentList = [
+        ...(
           chat_history[questionIndex]?.message_items?.filter(
             item => item.item_type === 'attachment_message',
           ) || []
-        ).map(i => ({ filepath: i.item_details.filepath })) || [];
+        ).map(i => ({ filepath: i.item_details.filepath })),
+        ...newAttachmentItems.map(i => ({ filepath: i.item_details.filepath })),
+      ];
       const question_id = chat_history[questionIndex]?.id;
       const leftChatHistory = chat_history.slice(0, questionIndex);
 
@@ -1605,8 +1607,23 @@ const ChatBox = forwardRef((props, boxRef) => {
     [chat_history, activeConversation, getPayload, emit],
   );
 
+  const onAddEditAttachment = useCallback(
+    async files => {
+      if (!files?.length || !activeConversation?.id) return [];
+      const dummyMessages = [{ message_items: [] }];
+      const { success, messages } = await uploadAttachments({
+        attachments: Array.isArray(files) ? files : [files],
+        conversationId: activeConversation.id,
+        messages: dummyMessages,
+      });
+      if (!success) return [];
+      return messages[0]?.message_items || [];
+    },
+    [activeConversation?.id, uploadAttachments],
+  );
+
   const onSubmitEditedMessage = useCallback(
-    (id, updatedItems) => {
+    (id, updatedItems, newAttachmentItems = []) => {
       const textUpdate = updatedItems?.find(u => u.item_type === 'text_message');
       setChatHistory(prev =>
         prev.map(item => {
@@ -1614,11 +1631,14 @@ const ChatBox = forwardRef((props, boxRef) => {
           return {
             ...item,
             ...(textUpdate ? { content: textUpdate.content } : {}),
-            message_items: (item.message_items || []).map(mi => {
-              const update = updatedItems?.find(u => u.uuid === mi.uuid);
-              if (!update) return mi;
-              return { ...mi, item_details: { ...mi.item_details, content: update.content } };
-            }),
+            message_items: [
+              ...(item.message_items || []).map(mi => {
+                const update = updatedItems?.find(u => u.uuid === mi.uuid);
+                if (!update) return mi;
+                return { ...mi, item_details: { ...mi.item_details, content: update.content } };
+              }),
+              ...newAttachmentItems,
+            ],
           };
         }),
       );
@@ -1626,7 +1646,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       const participant = ChatHelpers.getParticipantById(activeConversation, participant_id);
 
       if (answerId) {
-        onRegenerateAnswer(answerId, participant, updatedItems);
+        onRegenerateAnswer(answerId, participant, updatedItems, newAttachmentItems);
       } else {
         const question = textUpdate?.content || '';
         onResendQuestionStream(id, question);
@@ -2114,6 +2134,7 @@ const ChatBox = forwardRef((props, boxRef) => {
           onEditCanvas={onEditCanvas}
           selectedCodeBlockInfo={selectedCodeBlockInfo}
           onSubmitEditedMessage={onSubmitEditedMessage}
+          onAddEditAttachment={onAddEditAttachment}
           onScrollToTop={onLoadMoreMessages}
           onSelectParticipant={onSelectParticipant}
           isLoadingMore={isLoadingMore}
