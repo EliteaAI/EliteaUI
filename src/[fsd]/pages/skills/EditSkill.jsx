@@ -44,6 +44,7 @@ const buildInitialValues = data => ({
     tags: data?.version_details?.tags || data?.tags || [],
     instructions: data?.version_details?.instructions ?? data?.instructions ?? '',
     meta: data?.version_details?.meta || {},
+    status: data?.version_details?.status ?? null,
   },
 });
 
@@ -211,6 +212,7 @@ const EditSkill = memo(() => {
                   currentVersionId={currentVersionId}
                   onChangeVersion={handleChangeVersion}
                   onSetDefault={() => handleOpenDefaultDialog(currentVersionId)}
+                  onSuccess={handleSuccess}
                 />
               ),
               content: isFetching ? (

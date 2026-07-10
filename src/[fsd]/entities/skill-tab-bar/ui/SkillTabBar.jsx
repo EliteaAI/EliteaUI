@@ -8,6 +8,7 @@ import DiscardSkillButton from '@/[fsd]/features/skill/ui/DiscardSkillButton';
 import SaveSkillButton from '@/[fsd]/features/skill/ui/SaveSkillButton';
 import SaveSkillVersionButton from '@/[fsd]/features/skill/ui/SaveSkillVersionButton';
 import { Select } from '@/[fsd]/shared/ui';
+import PublishIcon from '@/assets/publish-version.svg?react';
 import PinIcon from '@/components/Icons/PinIcon';
 
 const SkillTabBar = memo(props => {
@@ -52,13 +53,22 @@ const SkillTabBar = memo(props => {
   );
 
   const renderVersionValue = useCallback(
-    option => (
-      <Box sx={styles.selectValueContainer}>
-        {option?.value === effectiveDefaultId && <PinIcon sx={{ fontSize: '1rem' }} />}
-        <Typography variant="labelMedium">{option?.label}</Typography>
-      </Box>
-    ),
-    [effectiveDefaultId, styles.selectValueContainer],
+    option => {
+      const isPublished = versions.find(v => v.id === option?.value)?.status === 'published';
+
+      return (
+        <Box sx={styles.selectValueContainer}>
+          {option?.value === effectiveDefaultId && <PinIcon sx={{ fontSize: '1rem' }} />}
+          {isPublished && (
+            <Box sx={styles.publishedIcon}>
+              <PublishIcon sx={{ fontSize: '1rem' }} />
+            </Box>
+          )}
+          <Typography variant="labelMedium">{option?.label}</Typography>
+        </Box>
+      );
+    },
+    [versions, effectiveDefaultId, styles.selectValueContainer, styles.publishedIcon],
   );
 
   return (
@@ -120,6 +130,12 @@ const skillTabBarStyles = () => ({
       fontSize: '1rem',
       path: { fill: palette.icon.fill.inactive },
     },
+  }),
+  publishedIcon: ({ palette }) => ({
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    svg: { path: { fill: `${palette.icon.fill.success} !important` } },
   }),
   label: ({ palette }) => ({
     display: 'flex',
