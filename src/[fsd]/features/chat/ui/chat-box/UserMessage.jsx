@@ -62,9 +62,9 @@ const UserMessage = React.forwardRef((props, ref) => {
 
   const onEdit = useCallback(() => {
     setValue(content || questionItem?.item_details?.content || '');
-    setEditAttachments([]);
+    setEditAttachments([...attachmentItems]);
     setIsEditing(true);
-  }, [content, questionItem]);
+  }, [content, questionItem, attachmentItems]);
 
   const onCancel = useCallback(() => {
     setIsEditing(false);
@@ -75,6 +75,19 @@ const UserMessage = React.forwardRef((props, ref) => {
   const onChange = useCallback(event => {
     setValue(event.target.value);
   }, []);
+
+  const onRemoveEditAttachment = useCallback(
+    (fileName, needToRemoveFromStorage) => {
+      setEditAttachments(prev =>
+        prev.filter(item => {
+          const itemFileName = item.item_details?.filepath || item.item_details?.name;
+          return itemFileName !== fileName;
+        }),
+      );
+      onRemoveAttachment?.(fileName, needToRemoveFromStorage);
+    },
+    [onRemoveAttachment],
+  );
 
   const onHandleAddFiles = useCallback(
     async files => {
@@ -242,12 +255,6 @@ const UserMessage = React.forwardRef((props, ref) => {
       ) : (
         <Box sx={styles.editContainer}>
           <ChatInputContainer sx={styles.editInputContainer}>
-            {onAddEditAttachment && (
-              <ChatButton.AttachmentButton
-                attachments={editAttachments}
-                onAttachFiles={onHandleAddFiles}
-              />
-            )}
             <StyledTextField
               value={value}
               fullWidth
@@ -266,11 +273,17 @@ const UserMessage = React.forwardRef((props, ref) => {
                 },
               }}
             />
+            {onAddEditAttachment && (
+              <ChatButton.AttachmentButton
+                attachments={editAttachments}
+                onAttachFiles={onHandleAddFiles}
+              />
+            )}
           </ChatInputContainer>
-          {attachmentItems?.length > 0 && (
+          {editAttachments?.length > 0 && (
             <MessageAttachmentList
-              items={attachmentItems}
-              onRemoveAttachment={onRemoveAttachment}
+              items={editAttachments}
+              onRemoveAttachment={onRemoveEditAttachment}
             />
           )}
           <Box sx={styles.editButtonsContainer}>
@@ -386,6 +399,8 @@ const styles = {
     width: '100%',
   },
   editInputContainer: ({ palette }) => ({
+    display: 'flex',
+    flexDirection: 'column',
     borderRadius: '0.5rem',
     border: `0.0625rem solid ${palette.border.userMessageEditor}`,
     background: palette.background.userInputBackground,
