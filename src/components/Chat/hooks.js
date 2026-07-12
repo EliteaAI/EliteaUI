@@ -786,6 +786,8 @@ export const useChatSocket = ({
               // the SAME sub-agent (same name) so the thinking view renders one
               // accordion per invocation instead of merging their activity.
               parent_agent_call_id: metadata?.parent_agent_call_id,
+              // Ancestry chain for depth-3 breadcrumb rendering (#5778 Phase 6).
+              parent_agent_path: metadata?.parent_agent_path,
               id: message.response_metadata?.tool_run_id,
               status: ToolActionStatus.processing,
               message: '',

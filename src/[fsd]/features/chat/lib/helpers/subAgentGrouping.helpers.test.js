@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildPcidAnchorMap,
   collapseSubAgentInvocationKeys,
+  computeBreadcrumbs,
   inflightToolChipId,
   isInvocationId,
   partitionActionsIntoBlocks,
@@ -589,5 +590,97 @@ describe('inflightToolChipId', () => {
 
   it('returns null when the tool ref has no id', () => {
     expect(inflightToolChipId({ type: TOOL }, TOOL)).toBeNull();
+  });
+});
+
+// --- computeBreadcrumbs (#5778 depth-3 per-tier numbering) ------------------ //
+//
+// Depth-1 (root -> child) keeps today's flat single-level "(N)" ordinal, computed
+// entirely in ApplicationThinkView.partitionIntoBlocks — computeBreadcrumbs is
+// not even called for those blocks (agentPath.length <= 1), so there is nothing
+// to regress here; the tests below just confirm the helper stays out of the way.
+// Depth-3 (root -> container -> leaf) needs its OWN per-tier "(n)" disambiguation
+// — e.g. two parallel containers of the same name must render "container (1)"
+// and "container (2)" even though each hosts only ONE leaf — anchored to each
+// tier's call_id (not array position) so the numbering is stable across
+// re-renders and between live streaming and reload.
+
+describe('computeBreadcrumb — #5778 depth-3 per-tier numbering', () => {
+  it('does not emit a breadcrumb for depth-1 entries (agentPath.length <= 1)', () => {
+    const entries = [
+      { instanceKey: 'cB1', agentPath: [{ name: 'B', call_id: 'cB1' }] },
+      { instanceKey: 'cB2', agentPath: [{ name: 'B', call_id: 'cB2' }] },
+      { instanceKey: 'noPath', agentPath: [] },
+    ];
+    expect(computeBreadcrumbs(entries).size).toBe(0);
+  });
+
+  it('disambiguates two parallel same-name containers, each with its own leaf', () => {
+    const entries = [
+      {
+        instanceKey: 'cLeafA',
+        agentPath: [
+          { name: 'container', call_id: 'cC1' },
+          { name: 'leaf', call_id: 'cLeafA' },
+        ],
+      },
+      {
+        instanceKey: 'cLeafB',
+        agentPath: [
+          { name: 'container', call_id: 'cC2' },
+          { name: 'leaf', call_id: 'cLeafB' },
+        ],
+      },
+    ];
+    const map = computeBreadcrumbs(entries);
+    expect(map.get('cLeafA')).toBe('container (1) ▸ leaf');
+    expect(map.get('cLeafB')).toBe('container (2) ▸ leaf');
+  });
+
+  it('is stable across re-computation and independent of relative block order', () => {
+    const containerA = { name: 'container', call_id: 'cC1' };
+    const containerB = { name: 'container', call_id: 'cC2' };
+    const entries1 = [
+      { instanceKey: 'cLeafA', agentPath: [containerA, { name: 'leaf', call_id: 'cLeafA' }] },
+      { instanceKey: 'cLeafB', agentPath: [containerB, { name: 'leaf', call_id: 'cLeafB' }] },
+    ];
+    // Same two blocks, fed in the opposite relative order alongside an unrelated
+    // depth-1 block interleaved between them — the scope's first-seen ordinals
+    // must not shift just because array position changed.
+    const entries2 = [
+      { instanceKey: 'cLeafB', agentPath: [containerB, { name: 'leaf', call_id: 'cLeafB' }] },
+      { instanceKey: 'unrelated', agentPath: [{ name: 'Other', call_id: 'cOther' }] },
+      { instanceKey: 'cLeafA', agentPath: [containerA, { name: 'leaf', call_id: 'cLeafA' }] },
+    ];
+    const map1 = computeBreadcrumbs(entries1);
+    const map2 = computeBreadcrumbs(entries2);
+    // cC1 is first-seen first in entries1 -> ordinal 1; in entries2 cC2 (via
+    // cLeafB) is first-seen first -> ordinal 1 there instead. What must stay
+    // stable is each call_id's OWN ordinal being consistent within a single
+    // computation, and running the SAME input twice must reproduce the SAME map.
+    expect(computeBreadcrumbs(entries1)).toEqual(map1);
+    expect(map1.get('cLeafA')).toBe('container (1) ▸ leaf');
+    expect(map1.get('cLeafB')).toBe('container (2) ▸ leaf');
+    expect(map2.get('cLeafB')).toBe('container (1) ▸ leaf');
+    expect(map2.get('cLeafA')).toBe('container (2) ▸ leaf');
+  });
+
+  it('combines a depth-1 run and a depth-3 run in one action list without cross-interference', () => {
+    const entries = [
+      // Depth-1: agentPath.length===1 -> no breadcrumb (existing ordinal path handles it).
+      { instanceKey: 'cB', agentPath: [{ name: 'B', call_id: 'cB' }] },
+      // Depth-3: root -> container -> leaf.
+      {
+        instanceKey: 'cLeaf',
+        agentPath: [
+          { name: 'container', call_id: 'cC' },
+          { name: 'leaf', call_id: 'cLeaf' },
+        ],
+      },
+    ];
+    const map = computeBreadcrumbs(entries);
+    expect(map.has('cB')).toBe(false);
+    // Lone container instance -> no "(n)" suffix (per-tier ">1" guard).
+    expect(map.get('cLeaf')).toBe('container ▸ leaf');
   });
 });

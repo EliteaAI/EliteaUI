@@ -171,6 +171,8 @@ export const convertToAIAnswer = (message_group, message_groups, participants) =
       toolActions.push({
         name: tool_name || TOOL_ACTION_NAMES.Llm,
         parent_agent_name: step.parent_agent_name || null,
+        // Ancestry chain for depth-3 breadcrumb rendering (#5778 Phase 6).
+        parent_agent_path: step.parent_agent_path || [],
         id: step.message.id,
         status: ToolActionStatus.complete,
         toolInputs: '',
@@ -218,6 +220,8 @@ export const convertToAIAnswer = (message_group, message_groups, participants) =
         // (below) normalises the over-split rounds to one epoch-anchor key per
         // invocation so reload matches the live stream (no flicker, #5386).
         parent_agent_call_id: step.metadata?.parent_agent_call_id,
+        // Ancestry chain for depth-3 breadcrumb rendering (#5778 Phase 6).
+        parent_agent_path: step.metadata?.parent_agent_path || [],
         id: step.tool_run_id,
         status: ToolActionStatus.complete,
         toolInputs: step.tool_inputs,

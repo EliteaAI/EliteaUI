@@ -5,6 +5,7 @@ import { Box, Typography } from '@mui/material';
 import { ChatHelpers } from '@/[fsd]/features/chat/lib/helpers';
 import {
   buildPcidAnchorMap,
+  computeBreadcrumbs,
   inflightToolChipId,
   isInvocationId,
   partitionActionsIntoBlocks,
@@ -111,7 +112,10 @@ const StreamingThinkBlocks = memo(props => {
     if (!subEntry && isInvocationId(key)) return null;
     const displayName = subEntry?.name || key;
     const ordinal = subEntry?.ordinal || 0;
-    const label = ordinal ? `${displayName} (${ordinal})` : displayName;
+    // #5778: a depth-3 block (agentPath.length >= 2) carries a breadcrumbLabel
+    // (e.g. "container (2) ▸ leaf"); depth-1 blocks have none and fall back to
+    // today's single-level ordinal label — zero behavior change for depth-1.
+    const label = subEntry?.breadcrumbLabel || (ordinal ? `${displayName} (${ordinal})` : displayName);
     const groups = subEntry?.groups || [];
     // One invocation can span several raw pcids: a sequential nested-HITL pause
     // RESUMES with a fresh pcid each round, and partitionActionsIntoBlocks folds
@@ -362,6 +366,16 @@ const ApplicationThinkView = memo(props => {
     return '';
   }, []);
 
+  // The full ancestry chain for depth-3 nested sub-agents (#5778 Phase 6):
+  // an ORDERED [{name, call_id}] array, one entry per ancestor hop from the
+  // root's first child down to the immediate parent. Depth-1 (today's only
+  // shape) yields a 1-element array; absent/older backends yield []. Mirrors
+  // deriveSubAgentName's two-location fallback (bare field vs. toolMeta).
+  const deriveSubAgentPath = useCallback(item => {
+    if (!item) return [];
+    return item.parent_agent_path || item.toolMeta?.parent_agent_path || [];
+  }, []);
+
   // A unique key per sub-agent INVOCATION (not merely per name). Two sequential
   // or parallel calls to the same sub-agent share a display name (and, on the
   // in-process path, the same derived thread_id), so name-keying merges their
@@ -466,12 +480,19 @@ const ApplicationThinkView = memo(props => {
       });
       // Number same-name invocations "(1)", "(2)", … so otherwise-identical
       // accordions are distinguishable; single invocations keep a bare name.
+      // This single-level scheme is UNCHANGED by #5778 — it stays the source of
+      // truth for depth-1 blocks (agentPath.length <= 1), per the coexistence
+      // contract: zero behavior change for today's parent->child runs.
       const nameTotals = new Map();
       blocks.forEach(b => {
         if (b.kind === 'sub') nameTotals.set(b.name, (nameTotals.get(b.name) || 0) + 1);
       });
       const nameSeen = new Map();
-      return blocks.map(block => {
+      // Each block's ancestry chain, derived from its REPRESENTATIVE action (the
+      // first action in the block — same source the name/agentType already use)
+      // via deriveSubAgentPath. #5778 depth-3 breadcrumb input; depth-1 blocks
+      // carry a 1-element (or empty) path and are skipped by computeBreadcrumbs.
+      const decorated = blocks.map(block => {
         if (block.kind === 'coord') return { kind: 'coord', groups: groupActions(block.actions).groups };
         const seq = (nameSeen.get(block.name) || 0) + 1;
         nameSeen.set(block.name, seq);
@@ -490,11 +511,30 @@ const ApplicationThinkView = memo(props => {
           name: block.name,
           ordinal,
           agentType: deriveSubAgentType(block.name, block.actions),
+          agentPath: deriveSubAgentPath(block.actions[0]),
           groups: groupActions(block.actions).groups,
         };
       });
+      // Per-tier breadcrumb for depth-3 blocks only (#5778). computeBreadcrumbs
+      // ignores agentPath.length <= 1 entries, so depth-1 blocks are untouched —
+      // they simply get no breadcrumbLabel and keep rendering via `ordinal` alone.
+      const breadcrumbs = computeBreadcrumbs(
+        decorated
+          .filter(b => b.kind === 'sub')
+          .map(b => ({ instanceKey: b.instanceKey, agentPath: b.agentPath })),
+      );
+      return decorated.map(block =>
+        block.kind === 'sub' ? { ...block, breadcrumbLabel: breadcrumbs.get(block.instanceKey) } : block,
+      );
     },
-    [deriveSubAgentName, deriveSubAgentInstanceKey, classifyWrapper, deriveSubAgentType, groupActions],
+    [
+      deriveSubAgentName,
+      deriveSubAgentInstanceKey,
+      classifyWrapper,
+      deriveSubAgentType,
+      deriveSubAgentPath,
+      groupActions,
+    ],
   );
 
   // Revealed (finished) actions for streaming view; all actions for history view.
@@ -519,6 +559,9 @@ const ApplicationThinkView = memo(props => {
           agentType: block.agentType,
           name: block.name,
           ordinal: block.ordinal,
+          // #5778: carried through so the streaming label (renderSub below) can
+          // prefer the depth-3 breadcrumb over the single-level ordinal label.
+          breadcrumbLabel: block.breadcrumbLabel,
           aliasKeys: block.aliasKeys,
           pausedForResume: block.pausedForResume,
         });
@@ -906,7 +949,12 @@ const ApplicationThinkView = memo(props => {
             <SubAgentAccordion
               key={`sa-${block.instanceKey}`}
               name={block.name}
-              label={block.ordinal ? `${block.name} (${block.ordinal})` : undefined}
+              // #5778: a depth-3 block prefers its breadcrumbLabel; depth-1
+              // blocks have none and fall back to today's ordinal ternary
+              // unchanged — zero behavior change for depth-1.
+              label={
+                block.breadcrumbLabel || (block.ordinal ? `${block.name} (${block.ordinal})` : undefined)
+              }
               tools={tools}
               agentType={block.agentType}
               defaultExpanded={!!subAgentErrors?.[block.name]}

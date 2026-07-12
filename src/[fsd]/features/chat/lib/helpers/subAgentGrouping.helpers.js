@@ -330,3 +330,107 @@ export function resolveSubAgentLiveness({
 export function inflightToolChipId(refAction, toolType) {
   return refAction && refAction.type === toolType ? (refAction.id ?? null) : null;
 }
+
+// Depth-3 per-tier breadcrumb numbering (#5778 Phase 6).
+//
+// Today's grouping (above) numbers same-name sub-agent BLOCKS with a single
+// flat ordinal ("(1)", "(2)", …) scoped to the whole block list — correct for
+// depth-1 (root → child), where a "block" IS one ancestry tier. #5778 adds
+// depth-3 (root → container → leaf): the backend now stamps every action with
+// parent_agent_path, an ORDERED [{name, call_id}] chain of ancestor hops from
+// the root's first child down to the immediate parent. A depth-3 block's own
+// tier (its immediate parent) is only the LAST hop — the container tier(s)
+// above it also need their own same-name disambiguation, e.g. two parallel
+// "container" instances must render "container (1) ▸ leaf" / "container (2) ▸
+// leaf" even though each block itself is a lone "leaf" invocation.
+//
+// The rule, mirroring today's block ordinal but PER TIER:
+//   - A tier instance is identified by (parentCallId, tierName, callId) — the
+//     callId anchors it, NOT array position, so the same container keeps the
+//     same "(n)" across re-renders / streaming vs. reload (mirrors the
+//     pcid-anchoring philosophy in partitionActionsIntoBlocks/
+//     collapseSubAgentInvocationKeys above, without reusing those functions —
+//     the fold/epoch machinery there solves a different problem: HITL-resume
+//     replay collapsing, not ancestry-tier disambiguation).
+//   - Ordinals are assigned by FIRST-SEEN order among sibling call_ids sharing
+//     the same (parentCallId, tierName) scope; a callId seen again later
+//     reuses its first-assigned ordinal.
+//   - The "(n)" suffix only shows when a scope has 2+ DISTINCT call_ids overall
+//     (mirrors the existing single-level ">1" guard, applied per tier) — so
+//     this must be a two-pass computation: pass 1 walks every block's full
+//     agentPath to learn every scope's distinct-callId count, pass 2 assigns
+//     the per-tier ordinal/guard using the now-complete counts.
+//   - Root sentinel: tier 0's "parent" is a fixed constant (there is no real
+//     parent call_id above the root's first child).
+//
+// Coexistence (#5778 contract): this function is only meaningful for blocks
+// whose agentPath has 2+ tiers. The caller (ApplicationThinkView) must not
+// invoke it for agentPath.length <= 1 — those blocks keep today's untouched
+// single-level ordinal/no-breadcrumb path. Blocks with agentPath.length <= 1
+// simply don't appear in the returned map.
+
+/** Fixed parent-scope key for tier 0 (no real ancestor call_id above the root). */
+const ROOT_SCOPE = '__root__';
+
+/**
+ * Compute a breadcrumb label (e.g. "container (2) ▸ leaf") for every block whose
+ * ancestry chain (`agentPath`) has 2+ tiers. Depth-1 blocks (agentPath.length <= 1)
+ * are skipped entirely — they keep today's flat single-level ordinal in the caller.
+ *
+ * @param {Array<{instanceKey: string, agentPath: Array<{name: string, call_id: (string|null)}>}>} entries
+ *        ordered blocks, each with its resolved ancestry chain (root's first child
+ *        first, immediate parent last)
+ * @returns {Map<string, string>} instanceKey -> breadcrumbLabel, only for entries
+ *          with agentPath.length >= 2
+ */
+export function computeBreadcrumbs(entries) {
+  const result = new Map();
+
+  // Pass 1 — learn every tier scope's distinct call_ids (needed for the ">1"
+  // guard, which can only be answered once ALL blocks have been seen — a tier
+  // that looks like a lone instance early may turn out to have a sibling later).
+  const distinctCallIdsByScope = new Map(); // "parentCallId tierName" -> Set<callId>
+  (entries || []).forEach(({ agentPath }) => {
+    if (!agentPath || agentPath.length < 2) return;
+    let parentCallId = ROOT_SCOPE;
+    agentPath.forEach(tier => {
+      const scopeKey = `${parentCallId} ${tier.name}`;
+      let set = distinctCallIdsByScope.get(scopeKey);
+      if (!set) {
+        set = new Set();
+        distinctCallIdsByScope.set(scopeKey, set);
+      }
+      set.add(tier.call_id);
+      parentCallId = tier.call_id;
+    });
+  });
+
+  // Pass 2 — assign each scope's ordinals by first-seen call_id order, then
+  // render every tier of every qualifying block into its breadcrumb string.
+  const ordinalByScope = new Map(); // scopeKey -> Map<callId, ordinal>
+  (entries || []).forEach(({ instanceKey, agentPath }) => {
+    if (!agentPath || agentPath.length < 2) return;
+    let parentCallId = ROOT_SCOPE;
+    const pieces = agentPath.map(tier => {
+      const scopeKey = `${parentCallId} ${tier.name}`;
+      let ordinals = ordinalByScope.get(scopeKey);
+      if (!ordinals) {
+        ordinals = new Map();
+        ordinalByScope.set(scopeKey, ordinals);
+      }
+      // Stable, first-seen ordinal anchored to call_id (not array position): the
+      // same call_id always maps to the same ordinal even if blocks interleave.
+      let ordinal = ordinals.get(tier.call_id);
+      if (ordinal === undefined) {
+        ordinal = ordinals.size + 1;
+        ordinals.set(tier.call_id, ordinal);
+      }
+      parentCallId = tier.call_id;
+      const distinctCount = distinctCallIdsByScope.get(scopeKey)?.size || 0;
+      return distinctCount > 1 ? `${tier.name} (${ordinal})` : tier.name;
+    });
+    result.set(instanceKey, pieces.join(' ▸ '));
+  });
+
+  return result;
+}
