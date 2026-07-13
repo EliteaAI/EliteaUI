@@ -180,8 +180,9 @@ const SkillControls = memo(props => {
         disabled: disableDelete,
         addSeparator: true,
         alarm: true,
-        alertTitle: 'Delete version',
-        confirmText: `Are you sure to delete ${versionDetails?.name}?`,
+        entityName: versionDetails?.name,
+        inlineExtraContent: " version? It can't be restored.",
+        shouldRequestInputName: false,
         onConfirm: onDeleteVersion,
       },
       {

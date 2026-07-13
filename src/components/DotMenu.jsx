@@ -1,13 +1,13 @@
-import { useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
 import { Box, Divider, IconButton, ListItemIcon, Menu, MenuItem } from '@mui/material';
 import ListItemText from '@mui/material/ListItemText';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
+import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { useDeleteConfirmationDisabled } from '@/[fsd]/shared/lib/hooks';
 import { Modal } from '@/[fsd]/shared/ui';
 import CheckedIcon from '@/assets/checked-icon.svg?react';
-import AlertDialogV2 from '@/components/AlertDialogV2';
 import DotsMenuIcon from '@/components/Icons/DotsMenuIcon';
 import { useTheme } from '@emotion/react';
 
@@ -127,6 +127,8 @@ const BasicMenuItem = ({
                 alarm={subMenuItem.alarm}
                 entityName={subMenuItem.entityName}
                 shouldRequestInputName={subMenuItem.shouldRequestInputName}
+                inlineExtraContent={subMenuItem.inlineExtraContent}
+                textContent={subMenuItem.textContent}
                 setActiveDialog={setActiveDialog}
                 dialogKey={subMenuItem.key || subMenuItem.label}
                 skipConfirmation={skipConfirmation}
@@ -163,6 +165,7 @@ const ActionWithDialog = ({
   shouldRequestInputName = true,
   extraContent,
   inlineExtraContent,
+  textContent,
   modalSx,
   setActiveDialog,
   dialogKey,
@@ -191,6 +194,7 @@ const ActionWithDialog = ({
           shouldRequestInputName,
           extraContent,
           inlineExtraContent,
+          textContent,
           modalSx,
         },
       });
@@ -210,6 +214,7 @@ const ActionWithDialog = ({
       shouldRequestInputName,
       extraContent,
       inlineExtraContent,
+      textContent,
       modalSx,
       skipConfirmation,
     ],
@@ -229,26 +234,27 @@ const ActionWithDialog = ({
   );
 };
 
-export default function DotMenu({
-  id,
-  menuIcon,
-  menuIconSX = {},
-  iconColor = 'tertiary',
-  children,
-  onClose,
-  onShowMenuList,
-  anchorOrigin,
-  transformOrigin,
-  multipleColumns,
-  columnSize,
-  columnMinWidth = '150px',
-  menuStyle,
-  slotProps = {},
-  AnchorButton,
-  anchorButtonProps = {},
-  shouldStopPropagation = true,
-  disabled,
-}) {
+const DotMenu = memo(props => {
+  const {
+    id,
+    menuIcon,
+    menuIconSX = {},
+    iconColor = 'tertiary',
+    children,
+    onClose,
+    onShowMenuList,
+    anchorOrigin,
+    transformOrigin,
+    multipleColumns,
+    columnSize,
+    columnMinWidth = '150px',
+    menuStyle,
+    slotProps = {},
+    AnchorButton,
+    anchorButtonProps = {},
+    shouldStopPropagation = true,
+    disabled,
+  } = props;
   const [anchorEl, setAnchorEl] = useState(null);
   const [activeDialog, setActiveDialog] = useState(null);
   const open = useMemo(() => Boolean(anchorEl), [anchorEl]);
@@ -403,6 +409,7 @@ export default function DotMenu({
                     shouldRequestInputName={item.shouldRequestInputName}
                     extraContent={item.extraContent}
                     inlineExtraContent={item.inlineExtraContent}
+                    textContent={item.textContent}
                     modalSx={item.modalSx}
                     setActiveDialog={setActiveDialog}
                     dialogKey={item.key || item.label}
@@ -462,6 +469,7 @@ export default function DotMenu({
                         shouldRequestInputName={item.shouldRequestInputName}
                         extraContent={item.extraContent}
                         inlineExtraContent={item.inlineExtraContent}
+                        textContent={item.textContent}
                         modalSx={item.modalSx}
                         setActiveDialog={setActiveDialog}
                         dialogKey={item.key || item.label}
@@ -487,34 +495,37 @@ export default function DotMenu({
           </Box>
         )}
       </Menu>
-      {activeDialog && !activeDialog.props.entityName && (
-        <AlertDialogV2
-          open={true}
-          setOpen={() => setActiveDialog(null)}
-          alarm={activeDialog.props.alarm}
-          title={activeDialog.props.alertTitle}
-          confirmButtonSX={activeDialog.props.confirmButtonSX}
-          confirmButtonTitle={activeDialog.props.confirmButtonTitle}
-          content={activeDialog.props.confirmText}
-          onConfirm={handleDialogConfirm}
-          onCancel={handleDialogClose}
-        />
-      )}
-      {activeDialog && activeDialog.props.entityName && (
-        <Modal.DeleteEntityModal
-          shouldRequestInputName={activeDialog.props.shouldRequestInputName}
-          name={activeDialog.props.entityName}
-          open={true}
-          onClose={handleDialogClose}
-          onConfirm={handleDialogConfirm}
-          extraContent={activeDialog.props.extraContent}
-          inlineExtraContent={activeDialog.props.inlineExtraContent}
-          sx={activeDialog.props.modalSx}
-        />
-      )}
+      {activeDialog &&
+        (activeDialog.props.entityName ? (
+          <Modal.DeleteEntityModal
+            open={true}
+            onClose={handleDialogClose}
+            onConfirm={handleDialogConfirm}
+            name={activeDialog.props.entityName}
+            shouldRequestInputName={activeDialog.props.shouldRequestInputName}
+            extraContent={activeDialog.props.extraContent}
+            inlineExtraContent={activeDialog.props.inlineExtraContent}
+            textContent={activeDialog.props.textContent}
+            sx={activeDialog.props.modalSx}
+          />
+        ) : (
+          <Modal.BaseModal
+            open={true}
+            variant={ModalConstants.MODAL_VARIANT.simple}
+            titleIcon={ModalConstants.MODAL_ICON_TYPE.info}
+            title={activeDialog.props.alertTitle}
+            content={activeDialog.props.confirmText}
+            onClose={handleDialogClose}
+            onConfirm={handleDialogConfirm}
+            confirmButtonText={activeDialog.props.confirmButtonTitle}
+            alarm={activeDialog.props.alarm}
+          />
+        ))}
     </Box>
   );
-}
+});
+
+DotMenu.displayName = 'DotMenu';
 
 /** @type {MuiSx} */
 const dotMenuStyles = () => ({
@@ -523,3 +534,5 @@ const dotMenuStyles = () => ({
     'svg, &:hover svg': { fill: palette.icon.fill.secondary },
   }),
 });
+
+export default DotMenu;

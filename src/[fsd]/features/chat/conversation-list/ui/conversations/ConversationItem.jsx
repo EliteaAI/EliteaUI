@@ -234,9 +234,9 @@ const ConversationItem = memo(props => {
           {
             label: 'Delete',
             icon: <DeleteIcon sx={{ fontSize: '1rem' }} />,
-            alertTitle: 'Delete conversation?',
-            confirmButtonTitle: 'Delete',
-            confirmText: "Are you sure to delete conversation? It can't be restored.",
+            entityName: name,
+            inlineExtraContent: " chat? It can't be restored.",
+            shouldRequestInputName: false,
             alarm: true,
             disabled: userId != author_id || (isActive && isEditingCanvas),
             onConfirm: handleDelete,
@@ -279,6 +279,7 @@ const ConversationItem = memo(props => {
     conversation.folder_id,
     handlePin,
     is_private,
+    name,
   ]);
 
   const onMouseEnter = useCallback(() => {

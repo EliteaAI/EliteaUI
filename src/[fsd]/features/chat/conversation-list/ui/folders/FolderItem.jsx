@@ -103,9 +103,9 @@ const FolderItem = memo(props => {
             fill={theme.palette.icon.fill.default}
           />
         ),
-        alertTitle: 'Delete folder?',
-        confirmButtonTitle: 'Delete',
-        confirmText: "Are you sure to delete folder? It can't be restored.",
+        entityName: name,
+        inlineExtraContent: " folder? It can't be restored.",
+        shouldRequestInputName: false,
         alarm: true,
         disabled: userId != owner_id || !checkPermission(PERMISSIONS.chat.folders.delete),
         onConfirm: handleDeleteFolder,
@@ -122,6 +122,7 @@ const FolderItem = memo(props => {
     handleEditFolder,
     handlePinFolder,
     folder.meta?.is_pinned,
+    name,
   ]);
 
   const onMouseEnter = useCallback(() => {
