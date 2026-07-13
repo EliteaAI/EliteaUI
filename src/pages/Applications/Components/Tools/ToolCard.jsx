@@ -50,8 +50,16 @@ import EnhancedCardToolActions from './CardActions/EnhancedCardToolActions.jsx';
 import BaseCardBody from './CardBodies/BaseCardBody.jsx';
 
 const ToolCard = memo(props => {
-  const { tool, index, applicationId, disabled, isDuplicate, onDeleteAttachmentTool, entityProjectId } =
-    props;
+  const {
+    tool,
+    index,
+    applicationId,
+    disabled,
+    isDuplicate,
+    onDeleteAttachmentTool,
+    entityProjectId,
+    isPipeline = false,
+  } = props;
   const theme = useTheme();
   const [openAlert, setOpenAlert] = useState(false);
   const { toastError } = useToast();
@@ -295,12 +303,15 @@ const ToolCard = memo(props => {
       if (tool?.agent_type === 'pipeline') return 'pipeline';
       return 'agent';
     }
+    if (isMcp) return 'MCP';
     return 'toolkit';
-  }, [tool?.agent_type, tool?.type]);
+  }, [tool?.agent_type, tool?.type, isMcp]);
 
-  // Generate tooltip texts
-  const openTooltipText = `Open ${entityType === 'toolkit' && isMcp ? 'mcp' : entityType} in new tab`;
-  const removeTooltipText = `Remove ${entityType}`;
+  const parentEntityType = isPipeline ? 'pipeline' : 'agent';
+
+  const entityTypeLabel = entityType === 'MCP' ? 'MCP' : entityType.toLowerCase();
+  const openTooltipText = `Open ${entityTypeLabel} in new tab`;
+  const removeTooltipText = `Remove ${entityTypeLabel}`;
 
   const toolValidationMessage = useMemo(() => {
     if (!validationInfo) return null;
@@ -375,68 +386,14 @@ const ToolCard = memo(props => {
     );
   }, [validationInfo, toolValidationMessage, personal_project_id, projectId, tool]);
 
-  // Generate dialog texts based on entity type
-  const dialogTitle = useMemo(() => {
-    switch (entityType) {
-      case 'agent':
-        return 'Remove agent?';
-      case 'pipeline':
-        return 'Remove pipeline?';
-      case 'toolkit':
-      default:
-        return 'Remove toolkit?';
-    }
-  }, [entityType]);
+  const dialogTitle = useMemo(() => `Remove ${entityTypeLabel}?`, [entityTypeLabel]);
 
-  const dialogContent = useMemo(() => {
-    const styledEntityName = (
-      <Typography
-        component="span"
-        variant="headingSmall"
-        color={theme.palette.text.deleteAlertEntityName}
-      >
-        {toolkitName}
-      </Typography>
-    );
-
-    switch (entityType) {
-      case 'agent':
-        return (
-          <Typography
-            variant="bodyMedium"
-            color="text.deleteAlertText"
-          >
-            Are you sure to remove the {styledEntityName} agent?
-          </Typography>
-        );
-      case 'pipeline':
-        return (
-          <Typography
-            variant="bodyMedium"
-            color="text.deleteAlertText"
-          >
-            Are you sure to remove the {styledEntityName} pipeline?
-          </Typography>
-        );
-      case 'toolkit':
-      default:
-        return !isAttachmentToolkit ? (
-          <Typography
-            variant="bodyMedium"
-            color="text.deleteAlertText"
-          >
-            Are you sure to remove the {styledEntityName} toolkit?
-          </Typography>
-        ) : (
-          <Typography
-            variant="bodyMedium"
-            color="text.deleteAlertText"
-          >
-            Are you sure to remove the {styledEntityName} toolkit, which is used to keep attached files?
-          </Typography>
-        );
+  const dialogInlineExtraContent = useMemo(() => {
+    if (isAttachmentToolkit) {
+      return ` ${entityTypeLabel}, which is used to keep attached files, from ${parentEntityType}?`;
     }
-  }, [theme.palette.text.deleteAlertEntityName, toolkitName, entityType, isAttachmentToolkit]);
+    return ` from ${parentEntityType}?`;
+  }, [entityTypeLabel, isAttachmentToolkit, parentEntityType]);
 
   const getToolkitIconMeta = useGetToolkitIconMeta();
 
@@ -671,9 +628,10 @@ const ToolCard = memo(props => {
           />
           <Modal.DeleteEntityModal
             title={dialogTitle}
-            customContent={dialogContent}
+            textContent="Are you sure to remove the "
+            name={toolkitName}
+            inlineExtraContent={dialogInlineExtraContent}
             open={openAlert}
-            alarm={false}
             titleIcon={ModalConstants.MODAL_ICON_TYPE.warning}
             onClose={onCloseAlert}
             onConfirm={onConfirmAlert}
