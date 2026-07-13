@@ -85,12 +85,11 @@ export const buildSkillMenuItems = (skillsByTag, selectedTagNames) => {
 };
 
 /**
- * Determine which fetch function to call based on category.
+ * Determine which fetch function to call based on category. Trending and My
+ * Liked paginate server-side; ordinary categories are bucketed client-side from
+ * the single bulk fetch, so they have nothing more to load (null = no-op).
  */
-export const getFetchFunctionForCategory = (
-  category,
-  { fetchTrendingSkills, fetchMyLikedSkills, fetchSkillsForCategoryName },
-) => {
+export const getFetchFunctionForCategory = (category, { fetchTrendingSkills, fetchMyLikedSkills }) => {
   if (category === SkillHubConstants.TRENDING_CATEGORY) {
     return fetchTrendingSkills;
   }
@@ -99,7 +98,7 @@ export const getFetchFunctionForCategory = (
     return fetchMyLikedSkills;
   }
 
-  return page => fetchSkillsForCategoryName(category, page);
+  return null;
 };
 
 export const getCategoryForSkill = skill => skill.category;

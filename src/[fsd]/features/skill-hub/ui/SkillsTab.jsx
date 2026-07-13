@@ -47,7 +47,6 @@ const SkillsTab = memo(props => {
     loadingTags,
     refreshingTags,
     isFetching,
-    fetchSkillsForCategoryName,
     fetchTrendingSkills,
     fetchMyLikedSkills,
     updateSkillInState,
@@ -110,14 +109,13 @@ const SkillsTab = memo(props => {
       const fetchFunction = SkillHubHelpers.getFetchFunctionForCategory(category, {
         fetchTrendingSkills,
         fetchMyLikedSkills,
-        fetchSkillsForCategoryName,
       });
 
       if (fetchFunction) {
         fetchFunction(currentPage + 1);
       }
     },
-    [currentPageByTag, fetchSkillsForCategoryName, fetchTrendingSkills, fetchMyLikedSkills],
+    [currentPageByTag, fetchTrendingSkills, fetchMyLikedSkills],
   );
 
   const renderCategory = useCallback(

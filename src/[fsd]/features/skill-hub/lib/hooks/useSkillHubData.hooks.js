@@ -90,6 +90,18 @@ export const useSkillHubData = (query, selectedTagNames) => {
 
         if (!result?.rows) return;
 
+        // The catalog buckets client-side from one bulk fetch capped at
+        // ALL_SKILLS_LIMIT; there is no per-category server pagination. If the
+        // public catalog ever outgrows the cap, surface it instead of silently
+        // dropping the overflow.
+        if (result.total > result.rows.length) {
+          // eslint-disable-next-line no-console
+          console.warn(
+            `ELITEA Catalog: showing ${result.rows.length} of ${result.total} published skills ` +
+              `(bulk fetch capped at ${ALL_SKILLS_LIMIT}).`,
+          );
+        }
+
         const buckets = bucketSkillsByCategory(result.rows, activeCategoryNames);
 
         Object.entries(buckets).forEach(([categoryName, rows]) => {
@@ -185,10 +197,6 @@ export const useSkillHubData = (query, selectedTagNames) => {
       setLoading('global_search', false);
     }
   }, [fetchSkills, query, setLoading, resetSearchByTag, bucketSkillsByCategory, categoryNames, dispatch]);
-
-  const fetchSkillsForCategoryName = useCallback(async () => {
-    await fetchAllAndCategorize(categoryNames);
-  }, [fetchAllAndCategorize, categoryNames]);
 
   useEffect(() => {
     if (query !== lastQueryRef.current) {
@@ -322,7 +330,6 @@ export const useSkillHubData = (query, selectedTagNames) => {
     loadingTags,
     refreshingTags,
     isFetching,
-    fetchSkillsForCategoryName,
     fetchTrendingSkills,
     fetchMyLikedSkills,
     updateSkillInState,

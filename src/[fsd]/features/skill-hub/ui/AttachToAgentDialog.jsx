@@ -17,7 +17,7 @@ import {
   Typography,
 } from '@mui/material';
 
-import { useAttachPublicSkillMutation } from '@/[fsd]/features/skill-hub/api';
+import { useAgentsWithSkillQuery, useAttachPublicSkillMutation } from '@/[fsd]/features/skill-hub/api';
 import { Banner } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { useLazyApplicationListQuery } from '@/api/applications';
@@ -44,7 +44,7 @@ const AttachToAgentDialog = memo(props => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const projectId = useSelectedProjectId();
-  const { toastSuccess, toastError, toastWarning } = useToast();
+  const { toastSuccess, toastError, toastWarning, toastInfo } = useToast();
 
   const styles = attachToAgentDialogStyles();
 
@@ -54,6 +54,23 @@ const AttachToAgentDialog = memo(props => {
 
   const [fetchAgents, { data: agentsData, isFetching }] = useLazyApplicationListQuery();
   const [attachPublicSkill, { isLoading: isAttaching }] = useAttachPublicSkillMutation();
+
+  // Agent versions in this project that already carry the skill. The mutation
+  // invalidates this query's tag, so it re-marks freshly attached agents.
+  const { data: agentsWithSkill } = useAgentsWithSkillQuery(
+    { projectId, publicSkillId: skill?.id },
+    { skip: !open || !projectId || !skill?.id },
+  );
+
+  const attachedVersionIds = useMemo(
+    () => new Set((agentsWithSkill?.rows || []).map(row => row.entity_version_id)),
+    [agentsWithSkill],
+  );
+
+  const isAlreadyAttached = useCallback(
+    agent => attachedVersionIds.has(getAgentVersionId(agent)),
+    [attachedVersionIds],
+  );
 
   const agentOptions = useMemo(() => agentsData?.rows || [], [agentsData]);
 
@@ -93,32 +110,55 @@ const AttachToAgentDialog = memo(props => {
 
   const notifyResult = useCallback(
     (agents, results) => {
-      const attemptedCount = agents.length;
+      // The backend returns one result per version id actually sent, so this
+      // excludes any agent dropped by buildAttachArgs (missing version id).
+      const attemptedCount = results.length;
       const byVersionId = new Map(agents.map(a => [getAgentVersionId(a), a]));
       const okResults = results.filter(r => r.ok);
-      const failedResults = results.filter(r => !r.ok);
+      // 409 means the agent already has the skill — a no-op, not a failure.
+      const alreadyResults = results.filter(r => !r.ok && r.http_status === 409);
+      const failedResults = results.filter(r => !r.ok && r.http_status !== 409);
 
+      const agentWord = count => (count === 1 ? 'agent' : 'agents');
+      const bulletList = list =>
+        list
+          .map(r => byVersionId.get(r.agent_version_id)?.name)
+          .filter(Boolean)
+          .map(name => `• ${name}`)
+          .join('\n');
+
+      // No real failures: everything either attached or was already present.
       if (failedResults.length === 0) {
-        toastSuccess(`The skill was successfully added to ${attemptedCount} agents.`);
+        if (alreadyResults.length === 0) {
+          toastSuccess(
+            `The skill was successfully added to ${okResults.length} ${agentWord(okResults.length)}.`,
+          );
+        } else if (okResults.length === 0) {
+          toastInfo(
+            alreadyResults.length === 1
+              ? 'The skill is already added to this agent.'
+              : 'The skill is already added to all selected agents.',
+          );
+        } else {
+          toastSuccess(
+            `The skill was added to ${okResults.length} ${agentWord(okResults.length)}. ${alreadyResults.length} already had it.`,
+          );
+        }
         return true;
       }
 
-      if (okResults.length === 0) {
-        toastError(`The skill was not added to ${attemptedCount} agent.`);
+      // Some genuine failures — nothing usable got through.
+      if (okResults.length === 0 && alreadyResults.length === 0) {
+        toastError(`The skill was not added to ${attemptedCount} ${agentWord(attemptedCount)}.`);
         return false;
       }
 
-      const failedList = failedResults
-        .map(r => byVersionId.get(r.agent_version_id)?.name)
-        .filter(Boolean)
-        .map(name => `• ${name}`)
-        .join('\n');
       toastWarning(
-        `The skill was added only to ${okResults.length} of ${attemptedCount} agents.\nFailed to add to:\n${failedList}`,
+        `The skill was added only to ${okResults.length} of ${attemptedCount} ${agentWord(attemptedCount)}.\nFailed to add to:\n${bulletList(failedResults)}`,
       );
       return false;
     },
-    [toastSuccess, toastError, toastWarning],
+    [toastSuccess, toastError, toastWarning, toastInfo],
   );
 
   const handleAdd = useCallback(async () => {
@@ -204,29 +244,41 @@ const AttachToAgentDialog = memo(props => {
   }, []);
 
   const renderOption = useCallback(
-    (optionProps, option, { selected }) => (
-      <Box
-        component="li"
-        {...optionProps}
-        key={option.id}
-        sx={styles.option}
-      >
-        <EntityIcon
-          icon={option.icon_meta}
-          entityType={ChatParticipantType.Applications}
-          projectId={projectId}
-          editable={false}
-        />
-        <Typography
-          variant="bodyMedium"
-          sx={styles.optionLabel}
+    (optionProps, option, { selected }) => {
+      const alreadyAttached = isAlreadyAttached(option);
+      return (
+        <Box
+          component="li"
+          {...optionProps}
+          key={option.id}
+          sx={styles.option}
         >
-          {option.name}
-        </Typography>
-        {selected && <CheckIcon sx={styles.checkIcon} />}
-      </Box>
-    ),
-    [projectId, styles],
+          <EntityIcon
+            icon={option.icon_meta}
+            entityType={ChatParticipantType.Applications}
+            projectId={projectId}
+            editable={false}
+          />
+          <Typography
+            variant="bodyMedium"
+            sx={styles.optionLabel}
+          >
+            {option.name}
+          </Typography>
+          {alreadyAttached ? (
+            <Typography
+              variant="bodySmall"
+              sx={styles.alreadyAddedLabel}
+            >
+              Already added
+            </Typography>
+          ) : (
+            selected && <CheckIcon sx={styles.checkIcon} />
+          )}
+        </Box>
+      );
+    },
+    [projectId, styles, isAlreadyAttached],
   );
 
   const renderTags = useCallback(
@@ -291,6 +343,7 @@ const AttachToAgentDialog = memo(props => {
           loading={isFetching}
           filterOptions={x => x}
           getOptionLabel={option => option.name || ''}
+          getOptionDisabled={isAlreadyAttached}
           isOptionEqualToValue={(option, val) => option.id === val.id}
           onChange={handleSelectionChange}
           onInputChange={handleInputChange}
@@ -467,6 +520,10 @@ const attachToAgentDialogStyles = () => ({
   checkIcon: ({ palette }) => ({
     fontSize: '1rem',
     color: palette.icon.fill.default,
+  }),
+  alreadyAddedLabel: ({ palette }) => ({
+    color: palette.text.disabled,
+    whiteSpace: 'nowrap',
   }),
   dialogActions: ({ palette }) => ({
     display: 'flex',
