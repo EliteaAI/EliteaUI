@@ -280,6 +280,7 @@ const CreateSkillForm = memo(props => {
                         minHeight="0"
                         maxLength={MAX_INSTRUCTIONS_LENGTH}
                         readOnly={disabled}
+                        contentTestId="skill-instructions-editor-content"
                       />
                     </Box>
                     <Box sx={styles.charCounterWrapper}>
