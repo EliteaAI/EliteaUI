@@ -78,6 +78,7 @@ const DeleteEntityModal = memo(props => {
       {extraContent}
       {shouldRequestInputName && (
         <TextField
+          data-testid="delete-confirm-name-input"
           fullWidth
           autoComplete="off"
           variant="standard"
