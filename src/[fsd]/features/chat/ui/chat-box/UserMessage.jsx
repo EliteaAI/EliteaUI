@@ -241,6 +241,7 @@ const UserMessage = React.forwardRef((props, ref) => {
                 placement="top"
               >
                 <IconButton
+                  data-testid="chat-message-delete-button"
                   sx={styles.iconButton}
                   variant="elitea"
                   color="tertiary"

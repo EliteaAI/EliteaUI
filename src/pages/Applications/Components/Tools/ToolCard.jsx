@@ -547,6 +547,7 @@ const ToolCard = memo(props => {
                   >
                     <IconButton
                       id="RefreshButton"
+                      data-testid="toolkit-reload-button"
                       variant="elitea"
                       color="tertiary"
                       aria-label="refresh toolkit"
@@ -564,6 +565,7 @@ const ToolCard = memo(props => {
               >
                 <IconButton
                   id="OpenInNewTabButton"
+                  data-testid="toolkit-open-button"
                   variant="elitea"
                   color="tertiary"
                   aria-label="open in new tab"
@@ -640,11 +642,15 @@ const ToolCard = memo(props => {
           </Box>
           {isBlockedToolkit && !validationInfo && !showActions && (
             <Banner.BannerMessage
+              data-testid="toolkit-blocked-banner"
               message={`${ToolkitsHelpers.getToolkitTypeLabel(tool?.type)} toolkit is blocked by your organization.`}
             />
           )}
           {!isBlockedToolkit && someToolsAreUnavailable && !validationInfo && !showActions && (
-            <Banner.BannerMessage message="Some tools are not available anymore." />
+            <Banner.BannerMessage
+              data-testid="toolkit-tools-unavailable-banner"
+              message="Some tools are not available anymore."
+            />
           )}
           {showVariables && (
             <AgentVariables
