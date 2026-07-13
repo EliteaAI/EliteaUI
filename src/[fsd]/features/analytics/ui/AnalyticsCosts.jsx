@@ -16,7 +16,10 @@ const AnalyticsCosts = memo(props => {
   const axisStroke = palette.text.primary;
   const axisTickStyle = { fill: axisStroke, fontSize: 11 };
 
-  const { data, isFetching } = useAnalyticsCostsQuery({ projectId, dateFrom, dateTo }, { skip: !projectId });
+  const { data, isFetching, isError } = useAnalyticsCostsQuery(
+    { projectId, dateFrom, dateTo },
+    { skip: !projectId },
+  );
 
   const modelChartData = useMemo(
     () =>
@@ -37,6 +40,14 @@ const AnalyticsCosts = memo(props => {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
         <CircularProgress size={32} />
+      </Box>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+        <Typography color="error">Failed to load cost analytics. Please try again later.</Typography>
       </Box>
     );
   }

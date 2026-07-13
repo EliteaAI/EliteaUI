@@ -60,4 +60,12 @@ describe('AnalyticsCosts component structure', () => {
   it('handles empty agent data gracefully', () => {
     expect(SRC).toContain('No data');
   });
+
+  it('destructures isError from the query hook', () => {
+    expect(SRC).toContain('isError');
+  });
+
+  it('renders error state with message', () => {
+    expect(SRC).toContain('Failed to load cost analytics');
+  });
 });

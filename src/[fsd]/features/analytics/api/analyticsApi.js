@@ -146,8 +146,9 @@ export const analyticsApi = eliteaApi
           const params = new URLSearchParams();
           if (dateFrom) params.set('date_from', dateFrom);
           if (dateTo) params.set('date_to', dateTo);
+          const qs = params.toString();
           return {
-            url: `/elitea_core/analytics_costs/prompt_lib/${projectId}?${params.toString()}`,
+            url: `/elitea_core/analytics_costs/prompt_lib/${projectId}${qs ? `?${qs}` : ''}`,
             method: 'GET',
           };
         },
