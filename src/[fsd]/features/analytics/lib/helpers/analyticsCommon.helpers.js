@@ -10,3 +10,13 @@ export const fmtDuration = ms => {
   if (ms < 1000) return `${Math.round(ms)}ms`;
   return `${(ms / 1000).toFixed(1)}s`;
 };
+
+export const fmtCost = usd => {
+  if (usd == null) return '-';
+  if (usd === 0) return '$0.00';
+  if (usd < 0.0001) return `$${usd.toFixed(8)}`;
+  if (usd < 0.01) return `$${usd.toFixed(6)}`;
+  if (usd < 1) return `$${usd.toFixed(4)}`;
+  if (usd < 1000) return `$${usd.toFixed(2)}`;
+  return `$${(usd / 1000).toFixed(1)}K`;
+};
