@@ -196,7 +196,7 @@ const AnalyticsCosts = memo(props => {
           >
             Cost by Agent
           </Typography>
-          {(data.by_agent || []).slice(0, 10).map((a, i) => (
+          {(data.by_agent || []).slice(0, AnalyticsCommonConstants.TOP_LIST_SIZE).map((a, i) => (
             <Box
               key={a.entity_id || i}
               sx={styles.listItem}
@@ -232,7 +232,7 @@ const AnalyticsCosts = memo(props => {
           >
             Cost by User
           </Typography>
-          {(data.by_user || []).slice(0, 10).map((u, i) => (
+          {(data.by_user || []).slice(0, AnalyticsCommonConstants.TOP_LIST_SIZE).map((u, i) => (
             <Box
               key={u.user_id || i}
               sx={styles.listItem}
