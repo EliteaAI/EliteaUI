@@ -8,6 +8,7 @@ import {
   useConversationDetailsQuery,
   useDeleteAllMessagesFromConversationMutation,
   useDeleteMessageFromConversationMutation,
+  useLazyMessageTracesQuery,
   useStopChatTaskMutation,
 } from '@/api';
 import { eliteaApi } from '@/api/eliteaApi';
@@ -66,6 +67,7 @@ export const useApplicationChat = ({
       refetchOnMountOrArgChange: true,
     },
   );
+  const [getMessageTraces] = useLazyMessageTracesQuery();
 
   useApplicationChatSwitchVersion({
     activeParticipant,
@@ -156,39 +158,49 @@ export const useApplicationChat = ({
     ) {
       setIsRestoringConversation(true);
 
-      const convertedChatHistory = convertConversationToChatHistory(restoredConversationData);
-
-      const restoredConversation = {
-        ...restoredConversationData,
-        chat_history: convertedChatHistory,
-        isApplicationChat: true,
-      };
-
-      // Find the application participant from the restored conversation
-      const appParticipant = restoredConversationData.participants?.find(
-        p => p.entity_name === 'application',
-      );
-
-      if (appParticipant) {
-        setActiveConversation(restoredConversation);
-        setActiveParticipant(appParticipant);
-
-        chatHistoryRef.current = convertedChatHistory;
-
-        emitEnterRoom({
-          conversation_id: restoredConversationData.id,
-          conversation_uuid: restoredConversationData.uuid,
-          project_id: projectId,
+      (async () => {
+        // Pins come from message_trace_step (TS-4); failure degrades to no pins.
+        const tracesResult = await getMessageTraces({
+          projectId,
+          conversationId: restoredConversationData.id,
         });
+        const convertedChatHistory = convertConversationToChatHistory(
+          restoredConversationData,
+          tracesResult.data,
+        );
 
-        toastInfo('Chat restored successfully');
-        setHasRestoredConversation(true);
-      } else {
-        toastError('Could not find application participant in restored chat');
-      }
+        const restoredConversation = {
+          ...restoredConversationData,
+          chat_history: convertedChatHistory,
+          isApplicationChat: true,
+        };
 
-      onRestoreConversationComplete();
-      setIsRestoringConversation(false);
+        // Find the application participant from the restored conversation
+        const appParticipant = restoredConversationData.participants?.find(
+          p => p.entity_name === 'application',
+        );
+
+        if (appParticipant) {
+          setActiveConversation(restoredConversation);
+          setActiveParticipant(appParticipant);
+
+          chatHistoryRef.current = convertedChatHistory;
+
+          emitEnterRoom({
+            conversation_id: restoredConversationData.id,
+            conversation_uuid: restoredConversationData.uuid,
+            project_id: projectId,
+          });
+
+          toastInfo('Chat restored successfully');
+          setHasRestoredConversation(true);
+        } else {
+          toastError('Could not find application participant in restored chat');
+        }
+
+        onRestoreConversationComplete();
+        setIsRestoringConversation(false);
+      })();
     }
   }, [
     restoredConversationID,
@@ -197,6 +209,7 @@ export const useApplicationChat = ({
     isErrorRestoredConversation,
     isRestoringConversation,
     emitEnterRoom,
+    getMessageTraces,
     projectId,
     toastInfo,
     toastError,

@@ -7,7 +7,6 @@ import {
   TOOL_ACTION_TYPES,
   ToolActionStatus,
 } from '@/common/constants';
-import { convertJsonToString } from '@/common/utils';
 
 export const isUserMessage = (author_participant_id, sent_to_id, userIds, reply_to_id, sent_to) => {
   return (
@@ -108,7 +107,45 @@ export const convertToPlayerQuestion = (message_group, playerInfo, participants)
   };
 };
 
-export const convertToAIAnswer = (message_group, message_groups, participants) => {
+// Map a light trace-step list row (TS-4) back to the entry shape the step loop below reads. The row
+// nests display data under attrs.metadata / attrs.tool_meta / attrs.response_metadata — the same
+// shape the old meta entries had — so icon/label resolution and sub-agent grouping stay unchanged.
+// Heavy fields (text / thinking / tool_inputs / tool_output) are absent on the list and fetched on
+// pin-expand via the detail endpoint; _traceStepId carries the DB id used for that fetch.
+const traceRowToStep = row => {
+  const attrs = row.attrs || {};
+  if (row.kind === 'thinking_step') {
+    return {
+      stepType: 'thinking_step',
+      text: '',
+      thinking: '',
+      message: {
+        id: `trace_step_${row.id}`,
+        response_metadata: { model_name: row.model_name || '', ...(attrs.response_metadata || {}) },
+      },
+      parent_agent_name: row.parent_agent_name || null,
+      timestamp_start: row.started_at,
+      timestamp_finish: row.finished_at,
+      _traceStepId: row.id,
+    };
+  }
+  return {
+    ...attrs, // metadata + tool_meta sub-objects the tool branch reads
+    tool_name: row.tool_name,
+    tool_run_id: `trace_step_${row.id}`,
+    tool_inputs: undefined,
+    tool_output: undefined,
+    content: '',
+    isError: !!row.is_error,
+    error: null,
+    finish_reason: row.finish_reason,
+    timestamp_start: row.started_at,
+    timestamp_finish: row.finished_at,
+    _traceStepId: row.id,
+  };
+};
+
+export const convertToAIAnswer = (message_group, message_groups, participants, traceSteps = []) => {
   const {
     author_participant_id,
     content,
@@ -131,24 +168,21 @@ export const convertToAIAnswer = (message_group, message_groups, participants) =
   const {
     references = [],
     is_error = false,
-    thinking_steps = [],
-    tool_calls = [],
-    first_tool_timestamp_start,
     error,
     context: { included: contextIncluded } = {},
   } = meta || {};
   const isSummarized = contextIncluded === false;
   const toolActions = [];
-  const toolCalls = Object.values(tool_calls ?? {});
-  const sortedSteps = [
-    ...(thinking_steps?.map(step => ({ ...step, stepType: 'thinking_step' })) || []),
-    ...toolCalls,
-  ].sort(
-    (a, b) =>
-      new Date(a.timestamp_start || a.timestamp_finish).getTime() -
-      new Date(b.timestamp_start || b.timestamp_finish).getTime(),
-  );
-  sortedSteps?.forEach((step, index) => {
+  // Steps are served from message_trace_step (TS-3/TS-4), not meta. Blank thinking steps are already
+  // filtered out server-side, so every row here is a real pin — no client-side empty-skip needed.
+  const sortedSteps = (traceSteps || [])
+    .map(traceRowToStep)
+    .sort(
+      (a, b) =>
+        new Date(a.timestamp_start || a.timestamp_finish).getTime() -
+        new Date(b.timestamp_start || b.timestamp_finish).getTime(),
+    );
+  sortedSteps?.forEach(step => {
     if (step.stepType === 'thinking_step') {
       // Handle thinking step
       const {
@@ -162,27 +196,18 @@ export const convertToAIAnswer = (message_group, message_groups, participants) =
         timestamp_finish,
       } = step;
 
-      // Skip empty thinking_steps (transition steps with no content)
-      // Backend normalizes text field for all providers (OpenAI, Anthropic, etc.)
-      if (!text || !text.trim()) {
-        return;
-      }
-
       toolActions.push({
         name: tool_name || TOOL_ACTION_NAMES.Llm,
         parent_agent_name: step.parent_agent_name || null,
         id: step.message.id,
+        traceStepId: step._traceStepId,
         status: ToolActionStatus.complete,
         toolInputs: '',
         toolOutputs: text,
         toolMeta: {
           ls_model_name: model_name,
         },
-        created_at:
-          (!index ? first_tool_timestamp_start : undefined) ||
-          timestamp_start ||
-          timestamp_finish ||
-          convertTime(created_at),
+        created_at: timestamp_start || timestamp_finish || convertTime(created_at),
         ended_at: timestamp_finish || convertTime(created_at),
         timestamp: timestamp_finish || convertTime(created_at),
         content: text,
@@ -219,11 +244,13 @@ export const convertToAIAnswer = (message_group, message_groups, participants) =
         // invocation so reload matches the live stream (no flicker, #5386).
         parent_agent_call_id: step.metadata?.parent_agent_call_id,
         id: step.tool_run_id,
+        traceStepId: step._traceStepId,
+        finishReason: step.finish_reason,
         status: ToolActionStatus.complete,
         toolInputs: step.tool_inputs,
         toolOutputs: step.tool_output,
         toolMeta: {
-          ls_model_name: step.tool_meta.model_name,
+          ls_model_name: step.tool_meta?.model_name,
           toolkit_name: toolkitName,
           // display_name: human-readable label injected by SDK. handleToolAction prefers this over toolkit_name.
           // For old internal tool history without display_name, handleToolAction falls back to resolveInternalToolDisplayName.
@@ -234,15 +261,12 @@ export const convertToAIAnswer = (message_group, message_groups, participants) =
           icon_meta: step.tool_meta?.icon_meta,
           agent_type: step.tool_meta?.metadata?.agent_type,
         },
-        created_at:
-          (!index ? first_tool_timestamp_start : undefined) ||
-          step.timestamp_start ||
-          convertTime(created_at),
+        created_at: step.timestamp_start || convertTime(created_at),
         ended_at: step.timestamp_finish || convertTime(created_at),
         timestamp: step.timestamp_finish || convertTime(created_at),
-        content: step.content || convertJsonToString(step.error ?? ''),
+        content: step.content || '',
         type: TOOL_ACTION_TYPES.Tool,
-        isError: !!step.error,
+        isError: !!step.isError,
       });
     }
   }) || [];
@@ -259,7 +283,9 @@ export const convertToAIAnswer = (message_group, message_groups, participants) =
       !a.parent_agent_name &&
       (a.name === name || a.original_name === name) &&
       !a.isError &&
-      !!a.toolOutputs,
+      // Reload pins carry no toolOutputs (lazy); finishReason is the persisted completion
+      // signal (set only once a tool_call finishes). Fall back to toolOutputs for live actions.
+      (!!a.finishReason || !!a.toolOutputs),
   });
 
   // Reconstruct HITL interrupt state persisted at pause time (#4823). The live
@@ -312,7 +338,12 @@ export const convertToAIAnswer = (message_group, message_groups, participants) =
   };
 };
 
-export const convertMessagesToChatHistory = (message_groups = [], participants = [], playerInfo) => {
+export const convertMessagesToChatHistory = (
+  message_groups = [],
+  participants = [],
+  playerInfo,
+  traceStepsByGroupId = {},
+) => {
   const sortedMessages = [...(message_groups || [])].sort((a, b) => {
     return a.created_at.toLowerCase().localeCompare(b.created_at.toLowerCase());
   });
@@ -352,7 +383,12 @@ export const convertMessagesToChatHistory = (message_groups = [], participants =
     }
 
     // Convert AI answer
-    const aiMessage = convertToAIAnswer(message_group, sortedMessages, participants);
+    const aiMessage = convertToAIAnswer(
+      message_group,
+      sortedMessages,
+      participants,
+      traceStepsByGroupId[message_group.id] || [],
+    );
 
     // Attach child messages as SwarmChild toolActions
     const childMessages = childMessagesByParent[uuid] || [];
@@ -386,7 +422,21 @@ export const convertMessagesToChatHistory = (message_groups = [], participants =
   });
 };
 
-export const convertConversationToChatHistory = (conversationDetails = {}) => {
+// Group flat trace-list rows ({ rows: [...] } or [...]) by message_group_id for the converters.
+export const groupTraceStepsByGroupId = traceSteps => {
+  const rows = Array.isArray(traceSteps) ? traceSteps : traceSteps?.rows || [];
+  return rows.reduce((acc, row) => {
+    (acc[row.message_group_id] = acc[row.message_group_id] || []).push(row);
+    return acc;
+  }, {});
+};
+
+export const convertConversationToChatHistory = (conversationDetails = {}, traceSteps = []) => {
   const { message_groups = [], participants = [] } = conversationDetails;
-  return convertMessagesToChatHistory(message_groups, participants);
+  return convertMessagesToChatHistory(
+    message_groups,
+    participants,
+    undefined,
+    groupTraceStepsByGroupId(traceSteps),
+  );
 };

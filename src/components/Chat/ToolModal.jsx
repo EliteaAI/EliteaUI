@@ -13,7 +13,7 @@ import { EditorView } from '@codemirror/view';
 import CloseIcon from '../Icons/CloseIcon';
 import CopyIcon from '../Icons/CopyIcon';
 
-const ToolModal = ({ open, onClose, toolData, title = '', input = '', output = '' }) => {
+const ToolModal = ({ open, onClose, toolData, title = '', input = '', output = '', isLoading = false }) => {
   const theme = useTheme();
   const { toastInfo } = useToast();
 
@@ -203,6 +203,14 @@ const ToolModal = ({ open, onClose, toolData, title = '', input = '', output = '
           },
         }}
       >
+        {isLoading && (
+          <Typography
+            variant="bodySmall"
+            sx={{ padding: '0.5rem 1rem', opacity: 0.7 }}
+          >
+            Loading details…
+          </Typography>
+        )}
         <Split
           className="split"
           sizes={[50, 50]}
