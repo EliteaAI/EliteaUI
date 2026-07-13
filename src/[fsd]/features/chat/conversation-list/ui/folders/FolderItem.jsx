@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useMemo, useState } from 'react';
+﻿import React, { memo, useCallback, useMemo, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 
@@ -18,20 +18,16 @@ import {
 import CancelIcon from '@/components/Icons/CancelIcon';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import EditIcon from '@/components/Icons/EditIcon';
-import ExportIcon from '@/components/Icons/ExportIcon';
 import PinIcon from '@/components/Icons/PinIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
 import DraggableFolderItem from './DraggableFolderItem';
 import DroppableFolderItem from './DroppableFolderItem';
 
-const isExportingAPIReady = false;
-
 const FolderItem = memo(props => {
   const {
     folder = {},
     isActive = false,
-    onExport,
     onChangeActiveFolderName,
     onCreateFolder,
     onCancelCreateFolder,
@@ -83,22 +79,7 @@ const FolderItem = memo(props => {
   const menuItems = useMemo(() => {
     const items = [
       {
-        label: 'Delete',
-        icon: (
-          <DeleteIcon
-            sx={{ fontSize: '1rem' }}
-            fill={theme.palette.icon.fill.default}
-          />
-        ),
-        alertTitle: 'Delete folder?',
-        confirmButtonTitle: 'Delete',
-        confirmText: 'Are you sure to delete folder? It can’t be restored.',
-        alarm: true,
-        disabled: userId != owner_id || !checkPermission(PERMISSIONS.chat.folders.delete),
-        onConfirm: handleDeleteFolder,
-      },
-      {
-        label: 'Edit',
+        label: 'Rename',
         icon: (
           <EditIcon
             sx={{ fontSize: '1rem' }}
@@ -109,32 +90,25 @@ const FolderItem = memo(props => {
         onClick: handleEditFolder,
       },
       {
-        label: 'Export',
-        icon: (
-          <ExportIcon
-            sx={{ fontSize: '1rem' }}
-            fill={theme.palette.icon.fill.default}
-          />
-        ),
-        hasSubMenu: true,
-        disabled: !isExportingAPIReady,
-        subMenuItems: [
-          {
-            label: 'Option1',
-            onClick: onExport,
-          },
-          {
-            label: 'Option2',
-            onClick: onExport,
-          },
-        ],
-        onClick: handleEditFolder,
-      },
-      {
         label: folder.meta?.is_pinned ? 'Unpin' : 'Pin on top',
         icon: <PinIcon sx={{ fontSize: '1rem' }} />,
         disabled: userId != owner_id || !checkPermission(PERMISSIONS.chat.folders.update),
         onClick: handlePinFolder,
+      },
+      {
+        label: 'Delete',
+        icon: (
+          <DeleteIcon
+            sx={{ fontSize: '1rem' }}
+            fill={theme.palette.icon.fill.default}
+          />
+        ),
+        alertTitle: 'Delete folder?',
+        confirmButtonTitle: 'Delete',
+        confirmText: "Are you sure to delete folder? It can't be restored.",
+        alarm: true,
+        disabled: userId != owner_id || !checkPermission(PERMISSIONS.chat.folders.delete),
+        onConfirm: handleDeleteFolder,
       },
     ];
 
@@ -147,7 +121,6 @@ const FolderItem = memo(props => {
     handleDeleteFolder,
     handleEditFolder,
     handlePinFolder,
-    onExport,
     folder.meta?.is_pinned,
   ]);
 
