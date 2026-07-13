@@ -1,7 +1,6 @@
 import { memo, useCallback, useMemo } from 'react';
 
 import { Form, Formik } from 'formik';
-import { useSelector } from 'react-redux';
 
 import { useDefaultModel } from '@/[fsd]/shared/lib/hooks';
 import { useAuthorDescriptionMutation, useAuthorDetailsQuery } from '@/api/social';
@@ -14,8 +13,7 @@ import { profileValidationSchema } from './profileValidation';
 import useQueryAuthor from './useQueryAuthor';
 
 const Profile = memo(() => {
-  const { isFetching } = useQueryAuthor();
-  const { name, avatar, email } = useSelector(state => state.trendingAuthor.authorDetails);
+  useQueryAuthor();
   const selectedProjectId = useSelectedProjectId();
   const { toastError, toastSuccess } = useToast();
 
@@ -56,13 +54,7 @@ const Profile = memo(() => {
       onSubmit={handleSubmit}
     >
       <Form>
-        <ProfileFormContent
-          name={name}
-          avatar={avatar}
-          email={email}
-          isFetching={isFetching}
-          modelList={modelList}
-        />
+        <ProfileFormContent modelList={modelList} />
       </Form>
     </Formik>
   );

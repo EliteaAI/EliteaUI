@@ -1,11 +1,17 @@
 import { memo } from 'react';
 
+import { useSelector } from 'react-redux';
+
 import { Box, Typography } from '@mui/material';
 
 import Profile from './Profile';
+import { ProfileUserInfo } from './components';
+import useQueryAuthor from './useQueryAuthor';
 
 const UserSettings = memo(() => {
   const styles = userSettingsStyles();
+  const { isFetching } = useQueryAuthor();
+  const { name, avatar } = useSelector(state => state.trendingAuthor.authorDetails);
 
   return (
     <Box sx={styles.container}>
@@ -16,6 +22,11 @@ const UserSettings = memo(() => {
         >
           Personalization
         </Typography>
+        <ProfileUserInfo
+          name={name}
+          avatar={avatar}
+          isFetching={isFetching}
+        />
       </Box>
       <Box sx={styles.content}>
         <Profile />
