@@ -5,11 +5,13 @@ import { Box, Typography } from '@mui/material';
 import { AnalyticCommonHelpers } from '@/[fsd]/features/analytics/lib/helpers';
 
 const ChartTooltip = memo(props => {
-  const { active, payload, label } = props;
+  const { active, payload, label, formatter } = props;
 
   const styles = chartTooltipStyles();
 
   if (!active || !payload?.length) return null;
+
+  const formatValue = formatter || (v => (typeof v === 'number' ? AnalyticCommonHelpers.fmtNum(v) : v));
 
   return (
     <Box sx={styles.chartTooltip}>
@@ -21,12 +23,11 @@ const ChartTooltip = memo(props => {
       </Typography>
       {payload.map((entry, i) => (
         <Typography
-          key={i}
+          key={entry.dataKey || i}
           variant="bodySmall"
           sx={{ color: entry.color }}
         >
-          {entry.name}:{' '}
-          {typeof entry.value === 'number' ? AnalyticCommonHelpers.fmtNum(entry.value) : entry.value}
+          {entry.name}: {formatValue(entry.value)}
         </Typography>
       ))}
     </Box>

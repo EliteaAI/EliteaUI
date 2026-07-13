@@ -94,43 +94,53 @@ const AnalyticsCosts = memo(props => {
           >
             Cost by Model
           </Typography>
-          <Box sx={styles.chartWrapper}>
-            <ResponsiveContainer
-              width="100%"
-              height="100%"
-            >
-              <BarChart
-                data={modelChartData}
-                layout="vertical"
+          {modelChartData.length ? (
+            <Box sx={styles.chartWrapper}>
+              <ResponsiveContainer
+                width="100%"
+                height="100%"
               >
-                <XAxis
-                  type="number"
-                  tick={axisTickStyle}
-                  tickFormatter={v => AnalyticCommonHelpers.fmtCost(v)}
-                />
-                <YAxis
-                  type="category"
-                  dataKey="name"
-                  tick={axisTickStyle}
-                  width={100}
-                />
-                <RechartsTooltip
-                  content={<ChartTooltip formatter={v => AnalyticCommonHelpers.fmtCost(v)} />}
-                />
-                <Bar
-                  dataKey="cost"
-                  radius={[0, 4, 4, 0]}
+                <BarChart
+                  data={modelChartData}
+                  layout="vertical"
                 >
-                  {modelChartData.map((entry, i) => (
-                    <Cell
-                      key={i}
-                      fill={entry.color}
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </Box>
+                  <XAxis
+                    type="number"
+                    tick={axisTickStyle}
+                    tickFormatter={v => AnalyticCommonHelpers.fmtCost(v)}
+                  />
+                  <YAxis
+                    type="category"
+                    dataKey="name"
+                    tick={axisTickStyle}
+                    width={100}
+                  />
+                  <RechartsTooltip
+                    content={<ChartTooltip formatter={v => AnalyticCommonHelpers.fmtCost(v)} />}
+                  />
+                  <Bar
+                    dataKey="cost"
+                    radius={[0, 4, 4, 0]}
+                  >
+                    {modelChartData.map((entry, i) => (
+                      <Cell
+                        key={entry.name || i}
+                        fill={entry.color}
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </Box>
+          ) : (
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ p: 2 }}
+            >
+              No data
+            </Typography>
+          )}
         </Box>
 
         <Box sx={styles.chartCard}>
@@ -140,31 +150,41 @@ const AnalyticsCosts = memo(props => {
           >
             Daily Cost Trend
           </Typography>
-          <Box sx={styles.chartWrapper}>
-            <ResponsiveContainer
-              width="100%"
-              height="100%"
+          {dailyChartData.length ? (
+            <Box sx={styles.chartWrapper}>
+              <ResponsiveContainer
+                width="100%"
+                height="100%"
+              >
+                <BarChart data={dailyChartData}>
+                  <XAxis
+                    dataKey="date"
+                    tick={axisTickStyle}
+                  />
+                  <YAxis
+                    tick={axisTickStyle}
+                    tickFormatter={v => AnalyticCommonHelpers.fmtCost(v)}
+                  />
+                  <RechartsTooltip
+                    content={<ChartTooltip formatter={v => AnalyticCommonHelpers.fmtCost(v)} />}
+                  />
+                  <Bar
+                    dataKey="total_cost"
+                    fill={AnalyticsCommonConstants.CHART_COLORS[0]}
+                    radius={[4, 4, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </Box>
+          ) : (
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ p: 2 }}
             >
-              <BarChart data={dailyChartData}>
-                <XAxis
-                  dataKey="date"
-                  tick={axisTickStyle}
-                />
-                <YAxis
-                  tick={axisTickStyle}
-                  tickFormatter={v => AnalyticCommonHelpers.fmtCost(v)}
-                />
-                <RechartsTooltip
-                  content={<ChartTooltip formatter={v => AnalyticCommonHelpers.fmtCost(v)} />}
-                />
-                <Bar
-                  dataKey="total_cost"
-                  fill={AnalyticsCommonConstants.CHART_COLORS[0]}
-                  radius={[4, 4, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </Box>
+              No data
+            </Typography>
+          )}
         </Box>
       </Box>
 

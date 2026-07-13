@@ -68,4 +68,13 @@ describe('AnalyticsCosts component structure', () => {
   it('renders error state with message', () => {
     expect(SRC).toContain('Failed to load cost analytics');
   });
+
+  it('handles empty chart states with conditional rendering', () => {
+    expect(SRC).toContain('modelChartData.length');
+    expect(SRC).toContain('dailyChartData.length');
+  });
+
+  it('passes formatter prop to ChartTooltip', () => {
+    expect(SRC).toContain('formatter={');
+  });
 });

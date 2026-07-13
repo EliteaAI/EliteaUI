@@ -12,11 +12,13 @@ export const fmtDuration = ms => {
 };
 
 export const fmtCost = usd => {
-  if (usd == null) return '-';
+  if (usd == null || Number.isNaN(usd)) return '-';
   if (usd === 0) return '$0.00';
-  if (usd < 0.0001) return `$${usd.toFixed(8)}`;
-  if (usd < 0.01) return `$${usd.toFixed(6)}`;
-  if (usd < 1) return `$${usd.toFixed(4)}`;
-  if (usd < 1000) return `$${usd.toFixed(2)}`;
-  return `$${(usd / 1000).toFixed(1)}K`;
+  const abs = Math.abs(usd);
+  const sign = usd < 0 ? '-' : '';
+  if (abs < 0.0001) return `${sign}$${abs.toFixed(8)}`;
+  if (abs < 0.01) return `${sign}$${abs.toFixed(6)}`;
+  if (abs < 1) return `${sign}$${abs.toFixed(4)}`;
+  if (abs < 1000) return `${sign}$${abs.toFixed(2)}`;
+  return `${sign}$${(abs / 1000).toFixed(1)}K`;
 };
