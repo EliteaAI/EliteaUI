@@ -7,6 +7,7 @@ import { useInteractiveTour } from '@/[fsd]/app/providers';
 import { useProjectAnalyticsQuery } from '@/[fsd]/features/analytics/api';
 import {
   AnalyticsAgents,
+  AnalyticsCosts,
   AnalyticsGuide,
   AnalyticsHealth,
   AnalyticsOverview,
@@ -190,7 +191,7 @@ const AnalyticsContainer = memo(() => {
             value={activeTab}
             onChange={handleTabChange}
           >
-            {['Overview', 'Agents', 'Tools', 'Users', 'Health', 'Guide'].map(label => (
+            {['Overview', 'Agents', 'Tools', 'Users', 'Health', 'Costs', 'Guide'].map(label => (
               <BaseTab
                 key={label}
                 label={label}
@@ -250,7 +251,14 @@ const AnalyticsContainer = memo(() => {
               daily_activity={data.daily_activity}
             />
           )}
-          {activeTab === 5 && <AnalyticsGuide />}
+          {activeTab === 5 && (
+            <AnalyticsCosts
+              projectId={projectId}
+              dateFrom={dateFromISO}
+              dateTo={dateToISO}
+            />
+          )}
+          {activeTab === 6 && <AnalyticsGuide />}
         </Box>
       </Box>
     </DrawerPage>
