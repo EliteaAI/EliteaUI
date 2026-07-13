@@ -233,6 +233,7 @@ const AnalyticsAgents = memo(props => {
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Users</Typography>
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Avg Latency</Typography>
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Errors</Typography>
+            <Typography sx={[styles.tableCell, { flex: 1 }]}>Tokens</Typography>
           </Box>
           {isFetching && (
             <Box sx={styles.loadingState}>
@@ -266,6 +267,9 @@ const AnalyticsAgents = memo(props => {
                   ]}
                 >
                   {a.errors}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
+                  {AnalyticCommonHelpers.fmtNum(a.total_tokens)}
                 </Typography>
               </Box>
             ))}
