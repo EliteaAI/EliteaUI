@@ -20,8 +20,10 @@ function useBrowserPageTitle() {
         return `Chat: ${name || params.conversationId} - ${projectName}`;
       }
       return `Chat - ${projectName}`;
+    } else if (location.pathname.startsWith('/elitea-catalog')) {
+      return `ELITEA Catalog - ${projectName}`;
     } else if (location.pathname.startsWith('/agents-hub')) {
-      return `Agent HUB - ${projectName}`;
+      return `ELITEA Catalog - ${projectName}`;
     } else if (location.pathname.startsWith('/agents')) {
       if (params.agentId) {
         return `Agent: ${name || params.agentId} - ${projectName}`;

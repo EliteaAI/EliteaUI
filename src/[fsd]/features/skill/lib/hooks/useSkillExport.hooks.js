@@ -7,8 +7,9 @@ import { buildErrorMessage, downloadBlobFile } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 
-export const useSkillExport = () => {
-  const projectId = useSelectedProjectId();
+export const useSkillExport = overrideProjectId => {
+  const currentProjectId = useSelectedProjectId();
+  const projectId = overrideProjectId ?? currentProjectId;
   const trackEvent = useTrackEvent();
   const { toastError } = useToast();
   const [exportSkill, { isFetching: isExporting }] = useLazySkillExportMdQuery();

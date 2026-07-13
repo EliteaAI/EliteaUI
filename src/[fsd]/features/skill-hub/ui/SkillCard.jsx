@@ -9,17 +9,17 @@ import AuthorContainer from '@/components/AuthorContainer';
 import EntityIcon from '@/components/EntityIcon';
 import { getCardGradientStyles } from '@/utils/cardStyles';
 
-import AgentHubLike from './AgentHubLike';
+import SkillHubLike from './SkillHubLike';
 
-const AgentCard = memo(props => {
-  const { application, onSelectItem } = props;
+const SkillCard = memo(props => {
+  const { skill, onSelectItem } = props;
 
-  const styles = agentCardStyles();
+  const styles = skillCardStyles();
 
   const cardAuthors = useMemo(() => {
-    const { authors = [], author = {} } = application || {};
+    const { authors = [], author = {} } = skill || {};
     return !authors?.length ? (author ? [author] : []) : authors;
-  }, [application]);
+  }, [skill]);
 
   const authorsTooltipText = useMemo(() => {
     if (!cardAuthors?.length) return '';
@@ -30,10 +30,10 @@ const AgentCard = memo(props => {
   }, [cardAuthors]);
 
   const handleClick = useCallback(() => {
-    onSelectItem?.(application);
-  }, [application, onSelectItem]);
+    onSelectItem?.(skill);
+  }, [skill, onSelectItem]);
 
-  if (!application) return null;
+  if (!skill) return null;
 
   return (
     <Card
@@ -43,8 +43,8 @@ const AgentCard = memo(props => {
     >
       <Box sx={styles.header}>
         <EntityIcon
-          icon={application.icon_meta}
-          entityType={ChatParticipantType.Applications}
+          icon={skill.icon_meta}
+          entityType={ChatParticipantType.Skills}
           projectId={PUBLIC_PROJECT_ID}
           editable={false}
         />
@@ -52,7 +52,7 @@ const AgentCard = memo(props => {
           variant="headingSmall"
           sx={styles.title}
         >
-          {application.name || 'Untitled'}
+          {skill.name || 'Untitled'}
         </Typography>
       </Box>
       <Box
@@ -72,19 +72,19 @@ const AgentCard = memo(props => {
             />
           </Box>
         </StyledTooltip>
-        <AgentHubLike
+        <SkillHubLike
           viewMode={ViewMode.Public}
-          data={application}
+          data={skill}
         />
       </Box>
     </Card>
   );
 });
 
-AgentCard.displayName = 'AgentCard';
+SkillCard.displayName = 'SkillCard';
 
 /** @type {MuiSx} */
-const agentCardStyles = () => ({
+const skillCardStyles = () => ({
   card: ({ palette }) => ({
     ...getCardGradientStyles(palette),
     height: '7rem',
@@ -129,4 +129,4 @@ const agentCardStyles = () => ({
   },
 });
 
-export default AgentCard;
+export default SkillCard;
