@@ -401,15 +401,39 @@ const ToolCard = memo(props => {
 
     switch (entityType) {
       case 'agent':
-        return <>Are you sure to remove the {styledEntityName} agent?</>;
+        return (
+          <Typography
+            variant="bodyMedium"
+            color="text.deleteAlertText"
+          >
+            Are you sure to remove the {styledEntityName} agent?
+          </Typography>
+        );
       case 'pipeline':
-        return <>Are you sure to remove the {styledEntityName} pipeline?</>;
+        return (
+          <Typography
+            variant="bodyMedium"
+            color="text.deleteAlertText"
+          >
+            Are you sure to remove the {styledEntityName} pipeline?
+          </Typography>
+        );
       case 'toolkit':
       default:
         return !isAttachmentToolkit ? (
-          <>Are you sure to remove the {styledEntityName} toolkit?</>
+          <Typography
+            variant="bodyMedium"
+            color="text.deleteAlertText"
+          >
+            Are you sure to remove the {styledEntityName} toolkit?
+          </Typography>
         ) : (
-          <>Are you sure to remove the {styledEntityName} toolkit, which is used to keep attached files?</>
+          <Typography
+            variant="bodyMedium"
+            color="text.deleteAlertText"
+          >
+            Are you sure to remove the {styledEntityName} toolkit, which is used to keep attached files?
+          </Typography>
         );
     }
   }, [theme.palette.text.deleteAlertEntityName, toolkitName, entityType, isAttachmentToolkit]);
