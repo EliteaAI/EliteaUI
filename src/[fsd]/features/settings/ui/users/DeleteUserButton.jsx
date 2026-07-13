@@ -1,11 +1,11 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useState } from 'react';
 
 import { Box, IconButton } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
+import { Modal } from '@/[fsd]/shared/ui';
 import { useUserDeleteMutation } from '@/api/admin';
 import { buildErrorMessage } from '@/common/utils';
-import AlertDialog from '@/components/AlertDialog';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -17,12 +17,6 @@ const DeleteUserButton = memo(props => {
   const { toastError, toastSuccess } = useToast();
   const projectId = useSelectedProjectId();
   const [openAlert, setOpenAlert] = useState(false);
-
-  const alertContent = useMemo(
-    () =>
-      `Are you sure to delete ${users.length > 1 ? 'the selected users' : `the selected user ${users[0]?.name || ''}`}?`,
-    [users],
-  );
 
   const [deleteUser, { isSuccess, isError, error, isLoading }] = useUserDeleteMutation();
   const onClickDelete = useCallback(() => {
@@ -77,14 +71,17 @@ const DeleteUserButton = memo(props => {
           </IconButton>
         </Box>
       </Tooltip>
-      <AlertDialog
-        title={'Delete user'}
-        alertContent={alertContent}
+      <Modal.DeleteEntityModal
         open={openAlert}
-        alarm
         onClose={onCloseAlert}
-        onCancel={onCloseAlert}
         onConfirm={onConfirmAlert}
+        textContent={
+          users.length > 1
+            ? 'Are you sure to delete the selected users'
+            : 'Are you sure to delete the selected user '
+        }
+        name={users.length > 1 ? '' : users[0]?.name || ''}
+        inlineExtraContent="?"
       />
     </>
   );

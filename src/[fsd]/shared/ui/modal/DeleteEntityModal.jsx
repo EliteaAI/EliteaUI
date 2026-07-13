@@ -23,7 +23,7 @@ const DeleteEntityModal = memo(props => {
     confirmButtonText = 'Delete',
     cancelButtonText = 'Cancel',
     customContent,
-    textContent = 'Are you sure to delete ',
+    textContent = 'Are you sure to delete the ',
   } = props;
 
   const styles = deleteEntityModalStyles();

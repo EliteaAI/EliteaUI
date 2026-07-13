@@ -7,8 +7,7 @@ import { Box, Typography } from '@mui/material';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import { AgentDetails } from '@/[fsd]/features/agent/ui';
-import { Button } from '@/[fsd]/shared/ui';
-import AlertDialog from '@/components/AlertDialog';
+import { Button, Modal } from '@/[fsd]/shared/ui';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import useDeleteVersion from '@/hooks/application/useDeleteVersion';
@@ -143,14 +142,12 @@ const VersionDelete = memo(
           </Button.BaseBtn>
         )}
 
-        <AlertDialog
-          title="Delete version"
-          alertContent={`Are you sure to delete ${currentVersionName}?`}
+        <Modal.DeleteEntityModal
           open={openConfirmDialog}
-          alarm
           onClose={onCloseConfirmDialog}
-          onCancel={onCloseConfirmDialog}
           onConfirm={onConfirmSimpleDelete}
+          name={currentVersionName}
+          inlineExtraContent=" version? It can't be restored."
         />
 
         <AgentDetails.VersionReplacementModal
