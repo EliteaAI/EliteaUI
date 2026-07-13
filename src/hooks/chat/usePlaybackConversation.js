@@ -3,11 +3,14 @@ import { useCallback, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 
 import { useConversationNavigation } from '@/[fsd]/features/chat/lib/hooks';
-import { useLazyConversationDetailsQuery, useLazyMessageListQuery } from '@/api';
+import { useLazyConversationDetailsQuery, useLazyMessageListQuery, useLazyMessageTracesQuery } from '@/api';
 import { buildErrorMessage } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
-import { convertMessagesToChatHistory } from '../../common/convertChatConversationMessages';
+import {
+  convertMessagesToChatHistory,
+  groupTraceStepsByGroupId,
+} from '../../common/convertChatConversationMessages';
 
 export const PLAYBACK_PAGE_SIZE = 100;
 
@@ -26,6 +29,7 @@ const usePlaybackConversation = ({
   const [getMessageList, { isError, error }] = useLazyMessageListQuery();
   const [getConversationDetail, { isError: isQueryDetailError, error: queryDetailError }] =
     useLazyConversationDetailsQuery();
+  const [getMessageTraces] = useLazyMessageTracesQuery();
 
   const onPlaybackConversation = useCallback(
     async conversation => {
@@ -58,10 +62,14 @@ const usePlaybackConversation = ({
         const firstUserMessage = messages.rows.find(i =>
           userParticipantsIds.includes(i.author_participant_id),
         );
-        const chatHistory = convertMessagesToChatHistory(messages.rows, result.data.participants, {
-          user,
-          firstUserMessage,
-        });
+        // Pins come from message_trace_step (TS-4); failure degrades to no pins.
+        const tracesResult = await getMessageTraces({ projectId, conversationId: result.data.id });
+        const chatHistory = convertMessagesToChatHistory(
+          messages.rows,
+          result.data.participants,
+          { user, firstUserMessage },
+          groupTraceStepsByGroupId(tracesResult.data),
+        );
 
         const newPlaybackConversation = {
           ...conversation,
@@ -114,6 +122,7 @@ const usePlaybackConversation = ({
       setFolders,
       clearUrlConversation,
       getMessageList,
+      getMessageTraces,
       activeConversation,
     ],
   );
