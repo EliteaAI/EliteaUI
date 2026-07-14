@@ -2,7 +2,6 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Box, CircularProgress, Typography } from '@mui/material';
 
-import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
 import { Banner, Button, Field } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import Markdown from '@/[fsd]/shared/ui/markdown';
@@ -22,7 +21,7 @@ import GenerateProjectContextButton from './GenerateProjectContextButton';
 
 const MAX_CHARS = 2500;
 
-const ProjectContextContent = memo(() => {
+const ProjectContext = memo(() => {
   const projectId = useSelectedProjectId();
   const { checkPermission } = useCheckPermission();
   const { toastSuccess, toastError } = useToast();
@@ -164,150 +163,139 @@ const ProjectContextContent = memo(() => {
   }
 
   return (
-    <Box sx={styles.root}>
-      <DrawerPageHeader
+    <Box sx={styles.body}>
+      {showReadOnlyBanner && (
+        <Banner.BannerMessage
+          message="You don't have permission to edit this setting."
+          variant="info"
+        />
+      )}
+      <EnableToggleCard
+        enabled={enabled}
+        onToggle={handleToggle}
+        disabled={!canEditProjectContext}
         title="Project Context"
-        showBorder
+        description="Project-specific background information that the AI uses to generate more accurate and relevant responses, tailored to your workflows, data, and goals."
       />
 
-      <Box sx={styles.body}>
-        {showReadOnlyBanner && (
-          <Banner.BannerMessage
-            message="You don't have permission to edit this setting."
-            variant="info"
-          />
-        )}
-        <EnableToggleCard
-          enabled={enabled}
-          onToggle={handleToggle}
-          disabled={!canEditProjectContext}
+      {showDisabledBanner && (
+        <Banner.BannerMessage
+          message="Project Context is turned off. The project background is not applied to AI responses or workflows."
+          variant="info"
         />
+      )}
 
-        {showDisabledBanner && (
-          <Banner.BannerMessage
-            message="Project Context is turned off. The project background is not applied to AI responses or workflows."
-            variant="info"
-          />
-        )}
-
-        {showEditorContent && (
-          <Box sx={styles.editorSection}>
-            <Box sx={styles.editorHeader}>
-              <Box sx={styles.editorText}>
-                <Typography
-                  variant="labelMedium"
-                  color="text.secondary"
-                >
-                  Project Background
-                </Typography>
-                <Typography variant="bodySmall">
-                  Include goals, terminology, workflows, or constraints relevant to the project.
-                </Typography>
-              </Box>
-              <Box sx={styles.toolbar}>
-                {showEditorControls && (
-                  <>
-                    <GenerateProjectContextButton
-                      existingContent={content}
-                      onApply={handleAIGenerated}
-                    />
-                    <Button.BaseBtn
-                      variant={BUTTON_VARIANTS.secondary}
-                      startIcon={<ImportIcon />}
-                      onClick={handleImportClick}
-                      title="Import markdown file"
-                    />
-                    <Box
-                      hidden
-                      component="input"
-                      ref={fileInputRef}
-                      type="file"
-                      accept=".md,text/markdown"
-                      onChange={handleFileUpload}
-                    />
-                  </>
-                )}
-                <TabGroupButton
-                  value={mode}
-                  onChange={handleModeChange}
-                  size="small"
-                  arrayBtn={modeButtons}
-                />
-              </Box>
-            </Box>
-
-            {mode === 'edit' ? (
-              <Box
-                sx={styles.editorWrapper}
-                onFocus={handleEditorFocus}
-                onBlur={handleEditorBlur}
+      {showEditorContent && (
+        <Box sx={styles.editorSection}>
+          <Box sx={styles.editorHeader}>
+            <Box sx={styles.editorText}>
+              <Typography
+                variant="labelMedium"
+                color="text.secondary"
               >
-                <Field.CodeMirrorEditor
-                  value={content}
-                  notifyChange={handleContentChange}
-                  extensions={markdownExtensions}
-                  height="100%"
-                  minHeight="0"
-                  maxLength={MAX_CHARS}
-                  readOnly={!canEditProjectContext}
-                />
-              </Box>
-            ) : (
-              <Box sx={styles.preview}>
-                <Markdown renderHtml={false}>{content}</Markdown>
-              </Box>
-            )}
-
-            {showEditorControls && (
-              <Box sx={styles.charCounterWrapper}>
-                <Typography
-                  variant="bodySmall"
-                  sx={styles.charCounter}
-                >
-                  {MAX_CHARS - content.length} characters left.{' '}
-                  {limitReached && 'You have reached the maximum character limit.'}
-                </Typography>
-              </Box>
-            )}
+                Project Background
+              </Typography>
+              <Typography variant="bodySmall">
+                Include goals, terminology, workflows, or constraints relevant to the project.
+              </Typography>
+            </Box>
+            <Box sx={styles.toolbar}>
+              {showEditorControls && (
+                <>
+                  <GenerateProjectContextButton
+                    existingContent={content}
+                    onApply={handleAIGenerated}
+                  />
+                  <Button.BaseBtn
+                    variant={BUTTON_VARIANTS.secondary}
+                    startIcon={<ImportIcon />}
+                    onClick={handleImportClick}
+                    title="Import markdown file"
+                  />
+                  <Box
+                    hidden
+                    component="input"
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".md,text/markdown"
+                    onChange={handleFileUpload}
+                  />
+                </>
+              )}
+              <TabGroupButton
+                value={mode}
+                onChange={handleModeChange}
+                size="small"
+                arrayBtn={modeButtons}
+              />
+            </Box>
           </Box>
-        )}
 
-        {canEditProjectContext && (
-          <Box sx={styles.actions}>
-            <Button.BaseBtn
-              variant={BUTTON_VARIANTS.contained}
-              color="primary"
-              disabled={!isDirty || isSaving}
-              onClick={handleSave}
+          {mode === 'edit' ? (
+            <Box
+              sx={styles.editorWrapper}
+              onFocus={handleEditorFocus}
+              onBlur={handleEditorBlur}
             >
-              Save
-            </Button.BaseBtn>
-            <Button.BaseBtn
-              variant={BUTTON_VARIANTS.secondary}
-              color="secondary"
-              disabled={!isDirty}
-              onClick={handleDiscard}
-            >
-              Discard
-            </Button.BaseBtn>
-          </Box>
-        )}
-      </Box>
+              <Field.CodeMirrorEditor
+                value={content}
+                notifyChange={handleContentChange}
+                extensions={markdownExtensions}
+                height="100%"
+                minHeight="0"
+                maxLength={MAX_CHARS}
+                readOnly={!canEditProjectContext}
+              />
+            </Box>
+          ) : (
+            <Box sx={styles.preview}>
+              <Markdown renderHtml={false}>{content}</Markdown>
+            </Box>
+          )}
+
+          {showEditorControls && (
+            <Box sx={styles.charCounterWrapper}>
+              <Typography
+                variant="bodySmall"
+                sx={styles.charCounter}
+              >
+                {MAX_CHARS - content.length} characters left.{' '}
+                {limitReached && 'You have reached the maximum character limit.'}
+              </Typography>
+            </Box>
+          )}
+        </Box>
+      )}
+
+      {canEditProjectContext && (
+        <Box sx={styles.actions}>
+          <Button.BaseBtn
+            variant={BUTTON_VARIANTS.contained}
+            color="primary"
+            disabled={!isDirty || isSaving}
+            onClick={handleSave}
+          >
+            Save
+          </Button.BaseBtn>
+          <Button.BaseBtn
+            variant={BUTTON_VARIANTS.secondary}
+            color="secondary"
+            disabled={!isDirty}
+            onClick={handleDiscard}
+          >
+            Discard
+          </Button.BaseBtn>
+        </Box>
+      )}
     </Box>
   );
 });
 
-ProjectContextContent.displayName = 'ProjectContextContent';
-export default ProjectContextContent;
+ProjectContext.displayName = 'ProjectContext';
+export default ProjectContext;
 
 /** @type {MuiSx} */
 const componentStyles = (limitReached, isEditorFocused, isMuted) => ({
-  root: {
-    display: 'flex',
-    flexDirection: 'column',
-    height: '100%',
-    alignItems: 'center',
-  },
   loader: {
     display: 'flex',
     alignItems: 'center',
@@ -318,13 +306,11 @@ const componentStyles = (limitReached, isEditorFocused, isMuted) => ({
     flex: 1,
     overflow: 'auto',
     minHeight: 0,
-    padding: '1rem 1.5rem',
-    paddingBottom: '2.375rem',
+    padding: '0rem 0rem',
     display: 'flex',
     flexDirection: 'column',
     gap: '1rem',
     width: '100%',
-    maxWidth: '43.75rem',
   },
   editorSection: {
     display: 'flex',
@@ -355,7 +341,7 @@ const componentStyles = (limitReached, isEditorFocused, isMuted) => ({
   editorWrapper: ({ palette }) => ({
     display: 'flex',
     flex: 1,
-    minHeight: 0,
+    minHeight: '25rem',
     borderRadius: '0.375rem',
     border: `0.0625rem solid ${palette.border.table}`,
     overflow: 'hidden',

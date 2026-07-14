@@ -44,9 +44,7 @@ const EnvironmentSettings = ChunkHelpers.lazyWithRetry(
 );
 const TokensSettings = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/settings/PersonalTokens'));
 const Secrets = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/settings/Secrets'));
-const ProjectContextSettings = ChunkHelpers.lazyWithRetry(
-  () => import('@/[fsd]/pages/settings/ProjectContext'),
-);
+const ProjectBehavior = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/settings/ProjectBehavior'));
 const ProjectGeneralPage = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/settings/ProjectGeneral'));
 const ServicePromptsPage = ChunkHelpers.lazyWithRetry(
   () => import('@/[fsd]/pages/settings/ServicePromptsPage'),
@@ -314,7 +312,7 @@ const ProtectedRoutes = () => {
             />
             <Route
               path="project-behavior"
-              element={<ProjectContextSettings />}
+              element={<ProjectBehavior />}
             />
             <Route
               path="prompts"

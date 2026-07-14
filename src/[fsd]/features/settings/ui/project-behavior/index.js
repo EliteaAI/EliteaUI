@@ -1,1 +1,1 @@
-export { default as ProjectContextContent } from './ProjectContextContent';
+export { default as ProjectBehaviorContent } from './ProjectBehaviorContent';
