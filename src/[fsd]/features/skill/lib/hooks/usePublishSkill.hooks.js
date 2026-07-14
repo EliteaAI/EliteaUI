@@ -42,9 +42,9 @@ export const usePublishSkill = onSuccess => {
 
   const { data: platformSettings } = useGetPlatformSettingsQuery();
   const isPublishBlockedByPolicy = useMemo(() => {
-    if (!platformSettings?.is_publish_blocked) return false;
+    if (!platformSettings?.is_skill_publish_blocked) return false;
     if (isAdminPublish) return false;
-    const whitelist = platformSettings?.publish_whitelist_project_ids || [];
+    const whitelist = platformSettings?.skill_publish_whitelist_project_ids || [];
     return !whitelist.includes(Number(projectId));
   }, [platformSettings, projectId, isAdminPublish]);
 

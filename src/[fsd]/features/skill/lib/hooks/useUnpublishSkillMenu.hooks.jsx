@@ -2,22 +2,27 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 import { useSelector } from 'react-redux';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
 import UnpublishConfirmModal from '@/[fsd]/entities/version/ui/UnpublishConfirmModal';
 import { useUnpublishSkillMutation } from '@/[fsd]/features/skill/api';
-import { CollectionStatus, PERMISSIONS } from '@/common/constants';
+import { CollectionStatus, PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';
 import UnpublishIcon from '@/components/Icons/UnpublishIcon';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
+import RouteDefinitions from '@/routes';
 
 export const useUnpublishSkillMenu = onSuccess => {
   const { version: versionId } = useParams();
 
+  const navigate = useNavigate();
+
   const projectId = useSelectedProjectId();
   const { toastError, toastInfo } = useToast();
+
+  const isAdminContext = useMemo(() => projectId == PUBLIC_PROJECT_ID, [projectId]);
 
   const {
     values: {
@@ -41,8 +46,8 @@ export const useUnpublishSkillMenu = onSuccess => {
   const currentVersionId = useMemo(() => versionId || versionIdFromDetail, [versionId, versionIdFromDetail]);
 
   const onUnpublish = useCallback(
-    async id => {
-      const { error } = await unpublish({ projectId, skillId, versionId: id, body: {} });
+    async (id, reason) => {
+      const { error } = await unpublish({ projectId, skillId, versionId: id, body: { reason } });
 
       if (!error) {
         toastInfo('Skill has been successfully unpublished!');
@@ -50,6 +55,9 @@ export const useUnpublishSkillMenu = onSuccess => {
         setTimeout(() => {
           reset();
         }, 0);
+        if (isAdminContext) {
+          navigate(RouteDefinitions.Skills);
+        }
       } else {
         const errorMsg = error.data?.msg || error.data?.error || 'Failed to unpublish';
         toastError(errorMsg);
@@ -58,7 +66,7 @@ export const useUnpublishSkillMenu = onSuccess => {
         }, 0);
       }
     },
-    [projectId, skillId, onSuccess, unpublish, reset, toastError, toastInfo],
+    [projectId, skillId, isAdminContext, navigate, onSuccess, unpublish, reset, toastError, toastInfo],
   );
 
   const handleOpenConfirm = useCallback(() => {
@@ -69,10 +77,13 @@ export const useUnpublishSkillMenu = onSuccess => {
     setShowConfirm(false);
   }, []);
 
-  const handleConfirmUnpublish = useCallback(() => {
-    setShowConfirm(false);
-    onUnpublish(currentVersionId);
-  }, [onUnpublish, currentVersionId]);
+  const handleConfirmUnpublish = useCallback(
+    reason => {
+      setShowConfirm(false);
+      onUnpublish(currentVersionId, reason);
+    },
+    [onUnpublish, currentVersionId],
+  );
 
   const menuItem = useMemo(
     () =>
@@ -107,12 +118,21 @@ export const useUnpublishSkillMenu = onSuccess => {
         onClose={handleCancelConfirm}
         onConfirm={handleConfirmUnpublish}
         isLoading={isUnpublishing}
+        showReason={isAdminContext}
         agentName={skillName}
         versionName={versionName}
         entityLabel="skill"
       />
     ),
-    [showConfirm, handleCancelConfirm, handleConfirmUnpublish, isUnpublishing, skillName, versionName],
+    [
+      showConfirm,
+      handleCancelConfirm,
+      handleConfirmUnpublish,
+      isUnpublishing,
+      isAdminContext,
+      skillName,
+      versionName,
+    ],
   );
 
   return {
