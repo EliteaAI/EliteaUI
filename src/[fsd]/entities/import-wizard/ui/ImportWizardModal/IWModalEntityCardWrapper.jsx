@@ -22,9 +22,22 @@ import { Button, Modal } from '@/[fsd]/shared/ui';
  * @param {boolean}       [props.defaultExpanded=false]
  * @param {(setFullscreenData: Function) => React.ReactNode} props.children  Detail fields.
  * @param {(fullscreenData: object) => React.ReactNode} [props.renderFullscreenContent]
+ * @param {string}        [props.titleTestId]    Stable test hook for the title node
+ *   (the entity's own name — test-generated data, so the caller asserts its
+ *   text content rather than locating BY it).
+ * @param {string}        [props.subtitleTestId] Stable test hook for the subtitle node.
  */
 const IWModalEntityCardWrapper = memo(props => {
-  const { icon, title, subtitle, defaultExpanded = false, children, renderFullscreenContent } = props;
+  const {
+    icon,
+    title,
+    subtitle,
+    defaultExpanded = false,
+    children,
+    renderFullscreenContent,
+    titleTestId,
+    subtitleTestId,
+  } = props;
 
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [fullscreenData, setFullscreenData] = useState(null);
@@ -37,8 +50,20 @@ const IWModalEntityCardWrapper = memo(props => {
         <Box sx={styles.mainBlock}>
           <Box sx={styles.entityIcon}>{icon}</Box>
           <Box sx={styles.entityTitles}>
-            <Typography sx={styles.titleText}>{title}</Typography>
-            {subtitle && <Typography sx={styles.typeText}>{subtitle}</Typography>}
+            <Typography
+              sx={styles.titleText}
+              data-testid={titleTestId}
+            >
+              {title}
+            </Typography>
+            {subtitle && (
+              <Typography
+                sx={styles.typeText}
+                data-testid={subtitleTestId}
+              >
+                {subtitle}
+              </Typography>
+            )}
           </Box>
           <Button.BaseBtn
             sx={styles.actionBtn}

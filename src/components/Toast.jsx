@@ -63,6 +63,7 @@ const Toast = ({
         icon={icon}
       >
         <Box
+          data-testid="toast-message"
           sx={{
             maxWidth: '50vw',
             whiteSpace: 'pre-line',
