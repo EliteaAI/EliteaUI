@@ -51,7 +51,7 @@ const useDeleteToolkit = (setBlockNav, isMCP) => {
       toastError(buildErrorMessage(error));
       reset();
     } else if (isSuccess) {
-      toastSuccess(`The ${entityName} ${isMCP ? 'MCP' : 'toolkit'} has been successfully deleted.`);
+      toastSuccess(`The ${entityName} ${isMCP ? 'mcp' : 'toolkit'} has been successfully deleted.`);
     }
   }, [entityName, error, isError, isMCP, isSuccess, reset, toastError, toastSuccess]);
 
