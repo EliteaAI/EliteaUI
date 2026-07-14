@@ -11,6 +11,7 @@ import {
   GridTableRow,
 } from '@/[fsd]/entities/grid-table/ui';
 import { Text } from '@/[fsd]/shared/ui';
+import { AddButton } from '@/[fsd]/shared/ui/button';
 import { SimpleSearchBar } from '@/[fsd]/shared/ui/input';
 import { useUserListQuery } from '@/api/admin';
 import {
@@ -20,7 +21,6 @@ import {
 } from '@/api/artifacts';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import EditIcon from '@/components/Icons/EditIcon';
-import PlusIcon from '@/components/Icons/PlusIcon';
 import useGetWindowWidth from '@/hooks/useGetWindowWidth';
 import useToast from '@/hooks/useToast';
 
@@ -37,8 +37,9 @@ const BUCKET_ACCESS_COLUMNS = [
 ];
 
 const getAccessValue = (bucketPermissions, bucket) => {
-  const perms = bucketPermissions?.[bucket];
-  if (!perms || perms.length === 0) return '';
+  if (!bucketPermissions || !(bucket in bucketPermissions)) return '';
+  const perms = bucketPermissions[bucket];
+  if (!perms || perms.length === 0) return 'no_access';
   if (perms.includes('write')) return 'read_write';
   return 'read';
 };
@@ -46,13 +47,16 @@ const getAccessValue = (bucketPermissions, bucket) => {
 const getAccessLabel = accessValue => {
   if (accessValue === 'read_write') return 'Read & Write';
   if (accessValue === 'read') return 'Read';
-  return 'No access';
+  if (accessValue === 'no_access') return 'No access';
+  return '-';
 };
 
 const buildBucketPermissions = (accessValue, bucket, existingPerms) => {
   const updated = { ...(existingPerms || {}) };
   if (!accessValue) {
     delete updated[bucket];
+  } else if (accessValue === 'no_access') {
+    updated[bucket] = [];
   } else if (accessValue === 'read_write') {
     updated[bucket] = ['read', 'write'];
   } else {
@@ -325,22 +329,13 @@ const BucketAccessTable = memo(props => {
             autoFocus={false}
           />
         </Box>
-        <Tooltip
-          title="Add user access"
-          placement="top"
-        >
-          <IconButton
-            variant="elitea"
-            size="small"
-            color="secondary"
-            onClick={() => setAddDialogOpen(true)}
-          >
-            <PlusIcon sx={styles.actionIcon} />
-          </IconButton>
-        </Tooltip>
+        <AddButton
+          tooltip="Add user access"
+          onAdd={() => setAddDialogOpen(true)}
+        />
       </>
     ),
-    [searchQuery, styles.searchWrapper, styles.actionIcon],
+    [searchQuery, styles.searchWrapper],
   );
 
   useEffect(() => {

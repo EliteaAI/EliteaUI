@@ -1,6 +1,7 @@
 import { memo, useCallback, useMemo } from 'react';
 
 import GroupsIcon from '@mui/icons-material/Groups';
+import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutlined';
 import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 
 import { ARTIFACT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/artifactTourTargets.constants';
@@ -61,24 +62,35 @@ const ArtifactTableToolbar = memo(props => {
     <Box sx={styles.toolbarContainer}>
       {/* Left side: Bucket name with breadcrumbs and info icon */}
       <Box sx={styles.leftSection}>
-        <Typography
-          variant="headingSmall"
-          sx={rootBucketSx}
-          onClick={currentPrefix ? handleRootClick : undefined}
-        >
-          {bucket}
-        </Typography>
+        {isManagingAccess ? (
+          <Typography
+            variant="headingSmall"
+            sx={styles.bucketName}
+          >
+            Manage access ({bucket})
+          </Typography>
+        ) : (
+          <>
+            <Typography
+              variant="headingSmall"
+              sx={rootBucketSx}
+              onClick={currentPrefix ? handleRootClick : undefined}
+            >
+              {bucket}
+            </Typography>
 
-        <BreadcrumbNavigation
-          breadcrumbs={breadcrumbs}
-          bucketName={bucket}
-          onBreadcrumbClick={onBreadcrumbClick}
-        />
+            <BreadcrumbNavigation
+              breadcrumbs={breadcrumbs}
+              bucketName={bucket}
+              onBreadcrumbClick={onBreadcrumbClick}
+            />
 
-        <BucketInfoTooltip
-          retentionDays={selectedBucketData?.retentionDays}
-          fileCount={fileCount}
-        />
+            <BucketInfoTooltip
+              retentionDays={selectedBucketData?.retentionDays}
+              fileCount={fileCount}
+            />
+          </>
+        )}
       </Box>
 
       {/* Right side: Search and action buttons */}
@@ -93,12 +105,12 @@ const ArtifactTableToolbar = memo(props => {
               >
                 <IconButton
                   variant={'elitea'}
-                  sx={[styles.actionButton, styles.actionButtonActive]}
+                  sx={styles.actionButton}
                   size="small"
                   color="secondary"
                   onClick={onManageAccessToggle}
                 >
-                  <GroupsIcon sx={styles.actionIcon} />
+                  <InsertDriveFileOutlinedIcon sx={styles.actionIcon} />
                 </IconButton>
               </Tooltip>
             )}

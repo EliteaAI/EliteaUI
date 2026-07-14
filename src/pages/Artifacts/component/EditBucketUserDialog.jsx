@@ -5,6 +5,7 @@ import { Box, MenuItem, Select, Typography } from '@mui/material';
 import { Button, Modal } from '@/[fsd]/shared/ui';
 
 const ACCESS_OPTIONS = [
+  { value: 'no_access', label: 'No access' },
   { value: 'read', label: 'Read' },
   { value: 'read_write', label: 'Read & Write' },
 ];

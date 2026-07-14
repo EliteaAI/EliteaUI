@@ -5,6 +5,7 @@ import { Autocomplete, Box, MenuItem, Select, TextField, Typography } from '@mui
 import { Button, Modal } from '@/[fsd]/shared/ui';
 
 const ACCESS_OPTIONS = [
+  { value: 'no_access', label: 'No access' },
   { value: 'read', label: 'Read' },
   { value: 'read_write', label: 'Read & Write' },
 ];
