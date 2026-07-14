@@ -119,6 +119,10 @@ const ApplicationEditForm = memo(props => {
                     inputProps={{ maxLength: MAX_NAME_LENGTH, 'data-testid': 'agent-name-input' }}
                     containerProps={{ flex: 1 }}
                     enableAutoBlur={false}
+                    hasActionsToolBar
+                    copyMessage="The name has been copied."
+                    showFullScreenAction={false}
+                    showExpandAction={false}
                   />
                   {isFocused(PROMPT_PAYLOAD_KEY.name) && MAX_NAME_LENGTH === name.length && (
                     <Typography

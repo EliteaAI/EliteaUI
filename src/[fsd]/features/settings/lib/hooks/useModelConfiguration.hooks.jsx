@@ -231,6 +231,7 @@ export const useCopyConfiguration = ({
   uniqueConfigurations,
   userApiUrl,
   configurationsBySections,
+  toastInfo,
 }) => {
   const handleCopyCardInformation = useCallback(async () => {
     try {
@@ -244,10 +245,11 @@ export const useCopyConfiguration = ({
 
       const jsonString = JSON.stringify(informationData, null, 2);
       await navigator.clipboard.writeText(jsonString);
+      toastInfo?.('The basic information has been copied as JSON.');
     } catch {
       // Silent error handling
     }
-  }, [model, projectId, uniqueConfigurations, userApiUrl, configurationsBySections]);
+  }, [model, projectId, uniqueConfigurations, userApiUrl, configurationsBySections, toastInfo]);
 
   return { handleCopyCardInformation };
 };
