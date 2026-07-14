@@ -143,7 +143,12 @@ const SkillHubModal = memo(props => {
                 INSTRUCTIONS
               </Typography>
               <Box sx={styles.instructionsBody}>
-                <Markdown>{instructions}</Markdown>
+                <Typography
+                  variant="bodyMedium"
+                  color="text.secondary"
+                >
+                  <Markdown>{instructions}</Markdown>
+                </Typography>
               </Box>
             </Box>
           </DialogContent>
