@@ -1,6 +1,7 @@
 const primaryDefault = '#6ae8fa';
 const primaryDisabled = '#267985';
 export const white = '#FFFFFF';
+const white2 = 'rgba(255, 255, 255, 0.02)';
 const white5 = 'rgba(255, 255, 255, 0.05)';
 const white6 = 'rgba(255, 255, 255, 0.06)'; // conversation hover dark
 const white8 = 'rgba(255, 255, 255, 0.08)'; // tool card hover light
@@ -385,6 +386,10 @@ const darkPalette = {
     },
     settingsPage: gray60,
     chatContinueBackground: white10,
+    aiProviderAccordion: {
+      default: white2,
+      hover: white5,
+    },
   },
   border: {
     lines: gray30,
@@ -410,6 +415,8 @@ const darkPalette = {
       logout: orange40,
     },
     chatContinue: blue30,
+    aiProviderAccordion:
+      'linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.0014) 100%)',
   },
   boxShadow: {
     default: `0px 0px 8px 0px ${white14}`,

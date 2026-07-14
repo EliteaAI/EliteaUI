@@ -7,7 +7,7 @@ import {
   CodePreviewContent,
   CodePreviewEmpty,
   CodePreviewHeader,
-} from '@/[fsd]/features/settings/ui/ai-configuration/OpenAITemplate';
+} from '@/[fsd]/features/settings/ui/project-general/project-ai-configurations/open-ai-template';
 
 const { CODE_EXAMPLE_TYPES, CODE_EXAMPLE_LABELS } = CodeExamplesConstants;
 

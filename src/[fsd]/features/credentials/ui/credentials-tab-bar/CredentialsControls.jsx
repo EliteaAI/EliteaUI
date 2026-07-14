@@ -65,14 +65,14 @@ const CredentialsControls = memo(props => {
   });
 
   // Check if we came from Model Configuration Settings (handle both new and legacy parameter names)
-  const isFromModelConfiguration = searchParams.get('from') === 'model-configuration';
+  const isFromModelConfiguration = searchParams.get('from') === 'ai-providers';
 
   const navigateBack = useCallback(
     (replace = false) => {
       if (isFromModelConfiguration)
         navigate(
           {
-            pathname: RouteDefinitions.SettingsWithTab.replace(':tab', 'model-configuration'),
+            pathname: RouteDefinitions.SettingsWithTab.replace(':tab', 'ai-providers'),
           },
           {
             replace,

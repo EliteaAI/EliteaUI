@@ -51,14 +51,14 @@ const BackButton = memo(() => {
 
   const onBack = useCallback(() => {
     if (!navigateBackUrl) {
-      // Special handling for CreateCredential pages - check for from=model-configuration parameter
+      // Special handling for CreateCredential pages - check for from=ai-providers parameter
       if (pageType === 'CredentialDetails' || isCredentialCreateRoute()) {
         const fromParam = searchParams.get('from');
         if (fromParam === 'information') {
           // Navigate back to Model Configuration Settings page (handle both new and legacy parameter)
           navigate(
             {
-              pathname: RouteDefinitions.SettingsWithTab.replace(':tab', 'model-configuration'),
+              pathname: RouteDefinitions.SettingsWithTab.replace(':tab', 'ai-providers'),
             },
             { replace: true },
           );

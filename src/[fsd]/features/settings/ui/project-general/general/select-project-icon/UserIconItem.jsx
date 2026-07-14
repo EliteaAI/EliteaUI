@@ -2,7 +2,7 @@ import { memo, useCallback, useState } from 'react';
 
 import { Box, IconButton } from '@mui/material';
 
-import { Modal } from '@/[fsd]/shared/ui';
+import AlertDialog from '@/components/AlertDialog';
 import CloseIcon from '@/components/Icons/CloseIcon';
 import { useTheme } from '@emotion/react';
 
@@ -49,11 +49,14 @@ const UserIconItem = memo(props => {
           />
         </IconButton>
       </Box>
-      <Modal.DeleteEntityModal
+      <AlertDialog
+        title="Warning"
+        alertContent="Are you sure to delete this icon?"
         open={openAlert}
+        alarm
         onClose={onCloseAlert}
+        onCancel={onCloseAlert}
         onConfirm={onConfirmAlert}
-        textContent="Are you sure to delete this icon"
       />
     </>
   );

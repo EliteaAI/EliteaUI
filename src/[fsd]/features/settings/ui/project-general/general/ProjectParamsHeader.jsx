@@ -4,13 +4,13 @@ import { Box, IconButton, Typography } from '@mui/material';
 
 import { useProjectInfoQuery } from '@/[fsd]/features/settings/api/projectInfoApi';
 import ProjectAvatar from '@/[fsd]/widgets/sidebar-root/ui/ProjectAvatar';
-import { PERMISSIONS } from '@/common/constants';
+import { PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';
 import EditIcon from '@/components/Icons/EditIcon';
 import UsersIcon from '@/components/Icons/UsersIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import { useSelectedProjectId, useSelectedProjectName } from '@/hooks/useSelectedProject';
 
-import SelectProjectIconDialog from './SelectProjectIconDialog';
+import { SelectProjectIconDialog } from './select-project-icon';
 
 const ProjectParamsHeader = memo(() => {
   const projectName = useSelectedProjectName();
@@ -67,13 +67,15 @@ const ProjectParamsHeader = memo(() => {
           >
             {projectName}
           </Typography>
-          <Box sx={styles.metaRow}>
-            <Box sx={styles.metaItem}>
-              <UsersIcon sx={styles.metaIconSvg} />
-              <Typography sx={styles.metaLabel}>Teammates:</Typography>
-              <Typography sx={styles.metaValue}>{teammatesCount}</Typography>
+          {projectId !== PUBLIC_PROJECT_ID && (
+            <Box sx={styles.metaRow}>
+              <Box sx={styles.metaItem}>
+                <UsersIcon sx={styles.metaIconSvg} />
+                <Typography sx={styles.metaLabel}>Teammates:</Typography>
+                <Typography sx={styles.metaValue}>{teammatesCount}</Typography>
+              </Box>
             </Box>
-          </Box>
+          )}
         </Box>
       </Box>
 
@@ -95,7 +97,7 @@ ProjectParamsHeader.displayName = 'ProjectParamsHeader';
 /** @type {MuiSx} */
 const projectParamsHeaderStyles = () => ({
   root: {
-    padding: '1.5rem',
+    // padding: '1.5rem',
   },
   headerContent: {
     display: 'flex',

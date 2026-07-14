@@ -35,7 +35,7 @@ const Apps = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/apps/Apps'))
 const McpAuthPage = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/mcp/index.jsx'));
 const Resources = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/resources'));
 const Settings = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/settings'));
-const AIConfiguration = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/settings/AIConfiguration'));
+const AIConfiguration = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/settings/AIProviders'));
 const CreatePersonalToken = ChunkHelpers.lazyWithRetry(
   () => import('@/[fsd]/pages/settings/CreatePersonalToken'),
 );
@@ -47,6 +47,7 @@ const Secrets = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/settings/
 const ProjectContextSettings = ChunkHelpers.lazyWithRetry(
   () => import('@/[fsd]/pages/settings/ProjectContext'),
 );
+const ProjectGeneralPage = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/settings/ProjectGeneral'));
 const ServicePromptsPage = ChunkHelpers.lazyWithRetry(
   () => import('@/[fsd]/pages/settings/ServicePromptsPage'),
 );
@@ -294,13 +295,13 @@ const ProtectedRoutes = () => {
               index
               element={
                 <Navigate
-                  to="model-configuration"
+                  to="project-general"
                   replace
                 />
               }
             />
             <Route
-              path="model-configuration"
+              path="ai-providers"
               element={<AIConfiguration />}
             />
             <Route
@@ -308,7 +309,11 @@ const ProtectedRoutes = () => {
               element={<EnvironmentSettings />}
             />
             <Route
-              path="project-params"
+              path="project-general"
+              element={<ProjectGeneralPage />}
+            />
+            <Route
+              path="project-behavior"
               element={<ProjectContextSettings />}
             />
             <Route
@@ -340,28 +345,28 @@ const ProtectedRoutes = () => {
               element={<NotificationCenter />}
             />
             <Route
-              path={'create-configuration'}
+              path={'create-ai-provider'}
               element={
                 <IntegrationGuard>
                   <CreateCredentialFromMain
-                    title="New Configuration"
-                    typeSelectorTitle="Select the Configuration Type"
+                    title="New AI Provider"
+                    typeSelectorTitle="Select the AI Provider Type"
                     showCategory={false}
-                    searchPlaceholder="Search configurations"
+                    searchPlaceholder="Search"
                     forceShowTitle
                   />
                 </IntegrationGuard>
               }
             />
             <Route
-              path={'create-configuration/:credentialType'}
+              path={'create-ai-provider/:credentialType'}
               element={
                 <IntegrationGuard>
                   <CreateCredentialFromMain
-                    title="New Configuration"
-                    typeSelectorTitle="Select the Configuration Type"
+                    title="New AI Provider"
+                    typeSelectorTitle="Select the AI Provider Type"
                     showCategory={false}
-                    searchPlaceholder="Search configurations"
+                    searchPlaceholder="Search"
                     forceShowTitle
                   />
                 </IntegrationGuard>

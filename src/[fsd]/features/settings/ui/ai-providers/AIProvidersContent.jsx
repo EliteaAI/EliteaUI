@@ -1,32 +1,21 @@
 import { memo, useCallback, useMemo } from 'react';
 
-import { useSelector } from 'react-redux';
+import { Box } from '@mui/material';
 
-import { Box, IconButton } from '@mui/material';
-
-import Tooltip from '@/ComponentsLib/Tooltip';
 import { ModelConfigurationHelpers } from '@/[fsd]/features/settings/lib/helpers';
-import {
-  useCopyConfiguration,
-  useModelConfiguration,
-  useModelOptions,
-} from '@/[fsd]/features/settings/lib/hooks';
+import { useModelConfiguration, useModelOptions } from '@/[fsd]/features/settings/lib/hooks';
 import { useListModelsQuery, useSetProjectDefaultModelMutation } from '@/api/configurations.js';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
-import CopyIcon from '@/components/Icons/CopyIcon';
 import { useMultiSectionConfigurations } from '@/hooks/useMultiSectionConfigurations';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast';
 
+import { DrawerPageHeader } from '../drawer-page';
 import ConfigurationsPanel from './ConfigurationsPanel';
 import ModelCapabilitiesSection from './ModelCapabilitiesSection';
-import ProjectConfiguration from './ProjectAIConfiguration';
 
-const ModelConfiguration = memo(() => {
+const AIProvidersContent = memo(() => {
   const projectId = useSelectedProjectId();
-  const user = useSelector(state => state.user);
   const [setProjectDefaultModel] = useSetProjectDefaultModelMutation();
-  const { toastInfo } = useToast();
   const styles = getStyles();
 
   // Fetch all model data
@@ -141,16 +130,6 @@ const ModelConfiguration = memo(() => {
     };
   }, [availableConfigurations, modelsData.default_model_name, modelsData.default_model_project_id]);
 
-  // Use copy configuration hook
-  const { handleCopyCardInformation } = useCopyConfiguration({
-    model,
-    projectId,
-    uniqueConfigurations,
-    userApiUrl: user.api_url,
-    configurationsBySections,
-    toastInfo,
-  });
-
   // Calculate options and capabilities
   const options = useMemo(
     () => ModelConfigurationHelpers.getConfigurationOptions(uniqueConfigurations),
@@ -162,7 +141,7 @@ const ModelConfiguration = memo(() => {
     [options, model.configuration_uid, model.model_name],
   );
 
-  // Default model values for dropdowns
+  // Default model values for dropdowns`
   const projectDefaultModel = useMemo(
     () => `${modelsData.default_model_name}<<>>${modelsData.default_model_project_id}`,
     [modelsData.default_model_name, modelsData.default_model_project_id],
@@ -226,59 +205,38 @@ const ModelConfiguration = memo(() => {
 
   return (
     <Box sx={styles.container}>
-      <Box sx={styles.mainContainer}>
-        <Tooltip
-          title="Copy to clipboard"
-          placement="top"
-        >
-          <IconButton
-            onClick={handleCopyCardInformation}
-            variant="elitea"
-            color="secondary"
-            sx={styles.copyButton}
-          >
-            <CopyIcon sx={styles.copyIcon} />
-          </IconButton>
-        </Tooltip>
+      <DrawerPageHeader
+        title="AI Providers"
+        showBorder
+      />
+      <ConfigurationsPanel
+        configurationsBySections={configurationsBySections}
+        configurationsLoading={configurationsLoading}
+        projectDefaultModel={projectDefaultModel}
+        projectLowTierDefaultModel={projectLowTierDefaultModel}
+        projectHighTierDefaultModel={projectHighTierDefaultModel}
+        projectDefaultEmbeddingModel={projectDefaultEmbeddingModel}
+        projectDefaultVectorStorageModel={projectDefaultVectorStorageModel}
+        projectDefaultImageGenerationModel={projectDefaultImageGenerationModel}
+        modelOptions={modelOptions}
+        lowTierModelOptions={lowTierModelOptions}
+        highTierModelOptions={highTierModelOptions}
+        embeddingModelOptions={embeddingModelOptions}
+        vectorStorageOptions={vectorStorageOptions}
+        imageGenerationOptions={imageGenerationOptions}
+        projectDefaultASRModel={projectDefaultASRModel}
+        asrOptions={asrOptions}
+        projectDefaultTTSModel={projectDefaultTTSModel}
+        ttsOptions={ttsOptions}
+        onChangeDefaultModel={onChangeDefaultModel}
+      />
 
-        {/* Content Wrapper */}
-        <Box sx={styles.contentWrapper}>
-          <ProjectConfiguration
-            userApiUrl={user.api_url}
-            projectId={projectId}
-            modelProjectId={model.project_id}
-          />
-
-          <ConfigurationsPanel
-            configurationsBySections={configurationsBySections}
-            configurationsLoading={configurationsLoading}
-            projectDefaultModel={projectDefaultModel}
-            projectLowTierDefaultModel={projectLowTierDefaultModel}
-            projectHighTierDefaultModel={projectHighTierDefaultModel}
-            projectDefaultEmbeddingModel={projectDefaultEmbeddingModel}
-            projectDefaultVectorStorageModel={projectDefaultVectorStorageModel}
-            projectDefaultImageGenerationModel={projectDefaultImageGenerationModel}
-            modelOptions={modelOptions}
-            lowTierModelOptions={lowTierModelOptions}
-            highTierModelOptions={highTierModelOptions}
-            embeddingModelOptions={embeddingModelOptions}
-            vectorStorageOptions={vectorStorageOptions}
-            imageGenerationOptions={imageGenerationOptions}
-            projectDefaultASRModel={projectDefaultASRModel}
-            asrOptions={asrOptions}
-            projectDefaultTTSModel={projectDefaultTTSModel}
-            ttsOptions={ttsOptions}
-            onChangeDefaultModel={onChangeDefaultModel}
-          />
-
-          {!!modelCapabilities?.length && <ModelCapabilitiesSection capabilities={modelCapabilities} />}
-        </Box>
-      </Box>
+      {!!modelCapabilities?.length && <ModelCapabilitiesSection capabilities={modelCapabilities} />}
     </Box>
   );
 });
 
-ModelConfiguration.displayName = 'ModelConfiguration';
+AIProvidersContent.displayName = 'AIProvidersContent';
 
 /**@type {MuiSx} */
 const getStyles = () => ({
@@ -314,4 +272,4 @@ const getStyles = () => ({
   },
 });
 
-export default ModelConfiguration;
+export default AIProvidersContent;

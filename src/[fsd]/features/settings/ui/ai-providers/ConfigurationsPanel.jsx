@@ -1,13 +1,10 @@
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
 import { AI_CONFIG_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/aiConfigurationTourTargets.constants';
-import AddModelButton from '@/[fsd]/features/settings/ui/ai-configuration/Configuration/AddModelButton';
-import ConfigurationSection from '@/[fsd]/features/settings/ui/ai-configuration/Configuration/ConfigurationSection';
+import ConfigurationSection from '@/[fsd]/features/settings/ui/ai-providers/ConfigurationSection';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
-import { ALLOW_PROJECT_OWN_LLMS, PUBLIC_PROJECT_ID } from '@/common/constants';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const ConfigurationsPanel = memo(props => {
   const {
@@ -32,11 +29,6 @@ const ConfigurationsPanel = memo(props => {
     onChangeDefaultModel,
   } = props;
   const styles = getStyles();
-  const projectId = useSelectedProjectId();
-  const canCreateConfiguration = useMemo(
-    () => ALLOW_PROJECT_OWN_LLMS !== false || projectId == PUBLIC_PROJECT_ID,
-    [projectId],
-  );
 
   const renderInfoLabel = useCallback(
     (label, tooltipText) => {
@@ -74,25 +66,10 @@ const ConfigurationsPanel = memo(props => {
 
   return (
     <Box sx={styles.configurationsSection}>
-      <Box
-        data-tour={AI_CONFIG_TOUR_TARGET_IDS.integrations}
-        sx={styles.configurationsHeader}
-      >
-        <Box sx={styles.configurationsContent}>
-          <Typography
-            variant="headingMedium"
-            sx={styles.sectionTitle}
-          >
-            Configurations
-          </Typography>
-          {canCreateConfiguration && <AddModelButton />}
-        </Box>
-      </Box>
-
       <ConfigurationSection
         tourTargetId={AI_CONFIG_TOUR_TARGET_IDS.llmModels}
         hasDefaultSetting
-        title="LLM Models"
+        title="LLMs"
         configurations={configurationsBySections.llm}
         isLoading={configurationsLoading}
         defaultSettingsLayout="inline"
@@ -201,18 +178,6 @@ const getStyles = () => ({
     overflow: 'auto',
     height: '100%',
   },
-  configurationsHeader: ({ palette }) => ({
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    position: 'sticky',
-    top: 0,
-    backgroundColor: palette.background.default,
-    borderBottom: `0.0625rem solid ${palette.border.sidebarDivider}`,
-    zIndex: 1,
-    width: '100%',
-    height: '3.8125rem',
-  }),
   configurationsContent: ({ palette }) => ({
     display: 'flex',
     justifyContent: 'space-between',

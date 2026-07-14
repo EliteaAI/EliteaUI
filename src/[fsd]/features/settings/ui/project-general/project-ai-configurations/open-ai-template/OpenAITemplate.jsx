@@ -3,7 +3,7 @@ import { memo } from 'react';
 import { Box, IconButton, Tooltip } from '@mui/material';
 
 import { useCodePreview, useModelConfiguration, useModelOptions } from '@/[fsd]/features/settings/lib/hooks';
-import { CodePreview } from '@/[fsd]/features/settings/ui/ai-configuration/OpenAITemplate';
+import { CodePreview } from '@/[fsd]/features/settings/ui/project-general/project-ai-configurations/open-ai-template';
 import { useListModelsQuery } from '@/api/configurations.js';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
 import CopyIcon from '@/components/Icons/CopyIcon';
@@ -74,52 +74,50 @@ const OpenAITemplate = memo(() => {
 
   return (
     <Box sx={styles.container}>
-      <Box sx={styles.mainContainer}>
-        <Box sx={styles.buttons}>
-          {hasModelSelected && (
-            <Tooltip
-              title="Copy to clipboard"
-              placement="top"
+      <Box sx={styles.buttons}>
+        {hasModelSelected && (
+          <Tooltip
+            title="Copy to clipboard"
+            placement="top"
+          >
+            <IconButton
+              variant="elitea"
+              color="secondary"
+              onClick={handleCopy}
             >
-              <IconButton
-                variant="elitea"
-                color="secondary"
-                onClick={handleCopy}
-              >
-                <CopyIcon sx={styles.actionIcon} />
-              </IconButton>
-            </Tooltip>
-          )}
+              <CopyIcon sx={styles.actionIcon} />
+            </IconButton>
+          </Tooltip>
+        )}
 
-          {/* Download button */}
-          {hasModelSelected && (
-            <Tooltip
-              title="Download code example"
-              placement="top"
+        {/* Download button */}
+        {hasModelSelected && (
+          <Tooltip
+            title="Download code example"
+            placement="top"
+          >
+            <IconButton
+              variant="elitea"
+              color="secondary"
+              onClick={handleDownload}
             >
-              <IconButton
-                variant="elitea"
-                color="secondary"
-                onClick={handleDownload}
-              >
-                <DownloadIcon sx={styles.actionIcon} />
-              </IconButton>
-            </Tooltip>
-          )}
-        </Box>
-        <CodePreview
-          model={model}
-          showCloseButton={false}
-          models={uniqueConfigurations}
-          selectedModel={selectedModelFromConfigurations}
-          onChangeModel={onChangeModel}
-          sx={styles.codePreview}
-          selectedLanguage={selectedLanguage}
-          codeExample={codeExample}
-          editorLanguage={editorLanguage}
-          handleLanguageChange={handleLanguageChange}
-        />
+              <DownloadIcon sx={styles.actionIcon} />
+            </IconButton>
+          </Tooltip>
+        )}
       </Box>
+      <CodePreview
+        model={model}
+        showCloseButton={false}
+        models={uniqueConfigurations}
+        selectedModel={selectedModelFromConfigurations}
+        onChangeModel={onChangeModel}
+        sx={styles.codePreview}
+        selectedLanguage={selectedLanguage}
+        codeExample={codeExample}
+        editorLanguage={editorLanguage}
+        handleLanguageChange={handleLanguageChange}
+      />
     </Box>
   );
 });
@@ -129,17 +127,13 @@ OpenAITemplate.displayName = 'OpenAITemplate';
 /**@type {MuiSx} */
 const getStyles = () => ({
   container: {
-    height: '100%',
+    height: '30.25rem',
     display: 'flex',
     flexDirection: 'column',
     overflow: 'hidden',
     width: '100%',
-  },
-  mainContainer: {
-    width: '100%',
-    height: 'calc(100vh - 7.5rem)',
-    display: 'flex',
-    flexDirection: 'column',
+    border: ({ palette }) => `0.0625rem solid ${palette.border.lines}`,
+    borderRadius: '0.75rem',
   },
 
   codePreview: {
@@ -149,8 +143,8 @@ const getStyles = () => ({
   },
   buttons: {
     position: 'absolute',
-    top: '1rem',
-    right: '1rem',
+    top: '0.5rem',
+    right: '0rem',
     display: 'flex',
     gap: '0.5rem',
     justifyContent: 'flex-end',

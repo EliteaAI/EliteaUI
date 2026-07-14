@@ -26,10 +26,11 @@ import RouteDefinitions, { PathSessionMap } from '@/routes';
 import { logout } from '@/slices/user.js';
 
 const VALID_TAB_IDS = [
-  'model-configuration',
+  'ai-providers',
   'prompts',
   'environment',
-  'project-params',
+  'project-general',
+  'project-behavior',
   'tokens',
   'integrations',
   'secrets',
@@ -50,9 +51,20 @@ const SETTINGS_TABS_CONFIG = [
     section: SETTINGS_SECTIONS.PROJECT,
     tabs: [
       {
-        id: 'model-configuration',
-        label: 'AI Configuration',
+        id: 'project-general',
+        label: 'General',
+        icon: <BriefcaseIcon />,
+      },
+      {
+        id: 'ai-providers',
+        label: 'AI Providers',
         icon: <ConfigurationIcon />,
+      },
+      {
+        id: 'project-behavior',
+        label: 'Behavior',
+        icon: <BriefcaseIcon />,
+        permission: PERMISSIONS.projectContext.view,
       },
       {
         id: 'prompts',
@@ -65,12 +77,6 @@ const SETTINGS_TABS_CONFIG = [
         label: 'Environment',
         icon: <EnvironmentIcon />,
         publicOnly: true,
-      },
-      {
-        id: 'project-params',
-        label: 'Project Params',
-        icon: <BriefcaseIcon />,
-        permission: PERMISSIONS.projectContext.view,
       },
       {
         id: 'secrets',
@@ -118,7 +124,7 @@ const SETTINGS_TABS_CONFIG = [
   },
 ];
 
-const DEFAULT_TAB = 'model-configuration';
+const DEFAULT_TAB = 'ai-providers';
 const LEGACY_TAB_REDIRECTS = ['configuration', 'information'];
 
 const Settings = memo(() => {

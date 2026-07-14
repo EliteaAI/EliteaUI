@@ -4,8 +4,8 @@ import { Box, IconButton, Typography } from '@mui/material';
 
 import ListInfiniteMoreLoader from '@/ComponentsLib/ListInfiniteMoreLoader';
 import StyledTooltip from '@/ComponentsLib/Tooltip';
-import ProjectIconItem from '@/[fsd]/features/settings/ui/project-context/ProjectIconItem';
-import UserIconItem from '@/[fsd]/features/settings/ui/project-context/UserIconItem';
+import ProjectIconItem from '@/[fsd]/features/settings/ui/project-general/general/select-project-icon/ProjectIconItem';
+import UserIconItem from '@/[fsd]/features/settings/ui/project-general/general/select-project-icon/UserIconItem';
 import {
   useDeleteSkillIconMutation,
   useGetSkillIconsQuery,

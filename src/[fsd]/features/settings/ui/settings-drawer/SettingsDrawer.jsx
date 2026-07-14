@@ -6,9 +6,11 @@ import { Box, Divider, Typography } from '@mui/material';
 
 import { SettingsLayoutConstants } from '@/[fsd]/features/settings/lib/constants';
 import AnalyticsIcon from '@/assets/analytics-icon.svg?react';
+import CompassIcon from '@/assets/compass.svg?react';
 import ConfigurationIcon from '@/assets/configuration-icon.svg?react';
 import KeyIcon from '@/assets/key-icon.svg?react';
 import LogoutIcon from '@/assets/logout-icon.svg?react';
+import ModelIcon from '@/assets/model-icon.svg?react';
 import EnvironmentIcon from '@/assets/new-environment-icon.svg?react';
 import PersonalizationIcon from '@/assets/personalization-icon.svg?react';
 import PromptIcon from '@/assets/prompt.svg?react';
@@ -18,11 +20,12 @@ import Lock from '@/components/Icons/Lock.jsx';
 import UsersIcon from '@/components/Icons/UsersIcon';
 
 const ICON_COMPONENTS = {
-  'model-configuration': ConfigurationIcon,
+  'ai-providers': ModelIcon,
   prompts: PromptIcon,
   environment: EnvironmentIcon,
   tokens: KeyIcon,
-  'project-params': BriefcaseIcon,
+  'project-general': BriefcaseIcon,
+  'project-behavior': CompassIcon,
   secrets: Lock,
   users: UsersIcon,
   analytics: AnalyticsIcon,
@@ -48,9 +51,9 @@ const SettingsDrawer = memo(props => {
       const lastSegment = pathSegments[pathSegments.length - 1];
 
       if (
-        tabId === 'model-configuration' &&
-        (lastSegment === 'create-configuration' ||
-          pathSegments[pathSegments.length - 2] === 'create-configuration')
+        tabId === 'ai-providers' &&
+        (lastSegment === 'create-ai-provider' ||
+          pathSegments[pathSegments.length - 2] === 'create-ai-provider')
       ) {
         return true;
       }

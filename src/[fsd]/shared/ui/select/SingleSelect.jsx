@@ -65,6 +65,7 @@ const SingleSelect = memo(props => {
     labelNode,
     variant = 'standard',
     separateLabel = false,
+    labelContainerSx,
     multiple = false,
     withSearch = false,
     searchPlaceholder,
@@ -681,7 +682,7 @@ const SingleSelect = memo(props => {
   };
 
   return separateLabel ? (
-    <Box sx={styles.labelContainer}>
+    <Box sx={[styles.labelContainer, labelContainerSx]}>
       <Typography
         variant="labelMedium"
         color="text.primary"

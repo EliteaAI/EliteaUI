@@ -15,8 +15,8 @@ export const useConfigurationNavigation = () => {
       const newPagePath = RouteDefinitions.EditConfiguration.replace(':uid', configurationId);
 
       newRouteStack.push({
-        breadCrumb: 'Model Configuration',
-        pagePath: RouteDefinitions.SettingsWithTab.replace(':tab', 'model-configuration'),
+        breadCrumb: 'AI Providers',
+        pagePath: RouteDefinitions.SettingsWithTab.replace(':tab', 'ai-providers'),
       });
 
       newRouteStack.push({
@@ -27,7 +27,7 @@ export const useConfigurationNavigation = () => {
       navigate(
         {
           pathname: newPagePath,
-          search: 'from=model-configuration',
+          search: 'from=ai-providers',
         },
         {
           state: { routeStack: newRouteStack },
