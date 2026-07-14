@@ -7,6 +7,7 @@ import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
 import { IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants';
 import { selectHistoryItem } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
+import { useLazyMessageTracesQuery } from '@/api';
 import { ROLES, WELCOME_MESSAGE_ID } from '@/common/constants';
 import { convertConversationToChatHistory } from '@/common/convertChatConversationMessages';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -23,9 +24,21 @@ export const useIndexHistory = (progressHistoryOptions = null) => {
     fetchConversationDetails,
     { data: conversationDetails, isFetching: isConversationDetailsFetching, reset },
   ] = RunHistoryApi.useLazyGetRunHistoryDetailsQuery();
+  const [getMessageTraces] = useLazyMessageTracesQuery();
+  const [traceSteps, setTraceSteps] = useState(null);
 
   const allowProgressingIndexHistoryRecovering =
     progressHistoryOptions?.shouldRecover && !progressingIndexHistoryRecovered;
+
+  // Fetch trace-step pins (TS-4) for a conversation; failure degrades to no pins.
+  const loadTracesForConversation = useCallback(
+    async conversationId => {
+      if (!conversationId) return;
+      const result = await getMessageTraces({ projectId, conversationId });
+      setTraceSteps(result.data || null);
+    },
+    [getMessageTraces, projectId],
+  );
 
   // Recover conversation history if indexing is in progress
   useEffect(() => {
@@ -35,8 +48,10 @@ export const useIndexHistory = (progressHistoryOptions = null) => {
       projectId,
       conversationId: progressHistoryOptions.conversationId,
     });
+    loadTracesForConversation(progressHistoryOptions.conversationId);
   }, [
     fetchConversationDetails,
+    loadTracesForConversation,
     projectId,
     allowProgressingIndexHistoryRecovering,
     progressHistoryOptions?.conversationId,
@@ -51,9 +66,14 @@ export const useIndexHistory = (progressHistoryOptions = null) => {
         projectId,
         conversationId: indexHistoryItem.conversation_id,
       });
-    } else reset();
+      loadTracesForConversation(indexHistoryItem.conversation_id);
+    } else {
+      reset();
+      setTraceSteps(null);
+    }
   }, [
     fetchConversationDetails,
+    loadTracesForConversation,
     indexHistoryItem?.conversation_id,
     isHistoryMode,
     projectId,
@@ -108,7 +128,7 @@ export const useIndexHistory = (progressHistoryOptions = null) => {
     const conversation = isHistoryMode ? (conversationDetails ?? null) : null;
 
     const currentConversationMessages = conversation
-      ? convertConversationToChatHistory(conversation)
+      ? convertConversationToChatHistory(conversation, traceSteps)
       : getHistoryMockMessage(showMockMessage);
 
     return {
@@ -123,6 +143,7 @@ export const useIndexHistory = (progressHistoryOptions = null) => {
     isConversationDetailsFetching,
     indexHistoryItem,
     conversationDetails,
+    traceSteps,
     getHistoryMockMessage,
   ]);
 
@@ -147,6 +168,7 @@ export const useIndexHistory = (progressHistoryOptions = null) => {
     historyConversation,
     needGenerateProgressingIndexHistory,
     conversationDetails,
+    traceSteps,
     setProgressingIndexHistoryRecovered,
   };
 };

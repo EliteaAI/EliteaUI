@@ -22,7 +22,7 @@ export const useCredentialActions = ({ integration, refetch }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [openAlert, setOpenAlert] = useState(false);
 
-  const { toastError, toastSuccess, toastInfo } = useToast();
+  const { toastError, toastSuccess } = useToast();
 
   const shouldDisableActions = useMemo(
     () => integration.project_id === null && integration.is_default,
@@ -52,7 +52,8 @@ export const useCredentialActions = ({ integration, refetch }) => {
         });
         if (!error) {
           await refetch();
-          toastInfo('The credential has been deleted');
+          const credentialName = integration?.settings?.title || integration?.title || integration?.config?.name || 'credential';
+          toastSuccess(`The ${credentialName} credential has been successfully deleted.`);
         } else {
           toastError(error?.status === 403 ? 'The action is not allowed' : buildErrorMessage(error));
         }
@@ -68,8 +69,11 @@ export const useCredentialActions = ({ integration, refetch }) => {
       integration.id,
       integration.uuid,
       integration.section,
+      integration?.settings?.title,
+      integration?.title,
+      integration?.config?.name,
       refetch,
-      toastInfo,
+      toastSuccess,
       toastError,
     ],
   );

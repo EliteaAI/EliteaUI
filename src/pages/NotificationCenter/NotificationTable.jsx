@@ -147,7 +147,7 @@ const NotificationTable = memo(props => {
     try {
       await bulkDeleteNotifications({ projectId: personal_project_id, ids: currentPageSelectedIds }).unwrap();
       removeIdsFromSelection(currentPageSelectedIds);
-      toastSuccess('Notifications deleted successfully');
+      toastSuccess('The selected notifications have been successfully deleted.');
     } catch (err) {
       toastError(buildErrorMessage(err));
     }

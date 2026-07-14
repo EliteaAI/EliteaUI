@@ -2,12 +2,15 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 
-import { useLazyMessageListQuery } from '@/api';
+import { useLazyMessageListQuery, useLazyMessageTracesQuery } from '@/api';
 import { buildErrorMessage } from '@/common/utils';
 import { PLAYBACK_PAGE_SIZE } from '@/hooks/chat/usePlaybackConversation.js';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
-import { convertMessagesToChatHistory } from '../../common/convertChatConversationMessages';
+import {
+  convertMessagesToChatHistory,
+  groupTraceStepsByGroupId,
+} from '../../common/convertChatConversationMessages';
 
 const useLoadPlaybackMessages = ({ conversation, toastError }) => {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -15,6 +18,7 @@ const useLoadPlaybackMessages = ({ conversation, toastError }) => {
   const projectId = useSelectedProjectId();
   const user = useSelector(state => state.user);
   const [getMessageList, { isError, error }] = useLazyMessageListQuery();
+  const [getMessageTraces] = useLazyMessageTracesQuery();
 
   const onLoadMoreMessages = useCallback(async () => {
     if (!isLoadingMore && conversation?.messages_count > page * PLAYBACK_PAGE_SIZE) {
@@ -30,9 +34,16 @@ const useLoadPlaybackMessages = ({ conversation, toastError }) => {
         },
       });
       if (result.data) {
+        // Pins come from message_trace_step (TS-4); cached per conversation. Degrades to no pins.
+        const tracesResult = await getMessageTraces({ projectId, conversationId: conversation?.id });
         setPage(prev => prev + 1);
         setIsLoadingMore(false);
-        return convertMessagesToChatHistory(result.data.rows, conversation?.participants, user);
+        return convertMessagesToChatHistory(
+          result.data.rows,
+          conversation?.participants,
+          user,
+          groupTraceStepsByGroupId(tracesResult.data),
+        );
       }
       setIsLoadingMore(false);
     }
@@ -41,6 +52,7 @@ const useLoadPlaybackMessages = ({ conversation, toastError }) => {
     conversation?.messages_count,
     conversation?.participants,
     getMessageList,
+    getMessageTraces,
     isLoadingMore,
     page,
     projectId,
