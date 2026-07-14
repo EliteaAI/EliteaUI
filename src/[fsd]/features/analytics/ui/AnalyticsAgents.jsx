@@ -268,7 +268,7 @@ const AnalyticsAgents = memo(props => {
                 >
                   {a.errors}
                 </Typography>
-                <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
+                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
                   {AnalyticCommonHelpers.fmtNum(a.total_tokens)}
                 </Typography>
               </Box>
@@ -354,6 +354,7 @@ const styles = {
     color: palette.text.secondary,
     '& .MuiTablePagination-selectIcon': { color: palette.text.secondary },
   }),
+  flexOne: { flex: 1 },
 };
 
 export default AnalyticsAgents;

@@ -14,7 +14,7 @@ const AnalyticsCosts = memo(props => {
 
   const { palette } = useTheme();
   const axisStroke = palette.text.primary;
-  const axisTickStyle = { fill: axisStroke, fontSize: 11 };
+  const axisTickStyle = styles.axisTickStyle(axisStroke);
 
   const { data, isFetching, isError } = useAnalyticsCostsQuery(
     { projectId, dateFrom, dateTo },
@@ -38,7 +38,7 @@ const AnalyticsCosts = memo(props => {
 
   if (isFetching) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+      <Box sx={styles.centered}>
         <CircularProgress size={32} />
       </Box>
     );
@@ -46,7 +46,7 @@ const AnalyticsCosts = memo(props => {
 
   if (isError) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+      <Box sx={styles.centered}>
         <Typography color="error">Failed to load cost analytics. Please try again later.</Typography>
       </Box>
     );
@@ -136,7 +136,7 @@ const AnalyticsCosts = memo(props => {
             <Typography
               variant="body2"
               color="text.secondary"
-              sx={{ p: 2 }}
+              sx={styles.noDataText}
             >
               No data
             </Typography>
@@ -180,7 +180,7 @@ const AnalyticsCosts = memo(props => {
             <Typography
               variant="body2"
               color="text.secondary"
-              sx={{ p: 2 }}
+              sx={styles.noDataText}
             >
               No data
             </Typography>
@@ -266,6 +266,9 @@ const AnalyticsCosts = memo(props => {
 });
 
 const styles = {
+  axisTickStyle: fill => ({ fill, fontSize: 11 }),
+  centered: { display: 'flex', justifyContent: 'center', p: 4 },
+  noDataText: { p: 2 },
   container: { display: 'flex', flexDirection: 'column', gap: '1rem' },
   kpiRow: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(9rem, 1fr))', gap: '1rem' },
   chartsRow: {
