@@ -177,6 +177,7 @@ const SkillMenu = memo(props => {
               disableRipple
               disabled={isButtonDisabled}
               onClick={isButtonDisabled ? undefined : handleButtonClick}
+              data-testid="agent-add-skill-button"
             >
               Skill
             </BaseBtn>

@@ -53,6 +53,7 @@ const MentionSkillList = memo(props => {
       <Box
         ref={containerRef}
         sx={styles.container}
+        data-testid="skill-mention-list"
       >
         <Box sx={styles.header}>
           <Typography
@@ -77,6 +78,7 @@ const MentionSkillList = memo(props => {
               key={item.name}
               label={item.name}
               description={item.description}
+              testId={`skill-mention-item-${item.name}`}
               icon={
                 item.icon_meta?.url ? (
                   <EliteAImage
