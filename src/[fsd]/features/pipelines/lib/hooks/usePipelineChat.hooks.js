@@ -136,49 +136,60 @@ export const usePipelineChat = ({
     ) {
       setIsRestoringConversation(true);
 
+      // Pins come from message_trace_step (TS-4); failure degrades to no pins.
+      const tracesRequest = getMessageTraces({
+        projectId,
+        conversationId: restoredConversationData.id,
+      });
+
       (async () => {
-        // Pins come from message_trace_step (TS-4); failure degrades to no pins.
-        const tracesResult = await getMessageTraces({
-          projectId,
-          conversationId: restoredConversationData.id,
-        });
-        const convertedChatHistory = convertConversationToChatHistory(
-          restoredConversationData,
-          tracesResult.data,
-        );
+        try {
+          const tracesResult = await tracesRequest;
+          const convertedChatHistory = convertConversationToChatHistory(
+            restoredConversationData,
+            tracesResult.data,
+          );
 
-        const restoredConversation = {
-          ...restoredConversationData,
-          chat_history: convertedChatHistory,
-          isPipelineChat: true,
-        };
+          const restoredConversation = {
+            ...restoredConversationData,
+            chat_history: convertedChatHistory,
+            isPipelineChat: true,
+          };
 
-        // Find the pipeline participant from the restored conversation
-        const restoredPipelineParticipant = restoredConversationData.participants?.find(
-          p => p.entity_name === 'application',
-        );
+          // Find the pipeline participant from the restored conversation
+          const restoredPipelineParticipant = restoredConversationData.participants?.find(
+            p => p.entity_name === 'application',
+          );
 
-        if (restoredPipelineParticipant) {
-          setActiveConversation(restoredConversation);
-          setActiveParticipant(restoredPipelineParticipant);
+          if (restoredPipelineParticipant) {
+            setActiveConversation(restoredConversation);
+            setActiveParticipant(restoredPipelineParticipant);
 
-          chatHistoryRef.current = convertedChatHistory;
+            chatHistoryRef.current = convertedChatHistory;
 
-          emitEnterRoom({
-            conversation_id: restoredConversationData.id,
-            conversation_uuid: restoredConversationData.uuid,
-            project_id: projectId,
-          });
+            emitEnterRoom({
+              conversation_id: restoredConversationData.id,
+              conversation_uuid: restoredConversationData.uuid,
+              project_id: projectId,
+            });
 
-          toastInfo('Chat restored successfully');
-          setHasRestoredConversation(true);
-        } else {
-          toastError('Could not find pipeline participant in restored chat');
+            toastInfo('Chat restored successfully');
+            setHasRestoredConversation(true);
+          } else {
+            toastError('Could not find pipeline participant in restored chat');
+          }
+
+          onRestoreConversationComplete();
+        } catch (error) {
+          if (error?.name !== 'AbortError') {
+            toastError('Failed to restore conversation');
+          }
+        } finally {
+          setIsRestoringConversation(false);
         }
-
-        onRestoreConversationComplete();
-        setIsRestoringConversation(false);
       })();
+
+      return () => tracesRequest.abort();
     }
   }, [
     restoredConversationID,
