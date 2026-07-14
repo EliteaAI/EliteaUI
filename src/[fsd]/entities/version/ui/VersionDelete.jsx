@@ -19,7 +19,7 @@ const VersionDelete = memo(
     const { disabled, onDiscard, type = 'button' } = props;
     const { version: versionId } = useParams();
     const styles = versionDeleteStyles();
-    const { toastError, toastInfo, toastSuccess } = useToast();
+    const { toastError, toastSuccess } = useToast();
 
     const {
       values: {
@@ -59,7 +59,6 @@ const VersionDelete = memo(
       versionId: currentVersionId,
       applicationId,
       toastError,
-      toastInfo,
       toastSuccess,
       versions,
       defaultVersionID,

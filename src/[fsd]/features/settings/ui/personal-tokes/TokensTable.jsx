@@ -19,6 +19,7 @@ import VsCodeIcon from '@/assets/vscode.svg?react';
 import { calculateExpiryInDays } from '@/common/utils';
 import DeleteEntityButton from '@/components/DeleteEntityButton';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
+import useToast from '@/hooks/useToast';
 import JetBrainsIcon from '@/components/Icons/JetBrainsIcon';
 import OpenEyeIcon from '@/components/Icons/OpenEyeIcon';
 import RemoveIcon from '@/components/Icons/RemoveIcon';
@@ -124,17 +125,19 @@ const TokenActionsCell = memo(props => {
   const { token, deleteToken, refetch, onDownload, onVsCodeDownload, onPreview, showDownload } = props;
   const styles = tokenActionsCellStyles();
   const [isDeleting, setIsDeleting] = useState(false);
+  const { toastSuccess } = useToast();
 
   const onClickDelete = useCallback(async () => {
     if (!isDeleting) {
       setIsDeleting(true);
       const { error } = await deleteToken({ uuid: token.uuid });
       if (!error) {
+        toastSuccess(`The ${token.name || 'personal token'} personal token has been successfully deleted.`);
         await refetch();
       }
       setIsDeleting(false);
     }
-  }, [deleteToken, isDeleting, refetch, token.uuid]);
+  }, [deleteToken, isDeleting, refetch, token.uuid, token.name, toastSuccess]);
 
   return (
     <Box

@@ -1144,6 +1144,7 @@ const NewChat = props => {
     setConversations,
     setFolders,
     toastError,
+    toastSuccess,
     emitLeaveRoom,
     stopListenCanvasEditorsChangeEvent,
     stopListenCanvasContentChangeEvent,
@@ -1156,6 +1157,7 @@ const NewChat = props => {
   const { onDeleteFolder } = useDeleteFolder({
     setFolders,
     toastError,
+    toastSuccess,
   });
 
   const { onPlaybackConversation } = usePlaybackConversation({

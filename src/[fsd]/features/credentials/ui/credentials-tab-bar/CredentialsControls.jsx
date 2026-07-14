@@ -98,7 +98,13 @@ const CredentialsControls = memo(props => {
       section: credentialDetails?.section,
     });
     if (!deleteError) {
-      toastSuccess('The credential has been deleted');
+      const entityName =
+        formik.values?.settings?.label ||
+        credentialDetails?.label ||
+        credentialDetails?.settings?.elitea_title ||
+        credentialDetails?.elitea_title ||
+        CredentialNameHelpers.extraCredentialName(credentialDetails?.name || '');
+      toastSuccess(`The ${entityName} has been successfully deleted.`);
 
       if (credentialDetails?.type === 'llm_model') dispatch(eliteaApi.util.invalidateTags([TAG_MODELS]));
 
@@ -113,6 +119,11 @@ const CredentialsControls = memo(props => {
     credentialDetails?.uuid,
     credentialDetails?.section,
     credentialDetails?.type,
+    credentialDetails?.label,
+    credentialDetails?.settings?.elitea_title,
+    credentialDetails?.elitea_title,
+    credentialDetails?.name,
+    formik.values?.settings?.label,
     toastSuccess,
     dispatch,
     navigateBack,

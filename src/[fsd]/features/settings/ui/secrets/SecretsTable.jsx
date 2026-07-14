@@ -81,7 +81,7 @@ const SecretsTable = memo(props => {
   const [deleteSecret] = useSecretDeleteMutation();
   const [showSecret] = useLazySecretShowQuery();
   const [hideSecret] = useSecretHideMutation();
-  const { toastError, toastInfo } = useToast();
+  const { toastError, toastInfo, toastSuccess } = useToast();
 
   // State to force re-render on window resize and sidebar changes
   const [windowSize, setWindowSize] = useState({
@@ -211,6 +211,7 @@ const SecretsTable = memo(props => {
     projectId,
     toastError,
     toastInfo,
+    toastSuccess,
     refetch,
     isShowSecretMap,
     setIsShowSecretMap,
