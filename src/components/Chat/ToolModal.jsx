@@ -13,7 +13,8 @@ import { EditorView } from '@codemirror/view';
 import CloseIcon from '../Icons/CloseIcon';
 import CopyIcon from '../Icons/CopyIcon';
 
-const ToolModal = ({ open, onClose, toolData, title = '', input = '', output = '', isLoading = false }) => {
+const ToolModal = props => {
+  const { open, onClose, toolData, title = '', input = '', output = '', isLoading = false } = props;
   const theme = useTheme();
   const { toastInfo } = useToast();
 

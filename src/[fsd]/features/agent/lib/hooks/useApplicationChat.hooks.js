@@ -158,49 +158,60 @@ export const useApplicationChat = ({
     ) {
       setIsRestoringConversation(true);
 
+      // Pins come from message_trace_step (TS-4); failure degrades to no pins.
+      const tracesRequest = getMessageTraces({
+        projectId,
+        conversationId: restoredConversationData.id,
+      });
+
       (async () => {
-        // Pins come from message_trace_step (TS-4); failure degrades to no pins.
-        const tracesResult = await getMessageTraces({
-          projectId,
-          conversationId: restoredConversationData.id,
-        });
-        const convertedChatHistory = convertConversationToChatHistory(
-          restoredConversationData,
-          tracesResult.data,
-        );
+        try {
+          const tracesResult = await tracesRequest;
+          const convertedChatHistory = convertConversationToChatHistory(
+            restoredConversationData,
+            tracesResult.data,
+          );
 
-        const restoredConversation = {
-          ...restoredConversationData,
-          chat_history: convertedChatHistory,
-          isApplicationChat: true,
-        };
+          const restoredConversation = {
+            ...restoredConversationData,
+            chat_history: convertedChatHistory,
+            isApplicationChat: true,
+          };
 
-        // Find the application participant from the restored conversation
-        const appParticipant = restoredConversationData.participants?.find(
-          p => p.entity_name === 'application',
-        );
+          // Find the application participant from the restored conversation
+          const appParticipant = restoredConversationData.participants?.find(
+            p => p.entity_name === 'application',
+          );
 
-        if (appParticipant) {
-          setActiveConversation(restoredConversation);
-          setActiveParticipant(appParticipant);
+          if (appParticipant) {
+            setActiveConversation(restoredConversation);
+            setActiveParticipant(appParticipant);
 
-          chatHistoryRef.current = convertedChatHistory;
+            chatHistoryRef.current = convertedChatHistory;
 
-          emitEnterRoom({
-            conversation_id: restoredConversationData.id,
-            conversation_uuid: restoredConversationData.uuid,
-            project_id: projectId,
-          });
+            emitEnterRoom({
+              conversation_id: restoredConversationData.id,
+              conversation_uuid: restoredConversationData.uuid,
+              project_id: projectId,
+            });
 
-          toastInfo('Chat restored successfully');
-          setHasRestoredConversation(true);
-        } else {
-          toastError('Could not find application participant in restored chat');
+            toastInfo('Chat restored successfully');
+            setHasRestoredConversation(true);
+          } else {
+            toastError('Could not find application participant in restored chat');
+          }
+
+          onRestoreConversationComplete();
+        } catch (error) {
+          if (error?.name !== 'AbortError') {
+            toastError('Failed to restore conversation');
+          }
+        } finally {
+          setIsRestoringConversation(false);
         }
-
-        onRestoreConversationComplete();
-        setIsRestoringConversation(false);
       })();
+
+      return () => tracesRequest.abort();
     }
   }, [
     restoredConversationID,
