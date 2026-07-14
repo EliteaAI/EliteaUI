@@ -8,7 +8,6 @@ import { useDefaultModel } from '@/[fsd]/shared/lib/hooks';
 import { useAuthorDescriptionMutation, useAuthorDetailsQuery } from '@/api/social';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
-import { deserializeProfileFormData, serializeProfileFormData } from '@/pages/UserSettings/profileUtils';
 
 const SettingsFormProvider = memo(props => {
   const { FormContent } = props;
@@ -23,14 +22,14 @@ const SettingsFormProvider = memo(props => {
   const { modelList, defaultModel } = useDefaultModel();
 
   const initialValues = useMemo(
-    () => serializeProfileFormData(authorData, defaultModel, selectedProjectId),
+    () => ProfileHelpers.serializeProfileFormData(authorData, defaultModel, selectedProjectId),
     [authorData, defaultModel, selectedProjectId],
   );
 
   const handleSubmit = useCallback(
     async (values, { setSubmitting, resetForm }) => {
       try {
-        const payload = deserializeProfileFormData(values);
+        const payload = ProfileHelpers.deserializeProfileFormData(values);
         await updateAuthor(payload).unwrap();
         resetForm({ values });
         toastSuccess('Settings saved successfully');
