@@ -1,5 +1,6 @@
 export const INPUT_VARIANTS = {
   standard: 'standard',
+  outlined: 'outlined',
 };
 
 export const eliteaInputVariants = inputBodyMediumStyles => [
@@ -62,6 +63,60 @@ export const eliteaTextFieldColorStyle = theme => ({
     },
     error: {
       underline: {
+        color: theme.palette.icon.fill.error,
+      },
+      helperText: {
+        color: theme.palette.icon.fill.error,
+      },
+    },
+  },
+  [INPUT_VARIANTS.outlined]: {
+    default: {
+      label: {
+        color: theme.palette.text.primary,
+      },
+      placeholder: {
+        color: theme.palette.text.participant.default,
+      },
+      input: {
+        color: theme.palette.text.secondary,
+      },
+      textarea: {
+        color: theme.palette.text.secondary,
+      },
+      border: {
+        color: theme.palette.border.lines,
+      },
+    },
+    hover: {
+      border: {
+        color: theme.palette.border.hover,
+      },
+    },
+    active: {
+      label: {
+        color: theme.palette.primary.main,
+      },
+      border: {
+        color: theme.palette.primary.main,
+      },
+    },
+    disabled: {
+      label: {
+        color: theme.palette.text.button.disabled,
+      },
+      input: {
+        color: theme.palette.text.default,
+      },
+      textarea: {
+        color: theme.palette.text.default,
+      },
+      border: {
+        color: theme.palette.border.lines,
+      },
+    },
+    error: {
+      border: {
         color: theme.palette.icon.fill.error,
       },
       helperText: {
@@ -150,6 +205,53 @@ export const eliteaTextFieldStyle = () => ({
   },
   '& .MuiInput-underline': {
     padding: '0.25rem 0.75rem 0',
+  },
+});
+
+/** @type {MuiSx} */
+export const eliteaTextFieldOutlinedStyle = () => ({
+  padding: 0,
+  '& .MuiOutlinedInput-root': {
+    borderRadius: '0.5rem',
+    '& fieldset': {
+      borderWidth: '0.0625rem',
+    },
+    '&:hover fieldset': {
+      borderWidth: '0.0625rem',
+    },
+    '&.Mui-focused fieldset': {
+      borderWidth: '0.0625rem',
+    },
+  },
+  '& .MuiOutlinedInput-input': {
+    padding: '0.75rem',
+    '&.MuiInputBase-inputMultiline': {
+      padding: '0 0.75rem 0.75rem',
+      maxHeight: '25rem',
+      minHeight: '8.25rem',
+      overflow: 'auto !important',
+    },
+  },
+  '& .MuiOutlinedInput-notchedOutline': {
+    top: 0,
+    '& legend': {
+      display: 'none',
+    },
+  },
+  '& input': {
+    fontSize: '0.875rem',
+    fontWeight: 500,
+    lineHeight: '1.5rem',
+    boxSizing: 'border-box',
+  },
+  '& textarea': {
+    fontSize: '0.875rem',
+    fontWeight: 500,
+    lineHeight: '1.5rem',
+    boxSizing: 'border-box',
+  },
+  '& textarea::-webkit-scrollbar': {
+    display: 'none',
   },
 });
 
@@ -243,6 +345,91 @@ export const eliteaTextFieldVariants = [
           borderBottomWidth: '0.0625rem',
           borderBottomStyle: 'solid',
         },
+        '& .MuiFormHelperText-root.Mui-error': {
+          color: colors.error.helperText.color,
+          paddingLeft: '0.75rem',
+        },
+      };
+    },
+  },
+  {
+    props: { variant: INPUT_VARIANTS.outlined },
+    style: ({ theme }) => {
+      const colors = eliteaTextFieldColorStyle(theme)[INPUT_VARIANTS.outlined];
+      const baseStyles = eliteaTextFieldOutlinedStyle();
+      return {
+        ...baseStyles,
+
+        '& label, & label.Mui-error, .MuiFormLabel-asterisk.Mui-error': {
+          color: colors.default.label.color,
+        },
+
+        '& :not(.Mui-error) label.Mui-focused': {
+          color: colors.active.label.color,
+        },
+
+        '& label.Mui-disabled': {
+          color: colors.disabled.label.color,
+        },
+
+        '& input::placeholder, & textarea::placeholder': {
+          color: colors.default.placeholder.color,
+          opacity: 1,
+        },
+
+        '& input': {
+          ...baseStyles['& input'],
+          color: colors.default.input.color,
+        },
+
+        '& input.Mui-disabled': {
+          ...baseStyles['& input'],
+          color: colors.disabled.input.color,
+          WebkitTextFillColor: colors.disabled.input.color,
+        },
+
+        '& textarea': {
+          ...baseStyles['& textarea'],
+          color: colors.default.textarea.color,
+        },
+
+        '& .Mui-disabled textarea': {
+          color: colors.disabled.textarea.color,
+        },
+
+        '&:has(.MuiInputBase-root.Mui-disabled)': {
+          cursor: 'not-allowed',
+        },
+        '& .MuiInputBase-root.Mui-disabled': {
+          cursor: 'not-allowed',
+        },
+        '& .MuiInputBase-root.Mui-disabled input, & .MuiInputBase-root.Mui-disabled textarea': {
+          cursor: 'not-allowed',
+        },
+        '& .MuiFormLabel-root.Mui-disabled': {
+          cursor: 'not-allowed',
+        },
+
+        '& .MuiOutlinedInput-root:not(.Mui-error) .MuiOutlinedInput-notchedOutline': {
+          borderColor: colors.default.border.color,
+        },
+
+        '& .MuiOutlinedInput-root:not(.Mui-error, .Mui-disabled):hover .MuiOutlinedInput-notchedOutline': {
+          borderColor: colors.hover.border.color,
+        },
+
+        '& .MuiOutlinedInput-root.Mui-focused:not(.Mui-error) .MuiOutlinedInput-notchedOutline': {
+          borderColor: colors.active.border.color,
+        },
+
+        '& .MuiOutlinedInput-root.Mui-disabled .MuiOutlinedInput-notchedOutline': {
+          borderColor: colors.disabled.border.color,
+        },
+
+        '& .MuiOutlinedInput-root.Mui-error .MuiOutlinedInput-notchedOutline': {
+          borderColor: colors.error.border.color,
+        },
+
         '& .MuiFormHelperText-root.Mui-error': {
           color: colors.error.helperText.color,
           paddingLeft: '0.75rem',

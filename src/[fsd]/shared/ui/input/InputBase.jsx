@@ -178,6 +178,8 @@ const InputBase = memo(props => {
     [leftProps.label, editswitcher, editswitchconfig, isCollapsed, minRows, needsLabelUnclip],
   );
 
+  const isOutlined = variant === INPUT_VARIANTS.outlined;
+
   const getLabelContent = () => {
     if (!leftProps.label) return undefined;
     // If label is already a React element (e.g. a <Typography> node passed from
@@ -187,20 +189,41 @@ const InputBase = memo(props => {
       return leftProps.label;
     }
     const labelText = `${leftProps.label}${leftProps.required ? ' *' : ''}`;
+
     return (
       <Label.InfoLabelWithTooltip
         label={labelText}
-        inheritLabel
-        inheritColor
+        {...(!isOutlined && { inheritLabel: true, inheritColor: true })}
         {...(tooltipDescription && {
           tooltip: tooltipDescription,
-          labelTextPointerEventsNone: true,
+          ...(!isOutlined && { labelTextPointerEventsNone: true }),
         })}
       />
     );
   };
 
   const labelContent = getLabelContent();
+
+  const renderActionsToolbar = () =>
+    hasActionsToolBar && (isHovering || forceShowActionsToolbar) ? (
+      <InputActionsToolbar
+        value={value}
+        showCopyAction={showCopyAction}
+        showFullScreenAction={showFullScreenAction}
+        showExpandAction={showExpandAction}
+        onCopy={onCopy}
+        onFullScreen={handleFullScreen}
+        switchRows={switchRows}
+        fullScreenIcon={fullScreenIcon}
+        isExpanded={isExpanded}
+        actionsBarProps={actionsBarProps}
+        toolbarSx={isOutlined ? styles.actionsToolbarOutlined : styles.actionsToolbar}
+        iconButtonSx={styles.iconButton}
+        iconSizeSx={styles.iconSize}
+        fullScreenButtonProps={fullScreenButtonProps}
+        isOutlined={isOutlined}
+      />
+    ) : null;
 
   return (
     <>
@@ -211,24 +234,13 @@ const InputBase = memo(props => {
         {...containerProps}
       >
         {overlayContent}
-        {hasActionsToolBar && (isHovering || forceShowActionsToolbar) && (
-          <InputActionsToolbar
-            value={value}
-            showCopyAction={showCopyAction}
-            showFullScreenAction={showFullScreenAction}
-            showExpandAction={showExpandAction}
-            onCopy={onCopy}
-            onFullScreen={handleFullScreen}
-            switchRows={switchRows}
-            fullScreenIcon={fullScreenIcon}
-            isExpanded={isExpanded}
-            actionsBarProps={actionsBarProps}
-            toolbarSx={styles.actionsToolbar}
-            iconButtonSx={styles.iconButton}
-            iconSizeSx={styles.iconSize}
-            fullScreenButtonProps={fullScreenButtonProps}
-          />
+        {isOutlined && (
+          <Box sx={styles.outlinedLabelRow}>
+            {labelContent || <Box />}
+            {renderActionsToolbar()}
+          </Box>
         )}
+        {!isOutlined && renderActionsToolbar()}
         <MuiTextField
           variant={variant}
           fullWidth
@@ -236,7 +248,7 @@ const InputBase = memo(props => {
           value={value}
           inputRef={inputRef}
           {...leftProps}
-          label={labelContent}
+          label={isOutlined ? undefined : labelContent}
           {...handlers}
           slotProps={{
             input: {
@@ -273,72 +285,88 @@ const styledInputBaseStyles = (
   isCollapsed,
   minRows,
   needsLabelUnclip,
-) => ({
-  inputLabelSlot: {
-    textOverflow: 'clip',
-    ...(needsLabelUnclip && {
-      overflow: 'visible !important',
-      maxWidth: 'none !important',
-    }),
-  },
-  containerBox: {
-    position: 'relative',
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  actionsToolbar: ({ spacing }) => ({
-    position: 'absolute',
-    display: 'flex',
-    justifyContent: 'flex-end',
-    gap: spacing(0.5),
-    top: hasLabel ? '0.15rem' : '-1.25rem',
-    right: spacing(1.5),
-    zIndex: 999,
-  }),
-  iconButton: {
-    marginLeft: '0rem',
-  },
-  expandIconButton: {
-    zIndex: 100,
-    marginLeft: '0px',
-    position: 'absolute',
-    top: '-1.875rem',
-    right: '0px',
-  },
-  iconSize: {
-    fontSize: '1rem',
-  },
-  unfoldIcon: ({ palette }) => ({
-    color: palette.icon.fill.default,
-  }),
-  inputSlot: ({ spacing }) => ({
-    paddingRight: spacing(1.5),
-  }),
-  textField: {
-    '& .MuiFormHelperText-root:not(.Mui-error)': ({ palette }) => ({
-      color: palette.secondary.main,
-    }),
-    '.MuiInputBase-input': {
-      maxHeight: editswitcher ? editswitchconfig.inputHeight || PROMPT_PAGE_INPUT.ROWS.TWO : '100%',
-      WebkitLineClamp: editswitcher
-        ? editswitchconfig.inputHeight === PROMPT_PAGE_INPUT.ROWS.THREE
-          ? PROMPT_PAGE_INPUT.CLAMP.THREE
-          : PROMPT_PAGE_INPUT.CLAMP.TWO
-        : isCollapsed
-          ? minRows
-          : 'unset',
-      caretColor: editswitcher ? 'transparent' : 'auto',
-      overflowWrap: 'break-word',
-      overflow: isCollapsed ? 'hidden' : 'auto',
-      ...(editswitcher || isCollapsed
-        ? {
-            textOverflow: 'ellipsis',
-            display: '-webkit-box',
-            WebkitBoxOrient: 'vertical',
-          }
-        : {}),
+) => {
+  return {
+    inputLabelSlot: {
+      textOverflow: 'clip',
+      ...(needsLabelUnclip && {
+        overflow: 'visible !important',
+        maxWidth: 'none !important',
+      }),
     },
-  },
-});
+    containerBox: {
+      position: 'relative',
+      display: 'flex',
+      flexDirection: 'column',
+      width: '100%',
+    },
+    actionsToolbar: ({ spacing }) => ({
+      position: 'absolute',
+      display: 'flex',
+      justifyContent: 'flex-end',
+      gap: spacing(0.5),
+      top: hasLabel ? '0.15rem' : '-1.25rem',
+      right: spacing(1.5),
+      zIndex: 999,
+    }),
+    actionsToolbarOutlined: ({ spacing }) => ({
+      display: 'flex',
+      gap: spacing(0.5),
+    }),
+    outlinedLabelRow: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: '0.25rem',
+      minHeight: '1.75rem',
+      width: '100%',
+      paddingLeft: '0.75rem',
+    },
+    iconButton: {
+      marginLeft: '0rem',
+    },
+    expandIconButton: {
+      zIndex: 100,
+      marginLeft: '0px',
+      position: 'absolute',
+      top: '-1.875rem',
+      right: '0px',
+    },
+    iconSize: {
+      fontSize: '1rem',
+    },
+    unfoldIcon: ({ palette }) => ({
+      color: palette.icon.fill.default,
+    }),
+    inputSlot: ({ spacing }) => ({
+      paddingRight: spacing(1.5),
+    }),
+    textField: {
+      '& .MuiFormHelperText-root:not(.Mui-error)': ({ palette }) => ({
+        color: palette.secondary.main,
+      }),
+      '.MuiInputBase-input': {
+        maxHeight: editswitcher ? editswitchconfig.inputHeight || PROMPT_PAGE_INPUT.ROWS.TWO : '100%',
+        WebkitLineClamp: editswitcher
+          ? editswitchconfig.inputHeight === PROMPT_PAGE_INPUT.ROWS.THREE
+            ? PROMPT_PAGE_INPUT.CLAMP.THREE
+            : PROMPT_PAGE_INPUT.CLAMP.TWO
+          : isCollapsed
+            ? minRows
+            : 'unset',
+        caretColor: editswitcher ? 'transparent' : 'auto',
+        overflowWrap: 'break-word',
+        overflow: isCollapsed ? 'hidden' : 'auto',
+        ...(editswitcher || isCollapsed
+          ? {
+              textOverflow: 'ellipsis',
+              display: '-webkit-box',
+              WebkitBoxOrient: 'vertical',
+            }
+          : {}),
+      },
+    },
+  };
+};
 
 export default InputBase;

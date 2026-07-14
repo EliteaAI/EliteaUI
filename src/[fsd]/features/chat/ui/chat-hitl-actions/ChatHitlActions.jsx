@@ -128,7 +128,10 @@ const ChatHitlActions = memo(props => {
 
   if (isSensitiveTool) {
     return (
-      <Box sx={styles.sensitiveContainer}>
+      <Box
+        data-testid="sensitive-action-panel"
+        sx={styles.sensitiveContainer}
+      >
         <Typography
           variant="labelMedium"
           sx={styles.sensitiveTitle}
@@ -160,6 +163,7 @@ const ChatHitlActions = memo(props => {
         )}
         <Box sx={styles.buttonContainer}>
           <BaseBtn
+            data-testid="sensitive-action-authorize-button"
             variant="positive"
             startIcon={<CheckedIcon />}
             onClick={handleApprove}

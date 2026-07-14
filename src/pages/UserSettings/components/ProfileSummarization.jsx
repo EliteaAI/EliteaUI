@@ -1,100 +1,101 @@
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { Box } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
-import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
-import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
-import { ContextBudgetUI } from '@/[fsd]/widgets/context-budget';
+import { Input, Switch } from '@/[fsd]/shared/ui';
+import { CONTEXT_MESSAGES } from '@/[fsd]/widgets/context-budget/lib/constants';
 import { handleConvertToNumberChange } from '@/[fsd]/widgets/context-budget/lib/validation';
 
-import { createContextStrategyFormData, parseModelValue } from '../profileUtils';
-
-const ProfileSummarization = memo(props => {
-  const { modelList } = props;
-
+const ProfileSummarization = memo(() => {
   const { values, errors, setFieldValue } = useFormikContext();
 
   const styles = profileSummarizationStyles();
 
-  // Create adapter for ContextStrategy components
-  const contextFormData = useMemo(() => createContextStrategyFormData(values), [values]);
+  const isSummarizationDisabled = !values.context_enabled || !values.enable_summarization;
 
-  // Map errors for ContextStrategy components
-  const contextErrors = useMemo(
-    () => ({
-      summary_llm_settings: errors.summary_llm_settings,
-    }),
-    [errors],
-  );
-
-  // Field mapping for ContextStrategy components
-  const fieldMapping = useMemo(
-    () => ({
-      enable_summarization: 'enable_summarization',
-    }),
-    [],
-  );
-
-  // Handler factory for ContextStrategy components
-  const handleInputChange = useCallback(
-    (event, field) => {
-      const value = event?.target?.type === 'checkbox' ? event?.target?.checked : event?.target?.value;
-      const formikField = fieldMapping[field] || field;
-
-      if (event?.target?.type === 'checkbox') {
-        setFieldValue(formikField, value);
-        return;
-      }
-
-      handleConvertToNumberChange(value, formikField, setFieldValue);
+  const handleSummarizationEnabledChange = useCallback(
+    (event, checkedValue) => {
+      setFieldValue('enable_summarization', checkedValue);
     },
-    [fieldMapping, setFieldValue],
+    [setFieldValue],
   );
 
-  const handleSummaryLLMInputChange = useCallback(
-    (event, field, isNumeric = false) => {
-      const value = event?.target?.value;
+  const handleInstructionsChange = useCallback(
+    e => setFieldValue('summary_llm_settings.instructions', e.target.value),
+    [setFieldValue],
+  );
 
-      if (field === 'model_name') {
-        const { modelName, modelProjectId } = parseModelValue(value);
-        setFieldValue('summary_llm_settings.model_name', modelName);
-        setFieldValue('summary_llm_settings.model_project_id', modelProjectId);
-      } else if (isNumeric) {
-        handleConvertToNumberChange(value, `summary_llm_settings.${field}`, setFieldValue);
-      } else {
-        setFieldValue(`summary_llm_settings.${field}`, value);
-      }
+  const handleMaxTokensChange = useCallback(
+    e => {
+      const value = e?.target?.value;
+      handleConvertToNumberChange(value, 'summary_llm_settings.max_tokens', setFieldValue);
     },
     [setFieldValue],
   );
 
   return (
-    <BasicAccordion
-      showMode={AccordionConstants.AccordionShowMode.LeftMode}
-      defaultExpanded
-      accordionSX={styles.accordion}
-      items={[
-        {
-          title: 'Default Summarization',
-          content: (
-            <Box sx={styles.accordionContent}>
-              {/* Reuse ContextStrategySummarization */}
-              <ContextBudgetUI.ContextStrategySummarization
-                formData={contextFormData}
-                errors={contextErrors}
-                handleInputChange={handleInputChange}
-                handleSummaryLLMInputChange={handleSummaryLLMInputChange}
-                isEnabled={values.context_enabled}
-                modelList={modelList}
-                enableAutoBlur={false}
-              />
-            </Box>
-          ),
-        },
-      ]}
-    />
+    <Box sx={styles.container}>
+      {/* Enable Toggle */}
+      <Box sx={styles.toggleSection}>
+        <Typography
+          variant="headingSmall"
+          sx={{ color: 'text.secondary' }}
+        >
+          Automatic Summarization
+        </Typography>
+        <Switch.BaseSwitch
+          checked={values.enable_summarization}
+          onChange={handleSummarizationEnabledChange}
+          disabled={!values.context_enabled}
+        />
+      </Box>
+
+      {/* Summarization Instructions */}
+      <Box sx={styles.section}>
+        <Input.StyledInputEnhancer
+          label="Summarization instructions"
+          tooltipDescription="Custom instructions for how summaries should be generated"
+          autoComplete="off"
+          variantInput="outlined"
+          fullWidth
+          multiline
+          value={values.summary_llm_settings?.instructions || ''}
+          onChange={handleInstructionsChange}
+          enableAutoBlur={false}
+          error={!!errors.summary_llm_settings?.instructions}
+          helperText={errors.summary_llm_settings?.instructions}
+          disabled={isSummarizationDisabled}
+          placeholder={CONTEXT_MESSAGES.DEFAULT_SUMMARY_INSTRUCTION}
+          hasActionsToolBar
+          showCopyAction={false}
+          showExpandAction={false}
+          fieldName="Summarization Instructions"
+          containerProps={styles.inputContainer}
+        />
+      </Box>
+
+      {/* Target Summary Tokens */}
+      <Box sx={styles.halfWidthSection}>
+        <Input.StyledInputEnhancer
+          label="Target Summary Tokens"
+          tooltipDescription="Target length for summary generation"
+          type="text"
+          inputMode="numeric"
+          value={values.summary_llm_settings?.max_tokens || ''}
+          onChange={handleMaxTokensChange}
+          error={!!errors.summary_llm_settings?.max_tokens}
+          helperText={errors.summary_llm_settings?.max_tokens}
+          disabled={isSummarizationDisabled}
+          enableAutoBlur={false}
+          containerProps={styles.inputContainer}
+          inputProps={{
+            pattern: '[1-9][0-9]*',
+          }}
+        />
+      </Box>
+    </Box>
   );
 });
 
@@ -102,15 +103,35 @@ ProfileSummarization.displayName = 'ProfileSummarization';
 
 /** @type {MuiSx} */
 const profileSummarizationStyles = () => ({
-  accordion: {
-    background: 'transparent !important',
-  },
-  accordionContent: {
+  container: {
     display: 'flex',
     flexDirection: 'column',
     gap: '1rem',
-    paddingRight: '1rem',
-    paddingTop: '0.6rem',
+  },
+  toggleSection: ({ palette }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '0.75rem 1rem',
+    backgroundColor: palette.background.userInputBackground,
+    borderRadius: '0.75rem',
+  }),
+  section: {
+    display: 'flex',
+    flexDirection: 'column',
+    width: '100%',
+  },
+  halfWidthSection: {
+    display: 'flex',
+    flexDirection: 'column',
+    width: '48%',
+  },
+  label: {
+    paddingLeft: '0.75rem',
+  },
+  inputContainer: {
+    padding: '0rem',
+    margin: '0rem',
   },
 });
 

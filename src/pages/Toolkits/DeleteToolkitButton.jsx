@@ -40,7 +40,8 @@ const useDeleteToolkit = (setBlockNav, isMCP) => {
   }, [isError, isMCP, isSuccess, navigate, reset, setBlockNav]);
 
   const toastProps = useMemo(() => ({ onCloseToast }), [onCloseToast]);
-  const { toastInfo, toastError } = useToast(toastProps);
+  const { toastSuccess, toastError } = useToast(toastProps);
+  const entityName = name || toolkit_name || settings?.elitea_title || settings?.configuration_title || (isMCP ? 'MCP' : 'Toolkit');
   const onDelete = useCallback(async () => {
     await deleteToolkit({ projectId, toolkitId: !isMCP ? toolkitId : mcpId });
   }, [deleteToolkit, isMCP, mcpId, projectId, toolkitId]);
@@ -50,9 +51,9 @@ const useDeleteToolkit = (setBlockNav, isMCP) => {
       toastError(buildErrorMessage(error));
       reset();
     } else if (isSuccess) {
-      toastInfo('Deleted the toolkit successfully');
+      toastSuccess(`The ${entityName} ${isMCP ? 'MCP' : 'toolkit'} has been successfully deleted.`);
     }
-  }, [error, isError, isSuccess, reset, toastError, toastInfo]);
+  }, [entityName, error, isError, isMCP, isSuccess, reset, toastError, toastSuccess]);
 
   return {
     name: name || toolkit_name || settings?.elitea_title || settings?.configuration_title || 'Toolkit',

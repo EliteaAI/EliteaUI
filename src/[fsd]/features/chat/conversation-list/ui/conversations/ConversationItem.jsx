@@ -22,7 +22,6 @@ import ArrowRightIcon from '@/components/Icons/ArrowRightIcon.jsx';
 import CancelIcon from '@/components/Icons/CancelIcon';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import EditIcon from '@/components/Icons/EditIcon';
-import ExportIcon from '@/components/Icons/ExportIcon';
 import MoveTo from '@/components/Icons/MoveTo';
 import OpenEyeIcon from '@/components/Icons/OpenEyeIcon';
 import PinIcon from '@/components/Icons/PinIcon';
@@ -39,7 +38,6 @@ const ConversationItem = memo(props => {
     onSelectConversation,
     isActive = false,
     onDelete,
-    onExport,
     onEdit,
     onPlayback,
     onPin,
@@ -165,17 +163,7 @@ const ConversationItem = memo(props => {
     const items = !isPlayback
       ? [
           {
-            label: 'Delete',
-            icon: <DeleteIcon sx={{ fontSize: '1rem' }} />,
-            alertTitle: 'Delete conversation?',
-            confirmButtonTitle: 'Delete',
-            confirmText: "Are you sure to delete conversation? It can't be restored.",
-            alarm: true,
-            disabled: userId != author_id || (isActive && isEditingCanvas),
-            onConfirm: handleDelete,
-          },
-          {
-            label: 'Edit',
+            label: 'Rename',
             icon: (
               <Box sx={{ svg: { path: { fill: ({ palette }) => `${palette.secondary.main} !important` } } }}>
                 <EditIcon sx={{ fontSize: '1rem' }} />
@@ -208,21 +196,10 @@ const ConversationItem = memo(props => {
             subMenuItems: moveToFoldersMenuItems,
           },
           {
-            label: 'Export',
-            icon: <ExportIcon sx={{ fontSize: '1rem' }} />,
-            hasSubMenu: true,
-            disabled: true,
-            subMenuItems: [
-              {
-                label: 'Option1',
-                onClick: onExport,
-              },
-              {
-                label: 'Option2',
-                onClick: onExport,
-              },
-            ],
-            onClick: handleEdit,
+            label: 'Playback',
+            icon: <PlayIcon sx={{ fontSize: '1rem' }} />,
+            disabled: isActive && isEditingCanvas,
+            onClick: handlePlayback,
           },
           {
             label: 'Make public',
@@ -249,16 +226,20 @@ const ConversationItem = memo(props => {
             display: projectId == personal_project_id ? 'none' : undefined,
           },
           {
-            label: 'Playback',
-            icon: <PlayIcon sx={{ fontSize: '1rem' }} />,
-            disabled: isActive && isEditingCanvas,
-            onClick: handlePlayback,
-          },
-          {
             label: isPinned ? 'Unpin' : 'Pin on top',
             icon: <PinIcon sx={{ fontSize: '1rem' }} />,
             disabled: !isPinned && !!conversation.folder_id,
             onClick: handlePin,
+          },
+          {
+            label: 'Delete',
+            icon: <DeleteIcon sx={{ fontSize: '1rem' }} />,
+            entityName: name,
+            inlineExtraContent: " chat? It can't be restored.",
+            shouldRequestInputName: false,
+            alarm: true,
+            disabled: userId != author_id || (isActive && isEditingCanvas),
+            onConfirm: handleDelete,
           },
         ].filter(item => item.display !== 'none')
       : [
@@ -271,7 +252,7 @@ const ConversationItem = memo(props => {
             onConfirm: handleDelete,
           },
           {
-            label: 'Edit',
+            label: 'Rename',
             icon: <EditIcon sx={{ fontSize: '1rem' }} />,
             onClick: handleEdit,
           },
@@ -288,7 +269,6 @@ const ConversationItem = memo(props => {
     isPinned,
     checkPermission,
     moveToFoldersMenuItems,
-    onExport,
     theme.palette.background.button.primary.default,
     theme.palette.text.button.primary,
     handleMakePublic,
@@ -299,6 +279,7 @@ const ConversationItem = memo(props => {
     conversation.folder_id,
     handlePin,
     is_private,
+    name,
   ]);
 
   const onMouseEnter = useCallback(() => {
