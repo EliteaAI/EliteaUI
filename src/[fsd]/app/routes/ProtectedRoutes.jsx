@@ -78,7 +78,13 @@ const CreateToolkit = ChunkHelpers.lazyWithRetry(() => import('@/pages/Toolkits/
 const EditToolkit = ChunkHelpers.lazyWithRetry(() => import('@/pages/Toolkits/EditToolkit'));
 const Toolkits = ChunkHelpers.lazyWithRetry(() => import('@/pages/Toolkits/Toolkits'));
 const UserPublic = ChunkHelpers.lazyWithRetry(() => import('@/pages/UserPublic/UserPublic'));
-const UserSettings = ChunkHelpers.lazyWithRetry(() => import('@/pages/UserSettings/UserSettings'));
+const Preferences = ChunkHelpers.lazyWithRetry(
+  () => import('@/[fsd]/features/settings/ui/preference/Preferences'),
+);
+const AIPersonality = ChunkHelpers.lazyWithRetry(
+  () => import('@/[fsd]/features/settings/ui/ai-personality/AIPersonality'),
+);
+const Memory = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/features/settings/ui/memory/Memory'));
 
 let userInfoTimer = undefined;
 
@@ -335,8 +341,16 @@ const ProtectedRoutes = () => {
               element={<AnalyticsContainer />}
             />
             <Route
-              path="personalization"
-              element={<UserSettings />}
+              path="preferences"
+              element={<Preferences />}
+            />
+            <Route
+              path="ai-personality"
+              element={<AIPersonality />}
+            />
+            <Route
+              path="memory"
+              element={<Memory />}
             />
             <Route
               path="notifications"

@@ -8,10 +8,10 @@ import { Input, Switch } from '@/[fsd]/shared/ui';
 import { CONTEXT_MESSAGES } from '@/[fsd]/widgets/context-budget/lib/constants';
 import { handleConvertToNumberChange } from '@/[fsd]/widgets/context-budget/lib/validation';
 
-const ProfileSummarization = memo(() => {
+const MemorySummarization = memo(() => {
   const { values, errors, setFieldValue } = useFormikContext();
 
-  const styles = profileSummarizationStyles();
+  const styles = memorySummarizationStyles();
 
   const isSummarizationDisabled = !values.context_enabled || !values.enable_summarization;
 
@@ -99,10 +99,10 @@ const ProfileSummarization = memo(() => {
   );
 });
 
-ProfileSummarization.displayName = 'ProfileSummarization';
+MemorySummarization.displayName = 'MemorySummarization';
 
 /** @type {MuiSx} */
-const profileSummarizationStyles = () => ({
+const memorySummarizationStyles = () => ({
   container: {
     display: 'flex',
     flexDirection: 'column',
@@ -135,4 +135,4 @@ const profileSummarizationStyles = () => ({
   },
 });
 
-export default ProfileSummarization;
+export default MemorySummarization;

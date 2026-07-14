@@ -2,34 +2,31 @@ import { memo, useCallback, useMemo } from 'react';
 
 import { Form, Formik } from 'formik';
 
+import { ProfileHelpers } from '@/[fsd]/features/settings/lib/helpers';
+import { useQueryAuthor } from '@/[fsd]/features/settings/lib/hooks';
 import { useDefaultModel } from '@/[fsd]/shared/lib/hooks';
 import { useAuthorDescriptionMutation, useAuthorDetailsQuery } from '@/api/social';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
+import { deserializeProfileFormData, serializeProfileFormData } from '@/pages/UserSettings/profileUtils';
 
-import ProfileFormContent from './ProfileFormContent';
-import { deserializeProfileFormData, serializeProfileFormData } from './profileUtils';
-import { profileValidationSchema } from './profileValidation';
-import useQueryAuthor from './useQueryAuthor';
+const SettingsFormProvider = memo(props => {
+  const { FormContent } = props;
 
-const Profile = memo(() => {
   useQueryAuthor();
   const selectedProjectId = useSelectedProjectId();
   const { toastError, toastSuccess } = useToast();
 
-  // Fetch author details with personalization settings
   const { data: authorData } = useAuthorDetailsQuery();
   const [updateAuthor] = useAuthorDescriptionMutation();
 
   const { modelList, defaultModel } = useDefaultModel();
 
-  // Compute initial values from API data
   const initialValues = useMemo(
     () => serializeProfileFormData(authorData, defaultModel, selectedProjectId),
     [authorData, defaultModel, selectedProjectId],
   );
 
-  // Form submit handler
   const handleSubmit = useCallback(
     async (values, { setSubmitting, resetForm }) => {
       try {
@@ -50,16 +47,16 @@ const Profile = memo(() => {
     <Formik
       enableReinitialize
       initialValues={initialValues}
-      validationSchema={profileValidationSchema}
+      validationSchema={ProfileHelpers.profileValidationSchema}
       onSubmit={handleSubmit}
     >
       <Form>
-        <ProfileFormContent modelList={modelList} />
+        <FormContent modelList={modelList} />
       </Form>
     </Formik>
   );
 });
 
-Profile.displayName = 'Profile';
+SettingsFormProvider.displayName = 'SettingsFormProvider';
 
-export default Profile;
+export default SettingsFormProvider;

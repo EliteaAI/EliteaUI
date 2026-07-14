@@ -4,14 +4,15 @@ import { useSelector } from 'react-redux';
 
 import { Box, Typography } from '@mui/material';
 
-import Profile from './Profile';
-import { ProfileUserInfo } from './components';
-import useQueryAuthor from './useQueryAuthor';
+import SettingsUserInfo from '@/[fsd]/features/settings/ui/shared/SettingsUserInfo';
+import { useAuthorDetailsQuery } from '@/api/social';
 
-const UserSettings = memo(() => {
-  const styles = userSettingsStyles();
-  const { isFetching } = useQueryAuthor();
-  const { name, avatar } = useSelector(state => state.trendingAuthor.authorDetails);
+import PreferencesFormContent from './PreferencesFormContent';
+
+const Preferences = memo(() => {
+  const styles = preferencesStyles();
+  const { name, avatar } = useSelector(state => state.user);
+  const { isFetching } = useAuthorDetailsQuery();
 
   return (
     <Box sx={styles.container}>
@@ -20,25 +21,26 @@ const UserSettings = memo(() => {
           variant="labelMedium"
           color="text.secondary"
         >
-          Personalization
+          Preferences
         </Typography>
-        <ProfileUserInfo
+        <SettingsUserInfo
           name={name}
           avatar={avatar}
           isFetching={isFetching}
         />
       </Box>
+
       <Box sx={styles.content}>
-        <Profile />
+        <PreferencesFormContent />
       </Box>
     </Box>
   );
 });
 
-UserSettings.displayName = 'UserSettings';
+Preferences.displayName = 'Preferences';
 
 /** @type {MuiSx} */
-const userSettingsStyles = () => ({
+const preferencesStyles = () => ({
   container: {
     display: 'flex',
     flexDirection: 'column',
@@ -62,4 +64,4 @@ const userSettingsStyles = () => ({
   }),
 });
 
-export default UserSettings;
+export default Preferences;

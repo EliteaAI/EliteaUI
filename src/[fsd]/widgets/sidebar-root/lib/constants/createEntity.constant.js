@@ -57,7 +57,7 @@ export const SimpleCreateRoutes = [
   'settings/analytics',
   'settings/prompts',
   'settings/environment',
-  'settings/personalization',
+  'settings/preferences',
   'settings/notifications',
   RouteDefinitions.Onboarding,
   RouteDefinitions.AgentHub,

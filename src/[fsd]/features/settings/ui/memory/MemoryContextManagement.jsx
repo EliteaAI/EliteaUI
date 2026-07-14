@@ -10,14 +10,14 @@ import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { handleConvertToNumberChange } from '@/[fsd]/widgets/context-budget/lib/validation';
 import FormInput from '@/components/FormInput';
 
-import ProfileLongTermMemory from './ProfileLongTermMemory';
-import ProfileSummarization from './ProfileSummarization';
+import MemoryLongTermMemory from './MemoryLongTermMemory';
+import MemorySummarization from './MemorySummarization';
 
-const ProfileContextManagement = memo(props => {
+const MemoryContextManagement = memo(props => {
   const { modelList, onAutoSaveRequested } = props;
   const { values, errors, setFieldValue } = useFormikContext();
 
-  const styles = profileContextManagementStyles();
+  const styles = memoryContextManagementStyles();
 
   const handleContextEnabledChange = useCallback(
     (event, checkedValue) => {
@@ -116,8 +116,8 @@ const ProfileContextManagement = memo(props => {
 
               {/* Sub-sections nested under Default Context Management */}
               <Box sx={styles.subSections}>
-                <ProfileSummarization modelList={modelList} />
-                <ProfileLongTermMemory />
+                <MemorySummarization modelList={modelList} />
+                <MemoryLongTermMemory />
               </Box>
             </Box>
           ),
@@ -127,10 +127,10 @@ const ProfileContextManagement = memo(props => {
   );
 });
 
-ProfileContextManagement.displayName = 'ProfileContextManagement';
+MemoryContextManagement.displayName = 'MemoryContextManagement';
 
 /** @type {MuiSx} */
-const profileContextManagementStyles = () => ({
+const memoryContextManagementStyles = () => ({
   accordion: {
     background: 'transparent !important',
     '& .MuiAccordionDetails-root': {
@@ -184,4 +184,4 @@ const profileContextManagementStyles = () => ({
   },
 });
 
-export default ProfileContextManagement;
+export default MemoryContextManagement;

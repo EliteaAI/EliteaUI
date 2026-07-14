@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 
 import { useLazyTrendingAuthorsDetailsQuery } from '@/api/trendingAuthor';
 
-const useQueryAuthor = () => {
+export const useQueryAuthor = () => {
   const { id: userId } = useSelector(state => state.user);
   const [getAuthorDetail, { isFetching }] = useLazyTrendingAuthorsDetailsQuery();
 
@@ -23,5 +23,3 @@ const useQueryAuthor = () => {
     refetch,
   };
 };
-
-export default useQueryAuthor;

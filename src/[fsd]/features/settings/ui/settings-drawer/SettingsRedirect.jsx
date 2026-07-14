@@ -13,7 +13,7 @@ const VALID_TABS = [
   'project-params',
   'prompts',
   'environment',
-  'personalization',
+  'preferences',
   'notifications',
 ];
 const LEGACY_TABS = ['configuration', 'information'];

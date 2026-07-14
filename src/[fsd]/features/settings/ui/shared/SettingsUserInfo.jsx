@@ -5,10 +5,10 @@ import Skeleton from '@mui/material/Skeleton';
 
 import UserAvatar from '@/components/UserAvatar';
 
-const ProfileUserInfo = memo(props => {
+const SettingsUserInfo = memo(props => {
   const { name, avatar, isFetching } = props;
 
-  const styles = profileUserInfoStyles();
+  const styles = settingsUserInfoStyles();
 
   if (isFetching) {
     return (
@@ -45,10 +45,10 @@ const ProfileUserInfo = memo(props => {
   );
 });
 
-ProfileUserInfo.displayName = 'ProfileUserInfo';
+SettingsUserInfo.displayName = 'SettingsUserInfo';
 
 /** @type {MuiSx} */
-const profileUserInfoStyles = () => ({
+const settingsUserInfoStyles = () => ({
   container: {
     display: 'flex',
     alignItems: 'center',
@@ -59,4 +59,4 @@ const profileUserInfoStyles = () => ({
   },
 });
 
-export default ProfileUserInfo;
+export default SettingsUserInfo;

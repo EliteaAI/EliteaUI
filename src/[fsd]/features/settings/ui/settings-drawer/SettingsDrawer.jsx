@@ -6,6 +6,7 @@ import { Box, Divider, Typography } from '@mui/material';
 
 import { SettingsLayoutConstants } from '@/[fsd]/features/settings/lib/constants';
 import AnalyticsIcon from '@/assets/analytics-icon.svg?react';
+import BrainIcon from '@/assets/brain.svg?react';
 import CompassIcon from '@/assets/compass.svg?react';
 import ConfigurationIcon from '@/assets/configuration-icon.svg?react';
 import KeyIcon from '@/assets/key-icon.svg?react';
@@ -14,6 +15,7 @@ import ModelIcon from '@/assets/model-icon.svg?react';
 import EnvironmentIcon from '@/assets/new-environment-icon.svg?react';
 import PersonalizationIcon from '@/assets/personalization-icon.svg?react';
 import PromptIcon from '@/assets/prompt.svg?react';
+import ReasonIcon from '@/assets/reason-icon.svg?react';
 import BellIcon from '@/components/Icons/BellIcon';
 import BriefcaseIcon from '@/components/Icons/BriefcaseIcon';
 import Lock from '@/components/Icons/Lock.jsx';
@@ -29,7 +31,9 @@ const ICON_COMPONENTS = {
   secrets: Lock,
   users: UsersIcon,
   analytics: AnalyticsIcon,
-  personalization: PersonalizationIcon,
+  preferences: PersonalizationIcon,
+  'ai-personality': ReasonIcon,
+  memory: BrainIcon,
   notifications: BellIcon,
   logout: LogoutIcon,
 };
@@ -167,6 +171,7 @@ const getStyles = () => ({
     display: 'flex',
     flexDirection: 'column',
     gap: '0.5rem',
+    marginBottom: '1rem',
   },
 
   sectionHeader: ({ palette }) => ({

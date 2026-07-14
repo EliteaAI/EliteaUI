@@ -5,8 +5,8 @@ import { Box, Typography } from '@mui/material';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 
-const ProfileLongTermMemory = memo(() => {
-  const styles = profileLongTermMemoryStyles();
+const MemoryLongTermMemory = memo(() => {
+  const styles = memoryLongTermMemoryStyles();
 
   return (
     <BasicAccordion
@@ -31,10 +31,10 @@ const ProfileLongTermMemory = memo(() => {
   );
 });
 
-ProfileLongTermMemory.displayName = 'ProfileLongTermMemory';
+MemoryLongTermMemory.displayName = 'MemoryLongTermMemory';
 
 /** @type {MuiSx} */
-const profileLongTermMemoryStyles = () => ({
+const memoryLongTermMemoryStyles = () => ({
   accordion: {
     background: 'transparent !important',
     opacity: 0.5,
@@ -47,4 +47,4 @@ const profileLongTermMemoryStyles = () => ({
   },
 });
 
-export default ProfileLongTermMemory;
+export default MemoryLongTermMemory;

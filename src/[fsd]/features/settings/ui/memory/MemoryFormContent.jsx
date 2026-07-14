@@ -2,16 +2,14 @@ import { memo } from 'react';
 
 import { Box } from '@mui/material';
 
-import { VoicePersonalizationSection } from '@/[fsd]/features/chat/ui';
-import { SoundNotificationSection } from '@/[fsd]/pages/user-settings/ui/SoundNotificationSection';
 import { useFormikAutoSaveOnBlur } from '@/[fsd]/shared/lib/hooks';
 
-import { ProfileContextManagement, ProfilePersonalization } from './components';
+import MemoryContextManagement from './MemoryContextManagement';
 
-const ProfileFormContent = memo(props => {
+const MemoryFormContent = memo(props => {
   const { modelList } = props;
 
-  const styles = profileFormContentStyles();
+  const styles = memoryFormContentStyles();
 
   const { onBlur, requestSubmit } = useFormikAutoSaveOnBlur();
 
@@ -21,22 +19,19 @@ const ProfileFormContent = memo(props => {
       onBlur={onBlur}
     >
       <Box sx={styles.container}>
-        <ProfilePersonalization onAutoSaveRequested={requestSubmit} />
-        <ProfileContextManagement
+        <MemoryContextManagement
           modelList={modelList}
           onAutoSaveRequested={requestSubmit}
         />
-        <VoicePersonalizationSection />
-        <SoundNotificationSection />
       </Box>
     </Box>
   );
 });
 
-ProfileFormContent.displayName = 'ProfileFormContent';
+MemoryFormContent.displayName = 'MemoryFormContent';
 
 /** @type {MuiSx} */
-const profileFormContentStyles = () => ({
+const memoryFormContentStyles = () => ({
   wrapper: {
     display: 'flex',
     justifyContent: 'center',
@@ -52,4 +47,4 @@ const profileFormContentStyles = () => ({
   },
 });
 
-export default ProfileFormContent;
+export default MemoryFormContent;

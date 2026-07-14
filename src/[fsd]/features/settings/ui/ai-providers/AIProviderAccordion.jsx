@@ -162,7 +162,7 @@ const aiProviderAccordionStyles = {
     lineHeight: '1.5rem',
     whiteSpace: 'nowrap',
   }),
-  countBadge: () => ({
+  countBadge: ({ palette }) => ({
     flexShrink: 0,
     width: '1.5rem',
     height: '1.5rem',
@@ -170,8 +170,7 @@ const aiProviderAccordionStyles = {
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: '50%',
-    border: '0.0625rem solid',
-    borderColor: ({ palette }) => palette.border.cardsOutlines,
+    border: `0.0625rem solid ${palette.border.cardsOutlines}`,
   }),
   countText: ({ palette }) => ({
     color: palette.text.primary,

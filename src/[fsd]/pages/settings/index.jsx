@@ -9,11 +9,13 @@ import { SettingsLayoutConstants } from '@/[fsd]/features/settings/lib/constants
 import { SettingsDrawer, SettingsRedirect } from '@/[fsd]/features/settings/ui/settings-drawer';
 import { useGetPlatformSettingsQuery } from '@/api/platformSettings';
 import AnalyticsIcon from '@/assets/analytics-icon.svg?react';
+import BrainIcon from '@/assets/brain.svg?react';
 import ConfigurationIcon from '@/assets/configuration-icon.svg?react';
 import EnvironmentIcon from '@/assets/environment-icon.svg?react';
 import KeyIcon from '@/assets/key-icon.svg?react';
 import LogoutIcon from '@/assets/logout-icon.svg?react';
 import PersonalizationIcon from '@/assets/personalization-icon.svg?react';
+import ReasonIcon from '@/assets/reason-icon.svg?react';
 import { PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';
 import BellIcon from '@/components/Icons/BellIcon';
 import BriefcaseIcon from '@/components/Icons/BriefcaseIcon';
@@ -36,7 +38,9 @@ const VALID_TAB_IDS = [
   'secrets',
   'users',
   'analytics',
-  'personalization',
+  'preferences',
+  'ai-personality',
+  'memory',
   'notifications',
   'logout',
 ];
@@ -100,9 +104,19 @@ const SETTINGS_TABS_CONFIG = [
     section: SETTINGS_SECTIONS.PERSONAL,
     tabs: [
       {
-        id: 'personalization',
-        label: 'Personalization',
+        id: 'preferences',
+        label: 'Preferences',
         icon: <PersonalizationIcon />,
+      },
+      {
+        id: 'ai-personality',
+        label: 'AI Personality',
+        icon: <ReasonIcon />,
+      },
+      {
+        id: 'memory',
+        label: 'Memory',
+        icon: <BrainIcon />,
       },
       {
         id: 'tokens',

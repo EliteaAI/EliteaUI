@@ -1,0 +1,179 @@
+import { memo, useCallback, useMemo } from 'react';
+
+import { useFormikContext } from 'formik';
+
+import { Box, Typography } from '@mui/material';
+
+import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
+import { Input, Label, Switch } from '@/[fsd]/shared/ui';
+import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
+import { SingleSelect } from '@/[fsd]/shared/ui/select';
+import { PERSONA_OPTIONS } from '@/common/constants';
+
+const AIPersonalityPersonalization = memo(props => {
+  const { onAutoSaveRequested } = props;
+
+  const { values, setFieldValue } = useFormikContext();
+
+  const styles = aiPersonalityPersonalizationStyles();
+
+  // Persona options for select
+  const personaOptions = useMemo(
+    () =>
+      PERSONA_OPTIONS.map(option => ({
+        value: option.value,
+        label: option.label,
+        description: option.description,
+      })),
+    [],
+  );
+
+  const handlePersonaChange = useCallback(
+    e => {
+      const newPersona = e.target.value;
+      setFieldValue('persona', newPersona);
+      onAutoSaveRequested?.();
+    },
+    [onAutoSaveRequested, setFieldValue],
+  );
+
+  const handleInstructionsChange = useCallback(
+    e => setFieldValue('default_instructions', e.target.value),
+    [setFieldValue],
+  );
+
+  const handleInternalMcpChange = useCallback(
+    (event, checkedValue) => {
+      setFieldValue('default_internal_mcp_enabled', checkedValue);
+      onAutoSaveRequested?.();
+    },
+    [onAutoSaveRequested, setFieldValue],
+  );
+
+  return (
+    <BasicAccordion
+      showMode={AccordionConstants.AccordionShowMode.LeftMode}
+      defaultExpanded
+      accordionSX={styles.accordion}
+      items={[
+        {
+          title: 'Default Personality Management',
+          content: (
+            <Box sx={styles.accordionContent}>
+              <Box sx={styles.section}>
+                <Label.InfoLabelWithTooltip
+                  label="Default personality"
+                  tooltip="Select the default assistant personality for your conversations"
+                  sx={styles.label}
+                />
+                <SingleSelect
+                  showBorder
+                  value={values.persona}
+                  emptyPlaceholder=""
+                  onChange={handlePersonaChange}
+                  options={personaOptions}
+                  customRenderOption={option => (
+                    <Box sx={styles.optionContainer}>
+                      <Typography
+                        variant="bodyMedium"
+                        color="text.secondary"
+                      >
+                        {option.label}
+                      </Typography>
+                      <Typography
+                        variant="bodySmall"
+                        color="text.primary"
+                      >
+                        {option.description}
+                      </Typography>
+                    </Box>
+                  )}
+                  sx={styles.inputSelect}
+                />
+              </Box>
+
+              <Box sx={styles.section}>
+                <Input.StyledInputEnhancer
+                  label="Default instructions"
+                  tooltipDescription="Custom instructions that will be applied to all new conversations"
+                  autoComplete="off"
+                  variantInput="outlined"
+                  fullWidth
+                  multiline
+                  value={values.default_instructions}
+                  onChange={handleInstructionsChange}
+                  enableAutoBlur={false}
+                  placeholder="Example: Always respond in a concise manner. Focus on practical solutions."
+                  hasActionsToolBar
+                  showCopyAction={false}
+                  showExpandAction={false}
+                  fieldName="Default Instructions"
+                  containerProps={styles.inputContainer}
+                />
+              </Box>
+
+              <Box sx={styles.toggleSection}>
+                <Switch.BaseSwitch
+                  checked={values.default_internal_mcp_enabled}
+                  onChange={handleInternalMcpChange}
+                  label="Enable Elitea MCP tools by default"
+                  tooltip="When enabled, internal Elitea MCP tools will be pre-enabled for each new conversation"
+                  slotProps={{
+                    switch: { size: 'small' },
+                    formControlLabel: { sx: styles.toggleLabel },
+                  }}
+                />
+              </Box>
+            </Box>
+          ),
+        },
+      ]}
+    />
+  );
+});
+
+AIPersonalityPersonalization.displayName = 'AIPersonalityPersonalization';
+
+/** @type {MuiSx} */
+const aiPersonalityPersonalizationStyles = () => ({
+  accordion: {
+    background: 'transparent !important',
+  },
+  accordionContent: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1.25rem',
+    paddingRight: '1rem',
+    marginTop: '0.6rem',
+  },
+  section: {
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  themeToggleContainer: {
+    marginTop: '0.5rem',
+    paddingLeft: '0.75rem',
+  },
+  label: {
+    paddingLeft: '0.75rem',
+  },
+  inputSelect: {
+    marginTop: '0.25rem',
+  },
+  inputContainer: {
+    padding: '0rem',
+    margin: '0rem',
+  },
+  toggleSection: {
+    paddingLeft: '0.75rem',
+  },
+  toggleLabel: {
+    margin: 0,
+  },
+  optionContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+  },
+});
+
+export default AIPersonalityPersonalization;
