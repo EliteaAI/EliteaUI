@@ -420,7 +420,7 @@ const SecretsTable = memo(props => {
             secretName={row.name}
             value={row.id}
             tooltip={isSafariBrowser ? 'Use copy icon in actions to copy secret' : 'Copy secret'}
-            copyMessage={'The secret has been copied to the clipboard'}
+            copyMessage={`The ${row.name} values have been copied.`}
             showSecret={showSecret}
             projectId={projectId}
             toastInfo={toastInfo}

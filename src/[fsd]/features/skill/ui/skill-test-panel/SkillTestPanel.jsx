@@ -66,7 +66,7 @@ const extractEditedText = items => {
 const SkillTestPanel = memo(({ isFullScreenChat, setIsFullScreenChat }) => {
   const projectId = useSelectedProjectId();
   const { values } = useFormikContext();
-  const { toastError, toastSuccess } = useToast();
+  const { toastError, toastInfo } = useToast();
   const socket = useContext(SocketContext);
   const currentUser = useSelector(state => state.user);
 
@@ -379,12 +379,12 @@ const SkillTestPanel = memo(({ isFullScreenChat, setIsFullScreenChat }) => {
       if (!text) return;
       try {
         await navigator.clipboard.writeText(text);
-        toastSuccess('Copied to clipboard');
+        toastInfo('The message has been copied.');
       } catch {
         toastError('Failed to copy');
       }
     },
-    [activeConversation.chat_history, toastSuccess, toastError],
+    [activeConversation.chat_history, toastInfo, toastError],
   );
 
   const onDeleteMessage = useCallback(

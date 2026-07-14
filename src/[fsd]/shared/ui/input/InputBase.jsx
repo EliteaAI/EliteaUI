@@ -85,6 +85,7 @@ const InputBase = memo(props => {
     inputProps,
     hasActionsToolBar = false,
     showCopyAction = true,
+    copyMessage,
     showFullScreenAction = true,
     showExpandAction = true,
     enableAutoBlur = true,
@@ -150,11 +151,11 @@ const InputBase = memo(props => {
   const onCopy = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(value);
-      toastInfo('The content has been copied to the clipboard');
+      toastInfo(copyMessage || 'The content has been copied.');
     } catch {
       toastError('Failed to copy the content!');
     }
-  }, [value, toastInfo, toastError]);
+  }, [value, toastInfo, toastError, copyMessage]);
 
   const handleFullScreen = useCallback(() => {
     onFullScreen?.();

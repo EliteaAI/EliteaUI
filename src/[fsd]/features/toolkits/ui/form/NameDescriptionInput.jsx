@@ -77,6 +77,10 @@ const NameDescriptionInput = memo(props => {
               inputProps={{ maxLength: MAX_NAME_LENGTH }}
               onFocus={() => toggleFieldFocus(PROMPT_PAYLOAD_KEY.name)}
               onBlur={() => toggleFieldFocus(null)}
+              hasActionsToolBar
+              copyMessage="The name has been copied."
+              showFullScreenAction={false}
+              showExpandAction={false}
             />
             {isFocused(PROMPT_PAYLOAD_KEY.name) && MAX_NAME_LENGTH === nameValue?.length && (
               <Typography
