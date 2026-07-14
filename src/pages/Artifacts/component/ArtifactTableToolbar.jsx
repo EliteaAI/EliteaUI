@@ -35,6 +35,7 @@ const ArtifactTableToolbar = memo(props => {
     isManagingAccess = false,
     onManageAccessToggle,
     isPersonalProject = false,
+    accessManagementControls = null,
   } = props;
 
   const { checkPermission } = useCheckPermission();
@@ -82,97 +83,121 @@ const ArtifactTableToolbar = memo(props => {
 
       {/* Right side: Search and action buttons */}
       <Box sx={styles.rightSection}>
-        <Box
-          sx={styles.searchWrapper}
-          data-testid="artifacts-file-search-input"
-        >
-          <SimpleSearchBar
-            searchQuery={searchQuery}
-            onSearchChange={onSearchChange}
-            placeholder="Search"
-            autoFocus={false}
-          />
-        </Box>
-
-        {/* Hidden file input for upload */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          accept="*/*"
-          style={{ display: 'none' }}
-          onChange={handleFileChange}
-        />
-
-        {!isPersonalProject && bucket && (
-          <Tooltip
-            title={isManagingAccess ? 'Back to files' : 'Manage access'}
-            placement="top"
-          >
-            <IconButton
-              variant={'elitea'}
-              sx={[styles.actionButton, isManagingAccess && styles.actionButtonActive]}
-              size="small"
-              color="secondary"
-              onClick={onManageAccessToggle}
+        {isManagingAccess ? (
+          <>
+            {accessManagementControls}
+            {!isPersonalProject && bucket && (
+              <Tooltip
+                title="Back to files"
+                placement="top"
+              >
+                <IconButton
+                  variant={'elitea'}
+                  sx={[styles.actionButton, styles.actionButtonActive]}
+                  size="small"
+                  color="secondary"
+                  onClick={onManageAccessToggle}
+                >
+                  <GroupsIcon sx={styles.actionIcon} />
+                </IconButton>
+              </Tooltip>
+            )}
+          </>
+        ) : (
+          <>
+            <Box
+              sx={styles.searchWrapper}
+              data-testid="artifacts-file-search-input"
             >
-              <GroupsIcon sx={styles.actionIcon} />
-            </IconButton>
-          </Tooltip>
-        )}
+              <SimpleSearchBar
+                searchQuery={searchQuery}
+                onSearchChange={onSearchChange}
+                placeholder="Search"
+                autoFocus={false}
+              />
+            </Box>
 
-        {checkPermission(PERMISSIONS.artifacts.create) && bucket && (
-          <Tooltip
-            title="Upload files"
-            placement="top"
-          >
-            <IconButton
-              variant={'elitea'}
-              sx={styles.actionButton}
-              size="small"
-              color="secondary"
-              onClick={handleUploadClick}
-              data-tour={ARTIFACT_TOUR_TARGET_IDS.uploadButton}
-              data-testid="artifacts-upload-files-button"
+            {/* Hidden file input for upload */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept="*/*"
+              style={{ display: 'none' }}
+              onChange={handleFileChange}
+            />
+
+            {!isPersonalProject && bucket && (
+              <Tooltip
+                title="Manage access"
+                placement="top"
+              >
+                <IconButton
+                  variant={'elitea'}
+                  sx={styles.actionButton}
+                  size="small"
+                  color="secondary"
+                  onClick={onManageAccessToggle}
+                >
+                  <GroupsIcon sx={styles.actionIcon} />
+                </IconButton>
+              </Tooltip>
+            )}
+
+            {checkPermission(PERMISSIONS.artifacts.create) && bucket && (
+              <Tooltip
+                title="Upload files"
+                placement="top"
+              >
+                <IconButton
+                  variant={'elitea'}
+                  sx={styles.actionButton}
+                  size="small"
+                  color="secondary"
+                  onClick={handleUploadClick}
+                  data-tour={ARTIFACT_TOUR_TARGET_IDS.uploadButton}
+                  data-testid="artifacts-upload-files-button"
+                >
+                  <FileUploadIcon sx={styles.actionIcon} />
+                </IconButton>
+              </Tooltip>
+            )}
+
+            <Tooltip
+              title="Download files"
+              placement="top"
             >
-              <FileUploadIcon sx={styles.actionIcon} />
-            </IconButton>
-          </Tooltip>
-        )}
+              <Box component="span">
+                <IconButton
+                  variant={'elitea'}
+                  sx={styles.actionButton}
+                  size="small"
+                  color="secondary"
+                  onClick={onDownloadFiles}
+                  disabled={!rowSelectionModel.length}
+                  data-testid="artifacts-download-files-button"
+                >
+                  <DownloadIcon sx={styles.actionIcon} />
+                </IconButton>
+              </Box>
+            </Tooltip>
 
-        <Tooltip
-          title="Download files"
-          placement="top"
-        >
-          <Box component="span">
-            <IconButton
-              variant={'elitea'}
-              sx={styles.actionButton}
-              size="small"
-              color="secondary"
-              onClick={onDownloadFiles}
-              disabled={!rowSelectionModel.length}
-              data-testid="artifacts-download-files-button"
-            >
-              <DownloadIcon sx={styles.actionIcon} />
-            </IconButton>
-          </Box>
-        </Tooltip>
-
-        {checkPermission(PERMISSIONS.artifacts.delete) && (
-          <DeleteEntityButton
-            name={rowSelectionModel.length === totalRows ? 'all files' : 'selected files'}
-            entity_name={'file'}
-            onDelete={onDeleteArtifacts}
-            title={`Delete ${rowSelectionModel.length === totalRows ? 'all files' : 'selected files'}`}
-            isLoading={false}
-            sx={styles.deleteEntityButton}
-            buttonColor="secondary"
-            buttonClassName="action"
-            iconColor={deleteButtonIconColor}
-            disabled={!rowSelectionModel.length}
-            shouldRequestInputName={false}
-          />
+            {checkPermission(PERMISSIONS.artifacts.delete) && (
+              <DeleteEntityButton
+                name={rowSelectionModel.length === totalRows ? 'all files' : 'selected files'}
+                entity_name={'file'}
+                onDelete={onDeleteArtifacts}
+                title={`Delete ${rowSelectionModel.length === totalRows ? 'all files' : 'selected files'}`}
+                isLoading={false}
+                sx={styles.deleteEntityButton}
+                buttonColor="secondary"
+                buttonClassName="action"
+                iconColor={deleteButtonIconColor}
+                disabled={!rowSelectionModel.length}
+                shouldRequestInputName={false}
+              />
+            )}
+          </>
         )}
       </Box>
     </Box>

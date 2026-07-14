@@ -62,6 +62,7 @@ const Artifacts = memo(() => {
   const [pendingFileSelection, setPendingFileSelection] = useState(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isManagingAccess, setIsManagingAccess] = useState(false);
+  const [accessManagementControls, setAccessManagementControls] = useState(null);
 
   const personal_project_id = useSelector(state => state.user?.personal_project_id);
 
@@ -737,11 +738,13 @@ const Artifacts = memo(() => {
                   isManagingAccess={isManagingAccess}
                   onManageAccessToggle={handleManageAccessToggle}
                   isPersonalProject={isPersonalProject}
+                  accessManagementControls={accessManagementControls}
                   accessManagementContent={
                     isManagingAccess ? (
                       <BucketAccessTable
                         bucket={queryParams.selectedBucket?.name}
                         projectId={queryParams.projectId}
+                        renderToolbarControls={setAccessManagementControls}
                       />
                     ) : null
                   }

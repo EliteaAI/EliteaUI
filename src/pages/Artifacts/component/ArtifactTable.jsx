@@ -79,6 +79,7 @@ export default function ArtifactTable(props) {
     onManageAccessToggle,
     isPersonalProject = false,
     accessManagementContent = null,
+    accessManagementControls = null,
   } = props;
   const { toastError, toastSuccess } = useToast();
   const { windowWidth } = useGetWindowWidth();
@@ -501,6 +502,7 @@ export default function ArtifactTable(props) {
             isManagingAccess={isManagingAccess}
             onManageAccessToggle={onManageAccessToggle}
             isPersonalProject={isPersonalProject}
+            accessManagementControls={accessManagementControls}
           />
         }
         isLoading={isFetching && !isManagingAccess}

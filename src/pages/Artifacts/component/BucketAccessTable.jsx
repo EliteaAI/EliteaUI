@@ -1,6 +1,6 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Box, IconButton, Skeleton, Tooltip, Typography } from '@mui/material';
+import { Box, IconButton, Skeleton, Tooltip } from '@mui/material';
 
 import { useResponsiveColumns, useTableSort } from '@/[fsd]/entities/grid-table/lib';
 import {
@@ -62,7 +62,7 @@ const buildBucketPermissions = (accessValue, bucket, existingPerms) => {
 };
 
 const BucketAccessTable = memo(props => {
-  const { bucket, projectId } = props;
+  const { bucket, projectId, renderToolbarControls } = props;
 
   const { windowWidth } = useGetWindowWidth();
   const { toastError, toastSuccess } = useToast();
@@ -314,42 +314,49 @@ const BucketAccessTable = memo(props => {
     [handleEditClick, handleRemoveAccess, styles],
   );
 
+  const toolbarControls = useMemo(
+    () => (
+      <>
+        <Box sx={styles.searchWrapper}>
+          <SimpleSearchBar
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            placeholder="Search users"
+            autoFocus={false}
+          />
+        </Box>
+        <Tooltip
+          title="Add user access"
+          placement="top"
+        >
+          <IconButton
+            variant="elitea"
+            size="small"
+            color="secondary"
+            onClick={() => setAddDialogOpen(true)}
+          >
+            <PlusIcon sx={styles.actionIcon} />
+          </IconButton>
+        </Tooltip>
+      </>
+    ),
+    [searchQuery, styles.searchWrapper, styles.actionIcon],
+  );
+
+  useEffect(() => {
+    if (renderToolbarControls) {
+      renderToolbarControls(toolbarControls);
+    }
+    return () => {
+      if (renderToolbarControls) {
+        renderToolbarControls(null);
+      }
+    };
+  }, [renderToolbarControls, toolbarControls]);
+
   return (
     <Box sx={styles.root}>
-      <Box sx={styles.toolbar}>
-        <Box sx={styles.leftSection}>
-          <Typography
-            variant="headingSmall"
-            color="text.secondary"
-          >
-            {bucket}
-          </Typography>
-        </Box>
-        <Box sx={styles.rightSection}>
-          <Box sx={styles.searchWrapper}>
-            <SimpleSearchBar
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
-              placeholder="Search"
-              autoFocus={false}
-            />
-          </Box>
-          <Tooltip
-            title="Add user access"
-            placement="top"
-          >
-            <IconButton
-              variant="elitea"
-              size="small"
-              color="secondary"
-              onClick={() => setAddDialogOpen(true)}
-            >
-              <PlusIcon sx={styles.actionIcon} />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      </Box>
-
+      {!renderToolbarControls && <Box sx={styles.actionsRow}>{toolbarControls}</Box>}
       <Box sx={styles.tableWrapper}>
         {isFetching ? (
           <Box sx={styles.skeletonContainer}>
@@ -431,26 +438,12 @@ const bucketAccessTableStyles = () => ({
     display: 'flex',
     flexDirection: 'column',
   },
-  toolbar: ({ palette }) => ({
-    height: '3.8rem',
-    minHeight: '3.8rem',
-    width: '100%',
-    boxSizing: 'border-box',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '0 1.5rem',
-    borderBottom: `0.0625rem solid ${palette.border.table}`,
-  }),
-  leftSection: {
+  actionsRow: {
     display: 'flex',
     alignItems: 'center',
-    gap: '1rem',
-  },
-  rightSection: {
-    display: 'flex',
-    alignItems: 'center',
+    justifyContent: 'flex-end',
     gap: '0.6rem',
+    padding: '0.75rem 1.5rem',
   },
   searchWrapper: {
     minWidth: '12.5rem',
