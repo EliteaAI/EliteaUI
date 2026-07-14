@@ -11,7 +11,14 @@ import { Select } from '@/[fsd]/shared/ui';
 import PinIcon from '@/components/Icons/PinIcon';
 
 const SkillTabBar = memo(props => {
-  const { versions = [], currentVersionId, defaultVersionId, onChangeVersion, onSuccess, handleSetDefaultVersion = null } = props;
+  const {
+    versions = [],
+    currentVersionId,
+    defaultVersionId,
+    onChangeVersion,
+    onSuccess,
+    handleSetDefaultVersion = null,
+  } = props;
 
   const styles = skillTabBarStyles();
 
@@ -31,9 +38,7 @@ const SkillTabBar = memo(props => {
       if (b.name === LATEST_VERSION_NAME) return -1;
       return new Date(b.created_at) - new Date(a.created_at);
     });
-    return sorted.map(
-      buildVersionOption({ defaultVersionID: effectiveDefaultId, handleSetDefaultVersion }),
-    );
+    return sorted.map(buildVersionOption({ defaultVersionID: effectiveDefaultId, handleSetDefaultVersion }));
   }, [versions, effectiveDefaultId, handleSetDefaultVersion]);
 
   const selectedVersionId = useMemo(
@@ -66,6 +71,7 @@ const SkillTabBar = memo(props => {
       <Box sx={styles.centeredBlock}>
         <Select.SingleSelect
           id="skill-version-select"
+          data-testid="skill-version-select"
           separateLabel
           label="VERSION:"
           options={versionOptions}
