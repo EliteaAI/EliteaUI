@@ -22,6 +22,7 @@ import { actions } from '@/slices/artifact';
 import Buckets from './Components/Buckets';
 import ArtifactTable from './component/ArtifactTable';
 import ArtifactTableNoFiles from './component/ArtifactTableNoFiles';
+import BucketAccessTable from './component/BucketAccessTable';
 import DuplicateResolutionDialog from './component/DuplicateResolutionDialog';
 import UploadPathDialog from './component/UploadPathDialog';
 import UploadingStatus from './component/UploadingStatus';
@@ -60,6 +61,9 @@ const Artifacts = memo(() => {
   const [notFoundBucketName, setNotFoundBucketName] = useState('');
   const [pendingFileSelection, setPendingFileSelection] = useState(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isManagingAccess, setIsManagingAccess] = useState(false);
+
+  const personal_project_id = useSelector(state => state.user?.personal_project_id);
 
   // Ref to track when we're deliberately clearing the file preview
   // This prevents the URL-restoration useEffect from re-opening the file
@@ -86,6 +90,8 @@ const Artifacts = memo(() => {
     configurationTitle: '',
     search: '',
   });
+  const isPersonalProject = queryParams.projectId === personal_project_id;
+
   const [previewFile, setPreviewFile] = useState(null);
   const [collapsedBuckets, setCollapsedBuckets] = useState(false);
   const [currentPrefix, setCurrentPrefix] = useState('');
@@ -180,6 +186,7 @@ const Artifacts = memo(() => {
       setPreviewFile(null);
       setFilePreviewActive(false);
       setCurrentPrefix(''); // Reset folder navigation when bucket changes
+      setIsManagingAccess(false);
 
       if (bucket) {
         sessionStorage.setItem(
@@ -204,6 +211,25 @@ const Artifacts = memo(() => {
     },
     [queryParams.projectId, queryParams.configurationTitle, setSearchParams, setFilePreviewActive],
   );
+
+  const handleManageAccess = useCallback(
+    bucket => {
+      onSelectBucket(bucket);
+      setIsManagingAccess(true);
+    },
+    [onSelectBucket],
+  );
+
+  const handleManageAccessToggle = useCallback(() => {
+    setIsManagingAccess(prev => {
+      const next = !prev;
+      const params = {};
+      if (queryParams.selectedBucket) params.bucket = queryParams.selectedBucket.name;
+      if (next) params.managing = 'true';
+      setSearchParams(params);
+      return next;
+    });
+  }, [queryParams.selectedBucket, setSearchParams]);
 
   // Bucket upload hook - handles all upload sources (bucket menu, table toolbar, drag-drop)
   const {
@@ -501,6 +527,10 @@ const Artifacts = memo(() => {
             selectedBucket: bucketToSelect,
           }));
 
+          if (searchParams.get('managing') === 'true') {
+            setIsManagingAccess(true);
+          }
+
           // Mark that we've had a selection for this project/storage combination
           sessionStorage.setItem(
             `artifacts-had-selection-${queryParams.projectId}-${queryParams.configurationTitle}`,
@@ -670,6 +700,7 @@ const Artifacts = memo(() => {
               onUpload={onBucketUpload}
               onSelectFile={onSelectFile}
               onSelectFolder={onSelectFolder}
+              onManageAccess={handleManageAccess}
               // storageUsage={storageUsage}
               // storageUsageRatio={storageUsageRatio}
             />
@@ -703,6 +734,17 @@ const Artifacts = memo(() => {
                   currentPrefix={currentPrefix}
                   onPrefixChange={handlePrefixChange}
                   onUploadRequest={handleTableUploadRequest}
+                  isManagingAccess={isManagingAccess}
+                  onManageAccessToggle={handleManageAccessToggle}
+                  isPersonalProject={isPersonalProject}
+                  accessManagementContent={
+                    isManagingAccess ? (
+                      <BucketAccessTable
+                        bucket={queryParams.selectedBucket?.name}
+                        projectId={queryParams.projectId}
+                      />
+                    ) : null
+                  }
                 />
               </Box>
             ) : (

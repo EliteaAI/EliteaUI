@@ -1,5 +1,6 @@
 import { memo, useCallback, useMemo } from 'react';
 
+import GroupsIcon from '@mui/icons-material/Groups';
 import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 
 import { ARTIFACT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/artifactTourTargets.constants';
@@ -31,6 +32,9 @@ const ArtifactTableToolbar = memo(props => {
     breadcrumbs = [],
     onBreadcrumbClick,
     currentPrefix,
+    isManagingAccess = false,
+    onManageAccessToggle,
+    isPersonalProject = false,
   } = props;
 
   const { checkPermission } = useCheckPermission();
@@ -99,6 +103,23 @@ const ArtifactTableToolbar = memo(props => {
           style={{ display: 'none' }}
           onChange={handleFileChange}
         />
+
+        {!isPersonalProject && bucket && (
+          <Tooltip
+            title={isManagingAccess ? 'Back to files' : 'Manage access'}
+            placement="top"
+          >
+            <IconButton
+              variant={'elitea'}
+              sx={[styles.actionButton, isManagingAccess && styles.actionButtonActive]}
+              size="small"
+              color="secondary"
+              onClick={onManageAccessToggle}
+            >
+              <GroupsIcon sx={styles.actionIcon} />
+            </IconButton>
+          </Tooltip>
+        )}
 
         {checkPermission(PERMISSIONS.artifacts.create) && bucket && (
           <Tooltip
@@ -207,6 +228,9 @@ const artifactTableToolbarStyles = () => ({
     '&:hover': {
       backgroundColor: palette.background.button.secondary.hover,
     },
+  }),
+  actionButtonActive: ({ palette }) => ({
+    backgroundColor: palette.background.button.secondary.hover,
   }),
   actionIcon: {
     width: '1rem',

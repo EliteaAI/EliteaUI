@@ -2,6 +2,7 @@ import { eliteaApi } from './eliteaApi.js';
 
 const TAG_BUCKETS = 'TAG_BUCKETS';
 const TAG_ARTIFACTS = 'TAG_ARTIFACTS';
+const TAG_BUCKET_PERMISSIONS = 'TAG_BUCKET_PERMISSIONS';
 
 // Maximum length for the path + query string portion passed to baseQuery.
 // Does not include the base URL (which varies per environment / proxy).
@@ -15,7 +16,7 @@ const headers = {
 
 export const artifactsApi = eliteaApi
   .enhanceEndpoints({
-    addTagTypes: ['artifacts'],
+    addTagTypes: ['artifacts', TAG_BUCKET_PERMISSIONS],
   })
   .injectEndpoints({
     endpoints: build => ({
@@ -164,11 +165,38 @@ export const artifactsApi = eliteaApi
         },
         invalidatesTags: [TAG_ARTIFACTS, TAG_BUCKETS],
       }),
+      createS3Credentials: build.mutation({
+        query: ({ projectId, ...body }) => ({
+          url: `/artifacts/s3_credentials/default/${projectId}`,
+          method: 'POST',
+          headers,
+          body,
+        }),
+        invalidatesTags: [TAG_BUCKET_PERMISSIONS],
+      }),
+      listBucketPermissions: build.query({
+        query: ({ projectId }) => ({
+          url: `/artifacts/bucket_permissions/default/${projectId}`,
+        }),
+        providesTags: [TAG_BUCKET_PERMISSIONS],
+      }),
+      setBucketPermissions: build.mutation({
+        query: ({ projectId, ...body }) => ({
+          url: `/artifacts/bucket_permissions/default/${projectId}`,
+          method: 'PUT',
+          headers,
+          body,
+        }),
+        invalidatesTags: [TAG_BUCKET_PERMISSIONS],
+      }),
     }),
   });
 
 export const {
   useBucketListQuery,
+  useCreateS3CredentialsMutation,
+  useListBucketPermissionsQuery,
+  useSetBucketPermissionsMutation,
   useArtifactListQuery,
   useLazyArtifactListQuery,
   useCreateBucketMutation,
