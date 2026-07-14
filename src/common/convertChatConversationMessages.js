@@ -112,7 +112,7 @@ export const convertToPlayerQuestion = (message_group, playerInfo, participants)
 // shape the old meta entries had — so icon/label resolution and sub-agent grouping stay unchanged.
 // Heavy fields (text / thinking / tool_inputs / tool_output) are absent on the list and fetched on
 // pin-expand via the detail endpoint; _traceStepId carries the DB id used for that fetch.
-const traceRowToStep = row => {
+export const traceRowToStep = row => {
   const attrs = row.attrs || {};
   if (row.kind === 'thinking_step') {
     return {
@@ -130,11 +130,16 @@ const traceRowToStep = row => {
       timestamp_start: row.started_at,
       timestamp_finish: row.finished_at,
       _traceStepId: row.id,
+      _traceMessageGroupId: row.message_group_id,
     };
   }
   return {
     ...attrs, // metadata + tool_meta sub-objects the tool branch reads
     tool_name: row.tool_name,
+    parent_agent_name: row.parent_agent_name || attrs.metadata?.parent_agent_name || null,
+    parent_agent_call_id: row.parent_agent_call_id || attrs.metadata?.parent_agent_call_id || null,
+    parent_agent_path: attrs.parent_agent_path || attrs.metadata?.parent_agent_path || [],
+    sibling_ordinal: attrs.sibling_ordinal || attrs.metadata?.sibling_ordinal || null,
     tool_run_id: `trace_step_${row.id}`,
     tool_inputs: undefined,
     tool_output: undefined,
@@ -145,6 +150,7 @@ const traceRowToStep = row => {
     timestamp_start: row.started_at,
     timestamp_finish: row.finished_at,
     _traceStepId: row.id,
+    _traceMessageGroupId: row.message_group_id,
   };
 };
 
@@ -217,6 +223,7 @@ export const convertToAIAnswer = (message_group, message_groups, participants, t
         ...hierarchy,
         id: step.message.id,
         traceStepId: step._traceStepId,
+        traceMessageGroupId: step._traceMessageGroupId,
         status: ToolActionStatus.complete,
         toolInputs: '',
         toolOutputs: text,
@@ -261,6 +268,7 @@ export const convertToAIAnswer = (message_group, message_groups, participants, t
         ...hierarchy,
         id: step.tool_run_id,
         traceStepId: step._traceStepId,
+        traceMessageGroupId: step._traceMessageGroupId,
         finishReason: step.finish_reason,
         status: ToolActionStatus.complete,
         toolInputs: step.tool_inputs,
@@ -431,6 +439,18 @@ export const groupTraceStepsByGroupId = traceSteps => {
     (acc[row.message_group_id] = acc[row.message_group_id] || []).push(row);
     return acc;
   }, {});
+};
+
+export const buildTraceListParams = messageGroups => {
+  const ids = [
+    ...new Set(
+      (messageGroups || []).map(group => Number(group?.id)).filter(id => Number.isInteger(id) && id > 0),
+    ),
+  ];
+  // Very old non-paginated surfaces can materialize more than the API's bounded
+  // group filter. Preserve their conversation-wide fallback rather than issuing
+  // a request the server must reject.
+  return ids.length && ids.length <= 200 ? { message_group_ids: ids.join(','), limit: 2000 } : undefined;
 };
 
 export const convertConversationToChatHistory = (conversationDetails = {}, traceSteps = []) => {

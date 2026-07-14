@@ -13,7 +13,10 @@ import {
 } from '@/api';
 import { eliteaApi } from '@/api/eliteaApi';
 import { ROLES, WELCOME_MESSAGE_ID, sioEvents } from '@/common/constants';
-import { convertConversationToChatHistory } from '@/common/convertChatConversationMessages';
+import {
+  buildTraceListParams,
+  convertConversationToChatHistory,
+} from '@/common/convertChatConversationMessages';
 import { buildErrorMessage } from '@/common/utils';
 import { useChatMessageDeleteSocket, useChatMessageSyncSocket } from '@/components/Chat/hooks';
 import useAgentAttachments from '@/hooks/application/useAgentAttachments';
@@ -162,6 +165,7 @@ export const useApplicationChat = ({
       const tracesRequest = getMessageTraces({
         projectId,
         conversationId: restoredConversationData.id,
+        params: buildTraceListParams(restoredConversationData.message_groups),
       });
 
       (async () => {

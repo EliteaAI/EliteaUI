@@ -9,7 +9,10 @@ import {
   useLazyMessageTracesQuery,
   useSelectConversationMutation,
 } from '@/api';
-import { convertConversationToChatHistory } from '@/common/convertChatConversationMessages';
+import {
+  buildTraceListParams,
+  convertConversationToChatHistory,
+} from '@/common/convertChatConversationMessages';
 import { areTheSameConversations, buildErrorMessage } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { actions as chatActions } from '@/slices/chat';
@@ -97,6 +100,7 @@ export default function useSelectConversation({
             const tracesResult = await getMessageTraces({
               projectId,
               conversationId: conversation.id,
+              params: buildTraceListParams(result.data.message_groups),
             });
             setActiveConversation({
               ...conversation,

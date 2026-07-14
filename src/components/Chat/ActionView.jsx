@@ -287,12 +287,17 @@ const ActionView = memo(props => {
     const needsFetch =
       action.traceStepId && !fetchedDetail && !action.toolInputs && !action.toolOutputs && !action.content;
     if (needsFetch) {
-      getMessageTrace({ projectId, stepId: action.traceStepId }).then(r => {
+      getMessageTrace({
+        projectId,
+        stepId: action.traceStepId,
+        messageGroupId: action.traceMessageGroupId,
+      }).then(r => {
         if (r.data) setFetchedDetail(r.data);
       });
     }
   }, [
     action.traceStepId,
+    action.traceMessageGroupId,
     action.toolInputs,
     action.toolOutputs,
     action.content,
