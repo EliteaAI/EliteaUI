@@ -35,6 +35,7 @@ const StyledInputEnhancer = memo(props => {
     inputProps,
     hasActionsToolBar = false,
     showCopyAction = true,
+    copyMessage,
     showFullScreenAction = true,
     showExpandAction = true,
     fieldName = '',
@@ -106,6 +107,7 @@ const StyledInputEnhancer = memo(props => {
         collapseContent={collapseContent}
         hasActionsToolBar={hasActionsToolBar}
         showCopyAction={showCopyAction}
+        copyMessage={copyMessage}
         showFullScreenAction={showFullScreenAction}
         showExpandAction={showExpandAction}
         enableAutoBlur={enableAutoBlur}

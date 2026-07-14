@@ -16,6 +16,7 @@ import { PUBLIC_PROJECT_ID } from '@/common/constants';
 import CopyIcon from '@/components/Icons/CopyIcon';
 import { useMultiSectionConfigurations } from '@/hooks/useMultiSectionConfigurations';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
+import useToast from '@/hooks/useToast';
 
 import ConfigurationsPanel from './ConfigurationsPanel';
 import ModelCapabilitiesSection from './ModelCapabilitiesSection';
@@ -25,6 +26,7 @@ const ModelConfiguration = memo(() => {
   const projectId = useSelectedProjectId();
   const user = useSelector(state => state.user);
   const [setProjectDefaultModel] = useSetProjectDefaultModelMutation();
+  const { toastInfo } = useToast();
   const styles = getStyles();
 
   // Fetch all model data
@@ -146,6 +148,7 @@ const ModelConfiguration = memo(() => {
     uniqueConfigurations,
     userApiUrl: user.api_url,
     configurationsBySections,
+    toastInfo,
   });
 
   // Calculate options and capabilities

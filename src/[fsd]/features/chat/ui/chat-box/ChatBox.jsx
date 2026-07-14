@@ -167,7 +167,7 @@ const ChatBox = forwardRef((props, boxRef) => {
   const sessionDeclinedMcpServersRef = useRef(new Map());
 
   const dispatch = useDispatch();
-  const { toastError, toastSuccess } = useToast();
+  const { toastError, toastInfo } = useToast();
 
   // Sockets
   const socket = useContext(SocketContext);
@@ -995,7 +995,7 @@ const ChatBox = forwardRef((props, boxRef) => {
         if (message.exception) {
           try {
             await navigator.clipboard.writeText(JSON.stringify(message.exception));
-            toastSuccess('The exception has been copied to the clipboard');
+            toastInfo('The exception has been copied.');
           } catch {
             toastError('Failed to copy the exception!');
           }
@@ -1025,14 +1025,14 @@ const ChatBox = forwardRef((props, boxRef) => {
 
           try {
             await navigator.clipboard.writeText(contentToCopy);
-            toastSuccess('The message has been copied to the clipboard');
+            toastInfo('The message has been copied.');
           } catch {
             toastError('Failed to copy the message!');
           }
         }
       }
     },
-    [chat_history, toastError, toastSuccess],
+    [chat_history, toastError, toastInfo],
   );
 
   const onRegenerateAnswer = useCallback(

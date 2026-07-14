@@ -612,6 +612,7 @@ const ToolBaseProperty = memo(props => {
       const placeholder =
         schemaPlaceholder || (isInteger && defaultValue !== undefined ? String(defaultValue) : undefined);
 
+      const isNameField = k === 'elitea_title' || k === 'label';
       return (
         <Box sx={styles.nameInputContainer}>
           <Input.StyledInputEnhancer
@@ -629,6 +630,12 @@ const ToolBaseProperty = memo(props => {
             placeholder={placeholder}
             onFocus={() => toggleFieldFocus(k)}
             onBlur={() => toggleFieldFocus(null)}
+            {...(isNameField && {
+              hasActionsToolBar: true,
+              copyMessage: 'The name has been copied.',
+              showFullScreenAction: false,
+              showExpandAction: false,
+            })}
           />
           {isFocused('label') && MAX_NAME_LENGTH === settings[k]?.length && (
             <Typography
