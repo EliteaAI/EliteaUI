@@ -7,7 +7,7 @@ import { Box, Button as MuiButton } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { useTrackEvent } from '@/GA';
-import { CredentialErrorHelpers } from '@/[fsd]/features/credentials/lib/helpers';
+import { CredentialErrorHelpers, CredentialHelpers } from '@/[fsd]/features/credentials/lib/helpers';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
 import { useFormDirtyExcluding, useProjectType } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
@@ -42,7 +42,7 @@ const CredentialTabBar = memo(props => {
   const navigate = useNavigate();
 
   const [searchParams] = useSearchParams();
-  const { credential_uid } = useParams();
+  const { credential_uid, credentialType } = useParams();
   const { toastSuccess } = useToast();
 
   const { checkPermission } = useCheckPermission();
@@ -66,6 +66,11 @@ const CredentialTabBar = memo(props => {
           },
           {
             replace,
+            state: {
+              expandSection: CredentialHelpers.normalizeCredentialSection(
+                credentialType ?? credentialDetails?.section,
+              ),
+            },
           },
         );
       else
@@ -78,7 +83,7 @@ const CredentialTabBar = memo(props => {
           },
         );
     },
-    [isFromModelConfiguration, navigate],
+    [isFromModelConfiguration, navigate, credentialType, credentialDetails?.section],
   );
 
   const toolType = useMemo(() => credentialDetails?.type || '', [credentialDetails?.type]);

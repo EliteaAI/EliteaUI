@@ -54,13 +54,13 @@ const BackButton = memo(() => {
       // Special handling for CreateCredential pages - check for from=ai-providers parameter
       if (pageType === 'CredentialDetails' || isCredentialCreateRoute()) {
         const fromParam = searchParams.get('from');
-        if (fromParam === 'information') {
+        if (fromParam === 'ai-providers') {
           // Navigate back to Model Configuration Settings page (handle both new and legacy parameter)
           navigate(
             {
               pathname: RouteDefinitions.SettingsWithTab.replace(':tab', 'ai-providers'),
             },
-            { replace: true },
+            { replace: true, state: { expandSection: location.state?.expandSection } },
           );
           return;
         }
@@ -113,6 +113,7 @@ const BackButton = memo(() => {
     pageType,
     searchParams,
     isCredentialCreateRoute,
+    location.state?.expandSection,
   ]);
   return (
     <IconButton

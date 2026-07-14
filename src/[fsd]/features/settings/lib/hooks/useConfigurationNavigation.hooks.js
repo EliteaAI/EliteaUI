@@ -10,8 +10,8 @@ export const useConfigurationNavigation = () => {
   const locationState = useMemo(() => state || { from: [], routeStack: [] }, [state]);
 
   const navigateToConfiguration = useCallback(
-    configurationId => {
-      const newRouteStack = [...locationState.routeStack];
+    (configurationId, section) => {
+      const newRouteStack = [...(locationState.routeStack ?? [])];
       const newPagePath = RouteDefinitions.EditConfiguration.replace(':uid', configurationId);
 
       newRouteStack.push({
@@ -30,11 +30,11 @@ export const useConfigurationNavigation = () => {
           search: 'from=ai-providers',
         },
         {
-          state: { routeStack: newRouteStack },
+          state: { routeStack: newRouteStack, expandSection: section },
         },
       );
     },
-    [locationState.routeStack, navigate],
+    [locationState, navigate],
   );
 
   return { navigateToConfiguration };

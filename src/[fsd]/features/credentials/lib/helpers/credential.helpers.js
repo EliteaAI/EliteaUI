@@ -1,6 +1,12 @@
 import * as CredentialIconHelpers from './credentialIcon.helpers';
 import * as CredentialNameHelpers from './credentialName.helpers';
 
+export const normalizeCredentialSection = section => {
+  if (section === 'embedding_model') return 'embedding';
+  if (section === 'credentials') return 'ai_credentials';
+  return section;
+};
+
 export const generateCredentialTagList = credentials => {
   if (!credentials || !Array.isArray(credentials)) return [];
 

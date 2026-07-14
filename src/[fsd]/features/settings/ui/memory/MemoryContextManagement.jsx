@@ -10,7 +10,7 @@ import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { handleConvertToNumberChange } from '@/[fsd]/widgets/context-budget/lib/validation';
 import FormInput from '@/components/FormInput';
 
-import MemoryLongTermMemory from './MemoryLongTermMemory';
+// import MemoryLongTermMemory from './MemoryLongTermMemory';
 import MemorySummarization from './MemorySummarization';
 
 const MemoryContextManagement = memo(props => {
@@ -117,7 +117,7 @@ const MemoryContextManagement = memo(props => {
               {/* Sub-sections nested under Default Context Management */}
               <Box sx={styles.subSections}>
                 <MemorySummarization modelList={modelList} />
-                <MemoryLongTermMemory />
+                {/* <MemoryLongTermMemory /> */}
               </Box>
             </Box>
           ),

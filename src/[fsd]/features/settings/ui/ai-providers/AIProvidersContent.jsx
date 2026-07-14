@@ -1,5 +1,7 @@
 import { memo, useCallback, useMemo } from 'react';
 
+import { useLocation } from 'react-router-dom';
+
 import { Box } from '@mui/material';
 
 import { ModelConfigurationHelpers } from '@/[fsd]/features/settings/lib/helpers';
@@ -17,6 +19,8 @@ const AIProvidersContent = memo(() => {
   const projectId = useSelectedProjectId();
   const [setProjectDefaultModel] = useSetProjectDefaultModelMutation();
   const styles = getStyles();
+  const { state: locationState } = useLocation();
+  const expandSection = locationState?.expandSection ?? null;
 
   // Fetch all model data
   const {
@@ -212,6 +216,7 @@ const AIProvidersContent = memo(() => {
       <ConfigurationsPanel
         configurationsBySections={configurationsBySections}
         configurationsLoading={configurationsLoading}
+        expandSection={expandSection}
         projectDefaultModel={projectDefaultModel}
         projectLowTierDefaultModel={projectLowTierDefaultModel}
         projectHighTierDefaultModel={projectHighTierDefaultModel}

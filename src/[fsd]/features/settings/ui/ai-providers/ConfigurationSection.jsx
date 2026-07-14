@@ -30,6 +30,7 @@ const ConfigurationSection = memo(props => {
     defaultSettingsLayout = DEFAULT_SETTINGS_LAYOUT.STACK,
     groupTheModelsByProvider = false,
     tourTargetId,
+    defaultExpanded = false,
   } = props;
 
   const groupedConfigurations = useMemo(() => {
@@ -99,6 +100,7 @@ const ConfigurationSection = memo(props => {
         <AIProviderAccordion
           title={title}
           count={configurations.length}
+          defaultExpanded={defaultExpanded}
           metaItems={[
             {
               label: defaultSettingLabel,

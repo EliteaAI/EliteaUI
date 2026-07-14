@@ -385,7 +385,7 @@ const ProtectedRoutes = () => {
               }
             />
             <Route
-              path={'edit-configuration/:credential_uid'}
+              path={'edit-ai-provider/:credential_uid'}
               element={
                 <EditCredentialFromMain
                   title="Configuration"

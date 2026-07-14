@@ -27,6 +27,7 @@ const ConfigurationsPanel = memo(props => {
     asrOptions,
     ttsOptions,
     onChangeDefaultModel,
+    expandSection = null,
   } = props;
   const styles = getStyles();
 
@@ -69,6 +70,7 @@ const ConfigurationsPanel = memo(props => {
       <ConfigurationSection
         tourTargetId={AI_CONFIG_TOUR_TARGET_IDS.llmModels}
         hasDefaultSetting
+        defaultExpanded={!expandSection || expandSection === 'llm'}
         title="LLMs"
         configurations={configurationsBySections.llm}
         isLoading={configurationsLoading}
@@ -104,6 +106,7 @@ const ConfigurationsPanel = memo(props => {
         configurations={configurationsBySections.embedding}
         isLoading={configurationsLoading}
         hasDefaultSetting={true}
+        defaultExpanded={expandSection === 'embedding'}
         defaultSettingsLayout="inline"
         defaultSettingLabel={renderInfoLabel('Default', tooltips.embedding)}
         defaultSettingValue={projectDefaultEmbeddingModel}
@@ -117,6 +120,7 @@ const ConfigurationsPanel = memo(props => {
         configurations={configurationsBySections.vectorstorage}
         isLoading={configurationsLoading}
         hasDefaultSetting={true}
+        defaultExpanded={expandSection === 'vectorstorage'}
         defaultSettingsLayout="inline"
         defaultSettingLabel={renderInfoLabel('Default', tooltips.vectorStorage)}
         defaultSettingValue={projectDefaultVectorStorageModel}
@@ -130,6 +134,7 @@ const ConfigurationsPanel = memo(props => {
         configurations={configurationsBySections.image_generation}
         isLoading={configurationsLoading}
         hasDefaultSetting={true}
+        defaultExpanded={expandSection === 'image_generation'}
         defaultSettingLabel="Default image generation model:"
         defaultSettingValue={projectDefaultImageGenerationModel}
         defaultSettingOptions={imageGenerationOptions}
@@ -141,6 +146,7 @@ const ConfigurationsPanel = memo(props => {
         configurations={configurationsBySections.asr}
         isLoading={configurationsLoading}
         hasDefaultSetting={true}
+        defaultExpanded={expandSection === 'asr'}
         defaultSettingLabel="Default ASR model:"
         defaultSettingValue={projectDefaultASRModel}
         defaultSettingOptions={asrOptions}
@@ -152,6 +158,7 @@ const ConfigurationsPanel = memo(props => {
         configurations={configurationsBySections.tts}
         isLoading={configurationsLoading}
         hasDefaultSetting={true}
+        defaultExpanded={expandSection === 'tts'}
         defaultSettingLabel="Default TTS model:"
         defaultSettingValue={projectDefaultTTSModel}
         defaultSettingOptions={ttsOptions}
@@ -163,6 +170,7 @@ const ConfigurationsPanel = memo(props => {
         title="AI Credentials"
         configurations={configurationsBySections.ai_credentials}
         isLoading={configurationsLoading}
+        defaultExpanded={expandSection === 'ai_credentials'}
       />
     </Box>
   );

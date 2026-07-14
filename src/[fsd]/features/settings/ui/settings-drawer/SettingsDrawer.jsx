@@ -53,10 +53,10 @@ const SettingsDrawer = memo(props => {
 
       const pathSegments = location.pathname.split('/');
       const lastSegment = pathSegments[pathSegments.length - 1];
-
       if (
         tabId === 'ai-providers' &&
         (lastSegment === 'create-ai-provider' ||
+          pathSegments[pathSegments.length - 2] === 'edit-ai-provider' ||
           pathSegments[pathSegments.length - 2] === 'create-ai-provider')
       ) {
         return true;

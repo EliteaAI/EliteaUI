@@ -6,7 +6,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
-import { CredentialNameHelpers } from '@/[fsd]/features/credentials/lib/helpers';
+import { CredentialHelpers, CredentialNameHelpers } from '@/[fsd]/features/credentials/lib/helpers';
 import { Controls } from '@/[fsd]/shared/ui';
 import { PinEntityType } from '@/[fsd]/widgets/pin-toggler/lib/constants';
 import { usePin, usePinMenu } from '@/[fsd]/widgets/pin-toggler/lib/hooks';
@@ -76,6 +76,9 @@ const CredentialsControls = memo(props => {
           },
           {
             replace,
+            state: {
+              expandSection: CredentialHelpers.normalizeCredentialSection(credentialDetails?.section),
+            },
           },
         );
       else
@@ -88,7 +91,7 @@ const CredentialsControls = memo(props => {
           },
         );
     },
-    [isFromModelConfiguration, navigate],
+    [isFromModelConfiguration, navigate, credentialDetails?.section],
   );
 
   const onDelete = useCallback(async () => {

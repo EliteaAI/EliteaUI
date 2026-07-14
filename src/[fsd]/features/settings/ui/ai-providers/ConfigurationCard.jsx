@@ -14,7 +14,7 @@ import ConfigurationIcon from './ConfigurationIcon';
 
 const { getConfigurationDisplayName, getConfigurationStatus, isConfigurationEditable } = ConfigurationHelpers;
 
-const ConfigurationCard = memo(({ configuration, canEdit, locationState, isDefault }) => {
+const ConfigurationCard = memo(({ configuration, canEdit, isDefault }) => {
   const styles = getStyles();
   const projectId = useSelectedProjectId();
   const { navigateToConfiguration } = useConfigurationNavigation();
@@ -35,9 +35,9 @@ const ConfigurationCard = memo(({ configuration, canEdit, locationState, isDefau
 
   const handleCardClick = useCallback(() => {
     if (!disabled) {
-      navigateToConfiguration(configuration.id, locationState);
+      navigateToConfiguration(configuration.id, configuration.section);
     }
-  }, [disabled, configuration.id, locationState, navigateToConfiguration]);
+  }, [disabled, configuration.id, configuration.section, navigateToConfiguration]);
 
   return (
     <Box

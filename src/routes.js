@@ -60,7 +60,7 @@ const RouteDefinitions = {
   CreateConfiguration: '/settings/create-ai-provider',
   CreateConfigurationWithType: '/settings/create-ai-provider/:credentialType',
   CreatePersonalToken: '/settings/create-personal-token',
-  EditConfiguration: '/settings/edit-configuration/:uid',
+  EditConfiguration: '/settings/edit-ai-provider/:uid',
   ModeSwitch: '/mode-switch',
 
   Artifacts: '/artifacts',
