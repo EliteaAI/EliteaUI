@@ -146,7 +146,7 @@ const DataRowAction = memo(props => {
   const doDeleteToolkit = useCallback(async () => {
     const { error } = await deleteToolkit({ projectId, toolkitId: data?.id });
     if (!error) {
-      const entityType = isAppAll ? 'application' : isMCP ? 'MCP' : 'toolkit';
+      const entityType = isAppAll ? 'application' : isMCP ? 'mcp' : 'toolkit';
       const entityName = data?.name || entityType;
       toastSuccess(`The ${entityName} ${entityType} has been successfully deleted.`);
     }
