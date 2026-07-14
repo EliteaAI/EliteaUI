@@ -52,7 +52,10 @@ const ApplicationSkills = memo(({ style, disabled, entityProjectId }) => {
         {
           title: SKILLS_TITLE,
           content: (
-            <Box sx={styles.containerStyles}>
+            <Box
+              sx={styles.containerStyles}
+              data-testid="agent-skills-section"
+            >
               <Box sx={styles.headerRow}>
                 {!disabled && (
                   <SkillMenu
@@ -66,6 +69,7 @@ const ApplicationSkills = memo(({ style, disabled, entityProjectId }) => {
                 <Typography
                   variant="bodySmall"
                   sx={styles.counter}
+                  data-testid="agent-skills-counter"
                 >
                   {skills.length}/{maxSkills} skills added.
                 </Typography>
