@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
@@ -44,7 +44,6 @@ const useDeleteVersion = ({
   versionId,
   applicationId,
   toastError,
-  toastInfo,
   toastSuccess,
   versions,
   defaultVersionID,
@@ -56,6 +55,13 @@ const useDeleteVersion = ({
   // State for version in use check result
   const [versionInUseData, setVersionInUseData] = useState(null);
   const [isCheckingInUse, setIsCheckingInUse] = useState(false);
+  const versionNameRef = useRef(null);
+
+  const numericVersionId = Number(versionId);
+  const currentVersionName = versions?.find(v => v.id === numericVersionId)?.name;
+  if (currentVersionName) {
+    versionNameRef.current = currentVersionName;
+  }
 
   const [deleteVersion, { isLoading: isDeletingVersion, reset: resetDeleteVersion }] =
     useDeleteApplicationVersionMutation();
@@ -83,13 +89,16 @@ const useDeleteVersion = ({
       resetDeleteVersion();
       setVersionInUseData(null);
 
+      const deletedVersionName = versionNameRef.current || 'version';
       if (updatedReferences > 0) {
-        toastSuccess(`Successfully updated ${updatedReferences} reference(s) and deleted the version.`);
+        toastSuccess(
+          `Successfully updated ${updatedReferences} reference(s) and deleted the ${deletedVersionName} version.`,
+        );
       } else {
-        toastInfo('Version has been deleted!');
+        toastSuccess(`The ${deletedVersionName} version has been successfully deleted.`);
       }
     },
-    [navigate, newPath, resetDeleteVersion, search, state, toastInfo, toastSuccess],
+    [navigate, newPath, resetDeleteVersion, search, state, toastSuccess],
   );
 
   /**
