@@ -274,6 +274,7 @@ export default function SearchBar({
             <StyledSendIcon
               disabled={disableSearchButton}
               onClick={onSearch}
+              data-testid="skills-search-send-button"
             />
           </Box>
           {/* Suggestions Popper (hidden when selected-items menu is open) */}
