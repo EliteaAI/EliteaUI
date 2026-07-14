@@ -375,7 +375,7 @@ const NewChat = props => {
     setConversations,
     setFolders,
     toastError,
-    toastInfo,
+    toastSuccess,
   });
   const { onDeleteAllMessages, onRemoteDeleteAllMessages } = useDeleteAllMessageFromConversation({
     activeConversation,

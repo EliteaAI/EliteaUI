@@ -51,7 +51,7 @@ export const usePipelineChat = ({
 
   const [deleteMessage, { reset: resetDeleteMessage }] = useDeleteMessageFromConversationMutation();
   const [deleteAllMessages, { reset: resetDeleteAll }] = useDeleteAllMessagesFromConversationMutation();
-  const { toastError, toastInfo } = useToast();
+  const { toastError, toastInfo, toastSuccess } = useToast();
   const chatHistoryRef = useRef([]);
 
   const {
@@ -598,7 +598,7 @@ export const usePipelineChat = ({
           callback?.();
           return updatedMessages;
         });
-        toastInfo('The message has been deleted');
+        toastSuccess('The message has been successfully deleted.');
         resetDeleteMessage();
       } else {
         toastError(buildErrorMessage(result.error) || 'Failed to delete the message, please try again.');
@@ -611,7 +611,7 @@ export const usePipelineChat = ({
       resetDeleteMessage,
       setChatHistory,
       toastError,
-      toastInfo,
+      toastSuccess,
     ],
   );
 
