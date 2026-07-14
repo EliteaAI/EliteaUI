@@ -6,6 +6,7 @@ import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPag
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
 
+import SettingsFormProvider from '../shared/SettingsFormProvider';
 import AgentPipelineBuilder from './AgentPipelineBuilder';
 import ProjectContext from './ProjectContext';
 
@@ -35,7 +36,7 @@ const ProjectBehaviorContent = memo(() => {
           ]}
         />
         <BasicAccordion
-          data-testid="project-context-section"
+          data-testid="agent-pipeline-builder-section"
           showMode={AccordionConstants.AccordionShowMode.LeftMode}
           accordionSX={styles.accordionStyles}
           items={[
@@ -43,7 +44,7 @@ const ProjectBehaviorContent = memo(() => {
               title: 'Agent & Pipeline Builder',
               content: (
                 <Box sx={styles.containerStyles}>
-                  <AgentPipelineBuilder />
+                  <SettingsFormProvider FormContent={AgentPipelineBuilder} />
                 </Box>
               ),
             },

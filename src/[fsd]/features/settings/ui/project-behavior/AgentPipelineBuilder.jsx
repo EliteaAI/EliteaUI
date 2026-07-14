@@ -1,55 +1,45 @@
-/* eslint-disable no-unused-vars */
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback } from 'react';
 
-import { Box, CircularProgress } from '@mui/material';
+import { useFormikContext } from 'formik';
 
-import { useProjectContextQuery } from '@/api/projectContext';
+import { Box } from '@mui/material';
+
+import { useFormikAutoSaveOnBlur } from '@/[fsd]/shared/lib/hooks';
 import { PERMISSIONS } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import EnableToggleCard from './EnableToggleCard';
 
 const AgentPipelineBuilder = memo(() => {
-  const projectId = useSelectedProjectId();
   const { checkPermission } = useCheckPermission();
   const canViewProjectContext = checkPermission(PERMISSIONS.projectContext.view);
   const canEditProjectContext = checkPermission(PERMISSIONS.projectContext.edit);
 
-  const { data: serverData, isLoading } = useProjectContextQuery(projectId, {
-    skip: !projectId || !canViewProjectContext,
-  });
-
-  const [enabled, setEnabled] = useState(true);
-  const [isDirty, setIsDirty] = useState(false);
+  const { values, setFieldValue } = useFormikContext();
+  const { onBlur, requestSubmit } = useFormikAutoSaveOnBlur();
 
   const handleToggle = useCallback(
-    e => {
+    (event, checkedValue) => {
       if (!canEditProjectContext) return;
-      setEnabled(e.target.checked);
-      setIsDirty(true);
+      setFieldValue('default_internal_mcp_enabled', checkedValue);
+      requestSubmit();
     },
-    [canEditProjectContext],
+    [canEditProjectContext, setFieldValue, requestSubmit],
   );
 
   const styles = componentStyles();
-
-  if (isLoading) {
-    return (
-      <Box sx={styles.loader}>
-        <CircularProgress size={32} />
-      </Box>
-    );
-  }
 
   if (!canViewProjectContext) {
     return null;
   }
 
   return (
-    <Box sx={styles.body}>
+    <Box
+      sx={styles.body}
+      onBlur={onBlur}
+    >
       <EnableToggleCard
-        enabled={enabled}
+        enabled={values.default_internal_mcp_enabled}
         onToggle={handleToggle}
         disabled={!canEditProjectContext}
         title="Agent & Pipeline Builder"
