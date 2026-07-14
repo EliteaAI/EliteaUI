@@ -1,8 +1,8 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Box, IconButton, Skeleton, Tooltip } from '@mui/material';
+import { Box, IconButton, Skeleton, Tooltip, Typography } from '@mui/material';
 
-import { useResponsiveColumns, useTableSort } from '@/[fsd]/entities/grid-table/lib';
+import { useResponsiveColumns, useRowSelection, useTableSort } from '@/[fsd]/entities/grid-table/lib';
 import {
   GridTableBody,
   GridTableContainer,
@@ -10,7 +10,7 @@ import {
   GridTablePagination,
   GridTableRow,
 } from '@/[fsd]/entities/grid-table/ui';
-import { Text } from '@/[fsd]/shared/ui';
+import { Button, Text } from '@/[fsd]/shared/ui';
 import { AddButton } from '@/[fsd]/shared/ui/button';
 import { SimpleSearchBar } from '@/[fsd]/shared/ui/input';
 import { useUserListQuery } from '@/api/admin';
@@ -25,6 +25,7 @@ import useGetWindowWidth from '@/hooks/useGetWindowWidth';
 import useToast from '@/hooks/useToast';
 
 import AddBucketUserDialog from './AddBucketUserDialog';
+import BulkEditBucketUsersDialog from './BulkEditBucketUsersDialog';
 import EditBucketUserDialog from './EditBucketUserDialog';
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
@@ -78,6 +79,7 @@ const BucketAccessTable = memo(props => {
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
+  const [bulkEditDialogOpen, setBulkEditDialogOpen] = useState(false);
 
   const { data: permissionsData, isLoading: isLoadingPerms } = useListBucketPermissionsQuery(
     { projectId },
@@ -149,10 +151,20 @@ const BucketAccessTable = memo(props => {
     return sortedUsers.slice(start, start + rowsPerPage);
   }, [sortedUsers, page, rowsPerPage]);
 
+  const {
+    selectedIds,
+    isAllSelected,
+    isIndeterminate,
+    handleSelectAll,
+    handleSelectRow,
+    clearSelection,
+    getSelectedRows,
+  } = useRowSelection({ rows: paginatedUsers, idField: 'id' });
+
   const { visibleColumns, gridTemplateColumns, dataColumns } = useResponsiveColumns({
     columns: BUCKET_ACCESS_COLUMNS,
     containerWidth: windowWidth,
-    showCheckbox: false,
+    showCheckbox: true,
   });
 
   const paginationProps = useMemo(
@@ -251,6 +263,66 @@ const BucketAccessTable = memo(props => {
     [handleAccessChange],
   );
 
+  const handleBulkEditClick = useCallback(() => {
+    setBulkEditDialogOpen(true);
+  }, []);
+
+  const handleBulkEditConfirm = useCallback(
+    async ({ permission }) => {
+      const selectedUsers = getSelectedRows();
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const user of selectedUsers) {
+        try {
+          const creds = credsByUserId[user.id];
+          if (!creds || creds.length === 0) {
+            if (!permission) continue;
+            const bucketPermissions = buildBucketPermissions(permission, bucket, {});
+            await createS3Credentials({
+              projectId,
+              user_id: user.id,
+              name: `${user.name || user.email} - bucket access`,
+              bucket_permissions: bucketPermissions,
+            }).unwrap();
+          } else {
+            const cred = creds[0];
+            const updatedPerms = buildBucketPermissions(permission, bucket, cred.bucket_permissions);
+            await setBucketPermissions({
+              projectId,
+              access_key_id: cred.access_key_id,
+              bucket_permissions: updatedPerms,
+            }).unwrap();
+          }
+          successCount++;
+        } catch {
+          errorCount++;
+        }
+      }
+
+      if (successCount > 0) {
+        toastSuccess(`Updated access for ${successCount} user${successCount !== 1 ? 's' : ''}`);
+      }
+      if (errorCount > 0) {
+        toastError(`Failed to update ${errorCount} user${errorCount !== 1 ? 's' : ''}`);
+      }
+
+      setBulkEditDialogOpen(false);
+      clearSelection();
+    },
+    [
+      getSelectedRows,
+      credsByUserId,
+      bucket,
+      createS3Credentials,
+      setBucketPermissions,
+      projectId,
+      toastSuccess,
+      toastError,
+      clearSelection,
+    ],
+  );
+
   const styles = bucketAccessTableStyles();
 
   const renderCell = useCallback((column, value, row) => {
@@ -321,6 +393,24 @@ const BucketAccessTable = memo(props => {
   const toolbarControls = useMemo(
     () => (
       <>
+        {selectedIds.length > 0 && (
+          <Box sx={styles.selectionInfo}>
+            <Typography
+              variant="bodySmall"
+              color="text.secondary"
+            >
+              {selectedIds.length} selected
+            </Typography>
+            <Button.BaseBtn
+              variant="elitea"
+              color="secondary"
+              size="small"
+              onClick={handleBulkEditClick}
+            >
+              Edit selected
+            </Button.BaseBtn>
+          </Box>
+        )}
         <Box sx={styles.searchWrapper}>
           <SimpleSearchBar
             searchQuery={searchQuery}
@@ -335,7 +425,7 @@ const BucketAccessTable = memo(props => {
         />
       </>
     ),
-    [searchQuery, styles.searchWrapper],
+    [searchQuery, styles.searchWrapper, styles.selectionInfo, selectedIds.length, handleBulkEditClick],
   );
 
   useEffect(() => {
@@ -376,20 +466,24 @@ const BucketAccessTable = memo(props => {
               sortConfig={sortConfig}
               onSort={handleSort}
               gridTemplateColumns={gridTemplateColumns}
-              showCheckbox={false}
+              showCheckbox={true}
+              onSelectAll={handleSelectAll}
+              isAllSelected={isAllSelected}
+              isIndeterminate={isIndeterminate}
             />
             <GridTableBody>
               {paginatedUsers.map(row => (
                 <GridTableRow
                   key={row.id}
                   row={row}
-                  isSelected={false}
+                  isSelected={selectedIds.includes(row.id)}
                   isHovered={hoveredRowId === row.id}
                   onMouseEnter={() => setHoveredRowId(row.id)}
                   onMouseLeave={() => setHoveredRowId(null)}
                   gridTemplateColumns={gridTemplateColumns}
                   columns={dataColumns}
-                  showCheckbox={false}
+                  showCheckbox={true}
+                  onSelect={handleSelectRow}
                   renderCell={renderCell}
                   actions={renderActions(row)}
                   dataCellSx={styles.dataCell}
@@ -420,6 +514,14 @@ const BucketAccessTable = memo(props => {
         user={editingUser}
         loading={isMutating}
       />
+
+      <BulkEditBucketUsersDialog
+        open={bulkEditDialogOpen}
+        onClose={() => setBulkEditDialogOpen(false)}
+        onConfirm={handleBulkEditConfirm}
+        selectedUsers={getSelectedRows()}
+        loading={isMutating}
+      />
     </Box>
   );
 });
@@ -439,6 +541,11 @@ const bucketAccessTableStyles = () => ({
     justifyContent: 'flex-end',
     gap: '0.6rem',
     padding: '0.75rem 1.5rem',
+  },
+  selectionInfo: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
   },
   searchWrapper: {
     minWidth: '12.5rem',
