@@ -17,6 +17,12 @@ import { Box } from '@mui/system';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import * as ChatHelpers from '@/[fsd]/features/chat/lib/helpers/chat.helpers';
+import { actionBelongsToInvocationSet } from '@/[fsd]/features/chat/lib/helpers/executionHierarchy.helpers.js';
+import {
+  getHitlResumeGroup,
+  getInterruptIdentity,
+  getPendingHitlMessage,
+} from '@/[fsd]/features/chat/lib/helpers/hitl.helpers.js';
 import * as NewConversationHelpers from '@/[fsd]/features/chat/lib/helpers/newConversation.helpers';
 import {
   useChatSkillMention,
@@ -188,9 +194,7 @@ const ChatBox = forwardRef((props, boxRef) => {
 
     return {
       chat_history: history,
-      pendingHitlMessage: [...history]
-        .reverse()
-        .find(item => item.hitlInterrupt || item.hitlInterrupts?.length),
+      pendingHitlMessage: getPendingHitlMessage(history),
     };
   }, [activeConversation?.chat_history]);
 
@@ -1263,7 +1267,7 @@ const ChatBox = forwardRef((props, boxRef) => {
   const pendingDecisionsRef = useRef({ messageId: null, decisions: {} });
 
   const onHitlResume = useCallback(
-    async ({ action, value, toolCallId: providedToolCallId }) => {
+    async ({ action, value, toolCallId: providedToolCallId, interruptId: providedInterruptId }) => {
       const lastMessage = pendingHitlMessage;
       if (!lastMessage) return;
 
@@ -1278,17 +1282,23 @@ const ChatBox = forwardRef((props, boxRef) => {
       // from that sole entry so a single still-pending parallel/fan-out child
       // keeps its tool_call_id-routed resume path instead of falling back to
       // the legacy hitl_action shape (which the SDK can't match to the child).
+      const selectedIdentity =
+        providedInterruptId || (interrupts.length === 1 ? getInterruptIdentity(interrupts[0]) : undefined);
+      const decidedEntry = selectedIdentity
+        ? interrupts.find(entry => getInterruptIdentity(entry) === selectedIdentity)
+        : providedToolCallId
+          ? interrupts.find(entry => entry?.tool_call_id === providedToolCallId)
+          : undefined;
       const toolCallId =
         providedToolCallId ||
+        decidedEntry?.tool_call_id ||
         (interrupts.length === 1 ? interrupts[0]?.tool_call_id || undefined : undefined);
-
-      // The interrupt entry being decided (matched by tool_call_id).
-      const decidedEntry = toolCallId ? interrupts.find(e => e?.tool_call_id === toolCallId) : undefined;
       // Track 2 fan-out child: each paused child carries its OWN thread_id and
       // resumes INDEPENDENTLY — emit immediately on that child's thread while
       // siblings keep running, instead of batching until every card is decided.
       const childThreadId = decidedEntry?.thread_id || decidedEntry?.child_thread_id || '';
       const isFanoutChild = Boolean(childThreadId);
+      const resumeGroup = getHitlResumeGroup(interrupts, decidedEntry);
 
       // Detect a (Track 1) parallel aggregate by the PRESENCE of the
       // hitlInterrupts array (hooks.js sets it only for backend
@@ -1301,12 +1311,43 @@ const ChatBox = forwardRef((props, boxRef) => {
         !isFanoutChild &&
         Array.isArray(lastMessage.hitlInterrupts) &&
         lastMessage.hitlInterrupts.length > 0 &&
-        Boolean(toolCallId);
+        Boolean(selectedIdentity || toolCallId);
 
       // Track 2 independent child resume: emit this child's decision NOW on its
       // own thread; clear ONLY this child's card and leave the parent message
       // streaming so running siblings keep their live boxes + shimmer.
       if (isFanoutChild) {
+        if (pendingDecisionsRef.current.messageId !== lastMessage.id) {
+          pendingDecisionsRef.current = { messageId: lastMessage.id, decisions: {} };
+        }
+        const decisionIdentity = getInterruptIdentity(decidedEntry);
+        pendingDecisionsRef.current.decisions[decisionIdentity] = {
+          ...(decidedEntry?.interrupt_id ? { interrupt_id: decidedEntry.interrupt_id } : {}),
+          thread_id: childThreadId,
+          tool_call_id: toolCallId,
+          action,
+          value: value ?? '',
+        };
+
+        setChatHistory(prevMessages =>
+          prevMessages.map(msg =>
+            msg.id !== lastMessage.id || !Array.isArray(msg.hitlInterrupts)
+              ? msg
+              : {
+                  ...msg,
+                  hitlInterrupts: msg.hitlInterrupts.map(entry =>
+                    getInterruptIdentity(entry) === decisionIdentity ? { ...entry, decided: true } : entry,
+                  ),
+                },
+          ),
+        );
+
+        const resumeIdentities = new Set(resumeGroup.map(getInterruptIdentity));
+        const groupComplete = [...resumeIdentities].every(
+          identity => pendingDecisionsRef.current.decisions[identity],
+        );
+        if (!groupComplete) return;
+
         const childPayload = generateChatContinuePayload({
           conversation_uuid: activeConversation?.uuid,
           projectId,
@@ -1317,14 +1358,12 @@ const ChatBox = forwardRef((props, boxRef) => {
         });
         childPayload.hitl_resume = true;
         childPayload.thread_id = childThreadId;
-        childPayload.hitl_decisions = [
-          {
-            thread_id: childThreadId,
-            tool_call_id: toolCallId,
-            action,
-            value: value ?? '',
-          },
-        ];
+        childPayload.hitl_decisions = [...resumeIdentities].map(
+          identity => pendingDecisionsRef.current.decisions[identity],
+        );
+        resumeIdentities.forEach(identity => {
+          delete pendingDecisionsRef.current.decisions[identity];
+        });
 
         // Remove the resumed child's card in place (do NOT blank the message).
         setChatHistory(prevMessages =>
@@ -1332,7 +1371,9 @@ const ChatBox = forwardRef((props, boxRef) => {
             if (msg.id !== lastMessage.id || !Array.isArray(msg.hitlInterrupts)) {
               return msg;
             }
-            const remaining = msg.hitlInterrupts.filter(e => e?.tool_call_id !== toolCallId);
+            const remaining = msg.hitlInterrupts.filter(
+              entry => !resumeIdentities.has(getInterruptIdentity(entry)),
+            );
             return {
               ...msg,
               hitlInterrupts: remaining,
@@ -1354,7 +1395,9 @@ const ChatBox = forwardRef((props, boxRef) => {
         if (pendingDecisionsRef.current.messageId !== lastMessage.id) {
           pendingDecisionsRef.current = { messageId: lastMessage.id, decisions: {} };
         }
-        pendingDecisionsRef.current.decisions[toolCallId] = {
+        const decisionIdentity = selectedIdentity || getInterruptIdentity(decidedEntry);
+        pendingDecisionsRef.current.decisions[decisionIdentity] = {
+          ...(decidedEntry?.interrupt_id ? { interrupt_id: decidedEntry.interrupt_id } : {}),
           tool_call_id: toolCallId,
           action,
           value: value ?? '',
@@ -1369,14 +1412,16 @@ const ChatBox = forwardRef((props, boxRef) => {
             return {
               ...msg,
               hitlInterrupts: msg.hitlInterrupts.map(entry =>
-                entry.tool_call_id === toolCallId ? { ...entry, decided: true } : entry,
+                getInterruptIdentity(entry) === decisionIdentity ? { ...entry, decided: true } : entry,
               ),
             };
           }),
         );
 
-        const decidedCount = Object.keys(pendingDecisionsRef.current.decisions).length;
-        if (decidedCount < interrupts.length) {
+        const allDecided = interrupts.every(
+          entry => pendingDecisionsRef.current.decisions[getInterruptIdentity(entry)],
+        );
+        if (!allDecided) {
           // Still waiting on sibling card(s); do not emit yet.
           return;
         }
@@ -1407,7 +1452,9 @@ const ChatBox = forwardRef((props, boxRef) => {
       payload.hitl_resume = true;
       if (isParallel) {
         // One resume carrying every child's decision.
-        payload.hitl_decisions = Object.values(pendingDecisionsRef.current.decisions);
+        payload.hitl_decisions = interrupts.map(
+          entry => pendingDecisionsRef.current.decisions[getInterruptIdentity(entry)],
+        );
         pendingDecisionsRef.current = { messageId: null, decisions: {} };
       } else {
         payload.hitl_action = action;
@@ -1457,10 +1504,9 @@ const ChatBox = forwardRef((props, boxRef) => {
           const deferred = !!a.hitlDeferred || !!a.toolMeta?.hitl_deferred;
           if (!terminal || deferred) unreturnedInvocationIds.add(callId);
         });
-        const preservedToolActions = prevToolActions.filter(a => {
-          const callId = a?.parent_agent_call_id || a?.toolMeta?.parent_agent_call_id;
-          return !(callId && unreturnedInvocationIds.has(callId));
-        });
+        const preservedToolActions = prevToolActions.filter(
+          candidateAction => !actionBelongsToInvocationSet(candidateAction, unreturnedInvocationIds),
+        );
         // Clear the interrupt state in place on the existing assistant
         // message. We intentionally do NOT clone it into a content-bearing
         // "archived" bubble — that left a stale "...requires approval..."

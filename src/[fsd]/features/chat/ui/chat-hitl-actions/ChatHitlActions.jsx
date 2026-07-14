@@ -93,7 +93,7 @@ const SensitiveToolParams = memo(props => {
 SensitiveToolParams.displayName = 'SensitiveToolParams';
 
 const ChatHitlActions = memo(props => {
-  const { hitlInterrupt, onHitlResume, disabled, toolCallId } = props;
+  const { hitlInterrupt, onHitlResume, disabled, toolCallId, interruptId } = props;
   const { available_actions = [], guardrail_type, message } = hitlInterrupt || {};
   // Parallel sub-agent fan-out surfaces multiple sensitive-tool pauses at once.
   const isSensitiveTool =
@@ -101,27 +101,27 @@ const ChatHitlActions = memo(props => {
   const styles = getStyles();
 
   const handleApprove = useCallback(() => {
-    onHitlResume?.({ action: 'approve', toolCallId });
-  }, [onHitlResume, toolCallId]);
+    onHitlResume?.({ action: 'approve', toolCallId, interruptId });
+  }, [interruptId, onHitlResume, toolCallId]);
 
   const handleReject = useCallback(() => {
-    onHitlResume?.({ action: 'reject', toolCallId });
-  }, [onHitlResume, toolCallId]);
+    onHitlResume?.({ action: 'reject', toolCallId, interruptId });
+  }, [interruptId, onHitlResume, toolCallId]);
 
   const handleBlockWithComment = useCallback(
     comment => {
-      onHitlResume?.({ action: BLOCK_WITH_COMMENT_ACTION, value: comment, toolCallId });
+      onHitlResume?.({ action: BLOCK_WITH_COMMENT_ACTION, value: comment, toolCallId, interruptId });
     },
-    [onHitlResume, toolCallId],
+    [interruptId, onHitlResume, toolCallId],
   );
 
   const canBlockWithComment = available_actions.includes(BLOCK_WITH_COMMENT_ACTION);
 
   const handleEditSubmit = useCallback(
     value => {
-      onHitlResume?.({ action: 'edit', value, toolCallId });
+      onHitlResume?.({ action: 'edit', value, toolCallId, interruptId });
     },
-    [onHitlResume, toolCallId],
+    [interruptId, onHitlResume, toolCallId],
   );
 
   if (!hitlInterrupt) return null;

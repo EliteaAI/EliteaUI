@@ -4,6 +4,12 @@ import { Box, Typography } from '@mui/material';
 
 import { ChatHelpers } from '@/[fsd]/features/chat/lib/helpers';
 import {
+  collapseDelegationWrapperReplays,
+  getActionOwnerPath,
+  getSubAgentInstanceKey,
+  getSubAgentName,
+} from '@/[fsd]/features/chat/lib/helpers/executionHierarchy.helpers.js';
+import {
   buildPcidAnchorMap,
   computeBreadcrumbs,
   inflightToolChipId,
@@ -11,6 +17,7 @@ import {
   partitionActionsIntoBlocks,
   resolveExtraSubAgentKeys,
   resolveSubAgentLiveness,
+  selectRichestAgentPath,
 } from '@/[fsd]/features/chat/lib/helpers/subAgentGrouping.helpers.js';
 import { ErrorTrace } from '@/[fsd]/features/chat/ui/error-trace';
 import { SubAgentAccordion } from '@/[fsd]/features/chat/ui/sub-agent-section';
@@ -43,6 +50,7 @@ const StreamingThinkBlocks = memo(props => {
     tools,
     renderGroupChips,
     badgesContainerSx,
+    streaming = true,
   } = props;
 
   // Sub-agents already represented by a revealed block render their in-flight
@@ -79,15 +87,20 @@ const StreamingThinkBlocks = memo(props => {
     pcidToAnchorKey,
   });
   // A child that hard-failed before producing any revealed chip still needs an
-  // accordion to host its error trace (#4993). subAgentErrors is keyed by display
-  // NAME; only add a name-fallback slot when no invocation of that name already
-  // renders (otherwise the error shows inside that invocation's accordion).
+  // accordion to host its error trace (#4993). New events are keyed by invocation;
+  // legacy persisted state may still be keyed by display name.
   if (subAgentErrors) {
     const coveredNames = new Set(renderedSubNames);
     streamingSubGroupsFull.forEach(entry => entry?.name && coveredNames.add(entry.name));
-    Object.keys(subAgentErrors).forEach(name => {
-      if (!coveredNames.has(name) && !renderedSubKeys.has(name) && !extraSub.includes(name)) {
-        extraSub.push(name);
+    Object.entries(subAgentErrors).forEach(([errorKey, error]) => {
+      const name = error?.name || errorKey;
+      const isInvocationError = isInvocationId(errorKey) || Boolean(error?.name && errorKey !== error.name);
+      if (
+        !renderedSubKeys.has(errorKey) &&
+        !extraSub.includes(errorKey) &&
+        (isInvocationError || !coveredNames.has(name))
+      ) {
+        extraSub.push(errorKey);
       }
     });
   }
@@ -105,16 +118,13 @@ const StreamingThinkBlocks = memo(props => {
     // is a name fallback (errored child with no block) subEntry is absent and the
     // key IS the display name.
     const subEntry = streamingSubGroupsFull.get(key);
-    // Defense (Bug 2): a key with no block entry is only legitimate as a
-    // subAgentErrors NAME fallback (a real display name). A raw invocation id
-    // here means a folded resume round leaked the union — never surface it as a
-    // `call_<id>` accordion.
-    if (!subEntry && isInvocationId(key)) return null;
-    const displayName = subEntry?.name || key;
+    // Defense (Bug 2): a raw invocation id without either a block or an
+    // invocation-scoped error means a folded resume round leaked the union.
+    const keyedError = subAgentErrors?.[key];
+    if (!subEntry && isInvocationId(key) && !keyedError) return null;
+    const displayName = subEntry?.name || keyedError?.name || key;
     const ordinal = subEntry?.ordinal || 0;
-    // #5778: a depth-3 block (agentPath.length >= 2) carries a breadcrumbLabel
-    // (e.g. "container (2) ▸ leaf"); depth-1 blocks have none and fall back to
-    // today's single-level ordinal label — zero behavior change for depth-1.
+    // #5778: all nested blocks use the same path-derived label contract.
     const label = subEntry?.breadcrumbLabel || (ordinal ? `${displayName} (${ordinal})` : displayName);
     const groups = subEntry?.groups || [];
     // One invocation can span several raw pcids: a sequential nested-HITL pause
@@ -125,8 +135,8 @@ const StreamingThinkBlocks = memo(props => {
     const aliasKeys = subEntry?.aliasKeys?.length ? subEntry.aliasKeys : [key];
     const lastKey = aliasKeys[aliasKeys.length - 1];
     const inflight = subAgentInflight.get(lastKey);
-    // Errors are tracked by display name upstream, so look them up by name.
-    const childError = subAgentErrors?.[displayName];
+    // Prefer invocation identity; retain the name lookup for legacy state.
+    const childError = keyedError || subAgentErrors?.[displayName];
     // A sequential HITL pause surfaces as the wrapper ERRORING (status=error, not
     // deferred), which subAgentDone counts as "returned". But the invocation is
     // NOT finished — it is paused awaiting approval and will resume with a new
@@ -154,7 +164,9 @@ const StreamingThinkBlocks = memo(props => {
       >
         {groups.length > 0 && (
           <Box sx={badgesContainerSx}>
-            {groups.flatMap((group, i) => renderGroupChips(group, `${key}-${i}`, true, inflight, true))}
+            {groups.flatMap((group, i) =>
+              renderGroupChips(group, `${key}-${i}`, streaming, inflight, streaming),
+            )}
           </Box>
         )}
         {inflight ? (
@@ -191,7 +203,7 @@ const StreamingThinkBlocks = memo(props => {
                 key={`coord-${bi}`}
                 sx={badgesContainerSx}
               >
-                {block.groups.flatMap((group, i) => renderGroupChips(group, `coord-${bi}-${i}`, true))}
+                {block.groups.flatMap((group, i) => renderGroupChips(group, `coord-${bi}-${i}`, streaming))}
               </Box>
             )
           : renderSub(block.instanceKey),
@@ -220,8 +232,17 @@ const ApplicationThinkView = memo(props => {
   const [expanded, setExpanded] = useState(defaultExpanded);
   const [displayedActionIndex, setDisplayedActionIndex] = useState(0);
   const displayTimerId = useRef(-1);
+  const previousActionsLength = useRef(actions.length);
+  const emptySignalMap = useMemo(() => new Map(), []);
 
   const styles = applicationThinkViewStyles();
+
+  useEffect(() => {
+    // A live tree stays expanded when it becomes persisted, avoiding a mode
+    // switch remount/collapse. Messages loaded directly from history keep the
+    // caller's default expansion state.
+    if (isStreaming) setExpanded(true);
+  }, [isStreaming]);
 
   const finishedActions = useMemo(
     () => actions.slice(0, displayedActionIndex),
@@ -252,11 +273,7 @@ const ApplicationThinkView = memo(props => {
       const groups = [];
       const swarmChildren = []; // Separate list for swarm child actions
       let currentGroup = { reasoning: null, tools: [] };
-      // Track ALL seen LLM node names and their actions to merge duplicates
-      // (pipeline may call same node multiple times with tool calls in between)
-      const seenLlmActions = new Map(); // normalizedName -> action reference in groups
-
-      actionsList.forEach(action => {
+      collapseDelegationWrapperReplays(actionsList).forEach(action => {
         // Extract SwarmChild actions to render separately with full content
         if (isSwarmChildAction(action)) {
           swarmChildren.push(action);
@@ -267,7 +284,8 @@ const ApplicationThinkView = memo(props => {
           // Named LLM actions (Start, Chat) with actual content or thinking should still show their chips
           const hasContent =
             (action.content && action.content.trim()) || (action.thinking && action.thinking.trim());
-          if (!hasContent && action.type === TOOL_ACTION_TYPES.Llm) {
+          const belongsToSubAgent = Boolean(getSubAgentName(action));
+          if (!hasContent && action.type === TOOL_ACTION_TYPES.Llm && !belongsToSubAgent) {
             return; // Skip empty LLM actions (transition steps)
           }
           // Skip LLM actions without a proper node name (transition actions before name is set)
@@ -275,44 +293,15 @@ const ApplicationThinkView = memo(props => {
           // Also skip actions with default "Thinking step" name - these are transition markers
           if (
             action.type === TOOL_ACTION_TYPES.Llm &&
-            (!action.name || action.name === TOOL_ACTION_NAMES.Llm)
+            (!action.name || action.name === TOOL_ACTION_NAMES.Llm) &&
+            !belongsToSubAgent
           ) {
             return; // Skip nameless/default transition actions
-          }
-          // Merge duplicate LLM actions with same name (pipeline calling same node multiple times)
-          // Normalize name for comparison (trim whitespace, case-insensitive)
-          const normalizedName = action.name?.trim().toLowerCase();
-          if (action.type === TOOL_ACTION_TYPES.Llm && seenLlmActions.has(normalizedName)) {
-            const existingAction = seenLlmActions.get(normalizedName);
-            // DON'T merge if existing action is already complete - it's from a previous execution
-            // (e.g., parent agent completed, now sub-agent with same node name is running)
-            const existingIsComplete =
-              existingAction.status === ToolActionStatus.complete && existingAction.ended_at;
-            if (!existingIsComplete) {
-              // Merge content into existing action (same execution, continuous updates)
-              if (action.content && action.content.trim()) {
-                const separator = existingAction.content ? '\n\n---\n\n' : '';
-                existingAction.content = (existingAction.content || '') + separator + action.content;
-              }
-              if (action.thinking && action.thinking.trim()) {
-                const separator = existingAction.thinking ? '\n\n---\n\n' : '';
-                existingAction.thinking = (existingAction.thinking || '') + separator + action.thinking;
-              }
-              // Update end timestamp to latest
-              if (action.ended_at) {
-                existingAction.ended_at = action.ended_at;
-              }
-              return; // Don't create new chip, content merged into existing
-            }
-            // If existing is complete, fall through to create new action (different execution)
           }
           if (currentGroup.tools.length > 0 || currentGroup.reasoning) {
             groups.push(currentGroup);
           }
           currentGroup = { reasoning: action, tools: [] };
-          if (action.type === TOOL_ACTION_TYPES.Llm && normalizedName) {
-            seenLlmActions.set(normalizedName, action);
-          }
         } else {
           currentGroup.tools.push(action);
         }
@@ -356,15 +345,7 @@ const ApplicationThinkView = memo(props => {
   // as a flat, node-labeled chip in BOTH streaming and reload, with no accordion.
   // (Previously a bare original_name/checkpoint_ns fallback misread pipeline nodes
   // as sub-agents during streaming only, diverging from the flat reload view.)
-  const deriveSubAgentName = useCallback(item => {
-    if (!item) return '';
-    const parent = item.parent_agent_name || item.toolMeta?.parent_agent_name;
-    if (parent) return parent;
-    const type = item.toolMeta?.toolkit_type;
-    const isDelegationWrapper = type === 'application' || type === 'pipeline' || !!item.toolMeta?.agent_type;
-    if (isDelegationWrapper && item.original_name) return item.original_name;
-    return '';
-  }, []);
+  const deriveSubAgentName = useCallback(item => getSubAgentName(item), []);
 
   // The full ancestry chain for depth-3 nested sub-agents (#5778 Phase 6):
   // an ORDERED [{name, call_id}] array, one entry per ancestor hop from the
@@ -373,7 +354,17 @@ const ApplicationThinkView = memo(props => {
   // deriveSubAgentName's two-location fallback (bare field vs. toolMeta).
   const deriveSubAgentPath = useCallback(item => {
     if (!item) return [];
-    return item.parent_agent_path || item.toolMeta?.parent_agent_path || [];
+    return getActionOwnerPath(item);
+  }, []);
+
+  // A same-name parallel root carries a distinct sibling ordinal. It is display
+  // ordering metadata, not durable identity, but it is the one authoritative
+  // signal that a freshly observed call must not be folded into an older paused
+  // sibling. Exact call-id matches still win before this fallback, so an existing
+  // child remains stable even if a later resume batch renumbers its ordinal.
+  const deriveRootSiblingOrdinal = useCallback(item => {
+    const root = getActionOwnerPath(item)[0];
+    return Number.isInteger(root?.sibling_ordinal) && root.sibling_ordinal > 0 ? root.sibling_ordinal : 0;
   }, []);
 
   // A unique key per sub-agent INVOCATION (not merely per name). Two sequential
@@ -384,15 +375,9 @@ const ApplicationThinkView = memo(props => {
   // inner chips) as parent_agent_call_id; key off it so each invocation owns its
   // own accordion. Falls back to the display name when the id is absent (older
   // backend) — i.e. the prior merged behavior, so there is no regression.
-  const deriveSubAgentInstanceKey = useCallback(
-    item => {
-      if (!item) return '';
-      const callId = item.parent_agent_call_id || item.toolMeta?.parent_agent_call_id;
-      if (callId) return callId;
-      return deriveSubAgentName(item);
-    },
-    [deriveSubAgentName],
-  );
+  const deriveSubAgentInstanceKey = useCallback(item => {
+    return getSubAgentInstanceKey(item);
+  }, []);
 
   // Partition the raw ACTIONS into an ORDERED list of blocks that preserves the
   // chronological turn order: a coordinator (orchestrator) run, then the
@@ -476,13 +461,12 @@ const ApplicationThinkView = memo(props => {
       const blocks = partitionActionsIntoBlocks(actionsList, {
         deriveName: deriveSubAgentName,
         deriveInstanceKey: deriveSubAgentInstanceKey,
+        deriveSiblingOrdinal: deriveRootSiblingOrdinal,
         classifyWrapper,
       });
       // Number same-name invocations "(1)", "(2)", … so otherwise-identical
       // accordions are distinguishable; single invocations keep a bare name.
-      // This single-level scheme is UNCHANGED by #5778 — it stays the source of
-      // truth for depth-1 blocks (agentPath.length <= 1), per the coexistence
-      // contract: zero behavior change for today's parent->child runs.
+      // Retain the legacy ordinal as a fallback for old events without a path.
       const nameTotals = new Map();
       blocks.forEach(b => {
         if (b.kind === 'sub') nameTotals.set(b.name, (nameTotals.get(b.name) || 0) + 1);
@@ -490,8 +474,7 @@ const ApplicationThinkView = memo(props => {
       const nameSeen = new Map();
       // Each block's ancestry chain, derived from its REPRESENTATIVE action (the
       // first action in the block — same source the name/agentType already use)
-      // via deriveSubAgentPath. #5778 depth-3 breadcrumb input; depth-1 blocks
-      // carry a 1-element (or empty) path and are skipped by computeBreadcrumbs.
+      // via deriveSubAgentPath. One-hop and deeper paths use the same renderer.
       const decorated = blocks.map(block => {
         if (block.kind === 'coord') return { kind: 'coord', groups: groupActions(block.actions).groups };
         const seq = (nameSeen.get(block.name) || 0) + 1;
@@ -511,13 +494,16 @@ const ApplicationThinkView = memo(props => {
           name: block.name,
           ordinal,
           agentType: deriveSubAgentType(block.name, block.actions),
-          agentPath: deriveSubAgentPath(block.actions[0]),
+          // Prefer the first action in the block that actually carries a
+          // non-empty ancestry chain, not blindly actions[0] (#5778). A block's
+          // representative first action can arrive before the backend has
+          // populated parent_agent_path (streaming timing), leaving it empty and
+          // dropping the breadcrumb even though later actions carry the chain.
+          agentPath: selectRichestAgentPath(block.actions.map(deriveSubAgentPath)),
           groups: groupActions(block.actions).groups,
         };
       });
-      // Per-tier breadcrumb for depth-3 blocks only (#5778). computeBreadcrumbs
-      // ignores agentPath.length <= 1 entries, so depth-1 blocks are untouched —
-      // they simply get no breadcrumbLabel and keep rendering via `ordinal` alone.
+      // Compute one path-derived label for both one-hop and deeper blocks.
       const breadcrumbs = computeBreadcrumbs(
         decorated
           .filter(b => b.kind === 'sub')
@@ -530,6 +516,7 @@ const ApplicationThinkView = memo(props => {
     [
       deriveSubAgentName,
       deriveSubAgentInstanceKey,
+      deriveRootSiblingOrdinal,
       classifyWrapper,
       deriveSubAgentType,
       deriveSubAgentPath,
@@ -559,8 +546,7 @@ const ApplicationThinkView = memo(props => {
           agentType: block.agentType,
           name: block.name,
           ordinal: block.ordinal,
-          // #5778: carried through so the streaming label (renderSub below) can
-          // prefer the depth-3 breadcrumb over the single-level ordinal label.
+          // Carried through so streaming and persisted blocks share a label.
           breadcrumbLabel: block.breadcrumbLabel,
           aliasKeys: block.aliasKeys,
           pausedForResume: block.pausedForResume,
@@ -585,7 +571,6 @@ const ApplicationThinkView = memo(props => {
         a.status !== ToolActionStatus.cancelled;
       const hasContent = (a.content && a.content.trim()) || (a.thinking && a.thinking.trim());
       if (!active || !hasContent) return;
-      if (!a.name || a.name === TOOL_ACTION_NAMES.Llm) return;
       map.set(key, a); // latest active action per sub-agent invocation wins
     });
     return map;
@@ -654,7 +639,12 @@ const ApplicationThinkView = memo(props => {
         // without this the accordion never shimmers/spins during the run. In parallel
         // mode the child's own inner actions already light hasNonTerminal, so this is
         // harmless there (#4993).
-        else hasNonTerminal.set(key, true);
+        else {
+          // A later replay/start supersedes an older paused/error wrapper for
+          // this invocation. Let the latest lifecycle drive the shimmer.
+          wrapperTerminal.delete(key);
+          hasNonTerminal.set(key, true);
+        }
       } else if (!terminal) {
         hasNonTerminal.set(key, true);
       }
@@ -680,6 +670,20 @@ const ApplicationThinkView = memo(props => {
     () => thinkStepStatus[displayedActionIndex]?.status,
     [thinkStepStatus, displayedActionIndex],
   );
+
+  // Resume pruning can shrink the action list while the reveal cursor still
+  // points beyond its end. Clamp only on shrink so the deliberate index ===
+  // length terminal state remains valid during normal streaming.
+  useEffect(() => {
+    if (actions.length < previousActionsLength.current) {
+      if (displayTimerId.current !== -1) {
+        clearTimeout(displayTimerId.current);
+        displayTimerId.current = -1;
+      }
+      setDisplayedActionIndex(index => Math.min(index, Math.max(0, actions.length - 1)));
+    }
+    previousActionsLength.current = actions.length;
+  }, [actions.length]);
 
   const thoughtDuration = useMemo(() => {
     // Wall-clock span of the whole turn = earliest start → latest end across ALL
@@ -767,13 +771,13 @@ const ApplicationThinkView = memo(props => {
     // Find finished LLM actions with the same name that are NOT from a completed previous execution
     // A completed previous execution has status='complete' and ended_at set BEFORE current action started
     const currentStartTime = currentAction.created_at || currentAction.timestamp;
-    const currentKey = deriveSubAgentName(currentAction);
+    const currentKey = deriveSubAgentInstanceKey(currentAction);
     const sameNameFinished = finishedActions.filter(a => {
       if (a.type !== TOOL_ACTION_TYPES.Llm) return false;
       if (a.name?.trim().toLowerCase() !== currentName) return false;
       // Only merge within the SAME sub-agent — two children sharing a node name
       // must not pool their content into one box (issue #4993).
-      if (deriveSubAgentName(a) !== currentKey) return false;
+      if (deriveSubAgentInstanceKey(a) !== currentKey) return false;
       // Skip if this finished action is from a different (earlier completed) execution
       // i.e., it completed before the current action started
       if (a.status === ToolActionStatus.complete && a.ended_at && currentStartTime) {
@@ -800,7 +804,7 @@ const ApplicationThinkView = memo(props => {
       ...currentAction,
       previousExecutions,
     };
-  }, [actions, displayedActionIndex, finishedActions, deriveSubAgentName]);
+  }, [actions, displayedActionIndex, finishedActions, deriveSubAgentInstanceKey]);
 
   // Render the chips for one turn-group. Streaming keeps the "skip reasoning chip
   // when it's the same node as the in-flight action" behavior and shows tool
@@ -863,7 +867,8 @@ const ApplicationThinkView = memo(props => {
     displayedActionIndex >= finishedActions.length &&
     !(
       mergedCurrentAction.type === TOOL_ACTION_TYPES.Llm &&
-      (!mergedCurrentAction.name || mergedCurrentAction.name === TOOL_ACTION_NAMES.Llm)
+      (!mergedCurrentAction.name || mergedCurrentAction.name === TOOL_ACTION_NAMES.Llm) &&
+      !deriveSubAgentName(mergedCurrentAction)
     );
   const currentActionKey = showCurrentAction ? deriveSubAgentInstanceKey(mergedCurrentAction) : '';
 
@@ -886,36 +891,21 @@ const ApplicationThinkView = memo(props => {
     />
   ) : null;
 
-  return isStreaming ? (
-    <Box sx={styles.streamingContainer}>
-      {/* SwarmChild actions are NOT rendered here during streaming.
-          They will be rendered as separate accordions in ApplicationAnswer
-          after streaming completes (!isProcessing). */}
-      <StreamingThinkBlocks
-        blocks={streamingBlocks}
-        streamingSubGroupsFull={streamingSubGroupsFull}
-        subAgentInflight={subAgentInflight}
-        subAgentRunning={subAgentRunning}
-        subAgentDone={subAgentDone}
-        currentActionKey={currentActionKey}
-        currentActionRunning={currentActionIsLive}
-        currentActionBox={currentActionBox}
-        subAgentErrors={subAgentErrors}
-        messageId={messageId}
-        onCopy={onCopy}
-        tools={tools}
-        renderGroupChips={renderGroupChips}
-        badgesContainerSx={styles.badgesContainer}
-      />
-    </Box>
-  ) : (
+  return (
     <StyledAccordion
       showMode={AccordionConstants.AccordionShowMode.LeftMode}
       defaultExpanded={defaultExpanded}
-      expanded={expanded}
-      onChange={onExpanded}
-      sx={styles.accordion}
-      slotProps={{ transition: { unmountOnExit: true } }}
+      expanded={isStreaming || expanded}
+      onChange={isStreaming ? undefined : onExpanded}
+      sx={[
+        styles.accordion,
+        isStreaming && {
+          borderBottom: 'none',
+          paddingBottom: '0 !important',
+          '& .MuiAccordion-heading': { display: 'none' },
+        },
+      ]}
+      slotProps={{ transition: { unmountOnExit: !isStreaming } }}
     >
       <StyledAccordionSummary
         expandIcon={<ArrowRightIcon style={styles.expandIcon} />}
@@ -932,50 +922,25 @@ const ApplicationThinkView = memo(props => {
           </Typography>
         </Box>
       </StyledAccordionSummary>
-      <StyledAccordionDetails sx={styles.accordionDetails}>
-        {/* SwarmChild actions are NOT rendered here in history view.
-            They are rendered as separate accordions in ApplicationAnswer. */}
-        {historyBlocks.map((block, bi) =>
-          block.kind === 'coord' ? (
-            block.groups.length > 0 && (
-              <Box
-                key={`coord-${bi}`}
-                sx={styles.badgesContainer}
-              >
-                {block.groups.flatMap((group, i) => renderGroupChips(group, `coord-${bi}-${i}`, false))}
-              </Box>
-            )
-          ) : (
-            <SubAgentAccordion
-              key={`sa-${block.instanceKey}`}
-              name={block.name}
-              // #5778: a depth-3 block prefers its breadcrumbLabel; depth-1
-              // blocks have none and fall back to today's ordinal ternary
-              // unchanged — zero behavior change for depth-1.
-              label={
-                block.breadcrumbLabel || (block.ordinal ? `${block.name} (${block.ordinal})` : undefined)
-              }
-              tools={tools}
-              agentType={block.agentType}
-              defaultExpanded={!!subAgentErrors?.[block.name]}
-            >
-              <Box sx={styles.badgesContainer}>
-                {block.groups.flatMap((group, i) =>
-                  renderGroupChips(group, `${block.instanceKey}-${i}`, false),
-                )}
-              </Box>
-              {subAgentErrors?.[block.name] && (
-                <ErrorTrace
-                  compact
-                  headline={subAgentErrors[block.name].headline || subAgentErrors[block.name].exception}
-                  trace={subAgentErrors[block.name].exception}
-                  messageId={messageId}
-                  onCopy={onCopy}
-                />
-              )}
-            </SubAgentAccordion>
-          ),
-        )}
+      <StyledAccordionDetails sx={isStreaming ? styles.streamingContainer : styles.accordionDetails}>
+        {/* One component tree renders both live and persisted hierarchy. */}
+        <StreamingThinkBlocks
+          blocks={isStreaming ? streamingBlocks : historyBlocks}
+          streamingSubGroupsFull={streamingSubGroupsFull}
+          subAgentInflight={isStreaming ? subAgentInflight : emptySignalMap}
+          subAgentRunning={isStreaming ? subAgentRunning : emptySignalMap}
+          subAgentDone={isStreaming ? subAgentDone : emptySignalMap}
+          currentActionKey={isStreaming ? currentActionKey : ''}
+          currentActionRunning={isStreaming && currentActionIsLive}
+          currentActionBox={isStreaming ? currentActionBox : null}
+          subAgentErrors={subAgentErrors}
+          messageId={messageId}
+          onCopy={onCopy}
+          tools={tools}
+          renderGroupChips={renderGroupChips}
+          badgesContainerSx={styles.badgesContainer}
+          streaming={isStreaming}
+        />
       </StyledAccordionDetails>
     </StyledAccordion>
   );

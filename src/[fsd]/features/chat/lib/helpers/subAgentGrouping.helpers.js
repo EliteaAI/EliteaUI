@@ -35,13 +35,19 @@
  * @param {Object} opts
  * @param {(action:any)=>string} opts.deriveName         sub-agent display name ('' = coordinator)
  * @param {(action:any)=>string} opts.deriveInstanceKey  per-invocation key (pcid, falls back to name)
+ * @param {(action:any)=>number} [opts.deriveSiblingOrdinal]
+ *        positive root-sibling ordinal when the backend supplied one; used only
+ *        to prevent a paused sibling from absorbing a distinct parallel sibling
  * @param {(action:any, name:string)=>('paused'|'active'|null)} opts.classifyWrapper
  *        'paused'  → this action is the invocation wrapper, errored & awaiting a sequential HITL resume
  *        'active'  → this action is the wrapper in any other state (processing / completed / deferred)
  *        null      → not the wrapper; leave the block's pause state unchanged
  * @returns {Array} ordered blocks: {kind:'coord', actions} | {kind:'sub', instanceKey, name, actions, pausedForResume}
  */
-export function partitionActionsIntoBlocks(actionsList, { deriveName, deriveInstanceKey, classifyWrapper }) {
+export function partitionActionsIntoBlocks(
+  actionsList,
+  { deriveName, deriveInstanceKey, deriveSiblingOrdinal, classifyWrapper },
+) {
   const blocks = [];
   const subBlockByKey = new Map(); // instanceKey (pcid) -> block
   const openBlockByName = new Map(); // name -> most-recent block for that name
@@ -61,6 +67,8 @@ export function partitionActionsIntoBlocks(actionsList, { deriveName, deriveInst
       return;
     }
     const instanceKey = deriveInstanceKey(action);
+    const siblingOrdinal = deriveSiblingOrdinal?.(action) || 0;
+    const phase = classifyWrapper(action, name);
     flushCoord();
 
     // (1) exact invocation (pcid) match.
@@ -72,7 +80,9 @@ export function partitionActionsIntoBlocks(actionsList, { deriveName, deriveInst
     //     paused-on-error), so they are never folded in here.
     if (!block) {
       const open = openBlockByName.get(name);
-      if (open && open.pausedForResume) {
+      const isKnownDistinctSibling =
+        siblingOrdinal > 0 && open?.siblingOrdinal > 0 && siblingOrdinal !== open.siblingOrdinal;
+      if (open && open.pausedForResume && !isKnownDistinctSibling) {
         block = open;
         subBlockByKey.set(instanceKey, block); // alias this fresh pcid onto the block
         // Record the folded resume-round pcid so the live streaming view can map
@@ -91,6 +101,7 @@ export function partitionActionsIntoBlocks(actionsList, { deriveName, deriveInst
         name,
         actions: [action],
         pausedForResume: false,
+        siblingOrdinal,
         aliasKeys: [instanceKey],
       };
       subBlockByKey.set(instanceKey, block);
@@ -99,7 +110,6 @@ export function partitionActionsIntoBlocks(actionsList, { deriveName, deriveInst
     }
 
     // (3) update the block's resume-pause state from the wrapper's latest state.
-    const phase = classifyWrapper(action, name);
     if (phase === 'paused') block.pausedForResume = true;
     else if (phase === 'active') block.pausedForResume = false;
   });
@@ -121,7 +131,7 @@ export function partitionActionsIntoBlocks(actionsList, { deriveName, deriveInst
 // (one accordion per round) or — once the names collapse — snaps the two
 // invocations into one: the flicker/collapse the user sees "at the very end".
 //
-// This pass rewrites each reload action's parent_agent_call_id to its completion
+// This pass returns clones whose parent_agent_call_id is rewritten to the completion
 // epoch's ANCHOR — the FIRST pcid seen in that epoch — which is exactly the key
 // the live stream used, so live and reload agree (no remount, no flicker) and
 // the two invocations stay two accordions.
@@ -134,17 +144,17 @@ export function partitionActionsIntoBlocks(actionsList, { deriveName, deriveInst
 // epoch-collapse can never merge genuine parallel siblings. (Parallel siblings
 // with DIFFERENT names are already separated by name.)
 //
-// @param {Array} toolActions  the rebuilt, chronological reload actions (mutated in place)
+// @param {Array} toolActions  the rebuilt, chronological reload actions
 // @param {Object} opts
 // @param {(a)=>string} opts.deriveName            sub-agent name ('' = coordinator, skipped)
 // @param {(a)=>string} opts.deriveRawKey          raw per-round pcid ('' if none)
 // @param {(a,name)=>boolean} opts.isWrapperCompletion  bare wrapper carrying a real result
-// @returns {Array} the same toolActions, with parent_agent_call_id normalised
+// @returns {Array} cloned actions with parent_agent_call_id normalised
 export function collapseSubAgentInvocationKeys(
   toolActions,
   { deriveName, deriveRawKey, isWrapperCompletion },
 ) {
-  const actions = toolActions || [];
+  const actions = (toolActions || []).map(action => ({ ...action }));
 
   // Pass 0 — flag per-name CONCURRENCY: a pcid that reappears after a different
   // pcid of the same name can only be two siblings streaming at once (parallel).
@@ -341,7 +351,7 @@ export function inflightToolChipId(refAction, toolType) {
 // the root's first child down to the immediate parent. A depth-3 block's own
 // tier (its immediate parent) is only the LAST hop — the container tier(s)
 // above it also need their own same-name disambiguation, e.g. two parallel
-// "container" instances must render "container (1) ▸ leaf" / "container (2) ▸
+// "container" instances must render "container ▸ leaf" / "container (2) ▸
 // leaf" even though each block itself is a lone "leaf" invocation.
 //
 // The rule, mirroring today's block ordinal but PER TIER:
@@ -352,85 +362,82 @@ export function inflightToolChipId(refAction, toolType) {
 //     collapseSubAgentInvocationKeys above, without reusing those functions —
 //     the fold/epoch machinery there solves a different problem: HITL-resume
 //     replay collapsing, not ancestry-tier disambiguation).
-//   - Ordinals are assigned by FIRST-SEEN order among sibling call_ids sharing
-//     the same (parentCallId, tierName) scope; a callId seen again later
-//     reuses its first-assigned ordinal.
-//   - The "(n)" suffix only shows when a scope has 2+ DISTINCT call_ids overall
-//     (mirrors the existing single-level ">1" guard, applied per tier) — so
-//     this must be a two-pass computation: pass 1 walks every block's full
-//     agentPath to learn every scope's distinct-callId count, pass 2 assigns
-//     the per-tier ordinal/guard using the now-complete counts.
+//   - Backend sibling_ordinal is authoritative. Older events fall back to a
+//     lexical call-id order within (parentCallId, tierName), which is stable
+//     across event arrival order and reload.
+//   - Ordinal one stays unsuffixed; later siblings render "(2)", "(3)", etc.
 //   - Root sentinel: tier 0's "parent" is a fixed constant (there is no real
 //     parent call_id above the root's first child).
 //
-// Coexistence (#5778 contract): this function is only meaningful for blocks
-// whose agentPath has 2+ tiers. The caller (ApplicationThinkView) must not
-// invoke it for agentPath.length <= 1 — those blocks keep today's untouched
-// single-level ordinal/no-breadcrumb path. Blocks with agentPath.length <= 1
-// simply don't appear in the returned map.
+// The same computation covers both one-hop and multi-hop paths so live and
+// persisted views use one label contract.
 
 /** Fixed parent-scope key for tier 0 (no real ancestor call_id above the root). */
 const ROOT_SCOPE = '__root__';
 
 /**
- * Compute a breadcrumb label (e.g. "container (2) ▸ leaf") for every block whose
- * ancestry chain (`agentPath`) has 2+ tiers. Depth-1 blocks (agentPath.length <= 1)
- * are skipped entirely — they keep today's flat single-level ordinal in the caller.
+ * Compute a breadcrumb label (e.g. "container (2) ▸ leaf") for every block with
+ * a non-empty ancestry chain.
  *
  * @param {Array<{instanceKey: string, agentPath: Array<{name: string, call_id: (string|null)}>}>} entries
  *        ordered blocks, each with its resolved ancestry chain (root's first child
  *        first, immediate parent last)
- * @returns {Map<string, string>} instanceKey -> breadcrumbLabel, only for entries
- *          with agentPath.length >= 2
+ * @param {Array<{instanceKey: string, agentPath: Array<{name: string, call_id: (string|null)}>}>} [contextEntries]
+ *        non-rendered paths from the same response. They keep root numbering stable
+ *        when a later HITL batch contains only one still-paused sibling.
+ * @returns {Map<string, string>} instanceKey -> breadcrumbLabel
  */
-export function computeBreadcrumbs(entries) {
+export function computeBreadcrumbs(entries, contextEntries = []) {
   const result = new Map();
+  const numberingEntries = [...(entries || []), ...(contextEntries || [])];
 
-  // Pass 1 — learn every tier scope's distinct call_ids (needed for the ">1"
-  // guard, which can only be answered once ALL blocks have been seen — a tier
-  // that looks like a lone instance early may turn out to have a sibling later).
-  const distinctCallIdsByScope = new Map(); // "parentCallId tierName" -> Set<callId>
-  (entries || []).forEach(({ agentPath }) => {
-    if (!agentPath || agentPath.length < 2) return;
-    let parentCallId = ROOT_SCOPE;
-    agentPath.forEach(tier => {
-      const scopeKey = `${parentCallId} ${tier.name}`;
-      let set = distinctCallIdsByScope.get(scopeKey);
-      if (!set) {
-        set = new Set();
-        distinctCallIdsByScope.set(scopeKey, set);
-      }
-      set.add(tier.call_id);
-      parentCallId = tier.call_id;
-    });
+  // Only repeated ROOT sub-orchestrator invocations are numbered. Leaf tiers
+  // inherit their root's label and are never numbered independently.
+  const rootsByName = new Map();
+  numberingEntries.forEach(({ agentPath }) => {
+    if (!agentPath || agentPath.length < 1) return;
+    const root = agentPath[0];
+    let roots = rootsByName.get(root.name);
+    if (!roots) {
+      roots = new Map();
+      rootsByName.set(root.name, roots);
+    }
+    const identity = root.call_id || JSON.stringify([ROOT_SCOPE, root.name, root.sibling_ordinal]);
+    if (!roots.has(identity)) roots.set(identity, root);
   });
 
-  // Pass 2 — assign each scope's ordinals by first-seen call_id order, then
-  // render every tier of every qualifying block into its breadcrumb string.
-  const ordinalByScope = new Map(); // scopeKey -> Map<callId, ordinal>
-  (entries || []).forEach(({ instanceKey, agentPath }) => {
-    if (!agentPath || agentPath.length < 2) return;
-    let parentCallId = ROOT_SCOPE;
-    const pieces = agentPath.map(tier => {
-      const scopeKey = `${parentCallId} ${tier.name}`;
-      let ordinals = ordinalByScope.get(scopeKey);
-      if (!ordinals) {
-        ordinals = new Map();
-        ordinalByScope.set(scopeKey, ordinals);
-      }
-      // Stable, first-seen ordinal anchored to call_id (not array position): the
-      // same call_id always maps to the same ordinal even if blocks interleave.
-      let ordinal = ordinals.get(tier.call_id);
-      if (ordinal === undefined) {
-        ordinal = ordinals.size + 1;
-        ordinals.set(tier.call_id, ordinal);
-      }
-      parentCallId = tier.call_id;
-      const distinctCount = distinctCallIdsByScope.get(scopeKey)?.size || 0;
-      return distinctCount > 1 ? `${tier.name} (${ordinal})` : tier.name;
+  const rootOrdinalByName = new Map();
+  rootsByName.forEach((roots, name) => {
+    const ordered = [...roots.entries()].sort(([idA, tierA], [idB, tierB]) => {
+      const ordinalA = tierA.sibling_ordinal || Number.MAX_SAFE_INTEGER;
+      const ordinalB = tierB.sibling_ordinal || Number.MAX_SAFE_INTEGER;
+      return ordinalA - ordinalB || String(idA).localeCompare(String(idB));
     });
+    rootOrdinalByName.set(name, new Map(ordered.map(([identity], index) => [identity, index + 1])));
+  });
+
+  (entries || []).forEach(({ instanceKey, agentPath }) => {
+    if (!agentPath || agentPath.length < 1) return;
+    const root = agentPath[0];
+    const roots = rootsByName.get(root.name);
+    const identity = root.call_id || JSON.stringify([ROOT_SCOPE, root.name, root.sibling_ordinal]);
+    // Backend ordinals establish ordering. The display rank stays contiguous
+    // even when partial/resumed batches report sparse values such as 1 and 3.
+    const ordinal = rootOrdinalByName.get(root.name)?.get(identity) || 1;
+    const pieces = [roots?.size > 1 ? `${root.name} (${ordinal})` : root.name];
+    pieces.push(...agentPath.slice(1).map(tier => tier.name));
     result.set(instanceKey, pieces.join(' ▸ '));
   });
 
   return result;
+}
+
+/** Prefer the deepest and most fully identified path, independent of arrival order. */
+export function selectRichestAgentPath(paths) {
+  const score = path =>
+    (path || []).reduce(
+      (total, tier) => total + 10 + (tier?.call_id ? 2 : 0) + (tier?.sibling_ordinal ? 1 : 0),
+      0,
+    );
+  return (paths || []).reduce((best, candidate) => (score(candidate) > score(best) ? candidate : best), []);
 }

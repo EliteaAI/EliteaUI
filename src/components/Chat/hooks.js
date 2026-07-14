@@ -4,6 +4,14 @@ import { v4 as uuidv4, v4 } from 'uuid';
 
 import { useTrackEvent } from '@/GA';
 import { ChatHelpers } from '@/[fsd]/features/chat/lib/helpers';
+import {
+  getSubAgentInstanceKey,
+  normalizeExecutionHierarchy,
+} from '@/[fsd]/features/chat/lib/helpers/executionHierarchy.helpers.js';
+import {
+  mergeHitlInterrupts,
+  normalizeHitlInterrupt,
+} from '@/[fsd]/features/chat/lib/helpers/hitl.helpers.js';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import * as ParsePipelineHelpers from '@/[fsd]/features/pipelines/flow-editor/lib/helpers/parsePipeline.helpers';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
@@ -399,6 +407,7 @@ export const useChatSocket = ({
           msg.question_id = question_id;
           msg.requiresConfirmation = undefined; // Clear confirmation state when task resumes
           msg.hitlInterrupt = undefined; // Clear HITL state when task resumes
+          msg.hitlInterrupts = undefined;
           if (!msg.replyTo) {
             const questionMessage = chatHistoryRef.current.find(m => m.id === question_id);
             if (questionMessage) {
@@ -500,6 +509,8 @@ export const useChatSocket = ({
               msg.threadId = threadId;
             }
             msg.isStreaming = false;
+            msg.hitlInterrupt = undefined;
+            msg.hitlInterrupts = undefined;
             notifyTaskComplete();
           }
           if (socketMessageType === SocketMessageType.AgentResponse) {
@@ -509,6 +520,7 @@ export const useChatSocket = ({
         case SocketMessageType.AgentLlmChunk: {
           const toolRunId = response_metadata?.tool_run_id;
           const chunkContent = convertJsonToString(message.content, false);
+          const hierarchy = normalizeExecutionHierarchy(response_metadata?.metadata, response_metadata);
           // Extract streaming thinking content (Anthropic extended thinking)
           const chunkThinking = message.thinking || '';
 
@@ -524,11 +536,13 @@ export const useChatSocket = ({
             if (toolRunId && !msg.toolActions.find(i => i.id === toolRunId)) {
               msg.toolActions.push({
                 name: response_metadata?.metadata?.langgraph_node?.trim() || TOOL_ACTION_NAMES.Llm,
+                ...hierarchy,
                 id: toolRunId,
                 status: ToolActionStatus.processing,
                 toolMeta: {
                   ...(response_metadata?.metadata || {}),
                   ls_model_name: response_metadata?.model_name,
+                  ...hierarchy,
                 },
                 created_at: message.created_at,
                 type: TOOL_ACTION_TYPES.Llm,
@@ -563,6 +577,12 @@ export const useChatSocket = ({
                   ta.id === toolRunId
                     ? {
                         ...ta,
+                        ...hierarchy,
+                        toolMeta: {
+                          ...ta.toolMeta,
+                          ...(response_metadata?.metadata || {}),
+                          ...hierarchy,
+                        },
                         content: (ta.content || '') + chunkContent,
                         thinking: (ta.thinking || '') + chunkThinking,
                       }
@@ -574,11 +594,13 @@ export const useChatSocket = ({
                   ...existingToolActions,
                   {
                     name: response_metadata?.metadata?.langgraph_node?.trim() || TOOL_ACTION_NAMES.Llm,
+                    ...hierarchy,
                     id: toolRunId,
                     status: ToolActionStatus.processing,
                     toolMeta: {
                       ...(response_metadata?.metadata || {}),
                       ls_model_name: response_metadata?.model_name,
+                      ...hierarchy,
                     },
                     created_at: message.created_at,
                     type: TOOL_ACTION_TYPES.Llm,
@@ -620,6 +642,15 @@ export const useChatSocket = ({
             thinkText = thinkText.replace(/\s+with inputs\s+\{[^}]*\}/g, '');
             t.content = thinkText;
             t.ended_at = thinkStep.timestamp_finish;
+            const stepHierarchy = normalizeExecutionHierarchy(
+              thinkStep,
+              thinkStep.metadata,
+              thinkStep.message?.response_metadata?.metadata,
+              t,
+              t.toolMeta,
+            );
+            Object.assign(t, stepHierarchy);
+            t.toolMeta = { ...t.toolMeta, ...stepHierarchy };
 
             // Update model name from thinking_step if not already set
             const stepModelName = thinkStep.message?.response_metadata?.model_name;
@@ -641,7 +672,7 @@ export const useChatSocket = ({
             }
 
             // Mark actions with empty content for removal (transition steps)
-            if (!thinkText || !thinkText.trim()) {
+            if ((!thinkText || !thinkText.trim()) && !stepHierarchy.parent_agent_name) {
               actionsToRemove.push(t.id);
             } else {
               t.status = ToolActionStatus.complete;
@@ -678,7 +709,10 @@ export const useChatSocket = ({
             msg.threadId = toolThreadId;
           }
 
-          if (!msg.toolActions.find(i => i.id === message.response_metadata?.tool_run_id)) {
+          const existingStartAction = msg.toolActions.find(
+            i => i.id === message.response_metadata?.tool_run_id,
+          );
+          if (!existingStartAction) {
             // Extract metadata from response FIRST
             // For tool_meta, we need to extract the nested metadata field (from LangChain's tool.metadata)
             // Merge both metadata sources with tool_meta.metadata taking precedence
@@ -771,6 +805,7 @@ export const useChatSocket = ({
               ...(metadata || {}),
               toolkit_type: toolkitType,
             };
+            const hierarchy = normalizeExecutionHierarchy(metadata, message.response_metadata);
 
             msg.toolActions.push({
               // When a lazy-loading wrapper is used, tool_name holds the wrapper's class name (e.g. "LazyLoading")
@@ -781,25 +816,39 @@ export const useChatSocket = ({
                   ? message.response_metadata.tool_meta.name
                   : message.response_metadata?.tool_name,
               original_name: ChatHelpers.getToolActionOriginalName(metadata),
-              parent_agent_name: metadata?.parent_agent_name,
-              // Per-invocation discriminator (#5386): distinguishes two calls to
-              // the SAME sub-agent (same name) so the thinking view renders one
-              // accordion per invocation instead of merging their activity.
-              parent_agent_call_id: metadata?.parent_agent_call_id,
-              // Ancestry chain for depth-3 breadcrumb rendering (#5778 Phase 6).
-              parent_agent_path: metadata?.parent_agent_path,
+              ...hierarchy,
               id: message.response_metadata?.tool_run_id,
               status: ToolActionStatus.processing,
               message: '',
               toolInputs: message.response_metadata?.tool_inputs,
               toolOutputs: message.response_metadata?.tool_outputs,
-              toolMeta,
+              toolMeta: { ...toolMeta, ...hierarchy },
               created_at: message.response_metadata?.timestamp_start || message.created_at,
               type:
                 socketMessageType === SocketMessageType.AgentLlmStart
                   ? TOOL_ACTION_TYPES.Llm
                   : TOOL_ACTION_TYPES.Tool,
             });
+          } else {
+            const metadata =
+              socketMessageType === SocketMessageType.AgentLlmStart
+                ? message.response_metadata?.metadata
+                : {
+                    ...(message.response_metadata?.metadata || {}),
+                    ...(message.response_metadata?.tool_meta?.metadata || {}),
+                  };
+            const hierarchy = normalizeExecutionHierarchy(
+              metadata,
+              message.response_metadata,
+              existingStartAction,
+              existingStartAction.toolMeta,
+            );
+            Object.assign(existingStartAction, hierarchy);
+            existingStartAction.toolMeta = {
+              ...existingStartAction.toolMeta,
+              ...(metadata || {}),
+              ...hierarchy,
+            };
           }
           onRcvAgentEventRef.current && onRcvAgentEventRef.current({ ...message });
           break;
@@ -810,12 +859,23 @@ export const useChatSocket = ({
           }
           t = msg.toolActions.find(i => i.id === message.response_metadata?.tool_run_id);
           if (t) {
+            const hierarchy = normalizeExecutionHierarchy(
+              message.response_metadata?.metadata,
+              message.response_metadata?.tool_meta?.metadata,
+              t,
+              t.toolMeta,
+            );
+            Object.assign(t, hierarchy);
             // const newData = message.response_metadata?.tool_output
             t.message = convertJsonToString(message.response_metadata?.message, true);
             t.markdown = message.response_metadata?.markdown || false;
             // Update toolMeta if provided (needed for toolkit badge display)
             if (message.response_metadata?.tool_meta) {
-              t.toolMeta = { ...t.toolMeta, ...message.response_metadata.tool_meta };
+              t.toolMeta = {
+                ...t.toolMeta,
+                ...message.response_metadata.tool_meta,
+                ...hierarchy,
+              };
             }
           }
           break;
@@ -827,17 +887,24 @@ export const useChatSocket = ({
           // Find the tool action by tool_run_id (not thinking_step_ prefixed)
           const toolRunId = message?.response_metadata?.tool_run_id;
           const toolAction = msg.toolActions.find(i => i.id === toolRunId);
+          const hierarchy = normalizeExecutionHierarchy(
+            message.response_metadata?.metadata,
+            message.response_metadata?.tool_meta?.metadata,
+            toolAction,
+            toolAction?.toolMeta,
+          );
 
           if (!toolAction) {
             // If tool action doesn't exist yet (thinking step arrived before tool_start), create it
             const thinkingStepRunId = 'thinking_step_' + toolRunId || '' + v4();
             msg.toolActions?.push({
               name: TOOL_ACTION_NAMES.Toolkit,
+              ...hierarchy,
               id: thinkingStepRunId,
               status: ToolActionStatus.processing,
               toolInputs: message.response_metadata?.tool_inputs,
               toolOutputs: message.response_metadata?.tool_outputs,
-              toolMeta: { ...(message.response_metadata?.metadata || {}) },
+              toolMeta: { ...(message.response_metadata?.metadata || {}), ...hierarchy },
               responseMetadata: message.response_metadata,
               created_at: message.created_at,
               type: TOOL_ACTION_TYPES.Toolkit,
@@ -848,6 +915,12 @@ export const useChatSocket = ({
             });
           } else {
             // Update the existing tool action's message field with the latest progress
+            Object.assign(toolAction, hierarchy);
+            toolAction.toolMeta = {
+              ...toolAction.toolMeta,
+              ...(message.response_metadata?.metadata || {}),
+              ...hierarchy,
+            };
             toolAction.message = message?.response_metadata?.message;
             toolAction.markdown = message?.response_metadata?.markdown || true;
           }
@@ -870,6 +943,9 @@ export const useChatSocket = ({
 
             // Store MCP session_id if present in metadata (may be newly created)
             const metadata = message.response_metadata?.metadata;
+            const endHierarchy = normalizeExecutionHierarchy(metadata, t, t.toolMeta);
+            Object.assign(t, endHierarchy);
+            t.toolMeta = { ...t.toolMeta, ...(metadata || {}), ...endHierarchy };
             if (metadata?.mcp_session_id && metadata?.mcp_server_url) {
               McpAuthHelpers.setSessionId(metadata.mcp_server_url, metadata.mcp_session_id);
             }
@@ -898,12 +974,16 @@ export const useChatSocket = ({
         case SocketMessageType.AgentToolError:
           t = msg.toolActions?.find(i => i.id === response_metadata?.tool_run_id);
           if (t) {
+            const errorMetadata = response_metadata?.metadata;
+            const errorHierarchy = normalizeExecutionHierarchy(errorMetadata, t, t.toolMeta);
             Object.assign(t, {
+              ...errorHierarchy,
               content: convertJsonToString(message?.content ?? ''),
               status: ToolActionStatus.error,
               ended_at: message.created_at,
               isError: true,
             });
+            t.toolMeta = { ...t.toolMeta, ...(errorMetadata || {}), ...errorHierarchy };
           }
           notifyTaskError();
           onRcvAgentEventRef.current && onRcvAgentEventRef.current({ ...message });
@@ -1112,33 +1192,15 @@ export const useChatSocket = ({
           // child the parent_agent_name / child thread are NOT on the raw
           // interrupt (the child doesn't know it's a child) — they come from the
           // indexer's event-metadata stamp (hitlMeta).
-          const buildHitlInterrupt = (raw, fallbackMessage) => ({
-            message: raw?.message || fallbackMessage || 'Please review and take action.',
-            node_name: raw?.node_name || '',
-            available_actions: raw?.available_actions || ['approve', 'reject'],
-            routes: raw?.routes || {},
-            edit_state_key: raw?.edit_state_key || '',
-            guardrail_type: raw?.guardrail_type || '',
-            tool_name: raw?.tool_name || '',
-            toolkit_name: raw?.toolkit_name || '',
-            toolkit_type: raw?.toolkit_type || '',
-            action_label: raw?.action_label || '',
-            tool_args: raw?.tool_args || null,
-            policy_message: raw?.policy_message || '',
-            // A fan-out child's tool_call_id arrives in the event-metadata
-            // overlay (hitlMeta), NOT on the raw interrupt — the child doesn't
-            // know it's a child. Without this fallback the card carries an empty
-            // tool_call_id, so onHitlResume can't match the decided entry, falls
-            // out of the fan-out branch, and blanks the whole message (#4993).
-            tool_call_id: raw?.tool_call_id || hitlMeta.tool_call_id || '',
-            child_thread_id: raw?.child_thread_id || childThreadId || '',
-            // Sub-agent the paused action originated from; used to group N
-            // stacked approval cards by sub-agent name (issue #4993).
-            parent_agent_name: raw?.parent_agent_name || hitlMeta.parent_agent_name || '',
-            // Per-entry thread to route resume to this child's OWN thread
-            // (Track 2). Empty for single-thread pauses (resume uses msg.threadId).
-            thread_id: raw?.thread_id || childThreadId || '',
-          });
+          const buildHitlInterrupt = (raw, fallbackMessage) =>
+            normalizeHitlInterrupt(
+              { ...raw, message: raw?.message || fallbackMessage },
+              {
+                ...hitlMeta,
+                child_thread_id: childThreadId,
+                thread_id: childThreadId,
+              },
+            );
 
           const fallbackMessage = response_metadata?.message || message.content;
           const rawInterrupts = Array.isArray(response_metadata?.hitl_interrupts)
@@ -1164,24 +1226,19 @@ export const useChatSocket = ({
               action_label: response_metadata?.hitl_interrupt?.action_label,
               tool_args: response_metadata?.hitl_interrupt?.tool_args,
               policy_message: response_metadata?.hitl_interrupt?.policy_message,
+              interrupt_id:
+                response_metadata?.hitl_interrupt?.interrupt_id || response_metadata?.interrupt_id,
               tool_call_id: response_metadata?.hitl_interrupt?.tool_call_id,
+              resume_strategy:
+                response_metadata?.hitl_interrupt?.resume_strategy || response_metadata?.resume_strategy,
             };
             incomingInterrupts = [buildHitlInterrupt(singleRaw, fallbackMessage)];
           }
 
           if (isFanoutChild) {
-            // Merge this child's pause into the running set (keyed by its own
-            // thread, falling back to tool_call_id) so a second child pausing
-            // doesn't erase the first child's still-pending card.
-            const keyOf = e => e.child_thread_id || e.thread_id || e.tool_call_id;
-            const merged = Array.isArray(msg.hitlInterrupts) ? [...msg.hitlInterrupts] : [];
-            incomingInterrupts.forEach(inc => {
-              const k = keyOf(inc);
-              const at = k ? merged.findIndex(e => keyOf(e) === k) : -1;
-              if (at >= 0) merged[at] = inc;
-              else merged.push(inc);
-            });
-            msg.hitlInterrupts = merged;
+            // interrupt_id distinguishes multiple approvals emitted by one
+            // aggregate child; thread/tool ids remain compatibility fallbacks.
+            msg.hitlInterrupts = mergeHitlInterrupts(msg.hitlInterrupts, incomingInterrupts);
           } else if (rawInterrupts.length > 0) {
             // True backend parallel aggregate (Track 1): N entries arrive in
             // hitl_interrupts. Populate the array so ChatBox routes resume via
@@ -1220,6 +1277,8 @@ export const useChatSocket = ({
           msg.isLoading = false;
           msg.isStreaming = false;
           msg.isSending = false;
+          msg.hitlInterrupt = undefined;
+          msg.hitlInterrupts = undefined;
           trackEvent(GA_EVENT_NAMES.CHAT_ERROR, {
             [GA_EVENT_PARAMS.ERROR_TYPE]: 'socket_error',
             [GA_EVENT_PARAMS.ERROR_CONTENT]: String(message.content || '').substring(0, 100),
@@ -1239,7 +1298,12 @@ export const useChatSocket = ({
           // entire orchestrator run as failed. Keep the message streaming so the
           // running siblings retain their live view (mirrors the HITL re-arm).
           const exMeta = response_metadata?.metadata || {};
-          const exChildName = exMeta.parent_agent_name || '';
+          const exHierarchy = normalizeExecutionHierarchy(exMeta, response_metadata);
+          const exChildName = exHierarchy.parent_agent_name || '';
+          const exChildKey =
+            getSubAgentInstanceKey({ ...exHierarchy, toolMeta: exHierarchy }) ||
+            exMeta.child_thread_id ||
+            exChildName;
           const isFanoutChildException = Boolean(exChildName && exMeta.child_thread_id);
 
           if (isFanoutChildException) {
@@ -1249,12 +1313,14 @@ export const useChatSocket = ({
             msg.isStreaming = true;
             msg.subAgentErrors = {
               ...(msg.subAgentErrors || {}),
-              [exChildName]: { exception: message.content },
+              [exChildKey]: { name: exChildName, exception: message.content },
             };
           } else {
             msg.isLoading = false;
             msg.isStreaming = false;
             msg.exception = message.content;
+            msg.hitlInterrupt = undefined;
+            msg.hitlInterrupts = undefined;
           }
           trackEvent(GA_EVENT_NAMES.AGENT_EXCEPTION, {
             [GA_EVENT_PARAMS.ERROR_TYPE]: 'agent_exception',
@@ -1271,6 +1337,8 @@ export const useChatSocket = ({
           msg.isLoading = false;
           msg.isStreaming = false;
           msg.exception = message.content;
+          msg.hitlInterrupt = undefined;
+          msg.hitlInterrupts = undefined;
           notifyTaskError();
           const llmErrorParticipant =
             participantsRef.current?.find(p => p.id === participant_id) || activeParticipantRef.current;
@@ -1389,6 +1457,7 @@ export const useChatSocket = ({
           msg.question_id = question_id;
           msg.requiresConfirmation = undefined; // Clear confirmation state when task resumes
           msg.hitlInterrupt = undefined; // Clear HITL state when task resumes
+          msg.hitlInterrupts = undefined;
           // Find the question message to populate replyTo with complete information
           if (!msg.replyTo) {
             const questionMessage = chatHistoryRef.current.find(m => m.id === question_id);
@@ -1498,6 +1567,8 @@ export const useChatSocket = ({
                     isStreaming: false,
                     isRegenerating: false,
                     isSending: false,
+                    hitlInterrupt: undefined,
+                    hitlInterrupts: undefined,
                   };
                 }
                 if (item.id === message_id) {
@@ -1507,6 +1578,8 @@ export const useChatSocket = ({
                     isStreaming: false,
                     isRegenerating: false,
                     isSending: false,
+                    hitlInterrupt: undefined,
+                    hitlInterrupts: undefined,
                   };
                 }
                 return item;

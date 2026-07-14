@@ -9,6 +9,7 @@ import {
   partitionActionsIntoBlocks,
   resolveExtraSubAgentKeys,
   resolveSubAgentLiveness,
+  selectRichestAgentPath,
 } from './subAgentGrouping.helpers.js';
 
 // --- Minimal mirrors of the component's callbacks ------------------------- //
@@ -41,6 +42,13 @@ const classifyWrapper = (a, name) => {
 
 const run = actions =>
   partitionActionsIntoBlocks(actions, { deriveName, deriveInstanceKey, classifyWrapper });
+const runWithOrdinals = actions =>
+  partitionActionsIntoBlocks(actions, {
+    deriveName,
+    deriveInstanceKey,
+    deriveSiblingOrdinal: action => action.rootOrdinal || 0,
+    classifyWrapper,
+  });
 const subBlocks = result => result.filter(b => b.kind === 'sub');
 
 // --- Action builders ------------------------------------------------------ //
@@ -162,6 +170,14 @@ describe('partitionActionsIntoBlocks — parallel must not regress (#5378/#5379)
       wrap('pb', 'complete', { hitlDeferred: true }),
     ];
     expect(subBlocks(run(actions))).toHaveLength(2);
+  });
+
+  it('does not fold a fresh processing sibling into an older paused invocation', () => {
+    const actions = [
+      wrap('paused-b1', 'error', { rootOrdinal: 1 }),
+      wrap('running-b2', 'processing', { rootOrdinal: 2 }),
+    ];
+    expect(subBlocks(runWithOrdinals(actions))).toHaveLength(2);
   });
 });
 
@@ -300,35 +316,37 @@ describe('collapseSubAgentInvocationKeys — #5386 sequential reload', () => {
       rwrap('874'),
       rinner('874'),
     ];
-    collapse(actions);
+    const collapsed = collapse(actions);
+    expect(actions[5].parent_agent_call_id).toBe('319');
+    expect(collapsed).not.toBe(actions);
     // Anchor = the FIRST pcid of each epoch (= the live-streaming key → no flicker).
-    expect(distinctKeys(actions)).toEqual(['TC7', 'U9c']);
+    expect(distinctKeys(collapsed)).toEqual(['TC7', 'U9c']);
     // And the grouping now yields exactly two persistent blocks, not one collapsed.
-    expect(subBlocks(run(actions))).toHaveLength(2);
+    expect(subBlocks(run(collapsed))).toHaveLength(2);
   });
 
   it('keeps the wrapper trailing inner chip (shared pcid) inside the closing epoch', () => {
     // d79-inner shares the wrapper pcid d79 → must stay in epoch 1 (anchor TC7),
     // NOT spawn a fresh epoch; only the genuinely new pcid U9c opens epoch 2.
     const actions = [rinner('TC7'), rwrap('d79'), rinner('d79'), rinner('U9c'), rwrap('874')];
-    collapse(actions);
-    expect(actions[2].parent_agent_call_id).toBe('TC7');
-    expect(actions[3].parent_agent_call_id).toBe('U9c');
-    expect(distinctKeys(actions)).toEqual(['TC7', 'U9c']);
+    const collapsed = collapse(actions);
+    expect(collapsed[2].parent_agent_call_id).toBe('TC7');
+    expect(collapsed[3].parent_agent_call_id).toBe('U9c');
+    expect(distinctKeys(collapsed)).toEqual(['TC7', 'U9c']);
   });
 
   it('adopts the first REAL pcid as the anchor even when an LLM step (no pcid) leads the epoch', () => {
     const actions = [rllm(SUB), rinner('TC7'), rwrap('d79')];
-    collapse(actions);
-    expect(actions[0].parent_agent_call_id).toBe('TC7');
-    expect(distinctKeys(actions)).toEqual(['TC7']);
+    const collapsed = collapse(actions);
+    expect(collapsed[0].parent_agent_call_id).toBe('TC7');
+    expect(distinctKeys(collapsed)).toEqual(['TC7']);
   });
 
   it('collapses a single multi-round invocation to one anchor key', () => {
     const actions = [rinner('TC7'), rinner('319'), rwrap('d79'), rinner('d79')];
-    collapse(actions);
-    expect(distinctKeys(actions)).toEqual(['TC7']);
-    expect(subBlocks(run(actions))).toHaveLength(1);
+    const collapsed = collapse(actions);
+    expect(distinctKeys(collapsed)).toEqual(['TC7']);
+    expect(subBlocks(run(collapsed))).toHaveLength(1);
   });
 });
 
@@ -337,16 +355,16 @@ describe('collapseSubAgentInvocationKeys — parallel must not regress (#5378/#5
     // Parallel same-agent: two STABLE pcids interleave (A,B,A,B). They must each
     // keep their own key — epoch-collapse must NOT fold them into one block.
     const actions = [rwrap('A'), rwrap('B'), rinner('A'), rinner('B'), rinner('A'), rinner('B')];
-    collapse(actions);
-    expect(new Set(distinctKeys(actions))).toEqual(new Set(['A', 'B']));
-    expect(subBlocks(run(actions))).toHaveLength(2);
+    const collapsed = collapse(actions);
+    expect(new Set(distinctKeys(collapsed))).toEqual(new Set(['A', 'B']));
+    expect(subBlocks(run(collapsed))).toHaveLength(2);
   });
 
   it('leaves a single stable pcid per parallel sibling as its own key', () => {
     // Group 1232 shape: each parallel sibling has ONE stable pcid (no over-split).
     const actions = [rinner('A'), rinner('A'), rwrap('A')];
-    collapse(actions);
-    expect(distinctKeys(actions)).toEqual(['A']);
+    const collapsed = collapse(actions);
+    expect(distinctKeys(collapsed)).toEqual(['A']);
   });
 });
 
@@ -600,19 +618,22 @@ describe('inflightToolChipId', () => {
 // not even called for those blocks (agentPath.length <= 1), so there is nothing
 // to regress here; the tests below just confirm the helper stays out of the way.
 // Depth-3 (root -> container -> leaf) needs its OWN per-tier "(n)" disambiguation
-// — e.g. two parallel containers of the same name must render "container (1)"
+// — e.g. two parallel containers of the same name must render "container"
 // and "container (2)" even though each hosts only ONE leaf — anchored to each
 // tier's call_id (not array position) so the numbering is stable across
 // re-renders and between live streaming and reload.
 
 describe('computeBreadcrumb — #5778 depth-3 per-tier numbering', () => {
-  it('does not emit a breadcrumb for depth-1 entries (agentPath.length <= 1)', () => {
+  it('emits stable labels for depth-1 entries and skips empty paths', () => {
     const entries = [
       { instanceKey: 'cB1', agentPath: [{ name: 'B', call_id: 'cB1' }] },
       { instanceKey: 'cB2', agentPath: [{ name: 'B', call_id: 'cB2' }] },
       { instanceKey: 'noPath', agentPath: [] },
     ];
-    expect(computeBreadcrumbs(entries).size).toBe(0);
+    const map = computeBreadcrumbs(entries);
+    expect(map.get('cB1')).toBe('B (1)');
+    expect(map.get('cB2')).toBe('B (2)');
+    expect(map.has('noPath')).toBe(false);
   });
 
   it('disambiguates two parallel same-name containers, each with its own leaf', () => {
@@ -645,8 +666,8 @@ describe('computeBreadcrumb — #5778 depth-3 per-tier numbering', () => {
       { instanceKey: 'cLeafB', agentPath: [containerB, { name: 'leaf', call_id: 'cLeafB' }] },
     ];
     // Same two blocks, fed in the opposite relative order alongside an unrelated
-    // depth-1 block interleaved between them — the scope's first-seen ordinals
-    // must not shift just because array position changed.
+    // depth-1 block interleaved between them. Call-id ordering is the deterministic
+    // compatibility fallback, so relative arrival order cannot change labels.
     const entries2 = [
       { instanceKey: 'cLeafB', agentPath: [containerB, { name: 'leaf', call_id: 'cLeafB' }] },
       { instanceKey: 'unrelated', agentPath: [{ name: 'Other', call_id: 'cOther' }] },
@@ -654,20 +675,16 @@ describe('computeBreadcrumb — #5778 depth-3 per-tier numbering', () => {
     ];
     const map1 = computeBreadcrumbs(entries1);
     const map2 = computeBreadcrumbs(entries2);
-    // cC1 is first-seen first in entries1 -> ordinal 1; in entries2 cC2 (via
-    // cLeafB) is first-seen first -> ordinal 1 there instead. What must stay
-    // stable is each call_id's OWN ordinal being consistent within a single
-    // computation, and running the SAME input twice must reproduce the SAME map.
     expect(computeBreadcrumbs(entries1)).toEqual(map1);
     expect(map1.get('cLeafA')).toBe('container (1) ▸ leaf');
     expect(map1.get('cLeafB')).toBe('container (2) ▸ leaf');
-    expect(map2.get('cLeafB')).toBe('container (1) ▸ leaf');
-    expect(map2.get('cLeafA')).toBe('container (2) ▸ leaf');
+    expect(map2.get('cLeafB')).toBe('container (2) ▸ leaf');
+    expect(map2.get('cLeafA')).toBe('container (1) ▸ leaf');
   });
 
   it('combines a depth-1 run and a depth-3 run in one action list without cross-interference', () => {
     const entries = [
-      // Depth-1: agentPath.length===1 -> no breadcrumb (existing ordinal path handles it).
+      // Depth-1 uses the same breadcrumb contract as deeper paths.
       { instanceKey: 'cB', agentPath: [{ name: 'B', call_id: 'cB' }] },
       // Depth-3: root -> container -> leaf.
       {
@@ -679,8 +696,160 @@ describe('computeBreadcrumb — #5778 depth-3 per-tier numbering', () => {
       },
     ];
     const map = computeBreadcrumbs(entries);
-    expect(map.has('cB')).toBe(false);
+    expect(map.get('cB')).toBe('B');
     // Lone container instance -> no "(n)" suffix (per-tier ">1" guard).
     expect(map.get('cLeaf')).toBe('container ▸ leaf');
+  });
+
+  it('uses backend sibling ordinals for same-name invocations', () => {
+    const entries = [
+      {
+        instanceKey: 'b-z',
+        agentPath: [{ name: 'B', call_id: 'z', sibling_ordinal: 1 }],
+      },
+      {
+        instanceKey: 'b-a',
+        agentPath: [{ name: 'B', call_id: 'a', sibling_ordinal: 2 }],
+      },
+    ];
+    const map = computeBreadcrumbs(entries);
+    expect(map.get('b-z')).toBe('B (1)');
+    expect(map.get('b-a')).toBe('B (2)');
+  });
+
+  it('uses sparse backend ordinals only for ordering and displays contiguous ranks', () => {
+    const map = computeBreadcrumbs([
+      { instanceKey: 'b1', agentPath: [{ name: 'B', call_id: 'b1', sibling_ordinal: 1 }] },
+      { instanceKey: 'b3', agentPath: [{ name: 'B', call_id: 'b3', sibling_ordinal: 3 }] },
+    ]);
+    expect(map.get('b1')).toBe('B (1)');
+    expect(map.get('b3')).toBe('B (2)');
+  });
+
+  it('does not number a lone root or any leaf from stale leaf ordinals', () => {
+    const map = computeBreadcrumbs([
+      {
+        instanceKey: 'leaf',
+        agentPath: [
+          { name: 'Full Name resolver', call_id: 'b1', sibling_ordinal: 2 },
+          { name: 'Surname Resolver', call_id: 'c1', sibling_ordinal: 7 },
+        ],
+      },
+    ]);
+    expect(map.get('leaf')).toBe('Full Name resolver ▸ Surname Resolver');
+  });
+
+  it('numbers only two repeated root suborchestrators and propagates that label to leaves', () => {
+    const map = computeBreadcrumbs([
+      {
+        instanceKey: 'b1',
+        agentPath: [{ name: 'Full Name resolver', call_id: 'b1', sibling_ordinal: 1 }],
+      },
+      {
+        instanceKey: 'b1-name',
+        agentPath: [
+          { name: 'Full Name resolver', call_id: 'b1', sibling_ordinal: 1 },
+          { name: 'Name Resolver', call_id: 'n1', sibling_ordinal: 9 },
+        ],
+      },
+      {
+        instanceKey: 'b2-name',
+        agentPath: [
+          { name: 'Full Name resolver', call_id: 'b2', sibling_ordinal: 2 },
+          { name: 'Name Resolver', call_id: 'n2', sibling_ordinal: 4 },
+        ],
+      },
+    ]);
+    expect(map.get('b1')).toBe('Full Name resolver (1)');
+    expect(map.get('b1-name')).toBe('Full Name resolver (1) ▸ Name Resolver');
+    expect(map.get('b2-name')).toBe('Full Name resolver (2) ▸ Name Resolver');
+  });
+
+  it('keeps a lone pending root numbered from completed sibling trace context', () => {
+    const pending = [
+      {
+        instanceKey: 'b1-name-current',
+        agentPath: [
+          { name: 'Full Name resolver', call_id: 'b1', sibling_ordinal: 1 },
+          { name: 'Name Resolver', call_id: 'n1', sibling_ordinal: 1 },
+        ],
+      },
+    ];
+    const traceContext = [
+      ...pending,
+      {
+        instanceKey: 'b2-completed',
+        agentPath: [
+          { name: 'Full Name resolver', call_id: 'b2', sibling_ordinal: 2 },
+          { name: 'Name Resolver', call_id: 'n2', sibling_ordinal: 1 },
+        ],
+      },
+    ];
+
+    const map = computeBreadcrumbs(pending, traceContext);
+
+    expect(map.get('b1-name-current')).toBe('Full Name resolver (1) ▸ Name Resolver');
+  });
+
+  it('keeps the second root numbered when it is the only pending sibling', () => {
+    const pending = [
+      {
+        instanceKey: 'b2-name-current',
+        agentPath: [
+          { name: 'Full Name resolver', call_id: 'b2', sibling_ordinal: 2 },
+          { name: 'Name Resolver', call_id: 'n2', sibling_ordinal: 1 },
+        ],
+      },
+    ];
+    const map = computeBreadcrumbs(pending, [
+      {
+        instanceKey: 'b1-completed',
+        agentPath: [{ name: 'Full Name resolver', call_id: 'b1', sibling_ordinal: 1 }],
+      },
+      ...pending,
+    ]);
+
+    expect(map.get('b2-name-current')).toBe('Full Name resolver (2) ▸ Name Resolver');
+  });
+
+  it('does not number one root repeated across multiple trace paths', () => {
+    const pending = [
+      {
+        instanceKey: 'b1-name-current',
+        agentPath: [
+          { name: 'Full Name resolver', call_id: 'b1', sibling_ordinal: 1 },
+          { name: 'Name Resolver', call_id: 'n1', sibling_ordinal: 1 },
+        ],
+      },
+    ];
+    const map = computeBreadcrumbs(pending, [
+      ...pending,
+      {
+        instanceKey: 'b1-surname-trace',
+        agentPath: [
+          { name: 'Full Name resolver', call_id: 'b1', sibling_ordinal: 1 },
+          { name: 'Surname Resolver', call_id: 's1', sibling_ordinal: 2 },
+        ],
+      },
+    ]);
+
+    expect(map.get('b1-name-current')).toBe('Full Name resolver ▸ Name Resolver');
+  });
+});
+
+describe('selectRichestAgentPath', () => {
+  it('prefers complete depth and identity over action arrival order', () => {
+    expect(
+      selectRichestAgentPath([
+        [{ name: 'B', call_id: 'b1' }],
+        [
+          { name: 'B', call_id: 'b1', sibling_ordinal: 2 },
+          { name: 'C', call_id: 'c1' },
+        ],
+      ]),
+    ).toEqual([
+      { name: 'B', call_id: 'b1', sibling_ordinal: 2 },
+      { name: 'C', call_id: 'c1' },
+    ]);
   });
 });

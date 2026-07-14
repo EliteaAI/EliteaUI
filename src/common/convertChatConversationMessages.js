@@ -1,5 +1,5 @@
 import { ChatHelpers } from '@/[fsd]/features/chat/lib/helpers';
-import { collapseSubAgentInvocationKeys } from '@/[fsd]/features/chat/lib/helpers/subAgentGrouping.helpers.js';
+import { normalizeExecutionHierarchy } from '@/[fsd]/features/chat/lib/helpers/executionHierarchy.helpers.js';
 import {
   ChatParticipantType,
   ROLES,
@@ -162,23 +162,26 @@ export const convertToAIAnswer = (message_group, message_groups, participants) =
         timestamp_finish,
       } = step;
 
-      // Skip empty thinking_steps (transition steps with no content)
-      // Backend normalizes text field for all providers (OpenAI, Anthropic, etc.)
-      if (!text || !text.trim()) {
-        return;
-      }
+      const hierarchy = normalizeExecutionHierarchy(
+        step,
+        step.metadata,
+        step.message?.response_metadata?.metadata,
+      );
+
+      // Root-level empty transition markers are noise. A nested LLM step is a
+      // structural chip for B/C and must survive both reload and live rendering.
+      if ((!text || !text.trim()) && !hierarchy.parent_agent_name) return;
 
       toolActions.push({
         name: tool_name || TOOL_ACTION_NAMES.Llm,
-        parent_agent_name: step.parent_agent_name || null,
-        // Ancestry chain for depth-3 breadcrumb rendering (#5778 Phase 6).
-        parent_agent_path: step.parent_agent_path || [],
+        ...hierarchy,
         id: step.message.id,
         status: ToolActionStatus.complete,
         toolInputs: '',
         toolOutputs: text,
         toolMeta: {
           ls_model_name: model_name,
+          ...hierarchy,
         },
         created_at:
           (!index ? first_tool_timestamp_start : undefined) ||
@@ -206,6 +209,7 @@ export const convertToAIAnswer = (message_group, message_groups, participants) =
         step.metadata?.toolkit_type ||
         tools?.find(tool => tool.name === toolkitName || tool.toolkit_name === toolkitName)?.type ||
         '';
+      const hierarchy = normalizeExecutionHierarchy(step.metadata, step.tool_meta?.metadata, step);
       toolActions.push({
         // When a lazy-loading wrapper was used, step.tool_name is the wrapper class name (e.g. "LazyLoading").
         // The SDK signals this via step.metadata.original_name. Prefer step.tool_meta.name which
@@ -215,13 +219,9 @@ export const convertToAIAnswer = (message_group, message_groups, participants) =
             ? step.tool_meta.name
             : step.tool_name || step.name || 'Tool Call',
         original_name: ChatHelpers.getToolActionOriginalName(step.metadata),
-        parent_agent_name: step.metadata?.parent_agent_name,
-        // Raw per-resume-round pcid as persisted. collapseSubAgentInvocationKeys
-        // (below) normalises the over-split rounds to one epoch-anchor key per
-        // invocation so reload matches the live stream (no flicker, #5386).
-        parent_agent_call_id: step.metadata?.parent_agent_call_id,
-        // Ancestry chain for depth-3 breadcrumb rendering (#5778 Phase 6).
-        parent_agent_path: step.metadata?.parent_agent_path || [],
+        // Canonical persisted hierarchy; the backend keeps the durable root
+        // identity stable across resume rounds.
+        ...hierarchy,
         id: step.tool_run_id,
         status: ToolActionStatus.complete,
         toolInputs: step.tool_inputs,
@@ -237,6 +237,7 @@ export const convertToAIAnswer = (message_group, message_groups, participants) =
           langgraph_node: step.metadata?.langgraph_node,
           icon_meta: step.tool_meta?.icon_meta,
           agent_type: step.tool_meta?.metadata?.agent_type,
+          ...hierarchy,
         },
         created_at:
           (!index ? first_tool_timestamp_start : undefined) ||
@@ -250,21 +251,6 @@ export const convertToAIAnswer = (message_group, message_groups, participants) =
       });
     }
   }) || [];
-
-  // Normalise the persisted, over-split per-round sub-agent pcids into one stable
-  // epoch-anchor key per logical invocation so the thinking-view grouping yields
-  // the SAME accordions on reload/finalize as it did live — no collapse, no
-  // flicker — while leaving concurrent (parallel) siblings untouched (#5386).
-  collapseSubAgentInvocationKeys(toolActions, {
-    deriveName: a => a.parent_agent_name || a.original_name || '',
-    deriveRawKey: a => a.parent_agent_call_id || '',
-    isWrapperCompletion: (a, name) =>
-      a.type === TOOL_ACTION_TYPES.Tool &&
-      !a.parent_agent_name &&
-      (a.name === name || a.original_name === name) &&
-      !a.isError &&
-      !!a.toolOutputs,
-  });
 
   // Reconstruct HITL interrupt state persisted at pause time (#4823). The live
   // socket handler (components/Chat/hooks.js) is the only other place these are
@@ -310,8 +296,10 @@ export const convertToAIAnswer = (message_group, message_groups, participants) =
     isSummarized,
     // HITL resume state (#4823). threadId powers the single-pause resume;
     // hitlInterrupts (when set) routes parallel/fan-out resume via tool_call_id.
-    ...(hitlInterrupt ? { hitlInterrupt } : {}),
-    ...(hitlInterrupts ? { hitlInterrupts } : {}),
+    // Always carry both keys so a remote completion sync overwrites stale live
+    // pause state instead of preserving it through object spread.
+    hitlInterrupt,
+    hitlInterrupts,
     ...(metaThreadId ? { threadId: metaThreadId } : {}),
   };
 };

@@ -90,6 +90,11 @@ export const mapAssociationError = (rawError, entityName, opts = {}) => {
   return message;
 };
 
+export const wouldExceedAgentNestingDepth = (candidateSubtreeTiers, maxTiers, hostTier = 1) =>
+  typeof candidateSubtreeTiers === 'number' &&
+  typeof maxTiers === 'number' &&
+  hostTier + candidateSubtreeTiers > maxTiers;
+
 /**
  * Custom hook to handle association of agents and pipelines as "toolkits"
  */
@@ -132,22 +137,16 @@ export const useAgentPipelineAssociation = (applicationId, versionId) => {
       // "container" agent (one that itself uses other agents) MAY now be nested, as long as the
       // combined tree stays within the tier budget. The host being edited is the tier-1 root, so
       // the candidate lands at tier 2; it is legal iff its own agent-subtree depth leaves room:
-      //   1 (candidate as tier 2) + (candidate_subtree_tiers - 1 extra tiers) <= max
-      // i.e. candidate_subtree_tiers <= max - 1. The backend computes agent_subtree_tiers (the
-      // candidate counted as tier 1, pipelines transparent) and max_agent_nesting_tiers on
-      // version_details. Pipelines are exempt entirely. Best-effort UI guidance — the backend
+      //   1 host tier + candidate_subtree_tiers <= max. The backend computes
+      // agent_subtree_tiers with pipelines transparent, so a pipeline does not consume a tier but
+      // its agent descendants still do. Best-effort UI guidance — the backend
       // validator is authoritative (see the catch/error handling).
-      const candidateAgentType = selectedApplication?.version_details?.agent_type;
       const candidateSubtreeTiers = selectedApplication?.version_details?.agent_subtree_tiers;
       const maxTiers = selectedApplication?.version_details?.max_agent_nesting_tiers;
       // Only enforce when the backend supplied both fields; otherwise defer entirely to the
       // backend (older payloads without the fields must not be spuriously blocked or allowed).
       const hostTier = 1; // the agent being edited is the top-level/root of its own chain
-      const wouldExceed =
-        candidateAgentType !== 'pipeline' &&
-        typeof candidateSubtreeTiers === 'number' &&
-        typeof maxTiers === 'number' &&
-        hostTier + (candidateSubtreeTiers - 1) > maxTiers;
+      const wouldExceed = wouldExceedAgentNestingDepth(candidateSubtreeTiers, maxTiers, hostTier);
       if (wouldExceed) {
         // Route the pre-attach guard through the shared mapper so it carries the same friendly
         // phrasing as the backend rejection — this guard fires before the request is sent.
