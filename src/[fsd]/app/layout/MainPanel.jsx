@@ -7,8 +7,8 @@ import { Box } from '@mui/material';
 import { ProtectedRoutes } from '@/[fsd]/app/routes';
 import { MaintenanceBanner } from '@/[fsd]/features/maintenance/ui';
 import { useIsOnboarding } from '@/[fsd]/shared/lib/hooks';
+import { Modal } from '@/[fsd]/shared/ui';
 import { COLLAPSED_SIDE_BAR_WIDTH, SIDE_BAR_WIDTH } from '@/common/constants';
-import UnsavedDialog from '@/components/UnsavedDialog';
 
 const MainPanel = memo(() => {
   const sideBarCollapsed = useSelector(state => state.settings.sideBarCollapsed);
@@ -29,7 +29,7 @@ const MainPanel = memo(() => {
     >
       <MaintenanceBanner />
       <ProtectedRoutes />
-      <UnsavedDialog />
+      <Modal.UnsavedModal />
     </Box>
   );
 });
