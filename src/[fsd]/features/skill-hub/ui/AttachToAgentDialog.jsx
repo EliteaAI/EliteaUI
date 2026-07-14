@@ -26,6 +26,7 @@ import EntityIcon from '@/components/EntityIcon';
 import ArrowDownMuiSvgIcon from '@/components/Icons/ArrowDownMuiSvgIcon';
 import CheckIcon from '@/components/Icons/CheckIcon';
 import CloseIcon from '@/components/Icons/CloseIcon';
+import RemoveIcon from '@/components/Icons/RemoveIcon';
 import useDebounceValue from '@/hooks/useDebounceValue';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
@@ -37,6 +38,8 @@ const ADD_TEST_DISABLED_TOOLTIP = 'Select one agent to be able to test the skill
 
 // The agent's default version is the attach target; the list row carries it on meta.
 const getAgentVersionId = agent => agent?.meta?.default_version_id ?? agent?.version_details?.id;
+
+const agentWord = count => (count === 1 ? 'agent' : 'agents');
 
 const AttachToAgentDialog = memo(props => {
   const { open, onClose, skill, versionId } = props;
@@ -119,7 +122,6 @@ const AttachToAgentDialog = memo(props => {
       const alreadyResults = results.filter(r => !r.ok && r.http_status === 409);
       const failedResults = results.filter(r => !r.ok && r.http_status !== 409);
 
-      const agentWord = count => (count === 1 ? 'agent' : 'agents');
       const bulletList = list =>
         list
           .map(r => byVersionId.get(r.agent_version_id)?.name)
@@ -168,7 +170,7 @@ const AttachToAgentDialog = memo(props => {
       const allOk = notifyResult(selectedAgents, response?.results || []);
       if (allOk) onClose?.();
     } catch {
-      toastError(`The skill was not added to ${selectedAgents.length} agent.`);
+      toastError(`The skill was not added to ${selectedAgents.length} ${agentWord(selectedAgents.length)}.`);
     }
   }, [
     canAdd,
@@ -221,7 +223,7 @@ const AttachToAgentDialog = memo(props => {
         navigateToChatWithAgent(agent);
       }
     } catch {
-      toastError(`The skill was not added to ${selectedAgents.length} agent.`);
+      toastError(`The skill was not added to ${selectedAgents.length} ${agentWord(selectedAgents.length)}.`);
     }
   }, [
     canAddAndTest,
@@ -299,6 +301,7 @@ const AttachToAgentDialog = memo(props => {
               imageStyle={styles.chipAvatarImage}
             />
           }
+          deleteIcon={<RemoveIcon />}
           sx={styles.chip}
         />
       )),
@@ -488,11 +491,12 @@ const attachToAgentDialogStyles = () => ({
       paddingRight: '0.5rem',
     },
     '& .MuiChip-deleteIcon': {
-      fontSize: '0.875rem',
+      width: '1.125rem',
+      height: '1.125rem',
       marginLeft: 0,
       marginRight: '0.5rem',
-      color: palette.icon.fill.default,
-      '&:hover': { color: palette.text.secondary },
+      '& path': { fill: palette.icon.fill.default },
+      '&:hover path': { fill: palette.text.secondary },
     },
   }),
   chipAvatar: {
