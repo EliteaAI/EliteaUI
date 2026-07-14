@@ -104,7 +104,7 @@ const CredentialsControls = memo(props => {
         credentialDetails?.settings?.elitea_title ||
         credentialDetails?.elitea_title ||
         CredentialNameHelpers.extraCredentialName(credentialDetails?.name || '');
-      toastSuccess(`The ${entityName} has been successfully deleted.`);
+      toastSuccess(`The ${entityName} credential has been successfully deleted.`);
 
       if (credentialDetails?.type === 'llm_model') dispatch(eliteaApi.util.invalidateTags([TAG_MODELS]));
 

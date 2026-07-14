@@ -45,6 +45,7 @@ import {
   DEFAULT_TEMPERATURE,
 } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
 import { cleanLLMSettings } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
+import { Modal } from '@/[fsd]/shared/ui';
 import {
   useConversationEditMutation,
   useRegenerateMutation,
@@ -69,7 +70,6 @@ import {
   generateMessagePayload,
 } from '@/common/messagePayloadUtils';
 import { buildErrorMessage } from '@/common/utils';
-import AlertDialog from '@/components/AlertDialog';
 import { ChatBodyContainer } from '@/components/Chat/StyledComponents';
 import { useChatSocket, useStopStreaming } from '@/components/Chat/hooks';
 import SocketContext from '@/contexts/SocketContext';
@@ -638,15 +638,14 @@ const ChatBox = forwardRef((props, boxRef) => {
     onStopRun?.();
   }, [onStopRun]);
 
-  const { openAlert, alertContent, onDeleteAnswer, onDeleteAll, onConfirmDelete, onCloseAlert } =
-    useDeleteMessageAlert({
-      setChatHistory,
-      chatInput,
-      onDeleteChatMessage,
-      onDeleteAllChatMessages,
-      deleteAllRunNodes,
-      onStopTTS: stopTTS,
-    });
+  const { openAlert, onDeleteAnswer, onDeleteAll, onConfirmDelete, onCloseAlert } = useDeleteMessageAlert({
+    setChatHistory,
+    chatInput,
+    onDeleteChatMessage,
+    onDeleteAllChatMessages,
+    deleteAllRunNodes,
+    onStopTTS: stopTTS,
+  });
 
   const onClickClearChat = useCallback(() => {
     if (chat_history?.length) {
@@ -2344,14 +2343,12 @@ const ChatBox = forwardRef((props, boxRef) => {
           />
         </Box>
       </ChatBodyContainer>
-      <AlertDialog
-        title="Warning"
-        alertContent={alertContent}
+      <Modal.DeleteEntityModal
         open={openAlert}
-        alarm
         onClose={onCloseAlert}
-        onCancel={onCloseAlert}
         onConfirm={onConfirmDelete}
+        textContent="Are you sure to delete the message"
+        inlineExtraContent="? It can't be restored."
       />
     </>
   );
