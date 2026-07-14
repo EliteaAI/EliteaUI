@@ -90,7 +90,6 @@ const ConfigurationSection = memo(props => {
   if (!configurations || configurations.length === 0) {
     return null;
   }
-
   return (
     <>
       <Box
@@ -104,13 +103,13 @@ const ConfigurationSection = memo(props => {
           metaItems={[
             {
               label: defaultSettingLabel,
-              value: defaultSettingValue?.split('<<>>')[0] || '',
+              value: defaultSettingOptions?.find(option => option.value === defaultSettingValue)?.label || '',
             },
             ...additionalDefaultSettings
               .filter(setting => setting)
               .map(setting => ({
                 label: setting.label,
-                value: setting.value?.split('<<>>')[0] || '',
+                value: setting.options?.find(option => option.value === setting.value)?.label || '',
                 onChange: setting.onChange,
                 options: setting.options,
                 disabled: !canEdit,
