@@ -12,8 +12,8 @@ import {
   useTheme,
 } from '@mui/material';
 
-import { useParticipantEntityIcon } from '@/[fsd]/features/chat/participants/lib/hooks';
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
+import { useParticipantEntityIcon } from '@/[fsd]/features/chat/participants/lib/hooks';
 import { usePublicProjectAccessCheck } from '@/[fsd]/features/project/lib/hooks';
 import { PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';
 import EntityIcon from '@/components/EntityIcon';
@@ -215,7 +215,10 @@ const AgentEditorPanel = memo(props => {
           placement="top"
           title={`Switch ${isPipeline ? 'Pipeline' : 'Agent'}`}
         >
-          <Button onClick={onClickParticipant}>
+          <Button
+            data-testid="chat-switch-participant-button"
+            onClick={onClickParticipant}
+          >
             <EntityIcon
               icon={entityIcon}
               entityType={isPipeline ? 'pipeline' : 'application'}
