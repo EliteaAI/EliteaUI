@@ -54,15 +54,15 @@ const ConfigurationsPanel = memo(props => {
 
   const tooltips = {
     default:
-      'Default: used for most activities by default. Start here; switch to Low-tier or High-tier when needed.',
-    lowTier:
-      'Low-tier: cheaper/faster models for routine tasks (diagram fixing, formatting, simple edits). Examples: gpt mini from OpenAI, Gemini Flash from google, Anthropic Haiku.',
-    highTier:
-      'High-tier: more capable (and more expensive) models for complex workflows (multi-step reasoning, heavy tool usage). Examples: Anthropic Sonnet 4.5 / Opus, OpenAI GPT-5.2, Google Gemini 3 Pro.',
+      'Default model used for most AI activities. The system may switch to the Low-tier or High-tier model when needed.',
+    lowTier: 'Model used for simpler tasks where faster responses and lower cost are preferred.',
+    highTier: 'Model used for complex tasks that require stronger reasoning or higher-quality responses.',
     embedding:
-      'Default embedding model: generates embeddings (vectors) used for indexing and semantic search (RAG). Affects retrieval quality and performance.',
-    vectorStorage:
-      'Default vector storage: where embeddings are stored for retrieval/search. Choose based on persistence and scale requirements.',
+      'Default embedding model used to convert content into vectors for indexing, semantic search, and retrieval.',
+    vectorStorage: 'Default vector storage used to store embeddings for indexing, search, and retrieval.',
+    imageGeneration: 'Default image generation model used when creating images in Elitea.',
+    asr: 'Default speech recognition model used to convert audio or speech into text.',
+    tts: 'Default text-to-speech model used to convert text into spoken audio.',
   };
 
   return (
@@ -135,7 +135,8 @@ const ConfigurationsPanel = memo(props => {
         isLoading={configurationsLoading}
         hasDefaultSetting={true}
         defaultExpanded={expandSection === 'image_generation'}
-        defaultSettingLabel="Default image generation model:"
+        defaultSettingsLayout="inline"
+        defaultSettingLabel={renderInfoLabel('Default', tooltips.imageGeneration)}
         defaultSettingValue={projectDefaultImageGenerationModel}
         defaultSettingOptions={imageGenerationOptions}
         onChangeDefaultSetting={onChangeDefaultModel('image_generation')}
@@ -147,7 +148,8 @@ const ConfigurationsPanel = memo(props => {
         isLoading={configurationsLoading}
         hasDefaultSetting={true}
         defaultExpanded={expandSection === 'asr'}
-        defaultSettingLabel="Default ASR model:"
+        defaultSettingsLayout="inline"
+        defaultSettingLabel={renderInfoLabel('Default', tooltips.asr)}
         defaultSettingValue={projectDefaultASRModel}
         defaultSettingOptions={asrOptions}
         onChangeDefaultSetting={onChangeDefaultModel('asr')}
@@ -159,7 +161,8 @@ const ConfigurationsPanel = memo(props => {
         isLoading={configurationsLoading}
         hasDefaultSetting={true}
         defaultExpanded={expandSection === 'tts'}
-        defaultSettingLabel="Default TTS model:"
+        defaultSettingsLayout="inline"
+        defaultSettingLabel={renderInfoLabel('Default', tooltips.tts)}
         defaultSettingValue={projectDefaultTTSModel}
         defaultSettingOptions={ttsOptions}
         onChangeDefaultSetting={onChangeDefaultModel('tts')}
