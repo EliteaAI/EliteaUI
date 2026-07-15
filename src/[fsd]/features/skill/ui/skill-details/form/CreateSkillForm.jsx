@@ -416,6 +416,7 @@ const skillCreateFormStyles = () => ({
     border: `0.0625rem solid ${palette.border.table}`,
     backgroundColor: palette.background.userInputBackground,
     overflow: 'auto',
+    fontSize: '0.875rem',
   }),
   emptyPreview: ({ palette }) => ({
     color: palette.text.metrics,

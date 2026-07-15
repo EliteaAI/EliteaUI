@@ -432,6 +432,7 @@ const componentStyles = (limitReached, isEditorFocused, isMuted, fullScreenMode)
     backgroundColor: palette.background.userInputBackground,
     overflow: 'auto',
     opacity: isMuted ? 0.55 : 1,
+    fontSize: '0.875rem',
   }),
   emptyPreview: ({ palette }) => ({
     color: palette.text.metrics,
