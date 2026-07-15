@@ -24,6 +24,7 @@ const LlmModelSelect = memo(props => {
     renderValue,
     disabled,
     sx,
+    labelSX,
   } = props;
   const { personal_project_id } = useSelector(state => state.user);
   const selectedProjectId = useSelectedProjectId();
@@ -152,6 +153,7 @@ const LlmModelSelect = memo(props => {
           helperText={mergedHelperText}
           showEmptyPlaceholder={false}
           isListFetching={isFetching}
+          labelSX={labelSX}
         />
       </Box>
     </>

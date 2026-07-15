@@ -215,7 +215,10 @@ const ApplicationControls = memo(({ setBlockNav, onSuccess }) => {
           <AuthorsButton key="AuthorsButton" />
         </Box>
       )}
-      <Controls.ControlsDropdown menuItems={menuItems} />
+      <Controls.ControlsDropdown
+        id="agent-actions"
+        menuItems={menuItems}
+      />
       <VersionDelete
         ref={versionDeleteRef}
         type="standalone"

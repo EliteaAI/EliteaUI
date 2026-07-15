@@ -80,6 +80,7 @@ export default function ArtifactTable(props) {
   const { windowWidth } = useGetWindowWidth();
   const [hoveredRowId, setHoveredRowId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [deletingFileName, setDeletingFileName] = useState(null);
 
   // Breadcrumb segments for current path
   const breadcrumbs = useMemo(() => parsePrefixToBreadcrumbs(currentPrefix || ''), [currentPrefix]);
@@ -349,6 +350,7 @@ export default function ArtifactTable(props) {
         const itemsToDelete = getItemsUnderFolder(bucketContents, row.key);
 
         if (itemsToDelete.length > 0) {
+          setDeletingFileName(null);
           deleteArtifacts({
             projectId,
             bucket,
@@ -357,6 +359,7 @@ export default function ArtifactTable(props) {
         }
       } else {
         // For files, use the key which already has the correct full path
+        setDeletingFileName(row.name || row.key);
         deleteArtifact({
           projectId,
           bucket,
@@ -425,11 +428,12 @@ export default function ArtifactTable(props) {
 
   useEffect(() => {
     if (isDeleteArtifactsSuccess) {
-      toastSuccess('The artifacts have been deleted successfully');
-    } else if (isDeleteArtifactSuccess) {
-      toastSuccess('The artifact has been deleted successfully');
+      toastSuccess('The selected files have been successfully deleted.');
+    } else if (isDeleteArtifactSuccess && deletingFileName) {
+      toastSuccess(`The ${deletingFileName} file has been successfully deleted.`);
+      setDeletingFileName(null);
     }
-  }, [isDeleteArtifactsSuccess, isDeleteArtifactSuccess, toastSuccess]);
+  }, [isDeleteArtifactsSuccess, isDeleteArtifactSuccess, deletingFileName, toastSuccess]);
 
   useEffect(() => {
     const errors = [

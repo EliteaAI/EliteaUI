@@ -4,7 +4,11 @@ import { useDispatch } from 'react-redux';
 
 import { useConversationNavigation } from '@/[fsd]/features/chat/lib/hooks';
 import { getChatParticipantUniqueId } from '@/[fsd]/features/chat/participants/lib/helpers';
-import { useLazyConversationDetailsQuery, useSelectConversationMutation } from '@/api';
+import {
+  useLazyConversationDetailsQuery,
+  useLazyMessageTracesQuery,
+  useSelectConversationMutation,
+} from '@/api';
 import { convertConversationToChatHistory } from '@/common/convertChatConversationMessages';
 import { areTheSameConversations, buildErrorMessage } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -42,6 +46,7 @@ export default function useSelectConversation({
   ] = useLazyConversationDetailsQuery();
   const [selectConversation, { isError: isSelectConversationError, error: selectConversationError }] =
     useSelectConversationMutation();
+  const [getMessageTraces] = useLazyMessageTracesQuery();
 
   const onSelectConversation = useCallback(
     async conversation => {
@@ -87,10 +92,16 @@ export default function useSelectConversation({
           changeUrlByConversation(conversation.id, result.data?.name || conversation.name);
 
           if (result.data) {
+            // Pins are served from message_trace_step (TS-4), not meta — fetch the light list and
+            // build chat_history from it. Failure degrades to no pins, never blocks the conversation.
+            const tracesResult = await getMessageTraces({
+              projectId,
+              conversationId: conversation.id,
+            });
             setActiveConversation({
               ...conversation,
               ...result.data,
-              chat_history: convertConversationToChatHistory(result.data),
+              chat_history: convertConversationToChatHistory(result.data, tracesResult.data),
             });
             const localActiveParticipant = getLocalActiveParticipant(result.data.id);
             if (localActiveParticipant.conversationId == result.data.id) {
@@ -144,6 +155,7 @@ export default function useSelectConversation({
       projectId,
       changeUrlByConversation,
       getConversationDetail,
+      getMessageTraces,
       setActiveConversation,
       getLocalActiveParticipant,
       setConversations,

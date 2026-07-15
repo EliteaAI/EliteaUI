@@ -145,17 +145,7 @@ export const BucketItem = forwardRef((props, ref) => {
         onClick: handleUploadClick,
       },
       {
-        label: isPinned ? 'Unpin from top' : 'Pin to top',
-        icon: (
-          <Box
-            component={isPinned ? PinIconFilled : PinIcon}
-            sx={styles.menuIcon}
-          />
-        ),
-        onClick: handlePinBucket,
-      },
-      {
-        label: 'Edit',
+        label: 'Rename',
         icon: (
           <EditIcon
             sx={{ fontSize: '1rem' }}
@@ -164,6 +154,16 @@ export const BucketItem = forwardRef((props, ref) => {
         ),
         disabled: !canUpdate,
         onClick: handleEditBucket,
+      },
+      {
+        label: isPinned ? 'Unpin from top' : 'Pin to top',
+        icon: (
+          <Box
+            component={isPinned ? PinIconFilled : PinIcon}
+            sx={styles.menuIcon}
+          />
+        ),
+        onClick: handlePinBucket,
       },
       {
         label: 'Share',

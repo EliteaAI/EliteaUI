@@ -101,6 +101,7 @@ const ToolBaseProperty = memo(props => {
   const errorText =
     (isIntegerConstraintError || (showValidation && (toolErrors[k] || validationErrorMessages?.[k]))) &&
     (typeof toolErrors[k] === 'string' ? toolErrors[k] : validationErrorMessages?.[k] || 'Field is required');
+  const compactLabelSX = v?.compact_label ? { fontSize: '0.875rem' } : undefined;
 
   const buildEditFieldPath = useCallback(
     fieldKey => {
@@ -524,6 +525,7 @@ const ToolBaseProperty = memo(props => {
           disabled={disableConfigFields || disabled}
           error={!!toastError}
           helperText={errorText}
+          labelSX={compactLabelSX}
         />
       );
     } else if (type === 'embedding_model') {
@@ -565,6 +567,7 @@ const ToolBaseProperty = memo(props => {
           disabled={disableConfigFields || disabled}
           multiple={v.originalType === 'array'}
           filters={v.toolkit_filter}
+          labelSX={compactLabelSX}
         />
       );
     } else if (type === 'agent_reference') {
@@ -609,6 +612,7 @@ const ToolBaseProperty = memo(props => {
       const placeholder =
         schemaPlaceholder || (isInteger && defaultValue !== undefined ? String(defaultValue) : undefined);
 
+      const isNameField = k === 'elitea_title' || k === 'label';
       return (
         <Box sx={styles.nameInputContainer}>
           <Input.StyledInputEnhancer
@@ -626,6 +630,12 @@ const ToolBaseProperty = memo(props => {
             placeholder={placeholder}
             onFocus={() => toggleFieldFocus(k)}
             onBlur={() => toggleFieldFocus(null)}
+            {...(isNameField && {
+              hasActionsToolBar: true,
+              copyMessage: 'The name has been copied.',
+              showFullScreenAction: false,
+              showExpandAction: false,
+            })}
           />
           {isFocused('label') && MAX_NAME_LENGTH === settings[k]?.length && (
             <Typography

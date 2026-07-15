@@ -116,7 +116,8 @@ const SkillControls = memo(props => {
         toastError(buildErrorMessage(error) || 'Failed to delete the version.');
         return;
       }
-      toastSuccess('The version has been deleted');
+      const versionName = versionDetails?.name || 'version';
+      toastSuccess(`The ${versionName} version has been successfully deleted.`);
       onChangeVersion?.(defaultVersionId);
     } catch (error) {
       toastError(buildErrorMessage(error) || 'Failed to delete the version.');
@@ -130,6 +131,7 @@ const SkillControls = memo(props => {
     onChangeVersion,
     toastError,
     toastSuccess,
+    versionDetails?.name,
   ]);
 
   const onDeleteSkill = useCallback(async () => {
@@ -139,12 +141,12 @@ const SkillControls = memo(props => {
         toastError(buildErrorMessage(error) || 'Failed to delete the skill.');
         return;
       }
-      toastSuccess('The skill has been deleted');
+      toastSuccess(`The ${skillName || 'skill'} skill has been successfully deleted.`);
       navigate(`${RouteDefinitions.Skills}/${SkillsTabs[0]}`);
     } catch (error) {
       toastError(buildErrorMessage(error) || 'Failed to delete the skill.');
     }
-  }, [deleteSkill, projectId, skillId, navigate, toastError, toastSuccess]);
+  }, [deleteSkill, projectId, skillId, skillName, navigate, toastError, toastSuccess]);
 
   const menuItems = useMemo(
     () => [
@@ -184,8 +186,9 @@ const SkillControls = memo(props => {
         disabled: disableDelete,
         addSeparator: true,
         alarm: true,
-        alertTitle: 'Delete version',
-        confirmText: `Are you sure to delete ${versionDetails?.name}?`,
+        entityName: versionDetails?.name,
+        inlineExtraContent: " version? It can't be restored.",
+        shouldRequestInputName: false,
         onConfirm: onDeleteVersion,
       },
       {

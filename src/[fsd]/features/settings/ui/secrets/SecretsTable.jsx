@@ -81,7 +81,7 @@ const SecretsTable = memo(props => {
   const [deleteSecret] = useSecretDeleteMutation();
   const [showSecret] = useLazySecretShowQuery();
   const [hideSecret] = useSecretHideMutation();
-  const { toastError, toastInfo } = useToast();
+  const { toastError, toastInfo, toastSuccess } = useToast();
 
   // State to force re-render on window resize and sidebar changes
   const [windowSize, setWindowSize] = useState({
@@ -211,6 +211,7 @@ const SecretsTable = memo(props => {
     projectId,
     toastError,
     toastInfo,
+    toastSuccess,
     refetch,
     isShowSecretMap,
     setIsShowSecretMap,
@@ -419,7 +420,7 @@ const SecretsTable = memo(props => {
             secretName={row.name}
             value={row.id}
             tooltip={isSafariBrowser ? 'Use copy icon in actions to copy secret' : 'Copy secret'}
-            copyMessage={'The secret has been copied to the clipboard'}
+            copyMessage={`The ${row.name} values have been copied.`}
             showSecret={showSecret}
             projectId={projectId}
             toastInfo={toastInfo}

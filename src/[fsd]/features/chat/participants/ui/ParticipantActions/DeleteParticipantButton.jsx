@@ -1,70 +1,44 @@
 import { memo, useCallback, useMemo, useState } from 'react';
 
-import { Box, IconButton, Typography, useTheme } from '@mui/material';
+import { IconButton } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { useParticipantName } from '@/[fsd]/features/chat/participants/lib/hooks';
+import { ModalConstants } from '@/[fsd]/shared/lib/constants';
+import { isMcpToolkitType } from '@/[fsd]/shared/lib/helpers';
+import { Modal } from '@/[fsd]/shared/ui';
 import { ChatParticipantType } from '@/common/constants';
-import AlertDialog from '@/components/AlertDialog';
-import AttentionIcon from '@/components/Icons/AttentionIcon';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 
 const DeleteParticipantButton = memo(props => {
   const { disabled, participant, onDelete, sx, warningMessage } = props;
 
   const participantName = useParticipantName(participant);
-  const theme = useTheme();
 
   const entityType = useMemo(() => {
     const name = participant?.entity_name;
     const agentType = participant?.entity_settings?.agent_type || participant?.agent_type;
-    if (name === ChatParticipantType.Toolkits) return 'toolkit';
+    const toolkitType = participant?.entity_settings?.toolkit_type;
+    const isMcp = participant?.meta?.mcp === true || isMcpToolkitType(toolkitType);
+
+    if (name === ChatParticipantType.Toolkits) {
+      return isMcp ? 'MCP' : 'toolkit';
+    }
     if (name === ChatParticipantType.Pipelines) return 'pipeline';
     if (name === ChatParticipantType.Users) return 'user';
     if (name === ChatParticipantType.Applications) {
       return agentType === 'pipeline' ? 'pipeline' : 'agent';
     }
     return undefined;
-  }, [participant?.agent_type, participant?.entity_name, participant?.entity_settings?.agent_type]);
+  }, [
+    participant?.agent_type,
+    participant?.entity_name,
+    participant?.entity_settings?.agent_type,
+    participant?.entity_settings?.toolkit_type,
+    participant?.meta?.mcp,
+  ]);
 
   const removeLabel = `Remove ${entityType || 'participant'}`;
-
-  const dialogTitle = useMemo(
-    () => (
-      <Box sx={styles.dialogTitleWrapper}>
-        <Box
-          component={AttentionIcon}
-          sx={styles.attentionIcon}
-        />
-        {`${removeLabel}?`}
-      </Box>
-    ),
-    [removeLabel],
-  );
-
-  const styledEntityName = useMemo(
-    () => (
-      <Typography
-        component="span"
-        variant="headingSmall"
-        color={theme.palette.text.deleteAlertEntityName}
-      >
-        {participantName}
-      </Typography>
-    ),
-    [participantName, theme.palette.text.deleteAlertEntityName],
-  );
-
-  const dialogContent = useMemo(() => {
-    if (warningMessage) return warningMessage;
-    if (!entityType)
-      return `Are you sure to remove this participant ${participantName} from the conversation?`;
-    return (
-      <>
-        Are you sure to remove the {styledEntityName} {entityType} from conversation?
-      </>
-    );
-  }, [entityType, participantName, styledEntityName, warningMessage]);
 
   const [openAlert, setOpenAlert] = useState(false);
 
@@ -87,6 +61,11 @@ const DeleteParticipantButton = memo(props => {
     [onDelete, participant],
   );
 
+  const dialogTitle = `Remove ${entityType || 'participant'}?`;
+
+  const textContent = warningMessage || 'Are you sure to remove the ';
+  const inlineExtraContent = warningMessage ? '' : ` ${entityType || 'participant'} from chat?`;
+
   return (
     <>
       <Tooltip
@@ -104,14 +83,15 @@ const DeleteParticipantButton = memo(props => {
           <DeleteIcon sx={styles.deleteIcon} />
         </IconButton>
       </Tooltip>
-      <AlertDialog
-        title={dialogTitle}
-        alertContent={dialogContent}
+      <Modal.DeleteEntityModal
         open={openAlert}
-        alarm
         onClose={onCloseAlert}
-        onCancel={onCloseAlert}
         onConfirm={onConfirmAlert}
+        title={dialogTitle}
+        titleIcon={ModalConstants.MODAL_ICON_TYPE.warning}
+        textContent={textContent}
+        name={warningMessage ? '' : participantName}
+        inlineExtraContent={inlineExtraContent}
         confirmButtonText="Remove"
       />
     </>
@@ -124,16 +104,6 @@ DeleteParticipantButton.displayName = 'DeleteParticipantButton';
 const styles = {
   deleteIcon: {
     fontSize: '1rem',
-  },
-  dialogTitleWrapper: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '.5rem',
-  },
-  attentionIcon: {
-    width: '1.125rem',
-    height: '1.125rem',
-    fill: theme => theme.palette.icon.fill.attention,
   },
 };
 

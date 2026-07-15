@@ -7,7 +7,7 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 export const useDeleteFolder = props => {
   const projectId = useSelectedProjectId();
 
-  const { setFolders, toastError } = props;
+  const { setFolders, toastError, toastSuccess } = props;
 
   const [deleteFolder, { isError, error }] = useDeleteFolderMutation();
 
@@ -22,12 +22,14 @@ export const useDeleteFolder = props => {
         });
       }
       if (!result.error) {
+        const folderName = conversation.name || conversation.title || 'folder';
+        toastSuccess?.(`The ${folderName} folder has been successfully deleted.`);
         setFolders(prev => {
           return prev.filter(item => !areTheSameFolders(conversation, item));
         });
       }
     },
-    [deleteFolder, projectId, setFolders],
+    [deleteFolder, projectId, setFolders, toastSuccess],
   );
 
   useEffect(() => {
