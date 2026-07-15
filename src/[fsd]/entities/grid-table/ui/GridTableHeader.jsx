@@ -15,6 +15,7 @@ const GridTableHeader = memo(props => {
     isIndeterminate = false,
     gridTemplateColumns,
     showCheckbox = true,
+    columnTestIdPrefix,
   } = props;
 
   const styles = gridTableHeaderStyles(gridTemplateColumns, showCheckbox);
@@ -41,6 +42,9 @@ const GridTableHeader = memo(props => {
         return (
           <Box
             key={`header-${column.field || index}`}
+            data-testid={
+              columnTestIdPrefix ? `${columnTestIdPrefix}-column-header-${column.field}` : undefined
+            }
             sx={styles.headerCell(isActive, isLastItem, isSortable, column.sortable, column.align)}
             onClick={isSortable || column.sortable ? () => onSort(column.field) : undefined}
           >

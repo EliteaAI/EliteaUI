@@ -68,6 +68,7 @@ const DataTableNameCell = memo(props => {
           <Typography
             variant="headingSmall"
             component="div"
+            data-testid={String(cardType).toLowerCase().includes('mcp') ? 'mcp-table-row-name' : undefined}
             sx={styles.nameText}
           >
             <HighlightQuery
