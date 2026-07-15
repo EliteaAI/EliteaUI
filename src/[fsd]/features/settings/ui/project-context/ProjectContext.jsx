@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Box, CircularProgress, Typography } from '@mui/material';
+import { Box, CircularProgress, Tooltip, Typography } from '@mui/material';
 
 import { Banner, Button, Field } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
@@ -8,9 +8,12 @@ import Markdown from '@/[fsd]/shared/ui/markdown';
 import TabGroupButton from '@/[fsd]/shared/ui/tab-group-button/TabGroupButton';
 import { useProjectContextQuery, useUpdateProjectContextMutation } from '@/api/projectContext';
 import CodeIcon from '@/assets/code-icon.svg?react';
+import FullscreenOutlinedIcon from '@/assets/full-screen-icon.svg?react';
 import ImportIcon from '@/assets/import-icon.svg?react';
 import OpenEyeIcon from '@/assets/open-eye-icon.svg?react';
 import { PERMISSIONS } from '@/common/constants';
+import CopyIcon from '@/components/Icons/CopyIcon';
+import StyledInputModal from '@/components/StyledInputModal';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
@@ -38,6 +41,8 @@ const ProjectContext = memo(() => {
   const [mode, setMode] = useState('edit');
   const [isDirty, setIsDirty] = useState(false);
   const [isEditorFocused, setIsEditorFocused] = useState(false);
+  const [fullScreenMode, setFullScreenMode] = useState(false);
+
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -147,8 +152,21 @@ const ProjectContext = memo(() => {
   const handleEditorBlur = e => {
     if (!e.currentTarget.contains(e.relatedTarget)) setIsEditorFocused(false);
   };
+  const toggleFullScreen = useCallback(state => {
+    setFullScreenMode(state);
+  }, []);
 
-  const styles = componentStyles(limitReached, isEditorFocused, !enabled || !canEditProjectContext);
+  const handleChangeFromFullScreenModal = ({ target }) => {
+    handleContentChange(target.value);
+    handleEditorBlur({ currentTarget: document.activeElement, relatedTarget: null });
+  };
+
+  const styles = componentStyles(
+    limitReached,
+    isEditorFocused,
+    !enabled || !canEditProjectContext,
+    fullScreenMode,
+  );
 
   if (isLoading) {
     return (
@@ -195,9 +213,6 @@ const ProjectContext = memo(() => {
               >
                 Project Background
               </Typography>
-              <Typography variant="bodySmall">
-                Include goals, terminology, workflows, or constraints relevant to the project.
-              </Typography>
             </Box>
             <Box sx={styles.toolbar}>
               {showEditorControls && (
@@ -220,6 +235,28 @@ const ProjectContext = memo(() => {
                     accept=".md,text/markdown"
                     onChange={handleFileUpload}
                   />
+                  <Tooltip
+                    title="Copy to clipboard"
+                    placement="top"
+                  >
+                    <Button.BaseBtn
+                      variant={BUTTON_VARIANTS.secondary}
+                      onClick={null}
+                      startIcon={<CopyIcon fill="currentColor" />}
+                    />
+                  </Tooltip>
+                  {mode === 'edit' && (
+                    <Tooltip
+                      title="Full screen view"
+                      placement="top"
+                    >
+                      <Button.BaseBtn
+                        variant={BUTTON_VARIANTS.secondary}
+                        onClick={() => toggleFullScreen(true)}
+                        startIcon={<FullscreenOutlinedIcon />}
+                      />
+                    </Tooltip>
+                  )}
                 </>
               )}
               <TabGroupButton
@@ -246,6 +283,19 @@ const ProjectContext = memo(() => {
                 maxLength={MAX_CHARS}
                 readOnly={!canEditProjectContext}
               />
+              {fullScreenMode && (
+                <StyledInputModal
+                  value={content}
+                  title="Project Background"
+                  key={fullScreenMode}
+                  open={fullScreenMode}
+                  hasOnChangeCallback
+                  onChange={handleChangeFromFullScreenModal}
+                  onClose={() => toggleFullScreen(false)}
+                  specifiedLanguage="markdown"
+                  disabled={!canEditProjectContext}
+                />
+              )}
             </Box>
           ) : (
             <Box sx={styles.preview}>
@@ -295,7 +345,7 @@ ProjectContext.displayName = 'ProjectContext';
 export default ProjectContext;
 
 /** @type {MuiSx} */
-const componentStyles = (limitReached, isEditorFocused, isMuted) => ({
+const componentStyles = (limitReached, isEditorFocused, isMuted, fullScreenMode) => ({
   loader: {
     display: 'flex',
     alignItems: 'center',
@@ -325,6 +375,7 @@ const componentStyles = (limitReached, isEditorFocused, isMuted) => ({
     justifyContent: 'space-between',
     gap: '1rem',
     paddingBottom: '0.75rem',
+    visibility: fullScreenMode ? 'hidden' : 'visible',
   },
   editorText: {
     display: 'flex',
@@ -341,7 +392,9 @@ const componentStyles = (limitReached, isEditorFocused, isMuted) => ({
   editorWrapper: ({ palette }) => ({
     display: 'flex',
     flex: 1,
-    minHeight: '25rem',
+    minHeight: '19rem',
+    maxHeight: '19rem',
+    visibility: fullScreenMode ? 'hidden' : 'visible',
     borderRadius: '0.375rem',
     border: `0.0625rem solid ${palette.border.table}`,
     overflow: 'hidden',
@@ -378,6 +431,7 @@ const componentStyles = (limitReached, isEditorFocused, isMuted) => ({
     display: 'flex',
     justifyContent: 'flex-end',
     paddingTop: '0.25rem',
+    visibility: fullScreenMode ? 'hidden' : 'visible',
   },
   charCounter: ({ palette }) => ({
     color: limitReached ? palette.text.error : palette.text.primary,
@@ -390,5 +444,6 @@ const componentStyles = (limitReached, isEditorFocused, isMuted) => ({
     paddingTop: '0.25rem',
     marginTop: 'auto',
     width: '100%',
+    visibility: fullScreenMode ? 'hidden' : 'visible',
   },
 });

@@ -3,8 +3,8 @@ import { memo } from 'react';
 import { Box } from '@mui/material';
 
 import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
+import AgentPipelineBuilder from '@/[fsd]/features/settings/ui/project-general/AgentPipelineBuilder';
 import { ProjectParamsHeader } from '@/[fsd]/features/settings/ui/project-general/general';
-import AgentPipelineBuilder from '@/[fsd]/features/settings/ui/project-general/general/AgentPipelineBuilder';
 import { ProjectAIConfigurations } from '@/[fsd]/features/settings/ui/project-general/project-ai-configurations';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';

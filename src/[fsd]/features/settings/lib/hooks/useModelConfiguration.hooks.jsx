@@ -4,6 +4,7 @@ import { ModelConfigurationHelpers } from '@/[fsd]/features/settings/lib/helpers
 import ShareIcon from '@/assets/share-icon.svg?react';
 import { CollectionStatus, PUBLIC_PROJECT_ID } from '@/common/constants';
 import BriefcaseIcon from '@/components/Icons/BriefcaseIcon.jsx';
+import useToast from '@/hooks/useToast';
 
 export const useModelConfiguration = ({ projectId, uniqueConfigurations }) => {
   const [model, setModel] = useState({
@@ -231,8 +232,8 @@ export const useCopyConfiguration = ({
   uniqueConfigurations,
   userApiUrl,
   configurationsBySections,
-  toastInfo,
 }) => {
+  const { toastSuccess, toastError } = useToast();
   const handleCopyCardInformation = useCallback(async () => {
     try {
       const informationData = ModelConfigurationHelpers.buildConfigurationData({
@@ -245,11 +246,19 @@ export const useCopyConfiguration = ({
 
       const jsonString = JSON.stringify(informationData, null, 2);
       await navigator.clipboard.writeText(jsonString);
-      toastInfo?.('The basic information has been copied as JSON.');
+      toastSuccess?.('The basic information has been copied as JSON.');
     } catch {
-      // Silent error handling
+      toastError('Failed to copy configuration information');
     }
-  }, [model, projectId, uniqueConfigurations, userApiUrl, configurationsBySections, toastInfo]);
+  }, [
+    userApiUrl,
+    projectId,
+    model,
+    configurationsBySections,
+    uniqueConfigurations,
+    toastSuccess,
+    toastError,
+  ]);
 
   return { handleCopyCardInformation };
 };
