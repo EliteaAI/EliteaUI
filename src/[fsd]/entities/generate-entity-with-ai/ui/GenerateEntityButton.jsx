@@ -8,7 +8,7 @@ import SparkleIcon from '@/assets/ai-sparkle-icon.svg?react';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
 const GenerateEntityButton = memo(props => {
-  const { permission, renderModal } = props;
+  const { permission, renderModal, buttonTestId } = props;
   const { isOpen, handleOpen, handleClose } = useModal();
   const { checkPermission } = useCheckPermission();
 
@@ -22,6 +22,7 @@ const GenerateEntityButton = memo(props => {
         startIcon={<SparkleIcon />}
         onClick={handleOpen}
         sx={styles.button}
+        data-testid={buttonTestId}
       >
         Build with AI
       </BaseBtn>
