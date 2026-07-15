@@ -278,6 +278,10 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
     const others = filteredToolActions.filter(action => action.type !== TOOL_ACTION_TYPES.SwarmChild);
     return { swarmChildActions: swarmChildren, nonSwarmChildActions: others };
   }, [filteredToolActions, isProcessing]);
+  const originalNonSwarmChildActions = useMemo(
+    () => toolActions.filter(action => action.type !== TOOL_ACTION_TYPES.SwarmChild),
+    [toolActions],
+  );
 
   const isEditing = useMemo(
     () =>
@@ -585,8 +589,8 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
               via hitlBuckets, so they survive the per-turn StartTask (#4993). */}
           {nonSwarmChildActions?.length > 0 && (
             <ApplicationThinkView
-              actions={[...nonSwarmChildActions]}
-              originalActions={toolActions.filter(a => a.type !== TOOL_ACTION_TYPES.SwarmChild)}
+              actions={nonSwarmChildActions}
+              originalActions={originalNonSwarmChildActions}
               isStreaming={isProcessing}
               tools={tools}
               subAgentTypeByName={subAgentTypeByName}

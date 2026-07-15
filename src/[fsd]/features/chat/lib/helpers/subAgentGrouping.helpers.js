@@ -44,10 +44,10 @@
  *        null      → not the wrapper; leave the block's pause state unchanged
  * @returns {Array} ordered blocks: {kind:'coord', actions} | {kind:'sub', instanceKey, name, actions, pausedForResume}
  */
-export function partitionActionsIntoBlocks(
+export const partitionActionsIntoBlocks = (
   actionsList,
   { deriveName, deriveInstanceKey, deriveSiblingOrdinal, classifyWrapper },
-) {
+) => {
   const blocks = [];
   const subBlockByKey = new Map(); // instanceKey (pcid) -> block
   const openBlockByName = new Map(); // name -> most-recent block for that name
@@ -116,7 +116,7 @@ export function partitionActionsIntoBlocks(
 
   flushCoord();
   return blocks;
-}
+};
 
 // Reload/finalize epoch-collapse (#5386).
 //
@@ -337,9 +337,59 @@ export function resolveSubAgentLiveness({
  * @param {string} toolType  the component's TOOL_ACTION_TYPES.Tool enum value
  * @returns {string|null}  the action id to skip, or null when there is nothing to skip
  */
-export function inflightToolChipId(refAction, toolType) {
+export const inflightToolChipId = (refAction, toolType) => {
   return refAction && refAction.type === toolType ? (refAction.id ?? null) : null;
-}
+};
+
+const hasRenderableValue = value =>
+  typeof value === 'string' ? Boolean(value.trim()) : value !== undefined && value !== null;
+
+/**
+ * Fingerprint only the fields that can change action grouping, hierarchy,
+ * liveness, or chip identity. Streaming token text is represented by presence,
+ * not its growing value: the active ActionView receives the latest action while
+ * the expensive block/breadcrumb pipeline can retain its previous result.
+ *
+ * @param {any} action
+ * @returns {string}
+ */
+export const getActionStructureSignature = action => {
+  if (!action) return '';
+  const meta = action.toolMeta || {};
+  return JSON.stringify([
+    action.id,
+    action.type,
+    action.status,
+    action.name,
+    action.original_name,
+    action.parent_agent_name,
+    action.parent_agent_call_id,
+    action.parent_agent_path,
+    action.sibling_ordinal,
+    action.agent_type,
+    action.hitlDeferred,
+    action.traceStepId,
+    action.message,
+    action.markdown,
+    action.responseMetadata?.tool_name,
+    meta.parent_agent_name,
+    meta.parent_agent_call_id,
+    meta.parent_agent_path,
+    meta.sibling_ordinal,
+    meta.toolkit_type,
+    meta.agent_type,
+    meta.langgraph_node,
+    meta.ls_model_name,
+    meta.display_name,
+    meta.toolkit_name,
+    meta.mcp_server_url,
+    meta.hitl_deferred,
+    meta.icon_meta,
+    hasRenderableValue(action.content),
+    hasRenderableValue(action.thinking),
+    hasRenderableValue(action.toolOutputs),
+  ]);
+};
 
 // Depth-3 per-tier breadcrumb numbering (#5778 Phase 6).
 //
@@ -387,7 +437,7 @@ const ROOT_SCOPE = '__root__';
  *        when a later HITL batch contains only one still-paused sibling.
  * @returns {Map<string, string>} instanceKey -> breadcrumbLabel
  */
-export function computeBreadcrumbs(entries, contextEntries = []) {
+export const computeBreadcrumbs = (entries, contextEntries = []) => {
   const result = new Map();
   const numberingEntries = [...(entries || []), ...(contextEntries || [])];
 
@@ -430,14 +480,14 @@ export function computeBreadcrumbs(entries, contextEntries = []) {
   });
 
   return result;
-}
+};
 
 /** Prefer the deepest and most fully identified path, independent of arrival order. */
-export function selectRichestAgentPath(paths) {
+export const selectRichestAgentPath = paths => {
   const score = path =>
     (path || []).reduce(
       (total, tier) => total + 10 + (tier?.call_id ? 2 : 0) + (tier?.sibling_ordinal ? 1 : 0),
       0,
     );
   return (paths || []).reduce((best, candidate) => (score(candidate) > score(best) ? candidate : best), []);
-}
+};

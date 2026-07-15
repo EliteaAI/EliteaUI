@@ -12,6 +12,7 @@ import {
 import {
   buildPcidAnchorMap,
   computeBreadcrumbs,
+  getActionStructureSignature,
   inflightToolChipId,
   isInvocationId,
   partitionActionsIntoBlocks,
@@ -29,6 +30,102 @@ import { getToolInfoFromAction } from '@/common/toolActionUitls';
 
 import ActionView from './ActionView';
 
+const useStructurallyStableActions = (actions, enabled) => {
+  const cache = useRef({ signatures: [], actions });
+  const signatures = useMemo(() => actions.map(getActionStructureSignature), [actions]);
+  const previous = cache.current;
+  const unchanged =
+    signatures.length === previous.signatures.length &&
+    signatures.every((signature, index) => signature === previous.signatures[index]);
+
+  // Commit cache state only after React commits the render. An interrupted
+  // concurrent render must not publish an action array the UI never displayed.
+  useEffect(() => {
+    if (!enabled || !unchanged) cache.current = { signatures, actions };
+  }, [actions, enabled, signatures, unchanged]);
+
+  return enabled && unchanged ? previous.actions : actions;
+};
+
+const SubAgentThinkBlock = memo(props => {
+  const {
+    instanceKey,
+    subEntry,
+    childError,
+    inflight,
+    lastRoundRunning,
+    lastRoundDone,
+    isLiveCurrent,
+    currentAction,
+    currentActionRunning,
+    currentActionBox,
+    messageId,
+    onCopy,
+    tools,
+    renderGroupChips,
+    badgesContainerSx,
+    streaming,
+  } = props;
+  const displayName = subEntry?.name || childError?.name || instanceKey;
+  const ordinal = subEntry?.ordinal || 0;
+  const label = subEntry?.breadcrumbLabel || (ordinal ? `${displayName} (${ordinal})` : displayName);
+  const groups = subEntry?.groups || [];
+  const { running, done } = resolveSubAgentLiveness({
+    paused: !!subEntry?.pausedForResume,
+    lastRoundRunning,
+    lastRoundDone,
+    hasInflight: !!inflight,
+    isLiveCurrent: isLiveCurrent && currentActionRunning,
+    hasError: !!childError,
+  });
+
+  return (
+    <SubAgentAccordion
+      name={displayName}
+      label={label}
+      tools={tools}
+      agentType={subEntry?.agentType}
+      running={running}
+      defaultExpanded={!!childError}
+    >
+      {groups.length > 0 && (
+        <Box sx={badgesContainerSx}>
+          {groups.flatMap((group, index) =>
+            renderGroupChips(
+              group,
+              `${instanceKey}-${index}`,
+              streaming,
+              inflight || currentAction,
+              streaming,
+            ),
+          )}
+        </Box>
+      )}
+      {inflight ? (
+        <ActionView
+          showProgress={!done}
+          action={inflight}
+          tools={tools}
+          isStreaming={!done}
+        />
+      ) : (
+        isLiveCurrent && currentActionBox
+      )}
+      {childError && (
+        <ErrorTrace
+          compact
+          headline={childError.headline || childError.exception}
+          trace={childError.exception}
+          messageId={messageId}
+          onCopy={onCopy}
+        />
+      )}
+    </SubAgentAccordion>
+  );
+});
+
+SubAgentThinkBlock.displayName = 'SubAgentThinkBlock';
+
 // Streaming view of the thinking block: ordered coordinator chip blocks and
 // per-sub-agent accordions, plus any sub-agent whose activity the throttled
 // reveal hasn't surfaced yet, plus the orchestrator's own in-flight box at the
@@ -42,6 +139,7 @@ const StreamingThinkBlocks = memo(props => {
     subAgentRunning,
     subAgentDone,
     currentActionKey,
+    currentAction,
     currentActionRunning,
     currentActionBox,
     subAgentErrors,
@@ -123,10 +221,6 @@ const StreamingThinkBlocks = memo(props => {
     const keyedError = subAgentErrors?.[key];
     if (!subEntry && isInvocationId(key) && !keyedError) return null;
     const displayName = subEntry?.name || keyedError?.name || key;
-    const ordinal = subEntry?.ordinal || 0;
-    // #5778: all nested blocks use the same path-derived label contract.
-    const label = subEntry?.breadcrumbLabel || (ordinal ? `${displayName} (${ordinal})` : displayName);
-    const groups = subEntry?.groups || [];
     // One invocation can span several raw pcids: a sequential nested-HITL pause
     // RESUMES with a fresh pcid each round, and partitionActionsIntoBlocks folds
     // those rounds into this one block (aliasKeys = anchor + every resume pcid).
@@ -135,62 +229,28 @@ const StreamingThinkBlocks = memo(props => {
     const aliasKeys = subEntry?.aliasKeys?.length ? subEntry.aliasKeys : [key];
     const lastKey = aliasKeys[aliasKeys.length - 1];
     const inflight = subAgentInflight.get(lastKey);
-    // Prefer invocation identity; retain the name lookup for legacy state.
     const childError = keyedError || subAgentErrors?.[displayName];
-    // A sequential HITL pause surfaces as the wrapper ERRORING (status=error, not
-    // deferred), which subAgentDone counts as "returned". But the invocation is
-    // NOT finished — it is paused awaiting approval and will resume with a new
-    // round. `pausedForResume` (the grouping's authoritative pause flag) keeps the
-    // accordion shimmering through that gap, mirroring the parallel-deferred case
-    // (#5378). The invocation is truly DONE only when its LATEST round's wrapper
-    // returned for real and nothing is paused or still running.
-    const { running, done } = resolveSubAgentLiveness({
-      paused: !!subEntry?.pausedForResume,
-      lastRoundRunning: !!subAgentRunning.get(lastKey),
-      lastRoundDone: !!subAgentDone.get(lastKey),
-      hasInflight: !!inflight,
-      isLiveCurrent: currentActionAnchor === key && currentActionRunning,
-      hasError: !!childError,
-    });
+    const isLiveCurrent = currentActionAnchor === key;
     return (
-      <SubAgentAccordion
+      <SubAgentThinkBlock
         key={`sa-${key}`}
-        name={displayName}
-        label={label}
+        instanceKey={key}
+        subEntry={subEntry}
+        childError={childError}
+        inflight={inflight}
+        lastRoundRunning={!!subAgentRunning.get(lastKey)}
+        lastRoundDone={!!subAgentDone.get(lastKey)}
+        isLiveCurrent={isLiveCurrent}
+        currentAction={isLiveCurrent ? currentAction : null}
+        currentActionRunning={isLiveCurrent && currentActionRunning}
+        currentActionBox={isLiveCurrent ? currentActionBox : null}
+        messageId={messageId}
+        onCopy={onCopy}
         tools={tools}
-        agentType={subEntry?.agentType}
-        running={running}
-        defaultExpanded={!!childError}
-      >
-        {groups.length > 0 && (
-          <Box sx={badgesContainerSx}>
-            {groups.flatMap((group, i) =>
-              renderGroupChips(group, `${key}-${i}`, streaming, inflight, streaming),
-            )}
-          </Box>
-        )}
-        {inflight ? (
-          // A finished child still keeps its streamed content visible, but with
-          // no spinner / streaming footer.
-          <ActionView
-            showProgress={!done}
-            action={inflight}
-            tools={tools}
-            isStreaming={!done}
-          />
-        ) : (
-          currentActionAnchor === key && currentActionBox
-        )}
-        {childError && (
-          <ErrorTrace
-            compact
-            headline={childError.headline || childError.exception}
-            trace={childError.exception}
-            messageId={messageId}
-            onCopy={onCopy}
-          />
-        )}
-      </SubAgentAccordion>
+        renderGroupChips={renderGroupChips}
+        badgesContainerSx={badgesContainerSx}
+        streaming={streaming}
+      />
     );
   };
 
@@ -203,7 +263,9 @@ const StreamingThinkBlocks = memo(props => {
                 key={`coord-${bi}`}
                 sx={badgesContainerSx}
               >
-                {block.groups.flatMap((group, i) => renderGroupChips(group, `coord-${bi}-${i}`, streaming))}
+                {block.groups.flatMap((group, i) =>
+                  renderGroupChips(group, `coord-${bi}-${i}`, streaming, currentAction),
+                )}
               </Box>
             )
           : renderSub(block.instanceKey),
@@ -235,7 +297,13 @@ const ApplicationThinkView = memo(props => {
   const previousActionsLength = useRef(actions.length);
   const emptySignalMap = useMemo(() => new Map(), []);
 
-  const styles = applicationThinkViewStyles();
+  const styles = useMemo(applicationThinkViewStyles, []);
+
+  // Socket token chunks replace the active action object on every update. Keep
+  // the hierarchy/grouping input stable while only token text grows; structural
+  // changes (new action, status, identity, path, or first renderable content)
+  // still invalidate it. History always uses the current persisted payload.
+  const structuralActions = useStructurallyStableActions(actions, isStreaming);
 
   useEffect(() => {
     // A live tree stays expanded when it becomes persisted, avoiding a mode
@@ -247,6 +315,10 @@ const ApplicationThinkView = memo(props => {
   const finishedActions = useMemo(
     () => actions.slice(0, displayedActionIndex),
     [actions, displayedActionIndex],
+  );
+  const finishedStructuralActions = useMemo(
+    () => structuralActions.slice(0, displayedActionIndex),
+    [structuralActions, displayedActionIndex],
   );
   // Check by type only - streaming uses actual tool names, history uses constants
   const isReasoningAction = useCallback(
@@ -533,10 +605,13 @@ const ApplicationThinkView = memo(props => {
 
   // Revealed (finished) actions for streaming view; all actions for history view.
   const streamingBlocks = useMemo(
-    () => partitionIntoBlocks(finishedActions),
-    [partitionIntoBlocks, finishedActions],
+    () => partitionIntoBlocks(finishedStructuralActions),
+    [partitionIntoBlocks, finishedStructuralActions],
   );
-  const historyBlocks = useMemo(() => partitionIntoBlocks(actions), [partitionIntoBlocks, actions]);
+  const historyBlocks = useMemo(
+    () => partitionIntoBlocks(structuralActions),
+    [partitionIntoBlocks, structuralActions],
+  );
 
   // Sub-agent accordions are collapsed by default and opened on demand to inspect
   // the child's activity. Their chips therefore render from the FULL set of
@@ -547,17 +622,7 @@ const ApplicationThinkView = memo(props => {
   const streamingSubGroupsFull = useMemo(() => {
     const map = new Map();
     historyBlocks.forEach(block => {
-      if (block.kind === 'sub')
-        map.set(block.instanceKey, {
-          groups: block.groups,
-          agentType: block.agentType,
-          name: block.name,
-          ordinal: block.ordinal,
-          // Carried through so streaming and persisted blocks share a label.
-          breadcrumbLabel: block.breadcrumbLabel,
-          aliasKeys: block.aliasKeys,
-          pausedForResume: block.pausedForResume,
-        });
+      if (block.kind === 'sub') map.set(block.instanceKey, block);
     });
     return map;
   }, [historyBlocks]);
@@ -565,9 +630,9 @@ const ApplicationThinkView = memo(props => {
   // In-flight streaming LLM action per sub-agent → drives the parallel content
   // boxes (one per sub-agent, each ~5 lines). Keyed by sub-agent so two children
   // streaming the same node name don't bleed content into one box (issue #4993).
-  const subAgentInflight = useMemo(() => {
-    const map = new Map();
-    actions.forEach(a => {
+  const subAgentInflightSlots = useMemo(() => {
+    const slots = [];
+    structuralActions.forEach((a, index) => {
       if (!a || a.type !== TOOL_ACTION_TYPES.Llm) return;
       const name = deriveSubAgentName(a);
       if (!name) return;
@@ -578,10 +643,18 @@ const ApplicationThinkView = memo(props => {
         a.status !== ToolActionStatus.cancelled;
       const hasContent = (a.content && a.content.trim()) || (a.thinking && a.thinking.trim());
       if (!active || !hasContent) return;
-      map.set(key, a); // latest active action per sub-agent invocation wins
+      slots.push({ key, index });
+    });
+    return slots;
+  }, [structuralActions, deriveSubAgentName, deriveSubAgentInstanceKey]);
+
+  const subAgentInflight = useMemo(() => {
+    const map = new Map();
+    subAgentInflightSlots.forEach(({ key, index }) => {
+      map.set(key, actions[index]);
     });
     return map;
-  }, [actions, deriveSubAgentName, deriveSubAgentInstanceKey]);
+  }, [actions, subAgentInflightSlots]);
 
   // Per-sub-agent progress signals that span the child's WHOLE lifecycle (LLM +
   // tool-call phases) and — critically — stop the moment the child is truly done,
@@ -606,7 +679,7 @@ const ApplicationThinkView = memo(props => {
   const { subAgentRunning, subAgentDone } = useMemo(() => {
     const hasNonTerminal = new Map();
     const wrapperTerminal = new Map();
-    actions.forEach(a => {
+    structuralActions.forEach(a => {
       if (!a) return;
       const name = deriveSubAgentName(a);
       if (!name) return;
@@ -661,16 +734,16 @@ const ApplicationThinkView = memo(props => {
       if (!wrapperTerminal.get(key)) running.set(key, true);
     });
     return { subAgentRunning: running, subAgentDone: wrapperTerminal };
-  }, [actions, deriveSubAgentName, deriveSubAgentInstanceKey]);
+  }, [structuralActions, deriveSubAgentName, deriveSubAgentInstanceKey]);
 
   const thinkStepStatus = useMemo(
     () =>
-      actions.map(action => ({
+      structuralActions.map(action => ({
         status: action?.status,
         content: action?.content,
         toolOutputs: action?.toolOutputs,
       })),
-    [actions],
+    [structuralActions],
   );
 
   const currentStepStatus = useMemo(
@@ -713,15 +786,15 @@ const ApplicationThinkView = memo(props => {
   useEffect(() => {
     // Find the highest index of actions that are complete or have content/thinking
     let maxValidIndex = 0;
-    for (let i = 0; i < actions.length; i++) {
+    for (let i = 0; i < structuralActions.length; i++) {
       if (
-        actions[i] &&
-        (actions[i].status === ToolActionStatus.complete ||
-          actions[i].status === ToolActionStatus.error ||
-          actions[i].status === ToolActionStatus.cancelled ||
-          actions[i].content ||
-          actions[i].thinking ||
-          actions[i].toolOutputs)
+        structuralActions[i] &&
+        (structuralActions[i].status === ToolActionStatus.complete ||
+          structuralActions[i].status === ToolActionStatus.error ||
+          structuralActions[i].status === ToolActionStatus.cancelled ||
+          structuralActions[i].content ||
+          structuralActions[i].thinking ||
+          structuralActions[i].toolOutputs)
       ) {
         maxValidIndex = i;
       }
@@ -734,7 +807,7 @@ const ApplicationThinkView = memo(props => {
       }
       setDisplayedActionIndex(maxValidIndex);
     }
-  }, [actions, thinkStepStatus, displayedActionIndex]);
+  }, [structuralActions, thinkStepStatus, displayedActionIndex]);
 
   useEffect(() => {
     if (
@@ -827,7 +900,7 @@ const ApplicationThinkView = memo(props => {
         // Compare against the in-flight box this bucket renders (sub-agent box,
         // or the coordinator's mergedCurrentAction) so an action isn't shown
         // twice — once as a chip and once as the live content box.
-        const ref = inflightAction || actions[displayedActionIndex];
+        const ref = inflightAction;
         const refIsLlm = ref?.type === TOOL_ACTION_TYPES.Llm;
         skipReasoning =
           refIsLlm && group.reasoning?.name?.trim().toLowerCase() === ref?.name?.trim().toLowerCase();
@@ -864,7 +937,7 @@ const ApplicationThinkView = memo(props => {
       });
       return items;
     },
-    [actions, displayedActionIndex, tools],
+    [tools],
   );
 
   // Whether the in-flight current action should render its progress/content box,
@@ -904,14 +977,7 @@ const ApplicationThinkView = memo(props => {
       defaultExpanded={defaultExpanded}
       expanded={isStreaming || expanded}
       onChange={isStreaming ? undefined : onExpanded}
-      sx={[
-        styles.accordion,
-        isStreaming && {
-          borderBottom: 'none',
-          paddingBottom: '0 !important',
-          '& .MuiAccordion-heading': { display: 'none' },
-        },
-      ]}
+      sx={[styles.accordion, isStreaming && styles.streamingAccordion]}
       slotProps={{ transition: { unmountOnExit: !isStreaming } }}
     >
       <StyledAccordionSummary
@@ -938,6 +1004,7 @@ const ApplicationThinkView = memo(props => {
           subAgentRunning={isStreaming ? subAgentRunning : emptySignalMap}
           subAgentDone={isStreaming ? subAgentDone : emptySignalMap}
           currentActionKey={isStreaming ? currentActionKey : ''}
+          currentAction={isStreaming ? mergedCurrentAction : null}
           currentActionRunning={isStreaming && currentActionIsLive}
           currentActionBox={isStreaming ? currentActionBox : null}
           subAgentErrors={subAgentErrors}
@@ -983,6 +1050,11 @@ const applicationThinkViewStyles = () => ({
     },
     paddingBottom: '0.5rem !important',
   }),
+  streamingAccordion: {
+    borderBottom: 'none',
+    paddingBottom: '0 !important',
+    '& .MuiAccordion-heading': { display: 'none' },
+  },
   accordionSummary: ({ palette, typography }) => ({
     width: 'auto !important',
     borderRadius: '1rem',

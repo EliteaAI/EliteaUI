@@ -4,6 +4,7 @@ import {
   buildPcidAnchorMap,
   collapseSubAgentInvocationKeys,
   computeBreadcrumbs,
+  getActionStructureSignature,
   inflightToolChipId,
   isInvocationId,
   partitionActionsIntoBlocks,
@@ -851,5 +852,41 @@ describe('selectRichestAgentPath', () => {
       { name: 'B', call_id: 'b1', sibling_ordinal: 2 },
       { name: 'C', call_id: 'c1' },
     ]);
+  });
+});
+
+describe('getActionStructureSignature', () => {
+  const action = {
+    id: 'llm-1',
+    type: 'llm',
+    status: 'processing',
+    name: 'Name Resolver',
+    parent_agent_call_id: 'call-1',
+    parent_agent_path: [{ name: 'Full Name resolver', call_id: 'root-1', sibling_ordinal: 1 }],
+    toolMeta: { toolkit_type: 'model', ls_model_name: 'gpt-test' },
+  };
+
+  it('ignores incremental token text after content becomes renderable', () => {
+    expect(getActionStructureSignature({ ...action, content: 'J' })).toBe(
+      getActionStructureSignature({ ...action, content: 'John Smith' }),
+    );
+  });
+
+  it('invalidates when content first becomes renderable', () => {
+    expect(getActionStructureSignature({ ...action, content: '' })).not.toBe(
+      getActionStructureSignature({ ...action, content: 'J' }),
+    );
+  });
+
+  it('invalidates lifecycle and hierarchy changes', () => {
+    expect(getActionStructureSignature(action)).not.toBe(
+      getActionStructureSignature({ ...action, status: 'complete' }),
+    );
+    expect(getActionStructureSignature(action)).not.toBe(
+      getActionStructureSignature({
+        ...action,
+        parent_agent_path: [{ name: 'Full Name resolver', call_id: 'root-2', sibling_ordinal: 2 }],
+      }),
+    );
   });
 });
