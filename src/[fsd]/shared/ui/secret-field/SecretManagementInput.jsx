@@ -21,6 +21,7 @@ const SecretManagementInput = memo(props => {
     name,
     specifiedProjectId,
     description,
+    testId,
   } = props;
 
   const [inputLabel, setInputLabel] = useState('API Key');
@@ -58,7 +59,7 @@ const SecretManagementInput = memo(props => {
       containerProps={{
         sx: [secretManagementInputStyles.container, sx],
       }}
-      inputProps={{ name: name || 'api_key' }}
+      inputProps={{ name: name || 'api_key', ...(testId && { 'data-testid': testId }) }}
       label={inputLabel}
       value={inputValue}
       onChange={handleInputChange(fieldPath)}

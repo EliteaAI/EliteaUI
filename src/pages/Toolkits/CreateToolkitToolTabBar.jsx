@@ -187,6 +187,7 @@ export default function CreateToolkitToolTabBar({
         >
           <Box component="span">
             <MuiButton
+              data-testid="toolkit-form-save-button"
               variant="elitea"
               color="primary"
               disabled={shouldDisableSave}
