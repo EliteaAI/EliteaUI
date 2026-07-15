@@ -415,6 +415,7 @@ const EditToolkit = memo(props => {
               <Typography
                 variant="headingSmall"
                 color="text.secondary"
+                data-testid="toolkit-detail-title"
               >
                 {publicToolkitData?.name || 'Edit Toolkit'}
               </Typography>
