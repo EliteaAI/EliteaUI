@@ -3,27 +3,31 @@ import { memo, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 const VALID_TABS = [
-  'model-configuration',
+  'project-general',
+  'ai-providers',
+  'project-context',
   'tokens',
   'integrations',
   'secrets',
   'projects',
+  'users',
   'analytics',
-  'project-params',
   'prompts',
   'environment',
-  'personalization',
+  'preferences',
+  'ai-personality',
+  'memory',
   'notifications',
 ];
 const LEGACY_TABS = ['configuration', 'information'];
-const DEFAULT_TAB = 'model-configuration';
+const DEFAULT_TAB = 'ai-providers';
 
 /**
  * Component to handle backwards compatibility for old settings routes
- * - /settings/configuration -> /settings/model-configuration
- * - /settings/information -> /settings/model-configuration
- * - /settings (no tab) -> /settings/model-configuration
- * - Invalid tabs -> /settings/model-configuration
+ * - /settings/configuration -> /settings/ai-providers
+ * - /settings/information -> /settings/ai-providers
+ * - /settings (no tab) -> /settings/ai-providers
+ * - Invalid tabs -> /settings/ai-providers
  */
 const SettingsRedirect = memo(() => {
   const { tab } = useParams();

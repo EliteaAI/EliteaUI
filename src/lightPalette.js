@@ -5,6 +5,8 @@ import { white } from './darkPalette';
 const blueFill08 = 'rgba(41, 184, 245, 0.08)';
 const skyBlue20 = ' rgba(80, 161, 255, 0.2)';
 const skyBlue40 = ' rgba(80, 161, 255, 0.4)';
+const grey003 = 'rgba(65, 71, 87, 0.03)';
+const grey007 = 'rgba(65, 71, 87, 0.07)';
 const light00 = '#5B5E69';
 const gray60 = '#0E131D';
 const darkMagenta16 = 'rgba(245, 81, 249, 0.16)';
@@ -384,6 +386,10 @@ const lightPalette = {
     },
     settingsPage: 'linear-gradient(270deg, #EBF1F8 0%, #FFF9FF 100%)',
     chatContinueBackground: dark10,
+    aiProviderAccordion: {
+      default: grey003,
+      hover: grey007,
+    },
   },
   border: {
     lines: light30,
@@ -409,6 +415,7 @@ const lightPalette = {
       logout: orange40,
     },
     chatContinue: darkMagenta30,
+    aiProviderAccordion: 'linear-gradient(0deg, rgba(65, 71, 87, 0) 0%, rgba(65, 71, 87, 0.08) 100%)',
   },
   boxShadow: {
     default: `0px 2px 10px 0px rgba(100, 119, 136, 0.2)`,

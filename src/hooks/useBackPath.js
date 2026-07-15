@@ -9,7 +9,6 @@ import {
   SearchParams,
   ToolkitsTabs,
   UserPublicTabs,
-  UserSettingsTabs,
   ViewMode,
 } from '@/common/constants';
 import { useAuthorIdFromUrl, useAuthorNameFromUrl, useNameFromUrl } from '@/hooks/useSearchParamValue';
@@ -38,7 +37,7 @@ const getPrevPathName = (routeStack, currentPath, name, authorName) => {
     } else if (
       currentPath.startsWith(RouteDefinitions.CreatePersonalToken) ||
       currentPath.startsWith(RouteDefinitions.CreateConfiguration) ||
-      currentPath.match(/\/settings\/edit-configuration\/\d+/g)
+      currentPath.match(/\/settings\/edit-ai-provider\/\d+/g)
     ) {
       return PathSessionMap[RouteDefinitions.Settings];
     }
@@ -90,9 +89,9 @@ const getPrevPath = (routeStack, currentPath, search, viewMode, authorId, author
       return `${RouteDefinitions.Settings}/information`;
     } else if (
       currentPath.startsWith(RouteDefinitions.CreateConfiguration) ||
-      currentPath.match(/\/settings\/edit-configuration\/\d+/g)
+      currentPath.match(/\/settings\/edit-ai-provider\/\d+/g)
     ) {
-      return `${RouteDefinitions.Settings}/${UserSettingsTabs[1]}`;
+      return `${RouteDefinitions.Settings}/ai-providers`;
     }
     return '';
   }
@@ -159,7 +158,7 @@ export default function useBackPath() {
         return true;
       } else if (pathname.startsWith(RouteDefinitions.CreateConfiguration)) {
         return true;
-      } else if (pathname.match(/\/settings\/edit-configuration\/\d+/g)) {
+      } else if (pathname.match(/\/settings\/edit-ai-provider\/\d+/g)) {
         return true;
       }
       return false;

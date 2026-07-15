@@ -57,10 +57,10 @@ const RouteDefinitions = {
 
   Settings: '/settings',
   SettingsWithTab: '/settings/:tab',
-  CreateConfiguration: '/settings/create-configuration',
-  CreateConfigurationWithType: '/settings/create-configuration/:credentialType',
+  CreateConfiguration: '/settings/create-ai-provider',
+  CreateConfigurationWithType: '/settings/create-ai-provider/:credentialType',
   CreatePersonalToken: '/settings/create-personal-token',
-  EditConfiguration: '/settings/edit-configuration/:uid',
+  EditConfiguration: '/settings/edit-ai-provider/:uid',
   ModeSwitch: '/mode-switch',
 
   Artifacts: '/artifacts',

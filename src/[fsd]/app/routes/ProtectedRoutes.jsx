@@ -35,7 +35,7 @@ const Apps = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/apps/Apps'))
 const McpAuthPage = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/mcp/index.jsx'));
 const Resources = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/resources'));
 const Settings = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/settings'));
-const AIConfiguration = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/settings/AIConfiguration'));
+const AIConfiguration = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/settings/AIProviders'));
 const CreatePersonalToken = ChunkHelpers.lazyWithRetry(
   () => import('@/[fsd]/pages/settings/CreatePersonalToken'),
 );
@@ -44,9 +44,8 @@ const EnvironmentSettings = ChunkHelpers.lazyWithRetry(
 );
 const TokensSettings = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/settings/PersonalTokens'));
 const Secrets = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/settings/Secrets'));
-const ProjectContextSettings = ChunkHelpers.lazyWithRetry(
-  () => import('@/[fsd]/pages/settings/ProjectContext'),
-);
+const ProjectContext = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/settings/ProjectContext'));
+const ProjectGeneralPage = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/settings/ProjectGeneral'));
 const ServicePromptsPage = ChunkHelpers.lazyWithRetry(
   () => import('@/[fsd]/pages/settings/ServicePromptsPage'),
 );
@@ -79,7 +78,13 @@ const CreateToolkit = ChunkHelpers.lazyWithRetry(() => import('@/pages/Toolkits/
 const EditToolkit = ChunkHelpers.lazyWithRetry(() => import('@/pages/Toolkits/EditToolkit'));
 const Toolkits = ChunkHelpers.lazyWithRetry(() => import('@/pages/Toolkits/Toolkits'));
 const UserPublic = ChunkHelpers.lazyWithRetry(() => import('@/pages/UserPublic/UserPublic'));
-const UserSettings = ChunkHelpers.lazyWithRetry(() => import('@/pages/UserSettings/UserSettings'));
+const Preferences = ChunkHelpers.lazyWithRetry(
+  () => import('@/[fsd]/features/settings/ui/preference/Preferences'),
+);
+const AIPersonality = ChunkHelpers.lazyWithRetry(
+  () => import('@/[fsd]/features/settings/ui/ai-personality/AIPersonality'),
+);
+const Memory = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/features/settings/ui/memory/Memory'));
 
 let userInfoTimer = undefined;
 
@@ -294,13 +299,13 @@ const ProtectedRoutes = () => {
               index
               element={
                 <Navigate
-                  to="model-configuration"
+                  to="project-general"
                   replace
                 />
               }
             />
             <Route
-              path="model-configuration"
+              path="ai-providers"
               element={<AIConfiguration />}
             />
             <Route
@@ -308,8 +313,12 @@ const ProtectedRoutes = () => {
               element={<EnvironmentSettings />}
             />
             <Route
-              path="project-params"
-              element={<ProjectContextSettings />}
+              path="project-general"
+              element={<ProjectGeneralPage />}
+            />
+            <Route
+              path="project-context"
+              element={<ProjectContext />}
             />
             <Route
               path="prompts"
@@ -332,43 +341,51 @@ const ProtectedRoutes = () => {
               element={<AnalyticsContainer />}
             />
             <Route
-              path="personalization"
-              element={<UserSettings />}
+              path="preferences"
+              element={<Preferences />}
+            />
+            <Route
+              path="ai-personality"
+              element={<AIPersonality />}
+            />
+            <Route
+              path="memory"
+              element={<Memory />}
             />
             <Route
               path="notifications"
               element={<NotificationCenter />}
             />
             <Route
-              path={'create-configuration'}
+              path={'create-ai-provider'}
               element={
                 <IntegrationGuard>
                   <CreateCredentialFromMain
-                    title="New Configuration"
-                    typeSelectorTitle="Select the Configuration Type"
+                    title="New AI Provider"
+                    typeSelectorTitle="Select the AI Provider Type"
                     showCategory={false}
-                    searchPlaceholder="Search configurations"
+                    searchPlaceholder="Search"
                     forceShowTitle
                   />
                 </IntegrationGuard>
               }
             />
             <Route
-              path={'create-configuration/:credentialType'}
+              path={'create-ai-provider/:credentialType'}
               element={
                 <IntegrationGuard>
                   <CreateCredentialFromMain
-                    title="New Configuration"
-                    typeSelectorTitle="Select the Configuration Type"
+                    title="New AI Provider"
+                    typeSelectorTitle="Select the AI Provider Type"
                     showCategory={false}
-                    searchPlaceholder="Search configurations"
+                    searchPlaceholder="Search"
                     forceShowTitle
                   />
                 </IntegrationGuard>
               }
             />
             <Route
-              path={'edit-configuration/:credential_uid'}
+              path={'edit-ai-provider/:credential_uid'}
               element={
                 <EditCredentialFromMain
                   title="Configuration"

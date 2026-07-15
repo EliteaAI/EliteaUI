@@ -12,7 +12,15 @@ export const APPLY_MODE = {
 const APPEND_SEPARATOR = '\n\n';
 
 const GenerateProjectContextReviewForm = memo(props => {
-  const { draft, onChange, onValidationChange, hasExistingContent, existingContentLength, applyMode, onApplyModeChange } = props;
+  const {
+    draft,
+    onChange,
+    onValidationChange,
+    hasExistingContent,
+    existingContentLength,
+    applyMode,
+    onApplyModeChange,
+  } = props;
 
   const projectBackground = draft.project_background || '';
 
@@ -22,7 +30,11 @@ const GenerateProjectContextReviewForm = memo(props => {
         ? existingContentLength + APPEND_SEPARATOR.length + projectBackground.length
         : projectBackground.length;
     const exceeded = len > MAX_CHARS;
-    return { effectiveLength: len, charError: exceeded, isValid: projectBackground.trim().length > 0 && !exceeded };
+    return {
+      effectiveLength: len,
+      charError: exceeded,
+      isValid: projectBackground.trim().length > 0 && !exceeded,
+    };
   }, [projectBackground, hasExistingContent, applyMode, existingContentLength]);
 
   useEffect(() => {

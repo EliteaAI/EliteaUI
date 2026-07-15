@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback, useEffect, useMemo } from 'react';
 
 import { Box, Slider, Typography } from '@mui/material';
 
@@ -29,6 +29,12 @@ const VoiceConfigControls = memo(props => {
     socket,
     voiceConfig: previewVoiceConfig,
   });
+
+  useEffect(() => {
+    if (!hasModelTTS || config?.voiceId !== undefined || !voices?.length) return;
+    const alloy = voices.find(v => v.id === 'alloy') ?? voices[0];
+    if (alloy) onConfigChange({ voiceId: alloy.id, voiceName: null });
+  }, [hasModelTTS, voices, config?.voiceId, onConfigChange]);
 
   const voiceOptions = (voices ?? []).map(v =>
     hasModelTTS

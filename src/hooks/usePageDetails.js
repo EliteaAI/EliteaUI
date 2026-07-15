@@ -45,6 +45,7 @@ export const usePageDetails = () => {
   const isCreateCredentialPage = useMatch({ path: RouteDefinitions.CreateCredentialFromMain });
   const isCreateCredentialTypePage = useMatch({ path: RouteDefinitions.CreateCredentialTypeFromMain });
   const isCredentialsWithTab = useMatch({ path: RouteDefinitions.CredentialsWithTab });
+  const isAIProviderDetailPage = useMatch({ path: RouteDefinitions.EditConfiguration });
 
   const isUserPublicAppDetailPage = useMatch({ path: RouteDefinitions.UserPublicAppDetail });
   const isAppDetailPage = useMatch({ path: RouteDefinitions.AppDetail });
@@ -88,7 +89,11 @@ export const usePageDetails = () => {
     isUserPublicMCPDetailPage || isMCPDetailPage || isMCPCreatePage || isMCPCreateTypePage || isMCPWithTab;
 
   const isCredentialPage =
-    isCredentialDetailPage || isCreateCredentialPage || isCreateCredentialTypePage || isCredentialsWithTab;
+    isCredentialDetailPage ||
+    isCreateCredentialPage ||
+    isCreateCredentialTypePage ||
+    isCredentialsWithTab ||
+    isAIProviderDetailPage;
 
   const projectId = useSelectedProjectId();
   const { agentId, toolkitId, credential_uid, mcpId, appId, skillId, tab } = useParams();

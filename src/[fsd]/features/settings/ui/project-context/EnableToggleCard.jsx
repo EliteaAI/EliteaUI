@@ -5,7 +5,13 @@ import { Box, Typography } from '@mui/material';
 import { Switch } from '@/[fsd]/shared/ui';
 
 const EnableToggleCard = memo(props => {
-  const { enabled, onToggle, disabled = false } = props;
+  const {
+    enabled,
+    onToggle,
+    disabled = false,
+    title = 'Project Context',
+    description = 'Project-specific background information that the AI uses to generate more accurate and relevant responses, tailored to your workflows, data, and goals.',
+  } = props;
   const styles = enableToggleCardStyles();
   return (
     <Box sx={styles.toggleCard}>
@@ -14,14 +20,13 @@ const EnableToggleCard = memo(props => {
           variant="headingSmall"
           color="text.secondary"
         >
-          Project Context
+          {title}
         </Typography>
         <Typography
           variant="bodySmall"
           sx={styles.toggleDescription}
         >
-          Project-specific background information that the AI uses to generate more accurate and relevant
-          responses, tailored to your workflows, data, and goals.
+          {description}
         </Typography>
       </Box>
       <Switch.BaseSwitch
