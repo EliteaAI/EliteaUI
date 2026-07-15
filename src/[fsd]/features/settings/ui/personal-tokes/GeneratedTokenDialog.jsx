@@ -5,6 +5,7 @@ import { Box, Button, Dialog, DialogActions, DialogContent, Typography } from '@
 import { handleCopy } from '@/common/utils';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
 import CancelIcon from '@/components/Icons/CancelIcon';
+import useToast from '@/hooks/useToast';
 import { StyledTipsContainer } from '@/pages/Common/Components/InputVersionDialog';
 
 const COPY_DISABLED_DURATION = 5000;
@@ -12,19 +13,21 @@ const COPY_DISABLED_DURATION = 5000;
 const GeneratedTokenDialog = memo(props => {
   const { open, name = 'Nice token', token, onClose } = props;
 
+  const { toastInfo } = useToast();
   const [disabledCopy, setDisabledCopy] = useState(false);
   const [buttonTitle, setButtonTitle] = useState('Copy');
   const styles = generatedTokenDialogStyles();
 
   const onCopy = useCallback(() => {
     handleCopy(token);
+    toastInfo('The token has been copied.');
     setButtonTitle('Copied!');
     setDisabledCopy(true);
     setTimeout(() => {
       setButtonTitle('Copy');
       setDisabledCopy(false);
     }, COPY_DISABLED_DURATION);
-  }, [token]);
+  }, [token, toastInfo]);
 
   const handleKeyDown = useCallback(
     event => {

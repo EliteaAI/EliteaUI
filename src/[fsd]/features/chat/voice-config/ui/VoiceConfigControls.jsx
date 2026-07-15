@@ -68,43 +68,45 @@ const VoiceConfigControls = memo(props => {
           emptyPlaceholder={<em>Default</em>}
         />
       )}
-      <Box sx={styles.sliderRow}>
-        <Typography
-          variant="caption"
-          sx={styles.sliderLabel}
-        >
-          Speed
-        </Typography>
-        <Slider
-          value={config?.rate ?? 1.0}
-          min={0.5}
-          max={2.0}
-          step={0.1}
-          marks={VOICE_SPEED_MARKS}
-          onChange={handleRateChange}
-          valueLabelDisplay="auto"
-          valueLabelFormat={v => `${v}×`}
-          size="small"
-        />
-      </Box>
-      <Box sx={styles.sliderRow}>
-        <Typography
-          variant="caption"
-          sx={styles.sliderLabel}
-        >
-          Volume
-        </Typography>
-        <Slider
-          value={config?.volume ?? 1.0}
-          min={0}
-          max={1}
-          step={0.05}
-          marks={VOICE_VOLUME_MARKS}
-          onChange={handleVolumeChange}
-          valueLabelDisplay="auto"
-          valueLabelFormat={v => `${Math.round(v * 100)}%`}
-          size="small"
-        />
+      <Box sx={styles.slidersContainer}>
+        <Box sx={styles.sliderRow}>
+          <Typography
+            variant="caption"
+            sx={styles.sliderLabel}
+          >
+            Speed
+          </Typography>
+          <Slider
+            value={config?.rate ?? 1.0}
+            min={0.5}
+            max={2.0}
+            step={0.1}
+            marks={VOICE_SPEED_MARKS}
+            onChange={handleRateChange}
+            valueLabelDisplay="auto"
+            valueLabelFormat={v => `${v}×`}
+            size="small"
+          />
+        </Box>
+        <Box sx={styles.sliderRow}>
+          <Typography
+            variant="caption"
+            sx={styles.sliderLabel}
+          >
+            Volume
+          </Typography>
+          <Slider
+            value={config?.volume ?? 1.0}
+            min={0}
+            max={1}
+            step={0.05}
+            marks={VOICE_VOLUME_MARKS}
+            onChange={handleVolumeChange}
+            valueLabelDisplay="auto"
+            valueLabelFormat={v => `${Math.round(v * 100)}%`}
+            size="small"
+          />
+        </Box>
       </Box>
       {!isPlaying && (
         <Box>
@@ -134,13 +136,20 @@ const voiceConfigControlsStyles = () => ({
     flexDirection: 'column',
     gap: '1rem',
   },
+  slidersContainer: {
+    display: 'flex',
+    flexDirection: 'row',
+    gap: '1.5rem',
+  },
   sliderRow: {
     display: 'flex',
     flexDirection: 'column',
     gap: '0.25rem',
     px: '0.25rem',
+    flex: 1,
+    minWidth: 0,
   },
   sliderLabel: {
-    color: 'text.secondary',
+    color: 'text.default',
   },
 });

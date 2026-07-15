@@ -158,15 +158,26 @@ const SingleSelect = memo(props => {
           onMenuActionClick?.(event);
           return;
         }
-        const picked = flatOptions.find(o => o.value === rawValue);
-        if (picked?.variant === 'action') {
-          skipNextCloseRef.current = true;
-          picked.onActivate?.(event);
-          return;
-        }
+      }
+
+      const normalizedRawValue =
+        effectiveMultiple && typeof rawValue === 'string' ? rawValue.split(',') : rawValue;
+      const selectedValues = Array.isArray(normalizedRawValue) ? normalizedRawValue : [normalizedRawValue];
+      const picked = flatOptions.find(
+        option => option.variant === 'action' && selectedValues.includes(option.value),
+      );
+
+      if (picked?.variant === 'action') {
+        skipNextCloseRef.current = true;
+        picked.onActivate?.(event);
+        return;
+      }
+
+      if (!effectiveMultiple) {
         setMenuOpen(false);
       }
-      const newValue = effectiveMultiple && typeof rawValue === 'string' ? rawValue.split(',') : rawValue;
+
+      const newValue = normalizedRawValue;
       onValueChange?.(newValue);
       onChange?.(event);
     },

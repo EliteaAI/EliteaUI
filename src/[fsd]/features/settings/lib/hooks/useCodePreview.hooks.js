@@ -14,7 +14,7 @@ const { generateCanvasTitle, generateCodeExample, getEditorLanguage, getFileName
 
 export const useCodePreview = (model, token) => {
   const [selectedLanguage, setSelectedLanguage] = useState(CODE_EXAMPLE_TYPES.PYTHON);
-  const { toastSuccess, toastError } = useToast();
+  const { toastSuccess, toastError, toastInfo } = useToast();
   const user = useSelector(state => state.user);
 
   const baseApiUrl = useMemo(() => {
@@ -46,11 +46,11 @@ export const useCodePreview = (model, token) => {
   const handleCopy = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(codeExample);
-      toastSuccess('Code copied to clipboard');
+      toastInfo('The code has been copied.');
     } catch {
       toastError('Failed to copy code');
     }
-  }, [codeExample, toastSuccess, toastError]);
+  }, [codeExample, toastInfo, toastError]);
 
   const handleDownload = useCallback(() => {
     try {

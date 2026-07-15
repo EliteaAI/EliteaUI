@@ -26,11 +26,21 @@ const SoundNotificationControls = memo(props => {
 
   return (
     <Box sx={styles.content}>
-      <Switch.BaseSwitch
-        checked={config.enabled}
-        onChange={handleToggle}
-        label="Play sound when tasks complete"
-      />
+      <Box sx={styles.toggleSection}>
+        <Box sx={styles.toggleContent}>
+          <Typography
+            variant="headingSmall"
+            sx={{ color: 'text.secondary' }}
+          >
+            Sound Notifications
+          </Typography>
+          <Typography variant="bodySmall">Play sound when tasks complete</Typography>
+        </Box>
+        <Switch.BaseSwitch
+          checked={config.enabled}
+          onChange={handleToggle}
+        />
+      </Box>
       {config.enabled && (
         <Box sx={styles.sliderRow}>
           <Typography
@@ -79,11 +89,25 @@ const soundNotificationControlsStyles = () => ({
     flexDirection: 'column',
     gap: '1rem',
   },
+  toggleSection: ({ palette }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '0.75rem 1rem',
+    backgroundColor: palette.background.userInputBackground,
+    borderRadius: '0.75rem',
+  }),
+  toggleContent: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem',
+  },
   sliderRow: {
     display: 'flex',
     flexDirection: 'column',
     gap: '0.25rem',
     px: '0.25rem',
+    width: '48%',
   },
   sliderLabel: {
     color: 'text.secondary',

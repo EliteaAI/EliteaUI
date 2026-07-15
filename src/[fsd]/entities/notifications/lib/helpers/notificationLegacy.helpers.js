@@ -47,9 +47,10 @@ export const formatName = name => {
 };
 
 export const formatIndexMessage = (meta, withLink = false) => {
-  const { index_name, error, reindex, indexed, updated } = meta;
+  const { index_name, error, reindex, indexed, total } = meta;
   const indexNamePlaceholder = withLink ? '{INDEX_LINK}' : index_name || 'Index';
-  const reindexedCount = updated || 0;
+  const indexedCount = indexed ?? 0;
+  const totalCount = total ?? indexed ?? 0;
 
   if (error && error.trim()) {
     return `Index ${indexNamePlaceholder} is failed.`;
@@ -58,10 +59,10 @@ export const formatIndexMessage = (meta, withLink = false) => {
   if (reindex) {
     const isScheduled = meta.initiator === 'schedule';
     const scheduledText = isScheduled ? ' by schedule' : '';
-    return `Index ${indexNamePlaceholder} is successfully reindexed${scheduledText}. { "reindexed": ${reindexedCount}, "indexed": ${indexed || 0} }`;
+    return `Index ${indexNamePlaceholder} is successfully reindexed${scheduledText}. { "reindexed": ${indexedCount}, "total": ${totalCount} }`;
   }
 
-  return `Index ${indexNamePlaceholder} is successfully created: { "indexed": ${indexed || 0} }`;
+  return `Index ${indexNamePlaceholder} is successfully created: { "indexed": ${indexedCount}, "total": ${totalCount} }`;
 };
 
 export const parseInformation = notification => {

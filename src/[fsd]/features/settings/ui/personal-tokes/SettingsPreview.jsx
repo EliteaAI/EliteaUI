@@ -23,7 +23,7 @@ const SettingsPreview = memo(props => {
   const { onClose, model, token, projectId, tokenName } = props;
 
   const styles = stylesSettingsPreview();
-  const { toastSuccess, toastError } = useToast();
+  const { toastSuccess, toastError, toastInfo } = useToast();
   const user = useSelector(state => state.user);
   const [selectedIDE, setSelectedIDE] = useState(TokensConstants.SETTINGS_PREVIEW_TYPES.VSCODE);
 
@@ -93,11 +93,11 @@ const SettingsPreview = memo(props => {
   const handleCopy = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(settingsContent);
-      toastSuccess('Settings copied to clipboard');
+      toastInfo('The settings have been copied.');
     } catch {
       toastError('Failed to copy settings');
     }
-  }, [settingsContent, toastSuccess, toastError]);
+  }, [settingsContent, toastInfo, toastError]);
 
   // Download functionality
   const handleDownload = useCallback(() => {

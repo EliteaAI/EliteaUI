@@ -201,6 +201,23 @@ export const apiSlice = eliteaApi
           return [];
         },
       }),
+      messageTraces: build.query({
+        // Light pin list for a conversation (TS-4): labels/order + bounded attrs, no heavy fields.
+        query: ({ projectId, conversationId, params }) => ({
+          url: apiSlicePath + '/message_traces/prompt_lib/' + projectId + '/' + conversationId,
+          params,
+        }),
+        providesTags: (result, error, { conversationId }) => {
+          if (error) return [];
+          return [{ type: TAG_TYPE_CONVERSATION_DETAILS, id: conversationId }];
+        },
+      }),
+      messageTrace: build.query({
+        // Full single step (heavy inputs/output/text/thinking), fetched on pin expand (TS-4).
+        query: ({ projectId, stepId }) => ({
+          url: apiSlicePath + '/message_trace/prompt_lib/' + projectId + '/' + stepId,
+        }),
+      }),
       conversationDetails: build.query({
         query: props => {
           const { projectId, id, messages_offset, messages_limit, sort_order } = props;
@@ -522,6 +539,8 @@ export const {
   useConversationEditMutation,
   useConversationDetailsQuery,
   useLazyConversationDetailsQuery,
+  useLazyMessageTracesQuery,
+  useLazyMessageTraceQuery,
   useDeleteConversationMutation,
   useAddParticipantIntoConversationMutation,
   useDeleteParticipantFromConversationMutation,
