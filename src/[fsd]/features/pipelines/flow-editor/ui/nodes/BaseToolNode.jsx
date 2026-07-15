@@ -190,6 +190,7 @@ const BaseToolNode = memo(props => {
         onChangeMapping={onChangeMapping}
         disabled={isRunningPipeline}
         valueTestIdPrefix={isMcpNode ? 'pipeline-mcp-node-input-mapping-value' : undefined}
+        requiredHeadingTestId={isMcpNode ? 'pipeline-mcp-node-input-mapping-heading' : undefined}
       />
       <FlowEditorSettings.CommonInterruptSettings
         id={id}
