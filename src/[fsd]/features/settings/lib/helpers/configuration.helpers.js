@@ -83,62 +83,25 @@ export const getConfigurationGroup = (name, type, label) => {
   const configKey = (name || type || '').toLowerCase();
   const labelKey = (label || '').toLowerCase();
 
-  // Third-party hosting providers that should always go to "Other LLM Providers"
-  // regardless of the model name (e.g., "Azure Claude" should be "Other", not "Anthropic")
-  const thirdPartyHostingKeywords = [
-    'azure',
-    'bedrock',
-    'vertex',
-    'vertexai',
-    'dial',
-    'ai_dial',
-    'ollama',
-    'hugging',
-    'model-router',
-    'pgvector',
-    'postgres',
+  // Priority-ordered groups: more specific hosting providers checked before generic OpenAI/Anthropic
+  // so that e.g. "Azure Claude" maps to Azure, not Anthropic.
+  const priorityGroups = [
+    CONFIGURATION_TYPE_GROUPS.Azure,
+    CONFIGURATION_TYPE_GROUPS.AmazonBedrock,
+    CONFIGURATION_TYPE_GROUPS.GoogleVertexAI,
+    CONFIGURATION_TYPE_GROUPS.OtherLLMProviders,
+    CONFIGURATION_TYPE_GROUPS.OpenAI,
+    CONFIGURATION_TYPE_GROUPS.Anthropic,
   ];
 
-  // Check if this is a third-party hosted model
-  const isThirdPartyHosted = thirdPartyHostingKeywords.some(
-    keyword => configKey.includes(keyword) || labelKey.includes(keyword),
-  );
-
-  if (isThirdPartyHosted) {
-    return CONFIGURATION_TYPE_GROUPS.OtherLLMProviders.label;
+  for (const group of priorityGroups) {
+    const matched =
+      group.types.some(t => t.toLowerCase() === configKey || configKey.includes(t.toLowerCase())) ||
+      (labelKey && group.types.some(t => labelKey.includes(t.toLowerCase())));
+    if (matched) return group.label;
   }
 
-  // Check OpenAI group (exact match or substring)
-  if (
-    CONFIGURATION_TYPE_GROUPS.OpenAI.types.some(
-      typeStr => typeStr.toLowerCase() === configKey || configKey.includes(typeStr.toLowerCase()),
-    )
-  ) {
-    return CONFIGURATION_TYPE_GROUPS.OpenAI.label;
-  }
-  if (
-    labelKey &&
-    CONFIGURATION_TYPE_GROUPS.OpenAI.types.some(typeStr => labelKey.includes(typeStr.toLowerCase()))
-  ) {
-    return CONFIGURATION_TYPE_GROUPS.OpenAI.label;
-  }
-
-  // Check Anthropic group (exact match or substring)
-  if (
-    CONFIGURATION_TYPE_GROUPS.Anthropic.types.some(
-      typeStr => typeStr.toLowerCase() === configKey || configKey.includes(typeStr.toLowerCase()),
-    )
-  ) {
-    return CONFIGURATION_TYPE_GROUPS.Anthropic.label;
-  }
-  if (
-    labelKey &&
-    CONFIGURATION_TYPE_GROUPS.Anthropic.types.some(typeStr => labelKey.includes(typeStr.toLowerCase()))
-  ) {
-    return CONFIGURATION_TYPE_GROUPS.Anthropic.label;
-  }
-
-  return CONFIGURATION_TYPE_GROUPS.OtherLLMProviders.label; // Default group
+  return CONFIGURATION_TYPE_GROUPS.OtherLLMProviders.label;
 };
 
 export const sortConfigurationsByDisplayName = (a, b) => {

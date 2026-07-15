@@ -2,9 +2,48 @@ import * as CredentialIconHelpers from './credentialIcon.helpers';
 import * as CredentialNameHelpers from './credentialName.helpers';
 
 export const normalizeCredentialSection = section => {
-  if (section === 'embedding_model') return 'embedding';
-  if (section === 'credentials') return 'ai_credentials';
-  return section;
+  switch (section) {
+    case 'embedding_model':
+      return 'embedding';
+    case 'credentials':
+      return 'ai_credentials';
+    case 'llm_model':
+      return 'llm';
+    case 'asr_model':
+      return 'asr';
+    case 'tts_model':
+      return 'tts';
+    case 'pgvector':
+    case 'postgres':
+    case 'postgresql':
+      return 'vectorstorage';
+    case 'image_generation_model':
+      return 'image_generation';
+    default:
+      if (
+        section &&
+        [
+          'open_ai',
+          'openai',
+          'claude',
+          'anthropic',
+          'azure_open_ai',
+          'azure_openai',
+          'vertex_ai',
+          'vertexai',
+          'amazon_bedrock',
+          'hugging_face',
+          'huggingface',
+          'ollama',
+          'gpt',
+          'ai_dial',
+          'model-router',
+        ].includes(section)
+      ) {
+        return 'llm';
+      }
+      return section;
+  }
 };
 
 export const generateCredentialTagList = credentials => {

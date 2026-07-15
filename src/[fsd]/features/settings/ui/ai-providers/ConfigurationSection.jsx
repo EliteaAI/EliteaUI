@@ -13,8 +13,15 @@ import ConfigurationCard from './ConfigurationCard';
 
 const { DEFAULT_SETTINGS_LAYOUT } = ConfigurationConstants;
 
-// Define group display order
-const GROUP_ORDER = ['OpenAI', 'Anthropic', 'Other LLM Providers'];
+// Define group display order matching CONFIGURATION_TYPE_GROUPS labels
+const GROUP_ORDER = [
+  'OpenAI',
+  'Anthropic',
+  'Azure AI Foundry',
+  'Amazon Bedrock',
+  'Google Vertex AI',
+  'Other Providers',
+];
 
 const ConfigurationSection = memo(props => {
   const {

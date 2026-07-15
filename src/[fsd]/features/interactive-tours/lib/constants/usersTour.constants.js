@@ -8,7 +8,7 @@ export { USERS_TOUR_ID };
 export const USERS_TOUR_COMPLETION = {
   keepExploring: [
     {
-      label: 'AI Proividers',
+      label: 'AI Providers',
       tourId: AI_CONFIG_TOUR_ID,
       path: RouteDefinitions.SettingsWithTab.replace(':tab', 'ai-providers'),
     },

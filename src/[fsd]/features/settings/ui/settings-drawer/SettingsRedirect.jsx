@@ -5,15 +5,18 @@ import { useNavigate, useParams } from 'react-router-dom';
 const VALID_TABS = [
   'project-general',
   'ai-providers',
+  'project-context',
   'tokens',
   'integrations',
   'secrets',
   'projects',
+  'users',
   'analytics',
-  'project-params',
   'prompts',
   'environment',
   'preferences',
+  'ai-personality',
+  'memory',
   'notifications',
 ];
 const LEGACY_TABS = ['configuration', 'information'];

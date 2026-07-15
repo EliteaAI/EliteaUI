@@ -31,7 +31,7 @@ const VoiceConfigControls = memo(props => {
   });
 
   useEffect(() => {
-    if (!hasModelTTS || config?.voiceId || !voices?.length) return;
+    if (!hasModelTTS || config?.voiceId !== undefined || !voices?.length) return;
     const alloy = voices.find(v => v.id === 'alloy') ?? voices[0];
     if (alloy) onConfigChange({ voiceId: alloy.id, voiceName: null });
   }, [hasModelTTS, voices, config?.voiceId, onConfigChange]);

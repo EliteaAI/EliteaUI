@@ -84,9 +84,15 @@ const UserInput = forwardRef((props, ref) => {
 
   const inputRef = useRef(null);
   const mirrorRef = useRef(null);
+  const inputContentRef = useRef('');
 
   const [question, setQuestion] = useState('');
   const [inputContent, setInputContent] = useState('');
+
+  const setInputContentWithRef = useCallback(value => {
+    inputContentRef.current = value;
+    setInputContent(value);
+  }, []);
   const [showExpandIcon, setShowExpandIcon] = useState(false);
   const [rows, setRows] = useState(MAX_ROWS);
   const [isFocused, setIsFocused] = useState(false);
@@ -136,14 +142,14 @@ const UserInput = forwardRef((props, ref) => {
   const sendQuestion = useCallback(() => {
     if (question.trim() && !disabledSend) {
       if (clearInputAfterSend) {
-        setInputContent('');
+        setInputContentWithRef('');
         setQuestion('');
         setShowExpandIcon(false);
       }
 
-      onSend?.(question, inputContent);
+      onSend?.(question, inputContentRef.current);
     }
-  }, [clearInputAfterSend, disabledSend, onSend, question, inputContent]);
+  }, [clearInputAfterSend, disabledSend, onSend, question, setInputContentWithRef]);
 
   // Helper function to insert text at cursor position
   const insertTextAtCursor = useCallback(
@@ -152,88 +158,90 @@ const UserInput = forwardRef((props, ref) => {
         const textarea = inputRef.current;
         const start = textarea.selectionStart || 0;
         const end = textarea.selectionEnd || 0;
-        const currentValue = inputContent;
+        const currentValue = inputContentRef.current;
 
-        // Create new value with text inserted at cursor position
         const newValue = currentValue.slice(0, start) + textToInsert + currentValue.slice(end);
 
-        // Update the state
-        setInputContent(newValue);
+        setInputContentWithRef(newValue);
         setQuestion(newValue?.trim() ? newValue : '');
 
-        // Restore cursor position after the inserted text
         const newCursorPosition = start + textToInsert.length;
 
-        // Use setTimeout to ensure the DOM is updated before setting cursor position
         setTimeout(() => {
           if (textarea && textarea.setSelectionRange) {
             textarea.setSelectionRange(newCursorPosition, newCursorPosition);
             textarea.focus();
           }
 
-          // Update expand icon state
           setShowExpandIcon(textarea.offsetHeight > MIN_HEIGHT);
         }, 0);
       }
     },
-    [inputContent],
+    [setInputContentWithRef],
   );
 
-  useImperativeHandle(ref, () => ({
-    focus: () => {
-      inputRef.current?.focus?.();
-    },
-    reset: () => {
-      setInputContent('');
-      setQuestion('');
-      setShowExpandIcon(false);
-    },
-    getInputContent: () => inputContent,
-    getCursorPosition: () => inputRef.current?.selectionStart ?? null,
-    setValue: (value, cursorPos) => {
-      setQuestion(value);
-      setInputContent(value);
-      if (cursorPos !== undefined) {
+  useImperativeHandle(
+    ref,
+    () => ({
+      focus: () => {
+        inputRef.current?.focus?.();
+      },
+      reset: () => {
+        setInputContentWithRef('');
+        setQuestion('');
+        setShowExpandIcon(false);
+      },
+      getInputContent: () => inputContentRef.current,
+      getCursorPosition: () => inputRef.current?.selectionStart ?? null,
+      setValue: (value, cursorPos) => {
+        setQuestion(value);
+        setInputContentWithRef(value);
+        if (cursorPos !== undefined) {
+          setTimeout(() => {
+            if (inputRef.current) {
+              inputRef.current.setSelectionRange(cursorPos, cursorPos);
+              inputRef.current.focus();
+            }
+          }, 0);
+        }
+      },
+      replaceRange: (start, end, text) => {
+        const current = inputContentRef.current;
+        const newValue = current.slice(0, start) + text + current.slice(end);
+        setInputContentWithRef(newValue);
+        setQuestion(newValue.trim() ? newValue : '');
+        const newCursorPos = start + text.length;
         setTimeout(() => {
           if (inputRef.current) {
-            inputRef.current.setSelectionRange(cursorPos, cursorPos);
+            inputRef.current.setSelectionRange(newCursorPos, newCursorPos);
             inputRef.current.focus();
           }
         }, 0);
-      }
-    },
-    replaceRange: (start, end, text) => {
-      const newValue = inputContent.slice(0, start) + text + inputContent.slice(end);
-      setInputContent(newValue);
-      setQuestion(newValue.trim() ? newValue : '');
-      const newCursorPos = start + text.length;
-      setTimeout(() => {
-        if (inputRef.current) {
-          inputRef.current.setSelectionRange(newCursorPos, newCursorPos);
-          inputRef.current.focus();
+      },
+      removeSymbol: symbol => {
+        const current = inputContentRef.current;
+        const index = current.lastIndexOf(symbol);
+        const newContent = current.slice(0, index);
+        setQuestion(newContent.trimEnd());
+        setInputContentWithRef(newContent.trimEnd());
+      },
+      sendQuestion,
+      insertTextAtCursor,
+      mentionUser: userString => {
+        const current = inputContentRef.current;
+        if (!current.includes(userString)) {
+          const newContent = current + userString;
+          setInputContentWithRef(newContent);
+          setQuestion(newContent);
         }
-      }, 0);
-    },
-    removeSymbol: symbol => {
-      const index = inputContent.lastIndexOf(symbol);
-      const newContent = inputContent.slice(0, index);
-      setQuestion(newContent.trimEnd());
-      setInputContent(newContent.trimEnd());
-    },
-    sendQuestion,
-    insertTextAtCursor,
-    mentionUser: userString => {
-      if (!inputContent.includes(userString)) {
-        const newContent = inputContent + userString;
-        setInputContent(newContent);
-        setQuestion(newContent);
-      }
-    },
-  }));
+      },
+    }),
+    [sendQuestion, insertTextAtCursor, setInputContentWithRef],
+  );
 
   const onInputQuestion = event => {
     const value = event.target.value;
-    setInputContent(value);
+    setInputContentWithRef(value);
     setQuestion(value?.trim() ? value : '');
     onInputChange?.(value);
     setTimeout(() => {

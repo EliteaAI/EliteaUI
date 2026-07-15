@@ -148,6 +148,14 @@ const ProjectContext = memo(() => {
     setIsDirty(true);
   }, []);
 
+  const handleCopyToClipboard = useCallback(() => {
+    if (!content) return;
+    navigator.clipboard.writeText(content).then(
+      () => toastSuccess('Copied to clipboard'),
+      () => toastError('Failed to copy to clipboard'),
+    );
+  }, [content, toastSuccess, toastError]);
+
   const handleEditorFocus = () => setIsEditorFocused(true);
   const handleEditorBlur = e => {
     if (!e.currentTarget.contains(e.relatedTarget)) setIsEditorFocused(false);
@@ -241,7 +249,7 @@ const ProjectContext = memo(() => {
                   >
                     <Button.BaseBtn
                       variant={BUTTON_VARIANTS.secondary}
-                      onClick={null}
+                      onClick={handleCopyToClipboard}
                       startIcon={<CopyIcon fill="currentColor" />}
                     />
                   </Tooltip>
@@ -294,7 +302,8 @@ const ProjectContext = memo(() => {
                   onClose={() => toggleFullScreen(false)}
                   specifiedLanguage="markdown"
                   disabled={!canEditProjectContext}
-                  maxLength={MAX_CHARS}
+                  inputProps={{ maxLength: MAX_CHARS }}
+                  showCharacterCounter
                 />
               )}
             </Box>

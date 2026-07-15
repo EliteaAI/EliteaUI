@@ -145,7 +145,7 @@ const AIProvidersContent = memo(() => {
     [options, model.configuration_uid, model.model_name],
   );
 
-  // Default model values for dropdowns`
+  // Default model values for dropdowns
   const projectDefaultModel = useMemo(
     () => `${modelsData.default_model_name}<<>>${modelsData.default_model_project_id}`,
     [modelsData.default_model_name, modelsData.default_model_project_id],

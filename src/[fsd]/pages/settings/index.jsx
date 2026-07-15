@@ -160,7 +160,7 @@ const Settings = memo(() => {
           .filter(item => {
             if (!checkPermission(item.permission)) return false;
             if (item.publicOnly) return projectId == PUBLIC_PROJECT_ID;
-            if (item.id === 'project-params') return projectId !== PUBLIC_PROJECT_ID;
+            if (item.id === 'project-context') return projectId !== PUBLIC_PROJECT_ID;
             if (item.id === 'analytics' && platformSettings?.analytics_enabled === false) return false;
             return true;
           }),
