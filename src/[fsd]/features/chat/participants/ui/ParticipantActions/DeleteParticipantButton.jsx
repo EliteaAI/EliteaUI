@@ -79,6 +79,7 @@ const DeleteParticipantButton = memo(props => {
           color="tertiary"
           id="DeleteButton"
           sx={sx}
+          data-testid="chat-participant-remove-button"
         >
           <DeleteIcon sx={styles.deleteIcon} />
         </IconButton>

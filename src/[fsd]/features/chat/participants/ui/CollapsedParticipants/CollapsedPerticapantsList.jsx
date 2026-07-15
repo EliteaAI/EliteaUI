@@ -215,7 +215,10 @@ const CollapsedPerticapantsList = memo(props => {
             onOpen={() => onTriggerTooltipOpen(entity.type)}
             onClose={onTriggerTooltipClose}
           >
-            <Box sx={styles.root}>
+            <Box
+              sx={styles.root}
+              data-testid={`chat-participants-badge-${entity.section}`}
+            >
               <Box sx={styles.iconWithWarning}>
                 <IconButton
                   variant="elitea"

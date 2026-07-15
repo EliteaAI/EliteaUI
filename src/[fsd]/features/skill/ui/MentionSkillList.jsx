@@ -64,7 +64,10 @@ const MentionSkillList = memo(props => {
           </Typography>
         </Box>
         {filteredItems.length === 0 ? (
-          <Box sx={styles.empty}>
+          <Box
+            sx={styles.empty}
+            data-testid="skill-mention-list-empty"
+          >
             <Typography
               variant="bodySmall"
               color="text.secondary"
