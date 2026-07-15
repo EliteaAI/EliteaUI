@@ -361,6 +361,7 @@ const ToolBaseProperty = memo(props => {
               onChange={handleObjectFieldChange}
               readOnly={disableConfigFields || disabled}
               data-testid={`toolkit-field-${k}-editor`}
+              contentTestId={`toolkit-field-${k}-editor-content`}
             />
           </Box>
         );
@@ -387,6 +388,7 @@ const ToolBaseProperty = memo(props => {
                     onChange={handleObjectFieldChange}
                     readOnly={disableConfigFields || disabled}
                     data-testid={`toolkit-field-${k}-editor`}
+                    contentTestId={`toolkit-field-${k}-editor-content`}
                   />
                 ),
               },
