@@ -150,7 +150,7 @@ const GenerateEntityModal = memo(props => {
           variant="standard"
           sx={styles.textField}
           slotProps={{ input: { disableUnderline: true } }}
-          data-testid={promptInputTestId}
+          inputProps={{ 'data-testid': promptInputTestId }}
         />
         {generateError && (
           <Alert
