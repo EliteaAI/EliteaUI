@@ -21,6 +21,8 @@ const buildAgentTermsSections = (entityLabel, studioName, entityPlural) => [
       '• Internal tool endpoints',
       '',
       `Consumers of your published ${entityLabel} will need to provide their own credentials and configurations.`,
+      '',
+      `Attached Skills and sub-agents are retained: their instructions are embedded in the published ${entityLabel}. Retained Skills are never listed as separate entries in the catalog.`,
     ],
   },
   {
@@ -88,13 +90,14 @@ const PublishingTerms = memo(({ entityLabel = 'agent' }) => {
   const [isHovering, setIsHovering] = useState(false);
   const [showFullScreen, setShowFullScreen] = useState(false);
 
-  const sections = entityLabel === 'skill'
-    ? buildSkillTermsSections()
-    : buildAgentTermsSections(
-        entityLabel,
-        ENTITY_STUDIO[entityLabel] || ENTITY_STUDIO.agent,
-        ENTITY_PLURAL[entityLabel] || capitalize(`${entityLabel}s`),
-      );
+  const sections =
+    entityLabel === 'skill'
+      ? buildSkillTermsSections()
+      : buildAgentTermsSections(
+          entityLabel,
+          ENTITY_STUDIO[entityLabel] || ENTITY_STUDIO.agent,
+          ENTITY_PLURAL[entityLabel] || capitalize(`${entityLabel}s`),
+        );
 
   return (
     <>
