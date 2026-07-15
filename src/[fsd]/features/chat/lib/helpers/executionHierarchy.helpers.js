@@ -116,6 +116,55 @@ export const getSubAgentInstanceKey = action => {
   return getSubAgentName(action);
 };
 
+const agentPathTiersEqual = (left, right) => {
+  if (!left || !right) return false;
+  if (left.call_id && right.call_id) {
+    return left.call_id === right.call_id && (!left.name || !right.name || left.name === right.name);
+  }
+  return Boolean(left.name && right.name) && left.name === right.name;
+};
+
+/** Compare logical invocation paths while keeping parallel same-name calls isolated. */
+export const agentPathsEqual = (leftPath, rightPath) => {
+  const left = normalizeAgentPath(leftPath);
+  const right = normalizeAgentPath(rightPath);
+  return (
+    left.length > 0 &&
+    left.length === right.length &&
+    left.every((tier, index) => agentPathTiersEqual(tier, right[index]))
+  );
+};
+
+/** True when `ancestorPath` identifies a real ancestor, never the invocation itself. */
+export const isStrictAgentPathPrefix = (ancestorPath, descendantPath) => {
+  const ancestor = normalizeAgentPath(ancestorPath);
+  const descendant = normalizeAgentPath(descendantPath);
+  return (
+    ancestor.length > 0 &&
+    ancestor.length < descendant.length &&
+    ancestor.every((tier, index) => agentPathTiersEqual(tier, descendant[index]))
+  );
+};
+
+/** Resolve the HITL activity inherited by one accordion from its hierarchy path. */
+export const resolveAgentPathActivity = (
+  agentPath,
+  { pendingPaths = [], resumingPaths = [], activePaths = [] } = {},
+) => {
+  const paused = pendingPaths.some(path => agentPathsEqual(agentPath, path));
+  const resuming = !paused && resumingPaths.some(path => agentPathsEqual(agentPath, path));
+  const hasActiveDescendant = [...pendingPaths, ...resumingPaths, ...activePaths].some(path =>
+    isStrictAgentPathPrefix(agentPath, path),
+  );
+  return { paused, resuming, hasActiveDescendant };
+};
+
+/** Prefer interrupt-owned paths; wrapper pause markers are legacy fallback only. */
+export const resolvePendingAgentPaths = (pendingPaths = [], fallbackPaths = []) => {
+  const identified = pendingPaths.map(normalizeAgentPath).filter(path => path.length);
+  return identified.length ? identified : fallbackPaths.map(normalizeAgentPath).filter(path => path.length);
+};
+
 /**
  * Collapse replayed Application/Pipeline wrapper events onto one logical chip.
  *
@@ -158,6 +207,56 @@ export const collapseDelegationWrapperReplays = actions => {
   });
 
   return collapsed;
+};
+
+const GRAPH_INTERRUPT_PATTERN = /\bGraphInterrupt(?:Exception)?\b/i;
+const TERMINAL_ACTION_STATUSES = new Set(['complete', 'error', 'cancelled']);
+
+const containsGraphInterrupt = value => {
+  if (typeof value === 'string') return GRAPH_INTERRUPT_PATTERN.test(value);
+  if (!value || typeof value !== 'object') return false;
+  try {
+    return GRAPH_INTERRUPT_PATTERN.test(JSON.stringify(value));
+  } catch {
+    return false;
+  }
+};
+
+const isGraphInterruptAction = action =>
+  [action?.content, action?.toolOutputs, action?.message, action?.exception].some(containsGraphInterrupt);
+
+const getHitlActionIdentity = action => {
+  if (!action) return '';
+  const hierarchy = normalizeExecutionHierarchy(action, action.toolMeta);
+  const ownerPath = getActionOwnerPath(action).map(({ name, call_id }) => [name, call_id]);
+  const stableCallId = hierarchy.parent_agent_call_id;
+  const actionName = asNonEmptyString(action.name) || asNonEmptyString(action.original_name);
+  if (!stableCallId || !actionName) return '';
+  return JSON.stringify([action.type, actionName, stableCallId, ownerPath]);
+};
+
+/**
+ * Hide transient GraphInterrupt lifecycle rows once the same logical tool call
+ * has a later terminal result. The terminal rows themselves are never collapsed,
+ * so repeated approved/blocked calls to one sensitive tool remain visible.
+ */
+export const omitSupersededGraphInterruptActions = actions => {
+  const terminalIdentities = new Set();
+  const visible = [];
+
+  for (let index = (actions || []).length - 1; index >= 0; index -= 1) {
+    const action = actions[index];
+    const identity = getHitlActionIdentity(action);
+    const graphInterrupt = isGraphInterruptAction(action);
+    if (graphInterrupt && identity && terminalIdentities.has(identity)) continue;
+
+    visible.push(action);
+    if (!graphInterrupt && identity && TERMINAL_ACTION_STATUSES.has(action?.status)) {
+      terminalIdentities.add(identity);
+    }
+  }
+
+  return visible.reverse();
 };
 
 /** Match both the invocation itself and descendants whose ancestry contains it. */

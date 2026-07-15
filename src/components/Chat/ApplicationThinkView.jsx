@@ -8,11 +8,13 @@ import {
   getActionOwnerPath,
   getSubAgentInstanceKey,
   getSubAgentName,
+  omitSupersededGraphInterruptActions,
+  resolveAgentPathActivity,
+  resolvePendingAgentPaths,
 } from '@/[fsd]/features/chat/lib/helpers/executionHierarchy.helpers.js';
 import {
   buildPcidAnchorMap,
   computeBreadcrumbs,
-  getActionStructureSignature,
   inflightToolChipId,
   isInvocationId,
   partitionActionsIntoBlocks,
@@ -30,23 +32,6 @@ import { getToolInfoFromAction } from '@/common/toolActionUitls';
 
 import ActionView from './ActionView';
 
-const useStructurallyStableActions = (actions, enabled) => {
-  const cache = useRef({ signatures: [], actions });
-  const signatures = useMemo(() => actions.map(getActionStructureSignature), [actions]);
-  const previous = cache.current;
-  const unchanged =
-    signatures.length === previous.signatures.length &&
-    signatures.every((signature, index) => signature === previous.signatures[index]);
-
-  // Commit cache state only after React commits the render. An interrupted
-  // concurrent render must not publish an action array the UI never displayed.
-  useEffect(() => {
-    if (!enabled || !unchanged) cache.current = { signatures, actions };
-  }, [actions, enabled, signatures, unchanged]);
-
-  return enabled && unchanged ? previous.actions : actions;
-};
-
 const SubAgentThinkBlock = memo(props => {
   const {
     instanceKey,
@@ -55,6 +40,9 @@ const SubAgentThinkBlock = memo(props => {
     inflight,
     lastRoundRunning,
     lastRoundDone,
+    paused,
+    resuming,
+    hasActiveDescendant,
     isLiveCurrent,
     currentAction,
     currentActionRunning,
@@ -71,7 +59,9 @@ const SubAgentThinkBlock = memo(props => {
   const label = subEntry?.breadcrumbLabel || (ordinal ? `${displayName} (${ordinal})` : displayName);
   const groups = subEntry?.groups || [];
   const { running, done } = resolveSubAgentLiveness({
-    paused: !!subEntry?.pausedForResume,
+    paused,
+    resuming,
+    hasActiveDescendant,
     lastRoundRunning,
     lastRoundDone,
     hasInflight: !!inflight,
@@ -86,7 +76,7 @@ const SubAgentThinkBlock = memo(props => {
       tools={tools}
       agentType={subEntry?.agentType}
       running={running}
-      defaultExpanded={!!childError}
+      paused={paused}
     >
       {groups.length > 0 && (
         <Box sx={badgesContainerSx}>
@@ -142,6 +132,8 @@ const StreamingThinkBlocks = memo(props => {
     currentAction,
     currentActionRunning,
     currentActionBox,
+    pendingAgentPaths,
+    resumingAgentPaths,
     subAgentErrors,
     messageId,
     onCopy,
@@ -208,6 +200,33 @@ const StreamingThinkBlocks = memo(props => {
   // (and never keys an orphan call_<id> slot).
   const currentActionAnchor = resolveAnchor(currentActionKey);
 
+  const subEntries = [...streamingSubGroupsFull.entries()];
+  const effectivePendingPaths = resolvePendingAgentPaths(
+    pendingAgentPaths,
+    subEntries.filter(([, entry]) => entry?.pausedForResume).map(([, entry]) => entry.agentPath),
+  );
+  const activePaths = subEntries
+    .filter(([key, entry]) => {
+      const aliases = entry?.aliasKeys?.length ? entry.aliasKeys : [key];
+      const lastKey = aliases[aliases.length - 1];
+      return (
+        subAgentRunning.get(lastKey) ||
+        subAgentInflight.has(lastKey) ||
+        (currentActionAnchor === key && currentActionRunning)
+      );
+    })
+    .map(([, entry]) => entry.agentPath);
+  const pathActivityByKey = new Map(
+    subEntries.map(([key, entry]) => [
+      key,
+      resolveAgentPathActivity(entry.agentPath, {
+        pendingPaths: effectivePendingPaths,
+        resumingPaths: resumingAgentPaths,
+        activePaths,
+      }),
+    ]),
+  );
+
   const renderSub = key => {
     // Everything about one invocation is keyed by its instance key. The display
     // entry (full groups, agentType, name, ordinal) comes from the FULL
@@ -231,6 +250,7 @@ const StreamingThinkBlocks = memo(props => {
     const inflight = subAgentInflight.get(lastKey);
     const childError = keyedError || subAgentErrors?.[displayName];
     const isLiveCurrent = currentActionAnchor === key;
+    const pathActivity = pathActivityByKey.get(key) || {};
     return (
       <SubAgentThinkBlock
         key={`sa-${key}`}
@@ -240,6 +260,9 @@ const StreamingThinkBlocks = memo(props => {
         inflight={inflight}
         lastRoundRunning={!!subAgentRunning.get(lastKey)}
         lastRoundDone={!!subAgentDone.get(lastKey)}
+        paused={!!pathActivity.paused}
+        resuming={!!pathActivity.resuming}
+        hasActiveDescendant={!!pathActivity.hasActiveDescendant}
         isLiveCurrent={isLiveCurrent}
         currentAction={isLiveCurrent ? currentAction : null}
         currentActionRunning={isLiveCurrent && currentActionRunning}
@@ -287,6 +310,8 @@ const ApplicationThinkView = memo(props => {
     tools,
     subAgentTypeByName,
     subAgentErrors = null,
+    pendingAgentPaths = [],
+    resumingAgentPaths = [],
     messageId,
     onCopy,
   } = props;
@@ -299,12 +324,6 @@ const ApplicationThinkView = memo(props => {
 
   const styles = useMemo(applicationThinkViewStyles, []);
 
-  // Socket token chunks replace the active action object on every update. Keep
-  // the hierarchy/grouping input stable while only token text grows; structural
-  // changes (new action, status, identity, path, or first renderable content)
-  // still invalidate it. History always uses the current persisted payload.
-  const structuralActions = useStructurallyStableActions(actions, isStreaming);
-
   useEffect(() => {
     // A live tree stays expanded when it becomes persisted, avoiding a mode
     // switch remount/collapse. Messages loaded directly from history keep the
@@ -315,10 +334,6 @@ const ApplicationThinkView = memo(props => {
   const finishedActions = useMemo(
     () => actions.slice(0, displayedActionIndex),
     [actions, displayedActionIndex],
-  );
-  const finishedStructuralActions = useMemo(
-    () => structuralActions.slice(0, displayedActionIndex),
-    [structuralActions, displayedActionIndex],
   );
   // Check by type only - streaming uses actual tool names, history uses constants
   const isReasoningAction = useCallback(
@@ -567,8 +582,8 @@ const ApplicationThinkView = memo(props => {
           // block instead of spawning a spurious call_<id> accordion (Bug 2).
           aliasKeys: block.aliasKeys,
           // True while the invocation is paused awaiting a sequential HITL resume
-          // (wrapper errored without deferring). Keeps the accordion shimmering
-          // through the approval gap even though that round's wrapper is terminal.
+          // (wrapper errored without deferring). It keeps the leaf non-terminal;
+          // the hierarchy activity resolver keeps only its ancestors shimmering.
           pausedForResume: block.pausedForResume,
           name: block.name,
           ordinal,
@@ -605,12 +620,16 @@ const ApplicationThinkView = memo(props => {
 
   // Revealed (finished) actions for streaming view; all actions for history view.
   const streamingBlocks = useMemo(
-    () => partitionIntoBlocks(finishedStructuralActions),
-    [partitionIntoBlocks, finishedStructuralActions],
+    () => partitionIntoBlocks(finishedActions),
+    [partitionIntoBlocks, finishedActions],
+  );
+  const historyActions = useMemo(
+    () => (isStreaming ? actions : omitSupersededGraphInterruptActions(actions)),
+    [actions, isStreaming],
   );
   const historyBlocks = useMemo(
-    () => partitionIntoBlocks(structuralActions),
-    [partitionIntoBlocks, structuralActions],
+    () => partitionIntoBlocks(historyActions),
+    [partitionIntoBlocks, historyActions],
   );
 
   // Sub-agent accordions are collapsed by default and opened on demand to inspect
@@ -632,7 +651,7 @@ const ApplicationThinkView = memo(props => {
   // streaming the same node name don't bleed content into one box (issue #4993).
   const subAgentInflightSlots = useMemo(() => {
     const slots = [];
-    structuralActions.forEach((a, index) => {
+    actions.forEach((a, index) => {
       if (!a || a.type !== TOOL_ACTION_TYPES.Llm) return;
       const name = deriveSubAgentName(a);
       if (!name) return;
@@ -646,7 +665,7 @@ const ApplicationThinkView = memo(props => {
       slots.push({ key, index });
     });
     return slots;
-  }, [structuralActions, deriveSubAgentName, deriveSubAgentInstanceKey]);
+  }, [actions, deriveSubAgentName, deriveSubAgentInstanceKey]);
 
   const subAgentInflight = useMemo(() => {
     const map = new Map();
@@ -679,7 +698,7 @@ const ApplicationThinkView = memo(props => {
   const { subAgentRunning, subAgentDone } = useMemo(() => {
     const hasNonTerminal = new Map();
     const wrapperTerminal = new Map();
-    structuralActions.forEach(a => {
+    actions.forEach(a => {
       if (!a) return;
       const name = deriveSubAgentName(a);
       if (!name) return;
@@ -708,8 +727,8 @@ const ApplicationThinkView = memo(props => {
       // A parallel child that paused for sensitive-action approval (#5378) returns
       // a deferred sentinel: its wrapper ENDS (terminal) but the child is NOT done
       // — it awaits a human decision, and the aggregate approval card may not have
-      // surfaced yet (siblings still running). Treat such a wrapper as non-terminal
-      // so the child keeps shimmering through the gap instead of looking finished.
+      // surfaced yet (siblings still running). Keep it non-terminal; the pending
+      // HITL path pauses that leaf while keeping its ancestors active.
       const deferred = !!a.hitlDeferred || !!a.toolMeta?.hitl_deferred;
       if (isWrapper) {
         if (terminal && !deferred) wrapperTerminal.set(key, true);
@@ -734,16 +753,16 @@ const ApplicationThinkView = memo(props => {
       if (!wrapperTerminal.get(key)) running.set(key, true);
     });
     return { subAgentRunning: running, subAgentDone: wrapperTerminal };
-  }, [structuralActions, deriveSubAgentName, deriveSubAgentInstanceKey]);
+  }, [actions, deriveSubAgentName, deriveSubAgentInstanceKey]);
 
   const thinkStepStatus = useMemo(
     () =>
-      structuralActions.map(action => ({
+      actions.map(action => ({
         status: action?.status,
         content: action?.content,
         toolOutputs: action?.toolOutputs,
       })),
-    [structuralActions],
+    [actions],
   );
 
   const currentStepStatus = useMemo(
@@ -786,15 +805,15 @@ const ApplicationThinkView = memo(props => {
   useEffect(() => {
     // Find the highest index of actions that are complete or have content/thinking
     let maxValidIndex = 0;
-    for (let i = 0; i < structuralActions.length; i++) {
+    for (let i = 0; i < actions.length; i++) {
       if (
-        structuralActions[i] &&
-        (structuralActions[i].status === ToolActionStatus.complete ||
-          structuralActions[i].status === ToolActionStatus.error ||
-          structuralActions[i].status === ToolActionStatus.cancelled ||
-          structuralActions[i].content ||
-          structuralActions[i].thinking ||
-          structuralActions[i].toolOutputs)
+        actions[i] &&
+        (actions[i].status === ToolActionStatus.complete ||
+          actions[i].status === ToolActionStatus.error ||
+          actions[i].status === ToolActionStatus.cancelled ||
+          actions[i].content ||
+          actions[i].thinking ||
+          actions[i].toolOutputs)
       ) {
         maxValidIndex = i;
       }
@@ -807,7 +826,7 @@ const ApplicationThinkView = memo(props => {
       }
       setDisplayedActionIndex(maxValidIndex);
     }
-  }, [structuralActions, thinkStepStatus, displayedActionIndex]);
+  }, [actions, thinkStepStatus, displayedActionIndex]);
 
   useEffect(() => {
     if (
@@ -1007,6 +1026,8 @@ const ApplicationThinkView = memo(props => {
           currentAction={isStreaming ? mergedCurrentAction : null}
           currentActionRunning={isStreaming && currentActionIsLive}
           currentActionBox={isStreaming ? currentActionBox : null}
+          pendingAgentPaths={isStreaming ? pendingAgentPaths : []}
+          resumingAgentPaths={isStreaming ? resumingAgentPaths : []}
           subAgentErrors={subAgentErrors}
           messageId={messageId}
           onCopy={onCopy}

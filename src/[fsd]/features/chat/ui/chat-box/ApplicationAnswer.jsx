@@ -99,6 +99,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
     requiresConfirmation = null,
     hitlInterrupt = null,
     hitlInterrupts = null,
+    resumingAgentPaths = [],
     onHitlResume,
     hideContinueButton = false,
     onOpenArtifactPreview,
@@ -278,11 +279,6 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
     const others = filteredToolActions.filter(action => action.type !== TOOL_ACTION_TYPES.SwarmChild);
     return { swarmChildActions: swarmChildren, nonSwarmChildActions: others };
   }, [filteredToolActions, isProcessing]);
-  const originalNonSwarmChildActions = useMemo(
-    () => toolActions.filter(action => action.type !== TOOL_ACTION_TYPES.SwarmChild),
-    [toolActions],
-  );
-
   const isEditing = useMemo(
     () =>
       selectedCodeBlockInfo?.selectedMessage?.id === messageId &&
@@ -351,6 +347,10 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
     }
     return hitlInterrupt ? [hitlInterrupt] : [];
   }, [hitlInterrupts, hitlInterrupt]);
+  const pendingAgentPaths = useMemo(
+    () => effectiveHitlInterrupts.map(getActionOwnerPath).filter(path => path.length),
+    [effectiveHitlInterrupts],
+  );
 
   // Group paused approvals by the sub-agent they originated from so a parallel
   // fan-out renders one stacked-card section per sub-agent under a name header
@@ -589,11 +589,13 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
               via hitlBuckets, so they survive the per-turn StartTask (#4993). */}
           {nonSwarmChildActions?.length > 0 && (
             <ApplicationThinkView
-              actions={nonSwarmChildActions}
-              originalActions={originalNonSwarmChildActions}
+              actions={[...nonSwarmChildActions]}
+              originalActions={toolActions.filter(action => action.type !== TOOL_ACTION_TYPES.SwarmChild)}
               isStreaming={isProcessing}
               tools={tools}
               subAgentTypeByName={subAgentTypeByName}
+              pendingAgentPaths={pendingAgentPaths}
+              resumingAgentPaths={resumingAgentPaths}
               subAgentErrors={subAgentErrors}
               messageId={messageId}
               onCopy={onCopy}
@@ -770,6 +772,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                       tools={tools}
                       agentType={bucket.agentType}
                       paused
+                      defaultExpanded
                       transparent
                     >
                       {bucket.entries.map(renderHitlCard)}

@@ -5,6 +5,7 @@ import { v4 as uuidv4, v4 } from 'uuid';
 import { useTrackEvent } from '@/GA';
 import { ChatHelpers } from '@/[fsd]/features/chat/lib/helpers';
 import {
+  agentPathsEqual,
   getSubAgentInstanceKey,
   normalizeExecutionHierarchy,
 } from '@/[fsd]/features/chat/lib/helpers/executionHierarchy.helpers.js';
@@ -36,6 +37,18 @@ import useSocket, { useManualSocket } from '@/hooks/useSocket';
 import RouteDefinitions from '@/routes';
 
 export { useCtrlEnterKeyEventsHandler };
+
+const RESUMED_AGENT_ACTIVITY_EVENTS = new Set([
+  SocketMessageType.AgentLlmStart,
+  SocketMessageType.AgentLlmChunk,
+  SocketMessageType.AgentLlmEnd,
+  SocketMessageType.AgentToolStart,
+  SocketMessageType.AgentToolEnd,
+  SocketMessageType.AgentToolError,
+  SocketMessageType.AgentThinkingStep,
+  SocketMessageType.AgentThinkingStepUpdate,
+  SocketMessageType.AgentException,
+]);
 
 export const useStopStreaming = ({
   chatHistoryRef,
@@ -95,6 +108,7 @@ export const useStopStreaming = ({
                     // re-invoke the parent and re-fan-out every child.
                     hitlInterrupts: undefined,
                     hitlInterrupt: undefined,
+                    resumingAgentPaths: undefined,
                   }
                 : { ...msg, task_id: undefined },
             ),
@@ -387,6 +401,18 @@ export const useChatSocket = ({
       const question_id = questionIdFromMessage || questionIdFromContent;
       const [msgIndex, msg] = getMessage(message_id, question_id);
 
+      if (RESUMED_AGENT_ACTIVITY_EVENTS.has(socketMessageType) && msg.resumingAgentPaths?.length) {
+        const eventPath = normalizeExecutionHierarchy(
+          response_metadata?.metadata,
+          response_metadata?.tool_meta?.metadata,
+          response_metadata,
+        ).parent_agent_path;
+        if (eventPath.length) {
+          const remaining = msg.resumingAgentPaths.filter(path => !agentPathsEqual(path, eventPath));
+          msg.resumingAgentPaths = remaining.length ? remaining : undefined;
+        }
+      }
+
       let t;
 
       switch (socketMessageType) {
@@ -511,6 +537,7 @@ export const useChatSocket = ({
             msg.isStreaming = false;
             msg.hitlInterrupt = undefined;
             msg.hitlInterrupts = undefined;
+            msg.resumingAgentPaths = undefined;
             notifyTaskComplete();
           }
           if (socketMessageType === SocketMessageType.AgentResponse) {
@@ -1279,6 +1306,7 @@ export const useChatSocket = ({
           msg.isSending = false;
           msg.hitlInterrupt = undefined;
           msg.hitlInterrupts = undefined;
+          msg.resumingAgentPaths = undefined;
           trackEvent(GA_EVENT_NAMES.CHAT_ERROR, {
             [GA_EVENT_PARAMS.ERROR_TYPE]: 'socket_error',
             [GA_EVENT_PARAMS.ERROR_CONTENT]: String(message.content || '').substring(0, 100),

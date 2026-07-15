@@ -17,7 +17,10 @@ import { Box } from '@mui/system';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import * as ChatHelpers from '@/[fsd]/features/chat/lib/helpers/chat.helpers';
-import { actionBelongsToInvocationSet } from '@/[fsd]/features/chat/lib/helpers/executionHierarchy.helpers.js';
+import {
+  actionBelongsToInvocationSet,
+  getActionOwnerPath,
+} from '@/[fsd]/features/chat/lib/helpers/executionHierarchy.helpers.js';
 import {
   getHitlResumeGroup,
   getInterruptIdentity,
@@ -1479,12 +1482,14 @@ const ChatBox = forwardRef((props, boxRef) => {
         // made every completed sibling — and the coordinator's own activity —
         // vanish each round, so the view rebuilt from scratch and flashed "Waking
         // the agent…", making a parallel run look sequential (#5378/#5379). Drop
-        // only the actions of sub-agent invocations that have NOT returned yet
-        // (their bare invocation wrapper — a tool action carrying the per-call
-        // parent_agent_call_id but NO parent_agent_name — is still deferred or
-        // non-terminal); those branches re-run and re-emit their chips fresh, so
-        // keeping the stale copies would duplicate them. Everything else (the
-        // coordinator's actions and the returned siblings) stays visible.
+        // only the actions of the exact interrupted leaf invocations. An ancestor
+        // container is also technically unreturned while it waits for that leaf,
+        // but it is not itself replayed and must remain mounted/shimmering. Older
+        // interrupts without an identified path retain the broad fallback.
+        const resumingAgentPaths = interrupts.map(getActionOwnerPath).filter(path => path.length);
+        const resumingInvocationIds = new Set(
+          resumingAgentPaths.map(path => path[path.length - 1]?.call_id).filter(Boolean),
+        );
         const prevToolActions = assistantMessage.toolActions || [];
         const unreturnedInvocationIds = new Set();
         prevToolActions.forEach(a => {
@@ -1501,7 +1506,8 @@ const ChatBox = forwardRef((props, boxRef) => {
             a.status === ToolActionStatus.error ||
             a.status === ToolActionStatus.cancelled;
           const deferred = !!a.hitlDeferred || !!a.toolMeta?.hitl_deferred;
-          if (!terminal || deferred) unreturnedInvocationIds.add(callId);
+          const isResumingInvocation = resumingInvocationIds.size === 0 || resumingInvocationIds.has(callId);
+          if ((!terminal || deferred) && isResumingInvocation) unreturnedInvocationIds.add(callId);
         });
         const preservedToolActions = prevToolActions.filter(
           candidateAction => !actionBelongsToInvocationSet(candidateAction, unreturnedInvocationIds),
@@ -1521,6 +1527,7 @@ const ChatBox = forwardRef((props, boxRef) => {
           exception: undefined,
           hitlInterrupt: undefined,
           hitlInterrupts: undefined,
+          resumingAgentPaths,
           references: [],
           toolActions: preservedToolActions,
           replyTo: editMessage ? { ...editMessage } : assistantMessage.replyTo,

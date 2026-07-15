@@ -294,9 +294,9 @@ export function resolveExtraSubAgentKeys({ renderedKeys, candidateKeys, pcidToAn
 // ERRORING (status=error, not deferred), which subAgentDone reads as "returned"
 // — but the invocation is only paused awaiting approval. `paused`
 // (block.pausedForResume, the grouping's authoritative pause flag) keeps the
-// accordion shimmering through that gap, mirroring the parallel-deferred case
-// (#5378). The invocation is truly DONE only when its latest round's wrapper
-// returned for real and nothing is paused or still running.
+// invocation non-terminal while its own indicator pauses. Ancestors remain
+// active through `hasActiveDescendant`; the leaf resumes through `resuming`
+// until its next socket action takes over.
 
 /**
  * Resolve a sub-agent accordion's running / done state from its reconciled
@@ -308,6 +308,8 @@ export function resolveExtraSubAgentKeys({ renderedKeys, candidateKeys, pcidToAn
  * @param {boolean} p.lastRoundDone    subAgentDone.get(lastAliasKey)
  * @param {boolean} p.hasInflight      latest round has a live streaming LLM action
  * @param {boolean} p.isLiveCurrent    the live current-action box belongs to this invocation
+ * @param {boolean} p.hasActiveDescendant a descendant is running, paused, or resuming
+ * @param {boolean} p.resuming         this invocation has an accepted HITL decision awaiting its next event
  * @param {boolean} p.hasError         the child hard-failed (renders an error trace instead)
  * @returns {{running:boolean, done:boolean}}
  */
@@ -317,10 +319,14 @@ export function resolveSubAgentLiveness({
   lastRoundDone,
   hasInflight,
   isLiveCurrent,
+  hasActiveDescendant,
+  resuming,
   hasError,
 }) {
-  const done = !paused && !lastRoundRunning && !!lastRoundDone;
-  const running = !hasError && !done && (!!paused || !!lastRoundRunning || !!hasInflight || !!isLiveCurrent);
+  const active =
+    !!resuming || !!hasActiveDescendant || !!lastRoundRunning || !!hasInflight || !!isLiveCurrent;
+  const done = !paused && !active && !!lastRoundDone;
+  const running = !hasError && !paused && !done && active;
   return { running, done };
 }
 
@@ -339,56 +345,6 @@ export function resolveSubAgentLiveness({
  */
 export const inflightToolChipId = (refAction, toolType) => {
   return refAction && refAction.type === toolType ? (refAction.id ?? null) : null;
-};
-
-const hasRenderableValue = value =>
-  typeof value === 'string' ? Boolean(value.trim()) : value !== undefined && value !== null;
-
-/**
- * Fingerprint only the fields that can change action grouping, hierarchy,
- * liveness, or chip identity. Streaming token text is represented by presence,
- * not its growing value: the active ActionView receives the latest action while
- * the expensive block/breadcrumb pipeline can retain its previous result.
- *
- * @param {any} action
- * @returns {string}
- */
-export const getActionStructureSignature = action => {
-  if (!action) return '';
-  const meta = action.toolMeta || {};
-  return JSON.stringify([
-    action.id,
-    action.type,
-    action.status,
-    action.name,
-    action.original_name,
-    action.parent_agent_name,
-    action.parent_agent_call_id,
-    action.parent_agent_path,
-    action.sibling_ordinal,
-    action.agent_type,
-    action.hitlDeferred,
-    action.traceStepId,
-    action.message,
-    action.markdown,
-    action.responseMetadata?.tool_name,
-    meta.parent_agent_name,
-    meta.parent_agent_call_id,
-    meta.parent_agent_path,
-    meta.sibling_ordinal,
-    meta.toolkit_type,
-    meta.agent_type,
-    meta.langgraph_node,
-    meta.ls_model_name,
-    meta.display_name,
-    meta.toolkit_name,
-    meta.mcp_server_url,
-    meta.hitl_deferred,
-    meta.icon_meta,
-    hasRenderableValue(action.content),
-    hasRenderableValue(action.thinking),
-    hasRenderableValue(action.toolOutputs),
-  ]);
 };
 
 // Depth-3 per-tier breadcrumb numbering (#5778 Phase 6).

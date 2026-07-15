@@ -4,7 +4,6 @@ import {
   buildPcidAnchorMap,
   collapseSubAgentInvocationKeys,
   computeBreadcrumbs,
-  getActionStructureSignature,
   inflightToolChipId,
   isInvocationId,
   partitionActionsIntoBlocks,
@@ -515,14 +514,12 @@ describe('isInvocationId', () => {
   });
 });
 
-// --- resolveSubAgentLiveness (#5386 final — sequential HITL shimmer) -------- //
+// --- resolveSubAgentLiveness (#5386/#5778 — nested HITL activity) ----------- //
 //
 // A sequential nested-HITL pause surfaces as the wrapper ERRORING (status=error,
 // not deferred). subAgentDone counts that as "returned" (lastRoundDone=true) even
-// though the invocation is only paused awaiting approval. The grouping's
-// pausedForResume flag must keep the accordion shimmering through that gap —
-// otherwise the real "Name Resolver" accordion stops spinning the instant a
-// sensitive tool triggers HITL (the regression after the Bug 2 phantom removal).
+// though the invocation is only paused awaiting approval. The leaf pauses while
+// its strict ancestors remain active; approval then marks that leaf as resuming.
 
 describe('resolveSubAgentLiveness', () => {
   it('is running while the latest round is genuinely working', () => {
@@ -539,13 +536,33 @@ describe('resolveSubAgentLiveness', () => {
     });
   });
 
-  it('KEEPS SHIMMERING through a sequential HITL pause even though the round reads done', () => {
-    // THE BUG: the error-wrapper makes lastRoundDone=true, but paused=true must
-    // win so the accordion keeps spinning until the resume round arrives.
+  it('pauses the interrupted leaf without marking it done', () => {
     expect(resolveSubAgentLiveness({ paused: true, lastRoundRunning: false, lastRoundDone: true })).toEqual({
-      running: true,
+      running: false,
       done: false,
     });
+  });
+
+  it('keeps an ancestor running while a descendant is paused', () => {
+    expect(
+      resolveSubAgentLiveness({
+        paused: false,
+        lastRoundRunning: false,
+        lastRoundDone: true,
+        hasActiveDescendant: true,
+      }),
+    ).toEqual({ running: true, done: false });
+  });
+
+  it('resumes the approved leaf before its next socket action arrives', () => {
+    expect(
+      resolveSubAgentLiveness({
+        paused: false,
+        lastRoundRunning: false,
+        lastRoundDone: true,
+        resuming: true,
+      }),
+    ).toEqual({ running: true, done: false });
   });
 
   it('shimmers while it owns the live current-action box', () => {
@@ -852,41 +869,5 @@ describe('selectRichestAgentPath', () => {
       { name: 'B', call_id: 'b1', sibling_ordinal: 2 },
       { name: 'C', call_id: 'c1' },
     ]);
-  });
-});
-
-describe('getActionStructureSignature', () => {
-  const action = {
-    id: 'llm-1',
-    type: 'llm',
-    status: 'processing',
-    name: 'Name Resolver',
-    parent_agent_call_id: 'call-1',
-    parent_agent_path: [{ name: 'Full Name resolver', call_id: 'root-1', sibling_ordinal: 1 }],
-    toolMeta: { toolkit_type: 'model', ls_model_name: 'gpt-test' },
-  };
-
-  it('ignores incremental token text after content becomes renderable', () => {
-    expect(getActionStructureSignature({ ...action, content: 'J' })).toBe(
-      getActionStructureSignature({ ...action, content: 'John Smith' }),
-    );
-  });
-
-  it('invalidates when content first becomes renderable', () => {
-    expect(getActionStructureSignature({ ...action, content: '' })).not.toBe(
-      getActionStructureSignature({ ...action, content: 'J' }),
-    );
-  });
-
-  it('invalidates lifecycle and hierarchy changes', () => {
-    expect(getActionStructureSignature(action)).not.toBe(
-      getActionStructureSignature({ ...action, status: 'complete' }),
-    );
-    expect(getActionStructureSignature(action)).not.toBe(
-      getActionStructureSignature({
-        ...action,
-        parent_agent_path: [{ name: 'Full Name resolver', call_id: 'root-2', sibling_ordinal: 2 }],
-      }),
-    );
   });
 });

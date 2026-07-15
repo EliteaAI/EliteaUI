@@ -2,11 +2,16 @@ import { describe, expect, it } from 'vitest';
 
 import {
   actionBelongsToInvocationSet,
+  agentPathsEqual,
   collapseDelegationWrapperReplays,
   getActionOwnerPath,
   getSubAgentInstanceKey,
   getSubAgentName,
+  isStrictAgentPathPrefix,
   normalizeExecutionHierarchy,
+  omitSupersededGraphInterruptActions,
+  resolveAgentPathActivity,
+  resolvePendingAgentPaths,
 } from './executionHierarchy.helpers';
 
 describe('execution hierarchy helpers', () => {
@@ -196,6 +201,63 @@ describe('execution hierarchy helpers', () => {
     expect(actionBelongsToInvocationSet({ parent_agent_call_id: 'b2' }, ids)).toBe(false);
   });
 
+  it('keeps strict ancestors active while only the interrupted leaf is paused', () => {
+    const pipeline = [{ name: 'PipelineA', call_id: 'pipeline-1' }];
+    const orchestrator = [...pipeline, { name: 'Full Name resolver', call_id: 'full-name-1' }];
+    const interruptedLeaf = [...orchestrator, { name: 'Name Resolver', call_id: 'name-1' }];
+    const siblingLeaf = [...orchestrator, { name: 'Surname Resolver', call_id: 'surname-1' }];
+
+    expect(resolveAgentPathActivity(pipeline, { pendingPaths: [interruptedLeaf] })).toEqual({
+      paused: false,
+      resuming: false,
+      hasActiveDescendant: true,
+    });
+    expect(resolveAgentPathActivity(orchestrator, { pendingPaths: [interruptedLeaf] })).toEqual({
+      paused: false,
+      resuming: false,
+      hasActiveDescendant: true,
+    });
+    expect(resolveAgentPathActivity(interruptedLeaf, { pendingPaths: [interruptedLeaf] })).toEqual({
+      paused: true,
+      resuming: false,
+      hasActiveDescendant: false,
+    });
+    expect(resolveAgentPathActivity(siblingLeaf, { pendingPaths: [interruptedLeaf] })).toEqual({
+      paused: false,
+      resuming: false,
+      hasActiveDescendant: false,
+    });
+  });
+
+  it('does not let an errored ancestor wrapper override the interrupt-owned leaf path', () => {
+    const pipeline = [{ name: 'PipelineA', call_id: 'pipeline-1' }];
+    const leaf = [
+      ...pipeline,
+      { name: 'Full Name resolver', call_id: 'full-name-1' },
+      { name: 'Name Resolver', call_id: 'name-1' },
+    ];
+
+    expect(resolvePendingAgentPaths([leaf], [pipeline])).toEqual([leaf]);
+    expect(resolvePendingAgentPaths([], [pipeline])).toEqual([pipeline]);
+  });
+
+  it('marks only the approved leaf as resuming and does not cross parallel roots', () => {
+    const firstRoot = [{ name: 'Full Name resolver', call_id: 'full-name-1' }];
+    const firstLeaf = [...firstRoot, { name: 'Name Resolver', call_id: 'name-1' }];
+    const secondRoot = [{ name: 'Full Name resolver', call_id: 'full-name-2' }];
+
+    expect(resolveAgentPathActivity(firstLeaf, { resumingPaths: [firstLeaf] }).resuming).toBe(true);
+    expect(resolveAgentPathActivity(firstRoot, { resumingPaths: [firstLeaf] }).hasActiveDescendant).toBe(
+      true,
+    );
+    expect(resolveAgentPathActivity(secondRoot, { resumingPaths: [firstLeaf] }).hasActiveDescendant).toBe(
+      false,
+    );
+    expect(agentPathsEqual(firstRoot, secondRoot)).toBe(false);
+    expect(isStrictAgentPathPrefix(firstRoot, firstLeaf)).toBe(true);
+    expect(isStrictAgentPathPrefix(firstLeaf, firstLeaf)).toBe(false);
+  });
+
   it('collapses replayed delegation wrappers but keeps real leaf work', () => {
     const root = { name: 'B', call_id: 'b1' };
     const wrapper = (id, status) => ({
@@ -231,5 +293,84 @@ describe('execution hierarchy helpers', () => {
     expect(result).toHaveLength(3);
     expect(result[0]).toMatchObject({ id: 'wrapper-first', status: 'complete' });
     expect(result.slice(1).map(action => action.id)).toEqual(['real-1', 'real-2']);
+  });
+
+  it('omits a GraphInterrupt attempt after its logical tool call gets a terminal result', () => {
+    const leafPath = [
+      { name: 'Full Name resolver', call_id: 'full-name-1' },
+      { name: 'Name Resolver', call_id: 'name-1' },
+    ];
+    const action = (id, status, content) => ({
+      id,
+      type: 'tool',
+      name: 'list_branches_in_repo',
+      status,
+      content,
+      parent_agent_call_id: 'name-1',
+      parent_agent_path: leafPath,
+    });
+
+    expect(
+      omitSupersededGraphInterruptActions([
+        action('interrupt', 'error', 'langgraph.errors.GraphInterrupt: approval required'),
+        action('result', 'complete', '[{"name":"main"}]'),
+      ]).map(item => item.id),
+    ).toEqual(['result']);
+  });
+
+  it('keeps every terminal result for intentionally repeated sensitive tool calls', () => {
+    const action = (id, status, content) => ({
+      id,
+      type: 'tool',
+      name: 'create_file',
+      status,
+      content,
+      parent_agent_call_id: 'name-1',
+      parent_agent_path: [{ name: 'Name Resolver', call_id: 'name-1' }],
+    });
+
+    expect(
+      omitSupersededGraphInterruptActions([
+        action('interrupt-1', 'error', 'GraphInterruptException'),
+        action('blocked-1', 'complete', '{"type":"sensitive_tool_blocked"}'),
+        action('interrupt-2', 'error', 'GraphInterrupt'),
+        action('approved-2', 'complete', '{"path":"summary.md"}'),
+      ]).map(item => item.id),
+    ).toEqual(['blocked-1', 'approved-2']);
+  });
+
+  it('keeps an unresolved GraphInterrupt and isolates parallel invocation ids', () => {
+    const action = (id, callId, status, content) => ({
+      id,
+      type: 'tool',
+      name: 'read_file',
+      status,
+      content,
+      parent_agent_call_id: callId,
+      parent_agent_path: [{ name: 'Name Resolver', call_id: callId }],
+    });
+
+    expect(
+      omitSupersededGraphInterruptActions([
+        action('first-pending', 'name-1', 'error', 'GraphInterrupt'),
+        action('other-result', 'name-2', 'complete', 'file contents'),
+      ]).map(item => item.id),
+    ).toEqual(['first-pending', 'other-result']);
+  });
+
+  it('omits the transient interrupt when the final tool outcome is an error', () => {
+    const common = {
+      type: 'tool',
+      name: 'create_file',
+      parent_agent_call_id: 'name-1',
+      parent_agent_path: [{ name: 'Name Resolver', call_id: 'name-1' }],
+    };
+
+    expect(
+      omitSupersededGraphInterruptActions([
+        { ...common, id: 'interrupt', status: 'error', content: 'GraphInterrupt' },
+        { ...common, id: 'failure', status: 'error', content: 'Permission denied' },
+      ]).map(item => item.id),
+    ).toEqual(['failure']);
   });
 });
