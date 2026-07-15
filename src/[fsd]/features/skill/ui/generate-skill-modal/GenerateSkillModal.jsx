@@ -107,6 +107,15 @@ const GenerateSkillModal = memo(props => {
       resetGenerate={resetGenerate}
       renderReview={renderReview}
       onApprove={handleApprove}
+      modalTestId="generate-skill-modal"
+      closeButtonTestId="generate-skill-close-button"
+      promptInputTestId="generate-skill-prompt-input"
+      errorAlertTestId="generate-skill-error-alert"
+      loadingIndicatorTestId="generate-skill-loading-indicator"
+      generateButtonTestId="generate-skill-submit-button"
+      cancelButtonTestId="generate-skill-cancel-button"
+      backButtonTestId="generate-skill-back-button"
+      approveButtonTestId="generate-skill-approve-button"
     />
   );
 });
