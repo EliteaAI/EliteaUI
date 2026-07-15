@@ -68,6 +68,7 @@ const SkillVersionSelector = memo(({ skill, entityVersionId, disabled }) => {
   return (
     <Box sx={styles.contentWrapper}>
       <Box
+        data-testid={`skill-version-selector-trigger-${skill.skill_id}`}
         sx={[styles.selector, disabled && styles.selectorDisabled]}
         onClick={isUpdating || disabled ? undefined : handleOpen}
       >
@@ -95,7 +96,10 @@ const SkillVersionSelector = memo(({ skill, entityVersionId, disabled }) => {
         transformOrigin={{ horizontal: 'left', vertical: 'top' }}
         anchorOrigin={{ horizontal: 'left', vertical: 'bottom' }}
       >
-        <Box sx={styles.versionHeader}>
+        <Box
+          data-testid={`skill-version-selector-menu-${skill.skill_id}`}
+          sx={styles.versionHeader}
+        >
           <Typography
             variant="labelSmall"
             sx={styles.versionHeaderTitle}
@@ -118,6 +122,7 @@ const SkillVersionSelector = memo(({ skill, entityVersionId, disabled }) => {
           return (
             <MenuItem
               key={version.id}
+              data-testid={`skill-version-option-${version.name}`}
               onClick={handleVersionSelect(version)}
               sx={isSelected ? styles.selectedMenuItem : styles.menuItem}
             >
