@@ -225,6 +225,7 @@ const CollapsedPerticapantsList = memo(props => {
                   color="secondary"
                   onClick={e => onCollapsedTriggerClick(entity.type, e)}
                   sx={styles.collapsedTriggerButton(group.count, sectionHasError, sectionHasSkippedContainer)}
+                  data-testid="chat-participants-badge-button"
                 >
                   <entity.icon sx={styles.collapsedIcon} />
                 </IconButton>
