@@ -6,6 +6,15 @@ export const normalizeCredentialSection = section => {
     case 'embedding_model':
       return 'embedding';
     case 'credentials':
+    case 'amazon_bedrock':
+    case 'ai_dial':
+    case 'azure_open_ai':
+    case 'azure_openai':
+    case 'ollama':
+    case 'open_ai':
+    case 'openai':
+    case 'vertex_ai':
+    case 'vertexai':
       return 'ai_credentials';
     case 'llm_model':
       return 'llm';
@@ -20,28 +29,6 @@ export const normalizeCredentialSection = section => {
     case 'image_generation_model':
       return 'image_generation';
     default:
-      if (
-        section &&
-        [
-          'open_ai',
-          'openai',
-          'claude',
-          'anthropic',
-          'azure_open_ai',
-          'azure_openai',
-          'vertex_ai',
-          'vertexai',
-          'amazon_bedrock',
-          'hugging_face',
-          'huggingface',
-          'ollama',
-          'gpt',
-          'ai_dial',
-          'model-router',
-        ].includes(section)
-      ) {
-        return 'llm';
-      }
       return section;
   }
 };
