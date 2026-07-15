@@ -15,6 +15,9 @@ const DiscardButton = memo(props => {
     disabled,
     discarding,
     color = 'secondary',
+    dataTestId,
+    modalDataTestId,
+    confirmButtonDataTestId,
     ...rest
   } = props;
 
@@ -35,6 +38,7 @@ const DiscardButton = memo(props => {
     <>
       <BaseBtn
         {...rest}
+        data-testid={dataTestId}
         disabled={disabled || isSaving}
         variant="elitea"
         color={color}
@@ -53,6 +57,8 @@ const DiscardButton = memo(props => {
         confirmButtonText={ModalConstants.WARNING_BUTTONS.DISCARD}
         confirming={discarding}
         dialogSx={{ fontSize: '0.875rem' }}
+        data-testid={modalDataTestId}
+        confirmButtonDataTestId={confirmButtonDataTestId}
       />
     </>
   );
