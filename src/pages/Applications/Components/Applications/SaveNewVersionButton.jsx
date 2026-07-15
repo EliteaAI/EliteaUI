@@ -90,6 +90,7 @@ const SaveNewVersionButton = forwardRef((props, ref) => {
   return (
     <>
       <Button.BaseBtn
+        data-testid="agent-save-as-version-button"
         disabled={isSavingNewVersion || disabled}
         variant="elitea"
         color="secondary"
@@ -108,12 +109,15 @@ const SaveNewVersionButton = forwardRef((props, ref) => {
         confirmButtonText="Save"
         confirming={!newVersion}
         onKeyDown={handleKeyDown}
+        closeButtonDataTestId="agent-version-dialog-close-button"
+        cancelButtonDataTestId="agent-version-dialog-cancel-button"
+        confirmButtonDataTestId="agent-version-dialog-save-button"
         content={
           <Input.InputBase
             label="Name"
             value={newVersion}
             onChange={onInputVersion}
-            inputProps={{ maxLength: 255 }}
+            inputProps={{ maxLength: 255, 'data-testid': 'agent-version-dialog-name-input' }}
             autoFocus
           />
         }

@@ -29,6 +29,7 @@ const VersionSelect = memo(props => {
     formikVersionData = null,
     handleSetDefaultVersion = null,
     errorVersionName = '',
+    dataTestId,
   } = props;
 
   const navigate = useNavigate();
@@ -172,6 +173,7 @@ const VersionSelect = memo(props => {
       )}
       <Box sx={styles.selectContainer}>
         <SingleSelect
+          data-testid={dataTestId}
           separateLabel
           label="VERSION:"
           showOptionIcon
