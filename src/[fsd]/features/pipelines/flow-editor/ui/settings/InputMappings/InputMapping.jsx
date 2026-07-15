@@ -29,6 +29,7 @@ const InputMapping = memo(props => {
     onChangeMapping,
     requiredInputs = [],
     disabled,
+    valueTestIdPrefix,
   } = props;
   const inputOptions = useInputOptions();
 
@@ -54,10 +55,20 @@ const InputMapping = memo(props => {
           tooltip={mappingInfo[key]?.tooltip}
           defaultValues={defaultValues}
           mappingInfo={mappingInfo}
+          valueTestId={valueTestIdPrefix ? `${valueTestIdPrefix}-${key}` : undefined}
         />
       );
     },
-    [input_mapping, values, mappingInfo, inputOptions, defaultValues, onChangeMapping, disabled],
+    [
+      input_mapping,
+      values,
+      mappingInfo,
+      inputOptions,
+      defaultValues,
+      onChangeMapping,
+      disabled,
+      valueTestIdPrefix,
+    ],
   );
 
   const items = useMemo(() => {

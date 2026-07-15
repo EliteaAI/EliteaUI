@@ -28,6 +28,14 @@ const BaseToolNode = memo(props => {
     customFilterTypes = filterTypes,
   } = props;
 
+  // Stable, scoped test handles are only added for the MCP node — this is the
+  // only node type whose Toolkit/Tool/Input/Output/Input-mapping fields are
+  // exercised by automation today (ELITEA-1954). Other node types sharing
+  // this base component (Function/Agent/etc.) intentionally get `undefined`
+  // so untested UI doesn't light up as "covered" (.agents/testing.md § Locator
+  // policy — testid scope is load-bearing).
+  const isMcpNode = nodeType === FlowEditorConstants.PipelineNodeTypes.Mcp;
+
   const { isRunningPipeline, yamlJsonObject, setYamlJsonObject } = useContext(FlowEditorContext);
   const yamlNode = useMemo(
     () => yamlJsonObject.nodes?.find(node => node.id === id),
@@ -145,6 +153,7 @@ const BaseToolNode = memo(props => {
         selectedToolkit={toolkit}
         disabled={isRunningPipeline}
         filterTypes={customFilterTypes}
+        data-testid={isMcpNode ? 'pipeline-mcp-node-toolkit-select' : undefined}
       />
       {functionOptions.length > 0 && (
         <SingleSelect
@@ -157,17 +166,20 @@ const BaseToolNode = memo(props => {
           showBorder
           className={'nopan nodrag'}
           onClear={onClearTool}
+          data-testid={isMcpNode ? 'pipeline-mcp-node-tool-select' : undefined}
         />
       )}
       <FlowEditorSelect.InputSelect
         id={id}
         inputFieldName={'input'}
         disabled={isRunningPipeline}
+        dataTestId={isMcpNode ? 'pipeline-mcp-node-input-select' : undefined}
       />
       <FlowEditorSelect.OutputSelect
         id={id}
         label="Output"
         outputFieldName="output"
+        dataTestId={isMcpNode ? 'pipeline-mcp-node-output-select' : undefined}
       />
       <FlowEditorSettings.InputMapping
         requiredInputs={requiredInputs}
@@ -177,6 +189,7 @@ const BaseToolNode = memo(props => {
         values={yamlNode?.input_mapping || {}}
         onChangeMapping={onChangeMapping}
         disabled={isRunningPipeline}
+        valueTestIdPrefix={isMcpNode ? 'pipeline-mcp-node-input-mapping-value' : undefined}
       />
       <FlowEditorSettings.CommonInterruptSettings
         id={id}
