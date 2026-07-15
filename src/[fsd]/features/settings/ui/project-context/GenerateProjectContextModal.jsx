@@ -11,7 +11,8 @@ const GenerateProjectContextModal = memo(props => {
 
   const projectId = useSelectedProjectId();
 
-  const [generateDraft, { error: generateError, reset: resetGenerate }] = useGenerateProjectContextDraftMutation();
+  const [generateDraft, { error: generateError, reset: resetGenerate }] =
+    useGenerateProjectContextDraftMutation();
   const [applyMode, setApplyMode] = useState(APPLY_MODE.REPLACE);
 
   const hasExistingContent = Boolean(existingContent?.trim());

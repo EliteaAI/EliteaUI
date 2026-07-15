@@ -1,18 +1,9 @@
 import { memo } from 'react';
 
-import { Typography } from '@mui/material';
-
-/** @type {MuiSx} */
-const getStyles = () => ({
-  highlightText: {
-    color: ({ palette }) => palette.primary.main,
-    borderRadius: '.25rem',
-  },
-});
+import { Box } from '@mui/material';
 
 const HighlightedText = memo(props => {
   const { text, ranges } = props;
-  const styles = getStyles();
 
   if (!ranges?.length || !text) return null;
 
@@ -22,38 +13,35 @@ const HighlightedText = memo(props => {
   for (const { start, end } of ranges) {
     if (start > lastIndex)
       children.push(
-        <Typography
-          key={start}
+        <Box
+          key={`plain-${start}`}
           component="span"
-          variant="labelMedium"
-          color="text.secondary"
+          sx={{ color: 'text.secondary' }}
         >
           {text.slice(lastIndex, start)}
-        </Typography>,
+        </Box>,
       );
     children.push(
-      <Typography
-        key={start}
+      <Box
+        key={`highlight-${start}`}
         component="span"
-        variant="labelMedium"
-        sx={styles.highlightText}
+        sx={{ color: 'primary.main', borderRadius: '.25rem' }}
       >
         {text.slice(start, end)}
-      </Typography>,
+      </Box>,
     );
     lastIndex = end;
   }
 
   if (lastIndex < text.length)
     children.push(
-      <Typography
-        key={lastIndex}
+      <Box
+        key={`plain-end-${lastIndex}`}
         component="span"
-        variant="labelMedium"
-        color="text.secondary"
+        sx={{ color: 'text.secondary' }}
       >
         {text.slice(lastIndex)}
-      </Typography>,
+      </Box>,
     );
 
   return children;

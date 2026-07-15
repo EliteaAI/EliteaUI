@@ -1,6 +1,38 @@
 import * as CredentialIconHelpers from './credentialIcon.helpers';
 import * as CredentialNameHelpers from './credentialName.helpers';
 
+export const normalizeCredentialSection = section => {
+  switch (section) {
+    case 'embedding_model':
+      return 'embedding';
+    case 'credentials':
+    case 'amazon_bedrock':
+    case 'ai_dial':
+    case 'azure_open_ai':
+    case 'azure_openai':
+    case 'ollama':
+    case 'open_ai':
+    case 'openai':
+    case 'vertex_ai':
+    case 'vertexai':
+      return 'ai_credentials';
+    case 'llm_model':
+      return 'llm';
+    case 'asr_model':
+      return 'asr';
+    case 'tts_model':
+      return 'tts';
+    case 'pgvector':
+    case 'postgres':
+    case 'postgresql':
+      return 'vectorstorage';
+    case 'image_generation_model':
+      return 'image_generation';
+    default:
+      return section;
+  }
+};
+
 export const generateCredentialTagList = credentials => {
   if (!credentials || !Array.isArray(credentials)) return [];
 

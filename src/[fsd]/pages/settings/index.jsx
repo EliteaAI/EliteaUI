@@ -9,11 +9,13 @@ import { SettingsLayoutConstants } from '@/[fsd]/features/settings/lib/constants
 import { SettingsDrawer, SettingsRedirect } from '@/[fsd]/features/settings/ui/settings-drawer';
 import { useGetPlatformSettingsQuery } from '@/api/platformSettings';
 import AnalyticsIcon from '@/assets/analytics-icon.svg?react';
+import BrainIcon from '@/assets/brain.svg?react';
 import ConfigurationIcon from '@/assets/configuration-icon.svg?react';
 import EnvironmentIcon from '@/assets/environment-icon.svg?react';
 import KeyIcon from '@/assets/key-icon.svg?react';
 import LogoutIcon from '@/assets/logout-icon.svg?react';
 import PersonalizationIcon from '@/assets/personalization-icon.svg?react';
+import ReasonIcon from '@/assets/reason-icon.svg?react';
 import { PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';
 import BellIcon from '@/components/Icons/BellIcon';
 import BriefcaseIcon from '@/components/Icons/BriefcaseIcon';
@@ -26,16 +28,19 @@ import RouteDefinitions, { PathSessionMap } from '@/routes';
 import { logout } from '@/slices/user.js';
 
 const VALID_TAB_IDS = [
-  'model-configuration',
+  'ai-providers',
   'prompts',
   'environment',
-  'project-params',
+  'project-general',
+  'project-context',
   'tokens',
   'integrations',
   'secrets',
   'users',
   'analytics',
-  'personalization',
+  'preferences',
+  'ai-personality',
+  'memory',
   'notifications',
   'logout',
 ];
@@ -50,9 +55,20 @@ const SETTINGS_TABS_CONFIG = [
     section: SETTINGS_SECTIONS.PROJECT,
     tabs: [
       {
-        id: 'model-configuration',
-        label: 'AI Configuration',
+        id: 'project-general',
+        label: 'General',
+        icon: <BriefcaseIcon />,
+      },
+      {
+        id: 'ai-providers',
+        label: 'AI Providers',
         icon: <ConfigurationIcon />,
+      },
+      {
+        id: 'project-context',
+        label: 'Project Context',
+        icon: <BriefcaseIcon />,
+        permission: PERMISSIONS.projectContext.view,
       },
       {
         id: 'prompts',
@@ -65,12 +81,6 @@ const SETTINGS_TABS_CONFIG = [
         label: 'Environment',
         icon: <EnvironmentIcon />,
         publicOnly: true,
-      },
-      {
-        id: 'project-params',
-        label: 'Project Params',
-        icon: <BriefcaseIcon />,
-        permission: PERMISSIONS.projectContext.view,
       },
       {
         id: 'secrets',
@@ -94,9 +104,19 @@ const SETTINGS_TABS_CONFIG = [
     section: SETTINGS_SECTIONS.PERSONAL,
     tabs: [
       {
-        id: 'personalization',
-        label: 'Personalization',
+        id: 'preferences',
+        label: 'Preferences',
         icon: <PersonalizationIcon />,
+      },
+      {
+        id: 'ai-personality',
+        label: 'AI Personality',
+        icon: <ReasonIcon />,
+      },
+      {
+        id: 'memory',
+        label: 'Memory',
+        icon: <BrainIcon />,
       },
       {
         id: 'tokens',
@@ -118,7 +138,7 @@ const SETTINGS_TABS_CONFIG = [
   },
 ];
 
-const DEFAULT_TAB = 'model-configuration';
+const DEFAULT_TAB = 'ai-providers';
 const LEGACY_TAB_REDIRECTS = ['configuration', 'information'];
 
 const Settings = memo(() => {
@@ -140,7 +160,7 @@ const Settings = memo(() => {
           .filter(item => {
             if (!checkPermission(item.permission)) return false;
             if (item.publicOnly) return projectId == PUBLIC_PROJECT_ID;
-            if (item.id === 'project-params') return projectId !== PUBLIC_PROJECT_ID;
+            if (item.id === 'project-context') return projectId !== PUBLIC_PROJECT_ID;
             if (item.id === 'analytics' && platformSettings?.analytics_enabled === false) return false;
             return true;
           }),

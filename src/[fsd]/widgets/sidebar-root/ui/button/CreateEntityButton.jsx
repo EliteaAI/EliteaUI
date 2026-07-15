@@ -154,8 +154,8 @@ const CreateEntityButton = memo(props => {
               ? 'create=1'
               : `${SearchParams.ViewMode}=${ViewMode.Owner}`;
 
-          if (stateOption === 'Configuration') {
-            search += '&from=model-configuration';
+          if (stateOption === 'AI Provider') {
+            search += '&from=ai-providers';
           }
 
           if (destUrl !== pathname || stateOption === CreateEntityConstants.OptionsMap.Chat) {
@@ -263,7 +263,6 @@ const CreateEntityButton = memo(props => {
   const handleDropdownItemClick = useCallback(
     item => {
       if (!getHasPermissionForDropdownItem(item.option)) return;
-
       setOpenMenu(false);
       handleCommand(item.option);
     },

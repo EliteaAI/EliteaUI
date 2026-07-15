@@ -19,8 +19,8 @@ export const OptionsMap = {
 
 export const RouteToLabelMap = [
   { route: RouteDefinitions.AgentHub, label: null },
-  { route: RouteDefinitions.CreateConfiguration, label: 'Configuration' },
-  { route: 'settings/model-configuration', label: 'Configuration' },
+  { route: RouteDefinitions.CreateConfiguration, label: 'AI Provider' },
+  { route: 'settings/ai-providers', label: 'AI Provider' },
   { route: RouteDefinitions.CreatePersonalToken, label: 'Token' },
   { route: 'settings/tokens', label: 'Token' },
   { route: 'settings/secrets', label: 'Secret' },
@@ -47,7 +47,7 @@ export const DropdownItems = [
   { label: 'Application', route: RouteDefinitions.AppsApplications, option: 'Application' },
   { label: 'MCP', route: RouteDefinitions.MCPs, option: 'MCP' },
   { label: 'Artifact Bucket', route: RouteDefinitions.Artifacts, option: 'Bucket' },
-  { label: 'Configuration', route: 'settings/model-configuration', option: 'Configuration' },
+  { label: 'AI Provider', route: 'settings/ai-providers', option: 'AI Provider' },
   { label: 'Token', route: 'settings/tokens', option: 'Personal Token' },
   { label: 'Secret', route: 'settings/secrets', option: 'Secret' },
   { label: 'Invite User', route: 'settings/users', option: 'User' },
@@ -57,7 +57,7 @@ export const SimpleCreateRoutes = [
   'settings/analytics',
   'settings/prompts',
   'settings/environment',
-  'settings/personalization',
+  'settings/preferences',
   'settings/notifications',
   RouteDefinitions.Onboarding,
   RouteDefinitions.AgentHub,
@@ -76,7 +76,7 @@ export const CreationPermissions = {
   MCP: [PERMISSIONS.toolkits.create],
   Credential: undefined, // No specific permission needed for credentials
   Bucket: [PERMISSIONS.artifacts.buckets.create, PERMISSIONS.artifacts.create],
-  Configuration: [PERMISSIONS.configuration.update],
+  'AI Provider': [PERMISSIONS.configuration.update],
   Model: undefined, // No specific permission needed for model credentials
   'Personal Token': undefined, // Personal tokens creation allowed from settings
   Secret: [PERMISSIONS.secrets.list], // Allow if user can access secrets page
@@ -92,7 +92,7 @@ export const CommandPathMap = {
   App: RouteDefinitions.CreateApp,
   Credential: RouteDefinitions.CreateCredentialFromMain,
   Bucket: RouteDefinitions.CreateBucket,
-  Configuration: RouteDefinitions.CreateConfiguration, // Route to filtered credential creation
+  'AI Provider': RouteDefinitions.CreateConfiguration, // Route to filtered credential creation
   'Personal Token': RouteDefinitions.CreatePersonalToken,
   // For Secret we stay on settings/secrets but add a query param to trigger row creation
   Secret: undefined,
@@ -108,7 +108,7 @@ export const BreadCrumbMap = {
   App: 'New App',
   Credential: 'New Credential',
   Bucket: 'New Bucket',
-  Configuration: 'New Configuration',
+  'AI Provider': 'New AI Provider',
   'Personal Token': 'New Personal Token',
   Secret: 'New Secret',
   [RouteDefinitions.CreateApplication]: 'Agents',
@@ -132,15 +132,12 @@ export const PrevUrlPathMap = {
   [RouteDefinitions.CreateBucket]: RouteDefinitions.Artifacts,
   // For personal tokens, previous path should be Settings -> tokens tab
   [RouteDefinitions.CreatePersonalToken]: RouteDefinitions.SettingsWithTab.replace(':tab', 'tokens'),
-  [RouteDefinitions.CreateConfiguration]: RouteDefinitions.SettingsWithTab.replace(
-    ':tab',
-    'model-configuration',
-  ),
+  [RouteDefinitions.CreateConfiguration]: RouteDefinitions.SettingsWithTab.replace(':tab', 'ai-providers'),
 };
 
 export const PathToOptionMap = [
-  { path: RouteDefinitions.CreateConfiguration, option: 'Configuration' },
-  { path: 'settings/model-configuration', option: 'Configuration' },
+  { path: RouteDefinitions.CreateConfiguration, option: 'AI Provider' },
+  { path: 'settings/ai-providers', option: 'AI Provider' },
   { path: RouteDefinitions.CreatePersonalToken, option: 'Personal Token' },
   { path: 'settings/tokens', option: 'Personal Token' },
   { path: 'settings/secrets', option: 'Secret' },

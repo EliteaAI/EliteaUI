@@ -489,8 +489,6 @@ export const CredentialsTabs = ['all'];
 
 export const PrivateApplicationTabs = ['all', 'drafts', 'published', 'moderation', 'approval', 'rejected'];
 
-export const UserSettingsTabs = ['information', 'tokens', 'secrets', 'projects'];
-
 export const UserProfileTabs = ['profile', 'credentials', 'secrets'];
 export const UserPublicTabs = ['all', 'agents', 'pipelines', 'toolkits', 'MCPs'];
 
