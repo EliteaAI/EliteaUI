@@ -2,7 +2,7 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import { useSearchParams } from 'react-router-dom';
 
-import { Box, Divider, TextField, Typography, alpha, useTheme } from '@mui/material';
+import { Box, Divider, TextField, Typography, useTheme } from '@mui/material';
 
 import { AgentsTab } from '@/[fsd]/features/agent-hub/ui';
 import { SkillsTab } from '@/[fsd]/features/skill-hub/ui';
@@ -117,15 +117,13 @@ const eliteaCatalogStyles = () => ({
     boxSizing: 'border-box',
     backgroundColor: palette.background.tabPanel,
   }),
-  header: ({ palette }) => ({
+  header: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     gap: '1.5rem',
     padding: '1.5rem 1.5rem 1.25rem 1.5rem',
-    // Soft brand glow centered behind the title, matching the design's header.
-    background: `radial-gradient(40rem 12rem at 50% -3rem, ${alpha(palette.primary.main, 0.12)}, transparent 70%)`,
-  }),
+  },
   title: ({ palette }) => ({
     color: palette.text.secondary,
   }),
