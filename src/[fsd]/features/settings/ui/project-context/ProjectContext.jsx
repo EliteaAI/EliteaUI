@@ -294,6 +294,7 @@ const ProjectContext = memo(() => {
                   onClose={() => toggleFullScreen(false)}
                   specifiedLanguage="markdown"
                   disabled={!canEditProjectContext}
+                  maxLength={MAX_CHARS}
                 />
               )}
             </Box>
