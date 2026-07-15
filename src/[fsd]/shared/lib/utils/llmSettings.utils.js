@@ -44,7 +44,40 @@ export const generateLLMSettings = (model, existingSettings = {}, options = {}) 
 };
 
 /**
- * Clean LLM settings by removing reasoning_effort if model doesn't support it
+ * True when temperature and an active reasoning_effort are both set — invalid combo for
+ * reasoning models (Anthropic extended thinking, OpenAI o1/gpt-5). Mirrors the backend's
+ * llm_settings_family_conflict (elitea_core/models/pd/llm.py) — single source of truth for
+ * this invariant on both sides (issue #5821).
+ * @param {number|null|undefined} temperature
+ * @param {string|null|undefined} reasoningEffort
+ * @returns {boolean}
+ */
+export const isLLMSettingsFamilyConflict = (temperature, reasoningEffort) =>
+  temperature !== null &&
+  temperature !== undefined &&
+  reasoningEffort !== null &&
+  reasoningEffort !== undefined &&
+  reasoningEffort !== 'none';
+
+/**
+ * Build the temperature/reasoning_effort pair for a newly selected model, resetting both
+ * fields explicitly (never leaves a stale value from the previously selected model's family).
+ * Spread this AFTER any existing settings so the explicit nulls always win.
+ * @param {Object} model - The newly selected model
+ * @returns {{temperature: number|null, reasoning_effort: string|null}}
+ */
+export const resetLLMSettingsForModel = model => {
+  if (modelSupportsReasoning(model)) {
+    return { temperature: null, reasoning_effort: DEFAULT_REASONING_EFFORT };
+  }
+  return { temperature: DEFAULT_TEMPERATURE, reasoning_effort: null };
+};
+
+/**
+ * Clean LLM settings by removing reasoning_effort if model doesn't support it, and dropping
+ * temperature if it conflicts with an active reasoning_effort (issue #5821 — previously only
+ * handled the reasoning_effort direction, leaving a stale temperature when switching TO a
+ * reasoning model).
  * @param {Object} llmSettings - The LLM settings object
  * @param {Object} model - The model object
  * @returns {Object} Cleaned LLM settings
@@ -59,6 +92,11 @@ export const cleanLLMSettings = (llmSettings, model) => {
   // Remove reasoning_effort if model doesn't support it
   if (!modelSupportsReasoning(model) && 'reasoning_effort' in cleanedSettings) {
     delete cleanedSettings.reasoning_effort;
+  }
+
+  // Drop temperature if it still conflicts with an active reasoning_effort
+  if (isLLMSettingsFamilyConflict(cleanedSettings.temperature, cleanedSettings.reasoning_effort)) {
+    delete cleanedSettings.temperature;
   }
 
   return cleanedSettings;
