@@ -8,7 +8,7 @@ import { useFormikAutoSaveOnBlur } from '@/[fsd]/shared/lib/hooks';
 import { PERMISSIONS } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
-import EnableToggleCard from './EnableToggleCard';
+import EnableToggleCard from '../../project-context/EnableToggleCard';
 
 const AgentPipelineBuilder = memo(() => {
   const { checkPermission } = useCheckPermission();

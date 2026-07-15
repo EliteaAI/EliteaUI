@@ -4,9 +4,12 @@ import { Box } from '@mui/material';
 
 import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
 import { ProjectParamsHeader } from '@/[fsd]/features/settings/ui/project-general/general';
+import AgentPipelineBuilder from '@/[fsd]/features/settings/ui/project-general/general/AgentPipelineBuilder';
 import { ProjectAIConfigurations } from '@/[fsd]/features/settings/ui/project-general/project-ai-configurations';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
+
+import SettingsFormProvider from '../shared/SettingsFormProvider';
 
 const ProjectGeneralContent = memo(() => {
   const styles = componentStyles();
@@ -46,6 +49,21 @@ const ProjectGeneralContent = memo(() => {
               content: (
                 <Box>
                   <ProjectAIConfigurations />
+                </Box>
+              ),
+            },
+          ]}
+        />
+        <BasicAccordion
+          data-testid="agent-pipeline-builder-section"
+          showMode={AccordionConstants.AccordionShowMode.LeftMode}
+          accordionSX={styles.accordionStyles}
+          items={[
+            {
+              title: 'Agent & Pipeline Builder',
+              content: (
+                <Box sx={styles.containerStyles}>
+                  <SettingsFormProvider FormContent={AgentPipelineBuilder} />
                 </Box>
               ),
             },

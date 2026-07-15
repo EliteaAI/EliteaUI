@@ -6,17 +6,15 @@ import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPag
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
 
-import SettingsFormProvider from '../shared/SettingsFormProvider';
-import AgentPipelineBuilder from './AgentPipelineBuilder';
 import ProjectContext from './ProjectContext';
 
-const ProjectBehaviorContent = memo(() => {
+const ProjectContextContent = memo(() => {
   const styles = componentStyles();
 
   return (
     <Box sx={styles.root}>
       <DrawerPageHeader
-        title="Project Behavior"
+        title="Project Context"
         showBorder
       />
       <Box sx={styles.body}>
@@ -35,28 +33,13 @@ const ProjectBehaviorContent = memo(() => {
             },
           ]}
         />
-        <BasicAccordion
-          data-testid="agent-pipeline-builder-section"
-          showMode={AccordionConstants.AccordionShowMode.LeftMode}
-          accordionSX={styles.accordionStyles}
-          items={[
-            {
-              title: 'Agent & Pipeline Builder',
-              content: (
-                <Box sx={styles.containerStyles}>
-                  <SettingsFormProvider FormContent={AgentPipelineBuilder} />
-                </Box>
-              ),
-            },
-          ]}
-        />
       </Box>
     </Box>
   );
 });
 
-ProjectBehaviorContent.displayName = 'ProjectBehaviorContent';
-export default ProjectBehaviorContent;
+ProjectContextContent.displayName = 'ProjectContextContent';
+export default ProjectContextContent;
 
 /** @type {MuiSx} */
 const componentStyles = () => ({

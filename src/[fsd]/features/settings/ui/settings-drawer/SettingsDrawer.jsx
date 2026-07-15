@@ -27,7 +27,7 @@ const ICON_COMPONENTS = {
   environment: EnvironmentIcon,
   tokens: KeyIcon,
   'project-general': BriefcaseIcon,
-  'project-behavior': CompassIcon,
+  'project-context': CompassIcon,
   secrets: Lock,
   users: UsersIcon,
   analytics: AnalyticsIcon,
