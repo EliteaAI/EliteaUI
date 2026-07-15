@@ -31,17 +31,30 @@ const IndexListItem = memo(props => {
       // silente catch
     }
 
-    if (index.metadata.history?.length > 1 && index.metadata.updated !== undefined) {
+    // Reindex detection: the SDK records a history entry per state transition (in_progress
+    // + completed), so history.length > 1 fires on any completed run. Count only completed
+    // entries — more than one means this collection has been indexed more than once.
+    // Units are docs/docs: `indexed` = documents landed in the vector store, `total` =
+    // documents fetched from the source. Mixing chunks and docs (previous behavior) made
+    // the ratio meaningless when a doc chunker produces multiple chunks per document.
+    const completedRuns = Array.isArray(index.metadata.history)
+      ? index.metadata.history.filter(h => h?.state === 'completed').length
+      : 0;
+    const isReindex = completedRuns > 1;
+    const total = index.metadata.total ?? index.metadata.indexed ?? '–';
+    const indexedDocs = index.metadata.indexed ?? '–';
+
+    if (isReindex) {
       return {
-        tooltip: 'reindexed / total indexed',
-        count: `${index.metadata.updated} / ${index.metadata.indexed}`,
+        tooltip: 'reindexed / total',
+        count: `${indexedDocs} / ${total}`,
         skipped: skipped?.total_skipped || 0,
       };
     }
 
     return {
-      tooltip: 'total indexed',
-      count: index.metadata.indexed ?? '–',
+      tooltip: 'indexed / total',
+      count: `${indexedDocs} / ${total}`,
       skipped: skipped?.total_skipped || 0,
     };
   }, [index]);

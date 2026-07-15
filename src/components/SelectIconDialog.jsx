@@ -197,7 +197,7 @@ export default function SelectIconDialog({
         name,
       });
       if (!error) {
-        toastSuccess('The icon has been deleted');
+        toastSuccess('The icon has been successfully deleted.');
         if (selectedIcon?.name === name) {
           onSelectIcon({});
         }

@@ -39,6 +39,7 @@ import {
   DEFAULT_TEMPERATURE,
 } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
 import { cleanLLMSettings } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
+import { Modal } from '@/[fsd]/shared/ui';
 import {
   useConversationEditMutation,
   useRegenerateMutation,
@@ -63,7 +64,6 @@ import {
   generateMessagePayload,
 } from '@/common/messagePayloadUtils';
 import { buildErrorMessage } from '@/common/utils';
-import AlertDialog from '@/components/AlertDialog';
 import { ChatBodyContainer } from '@/components/Chat/StyledComponents';
 import { useChatSocket, useStopStreaming } from '@/components/Chat/hooks';
 import SocketContext from '@/contexts/SocketContext';
@@ -167,7 +167,7 @@ const ChatBox = forwardRef((props, boxRef) => {
   const sessionDeclinedMcpServersRef = useRef(new Map());
 
   const dispatch = useDispatch();
-  const { toastError, toastSuccess } = useToast();
+  const { toastError, toastInfo } = useToast();
 
   // Sockets
   const socket = useContext(SocketContext);
@@ -634,15 +634,14 @@ const ChatBox = forwardRef((props, boxRef) => {
     onStopRun?.();
   }, [onStopRun]);
 
-  const { openAlert, alertContent, onDeleteAnswer, onDeleteAll, onConfirmDelete, onCloseAlert } =
-    useDeleteMessageAlert({
-      setChatHistory,
-      chatInput,
-      onDeleteChatMessage,
-      onDeleteAllChatMessages,
-      deleteAllRunNodes,
-      onStopTTS: stopTTS,
-    });
+  const { openAlert, onDeleteAnswer, onDeleteAll, onConfirmDelete, onCloseAlert } = useDeleteMessageAlert({
+    setChatHistory,
+    chatInput,
+    onDeleteChatMessage,
+    onDeleteAllChatMessages,
+    deleteAllRunNodes,
+    onStopTTS: stopTTS,
+  });
 
   const onClickClearChat = useCallback(() => {
     if (chat_history?.length) {
@@ -996,7 +995,7 @@ const ChatBox = forwardRef((props, boxRef) => {
         if (message.exception) {
           try {
             await navigator.clipboard.writeText(JSON.stringify(message.exception));
-            toastSuccess('The exception has been copied to the clipboard');
+            toastInfo('The exception has been copied.');
           } catch {
             toastError('Failed to copy the exception!');
           }
@@ -1026,14 +1025,14 @@ const ChatBox = forwardRef((props, boxRef) => {
 
           try {
             await navigator.clipboard.writeText(contentToCopy);
-            toastSuccess('The message has been copied to the clipboard');
+            toastInfo('The message has been copied.');
           } catch {
             toastError('Failed to copy the message!');
           }
         }
       }
     },
-    [chat_history, toastError, toastSuccess],
+    [chat_history, toastError, toastInfo],
   );
 
   const onRegenerateAnswer = useCallback(
@@ -1588,7 +1587,7 @@ const ChatBox = forwardRef((props, boxRef) => {
   );
 
   const onResendQuestionStream = useCallback(
-    async (question_id, question) => {
+    async (question_id, question, attachmentList = []) => {
       const leftChatHistory = chat_history.slice(
         0,
         chat_history.findIndex(item => item.id === question_id),
@@ -1600,7 +1599,7 @@ const ChatBox = forwardRef((props, boxRef) => {
         question_id,
         chatHistory: leftChatHistory,
         participant,
-        attachmentList: [],
+        attachmentList,
       });
       emit(payload);
     },
@@ -1632,11 +1631,13 @@ const ChatBox = forwardRef((props, boxRef) => {
             ...item,
             ...(textUpdate ? { content: textUpdate.content } : {}),
             message_items: [
-              ...(item.message_items || []).map(mi => {
-                const update = updatedItems?.find(u => u.uuid === mi.uuid);
-                if (!update) return mi;
-                return { ...mi, item_details: { ...mi.item_details, content: update.content } };
-              }),
+              ...(item.message_items || [])
+                .filter(mi => mi.item_type !== 'attachment_message')
+                .map(mi => {
+                  const update = updatedItems?.find(u => u.uuid === mi.uuid);
+                  if (!update) return mi;
+                  return { ...mi, item_details: { ...mi.item_details, content: update.content } };
+                }),
               ...newAttachmentItems,
             ],
           };
@@ -1649,7 +1650,17 @@ const ChatBox = forwardRef((props, boxRef) => {
         onRegenerateAnswer(answerId, participant, updatedItems, newAttachmentItems);
       } else {
         const question = textUpdate?.content || '';
-        onResendQuestionStream(id, question);
+        const questionIndex = chat_history.findIndex(item => item.id === id);
+        const existingAttachments = (
+          chat_history[questionIndex]?.message_items?.filter(
+            item => item.item_type === 'attachment_message',
+          ) || []
+        ).map(i => ({ filepath: i.item_details.filepath }));
+        const attachmentList = [
+          ...existingAttachments,
+          ...newAttachmentItems.map(i => ({ filepath: i.item_details.filepath })),
+        ];
+        onResendQuestionStream(id, question, attachmentList);
       }
     },
     [chat_history, activeConversation, onRegenerateAnswer, onResendQuestionStream, setChatHistory],
@@ -2286,14 +2297,12 @@ const ChatBox = forwardRef((props, boxRef) => {
           />
         </Box>
       </ChatBodyContainer>
-      <AlertDialog
-        title="Warning"
-        alertContent={alertContent}
+      <Modal.DeleteEntityModal
         open={openAlert}
-        alarm
         onClose={onCloseAlert}
-        onCancel={onCloseAlert}
         onConfirm={onConfirmDelete}
+        textContent="Are you sure to delete the message"
+        inlineExtraContent="? It can't be restored."
       />
     </>
   );

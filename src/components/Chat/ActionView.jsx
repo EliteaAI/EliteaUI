@@ -7,6 +7,7 @@ import { Box, Collapse, Typography } from '@mui/material';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import Markdown from '@/[fsd]/shared/ui/markdown';
+import { useLazyMessageTraceQuery } from '@/api';
 import { useListModelsQuery } from '@/api/configurations';
 import { TOOL_ACTION_TYPES, ToolActionStatus } from '@/common/constants';
 import { getToolInfoFromAction } from '@/common/toolActionUitls';
@@ -98,6 +99,8 @@ const ActionView = memo(props => {
   const [thinkingExpanded, setThinkingExpanded] = useState(true);
   const [streamingWindowExpanded, setStreamingWindowExpanded] = useState(false);
   const [autoScrollEnabled, setAutoScrollEnabled] = useState(true);
+  // Heavy fields for a reloaded pin (TS-4) are fetched lazily on expand; live pins already carry them.
+  const [fetchedDetail, setFetchedDetail] = useState(null);
   const streamingContentRef = useRef(null);
 
   // Auto-scroll to bottom when streaming content updates (if enabled)
@@ -128,6 +131,7 @@ const ActionView = memo(props => {
   // Resolve human-readable display name for LLM chips.
   // toolkitName for model chips is the raw model key (e.g. "gpt-4o"); look up the display_name.
   const projectId = useSelectedProjectId();
+  const [getMessageTrace, { isFetching: isFetchingDetail }] = useLazyMessageTraceQuery();
   const { data: { items: modelsList = [] } = {} } = useListModelsQuery(
     { projectId, include_shared: true },
     { skip: toolkitType !== 'model' || !projectId },
@@ -244,24 +248,32 @@ const ActionView = memo(props => {
   const modalTitle = useMemo(() => buildTitle(' - ', true), [buildTitle]);
 
   const modalInput = useMemo(() => {
-    if (typeof action.toolInputs === 'string') return action.toolInputs;
-    if (typeof action.toolInputs === 'object') return JSON.stringify(action.toolInputs, null, 2);
-    return action.toolInputs || '';
-  }, [action.toolInputs]);
+    // Reloaded pins carry no inputs until fetched (TS-4); prefer the fetched detail.
+    const inputs = fetchedDetail?.tool_inputs ?? action.toolInputs;
+    if (typeof inputs === 'string') return inputs;
+    if (typeof inputs === 'object') return JSON.stringify(inputs, null, 2);
+    return inputs || '';
+  }, [fetchedDetail, action.toolInputs]);
 
   const modalOutput = useMemo(() => {
-    const outputData = action.toolOutputs || action.content || action.originalContent;
+    const outputData =
+      fetchedDetail?.tool_output ||
+      fetchedDetail?.text ||
+      action.toolOutputs ||
+      action.content ||
+      action.originalContent;
     let result = '';
     if (typeof outputData === 'string') result = outputData;
     else if (typeof outputData === 'object') result = JSON.stringify(outputData, null, 2);
     else result = outputData || '';
 
-    // Prepend thinking/reasoning if available
-    if (thinking) {
-      result = `**💭 Thinking:**\n\n${thinking}\n\n---\n\n**📝 Response:**\n\n${result}`;
+    // Prepend thinking/reasoning if available (live action, or fetched for a reloaded pin).
+    const thinkingText = thinking || fetchedDetail?.thinking;
+    if (thinkingText) {
+      result = `**💭 Thinking:**\n\n${thinkingText}\n\n---\n\n**📝 Response:**\n\n${result}`;
     }
     return result;
-  }, [action.toolOutputs, action.content, action.originalContent, thinking]);
+  }, [fetchedDetail, action.toolOutputs, action.content, action.originalContent, thinking]);
 
   const contentBoxWidth = useMemo(
     () => (componentWidth ? `${componentWidth - 24}px` : '100%'),
@@ -270,7 +282,24 @@ const ActionView = memo(props => {
 
   const onClickToolkit = useCallback(() => {
     setOpenModalView(true);
-  }, []);
+    // A reloaded pin (TS-4) carries a traceStepId but no heavy content — fetch it on first expand.
+    // Live pins have no traceStepId (or already carry content), so they never fetch.
+    const needsFetch =
+      action.traceStepId && !fetchedDetail && !action.toolInputs && !action.toolOutputs && !action.content;
+    if (needsFetch) {
+      getMessageTrace({ projectId, stepId: action.traceStepId }).then(r => {
+        if (r.data) setFetchedDetail(r.data);
+      });
+    }
+  }, [
+    action.traceStepId,
+    action.toolInputs,
+    action.toolOutputs,
+    action.content,
+    fetchedDetail,
+    getMessageTrace,
+    projectId,
+  ]);
 
   const onCloseModalView = useCallback(() => {
     setOpenModalView(false);
@@ -456,6 +485,7 @@ const ActionView = memo(props => {
         title={modalTitle}
         input={modalInput}
         output={modalOutput}
+        isLoading={isFetchingDetail}
       />
     </>
   );

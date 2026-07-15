@@ -125,19 +125,14 @@ export const useMcpAuthModal = (options = {}) => {
     setMcpAuthMetadata(metadata);
     const serverUrl = message?.response_metadata?.server_url || '';
     setRuntimeServerUrl(serverUrl);
-    // Determine the correct token storage key so the backend can find it.
-    // Priority:
-    // 1. Composite "{configUuid}:{oauthEndpoint}" when configuration_uuid is present
-    //    (e.g. SharePoint with credential-scoped isolation).
-    // 2. Plain oauthEndpoint when it differs from server_url
-    //    (e.g. SharePoint without configUuid: site_url ≠ azure AD endpoint).
-    // 3. Empty string — falls back to serverUrl (regular MCP where server_url = oauth endpoint).
+    // Only credential-scoped flows (SharePoint/OpenAPI with configUuid) need a storage
+    // key different from server_url. For all regular remote MCPs the backend matches
+    // tokens by server_url — even when the OAuth authorization server host differs
+    // (e.g. Aha.io: MCP endpoint "…/api/v1/mcp" vs auth server "https://epam10.aha.io").
     const configUuid = metadata?.configurationUuid;
     const oauthEndpoint = metadata?.authServers?.[0];
     if (configUuid && oauthEndpoint) {
       setRuntimeTokenStorageKey(`${configUuid}:${oauthEndpoint}`);
-    } else if (oauthEndpoint && oauthEndpoint !== serverUrl) {
-      setRuntimeTokenStorageKey(oauthEndpoint);
     }
     setShowModal(true);
   }, []);

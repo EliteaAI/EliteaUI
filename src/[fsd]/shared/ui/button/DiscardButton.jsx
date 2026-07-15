@@ -10,7 +10,7 @@ import BaseBtn from './BaseBtn';
 const DiscardButton = memo(props => {
   const {
     title = 'Discard',
-    alertContent = 'Are you sure you want to discard changes?',
+    alertContent = ModalConstants.WARNING_MESSAGES.DISCARD_CHANGES,
     onDiscard,
     disabled,
     discarding,
@@ -50,8 +50,9 @@ const DiscardButton = memo(props => {
         open={openAlert}
         onClose={onCloseAlert}
         onConfirm={onConfirmDelete}
-        confirmButtonText="Discard"
+        confirmButtonText={ModalConstants.WARNING_BUTTONS.DISCARD}
         confirming={discarding}
+        dialogSx={{ fontSize: '0.875rem' }}
       />
     </>
   );

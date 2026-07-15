@@ -2,11 +2,11 @@ import { forwardRef, useCallback, useImperativeHandle, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { Button } from '@/[fsd]/shared/ui';
+import { ModalConstants } from '@/[fsd]/shared/lib/constants';
+import { Button, Input, Modal } from '@/[fsd]/shared/ui';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import useSaveNewVersion from '@/hooks/application/useSaveNewVersion';
 import useToast from '@/hooks/useToast';
-import InputVersionDialog from '@/pages/Common/Components/InputVersionDialog';
 
 const SaveNewVersionButton = forwardRef((props, ref) => {
   const { disabled, onClickHandler, onSuccess } = props;
@@ -77,6 +77,16 @@ const SaveNewVersionButton = forwardRef((props, ref) => {
     setNewVersion(target?.value.trim());
   }, []);
 
+  const handleKeyDown = useCallback(
+    event => {
+      if (event.key === 'Enter' && newVersion) {
+        event.preventDefault();
+        onConfirmVersion();
+      }
+    },
+    [newVersion, onConfirmVersion],
+  );
+
   return (
     <>
       <Button.BaseBtn
@@ -88,17 +98,25 @@ const SaveNewVersionButton = forwardRef((props, ref) => {
         Save As Version
         {isSavingNewVersion && <StyledCircleProgress size={20} />}
       </Button.BaseBtn>
-      <InputVersionDialog
+      <Modal.BaseModal
         open={showInputVersion}
-        showTips={false}
-        disabled={!newVersion}
-        title={'Create version'}
-        doButtonTitle={'Save'}
-        versionName={newVersion}
-        disabledInput={false}
-        onCancel={onCancelShowInputVersion}
+        variant={ModalConstants.MODAL_VARIANT.simple}
+        titleIcon={ModalConstants.MODAL_ICON_TYPE.success}
+        title="Create version"
+        onClose={onCancelShowInputVersion}
         onConfirm={onConfirmVersion}
-        onChange={onInputVersion}
+        confirmButtonText="Save"
+        confirming={!newVersion}
+        onKeyDown={handleKeyDown}
+        content={
+          <Input.InputBase
+            label="Name"
+            value={newVersion}
+            onChange={onInputVersion}
+            inputProps={{ maxLength: 255 }}
+            autoFocus
+          />
+        }
       />
     </>
   );

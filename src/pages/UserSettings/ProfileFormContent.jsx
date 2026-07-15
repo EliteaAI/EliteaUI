@@ -6,10 +6,10 @@ import { VoicePersonalizationSection } from '@/[fsd]/features/chat/ui';
 import { SoundNotificationSection } from '@/[fsd]/pages/user-settings/ui/SoundNotificationSection';
 import { useFormikAutoSaveOnBlur } from '@/[fsd]/shared/lib/hooks';
 
-import { ProfileContextManagement, ProfilePersonalization, ProfileUserInfo } from './components';
+import { ProfileContextManagement, ProfilePersonalization } from './components';
 
 const ProfileFormContent = memo(props => {
-  const { name, avatar, email, isFetching, modelList } = props;
+  const { modelList } = props;
 
   const styles = profileFormContentStyles();
 
@@ -21,12 +21,6 @@ const ProfileFormContent = memo(props => {
       onBlur={onBlur}
     >
       <Box sx={styles.container}>
-        <ProfileUserInfo
-          name={name}
-          avatar={avatar}
-          email={email}
-          isFetching={isFetching}
-        />
         <ProfilePersonalization onAutoSaveRequested={requestSubmit} />
         <ProfileContextManagement
           modelList={modelList}

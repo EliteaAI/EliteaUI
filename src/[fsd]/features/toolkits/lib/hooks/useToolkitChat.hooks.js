@@ -104,15 +104,19 @@ export const useToolkitChat = props => {
     [isCreateIndexMode, index?.metadata],
   );
 
-  const { conversationDetails, needGenerateProgressingIndexHistory, setProgressingIndexHistoryRecovered } =
-    useIndexHistory({
-      shouldRecover: shouldRecoverHistory,
-      conversationId: index?.metadata?.conversation_id,
-    });
+  const {
+    conversationDetails,
+    traceSteps,
+    needGenerateProgressingIndexHistory,
+    setProgressingIndexHistoryRecovered,
+  } = useIndexHistory({
+    shouldRecover: shouldRecoverHistory,
+    conversationId: index?.metadata?.conversation_id,
+  });
 
   useEffect(() => {
     if (needGenerateProgressingIndexHistory) {
-      const currentConversationMessages = convertConversationToChatHistory(conversationDetails);
+      const currentConversationMessages = convertConversationToChatHistory(conversationDetails, traceSteps);
       const prettifiedMessages = ToolkitsHelpers.prettifyToolkitConversation(currentConversationMessages);
 
       setChatHistory(prettifiedMessages);
@@ -122,6 +126,7 @@ export const useToolkitChat = props => {
   }, [
     shouldRecoverHistory,
     conversationDetails,
+    traceSteps,
     needGenerateProgressingIndexHistory,
     setProgressingIndexHistoryRecovered,
   ]);

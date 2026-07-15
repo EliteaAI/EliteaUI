@@ -25,6 +25,7 @@ const InputActionsToolbar = memo(props => {
     iconButtonSx,
     iconSizeSx,
     fullScreenButtonProps = {},
+    isOutlined = false,
   } = props;
 
   return (
@@ -51,7 +52,7 @@ const InputActionsToolbar = memo(props => {
         </Tooltip>
       )}
       {showFullScreenAction && (
-        <Box sx={!value ? { position: 'absolute', top: '1.5rem' } : {}}>
+        <Box sx={!value && !isOutlined ? { position: 'absolute', top: '1.5rem' } : {}}>
           <Tooltip
             title={fullScreenIcon ? 'AI Assistant' : 'Full screen view'}
             placement="top"
