@@ -32,6 +32,7 @@ const BaseModal = memo(props => {
     'data-testid': dataTestId,
     closeButtonDataTestId,
     confirmButtonDataTestId,
+    cancelButtonDataTestId,
     footer,
   } = props;
 
@@ -95,6 +96,7 @@ const BaseModal = memo(props => {
             color={BUTTON_COLORS.secondary}
             onClick={onClose}
             autoFocus
+            data-testid={cancelButtonDataTestId}
           >
             {cancelButtonText}
           </Button.BaseBtn>
