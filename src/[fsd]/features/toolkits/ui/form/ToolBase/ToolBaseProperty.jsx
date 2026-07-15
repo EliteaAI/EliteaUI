@@ -412,6 +412,7 @@ const ToolBaseProperty = memo(props => {
             control={
               <Checkbox.BaseCheckbox
                 data-testid={`toolkit-field-${k}-checkbox`}
+                inputProps={{ 'data-testid': `toolkit-field-${k}-checkbox-field` }}
                 checked={!!settings[k]}
                 onChange={(_, value) => {
                   editField(buildEditFieldPath(k), value);

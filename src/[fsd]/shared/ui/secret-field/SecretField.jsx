@@ -67,6 +67,14 @@ const SecretField = memo(props => {
   } = props;
   const styles = secretFieldStyles(error);
   const { sx: containerSx, ...restOfContainerProps } = containerProps;
+  // `inputProps` here is the CALLER'S prop (e.g. { name, 'data-testid': testId }),
+  // spread directly as top-level TextField props below — which is how its
+  // 'data-testid' ends up on the TextField root, not the native <input>
+  // (TextField's OWN `inputProps` prop — same name, different meaning — is
+  // what targets the native input's attributes). Derive a distinct testid
+  // for the real input from the caller's, so automation has a stable handle
+  // to the actual editable element without a raw-CSS chain off the wrapper.
+  const nativeInputTestId = inputProps['data-testid'] ? `${inputProps['data-testid']}-field` : undefined;
 
   const toggleOptions = useMemo(() => {
     return [
@@ -276,6 +284,7 @@ const SecretField = memo(props => {
             type={showPassword ? 'text' : 'password'}
             error={error}
             helperText={helperText}
+            inputProps={{ 'data-testid': nativeInputTestId }}
             slotProps={{
               inputLabel: tooltipDescription
                 ? undefined
