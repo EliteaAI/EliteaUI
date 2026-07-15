@@ -1,4 +1,8 @@
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
+import {
+  TAG_TYPE_PUBLIC_SKILLS,
+  TAG_TYPE_PUBLIC_SKILL_DETAILS,
+} from '@/[fsd]/features/skill-hub/api/skillHubApi';
 import { getFilenameFromContentDisposition } from '@/[fsd]/shared/lib/helpers';
 import { eliteaApi } from '@/api/eliteaApi.js';
 import { PAGE_SIZE } from '@/common/constants';
@@ -52,6 +56,8 @@ const skillsApi = eliteaApi
       TAG_TYPE_TOTAL_SKILLS,
       TAG_TYPE_APPLICATION_SKILLS,
       TAG_TYPE_SKILL_ICONS,
+      TAG_TYPE_PUBLIC_SKILLS,
+      TAG_TYPE_PUBLIC_SKILL_DETAILS,
     ],
   })
   .injectEndpoints({
@@ -479,6 +485,10 @@ const skillsApi = eliteaApi
             TAG_TYPE_SKILLS,
             TAG_TYPE_SKILL_DETAILS,
             { type: TAG_TYPE_SKILL_DETAILS, id: arg?.skillId },
+            // Refresh the ELITEA Catalog list/detail so a newly (un)published
+            // skill appears/disappears without a hard reload.
+            TAG_TYPE_PUBLIC_SKILLS,
+            TAG_TYPE_PUBLIC_SKILL_DETAILS,
           ];
         },
       }),
@@ -495,6 +505,9 @@ const skillsApi = eliteaApi
             TAG_TYPE_SKILLS,
             TAG_TYPE_SKILL_DETAILS,
             { type: TAG_TYPE_SKILL_DETAILS, id: arg?.skillId },
+            // Drop the unpublished skill from an already-open ELITEA Catalog.
+            TAG_TYPE_PUBLIC_SKILLS,
+            TAG_TYPE_PUBLIC_SKILL_DETAILS,
           ];
         },
       }),

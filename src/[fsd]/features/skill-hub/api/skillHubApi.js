@@ -1,8 +1,11 @@
 import { eliteaApi } from '@/api/eliteaApi.js';
 import { PAGE_SIZE, PUBLIC_PROJECT_ID } from '@/common/constants';
 
-const TAG_TYPE_PUBLIC_SKILLS = 'TAG_TYPE_PUBLIC_SKILLS';
-const TAG_TYPE_PUBLIC_SKILL_DETAILS = 'TAG_TYPE_PUBLIC_SKILL_DETAILS';
+// Exported so the publish/unpublish mutations (skillsApi) can invalidate the
+// catalog cache — otherwise a skill published/unpublished from the editor leaves
+// a stale card in an already-open ELITEA Catalog until a hard reload.
+export const TAG_TYPE_PUBLIC_SKILLS = 'TAG_TYPE_PUBLIC_SKILLS';
+export const TAG_TYPE_PUBLIC_SKILL_DETAILS = 'TAG_TYPE_PUBLIC_SKILL_DETAILS';
 const TAG_TYPE_AGENTS_WITH_SKILL = 'TAG_TYPE_AGENTS_WITH_SKILL';
 
 const apiSlicePath = '/elitea_core';

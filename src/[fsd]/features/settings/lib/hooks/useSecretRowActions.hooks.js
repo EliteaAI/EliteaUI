@@ -14,6 +14,7 @@ export const useSecretRowActions = ({
   projectId,
   toastError,
   toastInfo,
+  toastSuccess,
   refetch,
   isShowSecretMap,
   setIsShowSecretMap,
@@ -162,7 +163,10 @@ export const useSecretRowActions = ({
       }
 
       if (deletedRow && deletedRow.name) {
-        await deleteSecret({ projectId, name: deletedRow.name });
+        const { error } = await deleteSecret({ projectId, name: deletedRow.name });
+        if (!error) {
+          toastSuccess?.(`The ${deletedRow.name} secret has been successfully deleted.`);
+        }
         setTimeout(() => {
           refetch();
         }, 100);
@@ -170,7 +174,7 @@ export const useSecretRowActions = ({
         setRows(prevRows => prevRows.filter(row => row.id !== id));
       }
     },
-    [deleteSecret, projectId, setRows, refetch],
+    [deleteSecret, projectId, setRows, refetch, toastSuccess],
   );
 
   const handleCopyVisibleSecret = useCallback(
@@ -179,7 +183,7 @@ export const useSecretRowActions = ({
       if (targetRow && isShowSecretMapRef.current[id]) {
         try {
           await copyToClipboard(targetRow.secretValue);
-          toastInfo('The secret has been copied to the clipboard');
+          toastInfo(`The ${targetRow.name} values have been copied.`);
 
           // Hide the secret after copying
           setRows(prevRows =>

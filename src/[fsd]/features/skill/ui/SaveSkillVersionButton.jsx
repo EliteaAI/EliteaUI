@@ -4,12 +4,12 @@ import { useFormikContext } from 'formik';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import { useSaveSkillVersion } from '@/[fsd]/features/skill/lib/hooks';
-import { Button } from '@/[fsd]/shared/ui';
+import { ModalConstants } from '@/[fsd]/shared/lib/constants';
+import { Button, Input, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import useNavBlocker from '@/hooks/useNavBlocker';
 import useToast from '@/hooks/useToast';
-import InputVersionDialog from '@/pages/Common/Components/InputVersionDialog';
 
 const SaveSkillVersionButton = memo(({ onSuccess, onChangeVersion }) => {
   const { values, isValid, validateForm, setTouched } = useFormikContext();
@@ -75,6 +75,16 @@ const SaveSkillVersionButton = memo(({ onSuccess, onChangeVersion }) => {
     toastError,
   ]);
 
+  const handleKeyDown = useCallback(
+    event => {
+      if (event.key === 'Enter' && newVersion) {
+        event.preventDefault();
+        onConfirm();
+      }
+    },
+    [newVersion, onConfirm],
+  );
+
   return (
     <>
       <Button.BaseBtn
@@ -86,17 +96,25 @@ const SaveSkillVersionButton = memo(({ onSuccess, onChangeVersion }) => {
         Save As Version
         {isSavingNewVersion && <StyledCircleProgress size={20} />}
       </Button.BaseBtn>
-      <InputVersionDialog
+      <Modal.BaseModal
         open={showInputVersion}
-        showTips={false}
-        disabled={!newVersion}
+        variant={ModalConstants.MODAL_VARIANT.simple}
+        titleIcon={ModalConstants.MODAL_ICON_TYPE.success}
         title="Create version"
-        doButtonTitle="Save"
-        versionName={newVersion}
-        disabledInput={false}
-        onCancel={onCancel}
+        onClose={onCancel}
         onConfirm={onConfirm}
-        onChange={onInput}
+        confirmButtonText="Save"
+        confirming={!newVersion}
+        onKeyDown={handleKeyDown}
+        content={
+          <Input.InputBase
+            label="Name"
+            value={newVersion}
+            onChange={onInput}
+            inputProps={{ maxLength: 255 }}
+            autoFocus
+          />
+        }
       />
     </>
   );

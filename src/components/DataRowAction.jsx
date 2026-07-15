@@ -11,7 +11,7 @@ import { Modal } from '@/[fsd]/shared/ui';
 import { useDeleteApplicationMutation } from '@/api/applications';
 import { useDeleteConfigurationMutation } from '@/api/configurations';
 import { useToolkitDeleteMutation } from '@/api/toolkits.js';
-import { isSkillCard } from '@/common/checkCardType';
+import { isAppAllCard, isMCPCard, isSkillCard } from '@/common/checkCardType';
 import { PERMISSIONS, ViewMode } from '@/common/constants';
 import { getEntityNameByCardType } from '@/components/Fork/useForkEntity';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
@@ -129,12 +129,29 @@ const DataRowAction = memo(props => {
   const [deleteApplication] = useDeleteApplicationMutation();
   const [deleteToolkit] = useToolkitDeleteMutation();
   const [deleteCredential] = useDeleteConfigurationMutation();
+
   const doDeleteApplication = useCallback(async () => {
-    await deleteApplication({ projectId, applicationId: data?.id });
-  }, [data?.id, deleteApplication, projectId]);
+    const { error } = await deleteApplication({ projectId, applicationId: data?.id });
+    if (!error) {
+      const entityType =
+        entity_name === 'pipelines' ? 'pipeline' : entity_name === 'applications' ? 'application' : 'agent';
+      const entityName = data?.name || entityType;
+      toastSuccess(`The ${entityName} ${entityType} has been successfully deleted.`);
+    }
+  }, [data?.id, data?.name, deleteApplication, projectId, entity_name, toastSuccess]);
+
+  const isAppAll = useMemo(() => isAppAllCard(realCardType), [realCardType]);
+  const isMCP = useMemo(() => isMCPCard(realCardType), [realCardType]);
+
   const doDeleteToolkit = useCallback(async () => {
-    await deleteToolkit({ projectId, toolkitId: data?.id });
-  }, [data?.id, deleteToolkit, projectId]);
+    const { error } = await deleteToolkit({ projectId, toolkitId: data?.id });
+    if (!error) {
+      const entityType = isAppAll ? 'application' : isMCP ? 'mcp' : 'toolkit';
+      const entityName = data?.name || entityType;
+      toastSuccess(`The ${entityName} ${entityType} has been successfully deleted.`);
+    }
+  }, [data?.id, data?.name, deleteToolkit, projectId, isAppAll, isMCP, toastSuccess]);
+
   const doDeleteCredential = useCallback(async () => {
     const { error } = await deleteCredential({
       projectId,
@@ -142,11 +159,22 @@ const DataRowAction = memo(props => {
       section: data?.section,
     });
     if (!error) {
-      toastSuccess('The credential has been deleted');
+      const credentialName = data?.name || data?.settings?.elitea_title || 'credential';
+      toastSuccess(`The ${credentialName} credential has been successfully deleted.`);
     } else {
       toastError('Failed to delete credential');
     }
-  }, [data?.id, data?.originalId, data?.section, deleteCredential, projectId, toastSuccess, toastError]);
+  }, [
+    data?.id,
+    data?.originalId,
+    data?.section,
+    data?.name,
+    data?.settings?.elitea_title,
+    deleteCredential,
+    projectId,
+    toastSuccess,
+    toastError,
+  ]);
 
   const onDelete = useCallback(() => {
     if (entity_name === 'applications' || entity_name === 'pipelines') {

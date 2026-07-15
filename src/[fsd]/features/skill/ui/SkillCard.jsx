@@ -1,14 +1,14 @@
 import { memo, useCallback, useMemo, useState } from 'react';
 
-import { Box, IconButton, Tooltip, Typography } from '@mui/material';
+import { Box, IconButton, Tooltip } from '@mui/material';
 
 import { useDetachSkill } from '@/[fsd]/features/skill/lib/hooks';
-import { Banner } from '@/[fsd]/shared/ui';
+import { ModalConstants } from '@/[fsd]/shared/lib/constants';
+import { Banner, Modal } from '@/[fsd]/shared/ui';
 import { TypographyWithConditionalTooltip } from '@/[fsd]/shared/ui/tooltip';
 import OpenInNewIcon from '@/assets/open-new-icon.svg?react';
 import SkillIcon from '@/assets/skill-icon.svg?react';
 import { SkillsTabs } from '@/common/constants';
-import AlertDialog from '@/components/AlertDialog';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import EliteAImage from '@/components/EliteAImage';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
@@ -17,7 +17,7 @@ import { useTheme } from '@emotion/react';
 
 import SkillVersionSelector from './SkillVersionSelector.jsx';
 
-const SkillCard = memo(({ skill, entityVersionId, disabled }) => {
+const SkillCard = memo(({ skill, entityVersionId, disabled, parentEntityType = 'agent' }) => {
   const theme = useTheme();
   const [openAlert, setOpenAlert] = useState(false);
   const { detachSkill, isLoading } = useDetachSkill({ entityVersionId });
@@ -37,19 +37,6 @@ const SkillCard = memo(({ skill, entityVersionId, disabled }) => {
     setOpenAlert(false);
     await detachSkill({ skillId: skill.skill_id });
   }, [detachSkill, skill.skill_id]);
-
-  const dialogContent = useMemo(() => {
-    const styledName = (
-      <Typography
-        component="span"
-        variant="headingSmall"
-        color={theme.palette.text.deleteAlertEntityName}
-      >
-        {skill.name}
-      </Typography>
-    );
-    return <>Are you sure to remove the {styledName} skill?</>;
-  }, [theme.palette.text.deleteAlertEntityName, skill.name]);
 
   return (
     <>
@@ -130,14 +117,15 @@ const SkillCard = memo(({ skill, entityVersionId, disabled }) => {
         {skill.version_missing && (
           <Banner.BannerMessage message="The attached skill version no longer exists. Select a valid version or remove this skill." />
         )}
-        <AlertDialog
-          title="Remove skill?"
-          alertContent={dialogContent}
+        <Modal.DeleteEntityModal
           open={openAlert}
-          alarm
           onClose={onCloseAlert}
-          onCancel={onCloseAlert}
           onConfirm={onConfirmAlert}
+          title="Remove skill?"
+          titleIcon={ModalConstants.MODAL_ICON_TYPE.warning}
+          textContent="Are you sure to remove the "
+          name={skill.name}
+          inlineExtraContent={` skill from ${parentEntityType}?`}
           confirmButtonText="Remove"
         />
       </Box>

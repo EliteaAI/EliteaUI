@@ -6,8 +6,9 @@ import { Box, Skeleton, Typography, useTheme } from '@mui/material';
 
 import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
 import { RunHistoryTooltipCell } from '@/[fsd]/entities/run-history/ui';
+import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { SharedHelpers } from '@/[fsd]/shared/lib/helpers';
-import { Button, Modal } from '@/[fsd]/shared/ui';
+import { Modal } from '@/[fsd]/shared/ui';
 import CopyLinkIcon from '@/assets/copy-link-icon.svg?react';
 import { SearchParams } from '@/common/constants';
 import DotMenu from '@/components/DotMenu';
@@ -92,7 +93,7 @@ const RunHistoryListItem = memo(props => {
         historyId: item.id,
       }).unwrap();
 
-      toastSuccess('Chat deleted successfully');
+      toastSuccess('The run has been successfully deleted.');
       setConfirmRemoveModal(false);
       onItemSelect(null);
     } catch {
@@ -210,31 +211,16 @@ const RunHistoryListItem = memo(props => {
         </Box>
       </Box>
 
-      <Modal.BaseModal
-        hideSections
+      <Modal.DeleteEntityModal
         open={confirmRemoveModal}
-        title="Remove run"
         onClose={closeConfirmationModal}
-        content={<Typography>Are you sure you want to remove this run?</Typography>}
-        actions={
-          <Box sx={{ display: 'flex', gap: '1rem' }}>
-            <Button.BaseBtn
-              variant="elitea"
-              color="secondary"
-              onClick={closeConfirmationModal}
-            >
-              Cancel
-            </Button.BaseBtn>
-            <Button.BaseBtn
-              variant="elitea"
-              color="alarm"
-              onClick={confirmHistoryItemRemoval}
-              disabled={isDeleting}
-            >
-              Remove
-            </Button.BaseBtn>
-          </Box>
+        onConfirm={confirmHistoryItemRemoval}
+        title="Remove run?"
+        titleIcon={ModalConstants.MODAL_ICON_TYPE.warning}
+        customContent={
+          <Typography variant="bodyMedium">Are you sure you want to remove this run?</Typography>
         }
+        confirmButtonText="Remove"
       />
     </>
   );

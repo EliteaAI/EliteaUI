@@ -43,7 +43,7 @@ const Buckets = memo(props => {
   const navigate = useNavigate();
   const { state: locationState } = useLocation();
   const { routeStack = [] } = useMemo(() => locationState || { routeStack: [] }, [locationState]);
-  const { toastError, toastInfo } = useToast();
+  const { toastError, toastSuccess } = useToast();
 
   const [deletingBucket, setDeletingBucket] = useState(null);
 
@@ -165,10 +165,10 @@ const Buckets = memo(props => {
 
   // Success handling for delete mutation
   useEffect(() => {
-    if (isDeleteSuccess) {
-      toastInfo('The bucket has been deleted successfully');
+    if (isDeleteSuccess && deletingBucket) {
+      toastSuccess(`The ${deletingBucket.name} bucket has been successfully deleted.`);
     }
-  }, [isDeleteSuccess, toastInfo]);
+  }, [isDeleteSuccess, deletingBucket, toastSuccess]);
 
   // Handle bucket deletion and auto-select next bucket
   useEffect(() => {

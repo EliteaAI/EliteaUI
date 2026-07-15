@@ -9,6 +9,7 @@ import {
   useConversationDetailsQuery,
   useDeleteAllMessagesFromConversationMutation,
   useDeleteMessageFromConversationMutation,
+  useLazyMessageTracesQuery,
   useStopChatTaskMutation,
 } from '@/api';
 import { eliteaApi } from '@/api/eliteaApi';
@@ -50,7 +51,7 @@ export const usePipelineChat = ({
 
   const [deleteMessage, { reset: resetDeleteMessage }] = useDeleteMessageFromConversationMutation();
   const [deleteAllMessages, { reset: resetDeleteAll }] = useDeleteAllMessagesFromConversationMutation();
-  const { toastError, toastInfo } = useToast();
+  const { toastError, toastInfo, toastSuccess } = useToast();
   const chatHistoryRef = useRef([]);
 
   const {
@@ -67,6 +68,7 @@ export const usePipelineChat = ({
       refetchOnMountOrArgChange: true,
     },
   );
+  const [getMessageTraces] = useLazyMessageTracesQuery();
   const { attachments, onAttachFiles, onDeleteAttachment, disableAttachments, onClearAttachments } =
     useAgentAttachments({ agentVersionDetails: pipelineVersionDetails });
   useApplicationChatSwitchVersion({
@@ -134,39 +136,60 @@ export const usePipelineChat = ({
     ) {
       setIsRestoringConversation(true);
 
-      const convertedChatHistory = convertConversationToChatHistory(restoredConversationData);
+      // Pins come from message_trace_step (TS-4); failure degrades to no pins.
+      const tracesRequest = getMessageTraces({
+        projectId,
+        conversationId: restoredConversationData.id,
+      });
 
-      const restoredConversation = {
-        ...restoredConversationData,
-        chat_history: convertedChatHistory,
-        isPipelineChat: true,
-      };
+      (async () => {
+        try {
+          const tracesResult = await tracesRequest;
+          const convertedChatHistory = convertConversationToChatHistory(
+            restoredConversationData,
+            tracesResult.data,
+          );
 
-      // Find the pipeline participant from the restored conversation
-      const restoredPipelineParticipant = restoredConversationData.participants?.find(
-        p => p.entity_name === 'application',
-      );
+          const restoredConversation = {
+            ...restoredConversationData,
+            chat_history: convertedChatHistory,
+            isPipelineChat: true,
+          };
 
-      if (restoredPipelineParticipant) {
-        setActiveConversation(restoredConversation);
-        setActiveParticipant(restoredPipelineParticipant);
+          // Find the pipeline participant from the restored conversation
+          const restoredPipelineParticipant = restoredConversationData.participants?.find(
+            p => p.entity_name === 'application',
+          );
 
-        chatHistoryRef.current = convertedChatHistory;
+          if (restoredPipelineParticipant) {
+            setActiveConversation(restoredConversation);
+            setActiveParticipant(restoredPipelineParticipant);
 
-        emitEnterRoom({
-          conversation_id: restoredConversationData.id,
-          conversation_uuid: restoredConversationData.uuid,
-          project_id: projectId,
-        });
+            chatHistoryRef.current = convertedChatHistory;
 
-        toastInfo('Chat restored successfully');
-        setHasRestoredConversation(true);
-      } else {
-        toastError('Could not find pipeline participant in restored chat');
-      }
+            emitEnterRoom({
+              conversation_id: restoredConversationData.id,
+              conversation_uuid: restoredConversationData.uuid,
+              project_id: projectId,
+            });
 
-      onRestoreConversationComplete();
-      setIsRestoringConversation(false);
+            toastInfo('Chat restored successfully');
+            setHasRestoredConversation(true);
+          } else {
+            toastError('Could not find pipeline participant in restored chat');
+          }
+
+          onRestoreConversationComplete();
+        } catch (error) {
+          if (error?.name !== 'AbortError') {
+            toastError('Failed to restore conversation');
+          }
+        } finally {
+          setIsRestoringConversation(false);
+        }
+      })();
+
+      return () => tracesRequest.abort();
     }
   }, [
     restoredConversationID,
@@ -175,6 +198,7 @@ export const usePipelineChat = ({
     isErrorRestoredConversation,
     isRestoringConversation,
     emitEnterRoom,
+    getMessageTraces,
     projectId,
     toastInfo,
     toastError,
@@ -574,7 +598,7 @@ export const usePipelineChat = ({
           callback?.();
           return updatedMessages;
         });
-        toastInfo('The message has been deleted');
+        toastSuccess('The message has been successfully deleted.');
         resetDeleteMessage();
       } else {
         toastError(buildErrorMessage(result.error) || 'Failed to delete the message, please try again.');
@@ -587,7 +611,7 @@ export const usePipelineChat = ({
       resetDeleteMessage,
       setChatHistory,
       toastError,
-      toastInfo,
+      toastSuccess,
     ],
   );
 

@@ -260,17 +260,24 @@ const ApplicationThinkView = memo(props => {
         }
         if (isReasoningAction(action)) {
           // Skip ALL LLM actions with empty content AND empty thinking (transition steps)
-          // Named LLM actions (Start, Chat) with actual content or thinking should still show their chips
+          // Named LLM actions (Start, Chat) with actual content or thinking should still show their chips.
+          // Reloaded pins (TS-4) carry a traceStepId and lazy (empty) content, but the backend already
+          // dropped blank thinking steps from the list — so a reloaded pin is known non-blank and is kept.
           const hasContent =
-            (action.content && action.content.trim()) || (action.thinking && action.thinking.trim());
+            (action.content && action.content.trim()) ||
+            (action.thinking && action.thinking.trim()) ||
+            !!action.traceStepId;
           if (!hasContent && action.type === TOOL_ACTION_TYPES.Llm) {
             return; // Skip empty LLM actions (transition steps)
           }
           // Skip LLM actions without a proper node name (transition actions before name is set)
           // These show as just model name without ": NodeName" suffix
-          // Also skip actions with default "Thinking step" name - these are transition markers
+          // Also skip actions with default "Thinking step" name - these are transition markers.
+          // Reloaded pins (traceStepId) are exempt: the backend already dropped blank steps, so a
+          // default-named reloaded pin is a real single-LLM answer, not a transition marker.
           if (
             action.type === TOOL_ACTION_TYPES.Llm &&
+            !action.traceStepId &&
             (!action.name || action.name === TOOL_ACTION_NAMES.Llm)
           ) {
             return; // Skip nameless/default transition actions

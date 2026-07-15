@@ -2,7 +2,7 @@ import { memo, useCallback } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { Box } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { Label, Switch } from '@/[fsd]/shared/ui';
@@ -50,15 +50,19 @@ const ProfileContextManagement = memo(props => {
             <Box sx={styles.accordionContent}>
               {/* Enable Context Management */}
               <Box sx={styles.toggleSection}>
+                <Box sx={styles.toggleContent}>
+                  <Typography
+                    variant="headingSmall"
+                    sx={{ color: 'text.secondary' }}
+                  >
+                    Context Management
+                  </Typography>
+                  <Typography variant="bodySmall">Enable context management for new conversations</Typography>
+                </Box>
                 <Switch.BaseSwitch
                   data-testid="context-management-toggle"
                   checked={values.context_enabled}
                   onChange={handleContextEnabledChange}
-                  label="Enable context management for new conversations"
-                  slotProps={{
-                    switch: { size: 'small' },
-                    formControlLabel: { sx: styles.toggleLabel },
-                  }}
                 />
               </Box>
 
@@ -136,13 +140,21 @@ const profileContextManagementStyles = () => ({
   accordionContent: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '1rem',
+    // gap: '1rem',
     paddingRight: '1rem',
   },
-  toggleSection: {
+  toggleSection: ({ palette }) => ({
     display: 'flex',
     alignItems: 'center',
-    paddingLeft: '0.5rem',
+    justifyContent: 'space-between',
+    padding: '0.75rem 1rem',
+    backgroundColor: palette.background.userInputBackground,
+    borderRadius: '0.75rem',
+  }),
+  toggleContent: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem',
   },
   toggleLabel: {
     gap: '0.7rem',
@@ -150,14 +162,12 @@ const profileContextManagementStyles = () => ({
   fieldsRow: {
     display: 'flex',
     gap: '1.5rem',
+    marginTop: '1rem',
   },
   subSections: {
     display: 'flex',
     flexDirection: 'column',
-    paddingLeft: '1rem',
-    borderLeft: '2px solid',
     borderColor: 'divider',
-    marginTop: '0.5rem',
   },
   field: {
     display: 'flex',

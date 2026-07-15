@@ -50,8 +50,16 @@ import EnhancedCardToolActions from './CardActions/EnhancedCardToolActions.jsx';
 import BaseCardBody from './CardBodies/BaseCardBody.jsx';
 
 const ToolCard = memo(props => {
-  const { tool, index, applicationId, disabled, isDuplicate, onDeleteAttachmentTool, entityProjectId } =
-    props;
+  const {
+    tool,
+    index,
+    applicationId,
+    disabled,
+    isDuplicate,
+    onDeleteAttachmentTool,
+    entityProjectId,
+    isPipeline = false,
+  } = props;
   const theme = useTheme();
   const [openAlert, setOpenAlert] = useState(false);
   const { toastError } = useToast();
@@ -295,12 +303,15 @@ const ToolCard = memo(props => {
       if (tool?.agent_type === 'pipeline') return 'pipeline';
       return 'agent';
     }
+    if (isMcp) return 'MCP';
     return 'toolkit';
-  }, [tool?.agent_type, tool?.type]);
+  }, [tool?.agent_type, tool?.type, isMcp]);
 
-  // Generate tooltip texts
-  const openTooltipText = `Open ${entityType === 'toolkit' && isMcp ? 'mcp' : entityType} in new tab`;
-  const removeTooltipText = `Remove ${entityType}`;
+  const parentEntityType = isPipeline ? 'pipeline' : 'agent';
+
+  const entityTypeLabel = entityType === 'MCP' ? 'MCP' : entityType.toLowerCase();
+  const openTooltipText = `Open ${entityTypeLabel} in new tab`;
+  const removeTooltipText = `Remove ${entityTypeLabel}`;
 
   const toolValidationMessage = useMemo(() => {
     if (!validationInfo) return null;
@@ -375,44 +386,14 @@ const ToolCard = memo(props => {
     );
   }, [validationInfo, toolValidationMessage, personal_project_id, projectId, tool]);
 
-  // Generate dialog texts based on entity type
-  const dialogTitle = useMemo(() => {
-    switch (entityType) {
-      case 'agent':
-        return 'Remove agent?';
-      case 'pipeline':
-        return 'Remove pipeline?';
-      case 'toolkit':
-      default:
-        return 'Remove toolkit?';
-    }
-  }, [entityType]);
+  const dialogTitle = useMemo(() => `Remove ${entityTypeLabel}?`, [entityTypeLabel]);
 
-  const dialogContent = useMemo(() => {
-    const styledEntityName = (
-      <Typography
-        component="span"
-        variant="headingSmall"
-        color={theme.palette.text.deleteAlertEntityName}
-      >
-        {toolkitName}
-      </Typography>
-    );
-
-    switch (entityType) {
-      case 'agent':
-        return <>Are you sure to remove the {styledEntityName} agent?</>;
-      case 'pipeline':
-        return <>Are you sure to remove the {styledEntityName} pipeline?</>;
-      case 'toolkit':
-      default:
-        return !isAttachmentToolkit ? (
-          <>Are you sure to remove the {styledEntityName} toolkit?</>
-        ) : (
-          <>Are you sure to remove the {styledEntityName} toolkit, which is used to keep attached files?</>
-        );
+  const dialogInlineExtraContent = useMemo(() => {
+    if (isAttachmentToolkit) {
+      return ` ${entityTypeLabel}, which is used to keep attached files, from ${parentEntityType}?`;
     }
-  }, [theme.palette.text.deleteAlertEntityName, toolkitName, entityType, isAttachmentToolkit]);
+    return ` from ${parentEntityType}?`;
+  }, [entityTypeLabel, isAttachmentToolkit, parentEntityType]);
 
   const getToolkitIconMeta = useGetToolkitIconMeta();
 
@@ -523,6 +504,7 @@ const ToolCard = memo(props => {
                   >
                     <IconButton
                       id="RefreshButton"
+                      data-testid="toolkit-reload-button"
                       variant="elitea"
                       color="tertiary"
                       aria-label="refresh toolkit"
@@ -540,6 +522,7 @@ const ToolCard = memo(props => {
               >
                 <IconButton
                   id="OpenInNewTabButton"
+                  data-testid="toolkit-open-button"
                   variant="elitea"
                   color="tertiary"
                   aria-label="open in new tab"
@@ -616,11 +599,15 @@ const ToolCard = memo(props => {
           </Box>
           {isBlockedToolkit && !validationInfo && !showActions && (
             <Banner.BannerMessage
+              data-testid="toolkit-blocked-banner"
               message={`${ToolkitsHelpers.getToolkitTypeLabel(tool?.type)} toolkit is blocked by your organization.`}
             />
           )}
           {!isBlockedToolkit && someToolsAreUnavailable && !validationInfo && !showActions && (
-            <Banner.BannerMessage message="Some tools are not available anymore." />
+            <Banner.BannerMessage
+              data-testid="toolkit-tools-unavailable-banner"
+              message="Some tools are not available anymore."
+            />
           )}
           {showVariables && (
             <AgentVariables
@@ -641,9 +628,10 @@ const ToolCard = memo(props => {
           />
           <Modal.DeleteEntityModal
             title={dialogTitle}
-            customContent={dialogContent}
+            textContent="Are you sure to remove the "
+            name={toolkitName}
+            inlineExtraContent={dialogInlineExtraContent}
             open={openAlert}
-            alarm={false}
             titleIcon={ModalConstants.MODAL_ICON_TYPE.warning}
             onClose={onCloseAlert}
             onConfirm={onConfirmAlert}

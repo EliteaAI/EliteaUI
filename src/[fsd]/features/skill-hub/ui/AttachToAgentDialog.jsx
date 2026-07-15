@@ -98,8 +98,11 @@ const AttachToAgentDialog = memo(props => {
     }
   }, [open]);
 
-  const canAdd = selectedAgents.length >= 1;
-  const canAddAndTest = selectedAgents.length === 1;
+  // Gate on versionId too: without the resolved public version id the attach
+  // request 400s and surfaces a red error toast. Keep the buttons disabled
+  // until the skill detail (and its published version) has loaded.
+  const canAdd = selectedAgents.length >= 1 && Boolean(versionId);
+  const canAddAndTest = selectedAgents.length === 1 && Boolean(versionId);
 
   const buildAttachArgs = useCallback(
     agents => ({

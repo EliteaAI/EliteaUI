@@ -2,7 +2,7 @@ import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 
-import { Box, FormControl, FormHelperText, IconButton, InputLabel, Tooltip, Typography } from '@mui/material';
+import { Box, FormControl, FormHelperText, InputLabel, Typography } from '@mui/material';
 
 import { Select } from '@/[fsd]/shared/ui';
 import { toolkitsApi } from '@/api/toolkits';
@@ -30,6 +30,7 @@ const ToolkitSelect = memo(
     disabled,
     multiple = false,
     filters = {},
+    labelSX,
   }) => {
     const { personal_project_id } = useSelector(state => state.user);
     const selectedProjectId = useSelectedProjectId();
@@ -99,10 +100,7 @@ const ToolkitSelect = memo(
       onRefresh();
     }, [onRefresh]);
 
-    const isToolkitPersonal = useCallback(
-      t => t.project_id === personal_project_id,
-      [personal_project_id],
-    );
+    const isToolkitPersonal = useCallback(t => t.project_id === personal_project_id, [personal_project_id]);
 
     const newToolkitOptions = useMemo(
       () =>
@@ -135,10 +133,7 @@ const ToolkitSelect = memo(
 
     const hasToolkitOptions = useMemo(() => newToolkitOptions.length > 0, [newToolkitOptions]);
 
-    const stringMultiValue = useMemo(
-      () => (Array.isArray(value) ? value.map(v => String(v)) : []),
-      [value],
-    );
+    const stringMultiValue = useMemo(() => (Array.isArray(value) ? value.map(v => String(v)) : []), [value]);
 
     const customRenderSelectValue = useCallback(foundOption => {
       return (
@@ -166,6 +161,7 @@ const ToolkitSelect = memo(
 
     const hasStaleSingleValue = useMemo(
       () =>
+        !Array.isArray(value) &&
         value != null &&
         value !== '' &&
         hasFetchedData &&
@@ -175,9 +171,7 @@ const ToolkitSelect = memo(
 
     const hasStaleMultiValue = useMemo(() => {
       if (!Array.isArray(value) || !value.length || !hasFetchedData) return false;
-      return value.some(
-        v => !toolkits.some(t => getToolkitIdString(t.id) === String(v)),
-      );
+      return value.some(v => !toolkits.some(t => getToolkitIdString(t.id) === String(v)));
     }, [value, hasFetchedData, toolkits]);
 
     const { effectiveSingleError, effectiveSingleHelperText } = useMemo(() => {
@@ -201,10 +195,7 @@ const ToolkitSelect = memo(
         <Box
           sx={{
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
             width: '100%',
-            pr: 0.5,
           }}
         >
           <InputLabel
@@ -221,6 +212,7 @@ const ToolkitSelect = memo(
                 ...(required && {
                   '& .MuiInputLabel-asterisk, & .MuiFormLabel-asterisk': { display: 'none' },
                 }),
+                ...labelSX,
               },
             ]}
             shrink
@@ -228,36 +220,14 @@ const ToolkitSelect = memo(
             {label}
             {required && ' *'}
           </InputLabel>
-          <Tooltip
-            title="Refresh the toolkits"
-            placement="top"
-          >
-            <Box
-              component="span"
-              sx={{ display: 'inline-flex' }}
-            >
-              <IconButton
-                type="button"
-                variant="elitea"
-                color="tertiary"
-                onClick={e => onRefresh(e)}
-                onMouseDown={e => e.stopPropagation()}
-                disabled={disabled}
-                size="small"
-                aria-label="Refresh toolkits"
-              >
-                <RefreshIcon />
-              </IconButton>
-            </Box>
-          </Tooltip>
         </Box>
       ),
-      [disabled, label, onRefresh, required],
+      [label, labelSX, required],
     );
 
     const singleValueForSelect = useMemo(() => {
       if (!hasToolkitOptions) return '';
-      if (value == null || value === '') return '';
+      if (value == null || value === '' || Array.isArray(value)) return '';
       return String(value);
     }, [hasToolkitOptions, value]);
 
@@ -273,7 +243,7 @@ const ToolkitSelect = memo(
               label=""
               labelNode={multiLabelNode}
               value={stringMultiValue}
-              options={newToolkitOptions}
+              options={optionsWithActions}
               showOptionIcon
               showOptionDescription
               onValueChange={handleMultiValueChange}
@@ -314,6 +284,7 @@ const ToolkitSelect = memo(
           showEmptyPlaceholder={false}
           isListFetching={isFetching}
           optionTextColumnSx={{ flexDirection: 'row', gap: '1rem', alignItems: 'center' }}
+          labelSX={labelSX}
         />
       </Box>
     );

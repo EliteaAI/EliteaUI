@@ -87,7 +87,7 @@ const ProfilePersonalization = memo(props => {
               <Box sx={styles.accordionContent}>
                 <Box sx={styles.section}>
                   <Label.InfoLabelWithTooltip
-                    label="Default Personality"
+                    label="Default personality"
                     tooltip="Select the default assistant personality for your conversations"
                     sx={styles.label}
                   />
@@ -118,23 +118,20 @@ const ProfilePersonalization = memo(props => {
                 </Box>
 
                 <Box sx={styles.section}>
-                  <Label.InfoLabelWithTooltip
-                    label="Default User Instructions"
-                    tooltip="Custom instructions that will be applied to all new conversations"
-                    sx={styles.label}
-                  />
                   <Input.StyledInputEnhancer
+                    label="Default instructions"
+                    tooltipDescription="Custom instructions that will be applied to all new conversations"
                     autoComplete="off"
-                    variant="standard"
+                    variantInput="outlined"
                     fullWidth
                     multiline
-                    maxRows={6}
-                    minRows={3}
                     value={values.default_instructions}
                     onChange={handleInstructionsChange}
                     enableAutoBlur={false}
-                    placeholder="Example: Always respond in a concise manner. Focus on practical solutions. Use code examples when explaining technical concepts."
+                    placeholder="Example: Always respond in a concise manner. Focus on practical solutions."
                     hasActionsToolBar
+                    showCopyAction={false}
+                    showExpandAction={false}
                     fieldName="Default Instructions"
                     containerProps={styles.inputContainer}
                   />

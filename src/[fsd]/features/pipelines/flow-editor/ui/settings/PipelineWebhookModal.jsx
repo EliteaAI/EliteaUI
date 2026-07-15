@@ -83,7 +83,7 @@ const PipelineWebhookModal = props => {
   } = props;
 
   const styles = pipelineWebhookModalStyles();
-  const { toastSuccess } = useToast();
+  const { toastSuccess, toastInfo } = useToast();
 
   const [selectedWebhookType, setSelectedWebhookType] = useState('github');
   const [showSecretValue, setShowSecretValue] = useState(false);
@@ -118,16 +118,16 @@ const PipelineWebhookModal = props => {
   const handleCopyUrl = useCallback(() => {
     if (fullWebhookUrl) {
       navigator.clipboard.writeText(fullWebhookUrl);
-      toastSuccess('Webhook URL copied to clipboard');
+      toastInfo('The webhook URL has been copied.');
     }
-  }, [fullWebhookUrl, toastSuccess]);
+  }, [fullWebhookUrl, toastInfo]);
 
   const handleCopySecret = useCallback(() => {
     if (displaySecretValue) {
       navigator.clipboard.writeText(displaySecretValue);
-      toastSuccess('Secret copied to clipboard');
+      toastInfo('The secret has been copied.');
     }
-  }, [displaySecretValue, toastSuccess]);
+  }, [displaySecretValue, toastInfo]);
 
   const handleToggleSecretVisibility = useCallback(() => {
     setShowSecretValue(prev => !prev);
@@ -154,9 +154,9 @@ const PipelineWebhookModal = props => {
   const handleCopyExample = useCallback(() => {
     if (exampleRequest) {
       navigator.clipboard.writeText(exampleRequest);
-      toastSuccess('Example request copied to clipboard');
+      toastInfo('The example request has been copied.');
     }
-  }, [exampleRequest, toastSuccess]);
+  }, [exampleRequest, toastInfo]);
 
   const applyChanges = useCallback(() => {
     onSubmit(selectedWebhookType, pendingSecretValue);

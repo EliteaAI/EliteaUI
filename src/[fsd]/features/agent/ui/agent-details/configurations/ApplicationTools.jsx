@@ -140,6 +140,7 @@ const ApplicationTools = memo(props => {
                   disabled={disabled}
                   isDuplicate={markedDuplicateTool.isDuplicate}
                   entityProjectId={entityProjectId}
+                  isPipeline={isPipeline}
                 />
               ))}
 

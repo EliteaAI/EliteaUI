@@ -32,7 +32,7 @@ const useDeleteApplication = setBlockNav => {
   }, [isError, isSuccess, navigate, reset, setBlockNav]);
 
   const toastProps = useMemo(() => ({ onCloseToast }), [onCloseToast]);
-  const { toastInfo, toastError } = useToast(toastProps);
+  const { toastSuccess, toastError } = useToast(toastProps);
   const onDelete = useCallback(async () => {
     await deleteApplication({ projectId, applicationId });
   }, [deleteApplication, projectId, applicationId]);
@@ -42,9 +42,10 @@ const useDeleteApplication = setBlockNav => {
       toastError(buildErrorMessage(error));
       reset();
     } else if (isSuccess) {
-      toastInfo(`Deleted the ${!isFromPipeline ? 'agent' : 'pipeline'} successfully`);
+      const entityType = !isFromPipeline ? 'agent' : 'pipeline';
+      toastSuccess(`The ${name || entityType} ${entityType} has been successfully deleted.`);
     }
-  }, [error, isError, isFromPipeline, isSuccess, reset, toastError, toastInfo]);
+  }, [error, isError, isFromPipeline, isSuccess, name, reset, toastError, toastSuccess]);
 
   return {
     name,
@@ -59,6 +60,7 @@ export const useDeleteApplicationMenu = (setBlockNav, disabled) => {
   const { name, onDelete, isLoading } = useDeleteApplication(setBlockNav);
   const menuItem = useMemo(
     () => ({
+      key: 'delete-agent',
       label: 'Delete',
       icon: (
         <DeleteIcon
