@@ -8,7 +8,7 @@ import BasicAccordion from '../[fsd]/shared/ui/accordion/BasicAccordion';
 import VariableList from './VariableList';
 
 const ApplicationVariables = memo(props => {
-  const { style } = props;
+  const { style, sectionTestId, rowTestId, inputTestId } = props;
 
   const { values: { version_details = {} } = {}, setFieldValue } = useFormikContext();
 
@@ -33,6 +33,7 @@ const ApplicationVariables = memo(props => {
     () => [
       {
         title: 'Variables',
+        testId: sectionTestId,
         content: (
           <Box>
             <VariableList
@@ -41,12 +42,14 @@ const ApplicationVariables = memo(props => {
               showexpandicon="true"
               multiline
               collapseContent
+              rowTestId={rowTestId}
+              inputTestId={inputTestId}
             />
           </Box>
         ),
       },
     ],
-    [version_details?.variables, onChangeVariable],
+    [version_details?.variables, onChangeVariable, sectionTestId, rowTestId, inputTestId],
   );
 
   const styles = applicationVariablesStyles();
