@@ -101,6 +101,7 @@ const SkillCard = memo(({ skill, entityVersionId, disabled, parentEntityType = '
             >
               <IconButton
                 id="DeleteButton"
+                data-testid="skill-card-remove-button"
                 variant="elitea"
                 color="tertiary"
                 aria-label="remove skill"
