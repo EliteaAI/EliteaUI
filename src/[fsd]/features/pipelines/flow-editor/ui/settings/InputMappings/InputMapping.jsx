@@ -30,6 +30,7 @@ const InputMapping = memo(props => {
     requiredInputs = [],
     disabled,
     valueTestIdPrefix,
+    requiredHeadingTestId,
   } = props;
   const inputOptions = useInputOptions();
 
@@ -89,6 +90,7 @@ const InputMapping = memo(props => {
           </Box>
         ),
         itemDefaultExpanded: true,
+        testId: requiredHeadingTestId,
       });
     }
 
@@ -103,7 +105,7 @@ const InputMapping = memo(props => {
     }
 
     return accordionItems;
-  }, [input_mapping, requiredInputs, renderMappingItem]);
+  }, [input_mapping, requiredInputs, renderMappingItem, requiredHeadingTestId]);
 
   return (
     <BasicAccordion
