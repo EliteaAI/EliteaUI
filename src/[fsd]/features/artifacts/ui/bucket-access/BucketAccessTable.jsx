@@ -10,7 +10,7 @@ import {
   GridTablePagination,
   GridTableRow,
 } from '@/[fsd]/entities/grid-table/ui';
-import { Button, Text } from '@/[fsd]/shared/ui';
+import { Button, Modal, Text } from '@/[fsd]/shared/ui';
 import { AddButton } from '@/[fsd]/shared/ui/button';
 import { SimpleSearchBar } from '@/[fsd]/shared/ui/input';
 import { useUserListQuery } from '@/api/admin';
@@ -138,6 +138,8 @@ const BucketAccessTable = memo(props => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [bulkEditDialogOpen, setBulkEditDialogOpen] = useState(false);
+  const [removeConfirmOpen, setRemoveConfirmOpen] = useState(false);
+  const [userToRemove, setUserToRemove] = useState(null);
 
   const { data: permissionsData, isLoading: isLoadingPerms } = useListBucketPermissionsQuery(
     { projectId },
@@ -284,12 +286,22 @@ const BucketAccessTable = memo(props => {
     [credsByUserId, bucket, createS3Credentials, setBucketPermissions, projectId, toastError, toastSuccess],
   );
 
-  const handleRemoveAccess = useCallback(
-    async user => {
-      await handleAccessChange(user, '');
-    },
-    [handleAccessChange],
-  );
+  const handleRemoveClick = useCallback(user => {
+    setUserToRemove(user);
+    setRemoveConfirmOpen(true);
+  }, []);
+
+  const handleRemoveConfirm = useCallback(async () => {
+    if (!userToRemove) return;
+    await handleAccessChange(userToRemove, '');
+    setRemoveConfirmOpen(false);
+    setUserToRemove(null);
+  }, [userToRemove, handleAccessChange]);
+
+  const handleRemoveCancel = useCallback(() => {
+    setRemoveConfirmOpen(false);
+    setUserToRemove(null);
+  }, []);
 
   const handleEditClick = useCallback(row => {
     setEditingUser({
@@ -410,7 +422,7 @@ const BucketAccessTable = memo(props => {
             <Button.BaseBtn
               variant="icon"
               sx={styles.actionButton}
-              onClick={() => handleRemoveAccess(row)}
+              onClick={() => handleRemoveClick(row)}
             >
               <DeleteIcon sx={styles.actionIcon} />
             </Button.BaseBtn>
@@ -418,7 +430,7 @@ const BucketAccessTable = memo(props => {
         </Tooltip>
       </Box>
     ),
-    [handleEditClick, handleRemoveAccess],
+    [handleEditClick, handleRemoveClick],
   );
 
   const toolbarControls = useMemo(
@@ -552,6 +564,16 @@ const BucketAccessTable = memo(props => {
         onConfirm={handleBulkEditConfirm}
         selectedUsers={selectedRows}
         loading={isMutating}
+      />
+
+      <Modal.DeleteEntityModal
+        open={removeConfirmOpen}
+        name={userToRemove?.name || userToRemove?.email || 'this user'}
+        title="Remove access"
+        textContent="Are you sure you want to remove bucket access for "
+        confirmButtonText="Remove"
+        onClose={handleRemoveCancel}
+        onConfirm={handleRemoveConfirm}
       />
     </Box>
   );
