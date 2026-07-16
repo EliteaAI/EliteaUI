@@ -6,7 +6,7 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Box } from '@mui/material';
 
 import { useFileUpload } from '@/[fsd]/features/artifacts/lib/hooks/useFileUpload.hooks';
-import { FilePreviewCanvas } from '@/[fsd]/features/artifacts/ui';
+import { BucketAccessTable, FilePreviewCanvas } from '@/[fsd]/features/artifacts/ui';
 import { ARTIFACT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/artifactTourTargets.constants';
 import { useGetConfigurationsListQuery } from '@/api/configurations';
 import { PENDING_BUCKET_SESSION_KEY } from '@/common/artifactConstants';
@@ -22,7 +22,6 @@ import { actions } from '@/slices/artifact';
 import Buckets from './Components/Buckets';
 import ArtifactTable from './component/ArtifactTable';
 import ArtifactTableNoFiles from './component/ArtifactTableNoFiles';
-import BucketAccessTable from './component/BucketAccessTable';
 import DuplicateResolutionDialog from './component/DuplicateResolutionDialog';
 import UploadPathDialog from './component/UploadPathDialog';
 import UploadingStatus from './component/UploadingStatus';
