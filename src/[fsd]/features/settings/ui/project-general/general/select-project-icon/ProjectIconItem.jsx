@@ -3,12 +3,13 @@ import { memo } from 'react';
 import { Box } from '@mui/material';
 
 const ProjectIconItem = memo(props => {
-  const { isSelected, children, onClick } = props;
+  const { isSelected, children, onClick, 'data-testid': dataTestId } = props;
 
   const styles = projectIconItemStyles(isSelected);
 
   return (
     <Box
+      data-testid={dataTestId}
       onClick={onClick}
       sx={styles.container}
     >

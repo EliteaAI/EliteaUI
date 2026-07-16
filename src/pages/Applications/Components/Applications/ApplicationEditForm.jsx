@@ -95,6 +95,7 @@ const ApplicationEditForm = memo(props => {
             <Box>
               <Box sx={styles.nameContainer}>
                 <EntityIcon
+                  data-testid="agent-form-icon-button"
                   icon={formik.values?.version_details?.meta?.icon_meta}
                   entityType={isFromPipeline ? 'pipeline' : 'application'}
                   editable={true}
