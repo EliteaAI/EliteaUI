@@ -180,7 +180,11 @@ const CreateSkillForm = memo(props => {
                       onBlur={onNameBlur}
                       value={name}
                       required
-                      inputProps={{ maxLength: MAX_NAME_LENGTH }}
+                      // 'data-testid' here lands on the real <input> element via
+                      // InputBase's slotProps.htmlInput (unlike the data-testid
+                      // above on StyledInputEnhancer, which resolves to the
+                      // MuiFormControl-root wrapper, not the input itself).
+                      inputProps={{ maxLength: MAX_NAME_LENGTH, 'data-testid': 'skill-name-input-field' }}
                       containerProps={{ flex: 1 }}
                       enableAutoBlur={false}
                       hasActionsToolBar
@@ -216,7 +220,12 @@ const CreateSkillForm = memo(props => {
                     error={formik.touched?.description && Boolean(formik.errors.description)}
                     helperText={formik.touched?.description && formik.errors.description}
                     disabled={disabled}
-                    inputProps={{ maxLength: MAX_DESCRIPTION_LENGTH }}
+                    // Lands on the real <textarea> — see the analogous comment
+                    // on the Name field's inputProps above.
+                    inputProps={{
+                      maxLength: MAX_DESCRIPTION_LENGTH,
+                      'data-testid': 'skill-description-input-field',
+                    }}
                     hasActionsToolBar
                     fieldName="Description"
                   />
@@ -232,6 +241,14 @@ const CreateSkillForm = memo(props => {
 
                 <TagEditor
                   id="tags"
+                  data-testid="skill-tags-input"
+                  // Sub-element testids threaded through AutoCompleteDropDown
+                  // (see that component for how each lands on the DOM):
+                  // the real <input>, each committed-tag chip, and each
+                  // dropdown option (keyed by the option's own name).
+                  inputTestId="skill-tags-input-field"
+                  chipTestId="skill-tag-chip"
+                  getOptionTestId={option => `skill-tag-option-${option?.name}`}
                   label="Tags"
                   tagList={tagList || []}
                   stateTags={formik.values?.version_details?.tags || []}
@@ -283,6 +300,7 @@ const CreateSkillForm = memo(props => {
                         minHeight="0"
                         maxLength={MAX_INSTRUCTIONS_LENGTH}
                         readOnly={disabled}
+                        contentTestId="skill-instructions-editor-content"
                       />
                     </Box>
                     <Box sx={styles.charCounterWrapper}>

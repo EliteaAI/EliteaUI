@@ -53,6 +53,7 @@ const MentionSkillList = memo(props => {
       <Box
         ref={containerRef}
         sx={styles.container}
+        data-testid="skill-mention-list"
       >
         <Box sx={styles.header}>
           <Typography
@@ -63,7 +64,10 @@ const MentionSkillList = memo(props => {
           </Typography>
         </Box>
         {filteredItems.length === 0 ? (
-          <Box sx={styles.empty}>
+          <Box
+            sx={styles.empty}
+            data-testid="skill-mention-list-empty"
+          >
             <Typography
               variant="bodySmall"
               color="text.secondary"
@@ -77,6 +81,7 @@ const MentionSkillList = memo(props => {
               key={item.name}
               label={item.name}
               description={item.description}
+              testId={`skill-mention-item-${item.name}`}
               icon={
                 item.icon_meta?.url ? (
                   <EliteAImage

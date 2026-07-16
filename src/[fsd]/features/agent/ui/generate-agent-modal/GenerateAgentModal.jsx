@@ -326,6 +326,15 @@ const GenerateAgentModal = memo(props => {
       onDraftGenerated={handleDraftGenerated}
       renderReview={renderReview}
       onApprove={handleApprove}
+      modalTestId="generate-agent-modal"
+      closeButtonTestId="generate-agent-close-button"
+      promptInputTestId="generate-agent-prompt-input"
+      errorAlertTestId="generate-agent-error-alert"
+      loadingIndicatorTestId="generate-agent-loading-indicator"
+      generateButtonTestId="generate-agent-submit-button"
+      cancelButtonTestId="generate-agent-cancel-button"
+      backButtonTestId="generate-agent-back-button"
+      approveButtonTestId="generate-agent-approve-button"
     />
   );
 });

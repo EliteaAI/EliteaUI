@@ -36,7 +36,12 @@ const GenerateSkillReviewForm = memo(props => {
           size="small"
           value={draft.name || ''}
           onChange={e => handleFieldChange('name', e.target.value)}
-          slotProps={{ htmlInput: { maxLength: SKILL_NAME_MAX_LENGTH } }}
+          slotProps={{
+            htmlInput: {
+              maxLength: SKILL_NAME_MAX_LENGTH,
+              'data-testid': 'generate-skill-review-name-input',
+            },
+          }}
           helperText={validationErrors.name || `${(draft.name || '').length}/${SKILL_NAME_MAX_LENGTH}`}
           error={!!validationErrors.name}
           sx={styles.textField}
@@ -53,7 +58,12 @@ const GenerateSkillReviewForm = memo(props => {
           maxRows={4}
           value={draft.description || ''}
           onChange={e => handleFieldChange('description', e.target.value)}
-          slotProps={{ htmlInput: { maxLength: MAX_DESCRIPTION_LENGTH } }}
+          slotProps={{
+            htmlInput: {
+              maxLength: MAX_DESCRIPTION_LENGTH,
+              'data-testid': 'generate-skill-review-description-input',
+            },
+          }}
           helperText={
             validationErrors.description || `${(draft.description || '').length}/${MAX_DESCRIPTION_LENGTH}`
           }
@@ -72,7 +82,12 @@ const GenerateSkillReviewForm = memo(props => {
           maxRows={10}
           value={draft.instructions || ''}
           onChange={e => handleFieldChange('instructions', e.target.value)}
-          slotProps={{ htmlInput: { maxLength: MAX_INSTRUCTIONS_LENGTH } }}
+          slotProps={{
+            htmlInput: {
+              maxLength: MAX_INSTRUCTIONS_LENGTH,
+              'data-testid': 'generate-skill-review-instructions-input',
+            },
+          }}
           helperText={
             validationErrors.instructions || `${(draft.instructions || '').length}/${MAX_INSTRUCTIONS_LENGTH}`
           }

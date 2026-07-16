@@ -27,6 +27,15 @@ const GenerateEntityModal = memo(props => {
     onApprove,
     approveLabel,
     approvingLabel,
+    modalTestId,
+    closeButtonTestId,
+    promptInputTestId,
+    errorAlertTestId,
+    loadingIndicatorTestId,
+    generateButtonTestId,
+    cancelButtonTestId,
+    backButtonTestId,
+    approveButtonTestId,
   } = props;
 
   const { toastError } = useToast();
@@ -107,7 +116,10 @@ const GenerateEntityModal = memo(props => {
   const renderContent = () => {
     if (step === STEPS.LOADING) {
       return (
-        <Box sx={styles.loadingContainer}>
+        <Box
+          sx={styles.loadingContainer}
+          data-testid={loadingIndicatorTestId}
+        >
           <CircularProgress size={24} />
           <Typography
             color="text.secondary"
@@ -138,11 +150,13 @@ const GenerateEntityModal = memo(props => {
           variant="standard"
           sx={styles.textField}
           slotProps={{ input: { disableUnderline: true } }}
+          inputProps={{ 'data-testid': promptInputTestId }}
         />
         {generateError && (
           <Alert
             severity="error"
             sx={styles.errorAlert}
+            data-testid={errorAlertTestId}
           >
             {generateError?.data?.error ||
               generateError?.data?.detail ||
@@ -164,6 +178,7 @@ const GenerateEntityModal = memo(props => {
             size="small"
             onClick={handleBack}
             disabled={isApproving}
+            data-testid={backButtonTestId}
           >
             Back to prompt
           </BaseBtn>
@@ -173,10 +188,11 @@ const GenerateEntityModal = memo(props => {
             onClick={handleApprove}
             disabled={isApproving || !isDraftValid}
             sx={{ margin: '0 !important' }}
+            data-testid={approveButtonTestId}
           >
             {isApproving
-              ? (approvingLabel || 'Creating...')
-              : (approveLabel || `Create ${entityLabelCapitalized}`)}
+              ? approvingLabel || 'Creating...'
+              : approveLabel || `Create ${entityLabelCapitalized}`}
           </BaseBtn>
         </>
       );
@@ -189,6 +205,7 @@ const GenerateEntityModal = memo(props => {
           variant={BUTTON_VARIANTS.secondary}
           size="small"
           onClick={handleClose}
+          data-testid={cancelButtonTestId}
         >
           Cancel
         </BaseBtn>
@@ -198,6 +215,7 @@ const GenerateEntityModal = memo(props => {
           disabled={!description.trim()}
           onClick={handleGenerate}
           sx={{ margin: '0 !important' }}
+          data-testid={generateButtonTestId}
         >
           Generate
         </BaseBtn>
@@ -214,6 +232,8 @@ const GenerateEntityModal = memo(props => {
       actions={renderActions()}
       dialogSx={styles.dialogContent}
       sx={styles.dialog}
+      data-testid={modalTestId}
+      closeButtonDataTestId={closeButtonTestId}
     />
   );
 });

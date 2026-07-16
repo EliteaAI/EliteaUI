@@ -79,6 +79,7 @@ const SingleSelect = memo(props => {
     infoIconDescription,
     shrinkLabel = false,
     valueItemSX,
+    'data-testid': dataTestId,
   } = props;
 
   const [menuOpen, setMenuOpen] = useState(false);
@@ -654,6 +655,7 @@ const SingleSelect = memo(props => {
           className={className}
           labelId={id ? id + '-label' : 'simple-select-label-' + label}
           id={id || 'simple-select-' + label}
+          data-testid={dataTestId}
           name={name}
           multiple={effectiveMultiple || undefined}
           value={realValue}

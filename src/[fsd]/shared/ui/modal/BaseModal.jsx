@@ -31,6 +31,8 @@ const BaseModal = memo(props => {
     confirming = false,
     'data-testid': dataTestId,
     closeButtonDataTestId,
+    confirmButtonDataTestId,
+    cancelButtonDataTestId,
     footer,
   } = props;
 
@@ -94,6 +96,7 @@ const BaseModal = memo(props => {
             color={BUTTON_COLORS.secondary}
             onClick={onClose}
             autoFocus
+            data-testid={cancelButtonDataTestId}
           >
             {cancelButtonText}
           </Button.BaseBtn>
@@ -104,6 +107,7 @@ const BaseModal = memo(props => {
           onClick={onConfirm}
           autoFocus={!onClose}
           disabled={confirming}
+          data-testid={confirmButtonDataTestId}
         >
           {confirmButtonText}
         </Button.BaseBtn>

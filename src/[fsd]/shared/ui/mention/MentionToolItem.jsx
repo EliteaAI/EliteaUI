@@ -3,13 +3,14 @@ import { memo } from 'react';
 import { Box, Typography } from '@mui/material';
 
 const MentionToolItem = memo(props => {
-  const { label, description, icon, onClick, isHighlighted } = props;
+  const { label, description, icon, onClick, isHighlighted, testId } = props;
   const styles = mentionToolItemStyles({ isHighlighted });
   return (
     <Box
       onClick={onClick}
       data-highlighted={isHighlighted ? 'true' : undefined}
       sx={styles.container}
+      data-testid={testId}
     >
       <Box sx={styles.labelRow}>
         {icon && <Box sx={styles.iconBox}>{icon}</Box>}
