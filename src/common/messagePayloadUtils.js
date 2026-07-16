@@ -205,18 +205,20 @@ export const generateChatContinuePayload = ({
   // Only servers missing valid tokens (does NOT read localStorage)
   const noTokenServers = McpAuthHelpers.getServersWithoutTokens(mcpServerUrls);
 
-  // Merge: no-token servers + session-declined servers (deduplicated)
-  // Only remove a server from the ignore list if the user has authenticated it (valid access_token).
-  // An entry with {access_token: null, refresh_token: "..."} means the token is expired but
-  // refreshable — it is NOT a valid token, so the server must remain ignored.
-  const allIgnored = [
-    ...new Set([...noTokenServers, ...sessionDeclinedMcpServers.map(s => s.server_url)]),
-  ].filter(s => !allTokens[s]);
+  // Helper: check if a declined server entry has an authenticated token.
+  // For prebuild MCPs the token is stored under toolkit_type (e.g. 'mcp_github'), not under
+  // server_url (the real server URL), so we must check both keys.
+  const hasToken = s =>
+    allTokens[s.server_url]?.access_token || (s.toolkit_type && allTokens[s.toolkit_type]?.access_token);
+
+  // Merge: no-token servers + session-declined servers (deduplicated).
+  // Only keep a server in the ignored list if it has no authenticated token.
+  // For prebuild MCPs, check both server_url and toolkit_type keys against allTokens.
+  const sessionDeclinedUrls = sessionDeclinedMcpServers.filter(s => !hasToken(s)).map(s => s.server_url);
+  const allIgnored = [...new Set([...noTokenServers, ...sessionDeclinedUrls])].filter(s => !allTokens[s]);
 
   // Exclude servers from user_declined_mcp_servers that now have a valid access_token
-  const effectiveDeclinedServers = sessionDeclinedMcpServers.filter(
-    s => !allTokens[s.server_url]?.access_token,
-  );
+  const effectiveDeclinedServers = sessionDeclinedMcpServers.filter(s => !hasToken(s));
 
   return {
     project_id: projectId,
