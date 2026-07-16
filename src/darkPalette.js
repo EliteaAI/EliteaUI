@@ -444,6 +444,7 @@ const darkPalette = {
       label: gray10,
       primary: gray60,
       placeholder: gray30,
+      placeholderSecondary: gray20,
       disabled: white50,
     },
     select: {
