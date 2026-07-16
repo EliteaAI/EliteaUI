@@ -22,7 +22,7 @@ const buildAgentTermsSections = (entityLabel, studioName, entityPlural) => [
       '',
       `Consumers of your published ${entityLabel} will need to provide their own credentials and configurations.`,
       '',
-      `Attached Skills and sub-agents are retained: their instructions are embedded in the published ${entityLabel}. Retained Skills are never listed as separate entries in the catalog.`,
+      `Exception: attached Skills and sub-agents are not stripped — their instructions are embedded in the published ${entityLabel}. Retained Skills are never listed as separate entries in the catalog.`,
     ],
   },
   {
