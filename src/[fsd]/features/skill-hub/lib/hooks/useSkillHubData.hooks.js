@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useDispatch, useSelector } from 'react-redux';
 
 import { useLazyPublicSkillsListQuery } from '@/[fsd]/features/skill-hub/api';
 import { SkillHubConstants } from '@/[fsd]/features/skill-hub/lib/constants';
 import { useGetSkillCategoriesQuery } from '@/[fsd]/features/skill/api';
-import { PUBLIC_PROJECT_ID } from '@/common/constants';
+import { PAGE_SIZE, PUBLIC_PROJECT_ID } from '@/common/constants';
 import { selectIsCacheValid, selectSkillHubData, actions as skillHubActions } from '@/slices/skillHub';
 
 /** Single bulk-fetch limit — covers realistic max published-skill counts. */
@@ -26,9 +26,6 @@ export const useSkillHubData = (query, selectedTagNames) => {
 
   const [loadingTags, setLoadingTags] = useState(new Set());
   const [refreshingTags, setRefreshingTags] = useState(new Set());
-  const lastQueryRef = useRef(query);
-  const stateRef = useRef({ skillsByTag, totalCountsByTag, currentPageByTag });
-  stateRef.current = { skillsByTag, totalCountsByTag, currentPageByTag };
 
   const { data: categoriesData, isFetching: isFetchingCategories } = useGetSkillCategoriesQuery({
     projectId: PUBLIC_PROJECT_ID,
@@ -120,7 +117,7 @@ export const useSkillHubData = (query, selectedTagNames) => {
       try {
         const result = await fetchSkills({
           page,
-          pageSize: SkillHubConstants.PAGE_SIZE,
+          pageSize: PAGE_SIZE,
           params: {
             query,
             trend_start_period: SkillHubConstants.TRENDING_START_PERIOD,
@@ -145,7 +142,7 @@ export const useSkillHubData = (query, selectedTagNames) => {
       try {
         const result = await fetchSkills({
           page,
-          pageSize: SkillHubConstants.PAGE_SIZE,
+          pageSize: PAGE_SIZE,
           params: {
             query,
             my_liked: true,
@@ -199,10 +196,6 @@ export const useSkillHubData = (query, selectedTagNames) => {
   }, [fetchSkills, query, setLoading, resetSearchByTag, bucketSkillsByCategory, categoryNames, dispatch]);
 
   useEffect(() => {
-    if (query !== lastQueryRef.current) {
-      lastQueryRef.current = query;
-    }
-
     if (categoryNames.length === 0) return;
 
     if (query) {
@@ -250,34 +243,14 @@ export const useSkillHubData = (query, selectedTagNames) => {
     [loadingTags.size, isFetchingCategories],
   );
 
-  const updateSkillInCategoriesHelper = useCallback((skillsMap, skillId, updateFn) => {
-    const updated = { ...skillsMap };
-    Object.keys(updated).forEach(category => {
-      updated[category] = updated[category].map(skill => (skill.id === skillId ? updateFn(skill) : skill));
-    });
-    return updated;
-  }, []);
-
+  // Patch a skill in every category bucket. The reducer reads the CURRENT
+  // store state, so concurrent updates in one tick cannot clobber each other
+  // (and cache metadata like lastFetchedAt stays untouched).
   const updateSkillInState = useCallback(
-    (skillId, updateFn) => {
-      const {
-        skillsByTag: currentSkillsByTag,
-        totalCountsByTag: currentTotals,
-        currentPageByTag: currentPages,
-      } = stateRef.current;
-
-      const updated = updateSkillInCategoriesHelper(currentSkillsByTag, skillId, updateFn);
-
-      dispatch(
-        skillHubActions.setSkillsData({
-          skillsByTag: updated,
-          totalCountsByTag: currentTotals,
-          currentPageByTag: currentPages,
-          query,
-        }),
-      );
+    (skillId, patch) => {
+      dispatch(skillHubActions.updateSkillInCategories({ skillId, patch }));
     },
-    [query, dispatch, updateSkillInCategoriesHelper],
+    [dispatch],
   );
 
   const addToMyLiked = useCallback(
