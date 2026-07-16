@@ -258,11 +258,11 @@ const lightPalette = {
       },
       agentHub: {
         default: 'transparent',
-        hover: 'rgba(201, 189, 255, 0.2)',
-        active: 'rgba(201, 189, 255, 0.4)',
+        hover: dark5,
+        active: dark10,
         shadowDefault: 'none',
-        shadowHover: '0px 0px 16px 0px rgba(84, 90, 255, 0.4) inset',
-        shadowActive: '0px 0px 40px 0px rgba(84, 90, 255, 0.3) inset',
+        shadowHover: 'none',
+        shadowActive: 'none',
       },
       iconLabelButton: {
         default: 'transparent',
