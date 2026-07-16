@@ -14,6 +14,20 @@ export const modelSupportsReasoning = model => {
 };
 
 /**
+ * Infer whether stored llm_settings belong to the reasoning family when no model lookup is
+ * available at the call site (e.g. pipeline chat panel). Mirrors the same heuristic used
+ * server-side when the source model config is unavailable, and the 'none' exclusion used by
+ * isLLMSettingsFamilyConflict — a stored reasoning_effort of 'none' means reasoning is inactive,
+ * not that the settings belong to the reasoning family (issue #5821).
+ * @param {Object} llmSettings - Stored llm_settings (e.g. version_details.llm_settings)
+ * @returns {boolean}
+ */
+export const isReasoningFamilyFromStored = llmSettings => {
+  const reasoningEffort = llmSettings?.reasoning_effort;
+  return reasoningEffort != null && reasoningEffort !== 'none';
+};
+
+/**
  * Generate LLM settings object that respects model capabilities
  * @param {Object} model - The model object
  * @param {Object} existingSettings - Existing LLM settings to merge with

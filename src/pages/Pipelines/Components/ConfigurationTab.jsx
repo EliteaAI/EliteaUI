@@ -15,6 +15,7 @@ import {
   DEFAULT_TEMPERATURE,
 } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
 import { useShowRunHistoryFromUrl } from '@/[fsd]/shared/lib/hooks';
+import { isReasoningFamilyFromStored } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
 import DirtyDetector from '@/components/Formik/DirtyDetector';
 import useAgentMCPToolsStatusMonitor from '@/hooks/application/useAgentMCPToolsStatusMonitor';
 import useUploadAttachments from '@/hooks/chat/useUploadAttachments';
@@ -89,7 +90,7 @@ const ConfigurationTab = memo(props => {
     temperature,
     reasoning_effort,
   } = llm_settings;
-  const isReasoningFamily = reasoning_effort != null;
+  const isReasoningFamily = isReasoningFamilyFromStored(llm_settings);
 
   const interaction_uuid = useMemo(() => `pipeline_${applicationId}_${Date.now()}`, [applicationId]);
 
