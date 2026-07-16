@@ -20,7 +20,7 @@ import {
   createToolkitConversationWithParticipant,
   findToolkitParticipant,
 } from '@/[fsd]/features/toolkits/lib/helpers/toolkitConversation.helpers';
-import { generateLLMSettings } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
+import { generateLLMSettings, resetLLMSettingsForModel } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
 import {
   useAddParticipantIntoConversationMutation,
   useConversationCreateMutation,
@@ -216,6 +216,14 @@ export const useToolkitChat = props => {
   useEffect(() => {
     modelsFetchSuccess && selectedModel === null && setSelectedModel(defaultModel);
   }, [modelsFetchSuccess, defaultModel, selectedModel]);
+
+  // llmSettings is seeded before the model resolves (generateLLMSettings(null) → temperature-only).
+  // Realign the family pair once the model is known so a reasoning model never shows/persists a
+  // stale temperature (issue #5859).
+  useEffect(() => {
+    if (!selectedModel) return;
+    setLLmSettings(prev => ({ ...prev, ...resetLLMSettingsForModel(selectedModel) }));
+  }, [selectedModel]);
 
   useEffect(() => {
     if (!conversationDetails?.id || !conversationDetails?.uuid) return;
