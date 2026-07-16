@@ -108,8 +108,8 @@ const SaveSkillVersionButton = memo(({ onSuccess, onChangeVersion }) => {
         confirming={!newVersion}
         onKeyDown={handleKeyDown}
         data-testid="skill-create-version-dialog"
-        confirmButtonDataTestId="skill-create-version-save-button"
-        closeButtonDataTestId="skill-create-version-close-button"
+        confirmButtonTestId="skill-create-version-save-button"
+        closeButtonTestId="skill-create-version-close-button"
         content={
           <Input.InputBase
             label="Name"

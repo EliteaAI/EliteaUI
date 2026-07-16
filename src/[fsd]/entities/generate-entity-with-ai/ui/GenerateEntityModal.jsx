@@ -233,7 +233,7 @@ const GenerateEntityModal = memo(props => {
       dialogSx={styles.dialogContent}
       sx={styles.dialog}
       data-testid={modalTestId}
-      closeButtonDataTestId={closeButtonTestId}
+      closeButtonTestId={closeButtonTestId}
     />
   );
 });

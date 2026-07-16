@@ -102,7 +102,7 @@ const UnsavedModal = memo(() => {
       // Stable test hook for the nav-blocker's confirm action (e.g. "Leave").
       // Preserves the testid the older AlertDialog-based unsaved-changes
       // dialog used to carry, so existing page-object callers keep working.
-      confirmButtonDataTestId="alert-dialog-confirm-button"
+      confirmButtonTestId="alert-dialog-confirm-button"
     />
   );
 });

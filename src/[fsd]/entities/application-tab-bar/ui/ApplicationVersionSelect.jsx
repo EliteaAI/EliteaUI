@@ -225,7 +225,7 @@ const ApplicationVersionSelect = memo(props => {
   return (
     <>
       <VersionSelect
-        dataTestId="agent-version-selector-trigger"
+        testId="agent-version-selector-trigger"
         useFormikVersions
         entityType="application"
         enableVersionListAvatar={enableVersionListAvatar}

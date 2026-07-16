@@ -109,9 +109,9 @@ const SaveNewVersionButton = forwardRef((props, ref) => {
         confirmButtonText="Save"
         confirming={!newVersion}
         onKeyDown={handleKeyDown}
-        closeButtonDataTestId="agent-version-dialog-close-button"
-        cancelButtonDataTestId="agent-version-dialog-cancel-button"
-        confirmButtonDataTestId="agent-version-dialog-save-button"
+        closeButtonTestId="agent-version-dialog-close-button"
+        cancelButtonTestId="agent-version-dialog-cancel-button"
+        confirmButtonTestId="agent-version-dialog-save-button"
         content={
           <Input.InputBase
             label="Name"

@@ -271,13 +271,13 @@ export default function SearchBar({
             top={'0px'}
           >
             <StyledCancelIcon
-              data-testid="agent-search-clear-button"
+              data-testid="search-clear-button"
               onClick={onClear}
             />
             <StyledSendIcon
               disabled={disableSearchButton}
               onClick={onSearch}
-              data-testid="skills-search-send-button"
+              data-testid="search-send-button"
             />
           </Box>
           {/* Suggestions Popper (hidden when selected-items menu is open) */}
