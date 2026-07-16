@@ -9,7 +9,7 @@
  */
 import { describe, expect, it, vi } from 'vitest';
 
-import { mapAssociationError } from './useAgentPipelineAssociation';
+import { mapAssociationError, wouldExceedAgentNestingDepth } from './useAgentPipelineAssociation';
 
 // Mock transitive deps that pull in browser APIs or SVG loaders before importing the module
 vi.mock('@/common/utils', () => ({
@@ -53,20 +53,20 @@ describe('mapAssociationError', () => {
     const rawError = 'sub-agent nesting limit exceeded';
     const result = mapAssociationError(rawError, 'NestAgent');
     expect(result).toContain('NestAgent');
-    expect(result).toContain('uses other agents');
+    expect(result).toContain('sub-agent chain is too deep');
   });
 
   it('maps uses-other-agents backend error to cannot-nest message', () => {
     const rawError = 'agent uses other agents and cannot be nested here';
     const result = mapAssociationError(rawError, 'ContainerAgent');
     expect(result).toContain('ContainerAgent');
-    expect(result).toContain('uses other agents');
+    expect(result).toContain('sub-agent chain is too deep');
   });
 
   it('adds the make-default-leaf-version tip on the ADD path only', () => {
     const rawError = 'agent uses other agents and cannot be added as a sub-agent';
     const addResult = mapAssociationError(rawError, 'ContainerAgent', { action: 'add' });
-    expect(addResult).toContain('make a version');
+    expect(addResult).toContain('make a shallower version');
     expect(addResult).toContain('default');
     // The tip is default-version advice; it is WRONG for switch (binds the picked version) and for
     // status (already-attached). Those must NOT carry it.
@@ -127,8 +127,8 @@ describe('mapAssociationError', () => {
       entityLabel: 'agent',
     });
     expect(result).toContain('switch "AgentA"');
-    expect(result).toContain('uses other agents');
-    expect(result).toContain('leaf version');
+    expect(result).toContain('sub-agent chain is too deep');
+    expect(result).toContain('shallower chain');
     // Must NOT be the raw backend string
     expect(result).not.toBe(rawError);
   });
@@ -162,8 +162,8 @@ describe('mapAssociationError', () => {
       "'base' uses other agents and cannot be added as a sub-agent. Run it directly as a chat participant, or add only leaf agents.";
     const result = mapAssociationError(rawError, 'AgentA', { action: 'status', entityLabel: 'pipeline' });
     expect(result).toContain('use "AgentA"');
-    expect(result).toContain('uses other agents');
-    expect(result).toContain('leaf version');
+    expect(result).toContain('nests agents too deeply');
+    expect(result).toContain('shallower chain');
     expect(result).not.toBe(rawError);
   });
 
@@ -173,5 +173,17 @@ describe('mapAssociationError', () => {
     const rawError = 'some unrelated backend failure';
     const result = mapAssociationError(rawError, 'AgentA', { action: 'status' });
     expect(result).toBe(rawError);
+  });
+});
+
+describe('wouldExceedAgentNestingDepth', () => {
+  it('accepts A -> B -> C and rejects a fourth agent tier', () => {
+    expect(wouldExceedAgentNestingDepth(2, 3)).toBe(false);
+    expect(wouldExceedAgentNestingDepth(3, 3)).toBe(true);
+  });
+
+  it('defers to the backend when depth metadata is absent', () => {
+    expect(wouldExceedAgentNestingDepth(undefined, 3)).toBe(false);
+    expect(wouldExceedAgentNestingDepth(3, undefined)).toBe(false);
   });
 });

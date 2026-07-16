@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { useLazyMessageListQuery, useLazyMessageTracesQuery } from '@/api';
 import {
+  buildTraceListParams,
   convertMessagesToChatHistory,
   groupTraceStepsByGroupId,
 } from '@/common/convertChatConversationMessages';
@@ -31,6 +32,7 @@ const useLoadMoreMessages = ({ setChatHistory, activeConversation, toastError })
           const tracesResult = await getMessageTraces({
             projectId,
             conversationId: activeConversation?.id,
+            params: buildTraceListParams(result.data.rows),
           });
           const traceStepsByGroupId = groupTraceStepsByGroupId(tracesResult.data);
           setChatHistory(prev => {

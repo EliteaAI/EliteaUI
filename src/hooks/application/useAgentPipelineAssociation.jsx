@@ -59,23 +59,27 @@ export const mapAssociationError = (rawError, entityName, opts = {}) => {
   if (
     lower.includes('uses other agents') ||
     lower.includes('cannot be nested') ||
-    lower.includes('sub-agent')
+    lower.includes('sub-agent') ||
+    lower.includes('tiers') ||
+    lower.includes('nested too deeply')
   ) {
+    // #5778: nesting is now allowed up to 3 tiers (orchestrator → sub-orchestrator → leaf).
+    // The message reflects a DEPTH limit, not an absolute ban on container agents.
     if (isSwitch)
       return (
-        `Cannot ${target}: that version uses other agents and can only run directly as a chat ` +
-        `participant, not as a sub-agent tool. Choose a leaf version instead.`
+        `Cannot ${target}: that version's sub-agent chain is too deep — agent nesting is limited ` +
+        `to 3 tiers (orchestrator → sub-orchestrator → leaf). Choose a version with a shallower chain.`
       );
     if (isStatus)
       return (
-        `Cannot ${target}: it now uses other agents, so it can only run directly as a chat ` +
-        `participant, not as a sub-agent tool. Replace it with a leaf version.`
+        `Cannot ${target}: it now nests agents too deeply — agent nesting is limited to 3 tiers ` +
+        `(orchestrator → sub-orchestrator → leaf). Point it to a version with a shallower chain.`
       );
-    // Add path binds the child's DEFAULT version, so the actionable fix is to make a leaf version
-    // (one that doesn't itself use other agents) the default — then it can be attached here.
+    // Add path binds the child's DEFAULT version, so the actionable fix is to make a shallower
+    // version (one whose own sub-agents are leaves) the default — then it fits within the budget.
     return (
-      `Cannot ${target}: it uses other agents and can only be run directly as a chat participant, ` +
-      `not added as a tool. Tip: make a version of it without sub-agents its default, then add it.`
+      `Cannot ${target}: its sub-agent chain is too deep. Agent nesting is limited to 3 tiers ` +
+      `(orchestrator → sub-orchestrator → leaf). Tip: make a shallower version its default, then add it.`
     );
   }
   if (lower.includes('bind') && lower.includes('itself')) {
@@ -85,6 +89,11 @@ export const mapAssociationError = (rawError, entityName, opts = {}) => {
   }
   return message;
 };
+
+export const wouldExceedAgentNestingDepth = (candidateSubtreeTiers, maxTiers, hostTier = 1) =>
+  typeof candidateSubtreeTiers === 'number' &&
+  typeof maxTiers === 'number' &&
+  hostTier + candidateSubtreeTiers > maxTiers;
 
 /**
  * Custom hook to handle association of agents and pipelines as "toolkits"
@@ -124,19 +133,23 @@ export const useAgentPipelineAssociation = (applicationId, versionId) => {
         return;
       }
 
-      // Block "container" agents from being nested (issue #5680). A non-pipeline agent that
-      // itself uses other agents (has an 'application'-type tool) may only run at the top as a
-      // direct chat participant — nesting it would create an unsupported extra nesting level.
-      // Pipelines are the sanctioned deep-composition primitive and are exempt from this rule.
-      // This mirrors the swarm guard and matches the authoritative backend check; it is
-      // best-effort UI guidance (the backend rejects it too — see the catch/error handling).
-      const candidateAgentType = selectedApplication?.version_details?.agent_type;
-      const candidateTools = selectedApplication?.version_details?.tools || [];
-      const candidateIsContainer = candidateTools.some(tool => tool.type === 'application');
-      if (candidateAgentType !== 'pipeline' && candidateIsContainer) {
+      // Depth-aware nesting guard (issue #5778, relaxing #5680's absolute ban). A non-pipeline
+      // "container" agent (one that itself uses other agents) MAY now be nested, as long as the
+      // combined tree stays within the tier budget. The host being edited is the tier-1 root, so
+      // the candidate lands at tier 2; it is legal iff its own agent-subtree depth leaves room:
+      //   1 host tier + candidate_subtree_tiers <= max. The backend computes
+      // agent_subtree_tiers with pipelines transparent, so a pipeline does not consume a tier but
+      // its agent descendants still do. Best-effort UI guidance — the backend
+      // validator is authoritative (see the catch/error handling).
+      const candidateSubtreeTiers = selectedApplication?.version_details?.agent_subtree_tiers;
+      const maxTiers = selectedApplication?.version_details?.max_agent_nesting_tiers;
+      // Only enforce when the backend supplied both fields; otherwise defer entirely to the
+      // backend (older payloads without the fields must not be spuriously blocked or allowed).
+      const hostTier = 1; // the agent being edited is the top-level/root of its own chain
+      const wouldExceed = wouldExceedAgentNestingDepth(candidateSubtreeTiers, maxTiers, hostTier);
+      if (wouldExceed) {
         // Route the pre-attach guard through the shared mapper so it carries the same friendly
-        // phrasing AND the actionable tip (make a leaf version the default) as the backend
-        // rejection — this guard is the most common trigger, firing before the request is sent.
+        // phrasing as the backend rejection — this guard fires before the request is sent.
         toastError(
           mapAssociationError('uses other agents and cannot be added as a sub-agent', agent.name, {
             action: 'add',

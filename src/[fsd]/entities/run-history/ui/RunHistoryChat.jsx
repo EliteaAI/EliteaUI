@@ -4,7 +4,10 @@ import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
 import { ChatMessageList } from '@/[fsd]/features/chat/ui/chat-box';
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useLazyMessageTracesQuery } from '@/api';
-import { convertConversationToChatHistory } from '@/common/convertChatConversationMessages';
+import {
+  buildTraceListParams,
+  convertConversationToChatHistory,
+} from '@/common/convertChatConversationMessages';
 import { ChatBodyContainer } from '@/components/Chat/StyledComponents';
 import useChatCopyToClipboard from '@/hooks/chat/useChatCopyToClipboard';
 import useIsSmallWindow from '@/hooks/useIsSmallWindow';
@@ -30,15 +33,20 @@ const RunHistoryChat = memo(props => {
         projectId,
         conversationId: selectedHistoryItem,
       });
-      // Pins come from message_trace_step (TS-4); failure degrades to no pins.
-      getMessageTraces({ projectId, conversationId: selectedHistoryItem }).then(r =>
-        setTraceSteps(r.data || null),
-      );
     } else {
       reset();
       setTraceSteps(null);
     }
   }, [fetchConversationDetails, getMessageTraces, projectId, reset, selectedHistoryItem]);
+
+  useEffect(() => {
+    if (!selectedHistoryItem || !conversationDetails) return;
+    getMessageTraces({
+      projectId,
+      conversationId: selectedHistoryItem,
+      params: buildTraceListParams(conversationDetails.message_groups),
+    }).then(r => setTraceSteps(r.data || null));
+  }, [conversationDetails, getMessageTraces, projectId, selectedHistoryItem]);
 
   const styles = runHistoryChatStyles(isSmallWindow);
 

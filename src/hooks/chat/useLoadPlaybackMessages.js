@@ -8,6 +8,7 @@ import { PLAYBACK_PAGE_SIZE } from '@/hooks/chat/usePlaybackConversation.js';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import {
+  buildTraceListParams,
   convertMessagesToChatHistory,
   groupTraceStepsByGroupId,
 } from '../../common/convertChatConversationMessages';
@@ -35,7 +36,11 @@ const useLoadPlaybackMessages = ({ conversation, toastError }) => {
       });
       if (result.data) {
         // Pins come from message_trace_step (TS-4); cached per conversation. Degrades to no pins.
-        const tracesResult = await getMessageTraces({ projectId, conversationId: conversation?.id });
+        const tracesResult = await getMessageTraces({
+          projectId,
+          conversationId: conversation?.id,
+          params: buildTraceListParams(result.data.rows),
+        });
         setPage(prev => prev + 1);
         setIsLoadingMore(false);
         return convertMessagesToChatHistory(
