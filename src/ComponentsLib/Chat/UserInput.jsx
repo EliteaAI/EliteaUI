@@ -85,6 +85,9 @@ const UserInput = forwardRef((props, ref) => {
   const inputRef = useRef(null);
   const mirrorRef = useRef(null);
   const inputContentRef = useRef('');
+  // Desired cursor position to apply after the next render. Set by replaceRange/setValue/
+  // insertTextAtCursor; consumed and cleared by the useEffect below.
+  const pendingCursorRef = useRef(null);
 
   const [question, setQuestion] = useState('');
   const [inputContent, setInputContent] = useState('');
@@ -96,6 +99,21 @@ const UserInput = forwardRef((props, ref) => {
     inputContentRef.current = value;
     setInputContent(value);
   }, []);
+
+  // Apply any pending cursor position after the render that reflects the new value.
+  // This replaces the setTimeout(setSelectionRange) pattern, which was unreliable
+  // when multiple state updates (e.g. toolkit auto-select) caused several re-renders
+  // between the schedule and the execution of the timeout callback.
+  useEffect(() => {
+    if (pendingCursorRef.current === null) return;
+    const pos = pendingCursorRef.current;
+    pendingCursorRef.current = null;
+    const textarea = inputRef.current;
+    if (textarea) {
+      textarea.setSelectionRange(pos, pos);
+      textarea.focus();
+    }
+  });
 
   const { users = [], onMentionChange } = mentionUser || {};
 
@@ -223,13 +241,8 @@ const UserInput = forwardRef((props, ref) => {
         setQuestion(newValue?.trim() ? newValue : '');
 
         const newCursorPosition = start + textToInsert.length;
-
+        pendingCursorRef.current = newCursorPosition;
         setTimeout(() => {
-          if (textarea && textarea.setSelectionRange) {
-            textarea.setSelectionRange(newCursorPosition, newCursorPosition);
-            textarea.focus();
-          }
-
           setShowExpandIcon(textarea.offsetHeight > MIN_HEIGHT);
         }, 0);
       }
@@ -254,12 +267,7 @@ const UserInput = forwardRef((props, ref) => {
         setQuestion(value);
         setInputContentWithRef(value);
         if (cursorPos !== undefined) {
-          setTimeout(() => {
-            if (inputRef.current) {
-              inputRef.current.setSelectionRange(cursorPos, cursorPos);
-              inputRef.current.focus();
-            }
-          }, 0);
+          pendingCursorRef.current = cursorPos;
         }
       },
       replaceRange: (start, end, text) => {
@@ -268,12 +276,7 @@ const UserInput = forwardRef((props, ref) => {
         setInputContentWithRef(newValue);
         setQuestion(newValue.trim() ? newValue : '');
         const newCursorPos = start + text.length;
-        setTimeout(() => {
-          if (inputRef.current) {
-            inputRef.current.setSelectionRange(newCursorPos, newCursorPos);
-            inputRef.current.focus();
-          }
-        }, 0);
+        pendingCursorRef.current = newCursorPos;
       },
       removeSymbol: symbol => {
         const current = inputContentRef.current;
