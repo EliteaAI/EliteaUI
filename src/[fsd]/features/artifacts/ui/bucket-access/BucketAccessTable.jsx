@@ -10,7 +10,7 @@ import {
   GridTablePagination,
   GridTableRow,
 } from '@/[fsd]/entities/grid-table/ui';
-import { Button, Text } from '@/[fsd]/shared/ui';
+import { Button, Modal, Text } from '@/[fsd]/shared/ui';
 import { AddButton } from '@/[fsd]/shared/ui/button';
 import { SimpleSearchBar } from '@/[fsd]/shared/ui/input';
 import { useUserListQuery } from '@/api/admin';
@@ -19,6 +19,7 @@ import {
   useListBucketPermissionsQuery,
   useSetBucketPermissionsMutation,
 } from '@/api/artifacts';
+import { PAGE_SIZE } from '@/common/constants';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import EditIcon from '@/components/Icons/EditIcon';
 import useGetWindowWidth from '@/hooks/useGetWindowWidth';
@@ -131,6 +132,7 @@ const BucketAccessTable = memo(props => {
   const { toastError, toastSuccess } = useToast();
 
   const [page, setPage] = useState(0);
+  const [userPage, setUserPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [hoveredRowId, setHoveredRowId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -138,21 +140,23 @@ const BucketAccessTable = memo(props => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [bulkEditDialogOpen, setBulkEditDialogOpen] = useState(false);
+  const [removeConfirmOpen, setRemoveConfirmOpen] = useState(false);
+  const [userToRemove, setUserToRemove] = useState(null);
 
   const { data: permissionsData, isLoading: isLoadingPerms } = useListBucketPermissionsQuery(
     { projectId },
     { skip: !projectId },
   );
 
-  const { data: usersData, isLoading: isLoadingUsers } = useUserListQuery(
-    { projectId, page: 0, pageSize: 1000 },
-    { skip: !projectId },
+  const { data: usersData, isFetching: isFetchingUsers } = useUserListQuery(
+    { projectId, page: userPage, pageSize: PAGE_SIZE },
+    { skip: !projectId, refetchOnMountOrArgChange: true },
   );
 
   const [setBucketPermissions, { isLoading: isSaving }] = useSetBucketPermissionsMutation();
   const [createS3Credentials, { isLoading: isCreatingCreds }] = useCreateS3CredentialsMutation();
 
-  const isFetching = isLoadingPerms || isLoadingUsers;
+  const isFetching = isLoadingPerms || isFetchingUsers;
   const isMutating = isSaving || isCreatingCreds;
 
   const credsByUserId = useMemo(() => {
@@ -166,6 +170,7 @@ const BucketAccessTable = memo(props => {
   }, [permissionsData]);
 
   const users = useMemo(() => usersData?.rows || [], [usersData]);
+  const usersTotal = usersData?.total || 0;
 
   const usersWithAccess = useMemo(() => {
     return users
@@ -237,7 +242,14 @@ const BucketAccessTable = memo(props => {
       startRow: total > 0 ? page * rowsPerPage + 1 : 0,
       endRow: Math.min((page + 1) * rowsPerPage, total),
       handlePrevPage: () => setPage(p => p - 1),
-      handleNextPage: () => setPage(p => p + 1),
+      handleNextPage: () => {
+        const nextPage = page + 1;
+        const loadLimit = (nextPage + 1) * rowsPerPage;
+        if (users.length !== usersTotal && users.length < loadLimit) {
+          setUserPage(p => p + 1);
+        }
+        setPage(nextPage);
+      },
       handlePageSizeChange: newSize => {
         setRowsPerPage(newSize);
         setPage(0);
@@ -247,7 +259,7 @@ const BucketAccessTable = memo(props => {
         value: size,
       })),
     }),
-    [total, page, rowsPerPage],
+    [total, page, rowsPerPage, users.length, usersTotal],
   );
 
   const handleAccessChange = useCallback(
@@ -284,12 +296,23 @@ const BucketAccessTable = memo(props => {
     [credsByUserId, bucket, createS3Credentials, setBucketPermissions, projectId, toastError, toastSuccess],
   );
 
-  const handleRemoveAccess = useCallback(
-    async user => {
-      await handleAccessChange(user, '');
-    },
-    [handleAccessChange],
-  );
+  const handleRemoveAccessClick = useCallback(row => {
+    setUserToRemove(row);
+    setRemoveConfirmOpen(true);
+  }, []);
+
+  const handleRemoveAccessConfirm = useCallback(async () => {
+    if (userToRemove) {
+      await handleAccessChange(userToRemove, '');
+    }
+    setRemoveConfirmOpen(false);
+    setUserToRemove(null);
+  }, [userToRemove, handleAccessChange]);
+
+  const handleRemoveAccessCancel = useCallback(() => {
+    setRemoveConfirmOpen(false);
+    setUserToRemove(null);
+  }, []);
 
   const handleEditClick = useCallback(row => {
     setEditingUser({
@@ -410,7 +433,7 @@ const BucketAccessTable = memo(props => {
             <Button.BaseBtn
               variant="icon"
               sx={styles.actionButton}
-              onClick={() => handleRemoveAccess(row)}
+              onClick={() => handleRemoveAccessClick(row)}
             >
               <DeleteIcon sx={styles.actionIcon} />
             </Button.BaseBtn>
@@ -418,7 +441,7 @@ const BucketAccessTable = memo(props => {
         </Tooltip>
       </Box>
     ),
-    [handleEditClick, handleRemoveAccess],
+    [handleEditClick, handleRemoveAccessClick],
   );
 
   const toolbarControls = useMemo(
@@ -552,6 +575,17 @@ const BucketAccessTable = memo(props => {
         onConfirm={handleBulkEditConfirm}
         selectedUsers={selectedRows}
         loading={isMutating}
+      />
+
+      <Modal.DeleteEntityModal
+        name={userToRemove?.name || userToRemove?.email || 'user'}
+        open={removeConfirmOpen}
+        onClose={handleRemoveAccessCancel}
+        onConfirm={handleRemoveAccessConfirm}
+        shouldRequestInputName={false}
+        title="Remove access"
+        textContent="Are you sure you want to remove access for "
+        confirmButtonText="Remove"
       />
     </Box>
   );
