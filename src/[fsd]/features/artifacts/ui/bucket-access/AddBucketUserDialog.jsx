@@ -1,8 +1,9 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Autocomplete, Box, MenuItem, Select, TextField, Typography } from '@mui/material';
+import { Autocomplete, Box, CircularProgress, MenuItem, Select, TextField, Typography } from '@mui/material';
 
 import { Button, Modal } from '@/[fsd]/shared/ui';
+import { useUserListQuery } from '@/api/admin';
 
 import { ACCESS_OPTIONS } from './constants';
 
@@ -35,10 +36,17 @@ const styles = {
 };
 
 const AddBucketUserDialog = memo(props => {
-  const { open, onClose, onConfirm, users = [], existingUserIds = [], loading = false } = props;
+  const { open, onClose, onConfirm, projectId, existingUserIds = [], loading = false } = props;
 
   const [selectedUser, setSelectedUser] = useState(null);
   const [permission, setPermission] = useState('read');
+
+  const { data: usersData, isLoading: isLoadingUsers } = useUserListQuery(
+    { projectId, page: 0, pageSize: 100 },
+    { skip: !projectId || !open },
+  );
+
+  const users = useMemo(() => usersData?.rows || [], [usersData]);
 
   useEffect(() => {
     if (!open) {
@@ -93,6 +101,7 @@ const AddBucketUserDialog = memo(props => {
               getOptionLabel={u => u.name || u.email || ''}
               value={selectedUser}
               onChange={(_, v) => setSelectedUser(v)}
+              loading={isLoadingUsers}
               size="small"
               sx={styles.autocomplete}
               renderInput={params => (
@@ -100,6 +109,15 @@ const AddBucketUserDialog = memo(props => {
                   {...params}
                   placeholder="Select user"
                   size="small"
+                  InputProps={{
+                    ...params.InputProps,
+                    endAdornment: (
+                      <>
+                        {isLoadingUsers ? <CircularProgress size={16} /> : null}
+                        {params.InputProps.endAdornment}
+                      </>
+                    ),
+                  }}
                 />
               )}
               renderOption={(optionProps, option) => {

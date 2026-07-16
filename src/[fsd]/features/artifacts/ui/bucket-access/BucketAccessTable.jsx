@@ -147,7 +147,7 @@ const BucketAccessTable = memo(props => {
   );
 
   const { data: usersData, isLoading: isLoadingUsers } = useUserListQuery(
-    { projectId, page: 0, pageSize: 1000 },
+    { projectId, page: 0, pageSize: 100 },
     { skip: !projectId },
   );
 
@@ -542,7 +542,7 @@ const BucketAccessTable = memo(props => {
         open={addDialogOpen}
         onClose={() => setAddDialogOpen(false)}
         onConfirm={handleAddConfirm}
-        users={users}
+        projectId={projectId}
         existingUserIds={existingUserIds}
         loading={isMutating}
       />
