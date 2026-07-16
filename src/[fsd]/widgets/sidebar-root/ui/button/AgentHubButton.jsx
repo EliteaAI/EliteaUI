@@ -11,14 +11,14 @@ import AgentStudioIcon from '@/assets/agent-hub-icon.svg?react';
 import RouteDefinitions from '@/routes';
 
 const AgentHubButton = memo(() => {
-  const isOnAgentHub = useMatch({ path: RouteDefinitions.AgentHub });
+  const isOnAgentHub = useMatch({ path: RouteDefinitions.EliteaCatalog });
   const navigate = useNavigate();
   const location = useLocation();
   const sideBarCollapsed = useSelector(state => state.settings.sideBarCollapsed);
 
   const handleAgentHubClick = useCallback(() => {
     if (isOnAgentHub) return;
-    navigate(RouteDefinitions.AgentHub, {
+    navigate(RouteDefinitions.EliteaCatalog, {
       state: { from: location.pathname },
     });
   }, [isOnAgentHub, navigate, location.pathname]);
@@ -28,7 +28,7 @@ const AgentHubButton = memo(() => {
   return (
     <StyledTooltip
       placement="right"
-      title={sideBarCollapsed ? 'Agent HUB' : ''}
+      title={sideBarCollapsed ? 'Catalog' : ''}
       enterDelay={500}
       enterNextDelay={500}
     >
@@ -44,7 +44,7 @@ const AgentHubButton = memo(() => {
             variant="labelSmall"
             sx={styles.label}
           >
-            Agent HUB
+            Catalog
           </Typography>
         )}
       </Box>

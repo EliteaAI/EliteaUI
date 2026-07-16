@@ -20,6 +20,7 @@ import pipelineReducer, { name as pipelineReducerName } from '@/slices/pipeline'
 import pipelineEditorReducer, { name as pipelineEditorReducerName } from '@/slices/pipelineEditor';
 import searchReducer, { name as searchReducerName } from '@/slices/search';
 import settingsReducer, { name as settingsReducerName } from '@/slices/settings';
+import skillHubReducer, { name as skillHubReducerName } from '@/slices/skillHub';
 import tagsReducer, { name as tagsReducerName } from '@/slices/tags';
 import authorReducer, { name as authorReducerName } from '@/slices/trendingAuthors';
 import uploadReducer, { name as uploadReducerName } from '@/slices/upload';
@@ -30,6 +31,7 @@ const store = configureStore({
   reducer: {
     [eliteaReducerName]: eliteaReducer,
     [agentHubReducerName]: agentHubReducer,
+    [skillHubReducerName]: skillHubReducer,
     [applicationsReducerName]: applicationsReducer,
     [artifactReducerName]: artifactReducer,
     [authorReducerName]: authorReducer,

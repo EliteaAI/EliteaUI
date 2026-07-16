@@ -72,6 +72,8 @@ const RouteDefinitions = {
 
   Onboarding: '/onboarding',
   HelpCenter: '/help-center',
+  EliteaCatalog: '/elitea-catalog',
+  // Legacy path kept as a redirect source to EliteaCatalog.
   AgentHub: '/agents-hub',
 };
 

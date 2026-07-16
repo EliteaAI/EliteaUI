@@ -51,7 +51,7 @@ const ServicePromptsPage = ChunkHelpers.lazyWithRetry(
   () => import('@/[fsd]/pages/settings/ServicePromptsPage'),
 );
 const Users = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/settings/Users'));
-const AgentHub = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/agent-hub'));
+const EliteaCatalog = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/elitea-catalog'));
 const Applications = ChunkHelpers.lazyWithRetry(() => import('@/pages/Applications/Applications'));
 const CreateApplication = ChunkHelpers.lazyWithRetry(() => import('@/pages/Applications/CreateApplication'));
 const EditApplication = ChunkHelpers.lazyWithRetry(() => import('@/pages/Applications/EditApplication.jsx'));
@@ -82,6 +82,19 @@ const UserPublic = ChunkHelpers.lazyWithRetry(() => import('@/pages/UserPublic/U
 const UserSettings = ChunkHelpers.lazyWithRetry(() => import('@/pages/UserSettings/UserSettings'));
 
 let userInfoTimer = undefined;
+
+// Reads location at render time so the memoized route table does not need to
+// be re-created on every navigation just for this redirect.
+const LegacyCatalogRedirect = () => {
+  const location = useLocation();
+  return (
+    <Navigate
+      to={RouteDefinitions.EliteaCatalog + location.search}
+      state={location.state}
+      replace
+    />
+  );
+};
 
 const ProtectedRoutes = () => {
   const location = useLocation();
@@ -158,7 +171,8 @@ const ProtectedRoutes = () => {
       /* onboarding */
       { path: RouteDefinitions.Onboarding, element: <Onboarding /> },
       { path: RouteDefinitions.HelpCenter, element: <Resources /> },
-      { path: RouteDefinitions.AgentHub, element: <AgentHub /> },
+      { path: RouteDefinitions.EliteaCatalog, element: <EliteaCatalog /> },
+      { path: RouteDefinitions.AgentHub, element: <LegacyCatalogRedirect /> },
 
       /* chat */
       { path: RouteDefinitions.Chat, element: <ChatWrapper /> },

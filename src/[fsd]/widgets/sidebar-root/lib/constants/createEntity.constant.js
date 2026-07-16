@@ -18,6 +18,7 @@ export const OptionsMap = {
 };
 
 export const RouteToLabelMap = [
+  { route: RouteDefinitions.EliteaCatalog, label: null },
   { route: RouteDefinitions.AgentHub, label: null },
   { route: RouteDefinitions.CreateConfiguration, label: 'Configuration' },
   { route: 'settings/model-configuration', label: 'Configuration' },
@@ -60,6 +61,7 @@ export const SimpleCreateRoutes = [
   'settings/personalization',
   'settings/notifications',
   RouteDefinitions.Onboarding,
+  RouteDefinitions.EliteaCatalog,
   RouteDefinitions.AgentHub,
   RouteDefinitions.HelpCenter,
 ];

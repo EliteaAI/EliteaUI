@@ -10,9 +10,10 @@ import { buildErrorMessage } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 
-export const useForkSkill = () => {
+export const useForkSkill = overrideProjectId => {
   const dispatch = useDispatch();
-  const projectId = useSelectedProjectId();
+  const currentProjectId = useSelectedProjectId();
+  const projectId = overrideProjectId ?? currentProjectId;
   const trackEvent = useTrackEvent();
   const { toastError } = useToast();
   const [exportForFork, { isFetching }] = useLazySkillExportForkQuery();

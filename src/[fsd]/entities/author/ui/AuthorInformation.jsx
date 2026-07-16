@@ -23,6 +23,8 @@ const AuthorInformation = memo(props => {
     total_applications = 0,
     total_pipelines = 0,
     total_toolkits = 0,
+    public_skills = 0,
+    total_skills = 0,
   } = useSelector(state => state.trendingAuthor.authorDetails);
 
   const statistics = useMemo(
@@ -31,8 +33,10 @@ const AuthorInformation = memo(props => {
       public_applications,
       total_pipelines,
       total_toolkits,
+      total_skills,
+      public_skills,
     }),
-    [total_applications, public_applications, total_pipelines, total_toolkits],
+    [total_applications, public_applications, total_pipelines, total_toolkits, total_skills, public_skills],
   );
 
   const currentsStatistic = useMemo(() => {
