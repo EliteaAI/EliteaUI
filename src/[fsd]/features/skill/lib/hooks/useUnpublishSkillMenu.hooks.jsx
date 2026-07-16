@@ -22,7 +22,7 @@ export const useUnpublishSkillMenu = onSuccess => {
   const projectId = useSelectedProjectId();
   const { toastError, toastInfo } = useToast();
 
-  const isAdminContext = useMemo(() => projectId == PUBLIC_PROJECT_ID, [projectId]);
+  const isAdminContext = Number(projectId) === PUBLIC_PROJECT_ID;
 
   const {
     values: {
@@ -47,7 +47,12 @@ export const useUnpublishSkillMenu = onSuccess => {
 
   const onUnpublish = useCallback(
     async (id, reason) => {
-      const { error } = await unpublish({ projectId, skillId, versionId: id, body: { reason } });
+      const { error } = await unpublish({
+        projectId,
+        skillId,
+        versionId: id,
+        body: reason ? { reason } : {},
+      });
 
       if (!error) {
         toastInfo('Skill has been successfully unpublished!');
