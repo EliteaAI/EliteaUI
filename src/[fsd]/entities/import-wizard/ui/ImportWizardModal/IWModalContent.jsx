@@ -82,8 +82,20 @@ const IWModalContent = memo(props => {
       <Box sx={styles.projectSelectorWrapper}>
         <Typography sx={[styles.label, { pb: '0.15rem' }]}>Project:</Typography>
         <Box sx={{ width: 'auto' }}>
+          {/* Declared improvisation (ELITEA-1893 review R1): this ProjectSelect is
+              the SAME component instance/DOM node for both the Import and Fork
+              wizards — `isForking` is a mount-time prop, not runtime-toggled state
+              on an already-mounted node. A single unconditional testid is the
+              correct shape here per `.agents/testing.md` § Locator policy ("the
+              element keeps ONE testid; state is a separate attribute") — a
+              cond-branched `data-testid` value (this file's previous shape) is
+              CHANGES_REQUESTED regardless of whether the branch is mount-time or
+              per-render. Each of AgentDetailPage (Fork context) and
+              AgentsListPage (Import context) only ever encounters this dialog in
+              its own single context, so one stable testid is sufficient — no
+              `data-*` mode filter is needed for automation to disambiguate. */}
           <ProjectSelect
-            data-testid={isForking ? 'agent-fork-project-select' : 'agent-import-project-select'}
+            data-testid="agent-import-wizard-project-select"
             required
             forLocalUsage
             showValidation={false}

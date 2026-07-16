@@ -13,6 +13,19 @@ import { useTheme } from '@emotion/react';
 
 import { useForkEntity } from './useForkEntity';
 
+// useForkEntityMenu() is a SHARED hook consumed by multiple entity-scoped
+// controls (ApplicationControls.jsx for applications/pipelines,
+// ToolkitsControls.jsx for toolkits) — a single hardcoded 'agent-actions-fork'
+// key would leak an Agent-scoped testid name onto a Toolkit's (or a
+// Pipeline's) Fork menuitem. Scope the key by the entity_name this hook is
+// actually invoked with, mirroring the {section}-{element}-{type} convention
+// used elsewhere (`.agents/testing.md` § Locator policy).
+const FORK_MENU_ITEM_KEY_BY_ENTITY = {
+  applications: 'agent-actions-fork',
+  pipelines: 'pipeline-actions-fork',
+  toolkits: 'toolkit-actions-fork',
+};
+
 const useForkEntityButton = (id, title, entity_name, data = {}) => {
   const { checkPermission } = useCheckPermission();
   const { doFork, isLoading, tooltipTitle } = useForkEntity({ id, entity_name, title, data });
@@ -47,7 +60,7 @@ export const useForkEntityMenu = ({
     () =>
       !!entity_name && (checkPermission(PERMISSIONS[entity_name].fork) || !validatePermission)
         ? {
-            key: 'agent-actions-fork',
+            key: FORK_MENU_ITEM_KEY_BY_ENTITY[entity_name] ?? 'entity-actions-fork',
             label: 'Fork',
             icon: (
               <>
