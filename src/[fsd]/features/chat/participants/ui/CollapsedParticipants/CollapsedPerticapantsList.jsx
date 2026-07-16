@@ -203,7 +203,7 @@ const CollapsedPerticapantsList = memo(props => {
               sectionHasError
                 ? `Misconfiguration error in ${entity?.label?.toLowerCase()}`
                 : sectionHasSkippedContainer
-                  ? "Uses other agents — select it to run; it won't be used as a tool."
+                  ? 'Its sub-agent chain is at the nesting limit (3 tiers) — select it to run.'
                   : `${entity.label} in this conversation`
             }
             placement="right"

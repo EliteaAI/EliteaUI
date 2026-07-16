@@ -1,5 +1,5 @@
 import { ChatHelpers } from '@/[fsd]/features/chat/lib/helpers';
-import { collapseSubAgentInvocationKeys } from '@/[fsd]/features/chat/lib/helpers/subAgentGrouping.helpers.js';
+import { normalizeExecutionHierarchy } from '@/[fsd]/features/chat/lib/helpers/executionHierarchy.helpers.js';
 import {
   ChatParticipantType,
   ROLES,
@@ -112,10 +112,11 @@ export const convertToPlayerQuestion = (message_group, playerInfo, participants)
 // shape the old meta entries had — so icon/label resolution and sub-agent grouping stay unchanged.
 // Heavy fields (text / thinking / tool_inputs / tool_output) are absent on the list and fetched on
 // pin-expand via the detail endpoint; _traceStepId carries the DB id used for that fetch.
-const traceRowToStep = row => {
+export const traceRowToStep = row => {
   const attrs = row.attrs || {};
   if (row.kind === 'thinking_step') {
     return {
+      ...attrs,
       stepType: 'thinking_step',
       text: '',
       thinking: '',
@@ -123,15 +124,22 @@ const traceRowToStep = row => {
         id: `trace_step_${row.id}`,
         response_metadata: { model_name: row.model_name || '', ...(attrs.response_metadata || {}) },
       },
-      parent_agent_name: row.parent_agent_name || null,
+      parent_agent_name: row.parent_agent_name || attrs.parent_agent_name || null,
+      parent_agent_call_id: row.parent_agent_call_id || attrs.parent_agent_call_id || null,
+      parent_agent_path: row.parent_agent_path || attrs.parent_agent_path || [],
       timestamp_start: row.started_at,
       timestamp_finish: row.finished_at,
       _traceStepId: row.id,
+      _traceMessageGroupId: row.message_group_id,
     };
   }
   return {
     ...attrs, // metadata + tool_meta sub-objects the tool branch reads
     tool_name: row.tool_name,
+    parent_agent_name: row.parent_agent_name || attrs.metadata?.parent_agent_name || null,
+    parent_agent_call_id: row.parent_agent_call_id || attrs.metadata?.parent_agent_call_id || null,
+    parent_agent_path: attrs.parent_agent_path || attrs.metadata?.parent_agent_path || [],
+    sibling_ordinal: attrs.sibling_ordinal || attrs.metadata?.sibling_ordinal || null,
     tool_run_id: `trace_step_${row.id}`,
     tool_inputs: undefined,
     tool_output: undefined,
@@ -142,6 +150,7 @@ const traceRowToStep = row => {
     timestamp_start: row.started_at,
     timestamp_finish: row.finished_at,
     _traceStepId: row.id,
+    _traceMessageGroupId: row.message_group_id,
   };
 };
 
@@ -196,16 +205,31 @@ export const convertToAIAnswer = (message_group, message_groups, participants, t
         timestamp_finish,
       } = step;
 
+      const hierarchy = normalizeExecutionHierarchy(
+        step,
+        step.metadata,
+        step.message?.response_metadata?.metadata,
+        step.message?.response_metadata,
+      );
+
+      // Root-level empty transition markers are noise. A nested LLM step is a
+      // structural chip for B/C and must survive both reload and live rendering.
+      // Lazy trace rows also have empty text until pin expansion, but the trace
+      // API already filtered transition markers, so traceStepId makes them real.
+      if ((!text || !text.trim()) && !step._traceStepId && !hierarchy.parent_agent_name) return;
+
       toolActions.push({
         name: tool_name || TOOL_ACTION_NAMES.Llm,
-        parent_agent_name: step.parent_agent_name || null,
+        ...hierarchy,
         id: step.message.id,
         traceStepId: step._traceStepId,
+        traceMessageGroupId: step._traceMessageGroupId,
         status: ToolActionStatus.complete,
         toolInputs: '',
         toolOutputs: text,
         toolMeta: {
           ls_model_name: model_name,
+          ...hierarchy,
         },
         created_at: timestamp_start || timestamp_finish || convertTime(created_at),
         ended_at: timestamp_finish || convertTime(created_at),
@@ -229,6 +253,7 @@ export const convertToAIAnswer = (message_group, message_groups, participants, t
         step.metadata?.toolkit_type ||
         tools?.find(tool => tool.name === toolkitName || tool.toolkit_name === toolkitName)?.type ||
         '';
+      const hierarchy = normalizeExecutionHierarchy(step.metadata, step.tool_meta?.metadata, step);
       toolActions.push({
         // When a lazy-loading wrapper was used, step.tool_name is the wrapper class name (e.g. "LazyLoading").
         // The SDK signals this via step.metadata.original_name. Prefer step.tool_meta.name which
@@ -238,13 +263,12 @@ export const convertToAIAnswer = (message_group, message_groups, participants, t
             ? step.tool_meta.name
             : step.tool_name || step.name || 'Tool Call',
         original_name: ChatHelpers.getToolActionOriginalName(step.metadata),
-        parent_agent_name: step.metadata?.parent_agent_name,
-        // Raw per-resume-round pcid as persisted. collapseSubAgentInvocationKeys
-        // (below) normalises the over-split rounds to one epoch-anchor key per
-        // invocation so reload matches the live stream (no flicker, #5386).
-        parent_agent_call_id: step.metadata?.parent_agent_call_id,
+        // Canonical persisted hierarchy; the backend keeps the durable root
+        // identity stable across resume rounds.
+        ...hierarchy,
         id: step.tool_run_id,
         traceStepId: step._traceStepId,
+        traceMessageGroupId: step._traceMessageGroupId,
         finishReason: step.finish_reason,
         status: ToolActionStatus.complete,
         toolInputs: step.tool_inputs,
@@ -260,6 +284,7 @@ export const convertToAIAnswer = (message_group, message_groups, participants, t
           langgraph_node: step.metadata?.langgraph_node,
           icon_meta: step.tool_meta?.icon_meta,
           agent_type: step.tool_meta?.metadata?.agent_type,
+          ...hierarchy,
         },
         created_at: step.timestamp_start || convertTime(created_at),
         ended_at: step.timestamp_finish || convertTime(created_at),
@@ -270,23 +295,6 @@ export const convertToAIAnswer = (message_group, message_groups, participants, t
       });
     }
   }) || [];
-
-  // Normalise the persisted, over-split per-round sub-agent pcids into one stable
-  // epoch-anchor key per logical invocation so the thinking-view grouping yields
-  // the SAME accordions on reload/finalize as it did live — no collapse, no
-  // flicker — while leaving concurrent (parallel) siblings untouched (#5386).
-  collapseSubAgentInvocationKeys(toolActions, {
-    deriveName: a => a.parent_agent_name || a.original_name || '',
-    deriveRawKey: a => a.parent_agent_call_id || '',
-    isWrapperCompletion: (a, name) =>
-      a.type === TOOL_ACTION_TYPES.Tool &&
-      !a.parent_agent_name &&
-      (a.name === name || a.original_name === name) &&
-      !a.isError &&
-      // Reload pins carry no toolOutputs (lazy); finishReason is the persisted completion
-      // signal (set only once a tool_call finishes). Fall back to toolOutputs for live actions.
-      (!!a.finishReason || !!a.toolOutputs),
-  });
 
   // Reconstruct HITL interrupt state persisted at pause time (#4823). The live
   // socket handler (components/Chat/hooks.js) is the only other place these are
@@ -332,8 +340,10 @@ export const convertToAIAnswer = (message_group, message_groups, participants, t
     isSummarized,
     // HITL resume state (#4823). threadId powers the single-pause resume;
     // hitlInterrupts (when set) routes parallel/fan-out resume via tool_call_id.
-    ...(hitlInterrupt ? { hitlInterrupt } : {}),
-    ...(hitlInterrupts ? { hitlInterrupts } : {}),
+    // Always carry both keys so a remote completion sync overwrites stale live
+    // pause state instead of preserving it through object spread.
+    hitlInterrupt,
+    hitlInterrupts,
     ...(metaThreadId ? { threadId: metaThreadId } : {}),
   };
 };
@@ -429,6 +439,18 @@ export const groupTraceStepsByGroupId = traceSteps => {
     (acc[row.message_group_id] = acc[row.message_group_id] || []).push(row);
     return acc;
   }, {});
+};
+
+export const buildTraceListParams = messageGroups => {
+  const ids = [
+    ...new Set(
+      (messageGroups || []).map(group => Number(group?.id)).filter(id => Number.isInteger(id) && id > 0),
+    ),
+  ];
+  // Very old non-paginated surfaces can materialize more than the API's bounded
+  // group filter. Preserve their conversation-wide fallback rather than issuing
+  // a request the server must reject.
+  return ids.length && ids.length <= 200 ? { message_group_ids: ids.join(','), limit: 2000 } : undefined;
 };
 
 export const convertConversationToChatHistory = (conversationDetails = {}, traceSteps = []) => {

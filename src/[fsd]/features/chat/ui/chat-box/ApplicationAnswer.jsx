@@ -16,6 +16,12 @@ import {
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { buildAttachmentSummary } from '@/[fsd]/entities/attachment/lib';
 import { toSpeakableText, translateSpokenPos } from '@/[fsd]/features/chat/lib/helpers';
+import {
+  getActionOwnerPath,
+  normalizeExecutionHierarchy,
+} from '@/[fsd]/features/chat/lib/helpers/executionHierarchy.helpers.js';
+import { getInterruptIdentity } from '@/[fsd]/features/chat/lib/helpers/hitl.helpers.js';
+import { computeBreadcrumbs } from '@/[fsd]/features/chat/lib/helpers/subAgentGrouping.helpers.js';
 import { useParticipantEntityIcon, useParticipantName } from '@/[fsd]/features/chat/participants/lib/hooks';
 import { ChatAttachment, ChatContinue, ChatHitlActions, ErrorTrace } from '@/[fsd]/features/chat/ui';
 import { SubAgentAccordion } from '@/[fsd]/features/chat/ui/sub-agent-section';
@@ -93,6 +99,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
     requiresConfirmation = null,
     hitlInterrupt = null,
     hitlInterrupts = null,
+    resumingAgentPaths = [],
     onHitlResume,
     hideContinueButton = false,
     onOpenArtifactPreview,
@@ -226,6 +233,9 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
         if (
           action?.type === TOOL_ACTION_TYPES.Llm &&
           action?.name === TOOL_ACTION_NAMES.Llm &&
+          !action?.parent_agent_name &&
+          !action?.toolMeta?.parent_agent_name &&
+          !(action?.parent_agent_path || action?.toolMeta?.parent_agent_path)?.length &&
           !isStreaming &&
           !isRegenerating
         ) {
@@ -269,7 +279,6 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
     const others = filteredToolActions.filter(action => action.type !== TOOL_ACTION_TYPES.SwarmChild);
     return { swarmChildActions: swarmChildren, nonSwarmChildActions: others };
   }, [filteredToolActions, isProcessing]);
-
   const isEditing = useMemo(
     () =>
       selectedCodeBlockInfo?.selectedMessage?.id === messageId &&
@@ -338,6 +347,10 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
     }
     return hitlInterrupt ? [hitlInterrupt] : [];
   }, [hitlInterrupts, hitlInterrupt]);
+  const pendingAgentPaths = useMemo(
+    () => effectiveHitlInterrupts.map(getActionOwnerPath).filter(path => path.length),
+    [effectiveHitlInterrupts],
+  );
 
   // Group paused approvals by the sub-agent they originated from so a parallel
   // fan-out renders one stacked-card section per sub-agent under a name header
@@ -348,19 +361,28 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
   const hitlBuckets = useMemo(() => {
     const coordinator = [];
     const order = [];
-    const byName = new Map();
+    const byInvocation = new Map();
     effectiveHitlInterrupts.forEach((interrupt, index) => {
-      const key = interrupt?.parent_agent_name || '';
+      const hierarchy = normalizeExecutionHierarchy(interrupt);
+      const name = hierarchy.parent_agent_name;
       const entry = { interrupt, index };
-      if (!key) {
+      if (!name) {
         coordinator.push(entry);
         return;
       }
-      if (!byName.has(key)) {
-        byName.set(key, []);
+      const key =
+        hierarchy.parent_agent_call_id ||
+        interrupt?.child_thread_id ||
+        interrupt?.thread_id ||
+        (hierarchy.parent_agent_path.length ? JSON.stringify(hierarchy.parent_agent_path) : name);
+      if (!byInvocation.has(key)) {
+        const path = hierarchy.parent_agent_path.length
+          ? hierarchy.parent_agent_path
+          : [{ name, call_id: key, sibling_ordinal: interrupt?.sibling_ordinal }];
+        byInvocation.set(key, { name, entries: [], agentPath: path });
         order.push(key);
       }
-      byName.get(key).push(entry);
+      byInvocation.get(key).entries.push(entry);
     });
     // Resolve each paused sub-agent's kind (pipeline vs agent) the same way the
     // thinking view does: the conversation participant's authoritative
@@ -378,25 +400,47 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
       if (at) return 'application';
       return '';
     };
+    const breadcrumbEntries = order.map(key => ({
+      instanceKey: key,
+      agentPath: byInvocation.get(key).agentPath,
+    }));
+    // A parallel batch can shrink after mixed HITL decisions (for example B1
+    // approves and pauses again while B2 completes after a block). Numbering
+    // against only the current cards would rename B1 from "(1)" to unnumbered.
+    // Seed the rank calculation with every owner path already observed in this
+    // response while rendering labels only for the current pending buckets.
+    const breadcrumbContext = (toolActions || [])
+      .map((action, index) => ({
+        instanceKey: `trace-${index}`,
+        agentPath: getActionOwnerPath(action),
+      }))
+      .filter(entry => entry.agentPath.length);
+    const breadcrumbLabels = computeBreadcrumbs(breadcrumbEntries, breadcrumbContext);
     return {
       coordinator,
-      subAgents: order.map(name => ({
-        name,
-        entries: byName.get(name),
-        agentType: resolveType(name, byName.get(name)),
-      })),
+      subAgents: order.map(key => {
+        const bucket = byInvocation.get(key);
+        return {
+          ...bucket,
+          instanceKey: key,
+          label: breadcrumbLabels.get(key),
+          agentType: resolveType(bucket.name, bucket.entries),
+        };
+      }),
       hasSubAgents: order.length > 0,
     };
-  }, [effectiveHitlInterrupts, subAgentTypeByName]);
+  }, [effectiveHitlInterrupts, subAgentTypeByName, toolActions]);
 
   const renderHitlCard = useCallback(
     ({ interrupt, index }) => {
       const toolCallId = interrupt?.tool_call_id || '';
+      const interruptId = getInterruptIdentity(interrupt);
       return (
         <ChatHitlActions
-          key={toolCallId || `hitl-${index}`}
+          key={interruptId || `hitl-${index}`}
           hitlInterrupt={interrupt}
           toolCallId={toolCallId}
+          interruptId={interruptId}
           onHitlResume={onHitlResume}
           disabled={!onHitlResume || Boolean(interrupt?.decided)}
         />
@@ -546,10 +590,12 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
           {nonSwarmChildActions?.length > 0 && (
             <ApplicationThinkView
               actions={[...nonSwarmChildActions]}
-              originalActions={toolActions.filter(a => a.type !== TOOL_ACTION_TYPES.SwarmChild)}
+              originalActions={toolActions.filter(action => action.type !== TOOL_ACTION_TYPES.SwarmChild)}
               isStreaming={isProcessing}
               tools={tools}
               subAgentTypeByName={subAgentTypeByName}
+              pendingAgentPaths={pendingAgentPaths}
+              resumingAgentPaths={resumingAgentPaths}
               subAgentErrors={subAgentErrors}
               messageId={messageId}
               onCopy={onCopy}
@@ -720,11 +766,13 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                   {hitlBuckets.coordinator.map(renderHitlCard)}
                   {hitlBuckets.subAgents.map(bucket => (
                     <SubAgentAccordion
-                      key={`hitl-sa-${bucket.name}`}
+                      key={`hitl-sa-${bucket.instanceKey}`}
                       name={bucket.name}
+                      label={bucket.label}
                       tools={tools}
                       agentType={bucket.agentType}
                       paused
+                      defaultExpanded
                       transparent
                     >
                       {bucket.entries.map(renderHitlCard)}

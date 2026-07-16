@@ -8,6 +8,7 @@ import { buildErrorMessage } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import {
+  buildTraceListParams,
   convertMessagesToChatHistory,
   groupTraceStepsByGroupId,
 } from '../../common/convertChatConversationMessages';
@@ -63,7 +64,11 @@ const usePlaybackConversation = ({
           userParticipantsIds.includes(i.author_participant_id),
         );
         // Pins come from message_trace_step (TS-4); failure degrades to no pins.
-        const tracesResult = await getMessageTraces({ projectId, conversationId: result.data.id });
+        const tracesResult = await getMessageTraces({
+          projectId,
+          conversationId: result.data.id,
+          params: buildTraceListParams(messages.rows),
+        });
         const chatHistory = convertMessagesToChatHistory(
           messages.rows,
           result.data.participants,

@@ -214,8 +214,9 @@ export const apiSlice = eliteaApi
       }),
       messageTrace: build.query({
         // Full single step (heavy inputs/output/text/thinking), fetched on pin expand (TS-4).
-        query: ({ projectId, stepId }) => ({
+        query: ({ projectId, stepId, messageGroupId }) => ({
           url: apiSlicePath + '/message_trace/prompt_lib/' + projectId + '/' + stepId,
+          params: { message_group_id: messageGroupId },
         }),
       }),
       conversationDetails: build.query({

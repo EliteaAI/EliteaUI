@@ -4,6 +4,8 @@ import * as NewConversationHelpers from '@/[fsd]/features/chat/lib/helpers/newCo
 import { DEFAULT_MAX_TOKENS, DEFAULT_TEMPERATURE } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
 import { ChatParticipantType, ROLES, WELCOME_MESSAGE_ID } from '@/common/constants';
 
+import { normalizeHitlInterrupt } from './hitl.helpers';
+
 export const getWelcomeMessage = (welcomeMessage, participantId = null) => ({
   id: WELCOME_MESSAGE_ID,
   role: ROLES.Assistant,
@@ -85,24 +87,7 @@ export const getToolActionOriginalName = metadata =>
  * @param {Object} raw - Raw interrupt dict from meta.hitl_interrupt / hitl_interrupts[]
  * @returns {Object} UI-shaped interrupt
  */
-export const buildHitlInterruptFromRaw = raw => ({
-  message: raw?.message || 'Please review and take action.',
-  node_name: raw?.node_name || '',
-  available_actions: raw?.available_actions || ['approve', 'reject'],
-  routes: raw?.routes || {},
-  edit_state_key: raw?.edit_state_key || '',
-  guardrail_type: raw?.guardrail_type || '',
-  tool_name: raw?.tool_name || '',
-  toolkit_name: raw?.toolkit_name || '',
-  toolkit_type: raw?.toolkit_type || '',
-  action_label: raw?.action_label || '',
-  tool_args: raw?.tool_args || null,
-  policy_message: raw?.policy_message || '',
-  tool_call_id: raw?.tool_call_id || '',
-  child_thread_id: raw?.child_thread_id || '',
-  parent_agent_name: raw?.parent_agent_name || '',
-  thread_id: raw?.thread_id || '',
-});
+export const buildHitlInterruptFromRaw = raw => normalizeHitlInterrupt(raw);
 
 export const createHitlEditUserMessage = props => {
   const { question, participant, userId, name, avatar } = props;
