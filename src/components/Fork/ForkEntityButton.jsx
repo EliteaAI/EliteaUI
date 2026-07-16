@@ -47,6 +47,7 @@ export const useForkEntityMenu = ({
     () =>
       !!entity_name && (checkPermission(PERMISSIONS[entity_name].fork) || !validatePermission)
         ? {
+            key: 'agent-actions-fork',
             label: 'Fork',
             icon: (
               <>

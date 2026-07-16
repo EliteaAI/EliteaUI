@@ -83,6 +83,7 @@ const IWModalContent = memo(props => {
         <Typography sx={[styles.label, { pb: '0.15rem' }]}>Project:</Typography>
         <Box sx={{ width: 'auto' }}>
           <ProjectSelect
+            data-testid={isForking ? 'agent-fork-project-select' : 'agent-import-project-select'}
             required
             forLocalUsage
             showValidation={false}
