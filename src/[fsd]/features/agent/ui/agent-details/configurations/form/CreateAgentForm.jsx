@@ -109,6 +109,7 @@ const CreateAgentForm = memo(props => {
                 <Box sx={styles.nameContainer}>
                   <EntityIcon
                     data-testid="agent-form-icon-button"
+                    imgTestId="agent-form-icon-img"
                     icon={formik.values?.version_details?.meta?.icon_meta}
                     entityType={entityType}
                     editable={true}

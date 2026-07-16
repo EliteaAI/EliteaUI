@@ -148,6 +148,7 @@ const EntityIcon = memo(props => {
     isActive = false,
     specifiedFontSize = '1rem',
     'data-testid': dataTestId,
+    imgTestId,
   } = props;
   const theme = useTheme();
   const systemSenderName = useSystemSenderName();
@@ -194,6 +195,7 @@ const EntityIcon = memo(props => {
             style={styles.imageStyle}
             image={icon}
             alt="Preview"
+            data-testid={imgTestId}
           />
         )}
         {!icon?.url && !icon?.component && !isHovering && (

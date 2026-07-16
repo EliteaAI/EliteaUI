@@ -172,6 +172,7 @@ const Card = memo(props => {
           >
             <EntityIcon
               data-testid="entity-card-icon"
+              imgTestId="entity-card-icon-img"
               icon={data.icon_meta}
               entityType={getEntityType(type)}
               projectId={projectId}
