@@ -11,7 +11,7 @@ import EliteaAssistantIcon from '@/assets/icons/elitea-assistant-icon.svg?react'
 import OfflineIcon from '@/assets/offline-icon.svg?react';
 import OnlineIcon from '@/assets/online-icon.svg?react';
 import PublishIcon from '@/assets/publish-version.svg?react';
-import { isApplicationCard } from '@/common/checkCardType';
+import { isApplicationCard, isSkillCard } from '@/common/checkCardType';
 import { ContentType, ViewMode } from '@/common/constants';
 import { getEntityType, getEntityTypeByCardType } from '@/common/utils';
 import AuthorContainer from '@/components/AuthorContainer';
@@ -53,6 +53,7 @@ const Card = memo(props => {
     meta,
     is_forked: isForked,
     is_pinned: isPinned = false,
+    has_published_version: hasPublishedVersion = false,
   } = data;
 
   const viewMode = useDataViewMode(pageViewMode, data);
@@ -266,7 +267,8 @@ const Card = memo(props => {
                       alwaysVisible={isCardHovered}
                       onPinChange={handlePinChange}
                     />
-                    {(status === 'published' || status === 'embedded') && isApplicationCard(type) && (
+                    {(((status === 'published' || status === 'embedded') && isApplicationCard(type)) ||
+                      (hasPublishedVersion && isSkillCard(type))) && (
                       <StyledTooltip
                         placement="top"
                         title={status === 'embedded' ? 'Embedded' : 'Published'}

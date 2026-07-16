@@ -66,6 +66,7 @@ export const TAG_NAME_MAX_LENGTH = 48;
 export const MAX_NAME_LENGTH = 32;
 export const MAX_DESCRIPTION_LENGTH = 2304;
 export const MAX_INSTRUCTIONS_LENGTH = 2500;
+export const MAX_SKILLS_PER_AGENT = 5;
 export const MAX_VARIABLES_LENGTH = 768;
 export const MAX_STEP_LIMIT = 999;
 export const MIN_STEP_LIMIT = 0;
@@ -549,6 +550,9 @@ export const PERMISSIONS = {
     fork: 'models.applications.fork.post',
     // webhook: 'models.applications.webhook.post', // According to Mikhail's comment, this permission is not used
     delete: 'models.applications.application.delete',
+  },
+  skills: {
+    publish: 'models.applications.skills.publish',
   },
 
   users: {

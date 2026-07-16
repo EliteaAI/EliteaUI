@@ -18,6 +18,7 @@ export const OptionsMap = {
 };
 
 export const RouteToLabelMap = [
+  { route: RouteDefinitions.EliteaCatalog, label: null },
   { route: RouteDefinitions.AgentHub, label: null },
   { route: RouteDefinitions.CreateConfiguration, label: 'AI Provider' },
   { route: 'settings/ai-providers', label: 'AI Provider' },
@@ -60,6 +61,7 @@ export const SimpleCreateRoutes = [
   'settings/preferences',
   'settings/notifications',
   RouteDefinitions.Onboarding,
+  RouteDefinitions.EliteaCatalog,
   RouteDefinitions.AgentHub,
   RouteDefinitions.HelpCenter,
 ];
