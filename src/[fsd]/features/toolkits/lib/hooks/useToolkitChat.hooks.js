@@ -142,7 +142,9 @@ export const useToolkitChat = props => {
 
   const onSelectModel = useCallback(model => {
     setSelectedModel(model);
-    setLLmSettings(generateLLMSettings(model));
+    // Realign only the family pair (temperature/reasoning_effort) — preserve max_tokens and other
+    // user-tuned settings (issue #5859).
+    setLLmSettings(prev => ({ ...prev, ...resetLLMSettingsForModel(model) }));
   }, []);
 
   const onRunFinish = useCallback(
