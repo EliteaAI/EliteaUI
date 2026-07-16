@@ -203,6 +203,9 @@ const AttachToAgentDialog = memo(props => {
             project_id: projectId,
             entity_name: ChatParticipantType.Applications,
             entity_meta: { id: agent.id, project_id: projectId },
+            // The list row carries no version payload; prime the version id so
+            // the participant is chat-ready before details are fetched.
+            version_details: { id: getAgentVersionId(agent) },
           },
           starter: '',
         }),

@@ -622,7 +622,12 @@ const NewConversationView = forwardRef(
         const keptSelectedAgentStarter = selectedAgentStarter;
         setTimeout(() => {
           convertParticipantAndAddIt({
-            participant: { ...keptSelectedAgent, project_id: PUBLIC_PROJECT_ID },
+            // Agents can arrive from the public catalog OR from the current
+            // project (e.g. attach-and-test); honor the dispatched project.
+            participant: {
+              ...keptSelectedAgent,
+              project_id: keptSelectedAgent.project_id ?? PUBLIC_PROJECT_ID,
+            },
             details: keptSelectedAgent,
           });
           if (keptSelectedAgentStarter) {
