@@ -51,29 +51,20 @@ const skillHubApi = eliteaApi
           if (error) return [];
           return [TAG_TYPE_PUBLIC_SKILL_DETAILS, { type: TAG_TYPE_PUBLIC_SKILL_DETAILS, id: result?.id }];
         },
-        serializeQueryArgs: ({ endpointName, queryArgs }) => {
-          const sortedObject = {};
-          Object.keys(queryArgs)
-            .sort()
-            .forEach(prop => {
-              sortedObject[prop] = queryArgs[prop];
-            });
-          return endpointName + JSON.stringify(sortedObject);
-        },
       }),
       likeSkill: build.mutation({
         query: skillId => ({
           url: `${apiSlicePathForLike}${PUBLIC_PROJECT_ID}/skill/${skillId}`,
           method: 'POST',
         }),
-        invalidatesTags: [TAG_TYPE_PUBLIC_SKILL_DETAILS],
+        invalidatesTags: (result, error, skillId) => [{ type: TAG_TYPE_PUBLIC_SKILL_DETAILS, id: skillId }],
       }),
       unlikeSkill: build.mutation({
         query: skillId => ({
           url: `${apiSlicePathForLike}${PUBLIC_PROJECT_ID}/skill/${skillId}`,
           method: 'DELETE',
         }),
-        invalidatesTags: [TAG_TYPE_PUBLIC_SKILL_DETAILS],
+        invalidatesTags: (result, error, skillId) => [{ type: TAG_TYPE_PUBLIC_SKILL_DETAILS, id: skillId }],
       }),
       // Agents (in the CURRENT project) that already have this PUBLIC skill attached.
       agentsWithSkill: build.query({
