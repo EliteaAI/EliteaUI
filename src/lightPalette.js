@@ -445,6 +445,7 @@ const lightPalette = {
       label: light10,
       primary: gradient,
       placeholder: light30,
+      placeholderSecondary: light20,
       disabled: light10,
     },
     select: {
