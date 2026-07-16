@@ -16,7 +16,10 @@ const CATALOG_TABS = {
   skills: 'skills',
 };
 
-const SEARCH_PLACEHOLDER = 'Search for agents and skills';
+const SEARCH_PLACEHOLDERS = {
+  [CATALOG_TABS.agents]: 'Search for agents',
+  [CATALOG_TABS.skills]: 'Search for skills',
+};
 
 const EliteaCatalog = memo(() => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -70,7 +73,7 @@ const EliteaCatalog = memo(() => {
             <SearchIcon fill={theme.palette.text.secondary} />
           </Box>
           <TextField
-            placeholder={SEARCH_PLACEHOLDER}
+            placeholder={SEARCH_PLACEHOLDERS[activeTab]}
             value={isSkillsTab ? skillQuery : agentQuery}
             onChange={handleSearchChange}
             sx={styles.searchField}

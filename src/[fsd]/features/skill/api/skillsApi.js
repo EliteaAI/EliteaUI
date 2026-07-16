@@ -485,6 +485,8 @@ const skillsApi = eliteaApi
             TAG_TYPE_SKILLS,
             TAG_TYPE_SKILL_DETAILS,
             { type: TAG_TYPE_SKILL_DETAILS, id: arg?.skillId },
+            // Keep skill totals (e.g. published count) in sync.
+            TAG_TYPE_TOTAL_SKILLS,
             // Refresh the ELITEA Catalog list/detail so a newly (un)published
             // skill appears/disappears without a hard reload.
             TAG_TYPE_PUBLIC_SKILLS,
@@ -505,6 +507,8 @@ const skillsApi = eliteaApi
             TAG_TYPE_SKILLS,
             TAG_TYPE_SKILL_DETAILS,
             { type: TAG_TYPE_SKILL_DETAILS, id: arg?.skillId },
+            // Keep skill totals (e.g. published count) in sync.
+            TAG_TYPE_TOTAL_SKILLS,
             // Drop the unpublished skill from an already-open ELITEA Catalog.
             TAG_TYPE_PUBLIC_SKILLS,
             TAG_TYPE_PUBLIC_SKILL_DETAILS,

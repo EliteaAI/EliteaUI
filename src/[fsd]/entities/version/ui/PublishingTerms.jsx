@@ -21,6 +21,8 @@ const buildAgentTermsSections = (entityLabel, studioName, entityPlural) => [
       '• Internal tool endpoints',
       '',
       `Consumers of your published ${entityLabel} will need to provide their own credentials and configurations.`,
+      '',
+      `Exception: attached Skills and sub-agents are not stripped — their instructions are embedded in the published ${entityLabel}. Retained Skills are never listed as separate entries in the catalog.`,
     ],
   },
   {
