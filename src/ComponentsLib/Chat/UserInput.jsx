@@ -1,4 +1,13 @@
-import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import {
+  forwardRef,
+  memo,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
@@ -84,9 +93,10 @@ const UserInput = forwardRef((props, ref) => {
 
   const inputRef = useRef(null);
   const mirrorRef = useRef(null);
+  const prevCleanupRef = useRef(null);
   const inputContentRef = useRef('');
   // Desired cursor position to apply after the next render. Set by replaceRange/setValue/
-  // insertTextAtCursor; consumed and cleared by the useEffect below.
+  // insertTextAtCursor; consumed and cleared by the useLayoutEffect below.
   const pendingCursorRef = useRef(null);
 
   const [question, setQuestion] = useState('');
@@ -101,10 +111,9 @@ const UserInput = forwardRef((props, ref) => {
   }, []);
 
   // Apply any pending cursor position after the render that reflects the new value.
-  // This replaces the setTimeout(setSelectionRange) pattern, which was unreliable
-  // when multiple state updates (e.g. toolkit auto-select) caused several re-renders
-  // between the schedule and the execution of the timeout callback.
-  useEffect(() => {
+  // useLayoutEffect fires before paint so the selection is applied before the browser
+  // draws, preventing a visible flicker of the caret at the wrong position.
+  useLayoutEffect(() => {
     if (pendingCursorRef.current === null) return;
     const pos = pendingCursorRef.current;
     pendingCursorRef.current = null;
@@ -139,18 +148,25 @@ const UserInput = forwardRef((props, ref) => {
 
   // Sync mirror size/scroll with the real textarea.
   // Uses a callback ref so we get called exactly when the mirror node appears/disappears.
-  const mirrorCallbackRef = useCallback(
-    node => {
-      mirrorRef.current = node;
-      if (!node) return;
+  const mirrorCallbackRef = useCallback(node => {
+    // Always run the previous cleanup first — covers both node replacement and removal.
+    try {
+      prevCleanupRef.current?.();
+    } catch {
+      // defensive
+    }
+    prevCleanupRef.current = null;
+    mirrorRef.current = node;
 
-      const textarea = inputRef.current;
-      if (!textarea) return;
+    if (!node) return;
 
-      const syncSize = () => {
-        const cs = window.getComputedStyle(textarea);
-        // Apply all layout-critical styles as inline so no MUI rule can override them
-        node.style.cssText = `
+    const textarea = inputRef.current;
+    if (!textarea) return;
+
+    const syncSize = () => {
+      const cs = window.getComputedStyle(textarea);
+      // Apply all layout-critical styles as inline so no MUI rule can override them
+      node.style.cssText = `
           display: block !important;
           position: absolute;
           top: 0;
@@ -167,27 +183,24 @@ const UserInput = forwardRef((props, ref) => {
           width: ${textarea.offsetWidth}px;
           height: ${textarea.offsetHeight}px;
         `;
-      };
+    };
 
-      syncSize();
+    syncSize();
 
-      const syncScroll = () => {
-        node.scrollTop = textarea.scrollTop;
-      };
+    const syncScroll = () => {
+      node.scrollTop = textarea.scrollTop;
+    };
 
-      textarea.addEventListener('scroll', syncScroll);
-      const ro = new ResizeObserver(syncSize);
-      ro.observe(textarea);
+    textarea.addEventListener('scroll', syncScroll);
+    const ro = new ResizeObserver(syncSize);
+    ro.observe(textarea);
 
-      // Store cleanup so we can call it when node is removed
-      node._cleanup = () => {
-        textarea.removeEventListener('scroll', syncScroll);
-        ro.disconnect();
-      };
-    },
-
-    [],
-  );
+    prevCleanupRef.current = () => {
+      textarea.removeEventListener('scroll', syncScroll);
+      ro.disconnect();
+      prevCleanupRef.current = null;
+    };
+  }, []);
 
   // Re-sync height when content changes (textarea grows/shrinks with rows)
   useEffect(() => {
@@ -202,7 +215,11 @@ const UserInput = forwardRef((props, ref) => {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      mirrorRef.current?._cleanup?.();
+      try {
+        prevCleanupRef.current?.();
+      } catch {
+        // defensive
+      }
     };
   }, []);
 
