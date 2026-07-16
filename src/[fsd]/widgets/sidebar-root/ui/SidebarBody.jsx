@@ -22,6 +22,7 @@ import ToolIcon from '@/assets/tool-icon.svg?react';
 import {
   COLLAPSED_SIDE_BAR_WIDTH,
   NAV_BAR_HEIGHT_IN_PX,
+  PERMISSIONS,
   PERMISSION_GROUPS,
   PUBLIC_PROJECT_ID,
   SIDE_BAR_WIDTH,
@@ -185,7 +186,11 @@ const SidebarBody = memo(props => {
         if (i.value === 'mcps' && !isMcpVisible) {
           return false;
         }
-        if (i.value === 'skills' && isSelectedProjectPublic) {
+        if (
+          i.value === 'skills' &&
+          isSelectedProjectPublic &&
+          !permissionsSet.has(PERMISSIONS.skills.publish)
+        ) {
           return false;
         }
         const perms = i.publicPermission ? publicPermissionsSet : permissionsSet;
