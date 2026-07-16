@@ -27,6 +27,7 @@ const Folders = memo(props => {
     enableDragAndDrop = false,
     getDropAreaState,
     isSearchMode = false,
+    searchQuery = '',
     isFolderOperationInProgress = false,
     isPinned = false,
     onLoadMoreInFolder,
@@ -66,10 +67,14 @@ const Folders = memo(props => {
         conversation => genConversationId(conversation) === selectedConversationId,
       );
 
+      const lowerQuery = searchQuery.toLowerCase();
+      const hasSearchMatches =
+        isSearchMode && folder.conversations?.some(conv => conv.name?.toLowerCase().includes(lowerQuery));
+
       const shouldExpandByDefault =
         containsActiveConversation ||
         (ungroupedConversationsCount === 0 && folder.conversations && folder.conversations.length > 0) ||
-        (isSearchMode && folder.hasSearchMatches);
+        hasSearchMatches;
 
       return (
         <FolderItem
