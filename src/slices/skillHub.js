@@ -20,6 +20,9 @@ const skillHubSlice = createSlice({
       state.lastFetchedAt = Date.now();
       state.lastQuery = query || '';
     },
+    // Per-category loads only ever FOLLOW a bulk setSkillsData (which records
+    // lastQuery), so lastQuery is deliberately left untouched here — bumping
+    // only lastFetchedAt keeps the cache-validity check honest.
     updateCategoryData: (state, action) => {
       const { categoryName, page, rows, total } = action.payload;
       state.skillsByTag[categoryName] =
@@ -41,6 +44,14 @@ const skillHubSlice = createSlice({
       const currentMyLiked = state.skillsByTag[categoryName] || [];
       state.skillsByTag[categoryName] = currentMyLiked.filter(item => item.id !== skillId);
       state.totalCountsByTag[categoryName] = Math.max(0, (state.totalCountsByTag[categoryName] || 0) - 1);
+    },
+    updateSkillInCategories: (state, action) => {
+      const { skillId, patch } = action.payload;
+      Object.keys(state.skillsByTag).forEach(category => {
+        state.skillsByTag[category] = state.skillsByTag[category].map(skill =>
+          skill.id === skillId ? { ...skill, ...patch } : skill,
+        );
+      });
     },
     clearCache: state => {
       state.skillsByTag = {};

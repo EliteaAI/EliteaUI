@@ -32,9 +32,8 @@ const AgentHubModalMenu = memo(props => {
   }, [doExport, agentId, versionId, agentName]);
 
   const onFork = useCallback(() => {
-    if (openWizard) return;
     doFork({ agentId, versionId, agentName });
-  }, [openWizard, doFork, agentId, versionId, agentName]);
+  }, [doFork, agentId, versionId, agentName]);
 
   const menuItems = useMemo(
     () => [

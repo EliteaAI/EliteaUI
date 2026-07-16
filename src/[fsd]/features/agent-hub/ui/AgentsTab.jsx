@@ -25,6 +25,8 @@ const AgentsTab = memo(props => {
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const modalOpenedByTourRef = useRef(false);
+  // Auto-open once per step activation: a manual close must not re-trigger it.
+  const tourAutoOpenedRef = useRef(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
   const tour = useInteractiveTour();
@@ -174,7 +176,8 @@ const AgentsTab = memo(props => {
 
   useEffect(() => {
     if (isStartingConversationStep) {
-      if (!isModalOpen && !selectedApplication && firstVisibleApplication) {
+      if (!tourAutoOpenedRef.current && !isModalOpen && !selectedApplication && firstVisibleApplication) {
+        tourAutoOpenedRef.current = true;
         modalOpenedByTourRef.current = true;
         setSelectedApplication(firstVisibleApplication);
         setIsModalOpen(true);
@@ -183,6 +186,7 @@ const AgentsTab = memo(props => {
       return;
     }
 
+    tourAutoOpenedRef.current = false;
     if (modalOpenedByTourRef.current) {
       modalOpenedByTourRef.current = false;
       setIsModalOpen(false);
