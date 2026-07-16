@@ -2,7 +2,7 @@ import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useRef, 
 
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
-import { Box, IconButton, TextField, Typography } from '@mui/material';
+import { Box, IconButton, TextField } from '@mui/material';
 
 import StyledCircleProgress from '@/ComponentsLib/CircularProgress';
 import Tooltip from '@/ComponentsLib/Tooltip';
@@ -85,17 +85,35 @@ const UserInput = forwardRef((props, ref) => {
   const inputRef = useRef(null);
   const mirrorRef = useRef(null);
   const inputContentRef = useRef('');
+  // Desired cursor position to apply after the next render. Set by replaceRange/setValue/
+  // insertTextAtCursor; consumed and cleared by the useEffect below.
+  const pendingCursorRef = useRef(null);
 
   const [question, setQuestion] = useState('');
   const [inputContent, setInputContent] = useState('');
+  const [showExpandIcon, setShowExpandIcon] = useState(false);
+  const [rows, setRows] = useState(MAX_ROWS);
+  const [isFocused, setIsFocused] = useState(false);
 
   const setInputContentWithRef = useCallback(value => {
     inputContentRef.current = value;
     setInputContent(value);
   }, []);
-  const [showExpandIcon, setShowExpandIcon] = useState(false);
-  const [rows, setRows] = useState(MAX_ROWS);
-  const [isFocused, setIsFocused] = useState(false);
+
+  // Apply any pending cursor position after the render that reflects the new value.
+  // This replaces the setTimeout(setSelectionRange) pattern, which was unreliable
+  // when multiple state updates (e.g. toolkit auto-select) caused several re-renders
+  // between the schedule and the execution of the timeout callback.
+  useEffect(() => {
+    if (pendingCursorRef.current === null) return;
+    const pos = pendingCursorRef.current;
+    pendingCursorRef.current = null;
+    const textarea = inputRef.current;
+    if (textarea) {
+      textarea.setSelectionRange(pos, pos);
+      textarea.focus();
+    }
+  });
 
   const { users = [], onMentionChange } = mentionUser || {};
 
@@ -116,20 +134,77 @@ const UserInput = forwardRef((props, ref) => {
 
   const { ranges: highlightRanges = [] } = highlight;
   const hasHighlights = highlightRanges.length > 0 && !!inputContent;
-  // console.log('highlightRanges', highlightRanges, hasHighlights);
 
   const styles = userInputStyles(isFocused, isDragOver, isRecording);
 
+  // Sync mirror size/scroll with the real textarea.
+  // Uses a callback ref so we get called exactly when the mirror node appears/disappears.
+  const mirrorCallbackRef = useCallback(
+    node => {
+      mirrorRef.current = node;
+      if (!node) return;
+
+      const textarea = inputRef.current;
+      if (!textarea) return;
+
+      const syncSize = () => {
+        const cs = window.getComputedStyle(textarea);
+        // Apply all layout-critical styles as inline so no MUI rule can override them
+        node.style.cssText = `
+          display: block !important;
+          position: absolute;
+          top: 0;
+          left: 0;
+          overflow: hidden;
+          pointer-events: none;
+          z-index: 0;
+          white-space: pre-wrap;
+          word-break: break-word;
+          font: ${cs.font};
+          line-height: ${cs.lineHeight};
+          letter-spacing: ${cs.letterSpacing};
+          padding: ${cs.padding};
+          width: ${textarea.offsetWidth}px;
+          height: ${textarea.offsetHeight}px;
+        `;
+      };
+
+      syncSize();
+
+      const syncScroll = () => {
+        node.scrollTop = textarea.scrollTop;
+      };
+
+      textarea.addEventListener('scroll', syncScroll);
+      const ro = new ResizeObserver(syncSize);
+      ro.observe(textarea);
+
+      // Store cleanup so we can call it when node is removed
+      node._cleanup = () => {
+        textarea.removeEventListener('scroll', syncScroll);
+        ro.disconnect();
+      };
+    },
+
+    [],
+  );
+
+  // Re-sync height when content changes (textarea grows/shrinks with rows)
   useEffect(() => {
     const textarea = inputRef.current;
     const mirror = mirrorRef.current;
-    if (!textarea || !mirror || !hasHighlights) return;
-    const sync = () => {
-      mirror.scrollTop = textarea.scrollTop;
+    if (!textarea || !mirror) return;
+    mirror.style.height = textarea.offsetHeight + 'px';
+    mirror.style.width = textarea.offsetWidth + 'px';
+    mirror.scrollTop = textarea.scrollTop;
+  }, [inputContent]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      mirrorRef.current?._cleanup?.();
     };
-    textarea.addEventListener('scroll', sync);
-    return () => textarea.removeEventListener('scroll', sync);
-  }, [hasHighlights]);
+  }, []);
 
   useEffect(() => {
     onMentionChange?.(mentions);
@@ -166,13 +241,8 @@ const UserInput = forwardRef((props, ref) => {
         setQuestion(newValue?.trim() ? newValue : '');
 
         const newCursorPosition = start + textToInsert.length;
-
+        pendingCursorRef.current = newCursorPosition;
         setTimeout(() => {
-          if (textarea && textarea.setSelectionRange) {
-            textarea.setSelectionRange(newCursorPosition, newCursorPosition);
-            textarea.focus();
-          }
-
           setShowExpandIcon(textarea.offsetHeight > MIN_HEIGHT);
         }, 0);
       }
@@ -197,12 +267,7 @@ const UserInput = forwardRef((props, ref) => {
         setQuestion(value);
         setInputContentWithRef(value);
         if (cursorPos !== undefined) {
-          setTimeout(() => {
-            if (inputRef.current) {
-              inputRef.current.setSelectionRange(cursorPos, cursorPos);
-              inputRef.current.focus();
-            }
-          }, 0);
+          pendingCursorRef.current = cursorPos;
         }
       },
       replaceRange: (start, end, text) => {
@@ -211,12 +276,7 @@ const UserInput = forwardRef((props, ref) => {
         setInputContentWithRef(newValue);
         setQuestion(newValue.trim() ? newValue : '');
         const newCursorPos = start + text.length;
-        setTimeout(() => {
-          if (inputRef.current) {
-            inputRef.current.setSelectionRange(newCursorPos, newCursorPos);
-            inputRef.current.focus();
-          }
-        }, 0);
+        pendingCursorRef.current = newCursorPos;
       },
       removeSymbol: symbol => {
         const current = inputContentRef.current;
@@ -330,18 +390,13 @@ const UserInput = forwardRef((props, ref) => {
           )}
           <Box sx={styles.textFieldWrapper}>
             {hasHighlights && (
-              <Typography
-                ref={mirrorRef}
-                aria-hidden="true"
-                component="div"
-                color="text.secondary"
-                sx={styles.mirrorDiv}
-              >
+              <div ref={mirrorCallbackRef}>
+                {/** we should use div for mirror here because we don't want the styls from MUI */}
                 <HighlightedText
                   text={inputContent}
                   ranges={highlightRanges}
                 />
-              </Typography>
+              </div>
             )}
             <TextField
               data-testid="chat-input"
@@ -365,7 +420,7 @@ const UserInput = forwardRef((props, ref) => {
               onBlur={() => setIsFocused(false)}
               sx={styles.textField}
               slotProps={{
-                htmlInput: { 'data-testid': 'chat-message-input' },
+                htmlInput: { 'data-testid': 'chat-message-input', spellCheck: false },
                 input: {
                   inputRef,
                   sx: [
@@ -497,24 +552,6 @@ const userInputStyles = (isFocused, isDragOver, isRecording) => {
       alignItems: 'center',
       width: '100%',
       position: 'relative',
-    },
-    mirrorDiv: {
-      position: 'absolute',
-      inset: 0,
-      overflow: 'auto',
-      pointerEvents: 'none',
-      zIndex: 0,
-      whiteSpace: 'pre-wrap',
-      wordBreak: 'break-word',
-      padding: 0,
-      fontSize: '.875rem',
-      fontStyle: 'normal',
-      fontWeight: 500,
-      lineHeight: '1.5rem',
-      fontFamily: 'inherit',
-      '&::-webkit-scrollbar': { display: 'none' },
-      scrollbarWidth: 'none',
-      msOverflowStyle: 'none',
     },
     textField: {
       padding: 0,
