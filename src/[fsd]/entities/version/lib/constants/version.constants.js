@@ -4,4 +4,4 @@ export const VERSION_NAME_MAX_LENGTH = 50;
 
 // Where a published entity becomes visible, per entity label. Shared by the
 // publish/unpublish dialogs so the destination name cannot drift between them.
-export const ENTITY_STUDIO = { agent: 'Agent Studio', skill: 'Skills' };
+export const ENTITY_STUDIO = { agent: 'ELITEA Catalog', skill: 'ELITEA Catalog' };
