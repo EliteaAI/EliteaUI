@@ -16,7 +16,7 @@ import {
 import { Controls } from '@/[fsd]/shared/ui';
 import { PinEntityType } from '@/[fsd]/widgets/pin-toggler/lib/constants';
 import { usePin, usePinMenu } from '@/[fsd]/widgets/pin-toggler/lib/hooks';
-import { CollectionStatus, SkillsTabs } from '@/common/constants';
+import { SkillsTabs } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils.jsx';
 import { useCopyLinkMenu } from '@/components/CopyLinkToEntityButton.jsx';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
@@ -94,14 +94,11 @@ const SkillControls = memo(props => {
     return false;
   }, [defaultVersionId, currentVersionId, versionDetails?.name]);
 
-  const isVersionPublished = versionDetails?.status === CollectionStatus.Published;
-
   const disableDelete = useMemo(() => {
     if (defaultVersionId === currentVersionId) return true;
     if (versionDetails?.name === LATEST_VERSION_NAME) return true;
-    if (isVersionPublished) return true;
     return false;
-  }, [defaultVersionId, currentVersionId, versionDetails?.name, isVersionPublished]);
+  }, [defaultVersionId, currentVersionId, versionDetails?.name]);
 
   const onExport = useCallback(() => {
     doExport({ skillId, versionId: currentVersionId, skillName });
@@ -188,7 +185,6 @@ const SkillControls = memo(props => {
           label: 'Delete',
           icon: <DeleteIcon sx={{ fontSize: '1rem' }} />,
           disabled: disableDelete,
-          tooltip: isVersionPublished ? 'Unpublish this version first' : undefined,
           addSeparator: true,
           alarm: true,
           entityName: versionDetails?.name,
@@ -228,7 +224,6 @@ const SkillControls = memo(props => {
       publishSkillMenuItem,
       unpublishSkillMenuItem,
       disableDelete,
-      isVersionPublished,
       versionDetails?.name,
       skillName,
       onDeleteVersion,
