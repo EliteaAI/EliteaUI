@@ -51,7 +51,9 @@ export const createToolkitConversationWithParticipant = async options => {
   }
 
   // Align the family pair to the model so a reasoning model never carries a stale temperature
-  // (issue #5859). Strip both from the base first — generateLLMSettings emits only the correct one.
+  // (issue #5859). Persist-time uses generateLLMSettings (not resetLLMSettingsForModel) so a
+  // user-tuned reasoning_effort/temperature within the family is preserved, not hard-reset.
+  // Strip both from the base first — generateLLMSettings emits only the correct one.
   // eslint-disable-next-line no-unused-vars
   const { temperature: _t, reasoning_effort: _re, ...baseLlmSettings } = llmSettings || {};
   const alignedLlmSettings = {
