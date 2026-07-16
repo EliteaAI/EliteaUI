@@ -30,9 +30,9 @@ const BaseModal = memo(props => {
     alarm = false,
     confirming = false,
     'data-testid': dataTestId,
-    closeButtonDataTestId,
-    confirmButtonDataTestId,
-    cancelButtonDataTestId,
+    closeButtonTestId,
+    confirmButtonTestId,
+    cancelButtonTestId,
     footer,
   } = props;
 
@@ -96,7 +96,7 @@ const BaseModal = memo(props => {
             color={BUTTON_COLORS.secondary}
             onClick={onClose}
             autoFocus
-            data-testid={cancelButtonDataTestId}
+            data-testid={cancelButtonTestId}
           >
             {cancelButtonText}
           </Button.BaseBtn>
@@ -107,7 +107,7 @@ const BaseModal = memo(props => {
           onClick={onConfirm}
           autoFocus={!onClose}
           disabled={confirming}
-          data-testid={confirmButtonDataTestId}
+          data-testid={confirmButtonTestId}
         >
           {confirmButtonText}
         </Button.BaseBtn>
@@ -143,7 +143,7 @@ const BaseModal = memo(props => {
           <Button.BaseBtn
             variant={BUTTON_VARIANTS.tertiary}
             aria-label="Close"
-            data-testid={closeButtonDataTestId}
+            data-testid={closeButtonTestId}
             startIcon={<CloseIcon />}
             onClick={onClose}
             sx={styles.closeButton}

@@ -27,9 +27,7 @@ import { Button, Modal } from '@/[fsd]/shared/ui';
  *   text content rather than locating BY it).
  * @param {string}        [props.subtitleTestId] Stable test hook for the subtitle node.
  * @param {string}        [props.toggleTestId]   Stable test hook for the "Show details"/
- *   "Hide details" toggle button. Rendered ONLY while collapsed (omitted once
- *   `isExpanded` is true) so a shared testid across multiple cards still lets
- *   a "click every remaining toggle" loop converge correctly.
+ *   "Hide details" toggle button. `data-expanded` reflects the current state.
  */
 const IWModalEntityCardWrapper = memo(props => {
   const {
@@ -74,7 +72,8 @@ const IWModalEntityCardWrapper = memo(props => {
             sx={styles.actionBtn}
             variant="auxiliary"
             onClick={() => setIsExpanded(prev => !prev)}
-            data-testid={!isExpanded ? toggleTestId : undefined}
+            data-testid={toggleTestId}
+            data-expanded={isExpanded}
           >
             {isExpanded ? 'Hide details' : 'Show details'}
           </Button.BaseBtn>
