@@ -270,7 +270,10 @@ export default function SearchBar({
             right={'12px'}
             top={'0px'}
           >
-            <StyledCancelIcon onClick={onClear} />
+            <StyledCancelIcon
+              data-testid="agent-search-clear-button"
+              onClick={onClear}
+            />
             <StyledSendIcon
               disabled={disableSearchButton}
               onClick={onSearch}
