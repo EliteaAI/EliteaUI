@@ -2,19 +2,16 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import { Box, IconButton, Tooltip } from '@mui/material';
 
-import { useSkillDetailsQuery } from '@/[fsd]/features/skill/api';
 import { useDetachSkill } from '@/[fsd]/features/skill/lib/hooks';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { Banner, Modal } from '@/[fsd]/shared/ui';
 import { TypographyWithConditionalTooltip } from '@/[fsd]/shared/ui/tooltip';
 import OpenInNewIcon from '@/assets/open-new-icon.svg?react';
 import SkillIcon from '@/assets/skill-icon.svg?react';
-import { CollectionStatus, SkillsTabs } from '@/common/constants';
+import { SkillsTabs } from '@/common/constants';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import EliteAImage from '@/components/EliteAImage';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
-import { StatusDot } from '@/components/StatusDot';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import RouteDefinitions, { getBasename } from '@/routes';
 import { useTheme } from '@emotion/react';
 
@@ -22,22 +19,9 @@ import SkillVersionSelector from './SkillVersionSelector.jsx';
 
 const SkillCard = memo(({ skill, entityVersionId, disabled, parentEntityType = 'agent' }) => {
   const theme = useTheme();
-  const projectId = useSelectedProjectId();
   const [openAlert, setOpenAlert] = useState(false);
   const { detachSkill, isLoading } = useDetachSkill({ entityVersionId });
   const styles = useMemo(() => skillCardStyles(), []);
-
-  // Attached-skill payload has no version statuses; reuse the skill details
-  // cache entry (shared with SkillVersionSelector) to detect a published version.
-  const { data: skillDetails } = useSkillDetailsQuery(
-    { projectId, skillId: skill.skill_id },
-    { skip: !projectId || !skill.skill_id },
-  );
-
-  const hasPublishedVersion = useMemo(
-    () => (skillDetails?.versions || []).some(version => version.status === CollectionStatus.Published),
-    [skillDetails?.versions],
-  );
 
   const onOpenInNewTab = useCallback(() => {
     const baseUrl = `${window.location.protocol}//${window.location.host}`;
@@ -81,7 +65,6 @@ const SkillCard = memo(({ skill, entityVersionId, disabled, parentEntityType = '
               >
                 {skill.name}
               </TypographyWithConditionalTooltip>
-              {hasPublishedVersion && <StatusDot status={CollectionStatus.Published} />}
             </Box>
             <SkillVersionSelector
               skill={skill}

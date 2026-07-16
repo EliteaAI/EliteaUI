@@ -8,8 +8,6 @@ import StyledCircleProgress from '@/ComponentsLib/CircularProgress';
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import { useSkillDetailsQuery } from '@/[fsd]/features/skill/api';
 import { useAttachSkill, useDetachSkill } from '@/[fsd]/features/skill/lib/hooks';
-import { CollectionStatus } from '@/common/constants';
-import { StatusDot } from '@/components/StatusDot';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 /**
@@ -31,11 +29,9 @@ const SkillVersionSelector = memo(({ skill, entityVersionId, disabled }) => {
   const { attachSkill } = useAttachSkill({ entityVersionId });
   const { detachSkill } = useDetachSkill({ entityVersionId });
 
-  // Fetched eagerly (not on menu open) so the published dot on the trigger
-  // can render before the user interacts; the entry is shared with SkillCard.
   const { data: skillDetails } = useSkillDetailsQuery(
     { projectId, skillId: skill.skill_id },
-    { skip: !projectId || !skill.skill_id },
+    { skip: !projectId || !skill.skill_id || !anchorEl },
   );
 
   const versions = useMemo(() => {
@@ -50,14 +46,6 @@ const SkillVersionSelector = memo(({ skill, entityVersionId, disabled }) => {
   }, [skillDetails?.versions]);
 
   const displayText = useMemo(() => skill.version_name || LATEST_VERSION_NAME, [skill.version_name]);
-
-  const isSelectedPublished = useMemo(
-    () =>
-      versions.some(
-        version => version.id === skill.version_id && version.status === CollectionStatus.Published,
-      ),
-    [versions, skill.version_id],
-  );
 
   const handleOpen = useCallback(event => setAnchorEl(event.currentTarget), []);
   const handleClose = useCallback(() => setAnchorEl(null), []);
@@ -83,7 +71,6 @@ const SkillVersionSelector = memo(({ skill, entityVersionId, disabled }) => {
         sx={[styles.selector, disabled && styles.selectorDisabled]}
         onClick={isUpdating || disabled ? undefined : handleOpen}
       >
-        {isSelectedPublished && <StatusDot status={CollectionStatus.Published} />}
         <Typography
           variant="bodySmall"
           className="version-text"
@@ -134,12 +121,7 @@ const SkillVersionSelector = memo(({ skill, entityVersionId, disabled }) => {
               onClick={handleVersionSelect(version)}
               sx={isSelected ? styles.selectedMenuItem : styles.menuItem}
             >
-              <Box sx={styles.versionNameRow}>
-                {version.status === CollectionStatus.Published && (
-                  <StatusDot status={CollectionStatus.Published} />
-                )}
-                <Typography variant="bodyMedium">{version.name}</Typography>
-              </Box>
+              <Typography variant="bodyMedium">{version.name}</Typography>
               {isSelected && <CheckIcon sx={styles.selectedCheckIcon} />}
             </MenuItem>
           );
@@ -175,12 +157,6 @@ const styles = {
   selectorDisabled: {
     cursor: 'default',
     '&:hover': {},
-  },
-  versionNameRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-    minWidth: 0,
   },
   versionText: ({ palette }) => ({
     color: palette.text.primary,
