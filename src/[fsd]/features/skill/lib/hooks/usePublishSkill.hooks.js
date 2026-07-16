@@ -38,7 +38,7 @@ export const usePublishSkill = onSuccess => {
 
   const currentVersionId = useMemo(() => versionId || versionIdFromDetail, [versionId, versionIdFromDetail]);
 
-  const isAdminPublish = useMemo(() => projectId == PUBLIC_PROJECT_ID, [projectId]);
+  const isAdminPublish = useMemo(() => Number(projectId) === PUBLIC_PROJECT_ID, [projectId]);
 
   const { data: platformSettings } = useGetPlatformSettingsQuery();
   const isPublishBlockedByPolicy = useMemo(() => {
@@ -179,8 +179,9 @@ export const usePublishSkill = onSuccess => {
     } else {
       if (data?.error) {
         toastWarning(data.msg || 'Skill published, but some resources may not have been published.');
+      } else {
+        toastSuccess('The skill has been published');
       }
-      toastSuccess('The skill has been published');
       onSuccess();
       handleCloseModal();
     }

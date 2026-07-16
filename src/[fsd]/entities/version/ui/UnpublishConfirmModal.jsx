@@ -2,11 +2,10 @@ import { memo, useCallback, useState } from 'react';
 
 import { DialogContent, DialogTitle, IconButton, TextField, Typography } from '@mui/material';
 
+import { ENTITY_STUDIO } from '@/[fsd]/entities/version/lib/constants';
 import { Button } from '@/[fsd]/shared/ui';
 import CloseIcon from '@/components/Icons/CloseIcon';
 import { StyledDialog, StyledDialogActions } from '@/components/StyledDialog';
-
-const ENTITY_STUDIO = { agent: 'Agents Studio', skill: 'Skills' };
 
 const capitalize = value => value.charAt(0).toUpperCase() + value.slice(1);
 
@@ -17,7 +16,7 @@ const UnpublishConfirmModal = memo(props => {
     onConfirm,
     isLoading,
     showReason = false,
-    agentName,
+    entityName,
     versionName,
     entityLabel = 'agent',
   } = props;
@@ -95,7 +94,7 @@ const UnpublishConfirmModal = memo(props => {
               component="span"
               variant="headingSmall"
             >
-              {agentName}
+              {entityName}
             </Typography>{' '}
             (version:{' '}
             <Typography

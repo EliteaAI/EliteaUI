@@ -52,19 +52,14 @@ export const useUnpublishSkillMenu = onSuccess => {
       if (!error) {
         toastInfo('Skill has been successfully unpublished!');
         onSuccess();
-        setTimeout(() => {
-          reset();
-        }, 0);
         if (isAdminContext) {
           navigate(RouteDefinitions.Skills);
         }
       } else {
         const errorMsg = error.data?.msg || error.data?.error || 'Failed to unpublish';
         toastError(errorMsg);
-        setTimeout(() => {
-          reset();
-        }, 0);
       }
+      reset();
     },
     [projectId, skillId, isAdminContext, navigate, onSuccess, unpublish, reset, toastError, toastInfo],
   );
@@ -119,7 +114,7 @@ export const useUnpublishSkillMenu = onSuccess => {
         onConfirm={handleConfirmUnpublish}
         isLoading={isUnpublishing}
         showReason={isAdminContext}
-        agentName={skillName}
+        entityName={skillName}
         versionName={versionName}
         entityLabel="skill"
       />
