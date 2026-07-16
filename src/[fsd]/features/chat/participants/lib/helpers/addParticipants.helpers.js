@@ -77,8 +77,10 @@ export const transformParticipant = (participantType, participant, variables) =>
     },
     entity_settings: {
       max_tokens: participant.max_tokens || DEFAULT_MAX_TOKENS,
-      temperature: participant.temperature || DEFAULT_TEMPERATURE,
-      reasoning_effort: participant.reasoning_effort || DEFAULT_REASONING_EFFORT,
+      // Only one of temperature/reasoning_effort applies, never both (issue #5821).
+      ...(participant.supports_reasoning
+        ? { reasoning_effort: participant.reasoning_effort || DEFAULT_REASONING_EFFORT }
+        : { temperature: participant.temperature || DEFAULT_TEMPERATURE }),
     },
   };
 };

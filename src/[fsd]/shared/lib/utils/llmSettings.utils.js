@@ -26,12 +26,14 @@ export const generateLLMSettings = (model, existingSettings = {}, options = {}) 
 
   const baseSettings = {
     max_tokens: existingSettings.max_tokens ?? DEFAULT_MAX_TOKENS,
-    temperature: existingSettings.temperature ?? DEFAULT_TEMPERATURE,
   };
 
-  // Only include reasoning_effort if the model supports reasoning
+  // Only one of temperature/reasoning_effort applies, never both (issue #5821) — a
+  // reasoning-capable model rejects a custom temperature.
   if (modelSupportsReasoning(model)) {
     baseSettings.reasoning_effort = existingSettings.reasoning_effort ?? DEFAULT_REASONING_EFFORT;
+  } else {
+    baseSettings.temperature = existingSettings.temperature ?? DEFAULT_TEMPERATURE;
   }
 
   // Optionally include model information
