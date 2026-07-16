@@ -12,6 +12,7 @@ import {
   useTheme,
 } from '@mui/material';
 
+import { ENTITY_STUDIO } from '@/[fsd]/entities/version/lib/constants';
 import InputActionsToolbar from '@/[fsd]/shared/ui/input/InputActionsToolbar';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
 import CloseIcon from '@/components/Icons/CloseIcon';
@@ -19,8 +20,6 @@ import ErrorIcon from '@/components/Icons/ErrorIcon';
 import InfoIcon from '@/components/Icons/InfoIcon';
 import SuccessIcon from '@/components/Icons/SuccessIcon';
 import useToast from '@/hooks/useToast';
-
-const ENTITY_STUDIO = { agent: 'Agent Studio', skill: 'Skills' };
 
 const STATUS_CONFIG = {
   PASS: {

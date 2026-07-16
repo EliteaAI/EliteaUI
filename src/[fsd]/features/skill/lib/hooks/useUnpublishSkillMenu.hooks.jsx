@@ -47,16 +47,11 @@ export const useUnpublishSkillMenu = onSuccess => {
       if (!error) {
         toastInfo('Skill has been successfully unpublished!');
         onSuccess();
-        setTimeout(() => {
-          reset();
-        }, 0);
       } else {
         const errorMsg = error.data?.msg || error.data?.error || 'Failed to unpublish';
         toastError(errorMsg);
-        setTimeout(() => {
-          reset();
-        }, 0);
       }
+      reset();
     },
     [projectId, skillId, onSuccess, unpublish, reset, toastError, toastInfo],
   );
@@ -107,7 +102,7 @@ export const useUnpublishSkillMenu = onSuccess => {
         onClose={handleCancelConfirm}
         onConfirm={handleConfirmUnpublish}
         isLoading={isUnpublishing}
-        agentName={skillName}
+        entityName={skillName}
         versionName={versionName}
         entityLabel="skill"
       />

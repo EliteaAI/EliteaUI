@@ -2,10 +2,10 @@ import { memo, useState } from 'react';
 
 import { Box, Dialog, DialogContent, DialogTitle, IconButton, Typography } from '@mui/material';
 
+import { ENTITY_STUDIO } from '@/[fsd]/entities/version/lib/constants';
 import InputActionsToolbar from '@/[fsd]/shared/ui/input/InputActionsToolbar';
 import CloseIcon from '@/components/Icons/CloseIcon';
 
-const ENTITY_STUDIO = { agent: 'Agent Studio', skill: 'Skills' };
 const ENTITY_PLURAL = { agent: 'Agents', skill: 'Skills' };
 
 const capitalize = value => value.charAt(0).toUpperCase() + value.slice(1);
@@ -88,13 +88,14 @@ const PublishingTerms = memo(({ entityLabel = 'agent' }) => {
   const [isHovering, setIsHovering] = useState(false);
   const [showFullScreen, setShowFullScreen] = useState(false);
 
-  const sections = entityLabel === 'skill'
-    ? buildSkillTermsSections()
-    : buildAgentTermsSections(
-        entityLabel,
-        ENTITY_STUDIO[entityLabel] || ENTITY_STUDIO.agent,
-        ENTITY_PLURAL[entityLabel] || capitalize(`${entityLabel}s`),
-      );
+  const sections =
+    entityLabel === 'skill'
+      ? buildSkillTermsSections()
+      : buildAgentTermsSections(
+          entityLabel,
+          ENTITY_STUDIO[entityLabel] || ENTITY_STUDIO.agent,
+          ENTITY_PLURAL[entityLabel] || capitalize(`${entityLabel}s`),
+        );
 
   return (
     <>

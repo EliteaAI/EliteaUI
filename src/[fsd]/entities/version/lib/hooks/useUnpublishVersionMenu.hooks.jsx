@@ -136,7 +136,7 @@ export const useUnpublishVersionMenu = onSuccess => {
         onConfirm={handleConfirmUnpublish}
         isLoading={isUnpublishingVersion}
         showReason={isAdminContext}
-        agentName={agentName}
+        entityName={agentName}
         versionName={versionName}
       />
     ),
