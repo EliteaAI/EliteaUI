@@ -102,6 +102,7 @@ const IWModaSucceedlContent = memo(props => {
                     key={key}
                     variant="bodyMedium"
                     component="p"
+                    data-testid={`agent-import-complete-list-${key}`}
                   >
                     {(key === 'toolkits' ? importedItems[key].map(t => t.name) : importedItems[key])?.join(
                       ', ',

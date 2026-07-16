@@ -67,6 +67,11 @@ export default function AutoCompleteDropDown({
   },
   sx,
   filterOptions: filterOptionsProp,
+  // Optional stable test hooks (testid-only locator policy). All three are
+  // additive/no-op when omitted, so existing callers are unaffected.
+  inputTestId,
+  chipTestId,
+  getOptionTestId,
   ...props
 }) {
   const filterFn = filterOptionsProp ?? defaultFilterOptions;
@@ -205,6 +210,7 @@ export default function AutoCompleteDropDown({
         const { key: notUsedKey, ...optionPropsWithoutKey } = optionProps;
         return (
           <StyledChip
+            data-testid={chipTestId}
             label={
               <Box
                 height={'100%'}
@@ -236,7 +242,7 @@ export default function AutoCompleteDropDown({
           />
         );
       }),
-    [avatarField, handleDelete, nameField, styles.mergedChipSx, styles.mergedRemoveIcon.fill],
+    [avatarField, chipTestId, handleDelete, nameField, styles.mergedChipSx, styles.mergedRemoveIcon.fill],
   );
   const renderInput = useCallback(
     params => (
@@ -259,6 +265,13 @@ export default function AutoCompleteDropDown({
           '& .MuiInputLabel-shrink': {
             top: '0.375rem',
           },
+        }}
+        // Merged onto the real <input> alongside whatever Autocomplete's
+        // internals already put there (id, autoComplete, aria-*, etc.) —
+        // params.inputProps is MUI's own htmlInput bag for this render slot.
+        inputProps={{
+          ...(params.inputProps || {}),
+          ...(inputTestId ? { 'data-testid': inputTestId } : {}),
         }}
         slotProps={{
           input:
@@ -288,6 +301,7 @@ export default function AutoCompleteDropDown({
       error,
       handleInputChange,
       helpText,
+      inputTestId,
       inputValue,
       label,
       onBlur,
@@ -391,6 +405,7 @@ export default function AutoCompleteDropDown({
           <Box
             component="li"
             key={key}
+            data-testid={getOptionTestId ? getOptionTestId(option) : undefined}
             {...otherOptionProps}
             sx={({ palette }) => styles.getOptionLiSx(state.selected, palette)}
             onClick={onClickOption(!state.selected, option)}

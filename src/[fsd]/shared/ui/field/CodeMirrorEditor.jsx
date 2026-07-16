@@ -47,6 +47,11 @@ const CodeMirrorEditor = forwardRef((props, ref) => {
     maxHeight,
     autoHeight = false,
     variant = 'bodyMedium',
+    // Stable test hook for the CodeMirror content DOM node (`.cm-content`).
+    // Applied via EditorView.contentAttributes since CodeMirror renders its
+    // internal DOM itself — a plain JSX data-testid on this component would
+    // only land on the outer wrapper, not on .cm-content.
+    contentTestId,
     onCanUndo,
     onCanRedo,
     onBlur,
@@ -239,6 +244,15 @@ const CodeMirrorEditor = forwardRef((props, ref) => {
     notifyChange,
   });
 
+  // Sets data-testid directly on the .cm-content DOM node CodeMirror renders
+  // internally, so callers get a stable handle to the actual editable text
+  // element (not just the outer wrapper).
+  const contentTestIdExtension = useMemo(() => {
+    if (!contentTestId) return [];
+
+    return [EditorView.contentAttributes.of({ 'data-testid': contentTestId })];
+  }, [contentTestId]);
+
   useImperativeHandle(ref, () => ({
     getCode: () => code,
     setCode,
@@ -285,6 +299,7 @@ const CodeMirrorEditor = forwardRef((props, ref) => {
         ...basicExtensions,
         ...autoHeightExtension,
         ...syntaxErrorListener,
+        ...contentTestIdExtension,
         ...extensions,
         createMaxLengthExtension(maxLength),
       ]}

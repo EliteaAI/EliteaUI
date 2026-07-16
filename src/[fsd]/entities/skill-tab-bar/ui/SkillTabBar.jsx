@@ -86,6 +86,7 @@ const SkillTabBar = memo(props => {
       <Box sx={styles.centeredBlock}>
         <Select.SingleSelect
           id="skill-version-select"
+          data-testid="skill-version-select"
           separateLabel
           label="VERSION:"
           options={versionOptions}

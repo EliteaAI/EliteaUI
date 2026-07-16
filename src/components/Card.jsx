@@ -159,6 +159,7 @@ const Card = memo(props => {
       ref={cardRef}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      data-testid="entity-card"
     >
       <MuiCard
         elevation={0}

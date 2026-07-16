@@ -92,6 +92,7 @@ const SaveSkillVersionButton = memo(({ onSuccess, onChangeVersion }) => {
         variant={BUTTON_VARIANTS.elitea}
         color="secondary"
         onClick={onOpen}
+        data-testid="skill-save-as-version-button"
       >
         Save As Version
         {isSavingNewVersion && <StyledCircleProgress size={20} />}
@@ -106,12 +107,20 @@ const SaveSkillVersionButton = memo(({ onSuccess, onChangeVersion }) => {
         confirmButtonText="Save"
         confirming={!newVersion}
         onKeyDown={handleKeyDown}
+        data-testid="skill-create-version-dialog"
+        confirmButtonTestId="skill-create-version-save-button"
+        closeButtonTestId="skill-create-version-close-button"
         content={
           <Input.InputBase
             label="Name"
             value={newVersion}
             onChange={onInput}
-            inputProps={{ maxLength: 255 }}
+            data-testid="skill-create-version-name-input"
+            // 'data-testid' here lands on the MuiFormControl-root wrapper via
+            // InputBase's leftProps spread onto MuiTextField; the one below,
+            // via slotProps.htmlInput, lands on the real <input> — same split
+            // established for CreateSkillForm's Name/Description fields.
+            inputProps={{ maxLength: 255, 'data-testid': 'skill-create-version-name-input-field' }}
             autoFocus
           />
         }

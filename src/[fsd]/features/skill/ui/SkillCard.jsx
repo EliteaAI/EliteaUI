@@ -40,7 +40,10 @@ const SkillCard = memo(({ skill, entityVersionId, disabled, parentEntityType = '
 
   return (
     <>
-      <Box sx={styles.cardContainer}>
+      <Box
+        sx={styles.cardContainer}
+        data-testid={`skill-card-${skill.skill_id}`}
+      >
         <Box sx={styles.cardHeader}>
           <Box sx={styles.iconBox}>
             {skill.icon_meta?.url ? (
@@ -98,6 +101,7 @@ const SkillCard = memo(({ skill, entityVersionId, disabled, parentEntityType = '
             >
               <IconButton
                 id="DeleteButton"
+                data-testid="skill-card-remove-button"
                 variant="elitea"
                 color="tertiary"
                 aria-label="remove skill"

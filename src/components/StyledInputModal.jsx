@@ -110,7 +110,7 @@ const StyledInputModal = forwardRef((props, ref) => {
       value={value}
       specifiedLanguage={specifiedLanguage}
       data-testid={dataTestId}
-      closeButtonDataTestId={dataTestId ? `${dataTestId}-close` : undefined}
+      closeButtonTestId={dataTestId ? `${dataTestId}-close` : undefined}
     >
       <Box sx={styles.editorContainer}>
         <Box sx={styles.editorWrapper}>

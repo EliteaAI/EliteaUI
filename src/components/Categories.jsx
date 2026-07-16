@@ -296,6 +296,7 @@ const Categories = ({
                 variant="elitea"
                 color="secondary"
                 onClick={handleClear}
+                data-testid="tags-panel-clear-all"
               >
                 <ClearIcon
                   sx={{ fontSize: '16px' }}
@@ -332,6 +333,7 @@ const Categories = ({
                     label={name}
                     onClick={handleClick(tag)}
                     isSelected={selectedTags.includes(name)}
+                    data-testid={`tags-panel-chip-${name}`}
                   />
                 );
               })

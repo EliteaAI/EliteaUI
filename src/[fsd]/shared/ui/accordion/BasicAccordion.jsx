@@ -47,7 +47,7 @@ const BasicAccordion = memo(props => {
       sx={style}
       data-testid={dataTestId}
     >
-      {items.map(({ title, content, summaryAction }, index) => (
+      {items.map(({ title, content, summaryAction, testId }, index) => (
         <Box
           key={index}
           sx={styles.accordionWrapper}
@@ -64,6 +64,7 @@ const BasicAccordion = memo(props => {
               aria-controls={`panel-content-${index}`}
               showMode={showMode}
               sx={summarySX}
+              data-testid={testId}
             >
               <StyledTypography
                 sx={titleSX}

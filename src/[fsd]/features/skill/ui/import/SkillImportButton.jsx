@@ -33,6 +33,7 @@ const SkillImportButton = memo(() => {
         placement="top"
       >
         <BaseBtn
+          data-testid="skills-import-button"
           variant={BUTTON_VARIANTS.icon}
           onClick={openFileDialog}
           disabled={isImporting}

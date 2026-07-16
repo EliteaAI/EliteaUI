@@ -73,7 +73,11 @@ const IWModalDetails = memo(props => {
     <Box sx={styles.root}>
       <Box sx={styles.entityBlock}>
         <Typography sx={styles.label}>Main entity</Typography>
-        <IWModalEntityCard entity={mainEntity} />
+        <IWModalEntityCard
+          entity={mainEntity}
+          titleTestId="agent-import-preview-name"
+          toggleTestId="agent-import-preview-card-toggle"
+        />
       </Box>
 
       {nestedEntities.length > 0 && (
@@ -98,6 +102,9 @@ const IWModalDetails = memo(props => {
               <IWModalEntityCard
                 key={index}
                 entity={entity}
+                titleTestId="agent-import-preview-skill-name"
+                toggleTestId="agent-import-preview-card-toggle"
+                instructionsTestId="agent-import-preview-skill-instructions"
               />
             ))}
           </Box>

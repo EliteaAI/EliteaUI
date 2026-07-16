@@ -170,13 +170,17 @@ const SkillMenu = memo(props => {
           title={tooltipTitle}
           placement="top"
         >
-          <Box component="span">
+          <Box
+            component="span"
+            data-testid="agent-add-skill-button-tooltip"
+          >
             <BaseBtn
               variant={BUTTON_VARIANTS.iconLabel}
               startIcon={<PlusIcon />}
               disableRipple
               disabled={isButtonDisabled}
               onClick={isButtonDisabled ? undefined : handleButtonClick}
+              data-testid="agent-add-skill-button"
             >
               Skill
             </BaseBtn>
