@@ -100,21 +100,6 @@ const UserInput = forwardRef((props, ref) => {
     setInputContent(value);
   }, []);
 
-  // Apply any pending cursor position after the render that reflects the new value.
-  // This replaces the setTimeout(setSelectionRange) pattern, which was unreliable
-  // when multiple state updates (e.g. toolkit auto-select) caused several re-renders
-  // between the schedule and the execution of the timeout callback.
-  useEffect(() => {
-    if (pendingCursorRef.current === null) return;
-    const pos = pendingCursorRef.current;
-    pendingCursorRef.current = null;
-    const textarea = inputRef.current;
-    if (textarea) {
-      textarea.setSelectionRange(pos, pos);
-      textarea.focus();
-    }
-  });
-
   const { users = [], onMentionChange } = mentionUser || {};
 
   const { mentions } = useMentionDetection(inputContent, users, 'name', {
