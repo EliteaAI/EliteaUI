@@ -27,7 +27,7 @@ const MAX_CHARS = 2500;
 const ProjectContext = memo(() => {
   const projectId = useSelectedProjectId();
   const { checkPermission } = useCheckPermission();
-  const { toastSuccess, toastError } = useToast();
+  const { toastSuccess, toastInfo, toastError } = useToast();
   const canViewProjectContext = checkPermission(PERMISSIONS.projectContext.view);
   const canEditProjectContext = checkPermission(PERMISSIONS.projectContext.edit);
 
@@ -151,10 +151,10 @@ const ProjectContext = memo(() => {
   const handleCopyToClipboard = useCallback(() => {
     if (!content) return;
     navigator.clipboard.writeText(content).then(
-      () => toastSuccess('Copied to clipboard'),
+      () => toastInfo('The content has been copied.'),
       () => toastError('Failed to copy to clipboard'),
     );
-  }, [content, toastSuccess, toastError]);
+  }, [content, toastInfo, toastError]);
 
   const handleEditorFocus = () => setIsEditorFocused(true);
   const handleEditorBlur = e => {
