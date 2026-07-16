@@ -257,10 +257,10 @@ const lightPalette = {
         selected: dark10,
       },
       agentHub: {
-        default: 'rgba(201, 189, 255, 0.2)',
+        default: 'transparent',
         hover: 'rgba(201, 189, 255, 0.2)',
         active: 'rgba(201, 189, 255, 0.4)',
-        shadowDefault: '0px 0px 10px 0px rgba(84, 90, 255, 0.15) inset',
+        shadowDefault: 'none',
         shadowHover: '0px 0px 16px 0px rgba(84, 90, 255, 0.4) inset',
         shadowActive: '0px 0px 40px 0px rgba(84, 90, 255, 0.3) inset',
       },
