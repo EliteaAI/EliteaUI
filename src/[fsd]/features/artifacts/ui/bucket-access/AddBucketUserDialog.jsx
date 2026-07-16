@@ -1,14 +1,38 @@
-import { memo, useCallback, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Autocomplete, Box, MenuItem, Select, TextField, Typography } from '@mui/material';
 
 import { Button, Modal } from '@/[fsd]/shared/ui';
 
-const ACCESS_OPTIONS = [
-  { value: 'no_access', label: 'No access' },
-  { value: 'read', label: 'Read' },
-  { value: 'read_write', label: 'Read & Write' },
-];
+import { ACCESS_OPTIONS } from './constants';
+
+const styles = {
+  contentWrapper: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+    minWidth: '20rem',
+  },
+  actionsWrapper: {
+    display: 'flex',
+    gap: '1rem',
+  },
+  fieldWrapper: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
+  },
+  autocomplete: {
+    width: '100%',
+  },
+  select: {
+    width: '100%',
+  },
+  optionContent: {
+    display: 'flex',
+    flexDirection: 'column',
+  },
+};
 
 const AddBucketUserDialog = memo(props => {
   const { open, onClose, onConfirm, users = [], existingUserIds = [], loading = false } = props;
@@ -23,7 +47,10 @@ const AddBucketUserDialog = memo(props => {
     }
   }, [open]);
 
-  const availableUsers = users.filter(u => !existingUserIds.includes(u.id));
+  const availableUsers = useMemo(
+    () => users.filter(u => !existingUserIds.includes(u.id)),
+    [users, existingUserIds],
+  );
 
   const handleConfirm = useCallback(() => {
     if (!selectedUser) return;
@@ -39,8 +66,6 @@ const AddBucketUserDialog = memo(props => {
     },
     [selectedUser, handleConfirm],
   );
-
-  const styles = addBucketUserDialogStyles();
 
   return (
     <Modal.BaseModal
@@ -150,33 +175,5 @@ const AddBucketUserDialog = memo(props => {
 });
 
 AddBucketUserDialog.displayName = 'AddBucketUserDialog';
-
-const addBucketUserDialogStyles = () => ({
-  contentWrapper: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-    minWidth: '20rem',
-  },
-  actionsWrapper: {
-    display: 'flex',
-    gap: '1rem',
-  },
-  fieldWrapper: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.5rem',
-  },
-  autocomplete: {
-    width: '100%',
-  },
-  select: {
-    width: '100%',
-  },
-  optionContent: {
-    display: 'flex',
-    flexDirection: 'column',
-  },
-});
 
 export default AddBucketUserDialog;

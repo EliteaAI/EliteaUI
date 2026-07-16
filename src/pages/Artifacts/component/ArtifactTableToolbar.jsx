@@ -265,9 +265,6 @@ const artifactTableToolbarStyles = () => ({
       backgroundColor: palette.background.button.secondary.hover,
     },
   }),
-  actionButtonActive: ({ palette }) => ({
-    backgroundColor: palette.background.button.secondary.hover,
-  }),
   actionIcon: {
     width: '1rem',
     height: '1rem',

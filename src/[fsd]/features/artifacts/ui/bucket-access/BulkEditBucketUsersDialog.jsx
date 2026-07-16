@@ -4,11 +4,41 @@ import { Box, MenuItem, Select, Typography } from '@mui/material';
 
 import { Button, Modal } from '@/[fsd]/shared/ui';
 
-const ACCESS_OPTIONS = [
-  { value: 'no_access', label: 'No access' },
-  { value: 'read', label: 'Read' },
-  { value: 'read_write', label: 'Read & Write' },
-];
+import { ACCESS_OPTIONS } from './constants';
+
+const styles = {
+  contentWrapper: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+    minWidth: '20rem',
+  },
+  actionsWrapper: {
+    display: 'flex',
+    gap: '1rem',
+  },
+  usersListWrapper: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
+    padding: '0.75rem',
+    borderRadius: '0.5rem',
+    backgroundColor: 'background.secondary',
+  },
+  usersList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem',
+  },
+  fieldWrapper: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem',
+  },
+  select: {
+    width: '100%',
+  },
+};
 
 const BulkEditBucketUsersDialog = memo(props => {
   const { open, onClose, onConfirm, selectedUsers = [], loading = false } = props;
@@ -34,8 +64,6 @@ const BulkEditBucketUsersDialog = memo(props => {
     },
     [handleConfirm],
   );
-
-  const styles = bulkEditBucketUsersDialogStyles();
 
   return (
     <Modal.BaseModal
@@ -128,39 +156,5 @@ const BulkEditBucketUsersDialog = memo(props => {
 });
 
 BulkEditBucketUsersDialog.displayName = 'BulkEditBucketUsersDialog';
-
-const bulkEditBucketUsersDialogStyles = () => ({
-  contentWrapper: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-    minWidth: '20rem',
-  },
-  actionsWrapper: {
-    display: 'flex',
-    gap: '1rem',
-  },
-  usersListWrapper: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.5rem',
-    padding: '0.75rem',
-    borderRadius: '0.5rem',
-    backgroundColor: 'background.secondary',
-  },
-  usersList: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.25rem',
-  },
-  fieldWrapper: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.25rem',
-  },
-  select: {
-    width: '100%',
-  },
-});
 
 export default BulkEditBucketUsersDialog;

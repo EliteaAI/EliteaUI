@@ -37,6 +37,64 @@ const BUCKET_ACCESS_COLUMNS = [
   { field: 'actions', label: 'Actions', width: '8.25rem', sortable: false },
 ];
 
+const styles = {
+  root: {
+    height: '100%',
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  actionsRow: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: '0.6rem',
+    padding: '0.75rem 1.5rem',
+  },
+  selectionInfo: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+  },
+  searchWrapper: {
+    minWidth: '12.5rem',
+  },
+  tableWrapper: {
+    flex: 1,
+    minHeight: 0,
+    display: 'flex',
+    maxWidth: '100%',
+  },
+  actionsContainer: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    gap: '0.5rem',
+  },
+  actionIcon: {
+    width: '1rem',
+    height: '1rem',
+  },
+  actionButton: ({ palette }) => ({
+    '&:hover': {
+      backgroundColor: palette.background.button.secondary.hover,
+    },
+  }),
+  dataCell: {
+    display: 'flex',
+    alignItems: 'center',
+    padding: '0rem 1rem',
+  },
+  skeletonContainer: {
+    width: '100%',
+    padding: '1rem 1.5rem',
+  },
+  skeleton: {
+    marginBottom: '0.5rem',
+  },
+};
+
 const getAccessValue = (bucketPermissions, bucket) => {
   if (!bucketPermissions || !(bucket in bucketPermissions)) return '';
   const perms = bucketPermissions[bucket];
@@ -161,6 +219,8 @@ const BucketAccessTable = memo(props => {
     getSelectedRows,
   } = useRowSelection({ rows: paginatedUsers, idField: 'id' });
 
+  const selectedRows = useMemo(() => getSelectedRows(), [getSelectedRows]);
+
   const { visibleColumns, gridTemplateColumns, dataColumns } = useResponsiveColumns({
     columns: BUCKET_ACCESS_COLUMNS,
     containerWidth: windowWidth,
@@ -204,7 +264,6 @@ const BucketAccessTable = memo(props => {
             bucket_permissions: bucketPermissions,
           }).unwrap();
         } else {
-          // Reuse the first existing credential regardless of whether it has this bucket
           const cred = creds[0];
           const updatedPerms = buildBucketPermissions(newAccess, bucket, cred.bucket_permissions);
           await setBucketPermissions({
@@ -269,31 +328,13 @@ const BucketAccessTable = memo(props => {
 
   const handleBulkEditConfirm = useCallback(
     async ({ permission }) => {
-      const selectedUsers = getSelectedRows();
+      const usersToUpdate = getSelectedRows();
       let successCount = 0;
       let errorCount = 0;
 
-      for (const user of selectedUsers) {
+      for (const user of usersToUpdate) {
         try {
-          const creds = credsByUserId[user.id];
-          if (!creds || creds.length === 0) {
-            if (!permission) continue;
-            const bucketPermissions = buildBucketPermissions(permission, bucket, {});
-            await createS3Credentials({
-              projectId,
-              user_id: user.id,
-              name: `${user.name || user.email} - bucket access`,
-              bucket_permissions: bucketPermissions,
-            }).unwrap();
-          } else {
-            const cred = creds[0];
-            const updatedPerms = buildBucketPermissions(permission, bucket, cred.bucket_permissions);
-            await setBucketPermissions({
-              projectId,
-              access_key_id: cred.access_key_id,
-              bucket_permissions: updatedPerms,
-            }).unwrap();
-          }
+          await handleAccessChange(user, permission);
           successCount++;
         } catch {
           errorCount++;
@@ -310,20 +351,8 @@ const BucketAccessTable = memo(props => {
       setBulkEditDialogOpen(false);
       clearSelection();
     },
-    [
-      getSelectedRows,
-      credsByUserId,
-      bucket,
-      createS3Credentials,
-      setBucketPermissions,
-      projectId,
-      toastSuccess,
-      toastError,
-      clearSelection,
-    ],
+    [getSelectedRows, handleAccessChange, toastSuccess, toastError, clearSelection],
   );
-
-  const styles = bucketAccessTableStyles();
 
   const renderCell = useCallback((column, value, row) => {
     if (column.field === 'name') {
@@ -389,7 +418,7 @@ const BucketAccessTable = memo(props => {
         </Tooltip>
       </Box>
     ),
-    [handleEditClick, handleRemoveAccess, styles],
+    [handleEditClick, handleRemoveAccess],
   );
 
   const toolbarControls = useMemo(
@@ -427,7 +456,7 @@ const BucketAccessTable = memo(props => {
         />
       </>
     ),
-    [searchQuery, styles.searchWrapper, styles.selectionInfo, selectedIds.length, handleBulkEditClick],
+    [searchQuery, selectedIds.length, handleBulkEditClick],
   );
 
   useEffect(() => {
@@ -521,7 +550,7 @@ const BucketAccessTable = memo(props => {
         open={bulkEditDialogOpen}
         onClose={() => setBulkEditDialogOpen(false)}
         onConfirm={handleBulkEditConfirm}
-        selectedUsers={getSelectedRows()}
+        selectedUsers={selectedRows}
         loading={isMutating}
       />
     </Box>
@@ -529,63 +558,5 @@ const BucketAccessTable = memo(props => {
 });
 
 BucketAccessTable.displayName = 'BucketAccessTable';
-
-const bucketAccessTableStyles = () => ({
-  root: {
-    height: '100%',
-    width: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  actionsRow: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    gap: '0.6rem',
-    padding: '0.75rem 1.5rem',
-  },
-  selectionInfo: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-  },
-  searchWrapper: {
-    minWidth: '12.5rem',
-  },
-  tableWrapper: {
-    flex: 1,
-    minHeight: 0,
-    display: 'flex',
-    maxWidth: '100%',
-  },
-  actionsContainer: {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    gap: '0.5rem',
-  },
-  actionIcon: {
-    width: '1rem',
-    height: '1rem',
-  },
-  actionButton: ({ palette }) => ({
-    '&:hover': {
-      backgroundColor: palette.background.button.secondary.hover,
-    },
-  }),
-  dataCell: {
-    display: 'flex',
-    alignItems: 'center',
-    padding: '0rem 1rem',
-  },
-  skeletonContainer: {
-    width: '100%',
-    padding: '1rem 1.5rem',
-  },
-  skeleton: {
-    marginBottom: '0.5rem',
-  },
-});
 
 export default BucketAccessTable;
