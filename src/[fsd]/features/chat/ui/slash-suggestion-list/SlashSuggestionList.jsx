@@ -69,7 +69,7 @@ const SlashSuggestionList = memo(props => {
   );
 
   useEffect(() => {
-    if (phase !== 'toolkit' || !isQueryFinal) return;
+    if (phase !== 'toolkit' || !isQueryFinal || !toolkitQuery) return;
 
     const match = filteredParticipants.find(p => p.name.toLowerCase().startsWith(toolkitQuery.toLowerCase()));
     if (match && (match.project_id !== selectedToolkit?.project_id || match.id !== selectedToolkit?.id)) {

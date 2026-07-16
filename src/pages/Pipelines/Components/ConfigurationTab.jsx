@@ -15,6 +15,7 @@ import {
   DEFAULT_TEMPERATURE,
 } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
 import { useShowRunHistoryFromUrl } from '@/[fsd]/shared/lib/hooks';
+import { isReasoningFamilyFromStored } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
 import DirtyDetector from '@/components/Formik/DirtyDetector';
 import useAgentMCPToolsStatusMonitor from '@/hooks/application/useAgentMCPToolsStatusMonitor';
 import useUploadAttachments from '@/hooks/chat/useUploadAttachments';
@@ -78,13 +79,18 @@ const ConfigurationTab = memo(props => {
 
   const { llm_settings = {}, tools, id: currentVersionId, type = 'chat' } = formValues?.version_details || {};
 
+  // Only one of temperature/reasoning_effort applies, never both (issue #5821). Family is
+  // inferred from whichever is already stored (no model lookup available here) -- absent
+  // both, default to the non-reasoning shape, matching generateLLMSettings' behavior for an
+  // unselected model.
   const {
     model_name,
     model_project_id,
     max_tokens = DEFAULT_MAX_TOKENS,
-    temperature = DEFAULT_TEMPERATURE,
-    reasoning_effort = DEFAULT_REASONING_EFFORT,
+    temperature,
+    reasoning_effort,
   } = llm_settings;
+  const isReasoningFamily = isReasoningFamilyFromStored(llm_settings);
 
   const interaction_uuid = useMemo(() => `pipeline_${applicationId}_${Date.now()}`, [applicationId]);
 
@@ -131,9 +137,10 @@ const ConfigurationTab = memo(props => {
     currentLLMSettings: {
       model_name,
       model_project_id,
-      temperature,
       max_tokens,
-      reasoning_effort,
+      ...(isReasoningFamily
+        ? { reasoning_effort: reasoning_effort ?? DEFAULT_REASONING_EFFORT }
+        : { temperature: temperature ?? DEFAULT_TEMPERATURE }),
     },
     deleteAllRunNodes: handleDeleteAllRunNodes,
     restoredConversationID,

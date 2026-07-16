@@ -38,7 +38,11 @@ import {
   DEFAULT_STEPS_LIMIT,
   DEFAULT_TEMPERATURE,
 } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
-import { cleanLLMSettings } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
+import {
+  cleanLLMSettings,
+  isLLMSettingsFamilyConflict,
+  resetLLMSettingsForModel,
+} from '@/[fsd]/shared/lib/utils/llmSettings.utils';
 import { Modal } from '@/[fsd]/shared/ui';
 import {
   useConversationEditMutation,
@@ -287,6 +291,11 @@ const ChatBox = forwardRef((props, boxRef) => {
       if (model?.supports_reasoning) {
         baseSettings.reasoning_effort = DEFAULT_REASONING_EFFORT;
       }
+    }
+
+    // A reasoning_effort implies the model rejects a custom temperature (issue #5821)
+    if (isLLMSettingsFamilyConflict(baseSettings.temperature, baseSettings.reasoning_effort)) {
+      delete baseSettings.temperature;
     }
 
     return baseSettings;
@@ -1926,14 +1935,12 @@ const ChatBox = forwardRef((props, boxRef) => {
           model_name: newModel.name,
           model_project_id: newModel.project_id,
           max_tokens: DEFAULT_MAX_TOKENS, // Reset max tokens to default when changing model
-          temperature: DEFAULT_TEMPERATURE,
-          // Only set reasoning_effort if the model supports it
-          ...(newModel.supports_reasoning && { reasoning_effort: DEFAULT_REASONING_EFFORT }),
+          // Explicitly resets both temperature and reasoning_effort for the new model's
+          // family — never leaves a stale value from the previously selected model (issue #5821).
+          ...resetLLMSettingsForModel(newModel),
           // Preserve steps_limit — not model-specific
           steps_limit: activeParticipant?.entity_settings.llm_settings?.steps_limit ?? DEFAULT_STEPS_LIMIT,
         };
-
-        if (!newModel.supports_reasoning) delete newLLMSettings.reasoning_effort;
 
         // Update Formik so Save button persists the new model
         if (onSetLLMSettings) {
@@ -1960,12 +1967,11 @@ const ChatBox = forwardRef((props, boxRef) => {
             model_name: newModel.name,
             model_project_id: newModel.project_id,
             max_tokens: DEFAULT_MAX_TOKENS, // Reset max tokens to default when changing model
-            temperature: DEFAULT_TEMPERATURE,
-            ...(newModel.supports_reasoning && { reasoning_effort: DEFAULT_REASONING_EFFORT }),
+            // Explicitly resets both temperature and reasoning_effort for the new model's
+            // family — never leaves a stale value from the previously selected model (issue #5821).
+            ...resetLLMSettingsForModel(newModel),
             // steps_limit is stored in conversation meta — do not touch it here
           };
-
-          if (!newModel.supports_reasoning) delete llmSettingsPayload.reasoning_effort;
 
           const result = await updateChatLlmSettings({
             projectId,

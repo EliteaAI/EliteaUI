@@ -388,9 +388,13 @@ export const useSlashCommandHandler = ({ setInputContent }) => {
       }
       // Set anchor on the first syncWithValue call in toolkit phase
       // (covers fresh '/' pressed — onKeyDown enters toolkit but doesn't set anchor).
-      if (mentionAnchorRef.current === null && (fullMatch || toolkitOnlyMatch)) {
+      // When the toolkit name is still empty (bare '/'), keep advancing the anchor to the
+      // latest slash so that repeated slashes ("////") replace only the last one.
+      if (fullMatch || toolkitOnlyMatch) {
         const match = fullMatch || toolkitOnlyMatch;
-        mentionAnchorRef.current = (cursorPos ?? textToCursor.length) - match[0].length;
+        if (mentionAnchorRef.current === null || (!fullMatch && toolkitOnlyMatch[1] === '')) {
+          mentionAnchorRef.current = (cursorPos ?? textToCursor.length) - match[0].length;
+        }
       }
     },
     [resetSlash],
