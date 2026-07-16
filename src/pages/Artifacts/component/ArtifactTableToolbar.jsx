@@ -2,9 +2,10 @@ import { memo, useCallback, useMemo } from 'react';
 
 import GroupsIcon from '@mui/icons-material/Groups';
 import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutlined';
-import { Box, IconButton, Tooltip, Typography } from '@mui/material';
+import { Box, Tooltip, Typography } from '@mui/material';
 
 import { ARTIFACT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/artifactTourTargets.constants';
+import { Button } from '@/[fsd]/shared/ui';
 import { SimpleSearchBar } from '@/[fsd]/shared/ui/input';
 import FileUploadIcon from '@/assets/icons/FileUploadIcon.svg?react';
 import { PERMISSIONS } from '@/common/constants';
@@ -103,15 +104,15 @@ const ArtifactTableToolbar = memo(props => {
                 title="Back to files"
                 placement="top"
               >
-                <IconButton
-                  variant={'elitea'}
-                  sx={styles.actionButton}
-                  size="small"
-                  color="secondary"
-                  onClick={onManageAccessToggle}
-                >
-                  <InsertDriveFileOutlinedIcon sx={styles.actionIcon} />
-                </IconButton>
+                <Box component="span">
+                  <Button.BaseBtn
+                    variant="icon"
+                    sx={styles.actionButton}
+                    onClick={onManageAccessToggle}
+                  >
+                    <InsertDriveFileOutlinedIcon sx={styles.actionIcon} />
+                  </Button.BaseBtn>
+                </Box>
               </Tooltip>
             )}
           </>
@@ -144,15 +145,15 @@ const ArtifactTableToolbar = memo(props => {
                 title="Manage access"
                 placement="top"
               >
-                <IconButton
-                  variant={'elitea'}
-                  sx={styles.actionButton}
-                  size="small"
-                  color="secondary"
-                  onClick={onManageAccessToggle}
-                >
-                  <GroupsIcon sx={styles.actionIcon} />
-                </IconButton>
+                <Box component="span">
+                  <Button.BaseBtn
+                    variant="icon"
+                    sx={styles.actionButton}
+                    onClick={onManageAccessToggle}
+                  >
+                    <GroupsIcon sx={styles.actionIcon} />
+                  </Button.BaseBtn>
+                </Box>
               </Tooltip>
             )}
 
@@ -161,17 +162,17 @@ const ArtifactTableToolbar = memo(props => {
                 title="Upload files"
                 placement="top"
               >
-                <IconButton
-                  variant={'elitea'}
-                  sx={styles.actionButton}
-                  size="small"
-                  color="secondary"
-                  onClick={handleUploadClick}
-                  data-tour={ARTIFACT_TOUR_TARGET_IDS.uploadButton}
-                  data-testid="artifacts-upload-files-button"
-                >
-                  <FileUploadIcon sx={styles.actionIcon} />
-                </IconButton>
+                <Box component="span">
+                  <Button.BaseBtn
+                    variant="icon"
+                    sx={styles.actionButton}
+                    onClick={handleUploadClick}
+                    data-tour={ARTIFACT_TOUR_TARGET_IDS.uploadButton}
+                    data-testid="artifacts-upload-files-button"
+                  >
+                    <FileUploadIcon sx={styles.actionIcon} />
+                  </Button.BaseBtn>
+                </Box>
               </Tooltip>
             )}
 
@@ -180,17 +181,15 @@ const ArtifactTableToolbar = memo(props => {
               placement="top"
             >
               <Box component="span">
-                <IconButton
-                  variant={'elitea'}
+                <Button.BaseBtn
+                  variant="icon"
                   sx={styles.actionButton}
-                  size="small"
-                  color="secondary"
                   onClick={onDownloadFiles}
                   disabled={!rowSelectionModel.length}
                   data-testid="artifacts-download-files-button"
                 >
                   <DownloadIcon sx={styles.actionIcon} />
-                </IconButton>
+                </Button.BaseBtn>
               </Box>
             </Tooltip>
 

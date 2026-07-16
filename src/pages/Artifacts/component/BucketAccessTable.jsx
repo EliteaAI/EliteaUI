@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Box, IconButton, Skeleton, Tooltip, Typography } from '@mui/material';
+import { Box, Skeleton, Tooltip, Typography } from '@mui/material';
 
 import { useResponsiveColumns, useRowSelection, useTableSort } from '@/[fsd]/entities/grid-table/lib';
 import {
@@ -363,27 +363,29 @@ const BucketAccessTable = memo(props => {
           title="Edit access"
           placement="top"
         >
-          <IconButton
-            variant="elitea"
-            color="tertiary"
-            size="small"
-            onClick={() => handleEditClick(row)}
-          >
-            <EditIcon sx={styles.actionIcon} />
-          </IconButton>
+          <Box component="span">
+            <Button.BaseBtn
+              variant="icon"
+              sx={styles.actionButton}
+              onClick={() => handleEditClick(row)}
+            >
+              <EditIcon sx={styles.actionIcon} />
+            </Button.BaseBtn>
+          </Box>
         </Tooltip>
         <Tooltip
           title="Remove access"
           placement="top"
         >
-          <IconButton
-            variant="elitea"
-            color="tertiary"
-            size="small"
-            onClick={() => handleRemoveAccess(row)}
-          >
-            <DeleteIcon sx={styles.actionIcon} />
-          </IconButton>
+          <Box component="span">
+            <Button.BaseBtn
+              variant="icon"
+              sx={styles.actionButton}
+              onClick={() => handleRemoveAccess(row)}
+            >
+              <DeleteIcon sx={styles.actionIcon} />
+            </Button.BaseBtn>
+          </Box>
         </Tooltip>
       </Box>
     ),
@@ -567,6 +569,11 @@ const bucketAccessTableStyles = () => ({
     width: '1rem',
     height: '1rem',
   },
+  actionButton: ({ palette }) => ({
+    '&:hover': {
+      backgroundColor: palette.background.button.secondary.hover,
+    },
+  }),
   dataCell: {
     display: 'flex',
     alignItems: 'center',

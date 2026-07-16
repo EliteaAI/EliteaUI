@@ -77,24 +77,28 @@ const AddBucketUserDialog = memo(props => {
                   size="small"
                 />
               )}
-              renderOption={(optionProps, option) => (
-                <li
-                  {...optionProps}
-                  key={option.id}
-                >
-                  <Box sx={styles.optionContent}>
-                    <Typography variant="bodyMedium">{option.name || option.email}</Typography>
-                    {option.name && (
-                      <Typography
-                        variant="bodySmall"
-                        color="text.secondary"
-                      >
-                        {option.email}
-                      </Typography>
-                    )}
+              renderOption={(optionProps, option) => {
+                const { key, ...otherOptionProps } = optionProps;
+                return (
+                  <Box
+                    component="li"
+                    key={key}
+                    {...otherOptionProps}
+                  >
+                    <Box sx={styles.optionContent}>
+                      <Typography variant="bodyMedium">{option.name || option.email}</Typography>
+                      {option.name && (
+                        <Typography
+                          variant="bodySmall"
+                          color="text.secondary"
+                        >
+                          {option.email}
+                        </Typography>
+                      )}
+                    </Box>
                   </Box>
-                </li>
-              )}
+                );
+              }}
             />
           </Box>
           <Box sx={styles.fieldWrapper}>
