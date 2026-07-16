@@ -16,6 +16,7 @@ export * from './project';
 export * from './search';
 export * from './secrets';
 export * from '@/[fsd]/features/skill/api';
+export * from '@/[fsd]/features/skill-hub/api';
 export * from './social';
 export * from './tags';
 export * from './toolkits';

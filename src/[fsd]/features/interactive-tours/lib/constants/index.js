@@ -10,8 +10,15 @@ export {
 } from '@/[fsd]/features/interactive-tours/lib/constants/applicationsTourTargets.constants.js';
 export { ANALYTICS_TOUR_COMPLETION, ANALYTICS_TOUR_ID, analyticsTourSteps } from './analyticsTour.constants';
 export { ANALYTICS_TOUR_TARGET_IDS, ANALYTICS_TOUR_TARGETS } from './analyticsTourTargets.constants.js';
-export { AGENT_HUB_TOUR_COMPLETION, AGENT_HUB_TOUR_ID, agentHubTourSteps } from './agentHubTour.constants';
-export { AGENT_HUB_TOUR_TARGET_IDS, AGENT_HUB_TOUR_TARGETS } from './agentHubTourTargets.constants.js';
+export {
+  ELITEA_CATALOG_TOUR_COMPLETION,
+  ELITEA_CATALOG_TOUR_ID,
+  eliteaCatalogTourSteps,
+} from './eliteaCatalogTour.constants';
+export {
+  ELITEA_CATALOG_TOUR_TARGET_IDS,
+  ELITEA_CATALOG_TOUR_TARGETS,
+} from './eliteaCatalogTourTargets.constants.js';
 export {
   AI_CONFIG_TOUR_COMPLETION,
   AI_CONFIG_TOUR_ID,

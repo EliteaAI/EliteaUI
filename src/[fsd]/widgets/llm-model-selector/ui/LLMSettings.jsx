@@ -107,7 +107,9 @@ const LLMSettings = memo(props => {
   }, [llmSettings?.max_tokens, maxTokens]);
 
   const initializeDefaultLLMSettings = useCallback(() => {
-    if (isNullOrUndefined(llmSettings.temperature)) {
+    // Temperature and reasoning_effort are mutually exclusive by model family — a reasoning
+    // model rejects a custom temperature (issue #5859), so only seed one of the two.
+    if (!model?.supports_reasoning && isNullOrUndefined(llmSettings.temperature)) {
       onChangeLLMSettings(PROMPT_PAYLOAD_KEY.temperature)(DEFAULT_TEMPERATURE);
     }
     // Only set default for max_tokens if it's undefined (not set), not if it's DEFAULT_MAX_TOKENS (auto mode)

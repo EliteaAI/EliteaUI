@@ -15,6 +15,17 @@ const getRedirectUri = () => {
   return `${baseUrl}${basename}${RouteDefinitions.McpAuthPage}`;
 };
 
+// Detect Microsoft Entra (Azure AD) authorization endpoints across public and sovereign clouds.
+// Covers login.microsoftonline.com/.us/.de, login.microsoft.com, and login.windows.net.
+const isMicrosoftEntraEndpoint = authorizationEndpoint => {
+  const endpoint = (authorizationEndpoint || '').toLowerCase();
+  return (
+    endpoint.includes('login.microsoftonline.') ||
+    endpoint.includes('login.microsoft.com') ||
+    endpoint.includes('login.windows.net')
+  );
+};
+
 const resolveCredentials = (serverUrl, tokenInfo) => {
   const savedCredentials = McpAuthHelpers.getSavedCredentials(serverUrl);
   return {
@@ -436,7 +447,11 @@ export const startMcpAuthFlow = async options => {
       // and issues a token with old scopes even after app permissions are updated.
       // Only set for OIDC servers — non-OIDC OAuth servers (GitHub, GitLab, etc.)
       // don't define the prompt parameter and may reject it.
-      prompt: isOIDC ? 'consent' : undefined,
+      // Exception: skip on Microsoft Entra (SharePoint, MS Graph, etc.) because
+      // prompt=consent triggers the admin-approval screen for non-admin users
+      // even when tenant-wide admin consent already exists. Entra natively
+      // re-prompts on scope drift, so forced re-consent is redundant there.
+      prompt: isOIDC && !isMicrosoftEntraEndpoint(authorizationEndpoint) ? 'consent' : undefined,
     };
     // Build authorization URL
     const authUrl = buildAuthorizationUrl(buildingOptions);

@@ -21,7 +21,7 @@ const AgentConversationStarters = memo(props => {
         variant="subtitle"
         sx={styles.header}
       >
-        CONVERSATION STARTERS
+        CHAT STARTERS
       </Typography>
       {filteredStarters.length > 0 ? (
         <Box sx={styles.startersGrid(filteredStarters.length === 1)}>
