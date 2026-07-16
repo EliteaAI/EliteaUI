@@ -12,7 +12,14 @@ import PublishIcon from '@/assets/publish-version.svg?react';
 import PinIcon from '@/components/Icons/PinIcon';
 
 const SkillTabBar = memo(props => {
-  const { versions = [], currentVersionId, defaultVersionId, onChangeVersion, onSuccess, handleSetDefaultVersion = null } = props;
+  const {
+    versions = [],
+    currentVersionId,
+    defaultVersionId,
+    onChangeVersion,
+    onSuccess,
+    handleSetDefaultVersion = null,
+  } = props;
 
   const styles = skillTabBarStyles();
 
@@ -32,9 +39,7 @@ const SkillTabBar = memo(props => {
       if (b.name === LATEST_VERSION_NAME) return -1;
       return new Date(b.created_at) - new Date(a.created_at);
     });
-    return sorted.map(
-      buildVersionOption({ defaultVersionID: effectiveDefaultId, handleSetDefaultVersion }),
-    );
+    return sorted.map(buildVersionOption({ defaultVersionID: effectiveDefaultId, handleSetDefaultVersion }));
   }, [versions, effectiveDefaultId, handleSetDefaultVersion]);
 
   const selectedVersionId = useMemo(
@@ -52,9 +57,14 @@ const SkillTabBar = memo(props => {
     [onChangeVersion, selectedVersionId],
   );
 
+  const publishedVersionIds = useMemo(
+    () => new Set(versions.filter(v => v.status === 'published').map(v => v.id)),
+    [versions],
+  );
+
   const renderVersionValue = useCallback(
     option => {
-      const isPublished = versions.find(v => v.id === option?.value)?.status === 'published';
+      const isPublished = publishedVersionIds.has(option?.value);
 
       return (
         <Box sx={styles.selectValueContainer}>
@@ -68,7 +78,7 @@ const SkillTabBar = memo(props => {
         </Box>
       );
     },
-    [versions, effectiveDefaultId, styles.selectValueContainer, styles.publishedIcon],
+    [publishedVersionIds, effectiveDefaultId, styles.selectValueContainer, styles.publishedIcon],
   );
 
   return (
