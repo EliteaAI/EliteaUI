@@ -99,7 +99,7 @@ const ArtifactTableToolbar = memo(props => {
         {isManagingAccess ? (
           <>
             {accessManagementControls}
-            {bucket && (
+            {!isPersonalProject && bucket && (
               <Tooltip
                 title="Back to files"
                 placement="top"
@@ -140,7 +140,7 @@ const ArtifactTableToolbar = memo(props => {
               onChange={handleFileChange}
             />
 
-            {!isPersonalProject && bucket && checkPermission(PERMISSIONS.artifacts.buckets.update) && (
+            {!isPersonalProject && bucket && (
               <Tooltip
                 title="Manage access"
                 placement="top"
