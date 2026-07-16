@@ -32,9 +32,8 @@ const SkillHubModalMenu = memo(props => {
   }, [doExport, skillId, versionId, skillName]);
 
   const onFork = useCallback(() => {
-    if (openWizard) return;
     doFork({ skillId, versionId, skillName });
-  }, [openWizard, doFork, skillId, versionId, skillName]);
+  }, [doFork, skillId, versionId, skillName]);
 
   const menuItems = useMemo(
     () => [

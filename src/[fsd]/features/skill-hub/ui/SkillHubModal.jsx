@@ -38,10 +38,7 @@ const SkillHubModal = memo(props => {
   const styles = skillHubModalStyles();
   const [isAttachOpen, setIsAttachOpen] = useState(false);
 
-  const { data: skillDetails } = useGetPublicSkillDetailsQuery(
-    { projectId: PUBLIC_PROJECT_ID, skillId: skill?.id },
-    { skip: !skill?.id },
-  );
+  const { data: skillDetails } = useGetPublicSkillDetailsQuery({ skillId: skill?.id }, { skip: !skill?.id });
 
   const cardAuthors = useMemo(() => getCardAuthors(skill, skillDetails), [skill, skillDetails]);
   const name = useMemo(() => skill?.name || skillDetails?.name || 'Untitled Skill', [skill, skillDetails]);

@@ -149,19 +149,21 @@ const AttachToAgentDialog = memo(props => {
             `The skill was added to ${okResults.length} ${agentWord(okResults.length)}. ${alreadyResults.length} already had it.`,
           );
         }
-        return true;
+        return [];
       }
+
+      const failedAgents = failedResults.map(r => byVersionId.get(r.agent_version_id)).filter(Boolean);
 
       // Some genuine failures — nothing usable got through.
       if (okResults.length === 0 && alreadyResults.length === 0) {
         toastError(`The skill was not added to ${attemptedCount} ${agentWord(attemptedCount)}.`);
-        return false;
+        return failedAgents;
       }
 
       toastWarning(
         `The skill was added only to ${okResults.length} of ${attemptedCount} ${agentWord(attemptedCount)}.\nFailed to add to:\n${bulletList(failedResults)}`,
       );
-      return false;
+      return failedAgents;
     },
     [toastSuccess, toastError, toastWarning, toastInfo],
   );
@@ -170,8 +172,13 @@ const AttachToAgentDialog = memo(props => {
     if (!canAdd || isAttaching) return;
     try {
       const response = await attachPublicSkill(buildAttachArgs(selectedAgents)).unwrap();
-      const allOk = notifyResult(selectedAgents, response?.results || []);
-      if (allOk) onClose?.();
+      const failedAgents = notifyResult(selectedAgents, response?.results || []);
+      if (failedAgents.length === 0) {
+        onClose?.();
+      } else {
+        // Keep only the failed agents selected so a retry targets just those.
+        setSelectedAgents(failedAgents);
+      }
     } catch {
       toastError(`The skill was not added to ${selectedAgents.length} ${agentWord(selectedAgents.length)}.`);
     }
@@ -203,17 +210,15 @@ const AttachToAgentDialog = memo(props => {
           starter: '',
         }),
       );
-      setTimeout(() => {
-        navigate(
-          { pathname: RouteDefinitions.Chat, search: 'create=1' },
-          {
-            replace: false,
-            state: {
-              routeStack: [{ breadCrumb: 'Chat', viewMode: ViewMode.Owner, pagePath: RouteDefinitions.Chat }],
-            },
+      navigate(
+        { pathname: RouteDefinitions.Chat, search: 'create=1' },
+        {
+          replace: false,
+          state: {
+            routeStack: [{ breadCrumb: 'Chat', viewMode: ViewMode.Owner, pagePath: RouteDefinitions.Chat }],
           },
-        );
-      }, 0);
+        },
+      );
     },
     [dispatch, projectId, navigate],
   );
@@ -223,8 +228,8 @@ const AttachToAgentDialog = memo(props => {
     const [agent] = selectedAgents;
     try {
       const response = await attachPublicSkill(buildAttachArgs(selectedAgents)).unwrap();
-      const allOk = notifyResult(selectedAgents, response?.results || []);
-      if (allOk) {
+      const failedAgents = notifyResult(selectedAgents, response?.results || []);
+      if (failedAgents.length === 0) {
         onClose?.();
         navigateToChatWithAgent(agent);
       }

@@ -1,11 +1,14 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useLocation, useSearchParams } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
-import { SkillHubContext } from '@/[fsd]/app/providers';
-import { ELITEA_CATALOG_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
+import { SkillHubContext, useInteractiveTour } from '@/[fsd]/app/providers';
+import {
+  ELITEA_CATALOG_TOUR_ID,
+  ELITEA_CATALOG_TOUR_TARGET_IDS,
+} from '@/[fsd]/features/interactive-tours/lib/constants';
 import { SkillHubConstants } from '@/[fsd]/features/skill-hub/lib/constants';
 import { SkillHubHelpers } from '@/[fsd]/features/skill-hub/lib/helpers';
 import { useSkillHubData } from '@/[fsd]/features/skill-hub/lib/hooks';
@@ -23,6 +26,10 @@ const SkillsTab = memo(props => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
+  const tour = useInteractiveTour();
+  const modalOpenedByTourRef = useRef(false);
+  // Auto-open once per step activation: a manual close must not re-trigger it.
+  const tourAutoOpenedRef = useRef(false);
 
   useEffect(() => {
     const skillId = searchParams.get(SkillHubConstants.SKILL_ID);
@@ -67,17 +74,18 @@ const SkillsTab = memo(props => {
   }, []);
 
   const handleCloseModal = useCallback(() => {
+    modalOpenedByTourRef.current = false;
     setIsModalOpen(false);
     setSelectedSkill(null);
   }, []);
 
   const updateSkillInStateAndModal = useCallback(
-    (skillId, updateFn) => {
-      updateSkillInState(skillId, updateFn);
+    (skillId, patch) => {
+      updateSkillInState(skillId, patch);
 
       setSelectedSkill(prev => {
         if (prev && prev.id === skillId) {
-          return updateFn(prev);
+          return { ...prev, ...patch };
         }
         return prev;
       });
@@ -92,6 +100,46 @@ const SkillsTab = memo(props => {
     null,
     { isSearchDisabled: true, isSortDisabled: true },
   );
+
+  const firstVisibleSkill = useMemo(() => {
+    for (const category of allCategories) {
+      const firstItem = groupedItems?.[category]?.find(item => item?.value);
+
+      if (firstItem?.value) {
+        return firstItem.value;
+      }
+    }
+
+    return null;
+  }, [allCategories, groupedItems]);
+
+  // Mirror AgentsTab: the "using-catalog-entities" tour step highlights the
+  // primary action inside the detail modal, so open the first visible skill
+  // for it and close it again when the step ends.
+  const isStartingConversationStep = useMemo(
+    () => tour?.tourId === ELITEA_CATALOG_TOUR_ID && tour?.currentStep?.id === 'using-catalog-entities',
+    [tour?.currentStep?.id, tour?.tourId],
+  );
+
+  useEffect(() => {
+    if (isStartingConversationStep) {
+      if (!tourAutoOpenedRef.current && !isModalOpen && !selectedSkill && firstVisibleSkill) {
+        tourAutoOpenedRef.current = true;
+        modalOpenedByTourRef.current = true;
+        setSelectedSkill(firstVisibleSkill);
+        setIsModalOpen(true);
+      }
+
+      return;
+    }
+
+    tourAutoOpenedRef.current = false;
+    if (modalOpenedByTourRef.current) {
+      modalOpenedByTourRef.current = false;
+      setIsModalOpen(false);
+      setSelectedSkill(null);
+    }
+  }, [firstVisibleSkill, isModalOpen, isStartingConversationStep, selectedSkill]);
 
   const handleTagSelect = useCallback(
     category => {

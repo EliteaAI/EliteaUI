@@ -46,6 +46,6 @@ Switch between the **Agents** and **Skills** tabs to browse, preview, and reuse 
     target: ELITEA_CATALOG_TOUR_TARGETS.primaryActionButton,
     placement: 'left',
     title: 'Using an Agent or Skill',
-    content: `From an agent's detail view, click **Start conversation** to open a chat with the agent already added. From a skill's detail view, click **Add to Agent** to attach the skill to one or more of your agents — and optionally test it in Chat right away.`,
+    content: `From an agent's detail view, click **Start Chat** to open a chat with the agent already added. From a skill's detail view, click **Add to Agent** to attach the skill to one or more of your agents — and optionally test it in Chat right away.`,
   },
 ];

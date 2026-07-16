@@ -40,12 +40,11 @@ const SkillHubLike = memo(props => {
       const currentLikes = current?.likes ?? current?.likes_count ?? 0;
       const newLikesCount = SkillHubHelpers.calculateNewLikesCount(0, nextLiked, currentLikes);
 
-      updateSkillInState?.(id, skill => ({
-        ...skill,
+      updateSkillInState?.(id, {
         is_liked: nextLiked,
         likes: newLikesCount,
         likes_count: newLikesCount,
-      }));
+      });
 
       if (nextLiked) {
         addToMyLiked?.({ ...current, is_liked: true, likes: newLikesCount, likes_count: newLikesCount });

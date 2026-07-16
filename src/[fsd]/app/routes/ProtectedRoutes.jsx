@@ -83,6 +83,19 @@ const UserSettings = ChunkHelpers.lazyWithRetry(() => import('@/pages/UserSettin
 
 let userInfoTimer = undefined;
 
+// Reads location at render time so the memoized route table does not need to
+// be re-created on every navigation just for this redirect.
+const LegacyCatalogRedirect = () => {
+  const location = useLocation();
+  return (
+    <Navigate
+      to={RouteDefinitions.EliteaCatalog + location.search}
+      state={location.state}
+      replace
+    />
+  );
+};
+
 const ProtectedRoutes = () => {
   const location = useLocation();
   const dispatch = useDispatch();
@@ -159,16 +172,7 @@ const ProtectedRoutes = () => {
       { path: RouteDefinitions.Onboarding, element: <Onboarding /> },
       { path: RouteDefinitions.HelpCenter, element: <Resources /> },
       { path: RouteDefinitions.EliteaCatalog, element: <EliteaCatalog /> },
-      {
-        path: RouteDefinitions.AgentHub,
-        element: (
-          <Navigate
-            to={RouteDefinitions.EliteaCatalog + location.search}
-            state={location.state}
-            replace
-          />
-        ),
-      },
+      { path: RouteDefinitions.AgentHub, element: <LegacyCatalogRedirect /> },
 
       /* chat */
       { path: RouteDefinitions.Chat, element: <ChatWrapper /> },
@@ -257,7 +261,7 @@ const ProtectedRoutes = () => {
       // MCP OAuth callback
       { path: RouteDefinitions.McpAuthPage, element: <McpAuthPage /> },
     ],
-    [getIndexElement, location.search, location.state],
+    [getIndexElement],
   );
 
   return (
