@@ -50,7 +50,7 @@ const SkillHubModal = memo(props => {
     [skill, skillDetails],
   );
   const icon_meta = useMemo(
-    () => skill?.icon_meta || skillDetails?.version_details?.icon_meta,
+    () => skill?.icon_meta || skillDetails?.icon_meta || skillDetails?.version_details?.meta?.icon_meta,
     [skill, skillDetails],
   );
   const instructions = useMemo(() => skillDetails?.version_details?.instructions || '', [skillDetails]);
