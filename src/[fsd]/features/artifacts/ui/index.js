@@ -13,3 +13,4 @@ export {
   EditBucketUserDialog,
   BulkEditBucketUsersDialog,
 } from './bucket-access';
+export { default as MdxPreview } from './FilePreviewCanvas/MdxPreview';

@@ -13,6 +13,7 @@ export const AvailableLanguagesEnum = {
   IMAGE: 'image',
   DOCX: 'docx',
   HTML: 'html',
+  MDX: 'mdx',
 };
 
 export const AvailableFormatsEnum = {
@@ -26,4 +27,5 @@ export const AvailableFormatsEnum = {
   DOCX: 'docx',
   HTML: 'html',
   HTM: 'htm',
+  MDX: 'mdx',
 };
