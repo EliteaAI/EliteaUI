@@ -179,6 +179,36 @@ const MdxPreview = memo(props => {
         />
       ),
       Divider: () => <Divider sx={styles.mdxDivider} />,
+      // eslint-disable-next-line no-unused-vars
+      table: ({ node: _n, ...tableProps }) => (
+        <Box
+          component="table"
+          sx={styles.table}
+          {...tableProps}
+        />
+      ),
+      // eslint-disable-next-line no-unused-vars
+      thead: ({ node: _n, ...theadProps }) => <thead {...theadProps} />,
+      // eslint-disable-next-line no-unused-vars
+      tbody: ({ node: _n, ...tbodyProps }) => <tbody {...tbodyProps} />,
+      // eslint-disable-next-line no-unused-vars
+      tr: ({ node: _n, ...trProps }) => <tr {...trProps} />,
+      // eslint-disable-next-line no-unused-vars
+      th: ({ node: _n, ...thProps }) => (
+        <Box
+          component="th"
+          sx={styles.th}
+          {...thProps}
+        />
+      ),
+      // eslint-disable-next-line no-unused-vars
+      td: ({ node: _n, ...tdProps }) => (
+        <Box
+          component="td"
+          sx={styles.td}
+          {...tdProps}
+        />
+      ),
     }),
     [styles],
   );
@@ -360,7 +390,6 @@ const mdxPreviewStyles = () => ({
   paragraph: {
     marginBlockStart: '0rem',
     marginBottom: '0.8em',
-    whiteSpace: 'pre-wrap',
   },
 
   inline: {
@@ -450,6 +479,29 @@ const mdxPreviewStyles = () => ({
   mdxDivider: {
     my: '0.75rem',
   },
+
+  table: {
+    borderCollapse: 'collapse',
+    marginBottom: '0.8em',
+    width: '100%',
+    fontSize: '0.875rem',
+  },
+
+  th: ({ palette }) => ({
+    border: `0.0625rem solid ${palette.border.lines}`,
+    padding: '0.375rem 0.5rem',
+    textAlign: 'left',
+    fontWeight: 600,
+    backgroundColor: palette.background.tabPanel,
+    verticalAlign: 'bottom',
+  }),
+
+  td: ({ palette }) => ({
+    border: `0.0625rem solid ${palette.border.lines}`,
+    padding: '0.375rem 0.5rem',
+    textAlign: 'left',
+    verticalAlign: 'top',
+  }),
 });
 
 export default MdxPreview;

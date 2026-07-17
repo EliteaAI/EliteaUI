@@ -1,6 +1,5 @@
 export const stripMdxMetadata = source => {
   let processed = source;
-  processed = processed.replace(/^---[\s\S]*?---\s*/m, '');
   processed = processed.replace(/^import\s[^;]*?['"][^'"]*['"]\s*;?\s*$/gm, '');
   return processed.trim();
 };
