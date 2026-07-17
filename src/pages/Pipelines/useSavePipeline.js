@@ -12,11 +12,6 @@ export default function useSavePipeline() {
   const { nodes, edges } = useSelector(state => state.pipelineEditor);
   const { yamlCode, yamlJsonObject, initState } = useSelector(state => state.pipeline);
 
-  // Determine if we're editing a pipeline:
-  // - initState covers existing pipelines even when the user has deleted all nodes (initState
-  //   holds the original loaded data and won't empty out during editing).
-  // - yamlJsonObject covers new pipelines being built from scratch (initState is empty until
-  //   after the first save/load).
   const hasPipelineData =
     initState.yamlJsonObject?.nodes?.length > 0 ||
     initState.yamlCode?.length > 0 ||
