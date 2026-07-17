@@ -17,3 +17,6 @@ export { default as IndexesList } from './IndexesList';
 
 // Main container
 export { default as IndexesContainer } from './IndexesContainer';
+
+// Headless reindex runner
+export { default as HeadlessReindexRunner } from './HeadlessReindexRunner';

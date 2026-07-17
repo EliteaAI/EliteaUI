@@ -116,7 +116,7 @@ export const BreadCrumbMap = {
   [RouteDefinitions.CreateApplication]: 'Agents',
   [RouteDefinitions.CreateSkill]: 'Skills',
   [RouteDefinitions.CreatePipeline]: 'Pipelines',
-  [RouteDefinitions.CreateToolkit]: 'Toolkits',
+  [RouteDefinitions.CreateToolkit]: 'Toolkits & Indexes',
   [RouteDefinitions.CreateApp]: 'Apps',
   [RouteDefinitions.CreateCredentialFromMain]: 'Credentials',
   [RouteDefinitions.CreateBucket]: 'Artifacts',

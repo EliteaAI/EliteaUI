@@ -46,7 +46,7 @@ const IndexHistory = memo(props => {
   );
 
   const sortedHistory = useMemo(
-    () => getSortedData(history, sortFunctions),
+    () => getSortedData(history, sortFunctions).filter(item => Boolean(IndexHistoryItemsLabels[item.state])),
     [history, getSortedData, sortFunctions],
   );
 

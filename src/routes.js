@@ -32,6 +32,9 @@ const RouteDefinitions = {
   CreateToolkit: '/toolkits/create',
   CreateToolkitType: '/toolkits/create/:toolkitType',
   ToolkitDetail: '/toolkits/:tab/:toolkitId',
+  ToolkitIndexNew: '/toolkits/:tab/:toolkitId/index/new',
+  ToolkitIndex: '/toolkits/:tab/:toolkitId/index/:indexName',
+  ToolkitIndexHistory: '/toolkits/:tab/:toolkitId/index/:indexName/history',
 
   Apps: '/apps',
   AppsApplications: '/apps/applications',
@@ -125,7 +128,7 @@ export const PathSessionMap = {
   [RouteDefinitions.Applications]: 'Agents',
   [RouteDefinitions.Skills]: 'Skills',
   [RouteDefinitions.Pipelines]: 'Pipelines',
-  [RouteDefinitions.Toolkits]: 'Toolkits',
+  [RouteDefinitions.Toolkits]: 'Toolkits & Indexes',
   [RouteDefinitions.Apps]: 'Apps',
   [RouteDefinitions.Credentials]: 'Credentials',
   [RouteDefinitions.HelpCenter]: 'Help Center',

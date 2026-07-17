@@ -134,11 +134,11 @@ const SidebarBody = memo(props => {
         },
         {
           value: 'toolkits',
-          label: 'Toolkits',
+          label: 'Toolkits & Indexes',
           icon: <ToolIcon />,
           url: RouteDefinitions.Toolkits,
-          breadCrumb: 'Toolkits',
-          tooltip: 'Toolkits',
+          breadCrumb: 'Toolkits & Indexes',
+          tooltip: 'Toolkits & Indexes',
           tourId: SIDEBAR_TOUR_TARGET_IDS.navToolkits,
         },
         {
