@@ -38,6 +38,16 @@ const styles = {
   select: {
     width: '100%',
   },
+  optionItem: ({ palette }) => ({
+    padding: '0.5rem 1rem',
+    borderBottom: `1px solid ${palette.border.lines}`,
+    '&:last-child': {
+      borderBottom: 'none',
+    },
+    '&:hover': {
+      backgroundColor: palette.background.participant?.hover || palette.action.hover,
+    },
+  }),
   optionContent: {
     display: 'flex',
     flexDirection: 'column',
@@ -147,6 +157,7 @@ const AddBucketUserDialog = memo(props => {
                     component="li"
                     key={key}
                     {...otherOptionProps}
+                    sx={styles.optionItem}
                   >
                     <Box sx={styles.optionContent}>
                       <Typography variant="bodyMedium">{option.name || option.email}</Typography>
