@@ -502,7 +502,7 @@ const BucketAccessTable = memo(props => {
           <GridTableContainer
             isLoading={false}
             isEmpty={paginatedUsers.length === 0}
-            emptyMessage="No users with access to this bucket"
+            emptyMessage="All project users have access to this bucket"
           >
             <GridTableHeader
               columns={visibleColumns}
