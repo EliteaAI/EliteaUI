@@ -159,6 +159,21 @@ export const useSkillHubData = (query, selectedTagNames) => {
     [fetchSkills, query, setLoading, updateSkillData],
   );
 
+  const fetchCategoryScoped = useCallback(
+    async categoryName => {
+      const result = await fetchSkills({
+        page: 0,
+        pageSize: ALL_SKILLS_LIMIT,
+        params: { query, category: categoryName },
+      }).unwrap();
+
+      if (result?.rows) {
+        updateSkillData(categoryName, 0, result.rows, result.rows.length);
+      }
+    },
+    [fetchSkills, query, updateSkillData],
+  );
+
   const resetSearchByTag = useCallback(() => {
     dispatch(skillHubActions.clearCache());
   }, [dispatch]);
@@ -286,13 +301,13 @@ export const useSkillHubData = (query, selectedTagNames) => {
         } else if (categoryName === SkillHubConstants.MY_LIKED_CATEGORY) {
           await fetchMyLikedSkills(0);
         } else {
-          await fetchAllAndCategorize(categoryNames);
+          await fetchCategoryScoped(categoryName);
         }
       } finally {
         setRefreshing(categoryName, false);
       }
     },
-    [categoryNames, setRefreshing, fetchTrendingSkills, fetchMyLikedSkills, fetchAllAndCategorize],
+    [setRefreshing, fetchTrendingSkills, fetchMyLikedSkills, fetchCategoryScoped],
   );
 
   return {

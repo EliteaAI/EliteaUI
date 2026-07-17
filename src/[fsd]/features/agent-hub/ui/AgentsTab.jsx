@@ -60,6 +60,7 @@ const AgentsTab = memo(props => {
     updateApplicationInState,
     addToMyLiked,
     removeFromMyLiked,
+    onRefresh,
   } = useAgentHubData(debouncedQuery, selectedTagNames);
 
   const allCategories = useMemo(() => AgentHubHelpers.buildAllCategories(categoryNames), [categoryNames]);
@@ -139,10 +140,11 @@ const AgentsTab = memo(props => {
           isLoadingMore={loadingTags.has(category)}
           onSelectItem={handleApplicationSelect}
           onLoadMore={handleLoadMore}
+          onRefresh={onRefresh}
         />
       );
     },
-    [handleApplicationSelect, handleLoadMore, loadingTags, refreshingTags, totalCountsByTag],
+    [handleApplicationSelect, handleLoadMore, loadingTags, onRefresh, refreshingTags, totalCountsByTag],
   );
 
   const renderNoResults = useCallback(
