@@ -1,36 +1,20 @@
-import React, { memo, useEffect, useMemo, useState } from 'react';
+import React, { memo, useMemo } from 'react';
 
-import { Alert, Box, Chip, CircularProgress, Divider, Link, Paper, Typography } from '@mui/material';
+import { Box, Chip, CircularProgress, Divider, Link, Paper, Typography } from '@mui/material';
 
 import { typographyVariants } from '@/MainTheme';
+import { MdxStatus } from '@/[fsd]/features/artifacts/lib/constants/previewMdx.constants';
+import { useMdxEvaluator } from '@/[fsd]/features/artifacts/lib/hooks';
+import MdxAlert from '@/[fsd]/features/artifacts/ui/FilePreviewCanvas/MdxAlert';
 import Markdown from '@/[fsd]/shared/ui/markdown';
-
-const preprocessMdx = source => {
-  let processed = source;
-  processed = processed.replace(/^---[\s\S]*?---\s*/m, '');
-  processed = processed.replace(/^import\s[^;]*?['"][^'"]*['"]\s*;?\s*$/gm, '');
-  return processed.trim();
-};
-
-const evaluateMdx = async source => {
-  const processed = preprocessMdx(source);
-  const [{ evaluate }, runtime, { default: remarkGfm }] = await Promise.all([
-    import('@mdx-js/mdx'),
-    import('react/jsx-runtime'),
-    import('remark-gfm'),
-  ]);
-  const { default: MDXContent } = await evaluate(processed, {
-    ...runtime,
-    remarkPlugins: [remarkGfm],
-    development: false,
-  });
-  return MDXContent;
-};
 
 const MdxPreview = memo(props => {
   const { mdxContent } = props;
 
   const styles = mdxPreviewStyles();
+
+  const isEmpty = useMemo(() => !mdxContent || !mdxContent.trim(), [mdxContent]);
+  const state = useMdxEvaluator(isEmpty ? '' : mdxContent);
 
   const mdxComponents = useMemo(
     () => ({
@@ -138,52 +122,45 @@ const MdxPreview = memo(props => {
         );
       },
       Alert: alertProps => (
-        <Alert
-          severity={alertProps.severity || 'info'}
+        <MdxAlert
+          alertProps={alertProps}
           sx={styles.mdxAlert}
-        >
-          {alertProps.children}
-        </Alert>
+        />
       ),
       Callout: calloutProps => (
-        <Alert
-          severity={calloutProps.type || 'info'}
+        <MdxAlert
+          alertProps={calloutProps}
+          defaultSeverity="info"
+          severityProp="type"
           sx={styles.mdxAlert}
-        >
-          {calloutProps.children}
-        </Alert>
+        />
       ),
       Note: noteProps => (
-        <Alert
-          severity="info"
+        <MdxAlert
+          alertProps={noteProps}
           sx={styles.mdxAlert}
-        >
-          {noteProps.children}
-        </Alert>
+        />
       ),
       Warning: warningProps => (
-        <Alert
-          severity="warning"
+        <MdxAlert
+          alertProps={warningProps}
+          defaultSeverity="warning"
           sx={styles.mdxAlert}
-        >
-          {warningProps.children}
-        </Alert>
+        />
       ),
       Tip: tipProps => (
-        <Alert
-          severity="success"
+        <MdxAlert
+          alertProps={tipProps}
+          defaultSeverity="success"
           sx={styles.mdxAlert}
-        >
-          {tipProps.children}
-        </Alert>
+        />
       ),
       Danger: dangerProps => (
-        <Alert
-          severity="error"
+        <MdxAlert
+          alertProps={dangerProps}
+          defaultSeverity="error"
           sx={styles.mdxAlert}
-        >
-          {dangerProps.children}
-        </Alert>
+        />
       ),
       Card: cardProps => (
         <Paper
@@ -206,27 +183,6 @@ const MdxPreview = memo(props => {
     [styles],
   );
 
-  const [state, setState] = useState({ status: 'idle', Component: null, error: null });
-
-  const isEmpty = useMemo(() => !mdxContent || !mdxContent.trim(), [mdxContent]);
-
-  useEffect(() => {
-    if (isEmpty) {
-      setState({ status: 'idle', Component: null, error: null });
-      return;
-    }
-
-    setState({ status: 'loading', Component: null, error: null });
-
-    evaluateMdx(mdxContent)
-      .then(Component => {
-        setState({ status: 'success', Component, error: null });
-      })
-      .catch(err => {
-        setState({ status: 'error', Component: null, error: err?.message || String(err) });
-      });
-  }, [mdxContent, isEmpty]);
-
   if (isEmpty) {
     return (
       <Box sx={styles.fallbackWrapper}>
@@ -246,7 +202,7 @@ const MdxPreview = memo(props => {
     );
   }
 
-  if (state.status === 'loading') {
+  if (state.status === MdxStatus.LOADING) {
     return (
       <Box sx={styles.loaderWrapper}>
         <CircularProgress
@@ -263,7 +219,7 @@ const MdxPreview = memo(props => {
     );
   }
 
-  if (state.status === 'error') {
+  if (state.status === MdxStatus.ERROR) {
     return (
       <Box sx={styles.wrapper}>
         <Box sx={styles.warningBanner}>
@@ -281,7 +237,7 @@ const MdxPreview = memo(props => {
     );
   }
 
-  if (state.status === 'success' && state.Component) {
+  if (state.status === MdxStatus.SUCCESS && state.Component) {
     const MDXContent = state.Component;
     return (
       <Box sx={styles.markdownWrapper}>
