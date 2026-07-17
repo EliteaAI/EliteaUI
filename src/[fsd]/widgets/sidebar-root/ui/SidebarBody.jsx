@@ -279,6 +279,7 @@ const SidebarBody = memo(props => {
         <Box sx={styles.bottomSection}>
           <Box sx={styles.section}>
             <Buttons.SettingsButton navigateToPage={navigateToPage} />
+            <Divider sx={styles.catalogDivider} />
             <Buttons.AgentHubButton />
           </Box>
         </Box>
@@ -333,7 +334,6 @@ const sideBarBodyStyles = (sideBarCollapsed, socketStatus) => ({
     flexDirection: 'column',
     overflowY: 'auto',
     overflowX: 'hidden',
-    paddingBottom: '1.25rem',
   },
   header: {
     display: 'flex',
@@ -359,6 +359,10 @@ const sideBarBodyStyles = (sideBarCollapsed, socketStatus) => ({
   },
   divider: ({ palette }) => ({
     borderColor: palette.border.sidebarDivider,
+  }),
+  catalogDivider: ({ palette }) => ({
+    borderColor: palette.border.sidebarDivider,
+    marginInline: '-1rem',
   }),
   createSection: {
     padding: '0.75rem 1rem',
