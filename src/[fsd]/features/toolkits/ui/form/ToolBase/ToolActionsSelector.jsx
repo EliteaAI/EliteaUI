@@ -106,6 +106,7 @@ export const ToolActionsSelector = memo(props => {
               summaryAction:
                 isRemoteMcp || isPreconfiguredMcp ? (
                   <Typography
+                    data-testid="toolkit-load-tools-button"
                     variant="labelSmall"
                     sx={styles.syncButton(!canGetTools || isFetchingTools)}
                     onClick={onClickGetTools}

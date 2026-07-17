@@ -125,6 +125,7 @@ const TestToolSettings = memo(props => {
         </Box>
         <Box sx={styles.toolSelectContainer}>
           <Select.SingleSelect
+            data-testid="toolkit-test-tool-select"
             value={selectedTool}
             label="Tool"
             onValueChange={onChangeTool}

@@ -5,9 +5,10 @@ import Chip from '@mui/material/Chip';
 import CheckedIcon from '@/assets/checked-icon.svg?react';
 
 const ChipWithCheckIcon = memo(
-  ({ isSelected, label, icon, clickable = true, onClick, sx = {}, warning = false }) => {
+  ({ isSelected, label, icon, clickable = true, onClick, sx = {}, warning = false, testId }) => {
     return (
       <Chip
+        data-testid={testId}
         clickable={clickable}
         // disableRipple
         sx={[styles.chipLabel(warning, isSelected, !clickable), sx]}
