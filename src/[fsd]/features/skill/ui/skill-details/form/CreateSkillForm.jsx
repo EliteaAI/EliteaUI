@@ -7,7 +7,7 @@ import { Box, Typography } from '@mui/material';
 import { GenerateSkillButton } from '@/[fsd]/features/skill/ui/generate-skill-modal';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { useFieldFocus } from '@/[fsd]/shared/lib/hooks';
-import { Field, Input, Markdown } from '@/[fsd]/shared/ui';
+import { Field, Input, Markdown, Text } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import TabGroupButton from '@/[fsd]/shared/ui/tab-group-button/TabGroupButton';
 import { useTagListQuery } from '@/api/tags.js';
@@ -193,12 +193,12 @@ const CreateSkillForm = memo(props => {
                       showExpandAction={false}
                     />
                     {isFocused(PROMPT_PAYLOAD_KEY.name) && name.length > 0 && (
-                      <Typography
-                        variant="bodySmall2"
+                      <Text.CharacterCounter
+                        value={name}
+                        maxLength={MAX_NAME_LENGTH}
+                        hideMaxLimitMessage
                         sx={styles.charactersLabel}
-                      >
-                        {`${MAX_NAME_LENGTH - name.length} characters left`}
-                      </Typography>
+                      />
                     )}
                   </Box>
                 </Box>
@@ -230,12 +230,12 @@ const CreateSkillForm = memo(props => {
                     fieldName="Description"
                   />
                   {isFocused(PROMPT_PAYLOAD_KEY.description) && formik.values?.description?.length > 0 && (
-                    <Typography
-                      variant="bodySmall"
+                    <Text.CharacterCounter
+                      value={formik.values.description}
+                      maxLength={MAX_DESCRIPTION_LENGTH}
+                      hideMaxLimitMessage
                       sx={styles.descriptionCharactersLabel}
-                    >
-                      {`${MAX_DESCRIPTION_LENGTH - formik.values.description.length} characters left`}
-                    </Typography>
+                    />
                   )}
                 </Box>
 
@@ -348,8 +348,8 @@ const skillCreateFormStyles = () => ({
   },
   nameContainer: {
     display: 'flex',
-    alignItems: 'center',
-    height: '4.25rem',
+    alignItems: 'baseline',
+    minHeight: '4.25rem',
     width: '100%',
     gap: '1rem',
   },
@@ -362,7 +362,6 @@ const skillCreateFormStyles = () => ({
   charactersLabel: {
     textAlign: 'right',
     width: '100%',
-    fontSize: '0.625rem',
     position: 'relative',
     top: '0.25rem',
   },
@@ -374,9 +373,8 @@ const skillCreateFormStyles = () => ({
   descriptionCharactersLabel: {
     textAlign: 'right',
     width: '100%',
-    fontSize: '0.625rem',
     position: 'relative',
-    top: '0.5rem',
+    top: '0.25rem',
   },
   summaryActions: {
     display: 'inline-flex',

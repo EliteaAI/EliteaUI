@@ -11,7 +11,7 @@ import { ArrayFieldInput } from '@/[fsd]/features/toolkits/ui/form/ToolBase';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { CodeMirrorLinterHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useFieldFocus } from '@/[fsd]/shared/lib/hooks';
-import { Checkbox, Field, Input } from '@/[fsd]/shared/ui';
+import { Checkbox, Field, Input, Text } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { SecretManagementInput } from '@/[fsd]/shared/ui/secret-field';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
@@ -638,12 +638,12 @@ const ToolBaseProperty = memo(props => {
             })}
           />
           {isFocused('label') && MAX_NAME_LENGTH === settings[k]?.length && (
-            <Typography
-              variant="bodySmall"
+            <Text.CharacterCounter
+              value={settings[k] || ''}
+              maxLength={MAX_NAME_LENGTH}
+              hideMaxLimitMessage
               sx={styles.nameLengthMessage}
-            >
-              {`0 is left from ${MAX_NAME_LENGTH} characters left`}
-            </Typography>
+            />
           )}
         </Box>
       );
@@ -686,10 +686,9 @@ const toolBasePropertyStyles = theme => ({
   },
   nameLengthMessage: {
     textAlign: 'right',
-    fontSize: '0.625rem',
-    position: 'absolute',
-    right: '0',
-    bottom: '2.75rem',
+    width: '100%',
+    position: 'relative',
+    top: '0.25rem',
   },
   infoIconWrapper: {
     display: 'inline-flex',
