@@ -2,6 +2,7 @@ import { forwardRef, memo, useCallback, useMemo, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 
+import GroupsIcon from '@mui/icons-material/Groups';
 import { Box, useTheme } from '@mui/material';
 
 import { useShareLink } from '@/[fsd]/shared/lib/hooks/useShareLink.hooks';
@@ -28,6 +29,7 @@ export const BucketItem = forwardRef((props, ref) => {
     onDelete,
     onSelect,
     onUpload,
+    onManageAccess,
     isNextItemHighlighted = false,
     onItemHover,
     isExpanded = false,
@@ -99,6 +101,18 @@ export const BucketItem = forwardRef((props, ref) => {
       if (onUpload && bucket.name) onUpload(bucket.name);
     },
     [onUpload, bucket.name],
+  );
+
+  const handleManageAccessClick = useCallback(
+    event => {
+      if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+      }
+
+      if (onManageAccess) onManageAccess(bucket);
+    },
+    [onManageAccess, bucket],
   );
 
   const onMouseMove = useCallback(
@@ -177,6 +191,12 @@ export const BucketItem = forwardRef((props, ref) => {
         display: isPersonalProject ? 'none' : undefined,
       },
       {
+        label: 'Manage access',
+        icon: <GroupsIcon sx={{ fontSize: '1rem', color: theme.palette.icon.fill.default }} />,
+        onClick: handleManageAccessClick,
+        display: isPersonalProject ? 'none' : undefined,
+      },
+      {
         label: 'Delete',
         icon: (
           <DeleteIcon
@@ -203,6 +223,7 @@ export const BucketItem = forwardRef((props, ref) => {
     handleEditBucket,
     handleShareBucket,
     handleUploadClick,
+    handleManageAccessClick,
     owner_id,
     userId,
     isPersonalProject,

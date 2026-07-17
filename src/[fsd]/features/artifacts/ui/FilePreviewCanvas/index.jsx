@@ -117,46 +117,55 @@ const FilePreviewCanvas = memo(props => {
     [selectedLanguage, detectedLanguage],
   );
 
-  const { isMarkdownFile, isDataFile, isMermaidFile, isImageFileType, dataFileType, isDocxFile, isHtmlFile } =
-    useMemo(() => {
-      const checkIfType = (lang, format) =>
-        file &&
-        (lang.some(l => currentLanguage === l) ||
-          format.some(f => file.name.toLowerCase().endsWith(`.${f}`)));
+  const {
+    isMarkdownFile,
+    isDataFile,
+    isMermaidFile,
+    isImageFileType,
+    dataFileType,
+    isDocxFile,
+    isHtmlFile,
+    isMdxFile,
+  } = useMemo(() => {
+    const checkIfType = (lang, format) =>
+      file &&
+      (lang.some(l => currentLanguage === l) || format.some(f => file.name.toLowerCase().endsWith(`.${f}`)));
 
-      const isMarkdown = checkIfType([AvailableLanguagesEnum.MARKDOWN], [AvailableFormatsEnum.MARKDOWN]);
-      const isData = checkIfType(
-        [AvailableLanguagesEnum.CSV, AvailableLanguagesEnum.TSV],
-        [AvailableFormatsEnum.CSV, AvailableFormatsEnum.TSV],
-      );
-      const isMermaid = checkIfType(
-        [AvailableLanguagesEnum.MERMAID],
-        [AvailableFormatsEnum.MERMAID_LONG, AvailableFormatsEnum.MERMAID_SHORT],
-      );
-      const imageType = checkIfType([AvailableLanguagesEnum.IMAGE], []);
-      const dataType = !isData
-        ? null
-        : checkIfType([AvailableLanguagesEnum.CSV], [AvailableFormatsEnum.CSV])
-          ? AvailableFormatsEnum.CSV
-          : checkIfType([AvailableLanguagesEnum.TSV], [AvailableFormatsEnum.TSV])
-            ? AvailableFormatsEnum.TSV
-            : AvailableFormatsEnum.CSV;
-      const isDocx = checkIfType([AvailableLanguagesEnum.DOCX], [AvailableFormatsEnum.DOCX]);
-      const isHtml = checkIfType(
-        [AvailableLanguagesEnum.HTML],
-        [AvailableFormatsEnum.HTML, AvailableFormatsEnum.HTM],
-      );
+    const isMarkdown = checkIfType([AvailableLanguagesEnum.MARKDOWN], [AvailableFormatsEnum.MARKDOWN]);
+    const isData = checkIfType(
+      [AvailableLanguagesEnum.CSV, AvailableLanguagesEnum.TSV],
+      [AvailableFormatsEnum.CSV, AvailableFormatsEnum.TSV],
+    );
+    const isMermaid = checkIfType(
+      [AvailableLanguagesEnum.MERMAID],
+      [AvailableFormatsEnum.MERMAID_LONG, AvailableFormatsEnum.MERMAID_SHORT],
+    );
+    const imageType = checkIfType([AvailableLanguagesEnum.IMAGE], []);
+    const dataType = !isData
+      ? null
+      : checkIfType([AvailableLanguagesEnum.CSV], [AvailableFormatsEnum.CSV])
+        ? AvailableFormatsEnum.CSV
+        : checkIfType([AvailableLanguagesEnum.TSV], [AvailableFormatsEnum.TSV])
+          ? AvailableFormatsEnum.TSV
+          : AvailableFormatsEnum.CSV;
+    const isDocx = checkIfType([AvailableLanguagesEnum.DOCX], [AvailableFormatsEnum.DOCX]);
+    const isHtml = checkIfType(
+      [AvailableLanguagesEnum.HTML],
+      [AvailableFormatsEnum.HTML, AvailableFormatsEnum.HTM],
+    );
+    const isMdx = checkIfType([AvailableLanguagesEnum.MDX], [AvailableFormatsEnum.MDX]);
 
-      return {
-        isMarkdownFile: isMarkdown,
-        isDataFile: isData,
-        isMermaidFile: isMermaid,
-        isImageFileType: imageType,
-        dataFileType: dataType,
-        isDocxFile: isDocx,
-        isHtmlFile: isHtml,
-      };
-    }, [file, currentLanguage]);
+    return {
+      isMarkdownFile: isMarkdown,
+      isDataFile: isData,
+      isMermaidFile: isMermaid,
+      isImageFileType: imageType,
+      dataFileType: dataType,
+      isDocxFile: isDocx,
+      isHtmlFile: isHtml,
+      isMdxFile: isMdx,
+    };
+  }, [file, currentLanguage]);
 
   // Deferred parsing for data files - show loading state while parsing
   useEffect(() => {
@@ -298,7 +307,7 @@ const FilePreviewCanvas = memo(props => {
       setEditedContent('');
       toastInfo('File saved successfully');
 
-      if (isHtmlFile) {
+      if (isHtmlFile || isMdxFile || isMarkdownFile) {
         setRenderMode(RenderModeOptionsEnum.RENDERED);
       } else {
         onClose();
@@ -323,6 +332,8 @@ const FilePreviewCanvas = memo(props => {
     isDataFile,
     dataFileType,
     isHtmlFile,
+    isMdxFile,
+    isMarkdownFile,
     setFileContent,
     toastInfo,
     onClose,
@@ -342,7 +353,7 @@ const FilePreviewCanvas = memo(props => {
     if (needToFetch) {
       fetchFileContent();
       setRenderMode(
-        isMarkdownFile || isDataFile || isMermaidFile || isImageFileType || isHtmlFile
+        isMarkdownFile || isDataFile || isMermaidFile || isImageFileType || isHtmlFile || isMdxFile
           ? RenderModeOptionsEnum.RENDERED
           : RenderModeOptionsEnum.CODE,
       );
@@ -366,6 +377,7 @@ const FilePreviewCanvas = memo(props => {
     isImageFileType,
     bucket,
     isHtmlFile,
+    isMdxFile,
   ]);
 
   useEffect(() => {
@@ -467,6 +479,7 @@ const FilePreviewCanvas = memo(props => {
         isMermaidFile={isMermaidFile}
         isDocxFile={isDocxFile}
         isHtmlFile={isHtmlFile}
+        isMdxFile={isMdxFile}
         handleSaveChanges={handleSaveChanges}
         hasUnsavedChanges={hasUnsavedChanges}
         fileContent={fileContent}
@@ -506,6 +519,7 @@ const FilePreviewCanvas = memo(props => {
             documentBuffer={documentBuffer}
             isDocxFile={isDocxFile}
             isHtmlFile={isHtmlFile}
+            isMdxFile={isMdxFile}
             docxResetKey={docxResetKey}
             file={file}
             bucket={bucket}

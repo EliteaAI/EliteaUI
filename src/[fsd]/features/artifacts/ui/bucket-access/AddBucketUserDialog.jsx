@@ -1,6 +1,15 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Autocomplete, Box, CircularProgress, MenuItem, Select, TextField, Typography } from '@mui/material';
+import {
+  Autocomplete,
+  Box,
+  Chip,
+  CircularProgress,
+  MenuItem,
+  Select,
+  TextField,
+  Typography,
+} from '@mui/material';
 
 import { Button, Modal } from '@/[fsd]/shared/ui';
 import { useUserListQuery } from '@/api/admin';
@@ -29,6 +38,16 @@ const styles = {
   select: {
     width: '100%',
   },
+  optionItem: ({ palette }) => ({
+    padding: '0.5rem 1rem',
+    borderBottom: `1px solid ${palette.border.lines}`,
+    '&:last-child': {
+      borderBottom: 'none',
+    },
+    '&:hover': {
+      backgroundColor: palette.background.participant?.hover || palette.action.hover,
+    },
+  }),
   optionContent: {
     display: 'flex',
     flexDirection: 'column',
@@ -38,7 +57,7 @@ const styles = {
 const AddBucketUserDialog = memo(props => {
   const { open, onClose, onConfirm, projectId, existingUserIds = [], loading = false } = props;
 
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedUsers, setSelectedUsers] = useState([]);
   const [permission, setPermission] = useState('read');
 
   const { data: usersData, isLoading: isLoadingUsers } = useUserListQuery(
@@ -50,7 +69,7 @@ const AddBucketUserDialog = memo(props => {
 
   useEffect(() => {
     if (!open) {
-      setSelectedUser(null);
+      setSelectedUsers([]);
       setPermission('read');
     }
   }, [open]);
@@ -61,18 +80,18 @@ const AddBucketUserDialog = memo(props => {
   );
 
   const handleConfirm = useCallback(() => {
-    if (!selectedUser) return;
-    onConfirm({ user: selectedUser, permission });
-  }, [selectedUser, permission, onConfirm]);
+    if (!selectedUsers.length) return;
+    onConfirm({ users: selectedUsers, permission });
+  }, [selectedUsers, permission, onConfirm]);
 
   const handleKeyDown = useCallback(
     event => {
-      if (event.key === 'Enter' && selectedUser) {
+      if (event.key === 'Enter' && selectedUsers.length > 0) {
         event.preventDefault();
         handleConfirm();
       }
     },
-    [selectedUser, handleConfirm],
+    [selectedUsers, handleConfirm],
   );
 
   return (
@@ -87,27 +106,38 @@ const AddBucketUserDialog = memo(props => {
             variant="bodyMedium"
             color="text.secondary"
           >
-            Select a user and assign bucket permissions.
+            Select users and assign bucket permissions.
           </Typography>
           <Box sx={styles.fieldWrapper}>
             <Typography
               variant="labelMedium"
               color="text.secondary"
             >
-              User
+              Users
             </Typography>
             <Autocomplete
+              multiple
               options={availableUsers}
               getOptionLabel={u => u.name || u.email || ''}
-              value={selectedUser}
-              onChange={(_, v) => setSelectedUser(v)}
+              value={selectedUsers}
+              onChange={(_, v) => setSelectedUsers(v)}
               loading={isLoadingUsers}
               size="small"
               sx={styles.autocomplete}
+              renderTags={(value, getTagProps) =>
+                value.map((option, index) => (
+                  <Chip
+                    {...getTagProps({ index })}
+                    key={option.id}
+                    label={option.name || option.email}
+                    size="small"
+                  />
+                ))
+              }
               renderInput={params => (
                 <TextField
                   {...params}
-                  placeholder="Select user"
+                  placeholder={selectedUsers.length === 0 ? 'Select users' : ''}
                   size="small"
                   InputProps={{
                     ...params.InputProps,
@@ -127,6 +157,7 @@ const AddBucketUserDialog = memo(props => {
                     component="li"
                     key={key}
                     {...otherOptionProps}
+                    sx={styles.optionItem}
                   >
                     <Box sx={styles.optionContent}>
                       <Typography variant="bodyMedium">{option.name || option.email}</Typography>
@@ -182,9 +213,9 @@ const AddBucketUserDialog = memo(props => {
             variant="elitea"
             color="primary"
             onClick={handleConfirm}
-            disabled={!selectedUser || loading}
+            disabled={selectedUsers.length === 0 || loading}
           >
-            Add
+            Add {selectedUsers.length > 1 ? `(${selectedUsers.length})` : ''}
           </Button.BaseBtn>
         </Box>
       }

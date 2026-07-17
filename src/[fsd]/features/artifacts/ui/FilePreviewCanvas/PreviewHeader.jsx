@@ -32,6 +32,7 @@ const PreviewHeader = memo(props => {
     isDataFile,
     isMermaidFile,
     isHtmlFile,
+    isMdxFile,
     handleSaveChanges,
     hasUnsavedChanges,
     fileContent,
@@ -102,8 +103,11 @@ const PreviewHeader = memo(props => {
   }, [fullPath]);
 
   const modeTogglerAvailable = useMemo(
-    () => (isMarkdownFile || isDataFile || isMermaidFile || isHtmlFile) && !isImageFileType && fileContent,
-    [fileContent, isDataFile, isImageFileType, isMarkdownFile, isMermaidFile, isHtmlFile],
+    () =>
+      (isMarkdownFile || isDataFile || isMermaidFile || isHtmlFile || isMdxFile) &&
+      !isImageFileType &&
+      fileContent,
+    [fileContent, isDataFile, isImageFileType, isMarkdownFile, isMermaidFile, isHtmlFile, isMdxFile],
   );
 
   const handleCopyContent = useCallback(() => {
@@ -253,7 +257,7 @@ const PreviewHeader = memo(props => {
                 variant="elitea"
                 sx={styles.toggleLeftButton}
               >
-                {isMarkdownFile || isHtmlFile ? 'Preview' : isDataFile ? 'Table' : 'Diagram'}
+                {isMarkdownFile || isHtmlFile || isMdxFile ? 'Preview' : isDataFile ? 'Table' : 'Diagram'}
               </ToggleButton>
               <ToggleButton
                 variant="elitea"
