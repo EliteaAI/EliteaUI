@@ -260,11 +260,13 @@ const lightPalette = {
       },
       agentHub: {
         default: 'transparent',
-        hover: dark5,
-        active: dark10,
+        hover: '#C6B8FF33',
+        active: '#C6B8FF33',
         shadowDefault: 'none',
         shadowHover: 'none',
-        shadowActive: 'none',
+        shadowActive: '0px 0px 15px 0px #A754FF33 inset',
+        textGradient: 'linear-gradient(90deg, #DD32FF 0.7%, #8147FF 95.74%)',
+        iconGradient: 'linear-gradient(33.96deg, #E345FF 0%, #A274FF 96.65%)',
       },
       iconLabelButton: {
         default: 'transparent',
