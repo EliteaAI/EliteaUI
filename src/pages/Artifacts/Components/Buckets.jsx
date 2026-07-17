@@ -35,6 +35,7 @@ const Buckets = memo(props => {
     onStorageChange,
     onBucketsDataChange, // Callback to provide bucket data to parent
     onUpload, // Callback to handle upload from bucket menu
+    onManageAccess, // Callback to open bucket access management
     onSelectFile, // Callback to handle file selection
     onSelectFolder, // Callback to handle folder selection (navigates table)
   } = props;
@@ -215,6 +216,7 @@ const Buckets = memo(props => {
       onCreateBucket={onCreateBucket}
       onStorageChange={onStorageChange}
       onUpload={onUpload}
+      onManageAccess={onManageAccess}
       onSelectFile={onSelectFile}
       onSelectFolder={onSelectFolder}
       onEdit={handleEdit}

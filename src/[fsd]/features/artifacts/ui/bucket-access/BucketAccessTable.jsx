@@ -96,7 +96,8 @@ const styles = {
 };
 
 const getAccessValue = (bucketPermissions, bucket) => {
-  if (!bucketPermissions || !(bucket in bucketPermissions)) return '';
+  if (!bucketPermissions || Object.keys(bucketPermissions).length === 0) return '';
+  if (!(bucket in bucketPermissions)) return '';
   const perms = bucketPermissions[bucket];
   if (!perms || perms.length === 0) return 'no_access';
   if (perms.includes('write')) return 'read_write';
@@ -140,6 +141,7 @@ const BucketAccessTable = memo(props => {
   const [bulkEditDialogOpen, setBulkEditDialogOpen] = useState(false);
   const [removeConfirmOpen, setRemoveConfirmOpen] = useState(false);
   const [userToRemove, setUserToRemove] = useState(null);
+  const [optimisticUsers, setOptimisticUsers] = useState([]);
 
   const { data: permissionsData, isLoading: isLoadingPerms } = useListBucketPermissionsQuery(
     { projectId },
@@ -170,23 +172,26 @@ const BucketAccessTable = memo(props => {
   const users = useMemo(() => usersData?.rows || [], [usersData]);
 
   const usersWithAccess = useMemo(() => {
-    return users
+    const fromServer = users
       .filter(u => {
         const creds = credsByUserId[u.id];
         if (!creds || creds.length === 0) return false;
-        const accessValue = getAccessValue(creds[0]?.bucket_permissions, bucket);
-        return accessValue !== '';
+        return creds.some(c => c.bucket_permissions && bucket in c.bucket_permissions);
       })
       .map(u => {
         const creds = credsByUserId[u.id];
-        const accessValue = getAccessValue(creds[0]?.bucket_permissions, bucket);
+        const cred = creds.find(c => c.bucket_permissions && bucket in c.bucket_permissions);
+        const accessValue = getAccessValue(cred?.bucket_permissions, bucket);
         return {
           ...u,
           accessValue,
           accessLabel: getAccessLabel(accessValue),
         };
       });
-  }, [users, credsByUserId, bucket]);
+    const serverIds = new Set(fromServer.map(u => u.id));
+    const pending = optimisticUsers.filter(u => !serverIds.has(u.id));
+    return [...fromServer, ...pending];
+  }, [users, credsByUserId, bucket, optimisticUsers]);
 
   const existingUserIds = useMemo(() => usersWithAccess.map(u => u.id), [usersWithAccess]);
 
@@ -266,7 +271,10 @@ const BucketAccessTable = memo(props => {
             bucket_permissions: bucketPermissions,
           }).unwrap();
         } else {
-          const cred = creds[0];
+          const cred =
+            creds.find(c => c.bucket_permissions && bucket in c.bucket_permissions) ||
+            creds.find(c => !c.bucket_permissions || Object.keys(c.bucket_permissions).length === 0) ||
+            creds[0];
           const updatedPerms = buildBucketPermissions(newAccess, bucket, cred.bucket_permissions);
           await setBucketPermissions({
             projectId,
@@ -327,11 +335,32 @@ const BucketAccessTable = memo(props => {
   );
 
   const handleAddConfirm = useCallback(
-    async ({ user, permission }) => {
-      await handleAccessChange(user, permission);
+    async ({ users: usersToAdd, permission }) => {
+      const newOptimisticUsers = usersToAdd.map(user => ({
+        ...user,
+        accessValue: permission,
+        accessLabel: getAccessLabel(permission),
+      }));
+      setOptimisticUsers(prev => [...prev, ...newOptimisticUsers]);
+
+      let successCount = 0;
+
+      for (const user of usersToAdd) {
+        try {
+          await handleAccessChange(user, permission);
+          successCount++;
+        } catch {
+          setOptimisticUsers(prev => prev.filter(u => u.id !== user.id));
+        }
+      }
+
+      if (successCount > 0 && usersToAdd.length > 1) {
+        toastSuccess(`Added access for ${successCount} user${successCount !== 1 ? 's' : ''}`);
+      }
+
       setAddDialogOpen(false);
     },
-    [handleAccessChange],
+    [handleAccessChange, toastSuccess],
   );
 
   const handleBulkEditClick = useCallback(() => {
@@ -472,6 +501,12 @@ const BucketAccessTable = memo(props => {
   );
 
   useEffect(() => {
+    if (permissionsData) {
+      setOptimisticUsers([]);
+    }
+  }, [permissionsData]);
+
+  useEffect(() => {
     if (renderToolbarControls) {
       renderToolbarControls(toolbarControls);
     }
@@ -502,7 +537,7 @@ const BucketAccessTable = memo(props => {
           <GridTableContainer
             isLoading={false}
             isEmpty={paginatedUsers.length === 0}
-            emptyMessage="No users with access to this bucket"
+            emptyMessage="All project users have access to this bucket"
           >
             <GridTableHeader
               columns={visibleColumns}
