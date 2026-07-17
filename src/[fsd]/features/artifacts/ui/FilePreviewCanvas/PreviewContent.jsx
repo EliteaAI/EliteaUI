@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 
 import { FilePreviewCanvasConstants } from '@/[fsd]/features/artifacts/lib/constants';
-import { PreviewDocument } from '@/[fsd]/features/artifacts/ui/';
+import { HtmlPreviewFrame, PreviewDocument } from '@/[fsd]/features/artifacts/ui/';
 import { Field } from '@/[fsd]/shared/ui';
 import Markdown from '@/[fsd]/shared/ui/markdown';
 import MermaidDiagramOutput from '@/components/MermaidDiagramOutput/DiagramOutput';
@@ -26,6 +26,7 @@ const PreviewTypeEnum = {
   IMAGE: 'IMAGE',
   CODE: 'CODE',
   DOCX: 'DOCX',
+  HTML: 'HTML',
 };
 
 const PreviewContent = forwardRef((props, documentReaderRef) => {
@@ -43,6 +44,7 @@ const PreviewContent = forwardRef((props, documentReaderRef) => {
     isMermaidFile,
     isImageFileType,
     isDocxFile,
+    isHtmlFile,
     imageBlobUrl,
     file,
     documentBuffer,
@@ -60,11 +62,12 @@ const PreviewContent = forwardRef((props, documentReaderRef) => {
     if (isMarkdownFile && isRenderMode) return PreviewTypeEnum.MARKDOWN;
     if (isDataFile && isRenderMode) return PreviewTypeEnum.DATA;
     if (isMermaidFile && isRenderMode) return PreviewTypeEnum.MERMAID;
+    if (isHtmlFile && isRenderMode) return PreviewTypeEnum.HTML;
     if (isImageFileType) return PreviewTypeEnum.IMAGE;
     if (isDocxFile) return PreviewTypeEnum.DOCX;
 
     return PreviewTypeEnum.CODE;
-  }, [renderMode, isMarkdownFile, isDataFile, isMermaidFile, isImageFileType, isDocxFile]);
+  }, [renderMode, isMarkdownFile, isDataFile, isMermaidFile, isHtmlFile, isImageFileType, isDocxFile]);
 
   if (isLoading || isRenderLoading)
     return (
@@ -191,6 +194,9 @@ const PreviewContent = forwardRef((props, documentReaderRef) => {
                 )}
               </Box>
             );
+          case PreviewTypeEnum.HTML:
+            return <HtmlPreviewFrame htmlContent={fileContent} />;
+
           case PreviewTypeEnum.MERMAID:
             return (
               <Box sx={styles.mermaidWrapper}>
