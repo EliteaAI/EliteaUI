@@ -18,6 +18,7 @@ const SimpleBucketList = memo(props => {
     onDelete,
     onSelect,
     onUpload,
+    onManageAccess,
     onSelectFile,
     onSelectFolder,
     onPin,
@@ -78,6 +79,7 @@ const SimpleBucketList = memo(props => {
                   onDelete={onDelete}
                   onSelect={onSelect}
                   onUpload={onUpload}
+                  onManageAccess={onManageAccess}
                   isNextItemHighlighted={isNextBucketHighlighted}
                   onItemHover={handleItemHover}
                   isExpanded={isExpanded}

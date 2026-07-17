@@ -335,19 +335,32 @@ const BucketAccessTable = memo(props => {
   );
 
   const handleAddConfirm = useCallback(
-    async ({ user, permission }) => {
-      setOptimisticUsers(prev => [
-        ...prev,
-        { ...user, accessValue: permission, accessLabel: getAccessLabel(permission) },
-      ]);
-      try {
-        await handleAccessChange(user, permission);
-      } catch {
-        setOptimisticUsers(prev => prev.filter(u => u.id !== user.id));
+    async ({ users: usersToAdd, permission }) => {
+      const newOptimisticUsers = usersToAdd.map(user => ({
+        ...user,
+        accessValue: permission,
+        accessLabel: getAccessLabel(permission),
+      }));
+      setOptimisticUsers(prev => [...prev, ...newOptimisticUsers]);
+
+      let successCount = 0;
+
+      for (const user of usersToAdd) {
+        try {
+          await handleAccessChange(user, permission);
+          successCount++;
+        } catch {
+          setOptimisticUsers(prev => prev.filter(u => u.id !== user.id));
+        }
       }
+
+      if (successCount > 0 && usersToAdd.length > 1) {
+        toastSuccess(`Added access for ${successCount} user${successCount !== 1 ? 's' : ''}`);
+      }
+
       setAddDialogOpen(false);
     },
-    [handleAccessChange],
+    [handleAccessChange, toastSuccess],
   );
 
   const handleBulkEditClick = useCallback(() => {

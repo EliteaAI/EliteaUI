@@ -22,6 +22,7 @@ const BucketsListContent = memo(props => {
     onDelete,
     onSelect,
     onUpload,
+    onManageAccess,
     onSelectFile,
     onSelectFolder,
     onPin,
@@ -67,6 +68,7 @@ const BucketsListContent = memo(props => {
         onDelete={onDelete}
         onSelect={onSelect}
         onUpload={onUpload}
+        onManageAccess={onManageAccess}
         onSelectFile={onSelectFile}
         onSelectFolder={onSelectFolder}
         onPin={onPin}
