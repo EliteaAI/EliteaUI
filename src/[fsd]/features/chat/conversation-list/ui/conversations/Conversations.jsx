@@ -458,6 +458,7 @@ const Conversations = memo(props => {
         enableDragAndDrop={enableDragAndDrop}
         getDropAreaState={getDropAreaState}
         isSearchMode={!!debouncedSearchQuery.trim()}
+        searchQuery={debouncedSearchQuery}
         isFolderOperationInProgress={isFolderOperationInProgress}
         isPinned={isPinned}
         onLoadMoreInFolder={onLoadMoreInFolder}
