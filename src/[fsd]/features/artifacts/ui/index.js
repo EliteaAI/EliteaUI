@@ -4,3 +4,4 @@ export { default as PreviewUnavailable } from './FilePreviewCanvas/PreviewUnavai
 export { default as PreviewContent } from './FilePreviewCanvas/PreviewContent';
 export { default as PreviewHeader } from './FilePreviewCanvas/PreviewHeader';
 export { default as PreviewDocument } from './FilePreviewCanvas/PreviewDocument';
+export { default as HtmlPreviewFrame } from './FilePreviewCanvas/HtmlPreviewFrame';

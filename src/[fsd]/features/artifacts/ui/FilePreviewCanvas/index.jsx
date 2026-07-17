@@ -117,7 +117,7 @@ const FilePreviewCanvas = memo(props => {
     [selectedLanguage, detectedLanguage],
   );
 
-  const { isMarkdownFile, isDataFile, isMermaidFile, isImageFileType, dataFileType, isDocxFile } =
+  const { isMarkdownFile, isDataFile, isMermaidFile, isImageFileType, dataFileType, isDocxFile, isHtmlFile } =
     useMemo(() => {
       const checkIfType = (lang, format) =>
         file &&
@@ -142,6 +142,10 @@ const FilePreviewCanvas = memo(props => {
             ? AvailableFormatsEnum.TSV
             : AvailableFormatsEnum.CSV;
       const isDocx = checkIfType([AvailableLanguagesEnum.DOCX], [AvailableFormatsEnum.DOCX]);
+      const isHtml = checkIfType(
+        [AvailableLanguagesEnum.HTML],
+        [AvailableFormatsEnum.HTML, AvailableFormatsEnum.HTM],
+      );
 
       return {
         isMarkdownFile: isMarkdown,
@@ -150,6 +154,7 @@ const FilePreviewCanvas = memo(props => {
         isImageFileType: imageType,
         dataFileType: dataType,
         isDocxFile: isDocx,
+        isHtmlFile: isHtml,
       };
     }, [file, currentLanguage]);
 
@@ -292,7 +297,12 @@ const FilePreviewCanvas = memo(props => {
 
       setEditedContent('');
       toastInfo('File saved successfully');
-      onClose();
+
+      if (isHtmlFile) {
+        setRenderMode(RenderModeOptionsEnum.RENDERED);
+      } else {
+        onClose();
+      }
     } catch (error) {
       toastError('Failed to save file: ' + (error?.data?.error || error?.data?.message || 'Unknown error'));
     } finally {
@@ -312,6 +322,7 @@ const FilePreviewCanvas = memo(props => {
     currentLanguage,
     isDataFile,
     dataFileType,
+    isHtmlFile,
     setFileContent,
     toastInfo,
     onClose,
@@ -331,7 +342,7 @@ const FilePreviewCanvas = memo(props => {
     if (needToFetch) {
       fetchFileContent();
       setRenderMode(
-        isMarkdownFile || isDataFile || isMermaidFile || isImageFileType
+        isMarkdownFile || isDataFile || isMermaidFile || isImageFileType || isHtmlFile
           ? RenderModeOptionsEnum.RENDERED
           : RenderModeOptionsEnum.CODE,
       );
@@ -354,6 +365,7 @@ const FilePreviewCanvas = memo(props => {
     isMermaidFile,
     isImageFileType,
     bucket,
+    isHtmlFile,
   ]);
 
   useEffect(() => {
@@ -454,6 +466,7 @@ const FilePreviewCanvas = memo(props => {
         isDataFile={isDataFile}
         isMermaidFile={isMermaidFile}
         isDocxFile={isDocxFile}
+        isHtmlFile={isHtmlFile}
         handleSaveChanges={handleSaveChanges}
         hasUnsavedChanges={hasUnsavedChanges}
         fileContent={fileContent}
@@ -492,6 +505,7 @@ const FilePreviewCanvas = memo(props => {
             imageBlobUrl={imageBlobUrl}
             documentBuffer={documentBuffer}
             isDocxFile={isDocxFile}
+            isHtmlFile={isHtmlFile}
             docxResetKey={docxResetKey}
             file={file}
             bucket={bucket}
