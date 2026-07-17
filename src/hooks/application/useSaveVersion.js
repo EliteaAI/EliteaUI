@@ -123,6 +123,14 @@ const useSaveVersion = () => {
       ...version_details,
       llm_settings: cleanedLlmSettings,
       instructions: !isFromPipeline ? version_details.instructions : yamlCode,
+      ...(isFromPipeline && {
+        pipeline_settings: {
+          nodes,
+          edges,
+          orientation: ORIENTATION.vertical,
+          layout_version: LAYOUT_VERSION,
+        },
+      }),
     };
     // The update application API always returns the base version details,
     // so we must override version_details with the currently selected version's data.
