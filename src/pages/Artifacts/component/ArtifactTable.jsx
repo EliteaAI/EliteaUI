@@ -75,6 +75,11 @@ export default function ArtifactTable(props) {
     currentPrefix,
     onPrefixChange,
     onUploadRequest,
+    isManagingAccess = false,
+    onManageAccessToggle,
+    isPersonalProject = false,
+    accessManagementContent = null,
+    accessManagementControls = null,
   } = props;
   const { toastError, toastSuccess } = useToast();
   const { windowWidth } = useGetWindowWidth();
@@ -494,12 +499,18 @@ export default function ArtifactTable(props) {
             breadcrumbs={breadcrumbs}
             onBreadcrumbClick={handleBreadcrumbClick}
             currentPrefix={currentPrefix}
+            isManagingAccess={isManagingAccess}
+            onManageAccessToggle={onManageAccessToggle}
+            isPersonalProject={isPersonalProject}
+            accessManagementControls={accessManagementControls}
           />
         }
-        isLoading={isFetching}
+        isLoading={isFetching && !isManagingAccess}
         loadingMessage="Loading..."
       >
-        {paginatedRows.length === 0 && !isFetching ? (
+        {isManagingAccess && accessManagementContent ? (
+          accessManagementContent
+        ) : paginatedRows.length === 0 && !isFetching ? (
           <ArtifactTableNoFiles
             message="No files in this bucket"
             onUpload={handleUploadClick}

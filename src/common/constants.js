@@ -578,6 +578,7 @@ export const PERMISSIONS = {
     create: 'configuration.artifacts.artifacts.create',
     delete: 'configuration.artifacts.artifacts.delete',
     view: 'configuration.artifacts.artifacts.view',
+    edit: 'configuration.artifacts.artifacts.edit',
     buckets: {
       delete: 'configuration.artifacts.buckets.delete',
       update: 'configuration.artifacts.buckets.update',
