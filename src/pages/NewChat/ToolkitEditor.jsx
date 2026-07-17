@@ -26,6 +26,17 @@ const getToolkitId = toolkit => {
   return toolkit?.entity_meta?.id || toolkit?.id || toolkit?.meta?.id;
 };
 
+const getToolkitNameFromType = (label, isMCP) => {
+  if (!isMCP) {
+    return `New ${label} Toolkit`;
+  } else {
+    if (label.endsWith('MCP')) {
+      return `New ${label}`;
+    } else {
+      return `New ${label} MCP`;
+    }
+  }
+};
 const ToolkitEditor = ({ toolkit, onCloseToolkitEditor, onToolkitCreated, onToolkitUpdated, isVisible }) => {
   const trackEvent = useTrackEvent();
 
@@ -167,7 +178,7 @@ const ToolkitEditor = ({ toolkit, onCloseToolkitEditor, onToolkitCreated, onTool
       if (toolType) {
         const schema = toolkitSchemas?.[toolType];
         const label = schema?.metadata?.label || schema?.title || formatTitleFromSnakeCase(toolType);
-        return `New ${label} ${isMCP ? 'MCP' : 'Toolkit'}`;
+        return getToolkitNameFromType(label, isMCP);
       }
       return `New ${isMCP ? 'MCP' : 'Toolkit'}`;
     }
