@@ -9,6 +9,7 @@ const ChipWithCheckIcon = memo(
     return (
       <Chip
         data-testid={testId}
+        data-selected={isSelected}
         clickable={clickable}
         // disableRipple
         sx={[styles.chipLabel(warning, isSelected, !clickable), sx]}
