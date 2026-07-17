@@ -7,8 +7,10 @@ import { Box, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { SIDEBAR_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
-import AgentStudioIcon from '@/assets/agent-hub-icon.svg?react';
+import agentHubIconRaw from '@/assets/agent-hub-icon.svg?raw';
 import RouteDefinitions from '@/routes';
+
+const agentHubIconMask = `url("data:image/svg+xml,${encodeURIComponent(agentHubIconRaw)}")`;
 
 const AgentHubButton = memo(() => {
   const isOnAgentHub = useMatch({ path: RouteDefinitions.EliteaCatalog });
@@ -37,7 +39,7 @@ const AgentHubButton = memo(() => {
         onClick={handleAgentHubClick}
         sx={styles.container}
       >
-        <AgentStudioIcon sx={styles.icon} />
+        <Box sx={styles.icon} />
         {!sideBarCollapsed && (
           <Typography
             component="div"
@@ -74,23 +76,35 @@ const agentHubButtonStyles = (sideBarCollapsed, isActive) => ({
     gap: '0.5rem',
     alignItems: 'center',
     boxSizing: 'border-box',
-    '& path': {
-      fill: palette.primary.main,
-    },
     '&:hover': {
       background: palette.background.button.agentHub.hover,
       boxShadow: palette.background.button.agentHub.shadowHover,
     },
   }),
-  icon: {
-    fontSize: '1rem',
-  },
+  icon: ({ palette }) => ({
+    width: '1rem',
+    height: '1rem',
+    flexShrink: 0,
+    background: palette.background.button.agentHub.iconGradient,
+    WebkitMaskImage: agentHubIconMask,
+    maskImage: agentHubIconMask,
+    WebkitMaskRepeat: 'no-repeat',
+    maskRepeat: 'no-repeat',
+    WebkitMaskSize: 'contain',
+    maskSize: 'contain',
+    WebkitMaskPosition: 'center',
+    maskPosition: 'center',
+  }),
   label: ({ palette }) => ({
     flex: 1,
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
-    color: palette.primary.main,
+    background: palette.background.button.agentHub.textGradient,
+    WebkitBackgroundClip: 'text',
+    backgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    color: 'transparent',
     textAlign: 'left',
   }),
 });
