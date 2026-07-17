@@ -2,15 +2,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useDispatch, useSelector } from 'react-redux';
 
-import { useGetAgentCategoriesQuery } from '@/[fsd]/features/agent/api/agentCategoriesApi';
 import { AgentHubConstants } from '@/[fsd]/features/agent-hub/lib/constants';
+import { useGetAgentCategoriesQuery } from '@/[fsd]/features/agent/api/agentCategoriesApi';
 import { useLazyPublicApplicationsListQuery } from '@/api/applications';
 import { CollectionStatus, PUBLIC_PROJECT_ID } from '@/common/constants';
-import {
-  actions as agentHubActions,
-  selectAgentHubData,
-  selectIsCacheValid,
-} from '@/slices/agentHub';
+import useToast from '@/hooks/useToast';
+import { actions as agentHubActions, selectAgentHubData, selectIsCacheValid } from '@/slices/agentHub';
 
 /** Single bulk-fetch limit — covers realistic max deployments (≤200 published agents). */
 const ALL_AGENTS_LIMIT = 1000;
@@ -29,6 +26,7 @@ const SEARCH_AGENTS_LIMIT = 100;
  */
 export const useAgentHubData = (query, selectedTagNames) => {
   const dispatch = useDispatch();
+  const { toastError } = useToast();
   const { applicationsByTag, totalCountsByTag, currentPageByTag } = useSelector(selectAgentHubData);
   const isCacheValid = useSelector(state => selectIsCacheValid(state, query));
 
@@ -172,6 +170,26 @@ export const useAgentHubData = (query, selectedTagNames) => {
       }
     },
     [fetchApplications, query, setLoading, updateApplicationData],
+  );
+
+  const fetchCategoryScoped = useCallback(
+    async categoryName => {
+      const result = await fetchApplications({
+        page: 0,
+        pageSize: ALL_AGENTS_LIMIT,
+        params: {
+          query,
+          statuses: CollectionStatus.Published,
+          agents_type: 'classic',
+          category: categoryName,
+        },
+      }).unwrap();
+
+      if (result?.rows) {
+        updateApplicationData(categoryName, 0, result.rows, result.rows.length);
+      }
+    },
+    [fetchApplications, query, updateApplicationData],
   );
 
   const resetSearchByTag = useCallback(() => {
@@ -363,19 +381,15 @@ export const useAgentHubData = (query, selectedTagNames) => {
         } else if (categoryName === AgentHubConstants.MY_LIKED_CATEGORY) {
           await fetchMyLikedApplications(0);
         } else {
-          await fetchAllAndCategorize(categoryNames);
+          await fetchCategoryScoped(categoryName);
         }
+      } catch {
+        toastError(`Failed to refresh ${categoryName}. Please try again.`);
       } finally {
         setRefreshing(categoryName, false);
       }
     },
-    [
-      categoryNames,
-      setRefreshing,
-      fetchTrendingApplications,
-      fetchMyLikedApplications,
-      fetchAllAndCategorize,
-    ],
+    [setRefreshing, fetchTrendingApplications, fetchMyLikedApplications, fetchCategoryScoped, toastError],
   );
 
   return {
