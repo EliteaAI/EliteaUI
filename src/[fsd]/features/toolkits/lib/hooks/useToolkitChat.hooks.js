@@ -48,6 +48,7 @@ export const useToolkitChat = props => {
     isValidForm,
     toolInputVariables,
     index,
+    indexConfigOverride,
     traceNewIndex,
     refetchIndexesList,
     cancelIndexingCallback,
@@ -362,7 +363,10 @@ export const useToolkitChat = props => {
       let relevantInputVariables = toolInputVariables;
 
       if (!isCreateIndexMode && indexing && index)
-        relevantInputVariables = index.metadata.index_configuration || {};
+        relevantInputVariables = {
+          ...(index.metadata.index_configuration || {}),
+          ...(indexConfigOverride || {}),
+        };
 
       if (canProceed) {
         setIsRunning(true);
@@ -378,7 +382,16 @@ export const useToolkitChat = props => {
         executeRunTool({ relevantInputVariables, indexing, tool });
       }
     },
-    [isCreateIndexMode, isValidForm, isRunning, toolInputVariables, index, traceNewIndex, executeRunTool],
+    [
+      isCreateIndexMode,
+      isValidForm,
+      isRunning,
+      toolInputVariables,
+      index,
+      indexConfigOverride,
+      traceNewIndex,
+      executeRunTool,
+    ],
   );
 
   const onCancelIndexing = useCallback(async () => {

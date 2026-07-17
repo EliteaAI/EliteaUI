@@ -18,6 +18,7 @@ import { useToolkitChat } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
 import { useToolkitsDetailsQuery } from '@/api/toolkits.js';
+import ArrowRightIcon from '@/assets/arrow-right-icon.svg?react';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils.jsx';
 import ArrowBackIcon from '@/components/Icons/ArrowBackIcon';
 import { useGetSelectedToolSchema } from '@/hooks/toolkit/useGetSelectedToolSchema';
@@ -235,6 +236,10 @@ const CreateIndex = memo(() => {
     navigate(target);
   }, [navigate, tab, toolkitId]);
 
+  const goToToolkitsList = useCallback(() => {
+    navigate(RouteDefinitions.ToolkitsWithTab.replace(':tab', tab ?? 'all'));
+  }, [navigate, tab]);
+
   const {
     data: publicToolkitData = emptyToolDetail,
     isFetching,
@@ -261,6 +266,8 @@ const CreateIndex = memo(() => {
 
   if (shouldShowNotFoundPage) return <Page404 />;
 
+  const toolkitName = publicToolkitData?.name || '';
+
   return (
     <Box sx={styles.wrapper}>
       <Box sx={styles.header}>
@@ -271,12 +278,40 @@ const CreateIndex = memo(() => {
         >
           <ArrowBackIcon />
         </IconButton>
-        <Typography
-          variant="headingSmall"
-          color="text.secondary"
-        >
-          New index
-        </Typography>
+        <Box sx={styles.breadcrumb}>
+          <Typography
+            variant="headingSmall"
+            sx={styles.breadcrumbLink}
+            onClick={goToToolkitsList}
+          >
+            Toolkits
+          </Typography>
+          {toolkitName && (
+            <>
+              <Box
+                component={ArrowRightIcon}
+                sx={styles.breadcrumbSeparator}
+              />
+              <Typography
+                variant="headingSmall"
+                sx={styles.breadcrumbLink}
+                onClick={goBackToToolkit}
+              >
+                {toolkitName}
+              </Typography>
+            </>
+          )}
+          <Box
+            component={ArrowRightIcon}
+            sx={styles.breadcrumbSeparator}
+          />
+          <Typography
+            variant="headingSmall"
+            color="text.secondary"
+          >
+            New index
+          </Typography>
+        </Box>
       </Box>
       {isFetching || !publicToolkitData?.id ? (
         <Box sx={styles.loading}>
@@ -306,15 +341,41 @@ const createIndexStyles = () => ({
     display: 'flex',
     flexDirection: 'column',
     height: '100%',
+    width: '100%',
+    maxWidth: '52rem',
+    margin: '0 auto',
     padding: '1rem 1.5rem',
     gap: '1rem',
     overflow: 'hidden',
+    boxSizing: 'border-box',
   },
   header: {
     display: 'flex',
     alignItems: 'center',
     gap: '0.75rem',
   },
+  breadcrumb: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.25rem',
+    minWidth: 0,
+    overflow: 'hidden',
+  },
+  breadcrumbSeparator: ({ palette }) => ({
+    width: '1rem',
+    height: '1rem',
+    color: palette.text.secondary,
+    flexShrink: 0,
+  }),
+  breadcrumbLink: ({ palette }) => ({
+    color: palette.text.secondary,
+    whiteSpace: 'nowrap',
+    cursor: 'pointer',
+    '&:hover': {
+      color: palette.primary.main,
+      textDecoration: 'underline',
+    },
+  }),
   body: {
     display: 'flex',
     flexDirection: 'column',
@@ -334,7 +395,7 @@ const createIndexStyles = () => ({
   },
   actions: {
     display: 'flex',
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
     gap: '0.75rem',
   },
   loading: {

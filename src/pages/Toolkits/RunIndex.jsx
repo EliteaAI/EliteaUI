@@ -109,6 +109,7 @@ const RunIndexPanel = memo(props => {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [reindexConfirmOpen, setReindexConfirmOpen] = useState(false);
   const [toolInputVariables, setToolInputVariables] = useState({});
+  const [configInputVariables, setConfigInputVariables] = useState({});
   const [localMetaOverride, setLocalMetaOverride] = useState(null);
   const [bannerDismissed, setBannerDismissed] = useState(false);
 
@@ -170,6 +171,7 @@ const RunIndexPanel = memo(props => {
     onCancelIndexing,
   } = useToolkitChat({
     index,
+    indexConfigOverride: configInputVariables,
     isValidForm: isRunFormValid,
     refetchIndexesList,
     runTool: selectedRunTool,
@@ -311,6 +313,11 @@ const RunIndexPanel = memo(props => {
     [index?.metadata?.index_configuration],
   );
 
+  useEffect(() => {
+    if (!configSchema?.properties) return;
+    setConfigInputVariables(prev => ({ ...configuredValues, ...prev }));
+  }, [configSchema, configuredValues]);
+
   const runFormFields = useMemo(() => Object.keys(adjustedRunSchema?.properties || {}), [adjustedRunSchema]);
 
   const generalAccordionContent = (
@@ -444,37 +451,18 @@ const RunIndexPanel = memo(props => {
         <CircularProgress size={20} />
       </Box>
     ) : (
-      <Box sx={styles.configReadonly}>
-        {configFields.map(key => {
-          const property = configSchema.properties[key];
-          const value = configuredValues[key];
-          const display =
-            value === undefined || value === null
-              ? '—'
-              : typeof value === 'object'
-                ? JSON.stringify(value)
-                : String(value);
-
-          return (
-            <Box
-              key={key}
-              sx={styles.configRow}
-            >
-              <Typography
-                variant="labelMedium"
-                color="text.secondary"
-              >
-                {property?.title || key}
-              </Typography>
-              <Typography
-                variant="bodyMedium"
-                sx={styles.configValue}
-              >
-                {display}
-              </Typography>
-            </Box>
-          );
-        })}
+      <Box sx={styles.configEditor}>
+        {configFields.map(key => (
+          <ToolkitForm.ToolFormContainer
+            key={key}
+            fieldKey={key}
+            property={configSchema.properties[key]}
+            toolInputVariables={configInputVariables}
+            schema={configSchema}
+            onChangeInputVariables={setConfigInputVariables}
+            changesDisabled={isRunning || isIndexing || key === 'index_name'}
+          />
+        ))}
       </Box>
     );
 
@@ -1014,18 +1002,12 @@ const runIndexStyles = () => ({
     justifyContent: 'center',
     padding: '1rem 0',
   },
-  configReadonly: {
+  configEditor: {
     display: 'flex',
     flexDirection: 'column',
     gap: '0.75rem',
-  },
-  configRow: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.25rem',
-  },
-  configValue: {
-    wordBreak: 'break-word',
+    width: '100%',
+    maxWidth: '48rem',
   },
   rightColumn: {
     flex: 1,
@@ -1058,6 +1040,8 @@ const runIndexStyles = () => ({
     gap: '0.75rem',
     overflowY: 'auto',
     padding: '0.5rem 0',
+    width: '100%',
+    maxWidth: '48rem',
   },
   chatBody: {
     flex: 1,
