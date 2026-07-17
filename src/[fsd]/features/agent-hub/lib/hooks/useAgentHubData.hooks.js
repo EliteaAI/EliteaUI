@@ -6,6 +6,7 @@ import { AgentHubConstants } from '@/[fsd]/features/agent-hub/lib/constants';
 import { useGetAgentCategoriesQuery } from '@/[fsd]/features/agent/api/agentCategoriesApi';
 import { useLazyPublicApplicationsListQuery } from '@/api/applications';
 import { CollectionStatus, PUBLIC_PROJECT_ID } from '@/common/constants';
+import useToast from '@/hooks/useToast';
 import { actions as agentHubActions, selectAgentHubData, selectIsCacheValid } from '@/slices/agentHub';
 
 /** Single bulk-fetch limit — covers realistic max deployments (≤200 published agents). */
@@ -25,6 +26,7 @@ const SEARCH_AGENTS_LIMIT = 100;
  */
 export const useAgentHubData = (query, selectedTagNames) => {
   const dispatch = useDispatch();
+  const { toastError } = useToast();
   const { applicationsByTag, totalCountsByTag, currentPageByTag } = useSelector(selectAgentHubData);
   const isCacheValid = useSelector(state => selectIsCacheValid(state, query));
 
@@ -381,11 +383,13 @@ export const useAgentHubData = (query, selectedTagNames) => {
         } else {
           await fetchCategoryScoped(categoryName);
         }
+      } catch {
+        toastError(`Failed to refresh ${categoryName}. Please try again.`);
       } finally {
         setRefreshing(categoryName, false);
       }
     },
-    [setRefreshing, fetchTrendingApplications, fetchMyLikedApplications, fetchCategoryScoped],
+    [setRefreshing, fetchTrendingApplications, fetchMyLikedApplications, fetchCategoryScoped, toastError],
   );
 
   return {

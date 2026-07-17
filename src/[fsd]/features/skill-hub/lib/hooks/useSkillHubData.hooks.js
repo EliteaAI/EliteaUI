@@ -6,6 +6,7 @@ import { useLazyPublicSkillsListQuery } from '@/[fsd]/features/skill-hub/api';
 import { SkillHubConstants } from '@/[fsd]/features/skill-hub/lib/constants';
 import { useGetSkillCategoriesQuery } from '@/[fsd]/features/skill/api';
 import { PAGE_SIZE, PUBLIC_PROJECT_ID } from '@/common/constants';
+import useToast from '@/hooks/useToast';
 import { selectIsCacheValid, selectSkillHubData, actions as skillHubActions } from '@/slices/skillHub';
 
 /** Single bulk-fetch limit — covers realistic max published-skill counts. */
@@ -21,6 +22,7 @@ const SEARCH_SKILLS_LIMIT = 100;
  */
 export const useSkillHubData = (query, selectedTagNames) => {
   const dispatch = useDispatch();
+  const { toastError } = useToast();
   const { skillsByTag, totalCountsByTag, currentPageByTag } = useSelector(selectSkillHubData);
   const isCacheValid = useSelector(state => selectIsCacheValid(state, query));
 
@@ -303,11 +305,13 @@ export const useSkillHubData = (query, selectedTagNames) => {
         } else {
           await fetchCategoryScoped(categoryName);
         }
+      } catch {
+        toastError(`Failed to refresh ${categoryName}. Please try again.`);
       } finally {
         setRefreshing(categoryName, false);
       }
     },
-    [setRefreshing, fetchTrendingSkills, fetchMyLikedSkills, fetchCategoryScoped],
+    [setRefreshing, fetchTrendingSkills, fetchMyLikedSkills, fetchCategoryScoped, toastError],
   );
 
   return {

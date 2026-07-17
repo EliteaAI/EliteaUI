@@ -1,16 +1,9 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
-import {
-  Box,
-  CircularProgress,
-  IconButton,
-  Skeleton,
-  Tooltip,
-  Typography,
-  useMediaQuery,
-  useTheme,
-} from '@mui/material';
+import { Box, CircularProgress, Skeleton, Tooltip, Typography, useMediaQuery, useTheme } from '@mui/material';
 
+import { Button } from '@/[fsd]/shared/ui';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import RefreshIcon from '@/assets/refresh-icon.svg?react';
 import { INITIAL_CARD_DISPLAY_COUNT } from '@/common/constants';
 
@@ -85,13 +78,12 @@ const AgentCategorySection = memo(props => {
             title="Reload the category items"
             placement="top"
           >
-            <IconButton
-              variant="elitea"
-              color="tertiary"
+            <Button.BaseBtn
+              variant={BUTTON_VARIANTS.tertiary}
+              aria-label="Reload the category items"
+              startIcon={<RefreshIcon />}
               onClick={() => onRefresh?.(category)}
-            >
-              <RefreshIcon />
-            </IconButton>
+            />
           </Tooltip>
         )}
       </Box>
