@@ -4,10 +4,6 @@ import DOMPurify from 'dompurify';
 
 import { Box, Typography } from '@mui/material';
 
-// Blocks all external resource loading inside the iframe.
-// sandbox="" already prevents scripts and same-origin access; this CSP adds
-// defense-in-depth against tracking pixels, external CSS, and data exfiltration
-// via image URL parameters.
 const PREVIEW_CSP = [
   "default-src 'none'",
   "style-src 'unsafe-inline'",
@@ -22,7 +18,6 @@ const PREVIEW_CSP = [
 const CSP_META_TAG = `<meta http-equiv="Content-Security-Policy" content="${PREVIEW_CSP}">`;
 
 const sanitizeForPreview = rawHtml => {
-  // WHOLE_DOCUMENT preserves <html>/<head>/<body> structure of full HTML files.
   const clean = DOMPurify.sanitize(rawHtml, {
     WHOLE_DOCUMENT: true,
     FORCE_BODY: false,
@@ -30,7 +25,6 @@ const sanitizeForPreview = rawHtml => {
 
   if (!clean) return null;
 
-  // DOMPurify with WHOLE_DOCUMENT always produces a <head> tag; inject CSP there.
   const withCsp = clean.replace(/<head([^>]*)>/i, `<head$1>${CSP_META_TAG}`);
 
   return withCsp;
