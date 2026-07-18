@@ -170,6 +170,7 @@ const ToolkitTypeSelector = memo(
           EmptyPlaceholder={
             isMCP ? (
               <Typography
+                data-testid="mcp-type-picker-local-empty-state"
                 variant="bodyMedium"
                 color="text.primary"
               >
