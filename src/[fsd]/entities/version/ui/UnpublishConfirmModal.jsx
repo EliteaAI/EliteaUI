@@ -116,6 +116,7 @@ const UnpublishConfirmModal = memo(props => {
           Cancel
         </Button.BaseBtn>
         <Button.BaseBtn
+          data-testid="agent-unpublish-confirm-button"
           variant="contained"
           onClick={handleConfirm}
           disabled={isLoading}
