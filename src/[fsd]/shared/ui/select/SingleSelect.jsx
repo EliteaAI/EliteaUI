@@ -656,6 +656,7 @@ const SingleSelect = memo(props => {
           labelId={id ? id + '-label' : 'simple-select-label-' + label}
           id={id || 'simple-select-' + label}
           data-testid={dataTestId}
+          SelectDisplayProps={dataTestId ? { 'data-testid': `${dataTestId}-combobox` } : undefined}
           name={name}
           multiple={effectiveMultiple || undefined}
           value={realValue}
