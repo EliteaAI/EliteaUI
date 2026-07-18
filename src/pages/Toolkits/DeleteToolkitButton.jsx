@@ -41,7 +41,12 @@ const useDeleteToolkit = (setBlockNav, isMCP) => {
 
   const toastProps = useMemo(() => ({ onCloseToast }), [onCloseToast]);
   const { toastSuccess, toastError } = useToast(toastProps);
-  const entityName = name || toolkit_name || settings?.elitea_title || settings?.configuration_title || (isMCP ? 'MCP' : 'Toolkit');
+  const entityName =
+    name ||
+    toolkit_name ||
+    settings?.elitea_title ||
+    settings?.configuration_title ||
+    (isMCP ? 'MCP' : 'Toolkit');
   const onDelete = useCallback(async () => {
     await deleteToolkit({ projectId, toolkitId: !isMCP ? toolkitId : mcpId });
   }, [deleteToolkit, isMCP, mcpId, projectId, toolkitId]);
@@ -67,6 +72,7 @@ export const useDeleteToolkitMenu = (setBlockNav, disabled, isMCP) => {
   const { name, onDelete, isLoading } = useDeleteToolkit(setBlockNav, isMCP);
   const menuItem = useMemo(
     () => ({
+      key: 'toolkit-actions-delete',
       label: 'Delete',
       icon: (
         <DeleteIcon

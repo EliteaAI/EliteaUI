@@ -107,6 +107,7 @@ const DeleteEntityModal = memo(props => {
         color={alarm ? BUTTON_COLORS.alarm : BUTTON_COLORS.primary}
         disabled={isButtonDisabled}
         onClick={onConfirm}
+        data-testid="delete-confirm-button"
       />
     </>
   );
@@ -122,6 +123,7 @@ const DeleteEntityModal = memo(props => {
       onClose={e => resetButtonState(e, onClose)}
       onKeyDown={handleKeyDown}
       sx={sx}
+      data-testid="delete-confirm-dialog"
     />
   );
 });
