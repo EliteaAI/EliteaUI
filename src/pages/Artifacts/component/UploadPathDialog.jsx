@@ -2,9 +2,8 @@ import React, { memo, useCallback, useMemo, useState } from 'react';
 
 import { Box, InputAdornment, TextField, Typography } from '@mui/material';
 
-import { Button } from '@/[fsd]/shared/ui';
-
 import { PathValidationHelpers } from '@/[fsd]/features/artifacts/lib/helpers';
+import { Button } from '@/[fsd]/shared/ui';
 import BaseModal from '@/[fsd]/shared/ui/modal/BaseModal';
 
 const MAX_FOLDER_DEPTH = 10;
@@ -74,6 +73,7 @@ const UploadPathDialog = memo(props => {
       </Typography>
       <Box sx={styles.textFieldContainer}>
         <TextField
+          data-testid="artifacts-upload-path-input"
           fullWidth
           label="Path"
           value={folderPath}
@@ -112,6 +112,7 @@ const UploadPathDialog = memo(props => {
         Cancel
       </Button.BaseBtn>
       <Button.BaseBtn
+        data-testid="artifacts-upload-path-upload-button"
         variant="elitea"
         color="primary"
         onClick={handleConfirm}
@@ -125,6 +126,7 @@ const UploadPathDialog = memo(props => {
 
   return (
     <BaseModal
+      data-testid="artifacts-upload-path-dialog"
       open={open}
       onClose={handleCancel}
       title="Upload files to ..."
