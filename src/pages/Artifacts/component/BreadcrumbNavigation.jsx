@@ -66,6 +66,7 @@ const BreadcrumbNavigation = memo(props => {
               sx={breadcrumbStyles.breadcrumbSeparator}
             />
             <Typography
+              data-testid="artifacts-breadcrumb-folder-label"
               variant="headingSmall"
               sx={getBreadcrumbSx(index < breadcrumbs.length - 1)}
               onClick={

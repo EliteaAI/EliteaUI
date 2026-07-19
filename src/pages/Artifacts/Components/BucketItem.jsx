@@ -236,6 +236,7 @@ export const BucketItem = forwardRef((props, ref) => {
   return (
     <Box
       data-testid={`artifacts-bucket-row-${name}`}
+      data-selected={isActive ? 'true' : 'false'}
       ref={ref}
       sx={styles.container}
       onClick={handleSelectBucket}

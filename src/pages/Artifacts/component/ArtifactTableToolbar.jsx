@@ -73,6 +73,7 @@ const ArtifactTableToolbar = memo(props => {
         ) : (
           <>
             <Typography
+              data-testid="artifacts-breadcrumb-bucket-label"
               variant="headingSmall"
               sx={rootBucketSx}
               onClick={currentPrefix ? handleRootClick : undefined}
