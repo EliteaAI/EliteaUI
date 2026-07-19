@@ -94,6 +94,12 @@ const UploadPathDialog = memo(props => {
                 </InputAdornment>
               ),
             },
+            // 'data-testid' on the TextField above lands on the
+            // MuiFormControl-root wrapper (read-only startAdornment +
+            // label), not the editable native <input> itself -- htmlInput
+            // targets the real <input> element, same pattern already
+            // established in UserInput.jsx / CreateSkillForm.jsx.
+            htmlInput: { 'data-testid': 'artifacts-upload-path-input-field' },
           }}
           autoFocus
         />
