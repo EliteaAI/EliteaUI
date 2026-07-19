@@ -148,6 +148,7 @@ export const BucketItem = forwardRef((props, ref) => {
 
     return [
       {
+        key: 'bucket-menu-upload-files',
         label: 'Upload files',
         icon: (
           <Box
@@ -286,7 +287,7 @@ export const BucketItem = forwardRef((props, ref) => {
         onClick={handleMenuClick}
       >
         <DotMenu
-          id="bucket-menu"
+          id={`bucket-menu-${name}`}
           slotProps={styles.menuSlotProps}
           onClose={onCloseMenuList}
           onShowMenuList={onShowMenuList}

@@ -216,6 +216,7 @@ const CreateBucket = memo(() => {
             <Box sx={styles.formContent}>
               <Box sx={styles.nameFieldWrapper}>
                 <TextField
+                  data-testid="artifacts-bucket-name-input"
                   variant="standard"
                   fullWidth
                   id="name"
@@ -233,6 +234,7 @@ const CreateBucket = memo(() => {
               <Box sx={styles.retentionPolicyWrapper}>
                 <Box sx={styles.selectWrapper}>
                   <Select.SingleSelect
+                    data-testid="artifacts-bucket-retention-measure-select"
                     showBorder
                     id="expiration_measure"
                     name="expiration_measure"
@@ -247,6 +249,7 @@ const CreateBucket = memo(() => {
                 </Box>
                 <Box sx={styles.valueFieldWrapper}>
                   <TextField
+                    data-testid="artifacts-bucket-retention-value-input"
                     variant="standard"
                     fullWidth
                     id="expiration_value"
@@ -264,6 +267,7 @@ const CreateBucket = memo(() => {
               </Box>
               <Box sx={styles.buttonWrapper}>
                 <Button.BaseBtn
+                  data-testid="artifacts-bucket-save-button"
                   onClick={onSave}
                   variant="elitea"
                   color="primary"

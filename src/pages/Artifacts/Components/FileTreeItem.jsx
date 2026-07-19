@@ -104,6 +104,7 @@ const FileTreeItem = memo(props => {
   return (
     <Box sx={styles.wrapper}>
       <Box
+        data-testid={`artifacts-tree-item-${item.key}`}
         sx={styles.container}
         onClick={handleSelect}
         onMouseEnter={handleMouseEnter}
