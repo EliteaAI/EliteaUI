@@ -55,6 +55,7 @@ const ZipDownloadProgressDialog = memo(props => {
   return (
     <BaseModal
       open={open}
+      data-testid="artifacts-zip-download-progress-dialog"
       title={`Preparing ${bucket || 'artifacts'}.zip`}
       content={content}
       actions={actions}

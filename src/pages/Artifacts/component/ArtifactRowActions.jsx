@@ -39,12 +39,14 @@ const ArtifactRowActions = memo(props => {
 
     if (isFile) {
       items.push({
+        key: 'artifacts-file-download',
         label: 'Download',
         icon: <DownloadIcon sx={styles.menuIcon} />,
         onClick: handleDownload,
       });
 
       items.push({
+        key: 'artifacts-file-delete',
         label: 'Delete',
         icon: <DeleteIcon sx={styles.menuIcon} />,
         entityName: row.name,
