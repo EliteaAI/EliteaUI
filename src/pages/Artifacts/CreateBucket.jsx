@@ -216,7 +216,6 @@ const CreateBucket = memo(() => {
             <Box sx={styles.formContent}>
               <Box sx={styles.nameFieldWrapper}>
                 <TextField
-                  data-testid="artifacts-bucket-name-input"
                   variant="standard"
                   fullWidth
                   id="name"
@@ -228,7 +227,7 @@ const CreateBucket = memo(() => {
                   error={formik.touched.name && Boolean(formik.errors.name)}
                   helperText={formik.touched.name && formik.errors.name}
                   disabled={!!currentBucket}
-                  inputProps={{ maxLength: 56 }}
+                  inputProps={{ maxLength: 56, 'data-testid': 'artifacts-bucket-name-input' }}
                 />
               </Box>
               <Box sx={styles.retentionPolicyWrapper}>
@@ -249,7 +248,6 @@ const CreateBucket = memo(() => {
                 </Box>
                 <Box sx={styles.valueFieldWrapper}>
                   <TextField
-                    data-testid="artifacts-bucket-retention-value-input"
                     variant="standard"
                     fullWidth
                     id="expiration_value"
@@ -262,6 +260,7 @@ const CreateBucket = memo(() => {
                     error={formik.touched.expiration_value && Boolean(formik.errors.expiration_value)}
                     helperText={formik.touched.expiration_value && formik.errors.expiration_value}
                     sx={styles.valueField}
+                    inputProps={{ 'data-testid': 'artifacts-bucket-retention-value-input' }}
                   />
                 </Box>
               </Box>
