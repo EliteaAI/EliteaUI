@@ -22,11 +22,13 @@ const ZipDownloadProgressDialog = memo(props => {
           variant="determinate"
           value={(progress.current / progress.total) * 100}
           sx={styles.progressBar}
+          data-testid="artifacts-zip-download-progress-bar"
         />
       </Box>
       <Typography
         variant="caption"
         color="textSecondary"
+        data-testid="artifacts-zip-download-progress-counter"
       >
         {progress.current} of {progress.total} files
       </Typography>
@@ -35,6 +37,7 @@ const ZipDownloadProgressDialog = memo(props => {
           variant="headingSmall"
           color="textSecondary"
           sx={styles.filename}
+          data-testid="artifacts-zip-download-progress-current-file"
         >
           Current: {progress.filename}
         </Typography>
@@ -47,16 +50,27 @@ const ZipDownloadProgressDialog = memo(props => {
       variant="elitea"
       color="alarm"
       onClick={onCancel}
+      data-testid="artifacts-zip-download-progress-cancel-button"
     >
       Cancel
     </Button.BaseBtn>
+  );
+
+  const titleNode = (
+    <Typography
+      variant="headingSmall"
+      color="text.secondary"
+      data-testid="artifacts-zip-download-progress-title"
+    >
+      Preparing {bucket || 'artifacts'}.zip
+    </Typography>
   );
 
   return (
     <BaseModal
       open={open}
       data-testid="artifacts-zip-download-progress-dialog"
-      title={`Preparing ${bucket || 'artifacts'}.zip`}
+      title={titleNode}
       content={content}
       actions={actions}
       onClose={onCancel}

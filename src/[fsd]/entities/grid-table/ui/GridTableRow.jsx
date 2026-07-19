@@ -37,6 +37,7 @@ const GridTableRow = memo(props => {
     rowHeight,
     checkboxCellSx,
     'data-testid': dataTestId,
+    checkboxTestId,
   } = props;
 
   const styles = gridTableRowStyles(isSelected, isHovered, gridTemplateColumns, showCheckbox, rowHeight);
@@ -66,6 +67,7 @@ const GridTableRow = memo(props => {
               onChange={handleCheckboxChange}
               sx={styles.checkbox}
               onClick={e => e.stopPropagation()}
+              data-testid={checkboxTestId}
             />
           )}
         </Box>
