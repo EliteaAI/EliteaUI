@@ -60,6 +60,7 @@ const DeleteEntityModal = memo(props => {
     >
       <Typography
         id="alert-dialog-description"
+        data-testid="delete-confirm-message"
         color="text.deleteAlertText"
         variant="bodyMedium"
         sx={{ whiteSpaceCollapse: 'preserve' }}
