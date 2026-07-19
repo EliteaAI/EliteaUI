@@ -14,6 +14,7 @@ const CategoryFilter = memo(props => {
     selectedCategories = [],
     onSelectCategory,
     children,
+    searchInputTestId,
     slotProps = {
       categoryList: {
         sx: {},
@@ -49,6 +50,7 @@ const CategoryFilter = memo(props => {
             <SearchIcon fill={theme.palette.text.secondary} />
           </Box>
           <TextField
+            data-testid={searchInputTestId}
             placeholder={searchPlaceholder}
             value={searchQuery}
             onChange={onSearchChange}

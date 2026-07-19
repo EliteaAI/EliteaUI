@@ -58,7 +58,7 @@ const DiscardButton = memo(props => {
         confirming={discarding}
         dialogSx={{ fontSize: '0.875rem' }}
         data-testid={modalDataTestId}
-        confirmButtonDataTestId={confirmButtonDataTestId}
+        confirmButtonTestId={confirmButtonDataTestId}
       />
     </>
   );

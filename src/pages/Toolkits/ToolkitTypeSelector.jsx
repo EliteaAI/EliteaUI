@@ -219,6 +219,7 @@ const ToolkitTypeSelector = memo(
           allowEmptyCategory={isMCP}
           renderCategory={renderCategory}
           renderNoResults={renderNoResults}
+          searchInputTestId={!isApplication && !isMCP ? 'toolkit-wizard-type-search-input' : undefined}
           {...searchProps}
         />
       </>
