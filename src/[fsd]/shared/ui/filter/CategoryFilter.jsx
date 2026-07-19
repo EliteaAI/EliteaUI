@@ -50,13 +50,15 @@ const CategoryFilter = memo(props => {
             <SearchIcon fill={theme.palette.text.secondary} />
           </Box>
           <TextField
-            data-testid={searchInputTestId}
             placeholder={searchPlaceholder}
             value={searchQuery}
             onChange={onSearchChange}
             sx={styles.searchField}
             variant="outlined"
             size="small"
+            slotProps={{
+              htmlInput: { 'data-testid': searchInputTestId },
+            }}
           />
         </Box>
 
