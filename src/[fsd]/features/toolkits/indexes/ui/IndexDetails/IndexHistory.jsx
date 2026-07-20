@@ -7,7 +7,7 @@ import { Box, Typography } from '@mui/material';
 
 import { useRunHistorySorting } from '@/[fsd]/entities/run-history/lib/hooks';
 import { RunHistorySortableHeader } from '@/[fsd]/entities/run-history/ui';
-import { IndexHistoryItemsLabels } from '@/[fsd]/features/toolkits/indexes/lib/constants';
+import { IndexHistoryItemsLabels, IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants';
 import { actions, selectHistoryItem } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
 
 const SORT_TYPES = {
@@ -24,8 +24,23 @@ const IndexHistory = memo(props => {
   const selectedHistoryItem = useSelector(selectHistoryItem);
   const { sortConfig, handleSortItems, getSortedData } = useRunHistorySorting(SORT_TYPES.DATE);
 
+  const initialCompletedTs = useMemo(() => {
+    const completed = history.filter(h => h.state === IndexStatuses.success);
+    if (!completed.length) return null;
+    return completed.reduce((min, h) => (h.updated_on < min ? h.updated_on : min), completed[0].updated_on);
+  }, [history]);
+
+  const annotateItem = useMemo(
+    () => item => {
+      if (!item) return item;
+      const isInitialIndex = item.state === IndexStatuses.success && item.updated_on === initialCompletedTs;
+      return { ...item, isInitialIndex };
+    },
+    [initialCompletedTs],
+  );
+
   useEffect(() => {
-    dispatch(actions.selectHistoryItem(history[history.length - 1]));
+    dispatch(actions.selectHistoryItem(annotateItem(history[history.length - 1])));
 
     return () => {
       dispatch(actions.selectHistoryItem(null));
@@ -59,7 +74,7 @@ const IndexHistory = memo(props => {
   );
 
   const handleSelectHistoryItem = item => {
-    dispatch(actions.selectHistoryItem(item));
+    dispatch(actions.selectHistoryItem(annotateItem(item)));
   };
 
   return (

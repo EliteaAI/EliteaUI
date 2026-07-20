@@ -5,6 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { Box, Button, CircularProgress } from '@mui/material';
 
+import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
 import { useGetIndexesListQuery } from '@/[fsd]/features/toolkits/indexes/api';
 import {
   IndexStatuses,
@@ -200,18 +201,18 @@ const CreateIndexForm = memo(props => {
       />
       <Box sx={styles.actions}>
         <Button
-          variant="secondary"
-          onClick={handleCancel}
-          disabled={isRunning}
-        >
-          Cancel
-        </Button>
-        <Button
           variant="special"
           onClick={handleIndexData}
           disabled={!isValidForm || isRunning}
         >
           Index
+        </Button>
+        <Button
+          variant="secondary"
+          onClick={handleCancel}
+          disabled={isRunning}
+        >
+          Cancel
         </Button>
       </Box>
     </Box>
@@ -269,30 +270,35 @@ const CreateIndex = memo(() => {
 
   return (
     <Box sx={styles.wrapper}>
-      <Box sx={styles.header}>
-        <IndexBreadcrumb
-          toolkitName={toolkitName}
-          current="New index"
-          onToolkitsClick={goToToolkitsList}
-          onToolkitClick={goBackToToolkit}
-        />
-      </Box>
-      {isFetching || !publicToolkitData?.id ? (
-        <Box sx={styles.loading}>
-          <CircularProgress size={24} />
-        </Box>
-      ) : (
-        <Formik
-          enableReinitialize
-          initialValues={initialValues}
-          onSubmit={() => {}}
-        >
-          <CreateIndexForm
-            toolkitId={toolkitId}
-            tab={tab}
+      <DrawerPageHeader
+        showBorder
+        title={
+          <IndexBreadcrumb
+            toolkitName={toolkitName}
+            current="New index"
+            onToolkitsClick={goToToolkitsList}
+            onToolkitClick={goBackToToolkit}
           />
-        </Formik>
-      )}
+        }
+      />
+      <Box sx={styles.content}>
+        {isFetching || !publicToolkitData?.id ? (
+          <Box sx={styles.loading}>
+            <CircularProgress size={24} />
+          </Box>
+        ) : (
+          <Formik
+            enableReinitialize
+            initialValues={initialValues}
+            onSubmit={() => {}}
+          >
+            <CreateIndexForm
+              toolkitId={toolkitId}
+              tab={tab}
+            />
+          </Formik>
+        )}
+      </Box>
     </Box>
   );
 });
@@ -306,17 +312,18 @@ const createIndexStyles = () => ({
     flexDirection: 'column',
     height: '100%',
     width: '100%',
-    maxWidth: '52rem',
-    margin: '0 auto',
+    overflow: 'hidden',
+    boxSizing: 'border-box',
+  },
+  content: {
+    display: 'flex',
+    flexDirection: 'column',
+    flex: 1,
+    minHeight: 0,
     padding: '1rem 1.5rem',
     gap: '1rem',
     overflow: 'hidden',
     boxSizing: 'border-box',
-  },
-  header: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.75rem',
   },
   body: {
     display: 'flex',
@@ -324,6 +331,9 @@ const createIndexStyles = () => ({
     gap: '1rem',
     flex: 1,
     minHeight: 0,
+    width: '100%',
+    maxWidth: '52rem',
+    marginX: 'auto',
   },
   accordionWrapper: {
     flex: 1,

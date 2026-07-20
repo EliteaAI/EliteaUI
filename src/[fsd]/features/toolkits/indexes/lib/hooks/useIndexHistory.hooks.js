@@ -85,20 +85,27 @@ export const useIndexHistory = (progressHistoryOptions = null) => {
     showMockMessage => {
       if (!showMockMessage) return [];
 
+      const isScheduled = indexHistoryItem?.state === IndexStatuses.scheduledReindex;
+      const isInitialIndex = Boolean(indexHistoryItem?.isInitialIndex);
+
       const getFailedTrace = () => {
         if (indexHistoryItem?.error) return indexHistoryItem?.error;
 
-        return 'The system encountered an issue and was unable to complete the scheduled reindexing operation';
+        if (isScheduled)
+          return 'The system encountered an issue and was unable to complete the scheduled reindexing operation';
+        return isInitialIndex
+          ? 'The system encountered an issue and was unable to complete the indexing operation'
+          : 'The system encountered an issue and was unable to complete the reindexing operation';
       };
 
       const isFailed = indexHistoryItem?.state === IndexStatuses.fail;
       const isPartlyOk = indexHistoryItem?.state === IndexStatuses.partlyOk;
 
       const getExecutionSummary = () => {
-        if (isFailed)
-          return 'The system encountered an issue and was unable to complete the scheduled reindexing operation';
-        if (isPartlyOk) return 'Partially indexed by schedule';
-        return 'Successfully reindexed by schedule';
+        if (isFailed) return getFailedTrace();
+        if (isPartlyOk) return isScheduled ? 'Partially indexed by schedule' : 'Partially indexed';
+        if (isScheduled) return 'Successfully reindexed by schedule';
+        return isInitialIndex ? 'Successfully indexed' : 'Successfully reindexed';
       };
 
       const toolExecutionSummary = getExecutionSummary();

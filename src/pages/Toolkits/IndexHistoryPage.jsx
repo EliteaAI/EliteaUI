@@ -5,7 +5,11 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { Box, CircularProgress, Typography } from '@mui/material';
 
+import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
+import { ParticipantEntityTypes } from '@/[fsd]/features/chat/participants/lib/constants/participant.constants';
+import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
 import { useGetIndexesListQuery } from '@/[fsd]/features/toolkits/indexes/api';
+import { IndexStatuses, RUN_TEST_OPERATION_TYPES } from '@/[fsd]/features/toolkits/indexes/lib/constants';
 import { selectIndexesList } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
 import { IndexChatContainer, IndexHistory } from '@/[fsd]/features/toolkits/indexes/ui';
 import { useToolkitsDetailsQuery } from '@/api/toolkits.js';
@@ -72,8 +76,35 @@ const IndexHistoryPage = memo(() => {
     if (isError && !shouldShowNotFoundPage) toastError(buildErrorMessage(error));
   }, [error, isError, shouldShowNotFoundPage, toastError]);
 
-  const history = currentIndex?.metadata?.history || [];
-  const isLoading = indexesLoading || indexesFetching || !hasData;
+  const baseHistory = useMemo(() => currentIndex?.metadata?.history || [], [currentIndex]);
+
+  const { data: runHistoryData, isLoading: runHistoryLoading } = RunHistoryApi.useGetRunHistoryListQuery(
+    {
+      source: ParticipantEntityTypes.Toolkit,
+      projectId,
+      entityId: toolkitId,
+      page: 0,
+      pageSize: 100,
+    },
+    { skip: !projectId || !toolkitId },
+  );
+
+  const runTestHistoryItems = useMemo(() => {
+    const rows = runHistoryData?.rows || [];
+    if (!indexName) return [];
+    return rows
+      .filter(row => row.index_name === indexName && RUN_TEST_OPERATION_TYPES.has(row.operation_type))
+      .map(row => ({
+        state: IndexStatuses.runTest,
+        updated_on: Math.floor(new Date(row.created_at).getTime() / 1000),
+        conversation_id: row.id,
+        operation_type: row.operation_type,
+      }));
+  }, [runHistoryData, indexName]);
+
+  const history = useMemo(() => [...baseHistory, ...runTestHistoryItems], [baseHistory, runTestHistoryItems]);
+
+  const isLoading = indexesLoading || indexesFetching || !hasData || runHistoryLoading;
 
   const toggleFullScreenChat = useCallback(() => setIsFullScreenChat(prev => !prev), []);
 
@@ -83,59 +114,64 @@ const IndexHistoryPage = memo(() => {
 
   return (
     <Box sx={styles.wrapper}>
-      <Box sx={styles.header}>
-        <IndexBreadcrumb
-          toolkitName={toolkitName}
-          current="History"
-          onToolkitsClick={goToToolkitsList}
-          onToolkitClick={goBackToToolkit}
-          onIndexClick={goBackToRunIndex}
-          indexName={indexName}
-        />
+      <DrawerPageHeader
+        showBorder
+        title={
+          <IndexBreadcrumb
+            toolkitName={toolkitName}
+            current="History"
+            onToolkitsClick={goToToolkitsList}
+            onToolkitClick={goBackToToolkit}
+            onIndexClick={goBackToRunIndex}
+            indexName={indexName}
+          />
+        }
+      />
+      <Box sx={styles.content}>
+        {isLoading ? (
+          <Box sx={styles.loading}>
+            <CircularProgress size={24} />
+          </Box>
+        ) : !currentIndex ? (
+          <Box sx={styles.loading}>
+            <Typography
+              variant="bodyMedium"
+              color="text.secondary"
+            >
+              Index &quot;{indexName}&quot; was not found for this toolkit.
+            </Typography>
+          </Box>
+        ) : history.length === 0 ? (
+          <Box sx={styles.loading}>
+            <Typography
+              variant="bodyMedium"
+              color="text.secondary"
+            >
+              No history is available for this index yet.
+            </Typography>
+          </Box>
+        ) : (
+          <Box sx={styles.body}>
+            <Box sx={styles.historyColumn}>
+              <IndexHistory history={history} />
+            </Box>
+            <Box sx={styles.chatColumn}>
+              <IndexChatContainer
+                selectedModel={null}
+                onSelectModel={() => null}
+                modelList={[]}
+                llmSettings={null}
+                onSetLLMSettings={() => null}
+                isFullScreenChat={isFullScreenChat}
+                toggleFullScreenChat={toggleFullScreenChat}
+                clearChat={() => null}
+                chatHistory={[]}
+                conversation={null}
+              />
+            </Box>
+          </Box>
+        )}
       </Box>
-      {isLoading ? (
-        <Box sx={styles.loading}>
-          <CircularProgress size={24} />
-        </Box>
-      ) : !currentIndex ? (
-        <Box sx={styles.loading}>
-          <Typography
-            variant="bodyMedium"
-            color="text.secondary"
-          >
-            Index &quot;{indexName}&quot; was not found for this toolkit.
-          </Typography>
-        </Box>
-      ) : history.length === 0 ? (
-        <Box sx={styles.loading}>
-          <Typography
-            variant="bodyMedium"
-            color="text.secondary"
-          >
-            No history is available for this index yet.
-          </Typography>
-        </Box>
-      ) : (
-        <Box sx={styles.body}>
-          <Box sx={styles.historyColumn}>
-            <IndexHistory history={history} />
-          </Box>
-          <Box sx={styles.chatColumn}>
-            <IndexChatContainer
-              selectedModel={null}
-              onSelectModel={() => null}
-              modelList={[]}
-              llmSettings={null}
-              onSetLLMSettings={() => null}
-              isFullScreenChat={isFullScreenChat}
-              toggleFullScreenChat={toggleFullScreenChat}
-              clearChat={() => null}
-              chatHistory={[]}
-              conversation={null}
-            />
-          </Box>
-        </Box>
-      )}
     </Box>
   );
 });
@@ -148,14 +184,16 @@ const indexHistoryPageStyles = () => ({
     display: 'flex',
     flexDirection: 'column',
     height: '100%',
+    overflow: 'hidden',
+  },
+  content: {
+    display: 'flex',
+    flexDirection: 'column',
+    flex: 1,
+    minHeight: 0,
     padding: '1rem 1.5rem',
     gap: '1rem',
     overflow: 'hidden',
-  },
-  header: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.75rem',
   },
   loading: {
     display: 'flex',

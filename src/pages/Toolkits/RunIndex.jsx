@@ -20,6 +20,7 @@ import {
 
 import { ChatButton } from '@/[fsd]/features/chat/ui';
 import { ChatMessageList } from '@/[fsd]/features/chat/ui/chat-box';
+import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
 import {
   useDeleteIndexItemMutation,
   useGetIndexScheduleQuery,
@@ -423,12 +424,12 @@ const RunIndexPanel = memo(props => {
   ) : (
     <Box sx={styles.scheduleSummaryBlock}>
       <Typography variant="bodyMedium">{scheduleSummary}</Typography>
-      {scheduleData.credentials && (
+      {scheduleData.credentials?.elitea_title && (
         <Typography
           variant="bodySmall"
           color="text.secondary"
         >
-          Credentials: {scheduleData.credentials}
+          Credentials: {scheduleData.credentials.elitea_title}
         </Typography>
       )}
     </Box>
@@ -664,18 +665,19 @@ const RunIndexPanel = memo(props => {
 
         {!canRunTools && !isIndexing && (
           <Box sx={styles.readyRow}>
-            <RocketIcon />
-            <Typography
-              variant="bodyMedium"
-              color="text.secondary"
-            >
-              Reindex to enable running tools against this index.
-            </Typography>
+            <Box sx={styles.readyRowInner}>
+              <RocketIcon />
+              <Typography
+                variant="bodyMedium"
+                color="text.secondary"
+              >
+                Reindex to enable running tools against this index.
+              </Typography>
+            </Box>
           </Box>
         )}
         <Box sx={styles.rightFooter}>
-          <Box sx={styles.footerSpacer} />
-          <Box sx={styles.footerCenter}>
+          <Box sx={styles.footerRunSlot}>
             <Button
               variant="special"
               disabled={!canRunTools || !isRunFormValid || isRunning || isIndexing}
@@ -687,14 +689,14 @@ const RunIndexPanel = memo(props => {
               Run Test
             </Button>
           </Box>
-          <Box sx={styles.footerRight}>
-            {activeRightTab === RIGHT_TAB_RESULTS && (
+          {activeRightTab === RIGHT_TAB_RESULTS && (
+            <Box sx={styles.footerClearSlot}>
               <ChatButton.ClearChatButton
                 disabled={isRunning || isIndexing}
                 onClear={handleClearChat}
               />
-            )}
-          </Box>
+            </Box>
+          )}
         </Box>
       </Box>
 
@@ -837,52 +839,57 @@ const RunIndex = memo(() => {
 
   return (
     <Box sx={styles.wrapper}>
-      <Box sx={styles.header}>
-        <IndexBreadcrumb
-          toolkitName={publicToolkitData?.name || ''}
-          current={indexName || 'Index'}
-          onToolkitsClick={goToToolkitsList}
-          onToolkitClick={goBackToToolkit}
-        />
-      </Box>
-      {isLoading || showCreatingPlaceholder ? (
-        <Box sx={styles.loading}>
-          <CircularProgress size={24} />
-          {showCreatingPlaceholder && (
+      <DrawerPageHeader
+        showBorder
+        title={
+          <IndexBreadcrumb
+            toolkitName={publicToolkitData?.name || ''}
+            current={indexName || 'Index'}
+            onToolkitsClick={goToToolkitsList}
+            onToolkitClick={goBackToToolkit}
+          />
+        }
+      />
+      <Box sx={styles.content}>
+        {isLoading || showCreatingPlaceholder ? (
+          <Box sx={styles.loading}>
+            <CircularProgress size={24} />
+            {showCreatingPlaceholder && (
+              <Typography
+                variant="bodyMedium"
+                color="text.secondary"
+                sx={{ marginLeft: '0.75rem' }}
+              >
+                Preparing index &quot;{indexName}&quot;…
+              </Typography>
+            )}
+          </Box>
+        ) : !currentIndex ? (
+          <Box sx={styles.loading}>
             <Typography
               variant="bodyMedium"
               color="text.secondary"
-              sx={{ marginLeft: '0.75rem' }}
             >
-              Preparing index &quot;{indexName}&quot;…
+              Index &quot;{indexName}&quot; was not found for this toolkit.
             </Typography>
-          )}
-        </Box>
-      ) : !currentIndex ? (
-        <Box sx={styles.loading}>
-          <Typography
-            variant="bodyMedium"
-            color="text.secondary"
+          </Box>
+        ) : (
+          <Formik
+            enableReinitialize
+            initialValues={initialValues}
+            onSubmit={() => {}}
           >
-            Index &quot;{indexName}&quot; was not found for this toolkit.
-          </Typography>
-        </Box>
-      ) : (
-        <Formik
-          enableReinitialize
-          initialValues={initialValues}
-          onSubmit={() => {}}
-        >
-          <RunIndexPanel
-            toolkitId={toolkitId}
-            tab={tab}
-            indexName={indexName}
-            index={currentIndex}
-            selectedIndexTools={selectedIndexTools}
-            refetchIndexesList={handleRefetch}
-          />
-        </Formik>
-      )}
+            <RunIndexPanel
+              toolkitId={toolkitId}
+              tab={tab}
+              indexName={indexName}
+              index={currentIndex}
+              selectedIndexTools={selectedIndexTools}
+              refetchIndexesList={handleRefetch}
+            />
+          </Formik>
+        )}
+      </Box>
     </Box>
   );
 });
@@ -895,14 +902,16 @@ const runIndexStyles = () => ({
     display: 'flex',
     flexDirection: 'column',
     height: '100%',
+    overflow: 'hidden',
+  },
+  content: {
+    display: 'flex',
+    flexDirection: 'column',
+    flex: 1,
+    minHeight: 0,
     padding: '1rem 1.5rem',
     gap: '1rem',
     overflow: 'hidden',
-  },
-  header: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.75rem',
   },
   loading: {
     display: 'flex',
@@ -1019,28 +1028,34 @@ const runIndexStyles = () => ({
   rightFooter: {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.75rem',
     paddingTop: '0.5rem',
+    width: '100%',
+    position: 'relative',
   },
-  footerSpacer: {
-    flex: 1,
-  },
-  footerCenter: {
-    flex: 1,
+  footerRunSlot: {
+    width: '100%',
+    maxWidth: '48rem',
     display: 'flex',
     justifyContent: 'center',
   },
-  footerRight: {
-    flex: 1,
-    display: 'flex',
-    justifyContent: 'flex-end',
+  footerClearSlot: {
+    position: 'absolute',
+    right: 0,
+    top: '50%',
+    transform: 'translateY(-50%)',
+    marginTop: '0.25rem',
   },
   readyRow: {
+    width: '100%',
+    maxWidth: '48rem',
+    display: 'flex',
+    justifyContent: 'center',
+    paddingTop: '0.25rem',
+  },
+  readyRowInner: {
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center',
     gap: '0.5rem',
-    paddingTop: '0.25rem',
   },
 });
 
