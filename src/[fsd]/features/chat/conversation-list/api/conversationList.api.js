@@ -67,7 +67,7 @@ export const apiSlice = eliteaApi
             currentArg.projectId !== previousArg.projectId ||
             currentArg.params?.sort_by !== previousArg.params?.sort_by ||
             currentArg.params?.sort_order !== previousArg.params?.sort_order ||
-            currentArg.params?.search !== previousArg.params?.search
+            currentArg.params?.query !== previousArg.params?.query
           );
         },
       }),
