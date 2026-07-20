@@ -65,6 +65,7 @@ const UploadPathDialog = memo(props => {
   const content = (
     <>
       <Typography
+        data-testid="artifacts-upload-path-description-text"
         variant="bodyMedium"
         color="text.secondary"
         sx={styles.description}
