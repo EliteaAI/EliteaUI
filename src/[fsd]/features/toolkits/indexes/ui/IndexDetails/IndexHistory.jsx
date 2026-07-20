@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo } from 'react';
+import { memo, useCallback, useEffect, useMemo } from 'react';
 
 import { format, fromUnixTime } from 'date-fns';
 import { useDispatch, useSelector } from 'react-redux';
@@ -48,16 +48,22 @@ const IndexHistory = memo(props => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const resolveLabel = useCallback(
+    item => {
+      if (item.state === IndexStatuses.success && item.updated_on !== initialCompletedTs) {
+        return 'Reindexed';
+      }
+      return IndexHistoryItemsLabels[item.state] || item.state;
+    },
+    [initialCompletedTs],
+  );
+
   const sortFunctions = useMemo(
     () => ({
-      [SORT_TYPES.EVENT]: (a, b) => {
-        const labelA = IndexHistoryItemsLabels[a.state] || a.state;
-        const labelB = IndexHistoryItemsLabels[b.state] || b.state;
-        return labelA.localeCompare(labelB);
-      },
+      [SORT_TYPES.EVENT]: (a, b) => resolveLabel(a).localeCompare(resolveLabel(b)),
       [SORT_TYPES.DATE]: (a, b) => a.updated_on - b.updated_on,
     }),
-    [],
+    [resolveLabel],
   );
 
   const sortedHistory = useMemo(
@@ -105,7 +111,7 @@ const IndexHistory = memo(props => {
               color="text.secondary"
               sx={{ width: '6.5rem' }}
             >
-              {IndexHistoryItemsLabels[historyItem.state]}
+              {resolveLabel(historyItem)}
             </Typography>
             <Typography
               variant="bodyM"
