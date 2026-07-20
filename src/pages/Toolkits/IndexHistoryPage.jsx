@@ -94,12 +94,16 @@ const IndexHistoryPage = memo(() => {
     if (!indexName) return [];
     return rows
       .filter(row => row.index_name === indexName && RUN_TEST_OPERATION_TYPES.has(row.operation_type))
-      .map(row => ({
-        state: IndexStatuses.runTest,
-        updated_on: Math.floor(new Date(row.created_at).getTime() / 1000),
-        conversation_id: row.id,
-        operation_type: row.operation_type,
-      }));
+      .map(row => {
+        const ms = new Date(row.created_at).getTime();
+        return {
+          state: IndexStatuses.runTest,
+          updated_on: Number.isFinite(ms) ? Math.floor(ms / 1000) : null,
+          conversation_id: row.id,
+          operation_type: row.operation_type,
+        };
+      })
+      .filter(item => Number.isFinite(item.updated_on));
   }, [runHistoryData, indexName]);
 
   const history = useMemo(() => [...baseHistory, ...runTestHistoryItems], [baseHistory, runTestHistoryItems]);

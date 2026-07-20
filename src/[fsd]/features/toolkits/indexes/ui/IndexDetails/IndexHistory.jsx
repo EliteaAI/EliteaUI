@@ -61,7 +61,10 @@ const IndexHistory = memo(props => {
   );
 
   const sortedHistory = useMemo(
-    () => getSortedData(history, sortFunctions).filter(item => Boolean(IndexHistoryItemsLabels[item.state])),
+    () =>
+      getSortedData(history, sortFunctions).filter(
+        item => Boolean(IndexHistoryItemsLabels[item.state]) && Number.isFinite(item.updated_on),
+      ),
     [history, getSortedData, sortFunctions],
   );
 
