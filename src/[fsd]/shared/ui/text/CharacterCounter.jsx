@@ -3,18 +3,32 @@ import { memo } from 'react';
 import { Box, Typography } from '@mui/material';
 
 const CharacterCounter = memo(props => {
-  const { value, maxLength, textVariant = 'bodySmall', 'data-testid': dataTestId } = props;
+  const {
+    value,
+    maxLength,
+    textVariant = 'bodySmall',
+    hideMaxLimitMessage = false,
+    sx,
+    'data-testid': dataTestId,
+  } = props;
   const remaining = maxLength - value.length;
   const isAtLimit = remaining === 0;
+  const showMaxLimitMessage = isAtLimit && !hideMaxLimitMessage;
 
   return (
     <Box
       data-testid={dataTestId}
-      sx={({ palette }) => ({ color: isAtLimit ? palette.error.main : palette.secondary.main })}
+      sx={({ palette }) => ({
+        display: 'contents',
+        color: showMaxLimitMessage ? palette.error.main : palette.secondary.main,
+      })}
     >
-      <Typography variant={textVariant}>
+      <Typography
+        variant={textVariant}
+        sx={sx}
+      >
         {`${remaining} characters left`}
-        {isAtLimit && '. You have reached the MAXIMUM character limit'}
+        {showMaxLimitMessage && '. You have reached the MAXIMUM character limit'}
       </Typography>
     </Box>
   );
