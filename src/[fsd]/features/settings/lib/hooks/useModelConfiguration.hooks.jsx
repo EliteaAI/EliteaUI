@@ -233,7 +233,7 @@ export const useCopyConfiguration = ({
   userApiUrl,
   configurationsBySections,
 }) => {
-  const { toastSuccess, toastError } = useToast();
+  const { toastInfo, toastError } = useToast();
   const handleCopyCardInformation = useCallback(async () => {
     try {
       const informationData = ModelConfigurationHelpers.buildConfigurationData({
@@ -246,19 +246,11 @@ export const useCopyConfiguration = ({
 
       const jsonString = JSON.stringify(informationData, null, 2);
       await navigator.clipboard.writeText(jsonString);
-      toastSuccess?.('The basic information has been copied as JSON.');
+      toastInfo?.('The basic information has been copied as JSON.');
     } catch {
       toastError('Failed to copy configuration information');
     }
-  }, [
-    userApiUrl,
-    projectId,
-    model,
-    configurationsBySections,
-    uniqueConfigurations,
-    toastSuccess,
-    toastError,
-  ]);
+  }, [userApiUrl, projectId, model, configurationsBySections, uniqueConfigurations, toastInfo, toastError]);
 
   return { handleCopyCardInformation };
 };
