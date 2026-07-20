@@ -40,11 +40,11 @@ const SUBMENU_KEYS = {
 };
 
 const EXPANDABLE_ITEMS = [
-  { key: SUBMENU_KEYS.INTERNAL_TOOLS, label: 'Modules', Icon: ValueIcon },
-  { key: SUBMENU_KEYS.AGENTS, label: 'Agents', Icon: ApplicationsIcon },
-  { key: SUBMENU_KEYS.PIPELINES, label: 'Pipelines', Icon: FlowIcon },
-  { key: SUBMENU_KEYS.TOOLKITS, label: 'Toolkits', Icon: ToolIcon },
-  { key: SUBMENU_KEYS.MCPS, label: 'MCPs', Icon: MCPIcon },
+  { key: SUBMENU_KEYS.INTERNAL_TOOLS, label: 'Modules', Icon: ValueIcon, testId: 'internal-tools-menuitem' },
+  { key: SUBMENU_KEYS.AGENTS, label: 'Agents', Icon: ApplicationsIcon, testId: 'agents-menuitem' },
+  { key: SUBMENU_KEYS.PIPELINES, label: 'Pipelines', Icon: FlowIcon, testId: 'pipelines-menuitem' },
+  { key: SUBMENU_KEYS.TOOLKITS, label: 'Toolkits', Icon: ToolIcon, testId: 'toolkits-menuitem' },
+  { key: SUBMENU_KEYS.MCPS, label: 'MCPs', Icon: MCPIcon, testId: 'mcps-menuitem' },
 ];
 
 const SEARCHABLE_KEYS = [
@@ -293,6 +293,7 @@ const PlusChatButton = memo(props => {
           onSearchChange={data.onSearchChange}
           onScroll={data.onScroll}
           isLoading={data.isLoading}
+          sectionKey={hoveredItem}
           {...config}
         />
       );
@@ -363,11 +364,11 @@ const PlusChatButton = memo(props => {
               />
 
               {EXPANDABLE_ITEMS.filter(item => item.key !== SUBMENU_KEYS.MCPS || isMcpVisible).map(
-                ({ key, label, Icon }) => (
+                ({ key, label, Icon, testId }) => (
                   <MenuItem
                     key={key}
                     sx={styles.menuItem}
-                    data-testid={key === SUBMENU_KEYS.INTERNAL_TOOLS ? 'internal-tools-menuitem' : undefined}
+                    data-testid={testId}
                     onMouseEnter={e => handleItemHover(key, e)}
                     onMouseLeave={handleItemLeave}
                   >

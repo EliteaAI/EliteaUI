@@ -26,6 +26,7 @@ const PlusChatSubmenu = memo(props => {
     onScroll,
     showPublicLabel = true,
     showToggle = false,
+    sectionKey,
   } = props;
 
   const searchRef = useRef(null);
@@ -85,6 +86,7 @@ const PlusChatSubmenu = memo(props => {
             variant="standard"
             autoFocus
             InputProps={{ disableUnderline: true }}
+            inputProps={sectionKey ? { 'data-testid': `${sectionKey}-search-input` } : undefined}
           />
         </Box>
       </Box>
@@ -125,6 +127,7 @@ const PlusChatSubmenu = memo(props => {
           return (
             <MenuItem
               key={item.key}
+              data-testid={sectionKey ? `${sectionKey}-menu-item-${item.key}` : undefined}
               onClick={showToggle ? handleToggle(item) : handleItemClick(item)}
               disabled={showToggle && item.pending}
               sx={showToggle ? styles.toggleItem : styles.listItem}
