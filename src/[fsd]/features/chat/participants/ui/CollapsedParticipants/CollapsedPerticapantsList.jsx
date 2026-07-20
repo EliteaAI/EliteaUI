@@ -151,7 +151,10 @@ const CollapsedPerticapantsList = memo(props => {
           onOpen={() => onTriggerTooltipOpen(USERS_SECTION.type)}
           onClose={onTriggerTooltipClose}
         >
-          <Box sx={styles.root}>
+          <Box
+            sx={styles.root}
+            data-testid={`chat-participants-badge-${USERS_SECTION.section}`}
+          >
             <UsersParticipantDropdown
               showTrigger
               users={usersGroup.participants}

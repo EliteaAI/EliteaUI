@@ -27,7 +27,12 @@ const SummaryDetailsButton = memo(props => {
   // Show only the count without modal functionality
   return (
     <Box sx={styles.countDisplay}>
-      <Typography variant={isCompact ? 'bodySmall2' : 'bodyMedium'}>{count}</Typography>
+      <Typography
+        variant={isCompact ? 'bodySmall2' : 'bodyMedium'}
+        data-testid="context-budget-summaries-count"
+      >
+        {count}
+      </Typography>
     </Box>
   );
 

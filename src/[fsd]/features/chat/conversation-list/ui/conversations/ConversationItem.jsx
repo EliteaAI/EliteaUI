@@ -338,6 +338,7 @@ const ConversationItem = memo(props => {
 
   const renderConversationContent = () => (
     <Box
+      data-testid={`chat-conversation-item-${conversation.id}`}
       sx={styles.conversationContentWrapper}
       onClick={onClickConversation}
       onMouseEnter={onMouseEnter}

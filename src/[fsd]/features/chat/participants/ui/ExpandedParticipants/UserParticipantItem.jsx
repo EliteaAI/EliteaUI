@@ -41,6 +41,7 @@ const UserParticipantItem = memo(props => {
           name={user_name}
           avatar={user_avatar}
           size={28}
+          testId="chat-participants-users-avatar"
         />
         <Box
           id="cover"
