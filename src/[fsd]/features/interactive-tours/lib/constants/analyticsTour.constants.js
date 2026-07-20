@@ -85,8 +85,18 @@ Click any user row to open a drill-down showing a daily activity chart broken do
 The **Health by Event Type** table shows error rate and average latency for each event type (\`api\`, \`socketio\`, \`llm\`, \`tool\`, \`agent\`, \`rpc\`). Error rates above 5% are highlighted in red.`,
   },
   {
-    id: 'guide-tab',
+    id: 'costs-tab',
     tabIndex: 5,
+    target: ANALYTICS_TOUR_TARGETS.tabSection,
+    placement: 'right',
+    title: 'Costs Tab',
+    content: `The **Costs** tab breaks down LLM spend for the selected period. KPI tiles summarize total cost and token usage, while charts show cost by model and a daily cost trend.
+
+The **Cost by Agent** and **Cost by User** lists rank the top spenders, helping you attribute spend and spot unexpectedly expensive workloads.`,
+  },
+  {
+    id: 'guide-tab',
+    tabIndex: 6,
     target: ANALYTICS_TOUR_TARGETS.tabSection,
     placement: 'right',
     title: 'Guide Tab',

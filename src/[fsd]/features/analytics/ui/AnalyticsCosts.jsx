@@ -54,7 +54,7 @@ const AnalyticsCosts = memo(props => {
 
   if (!data) return null;
 
-  const { kpis = {} } = data;
+  const kpis = data.kpis ?? {};
 
   return (
     <Box sx={styles.container}>

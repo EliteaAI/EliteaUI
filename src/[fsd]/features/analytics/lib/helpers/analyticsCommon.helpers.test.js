@@ -24,6 +24,8 @@ describe('fmtCost', () => {
   it('formats dollar range with 2 decimals', () => expect(fmtCost(1.5)).toBe('$1.50'));
   it('formats thousands with K suffix', () => expect(fmtCost(1500)).toBe('$1.5K'));
   it('formats NaN as dash', () => expect(fmtCost(NaN)).toBe('-'));
+  it('formats Infinity as dash', () => expect(fmtCost(Infinity)).toBe('-'));
+  it('formats -Infinity as dash', () => expect(fmtCost(-Infinity)).toBe('-'));
   it('formats negative values with sign', () => expect(fmtCost(-1.5)).toBe('-$1.50'));
   it('formats undefined as dash', () => expect(fmtCost(undefined)).toBe('-'));
 });

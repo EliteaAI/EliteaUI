@@ -12,7 +12,7 @@ export const fmtDuration = ms => {
 };
 
 export const fmtCost = usd => {
-  if (usd == null || Number.isNaN(usd)) return '-';
+  if (usd == null || !Number.isFinite(usd)) return '-';
   if (usd === 0) return '$0.00';
   const abs = Math.abs(usd);
   const sign = usd < 0 ? '-' : '';
