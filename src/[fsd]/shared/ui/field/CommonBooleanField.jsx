@@ -25,6 +25,7 @@ const CommonBooleanField = memo(props => {
   return (
     <Box
       key={fieldKey}
+      data-testid={`toolkit-test-param-${fieldKey}`}
       sx={styles.wrapper(disabled)}
       className="index-config-field"
     >
@@ -39,7 +40,12 @@ const CommonBooleanField = memo(props => {
         label={
           <Box sx={styles.header}>
             <Typography variant="bodyMedium">{`${label}${isRequired ? ' *' : ''}`}</Typography>
-            {description && <InfoTooltip infoTooltip={description} sx={styles.infoIconWrapper} />}
+            {description && (
+              <InfoTooltip
+                infoTooltip={description}
+                sx={styles.infoIconWrapper}
+              />
+            )}
           </Box>
         }
         sx={styles.formControlLabel}

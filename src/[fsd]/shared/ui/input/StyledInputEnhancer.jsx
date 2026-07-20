@@ -48,6 +48,7 @@ const StyledInputEnhancer = memo(props => {
     inputRef,
     variantInput,
     tooltipDescription,
+    tooltipTestId,
     forceShowActionsToolbar,
     enableFStringAutocomplete,
     stateVariableOptions,
@@ -117,6 +118,7 @@ const StyledInputEnhancer = memo(props => {
         onFullScreen={handleOpenFullScreen}
         variant={variantInput}
         tooltipDescription={tooltipDescription}
+        tooltipTestId={tooltipTestId}
         forceShowActionsToolbar={forceShowActionsToolbar}
         fullScreenButtonProps={fullScreenButtonProps}
       />

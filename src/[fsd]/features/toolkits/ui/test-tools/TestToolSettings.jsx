@@ -156,6 +156,7 @@ const TestToolSettings = memo(props => {
 
             <Box sx={styles.runToolBtn}>
               <Button.BaseBtn
+                data-testid="toolkit-test-run-tool-button"
                 variant={BUTTON_VARIANTS.special}
                 fullWidth
                 disabled={disabledRunTool}

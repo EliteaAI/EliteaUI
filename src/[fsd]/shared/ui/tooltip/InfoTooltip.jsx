@@ -22,6 +22,7 @@ const InfoTooltip = memo(props => {
     disableTooltip = false,
     TitleComponent,
     titleComponentProps,
+    testId,
   } = props;
   const styles = infoTooltipStyles();
 
@@ -73,6 +74,7 @@ const InfoTooltip = memo(props => {
   const iconElement = (
     <Box
       data-info-tooltip
+      data-testid={testId}
       sx={[styles.iconContainer, sx]}
       {...boxProps}
     >

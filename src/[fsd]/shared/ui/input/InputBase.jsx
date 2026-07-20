@@ -96,6 +96,7 @@ const InputBase = memo(props => {
     onFullScreen,
     fullScreenIcon,
     tooltipDescription,
+    tooltipTestId,
     forceShowActionsToolbar = false,
     fullScreenButtonProps = {},
     // eslint-disable-next-line no-unused-vars
@@ -197,6 +198,7 @@ const InputBase = memo(props => {
         {...(!isOutlined && { inheritLabel: true, inheritColor: true })}
         {...(tooltipDescription && {
           tooltip: tooltipDescription,
+          tooltipTestId,
           ...(!isOutlined && { labelTextPointerEventsNone: true }),
         })}
       />

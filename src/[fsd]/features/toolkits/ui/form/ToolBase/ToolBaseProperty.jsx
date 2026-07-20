@@ -636,6 +636,7 @@ const ToolBaseProperty = memo(props => {
             disabled={disableConfigFields || disabled}
             inputProps={inputProps}
             placeholder={placeholder}
+            {...(k === 'bucket' && { tooltipTestId: 'toolkit-field-bucket-info-icon' })}
             onFocus={() => toggleFieldFocus(k)}
             onBlur={() => toggleFieldFocus(null)}
             {...(isNameField && {
