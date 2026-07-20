@@ -45,7 +45,6 @@ const AIConfigurationToggle = memo(props => {
       onChange={handleChange}
       arrayBtn={themeArrayBtn}
       size="medium"
-      skipTooltip
     />
   );
 });
