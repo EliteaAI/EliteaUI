@@ -86,7 +86,7 @@ const bannerVariant = (isRunningTool, isIndexing, state) => {
 };
 
 const RunIndexPanel = memo(props => {
-  const { toolkitId, indexName, index, refetchIndexesList, selectedIndexTools, tab } = props;
+  const { toolkitId, indexName, index, refetchIndexesList, selectedIndexTools, tab, isCreating } = props;
   const styles = runIndexStyles();
   const navigate = useNavigate();
   const projectId = useSelectedProjectId();
@@ -104,7 +104,9 @@ const RunIndexPanel = memo(props => {
   );
 
   const [selectedRunTool, setSelectedRunTool] = useState(runToolOptions[0]?.value ?? null);
-  const [activeRightTab, setActiveRightTab] = useState(RIGHT_TAB_RUN_SETTINGS);
+  const [activeRightTab, setActiveRightTab] = useState(
+    isCreating ? RIGHT_TAB_RESULTS : RIGHT_TAB_RUN_SETTINGS,
+  );
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [reindexConfirmOpen, setReindexConfirmOpen] = useState(false);
   const [toolInputVariables, setToolInputVariables] = useState({});
@@ -263,6 +265,7 @@ const RunIndexPanel = memo(props => {
     handleClearActiveConversation();
     handleClearChat();
     handleIndexData();
+    setActiveRightTab(RIGHT_TAB_RESULTS);
   }, [handleClearActiveConversation, handleClearChat, handleIndexData]);
   const cancelReindexConfirm = useCallback(() => setReindexConfirmOpen(false), []);
 
@@ -650,11 +653,11 @@ const RunIndexPanel = memo(props => {
           >
             <Tab
               value={RIGHT_TAB_RUN_SETTINGS}
-              label="Run Settings"
+              label="Search Settings"
             />
             <Tab
               value={RIGHT_TAB_RESULTS}
-              label="Results"
+              label="Activity"
             />
           </Tabs>
         </Box>
@@ -686,7 +689,7 @@ const RunIndexPanel = memo(props => {
                 handleRunTool();
               }}
             >
-              Run Test
+              Search
             </Button>
           </Box>
           {activeRightTab === RIGHT_TAB_RESULTS && (
@@ -886,6 +889,7 @@ const RunIndex = memo(() => {
               index={currentIndex}
               selectedIndexTools={selectedIndexTools}
               refetchIndexesList={handleRefetch}
+              isCreating={isCreating}
             />
           </Formik>
         )}
