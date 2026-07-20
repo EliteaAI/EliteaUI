@@ -48,9 +48,16 @@ const createMaxLengthExtension = maxLength => {
 
     if (changes.length === 0) return [];
 
+    const hasRealChanges = changes.some(c => c.from !== c.to || c.insert !== '');
+    if (!hasRealChanges) return [];
+
+    const originalAnchor = tr.startState.selection.main.head;
+    const docLengthChange = runningLength - currentLength;
+    const newAnchor = Math.max(0, originalAnchor + docLengthChange);
+
     return tr.startState.update({
       changes,
-      selection: { anchor: Math.min((tr.selection ?? tr.startState.selection).main.head, maxLength) },
+      selection: { anchor: Math.min(newAnchor, maxLength) },
     });
   });
 };

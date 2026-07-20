@@ -2,11 +2,11 @@ import { memo, useCallback, useEffect, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { Box, Typography } from '@mui/material';
+import { Box } from '@mui/material';
 
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { useFieldFocus } from '@/[fsd]/shared/lib/hooks';
-import { Input } from '@/[fsd]/shared/ui';
+import { Input, Text } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { useTagListQuery } from '@/api/tags';
 import { MAX_DESCRIPTION_LENGTH, MAX_NAME_LENGTH, PROMPT_PAYLOAD_KEY } from '@/common/constants';
@@ -127,12 +127,12 @@ const ApplicationEditForm = memo(props => {
                     showExpandAction={false}
                   />
                   {isFocused(PROMPT_PAYLOAD_KEY.name) && MAX_NAME_LENGTH === name.length && (
-                    <Typography
-                      variant="bodySmall2"
+                    <Text.CharacterCounter
+                      value={name}
+                      maxLength={MAX_NAME_LENGTH}
+                      hideMaxLimitMessage
                       sx={styles.nameCharactersLabel}
-                    >
-                      {` 0 is left from ${MAX_NAME_LENGTH} characters`}
-                    </Typography>
+                    />
                   )}
                 </Box>
               </Box>
@@ -160,12 +160,12 @@ const ApplicationEditForm = memo(props => {
                   fieldName="Description"
                 />
                 {isFocused(PROMPT_PAYLOAD_KEY.description) && formik.values?.description?.length > 0 && (
-                  <Typography
-                    variant="bodySmall"
+                  <Text.CharacterCounter
+                    value={formik.values.description}
+                    maxLength={MAX_DESCRIPTION_LENGTH}
+                    hideMaxLimitMessage
                     sx={styles.descripitonCharactersLabel}
-                  >
-                    {`${MAX_DESCRIPTION_LENGTH - formik.values.description.length} characters left`}
-                  </Typography>
+                  />
                 )}
               </Box>
 
@@ -189,8 +189,8 @@ const ApplicationEditForm = memo(props => {
 const applicationEditFormStyles = () => ({
   nameContainer: {
     display: 'flex',
-    alignItems: 'center',
-    height: '4.25rem',
+    alignItems: 'baseline',
+    minHeight: '4.25rem',
     width: '100%',
     gap: '1rem',
   },
@@ -203,9 +203,8 @@ const applicationEditFormStyles = () => ({
   nameCharactersLabel: {
     textAlign: 'right',
     width: '100%',
-    fontSize: '0.625rem',
-    position: 'absolute',
-    bottom: '3.5rem',
+    position: 'relative',
+    top: '0.25rem',
   },
   descriptionWrapper: {
     display: 'flex',
@@ -215,9 +214,8 @@ const applicationEditFormStyles = () => ({
   descripitonCharactersLabel: {
     textAlign: 'right',
     width: '100%',
-    fontSize: '0.625rem',
     position: 'relative',
-    top: '0.5rem',
+    top: '0.25rem',
   },
 });
 

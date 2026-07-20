@@ -7,7 +7,8 @@ import * as yup from 'yup';
 
 import { Box, TextField, Typography } from '@mui/material';
 
-import { Button, Select } from '@/[fsd]/shared/ui';
+import { useFieldFocus } from '@/[fsd]/shared/lib/hooks';
+import { Button, Select, Text } from '@/[fsd]/shared/ui';
 import { useArtifactListQuery, useCreateBucketMutation, useEditBucketMutation } from '@/api/artifacts';
 import { PENDING_BUCKET_SESSION_KEY } from '@/common/artifactConstants';
 import { DEFAULT_RETENTION_VALUE, RETENTION_MEASURES } from '@/common/constants';
@@ -81,6 +82,9 @@ const CreateBucket = memo(() => {
 
   // If no legacy retention policy, try to convert from retentionDays (new backend format)
   const policyFromRetentionDays = convertRetentionDaysToPolicy(currentBucket?.retentionDays);
+
+  const { toggleFieldFocus, isFocused } = useFieldFocus();
+  const MAX_BUCKET_NAME_LENGTH = 56;
 
   const formik = useFormik({
     initialValues: {
@@ -223,12 +227,27 @@ const CreateBucket = memo(() => {
                   label="Name"
                   value={formik.values.name}
                   onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
+                  onFocus={() => toggleFieldFocus('name')}
+                  onBlur={e => {
+                    formik.handleBlur(e);
+                    toggleFieldFocus(null);
+                  }}
                   error={formik.touched.name && Boolean(formik.errors.name)}
                   helperText={formik.touched.name && formik.errors.name}
                   disabled={!!currentBucket}
-                  inputProps={{ maxLength: 56, 'data-testid': 'artifacts-bucket-name-input' }}
+                  inputProps={{
+                    maxLength: MAX_BUCKET_NAME_LENGTH,
+                    'data-testid': 'artifacts-bucket-name-input',
+                  }}
                 />
+                {isFocused('name') && formik.values.name?.length === MAX_BUCKET_NAME_LENGTH && (
+                  <Text.CharacterCounter
+                    value={formik.values.name}
+                    maxLength={MAX_BUCKET_NAME_LENGTH}
+                    hideMaxLimitMessage
+                    sx={styles.nameCharactersLabel}
+                  />
+                )}
               </Box>
               <Box sx={styles.retentionPolicyWrapper}>
                 <Box sx={styles.selectWrapper}>
@@ -328,9 +347,18 @@ const createBucketStyles = () => ({
   nameFieldWrapper: {
     width: '32.5rem',
     marginRight: '1rem',
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  nameCharactersLabel: {
+    textAlign: 'right',
+    width: '100%',
+    position: 'relative',
+    top: '0.25rem',
   },
   retentionPolicyWrapper: {
     display: 'flex',
+    alignItems: 'flex-end',
   },
   selectWrapper: {
     width: '15rem',
