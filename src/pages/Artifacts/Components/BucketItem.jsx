@@ -198,6 +198,7 @@ export const BucketItem = forwardRef((props, ref) => {
         display: isPersonalProject ? 'none' : undefined,
       },
       {
+        key: 'bucket-menu-delete',
         label: 'Delete',
         icon: (
           <DeleteIcon
