@@ -78,49 +78,52 @@ const ProjectContextSavedView = memo(props => {
     [handleCopy, handleDeleteConfirm],
   );
 
-  const headerActions = (
-    <Box sx={styles.headerActions}>
-      {canEdit && (
-        <>
-          <Button.BaseBtn
-            variant={BUTTON_VARIANTS.special}
-            startIcon={<SparkleIcon />}
-            onClick={() => onNavigate('edit', { openAi: true })}
-            disabled={!enabled}
-          >
-            Edit with AI
-          </Button.BaseBtn>
-          <Button.BaseBtn
-            variant={BUTTON_VARIANTS.secondary}
-            onClick={() => onNavigate('edit')}
-            disabled={!enabled}
-          >
-            Edit
-          </Button.BaseBtn>
-          <Divider
-            orientation="vertical"
-            flexItem
-          />
-          <DotMenu
-            id="project-context-actions"
-            slotProps={{
-              ListItemText: {
-                sx: { color: theme.palette.text.secondary },
-                primaryTypographyProps: { variant: 'bodyMedium' },
-              },
-              ListItemIcon: {
-                sx: {
-                  minWidth: '16px !important',
-                  marginRight: '12px',
+  const headerActions = useMemo(
+    () => (
+      <Box sx={styles.headerActions}>
+        {canEdit && (
+          <>
+            <Button.BaseBtn
+              variant={BUTTON_VARIANTS.special}
+              startIcon={<SparkleIcon />}
+              onClick={() => onNavigate('edit', { openAi: true })}
+              disabled={!enabled}
+            >
+              Edit with AI
+            </Button.BaseBtn>
+            <Button.BaseBtn
+              variant={BUTTON_VARIANTS.secondary}
+              onClick={() => onNavigate('edit')}
+              disabled={!enabled}
+            >
+              Edit
+            </Button.BaseBtn>
+            <Divider
+              orientation="vertical"
+              flexItem
+            />
+            <DotMenu
+              id="project-context-actions"
+              slotProps={{
+                ListItemText: {
+                  sx: { color: theme.palette.text.secondary },
+                  primaryTypographyProps: { variant: 'bodyMedium' },
                 },
-              },
-            }}
-          >
-            {dotMenuItems}
-          </DotMenu>
-        </>
-      )}
-    </Box>
+                ListItemIcon: {
+                  sx: {
+                    minWidth: '16px !important',
+                    marginRight: '12px',
+                  },
+                },
+              }}
+            >
+              {dotMenuItems}
+            </DotMenu>
+          </>
+        )}
+      </Box>
+    ),
+    [styles.headerActions, canEdit, enabled, theme.palette.text.secondary, dotMenuItems, onNavigate],
   );
 
   return (
