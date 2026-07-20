@@ -69,6 +69,7 @@ const CategoryFilter = memo(props => {
               {allCategories.map(category => (
                 <Chip
                   key={category}
+                  data-testid="category-filter-tab"
                   label={category}
                   clickable
                   onClick={() => onSelectCategory(category)}

@@ -23,6 +23,7 @@ const InfoTooltip = memo(props => {
     TitleComponent,
     titleComponentProps,
     testId,
+    contentTestId,
   } = props;
   const styles = infoTooltipStyles();
 
@@ -96,6 +97,18 @@ const InfoTooltip = memo(props => {
     titleContent = tooltipConfig.title;
   } else {
     titleContent = <TooltipMarkdownContent>{tooltipConfig.title}</TooltipMarkdownContent>;
+  }
+
+  // Caller-scoped testid on the popper CONTENT wrapper — opt-in only (per
+  // the shared-component testid ruling, `.agents/testing.md` § Locator
+  // policy: shared components never hardcode a feature-scoped testid).
+  // Wrapping only fires when a caller passes `contentTestId`, so the DOM
+  // for every other InfoTooltip instance on the page (e.g. Pgvector
+  // Configuration, Embedding Model on the Artifact toolkit form) is
+  // unchanged. Added for ELITEA-1866 — see toolkit_creation_page.py's
+  // get_bucket_info_tooltip_text().
+  if (contentTestId) {
+    titleContent = <Box data-testid={contentTestId}>{titleContent}</Box>;
   }
 
   return (

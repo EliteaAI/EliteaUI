@@ -97,6 +97,7 @@ const InputBase = memo(props => {
     fullScreenIcon,
     tooltipDescription,
     tooltipTestId,
+    tooltipContentTestId,
     forceShowActionsToolbar = false,
     fullScreenButtonProps = {},
     // eslint-disable-next-line no-unused-vars
@@ -199,6 +200,7 @@ const InputBase = memo(props => {
         {...(tooltipDescription && {
           tooltip: tooltipDescription,
           tooltipTestId,
+          tooltipContentTestId,
           ...(!isOutlined && { labelTextPointerEventsNone: true }),
         })}
       />

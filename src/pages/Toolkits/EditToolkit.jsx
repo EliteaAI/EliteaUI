@@ -229,6 +229,7 @@ const EditToolkit = memo(props => {
       {
         label: 'Configuration',
         icon: <GearIcon />,
+        tabProps: { 'data-testid': 'toolkit-detail-configuration-tab' },
         tabBarItems: !isFetchingPublic && (
           <ToolkitsTabBar
             showPlaceholder={!editToolDetail}
@@ -267,7 +268,10 @@ const EditToolkit = memo(props => {
       {
         label: 'Indexes',
         icon: <IndexingIcon />,
-        tabProps: { 'data-tour': TOOLKIT_TOUR_TARGET_IDS.indexesTab },
+        tabProps: {
+          'data-tour': TOOLKIT_TOUR_TARGET_IDS.indexesTab,
+          'data-testid': 'toolkit-detail-indexes-tab',
+        },
         content: (
           <IndexesContainer
             toolkitId={realId}
