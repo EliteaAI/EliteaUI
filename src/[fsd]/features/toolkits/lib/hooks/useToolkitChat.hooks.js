@@ -367,6 +367,11 @@ export const useToolkitChat = props => {
           ...(index.metadata.index_configuration || {}),
           ...(indexConfigOverride || {}),
         };
+      else if (!indexing && index?.metadata?.collection)
+        relevantInputVariables = {
+          index_name: index.metadata.collection,
+          ...toolInputVariables,
+        };
 
       if (canProceed) {
         setIsRunning(true);
