@@ -1,7 +1,7 @@
 import { memo, useCallback, useEffect, useMemo } from 'react';
 
 import { useDispatch } from 'react-redux';
-import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
@@ -138,15 +138,15 @@ const SETTINGS_TABS_CONFIG = [
   },
 ];
 
-const DEFAULT_TAB = 'ai-providers';
+const DEFAULT_TAB = 'project-general';
 const LEGACY_TAB_REDIRECTS = ['configuration', 'information'];
 
 const Settings = memo(() => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const styles = settingsPageStyles();
-  const { state: locationState } = useLocation();
-  const { tab = DEFAULT_TAB } = useParams();
+  const { state: locationState, pathname } = useLocation();
+  const tab = VALID_TAB_IDS.find(id => pathname === `${RouteDefinitions.Settings}/${id}`) ?? DEFAULT_TAB;
   const projectId = useSelectedProjectId();
   const { checkPermission } = useCheckPermission();
   const { data: platformSettings } = useGetPlatformSettingsQuery();
@@ -211,6 +211,13 @@ const Settings = memo(() => {
       handleSettingsItemClick(DEFAULT_TAB);
     }
   }, [handleSettingsItemClick, projectId, tab]);
+
+  // Guard: hide Project Context for the Public project
+  useEffect(() => {
+    if (tab === 'project-context' && projectId == PUBLIC_PROJECT_ID) {
+      navigate(`${RouteDefinitions.Settings}/${DEFAULT_TAB}`, { replace: true });
+    }
+  }, [navigate, projectId, tab]);
 
   // Guard: redirect away from analytics if disabled at platform level
   useEffect(() => {
