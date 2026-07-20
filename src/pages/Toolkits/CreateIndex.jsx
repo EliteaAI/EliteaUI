@@ -7,10 +7,7 @@ import { Box, Button, CircularProgress } from '@mui/material';
 
 import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
 import { useGetIndexesListQuery } from '@/[fsd]/features/toolkits/indexes/api';
-import {
-  IndexStatuses,
-  IndexesToolsEnum,
-} from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
+import { IndexesToolsEnum } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import { adjustIndexDataSchema } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexChat.helpers';
 import { useIndexNameValidation } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import { ToolkitChatModesEnum } from '@/[fsd]/features/toolkits/lib/constants';
@@ -39,6 +36,7 @@ const CreateIndexForm = memo(props => {
 
   const configInitialized = useRef(false);
   const navigatedRef = useRef(false);
+  const pendingCollectionRef = useRef(null);
   const [toolInputVariables, setToolInputVariables] = useState({});
   const [nameFormatError, setNameFormatError] = useState(null);
 
@@ -117,12 +115,23 @@ const CreateIndexForm = memo(props => {
   const traceNewIndex = useCallback(
     (_id, meta) => {
       if (navigatedRef.current) return;
-      if (meta?.state === IndexStatuses.progress && meta?.collection) {
+      if (meta?.collection) pendingCollectionRef.current = meta.collection;
+
+      const collection = pendingCollectionRef.current;
+      if (meta?.conversation_id && meta?.conversation_uuid && collection) {
         navigatedRef.current = true;
         const target = RouteDefinitions.ToolkitIndex.replace(':tab', tab ?? 'all')
           .replace(':toolkitId', String(toolkitId))
-          .replace(':indexName', encodeURIComponent(meta.collection));
-        navigate(target, { replace: true, state: { creating: true, collection: meta.collection } });
+          .replace(':indexName', encodeURIComponent(collection));
+        navigate(target, {
+          replace: true,
+          state: {
+            creating: true,
+            collection,
+            conversation_id: meta.conversation_id,
+            conversation_uuid: meta.conversation_uuid,
+          },
+        });
       }
     },
     [navigate, tab, toolkitId],

@@ -86,7 +86,16 @@ const bannerVariant = (isRunningTool, isIndexing, state) => {
 };
 
 const RunIndexPanel = memo(props => {
-  const { toolkitId, indexName, index, refetchIndexesList, selectedIndexTools, tab, isCreating } = props;
+  const {
+    toolkitId,
+    indexName,
+    index,
+    refetchIndexesList,
+    selectedIndexTools,
+    tab,
+    isCreating,
+    initialConversation,
+  } = props;
   const styles = runIndexStyles();
   const navigate = useNavigate();
   const projectId = useSelectedProjectId();
@@ -172,6 +181,7 @@ const RunIndexPanel = memo(props => {
     traceNewIndex,
     values,
     modes: [],
+    initialConversation,
   });
 
   const [deleteIndex, { isLoading: isDeleting }] = useDeleteIndexItemMutation();
@@ -789,6 +799,26 @@ const RunIndex = memo(() => {
   }, [indexesList, indexName, hasData]);
 
   const isCreating = Boolean(location.state?.creating);
+  const initialConversation = useMemo(() => {
+    const id = location.state?.conversation_id;
+    const uuid = location.state?.conversation_uuid;
+    return id && uuid ? { id, uuid } : null;
+  }, [location.state?.conversation_id, location.state?.conversation_uuid]);
+
+  const inflightIndex = useMemo(() => {
+    if (!isCreating || !initialConversation) return null;
+    return {
+      id: null,
+      metadata: {
+        collection: indexName,
+        state: IndexStatuses.progress,
+        conversation_id: initialConversation.id,
+        conversation_uuid: initialConversation.uuid,
+        created_on: Date.now() / 1000,
+      },
+    };
+  }, [isCreating, initialConversation, indexName]);
+
   const [awaitingCreation, setAwaitingCreation] = useState(isCreating);
 
   useEffect(() => {
@@ -836,9 +866,15 @@ const RunIndex = memo(() => {
 
   if (shouldShowNotFoundPage) return <Page404 />;
 
-  const isLoading = isFetching || indexesLoading || indexesFetching || !hasData || !publicToolkitData?.id;
+  const effectiveIndex = currentIndex ?? inflightIndex;
+  // When we already have the inflight index from CreateIndex, don't block RunIndexPanel behind
+  // the indexes-list fetch — we need to mount the socket listener immediately so streaming events
+  // aren't dropped.
+  const isLoading = effectiveIndex
+    ? isFetching || !publicToolkitData?.id
+    : isFetching || indexesLoading || indexesFetching || !hasData || !publicToolkitData?.id;
 
-  const showCreatingPlaceholder = awaitingCreation && !currentIndex;
+  const showCreatingPlaceholder = awaitingCreation && !effectiveIndex;
 
   return (
     <Box sx={styles.wrapper}>
@@ -867,7 +903,7 @@ const RunIndex = memo(() => {
               </Typography>
             )}
           </Box>
-        ) : !currentIndex ? (
+        ) : !effectiveIndex ? (
           <Box sx={styles.loading}>
             <Typography
               variant="bodyMedium"
@@ -886,10 +922,11 @@ const RunIndex = memo(() => {
               toolkitId={toolkitId}
               tab={tab}
               indexName={indexName}
-              index={currentIndex}
+              index={effectiveIndex}
               selectedIndexTools={selectedIndexTools}
               refetchIndexesList={handleRefetch}
               isCreating={isCreating}
+              initialConversation={initialConversation}
             />
           </Formik>
         )}

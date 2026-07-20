@@ -55,6 +55,7 @@ export const useToolkitChat = props => {
     values,
     modes,
     onMcpAuthRequired,
+    initialConversation,
   } = props;
 
   // Keep callback ref updated
@@ -100,9 +101,10 @@ export const useToolkitChat = props => {
   const shouldRecoverHistory = useMemo(
     () =>
       !isCreateIndexMode &&
+      !initialConversation &&
       index?.metadata?.state === IndexStatuses.progress &&
       index?.metadata?.conversation_id,
-    [isCreateIndexMode, index?.metadata],
+    [isCreateIndexMode, initialConversation, index?.metadata],
   );
 
   const {
@@ -229,17 +231,26 @@ export const useToolkitChat = props => {
   }, [selectedModel]);
 
   useEffect(() => {
-    if (!conversationDetails?.id || !conversationDetails?.uuid) return;
+    const conv = conversationDetails ?? initialConversation;
+    if (!conv?.id || !conv?.uuid) return;
 
     const payload = {
-      conversation_id: conversationDetails.id,
-      conversation_uuid: conversationDetails.uuid,
+      conversation_id: conv.id,
+      conversation_uuid: conv.uuid,
       project_id: projectId,
     };
 
     if (isIndexing || isRunning) emitEnterRoom(payload);
     else emitLeaveRoom(payload);
-  }, [conversationDetails, emitEnterRoom, emitLeaveRoom, isIndexing, isRunning, projectId]);
+  }, [
+    conversationDetails,
+    initialConversation,
+    emitEnterRoom,
+    emitLeaveRoom,
+    isIndexing,
+    isRunning,
+    projectId,
+  ]);
 
   const createToolkitConversation = useCallback(
     async ({ indexName, configuration, tool }) => {
@@ -289,6 +300,7 @@ export const useToolkitChat = props => {
           if (traceNewIndex)
             traceNewIndex(index?.id ?? null, {
               conversation_id: currentConversation.id,
+              conversation_uuid: currentConversation.uuid,
             });
         }
 
