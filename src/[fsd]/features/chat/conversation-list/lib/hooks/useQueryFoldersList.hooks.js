@@ -84,39 +84,47 @@ export const useQueryFoldersList = props => {
     setDateGroupsRef.current?.(processedGroups);
   }, []);
 
-  const updateFolders = useCallback((folderList, pinnedIds) => {
-    const folderedConversations =
-      (folderList || []).map(folder => {
-        const filtered = pinnedIds?.size
-          ? (folder?.conversations || []).filter(c => !pinnedIds.has(c.id))
-          : folder?.conversations || [];
-        return {
-          ...folder,
-          conversations: sortConversations(filtered),
-          offset: filtered.length,
-        };
-      }) || [];
+  const updateFolders = useCallback(
+    (folderList, pinnedIds) => {
+      const folderedConversations =
+        (folderList || []).map(folder => {
+          const filtered = pinnedIds?.size
+            ? (folder?.conversations || []).filter(c => !pinnedIds.has(c.id))
+            : folder?.conversations || [];
+          return {
+            ...folder,
+            conversations: sortConversations(filtered),
+            offset: filtered.length,
+          };
+        }) || [];
 
-    setFoldersRef.current?.(prevFolders => {
-      const newFolders = (prevFolders || []).filter(folder => folder.isNew);
+      if (searchQuery) {
+        setFoldersRef.current?.(folderedConversations);
+        return;
+      }
 
-      const mergedFolders = folderedConversations.map(serverFolder => {
-        const localFolder = (prevFolders || []).find(f => f.id === serverFolder.id && !f.isNew);
-        if (!localFolder?.conversations?.length) return serverFolder;
+      setFoldersRef.current?.(prevFolders => {
+        const newFolders = (prevFolders || []).filter(folder => folder.isNew);
 
-        const serverConvIds = new Set((serverFolder.conversations || []).map(c => c.id));
-        const localOnly = localFolder.conversations.filter(c => !serverConvIds.has(c.id));
-        if (!localOnly.length) return serverFolder;
+        const mergedFolders = folderedConversations.map(serverFolder => {
+          const localFolder = (prevFolders || []).find(f => f.id === serverFolder.id && !f.isNew);
+          if (!localFolder?.conversations?.length) return serverFolder;
 
-        return {
-          ...serverFolder,
-          conversations: sortConversations([...serverFolder.conversations, ...localOnly]),
-        };
+          const serverConvIds = new Set((serverFolder.conversations || []).map(c => c.id));
+          const localOnly = localFolder.conversations.filter(c => !serverConvIds.has(c.id));
+          if (!localOnly.length) return serverFolder;
+
+          return {
+            ...serverFolder,
+            conversations: sortConversations([...serverFolder.conversations, ...localOnly]),
+          };
+        });
+
+        return [...newFolders, ...mergedFolders];
       });
-
-      return [...newFolders, ...mergedFolders];
-    });
-  }, []);
+    },
+    [searchQuery],
+  );
 
   const updatePinnedConversations = useCallback(
     pinned => {
@@ -178,8 +186,10 @@ export const useQueryFoldersList = props => {
     errorGetFolders();
   }, [errorGetFolders]);
 
+  const isSearching = searchQuery && isLoadMoreFolders;
+
   return {
-    isLoadFolders,
+    isLoadFolders: isLoadFolders || isSearching,
     isLoadMoreFolders,
     totalFolderCount: data?.total_folders || 0,
     isConversationsLoaded,

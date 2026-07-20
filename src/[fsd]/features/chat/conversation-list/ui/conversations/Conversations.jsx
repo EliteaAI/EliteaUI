@@ -94,6 +94,12 @@ const Conversations = memo(props => {
   const [loadingGroups, setLoadingGroups] = useState(new Set());
   const [loadingFolders, setLoadingFolders] = useState(new Set());
 
+  const savedStateBeforeSearchRef = useRef(null);
+  const dateGroupsRef = useRef(dateGroups);
+  const foldersRef = useRef(folders);
+  dateGroupsRef.current = dateGroups;
+  foldersRef.current = folders;
+
   const [triggerDateGroupFetch] = useLazyDateGroupConversationsQuery();
   const [triggerFolderFetch] = useLazyFolderConversationsQuery();
   const { sort_by: sortBy, sort_order: sortOrder } = useSortQueryParamsFromUrl({
@@ -121,6 +127,20 @@ const Conversations = memo(props => {
   }, [debouncedSearchQuery, onSearchQueryChange]);
 
   useEffect(() => {
+    const trimmedQuery = debouncedSearchQuery.trim();
+    if (trimmedQuery && !savedStateBeforeSearchRef.current) {
+      savedStateBeforeSearchRef.current = {
+        dateGroups: dateGroupsRef.current,
+        folders: foldersRef.current,
+      };
+    } else if (!trimmedQuery && savedStateBeforeSearchRef.current) {
+      setDateGroups(savedStateBeforeSearchRef.current.dateGroups);
+      setFolders(savedStateBeforeSearchRef.current.folders);
+      savedStateBeforeSearchRef.current = null;
+    }
+  }, [debouncedSearchQuery, setDateGroups, setFolders]);
+
+  useEffect(() => {
     if (isSearchActive && conversations.find(conv => conv.isNew)) {
       setIsSearchActive(false);
       setSearchQuery('');
@@ -130,6 +150,7 @@ const Conversations = memo(props => {
   const onLoadMoreInGroup = useCallback(
     async groupName => {
       if (loadingGroups.has(groupName)) return;
+      if (searchQuery) return;
 
       const group = dateGroups.find(g => g.name === groupName);
 
@@ -183,6 +204,7 @@ const Conversations = memo(props => {
       loadingGroups,
       pinnedConversations,
       projectId,
+      searchQuery,
       setDateGroups,
       triggerDateGroupFetch,
       sortBy,
