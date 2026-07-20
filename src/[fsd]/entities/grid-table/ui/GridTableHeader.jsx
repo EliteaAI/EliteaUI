@@ -16,6 +16,7 @@ const GridTableHeader = memo(props => {
     gridTemplateColumns,
     showCheckbox = true,
     columnTestIdPrefix,
+    selectAllCheckboxTestId,
   } = props;
 
   const styles = gridTableHeaderStyles(gridTemplateColumns, showCheckbox);
@@ -25,6 +26,7 @@ const GridTableHeader = memo(props => {
       {showCheckbox && (
         <Box sx={styles.checkboxCell}>
           <Checkbox.BaseCheckbox
+            data-testid={selectAllCheckboxTestId}
             checked={isAllSelected}
             indeterminate={isIndeterminate}
             onChange={onSelectAll}

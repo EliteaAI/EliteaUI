@@ -181,7 +181,10 @@ const ArtifactTableToolbar = memo(props => {
               title="Download files"
               placement="top"
             >
-              <Box component="span">
+              <Box
+                component="span"
+                data-testid="artifacts-download-files-tooltip"
+              >
                 <Button.BaseBtn
                   variant="icon"
                   sx={styles.actionButton}
