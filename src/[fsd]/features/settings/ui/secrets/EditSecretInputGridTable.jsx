@@ -3,7 +3,7 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { Input } from '@/[fsd]/shared/ui';
 import { MAX_VARIABLES_LENGTH } from '@/common/constants';
 
-const SECRET_NAME_PATTERN = /^[a-zA-Z0-9_-]*$/;
+const SECRET_NAME_PATTERN = /^[A-Za-z0-9_]*$/;
 
 const EditSecretInputGridTable = memo(props => {
   const { id, field, value, row, setRows, setRowModesModel, onValidationChange } = props;
@@ -13,7 +13,7 @@ const EditSecretInputGridTable = memo(props => {
   const validationError = useMemo(() => {
     const hasInvalidNameChars = field === 'name' && inputValue && !SECRET_NAME_PATTERN.test(inputValue);
 
-    if (hasInvalidNameChars) return 'Only alphanumeric characters, underscore and hyphen are allowed';
+    if (hasInvalidNameChars) return 'Only alphanumeric characters and underscore are allowed';
     return null;
   }, [field, inputValue]);
 
