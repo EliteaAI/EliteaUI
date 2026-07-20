@@ -1079,14 +1079,14 @@ const ChatBox = forwardRef((props, boxRef) => {
       const theQuestion =
         chat_history[questionIndex]?.message_items?.find(item => item.item_type === 'text_message')
           ?.item_details?.content || '';
-      const attachmentList = [
-        ...(
-          chat_history[questionIndex]?.message_items?.filter(
-            item => item.item_type === 'attachment_message',
-          ) || []
-        ).map(i => ({ filepath: i.item_details.filepath })),
-        ...newAttachmentItems.map(i => ({ filepath: i.item_details.filepath })),
-      ];
+      const attachmentList =
+        newAttachmentItems.length > 0
+          ? newAttachmentItems.map(i => ({ filepath: i.item_details.filepath }))
+          : (
+              chat_history[questionIndex]?.message_items?.filter(
+                item => item.item_type === 'attachment_message',
+              ) || []
+            ).map(i => ({ filepath: i.item_details.filepath }));
       const question_id = chat_history[questionIndex]?.id;
       const leftChatHistory = chat_history.slice(0, questionIndex);
 
@@ -1713,15 +1713,14 @@ const ChatBox = forwardRef((props, boxRef) => {
       } else {
         const question = textUpdate?.content || '';
         const questionIndex = chat_history.findIndex(item => item.id === id);
-        const existingAttachments = (
-          chat_history[questionIndex]?.message_items?.filter(
-            item => item.item_type === 'attachment_message',
-          ) || []
-        ).map(i => ({ filepath: i.item_details.filepath }));
-        const attachmentList = [
-          ...existingAttachments,
-          ...newAttachmentItems.map(i => ({ filepath: i.item_details.filepath })),
-        ];
+        const attachmentList =
+          newAttachmentItems.length > 0
+            ? newAttachmentItems.map(i => ({ filepath: i.item_details.filepath }))
+            : (
+                chat_history[questionIndex]?.message_items?.filter(
+                  item => item.item_type === 'attachment_message',
+                ) || []
+              ).map(i => ({ filepath: i.item_details.filepath }));
         onResendQuestionStream(id, question, attachmentList);
       }
     },
