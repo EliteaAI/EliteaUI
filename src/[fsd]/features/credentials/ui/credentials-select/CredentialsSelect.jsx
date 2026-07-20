@@ -314,8 +314,7 @@ const CredentialsSelect = memo(
         return (
           savedCredentialsMenuData.find(
             option => option.elitea_title && option.elitea_title === value?.elitea_title && option.shared,
-          ) ||
-          (isBlankEliteaTitle(value?.elitea_title) && !value?.private ? savedCredentialsMenuData[0] : null)
+          ) || null
         );
 
       return null;
@@ -325,23 +324,25 @@ const CredentialsSelect = memo(
       setShowConfigurableFields?.(!!selectedOption);
     }, [selectedOption, setShowConfigurableFields]);
 
-    useEffect(() => {
-      if (!hasFetchedData || !selectedOption) return;
-
-      const isDefaultAutoSelected =
-        selectedOption && (section === 'vectorstorage' || isBlankEliteaTitle(value?.elitea_title));
-
-      if (isDefaultAutoSelected && !hasAutoSelectedRef.current) {
-        hasAutoSelectedRef.current = true;
-        onSelectConfiguration?.(
-          {
-            private: selectedOption.private,
-            elitea_title: selectedOption.elitea_title,
-          },
-          { isAutoSelect: true },
-        );
+    const credentialToAutoSelect = useMemo(() => {
+      if (section === 'vectorstorage') {
+        return selectedOption;
       }
-    }, [hasFetchedData, selectedOption, value, onSelectConfiguration, section, hasAutoSelectedRef]);
+      if (isBlankEliteaTitle(value?.elitea_title)) {
+        return savedCredentialsMenuData[0];
+      }
+      return null;
+    }, [section, savedCredentialsMenuData, selectedOption, value?.elitea_title]);
+
+    useEffect(() => {
+      if (!hasFetchedData || hasAutoSelectedRef.current || !credentialToAutoSelect) return;
+
+      hasAutoSelectedRef.current = true;
+      onSelectConfiguration?.(
+        { private: credentialToAutoSelect.private, elitea_title: credentialToAutoSelect.elitea_title },
+        { isAutoSelect: true },
+      );
+    }, [hasFetchedData, credentialToAutoSelect, onSelectConfiguration, hasAutoSelectedRef]);
 
     const onSelectItem = useCallback(
       option => {
