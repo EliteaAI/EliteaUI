@@ -1,4 +1,4 @@
-import { memo, useCallback, useRef, useState } from 'react';
+import { memo, useCallback, useMemo, useRef, useState } from 'react';
 
 import { Box, Button, ButtonGroup, Divider, Tooltip, Typography, useTheme } from '@mui/material';
 
@@ -6,6 +6,7 @@ import ShareIcon from '@/assets/share-icon.svg?react';
 import BriefcaseIcon from '@/components/Icons/BriefcaseIcon.jsx';
 import SettingIcon from '@/components/Icons/SettingIcon';
 
+import { normalizeLlmSettings } from '../lib/helpers';
 import LLMModelsMenu from './LLMModelsMenu';
 import { LLMSettingsDialog } from './LLMSettingsDialog';
 
@@ -38,6 +39,11 @@ const LLMModelSelector = memo(props => {
   const [showLLMSettings, setShowLLMSettings] = useState(false);
 
   const [anchorEl, setAnchorEl] = useState(null);
+
+  const normalizedLlmSettings = useMemo(
+    () => normalizeLlmSettings(llmSettings, selectedModel, { showStepsLimit }),
+    [llmSettings, selectedModel, showStepsLimit],
+  );
 
   const handleModelMenuClick = () => {
     setAnchorEl(anchorRef.current);
@@ -177,7 +183,7 @@ const LLMModelSelector = memo(props => {
           onApply={handleApplySettings}
           onCancel={handleCancelSettings}
           selectedModel={selectedModel}
-          llmSettings={llmSettings}
+          llmSettings={normalizedLlmSettings}
           showWebhookSecret={showWebhookSecret}
           showStepsLimit={showStepsLimit}
           onResetToDefaults={onResetToDefaults}
