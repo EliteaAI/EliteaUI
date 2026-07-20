@@ -1,17 +1,16 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import cronstrue from 'cronstrue';
 import { Formik, useFormikContext } from 'formik';
-import { Cron } from 'react-js-cron';
-import 'react-js-cron/dist/styles.css';
 import { useSelector } from 'react-redux';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import {
   Alert,
   Box,
   Button,
   CircularProgress,
-  GlobalStyles,
   IconButton,
   Tab,
   Tabs,
@@ -21,7 +20,6 @@ import {
 
 import { ChatButton } from '@/[fsd]/features/chat/ui';
 import { ChatMessageList } from '@/[fsd]/features/chat/ui/chat-box';
-import { CredentialsSelect } from '@/[fsd]/features/credentials/ui';
 import {
   useDeleteIndexItemMutation,
   useGetIndexScheduleQuery,
@@ -38,11 +36,11 @@ import {
   adjustIndexDataSchema,
   getMockToolkitIndexConversation,
 } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexChat.helpers';
-import { validateCronExpressionDaily } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexSchedule.helpers.js';
 import {
   selectIndexesList,
   selectToolkitScheduler,
 } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
+import { IndexScheduleModal } from '@/[fsd]/features/toolkits/indexes/ui';
 import { ToolkitChatHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useGetCurrentToolkitSchemas, useToolkitChat } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
@@ -53,12 +51,12 @@ import { PERMISSIONS } from '@/common/constants';
 import { convertToolkitSchema } from '@/common/toolkitSchemaUtils';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils.jsx';
 import { ChatBodyContainer } from '@/components/Chat/StyledComponents';
-import ArrowBackIcon from '@/components/Icons/ArrowBackIcon';
 import RocketIcon from '@/components/Icons/RocketIcon';
 import { useGetSelectedToolSchema } from '@/hooks/toolkit/useGetSelectedToolSchema';
-import { useSelectedProject, useSelectedProjectId } from '@/hooks/useSelectedProject';
+import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast.jsx';
 import Page404 from '@/pages/Page404.jsx';
+import IndexBreadcrumb from '@/pages/Toolkits/IndexBreadcrumb';
 import RouteDefinitions from '@/routes';
 
 const emptyToolDetail = {};
@@ -113,16 +111,7 @@ const RunIndexPanel = memo(props => {
   const [localMetaOverride, setLocalMetaOverride] = useState(null);
   const [bannerDismissed, setBannerDismissed] = useState(false);
 
-  const {
-    id: userId,
-    permissions: userPermissions,
-    personal_project_id: personalProjectId,
-  } = useSelector(state => state.user);
-  const selectedProject = useSelectedProject();
-  const isPrivateProject = useMemo(
-    () => selectedProject?.id === personalProjectId,
-    [personalProjectId, selectedProject?.id],
-  );
+  const { id: userId, permissions: userPermissions } = useSelector(state => state.user);
   const currentProjectName = useSelector(state => state.settings.project.name);
   const toolkitScheduler = useSelector(selectToolkitScheduler);
   const [updateIndexSchedule] = useUpdateIndexScheduleMutation();
@@ -241,29 +230,23 @@ const RunIndexPanel = memo(props => {
     [updateIndexSchedule, projectId, toolkitId, indexName, toastSuccess, toastError],
   );
 
-  const [cronDraft, setCronDraft] = useState(scheduleData.cron ?? IndexCronDefault);
-  const [credentialsDraft, setCredentialsDraft] = useState(scheduleData.credentials ?? null);
+  const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
 
-  useEffect(() => {
-    setCronDraft(scheduleData.cron ?? IndexCronDefault);
-    setCredentialsDraft(scheduleData.credentials ?? null);
-  }, [scheduleData.cron, scheduleData.credentials]);
-
-  const cronState = useMemo(() => validateCronExpressionDaily(cronDraft), [cronDraft]);
-  const scheduleEditorDisabled = !scheduleData.enabled || Boolean(schedulingTooltipMessage);
-
-  const handleApplyScheduleEdits = useCallback(() => {
-    if (!scheduleData.enabled) return;
-    if (!cronState.isValid) {
-      toastError('Cron expression is invalid');
-      return;
+  const scheduleSummary = useMemo(() => {
+    if (!scheduleData.enabled) return null;
+    const cron = scheduleData.cron || IndexCronDefault;
+    try {
+      return cronstrue.toString(cron, { use24HourTimeFormat: true });
+    } catch {
+      return cron;
     }
-    handleChangeIndexSchedule({ ...scheduleData, cron: cronDraft, credentials: credentialsDraft }, true);
-  }, [scheduleData, cronState.isValid, cronDraft, credentialsDraft, handleChangeIndexSchedule, toastError]);
+  }, [scheduleData.enabled, scheduleData.cron]);
 
-  const hasScheduleDraftChanges = useMemo(
-    () => cronDraft !== scheduleData.cron || credentialsDraft !== scheduleData.credentials,
-    [cronDraft, credentialsDraft, scheduleData.cron, scheduleData.credentials],
+  const handleApplyScheduleModal = useCallback(
+    (cron, credentials) => {
+      handleChangeIndexSchedule({ ...scheduleData, cron, credentials, enabled: true }, true);
+    },
+    [scheduleData, handleChangeIndexSchedule],
   );
 
   useEffect(() => {
@@ -320,6 +303,31 @@ const RunIndexPanel = memo(props => {
 
   const runFormFields = useMemo(() => Object.keys(adjustedRunSchema?.properties || {}), [adjustedRunSchema]);
 
+  const reindexStats = useMemo(() => {
+    const md = index?.metadata;
+    if (!md) return { isReindex: false, updatedOn: null, updated: null, skipped: 0 };
+
+    const completedRuns = Array.isArray(md.history)
+      ? md.history.filter(h => h?.state === 'completed').length
+      : 0;
+    const isReindex = completedRuns > 1;
+
+    let skipped = 0;
+    try {
+      const parsed = typeof md.skipped === 'string' ? JSON.parse(md.skipped) : md.skipped;
+      skipped = Number(parsed?.total_skipped ?? 0) || 0;
+    } catch {
+      skipped = 0;
+    }
+
+    return {
+      isReindex,
+      updatedOn: md.updated_on ?? null,
+      updated: md.updated ?? null,
+      skipped,
+    };
+  }, [index?.metadata]);
+
   const generalAccordionContent = (
     <Box sx={styles.generalGrid}>
       <Box sx={styles.generalRow}>
@@ -351,6 +359,39 @@ const RunIndexPanel = memo(props => {
           {index?.metadata?.total ?? index?.metadata?.indexed ?? '—'}
         </Typography>
       </Box>
+      {reindexStats.isReindex && (
+        <Box sx={styles.generalRow}>
+          <Typography
+            variant="labelMedium"
+            color="text.secondary"
+          >
+            Last reindex
+          </Typography>
+          <Typography variant="bodyMedium">{formatDate(reindexStats.updatedOn)}</Typography>
+        </Box>
+      )}
+      {reindexStats.isReindex && reindexStats.updated !== null && (
+        <Box sx={styles.generalRow}>
+          <Typography
+            variant="labelMedium"
+            color="text.secondary"
+          >
+            Files reindexed
+          </Typography>
+          <Typography variant="bodyMedium">{reindexStats.updated}</Typography>
+        </Box>
+      )}
+      {reindexStats.skipped > 0 && (
+        <Box sx={styles.generalRow}>
+          <Typography
+            variant="labelMedium"
+            color="text.secondary"
+          >
+            Files skipped
+          </Typography>
+          <Typography variant="bodyMedium">{reindexStats.skipped}</Typography>
+        </Box>
+      )}
       <Box sx={styles.generalActions}>
         <Button
           variant="special"
@@ -380,69 +421,53 @@ const RunIndexPanel = memo(props => {
       </Typography>
     </Box>
   ) : (
-    <Box sx={styles.scheduleEditor}>
-      <GlobalStyles styles={styles.cronContainer} />
-      <Typography
-        variant="bodySmall"
-        sx={[styles.cronExplanation, !cronState.isValid && { color: 'error.main' }]}
-      >
-        {cronState.message}
-      </Typography>
-      <Cron
-        value={cronDraft}
-        setValue={setCronDraft}
-        clearButton={false}
-        clockFormat="24-hour-clock"
-        disabled={scheduleEditorDisabled}
-      />
-      <Typography
-        variant="bodySmall"
-        sx={styles.cronDescription}
-      >
-        minute – hour – day (month) – month – day (week)
-      </Typography>
-      {credentialsData && (
-        <CredentialsSelect
-          required
-          isCreationAllowed
-          label={credentialsData.description}
-          onSelectConfiguration={value => setCredentialsDraft(value)}
-          value={credentialsDraft}
-          configurations={credentialsData.options}
-          type={credentialsData.configuration_types?.[0] || ''}
-          section="credentials"
-          disabled={scheduleEditorDisabled}
-          onlyPublic={!isPrivateProject}
-        />
-      )}
-      <Box sx={styles.scheduleActions}>
-        <Button
-          variant="special"
-          size="small"
-          disabled={scheduleEditorDisabled || !hasScheduleDraftChanges || !cronState.isValid}
-          onClick={handleApplyScheduleEdits}
+    <Box sx={styles.scheduleSummaryBlock}>
+      <Typography variant="bodyMedium">{scheduleSummary}</Typography>
+      {scheduleData.credentials && (
+        <Typography
+          variant="bodySmall"
+          color="text.secondary"
         >
-          Apply
-        </Button>
-      </Box>
+          Credentials: {scheduleData.credentials}
+        </Typography>
+      )}
     </Box>
   );
 
   const scheduleSummaryAction = (
-    <Tooltip
-      title={schedulingTooltipMessage || ''}
-      placement="top"
-    >
-      <Box component="span">
-        <Switch.BaseSwitch
-          checked={scheduleData.enabled}
-          onChange={() =>
-            handleChangeIndexSchedule({ ...scheduleData, enabled: !scheduleData.enabled }, true)
-          }
-          disabled={Boolean(schedulingTooltipMessage)}
-        />
-      </Box>
-    </Tooltip>
+    <Box sx={styles.scheduleSummaryActions}>
+      <Tooltip
+        title={scheduleData.enabled ? 'Configure schedule' : ''}
+        placement="top"
+      >
+        <Box component="span">
+          <IconButton
+            size="small"
+            disabled={!scheduleData.enabled || Boolean(schedulingTooltipMessage)}
+            onClick={e => {
+              e.stopPropagation();
+              setScheduleModalOpen(true);
+            }}
+          >
+            <SettingsOutlinedIcon fontSize="small" />
+          </IconButton>
+        </Box>
+      </Tooltip>
+      <Tooltip
+        title={schedulingTooltipMessage || ''}
+        placement="top"
+      >
+        <Box component="span">
+          <Switch.BaseSwitch
+            checked={scheduleData.enabled}
+            onChange={() =>
+              handleChangeIndexSchedule({ ...scheduleData, enabled: !scheduleData.enabled }, true)
+            }
+            disabled={Boolean(schedulingTooltipMessage)}
+          />
+        </Box>
+      </Tooltip>
+    </Box>
   );
 
   const configAccordionContent =
@@ -659,14 +684,16 @@ const RunIndexPanel = memo(props => {
                 handleRunTool();
               }}
             >
-              Run
+              Run Test
             </Button>
           </Box>
           <Box sx={styles.footerRight}>
-            <ChatButton.ClearChatButton
-              disabled={isRunning || isIndexing}
-              onClear={handleClearChat}
-            />
+            {activeRightTab === RIGHT_TAB_RESULTS && (
+              <ChatButton.ClearChatButton
+                disabled={isRunning || isIndexing}
+                onClear={handleClearChat}
+              />
+            )}
           </Box>
         </Box>
       </Box>
@@ -687,6 +714,14 @@ const RunIndexPanel = memo(props => {
         cancelButtonText="Cancel"
         onClose={cancelReindexConfirm}
         onConfirm={confirmReindex}
+      />
+      <IndexScheduleModal
+        open={scheduleModalOpen}
+        onClose={() => setScheduleModalOpen(false)}
+        onSubmit={handleApplyScheduleModal}
+        cron={scheduleData.cron}
+        credentials={scheduleData.credentials}
+        credentialsData={credentialsData}
       />
     </Box>
   );
@@ -713,6 +748,10 @@ const RunIndex = memo(() => {
     );
     navigate(target);
   }, [navigate, tab, toolkitId]);
+
+  const goToToolkitsList = useCallback(() => {
+    navigate(RouteDefinitions.ToolkitsWithTab.replace(':tab', tab ?? 'all'));
+  }, [navigate, tab]);
 
   const {
     data: publicToolkitData = emptyToolDetail,
@@ -799,20 +838,12 @@ const RunIndex = memo(() => {
   return (
     <Box sx={styles.wrapper}>
       <Box sx={styles.header}>
-        <IconButton
-          variant="elitea"
-          color="tertiary"
-          onClick={goBackToToolkit}
-          sx={styles.backButton}
-        >
-          <ArrowBackIcon />
-        </IconButton>
-        <Typography
-          variant="headingSmall"
-          color="text.secondary"
-        >
-          {indexName || 'Index'}
-        </Typography>
+        <IndexBreadcrumb
+          toolkitName={publicToolkitData?.name || ''}
+          current={indexName || 'Index'}
+          onToolkitsClick={goToToolkitsList}
+          onToolkitClick={goBackToToolkit}
+        />
       </Box>
       {isLoading || showCreatingPlaceholder ? (
         <Box sx={styles.loading}>
@@ -873,12 +904,6 @@ const runIndexStyles = () => ({
     alignItems: 'center',
     gap: '0.75rem',
   },
-  backButton: ({ palette }) => ({
-    margin: 0,
-    '&:hover svg path': {
-      fill: palette.icon.fill.secondary,
-    },
-  }),
   loading: {
     display: 'flex',
     justifyContent: 'center',
@@ -930,73 +955,17 @@ const runIndexStyles = () => ({
   placeholderBlock: {
     padding: '0.5rem 0',
   },
-  scheduleEditor: {
+  scheduleSummaryBlock: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.5rem',
+    gap: '0.25rem',
     padding: '0.25rem 0',
   },
-  scheduleActions: {
+  scheduleSummaryActions: {
     display: 'flex',
-    justifyContent: 'flex-end',
-    marginTop: '0.5rem',
+    alignItems: 'center',
+    gap: '0.25rem',
   },
-  cronExplanation: ({ palette }) => ({
-    color: palette.text.secondary,
-    textAlign: 'center',
-  }),
-  cronDescription: ({ palette }) => ({
-    color: palette.secondary.main,
-    fontSize: '0.75rem',
-    textAlign: 'center',
-  }),
-  cronContainer: ({ palette }) => ({
-    '.react-js-cron': {
-      alignItems: 'center',
-      justifyContent: 'center',
-      flexWrap: 'wrap',
-      span: {
-        fontStyle: 'normal',
-        fontWeight: 400,
-        fontSize: '0.875rem',
-        lineHeight: '1rem',
-        color: palette.secondary.main,
-      },
-    },
-    '.react-js-cron-select': {
-      background: palette.background.secondary,
-      border: `1px solid ${palette.border.lines}`,
-      color: palette.secondary.main,
-      fontSize: '.75rem',
-      minWidth: '7rem !important',
-      '.ant-select-clear': { display: 'none !important' },
-      '.ant-select-placeholder,.ant-select-content-value': {
-        color: palette.secondary.main,
-        fontSize: '.75rem',
-      },
-      div: {
-        color: palette.secondary.main,
-        fontSize: '.75rem',
-      },
-    },
-    '.react-js-cron-select-dropdown': {
-      zIndex: 1400,
-      background: palette.background.secondary,
-      border: `1px solid ${palette.border.lines}`,
-      div: {
-        color: palette.secondary.main,
-        fontSize: '.75rem',
-        '.ant-select-item-option': {
-          '&:hover': {
-            backgroundColor: `${palette.background.userInputBackground} !important`,
-          },
-        },
-        '.ant-select-item-option-selected': {
-          backgroundColor: `${palette.background.userInputBackground} !important`,
-        },
-      },
-    },
-  }),
   loadingRow: {
     display: 'flex',
     justifyContent: 'center',

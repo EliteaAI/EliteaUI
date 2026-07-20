@@ -3,7 +3,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Formik, useFormikContext } from 'formik';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { Box, Button, CircularProgress, IconButton, Typography } from '@mui/material';
+import { Box, Button, CircularProgress } from '@mui/material';
 
 import { useGetIndexesListQuery } from '@/[fsd]/features/toolkits/indexes/api';
 import {
@@ -18,14 +18,13 @@ import { useToolkitChat } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
 import { useToolkitsDetailsQuery } from '@/api/toolkits.js';
-import ArrowRightIcon from '@/assets/arrow-right-icon.svg?react';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils.jsx';
-import ArrowBackIcon from '@/components/Icons/ArrowBackIcon';
 import { useGetSelectedToolSchema } from '@/hooks/toolkit/useGetSelectedToolSchema';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast.jsx';
 import { ToolTypes } from '@/pages/Applications/Components/Tools/consts';
 import Page404 from '@/pages/Page404.jsx';
+import IndexBreadcrumb from '@/pages/Toolkits/IndexBreadcrumb';
 import RouteDefinitions from '@/routes';
 
 const emptyToolDetail = {};
@@ -271,47 +270,12 @@ const CreateIndex = memo(() => {
   return (
     <Box sx={styles.wrapper}>
       <Box sx={styles.header}>
-        <IconButton
-          variant="elitea"
-          color="tertiary"
-          onClick={goBackToToolkit}
-        >
-          <ArrowBackIcon />
-        </IconButton>
-        <Box sx={styles.breadcrumb}>
-          <Typography
-            variant="headingSmall"
-            sx={styles.breadcrumbLink}
-            onClick={goToToolkitsList}
-          >
-            Toolkits
-          </Typography>
-          {toolkitName && (
-            <>
-              <Box
-                component={ArrowRightIcon}
-                sx={styles.breadcrumbSeparator}
-              />
-              <Typography
-                variant="headingSmall"
-                sx={styles.breadcrumbLink}
-                onClick={goBackToToolkit}
-              >
-                {toolkitName}
-              </Typography>
-            </>
-          )}
-          <Box
-            component={ArrowRightIcon}
-            sx={styles.breadcrumbSeparator}
-          />
-          <Typography
-            variant="headingSmall"
-            color="text.secondary"
-          >
-            New index
-          </Typography>
-        </Box>
+        <IndexBreadcrumb
+          toolkitName={toolkitName}
+          current="New index"
+          onToolkitsClick={goToToolkitsList}
+          onToolkitClick={goBackToToolkit}
+        />
       </Box>
       {isFetching || !publicToolkitData?.id ? (
         <Box sx={styles.loading}>
@@ -354,28 +318,6 @@ const createIndexStyles = () => ({
     alignItems: 'center',
     gap: '0.75rem',
   },
-  breadcrumb: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.25rem',
-    minWidth: 0,
-    overflow: 'hidden',
-  },
-  breadcrumbSeparator: ({ palette }) => ({
-    width: '1rem',
-    height: '1rem',
-    color: palette.text.secondary,
-    flexShrink: 0,
-  }),
-  breadcrumbLink: ({ palette }) => ({
-    color: palette.text.secondary,
-    whiteSpace: 'nowrap',
-    cursor: 'pointer',
-    '&:hover': {
-      color: palette.primary.main,
-      textDecoration: 'underline',
-    },
-  }),
   body: {
     display: 'flex',
     flexDirection: 'column',
@@ -395,7 +337,7 @@ const createIndexStyles = () => ({
   },
   actions: {
     display: 'flex',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     gap: '0.75rem',
   },
   loading: {

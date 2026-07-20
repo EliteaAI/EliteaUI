@@ -1,19 +1,19 @@
-import { memo, useCallback, useEffect, useMemo } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { Box, CircularProgress, IconButton, Typography } from '@mui/material';
+import { Box, CircularProgress, Typography } from '@mui/material';
 
 import { useGetIndexesListQuery } from '@/[fsd]/features/toolkits/indexes/api';
 import { selectIndexesList } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
-import { IndexHistory } from '@/[fsd]/features/toolkits/indexes/ui';
+import { IndexChatContainer, IndexHistory } from '@/[fsd]/features/toolkits/indexes/ui';
 import { useToolkitsDetailsQuery } from '@/api/toolkits.js';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils.jsx';
-import ArrowBackIcon from '@/components/Icons/ArrowBackIcon';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast.jsx';
 import Page404 from '@/pages/Page404.jsx';
+import IndexBreadcrumb from '@/pages/Toolkits/IndexBreadcrumb';
 import RouteDefinitions from '@/routes';
 
 const IndexHistoryPage = memo(() => {
@@ -23,6 +23,8 @@ const IndexHistoryPage = memo(() => {
   const { toastError } = useToast();
   const styles = indexHistoryPageStyles();
 
+  const [isFullScreenChat, setIsFullScreenChat] = useState(false);
+
   const goBackToRunIndex = useCallback(() => {
     const target = RouteDefinitions.ToolkitIndex.replace(':tab', tab ?? 'all')
       .replace(':toolkitId', String(toolkitId))
@@ -30,12 +32,25 @@ const IndexHistoryPage = memo(() => {
     navigate(target);
   }, [navigate, tab, toolkitId, rawIndexName]);
 
+  const goBackToToolkit = useCallback(() => {
+    const target = RouteDefinitions.ToolkitDetail.replace(':tab', tab ?? 'all').replace(
+      ':toolkitId',
+      String(toolkitId),
+    );
+    navigate(target);
+  }, [navigate, tab, toolkitId]);
+
+  const goToToolkitsList = useCallback(() => {
+    navigate(RouteDefinitions.ToolkitsWithTab.replace(':tab', tab ?? 'all'));
+  }, [navigate, tab]);
+
   const indexName = useMemo(() => (rawIndexName ? decodeURIComponent(rawIndexName) : ''), [rawIndexName]);
 
-  const { isError, error } = useToolkitsDetailsQuery(
-    { projectId, toolkitId },
-    { skip: !projectId || !toolkitId },
-  );
+  const {
+    data: publicToolkitData,
+    isError,
+    error,
+  } = useToolkitsDetailsQuery({ projectId, toolkitId }, { skip: !projectId || !toolkitId });
 
   useGetIndexesListQuery({ toolkitId, projectId }, { skip: !projectId || !toolkitId });
 
@@ -60,25 +75,23 @@ const IndexHistoryPage = memo(() => {
   const history = currentIndex?.metadata?.history || [];
   const isLoading = indexesLoading || indexesFetching || !hasData;
 
+  const toggleFullScreenChat = useCallback(() => setIsFullScreenChat(prev => !prev), []);
+
   if (shouldShowNotFoundPage) return <Page404 />;
+
+  const toolkitName = publicToolkitData?.name || '';
 
   return (
     <Box sx={styles.wrapper}>
       <Box sx={styles.header}>
-        <IconButton
-          variant="elitea"
-          color="tertiary"
-          onClick={goBackToRunIndex}
-          sx={styles.backButton}
-        >
-          <ArrowBackIcon />
-        </IconButton>
-        <Typography
-          variant="headingSmall"
-          color="text.secondary"
-        >
-          {indexName ? `${indexName} — History` : 'Index history'}
-        </Typography>
+        <IndexBreadcrumb
+          toolkitName={toolkitName}
+          current="History"
+          onToolkitsClick={goToToolkitsList}
+          onToolkitClick={goBackToToolkit}
+          onIndexClick={goBackToRunIndex}
+          indexName={indexName}
+        />
       </Box>
       {isLoading ? (
         <Box sx={styles.loading}>
@@ -104,7 +117,23 @@ const IndexHistoryPage = memo(() => {
         </Box>
       ) : (
         <Box sx={styles.body}>
-          <IndexHistory history={history} />
+          <Box sx={styles.historyColumn}>
+            <IndexHistory history={history} />
+          </Box>
+          <Box sx={styles.chatColumn}>
+            <IndexChatContainer
+              selectedModel={null}
+              onSelectModel={() => null}
+              modelList={[]}
+              llmSettings={null}
+              onSetLLMSettings={() => null}
+              isFullScreenChat={isFullScreenChat}
+              toggleFullScreenChat={toggleFullScreenChat}
+              clearChat={() => null}
+              chatHistory={[]}
+              conversation={null}
+            />
+          </Box>
         </Box>
       )}
     </Box>
@@ -128,12 +157,6 @@ const indexHistoryPageStyles = () => ({
     alignItems: 'center',
     gap: '0.75rem',
   },
-  backButton: ({ palette }) => ({
-    margin: 0,
-    '&:hover svg path': {
-      fill: palette.icon.fill.secondary,
-    },
-  }),
   loading: {
     display: 'flex',
     justifyContent: 'center',
@@ -143,7 +166,22 @@ const indexHistoryPageStyles = () => ({
   body: {
     flex: 1,
     minHeight: 0,
-    overflow: 'auto',
+    display: 'flex',
+    gap: '1.5rem',
+    overflow: 'hidden',
+  },
+  historyColumn: {
+    flex: '0 0 24rem',
+    minWidth: '20rem',
+    maxWidth: '28rem',
+    overflow: 'hidden',
+  },
+  chatColumn: {
+    flex: 1,
+    minWidth: 0,
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden',
   },
 });
 

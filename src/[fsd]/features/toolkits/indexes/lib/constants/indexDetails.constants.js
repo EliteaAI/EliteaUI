@@ -26,6 +26,7 @@ export const IndexStatuses = {
   cancelled: 'cancelled',
   created: 'created',
   partlyOk: 'partly_indexed',
+  scheduledReindex: 'scheduled_reindex',
 };
 
 // Statuses that allow the index to be searched and run tools against
@@ -37,6 +38,7 @@ export const IndexHistoryItemsLabels = {
   [IndexStatuses.cancelled]: 'Stopped',
   [IndexStatuses.fail]: 'Failed',
   [IndexStatuses.partlyOk]: 'Partially Indexed',
+  [IndexStatuses.scheduledReindex]: 'Reindexed by schedule',
 };
 
 export const IndexCronDefault = '0 0 * * 6';
