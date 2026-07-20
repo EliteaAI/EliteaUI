@@ -95,7 +95,11 @@ const IndexHistoryPage = memo(() => {
     return rows
       .filter(row => row.index_name === indexName && RUN_TEST_OPERATION_TYPES.has(row.operation_type))
       .map(row => {
-        const ms = new Date(row.created_at).getTime();
+        // Backend emits malformed ISO like "2026-07-20T11:52:57+00:00Z" (offset + trailing Z).
+        // Strip the redundant Z when a numeric offset is present so Date() can parse it.
+        const raw = typeof row.created_at === 'string' ? row.created_at : '';
+        const normalized = raw.replace(/([+-]\d{2}:?\d{2})Z$/, '$1');
+        const ms = new Date(normalized).getTime();
         return {
           state: IndexStatuses.runTest,
           updated_on: Number.isFinite(ms) ? Math.floor(ms / 1000) : null,
