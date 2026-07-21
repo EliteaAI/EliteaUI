@@ -55,8 +55,12 @@ const IndexDetails = memo(props => {
   const { clearIndexNameError, indexNameError, updateIndexNameError, isIndexNameValid } =
     useIndexNameValidation();
 
+  // Stable ref so useMcpAuthModal's onSuccess callback always calls the latest handleIndexData
+  const handleIndexDataRef = useRef(null);
+  const onMcpAuthSuccess = useCallback(() => handleIndexDataRef.current?.(), []);
+
   // MCP Auth Modal hook
-  const { handleMcpAuthRequired, getModalProps } = useMcpAuthModal({ values });
+  const { handleMcpAuthRequired, getModalProps } = useMcpAuthModal({ values, onSuccess: onMcpAuthSuccess });
 
   const disableRunTabReason = useMemo(() => {
     if (!index?.metadata?.state) return 'No index selected';
@@ -234,6 +238,9 @@ const IndexDetails = memo(props => {
     modes: isCreateView ? [ToolkitChatModesEnum.createIndex] : [],
     onMcpAuthRequired: handleMcpAuthRequired,
   });
+
+  // Keep the ref up-to-date so the onSuccess callback always invokes the latest handleIndexData
+  handleIndexDataRef.current = handleIndexData;
 
   // Update run tool when view changes
   useEffect(() => {
