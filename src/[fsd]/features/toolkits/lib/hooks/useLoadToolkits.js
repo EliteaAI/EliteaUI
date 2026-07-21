@@ -5,12 +5,13 @@ import { useTheme } from '@mui/material';
 import { CredentialNameHelpers } from '@/[fsd]/features/credentials/lib/helpers';
 import { McpConstants } from '@/[fsd]/features/toolkits/lib/constants';
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
-import { useGetCurrentToolkitSchemas } from './useGetCurrentToolkitSchemas.hooks';
 import { useListToolkitTypesQuery, useToolkitsListQuery } from '@/api/toolkits.js';
 import useTypes from '@/hooks/toolkit/useTypes';
 import usePageQuery from '@/hooks/usePageQuery';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useSortQueryParamsFromUrl from '@/hooks/useSortQueryParamsFromUrl';
+
+import { useGetCurrentToolkitSchemas } from './useGetCurrentToolkitSchemas.hooks';
 
 export const useLoadToolkits = ({
   isMCP,
@@ -75,6 +76,7 @@ export const useLoadToolkits = ({
     isToolkitsFirstFetching: isCardViewToolkitsFirstFetching,
     toolkitsError: cardViewToolkitsError,
     totalCount: cardViewTotalCount,
+    indexesTotal: cardViewIndexesTotal,
     page: cardViewPage,
     pageSize: cardViewPageSize,
     setPage: setCardViewPage,
@@ -126,6 +128,7 @@ export const useLoadToolkits = ({
     isToolkitsFirstFetching: isTableViewToolkitsFirstFetching,
     toolkitsError: tableViewToolkitsError,
     totalCount: tableViewTotalCount,
+    indexesTotal: tableViewIndexesTotal,
     page: tableViewPage,
     pageSize: tableViewPageSize,
     setPage: setTableViewPage,
@@ -177,6 +180,7 @@ export const useLoadToolkits = ({
     isToolkitsFirstFetching: isTableView ? isTableViewToolkitsFirstFetching : isCardViewToolkitsFirstFetching,
     toolkitsError: isTableView ? tableViewToolkitsError : cardViewToolkitsError,
     totalCount: isTableView ? tableViewTotalCount : cardViewTotalCount,
+    indexesTotal: isTableView ? tableViewIndexesTotal : cardViewIndexesTotal,
     page: isTableView ? tableViewPage : cardViewPage,
     pageSize: isTableView ? tableViewPageSize : cardViewPageSize,
     setPage: isTableView ? setTableViewPage : setCardViewPage,
@@ -302,6 +306,8 @@ const useLoadToolkitData = ({
     return toolkitData?.total || 0;
   }, [toolkitData]);
 
+  const indexesTotal = useMemo(() => toolkitData?.indexes_total ?? null, [toolkitData]);
+
   const onLoadMoreToolkits = useCallback(() => {
     if (!isToolkitFetching && (page + 1) * pageSize < totalCount) {
       setPage(page + 1);
@@ -323,6 +329,7 @@ const useLoadToolkitData = ({
     isToolkitsFirstFetching: !page && isToolkitFetching,
     toolkitsError: toolkitError,
     totalCount,
+    indexesTotal,
     page,
     pageSize,
     setPage,

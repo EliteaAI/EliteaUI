@@ -1,12 +1,14 @@
 import { memo, useCallback, useState } from 'react';
 
-import { Box, CircularProgress, Grid } from '@mui/material';
+import { Box, CircularProgress, Grid, Typography } from '@mui/material';
 
 import { RunHistoryContainer } from '@/[fsd]/entities/run-history/ui';
 import { ParticipantEntityTypes } from '@/[fsd]/features/chat/participants/lib/constants/participant.constants';
+import { IndexesContainer } from '@/[fsd]/features/toolkits/indexes/ui';
 import { TestTools } from '@/[fsd]/features/toolkits/ui';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui/form/ToolkitForm';
 import { useShowRunHistoryFromUrl } from '@/[fsd]/shared/lib/hooks';
+import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
 import DirtyDetector from '@/components/Formik/DirtyDetector.jsx';
 import { CONFIGURATION_VIEW_OPTIONS } from '@/pages/Applications/Components/Tools/ToolConfigurationForm.jsx';
 
@@ -25,6 +27,9 @@ const ConfigurationTab = memo(props => {
     updateKey,
     isMCP,
     onValidationStateChange,
+    selectedIndexTools,
+    indexingUnavailableReason,
+    shouldHideIndexes,
   } = props;
   const [showHistory, setShowHistory] = useState(false);
   useShowRunHistoryFromUrl({ setShowHistory });
@@ -44,6 +49,30 @@ const ConfigurationTab = memo(props => {
   }, []);
 
   const [isFullScreenChat, setIsFullScreenChat] = useState(false);
+
+  const indexesAccordionContent = (() => {
+    if (indexingUnavailableReason) {
+      return (
+        <Box sx={styles.indexesUnavailable}>
+          <Typography
+            variant="bodyMedium"
+            color="text.default"
+          >
+            Indexing is not available for now
+          </Typography>
+        </Box>
+      );
+    }
+
+    return (
+      <IndexesContainer
+        listOnly
+        toolkitId={toolkitId}
+        selectedIndexTools={selectedIndexTools}
+        editToolDetail={editToolDetail}
+      />
+    );
+  })();
 
   return isFetching ? (
     <Box
@@ -90,6 +119,19 @@ const ConfigurationTab = memo(props => {
                 onSyntaxError={() => {}}
                 onValidationStateChange={onValidationStateChange}
               />
+              {!shouldHideIndexes && (
+                <BasicAccordion
+                  data-testid="toolkit-indexes-accordion"
+                  style={styles.indexesAccordionWrapper}
+                  accordionSX={styles.indexesAccordion}
+                  items={[
+                    {
+                      title: 'Indexes',
+                      content: indexesAccordionContent,
+                    },
+                  ]}
+                />
+              )}
             </Grid>
           )}
           <Grid
@@ -127,11 +169,28 @@ const styles = {
     overflow: 'auto',
     maxHeight: '100%',
     height: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
   },
   rightPanel: {
     height: '100%',
     maxHeight: '100%',
   },
+  indexesAccordionWrapper: {
+    width: '100%',
+  },
+  indexesAccordion: {
+    width: '100%',
+  },
+  indexesUnavailable: ({ palette }) => ({
+    padding: '1rem',
+    borderRadius: '0.5rem',
+    background: palette.background.userInputBackground,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  }),
 };
 
 export default ConfigurationTab;

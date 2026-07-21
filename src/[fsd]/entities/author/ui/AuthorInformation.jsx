@@ -12,7 +12,7 @@ import { AuthorStatistics } from '@/[fsd]/entities/author/ui/AuthorInfo';
 import UserAvatar from '@/components/UserAvatar';
 
 const AuthorInformation = memo(props => {
-  const { isLoading } = props;
+  const { isLoading, indexesTotal } = props;
 
   const location = useLocation();
   const styles = stylesAuthorInformation();
@@ -71,7 +71,12 @@ const AuthorInformation = memo(props => {
                 {name}
               </Typography>
             </Box>
-            {currentsStatistic && <AuthorStatistics statistic={currentsStatistic} />}
+            {currentsStatistic && (
+              <AuthorStatistics
+                statistic={currentsStatistic}
+                indexesTotal={indexesTotal}
+              />
+            )}
           </Box>
         </Box>
       )}

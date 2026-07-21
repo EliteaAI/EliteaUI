@@ -22,7 +22,7 @@ const MAX_CHARS = 2500;
 
 const ProjectContextEditor = memo(props => {
   const { serverData, projectId, isCreate, canEdit, openAiModal, onNavigate } = props;
-  const { toastSuccess, toastError } = useToast();
+  const { toastSuccess, toastError, toastInfo } = useToast();
   const fileInputRef = useRef(null);
   const [isDirty, setIsDirty] = useState(false);
 
@@ -125,10 +125,10 @@ const ProjectContextEditor = memo(props => {
   const handleCopyToClipboard = useCallback(() => {
     if (!content) return;
     navigator.clipboard.writeText(content).then(
-      () => toastSuccess('The content has been copied.'),
-      () => toastError('Failed to copy to clipboard'),
+      () => toastInfo('The content has been copied to the clipboard.'),
+      () => toastError('Failed to copy to the clipboard.'),
     );
-  }, [content, toastSuccess, toastError]);
+  }, [content, toastInfo, toastError]);
 
   const handleCancel = useCallback(() => {
     onNavigate('empty');

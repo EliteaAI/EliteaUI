@@ -246,7 +246,7 @@ export const useCopyConfiguration = ({
 
       const jsonString = JSON.stringify(informationData, null, 2);
       await navigator.clipboard.writeText(jsonString);
-      toastInfo?.('The basic information has been copied as JSON.');
+      toastInfo?.('The basic information has been copied as JSON to the clipboard.');
     } catch {
       toastError('Failed to copy configuration information');
     }

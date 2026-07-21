@@ -93,7 +93,7 @@ const SettingsPreview = memo(props => {
   const handleCopy = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(settingsContent);
-      toastInfo('The settings have been copied.');
+      toastInfo('The settings have been copied to the clipboard.');
     } catch {
       toastError('Failed to copy settings');
     }

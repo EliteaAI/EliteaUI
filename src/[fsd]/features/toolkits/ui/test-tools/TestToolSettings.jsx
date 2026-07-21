@@ -77,8 +77,15 @@ const TestToolSettings = memo(props => {
         ? dynamicToolNames
         : schemaToolNames;
 
-    // Map to label/value pairs and always sort by label (asc) for stable UI order
+    const indexToolNames = new Set(Object.values(IndexesToolsEnum));
+
+    // Map to label/value pairs and always sort by label (asc) for stable UI order.
+    // Index-scope tools are exercised on the Index page's Run Test flow, not here.
     return (availableTools || [])
+      .filter(tool => {
+        const name = typeof tool === 'string' ? tool : tool?.name;
+        return !indexToolNames.has(name);
+      })
       .map(tool => ({
         label:
           typeof tool === 'string'

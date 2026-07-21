@@ -46,7 +46,7 @@ export const useCodePreview = (model, token) => {
   const handleCopy = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(codeExample);
-      toastInfo('The code has been copied.');
+      toastInfo('The code has been copied to the clipboard.');
     } catch {
       toastError('Failed to copy code');
     }

@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo } from 'react';
+import { memo, useCallback, useEffect, useMemo } from 'react';
 
 import { format, fromUnixTime } from 'date-fns';
 import { useDispatch, useSelector } from 'react-redux';
@@ -7,7 +7,7 @@ import { Box, Typography } from '@mui/material';
 
 import { useRunHistorySorting } from '@/[fsd]/entities/run-history/lib/hooks';
 import { RunHistorySortableHeader } from '@/[fsd]/entities/run-history/ui';
-import { IndexHistoryItemsLabels } from '@/[fsd]/features/toolkits/indexes/lib/constants';
+import { IndexHistoryItemsLabels, IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants';
 import { actions, selectHistoryItem } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
 
 const SORT_TYPES = {
@@ -24,8 +24,23 @@ const IndexHistory = memo(props => {
   const selectedHistoryItem = useSelector(selectHistoryItem);
   const { sortConfig, handleSortItems, getSortedData } = useRunHistorySorting(SORT_TYPES.DATE);
 
+  const initialCompletedTs = useMemo(() => {
+    const completed = history.filter(h => h.state === IndexStatuses.success);
+    if (!completed.length) return null;
+    return completed.reduce((min, h) => (h.updated_on < min ? h.updated_on : min), completed[0].updated_on);
+  }, [history]);
+
+  const annotateItem = useMemo(
+    () => item => {
+      if (!item) return item;
+      const isInitialIndex = item.state === IndexStatuses.success && item.updated_on === initialCompletedTs;
+      return { ...item, isInitialIndex };
+    },
+    [initialCompletedTs],
+  );
+
   useEffect(() => {
-    dispatch(actions.selectHistoryItem(history[history.length - 1]));
+    dispatch(actions.selectHistoryItem(annotateItem(history[history.length - 1])));
 
     return () => {
       dispatch(actions.selectHistoryItem(null));
@@ -33,20 +48,29 @@ const IndexHistory = memo(props => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const resolveLabel = useCallback(
+    item => {
+      if (item.state === IndexStatuses.success && item.updated_on !== initialCompletedTs) {
+        return 'Reindexed';
+      }
+      return IndexHistoryItemsLabels[item.state] || item.state;
+    },
+    [initialCompletedTs],
+  );
+
   const sortFunctions = useMemo(
     () => ({
-      [SORT_TYPES.EVENT]: (a, b) => {
-        const labelA = IndexHistoryItemsLabels[a.state] || a.state;
-        const labelB = IndexHistoryItemsLabels[b.state] || b.state;
-        return labelA.localeCompare(labelB);
-      },
+      [SORT_TYPES.EVENT]: (a, b) => resolveLabel(a).localeCompare(resolveLabel(b)),
       [SORT_TYPES.DATE]: (a, b) => a.updated_on - b.updated_on,
     }),
-    [],
+    [resolveLabel],
   );
 
   const sortedHistory = useMemo(
-    () => getSortedData(history, sortFunctions),
+    () =>
+      getSortedData(history, sortFunctions).filter(
+        item => Boolean(IndexHistoryItemsLabels[item.state]) && Number.isFinite(item.updated_on),
+      ),
     [history, getSortedData, sortFunctions],
   );
 
@@ -59,7 +83,7 @@ const IndexHistory = memo(props => {
   );
 
   const handleSelectHistoryItem = item => {
-    dispatch(actions.selectHistoryItem(item));
+    dispatch(actions.selectHistoryItem(annotateItem(item)));
   };
 
   return (
@@ -87,7 +111,7 @@ const IndexHistory = memo(props => {
               color="text.secondary"
               sx={{ width: '6.5rem' }}
             >
-              {IndexHistoryItemsLabels[historyItem.state]}
+              {resolveLabel(historyItem)}
             </Typography>
             <Typography
               variant="bodyM"

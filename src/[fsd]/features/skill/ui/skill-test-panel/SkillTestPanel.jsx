@@ -379,7 +379,7 @@ const SkillTestPanel = memo(({ isFullScreenChat, setIsFullScreenChat }) => {
       if (!text) return;
       try {
         await navigator.clipboard.writeText(text);
-        toastInfo('The message has been copied.');
+        toastInfo('The message has been copied to the clipboard.');
       } catch {
         toastError('Failed to copy');
       }

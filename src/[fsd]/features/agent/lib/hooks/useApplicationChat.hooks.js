@@ -199,7 +199,7 @@ export const useApplicationChat = ({
               project_id: projectId,
             });
 
-            toastInfo('Chat restored successfully');
+            toastSuccess('Chat has been restored successfully.');
             setHasRestoredConversation(true);
           } else {
             toastError('Could not find application participant in restored chat');
@@ -226,7 +226,7 @@ export const useApplicationChat = ({
     emitEnterRoom,
     getMessageTraces,
     projectId,
-    toastInfo,
+    toastSuccess,
     toastError,
     onRestoreConversationComplete,
   ]);
