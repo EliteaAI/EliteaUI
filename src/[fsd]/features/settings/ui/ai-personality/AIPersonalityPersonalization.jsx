@@ -8,7 +8,10 @@ import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { Input, Label } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
-import { PERSONA_OPTIONS } from '@/common/constants';
+import { PERSONA_INSTRUCTIONS_PLACEHOLDERS, PERSONA_OPTIONS } from '@/common/constants';
+
+// #5392: the "None" persona has no personality overlay, so it carries no user instructions.
+const NONE_PERSONA = 'none';
 
 const AIPersonalityPersonalization = memo(props => {
   const { onAutoSaveRequested } = props;
@@ -37,9 +40,10 @@ const AIPersonalityPersonalization = memo(props => {
     [onAutoSaveRequested, setFieldValue],
   );
 
+  // #5392: instructions are stored per-persona; edit the slot for the currently selected persona.
   const handleInstructionsChange = useCallback(
-    e => setFieldValue('default_instructions', e.target.value),
-    [setFieldValue],
+    e => setFieldValue(`personality_instructions.${values.persona}`, e.target.value),
+    [setFieldValue, values.persona],
   );
 
   return (
@@ -49,13 +53,13 @@ const AIPersonalityPersonalization = memo(props => {
       accordionSX={styles.accordion}
       items={[
         {
-          title: 'Default Personality Management',
+          title: 'Persona Management',
           content: (
             <Box sx={styles.accordionContent}>
               <Box sx={styles.section}>
                 <Label.InfoLabelWithTooltip
-                  label="Default personality"
-                  tooltip="Select the default assistant personality for your conversations"
+                  label="Default persona"
+                  tooltip="Select the default assistant persona for your conversations"
                   sx={styles.label}
                 />
                 <SingleSelect
@@ -84,25 +88,29 @@ const AIPersonalityPersonalization = memo(props => {
                 />
               </Box>
 
-              <Box sx={styles.section}>
-                <Input.StyledInputEnhancer
-                  label="Default instructions"
-                  tooltipDescription="Custom instructions that will be applied to all new conversations"
-                  autoComplete="off"
-                  variantInput="outlined"
-                  fullWidth
-                  multiline
-                  value={values.default_instructions}
-                  onChange={handleInstructionsChange}
-                  enableAutoBlur={false}
-                  placeholder="Example: Always respond in a concise manner. Focus on practical solutions."
-                  hasActionsToolBar
-                  showCopyAction={false}
-                  showExpandAction={false}
-                  fieldName="Default Instructions"
-                  containerProps={styles.inputContainer}
-                />
-              </Box>
+              {values.persona !== NONE_PERSONA && (
+                <Box sx={styles.section}>
+                  <Input.StyledInputEnhancer
+                    label="User instructions"
+                    tooltipDescription="Custom instructions for the selected persona, applied to new conversations that use it. Each persona keeps its own instructions."
+                    autoComplete="off"
+                    variantInput="outlined"
+                    fullWidth
+                    multiline
+                    value={values.personality_instructions?.[values.persona] ?? ''}
+                    onChange={handleInstructionsChange}
+                    enableAutoBlur={false}
+                    placeholder={
+                      PERSONA_INSTRUCTIONS_PLACEHOLDERS[values.persona] ??
+                      'No custom instructions for this persona yet. Type here to add some.'
+                    }
+                    hasActionsToolBar
+                    showExpandAction={false}
+                    fieldName="User Instructions"
+                    containerProps={styles.inputContainer}
+                  />
+                </Box>
+              )}
             </Box>
           ),
         },

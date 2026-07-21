@@ -6,11 +6,17 @@ import {
   SEPARATOR,
   VALIDATION_LIMITS,
 } from '@/[fsd]/widgets/context-budget/lib/constants';
-import { DEFAULT_PERSONA } from '@/common/constants';
+import { DEFAULT_PERSONA, PERSONA_OPTIONS } from '@/common/constants';
+
+// #5392: every persona starts with an empty instructions slot.
+export const EMPTY_PERSONALITY_INSTRUCTIONS = PERSONA_OPTIONS.reduce(
+  (acc, { value }) => ({ ...acc, [value]: '' }),
+  {},
+);
 
 export const PROFILE_INITIAL_VALUES = {
   persona: DEFAULT_PERSONA,
-  default_instructions: '',
+  personality_instructions: { ...EMPTY_PERSONALITY_INSTRUCTIONS },
   default_internal_mcp_enabled: true,
   context_enabled: DEFAULT_CONTEXT_STRATEGY.ENABLED,
   max_context_tokens: DEFAULT_CONTEXT_STRATEGY.MAX_CONTEXT_TOKENS,
@@ -29,6 +35,7 @@ export const serializeProfileFormData = (authorData, defaultModel, selectedProje
     return {
       ...PROFILE_INITIAL_VALUES,
       persona: '',
+      personality_instructions: { ...EMPTY_PERSONALITY_INSTRUCTIONS },
       summary_llm_settings: {
         ...PROFILE_INITIAL_VALUES.summary_llm_settings,
         model_name: defaultModel?.name || '',
@@ -43,7 +50,12 @@ export const serializeProfileFormData = (authorData, defaultModel, selectedProje
 
   return {
     persona: p.persona || DEFAULT_PERSONA,
-    default_instructions: p.default_instructions || '',
+    // #5392: merge saved per-persona instructions over the empty defaults so every persona key
+    // is always present (backend GET self-heals legacy rows into this dict).
+    personality_instructions: {
+      ...EMPTY_PERSONALITY_INSTRUCTIONS,
+      ...(p.personality_instructions || {}),
+    },
     default_internal_mcp_enabled: p.default_internal_mcp_enabled ?? true,
     context_enabled: cm.enabled ?? DEFAULT_CONTEXT_STRATEGY.ENABLED,
     max_context_tokens: cm.max_context_tokens ?? DEFAULT_CONTEXT_STRATEGY.MAX_CONTEXT_TOKENS,
@@ -62,7 +74,8 @@ export const serializeProfileFormData = (authorData, defaultModel, selectedProje
 export const deserializeProfileFormData = formValues => ({
   personalization: {
     persona: formValues.persona,
-    default_instructions: formValues.default_instructions,
+    // #5392: send the full per-persona map; default_instructions is server-owned now.
+    personality_instructions: formValues.personality_instructions,
     default_internal_mcp_enabled: formValues.default_internal_mcp_enabled,
   },
   default_context_management: {
@@ -102,7 +115,7 @@ export const parseModelValue = value => {
 export const profileValidationSchema = yup.object({
   // Personalization - no strict validation, just string types
   persona: yup.string().required('Please select a personality'),
-  default_instructions: yup.string(),
+  personality_instructions: yup.object(),
 
   // Context Management
   context_enabled: yup.boolean(),

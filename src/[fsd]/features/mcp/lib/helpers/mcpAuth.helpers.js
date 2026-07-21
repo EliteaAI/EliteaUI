@@ -144,7 +144,8 @@ export const canonicalizeServerUrl = url => {
     const segments = rawPath.split('/').filter((seg, i) => i === 0 || seg !== '');
     const normalizedPath = segments.join('/').toLowerCase();
     const path = normalizedPath === '/' ? '' : normalizedPath;
-    return `${scheme}://${host}${port}${path}`;
+    const canonical = `${scheme}://${host}${port}${path}`;
+    return McpAuthConstants.MCP_DEPRECATED_URL_MAP[canonical] ?? canonical;
   } catch {
     return url.toLowerCase().replace(/\/$/, '');
   }

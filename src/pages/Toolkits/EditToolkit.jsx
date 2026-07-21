@@ -2,18 +2,14 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Form, Formik } from 'formik';
 import { useSelector } from 'react-redux';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import { Box, Typography } from '@mui/material';
 
 import { getIntegrationOptions } from '@/DEPRECATED.js';
-import {
-  SHARED_TOUR_TARGET_IDS,
-  TOOLKIT_TOUR_TARGET_IDS,
-} from '@/[fsd]/features/interactive-tours/lib/constants';
+import { SHARED_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { useGetIndexesListQuery } from '@/[fsd]/features/toolkits/indexes/api';
 import { IndexesToolsEnum } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
-import { IndexesContainer } from '@/[fsd]/features/toolkits/indexes/ui';
 // TODO: DELETE after migration period (Q1 2026) - Legacy OpenAPI toolkit migration
 import { LegacyOpenApiMigration } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
@@ -25,7 +21,6 @@ import { buildErrorMessage, isNotFoundError } from '@/common/utils.jsx';
 import BackButton from '@/components/BackButton';
 import ConfirmRedirectModal from '@/components/ConfirmRedirectModal';
 import GearIcon from '@/components/Icons/GearIcon.jsx';
-import IndexingIcon from '@/components/Icons/IndexingIcon.jsx';
 import StyledTabs from '@/components/StyledTabs.jsx';
 import useNavBlocker from '@/hooks/useNavBlocker';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -33,6 +28,7 @@ import useToast from '@/hooks/useToast.jsx';
 import getValidateSchema from '@/pages/Applications/Components/Applications/ApplicationCreationValidateSchema';
 import Page404 from '@/pages/Page404.jsx';
 import ConfigurationTab from '@/pages/Toolkits/ConfigurationTab.jsx';
+import RouteDefinitions from '@/routes';
 import { interpolateUrl } from '@/utils/urlInterpolation';
 
 const applicationCapabilities = [CapabilityTypes.chat_completion.value];
@@ -44,6 +40,7 @@ const EditToolkit = memo(props => {
   // const fileReaderEnhancerRef = useRef();
   const { toastError, toastInfo } = useToast();
   const { toolkitId, mcpId, appId, tab } = useParams();
+  const navigate = useNavigate();
   const realId = useMemo(() => (isMCP ? mcpId : appId || toolkitId), [isMCP, mcpId, appId, toolkitId]);
   const currentProjectId = useSelectedProjectId();
   const [editToolDetail, setEditToolDetail] = useState(null);
@@ -262,29 +259,11 @@ const EditToolkit = memo(props => {
             isMCP={isMCP}
             toolkitId={realId}
             onValidationStateChange={handleValidationStateChange}
-          />
-        ),
-      },
-      {
-        label: 'Indexes',
-        icon: <IndexingIcon />,
-        tabProps: {
-          'data-tour': TOOLKIT_TOUR_TARGET_IDS.indexesTab,
-          'data-testid': 'toolkit-detail-indexes-tab',
-        },
-        content: (
-          <IndexesContainer
-            toolkitId={realId}
             selectedIndexTools={selectedIndexTools}
-            editToolDetail={editToolDetail}
+            indexingUnavailableReason={disableIndexingReason}
+            shouldHideIndexes={shouldHideIndexesTab}
           />
         ),
-        ...(disableIndexingReason && {
-          disabled: disableIndexingReason.loading
-            ? 'Configure PgVector and Embedding model to enable Indexes options'
-            : '"Index data" tool is not selected',
-        }),
-        ...(shouldHideIndexesTab && { display: 'none' }),
       },
       {
         label: 'Test',
@@ -317,6 +296,22 @@ const EditToolkit = memo(props => {
   const [searchParams, setSearchParams] = useSearchParams();
   const destTab = useMemo(() => searchParams.get(SearchParams.DestTab), [searchParams]);
 
+  // Legacy deep-link back-compat: /toolkits/:tab/:toolkitId?index_name=X or ?indexName=X → /toolkits/:tab/:toolkitId/index/X
+  useEffect(() => {
+    if (isMCP) return;
+    const indexNameParam = searchParams.get(SearchParams.IndexName) || searchParams.get('indexName');
+    if (!indexNameParam || !tab || !realId) return;
+    const target = RouteDefinitions.ToolkitIndex.replace(':tab', tab)
+      .replace(':toolkitId', String(realId))
+      .replace(':indexName', encodeURIComponent(indexNameParam));
+    const preserved = new URLSearchParams(searchParams);
+    preserved.delete(SearchParams.IndexName);
+    preserved.delete('indexName');
+    const search = preserved.toString();
+    navigate({ pathname: target, search: search ? `?${search}` : '' }, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, tab, realId, isMCP]);
+
   // Update URL with toolkit name when it loads
   useEffect(() => {
     if (publicToolkitData?.name && searchParams.get(SearchParams.Name) !== publicToolkitData.name) {
@@ -336,7 +331,10 @@ const EditToolkit = memo(props => {
 
     // Fallback to destTab search parameter
     if (destTab && destTab !== 'History') {
-      return tabs.findIndex(item => item.label.toLocaleLowerCase() === destTab.toLocaleLowerCase());
+      const destIndex = tabs.findIndex(
+        item => item.label.toLocaleLowerCase() === destTab.toLocaleLowerCase(),
+      );
+      if (destIndex !== -1) return destIndex;
     }
 
     return 0;
@@ -467,6 +465,7 @@ const editToolkitStyles = isMCP => ({
     gap: '0.75rem',
   },
   tabsSX: {
+    display: 'none',
     flex: 1,
     '& .MuiTabs-scroller': {
       justifyContent: 'center',

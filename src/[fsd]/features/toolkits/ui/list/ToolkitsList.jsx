@@ -59,6 +59,7 @@ const ToolkitsList = memo(props => {
     page,
     pageSize,
     totalCount,
+    indexesTotal,
     setPage,
   } = useLoadToolkits({ isMCP, isApplication, isTableView });
 
@@ -85,13 +86,26 @@ const ToolkitsList = memo(props => {
           style={styles.rightInfoPanel}
         />
         {selectedProjectId == privateProjectId || authorId ? (
-          <AuthorInformation isLoading={isLoadingAuthor} />
+          <AuthorInformation
+            isLoading={isLoadingAuthor}
+            indexesTotal={!isMCP && !isApplication ? indexesTotal : null}
+          />
         ) : (
           <TeamMates entityType="toolkit" />
         )}
       </Box>
     ),
-    [tagList, styles, selectedProjectId, privateProjectId, authorId, isLoadingAuthor],
+    [
+      tagList,
+      styles,
+      selectedProjectId,
+      privateProjectId,
+      authorId,
+      isLoadingAuthor,
+      indexesTotal,
+      isMCP,
+      isApplication,
+    ],
   );
 
   // Navigate to New Toolkit page for private projects with no toolkits

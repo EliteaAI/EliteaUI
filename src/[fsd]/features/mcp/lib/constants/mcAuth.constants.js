@@ -7,3 +7,9 @@ export const MCP_CONNECTION_VERIFIED = '__connection_verified__';
 // Prefix for pre-built MCP toolkit types (e.g., mcp_github, mcp_context7)
 // Used to identify pre-built MCPs and as storage key prefix
 export const MCP_PREBUILD_PREFIX = 'mcp_';
+
+// Deprecated MCP server URLs mapped to their current replacements.
+// Tokens stored under either URL resolve to the same canonical key.
+export const MCP_DEPRECATED_URL_MAP = {
+  'https://mcp.atlassian.com/v1/sse': 'https://mcp.atlassian.com/v1/mcp/authv2',
+};

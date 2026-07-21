@@ -26,17 +26,27 @@ export const IndexStatuses = {
   cancelled: 'cancelled',
   created: 'created',
   partlyOk: 'partly_indexed',
+  scheduledReindex: 'scheduled_reindex',
+  runTest: 'run_test',
 };
 
 // Statuses that allow the index to be searched and run tools against
 export const RUNNABLE_INDEX_STATUSES = [IndexStatuses.success, IndexStatuses.partlyOk];
 
 export const IndexHistoryItemsLabels = {
-  [IndexStatuses.success]: 'Reindexed',
+  [IndexStatuses.success]: 'Indexed',
   [IndexStatuses.created]: 'Created',
   [IndexStatuses.cancelled]: 'Stopped',
   [IndexStatuses.fail]: 'Failed',
   [IndexStatuses.partlyOk]: 'Partially Indexed',
+  [IndexStatuses.scheduledReindex]: 'Reindexed by schedule',
+  [IndexStatuses.runTest]: 'Run test',
 };
+
+export const RUN_TEST_OPERATION_TYPES = new Set([
+  'search_index',
+  'stepback_search_index',
+  'stepback_summary_index',
+]);
 
 export const IndexCronDefault = '0 0 * * 6';
