@@ -92,7 +92,7 @@ export const generateMessagePayload = ({
         conversation_uuid,
         question_id,
         interaction_uuid,
-        user_ids: isSendingToUser ? userIds : undefined,
+        user_ids: isSendingToUser && userIds?.length > 0 ? userIds : undefined,
         attachments_info: attachmentList
           .filter(item => item.filepath)
           .map(item => ({
