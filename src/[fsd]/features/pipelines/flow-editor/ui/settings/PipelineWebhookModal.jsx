@@ -118,14 +118,14 @@ const PipelineWebhookModal = props => {
   const handleCopyUrl = useCallback(() => {
     if (fullWebhookUrl) {
       navigator.clipboard.writeText(fullWebhookUrl);
-      toastInfo('The webhook URL has been copied.');
+      toastInfo('The webhook URL has been copied to the clipboard.');
     }
   }, [fullWebhookUrl, toastInfo]);
 
   const handleCopySecret = useCallback(() => {
     if (displaySecretValue) {
       navigator.clipboard.writeText(displaySecretValue);
-      toastInfo('The secret has been copied.');
+      toastInfo('The secret has been copied to the clipboard.');
     }
   }, [displaySecretValue, toastInfo]);
 
@@ -154,7 +154,7 @@ const PipelineWebhookModal = props => {
   const handleCopyExample = useCallback(() => {
     if (exampleRequest) {
       navigator.clipboard.writeText(exampleRequest);
-      toastInfo('The example request has been copied.');
+      toastInfo('The example request has been copied to the clipboard.');
     }
   }, [exampleRequest, toastInfo]);
 

@@ -42,7 +42,7 @@ const ExpandedViewerModal = memo(props => {
 
   const onClickCopy = useCallback(() => {
     handleCopy(value);
-    toastInfo('The content has been copied to the clipboard');
+    toastInfo('The content has been copied to the clipboard.');
   }, [value, toastInfo]);
 
   const titleRef = useRef(null);

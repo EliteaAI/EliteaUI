@@ -42,7 +42,7 @@ const StyledShowContextModal = memo(props => {
   const onCopy = async () => {
     try {
       await navigator.clipboard.writeText(context);
-      toastInfo('The content has been copied to the clipboard');
+      toastInfo('The content has been copied to the clipboard.');
     } catch {
       toastError('Failed to copy the content!');
       return;

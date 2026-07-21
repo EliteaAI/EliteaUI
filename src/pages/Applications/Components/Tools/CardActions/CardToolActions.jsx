@@ -21,7 +21,7 @@ const CardToolActions = ({ toolOptions = [], selectedTools = [], showActions = f
   const onClickCopy = useCallback(
     value => async () => {
       await navigator.clipboard.writeText(value);
-      toastInfo('The action has been copied to clipboard');
+      toastInfo('The action has been copied to the clipboard.');
     },
     [toastInfo],
   );

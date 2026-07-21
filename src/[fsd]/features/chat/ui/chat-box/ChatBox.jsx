@@ -1013,7 +1013,7 @@ const ChatBox = forwardRef((props, boxRef) => {
         if (message.exception) {
           try {
             await navigator.clipboard.writeText(JSON.stringify(message.exception));
-            toastInfo('The exception has been copied.');
+            toastInfo('The exception has been copied to the clipboard.');
           } catch {
             toastError('Failed to copy the exception!');
           }
@@ -1043,7 +1043,7 @@ const ChatBox = forwardRef((props, boxRef) => {
 
           try {
             await navigator.clipboard.writeText(contentToCopy);
-            toastInfo('The message has been copied.');
+            toastInfo('The message has been copied to the clipboard.');
           } catch {
             toastError('Failed to copy the message!');
           }

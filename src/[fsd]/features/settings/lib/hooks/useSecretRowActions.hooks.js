@@ -183,7 +183,7 @@ export const useSecretRowActions = ({
       if (targetRow && isShowSecretMapRef.current[id]) {
         try {
           await copyToClipboard(targetRow.secretValue);
-          toastInfo(`The ${targetRow.name} values have been copied.`);
+          toastInfo(`The ${targetRow.name} values have been copied to the clipboard.`);
 
           // Hide the secret after copying
           setRows(prevRows =>
@@ -201,7 +201,7 @@ export const useSecretRowActions = ({
             return newMap;
           });
         } catch {
-          toastInfo('Failed to copy to clipboard');
+          toastInfo('Failed to copy to the clipboard.');
         }
       }
     },

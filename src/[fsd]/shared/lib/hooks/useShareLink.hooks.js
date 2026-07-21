@@ -12,7 +12,7 @@ export const useShareLink = () => {
     async (url, entityType, entityId, entityName) => {
       try {
         await navigator.clipboard.writeText(url);
-        toastInfo('The link has been copied to the clipboard');
+        toastInfo('The link has been copied to the clipboard.');
         trackEvent(GA_EVENT_NAMES.SHARE_LINK_COPIED, {
           [GA_EVENT_PARAMS.ENTITY_TYPE]: entityType || 'unknown',
           [GA_EVENT_PARAMS.ENTITY_ID]: entityId || 'unknown',
@@ -20,7 +20,7 @@ export const useShareLink = () => {
           [GA_EVENT_PARAMS.TIMESTAMP]: new Date().toISOString(),
         });
       } catch {
-        toastInfo('Failed to copy the link to the clipboard');
+        toastInfo('Failed to copy the link to the clipboard.');
       }
     },
     [toastInfo, trackEvent],

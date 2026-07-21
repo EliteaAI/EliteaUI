@@ -13,7 +13,7 @@ const FieldWithCopy = memo(props => {
 
   const onCopy = useCallback(() => {
     handleCopy(value);
-    toastInfo(`The ${label.replace(/:$/, '')} has been copied.`);
+    toastInfo(`The ${label.replace(/:$/, '')} has been copied to the clipboard.`);
   }, [label, toastInfo, value]);
 
   return (

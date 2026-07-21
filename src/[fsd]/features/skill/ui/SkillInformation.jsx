@@ -30,7 +30,7 @@ const SkillInformation = memo(({ id, versionId, meta }) => {
                 label="Skill ID:"
                 value={String(id)}
                 tooltip="Copy ID"
-                copyMessage="The ID has been copied."
+                copyMessage="The ID has been copied to the clipboard."
               />
             )}
             {versionId !== null && versionId !== undefined && (
@@ -38,7 +38,7 @@ const SkillInformation = memo(({ id, versionId, meta }) => {
                 label="Version ID:"
                 value={String(versionId)}
                 tooltip="Copy version ID"
-                copyMessage="The Version ID has been copied."
+                copyMessage="The Version ID has been copied to the clipboard."
               />
             )}
             {isForked && (

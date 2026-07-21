@@ -120,7 +120,7 @@ const PreviewHeader = memo(props => {
             [GA_EVENT_PARAMS.FILE_TYPE]: currentLanguage,
             [GA_EVENT_PARAMS.TIMESTAMP]: new Date().toISOString(),
           });
-          toastInfo('File content copied to clipboard');
+          toastInfo('The file content has been copied to the clipboard.');
         })
         .catch(() => {
           toastError('Failed to copy file content');
