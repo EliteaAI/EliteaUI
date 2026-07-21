@@ -54,7 +54,7 @@ export const usePipelineChat = ({
 
   const [deleteMessage, { reset: resetDeleteMessage }] = useDeleteMessageFromConversationMutation();
   const [deleteAllMessages, { reset: resetDeleteAll }] = useDeleteAllMessagesFromConversationMutation();
-  const { toastError, toastInfo, toastSuccess } = useToast();
+  const { toastError, toastSuccess } = useToast();
   const chatHistoryRef = useRef([]);
 
   const {
@@ -177,7 +177,7 @@ export const usePipelineChat = ({
               project_id: projectId,
             });
 
-            toastInfo('Chat restored successfully');
+            toastSuccess('Chat has been restored successfully.');
             setHasRestoredConversation(true);
           } else {
             toastError('Could not find pipeline participant in restored chat');
@@ -204,7 +204,7 @@ export const usePipelineChat = ({
     emitEnterRoom,
     getMessageTraces,
     projectId,
-    toastInfo,
+    toastSuccess,
     toastError,
     onRestoreConversationComplete,
   ]);

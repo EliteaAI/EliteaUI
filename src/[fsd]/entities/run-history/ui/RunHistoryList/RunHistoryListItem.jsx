@@ -199,7 +199,7 @@ const RunHistoryListItem = memo(props => {
               ...(handleRestoreConversation
                 ? [
                     {
-                      label: 'Restore conversation',
+                      label: 'Restore chat',
                       icon: <RestoreIcon />,
                       onClick: () => handleRestoreConversation(item.id),
                       tooltip: `Restores chat history only. ${source?.charAt(0)?.toUpperCase() + source?.slice(1)} configuration, behavior, or settings are not restored and may have changed since then.`,
