@@ -193,6 +193,8 @@ export const useToolkitChat = props => {
 
       // Handle MCP authorization required message
       if (message.type === SocketMessageType.McpAuthorizationRequired) {
+        // Reset running state so the retry triggered by onSuccess can proceed
+        setIsRunning(false);
         if (onMcpAuthRequiredRef.current) {
           onMcpAuthRequiredRef.current(message);
         }
