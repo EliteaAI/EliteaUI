@@ -43,6 +43,7 @@ const FolderAccordion = memo(props => {
     isHovering,
     isNextFolderHovered = false,
     isPinned = false,
+    folderId,
   } = props;
 
   const [expanded, setExpanded] = useState(defaultExpanded);
@@ -73,6 +74,8 @@ const FolderAccordion = memo(props => {
         <StyledAccordion
           showMode={showMode}
           key={index}
+          data-testid={folderId != null ? `chat-folder-item-${folderId}` : undefined}
+          data-expanded={expanded}
           sx={[styles.accordion, slotProps?.sx]}
           expanded={expanded}
           onChange={onChange}
@@ -83,13 +86,21 @@ const FolderAccordion = memo(props => {
             onMouseLeave={onMouseLeave}
           >
             <StyledAccordionSummary
-              expandIcon={<StyledExpandMoreIcon sx={styles.expandIcon} />}
+              expandIcon={
+                <StyledExpandMoreIcon
+                  data-testid="chat-folder-expand-icon"
+                  sx={styles.expandIcon}
+                />
+              }
               aria-controls={'panel-content' + index}
               showMode={showMode}
               sx={[styles.summary, slotProps?.summary?.sx]}
             >
               <Box sx={styles.titleContainer}>
-                <FolderIcon sx={styles.folderIcon} />
+                <FolderIcon
+                  data-testid="chat-folder-icon"
+                  sx={styles.folderIcon}
+                />
                 <Tooltip.TypographyWithConditionalTooltip
                   title={title}
                   placement="top"
