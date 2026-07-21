@@ -97,7 +97,7 @@ const AIPersonalityPersonalization = memo(props => {
                   enableAutoBlur={false}
                   placeholder="Example: Always respond in a concise manner. Focus on practical solutions."
                   hasActionsToolBar
-                  showCopyAction={false}
+                  showCopyAction
                   showExpandAction={false}
                   fieldName="Default Instructions"
                   containerProps={styles.inputContainer}
