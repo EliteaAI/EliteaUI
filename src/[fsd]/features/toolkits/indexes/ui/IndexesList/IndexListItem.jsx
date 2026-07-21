@@ -2,21 +2,37 @@ import { memo, useMemo } from 'react';
 
 import { format } from 'date-fns';
 
-import { Box, CircularProgress, Skeleton, Typography } from '@mui/material';
+import { Box, CircularProgress, IconButton, Skeleton, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import ClockIcon from '@/assets/clock.svg?react';
 import FileIcon from '@/assets/file.svg?react';
+import OpenInNewIcon from '@/assets/open-new-icon.svg?react';
+import RefreshIcon from '@/assets/refresh-icon.svg?react';
 import StopIcon from '@/assets/stop-icon.svg?react';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
+import DeleteIcon from '@/components/Icons/DeleteIcon';
 
 const IndexListItem = memo(props => {
-  const { index, onIndexClick, currentIndex, useMock } = props;
-  const styles = indexListItem();
+  const {
+    index,
+    onIndexClick,
+    currentIndex,
+    useMock,
+    listOnly = false,
+    onCardReindex,
+    onCardDelete,
+    onCardOpenNewTab,
+    isReindexing,
+  } = props;
+  const styles = indexListItem(listOnly);
 
   const isSelected = useMemo(() => currentIndex?.id === index.id, [currentIndex, index]);
+  const isInProgress = index?.metadata?.state === IndexStatuses.progress;
+  const disableActions = isReindexing || isInProgress;
+
   const documents = useMemo(() => {
     if (!index.metadata) return { tooltip: '-', count: '–', skipped: '-' };
 
@@ -75,6 +91,28 @@ const IndexListItem = memo(props => {
       </Box>
     );
 
+  const handleReindexClick = e => {
+    e.stopPropagation();
+    if (disableActions) return;
+    onCardReindex?.(index);
+  };
+
+  const handleDeleteClick = e => {
+    e.stopPropagation();
+    if (disableActions) return;
+    onCardDelete?.(index);
+  };
+
+  const handleOpenNewTabClick = e => {
+    e.stopPropagation();
+    onCardOpenNewTab?.(index);
+  };
+
+  const handleCardClick = () => {
+    if (!onIndexClick) return;
+    onIndexClick(index);
+  };
+
   return (
     <Box
       sx={[
@@ -83,57 +121,122 @@ const IndexListItem = memo(props => {
         ...(index.stale && index.metadata.state === IndexStatuses.progress ? [styles.errorWrapper] : []),
       ]}
       className={isSelected && true ? 'selected' : ''}
-      onClick={() => onIndexClick(index)}
+      onClick={handleCardClick}
     >
-      <Typography
-        variant="bodyMedium"
-        color="text.secondary"
-      >
-        {index.metadata.collection}
-      </Typography>
-      <Box sx={styles.additionalInfo}>
-        <Box sx={styles.infoItem}>
-          <ClockIcon />
-          <Typography variant="bodySmall2">
-            {index.metadata.created_on
-              ? format(new Date(index.metadata.created_on * 1000), 'dd.MM.yyyy')
-              : '–'}
-          </Typography>
-        </Box>
+      <Box sx={styles.mainContent}>
+        <Typography
+          variant="bodyMedium"
+          color="text.secondary"
+          sx={styles.nameText}
+        >
+          {index.metadata.collection}
+        </Typography>
+        <Box sx={styles.additionalInfo}>
+          <Box sx={styles.infoItem}>
+            <ClockIcon />
+            <Typography variant="bodySmall2">
+              {index.metadata.created_on
+                ? format(new Date(index.metadata.created_on * 1000), 'dd.MM.yyyy')
+                : '–'}
+            </Typography>
+          </Box>
 
-        <Box sx={styles.infoItem}>
-          <FileIcon />
-          <Tooltip
-            title={documents.tooltip}
-            placement="top"
-          >
-            <Typography variant="bodySmall2">{documents.count}</Typography>
-          </Tooltip>
-        </Box>
-
-        {Number(documents.skipped) > 0 && (
-          <Box sx={[styles.infoItem, { svg: { mt: '.15rem' } }]}>
-            <AttentionIcon
-              width={16}
-              height={16}
-            />
+          <Box sx={styles.infoItem}>
+            <FileIcon />
             <Tooltip
-              title="total skipped during indexing"
+              title={documents.tooltip}
               placement="top"
             >
-              <Typography
-                variant="bodySmall2"
-                sx={styles.skippedText}
-              >
-                {documents.skipped}
-              </Typography>
+              <Typography variant="bodySmall2">{documents.count}</Typography>
             </Tooltip>
           </Box>
-        )}
+
+          {Number(documents.skipped) > 0 && (
+            <Box sx={[styles.infoItem, { svg: { mt: '.15rem' } }]}>
+              <AttentionIcon
+                width={16}
+                height={16}
+              />
+              <Tooltip
+                title="total skipped during indexing"
+                placement="top"
+              >
+                <Typography
+                  variant="bodySmall2"
+                  sx={styles.skippedText}
+                >
+                  {documents.skipped}
+                </Typography>
+              </Tooltip>
+            </Box>
+          )}
+        </Box>
       </Box>
+
+      {listOnly && (onCardReindex || onCardDelete || onCardOpenNewTab) && (
+        <Box
+          sx={styles.actions}
+          className="index-card-actions"
+        >
+          {onCardOpenNewTab && (
+            <Tooltip
+              title="Open in new tab"
+              placement="top"
+            >
+              <Box component="span">
+                <IconButton
+                  size="small"
+                  onClick={handleOpenNewTabClick}
+                  data-testid="index-card-open-new-tab-btn"
+                  sx={styles.actionButton}
+                >
+                  <OpenInNewIcon />
+                </IconButton>
+              </Box>
+            </Tooltip>
+          )}
+          {onCardReindex && (
+            <Tooltip
+              title="Reindex"
+              placement="top"
+            >
+              <Box component="span">
+                <IconButton
+                  size="small"
+                  disabled={disableActions}
+                  onClick={handleReindexClick}
+                  data-testid="index-card-reindex-btn"
+                  sx={styles.actionButton}
+                >
+                  <RefreshIcon />
+                </IconButton>
+              </Box>
+            </Tooltip>
+          )}
+          {onCardDelete && (
+            <Tooltip
+              title="Delete"
+              placement="top"
+            >
+              <Box component="span">
+                <IconButton
+                  size="small"
+                  disabled={disableActions}
+                  onClick={handleDeleteClick}
+                  data-testid="index-card-delete-btn"
+                  sx={styles.actionButton}
+                >
+                  <DeleteIcon sx={{ fontSize: '1rem' }} />
+                </IconButton>
+              </Box>
+            </Tooltip>
+          )}
+        </Box>
+      )}
+
       {index.metadata.state === IndexStatuses.progress && (
         <CircularProgress
-          sx={styles.icon}
+          sx={styles.stateIcon}
           size={14}
           thickness={5}
         />
@@ -142,12 +245,12 @@ const IndexListItem = memo(props => {
         <InfoTooltip
           infoTooltip={{ icon: styles.error }}
           disableTooltip
-          sx={styles.icon}
+          sx={styles.stateIcon}
         />
       )}
 
       {index.metadata.state === IndexStatuses.cancelled && (
-        <Box sx={[styles.icon, styles.warning]}>
+        <Box sx={[styles.stateIcon, styles.warning]}>
           <StopIcon
             width={16}
             height={16}
@@ -155,7 +258,7 @@ const IndexListItem = memo(props => {
         </Box>
       )}
       {index.metadata.state === IndexStatuses.partlyOk && (
-        <Box sx={[styles.icon, styles.warning]}>
+        <Box sx={[styles.stateIcon, styles.warning]}>
           <AttentionIcon
             width={16}
             height={16}
@@ -169,24 +272,34 @@ const IndexListItem = memo(props => {
 IndexListItem.displayName = 'IndexListItem';
 
 /** @type {MuiSx} */
-const indexListItem = () => ({
+const indexListItem = listOnly => ({
   wrapper: ({ palette }) => ({
     display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     width: '100%',
-    height: '4rem',
+    minHeight: '4rem',
     borderRadius: '.5rem',
     background: `${palette.background.userInputBackground}`,
     padding: '.375rem 1rem',
     border: `.0625rem solid transparent`,
     position: 'relative',
-    gap: '.25rem',
+    gap: '.5rem',
+
+    '& .index-card-actions': {
+      opacity: 0,
+      transition: 'opacity 0.15s ease-in-out',
+    },
 
     '&:hover': {
       background: palette.split.pressed,
       border: `.0625rem solid ${palette.split.hover}`,
       cursor: 'pointer',
+
+      '& .index-card-actions': {
+        opacity: 1,
+      },
     },
   }),
 
@@ -210,9 +323,26 @@ const indexListItem = () => ({
     },
   }),
 
+  mainContent: {
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    gap: '.25rem',
+    flexGrow: 1,
+    minWidth: 0,
+    overflow: 'hidden',
+  },
+
+  nameText: {
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+
   additionalInfo: {
     display: 'flex',
     gap: '0.5rem',
+    flexWrap: 'wrap',
   },
 
   infoItem: {
@@ -230,11 +360,30 @@ const indexListItem = () => ({
     },
   },
 
-  icon: ({ palette }) => ({
+  actions: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.25rem',
+    flexShrink: 0,
+  },
+
+  actionButton: ({ palette }) => ({
+    padding: '0.25rem',
+    color: palette.text.secondary,
+    '& svg': {
+      width: '1rem',
+      height: '1rem',
+    },
+    '&.Mui-disabled': {
+      opacity: 0.4,
+    },
+  }),
+
+  stateIcon: ({ palette }) => ({
     color: palette.text.info,
     position: 'absolute',
     top: '50%',
-    right: '1rem',
+    right: listOnly ? '8rem' : '1rem',
     marginTop: '-.4375rem',
   }),
   error: {

@@ -11,7 +11,7 @@ import EliteaAssistantIcon from '@/assets/icons/elitea-assistant-icon.svg?react'
 import OfflineIcon from '@/assets/offline-icon.svg?react';
 import OnlineIcon from '@/assets/online-icon.svg?react';
 import PublishIcon from '@/assets/publish-version.svg?react';
-import { isApplicationCard, isSkillCard } from '@/common/checkCardType';
+import { isApplicationCard, isSkillCard, isToolkitCard } from '@/common/checkCardType';
 import { ContentType, ViewMode } from '@/common/constants';
 import { getEntityType, getEntityTypeByCardType } from '@/common/utils';
 import AuthorContainer from '@/components/AuthorContainer';
@@ -247,6 +247,20 @@ const Card = memo(props => {
                 />
               </Box>
               <Box sx={styles.bottomRightSection}>
+                {isToolkitCard(type) && typeof data.indexes_count === 'number' && (
+                  <StyledTooltip
+                    placement="top"
+                    title={`${data.indexes_count} ${data.indexes_count === 1 ? 'index' : 'indexes'}`}
+                  >
+                    <Typography
+                      variant="bodySmall2"
+                      sx={styles.indexesCount}
+                      data-testid="toolkit-indexes-count"
+                    >
+                      {data.indexes_count} {data.indexes_count === 1 ? 'index' : 'indexes'}
+                    </Typography>
+                  </StyledTooltip>
+                )}
                 {!disableCardActions && (
                   <>
                     {isSupportAssistant && (
@@ -463,6 +477,15 @@ const cardStyles = (hasCardDetails, showCardBottom, isWholeCardClickable, isClic
       backgroundColor: palette.background.button.secondary.default,
     },
     svg: { path: { fill: `${palette.icon.fill.default} !important` } },
+  }),
+  indexesCount: ({ palette }) => ({
+    display: 'inline-flex',
+    alignItems: 'center',
+    height: '1.5rem',
+    padding: '0 0.5rem',
+    marginRight: '0.25rem',
+    color: palette.text.metrics,
+    whiteSpace: 'nowrap',
   }),
   likeContainer: {
     display: 'flex',
