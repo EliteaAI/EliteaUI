@@ -586,6 +586,10 @@ const lightPalette = {
     thumb: dark10,
     thumbHover: light10,
   },
+  diff: {
+    removed: 'rgba(215, 22, 22, 0.3)',
+    added: 'rgba(42, 179, 122, 0.3)',
+  },
   capability: {
     vision: {
       background: lightPurpleBgr,

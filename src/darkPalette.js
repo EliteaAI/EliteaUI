@@ -585,6 +585,10 @@ const darkPalette = {
     thumb: white10,
     thumbHover: gray10,
   },
+  diff: {
+    removed: 'rgba(215, 22, 22, 0.3)',
+    added: 'rgba(42, 179, 122, 0.3)',
+  },
   capability: {
     vision: {
       background: darkPurpleBgr,
