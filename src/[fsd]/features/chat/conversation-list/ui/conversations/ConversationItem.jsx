@@ -246,9 +246,10 @@ const ConversationItem = memo(props => {
           {
             label: 'Delete',
             icon: <DeleteIcon sx={{ fontSize: '1rem' }} />,
-            alertTitle: 'Delete playback',
-            confirmButtonTitle: 'Delete',
-            confirmText: 'Are you sure to delete playback?',
+            entityName: name?.replace(/^\[Playback\]\s*/, ''),
+            inlineExtraContent: ' chat playback?',
+            shouldRequestInputName: false,
+            alarm: true,
             onConfirm: handleDelete,
           },
           {
