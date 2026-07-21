@@ -183,7 +183,7 @@ const IndexListItem = memo(props => {
               title="Open in new tab"
               placement="top"
             >
-              <span>
+              <Box component="span">
                 <IconButton
                   size="small"
                   onClick={handleOpenNewTabClick}
@@ -192,7 +192,7 @@ const IndexListItem = memo(props => {
                 >
                   <OpenInNewIcon />
                 </IconButton>
-              </span>
+              </Box>
             </Tooltip>
           )}
           {onCardReindex && (
@@ -200,7 +200,7 @@ const IndexListItem = memo(props => {
               title="Reindex"
               placement="top"
             >
-              <span>
+              <Box component="span">
                 <IconButton
                   size="small"
                   disabled={disableActions}
@@ -210,7 +210,7 @@ const IndexListItem = memo(props => {
                 >
                   <RefreshIcon />
                 </IconButton>
-              </span>
+              </Box>
             </Tooltip>
           )}
           {onCardDelete && (
@@ -218,7 +218,7 @@ const IndexListItem = memo(props => {
               title="Delete"
               placement="top"
             >
-              <span>
+              <Box component="span">
                 <IconButton
                   size="small"
                   disabled={disableActions}
@@ -228,7 +228,7 @@ const IndexListItem = memo(props => {
                 >
                   <DeleteIcon sx={{ fontSize: '1rem' }} />
                 </IconButton>
-              </span>
+              </Box>
             </Tooltip>
           )}
         </Box>
