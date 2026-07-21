@@ -1,7 +1,5 @@
 import { memo, useCallback, useMemo } from 'react';
 
-import GroupsIcon from '@mui/icons-material/Groups';
-import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutlined';
 import { Box, Tooltip, Typography } from '@mui/material';
 
 import { ARTIFACT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/artifactTourTargets.constants';
@@ -34,10 +32,6 @@ const ArtifactTableToolbar = memo(props => {
     breadcrumbs = [],
     onBreadcrumbClick,
     currentPrefix,
-    isManagingAccess = false,
-    onManageAccessToggle,
-    isPersonalProject = false,
-    accessManagementControls = null,
   } = props;
 
   const { checkPermission } = useCheckPermission();
@@ -63,152 +57,100 @@ const ArtifactTableToolbar = memo(props => {
     <Box sx={styles.toolbarContainer}>
       {/* Left side: Bucket name with breadcrumbs and info icon */}
       <Box sx={styles.leftSection}>
-        {isManagingAccess ? (
-          <Typography
-            variant="headingSmall"
-            sx={styles.bucketName}
-          >
-            Manage access ({bucket})
-          </Typography>
-        ) : (
-          <>
-            <Typography
-              variant="headingSmall"
-              sx={rootBucketSx}
-              onClick={currentPrefix ? handleRootClick : undefined}
-            >
-              {bucket}
-            </Typography>
+        <Typography
+          variant="headingSmall"
+          sx={rootBucketSx}
+          onClick={currentPrefix ? handleRootClick : undefined}
+        >
+          {bucket}
+        </Typography>
 
-            <BreadcrumbNavigation
-              breadcrumbs={breadcrumbs}
-              bucketName={bucket}
-              onBreadcrumbClick={onBreadcrumbClick}
-            />
+        <BreadcrumbNavigation
+          breadcrumbs={breadcrumbs}
+          bucketName={bucket}
+          onBreadcrumbClick={onBreadcrumbClick}
+        />
 
-            <BucketInfoTooltip
-              retentionDays={selectedBucketData?.retentionDays}
-              fileCount={fileCount}
-            />
-          </>
-        )}
+        <BucketInfoTooltip
+          retentionDays={selectedBucketData?.retentionDays}
+          fileCount={fileCount}
+        />
       </Box>
 
       {/* Right side: Search and action buttons */}
       <Box sx={styles.rightSection}>
-        {isManagingAccess ? (
-          <>
-            {accessManagementControls}
-            {!isPersonalProject && bucket && (
-              <Tooltip
-                title="Back to files"
-                placement="top"
-              >
-                <Box component="span">
-                  <Button.BaseBtn
-                    variant="icon"
-                    sx={styles.actionButton}
-                    onClick={onManageAccessToggle}
-                  >
-                    <InsertDriveFileOutlinedIcon sx={styles.actionIcon} />
-                  </Button.BaseBtn>
-                </Box>
-              </Tooltip>
-            )}
-          </>
-        ) : (
-          <>
-            <Box
-              sx={styles.searchWrapper}
-              data-testid="artifacts-file-search-input"
+        <Box
+          sx={styles.searchWrapper}
+          data-testid="artifacts-file-search-input"
+        >
+          <SimpleSearchBar
+            searchQuery={searchQuery}
+            onSearchChange={onSearchChange}
+            placeholder="Search"
+            autoFocus={false}
+          />
+        </Box>
+
+        {/* Hidden file input for upload */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          accept="*/*"
+          style={{ display: 'none' }}
+          onChange={handleFileChange}
+        />
+
+        <Tooltip
+          title="Download files"
+          placement="top"
+        >
+          <Box component="span">
+            <Button.BaseBtn
+              variant="icon"
+              sx={styles.actionButton}
+              onClick={onDownloadFiles}
+              disabled={!rowSelectionModel.length}
+              data-testid="artifacts-download-files-button"
             >
-              <SimpleSearchBar
-                searchQuery={searchQuery}
-                onSearchChange={onSearchChange}
-                placeholder="Search"
-                autoFocus={false}
-              />
+              <DownloadIcon sx={styles.actionIcon} />
+            </Button.BaseBtn>
+          </Box>
+        </Tooltip>
+
+        {checkPermission(PERMISSIONS.artifacts.delete) && (
+          <DeleteEntityButton
+            name={rowSelectionModel.length === totalRows ? 'all files' : 'selected files'}
+            entity_name="file"
+            onDelete={onDeleteArtifacts}
+            title={`Delete ${rowSelectionModel.length === totalRows ? 'all files' : 'selected files'}`}
+            isLoading={false}
+            sx={styles.deleteEntityButton}
+            buttonColor="secondary"
+            buttonClassName="action"
+            iconColor={deleteButtonIconColor}
+            disabled={!rowSelectionModel.length}
+            shouldRequestInputName={false}
+          />
+        )}
+
+        {checkPermission(PERMISSIONS.artifacts.create) && bucket && (
+          <Tooltip
+            title="Upload files"
+            placement="top"
+          >
+            <Box component="span">
+              <Button.BaseBtn
+                variant="icon"
+                sx={styles.actionButton}
+                onClick={handleUploadClick}
+                data-tour={ARTIFACT_TOUR_TARGET_IDS.uploadButton}
+                data-testid="artifacts-upload-files-button"
+              >
+                <FileUploadIcon sx={styles.actionIcon} />
+              </Button.BaseBtn>
             </Box>
-
-            {/* Hidden file input for upload */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              accept="*/*"
-              style={{ display: 'none' }}
-              onChange={handleFileChange}
-            />
-
-            {!isPersonalProject && bucket && checkPermission(PERMISSIONS.artifacts.edit) && (
-              <Tooltip
-                title="Manage access"
-                placement="top"
-              >
-                <Box component="span">
-                  <Button.BaseBtn
-                    variant="icon"
-                    sx={styles.actionButton}
-                    onClick={onManageAccessToggle}
-                  >
-                    <GroupsIcon sx={styles.actionIcon} />
-                  </Button.BaseBtn>
-                </Box>
-              </Tooltip>
-            )}
-
-            {checkPermission(PERMISSIONS.artifacts.create) && bucket && (
-              <Tooltip
-                title="Upload files"
-                placement="top"
-              >
-                <Box component="span">
-                  <Button.BaseBtn
-                    variant="icon"
-                    sx={styles.actionButton}
-                    onClick={handleUploadClick}
-                    data-tour={ARTIFACT_TOUR_TARGET_IDS.uploadButton}
-                    data-testid="artifacts-upload-files-button"
-                  >
-                    <FileUploadIcon sx={styles.actionIcon} />
-                  </Button.BaseBtn>
-                </Box>
-              </Tooltip>
-            )}
-
-            <Tooltip
-              title="Download files"
-              placement="top"
-            >
-              <Box component="span">
-                <Button.BaseBtn
-                  variant="icon"
-                  sx={styles.actionButton}
-                  onClick={onDownloadFiles}
-                  disabled={!rowSelectionModel.length}
-                  data-testid="artifacts-download-files-button"
-                >
-                  <DownloadIcon sx={styles.actionIcon} />
-                </Button.BaseBtn>
-              </Box>
-            </Tooltip>
-
-            {checkPermission(PERMISSIONS.artifacts.delete) && (
-              <DeleteEntityButton
-                name={rowSelectionModel.length === totalRows ? 'all files' : 'selected files'}
-                entity_name={'file'}
-                onDelete={onDeleteArtifacts}
-                title={`Delete ${rowSelectionModel.length === totalRows ? 'all files' : 'selected files'}`}
-                isLoading={false}
-                sx={styles.deleteEntityButton}
-                buttonColor="secondary"
-                buttonClassName="action"
-                iconColor={deleteButtonIconColor}
-                disabled={!rowSelectionModel.length}
-                shouldRequestInputName={false}
-              />
-            )}
-          </>
+          </Tooltip>
         )}
       </Box>
     </Box>

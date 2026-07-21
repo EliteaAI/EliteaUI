@@ -1,64 +1,41 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
-import {
-  Autocomplete,
-  Box,
-  Chip,
-  CircularProgress,
-  MenuItem,
-  Select,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
-import { Button, Modal } from '@/[fsd]/shared/ui';
+import { BucketAccessConstants } from '@/[fsd]/features/artifacts/lib/constants';
+import { Autocomplete, Button, Modal } from '@/[fsd]/shared/ui';
+import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { useUserListQuery } from '@/api/admin';
-
-import { ACCESS_OPTIONS } from './constants';
 
 const styles = {
   contentWrapper: {
     display: 'flex',
     flexDirection: 'column',
     gap: '1rem',
-    minWidth: '20rem',
+    minWidth: '25rem',
+  },
+  description: {
+    marginBottom: '0.5rem',
   },
   actionsWrapper: {
     display: 'flex',
-    gap: '1rem',
+    gap: '0.75rem',
   },
-  fieldWrapper: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.5rem',
-  },
-  autocomplete: {
-    width: '100%',
-  },
-  select: {
-    width: '100%',
-  },
-  optionItem: ({ palette }) => ({
-    padding: '0.5rem 1rem',
-    borderBottom: `1px solid ${palette.border.lines}`,
-    '&:last-child': {
-      borderBottom: 'none',
-    },
-    '&:hover': {
-      backgroundColor: palette.background.participant?.hover || palette.action.hover,
+  userSelect: ({ typography }) => ({
+    '& .MuiInputLabel-root': {
+      ...typography.labelMedium,
     },
   }),
-  optionContent: {
-    display: 'flex',
-    flexDirection: 'column',
-  },
+  labelSx: ({ typography }) => ({
+    ...typography.labelMedium,
+  }),
 };
 
 const AddBucketUserDialog = memo(props => {
   const { open, onClose, onConfirm, projectId, existingUserIds = [], loading = false } = props;
 
   const [selectedUsers, setSelectedUsers] = useState([]);
-  const [permission, setPermission] = useState('read');
+  const [permission, setPermission] = useState('');
 
   const { data: usersData, isLoading: isLoadingUsers } = useUserListQuery(
     { projectId, page: 0, pageSize: 100 },
@@ -70,7 +47,7 @@ const AddBucketUserDialog = memo(props => {
   useEffect(() => {
     if (!open) {
       setSelectedUsers([]);
-      setPermission('read');
+      setPermission('');
     }
   }, [open]);
 
@@ -94,10 +71,14 @@ const AddBucketUserDialog = memo(props => {
     [selectedUsers, handleConfirm],
   );
 
+  const handlePermissionChange = useCallback(value => {
+    setPermission(value);
+  }, []);
+
   return (
     <Modal.BaseModal
       open={open}
-      title="Add User Access"
+      title="Add exceptions"
       onClose={onClose}
       onKeyDown={handleKeyDown}
       content={
@@ -105,99 +86,27 @@ const AddBucketUserDialog = memo(props => {
           <Typography
             variant="bodyMedium"
             color="text.secondary"
+            sx={styles.description}
           >
-            Select users and assign bucket permissions.
+            Select users, then assign their bucket permissions.
           </Typography>
-          <Box sx={styles.fieldWrapper}>
-            <Typography
-              variant="labelMedium"
-              color="text.secondary"
-            >
-              Users
-            </Typography>
-            <Autocomplete
-              multiple
-              options={availableUsers}
-              getOptionLabel={u => u.name || u.email || ''}
-              value={selectedUsers}
-              onChange={(_, v) => setSelectedUsers(v)}
-              loading={isLoadingUsers}
-              size="small"
-              sx={styles.autocomplete}
-              renderTags={(value, getTagProps) =>
-                value.map((option, index) => (
-                  <Chip
-                    {...getTagProps({ index })}
-                    key={option.id}
-                    label={option.name || option.email}
-                    size="small"
-                  />
-                ))
-              }
-              renderInput={params => (
-                <TextField
-                  {...params}
-                  placeholder={selectedUsers.length === 0 ? 'Select users' : ''}
-                  size="small"
-                  InputProps={{
-                    ...params.InputProps,
-                    endAdornment: (
-                      <>
-                        {isLoadingUsers ? <CircularProgress size={16} /> : null}
-                        {params.InputProps.endAdornment}
-                      </>
-                    ),
-                  }}
-                />
-              )}
-              renderOption={(optionProps, option) => {
-                const { key, ...otherOptionProps } = optionProps;
-                return (
-                  <Box
-                    component="li"
-                    key={key}
-                    {...otherOptionProps}
-                    sx={styles.optionItem}
-                  >
-                    <Box sx={styles.optionContent}>
-                      <Typography variant="bodyMedium">{option.name || option.email}</Typography>
-                      {option.name && (
-                        <Typography
-                          variant="bodySmall"
-                          color="text.secondary"
-                        >
-                          {option.email}
-                        </Typography>
-                      )}
-                    </Box>
-                  </Box>
-                );
-              }}
-            />
-          </Box>
-          <Box sx={styles.fieldWrapper}>
-            <Typography
-              variant="labelMedium"
-              color="text.secondary"
-            >
-              Permission
-            </Typography>
-            <Select
-              size="small"
-              value={permission}
-              onChange={e => setPermission(e.target.value)}
-              sx={styles.select}
-            >
-              {ACCESS_OPTIONS.map(opt => (
-                <MenuItem
-                  key={opt.value}
-                  value={opt.value}
-                >
-                  {opt.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </Box>
+          <Autocomplete.UserSearchSelect
+            userList={availableUsers}
+            selectedUsers={selectedUsers}
+            onChangeUsers={setSelectedUsers}
+            disabled={isLoadingUsers}
+            label="Users"
+            showSearchIcon={false}
+            sx={styles.userSelect}
+          />
+          <SingleSelect
+            value={permission}
+            onValueChange={handlePermissionChange}
+            options={BucketAccessConstants.ADD_EXCEPTION_OPTIONS}
+            label="Permissions"
+            showBorder
+            labelSX={styles.labelSx}
+          />
         </Box>
       }
       actions={
@@ -213,9 +122,9 @@ const AddBucketUserDialog = memo(props => {
             variant="elitea"
             color="primary"
             onClick={handleConfirm}
-            disabled={selectedUsers.length === 0 || loading}
+            disabled={selectedUsers.length === 0 || !permission || loading}
           >
-            Add {selectedUsers.length > 1 ? `(${selectedUsers.length})` : ''}
+            Save
           </Button.BaseBtn>
         </Box>
       }

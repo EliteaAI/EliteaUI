@@ -6,7 +6,7 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Box } from '@mui/material';
 
 import { useFileUpload } from '@/[fsd]/features/artifacts/lib/hooks/useFileUpload.hooks';
-import { BucketAccessTable, FilePreviewCanvas } from '@/[fsd]/features/artifacts/ui';
+import { FilePreviewCanvas, ManagePermissionsModal } from '@/[fsd]/features/artifacts/ui';
 import { ARTIFACT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/artifactTourTargets.constants';
 import { useGetConfigurationsListQuery } from '@/api/configurations';
 import { PENDING_BUCKET_SESSION_KEY } from '@/common/artifactConstants';
@@ -60,10 +60,8 @@ const Artifacts = memo(() => {
   const [notFoundBucketName, setNotFoundBucketName] = useState('');
   const [pendingFileSelection, setPendingFileSelection] = useState(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [isManagingAccess, setIsManagingAccess] = useState(false);
-  const [accessManagementControls, setAccessManagementControls] = useState(null);
-
-  const personal_project_id = useSelector(state => state.user?.personal_project_id);
+  const [manageAccessModalOpen, setManageAccessModalOpen] = useState(false);
+  const [manageAccessBucket, setManageAccessBucket] = useState(null);
 
   // Ref to track when we're deliberately clearing the file preview
   // This prevents the URL-restoration useEffect from re-opening the file
@@ -90,7 +88,6 @@ const Artifacts = memo(() => {
     configurationTitle: '',
     search: '',
   });
-  const isPersonalProject = queryParams.projectId === personal_project_id;
 
   const [previewFile, setPreviewFile] = useState(null);
   const [collapsedBuckets, setCollapsedBuckets] = useState(false);
@@ -186,7 +183,6 @@ const Artifacts = memo(() => {
       setPreviewFile(null);
       setFilePreviewActive(false);
       setCurrentPrefix(''); // Reset folder navigation when bucket changes
-      setIsManagingAccess(false);
 
       if (bucket) {
         sessionStorage.setItem(
@@ -212,24 +208,15 @@ const Artifacts = memo(() => {
     [queryParams.projectId, queryParams.configurationTitle, setSearchParams, setFilePreviewActive],
   );
 
-  const handleManageAccess = useCallback(
-    bucket => {
-      onSelectBucket(bucket);
-      setIsManagingAccess(true);
-    },
-    [onSelectBucket],
-  );
+  const handleManageAccess = useCallback(bucket => {
+    setManageAccessBucket(bucket);
+    setManageAccessModalOpen(true);
+  }, []);
 
-  const handleManageAccessToggle = useCallback(() => {
-    setIsManagingAccess(prev => {
-      const next = !prev;
-      const params = {};
-      if (queryParams.selectedBucket) params.bucket = queryParams.selectedBucket.name;
-      if (next) params.managing = 'true';
-      setSearchParams(params);
-      return next;
-    });
-  }, [queryParams.selectedBucket, setSearchParams]);
+  const handleCloseManageAccess = useCallback(() => {
+    setManageAccessModalOpen(false);
+    setManageAccessBucket(null);
+  }, []);
 
   // Bucket upload hook - handles all upload sources (bucket menu, table toolbar, drag-drop)
   const {
@@ -527,10 +514,6 @@ const Artifacts = memo(() => {
             selectedBucket: bucketToSelect,
           }));
 
-          if (searchParams.get('managing') === 'true') {
-            setIsManagingAccess(true);
-          }
-
           // Mark that we've had a selection for this project/storage combination
           sessionStorage.setItem(
             `artifacts-had-selection-${queryParams.projectId}-${queryParams.configurationTitle}`,
@@ -734,19 +717,6 @@ const Artifacts = memo(() => {
                   currentPrefix={currentPrefix}
                   onPrefixChange={handlePrefixChange}
                   onUploadRequest={handleTableUploadRequest}
-                  isManagingAccess={isManagingAccess}
-                  onManageAccessToggle={handleManageAccessToggle}
-                  isPersonalProject={isPersonalProject}
-                  accessManagementControls={accessManagementControls}
-                  accessManagementContent={
-                    isManagingAccess ? (
-                      <BucketAccessTable
-                        bucket={queryParams.selectedBucket?.name}
-                        projectId={queryParams.projectId}
-                        renderToolbarControls={setAccessManagementControls}
-                      />
-                    ) : null
-                  }
                 />
               </Box>
             ) : (
@@ -793,6 +763,13 @@ const Artifacts = memo(() => {
         onConfirm={handlePathConfirmWithSelection}
         bucket={pendingUploadBucket}
         currentPrefix={currentPrefix}
+      />
+
+      <ManagePermissionsModal
+        open={manageAccessModalOpen}
+        onClose={handleCloseManageAccess}
+        bucket={manageAccessBucket?.name}
+        projectId={queryParams.projectId}
       />
     </>
   );

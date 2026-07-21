@@ -2,6 +2,7 @@ const primaryDefault = '#6ae8fa';
 const primaryDisabled = '#267985';
 export const white = '#FFFFFF';
 const white2 = 'rgba(255, 255, 255, 0.02)';
+const white3 = 'rgba(255, 255, 255, 0.03)';
 const white5 = 'rgba(255, 255, 255, 0.05)';
 const white6 = 'rgba(255, 255, 255, 0.06)'; // conversation hover dark
 const white8 = 'rgba(255, 255, 255, 0.08)'; // tool card hover light
@@ -391,6 +392,9 @@ const darkPalette = {
     aiProviderAccordion: {
       default: white2,
       hover: white5,
+    },
+    emptyState: {
+      default: white3,
     },
   },
   border: {

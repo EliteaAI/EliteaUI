@@ -1,52 +1,49 @@
 import { memo, useCallback, useEffect, useState } from 'react';
 
-import { Box, MenuItem, Select, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
+import { BucketAccessConstants } from '@/[fsd]/features/artifacts/lib/constants';
 import { Button, Modal } from '@/[fsd]/shared/ui';
-
-import { ACCESS_OPTIONS } from './constants';
+import { SingleSelect } from '@/[fsd]/shared/ui/select';
 
 const styles = {
   contentWrapper: {
     display: 'flex',
     flexDirection: 'column',
     gap: '1rem',
-    minWidth: '20rem',
+    minWidth: '25rem',
+  },
+  description: {
+    marginBottom: '0.5rem',
   },
   actionsWrapper: {
     display: 'flex',
-    gap: '1rem',
-  },
-  userInfoWrapper: {
-    display: 'flex',
-    flexDirection: 'column',
     gap: '0.75rem',
-    padding: '0.75rem',
-    borderRadius: '0.5rem',
-    backgroundColor: 'background.secondary',
   },
-  fieldWrapper: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.25rem',
-  },
-  select: {
-    width: '100%',
-  },
+  labelSx: ({ typography }) => ({
+    ...typography.labelMedium,
+  }),
 };
 
 const EditBucketUserDialog = memo(props => {
-  const { open, onClose, onConfirm, user, loading = false } = props;
+  const { open, onClose, onConfirm, users = [], loading = false } = props;
 
-  const [permission, setPermission] = useState('read');
+  const [permission, setPermission] = useState('');
+
+  const isBulkEdit = users.length > 1;
 
   useEffect(() => {
-    if (open && user) {
-      setPermission(user.currentPermission || 'read');
+    if (open && users.length > 0) {
+      if (isBulkEdit) {
+        setPermission('');
+      } else {
+        const firstUser = users[0];
+        setPermission(firstUser.currentPermission || '');
+      }
     } else if (!open) {
-      setPermission('read');
+      setPermission('');
     }
-  }, [open, user]);
+  }, [open, users, isBulkEdit]);
 
   const handleConfirm = useCallback(() => {
     onConfirm({ permission });
@@ -62,67 +59,33 @@ const EditBucketUserDialog = memo(props => {
     [handleConfirm],
   );
 
+  const handlePermissionChange = useCallback(value => {
+    setPermission(value);
+  }, []);
+
   return (
     <Modal.BaseModal
       open={open}
-      title="Edit User Access"
+      title="Edit exception"
       onClose={onClose}
       onKeyDown={handleKeyDown}
       content={
         <Box sx={styles.contentWrapper}>
-          <Box sx={styles.userInfoWrapper}>
-            <Box sx={styles.fieldWrapper}>
-              <Typography
-                variant="labelMedium"
-                color="text.secondary"
-              >
-                Name
-              </Typography>
-              <Typography
-                variant="bodyMedium"
-                color="text.primary"
-              >
-                {user?.name || '-'}
-              </Typography>
-            </Box>
-            <Box sx={styles.fieldWrapper}>
-              <Typography
-                variant="labelMedium"
-                color="text.secondary"
-              >
-                Email
-              </Typography>
-              <Typography
-                variant="bodyMedium"
-                color="text.primary"
-              >
-                {user?.email || '-'}
-              </Typography>
-            </Box>
-          </Box>
-          <Box sx={styles.fieldWrapper}>
-            <Typography
-              variant="labelMedium"
-              color="text.secondary"
-            >
-              Permission
-            </Typography>
-            <Select
-              size="small"
-              value={permission}
-              onChange={e => setPermission(e.target.value)}
-              sx={styles.select}
-            >
-              {ACCESS_OPTIONS.map(opt => (
-                <MenuItem
-                  key={opt.value}
-                  value={opt.value}
-                >
-                  {opt.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </Box>
+          <Typography
+            variant="bodyMedium"
+            color="text.secondary"
+            sx={styles.description}
+          >
+            Select new bucket permissions for these users.
+          </Typography>
+          <SingleSelect
+            value={permission}
+            onValueChange={handlePermissionChange}
+            options={BucketAccessConstants.EDIT_EXCEPTION_OPTIONS}
+            label="Permissions"
+            showBorder
+            labelSX={styles.labelSx}
+          />
         </Box>
       }
       actions={
@@ -138,7 +101,7 @@ const EditBucketUserDialog = memo(props => {
             variant="elitea"
             color="primary"
             onClick={handleConfirm}
-            disabled={loading}
+            disabled={!permission || loading}
           >
             Save
           </Button.BaseBtn>

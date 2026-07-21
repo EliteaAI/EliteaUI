@@ -392,6 +392,9 @@ const lightPalette = {
       default: grey003,
       hover: grey007,
     },
+    emptyState: {
+      default: grey003,
+    },
   },
   border: {
     lines: light30,

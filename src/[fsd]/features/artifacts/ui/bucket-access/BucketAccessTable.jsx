@@ -5,12 +5,13 @@ import { Box, Skeleton, Tooltip, Typography } from '@mui/material';
 import { useResponsiveColumns, useRowSelection, useTableSort } from '@/[fsd]/entities/grid-table/lib';
 import {
   GridTableBody,
-  GridTableContainer,
   GridTableHeader,
   GridTablePagination,
   GridTableRow,
 } from '@/[fsd]/entities/grid-table/ui';
-import { Button, Modal, Text } from '@/[fsd]/shared/ui';
+import { BucketAccessConstants } from '@/[fsd]/features/artifacts/lib/constants';
+import { BucketAccessHelpers } from '@/[fsd]/features/artifacts/lib/helpers';
+import { Button, Text } from '@/[fsd]/shared/ui';
 import { AddButton } from '@/[fsd]/shared/ui/button';
 import { SimpleSearchBar } from '@/[fsd]/shared/ui/input';
 import { useUserListQuery } from '@/api/admin';
@@ -19,13 +20,13 @@ import {
   useListBucketPermissionsQuery,
   useSetBucketPermissionsMutation,
 } from '@/api/artifacts';
-import DeleteIcon from '@/components/Icons/DeleteIcon';
+import NoPermissionsIcon from '@/assets/file-lock.svg?react';
+import PlusIcon from '@/assets/plus-icon.svg?react';
 import EditIcon from '@/components/Icons/EditIcon';
 import useGetWindowWidth from '@/hooks/useGetWindowWidth';
 import useToast from '@/hooks/useToast';
 
 import AddBucketUserDialog from './AddBucketUserDialog';
-import BulkEditBucketUsersDialog from './BulkEditBucketUsersDialog';
 import EditBucketUserDialog from './EditBucketUserDialog';
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
@@ -34,99 +35,13 @@ const BUCKET_ACCESS_COLUMNS = [
   { field: 'name', label: 'Name', width: '1fr', sortable: true },
   { field: 'email', label: 'Email', width: '1.2fr', sortable: true, hideBelow: 600 },
   { field: 'access', label: 'Permissions', width: '10rem', sortable: false },
-  { field: 'actions', label: 'Actions', width: '8.25rem', sortable: false },
+  { field: 'actions', label: '', width: '3.5rem', sortable: false },
 ];
 
-const styles = {
-  root: {
-    height: '100%',
-    width: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  actionsRow: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    gap: '0.6rem',
-    padding: '0.75rem 1.5rem',
-  },
-  selectionInfo: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-  },
-  searchWrapper: {
-    minWidth: '12.5rem',
-  },
-  tableWrapper: {
-    flex: 1,
-    minHeight: 0,
-    display: 'flex',
-    maxWidth: '100%',
-  },
-  actionsContainer: {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    gap: '0.5rem',
-  },
-  actionIcon: {
-    width: '1rem',
-    height: '1rem',
-  },
-  actionButton: ({ palette }) => ({
-    '&:hover': {
-      backgroundColor: palette.background.button.secondary.hover,
-    },
-  }),
-  dataCell: {
-    display: 'flex',
-    alignItems: 'center',
-    padding: '0rem 1rem',
-  },
-  skeletonContainer: {
-    width: '100%',
-    padding: '1rem 1.5rem',
-  },
-  skeleton: {
-    marginBottom: '0.5rem',
-  },
-};
-
-const getAccessValue = (bucketPermissions, bucket) => {
-  if (!bucketPermissions || Object.keys(bucketPermissions).length === 0) return '';
-  if (!(bucket in bucketPermissions)) return '';
-  const perms = bucketPermissions[bucket];
-  if (!perms || perms.length === 0) return 'no_access';
-  if (perms.includes('write')) return 'read_write';
-  return 'read';
-};
-
-const getAccessLabel = accessValue => {
-  if (accessValue === 'read_write') return 'Read & Write';
-  if (accessValue === 'read') return 'Read';
-  if (accessValue === 'no_access') return 'No access';
-  return '-';
-};
-
-const buildBucketPermissions = (accessValue, bucket, existingPerms) => {
-  const updated = { ...(existingPerms || {}) };
-  if (!accessValue) {
-    delete updated[bucket];
-  } else if (accessValue === 'no_access') {
-    updated[bucket] = [];
-  } else if (accessValue === 'read_write') {
-    updated[bucket] = ['read', 'write'];
-  } else {
-    updated[bucket] = ['read'];
-  }
-  return updated;
-};
-
 const BucketAccessTable = memo(props => {
-  const { bucket, projectId, renderToolbarControls } = props;
+  const { bucket, projectId, renderToolbarControls, hidePagination = false } = props;
+
+  const styles = useMemo(() => bucketAccessTableStyle(), []);
 
   const { windowWidth } = useGetWindowWidth();
   const { toastError, toastSuccess } = useToast();
@@ -137,10 +52,7 @@ const BucketAccessTable = memo(props => {
   const [searchQuery, setSearchQuery] = useState('');
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState(null);
-  const [bulkEditDialogOpen, setBulkEditDialogOpen] = useState(false);
-  const [removeConfirmOpen, setRemoveConfirmOpen] = useState(false);
-  const [userToRemove, setUserToRemove] = useState(null);
+  const [editingUsers, setEditingUsers] = useState([]);
   const [optimisticUsers, setOptimisticUsers] = useState([]);
 
   const { data: permissionsData, isLoading: isLoadingPerms } = useListBucketPermissionsQuery(
@@ -181,11 +93,11 @@ const BucketAccessTable = memo(props => {
       .map(u => {
         const creds = credsByUserId[u.id];
         const cred = creds.find(c => c.bucket_permissions && bucket in c.bucket_permissions);
-        const accessValue = getAccessValue(cred?.bucket_permissions, bucket);
+        const accessValue = BucketAccessHelpers.getAccessValue(cred?.bucket_permissions, bucket);
         return {
           ...u,
           accessValue,
-          accessLabel: getAccessLabel(accessValue),
+          accessLabel: BucketAccessHelpers.getAccessLabel(accessValue),
         };
       });
     const serverIds = new Set(fromServer.map(u => u.id));
@@ -216,6 +128,8 @@ const BucketAccessTable = memo(props => {
     return sortedUsers.slice(start, start + rowsPerPage);
   }, [sortedUsers, page, rowsPerPage]);
 
+  const selectionRows = hidePagination ? sortedUsers : paginatedUsers;
+
   const {
     selectedIds,
     isAllSelected,
@@ -224,9 +138,7 @@ const BucketAccessTable = memo(props => {
     handleSelectRow,
     clearSelection,
     getSelectedRows,
-  } = useRowSelection({ rows: paginatedUsers, idField: 'id' });
-
-  const selectedRows = useMemo(() => getSelectedRows(), [getSelectedRows]);
+  } = useRowSelection({ rows: selectionRows, idField: 'id' });
 
   const { visibleColumns, gridTemplateColumns, dataColumns } = useResponsiveColumns({
     columns: BUCKET_ACCESS_COLUMNS,
@@ -263,7 +175,7 @@ const BucketAccessTable = memo(props => {
       try {
         if (!creds || creds.length === 0) {
           if (!newAccess) return;
-          const bucketPermissions = buildBucketPermissions(newAccess, bucket, {});
+          const bucketPermissions = BucketAccessHelpers.buildBucketPermissions(newAccess, bucket, {});
           await createS3Credentials({
             projectId,
             user_id: user.id,
@@ -275,7 +187,11 @@ const BucketAccessTable = memo(props => {
             creds.find(c => c.bucket_permissions && bucket in c.bucket_permissions) ||
             creds.find(c => !c.bucket_permissions || Object.keys(c.bucket_permissions).length === 0) ||
             creds[0];
-          const updatedPerms = buildBucketPermissions(newAccess, bucket, cred.bucket_permissions);
+          const updatedPerms = BucketAccessHelpers.buildBucketPermissions(
+            newAccess,
+            bucket,
+            cred.bucket_permissions,
+          );
           await setBucketPermissions({
             projectId,
             access_key_id: cred.access_key_id,
@@ -294,44 +210,66 @@ const BucketAccessTable = memo(props => {
     [credsByUserId, bucket, createS3Credentials, setBucketPermissions, projectId, toastError, toastSuccess],
   );
 
-  const handleRemoveClick = useCallback(user => {
-    setUserToRemove(user);
-    setRemoveConfirmOpen(true);
-  }, []);
-
-  const handleRemoveConfirm = useCallback(async () => {
-    if (!userToRemove) return;
-    await handleAccessChange(userToRemove, '');
-    setRemoveConfirmOpen(false);
-    setUserToRemove(null);
-  }, [userToRemove, handleAccessChange]);
-
-  const handleRemoveCancel = useCallback(() => {
-    setRemoveConfirmOpen(false);
-    setUserToRemove(null);
-  }, []);
-
   const handleEditClick = useCallback(row => {
-    setEditingUser({
-      id: row.id,
-      name: row.name,
-      email: row.email,
-      currentPermission: row.accessValue,
-    });
+    setEditingUsers([
+      {
+        id: row.id,
+        name: row.name,
+        email: row.email,
+        currentPermission: row.accessValue,
+      },
+    ]);
     setEditDialogOpen(true);
   }, []);
 
+  const handleBulkEditClick = useCallback(() => {
+    const selected = getSelectedRows();
+    setEditingUsers(
+      selected.map(row => ({
+        id: row.id,
+        name: row.name,
+        email: row.email,
+        currentPermission: row.accessValue,
+      })),
+    );
+    setEditDialogOpen(true);
+  }, [getSelectedRows]);
+
   const handleEditConfirm = useCallback(
     async ({ permission }) => {
-      if (!editingUser) return;
-      const user = users.find(u => u.id === editingUser.id);
-      if (user) {
-        await handleAccessChange(user, permission);
+      if (editingUsers.length === 0) return;
+
+      const isRemoval = permission === BucketAccessConstants.PERMISSION_OPTIONS.READ_WRITE;
+
+      const results = await Promise.allSettled(
+        editingUsers.map(async editingUser => {
+          const user = users.find(u => u.id === editingUser.id);
+          if (!user) {
+            throw new Error(`User ${editingUser.id} not found`);
+          }
+          await handleAccessChange(user, isRemoval ? '' : permission);
+        }),
+      );
+
+      const successCount = results.filter(r => r.status === 'fulfilled').length;
+      const errorCount = results.filter(r => r.status === 'rejected').length;
+
+      if (editingUsers.length > 1) {
+        if (successCount > 0) {
+          toastSuccess(
+            `${isRemoval ? 'Removed' : 'Updated'} access for ${successCount} user${successCount !== 1 ? 's' : ''}`,
+          );
+        }
+        if (errorCount > 0) {
+          toastError(`Failed to update ${errorCount} user${errorCount !== 1 ? 's' : ''}`);
+        }
       }
+
       setEditDialogOpen(false);
-      setEditingUser(null);
+      setEditingUsers([]);
+      clearSelection();
     },
-    [editingUser, users, handleAccessChange],
+    [editingUsers, users, handleAccessChange, toastSuccess, toastError, clearSelection],
   );
 
   const handleAddConfirm = useCallback(
@@ -339,21 +277,19 @@ const BucketAccessTable = memo(props => {
       const newOptimisticUsers = usersToAdd.map(user => ({
         ...user,
         accessValue: permission,
-        accessLabel: getAccessLabel(permission),
+        accessLabel: BucketAccessHelpers.getAccessLabel(permission),
       }));
       setOptimisticUsers(prev => [...prev, ...newOptimisticUsers]);
 
-      let successCount = 0;
+      const results = await Promise.allSettled(usersToAdd.map(user => handleAccessChange(user, permission)));
 
-      for (const user of usersToAdd) {
-        try {
-          await handleAccessChange(user, permission);
-          successCount++;
-        } catch {
-          setOptimisticUsers(prev => prev.filter(u => u.id !== user.id));
-        }
+      const failedUserIds = usersToAdd.filter((_, i) => results[i].status === 'rejected').map(u => u.id);
+
+      if (failedUserIds.length > 0) {
+        setOptimisticUsers(prev => prev.filter(u => !failedUserIds.includes(u.id)));
       }
 
+      const successCount = results.filter(r => r.status === 'fulfilled').length;
       if (successCount > 0 && usersToAdd.length > 1) {
         toastSuccess(`Added access for ${successCount} user${successCount !== 1 ? 's' : ''}`);
       }
@@ -361,38 +297,6 @@ const BucketAccessTable = memo(props => {
       setAddDialogOpen(false);
     },
     [handleAccessChange, toastSuccess],
-  );
-
-  const handleBulkEditClick = useCallback(() => {
-    setBulkEditDialogOpen(true);
-  }, []);
-
-  const handleBulkEditConfirm = useCallback(
-    async ({ permission }) => {
-      const usersToUpdate = getSelectedRows();
-      let successCount = 0;
-      let errorCount = 0;
-
-      for (const user of usersToUpdate) {
-        try {
-          await handleAccessChange(user, permission);
-          successCount++;
-        } catch {
-          errorCount++;
-        }
-      }
-
-      if (successCount > 0) {
-        toastSuccess(`Updated access for ${successCount} user${successCount !== 1 ? 's' : ''}`);
-      }
-      if (errorCount > 0) {
-        toastError(`Failed to update ${errorCount} user${errorCount !== 1 ? 's' : ''}`);
-      }
-
-      setBulkEditDialogOpen(false);
-      clearSelection();
-    },
-    [getSelectedRows, handleAccessChange, toastSuccess, toastError, clearSelection],
   );
 
   const renderCell = useCallback((column, value, row) => {
@@ -430,7 +334,7 @@ const BucketAccessTable = memo(props => {
     row => (
       <Box sx={styles.actionsContainer}>
         <Tooltip
-          title="Edit access"
+          title="Edit exception"
           placement="top"
         >
           <Box component="span">
@@ -443,61 +347,52 @@ const BucketAccessTable = memo(props => {
             </Button.BaseBtn>
           </Box>
         </Tooltip>
+      </Box>
+    ),
+    [handleEditClick, styles.actionsContainer, styles.actionButton, styles.actionIcon],
+  );
+
+  const toolbarControls = useMemo(
+    () => (
+      <Box sx={styles.actionsRow}>
+        <Box sx={styles.searchWrapper}>
+          <SimpleSearchBar
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            placeholder="Search"
+            autoFocus={false}
+          />
+        </Box>
+        <AddButton
+          tooltip="Add exception"
+          onAdd={() => setAddDialogOpen(true)}
+        />
         <Tooltip
-          title="Remove access"
+          title="Edit selected"
           placement="top"
         >
           <Box component="span">
             <Button.BaseBtn
               variant="icon"
-              sx={styles.actionButton}
-              onClick={() => handleRemoveClick(row)}
+              sx={styles.bulkEditButton}
+              onClick={handleBulkEditClick}
+              disabled={selectedIds.length === 0}
             >
-              <DeleteIcon sx={styles.actionIcon} />
+              <EditIcon sx={styles.actionIcon} />
             </Button.BaseBtn>
           </Box>
         </Tooltip>
       </Box>
     ),
-    [handleEditClick, handleRemoveClick],
-  );
-
-  const toolbarControls = useMemo(
-    () => (
-      <>
-        {selectedIds.length > 0 && (
-          <Box sx={styles.selectionInfo}>
-            <Typography
-              variant="bodySmall"
-              color="text.secondary"
-            >
-              {selectedIds.length} selected
-            </Typography>
-            <Button.BaseBtn
-              variant="elitea"
-              color="secondary"
-              size="small"
-              onClick={handleBulkEditClick}
-            >
-              Edit selected
-            </Button.BaseBtn>
-          </Box>
-        )}
-        <Box sx={styles.searchWrapper}>
-          <SimpleSearchBar
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            placeholder="Search users"
-            autoFocus={false}
-          />
-        </Box>
-        <AddButton
-          tooltip="Add user access"
-          onAdd={() => setAddDialogOpen(true)}
-        />
-      </>
-    ),
-    [searchQuery, selectedIds.length, handleBulkEditClick],
+    [
+      searchQuery,
+      selectedIds.length,
+      handleBulkEditClick,
+      styles.bulkEditButton,
+      styles.actionIcon,
+      styles.actionsRow,
+      styles.searchWrapper,
+    ],
   );
 
   useEffect(() => {
@@ -517,40 +412,84 @@ const BucketAccessTable = memo(props => {
     };
   }, [renderToolbarControls, toolbarControls]);
 
+  const renderEmptyState = () => (
+    <Box sx={styles.emptyStateWrapper}>
+      <Box sx={styles.emptyStateContainer}>
+        <NoPermissionsIcon sx={styles.emptyStateIcon} />
+        <Typography
+          variant="headingSmall"
+          color="text.secondary"
+          sx={styles.emptyStateTitle}
+        >
+          No exceptions added yet
+        </Typography>
+        <Typography
+          variant="bodyMedium"
+          color="text.default"
+          sx={styles.emptyStateSubtitle}
+        >
+          All users have read/write permissions by default.
+        </Typography>
+        <Button.BaseBtn
+          variant="special"
+          onClick={() => setAddDialogOpen(true)}
+          startIcon={<PlusIcon />}
+        >
+          Add Exceptions
+        </Button.BaseBtn>
+      </Box>
+    </Box>
+  );
+
+  const hasExceptions = usersWithAccess.length > 0;
+  const displayUsers = hidePagination ? sortedUsers : paginatedUsers;
+
   return (
     <Box sx={styles.root}>
-      {!renderToolbarControls && <Box sx={styles.actionsRow}>{toolbarControls}</Box>}
-      <Box sx={styles.tableWrapper}>
-        {isFetching ? (
-          <Box sx={styles.skeletonContainer}>
-            {Array.from({ length: 10 }).map((_, i) => (
-              <Skeleton
-                key={i}
-                variant="rectangular"
-                width="100%"
-                height="2.5rem"
-                sx={styles.skeleton}
-              />
-            ))}
-          </Box>
-        ) : (
-          <GridTableContainer
-            isLoading={false}
-            isEmpty={paginatedUsers.length === 0}
-            emptyMessage="All project users have access to this bucket"
-          >
-            <GridTableHeader
-              columns={visibleColumns}
-              sortConfig={sortConfig}
-              onSort={handleSort}
-              gridTemplateColumns={gridTemplateColumns}
-              showCheckbox={true}
-              onSelectAll={handleSelectAll}
-              isAllSelected={isAllSelected}
-              isIndeterminate={isIndeterminate}
+      {/* Section Header */}
+      <Box sx={styles.sectionHeader}>
+        <Typography
+          variant="labelMedium"
+          color="text.secondary"
+          sx={styles.sectionTitle}
+        >
+          Exceptions – {usersWithAccess.length}
+        </Typography>
+        {hasExceptions && (renderToolbarControls ? null : toolbarControls)}
+      </Box>
+
+      {/* Content */}
+      {isFetching ? (
+        <Box sx={styles.skeletonContainer}>
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton
+              key={i}
+              variant="rectangular"
+              width="100%"
+              height="2.5rem"
+              sx={styles.skeleton}
             />
-            <GridTableBody>
-              {paginatedUsers.map(row => (
+          ))}
+        </Box>
+      ) : !hasExceptions ? (
+        renderEmptyState()
+      ) : (
+        <Box sx={styles.tableWrapper}>
+          <Box sx={styles.tableScrollContainer}>
+            <Box sx={styles.stickyHeader}>
+              <GridTableHeader
+                columns={visibleColumns}
+                sortConfig={sortConfig}
+                onSort={handleSort}
+                gridTemplateColumns={gridTemplateColumns}
+                showCheckbox={true}
+                onSelectAll={handleSelectAll}
+                isAllSelected={isAllSelected}
+                isIndeterminate={isIndeterminate}
+              />
+            </Box>
+            <GridTableBody sx={styles.tableBodySx}>
+              {displayUsers.map(row => (
                 <GridTableRow
                   key={row.id}
                   row={row}
@@ -568,10 +507,10 @@ const BucketAccessTable = memo(props => {
                 />
               ))}
             </GridTableBody>
-            {total > 0 && <GridTablePagination {...paginationProps} />}
-          </GridTableContainer>
-        )}
-      </Box>
+          </Box>
+          {!hidePagination && total > 0 && <GridTablePagination {...paginationProps} />}
+        </Box>
+      )}
 
       <AddBucketUserDialog
         open={addDialogOpen}
@@ -586,32 +525,148 @@ const BucketAccessTable = memo(props => {
         open={editDialogOpen}
         onClose={() => {
           setEditDialogOpen(false);
-          setEditingUser(null);
+          setEditingUsers([]);
         }}
         onConfirm={handleEditConfirm}
-        user={editingUser}
+        users={editingUsers}
         loading={isMutating}
-      />
-
-      <BulkEditBucketUsersDialog
-        open={bulkEditDialogOpen}
-        onClose={() => setBulkEditDialogOpen(false)}
-        onConfirm={handleBulkEditConfirm}
-        selectedUsers={selectedRows}
-        loading={isMutating}
-      />
-
-      <Modal.DeleteEntityModal
-        open={removeConfirmOpen}
-        name={userToRemove?.name || userToRemove?.email || 'this user'}
-        title="Remove access"
-        textContent="Are you sure you want to remove bucket access for "
-        confirmButtonText="Remove"
-        onClose={handleRemoveCancel}
-        onConfirm={handleRemoveConfirm}
       />
     </Box>
   );
+});
+
+const bucketAccessTableStyle = () => ({
+  root: {
+    height: '100%',
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    flex: 1,
+    minHeight: 0,
+  },
+  sectionHeader: ({ palette }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '1rem 1.5rem',
+    minHeight: '4.5rem',
+    backgroundColor: palette.background.secondary,
+  }),
+  sectionTitle: {
+    fontWeight: 600,
+  },
+  actionsRow: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: '0.6rem',
+  },
+  selectionInfo: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+  },
+  searchWrapper: {
+    minWidth: '12.5rem',
+  },
+  tableWrapper: ({ palette }) => ({
+    flex: 1,
+    minHeight: 0,
+    display: 'flex',
+    flexDirection: 'column',
+    maxWidth: '100%',
+    overflow: 'hidden',
+    padding: '0 1.5rem 1.5rem',
+    backgroundColor: palette.background.secondary,
+  }),
+  tableScrollContainer: ({ palette }) => ({
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'auto',
+    minHeight: 0,
+    backgroundColor: palette.background.secondary,
+    borderRadius: '0.5rem',
+  }),
+  tableBodySx: {
+    '& > div': {
+      backgroundColor: 'transparent !important',
+    },
+  },
+  stickyHeader: ({ palette }) => ({
+    position: 'sticky',
+    top: 0,
+    zIndex: 1,
+    backgroundColor: palette.background.secondary,
+  }),
+  actionsContainer: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    gap: '0.5rem',
+  },
+  actionIcon: {
+    width: '1rem',
+    height: '1rem',
+  },
+  actionButton: ({ palette }) => ({
+    '&:hover': {
+      backgroundColor: palette.background.button.secondary.hover,
+    },
+  }),
+  bulkEditButton: ({ palette }) => ({
+    '&:hover': {
+      backgroundColor: palette.background.button.secondary.hover,
+    },
+    '&.Mui-disabled': {
+      opacity: 0.5,
+    },
+  }),
+  dataCell: {
+    display: 'flex',
+    alignItems: 'center',
+    padding: '0rem 1rem',
+  },
+  skeletonContainer: {
+    width: '100%',
+    padding: '1rem 1.5rem',
+  },
+  skeleton: {
+    marginBottom: '0.5rem',
+  },
+  emptyStateWrapper: ({ palette }) => ({
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    padding: '0 1.5rem 1.5rem',
+    backgroundColor: palette.background.secondary,
+    minHeight: '25rem',
+  }),
+  emptyStateContainer: ({ palette }) => ({
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    paddingTop: '4rem',
+    gap: '1rem',
+    borderRadius: '0.5rem',
+    backgroundColor: palette.background.emptyState?.default || palette.background.default,
+  }),
+  emptyStateIcon: ({ palette }) => ({
+    width: '2.5rem',
+    height: '2.5rem',
+    color: palette.icon.fill.default,
+    opacity: 0.6,
+  }),
+  emptyStateTitle: {
+    textAlign: 'center',
+  },
+  emptyStateSubtitle: {
+    marginTop: '-0.5rem',
+    textAlign: 'center',
+  },
 });
 
 BucketAccessTable.displayName = 'BucketAccessTable';
