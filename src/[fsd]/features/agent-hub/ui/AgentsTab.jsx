@@ -14,7 +14,7 @@ import {
   ELITEA_CATALOG_TOUR_ID,
   ELITEA_CATALOG_TOUR_TARGET_IDS,
 } from '@/[fsd]/features/interactive-tours/lib/constants';
-import { useGroupedCategories } from '@/[fsd]/shared/lib/hooks';
+import { useCatalogAutoRefresh, useGroupedCategories } from '@/[fsd]/shared/lib/hooks';
 import { Category } from '@/[fsd]/shared/ui';
 import useDebounceValue from '@/hooks/useDebounceValue';
 
@@ -52,16 +52,24 @@ const AgentsTab = memo(props => {
     totalCountsByTag,
     currentPageByTag,
     loadingTags,
-    refreshingTags,
     isFetching,
+    isCacheValid,
+    lastRefreshedAt,
     fetchApplicationsForCategoryName,
     fetchTrendingApplications,
     fetchMyLikedApplications,
     updateApplicationInState,
     addToMyLiked,
     removeFromMyLiked,
-    onRefresh,
+    refresh,
   } = useAgentHubData(debouncedQuery, selectedTagNames);
+
+  useCatalogAutoRefresh({
+    refresh,
+    lastRefreshedAt,
+    isCacheValid,
+    throttleMs: AgentHubConstants.AUTO_REFRESH_THROTTLE_MS,
+  });
 
   const allCategories = useMemo(() => AgentHubHelpers.buildAllCategories(categoryNames), [categoryNames]);
   const applicationMenuItems = useMemo(
@@ -136,15 +144,13 @@ const AgentsTab = memo(props => {
           category={category}
           items={items}
           totalCount={totalCountsByTag[category] || 0}
-          isLoading={refreshingTags.has(category)}
           isLoadingMore={loadingTags.has(category)}
           onSelectItem={handleApplicationSelect}
           onLoadMore={handleLoadMore}
-          onRefresh={onRefresh}
         />
       );
     },
-    [handleApplicationSelect, handleLoadMore, loadingTags, onRefresh, refreshingTags, totalCountsByTag],
+    [handleApplicationSelect, handleLoadMore, loadingTags, totalCountsByTag],
   );
 
   const renderNoResults = useCallback(

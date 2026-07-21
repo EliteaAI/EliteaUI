@@ -11,6 +11,7 @@ export const TagsQueryParams = {
   statuses: CollectionStatus.Published,
 };
 export const TRENDING_START_PERIOD = ALL_TIME_DATE;
+export const AUTO_REFRESH_THROTTLE_MS = 30 * 1000;
 
 export const LikeUpdateStrategy = {
   USE_SERVER_COUNT: 'USE_SERVER_COUNT',

@@ -6,8 +6,12 @@ import { AgentHubConstants } from '@/[fsd]/features/agent-hub/lib/constants';
 import { useGetAgentCategoriesQuery } from '@/[fsd]/features/agent/api/agentCategoriesApi';
 import { useLazyPublicApplicationsListQuery } from '@/api/applications';
 import { CollectionStatus, PUBLIC_PROJECT_ID } from '@/common/constants';
-import useToast from '@/hooks/useToast';
-import { actions as agentHubActions, selectAgentHubData, selectIsCacheValid } from '@/slices/agentHub';
+import {
+  actions as agentHubActions,
+  selectAgentHubData,
+  selectIsCacheValid,
+  selectLastRefreshedAt,
+} from '@/slices/agentHub';
 
 /** Single bulk-fetch limit — covers realistic max deployments (≤200 published agents). */
 const ALL_AGENTS_LIMIT = 1000;
@@ -26,12 +30,11 @@ const SEARCH_AGENTS_LIMIT = 100;
  */
 export const useAgentHubData = (query, selectedTagNames) => {
   const dispatch = useDispatch();
-  const { toastError } = useToast();
   const { applicationsByTag, totalCountsByTag, currentPageByTag } = useSelector(selectAgentHubData);
   const isCacheValid = useSelector(state => selectIsCacheValid(state, query));
+  const lastRefreshedAt = useSelector(selectLastRefreshedAt);
 
   const [loadingTags, setLoadingTags] = useState(new Set());
-  const [refreshingTags, setRefreshingTags] = useState(new Set());
   const isRefetchingTrendingRef = useRef(false);
   const lastQueryRef = useRef(query);
   const stateRef = useRef({ applicationsByTag, totalCountsByTag, currentPageByTag });
@@ -58,14 +61,6 @@ export const useAgentHubData = (query, selectedTagNames) => {
     setLoadingTags(prev => {
       const s = new Set(prev);
       isLoading ? s.add(id) : s.delete(id);
-      return s;
-    });
-  }, []);
-
-  const setRefreshing = useCallback((id, isRefreshing) => {
-    setRefreshingTags(prev => {
-      const s = new Set(prev);
-      isRefreshing ? s.add(id) : s.delete(id);
       return s;
     });
   }, []);
@@ -120,13 +115,22 @@ export const useAgentHubData = (query, selectedTagNames) => {
     [fetchApplications, query, setLoading, bucketAppsByCategory, updateApplicationData],
   );
 
+  const rebuildCategoryToDepth = useCallback(
+    (categoryName, rows, total, depth) => {
+      dispatch(agentHubActions.replaceCategoryData({ categoryName, page: depth, rows, total }));
+    },
+    [dispatch],
+  );
+
   const fetchTrendingApplications = useCallback(
-    async (page = 0) => {
-      setLoading(AgentHubConstants.TRENDING_CATEGORY, true);
+    async (page = 0, depth = null) => {
+      const isRebuild = depth !== null;
+      const category = AgentHubConstants.TRENDING_CATEGORY;
+      if (!isRebuild) setLoading(category, true);
       try {
         const result = await fetchApplications({
-          page,
-          pageSize: AgentHubConstants.PAGE_SIZE,
+          page: isRebuild ? 0 : page,
+          pageSize: isRebuild ? (depth + 1) * AgentHubConstants.PAGE_SIZE : AgentHubConstants.PAGE_SIZE,
           params: {
             query,
             statuses: CollectionStatus.Published,
@@ -138,22 +142,25 @@ export const useAgentHubData = (query, selectedTagNames) => {
         }).unwrap();
 
         if (result?.rows) {
-          updateApplicationData(AgentHubConstants.TRENDING_CATEGORY, page, result.rows, result.total);
+          if (isRebuild) rebuildCategoryToDepth(category, result.rows, result.total, depth);
+          else updateApplicationData(category, page, result.rows, result.total);
         }
       } finally {
-        setLoading(AgentHubConstants.TRENDING_CATEGORY, false);
+        if (!isRebuild) setLoading(category, false);
       }
     },
-    [fetchApplications, query, setLoading, updateApplicationData],
+    [fetchApplications, query, setLoading, updateApplicationData, rebuildCategoryToDepth],
   );
 
   const fetchMyLikedApplications = useCallback(
-    async (page = 0) => {
-      setLoading(AgentHubConstants.MY_LIKED_CATEGORY, true);
+    async (page = 0, depth = null) => {
+      const isRebuild = depth !== null;
+      const category = AgentHubConstants.MY_LIKED_CATEGORY;
+      if (!isRebuild) setLoading(category, true);
       try {
         const result = await fetchApplications({
-          page,
-          pageSize: AgentHubConstants.PAGE_SIZE,
+          page: isRebuild ? 0 : page,
+          pageSize: isRebuild ? (depth + 1) * AgentHubConstants.PAGE_SIZE : AgentHubConstants.PAGE_SIZE,
           params: {
             query,
             statuses: CollectionStatus.Published,
@@ -163,33 +170,14 @@ export const useAgentHubData = (query, selectedTagNames) => {
         }).unwrap();
 
         if (result?.rows) {
-          updateApplicationData(AgentHubConstants.MY_LIKED_CATEGORY, page, result.rows, result.total);
+          if (isRebuild) rebuildCategoryToDepth(category, result.rows, result.total, depth);
+          else updateApplicationData(category, page, result.rows, result.total);
         }
       } finally {
-        setLoading(AgentHubConstants.MY_LIKED_CATEGORY, false);
+        if (!isRebuild) setLoading(category, false);
       }
     },
-    [fetchApplications, query, setLoading, updateApplicationData],
-  );
-
-  const fetchCategoryScoped = useCallback(
-    async categoryName => {
-      const result = await fetchApplications({
-        page: 0,
-        pageSize: ALL_AGENTS_LIMIT,
-        params: {
-          query,
-          statuses: CollectionStatus.Published,
-          agents_type: 'classic',
-          category: categoryName,
-        },
-      }).unwrap();
-
-      if (result?.rows) {
-        updateApplicationData(categoryName, 0, result.rows, result.rows.length);
-      }
-    },
-    [fetchApplications, query, updateApplicationData],
+    [fetchApplications, query, setLoading, updateApplicationData, rebuildCategoryToDepth],
   );
 
   const resetSearchByTag = useCallback(() => {
@@ -242,6 +230,25 @@ export const useAgentHubData = (query, selectedTagNames) => {
   const fetchApplicationsForCategoryName = useCallback(async () => {
     await fetchAllAndCategorize(categoryNames);
   }, [fetchAllAndCategorize, categoryNames]);
+
+  const refresh = useCallback(() => {
+    if (query) return;
+    if (categoryNames.length === 0) return;
+    const trendingDepth = currentPageByTag[AgentHubConstants.TRENDING_CATEGORY] || 0;
+    const myLikedDepth = currentPageByTag[AgentHubConstants.MY_LIKED_CATEGORY] || 0;
+    Promise.all([
+      fetchAllAndCategorize(categoryNames),
+      fetchTrendingApplications(0, trendingDepth),
+      fetchMyLikedApplications(0, myLikedDepth),
+    ]).catch(() => {});
+  }, [
+    query,
+    categoryNames,
+    currentPageByTag,
+    fetchAllAndCategorize,
+    fetchTrendingApplications,
+    fetchMyLikedApplications,
+  ]);
 
   // Main data fetching effect
   useEffect(() => {
@@ -312,40 +319,19 @@ export const useAgentHubData = (query, selectedTagNames) => {
     [fetchTrendingApplications],
   );
 
-  const updateApplicationInCategoriesHelper = useCallback((appsByTag, applicationId, updateFn) => {
-    const updated = { ...appsByTag };
-    Object.keys(updated).forEach(category => {
-      updated[category] = updated[category].map(app => (app.id === applicationId ? updateFn(app) : app));
-    });
-    return updated;
-  }, []);
-
   const updateApplicationInState = useCallback(
     (applicationId, updateFn) => {
-      const {
-        applicationsByTag: currentAppsByTag,
-        totalCountsByTag: currentTotals,
-        currentPageByTag: currentPages,
-      } = stateRef.current;
+      const { applicationsByTag: currentAppsByTag } = stateRef.current;
       const trendingCategory = currentAppsByTag[AgentHubConstants.TRENDING_CATEGORY] || [];
       const currentApp = trendingCategory.find(app => app.id === applicationId);
       const currentLikes = currentApp?.likes || 0;
       const conditionForRefetching = !!currentApp && !isRefetchingTrendingRef.current;
 
-      const updated = updateApplicationInCategoriesHelper(currentAppsByTag, applicationId, updateFn);
-
-      dispatch(
-        agentHubActions.setApplicationsData({
-          applicationsByTag: updated,
-          totalCountsByTag: currentTotals,
-          currentPageByTag: currentPages,
-          query,
-        }),
-      );
+      dispatch(agentHubActions.updateApplicationInCategories({ applicationId, updateFn }));
 
       refetchTrendingApplications(conditionForRefetching, updateFn, currentApp, currentLikes);
     },
-    [query, dispatch, updateApplicationInCategoriesHelper, refetchTrendingApplications],
+    [dispatch, refetchTrendingApplications],
   );
 
   const addToMyLiked = useCallback(
@@ -372,40 +358,21 @@ export const useAgentHubData = (query, selectedTagNames) => {
     [dispatch],
   );
 
-  const onRefresh = useCallback(
-    async categoryName => {
-      setRefreshing(categoryName, true);
-      try {
-        if (categoryName === AgentHubConstants.TRENDING_CATEGORY) {
-          await fetchTrendingApplications(0);
-        } else if (categoryName === AgentHubConstants.MY_LIKED_CATEGORY) {
-          await fetchMyLikedApplications(0);
-        } else {
-          await fetchCategoryScoped(categoryName);
-        }
-      } catch {
-        toastError(`Failed to refresh ${categoryName}. Please try again.`);
-      } finally {
-        setRefreshing(categoryName, false);
-      }
-    },
-    [setRefreshing, fetchTrendingApplications, fetchMyLikedApplications, fetchCategoryScoped, toastError],
-  );
-
   return {
     categoryNames,
     applicationsByTag: filteredApplicationsByTag,
     totalCountsByTag: filteredTotalCountsByTag,
     currentPageByTag,
     loadingTags,
-    refreshingTags,
     isFetching,
+    isCacheValid,
+    lastRefreshedAt,
     fetchApplicationsForCategoryName,
     fetchTrendingApplications,
     fetchMyLikedApplications,
     updateApplicationInState,
     addToMyLiked,
     removeFromMyLiked,
-    onRefresh,
+    refresh,
   };
 };
