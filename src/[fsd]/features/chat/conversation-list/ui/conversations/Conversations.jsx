@@ -544,7 +544,14 @@ const Conversations = memo(props => {
             alignItems={'center'}
             gap={'8px'}
           >
-            {(!collapsed || isSmallWindow) && <Typography variant="subtitle">Chats</Typography>}
+            {(!collapsed || isSmallWindow) && (
+              <Typography
+                data-testid="chat-conversations-heading"
+                variant="subtitle"
+              >
+                Chats
+              </Typography>
+            )}
             {(!collapsed || isSmallWindow) && (
               <>
                 <Tooltip

@@ -96,6 +96,7 @@ const FolderItem = memo(props => {
         onClick: handlePinFolder,
       },
       {
+        key: 'chat-folder-menu-delete',
         label: 'Delete',
         icon: (
           <DeleteIcon
