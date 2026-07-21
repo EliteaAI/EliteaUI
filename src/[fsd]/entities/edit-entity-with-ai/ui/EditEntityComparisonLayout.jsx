@@ -7,17 +7,19 @@ const EditEntityComparisonLayout = memo(props => {
 
   return (
     <Box sx={styles.container}>
-      <Box sx={styles.column}>
-        <Box sx={styles.columnHeaderBar}>
-          <Typography sx={styles.columnHeaderText}>{currentLabel}</Typography>
+      <Box sx={styles.headerRow}>
+        <Box sx={styles.headerCell}>
+          <Typography sx={styles.headerText}>{currentLabel}</Typography>
         </Box>
-        <Box sx={styles.columnContent}>{currentContent}</Box>
+        <Box sx={styles.headerCell}>
+          <Typography sx={styles.headerText}>{suggestedLabel}</Typography>
+        </Box>
       </Box>
-      <Box sx={[styles.column, styles.suggestedColumn]}>
-        <Box sx={styles.columnHeaderBar}>
-          <Typography sx={styles.columnHeaderText}>{suggestedLabel}</Typography>
+      <Box sx={styles.scrollable}>
+        <Box sx={styles.columnsRow}>
+          <Box sx={styles.column}>{currentContent}</Box>
+          <Box sx={styles.column}>{suggestedContent}</Box>
         </Box>
-        <Box sx={styles.columnContent}>{suggestedContent}</Box>
       </Box>
     </Box>
   );
@@ -27,30 +29,38 @@ EditEntityComparisonLayout.displayName = 'EditEntityComparisonLayout';
 
 /** @type {MuiSx} */
 const styles = {
-  container: {
+  container: ({ palette }) => ({
     display: 'flex',
+    flexDirection: 'column',
     width: '100%',
     flex: 1,
     minHeight: 0,
-  },
-  column: {
-    flex: 1,
-    minWidth: 0,
-    display: 'flex',
-    flexDirection: 'column',
-    height: '100%',
-  },
-  suggestedColumn: ({ palette }) => ({
-    borderLeft: `0.0625rem solid ${palette.border.lines}`,
+    position: 'relative',
+    '&::after': {
+      content: '""',
+      position: 'absolute',
+      top: 0,
+      bottom: 0,
+      left: '50%',
+      width: '0.0625rem',
+      backgroundColor: palette.border.lines,
+      pointerEvents: 'none',
+      zIndex: 1,
+    },
   }),
-  columnHeaderBar: ({ palette }) => ({
+  headerRow: ({ palette }) => ({
+    display: 'flex',
+    flexShrink: 0,
+    borderBottom: `0.0625rem solid ${palette.border.lines}`,
+  }),
+  headerCell: {
+    flex: 1,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     padding: '0.75rem 1.5rem',
-    borderBottom: `0.0625rem solid ${palette.border.lines}`,
-  }),
-  columnHeaderText: {
+  },
+  headerText: {
     flex: 1,
     fontSize: '0.75rem',
     fontWeight: 500,
@@ -60,11 +70,18 @@ const styles = {
     textAlign: 'center',
     color: 'text.primary',
   },
-  columnContent: {
-    display: 'flex',
-    flexDirection: 'column',
+  scrollable: {
     flex: 1,
     minHeight: 0,
+    overflowY: 'auto',
+  },
+  columnsRow: {
+    display: 'flex',
+    marginBottom: '1rem',
+  },
+  column: {
+    flex: 1,
+    minWidth: 0,
   },
 };
 

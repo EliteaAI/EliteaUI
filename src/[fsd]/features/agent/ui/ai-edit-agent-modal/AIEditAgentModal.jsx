@@ -46,7 +46,7 @@ const AIEditAgentModal = memo(props => {
 
   const [steps, setSteps] = useState([]);
   const [fieldApplyFlags, setFieldApplyFlags] = useState(DEFAULT_FIELD_FLAGS);
-  const [toolSelections, setToolSelections] = useState({ toAdd: new Set(), toRemove: new Set() });
+  const [toolSelections, setToolSelections] = useState({ toAdd: new Set(), toRemove: new Set(), toKeep: new Set() });
 
   const handleGenerate = useCallback(
     description => {
@@ -82,7 +82,10 @@ const AIEditAgentModal = memo(props => {
       ...(draftData.skills_to_remove || []).map(s => s.id),
     ]);
 
-    setToolSelections({ toAdd: addIds, toRemove: removeIds });
+    const currentTools = currentDataRef.current?.version_details?.tools || [];
+    const keepIds = new Set(currentTools.filter(t => !removeIds.has(t.id)).map(t => t.id));
+
+    setToolSelections({ toAdd: addIds, toRemove: removeIds, toKeep: keepIds });
   }, []);
 
   const handleToggleField = useCallback(field => {
@@ -297,6 +300,7 @@ const AIEditAgentModal = memo(props => {
         case EDIT_STEP_KEYS.TOOLS_SKILLS:
           return (
             <ToolsSkillsStep
+              currentData={currentData}
               draftData={draftData}
               toolSelections={toolSelections}
               onToggleTool={handleToggleTool}

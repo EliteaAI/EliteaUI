@@ -8,10 +8,7 @@ import { Input } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import BaseCheckbox from '@/[fsd]/shared/ui/checkbox/BaseCheckbox';
 import PlusIcon from '@/assets/plus-icon.svg?react';
-import {
-  MAX_CONVERSATION_STARTER_LENGTH,
-  MAX_CONVERSATION_STARTERS,
-} from '@/common/constants';
+import { MAX_CONVERSATION_STARTERS, MAX_CONVERSATION_STARTER_LENGTH } from '@/common/constants';
 import CloseIcon from '@/components/Icons/CloseIcon';
 
 const UserInteractionStep = memo(props => {
@@ -20,7 +17,10 @@ const UserInteractionStep = memo(props => {
   const currentWelcome = currentData.version_details?.welcome_message || '';
   const currentStarters = currentData.version_details?.conversation_starters || [];
   const suggestedWelcome = draftData.welcome_message || '';
-  const suggestedStarters = useMemo(() => draftData.conversation_starters || [], [draftData.conversation_starters]);
+  const suggestedStarters = useMemo(
+    () => draftData.conversation_starters || [],
+    [draftData.conversation_starters],
+  );
 
   const handleWelcomeChange = useCallback(
     newText => {
@@ -80,7 +80,7 @@ const UserInteractionStep = memo(props => {
           </Box>
           {hasStarters && (
             <Box sx={styles.fieldSectionGrow}>
-              <Typography sx={styles.fieldLabel}>Conversation Starters</Typography>
+              <Typography sx={styles.sectionLabel}>Conversation Starters:</Typography>
               <Box sx={styles.startersList}>
                 {currentStarters.filter(Boolean).map((starter, index) => (
                   <Box
@@ -126,7 +126,7 @@ const UserInteractionStep = memo(props => {
           {hasStarters && (
             <Box sx={styles.fieldSectionGrow}>
               <Box sx={styles.fieldHeader}>
-                <Typography sx={styles.fieldLabel}>Conversation Starters</Typography>
+                <Typography sx={styles.sectionLabel}>Conversation Starters:</Typography>
                 <Box sx={styles.applyToggle}>
                   <Typography sx={styles.applyLabel}>Apply changes</Typography>
                   <BaseCheckbox
@@ -143,13 +143,18 @@ const UserInteractionStep = memo(props => {
                     key={index}
                     sx={styles.starterRow}
                   >
-                    <Input.InputBase
-                      fullWidth
-                      value={starter}
-                      onChange={e => handleStarterChange(index, e.target.value)}
-                      inputProps={{ maxLength: MAX_CONVERSATION_STARTER_LENGTH }}
-                      enableAutoBlur={false}
-                    />
+                    <Box sx={styles.editableStarterCard}>
+                      <Input.InputBase
+                        fullWidth
+                        multiline
+                        disableUnderline
+                        value={starter}
+                        onChange={e => handleStarterChange(index, e.target.value)}
+                        inputProps={{ maxLength: MAX_CONVERSATION_STARTER_LENGTH }}
+                        enableAutoBlur={false}
+                        sx={styles.starterInput}
+                      />
+                    </Box>
                     <IconButton
                       size="small"
                       onClick={() => handleRemoveStarter(index)}
@@ -242,11 +247,50 @@ const styles = {
     backgroundColor: palette.background.userInputBackground,
     border: `0.0625rem solid ${palette.border.lines}`,
   }),
+  sectionLabel: {
+    fontSize: '0.875rem',
+    fontWeight: 500,
+    lineHeight: '1.5rem',
+    color: 'text.primary',
+    textTransform: 'uppercase',
+  },
   editableCard: ({ palette }) => ({
     padding: '0.5rem 1rem',
     borderRadius: '0.5rem',
     backgroundColor: palette.background.userInputBackground,
     border: `0.0625rem solid ${palette.border.lines}`,
+  }),
+  editableStarterCard: ({ palette }) => ({
+    flex: 1,
+    padding: '0.5rem 1rem',
+    borderRadius: '0.5rem',
+    backgroundColor: palette.background.userInputBackground,
+    border: `0.0625rem solid ${palette.border.lines}`,
+  }),
+  starterInput: ({ palette }) => ({
+    '& .MuiInputBase-input': {
+      padding: '0 !important',
+      margin: '0 !important',
+      fontSize: '0.875rem',
+      fontWeight: 400,
+      lineHeight: '1.5rem',
+      color: palette.text.secondary,
+    },
+    '& .MuiInputBase-root': {
+      padding: '0 !important',
+      minHeight: 'unset',
+      '&::before, &::after': {
+        display: 'none !important',
+      },
+    },
+    '& .MuiInput-underline::before, & .MuiInput-underline::after': {
+      display: 'none !important',
+    },
+    '& textarea': {
+      padding: '0 !important',
+      margin: '0 !important',
+    },
+    padding: 0,
   }),
   startersList: {
     display: 'flex',
@@ -255,7 +299,7 @@ const styles = {
   },
   starterRow: {
     display: 'flex',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     gap: '0.625rem',
   },
   starterText: {
@@ -268,15 +312,13 @@ const styles = {
     color: 'text.primary',
     fontStyle: 'italic',
   },
-  removeBtn: ({ palette }) => ({
-    backgroundColor: palette.background.userInputBackgroundActive,
-    borderRadius: '1rem',
+  removeBtn: {
     padding: '0.375rem',
-    marginTop: '0.25rem',
+    color: 'text.secondary',
     '&:hover': {
-      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+      backgroundColor: 'transparent',
     },
-  }),
+  },
   removeIcon: {
     fontSize: '1rem',
   },
@@ -284,6 +326,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '0.625rem',
+    marginTop: '1rem',
   },
   addStarterWrapper: {
     display: 'inline-flex',

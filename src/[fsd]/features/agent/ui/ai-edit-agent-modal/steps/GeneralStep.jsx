@@ -41,7 +41,7 @@ const GeneralStep = memo(props => {
               />
             </Box>
           </Box>
-          <Box sx={styles.fieldSectionGrow}>
+          <Box sx={[styles.fieldSectionGrow, { minHeight: '15rem' }]}>
             <Typography sx={styles.fieldLabel}>Description</Typography>
             <Box sx={styles.readOnlyCardGrow}>
               <TextDiffHighlight
@@ -78,7 +78,7 @@ const GeneralStep = memo(props => {
               />
             </Box>
           </Box>
-          <Box sx={styles.fieldSectionGrow}>
+          <Box sx={[styles.fieldSectionGrow, { minHeight: '15rem' }]}>
             <Box sx={styles.fieldHeader}>
               <Typography sx={styles.fieldLabel}>Description</Typography>
               <Box sx={styles.applyToggle}>
