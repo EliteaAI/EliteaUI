@@ -69,7 +69,7 @@ const MemorySummarization = memo(() => {
           disabled={isSummarizationDisabled}
           placeholder={CONTEXT_MESSAGES.DEFAULT_SUMMARY_INSTRUCTION}
           hasActionsToolBar
-          showCopyAction={false}
+          showCopyAction
           showExpandAction={false}
           fieldName="Summarization Instructions"
           containerProps={styles.inputContainer}
