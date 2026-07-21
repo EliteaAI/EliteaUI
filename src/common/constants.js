@@ -1099,3 +1099,14 @@ export const PERSONA_OPTIONS = [
 ];
 
 export const DEFAULT_PERSONA = 'generic';
+
+// #5392: contextual placeholder shown when a persona has no custom instructions yet.
+export const PERSONA_INSTRUCTIONS_PLACEHOLDERS = {
+  generic: 'No custom instructions for the Generic persona yet. Type here to add some.',
+  qa: 'No custom instructions for the QA persona yet. Type here to add some.',
+  nerdy: 'No custom instructions for the Nerdy persona yet. Type here to add some.',
+  quirky: 'No custom instructions for the Quirky persona yet. Type here to add some.',
+  cynical: 'No custom instructions for the Cynical persona yet. Type here to add some.',
+  none: 'No custom instructions for this persona yet. Type here to add some.',
+  bare: 'No custom instructions for this persona yet. Type here to add some.',
+};

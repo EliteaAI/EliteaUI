@@ -8,7 +8,7 @@ import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { Input, Label } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
-import { PERSONA_OPTIONS } from '@/common/constants';
+import { PERSONA_INSTRUCTIONS_PLACEHOLDERS, PERSONA_OPTIONS } from '@/common/constants';
 
 const AIPersonalityPersonalization = memo(props => {
   const { onAutoSaveRequested } = props;
@@ -37,9 +37,10 @@ const AIPersonalityPersonalization = memo(props => {
     [onAutoSaveRequested, setFieldValue],
   );
 
+  // #5392: instructions are stored per-persona; edit the slot for the currently selected persona.
   const handleInstructionsChange = useCallback(
-    e => setFieldValue('default_instructions', e.target.value),
-    [setFieldValue],
+    e => setFieldValue(`personality_instructions.${values.persona}`, e.target.value),
+    [setFieldValue, values.persona],
   );
 
   return (
@@ -87,15 +88,18 @@ const AIPersonalityPersonalization = memo(props => {
               <Box sx={styles.section}>
                 <Input.StyledInputEnhancer
                   label="Default instructions"
-                  tooltipDescription="Custom instructions that will be applied to all new conversations"
+                  tooltipDescription="Custom instructions for the selected personality, applied to new conversations that use it. Each personality keeps its own instructions."
                   autoComplete="off"
                   variantInput="outlined"
                   fullWidth
                   multiline
-                  value={values.default_instructions}
+                  value={values.personality_instructions?.[values.persona] ?? ''}
                   onChange={handleInstructionsChange}
                   enableAutoBlur={false}
-                  placeholder="Example: Always respond in a concise manner. Focus on practical solutions."
+                  placeholder={
+                    PERSONA_INSTRUCTIONS_PLACEHOLDERS[values.persona] ??
+                    'No custom instructions for this persona yet. Type here to add some.'
+                  }
                   hasActionsToolBar
                   showCopyAction={false}
                   showExpandAction={false}
