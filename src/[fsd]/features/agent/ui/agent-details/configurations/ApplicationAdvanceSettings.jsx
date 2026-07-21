@@ -85,6 +85,7 @@ const ApplicationAdvanceSettings = memo(props => {
     () => [
       {
         title: 'Advanced',
+        testId: 'agent-canvas-section-advanced',
         content: (
           <Box sx={styles.fieldContainer}>
             <Input.StyledInputEnhancer

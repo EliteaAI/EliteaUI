@@ -102,6 +102,7 @@ const CreateAgentForm = memo(props => {
         items={[
           {
             title: 'General',
+            testId: 'agent-canvas-section-general',
             summaryAction:
               entityType !== 'pipeline' ? <GenerateAgentButton onAgentCreated={onAgentCreated} /> : null,
             content: (

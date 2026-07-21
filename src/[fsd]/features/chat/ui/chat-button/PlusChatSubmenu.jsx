@@ -100,6 +100,7 @@ const PlusChatSubmenu = memo(props => {
           <MenuItem
             onClick={onCreateNew}
             sx={styles.createNewItem}
+            data-testid={sectionKey ? `${sectionKey}-create-new-button` : undefined}
           >
             <PlusIcon
               style={styles.plusIcon}

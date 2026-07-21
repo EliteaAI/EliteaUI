@@ -99,6 +99,7 @@ const ConversationStarters = memo(props => {
       items={[
         {
           title: 'Chat starters',
+          testId: 'agent-canvas-section-chat-starters',
           content: (
             <Box data-tour={AGENT_TOUR_TARGET_IDS.conversationStarters}>
               {values.map((value, index) => {

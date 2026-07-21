@@ -387,6 +387,7 @@ const PlusChatButton = memo(props => {
                   sx={styles.menuItem}
                   disabled={!canInviteUsers}
                   onClick={handleInviteUsers}
+                  data-testid="invite-users-menuitem"
                 >
                   <UsersIcon sx={styles.menuIcon} />
                   <Typography sx={styles.menuLabel}>Invite Users</Typography>

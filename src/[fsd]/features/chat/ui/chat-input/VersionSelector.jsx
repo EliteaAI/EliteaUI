@@ -91,6 +91,7 @@ const VersionSelector = memo(props => {
       >
         <Button
           size="small"
+          data-testid="chat-version-selector-trigger"
           aria-expanded={versionSelectMenuOpen ? 'true' : undefined}
           aria-label="version selector menu"
           aria-haspopup="menu"
