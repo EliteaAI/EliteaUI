@@ -52,7 +52,7 @@ const ToolModal = props => {
   const handleCopyToClipboard = useCallback(
     text => {
       navigator.clipboard.writeText(text).then(() => {
-        toastInfo('Content copied to clipboard');
+        toastInfo('The content has been copied to the clipboard.');
       });
     },
     [toastInfo],

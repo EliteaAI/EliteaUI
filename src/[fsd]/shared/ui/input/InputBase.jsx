@@ -153,7 +153,7 @@ const InputBase = memo(props => {
   const onCopy = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(value);
-      toastInfo(copyMessage || 'The content has been copied.');
+      toastInfo(copyMessage || 'The content has been copied to the clipboard.');
     } catch {
       toastError('Failed to copy the content!');
     }

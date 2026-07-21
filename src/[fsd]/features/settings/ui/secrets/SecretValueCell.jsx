@@ -25,7 +25,7 @@ const SecretValueCell = memo(props => {
         await copyToClipboard(value);
         toastInfo(copyMessage);
       } catch {
-        toastInfo('Failed to copy to clipboard');
+        toastInfo('Failed to copy to the clipboard.');
       }
     }
   }, [projectId, secretName, showSecret, copyMessage, toastInfo]);

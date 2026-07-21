@@ -21,7 +21,7 @@ const useCopyLink = ({ link } = {}) => {
       await navigator.clipboard.writeText(link || projectEntityLink);
       setCopied(true);
       setTimeout(() => setCopied(false), COPIED_EVENT_DURATION);
-      toastInfo('The link has been copied to the clipboard');
+      toastInfo('The link has been copied to the clipboard.');
     } catch {
       setCopied(false);
       toastError('Failed to copy the link!');

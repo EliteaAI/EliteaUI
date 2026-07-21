@@ -737,6 +737,9 @@ const ChatBox = forwardRef((props, boxRef) => {
     mentionUser: content => {
       chatInput.current?.mentionUser(content);
     },
+    selectEveryoneMention: () => {
+      onSelectUserMention({ id: '@everyone', name: 'Everyone', participant: 'All users' });
+    },
     stopAll: handleStopStreaming,
   }));
   const isSendingToUser = isMentioningEveryone || selectedUsers.length > 0;
@@ -994,7 +997,6 @@ const ChatBox = forwardRef((props, boxRef) => {
       projectId,
       setAskingQuestionId,
       setChatHistory,
-      setIsMentioningEveryone,
       setSelectedUsers,
       setStreamingInfo,
       unsavedLLMSettings,
@@ -1011,7 +1013,7 @@ const ChatBox = forwardRef((props, boxRef) => {
         if (message.exception) {
           try {
             await navigator.clipboard.writeText(JSON.stringify(message.exception));
-            toastInfo('The exception has been copied.');
+            toastInfo('The exception has been copied to the clipboard.');
           } catch {
             toastError('Failed to copy the exception!');
           }
@@ -1041,7 +1043,7 @@ const ChatBox = forwardRef((props, boxRef) => {
 
           try {
             await navigator.clipboard.writeText(contentToCopy);
-            toastInfo('The message has been copied.');
+            toastInfo('The message has been copied to the clipboard.');
           } catch {
             toastError('Failed to copy the message!');
           }
@@ -1641,11 +1643,18 @@ const ChatBox = forwardRef((props, boxRef) => {
           '@' + user.name + ' ',
         );
       }
+      if (user.id === '@everyone') {
+        setIsMentioningEveryone(true);
+        onClearActiveParticipant();
+        setSelectedUsers([]);
+      } else {
+        setSelectedUsers(prev => [...prev.filter(u => u.user?.id !== user.id), { user, isValid: true }]);
+      }
       stopProcessingAtSymbol();
     },
     // atAnchorRef is a ref — stable, no dep needed
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [atQuery, stopProcessingAtSymbol],
+    [atQuery, stopProcessingAtSymbol, onClearActiveParticipant],
   );
 
   const onResendQuestionStream = useCallback(
@@ -1740,26 +1749,28 @@ const ChatBox = forwardRef((props, boxRef) => {
   }, []);
   const { fetchOriginalDetails, isFetchingParticipant, fetchOriginalVersionDetails } =
     useFetchParticipantDetails();
-  const users = useMemo(
-    () => [
-      ...(activeConversation?.participants
-        ?.filter(
-          participant =>
-            participant.entity_name === ChatParticipantType.Users && participant.entity_meta?.id !== userId,
-        )
-        .map(participant => ({
-          id: participant.id,
-          name: participant.meta.user_name,
-          participant,
-        })) || []),
-      {
+  const users = useMemo(() => {
+    const userParticipants = (activeConversation?.participants || [])
+      .filter(
+        participant =>
+          participant.entity_name === ChatParticipantType.Users && participant.entity_meta?.id !== userId,
+      )
+      .map(participant => ({
+        id: participant.id,
+        name: participant.meta.user_name,
+        participant,
+      }));
+
+    if (userParticipants.length > 0) {
+      userParticipants.push({
         id: '@everyone',
         name: 'Everyone',
         participant: 'All users',
-      },
-    ],
-    [activeConversation?.participants, userId],
-  );
+      });
+    }
+
+    return userParticipants;
+  }, [activeConversation?.participants, userId]);
 
   const hasOtherUsers = useMemo(
     () =>
@@ -1843,21 +1854,20 @@ const ChatBox = forwardRef((props, boxRef) => {
 
   const onMentionChange = useCallback(
     mentions => {
-      const mentionedEveryone = mentions.find(mention => mention.user?.id === '@everyone');
-      if (mentionedEveryone) {
-        setIsMentioningEveryone(true);
-        onClearActiveParticipant();
-        setSelectedUsers([]);
-      } else {
-        const mentionedUsers = mentions.filter(mention => mention.isValid && mention.user);
-        if (mentionedUsers.length > 0) {
-          onClearActiveParticipant();
-          setIsMentioningEveryone(false);
-        } else {
-          setIsMentioningEveryone(false);
-        }
-        setSelectedUsers(mentionedUsers);
+      // isMentioningEveryone is only ever SET by onSelectUserMention (dropdown confirmation).
+      // Here we only CLEAR it when the @Everyone text has been deleted from the input.
+      const everyoneStillPresent = mentions.some(mention => mention.user?.id === '@everyone');
+      if (!everyoneStillPresent) {
+        setIsMentioningEveryone(false);
       }
+
+      const mentionedUsers = mentions.filter(
+        mention => mention.isValid && mention.user && mention.user.id !== '@everyone',
+      );
+      if (mentionedUsers.length > 0) {
+        onClearActiveParticipant();
+      }
+      setSelectedUsers(mentionedUsers);
     },
     [onClearActiveParticipant],
   );

@@ -156,7 +156,7 @@ const ConversationItem = memo(props => {
 
     await navigator.clipboard.writeText(destinationUrl);
 
-    toastInfo('The link has been copied to the clipboard');
+    toastInfo('The link has been copied to the clipboard.');
   }, [conversation, projectId, toastInfo]);
 
   const menuItems = useMemo(() => {

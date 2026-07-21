@@ -644,7 +644,7 @@ const ToolBaseProperty = memo(props => {
             onBlur={() => toggleFieldFocus(null)}
             {...(isNameField && {
               hasActionsToolBar: true,
-              copyMessage: 'The name has been copied.',
+              copyMessage: 'The name has been copied to the clipboard.',
               showFullScreenAction: false,
               showExpandAction: false,
             })}

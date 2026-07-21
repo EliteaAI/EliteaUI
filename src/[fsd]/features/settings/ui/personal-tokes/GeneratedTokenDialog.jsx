@@ -20,7 +20,7 @@ const GeneratedTokenDialog = memo(props => {
 
   const onCopy = useCallback(() => {
     handleCopy(token);
-    toastInfo('The token has been copied.');
+    toastInfo('The token has been copied to the clipboard.');
     setButtonTitle('Copied!');
     setDisabledCopy(true);
     setTimeout(() => {

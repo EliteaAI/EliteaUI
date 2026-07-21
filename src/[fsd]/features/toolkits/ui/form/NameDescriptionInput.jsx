@@ -78,7 +78,7 @@ const NameDescriptionInput = memo(props => {
               onFocus={() => toggleFieldFocus(PROMPT_PAYLOAD_KEY.name)}
               onBlur={() => toggleFieldFocus(null)}
               hasActionsToolBar
-              copyMessage="The name has been copied."
+              copyMessage="The name has been copied to the clipboard."
               showFullScreenAction={false}
               showExpandAction={false}
             />

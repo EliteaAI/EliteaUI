@@ -18,7 +18,7 @@ const ModalMessage = memo(props => {
   const onCopy = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(message);
-      toastInfo('The content has been copied to the clipboard');
+      toastInfo('The content has been copied to the clipboard.');
     } catch {
       toastError('Failed to copy the content!');
       return;

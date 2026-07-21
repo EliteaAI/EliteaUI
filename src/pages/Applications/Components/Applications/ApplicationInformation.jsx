@@ -82,7 +82,7 @@ const ApplicationInformation = memo(props => {
               label={`${entityTitle} ID:`}
               value={id}
               tooltip="Copy ID"
-              copyMessage="The ID has been copied."
+              copyMessage="The ID has been copied to the clipboard."
               data-testid="copy-id"
             />
             {versionId !== undefined && (
@@ -91,7 +91,7 @@ const ApplicationInformation = memo(props => {
                 label="Version ID:"
                 value={versionId}
                 tooltip="Copy version ID"
-                copyMessage="The Version ID has been copied."
+                copyMessage="The Version ID has been copied to the clipboard."
               />
             )}
             {isPipeline && triggerData?.type && (
@@ -107,7 +107,7 @@ const ApplicationInformation = memo(props => {
                 label="Schedule:"
                 value={triggerData.cron}
                 tooltip="Copy cron expression"
-                copyMessage="The cron expression has been copied."
+                copyMessage="The cron expression has been copied to the clipboard."
               />
             )}
             {isPipeline && triggerData?.type === 'schedule' && triggerData?.timezone && (

@@ -572,7 +572,7 @@ const NewChat = props => {
           activeConversation?.isNew || !activeConversation?.id
             ? newConversationViewRef.current
             : boxRef.current;
-        shouldMentionUser && mentionTarget?.mentionUser?.(`@Everyone `);
+        shouldMentionUser && mentionTarget?.selectEveryoneMention?.();
         return;
       }
 
