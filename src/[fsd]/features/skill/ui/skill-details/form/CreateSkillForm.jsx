@@ -188,7 +188,7 @@ const CreateSkillForm = memo(props => {
                       containerProps={{ flex: 1 }}
                       enableAutoBlur={false}
                       hasActionsToolBar
-                      copyMessage="The name has been copied."
+                      copyMessage="The name has been copied to the clipboard."
                       showFullScreenAction={false}
                       showExpandAction={false}
                     />

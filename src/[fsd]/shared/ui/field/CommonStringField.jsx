@@ -61,7 +61,7 @@ const CommonStringField = memo(props => {
   const handleCopyToClipboard = useCallback(
     value => {
       navigator.clipboard.writeText(value).then(() => {
-        toastInfo('Content copied to clipboard');
+        toastInfo('The content has been copied to the clipboard.');
       });
     },
     [toastInfo],

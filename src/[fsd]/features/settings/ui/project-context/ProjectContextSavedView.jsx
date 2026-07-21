@@ -41,7 +41,7 @@ const ProjectContextSavedView = memo(props => {
 
   const handleCopy = useCallback(() => {
     navigator.clipboard.writeText(content).then(
-      () => toastInfo('The content has been copied.'),
+      () => toastInfo('The content has been copied to the clipboard.'),
       () => toastError('Failed to copy to clipboard'),
     );
   }, [content, toastInfo, toastError]);

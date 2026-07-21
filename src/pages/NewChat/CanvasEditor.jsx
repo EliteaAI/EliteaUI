@@ -234,7 +234,7 @@ const CanvasEditor = forwardRef(
         [GA_EVENT_PARAMS.TIMESTAMP]: new Date().toISOString(),
       });
 
-      toastInfo('The code is copied to clipboard');
+      toastInfo('The code has been copied to the clipboard.');
     }, [selectedCodeBlockInfo?.language, trackEvent, toastInfo]);
 
     const onUndo = useCallback(() => {

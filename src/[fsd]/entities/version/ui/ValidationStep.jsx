@@ -149,7 +149,7 @@ const ValidationResult = memo(({ result, entityLabel = 'agent' }) => {
   const handleCopy = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(plainText);
-      toastInfo('The content has been copied to the clipboard');
+      toastInfo('The content has been copied to the clipboard.');
     } catch {
       toastError('Failed to copy the content!');
     }

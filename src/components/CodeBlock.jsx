@@ -49,7 +49,7 @@ const CodeBlock = ({
   const { isBlockEditing, blockId } = useCheckIsBlockEditing(canvasId, selectedCodeBlockInfo);
   const onCopy = useCallback(async () => {
     await navigator.clipboard.writeText(markedToken.text);
-    toastInfo('The code has been copied into clipboard');
+    toastInfo('The code has been copied to the clipboard.');
   }, [markedToken.text, toastInfo]);
   const { onClickCopy } = useCopyDownloadHandlers({ onCopy });
 

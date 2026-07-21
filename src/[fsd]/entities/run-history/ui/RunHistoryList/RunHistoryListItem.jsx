@@ -77,7 +77,7 @@ const RunHistoryListItem = memo(props => {
     await navigator.clipboard.writeText(destinationUrl);
 
     setLinkCopied(true);
-    toastInfo('The link has been copied to the clipboard');
+    toastInfo('The link has been copied to the clipboard.');
 
     setTimeout(() => {
       setLinkCopied(false);
