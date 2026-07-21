@@ -45,6 +45,7 @@ import { IndexScheduleModal } from '@/[fsd]/features/toolkits/indexes/ui';
 import { ToolkitChatHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useGetCurrentToolkitSchemas, useToolkitChat } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
+import IndexBreadcrumb from '@/[fsd]/pages/indexes/IndexBreadcrumb';
 import { Button as EliteaButton, Modal, Select, Switch } from '@/[fsd]/shared/ui';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
 import { useToolkitsDetailsQuery } from '@/api/toolkits.js';
@@ -57,7 +58,6 @@ import { useGetSelectedToolSchema } from '@/hooks/toolkit/useGetSelectedToolSche
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast.jsx';
 import Page404 from '@/pages/Page404.jsx';
-import IndexBreadcrumb from '@/pages/Toolkits/IndexBreadcrumb';
 import RouteDefinitions from '@/routes';
 
 const emptyToolDetail = {};

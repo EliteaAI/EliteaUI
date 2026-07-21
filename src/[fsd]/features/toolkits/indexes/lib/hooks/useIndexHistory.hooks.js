@@ -93,9 +93,7 @@ export const useIndexHistory = (progressHistoryOptions = null) => {
 
         if (isScheduled)
           return 'The system encountered an issue and was unable to complete the scheduled reindexing operation';
-        return isInitialIndex
-          ? 'The system encountered an issue and was unable to complete the indexing operation'
-          : 'The system encountered an issue and was unable to complete the reindexing operation';
+        return `The system encountered an issue and was unable to complete the ${isInitialIndex ? 'indexing' : 'reindexing'} operation`;
       };
 
       const isFailed = indexHistoryItem?.state === IndexStatuses.fail;

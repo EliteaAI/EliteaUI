@@ -14,6 +14,7 @@ import { ToolkitChatModesEnum } from '@/[fsd]/features/toolkits/lib/constants';
 import { ToolkitChatHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useToolkitChat } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
+import IndexBreadcrumb from '@/[fsd]/pages/indexes/IndexBreadcrumb';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
 import { useToolkitsDetailsQuery } from '@/api/toolkits.js';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils.jsx';
@@ -22,7 +23,6 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast.jsx';
 import { ToolTypes } from '@/pages/Applications/Components/Tools/consts';
 import Page404 from '@/pages/Page404.jsx';
-import IndexBreadcrumb from '@/pages/Toolkits/IndexBreadcrumb';
 import RouteDefinitions from '@/routes';
 
 const emptyToolDetail = {};

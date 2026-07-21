@@ -12,12 +12,12 @@ import { useGetIndexesListQuery } from '@/[fsd]/features/toolkits/indexes/api';
 import { IndexStatuses, RUN_TEST_OPERATION_TYPES } from '@/[fsd]/features/toolkits/indexes/lib/constants';
 import { selectIndexesList } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
 import { IndexChatContainer, IndexHistory } from '@/[fsd]/features/toolkits/indexes/ui';
+import IndexBreadcrumb from '@/[fsd]/pages/indexes/IndexBreadcrumb';
 import { useToolkitsDetailsQuery } from '@/api/toolkits.js';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils.jsx';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast.jsx';
 import Page404 from '@/pages/Page404.jsx';
-import IndexBreadcrumb from '@/pages/Toolkits/IndexBreadcrumb';
 import RouteDefinitions from '@/routes';
 
 const IndexHistoryPage = memo(() => {
