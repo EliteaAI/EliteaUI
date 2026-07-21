@@ -30,6 +30,7 @@ const BaseModal = memo(props => {
     alarm = false,
     confirming = false,
     'data-testid': dataTestId,
+    titleTestId,
     closeButtonTestId,
     confirmButtonTestId,
     cancelButtonTestId,
@@ -134,7 +135,10 @@ const BaseModal = memo(props => {
         id="variables-dialog-title"
         sx={styles.dialogTitle}
       >
-        <Box sx={styles.titleWrapper}>
+        <Box
+          data-testid={titleTestId}
+          sx={styles.titleWrapper}
+        >
           {isSimple && titleIcon && renderIconType(titleIcon)}
           {renderTitle()}
         </Box>

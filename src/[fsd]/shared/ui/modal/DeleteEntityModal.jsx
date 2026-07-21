@@ -100,6 +100,7 @@ const DeleteEntityModal = memo(props => {
         variant={BUTTON_VARIANTS.elitea}
         color={BUTTON_COLORS.secondary}
         onClick={e => resetButtonState(e, onClose)}
+        data-testid="delete-confirm-cancel-button"
       >
         {cancelButtonText}
       </Button.BaseBtn>
@@ -119,6 +120,7 @@ const DeleteEntityModal = memo(props => {
       variant={ModalConstants.MODAL_VARIANT.simple}
       titleIcon={titleIcon}
       title={title}
+      titleTestId="delete-confirm-title"
       content={customContent ?? contentNode}
       actions={actions ?? actionsNode}
       onClose={e => resetButtonState(e, onClose)}
