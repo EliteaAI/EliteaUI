@@ -389,7 +389,11 @@ const ConversationItem = memo(props => {
         </Box>
       </Box>
       {/* Updated icon logic based on conversation type */}
-      <Box sx={styles.conversationIconWrapper}>
+      <Box
+        data-testid="conversation-multi-user-icon"
+        data-has-icon={conversationType === 'private_with_users' || conversationType === 'public'}
+        sx={styles.conversationIconWrapper}
+      >
         {/* Always show users icon with appropriate color based on type */}
         {conversationType === 'private_with_users' && (
           <UsersIcon

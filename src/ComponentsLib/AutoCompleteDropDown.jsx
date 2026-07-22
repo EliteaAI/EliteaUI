@@ -210,7 +210,7 @@ export default function AutoCompleteDropDown({
         const { key: notUsedKey, ...optionPropsWithoutKey } = optionProps;
         return (
           <StyledChip
-            data-testid={chipTestId}
+            data-testid={typeof chipTestId === 'function' ? chipTestId(option) : chipTestId}
             label={
               <Box
                 height={'100%'}
