@@ -26,10 +26,11 @@ const CreateSkillTabBar = memo(() => {
   const { toastError } = useToast();
   const [createSkill, { isLoading, error, isError }] = useSkillCreateMutation();
   const [wantToCancel, setWantToCancel] = useState(false);
+  const [pendingNav, setPendingNav] = useState(null);
 
   const blockOptions = useMemo(
-    () => ({ blockCondition: !!formik?.dirty && !wantToCancel }),
-    [formik?.dirty, wantToCancel],
+    () => ({ blockCondition: !!formik?.dirty && !wantToCancel && !pendingNav }),
+    [formik?.dirty, wantToCancel, pendingNav],
   );
   useNavBlocker(blockOptions);
 
@@ -75,33 +76,29 @@ const CreateSkillTabBar = memo(() => {
       formik.resetForm({ values: formik.values });
       const skillId = result?.id;
 
-      // Came from an agent's "+ Skill > Create new": return to the agent with the new skill id
-      // so the SKILLS section auto-attaches it.
       const returnUrl = searchParams.get(SearchParams.ReturnUrl);
       const sourceApplicationId = searchParams.get(SearchParams.SourceApplicationId);
       if (returnUrl && sourceApplicationId && skillId) {
         const urlObj = new URL(decodeURIComponent(returnUrl), window.location.origin);
         urlObj.searchParams.set('newSkillId', String(skillId));
-        // Defer so the resetForm above clears before navigating, otherwise the
-        // unsaved-changes nav blocker intercepts the return.
-        setTimeout(() => {
-          navigate({ pathname: urlObj.pathname, search: urlObj.search }, { replace: true });
-        }, 0);
+        setPendingNav({ pathname: urlObj.pathname, search: urlObj.search });
         return;
       }
 
-      const pathname = `${RouteDefinitions.Skills}/${SkillsTabs[0]}/${skillId}`;
-      setTimeout(() => {
-        navigate(pathname, { replace: true });
-      }, 0);
+      setPendingNav({ pathname: `${RouteDefinitions.Skills}/${SkillsTabs[0]}/${skillId}` });
     } catch (e) {
       toastError(buildErrorMessage(e));
     }
-  }, [createSkill, formik, navigate, projectId, searchParams, toastError]);
+  }, [createSkill, formik, projectId, searchParams, toastError]);
 
   const onCancel = useCallback(() => {
     setWantToCancel(true);
   }, []);
+
+  useEffect(() => {
+    if (!pendingNav) return;
+    navigate(pendingNav, { replace: true });
+  }, [navigate, pendingNav]);
 
   useEffect(() => {
     if (!wantToCancel) return;
