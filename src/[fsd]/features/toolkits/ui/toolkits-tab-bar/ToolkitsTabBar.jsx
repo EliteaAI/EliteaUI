@@ -3,8 +3,10 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFormikContext } from 'formik';
 import { useSelector } from 'react-redux';
 
-import { Box, Button as MuiButton, Typography } from '@mui/material';
+import { Box, Button as MuiButton, Tooltip, Typography } from '@mui/material';
 
+import { PAT_REQUIRED_ACTION_HINT } from '@/[fsd]/features/mcp/lib/constants';
+import { useInternalMcpPatStatus } from '@/[fsd]/features/mcp/lib/hooks';
 import { selectIndexesAvailable } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
 import ToolkitsTabBarPlaceholder from '@/[fsd]/features/toolkits/ui/toolkits-tab-bar/ToolkitsTabBarPlaceholder';
 import { useFormDirtyExcluding } from '@/[fsd]/shared/lib/hooks';
@@ -37,6 +39,7 @@ const ToolkitsTabBarContainer = memo(props => {
   const { values, resetForm, initialValues } = useFormikContext();
 
   const isFormDirtyExcluding = useFormDirtyExcluding();
+  const { patInvalid } = useInternalMcpPatStatus({ projectId, toolkitType: values?.type });
 
   const isIndexesAvailable = useSelector(selectIndexesAvailable);
 
@@ -104,8 +107,9 @@ const ToolkitsTabBarContainer = memo(props => {
       isSaving ||
       !isFormDirtyExcluding ||
       reasonFor === ValidateToolEventReason.saveNewVersion ||
-      hasValidationErrors,
-    [isSaving, isFormDirtyExcluding, reasonFor, hasValidationErrors],
+      hasValidationErrors ||
+      patInvalid,
+    [isSaving, isFormDirtyExcluding, reasonFor, hasValidationErrors, patInvalid],
   );
 
   const onResetValidateEvent = useCallback(async () => {
@@ -145,15 +149,19 @@ const ToolkitsTabBarContainer = memo(props => {
   return (
     <>
       <TabBarItems>
-        <MuiButton
-          disabled={shouldDisableSave}
-          variant="elitea"
-          color="primary"
-          onClick={onClickSave}
-        >
-          {hasNotSavedCredentials ? 'Save Credentials' : 'Save'}
-          {isSaving && <StyledCircleProgress size={20} />}
-        </MuiButton>
+        <Tooltip title={patInvalid ? PAT_REQUIRED_ACTION_HINT : ''}>
+          <Box component="span">
+            <MuiButton
+              disabled={shouldDisableSave}
+              variant="elitea"
+              color="primary"
+              onClick={onClickSave}
+            >
+              {hasNotSavedCredentials ? 'Save Credentials' : 'Save'}
+              {isSaving && <StyledCircleProgress size={20} />}
+            </MuiButton>
+          </Box>
+        </Tooltip>
         <Button.DiscardButton
           disabled={isSaving || !isFormDirtyExcluding}
           onDiscard={discardApplicationChanges}

@@ -7,7 +7,9 @@ import { Box, Button as MuiButton } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { useTrackEvent } from '@/GA';
+import { PAT_REQUIRED_ACTION_HINT } from '@/[fsd]/features/mcp/lib/constants';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
+import { useInternalMcpPatStatus } from '@/[fsd]/features/mcp/lib/hooks';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
 import { Button } from '@/[fsd]/shared/ui';
 import { SearchParams } from '@/common/constants.js';
@@ -16,6 +18,7 @@ import { buildErrorMessage } from '@/common/utils.jsx';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import useCreateToolkit from '@/hooks/toolkit/useCreateToolkit.jsx';
 import useNavBlocker from '@/hooks/useNavBlocker';
+import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast.jsx';
 import { ToolEvents, ValidateToolEventReason } from '@/pages/Applications/Components/Tools/consts.js';
 import { TabBarItems } from '@/pages/Common/Components';
@@ -40,15 +43,19 @@ export default function CreateToolkitToolTabBar({
   const [wantToSave, setWantToSave] = useState(false);
   const { isLoading, create, error, isError } = useCreateToolkit(formik);
 
+  const projectId = useSelectedProjectId();
+  const { patInvalid } = useInternalMcpPatStatus({ projectId, toolkitType: formik.values?.type });
+
   //@todo: add Save button disable functionality based on the tool validation schema taking into account formik
   const shouldDisableSave = useMemo(() => {
-    return isLoading || !formik?.dirty;
-  }, [isLoading, formik?.dirty]);
+    return isLoading || !formik?.dirty || patInvalid;
+  }, [isLoading, formik?.dirty, patInvalid]);
 
   //@todo: add tooltip title for the button functionality based on the tool validation schema taking into account formik
   const tooltipTitle = useMemo(() => {
+    if (patInvalid) return PAT_REQUIRED_ACTION_HINT;
     return hasNotSavedCredentials ? 'Save credentials' : 'Save toolkit';
-  }, [hasNotSavedCredentials]);
+  }, [patInvalid, hasNotSavedCredentials]);
 
   const onSaveRef = React.useRef(create);
 
