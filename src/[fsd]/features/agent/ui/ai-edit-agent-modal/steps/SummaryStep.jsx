@@ -22,6 +22,12 @@ const normalizeToolItem = (item, entityType) => ({
   entityType: item.entity_type || entityType,
 });
 
+const resolveEntityType = item => {
+  if (item.type === 'application') return item.agent_type === 'pipeline' ? 'pipeline' : 'agent';
+  if (item.type === 'skill') return 'skill';
+  return 'toolkit';
+};
+
 const SummaryStep = memo(props => {
   const { currentData, currentTools = [], draftData, onDraftChange, fieldApplyFlags, onToggleField, toolSelections } = props;
 
@@ -45,28 +51,26 @@ const SummaryStep = memo(props => {
   );
 
   const mergedTools = useMemo(() => {
-    const removeSuggestionKeys = new Set([
-      ...(draftData?.tools_to_remove || []).map(t => `toolkit:${t.id}`),
-      ...(draftData?.skills_to_remove || []).map(s => `skill:${s.id}`),
+    const currentKeys = new Set(
+      currentTools.map(t => `${resolveEntityType(t)}:${t.id}`),
+    );
+
+    const allSuggestedKeys = new Set([
+      ...(draftData?.suggested_toolkits || []).map(t => `toolkit:${t.id}`),
+      ...(draftData?.suggested_mcp || []).map(m => `mcp:${m.id}`),
+      ...(draftData?.suggested_agents || []).map(a => `agent:${a.id}`),
+      ...(draftData?.suggested_pipelines || []).map(p => `pipeline:${p.id}`),
+      ...(draftData?.suggested_skills || []).map(s => `skill:${s.id}`),
     ]);
 
     const kept = currentTools
       .filter(t => {
-        const type = t.type === 'application' ? 'agent' : (t.type === 'skill' ? 'skill' : 'toolkit');
-        const key = `${type}:${t.id}`;
-        if (removeSuggestionKeys.has(key)) {
-          return !toolSelections?.toRemove?.has(key);
-        }
-        return toolSelections?.toKeep?.has(key);
+        const key = `${resolveEntityType(t)}:${t.id}`;
+        if (allSuggestedKeys.has(key)) return toolSelections?.toKeep?.has(key);
+        return !toolSelections?.toRemove?.has(key);
       })
-      .map(item => normalizeToolItem(item, item.type === 'application' ? 'agent' : (item.type === 'skill' ? 'skill' : 'toolkit')));
+      .map(item => normalizeToolItem(item, resolveEntityType(item)));
 
-    const currentKeys = new Set(
-      currentTools.map(t => {
-        const type = t.type === 'application' ? 'agent' : (t.type === 'skill' ? 'skill' : 'toolkit');
-        return `${type}:${t.id}`;
-      }),
-    );
     const addItems = [
       ...(draftData?.suggested_toolkits || []).map(item => normalizeToolItem(item, 'toolkit')),
       ...(draftData?.suggested_mcp || []).map(item => normalizeToolItem(item, 'mcp')),

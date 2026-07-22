@@ -44,8 +44,7 @@ export const computeVisibleSteps = (currentData, draftData) => {
     hasArrayItems(draftData.suggested_agents) ||
     hasArrayItems(draftData.suggested_pipelines) ||
     hasArrayItems(draftData.suggested_skills) ||
-    hasArrayItems(draftData.tools_to_remove) ||
-    hasArrayItems(draftData.skills_to_remove);
+    hasArrayItems(currentData?.version_details?.tools);
 
   if (hasToolSuggestions)
     steps.push({ key: EDIT_STEP_KEYS.TOOLS_SKILLS, label: STEP_LABELS[EDIT_STEP_KEYS.TOOLS_SKILLS] });

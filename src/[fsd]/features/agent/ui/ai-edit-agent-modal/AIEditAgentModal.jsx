@@ -104,6 +104,12 @@ const AIEditAgentModal = memo(props => {
     [generateDraft, projectId, formik.values],
   );
 
+  const resolveEntityType = useCallback(item => {
+    if (item.type === 'application') return item.agent_type === 'pipeline' ? 'pipeline' : 'agent';
+    if (item.type === 'skill') return 'skill';
+    return 'toolkit';
+  }, []);
+
   const handleDraftGenerated = useCallback(
     draftData => {
       const visibleSteps = AgentAIEditionStepsHelpers.computeVisibleSteps(currentDataRef.current, draftData);
@@ -111,50 +117,35 @@ const AIEditAgentModal = memo(props => {
       setSteps(visibleSteps);
       setFieldApplyFlags({ ...DEFAULT_FIELD_FLAGS });
 
-      const removeIds = new Set([
-        ...(draftData.tools_to_remove || []).map(t => `toolkit:${t.id}`),
-        ...(draftData.skills_to_remove || []).map(s => `skill:${s.id}`),
-      ]);
-
-      const snapshotTools = currentDataRef.current?.version_details?.tools || [];
+      const snapshotTools = (currentDataRef.current?.version_details?.tools || []).map(t =>
+        t.type === 'application' ? { ...t, id: t.settings?.application_id ?? t.id } : t,
+      );
       const snapshotSkills = (applicationSkills?.skills || []).map(s => ({
         ...s,
         id: s.skill_id,
         type: 'skill',
       }));
       const allCurrentTools = [...snapshotTools, ...snapshotSkills];
+
       const currentKeys = new Set(
-        allCurrentTools.map(t => {
-          const type = t.type === 'application' ? 'agent' : t.type === 'skill' ? 'skill' : 'toolkit';
-          return `${type}:${t.id}`;
-        }),
+        allCurrentTools.map(t => `${resolveEntityType(t)}:${t.id}`),
       );
 
-      const addIds = new Set(
-        [
-          ...(draftData.suggested_toolkits || []).map(t => `toolkit:${t.id}`),
-          ...(draftData.suggested_mcp || []).map(m => `mcp:${m.id}`),
-          ...(draftData.suggested_agents || []).map(a => `agent:${a.id}`),
-          ...(draftData.suggested_pipelines || []).map(p => `pipeline:${p.id}`),
-          ...(draftData.suggested_skills || []).map(s => `skill:${s.id}`),
-        ].filter(key => !currentKeys.has(key)),
-      );
+      const allSuggestedKeys = new Set([
+        ...(draftData.suggested_toolkits || []).map(t => `toolkit:${t.id}`),
+        ...(draftData.suggested_mcp || []).map(m => `mcp:${m.id}`),
+        ...(draftData.suggested_agents || []).map(a => `agent:${a.id}`),
+        ...(draftData.suggested_pipelines || []).map(p => `pipeline:${p.id}`),
+        ...(draftData.suggested_skills || []).map(s => `skill:${s.id}`),
+      ]);
 
-      const keepIds = new Set(
-        allCurrentTools
-          .filter(t => {
-            const type = t.type === 'application' ? 'agent' : t.type === 'skill' ? 'skill' : 'toolkit';
-            return !removeIds.has(`${type}:${t.id}`);
-          })
-          .map(t => {
-            const type = t.type === 'application' ? 'agent' : t.type === 'skill' ? 'skill' : 'toolkit';
-            return `${type}:${t.id}`;
-          }),
-      );
+      const addIds = new Set([...allSuggestedKeys].filter(key => !currentKeys.has(key)));
+      const keepIds = new Set([...allSuggestedKeys].filter(key => currentKeys.has(key)));
+      const removeIds = new Set([...currentKeys].filter(key => !allSuggestedKeys.has(key)));
 
       setToolSelections({ toAdd: addIds, toRemove: removeIds, toKeep: keepIds });
     },
-    [applicationSkills?.skills],
+    [applicationSkills?.skills, resolveEntityType],
   );
 
   const handleToggleField = useCallback(field => {
@@ -178,12 +169,9 @@ const AIEditAgentModal = memo(props => {
 
       if (!versionId) return;
 
-      const removeSuggestionKeys = new Set([
-        ...(draftData.tools_to_remove || []).map(t => `toolkit:${t.id}`),
-        ...(draftData.skills_to_remove || []).map(s => `skill:${s.id}`),
-      ]);
-
-      const snapshotTools = formik.values.version_details?.tools || [];
+      const snapshotTools = (formik.values.version_details?.tools || []).map(t =>
+        t.type === 'application' ? { ...t, id: t.settings?.application_id ?? t.id } : t,
+      );
       const snapshotSkills = (applicationSkills?.skills || []).map(s => ({
         ...s,
         id: s.skill_id,
@@ -191,54 +179,50 @@ const AIEditAgentModal = memo(props => {
       }));
       const allCurrent = [...snapshotTools, ...snapshotSkills];
 
-      const uncheckedKeepToolkits = [];
-      const uncheckedKeepApps = [];
-      const uncheckedKeepSkills = [];
+      const allSuggestedKeys = new Set([
+        ...(draftData.suggested_toolkits || []).map(t => `toolkit:${t.id}`),
+        ...(draftData.suggested_mcp || []).map(m => `mcp:${m.id}`),
+        ...(draftData.suggested_agents || []).map(a => `agent:${a.id}`),
+        ...(draftData.suggested_pipelines || []).map(p => `pipeline:${p.id}`),
+        ...(draftData.suggested_skills || []).map(s => `skill:${s.id}`),
+      ]);
+
+      const toolkitsToRemove = [];
+      const appsToRemove = [];
+      const skillsToRemove = [];
 
       allCurrent.forEach(t => {
-        const type = t.type === 'application' ? 'agent' : t.type === 'skill' ? 'skill' : 'toolkit';
+        const type = resolveEntityType(t);
         const key = `${type}:${t.id}`;
-        if (removeSuggestionKeys.has(key) || toolSelections.toKeep.has(key)) return;
-        if (type === 'skill') uncheckedKeepSkills.push(t);
-        else if (t.type === 'application') uncheckedKeepApps.push(t);
-        else uncheckedKeepToolkits.push(t);
+
+        const shouldRemove = allSuggestedKeys.has(key)
+          ? !toolSelections.toKeep.has(key)
+          : toolSelections.toRemove.has(key);
+
+        if (!shouldRemove) return;
+
+        if (type === 'skill') skillsToRemove.push(t);
+        else if (t.type === 'application') appsToRemove.push(t);
+        else toolkitsToRemove.push(t);
       });
 
-      const selectedAddToolkits = [
+      const toolkitsToAdd = [
         ...(draftData.suggested_toolkits || []).filter(t => toolSelections.toAdd.has(`toolkit:${t.id}`)),
         ...(draftData.suggested_mcp || []).filter(m => toolSelections.toAdd.has(`mcp:${m.id}`)),
       ];
 
-      const selectedAddAgents = (draftData.suggested_agents || []).filter(a =>
-        toolSelections.toAdd.has(`agent:${a.id}`),
-      );
+      const appsToAdd = [
+        ...(draftData.suggested_agents || []).filter(a => toolSelections.toAdd.has(`agent:${a.id}`)),
+        ...(draftData.suggested_pipelines || []).filter(p => toolSelections.toAdd.has(`pipeline:${p.id}`)),
+      ];
 
-      const selectedAddPipelines = (draftData.suggested_pipelines || []).filter(p =>
-        toolSelections.toAdd.has(`pipeline:${p.id}`),
-      );
-
-      const selectedAddSkills = (draftData.suggested_skills || []).filter(s =>
+      const skillsToAdd = (draftData.suggested_skills || []).filter(s =>
         toolSelections.toAdd.has(`skill:${s.id}`),
       );
 
-      const selectedRemoveToolkits = (draftData.tools_to_remove || []).filter(t =>
-        toolSelections.toRemove.has(`toolkit:${t.id}`),
-      );
-
-      const selectedRemoveSkills = (draftData.skills_to_remove || []).filter(s =>
-        toolSelections.toRemove.has(`skill:${s.id}`),
-      );
-
-      const allToolkitsToAdd = selectedAddToolkits;
-      const allToolkitsToRemove = [...selectedRemoveToolkits, ...uncheckedKeepToolkits];
-      const allAppsToAdd = [...selectedAddAgents, ...selectedAddPipelines];
-      const allAppsToRemove = uncheckedKeepApps;
-      const allSkillsToAdd = selectedAddSkills;
-      const allSkillsToRemove = [...selectedRemoveSkills, ...uncheckedKeepSkills];
-
-      if (allToolkitsToAdd.length > 0) {
+      if (toolkitsToAdd.length > 0) {
         await Promise.allSettled(
-          allToolkitsToAdd.map(t =>
+          toolkitsToAdd.map(t =>
             associateToolkit({
               projectId,
               toolkitId: t.id,
@@ -251,9 +235,9 @@ const AIEditAgentModal = memo(props => {
         );
       }
 
-      if (allToolkitsToRemove.length > 0) {
+      if (toolkitsToRemove.length > 0) {
         await Promise.allSettled(
-          allToolkitsToRemove.map(t =>
+          toolkitsToRemove.map(t =>
             associateToolkit({
               projectId,
               toolkitId: t.id,
@@ -266,9 +250,9 @@ const AIEditAgentModal = memo(props => {
         );
       }
 
-      if (allAppsToAdd.length > 0) {
+      if (appsToAdd.length > 0) {
         const results = await Promise.allSettled(
-          allAppsToAdd.map(async a => {
+          appsToAdd.map(async a => {
             const { data: appDetails } = await fetchApplicationDetails({
               projectId,
               applicationId: a.id,
@@ -300,9 +284,9 @@ const AIEditAgentModal = memo(props => {
           });
       }
 
-      if (allAppsToRemove.length > 0) {
+      if (appsToRemove.length > 0) {
         await Promise.allSettled(
-          allAppsToRemove.map(async a => {
+          appsToRemove.map(async a => {
             const { data: appDetails } = await fetchApplicationDetails({
               projectId,
               applicationId: a.id,
@@ -321,9 +305,9 @@ const AIEditAgentModal = memo(props => {
         );
       }
 
-      if (allSkillsToAdd.length > 0) {
+      if (skillsToAdd.length > 0) {
         await Promise.allSettled(
-          allSkillsToAdd.map(async skill => {
+          skillsToAdd.map(async skill => {
             const { data: skillDetails } = await fetchSkillDetails({
               projectId,
               skillId: skill.id,
@@ -342,9 +326,9 @@ const AIEditAgentModal = memo(props => {
         );
       }
 
-      if (allSkillsToRemove.length > 0) {
+      if (skillsToRemove.length > 0) {
         await Promise.allSettled(
-          allSkillsToRemove.map(async skill => {
+          skillsToRemove.map(async skill => {
             const { data: skillDetails } = await fetchSkillDetails({
               projectId,
               skillId: skill.id,
@@ -367,6 +351,7 @@ const AIEditAgentModal = memo(props => {
       formik.values,
       toolSelections,
       applicationSkills?.skills,
+      resolveEntityType,
       associateToolkit,
       updateApplicationRelation,
       updateSkillRelation,
@@ -490,7 +475,9 @@ const AIEditAgentModal = memo(props => {
   const currentData = currentDataRef.current || formik.values;
 
   const currentTools = useMemo(() => {
-    const tools = currentData?.version_details?.tools || [];
+    const tools = (currentData?.version_details?.tools || []).map(t =>
+      t.type === 'application' ? { ...t, id: t.settings?.application_id ?? t.id } : t,
+    );
     const skills = (applicationSkills?.skills || []).map(s => ({ ...s, id: s.skill_id, type: 'skill' }));
     return [...tools, ...skills];
   }, [currentData?.version_details?.tools, applicationSkills?.skills]);

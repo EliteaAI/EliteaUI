@@ -12,66 +12,47 @@ const normalizeToolItem = (item, entityType) => ({
   entityType: item.entity_type || entityType,
 });
 
+const resolveEntityType = item => {
+  if (item.type === 'application') return item.agent_type === 'pipeline' ? 'pipeline' : 'agent';
+  if (item.type === 'skill') return 'skill';
+  return 'toolkit';
+};
+
 const ToolsSkillsStep = memo(props => {
   const { currentTools = [], draftData, toolSelections, onToggleTool } = props;
 
-  const removeItems = useMemo(
+  const allSuggestedItems = useMemo(
     () => [
-      ...(draftData.tools_to_remove || []).map(item => normalizeToolItem(item, 'toolkit')),
-      ...(draftData.skills_to_remove || []).map(item => normalizeToolItem(item, 'skill')),
-    ],
-    [draftData.tools_to_remove, draftData.skills_to_remove],
-  );
-
-  const addItems = useMemo(() => {
-    const currentKeys = new Set(
-      currentTools.map(t => {
-        const type = t.type === 'application' ? 'agent' : t.type === 'skill' ? 'skill' : 'toolkit';
-        return `${type}:${t.id}`;
-      }),
-    );
-    return [
       ...(draftData.suggested_toolkits || []).map(item => normalizeToolItem(item, 'toolkit')),
       ...(draftData.suggested_mcp || []).map(item => normalizeToolItem(item, 'mcp')),
       ...(draftData.suggested_agents || []).map(item => normalizeToolItem(item, 'agent')),
       ...(draftData.suggested_pipelines || []).map(item => normalizeToolItem(item, 'pipeline')),
       ...(draftData.suggested_skills || []).map(item => normalizeToolItem(item, 'skill')),
-    ].filter(item => !currentKeys.has(`${item.entityType}:${item.id}`));
-  }, [
-    currentTools,
-    draftData.suggested_toolkits,
-    draftData.suggested_mcp,
-    draftData.suggested_agents,
-    draftData.suggested_pipelines,
-    draftData.suggested_skills,
-  ]);
+    ],
+    [
+      draftData.suggested_toolkits,
+      draftData.suggested_mcp,
+      draftData.suggested_agents,
+      draftData.suggested_pipelines,
+      draftData.suggested_skills,
+    ],
+  );
 
-  const keepItems = useMemo(() => {
-    if (!currentTools.length) return [];
+  const { addItems, keepItems, removeItems } = useMemo(() => {
+    const currentKeys = new Set(currentTools.map(t => `${resolveEntityType(t)}:${t.id}`));
+    const suggestedKeys = new Set(allSuggestedItems.map(item => `${item.entityType}:${item.id}`));
 
-    const removeKeys = new Set(removeItems.map(i => `${i.entityType}:${i.id}`));
-
-    return currentTools
-      .filter(t => {
-        const type = t.type === 'application' ? 'agent' : t.type === 'skill' ? 'skill' : 'toolkit';
-        return !removeKeys.has(`${type}:${t.id}`);
-      })
-      .map(item =>
-        normalizeToolItem(
-          item,
-          item.type === 'application' ? 'agent' : item.type === 'skill' ? 'skill' : 'toolkit',
-        ),
-      );
-  }, [currentTools, removeItems]);
+    return {
+      addItems: allSuggestedItems.filter(item => !currentKeys.has(`${item.entityType}:${item.id}`)),
+      keepItems: allSuggestedItems.filter(item => currentKeys.has(`${item.entityType}:${item.id}`)),
+      removeItems: currentTools
+        .filter(t => !suggestedKeys.has(`${resolveEntityType(t)}:${t.id}`))
+        .map(item => normalizeToolItem(item, resolveEntityType(item))),
+    };
+  }, [currentTools, allSuggestedItems]);
 
   const currentItemsNormalized = useMemo(
-    () =>
-      currentTools.map(item =>
-        normalizeToolItem(
-          item,
-          item.type === 'application' ? 'agent' : item.type === 'skill' ? 'skill' : 'toolkit',
-        ),
-      ),
+    () => currentTools.map(item => normalizeToolItem(item, resolveEntityType(item))),
     [currentTools],
   );
 
@@ -82,48 +63,19 @@ const ToolsSkillsStep = memo(props => {
           <Box sx={styles.cardList}>
             {currentItemsNormalized.map(item => (
               <ToolItemCard
-                key={item.id}
+                key={`${item.entityType}:${item.id}`}
                 item={item}
                 entityType={item.entityType}
               />
             ))}
             {currentItemsNormalized.length === 0 && (
-              <Typography sx={styles.emptyText}>No tools or skills attached</Typography>
+              <Typography sx={styles.emptyText}>No tools, agents, pipelines or skills attached</Typography>
             )}
           </Box>
         </Box>
       }
       suggestedContent={
         <Box sx={styles.suggestedColumn}>
-          {removeItems.length > 0 && (
-            <Box sx={styles.section}>
-              <Typography sx={styles.sectionLabel}>Suggested to Remove:</Typography>
-              <Box sx={styles.cardList}>
-                {removeItems.map(item => {
-                  const toolKey = `${item.entityType}:${item.id}`;
-                  return (
-                    <Box
-                      key={toolKey}
-                      sx={styles.checkboxRow}
-                      onClick={() => onToggleTool('toRemove', toolKey)}
-                    >
-                      <BaseCheckbox
-                        size="small"
-                        checked={toolSelections.toRemove.has(toolKey)}
-                        onChange={() => onToggleTool('toRemove', toolKey)}
-                        onClick={e => e.stopPropagation()}
-                        sx={styles.checkbox}
-                      />
-                      <ToolItemCard
-                        item={item}
-                        entityType={item.entityType}
-                      />
-                    </Box>
-                  );
-                })}
-              </Box>
-            </Box>
-          )}
           {addItems.length > 0 && (
             <Box sx={styles.section}>
               <Typography sx={styles.sectionLabel}>Suggested to Add:</Typography>
@@ -169,6 +121,35 @@ const ToolsSkillsStep = memo(props => {
                         size="small"
                         checked={toolSelections.toKeep?.has(toolKey) ?? true}
                         onChange={() => onToggleTool('toKeep', toolKey)}
+                        onClick={e => e.stopPropagation()}
+                        sx={styles.checkbox}
+                      />
+                      <ToolItemCard
+                        item={item}
+                        entityType={item.entityType}
+                      />
+                    </Box>
+                  );
+                })}
+              </Box>
+            </Box>
+          )}
+          {removeItems.length > 0 && (
+            <Box sx={styles.section}>
+              <Typography sx={styles.sectionLabel}>Suggested to Remove:</Typography>
+              <Box sx={styles.cardList}>
+                {removeItems.map(item => {
+                  const toolKey = `${item.entityType}:${item.id}`;
+                  return (
+                    <Box
+                      key={toolKey}
+                      sx={styles.checkboxRow}
+                      onClick={() => onToggleTool('toRemove', toolKey)}
+                    >
+                      <BaseCheckbox
+                        size="small"
+                        checked={toolSelections.toRemove.has(toolKey)}
+                        onChange={() => onToggleTool('toRemove', toolKey)}
                         onClick={e => e.stopPropagation()}
                         sx={styles.checkbox}
                       />

@@ -1,6 +1,6 @@
 import { memo, useCallback, useMemo } from 'react';
 
-import { Box, IconButton, Typography, useTheme } from '@mui/material';
+import { Box, IconButton, Tooltip, Typography, useTheme } from '@mui/material';
 
 import OpenNewIcon from '@/assets/open-new-icon.svg?react';
 import { SearchParams } from '@/common/constants';
@@ -30,19 +30,37 @@ const ToolItemCard = memo(props => {
   const showSecondary = secondaryText && secondaryText !== item.name;
   const resolvedEntityType = entityType === 'toolkit' ? undefined : entityType;
   const typeLabel = ENTITY_TYPE_LABELS[entityType] || entityType;
+  const openTooltipText = `Open ${typeLabel.toLowerCase()} in new tab`;
+
+  const isDisabled = item.type === 'application'
+    ? !item.settings?.application_id
+    : !item.id;
 
   const handleOpenClick = useCallback(
     e => {
       e.stopPropagation();
       const baseUrl = `${window.location.protocol}//${window.location.host}`;
       const basename = getBasename();
-      const routeMap = { toolkit: 'toolkits', mcp: 'mcps', agent: 'agents', pipeline: 'pipelines', skill: 'skills' };
-      const route = routeMap[entityType] || 'agents';
       const viewMode = new URLSearchParams(window.location.search).get(SearchParams.ViewMode);
-      const url = `${baseUrl}${basename}/${route}/all/${item.id}?${SearchParams.ViewMode}=${viewMode}&name=${encodeURIComponent(item.name)}`;
-      window.open(url, '_blank');
+      const nameParam = encodeURIComponent(item.name);
+
+      if (item.type === 'application') {
+        const entityId = item.settings?.application_id;
+        const versionId = item.settings?.application_version_id;
+        const route = item.agent_type === 'pipeline' ? 'pipelines' : 'agents';
+        if (!entityId) return;
+        let url = `${baseUrl}${basename}/${route}/all/${entityId}`;
+        if (versionId) url += `/${versionId}`;
+        url += `?${SearchParams.ViewMode}=${viewMode}&name=${nameParam}`;
+        window.open(url, '_blank');
+      } else {
+        const routeMap = { toolkit: 'toolkits', mcp: 'mcps', agent: 'agents', pipeline: 'pipelines', skill: 'skills' };
+        const route = routeMap[entityType] || 'agents';
+        const url = `${baseUrl}${basename}/${route}/all/${item.id}?${SearchParams.ViewMode}=${viewMode}&name=${nameParam}`;
+        window.open(url, '_blank');
+      }
     },
-    [entityType, item.id, item.name],
+    [entityType, item],
   );
 
   return (
@@ -69,14 +87,22 @@ const ToolItemCard = memo(props => {
         )}
       </Box>
 
-      <IconButton
-        className="open-link-btn"
-        size="small"
-        onClick={handleOpenClick}
-        sx={styles.openLinkBtn}
+      <Tooltip
+        title={openTooltipText}
+        placement="top"
       >
-        <OpenNewIcon />
-      </IconButton>
+        <IconButton
+          className="open-link-btn"
+          variant="elitea"
+          color="tertiary"
+          size="small"
+          onClick={handleOpenClick}
+          disabled={isDisabled}
+          sx={styles.openLinkBtn}
+        >
+          <OpenNewIcon sx={styles.openLinkIcon} fill={!isDisabled ? theme.palette.icon.fill.default : theme.palette.icon.fill.disabled} />
+        </IconButton>
+      </Tooltip>
 
       <Box sx={styles.typeBadge}>
         <Typography sx={styles.typeBadgeText}>{typeLabel}</Typography>
@@ -127,12 +153,10 @@ const styles = {
     color: 'text.primary',
   },
   openLinkBtn: {
-    padding: '0.375rem',
-    color: 'text.primary',
     flexShrink: 0,
-    '&:hover': {
-      backgroundColor: 'transparent',
-    },
+  },
+  openLinkIcon: {
+    fontSize: '1rem',
   },
   typeBadge: ({ palette }) => ({
     display: 'flex',
