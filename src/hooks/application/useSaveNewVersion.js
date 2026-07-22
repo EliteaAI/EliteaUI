@@ -8,12 +8,12 @@ import {
   ORIENTATION,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/constants/flowEditor.constants';
 import { useSaveApplicationNewVersionMutation } from '@/api/applications';
+import clearTools, { filterEmptyStrings } from '@/common/applicationUtils';
 import { buildErrorMessage, replaceVersionInPath } from '@/common/utils';
 import { useNameFromUrl, useViewModeFromUrl } from '@/hooks/useSearchParamValue';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useSavePipeline, { calculateNodesAndEdges } from '@/pages/Pipelines/useSavePipeline';
 
-import clearTools from '../../common/applicationUtils';
 import useNavBlocker from '../useNavBlocker';
 import useSaveChangedTools from './useSaveChangedTools';
 
@@ -121,6 +121,7 @@ const useSaveNewVersion = ({
       const result = await saveNewVersion({
         ...(versionDetails || {}),
         tools: clearTools(versionDetails?.tools),
+        conversation_starters: filterEmptyStrings(versionDetails?.conversation_starters),
         copy_skills_from_version_id: sourceVersionId,
         name: newVersionName,
         projectId: selectedProjectId,

@@ -3,7 +3,6 @@ import { useCallback, useMemo } from 'react';
 import { useFormikContext } from 'formik';
 import { useSelector } from 'react-redux';
 
-import { conversationStartersHelpers } from '@/[fsd]/features/agent/lib/helpers';
 import { useFormDirtyExcluding } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
@@ -36,25 +35,17 @@ export default function SaveApplicationButton({ onSuccess }) {
     return stateValidationErrors && Object.keys(stateValidationErrors).length > 0;
   }, [stateValidationErrors]);
 
-  const hasEmptyStarters = useMemo(
-    () =>
-      (values?.version_details?.conversation_starters || []).some(
-        s => !conversationStartersHelpers.toString(s).trim(),
-      ),
-    [values?.version_details?.conversation_starters],
-  );
-
   const isButtonDisabled = useMemo(() => {
     const hasNoChanges = !isFormDirtyExcluding && !isYamlCodeDirty;
 
     // In chat context (edit mode), skip field validation since version data comes without description
     if (isFromChat && !!values?.id) {
-      return isSaving || hasNoChanges || hasStateErrors || hasEmptyStarters;
+      return isSaving || hasNoChanges || hasStateErrors;
     }
 
     // For standalone pages, validate required fields
     const hasMissingFields = !values?.name || !values?.description;
-    return isSaving || hasNoChanges || hasMissingFields || hasStateErrors || hasEmptyStarters;
+    return isSaving || hasNoChanges || hasMissingFields || hasStateErrors;
   }, [
     isFormDirtyExcluding,
     isYamlCodeDirty,
@@ -64,7 +55,6 @@ export default function SaveApplicationButton({ onSuccess }) {
     isSaving,
     isFromChat,
     hasStateErrors,
-    hasEmptyStarters,
   ]);
 
   return (
