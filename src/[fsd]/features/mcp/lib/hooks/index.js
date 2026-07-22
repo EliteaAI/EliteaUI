@@ -8,3 +8,4 @@ export {
 export { useGetRemoteMcpTools } from './useGetRemoteMcpTools.hooks';
 export { useMcpTokenChange } from './useMcpTokenChange.hooks';
 export { useMcpLogin } from './useMcpLogin.hooks';
+export { useInternalMcpPatStatus } from './useInternalMcpPatStatus.hooks';
