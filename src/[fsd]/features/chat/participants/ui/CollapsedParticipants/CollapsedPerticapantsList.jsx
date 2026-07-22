@@ -10,7 +10,7 @@ import {
   getChatParticipantUniqueId,
   isSkippedContainerParticipant,
 } from '@/[fsd]/features/chat/participants/lib/helpers';
-import { isMcpToolkitType } from '@/[fsd]/shared/lib/helpers';
+import { isMcpToolkitType, isRemoteMcpToolkitType } from '@/[fsd]/shared/lib/helpers';
 import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
 import AgentSvg from '@/assets/agent.svg?react';
 import FlowSvg from '@/assets/flow-icon.svg?react';
@@ -98,7 +98,7 @@ const CollapsedPerticapantsList = memo(props => {
           key = ChatParticipantType.Pipelines;
         else if (
           p.entity_name === ChatParticipantType.Toolkits &&
-          (isMcpToolkitType(p.entity_settings?.toolkit_type) || p.meta?.mcp === true)
+          (isRemoteMcpToolkitType(p.entity_settings?.toolkit_type) || p.meta?.mcp === true)
         )
           key = 'mcp';
 
