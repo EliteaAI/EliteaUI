@@ -1,6 +1,7 @@
-import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
+import { memo, useCallback, useEffect, useRef } from 'react';
 
-import { matchPath, useBlocker, useLocation } from 'react-router-dom';
+import { useStore } from 'react-redux';
+import { matchPath, useBlocker } from 'react-router-dom';
 
 import { Typography } from '@mui/material';
 
@@ -11,7 +12,7 @@ import { BLOCK_NAV_PATTERNS } from '@/routes';
 import BaseModal from './BaseModal';
 
 const UnsavedModal = memo(() => {
-  const location = useLocation();
+  const store = useStore();
   const {
     isBlockNav,
     isStreaming,
@@ -22,31 +23,26 @@ const UnsavedModal = memo(() => {
     resetApiState,
   } = useNavBlocker();
 
-  const isBlockablePath = useMemo(
-    () => BLOCK_NAV_PATTERNS.some(pattern => matchPath(pattern, location.pathname)),
-    [location.pathname],
-  );
-
-  const blockerState = useRef({ isBlockNav, isStreaming, isBlockablePath });
   const wasStreamingOnBlock = useRef(false);
 
-  useEffect(() => {
-    blockerState.current = { isBlockNav, isStreaming, isBlockablePath };
-  }, [isBlockNav, isStreaming, isBlockablePath]);
-
   const blocker = useBlocker(
-    useCallback(({ currentLocation, nextLocation }) => {
-      return (
-        blockerState.current.isBlockablePath &&
-        (blockerState.current.isBlockNav || blockerState.current.isStreaming) &&
-        currentLocation.pathname !== nextLocation.pathname
-      );
-    }, []),
+    useCallback(
+      ({ currentLocation, nextLocation }) => {
+        const { isBlockNav: blockNav, isStreaming: streaming } = store.getState().settings.navBlocker;
+        const isBlockablePath = BLOCK_NAV_PATTERNS.some(pattern =>
+          matchPath(pattern, currentLocation.pathname),
+        );
+        return (
+          isBlockablePath && (blockNav || streaming) && currentLocation.pathname !== nextLocation.pathname
+        );
+      },
+      [store],
+    ),
   );
 
   const isBlocked = blocker.state === 'blocked';
 
-  if (isBlocked && !wasStreamingOnBlock.current && blockerState.current.isStreaming) {
+  if (isBlocked && !wasStreamingOnBlock.current && isStreaming) {
     wasStreamingOnBlock.current = true;
   }
   if (!isBlocked) {

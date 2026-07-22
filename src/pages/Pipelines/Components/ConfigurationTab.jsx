@@ -77,7 +77,17 @@ const ConfigurationTab = memo(props => {
 
   const { setFieldValue } = useFormikContext();
 
-  const { llm_settings = {}, tools, id: currentVersionId, type = 'chat' } = formValues?.version_details || {};
+  const {
+    llm_settings: rawLlmSettings,
+    tools,
+    id: currentVersionId,
+    type = 'chat',
+  } = formValues?.version_details || {};
+  // Destructure defaults substitute only for `undefined`, not `null` — an API response with
+  // `llm_settings: null` would crash the inner destructure below with "Cannot read properties of
+  // null (reading 'max_tokens')". Coerce to `{}` explicitly, memoized so downstream useMemo deps
+  // stay stable across renders.
+  const llm_settings = useMemo(() => rawLlmSettings || {}, [rawLlmSettings]);
 
   // Only one of temperature/reasoning_effort applies, never both (issue #5821). Family is
   // inferred from whichever is already stored (no model lookup available here) -- absent
