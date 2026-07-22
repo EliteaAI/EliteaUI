@@ -1,25 +1,13 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Box, CircularProgress, Skeleton, Tooltip, Typography, useMediaQuery, useTheme } from '@mui/material';
+import { Box, Skeleton, Typography, useMediaQuery, useTheme } from '@mui/material';
 
-import { Button } from '@/[fsd]/shared/ui';
-import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
-import RefreshIcon from '@/assets/refresh-icon.svg?react';
 import { INITIAL_CARD_DISPLAY_COUNT } from '@/common/constants';
 
 import SkillCard from './SkillCard';
 
 const SkillCategorySection = memo(props => {
-  const {
-    category,
-    items,
-    totalCount = 0,
-    isLoading = false,
-    isLoadingMore = false,
-    onSelectItem,
-    onLoadMore,
-    onRefresh,
-  } = props;
+  const { category, items, totalCount = 0, isLoadingMore = false, onSelectItem, onLoadMore } = props;
 
   const theme = useTheme();
   const styles = skillCategorySectionStyles();
@@ -71,21 +59,6 @@ const SkillCategorySection = memo(props => {
         >
           {category}
         </Typography>
-        {isLoading ? (
-          <CircularProgress size={20} />
-        ) : (
-          <Tooltip
-            title="Reload the category items"
-            placement="top"
-          >
-            <Button.BaseBtn
-              variant={BUTTON_VARIANTS.tertiary}
-              aria-label="Reload the category items"
-              startIcon={<RefreshIcon />}
-              onClick={() => onRefresh?.(category)}
-            />
-          </Tooltip>
-        )}
       </Box>
 
       <Box sx={styles.grid}>

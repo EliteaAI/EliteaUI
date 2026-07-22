@@ -6,8 +6,12 @@ import { useLazyPublicSkillsListQuery } from '@/[fsd]/features/skill-hub/api';
 import { SkillHubConstants } from '@/[fsd]/features/skill-hub/lib/constants';
 import { useGetSkillCategoriesQuery } from '@/[fsd]/features/skill/api';
 import { PAGE_SIZE, PUBLIC_PROJECT_ID } from '@/common/constants';
-import useToast from '@/hooks/useToast';
-import { selectIsCacheValid, selectSkillHubData, actions as skillHubActions } from '@/slices/skillHub';
+import {
+  selectIsCacheValid,
+  selectLastRefreshedAt,
+  selectSkillHubData,
+  actions as skillHubActions,
+} from '@/slices/skillHub';
 
 /** Single bulk-fetch limit — covers realistic max published-skill counts. */
 const ALL_SKILLS_LIMIT = 1000;
@@ -22,12 +26,11 @@ const SEARCH_SKILLS_LIMIT = 100;
  */
 export const useSkillHubData = (query, selectedTagNames) => {
   const dispatch = useDispatch();
-  const { toastError } = useToast();
   const { skillsByTag, totalCountsByTag, currentPageByTag } = useSelector(selectSkillHubData);
   const isCacheValid = useSelector(state => selectIsCacheValid(state, query));
+  const lastRefreshedAt = useSelector(selectLastRefreshedAt);
 
   const [loadingTags, setLoadingTags] = useState(new Set());
-  const [refreshingTags, setRefreshingTags] = useState(new Set());
 
   const { data: categoriesData, isFetching: isFetchingCategories } = useGetSkillCategoriesQuery({
     projectId: PUBLIC_PROJECT_ID,
@@ -47,14 +50,6 @@ export const useSkillHubData = (query, selectedTagNames) => {
     setLoadingTags(prev => {
       const s = new Set(prev);
       isLoading ? s.add(id) : s.delete(id);
-      return s;
-    });
-  }, []);
-
-  const setRefreshing = useCallback((id, isRefreshing) => {
-    setRefreshingTags(prev => {
-      const s = new Set(prev);
-      isRefreshing ? s.add(id) : s.delete(id);
       return s;
     });
   }, []);
@@ -113,13 +108,22 @@ export const useSkillHubData = (query, selectedTagNames) => {
     [fetchSkills, query, setLoading, bucketSkillsByCategory, updateSkillData],
   );
 
+  const rebuildCategoryToDepth = useCallback(
+    (categoryName, rows, total, depth) => {
+      dispatch(skillHubActions.replaceCategoryData({ categoryName, page: depth, rows, total }));
+    },
+    [dispatch],
+  );
+
   const fetchTrendingSkills = useCallback(
-    async (page = 0) => {
-      setLoading(SkillHubConstants.TRENDING_CATEGORY, true);
+    async (page = 0, depth = null) => {
+      const isRebuild = depth !== null;
+      const category = SkillHubConstants.TRENDING_CATEGORY;
+      if (!isRebuild) setLoading(category, true);
       try {
         const result = await fetchSkills({
-          page,
-          pageSize: PAGE_SIZE,
+          page: isRebuild ? 0 : page,
+          pageSize: isRebuild ? (depth + 1) * PAGE_SIZE : PAGE_SIZE,
           params: {
             query,
             trend_start_period: SkillHubConstants.TRENDING_START_PERIOD,
@@ -129,22 +133,25 @@ export const useSkillHubData = (query, selectedTagNames) => {
         }).unwrap();
 
         if (result?.rows) {
-          updateSkillData(SkillHubConstants.TRENDING_CATEGORY, page, result.rows, result.total);
+          if (isRebuild) rebuildCategoryToDepth(category, result.rows, result.total, depth);
+          else updateSkillData(category, page, result.rows, result.total);
         }
       } finally {
-        setLoading(SkillHubConstants.TRENDING_CATEGORY, false);
+        if (!isRebuild) setLoading(category, false);
       }
     },
-    [fetchSkills, query, setLoading, updateSkillData],
+    [fetchSkills, query, setLoading, updateSkillData, rebuildCategoryToDepth],
   );
 
   const fetchMyLikedSkills = useCallback(
-    async (page = 0) => {
-      setLoading(SkillHubConstants.MY_LIKED_CATEGORY, true);
+    async (page = 0, depth = null) => {
+      const isRebuild = depth !== null;
+      const category = SkillHubConstants.MY_LIKED_CATEGORY;
+      if (!isRebuild) setLoading(category, true);
       try {
         const result = await fetchSkills({
-          page,
-          pageSize: PAGE_SIZE,
+          page: isRebuild ? 0 : page,
+          pageSize: isRebuild ? (depth + 1) * PAGE_SIZE : PAGE_SIZE,
           params: {
             query,
             my_liked: true,
@@ -152,28 +159,14 @@ export const useSkillHubData = (query, selectedTagNames) => {
         }).unwrap();
 
         if (result?.rows) {
-          updateSkillData(SkillHubConstants.MY_LIKED_CATEGORY, page, result.rows, result.total);
+          if (isRebuild) rebuildCategoryToDepth(category, result.rows, result.total, depth);
+          else updateSkillData(category, page, result.rows, result.total);
         }
       } finally {
-        setLoading(SkillHubConstants.MY_LIKED_CATEGORY, false);
+        if (!isRebuild) setLoading(category, false);
       }
     },
-    [fetchSkills, query, setLoading, updateSkillData],
-  );
-
-  const fetchCategoryScoped = useCallback(
-    async categoryName => {
-      const result = await fetchSkills({
-        page: 0,
-        pageSize: ALL_SKILLS_LIMIT,
-        params: { query, category: categoryName },
-      }).unwrap();
-
-      if (result?.rows) {
-        updateSkillData(categoryName, 0, result.rows, result.rows.length);
-      }
-    },
-    [fetchSkills, query, updateSkillData],
+    [fetchSkills, query, setLoading, updateSkillData, rebuildCategoryToDepth],
   );
 
   const resetSearchByTag = useCallback(() => {
@@ -211,6 +204,25 @@ export const useSkillHubData = (query, selectedTagNames) => {
       setLoading('global_search', false);
     }
   }, [fetchSkills, query, setLoading, resetSearchByTag, bucketSkillsByCategory, categoryNames, dispatch]);
+
+  const refresh = useCallback(() => {
+    if (query) return;
+    if (categoryNames.length === 0) return;
+    const trendingDepth = currentPageByTag[SkillHubConstants.TRENDING_CATEGORY] || 0;
+    const myLikedDepth = currentPageByTag[SkillHubConstants.MY_LIKED_CATEGORY] || 0;
+    Promise.all([
+      fetchAllAndCategorize(categoryNames),
+      fetchTrendingSkills(0, trendingDepth),
+      fetchMyLikedSkills(0, myLikedDepth),
+    ]).catch(() => {});
+  }, [
+    query,
+    categoryNames,
+    currentPageByTag,
+    fetchAllAndCategorize,
+    fetchTrendingSkills,
+    fetchMyLikedSkills,
+  ]);
 
   useEffect(() => {
     if (categoryNames.length === 0) return;
@@ -294,39 +306,20 @@ export const useSkillHubData = (query, selectedTagNames) => {
     [dispatch],
   );
 
-  const onRefresh = useCallback(
-    async categoryName => {
-      setRefreshing(categoryName, true);
-      try {
-        if (categoryName === SkillHubConstants.TRENDING_CATEGORY) {
-          await fetchTrendingSkills(0);
-        } else if (categoryName === SkillHubConstants.MY_LIKED_CATEGORY) {
-          await fetchMyLikedSkills(0);
-        } else {
-          await fetchCategoryScoped(categoryName);
-        }
-      } catch {
-        toastError(`Failed to refresh ${categoryName}. Please try again.`);
-      } finally {
-        setRefreshing(categoryName, false);
-      }
-    },
-    [setRefreshing, fetchTrendingSkills, fetchMyLikedSkills, fetchCategoryScoped, toastError],
-  );
-
   return {
     categoryNames,
     skillsByTag: filteredSkillsByTag,
     totalCountsByTag: filteredTotalCountsByTag,
     currentPageByTag,
     loadingTags,
-    refreshingTags,
     isFetching,
+    isCacheValid,
+    lastRefreshedAt,
     fetchTrendingSkills,
     fetchMyLikedSkills,
     updateSkillInState,
     addToMyLiked,
     removeFromMyLiked,
-    onRefresh,
+    refresh,
   };
 };

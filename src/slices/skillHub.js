@@ -9,6 +9,7 @@ const skillHubSlice = createSlice({
     totalCountsByTag: {},
     currentPageByTag: {},
     lastFetchedAt: null, // Timestamp of last successful fetch
+    lastRefreshedAt: null,
     lastQuery: '', // The query used for the last fetch
   },
   reducers: {
@@ -18,6 +19,7 @@ const skillHubSlice = createSlice({
       state.totalCountsByTag = totalCountsByTag;
       state.currentPageByTag = currentPageByTag;
       state.lastFetchedAt = Date.now();
+      state.lastRefreshedAt = Date.now();
       state.lastQuery = query || '';
     },
     // Per-category loads only ever FOLLOW a bulk setSkillsData (which records
@@ -30,6 +32,15 @@ const skillHubSlice = createSlice({
       state.totalCountsByTag[categoryName] = total || rows.length;
       state.currentPageByTag[categoryName] = page;
       state.lastFetchedAt = Date.now();
+      state.lastRefreshedAt = Date.now();
+    },
+    replaceCategoryData: (state, action) => {
+      const { categoryName, page, rows, total } = action.payload;
+      state.skillsByTag[categoryName] = rows;
+      state.totalCountsByTag[categoryName] = total || rows.length;
+      state.currentPageByTag[categoryName] = page;
+      state.lastFetchedAt = Date.now();
+      state.lastRefreshedAt = Date.now();
     },
     addToMyLiked: (state, action) => {
       const { skill, categoryName } = action.payload;
@@ -58,6 +69,7 @@ const skillHubSlice = createSlice({
       state.totalCountsByTag = {};
       state.currentPageByTag = {};
       state.lastFetchedAt = null;
+      state.lastRefreshedAt = null;
       state.lastQuery = '';
     },
   },
@@ -65,6 +77,8 @@ const skillHubSlice = createSlice({
 
 // Selectors
 export const selectSkillHubData = state => state.skillHub;
+
+export const selectLastRefreshedAt = state => state.skillHub.lastRefreshedAt;
 
 export const selectIsCacheValid = (state, query) => {
   const { lastFetchedAt, lastQuery } = state.skillHub;

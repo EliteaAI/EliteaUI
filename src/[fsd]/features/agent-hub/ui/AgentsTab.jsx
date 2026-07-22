@@ -7,7 +7,7 @@ import { Box } from '@mui/material';
 import { AgentHubContext, useInteractiveTour } from '@/[fsd]/app/providers';
 import { AgentHubConstants } from '@/[fsd]/features/agent-hub/lib/constants';
 import { AgentHubHelpers } from '@/[fsd]/features/agent-hub/lib/helpers';
-import { useAgentHubData } from '@/[fsd]/features/agent-hub/lib/hooks';
+import { useAgentHubData, useCatalogAutoRefresh } from '@/[fsd]/features/agent-hub/lib/hooks';
 import AgentCategorySection from '@/[fsd]/features/agent-hub/ui/AgentCategorySection';
 import AgentModal from '@/[fsd]/features/agent-hub/ui/AgentModal';
 import {
@@ -52,16 +52,24 @@ const AgentsTab = memo(props => {
     totalCountsByTag,
     currentPageByTag,
     loadingTags,
-    refreshingTags,
     isFetching,
+    isCacheValid,
+    lastRefreshedAt,
     fetchApplicationsForCategoryName,
     fetchTrendingApplications,
     fetchMyLikedApplications,
     updateApplicationInState,
     addToMyLiked,
     removeFromMyLiked,
-    onRefresh,
+    refresh,
   } = useAgentHubData(debouncedQuery, selectedTagNames);
+
+  useCatalogAutoRefresh({
+    refresh,
+    lastRefreshedAt,
+    isCacheValid,
+    throttleMs: AgentHubConstants.AUTO_REFRESH_THROTTLE_MS,
+  });
 
   const allCategories = useMemo(() => AgentHubHelpers.buildAllCategories(categoryNames), [categoryNames]);
   const applicationMenuItems = useMemo(
@@ -136,15 +144,13 @@ const AgentsTab = memo(props => {
           category={category}
           items={items}
           totalCount={totalCountsByTag[category] || 0}
-          isLoading={refreshingTags.has(category)}
           isLoadingMore={loadingTags.has(category)}
           onSelectItem={handleApplicationSelect}
           onLoadMore={handleLoadMore}
-          onRefresh={onRefresh}
         />
       );
     },
-    [handleApplicationSelect, handleLoadMore, loadingTags, onRefresh, refreshingTags, totalCountsByTag],
+    [handleApplicationSelect, handleLoadMore, loadingTags, totalCountsByTag],
   );
 
   const renderNoResults = useCallback(
