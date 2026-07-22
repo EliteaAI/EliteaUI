@@ -22,6 +22,6 @@ export {
   CodeMirrorLinterHelpers,
 };
 
-export { isMcpToolkitType, isMcpToolkit } from './mcp.helpers';
+export { isMcpToolkitType, isMcpToolkit, isRemoteMcpToolkitType } from './mcp.helpers';
 export * as ModalHelpers from './modal.helpers.js';
 export { getFilenameFromContentDisposition } from './download.helpers';
