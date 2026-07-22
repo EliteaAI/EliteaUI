@@ -1,11 +1,26 @@
+import { useEffect } from 'react';
+
 import { useInternalMcpPatStatusQuery } from '@/api/toolkits.js';
 
 export const useInternalMcpPatStatus = ({ projectId, toolkitType }) => {
   const isMcpType = typeof toolkitType === 'string' && toolkitType.startsWith('mcp');
-  const { data, isLoading } = useInternalMcpPatStatusQuery(
-    { projectId, toolkitType },
-    { skip: !projectId || !isMcpType },
-  );
+  const skip = !projectId || !isMcpType;
+  const { data, isLoading, refetch } = useInternalMcpPatStatusQuery({ projectId, toolkitType }, { skip });
+
+  // The token is created/renewed on the settings page (opened in a new tab), so re-check on return
+  // to the tab — otherwise the banner and gated actions stay stale until a full reload.
+  useEffect(() => {
+    if (skip) return undefined;
+    const recheck = () => {
+      if (document.visibilityState === 'visible') refetch();
+    };
+    window.addEventListener('focus', recheck);
+    document.addEventListener('visibilitychange', recheck);
+    return () => {
+      window.removeEventListener('focus', recheck);
+      document.removeEventListener('visibilitychange', recheck);
+    };
+  }, [skip, refetch]);
 
   const patInvalid = !!(data?.internal && data?.state !== 'VALID');
 
