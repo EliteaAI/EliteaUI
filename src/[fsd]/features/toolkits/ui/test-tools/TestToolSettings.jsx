@@ -3,9 +3,11 @@ import React, { memo, useCallback, useMemo } from 'react';
 import { useFormikContext } from 'formik';
 
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import { Box, Typography } from '@mui/material';
+import { Box, Tooltip, Typography } from '@mui/material';
 
 import { SHARED_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
+import { PAT_REQUIRED_ACTION_HINT } from '@/[fsd]/features/mcp/lib/constants';
+import { useInternalMcpPatStatus } from '@/[fsd]/features/mcp/lib/hooks';
 import { IndexesToolsEnum } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
@@ -40,9 +42,10 @@ const TestToolSettings = memo(props => {
 
   const { values } = useFormikContext();
   const projectId = useSelectedProjectId();
+  const { patInvalid } = useInternalMcpPatStatus({ projectId, toolkitType: values?.type });
   const { toolkitSchemas } = useGetCurrentToolkitSchemas();
   const selectedToolsSchema = toolkitSchemas?.[values?.type]?.properties?.selected_tools;
-  const disabledRunTool = !isValidForm || isRunning || indexNameError;
+  const disabledRunTool = !isValidForm || isRunning || indexNameError || patInvalid;
 
   const schemaToolNames = useMemo(() => {
     const argsSchemasKeys = Object.keys(selectedToolsSchema?.args_schemas || {});
@@ -162,16 +165,20 @@ const TestToolSettings = memo(props => {
             </Box>
 
             <Box sx={styles.runToolBtn}>
-              <Button.BaseBtn
-                data-testid="toolkit-test-run-tool-button"
-                variant={BUTTON_VARIANTS.special}
-                fullWidth
-                disabled={disabledRunTool}
-                onClick={onRunTool}
-                startIcon={<PlayArrowIcon />}
-              >
-                RUN TOOL
-              </Button.BaseBtn>
+              <Tooltip title={patInvalid ? PAT_REQUIRED_ACTION_HINT : ''}>
+                <Box component="span">
+                  <Button.BaseBtn
+                    data-testid="toolkit-test-run-tool-button"
+                    variant={BUTTON_VARIANTS.special}
+                    fullWidth
+                    disabled={disabledRunTool}
+                    onClick={onRunTool}
+                    startIcon={<PlayArrowIcon />}
+                  >
+                    RUN TOOL
+                  </Button.BaseBtn>
+                </Box>
+              </Tooltip>
             </Box>
           </Box>
         )}
