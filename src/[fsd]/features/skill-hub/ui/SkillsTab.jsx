@@ -11,7 +11,7 @@ import {
 } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { SkillHubConstants } from '@/[fsd]/features/skill-hub/lib/constants';
 import { SkillHubHelpers } from '@/[fsd]/features/skill-hub/lib/helpers';
-import { useSkillHubData } from '@/[fsd]/features/skill-hub/lib/hooks';
+import { useCatalogAutoRefresh, useSkillHubData } from '@/[fsd]/features/skill-hub/lib/hooks';
 import SkillCategorySection from '@/[fsd]/features/skill-hub/ui/SkillCategorySection';
 import SkillHubModal from '@/[fsd]/features/skill-hub/ui/SkillHubModal';
 import { useGroupedCategories } from '@/[fsd]/shared/lib/hooks';
@@ -52,15 +52,23 @@ const SkillsTab = memo(props => {
     totalCountsByTag,
     currentPageByTag,
     loadingTags,
-    refreshingTags,
     isFetching,
+    isCacheValid,
+    lastRefreshedAt,
     fetchTrendingSkills,
     fetchMyLikedSkills,
     updateSkillInState,
     addToMyLiked,
     removeFromMyLiked,
-    onRefresh,
+    refresh,
   } = useSkillHubData(debouncedQuery, selectedTagNames);
+
+  useCatalogAutoRefresh({
+    refresh,
+    lastRefreshedAt,
+    isCacheValid,
+    throttleMs: SkillHubConstants.AUTO_REFRESH_THROTTLE_MS,
+  });
 
   const allCategories = useMemo(() => SkillHubHelpers.buildAllCategories(categoryNames), [categoryNames]);
   const skillMenuItems = useMemo(
@@ -174,15 +182,13 @@ const SkillsTab = memo(props => {
           category={category}
           items={items}
           totalCount={totalCountsByTag[category] || 0}
-          isLoading={refreshingTags.has(category)}
           isLoadingMore={loadingTags.has(category)}
           onSelectItem={handleSkillSelect}
           onLoadMore={handleLoadMore}
-          onRefresh={onRefresh}
         />
       );
     },
-    [handleSkillSelect, handleLoadMore, loadingTags, onRefresh, refreshingTags, totalCountsByTag],
+    [handleSkillSelect, handleLoadMore, loadingTags, totalCountsByTag],
   );
 
   const renderNoResults = useCallback(

@@ -256,6 +256,7 @@ const UserInput = forwardRef((props, ref) => {
 
         setInputContentWithRef(newValue);
         setQuestion(newValue?.trim() ? newValue : '');
+        onInputChange?.(newValue);
 
         const newCursorPosition = start + textToInsert.length;
         pendingCursorRef.current = newCursorPosition;
@@ -264,7 +265,7 @@ const UserInput = forwardRef((props, ref) => {
         }, 0);
       }
     },
-    [setInputContentWithRef],
+    [setInputContentWithRef, onInputChange],
   );
 
   useImperativeHandle(

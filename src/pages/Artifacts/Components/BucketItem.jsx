@@ -2,12 +2,12 @@ import { forwardRef, memo, useCallback, useMemo, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 
-import GroupsIcon from '@mui/icons-material/Groups';
 import { Box, useTheme } from '@mui/material';
 
 import { useShareLink } from '@/[fsd]/shared/lib/hooks/useShareLink.hooks';
 import { Button, Tooltip } from '@/[fsd]/shared/ui';
 import CopyLinkIcon from '@/assets/copy-link-icon.svg?react';
+import GroupsIcon from '@/assets/groups-icon.svg?react';
 import FileUploadIcon from '@/assets/icons/FileUploadIcon.svg?react';
 import BucketIcon from '@/assets/icons/bucket-icon.svg?react';
 import PinIconFilled from '@/assets/pin-filled-new.svg?react';
@@ -193,7 +193,7 @@ export const BucketItem = forwardRef((props, ref) => {
       },
       {
         label: 'Manage access',
-        icon: <GroupsIcon sx={{ fontSize: '1rem', color: theme.palette.icon.fill.default }} />,
+        icon: <GroupsIcon color={theme.palette.icon.fill.default} />,
         onClick: handleManageAccessClick,
         display: isPersonalProject ? 'none' : undefined,
       },

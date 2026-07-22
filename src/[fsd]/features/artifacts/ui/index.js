@@ -11,6 +11,7 @@ export {
   BucketAccessTable,
   AddBucketUserDialog,
   EditBucketUserDialog,
-  BulkEditBucketUsersDialog,
+  DefaultPermissionsBanner,
+  ManagePermissionsModal,
 } from './bucket-access';
 export { default as MdxPreview } from './FilePreviewCanvas/MdxPreview';
