@@ -2,18 +2,21 @@ import { memo, useMemo } from 'react';
 
 import { format } from 'date-fns';
 
-import { Box, CircularProgress, IconButton, Skeleton, Typography } from '@mui/material';
+import { Box, CircularProgress, Skeleton, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
+import { Button } from '@/[fsd]/shared/ui';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import ClockIcon from '@/assets/clock.svg?react';
 import FileIcon from '@/assets/file.svg?react';
+import IndexingIcon from '@/assets/indexing.svg?react';
 import OpenInNewIcon from '@/assets/open-new-icon.svg?react';
-import RefreshIcon from '@/assets/refresh-icon.svg?react';
 import StopIcon from '@/assets/stop-icon.svg?react';
+import EntityIcon from '@/components/EntityIcon';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
+import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const IndexListItem = memo(props => {
   const {
@@ -28,6 +31,7 @@ const IndexListItem = memo(props => {
     isReindexing,
   } = props;
   const styles = indexListItem(listOnly);
+  const projectId = useSelectedProjectId();
 
   const isSelected = useMemo(() => currentIndex?.id === index.id, [currentIndex, index]);
   const isInProgress = index?.metadata?.state === IndexStatuses.progress;
@@ -123,6 +127,11 @@ const IndexListItem = memo(props => {
       className={isSelected && true ? 'selected' : ''}
       onClick={handleCardClick}
     >
+      <EntityIcon
+        entityType="index"
+        projectId={projectId}
+        editable={false}
+      />
       <Box sx={styles.mainContent}>
         <Typography
           variant="bodyMedium"
@@ -183,16 +192,12 @@ const IndexListItem = memo(props => {
               title="Open in new tab"
               placement="top"
             >
-              <Box component="span">
-                <IconButton
-                  size="small"
-                  onClick={handleOpenNewTabClick}
-                  data-testid="index-card-open-new-tab-btn"
-                  sx={styles.actionButton}
-                >
-                  <OpenInNewIcon />
-                </IconButton>
-              </Box>
+              <Button.BaseBtn
+                variant={Button.BUTTON_VARIANTS.tertiary}
+                startIcon={<OpenInNewIcon sx={styles.actionIcon} />}
+                onClick={handleOpenNewTabClick}
+                data-testid="index-card-open-new-tab-btn"
+              />
             </Tooltip>
           )}
           {onCardReindex && (
@@ -200,17 +205,12 @@ const IndexListItem = memo(props => {
               title="Reindex"
               placement="top"
             >
-              <Box component="span">
-                <IconButton
-                  size="small"
-                  disabled={disableActions}
-                  onClick={handleReindexClick}
-                  data-testid="index-card-reindex-btn"
-                  sx={styles.actionButton}
-                >
-                  <RefreshIcon />
-                </IconButton>
-              </Box>
+              <Button.BaseBtn
+                variant={Button.BUTTON_VARIANTS.tertiary}
+                startIcon={<IndexingIcon sx={styles.actionIcon} />}
+                onClick={handleReindexClick}
+                data-testid="index-card-reindex-btn"
+              />
             </Tooltip>
           )}
           {onCardDelete && (
@@ -218,17 +218,12 @@ const IndexListItem = memo(props => {
               title="Delete"
               placement="top"
             >
-              <Box component="span">
-                <IconButton
-                  size="small"
-                  disabled={disableActions}
-                  onClick={handleDeleteClick}
-                  data-testid="index-card-delete-btn"
-                  sx={styles.actionButton}
-                >
-                  <DeleteIcon sx={{ fontSize: '1rem' }} />
-                </IconButton>
-              </Box>
+              <Button.BaseBtn
+                variant={Button.BUTTON_VARIANTS.tertiary}
+                startIcon={<DeleteIcon sx={styles.actionIcon} />}
+                onClick={handleDeleteClick}
+                data-testid="index-card-delete-btn"
+              />
             </Tooltip>
           )}
         </Box>
@@ -282,10 +277,10 @@ const indexListItem = listOnly => ({
     minHeight: '4rem',
     borderRadius: '.5rem',
     background: `${palette.background.userInputBackground}`,
-    padding: '.375rem 1rem',
-    border: `.0625rem solid transparent`,
+    padding: '.5rem 1rem',
+    border: `.0625rem solid ${palette.border.table}`,
     position: 'relative',
-    gap: '.5rem',
+    gap: '1rem',
 
     '& .index-card-actions': {
       opacity: 0,
@@ -293,8 +288,7 @@ const indexListItem = listOnly => ({
     },
 
     '&:hover': {
-      background: palette.split.pressed,
-      border: `.0625rem solid ${palette.split.hover}`,
+      border: `.0625rem solid ${palette.border.lines}`,
       cursor: 'pointer',
 
       '& .index-card-actions': {
@@ -397,6 +391,9 @@ const indexListItem = listOnly => ({
   skippedText: ({ palette }) => ({
     color: palette.background.warning,
   }),
+  actionIcon: {
+    fontSize: '1rem',
+  },
 });
 
 export default IndexListItem;

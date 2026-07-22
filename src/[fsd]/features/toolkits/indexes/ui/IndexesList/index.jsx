@@ -72,7 +72,7 @@ const IndexesList = memo(props => {
       {listOnly && (
         <Box sx={styles.footer}>
           <Button.BaseBtn
-            variant="special"
+            variant={Button.BUTTON_VARIANTS.iconLabel}
             startIcon={<PlusIcon />}
             onClick={handleAddIndex}
             data-testid="toolkit-indexes-add-button"

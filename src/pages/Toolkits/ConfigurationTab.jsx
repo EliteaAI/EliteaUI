@@ -1,4 +1,4 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
 import { Box, CircularProgress, Grid, Typography } from '@mui/material';
 
@@ -50,7 +50,7 @@ const ConfigurationTab = memo(props => {
 
   const [isFullScreenChat, setIsFullScreenChat] = useState(false);
 
-  const indexesAccordionContent = (() => {
+  const indexesAccordionContent = useMemo(() => {
     if (indexingUnavailableReason) {
       return (
         <Box sx={styles.indexesUnavailable}>
@@ -72,7 +72,7 @@ const ConfigurationTab = memo(props => {
         editToolDetail={editToolDetail}
       />
     );
-  })();
+  }, [indexingUnavailableReason, toolkitId, selectedIndexTools, editToolDetail]);
 
   return isFetching ? (
     <Box
@@ -182,6 +182,7 @@ const styles = {
   },
   indexesAccordion: {
     width: '100%',
+    background: ({ palette }) => `${palette.background.tabPanel} !important`,
   },
   indexesUnavailable: ({ palette }) => ({
     padding: '1rem',
