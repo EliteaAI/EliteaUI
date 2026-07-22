@@ -41,7 +41,10 @@ const LLMModelSelector = memo(props => {
   const [anchorEl, setAnchorEl] = useState(null);
 
   const normalizedLlmSettings = useMemo(
-    () => normalizeLlmSettings(llmSettings, selectedModel, { showStepsLimit }),
+    // Default param `llmSettings = {}` only substitutes for `undefined`; the Toolkit Index History
+    // page passes `llmSettings={null}` explicitly, which would crash normalizeLlmSettings with
+    // "Cannot read properties of null (reading 'max_tokens')".
+    () => normalizeLlmSettings(llmSettings || {}, selectedModel, { showStepsLimit }),
     [llmSettings, selectedModel, showStepsLimit],
   );
 
