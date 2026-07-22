@@ -15,8 +15,15 @@ import {
 } from '@/common/constants';
 import CloseIcon from '@/components/Icons/CloseIcon';
 
+import ToolItemCard from './ToolItemCard';
+
+const normalizeToolItem = (item, entityType) => ({
+  ...item,
+  entityType: item.entity_type || entityType,
+});
+
 const SummaryStep = memo(props => {
-  const { currentData, draftData, onDraftChange, fieldApplyFlags } = props;
+  const { currentData, currentTools = [], draftData, onDraftChange, fieldApplyFlags, onToggleField, toolSelections } = props;
 
   const { mergedName, mergedDescription, mergedInstructions, mergedWelcome, mergedStarters } = useMemo(
     () => ({
@@ -37,34 +44,76 @@ const SummaryStep = memo(props => {
     [currentData, draftData, fieldApplyFlags],
   );
 
+  const mergedTools = useMemo(() => {
+    const removeSuggestionKeys = new Set([
+      ...(draftData?.tools_to_remove || []).map(t => `toolkit:${t.id}`),
+      ...(draftData?.skills_to_remove || []).map(s => `skill:${s.id}`),
+    ]);
+
+    const kept = currentTools
+      .filter(t => {
+        const type = t.type === 'application' ? 'agent' : (t.type === 'skill' ? 'skill' : 'toolkit');
+        const key = `${type}:${t.id}`;
+        if (removeSuggestionKeys.has(key)) {
+          return !toolSelections?.toRemove?.has(key);
+        }
+        return toolSelections?.toKeep?.has(key);
+      })
+      .map(item => normalizeToolItem(item, item.type === 'application' ? 'agent' : (item.type === 'skill' ? 'skill' : 'toolkit')));
+
+    const currentKeys = new Set(
+      currentTools.map(t => {
+        const type = t.type === 'application' ? 'agent' : (t.type === 'skill' ? 'skill' : 'toolkit');
+        return `${type}:${t.id}`;
+      }),
+    );
+    const addItems = [
+      ...(draftData?.suggested_toolkits || []).map(item => normalizeToolItem(item, 'toolkit')),
+      ...(draftData?.suggested_mcp || []).map(item => normalizeToolItem(item, 'mcp')),
+      ...(draftData?.suggested_agents || []).map(item => normalizeToolItem(item, 'agent')),
+      ...(draftData?.suggested_pipelines || []).map(item => normalizeToolItem(item, 'pipeline')),
+      ...(draftData?.suggested_skills || []).map(item => normalizeToolItem(item, 'skill')),
+    ].filter(
+      item =>
+        toolSelections?.toAdd?.has(`${item.entityType}:${item.id}`) &&
+        !currentKeys.has(`${item.entityType}:${item.id}`),
+    );
+
+    return [...kept, ...addItems];
+  }, [currentTools, draftData, toolSelections]);
+
   const handleFieldChange = useCallback(
     (field, value) => {
+      if (!fieldApplyFlags[field]) onToggleField(field);
       onDraftChange({ ...draftData, [field]: value });
     },
-    [draftData, onDraftChange],
+    [draftData, fieldApplyFlags, onDraftChange, onToggleField],
   );
 
   const handleStarterChange = useCallback(
     (index, value) => {
+      if (!fieldApplyFlags.conversation_starters) onToggleField('conversation_starters');
       const updated = [...mergedStarters];
       updated[index] = value;
       onDraftChange({ ...draftData, conversation_starters: updated });
     },
-    [draftData, mergedStarters, onDraftChange],
+    [draftData, fieldApplyFlags, mergedStarters, onDraftChange, onToggleField],
   );
 
   const handleRemoveStarter = useCallback(
     index => {
+      if (!fieldApplyFlags.conversation_starters) onToggleField('conversation_starters');
       const updated = mergedStarters.filter((_, i) => i !== index);
       onDraftChange({ ...draftData, conversation_starters: updated });
     },
-    [draftData, mergedStarters, onDraftChange],
+    [draftData, fieldApplyFlags, mergedStarters, onDraftChange, onToggleField],
   );
 
   const handleAddStarter = useCallback(() => {
+    if (!fieldApplyFlags.conversation_starters) onToggleField('conversation_starters');
     const updated = [...mergedStarters, ''];
     onDraftChange({ ...draftData, conversation_starters: updated });
-  }, [draftData, mergedStarters, onDraftChange]);
+  }, [draftData, fieldApplyFlags, mergedStarters, onDraftChange, onToggleField]);
 
   const disableAddStarter = useMemo(
     () => mergedStarters.length >= MAX_CONVERSATION_STARTERS || mergedStarters.some(s => !s?.trim()),
@@ -81,111 +130,136 @@ const SummaryStep = memo(props => {
     <Box sx={styles.container}>
       <Box sx={styles.field}>
         <Typography sx={styles.label}>Name</Typography>
-        <Input.InputBase
-          fullWidth
-          value={mergedName}
-          onChange={e => handleFieldChange('name', e.target.value)}
-          disabled={!fieldApplyFlags.name}
-          inputProps={{ maxLength: MAX_NAME_LENGTH }}
-          enableAutoBlur={false}
-        />
+        <Box sx={styles.editableCard}>
+          <Input.InputBase
+            fullWidth
+            value={mergedName}
+            onChange={e => handleFieldChange('name', e.target.value)}
+            inputProps={{ maxLength: MAX_NAME_LENGTH }}
+            enableAutoBlur={false}
+            disableUnderline
+            sx={styles.cardInput}
+          />
+        </Box>
       </Box>
 
       <Box sx={styles.field}>
         <Typography sx={styles.label}>Description</Typography>
-        <Input.InputBase
-          fullWidth
-          multiline
-          minRows={2}
-          maxRows={4}
-          value={mergedDescription}
-          onChange={e => handleFieldChange('description', e.target.value)}
-          disabled={!fieldApplyFlags.description}
-          inputProps={{ maxLength: MAX_DESCRIPTION_LENGTH }}
-          enableAutoBlur={false}
-        />
+        <Box sx={styles.editableCard}>
+          <Input.InputBase
+            fullWidth
+            multiline
+            minRows={2}
+            maxRows={4}
+            value={mergedDescription}
+            onChange={e => handleFieldChange('description', e.target.value)}
+            inputProps={{ maxLength: MAX_DESCRIPTION_LENGTH }}
+            enableAutoBlur={false}
+            disableUnderline
+            sx={styles.cardInput}
+          />
+        </Box>
       </Box>
 
       <Box sx={styles.field}>
         <Typography sx={styles.label}>Instructions</Typography>
-        <Input.InputBase
-          fullWidth
-          multiline
-          minRows={4}
-          maxRows={10}
-          value={mergedInstructions}
-          onChange={e => handleFieldChange('instructions', e.target.value)}
-          disabled={!fieldApplyFlags.instructions}
-          enableAutoBlur={false}
-        />
+        <Box sx={styles.editableCard}>
+          <Input.InputBase
+            fullWidth
+            multiline
+            minRows={4}
+            maxRows={10}
+            value={mergedInstructions}
+            onChange={e => handleFieldChange('instructions', e.target.value)}
+            enableAutoBlur={false}
+            disableUnderline
+            sx={styles.cardInput}
+          />
+        </Box>
       </Box>
 
       <Box sx={styles.field}>
         <Typography sx={styles.label}>Welcome Message</Typography>
-        <Input.InputBase
-          fullWidth
-          multiline
-          minRows={2}
-          maxRows={4}
-          value={mergedWelcome}
-          onChange={e => handleFieldChange('welcome_message', e.target.value)}
-          disabled={!fieldApplyFlags.welcome_message}
-          inputProps={{ maxLength: MAX_WELCOME_MESSAGE_LENGTH }}
-          enableAutoBlur={false}
-        />
+        <Box sx={styles.editableCard}>
+          <Input.InputBase
+            fullWidth
+            multiline
+            minRows={2}
+            maxRows={4}
+            value={mergedWelcome}
+            onChange={e => handleFieldChange('welcome_message', e.target.value)}
+            inputProps={{ maxLength: MAX_WELCOME_MESSAGE_LENGTH }}
+            enableAutoBlur={false}
+            disableUnderline
+            sx={styles.cardInput}
+          />
+        </Box>
       </Box>
 
-      {mergedStarters.length > 0 && (
-        <Box sx={styles.section}>
-          <Typography sx={styles.sectionLabel}>Conversation starters:</Typography>
-          <Box sx={styles.startersList}>
-            {mergedStarters.map((starter, index) => (
-              <Box
-                key={index}
-                sx={styles.starterRow}
-              >
+      <Box sx={styles.section}>
+        <Typography sx={styles.sectionLabel}>Conversation starters:</Typography>
+        <Box sx={styles.startersList}>
+          {mergedStarters.map((starter, index) => (
+            <Box
+              key={index}
+              sx={styles.starterRow}
+            >
+              <Box sx={styles.editableCard}>
                 <Input.InputBase
                   fullWidth
+                  multiline
+                  disableUnderline
                   value={starter}
                   onChange={e => handleStarterChange(index, e.target.value)}
-                  disabled={!fieldApplyFlags.conversation_starters}
                   inputProps={{ maxLength: MAX_CONVERSATION_STARTER_LENGTH }}
                   enableAutoBlur={false}
+                  sx={styles.cardInput}
                 />
-                {fieldApplyFlags.conversation_starters && (
-                  <IconButton
-                    size="small"
-                    onClick={() => handleRemoveStarter(index)}
-                    sx={styles.removeBtn}
-                  >
-                    <CloseIcon sx={styles.removeIcon} />
-                  </IconButton>
-                )}
               </Box>
-            ))}
-            {fieldApplyFlags.conversation_starters && (
-              <Box sx={styles.addStarterRow}>
-                <Tooltip
-                  placement="top-start"
-                  title={addStarterTooltip}
+              <IconButton
+                size="small"
+                onClick={() => handleRemoveStarter(index)}
+                sx={styles.removeBtn}
+              >
+                <CloseIcon sx={styles.removeIcon} />
+              </IconButton>
+            </Box>
+          ))}
+          <Box sx={styles.addStarterRow}>
+            <Tooltip
+              placement="top-start"
+              title={addStarterTooltip}
+            >
+              <Box sx={styles.addStarterWrapper}>
+                <BaseBtn
+                  variant={BUTTON_VARIANTS.iconLabel}
+                  size="small"
+                  disabled={disableAddStarter}
+                  onClick={handleAddStarter}
+                  startIcon={<PlusIcon />}
                 >
-                  <Box sx={styles.addStarterWrapper}>
-                    <BaseBtn
-                      variant={BUTTON_VARIANTS.iconLabel}
-                      size="small"
-                      disabled={disableAddStarter}
-                      onClick={handleAddStarter}
-                      startIcon={<PlusIcon />}
-                    >
-                      Starter
-                    </BaseBtn>
-                  </Box>
-                </Tooltip>
-                <Typography sx={styles.addedCount}>
-                  {mergedStarters.length}/{MAX_CONVERSATION_STARTERS} added.
-                </Typography>
+                  Starter
+                </BaseBtn>
               </Box>
-            )}
+            </Tooltip>
+            <Typography sx={styles.addedCount}>
+              {mergedStarters.length}/{MAX_CONVERSATION_STARTERS} added.
+            </Typography>
+          </Box>
+        </Box>
+      </Box>
+
+      {mergedTools.length > 0 && (
+        <Box sx={styles.section}>
+          <Typography sx={styles.sectionLabel}>Tools & Skills:</Typography>
+          <Box sx={styles.toolsList}>
+            {mergedTools.map(item => (
+              <ToolItemCard
+                key={item.id}
+                item={item}
+                entityType={item.entityType}
+              />
+            ))}
           </Box>
         </Box>
       )}
@@ -202,6 +276,12 @@ const styles = {
     flexDirection: 'column',
     gap: '1rem',
     padding: '1rem 2rem 1.25rem',
+    flex: 1,
+    minHeight: 0,
+    overflowY: 'auto',
+    maxWidth: '50rem',
+    width: '100%',
+    margin: '0 auto',
   },
   field: {
     display: 'flex',
@@ -214,6 +294,39 @@ const styles = {
     lineHeight: '1.5rem',
     color: 'text.primary',
   },
+  editableCard: ({ palette }) => ({
+    flex: 1,
+    minWidth: 0,
+    padding: '0.5rem 1rem',
+    borderRadius: '0.5rem',
+    backgroundColor: palette.background.userInputBackground,
+    border: `0.0625rem solid ${palette.border.lines}`,
+  }),
+  cardInput: ({ palette }) => ({
+    '& .MuiInputBase-input': {
+      padding: '0 !important',
+      margin: '0 !important',
+      fontSize: '0.875rem',
+      fontWeight: 400,
+      lineHeight: '1.5rem',
+      color: palette.text.secondary,
+    },
+    '& .MuiInputBase-root': {
+      padding: '0 !important',
+      minHeight: 'unset',
+      '&::before, &::after': {
+        display: 'none !important',
+      },
+    },
+    '& .MuiInput-underline::before, & .MuiInput-underline::after': {
+      display: 'none !important',
+    },
+    '& textarea': {
+      padding: '0 !important',
+      margin: '0 !important',
+    },
+    padding: 0,
+  }),
   sectionLabel: {
     fontSize: '0.75rem',
     fontWeight: 500,
@@ -231,22 +344,20 @@ const styles = {
   startersList: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.75rem',
+    gap: '0.5rem',
   },
   starterRow: {
     display: 'flex',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     gap: '0.625rem',
   },
-  removeBtn: ({ palette }) => ({
-    backgroundColor: palette.background.userInputBackgroundActive,
-    borderRadius: '1rem',
+  removeBtn: {
     padding: '0.375rem',
-    marginTop: '0.25rem',
+    color: 'text.secondary',
     '&:hover': {
-      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+      backgroundColor: 'transparent',
     },
-  }),
+  },
   removeIcon: {
     fontSize: '1rem',
   },
@@ -262,6 +373,11 @@ const styles = {
     fontSize: '0.75rem',
     lineHeight: '1rem',
     color: 'text.primary',
+  },
+  toolsList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem',
   },
 };
 

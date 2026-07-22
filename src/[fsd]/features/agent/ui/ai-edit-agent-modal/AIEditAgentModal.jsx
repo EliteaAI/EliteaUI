@@ -1,12 +1,19 @@
-import { memo, useCallback, useRef, useState } from 'react';
+import { memo, useCallback, useMemo, useRef, useState } from 'react';
 
 import { useFormikContext } from 'formik';
+import { flushSync } from 'react-dom';
 
 import { EditEntityModal } from '@/[fsd]/entities/edit-entity-with-ai';
 import { useGenerateAgentDraftMutation } from '@/[fsd]/features/agent/api';
 import { EDIT_STEP_KEYS } from '@/[fsd]/features/agent/lib/constants';
 import { AgentAIEditionStepsHelpers } from '@/[fsd]/features/agent/lib/helpers';
-import { useLazySkillDetailsQuery, useUpdateSkillRelationMutation } from '@/[fsd]/features/skill/api';
+import {
+  useGetApplicationSkillsQuery,
+  useLazySkillDetailsQuery,
+  useUpdateSkillRelationMutation,
+} from '@/[fsd]/features/skill/api';
+import { ModalConstants } from '@/[fsd]/shared/lib/constants';
+import { Input, Modal } from '@/[fsd]/shared/ui';
 import {
   useLazyApplicationDetailsQuery,
   useToolkitAssociateMutation,
@@ -15,6 +22,8 @@ import {
 import { filterEmptyStrings } from '@/common/applicationUtils';
 import { buildErrorMessage } from '@/common/utils';
 import { mapAssociationError } from '@/hooks/application/useAgentPipelineAssociation';
+import useSaveNewVersion from '@/hooks/application/useSaveNewVersion';
+import useSaveVersion from '@/hooks/application/useSaveVersion';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 
@@ -32,10 +41,13 @@ const AIEditAgentModal = memo(props => {
   const { open, onClose } = props;
 
   const currentDataRef = useRef(null);
+  const pendingDraftDataRef = useRef(null);
+  const onCreateNewVersionRef = useRef(null);
+  const saveVersionRef = useRef(null);
 
   const formik = useFormikContext();
   const projectId = useSelectedProjectId();
-  const { toastWarning } = useToast();
+  const { toastWarning, toastError, toastSuccess } = useToast();
 
   const [generateDraft, { error: generateError, reset: resetGenerate }] = useGenerateAgentDraftMutation();
   const [associateToolkit] = useToolkitAssociateMutation();
@@ -46,7 +58,36 @@ const AIEditAgentModal = memo(props => {
 
   const [steps, setSteps] = useState([]);
   const [fieldApplyFlags, setFieldApplyFlags] = useState(DEFAULT_FIELD_FLAGS);
-  const [toolSelections, setToolSelections] = useState({ toAdd: new Set(), toRemove: new Set(), toKeep: new Set() });
+  const [toolSelections, setToolSelections] = useState({
+    toAdd: new Set(),
+    toRemove: new Set(),
+    toKeep: new Set(),
+  });
+  const [showVersionModal, setShowVersionModal] = useState(false);
+  const [versionName, setVersionName] = useState('');
+
+  const { onCreateNewVersion, isSavingNewVersion } = useSaveNewVersion({
+    toastError,
+    toastSuccess,
+    applicationId: formik.values.id,
+    versionDetails: {
+      ...formik.values.version_details,
+      id: undefined,
+    },
+    sourceVersionId: formik.values.version_details?.id,
+    webhook_secret: formik.values.webhook_secret,
+  });
+
+  onCreateNewVersionRef.current = onCreateNewVersion;
+
+  const { onSave: saveVersion } = useSaveVersion();
+  saveVersionRef.current = saveVersion;
+
+  const entityVersionId = formik.values.version_details?.id;
+  const { data: applicationSkills } = useGetApplicationSkillsQuery(
+    { projectId, appVersionId: entityVersionId },
+    { skip: !projectId || !entityVersionId },
+  );
 
   const handleGenerate = useCallback(
     description => {
@@ -63,30 +104,58 @@ const AIEditAgentModal = memo(props => {
     [generateDraft, projectId, formik.values],
   );
 
-  const handleDraftGenerated = useCallback(draftData => {
-    const visibleSteps = AgentAIEditionStepsHelpers.computeVisibleSteps(currentDataRef.current, draftData);
+  const handleDraftGenerated = useCallback(
+    draftData => {
+      const visibleSteps = AgentAIEditionStepsHelpers.computeVisibleSteps(currentDataRef.current, draftData);
 
-    setSteps(visibleSteps);
-    setFieldApplyFlags({ ...DEFAULT_FIELD_FLAGS });
+      setSteps(visibleSteps);
+      setFieldApplyFlags({ ...DEFAULT_FIELD_FLAGS });
 
-    const addIds = new Set([
-      ...(draftData.suggested_toolkits || []).map(t => t.id),
-      ...(draftData.suggested_mcp || []).map(m => m.id),
-      ...(draftData.suggested_agents || []).map(a => a.id),
-      ...(draftData.suggested_pipelines || []).map(p => p.id),
-      ...(draftData.suggested_skills || []).map(s => s.id),
-    ]);
+      const removeIds = new Set([
+        ...(draftData.tools_to_remove || []).map(t => `toolkit:${t.id}`),
+        ...(draftData.skills_to_remove || []).map(s => `skill:${s.id}`),
+      ]);
 
-    const removeIds = new Set([
-      ...(draftData.tools_to_remove || []).map(t => t.id),
-      ...(draftData.skills_to_remove || []).map(s => s.id),
-    ]);
+      const snapshotTools = currentDataRef.current?.version_details?.tools || [];
+      const snapshotSkills = (applicationSkills?.skills || []).map(s => ({
+        ...s,
+        id: s.skill_id,
+        type: 'skill',
+      }));
+      const allCurrentTools = [...snapshotTools, ...snapshotSkills];
+      const currentKeys = new Set(
+        allCurrentTools.map(t => {
+          const type = t.type === 'application' ? 'agent' : t.type === 'skill' ? 'skill' : 'toolkit';
+          return `${type}:${t.id}`;
+        }),
+      );
 
-    const currentTools = currentDataRef.current?.version_details?.tools || [];
-    const keepIds = new Set(currentTools.filter(t => !removeIds.has(t.id)).map(t => t.id));
+      const addIds = new Set(
+        [
+          ...(draftData.suggested_toolkits || []).map(t => `toolkit:${t.id}`),
+          ...(draftData.suggested_mcp || []).map(m => `mcp:${m.id}`),
+          ...(draftData.suggested_agents || []).map(a => `agent:${a.id}`),
+          ...(draftData.suggested_pipelines || []).map(p => `pipeline:${p.id}`),
+          ...(draftData.suggested_skills || []).map(s => `skill:${s.id}`),
+        ].filter(key => !currentKeys.has(key)),
+      );
 
-    setToolSelections({ toAdd: addIds, toRemove: removeIds, toKeep: keepIds });
-  }, []);
+      const keepIds = new Set(
+        allCurrentTools
+          .filter(t => {
+            const type = t.type === 'application' ? 'agent' : t.type === 'skill' ? 'skill' : 'toolkit';
+            return !removeIds.has(`${type}:${t.id}`);
+          })
+          .map(t => {
+            const type = t.type === 'application' ? 'agent' : t.type === 'skill' ? 'skill' : 'toolkit';
+            return `${type}:${t.id}`;
+          }),
+      );
+
+      setToolSelections({ toAdd: addIds, toRemove: removeIds, toKeep: keepIds });
+    },
+    [applicationSkills?.skills],
+  );
 
   const handleToggleField = useCallback(field => {
     setFieldApplyFlags(prev => ({ ...prev, [field]: !prev[field] }));
@@ -109,34 +178,67 @@ const AIEditAgentModal = memo(props => {
 
       if (!versionId) return;
 
+      const removeSuggestionKeys = new Set([
+        ...(draftData.tools_to_remove || []).map(t => `toolkit:${t.id}`),
+        ...(draftData.skills_to_remove || []).map(s => `skill:${s.id}`),
+      ]);
+
+      const snapshotTools = formik.values.version_details?.tools || [];
+      const snapshotSkills = (applicationSkills?.skills || []).map(s => ({
+        ...s,
+        id: s.skill_id,
+        type: 'skill',
+      }));
+      const allCurrent = [...snapshotTools, ...snapshotSkills];
+
+      const uncheckedKeepToolkits = [];
+      const uncheckedKeepApps = [];
+      const uncheckedKeepSkills = [];
+
+      allCurrent.forEach(t => {
+        const type = t.type === 'application' ? 'agent' : t.type === 'skill' ? 'skill' : 'toolkit';
+        const key = `${type}:${t.id}`;
+        if (removeSuggestionKeys.has(key) || toolSelections.toKeep.has(key)) return;
+        if (type === 'skill') uncheckedKeepSkills.push(t);
+        else if (t.type === 'application') uncheckedKeepApps.push(t);
+        else uncheckedKeepToolkits.push(t);
+      });
+
       const selectedAddToolkits = [
-        ...(draftData.suggested_toolkits || []),
-        ...(draftData.suggested_mcp || []),
-      ].filter(t => toolSelections.toAdd.has(t.id));
+        ...(draftData.suggested_toolkits || []).filter(t => toolSelections.toAdd.has(`toolkit:${t.id}`)),
+        ...(draftData.suggested_mcp || []).filter(m => toolSelections.toAdd.has(`mcp:${m.id}`)),
+      ];
 
       const selectedAddAgents = (draftData.suggested_agents || []).filter(a =>
-        toolSelections.toAdd.has(a.id),
+        toolSelections.toAdd.has(`agent:${a.id}`),
       );
 
       const selectedAddPipelines = (draftData.suggested_pipelines || []).filter(p =>
-        toolSelections.toAdd.has(p.id),
+        toolSelections.toAdd.has(`pipeline:${p.id}`),
       );
 
       const selectedAddSkills = (draftData.suggested_skills || []).filter(s =>
-        toolSelections.toAdd.has(s.id),
+        toolSelections.toAdd.has(`skill:${s.id}`),
       );
 
       const selectedRemoveToolkits = (draftData.tools_to_remove || []).filter(t =>
-        toolSelections.toRemove.has(t.id),
+        toolSelections.toRemove.has(`toolkit:${t.id}`),
       );
 
       const selectedRemoveSkills = (draftData.skills_to_remove || []).filter(s =>
-        toolSelections.toRemove.has(s.id),
+        toolSelections.toRemove.has(`skill:${s.id}`),
       );
 
-      if (selectedAddToolkits.length > 0) {
+      const allToolkitsToAdd = selectedAddToolkits;
+      const allToolkitsToRemove = [...selectedRemoveToolkits, ...uncheckedKeepToolkits];
+      const allAppsToAdd = [...selectedAddAgents, ...selectedAddPipelines];
+      const allAppsToRemove = uncheckedKeepApps;
+      const allSkillsToAdd = selectedAddSkills;
+      const allSkillsToRemove = [...selectedRemoveSkills, ...uncheckedKeepSkills];
+
+      if (allToolkitsToAdd.length > 0) {
         await Promise.allSettled(
-          selectedAddToolkits.map(t =>
+          allToolkitsToAdd.map(t =>
             associateToolkit({
               projectId,
               toolkitId: t.id,
@@ -149,9 +251,9 @@ const AIEditAgentModal = memo(props => {
         );
       }
 
-      if (selectedRemoveToolkits.length > 0) {
+      if (allToolkitsToRemove.length > 0) {
         await Promise.allSettled(
-          selectedRemoveToolkits.map(t =>
+          allToolkitsToRemove.map(t =>
             associateToolkit({
               projectId,
               toolkitId: t.id,
@@ -164,11 +266,9 @@ const AIEditAgentModal = memo(props => {
         );
       }
 
-      const addApps = [...selectedAddAgents, ...selectedAddPipelines];
-
-      if (addApps.length > 0) {
+      if (allAppsToAdd.length > 0) {
         const results = await Promise.allSettled(
-          addApps.map(async a => {
+          allAppsToAdd.map(async a => {
             const { data: appDetails } = await fetchApplicationDetails({
               projectId,
               applicationId: a.id,
@@ -200,9 +300,30 @@ const AIEditAgentModal = memo(props => {
           });
       }
 
-      if (selectedAddSkills.length > 0) {
+      if (allAppsToRemove.length > 0) {
         await Promise.allSettled(
-          selectedAddSkills.map(async skill => {
+          allAppsToRemove.map(async a => {
+            const { data: appDetails } = await fetchApplicationDetails({
+              projectId,
+              applicationId: a.id,
+            });
+
+            if (!appDetails?.version_details?.id) return;
+            return updateApplicationRelation({
+              projectId,
+              selectedApplicationId: a.id,
+              selectedVersionId: appDetails.version_details.id,
+              application_id: entityId,
+              version_id: versionId,
+              has_relation: false,
+            }).unwrap();
+          }),
+        );
+      }
+
+      if (allSkillsToAdd.length > 0) {
+        await Promise.allSettled(
+          allSkillsToAdd.map(async skill => {
             const { data: skillDetails } = await fetchSkillDetails({
               projectId,
               skillId: skill.id,
@@ -221,9 +342,9 @@ const AIEditAgentModal = memo(props => {
         );
       }
 
-      if (selectedRemoveSkills.length > 0) {
+      if (allSkillsToRemove.length > 0) {
         await Promise.allSettled(
-          selectedRemoveSkills.map(async skill => {
+          allSkillsToRemove.map(async skill => {
             const { data: skillDetails } = await fetchSkillDetails({
               projectId,
               skillId: skill.id,
@@ -245,6 +366,7 @@ const AIEditAgentModal = memo(props => {
     [
       formik.values,
       toolSelections,
+      applicationSkills?.skills,
       associateToolkit,
       updateApplicationRelation,
       updateSkillRelation,
@@ -255,8 +377,8 @@ const AIEditAgentModal = memo(props => {
     ],
   );
 
-  const handleSave = useCallback(
-    async draftData => {
+  const applyFieldChanges = useCallback(
+    draftData => {
       if (fieldApplyFlags.name) formik.setFieldValue('name', draftData.name || '');
 
       if (fieldApplyFlags.description) formik.setFieldValue('description', draftData.description || '');
@@ -272,13 +394,106 @@ const AIEditAgentModal = memo(props => {
           'version_details.conversation_starters',
           filterEmptyStrings(draftData.conversation_starters),
         );
-
-      await applyToolAssociations(draftData);
     },
-    [fieldApplyFlags, formik, applyToolAssociations],
+    [fieldApplyFlags, formik],
+  );
+
+  const handleSave = useCallback(
+    async draftData => {
+      // flushSync forces a synchronous re-render so useSaveVersion picks up
+      // the updated formik values before saveVersionRef.current is called below.
+      flushSync(() => {
+        applyFieldChanges(draftData);
+      });
+      await applyToolAssociations(draftData);
+      await saveVersionRef.current();
+
+      // useSaveVersion resets formik with stale version_details.tools (it reads
+      // tools from formik which was not updated by applyToolAssociations).
+      // Refetch application details to get the updated tools list.
+      const { data: freshData } = await fetchApplicationDetails({
+        projectId,
+        applicationId: formik.values.id,
+      });
+      if (freshData) {
+        formik.resetForm({ values: freshData });
+      }
+    },
+    [applyFieldChanges, applyToolAssociations, fetchApplicationDetails, projectId, formik],
+  );
+
+  const handleSaveAsVersionClick = useCallback(draftData => {
+    pendingDraftDataRef.current = draftData;
+    setShowVersionModal(true);
+  }, []);
+
+  const handleConfirmVersion = useCallback(async () => {
+    const trimmedName = versionName.trim();
+    if (!trimmedName) return;
+
+    const versions = formik.values.versions || [];
+    if (versions.find(v => v.name === trimmedName)) {
+      toastError('A version with that name already exists. Please pick a unique name.');
+      return;
+    }
+
+    const draftData = pendingDraftDataRef.current;
+    if (!draftData) return;
+
+    // flushSync forces a synchronous re-render so useSaveNewVersion picks up
+    // the updated formik values before onCreateNewVersion is called below.
+    flushSync(() => {
+      applyFieldChanges(draftData);
+    });
+
+    await applyToolAssociations(draftData);
+    await onCreateNewVersionRef.current(trimmedName);
+
+    // Refetch application details to get the updated tools list
+    const { data: freshData } = await fetchApplicationDetails({
+      projectId,
+      applicationId: formik.values.id,
+    });
+    if (freshData) {
+      formik.resetForm({ values: freshData });
+    }
+
+    setShowVersionModal(false);
+    setVersionName('');
+    pendingDraftDataRef.current = null;
+  }, [
+    versionName,
+    formik,
+    toastError,
+    applyFieldChanges,
+    applyToolAssociations,
+    fetchApplicationDetails,
+    projectId,
+  ]);
+
+  const handleCancelVersion = useCallback(() => {
+    setShowVersionModal(false);
+    setVersionName('');
+    pendingDraftDataRef.current = null;
+  }, []);
+
+  const handleVersionKeyDown = useCallback(
+    e => {
+      if (e.key === 'Enter' && versionName.trim()) {
+        e.preventDefault();
+        handleConfirmVersion();
+      }
+    },
+    [versionName, handleConfirmVersion],
   );
 
   const currentData = currentDataRef.current || formik.values;
+
+  const currentTools = useMemo(() => {
+    const tools = currentData?.version_details?.tools || [];
+    const skills = (applicationSkills?.skills || []).map(s => ({ ...s, id: s.skill_id, type: 'skill' }));
+    return [...tools, ...skills];
+  }, [currentData?.version_details?.tools, applicationSkills?.skills]);
 
   const renderStep = useCallback(
     (stepKey, draftData, setDraftData) => {
@@ -300,7 +515,7 @@ const AIEditAgentModal = memo(props => {
         case EDIT_STEP_KEYS.TOOLS_SKILLS:
           return (
             <ToolsSkillsStep
-              currentData={currentData}
+              currentTools={currentTools}
               draftData={draftData}
               toolSelections={toolSelections}
               onToggleTool={handleToggleTool}
@@ -310,41 +525,70 @@ const AIEditAgentModal = memo(props => {
           return (
             <SummaryStep
               currentData={currentData}
+              currentTools={currentTools}
               draftData={draftData}
               onDraftChange={newDraft => setDraftData(newDraft)}
               fieldApplyFlags={fieldApplyFlags}
+              onToggleField={handleToggleField}
+              toolSelections={toolSelections}
             />
           );
         default:
           return null;
       }
     },
-    [currentData, fieldApplyFlags, handleToggleField, toolSelections, handleToggleTool],
+    [currentData, currentTools, fieldApplyFlags, handleToggleField, toolSelections, handleToggleTool],
   );
 
   return (
-    <EditEntityModal
-      open={open}
-      onClose={onClose}
-      entityLabel="agent"
-      placeholder="Describe the changes you'd like to make to the agent. AI can help update its description, instructions, tools, skills, and other configuration details."
-      onGenerate={handleGenerate}
-      generateError={generateError}
-      resetGenerate={resetGenerate}
-      onDraftGenerated={handleDraftGenerated}
-      steps={steps}
-      renderStep={renderStep}
-      onSave={handleSave}
-      saveLabel="Save Agent"
-      savingLabel="Saving..."
-      modalTestId="ai-edit-agent-modal"
-      closeButtonTestId="ai-edit-agent-close-button"
-      promptInputTestId="ai-edit-agent-prompt-input"
-      errorAlertTestId="ai-edit-agent-error-alert"
-      loadingIndicatorTestId="ai-edit-agent-loading-indicator"
-      generateButtonTestId="ai-edit-agent-generate-button"
-      cancelButtonTestId="ai-edit-agent-cancel-button"
-    />
+    <>
+      <EditEntityModal
+        open={open}
+        onClose={onClose}
+        entityLabel="agent"
+        placeholder="Describe the changes you'd like to make to the agent. AI can help update its description, instructions, tools, skills, and other configuration details."
+        onGenerate={handleGenerate}
+        generateError={generateError}
+        resetGenerate={resetGenerate}
+        onDraftGenerated={handleDraftGenerated}
+        steps={steps}
+        renderStep={renderStep}
+        onSave={handleSave}
+        onSaveAsVersion={handleSaveAsVersionClick}
+        saveLabel="Save"
+        savingLabel="Saving..."
+        modalTestId="ai-edit-agent-modal"
+        closeButtonTestId="ai-edit-agent-close-button"
+        promptInputTestId="ai-edit-agent-prompt-input"
+        errorAlertTestId="ai-edit-agent-error-alert"
+        loadingIndicatorTestId="ai-edit-agent-loading-indicator"
+        generateButtonTestId="ai-edit-agent-generate-button"
+        cancelButtonTestId="ai-edit-agent-cancel-button"
+      />
+      <Modal.BaseModal
+        open={showVersionModal}
+        variant={ModalConstants.MODAL_VARIANT.simple}
+        titleIcon={ModalConstants.MODAL_ICON_TYPE.success}
+        title="Create version"
+        onClose={handleCancelVersion}
+        onConfirm={handleConfirmVersion}
+        confirmButtonText="Save"
+        confirming={!versionName.trim() || isSavingNewVersion}
+        onKeyDown={handleVersionKeyDown}
+        closeButtonTestId="ai-edit-version-dialog-close-button"
+        cancelButtonTestId="ai-edit-version-dialog-cancel-button"
+        confirmButtonTestId="ai-edit-version-dialog-save-button"
+        content={
+          <Input.InputBase
+            label="Name"
+            value={versionName}
+            onChange={e => setVersionName(e.target.value)}
+            inputProps={{ maxLength: 255, 'data-testid': 'ai-edit-version-dialog-name-input' }}
+            autoFocus
+          />
+        }
+      />
+    </>
   );
 });
 

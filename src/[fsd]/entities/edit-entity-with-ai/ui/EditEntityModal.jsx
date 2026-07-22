@@ -27,6 +27,7 @@ const EditEntityModal = memo(props => {
     steps,
     renderStep,
     onSave,
+    onSaveAsVersion,
     saveLabel,
     savingLabel,
     modalTestId,
@@ -115,6 +116,11 @@ const EditEntityModal = memo(props => {
       setIsSaving(false);
     }
   }, [draftData, onSave, handleClose]);
+
+  const handleSaveAsVersionClick = useCallback(() => {
+    if (!draftData || !onSaveAsVersion) return;
+    onSaveAsVersion(draftData);
+  }, [draftData, onSaveAsVersion]);
 
   const handleKeyDown = useCallback(
     e => {
@@ -223,8 +229,6 @@ const EditEntityModal = memo(props => {
   const renderWizardFooter = () => {
     if (phase !== PHASES.WIZARD) return null;
 
-    const entityLabelCapitalized = entityLabel.charAt(0).toUpperCase() + entityLabel.slice(1);
-
     return (
       <Box sx={styles.wizardFooter}>
         <BaseBtn
@@ -247,14 +251,26 @@ const EditEntityModal = memo(props => {
             </BaseBtn>
           )}
           {isLastStep ? (
-            <BaseBtn
-              variant={BUTTON_VARIANTS.elitea}
-              size="small"
-              onClick={handleSave}
-              disabled={isSaving}
-            >
-              {isSaving ? savingLabel || 'Saving...' : saveLabel || `Save ${entityLabelCapitalized}`}
-            </BaseBtn>
+            <>
+              <BaseBtn
+                variant={BUTTON_VARIANTS.elitea}
+                size="small"
+                onClick={handleSave}
+                disabled={isSaving}
+              >
+                {isSaving ? savingLabel || 'Saving...' : saveLabel || 'Save'}
+              </BaseBtn>
+              {onSaveAsVersion && (
+                <BaseBtn
+                  variant={BUTTON_VARIANTS.elitea}
+                  size="small"
+                  onClick={handleSaveAsVersionClick}
+                  disabled={isSaving}
+                >
+                  Save as Version
+                </BaseBtn>
+              )}
+            </>
           ) : (
             <BaseBtn
               variant={BUTTON_VARIANTS.elitea}

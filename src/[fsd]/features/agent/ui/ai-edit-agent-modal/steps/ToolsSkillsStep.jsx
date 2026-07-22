@@ -13,12 +13,7 @@ const normalizeToolItem = (item, entityType) => ({
 });
 
 const ToolsSkillsStep = memo(props => {
-  const { currentData, draftData, toolSelections, onToggleTool } = props;
-
-  const currentTools = useMemo(
-    () => currentData?.version_details?.tools || [],
-    [currentData?.version_details?.tools],
-  );
+  const { currentTools = [], draftData, toolSelections, onToggleTool } = props;
 
   const removeItems = useMemo(
     () => [
@@ -29,14 +24,19 @@ const ToolsSkillsStep = memo(props => {
   );
 
   const addItems = useMemo(() => {
-    const currentIds = new Set(currentTools.map(t => t.id));
+    const currentKeys = new Set(
+      currentTools.map(t => {
+        const type = t.type === 'application' ? 'agent' : t.type === 'skill' ? 'skill' : 'toolkit';
+        return `${type}:${t.id}`;
+      }),
+    );
     return [
       ...(draftData.suggested_toolkits || []).map(item => normalizeToolItem(item, 'toolkit')),
       ...(draftData.suggested_mcp || []).map(item => normalizeToolItem(item, 'mcp')),
       ...(draftData.suggested_agents || []).map(item => normalizeToolItem(item, 'agent')),
       ...(draftData.suggested_pipelines || []).map(item => normalizeToolItem(item, 'pipeline')),
       ...(draftData.suggested_skills || []).map(item => normalizeToolItem(item, 'skill')),
-    ].filter(item => !currentIds.has(item.id));
+    ].filter(item => !currentKeys.has(`${item.entityType}:${item.id}`));
   }, [
     currentTools,
     draftData.suggested_toolkits,
@@ -49,16 +49,29 @@ const ToolsSkillsStep = memo(props => {
   const keepItems = useMemo(() => {
     if (!currentTools.length) return [];
 
-    const removeIds = new Set(removeItems.map(i => i.id));
+    const removeKeys = new Set(removeItems.map(i => `${i.entityType}:${i.id}`));
 
     return currentTools
-      .filter(t => !removeIds.has(t.id))
-      .map(item => normalizeToolItem(item, item.type === 'application' ? 'agent' : 'toolkit'));
+      .filter(t => {
+        const type = t.type === 'application' ? 'agent' : t.type === 'skill' ? 'skill' : 'toolkit';
+        return !removeKeys.has(`${type}:${t.id}`);
+      })
+      .map(item =>
+        normalizeToolItem(
+          item,
+          item.type === 'application' ? 'agent' : item.type === 'skill' ? 'skill' : 'toolkit',
+        ),
+      );
   }, [currentTools, removeItems]);
 
   const currentItemsNormalized = useMemo(
     () =>
-      currentTools.map(item => normalizeToolItem(item, item.type === 'application' ? 'agent' : 'toolkit')),
+      currentTools.map(item =>
+        normalizeToolItem(
+          item,
+          item.type === 'application' ? 'agent' : item.type === 'skill' ? 'skill' : 'toolkit',
+        ),
+      ),
     [currentTools],
   );
 
@@ -86,25 +99,28 @@ const ToolsSkillsStep = memo(props => {
             <Box sx={styles.section}>
               <Typography sx={styles.sectionLabel}>Suggested to Remove:</Typography>
               <Box sx={styles.cardList}>
-                {removeItems.map(item => (
-                  <Box
-                    key={item.id}
-                    sx={styles.checkboxRow}
-                    onClick={() => onToggleTool('toRemove', item.id)}
-                  >
-                    <BaseCheckbox
-                      size="small"
-                      checked={toolSelections.toRemove.has(item.id)}
-                      onChange={() => onToggleTool('toRemove', item.id)}
-                      onClick={e => e.stopPropagation()}
-                      sx={styles.checkbox}
-                    />
-                    <ToolItemCard
-                      item={item}
-                      entityType={item.entityType}
-                    />
-                  </Box>
-                ))}
+                {removeItems.map(item => {
+                  const toolKey = `${item.entityType}:${item.id}`;
+                  return (
+                    <Box
+                      key={toolKey}
+                      sx={styles.checkboxRow}
+                      onClick={() => onToggleTool('toRemove', toolKey)}
+                    >
+                      <BaseCheckbox
+                        size="small"
+                        checked={toolSelections.toRemove.has(toolKey)}
+                        onChange={() => onToggleTool('toRemove', toolKey)}
+                        onClick={e => e.stopPropagation()}
+                        sx={styles.checkbox}
+                      />
+                      <ToolItemCard
+                        item={item}
+                        entityType={item.entityType}
+                      />
+                    </Box>
+                  );
+                })}
               </Box>
             </Box>
           )}
@@ -112,25 +128,28 @@ const ToolsSkillsStep = memo(props => {
             <Box sx={styles.section}>
               <Typography sx={styles.sectionLabel}>Suggested to Add:</Typography>
               <Box sx={styles.cardList}>
-                {addItems.map(item => (
-                  <Box
-                    key={item.id}
-                    sx={styles.checkboxRow}
-                    onClick={() => onToggleTool('toAdd', item.id)}
-                  >
-                    <BaseCheckbox
-                      size="small"
-                      checked={toolSelections.toAdd.has(item.id)}
-                      onChange={() => onToggleTool('toAdd', item.id)}
-                      onClick={e => e.stopPropagation()}
-                      sx={styles.checkbox}
-                    />
-                    <ToolItemCard
-                      item={item}
-                      entityType={item.entityType}
-                    />
-                  </Box>
-                ))}
+                {addItems.map(item => {
+                  const toolKey = `${item.entityType}:${item.id}`;
+                  return (
+                    <Box
+                      key={toolKey}
+                      sx={styles.checkboxRow}
+                      onClick={() => onToggleTool('toAdd', toolKey)}
+                    >
+                      <BaseCheckbox
+                        size="small"
+                        checked={toolSelections.toAdd.has(toolKey)}
+                        onChange={() => onToggleTool('toAdd', toolKey)}
+                        onClick={e => e.stopPropagation()}
+                        sx={styles.checkbox}
+                      />
+                      <ToolItemCard
+                        item={item}
+                        entityType={item.entityType}
+                      />
+                    </Box>
+                  );
+                })}
               </Box>
             </Box>
           )}
@@ -138,25 +157,28 @@ const ToolsSkillsStep = memo(props => {
             <Box sx={styles.section}>
               <Typography sx={styles.sectionLabel}>Suggested to Keep:</Typography>
               <Box sx={styles.cardList}>
-                {keepItems.map(item => (
-                  <Box
-                    key={item.id}
-                    sx={styles.checkboxRow}
-                    onClick={() => onToggleTool('toKeep', item.id)}
-                  >
-                    <BaseCheckbox
-                      size="small"
-                      checked={toolSelections.toKeep?.has(item.id) ?? true}
-                      onChange={() => onToggleTool('toKeep', item.id)}
-                      onClick={e => e.stopPropagation()}
-                      sx={styles.checkbox}
-                    />
-                    <ToolItemCard
-                      item={item}
-                      entityType={item.entityType}
-                    />
-                  </Box>
-                ))}
+                {keepItems.map(item => {
+                  const toolKey = `${item.entityType}:${item.id}`;
+                  return (
+                    <Box
+                      key={toolKey}
+                      sx={styles.checkboxRow}
+                      onClick={() => onToggleTool('toKeep', toolKey)}
+                    >
+                      <BaseCheckbox
+                        size="small"
+                        checked={toolSelections.toKeep?.has(toolKey) ?? true}
+                        onChange={() => onToggleTool('toKeep', toolKey)}
+                        onClick={e => e.stopPropagation()}
+                        sx={styles.checkbox}
+                      />
+                      <ToolItemCard
+                        item={item}
+                        entityType={item.entityType}
+                      />
+                    </Box>
+                  );
+                })}
               </Box>
             </Box>
           )}
