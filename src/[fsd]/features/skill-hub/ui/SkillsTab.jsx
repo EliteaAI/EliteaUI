@@ -11,10 +11,10 @@ import {
 } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { SkillHubConstants } from '@/[fsd]/features/skill-hub/lib/constants';
 import { SkillHubHelpers } from '@/[fsd]/features/skill-hub/lib/helpers';
-import { useSkillHubData } from '@/[fsd]/features/skill-hub/lib/hooks';
+import { useCatalogAutoRefresh, useSkillHubData } from '@/[fsd]/features/skill-hub/lib/hooks';
 import SkillCategorySection from '@/[fsd]/features/skill-hub/ui/SkillCategorySection';
 import SkillHubModal from '@/[fsd]/features/skill-hub/ui/SkillHubModal';
-import { useCatalogAutoRefresh, useGroupedCategories } from '@/[fsd]/shared/lib/hooks';
+import { useGroupedCategories } from '@/[fsd]/shared/lib/hooks';
 import { Category } from '@/[fsd]/shared/ui';
 import useDebounceValue from '@/hooks/useDebounceValue';
 
