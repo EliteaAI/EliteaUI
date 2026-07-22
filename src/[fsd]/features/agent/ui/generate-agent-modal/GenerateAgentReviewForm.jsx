@@ -1,9 +1,11 @@
 import { memo, useCallback, useEffect, useMemo } from 'react';
 
-import { Box, IconButton, TextField, Typography } from '@mui/material';
+import { Box, IconButton, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { validateAgentDraft } from '@/[fsd]/features/agent/lib/helpers';
+import { useFieldFocus } from '@/[fsd]/shared/lib/hooks';
+import { Input, Text } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import PlusIcon from '@/assets/plus-icon.svg?react';
 import {
@@ -35,6 +37,7 @@ const GenerateAgentReviewForm = memo(props => {
   } = props;
 
   const styles = generateAgentReviewFormStyles();
+  const { toggleFieldFocus, isFocused } = useFieldFocus();
 
   const validationErrors = useMemo(() => validateAgentDraft(draft), [draft]);
 
@@ -89,22 +92,36 @@ const GenerateAgentReviewForm = memo(props => {
   return (
     <Box sx={styles.container}>
       <Box sx={styles.field}>
-        <Typography sx={styles.label}>Name</Typography>
-        <TextField
+        <Input.InputBase
+          label="Name"
+          labelVariant="bodyMedium"
+          variant={Input.INPUT_VARIANTS.outlined}
           fullWidth
           size="small"
           value={draft.name || ''}
           onChange={e => handleFieldChange('name', e.target.value)}
+          onFocus={() => toggleFieldFocus('name')}
+          onBlur={() => toggleFieldFocus(null)}
           slotProps={{ htmlInput: { maxLength: MAX_NAME_LENGTH } }}
-          helperText={validationErrors.name || `${(draft.name || '').length}/${MAX_NAME_LENGTH}`}
+          helperText={validationErrors.name}
           error={!!validationErrors.name}
-          sx={styles.textField}
+          sx={styles.compactMultilineInput}
         />
+        {isFocused('name') && (
+          <Text.CharacterCounter
+            value={draft.name || ''}
+            maxLength={MAX_NAME_LENGTH}
+            hideMaxLimitMessage
+            sx={styles.characterCounter}
+          />
+        )}
       </Box>
 
       <Box sx={styles.field}>
-        <Typography sx={styles.label}>Description</Typography>
-        <TextField
+        <Input.InputBase
+          label="Description"
+          labelVariant="bodyMedium"
+          variant={Input.INPUT_VARIANTS.outlined}
           fullWidth
           size="small"
           multiline
@@ -112,18 +129,27 @@ const GenerateAgentReviewForm = memo(props => {
           maxRows={4}
           value={draft.description || ''}
           onChange={e => handleFieldChange('description', e.target.value)}
+          onFocus={() => toggleFieldFocus('description')}
+          onBlur={() => toggleFieldFocus(null)}
           slotProps={{ htmlInput: { maxLength: MAX_DESCRIPTION_LENGTH } }}
-          helperText={
-            validationErrors.description || `${(draft.description || '').length}/${MAX_DESCRIPTION_LENGTH}`
-          }
+          helperText={validationErrors.description}
           error={!!validationErrors.description}
-          sx={styles.textField}
         />
+        {isFocused('description') && (
+          <Text.CharacterCounter
+            value={draft.description || ''}
+            maxLength={MAX_DESCRIPTION_LENGTH}
+            hideMaxLimitMessage
+            sx={styles.characterCounter}
+          />
+        )}
       </Box>
 
       <Box sx={styles.field}>
-        <Typography sx={styles.label}>Instructions</Typography>
-        <TextField
+        <Input.InputBase
+          label="Instructions"
+          labelVariant="bodyMedium"
+          variant={Input.INPUT_VARIANTS.outlined}
           fullWidth
           size="small"
           multiline
@@ -131,25 +157,35 @@ const GenerateAgentReviewForm = memo(props => {
           maxRows={10}
           value={draft.instructions || ''}
           onChange={e => handleFieldChange('instructions', e.target.value)}
-          sx={styles.textField}
         />
       </Box>
 
       <Box sx={styles.field}>
-        <Typography sx={styles.label}>Welcome Message</Typography>
-        <TextField
-          fullWidth
-          size="small"
+        <Input.InputBase
+          variant={Input.INPUT_VARIANTS.outlined}
+          label="Welcome Message"
+          labelVariant="bodyMedium"
+          multiline
+          minRows={1}
+          maxRows={4}
           value={draft.welcome_message || ''}
           onChange={e => handleFieldChange('welcome_message', e.target.value)}
+          onFocus={() => toggleFieldFocus('welcome_message')}
+          onBlur={() => toggleFieldFocus(null)}
           slotProps={{ htmlInput: { maxLength: MAX_WELCOME_MESSAGE_LENGTH } }}
-          helperText={
-            validationErrors.welcome_message ||
-            `${(draft.welcome_message || '').length}/${MAX_WELCOME_MESSAGE_LENGTH}`
-          }
+          helperText={validationErrors.welcome_message}
           error={!!validationErrors.welcome_message}
-          sx={styles.textField}
+          hasActionsToolBar={false}
+          sx={styles.compactMultilineInput}
         />
+        {isFocused('welcome_message') && (
+          <Text.CharacterCounter
+            value={draft.welcome_message || ''}
+            maxLength={MAX_WELCOME_MESSAGE_LENGTH}
+            hideMaxLimitMessage
+            sx={styles.characterCounter}
+          />
+        )}
       </Box>
 
       {starters.length > 0 && (
@@ -159,25 +195,40 @@ const GenerateAgentReviewForm = memo(props => {
             {starters.map((starter, index) => (
               <Box
                 key={index}
-                sx={styles.starterRow}
+                sx={styles.starterInputWrapper}
               >
-                <TextField
-                  fullWidth
-                  size="small"
-                  value={starter}
-                  onChange={e => handleStarterChange(index, e.target.value)}
-                  slotProps={{ htmlInput: { maxLength: MAX_CONVERSATION_STARTER_LENGTH } }}
-                  helperText={`${(starter || '').length}/${MAX_CONVERSATION_STARTER_LENGTH}`}
-                  error={!starter?.trim() && starter !== undefined}
-                  sx={styles.textField}
-                />
-                <IconButton
-                  size="small"
-                  onClick={() => handleRemoveStarter(index)}
-                  sx={styles.removeBtn}
-                >
-                  <CloseIcon sx={styles.removeIcon} />
-                </IconButton>
+                <Box sx={styles.starterRow}>
+                  <Input.InputBase
+                    variant={Input.INPUT_VARIANTS.outlined}
+                    multiline
+                    minRows={1}
+                    maxRows={4}
+                    value={starter}
+                    onChange={e => handleStarterChange(index, e.target.value)}
+                    onFocus={() => toggleFieldFocus(`starter_${index}`)}
+                    onBlur={() => toggleFieldFocus(null)}
+                    slotProps={{ htmlInput: { maxLength: MAX_CONVERSATION_STARTER_LENGTH } }}
+                    error={!starter?.trim() && starter !== undefined}
+                    hasActionsToolBar={false}
+                    sx={styles.compactMultilineInput}
+                    containerProps={{ sx: { flex: 1 } }}
+                  />
+                  <IconButton
+                    size="small"
+                    onClick={() => handleRemoveStarter(index)}
+                    sx={styles.removeBtn}
+                  >
+                    <CloseIcon sx={styles.removeIcon} />
+                  </IconButton>
+                </Box>
+                {isFocused(`starter_${index}`) && (
+                  <Text.CharacterCounter
+                    value={starter || ''}
+                    maxLength={MAX_CONVERSATION_STARTER_LENGTH}
+                    hideMaxLimitMessage
+                    sx={styles.characterCounter}
+                  />
+                )}
               </Box>
             ))}
             <Box sx={styles.addStarterRow}>
@@ -282,39 +333,6 @@ const generateAgentReviewFormStyles = () => ({
     gap: '0.75rem',
     paddingTop: '0.5rem',
   },
-  textField: ({ palette }) => ({
-    '& .MuiOutlinedInput-root': {
-      backgroundColor: palette.background.userInputBackground,
-      borderRadius: '0.5rem',
-      fontSize: '0.875rem',
-      color: palette.text.secondary,
-      '& .MuiOutlinedInput-notchedOutline': {
-        borderColor: palette.border.lines,
-      },
-      '&:hover .MuiOutlinedInput-notchedOutline': {
-        borderColor: palette.border.lines,
-      },
-      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-        borderColor: palette.primary.main,
-        borderWidth: '0.0625rem',
-      },
-    },
-    '& .MuiFormHelperText-root': {
-      fontSize: '0.625rem',
-      margin: '0.125rem 0 0',
-      color: palette.text.primary,
-      visibility: 'hidden',
-      lineHeight: '1rem',
-      textAlign: 'right',
-    },
-    '&:focus-within .MuiFormHelperText-root': {
-      visibility: 'visible',
-    },
-    '& .MuiFormHelperText-root.Mui-error': {
-      visibility: 'visible',
-      color: palette.error.main,
-    },
-  }),
   startersList: {
     display: 'flex',
     flexDirection: 'column',
@@ -322,8 +340,14 @@ const generateAgentReviewFormStyles = () => ({
   },
   starterRow: {
     display: 'flex',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     gap: '0.625rem',
+  },
+  starterInputWrapper: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
+    flex: 1,
   },
   removeBtn: ({ palette }) => ({
     backgroundColor: palette.background.userInputBackgroundActive,
@@ -349,6 +373,14 @@ const generateAgentReviewFormStyles = () => ({
     fontSize: '0.75rem',
     lineHeight: '1rem',
     color: 'text.primary',
+  },
+  characterCounter: {
+    textAlign: 'right',
+  },
+  compactMultilineInput: {
+    '& .MuiOutlinedInput-input.MuiInputBase-inputMultiline': {
+      minHeight: 'auto !important',
+    },
   },
 });
 
