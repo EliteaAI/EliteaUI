@@ -158,7 +158,7 @@ const TestToolSettings = memo(props => {
 
             <Box sx={styles.runToolBtn}>
               <Tooltip title={patInvalid ? PAT_REQUIRED_ACTION_HINT : ''}>
-                <span>
+                <Box component="span">
                   <Button.BaseBtn
                     variant={BUTTON_VARIANTS.special}
                     fullWidth
@@ -168,7 +168,7 @@ const TestToolSettings = memo(props => {
                   >
                     RUN TOOL
                   </Button.BaseBtn>
-                </span>
+                </Box>
               </Tooltip>
             </Box>
           </Box>

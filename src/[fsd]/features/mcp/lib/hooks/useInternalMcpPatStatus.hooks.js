@@ -2,7 +2,8 @@ import { useEffect } from 'react';
 
 import { useInternalMcpPatStatusQuery } from '@/api/toolkits.js';
 
-export const useInternalMcpPatStatus = ({ projectId, toolkitType }) => {
+export const useInternalMcpPatStatus = props => {
+  const { projectId, toolkitType } = props;
   const isMcpType = typeof toolkitType === 'string' && toolkitType.startsWith('mcp');
   const skip = !projectId || !isMcpType;
   const { data, isLoading, refetch } = useInternalMcpPatStatusQuery({ projectId, toolkitType }, { skip });
