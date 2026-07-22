@@ -98,6 +98,7 @@ const CreateSkillTabBar = memo(() => {
   useEffect(() => {
     if (!pendingNav) return;
     navigate(pendingNav, { replace: true });
+    setPendingNav(null);
   }, [navigate, pendingNav]);
 
   useEffect(() => {
