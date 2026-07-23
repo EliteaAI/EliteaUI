@@ -126,6 +126,8 @@ const McpAuthStatus = memo(({ authConfig } = {}) => {
   return shouldRender ? (
     <>
       <Box
+        data-testid="toolkit-connection-status"
+        data-connected={hasLoggedInToMcp ? 'true' : 'false'}
         sx={styles.loginStatusContainer}
         data-tour={MCP_TOUR_TARGET_IDS.connectionStatus}
       >
@@ -141,6 +143,7 @@ const McpAuthStatus = memo(({ authConfig } = {}) => {
         <Tooltip title={patInvalid ? PAT_REQUIRED_ACTION_HINT : ''}>
           <Box component="span">
             <Button.BaseBtn
+              data-testid="toolkit-connection-auth-button"
               onClick={hasLoggedInToMcp ? onLogout : onLogin}
               disabled={isButtonDisabled}
               variant={BUTTON_VARIANTS.secondary}
