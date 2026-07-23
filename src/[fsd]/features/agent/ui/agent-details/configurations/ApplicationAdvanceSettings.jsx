@@ -106,6 +106,7 @@ const ApplicationAdvanceSettings = memo(props => {
                 pattern: '[0-9]*',
                 min: MIN_STEP_LIMIT,
                 max: MAX_STEP_LIMIT,
+                'data-testid': 'agent-step-limit-input',
               }}
             />
             {showIgnoreProjectContext && (
