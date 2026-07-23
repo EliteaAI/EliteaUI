@@ -553,6 +553,13 @@ export const PERMISSIONS = {
   },
   skills: {
     publish: 'models.applications.skills.publish',
+    delete: 'models.applications.skills.delete',
+  },
+  versions: {
+    delete: 'models.applications.version.delete',
+  },
+  mcps: {
+    delete: 'configuration.integrations.integrations.delete',
   },
 
   users: {
@@ -606,6 +613,8 @@ export const PERMISSIONS = {
   },
   index: {
     schedule: 'models.applications.index_meta.edit',
+    delete: 'models.applications.index_meta.delete',
+    taskDelete: 'models.applications.task.delete',
   },
 };
 

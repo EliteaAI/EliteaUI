@@ -13,16 +13,18 @@ import {
   useSkillExport,
   useUnpublishSkillMenu,
 } from '@/[fsd]/features/skill/lib/hooks';
+import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
 import { Controls } from '@/[fsd]/shared/ui';
 import { PinEntityType } from '@/[fsd]/widgets/pin-toggler/lib/constants';
 import { usePin, usePinMenu } from '@/[fsd]/widgets/pin-toggler/lib/hooks';
-import { SkillsTabs } from '@/common/constants';
+import { PERMISSIONS, SkillsTabs } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils.jsx';
 import { useCopyLinkMenu } from '@/components/CopyLinkToEntityButton.jsx';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import ExportIcon from '@/components/Icons/ExportIcon';
 import ForkIcon from '@/components/Icons/ForkIcon';
 import PinIcon from '@/components/Icons/PinIcon';
+import useCheckPermission from '@/hooks/useCheckPermission';
 import { useProjectEntityLink } from '@/hooks/useProjectEntityLink';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
@@ -47,6 +49,8 @@ const SkillControls = memo(props => {
 
   const navigate = useNavigate();
   const projectId = useSelectedProjectId();
+  const { isPrivate } = useProjectType();
+  const { checkPermission } = useCheckPermission();
   const { toastError, toastSuccess } = useToast();
   const { values } = useFormikContext();
 
@@ -99,6 +103,9 @@ const SkillControls = memo(props => {
     if (versionDetails?.name === LATEST_VERSION_NAME) return true;
     return false;
   }, [defaultVersionId, currentVersionId, versionDetails?.name]);
+
+  const canDeleteVersion = isPrivate || checkPermission(PERMISSIONS.versions.delete);
+  const canDeleteSkill = isPrivate || checkPermission(PERMISSIONS.skills.delete);
 
   const onExport = useCallback(() => {
     doExport({ skillId, versionId: currentVersionId, skillName });
@@ -180,7 +187,7 @@ const SkillControls = memo(props => {
         },
         publishSkillMenuItem && { key: 'publish', ...publishSkillMenuItem },
         unpublishSkillMenuItem && { key: 'unpublish', ...unpublishSkillMenuItem },
-        {
+        canDeleteVersion && {
           key: 'delete-version',
           label: 'Delete',
           icon: <DeleteIcon sx={{ fontSize: '1rem' }} />,
@@ -200,7 +207,7 @@ const SkillControls = memo(props => {
         },
         shareSkillMenuItem,
         pinMenuItem,
-        {
+        canDeleteSkill && {
           key: 'delete-skill',
           label: 'Delete skill',
           icon: <DeleteIcon sx={{ fontSize: '1rem' }} />,
@@ -230,6 +237,8 @@ const SkillControls = memo(props => {
       shareSkillMenuItem,
       pinMenuItem,
       onDeleteSkill,
+      canDeleteVersion,
+      canDeleteSkill,
     ],
   );
 
