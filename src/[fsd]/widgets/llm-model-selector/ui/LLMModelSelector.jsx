@@ -176,7 +176,7 @@ const LLMModelSelector = memo(props => {
             component="span"
             sx={styles.modelButtonWrapper}
           >
-            <Button
+            <Button.BaseBtn
               variant="elitea"
               color="secondary"
               disabled={disabled}
@@ -215,7 +215,7 @@ const LLMModelSelector = memo(props => {
                   {selectedModel?.display_name || selectedModel?.name || 'None'}
                 </Typography>
               </Box>
-            </Button>
+            </Button.BaseBtn>
           </Box>
         </Tooltip>
         {showSettingsEntry && (
