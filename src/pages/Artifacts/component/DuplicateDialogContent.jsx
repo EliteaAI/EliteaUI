@@ -55,6 +55,7 @@ const DuplicateDialogContent = memo(props => {
     <Box sx={styles.wrapper}>
       <Box sx={styles.labelSection}>
         <Typography
+          data-testid="artifacts-resolve-duplicates-message"
           variant="labelMedium"
           color="text.secondary"
         >

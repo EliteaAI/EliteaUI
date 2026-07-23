@@ -34,18 +34,21 @@ const DuplicateResolutionDialog = memo(props => {
           </Button.BaseBtn>
           <Box sx={styles.primaryActions}>
             <Button.BaseBtn
+              data-testid="artifacts-resolve-duplicates-skip-button"
               variant={BUTTON_VARIANTS.secondary}
               onClick={onSkip}
             >
               Skip
             </Button.BaseBtn>
             <Button.BaseBtn
+              data-testid="artifacts-resolve-duplicates-replace-button"
               variant={BUTTON_VARIANTS.secondary}
               onClick={onReplace}
             >
               Replace
             </Button.BaseBtn>
             <Button.BaseBtn
+              data-testid="artifacts-resolve-duplicates-keep-both-button"
               variant={BUTTON_VARIANTS.contained}
               onClick={onKeepBoth}
             >
