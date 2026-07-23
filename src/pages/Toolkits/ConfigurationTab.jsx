@@ -9,6 +9,7 @@ import { TestTools } from '@/[fsd]/features/toolkits/ui';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui/form/ToolkitForm';
 import { useShowRunHistoryFromUrl } from '@/[fsd]/shared/lib/hooks';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
+import { ViewRunHistoryButton } from '@/[fsd]/shared/ui/button';
 import DirtyDetector from '@/components/Formik/DirtyDetector.jsx';
 import { CONFIGURATION_VIEW_OPTIONS } from '@/pages/Applications/Components/Tools/ToolConfigurationForm.jsx';
 
@@ -47,8 +48,6 @@ const ConfigurationTab = memo(props => {
   const handleShowHistory = useCallback(() => {
     setShowHistory(true);
   }, []);
-
-  const [isFullScreenChat, setIsFullScreenChat] = useState(false);
 
   const indexesAccordionContent = useMemo(() => {
     if (indexingUnavailableReason) {
@@ -94,14 +93,17 @@ const ConfigurationTab = memo(props => {
       {!showHistory && (
         <Grid
           container
-          columnSpacing={'2rem'}
+          // columnSpacing={'2rem'}
           sx={styles.gridContainer}
         >
-          {editToolDetail && !isFullScreenChat && (
+          {editToolDetail && (
             <Grid
-              size={{ md: 12, lg: 4 }}
+              size={{ md: 12, lg: 6 }}
               sx={styles.leftPanel}
             >
+              <Box sx={styles.historyButtonWrapper}>
+                <ViewRunHistoryButton onShowHistory={handleShowHistory} />
+              </Box>
               <ToolkitForm
                 editToolDetail={editToolDetail}
                 onChangeToolDetail={onChangeToolDetail}
@@ -119,6 +121,7 @@ const ConfigurationTab = memo(props => {
                 onSyntaxError={() => {}}
                 onValidationStateChange={onValidationStateChange}
               />
+
               {!shouldHideIndexes && (
                 <BasicAccordion
                   data-testid="toolkit-indexes-accordion"
@@ -135,13 +138,11 @@ const ConfigurationTab = memo(props => {
             </Grid>
           )}
           <Grid
-            size={{ md: 12, lg: !editToolDetail || isFullScreenChat ? 12 : 8 }}
+            size={{ md: 12, lg: 6 }}
             sx={styles.rightPanel}
             container
           >
             <TestTools
-              isFullScreenChat={isFullScreenChat}
-              setIsFullScreenChat={setIsFullScreenChat}
               applicationId={applicationId}
               toolkitId={toolkitId}
               onShowHistory={handleShowHistory}
@@ -160,10 +161,15 @@ const styles = {
   gridContainer: {
     height: '100%',
     maxHeight: '100%',
-    paddingTop: '1rem',
-    paddingBottom: '1.5rem',
-    paddingLeft: '1.5rem !important',
-    paddingRight: '1.5rem !important',
+    paddingTop: '0rem',
+    paddingBottom: '0rem',
+    paddingLeft: '0rem !important',
+    paddingRight: '0rem !important',
+  },
+  historyButtonWrapper: {
+    position: 'absolute',
+    top: '1rem',
+    right: '1.5rem',
   },
   leftPanel: {
     overflow: 'auto',
@@ -172,6 +178,9 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '1rem',
+    padding: '1rem 1.5rem',
+    borderRight: ({ palette }) => `0.0625rem solid ${palette.border.table}`,
+    position: 'relative',
   },
   rightPanel: {
     height: '100%',

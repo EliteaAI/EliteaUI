@@ -4,3 +4,4 @@ export { useToolkitChat } from './useToolkitChat.hooks';
 export { useLoadToolkits } from './useLoadToolkits.js';
 export { useToolkitNameProp } from './useToolkitNameProp.hooks';
 export { useParseSections } from './useParseSections.hooks';
+export { useToolkitToolOptions } from './useToolkitToolOptions.js';
