@@ -85,6 +85,7 @@ const UsersParticipantDropdown = memo(props => {
           aria-controls={open ? 'users-menu' : undefined}
           aria-expanded={open ? 'true' : undefined}
           aria-haspopup="true"
+          data-testid="chat-participants-badge-button"
         >
           <UsersIcon
             fontSize="1.5rem"
@@ -120,7 +121,10 @@ const UsersParticipantDropdown = memo(props => {
                     : 'center bottom',
             }}
           >
-            <Paper sx={[styles.paper, slotProps?.Paper?.sx || {}]}>
+            <Paper
+              sx={[styles.paper, slotProps?.Paper?.sx || {}]}
+              data-testid="chat-participants-popper"
+            >
               <ClickAwayListener onClickAway={handleClose}>
                 <Box>
                   <Box sx={styles.titleWrapper}>
