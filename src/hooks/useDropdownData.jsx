@@ -267,7 +267,7 @@ export const useDropdownData = ({ agentQuery, pipelineQuery, toolkitQuery, mcpQu
 
       return {
         key: `toolkit-${toolkit.project_id}-${toolkit.id}`,
-        label: `${title} (${toolkit.type})`,
+        label: title,
         description: toolkit.description,
         data: toolkit,
         icon: (
@@ -308,7 +308,7 @@ export const useDropdownData = ({ agentQuery, pipelineQuery, toolkitQuery, mcpQu
 
       return {
         key: `mcp-${mcp.project_id}-${mcp.id}`,
-        label: `${title} (${mcp.type})`,
+        label: title,
         description: mcp.description,
         data: mcp,
         icon: (

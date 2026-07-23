@@ -4,9 +4,35 @@ import { Box, Typography } from '@mui/material';
 
 import { Category } from '@/[fsd]/shared/ui';
 
+const UNGROUPED = 'Other';
+
+const buildSubGroups = items => {
+  const groupOf = item => item.group || UNGROUPED;
+  const distinct = [...new Set(items.map(groupOf))];
+  if (distinct.length < 2) return null;
+
+  distinct.sort((a, b) => {
+    if (a === UNGROUPED) return 1;
+    if (b === UNGROUPED) return -1;
+    return a.localeCompare(b, undefined, { sensitivity: 'base' });
+  });
+  return distinct.map(group => ({ group, items: items.filter(item => groupOf(item) === group) }));
+};
+
 const CategorySection = memo(props => {
-  const { category, items, EmptyPlaceholder, showCategory = true } = props;
+  const { category, items, EmptyPlaceholder, showCategory = true, enableSubGroups = false } = props;
   const styles = getStyles();
+  const subGroups = enableSubGroups ? buildSubGroups(items) : null;
+
+  const renderCard = item => (
+    <Category.CategoryItemCard
+      key={item.key}
+      itemKey={item.key}
+      label={item.label}
+      icon={item.icon}
+      onClick={item.onClick}
+    />
+  );
 
   return (
     <Box
@@ -22,18 +48,24 @@ const CategorySection = memo(props => {
         </Typography>
       )}
       {showCategory && <Box sx={styles.categoryDivider} />}
-      <Box sx={styles.itemsGrid}>
-        {items.map(item => (
-          <Category.CategoryItemCard
-            key={item.key}
-            itemKey={item.key}
-            label={item.label}
-            icon={item.icon}
-            onClick={item.onClick}
-          />
-        ))}
-        {items.length === 0 ? (EmptyPlaceholder ?? null) : null}
-      </Box>
+      {subGroups ? (
+        subGroups.map(({ group, items: groupItems }) => (
+          <Box key={group}>
+            <Typography
+              variant="bodySmall"
+              sx={styles.subGroupTitle}
+            >
+              {group}
+            </Typography>
+            <Box sx={styles.itemsGrid}>{groupItems.map(renderCard)}</Box>
+          </Box>
+        ))
+      ) : (
+        <Box sx={styles.itemsGrid}>
+          {items.map(renderCard)}
+          {items.length === 0 ? (EmptyPlaceholder ?? null) : null}
+        </Box>
+      )}
     </Box>
   );
 });
@@ -50,6 +82,12 @@ const getStyles = () => ({
   }),
   categoryTitle: ({ palette }) => ({
     color: palette.text.groupedTitle.default,
+  }),
+  subGroupTitle: ({ palette }) => ({
+    display: 'block',
+    color: palette.text.secondary,
+    marginBottom: '0.375rem',
+    marginTop: '0.75rem',
   }),
   categoryDivider: ({ palette }) => ({
     width: '100%',

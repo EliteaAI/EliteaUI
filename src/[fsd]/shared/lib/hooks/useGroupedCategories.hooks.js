@@ -34,6 +34,7 @@ export const useGroupedCategories = (
         },
         disabled: item.disabled,
         section: item.section,
+        group: item.group,
         value: item.value,
         categoryOrderByServer: item.categoryOrderByServer,
       };

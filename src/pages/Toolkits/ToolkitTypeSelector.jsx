@@ -167,6 +167,7 @@ const ToolkitTypeSelector = memo(
         <Category.CategorySection
           category={category}
           items={items || []}
+          enableSubGroups={!isMCP}
           EmptyPlaceholder={
             isMCP ? (
               <Typography

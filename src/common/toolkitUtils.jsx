@@ -23,7 +23,9 @@ import CodexIcon from '@/assets/codex.svg?react';
 import Context7Icon from '@/assets/context7.svg?react';
 import DeepwikiQueryIcon from '@/assets/deepwiki_query.svg?react';
 import DialIcon from '@/assets/dial-icon.svg?react';
+import EliteaMarkIcon from '@/assets/elitea-mark.svg?react';
 import EmbeddingIcon from '@/assets/embeddings.svg?react';
+import EpamMarkIcon from '@/assets/epam-mark.svg?react';
 import FigmaIcon from '@/assets/figma-icon.svg?react';
 import FlowIcon from '@/assets/flow-icon.svg?react';
 import GitlabWorkspaceIcon from '@/assets/gitlab-space.svg?react';
@@ -344,6 +346,17 @@ const getPredefinedIcon = (type, iconProps) => {
   }
 };
 
+const getGroupBrandIcon = (group, iconProps) => {
+  switch (group) {
+    case 'Elitea':
+      return <EliteaMarkIcon {...iconProps} />;
+    case 'EPAM':
+      return <EpamMarkIcon {...iconProps} />;
+    default:
+      return null;
+  }
+};
+
 export const getToolIconByType = (
   type,
   theme,
@@ -378,6 +391,11 @@ export const getToolIconByType = (
         {...iconProps}
       />
     );
+  }
+
+  const groupIcon = getGroupBrandIcon(toolSchema?.metadata?.group, iconProps);
+  if (groupIcon) {
+    return groupIcon;
   }
 
   if (isAppAll) {
