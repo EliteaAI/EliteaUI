@@ -401,10 +401,11 @@ export default function AutoCompleteDropDown({
       sx={[styles.rootAutocompleteSx, sx].filter(Boolean)}
       renderOption={(optionProps, option, state) => {
         const { key, ...otherOptionProps } = optionProps;
+        const uniqueKey = option[idField] ?? key;
         return (
           <Box
             component="li"
-            key={key}
+            key={uniqueKey}
             data-testid={getOptionTestId ? getOptionTestId(option) : undefined}
             {...otherOptionProps}
             sx={({ palette }) => styles.getOptionLiSx(state.selected, palette)}

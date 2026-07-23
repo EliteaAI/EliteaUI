@@ -48,8 +48,8 @@ const managePermissionsModalStyles = () => ({
     },
   }),
   dialogContent: ({ palette }) => ({
-    height: '60dvh',
-    overflow: 'hidden',
+    maxHeight: '80dvh',
+    overflowY: 'auto',
     padding: '0 !important',
     backgroundColor: palette.background.secondary,
   }),
