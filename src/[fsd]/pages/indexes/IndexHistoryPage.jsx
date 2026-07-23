@@ -167,7 +167,7 @@ const IndexHistoryPage = memo(() => {
                 selectedModel={null}
                 onSelectModel={() => null}
                 modelList={[]}
-                llmSettings={null}
+                llmSettings={undefined}
                 onSetLLMSettings={() => null}
                 isFullScreenChat={isFullScreenChat}
                 toggleFullScreenChat={toggleFullScreenChat}
