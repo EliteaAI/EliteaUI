@@ -333,7 +333,12 @@ export const ViewMode = {
   Public: 'public',
 };
 
-export const TOAST_DURATION = 3000;
+export const TOAST_DURATION_DEFAULTS = {
+  error: 10000,
+  warning: 7000,
+  success: 3000,
+  info: 3000,
+};
 
 export const MIN_CARD_WIDTH = '300px';
 export const CARD_WIDTH_PX = 300;

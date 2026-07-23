@@ -4,7 +4,7 @@ import { Box } from '@mui/material';
 import MuiAlert from '@mui/material/Alert';
 import Snackbar from '@mui/material/Snackbar';
 
-import { TOAST_DURATION } from '@/common/constants';
+import { TOAST_DURATION_DEFAULTS } from '@/common/constants';
 
 const Alert = forwardRef((props, ref) => {
   return (
@@ -23,7 +23,7 @@ const Toast = ({
   open,
   severity,
   message,
-  autoHideDuration = TOAST_DURATION,
+  autoHideDuration = TOAST_DURATION_DEFAULTS.info,
   onClose,
   topPosition = '90px',
   icon,
