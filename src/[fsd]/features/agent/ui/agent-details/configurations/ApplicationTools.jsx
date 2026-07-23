@@ -30,6 +30,8 @@ const ApplicationTools = memo(props => {
   const sortedToolsRef = useRef(null);
 
   const { values } = useFormikContext();
+  const versionStatus = values?.version_details?.status;
+  const isVersionLocked = versionStatus === 'published' || versionStatus === 'embedded';
   const { toolkitSchemas } = useGetCurrentToolkitSchemas();
   const isMcpVisible = useIsMcpVisible();
   // Use POC approach: get available internal tools based on toolkit availability
@@ -137,7 +139,7 @@ const ApplicationTools = memo(props => {
                   tool={markedDuplicateTool.tool}
                   index={markedDuplicateTool.originalIndex} // Use the original index from tools array
                   applicationId={applicationId}
-                  disabled={disabled}
+                  disabled={disabled || isVersionLocked}
                   isDuplicate={markedDuplicateTool.isDuplicate}
                   entityProjectId={entityProjectId}
                   isPipeline={isPipeline}
