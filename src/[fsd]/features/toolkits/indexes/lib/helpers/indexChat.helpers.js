@@ -76,6 +76,8 @@ export const generateIndexDataPayload = ({
   selectedModel,
   llmSettings,
   tool,
+  streamId,
+  messageId,
 }) => ({
   project_id: projectId,
   toolkit_config: {
@@ -95,6 +97,8 @@ export const generateIndexDataPayload = ({
     model_name: selectedModel?.name || 'gpt-4o-mini',
     model_project_id: selectedModel?.project_id,
   },
+  ...(streamId && { stream_id: streamId }),
+  ...(messageId && { message_id: messageId }),
 });
 
 export const generateMockMessageTemplate = (content, participantId) => ({

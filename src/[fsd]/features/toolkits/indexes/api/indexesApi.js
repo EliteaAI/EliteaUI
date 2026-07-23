@@ -2,6 +2,7 @@ import { eliteaApi } from '@/api/eliteaApi.js';
 
 const INDEXES_LIST = 'INDEXES_LIST';
 const INDEX_SCHEDULE = 'INDEX_SCHEDULE';
+const INDEX_EXECUTION_CONTRACT = 'index.ingest.v1';
 
 const indexesApi = eliteaApi
   .enhanceEndpoints({
@@ -19,6 +20,18 @@ const indexesApi = eliteaApi
 
           return currentArg !== previousArg;
         },
+      }),
+      startIndexData: build.mutation({
+        query: ({ projectId, ...body }) => ({
+          // This discriminator is routing metadata, not authorization. It lets
+          // the hybrid gateway move only async index_data to Go while every
+          // other toolkit tool on the shared current endpoint stays on Python.
+          url:
+            `elitea_core/test_toolkit_tool/prompt_lib/${projectId}` +
+            `?await_response=false&execution_contract=${INDEX_EXECUTION_CONTRACT}`,
+          method: 'POST',
+          body,
+        }),
       }),
       deleteIndexItem: build.mutation({
         query: ({ projectId, toolkitId, indexId }) => ({
@@ -66,6 +79,7 @@ const indexesApi = eliteaApi
 export const {
   useGetIndexesListQuery,
   useLazyGetIndexesListQuery,
+  useStartIndexDataMutation,
   useDeleteIndexItemMutation,
   useStopIndexingItemMutation,
   useUpdateIndexScheduleMutation,

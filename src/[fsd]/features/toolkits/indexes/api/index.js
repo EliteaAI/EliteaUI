@@ -1,6 +1,7 @@
 export {
   useGetIndexesListQuery,
   useLazyGetIndexesListQuery,
+  useStartIndexDataMutation,
   useDeleteIndexItemMutation,
   useStopIndexingItemMutation,
   useUpdateIndexScheduleMutation,

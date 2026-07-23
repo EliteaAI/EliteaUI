@@ -10,9 +10,19 @@ import {
 } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import {
   generateChatMessageBasedOnResponse,
+  generateIndexDataPayload,
   generateMockMessageTemplate,
   generateWelcomeMessage,
 } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexChat.helpers';
+import {
+  INDEX_EXECUTION_COMPLETED_EVENT,
+  INDEX_EXECUTION_FAILED_EVENT,
+  INDEX_EXECUTION_NODE_EVENT,
+  buildIndexExecutionEventsUrl,
+  buildPendingIndexExecutionKey,
+  parseIndexExecutionEvent,
+  parseIndexNodeEvent,
+} from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexExecution.helpers';
 import { useIndexHistory } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import { ToolkitChatModesEnum } from '@/[fsd]/features/toolkits/lib/constants';
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
@@ -25,9 +35,10 @@ import {
   useAddParticipantIntoConversationMutation,
   useConversationCreateMutation,
   useListModelsQuery,
+  useStartIndexDataMutation,
   useStopIndexingItemMutation,
 } from '@/api';
-import { SocketMessageType, sioEvents } from '@/common/constants';
+import { SocketMessageType, VITE_SERVER_URL, sioEvents } from '@/common/constants';
 import { convertConversationToChatHistory } from '@/common/convertChatConversationMessages';
 import { generateMessagePayload } from '@/common/messagePayloadUtils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -36,6 +47,7 @@ import useToast from '@/hooks/useToast';
 
 export const useToolkitChat = props => {
   const runningToolRef = useRef(null);
+  const indexEventSourceRef = useRef(null);
   const { toastSuccess, toastError } = useToast();
   const projectId = useSelectedProjectId();
 
@@ -66,9 +78,18 @@ export const useToolkitChat = props => {
 
   const isTestToolsMode = useMemo(() => modes.includes(ToolkitChatModesEnum.testTools), [modes]);
   const isCreateIndexMode = useMemo(() => modes.includes(ToolkitChatModesEnum.createIndex), [modes]);
+  const currentIndexName = index?.metadata?.collection || toolInputVariables?.index_name;
+  const pendingIndexExecutionKey = useMemo(
+    () =>
+      projectId && toolkitId && currentIndexName
+        ? buildPendingIndexExecutionKey({ projectId, toolkitId, indexName: currentIndexName })
+        : null,
+    [currentIndexName, projectId, toolkitId],
+  );
 
   // Indexes API and data fetching
   const [stopIndex, { isLoading: isStoppingIndexing }] = useStopIndexingItemMutation();
+  const [startIndexData] = useStartIndexDataMutation();
 
   // Conversations API and data fetching
   const [addParticipant] = useAddParticipantIntoConversationMutation();
@@ -181,6 +202,134 @@ export const useToolkitChat = props => {
     [index?.id, isTestToolsMode, traceNewIndex],
   );
 
+  const onRunFinishRef = useRef(onRunFinish);
+  const onStartTaskRef = useRef(onStartTask);
+  useEffect(() => {
+    onRunFinishRef.current = onRunFinish;
+  }, [onRunFinish]);
+  useEffect(() => {
+    onStartTaskRef.current = onStartTask;
+  }, [onStartTask]);
+
+  const closeIndexEventStream = useCallback(() => {
+    indexEventSourceRef.current?.close();
+    indexEventSourceRef.current = null;
+  }, []);
+
+  useEffect(() => closeIndexEventStream, [closeIndexEventStream]);
+
+  const openIndexEventStream = useCallback(
+    ({ taskId, messageId, storageKey }) => {
+      closeIndexEventStream();
+
+      const loadingMessage = {
+        ...generateMockMessageTemplate('🔄 Indexing in progress…', 'toolkit'),
+        id: messageId,
+        task_id: taskId,
+        isLoading: true,
+        isStreaming: true,
+      };
+      setChatHistory(previous => {
+        const existing = previous.findIndex(message => message.id === messageId);
+        if (existing < 0) return [...previous, loadingMessage];
+        const updated = [...previous];
+        updated[existing] = { ...updated[existing], ...loadingMessage };
+        return updated;
+      });
+
+      const source = new EventSource(buildIndexExecutionEventsUrl(VITE_SERVER_URL, projectId, taskId), {
+        withCredentials: true,
+      });
+      indexEventSourceRef.current = source;
+
+      const settle = result => {
+        if (indexEventSourceRef.current !== source) return;
+        source.close();
+        indexEventSourceRef.current = null;
+        try {
+          sessionStorage.removeItem(storageKey);
+        } catch {
+          // A blocked storage API must not prevent a durable terminal event from settling the UI.
+        }
+        setChatHistory(previous => {
+          const terminalMessage = {
+            ...generateMockMessageTemplate(result.content, 'toolkit'),
+            id: messageId,
+            task_id: taskId,
+            isLoading: false,
+            isStreaming: false,
+          };
+          const existing = previous.findIndex(message => message.id === messageId);
+          if (existing < 0) return [...previous, terminalMessage];
+          const updated = [...previous];
+          updated[existing] = { ...updated[existing], ...terminalMessage };
+          return updated;
+        });
+        onRunFinishRef.current(result.state);
+      };
+
+      const handleTerminalEvent = event => {
+        const result = parseIndexExecutionEvent(event.type, event.data);
+        if (result) settle(result);
+      };
+
+      const handleNodeEvent = event => {
+        if (indexEventSourceRef.current !== source) return;
+        const message = parseIndexNodeEvent(event.data, messageId);
+        if (!message) return;
+        setChatHistory(previous =>
+          generateChatMessageBasedOnResponse({
+            message,
+            chatHistory: previous,
+            onFinish: state => onRunFinishRef.current(state),
+            onStartTask: startedTaskId => onStartTaskRef.current(startedTaskId),
+          }),
+        );
+      };
+
+      source.addEventListener(INDEX_EXECUTION_NODE_EVENT, handleNodeEvent);
+      source.addEventListener(INDEX_EXECUTION_COMPLETED_EVENT, handleTerminalEvent);
+      source.addEventListener(INDEX_EXECUTION_FAILED_EVENT, handleTerminalEvent);
+      source.onerror = () => {
+        // EventSource reconnects automatically and carries Last-Event-ID. Only a permanently
+        // closed stream is terminal here; transient disconnects keep the running state intact.
+        if (source.readyState === EventSource.CLOSED)
+          settle({
+            state: IndexStatuses.fail,
+            content: '❌ The indexing event stream closed before a terminal result was received.',
+          });
+      };
+    },
+    [closeIndexEventStream, projectId],
+  );
+
+  useEffect(() => {
+    closeIndexEventStream();
+    if (!pendingIndexExecutionKey) return undefined;
+
+    let pending;
+    try {
+      pending = JSON.parse(sessionStorage.getItem(pendingIndexExecutionKey));
+    } catch {
+      try {
+        sessionStorage.removeItem(pendingIndexExecutionKey);
+      } catch {
+        // Browser storage can be unavailable under restrictive privacy settings.
+      }
+      return undefined;
+    }
+    if (!pending?.taskId || !pending?.messageId) return undefined;
+
+    runningToolRef.current = IndexesToolsEnum.indexData;
+    setIsRunning(true);
+    openIndexEventStream({
+      taskId: pending.taskId,
+      messageId: pending.messageId,
+      storageKey: pendingIndexExecutionKey,
+    });
+    return closeIndexEventStream;
+  }, [closeIndexEventStream, openIndexEventStream, pendingIndexExecutionKey]);
+
   // Use ref to access isAuthCheckSession in socket callback without adding it as dependency
   const isAuthCheckSessionRef = useRef(isAuthCheckSession);
   useEffect(() => {
@@ -285,6 +434,60 @@ export const useToolkitChat = props => {
     [createConversation, addParticipant, toolkitId, projectId, values, llmSettings, selectedModel],
   );
 
+  const executeIndexData = useCallback(
+    async ({ currentConversation, relevantInputVariables, tool }) => {
+      if (!currentConversation?.id || !currentConversation?.uuid)
+        throw new Error('The index conversation could not be created.');
+
+      const messageId = uuidv4();
+      const payload = generateIndexDataPayload({
+        projectId,
+        values,
+        toolInputVariables: relevantInputVariables,
+        selectedModel,
+        llmSettings,
+        tool,
+        streamId: currentConversation.uuid,
+        messageId,
+      });
+      const response = await startIndexData({ projectId, ...payload }).unwrap();
+      const taskId = response?.task_id;
+      if (!taskId) throw new Error('The indexing service returned no task identifier.');
+
+      const storageKey = buildPendingIndexExecutionKey({
+        projectId,
+        toolkitId,
+        indexName: relevantInputVariables.index_name,
+      });
+      try {
+        sessionStorage.setItem(storageKey, JSON.stringify({ taskId, messageId }));
+      } catch {
+        // The live stream still works when browser storage is disabled; only reload recovery is lost.
+      }
+
+      openIndexEventStream({ taskId, messageId, storageKey });
+      if (traceNewIndex)
+        traceNewIndex(index?.id ?? null, {
+          collection: relevantInputVariables.index_name,
+          state: IndexStatuses.progress,
+          task_id: taskId,
+          conversation_id: currentConversation.id,
+          conversation_uuid: currentConversation.uuid,
+        });
+    },
+    [
+      index?.id,
+      llmSettings,
+      openIndexEventStream,
+      projectId,
+      selectedModel,
+      startIndexData,
+      toolkitId,
+      traceNewIndex,
+      values,
+    ],
+  );
+
   const executeRunTool = useCallback(
     async ({ relevantInputVariables, indexing, tool }) => {
       try {
@@ -299,11 +502,16 @@ export const useToolkitChat = props => {
             tool,
           });
 
-          if (traceNewIndex)
+          if (traceNewIndex && !indexing)
             traceNewIndex(index?.id ?? null, {
               conversation_id: currentConversation.id,
               conversation_uuid: currentConversation.uuid,
             });
+        }
+
+        if (indexing) {
+          await executeIndexData({ currentConversation, relevantInputVariables, tool });
+          return;
         }
 
         const toolkitParticipant = findToolkitParticipant(currentConversation);
@@ -343,7 +551,11 @@ export const useToolkitChat = props => {
 
         let errorMessage;
 
-        if (error?.message) errorMessage = error.message;
+        if (indexing) {
+          const responseMessage = error?.data?.message || error?.data?.error;
+          errorMessage =
+            typeof responseMessage === 'string' ? responseMessage : 'The indexing task could not be started.';
+        } else if (error?.message) errorMessage = error.message;
         else if (typeof error === 'string') errorMessage = error;
         else errorMessage = JSON.stringify(error);
 
@@ -364,6 +576,7 @@ export const useToolkitChat = props => {
       socketEmit,
       setProgressingIndexHistoryRecovered,
       createToolkitConversation,
+      executeIndexData,
       traceNewIndex,
       index?.id,
     ],
