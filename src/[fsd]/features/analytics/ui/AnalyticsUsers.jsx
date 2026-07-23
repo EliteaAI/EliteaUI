@@ -108,6 +108,8 @@ const AnalyticsUsers = memo(props => {
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Agent</Typography>
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Chat Msg</Typography>
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Errors</Typography>
+            <Typography sx={[styles.tableCell, { flex: 1 }]}>Tokens</Typography>
+            <Typography sx={[styles.tableCell, { flex: 1 }]}>Cost</Typography>
           </Box>
           {isFetching && (
             <Box sx={styles.loadingState}>
@@ -150,6 +152,12 @@ const AnalyticsUsers = memo(props => {
                   ]}
                 >
                   {u.errors}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
+                  {AnalyticCommonHelpers.fmtNum(u.total_tokens)}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
+                  {AnalyticCommonHelpers.fmtCost(u.llm_cost)}
                 </Typography>
               </Box>
             ))}

@@ -59,6 +59,16 @@ const AnalyticsOverview = memo(props => {
           value={AnalyticCommonHelpers.fmtNum(kpis.agent_runs)}
           subtitle="agents and pipelines interactions"
         />
+        <KPICard
+          label="TOKENS"
+          value={AnalyticCommonHelpers.fmtNum(kpis.total_tokens)}
+          subtitle="total LLM tokens consumed"
+        />
+        <KPICard
+          label="LLM COST"
+          value={AnalyticCommonHelpers.fmtCost(kpis.total_llm_cost)}
+          subtitle="estimated USD cost"
+        />
       </Box>
       <Box sx={styles.chartsRowEqual}>
         <Box sx={styles.chartCard}>
