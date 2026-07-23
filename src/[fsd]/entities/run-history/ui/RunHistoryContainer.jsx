@@ -80,6 +80,7 @@ const RunHistoryContainer = memo(props => {
           <CloseIcon sx={styles.iconClose} />
         </IconButton>
         <Typography
+          data-testid="run-history-panel-heading"
           variant="headingSmall"
           color="text.secondary"
         >
