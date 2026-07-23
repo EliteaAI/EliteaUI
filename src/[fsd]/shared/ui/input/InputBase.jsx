@@ -98,6 +98,7 @@ const InputBase = memo(props => {
     tooltipDescription,
     forceShowActionsToolbar = false,
     fullScreenButtonProps = {},
+    labelVariant,
     // eslint-disable-next-line no-unused-vars
     fieldName, // Extract but don't use - prevents DOM warning when passed from parent
     sx: externalSx,
@@ -194,6 +195,7 @@ const InputBase = memo(props => {
     return (
       <Label.InfoLabelWithTooltip
         label={labelText}
+        {...(labelVariant && { variant: labelVariant })}
         {...(!isOutlined && { inheritLabel: true, inheritColor: true })}
         {...(tooltipDescription && {
           tooltip: tooltipDescription,
@@ -235,7 +237,7 @@ const InputBase = memo(props => {
         {...containerProps}
       >
         {overlayContent}
-        {isOutlined && (
+        {isOutlined && (labelContent || hasActionsToolBar) && (
           <Box sx={styles.outlinedLabelRow}>
             {labelContent || <Box />}
             {renderActionsToolbar()}
@@ -269,6 +271,7 @@ const InputBase = memo(props => {
               },
             },
           }}
+          minRows={minRows}
           maxRows={rows}
         />
       </Box>
