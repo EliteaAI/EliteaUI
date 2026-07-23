@@ -211,7 +211,7 @@ export const useLibraryToolkits = (onSelectToolkit = () => {}, applicationId, ve
 
     return (
       libraryToolkits?.rows.map(toolkit => {
-        const typeInfo = realToolkitSchemas[toolkit.type];
+        const typeInfo = resolveToolkitSchemaByType(toolkit.type, realToolkitSchemas);
         const iconComponent = getToolIconByType(toolkit.type, theme, { toolSchema: typeInfo, isMCP });
 
         return {
