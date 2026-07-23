@@ -1582,7 +1582,10 @@ export const useChatSocket = ({
 
       switch (socketMessageType) {
         case SocketMessageType.Error:
-        default:
+        default: {
+          // content can be a dict/list (e.g. maintenance error, pydantic validation
+          // errors) rather than a string; stringify so ErrorTrace never renders a raw object
+          const exceptionText = convertJsonToString(message.content);
           // Handle all socket validation errors by displaying in chat with red border
           setChatHistoryRef.current?.(prevState => {
             return [
@@ -1590,7 +1593,7 @@ export const useChatSocket = ({
                 if (item.question_id === message_id) {
                   return {
                     ...item,
-                    exception: message.content,
+                    exception: exceptionText,
                     isLoading: false,
                     isStreaming: false,
                     isRegenerating: false,
@@ -1622,6 +1625,7 @@ export const useChatSocket = ({
           });
           handleError({ data: message.content || [] });
           return;
+        }
       }
     },
     [handleError, trackEvent],
