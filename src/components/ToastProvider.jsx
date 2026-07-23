@@ -1,14 +1,12 @@
 import React, { useCallback, useContext, useMemo, useState } from 'react';
 
-import { useErrorToastDuration } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
-import { TOAST_DURATION } from '@/common/constants';
+import { useAllToastDurations } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
 
 import Toast from './Toast';
 
 export const ToastContext = React.createContext();
 
 export const ToastProvider = ({ children }) => {
-  const [autoHideDuration, setAutoHideDuration] = useState(TOAST_DURATION);
   const [topPosition, setTopPosition] = useState('90px');
   const [onCloseToast, setOnCloseToast] = useState(undefined);
   const [icon, setIcon] = useState(undefined);
@@ -44,8 +42,6 @@ export const ToastProvider = ({ children }) => {
       value={{
         toastHandlers,
         toastProps,
-        autoHideDuration,
-        setAutoHideDuration,
         topPosition,
         setTopPosition,
         icon,
@@ -61,9 +57,9 @@ export const ToastProvider = ({ children }) => {
 };
 
 export const ToastComponent = () => {
-  const { clearToast, toastProps, autoHideDuration, topPosition, icon } = useContext(ToastContext);
-  const errorToastDuration = useErrorToastDuration();
-  const resolvedDuration = toastProps.severity === 'error' ? errorToastDuration : autoHideDuration;
+  const { clearToast, toastProps, topPosition, icon } = useContext(ToastContext);
+  const toastDurations = useAllToastDurations();
+  const resolvedDuration = toastDurations[toastProps.severity] ?? toastDurations.info;
 
   return (
     <Toast

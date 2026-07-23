@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 
 import { Box, useTheme } from '@mui/material';
 
+import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
 import { useShareLink } from '@/[fsd]/shared/lib/hooks/useShareLink.hooks';
 import { Button, Tooltip } from '@/[fsd]/shared/ui';
 import CopyLinkIcon from '@/assets/copy-link-icon.svg?react';
@@ -39,6 +40,7 @@ export const BucketItem = forwardRef((props, ref) => {
   const { name, owner_id, isPinned = false } = bucket;
 
   const { checkPermission } = useCheckPermission();
+  const { isPrivate } = useProjectType();
   const projectId = useSelectedProjectId();
   const { id: userId, personal_project_id } = useSelector(state => state.user);
   const { copyShareLink } = useShareLink();
@@ -142,7 +144,7 @@ export const BucketItem = forwardRef((props, ref) => {
       checkPermission(PERMISSIONS.artifacts[action]) ||
       (owner_id && userId === owner_id);
 
-    const canDelete = hasActionRights('delete');
+    const canDelete = isPrivate || checkPermission(PERMISSIONS.artifacts.delete);
     const canUpdate = hasActionRights('update');
     const canUpload = hasActionRights('create');
 
@@ -197,7 +199,7 @@ export const BucketItem = forwardRef((props, ref) => {
         onClick: handleManageAccessClick,
         display: isPersonalProject ? 'none' : undefined,
       },
-      {
+      canDelete && {
         key: 'bucket-menu-delete',
         label: 'Delete',
         icon: (
@@ -209,14 +211,13 @@ export const BucketItem = forwardRef((props, ref) => {
         alertTitle: 'Delete bucket?',
         confirmButtonTitle: 'Delete',
         alarm: true,
-        disabled: !canDelete,
         inlineExtraContent: `? It can't be restored.`,
         entityName: name,
         shouldRequestInputName: false,
         onConfirm: handleDeleteBucket,
         modalSx: { paper: { width: '30rem' } },
       },
-    ].filter(item => item.display !== 'none');
+    ].filter(item => item && item.display !== 'none');
   }, [
     theme.palette.icon.fill.default,
     styles.menuIcon,
@@ -229,6 +230,7 @@ export const BucketItem = forwardRef((props, ref) => {
     owner_id,
     userId,
     isPersonalProject,
+    isPrivate,
     name,
     isPinned,
     handlePinBucket,

@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 
 import { ENVIRONMENT_KEYS, ENVIRONMENT_SECTION } from '@/[fsd]/shared/lib/constants/environment.constants';
 import { useGetConfigurationsListQuery } from '@/api/configurations.js';
-import { DEFAULT_PARTICIPANT_NAME, PUBLIC_PROJECT_ID, TOAST_DURATION } from '@/common/constants.js';
+import { DEFAULT_PARTICIPANT_NAME, PUBLIC_PROJECT_ID, TOAST_DURATION_DEFAULTS } from '@/common/constants.js';
 
 const ENVIRONMENT_QUERY_ARGS = {
   projectId: PUBLIC_PROJECT_ID,
@@ -29,7 +29,17 @@ export const useSystemSenderName = () => {
   return value || DEFAULT_PARTICIPANT_NAME;
 };
 
-export const useErrorToastDuration = () => {
-  const { value } = useEnvironmentSettingByKey(ENVIRONMENT_KEYS.ERROR_TOAST_DURATION);
-  return value ? parseInt(value, 10) : TOAST_DURATION;
+export const useAllToastDurations = () => {
+  const { data } = useGetConfigurationsListQuery(ENVIRONMENT_QUERY_ARGS);
+  const config = data?.items?.[0]?.data;
+
+  return useMemo(
+    () => ({
+      error: config?.[ENVIRONMENT_KEYS.ERROR_TOAST_DURATION] ?? TOAST_DURATION_DEFAULTS.error,
+      warning: config?.[ENVIRONMENT_KEYS.WARNING_TOAST_DURATION] ?? TOAST_DURATION_DEFAULTS.warning,
+      success: config?.[ENVIRONMENT_KEYS.SUCCESS_TOAST_DURATION] ?? TOAST_DURATION_DEFAULTS.success,
+      info: config?.[ENVIRONMENT_KEYS.INFO_TOAST_DURATION] ?? TOAST_DURATION_DEFAULTS.info,
+    }),
+    [config],
+  );
 };

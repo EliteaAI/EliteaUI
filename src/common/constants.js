@@ -333,7 +333,12 @@ export const ViewMode = {
   Public: 'public',
 };
 
-export const TOAST_DURATION = 3000;
+export const TOAST_DURATION_DEFAULTS = {
+  error: 10000,
+  warning: 7000,
+  success: 3000,
+  info: 3000,
+};
 
 export const MIN_CARD_WIDTH = '300px';
 export const CARD_WIDTH_PX = 300;
@@ -553,6 +558,13 @@ export const PERMISSIONS = {
   },
   skills: {
     publish: 'models.applications.skills.publish',
+    delete: 'models.applications.skills.delete',
+  },
+  versions: {
+    delete: 'models.applications.version.delete',
+  },
+  mcps: {
+    delete: 'configuration.integrations.integrations.delete',
   },
 
   users: {
@@ -606,6 +618,8 @@ export const PERMISSIONS = {
   },
   index: {
     schedule: 'models.applications.index_meta.edit',
+    delete: 'models.applications.index_meta.delete',
+    taskDelete: 'models.applications.task.delete',
   },
 };
 

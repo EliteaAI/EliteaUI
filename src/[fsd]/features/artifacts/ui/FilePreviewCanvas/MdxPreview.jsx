@@ -1,17 +1,44 @@
-import React, { memo, useMemo } from 'react';
+import React, { memo, useCallback, useMemo } from 'react';
 
-import { Box, Chip, CircularProgress, Divider, Link, Paper, Typography } from '@mui/material';
+import { ErrorBoundary } from 'react-error-boundary';
+
+import * as MuiAll from '@mui/material';
+import { Box, Chip, CircularProgress, Divider, Link, Paper, ThemeProvider, Typography } from '@mui/material';
 
 import { typographyVariants } from '@/MainTheme';
 import { MdxStatus } from '@/[fsd]/features/artifacts/lib/constants/previewMdx.constants';
 import { useMdxEvaluator } from '@/[fsd]/features/artifacts/lib/hooks';
 import MdxAlert from '@/[fsd]/features/artifacts/ui/FilePreviewCanvas/MdxAlert';
 import Markdown from '@/[fsd]/shared/ui/markdown';
+import useEliteATheme from '@/hooks/useEliteATheme';
+import { MDXProvider } from '@mdx-js/react';
+
+const UnknownComponentFallback = ({ children }) => (
+  <Box
+    component="span"
+    sx={{ display: 'contents' }}
+  >
+    {children}
+  </Box>
+);
+
+const JSX_COMPONENT_RE = /<([A-Z][A-Za-z0-9]*)/g;
+
+const buildUnknownStubs = (source, knownComponents) => {
+  const stubs = {};
+  for (const [, name] of source.matchAll(JSX_COMPONENT_RE)) {
+    if (!(name in knownComponents) && !(name in stubs)) {
+      stubs[name] = UnknownComponentFallback;
+    }
+  }
+  return stubs;
+};
 
 const MdxPreview = memo(props => {
   const { mdxContent } = props;
 
   const styles = mdxPreviewStyles();
+  const { localGridTheme } = useEliteATheme();
 
   const isEmpty = useMemo(() => !mdxContent || !mdxContent.trim(), [mdxContent]);
   const state = useMdxEvaluator(isEmpty ? '' : mdxContent);
@@ -213,6 +240,31 @@ const MdxPreview = memo(props => {
     [styles],
   );
 
+  const safeComponents = useMemo(() => {
+    const base = { ...MuiAll, ...mdxComponents };
+    const stubs = mdxContent ? buildUnknownStubs(mdxContent, base) : {};
+    return { ...stubs, ...base };
+  }, [mdxContent, mdxComponents]);
+
+  const mdxFallback = useCallback(
+    () => (
+      <Box sx={styles.wrapper}>
+        <Box sx={styles.warningBanner}>
+          <Typography
+            variant="bodySmall"
+            sx={styles.warningText}
+          >
+            MDX render failed. Showing plain Markdown fallback.
+          </Typography>
+        </Box>
+        <Box sx={styles.markdownWrapper}>
+          <Markdown>{mdxContent}</Markdown>
+        </Box>
+      </Box>
+    ),
+    [mdxContent, styles],
+  );
+
   if (isEmpty) {
     return (
       <Box sx={styles.fallbackWrapper}>
@@ -270,9 +322,15 @@ const MdxPreview = memo(props => {
   if (state.status === MdxStatus.SUCCESS && state.Component) {
     const MDXContent = state.Component;
     return (
-      <Box sx={styles.markdownWrapper}>
-        <MDXContent components={mdxComponents} />
-      </Box>
+      <ThemeProvider theme={localGridTheme}>
+        <ErrorBoundary fallbackRender={mdxFallback}>
+          <MDXProvider components={safeComponents}>
+            <Box sx={styles.markdownWrapper}>
+              <MDXContent />
+            </Box>
+          </MDXProvider>
+        </ErrorBoundary>
+      </ThemeProvider>
     );
   }
 

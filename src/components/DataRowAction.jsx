@@ -7,6 +7,7 @@ import { Box } from '@mui/system';
 
 import SkillRowAction from '@/[fsd]/features/skill/ui/SkillRowAction';
 import { useDeleteConfirmationDisabled } from '@/[fsd]/shared/lib/hooks';
+import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
 import { Modal } from '@/[fsd]/shared/ui';
 import { useDeleteApplicationMutation } from '@/api/applications';
 import { useDeleteConfigurationMutation } from '@/api/configurations';
@@ -89,6 +90,7 @@ ActionWithDialog.displayName = 'ActionWithDialog';
 const DataRowAction = memo(props => {
   const { data, viewMode, type, isPinnedItem = false, onTogglePin } = props;
   const { checkPermission } = useCheckPermission();
+  const { isPrivate } = useProjectType();
   const { id: myAuthorId } = useSelector(state => state.user);
   const { cardType } = data;
   const realCardType = useMemo(() => cardType || type, [cardType, type]);
@@ -216,12 +218,12 @@ const DataRowAction = memo(props => {
     if (onTogglePin) {
       list.push(pinMenuItem);
     }
-    if (checkPermission(PERMISSIONS[entity_name]?.delete)) {
+    if (isPrivate || checkPermission(PERMISSIONS[entity_name]?.delete)) {
       list.push(deleteMenuItem);
     }
 
     return list;
-  }, [checkPermission, deleteMenuItem, entity_name, onTogglePin, pinMenuItem]);
+  }, [checkPermission, deleteMenuItem, entity_name, onTogglePin, pinMenuItem, isPrivate]);
 
   const toolkitsMenu = useMemo(() => {
     const list = [];
@@ -229,8 +231,8 @@ const DataRowAction = memo(props => {
       list.push(pinMenuItem);
     }
     // Actions in the specified order: Delete, Export, Fork
-    // Use permission check for delete (same as applications)
-    if (checkPermission(PERMISSIONS[entity_name]?.delete)) {
+    const deletePermission = isMCP ? PERMISSIONS.mcps?.delete : PERMISSIONS[entity_name]?.delete;
+    if (isPrivate || checkPermission(deletePermission)) {
       list.push(deleteMenuItem);
     }
     // if (checkPermission(PERMISSIONS[entity_name]?.export)) {
@@ -241,7 +243,7 @@ const DataRowAction = memo(props => {
     // }
 
     return list;
-  }, [checkPermission, deleteMenuItem, entity_name, onTogglePin, pinMenuItem]);
+  }, [checkPermission, deleteMenuItem, entity_name, onTogglePin, pinMenuItem, isPrivate, isMCP]);
 
   const credentialsMenu = useMemo(() => {
     const list = [];
@@ -250,12 +252,12 @@ const DataRowAction = memo(props => {
       list.push(pinMenuItem);
     }
     // Actions in the specified order: Delete only (like toolkits)
-    if (isOwner) {
+    if (isOwner && (isPrivate || checkPermission(PERMISSIONS.secrets.delete))) {
       list.push(deleteMenuItem);
     }
 
     return list;
-  }, [deleteMenuItem, isOwner, onTogglePin, pinMenuItem]);
+  }, [deleteMenuItem, isOwner, onTogglePin, pinMenuItem, isPrivate, checkPermission]);
 
   const menuList = useMemo(() => {
     let list = [];

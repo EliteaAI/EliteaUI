@@ -3,6 +3,7 @@ import { memo, useCallback, useMemo } from 'react';
 import { Box, Tooltip, Typography } from '@mui/material';
 
 import { ARTIFACT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/artifactTourTargets.constants';
+import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { SimpleSearchBar } from '@/[fsd]/shared/ui/input';
 import FileUploadIcon from '@/assets/icons/FileUploadIcon.svg?react';
@@ -35,8 +36,11 @@ const ArtifactTableToolbar = memo(props => {
   } = props;
 
   const { checkPermission } = useCheckPermission();
+  const { isPrivate } = useProjectType();
   const theme = useTheme();
   const styles = artifactTableToolbarStyles();
+
+  const canDeleteFiles = isPrivate || checkPermission(PERMISSIONS.artifacts.delete);
 
   const handleRootClick = useCallback(() => {
     if (onBreadcrumbClick) {
@@ -122,7 +126,7 @@ const ArtifactTableToolbar = memo(props => {
           </Box>
         </Tooltip>
 
-        {checkPermission(PERMISSIONS.artifacts.delete) && (
+        {canDeleteFiles && (
           <DeleteEntityButton
             testId="artifacts-delete-files-button"
             name={rowSelectionModel.length === totalRows ? 'all files' : 'selected files'}

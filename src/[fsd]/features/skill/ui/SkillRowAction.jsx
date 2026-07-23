@@ -6,11 +6,13 @@ import { Box, IconButton, Menu } from '@mui/material';
 
 import { useDeleteSkillMutation } from '@/[fsd]/features/skill/api';
 import { useSkillExport } from '@/[fsd]/features/skill/lib/hooks';
+import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
-import { SkillsTabs } from '@/common/constants';
+import { PERMISSIONS, SkillsTabs } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils.jsx';
 import DotsMenuIcon from '@/components/Icons/DotsMenuIcon';
 import ExportIcon from '@/components/Icons/ExportIcon';
+import useCheckPermission from '@/hooks/useCheckPermission';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes';
@@ -31,6 +33,10 @@ const SkillRowAction = memo(props => {
   const navigate = useNavigate();
   const projectId = useSelectedProjectId();
   const { toastError, toastSuccess } = useToast();
+  const { isPrivate } = useProjectType();
+  const { checkPermission } = useCheckPermission();
+
+  const canDeleteSkill = isPrivate || checkPermission(PERMISSIONS.skills.delete);
 
   const [anchorEl, setAnchorEl] = useState(null);
   const open = useMemo(() => Boolean(anchorEl), [anchorEl]);
@@ -125,11 +131,13 @@ const SkillRowAction = memo(props => {
           onClick={withClose(onExport)}
         />
         <DisabledPublishMenuItem />
-        <SkillDeleteActionWithDialog
-          name={skillName}
-          onConfirm={withClose(onDelete)}
-          closeMenu={handleClose}
-        />
+        {canDeleteSkill && (
+          <SkillDeleteActionWithDialog
+            name={skillName}
+            onConfirm={withClose(onDelete)}
+            closeMenu={handleClose}
+          />
+        )}
       </Menu>
     </Box>
   );

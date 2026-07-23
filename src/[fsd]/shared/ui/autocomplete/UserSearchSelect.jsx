@@ -38,7 +38,10 @@ export default function UserSearchSelect({
   }, []);
   return (
     <AutoCompleteDropDown
-      optionList={userList.sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase())) || []}
+      optionList={
+        userList.sort((a, b) => (a.name || '').toLowerCase().localeCompare((b.name || '').toLowerCase())) ||
+        []
+      }
       selectedOptions={selectedUsers}
       onChangedSelectedOptions={onChangeUsers}
       disabled={disabled}

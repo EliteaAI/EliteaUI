@@ -6,14 +6,17 @@ import { Box, CircularProgress, IconButton, Skeleton, Typography } from '@mui/ma
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
+import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import ClockIcon from '@/assets/clock.svg?react';
 import FileIcon from '@/assets/file.svg?react';
 import OpenInNewIcon from '@/assets/open-new-icon.svg?react';
 import RefreshIcon from '@/assets/refresh-icon.svg?react';
 import StopIcon from '@/assets/stop-icon.svg?react';
+import { PERMISSIONS } from '@/common/constants';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
+import useCheckPermission from '@/hooks/useCheckPermission';
 
 const IndexListItem = memo(props => {
   const {
@@ -28,6 +31,10 @@ const IndexListItem = memo(props => {
     isReindexing,
   } = props;
   const styles = indexListItem(listOnly);
+  const { isPrivate } = useProjectType();
+  const { checkPermission } = useCheckPermission();
+
+  const canDeleteIndex = isPrivate || checkPermission(PERMISSIONS.index.delete);
 
   const isSelected = useMemo(() => currentIndex?.id === index.id, [currentIndex, index]);
   const isInProgress = index?.metadata?.state === IndexStatuses.progress;
@@ -213,7 +220,7 @@ const IndexListItem = memo(props => {
               </Box>
             </Tooltip>
           )}
-          {onCardDelete && (
+          {onCardDelete && canDeleteIndex && (
             <Tooltip
               title="Delete"
               placement="top"

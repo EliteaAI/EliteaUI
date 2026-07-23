@@ -91,6 +91,13 @@ const ToolMenu = memo(props => {
   // An entity is considered unsaved if it doesn't have an ID or version_details.id
   const isEntityUnsaved = !values?.id || !values?.version_details?.id;
 
+  // Published/embedded versions are decoupled from their public copy; mutating the
+  // tool/skill graph afterwards would silently diverge from what was published.
+  const versionStatus = values?.version_details?.status;
+  const isVersionLocked = versionStatus === 'published' || versionStatus === 'embedded';
+  const isAddDisabled = isEntityUnsaved || isVersionLocked;
+  const lockedTooltip = `This ${entityType} version is ${versionStatus} and can not be modified`;
+
   const isMcpVisible = useIsMcpVisible();
 
   // Use the hook to filter out already-added items
@@ -565,7 +572,9 @@ const ToolMenu = memo(props => {
           title={
             isEntityUnsaved
               ? `Save the ${values?.version_details?.agent_type === 'pipeline' ? 'pipeline' : 'agent'} first, then add toolkits`
-              : ''
+              : isVersionLocked
+                ? lockedTooltip
+                : ''
           }
           placement="top"
         >
@@ -575,8 +584,8 @@ const ToolMenu = memo(props => {
               variant={BUTTON_VARIANTS.iconLabel}
               startIcon={<PlusIcon />}
               disableRipple
-              disabled={isEntityUnsaved}
-              onClick={isEntityUnsaved ? undefined : handleToolkitButtonClick}
+              disabled={isAddDisabled}
+              onClick={isAddDisabled ? undefined : handleToolkitButtonClick}
             >
               Toolkit
             </BaseBtn>
@@ -588,7 +597,9 @@ const ToolMenu = memo(props => {
             title={
               isEntityUnsaved
                 ? `Save the ${values?.version_details?.agent_type === 'pipeline' ? 'pipeline' : 'agent'} first, then add mcps`
-                : ''
+                : isVersionLocked
+                  ? lockedTooltip
+                  : ''
             }
             placement="top"
           >
@@ -598,8 +609,8 @@ const ToolMenu = memo(props => {
                 variant={BUTTON_VARIANTS.iconLabel}
                 startIcon={<PlusIcon />}
                 disableRipple
-                disabled={isEntityUnsaved}
-                onClick={isEntityUnsaved ? undefined : handleMCPButtonClick}
+                disabled={isAddDisabled}
+                onClick={isAddDisabled ? undefined : handleMCPButtonClick}
               >
                 MCP
               </BaseBtn>
@@ -611,7 +622,9 @@ const ToolMenu = memo(props => {
           title={
             isEntityUnsaved
               ? `Save the ${values?.version_details?.agent_type === 'pipeline' ? 'pipeline' : 'agent'} first, then add agents`
-              : ''
+              : isVersionLocked
+                ? lockedTooltip
+                : ''
           }
           placement="top"
         >
@@ -621,8 +634,8 @@ const ToolMenu = memo(props => {
               variant={BUTTON_VARIANTS.iconLabel}
               startIcon={<PlusIcon />}
               disableRipple
-              disabled={isEntityUnsaved}
-              onClick={isEntityUnsaved ? undefined : handleAgentButtonClick}
+              disabled={isAddDisabled}
+              onClick={isAddDisabled ? undefined : handleAgentButtonClick}
             >
               Agent
             </BaseBtn>
@@ -634,7 +647,9 @@ const ToolMenu = memo(props => {
           title={
             isEntityUnsaved
               ? `Save the ${values?.version_details?.agent_type === 'pipeline' ? 'pipeline' : 'agent'} first, then add pipelines`
-              : ''
+              : isVersionLocked
+                ? lockedTooltip
+                : ''
           }
           placement="top"
         >
@@ -643,8 +658,8 @@ const ToolMenu = memo(props => {
               variant={BUTTON_VARIANTS.iconLabel}
               startIcon={<PlusIcon />}
               disableRipple
-              disabled={isEntityUnsaved}
-              onClick={isEntityUnsaved ? undefined : handlePipelineButtonClick}
+              disabled={isAddDisabled}
+              onClick={isAddDisabled ? undefined : handlePipelineButtonClick}
             >
               Pipeline
             </BaseBtn>

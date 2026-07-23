@@ -3,11 +3,18 @@ import { memo } from 'react';
 import { Box, Button, Typography } from '@mui/material';
 
 import { formatDate } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
+import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
+import { PERMISSIONS } from '@/common/constants';
+import useCheckPermission from '@/hooks/useCheckPermission';
 
 const RunIndexGeneralSection = memo(props => {
   const { indexName, index, reindexStats, isRunning, isIndexing, isDeleting, onReindex, onOpenDelete } =
     props;
   const styles = runIndexGeneralSectionStyles();
+  const { isPrivate } = useProjectType();
+  const { checkPermission } = useCheckPermission();
+
+  const canDeleteIndex = isPrivate || checkPermission(PERMISSIONS.index.delete);
 
   return (
     <Box sx={styles.generalGrid}>
@@ -81,13 +88,15 @@ const RunIndexGeneralSection = memo(props => {
         >
           Reindex
         </Button>
-        <Button
-          variant="secondary"
-          onClick={onOpenDelete}
-          disabled={isDeleting || isIndexing}
-        >
-          Delete Index
-        </Button>
+        {canDeleteIndex && (
+          <Button
+            variant="secondary"
+            onClick={onOpenDelete}
+            disabled={isDeleting || isIndexing}
+          >
+            Delete Index
+          </Button>
+        )}
       </Box>
     </Box>
   );

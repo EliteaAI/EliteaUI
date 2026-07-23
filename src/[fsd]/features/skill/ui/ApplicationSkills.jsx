@@ -31,6 +31,8 @@ const ApplicationSkills = memo(({ style, disabled, entityProjectId }) => {
 
   const entityVersionId = values?.version_details?.id;
   const isEntityUnsaved = !values?.id || !entityVersionId;
+  const versionStatus = values?.version_details?.status;
+  const isVersionLocked = versionStatus === 'published' || versionStatus === 'embedded';
 
   const { data: applicationSkills } = useGetApplicationSkillsQuery(
     { projectId, appVersionId: entityVersionId },
@@ -64,6 +66,7 @@ const ApplicationSkills = memo(({ style, disabled, entityProjectId }) => {
                     attachedSkillIds={attachedSkillIds}
                     disabled={isAtLimit}
                     isEntityUnsaved={isEntityUnsaved}
+                    isVersionLocked={isVersionLocked}
                   />
                 )}
                 <Typography
@@ -80,7 +83,7 @@ const ApplicationSkills = memo(({ style, disabled, entityProjectId }) => {
                   key={skill.skill_id}
                   skill={skill}
                   entityVersionId={entityVersionId}
-                  disabled={disabled}
+                  disabled={disabled || isVersionLocked}
                 />
               ))}
             </Box>

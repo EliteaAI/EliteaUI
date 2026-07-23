@@ -4,6 +4,7 @@ import { useFormikContext } from 'formik';
 
 import { Box } from '@mui/material';
 
+import { AIEditAgentButton } from '@/[fsd]/features/agent/ui/ai-edit-agent-modal';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { useFieldFocus } from '@/[fsd]/shared/lib/hooks';
 import { Input, Text } from '@/[fsd]/shared/ui';
@@ -91,6 +92,7 @@ const ApplicationEditForm = memo(props => {
       items={[
         {
           title: 'General',
+          summaryAction: !isFromPipeline ? <AIEditAgentButton /> : null,
           content: (
             <Box>
               <Box sx={styles.nameContainer}>

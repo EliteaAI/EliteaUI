@@ -7,6 +7,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Box } from '@mui/material';
 
 import { CredentialHelpers, CredentialNameHelpers } from '@/[fsd]/features/credentials/lib/helpers';
+import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
 import { Controls } from '@/[fsd]/shared/ui';
 import { PinEntityType } from '@/[fsd]/widgets/pin-toggler/lib/constants';
 import { usePin, usePinMenu } from '@/[fsd]/widgets/pin-toggler/lib/hooks';
@@ -30,6 +31,9 @@ const CredentialsControls = memo(props => {
   const navigate = useNavigate();
 
   const { checkPermission } = useCheckPermission();
+  const { isPrivate } = useProjectType();
+
+  const canDelete = isPrivate || checkPermission(PERMISSIONS.secrets.delete);
 
   const {
     isPinned,
@@ -136,36 +140,32 @@ const CredentialsControls = memo(props => {
   const styles = credentialsControlsStyles();
 
   const items = useMemo(
-    () => [
-      {
-        ...pinMenuItem,
-        key: 'pin-toggle-credential',
-        disabled: !(credentialDetails?.id && credentialDetails?.uuid),
-      },
-      {
-        key: 'delete-credentials',
-        label: 'Delete',
-        icon: <DeleteIcon sx={styles.deleteIcon} />,
-        onConfirm: onDelete,
-        entityName:
-          formik.values?.settings?.label ||
-          credentialDetails?.label ||
-          credentialDetails?.settings?.elitea_title ||
-          credentialDetails?.elitea_title ||
-          CredentialNameHelpers.extraCredentialName(credentialDetails?.name || ''),
-        shouldRequestInputName: true,
-        disabled:
-          isDeleting ||
-          !credentialDetails?.id ||
-          !checkPermission(PERMISSIONS.configuration.delete) ||
-          isLastInSection,
-        tooltip: isLastInSection
-          ? `Cannot delete the only ${section === 'vectorstorage' ? 'pgVector' : 'embedding model'} configuration. At least one is required for the project.`
-          : undefined,
-      },
-    ],
+    () =>
+      [
+        {
+          ...pinMenuItem,
+          key: 'pin-toggle-credential',
+          disabled: !(credentialDetails?.id && credentialDetails?.uuid),
+        },
+        canDelete && {
+          key: 'delete-credentials',
+          label: 'Delete',
+          icon: <DeleteIcon sx={styles.deleteIcon} />,
+          onConfirm: onDelete,
+          entityName:
+            formik.values?.settings?.label ||
+            credentialDetails?.label ||
+            credentialDetails?.settings?.elitea_title ||
+            credentialDetails?.elitea_title ||
+            CredentialNameHelpers.extraCredentialName(credentialDetails?.name || ''),
+          shouldRequestInputName: true,
+          disabled: isDeleting || !credentialDetails?.id || isLastInSection,
+          tooltip: isLastInSection
+            ? `Cannot delete the only ${section === 'vectorstorage' ? 'pgVector' : 'embedding model'} configuration. At least one is required for the project.`
+            : undefined,
+        },
+      ].filter(Boolean),
     [
-      checkPermission,
       credentialDetails?.elitea_title,
       credentialDetails?.id,
       credentialDetails?.label,
@@ -179,6 +179,7 @@ const CredentialsControls = memo(props => {
       onDelete,
       pinMenuItem,
       styles,
+      canDelete,
     ],
   );
 

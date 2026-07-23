@@ -8,6 +8,7 @@ import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import { useSetDefaultVersion, useUnpublishVersionMenu } from '@/[fsd]/entities/version/lib/hooks';
 import { usePublishApplicationMenu } from '@/[fsd]/entities/version/lib/hooks/usePublishVersionMenu.hooks';
 import VersionDelete from '@/[fsd]/entities/version/ui/VersionDelete';
+import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
 import { Controls } from '@/[fsd]/shared/ui';
 import { PinEntityType } from '@/[fsd]/widgets/pin-toggler/lib/constants';
 import { usePin, usePinMenu } from '@/[fsd]/widgets/pin-toggler/lib/hooks';
@@ -26,6 +27,7 @@ import { AuthorsButton } from '@/pages/Common';
 
 const ApplicationControls = memo(({ setBlockNav, onSuccess }) => {
   const { checkPermission } = useCheckPermission();
+  const { isPrivate } = useProjectType();
   const isFromPipeline = useIsFromPipelineDetail();
   const formik = useFormikContext();
   const viewMode = useViewMode();
@@ -102,6 +104,9 @@ const ApplicationControls = memo(({ setBlockNav, onSuccess }) => {
     return false;
   }, [formik?.values?.meta, formik?.values?.version_details]);
 
+  const canDeleteVersion = isPrivate || checkPermission(PERMISSIONS.versions.delete);
+  const canDeleteApplication = isPrivate || checkPermission(PERMISSIONS.applications.delete);
+
   const menuItems = useMemo(() => {
     const items = [
       {
@@ -138,14 +143,18 @@ const ApplicationControls = memo(({ setBlockNav, onSuccess }) => {
       ...(forkEntityMenuItem ? [forkEntityMenuItem] : []),
       ...(publishApplicationMenuItem && !isFromPipeline ? [publishApplicationMenuItem] : []),
       ...(unpublishVersionMenuItem && !isFromPipeline ? [unpublishVersionMenuItem] : []),
-      {
-        key: 'delete-version',
-        icon: <DeleteIcon sx={{ fontSize: '1rem' }} />,
-        label: 'Delete',
-        disabled: disableDelete,
-        addSeparator: true,
-        onClick: () => versionDeleteRef.current?.triggerDelete(),
-      },
+      ...(canDeleteVersion
+        ? [
+            {
+              key: 'delete-version',
+              icon: <DeleteIcon sx={{ fontSize: '1rem' }} />,
+              label: 'Delete',
+              disabled: disableDelete,
+              addSeparator: true,
+              onClick: () => versionDeleteRef.current?.triggerDelete(),
+            },
+          ]
+        : []),
       {
         key: isFromPipeline ? 'pipeline' : 'agent',
         label: (
@@ -166,7 +175,9 @@ const ApplicationControls = memo(({ setBlockNav, onSuccess }) => {
       },
       shareAgentMenuItem,
       pinMenuItem,
-      { ...deleteApplicationMenuItem, label: `Delete ${isFromPipeline ? 'pipeline' : 'agent'}` },
+      ...(canDeleteApplication
+        ? [{ ...deleteApplicationMenuItem, label: `Delete ${isFromPipeline ? 'pipeline' : 'agent'}` }]
+        : []),
     ];
 
     return items;
@@ -186,6 +197,8 @@ const ApplicationControls = memo(({ setBlockNav, onSuccess }) => {
     disableDelete,
     viewMode,
     isFromPipeline,
+    canDeleteVersion,
+    canDeleteApplication,
   ]);
 
   return (
