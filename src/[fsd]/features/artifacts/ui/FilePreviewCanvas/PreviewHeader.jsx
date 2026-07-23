@@ -173,6 +173,7 @@ const PreviewHeader = memo(props => {
             onClick={onClose}
             sx={styles.actionButton}
             aria-label="Close preview"
+            data-testid="artifacts-file-editor-close-button"
           >
             <CloseIcon sx={styles.iconClose} />
           </IconButton>
@@ -187,6 +188,7 @@ const PreviewHeader = memo(props => {
             <Typography
               variant="headingSmall"
               sx={styles.titleText}
+              data-testid="artifacts-file-editor-header"
             >
               {canvasTitle}
             </Typography>
@@ -201,6 +203,7 @@ const PreviewHeader = memo(props => {
                 color={BUTTON_COLORS.primary}
                 onClick={handleSaveChanges}
                 disabled={isSaving || !hasUnsavedChanges}
+                data-testid="artifacts-file-editor-save-button"
               >
                 Save
               </Button.BaseBtn>
@@ -208,6 +211,7 @@ const PreviewHeader = memo(props => {
                 onDiscard={onDiscard}
                 disabled={isSaving || !hasUnsavedChanges}
                 discarding={false}
+                dataTestId="artifacts-file-editor-discard-button"
               />
             </>
           )}
@@ -282,6 +286,7 @@ const PreviewHeader = memo(props => {
                 sx={styles.languageSelect}
                 showBorder={false}
                 customMenuProps={{ sx: styles.languageSelectMenuSx }}
+                data-testid="artifacts-file-editor-language-select"
               />
             </Box>
           )}
