@@ -139,6 +139,8 @@ const RunHistoryListItem = memo(props => {
   return (
     <>
       <Box
+        data-testid={`run-history-item-${item.id}`}
+        data-selected={selectedItem === item.id ? 'true' : 'false'}
         sx={[styles.listItem, selectedItem === item.id && styles.selected]}
         onClick={() => onItemSelect(item.id)}
       >
