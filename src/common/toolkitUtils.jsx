@@ -375,10 +375,11 @@ export const getToolIconByType = (
     return getInternalToolIcon(internalToolkitName, iconProps);
   }
 
-  const realType = isMCP ? 'mcp' : type;
-  const predefinedIcon = getPredefinedIcon(realType, iconProps);
+  const predefinedIcon = getPredefinedIcon(type, iconProps);
 
-  if (predefinedIcon.type !== BuildIcon) {
+  // The wrench and generic MCP icons are fallbacks, not matches, so icon_url and
+  // sub-group icons still resolve before them.
+  if (predefinedIcon.type !== BuildIcon && predefinedIcon.type !== MCPIcon) {
     return predefinedIcon;
   }
 
@@ -402,7 +403,7 @@ export const getToolIconByType = (
     return <ApplicationToolkitIcon {...iconProps} />;
   }
 
-  return predefinedIcon;
+  return isMCP || predefinedIcon.type === MCPIcon ? <MCPIcon {...iconProps} /> : <BuildIcon {...iconProps} />;
 };
 
 export const getToolIcon = toolType => {

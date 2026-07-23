@@ -4,6 +4,7 @@ import { useTheme } from '@mui/material';
 
 import { useSetRefetchDetails } from '@/[fsd]/features/agent/lib/hooks';
 import { useGetCurrentMCPSchemas, useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
+import { resolveToolkitSchemaByType } from '@/[fsd]/shared/lib/helpers';
 import { useApplicationDetailsQuery } from '@/api/applications';
 import { useToolkitAssociateMutation, useToolkitsListQuery } from '@/api/toolkits.js';
 import { PAGE_SIZE_TOOLKITS_DROPDOWN_LIST } from '@/common/constants';
@@ -265,8 +266,8 @@ export const useGetToolkitIconMeta = () => {
       // Get icon component based on toolkit type
       return {
         component: getToolIconByType(toolkitType, theme, {
-          toolSchema: toolkitSchemas?.[toolkitType],
-          isMCP,
+          toolSchema: resolveToolkitSchemaByType(toolkitType, toolkitSchemas),
+          isMCP: isMCP && toolkitType === 'mcp',
         }),
       };
     },
