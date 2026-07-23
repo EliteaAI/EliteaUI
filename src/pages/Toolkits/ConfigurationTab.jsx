@@ -181,6 +181,10 @@ const styles = {
     padding: '1rem 1.5rem',
     borderRight: ({ palette }) => `0.0625rem solid ${palette.border.table}`,
     position: 'relative',
+    background: ({ palette }) => palette.background.toolkitDetailLeftPanel,
+    ' & .MuiAccordion-root': {
+      background: ({ palette }) => `${palette.background.toolkitDetailLeftPanel} !important`,
+    },
   },
   rightPanel: {
     height: '100%',

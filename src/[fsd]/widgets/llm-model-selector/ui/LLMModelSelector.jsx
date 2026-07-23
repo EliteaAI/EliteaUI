@@ -295,6 +295,8 @@ const llmModelSelectorStyles = () => ({
     cursor: 'pointer',
     minWidth: 0,
     borderBottom: ({ palette }) => `0.0625rem solid ${palette.border.lines}`,
+    paddingLeft: '.75rem',
+    paddingRight: '.75rem',
   },
   fieldLabel: {
     lineHeight: 1,
