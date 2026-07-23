@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useTheme } from '@mui/material';
 
-import { isMcpToolkit } from '@/[fsd]/shared/lib/helpers';
+import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
+import { isMcpToolkit, resolveToolkitSchemaByType } from '@/[fsd]/shared/lib/helpers';
 import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
 import { useToolkitsListQuery } from '@/api/toolkits';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
@@ -23,6 +24,7 @@ export const useDropdownData = ({ agentQuery, pipelineQuery, toolkitQuery, mcpQu
   const projectId = useSelectedProjectId();
   const theme = useTheme();
   const isMcpVisible = useIsMcpVisible();
+  const { toolkitSchemas } = useGetCurrentToolkitSchemas();
   const [isLoadingMoreToolkit, setIsLoadingMoreToolkit] = useState(false);
   const [isLoadingMoreMCP, setIsLoadingMoreMCP] = useState(false);
 
@@ -274,14 +276,18 @@ export const useDropdownData = ({ agentQuery, pipelineQuery, toolkitQuery, mcpQu
           <EntityIcon
             sx={entityIconSx}
             imageStyle={entityImageStyle}
-            icon={{ component: getToolIconByType(toolkit.type, theme) }}
+            icon={{
+              component: getToolIconByType(toolkit.type, theme, {
+                toolSchema: resolveToolkitSchemaByType(toolkit.type, toolkitSchemas),
+              }),
+            }}
             editable={false}
             specifiedFontSize={DROPDOWN_CONSTANTS.DIMENSIONS.ICON_SVG_SIZE}
           />
         ),
       };
     });
-  }, [toolkitsData?.rows, projectId, theme, entityIconSx, entityImageStyle, isMcpVisible]);
+  }, [toolkitsData?.rows, projectId, theme, entityIconSx, entityImageStyle, isMcpVisible, toolkitSchemas]);
 
   // Transform MCPs data for dropdown display (combine regular + public)
   const mcpMenuItems = useMemo(() => {
@@ -315,14 +321,19 @@ export const useDropdownData = ({ agentQuery, pipelineQuery, toolkitQuery, mcpQu
           <EntityIcon
             sx={entityIconSx}
             imageStyle={entityImageStyle}
-            icon={{ component: getToolIconByType(mcp.type, theme, { isMCP: true }) }}
+            icon={{
+              component: getToolIconByType(mcp.type, theme, {
+                toolSchema: resolveToolkitSchemaByType(mcp.type, toolkitSchemas),
+                isMCP: mcp.type === 'mcp',
+              }),
+            }}
             editable={false}
             specifiedFontSize={DROPDOWN_CONSTANTS.DIMENSIONS.ICON_SVG_SIZE}
           />
         ),
       };
     });
-  }, [mcpsData?.rows, projectId, theme, entityIconSx, entityImageStyle]);
+  }, [mcpsData?.rows, projectId, theme, entityIconSx, entityImageStyle, toolkitSchemas]);
 
   // Refresh callback functions - wrapped in useCallback with query state guards
   const refreshAgents = useCallback(async () => {
