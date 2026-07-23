@@ -172,7 +172,7 @@ const styles = {
   },
   participantsContainer: (collapsed, isSmallWindow) => ({
     marginTop: '.5rem',
-    gap: '.5rem',
+    gap: '1rem',
     display: 'flex',
     flexDirection: 'column',
     alignItems: !collapsed || isSmallWindow ? 'flex-start' : 'center',
