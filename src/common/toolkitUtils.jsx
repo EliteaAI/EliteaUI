@@ -23,9 +23,9 @@ import CodexIcon from '@/assets/codex.svg?react';
 import Context7Icon from '@/assets/context7.svg?react';
 import DeepwikiQueryIcon from '@/assets/deepwiki_query.svg?react';
 import DialIcon from '@/assets/dial-icon.svg?react';
-import EliteaMarkIcon from '@/assets/elitea-mark.svg?react';
+import EliteaFilledIcon from '@/assets/elitea_filled.svg?react';
 import EmbeddingIcon from '@/assets/embeddings.svg?react';
-import EpamMarkIcon from '@/assets/epam-mark.svg?react';
+import EpamDefaultIcon from '@/assets/epam_default.svg?react';
 import FigmaIcon from '@/assets/figma-icon.svg?react';
 import FlowIcon from '@/assets/flow-icon.svg?react';
 import GitlabWorkspaceIcon from '@/assets/gitlab-space.svg?react';
@@ -349,9 +349,9 @@ const getPredefinedIcon = (type, iconProps) => {
 const getGroupBrandIcon = (group, iconProps) => {
   switch (group) {
     case 'Elitea':
-      return <EliteaMarkIcon {...iconProps} />;
+      return <EliteaFilledIcon {...iconProps} />;
     case 'EPAM':
-      return <EpamMarkIcon {...iconProps} />;
+      return <EpamDefaultIcon {...iconProps} />;
     default:
       return null;
   }
