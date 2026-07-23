@@ -2,9 +2,8 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { Box, Grid } from '@mui/material';
+import { Box, Grid, Typography } from '@mui/material';
 
-import { ChatButton } from '@/[fsd]/features/chat/ui';
 import { ChatMessageList } from '@/[fsd]/features/chat/ui/chat-box';
 import { useMcpAuthModal } from '@/[fsd]/features/mcp/lib/hooks';
 import { McpAuthModal } from '@/[fsd]/features/mcp/ui';
@@ -18,22 +17,21 @@ import { ToolkitChatModesEnum } from '@/[fsd]/features/toolkits/lib/constants';
 import { ToolkitChatHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useToolkitChat } from '@/[fsd]/features/toolkits/lib/hooks';
 import { TestToolSettings } from '@/[fsd]/features/toolkits/ui';
-import { ViewRunHistoryButton } from '@/[fsd]/shared/ui/button';
-import FullScreenToggle from '@/components/Chat/FullScreenToggle';
+import TestToolsEmptyState from '@/[fsd]/features/toolkits/ui/test-tools/TestToolsEmptyState';
+import { Button } from '@/[fsd]/shared/ui';
+import { WELCOME_MESSAGE_ID } from '@/common/constants';
 import { ChatBodyContainer } from '@/components/Chat/StyledComponents';
+import ArrowBackIcon from '@/components/Icons/ArrowBackIcon';
 import useChatCopyToClipboard from '@/hooks/chat/useChatCopyToClipboard';
 import { useGetSelectedToolSchema } from '@/hooks/toolkit/useGetSelectedToolSchema';
 import { ToolTypes } from '@/pages/Applications/Components/Tools/consts';
-import { ContentContainer } from '@/pages/Common/Components';
 
 const TestTools = memo(props => {
-  const { showAdvancedSettings, isFullScreenChat, setIsFullScreenChat, toolkitId, onShowHistory } = props;
+  const { toolkitId } = props;
   const initializedToolRef = useRef(null);
   const { values: formValues } = useFormikContext();
 
-  const styles = testToolsStyles({
-    showAdvancedSettings,
-  });
+  const styles = testToolsStyles();
 
   const { clearIndexNameError, updateIndexNameError, isIndexNameValid, indexNameError } =
     useIndexNameValidation();
@@ -178,54 +176,76 @@ const TestTools = memo(props => {
     initializeDefaultConfigValues();
   }, [initializeDefaultConfigValues]);
 
+  const hasRealMessages = chatHistory.some(msg => msg.id !== WELCOME_MESSAGE_ID);
+  const showRunResult = hasRealMessages || isRunning;
+
+  if (!selectedTool) {
+    return (
+      <>
+        <Grid
+          size={12}
+          sx={styles.emptyStateGrid}
+        >
+          <TestToolsEmptyState
+            toolkitId={toolkitId}
+            onChangeTool={onChangeTool}
+          />
+        </Grid>
+        <McpAuthModal {...getModalProps()} />
+      </>
+    );
+  }
+
+  if (showRunResult) {
+    return (
+      <>
+        <Grid
+          size={12}
+          sx={styles.resultGrid}
+        >
+          <Box sx={styles.resultPanel}>
+            <Box sx={styles.resultHeader}>
+              <Button.BaseBtn
+                size="small"
+                onClick={handleClearChat}
+                sx={styles.backButton}
+                startIcon={<ArrowBackIcon sx={styles.icon} />}
+              />
+              <Typography
+                variant="headingSmall"
+                color="text.secondary"
+              >
+                Run Results
+              </Typography>
+            </Box>
+            <Box sx={styles.resultContent}>
+              <ChatBodyContainer sx={styles.chatBodyContainer}>
+                <ChatMessageList
+                  chat_history={chatHistory}
+                  activeConversation={getMockToolkitIndexConversation(chatHistory)}
+                  isLoading={false}
+                  isStreaming={false}
+                  isLoadingMore={false}
+                  interaction_uuid="toolkit-test"
+                  askingQuestionId=""
+                  lastResponseMinHeight={0}
+                  questionItemRef={null}
+                  onCopyToClipboard={onCopyToClipboard}
+                />
+              </ChatBodyContainer>
+            </Box>
+          </Box>
+        </Grid>
+        <McpAuthModal {...getModalProps()} />
+      </>
+    );
+  }
+
   return (
     <>
       <Grid
-        size={{ md: 12, lg: 8 }}
-        sx={styles.chatGrid}
-      >
-        <ContentContainer sx={styles.chatContainer}>
-          <Box sx={styles.chatContent}>
-            <Box sx={styles.chatControls}>
-              <Box sx={styles.controlButtons}>
-                <FullScreenToggle
-                  isFullScreenChat={isFullScreenChat}
-                  setIsFullScreenChat={setIsFullScreenChat}
-                />
-                <ChatButton.ClearChatButton onClear={handleClearChat} />
-                {onShowHistory && <ViewRunHistoryButton onShowHistory={onShowHistory} />}
-              </Box>
-            </Box>
-
-            <ChatBodyContainer
-              sx={({ breakpoints }) => ({
-                [breakpoints.up('lg')]: styles.chatBodyContainer,
-                [breakpoints.down('lg')]: styles.chatBodyContainerResponsive,
-              })}
-            >
-              <ChatMessageList
-                chat_history={chatHistory}
-                activeConversation={getMockToolkitIndexConversation(chatHistory)}
-                isLoading={false}
-                isStreaming={false}
-                isLoadingMore={false}
-                interaction_uuid="toolkit-test"
-                askingQuestionId=""
-                lastResponseMinHeight={0}
-                questionItemRef={useRef()}
-                onCopyToClipboard={onCopyToClipboard}
-              />
-            </ChatBodyContainer>
-          </Box>
-        </ContentContainer>
-      </Grid>
-      <Grid
-        size={{ md: 12, lg: 4 }}
-        container
-        sx={({ breakpoints }) => ({
-          ...styles.settingsGrid,
-          [breakpoints.down('lg')]: styles.settingsGridResponsive,
-        })}
+        size={12}
+        sx={styles.settingsGrid}
       >
         <TestToolSettings
           toolkitId={toolkitId}
@@ -248,8 +268,6 @@ const TestTools = memo(props => {
           selectedToolSchema={selectedToolSchema}
         />
       </Grid>
-
-      {/* MCP Auth Modal */}
       <McpAuthModal {...getModalProps()} />
     </>
   );
@@ -260,59 +278,56 @@ TestTools.displayName = 'TestTools';
 export default TestTools;
 
 /** @type {MuiSx} */
-const testToolsStyles = ({ showAdvancedSettings }) => ({
-  chatGrid: ({ breakpoints }) => ({
-    height: '100%',
-
-    [breakpoints.down('lg')]: {
-      height: '100vh !important',
-      minHeight: '120vh !important',
-      marginBottom: '1.5rem',
-    },
-  }),
-  chatContainer: {
+const testToolsStyles = () => ({
+  emptyStateGrid: {
     height: '100%',
   },
-  chatContent: {
+  settingsGrid: {
+    height: '100%',
+  },
+  resultGrid: {
+    height: '100%',
+  },
+  resultPanel: {
     display: 'flex',
     flexDirection: 'column',
     height: '100%',
     maxHeight: '100%',
-    gap: '.875rem',
-    overflow: 'auto',
   },
-  chatControls: ({ breakpoints }) => ({
+  resultHeader: ({ palette }) => ({
     display: 'flex',
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-end',
-    width: '100%',
-
-    [breakpoints.down('lg')]: {
-      marginBottom: showAdvancedSettings ? '0rem' : '1.5rem',
-    },
+    padding: '0.5rem 1.5rem 0.5rem 0.75rem',
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+    borderBottom: `0.0625rem solid ${palette.border.lines}`,
+    flexShrink: 0,
+    height: '3rem',
+    gap: '1rem',
+  }),
+  resultHeaderLeft: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+  },
+  backButton: ({ palette }) => ({
+    padding: '0.375rem',
+    borderRadius: '1rem',
+    color: palette.text.secondary,
   }),
   controlButtons: {
     display: 'flex',
     alignItems: 'center',
-    gap: '.75rem',
+    gap: '0.75rem',
+  },
+  resultContent: {
+    flex: 1,
+    overflow: 'auto',
   },
   chatBodyContainer: {
-    height: 'calc(100vh - 10rem)',
+    height: '100%',
     overflow: 'hidden',
+    borderRadius: '0 !important',
+    border: 'none !important',
   },
-  chatBodyContainerResponsive: {
-    height: '100vh !important',
-    minHeight: '100vh !important',
-    marginBottom: '1.5rem',
-    overflow: 'hidden',
-  },
-  settingsGrid: {
-    maxHeight: '100%',
-  },
-  settingsGridResponsive: {
-    height: '100vh !important',
-    minHeight: '100vh !important',
-    paddingBottom: '1.5rem',
-  },
+  icon: { fontSize: '1rem' },
 });

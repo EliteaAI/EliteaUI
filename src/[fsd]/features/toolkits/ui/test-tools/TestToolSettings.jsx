@@ -1,20 +1,19 @@
-import React, { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import SendIcon from '@mui/icons-material/Send';
 import { Box, Tooltip, Typography } from '@mui/material';
 
 import { SHARED_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { PAT_REQUIRED_ACTION_HINT } from '@/[fsd]/features/mcp/lib/constants';
 import { useInternalMcpPatStatus } from '@/[fsd]/features/mcp/lib/hooks';
 import { IndexesToolsEnum } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
-import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
+import { useToolkitToolOptions } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { Button, Select } from '@/[fsd]/shared/ui/';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { LLMModelSelector } from '@/[fsd]/widgets/llm-model-selector';
-import { useToolkitAvailableToolsQuery } from '@/api/toolkits.js';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { ContentContainer } from '@/pages/Common/Components';
 
@@ -43,61 +42,10 @@ const TestToolSettings = memo(props => {
   const { values } = useFormikContext();
   const projectId = useSelectedProjectId();
   const { patInvalid } = useInternalMcpPatStatus({ projectId, toolkitType: values?.type });
-  const { toolkitSchemas } = useGetCurrentToolkitSchemas();
-  const selectedToolsSchema = toolkitSchemas?.[values?.type]?.properties?.selected_tools;
+  const { allToolsOptions } = useToolkitToolOptions({ toolkitId });
   const disabledRunTool = !isValidForm || isRunning || indexNameError || patInvalid;
 
-  const schemaToolNames = useMemo(() => {
-    const argsSchemasKeys = Object.keys(selectedToolsSchema?.args_schemas || {});
-    if (argsSchemasKeys.length) return argsSchemasKeys;
-    return [...(selectedToolsSchema?.items?.enum || [])];
-  }, [selectedToolsSchema?.args_schemas, selectedToolsSchema?.items?.enum]);
-
-  const shouldFetchDynamicTools = useMemo(() => {
-    if (!projectId || !toolkitId) return false;
-    if (schemaToolNames.length) return false;
-    return true;
-  }, [projectId, schemaToolNames.length, toolkitId]);
-
-  const { data: toolkitAvailableToolsData } = useToolkitAvailableToolsQuery(
-    { projectId, toolkitId },
-    { skip: !shouldFetchDynamicTools },
-  );
-
-  const dynamicToolNames = useMemo(() => {
-    const tools = toolkitAvailableToolsData?.tools || [];
-    return tools.map(t => t?.name).filter(name => typeof name === 'string' && name.trim());
-  }, [toolkitAvailableToolsData?.tools]);
-
   const styles = testToolSettingsStyles();
-
-  const allToolsOptions = useMemo(() => {
-    const explicitSelectedTools = values?.settings?.selected_tools || [];
-    const hasExplicitSelection = Array.isArray(explicitSelectedTools) && explicitSelectedTools.length > 0;
-    const availableTools = hasExplicitSelection
-      ? explicitSelectedTools
-      : dynamicToolNames.length
-        ? dynamicToolNames
-        : schemaToolNames;
-
-    const indexToolNames = new Set(Object.values(IndexesToolsEnum));
-
-    // Map to label/value pairs and always sort by label (asc) for stable UI order.
-    // Index-scope tools are exercised on the Index page's Run Test flow, not here.
-    return (availableTools || [])
-      .filter(tool => {
-        const name = typeof tool === 'string' ? tool : tool?.name;
-        return !indexToolNames.has(name);
-      })
-      .map(tool => ({
-        label:
-          typeof tool === 'string'
-            ? (tool.charAt(0).toUpperCase() + tool.slice(1)).replaceAll('_', ' ')
-            : tool?.name,
-        value: tool,
-      }))
-      .sort((a, b) => (a.label || '').toLowerCase().localeCompare((b.label || '').toLowerCase()));
-  }, [dynamicToolNames, schemaToolNames, values?.settings?.selected_tools]);
 
   const onChangeInputVariablesWrapper = useCallback(
     value => {
@@ -119,20 +67,17 @@ const TestToolSettings = memo(props => {
       width="100%"
       height="100%"
       data-tour={SHARED_TOUR_TARGET_IDS.testSettings}
+      sx={styles.root}
     >
+      <Box sx={styles.header}>
+        <Typography
+          variant="headingSmall"
+          color="text.secondary"
+        >
+          Test Settings
+        </Typography>
+      </Box>
       <ContentContainer sx={styles.contentContainer}>
-        <Box>
-          <Typography variant="subtitle">Test Settings</Typography>
-        </Box>
-        <Box sx={styles.llmModelContainer}>
-          <LLMModelSelector
-            selectedModel={selectedModel}
-            onSelectModel={onSelectModel}
-            models={modelList}
-            llmSettings={llmSettings}
-            onSetLLMSettings={onSetLLMSettings}
-          />
-        </Box>
         <Box sx={styles.toolSelectContainer}>
           <Select.SingleSelect
             value={selectedTool}
@@ -147,40 +92,42 @@ const TestToolSettings = memo(props => {
             showBorder
           />
         </Box>
+        <Box sx={styles.toolSelectContainer}>
+          <LLMModelSelector
+            selectedModel={selectedModel}
+            onSelectModel={onSelectModel}
+            models={modelList}
+            llmSettings={llmSettings}
+            onSetLLMSettings={onSetLLMSettings}
+            variant="field"
+          />
+        </Box>
 
-        {selectedTool && (
-          <Box sx={styles.configContainer}>
-            <Box sx={styles.scrollableSection}>
-              {Object.keys(selectedToolSchema?.properties || {}).map(key => (
-                <ToolkitForm.ToolFormContainer
-                  key={key}
-                  fieldKey={key}
-                  property={selectedToolSchema.properties[key]}
-                  toolInputVariables={toolInputVariables}
-                  schema={selectedToolSchema}
-                  onChangeInputVariables={onChangeInputVariablesWrapper}
-                />
-              ))}
-            </Box>
-
-            <Box sx={styles.runToolBtn}>
-              <Tooltip title={patInvalid ? PAT_REQUIRED_ACTION_HINT : ''}>
-                <Box component="span">
-                  <Button.BaseBtn
-                    variant={BUTTON_VARIANTS.special}
-                    fullWidth
-                    disabled={disabledRunTool}
-                    onClick={onRunTool}
-                    startIcon={<PlayArrowIcon />}
-                  >
-                    RUN TOOL
-                  </Button.BaseBtn>
-                </Box>
-              </Tooltip>
-            </Box>
-          </Box>
-        )}
+        {Object.keys(selectedTool ? selectedToolSchema?.properties || {} : {}).map(key => (
+          <ToolkitForm.ToolFormContainer
+            key={key}
+            fieldKey={key}
+            property={selectedToolSchema.properties[key]}
+            toolInputVariables={toolInputVariables}
+            schema={selectedToolSchema}
+            onChangeInputVariables={onChangeInputVariablesWrapper}
+          />
+        ))}
       </ContentContainer>
+      <Box sx={styles.footer}>
+        <Tooltip title={patInvalid ? PAT_REQUIRED_ACTION_HINT : ''}>
+          <Box component="span">
+            <Button.BaseBtn
+              variant={BUTTON_VARIANTS.special}
+              disabled={disabledRunTool}
+              onClick={onRunTool}
+              startIcon={<SendIcon sx={styles.icon} />}
+            >
+              Run Test
+            </Button.BaseBtn>
+          </Box>
+        </Tooltip>
+      </Box>
     </Box>
   );
 });
@@ -189,22 +136,43 @@ TestToolSettings.displayName = 'TestToolSettings';
 
 /** @type {MuiSx} */
 const testToolSettingsStyles = () => ({
+  root: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+  },
+  header: ({ palette }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: palette.background.aiProviderAccordion.default,
+    borderBottom: `0.0625rem solid ${palette.border.table}`,
+    flexShrink: 0,
+    height: '3rem',
+    width: '100%',
+  }),
   contentContainer: {
-    height: '100%',
+    flex: 1,
     maxHeight: '100%',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'flex-start',
-  },
-  llmModelContainer: {
-    flexShrink: 0,
-    width: '100%',
-    overflow: 'hidden',
-    marginTop: '.875rem',
+    paddingBottom: '1rem',
+    paddingTop: '1.5rem',
+    overflow: 'auto',
+    width: '28.125rem',
+    gap: '0.5rem',
+    '& .index-config-field': {
+      marginTop: '0 !important',
+
+      '& .MuiFormControl-root': {
+        paddingTop: '0 !important',
+      },
+    },
   },
   toolSelectContainer: {
-    marginTop: '0.5rem',
     paddingRight: '0.5rem',
+    height: '3.75rem',
   },
   configContainer: {
     display: 'flex',
@@ -233,15 +201,18 @@ const testToolSettingsStyles = () => ({
       background: palette.action.hover,
     },
   }),
-  runToolBtn: ({ palette }) => ({
-    marginTop: '1rem',
-    paddingRight: '0.5rem',
-    paddingTop: '1rem',
-    borderTop: `.0625rem solid ${palette.divider}`,
-    position: 'sticky',
-    bottom: 0,
-    zIndex: 1,
+  footer: ({ palette }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '0.5rem 1rem',
+    backgroundColor: palette.background.secondary,
+    borderTop: `0.0625rem solid ${palette.border.table}`,
+    flexShrink: 0,
+    width: '100%',
+    height: '3rem',
   }),
+  icon: { fontSize: '1rem' },
 });
 
 export default TestToolSettings;

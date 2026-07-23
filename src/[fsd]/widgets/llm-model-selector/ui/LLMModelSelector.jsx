@@ -1,8 +1,10 @@
 import { memo, useCallback, useMemo, useRef, useState } from 'react';
 
-import { Box, Button, ButtonGroup, Divider, Tooltip, Typography, useTheme } from '@mui/material';
+import { Box, ButtonGroup, Divider, Tooltip, Typography, useTheme } from '@mui/material';
 
+import { Button } from '@/[fsd]/shared/ui';
 import ShareIcon from '@/assets/share-icon.svg?react';
+import ArrowDownIcon from '@/components/Icons/ArrowDownIcon';
 import BriefcaseIcon from '@/components/Icons/BriefcaseIcon.jsx';
 import SettingIcon from '@/components/Icons/SettingIcon';
 
@@ -30,6 +32,7 @@ const LLMModelSelector = memo(props => {
     settingsTooltip = 'Model Settings',
     onResetToDefaults,
     dataTourTargetId,
+    variant = 'default',
   } = props;
 
   const theme = useTheme();
@@ -75,6 +78,81 @@ const LLMModelSelector = memo(props => {
   const handleCancelSettings = useCallback(() => {
     setShowLLMSettings(false);
   }, []);
+
+  if (variant === 'field') {
+    return (
+      <>
+        <Box
+          ref={anchorRef}
+          sx={styles.fieldRoot}
+        >
+          <Box
+            sx={styles.fieldSelector}
+            onClick={disabled ? undefined : handleModelMenuClick}
+          >
+            <Typography
+              variant="labelSmall"
+              color="text.primary"
+              sx={styles.fieldLabel}
+            >
+              Model
+            </Typography>
+            <Box sx={styles.fieldValueRow}>
+              <Typography
+                variant="labelMedium"
+                color="text.secondary"
+                noWrap
+                sx={styles.fieldValue}
+              >
+                {selectedModel?.display_name || selectedModel?.name || 'None'}
+              </Typography>
+              <ArrowDownIcon sx={styles.fieldChevron} />
+            </Box>
+          </Box>
+          {showSettingsEntry && (
+            <Tooltip
+              placement="top"
+              title={settingsTooltip}
+            >
+              <Button.BaseBtn
+                variant={Button.BUTTON_VARIANTS.secondary}
+                onClick={handleSettingsClick}
+                disabled={!onSetLLMSettings || disabled}
+                sx={styles.fieldSettingsBtn}
+                startIcon={
+                  <SettingIcon
+                    sx={styles.settingIcon}
+                    fill={!onSetLLMSettings || disabled ? undefined : undefined}
+                  />
+                }
+              />
+            </Tooltip>
+          )}
+        </Box>
+
+        <LLMModelsMenu
+          anchorEl={anchorEl}
+          onClose={handleClose}
+          models={models}
+          selectedModel={selectedModel}
+          onSelectModel={onSelectModel}
+        />
+
+        {onSetLLMSettings && (
+          <LLMSettingsDialog
+            open={showLLMSettings}
+            onApply={handleApplySettings}
+            onCancel={handleCancelSettings}
+            selectedModel={selectedModel}
+            llmSettings={normalizedLlmSettings}
+            showWebhookSecret={showWebhookSecret}
+            showStepsLimit={showStepsLimit}
+            onResetToDefaults={onResetToDefaults}
+          />
+        )}
+      </>
+    );
+  }
 
   return (
     <>
@@ -148,7 +226,7 @@ const LLMModelSelector = memo(props => {
               title={settingsTooltip}
             >
               <Box component="span">
-                <Button
+                <Button.BaseBtn
                   size="small"
                   aria-expanded={showLLMSettings ? 'true' : undefined}
                   aria-label="model settings menu"
@@ -162,7 +240,7 @@ const LLMModelSelector = memo(props => {
                     sx={styles.settingIcon}
                     fill={!onSetLLMSettings || disabled ? theme.palette.icon.fill.disabled : undefined}
                   />
-                </Button>
+                </Button.BaseBtn>
               </Box>
             </Tooltip>
           </>
@@ -197,6 +275,42 @@ LLMModelSelector.displayName = 'LLMModelSelector';
 
 /** @type {MuiSx} */
 const llmModelSelectorStyles = () => ({
+  fieldRoot: {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: '0.5rem',
+    padding: '0.5rem 0',
+    width: '100%',
+    cursor: 'default',
+  },
+  fieldSelector: {
+    display: 'flex',
+    flexDirection: 'column',
+    flex: 1,
+    gap: '0.25rem',
+    cursor: 'pointer',
+    minWidth: 0,
+    borderBottom: ({ palette }) => `0.0625rem solid ${palette.border.lines}`,
+  },
+  fieldLabel: {
+    lineHeight: 1,
+  },
+  fieldValueRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    minWidth: 0,
+  },
+  fieldValue: {
+    flex: 1,
+    minWidth: 0,
+  },
+  fieldChevron: {
+    fontSize: '1rem',
+    flexShrink: 0,
+    color: 'text.secondary',
+  },
   buttonGroup: {
     maxWidth: '100%',
     minWidth: 0,
