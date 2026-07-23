@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 import { flushSync } from 'react-dom';
@@ -65,8 +65,9 @@ const AIEditAgentModal = memo(props => {
   });
   const [showVersionModal, setShowVersionModal] = useState(false);
   const [versionName, setVersionName] = useState('');
+  const [isSavingAsVersion, setIsSavingAsVersion] = useState(false);
 
-  const { onCreateNewVersion, isSavingNewVersion } = useSaveNewVersion({
+  const { onCreateNewVersion } = useSaveNewVersion({
     toastError,
     toastSuccess,
     applicationId: formik.values.id,
@@ -82,6 +83,19 @@ const AIEditAgentModal = memo(props => {
 
   const { onSave: saveVersion } = useSaveVersion();
   saveVersionRef.current = saveVersion;
+
+  useEffect(() => {
+    if (!open) {
+      setSteps([]);
+      setFieldApplyFlags(DEFAULT_FIELD_FLAGS);
+      setToolSelections({ toAdd: new Set(), toRemove: new Set(), toKeep: new Set() });
+      setShowVersionModal(false);
+      setVersionName('');
+      setIsSavingAsVersion(false);
+      currentDataRef.current = null;
+      pendingDraftDataRef.current = null;
+    }
+  }, [open]);
 
   const entityVersionId = formik.values.version_details?.id;
   const { data: applicationSkills } = useGetApplicationSkillsQuery(
@@ -112,7 +126,17 @@ const AIEditAgentModal = memo(props => {
 
   const handleDraftGenerated = useCallback(
     draftData => {
-      const visibleSteps = AgentAIEditionStepsHelpers.computeVisibleSteps(currentDataRef.current, draftData);
+      const currentAppId = currentDataRef.current?.id;
+
+      const filtered = {
+        ...draftData,
+        suggested_agents: (draftData.suggested_agents || []).filter(a => a.application_id !== currentAppId),
+        suggested_pipelines: (draftData.suggested_pipelines || []).filter(
+          p => p.application_id !== currentAppId,
+        ),
+      };
+
+      const visibleSteps = AgentAIEditionStepsHelpers.computeVisibleSteps(currentDataRef.current, filtered);
 
       setSteps(visibleSteps);
       setFieldApplyFlags({ ...DEFAULT_FIELD_FLAGS });
@@ -127,16 +151,14 @@ const AIEditAgentModal = memo(props => {
       }));
       const allCurrentTools = [...snapshotTools, ...snapshotSkills];
 
-      const currentKeys = new Set(
-        allCurrentTools.map(t => `${resolveEntityType(t)}:${t.id}`),
-      );
+      const currentKeys = new Set(allCurrentTools.map(t => `${resolveEntityType(t)}:${t.id}`));
 
       const allSuggestedKeys = new Set([
-        ...(draftData.suggested_toolkits || []).map(t => `toolkit:${t.id}`),
-        ...(draftData.suggested_mcp || []).map(m => `mcp:${m.id}`),
-        ...(draftData.suggested_agents || []).map(a => `agent:${a.id}`),
-        ...(draftData.suggested_pipelines || []).map(p => `pipeline:${p.id}`),
-        ...(draftData.suggested_skills || []).map(s => `skill:${s.id}`),
+        ...(filtered.suggested_toolkits || []).map(t => `toolkit:${t.id}`),
+        ...(filtered.suggested_mcp || []).map(m => `mcp:${m.id}`),
+        ...(filtered.suggested_agents || []).map(a => `agent:${a.id}`),
+        ...(filtered.suggested_pipelines || []).map(p => `pipeline:${p.id}`),
+        ...(filtered.suggested_skills || []).map(s => `skill:${s.id}`),
       ]);
 
       const addIds = new Set([...allSuggestedKeys].filter(key => !currentKeys.has(key)));
@@ -144,6 +166,8 @@ const AIEditAgentModal = memo(props => {
       const removeIds = new Set([...currentKeys].filter(key => !allSuggestedKeys.has(key)));
 
       setToolSelections({ toAdd: addIds, toRemove: removeIds, toKeep: keepIds });
+
+      return filtered;
     },
     [applicationSkills?.skills, resolveEntityType],
   );
@@ -163,9 +187,9 @@ const AIEditAgentModal = memo(props => {
   }, []);
 
   const applyToolAssociations = useCallback(
-    async draftData => {
+    async (draftData, targetVersionId) => {
       const entityId = formik.values.id;
-      const versionId = formik.values.version_details?.id;
+      const versionId = targetVersionId || formik.values.version_details?.id;
 
       if (!versionId) return;
 
@@ -425,36 +449,48 @@ const AIEditAgentModal = memo(props => {
     const draftData = pendingDraftDataRef.current;
     if (!draftData) return;
 
-    // flushSync forces a synchronous re-render so useSaveNewVersion picks up
-    // the updated formik values before onCreateNewVersion is called below.
-    flushSync(() => {
-      applyFieldChanges(draftData);
-    });
+    setIsSavingAsVersion(true);
 
-    await applyToolAssociations(draftData);
-    await onCreateNewVersionRef.current(trimmedName);
+    try {
+      // Name/description are application-level (shared across versions).
+      // Save them via the proven useSaveVersion path before creating the new version.
+      if (fieldApplyFlags.name || fieldApplyFlags.description) {
+        flushSync(() => {
+          if (fieldApplyFlags.name) formik.setFieldValue('name', (draftData.name || '').trim());
+          if (fieldApplyFlags.description) formik.setFieldValue('description', draftData.description || '');
+        });
+        await saveVersionRef.current();
+      }
 
-    // Refetch application details to get the updated tools list
-    const { data: freshData } = await fetchApplicationDetails({
-      projectId,
-      applicationId: formik.values.id,
-    });
-    if (freshData) {
-      formik.resetForm({ values: freshData });
+      // Apply version-level fields to formik so useSaveNewVersion picks them up.
+      flushSync(() => {
+        if (fieldApplyFlags.instructions)
+          formik.setFieldValue('version_details.instructions', draftData.instructions || '');
+        if (fieldApplyFlags.welcome_message)
+          formik.setFieldValue('version_details.welcome_message', draftData.welcome_message || '');
+        if (fieldApplyFlags.conversation_starters)
+          formik.setFieldValue(
+            'version_details.conversation_starters',
+            filterEmptyStrings(draftData.conversation_starters),
+          );
+      });
+
+      // Create the new version — tools are applied to it afterwards.
+      const result = await onCreateNewVersionRef.current(trimmedName);
+      const newVersionId = result?.data?.id;
+
+      if (newVersionId) {
+        await applyToolAssociations(draftData, newVersionId);
+      }
+
+      setShowVersionModal(false);
+      setVersionName('');
+      pendingDraftDataRef.current = null;
+      onClose();
+    } catch {
+      setIsSavingAsVersion(false);
     }
-
-    setShowVersionModal(false);
-    setVersionName('');
-    pendingDraftDataRef.current = null;
-  }, [
-    versionName,
-    formik,
-    toastError,
-    applyFieldChanges,
-    applyToolAssociations,
-    fetchApplicationDetails,
-    projectId,
-  ]);
+  }, [versionName, formik, toastError, fieldApplyFlags, applyToolAssociations, onClose]);
 
   const handleCancelVersion = useCallback(() => {
     setShowVersionModal(false);
@@ -542,6 +578,7 @@ const AIEditAgentModal = memo(props => {
         renderStep={renderStep}
         onSave={handleSave}
         onSaveAsVersion={handleSaveAsVersionClick}
+        isSavingAsVersion={isSavingAsVersion}
         saveLabel="Save"
         savingLabel="Saving..."
         modalTestId="ai-edit-agent-modal"
@@ -557,10 +594,10 @@ const AIEditAgentModal = memo(props => {
         variant={ModalConstants.MODAL_VARIANT.simple}
         titleIcon={ModalConstants.MODAL_ICON_TYPE.success}
         title="Create version"
-        onClose={handleCancelVersion}
+        onClose={isSavingAsVersion ? undefined : handleCancelVersion}
         onConfirm={handleConfirmVersion}
         confirmButtonText="Save"
-        confirming={!versionName.trim() || isSavingNewVersion}
+        confirming={!versionName.trim() || isSavingAsVersion}
         onKeyDown={handleVersionKeyDown}
         closeButtonTestId="ai-edit-version-dialog-close-button"
         cancelButtonTestId="ai-edit-version-dialog-cancel-button"

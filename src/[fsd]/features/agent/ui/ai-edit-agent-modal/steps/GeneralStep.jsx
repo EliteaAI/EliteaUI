@@ -4,6 +4,8 @@ import { Box, Typography } from '@mui/material';
 
 import { EditEntityComparisonLayout, TextDiffHighlight } from '@/[fsd]/entities/edit-entity-with-ai';
 import BaseCheckbox from '@/[fsd]/shared/ui/checkbox/BaseCheckbox';
+import { Text } from '@/[fsd]/shared/ui';
+import { MAX_DESCRIPTION_LENGTH, MAX_NAME_LENGTH } from '@/common/constants';
 
 const GeneralStep = memo(props => {
   const { currentData, draftData, onDraftChange, fieldApplyFlags, onToggleField } = props;
@@ -15,14 +17,14 @@ const GeneralStep = memo(props => {
 
   const handleNameChange = useCallback(
     newText => {
-      onDraftChange({ ...draftData, name: newText });
+      onDraftChange({ ...draftData, name: newText.slice(0, MAX_NAME_LENGTH) });
     },
     [draftData, onDraftChange],
   );
 
   const handleDescriptionChange = useCallback(
     newText => {
-      onDraftChange({ ...draftData, description: newText });
+      onDraftChange({ ...draftData, description: newText.slice(0, MAX_DESCRIPTION_LENGTH) });
     },
     [draftData, onDraftChange],
   );
@@ -75,8 +77,17 @@ const GeneralStep = memo(props => {
                 mode="modified"
                 editable
                 onChange={handleNameChange}
+                maxLength={MAX_NAME_LENGTH}
               />
             </Box>
+            {suggestedName.length > 0 && (
+              <Text.CharacterCounter
+                value={suggestedName}
+                maxLength={MAX_NAME_LENGTH}
+                hideMaxLimitMessage
+                sx={styles.characterCounter}
+              />
+            )}
           </Box>
           <Box sx={[styles.fieldSectionGrow, { minHeight: '15rem' }]}>
             <Box sx={styles.fieldHeader}>
@@ -98,8 +109,17 @@ const GeneralStep = memo(props => {
                 mode="modified"
                 editable
                 onChange={handleDescriptionChange}
+                maxLength={MAX_DESCRIPTION_LENGTH}
               />
             </Box>
+            {suggestedDescription.length > 0 && (
+              <Text.CharacterCounter
+                value={suggestedDescription}
+                maxLength={MAX_DESCRIPTION_LENGTH}
+                hideMaxLimitMessage
+                sx={styles.characterCounter}
+              />
+            )}
           </Box>
         </Box>
       }
@@ -184,6 +204,9 @@ const styles = {
     minHeight: 0,
     overflow: 'auto',
   }),
+  characterCounter: {
+    alignSelf: 'flex-end',
+  },
 };
 
 export default GeneralStep;

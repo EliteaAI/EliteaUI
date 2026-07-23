@@ -5,7 +5,7 @@ import { Box, Typography, useTheme } from '@mui/material';
 import { computeWordDiff } from '../lib/helpers';
 
 const TextDiffHighlight = memo(props => {
-  const { original, modified, mode, editable, onChange } = props;
+  const { original, modified, mode, editable, onChange, maxLength } = props;
 
   const editableRef = useRef(null);
   const isFocusedRef = useRef(false);
@@ -60,11 +60,34 @@ const TextDiffHighlight = memo(props => {
     isFocusedRef.current = false;
 
     if (onChange && editableRef.current) {
-      const newText = editableRef.current.innerText || '';
+      let newText = editableRef.current.innerText || '';
+      if (maxLength && newText.length > maxLength) newText = newText.slice(0, maxLength);
 
       if (newText !== modified) onChange(newText);
     }
-  }, [onChange, modified]);
+  }, [onChange, modified, maxLength]);
+
+  const handleInput = useCallback(() => {
+    if (!editableRef.current || !maxLength) return;
+
+    const text = editableRef.current.innerText || '';
+    if (text.length <= maxLength) {
+      onChange?.(text);
+      return;
+    }
+
+    const truncated = text.slice(0, maxLength);
+    editableRef.current.innerText = truncated;
+
+    const range = document.createRange();
+    const selection = window.getSelection();
+    range.selectNodeContents(editableRef.current);
+    range.collapse(false);
+    selection.removeAllRanges();
+    selection.addRange(range);
+
+    onChange?.(truncated);
+  }, [maxLength, onChange]);
 
   if (editable) {
     return (
@@ -74,6 +97,7 @@ const TextDiffHighlight = memo(props => {
         component="div"
         onFocus={handleFocus}
         onBlur={handleBlur}
+        onInput={handleInput}
         sx={[styles.container, styles.editable]}
       />
     );

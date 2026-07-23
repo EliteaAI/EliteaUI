@@ -3,7 +3,7 @@ import { memo, useCallback, useMemo } from 'react';
 import { Box, IconButton, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
-import { Input } from '@/[fsd]/shared/ui';
+import { Input, Text } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import PlusIcon from '@/assets/plus-icon.svg?react';
 import {
@@ -145,6 +145,14 @@ const SummaryStep = memo(props => {
             sx={styles.cardInput}
           />
         </Box>
+        {mergedName.length > 0 && (
+          <Text.CharacterCounter
+            value={mergedName}
+            maxLength={MAX_NAME_LENGTH}
+            hideMaxLimitMessage
+            sx={styles.characterCounter}
+          />
+        )}
       </Box>
 
       <Box sx={styles.field}>
@@ -163,6 +171,14 @@ const SummaryStep = memo(props => {
             sx={styles.cardInput}
           />
         </Box>
+        {mergedDescription.length > 0 && (
+          <Text.CharacterCounter
+            value={mergedDescription}
+            maxLength={MAX_DESCRIPTION_LENGTH}
+            hideMaxLimitMessage
+            sx={styles.characterCounter}
+          />
+        )}
       </Box>
 
       <Box sx={styles.field}>
@@ -382,6 +398,9 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '0.75rem',
+  },
+  characterCounter: {
+    alignSelf: 'flex-end',
   },
 };
 
