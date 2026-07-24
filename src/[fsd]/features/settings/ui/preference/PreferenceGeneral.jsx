@@ -28,7 +28,10 @@ const PreferenceGeneral = memo(() => {
                   sx={styles.label}
                 />
                 <Box sx={styles.themeToggleContainer}>
-                  <ThemeModeToggle />
+                  <ThemeModeToggle
+                    darkToggleTestId="preferences-theme-dark-toggle"
+                    lightToggleTestId="preferences-theme-light-toggle"
+                  />
                 </Box>
               </Box>
             </Box>
