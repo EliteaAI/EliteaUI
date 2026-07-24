@@ -40,8 +40,6 @@ export const useLoadToolkits = ({
     { projectId, params: { mcp: isMCP || undefined, application: isApplication || undefined } },
     { skip: !projectId || forceSkip },
   );
-  // Instance type keys are normalized ("mcp_elitea_analytics"); schema keys are not
-  // ("mcp_Elitea Analytics"). Map both forms so group resolves for either.
   const mcpGroupByType = useMemo(() => {
     const prefix = McpAuthConstants.MCP_PREBUILD_PREFIX;
     const map = {};

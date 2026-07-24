@@ -377,8 +377,6 @@ export const getToolIconByType = (
 
   const predefinedIcon = getPredefinedIcon(type, iconProps);
 
-  // The wrench and generic MCP icons are fallbacks, not matches, so icon_url and
-  // sub-group icons still resolve before them.
   if (predefinedIcon.type !== BuildIcon && predefinedIcon.type !== MCPIcon) {
     return predefinedIcon;
   }

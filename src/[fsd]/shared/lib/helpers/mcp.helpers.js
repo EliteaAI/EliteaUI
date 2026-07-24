@@ -21,11 +21,6 @@ export const isRemoteMcpToolkitType = type => type === 'mcp';
  */
 export const isMcpToolkit = item => isMcpToolkitType(item?.type) || item?.meta?.mcp === true;
 
-/**
- * Resolve a toolkit's schema from a type. Toolkit instances use a normalized
- * type ("mcp_elitea_analytics") while schemas are keyed by the original name
- * ("mcp_Elitea Analytics"), so a direct lookup misses for MCP instances.
- */
 export const resolveToolkitSchemaByType = (type, toolkitSchemas = {}) => {
   if (!type) return undefined;
   if (toolkitSchemas[type]) return toolkitSchemas[type];
