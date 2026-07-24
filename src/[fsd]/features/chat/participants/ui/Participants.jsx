@@ -51,6 +51,8 @@ const Participants = memo(props => {
   return (
     <Box
       ref={componentRef}
+      data-testid="chat-participants-panel"
+      data-expanded={!collapsed}
       sx={styles.mainContainer(collapsed)}
     >
       <Box
@@ -65,6 +67,7 @@ const Participants = memo(props => {
           )}
           {Boolean(ExpandCollapseButton) && (
             <IconButton
+              data-testid="chat-participants-panel-toggle-button"
               sx={styles.collapseButton}
               variant="elitea"
               color="tertiary"
