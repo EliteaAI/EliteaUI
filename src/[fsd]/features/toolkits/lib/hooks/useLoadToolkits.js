@@ -63,7 +63,7 @@ export const useLoadToolkits = ({
       const isMcpType =
         type === 'mcp' || type.startsWith(McpAuthConstants.MCP_PREBUILD_PREFIX) || schema?.type === 'mcp';
       if (isMcpType) {
-        const group = mcpGroupByType[type] || McpConstants.McpToolkitGroup.Other;
+        const group = mcpGroupByType[type] || McpConstants.MCP_OTHER_GROUP;
         (byGroup[group] ||= []).push(type);
       } else {
         nonMcp.push(type);
