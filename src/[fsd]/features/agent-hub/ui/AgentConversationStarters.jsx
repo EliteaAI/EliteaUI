@@ -38,7 +38,7 @@ const AgentConversationStarters = memo(props => {
           variant="bodySmall"
           sx={styles.emptyText}
         >
-          No predefined conversation starters – just type your request to begin.
+          No predefined chat starters – just type your request to begin.
         </Typography>
       )}
     </Box>

@@ -55,11 +55,15 @@ const GeneralStep = memo(props => {
           <Box sx={[styles.fieldSectionGrow, { minHeight: '15rem' }]}>
             <Typography sx={styles.fieldLabel}>Description</Typography>
             <Box sx={styles.readOnlyCardGrow}>
-              <TextDiffHighlight
-                original={currentDescription}
-                modified={suggestedDescription}
-                mode="original"
-              />
+              {currentDescription ? (
+                <TextDiffHighlight
+                  original={currentDescription}
+                  modified={suggestedDescription}
+                  mode="original"
+                />
+              ) : (
+                <Typography sx={styles.emptyText}>No description</Typography>
+              )}
             </Box>
           </Box>
         </Box>
@@ -164,6 +168,11 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  emptyText: {
+    fontSize: '0.75rem',
+    color: 'text.primary',
+    fontStyle: 'italic',
+  },
   fieldLabel: {
     fontSize: '0.875rem',
     fontWeight: 500,
@@ -188,6 +197,7 @@ const styles = {
     borderRadius: '0.5rem',
     backgroundColor: palette.background.userInputBackground,
     border: `0.0625rem solid ${palette.border.lines}`,
+    minHeight: '2.5rem',
   }),
   readOnlyCardGrow: ({ palette }) => ({
     padding: '0.5rem 1rem',
@@ -203,6 +213,10 @@ const styles = {
     borderRadius: '0.5rem',
     backgroundColor: palette.background.userInputBackground,
     border: `0.0625rem solid ${palette.border.lines}`,
+    minHeight: '2.5rem',
+    transition: 'border-color 0.2s ease',
+    '&:hover': { borderColor: palette.border.hover },
+    '&:focus-within': { borderColor: palette.primary.main },
   }),
   editableCardGrow: ({ palette }) => ({
     padding: '0.5rem 1rem',
@@ -212,6 +226,9 @@ const styles = {
     flex: 1,
     minHeight: 0,
     overflow: 'auto',
+    transition: 'border-color 0.2s ease',
+    '&:hover': { borderColor: palette.border.hover },
+    '&:focus-within': { borderColor: palette.primary.main },
   }),
   characterCounter: {
     alignSelf: 'flex-end',

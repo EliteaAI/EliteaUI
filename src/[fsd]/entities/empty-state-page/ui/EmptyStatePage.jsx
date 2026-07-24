@@ -11,6 +11,7 @@ const EmptyStatePage = memo(props => {
   const {
     title,
     description,
+    icon: Icon = null,
     imageDark = applicationsDarkImage,
     imageLight = applicationsLightImage,
     onCreateClick,
@@ -31,12 +32,16 @@ const EmptyStatePage = memo(props => {
 
   return (
     <Box sx={styles.container}>
-      <Box
-        component="img"
-        src={isDarkMode ? imageDark : imageLight}
-        alt="No image of tool"
-        sx={styles.image}
-      />
+      {Icon ? (
+        <Box component={Icon} />
+      ) : (
+        <Box
+          component="img"
+          src={isDarkMode ? imageDark : imageLight}
+          alt="No image of tool"
+          sx={styles.image}
+        />
+      )}
 
       <Typography
         variant="headingSmall"

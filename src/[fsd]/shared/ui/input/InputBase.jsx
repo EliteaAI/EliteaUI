@@ -80,7 +80,7 @@ const InputBase = memo(props => {
     overlayContent,
     InputLabelProps,
     maxRows = null,
-    minRows = 3,
+    minRows = 1,
     collapseContent = false,
     inputProps,
     hasActionsToolBar = false,
@@ -195,7 +195,7 @@ const InputBase = memo(props => {
     return (
       <Label.InfoLabelWithTooltip
         label={labelText}
-        {...(labelVariant && { variant: labelVariant })}
+        {...(labelVariant ? { variant: labelVariant } : isOutlined && { variant: 'labelMedium' })}
         {...(!isOutlined && { inheritLabel: true, inheritColor: true })}
         {...(tooltipDescription && {
           tooltip: tooltipDescription,

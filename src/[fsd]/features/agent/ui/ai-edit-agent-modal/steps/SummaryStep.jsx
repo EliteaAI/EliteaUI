@@ -3,6 +3,7 @@ import { memo, useCallback, useMemo } from 'react';
 import { Box, IconButton, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
+import { resolveEntityType } from '@/[fsd]/entities/edit-entity-with-ai/lib/helpers';
 import { Input, Text } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import PlusIcon from '@/assets/plus-icon.svg?react';
@@ -22,14 +23,16 @@ const normalizeToolItem = (item, entityType) => ({
   entityType: item.entity_type || entityType,
 });
 
-const resolveEntityType = item => {
-  if (item.type === 'application') return item.agent_type === 'pipeline' ? 'pipeline' : 'agent';
-  if (item.type === 'skill') return 'skill';
-  return 'toolkit';
-};
-
 const SummaryStep = memo(props => {
-  const { currentData, currentTools = [], draftData, onDraftChange, fieldApplyFlags, onToggleField, toolSelections } = props;
+  const {
+    currentData,
+    currentTools = [],
+    draftData,
+    onDraftChange,
+    fieldApplyFlags,
+    onToggleField,
+    toolSelections,
+  } = props;
 
   const { mergedName, mergedDescription, mergedInstructions, mergedWelcome, mergedStarters } = useMemo(
     () => ({
@@ -51,9 +54,7 @@ const SummaryStep = memo(props => {
   );
 
   const mergedTools = useMemo(() => {
-    const currentKeys = new Set(
-      currentTools.map(t => `${resolveEntityType(t)}:${t.id}`),
-    );
+    const currentKeys = new Set(currentTools.map(t => `${resolveEntityType(t)}:${t.id}`));
 
     const allSuggestedKeys = new Set([
       ...(draftData?.suggested_toolkits || []).map(t => `toolkit:${t.id}`),
@@ -126,7 +127,7 @@ const SummaryStep = memo(props => {
 
   const addStarterTooltip = useMemo(() => {
     if (mergedStarters.length >= MAX_CONVERSATION_STARTERS)
-      return 'You have reached the limit of conversation starters';
+      return 'You have reached the limit of chat starters';
     return '';
   }, [mergedStarters]);
 
@@ -161,8 +162,7 @@ const SummaryStep = memo(props => {
           <Input.InputBase
             fullWidth
             multiline
-            minRows={2}
-            maxRows={4}
+            maxRows={3}
             value={mergedDescription}
             onChange={e => handleFieldChange('description', e.target.value)}
             inputProps={{ maxLength: MAX_DESCRIPTION_LENGTH }}
@@ -204,8 +204,7 @@ const SummaryStep = memo(props => {
           <Input.InputBase
             fullWidth
             multiline
-            minRows={2}
-            maxRows={4}
+            maxRows={3}
             value={mergedWelcome}
             onChange={e => handleFieldChange('welcome_message', e.target.value)}
             inputProps={{ maxLength: MAX_WELCOME_MESSAGE_LENGTH }}
@@ -217,23 +216,25 @@ const SummaryStep = memo(props => {
       </Box>
 
       <Box sx={styles.section}>
-        <Typography sx={styles.sectionLabel}>Conversation starters:</Typography>
+        <Typography sx={styles.sectionLabel}>Chat starters:</Typography>
         <Box sx={styles.startersList}>
           {mergedStarters.map((starter, index) => (
             <Box
               key={index}
               sx={styles.starterRow}
             >
-              <Box sx={styles.editableCard}>
+              <Box sx={styles.starterCard}>
                 <Input.InputBase
                   fullWidth
                   multiline
+                  maxRows={3}
+                  minRows={1}
                   disableUnderline
                   value={starter}
                   onChange={e => handleStarterChange(index, e.target.value)}
                   inputProps={{ maxLength: MAX_CONVERSATION_STARTER_LENGTH }}
                   enableAutoBlur={false}
-                  sx={styles.cardInput}
+                  sx={styles.starterInput}
                 />
               </Box>
               <IconButton
@@ -295,13 +296,11 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '1rem',
-    padding: '1rem 2rem 1.25rem',
+    paddingBlock: '1rem 1.25rem',
+    paddingInline: 'max(2rem, calc((100% - 46rem) / 2))',
     flex: 1,
     minHeight: 0,
     overflowY: 'auto',
-    maxWidth: '50rem',
-    width: '100%',
-    margin: '0 auto',
   },
   field: {
     display: 'flex',
@@ -321,6 +320,9 @@ const styles = {
     borderRadius: '0.5rem',
     backgroundColor: palette.background.userInputBackground,
     border: `0.0625rem solid ${palette.border.lines}`,
+    transition: 'border-color 0.2s ease',
+    '&:hover': { borderColor: palette.border.hover },
+    '&:focus-within': { borderColor: palette.primary.main },
   }),
   cardInput: ({ palette }) => ({
     '& .MuiInputBase-input': {
@@ -330,6 +332,7 @@ const styles = {
       fontWeight: 400,
       lineHeight: '1.5rem',
       color: palette.text.secondary,
+      caretColor: palette.text.secondary,
     },
     '& .MuiInputBase-root': {
       padding: '0 !important',
@@ -361,6 +364,40 @@ const styles = {
     gap: '0.75rem',
     paddingTop: '0.5rem',
   },
+  starterCard: ({ palette }) => ({
+    flex: 1,
+    minWidth: 0,
+    padding: '0.5rem 1rem',
+    borderRadius: '0.5rem',
+    backgroundColor: palette.background.userInputBackground,
+    border: `0.0625rem solid ${palette.border.lines}`,
+    transition: 'border-color 0.2s ease',
+    '&:hover': { borderColor: palette.border.hover },
+    '&:focus-within': { borderColor: palette.primary.main },
+  }),
+  starterInput: ({ palette }) => ({
+    '& .MuiInputBase-input': {
+      padding: '0 !important',
+      margin: '0 !important',
+      fontSize: '0.875rem',
+      fontWeight: 400,
+      lineHeight: '1.5rem',
+      color: palette.text.secondary,
+      caretColor: palette.text.secondary,
+    },
+    '& .MuiInputBase-root': {
+      padding: '0 !important',
+      minHeight: 'unset',
+      '&::before, &::after': {
+        display: 'none !important',
+      },
+    },
+    '& textarea': {
+      padding: '0 !important',
+      margin: '0 !important',
+    },
+    padding: 0,
+  }),
   startersList: {
     display: 'flex',
     flexDirection: 'column',
@@ -368,16 +405,20 @@ const styles = {
   },
   starterRow: {
     display: 'flex',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: '0.625rem',
   },
-  removeBtn: {
-    padding: '0.375rem',
-    color: 'text.secondary',
+  removeBtn: ({ palette }) => ({
+    padding: '0.5rem',
+    color: palette.text.default,
+    marginTop: '0.25rem',
     '&:hover': {
-      backgroundColor: 'transparent',
+      backgroundColor: palette.background.button.tertiary.hover,
     },
-  },
+    '&:active': {
+      backgroundColor: palette.background.button.tertiary.pressed,
+    },
+  }),
   removeIcon: {
     fontSize: '1rem',
   },

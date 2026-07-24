@@ -15,7 +15,11 @@ const UserInteractionStep = memo(props => {
   const { currentData, draftData, onDraftChange, fieldApplyFlags, onToggleField } = props;
 
   const currentWelcome = currentData.version_details?.welcome_message || '';
-  const currentStarters = currentData.version_details?.conversation_starters || [];
+
+  const currentStarters = useMemo(
+    () => currentData.version_details?.conversation_starters || [],
+    [currentData.version_details?.conversation_starters],
+  );
   const suggestedWelcome = draftData.welcome_message || '';
   const suggestedStarters = useMemo(
     () => draftData.conversation_starters || [],
@@ -58,11 +62,13 @@ const UserInteractionStep = memo(props => {
 
   const addStarterTooltip = useMemo(() => {
     if (suggestedStarters.length >= MAX_CONVERSATION_STARTERS)
-      return 'You have reached the limit of conversation starters';
+      return 'You have reached the limit of chat starters';
     return '';
   }, [suggestedStarters]);
 
-  const hasStarters = currentStarters.length > 0 || suggestedStarters.length > 0;
+  const filteredCurrentStarters = useMemo(() => currentStarters.filter(Boolean), [currentStarters]);
+
+  const hasStarters = filteredCurrentStarters.length > 0 || suggestedStarters.length > 0;
 
   return (
     <EditEntityComparisonLayout
@@ -71,27 +77,44 @@ const UserInteractionStep = memo(props => {
           <Box sx={styles.fieldSection}>
             <Typography sx={styles.fieldLabel}>Welcome Message</Typography>
             <Box sx={styles.readOnlyCard}>
-              <TextDiffHighlight
-                original={currentWelcome}
-                modified={suggestedWelcome}
-                mode="original"
-              />
+              {currentWelcome ? (
+                <TextDiffHighlight
+                  original={currentWelcome}
+                  modified={suggestedWelcome}
+                  mode="original"
+                />
+              ) : (
+                <Typography sx={styles.emptyText}>No welcome message</Typography>
+              )}
             </Box>
           </Box>
           {hasStarters && (
             <Box sx={styles.fieldSectionGrow}>
-              <Typography sx={styles.sectionLabel}>Conversation Starters:</Typography>
+              <Typography sx={styles.sectionLabel}>Chat Starters:</Typography>
               <Box sx={styles.startersList}>
-                {currentStarters.filter(Boolean).map((starter, index) => (
-                  <Box
-                    key={index}
-                    sx={styles.readOnlyCard}
-                  >
-                    <Typography sx={styles.starterText}>{starter}</Typography>
-                  </Box>
-                ))}
-                {currentStarters.filter(Boolean).length === 0 && (
-                  <Typography sx={styles.emptyText}>No conversation starters</Typography>
+                {filteredCurrentStarters.map((starter, index) => {
+                  const pairedSuggested = suggestedStarters[index];
+                  const hasPair = pairedSuggested != null && pairedSuggested !== '';
+
+                  return (
+                    <Box
+                      key={index}
+                      sx={styles.readOnlyCard}
+                    >
+                      {hasPair ? (
+                        <TextDiffHighlight
+                          original={starter}
+                          modified={pairedSuggested}
+                          mode="original"
+                        />
+                      ) : (
+                        <Typography sx={styles.starterText}>{starter}</Typography>
+                      )}
+                    </Box>
+                  );
+                })}
+                {filteredCurrentStarters.length === 0 && (
+                  <Typography sx={styles.emptyText}>No chat starters</Typography>
                 )}
               </Box>
             </Box>
@@ -126,7 +149,7 @@ const UserInteractionStep = memo(props => {
           {hasStarters && (
             <Box sx={styles.fieldSectionGrow}>
               <Box sx={styles.fieldHeader}>
-                <Typography sx={styles.sectionLabel}>Conversation Starters:</Typography>
+                <Typography sx={styles.sectionLabel}>Chat Starters:</Typography>
                 <Box sx={styles.applyToggle}>
                   <Typography sx={styles.applyLabel}>Apply changes</Typography>
                   <BaseCheckbox
@@ -138,32 +161,47 @@ const UserInteractionStep = memo(props => {
                 </Box>
               </Box>
               <Box sx={styles.startersList}>
-                {suggestedStarters.map((starter, index) => (
-                  <Box
-                    key={index}
-                    sx={styles.starterRow}
-                  >
-                    <Box sx={styles.editableStarterCard}>
-                      <Input.InputBase
-                        fullWidth
-                        multiline
-                        disableUnderline
-                        value={starter}
-                        onChange={e => handleStarterChange(index, e.target.value)}
-                        inputProps={{ maxLength: MAX_CONVERSATION_STARTER_LENGTH }}
-                        enableAutoBlur={false}
-                        sx={styles.starterInput}
-                      />
-                    </Box>
-                    <IconButton
-                      size="small"
-                      onClick={() => handleRemoveStarter(index)}
-                      sx={styles.removeBtn}
+                {suggestedStarters.map((starter, index) => {
+                  const pairedCurrent = filteredCurrentStarters[index];
+                  const hasPair = pairedCurrent != null && pairedCurrent !== '';
+
+                  return (
+                    <Box
+                      key={index}
+                      sx={styles.starterRow}
                     >
-                      <CloseIcon sx={styles.removeIcon} />
-                    </IconButton>
-                  </Box>
-                ))}
+                      <Box sx={styles.editableStarterCard}>
+                        {hasPair ? (
+                          <TextDiffHighlight
+                            original={pairedCurrent}
+                            modified={starter}
+                            mode="modified"
+                            editable
+                            onChange={newText => handleStarterChange(index, newText)}
+                          />
+                        ) : (
+                          <Input.InputBase
+                            fullWidth
+                            multiline
+                            disableUnderline
+                            value={starter}
+                            onChange={e => handleStarterChange(index, e.target.value)}
+                            inputProps={{ maxLength: MAX_CONVERSATION_STARTER_LENGTH }}
+                            enableAutoBlur={false}
+                            sx={styles.starterInput}
+                          />
+                        )}
+                      </Box>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleRemoveStarter(index)}
+                        sx={styles.removeBtn}
+                      >
+                        <CloseIcon sx={styles.removeIcon} />
+                      </IconButton>
+                    </Box>
+                  );
+                })}
                 <Box sx={styles.addStarterRow}>
                   <Tooltip
                     placement="top-start"
@@ -246,11 +284,15 @@ const styles = {
     borderRadius: '0.5rem',
     backgroundColor: palette.background.userInputBackground,
     border: `0.0625rem solid ${palette.border.lines}`,
+    minHeight: '2.5rem',
+    maxHeight: '5.5rem',
+    overflowY: 'auto',
   }),
   sectionLabel: {
-    fontSize: '0.875rem',
+    fontSize: '0.75rem',
     fontWeight: 500,
-    lineHeight: '1.5rem',
+    lineHeight: '1rem',
+    letterSpacing: '0.045rem',
     color: 'text.primary',
     textTransform: 'uppercase',
   },
@@ -259,6 +301,12 @@ const styles = {
     borderRadius: '0.5rem',
     backgroundColor: palette.background.userInputBackground,
     border: `0.0625rem solid ${palette.border.lines}`,
+    minHeight: '2.5rem',
+    maxHeight: '5.5rem',
+    overflowY: 'auto',
+    transition: 'border-color 0.2s ease',
+    '&:hover': { borderColor: palette.border.hover },
+    '&:focus-within': { borderColor: palette.primary.main },
   }),
   editableStarterCard: ({ palette }) => ({
     flex: 1,
@@ -266,6 +314,12 @@ const styles = {
     borderRadius: '0.5rem',
     backgroundColor: palette.background.userInputBackground,
     border: `0.0625rem solid ${palette.border.lines}`,
+    minHeight: '2.5rem',
+    maxHeight: '5.5rem',
+    overflowY: 'auto',
+    transition: 'border-color 0.2s ease',
+    '&:hover': { borderColor: palette.border.hover },
+    '&:focus-within': { borderColor: palette.primary.main },
   }),
   starterInput: ({ palette }) => ({
     '& .MuiInputBase-input': {
@@ -275,6 +329,7 @@ const styles = {
       fontWeight: 400,
       lineHeight: '1.5rem',
       color: palette.text.secondary,
+      caretColor: palette.text.secondary,
     },
     '& .MuiInputBase-root': {
       padding: '0 !important',
@@ -299,7 +354,7 @@ const styles = {
   },
   starterRow: {
     display: 'flex',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: '0.625rem',
   },
   starterText: {
@@ -312,13 +367,17 @@ const styles = {
     color: 'text.primary',
     fontStyle: 'italic',
   },
-  removeBtn: {
-    padding: '0.375rem',
-    color: 'text.secondary',
+  removeBtn: ({ palette }) => ({
+    padding: '0.5rem',
+    color: palette.text.default,
+    marginTop: '0.25rem',
     '&:hover': {
-      backgroundColor: 'transparent',
+      backgroundColor: palette.background.button.tertiary.hover,
     },
-  },
+    '&:active': {
+      backgroundColor: palette.background.button.tertiary.pressed,
+    },
+  }),
   removeIcon: {
     fontSize: '1rem',
   },

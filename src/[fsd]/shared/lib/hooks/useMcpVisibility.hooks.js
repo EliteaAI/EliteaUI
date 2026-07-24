@@ -8,6 +8,11 @@ export const useIsMcpVisible = () => {
   return platformSettings?.mcp_exposure_enabled !== false && platformSettings?.mcp_in_menu_enabled !== false;
 };
 
+export const useMcpCategoryName = () => {
+  const { data: platformSettings } = useGetPlatformSettingsQuery();
+  return platformSettings?.mcp_category_name || 'MCP';
+};
+
 /**
  * Returns a stable filter predicate: item => isMcpVisible || !isMcpToolkit(item).
  * Use this to filter toolkit arrays — replaces the repeated inline pattern.
