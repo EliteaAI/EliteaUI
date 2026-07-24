@@ -50,8 +50,13 @@ const AgentCategorySection = memo(props => {
     setDisplayCount(initialDisplayCount);
   }, [initialDisplayCount]);
 
+  const categorySlug = useMemo(() => category.toLowerCase().replace(/\s+/g, '-'), [category]);
+
   return (
-    <Box sx={styles.container}>
+    <Box
+      sx={styles.container}
+      data-testid={`catalog-category-section-${categorySlug}`}
+    >
       <Box sx={styles.headerContainer}>
         <Typography
           variant="headingMedium"
@@ -61,7 +66,10 @@ const AgentCategorySection = memo(props => {
         </Typography>
       </Box>
 
-      <Box sx={styles.grid}>
+      <Box
+        sx={styles.grid}
+        data-testid={`catalog-category-grid-${categorySlug}`}
+      >
         {visibleItems
           .filter(item => item?.value)
           .map(item => {
@@ -92,6 +100,7 @@ const AgentCategorySection = memo(props => {
             variant="labelMedium"
             onClick={isExpanded ? handleShowLess : handleShowMore}
             sx={styles.showMoreButton}
+            data-testid={`catalog-category-show-more-button-${categorySlug}`}
           >
             {isExpanded ? 'Show less' : 'Show more'}
           </Typography>

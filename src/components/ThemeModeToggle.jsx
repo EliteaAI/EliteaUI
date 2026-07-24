@@ -21,6 +21,7 @@ const ThemeModeToggle = memo(() => {
   const themeArrayBtn = [
     {
       value: ThemeModeOptions.Dark,
+      buttonProps: { 'data-testid': 'preferences-theme-dark-toggle' },
       icon: (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <MoonIcon />
@@ -31,6 +32,7 @@ const ThemeModeToggle = memo(() => {
     },
     {
       value: ThemeModeOptions.Light,
+      buttonProps: { 'data-testid': 'preferences-theme-light-toggle' },
       icon: (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <SunIcon />
