@@ -76,6 +76,7 @@ const PipelineAddNodeMenu = memo(props => {
           variant="elitea"
           color="primary"
           id="pipeline-add-node-menu-action"
+          data-testid="pipeline-add-node-button"
           data-tour={PIPELINE_TOUR_TARGET_IDS.nodes}
           aria-label="Add node"
           aria-controls={open ? 'pipeline-add-node-menu' : undefined}
@@ -115,6 +116,7 @@ const PipelineAddNodeMenu = memo(props => {
             {leftColumnItems.map(item => (
               <MenuItem
                 key={item.type}
+                data-testid={`pipeline-add-node-menu-item-${item.type}`}
                 onClick={handleItemClick(item.type)}
                 sx={styles.menuItem}
               >
@@ -137,6 +139,7 @@ const PipelineAddNodeMenu = memo(props => {
             {rightColumnItems.map(item => (
               <MenuItem
                 key={item.type}
+                data-testid={`pipeline-add-node-menu-item-${item.type}`}
                 onClick={handleItemClick(item.type)}
                 sx={styles.menuItem}
               >
