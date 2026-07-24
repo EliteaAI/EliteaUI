@@ -256,7 +256,7 @@ export const genToolkitName = (toolkit, schemaOfTools) => {
 
   if (key)
     return (
-      cleanString(toolkit.settings[key] || '') ||
+      cleanString(toolkit.settings?.[key] || '') ||
       cleanString(
         toolkit.name || toolkit.settings?.elitea_title || toolkit.settings?.configuration_title || '',
       )
