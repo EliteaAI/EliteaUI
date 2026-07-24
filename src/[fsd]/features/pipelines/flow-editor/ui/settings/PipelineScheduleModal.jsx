@@ -88,7 +88,7 @@ const PipelineScheduleModal = props => {
                   placeholder="* * * * *"
                   error={!cronState.isValid}
                   sx={{ padding: '0' }}
-                  data-testid="pipeline-schedule-modal-cron-input"
+                  inputProps={{ 'data-testid': 'pipeline-schedule-modal-cron-input' }}
                 />
               )}
 
