@@ -16,7 +16,10 @@ export const DecisionOutputs = memo(props => {
   const styles = decisionOutputsStyles();
 
   return (
-    <Box sx={styles.decisionOutputsContainer}>
+    <Box
+      sx={styles.decisionOutputsContainer}
+      data-testid="pipeline-decision-node-outputs-section"
+    >
       <Chip.HeadingChip label="Decision outputs" />
 
       <Box sx={styles.outputsBorderContainer}>
@@ -40,6 +43,7 @@ export const DecisionOutputs = memo(props => {
                 sx={styles.styledChip(borderColor)}
                 deleteIcon={<RemoveIcon />}
                 onDelete={onRemoveOutput(item)}
+                data-testid={`pipeline-decision-node-output-chip-${item}`}
               />
             </StyledTooltip>
           );
