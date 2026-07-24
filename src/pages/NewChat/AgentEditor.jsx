@@ -340,6 +340,7 @@ const AgentEditor = memo(
           titleTestId="agent-canvas-title"
           subtitleTestId="agent-canvas-subtitle"
           closeButtonTestId="agent-canvas-close-button"
+          discardButtonTestId="agent-canvas-discard-button"
         >
           <AgentEditorContent
             agentId={agentId}
