@@ -352,6 +352,8 @@ const PlusChatButton = memo(props => {
             <MenuList sx={styles.menuList}>
               <AttachmentButton
                 showLabel
+                testId="chat-attach-files-button"
+                inputTestId="chat-attach-files-input"
                 onAttachFiles={onAttachFiles}
                 disableAttachments={disableAttachments}
                 attachments={attachments}

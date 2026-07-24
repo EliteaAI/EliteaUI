@@ -33,6 +33,8 @@ const AttachmentButton = forwardRef((props, ref) => {
     attachments = [],
     showLabel = false,
     disabledTooltip,
+    testId,
+    inputTestId,
   } = props;
 
   const buttonRef = useRef(null);
@@ -200,6 +202,7 @@ const AttachmentButton = forwardRef((props, ref) => {
       variant="elitea"
       color="secondary"
       aria-label="attach files"
+      data-testid={testId}
       onClick={handleClickAttach}
       disabled={isDisabled}
       sx={{
@@ -213,6 +216,7 @@ const AttachmentButton = forwardRef((props, ref) => {
         ref={fileInputRef}
         type="file"
         id={id}
+        data-testid={inputTestId}
         multiple={multiple}
         onChange={event => handleFileChange(event, false)}
         accept={accept}
@@ -232,6 +236,7 @@ const AttachmentButton = forwardRef((props, ref) => {
           <Typography
             variant="labelSmall"
             sx={styles.counter}
+            data-testid="chat-attach-files-counter"
           >
             {remainingLabel}
           </Typography>

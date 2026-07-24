@@ -83,6 +83,7 @@ const FileList = memo(props => {
           boxSizing="border-box"
           gap="12px"
           sx={styles.item}
+          data-testid="chat-attachment-item"
         >
           <AttachedFileIcon />
           <TypographyWithConditionalTooltip
@@ -97,6 +98,7 @@ const FileList = memo(props => {
           <Box
             style={styles.itemRemove}
             onClick={onClickRemove(index)}
+            data-testid="chat-attachment-remove-button"
           >
             <CloseIcon fontSize="16px" />
           </Box>
@@ -114,6 +116,7 @@ const FileList = memo(props => {
             aria-expanded={open ? 'true' : undefined}
             aria-haspopup="menu"
             sx={styles.showMoreButton}
+            data-testid="chat-attachment-overflow-button"
           >
             {`+${hiddenAttachments.length}`}
           </Button.BaseBtn>
@@ -145,6 +148,7 @@ const FileList = memo(props => {
                 <MenuItem
                   key={actualIndex}
                   sx={styles.menuItem}
+                  data-testid="chat-attachment-overflow-item"
                 >
                   <ListItemIcon sx={styles.menuItemIcon}>
                     <AttachedFileIcon />
@@ -165,6 +169,7 @@ const FileList = memo(props => {
                   <Box
                     onClick={handleMenuItemRemove(actualIndex)}
                     sx={styles.menuItemRemove}
+                    data-testid="chat-attachment-overflow-remove-button"
                   >
                     <CloseIcon fontSize="14px" />
                   </Box>

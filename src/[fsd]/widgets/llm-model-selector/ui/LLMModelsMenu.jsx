@@ -46,6 +46,7 @@ const LLMModelsMenu = memo(props => {
         <MenuItem
           key={index}
           data-testid={`model-selector-option-${item.name}`}
+          data-selected={item.id === selectedModel?.id ? 'true' : 'false'}
           selected={item.id === selectedModel?.id}
           onClick={event => handleMenuItemClick(event, index)}
           sx={styles.menuItem}
