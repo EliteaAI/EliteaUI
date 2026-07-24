@@ -28,13 +28,24 @@ const BaseToolNode = memo(props => {
     customFilterTypes = filterTypes,
   } = props;
 
-  // Stable, scoped test handles are only added for the MCP node — this is the
-  // only node type whose Toolkit/Tool/Input/Output/Input-mapping fields are
-  // exercised by automation today (ELITEA-1954). Other node types sharing
-  // this base component (Function/Agent/etc.) intentionally get `undefined`
-  // so untested UI doesn't light up as "covered" (.agents/testing.md § Locator
-  // policy — testid scope is load-bearing).
-  const isMcpNode = nodeType === FlowEditorConstants.PipelineNodeTypes.Mcp;
+  // Stable, scoped test handles are only added for node types actually
+  // exercised by automation — MCP (ELITEA-1954) and Toolkit (ELITEA-2010),
+  // both sharing this base component. Other node types (Function/Agent/etc.)
+  // intentionally get `undefined` so untested UI doesn't light up as
+  // "covered" (.agents/testing.md § Locator policy — testid scope is
+  // load-bearing).
+  const nodeTestIdPrefix = useMemo(() => {
+    if (nodeType === FlowEditorConstants.PipelineNodeTypes.Mcp) return 'pipeline-mcp-node';
+    if (nodeType === FlowEditorConstants.PipelineNodeTypes.Toolkit) return 'pipeline-toolkit-node';
+    return undefined;
+  }, [nodeType]);
+  // The optional-mapping-heading and mapping-Type-select testids are new
+  // capabilities (ELITEA-2010) exercised only by the Toolkit node's own
+  // test today — scoped to Toolkit specifically (not the shared
+  // nodeTestIdPrefix) so they don't silently light up on the MCP node,
+  // which no current MCP test asserts against (.agents/testing.md §
+  // Locator policy — testid scope is load-bearing, canon ruling #511).
+  const isToolkitNode = nodeType === FlowEditorConstants.PipelineNodeTypes.Toolkit;
 
   const { isRunningPipeline, yamlJsonObject, setYamlJsonObject } = useContext(FlowEditorContext);
   const yamlNode = useMemo(
@@ -153,7 +164,7 @@ const BaseToolNode = memo(props => {
         selectedToolkit={toolkit}
         disabled={isRunningPipeline}
         filterTypes={customFilterTypes}
-        data-testid={isMcpNode ? 'pipeline-mcp-node-toolkit-select' : undefined}
+        data-testid={nodeTestIdPrefix ? `${nodeTestIdPrefix}-toolkit-select` : undefined}
       />
       {functionOptions.length > 0 && (
         <SingleSelect
@@ -166,20 +177,20 @@ const BaseToolNode = memo(props => {
           showBorder
           className={'nopan nodrag'}
           onClear={onClearTool}
-          data-testid={isMcpNode ? 'pipeline-mcp-node-tool-select' : undefined}
+          data-testid={nodeTestIdPrefix ? `${nodeTestIdPrefix}-tool-select` : undefined}
         />
       )}
       <FlowEditorSelect.InputSelect
         id={id}
         inputFieldName={'input'}
         disabled={isRunningPipeline}
-        dataTestId={isMcpNode ? 'pipeline-mcp-node-input-select' : undefined}
+        dataTestId={nodeTestIdPrefix ? `${nodeTestIdPrefix}-input-select` : undefined}
       />
       <FlowEditorSelect.OutputSelect
         id={id}
         label="Output"
         outputFieldName="output"
-        dataTestId={isMcpNode ? 'pipeline-mcp-node-output-select' : undefined}
+        dataTestId={nodeTestIdPrefix ? `${nodeTestIdPrefix}-output-select` : undefined}
       />
       <FlowEditorSettings.InputMapping
         requiredInputs={requiredInputs}
@@ -189,8 +200,12 @@ const BaseToolNode = memo(props => {
         values={yamlNode?.input_mapping || {}}
         onChangeMapping={onChangeMapping}
         disabled={isRunningPipeline}
-        valueTestIdPrefix={isMcpNode ? 'pipeline-mcp-node-input-mapping-value' : undefined}
-        requiredHeadingTestId={isMcpNode ? 'pipeline-mcp-node-input-mapping-heading' : undefined}
+        valueTestIdPrefix={nodeTestIdPrefix ? `${nodeTestIdPrefix}-input-mapping-value` : undefined}
+        requiredHeadingTestId={nodeTestIdPrefix ? `${nodeTestIdPrefix}-input-mapping-heading` : undefined}
+        optionalHeadingTestId={
+          isToolkitNode ? `${nodeTestIdPrefix}-input-mapping-optional-heading` : undefined
+        }
+        typeTestIdPrefix={isToolkitNode ? `${nodeTestIdPrefix}-input-mapping-type-select` : undefined}
       />
       <FlowEditorSettings.CommonInterruptSettings
         id={id}
