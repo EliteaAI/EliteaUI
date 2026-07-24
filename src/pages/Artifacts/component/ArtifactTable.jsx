@@ -515,6 +515,7 @@ export default function ArtifactTable(props) {
               isIndeterminate={isIndeterminate}
               gridTemplateColumns={gridTemplateColumns}
               selectAllCheckboxTestId="artifacts-select-all-checkbox"
+              columnTestIdPrefix="artifacts"
             />
 
             <GridTableBody data-testid="artifacts-file-list">
