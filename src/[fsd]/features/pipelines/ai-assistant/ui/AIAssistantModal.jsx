@@ -300,6 +300,11 @@ const AIAssistantModal = memo(props => {
       language={language}
       onLanguageChange={onChangeLanguage}
       contentBackgroundSx={contentBackgroundSx}
+      // GAP-007/GAP-010: stable testids for the modal root and its Close
+      // button — both props already exist on ExpandedViewerModal/BaseModal,
+      // this is the only feature-call-site wiring needed.
+      data-testid="pipeline-ai-assistant-modal"
+      closeButtonTestId="pipeline-ai-assistant-close-button"
       footer={
         <AIPromptInput
           disabled={disabled || isGenerating}

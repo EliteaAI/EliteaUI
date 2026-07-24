@@ -79,6 +79,11 @@ const AIPromptInput = memo(props => {
             disableUnderline: true,
             sx: styles.input,
           },
+          // GAP-010: stable testid on the native <textarea> — MUI's
+          // htmlInput slot, not the outer input wrapper.
+          htmlInput: {
+            'data-testid': 'pipeline-ai-prompt-input',
+          },
         }}
         sx={styles.textField}
       />
@@ -109,6 +114,10 @@ const AIPromptInput = memo(props => {
               onClick={handleSendAIPrompt}
               disabled={!aiPrompt.trim() || disabled}
               sx={styles.sendButton}
+              // GAP-010: stable testid — this button has no aria-label
+              // (only Copy/Close carry one in this dialog), so `disabled`
+              // state was the only observable signal before this.
+              data-testid="pipeline-ai-prompt-send"
             >
               <SendIcon sx={styles.sendIcon} />
             </IconButton>

@@ -80,6 +80,13 @@ const NodeFieldInput = memo(props => {
     // ...leftProps spread) and the plain StyledInputEnhancer branch
     // (chat_history) — same `inputProps` key, single wiring point.
     inputProps: { 'data-testid': `pipeline-llm-node-${variableName}-value-input` },
+    // GAP-007/GAP-010: stable testid on the AI Assistant fullscreen icon
+    // button. Only meaningful on the AI-Assistant branch (AIAssistantInput
+    // spreads ...leftProps onto Input.InputBase, which already forwards
+    // fullScreenButtonProps straight through to InputActionsToolbar's
+    // IconButton) — harmless no-op on the plain StyledInputEnhancer branch,
+    // which doesn't render a fullscreen action at all.
+    fullScreenButtonProps: { 'data-testid': 'pipeline-ai-assistant-open' },
   };
 
   const popperSx = nodeFieldInputStyles(containerRef.current?.clientWidth);

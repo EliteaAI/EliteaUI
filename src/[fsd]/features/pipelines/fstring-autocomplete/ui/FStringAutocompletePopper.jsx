@@ -17,6 +17,12 @@ const FStringAutocompletePopper = memo(props => {
       <Paper
         elevation={0}
         sx={styles.paper}
+        // GAP-007: stable testid for the autocomplete popper container.
+        // Shared by BOTH the AI-Assistant-modal path and the plain
+        // inline-field path (same component, only one mount ever open at a
+        // time) — same "shared marker testid" precedent as
+        // select-option-{value}/toolkit-menu-item.
+        data-testid="pipeline-fstring-autocomplete-popper"
       >
         <MenuList
           dense
@@ -29,6 +35,9 @@ const FStringAutocompletePopper = memo(props => {
               onMouseDown={event => event.preventDefault()}
               onClick={() => onSelect(option.value)}
               sx={styles.option}
+              // GAP-007: dynamic per-option testid, keyed on the option's
+              // stable state-variable value.
+              data-testid={`pipeline-fstring-autocomplete-option-${option.value}`}
             >
               {option.label}
             </MenuItem>
