@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback, useEffect, useMemo } from 'react';
 
 import { Box, IconButton, Typography } from '@mui/material';
 
@@ -32,6 +32,7 @@ const SummaryStep = memo(props => {
     fieldApplyFlags,
     onToggleField,
     toolSelections,
+    onValidationChange,
   } = props;
 
   const { mergedName, mergedDescription, mergedInstructions, mergedWelcome, mergedStarters } = useMemo(
@@ -131,6 +132,15 @@ const SummaryStep = memo(props => {
     return '';
   }, [mergedStarters]);
 
+  const hasStarterErrors = useMemo(
+    () => mergedStarters.some(s => s && s.length > MAX_CONVERSATION_STARTER_LENGTH),
+    [mergedStarters],
+  );
+
+  useEffect(() => {
+    onValidationChange?.(!hasStarterErrors);
+  }, [hasStarterErrors, onValidationChange]);
+
   return (
     <Box sx={styles.container}>
       <Box sx={styles.field}>
@@ -218,34 +228,56 @@ const SummaryStep = memo(props => {
       <Box sx={styles.section}>
         <Typography sx={styles.sectionLabel}>Chat starters:</Typography>
         <Box sx={styles.startersList}>
-          {mergedStarters.map((starter, index) => (
-            <Box
-              key={index}
-              sx={styles.starterRow}
-            >
-              <Box sx={styles.starterCard}>
-                <Input.InputBase
-                  fullWidth
-                  multiline
-                  maxRows={3}
-                  minRows={1}
-                  disableUnderline
-                  value={starter}
-                  onChange={e => handleStarterChange(index, e.target.value)}
-                  inputProps={{ maxLength: MAX_CONVERSATION_STARTER_LENGTH }}
-                  enableAutoBlur={false}
-                  sx={styles.starterInput}
-                />
-              </Box>
-              <IconButton
-                size="small"
-                onClick={() => handleRemoveStarter(index)}
-                sx={styles.removeBtn}
+          {mergedStarters.map((starter, index) => {
+            const isOverLimit = starter && starter.length > MAX_CONVERSATION_STARTER_LENGTH;
+
+            return (
+              <Box
+                key={index}
+                sx={styles.starterRow}
               >
-                <CloseIcon sx={styles.removeIcon} />
-              </IconButton>
-            </Box>
-          ))}
+                <Box sx={styles.starterColumn}>
+                  <Box sx={[styles.starterCard, isOverLimit && styles.starterCardError]}>
+                    <Input.InputBase
+                      fullWidth
+                      multiline
+                      maxRows={3}
+                      minRows={1}
+                      disableUnderline
+                      value={starter}
+                      onChange={e => handleStarterChange(index, e.target.value)}
+                      enableAutoBlur={false}
+                      sx={styles.starterInput}
+                    />
+                  </Box>
+                  {(isOverLimit || starter?.length > 0) && (
+                    <Box sx={styles.starterFooter}>
+                      {isOverLimit ? (
+                        <Typography sx={styles.fieldError}>
+                          {`Chat starter must be ${MAX_CONVERSATION_STARTER_LENGTH} characters or less`}
+                        </Typography>
+                      ) : (
+                        <Box />
+                      )}
+                      <Text.CharacterCounter
+                        value={starter}
+                        maxLength={MAX_CONVERSATION_STARTER_LENGTH}
+                        hideMaxLimitMessage
+                        sx={styles.characterCounter}
+                      />
+                    </Box>
+                  )}
+                </Box>
+                <IconButton
+                  size="small"
+                  onClick={() => handleRemoveStarter(index)}
+                  sx={styles.removeBtn}
+                >
+                  <CloseIcon sx={styles.removeIcon} />
+                </IconButton>
+              </Box>
+            );
+          })}
           <Box sx={styles.addStarterRow}>
             <Tooltip
               placement="top-start"
@@ -364,6 +396,18 @@ const styles = {
     gap: '0.75rem',
     paddingTop: '0.5rem',
   },
+  starterColumn: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem',
+    flex: 1,
+    minWidth: 0,
+  },
+  starterFooter: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'baseline',
+  },
   starterCard: ({ palette }) => ({
     flex: 1,
     minWidth: 0,
@@ -374,6 +418,11 @@ const styles = {
     transition: 'border-color 0.2s ease',
     '&:hover': { borderColor: palette.border.hover },
     '&:focus-within': { borderColor: palette.primary.main },
+  }),
+  starterCardError: ({ palette }) => ({
+    borderColor: palette.error.main,
+    '&:hover': { borderColor: palette.error.main },
+    '&:focus-within': { borderColor: palette.error.main },
   }),
   starterInput: ({ palette }) => ({
     '& .MuiInputBase-input': {
@@ -405,13 +454,12 @@ const styles = {
   },
   starterRow: {
     display: 'flex',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     gap: '0.625rem',
   },
   removeBtn: ({ palette }) => ({
     padding: '0.5rem',
     color: palette.text.default,
-    marginTop: '0.25rem',
     '&:hover': {
       backgroundColor: palette.background.button.tertiary.hover,
     },
@@ -439,6 +487,10 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '0.75rem',
+  },
+  fieldError: {
+    fontSize: '0.75rem',
+    color: 'error.main',
   },
   characterCounter: {
     alignSelf: 'flex-end',

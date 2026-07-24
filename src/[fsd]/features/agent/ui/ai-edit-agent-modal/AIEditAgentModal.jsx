@@ -517,7 +517,7 @@ const AIEditAgentModal = memo(props => {
   }, [currentData?.version_details?.tools, applicationSkills?.skills]);
 
   const renderStep = useCallback(
-    (stepKey, draftData, setDraftData) => {
+    (stepKey, draftData, setDraftData, onValidationChange) => {
       const stepProps = {
         currentData,
         draftData,
@@ -552,6 +552,7 @@ const AIEditAgentModal = memo(props => {
               fieldApplyFlags={fieldApplyFlags}
               onToggleField={handleToggleField}
               toolSelections={toolSelections}
+              onValidationChange={onValidationChange}
             />
           );
         default:

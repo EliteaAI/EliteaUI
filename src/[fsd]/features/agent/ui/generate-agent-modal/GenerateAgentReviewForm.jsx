@@ -203,7 +203,15 @@ const GenerateAgentReviewForm = memo(props => {
                     onFocus={() => toggleFieldFocus(`starter_${index}`)}
                     onBlur={() => toggleFieldFocus(null)}
                     slotProps={{ htmlInput: { maxLength: MAX_CONVERSATION_STARTER_LENGTH } }}
-                    error={!starter?.trim() && starter !== undefined}
+                    error={
+                      (!starter?.trim() && starter !== undefined) ||
+                      starter?.length > MAX_CONVERSATION_STARTER_LENGTH
+                    }
+                    helperText={
+                      starter?.length > MAX_CONVERSATION_STARTER_LENGTH
+                        ? `Chat starter must be ${MAX_CONVERSATION_STARTER_LENGTH} characters or less`
+                        : undefined
+                    }
                     hasActionsToolBar={false}
                     sx={styles.compactMultilineInput}
                     containerProps={{ sx: { flex: 1 } }}

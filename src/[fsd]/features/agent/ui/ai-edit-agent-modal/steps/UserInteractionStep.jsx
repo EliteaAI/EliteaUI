@@ -4,7 +4,7 @@ import { Box, IconButton, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { EditEntityComparisonLayout, TextDiffHighlight } from '@/[fsd]/entities/edit-entity-with-ai';
-import { Input } from '@/[fsd]/shared/ui';
+import { Input, Text } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import BaseCheckbox from '@/[fsd]/shared/ui/checkbox/BaseCheckbox';
 import PlusIcon from '@/assets/plus-icon.svg?react';
@@ -164,32 +164,53 @@ const UserInteractionStep = memo(props => {
                 {suggestedStarters.map((starter, index) => {
                   const pairedCurrent = filteredCurrentStarters[index];
                   const hasPair = pairedCurrent != null && pairedCurrent !== '';
+                  const isOverLimit = starter && starter.length > MAX_CONVERSATION_STARTER_LENGTH;
 
                   return (
                     <Box
                       key={index}
                       sx={styles.starterRow}
                     >
-                      <Box sx={styles.editableStarterCard}>
-                        {hasPair ? (
-                          <TextDiffHighlight
-                            original={pairedCurrent}
-                            modified={starter}
-                            mode="modified"
-                            editable
-                            onChange={newText => handleStarterChange(index, newText)}
-                          />
-                        ) : (
-                          <Input.InputBase
-                            fullWidth
-                            multiline
-                            disableUnderline
-                            value={starter}
-                            onChange={e => handleStarterChange(index, e.target.value)}
-                            inputProps={{ maxLength: MAX_CONVERSATION_STARTER_LENGTH }}
-                            enableAutoBlur={false}
-                            sx={styles.starterInput}
-                          />
+                      <Box sx={styles.starterColumn}>
+                        <Box
+                          sx={[styles.editableStarterCard, isOverLimit && styles.editableStarterCardError]}
+                        >
+                          {hasPair ? (
+                            <TextDiffHighlight
+                              original={pairedCurrent}
+                              modified={starter}
+                              mode="modified"
+                              editable
+                              onChange={newText => handleStarterChange(index, newText)}
+                            />
+                          ) : (
+                            <Input.InputBase
+                              fullWidth
+                              multiline
+                              disableUnderline
+                              value={starter}
+                              onChange={e => handleStarterChange(index, e.target.value)}
+                              enableAutoBlur={false}
+                              sx={styles.starterInput}
+                            />
+                          )}
+                        </Box>
+                        {(isOverLimit || starter?.length > 0) && (
+                          <Box sx={styles.starterFooter}>
+                            {isOverLimit ? (
+                              <Typography sx={styles.fieldError}>
+                                {`Chat starter must be ${MAX_CONVERSATION_STARTER_LENGTH} characters or less`}
+                              </Typography>
+                            ) : (
+                              <Box />
+                            )}
+                            <Text.CharacterCounter
+                              value={starter}
+                              maxLength={MAX_CONVERSATION_STARTER_LENGTH}
+                              hideMaxLimitMessage
+                              sx={styles.characterCounter}
+                            />
+                          </Box>
                         )}
                       </Box>
                       <IconButton
@@ -309,7 +330,6 @@ const styles = {
     '&:focus-within': { borderColor: palette.primary.main },
   }),
   editableStarterCard: ({ palette }) => ({
-    flex: 1,
     padding: '0.5rem 1rem',
     borderRadius: '0.5rem',
     backgroundColor: palette.background.userInputBackground,
@@ -320,6 +340,11 @@ const styles = {
     transition: 'border-color 0.2s ease',
     '&:hover': { borderColor: palette.border.hover },
     '&:focus-within': { borderColor: palette.primary.main },
+  }),
+  editableStarterCardError: ({ palette }) => ({
+    borderColor: palette.error.main,
+    '&:hover': { borderColor: palette.error.main },
+    '&:focus-within': { borderColor: palette.error.main },
   }),
   starterInput: ({ palette }) => ({
     '& .MuiInputBase-input': {
@@ -352,15 +377,34 @@ const styles = {
     flexDirection: 'column',
     gap: '0.5rem',
   },
+  starterColumn: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem',
+    flex: 1,
+    minWidth: 0,
+  },
+  starterFooter: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'baseline',
+  },
   starterRow: {
     display: 'flex',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     gap: '0.625rem',
   },
   starterText: {
     fontSize: '0.875rem',
     lineHeight: '1.5rem',
     color: 'text.secondary',
+  },
+  characterCounter: {
+    textAlign: 'right',
+  },
+  fieldError: {
+    fontSize: '0.75rem',
+    color: 'error.main',
   },
   emptyText: {
     fontSize: '0.75rem',
@@ -370,7 +414,6 @@ const styles = {
   removeBtn: ({ palette }) => ({
     padding: '0.5rem',
     color: palette.text.default,
-    marginTop: '0.25rem',
     '&:hover': {
       backgroundColor: palette.background.button.tertiary.hover,
     },
