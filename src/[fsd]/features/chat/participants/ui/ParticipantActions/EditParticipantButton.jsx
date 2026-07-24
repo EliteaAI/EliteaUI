@@ -46,6 +46,7 @@ const EditParticipantButton = memo(props => {
         color="tertiary"
         id={id}
         sx={[styles.listItemIcon, sx]}
+        data-testid="chat-participant-edit-button"
       >
         {canEdit ? (
           <EditPenIcon sx={{ fontSize: '1rem' }} />
