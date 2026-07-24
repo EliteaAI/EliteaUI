@@ -375,6 +375,7 @@ const SingleSelect = memo(props => {
                   key={`${groupKey}-header`}
                   disableSticky
                   sx={styles.groupHeader}
+                  data-testid={dataTestId ? `${dataTestId}-group-header` : undefined}
                 >
                   <Box sx={styles.groupHeaderRow}>
                     <Typography
@@ -521,6 +522,7 @@ const SingleSelect = memo(props => {
       isListFetching,
       onMenuActionClick,
       styles,
+      dataTestId,
     ],
   );
 
