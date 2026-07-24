@@ -94,7 +94,6 @@ const GenerateAgentReviewForm = memo(props => {
       <Box sx={styles.field}>
         <Input.InputBase
           label="Name"
-          labelVariant="bodyMedium"
           variant={Input.INPUT_VARIANTS.outlined}
           fullWidth
           size="small"
@@ -120,7 +119,6 @@ const GenerateAgentReviewForm = memo(props => {
       <Box sx={styles.field}>
         <Input.InputBase
           label="Description"
-          labelVariant="bodyMedium"
           variant={Input.INPUT_VARIANTS.outlined}
           fullWidth
           size="small"
@@ -148,7 +146,6 @@ const GenerateAgentReviewForm = memo(props => {
       <Box sx={styles.field}>
         <Input.InputBase
           label="Instructions"
-          labelVariant="bodyMedium"
           variant={Input.INPUT_VARIANTS.outlined}
           fullWidth
           size="small"
@@ -164,7 +161,6 @@ const GenerateAgentReviewForm = memo(props => {
         <Input.InputBase
           variant={Input.INPUT_VARIANTS.outlined}
           label="Welcome Message"
-          labelVariant="bodyMedium"
           multiline
           minRows={1}
           maxRows={4}

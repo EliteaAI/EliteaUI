@@ -195,7 +195,7 @@ const InputBase = memo(props => {
     return (
       <Label.InfoLabelWithTooltip
         label={labelText}
-        {...(labelVariant && { variant: labelVariant })}
+        {...(labelVariant ? { variant: labelVariant } : isOutlined && { variant: 'labelMedium' })}
         {...(!isOutlined && { inheritLabel: true, inheritColor: true })}
         {...(tooltipDescription && {
           tooltip: tooltipDescription,

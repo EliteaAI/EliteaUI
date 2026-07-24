@@ -399,6 +399,7 @@ const lightPalette = {
   border: {
     lines: light30,
     hover: light10,
+    inputHover: light20,
     category: {
       selected: dark20,
     },
