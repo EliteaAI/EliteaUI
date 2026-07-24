@@ -347,10 +347,10 @@ const getPredefinedIcon = (type, iconProps) => {
 };
 
 const getGroupBrandIcon = (group, iconProps) => {
-  switch (group) {
-    case 'Elitea':
+  switch (group?.toLowerCase()) {
+    case 'elitea':
       return <EliteaFilledIcon {...iconProps} />;
-    case 'EPAM':
+    case 'epam':
       return <EpamDefaultIcon {...iconProps} />;
     default:
       return null;
