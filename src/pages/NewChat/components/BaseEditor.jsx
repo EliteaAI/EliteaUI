@@ -34,6 +34,10 @@ import EditorHeader from '@/pages/NewChat/components/EditorHeader';
  * @param {string} [titleTestId] - Optional data-testid forwarded to EditorHeader's title.
  * @param {string} [subtitleTestId] - Optional data-testid forwarded to EditorHeader's subtitle.
  * @param {string} [closeButtonTestId] - Optional data-testid forwarded to EditorHeader's close button.
+ * @param {string} [discardButtonTestId] - Optional data-testid forwarded to EditorHeader's Discard button.
+ * @param {string} [discardModalTestId] - Optional data-testid forwarded to EditorHeader's Discard warning dialog.
+ * @param {string} [discardConfirmButtonTestId] - Optional data-testid forwarded to EditorHeader's
+ *   Discard dialog confirm button.
  */
 const BaseEditor = ({
   isVisible,
@@ -56,6 +60,9 @@ const BaseEditor = ({
   titleTestId,
   subtitleTestId,
   closeButtonTestId,
+  discardButtonTestId,
+  discardModalTestId,
+  discardConfirmButtonTestId,
 }) => {
   const theme = useTheme();
   const { isSmallWindow } = useIsSmallWindow();
@@ -125,6 +132,9 @@ const BaseEditor = ({
             titleTestId={titleTestId}
             subtitleTestId={subtitleTestId}
             closeButtonTestId={closeButtonTestId}
+            discardButtonTestId={discardButtonTestId}
+            discardModalTestId={discardModalTestId}
+            discardConfirmButtonTestId={discardConfirmButtonTestId}
           />
 
           {/* Optional form content (e.g., tabs) */}

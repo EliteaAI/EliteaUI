@@ -20,6 +20,13 @@ import useIsPipelineYamlCodeDirty from '@/pages/Pipelines/useIsPipelineYamlCodeD
  *   (never hardcoded here) since this component is shared across Agent/Pipeline/Toolkit editors.
  * @param {string} [subtitleTestId] - Optional data-testid for the subtitle Typography.
  * @param {string} [closeButtonTestId] - Optional data-testid for the close (X) IconButton.
+ * @param {string} [discardButtonTestId] - Optional data-testid for the Discard trigger button,
+ *   forwarded to DiscardButton's existing `dataTestId` prop. Caller-supplied, same rationale as
+ *   `titleTestId` — this component is shared across Agent/Pipeline/Toolkit editors.
+ * @param {string} [discardModalTestId] - Optional data-testid for the Discard warning dialog,
+ *   forwarded to DiscardButton's existing `modalDataTestId` prop.
+ * @param {string} [discardConfirmButtonTestId] - Optional data-testid for the dialog's confirm
+ *   ("Discard") button, forwarded to DiscardButton's existing `confirmButtonDataTestId` prop.
  */
 const EditorHeader = ({
   title,
@@ -31,6 +38,9 @@ const EditorHeader = ({
   titleTestId,
   subtitleTestId,
   closeButtonTestId,
+  discardButtonTestId,
+  discardModalTestId,
+  discardConfirmButtonTestId,
 }) => {
   const theme = useTheme();
   const { discardApplicationChanges } = useDiscardApplicationChanges(onDiscard);
@@ -84,6 +94,9 @@ const EditorHeader = ({
               onDiscard={discardApplicationChanges}
               size="small"
               sx={styles.discardButton}
+              dataTestId={discardButtonTestId}
+              modalDataTestId={discardModalTestId}
+              confirmButtonDataTestId={discardConfirmButtonTestId}
             />
           )}
           {!isPublic && saveButton}

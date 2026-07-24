@@ -3,7 +3,6 @@ import { useCallback, useMemo } from 'react';
 import { useFormikContext } from 'formik';
 
 import { Button } from '@/[fsd]/shared/ui';
-
 import { useToolkitCreateMutation } from '@/api/toolkits';
 import { buildErrorMessage } from '@/common/utils';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
@@ -74,6 +73,7 @@ export default function CreateToolkitButton({ toolSchema, onToolkitCreated, hasE
       variant="elitea"
       color="primary"
       onClick={onCreateToolkit}
+      data-testid="toolkit-form-create-button"
     >
       {isCreating && <StyledCircleProgress size={16} />}
       Create

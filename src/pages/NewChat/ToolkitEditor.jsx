@@ -239,6 +239,11 @@ const ToolkitEditor = ({ toolkit, onCloseToolkitEditor, onToolkitCreated, onTool
       onDiscard={handleDiscard}
       initialValues={normalizedInitialValues}
       error={error}
+      titleTestId="toolkit-canvas-title"
+      closeButtonTestId="toolkit-canvas-close-button"
+      discardButtonTestId="toolkit-canvas-discard-button"
+      discardModalTestId="toolkit-canvas-discard-confirm-dialog"
+      discardConfirmButtonTestId="toolkit-canvas-discard-confirm-button"
       saveButton={
         isCreating ? (
           <CreateToolkitButton
