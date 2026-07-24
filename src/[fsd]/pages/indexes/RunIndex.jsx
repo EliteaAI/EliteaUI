@@ -227,7 +227,6 @@ const runIndexStyles = () => ({
     flexDirection: 'column',
     flex: 1,
     minHeight: 0,
-    padding: '1rem 1.5rem',
     gap: '1rem',
     overflow: 'hidden',
   },

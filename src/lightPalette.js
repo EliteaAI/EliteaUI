@@ -87,6 +87,8 @@ const lightPurpleBgr = '#F0EDF7';
 const lightOrangeBgr = '#FFF1E4';
 const lightPurple = '#A48EE3';
 const lightOrange = '#FFB380';
+const yellow = '#FEBD17';
+const greenOutline40 = 'rgba(42, 179, 122, 0.4)';
 
 const lightPalette = {
   mode: 'light',
@@ -397,6 +399,12 @@ const lightPalette = {
     emptyState: {
       default: grey003,
     },
+    indexResult: {
+      success: green8,
+      error: red8,
+      warning: orange8,
+      info: blue8,
+    },
   },
   border: {
     lines: light30,
@@ -424,6 +432,13 @@ const lightPalette = {
     },
     chatContinue: darkMagenta30,
     aiProviderAccordion: 'linear-gradient(0deg, rgba(65, 71, 87, 0) 0%, rgba(65, 71, 87, 0.08) 100%)',
+    reindexInfoContainer: yellow,
+    indexResult: {
+      success: greenOutline40,
+      error: red40,
+      warning: orangeOutline40,
+      info: skyBlue40,
+    },
   },
   boxShadow: {
     default: `0px 2px 10px 0px rgba(100, 119, 136, 0.2)`,
@@ -491,6 +506,12 @@ const lightPalette = {
     link: darkBlue,
     linkSeen: darkBlue70,
     highlighted: gray60, //magenta,
+    indexResult: {
+      success: green,
+      error: red,
+      warning: orange,
+      info: blue,
+    },
   },
   icon: {
     main: light10,
@@ -522,6 +543,12 @@ const lightPalette = {
       hover: gray60,
       active: white,
       disabled: light20,
+    },
+    indexResult: {
+      success: greenHoverBtn,
+      error: dangerRed,
+      warning: orange,
+      info: blue,
     },
   },
   checkbox: {
