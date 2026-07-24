@@ -18,6 +18,7 @@ const AgentConversationStarters = memo(props => {
   return (
     <Box sx={styles.container}>
       <Typography
+        data-testid="catalog-agent-modal-starters-header"
         variant="subtitle"
         sx={styles.header}
       >
@@ -35,6 +36,7 @@ const AgentConversationStarters = memo(props => {
         </Box>
       ) : (
         <Typography
+          data-testid="catalog-agent-modal-starters-empty"
           variant="bodySmall"
           sx={styles.emptyText}
         >

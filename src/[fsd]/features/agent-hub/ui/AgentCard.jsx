@@ -37,6 +37,7 @@ const AgentCard = memo(props => {
 
   return (
     <Card
+      data-testid={`catalog-agent-card-${application.id}`}
       data-tour={ELITEA_CATALOG_TOUR_TARGET_IDS.entityCard}
       sx={styles.card}
       onClick={handleClick}

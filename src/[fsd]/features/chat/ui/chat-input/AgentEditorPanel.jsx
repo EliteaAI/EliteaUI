@@ -303,6 +303,7 @@ const AgentEditorPanel = memo(props => {
         title="Switch to model"
       >
         <IconButton
+          data-testid="chat-clear-participant-button"
           size="small"
           aria-label="switch to model"
           onClick={onSwitchToModel}

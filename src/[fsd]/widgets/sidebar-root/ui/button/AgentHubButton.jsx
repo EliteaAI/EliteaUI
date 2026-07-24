@@ -35,6 +35,7 @@ const AgentHubButton = memo(() => {
       enterNextDelay={500}
     >
       <Box
+        data-testid="sidebar-agent-hub-button"
         data-tour={SIDEBAR_TOUR_TARGET_IDS.agentHub}
         onClick={handleAgentHubClick}
         sx={styles.container}

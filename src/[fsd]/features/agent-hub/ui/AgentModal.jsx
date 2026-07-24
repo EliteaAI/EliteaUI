@@ -172,6 +172,7 @@ const AgentModal = memo(props => {
     <>
       <Dialog
         open={open}
+        data-testid="catalog-agent-detail-modal"
         onKeyDown={handleKeyDown}
         aria-labelledby="agent-modal-title"
         aria-describedby="agent-modal-description"
@@ -256,6 +257,7 @@ const AgentModal = memo(props => {
           </DialogContent>
           <DialogActions sx={styles.dialogActions}>
             <Button
+              data-testid="catalog-agent-modal-start-chat-button"
               data-tour={ELITEA_CATALOG_TOUR_TARGET_IDS.primaryActionButton}
               variant="elitea"
               color="primary"
