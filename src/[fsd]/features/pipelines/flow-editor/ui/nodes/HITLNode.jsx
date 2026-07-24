@@ -201,6 +201,7 @@ const HITLNode = memo(props => {
               }
               inputFieldName="input"
               disabled={isInputSelectDisabled}
+              dataTestId="pipeline-hitl-node-input-select"
             />
           </Box>
         </StyledTooltip>
@@ -249,6 +250,7 @@ const HITLNode = memo(props => {
                       error={action.value === 'edit' && isEditRouteInvalid}
                       showBorder
                       className="nopan nodrag"
+                      data-testid={`pipeline-hitl-node-router-${action.value}-select`}
                     />
                   </Box>
                 ))}
@@ -270,6 +272,7 @@ const HITLNode = memo(props => {
           error={isEditRouteInvalid}
           showBorder
           className="nopan nodrag"
+          data-testid="pipeline-hitl-node-edit-state-key-select"
         />
       </Box>
       {isEditRouteInvalid && (
