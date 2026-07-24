@@ -84,8 +84,7 @@ const GenerateAgentReviewForm = memo(props => {
   );
 
   const addStarterTooltip = useMemo(() => {
-    if (starters.length >= MAX_CONVERSATION_STARTERS)
-      return 'You have reached the limit of conversation starters';
+    if (starters.length >= MAX_CONVERSATION_STARTERS) return 'You have reached the limit of chat starters';
     return '';
   }, [starters]);
 
@@ -186,7 +185,7 @@ const GenerateAgentReviewForm = memo(props => {
 
       {starters.length > 0 && (
         <Box sx={styles.section}>
-          <Typography sx={styles.sectionLabel}>Conversation starters:</Typography>
+          <Typography sx={styles.sectionLabel}>Chat starters:</Typography>
           <Box sx={styles.startersList}>
             {starters.map((starter, index) => (
               <Box

@@ -24,11 +24,15 @@ const InstructionsStep = memo(props => {
         <Box sx={styles.fieldSection}>
           <Typography sx={styles.fieldLabel}>Instructions</Typography>
           <Box sx={styles.readOnlyCard}>
-            <TextDiffHighlight
-              original={currentInstructions}
-              modified={suggestedInstructions}
-              mode="original"
-            />
+            {currentInstructions ? (
+              <TextDiffHighlight
+                original={currentInstructions}
+                modified={suggestedInstructions}
+                mode="original"
+              />
+            ) : (
+              <Typography sx={styles.emptyText}>No instructions</Typography>
+            )}
           </Box>
         </Box>
       }
@@ -97,6 +101,11 @@ const styles = {
   checkbox: {
     padding: '0.25rem',
   },
+  emptyText: {
+    fontSize: '0.75rem',
+    color: 'text.primary',
+    fontStyle: 'italic',
+  },
   readOnlyCard: ({ palette }) => ({
     padding: '0.5rem 1rem',
     borderRadius: '0.5rem',
@@ -114,6 +123,9 @@ const styles = {
     flex: 1,
     minHeight: 0,
     overflow: 'auto',
+    transition: 'border-color 0.2s ease',
+    '&:hover': { borderColor: palette.border.hover },
+    '&:focus-within': { borderColor: palette.primary.main },
   }),
 };
 
