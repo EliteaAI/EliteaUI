@@ -53,6 +53,7 @@ const SkillImportModal = memo(props => {
               value={targetProject}
               onChange={setSelectedProject}
               selectPlaceholder="Select project"
+              data-testid="skill-import-project-select"
             />
           </Box>
 
@@ -104,6 +105,7 @@ const SkillImportModal = memo(props => {
             variant={BUTTON_VARIANTS.elitea}
             onClick={() => onConfirm(targetProject?.id)}
             disabled={isImporting}
+            data-testid="skill-import-confirm-button"
           >
             Import
           </Button.BaseBtn>
