@@ -48,6 +48,7 @@ const PipelineScheduleModal = props => {
         onClose={onClose}
         title="Schedule settings"
         data-testid="pipeline-schedule-modal"
+        closeButtonTestId="pipeline-schedule-modal-close-button"
         sx={{ '& .MuiDialog-paper': { maxWidth: 'unset !important', width: '43.75rem !important' } }}
         content={
           <Box sx={styles.contentWrapper}>
@@ -69,6 +70,7 @@ const PipelineScheduleModal = props => {
                     { label: 'Advanced', value: 'advanced' },
                   ]}
                   onChange={setCronType}
+                  testId="pipeline-schedule-mode-radio"
                 />
               </Box>
 
@@ -86,6 +88,7 @@ const PipelineScheduleModal = props => {
                   placeholder="* * * * *"
                   error={!cronState.isValid}
                   sx={{ padding: '0' }}
+                  data-testid="pipeline-schedule-modal-cron-input"
                 />
               )}
 
@@ -112,6 +115,7 @@ const PipelineScheduleModal = props => {
               variant="elitea"
               color="secondary"
               onClick={onClose}
+              data-testid="pipeline-schedule-cancel-button"
             >
               Cancel
             </Button>

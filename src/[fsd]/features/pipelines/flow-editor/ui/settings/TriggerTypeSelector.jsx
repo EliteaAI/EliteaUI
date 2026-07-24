@@ -315,6 +315,7 @@ const TriggerTypeSelector = memo(props => {
               sx={styles.scheduleButton}
               onClick={handleScheduleIconClick}
               disabled={disabled || isLoading}
+              data-testid="pipeline-trigger-schedule-edit-button"
             >
               <ClockIcon style={styles.iconStyle} />
             </IconButton>
