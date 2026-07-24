@@ -30,6 +30,20 @@ export const IndexStatuses = {
   runTest: 'run_test',
 };
 
+export const BannerSeverity = {
+  warning: 'warning',
+  error: 'error',
+  info: 'info',
+  success: 'success',
+};
+
+export const BannerTitleMap = {
+  [BannerSeverity.success]: 'Index is ready!',
+  [BannerSeverity.warning]: 'Indexing stopped',
+  [BannerSeverity.error]: 'Index processing error',
+  [BannerSeverity.info]: 'Indexing in progress…',
+};
+
 // Statuses that allow the index to be searched and run tools against
 export const RUNNABLE_INDEX_STATUSES = [IndexStatuses.success, IndexStatuses.partlyOk];
 

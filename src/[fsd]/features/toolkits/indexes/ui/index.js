@@ -23,3 +23,4 @@ export { default as IndexesContainer } from './IndexesContainer';
 
 // Headless reindex runner
 export { default as HeadlessReindexRunner } from './HeadlessReindexRunner';
+export { default as RunIndexBanner } from './RunIndexBanner';
