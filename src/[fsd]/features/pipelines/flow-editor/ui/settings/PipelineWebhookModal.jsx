@@ -171,8 +171,6 @@ const PipelineWebhookModal = props => {
       onClose={onClose}
       title="Webhook settings"
       data-testid="pipeline-webhook-modal"
-      titleTestId="pipeline-webhook-modal-title"
-      closeButtonTestId="pipeline-webhook-modal-close-button"
       sx={{ '& .MuiDialog-paper': { maxWidth: 'unset !important', width: '35rem !important' } }}
       content={
         <Box sx={styles.contentWrapper}>
