@@ -400,6 +400,7 @@ const darkPalette = {
   border: {
     lines: gray30,
     hover: gray10,
+    inputHover: gray20,
     category: {
       selected: white20,
     },
