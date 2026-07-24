@@ -14,7 +14,7 @@ const RouteSelect = memo(props => {
     nodesFilter = () => true,
     addEndNode,
     disabled,
-    dataTestId,
+    testId,
   } = props;
 
   const { setFlowEdges, setYamlJsonObject, yamlJsonObject } = useContext(FlowEditorContext);
@@ -105,7 +105,7 @@ const RouteSelect = memo(props => {
       multiple
       className="nopan nodrag nowheel"
       onDeleteOption={onDeleteOption}
-      data-testid={dataTestId}
+      data-testid={testId}
     />
   );
 });

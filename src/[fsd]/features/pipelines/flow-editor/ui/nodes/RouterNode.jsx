@@ -164,7 +164,7 @@ const RouterNode = memo(props => {
           disabled={isRunningPipeline || disabled}
           nodesFilter={node => node.id !== id}
           addEndNode
-          dataTestId="pipeline-router-node-routes-select"
+          testId="pipeline-router-node-routes-select"
         />
         <FlowEditorSelect.InputSelect
           id={id}
