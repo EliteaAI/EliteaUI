@@ -48,7 +48,6 @@ const PipelineScheduleModal = props => {
         onClose={onClose}
         title="Schedule settings"
         data-testid="pipeline-schedule-modal"
-        closeButtonTestId="pipeline-schedule-modal-close-button"
         sx={{ '& .MuiDialog-paper': { maxWidth: 'unset !important', width: '43.75rem !important' } }}
         content={
           <Box sx={styles.contentWrapper}>
