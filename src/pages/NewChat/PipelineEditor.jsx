@@ -513,6 +513,9 @@ const PipelineEditor = forwardRef(
           }
           isPublic={!canEditIt}
           closeButtonTestId="pipeline-canvas-close-button"
+          discardButtonTestId="pipeline-canvas-discard-button"
+          discardModalTestId="pipeline-canvas-discard-confirm-dialog"
+          discardConfirmButtonTestId="pipeline-canvas-discard-confirm-button"
         >
           <ApplicationValidator
             agentId={pipelineId}
