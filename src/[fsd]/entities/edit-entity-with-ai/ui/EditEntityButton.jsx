@@ -18,7 +18,7 @@ const EditEntityButton = memo(props => {
   return (
     <>
       <BaseBtn
-        variant={BUTTON_VARIANTS.secondary}
+        variant={BUTTON_VARIANTS.special}
         size="small"
         startIcon={<SparkleIcon />}
         onClick={handleOpen}
@@ -41,14 +41,9 @@ EditEntityButton.displayName = 'EditEntityButton';
 
 /** @type {MuiSx} */
 const styles = {
-  button: ({ palette }) => ({
+  button: {
     borderRadius: '1.25rem',
-    color: palette.primary.main,
-
-    '&:hover': {
-      color: palette.primary.main,
-    },
-  }),
+  },
 };
 
 export default EditEntityButton;

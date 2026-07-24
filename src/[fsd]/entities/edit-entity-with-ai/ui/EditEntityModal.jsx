@@ -357,6 +357,7 @@ const styles = {
       padding: 0,
       fontSize: '0.875rem',
       color: palette.text.secondary,
+      caretColor: palette.text.secondary,
     },
   }),
   errorAlert: {
