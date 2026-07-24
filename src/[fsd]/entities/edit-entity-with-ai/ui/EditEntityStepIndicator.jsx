@@ -14,7 +14,7 @@ const EditEntityStepIndicator = memo(props => {
         {steps.map((step, index) => (
           <Box
             key={step.key}
-            sx={index <= activeStepIndex ? styles.segmentActive : styles.segmentInactive}
+            sx={index === activeStepIndex ? styles.segmentActive : styles.segmentInactive}
           />
         ))}
       </Box>

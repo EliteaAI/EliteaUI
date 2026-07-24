@@ -2,11 +2,14 @@ import { memo, useCallback } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { EditEntityComparisonLayout, TextDiffHighlight } from '@/[fsd]/entities/edit-entity-with-ai';
+import { Text } from '@/[fsd]/shared/ui';
 import BaseCheckbox from '@/[fsd]/shared/ui/checkbox/BaseCheckbox';
 
+import EditEntityComparisonLayout from './EditEntityComparisonLayout';
+import TextDiffHighlight from './TextDiffHighlight';
+
 const InstructionsStep = memo(props => {
-  const { currentData, draftData, onDraftChange, fieldApplyFlags, onToggleField } = props;
+  const { currentData, draftData, onDraftChange, fieldApplyFlags, onToggleField, maxLength } = props;
 
   const currentInstructions = currentData.version_details?.instructions || '';
   const suggestedInstructions = draftData.instructions || '';
@@ -53,15 +56,24 @@ const InstructionsStep = memo(props => {
               mode="modified"
               editable
               onChange={handleChange}
+              maxLength={maxLength}
             />
           </Box>
+          {maxLength ? (
+            <Text.CharacterCounter
+              value={suggestedInstructions}
+              maxLength={maxLength}
+              hideMaxLimitMessage
+              sx={styles.characterCounter}
+            />
+          ) : null}
         </Box>
       }
     />
   );
 });
 
-InstructionsStep.displayName = 'InstructionsStep';
+InstructionsStep.displayName = 'EditEntityInstructionsStep';
 
 /** @type {MuiSx} */
 const styles = {
@@ -115,6 +127,9 @@ const styles = {
     minHeight: 0,
     overflow: 'auto',
   }),
+  characterCounter: {
+    alignSelf: 'flex-end',
+  },
 };
 
 export default InstructionsStep;

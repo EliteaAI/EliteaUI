@@ -2,13 +2,22 @@ import { memo, useCallback } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { EditEntityComparisonLayout, TextDiffHighlight } from '@/[fsd]/entities/edit-entity-with-ai';
-import BaseCheckbox from '@/[fsd]/shared/ui/checkbox/BaseCheckbox';
 import { Text } from '@/[fsd]/shared/ui';
+import BaseCheckbox from '@/[fsd]/shared/ui/checkbox/BaseCheckbox';
 import { MAX_DESCRIPTION_LENGTH, MAX_NAME_LENGTH } from '@/common/constants';
 
+import EditEntityComparisonLayout from './EditEntityComparisonLayout';
+import TextDiffHighlight from './TextDiffHighlight';
+
 const GeneralStep = memo(props => {
-  const { currentData, draftData, onDraftChange, fieldApplyFlags, onToggleField } = props;
+  const {
+    currentData,
+    draftData,
+    onDraftChange,
+    fieldApplyFlags,
+    onToggleField,
+    nameMaxLength = MAX_NAME_LENGTH,
+  } = props;
 
   const currentName = currentData.name || '';
   const currentDescription = currentData.description || '';
@@ -17,9 +26,9 @@ const GeneralStep = memo(props => {
 
   const handleNameChange = useCallback(
     newText => {
-      onDraftChange({ ...draftData, name: newText.slice(0, MAX_NAME_LENGTH) });
+      onDraftChange({ ...draftData, name: newText.slice(0, nameMaxLength) });
     },
-    [draftData, onDraftChange],
+    [draftData, onDraftChange, nameMaxLength],
   );
 
   const handleDescriptionChange = useCallback(
@@ -77,13 +86,13 @@ const GeneralStep = memo(props => {
                 mode="modified"
                 editable
                 onChange={handleNameChange}
-                maxLength={MAX_NAME_LENGTH}
+                maxLength={nameMaxLength}
               />
             </Box>
             {suggestedName.length > 0 && (
               <Text.CharacterCounter
                 value={suggestedName}
-                maxLength={MAX_NAME_LENGTH}
+                maxLength={nameMaxLength}
                 hideMaxLimitMessage
                 sx={styles.characterCounter}
               />
@@ -127,7 +136,7 @@ const GeneralStep = memo(props => {
   );
 });
 
-GeneralStep.displayName = 'GeneralStep';
+GeneralStep.displayName = 'EditEntityGeneralStep';
 
 /** @type {MuiSx} */
 const styles = {

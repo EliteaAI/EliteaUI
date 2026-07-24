@@ -4,6 +4,7 @@ import { useFormikContext } from 'formik';
 
 import { Box, Typography } from '@mui/material';
 
+import { SKILL_NAME_MAX_LENGTH } from '@/[fsd]/features/skill/lib/constants';
 import { GenerateSkillButton } from '@/[fsd]/features/skill/ui/generate-skill-modal';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { useFieldFocus } from '@/[fsd]/shared/lib/hooks';
@@ -17,7 +18,6 @@ import {
   ChatParticipantType,
   MAX_DESCRIPTION_LENGTH,
   MAX_INSTRUCTIONS_LENGTH,
-  MAX_NAME_LENGTH,
   PROMPT_PAYLOAD_KEY,
 } from '@/common/constants';
 import EntityIcon from '@/components/EntityIcon';
@@ -35,6 +35,7 @@ const CreateSkillForm = memo(props => {
     instructionsKey,
     onSkillCreated,
     showGenerateButton = false,
+    summaryEditAction = null,
   } = props;
   const formik = useFormikContext();
   const theme = useTheme();
@@ -152,7 +153,9 @@ const CreateSkillForm = memo(props => {
             title: 'General',
             summaryAction: showGenerateButton ? (
               <GenerateSkillButton onSkillCreated={onSkillCreated} />
-            ) : null,
+            ) : (
+              summaryEditAction
+            ),
             content: (
               <Box sx={styles.accordionContent}>
                 <Box sx={styles.nameContainer}>
@@ -184,7 +187,10 @@ const CreateSkillForm = memo(props => {
                       // InputBase's slotProps.htmlInput (unlike the data-testid
                       // above on StyledInputEnhancer, which resolves to the
                       // MuiFormControl-root wrapper, not the input itself).
-                      inputProps={{ maxLength: MAX_NAME_LENGTH, 'data-testid': 'skill-name-input-field' }}
+                      inputProps={{
+                        maxLength: SKILL_NAME_MAX_LENGTH,
+                        'data-testid': 'skill-name-input-field',
+                      }}
                       containerProps={{ flex: 1 }}
                       enableAutoBlur={false}
                       hasActionsToolBar
@@ -195,7 +201,7 @@ const CreateSkillForm = memo(props => {
                     {isFocused(PROMPT_PAYLOAD_KEY.name) && name.length > 0 && (
                       <Text.CharacterCounter
                         value={name}
-                        maxLength={MAX_NAME_LENGTH}
+                        maxLength={SKILL_NAME_MAX_LENGTH}
                         hideMaxLimitMessage
                         sx={styles.charactersLabel}
                       />
