@@ -3,6 +3,7 @@ import { memo, useCallback, useMemo } from 'react';
 import { Box, IconButton, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
+import { resolveEntityType } from '@/[fsd]/entities/edit-entity-with-ai/lib/helpers';
 import { Input, Text } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import PlusIcon from '@/assets/plus-icon.svg?react';
@@ -22,14 +23,16 @@ const normalizeToolItem = (item, entityType) => ({
   entityType: item.entity_type || entityType,
 });
 
-const resolveEntityType = item => {
-  if (item.type === 'application') return item.agent_type === 'pipeline' ? 'pipeline' : 'agent';
-  if (item.type === 'skill') return 'skill';
-  return 'toolkit';
-};
-
 const SummaryStep = memo(props => {
-  const { currentData, currentTools = [], draftData, onDraftChange, fieldApplyFlags, onToggleField, toolSelections } = props;
+  const {
+    currentData,
+    currentTools = [],
+    draftData,
+    onDraftChange,
+    fieldApplyFlags,
+    onToggleField,
+    toolSelections,
+  } = props;
 
   const { mergedName, mergedDescription, mergedInstructions, mergedWelcome, mergedStarters } = useMemo(
     () => ({
@@ -51,9 +54,7 @@ const SummaryStep = memo(props => {
   );
 
   const mergedTools = useMemo(() => {
-    const currentKeys = new Set(
-      currentTools.map(t => `${resolveEntityType(t)}:${t.id}`),
-    );
+    const currentKeys = new Set(currentTools.map(t => `${resolveEntityType(t)}:${t.id}`));
 
     const allSuggestedKeys = new Set([
       ...(draftData?.suggested_toolkits || []).map(t => `toolkit:${t.id}`),

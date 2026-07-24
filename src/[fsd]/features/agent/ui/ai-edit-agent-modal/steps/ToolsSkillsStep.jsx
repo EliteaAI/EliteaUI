@@ -3,6 +3,7 @@ import { memo, useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import { EditEntityComparisonLayout } from '@/[fsd]/entities/edit-entity-with-ai';
+import { resolveEntityType } from '@/[fsd]/entities/edit-entity-with-ai/lib/helpers';
 import BaseCheckbox from '@/[fsd]/shared/ui/checkbox/BaseCheckbox';
 
 import ToolItemCard from './ToolItemCard';
@@ -11,12 +12,6 @@ const normalizeToolItem = (item, entityType) => ({
   ...item,
   entityType: item.entity_type || entityType,
 });
-
-const resolveEntityType = item => {
-  if (item.type === 'application') return item.agent_type === 'pipeline' ? 'pipeline' : 'agent';
-  if (item.type === 'skill') return 'skill';
-  return 'toolkit';
-};
 
 const ToolsSkillsStep = memo(props => {
   const { currentTools = [], draftData, toolSelections, onToggleTool } = props;

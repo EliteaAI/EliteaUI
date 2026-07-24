@@ -179,6 +179,7 @@ const styles = {
     borderRadius: '0.5rem',
     backgroundColor: palette.background.userInputBackground,
     border: `0.0625rem solid ${palette.border.lines}`,
+    minHeight: '2.5rem',
   }),
   readOnlyCardGrow: ({ palette }) => ({
     padding: '0.5rem 1rem',
@@ -194,6 +195,7 @@ const styles = {
     borderRadius: '0.5rem',
     backgroundColor: palette.background.userInputBackground,
     border: `0.0625rem solid ${palette.border.lines}`,
+    minHeight: '2.5rem',
   }),
   editableCardGrow: ({ palette }) => ({
     padding: '0.5rem 1rem',

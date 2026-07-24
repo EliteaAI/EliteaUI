@@ -246,6 +246,7 @@ const styles = {
     borderRadius: '0.5rem',
     backgroundColor: palette.background.userInputBackground,
     border: `0.0625rem solid ${palette.border.lines}`,
+    minHeight: '2.5rem',
   }),
   sectionLabel: {
     fontSize: '0.875rem',
@@ -259,6 +260,7 @@ const styles = {
     borderRadius: '0.5rem',
     backgroundColor: palette.background.userInputBackground,
     border: `0.0625rem solid ${palette.border.lines}`,
+    minHeight: '2.5rem',
   }),
   editableStarterCard: ({ palette }) => ({
     flex: 1,
@@ -266,6 +268,7 @@ const styles = {
     borderRadius: '0.5rem',
     backgroundColor: palette.background.userInputBackground,
     border: `0.0625rem solid ${palette.border.lines}`,
+    minHeight: '2.5rem',
   }),
   starterInput: ({ palette }) => ({
     '& .MuiInputBase-input': {
