@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
@@ -22,7 +22,7 @@ const buildSubGroups = items => {
 const CategorySection = memo(props => {
   const { category, items, EmptyPlaceholder, showCategory = true, enableSubGroups = false } = props;
   const styles = getStyles();
-  const subGroups = enableSubGroups ? buildSubGroups(items) : null;
+  const subGroups = useMemo(() => (enableSubGroups ? buildSubGroups(items) : null), [enableSubGroups, items]);
 
   const renderCard = item => (
     <Category.CategoryItemCard
