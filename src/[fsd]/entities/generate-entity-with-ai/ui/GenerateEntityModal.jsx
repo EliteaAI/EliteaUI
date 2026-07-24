@@ -217,7 +217,7 @@ const GenerateEntityModal = memo(props => {
           sx={{ margin: '0 !important' }}
           data-testid={generateButtonTestId}
         >
-          Generate
+          Generate Draft
         </BaseBtn>
       </>
     );
