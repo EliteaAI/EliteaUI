@@ -2,7 +2,6 @@ import { memo, useCallback } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import SendIcon from '@mui/icons-material/Send';
 import { Box, Tooltip, Typography } from '@mui/material';
 
 import { SHARED_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
@@ -14,6 +13,7 @@ import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { Button, Select } from '@/[fsd]/shared/ui/';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { LLMModelSelector } from '@/[fsd]/widgets/llm-model-selector';
+import SendIcon from '@/components/Icons/SendIcon';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { ContentContainer } from '@/pages/Common/Components';
 
@@ -145,7 +145,7 @@ const testToolSettingsStyles = () => ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: palette.background.aiProviderAccordion.default,
+    background: palette.background.aiProviderAccordion.default,
     borderBottom: `0.0625rem solid ${palette.border.table}`,
     flexShrink: 0,
     height: '3rem',
@@ -212,7 +212,13 @@ const testToolSettingsStyles = () => ({
     width: '100%',
     height: '3rem',
   }),
-  icon: { fontSize: '1rem' },
+  icon: {
+    fontSize: '1rem',
+    '& path': { fill: ({ palette }) => palette.primary.main },
+    '.Mui-disabled & path': {
+      fill: ({ palette }) => palette.icon.fill.disabled,
+    },
+  },
 });
 
 export default TestToolSettings;
