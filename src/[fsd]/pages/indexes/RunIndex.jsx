@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Formik } from 'formik';
 import { useSelector } from 'react-redux';
@@ -141,18 +141,24 @@ const RunIndex = memo(() => {
     if (isError && !shouldShowNotFoundPage) toastError(buildErrorMessage(error));
   }, [error, isError, shouldShowNotFoundPage, toastError]);
 
+  const stableIndexRef = useRef(null);
+
   if (shouldShowNotFoundPage) return <Page404 />;
 
   const effectiveIndex = currentIndex ?? inflightIndex;
+
+  if (effectiveIndex) stableIndexRef.current = effectiveIndex;
+
+  const stableIndex = stableIndexRef.current;
+
   // When we already have the inflight index from CreateIndex, don't block RunIndexPanel behind
   // the indexes-list fetch — we need to mount the socket listener immediately so streaming events
-  // aren't dropped.
-  const isLoading = effectiveIndex
-    ? isFetching || !publicToolkitData?.id
+  // aren't dropped. Use stableIndex so background refetches don't unmount the panel.
+  const isLoading = stableIndex
+    ? !publicToolkitData?.id
     : isFetching || indexesLoading || indexesFetching || !hasData || !publicToolkitData?.id;
 
-  const showCreatingPlaceholder = awaitingCreation && !effectiveIndex;
-
+  const showCreatingPlaceholder = awaitingCreation && !stableIndex;
   return (
     <Box sx={styles.wrapper}>
       <DrawerPageHeader
@@ -180,7 +186,7 @@ const RunIndex = memo(() => {
               </Typography>
             )}
           </Box>
-        ) : !effectiveIndex ? (
+        ) : !stableIndex ? (
           <Box sx={styles.loading}>
             <Typography
               variant="bodyMedium"
@@ -199,7 +205,7 @@ const RunIndex = memo(() => {
               toolkitId={toolkitId}
               tab={tab}
               indexName={indexName}
-              index={effectiveIndex}
+              index={effectiveIndex ?? stableIndex}
               selectedIndexTools={selectedIndexTools}
               refetchIndexesList={handleRefetch}
               isCreating={isCreating}

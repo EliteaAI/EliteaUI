@@ -5,14 +5,14 @@ import { useFormikContext } from 'formik';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
-import { Box, Tab, Tabs, Tooltip, Typography } from '@mui/material';
+import { Box, Tooltip, Typography } from '@mui/material';
 
-import { ChatButton } from '@/[fsd]/features/chat/ui';
 import {
   useDeleteIndexItemMutation,
   useUpdateIndexScheduleMutation,
 } from '@/[fsd]/features/toolkits/indexes/api';
 import {
+  BannerSeverity,
   IndexCronDefault,
   IndexStatuses,
   IndexesToolsEnum,
@@ -24,7 +24,7 @@ import {
 } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexChat.helpers';
 import { bannerVariant } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
 import { selectToolkitScheduler } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
-import { IndexScheduleModal, RunIndexBanner } from '@/[fsd]/features/toolkits/indexes/ui';
+import { IndexError, IndexScheduleModal, IndexSuccess } from '@/[fsd]/features/toolkits/indexes/ui';
 import { ToolkitChatHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useGetCurrentToolkitSchemas, useToolkitChat } from '@/[fsd]/features/toolkits/lib/hooks';
 import { Button, Modal } from '@/[fsd]/shared/ui';
@@ -32,7 +32,6 @@ import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
 import ClockIcon from '@/assets/clock.svg?react';
 import { PERMISSIONS } from '@/common/constants';
 import { convertToolkitSchema } from '@/common/toolkitSchemaUtils';
-import RocketIcon from '@/components/Icons/RocketIcon';
 import { useGetSelectedToolSchema } from '@/hooks/toolkit/useGetSelectedToolSchema';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast.jsx';
@@ -40,45 +39,21 @@ import RouteDefinitions from '@/routes';
 
 import RunIndexConfigSection from './RunIndexConfigSection';
 import RunIndexGeneralSection from './RunIndexGeneralSection';
-import RunIndexResultsPanel from './RunIndexResultsPanel';
 import RunIndexScheduleAction from './RunIndexScheduleAction';
 import RunIndexScheduleContent from './RunIndexScheduleContent';
-import RunIndexSettingsPanel from './RunIndexSettingsPanel';
-
-const RIGHT_TAB_RUN_SETTINGS = 'runSettings';
-const RIGHT_TAB_RESULTS = 'results';
 
 const RunIndexPanel = memo(props => {
-  const {
-    toolkitId,
-    indexName,
-    index,
-    refetchIndexesList,
-    selectedIndexTools,
-    tab,
-    isCreating,
-    initialConversation,
-  } = props;
+  const { toolkitId, indexName, index, refetchIndexesList, selectedIndexTools, tab, initialConversation } =
+    props;
   const styles = runIndexPanelStyles();
   const navigate = useNavigate();
   const projectId = useSelectedProjectId();
   const { toastSuccess, toastError } = useToast();
   const { values } = useFormikContext();
 
-  const runToolOptions = useMemo(
-    () =>
-      [
-        { label: 'Search Index', value: IndexesToolsEnum.searchIndexData },
-        { label: 'Stepback Search Index', value: IndexesToolsEnum.stepbackSearchIndex },
-        { label: 'Stepback Summary Index', value: IndexesToolsEnum.stepbackSummaryIndex },
-      ].filter(opt => (selectedIndexTools || []).includes(opt.value)),
-    [selectedIndexTools],
-  );
-
-  const [selectedRunTool, setSelectedRunTool] = useState(runToolOptions[0]?.value ?? null);
-  const [activeRightTab, setActiveRightTab] = useState(
-    isCreating ? RIGHT_TAB_RESULTS : RIGHT_TAB_RUN_SETTINGS,
-  );
+  const [selectedSearchTool, setSelectedSearchTool] = useState(null);
+  const [hasSearchResults, setHasSearchResults] = useState(false);
+  const [hasIndexedThisSession, setHasIndexedThisSession] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [reindexConfirmOpen, setReindexConfirmOpen] = useState(false);
   const [toolInputVariables, setToolInputVariables] = useState({});
@@ -98,7 +73,7 @@ const RunIndexPanel = memo(props => {
 
   const runSchema = useGetSelectedToolSchema({
     toolkitType: values.type,
-    toolOptionType: selectedRunTool || IndexesToolsEnum.searchIndexData,
+    toolOptionType: selectedSearchTool || IndexesToolsEnum.searchIndexData,
   });
 
   const adjustedRunSchema = useMemo(() => {
@@ -118,9 +93,9 @@ const RunIndexPanel = memo(props => {
 
   const traceNewIndex = useCallback((id, metadata) => {
     if (!metadata) return;
+    setHasIndexedThisSession(true);
     setLocalMetaOverride(prev => ({ ...(prev || {}), ...metadata }));
   }, []);
-
   const {
     chatHistory,
     isIndexing,
@@ -136,7 +111,7 @@ const RunIndexPanel = memo(props => {
     indexConfigOverride: configInputVariables,
     isValidForm: isRunFormValid,
     refetchIndexesList,
-    runTool: selectedRunTool,
+    runTool: selectedSearchTool,
     toolkitId,
     toolInputVariables,
     traceNewIndex,
@@ -168,7 +143,10 @@ const RunIndexPanel = memo(props => {
     () => bannerVariant(effectiveIsIndexing, effectiveState),
     [effectiveIsIndexing, effectiveState],
   );
-  const canRunTools = selectedRunTool && RUNNABLE_INDEX_STATUSES.includes(effectiveState);
+  // const canRunTools = selectedSearchTool && RUNNABLE_INDEX_STATUSES.includes(effectiveState);
+
+  const showSearchResults = (isRunning && Boolean(selectedSearchTool)) || hasSearchResults;
+  const showIndexingResults = (isRunning && !selectedSearchTool) || effectiveIsIndexing;
 
   const schedulingTooltipMessage = useMemo(() => {
     if (effectiveState === IndexStatuses.cancelled || effectiveState === IndexStatuses.fail)
@@ -231,13 +209,23 @@ const RunIndexPanel = memo(props => {
 
   const onChangeInputVariables = useCallback(value => setToolInputVariables(value), []);
 
+  const handleSelectSearchTool = useCallback(tool => {
+    if (!tool) setHasSearchResults(false);
+    setSelectedSearchTool(tool);
+  }, []);
+
+  const handleRunSearch = useCallback(() => {
+    setHasSearchResults(true);
+    handleRunTool();
+  }, [handleRunTool]);
+
   const handleReindex = useCallback(() => setReindexConfirmOpen(true), []);
   const confirmReindex = useCallback(() => {
     setReindexConfirmOpen(false);
+    setHasSearchResults(false);
     handleClearActiveConversation();
     handleClearChat();
     handleIndexData();
-    setActiveRightTab(RIGHT_TAB_RESULTS);
   }, [handleClearActiveConversation, handleClearChat, handleIndexData]);
   const cancelReindexConfirm = useCallback(() => setReindexConfirmOpen(false), []);
 
@@ -295,28 +283,12 @@ const RunIndexPanel = memo(props => {
     } catch {
       skipped = 0;
     }
-    const completedHistory = Array.isArray(md.history)
-      ? md.history.filter(h => h?.state === 'completed').sort((a, b) => b.updated_on - a.updated_on)
-      : [];
-    let lastSkipped = 0;
-    try {
-      const parsed =
-        typeof completedHistory[completedHistory.length - 1]?.skipped === 'string'
-          ? JSON.parse(completedHistory[completedHistory.length - 1]?.skipped)
-          : completedHistory[completedHistory.length - 1]?.skipped;
-      lastSkipped = Number(parsed?.total_skipped ?? 0) || 0;
-    } catch {
-      lastSkipped = 0;
-    }
 
     return {
       isReindex,
-      updatedOn: completedHistory[completedHistory.length - 1]?.updated_on ?? null,
-      updated: completedHistory[completedHistory.length - 1]?.updated ?? null,
-      lastSkipped,
+      updatedOn: md.updated_on ?? null,
+      updated: md.updated ?? null,
       skipped,
-      createdOn: completedHistory[0]?.created_on ?? null,
-      indexed: completedHistory[0]?.updated ?? null,
     };
   }, [index?.metadata]);
 
@@ -413,6 +385,7 @@ const RunIndexPanel = memo(props => {
           {accordionSections.map(section => (
             <BasicAccordion
               key={section.key}
+              accordionSX={styles.accordion}
               items={[
                 {
                   title: section.title,
@@ -427,84 +400,39 @@ const RunIndexPanel = memo(props => {
       </Box>
 
       <Box sx={styles.rightColumn}>
-        <RunIndexBanner
-          banner={banner}
-          isIndexing={effectiveIsIndexing}
-          isStoppingIndexing={isStoppingIndexing}
-          onStop={onCancelIndexing}
-        />
-        <Box sx={styles.rightTabsBar}>
-          <Tabs
-            value={activeRightTab}
-            onChange={(_, v) => setActiveRightTab(v)}
-          >
-            <Tab
-              value={RIGHT_TAB_RUN_SETTINGS}
-              label="Search Settings"
-            />
-            <Tab
-              value={RIGHT_TAB_RESULTS}
-              label="Activity"
-            />
-          </Tabs>
-        </Box>
-
-        <Box sx={styles.rightContent}>
-          {activeRightTab === RIGHT_TAB_RUN_SETTINGS ? (
-            <RunIndexSettingsPanel
-              runToolOptions={runToolOptions}
-              selectedRunTool={selectedRunTool}
-              onSelectRunTool={value => setSelectedRunTool(value || null)}
-              runFormFields={runFormFields}
-              adjustedRunSchema={adjustedRunSchema}
-              toolInputVariables={toolInputVariables}
-              onChangeInputVariables={onChangeInputVariables}
-              disabled={isRunning || effectiveIsIndexing}
-            />
-          ) : (
-            <RunIndexResultsPanel
-              chatHistory={chatHistory}
-              chatConversation={chatConversation}
-              questionItemRef={questionItemRef}
-            />
-          )}
-        </Box>
-
-        {!canRunTools && !effectiveIsIndexing && (
-          <Box sx={styles.readyRow}>
-            <Box sx={styles.readyRowInner}>
-              <RocketIcon />
-              <Typography
-                variant="bodyMedium"
-                color="text.secondary"
-              >
-                Reindex to enable running tools against this index.
-              </Typography>
-            </Box>
-          </Box>
+        {banner.severity === BannerSeverity.success && (
+          <IndexSuccess
+            banner={banner}
+            onSelectSearchTool={handleSelectSearchTool}
+            selectedSearchTool={selectedSearchTool}
+            selectedIndexTools={selectedIndexTools}
+            runFormFields={runFormFields}
+            adjustedRunSchema={adjustedRunSchema}
+            toolInputVariables={toolInputVariables}
+            onChangeInputVariables={onChangeInputVariables}
+            isRunning={isRunning}
+            effectiveIsIndexing={effectiveIsIndexing}
+            handleRunTool={handleRunSearch}
+            chatHistory={chatHistory}
+            chatConversation={chatConversation}
+            questionItemRef={questionItemRef}
+            isRunFormValid={isRunFormValid}
+            showResults={showSearchResults}
+            showBanner={hasIndexedThisSession}
+          />
         )}
-        <Box sx={styles.rightFooter}>
-          <Box sx={styles.footerRunSlot}>
-            <Button.BaseBtn
-              variant={Button.BUTTON_VARIANTS.special}
-              disabled={!canRunTools || !isRunFormValid || isRunning || effectiveIsIndexing}
-              onClick={() => {
-                setActiveRightTab(RIGHT_TAB_RESULTS);
-                handleRunTool();
-              }}
-            >
-              Search
-            </Button.BaseBtn>
-          </Box>
-          {activeRightTab === RIGHT_TAB_RESULTS && (
-            <Box sx={styles.footerClearSlot}>
-              <ChatButton.ClearChatButton
-                disabled={isRunning || effectiveIsIndexing}
-                onClear={handleClearChat}
-              />
-            </Box>
-          )}
-        </Box>
+        {banner.severity !== BannerSeverity.success && (
+          <IndexError
+            banner={banner}
+            isIndexing={effectiveIsIndexing}
+            isStoppingIndexing={isStoppingIndexing}
+            onStop={onCancelIndexing}
+            chatHistory={chatHistory}
+            chatConversation={chatConversation}
+            questionItemRef={questionItemRef}
+            showResults={showIndexingResults}
+          />
+        )}
       </Box>
 
       <Modal.DeleteEntityModal
@@ -544,7 +472,6 @@ const runIndexPanelStyles = () => ({
     display: 'flex',
     flex: 1,
     minHeight: 0,
-    gap: '1.5rem',
   },
   leftColumn: {
     flex: 0.8,
@@ -556,6 +483,7 @@ const runIndexPanelStyles = () => ({
     padding: '0.5rem 1.5rem 1rem 1.5rem',
     borderRight: ({ palette }) => `1px solid ${palette.border.table}`,
     position: 'relative',
+    background: ({ palette }) => palette.background.toolkitDetailLeftPanel,
   },
   leftHeader: {
     display: 'flex',
@@ -566,6 +494,9 @@ const runIndexPanelStyles = () => ({
     top: '1rem',
     right: '1.5rem',
     zIndex: 999,
+  },
+  accordion: {
+    background: ({ palette }) => palette.background.toolkitDetailLeftPanel,
   },
   accordionWrapper: {
     flex: 1,
@@ -579,12 +510,6 @@ const runIndexPanelStyles = () => ({
     minWidth: 0,
     gap: '0.75rem',
     minHeight: 0,
-    padding: '1rem 1.5rem',
-  },
-  rightTabsBar: {
-    display: 'flex',
-    alignItems: 'center',
-    borderBottom: theme => `1px solid ${theme.palette.divider}`,
   },
   rightContent: {
     flex: 1,
@@ -592,6 +517,7 @@ const runIndexPanelStyles = () => ({
     display: 'flex',
     flexDirection: 'column',
     overflow: 'hidden',
+    alignItems: 'center',
   },
   rightFooter: {
     display: 'flex',
@@ -599,6 +525,7 @@ const runIndexPanelStyles = () => ({
     paddingTop: '0.5rem',
     width: '100%',
     position: 'relative',
+    justifyContent: 'center',
   },
   footerRunSlot: {
     width: '100%',
@@ -607,11 +534,9 @@ const runIndexPanelStyles = () => ({
     justifyContent: 'center',
   },
   footerClearSlot: {
-    position: 'absolute',
-    right: 0,
-    top: '50%',
-    transform: 'translateY(-50%)',
-    marginTop: '0.25rem',
+    display: 'flex',
+    justifyContent: 'flex-end',
+    width: '100%',
   },
   readyRow: {
     width: '100%',
@@ -619,6 +544,7 @@ const runIndexPanelStyles = () => ({
     display: 'flex',
     justifyContent: 'center',
     paddingTop: '0.25rem',
+    alignSelf: 'center',
   },
   readyRowInner: {
     display: 'flex',

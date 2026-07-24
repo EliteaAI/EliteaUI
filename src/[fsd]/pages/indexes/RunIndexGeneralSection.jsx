@@ -44,7 +44,7 @@ const RunIndexGeneralSection = memo(props => {
   const { indexName, index, reindexStats, isRunning, isIndexing, isDeleting, onReindex, onOpenDelete } =
     props;
   const styles = runIndexGeneralSectionStyles();
-
+  //
   return (
     <Box sx={styles.root}>
       <Box sx={styles.nameRow}>
@@ -101,7 +101,7 @@ const RunIndexGeneralSection = memo(props => {
             <StatItem
               icon={UnavailableIcon}
               label="Files skipped"
-              value={reindexStats.lastSkipped > 0 ? reindexStats.lastSkipped : 0}
+              value={reindexStats.skipped}
               styles={styles}
             />
           </Box>
@@ -161,7 +161,7 @@ const runIndexGeneralSectionStyles = () => ({
   }),
   statsSection: {
     display: 'flex',
-    gap: '0.5rem',
+    gap: '0.25rem',
   },
   latestSection: {
     flex: 1,

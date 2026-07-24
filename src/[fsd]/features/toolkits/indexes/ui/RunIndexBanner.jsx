@@ -47,7 +47,7 @@ const RunIndexBanner = memo(props => {
           {message}
         </Typography>
       </Box>
-      {isIndexing && (
+      {isIndexing && onStop && (
         <Button.BaseBtn
           variant={Button.BUTTON_VARIANTS.alarm}
           onClick={onStop}
@@ -68,6 +68,8 @@ const getStyles = severity => ({
     display: 'flex',
     gap: '1rem',
     alignItems: 'center',
+    padding: '1rem 1.5rem',
+    borderBottom: ({ palette }) => `0.0625rem solid ${palette.border.table}`,
   },
   contentContainer: {
     display: 'flex',

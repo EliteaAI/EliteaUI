@@ -33,6 +33,8 @@ const runIndexResultsPanelStyles = () => ({
   chatBody: {
     flex: 1,
     minHeight: 0,
+    borderRadius: '0 !important',
+    border: 'none !important',
   },
 });
 

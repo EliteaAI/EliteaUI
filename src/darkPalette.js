@@ -88,6 +88,7 @@ const darkPurple = '#7C69B4';
 const darkOrange = '#A5695C';
 const yellow = '#F1BD17';
 const greenOutline40 = 'rgba(42, 179, 122, 0.4)';
+const lightBlue = 'rgba(215, 241, 255, 1)';
 
 const darkPalette = {
   mode: 'dark',
@@ -400,9 +401,9 @@ const darkPalette = {
     },
     toolkitDetailLeftPanel: 'rgba(21, 28, 37, 1)',
     indexResult: {
-      completed: green8,
-      failed: red8,
-      cancelled: orange8,
+      success: green8,
+      error: red8,
+      warning: orange8,
       info: blue8,
     },
   },
@@ -508,7 +509,7 @@ const darkPalette = {
       success: lightGreen,
       error: lightRed,
       warning: lightOrange,
-      info: blue,
+      info: lightBlue,
     },
   },
   icon: {
