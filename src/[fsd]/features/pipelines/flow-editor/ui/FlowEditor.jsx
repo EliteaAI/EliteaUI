@@ -507,6 +507,7 @@ const FlowEditor = forwardRef((props, ref) => {
             variant={BUTTON_VARIANTS.elitea}
             color={BUTTON_COLORS.secondary}
             onClick={onToggleStateDrawer}
+            data-testid="pipeline-state-toggle-button"
             startIcon={
               <Box sx={styles.iconScale}>
                 <ClipboardIcon />

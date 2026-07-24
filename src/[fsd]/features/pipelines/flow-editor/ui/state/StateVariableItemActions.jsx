@@ -9,6 +9,7 @@ import DeleteIcon from '@/components/Icons/DeleteIcon';
 
 const StateVariableItemActions = memo(props => {
   const {
+    name,
     type,
     enabled,
     showToggle = false,
@@ -36,6 +37,7 @@ const StateVariableItemActions = memo(props => {
           onChange={handleToggle}
           sx={styles.switch}
           disabled={disabled}
+          inputProps={{ 'data-testid': `pipeline-state-variable-${name}-toggle` }}
         />
       </Box>
     );
@@ -50,6 +52,7 @@ const StateVariableItemActions = memo(props => {
         }
         onTypeChange={onTypeChange}
         disabled={disableTypeSelector}
+        testId={`pipeline-state-variable-${name}-type-button`}
       />
 
       {/* Default value - either icon button or text field based on drawer width */}
@@ -68,6 +71,7 @@ const StateVariableItemActions = memo(props => {
           color="tertiary"
           disabled={disabled}
           sx={styles.deleteButton}
+          data-testid={`pipeline-state-variable-${name}-delete-button`}
         >
           <Box
             component={DeleteIcon}

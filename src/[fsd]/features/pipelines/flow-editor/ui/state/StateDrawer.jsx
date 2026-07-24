@@ -92,6 +92,7 @@ const StateDrawer = memo(props => {
       <Box
         ref={containerRef}
         sx={styles.container}
+        data-testid="pipeline-state-drawer"
       >
         {/* Resize Handle */}
         <Box
@@ -117,6 +118,7 @@ const StateDrawer = memo(props => {
             variant="elitea"
             color="tertiary"
             onClick={onClose}
+            data-testid="pipeline-state-drawer-close-button"
           >
             <CloseIcon
               fill={theme.palette.icon.fill.default}

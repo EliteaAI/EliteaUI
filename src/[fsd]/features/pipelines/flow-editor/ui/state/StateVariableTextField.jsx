@@ -13,6 +13,7 @@ const StateVariableTextField = memo(props => {
     placeholder = '',
     width = '10.125rem',
     disabled,
+    testId,
   } = props;
 
   const styles = stateVariableTextFieldStyles(error, width);
@@ -29,6 +30,7 @@ const StateVariableTextField = memo(props => {
       placeholder={placeholder}
       sx={styles.textField}
       disabled={disabled}
+      slotProps={{ htmlInput: { 'data-testid': testId } }}
     />
   );
 });

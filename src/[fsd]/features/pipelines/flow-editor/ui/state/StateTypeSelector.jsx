@@ -26,7 +26,7 @@ const stateTypeOptions = Object.keys(FlowEditorConstants.StateVariableTypes).red
 }, {});
 
 const StateTypeSelector = memo(props => {
-  const { type, onTypeChange, disabled = false } = props;
+  const { type, onTypeChange, disabled = false, testId } = props;
 
   const styles = stateTypeSelectorStyles();
 
@@ -59,6 +59,7 @@ const StateTypeSelector = memo(props => {
         isActive={open}
         disabled={disabled}
         sx={styles.buttonIcon}
+        testId={testId}
       >
         <IconComponent style={{ fontSize: '1.25rem' }} />
       </FlowEditorState.StateVariableIconButton>
@@ -91,6 +92,7 @@ const StateTypeSelector = memo(props => {
               selected={isSelected}
               onClick={() => handleSelectType(typeKey)}
               sx={styles.menuItem(isSelected)}
+              data-testid={`select-state-type-option-${typeKey}`}
             >
               <Box sx={styles.menuItemContent}>
                 <MenuIconComponent style={{ fontSize: '1.25rem' }} />

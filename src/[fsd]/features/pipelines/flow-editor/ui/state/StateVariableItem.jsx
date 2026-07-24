@@ -161,18 +161,25 @@ const StateVariableItem = memo(props => {
             placeholder={isCreateMode ? 'name' : undefined}
             width={nameFieldWidth}
             disabled={disabled}
+            testId={isCreateMode ? 'pipeline-state-variable-name-input' : undefined}
           />
         ) : (
           <Box
             sx={styles.nameBox}
             onClick={!disabled ? handleStartEdit : undefined}
           >
-            <Typography sx={styles.nameText}>{name}</Typography>
+            <Typography
+              sx={styles.nameText}
+              data-testid={`pipeline-state-variable-${name}-name`}
+            >
+              {name}
+            </Typography>
           </Box>
         )}
 
         {/* Actions (type selector, default value, toggle/delete button) */}
         <FlowEditorState.StateVariableItemActions
+          name={name}
           type={type}
           enabled={enabled}
           showToggle={!isCreateMode && isDefault}

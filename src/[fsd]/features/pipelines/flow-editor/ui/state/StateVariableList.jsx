@@ -212,6 +212,7 @@ const StateVariableList = memo(props => {
         onClick={() => setIsCreatingNew(true)}
         sx={styles.addButton}
         disabled={disabled}
+        data-testid="pipeline-state-add-context-button"
       >
         Context
       </Button>

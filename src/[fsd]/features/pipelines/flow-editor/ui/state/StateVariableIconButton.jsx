@@ -3,7 +3,7 @@ import { memo } from 'react';
 import { IconButton, Tooltip } from '@mui/material';
 
 const StateVariableIconButton = memo(props => {
-  const { children, tooltip, onClick, isActive = false, disabled = false, sx = {} } = props;
+  const { children, tooltip, onClick, isActive = false, disabled = false, sx = {}, testId } = props;
 
   const styles = iconButtonStyles(isActive);
 
@@ -17,6 +17,7 @@ const StateVariableIconButton = memo(props => {
         onClick={onClick}
         disabled={disabled}
         sx={[styles.button, sx]}
+        data-testid={testId}
       >
         {children}
       </IconButton>
