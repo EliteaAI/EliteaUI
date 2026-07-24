@@ -190,6 +190,7 @@ const PipelineWebhookModal = props => {
             <Typography
               variant="bodySmall"
               sx={styles.description}
+              data-testid="pipeline-webhook-type-description"
             >
               {currentDescription}
             </Typography>
@@ -289,6 +290,7 @@ const PipelineWebhookModal = props => {
                 <Typography
                   variant="bodySmall"
                   sx={styles.helperText}
+                  data-testid="pipeline-webhook-secret-helper-text"
                 >
                   {displayedSecretInstructions}
                 </Typography>
@@ -306,6 +308,7 @@ const PipelineWebhookModal = props => {
             <Typography
               variant="bodySmall"
               sx={styles.description}
+              data-testid="pipeline-webhook-payload-format-description"
             >
               Send a POST request with any body content. The raw request body will be passed directly to the
               pipeline as user input.
