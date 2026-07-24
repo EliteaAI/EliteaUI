@@ -50,6 +50,7 @@ const VoiceControlButton = memo(props => {
           <Box component="span">
             <BaseBtn
               data-testid="chat-voice-play-stop-button"
+              data-playing={isPlaying ? 'true' : 'false'}
               variant={BUTTON_VARIANTS.icon}
               color="tertiary"
               size="small"
