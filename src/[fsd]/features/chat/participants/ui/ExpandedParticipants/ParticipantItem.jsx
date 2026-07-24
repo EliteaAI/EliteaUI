@@ -382,6 +382,7 @@ const ParticipantItem = memo(props => {
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
         sx={styles.attentionWrapper}
+        data-testid={`chat-participant-row-${getChatParticipantUniqueId(participant)}`}
       >
         <Box sx={styles.attentionHeader}>
           <EntityIcon
@@ -428,13 +429,17 @@ const ParticipantItem = memo(props => {
           )}
         </Box>
         <Box sx={styles.attentionMessageRow}>
-          <Box sx={styles.attentionIcon}>
+          <Box
+            sx={styles.attentionIcon}
+            data-testid="chat-participant-warning-icon"
+          >
             <AttentionIcon />
           </Box>
           <Typography
             variant="bodySmall"
             color="text.attention"
             sx={styles.attentionMessage}
+            data-testid="chat-participant-warning-message"
           >
             <ParticipantWarning
               isPublishedAgentGone={isPublishedAgentGone}
