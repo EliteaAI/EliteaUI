@@ -28,6 +28,7 @@ const ApplicationEditorNotes = memo(props => {
     () => [
       {
         title: 'EDITOR NOTES',
+        testId: 'agent-editor-notes-section',
         content: (
           <Box sx={styles.fieldContainer}>
             <Input.StyledInputEnhancer
@@ -46,7 +47,7 @@ const ApplicationEditorNotes = memo(props => {
               minRows={3}
               maxRows={10}
               fieldName="Editor Notes"
-              inputProps={{ maxLength: NOTES_MAX_LENGTH }}
+              inputProps={{ maxLength: NOTES_MAX_LENGTH, 'data-testid': 'agent-editor-notes-input' }}
             />
           </Box>
         ),

@@ -173,6 +173,14 @@ const ApplicationEditForm = memo(props => {
 
               <TagEditor
                 id="tags"
+                data-testid="agent-tags-input"
+                // Sub-element testids threaded through AutoCompleteDropDown
+                // (mirrors CreateAgentForm.jsx's create-time wiring — same
+                // component rendered on the detail/edit page. ELITEA-2021,
+                // .agents/role-overrides.md § Declared-improvisation protocol).
+                inputTestId="agent-tags-input-field"
+                chipTestId="agent-tag-chip"
+                getOptionTestId={option => `agent-tag-option-${option?.name}`}
                 label="Tags"
                 tagList={tagList || []}
                 stateTags={formik.values?.version_details?.tags || []}

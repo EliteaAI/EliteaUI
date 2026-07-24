@@ -183,6 +183,15 @@ const CreateAgentForm = memo(props => {
 
                 <TagEditor
                   id="tags"
+                  data-testid="agent-tags-input"
+                  // Sub-element testids threaded through AutoCompleteDropDown
+                  // (mirrors CreateSkillForm.jsx's skill-tags-input wiring —
+                  // ELITEA-2021, .agents/role-overrides.md § Declared-
+                  // improvisation protocol: matches this file's own
+                  // pre-existing agent- prefix convention).
+                  inputTestId="agent-tags-input-field"
+                  chipTestId="agent-tag-chip"
+                  getOptionTestId={option => `agent-tag-option-${option?.name}`}
                   label="Tags"
                   tagList={tagList || []}
                   stateTags={formik.values?.version_details?.tags || []}
