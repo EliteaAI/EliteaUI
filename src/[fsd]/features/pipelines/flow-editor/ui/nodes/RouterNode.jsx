@@ -155,6 +155,7 @@ const RouterNode = memo(props => {
             className: 'nowheel',
           }}
           modelConfig={pipelineLLMConfig}
+          inputProps={{ 'data-testid': 'pipeline-router-node-condition-input' }}
         />
         <FlowEditorSelect.RouteSelect
           id={id}
@@ -163,12 +164,14 @@ const RouterNode = memo(props => {
           disabled={isRunningPipeline || disabled}
           nodesFilter={node => node.id !== id}
           addEndNode
+          dataTestId="pipeline-router-node-routes-select"
         />
         <FlowEditorSelect.InputSelect
           id={id}
           label="Input"
           inputFieldName="input"
           disabled={isRunningPipeline || disabled}
+          dataTestId="pipeline-router-node-input-select"
         />
         <SingleSelect
           sx={{ marginBottom: '0rem' }}
@@ -179,6 +182,7 @@ const RouterNode = memo(props => {
           disabled={isRunningPipeline || disabled}
           showBorder
           className="nopan nodrag"
+          data-testid="pipeline-router-node-default-output-select"
         />
       </FlowEditorNodes.NodeCard>
     </>
