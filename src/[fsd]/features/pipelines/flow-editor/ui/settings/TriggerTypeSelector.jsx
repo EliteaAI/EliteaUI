@@ -301,6 +301,7 @@ const TriggerTypeSelector = memo(props => {
           disabled={disabled || isLoading}
           showBorder
           className="nopan nodrag"
+          data-testid="pipeline-trigger-select"
         />
 
         {currentTriggerType === TRIGGER_TYPES.schedule && (
@@ -331,6 +332,7 @@ const TriggerTypeSelector = memo(props => {
               sx={styles.scheduleButton}
               onClick={handleWebhookIconClick}
               disabled={disabled || isLoading}
+              data-testid="pipeline-trigger-webhook-edit-button"
             >
               <LinkIcon sx={styles.iconStyle} />
             </IconButton>
