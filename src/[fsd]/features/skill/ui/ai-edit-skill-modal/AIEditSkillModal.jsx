@@ -8,13 +8,14 @@ import {
   EditEntityInstructionsStep,
   EditEntityModal,
 } from '@/[fsd]/entities/edit-entity-with-ai';
-import { useGenerateSkillDraftMutation } from '@/[fsd]/features/skill/api';
+import { useGenerateSkillDraftMutation, useSkillUpdateMutation } from '@/[fsd]/features/skill/api';
 import { EDIT_STEP_KEYS, SKILL_NAME_MAX_LENGTH } from '@/[fsd]/features/skill/lib/constants';
 import { SkillAIEditionStepsHelpers } from '@/[fsd]/features/skill/lib/helpers';
 import { useSaveSkill, useSaveSkillVersion } from '@/[fsd]/features/skill/lib/hooks';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { Input, Modal } from '@/[fsd]/shared/ui';
 import { MAX_INSTRUCTIONS_LENGTH } from '@/common/constants';
+import { buildErrorMessage } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 
@@ -35,6 +36,7 @@ const AIEditSkillModal = memo(props => {
   const { toastError } = useToast();
 
   const [generateDraft, { error: generateError, reset: resetGenerate }] = useGenerateSkillDraftMutation();
+  const [updateSkill] = useSkillUpdateMutation();
   // Save hooks close over formik values, so a handler must call the ref (refreshed each
   // render), not its own captured closure, to see values applied via flushSync.
   const { onSave: saveSkill } = useSaveSkill();
@@ -127,14 +129,20 @@ const AIEditSkillModal = memo(props => {
     setIsSavingAsVersion(true);
 
     try {
-      // Name/description live on the skill (shared across versions); instructions live on the version.
+      // Name/description are skill-level; persist them directly, not via useSaveSkill, which
+      // would also overwrite the current version's instructions.
       if (fieldApplyFlags.name || fieldApplyFlags.description) {
-        flushSync(() => {
-          if (fieldApplyFlags.name) formik.setFieldValue('name', (draftData.name || '').trim());
-          if (fieldApplyFlags.description) formik.setFieldValue('description', draftData.description || '');
-        });
-        const ok = await saveSkillRef.current();
-        if (!ok) {
+        try {
+          await updateSkill({
+            projectId,
+            skillId: formik.values.id,
+            name: (fieldApplyFlags.name ? draftData.name || '' : formik.values.name || '').trim(),
+            description: fieldApplyFlags.description
+              ? draftData.description || ''
+              : formik.values.description || '',
+          }).unwrap();
+        } catch (e) {
+          toastError(buildErrorMessage(e));
           setIsSavingAsVersion(false);
           return;
         }
@@ -158,7 +166,7 @@ const AIEditSkillModal = memo(props => {
     } catch {
       setIsSavingAsVersion(false);
     }
-  }, [versionName, formik, toastError, fieldApplyFlags, onClose]);
+  }, [versionName, formik, toastError, fieldApplyFlags, onClose, projectId, updateSkill]);
 
   const handleCancelVersion = useCallback(() => {
     setShowVersionModal(false);
