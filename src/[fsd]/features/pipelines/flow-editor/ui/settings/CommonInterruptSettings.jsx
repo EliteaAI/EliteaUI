@@ -115,6 +115,7 @@ const CommonInterruptSettings = memo(props => {
               yamlJsonObject.entry_point === id ? false : !!realInterruptBefore.find(item => item === id)
             }
             onChange={onChangeInterruptBefore}
+            data-testid="pipeline-node-interrupt-before-switch"
           />
         }
         label={
@@ -137,6 +138,7 @@ const CommonInterruptSettings = memo(props => {
                 : !!realInterruptAfter.find(item => item === id)
             }
             onChange={onChangeInterruptAfter}
+            data-testid="pipeline-node-interrupt-after-switch"
           />
         }
         label={
@@ -156,6 +158,7 @@ const CommonInterruptSettings = memo(props => {
               disabled={disabled}
               checked={!!yamlNode?.structured_output}
               onChange={onChangeStructuredOutput}
+              data-testid="pipeline-node-structured-output-switch"
             />
           }
           label={
