@@ -3,7 +3,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFormikContext } from 'formik';
 import { useNavigate } from 'react-router-dom';
 
-import { Box, Button, CircularProgress } from '@mui/material';
+import { Box, CircularProgress } from '@mui/material';
 
 import { IndexesToolsEnum } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import { adjustIndexDataSchema } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexChat.helpers';
@@ -12,6 +12,7 @@ import { ToolkitChatModesEnum } from '@/[fsd]/features/toolkits/lib/constants';
 import { ToolkitChatHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useToolkitChat } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
+import { Button } from '@/[fsd]/shared/ui';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
 import { useGetSelectedToolSchema } from '@/hooks/toolkit/useGetSelectedToolSchema';
 import { ToolTypes } from '@/pages/Applications/Components/Tools/consts';
@@ -200,20 +201,20 @@ const CreateIndexForm = memo(props => {
         items={[{ title: 'Index configuration', content: accordionContent }]}
       />
       <Box sx={styles.actions}>
-        <Button
-          variant="special"
+        <Button.BaseBtn
+          variant={Button.BUTTON_VARIANTS.elitea}
           onClick={handleIndexData}
           disabled={!isValidForm || isRunning}
         >
           Index
-        </Button>
-        <Button
-          variant="secondary"
+        </Button.BaseBtn>
+        <Button.BaseBtn
+          variant={Button.BUTTON_VARIANTS.secondary}
           onClick={handleCancel}
           disabled={isRunning}
         >
           Cancel
-        </Button>
+        </Button.BaseBtn>
       </Box>
     </Box>
   );
@@ -230,7 +231,7 @@ const createIndexFormStyles = () => ({
     flex: 1,
     minHeight: 0,
     width: '100%',
-    maxWidth: '52rem',
+    maxWidth: '36.525rem',
     marginX: 'auto',
   },
   accordionWrapper: {
@@ -247,6 +248,7 @@ const createIndexFormStyles = () => ({
     display: 'flex',
     justifyContent: 'flex-start',
     gap: '0.75rem',
+    paddingLeft: '2.25rem',
   },
   loading: {
     display: 'flex',
