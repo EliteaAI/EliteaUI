@@ -1,7 +1,7 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Button, Modal } from '@/[fsd]/shared/ui';
 import { shallowEqual } from '@/[fsd]/shared/lib/utils';
+import { Button, Modal } from '@/[fsd]/shared/ui';
 import { VALIDATION_RULE, validateMaxTokens } from '@/[fsd]/widgets/llm-model-selector/lib';
 
 import { LLMSettings } from './LLMSettings';
@@ -32,10 +32,7 @@ const LLMSettingsDialog = memo(props => {
 
   const handleOK = useCallback(() => onApply(localSettings), [localSettings, onApply]);
 
-  const hasChanges = useMemo(
-    () => !shallowEqual(localSettings, llmSettings),
-    [localSettings, llmSettings],
-  );
+  const hasChanges = useMemo(() => !shallowEqual(localSettings, llmSettings), [localSettings, llmSettings]);
 
   const isDisabled = useMemo(() => {
     if (!hasChanges) return true;
@@ -50,6 +47,8 @@ const LLMSettingsDialog = memo(props => {
   return (
     <Modal.BaseModal
       open={open}
+      data-testid="model-settings-dialog"
+      closeButtonTestId="model-settings-dialog-close-button"
       title="Model settings"
       titleVariant="headingMedium"
       onClose={onCancel}

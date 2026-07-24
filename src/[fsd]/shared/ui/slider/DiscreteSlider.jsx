@@ -16,6 +16,7 @@ const DiscreteSlider = memo(props => {
     min = 1,
     max,
     showLabels = false,
+    containerTestId,
     ...sliderProps
   } = props;
 
@@ -34,7 +35,10 @@ const DiscreteSlider = memo(props => {
   );
 
   return (
-    <Box sx={styles.container}>
+    <Box
+      data-testid={containerTestId}
+      sx={styles.container}
+    >
       <Label.InfoLabelWithTooltip
         label={label}
         tooltip={labelTooltip || (tooltipFormatter ? tooltipFormatter(value, disabled) : '')}

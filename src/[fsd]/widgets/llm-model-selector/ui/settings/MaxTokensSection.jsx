@@ -60,6 +60,7 @@ const MaxTokensSection = memo(props => {
       />
 
       <Checkbox.RadioButtonGroup
+        testId="model-settings-max-tokens-mode"
         value={mode}
         onChange={handleModeChange}
         items={[

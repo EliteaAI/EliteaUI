@@ -152,6 +152,7 @@ const LLMModelSelector = memo(props => {
             >
               <Box component="span">
                 <Button
+                  data-testid="model-settings-button"
                   size="small"
                   aria-expanded={showLLMSettings ? 'true' : undefined}
                   aria-label="model settings menu"
