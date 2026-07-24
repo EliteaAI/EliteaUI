@@ -49,6 +49,7 @@ const EditEntityModal = memo(props => {
 
   const [activeStepIndex, setActiveStepIndex] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDraftValid, setIsDraftValid] = useState(true);
 
   useEffect(() => {
     if (!open) {
@@ -57,6 +58,7 @@ const EditEntityModal = memo(props => {
       setDraftData(null);
       setActiveStepIndex(0);
       setIsSaving(false);
+      setIsDraftValid(true);
     }
   }, [open]);
 
@@ -104,6 +106,7 @@ const EditEntityModal = memo(props => {
     setPhase(PHASES.PROMPT);
     setDraftData(null);
     setActiveStepIndex(0);
+    setIsDraftValid(true);
     resetGenerate();
   }, [resetGenerate]);
 
@@ -144,7 +147,8 @@ const EditEntityModal = memo(props => {
   );
 
   const isLastStep = steps && activeStepIndex === steps.length - 1;
-  const isDisabled = isSaving || isSavingAsVersion;
+  const isBusy = isSaving || isSavingAsVersion;
+  const isSaveDisabled = isBusy || !isDraftValid;
 
   const renderContent = () => {
     if (phase === PHASES.LOADING) {
@@ -173,7 +177,7 @@ const EditEntityModal = memo(props => {
             steps={steps}
             activeStepIndex={activeStepIndex}
           />
-          <Box sx={styles.stepContent}>{renderStep(activeStep.key, draftData, setDraftData)}</Box>
+          <Box sx={styles.stepContent}>{renderStep(activeStep.key, draftData, setDraftData, setIsDraftValid)}</Box>
         </Box>
       );
     }
@@ -247,7 +251,7 @@ const EditEntityModal = memo(props => {
           variant={BUTTON_VARIANTS.secondary}
           size="small"
           onClick={handleRefinePrompt}
-          disabled={isDisabled}
+          disabled={isBusy}
         >
           Refine Prompt
         </BaseBtn>
@@ -257,7 +261,7 @@ const EditEntityModal = memo(props => {
               variant={BUTTON_VARIANTS.secondary}
               size="small"
               onClick={handlePrevious}
-              disabled={isDisabled}
+              disabled={isBusy}
             >
               Previous
             </BaseBtn>
@@ -268,7 +272,7 @@ const EditEntityModal = memo(props => {
                 variant={BUTTON_VARIANTS.elitea}
                 size="small"
                 onClick={handleSave}
-                disabled={isDisabled}
+                disabled={isSaveDisabled}
               >
                 {isSaving ? savingLabel || 'Saving...' : saveLabel || 'Save'}
               </BaseBtn>
@@ -277,7 +281,7 @@ const EditEntityModal = memo(props => {
                   variant={BUTTON_VARIANTS.elitea}
                   size="small"
                   onClick={handleSaveAsVersionClick}
-                  disabled={isDisabled}
+                  disabled={isSaveDisabled}
                 >
                   {isSavingAsVersion ? 'Saving...' : 'Save as Version'}
                 </BaseBtn>
