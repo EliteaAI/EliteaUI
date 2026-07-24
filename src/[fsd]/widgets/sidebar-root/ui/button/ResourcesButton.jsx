@@ -2,11 +2,11 @@ import { memo, useCallback } from 'react';
 
 import { useLocation, useMatch, useNavigate } from 'react-router-dom';
 
-import HelpOutlineRoundedIcon from '@mui/icons-material/HelpOutlineRounded';
 import { Box, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { SIDEBAR_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
+import HelpCenterIcon from '@/assets/help-center.svg?react';
 import RouteDefinitions from '@/routes';
 
 const ResourcesButton = memo(({ fullWidth = false }) => {
@@ -40,7 +40,7 @@ const ResourcesButton = memo(({ fullWidth = false }) => {
           onClick={handleResourcesClick}
           sx={styles.fullWidthContainer}
         >
-          <HelpOutlineRoundedIcon sx={styles.icon} />
+          <HelpCenterIcon sx={styles.icon} />
           <Typography variant="labelSmall">Help Center</Typography>
         </Box>
       </StyledTooltip>
@@ -60,7 +60,7 @@ const ResourcesButton = memo(({ fullWidth = false }) => {
         sx={styles.container}
       >
         <Box sx={styles.iconButton}>
-          <HelpOutlineRoundedIcon sx={styles.icon} />
+          <HelpCenterIcon sx={styles.icon} />
         </Box>
       </Box>
     </StyledTooltip>
@@ -108,7 +108,7 @@ const resourcesButtonStyles = (fullWidth, isActive) => ({
     color: isActive ? palette.text.secondary : palette.text.metrics,
     background: isActive ? palette.background.button.drawerMenu.selected : 'transparent',
 
-    '& .MuiSvgIcon-root': {
+    '& svg': {
       color: isActive ? palette.text.secondary : palette.text.metrics,
     },
 

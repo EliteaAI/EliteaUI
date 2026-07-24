@@ -87,8 +87,8 @@ NotificationButton.displayName = 'NotificationButton';
 /** @type {MuiSx} */
 const styles = {
   container: ({ palette }) => ({
-    width: '2rem',
-    height: '2rem',
+    width: '1.75rem',
+    height: '1.75rem',
     borderRadius: '50%',
     display: 'flex',
     alignItems: 'center',
@@ -96,6 +96,9 @@ const styles = {
     cursor: 'pointer',
     '&:hover': {
       backgroundColor: palette.background.button.tertiary.hover,
+      '& svg path': {
+        fill: palette.icon.fill.secondary,
+      },
     },
     '&:active': {
       backgroundColor: palette.background.button.tertiary.pressed,
