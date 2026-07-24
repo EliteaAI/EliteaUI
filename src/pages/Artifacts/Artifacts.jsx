@@ -5,10 +5,12 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
+import { EmptyStatePage } from '@/[fsd]/entities/empty-state-page';
 import { useFileUpload } from '@/[fsd]/features/artifacts/lib/hooks/useFileUpload.hooks';
 import { FilePreviewCanvas, ManagePermissionsModal } from '@/[fsd]/features/artifacts/ui';
 import { ARTIFACT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/artifactTourTargets.constants';
 import { useGetConfigurationsListQuery } from '@/api/configurations';
+import EmptyArtifactBucketsIcon from '@/assets/empty-artifact-buckets.svg?react';
 import { PENDING_BUCKET_SESSION_KEY } from '@/common/artifactConstants';
 import { sortBucketsByRecent } from '@/common/bucketSortingUtils';
 import { SIDE_BAR_WIDTH, ViewMode } from '@/common/constants';
@@ -21,7 +23,6 @@ import { actions } from '@/slices/artifact';
 
 import Buckets from './Components/Buckets';
 import ArtifactTable from './component/ArtifactTable';
-import ArtifactTableNoFiles from './component/ArtifactTableNoFiles';
 import DuplicateResolutionDialog from './component/DuplicateResolutionDialog';
 import UploadPathDialog from './component/UploadPathDialog';
 import UploadingStatus from './component/UploadingStatus';
@@ -720,8 +721,13 @@ const Artifacts = memo(() => {
                 />
               </Box>
             ) : (
-              <Box sx={styles.contentBox}>
-                <ArtifactTableNoFiles message="No buckets created yet" />
+              <Box sx={styles.emptyStateContainer}>
+                <EmptyStatePage
+                  icon={EmptyArtifactBucketsIcon}
+                  title="No buckets created yet"
+                  description="Create your first bucket to organize and manage your artifacts in one place."
+                  onCreateClick={onAddBucket}
+                />
               </Box>
             )}
           </Box>
@@ -819,5 +825,12 @@ const artifactsStyles = (collapsedBuckets, leftPanelWidth) => ({
     width: '100%',
     height: '100%',
     overflow: 'hidden',
+  },
+  emptyStateContainer: {
+    width: '100%',
+    height: '100%',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
