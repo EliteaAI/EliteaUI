@@ -80,7 +80,7 @@ const InputBase = memo(props => {
     overlayContent,
     InputLabelProps,
     maxRows = null,
-    minRows = 3,
+    minRows = 1,
     collapseContent = false,
     inputProps,
     hasActionsToolBar = false,
