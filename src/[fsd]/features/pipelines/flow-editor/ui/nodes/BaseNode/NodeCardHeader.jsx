@@ -217,6 +217,7 @@ const NodeCardHeader = memo(props => {
                 onClick: handleMakeEntrypoint,
               },
               {
+                key: 'pipeline-node-delete',
                 label: 'Delete',
                 icon: (
                   <Box sx={styles.menuIconWrapper}>
@@ -229,6 +230,7 @@ const NodeCardHeader = memo(props => {
             ]
           : [
               {
+                key: 'pipeline-node-delete',
                 label: 'Delete',
                 icon: (
                   <Box sx={styles.menuIconWrapper}>
@@ -241,6 +243,7 @@ const NodeCardHeader = memo(props => {
             ]
         : [
             {
+              key: 'pipeline-node-delete',
               label: 'Delete',
               icon: (
                 <Box sx={styles.menuIconWrapper}>
@@ -279,6 +282,7 @@ const NodeCardHeader = memo(props => {
         <Box sx={styles.iconWrapper}>{NodeHelpers.getNodeIconByType(type, theme)}</Box>
         {!isEditingName ? (
           <Typography
+            data-testid="pipeline-node-title-label"
             sx={styles.nameText}
             variant="labelMedium"
             color="text.secondary"
