@@ -520,6 +520,7 @@ const ToolBaseProperty = memo(props => {
           disabled={disabled}
           presetOptions={presetOptions}
           propKey={k}
+          testId={`toolkit-field-${k}-select`}
         />
       );
     } else if (type === 'llm_model') {

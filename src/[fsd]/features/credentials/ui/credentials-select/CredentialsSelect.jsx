@@ -96,6 +96,7 @@ const CredentialsSelect = memo(
     presetOptions,
     onReload,
     propKey,
+    testId,
   }) => {
     const trackEvent = useTrackEvent();
     const { personal_project_id } = useSelector(state => state.user);
@@ -153,6 +154,7 @@ const CredentialsSelect = memo(
           options.push({
             elitea_title: Create_Personal_Title,
             private: true,
+            testId: testId ? `${testId}-create-private` : undefined,
             label: (
               <CredentialCreateLabel
                 isPrivate
@@ -166,6 +168,7 @@ const CredentialsSelect = memo(
           options.push({
             elitea_title: Create_Project_Title,
             private: false,
+            testId: testId ? `${testId}-create-project` : undefined,
             label: (
               <CredentialCreateLabel
                 isPrivate={false}
@@ -185,6 +188,7 @@ const CredentialsSelect = memo(
       personal_project_id,
       onlyPublic,
       section,
+      testId,
     ]);
     const tokens = McpAuthHelpers.loadTokens();
     const savedCredentialsMenuData = useMemo(() => {
@@ -397,6 +401,7 @@ const CredentialsSelect = memo(
             size="small"
             onClick={onRefresh}
             sx={styles.refreshIcon}
+            data-testid={testId ? `${testId}-refresh-button` : undefined}
           >
             <RefreshIcon />
           </BaseBtn>
@@ -416,6 +421,7 @@ const CredentialsSelect = memo(
                   label: opt.label,
                   variant: 'action',
                   meta: opt,
+                  testId: opt.testId,
                   onActivate: () => createSelectHandler(title, opt),
                 }))
               : list.map(opt => ({
@@ -424,7 +430,7 @@ const CredentialsSelect = memo(
                   meta: opt,
                 })),
         }));
-    }, [menuData, createSelectHandler, onRefresh]);
+    }, [menuData, createSelectHandler, onRefresh, testId]);
 
     const isOptionsReady = useMemo(() => {
       if (!hasFetchedData) return false;
@@ -529,6 +535,7 @@ const CredentialsSelect = memo(
           showEmptyPlaceholder={false}
           isListFetching={isFetching}
           valueItemSX={styles.valueItemSX}
+          data-testid={testId}
         />
         {showMismatchFooter && (
           <CredentialMismatchFooter
