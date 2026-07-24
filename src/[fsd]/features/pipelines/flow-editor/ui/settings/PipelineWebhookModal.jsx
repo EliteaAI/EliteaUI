@@ -208,7 +208,7 @@ const PipelineWebhookModal = props => {
                   value={fullWebhookUrl}
                   readOnly
                   sx={styles.urlInput}
-                  data-testid="pipeline-webhook-url-input"
+                  inputProps={{ 'data-testid': 'pipeline-webhook-url-input' }}
                 />
                 <Tooltip
                   title="Copy URL"
@@ -242,7 +242,7 @@ const PipelineWebhookModal = props => {
                   value={showSecretValue ? displaySecretValue : '•'.repeat(displaySecretValue?.length || 32)}
                   readOnly
                   sx={[styles.urlInput, isPendingRegenerate && styles.pendingInput]}
-                  data-testid="pipeline-webhook-secret-input"
+                  inputProps={{ 'data-testid': 'pipeline-webhook-secret-input' }}
                 />
                 <Tooltip
                   title={showSecretValue ? 'Hide secret' : 'Show secret'}
