@@ -483,12 +483,14 @@ const PipelineEditor = forwardRef(
                     sx={styles.customTabs}
                   >
                     <Tab
+                      data-testid="pipeline-canvas-configuration-tab"
                       sx={styles.tab}
                       icon={<GearIcon />}
                       label="Configuration"
                       iconPosition="start"
                     />
                     <Tab
+                      data-testid="pipeline-canvas-flow-editor-tab"
                       sx={styles.tab}
                       icon={<FlowIcon />}
                       label="Flow editor"
@@ -501,12 +503,16 @@ const PipelineEditor = forwardRef(
           }
           saveButton={
             isCreateMode ? (
-              <CreateApplicationSaveButton onSuccess={handlePipelineCreated} />
+              <CreateApplicationSaveButton
+                data-testid="pipeline-save-button"
+                onSuccess={handlePipelineCreated}
+              />
             ) : (
               <SaveApplicationButton onSuccess={handleSaveSuccess} />
             )
           }
           isPublic={!canEditIt}
+          closeButtonTestId="pipeline-canvas-close-button"
         >
           <ApplicationValidator
             agentId={pipelineId}
