@@ -7,7 +7,7 @@ export default function OpenAPICardBody({ tool, onClickShowActions, showActions 
 
   return (
     <>
-      {!!tool.settings.selected_tools?.length && (
+      {!!tool.settings?.selected_tools?.length && (
         <Box
           sx={{ cursor: 'pointer' }}
           onClick={onClickShowActions}
