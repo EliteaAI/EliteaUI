@@ -88,12 +88,14 @@ const LLMNode = memo(props => {
         label="Input"
         disabled={isRunningPipeline || disabled}
         inputFieldName="input"
+        dataTestId="pipeline-llm-node-input-select"
       />
       <FlowEditorSelect.OutputSelect
         id={id}
         label="Output"
         outputFieldName="output"
         disabled={isRunningPipeline || disabled}
+        dataTestId="pipeline-llm-node-output-select"
       />
       <FlowEditorSelect.ToolkitsSelect
         id={id}

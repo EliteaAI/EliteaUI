@@ -74,6 +74,12 @@ const NodeFieldInput = memo(props => {
       className: 'nopan nodrag nowheel',
     },
     inputRef,
+    // ELITEA-2004: stable testid on the native <textarea>/<input> element.
+    // Flows through InputBase's slotProps={{ htmlInput: inputProps }} for
+    // both the AI-Assistant branch (system/task, via AIAssistantInput's
+    // ...leftProps spread) and the plain StyledInputEnhancer branch
+    // (chat_history) — same `inputProps` key, single wiring point.
+    inputProps: { 'data-testid': `pipeline-llm-node-${variableName}-value-input` },
   };
 
   const popperSx = nodeFieldInputStyles(containerRef.current?.clientWidth);
@@ -196,6 +202,10 @@ const SimpleLLMInputItem = memo(props => {
             disabled={disabled}
             showBorder
             className="nopan nodrag"
+            // ELITEA-2004: distinguishes the System/Task/Chat History Type
+            // selects, which previously shared the duplicated native
+            // id="simple-select-Type" (EliteaAI/elitea-testing-public#1006).
+            data-testid={`pipeline-llm-node-${variableName}-type-select`}
           />
         </Box>
         <Box sx={styles.valueWrapper}>

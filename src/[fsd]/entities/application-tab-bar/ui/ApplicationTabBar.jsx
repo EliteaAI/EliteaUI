@@ -70,7 +70,16 @@ const ApplicationTabBar = memo(({ onSuccess, onDiscard }) => {
           )}
 
           <Button.DiscardButton
-            data-testid="discard-button"
+            // ELITEA-2004: DiscardButton destructures the camelCase
+            // `dataTestId` prop and forwards it as `data-testid={dataTestId}`
+            // onto BaseBtn — a literal `data-testid="…"` prop here lands in
+            // `...rest` and gets overwritten by that (undefined) forward,
+            // so the testid never actually renders. Confirmed live
+            // (0 matches for `[data-testid="discard-button"]` on the
+            // Pipeline detail page before this fix) — same root cause the
+            // Agent detail page already documents as a known gap
+            // (tests/ui/agents/test_agent_save_as_version.py NOTE).
+            dataTestId="discard-button"
             disabled={!isFormDirtyExcluding && !isYamlCodeDirty}
             onDiscard={discardApplicationChanges}
           />
