@@ -43,7 +43,7 @@ const ApplicationEditorNotes = memo(props => {
                   variant="bodyMedium"
                 />
               }
-              minRows={3}
+              minRows={1}
               maxRows={10}
               fieldName="Editor Notes"
               inputProps={{ maxLength: NOTES_MAX_LENGTH }}
