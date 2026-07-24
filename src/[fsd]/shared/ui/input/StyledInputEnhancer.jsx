@@ -30,7 +30,7 @@ const StyledInputEnhancer = memo(props => {
     containerProps = {},
     InputLabelProps,
     maxRows = null,
-    minRows = 3,
+    minRows = 1,
     collapseContent = false,
     inputProps,
     hasActionsToolBar = false,
