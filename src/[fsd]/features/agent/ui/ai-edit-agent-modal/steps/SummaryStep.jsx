@@ -3,6 +3,7 @@ import { memo, useCallback, useMemo } from 'react';
 import { Box, IconButton, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
+import { resolveEntityType } from '@/[fsd]/entities/edit-entity-with-ai/lib/helpers';
 import { Input, Text } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import PlusIcon from '@/assets/plus-icon.svg?react';
@@ -21,12 +22,6 @@ const normalizeToolItem = (item, entityType) => ({
   ...item,
   entityType: item.entity_type || entityType,
 });
-
-const resolveEntityType = item => {
-  if (item.type === 'application') return item.agent_type === 'pipeline' ? 'pipeline' : 'agent';
-  if (item.type === 'skill') return 'skill';
-  return 'toolkit';
-};
 
 const SummaryStep = memo(props => {
   const {

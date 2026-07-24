@@ -23,7 +23,9 @@ import CodexIcon from '@/assets/codex.svg?react';
 import Context7Icon from '@/assets/context7.svg?react';
 import DeepwikiQueryIcon from '@/assets/deepwiki_query.svg?react';
 import DialIcon from '@/assets/dial-icon.svg?react';
+import EliteaFilledIcon from '@/assets/elitea_filled.svg?react';
 import EmbeddingIcon from '@/assets/embeddings.svg?react';
+import EpamDefaultIcon from '@/assets/epam_default.svg?react';
 import FigmaIcon from '@/assets/figma-icon.svg?react';
 import FlowIcon from '@/assets/flow-icon.svg?react';
 import GitlabWorkspaceIcon from '@/assets/gitlab-space.svg?react';
@@ -344,6 +346,17 @@ const getPredefinedIcon = (type, iconProps) => {
   }
 };
 
+const getGroupBrandIcon = (group, iconProps) => {
+  switch (group?.toLowerCase()) {
+    case 'elitea':
+      return <EliteaFilledIcon {...iconProps} />;
+    case 'epam':
+      return <EpamDefaultIcon {...iconProps} />;
+    default:
+      return null;
+  }
+};
+
 export const getToolIconByType = (
   type,
   theme,
@@ -362,10 +375,9 @@ export const getToolIconByType = (
     return getInternalToolIcon(internalToolkitName, iconProps);
   }
 
-  const realType = isMCP ? 'mcp' : type;
-  const predefinedIcon = getPredefinedIcon(realType, iconProps);
+  const predefinedIcon = getPredefinedIcon(type, iconProps);
 
-  if (predefinedIcon.type !== BuildIcon) {
+  if (predefinedIcon.type !== BuildIcon && predefinedIcon.type !== MCPIcon) {
     return predefinedIcon;
   }
 
@@ -380,11 +392,16 @@ export const getToolIconByType = (
     );
   }
 
+  const groupIcon = getGroupBrandIcon(toolSchema?.metadata?.group, iconProps);
+  if (groupIcon) {
+    return groupIcon;
+  }
+
   if (isAppAll) {
     return <ApplicationToolkitIcon {...iconProps} />;
   }
 
-  return predefinedIcon;
+  return isMCP || predefinedIcon.type === MCPIcon ? <MCPIcon {...iconProps} /> : <BuildIcon {...iconProps} />;
 };
 
 export const getToolIcon = toolType => {

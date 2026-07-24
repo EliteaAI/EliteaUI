@@ -4,6 +4,7 @@ import { useFormikContext } from 'formik';
 import { flushSync } from 'react-dom';
 
 import { EditEntityModal } from '@/[fsd]/entities/edit-entity-with-ai';
+import { resolveEntityType } from '@/[fsd]/entities/edit-entity-with-ai/lib/helpers';
 import { useGenerateAgentDraftMutation } from '@/[fsd]/features/agent/api';
 import { EDIT_STEP_KEYS } from '@/[fsd]/features/agent/lib/constants';
 import { AgentAIEditionStepsHelpers } from '@/[fsd]/features/agent/lib/helpers';
@@ -118,12 +119,6 @@ const AIEditAgentModal = memo(props => {
     [generateDraft, projectId, formik.values],
   );
 
-  const resolveEntityType = useCallback(item => {
-    if (item.type === 'application') return item.agent_type === 'pipeline' ? 'pipeline' : 'agent';
-    if (item.type === 'skill') return 'skill';
-    return 'toolkit';
-  }, []);
-
   const handleDraftGenerated = useCallback(
     draftData => {
       const currentAppId = currentDataRef.current?.id;
@@ -169,7 +164,7 @@ const AIEditAgentModal = memo(props => {
 
       return filtered;
     },
-    [applicationSkills?.skills, resolveEntityType],
+    [applicationSkills?.skills],
   );
 
   const handleToggleField = useCallback(field => {
@@ -375,7 +370,6 @@ const AIEditAgentModal = memo(props => {
       formik.values,
       toolSelections,
       applicationSkills?.skills,
-      resolveEntityType,
       associateToolkit,
       updateApplicationRelation,
       updateSkillRelation,

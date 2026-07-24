@@ -1,6 +1,7 @@
 import { ParticipantEntityTypes } from '@/[fsd]/features/chat/participants/lib/constants/participant.constants';
 import { CredentialNameHelpers } from '@/[fsd]/features/credentials/lib/helpers';
 import { McpConstants } from '@/[fsd]/features/toolkits/lib/constants';
+import { resolveToolkitSchemaByType } from '@/[fsd]/shared/lib/helpers';
 import { BLOCKED_TOOLKITS } from '@/common/constants';
 import { getToolIconByType } from '@/common/toolkitUtils';
 import { ToolTypes } from '@/pages/Applications/Components/Tools/consts';
@@ -281,7 +282,7 @@ export const prettifyToolkitConversation = messages =>
   }));
 
 export const getToolkitIcon = (toolkit, theme, toolkitSchemas, isMCP) => {
-  const typeInfo = toolkitSchemas[toolkit.type];
+  const typeInfo = resolveToolkitSchemaByType(toolkit.type, toolkitSchemas);
   // Toolkits from an AppAll context carry meta.application === true.
   // When the type has no dedicated icon, fall back to ApplicationToolkitIcon instead of BuildIcon.
   const isAppAll = toolkit.meta?.application === true;
