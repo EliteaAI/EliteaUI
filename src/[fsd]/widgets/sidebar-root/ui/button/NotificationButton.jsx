@@ -67,6 +67,7 @@ const NotificationButton = memo(() => {
     <>
       <Box
         data-tour={SIDEBAR_TOUR_TARGET_IDS.notifications}
+        data-testid="notification-bell-button"
         onClick={onClickNotificationButton}
         sx={styles.container}
       >

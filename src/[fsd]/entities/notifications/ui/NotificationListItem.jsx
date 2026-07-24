@@ -88,6 +88,8 @@ const NotificationListItem = memo(props => {
   return (
     <Box
       sx={[styles.container, sx]}
+      data-testid="notification-item-row"
+      data-seen={notification.is_seen}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
@@ -118,6 +120,7 @@ const NotificationListItem = memo(props => {
             aria-label={markToggleLabel}
             onClick={handleMarkToggle}
             sx={styles.markButton}
+            data-testid="notification-item-mark-toggle-button"
           />
         </Tooltip>
       )}
