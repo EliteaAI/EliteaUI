@@ -88,6 +88,7 @@ export default function SaveToolkitButton({
 
   return (
     <Button.BaseBtn
+      data-testid="toolkit-canvas-save-button"
       disabled={shouldDisableSave}
       variant="elitea"
       color="primary"
