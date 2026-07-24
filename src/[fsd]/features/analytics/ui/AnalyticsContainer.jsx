@@ -27,7 +27,7 @@ import { useSelectedProjectId, useSelectedProjectName } from '@/hooks/useSelecte
 const DATE_FILTER_PRESETS = [
   { label: 'Last 24h', value: 1 },
   { label: 'Last 7d', value: 7 },
-  { label: 'Last 30d', value: 30 },
+  { label: 'Last 30d', value: 30, buttonProps: { 'data-testid': 'analytics-date-preset-30d-button' } },
   { label: 'Last 90d', value: 90 },
 ];
 

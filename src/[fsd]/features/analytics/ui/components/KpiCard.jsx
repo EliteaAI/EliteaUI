@@ -3,12 +3,15 @@ import { memo } from 'react';
 import { Box, Typography } from '@mui/material';
 
 const KpiCard = memo(props => {
-  const { label, value, valueSuffix, subtitle, color, badge } = props;
+  const { label, value, valueSuffix, subtitle, color, badge, testId } = props;
 
   const styles = kpiCardStyles();
 
   return (
-    <Box sx={styles.kpiCard}>
+    <Box
+      sx={styles.kpiCard}
+      data-testid={testId}
+    >
       <Typography
         variant="labelSmall"
         sx={styles.kpiLabel}

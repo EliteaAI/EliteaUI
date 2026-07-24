@@ -5,7 +5,7 @@ import { Box, Input, InputAdornment } from '@mui/material';
 import { typographyVariants } from '@/MainTheme';
 import SearchIcon from '@/components/Icons/SearchIcon.jsx';
 
-const SearchInput = memo(({ search, onChangeSearch, sx, placeholder = 'Search' }) => {
+const SearchInput = memo(({ search, onChangeSearch, sx, placeholder = 'Search', testId }) => {
   const styles = getStyles();
 
   return (
@@ -17,6 +17,7 @@ const SearchInput = memo(({ search, onChangeSearch, sx, placeholder = 'Search' }
         placeholder={placeholder}
         value={search}
         onChange={onChangeSearch}
+        inputProps={{ 'data-testid': testId }}
         startAdornment={
           <InputAdornment
             sx={styles.inputAdornment}

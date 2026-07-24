@@ -50,12 +50,14 @@ const AnalyticsUserDetailed = memo(props => {
         <IconButton
           onClick={onBack}
           size="small"
+          data-testid="analytics-user-detail-back-button"
         >
           <ArrowBackIcon />
         </IconButton>
         <Typography
           variant="labelMedium"
           sx={styles.chartTitle}
+          data-testid="analytics-user-detail-title"
         >
           {data.user_email}
         </Typography>
@@ -65,27 +67,33 @@ const AnalyticsUserDetailed = memo(props => {
         <KPICard
           label="LLM Calls"
           value={AnalyticCommonHelpers.fmtNum(kpis.llm_events)}
+          testId="analytics-user-detail-kpi-llm-calls"
         />
         <KPICard
           label="Tool Calls"
           value={AnalyticCommonHelpers.fmtNum(kpis.tool_events)}
+          testId="analytics-user-detail-kpi-tool-calls"
         />
         <KPICard
           label="Chat Msg"
           value={AnalyticCommonHelpers.fmtNum(kpis.chat_events)}
+          testId="analytics-user-detail-kpi-chat-msg"
         />
         <KPICard
           label="Agent Runs"
           value={AnalyticCommonHelpers.fmtNum(kpis.agent_events)}
+          testId="analytics-user-detail-kpi-agent-runs"
         />
         <KPICard
           label="Active Days"
           value={String(kpis.active_days)}
+          testId="analytics-user-detail-kpi-active-days"
         />
         <KPICard
           label="Errors"
           value={AnalyticCommonHelpers.fmtNum(kpis.errors)}
           color={kpis.errors > 0 ? palette.status.rejected : undefined}
+          testId="analytics-user-detail-kpi-errors"
         />
       </Box>
 

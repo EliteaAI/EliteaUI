@@ -32,6 +32,7 @@ const AnalyticsOverview = memo(props => {
           value={AnalyticCommonHelpers.fmtNum(kpis.unique_users)}
           valueSuffix={`of ${AnalyticCommonHelpers.fmtNum(kpis.total_project_users)}`}
           subtitle="active members"
+          testId="analytics-overview-kpi-team"
         />
         <KPICard
           label="AI ACTIVE"
@@ -138,6 +139,7 @@ const AnalyticsOverview = memo(props => {
               {top_ai_users.map((u, i) => (
                 <Box
                   key={i}
+                  data-testid="analytics-overview-leaderboard-row"
                   sx={[
                     styles.leaderboardRow,
                     onUserClick && {

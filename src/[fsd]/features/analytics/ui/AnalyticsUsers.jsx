@@ -81,6 +81,7 @@ const AnalyticsUsers = memo(props => {
             <Typography
               variant="labelMedium"
               sx={styles.chartTitle}
+              data-testid="analytics-users-list-title"
             >
               User Activity
             </Typography>
@@ -96,6 +97,7 @@ const AnalyticsUsers = memo(props => {
             onChangeSearch={handleSearchChange}
             placeholder="Search by email"
             sx={styles.userSearch}
+            testId="analytics-users-list-search-input"
           />
         </Box>
         <Box sx={styles.tableWrapper}>
