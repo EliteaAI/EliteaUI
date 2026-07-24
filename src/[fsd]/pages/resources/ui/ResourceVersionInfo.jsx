@@ -47,6 +47,7 @@ const ResourceVersionInfo = memo(props => {
   return (
     <Box sx={styles.header}>
       <Typography
+        data-testid="help-center-page-title"
         variant="headingMedium"
         color="text.secondary"
       >
@@ -63,6 +64,7 @@ const ResourceVersionInfo = memo(props => {
           versionLabel && (
             <Box sx={styles.headerVersionInfo}>
               <Typography
+                data-testid="help-center-version-info"
                 variant="bodyMedium"
                 color="text.secondary"
               >
@@ -104,6 +106,7 @@ const ResourceVersionInfo = memo(props => {
                 }
               >
                 <Box
+                  data-testid="help-center-version-info-icon"
                   component="span"
                   sx={styles.infoIcon}
                 >

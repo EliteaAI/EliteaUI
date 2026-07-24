@@ -82,6 +82,7 @@ const ResourcesPage = memo(() => {
 
   return (
     <Box
+      data-testid={RESOURCES_TOUR_TARGET_IDS.page}
       data-tour={RESOURCES_TOUR_TARGET_IDS.page}
       sx={styles.page}
     >
@@ -94,8 +95,16 @@ const ResourcesPage = memo(() => {
 
       <Box sx={styles.content}>
         <Box sx={styles.intro}>
-          <Typography variant="headingLarge">Explore Help Center</Typography>
-          <Typography variant="bodyMedium">
+          <Typography
+            data-testid="help-center-subtitle"
+            variant="headingLarge"
+          >
+            Explore Help Center
+          </Typography>
+          <Typography
+            data-testid="help-center-description"
+            variant="bodyMedium"
+          >
             Guides, documentation, and release notes to support your work.
           </Typography>
         </Box>
@@ -140,6 +149,7 @@ const ResourcesPage = memo(() => {
                     link.url ? (
                       <Link
                         key={idx}
+                        data-testid="resource-card-link"
                         href={link.url}
                         target="_blank"
                         rel="noopener noreferrer"

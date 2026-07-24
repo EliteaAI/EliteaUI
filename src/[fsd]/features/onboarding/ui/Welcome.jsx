@@ -9,7 +9,10 @@ const Welcome = memo(props => {
   const { name = 'there', onShowTour } = props;
 
   return (
-    <Box sx={styles.container}>
+    <Box
+      data-testid="onboarding-welcome-card"
+      sx={styles.container}
+    >
       <Box
         component="img"
         src={WelcomeImage}
@@ -49,6 +52,7 @@ const Welcome = memo(props => {
               Ready to explore Elitea&apos;s smart tools and tips?
             </Typography>
             <Button.BaseBtn
+              data-testid="onboarding-welcome-get-started-button"
               variant="elitea"
               color="primary"
               sx={styles.button}

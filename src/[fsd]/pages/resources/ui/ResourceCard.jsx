@@ -12,18 +12,26 @@ const ResourceCard = memo(props => {
   return (
     <Box
       sx={styles.card}
+      data-testid={tourTargetId}
       data-tour={tourTargetId}
     >
       <Box sx={styles.cardHeader}>
-        <GradientIconWrapper sx={styles.iconWrapper}>{icon}</GradientIconWrapper>
+        <GradientIconWrapper
+          testId="resource-card-icon"
+          sx={styles.iconWrapper}
+        >
+          {icon}
+        </GradientIconWrapper>
         <Box sx={styles.headerText}>
           <Typography
+            data-testid="resource-card-title"
             variant="subtitle"
             color="text.secondary"
           >
             {title}
           </Typography>
           <Typography
+            data-testid="resource-card-subtitle"
             variant="bodySmall"
             color="text.primary"
           >

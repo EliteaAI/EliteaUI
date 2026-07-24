@@ -3,10 +3,17 @@ import { memo } from 'react';
 import { Box } from '@mui/material';
 
 const GradientIconWrapper = memo(props => {
-  const { children, size = '2.75rem', sx } = props;
+  const { children, size = '2.75rem', sx, testId } = props;
   const styles = gradientIconWrapperStyles(size);
 
-  return <Box sx={[styles.wrapper, ...(Array.isArray(sx) ? sx : [sx])]}>{children}</Box>;
+  return (
+    <Box
+      data-testid={testId}
+      sx={[styles.wrapper, ...(Array.isArray(sx) ? sx : [sx])]}
+    >
+      {children}
+    </Box>
+  );
 });
 
 GradientIconWrapper.displayName = 'GradientIconWrapper';

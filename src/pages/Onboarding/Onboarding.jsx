@@ -144,7 +144,10 @@ const Onboarding = memo(() => {
         </IconButton>
       )}
       <Box sx={styles.body}>
-        <Box sx={styles.logo}>
+        <Box
+          data-testid="onboarding-tour-logo"
+          sx={styles.logo}
+        >
           <Logo />
         </Box>
         <Box sx={styles.gradientBorder}>
@@ -174,7 +177,10 @@ const Onboarding = memo(() => {
           </Box>
         </Box>
         {showTour && !thePrivateProjectIsReady && (
-          <Box sx={styles.footer}>
+          <Box
+            data-testid="onboarding-tour-progress-footer"
+            sx={styles.footer}
+          >
             <Box sx={styles.footerHead}>
               <Typography
                 sx={styles.footerHeadStatus}
@@ -191,6 +197,7 @@ const Onboarding = memo(() => {
             </Box>
             <Box sx={styles.progressContainer}>
               <LinearProgress
+                data-testid="onboarding-tour-progress-bar"
                 variant="determinate"
                 value={progress}
                 sx={styles.fileNameLinearProgress}
