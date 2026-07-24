@@ -278,6 +278,7 @@ const AgentEditorPanel = memo(props => {
             disabled={disabled || isEditSettingsDisabled}
             variant="elitea"
             color="secondary"
+            data-testid="chat-agent-settings-menu-button"
           >
             {isActiveParticipantBeingEdited ? (
               <Typography
