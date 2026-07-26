@@ -23,7 +23,7 @@ const AnalyticsCosts = memo(props => {
 
   const modelChartData = useMemo(
     () =>
-      (data?.by_model || []).slice(0, 15).map((m, i) => ({
+      (data?.by_model || []).slice(0, AnalyticsCommonConstants.MODEL_CHART_SIZE).map((m, i) => ({
         name: m.display_name || m.model_name,
         cost: m.total_cost,
         color: AnalyticsCommonConstants.CHART_COLORS[i % AnalyticsCommonConstants.CHART_COLORS.length],
@@ -36,7 +36,11 @@ const AnalyticsCosts = memo(props => {
     [data?.daily],
   );
 
-  if (isFetching) {
+  // Only blank the whole view on the initial load. On subsequent refetches
+  // (e.g. date-range changes) RTK Query keeps the previous `data`, so we keep
+  // rendering it instead of flashing a full-view spinner — matching the
+  // sibling Analytics tabs.
+  if (isFetching && !data) {
     return (
       <Box sx={styles.centered}>
         <CircularProgress size={32} />
@@ -108,23 +112,28 @@ const AnalyticsCosts = memo(props => {
                     type="number"
                     tick={axisTickStyle}
                     tickFormatter={v => AnalyticCommonHelpers.fmtCost(v)}
+                    axisLine={{ stroke: axisStroke }}
+                    tickLine={{ stroke: axisStroke }}
                   />
                   <YAxis
                     type="category"
                     dataKey="name"
                     tick={axisTickStyle}
                     width={100}
+                    axisLine={{ stroke: axisStroke }}
+                    tickLine={{ stroke: axisStroke }}
                   />
                   <RechartsTooltip
                     content={<ChartTooltip formatter={v => AnalyticCommonHelpers.fmtCost(v)} />}
                   />
                   <Bar
                     dataKey="cost"
+                    name="Cost"
                     radius={[0, 4, 4, 0]}
                   >
                     {modelChartData.map((entry, i) => (
                       <Cell
-                        key={entry.name || i}
+                        key={`${entry.name}-${i}`}
                         fill={entry.color}
                       />
                     ))}
@@ -160,16 +169,21 @@ const AnalyticsCosts = memo(props => {
                   <XAxis
                     dataKey="date"
                     tick={axisTickStyle}
+                    axisLine={{ stroke: axisStroke }}
+                    tickLine={{ stroke: axisStroke }}
                   />
                   <YAxis
                     tick={axisTickStyle}
                     tickFormatter={v => AnalyticCommonHelpers.fmtCost(v)}
+                    axisLine={{ stroke: axisStroke }}
+                    tickLine={{ stroke: axisStroke }}
                   />
                   <RechartsTooltip
                     content={<ChartTooltip formatter={v => AnalyticCommonHelpers.fmtCost(v)} />}
                   />
                   <Bar
                     dataKey="total_cost"
+                    name="Cost"
                     fill={AnalyticsCommonConstants.CHART_COLORS[0]}
                     radius={[4, 4, 0, 0]}
                   />

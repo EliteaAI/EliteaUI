@@ -108,8 +108,8 @@ const AnalyticsUsers = memo(props => {
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Agent</Typography>
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Chat Msg</Typography>
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Errors</Typography>
-            <Typography sx={[styles.tableCell, { flex: 1 }]}>Tokens</Typography>
-            <Typography sx={[styles.tableCell, { flex: 1 }]}>Cost</Typography>
+            <Typography sx={[styles.tableCell, styles.flexOne]}>Tokens</Typography>
+            <Typography sx={[styles.tableCell, styles.flexOne]}>Cost</Typography>
           </Box>
           {isFetching && (
             <Box sx={styles.loadingState}>
@@ -153,10 +153,10 @@ const AnalyticsUsers = memo(props => {
                 >
                   {u.errors}
                 </Typography>
-                <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
+                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
                   {AnalyticCommonHelpers.fmtNum(u.total_tokens)}
                 </Typography>
-                <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
+                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
                   {AnalyticCommonHelpers.fmtCost(u.llm_cost)}
                 </Typography>
               </Box>
@@ -239,6 +239,7 @@ const styles = {
     color: palette.text.secondary,
     '& .MuiTablePagination-selectIcon': { color: palette.text.secondary },
   }),
+  flexOne: { flex: 1 },
 };
 
 export default AnalyticsUsers;

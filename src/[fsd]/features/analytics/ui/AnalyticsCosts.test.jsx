@@ -15,8 +15,15 @@ vi.mock('@/api', () => ({
 
 vi.mock('recharts', () => ({
   ResponsiveContainer: ({ children }) => <div>{children}</div>,
-  BarChart: ({ children }) => <div>{children}</div>,
-  Bar: () => null,
+  // Surface the series so tests can assert the chart actually rendered with data
+  // (via the Bar's dataKey) rather than only checking the static section title.
+  BarChart: ({ children }) => <div data-testid="bar-chart">{children}</div>,
+  Bar: ({ dataKey, name }) => (
+    <div
+      data-testid={`bar-${dataKey}`}
+      data-name={name}
+    />
+  ),
   Cell: () => null,
   XAxis: () => null,
   YAxis: () => null,
@@ -27,6 +34,7 @@ vi.mock('@/[fsd]/features/analytics/lib/constants', () => ({
   AnalyticsCommonConstants: {
     CHART_COLORS: ['#4285F4', '#34A853', '#FBBC04', '#EA4335', '#9C27B0'],
     TOP_LIST_SIZE: 10,
+    MODEL_CHART_SIZE: 15,
   },
 }));
 
@@ -128,7 +136,7 @@ describe('AnalyticsCosts', () => {
     expect(screen.getByTestId('kpi-AVG COST / CALL')).toBeTruthy();
   });
 
-  it('renders model breakdown chart section', () => {
+  it('renders the model breakdown bar chart with a human-readable series name', () => {
     useAnalyticsCostsQuery.mockReturnValue({ data: MOCK_DATA, isFetching: false, isError: false });
     render(
       <AnalyticsCosts
@@ -139,9 +147,14 @@ describe('AnalyticsCosts', () => {
       { wrapper: Wrapper },
     );
     expect(screen.getByText('Cost by Model')).toBeTruthy();
+    // Bar for the model chart uses dataKey="cost" and must carry a readable name
+    // so the tooltip doesn't leak the raw field name.
+    const bar = screen.getByTestId('bar-cost');
+    expect(bar).toBeTruthy();
+    expect(bar).toHaveAttribute('data-name', 'Cost');
   });
 
-  it('renders daily cost trend chart section', () => {
+  it('renders the daily cost trend bar chart with a human-readable series name', () => {
     useAnalyticsCostsQuery.mockReturnValue({ data: MOCK_DATA, isFetching: false, isError: false });
     render(
       <AnalyticsCosts
@@ -152,6 +165,24 @@ describe('AnalyticsCosts', () => {
       { wrapper: Wrapper },
     );
     expect(screen.getByText('Daily Cost Trend')).toBeTruthy();
+    const bar = screen.getByTestId('bar-total_cost');
+    expect(bar).toBeTruthy();
+    expect(bar).toHaveAttribute('data-name', 'Cost');
+  });
+
+  it('does not render the charts when their series are empty', () => {
+    const noChartData = { ...MOCK_DATA, by_model: [], daily: [] };
+    useAnalyticsCostsQuery.mockReturnValue({ data: noChartData, isFetching: false, isError: false });
+    render(
+      <AnalyticsCosts
+        projectId={1}
+        dateFrom="2026-01-01"
+        dateTo="2026-01-31"
+      />,
+      { wrapper: Wrapper },
+    );
+    expect(screen.queryByTestId('bar-cost')).toBeNull();
+    expect(screen.queryByTestId('bar-total_cost')).toBeNull();
   });
 
   it('renders cost by agent list with entity names', () => {
@@ -203,7 +234,9 @@ describe('AnalyticsCosts', () => {
       />,
       { wrapper: Wrapper },
     );
-    expect(screen.getAllByText('No data').length).toBeGreaterThanOrEqual(2);
+    // All four sections (model chart, daily chart, by-agent list, by-user list)
+    // fall back to "No data" when their series are empty.
+    expect(screen.getAllByText('No data')).toHaveLength(4);
   });
 
   it('returns null when data is undefined and not fetching', () => {

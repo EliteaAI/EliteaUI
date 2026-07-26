@@ -20,5 +20,6 @@ export const fmtCost = usd => {
   if (abs < 0.01) return `${sign}$${abs.toFixed(6)}`;
   if (abs < 1) return `${sign}$${abs.toFixed(4)}`;
   if (abs < 1000) return `${sign}$${abs.toFixed(2)}`;
-  return `${sign}$${(abs / 1000).toFixed(1)}K`;
+  if (abs < 1_000_000) return `${sign}$${(abs / 1000).toFixed(1)}K`;
+  return `${sign}$${(abs / 1_000_000).toFixed(1)}M`;
 };
