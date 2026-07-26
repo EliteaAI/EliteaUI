@@ -10,6 +10,8 @@ import {
   buildPendingIndexExecutionKey,
   parseIndexExecutionEvent,
   parseIndexNodeEvent,
+  resolveIndexExecutionState,
+  resolveIndexExecutionTaskId,
 } from './indexExecution.helpers';
 
 describe('index execution contract', () => {
@@ -66,6 +68,19 @@ describe('index execution contract', () => {
     expect(buildPendingIndexExecutionKey({ projectId: 7, toolkitId: 9, indexName: 'Docs / Main' })).toBe(
       'elitea:index-execution:7:9:Docs%20%2F%20Main',
     );
+  });
+
+  it('keeps a terminal execution result authoritative over stale progress metadata', () => {
+    expect(resolveIndexExecutionState(IndexStatuses.progress, IndexStatuses.fail)).toBe(IndexStatuses.fail);
+    expect(resolveIndexExecutionState(IndexStatuses.progress, IndexStatuses.cancelled)).toBe(
+      IndexStatuses.cancelled,
+    );
+    expect(resolveIndexExecutionState(IndexStatuses.success, null)).toBe(IndexStatuses.success);
+  });
+
+  it('uses the admitted execution task id for control actions', () => {
+    expect(resolveIndexExecutionTaskId('metadata-task', 'admitted-task')).toBe('admitted-task');
+    expect(resolveIndexExecutionTaskId('metadata-task', null)).toBe('metadata-task');
   });
 
   describe('NodeEvent execution correlation', () => {

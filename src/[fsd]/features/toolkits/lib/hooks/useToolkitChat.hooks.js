@@ -22,6 +22,8 @@ import {
   buildPendingIndexExecutionKey,
   parseIndexExecutionEvent,
   parseIndexNodeEvent,
+  resolveIndexExecutionState,
+  resolveIndexExecutionTaskId,
 } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexExecution.helpers';
 import { useIndexHistory } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import { ToolkitChatModesEnum } from '@/[fsd]/features/toolkits/lib/constants';
@@ -48,6 +50,7 @@ import useToast from '@/hooks/useToast';
 export const useToolkitChat = props => {
   const runningToolRef = useRef(null);
   const indexEventSourceRef = useRef(null);
+  const admittedIndexTaskIdRef = useRef(null);
   const { toastSuccess, toastError } = useToast();
   const projectId = useSelectedProjectId();
 
@@ -117,7 +120,16 @@ export const useToolkitChat = props => {
 
   // Action state
   const [isRunning, setIsRunning] = useState(false);
-  const isIndexing = useMemo(() => index?.metadata?.state === IndexStatuses.progress, [index]);
+  const [indexExecutionState, setIndexExecutionState] = useState(null);
+  const [isStopRequested, setIsStopRequested] = useState(false);
+  const effectiveIndexState = resolveIndexExecutionState(index?.metadata?.state, indexExecutionState);
+  const isIndexing = effectiveIndexState === IndexStatuses.progress;
+
+  useEffect(() => {
+    admittedIndexTaskIdRef.current = null;
+    setIndexExecutionState(null);
+    setIsStopRequested(false);
+  }, [currentIndexName]);
 
   const shouldRecoverHistory = useMemo(
     () =>
@@ -173,22 +185,28 @@ export const useToolkitChat = props => {
 
   const onRunFinish = useCallback(
     state => {
-      if (isTestToolsMode) return setIsRunning(false);
+      setIsRunning(false);
+
+      if (isTestToolsMode) return;
+
+      if (runningToolRef.current && runningToolRef.current !== IndexesToolsEnum.indexData) return;
+
+      setIndexExecutionState(state);
+      setIsStopRequested(false);
+
+      if (traceNewIndex)
+        traceNewIndex(index?.id ?? null, {
+          state,
+        });
+
+      if (state === IndexStatuses.cancelled && cancelIndexingCallback)
+        cancelIndexingCallback(EditViewTabsEnum.configuration);
 
       setTimeout(() => {
-        if (runningToolRef.current && runningToolRef.current !== IndexesToolsEnum.indexData) return;
-
-        if (traceNewIndex)
-          traceNewIndex(index?.id ?? null, {
-            state,
-          });
-
         refetchIndexesList();
       }, 500);
-
-      setIsRunning(false);
     },
-    [refetchIndexesList, isTestToolsMode, index, traceNewIndex],
+    [cancelIndexingCallback, index, isTestToolsMode, refetchIndexesList, traceNewIndex],
   );
 
   const onStartTask = useCallback(
@@ -196,7 +214,7 @@ export const useToolkitChat = props => {
       if (isTestToolsMode) return;
 
       traceNewIndex(index?.id ?? null, {
-        task_id: taskId,
+        task_id: resolveIndexExecutionTaskId(taskId, admittedIndexTaskIdRef.current),
       });
     },
     [index?.id, isTestToolsMode, traceNewIndex],
@@ -240,6 +258,8 @@ export const useToolkitChat = props => {
       const source = new EventSource(buildIndexExecutionEventsUrl(VITE_SERVER_URL, projectId, taskId), {
         withCredentials: true,
       });
+      admittedIndexTaskIdRef.current = taskId;
+      setIndexExecutionState(IndexStatuses.progress);
       indexEventSourceRef.current = source;
 
       const settle = result => {
@@ -321,6 +341,8 @@ export const useToolkitChat = props => {
     if (!pending?.taskId || !pending?.messageId) return undefined;
 
     runningToolRef.current = IndexesToolsEnum.indexData;
+    admittedIndexTaskIdRef.current = pending.taskId;
+    setIndexExecutionState(IndexStatuses.progress);
     setIsRunning(true);
     openIndexEventStream({
       taskId: pending.taskId,
@@ -453,6 +475,9 @@ export const useToolkitChat = props => {
       const response = await startIndexData({ projectId, ...payload }).unwrap();
       const taskId = response?.task_id;
       if (!taskId) throw new Error('The indexing service returned no task identifier.');
+      admittedIndexTaskIdRef.current = taskId;
+      setIndexExecutionState(IndexStatuses.progress);
+      setIsStopRequested(false);
 
       const storageKey = buildPendingIndexExecutionKey({
         projectId,
@@ -465,7 +490,7 @@ export const useToolkitChat = props => {
         // The live stream still works when browser storage is disabled; only reload recovery is lost.
       }
 
-      openIndexEventStream({ taskId, messageId, storageKey });
+      if (!isCreateIndexMode) openIndexEventStream({ taskId, messageId, storageKey });
       if (traceNewIndex)
         traceNewIndex(index?.id ?? null, {
           collection: relevantInputVariables.index_name,
@@ -477,6 +502,7 @@ export const useToolkitChat = props => {
     },
     [
       index?.id,
+      isCreateIndexMode,
       llmSettings,
       openIndexEventStream,
       projectId,
@@ -602,6 +628,10 @@ export const useToolkitChat = props => {
 
       if (canProceed) {
         setIsRunning(true);
+        if (indexing) {
+          setIndexExecutionState(IndexStatuses.progress);
+          setIsStopRequested(false);
+        }
         runningToolRef.current = tool;
 
         if (traceNewIndex && indexing)
@@ -628,21 +658,23 @@ export const useToolkitChat = props => {
 
   const onCancelIndexing = useCallback(async () => {
     try {
+      const taskId = resolveIndexExecutionTaskId(index?.metadata?.task_id, admittedIndexTaskIdRef.current);
+      if (!taskId) throw new Error('The indexing task identifier is unavailable.');
+
       await stopIndex({
         projectId,
         toolkitId,
         indexName: index.metadata.collection,
-        taskId: index.metadata.task_id,
+        taskId,
       }).unwrap();
 
-      toastSuccess('Indexing stopped successfully');
-      setIsRunning(false);
-
-      if (cancelIndexingCallback) cancelIndexingCallback(EditViewTabsEnum.configuration);
+      setIsStopRequested(true);
+      toastSuccess('Stop requested');
     } catch {
+      setIsStopRequested(false);
       toastError('Failed to stop indexing');
     }
-  }, [index, projectId, cancelIndexingCallback, stopIndex, toastError, toastSuccess, toolkitId]);
+  }, [index, projectId, stopIndex, toastError, toastSuccess, toolkitId]);
 
   const handleIndexData = useCallback(() => run(), [run]);
 
@@ -669,7 +701,7 @@ export const useToolkitChat = props => {
     isIndexing,
     isFullScreenChat,
     isRunning,
-    isStoppingIndexing,
+    isStoppingIndexing: isStoppingIndexing || isStopRequested,
     handleClearActiveConversation,
     handleClearChat,
     handleIndexData,

@@ -81,3 +81,8 @@ export const buildIndexExecutionEventsUrl = (baseUrl, projectId, taskId) => {
 
 export const buildPendingIndexExecutionKey = ({ projectId, toolkitId, indexName }) =>
   `elitea:index-execution:${projectId}:${toolkitId}:${encodeURIComponent(indexName)}`;
+
+export const resolveIndexExecutionState = (metadataState, executionState) => executionState ?? metadataState;
+
+export const resolveIndexExecutionTaskId = (metadataTaskId, admittedTaskId) =>
+  admittedTaskId || metadataTaskId;

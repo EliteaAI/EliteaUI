@@ -19,6 +19,7 @@ import Page404 from '@/pages/Page404.jsx';
 import RouteDefinitions from '@/routes';
 
 import RunIndexPanel from './RunIndexPanel';
+import { shouldBlockRunIndexPanel } from './runIndex.helpers';
 
 const emptyToolDetail = {};
 const CREATING_POLL_INTERVAL_MS = 2000;
@@ -144,12 +145,16 @@ const RunIndex = memo(() => {
   if (shouldShowNotFoundPage) return <Page404 />;
 
   const effectiveIndex = currentIndex ?? inflightIndex;
-  // When we already have the inflight index from CreateIndex, don't block RunIndexPanel behind
-  // the indexes-list fetch — we need to mount the socket listener immediately so streaming events
-  // aren't dropped.
-  const isLoading = effectiveIndex
-    ? isFetching || !publicToolkitData?.id
-    : isFetching || indexesLoading || indexesFetching || !hasData || !publicToolkitData?.id;
+  // Once mounted, the panel owns the live execution stream and its terminal state. Background
+  // refetches must not replace it with a loading screen and discard that state.
+  const isLoading = shouldBlockRunIndexPanel({
+    hasEffectiveIndex: Boolean(effectiveIndex),
+    hasToolkit: Boolean(publicToolkitData?.id),
+    isToolkitFetching: isFetching,
+    indexesLoading,
+    indexesFetching,
+    hasIndexesData: hasData,
+  });
 
   const showCreatingPlaceholder = awaitingCreation && !effectiveIndex;
 
