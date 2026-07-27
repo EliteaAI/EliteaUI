@@ -4,20 +4,28 @@ import { Cron } from 'react-js-cron';
 import 'react-js-cron/dist/styles.css';
 import { useSelector } from 'react-redux';
 
-import { Box, GlobalStyles, Typography } from '@mui/material';
+import { Box, Divider, GlobalStyles, Typography } from '@mui/material';
 
 import { CredentialsSelect } from '@/[fsd]/features/credentials/ui';
 import { IndexCronDefault } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
-import { validateCronExpressionDaily as validateCronExpression } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexSchedule.helpers.js';
-import { Button, Checkbox, Modal } from '@/[fsd]/shared/ui';
+import {
+  getNextCronRun,
+  validateCronExpressionDaily as validateCronExpression,
+} from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexSchedule.helpers.js';
+import { Button, Modal, Tab } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import FormInput from '@/components/FormInput';
 import { useSelectedProject } from '@/hooks/useSelectedProject';
 
-const IndexScheduleModal = props => {
-  const { open, onClose, onSubmit, cron, credentials, credentialsData, toolkitSchemaFetching } = props;
+const viewButtons = [
+  { value: 'builder', label: 'Builder' },
+  { value: 'cron', label: 'Cron Expression' },
+];
 
+const IndexScheduleModal = props => {
+  const { open, onClose, onSubmit, cron, credentials, credentialsData, toolkitSchemaFetching, isEdit } =
+    props;
   const { personal_project_id } = useSelector(state => state.user);
   const selectedProject = useSelectedProject();
 
@@ -31,22 +39,34 @@ const IndexScheduleModal = props => {
   const [innerCredentials, setInnerCredentials] = useState(null);
   const [credentialsError, setCredentialsError] = useState(false);
   const [cronExpression, setCronExpression] = useState(IndexCronDefault);
-  const [cronTyoe, setCronType] = useState('default');
+  const [cronType, setCronType] = useState('builder');
 
   useEffect(() => {
     if (open) {
       if (cron) setCronExpression(cron);
-
       setInnerCredentials(credentials);
     }
 
     return () => {
       setCredentialsError(false);
-      setCronType('default');
+      setCronType('builder');
     };
   }, [open, cron, credentials]);
 
   const cronState = useMemo(() => validateCronExpression(cronExpression), [cronExpression]);
+
+  const nextRunComputed = useMemo(() => {
+    if (!cronState.isValid) return null;
+    const date = getNextCronRun(cronExpression);
+    if (!date) return null;
+    return date.toLocaleString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }, [cronExpression, cronState.isValid]);
 
   const applyIsDisabled = useMemo(
     () => !cronState.isValid || toolkitSchemaFetching,
@@ -69,80 +89,93 @@ const IndexScheduleModal = props => {
       <Modal.BaseModal
         open={open}
         onClose={onClose}
-        title="Schedule settings"
-        sx={{ '& .MuiDialog-paper': { maxWidth: 'unset !important', width: '43.75rem !important' } }}
+        title={isEdit ? 'Edit Schedule' : 'Create Schedule'}
+        sx={styles.dialog}
         content={
           <Box sx={styles.contentWrapper}>
-            <Box sx={styles.cronWrapper}>
-              <Typography
-                variant="headingSmall"
-                sx={[styles.cronExplanation, !cronState.isValid && { color: 'error.main' }]}
-              >
-                {cronState.message}
-              </Typography>
+            <Box sx={styles.tabRow}>
+              <Tab.TabGroupButton
+                arrayBtn={viewButtons}
+                value={cronType}
+                onChange={(_, newValue) => setCronType(newValue)}
+                disableTooltip
+              />
+            </Box>
 
-              <Box sx={styles.inputWrapper}>
-                <Checkbox.RadioButtonGroup
-                  label="Schedule Type"
-                  value={cronTyoe}
-                  items={[
-                    { label: 'Default', value: 'default' },
-                    { label: 'Advanced', value: 'advanced' },
-                  ]}
-                  onChange={setCronType}
-                />
-              </Box>
-
-              {cronTyoe === 'default' ? (
+            {cronType === 'builder' ? (
+              <Box sx={styles.cronWrapper}>
                 <Cron
                   value={cronExpression}
                   setValue={setCronExpression}
                   clearButton={false}
                   clockFormat="24-hour-clock"
                 />
-              ) : (
+              </Box>
+            ) : (
+              <>
                 <FormInput
                   value={cronExpression}
                   onChange={event => setCronExpression(event.target.value)}
                   placeholder="* * * * *"
                   error={!cronState.isValid}
-                  sx={{ padding: '0' }}
+                  sx={styles.cronInput}
                 />
-              )}
-
-              <Box sx={styles.descriptionContainer}>
-                <Typography
-                  variant="bodySmall"
-                  sx={styles.cronDescription}
-                >
-                  minute – hour – day (month) – month – day (week)
-                </Typography>
-                <InfoTooltip
-                  infoTooltip="Cron expression help"
-                  href="https://crontab.guru/#*_*_*_*"
-                  sx={styles.infoIconWrapper}
-                />
-              </Box>
-
-              {credentialsData && (
-                <Box mt="1rem">
-                  <CredentialsSelect
-                    required
-                    isCreationAllowed
-                    label={credentialsData.description}
-                    onSelectConfiguration={value => setInnerCredentials(value)}
-                    value={innerCredentials}
-                    configurations={credentialsData.options}
-                    error={credentialsError}
-                    helperText="Your configuration does not match any available configurations."
-                    type={credentialsData.configuration_types?.[0] || ''}
-                    section="credentials"
-                    disabled={toolkitSchemaFetching}
-                    onlyPublic={!isPrivateProject}
+                <Box sx={styles.descriptionContainer}>
+                  <Typography
+                    variant="bodySmall"
+                    sx={styles.cronDescription}
+                  >
+                    minute – hour – day (month) – month – day (week)
+                  </Typography>
+                  <InfoTooltip
+                    infoTooltip="Cron expression help"
+                    href="https://crontab.guru/#*_*_*_*"
+                    sx={styles.infoIconWrapper}
                   />
                 </Box>
+              </>
+            )}
+
+            <Box sx={styles.previewBox}>
+              <Typography
+                variant="headingSmall"
+                sx={[styles.previewSummary, !cronState.isValid && styles.previewSummaryError]}
+              >
+                {cronState.isValid ? `"${cronState.message}"` : cronState.message}
+              </Typography>
+              {nextRunComputed && (
+                <>
+                  <Typography
+                    variant="bodySmall"
+                    color="text.primary"
+                    sx={styles.nextRunLabel}
+                  >
+                    Next run:
+                  </Typography>
+                  <Typography variant="labelSmall">{nextRunComputed}</Typography>
+                </>
               )}
             </Box>
+
+            {credentialsData && (
+              <>
+                <Divider />
+                <CredentialsSelect
+                  isCreationAllowed
+                  label="Select credentials"
+                  description={credentialsData.description}
+                  onSelectConfiguration={value => setInnerCredentials(value)}
+                  value={innerCredentials}
+                  configurations={credentialsData.options}
+                  error={credentialsError}
+                  helperText="Your configuration does not match any available configurations."
+                  type={credentialsData.configuration_types?.[0] || ''}
+                  section="credentials"
+                  disabled={toolkitSchemaFetching}
+                  onlyPublic={!isPrivateProject}
+                />
+              </>
+            )}
           </Box>
         }
         actions={
@@ -162,7 +195,7 @@ const IndexScheduleModal = props => {
               onClick={applyChanges}
               disabled={applyIsDisabled}
             >
-              Apply
+              Save
             </Button.BaseBtn>
           </Box>
         }
@@ -173,72 +206,123 @@ const IndexScheduleModal = props => {
 
 /** @type {MuiSx} */
 const indexScheduleModalStyles = () => ({
+  dialog: {
+    width: '43.6rem',
+    maxWidth: 'none',
+  },
   actionBtn: {
     width: '4.25rem',
   },
   contentWrapper: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '1.75rem',
-    minWidth: '25rem',
+    gap: '1.5rem',
     padding: '0',
+    width: '100%',
+  },
+  tabRow: {
+    display: 'flex',
+    justifyContent: 'center',
   },
   actionsWrapper: {
     display: 'flex',
     justifyContent: 'flex-end',
     width: '100%',
-    gap: '.75rem',
+    gap: '0.75rem',
   },
-  cronWrapper: {
+  previewBox: {
+    padding: '1rem',
+    borderRadius: '0.5rem',
+    background: ({ palette }) => palette.background.userInputBackground,
     display: 'flex',
     flexDirection: 'column',
-    justifyContent: 'center',
-    gap: '0.5rem',
-
-    input: {
+    alignItems: 'center',
+    gap: '0.625rem',
+    width: '100%',
+  },
+  cronInput: {
+    padding: '0',
+    width: '100%',
+    '& input': {
       textAlign: 'center',
     },
   },
-  inputWrapper: {
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-    gap: '0.5rem',
+  previewSummary: {
+    textAlign: 'center',
+    fontWeight: 500,
   },
-  cronContainer: ({ palette }) => ({
+  previewSummaryError: {
+    color: 'error.main',
+  },
+  nextRunLabel: {
+    color: 'text.primary',
+  },
+  descriptionContainer: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: '0.25rem',
+  },
+  cronDescription: ({ palette }) => ({
+    color: palette.secondary.main,
+    fontSize: '0.75rem',
+    textAlign: 'center',
+  }),
+  infoIconWrapper: {
+    display: 'flex',
+    alignItems: 'center',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    height: '100%',
+    width: '1rem',
+    cursor: 'pointer',
+    pointerEvents: 'auto',
+  },
+  cronWrapper: {
+    width: '100%',
+    '& .react-js-cron': {
+      width: '100%',
+    },
+  },
+  cronContainer: ({ palette, typography }) => ({
     '.react-js-cron': {
       alignItems: 'center',
-      justifyContent: 'center',
+      gap: '0.5rem',
 
       span: {
-        fontStyle: 'normal',
-        fontWeight: 400,
-        fontSize: '1rem',
-        lineHeight: '1rem',
-        color: palette.secondary.main,
+        ...typography.bodyMedium,
+        color: palette.text.primary,
       },
     },
 
+    ' .react-js-cron-field': {
+      marginBottom: '0 !important',
+    },
+
     '.react-js-cron-select': {
-      background: palette.background.secondary,
+      background: palette.background.aiProviderAccordion.default,
       border: `1px solid ${palette.border.lines}`,
-      color: palette.secondary.main,
-      fontSize: '.75rem',
+      height: '2rem',
+      color: palette.text.primary,
       minWidth: '8rem !important',
+      ...typography.bodySmall,
 
       '.ant-select-clear': {
         display: 'none !important',
       },
 
+      ' .ant-select-content-has-value': {
+        color: `${palette.text.secondary} !important`,
+      },
+
       '.ant-select-placeholder,.ant-select-content-value': {
-        color: palette.secondary.main,
-        fontSize: '.75rem',
+        color: `${palette.text.secondary} !important`,
+        ...typography.bodySmall,
       },
 
       div: {
-        color: palette.secondary.main,
-        fontSize: '.75rem',
+        color: palette.text.secondary,
+        ...typography.bodySmall,
       },
     },
 
@@ -248,8 +332,8 @@ const indexScheduleModalStyles = () => ({
       border: `1px solid ${palette.border.lines}`,
 
       div: {
-        color: palette.secondary.main,
-        fontSize: '.75rem',
+        color: palette.text.secondary,
+        ...typography.bodySmall,
 
         '.ant-select-item-option': {
           '&:hover': {
@@ -263,32 +347,6 @@ const indexScheduleModalStyles = () => ({
       },
     },
   }),
-  cronDescription: ({ palette }) => ({
-    color: palette.secondary.main,
-    fontSize: '0.75rem',
-    textAlign: 'center',
-  }),
-  cronExplanation: ({ palette }) => ({
-    color: palette.text.secondary,
-    textAlign: 'center',
-  }),
-  descriptionContainer: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: '0.25rem',
-    gap: '0.25rem',
-  },
-  infoIconWrapper: {
-    display: 'flex',
-    alignItems: 'center',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    height: '100%',
-    width: '1rem',
-    cursor: 'pointer',
-    pointerEvents: 'auto',
-  },
 });
 
 export default IndexScheduleModal;

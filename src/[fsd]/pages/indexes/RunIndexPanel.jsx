@@ -23,6 +23,7 @@ import {
   getMockToolkitIndexConversation,
 } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexChat.helpers';
 import { bannerVariant } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
+import { getNextCronRun } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexSchedule.helpers.js';
 import { selectToolkitScheduler } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
 import { IndexError, IndexScheduleModal, IndexSuccess } from '@/[fsd]/features/toolkits/indexes/ui';
 import { ToolkitChatHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
@@ -39,7 +40,6 @@ import RouteDefinitions from '@/routes';
 
 import RunIndexConfigSection from './RunIndexConfigSection';
 import RunIndexGeneralSection from './RunIndexGeneralSection';
-import RunIndexScheduleAction from './RunIndexScheduleAction';
 import RunIndexScheduleContent from './RunIndexScheduleContent';
 
 const RunIndexPanel = memo(props => {
@@ -188,6 +188,7 @@ const RunIndexPanel = memo(props => {
   );
 
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
+  const [scheduleModalIsEdit, setScheduleModalIsEdit] = useState(false);
 
   const scheduleSummary = useMemo(() => {
     if (!scheduleData.enabled) return null;
@@ -197,6 +198,13 @@ const RunIndexPanel = memo(props => {
     } catch {
       return cron;
     }
+  }, [scheduleData.enabled, scheduleData.cron]);
+
+  const scheduleNextRun = useMemo(() => {
+    if (!scheduleData.enabled) return null;
+    const date = getNextCronRun(scheduleData.cron || IndexCronDefault);
+    if (!date) return null;
+    return date.toLocaleDateString(undefined, { day: '2-digit', month: '2-digit', year: 'numeric' });
   }, [scheduleData.enabled, scheduleData.cron]);
 
   const handleApplyScheduleModal = useCallback(
@@ -311,6 +319,23 @@ const RunIndexPanel = memo(props => {
     };
   }, [index?.metadata]);
 
+  const onAddSchedule = useCallback(() => {
+    setScheduleModalIsEdit(false);
+    setScheduleModalOpen(true);
+  }, []);
+
+  const onEditSchedule = useCallback(() => {
+    setScheduleModalIsEdit(true);
+    setScheduleModalOpen(true);
+  }, []);
+
+  const onDeleteSchedule = useCallback(() => {
+    handleChangeIndexSchedule(
+      { ...scheduleData, enabled: false, cron: IndexCronDefault, credentials: null },
+      true,
+    );
+  }, [scheduleData, handleChangeIndexSchedule]);
+
   const accordionSections = [
     {
       key: 'general',
@@ -336,17 +361,15 @@ const RunIndexPanel = memo(props => {
         <RunIndexScheduleContent
           enabled={scheduleData.enabled}
           scheduleSummary={scheduleSummary}
+          nextRun={scheduleNextRun}
           credentialsTitle={scheduleData.credentials?.elitea_title}
-        />
-      ),
-      summaryAction: (
-        <RunIndexScheduleAction
-          enabled={scheduleData.enabled}
-          disabledReason={schedulingTooltipMessage}
-          onConfigure={() => setScheduleModalOpen(true)}
+          onAddSchedule={onAddSchedule}
+          onEdit={onEditSchedule}
+          onDelete={onDeleteSchedule}
           onToggle={() =>
             handleChangeIndexSchedule({ ...scheduleData, enabled: !scheduleData.enabled }, true)
           }
+          disabledReason={schedulingTooltipMessage}
         />
       ),
       defaultExpanded: false,
@@ -487,6 +510,7 @@ const RunIndexPanel = memo(props => {
         cron={scheduleData.cron}
         credentials={scheduleData.credentials}
         credentialsData={credentialsData}
+        isEdit={scheduleModalIsEdit}
       />
     </Box>
   );

@@ -150,6 +150,56 @@ export const validateCronExpression = input => {
   }
 };
 
+const matchesCronField = (value, field) => {
+  if (field === '*') return true;
+  if (field.includes('/')) {
+    const [, step] = field.split('/');
+    return value % parseInt(step, 10) === 0;
+  }
+  if (field.includes('-')) {
+    const [start, end] = field.split('-').map(Number);
+    return value >= start && value <= end;
+  }
+  if (field.includes(',')) {
+    return field.split(',').map(Number).includes(value);
+  }
+  return value === parseInt(field, 10);
+};
+
+export const getNextCronRun = (expression, fromDate = new Date()) => {
+  if (!expression || typeof expression !== 'string') return null;
+  const parts = expression.trim().split(/\s+/);
+  if (parts.length !== 5) return null;
+  const [minuteF, hourF, dayF, monthF, weekdayF] = parts;
+
+  const d = new Date(fromDate);
+  d.setSeconds(0, 0);
+  d.setMinutes(d.getMinutes() + 1);
+
+  for (let i = 0; i < 366 * 24 * 60; i++) {
+    const mon = d.getMonth() + 1;
+    const dom = d.getDate();
+    const dow = d.getDay();
+    const hr = d.getHours();
+    const min = d.getMinutes();
+
+    const dowMatch =
+      weekdayF === '*' || matchesCronField(dow, weekdayF) || (dow === 0 && matchesCronField(7, weekdayF));
+
+    if (
+      matchesCronField(mon, monthF) &&
+      matchesCronField(dom, dayF) &&
+      dowMatch &&
+      matchesCronField(hr, hourF) &&
+      matchesCronField(min, minuteF)
+    ) {
+      return d;
+    }
+    d.setMinutes(d.getMinutes() + 1);
+  }
+  return null;
+};
+
 export const validateCronExpressionDaily = input => {
   const base = validateCronExpression(input);
   if (!base.isValid) {

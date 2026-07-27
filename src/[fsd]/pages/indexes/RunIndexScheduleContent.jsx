@@ -1,9 +1,23 @@
 import { memo } from 'react';
 
-import { Box, Typography } from '@mui/material';
+import { Box, Tooltip, Typography } from '@mui/material';
+
+import { Button, Switch } from '@/[fsd]/shared/ui';
+import DeleteIcon from '@/components/Icons/DeleteIcon';
+import EditIcon from '@/components/Icons/EditIcon';
 
 const RunIndexScheduleContent = memo(props => {
-  const { enabled, scheduleSummary, credentialsTitle } = props;
+  const {
+    enabled,
+    scheduleSummary,
+    credentialsTitle,
+    nextRun,
+    onAddSchedule,
+    onEdit,
+    onDelete,
+    onToggle,
+    disabledReason,
+  } = props;
   const styles = runIndexScheduleContentStyles();
 
   if (!enabled)
@@ -11,24 +25,96 @@ const RunIndexScheduleContent = memo(props => {
       <Box sx={styles.placeholderBlock}>
         <Typography
           variant="bodyMedium"
-          color="text.secondary"
+          color="text.button.disabled"
         >
-          No schedule configured
+          No schedule configured yet.
         </Typography>
+        <Box>
+          <Button.BaseBtn
+            variant={Button.BUTTON_VARIANTS.iconLabel}
+            color="secondary"
+            onClick={onAddSchedule}
+          >
+            + Schedule
+          </Button.BaseBtn>
+        </Box>
       </Box>
     );
 
   return (
-    <Box sx={styles.scheduleSummaryBlock}>
-      <Typography variant="bodyMedium">{scheduleSummary}</Typography>
-      {credentialsTitle && (
+    <Box sx={styles.scheduleCard}>
+      <Box sx={styles.cardBody}>
         <Typography
-          variant="bodySmall"
+          variant="labelMedium"
           color="text.secondary"
         >
-          Credentials: {credentialsTitle}
+          {scheduleSummary}
         </Typography>
-      )}
+        {nextRun && (
+          <Typography
+            variant="bodySmall2"
+            color="text.secondary"
+          >
+            <Typography
+              variant="bodySmall2"
+              component="span"
+              color="text.primary"
+              sx={styles.nextRunLabel}
+            >
+              Next run:
+            </Typography>
+            {nextRun}
+          </Typography>
+        )}
+        {credentialsTitle && (
+          <Typography
+            variant="bodySmall"
+            color="text.secondary"
+          >
+            Use credentials: {credentialsTitle}
+          </Typography>
+        )}
+      </Box>
+      <Box sx={styles.cardActions}>
+        <Tooltip title="Edit schedule">
+          <Box component="span">
+            <Button.BaseBtn
+              variant={Button.BUTTON_VARIANTS.tertiary}
+              size="small"
+              startIcon={<EditIcon fill={styles.iconFill} />}
+              onClick={e => {
+                e.stopPropagation();
+                onEdit();
+              }}
+            />
+          </Box>
+        </Tooltip>
+        <Tooltip title="Delete schedule">
+          <Box component="span">
+            <Button.BaseBtn
+              variant={Button.BUTTON_VARIANTS.tertiary}
+              size="small"
+              startIcon={<DeleteIcon fill={styles.iconFill} />}
+              onClick={e => {
+                e.stopPropagation();
+                onDelete();
+              }}
+            />
+          </Box>
+        </Tooltip>
+        <Tooltip title={disabledReason || ''}>
+          <Box component="span">
+            <Switch.BaseSwitch
+              checked={enabled}
+              onChange={e => {
+                e.stopPropagation();
+                onToggle();
+              }}
+              disabled={Boolean(disabledReason)}
+            />
+          </Box>
+        </Tooltip>
+      </Box>
     </Box>
   );
 });
@@ -38,14 +124,34 @@ RunIndexScheduleContent.displayName = 'RunIndexScheduleContent';
 /** @type {MuiSx} */
 const runIndexScheduleContentStyles = () => ({
   placeholderBlock: {
-    padding: '0.5rem 0',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
   },
-  scheduleSummaryBlock: {
+  scheduleCard: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '0.5rem',
+    padding: '0.5rem 1rem',
+    borderRadius: '0.5rem',
+    background: ({ palette }) => palette.background.userInputBackground,
+  },
+  cardBody: {
     display: 'flex',
     flexDirection: 'column',
     gap: '0.25rem',
-    padding: '0.25rem 0',
+    flex: 1,
+    minWidth: 0,
   },
+  cardActions: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem',
+    flexShrink: 0,
+  },
+  nextRunLabel: { marginRight: '0.5rem' },
+  iconFill: ({ palette }) => palette.icon.secondary,
 });
 
 export default RunIndexScheduleContent;
