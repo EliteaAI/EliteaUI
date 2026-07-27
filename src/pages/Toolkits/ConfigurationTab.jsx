@@ -1,18 +1,18 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo } from 'react';
+
+import { useNavigate } from 'react-router-dom';
 
 import { Box, CircularProgress, Grid } from '@mui/material';
 
-import { RunHistoryContainer } from '@/[fsd]/entities/run-history/ui';
-import { ParticipantEntityTypes } from '@/[fsd]/features/chat/participants/lib/constants/participant.constants';
 import { IndexesContainer, RunIndexBanner } from '@/[fsd]/features/toolkits/indexes/ui';
 import { TestTools } from '@/[fsd]/features/toolkits/ui';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui/form/ToolkitForm';
-import { useShowRunHistoryFromUrl } from '@/[fsd]/shared/lib/hooks';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
 import { ViewRunHistoryButton } from '@/[fsd]/shared/ui/button';
 import InfoIcon from '@/assets/info.svg?react';
 import DirtyDetector from '@/components/Formik/DirtyDetector.jsx';
 import { CONFIGURATION_VIEW_OPTIONS } from '@/pages/Applications/Components/Tools/ToolConfigurationForm.jsx';
+import RouteDefinitions from '@/routes';
 
 const ConfigurationTab = memo(props => {
   const {
@@ -33,8 +33,7 @@ const ConfigurationTab = memo(props => {
     indexingUnavailableReason,
     shouldHideIndexes,
   } = props;
-  const [showHistory, setShowHistory] = useState(false);
-  useShowRunHistoryFromUrl({ setShowHistory });
+  const navigate = useNavigate();
 
   const onChangeToolDetail = useCallback(
     (updater, options) => {
@@ -47,8 +46,10 @@ const ConfigurationTab = memo(props => {
   );
 
   const handleShowHistory = useCallback(() => {
-    setShowHistory(true);
-  }, []);
+    navigate(
+      `${RouteDefinitions.ToolkitRunHistory.replace(':tab', 'all').replace(':toolkitId', String(toolkitId))}?isMCP=${isMCP}`,
+    );
+  }, [isMCP, navigate, toolkitId]);
 
   const indexesAccordionContent = useMemo(() => {
     if (indexingUnavailableReason) {
@@ -84,15 +85,7 @@ const ConfigurationTab = memo(props => {
   ) : (
     <>
       <DirtyDetector setDirty={setDirty} />
-      {showHistory && (
-        <RunHistoryContainer
-          entityId={toolkitId}
-          source={isMCP ? ParticipantEntityTypes.MCP : ParticipantEntityTypes.Toolkit}
-          versions={null}
-          onClose={() => setShowHistory(false)}
-        />
-      )}
-      {!showHistory && (
+      <>
         <Grid
           container
           // columnSpacing={'2rem'}
@@ -151,7 +144,7 @@ const ConfigurationTab = memo(props => {
             />
           </Grid>
         </Grid>
-      )}
+      </>
     </>
   );
 });

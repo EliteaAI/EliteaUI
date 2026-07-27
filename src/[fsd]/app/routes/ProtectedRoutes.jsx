@@ -80,6 +80,7 @@ const ProjectSwitcher = ChunkHelpers.lazyWithRetry(() => import('@/pages/Project
 const CreateToolkit = ChunkHelpers.lazyWithRetry(() => import('@/pages/Toolkits/CreateToolkit'));
 const EditToolkit = ChunkHelpers.lazyWithRetry(() => import('@/pages/Toolkits/EditToolkit'));
 const Toolkits = ChunkHelpers.lazyWithRetry(() => import('@/pages/Toolkits/Toolkits'));
+const ToolkitRunHistory = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/toolkit/ToolkitRunHistory'));
 const CreateIndex = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/indexes/CreateIndex'));
 const RunIndex = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/indexes/RunIndex'));
 const IndexHistoryPage = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/indexes/IndexHistoryPage'));
@@ -241,6 +242,7 @@ const ProtectedRoutes = () => {
       { path: RouteDefinitions.CreateToolkitType, element: <CreateToolkit /> },
       { path: RouteDefinitions.ToolkitsWithTab, element: <Toolkits /> },
       { path: RouteDefinitions.ToolkitDetail, element: <EditToolkit /> },
+      { path: RouteDefinitions.ToolkitRunHistory, element: <ToolkitRunHistory /> },
       { path: RouteDefinitions.ToolkitIndexNew, element: <CreateIndex /> },
       { path: RouteDefinitions.ToolkitIndex, element: <RunIndex /> },
       { path: RouteDefinitions.ToolkitIndexHistory, element: <IndexHistoryPage /> },

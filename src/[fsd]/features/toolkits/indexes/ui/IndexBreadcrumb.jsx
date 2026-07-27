@@ -13,7 +13,7 @@ const IndexBreadcrumb = memo(props => {
         sx={styles.link}
         onClick={onToolkitsClick}
       >
-        Toolkits
+        Toolkits & Indexes
       </Typography>
       {toolkitName && (
         <>

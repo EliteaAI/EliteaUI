@@ -29,7 +29,7 @@ import { ToolkitChatHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useGetCurrentToolkitSchemas, useToolkitChat } from '@/[fsd]/features/toolkits/lib/hooks';
 import { Button, Modal } from '@/[fsd]/shared/ui';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
-import ClockIcon from '@/assets/clock.svg?react';
+import ClockIcon from '@/assets/clock_icon.svg?react';
 import { PERMISSIONS, WELCOME_MESSAGE_ID } from '@/common/constants';
 import { convertToolkitSchema } from '@/common/toolkitSchemaUtils';
 import { useGetSelectedToolSchema } from '@/hooks/toolkit/useGetSelectedToolSchema';

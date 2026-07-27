@@ -22,8 +22,8 @@ const ViewRunHistoryButton = memo(props => {
       placement="top"
     >
       <Button.BaseBtn
-        variant="elitea"
-        color="secondary"
+        variant={Button.BUTTON_VARIANTS.iconLabel}
+        size="small"
         aria-label="view run history"
         data-testid="pipeline-history-tab"
         data-tour={SHARED_TOUR_TARGET_IDS.runHistory}
