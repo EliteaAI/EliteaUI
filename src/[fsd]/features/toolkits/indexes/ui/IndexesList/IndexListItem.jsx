@@ -186,51 +186,18 @@ const IndexListItem = memo(props => {
               </Tooltip>
             </Box>
           )}
-          {index.metadata.state === IndexStatuses.progress && (
-            <CircularProgress
-              sx={styles.stateIcon}
-              size={14}
-              thickness={5}
-            />
-          )}
-          {index.metadata.state === IndexStatuses.fail && (
-            <InfoTooltip
-              infoTooltip={{ icon: styles.error }}
-              disableTooltip
-              sx={styles.stateIcon}
-            />
-          )}
-
-          {index.metadata.state === IndexStatuses.cancelled && (
-            <Box sx={[styles.stateIcon, styles.warning]}>
-              <StopIcon
-                width={16}
-                height={16}
-              />
-            </Box>
-          )}
-          {index.metadata.state === IndexStatuses.partlyOk && (
-            <Box sx={[styles.stateIcon, styles.warning]}>
-              <AttentionIcon
-                width={16}
-                height={16}
-              />
-            </Box>
-          )}
         </Box>
       </Box>
 
       {listOnly && (onCardReindex || onCardDelete || onCardOpenNewTab) && (
-        <Box
-          sx={styles.actions}
-          className="index-card-actions"
-        >
+        <Box sx={styles.actions}>
           {onCardOpenNewTab && (
             <Tooltip
               title="Open in new tab"
               placement="top"
             >
               <Button.BaseBtn
+                className="index-card-actions"
                 variant={Button.BUTTON_VARIANTS.tertiary}
                 startIcon={<OpenInNewIcon sx={styles.actionIcon} />}
                 onClick={handleOpenNewTabClick}
@@ -244,6 +211,7 @@ const IndexListItem = memo(props => {
               placement="top"
             >
               <Button.BaseBtn
+                className="index-card-actions"
                 variant={Button.BUTTON_VARIANTS.tertiary}
                 startIcon={<IndexingIcon sx={styles.actionIcon} />}
                 onClick={handleReindexClick}
@@ -257,12 +225,48 @@ const IndexListItem = memo(props => {
               placement="top"
             >
               <Button.BaseBtn
+                className="index-card-actions"
                 variant={Button.BUTTON_VARIANTS.tertiary}
                 startIcon={<DeleteIcon sx={styles.actionIcon} />}
                 onClick={handleDeleteClick}
                 data-testid="index-card-delete-btn"
               />
             </Tooltip>
+          )}
+          {index.metadata.state !== IndexStatuses.success && (
+            <Box style={styles.stateIconContainer}>
+              {index.metadata.state === IndexStatuses.progress && (
+                <CircularProgress
+                  sx={styles.stateIcon}
+                  size={14}
+                  thickness={5}
+                />
+              )}
+              {index.metadata.state === IndexStatuses.fail && (
+                <InfoTooltip
+                  infoTooltip={{ icon: styles.error }}
+                  disableTooltip
+                  sx={styles.stateIcon}
+                />
+              )}
+
+              {index.metadata.state === IndexStatuses.cancelled && (
+                <Box sx={[styles.stateIcon, styles.warning]}>
+                  <StopIcon
+                    width={16}
+                    height={16}
+                  />
+                </Box>
+              )}
+              {index.metadata.state === IndexStatuses.partlyOk && (
+                <Box sx={[styles.stateIcon, styles.warning]}>
+                  <AttentionIcon
+                    width={16}
+                    height={16}
+                  />
+                </Box>
+              )}
+            </Box>
           )}
         </Box>
       )}
@@ -367,7 +371,7 @@ const indexListItem = () => ({
     gap: '0.25rem',
     flexShrink: 0,
     position: 'absolute',
-    right: '0.5rem',
+    right: '0.75rem',
   },
 
   actionButton: ({ palette }) => ({
@@ -381,7 +385,13 @@ const indexListItem = () => ({
       opacity: 0.4,
     },
   }),
-
+  stateIconContainer: {
+    width: '1.5rem',
+    height: '1.5rem',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   stateIcon: ({ palette }) => ({
     color: palette.text.info,
     // position: 'absolute',
