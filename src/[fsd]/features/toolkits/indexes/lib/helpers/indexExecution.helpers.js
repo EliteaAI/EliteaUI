@@ -3,6 +3,9 @@ import { IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants/i
 export const INDEX_EXECUTION_COMPLETED_EVENT = 'index.ingest.completed';
 export const INDEX_EXECUTION_FAILED_EVENT = 'execution.failed';
 export const INDEX_EXECUTION_NODE_EVENT = 'execution.node_event';
+export const ACTIVE_INDEX_CONFLICT_MESSAGE = 'Indexing is already in progress for this index';
+
+const MAX_INDEX_EXECUTION_TASK_ID_BYTES = 512;
 
 const executionMessage = (prefix, message, fallback) => `${prefix} ${message || fallback}`;
 
@@ -56,7 +59,7 @@ export const parseIndexExecutionEvent = (eventType, data) => {
   }
 };
 
-export const parseIndexNodeEvent = (data, executionMessageId) => {
+export const parseIndexNodeEvent = (data, executionMessageId, allowMessageIdAdoption = false) => {
   let payload;
   try {
     payload = JSON.parse(data);
@@ -69,7 +72,7 @@ export const parseIndexNodeEvent = (data, executionMessageId) => {
   if (payload.message_id == null)
     return executionMessageId ? { ...payload, message_id: executionMessageId } : payload;
   if (typeof payload.message_id !== 'string' || !payload.message_id) return null;
-  if (executionMessageId && payload.message_id !== executionMessageId) return null;
+  if (executionMessageId && payload.message_id !== executionMessageId && !allowMessageIdAdoption) return null;
 
   return payload;
 };
@@ -99,4 +102,25 @@ export const canStartToolkitRun = ({
   !isRunning &&
   (!indexing || (!isIndexing && !indexStartPending));
 
-export const isIndexExecutionConflict = error => error?.status === 409;
+const isBoundedIndexExecutionTaskId = value =>
+  typeof value === 'string' &&
+  value.length > 0 &&
+  value === value.trim() &&
+  !/[\0\r\n]/.test(value) &&
+  new TextEncoder().encode(value).length <= MAX_INDEX_EXECUTION_TASK_ID_BYTES;
+
+// This parser is intentionally for the current startIndexData mutation only.
+// Callers must not use an arbitrary 409 response as proof that an execution is
+// authorized or visible.
+export const parseIndexStartConflictTaskId = error => {
+  if (error?.status !== 409) return null;
+
+  const body = error?.data;
+  if (!body || body instanceof Array || typeof body !== 'object') return null;
+  const keys = Object.keys(body).sort();
+  if (keys.length !== 2 || keys[0] !== 'error' || keys[1] !== 'task_id') return null;
+  if (body.error !== ACTIVE_INDEX_CONFLICT_MESSAGE || !isBoundedIndexExecutionTaskId(body.task_id))
+    return null;
+
+  return body.task_id;
+};

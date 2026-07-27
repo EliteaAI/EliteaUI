@@ -21,9 +21,9 @@ import {
   buildIndexExecutionEventsUrl,
   buildPendingIndexExecutionKey,
   canStartToolkitRun,
-  isIndexExecutionConflict,
   parseIndexExecutionEvent,
   parseIndexNodeEvent,
+  parseIndexStartConflictTaskId,
   resolveIndexExecutionState,
   resolveIndexExecutionTaskId,
 } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexExecution.helpers';
@@ -245,18 +245,27 @@ export const useToolkitChat = props => {
   useEffect(() => closeIndexEventStream, [closeIndexEventStream]);
 
   const openIndexEventStream = useCallback(
-    ({ taskId, messageId, storageKey }) => {
+    ({ taskId, messageId, storageKey, reattachingExistingExecution = false }) => {
       closeIndexEventStream();
 
+      let currentMessageId = messageId;
+      let mayAdoptMessageIdentity = reattachingExistingExecution;
       const loadingMessage = {
         ...generateMockMessageTemplate('🔄 Indexing in progress…', 'toolkit'),
-        id: messageId,
+        id: currentMessageId,
         task_id: taskId,
         isLoading: true,
         isStreaming: true,
       };
       setChatHistory(previous => {
-        const existing = previous.findIndex(message => message.id === messageId);
+        let existing = previous.findIndex(message => message.id === currentMessageId);
+        if (existing < 0 && reattachingExistingExecution) {
+          existing = previous.findIndex(message => message.task_id === taskId);
+          if (existing >= 0) {
+            currentMessageId = previous[existing].id;
+            return previous;
+          }
+        }
         if (existing < 0) return [...previous, loadingMessage];
         const updated = [...previous];
         updated[existing] = { ...updated[existing], ...loadingMessage };
@@ -282,12 +291,14 @@ export const useToolkitChat = props => {
         setChatHistory(previous => {
           const terminalMessage = {
             ...generateMockMessageTemplate(result.content, 'toolkit'),
-            id: messageId,
+            id: currentMessageId,
             task_id: taskId,
             isLoading: false,
             isStreaming: false,
           };
-          const existing = previous.findIndex(message => message.id === messageId);
+          let existing = previous.findIndex(message => message.id === currentMessageId);
+          if (existing < 0 && reattachingExistingExecution)
+            existing = previous.findIndex(message => message.task_id === taskId);
           if (existing < 0) return [...previous, terminalMessage];
           const updated = [...previous];
           updated[existing] = { ...updated[existing], ...terminalMessage };
@@ -303,16 +314,33 @@ export const useToolkitChat = props => {
 
       const handleNodeEvent = event => {
         if (indexEventSourceRef.current !== source) return;
-        const message = parseIndexNodeEvent(event.data, messageId);
+        const message = parseIndexNodeEvent(event.data, currentMessageId, mayAdoptMessageIdentity);
         if (!message) return;
-        setChatHistory(previous =>
-          generateChatMessageBasedOnResponse({
+        const previousMessageId = currentMessageId;
+        if (mayAdoptMessageIdentity && message.message_id !== currentMessageId) {
+          currentMessageId = message.message_id;
+          mayAdoptMessageIdentity = false;
+          try {
+            sessionStorage.setItem(
+              storageKey,
+              JSON.stringify({ taskId, messageId: currentMessageId, reattachingExistingExecution: false }),
+            );
+          } catch {
+            // The stream remains authoritative when browser storage is unavailable.
+          }
+        }
+        setChatHistory(previous => {
+          const correlatedHistory =
+            previousMessageId === currentMessageId
+              ? previous
+              : previous.filter(historyMessage => historyMessage.id !== previousMessageId);
+          return generateChatMessageBasedOnResponse({
             message,
-            chatHistory: previous,
+            chatHistory: correlatedHistory,
             onStartTask: startedTaskId => onStartTaskRef.current(startedTaskId),
             allowTerminalSideEffects: false,
-          }),
-        );
+          });
+        });
       };
 
       source.addEventListener(INDEX_EXECUTION_NODE_EVENT, handleNodeEvent);
@@ -349,6 +377,7 @@ export const useToolkitChat = props => {
       taskId: pending.taskId,
       messageId: pending.messageId,
       storageKey: pendingIndexExecutionKey,
+      reattachingExistingExecution: pending.reattachingExistingExecution === true,
     });
     return closeIndexEventStream;
   }, [closeIndexEventStream, openIndexEventStream, pendingIndexExecutionKey]);
@@ -473,7 +502,16 @@ export const useToolkitChat = props => {
         streamId: currentConversation.uuid,
         messageId,
       });
-      const response = await startIndexData({ projectId, ...payload }).unwrap();
+      let response;
+      let reattaching = false;
+      try {
+        response = await startIndexData({ projectId, ...payload }).unwrap();
+      } catch (error) {
+        const activeTaskId = parseIndexStartConflictTaskId(error);
+        if (!activeTaskId) throw error;
+        response = { task_id: activeTaskId };
+        reattaching = true;
+      }
       const taskId = response?.task_id;
       if (!taskId) throw new Error('The indexing service returned no task identifier.');
       admittedIndexTaskIdRef.current = taskId;
@@ -486,20 +524,38 @@ export const useToolkitChat = props => {
         indexName: relevantInputVariables.index_name,
       });
       try {
-        sessionStorage.setItem(storageKey, JSON.stringify({ taskId, messageId }));
+        sessionStorage.setItem(
+          storageKey,
+          JSON.stringify({ taskId, messageId, reattachingExistingExecution: reattaching }),
+        );
       } catch {
         // The live stream still works when browser storage is disabled; only reload recovery is lost.
       }
 
-      if (!isCreateIndexMode) openIndexEventStream({ taskId, messageId, storageKey });
+      if (!isCreateIndexMode)
+        openIndexEventStream({
+          taskId,
+          messageId,
+          storageKey,
+          reattachingExistingExecution: reattaching,
+        });
       if (traceNewIndex)
         traceNewIndex(index?.id ?? null, {
           collection: relevantInputVariables.index_name,
           state: IndexStatuses.progress,
           task_id: taskId,
-          conversation_id: currentConversation.id,
-          conversation_uuid: currentConversation.uuid,
+          ...(!reattaching && {
+            conversation_id: currentConversation.id,
+            conversation_uuid: currentConversation.uuid,
+          }),
         });
+      if (reattaching) {
+        try {
+          await refetchIndexesList();
+        } catch {
+          // The authorized execution stream remains usable while a metadata refresh is retried elsewhere.
+        }
+      }
     },
     [
       index?.id,
@@ -512,6 +568,7 @@ export const useToolkitChat = props => {
       toolkitId,
       traceNewIndex,
       values,
+      refetchIndexesList,
     ],
   );
 
@@ -570,17 +627,6 @@ export const useToolkitChat = props => {
       } catch (error) {
         setIsRunning(false);
 
-        if (indexing && isIndexExecutionConflict(error)) {
-          setIndexExecutionState(IndexStatuses.progress);
-          setIsStopRequested(false);
-          try {
-            await refetchIndexesList();
-          } catch {
-            // Preserve the existing-active state when its immediate refresh is temporarily unavailable.
-          }
-          return;
-        }
-
         if (indexing) indexStartPendingRef.current = false;
 
         if (traceNewIndex && indexing)
@@ -619,7 +665,6 @@ export const useToolkitChat = props => {
       executeIndexData,
       traceNewIndex,
       index?.id,
-      refetchIndexesList,
     ],
   );
 

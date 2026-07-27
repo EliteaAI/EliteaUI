@@ -3,15 +3,16 @@ import { describe, expect, it } from 'vitest';
 import { IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 
 import {
+  ACTIVE_INDEX_CONFLICT_MESSAGE,
   INDEX_EXECUTION_COMPLETED_EVENT,
   INDEX_EXECUTION_FAILED_EVENT,
   INDEX_EXECUTION_NODE_EVENT,
   buildIndexExecutionEventsUrl,
   buildPendingIndexExecutionKey,
   canStartToolkitRun,
-  isIndexExecutionConflict,
   parseIndexExecutionEvent,
   parseIndexNodeEvent,
+  parseIndexStartConflictTaskId,
   resolveIndexExecutionState,
   resolveIndexExecutionTaskId,
 } from './indexExecution.helpers';
@@ -101,10 +102,49 @@ describe('index execution contract', () => {
     expect(canStartToolkitRun({ ...ready, isRunning: true })).toBe(false);
   });
 
-  it('recognizes only an HTTP 409 admission response as an existing active execution', () => {
-    expect(isIndexExecutionConflict({ status: 409, data: { error: 'already active' } })).toBe(true);
-    expect(isIndexExecutionConflict({ status: 500, data: { error: 'already active' } })).toBe(false);
-    expect(isIndexExecutionConflict(new Error('already active'))).toBe(false);
+  it('accepts only the exact current start conflict contract', () => {
+    expect(
+      parseIndexStartConflictTaskId({
+        status: 409,
+        data: {
+          error: ACTIVE_INDEX_CONFLICT_MESSAGE,
+          task_id: '0123456789abcdef0123456789abcdef',
+        },
+      }),
+    ).toBe('0123456789abcdef0123456789abcdef');
+  });
+
+  it.each([
+    ['generic conflict', { status: 409, data: { error: 'already active' } }],
+    [
+      'unexpected response field',
+      {
+        status: 409,
+        data: { error: ACTIVE_INDEX_CONFLICT_MESSAGE, task_id: 'task-1', project_id: 7 },
+      },
+    ],
+    ['missing task id', { status: 409, data: { error: ACTIVE_INDEX_CONFLICT_MESSAGE } }],
+    ['blank task id', { status: 409, data: { error: ACTIVE_INDEX_CONFLICT_MESSAGE, task_id: ' ' } }],
+    [
+      'control characters',
+      { status: 409, data: { error: ACTIVE_INDEX_CONFLICT_MESSAGE, task_id: 'task\r\n2' } },
+    ],
+    [
+      'oversized task id',
+      {
+        status: 409,
+        data: { error: ACTIVE_INDEX_CONFLICT_MESSAGE, task_id: 'x'.repeat(513) },
+      },
+    ],
+    [
+      'authorization failure',
+      {
+        status: 403,
+        data: { error: ACTIVE_INDEX_CONFLICT_MESSAGE, task_id: 'task-1' },
+      },
+    ],
+  ])('rejects a %s as reattachment authority', (_, error) => {
+    expect(parseIndexStartConflictTaskId(error)).toBeNull();
   });
 
   describe('NodeEvent execution correlation', () => {
@@ -137,6 +177,10 @@ describe('index execution contract', () => {
 
     it('rejects a conflicting message id instead of correlating another execution', () => {
       expect(parseIndexNodeEvent(JSON.stringify(event), 'message-2')).toBeNull();
+    });
+
+    it('allows one execution-scoped message identity adoption during conflict recovery', () => {
+      expect(parseIndexNodeEvent(JSON.stringify(event), 'recovery-placeholder', true)).toEqual(event);
     });
 
     it('keeps missing-id fallbacks local to each execution', () => {
