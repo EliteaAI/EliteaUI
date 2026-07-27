@@ -20,6 +20,8 @@ import {
   INDEX_EXECUTION_NODE_EVENT,
   buildIndexExecutionEventsUrl,
   buildPendingIndexExecutionKey,
+  canStartToolkitRun,
+  isIndexExecutionConflict,
   parseIndexExecutionEvent,
   parseIndexNodeEvent,
   resolveIndexExecutionState,
@@ -49,6 +51,7 @@ import useToast from '@/hooks/useToast';
 
 export const useToolkitChat = props => {
   const runningToolRef = useRef(null);
+  const indexStartPendingRef = useRef(false);
   const indexEventSourceRef = useRef(null);
   const admittedIndexTaskIdRef = useRef(null);
   const { toastSuccess, toastError } = useToast();
@@ -127,9 +130,14 @@ export const useToolkitChat = props => {
 
   useEffect(() => {
     admittedIndexTaskIdRef.current = null;
+    indexStartPendingRef.current = false;
     setIndexExecutionState(null);
     setIsStopRequested(false);
   }, [currentIndexName]);
+
+  useEffect(() => {
+    if (!isRunning && !isIndexing) indexStartPendingRef.current = false;
+  }, [isIndexing, isRunning]);
 
   const shouldRecoverHistory = useMemo(
     () =>
@@ -562,6 +570,19 @@ export const useToolkitChat = props => {
       } catch (error) {
         setIsRunning(false);
 
+        if (indexing && isIndexExecutionConflict(error)) {
+          setIndexExecutionState(IndexStatuses.progress);
+          setIsStopRequested(false);
+          try {
+            await refetchIndexesList();
+          } catch {
+            // Preserve the existing-active state when its immediate refresh is temporarily unavailable.
+          }
+          return;
+        }
+
+        if (indexing) indexStartPendingRef.current = false;
+
         if (traceNewIndex && indexing)
           traceNewIndex(index?.id ?? null, {
             collection: relevantInputVariables.index_name,
@@ -598,13 +619,21 @@ export const useToolkitChat = props => {
       executeIndexData,
       traceNewIndex,
       index?.id,
+      refetchIndexesList,
     ],
   );
 
   const run = useCallback(
     (tool = IndexesToolsEnum.indexData) => {
       const indexing = tool === IndexesToolsEnum.indexData;
-      const canProceed = ((indexing && !isCreateIndexMode) || isValidForm) && !isRunning;
+      const canProceed = canStartToolkitRun({
+        indexing,
+        isCreateIndexMode,
+        isValidForm,
+        isRunning,
+        isIndexing,
+        indexStartPending: indexStartPendingRef.current,
+      });
 
       let relevantInputVariables = toolInputVariables;
 
@@ -620,6 +649,7 @@ export const useToolkitChat = props => {
         };
 
       if (canProceed) {
+        if (indexing) indexStartPendingRef.current = true;
         setIsRunning(true);
         if (indexing) {
           setIndexExecutionState(IndexStatuses.progress);
@@ -641,6 +671,7 @@ export const useToolkitChat = props => {
       isCreateIndexMode,
       isValidForm,
       isRunning,
+      isIndexing,
       toolInputVariables,
       index,
       indexConfigOverride,

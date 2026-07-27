@@ -86,3 +86,17 @@ export const resolveIndexExecutionState = (metadataState, executionState) => exe
 
 export const resolveIndexExecutionTaskId = (metadataTaskId, admittedTaskId) =>
   admittedTaskId || metadataTaskId;
+
+export const canStartToolkitRun = ({
+  indexing,
+  isCreateIndexMode,
+  isValidForm,
+  isRunning,
+  isIndexing,
+  indexStartPending,
+}) =>
+  ((indexing && !isCreateIndexMode) || isValidForm) &&
+  !isRunning &&
+  (!indexing || (!isIndexing && !indexStartPending));
+
+export const isIndexExecutionConflict = error => error?.status === 409;

@@ -8,6 +8,8 @@ import {
   INDEX_EXECUTION_NODE_EVENT,
   buildIndexExecutionEventsUrl,
   buildPendingIndexExecutionKey,
+  canStartToolkitRun,
+  isIndexExecutionConflict,
   parseIndexExecutionEvent,
   parseIndexNodeEvent,
   resolveIndexExecutionState,
@@ -81,6 +83,28 @@ describe('index execution contract', () => {
   it('uses the admitted execution task id for control actions', () => {
     expect(resolveIndexExecutionTaskId('metadata-task', 'admitted-task')).toBe('admitted-task');
     expect(resolveIndexExecutionTaskId('metadata-task', null)).toBe('metadata-task');
+  });
+
+  it('suppresses duplicate index starts while admission or execution is active', () => {
+    const ready = {
+      indexing: true,
+      isCreateIndexMode: false,
+      isValidForm: true,
+      isRunning: false,
+      isIndexing: false,
+      indexStartPending: false,
+    };
+
+    expect(canStartToolkitRun(ready)).toBe(true);
+    expect(canStartToolkitRun({ ...ready, indexStartPending: true })).toBe(false);
+    expect(canStartToolkitRun({ ...ready, isIndexing: true })).toBe(false);
+    expect(canStartToolkitRun({ ...ready, isRunning: true })).toBe(false);
+  });
+
+  it('recognizes only an HTTP 409 admission response as an existing active execution', () => {
+    expect(isIndexExecutionConflict({ status: 409, data: { error: 'already active' } })).toBe(true);
+    expect(isIndexExecutionConflict({ status: 500, data: { error: 'already active' } })).toBe(false);
+    expect(isIndexExecutionConflict(new Error('already active'))).toBe(false);
   });
 
   describe('NodeEvent execution correlation', () => {
