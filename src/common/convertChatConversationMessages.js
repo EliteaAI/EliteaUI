@@ -21,6 +21,30 @@ export const isUserMessage = (author_participant_id, sent_to_id, userIds, reply_
   );
 };
 
+// Indexing has no user-authored prompt group: Main persists the worker Activity
+// directly against the execution-scoped placeholder UUID. Keep this exception
+// narrower than the general role heuristic so every existing chat/toolkit
+// message retains its current classification.
+export const isIndexActivityMessage = (messageGroup, participants = []) => {
+  const {
+    author_participant_id,
+    sent_to_id,
+    reply_to_id,
+    task_id,
+    meta: { activity_kind: activityKind } = {},
+  } = messageGroup || {};
+  const author = participants.find(participant => participant.id === author_participant_id);
+
+  return (
+    activityKind === 'indexing' &&
+    typeof task_id === 'string' &&
+    task_id.trim().length > 0 &&
+    author?.entity_name === ChatParticipantType.Toolkits &&
+    !sent_to_id &&
+    !reply_to_id
+  );
+};
+
 export const convertTime = time => {
   const timeStrings = time.split(' ');
   if (timeStrings.length > 1) {
@@ -395,7 +419,9 @@ export const convertMessagesToChatHistory = (
   // Convert parent messages and attach their children as SwarmChild toolActions
   return parentMessages.map(message_group => {
     const { author_participant_id, sent_to_id, reply_to_id, sent_to, uuid } = message_group;
-    const isUser = isUserMessage(author_participant_id, sent_to_id, userIds, reply_to_id, sent_to);
+    const isUser =
+      !isIndexActivityMessage(message_group, participants) &&
+      isUserMessage(author_participant_id, sent_to_id, userIds, reply_to_id, sent_to);
 
     if (isUser) {
       return !playerInfo
