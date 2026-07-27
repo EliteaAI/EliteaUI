@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo } from 'react';
 
 import { useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -25,8 +25,6 @@ const IndexHistoryPage = memo(() => {
   const projectId = useSelectedProjectId();
   const { toastError } = useToast();
   const styles = indexHistoryPageStyles();
-
-  const [isFullScreenChat, setIsFullScreenChat] = useState(false);
 
   const goBackToRunIndex = useCallback(() => {
     const target = RouteDefinitions.ToolkitIndex.replace(':tab', tab ?? 'all')
@@ -113,8 +111,6 @@ const IndexHistoryPage = memo(() => {
 
   const isLoading = indexesLoading || indexesFetching || !hasData || runHistoryLoading;
 
-  const toggleFullScreenChat = useCallback(() => setIsFullScreenChat(prev => !prev), []);
-
   if (shouldShowNotFoundPage) return <Page404 />;
 
   const toolkitName = publicToolkitData?.name || '';
@@ -169,11 +165,12 @@ const IndexHistoryPage = memo(() => {
                 modelList={[]}
                 llmSettings={undefined}
                 onSetLLMSettings={() => null}
-                isFullScreenChat={isFullScreenChat}
-                toggleFullScreenChat={toggleFullScreenChat}
+                toggleFullScreenChat={null}
                 clearChat={() => null}
                 chatHistory={[]}
                 conversation={null}
+                showHeader={false}
+                chatContainerSX={styles.chatContainer}
               />
             </Box>
           </Box>
@@ -227,6 +224,9 @@ const indexHistoryPageStyles = () => ({
     display: 'flex',
     flexDirection: 'column',
     overflow: 'hidden',
+  },
+  chatContainer: {
+    height: '100%',
   },
 });
 
