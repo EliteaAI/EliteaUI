@@ -1,6 +1,6 @@
 export * from './admin';
 export * from './eliteaApi';
-export * from '../[fsd]/features/analytics/api/analyticsApi';
+export * from '../[fsd]/features/settings/api/analyticsApi';
 export * from './applications';
 export * from './artifacts';
 export * from './auth';
@@ -25,3 +25,4 @@ export * from './trendingAuthor';
 export * from '@/[fsd]/features/toolkits/indexes/api/indexesApi';
 export * from '@/[fsd]/features/agent/api/generateAgentDraftApi';
 export * from '@/[fsd]/features/settings/api/generateProjectContextDraftApi';
+export * from '@/[fsd]/features/settings/api/usageApi';

@@ -2,8 +2,8 @@ import { memo, useMemo } from 'react';
 
 import { Box, Tooltip, Typography } from '@mui/material';
 
-import { AnalyticsCommonConstants } from '@/[fsd]/features/analytics/lib/constants';
-import { formatModelName, formatMoney, formatTokens } from '@/[fsd]/features/usage/lib/usage.helpers';
+import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
+import { UsageHelpers } from '@/[fsd]/features/settings/lib/helpers';
 
 const UsageModelTable = memo(props => {
   const { models = [], canSeeAmounts, currency } = props;
@@ -13,7 +13,7 @@ const UsageModelTable = memo(props => {
   // Different raw models can share a display name once provider/project prefixes are
   // stripped (e.g. two distinct "gpt-5" registrations) - fall back to the raw name for those
   const displayNames = useMemo(() => {
-    const stripped = models.map(model => formatModelName(model.model));
+    const stripped = models.map(model => UsageHelpers.formatModelName(model.model));
     const counts = stripped.reduce((acc, name) => acc.set(name, (acc.get(name) || 0) + 1), new Map());
 
     return stripped.map((name, index) => (counts.get(name) > 1 ? models[index].model || name : name));
@@ -91,14 +91,14 @@ const UsageModelTable = memo(props => {
               </Tooltip>
               {canSeeAmounts && (
                 <Typography sx={[styles.value, styles.right, { flex: 1.2 }]}>
-                  {formatMoney(model.spend, currency)}
+                  {UsageHelpers.formatMoney(model.spend, currency)}
                 </Typography>
               )}
               <Typography sx={[styles.value, styles.right, { flex: 1 }]}>
                 {model.api_requests || 0}
               </Typography>
               <Typography sx={[styles.value, styles.right, { flex: 1 }]}>
-                {formatTokens(model.total_tokens)}
+                {UsageHelpers.formatTokens(model.total_tokens)}
               </Typography>
               <Box sx={[styles.shareWrapper, { flex: 1.5 }]}>
                 <Box sx={styles.shareTrack}>
@@ -125,8 +125,8 @@ const usageModelTableStyles = () => ({
     flexDirection: 'column',
     padding: '1rem',
     borderRadius: '0.5rem',
-    border: `1px solid ${palette.border.lines}`,
-    backgroundColor: palette.background.secondary,
+    border: 'none',
+    backgroundColor: palette.background.userInputBackground,
     // Height follows content; stretching leaves a large dead area when empty
     flex: '0 0 auto',
   }),

@@ -1,28 +1,24 @@
-import { memo, useCallback, useMemo, useState } from 'react';
-
-import { Bar, BarChart, Cell, Tooltip as RechartsTooltip, ResponsiveContainer, XAxis, YAxis } from 'recharts';
+import { memo, useCallback, useState } from 'react';
 
 import { Box, CircularProgress, TablePagination, Typography, useTheme } from '@mui/material';
 
-import { AnalyticsCommonConstants } from '@/[fsd]/features/analytics/lib/constants';
-import { AnalyticCommonHelpers } from '@/[fsd]/features/analytics/lib/helpers';
-import { AnalyticsToolDetailed, ChartTooltip } from '@/[fsd]/features/analytics/ui';
-import { useAnalyticsToolsQuery } from '@/api';
+import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
+import { AnalyticsUserDetailed } from '@/[fsd]/features/settings/ui/analytics';
+import { useAnalyticsUsersQuery } from '@/api';
 import StyledSearchInput from '@/components/SearchInput';
 
-const AnalyticsTools = memo(props => {
-  const { projectId, dateFrom, dateTo } = props;
+const AnalyticsUsers = memo(props => {
+  const { projectId, dateFrom, dateTo, initialUserId, onBackToSource } = props;
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
   const [search, setSearch] = useState('');
-  const [selectedTool, setSelectedTool] = useState(null);
+  const [selectedUserId, setSelectedUserId] = useState(initialUserId || null);
+  const [cameFromExternal] = useState(() => !!initialUserId);
 
   const { palette } = useTheme();
-  const axisStroke = palette.text.primary;
-  const axisTickStyle = { fill: axisStroke, fontSize: 11 };
 
-  const { data, isFetching } = useAnalyticsToolsQuery(
+  const { data, isFetching } = useAnalyticsUsersQuery(
     {
       projectId,
       dateFrom,
@@ -32,16 +28,6 @@ const AnalyticsTools = memo(props => {
       search,
     },
     { skip: !projectId },
-  );
-
-  const toolChartData = useMemo(
-    () =>
-      (data?.rows || []).slice(0, 20).map((t, i) => ({
-        tool_name: t.tool_name,
-        calls: t.calls,
-        color: AnalyticsCommonConstants.CHART_COLORS[i % AnalyticsCommonConstants.CHART_COLORS.length],
-      })),
-    [data?.rows],
   );
 
   const handleSearchChange = useCallback(event => {
@@ -56,15 +42,21 @@ const AnalyticsTools = memo(props => {
     setPage(0);
   }, []);
 
-  const handleToolClick = useCallback(toolName => setSelectedTool(toolName), []);
+  const handleUserClick = useCallback(userId => setSelectedUserId(userId), []);
 
-  const handleBack = useCallback(() => setSelectedTool(null), []);
+  const handleBack = useCallback(() => {
+    if (cameFromExternal && onBackToSource) {
+      onBackToSource();
+    } else {
+      setSelectedUserId(null);
+    }
+  }, [cameFromExternal, onBackToSource]);
 
-  if (selectedTool) {
+  if (selectedUserId) {
     return (
-      <AnalyticsToolDetailed
+      <AnalyticsUserDetailed
         projectId={projectId}
-        toolName={selectedTool}
+        userId={selectedUserId}
         dateFrom={dateFrom}
         dateTo={dateTo}
         onBack={handleBack}
@@ -75,66 +67,7 @@ const AnalyticsTools = memo(props => {
   const { total = 0, rows = [] } = data || {};
 
   return (
-    <Box sx={styles.toolsContent}>
-      {/* Top tools chart */}
-      {toolChartData.length > 0 && (
-        <Box sx={styles.chartCard}>
-          <Typography
-            variant="labelMedium"
-            sx={styles.chartTitle}
-          >
-            Most Popular Tools
-          </Typography>
-          <Typography
-            variant="bodySmall"
-            sx={styles.chartSubtitle}
-          >
-            Top {toolChartData.length} by usage
-          </Typography>
-          <Box sx={styles.chartWrapper}>
-            <ResponsiveContainer
-              width="100%"
-              height={200}
-            >
-              <BarChart
-                data={toolChartData}
-                margin={{ left: 5, right: 20, top: 5, bottom: 40 }}
-              >
-                <XAxis
-                  dataKey="tool_name"
-                  tick={{ ...axisTickStyle, fontSize: 10 }}
-                  angle={-45}
-                  textAnchor="end"
-                  interval={0}
-                  height={50}
-                  axisLine={{ stroke: axisStroke }}
-                  tickLine={{ stroke: axisStroke }}
-                />
-                <YAxis
-                  tick={axisTickStyle}
-                  axisLine={{ stroke: axisStroke }}
-                  tickLine={{ stroke: axisStroke }}
-                />
-                <RechartsTooltip content={<ChartTooltip />} />
-                <Bar
-                  dataKey="calls"
-                  name="Calls"
-                  radius={[4, 4, 0, 0]}
-                >
-                  {toolChartData.map((d, i) => (
-                    <Cell
-                      key={i}
-                      fill={d.color}
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </Box>
-        </Box>
-      )}
-
-      {/* Paginated tool table */}
+    <Box sx={styles.usersContent}>
       <Box sx={styles.chartCard}>
         <Box
           sx={{
@@ -149,28 +82,31 @@ const AnalyticsTools = memo(props => {
               variant="labelMedium"
               sx={styles.chartTitle}
             >
-              Tool Details
+              User Activity
             </Typography>
             <Typography
               variant="bodySmall"
               sx={styles.chartSubtitle}
             >
-              {total} tools
+              {total} users
             </Typography>
           </Box>
           <StyledSearchInput
             search={search}
             onChangeSearch={handleSearchChange}
-            placeholder="Search by tool name"
+            placeholder="Search by email"
             sx={styles.userSearch}
           />
         </Box>
         <Box sx={styles.tableWrapper}>
           <Box sx={styles.tableHeader}>
-            <Typography sx={[styles.tableCell, { flex: 3 }]}>Tool</Typography>
-            <Typography sx={[styles.tableCell, { flex: 1 }]}>Calls</Typography>
-            <Typography sx={[styles.tableCell, { flex: 1 }]}>Users</Typography>
-            <Typography sx={[styles.tableCell, { flex: 1 }]}>Avg Latency</Typography>
+            <Typography sx={[styles.tableCell, { flex: 3 }]}>User</Typography>
+            <Typography sx={[styles.tableCell, { flex: 1 }]}>Events</Typography>
+            <Typography sx={[styles.tableCell, { flex: 1 }]}>Days</Typography>
+            <Typography sx={[styles.tableCell, { flex: 1 }]}>LLM</Typography>
+            <Typography sx={[styles.tableCell, { flex: 1 }]}>Tool</Typography>
+            <Typography sx={[styles.tableCell, { flex: 1 }]}>Agent</Typography>
+            <Typography sx={[styles.tableCell, { flex: 1 }]}>Chat Msg</Typography>
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Errors</Typography>
           </Box>
           {isFetching && (
@@ -179,32 +115,41 @@ const AnalyticsTools = memo(props => {
             </Box>
           )}
           {!isFetching &&
-            rows.map((t, i) => (
+            rows.map((u, i) => (
               <Box
                 key={i}
                 sx={styles.clickableRow}
-                onClick={() => handleToolClick(t.tool_name)}
+                onClick={() => handleUserClick(u.user_id)}
               >
                 <Typography
                   sx={[styles.tableCellValue, { flex: 3 }]}
                   noWrap
                 >
-                  {t.tool_name}
+                  {u.user_email || `User ${u.user_id}`}
                 </Typography>
                 <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
-                  {AnalyticCommonHelpers.fmtNum(t.calls)}
+                  {AnalyticCommonHelpers.fmtNum(u.total_events)}
                 </Typography>
-                <Typography sx={[styles.tableCellValue, { flex: 1 }]}>{t.users}</Typography>
+                <Typography sx={[styles.tableCellValue, { flex: 1 }]}>{u.active_days}</Typography>
                 <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
-                  {AnalyticCommonHelpers.fmtDuration(t.avg_duration_ms)}
+                  {AnalyticCommonHelpers.fmtNum(u.llm_events)}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
+                  {AnalyticCommonHelpers.fmtNum(u.tool_events)}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
+                  {AnalyticCommonHelpers.fmtNum(u.agent_events)}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
+                  {AnalyticCommonHelpers.fmtNum(u.chat_events)}
                 </Typography>
                 <Typography
                   sx={[
                     styles.tableCellValue,
-                    { flex: 1, color: t.errors > 0 ? palette.status.rejected : undefined },
+                    { flex: 1, color: u.errors > 0 ? palette.status.rejected : undefined },
                   ]}
                 >
-                  {t.errors}
+                  {u.errors}
                 </Typography>
               </Box>
             ))}
@@ -224,11 +169,11 @@ const AnalyticsTools = memo(props => {
   );
 });
 
-AnalyticsTools.displayName = 'AnalyticsTools';
+AnalyticsUsers.displayName = 'AnalyticsUsers';
 
 /** @type {MuiSx} */
 const styles = {
-  toolsContent: { display: 'flex', flexDirection: 'column', gap: '1rem' },
+  usersContent: { display: 'flex', flexDirection: 'column', gap: '1rem' },
   chartCard: ({ palette }) => ({
     padding: '1rem',
     borderRadius: '0.5rem',
@@ -244,7 +189,6 @@ const styles = {
     marginBottom: '0.5rem',
     display: 'block',
   }),
-  chartWrapper: { width: '100%', overflow: 'hidden', flex: 1, minHeight: 200 },
   loadingState: { display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem' },
   tableWrapper: { display: 'flex', flexDirection: 'column', width: '100%', overflow: 'auto' },
   tableHeader: ({ palette }) => ({
@@ -289,4 +233,4 @@ const styles = {
   }),
 };
 
-export default AnalyticsTools;
+export default AnalyticsUsers;

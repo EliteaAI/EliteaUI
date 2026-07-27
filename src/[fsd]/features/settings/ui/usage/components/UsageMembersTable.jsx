@@ -2,7 +2,7 @@ import { memo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { formatLimit, formatMoney, usageSeverity } from '@/[fsd]/features/usage/lib/usage.helpers';
+import { UsageHelpers } from '@/[fsd]/features/settings/lib/helpers';
 
 const SEVERITY_COLOR = {
   exceeded: 'error',
@@ -41,7 +41,7 @@ const UsageMembersTable = memo(props => {
       </Box>
 
       {sorted.map(row => {
-        const severity = usageSeverity(row.percent_used);
+        const severity = UsageHelpers.usageSeverity(row.percent_used);
         const color = SEVERITY_COLOR[severity];
 
         return (
@@ -56,10 +56,10 @@ const UsageMembersTable = memo(props => {
               )}
             </Box>
             <Typography sx={[styles.value, styles.right, { flex: 1.2 }]}>
-              {formatMoney(row.spend, row.currency)}
+              {UsageHelpers.formatMoney(row.spend, row.currency)}
             </Typography>
             <Typography sx={[styles.value, styles.right, styles.muted, { flex: 1.2 }]}>
-              {formatLimit(row.effective_limit, row.currency)}
+              {UsageHelpers.formatLimit(row.effective_limit, row.currency)}
             </Typography>
             <Typography
               sx={[
@@ -87,8 +87,8 @@ const usageMembersTableStyles = () => ({
     flexDirection: 'column',
     padding: '1rem',
     borderRadius: '0.5rem',
-    border: `1px solid ${palette.border.lines}`,
-    backgroundColor: palette.background.secondary,
+    border: 'none',
+    backgroundColor: palette.background.userInputBackground,
   }),
   title: ({ palette }) => ({
     color: palette.text.secondary,

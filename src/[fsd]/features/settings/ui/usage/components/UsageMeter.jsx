@@ -2,13 +2,13 @@ import { memo } from 'react';
 
 import { Box, Typography, useTheme } from '@mui/material';
 
-import { usageSeverity } from '@/[fsd]/features/usage/lib/usage.helpers';
+import { UsageHelpers } from '@/[fsd]/features/settings/lib/helpers';
 
 const UsageMeter = memo(props => {
   const { percentUsed, primaryLabel, secondaryLabel } = props;
 
   const theme = useTheme();
-  const severity = usageSeverity(percentUsed);
+  const severity = UsageHelpers.usageSeverity(percentUsed);
   const styles = usageMeterStyles(theme, severity);
 
   // No limit set means nothing to fill; show the bar empty rather than full

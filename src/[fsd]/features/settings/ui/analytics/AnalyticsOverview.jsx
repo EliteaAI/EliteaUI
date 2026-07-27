@@ -4,10 +4,10 @@ import { Area, AreaChart, Tooltip as RechartsTooltip, ResponsiveContainer, XAxis
 
 import { Box, Typography, useTheme } from '@mui/material';
 
-import { AnalyticsCommonConstants } from '@/[fsd]/features/analytics/lib/constants';
-import { AnalyticCommonHelpers } from '@/[fsd]/features/analytics/lib/helpers';
-import { ChartTooltip, KPICard, ModelUsageTable } from '@/[fsd]/features/analytics/ui';
 import { ANALYTICS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
+import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
+import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
+import { ChartTooltip, KPICard, ModelUsageTable } from '@/[fsd]/features/settings/ui/analytics';
 
 const AnalyticsOverview = memo(props => {
   const { data, onUserClick } = props;

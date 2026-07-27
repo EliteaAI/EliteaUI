@@ -4,9 +4,9 @@ import { Area, AreaChart, Tooltip as RechartsTooltip, ResponsiveContainer, XAxis
 
 import { Box, Typography, useTheme } from '@mui/material';
 
-import { AnalyticsCommonConstants } from '@/[fsd]/features/analytics/lib/constants';
-import { AnalyticCommonHelpers } from '@/[fsd]/features/analytics/lib/helpers';
-import { ChartTooltip } from '@/[fsd]/features/analytics/ui';
+import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
+import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
+import { ChartTooltip } from '@/[fsd]/features/settings/ui/analytics';
 
 const AnalyticsHealth = memo(props => {
   const { health = [], daily_activity = [] } = props;

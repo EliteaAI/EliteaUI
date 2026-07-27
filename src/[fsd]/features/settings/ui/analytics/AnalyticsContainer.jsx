@@ -4,7 +4,8 @@ import { Box, CircularProgress, Typography } from '@mui/material';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 
 import { useInteractiveTour } from '@/[fsd]/app/providers';
-import { useProjectAnalyticsQuery } from '@/[fsd]/features/analytics/api';
+import { ANALYTICS_TOUR_ID, ANALYTICS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
+import { useProjectAnalyticsQuery } from '@/[fsd]/features/settings/api/analyticsApi';
 import {
   AnalyticsAgents,
   AnalyticsGuide,
@@ -12,8 +13,7 @@ import {
   AnalyticsOverview,
   AnalyticsTools,
   AnalyticsUsers,
-} from '@/[fsd]/features/analytics/ui';
-import { ANALYTICS_TOUR_ID, ANALYTICS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
+} from '@/[fsd]/features/settings/ui/analytics';
 import { DrawerPage } from '@/[fsd]/features/settings/ui/drawer-page';
 import TabGroupButton from '@/[fsd]/shared/ui/tab-group-button/TabGroupButton';
 import { BaseTab, BaseTabs } from '@/[fsd]/shared/ui/tabs';

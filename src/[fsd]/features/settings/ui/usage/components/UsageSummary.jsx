@@ -2,15 +2,10 @@ import { memo } from 'react';
 
 import { Alert, Box, Chip, Typography } from '@mui/material';
 
-import { KPICard } from '@/[fsd]/features/analytics/ui';
-import {
-  formatLimit,
-  formatMoney,
-  formatResetLabel,
-  formatTokens,
-  usageSeverity,
-} from '@/[fsd]/features/usage/lib/usage.helpers';
-import UsageMeter from '@/[fsd]/features/usage/ui/components/UsageMeter';
+import { UsageHelpers } from '@/[fsd]/features/settings/lib/helpers';
+import { KPICard } from '@/[fsd]/features/settings/ui/analytics';
+
+import UsageMeter from './UsageMeter';
 
 const LIMIT_SOURCE_HINT = {
   explicit: 'A limit was set specifically for this scope.',
@@ -35,13 +30,18 @@ const UsageSummary = memo(props => {
     can_see_amounts: canSeeAmounts,
   } = data;
 
-  const severity = usageSeverity(percentUsed);
+  const severity = UsageHelpers.usageSeverity(percentUsed);
 
-  const primaryLabel = canSeeAmounts
-    ? `${formatMoney(spend, currency)} of ${formatLimit(limit, currency)}`
-    : percentUsed === null || percentUsed === undefined
-      ? 'No limit applied'
-      : `${percentUsed}% of your limit used`;
+  const getPrimaryLabel = () => {
+    if (canSeeAmounts)
+      return `${UsageHelpers.formatMoney(spend, currency)} of ${UsageHelpers.formatLimit(limit, currency)}`;
+
+    if (percentUsed == null) return 'No limit applied';
+
+    return `${percentUsed}% of your limit used`;
+  };
+
+  const primaryLabel = getPrimaryLabel();
 
   // The reset chip already states this, so only show a percentage here when there is one
   const secondaryLabel = percentUsed === null || percentUsed === undefined ? '' : `${percentUsed}%`;
@@ -58,7 +58,7 @@ const UsageSummary = memo(props => {
           </Typography>
           <Chip
             size="small"
-            label={formatResetLabel(resetsAt)}
+            label={UsageHelpers.formatResetLabel(resetsAt)}
             sx={styles.resetChip}
           />
         </Box>
@@ -99,13 +99,13 @@ const UsageSummary = memo(props => {
         {canSeeAmounts && (
           <KPICard
             label="SPEND"
-            value={formatMoney(spend, currency)}
+            value={UsageHelpers.formatMoney(spend, currency)}
             subtitle="this billing period"
           />
         )}
         <KPICard
           label="TOKENS"
-          value={formatTokens(totalTokens)}
+          value={UsageHelpers.formatTokens(totalTokens)}
           subtitle="prompt and completion"
         />
         <KPICard
@@ -115,7 +115,7 @@ const UsageSummary = memo(props => {
         />
         <KPICard
           label="LIMIT"
-          value={canSeeAmounts ? formatLimit(limit, currency) : limit ? 'Set' : 'Unlimited'}
+          value={canSeeAmounts ? UsageHelpers.formatLimit(limit, currency) : limit ? 'Set' : 'Unlimited'}
           subtitle={limitSource === 'default' ? 'platform default' : 'monthly'}
         />
       </Box>
@@ -149,8 +149,8 @@ const usageSummaryStyles = () => ({
     gap: '0.75rem',
     padding: '1rem',
     borderRadius: '0.5rem',
-    border: `1px solid ${palette.border.lines}`,
-    backgroundColor: palette.background.secondary,
+    border: 'none',
+    backgroundColor: palette.background.userInputBackground,
   }),
   meterHeader: {
     display: 'flex',
@@ -173,10 +173,9 @@ const usageSummaryStyles = () => ({
     color: palette.text.metrics || palette.text.disabled,
   }),
   kpiRow: {
-    display: 'flex',
-    flexDirection: 'row',
+    display: 'grid',
+    gridTemplateColumns: 'repeat(4, 1fr)',
     gap: '0.75rem',
-    flexWrap: 'wrap',
   },
   alert: {
     fontSize: '0.8125rem',

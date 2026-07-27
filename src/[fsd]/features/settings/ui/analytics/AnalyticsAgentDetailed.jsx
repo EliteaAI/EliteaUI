@@ -4,22 +4,22 @@ import { Area, AreaChart, Tooltip as RechartsTooltip, ResponsiveContainer, XAxis
 
 import { Box, CircularProgress, IconButton, Typography, useTheme } from '@mui/material';
 
-import { useAnalyticsToolDetailQuery } from '@/[fsd]/features/analytics/api';
-import { AnalyticCommonHelpers } from '@/[fsd]/features/analytics/lib/helpers';
-import { ChartTooltip, KPICard } from '@/[fsd]/features/analytics/ui';
+import { useAnalyticsAgentDetailQuery } from '@/[fsd]/features/settings/api/analyticsApi';
+import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
+import { ChartTooltip, KPICard } from '@/[fsd]/features/settings/ui/analytics';
 import ArrowBackIcon from '@/components/Icons/ArrowBackIcon';
 
-const AnalyticsToolDetailed = memo(props => {
-  const { projectId, toolName, dateFrom, dateTo, onBack } = props;
+const AnalyticAgentDetailed = memo(props => {
+  const { projectId, entityId, dateFrom, dateTo, onBack } = props;
 
-  const styles = analyticsToolDetailedStyles();
+  const styles = analyticsAgentDetailedStyles();
   const { palette } = useTheme();
   const axisStroke = palette.text.primary;
   const axisTickStyle = { fill: axisStroke, fontSize: 11 };
 
-  const { data, isFetching } = useAnalyticsToolDetailQuery(
-    { projectId, toolName, dateFrom, dateTo },
-    { skip: !projectId || !toolName },
+  const { data, isFetching } = useAnalyticsAgentDetailQuery(
+    { projectId, entityId, dateFrom, dateTo },
+    { skip: !projectId || !entityId },
   );
 
   if (isFetching)
@@ -41,10 +41,10 @@ const AnalyticsToolDetailed = memo(props => {
       </Box>
     );
 
-  const { kpis, users = [], agents = [], daily_usage = [] } = data;
+  const { entity_name, kpis, users = [], tools = [], daily_usage = [] } = data;
 
   return (
-    <Box sx={styles.toolDetailedContent}>
+    <Box sx={styles.agentDetailedContent}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
         <IconButton
           onClick={onBack}
@@ -56,14 +56,14 @@ const AnalyticsToolDetailed = memo(props => {
           variant="labelMedium"
           sx={styles.chartTitle}
         >
-          {toolName}
+          {entity_name}
         </Typography>
       </Box>
 
       <Box sx={styles.kpiRow}>
         <KPICard
-          label="Total Calls"
-          value={AnalyticCommonHelpers.fmtNum(kpis.total_calls)}
+          label="Total Events"
+          value={AnalyticCommonHelpers.fmtNum(kpis.total_events)}
         />
         <KPICard
           label="Unique Users"
@@ -107,7 +107,7 @@ const AnalyticsToolDetailed = memo(props => {
                   tickLine={{ stroke: axisStroke }}
                 />
                 <YAxis
-                  yAxisId="calls"
+                  yAxisId="events"
                   tick={axisTickStyle}
                   axisLine={{ stroke: axisStroke }}
                   tickLine={{ stroke: axisStroke }}
@@ -121,10 +121,10 @@ const AnalyticsToolDetailed = memo(props => {
                 />
                 <RechartsTooltip content={<ChartTooltip />} />
                 <Area
-                  yAxisId="calls"
+                  yAxisId="events"
                   type="monotone"
-                  dataKey="calls"
-                  name="Calls"
+                  dataKey="events"
+                  name="Events"
                   stroke={palette.status.draft}
                   fill={palette.status.draft}
                   fillOpacity={0.15}
@@ -165,12 +165,12 @@ const AnalyticsToolDetailed = memo(props => {
             variant="bodySmall"
             sx={styles.chartSubtitle}
           >
-            {users.length} users called this tool
+            {users.length} users used this agent
           </Typography>
           <Box sx={styles.tableWrapper}>
             <Box sx={styles.tableHeader}>
               <Typography sx={[styles.tableCell, { flex: 3 }]}>User</Typography>
-              <Typography sx={[styles.tableCell, { flex: 1 }]}>Calls</Typography>
+              <Typography sx={[styles.tableCell, { flex: 1 }]}>Events</Typography>
               <Typography sx={[styles.tableCell, { flex: 1 }]}>Avg Latency</Typography>
               <Typography sx={[styles.tableCell, { flex: 1 }]}>Errors</Typography>
             </Box>
@@ -187,7 +187,7 @@ const AnalyticsToolDetailed = memo(props => {
                     {u.user_email || `User ${u.user_id}`}
                   </Typography>
                   <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
-                    {AnalyticCommonHelpers.fmtNum(u.calls)}
+                    {AnalyticCommonHelpers.fmtNum(u.events)}
                   </Typography>
                   <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
                     {AnalyticCommonHelpers.fmtDuration(u.avg_duration_ms)}
@@ -218,21 +218,21 @@ const AnalyticsToolDetailed = memo(props => {
             variant="labelMedium"
             sx={styles.chartTitle}
           >
-            Agents
+            Tools
           </Typography>
           <Typography
             variant="bodySmall"
             sx={styles.chartSubtitle}
           >
-            {agents.length} agents used this tool
+            {tools.length} tools used by this agent
           </Typography>
           <Box sx={styles.tableWrapper}>
             <Box sx={styles.tableHeader}>
-              <Typography sx={[styles.tableCell, { flex: 3 }]}>Agent</Typography>
+              <Typography sx={[styles.tableCell, { flex: 3 }]}>Tool</Typography>
               <Typography sx={[styles.tableCell, { flex: 1 }]}>Calls</Typography>
             </Box>
             <Box sx={styles.fixedScrollList}>
-              {agents.map((a, i) => (
+              {tools.map((t, i) => (
                 <Box
                   key={i}
                   sx={styles.tableRow}
@@ -241,19 +241,19 @@ const AnalyticsToolDetailed = memo(props => {
                     sx={[styles.tableCellValue, { flex: 3 }]}
                     noWrap
                   >
-                    {a.entity_name}
+                    {t.tool_name}
                   </Typography>
                   <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
-                    {AnalyticCommonHelpers.fmtNum(a.calls)}
+                    {AnalyticCommonHelpers.fmtNum(t.calls)}
                   </Typography>
                 </Box>
               ))}
-              {!agents.length && (
+              {!tools.length && (
                 <Typography
                   variant="bodySmall"
                   sx={styles.emptyText}
                 >
-                  No agent data
+                  No tool data
                 </Typography>
               )}
             </Box>
@@ -264,11 +264,11 @@ const AnalyticsToolDetailed = memo(props => {
   );
 });
 
-AnalyticsToolDetailed.displayName = 'AnalyticsToolDetailed';
+AnalyticAgentDetailed.displayName = 'AnalyticAgentDetailed';
 
 /** @type {MuiSx} */
-const analyticsToolDetailedStyles = () => ({
-  toolDetailedContent: { display: 'flex', flexDirection: 'column', gap: '1rem' },
+const analyticsAgentDetailedStyles = () => ({
+  agentDetailedContent: { display: 'flex', flexDirection: 'column', gap: '1rem' },
   kpiRow: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(9rem, 1fr))', gap: '0.75rem' },
   chartCard: ({ palette }) => ({
     padding: '1rem',
@@ -325,7 +325,7 @@ const analyticsToolDetailedStyles = () => ({
     padding: '0.5rem 0.75rem',
     borderBottom: `1px solid ${palette.border.table}`,
     gap: '0.5rem',
-    '&:hover': { backgroundColor: palette.background.conversation?.hover },
+    '&:hover': { backgroundColor: palette.background.conversation?.hover || 'rgba(255,255,255,0.02)' },
   }),
   tableCellValue: ({ palette }) => ({
     fontSize: '0.8125rem',
@@ -337,4 +337,4 @@ const analyticsToolDetailedStyles = () => ({
   fixedScrollList: { height: 300, overflowY: 'auto', overflowX: 'hidden' },
 });
 
-export default AnalyticsToolDetailed;
+export default AnalyticAgentDetailed;
