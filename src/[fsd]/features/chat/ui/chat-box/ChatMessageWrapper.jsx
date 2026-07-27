@@ -160,6 +160,7 @@ const ChatMessageWrapper = memo(props => {
       exception={message.exception}
       subAgentErrors={message.subAgentErrors}
       toolActions={message.toolActions || []}
+      appliedSkills={message.appliedSkills}
       tools={messageParticipant?.meta?.tools || toolsFromConversation}
       subAgentTypeByName={subAgentTypeByName}
       isLoading={Boolean(message.isLoading)}

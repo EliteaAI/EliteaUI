@@ -178,6 +178,7 @@ export const convertToAIAnswer = (message_group, message_groups, participants, t
     references = [],
     is_error = false,
     error,
+    invoked_skills: rawAppliedSkills,
     context: { included: contextIncluded } = {},
   } = meta || {};
   const isSummarized = contextIncluded === false;
@@ -337,6 +338,7 @@ export const convertToAIAnswer = (message_group, message_groups, participants, t
     originalId: id,
     task_id,
     toolActions,
+    appliedSkills: rawAppliedSkills ?? [],
     isSummarized,
     // HITL resume state (#4823). threadId powers the single-pause resume;
     // hitlInterrupts (when set) routes parallel/fan-out resume via tool_call_id.

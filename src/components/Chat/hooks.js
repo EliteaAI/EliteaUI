@@ -1381,7 +1381,19 @@ export const useChatSocket = ({
         }
         case SocketMessageType.Freeform:
           break;
-        case SocketMessageType.AgentStart:
+        case SocketMessageType.AgentStart: {
+          // A fan-out child emits its own agent_start on the PARENT's message id, carrying
+          // no skills, so an empty list here is never authoritative.
+          const incomingSkills = response_metadata?.invoked_skills;
+          if (Array.isArray(incomingSkills) && incomingSkills.length) {
+            const known = new Set(
+              (msg.appliedSkills || []).map(skill => (skill?.name || '').trim().toLowerCase()),
+            );
+            msg.appliedSkills = [
+              ...(msg.appliedSkills || []),
+              ...incomingSkills.filter(skill => !known.has((skill?.name || '').trim().toLowerCase())),
+            ];
+          }
           // For attachment indexing events, initialize and add message to chat history
           if (msgIndex === -1 && sio_event === 'chat_predict_attachment') {
             msg.isLoading = true;
@@ -1401,6 +1413,7 @@ export const useChatSocket = ({
           }
           onRcvAgentEventRef.current && onRcvAgentEventRef.current({ ...message });
           break;
+        }
         case SocketMessageType.SwarmChildMessage: {
           // Handle swarm child agent message - add as tool action on parent message
           const {

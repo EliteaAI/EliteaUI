@@ -22,6 +22,7 @@ import {
   resolveSubAgentLiveness,
   selectRichestAgentPath,
 } from '@/[fsd]/features/chat/lib/helpers/subAgentGrouping.helpers.js';
+import { AppliedSkills } from '@/[fsd]/features/chat/ui/applied-skills';
 import { ErrorTrace } from '@/[fsd]/features/chat/ui/error-trace';
 import { SubAgentAccordion } from '@/[fsd]/features/chat/ui/sub-agent-section';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
@@ -306,6 +307,7 @@ const ApplicationThinkView = memo(props => {
     defaultExpanded = false,
     actions,
     originalActions,
+    appliedSkills = [],
     isStreaming = false,
     tools,
     subAgentTypeByName,
@@ -1010,11 +1012,12 @@ const ApplicationThinkView = memo(props => {
             variant="bodyMedium"
             sx={styles.summaryText}
           >
-            {`Thought for ${thoughtDuration}`}
+            {actions?.length || originalActions?.length ? `Thought for ${thoughtDuration}` : 'Skills applied'}
           </Typography>
         </Box>
       </StyledAccordionSummary>
       <StyledAccordionDetails sx={isStreaming ? styles.streamingContainer : styles.accordionDetails}>
+        <AppliedSkills skills={appliedSkills} />
         {/* One component tree renders both live and persisted hierarchy. */}
         <StreamingThinkBlocks
           blocks={isStreaming ? streamingBlocks : historyBlocks}

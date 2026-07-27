@@ -36,7 +36,14 @@ const useSynAgentChatMessage = ({ setActiveConversation }) => {
           // are NOT in meta anymore (TS-4), so convertToAIAnswer produces none on this sync. Preserve
           // the live-built toolActions wholesale rather than overwriting them with an empty set —
           // otherwise the chips vanish the instant a run finalizes. Reload rebuilds them from traces.
-          return { ...message, ...convertedMessageGroup, toolActions: message.toolActions || [] };
+          return {
+            ...message,
+            ...convertedMessageGroup,
+            toolActions: message.toolActions || [],
+            appliedSkills: convertedMessageGroup.appliedSkills?.length
+              ? convertedMessageGroup.appliedSkills
+              : message.appliedSkills,
+          };
         });
 
         const { reply_to_first_message_item_uuid } = message_group;

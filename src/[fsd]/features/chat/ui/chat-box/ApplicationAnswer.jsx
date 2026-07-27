@@ -63,6 +63,8 @@ const COMPACT_VIEW_BREAKPOINT = 340;
 
 export const ALLOW_EDIT_WHOLE_MESSAGE = false;
 
+const EMPTY_APPLIED_SKILLS = [];
+
 const ApplicationAnswer = React.forwardRef((props, ref) => {
   const theme = useTheme();
 
@@ -91,6 +93,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
     messageId,
     minHeight,
     toolActions = [],
+    appliedSkills = EMPTY_APPLIED_SKILLS,
     tools,
     subAgentTypeByName,
     onRemoveAttachment,
@@ -476,7 +479,8 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
   ]);
 
   const isWideView = actionButtonsWrapperWidth > COMPACT_VIEW_BREAKPOINT;
-  const hasToolActionsOrException = nonSwarmChildActions.length || swarmChildActions.length || exception;
+  const hasToolActionsOrException =
+    nonSwarmChildActions.length || swarmChildActions.length || appliedSkills.length || exception;
   const styles = applicationAnswerStyles(
     verticalMode,
     minHeight,
@@ -587,10 +591,11 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
           {/* Live thinking view shows tool-call chips only. HITL approval cards
               (including Track 2 fan-out children) render in the message box below
               via hitlBuckets, so they survive the per-turn StartTask (#4993). */}
-          {nonSwarmChildActions?.length > 0 && (
+          {(nonSwarmChildActions?.length > 0 || appliedSkills.length > 0) && (
             <ApplicationThinkView
               actions={[...nonSwarmChildActions]}
               originalActions={toolActions.filter(action => action.type !== TOOL_ACTION_TYPES.SwarmChild)}
+              appliedSkills={appliedSkills}
               isStreaming={isProcessing}
               tools={tools}
               subAgentTypeByName={subAgentTypeByName}

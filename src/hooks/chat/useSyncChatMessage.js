@@ -123,7 +123,14 @@ const useSynChatMessage = ({
           // the live-built toolActions wholesale rather than overwriting them with an empty set —
           // otherwise the chips vanish the instant a run finalizes. Reload rebuilds them from the
           // trace endpoints. See useLoadMoreMessages / useSelectConversation.
-          return { ...message, ...convertedMessageGroup, toolActions: message.toolActions || [] };
+          return {
+            ...message,
+            ...convertedMessageGroup,
+            toolActions: message.toolActions || [],
+            appliedSkills: convertedMessageGroup.appliedSkills?.length
+              ? convertedMessageGroup.appliedSkills
+              : message.appliedSkills,
+          };
         });
 
         if (reply_to_first_message_item_uuid && existingMessage?.question_id) {

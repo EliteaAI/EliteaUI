@@ -1070,6 +1070,7 @@ const ChatBox = forwardRef((props, boxRef) => {
                 references: [],
                 exception: undefined,
                 toolActions: [],
+                appliedSkills: [],
                 isRegenerating: true,
                 created_at: new Date().getTime(),
               },
