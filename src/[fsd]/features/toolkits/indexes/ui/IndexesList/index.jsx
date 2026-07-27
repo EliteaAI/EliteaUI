@@ -42,7 +42,7 @@ const IndexesList = memo(props => {
           variant="bodyMedium"
           sx={styles.placeholder}
         >
-          Still no indexes created
+          No indexes yet. Create your first index to get started
         </Typography>
       ) : (
         <Box sx={styles.indexesListContainer}>
