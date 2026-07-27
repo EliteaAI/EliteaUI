@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { format, fromUnixTime } from 'date-fns';
 import { useDispatch, useSelector } from 'react-redux';
@@ -8,6 +8,10 @@ import { Box, Typography } from '@mui/material';
 import { useRunHistorySorting } from '@/[fsd]/entities/run-history/lib/hooks';
 import { RunHistorySortableHeader } from '@/[fsd]/entities/run-history/ui';
 import { IndexHistoryItemsLabels, IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants';
+import {
+  getIndexHistoryRunIdentity,
+  reconcileIndexHistorySelection,
+} from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexHistorySelection.helpers';
 import { actions, selectHistoryItem } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
 
 const SORT_TYPES = {
@@ -22,7 +26,12 @@ const IndexHistory = memo(props => {
   const styles = indexHistoryStyles();
 
   const selectedHistoryItem = useSelector(selectHistoryItem);
+  const selectedHistoryItemRef = useRef(selectedHistoryItem);
+  const previousLatestIdentityRef = useRef(null);
+  const selectionInitializedRef = useRef(false);
   const { sortConfig, handleSortItems, getSortedData } = useRunHistorySorting(SORT_TYPES.DATE);
+
+  selectedHistoryItemRef.current = selectedHistoryItem;
 
   const initialCompletedTs = useMemo(() => {
     const completed = history.filter(h => h.state === IndexStatuses.success);
@@ -40,13 +49,24 @@ const IndexHistory = memo(props => {
   );
 
   useEffect(() => {
-    dispatch(actions.selectHistoryItem(annotateItem(history[history.length - 1])));
+    const selection = reconcileIndexHistorySelection({
+      history,
+      selectedItem: selectedHistoryItemRef.current,
+      previousLatestIdentity: previousLatestIdentityRef.current,
+      initialized: selectionInitializedRef.current,
+    });
 
-    return () => {
+    selectionInitializedRef.current = true;
+    previousLatestIdentityRef.current = selection.latestIdentity;
+    dispatch(actions.selectHistoryItem(annotateItem(selection.selectedItem)));
+  }, [annotateItem, dispatch, history]);
+
+  useEffect(
+    () => () => {
       dispatch(actions.selectHistoryItem(null));
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    },
+    [dispatch],
+  );
 
   const resolveLabel = useCallback(
     item => {
@@ -100,8 +120,7 @@ const IndexHistory = memo(props => {
             key={`${idx}_${historyItem.conversation_id}`}
             sx={[
               styles.historyItem,
-              historyItem.updated_on === selectedHistoryItem?.updated_on &&
-                historyItem.conversation_id === selectedHistoryItem?.conversation_id &&
+              getIndexHistoryRunIdentity(historyItem) === getIndexHistoryRunIdentity(selectedHistoryItem) &&
                 styles.selected,
             ]}
             onClick={() => handleSelectHistoryItem(historyItem)}
