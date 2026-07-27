@@ -2,8 +2,8 @@ import { memo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { AnalyticsCommonConstants } from '@/[fsd]/features/analytics/lib/constants';
-import { AnalyticCommonHelpers } from '@/[fsd]/features/analytics/lib/helpers';
+import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
+import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 
 const ModelUsageTable = memo(props => {
   const { models = [], totalCalls } = props;

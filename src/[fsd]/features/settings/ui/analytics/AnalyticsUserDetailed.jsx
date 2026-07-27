@@ -4,10 +4,10 @@ import { Area, AreaChart, Tooltip as RechartsTooltip, ResponsiveContainer, XAxis
 
 import { Box, CircularProgress, IconButton, Typography, useTheme } from '@mui/material';
 
-import { useAnalyticsUserDetailQuery } from '@/[fsd]/features/analytics/api';
-import { AnalyticsCommonConstants } from '@/[fsd]/features/analytics/lib/constants';
-import { AnalyticCommonHelpers } from '@/[fsd]/features/analytics/lib/helpers';
-import { ChartTooltip, KPICard } from '@/[fsd]/features/analytics/ui';
+import { useAnalyticsUserDetailQuery } from '@/[fsd]/features/settings/api/analyticsApi';
+import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
+import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
+import { ChartTooltip, KPICard } from '@/[fsd]/features/settings/ui/analytics';
 import ArrowBackIcon from '@/components/Icons/ArrowBackIcon';
 
 const AnalyticsUserDetailed = memo(props => {

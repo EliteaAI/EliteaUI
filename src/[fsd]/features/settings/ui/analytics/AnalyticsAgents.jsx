@@ -14,9 +14,9 @@ import {
 
 import { Box, CircularProgress, TablePagination, Typography, useTheme } from '@mui/material';
 
-import { AnalyticsCommonConstants } from '@/[fsd]/features/analytics/lib/constants';
-import { AnalyticCommonHelpers } from '@/[fsd]/features/analytics/lib/helpers';
-import { AnalyticsAgentDetailed, ChartTooltip } from '@/[fsd]/features/analytics/ui';
+import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
+import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
+import { AnalyticsAgentDetailed, ChartTooltip } from '@/[fsd]/features/settings/ui/analytics';
 import { useAnalyticsAgentsQuery } from '@/api';
 import StyledSearchInput from '@/components/SearchInput';
 

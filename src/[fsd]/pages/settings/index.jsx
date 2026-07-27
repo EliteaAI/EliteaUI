@@ -15,6 +15,7 @@ import EnvironmentIcon from '@/assets/environment-icon.svg?react';
 import KeyIcon from '@/assets/key-icon.svg?react';
 import LogoutIcon from '@/assets/logout-icon.svg?react';
 import PersonalizationIcon from '@/assets/personalization-icon.svg?react';
+import PieChartIcon from '@/assets/pie-chart-icon.svg?react';
 import ReasonIcon from '@/assets/reason-icon.svg?react';
 import { PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';
 import BellIcon from '@/components/Icons/BellIcon';
@@ -38,6 +39,7 @@ const VALID_TAB_IDS = [
   'secrets',
   'users',
   'analytics',
+  'usage',
   'preferences',
   'ai-personality',
   'memory',
@@ -97,6 +99,11 @@ const SETTINGS_TABS_CONFIG = [
         id: 'analytics',
         label: 'Analytics',
         icon: <AnalyticsIcon />,
+      },
+      {
+        id: 'usage',
+        label: 'Usage',
+        icon: <PieChartIcon />,
       },
     ],
   },
@@ -162,6 +169,7 @@ const Settings = memo(() => {
             if (item.publicOnly) return projectId == PUBLIC_PROJECT_ID;
             if (item.id === 'project-context') return projectId !== PUBLIC_PROJECT_ID;
             if (item.id === 'analytics' && platformSettings?.analytics_enabled === false) return false;
+            if (item.id === 'usage' && !platformSettings?.cost_budgets_enabled) return false;
             return true;
           }),
       })).filter(section => section.tabs.length > 0),
@@ -222,6 +230,13 @@ const Settings = memo(() => {
   // Guard: redirect away from analytics if disabled at platform level
   useEffect(() => {
     if (tab === 'analytics' && platformSettings?.analytics_enabled === false) {
+      handleSettingsItemClick(DEFAULT_TAB);
+    }
+  }, [handleSettingsItemClick, platformSettings, tab]);
+
+  // Guard: redirect away from usage when cost tracking is off (wait for settings to load)
+  useEffect(() => {
+    if (tab === 'usage' && platformSettings && !platformSettings.cost_budgets_enabled) {
       handleSettingsItemClick(DEFAULT_TAB);
     }
   }, [handleSettingsItemClick, platformSettings, tab]);

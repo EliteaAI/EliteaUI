@@ -2,7 +2,7 @@ import { memo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { AnalyticCommonHelpers } from '@/[fsd]/features/analytics/lib/helpers';
+import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 
 const ChartTooltip = memo(props => {
   const { active, payload, label } = props;

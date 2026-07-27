@@ -2,7 +2,7 @@ import { memo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { AnalyticsCommonConstants } from '@/[fsd]/features/analytics/lib/constants';
+import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 
 const AnalyticsGuide = memo(() => {
   const styles = analyticsGuideStyles();
