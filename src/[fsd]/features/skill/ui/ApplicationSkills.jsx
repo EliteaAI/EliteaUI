@@ -31,6 +31,8 @@ const ApplicationSkills = memo(({ style, disabled, entityProjectId }) => {
 
   const entityVersionId = values?.version_details?.id;
   const isEntityUnsaved = !values?.id || !entityVersionId;
+  const versionStatus = values?.version_details?.status;
+  const isVersionLocked = versionStatus === 'published' || versionStatus === 'embedded';
 
   const { data: applicationSkills } = useGetApplicationSkillsQuery(
     { projectId, appVersionId: entityVersionId },
@@ -52,7 +54,10 @@ const ApplicationSkills = memo(({ style, disabled, entityProjectId }) => {
         {
           title: SKILLS_TITLE,
           content: (
-            <Box sx={styles.containerStyles}>
+            <Box
+              sx={styles.containerStyles}
+              data-testid="agent-skills-section"
+            >
               <Box sx={styles.headerRow}>
                 {!disabled && (
                   <SkillMenu
@@ -61,11 +66,13 @@ const ApplicationSkills = memo(({ style, disabled, entityProjectId }) => {
                     attachedSkillIds={attachedSkillIds}
                     disabled={isAtLimit}
                     isEntityUnsaved={isEntityUnsaved}
+                    isVersionLocked={isVersionLocked}
                   />
                 )}
                 <Typography
                   variant="bodySmall"
                   sx={styles.counter}
+                  data-testid="agent-skills-counter"
                 >
                   {skills.length}/{maxSkills} skills added.
                 </Typography>
@@ -76,7 +83,8 @@ const ApplicationSkills = memo(({ style, disabled, entityProjectId }) => {
                   key={skill.skill_id}
                   skill={skill}
                   entityVersionId={entityVersionId}
-                  disabled={disabled}
+                  disabled={disabled || isVersionLocked}
+                  isPublicView={disabled}
                 />
               ))}
             </Box>

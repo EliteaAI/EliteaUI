@@ -15,5 +15,11 @@ export { default as IndexChatContainer } from './IndexDetails/IndexChat';
 export { default as IndexListItem } from './IndexesList/IndexListItem';
 export { default as IndexesList } from './IndexesList';
 
+// Breadcrumb
+export { default as IndexBreadcrumb } from './IndexBreadcrumb';
+
 // Main container
 export { default as IndexesContainer } from './IndexesContainer';
+
+// Headless reindex runner
+export { default as HeadlessReindexRunner } from './HeadlessReindexRunner';

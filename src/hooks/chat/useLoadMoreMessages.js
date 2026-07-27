@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import { useLazyMessageListQuery } from '@/api';
-import { convertMessagesToChatHistory } from '@/common/convertChatConversationMessages';
+import { useLazyMessageListQuery, useLazyMessageTracesQuery } from '@/api';
+import {
+  buildTraceListParams,
+  convertMessagesToChatHistory,
+  groupTraceStepsByGroupId,
+} from '@/common/convertChatConversationMessages';
 import { buildErrorMessage } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
@@ -10,6 +14,7 @@ const useLoadMoreMessages = ({ setChatHistory, activeConversation, toastError })
   const [page, setPage] = useState(1);
   const projectId = useSelectedProjectId();
   const [getMessageList, { isError, error }] = useLazyMessageListQuery();
+  const [getMessageTraces] = useLazyMessageTracesQuery();
 
   const onLoadMoreMessages = useCallback(
     async callback => {
@@ -22,12 +27,22 @@ const useLoadMoreMessages = ({ setChatHistory, activeConversation, toastError })
           pageSize: 10,
         });
         if (result.data) {
+          // Pins for the loaded page come from message_trace_step (TS-4). Cached per conversation,
+          // so repeated load-more calls dedupe. Failure degrades to no pins for the page.
+          const tracesResult = await getMessageTraces({
+            projectId,
+            conversationId: activeConversation?.id,
+            params: buildTraceListParams(result.data.rows),
+          });
+          const traceStepsByGroupId = groupTraceStepsByGroupId(tracesResult.data);
           setChatHistory(prev => {
             callback && callback();
             return [
               ...convertMessagesToChatHistory(
                 result.data.rows.slice().reverse(),
                 activeConversation?.participants,
+                undefined,
+                traceStepsByGroupId,
               ).filter(message => !prev.find(preMessage => preMessage.id === message.id)),
               ...prev,
             ];
@@ -42,6 +57,7 @@ const useLoadMoreMessages = ({ setChatHistory, activeConversation, toastError })
       activeConversation?.messages_count,
       activeConversation?.participants,
       getMessageList,
+      getMessageTraces,
       isLoadingMore,
       page,
       projectId,

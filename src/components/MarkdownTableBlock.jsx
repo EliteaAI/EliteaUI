@@ -61,7 +61,7 @@ export default function MarkdownTableBlock({
 
   const onCopy = useCallback(async () => {
     await navigator.clipboard.writeText(tableRowData);
-    toastInfo('The code has been copied into clipboard');
+    toastInfo('The code has been copied to the clipboard.');
   }, [tableRowData, toastInfo]);
   const { onClickCopy } = useCopyDownloadHandlers({ onCopy });
 

@@ -64,7 +64,7 @@ const MaxTokensSection = memo(props => {
         onChange={handleModeChange}
         items={[
           {
-            label: 'Auto',
+            label: 'Default',
             value: 'auto',
             info: 'System automatically sets the best token limit for this model.',
           },

@@ -12,6 +12,7 @@ export const uploadSlice = createSlice({
     isUploading: false,
     uploadFinished: false,
     skippedFiles: [],
+    hasPermissionError: false,
     fileStatuses: [
       //   {
       //   uploadProgress: 100,
@@ -36,6 +37,9 @@ export const uploadSlice = createSlice({
     },
     setSkippedFiles: (state, action) => {
       state.skippedFiles = action.payload;
+    },
+    setHasPermissionError: (state, action) => {
+      state.hasPermissionError = action.payload;
     },
     updateFileStatus: (state, action) => {
       const newStatus = [...state.fileStatuses];
@@ -134,6 +138,7 @@ export const uploadFile = createAsyncThunk(
     Promise.allSettled(uploadPromises).then(results => {
       // All requests completed (either fulfilled or rejected)
       let hasFailure = false;
+      let hasPermissionError = false;
       results.forEach((result, index) => {
         if (result.status === 'fulfilled') {
           dispatch(
@@ -152,14 +157,24 @@ export const uploadFile = createAsyncThunk(
             }),
           );
           hasFailure = true;
+          if (result.reason?.response?.status === 403) {
+            hasPermissionError = true;
+          }
         }
       });
+      dispatch(uploadSlice.actions.setHasPermissionError(hasPermissionError));
       dispatch(uploadSlice.actions.setIsUploading(hasFailure));
       dispatch(uploadSlice.actions.setUploadFinished(true));
     });
   },
 );
 
-export const { setUploadProgress, setUploadFinished, setIsUploading, setSkippedFiles } = uploadSlice.actions;
+export const {
+  setUploadProgress,
+  setUploadFinished,
+  setIsUploading,
+  setSkippedFiles,
+  setHasPermissionError,
+} = uploadSlice.actions;
 export const { name } = uploadSlice;
 export default uploadSlice.reducer;

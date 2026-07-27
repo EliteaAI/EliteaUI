@@ -144,7 +144,8 @@ export const canonicalizeServerUrl = url => {
     const segments = rawPath.split('/').filter((seg, i) => i === 0 || seg !== '');
     const normalizedPath = segments.join('/').toLowerCase();
     const path = normalizedPath === '/' ? '' : normalizedPath;
-    return `${scheme}://${host}${port}${path}`;
+    const canonical = `${scheme}://${host}${port}${path}`;
+    return McpAuthConstants.MCP_DEPRECATED_URL_MAP[canonical] ?? canonical;
   } catch {
     return url.toLowerCase().replace(/\/$/, '');
   }
@@ -281,10 +282,24 @@ export const setAccessToken = (
   // Notify components that token has changed
   dispatchTokenChangeEvent(key, 'login');
 
-  // Remove from ignored servers when a new token is provided
+  // Remove from ignored servers when a new token is provided.
+  // For prebuilt MCPs the token is stored under toolkitType (e.g. 'mcp_github')
+  // but addIgnoredServer stores the entry under the canonical server URL.
+  // We must remove both keys so the ignored entry is always cleaned up.
   const ignoredServers = loadIgnoredServers();
+  let ignoredChanged = false;
   if (ignoredServers[key]) {
     delete ignoredServers[key];
+    ignoredChanged = true;
+  }
+  if (serverUrl) {
+    const canonicalKey = canonicalizeServerUrl(serverUrl);
+    if (canonicalKey !== key && ignoredServers[canonicalKey]) {
+      delete ignoredServers[canonicalKey];
+      ignoredChanged = true;
+    }
+  }
+  if (ignoredChanged) {
     saveIgnoredServers(ignoredServers);
   }
 };

@@ -178,6 +178,7 @@ const ChatMessageWrapper = memo(props => {
       requiresConfirmation={message.requiresConfirmation}
       hitlInterrupt={hideHitlActions ? null : message.hitlInterrupt}
       hitlInterrupts={hideHitlActions ? null : message.hitlInterrupts}
+      resumingAgentPaths={message.resumingAgentPaths}
       onHitlResume={!hideHitlActions && isLastMessage && onHitlResume ? onHitlResume : undefined}
       hideContinueButton={hideContinueButton}
       // Swarm mode props

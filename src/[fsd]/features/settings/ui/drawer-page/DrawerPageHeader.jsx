@@ -2,9 +2,9 @@ import { memo, useCallback } from 'react';
 
 import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 
+import { Input } from '@/[fsd]/shared/ui';
 import ArrowBackIcon from '@/components/Icons/ArrowBackIcon';
 import PlusIcon from '@/components/Icons/PlusIcon';
-import StyledSearchInput from '@/components/SearchInput';
 
 const DrawerPageHeader = memo(props => {
   const {
@@ -21,12 +21,8 @@ const DrawerPageHeader = memo(props => {
   const { search, onChangeSearch, placeholder = 'Search something amazing!' } = slotProps?.searchInput || {};
   const { onAdd, disabled, tooltip: addButtonTooltip, tourId: addButtonTourId } = slotProps?.addButton || {};
   const styles = getStyles();
-  const handleInputChange = useCallback(
-    event => {
-      onChangeSearch(event.target.value);
-    },
-    [onChangeSearch],
-  );
+
+  const handleSearchClear = useCallback(() => onChangeSearch(''), [onChangeSearch]);
 
   return (
     <Box sx={[styles.container(showBorder), sx]}>
@@ -51,10 +47,12 @@ const DrawerPageHeader = memo(props => {
       </Box>
       <Box sx={styles.body}>
         {showSearchInput && (
-          <StyledSearchInput
-            search={search}
-            onChangeSearch={handleInputChange}
+          <Input.SimpleSearchBar
+            searchQuery={search}
+            onSearchChange={onChangeSearch}
+            onSearchClear={handleSearchClear}
             placeholder={placeholder}
+            autoFocus={false}
             sx={styles.searchInput}
           />
         )}
@@ -121,14 +119,8 @@ const getStyles = () => ({
     },
   }),
   searchInput: {
-    flexShrink: 0, // Allow input to shrink
+    flexShrink: 0,
     width: '15rem',
-    height: '2.25rem',
-    backgroundColor: ({ palette }) => palette.background.userInputBackgroundActive,
-    borderRadius: '1.6875rem',
-    gap: '.5rem',
-    borderBottom: '0rem',
-    padding: '0.375rem 0.75rem',
   },
   addButton: ({ palette }) => ({
     minWidth: '1.75rem',

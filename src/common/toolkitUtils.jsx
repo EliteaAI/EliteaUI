@@ -23,7 +23,9 @@ import CodexIcon from '@/assets/codex.svg?react';
 import Context7Icon from '@/assets/context7.svg?react';
 import DeepwikiQueryIcon from '@/assets/deepwiki_query.svg?react';
 import DialIcon from '@/assets/dial-icon.svg?react';
+import EliteaFilledIcon from '@/assets/elitea_filled.svg?react';
 import EmbeddingIcon from '@/assets/embeddings.svg?react';
+import EpamDefaultIcon from '@/assets/epam_default.svg?react';
 import FigmaIcon from '@/assets/figma-icon.svg?react';
 import FlowIcon from '@/assets/flow-icon.svg?react';
 import GitlabWorkspaceIcon from '@/assets/gitlab-space.svg?react';
@@ -113,11 +115,12 @@ const generateColorMatrix = color => {
   return `0 0 0 0 ${r}
           0 0 0 0 ${g}
           0 0 0 0 ${b}
-          0 0 0 1 0`;
+          0 0 0 3 0`;
 };
 
 const EliteASvgIcon = ({ iconUrl, isToolIcon, fallbackIcon, ...iconProps }) => {
   const theme = useTheme();
+
   const [iconError, setIconError] = useState(false);
   const matrix = generateColorMatrix(theme.palette.icon.fill.default);
 
@@ -139,10 +142,7 @@ const EliteASvgIcon = ({ iconUrl, isToolIcon, fallbackIcon, ...iconProps }) => {
     return fallbackIcon || <BuildIcon {...iconProps} />;
   } else {
     return (
-      <SvgIcon
-        {...iconProps}
-        style={{ color: 'red' }}
-      >
+      <SvgIcon {...iconProps}>
         <defs>
           <filter
             id="customColor1"
@@ -344,6 +344,17 @@ const getPredefinedIcon = (type, iconProps) => {
   }
 };
 
+const getGroupBrandIcon = (group, iconProps) => {
+  switch (group?.toLowerCase()) {
+    case 'elitea':
+      return <EliteaFilledIcon {...iconProps} />;
+    case 'epam':
+      return <EpamDefaultIcon {...iconProps} />;
+    default:
+      return null;
+  }
+};
+
 export const getToolIconByType = (
   type,
   theme,
@@ -362,10 +373,9 @@ export const getToolIconByType = (
     return getInternalToolIcon(internalToolkitName, iconProps);
   }
 
-  const realType = isMCP ? 'mcp' : type;
-  const predefinedIcon = getPredefinedIcon(realType, iconProps);
+  const predefinedIcon = getPredefinedIcon(type, iconProps);
 
-  if (predefinedIcon.type !== BuildIcon) {
+  if (predefinedIcon.type !== BuildIcon && predefinedIcon.type !== MCPIcon) {
     return predefinedIcon;
   }
 
@@ -380,11 +390,16 @@ export const getToolIconByType = (
     );
   }
 
+  const groupIcon = getGroupBrandIcon(toolSchema?.metadata?.group, iconProps);
+  if (groupIcon) {
+    return groupIcon;
+  }
+
   if (isAppAll) {
     return <ApplicationToolkitIcon {...iconProps} />;
   }
 
-  return predefinedIcon;
+  return isMCP || predefinedIcon.type === MCPIcon ? <MCPIcon {...iconProps} /> : <BuildIcon {...iconProps} />;
 };
 
 export const getToolIcon = toolType => {

@@ -68,6 +68,7 @@ const CardTagSection = memo(props => {
             text={`+${tagLength + extraTagsCount - MAX_NUMBER_TAGS_SHOWN}`}
             showDivider={false}
             onClick={handleTagNumberClick}
+            isOverflow
           />
         </Box>
       ) : null}
@@ -80,6 +81,7 @@ const CardTagSection = memo(props => {
             text={`+${extraTagsCount}`}
             showDivider={false}
             onClick={handleTagNumberClick}
+            isOverflow
           />
         </Box>
       ) : null}

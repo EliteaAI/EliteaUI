@@ -1,7 +1,7 @@
 import { memo, useCallback, useEffect, useMemo } from 'react';
 
 import { useDispatch } from 'react-redux';
-import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
@@ -9,11 +9,14 @@ import { SettingsLayoutConstants } from '@/[fsd]/features/settings/lib/constants
 import { SettingsDrawer, SettingsRedirect } from '@/[fsd]/features/settings/ui/settings-drawer';
 import { useGetPlatformSettingsQuery } from '@/api/platformSettings';
 import AnalyticsIcon from '@/assets/analytics-icon.svg?react';
+import BrainIcon from '@/assets/brain.svg?react';
 import ConfigurationIcon from '@/assets/configuration-icon.svg?react';
 import EnvironmentIcon from '@/assets/environment-icon.svg?react';
 import KeyIcon from '@/assets/key-icon.svg?react';
 import LogoutIcon from '@/assets/logout-icon.svg?react';
 import PersonalizationIcon from '@/assets/personalization-icon.svg?react';
+import PieChartIcon from '@/assets/pie-chart-icon.svg?react';
+import ReasonIcon from '@/assets/reason-icon.svg?react';
 import { PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';
 import BellIcon from '@/components/Icons/BellIcon';
 import BriefcaseIcon from '@/components/Icons/BriefcaseIcon';
@@ -26,16 +29,20 @@ import RouteDefinitions, { PathSessionMap } from '@/routes';
 import { logout } from '@/slices/user.js';
 
 const VALID_TAB_IDS = [
-  'model-configuration',
+  'ai-providers',
   'prompts',
   'environment',
-  'project-params',
+  'project-general',
+  'project-context',
   'tokens',
   'integrations',
   'secrets',
   'users',
   'analytics',
-  'personalization',
+  'usage',
+  'preferences',
+  'ai-personality',
+  'memory',
   'notifications',
   'logout',
 ];
@@ -50,9 +57,20 @@ const SETTINGS_TABS_CONFIG = [
     section: SETTINGS_SECTIONS.PROJECT,
     tabs: [
       {
-        id: 'model-configuration',
-        label: 'AI Configuration',
+        id: 'project-general',
+        label: 'General',
+        icon: <BriefcaseIcon />,
+      },
+      {
+        id: 'ai-providers',
+        label: 'AI Providers',
         icon: <ConfigurationIcon />,
+      },
+      {
+        id: 'project-context',
+        label: 'Project Context',
+        icon: <BriefcaseIcon />,
+        permission: PERMISSIONS.projectContext.view,
       },
       {
         id: 'prompts',
@@ -65,12 +83,6 @@ const SETTINGS_TABS_CONFIG = [
         label: 'Environment',
         icon: <EnvironmentIcon />,
         publicOnly: true,
-      },
-      {
-        id: 'project-params',
-        label: 'Project Params',
-        icon: <BriefcaseIcon />,
-        permission: PERMISSIONS.projectContext.view,
       },
       {
         id: 'secrets',
@@ -88,15 +100,30 @@ const SETTINGS_TABS_CONFIG = [
         label: 'Analytics',
         icon: <AnalyticsIcon />,
       },
+      {
+        id: 'usage',
+        label: 'Usage',
+        icon: <PieChartIcon />,
+      },
     ],
   },
   {
     section: SETTINGS_SECTIONS.PERSONAL,
     tabs: [
       {
-        id: 'personalization',
-        label: 'Personalization',
+        id: 'preferences',
+        label: 'Preferences',
         icon: <PersonalizationIcon />,
+      },
+      {
+        id: 'ai-personality',
+        label: 'AI Personality',
+        icon: <ReasonIcon />,
+      },
+      {
+        id: 'memory',
+        label: 'Memory',
+        icon: <BrainIcon />,
       },
       {
         id: 'tokens',
@@ -118,15 +145,15 @@ const SETTINGS_TABS_CONFIG = [
   },
 ];
 
-const DEFAULT_TAB = 'model-configuration';
+const DEFAULT_TAB = 'project-general';
 const LEGACY_TAB_REDIRECTS = ['configuration', 'information'];
 
 const Settings = memo(() => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const styles = settingsPageStyles();
-  const { state: locationState } = useLocation();
-  const { tab = DEFAULT_TAB } = useParams();
+  const { state: locationState, pathname } = useLocation();
+  const tab = VALID_TAB_IDS.find(id => pathname === `${RouteDefinitions.Settings}/${id}`) ?? DEFAULT_TAB;
   const projectId = useSelectedProjectId();
   const { checkPermission } = useCheckPermission();
   const { data: platformSettings } = useGetPlatformSettingsQuery();
@@ -140,8 +167,9 @@ const Settings = memo(() => {
           .filter(item => {
             if (!checkPermission(item.permission)) return false;
             if (item.publicOnly) return projectId == PUBLIC_PROJECT_ID;
-            if (item.id === 'project-params') return projectId !== PUBLIC_PROJECT_ID;
+            if (item.id === 'project-context') return projectId !== PUBLIC_PROJECT_ID;
             if (item.id === 'analytics' && platformSettings?.analytics_enabled === false) return false;
+            if (item.id === 'usage' && !platformSettings?.cost_budgets_enabled) return false;
             return true;
           }),
       })).filter(section => section.tabs.length > 0),
@@ -192,9 +220,23 @@ const Settings = memo(() => {
     }
   }, [handleSettingsItemClick, projectId, tab]);
 
+  // Guard: hide Project Context for the Public project
+  useEffect(() => {
+    if (tab === 'project-context' && projectId == PUBLIC_PROJECT_ID) {
+      navigate(`${RouteDefinitions.Settings}/${DEFAULT_TAB}`, { replace: true });
+    }
+  }, [navigate, projectId, tab]);
+
   // Guard: redirect away from analytics if disabled at platform level
   useEffect(() => {
     if (tab === 'analytics' && platformSettings?.analytics_enabled === false) {
+      handleSettingsItemClick(DEFAULT_TAB);
+    }
+  }, [handleSettingsItemClick, platformSettings, tab]);
+
+  // Guard: redirect away from usage when cost tracking is off (wait for settings to load)
+  useEffect(() => {
+    if (tab === 'usage' && platformSettings && !platformSettings.cost_budgets_enabled) {
       handleSettingsItemClick(DEFAULT_TAB);
     }
   }, [handleSettingsItemClick, platformSettings, tab]);

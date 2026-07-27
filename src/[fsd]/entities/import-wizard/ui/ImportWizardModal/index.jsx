@@ -113,6 +113,9 @@ const ImportWizardModal = memo(props => {
     <Modal.BaseModal
       open={open}
       title={modalTitle}
+      data-testid={
+        importSucceedData || forkedData ? 'agent-import-complete-dialog' : 'agent-import-preview-dialog'
+      }
       onClose={onCloseHandler}
       dialogSx={{ padding: '.5rem 1.5rem !important', maxHeight: 'unset' }}
       content={

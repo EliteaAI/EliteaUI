@@ -15,6 +15,7 @@ export const PREVIEWABLE_EXTENSIONS = [
   // Markdown
   'md',
   'markdown',
+  'mdx',
 
   // JSON
   'json',
@@ -312,6 +313,7 @@ export const getLanguageFromFilename = filename => {
     // Markdown
     md: 'markdown',
     markdown: 'markdown',
+    mdx: 'mdx',
 
     // JSON
     json: 'json',

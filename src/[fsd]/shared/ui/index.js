@@ -1,4 +1,5 @@
 export * as Accordion from './accordion';
+export * as Autocomplete from './autocomplete';
 export * as Banner from './banner-message';
 export * as Button from './button';
 export * as Chip from './chip';

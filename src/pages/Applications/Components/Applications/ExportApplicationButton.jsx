@@ -43,6 +43,7 @@ export const useExportApplicationMenu = () => {
 
   const menuItem = useMemo(
     () => ({
+      key: 'agent-actions-export',
       label: 'Export',
       icon: (
         <>

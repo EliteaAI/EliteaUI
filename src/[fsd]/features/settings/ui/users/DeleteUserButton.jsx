@@ -39,11 +39,14 @@ const DeleteUserButton = memo(props => {
 
   useEffect(() => {
     if (isSuccess) {
-      toastSuccess(users.length > 1 ? 'The users have been deleted' : 'The user has been deleted');
+      const message = users.length > 1
+        ? 'The selected users have been successfully deleted.'
+        : `The ${users[0]?.name || 'user'} user has been successfully deleted.`;
+      toastSuccess(message);
       setSelectedUsers([]);
       refetch();
     }
-  }, [users.length, isSuccess, toastSuccess, refetch, setSelectedUsers]);
+  }, [users, isSuccess, toastSuccess, refetch, setSelectedUsers]);
 
   useEffect(() => {
     if (isError) {

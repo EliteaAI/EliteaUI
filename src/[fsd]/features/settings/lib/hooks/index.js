@@ -11,3 +11,4 @@ export {
   useCopyConfiguration,
 } from './useModelConfiguration.hooks.jsx';
 export { useEditUser, useBatchEditUsers } from './useEditUser.hooks.js';
+export { useQueryAuthor } from './useQueryAuthor.hooks.js';

@@ -16,13 +16,13 @@ import {
 
 import AgentConversationStarters from '@/[fsd]/features/agent-hub/ui/AgentConversationStarters';
 import AgentHubLike from '@/[fsd]/features/agent-hub/ui/AgentHubLike';
+import AgentHubModalMenu from '@/[fsd]/features/agent-hub/ui/AgentHubModalMenu';
 import AgentWelcomeMessage from '@/[fsd]/features/agent-hub/ui/AgentWelcomeMessage';
 import { ConfigurationModal } from '@/[fsd]/features/agent/ui/agent-details/configurations';
-import { AGENT_HUB_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/agentHubTourTargets.constants';
+import { ELITEA_CATALOG_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/eliteaCatalogTourTargets.constants';
 import { useLazyPublicApplicationDetailsQuery } from '@/api';
 import { ChatParticipantType, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
 import AuthorContainer from '@/components/AuthorContainer';
-import { CopyLinkToEntityButton } from '@/components/CopyLinkToEntityButton';
 import EntityIcon from '@/components/EntityIcon';
 import CloseIcon from '@/components/Icons/CloseIcon';
 import RouteDefinitions, { getBasename } from '@/routes';
@@ -64,12 +64,13 @@ const AgentModal = memo(props => {
     () => agent?.icon_meta || agentDetails?.version_details?.icon_meta,
     [agent, agentDetails],
   );
+  const versionId = useMemo(() => agentDetails?.version_details?.id, [agentDetails]);
   const link = useMemo(() => {
     const baseUrl = `${window.location.protocol}//${window.location.host}`;
     const basename = getBasename();
     const pathPrefix = basename ? basename : '';
     return agent
-      ? `${baseUrl}${pathPrefix}${RouteDefinitions.AgentHub}?${AgentHubConstants.AGENT_ID}=${agent.id}`
+      ? `${baseUrl}${pathPrefix}${RouteDefinitions.EliteaCatalog}?tab=agents&${AgentHubConstants.AGENT_ID}=${agent.id}`
       : '';
   }, [agent]);
 
@@ -198,7 +199,12 @@ const AgentModal = memo(props => {
                 viewMode={ViewMode.Public}
                 data={agent?.name ? agent : agentDetails || {}}
               />
-              <CopyLinkToEntityButton link={link} />
+              <AgentHubModalMenu
+                agentId={agent?.id}
+                agentName={name}
+                versionId={versionId}
+                link={link}
+              />
               <IconButton
                 variant="elitea"
                 color="secondary"
@@ -237,7 +243,7 @@ const AgentModal = memo(props => {
                 sx={styles.showContext}
                 onClick={onShowContext}
               >
-                Show context
+                Show instructions
               </Typography>
               <Box sx={styles.sectionsContainer(isSmallHeight)}>
                 <AgentConversationStarters
@@ -250,12 +256,12 @@ const AgentModal = memo(props => {
           </DialogContent>
           <DialogActions sx={styles.dialogActions}>
             <Button
-              data-tour={AGENT_HUB_TOUR_TARGET_IDS.startConversationButton}
+              data-tour={ELITEA_CATALOG_TOUR_TARGET_IDS.primaryActionButton}
               variant="elitea"
               color="primary"
               onClick={onStartConversation()}
             >
-              Start conversation
+              Start Chat
             </Button>
           </DialogActions>
         </Box>
@@ -265,7 +271,7 @@ const AgentModal = memo(props => {
           context={agentDetails?.version_details?.instructions || ''}
           open={showContext}
           onClose={() => setShowContext(false)}
-          contextLabel="Context"
+          contextLabel="Instructions"
           isLoading={isFetching}
         />
       )}

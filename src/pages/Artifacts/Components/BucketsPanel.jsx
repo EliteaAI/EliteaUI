@@ -30,6 +30,7 @@ const BucketsPanel = memo(props => {
     onCreateBucket,
     onStorageChange,
     onUpload,
+    onManageAccess,
     onSelectFile,
     onSelectFolder,
     onEdit,
@@ -162,6 +163,7 @@ const BucketsPanel = memo(props => {
               onDelete={onDelete}
               onSelect={handleSelect}
               onUpload={onUpload}
+              onManageAccess={onManageAccess}
               onSelectFile={onSelectFile}
               onSelectFolder={onSelectFolder}
               onPin={onPin}

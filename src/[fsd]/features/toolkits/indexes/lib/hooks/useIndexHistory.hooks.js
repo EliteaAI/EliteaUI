@@ -7,8 +7,12 @@ import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
 import { IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants';
 import { selectHistoryItem } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
+import { useLazyMessageTracesQuery } from '@/api';
 import { ROLES, WELCOME_MESSAGE_ID } from '@/common/constants';
-import { convertConversationToChatHistory } from '@/common/convertChatConversationMessages';
+import {
+  buildTraceListParams,
+  convertConversationToChatHistory,
+} from '@/common/convertChatConversationMessages';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 export const useIndexHistory = (progressHistoryOptions = null) => {
@@ -23,10 +27,13 @@ export const useIndexHistory = (progressHistoryOptions = null) => {
     fetchConversationDetails,
     { data: conversationDetails, isFetching: isConversationDetailsFetching, reset },
   ] = RunHistoryApi.useLazyGetRunHistoryDetailsQuery();
+  const [getMessageTraces] = useLazyMessageTracesQuery();
+  const [traceSteps, setTraceSteps] = useState(null);
 
   const allowProgressingIndexHistoryRecovering =
     progressHistoryOptions?.shouldRecover && !progressingIndexHistoryRecovered;
 
+  // Fetch trace-step pins (TS-4) for a conversation; failure degrades to no pins.
   // Recover conversation history if indexing is in progress
   useEffect(() => {
     if (!allowProgressingIndexHistoryRecovering) return;
@@ -51,7 +58,10 @@ export const useIndexHistory = (progressHistoryOptions = null) => {
         projectId,
         conversationId: indexHistoryItem.conversation_id,
       });
-    } else reset();
+    } else {
+      reset();
+      setTraceSteps(null);
+    }
   }, [
     fetchConversationDetails,
     indexHistoryItem?.conversation_id,
@@ -61,24 +71,39 @@ export const useIndexHistory = (progressHistoryOptions = null) => {
     allowProgressingIndexHistoryRecovering,
   ]);
 
+  useEffect(() => {
+    const conversationId = conversationDetails?.id;
+    if (!conversationId) return;
+    getMessageTraces({
+      projectId,
+      conversationId,
+      params: buildTraceListParams(conversationDetails.message_groups),
+    }).then(result => setTraceSteps(result.data || null));
+  }, [conversationDetails, getMessageTraces, projectId]);
+
   const getHistoryMockMessage = useCallback(
     showMockMessage => {
       if (!showMockMessage) return [];
 
+      const isScheduled = indexHistoryItem?.state === IndexStatuses.scheduledReindex;
+      const isInitialIndex = Boolean(indexHistoryItem?.isInitialIndex);
+
       const getFailedTrace = () => {
         if (indexHistoryItem?.error) return indexHistoryItem?.error;
 
-        return 'The system encountered an issue and was unable to complete the scheduled reindexing operation';
+        if (isScheduled)
+          return 'The system encountered an issue and was unable to complete the scheduled reindexing operation';
+        return `The system encountered an issue and was unable to complete the ${isInitialIndex ? 'indexing' : 'reindexing'} operation`;
       };
 
       const isFailed = indexHistoryItem?.state === IndexStatuses.fail;
       const isPartlyOk = indexHistoryItem?.state === IndexStatuses.partlyOk;
 
       const getExecutionSummary = () => {
-        if (isFailed)
-          return 'The system encountered an issue and was unable to complete the scheduled reindexing operation';
-        if (isPartlyOk) return 'Partially indexed by schedule';
-        return 'Successfully reindexed by schedule';
+        if (isFailed) return getFailedTrace();
+        if (isPartlyOk) return isScheduled ? 'Partially indexed by schedule' : 'Partially indexed';
+        if (isScheduled) return 'Successfully reindexed by schedule';
+        return isInitialIndex ? 'Successfully indexed' : 'Successfully reindexed';
       };
 
       const toolExecutionSummary = getExecutionSummary();
@@ -108,7 +133,7 @@ export const useIndexHistory = (progressHistoryOptions = null) => {
     const conversation = isHistoryMode ? (conversationDetails ?? null) : null;
 
     const currentConversationMessages = conversation
-      ? convertConversationToChatHistory(conversation)
+      ? convertConversationToChatHistory(conversation, traceSteps)
       : getHistoryMockMessage(showMockMessage);
 
     return {
@@ -123,6 +148,7 @@ export const useIndexHistory = (progressHistoryOptions = null) => {
     isConversationDetailsFetching,
     indexHistoryItem,
     conversationDetails,
+    traceSteps,
     getHistoryMockMessage,
   ]);
 
@@ -147,6 +173,7 @@ export const useIndexHistory = (progressHistoryOptions = null) => {
     historyConversation,
     needGenerateProgressingIndexHistory,
     conversationDetails,
+    traceSteps,
     setProgressingIndexHistoryRecovered,
   };
 };

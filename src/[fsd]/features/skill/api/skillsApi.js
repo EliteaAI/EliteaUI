@@ -1,4 +1,8 @@
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
+import {
+  TAG_TYPE_PUBLIC_SKILLS,
+  TAG_TYPE_PUBLIC_SKILL_DETAILS,
+} from '@/[fsd]/features/skill-hub/api/skillHubApi';
 import { getFilenameFromContentDisposition } from '@/[fsd]/shared/lib/helpers';
 import { eliteaApi } from '@/api/eliteaApi.js';
 import { PAGE_SIZE } from '@/common/constants';
@@ -52,6 +56,8 @@ const skillsApi = eliteaApi
       TAG_TYPE_TOTAL_SKILLS,
       TAG_TYPE_APPLICATION_SKILLS,
       TAG_TYPE_SKILL_ICONS,
+      TAG_TYPE_PUBLIC_SKILLS,
+      TAG_TYPE_PUBLIC_SKILL_DETAILS,
     ],
   })
   .injectEndpoints({
@@ -457,6 +463,58 @@ const skillsApi = eliteaApi
           }
         },
       }),
+      validateSkillForPublish: build.mutation({
+        query: ({ projectId, skillId, versionId, body }) => ({
+          url: `${apiSlicePath}/publish_skill_validate/${mode}/${projectId}/${skillId}/${versionId}`,
+          method: 'POST',
+          headers,
+          body,
+        }),
+        invalidatesTags: [],
+      }),
+      publishSkill: build.mutation({
+        query: ({ projectId, skillId, versionId, body }) => ({
+          url: `${apiSlicePath}/publish_skill/${mode}/${projectId}/${skillId}/${versionId}`,
+          method: 'POST',
+          headers,
+          body,
+        }),
+        invalidatesTags: (result, error, arg) => {
+          if (error) return [];
+          return [
+            TAG_TYPE_SKILLS,
+            TAG_TYPE_SKILL_DETAILS,
+            { type: TAG_TYPE_SKILL_DETAILS, id: arg?.skillId },
+            // Keep skill totals (e.g. published count) in sync.
+            TAG_TYPE_TOTAL_SKILLS,
+            // Refresh the ELITEA Catalog list/detail so a newly (un)published
+            // skill appears/disappears without a hard reload.
+            TAG_TYPE_PUBLIC_SKILLS,
+            TAG_TYPE_PUBLIC_SKILL_DETAILS,
+          ];
+        },
+      }),
+      unpublishSkill: build.mutation({
+        query: ({ projectId, skillId, versionId, body }) => ({
+          url: `${apiSlicePath}/unpublish_skill/${mode}/${projectId}/${skillId}/${versionId}`,
+          method: 'POST',
+          headers,
+          body,
+        }),
+        invalidatesTags: (result, error, arg) => {
+          if (error) return [];
+          return [
+            TAG_TYPE_SKILLS,
+            TAG_TYPE_SKILL_DETAILS,
+            { type: TAG_TYPE_SKILL_DETAILS, id: arg?.skillId },
+            // Keep skill totals (e.g. published count) in sync.
+            TAG_TYPE_TOTAL_SKILLS,
+            // Drop the unpublished skill from an already-open ELITEA Catalog.
+            TAG_TYPE_PUBLIC_SKILLS,
+            TAG_TYPE_PUBLIC_SKILL_DETAILS,
+          ];
+        },
+      }),
       deleteSkillIcon: build.mutation({
         query: ({ projectId, name }) => {
           return {
@@ -519,4 +577,7 @@ export const {
   useUploadSkillIconMutation,
   useReplaceSkillIconMutation,
   useDeleteSkillIconMutation,
+  useValidateSkillForPublishMutation,
+  usePublishSkillMutation,
+  useUnpublishSkillMutation,
 } = skillsApi;

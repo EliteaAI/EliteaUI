@@ -32,6 +32,9 @@ const RouteDefinitions = {
   CreateToolkit: '/toolkits/create',
   CreateToolkitType: '/toolkits/create/:toolkitType',
   ToolkitDetail: '/toolkits/:tab/:toolkitId',
+  ToolkitIndexNew: '/toolkits/:tab/:toolkitId/index/new',
+  ToolkitIndex: '/toolkits/:tab/:toolkitId/index/:indexName',
+  ToolkitIndexHistory: '/toolkits/:tab/:toolkitId/index/:indexName/history',
 
   Apps: '/apps',
   AppsApplications: '/apps/applications',
@@ -57,10 +60,10 @@ const RouteDefinitions = {
 
   Settings: '/settings',
   SettingsWithTab: '/settings/:tab',
-  CreateConfiguration: '/settings/create-configuration',
-  CreateConfigurationWithType: '/settings/create-configuration/:credentialType',
+  CreateConfiguration: '/settings/create-ai-provider',
+  CreateConfigurationWithType: '/settings/create-ai-provider/:credentialType',
   CreatePersonalToken: '/settings/create-personal-token',
-  EditConfiguration: '/settings/edit-configuration/:uid',
+  EditConfiguration: '/settings/edit-ai-provider/:uid',
   ModeSwitch: '/mode-switch',
 
   Artifacts: '/artifacts',
@@ -72,6 +75,8 @@ const RouteDefinitions = {
 
   Onboarding: '/onboarding',
   HelpCenter: '/help-center',
+  EliteaCatalog: '/elitea-catalog',
+  // Legacy path kept as a redirect source to EliteaCatalog.
   AgentHub: '/agents-hub',
 };
 
@@ -90,6 +95,9 @@ export const BLOCK_NAV_PATTERNS = [
   RouteDefinitions.CreatePipeline,
   RouteDefinitions.CreateToolkitType,
   RouteDefinitions.ToolkitDetail,
+  RouteDefinitions.CreateMCP,
+  RouteDefinitions.CreateMCPType,
+  RouteDefinitions.MCPDetail,
   RouteDefinitions.CreateCredentialFromMain,
   RouteDefinitions.CreateCredentialTypeFromMain,
   RouteDefinitions.EditCredentialFromMain,
@@ -120,7 +128,7 @@ export const PathSessionMap = {
   [RouteDefinitions.Applications]: 'Agents',
   [RouteDefinitions.Skills]: 'Skills',
   [RouteDefinitions.Pipelines]: 'Pipelines',
-  [RouteDefinitions.Toolkits]: 'Toolkits',
+  [RouteDefinitions.Toolkits]: 'Toolkits & Indexes',
   [RouteDefinitions.Apps]: 'Apps',
   [RouteDefinitions.Credentials]: 'Credentials',
   [RouteDefinitions.HelpCenter]: 'Help Center',

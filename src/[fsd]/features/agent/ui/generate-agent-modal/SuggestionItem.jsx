@@ -24,10 +24,12 @@ const SuggestionItem = memo(props => {
 
   return (
     <Box
+      data-testid={`generate-agent-resource-item-${entityType}-${item.id}`}
       sx={styles.item}
       onClick={() => onToggle(item.id)}
     >
       <BaseCheckbox
+        data-testid={`generate-agent-resource-checkbox-${entityType}-${item.id}`}
         size="small"
         checked={checked}
         onChange={() => onToggle(item.id)}
@@ -42,6 +44,7 @@ const SuggestionItem = memo(props => {
         />
         <Box sx={styles.cardContent}>
           <Typography
+            data-testid={`generate-agent-resource-name-${entityType}-${item.id}`}
             sx={styles.itemName}
             noWrap
           >
@@ -49,6 +52,7 @@ const SuggestionItem = memo(props => {
           </Typography>
           {showSecondary && (
             <Typography
+              data-testid={`generate-agent-resource-description-${entityType}-${item.id}`}
               sx={styles.secondaryText}
               noWrap
             >

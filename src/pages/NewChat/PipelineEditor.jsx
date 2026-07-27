@@ -24,7 +24,6 @@ import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/
 import { LayoutHelpers, ParsePipelineHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { usePipelineAttachmentYamlSync } from '@/[fsd]/features/pipelines/lib/hooks';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
-import { DEFAULT_REASONING_EFFORT } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
 import { useGetApplicationVersionDetailQuery, usePublicApplicationDetailsQuery } from '@/api/applications';
 import FlowIcon from '@/assets/flow-icon.svg?react';
 import { ChatParticipantType, PERMISSIONS, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants.js';
@@ -320,8 +319,10 @@ const PipelineEditor = forwardRef(
             llm_settings: {
               model_name: '',
               model_project_id: projectId,
+              // No model is selected yet in this placeholder state (real settings load once
+              // version data arrives) — default to non-reasoning shape rather than hardcoding
+              // both temperature and reasoning_effort together (issue #5821).
               temperature: 0.7,
-              reasoning_effort: DEFAULT_REASONING_EFFORT,
 
               max_tokens: 4096,
             },

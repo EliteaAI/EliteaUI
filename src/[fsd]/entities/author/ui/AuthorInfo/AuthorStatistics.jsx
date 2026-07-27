@@ -5,11 +5,13 @@ import { Box, Typography } from '@mui/material';
 import { STATISTICS_USER_INFO } from '@/[fsd]/entities/author/lib/constants';
 
 const AuthorStatistics = memo(props => {
-  const { statistic } = props;
+  const { statistic, indexesTotal } = props;
 
   const styles = authorStatisticsStyles();
 
   if (!statistic) return null;
+
+  const showIndexesRow = indexesTotal !== undefined && indexesTotal !== null;
 
   return (
     <Box sx={styles.statisticsBlock}>
@@ -46,6 +48,22 @@ const AuthorStatistics = memo(props => {
           </>
         )}
       </Typography>
+      {showIndexesRow && (
+        <Typography variant="bodySmall">
+          <Box
+            component="span"
+            sx={styles.statisticsLabel}
+          >
+            Indexes:
+          </Box>
+          <Box
+            component="span"
+            sx={styles.statisticsValue}
+          >
+            {indexesTotal}
+          </Box>
+        </Typography>
+      )}
     </Box>
   );
 });
@@ -53,9 +71,10 @@ const AuthorStatistics = memo(props => {
 /** @type {MuiSx} */
 const authorStatisticsStyles = () => ({
   statisticsBlock: {
-    height: '1.5rem',
+    minHeight: '1.5rem',
     display: 'flex',
-    alignItems: 'center',
+    flexDirection: 'column',
+    justifyContent: 'center',
   },
   statisticsLabel: {
     // No special styling needed

@@ -14,7 +14,10 @@ import DownloadIcon from '@/components/Icons/DownloadIcon';
 // verbatim from ApplicationAnswer's inline block so both call sites stay
 // pixel-identical; `compact` tightens spacing for the narrower accordion column.
 const ErrorTrace = memo(props => {
-  const { headline, trace, messageId, onCopy, compact = false } = props;
+  const { headline, trace: rawTrace, messageId, onCopy, compact = false } = props;
+  // trace/headline are expected to be strings, but defend against callers
+  // passing a raw object/array (would crash React error #31 at render time)
+  const trace = typeof rawTrace === 'string' || !rawTrace ? rawTrace : JSON.stringify(rawTrace);
 
   const [isExpanded, setIsExpanded] = useState(false);
 

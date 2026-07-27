@@ -26,6 +26,7 @@ const IWModalActions = memo(props => {
         variant="elitea"
         color="primary"
         onClick={onSucceedImportAgree}
+        data-testid="agent-import-complete-got-it-button"
       >
         Got it
       </Button.BaseBtn>

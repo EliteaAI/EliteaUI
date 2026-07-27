@@ -4,11 +4,10 @@ import { useSelector } from 'react-redux';
 
 import { Box } from '@mui/material';
 
-import { Button, Modal } from '@/[fsd]/shared/ui';
+import { Autocomplete, Button, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { ChatParticipantType } from '@/common/constants';
 import { useUserList } from '@/hooks/useUserList';
-import UserSearchSelect from '@/pages/NewChat/AddNewUser/UserSearchSelect';
 
 const AddNewUserModal = memo(props => {
   const { participants, open, onAdd, onCancel } = props;
@@ -102,7 +101,7 @@ const AddNewUserModal = memo(props => {
       sx={styles.dialog}
       content={
         <Box>
-          <UserSearchSelect
+          <Autocomplete.UserSearchSelect
             userList={usersList}
             selectedUsers={localUsers}
             onChangeUsers={onChangeUsers}

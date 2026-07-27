@@ -65,6 +65,7 @@ const SingleSelect = memo(props => {
     labelNode,
     variant = 'standard',
     separateLabel = false,
+    labelContainerSx,
     multiple = false,
     withSearch = false,
     searchPlaceholder,
@@ -78,6 +79,7 @@ const SingleSelect = memo(props => {
     infoIconDescription,
     shrinkLabel = false,
     valueItemSX,
+    'data-testid': dataTestId,
   } = props;
 
   const [menuOpen, setMenuOpen] = useState(false);
@@ -653,6 +655,7 @@ const SingleSelect = memo(props => {
           className={className}
           labelId={id ? id + '-label' : 'simple-select-label-' + label}
           id={id || 'simple-select-' + label}
+          data-testid={dataTestId}
           name={name}
           multiple={effectiveMultiple || undefined}
           value={realValue}
@@ -681,7 +684,7 @@ const SingleSelect = memo(props => {
   };
 
   return separateLabel ? (
-    <Box sx={styles.labelContainer}>
+    <Box sx={[styles.labelContainer, labelContainerSx]}>
       <Typography
         variant="labelMedium"
         color="text.primary"

@@ -10,7 +10,7 @@ import {
   getChatParticipantUniqueId,
   isSkippedContainerParticipant,
 } from '@/[fsd]/features/chat/participants/lib/helpers';
-import { isMcpToolkitType } from '@/[fsd]/shared/lib/helpers';
+import { isMcpToolkitType, isRemoteMcpToolkitType } from '@/[fsd]/shared/lib/helpers';
 import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
 import AgentSvg from '@/assets/agent.svg?react';
 import FlowSvg from '@/assets/flow-icon.svg?react';
@@ -98,7 +98,7 @@ const CollapsedPerticapantsList = memo(props => {
           key = ChatParticipantType.Pipelines;
         else if (
           p.entity_name === ChatParticipantType.Toolkits &&
-          (isMcpToolkitType(p.entity_settings?.toolkit_type) || p.meta?.mcp === true)
+          (isRemoteMcpToolkitType(p.entity_settings?.toolkit_type) || p.meta?.mcp === true)
         )
           key = 'mcp';
 
@@ -203,7 +203,7 @@ const CollapsedPerticapantsList = memo(props => {
               sectionHasError
                 ? `Misconfiguration error in ${entity?.label?.toLowerCase()}`
                 : sectionHasSkippedContainer
-                  ? "Uses other agents — select it to run; it won't be used as a tool."
+                  ? 'Its sub-agent chain is at the nesting limit (3 tiers) — select it to run.'
                   : `${entity.label} in this conversation`
             }
             placement="right"
@@ -215,13 +215,17 @@ const CollapsedPerticapantsList = memo(props => {
             onOpen={() => onTriggerTooltipOpen(entity.type)}
             onClose={onTriggerTooltipClose}
           >
-            <Box sx={styles.root}>
+            <Box
+              sx={styles.root}
+              data-testid={`chat-participants-badge-${entity.section}`}
+            >
               <Box sx={styles.iconWithWarning}>
                 <IconButton
                   variant="elitea"
                   color="secondary"
                   onClick={e => onCollapsedTriggerClick(entity.type, e)}
                   sx={styles.collapsedTriggerButton(group.count, sectionHasError, sectionHasSkippedContainer)}
+                  data-testid="chat-participants-badge-button"
                 >
                   <entity.icon sx={styles.collapsedIcon} />
                 </IconButton>
@@ -359,7 +363,7 @@ const collapsedPerticapantsListStyles = () => ({
   }),
 
   collapsedIcon: {
-    fontSize: '1.5rem !important',
+    fontSize: '1.25rem !important',
 
     color: ({ palette }) => palette.secondary.main,
   },

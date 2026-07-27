@@ -6,7 +6,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
-import { CredentialNameHelpers } from '@/[fsd]/features/credentials/lib/helpers';
+import { CredentialHelpers, CredentialNameHelpers } from '@/[fsd]/features/credentials/lib/helpers';
+import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
 import { Controls } from '@/[fsd]/shared/ui';
 import { PinEntityType } from '@/[fsd]/widgets/pin-toggler/lib/constants';
 import { usePin, usePinMenu } from '@/[fsd]/widgets/pin-toggler/lib/hooks';
@@ -30,6 +31,9 @@ const CredentialsControls = memo(props => {
   const navigate = useNavigate();
 
   const { checkPermission } = useCheckPermission();
+  const { isPrivate } = useProjectType();
+
+  const canDelete = isPrivate || checkPermission(PERMISSIONS.secrets.delete);
 
   const {
     isPinned,
@@ -65,17 +69,20 @@ const CredentialsControls = memo(props => {
   });
 
   // Check if we came from Model Configuration Settings (handle both new and legacy parameter names)
-  const isFromModelConfiguration = searchParams.get('from') === 'model-configuration';
+  const isFromModelConfiguration = searchParams.get('from') === 'ai-providers';
 
   const navigateBack = useCallback(
     (replace = false) => {
       if (isFromModelConfiguration)
         navigate(
           {
-            pathname: RouteDefinitions.SettingsWithTab.replace(':tab', 'model-configuration'),
+            pathname: RouteDefinitions.SettingsWithTab.replace(':tab', 'ai-providers'),
           },
           {
             replace,
+            state: {
+              expandSection: CredentialHelpers.normalizeCredentialSection(credentialDetails?.section),
+            },
           },
         );
       else
@@ -88,7 +95,7 @@ const CredentialsControls = memo(props => {
           },
         );
     },
-    [isFromModelConfiguration, navigate],
+    [isFromModelConfiguration, navigate, credentialDetails?.section],
   );
 
   const onDelete = useCallback(async () => {
@@ -98,7 +105,13 @@ const CredentialsControls = memo(props => {
       section: credentialDetails?.section,
     });
     if (!deleteError) {
-      toastSuccess('The credential has been deleted');
+      const entityName =
+        formik.values?.settings?.label ||
+        credentialDetails?.label ||
+        credentialDetails?.settings?.elitea_title ||
+        credentialDetails?.elitea_title ||
+        CredentialNameHelpers.extraCredentialName(credentialDetails?.name || '');
+      toastSuccess(`The ${entityName} credential has been successfully deleted.`);
 
       if (credentialDetails?.type === 'llm_model') dispatch(eliteaApi.util.invalidateTags([TAG_MODELS]));
 
@@ -113,6 +126,11 @@ const CredentialsControls = memo(props => {
     credentialDetails?.uuid,
     credentialDetails?.section,
     credentialDetails?.type,
+    credentialDetails?.label,
+    credentialDetails?.settings?.elitea_title,
+    credentialDetails?.elitea_title,
+    credentialDetails?.name,
+    formik.values?.settings?.label,
     toastSuccess,
     dispatch,
     navigateBack,
@@ -122,35 +140,31 @@ const CredentialsControls = memo(props => {
   const styles = credentialsControlsStyles();
 
   const items = useMemo(
-    () => [
-      {
-        ...pinMenuItem,
-        disabled: !(credentialDetails?.id && credentialDetails?.uuid),
-      },
-      {
-        key: 'delete-credentials',
-        label: 'Delete',
-        icon: <DeleteIcon sx={styles.deleteIcon} />,
-        onConfirm: onDelete,
-        entityName:
-          formik.values?.settings?.label ||
-          credentialDetails?.label ||
-          credentialDetails?.settings?.elitea_title ||
-          credentialDetails?.elitea_title ||
-          CredentialNameHelpers.extraCredentialName(credentialDetails?.name || ''),
-        shouldRequestInputName: true,
-        disabled:
-          isDeleting ||
-          !credentialDetails?.id ||
-          !checkPermission(PERMISSIONS.configuration.delete) ||
-          isLastInSection,
-        tooltip: isLastInSection
-          ? `Cannot delete the only ${section === 'vectorstorage' ? 'pgVector' : 'embedding model'} configuration. At least one is required for the project.`
-          : undefined,
-      },
-    ],
+    () =>
+      [
+        {
+          ...pinMenuItem,
+          disabled: !(credentialDetails?.id && credentialDetails?.uuid),
+        },
+        canDelete && {
+          key: 'delete-credentials',
+          label: 'Delete',
+          icon: <DeleteIcon sx={styles.deleteIcon} />,
+          onConfirm: onDelete,
+          entityName:
+            formik.values?.settings?.label ||
+            credentialDetails?.label ||
+            credentialDetails?.settings?.elitea_title ||
+            credentialDetails?.elitea_title ||
+            CredentialNameHelpers.extraCredentialName(credentialDetails?.name || ''),
+          shouldRequestInputName: true,
+          disabled: isDeleting || !credentialDetails?.id || isLastInSection,
+          tooltip: isLastInSection
+            ? `Cannot delete the only ${section === 'vectorstorage' ? 'pgVector' : 'embedding model'} configuration. At least one is required for the project.`
+            : undefined,
+        },
+      ].filter(Boolean),
     [
-      checkPermission,
       credentialDetails?.elitea_title,
       credentialDetails?.id,
       credentialDetails?.label,
@@ -164,6 +178,7 @@ const CredentialsControls = memo(props => {
       onDelete,
       pinMenuItem,
       styles,
+      canDelete,
     ],
   );
 

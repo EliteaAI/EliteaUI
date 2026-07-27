@@ -11,6 +11,7 @@ const GenerateAgentButton = memo(props => {
   return (
     <GenerateEntityButton
       permission={PERMISSIONS.applications.update}
+      buttonTestId="generate-agent-open-button"
       renderModal={({ open, onClose }) => (
         <GenerateAgentModal
           open={open}

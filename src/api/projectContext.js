@@ -29,7 +29,18 @@ export const apis = eliteaApi
           return [{ type: TAG_TYPE_PROJECT_CONTEXT, id: projectId }];
         },
       }),
+      deleteProjectContext: build.mutation({
+        query: ({ projectId }) => ({
+          url: `${apiSlicePath}/${projectId}/project-context`,
+          method: 'DELETE',
+        }),
+        invalidatesTags: (result, error, { projectId }) => {
+          if (error) return [];
+          return [{ type: TAG_TYPE_PROJECT_CONTEXT, id: projectId }];
+        },
+      }),
     }),
   });
 
-export const { useProjectContextQuery, useUpdateProjectContextMutation } = apis;
+export const { useProjectContextQuery, useUpdateProjectContextMutation, useDeleteProjectContextMutation } =
+  apis;

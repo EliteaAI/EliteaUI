@@ -19,6 +19,11 @@ export {
   useUploadSkillIconMutation,
   useReplaceSkillIconMutation,
   useDeleteSkillIconMutation,
+  useValidateSkillForPublishMutation,
+  usePublishSkillMutation,
+  useUnpublishSkillMutation,
 } from './skillsApi';
 
 export { useGenerateSkillDraftMutation } from './generateSkillDraftApi';
+
+export { useGetSkillCategoriesQuery, useLazyGetSkillCategoriesQuery } from './skillCategoriesApi';

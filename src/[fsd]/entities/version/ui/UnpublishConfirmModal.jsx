@@ -2,13 +2,28 @@ import { memo, useCallback, useState } from 'react';
 
 import { DialogContent, DialogTitle, IconButton, TextField, Typography } from '@mui/material';
 
+import { ENTITY_STUDIO } from '@/[fsd]/entities/version/lib/constants';
 import { Button } from '@/[fsd]/shared/ui';
 import CloseIcon from '@/components/Icons/CloseIcon';
 import { StyledDialog, StyledDialogActions } from '@/components/StyledDialog';
 
+const capitalize = value => value.charAt(0).toUpperCase() + value.slice(1);
+
 const UnpublishConfirmModal = memo(props => {
-  const { open, onClose, onConfirm, isLoading, showReason = false, agentName, versionName } = props;
+  const {
+    open,
+    onClose,
+    onConfirm,
+    isLoading,
+    showReason = false,
+    entityName,
+    versionName,
+    entityLabel = 'agent',
+  } = props;
   const [reason, setReason] = useState('');
+
+  const entityTitle = capitalize(entityLabel);
+  const studioName = ENTITY_STUDIO[entityLabel] || ENTITY_STUDIO.agent;
 
   const handleConfirm = useCallback(() => {
     onConfirm(showReason ? reason.trim() || undefined : undefined);
@@ -46,7 +61,7 @@ const UnpublishConfirmModal = memo(props => {
           variant="headingSmall"
           color="text.secondary"
         >
-          Unpublish Agent
+          Unpublish {entityTitle}
         </Typography>
         <IconButton
           variant="elitea"
@@ -79,7 +94,7 @@ const UnpublishConfirmModal = memo(props => {
               component="span"
               variant="headingSmall"
             >
-              {agentName}
+              {entityName}
             </Typography>{' '}
             (version:{' '}
             <Typography
@@ -88,8 +103,8 @@ const UnpublishConfirmModal = memo(props => {
             >
               {versionName})?
             </Typography>{' '}
-            The agent will be removed from Agents Studio immediately. Existing conversations using this agent
-            version may be affected.
+            The {entityLabel} will be removed from {studioName} immediately. Existing conversations using this{' '}
+            {entityLabel} version may be affected.
           </Typography>
         )}
       </DialogContent>

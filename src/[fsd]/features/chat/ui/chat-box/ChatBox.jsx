@@ -17,6 +17,15 @@ import { Box } from '@mui/system';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import * as ChatHelpers from '@/[fsd]/features/chat/lib/helpers/chat.helpers';
+import {
+  actionBelongsToInvocationSet,
+  getActionOwnerPath,
+} from '@/[fsd]/features/chat/lib/helpers/executionHierarchy.helpers.js';
+import {
+  getHitlResumeGroup,
+  getInterruptIdentity,
+  getPendingHitlMessage,
+} from '@/[fsd]/features/chat/lib/helpers/hitl.helpers.js';
 import * as NewConversationHelpers from '@/[fsd]/features/chat/lib/helpers/newConversation.helpers';
 import {
   useChatSkillMention,
@@ -38,7 +47,12 @@ import {
   DEFAULT_STEPS_LIMIT,
   DEFAULT_TEMPERATURE,
 } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
-import { cleanLLMSettings } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
+import {
+  cleanLLMSettings,
+  isLLMSettingsFamilyConflict,
+  resetLLMSettingsForModel,
+} from '@/[fsd]/shared/lib/utils/llmSettings.utils';
+import { Modal } from '@/[fsd]/shared/ui';
 import {
   useConversationEditMutation,
   useRegenerateMutation,
@@ -63,7 +77,6 @@ import {
   generateMessagePayload,
 } from '@/common/messagePayloadUtils';
 import { buildErrorMessage } from '@/common/utils';
-import AlertDialog from '@/components/AlertDialog';
 import { ChatBodyContainer } from '@/components/Chat/StyledComponents';
 import { useChatSocket, useStopStreaming } from '@/components/Chat/hooks';
 import SocketContext from '@/contexts/SocketContext';
@@ -167,7 +180,7 @@ const ChatBox = forwardRef((props, boxRef) => {
   const sessionDeclinedMcpServersRef = useRef(new Map());
 
   const dispatch = useDispatch();
-  const { toastError, toastSuccess } = useToast();
+  const { toastError, toastInfo } = useToast();
 
   // Sockets
   const socket = useContext(SocketContext);
@@ -188,9 +201,7 @@ const ChatBox = forwardRef((props, boxRef) => {
 
     return {
       chat_history: history,
-      pendingHitlMessage: [...history]
-        .reverse()
-        .find(item => item.hitlInterrupt || item.hitlInterrupts?.length),
+      pendingHitlMessage: getPendingHitlMessage(history),
     };
   }, [activeConversation?.chat_history]);
 
@@ -287,6 +298,11 @@ const ChatBox = forwardRef((props, boxRef) => {
       if (model?.supports_reasoning) {
         baseSettings.reasoning_effort = DEFAULT_REASONING_EFFORT;
       }
+    }
+
+    // A reasoning_effort implies the model rejects a custom temperature (issue #5821)
+    if (isLLMSettingsFamilyConflict(baseSettings.temperature, baseSettings.reasoning_effort)) {
+      delete baseSettings.temperature;
     }
 
     return baseSettings;
@@ -634,15 +650,14 @@ const ChatBox = forwardRef((props, boxRef) => {
     onStopRun?.();
   }, [onStopRun]);
 
-  const { openAlert, alertContent, onDeleteAnswer, onDeleteAll, onConfirmDelete, onCloseAlert } =
-    useDeleteMessageAlert({
-      setChatHistory,
-      chatInput,
-      onDeleteChatMessage,
-      onDeleteAllChatMessages,
-      deleteAllRunNodes,
-      onStopTTS: stopTTS,
-    });
+  const { openAlert, onDeleteAnswer, onDeleteAll, onConfirmDelete, onCloseAlert } = useDeleteMessageAlert({
+    setChatHistory,
+    chatInput,
+    onDeleteChatMessage,
+    onDeleteAllChatMessages,
+    deleteAllRunNodes,
+    onStopTTS: stopTTS,
+  });
 
   const onClickClearChat = useCallback(() => {
     if (chat_history?.length) {
@@ -721,6 +736,9 @@ const ChatBox = forwardRef((props, boxRef) => {
     onClear: onClickClearChat,
     mentionUser: content => {
       chatInput.current?.mentionUser(content);
+    },
+    selectEveryoneMention: () => {
+      onSelectUserMention({ id: '@everyone', name: 'Everyone', participant: 'All users' });
     },
     stopAll: handleStopStreaming,
   }));
@@ -979,7 +997,6 @@ const ChatBox = forwardRef((props, boxRef) => {
       projectId,
       setAskingQuestionId,
       setChatHistory,
-      setIsMentioningEveryone,
       setSelectedUsers,
       setStreamingInfo,
       unsavedLLMSettings,
@@ -996,7 +1013,7 @@ const ChatBox = forwardRef((props, boxRef) => {
         if (message.exception) {
           try {
             await navigator.clipboard.writeText(JSON.stringify(message.exception));
-            toastSuccess('The exception has been copied to the clipboard');
+            toastInfo('The exception has been copied to the clipboard.');
           } catch {
             toastError('Failed to copy the exception!');
           }
@@ -1026,18 +1043,18 @@ const ChatBox = forwardRef((props, boxRef) => {
 
           try {
             await navigator.clipboard.writeText(contentToCopy);
-            toastSuccess('The message has been copied to the clipboard');
+            toastInfo('The message has been copied to the clipboard.');
           } catch {
             toastError('Failed to copy the message!');
           }
         }
       }
     },
-    [chat_history, toastError, toastSuccess],
+    [chat_history, toastError, toastInfo],
   );
 
   const onRegenerateAnswer = useCallback(
-    async (uuid, messageParticipant, updatedItems, newAttachmentItems = []) => {
+    async (uuid, messageParticipant, updatedItems, newAttachmentItems) => {
       stopTTS();
       chatInput.current?.pauseSpeakingMode?.();
       let prevMessage = {};
@@ -1064,14 +1081,14 @@ const ChatBox = forwardRef((props, boxRef) => {
       const theQuestion =
         chat_history[questionIndex]?.message_items?.find(item => item.item_type === 'text_message')
           ?.item_details?.content || '';
-      const attachmentList = [
-        ...(
-          chat_history[questionIndex]?.message_items?.filter(
-            item => item.item_type === 'attachment_message',
-          ) || []
-        ).map(i => ({ filepath: i.item_details.filepath })),
-        ...newAttachmentItems.map(i => ({ filepath: i.item_details.filepath })),
-      ];
+      const attachmentList =
+        newAttachmentItems !== undefined
+          ? newAttachmentItems.map(i => ({ filepath: i.item_details.filepath }))
+          : (
+              chat_history[questionIndex]?.message_items?.filter(
+                item => item.item_type === 'attachment_message',
+              ) || []
+            ).map(i => ({ filepath: i.item_details.filepath }));
       const question_id = chat_history[questionIndex]?.id;
       const leftChatHistory = chat_history.slice(0, questionIndex);
 
@@ -1263,7 +1280,7 @@ const ChatBox = forwardRef((props, boxRef) => {
   const pendingDecisionsRef = useRef({ messageId: null, decisions: {} });
 
   const onHitlResume = useCallback(
-    async ({ action, value, toolCallId: providedToolCallId }) => {
+    async ({ action, value, toolCallId: providedToolCallId, interruptId: providedInterruptId }) => {
       const lastMessage = pendingHitlMessage;
       if (!lastMessage) return;
 
@@ -1278,17 +1295,23 @@ const ChatBox = forwardRef((props, boxRef) => {
       // from that sole entry so a single still-pending parallel/fan-out child
       // keeps its tool_call_id-routed resume path instead of falling back to
       // the legacy hitl_action shape (which the SDK can't match to the child).
+      const selectedIdentity =
+        providedInterruptId || (interrupts.length === 1 ? getInterruptIdentity(interrupts[0]) : undefined);
+      const decidedEntry = selectedIdentity
+        ? interrupts.find(entry => getInterruptIdentity(entry) === selectedIdentity)
+        : providedToolCallId
+          ? interrupts.find(entry => entry?.tool_call_id === providedToolCallId)
+          : undefined;
       const toolCallId =
         providedToolCallId ||
+        decidedEntry?.tool_call_id ||
         (interrupts.length === 1 ? interrupts[0]?.tool_call_id || undefined : undefined);
-
-      // The interrupt entry being decided (matched by tool_call_id).
-      const decidedEntry = toolCallId ? interrupts.find(e => e?.tool_call_id === toolCallId) : undefined;
       // Track 2 fan-out child: each paused child carries its OWN thread_id and
       // resumes INDEPENDENTLY — emit immediately on that child's thread while
       // siblings keep running, instead of batching until every card is decided.
       const childThreadId = decidedEntry?.thread_id || decidedEntry?.child_thread_id || '';
       const isFanoutChild = Boolean(childThreadId);
+      const resumeGroup = getHitlResumeGroup(interrupts, decidedEntry);
 
       // Detect a (Track 1) parallel aggregate by the PRESENCE of the
       // hitlInterrupts array (hooks.js sets it only for backend
@@ -1301,12 +1324,43 @@ const ChatBox = forwardRef((props, boxRef) => {
         !isFanoutChild &&
         Array.isArray(lastMessage.hitlInterrupts) &&
         lastMessage.hitlInterrupts.length > 0 &&
-        Boolean(toolCallId);
+        Boolean(selectedIdentity || toolCallId);
 
       // Track 2 independent child resume: emit this child's decision NOW on its
       // own thread; clear ONLY this child's card and leave the parent message
       // streaming so running siblings keep their live boxes + shimmer.
       if (isFanoutChild) {
+        if (pendingDecisionsRef.current.messageId !== lastMessage.id) {
+          pendingDecisionsRef.current = { messageId: lastMessage.id, decisions: {} };
+        }
+        const decisionIdentity = getInterruptIdentity(decidedEntry);
+        pendingDecisionsRef.current.decisions[decisionIdentity] = {
+          ...(decidedEntry?.interrupt_id ? { interrupt_id: decidedEntry.interrupt_id } : {}),
+          thread_id: childThreadId,
+          tool_call_id: toolCallId,
+          action,
+          value: value ?? '',
+        };
+
+        setChatHistory(prevMessages =>
+          prevMessages.map(msg =>
+            msg.id !== lastMessage.id || !Array.isArray(msg.hitlInterrupts)
+              ? msg
+              : {
+                  ...msg,
+                  hitlInterrupts: msg.hitlInterrupts.map(entry =>
+                    getInterruptIdentity(entry) === decisionIdentity ? { ...entry, decided: true } : entry,
+                  ),
+                },
+          ),
+        );
+
+        const resumeIdentities = new Set(resumeGroup.map(getInterruptIdentity));
+        const groupComplete = [...resumeIdentities].every(
+          identity => pendingDecisionsRef.current.decisions[identity],
+        );
+        if (!groupComplete) return;
+
         const childPayload = generateChatContinuePayload({
           conversation_uuid: activeConversation?.uuid,
           projectId,
@@ -1317,14 +1371,12 @@ const ChatBox = forwardRef((props, boxRef) => {
         });
         childPayload.hitl_resume = true;
         childPayload.thread_id = childThreadId;
-        childPayload.hitl_decisions = [
-          {
-            thread_id: childThreadId,
-            tool_call_id: toolCallId,
-            action,
-            value: value ?? '',
-          },
-        ];
+        childPayload.hitl_decisions = [...resumeIdentities].map(
+          identity => pendingDecisionsRef.current.decisions[identity],
+        );
+        resumeIdentities.forEach(identity => {
+          delete pendingDecisionsRef.current.decisions[identity];
+        });
 
         // Remove the resumed child's card in place (do NOT blank the message).
         setChatHistory(prevMessages =>
@@ -1332,7 +1384,9 @@ const ChatBox = forwardRef((props, boxRef) => {
             if (msg.id !== lastMessage.id || !Array.isArray(msg.hitlInterrupts)) {
               return msg;
             }
-            const remaining = msg.hitlInterrupts.filter(e => e?.tool_call_id !== toolCallId);
+            const remaining = msg.hitlInterrupts.filter(
+              entry => !resumeIdentities.has(getInterruptIdentity(entry)),
+            );
             return {
               ...msg,
               hitlInterrupts: remaining,
@@ -1354,7 +1408,9 @@ const ChatBox = forwardRef((props, boxRef) => {
         if (pendingDecisionsRef.current.messageId !== lastMessage.id) {
           pendingDecisionsRef.current = { messageId: lastMessage.id, decisions: {} };
         }
-        pendingDecisionsRef.current.decisions[toolCallId] = {
+        const decisionIdentity = selectedIdentity || getInterruptIdentity(decidedEntry);
+        pendingDecisionsRef.current.decisions[decisionIdentity] = {
+          ...(decidedEntry?.interrupt_id ? { interrupt_id: decidedEntry.interrupt_id } : {}),
           tool_call_id: toolCallId,
           action,
           value: value ?? '',
@@ -1369,14 +1425,16 @@ const ChatBox = forwardRef((props, boxRef) => {
             return {
               ...msg,
               hitlInterrupts: msg.hitlInterrupts.map(entry =>
-                entry.tool_call_id === toolCallId ? { ...entry, decided: true } : entry,
+                getInterruptIdentity(entry) === decisionIdentity ? { ...entry, decided: true } : entry,
               ),
             };
           }),
         );
 
-        const decidedCount = Object.keys(pendingDecisionsRef.current.decisions).length;
-        if (decidedCount < interrupts.length) {
+        const allDecided = interrupts.every(
+          entry => pendingDecisionsRef.current.decisions[getInterruptIdentity(entry)],
+        );
+        if (!allDecided) {
           // Still waiting on sibling card(s); do not emit yet.
           return;
         }
@@ -1407,7 +1465,9 @@ const ChatBox = forwardRef((props, boxRef) => {
       payload.hitl_resume = true;
       if (isParallel) {
         // One resume carrying every child's decision.
-        payload.hitl_decisions = Object.values(pendingDecisionsRef.current.decisions);
+        payload.hitl_decisions = interrupts.map(
+          entry => pendingDecisionsRef.current.decisions[getInterruptIdentity(entry)],
+        );
         pendingDecisionsRef.current = { messageId: null, decisions: {} };
       } else {
         payload.hitl_action = action;
@@ -1433,12 +1493,14 @@ const ChatBox = forwardRef((props, boxRef) => {
         // made every completed sibling — and the coordinator's own activity —
         // vanish each round, so the view rebuilt from scratch and flashed "Waking
         // the agent…", making a parallel run look sequential (#5378/#5379). Drop
-        // only the actions of sub-agent invocations that have NOT returned yet
-        // (their bare invocation wrapper — a tool action carrying the per-call
-        // parent_agent_call_id but NO parent_agent_name — is still deferred or
-        // non-terminal); those branches re-run and re-emit their chips fresh, so
-        // keeping the stale copies would duplicate them. Everything else (the
-        // coordinator's actions and the returned siblings) stays visible.
+        // only the actions of the exact interrupted leaf invocations. An ancestor
+        // container is also technically unreturned while it waits for that leaf,
+        // but it is not itself replayed and must remain mounted/shimmering. Older
+        // interrupts without an identified path retain the broad fallback.
+        const resumingAgentPaths = interrupts.map(getActionOwnerPath).filter(path => path.length);
+        const resumingInvocationIds = new Set(
+          resumingAgentPaths.map(path => path[path.length - 1]?.call_id).filter(Boolean),
+        );
         const prevToolActions = assistantMessage.toolActions || [];
         const unreturnedInvocationIds = new Set();
         prevToolActions.forEach(a => {
@@ -1455,12 +1517,12 @@ const ChatBox = forwardRef((props, boxRef) => {
             a.status === ToolActionStatus.error ||
             a.status === ToolActionStatus.cancelled;
           const deferred = !!a.hitlDeferred || !!a.toolMeta?.hitl_deferred;
-          if (!terminal || deferred) unreturnedInvocationIds.add(callId);
+          const isResumingInvocation = resumingInvocationIds.size === 0 || resumingInvocationIds.has(callId);
+          if ((!terminal || deferred) && isResumingInvocation) unreturnedInvocationIds.add(callId);
         });
-        const preservedToolActions = prevToolActions.filter(a => {
-          const callId = a?.parent_agent_call_id || a?.toolMeta?.parent_agent_call_id;
-          return !(callId && unreturnedInvocationIds.has(callId));
-        });
+        const preservedToolActions = prevToolActions.filter(
+          candidateAction => !actionBelongsToInvocationSet(candidateAction, unreturnedInvocationIds),
+        );
         // Clear the interrupt state in place on the existing assistant
         // message. We intentionally do NOT clone it into a content-bearing
         // "archived" bubble — that left a stale "...requires approval..."
@@ -1476,6 +1538,7 @@ const ChatBox = forwardRef((props, boxRef) => {
           exception: undefined,
           hitlInterrupt: undefined,
           hitlInterrupts: undefined,
+          resumingAgentPaths,
           references: [],
           toolActions: preservedToolActions,
           replyTo: editMessage ? { ...editMessage } : assistantMessage.replyTo,
@@ -1580,11 +1643,18 @@ const ChatBox = forwardRef((props, boxRef) => {
           '@' + user.name + ' ',
         );
       }
+      if (user.id === '@everyone') {
+        setIsMentioningEveryone(true);
+        onClearActiveParticipant();
+        setSelectedUsers([]);
+      } else {
+        setSelectedUsers(prev => [...prev.filter(u => u.user?.id !== user.id), { user, isValid: true }]);
+      }
       stopProcessingAtSymbol();
     },
     // atAnchorRef is a ref — stable, no dep needed
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [atQuery, stopProcessingAtSymbol],
+    [atQuery, stopProcessingAtSymbol, onClearActiveParticipant],
   );
 
   const onResendQuestionStream = useCallback(
@@ -1623,7 +1693,7 @@ const ChatBox = forwardRef((props, boxRef) => {
   );
 
   const onSubmitEditedMessage = useCallback(
-    (id, updatedItems, newAttachmentItems = []) => {
+    (id, updatedItems, newAttachmentItems) => {
       const textUpdate = updatedItems?.find(u => u.item_type === 'text_message');
       setChatHistory(prev =>
         prev.map(item => {
@@ -1652,15 +1722,14 @@ const ChatBox = forwardRef((props, boxRef) => {
       } else {
         const question = textUpdate?.content || '';
         const questionIndex = chat_history.findIndex(item => item.id === id);
-        const existingAttachments = (
-          chat_history[questionIndex]?.message_items?.filter(
-            item => item.item_type === 'attachment_message',
-          ) || []
-        ).map(i => ({ filepath: i.item_details.filepath }));
-        const attachmentList = [
-          ...existingAttachments,
-          ...newAttachmentItems.map(i => ({ filepath: i.item_details.filepath })),
-        ];
+        const attachmentList =
+          newAttachmentItems !== undefined
+            ? newAttachmentItems.map(i => ({ filepath: i.item_details.filepath }))
+            : (
+                chat_history[questionIndex]?.message_items?.filter(
+                  item => item.item_type === 'attachment_message',
+                ) || []
+              ).map(i => ({ filepath: i.item_details.filepath }));
         onResendQuestionStream(id, question, attachmentList);
       }
     },
@@ -1680,26 +1749,28 @@ const ChatBox = forwardRef((props, boxRef) => {
   }, []);
   const { fetchOriginalDetails, isFetchingParticipant, fetchOriginalVersionDetails } =
     useFetchParticipantDetails();
-  const users = useMemo(
-    () => [
-      ...(activeConversation?.participants
-        ?.filter(
-          participant =>
-            participant.entity_name === ChatParticipantType.Users && participant.entity_meta?.id !== userId,
-        )
-        .map(participant => ({
-          id: participant.id,
-          name: participant.meta.user_name,
-          participant,
-        })) || []),
-      {
+  const users = useMemo(() => {
+    const userParticipants = (activeConversation?.participants || [])
+      .filter(
+        participant =>
+          participant.entity_name === ChatParticipantType.Users && participant.entity_meta?.id !== userId,
+      )
+      .map(participant => ({
+        id: participant.id,
+        name: participant.meta.user_name,
+        participant,
+      }));
+
+    if (userParticipants.length > 0) {
+      userParticipants.push({
         id: '@everyone',
         name: 'Everyone',
         participant: 'All users',
-      },
-    ],
-    [activeConversation?.participants, userId],
-  );
+      });
+    }
+
+    return userParticipants;
+  }, [activeConversation?.participants, userId]);
 
   const hasOtherUsers = useMemo(
     () =>
@@ -1783,21 +1854,20 @@ const ChatBox = forwardRef((props, boxRef) => {
 
   const onMentionChange = useCallback(
     mentions => {
-      const mentionedEveryone = mentions.find(mention => mention.user?.id === '@everyone');
-      if (mentionedEveryone) {
-        setIsMentioningEveryone(true);
-        onClearActiveParticipant();
-        setSelectedUsers([]);
-      } else {
-        const mentionedUsers = mentions.filter(mention => mention.isValid && mention.user);
-        if (mentionedUsers.length > 0) {
-          onClearActiveParticipant();
-          setIsMentioningEveryone(false);
-        } else {
-          setIsMentioningEveryone(false);
-        }
-        setSelectedUsers(mentionedUsers);
+      // isMentioningEveryone is only ever SET by onSelectUserMention (dropdown confirmation).
+      // Here we only CLEAR it when the @Everyone text has been deleted from the input.
+      const everyoneStillPresent = mentions.some(mention => mention.user?.id === '@everyone');
+      if (!everyoneStillPresent) {
+        setIsMentioningEveryone(false);
       }
+
+      const mentionedUsers = mentions.filter(
+        mention => mention.isValid && mention.user && mention.user.id !== '@everyone',
+      );
+      if (mentionedUsers.length > 0) {
+        onClearActiveParticipant();
+      }
+      setSelectedUsers(mentionedUsers);
     },
     [onClearActiveParticipant],
   );
@@ -1927,14 +1997,12 @@ const ChatBox = forwardRef((props, boxRef) => {
           model_name: newModel.name,
           model_project_id: newModel.project_id,
           max_tokens: DEFAULT_MAX_TOKENS, // Reset max tokens to default when changing model
-          temperature: DEFAULT_TEMPERATURE,
-          // Only set reasoning_effort if the model supports it
-          ...(newModel.supports_reasoning && { reasoning_effort: DEFAULT_REASONING_EFFORT }),
+          // Explicitly resets both temperature and reasoning_effort for the new model's
+          // family — never leaves a stale value from the previously selected model (issue #5821).
+          ...resetLLMSettingsForModel(newModel),
           // Preserve steps_limit — not model-specific
           steps_limit: activeParticipant?.entity_settings.llm_settings?.steps_limit ?? DEFAULT_STEPS_LIMIT,
         };
-
-        if (!newModel.supports_reasoning) delete newLLMSettings.reasoning_effort;
 
         // Update Formik so Save button persists the new model
         if (onSetLLMSettings) {
@@ -1961,12 +2029,11 @@ const ChatBox = forwardRef((props, boxRef) => {
             model_name: newModel.name,
             model_project_id: newModel.project_id,
             max_tokens: DEFAULT_MAX_TOKENS, // Reset max tokens to default when changing model
-            temperature: DEFAULT_TEMPERATURE,
-            ...(newModel.supports_reasoning && { reasoning_effort: DEFAULT_REASONING_EFFORT }),
+            // Explicitly resets both temperature and reasoning_effort for the new model's
+            // family — never leaves a stale value from the previously selected model (issue #5821).
+            ...resetLLMSettingsForModel(newModel),
             // steps_limit is stored in conversation meta — do not touch it here
           };
-
-          if (!newModel.supports_reasoning) delete llmSettingsPayload.reasoning_effort;
 
           const result = await updateChatLlmSettings({
             projectId,
@@ -2298,14 +2365,12 @@ const ChatBox = forwardRef((props, boxRef) => {
           />
         </Box>
       </ChatBodyContainer>
-      <AlertDialog
-        title="Warning"
-        alertContent={alertContent}
+      <Modal.DeleteEntityModal
         open={openAlert}
-        alarm
         onClose={onCloseAlert}
-        onCancel={onCloseAlert}
         onConfirm={onConfirmDelete}
+        textContent="Are you sure to delete the message"
+        inlineExtraContent="? It can't be restored."
       />
     </>
   );

@@ -90,15 +90,15 @@ export const eliteaTextFieldColorStyle = theme => ({
     },
     hover: {
       border: {
-        color: theme.palette.border.hover,
+        color: theme.palette.border.inputHover,
       },
     },
     active: {
       label: {
-        color: theme.palette.primary.main,
+        color: theme.palette.primary.pressed,
       },
       border: {
-        color: theme.palette.primary.main,
+        color: theme.palette.primary.pressed,
       },
     },
     disabled: {
@@ -212,6 +212,7 @@ export const eliteaTextFieldStyle = () => ({
 export const eliteaTextFieldOutlinedStyle = () => ({
   padding: 0,
   '& .MuiOutlinedInput-root': {
+    padding: 0,
     borderRadius: '0.5rem',
     '& fieldset': {
       borderWidth: '0.0625rem',
@@ -224,9 +225,9 @@ export const eliteaTextFieldOutlinedStyle = () => ({
     },
   },
   '& .MuiOutlinedInput-input': {
-    padding: '0.75rem',
+    padding: '0.5rem 1rem',
     '&.MuiInputBase-inputMultiline': {
-      padding: '0 0.75rem 0.75rem',
+      padding: '0.5rem 1rem',
       maxHeight: '25rem',
       minHeight: '8.25rem',
       overflow: 'auto !important',

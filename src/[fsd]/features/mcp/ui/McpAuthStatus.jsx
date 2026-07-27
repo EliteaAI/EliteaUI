@@ -2,11 +2,17 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { Box, Typography } from '@mui/material';
+import { Box, Tooltip, Typography } from '@mui/material';
 
 import { MCP_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
+import { PAT_REQUIRED_ACTION_HINT } from '@/[fsd]/features/mcp/lib/constants';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
-import { useMcpAuthCheck, useMcpAuthModal, useMcpTokenChange } from '@/[fsd]/features/mcp/lib/hooks';
+import {
+  useInternalMcpPatStatus,
+  useMcpAuthCheck,
+  useMcpAuthModal,
+  useMcpTokenChange,
+} from '@/[fsd]/features/mcp/lib/hooks';
 import { McpAuthModal, McpLogoutModal } from '@/[fsd]/features/mcp/ui';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
@@ -105,10 +111,12 @@ const McpAuthStatus = memo(({ authConfig } = {}) => {
     setShowLogoutModal(false);
   }, []);
 
+  const { patInvalid } = useInternalMcpPatStatus({ projectId, toolkitType });
+
   // For pre-built MCPs, we don't require URL to show the auth status.
   // authConfig implies an external flow (e.g. SharePoint) that is always capable of login.
   const canLogin = !!(authConfig || isPrebuildMcp || url);
-  const isButtonDisabled = !canLogin || isRunning || authConfig?.isRunning;
+  const isButtonDisabled = !canLogin || isRunning || authConfig?.isRunning || patInvalid;
   const buttonLabel = hasLoggedInToMcp ? 'Logout' : isRunning ? 'Logging in...' : 'Login';
 
   // For injected auth flows (authConfig), always render regardless of id/create-mode,
@@ -130,13 +138,17 @@ const McpAuthStatus = memo(({ authConfig } = {}) => {
             {hasLoggedInToMcp ? 'Connected!' : 'Not Connected'}
           </Typography>
         </Box>
-        <Button.BaseBtn
-          onClick={hasLoggedInToMcp ? onLogout : onLogin}
-          disabled={isButtonDisabled}
-          variant={BUTTON_VARIANTS.secondary}
-        >
-          {buttonLabel}
-        </Button.BaseBtn>
+        <Tooltip title={patInvalid ? PAT_REQUIRED_ACTION_HINT : ''}>
+          <Box component="span">
+            <Button.BaseBtn
+              onClick={hasLoggedInToMcp ? onLogout : onLogin}
+              disabled={isButtonDisabled}
+              variant={BUTTON_VARIANTS.secondary}
+            >
+              {buttonLabel}
+            </Button.BaseBtn>
+          </Box>
+        </Tooltip>
       </Box>
       {showModal && (
         <McpAuthModal

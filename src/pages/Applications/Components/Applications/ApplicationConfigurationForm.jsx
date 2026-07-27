@@ -34,7 +34,12 @@ const ApplicationConfigurationForm = memo(props => {
         applicationId={applicationId}
         entityProjectId={entityProjectId}
       />
-      <ApplicationVariables style={styles.section} />
+      <ApplicationVariables
+        style={styles.section}
+        sectionTestId="agent-variables-section"
+        rowTestId="agent-variable-row-{}"
+        inputTestId="agent-variable-input-{}"
+      />
       <AgentInput.WelcomeMessageInput
         style={styles.section}
         disabled={isDisabled}

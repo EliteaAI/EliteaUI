@@ -375,7 +375,7 @@ const NewChat = props => {
     setConversations,
     setFolders,
     toastError,
-    toastInfo,
+    toastSuccess,
   });
   const { onDeleteAllMessages, onRemoteDeleteAllMessages } = useDeleteAllMessageFromConversation({
     activeConversation,
@@ -572,7 +572,7 @@ const NewChat = props => {
           activeConversation?.isNew || !activeConversation?.id
             ? newConversationViewRef.current
             : boxRef.current;
-        shouldMentionUser && mentionTarget?.mentionUser?.(`@Everyone `);
+        shouldMentionUser && mentionTarget?.selectEveryoneMention?.();
         return;
       }
 
@@ -1144,6 +1144,7 @@ const NewChat = props => {
     setConversations,
     setFolders,
     toastError,
+    toastSuccess,
     emitLeaveRoom,
     stopListenCanvasEditorsChangeEvent,
     stopListenCanvasContentChangeEvent,
@@ -1156,6 +1157,7 @@ const NewChat = props => {
   const { onDeleteFolder } = useDeleteFolder({
     setFolders,
     toastError,
+    toastSuccess,
   });
 
   const { onPlaybackConversation } = usePlaybackConversation({

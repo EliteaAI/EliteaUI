@@ -5,6 +5,8 @@ import { white } from './darkPalette';
 const blueFill08 = 'rgba(41, 184, 245, 0.08)';
 const skyBlue20 = ' rgba(80, 161, 255, 0.2)';
 const skyBlue40 = ' rgba(80, 161, 255, 0.4)';
+const grey003 = 'rgba(65, 71, 87, 0.03)';
+const grey007 = 'rgba(65, 71, 87, 0.07)';
 const light00 = '#5B5E69';
 const gray60 = '#0E131D';
 const darkMagenta16 = 'rgba(245, 81, 249, 0.16)';
@@ -257,12 +259,14 @@ const lightPalette = {
         selected: dark10,
       },
       agentHub: {
-        default: 'rgba(201, 189, 255, 0.2)',
-        hover: 'rgba(201, 189, 255, 0.2)',
-        active: 'rgba(201, 189, 255, 0.4)',
-        shadowDefault: '0px 0px 10px 0px rgba(84, 90, 255, 0.15) inset',
-        shadowHover: '0px 0px 16px 0px rgba(84, 90, 255, 0.4) inset',
-        shadowActive: '0px 0px 40px 0px rgba(84, 90, 255, 0.3) inset',
+        default: 'transparent',
+        hover: '#C6B8FF33',
+        active: '#C6B8FF33',
+        shadowDefault: 'none',
+        shadowHover: 'none',
+        shadowActive: '0px 0px 15px 0px #A754FF33 inset',
+        textGradient: 'linear-gradient(90deg, #DD32FF 0.7%, #8147FF 30%)',
+        iconGradient: 'linear-gradient(33.96deg, #E345FF 0%, #A274FF 80%)',
       },
       iconLabelButton: {
         default: 'transparent',
@@ -384,10 +388,18 @@ const lightPalette = {
     },
     settingsPage: 'linear-gradient(270deg, #EBF1F8 0%, #FFF9FF 100%)',
     chatContinueBackground: dark10,
+    aiProviderAccordion: {
+      default: grey003,
+      hover: grey007,
+    },
+    emptyState: {
+      default: grey003,
+    },
   },
   border: {
     lines: light30,
     hover: light10,
+    inputHover: light20,
     category: {
       selected: dark20,
     },
@@ -409,6 +421,7 @@ const lightPalette = {
       logout: orange40,
     },
     chatContinue: darkMagenta30,
+    aiProviderAccordion: 'linear-gradient(0deg, rgba(65, 71, 87, 0) 0%, rgba(65, 71, 87, 0.08) 100%)',
   },
   boxShadow: {
     default: `0px 2px 10px 0px rgba(100, 119, 136, 0.2)`,
@@ -438,6 +451,7 @@ const lightPalette = {
       label: light10,
       primary: gradient,
       placeholder: light30,
+      placeholderSecondary: light20,
       disabled: light10,
     },
     select: {
@@ -575,6 +589,10 @@ const lightPalette = {
   scrollbar: {
     thumb: dark10,
     thumbHover: light10,
+  },
+  diff: {
+    removed: 'rgba(215, 22, 22, 0.3)',
+    added: 'rgba(42, 179, 122, 0.3)',
   },
   capability: {
     vision: {

@@ -21,7 +21,7 @@ const UserButton = memo(props => {
   const { name, avatar } = useSelector(state => state.user);
   const sideBarCollapsed = useSelector(state => state.settings.sideBarCollapsed);
   const isOnUserSettings = useMatch({
-    path: RouteDefinitions.SettingsWithTab.replace(':tab', 'personalization'),
+    path: RouteDefinitions.SettingsWithTab.replace(':tab', 'preferences'),
   });
   const theme = useTheme();
 
@@ -35,12 +35,9 @@ const UserButton = memo(props => {
   const menuItems = useMemo(
     () => [
       {
-        label: 'Personalization',
+        label: 'Preferences',
         icon: <UserIcon sx={{ fontSize: '1rem' }} />,
-        onClick: navigateToPage(
-          RouteDefinitions.SettingsWithTab.replace(':tab', 'personalization'),
-          'Settings',
-        ),
+        onClick: navigateToPage(RouteDefinitions.SettingsWithTab.replace(':tab', 'preferences'), 'Settings'),
         isSelected: !!isOnUserSettings,
         addSeparator: true,
       },

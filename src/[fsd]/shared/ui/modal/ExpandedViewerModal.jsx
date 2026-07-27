@@ -28,7 +28,7 @@ const ExpandedViewerModal = memo(props => {
     disableSelectLanguage,
     customButtons,
     'data-testid': dataTestId,
-    closeButtonDataTestId,
+    closeButtonTestId,
     footer,
   } = props;
 
@@ -42,7 +42,7 @@ const ExpandedViewerModal = memo(props => {
 
   const onClickCopy = useCallback(() => {
     handleCopy(value);
-    toastInfo('The content has been copied to the clipboard');
+    toastInfo('The content has been copied to the clipboard.');
   }, [value, toastInfo]);
 
   const titleRef = useRef(null);
@@ -134,7 +134,7 @@ const ExpandedViewerModal = memo(props => {
       sx={styles.dialogPaper}
       dialogSx={[styles.dialogContent, contentBackgroundSx]}
       data-testid={dataTestId}
-      closeButtonDataTestId={closeButtonDataTestId}
+      closeButtonTestId={closeButtonTestId}
       footer={footer}
     />
   );

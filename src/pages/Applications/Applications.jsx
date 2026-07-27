@@ -110,7 +110,7 @@ const Applications = memo(() => {
       tabBarStyle={{ padding: '0 0.5rem 0 1.5rem' }}
       middleTabComponent={
         <>
-          <ToolbarImportButton />
+          <ToolbarImportButton testId="agents-import-button" />
           {tab === 'trending' && <DateRangeSelect />}
           {projectId == PUBLIC_PROJECT_ID && (
             <StatusFilterSelect

@@ -88,7 +88,7 @@ const EditApplication = memo(() => {
         ),
         content: (
           <ConfigurationTab
-            totalToolCount={initialValues?.version_details?.tools.length || 0}
+            totalToolCount={initialValues?.version_details?.tools?.length || 0}
             isFetching={isFetching}
             isError={isError}
             applicationId={applicationId}
@@ -101,7 +101,7 @@ const EditApplication = memo(() => {
     ],
     [
       initialValues?.name,
-      initialValues?.version_details?.tools.length,
+      initialValues?.version_details?.tools?.length,
       isFetching,
       isError,
       applicationId,

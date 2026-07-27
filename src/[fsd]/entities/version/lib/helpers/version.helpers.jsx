@@ -75,7 +75,10 @@ export const buildVersionOption =
                 },
               },
             })}
-            onClick={e => { e.stopPropagation(); handleSetDefaultVersion(id); }}
+            onClick={e => {
+              e.stopPropagation();
+              handleSetDefaultVersion(id);
+            }}
           >
             <PinIcon sx={{ fontSize: '1rem' }} />
           </Box>
@@ -89,5 +92,12 @@ export const buildVersionOption =
       value: id,
       date: timeFormatter(created_at, TIME_FORMAT.DDMMYYYY),
       icon: <IconBlock />,
+      // Name-keyed testid for version-selector options (ELITEA-1738 testid
+      // rework): SingleSelectMenuItem's default `select-option-{value}` is
+      // keyed to the option's numeric id, which callers don't know ahead of
+      // time for a version they just created. Every buildVersionOption
+      // consumer (skill/agent/pipeline version selects) gets this uniformly —
+      // additive via SingleSelectMenuItem's `option.testId ?? default` fallback.
+      testId: `version-option-${name}`,
     };
   };

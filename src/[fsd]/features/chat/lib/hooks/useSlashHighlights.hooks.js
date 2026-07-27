@@ -18,26 +18,27 @@ export const useSlashHighlights = (inputContent, committedMentions) =>
   useMemo(() => {
     if (!committedMentions?.length || !inputContent) return [];
 
-    // Build unique token strings; sort longest-first to prevent sub-match shadowing.
-    const tokens = [
-      ...new Set(
-        committedMentions.map(m =>
-          m.tool_name ? `/${m.toolkit_name}/${m.tool_name}` : `/${m.toolkit_name}`,
-        ),
-      ),
-    ].sort((a, b) => b.length - a.length);
+    // committedMentions deduplicates by toolkit_id — only the last committed mention
+    // per toolkit is stored. To highlight ALL occurrences of a toolkit in the text
+    // (e.g. /abc-test/tool1 and /abc-test/tool2 both typed), we build a per-toolkit
+    // regex that matches any /toolkitName[/toolName] pattern in the text.
+    const toolkitNames = [...new Set(committedMentions.map(m => m.toolkit_name))];
 
     const ranges = [];
 
-    for (const token of tokens) {
-      let idx = inputContent.indexOf(token);
-      while (idx !== -1) {
-        const end = idx + token.length;
-        // Skip if this range overlaps any already-recorded range.
-        if (!ranges.some(r => idx < r.end && end > r.start)) {
-          ranges.push({ start: idx, end });
+    for (const name of toolkitNames) {
+      const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      // Match /toolkitName optionally followed by /toolName (non-whitespace, non-slash).
+      // Negative lookahead (?!\w) prevents matching /toolkitNameExtra as /toolkitName
+      // while correctly handling all valid terminators (space, punctuation, end of string).
+      const re = new RegExp(`\\/${escaped}(?:\\/[^\\s/]+)?(?!\\w)`, 'g');
+      let match;
+      while ((match = re.exec(inputContent)) !== null) {
+        const start = match.index;
+        const end = start + match[0].length;
+        if (!ranges.some(r => start < r.end && end > r.start)) {
+          ranges.push({ start, end });
         }
-        idx = inputContent.indexOf(token, idx + 1);
       }
     }
 

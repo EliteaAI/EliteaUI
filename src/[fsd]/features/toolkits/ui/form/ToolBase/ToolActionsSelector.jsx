@@ -2,15 +2,17 @@ import { memo, useCallback, useMemo } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { Box, Typography } from '@mui/material';
+import { Box, Tooltip, Typography } from '@mui/material';
 
 import { SHARED_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
-import { useGetRemoteMcpTools } from '@/[fsd]/features/mcp/lib/hooks';
+import { PAT_REQUIRED_ACTION_HINT } from '@/[fsd]/features/mcp/lib/constants';
+import { useGetRemoteMcpTools, useInternalMcpPatStatus } from '@/[fsd]/features/mcp/lib/hooks';
 import { McpAuthModal } from '@/[fsd]/features/mcp/ui';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { useToolkitView } from '@/hooks/toolkit/useToolkitView.js';
+import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { useTheme } from '@emotion/react';
 
 export const ToolActionsSelector = memo(props => {
@@ -45,9 +47,12 @@ export const ToolActionsSelector = memo(props => {
     onToolsFetched,
   });
 
+  const projectId = useSelectedProjectId();
+  const { patInvalid } = useInternalMcpPatStatus({ projectId, toolkitType });
+
   const canGetRemoteMcpTools = isRemoteMcp && values?.settings?.url;
   const canGetPreconfiguredMcpTools = isPreconfiguredMcp && toolkitType;
-  const canGetTools = canGetRemoteMcpTools || canGetPreconfiguredMcpTools;
+  const canGetTools = (canGetRemoteMcpTools || canGetPreconfiguredMcpTools) && !patInvalid;
 
   const onClickGetTools = useCallback(
     event => {
@@ -105,13 +110,15 @@ export const ToolActionsSelector = memo(props => {
               title: 'Tools',
               summaryAction:
                 isRemoteMcp || isPreconfiguredMcp ? (
-                  <Typography
-                    variant="labelSmall"
-                    sx={styles.syncButton(!canGetTools || isFetchingTools)}
-                    onClick={onClickGetTools}
-                  >
-                    {isFetchingTools ? 'Loading...' : 'Load Tools'}
-                  </Typography>
+                  <Tooltip title={patInvalid ? PAT_REQUIRED_ACTION_HINT : ''}>
+                    <Typography
+                      variant="labelSmall"
+                      sx={styles.syncButton(!canGetTools || isFetchingTools)}
+                      onClick={onClickGetTools}
+                    >
+                      {isFetchingTools ? 'Loading...' : 'Load Tools'}
+                    </Typography>
+                  </Tooltip>
                 ) : null,
               content: (
                 <>

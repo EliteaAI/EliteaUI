@@ -7,18 +7,24 @@ import { useNavigate } from 'react-router-dom';
 import { Box } from '@mui/material';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
-import { useForkSkill, useSkillExport } from '@/[fsd]/features/skill/lib/hooks';
-import { Controls, SoonLabel } from '@/[fsd]/shared/ui';
+import {
+  useForkSkill,
+  usePublishSkillMenu,
+  useSkillExport,
+  useUnpublishSkillMenu,
+} from '@/[fsd]/features/skill/lib/hooks';
+import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
+import { Controls } from '@/[fsd]/shared/ui';
 import { PinEntityType } from '@/[fsd]/widgets/pin-toggler/lib/constants';
 import { usePin, usePinMenu } from '@/[fsd]/widgets/pin-toggler/lib/hooks';
-import PublishIcon from '@/assets/publish-version.svg?react';
-import { SkillsTabs } from '@/common/constants';
+import { PERMISSIONS, SkillsTabs } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils.jsx';
 import { useCopyLinkMenu } from '@/components/CopyLinkToEntityButton.jsx';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import ExportIcon from '@/components/Icons/ExportIcon';
 import ForkIcon from '@/components/Icons/ForkIcon';
 import PinIcon from '@/components/Icons/PinIcon';
+import useCheckPermission from '@/hooks/useCheckPermission';
 import { useProjectEntityLink } from '@/hooks/useProjectEntityLink';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
@@ -38,12 +44,18 @@ const sectionLabelSx = ({ palette }) => ({
  * Controls.ControlsDropdown and reuses the entity-agnostic agent hooks.
  */
 const SkillControls = memo(props => {
-  const { skillId, skillName, initialPinned, currentVersionId, onChangeVersion, onSetDefault } = props;
+  const { skillId, skillName, initialPinned, currentVersionId, onChangeVersion, onSetDefault, onSuccess } =
+    props;
 
   const navigate = useNavigate();
   const projectId = useSelectedProjectId();
+  const { isPrivate } = useProjectType();
+  const { checkPermission } = useCheckPermission();
   const { toastError, toastSuccess } = useToast();
   const { values } = useFormikContext();
+
+  const { publishSkillMenuItem, publishDialog } = usePublishSkillMenu(onSuccess);
+  const { unpublishSkillMenuItem, unpublishDialog } = useUnpublishSkillMenu(onSuccess);
 
   const versionDetails = values?.version_details;
   const defaultVersionId = values?.meta?.default_version_id;
@@ -92,6 +104,9 @@ const SkillControls = memo(props => {
     return false;
   }, [defaultVersionId, currentVersionId, versionDetails?.name]);
 
+  const canDeleteVersion = isPrivate || checkPermission(PERMISSIONS.versions.delete);
+  const canDeleteSkill = isPrivate || checkPermission(PERMISSIONS.skills.delete);
+
   const onExport = useCallback(() => {
     doExport({ skillId, versionId: currentVersionId, skillName });
   }, [doExport, skillId, currentVersionId, skillName]);
@@ -108,7 +123,8 @@ const SkillControls = memo(props => {
         toastError(buildErrorMessage(error) || 'Failed to delete the version.');
         return;
       }
-      toastSuccess('The version has been deleted');
+      const versionName = versionDetails?.name || 'version';
+      toastSuccess(`The ${versionName} version has been successfully deleted.`);
       onChangeVersion?.(defaultVersionId);
     } catch (error) {
       toastError(buildErrorMessage(error) || 'Failed to delete the version.');
@@ -122,6 +138,7 @@ const SkillControls = memo(props => {
     onChangeVersion,
     toastError,
     toastSuccess,
+    versionDetails?.name,
   ]);
 
   const onDeleteSkill = useCallback(async () => {
@@ -131,79 +148,76 @@ const SkillControls = memo(props => {
         toastError(buildErrorMessage(error) || 'Failed to delete the skill.');
         return;
       }
-      toastSuccess('The skill has been deleted');
+      toastSuccess(`The ${skillName || 'skill'} skill has been successfully deleted.`);
       navigate(`${RouteDefinitions.Skills}/${SkillsTabs[0]}`);
     } catch (error) {
       toastError(buildErrorMessage(error) || 'Failed to delete the skill.');
     }
-  }, [deleteSkill, projectId, skillId, navigate, toastError, toastSuccess]);
+  }, [deleteSkill, projectId, skillId, skillName, navigate, toastError, toastSuccess]);
 
   const menuItems = useMemo(
-    () => [
-      {
-        key: 'version',
-        label: <Box sx={sectionLabelSx}>VERSION</Box>,
-        addSeparator: true,
-        slotProps: { MenuItem: { sx: { pointerEvents: 'none' } } },
-      },
-      {
-        key: 'set-as-a-default',
-        label: 'Set as a default',
-        disabled: disableSetAsDefault,
-        icon: <PinIcon sx={{ fontSize: '1rem' }} />,
-        onClick: onSetDefault,
-      },
-      {
-        key: 'export-version',
-        label: 'Export',
-        icon: <ExportIcon sx={{ fontSize: '1rem' }} />,
-        onClick: onExport,
-      },
-      shareVersionMenuItem,
-      {
-        key: 'fork',
-        label: 'Fork',
-        icon: <ForkIcon sx={{ fontSize: '1rem' }} />,
-        disabled: !skillId || !currentVersionId || isForking || openWizard,
-        onClick: onFork,
-      },
-      {
-        key: 'publish',
-        label: <SoonLabel text="Publish" />,
-        disabled: true,
-        icon: <PublishIcon sx={{ fontSize: '1rem' }} />,
-      },
-      {
-        key: 'delete-version',
-        label: 'Delete',
-        icon: <DeleteIcon sx={{ fontSize: '1rem' }} />,
-        disabled: disableDelete,
-        addSeparator: true,
-        alarm: true,
-        entityName: versionDetails?.name,
-        inlineExtraContent: " version? It can't be restored.",
-        shouldRequestInputName: false,
-        onConfirm: onDeleteVersion,
-      },
-      {
-        key: 'skill',
-        label: <Box sx={sectionLabelSx}>SKILL</Box>,
-        addSeparator: true,
-        slotProps: { MenuItem: { sx: { pointerEvents: 'none' } } },
-      },
-      shareSkillMenuItem,
-      pinMenuItem,
-      {
-        key: 'delete-skill',
-        label: 'Delete skill',
-        icon: <DeleteIcon sx={{ fontSize: '1rem' }} />,
-        entityName: skillName,
-        shouldRequestInputName: true,
-        confirmButtonTitle: 'Delete',
-        onConfirm: onDeleteSkill,
-        slotProps: { MenuItem: { 'data-testid': 'skill-delete-menu-item' } },
-      },
-    ],
+    () =>
+      [
+        {
+          key: 'version',
+          label: <Box sx={sectionLabelSx}>VERSION</Box>,
+          addSeparator: true,
+          slotProps: { MenuItem: { sx: { pointerEvents: 'none' } } },
+        },
+        {
+          key: 'set-as-a-default',
+          label: 'Set as a default',
+          disabled: disableSetAsDefault,
+          icon: <PinIcon sx={{ fontSize: '1rem' }} />,
+          onClick: onSetDefault,
+        },
+        {
+          key: 'export-version',
+          label: 'Export',
+          icon: <ExportIcon sx={{ fontSize: '1rem' }} />,
+          onClick: onExport,
+        },
+        shareVersionMenuItem,
+        {
+          key: 'fork',
+          label: 'Fork',
+          icon: <ForkIcon sx={{ fontSize: '1rem' }} />,
+          disabled: !skillId || !currentVersionId || isForking || openWizard,
+          onClick: onFork,
+        },
+        publishSkillMenuItem && { key: 'publish', ...publishSkillMenuItem },
+        unpublishSkillMenuItem && { key: 'unpublish', ...unpublishSkillMenuItem },
+        canDeleteVersion && {
+          key: 'delete-version',
+          label: 'Delete',
+          icon: <DeleteIcon sx={{ fontSize: '1rem' }} />,
+          disabled: disableDelete,
+          addSeparator: true,
+          alarm: true,
+          entityName: versionDetails?.name,
+          inlineExtraContent: " version? It can't be restored.",
+          shouldRequestInputName: false,
+          onConfirm: onDeleteVersion,
+        },
+        {
+          key: 'skill',
+          label: <Box sx={sectionLabelSx}>SKILL</Box>,
+          addSeparator: true,
+          slotProps: { MenuItem: { sx: { pointerEvents: 'none' } } },
+        },
+        shareSkillMenuItem,
+        pinMenuItem,
+        canDeleteSkill && {
+          key: 'delete-skill',
+          label: 'Delete skill',
+          icon: <DeleteIcon sx={{ fontSize: '1rem' }} />,
+          entityName: skillName,
+          shouldRequestInputName: true,
+          confirmButtonTitle: 'Delete',
+          onConfirm: onDeleteSkill,
+          slotProps: { MenuItem: { 'data-testid': 'skill-delete-menu-item' } },
+        },
+      ].filter(Boolean),
     [
       disableSetAsDefault,
       onSetDefault,
@@ -214,6 +228,8 @@ const SkillControls = memo(props => {
       isForking,
       openWizard,
       onFork,
+      publishSkillMenuItem,
+      unpublishSkillMenuItem,
       disableDelete,
       versionDetails?.name,
       skillName,
@@ -221,6 +237,8 @@ const SkillControls = memo(props => {
       shareSkillMenuItem,
       pinMenuItem,
       onDeleteSkill,
+      canDeleteVersion,
+      canDeleteSkill,
     ],
   );
 
@@ -230,6 +248,8 @@ const SkillControls = memo(props => {
         menuItems={menuItems}
         anchorButtonProps={{ 'data-testid': 'skill-controls-menu-button' }}
       />
+      {publishDialog}
+      {unpublishDialog}
     </Box>
   );
 });

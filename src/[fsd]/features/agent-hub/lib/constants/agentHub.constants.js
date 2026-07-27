@@ -5,6 +5,7 @@ export const TRENDING_CATEGORY = 'Trending';
 export const MY_LIKED_CATEGORY = 'My Liked';
 export const OTHER_CATEGORY = 'Other';
 export const PAGE_SIZE = 20;
+export const AUTO_REFRESH_THROTTLE_MS = 30 * 1000;
 export const TagsQueryParams = {
   projectId: PUBLIC_PROJECT_ID,
   page: 0,

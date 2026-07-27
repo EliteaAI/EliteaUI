@@ -44,21 +44,37 @@ export const getParticipantName = (participant, systemSenderName = DEFAULT_PARTI
 };
 
 /**
- * True when a participant is a "container" agent that will NOT be bound as a callable tool in
- * adhoc chat (issue #5680): a non-pipeline application that itself uses other agents. The backend
- * sets `meta.is_container` mirroring its own skip rule; this helper is the single client-side
- * definition of "should the skip hint show for this participant" so the expanded card and the
- * collapsed section indicator can't diverge. Callers additionally gate on `!isActive` (the hint is
- * only relevant while the agent is NOT the active orchestrator). Pipelines are the sanctioned
- * deep-composition primitive and are never flagged.
+ * True when a participant is a "container" agent that CANNOT be bound as a callable tool in adhoc
+ * chat because nesting it would exceed the tier budget (issue #5778, relaxing #5680's absolute ban).
+ *
+ * A non-pipeline container is NO LONGER unconditionally skipped: a container whose own agent-subtree
+ * still fits within `max_agent_nesting_tiers` (the participant counted as tier 1) is bindable and
+ * must NOT show the skip hint. The gate now mirrors the depth-aware add-guard in
+ * useAgentPipelineAssociation.jsx: skip only when the adhoc root plus the candidate subtree exceeds
+ * `max_agent_nesting_tiers`.
+ *
+ * The backend emits `agent_subtree_tiers` + `max_agent_nesting_tiers` on the participant meta
+ * (conversation_utils.get_conversation_details, issue #5778). When BOTH tier fields are present we
+ * use them; when they are absent (older payloads) we fall back to the pre-#5778 behavior — treat any
+ * `is_container` as skipped — so we neither spuriously unblock nor crash on a stale payload.
+ *
+ * Callers additionally gate on `!isActive` (the hint is only relevant while the agent is NOT the
+ * active orchestrator). Pipelines are transparent for counting purposes, but their agent descendants
+ * still consume tiers, so they are evaluated by the same formula.
  */
 export const isSkippedContainerParticipant = participant => {
   if (!participant || participant.meta?.is_container !== true) return false;
   if (participant.entity_name !== ChatParticipantType.Applications) return false;
-  const isPipeline =
-    participant.entity_settings?.agent_type === ChatParticipantType.Pipelines ||
-    participant.agent_type === ChatParticipantType.Pipelines;
-  return !isPipeline;
+  // Depth-aware gate (issue #5778). The adhoc orchestrator is tier A. The candidate subtree starts
+  // at tier B, therefore all of its reported agent tiers are added to the host tier. A pipeline is
+  // transparent in the backend's subtree count; it is not an exemption from validating descendants.
+  const subtreeTiers = participant.meta?.agent_subtree_tiers;
+  const maxTiers = participant.meta?.max_agent_nesting_tiers;
+  if (typeof subtreeTiers === 'number' && typeof maxTiers === 'number') {
+    return 1 + subtreeTiers > maxTiers;
+  }
+  // Backward-compat: tier fields absent → fall back to the blunt container ban.
+  return true;
 };
 
 export const isParticipantStillActive = participant => {

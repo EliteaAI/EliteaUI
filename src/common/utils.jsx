@@ -14,6 +14,7 @@ import {
   CollectionStatus,
   DEV,
   PROMPT_PAYLOAD_KEY,
+  PUBLIC_PROJECT_ID,
   TIME_FORMAT,
   VITE_DEV_TOKEN,
   VITE_SERVER_URL,
@@ -1005,6 +1006,16 @@ export const buildForkedEntityHref = (entity, meta) => {
 
   const baseUrl = `${window.location.protocol}//${window.location.host}`;
   const basename = getBasename();
+
+  // Entities forked from the shared public project (the ELITEA Catalog) can't be
+  // opened via the normal project route — that project isn't browsable. Deep-link
+  // to the Catalog with the entity's modal instead.
+  const catalogTab = { skills: 'skills', agents: 'agents' }[entity];
+  const catalogParam = { skills: 'skillId', agents: 'agentId' }[entity];
+  if (Number(meta.parent_project_id) === PUBLIC_PROJECT_ID && catalogTab) {
+    return `${baseUrl}${basename}${RouteDefinitions.EliteaCatalog}?tab=${catalogTab}&${catalogParam}=${meta.parent_entity_id}`;
+  }
+
   const projectEntityPath = `/${meta.parent_project_id}/${entity}/all/${meta.parent_entity_id}${meta.parent_version_id ? `/${meta.parent_version_id}` : ''}`;
 
   return `${baseUrl}${basename}${projectEntityPath}?viewMode=owner`;

@@ -7,7 +7,7 @@ import { useTheme } from '@mui/material';
 import { McpAuthConstants } from '@/[fsd]/features/mcp/lib/constants';
 import { McpConstants } from '@/[fsd]/features/toolkits/lib/constants';
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
-import { useGroupedCategories, useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
+import { useGroupedCategories, useIsMcpVisible, useMcpCategoryName } from '@/[fsd]/shared/lib/hooks';
 import { getToolIcon } from '@/common/toolkitUtils';
 import RouteDefinitions from '@/routes.js';
 
@@ -22,6 +22,7 @@ export const useToolkitSearch = ({
   const { toolkitType } = useParams();
   const [searchParams] = useSearchParams();
   const isMcpVisible = useIsMcpVisible();
+  const mcpCategoryName = useMcpCategoryName();
 
   // Get toolkit schemas from backend for category extraction
   const { toolkitSchemas } = useGetCurrentToolkitSchemas();
@@ -34,8 +35,10 @@ export const useToolkitSearch = ({
         if (toolkitSchemas && toolkitSchemas[toolkit.key]) {
           const categories = toolkitSchemas[toolkit.key]?.metadata?.categories;
           if (categories && categories.length > 0) {
-            // Capitalize each word in category name
             const category = categories[0];
+            if (category.toLowerCase() === 'mcp') {
+              return mcpCategoryName;
+            }
             return category
               .split(' ')
               .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
@@ -48,7 +51,7 @@ export const useToolkitSearch = ({
         return toolkit.key === 'mcp' ? McpConstants.McpCategory.Remote : McpConstants.McpCategory.Local;
       }
     },
-    [isMCP, toolkitSchemas],
+    [isMCP, toolkitSchemas, mcpCategoryName],
   );
 
   // Process children to add icons and categories, filtering out pre-built MCPs when MCP is hidden

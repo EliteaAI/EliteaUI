@@ -27,21 +27,15 @@ export const useDateGroupExpansion = () => {
 
   const isGroupExpanded = useCallback(groupName => expandedGroups.has(groupName), [expandedGroups]);
 
-  const enterSearchMode = useCallback(
-    groupsWithResults => {
-      if (searchModeRef.current) return;
-
-      searchModeRef.current = true;
-
-      // Save current expansion state using ref (no re-render)
-      savedNormalExpansionRef.current = new Set(expandedGroups);
-
-      // Expand all groups that have search results
-      const groupsToExpand = new Set(groupsWithResults);
-      setExpandedGroups(groupsToExpand);
-    },
-    [expandedGroups],
-  );
+  const setSearchModeExpansion = useCallback(groupsWithResults => {
+    setExpandedGroups(prev => {
+      if (!searchModeRef.current) {
+        savedNormalExpansionRef.current = new Set(prev);
+      }
+      return new Set(groupsWithResults);
+    });
+    searchModeRef.current = true;
+  }, []);
 
   const exitSearchMode = useCallback((activeConversationGroup = null) => {
     if (!searchModeRef.current) return;
@@ -107,7 +101,7 @@ export const useDateGroupExpansion = () => {
     toggleGroup,
     expandTodayGroup,
     initializeExpansion,
-    enterSearchMode,
+    setSearchModeExpansion,
     exitSearchMode,
     isSearchMode: searchModeRef.current,
   };

@@ -65,7 +65,8 @@ export const DEFAULT_PAGE_TOP_K = 1;
 export const TAG_NAME_MAX_LENGTH = 48;
 export const MAX_NAME_LENGTH = 32;
 export const MAX_DESCRIPTION_LENGTH = 2304;
-export const MAX_INSTRUCTIONS_LENGTH = 2500;
+export const MAX_INSTRUCTIONS_LENGTH = 5000;
+export const MAX_SKILLS_PER_AGENT = 5;
 export const MAX_VARIABLES_LENGTH = 768;
 export const MAX_STEP_LIMIT = 999;
 export const MIN_STEP_LIMIT = 0;
@@ -332,7 +333,12 @@ export const ViewMode = {
   Public: 'public',
 };
 
-export const TOAST_DURATION = 3000;
+export const TOAST_DURATION_DEFAULTS = {
+  error: 10000,
+  warning: 7000,
+  success: 3000,
+  info: 3000,
+};
 
 export const MIN_CARD_WIDTH = '300px';
 export const CARD_WIDTH_PX = 300;
@@ -489,8 +495,6 @@ export const CredentialsTabs = ['all'];
 
 export const PrivateApplicationTabs = ['all', 'drafts', 'published', 'moderation', 'approval', 'rejected'];
 
-export const UserSettingsTabs = ['information', 'tokens', 'secrets', 'projects'];
-
 export const UserProfileTabs = ['profile', 'credentials', 'secrets'];
 export const UserPublicTabs = ['all', 'agents', 'pipelines', 'toolkits', 'MCPs'];
 
@@ -552,6 +556,17 @@ export const PERMISSIONS = {
     // webhook: 'models.applications.webhook.post', // According to Mikhail's comment, this permission is not used
     delete: 'models.applications.application.delete',
   },
+  skills: {
+    publish: 'models.applications.skills.publish',
+    delete: 'models.applications.skills.delete',
+    update: 'models.applications.skills.update',
+  },
+  versions: {
+    delete: 'models.applications.version.delete',
+  },
+  mcps: {
+    delete: 'configuration.integrations.integrations.delete',
+  },
 
   users: {
     view: 'configuration.users.users.view',
@@ -576,6 +591,7 @@ export const PERMISSIONS = {
     create: 'configuration.artifacts.artifacts.create',
     delete: 'configuration.artifacts.artifacts.delete',
     view: 'configuration.artifacts.artifacts.view',
+    edit: 'configuration.artifacts.artifacts.edit',
     buckets: {
       delete: 'configuration.artifacts.buckets.delete',
       update: 'configuration.artifacts.buckets.update',
@@ -603,6 +619,8 @@ export const PERMISSIONS = {
   },
   index: {
     schedule: 'models.applications.index_meta.edit',
+    delete: 'models.applications.index_meta.delete',
+    taskDelete: 'models.applications.task.delete',
   },
 };
 
@@ -1096,3 +1114,14 @@ export const PERSONA_OPTIONS = [
 ];
 
 export const DEFAULT_PERSONA = 'generic';
+
+// #5392: contextual placeholder shown when a persona has no custom instructions yet.
+export const PERSONA_INSTRUCTIONS_PLACEHOLDERS = {
+  generic: 'No custom instructions for the Generic persona yet. Type here to add some.',
+  qa: 'No custom instructions for the QA persona yet. Type here to add some.',
+  nerdy: 'No custom instructions for the Nerdy persona yet. Type here to add some.',
+  quirky: 'No custom instructions for the Quirky persona yet. Type here to add some.',
+  cynical: 'No custom instructions for the Cynical persona yet. Type here to add some.',
+  none: 'No custom instructions for this persona yet. Type here to add some.',
+  bare: 'No custom instructions for this persona yet. Type here to add some.',
+};

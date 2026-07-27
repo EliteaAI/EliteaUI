@@ -1,9 +1,9 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Form, Formik } from 'formik';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
-import { Box, Grid } from '@mui/material';
+import { Box, Grid, Typography } from '@mui/material';
 
 import { CredentialsTabBar } from '@/[fsd]/features/credentials/ui';
 import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
@@ -19,191 +19,219 @@ import { StyledGridContainer } from '@/pages/Common/Components';
 import CredentialForm from '@/pages/Credentials/CredentialForm.jsx';
 import CredentialTypeSelector from '@/pages/Credentials/CredentialTypeSelector.jsx';
 
-const CreateCredential = memo(
-  ({ title, forceShowTitle, typeSelectorTitle, searchPlaceholder, showCategory }) => {
-    const { credentialType } = useParams();
-    const [searchParams] = useSearchParams();
-    const systemSenderName = useSystemSenderName();
-    const { configurationsAsSchema } = useGetCurrentConfigurationAsSchemas();
+const CreateCredential = memo(({ forceShowTitle, typeSelectorTitle, searchPlaceholder, showCategory }) => {
+  const { credentialType } = useParams();
+  const [searchParams] = useSearchParams();
+  const systemSenderName = useSystemSenderName();
+  const navigate = useNavigate();
+  const { configurationsAsSchema } = useGetCurrentConfigurationAsSchemas();
 
-    // Check if we're coming from Model Configuration Settings to show filtered credentials
-    const isFromModelConfiguration = searchParams.get('from') === 'model-configuration';
-    const section = searchParams.get('section');
-    // Pre-fill credential name and ID when navigating from a missing-credential banner
-    const prefillName = searchParams.get('prefill_name') ?? '';
-    const prefillId = searchParams.get('prefill_id') ?? '';
-    const [toolErrors, setToolErrors] = useState({});
-    const [showValidation, setShowValidation] = useState(false);
-    const [validationErrorMessages, setValidationErrorMessages] = useState({});
-    const [apiError, setApiError] = useState('');
+  // Check if we're coming from Model Configuration Settings to show filtered credentials
+  const isFromModelConfiguration = searchParams.get('from') === 'ai-providers';
+  const section = searchParams.get('section');
+  // Pre-fill credential name and ID when navigating from a missing-credential banner
+  const prefillName = searchParams.get('prefill_name') ?? '';
+  const prefillId = searchParams.get('prefill_id') ?? '';
+  const [toolErrors, setToolErrors] = useState({});
+  const [showValidation, setShowValidation] = useState(false);
+  const [validationErrorMessages, setValidationErrorMessages] = useState({});
+  const [apiError, setApiError] = useState('');
 
-    // Define section parameters for different contexts
-    const sectionParams = useMemo(() => {
-      if (section) {
-        return [section];
-      } else if (isFromModelConfiguration) {
-        // For model credentials, use multiple sections
-        return ['llm', 'embedding', 'vectorstorage', 'ai_credentials', 'image_generation', 'asr', 'tts'];
-      } else {
-        // For regular credentials page, use credentials section
-        return ['credentials'];
-      }
-    }, [isFromModelConfiguration, section]);
+  // Define section parameters for different contexts
+  const sectionParams = useMemo(() => {
+    if (section) {
+      return [section];
+    } else if (isFromModelConfiguration) {
+      // For model credentials, use multiple sections
+      return ['llm', 'embedding', 'vectorstorage', 'ai_credentials', 'image_generation', 'asr', 'tts'];
+    } else {
+      // For regular credentials page, use credentials section
+      return ['credentials'];
+    }
+  }, [isFromModelConfiguration, section]);
 
-    // Get filtered configurations based on sections
-    const { data: availableConfigurations, isFetching } = useGetMultiSectionConfigurations(
-      sectionParams || [],
-    );
+  // Get filtered configurations based on sections
+  const { data: availableConfigurations, isFetching } = useGetMultiSectionConfigurations(sectionParams || []);
 
-    const schema = useMemo(
-      () => configurationsAsSchema.find(item => item?.type === credentialType),
-      [configurationsAsSchema, credentialType],
-    );
-    const pageTitle = useMemo(
-      () => title || `New ${schema?.config_schema?.title || credentialType || ''} credential`,
-      [credentialType, schema?.config_schema?.title, title],
-    );
+  const schema = useMemo(
+    () => configurationsAsSchema.find(item => item?.type === credentialType),
+    [configurationsAsSchema, credentialType],
+  );
 
-    const [editCredentialDetail, setEditCredentialDetail] = useState(null);
-    const [isCredentialDirty, setIsCredentialDirty] = useState(false);
-    const { toolSchema, sectionProps } = useToolkitConfigurationProperties({ toolType: credentialType });
-    const hasErrors = useMemo(() => !!Object.values(toolErrors).some(i => i), [toolErrors]);
+  const [editCredentialDetail, setEditCredentialDetail] = useState(null);
+  const [isCredentialDirty, setIsCredentialDirty] = useState(false);
+  const { toolSchema, sectionProps } = useToolkitConfigurationProperties({ toolType: credentialType });
+  const hasErrors = useMemo(() => !!Object.values(toolErrors).some(i => i), [toolErrors]);
 
-    const initialValues = useMemo(() => {
-      if (!credentialType || !configurationsAsSchema || !schema) {
-        return {};
-      }
-      const result = {
-        type: credentialType,
-        schema: convertCredentialConfigSchema(schema?.config_schema, toolSchema, systemSenderName),
-        has_test_connection: schema?.has_test_connection || false,
-        check_connection_label: schema?.check_connection_label,
-        settings: {},
-      };
+  const initialValues = useMemo(() => {
+    if (!credentialType || !configurationsAsSchema || !schema) {
+      return {};
+    }
+    const result = {
+      type: credentialType,
+      schema: convertCredentialConfigSchema(schema?.config_schema, toolSchema, systemSenderName),
+      has_test_connection: schema?.has_test_connection || false,
+      check_connection_label: schema?.check_connection_label,
+      settings: {},
+    };
 
-      result.schema?.required?.forEach(async prop => {
-        if (!sectionProps.find(sectionProp => sectionProp === prop)) {
-          result.settings[prop] = getPropValue({
-            schema: result.schema,
-            name: prop,
-            type: result.schema.properties[prop]?.type,
-            format: result.schema.properties[prop]?.format,
-            defaultValue: result.schema.properties[prop]?.default,
-            items: result.schema.properties[prop]?.items,
-            configuration_types: result.schema.properties[prop]?.configuration_types,
-          });
-        }
-      });
-
-      // Initialize from schema defaults or prefill_value for any property (not only required).
-      // - 'default': Standard JSON Schema attribute for optional fields
-      // - 'prefill_value': Custom attribute for pre-filling required fields without making them
-      //   optional in Pydantic. This keeps the API schema Pydantic-compliant (field stays in
-      //   'required' array) while allowing UI to show a sensible initial value.
-      const props = result.schema?.properties || {};
-      Object.entries(props).forEach(([prop, propSchema]) => {
-        const prefillValue = propSchema?.prefill_value;
-        const defaultValue = propSchema?.default;
-        // prefill_value takes precedence - it's explicitly set for UI pre-filling
-        const effectiveDefault = prefillValue ?? defaultValue;
-
-        if (effectiveDefault === undefined || effectiveDefault === null) return;
-
-        const alreadySet =
-          result.settings[prop] !== undefined &&
-          result.settings[prop] !== null &&
-          result.settings[prop] !== '';
-        if (alreadySet) return;
-
-        const value = getPropValue({
+    result.schema?.required?.forEach(async prop => {
+      if (!sectionProps.find(sectionProp => sectionProp === prop)) {
+        result.settings[prop] = getPropValue({
           schema: result.schema,
           name: prop,
-          type: propSchema?.type,
-          format: propSchema?.format,
-          defaultValue,
-          prefillValue,
-          items: propSchema?.items,
-          configuration_types: propSchema?.configuration_types,
+          type: result.schema.properties[prop]?.type,
+          format: result.schema.properties[prop]?.format,
+          defaultValue: result.schema.properties[prop]?.default,
+          items: result.schema.properties[prop]?.items,
+          configuration_types: result.schema.properties[prop]?.configuration_types,
         });
-
-        if (value !== undefined && value !== null && value !== '') {
-          result.settings[prop] = value;
-        }
-      });
-      // Apply pre-fill values from URL params (set by CredentialWarningBanner "Create a credential" link)
-      if (prefillId) result.settings.elitea_title = prefillId;
-      if (prefillName) result.settings.label = prefillName;
-      // Enable editing the elitea_title field so the pre-filled ID is visible and editable
-      if (prefillId) result.enableEditEliteaTitle = true;
-
-      return result;
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [credentialType, sectionProps, toolSchema, schema, prefillId, prefillName]);
-
-    useEffect(() => {
-      setEditCredentialDetail(initialValues);
-    }, [initialValues]);
-
-    const onChangeCredentialDetail = useCallback((...args) => {
-      setIsCredentialDirty(!!args[0]);
-      setEditCredentialDetail(args[0]);
-      //@todo: clear url might be here
-    }, []);
-
-    const handleClearCredentialDetail = useCallback(() => {
-      setEditCredentialDetail(initialValues);
-      setValidationErrorMessages({});
-      setShowValidation(false);
-      setApiError('');
-    }, [initialValues]);
-
-    const onEnableEditTitle = useCallback(() => {
-      setEditCredentialDetail(prev => ({ ...prev, enableEditEliteaTitle: true }));
-    }, []);
-
-    useEffect(() => {
-      if (!credentialType) {
-        setEditCredentialDetail(null);
       }
-    }, [setEditCredentialDetail, credentialType]);
+    });
 
-    const onSelectTool = useCallback(tool => {
-      setEditCredentialDetail({
-        ...tool,
+    // Initialize from schema defaults or prefill_value for any property (not only required).
+    // - 'default': Standard JSON Schema attribute for optional fields
+    // - 'prefill_value': Custom attribute for pre-filling required fields without making them
+    //   optional in Pydantic. This keeps the API schema Pydantic-compliant (field stays in
+    //   'required' array) while allowing UI to show a sensible initial value.
+    const props = result.schema?.properties || {};
+    Object.entries(props).forEach(([prop, propSchema]) => {
+      const prefillValue = propSchema?.prefill_value;
+      const defaultValue = propSchema?.default;
+      // prefill_value takes precedence - it's explicitly set for UI pre-filling
+      const effectiveDefault = prefillValue ?? defaultValue;
+
+      if (effectiveDefault === undefined || effectiveDefault === null) return;
+
+      const alreadySet =
+        result.settings[prop] !== undefined && result.settings[prop] !== null && result.settings[prop] !== '';
+      if (alreadySet) return;
+
+      const value = getPropValue({
+        schema: result.schema,
+        name: prop,
+        type: propSchema?.type,
+        format: propSchema?.format,
+        defaultValue,
+        prefillValue,
+        items: propSchema?.items,
+        configuration_types: propSchema?.configuration_types,
       });
-      setToolErrors({});
-    }, []);
 
-    useEffect(() => {
-      // each tool must have name and description
-      setToolErrors(prevState => ({
-        ...prevState,
-        name: false,
-        type: false,
-        data: false,
-      }));
-    }, [
-      setToolErrors,
-      editCredentialDetail?.name,
-      editCredentialDetail?.description,
-      editCredentialDetail?.settings,
-    ]);
+      if (value !== undefined && value !== null && value !== '') {
+        result.settings[prop] = value;
+      }
+    });
+    // Apply pre-fill values from URL params (set by CredentialWarningBanner "Create a credential" link)
+    if (prefillId) result.settings.elitea_title = prefillId;
+    if (prefillName) result.settings.label = prefillName;
+    // Enable editing the elitea_title field so the pre-filled ID is visible and editable
+    if (prefillId) result.enableEditEliteaTitle = true;
 
-    const styles = createCredentialStyles();
+    return result;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [credentialType, sectionProps, toolSchema, schema, prefillId, prefillName]);
 
-    return (
-      <Formik
-        enableReinitialize
-        initialValues={initialValues}
-      >
-        <StyledTabs
-          fullWidth
-          panelStyle={!editCredentialDetail ? styles.emptyPanelStyle : undefined}
-          tabSX={styles.tabSX}
-          forceShowLabel={forceShowTitle}
-          tabs={[
-            {
-              label: (
+  const isEditing = editCredentialDetail && credentialType && Object.keys(initialValues).length > 0;
+
+  const pageTitle = useMemo(() => {
+    if (isFromModelConfiguration) {
+      if (isEditing) {
+        return `New ${schema?.config_schema?.title || credentialType || ''} provider`;
+      } else {
+        return 'New AI Provider';
+      }
+    }
+    return `New ${schema?.config_schema?.title || credentialType || ''} credential`;
+  }, [credentialType, isEditing, isFromModelConfiguration, schema?.config_schema?.title]);
+
+  useEffect(() => {
+    setEditCredentialDetail(initialValues);
+  }, [initialValues]);
+
+  const onChangeCredentialDetail = useCallback((...args) => {
+    setIsCredentialDirty(!!args[0]);
+    setEditCredentialDetail(args[0]);
+    //@todo: clear url might be here
+  }, []);
+
+  const handleClearCredentialDetail = useCallback(() => {
+    setEditCredentialDetail(initialValues);
+    setValidationErrorMessages({});
+    setShowValidation(false);
+    setApiError('');
+  }, [initialValues]);
+
+  const onEnableEditTitle = useCallback(() => {
+    setEditCredentialDetail(prev => ({ ...prev, enableEditEliteaTitle: true }));
+  }, []);
+
+  useEffect(() => {
+    if (!credentialType) {
+      setEditCredentialDetail(null);
+    }
+  }, [setEditCredentialDetail, credentialType]);
+
+  const onSelectTool = useCallback(tool => {
+    setEditCredentialDetail({
+      ...tool,
+    });
+    setToolErrors({});
+  }, []);
+
+  useEffect(() => {
+    // each tool must have name and description
+    setToolErrors(prevState => ({
+      ...prevState,
+      name: false,
+      type: false,
+      data: false,
+    }));
+  }, [
+    setToolErrors,
+    editCredentialDetail?.name,
+    editCredentialDetail?.description,
+    editCredentialDetail?.settings,
+  ]);
+
+  const styles = createCredentialStyles();
+
+  return (
+    <Formik
+      enableReinitialize
+      initialValues={initialValues}
+    >
+      <StyledTabs
+        fullWidth
+        panelStyle={!editCredentialDetail ? styles.emptyPanelStyle : undefined}
+        tabSX={styles.tabSX}
+        forceShowLabel={forceShowTitle}
+        hideBackButton
+        tabs={[
+          {
+            label: (
+              <Box sx={styles.breadCrumbContainer}>
+                {isFromModelConfiguration && (
+                  <Typography
+                    variant="headingSmall"
+                    color="text.primary"
+                    sx={styles.breadCrumbLink}
+                    onClick={() => {
+                      navigate(-1);
+                    }}
+                  >
+                    AI Providers
+                  </Typography>
+                )}
+                {isFromModelConfiguration && (
+                  <Typography
+                    variant="headingSmall"
+                    color="text.primary"
+                    sx={styles.breadCrumbSeparator}
+                  >
+                    /
+                  </Typography>
+                )}
                 <Tooltip.TypographyWithConditionalTooltip
                   title={pageTitle}
                   placement="top"
@@ -212,74 +240,74 @@ const CreateCredential = memo(
                 >
                   {pageTitle}
                 </Tooltip.TypographyWithConditionalTooltip>
-              ),
-              //@todo: need to optimize components for reusability of TabBars
-              tabBarItems: editCredentialDetail ? (
-                <CredentialsTabBar
-                  credentialDetails={editCredentialDetail}
-                  onClearCredentialDetails={handleClearCredentialDetail}
-                  configurationsAsSchema={configurationsAsSchema}
-                  onEnableEditTitle={onEnableEditTitle}
-                  hasErrors={hasErrors}
-                  setShowValidation={setShowValidation}
-                  setApiError={setApiError}
-                  setValidationErrorMessages={setValidationErrorMessages}
-                />
-              ) : null,
-              rightToolbar: <div />,
-              content: (
-                <Form style={styles.formContainer}>
-                  <StyledGridContainer
-                    columnSpacing={SPACING.gridSpacing}
-                    container
-                    sx={styles.styledGridContainer}
+              </Box>
+            ),
+            //@todo: need to optimize components for reusability of TabBars
+            tabBarItems: editCredentialDetail ? (
+              <CredentialsTabBar
+                credentialDetails={editCredentialDetail}
+                onClearCredentialDetails={handleClearCredentialDetail}
+                configurationsAsSchema={configurationsAsSchema}
+                onEnableEditTitle={onEnableEditTitle}
+                hasErrors={hasErrors}
+                setShowValidation={setShowValidation}
+                setApiError={setApiError}
+                setValidationErrorMessages={setValidationErrorMessages}
+              />
+            ) : null,
+            rightToolbar: <div />,
+            content: (
+              <Form style={styles.formContainer}>
+                <StyledGridContainer
+                  columnSpacing={SPACING.gridSpacing}
+                  container
+                  sx={styles.styledGridContainer}
+                >
+                  <Grid
+                    size={{ xs: 12 }}
+                    sx={styles.gridContainer}
                   >
-                    <Grid
-                      size={{ xs: 12 }}
-                      sx={styles.gridContainer}
-                    >
-                      {editCredentialDetail && credentialType && Object.keys(initialValues).length > 0 ? (
-                        //@todo: need to be replaced and customized for Credentials instead of using ToolkitForm components
-                        <CredentialForm
-                          key={credentialType}
-                          credentialDetails={editCredentialDetail}
-                          onChangeCredentialDetail={onChangeCredentialDetail}
-                          isToolDirty={isCredentialDirty}
-                          isViewToggleVisible={false}
-                          showOnlyConfigurationFields={true}
-                          configurationsAsSchema={configurationsAsSchema}
-                          toolErrors={toolErrors}
-                          setToolErrors={setToolErrors}
-                          showValidation={showValidation}
-                          setShowValidation={setShowValidation}
-                          validationErrorMessages={validationErrorMessages}
-                          setValidationErrorMessages={setValidationErrorMessages}
-                          apiError={apiError}
-                          setApiError={setApiError}
+                    {isEditing ? (
+                      //@todo: need to be replaced and customized for Credentials instead of using ToolkitForm components
+                      <CredentialForm
+                        key={credentialType}
+                        credentialDetails={editCredentialDetail}
+                        onChangeCredentialDetail={onChangeCredentialDetail}
+                        isToolDirty={isCredentialDirty}
+                        isViewToggleVisible={false}
+                        showOnlyConfigurationFields={true}
+                        configurationsAsSchema={configurationsAsSchema}
+                        toolErrors={toolErrors}
+                        setToolErrors={setToolErrors}
+                        showValidation={showValidation}
+                        setShowValidation={setShowValidation}
+                        validationErrorMessages={validationErrorMessages}
+                        setValidationErrorMessages={setValidationErrorMessages}
+                        apiError={apiError}
+                        setApiError={setApiError}
+                      />
+                    ) : (
+                      <Box sx={styles.selectorContainer}>
+                        <CredentialTypeSelector
+                          onSelectTool={onSelectTool}
+                          configurationsData={availableConfigurations}
+                          isFetching={isFetching}
+                          typeSelectorTitle={typeSelectorTitle}
+                          showCategory={showCategory}
+                          searchPlaceholder={searchPlaceholder}
                         />
-                      ) : (
-                        <Box sx={styles.selectorContainer}>
-                          <CredentialTypeSelector
-                            onSelectTool={onSelectTool}
-                            configurationsData={availableConfigurations}
-                            isFetching={isFetching}
-                            typeSelectorTitle={typeSelectorTitle}
-                            showCategory={showCategory}
-                            searchPlaceholder={searchPlaceholder}
-                          />
-                        </Box>
-                      )}
-                    </Grid>
-                  </StyledGridContainer>
-                </Form>
-              ),
-            },
-          ]}
-        />
-      </Formik>
-    );
-  },
-);
+                      </Box>
+                    )}
+                  </Grid>
+                </StyledGridContainer>
+              </Form>
+            ),
+          },
+        ]}
+      />
+    </Formik>
+  );
+});
 
 CreateCredential.displayName = 'CreateCredential';
 
@@ -333,6 +361,18 @@ const createCredentialStyles = () => ({
   }),
   selectorContainer: {
     height: '100%',
+  },
+  breadCrumbContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+  },
+  breadCrumbLink: {
+    fontWeight: 600,
+    cursor: 'pointer',
+  },
+  breadCrumbSeparator: {
+    fontWeight: 600,
   },
 });
 

@@ -5,7 +5,7 @@ import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 import FullScreenIconSvg from '@/assets/full-screen-icon.svg?react';
 
 const IWModalEntityTextField = memo(props => {
-  const { title, description, lineClamp, setFullscreenData, type = 'text', height = '4rem' } = props;
+  const { title, description, lineClamp, setFullscreenData, type = 'text', height = '4rem', testId } = props;
 
   const styles = iWModalEntityTextFieldStyles();
 
@@ -36,6 +36,7 @@ const IWModalEntityTextField = memo(props => {
             ...(type === 'markdown' ? [{ whiteSpace: 'pre-wrap' }] : []),
           ]}
           component="p"
+          data-testid={testId}
         >
           {description}
         </Typography>

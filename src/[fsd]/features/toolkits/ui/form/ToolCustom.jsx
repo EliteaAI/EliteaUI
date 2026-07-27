@@ -64,7 +64,7 @@ const ToolCustom = memo(props => {
 
   const onClickCopy = useCallback(() => {
     handleCopy(jsonString);
-    toastInfo('The content has been copied to the clipboard');
+    toastInfo('The content has been copied to the clipboard.');
   }, [toastInfo, jsonString]);
 
   useEffect(() => {

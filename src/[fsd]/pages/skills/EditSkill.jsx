@@ -13,6 +13,7 @@ import { useSetSkillDefaultVersionMutation, useSkillDetailsQuery } from '@/[fsd]
 import { SkillValidateSchema } from '@/[fsd]/features/skill/lib/validation';
 import SkillControls from '@/[fsd]/features/skill/ui/SkillControls';
 import SkillInformation from '@/[fsd]/features/skill/ui/SkillInformation';
+import { AIEditSkillButton } from '@/[fsd]/features/skill/ui/ai-edit-skill-modal';
 import CreateSkillForm from '@/[fsd]/features/skill/ui/skill-details/form/CreateSkillForm';
 import SkillTestPanel from '@/[fsd]/features/skill/ui/skill-test-panel/SkillTestPanel';
 import { eliteaApi } from '@/api/eliteaApi';
@@ -44,6 +45,9 @@ const buildInitialValues = data => ({
     tags: data?.version_details?.tags || data?.tags || [],
     instructions: data?.version_details?.instructions ?? data?.instructions ?? '',
     meta: data?.version_details?.meta || {},
+    // The publish/unpublish hooks gate on the current version's status read
+    // from formik values, so it must be seeded here.
+    status: data?.version_details?.status ?? null,
   },
 });
 
@@ -211,6 +215,7 @@ const EditSkill = memo(() => {
                   currentVersionId={currentVersionId}
                   onChangeVersion={handleChangeVersion}
                   onSetDefault={() => handleOpenDefaultDialog(currentVersionId)}
+                  onSuccess={handleSuccess}
                 />
               ),
               content: isFetching ? (
@@ -233,6 +238,7 @@ const EditSkill = memo(() => {
                       <ContentContainer height="100%">
                         <CreateSkillForm
                           viewMode={ViewMode.Owner}
+                          summaryEditAction={<AIEditSkillButton />}
                           instructionsKey={`${skillId}:${currentVersionId}:${
                             (data?.version_details?.instructions ?? data?.instructions ?? '').length
                           }`}

@@ -31,6 +31,8 @@ const PreviewHeader = memo(props => {
     isMarkdownFile,
     isDataFile,
     isMermaidFile,
+    isHtmlFile,
+    isMdxFile,
     handleSaveChanges,
     hasUnsavedChanges,
     fileContent,
@@ -101,8 +103,11 @@ const PreviewHeader = memo(props => {
   }, [fullPath]);
 
   const modeTogglerAvailable = useMemo(
-    () => (isMarkdownFile || isDataFile || isMermaidFile) && !isImageFileType && fileContent,
-    [fileContent, isDataFile, isImageFileType, isMarkdownFile, isMermaidFile],
+    () =>
+      (isMarkdownFile || isDataFile || isMermaidFile || isHtmlFile || isMdxFile) &&
+      !isImageFileType &&
+      fileContent,
+    [fileContent, isDataFile, isImageFileType, isMarkdownFile, isMermaidFile, isHtmlFile, isMdxFile],
   );
 
   const handleCopyContent = useCallback(() => {
@@ -115,7 +120,7 @@ const PreviewHeader = memo(props => {
             [GA_EVENT_PARAMS.FILE_TYPE]: currentLanguage,
             [GA_EVENT_PARAMS.TIMESTAMP]: new Date().toISOString(),
           });
-          toastInfo('File content copied to clipboard');
+          toastInfo('The file content has been copied to the clipboard.');
         })
         .catch(() => {
           toastError('Failed to copy file content');
@@ -252,7 +257,7 @@ const PreviewHeader = memo(props => {
                 variant="elitea"
                 sx={styles.toggleLeftButton}
               >
-                {isMarkdownFile ? 'Preview' : isDataFile ? 'Table' : 'Diagram'}
+                {isMarkdownFile || isHtmlFile || isMdxFile ? 'Preview' : isDataFile ? 'Table' : 'Diagram'}
               </ToggleButton>
               <ToggleButton
                 variant="elitea"

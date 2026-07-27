@@ -171,7 +171,7 @@ const EditorPanel = forwardRef(({ setYamlDirty, stopRun, display, sx, disabled }
 
   const onCopy = useCallback(() => {
     handleCopy(yamlCode);
-    toastInfo('The code is copied to clipboard');
+    toastInfo('The code has been copied to the clipboard.');
   }, [toastInfo, yamlCode]);
 
   useEffect(() => {

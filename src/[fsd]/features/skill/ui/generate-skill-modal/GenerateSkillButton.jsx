@@ -11,6 +11,7 @@ const GenerateSkillButton = memo(props => {
   return (
     <GenerateEntityButton
       permission={PERMISSIONS.applications.update}
+      buttonTestId="generate-skill-open-button"
       renderModal={({ open, onClose }) => (
         <GenerateSkillModal
           open={open}

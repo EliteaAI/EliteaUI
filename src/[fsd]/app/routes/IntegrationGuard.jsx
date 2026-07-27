@@ -13,7 +13,7 @@ const IntegrationGuard = memo(props => {
   if (ALLOW_PROJECT_OWN_LLMS === false && projectId != PUBLIC_PROJECT_ID) {
     return (
       <Navigate
-        to={RouteDefinitions.SettingsWithTab.replace(':tab', 'model-configuration')}
+        to={RouteDefinitions.SettingsWithTab.replace(':tab', 'ai-providers')}
         replace
       />
     );

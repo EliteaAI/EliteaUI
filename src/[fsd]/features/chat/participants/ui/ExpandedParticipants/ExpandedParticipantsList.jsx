@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 
 import { Box, Typography } from '@mui/material';
 
-import { isMcpToolkitType } from '@/[fsd]/shared/lib/helpers';
+import { isMcpToolkitType, isRemoteMcpToolkitType } from '@/[fsd]/shared/lib/helpers';
 import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
 import { ChatParticipantType } from '@/common/constants';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -72,7 +72,7 @@ const ExpandedPerticapantsList = memo(props => {
           key = ChatParticipantType.Pipelines;
         else if (
           p.entity_name === ChatParticipantType.Toolkits &&
-          (isMcpToolkitType(p.entity_settings?.toolkit_type) || p.meta?.mcp === true)
+          (isRemoteMcpToolkitType(p.entity_settings?.toolkit_type) || p.meta?.mcp === true)
         )
           key = 'mcp';
 

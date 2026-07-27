@@ -170,12 +170,12 @@ const AIAssistantModal = memo(props => {
 
   const onClickCopyCurrent = () => {
     navigator.clipboard.writeText(currentValue);
-    toastInfo('Current content has been copied to the clipboard');
+    toastInfo('The current content has been copied to the clipboard.');
   };
 
   const onClickCopyImproved = () => {
     navigator.clipboard.writeText(improvedContent);
-    toastInfo('Improved content has been copied to the clipboard');
+    toastInfo('The improved content has been copied to the clipboard.');
   };
 
   const isErrorContent = useCallback(content => {

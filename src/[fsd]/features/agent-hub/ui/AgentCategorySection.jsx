@@ -1,32 +1,13 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
-import {
-  Box,
-  CircularProgress,
-  IconButton,
-  Skeleton,
-  Tooltip,
-  Typography,
-  useMediaQuery,
-  useTheme,
-} from '@mui/material';
+import { Box, Skeleton, Typography, useMediaQuery, useTheme } from '@mui/material';
 
-import RefreshIcon from '@/assets/refresh-icon.svg?react';
 import { INITIAL_CARD_DISPLAY_COUNT } from '@/common/constants';
 
 import AgentCard from './AgentCard';
 
 const AgentCategorySection = memo(props => {
-  const {
-    category,
-    items,
-    totalCount = 0,
-    isLoading = false,
-    isLoadingMore = false,
-    onSelectItem,
-    onLoadMore,
-    onRefresh,
-  } = props;
+  const { category, items, totalCount = 0, isLoadingMore = false, onSelectItem, onLoadMore } = props;
 
   const theme = useTheme();
   const styles = agentCategorySectionStyles();
@@ -78,22 +59,6 @@ const AgentCategorySection = memo(props => {
         >
           {category}
         </Typography>
-        {isLoading ? (
-          <CircularProgress size={20} />
-        ) : (
-          <Tooltip
-            title="Reload the category items"
-            placement="top"
-          >
-            <IconButton
-              variant="elitea"
-              color="tertiary"
-              onClick={() => onRefresh?.(category)}
-            >
-              <RefreshIcon />
-            </IconButton>
-          </Tooltip>
-        )}
       </Box>
 
       <Box sx={styles.grid}>

@@ -12,7 +12,7 @@ const useDeleteMessageFromConversation = ({
   setConversations,
   setFolders,
   toastError,
-  toastInfo,
+  toastSuccess,
 }) => {
   const projectId = useSelectedProjectId();
   const { updateConversationTimestamp } = useUpdateConversationTimestamp();
@@ -118,10 +118,10 @@ const useDeleteMessageFromConversation = ({
 
   useEffect(() => {
     if (isSuccess) {
-      toastInfo('The message has been deleted');
+      toastSuccess('The message has been successfully deleted.');
       reset();
     }
-  }, [isSuccess, reset, toastInfo]);
+  }, [isSuccess, reset, toastSuccess]);
 
   return {
     onDeleteMessage,

@@ -37,7 +37,7 @@ const pipelineSlice = createSlice({
       state.initState = {
         nodes: [...nodes],
         edges: [...edges],
-        yamlJsonObject: structuredClone(yamlJsonObject),
+        yamlJsonObject: structuredClone(yamlJsonObject || {}),
         yamlCode,
         layout_version,
       };
@@ -46,7 +46,7 @@ const pipelineSlice = createSlice({
       const { nodes, edges, yamlJsonObject, yamlCode, layout_version } = state.initState;
       state.nodes = [...nodes];
       state.edges = [...edges];
-      state.yamlJsonObject = structuredClone(current(yamlJsonObject) || {});
+      state.yamlJsonObject = structuredClone(yamlJsonObject ? current(yamlJsonObject) : {});
       state.yamlCode = yamlCode;
       state.resetFlag = true;
       state.layout_version = layout_version;

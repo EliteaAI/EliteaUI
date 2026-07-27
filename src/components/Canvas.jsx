@@ -205,7 +205,7 @@ const Canvas = ({
   const { isBlockEditing, blockId } = useCheckIsBlockEditing(canvasId, selectedCodeBlockInfo);
   const onCopy = useCallback(async () => {
     await navigator.clipboard.writeText(content);
-    toastInfo('The code has been copied into clipboard');
+    toastInfo('The code has been copied to the clipboard.');
   }, [content, toastInfo]);
   const { onClickCopy } = useCopyDownloadHandlers({ onCopy });
 

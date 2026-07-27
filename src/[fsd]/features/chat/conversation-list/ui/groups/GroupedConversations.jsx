@@ -26,28 +26,29 @@ const GroupedConversations = memo(props => {
     [dateGroups],
   );
 
-  const { isGroupExpanded, toggleGroup, initializeExpansion, enterSearchMode, exitSearchMode } =
+  const { isGroupExpanded, toggleGroup, initializeExpansion, setSearchModeExpansion, exitSearchMode } =
     useDateGroupExpansion();
 
   const prevSearchModeRef = useRef(isSearchMode);
   const prevSearchQueryRef = useRef(searchQuery);
+  const prevTotalConversationsRef = useRef(0);
 
   useEffect(() => {
     const searchModeChanged = prevSearchModeRef.current !== isSearchMode;
     const searchQueryChanged = prevSearchQueryRef.current !== searchQuery;
+    const totalConversations = visibleGroups.reduce((sum, g) => sum + g.conversations.length, 0);
+    const dataChanged = prevTotalConversationsRef.current !== totalConversations;
 
-    if (isSearchMode && (searchModeChanged || searchQueryChanged)) {
-      const groupsWithMatches = visibleGroups.filter(group =>
-        group.conversations.some(conv => conv.name?.toLowerCase().includes(searchQuery.toLowerCase())),
-      );
-      enterSearchMode(groupsWithMatches.map(g => g.name));
+    if (isSearchMode && (searchModeChanged || searchQueryChanged || dataChanged)) {
+      setSearchModeExpansion(visibleGroups.map(g => g.name));
     } else if (!isSearchMode && searchModeChanged) {
       exitSearchMode();
     }
 
     prevSearchModeRef.current = isSearchMode;
     prevSearchQueryRef.current = searchQuery;
-  }, [isSearchMode, searchQuery, visibleGroups, enterSearchMode, exitSearchMode]);
+    prevTotalConversationsRef.current = totalConversations;
+  }, [isSearchMode, searchQuery, visibleGroups, setSearchModeExpansion, exitSearchMode]);
 
   useEffect(() => {
     if (!isSearchMode) initializeExpansion(visibleGroups, selectedConversationId);

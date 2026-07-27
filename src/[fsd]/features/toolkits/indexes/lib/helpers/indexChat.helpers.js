@@ -105,6 +105,30 @@ export const generateMockMessageTemplate = (content, participantId) => ({
   participant_id: participantId,
 });
 
+// Find a message by id, or append a fresh loading placeholder so streaming events that arrive
+// after a route hop (CreateIndex → RunIndex) still land in the UI. Without this, events whose
+// StartTask fired against a now-unmounted chat context would be silently dropped.
+const findOrCreateStreamingMessage = (history, message_id, task_id) => {
+  let idx = history.findIndex(msg => msg.id === message_id);
+
+  if (idx < 0) {
+    history.push({
+      id: message_id,
+      role: ROLES.Assistant,
+      content: '',
+      isLoading: true,
+      isStreaming: true,
+      task_id,
+      toolActions: [],
+      created_at: new Date().getTime(),
+      participant_id: 'system',
+    });
+    idx = history.length - 1;
+  }
+
+  return idx;
+};
+
 export const generateChatMessageBasedOnResponse = ({ message, chatHistory, onFinish, onStartTask }) => {
   const { message_id, type: socketMessageType, response_metadata } = message;
   const { task_id } = message.content instanceof Object ? message.content : {};
@@ -131,10 +155,9 @@ export const generateChatMessageBasedOnResponse = ({ message, chatHistory, onFin
     }
 
     case SocketMessageType.AgentToolStart: {
-      // Find message and add tool action
-      const msgIndex = updatedHistory.findIndex(msg => msg.id === message_id);
+      const msgIndex = findOrCreateStreamingMessage(updatedHistory, message_id, task_id);
 
-      if (msgIndex >= 0) {
+      {
         const msg = updatedHistory[msgIndex];
 
         if (!msg.toolActions) msg.toolActions = [];
@@ -177,10 +200,9 @@ export const generateChatMessageBasedOnResponse = ({ message, chatHistory, onFin
     }
 
     case SocketMessageType.AgentToolEnd: {
-      // Find and update tool action
-      const toolMsgIndex = updatedHistory.findIndex(msg => msg.id === message_id);
+      const toolMsgIndex = findOrCreateStreamingMessage(updatedHistory, message_id, task_id);
 
-      if (toolMsgIndex >= 0) {
+      {
         const msg = updatedHistory[toolMsgIndex];
         const toolAction = msg.toolActions?.find(t => t.id === response_metadata?.tool_run_id);
 
@@ -211,10 +233,9 @@ export const generateChatMessageBasedOnResponse = ({ message, chatHistory, onFin
     case SocketMessageType.AgentResponse:
     case SocketMessageType.Chunk:
     case SocketMessageType.AIMessageChunk: {
-      // Update main message content
-      const responseMsgIndex = updatedHistory.findIndex(msg => msg.id === message_id);
+      const responseMsgIndex = findOrCreateStreamingMessage(updatedHistory, message_id, task_id);
 
-      if (responseMsgIndex >= 0) {
+      {
         const msg = updatedHistory[responseMsgIndex];
         // Check content_type to determine if we should wrap in JSON code block
         const contentType = response_metadata?.content_type;
@@ -255,10 +276,9 @@ export const generateChatMessageBasedOnResponse = ({ message, chatHistory, onFin
     }
 
     case SocketMessageType.AgentToolError: {
-      // Handle tool errors
-      const errorMsgIndex = updatedHistory.findIndex(msg => msg.id === message_id);
+      const errorMsgIndex = findOrCreateStreamingMessage(updatedHistory, message_id, task_id);
 
-      if (errorMsgIndex >= 0) {
+      {
         const msg = updatedHistory[errorMsgIndex];
         const toolAction = msg.toolActions?.find(t => t.id === response_metadata?.tool_run_id);
         if (toolAction) {

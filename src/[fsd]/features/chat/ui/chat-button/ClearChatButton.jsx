@@ -20,6 +20,7 @@ const ClearChatButton = memo(({ disabled, onClear }) => {
           disabled={disabled}
           onClick={onClear}
           sx={styles.button}
+          data-testid="chat-clear-button"
         >
           <ClearIcon
             sx={styles.icon}

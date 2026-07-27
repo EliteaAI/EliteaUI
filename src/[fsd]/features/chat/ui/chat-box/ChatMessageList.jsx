@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { Box, Skeleton } from '@mui/material';
 
+import { getPendingHitlMessage } from '@/[fsd]/features/chat/lib/helpers/hitl.helpers.js';
 import { ScrollableContainer } from '@/[fsd]/shared/ui';
 import { ChatParticipantType, ROLES } from '@/common/constants';
 import { MessageList } from '@/components/Chat/StyledComponents';
@@ -178,6 +179,7 @@ const ChatMessageList = memo(props => {
     () => activeConversation?.participants?.filter(p => p.entity_name === ChatParticipantType.Toolkits) || [],
     [activeConversation?.participants],
   );
+  const pendingHitlMessageId = useMemo(() => getPendingHitlMessage(chat_history)?.id, [chat_history]);
 
   // Authoritative sub-agent kind (pipeline vs agent) keyed by display name, built
   // once from the conversation's added participants. A participant's meta.name is
@@ -259,7 +261,7 @@ const ChatMessageList = memo(props => {
             onContinueMcpExecution={onContinueMcpExecution}
             onContinueTokenLimitExecution={onContinueTokenLimitExecution}
             onHitlResume={onHitlResume}
-            hideHitlActions={hideHitlActions}
+            hideHitlActions={hideHitlActions || message.id !== pendingHitlMessageId}
             hideContinueButton={hideContinueButton}
             isSpeakingMode={isSpeakingMode}
             onAutoSpeak={onAutoSpeak}

@@ -37,6 +37,7 @@ const PublishWizardModal = memo(
   ({
     open,
     isAdminPublish,
+    entityLabel = 'agent',
     step,
     versionName,
     onVersionNameChange,
@@ -212,7 +213,7 @@ const PublishWizardModal = memo(
                 value={category}
                 options={categoryOptions}
                 onValueChange={onCategoryChange}
-                helperText="Select a category to help users discover your agent."
+                helperText={`Select a category to help users discover your ${entityLabel}.`}
               />
             </Box>
           ) : (
@@ -226,6 +227,7 @@ const PublishWizardModal = memo(
                   categoryOptions={categoryOptions}
                   agreed={agreed}
                   onAgreedChange={onAgreedChange}
+                  entityLabel={entityLabel}
                   error={versionNameError || (step === PUBLISH_STEPS.PREPARATION ? publishError : undefined)}
                 />
               )}
@@ -234,6 +236,7 @@ const PublishWizardModal = memo(
                 <ValidationStep
                   isValidating={isValidating}
                   validationResult={validationResult}
+                  entityLabel={entityLabel}
                 />
               )}
 
@@ -245,7 +248,7 @@ const PublishWizardModal = memo(
                     color="text.secondary"
                     sx={{ marginTop: '1.5rem' }}
                   >
-                    Publishing your agent...
+                    Publishing your {entityLabel}...
                   </Typography>
                 </Box>
               )}

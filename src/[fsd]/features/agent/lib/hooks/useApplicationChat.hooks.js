@@ -8,11 +8,15 @@ import {
   useConversationDetailsQuery,
   useDeleteAllMessagesFromConversationMutation,
   useDeleteMessageFromConversationMutation,
+  useLazyMessageTracesQuery,
   useStopChatTaskMutation,
 } from '@/api';
 import { eliteaApi } from '@/api/eliteaApi';
 import { ROLES, WELCOME_MESSAGE_ID, sioEvents } from '@/common/constants';
-import { convertConversationToChatHistory } from '@/common/convertChatConversationMessages';
+import {
+  buildTraceListParams,
+  convertConversationToChatHistory,
+} from '@/common/convertChatConversationMessages';
 import { buildErrorMessage } from '@/common/utils';
 import { useChatMessageDeleteSocket, useChatMessageSyncSocket } from '@/components/Chat/hooks';
 import useAgentAttachments from '@/hooks/application/useAgentAttachments';
@@ -49,7 +53,7 @@ export const useApplicationChat = ({
   const [hasRestoredConversation, setHasRestoredConversation] = useState(false);
   const [deleteMessage, { reset: resetDeleteMessage }] = useDeleteMessageFromConversationMutation();
   const [deleteAllMessages, { reset: resetDeleteAll }] = useDeleteAllMessagesFromConversationMutation();
-  const { toastError, toastInfo } = useToast();
+  const { toastError, toastInfo, toastSuccess } = useToast();
   const chatHistoryRef = useRef([]);
 
   const {
@@ -66,6 +70,7 @@ export const useApplicationChat = ({
       refetchOnMountOrArgChange: true,
     },
   );
+  const [getMessageTraces] = useLazyMessageTracesQuery();
 
   useApplicationChatSwitchVersion({
     activeParticipant,
@@ -156,39 +161,61 @@ export const useApplicationChat = ({
     ) {
       setIsRestoringConversation(true);
 
-      const convertedChatHistory = convertConversationToChatHistory(restoredConversationData);
+      // Pins come from message_trace_step (TS-4); failure degrades to no pins.
+      const tracesRequest = getMessageTraces({
+        projectId,
+        conversationId: restoredConversationData.id,
+        params: buildTraceListParams(restoredConversationData.message_groups),
+      });
 
-      const restoredConversation = {
-        ...restoredConversationData,
-        chat_history: convertedChatHistory,
-        isApplicationChat: true,
-      };
+      (async () => {
+        try {
+          const tracesResult = await tracesRequest;
+          const convertedChatHistory = convertConversationToChatHistory(
+            restoredConversationData,
+            tracesResult.data,
+          );
 
-      // Find the application participant from the restored conversation
-      const appParticipant = restoredConversationData.participants?.find(
-        p => p.entity_name === 'application',
-      );
+          const restoredConversation = {
+            ...restoredConversationData,
+            chat_history: convertedChatHistory,
+            isApplicationChat: true,
+          };
 
-      if (appParticipant) {
-        setActiveConversation(restoredConversation);
-        setActiveParticipant(appParticipant);
+          // Find the application participant from the restored conversation
+          const appParticipant = restoredConversationData.participants?.find(
+            p => p.entity_name === 'application',
+          );
 
-        chatHistoryRef.current = convertedChatHistory;
+          if (appParticipant) {
+            setActiveConversation(restoredConversation);
+            setActiveParticipant(appParticipant);
 
-        emitEnterRoom({
-          conversation_id: restoredConversationData.id,
-          conversation_uuid: restoredConversationData.uuid,
-          project_id: projectId,
-        });
+            chatHistoryRef.current = convertedChatHistory;
 
-        toastInfo('Chat restored successfully');
-        setHasRestoredConversation(true);
-      } else {
-        toastError('Could not find application participant in restored chat');
-      }
+            emitEnterRoom({
+              conversation_id: restoredConversationData.id,
+              conversation_uuid: restoredConversationData.uuid,
+              project_id: projectId,
+            });
 
-      onRestoreConversationComplete();
-      setIsRestoringConversation(false);
+            toastSuccess('Chat has been restored successfully.');
+            setHasRestoredConversation(true);
+          } else {
+            toastError('Could not find application participant in restored chat');
+          }
+
+          onRestoreConversationComplete();
+        } catch (error) {
+          if (error?.name !== 'AbortError') {
+            toastError('Failed to restore conversation');
+          }
+        } finally {
+          setIsRestoringConversation(false);
+        }
+      })();
+
+      return () => tracesRequest.abort();
     }
   }, [
     restoredConversationID,
@@ -197,8 +224,9 @@ export const useApplicationChat = ({
     isErrorRestoredConversation,
     isRestoringConversation,
     emitEnterRoom,
+    getMessageTraces,
     projectId,
-    toastInfo,
+    toastSuccess,
     toastError,
     onRestoreConversationComplete,
   ]);
@@ -621,7 +649,7 @@ export const useApplicationChat = ({
           callback?.();
           return updatedMessages;
         });
-        toastInfo('The message has been deleted');
+        toastSuccess('The message has been successfully deleted.');
         resetDeleteMessage();
       } else {
         toastError(buildErrorMessage(result.error) || 'Failed to delete the message, please try again.');
@@ -634,7 +662,7 @@ export const useApplicationChat = ({
       resetDeleteMessage,
       setChatHistory,
       toastError,
-      toastInfo,
+      toastSuccess,
     ],
   );
 

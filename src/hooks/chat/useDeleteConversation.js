@@ -14,6 +14,7 @@ const useDeleteConversation = ({
   setConversations,
   setFolders,
   toastError,
+  toastSuccess,
   emitLeaveRoom,
   stopListenCanvasEditorsChangeEvent,
   stopListenCanvasContentChangeEvent,
@@ -67,6 +68,9 @@ const useDeleteConversation = ({
         });
       }
       if (!result.error) {
+        const chatName = conversation.name || conversation.title || 'chat';
+        toastSuccess?.(`The ${chatName} chat has been successfully deleted.`);
+
         // Find next conversation to select BEFORE deleting current one
         const nextConversation = areTheSameConversations(conversation, activeConversation)
           ? findNextConversation(conversation, conversations, folders)
@@ -132,6 +136,7 @@ const useDeleteConversation = ({
       unselectConversation,
       stopListenCanvasEditorsChangeEvent,
       stopListenCanvasContentChangeEvent,
+      toastSuccess,
       // Add new dependencies
       conversations,
       folders,

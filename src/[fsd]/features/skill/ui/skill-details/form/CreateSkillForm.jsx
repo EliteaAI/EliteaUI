@@ -4,10 +4,11 @@ import { useFormikContext } from 'formik';
 
 import { Box, Typography } from '@mui/material';
 
+import { SKILL_NAME_MAX_LENGTH } from '@/[fsd]/features/skill/lib/constants';
 import { GenerateSkillButton } from '@/[fsd]/features/skill/ui/generate-skill-modal';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { useFieldFocus } from '@/[fsd]/shared/lib/hooks';
-import { Field, Input, Markdown } from '@/[fsd]/shared/ui';
+import { Field, Input, Markdown, Text } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import TabGroupButton from '@/[fsd]/shared/ui/tab-group-button/TabGroupButton';
 import { useTagListQuery } from '@/api/tags.js';
@@ -17,7 +18,6 @@ import {
   ChatParticipantType,
   MAX_DESCRIPTION_LENGTH,
   MAX_INSTRUCTIONS_LENGTH,
-  MAX_NAME_LENGTH,
   PROMPT_PAYLOAD_KEY,
 } from '@/common/constants';
 import EntityIcon from '@/components/EntityIcon';
@@ -35,6 +35,7 @@ const CreateSkillForm = memo(props => {
     instructionsKey,
     onSkillCreated,
     showGenerateButton = false,
+    summaryEditAction = null,
   } = props;
   const formik = useFormikContext();
   const theme = useTheme();
@@ -152,7 +153,9 @@ const CreateSkillForm = memo(props => {
             title: 'General',
             summaryAction: showGenerateButton ? (
               <GenerateSkillButton onSkillCreated={onSkillCreated} />
-            ) : null,
+            ) : (
+              summaryEditAction
+            ),
             content: (
               <Box sx={styles.accordionContent}>
                 <Box sx={styles.nameContainer}>
@@ -180,17 +183,28 @@ const CreateSkillForm = memo(props => {
                       onBlur={onNameBlur}
                       value={name}
                       required
-                      inputProps={{ maxLength: MAX_NAME_LENGTH }}
+                      // 'data-testid' here lands on the real <input> element via
+                      // InputBase's slotProps.htmlInput (unlike the data-testid
+                      // above on StyledInputEnhancer, which resolves to the
+                      // MuiFormControl-root wrapper, not the input itself).
+                      inputProps={{
+                        maxLength: SKILL_NAME_MAX_LENGTH,
+                        'data-testid': 'skill-name-input-field',
+                      }}
                       containerProps={{ flex: 1 }}
                       enableAutoBlur={false}
+                      hasActionsToolBar
+                      copyMessage="The name has been copied to the clipboard."
+                      showFullScreenAction={false}
+                      showExpandAction={false}
                     />
                     {isFocused(PROMPT_PAYLOAD_KEY.name) && name.length > 0 && (
-                      <Typography
-                        variant="bodySmall2"
+                      <Text.CharacterCounter
+                        value={name}
+                        maxLength={SKILL_NAME_MAX_LENGTH}
+                        hideMaxLimitMessage
                         sx={styles.charactersLabel}
-                      >
-                        {`${MAX_NAME_LENGTH - name.length} characters left`}
-                      </Typography>
+                      />
                     )}
                   </Box>
                 </Box>
@@ -212,22 +226,35 @@ const CreateSkillForm = memo(props => {
                     error={formik.touched?.description && Boolean(formik.errors.description)}
                     helperText={formik.touched?.description && formik.errors.description}
                     disabled={disabled}
-                    inputProps={{ maxLength: MAX_DESCRIPTION_LENGTH }}
+                    // Lands on the real <textarea> — see the analogous comment
+                    // on the Name field's inputProps above.
+                    inputProps={{
+                      maxLength: MAX_DESCRIPTION_LENGTH,
+                      'data-testid': 'skill-description-input-field',
+                    }}
                     hasActionsToolBar
                     fieldName="Description"
                   />
                   {isFocused(PROMPT_PAYLOAD_KEY.description) && formik.values?.description?.length > 0 && (
-                    <Typography
-                      variant="bodySmall"
+                    <Text.CharacterCounter
+                      value={formik.values.description}
+                      maxLength={MAX_DESCRIPTION_LENGTH}
+                      hideMaxLimitMessage
                       sx={styles.descriptionCharactersLabel}
-                    >
-                      {`${MAX_DESCRIPTION_LENGTH - formik.values.description.length} characters left`}
-                    </Typography>
+                    />
                   )}
                 </Box>
 
                 <TagEditor
                   id="tags"
+                  data-testid="skill-tags-input"
+                  // Sub-element testids threaded through AutoCompleteDropDown
+                  // (see that component for how each lands on the DOM):
+                  // the real <input>, each committed-tag chip, and each
+                  // dropdown option (keyed by the option's own name).
+                  inputTestId="skill-tags-input-field"
+                  chipTestId="skill-tag-chip"
+                  getOptionTestId={option => `skill-tag-option-${option?.name}`}
                   label="Tags"
                   tagList={tagList || []}
                   stateTags={formik.values?.version_details?.tags || []}
@@ -279,6 +306,7 @@ const CreateSkillForm = memo(props => {
                         minHeight="0"
                         maxLength={MAX_INSTRUCTIONS_LENGTH}
                         readOnly={disabled}
+                        contentTestId="skill-instructions-editor-content"
                       />
                     </Box>
                     <Box sx={styles.charCounterWrapper}>
@@ -326,8 +354,8 @@ const skillCreateFormStyles = () => ({
   },
   nameContainer: {
     display: 'flex',
-    alignItems: 'center',
-    height: '4.25rem',
+    alignItems: 'baseline',
+    minHeight: '4.25rem',
     width: '100%',
     gap: '1rem',
   },
@@ -340,7 +368,6 @@ const skillCreateFormStyles = () => ({
   charactersLabel: {
     textAlign: 'right',
     width: '100%',
-    fontSize: '0.625rem',
     position: 'relative',
     top: '0.25rem',
   },
@@ -352,9 +379,8 @@ const skillCreateFormStyles = () => ({
   descriptionCharactersLabel: {
     textAlign: 'right',
     width: '100%',
-    fontSize: '0.625rem',
     position: 'relative',
-    top: '0.5rem',
+    top: '0.25rem',
   },
   summaryActions: {
     display: 'inline-flex',
@@ -412,6 +438,7 @@ const skillCreateFormStyles = () => ({
     border: `0.0625rem solid ${palette.border.table}`,
     backgroundColor: palette.background.userInputBackground,
     overflow: 'auto',
+    fontSize: '0.875rem',
   }),
   emptyPreview: ({ palette }) => ({
     color: palette.text.metrics,

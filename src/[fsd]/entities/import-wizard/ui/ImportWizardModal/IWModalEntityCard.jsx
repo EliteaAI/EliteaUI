@@ -15,7 +15,7 @@ import SkillIcon from '@/assets/skill-icon.svg?react';
 import MermaidDiagramOutput from '@/components/MermaidDiagramOutput/DiagramOutput';
 
 const IWModalEntityCard = memo(props => {
-  const { entity } = props;
+  const { entity, titleTestId, toggleTestId, instructionsTestId } = props;
 
   const styles = iWModalEntityCardStyles();
 
@@ -39,6 +39,8 @@ const IWModalEntityCard = memo(props => {
       icon={isSkill ? <SkillIcon /> : isPipeline ? <FlowIcon /> : <AgentIcon />}
       title={entity.name}
       subtitle={`Type: ${isSkill ? 'skill' : isPipeline ? 'pipeline' : 'agent'}`}
+      titleTestId={titleTestId}
+      toggleTestId={toggleTestId}
       renderFullscreenContent={fullscreenData =>
         fullscreenData?.isDiagram ? (
           <Box sx={{ height: '34rem', borderRadius: '.5rem', overflow: 'hidden' }}>
@@ -105,6 +107,7 @@ const IWModalEntityCard = memo(props => {
               setFullscreenData={setFullscreenData}
               height="9rem"
               type="markdown"
+              testId={instructionsTestId}
             />
           )}
 

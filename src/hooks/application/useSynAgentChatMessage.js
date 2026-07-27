@@ -1,6 +1,5 @@
 import { useCallback } from 'react';
 
-import { TOOL_ACTION_TYPES } from '@/common/constants';
 import { convertToAIAnswer } from '@/common/convertChatConversationMessages';
 
 const useSynAgentChatMessage = ({ setActiveConversation }) => {
@@ -33,24 +32,11 @@ const useSynAgentChatMessage = ({ setActiveConversation }) => {
           if (message.id != message_group.id && message.id != message_group.uuid) {
             return message;
           }
-          // Preserve SwarmChild actions added via socket (server doesn't include them in sync)
-          // Deduplicate by agent_name + content to handle same agent responding multiple times
-          const existingSwarmChildren = (message.toolActions || []).filter(
-            a => a.type === TOOL_ACTION_TYPES.SwarmChild,
-          );
-          const newSwarmChildren = (convertedMessageGroup.toolActions || []).filter(
-            a => a.type === TOOL_ACTION_TYPES.SwarmChild,
-          );
-          const preservedSwarmChildren = existingSwarmChildren.filter(
-            existing =>
-              !newSwarmChildren.some(
-                newOne =>
-                  newOne.toolMeta?.agent_name === existing.toolMeta?.agent_name &&
-                  newOne.content === existing.content,
-              ),
-          );
-          const mergedToolActions = [...(convertedMessageGroup.toolActions || []), ...preservedSwarmChildren];
-          return { ...message, ...convertedMessageGroup, toolActions: mergedToolActions };
+          // Pins (tool/thinking/SwarmChild) are built live from socket events during streaming and
+          // are NOT in meta anymore (TS-4), so convertToAIAnswer produces none on this sync. Preserve
+          // the live-built toolActions wholesale rather than overwriting them with an empty set —
+          // otherwise the chips vanish the instant a run finalizes. Reload rebuilds them from traces.
+          return { ...message, ...convertedMessageGroup, toolActions: message.toolActions || [] };
         });
 
         const { reply_to_first_message_item_uuid } = message_group;

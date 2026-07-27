@@ -7,6 +7,7 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { Box, CircularProgress } from '@mui/material';
 
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
+import { McpPatBanner } from '@/[fsd]/features/mcp/ui';
 import { ToolkitFormConstants } from '@/[fsd]/features/toolkits/lib/constants';
 import { ToolComponentHelpers, ToolkitFormHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { CONFIGURATION_VIEW_OPTIONS } from '@/[fsd]/features/toolkits/lib/helpers/toolkitForm.helpers';
@@ -503,6 +504,10 @@ export const ToolkitForm = memo(props => {
     </Box>
   ) : (
     <Box sx={[styles.container, sx]}>
+      <McpPatBanner
+        projectId={selectedProjectId}
+        toolkitType={editToolDetail?.type || values?.type || toolkitType}
+      />
       {editToolDetail.type !== ToolTypes.custom.value && !!effectiveToolSchema && isViewToggleVisible && (
         <FormViewToggle
           containerSX={styles.formViewToggle}

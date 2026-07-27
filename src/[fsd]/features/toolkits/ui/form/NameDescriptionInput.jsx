@@ -1,10 +1,10 @@
 import { memo, useCallback } from 'react';
 
-import { Box, Typography } from '@mui/material';
+import { Box } from '@mui/material';
 
 import { useToolkitNameProp } from '@/[fsd]/features/toolkits/lib/hooks';
 import { useFieldFocus } from '@/[fsd]/shared/lib/hooks';
-import { Input } from '@/[fsd]/shared/ui';
+import { Input, Text } from '@/[fsd]/shared/ui';
 import { MAX_DESCRIPTION_LENGTH, MAX_NAME_LENGTH, PROMPT_PAYLOAD_KEY } from '@/common/constants';
 import EntityIcon from '@/components/EntityIcon';
 import { useIconMetaTooltipType } from '@/hooks/toolkit/useIconMetaTooltipType.js';
@@ -77,14 +77,18 @@ const NameDescriptionInput = memo(props => {
               inputProps={{ maxLength: MAX_NAME_LENGTH }}
               onFocus={() => toggleFieldFocus(PROMPT_PAYLOAD_KEY.name)}
               onBlur={() => toggleFieldFocus(null)}
+              hasActionsToolBar
+              copyMessage="The name has been copied to the clipboard."
+              showFullScreenAction={false}
+              showExpandAction={false}
             />
             {isFocused(PROMPT_PAYLOAD_KEY.name) && MAX_NAME_LENGTH === nameValue?.length && (
-              <Typography
-                variant="bodySmall2"
+              <Text.CharacterCounter
+                value={nameValue}
+                maxLength={MAX_NAME_LENGTH}
+                hideMaxLimitMessage
                 sx={styles.nameLengthMessage}
-              >
-                {`0 is left from ${MAX_NAME_LENGTH} characters left`}
-              </Typography>
+              />
             )}
           </Box>
         )}
@@ -111,12 +115,12 @@ const NameDescriptionInput = memo(props => {
             onBlur={() => toggleFieldFocus(null)}
           />
           {isFocused(PROMPT_PAYLOAD_KEY.description) && description?.length > 0 && (
-            <Typography
-              variant="bodySmall"
+            <Text.CharacterCounter
+              value={description}
+              maxLength={MAX_DESCRIPTION_LENGTH}
+              hideMaxLimitMessage
               sx={styles.descriptionLengthMessage}
-            >
-              {`${MAX_DESCRIPTION_LENGTH - description.length} characters left`}
-            </Typography>
+            />
           )}
         </Box>
       )}
@@ -128,7 +132,7 @@ const NameDescriptionInput = memo(props => {
 const nameDescriptionInputStyles = () => ({
   nameContainer: {
     display: 'flex',
-    alignItems: 'center',
+    alignItems: 'baseline',
     gap: '0.75rem',
   },
   nameInputContainer: {
@@ -139,10 +143,9 @@ const nameDescriptionInputStyles = () => ({
   },
   nameLengthMessage: {
     textAlign: 'right',
-    fontSize: '0.625rem',
-    position: 'absolute',
-    right: '0',
-    bottom: '3.125rem',
+    width: '100%',
+    position: 'relative',
+    top: '0.25rem',
   },
   descriptionContainer: {
     display: 'flex',
@@ -152,7 +155,6 @@ const nameDescriptionInputStyles = () => ({
   descriptionLengthMessage: {
     textAlign: 'right',
     width: '100%',
-    fontSize: '0.625rem',
     marginTop: '0.25rem',
   },
 });

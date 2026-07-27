@@ -17,11 +17,14 @@ import { useTheme } from '@emotion/react';
 
 import SkillVersionSelector from './SkillVersionSelector.jsx';
 
-const SkillCard = memo(({ skill, entityVersionId, disabled, parentEntityType = 'agent' }) => {
+const SkillCard = memo(({ skill, entityVersionId, disabled, isPublicView, parentEntityType = 'agent' }) => {
   const theme = useTheme();
   const [openAlert, setOpenAlert] = useState(false);
   const { detachSkill, isLoading } = useDetachSkill({ entityVersionId });
   const styles = useMemo(() => skillCardStyles(), []);
+
+  // A public/catalog agent has no standalone skill page to open; a locked-but-owned version still does.
+  const isOpenDisabled = isPublicView || !skill.skill_id;
 
   const onOpenInNewTab = useCallback(() => {
     const baseUrl = `${window.location.protocol}//${window.location.host}`;
@@ -40,7 +43,10 @@ const SkillCard = memo(({ skill, entityVersionId, disabled, parentEntityType = '
 
   return (
     <>
-      <Box sx={styles.cardContainer}>
+      <Box
+        sx={styles.cardContainer}
+        data-testid={`skill-card-${skill.skill_id}`}
+      >
         <Box sx={styles.cardHeader}>
           <Box sx={styles.iconBox}>
             {skill.icon_meta?.url ? (
@@ -83,12 +89,12 @@ const SkillCard = memo(({ skill, entityVersionId, disabled, parentEntityType = '
                 color="tertiary"
                 aria-label="open in new tab"
                 onClick={onOpenInNewTab}
-                disabled={!skill.skill_id}
+                disabled={isOpenDisabled}
                 sx={styles.actionButton}
               >
                 <OpenInNewIcon
                   sx={styles.actionIcon}
-                  fill={theme.palette.icon.fill.default}
+                  fill={!isOpenDisabled ? theme.palette.icon.fill.default : theme.palette.icon.fill.disabled}
                 />
               </IconButton>
             </Tooltip>
@@ -98,6 +104,7 @@ const SkillCard = memo(({ skill, entityVersionId, disabled, parentEntityType = '
             >
               <IconButton
                 id="DeleteButton"
+                data-testid="skill-card-remove-button"
                 variant="elitea"
                 color="tertiary"
                 aria-label="remove skill"

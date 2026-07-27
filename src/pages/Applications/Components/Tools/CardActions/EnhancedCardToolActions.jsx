@@ -29,7 +29,7 @@ const ToolView = memo(props => {
     value => async event => {
       event.stopPropagation();
       await navigator.clipboard.writeText(value);
-      toastInfo('The content has been copied to the clipboard');
+      toastInfo('The content has been copied to the clipboard.');
     },
     [toastInfo],
   );

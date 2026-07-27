@@ -7,11 +7,12 @@ import { Box } from '@mui/system';
 
 import SkillRowAction from '@/[fsd]/features/skill/ui/SkillRowAction';
 import { useDeleteConfirmationDisabled } from '@/[fsd]/shared/lib/hooks';
+import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
 import { Modal } from '@/[fsd]/shared/ui';
 import { useDeleteApplicationMutation } from '@/api/applications';
 import { useDeleteConfigurationMutation } from '@/api/configurations';
 import { useToolkitDeleteMutation } from '@/api/toolkits.js';
-import { isSkillCard } from '@/common/checkCardType';
+import { isAppAllCard, isMCPCard, isSkillCard } from '@/common/checkCardType';
 import { PERMISSIONS, ViewMode } from '@/common/constants';
 import { getEntityNameByCardType } from '@/components/Fork/useForkEntity';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
@@ -89,6 +90,7 @@ ActionWithDialog.displayName = 'ActionWithDialog';
 const DataRowAction = memo(props => {
   const { data, viewMode, type, isPinnedItem = false, onTogglePin } = props;
   const { checkPermission } = useCheckPermission();
+  const { isPrivate } = useProjectType();
   const { id: myAuthorId } = useSelector(state => state.user);
   const { cardType } = data;
   const realCardType = useMemo(() => cardType || type, [cardType, type]);
@@ -129,12 +131,29 @@ const DataRowAction = memo(props => {
   const [deleteApplication] = useDeleteApplicationMutation();
   const [deleteToolkit] = useToolkitDeleteMutation();
   const [deleteCredential] = useDeleteConfigurationMutation();
+
   const doDeleteApplication = useCallback(async () => {
-    await deleteApplication({ projectId, applicationId: data?.id });
-  }, [data?.id, deleteApplication, projectId]);
+    const { error } = await deleteApplication({ projectId, applicationId: data?.id });
+    if (!error) {
+      const entityType =
+        entity_name === 'pipelines' ? 'pipeline' : entity_name === 'applications' ? 'application' : 'agent';
+      const entityName = data?.name || entityType;
+      toastSuccess(`The ${entityName} ${entityType} has been successfully deleted.`);
+    }
+  }, [data?.id, data?.name, deleteApplication, projectId, entity_name, toastSuccess]);
+
+  const isAppAll = useMemo(() => isAppAllCard(realCardType), [realCardType]);
+  const isMCP = useMemo(() => isMCPCard(realCardType), [realCardType]);
+
   const doDeleteToolkit = useCallback(async () => {
-    await deleteToolkit({ projectId, toolkitId: data?.id });
-  }, [data?.id, deleteToolkit, projectId]);
+    const { error } = await deleteToolkit({ projectId, toolkitId: data?.id });
+    if (!error) {
+      const entityType = isAppAll ? 'application' : isMCP ? 'mcp' : 'toolkit';
+      const entityName = data?.name || entityType;
+      toastSuccess(`The ${entityName} ${entityType} has been successfully deleted.`);
+    }
+  }, [data?.id, data?.name, deleteToolkit, projectId, isAppAll, isMCP, toastSuccess]);
+
   const doDeleteCredential = useCallback(async () => {
     const { error } = await deleteCredential({
       projectId,
@@ -142,11 +161,22 @@ const DataRowAction = memo(props => {
       section: data?.section,
     });
     if (!error) {
-      toastSuccess('The credential has been deleted');
+      const credentialName = data?.name || data?.settings?.elitea_title || 'credential';
+      toastSuccess(`The ${credentialName} credential has been successfully deleted.`);
     } else {
       toastError('Failed to delete credential');
     }
-  }, [data?.id, data?.originalId, data?.section, deleteCredential, projectId, toastSuccess, toastError]);
+  }, [
+    data?.id,
+    data?.originalId,
+    data?.section,
+    data?.name,
+    data?.settings?.elitea_title,
+    deleteCredential,
+    projectId,
+    toastSuccess,
+    toastError,
+  ]);
 
   const onDelete = useCallback(() => {
     if (entity_name === 'applications' || entity_name === 'pipelines') {
@@ -188,12 +218,12 @@ const DataRowAction = memo(props => {
     if (onTogglePin) {
       list.push(pinMenuItem);
     }
-    if (checkPermission(PERMISSIONS[entity_name]?.delete)) {
+    if (isPrivate || checkPermission(PERMISSIONS[entity_name]?.delete)) {
       list.push(deleteMenuItem);
     }
 
     return list;
-  }, [checkPermission, deleteMenuItem, entity_name, onTogglePin, pinMenuItem]);
+  }, [checkPermission, deleteMenuItem, entity_name, onTogglePin, pinMenuItem, isPrivate]);
 
   const toolkitsMenu = useMemo(() => {
     const list = [];
@@ -201,8 +231,8 @@ const DataRowAction = memo(props => {
       list.push(pinMenuItem);
     }
     // Actions in the specified order: Delete, Export, Fork
-    // Use permission check for delete (same as applications)
-    if (checkPermission(PERMISSIONS[entity_name]?.delete)) {
+    const deletePermission = isMCP ? PERMISSIONS.mcps?.delete : PERMISSIONS[entity_name]?.delete;
+    if (isPrivate || checkPermission(deletePermission)) {
       list.push(deleteMenuItem);
     }
     // if (checkPermission(PERMISSIONS[entity_name]?.export)) {
@@ -213,7 +243,7 @@ const DataRowAction = memo(props => {
     // }
 
     return list;
-  }, [checkPermission, deleteMenuItem, entity_name, onTogglePin, pinMenuItem]);
+  }, [checkPermission, deleteMenuItem, entity_name, onTogglePin, pinMenuItem, isPrivate, isMCP]);
 
   const credentialsMenu = useMemo(() => {
     const list = [];
@@ -222,12 +252,12 @@ const DataRowAction = memo(props => {
       list.push(pinMenuItem);
     }
     // Actions in the specified order: Delete only (like toolkits)
-    if (isOwner) {
+    if (isOwner && (isPrivate || checkPermission(PERMISSIONS.secrets.delete))) {
       list.push(deleteMenuItem);
     }
 
     return list;
-  }, [deleteMenuItem, isOwner, onTogglePin, pinMenuItem]);
+  }, [deleteMenuItem, isOwner, onTogglePin, pinMenuItem, isPrivate, checkPermission]);
 
   const menuList = useMemo(() => {
     let list = [];

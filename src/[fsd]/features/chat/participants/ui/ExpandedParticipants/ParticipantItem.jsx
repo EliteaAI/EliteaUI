@@ -8,6 +8,7 @@ import Tooltip from '@/ComponentsLib/Tooltip';
 import { useParticipantDetailsContext } from '@/[fsd]/features/chat/participants/lib/context/ParticipantDetailsContext';
 import {
   canParticipantBeActiveInChat,
+  getChatParticipantUniqueId,
   isSkippedContainerParticipant,
 } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { useParticipantEntityIcon } from '@/[fsd]/features/chat/participants/lib/hooks';
@@ -252,6 +253,7 @@ const ParticipantItem = memo(props => {
           onMouseEnter={onMouseEnter}
           onMouseLeave={onMouseLeave}
           sx={styles.contentWrapper}
+          data-testid={`chat-participant-row-${getChatParticipantUniqueId(participant)}`}
         >
           <EntityIcon
             icon={entityIcon}

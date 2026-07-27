@@ -3,7 +3,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { useTheme } from '@mui/system';
 
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
-import { isMcpToolkitType } from '@/[fsd]/shared/lib/helpers';
+import { isMcpToolkitType, resolveToolkitSchemaByType } from '@/[fsd]/shared/lib/helpers';
 import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
 import { ChatParticipantType } from '@/common/constants';
 import { getToolIconByType } from '@/common/toolkitUtils';
@@ -66,7 +66,7 @@ export const useSlashMention = ({ chatInput, activeConversation }) => {
             ? p.entity_settings?.icon_meta
             : {
                 component: getToolIconByType(p.entity_settings?.toolkit_type, theme, {
-                  toolSchema: toolkitSchemas?.[p.entity_settings?.toolkit_type],
+                  toolSchema: resolveToolkitSchemaByType(p.entity_settings?.toolkit_type, toolkitSchemas),
                   isMCP: p.entity_settings?.toolkit_type?.toLowerCase().endsWith('mcp'),
                 }),
               },

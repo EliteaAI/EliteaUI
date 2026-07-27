@@ -12,6 +12,8 @@ export const AvailableLanguagesEnum = {
   MERMAID: 'mermaid',
   IMAGE: 'image',
   DOCX: 'docx',
+  HTML: 'html',
+  MDX: 'mdx',
 };
 
 export const AvailableFormatsEnum = {
@@ -23,4 +25,7 @@ export const AvailableFormatsEnum = {
   TXT: 'txt',
   DOC: 'doc',
   DOCX: 'docx',
+  HTML: 'html',
+  HTM: 'htm',
+  MDX: 'mdx',
 };

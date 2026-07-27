@@ -10,8 +10,16 @@ const ResourceSuggestions = memo(props => {
   if (!items?.length) return null;
 
   return (
-    <Box sx={styles.container}>
-      <Typography sx={styles.title}>{title}</Typography>
+    <Box
+      data-testid={`generate-agent-resource-section-${entityType}`}
+      sx={styles.container}
+    >
+      <Typography
+        data-testid={`generate-agent-resource-section-title-${entityType}`}
+        sx={styles.title}
+      >
+        {title}
+      </Typography>
       <Box sx={styles.list}>
         {items.map(item => (
           <SuggestionItem

@@ -16,6 +16,7 @@ const PreparationStep = memo(
     categoryOptions,
     agreed,
     onAgreedChange,
+    entityLabel = 'agent',
     error,
   }) => {
     const handleVersionNameChange = useCallback(
@@ -70,7 +71,7 @@ const PreparationStep = memo(
           value={category}
           options={categoryOptions}
           onValueChange={onCategoryChange}
-          helperText="Select a category to help users discover your agent."
+          helperText={`Select a category to help users discover your ${entityLabel}.`}
         />
 
         <Box sx={styles.termsContainer}>
@@ -81,7 +82,7 @@ const PreparationStep = memo(
           >
             Publishing Terms
           </Typography>
-          <PublishingTerms />
+          <PublishingTerms entityLabel={entityLabel} />
         </Box>
 
         <FormControlLabel

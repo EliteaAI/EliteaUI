@@ -1,8 +1,10 @@
 import { memo, useCallback, useMemo } from 'react';
 
-import { Box, IconButton, Tooltip, Typography } from '@mui/material';
+import { Box, Tooltip, Typography } from '@mui/material';
 
 import { ARTIFACT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/artifactTourTargets.constants';
+import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
+import { Button } from '@/[fsd]/shared/ui';
 import { SimpleSearchBar } from '@/[fsd]/shared/ui/input';
 import FileUploadIcon from '@/assets/icons/FileUploadIcon.svg?react';
 import { PERMISSIONS } from '@/common/constants';
@@ -34,8 +36,11 @@ const ArtifactTableToolbar = memo(props => {
   } = props;
 
   const { checkPermission } = useCheckPermission();
+  const { isPrivate } = useProjectType();
   const theme = useTheme();
   const styles = artifactTableToolbarStyles();
+
+  const canDeleteFiles = isPrivate || checkPermission(PERMISSIONS.artifacts.delete);
 
   const handleRootClick = useCallback(() => {
     if (onBreadcrumbClick) {
@@ -48,9 +53,9 @@ const ArtifactTableToolbar = memo(props => {
     [styles, currentPrefix],
   );
 
-  const deleteButtonIconColor = !rowSelectionModel.length
-    ? theme.palette.icon.fill.disabled
-    : theme.palette.icon.fill.default;
+  const hasSelection = rowSelectionModel.length > 0;
+  const disabledIconColor = theme.palette.icon.fill.disabled;
+  const defaultIconColor = theme.palette.icon.fill.default;
 
   return (
     <Box sx={styles.toolbarContainer}>
@@ -105,17 +110,17 @@ const ArtifactTableToolbar = memo(props => {
             title="Upload files"
             placement="top"
           >
-            <IconButton
-              variant={'elitea'}
-              sx={styles.actionButton}
-              size="small"
-              color="secondary"
-              onClick={handleUploadClick}
-              data-tour={ARTIFACT_TOUR_TARGET_IDS.uploadButton}
-              data-testid="artifacts-upload-files-button"
-            >
-              <FileUploadIcon sx={styles.actionIcon} />
-            </IconButton>
+            <Box component="span">
+              <Button.BaseBtn
+                variant="icon"
+                sx={styles.actionButton}
+                onClick={handleUploadClick}
+                data-tour={ARTIFACT_TOUR_TARGET_IDS.uploadButton}
+                data-testid="artifacts-upload-files-button"
+              >
+                <FileUploadIcon sx={styles.actionIcon} />
+              </Button.BaseBtn>
+            </Box>
           </Tooltip>
         )}
 
@@ -124,32 +129,33 @@ const ArtifactTableToolbar = memo(props => {
           placement="top"
         >
           <Box component="span">
-            <IconButton
-              variant={'elitea'}
+            <Button.BaseBtn
+              variant="icon"
               sx={styles.actionButton}
-              size="small"
-              color="secondary"
               onClick={onDownloadFiles}
-              disabled={!rowSelectionModel.length}
+              disabled={!hasSelection}
               data-testid="artifacts-download-files-button"
             >
-              <DownloadIcon sx={styles.actionIcon} />
-            </IconButton>
+              <DownloadIcon
+                sx={styles.actionIcon}
+                fill={hasSelection ? defaultIconColor : disabledIconColor}
+              />
+            </Button.BaseBtn>
           </Box>
         </Tooltip>
 
-        {checkPermission(PERMISSIONS.artifacts.delete) && (
+        {canDeleteFiles && (
           <DeleteEntityButton
             name={rowSelectionModel.length === totalRows ? 'all files' : 'selected files'}
-            entity_name={'file'}
+            entity_name="file"
             onDelete={onDeleteArtifacts}
             title={`Delete ${rowSelectionModel.length === totalRows ? 'all files' : 'selected files'}`}
             isLoading={false}
             sx={styles.deleteEntityButton}
             buttonColor="secondary"
             buttonClassName="action"
-            iconColor={deleteButtonIconColor}
-            disabled={!rowSelectionModel.length}
+            iconColor={hasSelection ? defaultIconColor : disabledIconColor}
+            disabled={!hasSelection}
             shouldRequestInputName={false}
           />
         )}

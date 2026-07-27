@@ -13,7 +13,8 @@ import { EditorView } from '@codemirror/view';
 import CloseIcon from '../Icons/CloseIcon';
 import CopyIcon from '../Icons/CopyIcon';
 
-const ToolModal = ({ open, onClose, toolData, title = '', input = '', output = '' }) => {
+const ToolModal = props => {
+  const { open, onClose, toolData, title = '', input = '', output = '', isLoading = false } = props;
   const theme = useTheme();
   const { toastInfo } = useToast();
 
@@ -51,7 +52,7 @@ const ToolModal = ({ open, onClose, toolData, title = '', input = '', output = '
   const handleCopyToClipboard = useCallback(
     text => {
       navigator.clipboard.writeText(text).then(() => {
-        toastInfo('Content copied to clipboard');
+        toastInfo('The content has been copied to the clipboard.');
       });
     },
     [toastInfo],
@@ -203,6 +204,14 @@ const ToolModal = ({ open, onClose, toolData, title = '', input = '', output = '
           },
         }}
       >
+        {isLoading && (
+          <Typography
+            variant="bodySmall"
+            sx={{ padding: '0.5rem 1rem', opacity: 0.7 }}
+          >
+            Loading details…
+          </Typography>
+        )}
         <Split
           className="split"
           sizes={[50, 50]}

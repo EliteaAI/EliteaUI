@@ -1,5 +1,6 @@
 import { ParticipantEntityTypes } from '@/[fsd]/features/chat/participants/lib/constants/participant.constants';
 import { DEFAULT_MAX_TOKENS, DEFAULT_TEMPERATURE } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
+import { generateLLMSettings } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
 import { ChatParticipantType } from '@/common/constants';
 
 export const DEFAULT_LLM_SETTINGS = {
@@ -49,6 +50,19 @@ export const createToolkitConversationWithParticipant = async options => {
     return null;
   }
 
+  // Align the family pair to the model so a reasoning model never carries a stale temperature
+  // (issue #5859). Persist-time uses generateLLMSettings (not resetLLMSettingsForModel) so a
+  // user-tuned reasoning_effort/temperature within the family is preserved, not hard-reset.
+  // Strip both from the base first — generateLLMSettings emits only the correct one.
+  // eslint-disable-next-line no-unused-vars
+  const { temperature: _t, reasoning_effort: _re, ...baseLlmSettings } = llmSettings || {};
+  const alignedLlmSettings = {
+    ...baseLlmSettings,
+    model_name: selectedModel?.name,
+    model_project_id: selectedModel?.project_id,
+    ...generateLLMSettings(selectedModel, llmSettings, { includeModelInfo: true }),
+  };
+
   const toolkitParticipant = {
     projectId,
     id: conversationResult.data.id,
@@ -62,11 +76,7 @@ export const createToolkitConversationWithParticipant = async options => {
         entity_settings: {
           ...values.settings,
           toolkit_type: values.type,
-          llm_settings: {
-            model_name: selectedModel?.name,
-            model_project_id: selectedModel?.project_id,
-            ...llmSettings,
-          },
+          llm_settings: alignedLlmSettings,
         },
       },
     ],

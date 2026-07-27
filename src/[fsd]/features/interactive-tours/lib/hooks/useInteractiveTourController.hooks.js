@@ -5,7 +5,6 @@ import { useDispatch } from 'react-redux';
 import { actions as settingsActions } from '@/slices/settings';
 
 import {
-  AGENT_HUB_TOUR_ID,
   AGENT_TOUR_ID,
   AI_CONFIG_TOUR_ID,
   ANALYTICS_TOUR_ID,
@@ -13,6 +12,7 @@ import {
   ARTIFACT_TOUR_ID,
   CHAT_TOUR_ID,
   CREDENTIALS_TOUR_ID,
+  ELITEA_CATALOG_TOUR_ID,
   FIRST_ELITEA_TOUR_ID,
   MCP_TOUR_ID,
   NOTIFICATIONS_TOUR_ID,
@@ -30,7 +30,8 @@ import { initialState, lsCompletedKey, lsPromptKey, tourReducer } from '../helpe
 const TOUR_LOADERS = {
   [APPLICATIONS_TOUR_ID]: () =>
     import('../constants/applicationsTour.constants').then(m => m.applicationsTourSteps),
-  [AGENT_HUB_TOUR_ID]: () => import('../constants/agentHubTour.constants').then(m => m.agentHubTourSteps),
+  [ELITEA_CATALOG_TOUR_ID]: () =>
+    import('../constants/eliteaCatalogTour.constants').then(m => m.eliteaCatalogTourSteps),
   [AI_CONFIG_TOUR_ID]: () =>
     import('../constants/aiConfigurationTour.constants').then(m => m.aiConfigurationTourSteps),
   [ANALYTICS_TOUR_ID]: () => import('../constants/analyticsTour.constants').then(m => m.analyticsTourSteps),

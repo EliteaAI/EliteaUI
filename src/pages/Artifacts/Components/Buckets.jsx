@@ -35,6 +35,7 @@ const Buckets = memo(props => {
     onStorageChange,
     onBucketsDataChange, // Callback to provide bucket data to parent
     onUpload, // Callback to handle upload from bucket menu
+    onManageAccess, // Callback to open bucket access management
     onSelectFile, // Callback to handle file selection
     onSelectFolder, // Callback to handle folder selection (navigates table)
   } = props;
@@ -43,7 +44,7 @@ const Buckets = memo(props => {
   const navigate = useNavigate();
   const { state: locationState } = useLocation();
   const { routeStack = [] } = useMemo(() => locationState || { routeStack: [] }, [locationState]);
-  const { toastError, toastInfo } = useToast();
+  const { toastError, toastSuccess } = useToast();
 
   const [deletingBucket, setDeletingBucket] = useState(null);
 
@@ -165,10 +166,10 @@ const Buckets = memo(props => {
 
   // Success handling for delete mutation
   useEffect(() => {
-    if (isDeleteSuccess) {
-      toastInfo('The bucket has been deleted successfully');
+    if (isDeleteSuccess && deletingBucket) {
+      toastSuccess(`The ${deletingBucket.name} bucket has been successfully deleted.`);
     }
-  }, [isDeleteSuccess, toastInfo]);
+  }, [isDeleteSuccess, deletingBucket, toastSuccess]);
 
   // Handle bucket deletion and auto-select next bucket
   useEffect(() => {
@@ -215,6 +216,7 @@ const Buckets = memo(props => {
       onCreateBucket={onCreateBucket}
       onStorageChange={onStorageChange}
       onUpload={onUpload}
+      onManageAccess={onManageAccess}
       onSelectFile={onSelectFile}
       onSelectFolder={onSelectFolder}
       onEdit={handleEdit}

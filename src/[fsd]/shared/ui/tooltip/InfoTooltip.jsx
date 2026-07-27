@@ -74,6 +74,7 @@ const InfoTooltip = memo(props => {
     <Box
       data-info-tooltip
       sx={[styles.iconContainer, sx]}
+      component="span"
       {...boxProps}
     >
       <InfoIcon

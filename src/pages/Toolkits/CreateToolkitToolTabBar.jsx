@@ -7,7 +7,6 @@ import { Box, Button as MuiButton } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { useTrackEvent } from '@/GA';
-import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
 import { Button } from '@/[fsd]/shared/ui';
 import { SearchParams } from '@/common/constants.js';
@@ -144,12 +143,12 @@ export default function CreateToolkitToolTabBar({
                 { replace: true },
               );
             } else {
-              // Default behavior - navigate to toolkit/MCP detail page
-              // For pre-built MCPs (mcp_github, etc.), navigate to MCP page
-              const isPrebuildMcp = McpAuthHelpers.isPrebuildMcpType(formik.values?.type);
-              const shouldNavigateToMcp = isMCP || isPrebuildMcp;
+              // Default behavior - navigate back to the list the user created from.
+              // Pre-built MCP toolkits (type 'mcp_*') created from the Toolkits flow are
+              // regular toolkits, so return to Toolkits; only the MCPs flow (isMCP) lands
+              // on the MCPs list.
               let destinationRoute = RouteDefinitions.ToolkitsWithTab;
-              if (shouldNavigateToMcp) {
+              if (isMCP) {
                 destinationRoute = RouteDefinitions.MCPsWithTab;
               } else if (isApplication) {
                 destinationRoute = RouteDefinitions.AppsWithTab;

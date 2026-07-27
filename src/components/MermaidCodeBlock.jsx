@@ -61,7 +61,7 @@ const MermaidCodeBlock = ({
   const displayedCode = fixedCode || markedToken.text;
   const onCopy = useCallback(async () => {
     await navigator.clipboard.writeText(displayedCode);
-    toastInfo('The code has been copied into clipboard');
+    toastInfo('The code has been copied to the clipboard.');
   }, [displayedCode, toastInfo]);
   const { onClickCopy } = useCopyDownloadHandlers({ onCopy });
 

@@ -1,9 +1,13 @@
-import { memo, useEffect, useMemo, useRef } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 
 import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
 import { ChatMessageList } from '@/[fsd]/features/chat/ui/chat-box';
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
-import { convertConversationToChatHistory } from '@/common/convertChatConversationMessages';
+import { useLazyMessageTracesQuery } from '@/api';
+import {
+  buildTraceListParams,
+  convertConversationToChatHistory,
+} from '@/common/convertChatConversationMessages';
 import { ChatBodyContainer } from '@/components/Chat/StyledComponents';
 import useChatCopyToClipboard from '@/hooks/chat/useChatCopyToClipboard';
 import useIsSmallWindow from '@/hooks/useIsSmallWindow';
@@ -20,6 +24,8 @@ const RunHistoryChat = memo(props => {
     fetchConversationDetails,
     { data: conversationDetails, isFetching: isConversationDetailsFetching, reset },
   ] = RunHistoryApi.useLazyGetRunHistoryDetailsQuery();
+  const [getMessageTraces] = useLazyMessageTracesQuery();
+  const [traceSteps, setTraceSteps] = useState(null);
 
   useEffect(() => {
     if (selectedHistoryItem) {
@@ -27,15 +33,29 @@ const RunHistoryChat = memo(props => {
         projectId,
         conversationId: selectedHistoryItem,
       });
-    } else reset();
-  }, [fetchConversationDetails, projectId, reset, selectedHistoryItem]);
+    } else {
+      reset();
+      setTraceSteps(null);
+    }
+  }, [fetchConversationDetails, getMessageTraces, projectId, reset, selectedHistoryItem]);
+
+  useEffect(() => {
+    if (!selectedHistoryItem || !conversationDetails) return;
+    getMessageTraces({
+      projectId,
+      conversationId: selectedHistoryItem,
+      params: buildTraceListParams(conversationDetails.message_groups),
+    }).then(r => setTraceSteps(r.data || null));
+  }, [conversationDetails, getMessageTraces, projectId, selectedHistoryItem]);
 
   const styles = runHistoryChatStyles(isSmallWindow);
 
   const { isLoadingData, chatHistory, conversationData } = useMemo(() => {
     const conversation = selectedHistoryItem ? (conversationDetails ?? null) : null;
 
-    const currentConversationMessages = conversation ? convertConversationToChatHistory(conversation) : [];
+    const currentConversationMessages = conversation
+      ? convertConversationToChatHistory(conversation, traceSteps)
+      : [];
 
     return {
       isLoadingData: isConversationDetailsFetching,
@@ -44,7 +64,7 @@ const RunHistoryChat = memo(props => {
         : currentConversationMessages,
       conversationData: conversation,
     };
-  }, [selectedHistoryItem, conversationDetails, isConversationDetailsFetching, prettifyChat]);
+  }, [selectedHistoryItem, conversationDetails, traceSteps, isConversationDetailsFetching, prettifyChat]);
 
   const onCopyToClipboard = useChatCopyToClipboard(chatHistory);
 

@@ -22,6 +22,7 @@ import ToolIcon from '@/assets/tool-icon.svg?react';
 import {
   COLLAPSED_SIDE_BAR_WIDTH,
   NAV_BAR_HEIGHT_IN_PX,
+  PERMISSIONS,
   PERMISSION_GROUPS,
   PUBLIC_PROJECT_ID,
   SIDE_BAR_WIDTH,
@@ -81,7 +82,7 @@ const SidebarBody = memo(props => {
   const publicPermissionsSet = useMemo(() => new Set(publicPermissions), [publicPermissions]);
 
   const selectedItem = useMemo(() => {
-    if (pathname === RouteDefinitions.AgentHub) {
+    if (pathname === RouteDefinitions.AgentHub || pathname === RouteDefinitions.EliteaCatalog) {
       return '';
     }
     const matchedRoute = SidebarConstants.RouteToSideBarItemMap.find(({ route }) =>
@@ -133,11 +134,11 @@ const SidebarBody = memo(props => {
         },
         {
           value: 'toolkits',
-          label: 'Toolkits',
+          label: 'Toolkits & Indexes',
           icon: <ToolIcon />,
           url: RouteDefinitions.Toolkits,
-          breadCrumb: 'Toolkits',
-          tooltip: 'Toolkits',
+          breadCrumb: 'Toolkits & Indexes',
+          tooltip: 'Toolkits & Indexes',
           tourId: SIDEBAR_TOUR_TARGET_IDS.navToolkits,
         },
         {
@@ -185,7 +186,11 @@ const SidebarBody = memo(props => {
         if (i.value === 'mcps' && !isMcpVisible) {
           return false;
         }
-        if (i.value === 'skills' && isSelectedProjectPublic) {
+        if (
+          i.value === 'skills' &&
+          isSelectedProjectPublic &&
+          !permissionsSet.has(PERMISSIONS.skills.publish)
+        ) {
           return false;
         }
         const perms = i.publicPermission ? publicPermissionsSet : permissionsSet;
@@ -274,6 +279,7 @@ const SidebarBody = memo(props => {
         <Box sx={styles.bottomSection}>
           <Box sx={styles.section}>
             <Buttons.SettingsButton navigateToPage={navigateToPage} />
+            <Divider sx={styles.catalogDivider} />
             <Buttons.AgentHubButton />
           </Box>
         </Box>
@@ -328,7 +334,6 @@ const sideBarBodyStyles = (sideBarCollapsed, socketStatus) => ({
     flexDirection: 'column',
     overflowY: 'auto',
     overflowX: 'hidden',
-    paddingBottom: '1.25rem',
   },
   header: {
     display: 'flex',
@@ -354,6 +359,10 @@ const sideBarBodyStyles = (sideBarCollapsed, socketStatus) => ({
   },
   divider: ({ palette }) => ({
     borderColor: palette.border.sidebarDivider,
+  }),
+  catalogDivider: ({ palette }) => ({
+    borderColor: palette.border.sidebarDivider,
+    marginInline: '-1rem',
   }),
   createSection: {
     padding: '0.75rem 1rem',

@@ -11,4 +11,5 @@ export const RouteToSideBarItemMap = [
   { route: RouteDefinitions.Apps, item: 'applications' },
   { route: RouteDefinitions.MCPs, item: 'mcps' },
   { route: RouteDefinitions.HelpCenter, item: 'resources' },
+  { route: RouteDefinitions.EliteaCatalog, item: 'elitea-catalog' },
 ];

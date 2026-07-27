@@ -8,7 +8,8 @@ import BaseBtn from '@/[fsd]/shared/ui/button/BaseBtn';
 import ImportIcon from '@/assets/import-icon.svg?react';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
 
-const ToolbarImportButton = memo(() => {
+const ToolbarImportButton = memo(props => {
+  const { testId } = props ?? {};
   const styles = importButtonStyles();
 
   const { projects } = useSelector(state => state.settings);
@@ -26,6 +27,7 @@ const ToolbarImportButton = memo(() => {
         variant="icon"
         onClick={openFileDialog}
         sx={styles.importBtn}
+        data-testid={testId}
       >
         <ImportIcon />
       </BaseBtn>

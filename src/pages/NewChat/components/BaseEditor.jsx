@@ -2,10 +2,11 @@ import React, { useCallback, useState } from 'react';
 
 import { Form, Formik } from 'formik';
 
-import { Alert, Box } from '@mui/material';
+import { Alert, Box, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 
-import AlertDialog from '@/components/AlertDialog';
+import { ModalConstants } from '@/[fsd]/shared/lib/constants';
+import { Modal } from '@/[fsd]/shared/ui';
 import DirtyDetector from '@/components/Formik/DirtyDetector';
 import useEditorNavBlocking from '@/hooks/useEditorNavBlocking';
 import useIsSmallWindow from '@/hooks/useIsSmallWindow';
@@ -137,15 +138,15 @@ const BaseEditor = ({
       </Formik>
 
       {/* Discard changes warning dialog */}
-      <AlertDialog
-        title={'Warning'}
-        alertContent={'You are editing now. Do you want to discard current changes and continue?'}
+      <Modal.BaseModal
+        variant={ModalConstants.MODAL_VARIANT.simple}
+        titleIcon={ModalConstants.MODAL_ICON_TYPE.warning}
+        title="Warning"
+        content={<Typography variant="bodyMedium">{ModalConstants.WARNING_MESSAGES.UNSAVED_CHANGES}</Typography>}
         open={showWarning}
-        alarm
         onClose={handleDialogCancel}
-        onCancel={handleDialogCancel}
         onConfirm={handleDialogConfirm}
-        confirmButtonText="Confirm"
+        confirmButtonText={ModalConstants.WARNING_BUTTONS.LEAVE}
       />
     </Box>
   );

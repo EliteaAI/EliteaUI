@@ -56,11 +56,11 @@ export default function useDownloadTable({ tableRowData }) {
       switch (option) {
         case 'markdown':
           onCopyRawTable();
-          toastInfo('The markdown presentation of the table has been copied into clipboard');
+          toastInfo('The table has been copied as Markdown to the clipboard.');
           break;
         case 'html':
           onCopyHtml();
-          toastInfo('The html presentation of the table has been copied into clipboard');
+          toastInfo('The table has been copied as HTML to the clipboard.');
           break;
         case 'xlsx':
           onDownloadExcel();

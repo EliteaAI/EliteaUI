@@ -4,6 +4,7 @@ import { useFormikContext } from 'formik';
 
 import { Box } from '@mui/material';
 
+import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
 import { Controls } from '@/[fsd]/shared/ui';
 import { PinEntityType } from '@/[fsd]/widgets/pin-toggler/lib/constants';
 import { usePin, usePinMenu } from '@/[fsd]/widgets/pin-toggler/lib/hooks';
@@ -24,6 +25,10 @@ const ToolkitsControls = memo(props => {
   const { values: { id } = {} } = formik;
 
   const { checkPermission } = useCheckPermission();
+  const { isPrivate } = useProjectType();
+
+  const deletePermission = isMCP ? PERMISSIONS.mcps?.delete : PERMISSIONS.toolkits.delete;
+  const canDelete = isPrivate || checkPermission(deletePermission);
 
   const {
     isPinned,
@@ -53,21 +58,19 @@ const ToolkitsControls = memo(props => {
   const { deleteToolkitMenuItem } = useDeleteToolkitMenu(setBlockNav, false, isMCP);
 
   const items = useMemo(
-    () => [
-      {
-        ...exportToolkitMenuItem,
-        disabled:
-          !checkPermission(PERMISSIONS.applications.export) || !checkPermission(PERMISSIONS.toolkits.export),
-      },
-      forkEntityMenuItem,
-      copyLinkMenuItem,
-      pinMenuItem,
-      {
-        ...deleteToolkitMenuItem,
-        disabled:
-          !checkPermission(PERMISSIONS.applications.delete) || !checkPermission(PERMISSIONS.toolkits.delete),
-      },
-    ],
+    () =>
+      [
+        {
+          ...exportToolkitMenuItem,
+          disabled:
+            !checkPermission(PERMISSIONS.applications.export) ||
+            !checkPermission(PERMISSIONS.toolkits.export),
+        },
+        forkEntityMenuItem,
+        copyLinkMenuItem,
+        pinMenuItem,
+        canDelete && deleteToolkitMenuItem,
+      ].filter(Boolean),
     [
       checkPermission,
       copyLinkMenuItem,
@@ -75,6 +78,7 @@ const ToolkitsControls = memo(props => {
       exportToolkitMenuItem,
       forkEntityMenuItem,
       pinMenuItem,
+      canDelete,
     ],
   );
 

@@ -3,7 +3,15 @@ import { memo } from 'react';
 import { Box, Divider, Typography } from '@mui/material';
 
 const CardTagSectionItem = memo(props => {
-  const { text, showDivider = false, paddingLeft = true, onClick, hoverHighlight, icon = false } = props;
+  const {
+    text,
+    showDivider = false,
+    paddingLeft = true,
+    onClick,
+    hoverHighlight,
+    icon = false,
+    isOverflow = false,
+  } = props;
   const styles = cardTagSectionItemStyles(paddingLeft, icon, hoverHighlight);
 
   return (
@@ -11,6 +19,7 @@ const CardTagSectionItem = memo(props => {
       component="span"
       onClick={onClick}
       sx={styles.item}
+      data-testid={isOverflow ? 'entity-card-tag-overflow' : 'entity-card-tag-chip'}
     >
       <Typography
         variant="bodySmall"

@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useState } from 'react';
+import { memo, useCallback, useState } from 'react';
 
 import { Box, CircularProgress, Typography, useTheme } from '@mui/material';
 
@@ -10,8 +10,8 @@ import { resolveSubAgentIcon } from './subAgentIcon.helpers';
 
 // VS Code-style collapsible group for one sub-agent's activity. Collapsed by
 // default with a left-to-right shimmer sweeping the name while the sub-agent is
-// running; auto-expands when it pauses for HITL approval (shimmer stops). The
-// children (chips / live content box / HITL cards) live inside the details.
+// running. Callers can opt into an initially expanded state (for example, when
+// an HITL approval card materializes); the user controls it after that.
 const SubAgentAccordion = memo(props => {
   const {
     name,
@@ -26,13 +26,7 @@ const SubAgentAccordion = memo(props => {
   } = props;
   const theme = useTheme();
 
-  const [expanded, setExpanded] = useState(defaultExpanded || paused);
-
-  // A pause for sensitive-action approval must surface its cards — force-open
-  // the accordion when this sub-agent enters the paused state.
-  useEffect(() => {
-    if (paused) setExpanded(true);
-  }, [paused]);
+  const [expanded, setExpanded] = useState(defaultExpanded);
 
   const onChange = useCallback((_, value) => setExpanded(value), []);
 

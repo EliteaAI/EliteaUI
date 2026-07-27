@@ -8,9 +8,9 @@ export { USERS_TOUR_ID };
 export const USERS_TOUR_COMPLETION = {
   keepExploring: [
     {
-      label: 'AI Configuration',
+      label: 'AI Providers',
       tourId: AI_CONFIG_TOUR_ID,
-      path: RouteDefinitions.SettingsWithTab.replace(':tab', 'model-configuration'),
+      path: RouteDefinitions.SettingsWithTab.replace(':tab', 'ai-providers'),
     },
   ],
 };

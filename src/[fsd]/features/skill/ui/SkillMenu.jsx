@@ -36,9 +36,17 @@ const NEW_SKILL_ID_PARAM = 'newSkillId';
  * @param {number[]} props.attachedSkillIds - Already-attached skill ids to exclude.
  * @param {boolean} [props.disabled] - Disable when at limit / read-only.
  * @param {boolean} [props.isEntityUnsaved] - True when the agent has no persisted version yet.
+ * @param {boolean} [props.isVersionLocked] - True when the agent version is published/embedded.
  */
 const SkillMenu = memo(props => {
-  const { applicationId, entityVersionId, attachedSkillIds = [], disabled, isEntityUnsaved } = props;
+  const {
+    applicationId,
+    entityVersionId,
+    attachedSkillIds = [],
+    disabled,
+    isEntityUnsaved,
+    isVersionLocked,
+  } = props;
   const projectId = useSelectedProjectId();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -158,10 +166,12 @@ const SkillMenu = memo(props => {
 
   const tooltipTitle = isEntityUnsaved
     ? 'Save the agent first, then add skills'
-    : disabled
-      ? 'Maximum number of skills reached'
-      : '';
-  const isButtonDisabled = disabled || isEntityUnsaved;
+    : isVersionLocked
+      ? 'This agent version is published or embedded and can not be modified'
+      : disabled
+        ? 'Maximum number of skills reached'
+        : '';
+  const isButtonDisabled = disabled || isEntityUnsaved || isVersionLocked;
 
   return (
     <>
@@ -170,13 +180,17 @@ const SkillMenu = memo(props => {
           title={tooltipTitle}
           placement="top"
         >
-          <Box component="span">
+          <Box
+            component="span"
+            data-testid="agent-add-skill-button-tooltip"
+          >
             <BaseBtn
               variant={BUTTON_VARIANTS.iconLabel}
               startIcon={<PlusIcon />}
               disableRipple
               disabled={isButtonDisabled}
               onClick={isButtonDisabled ? undefined : handleButtonClick}
+              data-testid="agent-add-skill-button"
             >
               Skill
             </BaseBtn>

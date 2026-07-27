@@ -19,17 +19,45 @@ const createMaxLengthExtension = maxLength => {
     if (!tr.docChanged) return tr;
     if (tr.newDoc.length <= maxLength) return tr;
 
-    const truncatedText = tr.newDoc.sliceString(0, maxLength);
-    const selection = tr.selection ?? tr.startState.selection;
-    const cursorPos = Math.min(selection.main.head, truncatedText.length);
+    const currentLength = tr.startState.doc.length;
+    const changes = [];
+    let runningLength = currentLength;
+
+    tr.changes.iterChanges((fromA, toA, _fromB, _toB, inserted) => {
+      const insertText = inserted.toString();
+      const deleteCount = toA - fromA;
+      const netChange = insertText.length - deleteCount;
+
+      if (netChange <= 0) {
+        changes.push({ from: fromA, to: toA, insert: insertText });
+        runningLength += netChange;
+        return;
+      }
+
+      const spaceLeft = maxLength - runningLength;
+
+      if (netChange <= spaceLeft) {
+        changes.push({ from: fromA, to: toA, insert: insertText });
+        runningLength += netChange;
+      } else {
+        const allowedInsertLength = Math.max(0, deleteCount + spaceLeft);
+        changes.push({ from: fromA, to: toA, insert: insertText.slice(0, allowedInsertLength) });
+        runningLength = runningLength - deleteCount + allowedInsertLength;
+      }
+    });
+
+    if (changes.length === 0) return [];
+
+    const hasRealChanges = changes.some(c => c.from !== c.to || c.insert !== '');
+    if (!hasRealChanges) return [];
+
+    const originalAnchor = tr.startState.selection.main.head;
+    const docLengthChange = runningLength - currentLength;
+    const newAnchor = Math.max(0, originalAnchor + docLengthChange);
 
     return tr.startState.update({
-      changes: {
-        from: 0,
-        to: tr.startState.doc.length,
-        insert: truncatedText,
-      },
-      selection: { anchor: cursorPos },
+      changes,
+      selection: { anchor: Math.min(newAnchor, maxLength) },
     });
   });
 };
@@ -47,6 +75,11 @@ const CodeMirrorEditor = forwardRef((props, ref) => {
     maxHeight,
     autoHeight = false,
     variant = 'bodyMedium',
+    // Stable test hook for the CodeMirror content DOM node (`.cm-content`).
+    // Applied via EditorView.contentAttributes since CodeMirror renders its
+    // internal DOM itself — a plain JSX data-testid on this component would
+    // only land on the outer wrapper, not on .cm-content.
+    contentTestId,
     onCanUndo,
     onCanRedo,
     onBlur,
@@ -239,6 +272,15 @@ const CodeMirrorEditor = forwardRef((props, ref) => {
     notifyChange,
   });
 
+  // Sets data-testid directly on the .cm-content DOM node CodeMirror renders
+  // internally, so callers get a stable handle to the actual editable text
+  // element (not just the outer wrapper).
+  const contentTestIdExtension = useMemo(() => {
+    if (!contentTestId) return [];
+
+    return [EditorView.contentAttributes.of({ 'data-testid': contentTestId })];
+  }, [contentTestId]);
+
   useImperativeHandle(ref, () => ({
     getCode: () => code,
     setCode,
@@ -285,6 +327,7 @@ const CodeMirrorEditor = forwardRef((props, ref) => {
         ...basicExtensions,
         ...autoHeightExtension,
         ...syntaxErrorListener,
+        ...contentTestIdExtension,
         ...extensions,
         createMaxLengthExtension(maxLength),
       ]}

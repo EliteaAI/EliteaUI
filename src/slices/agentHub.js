@@ -9,6 +9,7 @@ const agentHubSlice = createSlice({
     totalCountsByTag: {},
     currentPageByTag: {},
     lastFetchedAt: null, // Timestamp of last successful fetch
+    lastRefreshedAt: null,
     lastQuery: '', // The query used for the last fetch
   },
   reducers: {
@@ -18,6 +19,7 @@ const agentHubSlice = createSlice({
       state.totalCountsByTag = totalCountsByTag;
       state.currentPageByTag = currentPageByTag;
       state.lastFetchedAt = Date.now();
+      state.lastRefreshedAt = Date.now();
       state.lastQuery = query || '';
     },
     updateCategoryData: (state, action) => {
@@ -27,6 +29,15 @@ const agentHubSlice = createSlice({
       state.totalCountsByTag[categoryName] = total || rows.length;
       state.currentPageByTag[categoryName] = page;
       state.lastFetchedAt = Date.now();
+      state.lastRefreshedAt = Date.now();
+    },
+    replaceCategoryData: (state, action) => {
+      const { categoryName, page, rows, total } = action.payload;
+      state.applicationsByTag[categoryName] = rows;
+      state.totalCountsByTag[categoryName] = total || rows.length;
+      state.currentPageByTag[categoryName] = page;
+      state.lastFetchedAt = Date.now();
+      state.lastRefreshedAt = Date.now();
     },
     updateApplicationInCategories: (state, action) => {
       const { applicationId, updateFn } = action.payload;
@@ -64,6 +75,7 @@ const agentHubSlice = createSlice({
       state.totalCountsByTag = {};
       state.currentPageByTag = {};
       state.lastFetchedAt = null;
+      state.lastRefreshedAt = null;
       state.lastQuery = '';
     },
   },
@@ -71,6 +83,8 @@ const agentHubSlice = createSlice({
 
 // Selectors
 export const selectAgentHubData = state => state.agentHub;
+
+export const selectLastRefreshedAt = state => state.agentHub.lastRefreshedAt;
 
 export const selectIsCacheValid = (state, query) => {
   const { lastFetchedAt, lastQuery } = state.agentHub;

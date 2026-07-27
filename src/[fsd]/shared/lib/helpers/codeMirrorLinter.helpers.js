@@ -1,9 +1,10 @@
 import YAML from 'js-yaml';
 
-import * as MermaidHelpers from './mermaid.helpers';
 import { json, jsonParseLinter } from '@codemirror/lang-json';
 import { StreamLanguage } from '@codemirror/language';
 import { linter } from '@codemirror/lint';
+
+import * as MermaidHelpers from './mermaid.helpers';
 
 const csvMode = {
   startState: () => ({}),
@@ -196,7 +197,8 @@ export const getExtensionsByLang = async lang => {
         extensionWithLinter: [langs.mermaid?.(), mermaidLinter].filter(Boolean),
       };
     }
-    case 'markdown': {
+    case 'markdown':
+    case 'mdx': {
       const { markdown } = await import('@codemirror/lang-markdown');
       return { extensionWithoutLinter: [markdown()], extensionWithLinter: [markdown(), markdownLinter] };
     }

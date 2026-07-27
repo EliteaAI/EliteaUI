@@ -491,6 +491,12 @@ export const toolkitsApi = eliteaApi
         }),
         providesTags: [],
       }),
+      internalMcpPatStatus: build.query({
+        query: ({ projectId, toolkitType }) => ({
+          url: `${apiSlicePath}/internal_mcp_pat_status/prompt_lib/${projectId}/${toolkitType}`,
+        }),
+        providesTags: [],
+      }),
     }),
   });
 
@@ -515,4 +521,5 @@ export const {
   useToolkitAvailableToolsQuery,
   useLazyToolkitAvailableToolsQuery,
   useListToolkitTypesQuery,
+  useInternalMcpPatStatusQuery,
 } = toolkitsApi;

@@ -30,3 +30,16 @@ export const MODAL_ICON_COLOR_KEYS = {
 };
 
 export const MODAL_ICON_SIZE = { width: '1.25rem', height: '1.25rem' };
+
+export const WARNING_MESSAGES = {
+  GENERATION_INTERRUPTION:
+    'Response generation is still in progress. Switching away may stop the response and any generated content may be lost. Do you want to switch anyway?',
+  UNSAVED_CHANGES: 'There are unsaved changes. Are you sure you want to leave?',
+  DISCARD_CHANGES: 'Are you sure you want to discard changes?',
+};
+
+export const WARNING_BUTTONS = {
+  SWITCH: 'Switch',
+  LEAVE: 'Leave',
+  DISCARD: 'Discard',
+};

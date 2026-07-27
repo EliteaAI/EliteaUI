@@ -51,7 +51,7 @@ const IndexChatContainer = memo(props => {
           }
 
           await navigator.clipboard.writeText(contentToCopy);
-          toastInfo('Copied to clipboard');
+          toastInfo('The content has been copied to the clipboard.');
         } catch {
           toastError('Failed to copy to clipboard');
         }

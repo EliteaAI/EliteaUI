@@ -32,7 +32,7 @@ const ResourceVersionInfo = memo(props => {
       const infoToCopy =
         `${versionInfo}\n` + plugins.map(p => `${p.name}: ${p.version || '\u2014'}`).join('\n');
       await navigator.clipboard.writeText(infoToCopy);
-      toastInfo('The version information has been copied to clipboard');
+      toastInfo('The version information has been copied to the clipboard.');
     } catch {
       // Optionally, handle copy failure (e.g., show an error toast)
     }

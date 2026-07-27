@@ -1,29 +1,21 @@
 import { memo, useCallback, useEffect, useMemo } from 'react';
 
-import { Box, FormControlLabel, Radio, RadioGroup, TextField, Typography } from '@mui/material';
+import { Box, TextField, Typography } from '@mui/material';
 
 const MAX_CHARS = 2500;
 
-export const APPLY_MODE = {
-  REPLACE: 'replace',
-  APPEND: 'append',
-};
-
-const APPEND_SEPARATOR = '\n\n';
-
 const GenerateProjectContextReviewForm = memo(props => {
-  const { draft, onChange, onValidationChange, hasExistingContent, existingContentLength, applyMode, onApplyModeChange } = props;
+  const { draft, onChange, onValidationChange } = props;
 
   const projectBackground = draft.project_background || '';
 
-  const { effectiveLength, charError, isValid } = useMemo(() => {
-    const len =
-      hasExistingContent && applyMode === APPLY_MODE.APPEND
-        ? existingContentLength + APPEND_SEPARATOR.length + projectBackground.length
-        : projectBackground.length;
-    const exceeded = len > MAX_CHARS;
-    return { effectiveLength: len, charError: exceeded, isValid: projectBackground.trim().length > 0 && !exceeded };
-  }, [projectBackground, hasExistingContent, applyMode, existingContentLength]);
+  const { charError, isValid } = useMemo(() => {
+    const exceeded = projectBackground.length > MAX_CHARS;
+    return {
+      charError: exceeded,
+      isValid: projectBackground.trim().length > 0 && !exceeded,
+    };
+  }, [projectBackground]);
 
   useEffect(() => {
     onValidationChange?.(isValid);
@@ -53,36 +45,13 @@ const GenerateProjectContextReviewForm = memo(props => {
           slotProps={{ htmlInput: { maxLength: MAX_CHARS } }}
           helperText={
             charError
-              ? `Combined content exceeds ${MAX_CHARS} characters.`
-              : `${effectiveLength}/${MAX_CHARS}`
+              ? `Content exceeds ${MAX_CHARS} characters.`
+              : `${projectBackground.length}/${MAX_CHARS}`
           }
           error={charError}
           sx={styles.textField}
         />
       </Box>
-
-      {hasExistingContent && (
-        <Box sx={styles.field}>
-          <Typography sx={styles.label}>Existing content detected</Typography>
-          <RadioGroup
-            value={applyMode}
-            onChange={e => onApplyModeChange(e.target.value)}
-          >
-            <FormControlLabel
-              value={APPLY_MODE.REPLACE}
-              control={<Radio size="small" />}
-              label="Replace existing content"
-              sx={styles.radio}
-            />
-            <FormControlLabel
-              value={APPLY_MODE.APPEND}
-              control={<Radio size="small" />}
-              label="Append to existing content"
-              sx={styles.radio}
-            />
-          </RadioGroup>
-        </Box>
-      )}
     </Box>
   );
 });
@@ -105,11 +74,6 @@ const reviewFormStyles = () => ({
     fontWeight: 500,
     lineHeight: '1.5rem',
     color: 'text.primary',
-  },
-  radio: {
-    '& .MuiFormControlLabel-label': {
-      fontSize: '0.875rem',
-    },
   },
   textField: ({ palette }) => ({
     '& .MuiOutlinedInput-root': {

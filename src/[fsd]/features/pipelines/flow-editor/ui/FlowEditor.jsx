@@ -29,7 +29,6 @@ import {
   FlowEditorSettings,
   FlowEditorState,
 } from '@/[fsd]/features/pipelines/flow-editor/ui';
-import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
 import { Button, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
@@ -147,7 +146,6 @@ const FlowEditor = forwardRef((props, ref) => {
 
   const {
     showDeleteConfirmDlg,
-    confirmContent,
     nodesToDelete,
     onBeforeDelete,
     handleDeleteNode,
@@ -618,11 +616,7 @@ const FlowEditor = forwardRef((props, ref) => {
         onClose={onCancelDelete}
         onConfirm={onConfirmDelete}
         name={nodesToDelete[0]?.data?.label || nodesToDelete[0]?.id || ''}
-        title="Delete node?"
-        textContent={confirmContent}
-        titleIcon={ModalConstants.MODAL_ICON_TYPE.warning}
-        alarm={false}
-        confirmButtonText="Remove"
+        inlineExtraContent=" node? It can't be restored."
       />
 
       {/* Connection dropdown for incomplete edges */}

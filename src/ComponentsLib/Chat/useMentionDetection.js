@@ -1,5 +1,17 @@
 import { useMemo } from 'react';
 
+// Returns true if the character at `index` in `str` is inside a quoted region (" or ')
+const isInsideQuotes = (str, index) => {
+  let inDouble = false;
+  let inSingle = false;
+  for (let i = 0; i < index; i++) {
+    const ch = str[i];
+    if (ch === '"' && !inSingle) inDouble = !inDouble;
+    else if (ch === "'" && !inDouble) inSingle = !inSingle;
+  }
+  return inDouble || inSingle;
+};
+
 export const useMentionDetection = (text, users = [], nameField = 'name', options = {}) => {
   const { allowPartialMatches = false, caseSensitive = false, minMatchLength = 1 } = options;
 
@@ -18,6 +30,9 @@ export const useMentionDetection = (text, users = [], nameField = 'name', option
 
     while ((atMatch = atSymbolRegex.exec(text)) !== null) {
       const startPos = atMatch.index;
+
+      // Skip @ symbols inside quoted strings — they are literal text, not mentions
+      if (isInsideQuotes(text, startPos)) continue;
       const remainingText = text.slice(startPos + 1);
 
       let bestMatch = null;

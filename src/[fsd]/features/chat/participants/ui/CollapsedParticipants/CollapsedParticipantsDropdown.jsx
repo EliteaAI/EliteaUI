@@ -133,7 +133,10 @@ const CollapsedParticipantsDropdown = memo(props => {
                     : 'center top',
             }}
           >
-            <Paper sx={[styles.paper, sx]}>
+            <Paper
+              sx={[styles.paper, sx]}
+              data-testid="chat-participants-popper"
+            >
               <ClickAwayListener onClickAway={handleClickAway}>
                 <Box
                   ref={scrollRef}

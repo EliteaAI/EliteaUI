@@ -23,7 +23,7 @@ import {
   StepsLimitInput,
 } from '@/[fsd]/widgets/llm-model-selector/ui/settings';
 import { PROMPT_PAYLOAD_KEY } from '@/common/constants';
-import { isNullOrUndefined, parseValueToIntNumber } from '@/common/utils';
+import { parseValueToIntNumber } from '@/common/utils';
 
 const LLMSettings = memo(props => {
   const {
@@ -105,36 +105,6 @@ const LLMSettings = memo(props => {
       setMaxTokens(llmSettings?.max_tokens);
     }
   }, [llmSettings?.max_tokens, maxTokens]);
-
-  const initializeDefaultLLMSettings = useCallback(() => {
-    if (isNullOrUndefined(llmSettings.temperature)) {
-      onChangeLLMSettings(PROMPT_PAYLOAD_KEY.temperature)(DEFAULT_TEMPERATURE);
-    }
-    // Only set default for max_tokens if it's undefined (not set), not if it's DEFAULT_MAX_TOKENS (auto mode)
-    if (llmSettings.max_tokens === undefined) {
-      onChangeLLMSettings(PROMPT_PAYLOAD_KEY.maxTokens)(DEFAULT_MAX_TOKENS);
-    }
-
-    if (model?.supports_reasoning && isNullOrUndefined(llmSettings.reasoning_effort)) {
-      onChangeLLMSettings(PROMPT_PAYLOAD_KEY.reasoningEffort)(DEFAULT_REASONING_EFFORT);
-    }
-
-    if (showStepsLimit && isNullOrUndefined(llmSettings.steps_limit)) {
-      onChangeLLMSettings(PROMPT_PAYLOAD_KEY.stepsLimit)(DEFAULT_STEPS_LIMIT);
-    }
-  }, [
-    llmSettings.temperature,
-    llmSettings.max_tokens,
-    llmSettings.reasoning_effort,
-    llmSettings.steps_limit,
-    model?.supports_reasoning,
-    showStepsLimit,
-    onChangeLLMSettings,
-  ]);
-
-  useEffect(() => {
-    initializeDefaultLLMSettings();
-  }, [initializeDefaultLLMSettings]);
 
   const { maxTokensError, maxTokensHelperText } = useMemo(() => {
     const maxTokensValidation = validateMaxTokens(maxTokens, model);

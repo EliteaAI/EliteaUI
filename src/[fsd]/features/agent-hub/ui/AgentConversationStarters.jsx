@@ -21,7 +21,7 @@ const AgentConversationStarters = memo(props => {
         variant="subtitle"
         sx={styles.header}
       >
-        CONVERSATION STARTERS
+        CHAT STARTERS
       </Typography>
       {filteredStarters.length > 0 ? (
         <Box sx={styles.startersGrid(filteredStarters.length === 1)}>
@@ -38,7 +38,7 @@ const AgentConversationStarters = memo(props => {
           variant="bodySmall"
           sx={styles.emptyText}
         >
-          No predefined conversation starters – just type your request to begin.
+          No predefined chat starters – just type your request to begin.
         </Typography>
       )}
     </Box>

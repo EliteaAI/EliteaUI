@@ -20,7 +20,7 @@ import {
   createToolkitConversationWithParticipant,
   findToolkitParticipant,
 } from '@/[fsd]/features/toolkits/lib/helpers/toolkitConversation.helpers';
-import { generateLLMSettings } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
+import { generateLLMSettings, resetLLMSettingsForModel } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
 import {
   useAddParticipantIntoConversationMutation,
   useConversationCreateMutation,
@@ -48,12 +48,14 @@ export const useToolkitChat = props => {
     isValidForm,
     toolInputVariables,
     index,
+    indexConfigOverride,
     traceNewIndex,
     refetchIndexesList,
     cancelIndexingCallback,
     values,
     modes,
     onMcpAuthRequired,
+    initialConversation,
   } = props;
 
   // Keep callback ref updated
@@ -99,20 +101,25 @@ export const useToolkitChat = props => {
   const shouldRecoverHistory = useMemo(
     () =>
       !isCreateIndexMode &&
+      !initialConversation &&
       index?.metadata?.state === IndexStatuses.progress &&
       index?.metadata?.conversation_id,
-    [isCreateIndexMode, index?.metadata],
+    [isCreateIndexMode, initialConversation, index?.metadata],
   );
 
-  const { conversationDetails, needGenerateProgressingIndexHistory, setProgressingIndexHistoryRecovered } =
-    useIndexHistory({
-      shouldRecover: shouldRecoverHistory,
-      conversationId: index?.metadata?.conversation_id,
-    });
+  const {
+    conversationDetails,
+    traceSteps,
+    needGenerateProgressingIndexHistory,
+    setProgressingIndexHistoryRecovered,
+  } = useIndexHistory({
+    shouldRecover: shouldRecoverHistory,
+    conversationId: index?.metadata?.conversation_id,
+  });
 
   useEffect(() => {
     if (needGenerateProgressingIndexHistory) {
-      const currentConversationMessages = convertConversationToChatHistory(conversationDetails);
+      const currentConversationMessages = convertConversationToChatHistory(conversationDetails, traceSteps);
       const prettifiedMessages = ToolkitsHelpers.prettifyToolkitConversation(currentConversationMessages);
 
       setChatHistory(prettifiedMessages);
@@ -122,6 +129,7 @@ export const useToolkitChat = props => {
   }, [
     shouldRecoverHistory,
     conversationDetails,
+    traceSteps,
     needGenerateProgressingIndexHistory,
     setProgressingIndexHistoryRecovered,
   ]);
@@ -137,7 +145,9 @@ export const useToolkitChat = props => {
 
   const onSelectModel = useCallback(model => {
     setSelectedModel(model);
-    setLLmSettings(generateLLMSettings(model));
+    // Realign only the family pair (temperature/reasoning_effort) — preserve max_tokens and other
+    // user-tuned settings (issue #5859).
+    setLLmSettings(prev => ({ ...prev, ...resetLLMSettingsForModel(model) }));
   }, []);
 
   const onRunFinish = useCallback(
@@ -186,6 +196,8 @@ export const useToolkitChat = props => {
 
       // Handle MCP authorization required message
       if (message.type === SocketMessageType.McpAuthorizationRequired) {
+        // Reset running state so the retry triggered by onSuccess can proceed
+        setIsRunning(false);
         if (onMcpAuthRequiredRef.current) {
           onMcpAuthRequiredRef.current(message);
         }
@@ -212,18 +224,35 @@ export const useToolkitChat = props => {
     modelsFetchSuccess && selectedModel === null && setSelectedModel(defaultModel);
   }, [modelsFetchSuccess, defaultModel, selectedModel]);
 
+  // llmSettings is seeded before the model resolves (generateLLMSettings(null) → temperature-only).
+  // Realign the family pair once the model is known so a reasoning model never shows/persists a
+  // stale temperature (issue #5859).
   useEffect(() => {
-    if (!conversationDetails?.id || !conversationDetails?.uuid) return;
+    if (!selectedModel) return;
+    setLLmSettings(prev => ({ ...prev, ...resetLLMSettingsForModel(selectedModel) }));
+  }, [selectedModel]);
+
+  useEffect(() => {
+    const conv = conversationDetails ?? initialConversation;
+    if (!conv?.id || !conv?.uuid) return;
 
     const payload = {
-      conversation_id: conversationDetails.id,
-      conversation_uuid: conversationDetails.uuid,
+      conversation_id: conv.id,
+      conversation_uuid: conv.uuid,
       project_id: projectId,
     };
 
     if (isIndexing || isRunning) emitEnterRoom(payload);
     else emitLeaveRoom(payload);
-  }, [conversationDetails, emitEnterRoom, emitLeaveRoom, isIndexing, isRunning, projectId]);
+  }, [
+    conversationDetails,
+    initialConversation,
+    emitEnterRoom,
+    emitLeaveRoom,
+    isIndexing,
+    isRunning,
+    projectId,
+  ]);
 
   const createToolkitConversation = useCallback(
     async ({ indexName, configuration, tool }) => {
@@ -273,6 +302,7 @@ export const useToolkitChat = props => {
           if (traceNewIndex)
             traceNewIndex(index?.id ?? null, {
               conversation_id: currentConversation.id,
+              conversation_uuid: currentConversation.uuid,
             });
         }
 
@@ -347,7 +377,15 @@ export const useToolkitChat = props => {
       let relevantInputVariables = toolInputVariables;
 
       if (!isCreateIndexMode && indexing && index)
-        relevantInputVariables = index.metadata.index_configuration || {};
+        relevantInputVariables = {
+          ...(index.metadata.index_configuration || {}),
+          ...(indexConfigOverride || {}),
+        };
+      else if (!indexing && index?.metadata?.collection)
+        relevantInputVariables = {
+          index_name: index.metadata.collection,
+          ...toolInputVariables,
+        };
 
       if (canProceed) {
         setIsRunning(true);
@@ -363,7 +401,16 @@ export const useToolkitChat = props => {
         executeRunTool({ relevantInputVariables, indexing, tool });
       }
     },
-    [isCreateIndexMode, isValidForm, isRunning, toolInputVariables, index, traceNewIndex, executeRunTool],
+    [
+      isCreateIndexMode,
+      isValidForm,
+      isRunning,
+      toolInputVariables,
+      index,
+      indexConfigOverride,
+      traceNewIndex,
+      executeRunTool,
+    ],
   );
 
   const onCancelIndexing = useCallback(async () => {

@@ -4,7 +4,8 @@ import { useFormikContext } from 'formik';
 
 import { Box } from '@mui/material';
 
-import { DEFAULT_MAX_TOKENS, DEFAULT_TEMPERATURE } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
+import { DEFAULT_MAX_TOKENS } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
+import { resetLLMSettingsForModel } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
 import { LLMModelSelector } from '@/[fsd]/widgets/llm-model-selector';
 import { useListModelsQuery } from '@/api/configurations';
 import { PROMPT_PAYLOAD_KEY } from '@/common/constants';
@@ -70,9 +71,9 @@ const LLMModelSelectorWrapper = ({
         model_name: model?.name,
         model_project_id: model?.project_id,
         [PROMPT_PAYLOAD_KEY.maxTokens]: DEFAULT_MAX_TOKENS,
-        temperature: DEFAULT_TEMPERATURE,
-        // Only set reasoning_effort if the model supports it
-        ...(model?.supports_reasoning && { reasoning_effort: 'medium' }),
+        // Explicitly resets both temperature and reasoning_effort for the new model's family —
+        // never leaves a stale value from the previously selected model (issue #5821).
+        ...resetLLMSettingsForModel(model),
       };
       setFieldValue('version_details.llm_settings', newSettings);
       onLLMSettingsChange?.(pev => ({ ...pev, ...newSettings }));

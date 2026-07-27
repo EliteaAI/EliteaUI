@@ -37,6 +37,7 @@ const SkillImportModal = memo(props => {
     <Modal.BaseModal
       open={open}
       title="Import parameters"
+      data-testid="skill-import-preview-dialog"
       onClose={onClose}
       content={
         <Box sx={styles.container}>
@@ -63,6 +64,8 @@ const SkillImportModal = memo(props => {
             icon={<SkillIcon />}
             title={skill.name}
             subtitle={`Type: Skill | Version: ${LATEST_VERSION_NAME}`}
+            titleTestId="skill-import-preview-name"
+            subtitleTestId="skill-import-preview-type-version"
           >
             {setFullscreenData => (
               <>
@@ -72,6 +75,7 @@ const SkillImportModal = memo(props => {
                   lineClamp={3}
                   setFullscreenData={setFullscreenData}
                   height="4rem"
+                  testId="skill-import-preview-description"
                 />
                 <IWModalEntityTextField
                   title="Instructions"
@@ -80,6 +84,7 @@ const SkillImportModal = memo(props => {
                   setFullscreenData={setFullscreenData}
                   height="9rem"
                   type="markdown"
+                  testId="skill-import-preview-instructions"
                 />
               </>
             )}

@@ -19,7 +19,11 @@ import { MentionSkillList } from '@/[fsd]/features/skill/ui';
 import { MentionConstants } from '@/[fsd]/shared/lib/constants';
 import { DEFAULT_STEPS_LIMIT } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
 import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
-import { cleanLLMSettings, generateLLMSettings } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
+import {
+  cleanLLMSettings,
+  generateLLMSettings,
+  resetLLMSettingsForModel,
+} from '@/[fsd]/shared/lib/utils/llmSettings.utils';
 import { useConversationEditMutation, useUpdateParticipantLlmSettingsMutation } from '@/api';
 import { useListModelsQuery } from '@/api/configurations.js';
 import WelcomeImage from '@/assets/chat-welcome.png';
@@ -149,6 +153,14 @@ const NewConversationView = forwardRef(
       setSelectedModel(defaultModel);
       setPrevSelectedModel(defaultModel);
     }, [defaultModel]);
+
+    // llmSettings is seeded before any model is known (generateLLMSettings(null) → temperature-only).
+    // Realign temperature/reasoning_effort to the resolved model's family so a reasoning model never
+    // carries a stale temperature (issue #5859).
+    useEffect(() => {
+      if (!selectedModel) return;
+      setLlmSettings(prev => ({ ...prev, ...resetLLMSettingsForModel(selectedModel) }));
+    }, [selectedModel]);
 
     useEffect(() => {
       dispatch(actions.setCurrentChatModel(selectedModel));
@@ -622,7 +634,12 @@ const NewConversationView = forwardRef(
         const keptSelectedAgentStarter = selectedAgentStarter;
         setTimeout(() => {
           convertParticipantAndAddIt({
-            participant: { ...keptSelectedAgent, project_id: PUBLIC_PROJECT_ID },
+            // Agents can arrive from the public catalog OR from the current
+            // project (e.g. attach-and-test); honor the dispatched project.
+            participant: {
+              ...keptSelectedAgent,
+              project_id: keptSelectedAgent.project_id ?? PUBLIC_PROJECT_ID,
+            },
             details: keptSelectedAgent,
           });
           if (keptSelectedAgentStarter) {

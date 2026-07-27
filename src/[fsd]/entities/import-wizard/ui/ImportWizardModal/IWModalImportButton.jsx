@@ -139,6 +139,7 @@ const IWModalImportButton = memo(props => {
           disabled={isDisabled || isLoading}
           variant="elitea"
           onClick={handleClickOnImport}
+          data-testid="agent-import-confirm-button"
         >
           Import
           {isLoading && <StyledCircleProgress size={18} />}
