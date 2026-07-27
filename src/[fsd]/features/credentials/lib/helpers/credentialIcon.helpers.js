@@ -19,8 +19,10 @@ const getCredentialIcon = (integrationType, theme, toolkitSchemas, configuration
   return getToolIconByType(
     mappedToolType,
     theme,
-    configurationsAsSchema.find(config => config.type === integrationType)?.config_schema?.properties.data ||
-      toolkitSchemas[mappedToolType],
+    {
+      toolSchema: configurationsAsSchema.find(config => config.type === integrationType)?.config_schema?.properties.data ||
+        toolkitSchemas[mappedToolType],
+    },
   );
 };
 

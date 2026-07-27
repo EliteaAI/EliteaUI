@@ -115,11 +115,12 @@ const generateColorMatrix = color => {
   return `0 0 0 0 ${r}
           0 0 0 0 ${g}
           0 0 0 0 ${b}
-          0 0 0 1 0`;
+          0 0 0 3 0`;
 };
 
 const EliteASvgIcon = ({ iconUrl, isToolIcon, fallbackIcon, ...iconProps }) => {
   const theme = useTheme();
+
   const [iconError, setIconError] = useState(false);
   const matrix = generateColorMatrix(theme.palette.icon.fill.default);
 
@@ -141,10 +142,7 @@ const EliteASvgIcon = ({ iconUrl, isToolIcon, fallbackIcon, ...iconProps }) => {
     return fallbackIcon || <BuildIcon {...iconProps} />;
   } else {
     return (
-      <SvgIcon
-        {...iconProps}
-        style={{ color: 'red' }}
-      >
+      <SvgIcon {...iconProps}>
         <defs>
           <filter
             id="customColor1"
