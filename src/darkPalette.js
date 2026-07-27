@@ -266,8 +266,8 @@ const darkPalette = {
         shadowDefault: 'none',
         shadowHover: 'none',
         shadowActive: '0px 0px 12px 0px #66D1FF1A inset',
-        textGradient: 'linear-gradient(90deg, #58CDEA 0.7%, #AF64FF 101.06%)',
-        iconGradient: 'linear-gradient(33.96deg, #58CDEA 0%, #AF64FF 96.65%)',
+        textGradient: 'linear-gradient(90deg, #58CDEA 0.7%, #AF64FF 25%)',
+        iconGradient: 'linear-gradient(33.96deg, #58CDEA 0%, #AF64FF 80%)',
       },
       iconLabelButton: {
         default: 'transparent',
