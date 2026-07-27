@@ -79,13 +79,13 @@ const RunIndexGeneralSection = memo(props => {
           <StatItem
             icon={FileIcon}
             label="Files indexed"
-            value={index?.metadata?.total ?? index?.metadata?.indexed}
+            value={reindexStats.firstIndexed ?? index?.metadata?.indexed ?? index?.metadata?.total}
             styles={styles}
           />
           <StatItem
             icon={UnavailableIcon}
             label="Files skipped"
-            value={reindexStats.skipped > 0 ? reindexStats.skipped : 0}
+            value={reindexStats.firstSkipped > 0 ? reindexStats.firstSkipped : 0}
             styles={styles}
           />
         </Box>

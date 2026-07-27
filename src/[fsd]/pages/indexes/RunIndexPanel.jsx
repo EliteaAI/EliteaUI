@@ -274,26 +274,39 @@ const RunIndexPanel = memo(props => {
     const md = index?.metadata;
     if (!md) return { isReindex: false, updatedOn: null, updated: null, skipped: 0 };
 
-    const completedRuns = Array.isArray(md.history)
-      ? md.history.filter(h => h?.state === 'completed').length
-      : 0;
-    const isReindex = completedRuns > 1;
-    const sortedHistory = Array.isArray(md.history)
-      ? [...md.history].sort((a, b) => (a?.created_on ?? 0) - (b?.created_on ?? 0))
+    const completedRuns = Array.isArray(md.history) ? md.history.filter(h => h?.state === 'completed') : [];
+    const isReindex = completedRuns.length > 1;
+    const sortedHistory = Array.isArray(completedRuns)
+      ? completedRuns.sort((a, b) => (a?.created_on ?? 0) - (b?.created_on ?? 0))
       : [];
     let skipped = 0;
     try {
-      const parsed = typeof md.skipped === 'string' ? JSON.parse(md.skipped) : md.skipped;
+      const parsed =
+        typeof sortedHistory[sortedHistory.length - 1]?.skipped === 'string'
+          ? JSON.parse(sortedHistory[sortedHistory.length - 1]?.skipped)
+          : sortedHistory[sortedHistory.length - 1]?.skipped;
       skipped = Number(parsed?.total_skipped ?? 0) || 0;
     } catch {
       skipped = 0;
     }
+    let firstSkipped = 0;
+    try {
+      const parsedFirstSkipped =
+        typeof sortedHistory[0]?.skipped === 'string'
+          ? JSON.parse(sortedHistory[0]?.skipped)
+          : sortedHistory[0]?.skipped;
+      firstSkipped = Number(parsedFirstSkipped?.total_skipped ?? 0) || 0;
+    } catch {
+      firstSkipped = 0;
+    }
 
     return {
       isReindex,
-      createdOn: sortedHistory.length > 0 ? (sortedHistory[0]?.created_on ?? null) : null,
+      createdOn: sortedHistory[0]?.created_on ?? null,
+      firstIndexed: sortedHistory[0]?.indexed ?? null,
+      firstSkipped,
       updatedOn: md.updated_on ?? null,
-      updated: md.updated ?? null,
+      updated: sortedHistory[sortedHistory.length - 1]?.indexed ?? null,
       skipped,
     };
   }, [index?.metadata]);
