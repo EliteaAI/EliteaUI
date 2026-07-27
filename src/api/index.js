@@ -18,6 +18,7 @@ export * from './secrets';
 export * from '@/[fsd]/features/skill/api';
 export * from '@/[fsd]/features/skill-hub/api';
 export * from './social';
+export * from '@/[fsd]/widgets/nps-survey/api';
 export * from './tags';
 export * from './toolkits';
 export * from './trendingAuthor';
