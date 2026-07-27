@@ -184,6 +184,8 @@ export const SocketMessageType = {
   PipelineFinish: 'pipeline_finish',
   AgentThinkingStep: 'agent_thinking_step',
   AgentThinkingStepUpdate: 'agent_thinking_step_update',
+  AgentIndexDataStatus: 'agent_index_data_status',
+  AgentIndexDataRemoved: 'agent_index_data_removed',
   ChatPredictSummaryStarted: 'chat_predict_summary_started',
   ChatPredictSummaryFinished: 'chat_predict_summary_finished',
   // Swarm mode events - for multi-agent collaboration visibility

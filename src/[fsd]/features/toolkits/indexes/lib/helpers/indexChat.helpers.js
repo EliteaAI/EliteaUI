@@ -240,6 +240,8 @@ export const generateChatMessageBasedOnResponse = ({
 
     case SocketMessageType.AgentThinkingStepUpdate:
     case SocketMessageType.AgentThinkingStep:
+    case SocketMessageType.AgentIndexDataStatus:
+    case SocketMessageType.AgentIndexDataRemoved:
     case SocketMessageType.AgentResponse:
     case SocketMessageType.Chunk:
     case SocketMessageType.AIMessageChunk: {
