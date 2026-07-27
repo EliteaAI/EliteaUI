@@ -145,9 +145,6 @@ const RunIndexPanel = memo(props => {
   );
   // const canRunTools = selectedSearchTool && RUNNABLE_INDEX_STATUSES.includes(effectiveState);
 
-  const showSearchResults = (isRunning && Boolean(selectedSearchTool)) || hasSearchResults;
-  const showIndexingResults = (isRunning && !selectedSearchTool) || effectiveIsIndexing;
-
   const schedulingTooltipMessage = useMemo(() => {
     if (effectiveState === IndexStatuses.cancelled || effectiveState === IndexStatuses.fail)
       return 'Scheduling is unavailable while the index is in a stopped/error state';
@@ -266,7 +263,6 @@ const RunIndexPanel = memo(props => {
   }, [configSchema, configuredValues]);
 
   const runFormFields = useMemo(() => Object.keys(adjustedRunSchema?.properties || {}), [adjustedRunSchema]);
-
   const reindexStats = useMemo(() => {
     const md = index?.metadata;
     if (!md) return { isReindex: false, updatedOn: null, updated: null, skipped: 0 };
@@ -275,7 +271,9 @@ const RunIndexPanel = memo(props => {
       ? md.history.filter(h => h?.state === 'completed').length
       : 0;
     const isReindex = completedRuns > 1;
-
+    const sortedHistory = Array.isArray(md.history)
+      ? [...md.history].sort((a, b) => (a?.created_on ?? 0) - (b?.created_on ?? 0))
+      : [];
     let skipped = 0;
     try {
       const parsed = typeof md.skipped === 'string' ? JSON.parse(md.skipped) : md.skipped;
@@ -286,6 +284,7 @@ const RunIndexPanel = memo(props => {
 
     return {
       isReindex,
+      createdOn: sortedHistory.length > 0 ? (sortedHistory[0]?.created_on ?? null) : null,
       updatedOn: md.updated_on ?? null,
       updated: md.updated ?? null,
       skipped,
@@ -352,6 +351,12 @@ const RunIndexPanel = memo(props => {
   const questionItemRef = useRef();
 
   const historyDisabled = !index?.metadata?.history?.length || effectiveIsIndexing;
+
+  const showSearchResults = (isRunning && Boolean(selectedSearchTool)) || hasSearchResults;
+  const showIndexingResults =
+    (isRunning && !selectedSearchTool) ||
+    effectiveIsIndexing ||
+    (banner.severity !== BannerSeverity.success && chatConversation?.chat_history?.length > 0);
 
   const goToHistory = useCallback(() => {
     const target = RouteDefinitions.ToolkitIndexHistory.replace(':tab', tab ?? 'all')

@@ -73,7 +73,7 @@ const RunIndexGeneralSection = memo(props => {
           <StatItem
             icon={ClockIcon}
             label="Created"
-            value={formatDate(index?.metadata?.created_on)}
+            value={formatDate(reindexStats.createdOn ?? index?.metadata?.created_on)}
             styles={styles}
           />
           <StatItem
