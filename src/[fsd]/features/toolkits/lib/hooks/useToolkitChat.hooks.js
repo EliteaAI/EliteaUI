@@ -301,8 +301,8 @@ export const useToolkitChat = props => {
           generateChatMessageBasedOnResponse({
             message,
             chatHistory: previous,
-            onFinish: state => onRunFinishRef.current(state),
             onStartTask: startedTaskId => onStartTaskRef.current(startedTaskId),
+            allowTerminalSideEffects: false,
           }),
         );
       };
@@ -310,15 +310,8 @@ export const useToolkitChat = props => {
       source.addEventListener(INDEX_EXECUTION_NODE_EVENT, handleNodeEvent);
       source.addEventListener(INDEX_EXECUTION_COMPLETED_EVENT, handleTerminalEvent);
       source.addEventListener(INDEX_EXECUTION_FAILED_EVENT, handleTerminalEvent);
-      source.onerror = () => {
-        // EventSource reconnects automatically and carries Last-Event-ID. Only a permanently
-        // closed stream is terminal here; transient disconnects keep the running state intact.
-        if (source.readyState === EventSource.CLOSED)
-          settle({
-            state: IndexStatuses.fail,
-            content: '❌ The indexing event stream closed before a terminal result was received.',
-          });
-      };
+      // Native EventSource reconnection carries Last-Event-ID. Preserve the pending execution
+      // across connection errors; only a durable named event may settle the run.
     },
     [closeIndexEventStream, projectId],
   );

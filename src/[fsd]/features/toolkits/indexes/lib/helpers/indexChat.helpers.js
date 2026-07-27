@@ -133,7 +133,13 @@ const findOrCreateStreamingMessage = (history, message_id, task_id) => {
   return idx;
 };
 
-export const generateChatMessageBasedOnResponse = ({ message, chatHistory, onFinish, onStartTask }) => {
+export const generateChatMessageBasedOnResponse = ({
+  message,
+  chatHistory,
+  onFinish,
+  onStartTask,
+  allowTerminalSideEffects = true,
+}) => {
   const { message_id, type: socketMessageType, response_metadata } = message;
   const { task_id } = message.content instanceof Object ? message.content : {};
 
@@ -249,8 +255,10 @@ export const generateChatMessageBasedOnResponse = ({ message, chatHistory, onFin
 
         if (response_metadata?.finish_reason) {
           msg.isStreaming = false;
-          onFinish(IndexStatuses.success);
-          notifyTaskComplete();
+          if (allowTerminalSideEffects) {
+            onFinish(IndexStatuses.success);
+            notifyTaskComplete();
+          }
 
           // Enrich final message with execution time and status
           // NOTE: This formatting is specific to toolkit testing page only
@@ -293,8 +301,10 @@ export const generateChatMessageBasedOnResponse = ({ message, chatHistory, onFin
         msg.isLoading = false;
         msg.isStreaming = false;
 
-        onFinish(IndexStatuses.fail);
-        notifyTaskError();
+        if (allowTerminalSideEffects) {
+          onFinish(IndexStatuses.fail);
+          notifyTaskError();
+        }
       }
       return updatedHistory;
     }
@@ -302,7 +312,7 @@ export const generateChatMessageBasedOnResponse = ({ message, chatHistory, onFin
     case SocketMessageType.Error:
     case SocketMessageType.AgentException: {
       // Handle general errors
-      notifyTaskError();
+      if (allowTerminalSideEffects) notifyTaskError();
       const finalMsgIndex = updatedHistory.findIndex(msg => msg.id === message_id);
 
       if (finalMsgIndex >= 0) {
@@ -311,7 +321,7 @@ export const generateChatMessageBasedOnResponse = ({ message, chatHistory, onFin
         msg.isStreaming = false;
         msg.exception = message.content;
 
-        onFinish(IndexStatuses.fail);
+        if (allowTerminalSideEffects) onFinish(IndexStatuses.fail);
       } else {
         // Add new error message if no existing message found
         const errorMessage = generateMockMessageTemplate(
