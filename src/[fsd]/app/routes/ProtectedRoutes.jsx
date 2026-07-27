@@ -30,6 +30,7 @@ import { actions as chatActions } from '@/slices/chat';
 const AnalyticsContainer = ChunkHelpers.lazyWithRetry(
   () => import('@/[fsd]/features/analytics/ui/AnalyticsContainer'),
 );
+const UsageContainer = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/features/usage/ui/UsageContainer'));
 const AppDetail = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/apps/AppDetail'));
 const Apps = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/apps/Apps'));
 const McpAuthPage = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/mcp/index.jsx'));
@@ -359,6 +360,10 @@ const ProtectedRoutes = () => {
             <Route
               path="analytics"
               element={<AnalyticsContainer />}
+            />
+            <Route
+              path="usage"
+              element={<UsageContainer />}
             />
             <Route
               path="preferences"
