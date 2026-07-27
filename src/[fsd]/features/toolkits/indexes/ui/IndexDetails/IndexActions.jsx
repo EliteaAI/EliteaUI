@@ -43,6 +43,7 @@ const IndexActions = memo(props => {
     selectedIndexTools,
     onCancelIndexing,
     isStoppingIndexing,
+    canStopIndexing,
     editToolDetail,
   } = props;
   const styles = indexActionsStyles();
@@ -56,7 +57,7 @@ const IndexActions = memo(props => {
   const selectedHistoryItem = useSelector(selectHistoryItem);
 
   const indexName = index?.metadata?.collection ?? null;
-  const indexCouldBeStopped = Boolean(index?.metadata?.task_id);
+  const indexCouldBeStopped = Boolean(canStopIndexing);
   const progressInvalidIndex = index?.stale && index?.metadata?.state === IndexStatuses.progress;
 
   const [updateIndexSchedule] = useUpdateIndexScheduleMutation();
@@ -181,6 +182,7 @@ const IndexActions = memo(props => {
         title="Stop"
         alertContent="Are you sure to stop the indexing process?"
         onDiscard={onCancelIndexing}
+        disabled={!canStopIndexing}
         executing={isStoppingIndexing}
         color="alarm"
       />

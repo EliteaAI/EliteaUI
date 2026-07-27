@@ -17,13 +17,18 @@ const IconMap = {
 
 const RunIndexBanner = memo(props => {
   const {
-    banner: { severity, label } = {},
+    banner: {
+      severity,
+      label,
+      message = 'Some description of status, important details or instructions.',
+    } = {},
     isIndexing,
     isStoppingIndexing,
-    message = 'Some description of status, important details or instructions.',
+    canStopIndexing = true,
     onStop,
+    showBottomBorder = true,
   } = props;
-  const styles = useMemo(() => getStyles(severity), [severity]);
+  const styles = useMemo(() => getStyles(severity, showBottomBorder), [severity, showBottomBorder]);
   const Icon = IconMap[severity];
   return (
     <Box sx={styles.root}>
@@ -51,9 +56,9 @@ const RunIndexBanner = memo(props => {
         <Button.BaseBtn
           variant={Button.BUTTON_VARIANTS.alarm}
           onClick={onStop}
-          disabled={isStoppingIndexing}
+          disabled={isStoppingIndexing || !canStopIndexing}
         >
-          {!isStoppingIndexing ? 'Stop' : 'Stopping...'}
+          {isStoppingIndexing ? 'Stopping...' : canStopIndexing ? 'Stop' : 'Starting...'}
         </Button.BaseBtn>
       )}
     </Box>
@@ -63,13 +68,13 @@ const RunIndexBanner = memo(props => {
 RunIndexBanner.displayName = 'RunIndexBanner';
 
 /** @type {MuiSx} */
-const getStyles = severity => ({
+const getStyles = (severity, showBottomBorder) => ({
   root: {
     display: 'flex',
     gap: '1rem',
     alignItems: 'center',
     padding: '1rem 1.5rem',
-    borderBottom: ({ palette }) => `0.0625rem solid ${palette.border.table}`,
+    borderBottom: showBottomBorder ? ({ palette }) => `0.0625rem solid ${palette.border.table}` : 'none',
   },
   contentContainer: {
     display: 'flex',

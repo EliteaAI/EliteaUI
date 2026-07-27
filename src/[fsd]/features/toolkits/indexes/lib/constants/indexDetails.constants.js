@@ -44,6 +44,15 @@ export const BannerTitleMap = {
   [BannerSeverity.info]: 'Indexing in progress…',
 };
 
+export const BannerMessageMap = {
+  [BannerSeverity.success]: 'The index is ready for use.',
+  [BannerSeverity.warning]:
+    'Indexing was stopped before completion. Click Reindex to restart indexing, or check History for the reason it stopped.',
+  [BannerSeverity.error]:
+    'An error occurred during the indexing process. Click Reindex to restart indexing, or check History for the reason it failed.',
+  [BannerSeverity.info]: 'The indexing process is currently running. You can stop it if needed.',
+};
+
 // Statuses that allow the index to be searched and run tools against
 export const RUNNABLE_INDEX_STATUSES = [IndexStatuses.success, IndexStatuses.partlyOk];
 

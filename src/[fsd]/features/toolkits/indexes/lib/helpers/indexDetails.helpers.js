@@ -1,4 +1,5 @@
 import {
+  BannerMessageMap,
   BannerSeverity,
   BannerTitleMap,
   IndexStatuses,
@@ -19,14 +20,39 @@ export const formatDate = ts => {
 };
 
 export const bannerVariant = (isIndexing, state) => {
-  if (isIndexing) return { severity: BannerSeverity.info, label: BannerTitleMap[BannerSeverity.info] };
+  if (isIndexing)
+    return {
+      severity: BannerSeverity.info,
+      label: BannerTitleMap[BannerSeverity.info],
+      message: BannerMessageMap[BannerSeverity.info],
+    };
   if (state === IndexStatuses.progress)
-    return { severity: BannerSeverity.info, label: BannerTitleMap[BannerSeverity.info] };
+    return {
+      severity: BannerSeverity.info,
+      label: BannerTitleMap[BannerSeverity.info],
+      message: BannerMessageMap[BannerSeverity.info],
+    };
   if (state === IndexStatuses.fail)
-    return { severity: BannerSeverity.error, label: BannerTitleMap[BannerSeverity.error] };
+    return {
+      severity: BannerSeverity.error,
+      label: BannerTitleMap[BannerSeverity.error],
+      message: BannerMessageMap[BannerSeverity.error],
+    };
   if (state === IndexStatuses.cancelled)
-    return { severity: BannerSeverity.warning, label: BannerTitleMap[BannerSeverity.warning] };
+    return {
+      severity: BannerSeverity.warning,
+      label: BannerTitleMap[BannerSeverity.warning],
+      message: BannerMessageMap[BannerSeverity.warning],
+    };
   if (RUNNABLE_INDEX_STATUSES.includes(state))
-    return { severity: BannerSeverity.success, label: BannerTitleMap[BannerSeverity.success] };
-  return { severity: BannerSeverity.info, label: BannerTitleMap[BannerSeverity.info] };
+    return {
+      severity: BannerSeverity.success,
+      label: BannerTitleMap[BannerSeverity.success],
+      message: BannerMessageMap[BannerSeverity.success],
+    };
+  return {
+    severity: BannerSeverity.info,
+    label: BannerTitleMap[BannerSeverity.info],
+    message: BannerMessageMap[BannerSeverity.info],
+  };
 };

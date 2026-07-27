@@ -207,6 +207,7 @@ const IndexDetails = memo(props => {
     isIndexing,
     isRunning,
     isStoppingIndexing,
+    canStopIndexing,
     isFullScreenChat,
     handleClearChat,
     handleIndexData,
@@ -336,6 +337,7 @@ const IndexDetails = memo(props => {
           selectedIndexTools={selectedIndexTools}
           onCancelIndexing={onCancelIndexing}
           isStoppingIndexing={isStoppingIndexing}
+          canStopIndexing={canStopIndexing}
           editToolDetail={editToolDetail}
         />
       </Box>

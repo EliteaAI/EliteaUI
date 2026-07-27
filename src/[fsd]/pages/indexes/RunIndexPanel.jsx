@@ -30,7 +30,7 @@ import { useGetCurrentToolkitSchemas, useToolkitChat } from '@/[fsd]/features/to
 import { Button, Modal } from '@/[fsd]/shared/ui';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
 import ClockIcon from '@/assets/clock.svg?react';
-import { PERMISSIONS } from '@/common/constants';
+import { PERMISSIONS, WELCOME_MESSAGE_ID } from '@/common/constants';
 import { convertToolkitSchema } from '@/common/toolkitSchemaUtils';
 import { useGetSelectedToolSchema } from '@/hooks/toolkit/useGetSelectedToolSchema';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -101,12 +101,19 @@ const RunIndexPanel = memo(props => {
     isIndexing,
     isRunning,
     isStoppingIndexing,
+    canStopIndexing,
     handleClearChat,
     handleClearActiveConversation,
     handleIndexData,
     handleRunTool,
     onCancelIndexing,
   } = useToolkitChat({
+    cancelIndexingCallback: () => {
+      traceNewIndex(index?.id ?? null, {
+        state: IndexStatuses.cancelled,
+        task_id: null,
+      });
+    },
     index,
     indexConfigOverride: configInputVariables,
     isValidForm: isRunFormValid,
@@ -346,8 +353,10 @@ const RunIndexPanel = memo(props => {
       defaultExpanded: false,
     },
   ];
-
-  const chatConversation = useMemo(() => getMockToolkitIndexConversation(chatHistory), [chatHistory]);
+  const chatConversation = useMemo(
+    () => getMockToolkitIndexConversation(chatHistory?.filter(msg => msg.id !== WELCOME_MESSAGE_ID)),
+    [chatHistory],
+  );
   const questionItemRef = useRef();
 
   const historyDisabled = !index?.metadata?.history?.length || effectiveIsIndexing;
@@ -431,6 +440,7 @@ const RunIndexPanel = memo(props => {
             banner={banner}
             isIndexing={effectiveIsIndexing}
             isStoppingIndexing={isStoppingIndexing}
+            canStopIndexing={canStopIndexing}
             onStop={onCancelIndexing}
             chatHistory={chatHistory}
             chatConversation={chatConversation}

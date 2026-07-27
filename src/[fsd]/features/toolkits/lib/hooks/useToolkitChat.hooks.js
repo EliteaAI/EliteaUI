@@ -96,7 +96,13 @@ export const useToolkitChat = props => {
 
   // Action state
   const [isRunning, setIsRunning] = useState(false);
+  const [activeTaskId, setActiveTaskId] = useState(index?.metadata?.task_id ?? null);
+  const [isWaitingForTaskStart, setIsWaitingForTaskStart] = useState(false);
   const isIndexing = useMemo(() => index?.metadata?.state === IndexStatuses.progress, [index]);
+  const canStopIndexing = useMemo(
+    () => Boolean(activeTaskId) && !isWaitingForTaskStart,
+    [activeTaskId, isWaitingForTaskStart],
+  );
 
   const shouldRecoverHistory = useMemo(
     () =>
@@ -154,6 +160,10 @@ export const useToolkitChat = props => {
     state => {
       if (isTestToolsMode) return setIsRunning(false);
 
+      if (runningToolRef.current === IndexesToolsEnum.indexData) {
+        setIsWaitingForTaskStart(false);
+      }
+
       setTimeout(() => {
         if (runningToolRef.current && runningToolRef.current !== IndexesToolsEnum.indexData) return;
 
@@ -173,6 +183,12 @@ export const useToolkitChat = props => {
   const onStartTask = useCallback(
     taskId => {
       if (isTestToolsMode) return;
+
+      if (taskId) setActiveTaskId(taskId);
+
+      if (runningToolRef.current === IndexesToolsEnum.indexData) {
+        setIsWaitingForTaskStart(false);
+      }
 
       traceNewIndex(index?.id ?? null, {
         task_id: taskId,
@@ -223,6 +239,14 @@ export const useToolkitChat = props => {
   useEffect(() => {
     modelsFetchSuccess && selectedModel === null && setSelectedModel(defaultModel);
   }, [modelsFetchSuccess, defaultModel, selectedModel]);
+
+  useEffect(() => {
+    setActiveTaskId(index?.metadata?.task_id ?? null);
+
+    if (index?.metadata?.state !== IndexStatuses.progress || index?.metadata?.task_id) {
+      setIsWaitingForTaskStart(false);
+    }
+  }, [index?.id, index?.metadata?.task_id, index?.metadata?.state]);
 
   // llmSettings is seeded before the model resolves (generateLLMSettings(null) → temperature-only).
   // Realign the family pair once the model is known so a reasoning model never shows/persists a
@@ -391,6 +415,11 @@ export const useToolkitChat = props => {
         setIsRunning(true);
         runningToolRef.current = tool;
 
+        if (indexing) {
+          setActiveTaskId(null);
+          setIsWaitingForTaskStart(true);
+        }
+
         if (traceNewIndex && indexing)
           traceNewIndex(index?.id ?? null, {
             collection: relevantInputVariables.index_name,
@@ -415,13 +444,20 @@ export const useToolkitChat = props => {
 
   const onCancelIndexing = useCallback(async () => {
     try {
+      if (!canStopIndexing) {
+        return;
+      }
+
+      const resolvedTaskId = activeTaskId;
+
       await stopIndex({
         projectId,
         toolkitId,
         indexName: index.metadata.collection,
-        taskId: index.metadata.task_id,
+        taskId: resolvedTaskId,
       }).unwrap();
 
+      setActiveTaskId(null);
       toastSuccess('Indexing stopped successfully');
       setIsRunning(false);
 
@@ -429,7 +465,17 @@ export const useToolkitChat = props => {
     } catch {
       toastError('Failed to stop indexing');
     }
-  }, [index, projectId, cancelIndexingCallback, stopIndex, toastError, toastSuccess, toolkitId]);
+  }, [
+    activeTaskId,
+    canStopIndexing,
+    index,
+    projectId,
+    cancelIndexingCallback,
+    stopIndex,
+    toastError,
+    toastSuccess,
+    toolkitId,
+  ]);
 
   const handleIndexData = useCallback(() => run(), [run]);
 
@@ -457,6 +503,7 @@ export const useToolkitChat = props => {
     isFullScreenChat,
     isRunning,
     isStoppingIndexing,
+    canStopIndexing,
     handleClearActiveConversation,
     handleClearChat,
     handleIndexData,

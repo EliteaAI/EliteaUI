@@ -14,6 +14,7 @@ const IndexError = memo(props => {
     questionItemRef,
     isIndexing,
     isStoppingIndexing,
+    canStopIndexing,
     onStop,
     showResults,
   } = props;
@@ -25,7 +26,9 @@ const IndexError = memo(props => {
         banner={banner}
         isIndexing={isIndexing}
         isStoppingIndexing={isStoppingIndexing}
+        canStopIndexing={canStopIndexing}
         onStop={onStop}
+        showBottomBorder={chatHistory?.chat_history?.length > 0}
       />
       <Box sx={styles.body}>
         {showResults && (
