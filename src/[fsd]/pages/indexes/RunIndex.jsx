@@ -46,7 +46,7 @@ const RunIndex = memo(() => {
   }, [navigate, tab]);
 
   const {
-    data: publicToolkitData = emptyToolDetail,
+    data: toolkitData = emptyToolDetail,
     isFetching,
     isError,
     error,
@@ -116,21 +116,18 @@ const RunIndex = memo(() => {
     return () => clearInterval(interval);
   }, [awaitingCreation, currentIndex, refetchIndexesList]);
 
-  const selectedIndexTools = useMemo(
-    () => publicToolkitData?.settings?.selected_tools ?? [],
-    [publicToolkitData],
-  );
+  const selectedIndexTools = useMemo(() => toolkitData?.settings?.selected_tools ?? [], [toolkitData]);
 
   const shouldShowNotFoundPage = isError && isNotFoundError(error);
 
   const initialValues = useMemo(() => {
-    if (!publicToolkitData?.id) return {};
+    if (!toolkitData?.id) return {};
     return {
-      ...publicToolkitData,
-      settings: publicToolkitData.settings || {},
-      type: publicToolkitData.type || '',
+      ...toolkitData,
+      settings: toolkitData.settings || {},
+      type: toolkitData.type || '',
     };
-  }, [publicToolkitData]);
+  }, [toolkitData]);
 
   const handleRefetch = useCallback(async () => {
     await refetchIndexesList();
@@ -155,8 +152,8 @@ const RunIndex = memo(() => {
   // the indexes-list fetch — we need to mount the socket listener immediately so streaming events
   // aren't dropped. Use stableIndex so background refetches don't unmount the panel.
   const isLoading = stableIndex
-    ? !publicToolkitData?.id
-    : isFetching || indexesLoading || indexesFetching || !hasData || !publicToolkitData?.id;
+    ? !toolkitData?.id
+    : isFetching || indexesLoading || indexesFetching || !hasData || !toolkitData?.id;
 
   const showCreatingPlaceholder = awaitingCreation && !stableIndex;
   return (
@@ -165,7 +162,7 @@ const RunIndex = memo(() => {
         showBorder
         title={
           <IndexBreadcrumb
-            toolkitName={publicToolkitData?.name || ''}
+            toolkitName={toolkitData?.name || ''}
             current={indexName || 'Index'}
             onToolkitsClick={goToToolkitsList}
             onToolkitClick={goBackToToolkit}
@@ -210,6 +207,7 @@ const RunIndex = memo(() => {
               refetchIndexesList={handleRefetch}
               isCreating={isCreating}
               initialConversation={initialConversation}
+              toolkitName={toolkitData?.name || ''}
             />
           </Formik>
         )}

@@ -68,10 +68,18 @@ const RunIndexScheduleContent = memo(props => {
         )}
         {credentialsTitle && (
           <Typography
-            variant="bodySmall"
+            variant="bodySmall2"
             color="text.secondary"
           >
-            Use credentials: {credentialsTitle}
+            <Typography
+              variant="bodySmall2"
+              component="span"
+              color="text.primary"
+              sx={styles.nextRunLabel}
+            >
+              Use credentials:
+            </Typography>
+            {credentialsTitle}
           </Typography>
         )}
       </Box>

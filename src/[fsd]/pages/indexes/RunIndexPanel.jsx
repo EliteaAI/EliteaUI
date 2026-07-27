@@ -43,8 +43,16 @@ import RunIndexGeneralSection from './RunIndexGeneralSection';
 import RunIndexScheduleContent from './RunIndexScheduleContent';
 
 const RunIndexPanel = memo(props => {
-  const { toolkitId, indexName, index, refetchIndexesList, selectedIndexTools, tab, initialConversation } =
-    props;
+  const {
+    toolkitId,
+    indexName,
+    index,
+    refetchIndexesList,
+    selectedIndexTools,
+    tab,
+    initialConversation,
+    toolkitName,
+  } = props;
   const styles = runIndexPanelStyles();
   const navigate = useNavigate();
   const projectId = useSelectedProjectId();
@@ -370,6 +378,7 @@ const RunIndexPanel = memo(props => {
             handleChangeIndexSchedule({ ...scheduleData, enabled: !scheduleData.enabled }, true)
           }
           disabledReason={schedulingTooltipMessage}
+          toolkitName={toolkitName}
         />
       ),
       defaultExpanded: false,
@@ -511,6 +520,7 @@ const RunIndexPanel = memo(props => {
         credentials={scheduleData.credentials}
         credentialsData={credentialsData}
         isEdit={scheduleModalIsEdit}
+        toolkitName={toolkitName}
       />
     </Box>
   );

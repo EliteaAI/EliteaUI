@@ -24,8 +24,17 @@ const viewButtons = [
 ];
 
 const IndexScheduleModal = props => {
-  const { open, onClose, onSubmit, cron, credentials, credentialsData, toolkitSchemaFetching, isEdit } =
-    props;
+  const {
+    open,
+    onClose,
+    onSubmit,
+    cron,
+    credentials,
+    credentialsData,
+    toolkitSchemaFetching,
+    isEdit,
+    toolkitName,
+  } = props;
   const { personal_project_id } = useSelector(state => state.user);
   const selectedProject = useSelectedProject();
 
@@ -162,7 +171,7 @@ const IndexScheduleModal = props => {
                 <Divider />
                 <CredentialsSelect
                   isCreationAllowed
-                  label="Select credentials"
+                  label={`${toolkitName} Credentials`}
                   description={credentialsData.description}
                   onSelectConfiguration={value => setInnerCredentials(value)}
                   value={innerCredentials}
