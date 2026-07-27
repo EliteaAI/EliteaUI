@@ -61,7 +61,7 @@ const AIEditProjectContextModal = memo(props => {
       const promise = generateDraft({
         projectId,
         user_description: description,
-        current_content: current,
+        current_project_background: current,
       });
       generatePromiseRef.current = promise;
       const result = await promise.unwrap();
