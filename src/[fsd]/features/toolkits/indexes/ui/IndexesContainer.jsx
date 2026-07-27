@@ -225,8 +225,26 @@ const IndexesContainer = memo(props => {
   }, []);
 
   const handleRefetchIndexesList = useCallback(async () => {
-    await refetch({ toolkitId, projectId });
+    return refetch({ toolkitId, projectId });
   }, [refetch, toolkitId, projectId]);
+
+  const handleActiveIndexReattach = useCallback(
+    activeIndex => {
+      const indexName = activeIndex?.metadata?.collection;
+      if (
+        !indexName ||
+        activeIndex.metadata?.state !== IndexStatuses.progress ||
+        !activeIndex.metadata?.task_id ||
+        !activeIndex.metadata?.conversation_id
+      )
+        return false;
+
+      setCurrentIndex(activeIndex);
+      navigate(buildIndexPath(RouteDefinitions.ToolkitIndex, indexName), { replace: true });
+      return true;
+    },
+    [buildIndexPath, navigate],
+  );
 
   const closeDeleteIndexModal = () => {
     setDeleteIndexModal(false);
@@ -344,6 +362,7 @@ const IndexesContainer = memo(props => {
           traceNewIndex={traceNewIndex}
           view={view}
           refetchIndexesList={handleRefetchIndexesList}
+          onActiveIndexReattach={handleActiveIndexReattach}
           handleDeleteIndex={handleDeleteIndex}
           isIndexDeleting={isIndexDeleting}
           selectedIndexTools={selectedIndexTools}

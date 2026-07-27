@@ -5,7 +5,11 @@ import { useNavigate } from 'react-router-dom';
 
 import { Box, Button, CircularProgress } from '@mui/material';
 
-import { IndexesToolsEnum } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
+import { useLazyGetIndexesListQuery } from '@/[fsd]/features/toolkits/indexes/api';
+import {
+  IndexStatuses,
+  IndexesToolsEnum,
+} from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import { adjustIndexDataSchema } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexChat.helpers';
 import { useIndexNameValidation } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import { ToolkitChatModesEnum } from '@/[fsd]/features/toolkits/lib/constants';
@@ -14,6 +18,7 @@ import { useToolkitChat } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
 import { useGetSelectedToolSchema } from '@/hooks/toolkit/useGetSelectedToolSchema';
+import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { ToolTypes } from '@/pages/Applications/Components/Tools/consts';
 import RouteDefinitions from '@/routes';
 
@@ -22,6 +27,7 @@ const NAME_WHITESPACE_ERROR = 'Name cannot start or end with whitespace';
 const CreateIndexForm = memo(props => {
   const { toolkitId, tab } = props;
   const navigate = useNavigate();
+  const projectId = useSelectedProjectId();
   const { values } = useFormikContext();
   const styles = createIndexFormStyles();
 
@@ -30,6 +36,7 @@ const CreateIndexForm = memo(props => {
   const pendingCollectionRef = useRef(null);
   const [toolInputVariables, setToolInputVariables] = useState({});
   const [nameFormatError, setNameFormatError] = useState(null);
+  const [getIndexesList] = useLazyGetIndexesListQuery();
 
   const { clearIndexNameError, indexNameError, updateIndexNameError, isIndexNameValid } =
     useIndexNameValidation();
@@ -128,7 +135,40 @@ const CreateIndexForm = memo(props => {
     [navigate, tab, toolkitId],
   );
 
-  const refetchIndexesList = useCallback(() => Promise.resolve(), []);
+  const refetchIndexesList = useCallback(
+    () => getIndexesList({ toolkitId, projectId }, false),
+    [getIndexesList, projectId, toolkitId],
+  );
+
+  const handleActiveIndexReattach = useCallback(
+    activeIndex => {
+      const metadata = activeIndex?.metadata;
+      if (
+        metadata?.state !== IndexStatuses.progress ||
+        !metadata?.collection ||
+        !metadata?.task_id ||
+        !metadata?.conversation_id
+      )
+        return false;
+
+      navigatedRef.current = true;
+      const target = RouteDefinitions.ToolkitIndex.replace(':tab', tab ?? 'all')
+        .replace(':toolkitId', String(toolkitId))
+        .replace(':indexName', encodeURIComponent(metadata.collection));
+      navigate(target, {
+        replace: true,
+        state: {
+          reattaching: true,
+          collection: metadata.collection,
+          conversation_id: metadata.conversation_id,
+          task_id: metadata.task_id,
+          ...(metadata.conversation_uuid ? { conversation_uuid: metadata.conversation_uuid } : {}),
+        },
+      });
+      return true;
+    },
+    [navigate, tab, toolkitId],
+  );
 
   const { handleIndexData, isRunning } = useToolkitChat({
     index: null,
@@ -139,6 +179,7 @@ const CreateIndexForm = memo(props => {
     toolInputVariables,
     traceNewIndex,
     values,
+    onActiveIndexReattach: handleActiveIndexReattach,
     modes: [ToolkitChatModesEnum.createIndex],
   });
 

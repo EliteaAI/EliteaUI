@@ -90,6 +90,11 @@ export const resolveIndexExecutionState = (metadataState, executionState) => exe
 export const resolveIndexExecutionTaskId = (metadataTaskId, admittedTaskId) =>
   admittedTaskId || metadataTaskId;
 
+export const resolveAuthoritativeIndexExecutionTaskId = (metadataState, metadataTaskId, admittedTaskId) =>
+  metadataState === IndexStatuses.progress && isBoundedIndexExecutionTaskId(metadataTaskId)
+    ? metadataTaskId
+    : admittedTaskId;
+
 export const canStartToolkitRun = ({
   indexing,
   isCreateIndexMode,
@@ -102,7 +107,7 @@ export const canStartToolkitRun = ({
   !isRunning &&
   (!indexing || (!isIndexing && !indexStartPending));
 
-const isBoundedIndexExecutionTaskId = value =>
+export const isBoundedIndexExecutionTaskId = value =>
   typeof value === 'string' &&
   value.length > 0 &&
   value === value.trim() &&
@@ -124,3 +129,42 @@ export const parseIndexStartConflictTaskId = error => {
 
   return body.task_id;
 };
+
+const isBoundedConversationId = value =>
+  (Number.isSafeInteger(value) && value > 0) ||
+  (typeof value === 'string' &&
+    value.length > 0 &&
+    value === value.trim() &&
+    !/[\0\r\n]/.test(value) &&
+    new TextEncoder().encode(value).length <= MAX_INDEX_EXECUTION_TASK_ID_BYTES);
+
+export const findAuthoritativeActiveIndex = (indexes, indexName, taskId) => {
+  if (
+    !Array.isArray(indexes) ||
+    typeof indexName !== 'string' ||
+    !indexName ||
+    !isBoundedIndexExecutionTaskId(taskId)
+  )
+    return null;
+
+  return (
+    indexes.find(
+      candidate =>
+        candidate &&
+        !(candidate instanceof Array) &&
+        typeof candidate === 'object' &&
+        candidate.metadata?.collection === indexName &&
+        candidate.metadata?.state === IndexStatuses.progress &&
+        candidate.metadata?.task_id === taskId &&
+        isBoundedConversationId(candidate.metadata?.conversation_id),
+    ) || null
+  );
+};
+
+export const sameIndexExecution = (left, right) =>
+  Boolean(
+    left?.taskId &&
+    right?.taskId &&
+    left.taskId === right.taskId &&
+    (left.generation == null || right.generation == null || left.generation === right.generation),
+  );

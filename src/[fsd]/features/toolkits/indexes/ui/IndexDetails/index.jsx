@@ -38,6 +38,7 @@ const IndexDetails = memo(props => {
     view,
     traceNewIndex,
     refetchIndexesList,
+    onActiveIndexReattach,
     handleDeleteIndex,
     isIndexDeleting,
     selectedIndexTools,
@@ -237,6 +238,7 @@ const IndexDetails = memo(props => {
     values,
     modes: isCreateView ? [ToolkitChatModesEnum.createIndex] : [],
     onMcpAuthRequired: handleMcpAuthRequired,
+    onActiveIndexReattach,
   });
 
   // Keep the ref up-to-date so the onSuccess callback always invokes the latest handleIndexData

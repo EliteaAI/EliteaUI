@@ -10,11 +10,14 @@ import {
   buildIndexExecutionEventsUrl,
   buildPendingIndexExecutionKey,
   canStartToolkitRun,
+  findAuthoritativeActiveIndex,
   parseIndexExecutionEvent,
   parseIndexNodeEvent,
   parseIndexStartConflictTaskId,
+  resolveAuthoritativeIndexExecutionTaskId,
   resolveIndexExecutionState,
   resolveIndexExecutionTaskId,
+  sameIndexExecution,
 } from './indexExecution.helpers';
 
 describe('index execution contract', () => {
@@ -84,6 +87,58 @@ describe('index execution contract', () => {
   it('uses the admitted execution task id for control actions', () => {
     expect(resolveIndexExecutionTaskId('metadata-task', 'admitted-task')).toBe('admitted-task');
     expect(resolveIndexExecutionTaskId('metadata-task', null)).toBe('metadata-task');
+  });
+
+  it('uses the active server metadata task for Stop ahead of a stale admitted task', () => {
+    expect(
+      resolveAuthoritativeIndexExecutionTaskId(
+        IndexStatuses.progress,
+        'metadata-task',
+        'stale-admitted-task',
+      ),
+    ).toBe('metadata-task');
+    expect(resolveAuthoritativeIndexExecutionTaskId(IndexStatuses.success, 'old-task', 'admitted-task')).toBe(
+      'admitted-task',
+    );
+  });
+
+  it('selects only matching active server metadata with a conversation', () => {
+    const active = {
+      id: 9,
+      metadata: {
+        collection: 'docs',
+        state: IndexStatuses.progress,
+        task_id: 'task-active',
+        conversation_id: 17,
+      },
+    };
+    expect(findAuthoritativeActiveIndex([active], 'docs', 'task-active')).toBe(active);
+    expect(
+      findAuthoritativeActiveIndex(
+        [{ ...active, metadata: { ...active.metadata, task_id: 'other-task' } }],
+        'docs',
+        'task-active',
+      ),
+    ).toBeNull();
+    expect(
+      findAuthoritativeActiveIndex(
+        [{ ...active, metadata: { ...active.metadata, conversation_id: null } }],
+        'docs',
+        'task-active',
+      ),
+    ).toBeNull();
+  });
+
+  it('matches terminal guards by task and generation without confusing a new generation', () => {
+    expect(sameIndexExecution({ taskId: 'task-1', generation: 3 }, { taskId: 'task-1', generation: 3 })).toBe(
+      true,
+    );
+    expect(sameIndexExecution({ taskId: 'task-1', generation: 3 }, { taskId: 'task-1', generation: 4 })).toBe(
+      false,
+    );
+    expect(
+      sameIndexExecution({ taskId: 'task-1', generation: null }, { taskId: 'task-1', generation: 4 }),
+    ).toBe(true);
   });
 
   it('suppresses duplicate index starts while admission or execution is active', () => {

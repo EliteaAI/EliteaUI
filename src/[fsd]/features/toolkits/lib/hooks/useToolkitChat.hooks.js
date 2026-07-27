@@ -21,11 +21,15 @@ import {
   buildIndexExecutionEventsUrl,
   buildPendingIndexExecutionKey,
   canStartToolkitRun,
+  findAuthoritativeActiveIndex,
+  isBoundedIndexExecutionTaskId,
   parseIndexExecutionEvent,
   parseIndexNodeEvent,
   parseIndexStartConflictTaskId,
+  resolveAuthoritativeIndexExecutionTaskId,
   resolveIndexExecutionState,
   resolveIndexExecutionTaskId,
+  sameIndexExecution,
 } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexExecution.helpers';
 import { useIndexHistory } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import { ToolkitChatModesEnum } from '@/[fsd]/features/toolkits/lib/constants';
@@ -54,6 +58,7 @@ export const useToolkitChat = props => {
   const indexStartPendingRef = useRef(false);
   const indexEventSourceRef = useRef(null);
   const admittedIndexTaskIdRef = useRef(null);
+  const settledIndexExecutionRef = useRef(null);
   const { toastSuccess, toastError } = useToast();
   const projectId = useSelectedProjectId();
 
@@ -73,6 +78,7 @@ export const useToolkitChat = props => {
     values,
     modes,
     onMcpAuthRequired,
+    onActiveIndexReattach,
     initialConversation,
   } = props;
 
@@ -127,9 +133,12 @@ export const useToolkitChat = props => {
   const [isStopRequested, setIsStopRequested] = useState(false);
   const effectiveIndexState = resolveIndexExecutionState(index?.metadata?.state, indexExecutionState);
   const isIndexing = effectiveIndexState === IndexStatuses.progress;
+  const currentIndexGeneration =
+    index?.metadata?.index_generation ?? index?.metadata?.execution_generation ?? null;
 
   useEffect(() => {
     admittedIndexTaskIdRef.current = null;
+    settledIndexExecutionRef.current = null;
     indexStartPendingRef.current = false;
     setIndexExecutionState(null);
     setIsStopRequested(false);
@@ -160,6 +169,15 @@ export const useToolkitChat = props => {
 
   useEffect(() => {
     if (needGenerateProgressingIndexHistory) {
+      const historyExecution = {
+        taskId: index?.metadata?.task_id || admittedIndexTaskIdRef.current,
+        generation: index?.metadata?.index_generation ?? index?.metadata?.execution_generation ?? null,
+      };
+      if (sameIndexExecution(settledIndexExecutionRef.current, historyExecution)) {
+        setProgressingIndexHistoryRecovered(true);
+        return;
+      }
+
       const currentConversationMessages = convertConversationToChatHistory(conversationDetails, traceSteps);
       const prettifiedMessages = ToolkitsHelpers.prettifyToolkitConversation(currentConversationMessages);
 
@@ -173,6 +191,9 @@ export const useToolkitChat = props => {
     traceSteps,
     needGenerateProgressingIndexHistory,
     setProgressingIndexHistoryRecovered,
+    index?.metadata?.task_id,
+    index?.metadata?.index_generation,
+    index?.metadata?.execution_generation,
   ]);
 
   const onSetLLMSettings = useCallback(
@@ -245,7 +266,7 @@ export const useToolkitChat = props => {
   useEffect(() => closeIndexEventStream, [closeIndexEventStream]);
 
   const openIndexEventStream = useCallback(
-    ({ taskId, messageId, storageKey, reattachingExistingExecution = false }) => {
+    ({ taskId, messageId, storageKey, reattachingExistingExecution = false, generation = null }) => {
       closeIndexEventStream();
 
       let currentMessageId = messageId;
@@ -283,6 +304,7 @@ export const useToolkitChat = props => {
         if (indexEventSourceRef.current !== source) return;
         source.close();
         indexEventSourceRef.current = null;
+        settledIndexExecutionRef.current = { taskId, generation };
         try {
           sessionStorage.removeItem(storageKey);
         } catch {
@@ -346,28 +368,114 @@ export const useToolkitChat = props => {
       source.addEventListener(INDEX_EXECUTION_NODE_EVENT, handleNodeEvent);
       source.addEventListener(INDEX_EXECUTION_COMPLETED_EVENT, handleTerminalEvent);
       source.addEventListener(INDEX_EXECUTION_FAILED_EVENT, handleTerminalEvent);
-      // Native EventSource reconnection carries Last-Event-ID. Preserve the pending execution
-      // across connection errors; only a durable named event may settle the run.
+      source.addEventListener('error', () => {
+        if (indexEventSourceRef.current !== source || source.readyState !== 2) return;
+
+        source.close();
+        indexEventSourceRef.current = null;
+        if (admittedIndexTaskIdRef.current === taskId) admittedIndexTaskIdRef.current = null;
+        setIndexExecutionState(null);
+        setIsRunning(false);
+        setIsStopRequested(false);
+        try {
+          sessionStorage.removeItem(storageKey);
+        } catch {
+          // Browser storage is only a recovery hint.
+        }
+        const safeMessage = generateMockMessageTemplate(
+          '⚠️ Live indexing updates are unavailable. Refreshing the current index status.',
+          'toolkit',
+        );
+        setChatHistory(previous => {
+          const existing = previous.findIndex(
+            message => message.id === currentMessageId || message.task_id === taskId,
+          );
+          if (existing < 0)
+            return [
+              ...previous,
+              {
+                ...safeMessage,
+                task_id: taskId,
+                isLoading: false,
+                isStreaming: false,
+              },
+            ];
+          const updated = [...previous];
+          updated[existing] = {
+            ...updated[existing],
+            ...safeMessage,
+            id: updated[existing].id,
+            task_id: taskId,
+            isLoading: false,
+            isStreaming: false,
+          };
+          return updated;
+        });
+        Promise.resolve()
+          .then(() => refetchIndexesList())
+          .catch(() => {
+            // The bounded local warning remains visible until another metadata refresh succeeds.
+          });
+      });
+      // CONNECTING is a transient native reconnect and preserves Last-Event-ID.
+      // Only CLOSED clears local stream authority.
     },
-    [closeIndexEventStream, projectId],
+    [closeIndexEventStream, projectId, refetchIndexesList],
   );
 
   useEffect(() => {
     closeIndexEventStream();
     if (!pendingIndexExecutionKey) return undefined;
 
-    let pending;
+    let storageHint;
     try {
-      pending = JSON.parse(sessionStorage.getItem(pendingIndexExecutionKey));
+      storageHint = JSON.parse(sessionStorage.getItem(pendingIndexExecutionKey));
     } catch {
       try {
         sessionStorage.removeItem(pendingIndexExecutionKey);
       } catch {
         // Browser storage can be unavailable under restrictive privacy settings.
       }
+      storageHint = null;
+    }
+
+    const validStorageHint =
+      isBoundedIndexExecutionTaskId(storageHint?.taskId) &&
+      isBoundedIndexExecutionTaskId(storageHint?.messageId)
+        ? storageHint
+        : null;
+    const authoritativeTaskId =
+      index?.metadata?.state === IndexStatuses.progress &&
+      isBoundedIndexExecutionTaskId(index?.metadata?.task_id)
+        ? index.metadata.task_id
+        : null;
+    const hasAuthoritativeMetadataState = typeof index?.metadata?.state === 'string';
+
+    let pending;
+    if (authoritativeTaskId) {
+      pending = {
+        taskId: authoritativeTaskId,
+        messageId: validStorageHint?.taskId === authoritativeTaskId ? validStorageHint.messageId : uuidv4(),
+        reattachingExistingExecution: true,
+        generation: currentIndexGeneration,
+      };
+      try {
+        sessionStorage.setItem(pendingIndexExecutionKey, JSON.stringify(pending));
+      } catch {
+        // Server metadata remains authoritative when browser storage is unavailable.
+      }
+    } else if (!hasAuthoritativeMetadataState && validStorageHint) {
+      pending = validStorageHint;
+    } else {
+      try {
+        sessionStorage.removeItem(pendingIndexExecutionKey);
+      } catch {
+        // Browser storage is only a hint and cannot override non-active server metadata.
+      }
       return undefined;
     }
-    if (!pending?.taskId || !pending?.messageId) return undefined;
+
+    if (sameIndexExecution(settledIndexExecutionRef.current, pending)) return undefined;
 
     runningToolRef.current = IndexesToolsEnum.indexData;
     admittedIndexTaskIdRef.current = pending.taskId;
@@ -378,9 +486,17 @@ export const useToolkitChat = props => {
       messageId: pending.messageId,
       storageKey: pendingIndexExecutionKey,
       reattachingExistingExecution: pending.reattachingExistingExecution === true,
+      generation: pending.generation ?? currentIndexGeneration,
     });
     return closeIndexEventStream;
-  }, [closeIndexEventStream, openIndexEventStream, pendingIndexExecutionKey]);
+  }, [
+    closeIndexEventStream,
+    currentIndexGeneration,
+    index?.metadata?.state,
+    index?.metadata?.task_id,
+    openIndexEventStream,
+    pendingIndexExecutionKey,
+  ]);
 
   // Use ref to access isAuthCheckSession in socket callback without adding it as dependency
   const isAuthCheckSessionRef = useRef(isAuthCheckSession);
@@ -504,12 +620,31 @@ export const useToolkitChat = props => {
       });
       let response;
       let reattaching = false;
+      let authoritativeActiveIndex = null;
       try {
         response = await startIndexData({ projectId, ...payload }).unwrap();
       } catch (error) {
         const activeTaskId = parseIndexStartConflictTaskId(error);
         if (!activeTaskId) throw error;
-        response = { task_id: activeTaskId };
+
+        let refreshed;
+        try {
+          refreshed = await refetchIndexesList();
+        } catch {
+          throw new Error('The active index could not be reopened. Refresh the index list and try again.');
+        }
+        authoritativeActiveIndex = findAuthoritativeActiveIndex(
+          refreshed?.data,
+          relevantInputVariables.index_name,
+          activeTaskId,
+        );
+        if (!authoritativeActiveIndex)
+          throw new Error('The active index could not be reopened. Refresh the index list and try again.');
+        const reattachAccepted = await onActiveIndexReattach?.(authoritativeActiveIndex);
+        if (isCreateIndexMode && reattachAccepted !== true)
+          throw new Error('The active index could not be reopened. Refresh the index list and try again.');
+
+        response = { task_id: authoritativeActiveIndex.metadata.task_id };
         reattaching = true;
       }
       const taskId = response?.task_id;
@@ -523,10 +658,20 @@ export const useToolkitChat = props => {
         toolkitId,
         indexName: relevantInputVariables.index_name,
       });
+      const generation = reattaching
+        ? (authoritativeActiveIndex?.metadata?.index_generation ??
+          authoritativeActiveIndex?.metadata?.execution_generation ??
+          null)
+        : null;
       try {
         sessionStorage.setItem(
           storageKey,
-          JSON.stringify({ taskId, messageId, reattachingExistingExecution: reattaching }),
+          JSON.stringify({
+            taskId,
+            messageId,
+            reattachingExistingExecution: reattaching,
+            generation,
+          }),
         );
       } catch {
         // The live stream still works when browser storage is disabled; only reload recovery is lost.
@@ -538,24 +683,16 @@ export const useToolkitChat = props => {
           messageId,
           storageKey,
           reattachingExistingExecution: reattaching,
+          generation,
         });
-      if (traceNewIndex)
+      if (traceNewIndex && !reattaching)
         traceNewIndex(index?.id ?? null, {
           collection: relevantInputVariables.index_name,
           state: IndexStatuses.progress,
           task_id: taskId,
-          ...(!reattaching && {
-            conversation_id: currentConversation.id,
-            conversation_uuid: currentConversation.uuid,
-          }),
+          conversation_id: currentConversation.id,
+          conversation_uuid: currentConversation.uuid,
         });
-      if (reattaching) {
-        try {
-          await refetchIndexesList();
-        } catch {
-          // The authorized execution stream remains usable while a metadata refresh is retried elsewhere.
-        }
-      }
     },
     [
       index?.id,
@@ -569,6 +706,7 @@ export const useToolkitChat = props => {
       traceNewIndex,
       values,
       refetchIndexesList,
+      onActiveIndexReattach,
     ],
   );
 
@@ -638,7 +776,7 @@ export const useToolkitChat = props => {
         let errorMessage;
 
         if (indexing) {
-          const responseMessage = error?.data?.message || error?.data?.error;
+          const responseMessage = error?.data?.message || error?.data?.error || error?.message;
           errorMessage =
             typeof responseMessage === 'string' ? responseMessage : 'The indexing task could not be started.';
         } else if (error?.message) errorMessage = error.message;
@@ -727,7 +865,11 @@ export const useToolkitChat = props => {
 
   const onCancelIndexing = useCallback(async () => {
     try {
-      const taskId = resolveIndexExecutionTaskId(index?.metadata?.task_id, admittedIndexTaskIdRef.current);
+      const taskId = resolveAuthoritativeIndexExecutionTaskId(
+        index?.metadata?.state,
+        index?.metadata?.task_id,
+        admittedIndexTaskIdRef.current,
+      );
       if (!taskId) throw new Error('The indexing task identifier is unavailable.');
 
       await stopIndex({

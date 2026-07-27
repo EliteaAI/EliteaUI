@@ -134,8 +134,9 @@ const RunIndex = memo(() => {
   }, [publicToolkitData]);
 
   const handleRefetch = useCallback(async () => {
-    await refetchIndexesList();
+    const indexesResult = await refetchIndexesList();
     await refetchToolkit();
+    return indexesResult;
   }, [refetchIndexesList, refetchToolkit]);
 
   useEffect(() => {

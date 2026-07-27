@@ -14,6 +14,7 @@ const mocks = vi.hoisted(() => ({
   createToolkitConversation: vi.fn(),
   generateChatMessage: vi.fn(),
   history: vi.fn(),
+  onActiveIndexReattach: vi.fn(),
   refetchIndexesList: vi.fn(),
   startIndexData: vi.fn(),
   stopIndex: vi.fn(),
@@ -91,12 +92,16 @@ vi.mock('@/hooks/useToast', () => ({
 
 class FakeEventSource {
   static instances = [];
+  static CONNECTING = 0;
+  static OPEN = 1;
+  static CLOSED = 2;
 
   constructor(url, options) {
     this.url = url;
     this.options = options;
     this.listeners = new Map();
     this.closed = false;
+    this.readyState = FakeEventSource.OPEN;
     FakeEventSource.instances.push(this);
   }
 
@@ -107,13 +112,15 @@ class FakeEventSource {
 
   close() {
     this.closed = true;
+    this.readyState = FakeEventSource.CLOSED;
   }
 
   emit(type, data) {
     for (const listener of this.listeners.get(type) || []) listener({ type, data: JSON.stringify(data) });
   }
 
-  reject(status) {
+  reject(readyState, status) {
+    this.readyState = readyState;
     const event = { type: 'error', status };
     this.onerror?.(event);
     for (const listener of this.listeners.get('error') || []) listener(event);
@@ -129,6 +136,19 @@ const baseIndex = {
   },
 };
 
+const activeIndexFor = (taskId, metadata = {}) => ({
+  id: 42,
+  metadata: {
+    collection: 'docs',
+    index_configuration: { index_name: 'docs' },
+    state: 'in_progress',
+    task_id: taskId,
+    conversation_id: 88,
+    index_generation: 16,
+    ...metadata,
+  },
+});
+
 const baseProps = {
   toolkitId: 11,
   runTool: 'search',
@@ -142,6 +162,7 @@ const baseProps = {
   values: {},
   modes: [],
   onMcpAuthRequired: vi.fn(),
+  onActiveIndexReattach: mocks.onActiveIndexReattach,
   initialConversation: null,
 };
 
@@ -154,12 +175,15 @@ describe('useToolkitChat active index reattachment', () => {
   let container;
   let root;
   let current;
+  let hookProps;
+
+  const Harness = () => {
+    current = useToolkitChat(hookProps);
+    return null;
+  };
 
   const renderHook = async (props = baseProps) => {
-    const Harness = () => {
-      current = useToolkitChat(props);
-      return null;
-    };
+    hookProps = props;
     await act(async () => {
       root.render(<Harness />);
       await flush();
@@ -193,7 +217,8 @@ describe('useToolkitChat active index reattachment', () => {
         content: message.content,
       },
     ]);
-    mocks.refetchIndexesList.mockResolvedValue(undefined);
+    mocks.onActiveIndexReattach.mockReturnValue(true);
+    mocks.refetchIndexesList.mockResolvedValue({ data: [] });
     mocks.stopIndex.mockReturnValue({ unwrap: () => Promise.resolve() });
   });
 
@@ -205,8 +230,10 @@ describe('useToolkitChat active index reattachment', () => {
     globalThis.IS_REACT_ACT_ENVIRONMENT = false;
   });
 
-  it('reattaches an exact authorized conflict without storage, survives SSE 403, and stops that task', async () => {
+  it('reattaches an exact Run conflict without storage and stops that authoritative task', async () => {
     const taskId = '0123456789abcdef0123456789abcdef';
+    const activeIndex = activeIndexFor(taskId);
+    mocks.refetchIndexesList.mockResolvedValue({ data: [activeIndex] });
     mocks.startIndexData.mockReturnValue({
       unwrap: () =>
         Promise.reject({
@@ -232,21 +259,8 @@ describe('useToolkitChat active index reattachment', () => {
     expect(source.url).toMatch(`/executions/7/${taskId}/events`);
     expect(source.options).toEqual({ withCredentials: true });
     expect(mocks.refetchIndexesList).toHaveBeenCalledOnce();
-    expect(
-      mocks.traceNewIndex.mock.calls.some(
-        ([, metadata]) =>
-          metadata.task_id === taskId &&
-          metadata.conversation_id === undefined &&
-          metadata.conversation_uuid === undefined,
-      ),
-    ).toBe(true);
-    expect(current.isRunning).toBe(true);
-
-    await act(async () => {
-      source.reject(403);
-      await flush();
-    });
-    expect(source.closed).toBe(false);
+    expect(mocks.onActiveIndexReattach).toHaveBeenCalledWith(activeIndex);
+    expect(mocks.traceNewIndex.mock.calls.some(([, metadata]) => metadata.task_id === taskId)).toBe(false);
     expect(current.isRunning).toBe(true);
 
     await act(async () => {
@@ -275,6 +289,40 @@ describe('useToolkitChat active index reattachment', () => {
         isStreaming: false,
       }),
     ]);
+  });
+
+  it('uses validated server metadata as an explicit Create Index navigation signal', async () => {
+    const taskId = '11111111111111111111111111111111';
+    const activeIndex = activeIndexFor(taskId);
+    mocks.refetchIndexesList.mockResolvedValue({ data: [activeIndex] });
+    mocks.startIndexData.mockReturnValue({
+      unwrap: () =>
+        Promise.reject({
+          status: 409,
+          data: {
+            error: ACTIVE_INDEX_CONFLICT_MESSAGE,
+            task_id: taskId,
+          },
+        }),
+    });
+
+    await renderHook({
+      ...baseProps,
+      index: {
+        id: 'new_index',
+        metadata: { collection: 'New Index', state: '' },
+      },
+      modes: ['create_index'],
+    });
+    await act(async () => {
+      current.handleIndexData();
+      await flush();
+    });
+
+    expect(mocks.refetchIndexesList).toHaveBeenCalledOnce();
+    expect(mocks.onActiveIndexReattach).toHaveBeenCalledWith(activeIndex);
+    expect(FakeEventSource.instances).toHaveLength(0);
+    expect(current.chatHistory).toEqual([]);
   });
 
   it.each([
@@ -315,6 +363,126 @@ describe('useToolkitChat active index reattachment', () => {
     expect(mocks.refetchIndexesList).not.toHaveBeenCalled();
     expect(current.isRunning).toBe(false);
     expect(current.chatHistory.at(-1)?.content).toContain('Failed to execute tool');
+  });
+
+  it('opens another-tab execution from authoritative metadata when storage is cleared', async () => {
+    const taskId = '22222222222222222222222222222222';
+    const activeIndex = activeIndexFor(taskId);
+
+    await renderHook({
+      ...baseProps,
+      index: activeIndex,
+    });
+
+    expect(FakeEventSource.instances).toHaveLength(1);
+    expect(FakeEventSource.instances[0].url).toMatch(`/executions/7/${taskId}/events`);
+    expect(JSON.parse(sessionStorage.getItem('elitea:index-execution:7:11:docs'))).toMatchObject({
+      taskId,
+      reattachingExistingExecution: true,
+      generation: 16,
+    });
+
+    await act(async () => {
+      await current.onCancelIndexing();
+      await flush();
+    });
+    expect(mocks.stopIndex).toHaveBeenCalledWith(expect.objectContaining({ taskId }));
+  });
+
+  it('overrides a stale storage task with the authoritative active task', async () => {
+    const staleTaskId = '33333333333333333333333333333333';
+    const activeTaskId = '44444444444444444444444444444444';
+    sessionStorage.setItem(
+      'elitea:index-execution:7:11:docs',
+      JSON.stringify({
+        taskId: staleTaskId,
+        messageId: 'stale-message',
+        reattachingExistingExecution: true,
+      }),
+    );
+
+    await renderHook({
+      ...baseProps,
+      index: activeIndexFor(activeTaskId),
+    });
+
+    expect(FakeEventSource.instances).toHaveLength(1);
+    expect(FakeEventSource.instances[0].url).toMatch(`/executions/7/${activeTaskId}/events`);
+    expect(FakeEventSource.instances[0].url).not.toContain(staleTaskId);
+    expect(JSON.parse(sessionStorage.getItem('elitea:index-execution:7:11:docs'))).toMatchObject({
+      taskId: activeTaskId,
+      reattachingExistingExecution: true,
+    });
+
+    await act(async () => {
+      await current.onCancelIndexing();
+      await flush();
+    });
+    expect(mocks.stopIndex).toHaveBeenCalledWith(expect.objectContaining({ taskId: activeTaskId }));
+  });
+
+  it('does not let a stale storage hint reopen server metadata that is not active', async () => {
+    sessionStorage.setItem(
+      'elitea:index-execution:7:11:docs',
+      JSON.stringify({
+        taskId: '77777777777777777777777777777777',
+        messageId: 'stale-message',
+        reattachingExistingExecution: true,
+      }),
+    );
+
+    await renderHook();
+
+    expect(FakeEventSource.instances).toHaveLength(0);
+    expect(current.isRunning).toBe(false);
+    expect(sessionStorage.getItem('elitea:index-execution:7:11:docs')).toBeNull();
+  });
+
+  it('keeps CONNECTING reattachment streams reconnectable but clears a 403/CLOSED stream', async () => {
+    const taskId = '55555555555555555555555555555555';
+    mocks.refetchIndexesList.mockResolvedValue({ data: [activeIndexFor(taskId)] });
+    mocks.startIndexData.mockReturnValue({
+      unwrap: () =>
+        Promise.reject({
+          status: 409,
+          data: {
+            error: ACTIVE_INDEX_CONFLICT_MESSAGE,
+            task_id: taskId,
+          },
+        }),
+    });
+    await renderHook();
+    await act(async () => {
+      current.handleIndexData();
+      await flush();
+    });
+    const source = FakeEventSource.instances[0];
+
+    await act(async () => {
+      source.reject(FakeEventSource.CONNECTING);
+      await flush();
+    });
+    expect(source.closed).toBe(false);
+    expect(current.isRunning).toBe(true);
+    expect(mocks.refetchIndexesList).toHaveBeenCalledOnce();
+
+    await act(async () => {
+      source.reject(FakeEventSource.CLOSED, 403);
+      await flush();
+    });
+    expect(source.closed).toBe(true);
+    expect(current.isRunning).toBe(false);
+    expect(current.isIndexing).toBe(false);
+    expect(mocks.refetchIndexesList).toHaveBeenCalledTimes(2);
+    expect(current.chatHistory).toEqual([
+      expect.objectContaining({
+        task_id: taskId,
+        content: '⚠️ Live indexing updates are unavailable. Refreshing the current index status.',
+        isLoading: false,
+        isStreaming: false,
+      }),
+    ]);
+    expect(sessionStorage.getItem('elitea:index-execution:7:11:docs')).toBeNull();
   });
 
   it('recovers the stored execution and its durable Activity history after a reload', async () => {
@@ -375,5 +543,116 @@ describe('useToolkitChat active index reattachment', () => {
       task_id: taskId,
       content: '✅ Indexed 20 files',
     });
+  });
+
+  it('does not let delayed Activity recovery overwrite a terminal SSE settlement', async () => {
+    const taskId = '66666666666666666666666666666666';
+    const activeIndex = activeIndexFor(taskId, { index_generation: 17 });
+    const recoveredHistory = {
+      id: 'delayed-history',
+      task_id: taskId,
+      content: 'stale in-progress Activity',
+    };
+    const recoveredSetter = vi.fn();
+    let resolveDelayedHistory;
+    const delayedHistory = new Promise(resolve => {
+      resolveDelayedHistory = resolve;
+    });
+
+    await renderHook({
+      ...baseProps,
+      index: activeIndex,
+    });
+    const source = FakeEventSource.instances[0];
+    await act(async () => {
+      source.emit('index.ingest.completed', { status: 'ok', message: 'Indexed terminal result' });
+      await flush();
+    });
+    expect(current.chatHistory.find(message => message.task_id === taskId)).toMatchObject({
+      task_id: taskId,
+      content: '✅ Indexed terminal result',
+    });
+
+    resolveDelayedHistory({
+      conversationDetails: { id: 88, uuid: 'conversation-original' },
+      traceSteps: [],
+      needGenerateProgressingIndexHistory: true,
+      setProgressingIndexHistoryRecovered: recoveredSetter,
+    });
+    mocks.history.mockReturnValue(await delayedHistory);
+    mocks.convertConversationToChatHistory.mockReturnValue([recoveredHistory]);
+    await renderHook({
+      ...baseProps,
+      index: activeIndex,
+    });
+
+    expect(recoveredSetter).toHaveBeenCalledWith(true);
+    expect(current.chatHistory.find(message => message.task_id === taskId)).toMatchObject({
+      task_id: taskId,
+      content: '✅ Indexed terminal result',
+    });
+    expect(current.isRunning).toBe(false);
+  });
+
+  it('keeps a newly admitted terminal result when metadata later advances to the new generation', async () => {
+    const taskId = '88888888888888888888888888888888';
+    mocks.startIndexData.mockReturnValue({
+      unwrap: () => Promise.resolve({ task_id: taskId }),
+    });
+
+    await renderHook({
+      ...baseProps,
+      index: {
+        ...baseIndex,
+        metadata: {
+          ...baseIndex.metadata,
+          index_generation: 16,
+        },
+      },
+    });
+    await act(async () => {
+      current.handleIndexData();
+      await flush();
+    });
+    expect(FakeEventSource.instances).toHaveLength(1);
+
+    await act(async () => {
+      FakeEventSource.instances[0].emit('index.ingest.completed', {
+        status: 'ok',
+        message: 'Indexed the new generation',
+      });
+      await flush();
+    });
+    expect(current.chatHistory.find(message => message.task_id === taskId)).toMatchObject({
+      task_id: taskId,
+      content: '✅ Indexed the new generation',
+    });
+
+    const recoveredSetter = vi.fn();
+    mocks.history.mockReturnValue({
+      conversationDetails: { id: 88 },
+      traceSteps: [],
+      needGenerateProgressingIndexHistory: true,
+      setProgressingIndexHistoryRecovered: recoveredSetter,
+    });
+    mocks.convertConversationToChatHistory.mockReturnValue([
+      {
+        id: 'stale-new-generation-history',
+        task_id: taskId,
+        content: 'stale in-progress Activity',
+      },
+    ]);
+    await renderHook({
+      ...baseProps,
+      index: activeIndexFor(taskId, { index_generation: 17 }),
+    });
+
+    expect(recoveredSetter).toHaveBeenCalledWith(true);
+    expect(FakeEventSource.instances).toHaveLength(1);
+    expect(current.chatHistory.find(message => message.task_id === taskId)).toMatchObject({
+      task_id: taskId,
+      content: '✅ Indexed the new generation',
+    });
+    expect(current.isRunning).toBe(false);
   });
 });
