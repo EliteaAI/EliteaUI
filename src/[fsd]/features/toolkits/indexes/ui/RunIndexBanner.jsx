@@ -27,15 +27,17 @@ const RunIndexBanner = memo(props => {
     canStopIndexing = true,
     onStop,
     showBottomBorder = true,
+    CustomIcon,
+    sx,
   } = props;
   const styles = useMemo(() => getStyles(severity, showBottomBorder), [severity, showBottomBorder]);
   const Icon = IconMap[severity];
   return (
-    <Box sx={styles.root}>
+    <Box sx={[styles.root, sx]}>
       <Box sx={styles.contentContainer}>
         <Box sx={styles.titleContainer}>
-          {Icon && <Icon />}
-          {severity === BannerSeverity.info && <CircularProgress size={16} />}
+          {CustomIcon ? <CustomIcon /> : Icon && <Icon />}
+          {severity === BannerSeverity.info && !CustomIcon && <CircularProgress size={16} />}
           {label && (
             <Typography
               sx={styles.title}

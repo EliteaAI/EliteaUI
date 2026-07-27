@@ -1,15 +1,16 @@
 import { memo, useCallback, useMemo, useState } from 'react';
 
-import { Box, CircularProgress, Grid, Typography } from '@mui/material';
+import { Box, CircularProgress, Grid } from '@mui/material';
 
 import { RunHistoryContainer } from '@/[fsd]/entities/run-history/ui';
 import { ParticipantEntityTypes } from '@/[fsd]/features/chat/participants/lib/constants/participant.constants';
-import { IndexesContainer } from '@/[fsd]/features/toolkits/indexes/ui';
+import { IndexesContainer, RunIndexBanner } from '@/[fsd]/features/toolkits/indexes/ui';
 import { TestTools } from '@/[fsd]/features/toolkits/ui';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui/form/ToolkitForm';
 import { useShowRunHistoryFromUrl } from '@/[fsd]/shared/lib/hooks';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
 import { ViewRunHistoryButton } from '@/[fsd]/shared/ui/button';
+import InfoIcon from '@/assets/info.svg?react';
 import DirtyDetector from '@/components/Formik/DirtyDetector.jsx';
 import { CONFIGURATION_VIEW_OPTIONS } from '@/pages/Applications/Components/Tools/ToolConfigurationForm.jsx';
 
@@ -52,14 +53,15 @@ const ConfigurationTab = memo(props => {
   const indexesAccordionContent = useMemo(() => {
     if (indexingUnavailableReason) {
       return (
-        <Box sx={styles.indexesUnavailable}>
-          <Typography
-            variant="bodyMedium"
-            color="text.default"
-          >
-            Indexing is not available for now
-          </Typography>
-        </Box>
+        <RunIndexBanner
+          banner={{
+            severity: 'info',
+            label: 'Indexing is not available for now',
+            message: 'Enable the “Index data” tool to activate indexing and create indexes.',
+          }}
+          CustomIcon={() => <InfoIcon />}
+          sx={styles.banner}
+        />
       );
     }
 
@@ -165,6 +167,9 @@ const styles = {
     paddingBottom: '0rem',
     paddingLeft: '0rem !important',
     paddingRight: '0rem !important',
+  },
+  banner: {
+    padding: '0rem !important',
   },
   historyButtonWrapper: {
     position: 'absolute',

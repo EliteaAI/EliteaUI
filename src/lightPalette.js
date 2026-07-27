@@ -61,6 +61,7 @@ const dark8 = 'rgba(61, 68, 86, 0.08)';
 
 // const dark8 = 'rgba(61, 68, 86, 0.08)'; // general hover fallback
 const blue8 = 'rgba(106, 232, 250, 0.08)';
+const blueFill8 = 'rgba(41, 184, 245, 0.08)';
 const blue12 = 'rgba(99, 144, 254, 0.12)'; // conversation selected light
 const gray30 = '#3B3E46';
 const white15 = 'rgba(255, 255, 255, 0.15)';
@@ -404,7 +405,7 @@ const lightPalette = {
       success: green8,
       error: red8,
       warning: orange8,
-      info: blue8,
+      info: blueFill8,
     },
   },
   border: {

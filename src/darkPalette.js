@@ -31,6 +31,7 @@ const gray58 = 'rgba(12, 17, 25, 1)';
 const gray60 = '#0E131D';
 const blue5 = 'rgba(41, 184, 245, 0.05)';
 const blue8 = 'rgba(106, 232, 250, 0.08)';
+const blueFill8 = 'rgba(41, 184, 245, 0.08)';
 const blue10 = 'rgba(106, 232, 250, 0.10)';
 const blue16 = 'rgba(106, 232, 250, 0.16)';
 const blue20 = 'rgba(106, 232, 250, 0.20)';
@@ -406,7 +407,7 @@ const darkPalette = {
       success: green8,
       error: red8,
       warning: orange8,
-      info: blue8,
+      info: blueFill8,
     },
   },
   border: {
