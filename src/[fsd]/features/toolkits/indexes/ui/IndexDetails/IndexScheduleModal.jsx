@@ -1,13 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Cron } from 'react-js-cron';
-import 'react-js-cron/dist/styles.css';
 import { useSelector } from 'react-redux';
 
-import { Box, GlobalStyles, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import { CredentialsSelect } from '@/[fsd]/features/credentials/ui';
-import { IndexCronDefault } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import {
   getNextCronRun,
   validateCronExpressionDaily as validateCronExpression,
@@ -18,6 +15,8 @@ import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import ErrorIcon from '@/assets/error-icon.svg?react';
 import FormInput from '@/components/FormInput';
 import { useSelectedProject } from '@/hooks/useSelectedProject';
+
+import CronBuilder from './CronBuilder';
 
 const viewButtons = [
   { value: 'builder', label: 'Builder' },
@@ -48,12 +47,12 @@ const IndexScheduleModal = props => {
 
   const [innerCredentials, setInnerCredentials] = useState(null);
   const [credentialsError, setCredentialsError] = useState(false);
-  const [cronExpression, setCronExpression] = useState(IndexCronDefault);
+  const [cronExpression, setCronExpression] = useState('');
   const [cronType, setCronType] = useState('builder');
 
   useEffect(() => {
     if (open) {
-      if (cron) setCronExpression(cron);
+      setCronExpression(cron || '');
       setInnerCredentials(credentials);
     }
 
@@ -64,11 +63,6 @@ const IndexScheduleModal = props => {
   }, [open, cron, credentials]);
 
   const cronState = useMemo(() => validateCronExpression(cronExpression), [cronExpression]);
-
-  const invalidCronFieldClass = useMemo(() => {
-    if (cronState.isValid || !cronState.field) return null;
-    return `react-js-cron-${cronState.field}`;
-  }, [cronState]);
 
   const nextRunComputed = useMemo(() => {
     if (!cronState.isValid) return null;
@@ -100,10 +94,9 @@ const IndexScheduleModal = props => {
 
   return (
     <>
-      <GlobalStyles styles={styles.cronContainer} />
       <Modal.BaseModal
         open={open}
-        onClose={onClose}
+        onClose={(_, reason) => reason !== 'backdropClick' && onClose()}
         title={isEdit ? 'Edit Schedule' : 'Create Schedule'}
         sx={styles.dialog}
         content={
@@ -118,33 +111,11 @@ const IndexScheduleModal = props => {
             </Box>
 
             {cronType === 'builder' ? (
-              <Box
-                sx={[
-                  styles.cronWrapper,
-                  invalidCronFieldClass && {
-                    [`& .${invalidCronFieldClass} .react-js-cron-select`]: {
-                      borderColor: ({ palette }) => `${palette.text.error} !important`,
-                    },
-                  },
-                ]}
-              >
-                <Cron
+              <Box sx={styles.cronWrapper}>
+                <CronBuilder
                   value={cronExpression}
-                  setValue={setCronExpression}
-                  clearButton={false}
-                  clockFormat="24-hour-clock"
-                  allowedPeriods={['month', 'week', 'day']}
-                  dropdownsConfig={{
-                    hours: { mode: 'single' },
-                    minutes: { mode: 'single' },
-                  }}
-                  locale={{
-                    emptyMonths: 'Month',
-                    emptyMonthDays: 'Day',
-                    emptyMonthDaysShort: 'Day',
-                    emptyWeekDays: 'Weekday',
-                    emptyWeekDaysShort: 'Weekday',
-                  }}
+                  onChange={setCronExpression}
+                  invalidField={cronState.isValid ? null : cronState.field}
                 />
               </Box>
             ) : (
@@ -184,7 +155,6 @@ const IndexScheduleModal = props => {
                 <Typography
                   variant="bodySmall"
                   color="text.primary"
-                  sx={styles.nextRunLabel}
                 >
                   Next run:
                 </Typography>
@@ -305,9 +275,6 @@ const indexScheduleModalStyles = () => ({
     alignItems: 'center',
     gap: '0.25rem',
   },
-  nextRunLabel: {
-    color: 'text.primary',
-  },
   descriptionContainer: {
     display: 'flex',
     justifyContent: 'center',
@@ -345,97 +312,7 @@ const indexScheduleModalStyles = () => ({
     display: 'flex',
     flexDirection: 'column',
     gap: '0.25rem',
-    '& .react-js-cron': {
-      width: '100%',
-      flexWrap: 'wrap',
-    },
   },
-  cronContainer: ({ palette, typography }) => ({
-    '.react-js-cron': {
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: '0.5rem',
-
-      span: {
-        ...typography.bodyMedium,
-        color: palette.text.primary,
-      },
-    },
-
-    ' .react-js-cron-field': {
-      marginBottom: '0 !important',
-    },
-
-    '.react-js-cron-select': {
-      background: palette.background.aiProviderAccordion.default,
-      border: `1px solid ${palette.border.lines}`,
-      height: '2rem',
-      color: palette.text.primary,
-      minWidth: '8rem !important',
-      ...typography.bodySmall,
-
-      '.ant-select-clear': {
-        display: 'none !important',
-      },
-
-      ' .ant-select-content-has-value': {
-        color: `${palette.text.secondary} !important`,
-      },
-
-      '.ant-select-placeholder,.ant-select-content-value': {
-        color: `${palette.text.secondary} !important`,
-        ...typography.bodySmall,
-      },
-
-      div: {
-        color: palette.text.secondary,
-        ...typography.bodySmall,
-        ' .ant-select-placeholder': {
-          color: `${palette.text.button.disabled} !important`,
-        },
-      },
-    },
-    ' .react-js-cron-hours .react-js-cron-select': {
-      // width: '4.25rem !important',
-      minWidth: '4.25rem !important',
-    },
-
-    ' .react-js-cron-hours .ant-select .ant-select-content': {
-      // width: '2rem !important',
-      minWidth: '2rem !important',
-    },
-
-    ' .react-js-cron-minutes .react-js-cron-select': {
-      // width: '4.25rem !important',
-      minWidth: '4.25rem !important',
-    },
-
-    ' .react-js-cron-minutes .ant-select .ant-select-content': {
-      // width: '2rem !important',
-      minWidth: '2rem !important',
-    },
-
-    '.react-js-cron-select-dropdown': {
-      zIndex: 1400,
-      background: palette.background.secondary,
-      border: `1px solid ${palette.border.lines}`,
-
-      div: {
-        color: palette.text.secondary,
-        ...typography.bodySmall,
-
-        '.ant-select-item-option': {
-          '&:hover': {
-            backgroundColor: `${palette.background.userInputBackground} !important`,
-          },
-        },
-
-        '.ant-select-item-option-selected': {
-          backgroundColor: `${palette.background.userInputBackground} !important`,
-        },
-      },
-    },
-  }),
 });
 
 export default IndexScheduleModal;

@@ -29,15 +29,24 @@ const RunIndexScheduleContent = memo(props => {
         >
           No schedule configured yet.
         </Typography>
-        <Box>
-          <Button.BaseBtn
-            variant={Button.BUTTON_VARIANTS.iconLabel}
-            color="secondary"
-            onClick={onAddSchedule}
+        <Tooltip
+          title={disabledReason || ''}
+          placement="top"
+        >
+          <Box
+            component="span"
+            sx={styles.addScheduleBtn}
           >
-            + Schedule
-          </Button.BaseBtn>
-        </Box>
+            <Button.BaseBtn
+              variant={Button.BUTTON_VARIANTS.iconLabel}
+              color="secondary"
+              onClick={onAddSchedule}
+              disabled={Boolean(disabledReason)}
+            >
+              + Schedule
+            </Button.BaseBtn>
+          </Box>
+        </Tooltip>
       </Box>
     );
 
@@ -135,6 +144,10 @@ const runIndexScheduleContentStyles = () => ({
     display: 'flex',
     flexDirection: 'column',
     gap: '1rem',
+  },
+  addScheduleBtn: {
+    width: 'fit-content',
+    display: 'inline-flex',
   },
   scheduleCard: {
     display: 'flex',
