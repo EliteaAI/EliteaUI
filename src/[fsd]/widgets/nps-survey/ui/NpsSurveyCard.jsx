@@ -5,16 +5,23 @@ import { Box, Fade, Typography } from '@mui/material';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 
+import { QUESTION_TYPE } from '../lib/constants';
+import CheckboxQuestion from './CheckboxQuestion';
+import RadioQuestion from './RadioQuestion';
 import ScoreButton from './ScoreButton';
 
 const NpsSurveyCard = memo(props => {
   const {
     survey,
     currentQuestion,
+    currentQuestionIndex,
+    totalQuestions,
     selectedAnswer,
     allAnswered,
     isSubmitting,
     onSelectAnswer,
+    onToggleCheckbox,
+    onNextQuestion,
     onSubmit,
     onDismiss,
   } = props;
@@ -34,15 +41,63 @@ const NpsSurveyCard = memo(props => {
   }, [currentQuestion]);
 
   const displayedQuestion = displayedQuestionRef.current;
-  const displayedOptions = displayedQuestion?.options;
-  const displayedMin = displayedOptions?.min ?? 0;
-  const displayedMax = displayedOptions?.max ?? 10;
-  const displayedScores = Array.from({ length: displayedMax - displayedMin + 1 }, (_, i) => displayedMin + i);
+  const displayedType = displayedQuestion?.question_type;
 
   const handleSelectScore = useCallback(
     score => onSelectAnswer(currentQuestion.id, score),
     [onSelectAnswer, currentQuestion.id],
   );
+
+  const isCheckboxType = displayedType === QUESTION_TYPE.checkbox;
+  const isLastQuestion = currentQuestionIndex >= totalQuestions - 1;
+  const hasCheckboxSelection = isCheckboxType && Array.isArray(selectedAnswer) && selectedAnswer.length > 0;
+  const showNext = isCheckboxType && !isLastQuestion;
+
+  const renderQuestionBody = () => {
+    switch (displayedType) {
+      case QUESTION_TYPE.radio:
+        return (
+          <RadioQuestion
+            question={displayedQuestion}
+            selectedAnswer={selectedAnswer}
+            onSelectAnswer={onSelectAnswer}
+          />
+        );
+      case QUESTION_TYPE.checkbox:
+        return (
+          <CheckboxQuestion
+            question={displayedQuestion}
+            selectedAnswer={selectedAnswer}
+            onToggleCheckbox={onToggleCheckbox}
+          />
+        );
+      default: {
+        const displayedOptions = displayedQuestion?.options;
+        const displayedMin = displayedOptions?.min ?? 0;
+        const displayedMax = displayedOptions?.max ?? 10;
+        const displayedScores = Array.from({ length: displayedMax - displayedMin + 1 }, (_, i) => displayedMin + i);
+
+        return (
+          <Box sx={styles.scoresSection}>
+            <Box sx={styles.scoresRow}>
+              {displayedScores.map(score => (
+                <ScoreButton
+                  key={score}
+                  score={score}
+                  isSelected={selectedAnswer === score}
+                  onClick={handleSelectScore}
+                />
+              ))}
+            </Box>
+            <Box sx={styles.labelsRow}>
+              <Typography sx={styles.label}>{displayedOptions?.min_label ?? 'Not likely'}</Typography>
+              <Typography sx={styles.label}>{displayedOptions?.max_label ?? 'Very likely'}</Typography>
+            </Box>
+          </Box>
+        );
+      }
+    }
+  };
 
   return (
     <Box sx={styles.card}>
@@ -60,23 +115,7 @@ const NpsSurveyCard = memo(props => {
         in={fadeIn}
         timeout={300}
       >
-        <Box sx={styles.scoresSection}>
-          <Box sx={styles.scoresRow}>
-            {displayedScores.map(score => (
-              <ScoreButton
-                key={score}
-                score={score}
-                isSelected={selectedAnswer === score}
-                onClick={handleSelectScore}
-              />
-            ))}
-          </Box>
-
-          <Box sx={styles.labelsRow}>
-            <Typography sx={styles.label}>{displayedOptions?.min_label ?? 'Not likely'}</Typography>
-            <Typography sx={styles.label}>{displayedOptions?.max_label ?? 'Very likely'}</Typography>
-          </Box>
-        </Box>
+        <Box>{renderQuestionBody()}</Box>
       </Fade>
 
       <Box sx={styles.actionsRow}>
@@ -88,6 +127,17 @@ const NpsSurveyCard = memo(props => {
             sx={styles.notNowBtn}
           >
             Not now
+          </Button.BaseBtn>
+        )}
+        {showNext && (
+          <Button.BaseBtn
+            variant={BUTTON_VARIANTS.elitea}
+            color={BUTTON_COLORS.secondary}
+            onClick={onNextQuestion}
+            disabled={!hasCheckboxSelection}
+            sx={styles.notNowBtn}
+          >
+            Next
           </Button.BaseBtn>
         )}
         <Button.BaseBtn

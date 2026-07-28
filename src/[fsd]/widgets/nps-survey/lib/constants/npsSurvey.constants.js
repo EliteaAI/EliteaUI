@@ -7,3 +7,9 @@ export const PHASE = {
   thankyou: 'thankyou',
   hidden: 'hidden',
 };
+
+export const QUESTION_TYPE = {
+  slider: 'slider',
+  radio: 'radio',
+  checkbox: 'checkbox',
+};
