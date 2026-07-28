@@ -6,6 +6,7 @@ const DAILY_FLOOR_MSG = 'Frequency cannot be more than once per day';
 const validateMinimumFrequency = (minute, hour) => {
   const invalid = {
     isValid: false,
+    field: 'minutes',
     message: HOURLY_FLOOR_MSG,
   };
 
@@ -41,6 +42,7 @@ const validateMinimumFrequency = (minute, hour) => {
       if (stepValue === 0)
         return {
           isValid: false,
+          field: 'hours',
           message: 'Invalid hour step value. Step cannot be 0.',
         };
     }
@@ -55,6 +57,7 @@ const validateMinimumFrequency = (minute, hour) => {
 const validateMinimumDailyFrequency = (minute, hour) => {
   const invalid = {
     isValid: false,
+    field: 'hours',
     message: DAILY_FLOOR_MSG,
   };
 
@@ -123,20 +126,37 @@ export const validateCronExpression = input => {
   const weekdayPattern = /^(\*|[0-7](,[0-7])*|[0-7]-[0-7]|(\*\/[0-7]))$/;
 
   if (!minutePattern.test(minute))
-    return { isValid: false, message: 'Invalid minute (0-59, *, ranges, lists, steps allowed)' };
+    return {
+      isValid: false,
+      field: 'minutes',
+      message: 'Invalid minute (0-59, *, ranges, lists, steps allowed)',
+    };
 
   if (!hourPattern.test(hour))
-    return { isValid: false, message: 'Invalid hour (0-23, *, ranges, lists, steps allowed)' };
+    return {
+      isValid: false,
+      field: 'hours',
+      message: 'Invalid hour (0-23, *, ranges, lists, steps allowed)',
+    };
 
   if (!dayPattern.test(day))
-    return { isValid: false, message: 'Invalid day (1-31, *, ranges, lists, steps allowed)' };
+    return {
+      isValid: false,
+      field: 'month-days',
+      message: 'Invalid day (1-31, *, ranges, lists, steps allowed)',
+    };
 
   if (!monthPattern.test(month))
-    return { isValid: false, message: 'Invalid month (1-12, *, ranges, lists, steps allowed)' };
+    return {
+      isValid: false,
+      field: 'months',
+      message: 'Invalid month (1-12, *, ranges, lists, steps allowed)',
+    };
 
   if (!weekdayPattern.test(weekday))
     return {
       isValid: false,
+      field: 'week-days',
       message: 'Invalid weekday (0-7 where 0,7=Sunday, *, ranges, lists, steps allowed)',
     };
 
@@ -207,7 +227,7 @@ export const validateCronExpressionDaily = input => {
     // the index modal those rejections must surface the daily-floor message
     // instead. Other rejections (syntax errors, hour-step-zero) pass through.
     if (base.message === HOURLY_FLOOR_MSG) {
-      return { isValid: false, message: DAILY_FLOOR_MSG };
+      return { isValid: false, field: base.field, message: DAILY_FLOOR_MSG };
     }
     return base;
   }

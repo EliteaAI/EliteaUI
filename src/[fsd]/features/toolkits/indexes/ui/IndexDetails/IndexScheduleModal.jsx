@@ -4,7 +4,7 @@ import { Cron } from 'react-js-cron';
 import 'react-js-cron/dist/styles.css';
 import { useSelector } from 'react-redux';
 
-import { Box, Divider, GlobalStyles, Typography } from '@mui/material';
+import { Box, GlobalStyles, Typography } from '@mui/material';
 
 import { CredentialsSelect } from '@/[fsd]/features/credentials/ui';
 import { IndexCronDefault } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
@@ -15,6 +15,7 @@ import {
 import { Button, Modal, Tab } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
+import ErrorIcon from '@/assets/error-icon.svg?react';
 import FormInput from '@/components/FormInput';
 import { useSelectedProject } from '@/hooks/useSelectedProject';
 
@@ -64,6 +65,11 @@ const IndexScheduleModal = props => {
 
   const cronState = useMemo(() => validateCronExpression(cronExpression), [cronExpression]);
 
+  const invalidCronFieldClass = useMemo(() => {
+    if (cronState.isValid || !cronState.field) return null;
+    return `react-js-cron-${cronState.field}`;
+  }, [cronState]);
+
   const nextRunComputed = useMemo(() => {
     if (!cronState.isValid) return null;
     const date = getNextCronRun(cronExpression);
@@ -112,16 +118,37 @@ const IndexScheduleModal = props => {
             </Box>
 
             {cronType === 'builder' ? (
-              <Box sx={styles.cronWrapper}>
+              <Box
+                sx={[
+                  styles.cronWrapper,
+                  invalidCronFieldClass && {
+                    [`& .${invalidCronFieldClass} .react-js-cron-select`]: {
+                      borderColor: ({ palette }) => `${palette.text.error} !important`,
+                    },
+                  },
+                ]}
+              >
                 <Cron
                   value={cronExpression}
                   setValue={setCronExpression}
                   clearButton={false}
                   clockFormat="24-hour-clock"
+                  allowedPeriods={['month', 'week', 'day']}
+                  dropdownsConfig={{
+                    hours: { mode: 'single' },
+                    minutes: { mode: 'single' },
+                  }}
+                  locale={{
+                    emptyMonths: 'Month',
+                    emptyMonthDays: 'Day',
+                    emptyMonthDaysShort: 'Day',
+                    emptyWeekDays: 'Weekday',
+                    emptyWeekDaysShort: 'Weekday',
+                  }}
                 />
               </Box>
             ) : (
-              <>
+              <Box sx={styles.cronWrapper}>
                 <FormInput
                   value={cronExpression}
                   onChange={event => setCronExpression(event.target.value)}
@@ -142,33 +169,42 @@ const IndexScheduleModal = props => {
                     sx={styles.infoIconWrapper}
                   />
                 </Box>
-              </>
+              </Box>
             )}
 
             <Box sx={styles.previewBox}>
               <Typography
                 variant="headingSmall"
-                sx={[styles.previewSummary, !cronState.isValid && styles.previewSummaryError]}
+                sx={styles.previewSummary}
               >
-                {cronState.isValid ? `"${cronState.message}"` : cronState.message}
+                {cronState.isValid ? `"${cronState.message}"` : '-'}
               </Typography>
-              {nextRunComputed && (
-                <Box sx={styles.nextRunContainer}>
-                  <Typography
-                    variant="bodySmall"
-                    color="text.primary"
-                    sx={styles.nextRunLabel}
-                  >
-                    Next run:
-                  </Typography>
-                  <Typography variant="labelSmall">{nextRunComputed}</Typography>
-                </Box>
-              )}
+
+              <Box sx={styles.nextRunContainer}>
+                <Typography
+                  variant="bodySmall"
+                  color="text.primary"
+                  sx={styles.nextRunLabel}
+                >
+                  Next run:
+                </Typography>
+                <Typography variant="labelSmall">{cronState.isValid ? nextRunComputed : '-'}</Typography>
+              </Box>
             </Box>
+            {!cronState.isValid && (
+              <Box sx={styles.errorContainer}>
+                <ErrorIcon />
+                <Typography
+                  variant="labelSmall"
+                  sx={styles.previewSummaryError}
+                >
+                  {cronState.message}
+                </Typography>
+              </Box>
+            )}
 
             {credentialsData && (
               <>
-                <Divider />
                 <CredentialsSelect
                   isCreationAllowed
                   label={`${toolkitName} Credentials`}
@@ -261,7 +297,7 @@ const indexScheduleModalStyles = () => ({
     fontWeight: 500,
   },
   previewSummaryError: {
-    color: 'error.main',
+    color: ({ palette }) => palette.text.warningText,
   },
   nextRunContainer: {
     display: 'flex',
@@ -283,6 +319,17 @@ const indexScheduleModalStyles = () => ({
     fontSize: '0.75rem',
     textAlign: 'center',
   }),
+  errorContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    width: '100%',
+    borderRadius: '0.5rem',
+    padding: '0.5rem',
+    border: ({ palette }) => `1px solid ${palette.border.error}`,
+    background: ({ palette }) => palette.background.errorBkg,
+    color: ({ palette }) => palette.text.error,
+    gap: '0.5rem',
+  },
   infoIconWrapper: {
     display: 'flex',
     alignItems: 'center',
@@ -295,6 +342,9 @@ const indexScheduleModalStyles = () => ({
   },
   cronWrapper: {
     width: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem',
     '& .react-js-cron': {
       width: '100%',
       flexWrap: 'wrap',
@@ -303,6 +353,7 @@ const indexScheduleModalStyles = () => ({
   cronContainer: ({ palette, typography }) => ({
     '.react-js-cron': {
       alignItems: 'center',
+      justifyContent: 'center',
       gap: '0.5rem',
 
       span: {
@@ -339,25 +390,28 @@ const indexScheduleModalStyles = () => ({
       div: {
         color: palette.text.secondary,
         ...typography.bodySmall,
+        ' .ant-select-placeholder': {
+          color: `${palette.text.button.disabled} !important`,
+        },
       },
     },
     ' .react-js-cron-hours .react-js-cron-select': {
-      maxWidth: '4.25rem !important',
+      // width: '4.25rem !important',
       minWidth: '4.25rem !important',
     },
 
     ' .react-js-cron-hours .ant-select .ant-select-content': {
-      maxWidth: '2rem !important',
+      // width: '2rem !important',
       minWidth: '2rem !important',
     },
 
     ' .react-js-cron-minutes .react-js-cron-select': {
-      maxWidth: '4.25rem !important',
+      // width: '4.25rem !important',
       minWidth: '4.25rem !important',
     },
 
     ' .react-js-cron-minutes .ant-select .ant-select-content': {
-      maxWidth: '2rem !important',
+      // width: '2rem !important',
       minWidth: '2rem !important',
     },
 
