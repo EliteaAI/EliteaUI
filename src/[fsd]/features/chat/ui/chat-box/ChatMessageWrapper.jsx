@@ -158,6 +158,7 @@ const ChatMessageWrapper = memo(props => {
       shouldDisableRegenerate={shouldDisableRegenerate}
       references={message.references}
       exception={message.exception}
+      budgetErrorCode={message.budgetErrorCode}
       subAgentErrors={message.subAgentErrors}
       toolActions={message.toolActions || []}
       tools={messageParticipant?.meta?.tools || toolsFromConversation}
