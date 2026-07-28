@@ -3,6 +3,7 @@ import {
   DEFAULT_REASONING_EFFORT,
   DEFAULT_TEMPERATURE,
 } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
+import { modelSupportsReasoning } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
 import {
   CONTEXT_MESSAGES,
   DEFAULT_CONTEXT_STRATEGY,
@@ -32,9 +33,15 @@ export const serializeFormData = (
     model_name: contextStrategy.summary_llm_settings?.model_name || defaultModel?.name || '',
     model_project_id:
       contextStrategy.summary_llm_settings?.model_project_id || defaultModel?.project_id || selectedProjectId,
-    temperature: contextStrategy.summary_llm_settings?.temperature || DEFAULT_TEMPERATURE,
+    // Only one of temperature/reasoning_effort may be set, never both (issue #5821) — a
+    // reasoning-capable model rejects a custom temperature.
+    ...(modelSupportsReasoning(defaultModel)
+      ? {
+          reasoning_effort:
+            contextStrategy.summary_llm_settings?.reasoning_effort || DEFAULT_REASONING_EFFORT,
+        }
+      : { temperature: contextStrategy.summary_llm_settings?.temperature || DEFAULT_TEMPERATURE }),
     max_tokens: contextStrategy.summary_llm_settings?.max_tokens || DEFAULT_MAX_TOKENS_CUSTOM,
-    reasoning_effort: contextStrategy.reasoning_effort || DEFAULT_REASONING_EFFORT,
     instructions:
       contextStrategy.summary_llm_settings?.instructions ||
       contextStrategy.summary_instructions ||
