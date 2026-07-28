@@ -7,13 +7,13 @@ import { Banner, Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import Markdown from '@/[fsd]/shared/ui/markdown';
 import { useDeleteProjectContextMutation, useUpdateProjectContextMutation } from '@/api/projectContext';
-import SparkleIcon from '@/assets/ai-sparkle-icon.svg?react';
 import DotMenu from '@/components/DotMenu';
 import CopyIcon from '@/components/Icons/CopyIcon';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import useToast from '@/hooks/useToast';
 
 import EnableToggleCard from './EnableToggleCard';
+import AIEditProjectContextButton from './ai-edit/AIEditProjectContextButton';
 
 const ProjectContextSavedView = memo(props => {
   const { serverData, projectId, canEdit, onNavigate } = props;
@@ -45,6 +45,14 @@ const ProjectContextSavedView = memo(props => {
       () => toastError('Failed to copy to clipboard'),
     );
   }, [content, toastInfo, toastError]);
+
+  const handleApplySave = useCallback(
+    async suggested => {
+      await updateProjectContext({ projectId, content: suggested, enabled }).unwrap();
+      toastSuccess('Project Context saved');
+    },
+    [updateProjectContext, projectId, enabled, toastSuccess],
+  );
 
   const handleDeleteConfirm = useCallback(async () => {
     try {
@@ -83,14 +91,11 @@ const ProjectContextSavedView = memo(props => {
       <Box sx={styles.headerActions}>
         {canEdit && (
           <>
-            <Button.BaseBtn
-              variant={BUTTON_VARIANTS.special}
-              startIcon={<SparkleIcon />}
-              onClick={() => onNavigate('edit', { openAi: true })}
+            <AIEditProjectContextButton
+              currentContent={content}
+              onApplySave={handleApplySave}
               disabled={!enabled}
-            >
-              Edit with AI
-            </Button.BaseBtn>
+            />
             <Button.BaseBtn
               variant={BUTTON_VARIANTS.secondary}
               onClick={() => onNavigate('edit')}
@@ -123,7 +128,16 @@ const ProjectContextSavedView = memo(props => {
         )}
       </Box>
     ),
-    [styles.headerActions, canEdit, enabled, theme.palette.text.secondary, dotMenuItems, onNavigate],
+    [
+      styles.headerActions,
+      canEdit,
+      enabled,
+      content,
+      handleApplySave,
+      theme.palette.text.secondary,
+      dotMenuItems,
+      onNavigate,
+    ],
   );
 
   return (

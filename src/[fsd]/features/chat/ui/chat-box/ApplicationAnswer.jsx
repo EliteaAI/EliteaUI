@@ -80,6 +80,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
     shouldDisableRegenerate,
     references = [],
     exception,
+    budgetErrorCode,
     subAgentErrors = null,
     isLoading = false,
     isStreaming,
@@ -740,6 +741,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                   trace={exception}
                   messageId={messageId}
                   onCopy={onCopy}
+                  budgetErrorCode={budgetErrorCode}
                 />
               )}
               {!!authRequiredAction && (
