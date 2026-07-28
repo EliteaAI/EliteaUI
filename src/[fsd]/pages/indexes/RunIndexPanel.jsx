@@ -576,7 +576,7 @@ const RunIndexPanel = memo(props => {
         open={scheduleModalOpen}
         onClose={() => setScheduleModalOpen(false)}
         onSubmit={handleApplyScheduleModal}
-        cron={scheduleData.cron}
+        cron={scheduleData.cron ?? IndexCronDefault}
         credentials={scheduleData.credentials}
         credentialsData={credentialsData}
         isEdit={scheduleModalIsEdit}
