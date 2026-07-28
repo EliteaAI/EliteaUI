@@ -159,23 +159,28 @@ const SkillTestPanel = memo(({ isFullScreenChat, setIsFullScreenChat }) => {
   const [generateContent] = useGenerateContentStreamingMutation();
   const [stopLlmTask] = useStopLlmTaskMutation();
 
-  const finishStreaming = useCallback(() => {
-    // Capture the active message id BEFORE nulling the refs below.
-    const finishedMessageId = activeMessageIdRef.current;
+  const finishStreaming = useCallback(
+    (errorPatch = null) => {
+      // Capture the active message id BEFORE nulling the refs below.
+      const finishedMessageId = activeMessageIdRef.current;
 
-    clearTimeout(finalizeTimerRef.current);
-    finalizeTimerRef.current = null;
-    setIsStreaming(false);
-    setChatHistory(prev =>
-      prev.map(msg =>
-        msg.internal_id === finishedMessageId ? { ...msg, isLoading: false, isStreaming: false } : msg,
-      ),
-    );
-    activeStreamIdRef.current = null;
-    activeTaskIdRef.current = null;
-    activeMessageIdRef.current = null;
-    awaitingStreamRef.current = false;
-  }, [setChatHistory]);
+      clearTimeout(finalizeTimerRef.current);
+      finalizeTimerRef.current = null;
+      setIsStreaming(false);
+      setChatHistory(prev =>
+        prev.map(msg =>
+          msg.internal_id === finishedMessageId
+            ? { ...msg, isLoading: false, isStreaming: false, ...(errorPatch || {}) }
+            : msg,
+        ),
+      );
+      activeStreamIdRef.current = null;
+      activeTaskIdRef.current = null;
+      activeMessageIdRef.current = null;
+      awaitingStreamRef.current = false;
+    },
+    [setChatHistory],
+  );
 
   const handleSocketEvent = useCallback(
     message => {
@@ -244,6 +249,22 @@ const SkillTestPanel = memo(({ isFullScreenChat, setIsFullScreenChat }) => {
             if (activeStreamIdRef.current) finishStreaming();
           }, 4000);
           break;
+        case SocketMessageType.AgentException: {
+          // The runtime reports execution failures here. Without this case the stream
+          // never terminates and the message spins forever, for any error class.
+          const budgetErrorCode = response_metadata?.budget_error_code;
+          const headline =
+            response_metadata?.human_readable ||
+            convertContent(message.content) ||
+            'Failed to generate response';
+
+          finishStreaming({
+            content: budgetErrorCode ? '' : headline,
+            exception: convertContent(message.content) || headline,
+            budgetErrorCode,
+          });
+          break;
+        }
         case SocketMessageType.Error:
         case SocketMessageType.LlmError: {
           const err = message.content?.error || message.content || 'Failed to generate response';
