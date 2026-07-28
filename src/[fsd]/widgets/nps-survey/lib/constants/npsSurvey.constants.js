@@ -12,4 +12,5 @@ export const QUESTION_TYPE = {
   slider: 'slider',
   radio: 'radio',
   checkbox: 'checkbox',
+  text: 'text',
 };

@@ -113,6 +113,16 @@ const useNpsSurvey = () => {
     });
   }, []);
 
+  const handleTextChange = useCallback((questionId, text) => {
+    setAnswers(prev => {
+      const next = new Map(prev);
+      if (text.trim().length > 0) next.set(questionId, text);
+      else next.delete(questionId);
+
+      return next;
+    });
+  }, []);
+
   const handleNextQuestion = useCallback(() => {
     setCurrentQuestionIndex(prev => {
       if (prev < sortedQuestions.length - 1) return prev + 1;
@@ -166,6 +176,7 @@ const useNpsSurvey = () => {
     isSubmitting,
     handleSelectAnswer,
     handleToggleCheckbox,
+    handleTextChange,
     handleNextQuestion,
     handleSubmit,
     handleDismiss,

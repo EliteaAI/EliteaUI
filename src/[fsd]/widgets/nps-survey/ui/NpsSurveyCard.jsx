@@ -9,6 +9,7 @@ import { QUESTION_TYPE } from '../lib/constants';
 import CheckboxQuestion from './CheckboxQuestion';
 import RadioQuestion from './RadioQuestion';
 import ScoreButton from './ScoreButton';
+import TextQuestion from './TextQuestion';
 
 const NpsSurveyCard = memo(props => {
   const {
@@ -21,6 +22,7 @@ const NpsSurveyCard = memo(props => {
     isSubmitting,
     onSelectAnswer,
     onToggleCheckbox,
+    onTextChange,
     onNextQuestion,
     onSubmit,
     onDismiss,
@@ -48,10 +50,13 @@ const NpsSurveyCard = memo(props => {
     [onSelectAnswer, currentQuestion.id],
   );
 
-  const isCheckboxType = displayedType === QUESTION_TYPE.checkbox;
+  const needsManualAdvance = displayedType === QUESTION_TYPE.checkbox || displayedType === QUESTION_TYPE.text;
   const isLastQuestion = currentQuestionIndex >= totalQuestions - 1;
-  const hasCheckboxSelection = isCheckboxType && Array.isArray(selectedAnswer) && selectedAnswer.length > 0;
-  const showNext = isCheckboxType && !isLastQuestion;
+  const hasCurrentAnswer =
+    displayedType === QUESTION_TYPE.checkbox
+      ? Array.isArray(selectedAnswer) && selectedAnswer.length > 0
+      : selectedAnswer != null;
+  const showNext = needsManualAdvance && !isLastQuestion;
 
   const renderQuestionBody = () => {
     switch (displayedType) {
@@ -71,11 +76,22 @@ const NpsSurveyCard = memo(props => {
             onToggleCheckbox={onToggleCheckbox}
           />
         );
+      case QUESTION_TYPE.text:
+        return (
+          <TextQuestion
+            question={displayedQuestion}
+            selectedAnswer={selectedAnswer}
+            onTextChange={onTextChange}
+          />
+        );
       default: {
         const displayedOptions = displayedQuestion?.options;
         const displayedMin = displayedOptions?.min ?? 0;
         const displayedMax = displayedOptions?.max ?? 10;
-        const displayedScores = Array.from({ length: displayedMax - displayedMin + 1 }, (_, i) => displayedMin + i);
+        const displayedScores = Array.from(
+          { length: displayedMax - displayedMin + 1 },
+          (_, i) => displayedMin + i,
+        );
 
         return (
           <Box sx={styles.scoresSection}>
@@ -134,7 +150,7 @@ const NpsSurveyCard = memo(props => {
             variant={BUTTON_VARIANTS.elitea}
             color={BUTTON_COLORS.secondary}
             onClick={onNextQuestion}
-            disabled={!hasCheckboxSelection}
+            disabled={!hasCurrentAnswer}
             sx={styles.notNowBtn}
           >
             Next

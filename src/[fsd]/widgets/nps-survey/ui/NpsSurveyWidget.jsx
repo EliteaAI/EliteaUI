@@ -21,6 +21,7 @@ const NpsSurveyWidget = memo(() => {
     isSubmitting,
     handleSelectAnswer,
     handleToggleCheckbox,
+    handleTextChange,
     handleNextQuestion,
     handleSubmit,
     handleDismiss,
@@ -83,6 +84,7 @@ const NpsSurveyWidget = memo(() => {
                   isSubmitting={isSubmitting}
                   onSelectAnswer={handleSelectAnswer}
                   onToggleCheckbox={handleToggleCheckbox}
+                  onTextChange={handleTextChange}
                   onNextQuestion={handleNextQuestion}
                   onSubmit={handleSubmit}
                   onDismiss={handleDismiss}
