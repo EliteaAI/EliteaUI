@@ -5,6 +5,8 @@ import { useNavigate } from 'react-router-dom';
 
 import { Box, CircularProgress } from '@mui/material';
 
+import { useMcpAuthModal } from '@/[fsd]/features/mcp/lib/hooks';
+import { McpAuthModal } from '@/[fsd]/features/mcp/ui';
 import { IndexesToolsEnum } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import { adjustIndexDataSchema } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexChat.helpers';
 import { useIndexNameValidation } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
@@ -130,6 +132,7 @@ const CreateIndexForm = memo(props => {
   );
 
   const refetchIndexesList = useCallback(() => Promise.resolve(), []);
+  const { handleMcpAuthRequired, getModalProps } = useMcpAuthModal({ values });
 
   const { handleIndexData, isRunning } = useToolkitChat({
     index: null,
@@ -141,6 +144,7 @@ const CreateIndexForm = memo(props => {
     traceNewIndex,
     values,
     modes: [ToolkitChatModesEnum.createIndex],
+    onMcpAuthRequired: handleMcpAuthRequired,
   });
 
   const onChangeInputVariables = useCallback(
@@ -194,29 +198,32 @@ const CreateIndexForm = memo(props => {
   );
 
   return (
-    <Box sx={styles.body}>
-      <BasicAccordion
-        data-testid="create-index-configuration-accordion"
-        style={styles.accordionWrapper}
-        items={[{ title: 'Index configuration', content: accordionContent }]}
-      />
-      <Box sx={styles.actions}>
-        <Button.BaseBtn
-          variant={Button.BUTTON_VARIANTS.elitea}
-          onClick={handleIndexData}
-          disabled={!isValidForm || isRunning}
-        >
-          Index
-        </Button.BaseBtn>
-        <Button.BaseBtn
-          variant={Button.BUTTON_VARIANTS.secondary}
-          onClick={handleCancel}
-          disabled={isRunning}
-        >
-          Cancel
-        </Button.BaseBtn>
+    <>
+      <Box sx={styles.body}>
+        <BasicAccordion
+          data-testid="create-index-configuration-accordion"
+          style={styles.accordionWrapper}
+          items={[{ title: 'Index configuration', content: accordionContent }]}
+        />
+        <Box sx={styles.actions}>
+          <Button.BaseBtn
+            variant={Button.BUTTON_VARIANTS.elitea}
+            onClick={handleIndexData}
+            disabled={!isValidForm || isRunning}
+          >
+            Index
+          </Button.BaseBtn>
+          <Button.BaseBtn
+            variant={Button.BUTTON_VARIANTS.secondary}
+            onClick={handleCancel}
+            disabled={isRunning}
+          >
+            Cancel
+          </Button.BaseBtn>
+        </Box>
       </Box>
-    </Box>
+      <McpAuthModal {...getModalProps()} />
+    </>
   );
 });
 

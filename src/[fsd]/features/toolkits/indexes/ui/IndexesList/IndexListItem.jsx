@@ -251,7 +251,7 @@ const IndexListItem = memo(props => {
               )}
 
               {index.metadata.state === IndexStatuses.cancelled && (
-                <Box sx={[styles.stateIcon, styles.warning]}>
+                <Box sx={[styles.stateIcon, styles.warning, styles.stateIconContainer]}>
                   <StopIcon
                     width={16}
                     height={16}
@@ -259,7 +259,7 @@ const IndexListItem = memo(props => {
                 </Box>
               )}
               {index.metadata.state === IndexStatuses.partlyOk && (
-                <Box sx={[styles.stateIcon, styles.warning]}>
+                <Box sx={[styles.stateIcon, styles.warning, styles.stateIconContainer]}>
                   <AttentionIcon
                     width={16}
                     height={16}
@@ -394,10 +394,6 @@ const indexListItem = () => ({
   },
   stateIcon: ({ palette }) => ({
     color: palette.text.info,
-    // position: 'absolute',
-    // bottom: '-0.725rem',
-    // right: listOnly ? '8rem' : '1rem',
-    // marginTop: '-.4375rem',
   }),
   error: {
     fill: '#D71616',

@@ -31,7 +31,7 @@ export const MONTH_DAY_OPTIONS = Array.from({ length: 31 }, (_, i) => ({
   label: String(i + 1),
 }));
 
-export const DEFAULT_CRON_STATE = { period: 'week', minutes: 0, hours: 0, monthDay: null, weekDay: null };
+export const DEFAULT_CRON_STATE = { period: 'week', minutes: 0, hours: 0, monthDays: [], weekDays: [] };
 
 export const parseCron = expression => {
   try {
@@ -43,33 +43,39 @@ export const parseCron = expression => {
     if (dayF !== '*') period = 'month';
     else if (weekdayF !== '*') period = 'week';
 
-    const [minutes, hours, monthDays, , weekDays] = converter.parseCronString(expression);
+    const [mins, hrs, monthDays, , weekDays] = converter.parseCronString(expression);
 
     return {
       period,
-      minutes: minutes[0] ?? 0,
-      hours: hours[0] ?? 0,
-      monthDay: dayF !== '*' ? (monthDays[0] ?? null) : null,
-      weekDay: weekdayF !== '*' ? (weekDays[0] ?? null) : null,
+      minutes: mins[0] ?? 0,
+      hours: hrs[0] ?? 0,
+      monthDays: dayF !== '*' ? monthDays : [],
+      weekDays: weekdayF !== '*' ? weekDays : [],
     };
   } catch {
     return null;
   }
 };
 
-export const buildCron = ({ period, minutes, hours, monthDay, weekDay }) => {
+// Only uses range notation when ALL values form a single consecutive run
+// (e.g. [1,2,3,4,5] → "1-5"). Otherwise joins with commas.
+// Keeps output compatible with the validator regex which allows a single range OR a comma list.
+const toCompactField = nums => {
+  if (!nums?.length) return '*';
+  const sorted = [...nums].sort((a, b) => a - b);
+  const isConsecutiveRun = sorted.length > 1 && sorted[sorted.length - 1] - sorted[0] === sorted.length - 1;
+  if (isConsecutiveRun) return `${sorted[0]}-${sorted[sorted.length - 1]}`;
+  return sorted.join(',');
+};
+
+export const buildCron = ({ period, minutes, hours, monthDays, weekDays }) => {
   const m = Number.isFinite(minutes) ? minutes : 0;
   const h = Number.isFinite(hours) ? hours : 0;
 
-  if (period === 'day') return converter.getCronStringFromValues('day', [], [], [], [h], [m]);
-  if (period === 'week') {
-    const wd = weekDay != null ? weekDay : '*';
-    return `${m} ${h} * * ${wd}`;
-  }
+  if (period === 'day') return `${m} ${h} * * *`;
+  if (period === 'week') return `${m} ${h} * * ${toCompactField(weekDays)}`;
   if (period === 'month') {
-    const md = monthDay != null ? monthDay : '*';
-    const wd = weekDay != null ? weekDay : '*';
-    return `${m} ${h} ${md} * ${wd}`;
+    return `${m} ${h} ${toCompactField(monthDays)} * ${toCompactField(weekDays)}`;
   }
   return '0 0 * * *';
 };
