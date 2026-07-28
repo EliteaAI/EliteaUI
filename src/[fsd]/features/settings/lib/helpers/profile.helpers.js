@@ -22,6 +22,7 @@ export const PROFILE_INITIAL_VALUES = {
   max_context_tokens: DEFAULT_CONTEXT_STRATEGY.MAX_CONTEXT_TOKENS,
   preserve_recent_messages: DEFAULT_CONTEXT_STRATEGY.PRESERVE_RECENT_MESSAGES,
   enable_summarization: DEFAULT_CONTEXT_STRATEGY.ENABLE_SUMMARIZATION,
+  enable_context_editing: DEFAULT_CONTEXT_STRATEGY.ENABLE_CONTEXT_EDITING,
   summary_llm_settings: {
     instructions: '',
     model_name: '',
@@ -61,6 +62,7 @@ export const serializeProfileFormData = (authorData, defaultModel, selectedProje
     max_context_tokens: cm.max_context_tokens ?? DEFAULT_CONTEXT_STRATEGY.MAX_CONTEXT_TOKENS,
     preserve_recent_messages:
       cm.preserve_recent_messages ?? DEFAULT_CONTEXT_STRATEGY.PRESERVE_RECENT_MESSAGES,
+    enable_context_editing: cm.enable_context_editing ?? DEFAULT_CONTEXT_STRATEGY.ENABLE_CONTEXT_EDITING,
     enable_summarization: s.enable_summarization ?? DEFAULT_CONTEXT_STRATEGY.ENABLE_SUMMARIZATION,
     summary_llm_settings: {
       instructions: s.summary_instructions || '',
@@ -82,6 +84,7 @@ export const deserializeProfileFormData = formValues => ({
     enabled: formValues.context_enabled,
     max_context_tokens: formValues.max_context_tokens,
     preserve_recent_messages: formValues.preserve_recent_messages,
+    enable_context_editing: formValues.enable_context_editing,
   },
   default_summarization: {
     enable_summarization: formValues.enable_summarization,
@@ -119,6 +122,7 @@ export const profileValidationSchema = yup.object({
 
   // Context Management
   context_enabled: yup.boolean(),
+  enable_context_editing: yup.boolean(),
   max_context_tokens: yup
     .number()
     .typeError('Please enter a valid number')

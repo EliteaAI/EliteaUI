@@ -27,6 +27,13 @@ const MemoryContextManagement = memo(props => {
     [setFieldValue, onAutoSaveRequested],
   );
 
+  const handleContextEditingChange = useCallback(
+    (event, checkedValue) => {
+      setFieldValue('enable_context_editing', checkedValue);
+    },
+    [setFieldValue],
+  );
+
   const handleNumericInputChange = useCallback(
     (e, fieldName) => {
       const value = e?.target?.value;
@@ -114,6 +121,27 @@ const MemoryContextManagement = memo(props => {
                 </Box>
               </Box>
 
+              {/* Context Editing (clear stale tool outputs) */}
+              <Box sx={styles.toggleSection}>
+                <Box sx={styles.toggleContent}>
+                  <Typography
+                    variant="headingSmall"
+                    sx={{ color: 'text.secondary' }}
+                  >
+                    Context Editing
+                  </Typography>
+                  <Typography variant="bodySmall">
+                    Clear older tool outputs when the context grows large, keeping recent results
+                  </Typography>
+                </Box>
+                <Switch.BaseSwitch
+                  data-testid="context-editing-toggle"
+                  checked={values.enable_context_editing}
+                  onChange={handleContextEditingChange}
+                  disabled={!isEnabled}
+                />
+              </Box>
+
               {/* Sub-sections nested under Default Context Management */}
               <Box sx={styles.subSections}>
                 <MemorySummarization modelList={modelList} />
@@ -140,7 +168,7 @@ const memoryContextManagementStyles = () => ({
   accordionContent: {
     display: 'flex',
     flexDirection: 'column',
-    // gap: '1rem',
+    gap: '1rem',
     paddingRight: '1rem',
   },
   toggleSection: ({ palette }) => ({
@@ -162,7 +190,6 @@ const memoryContextManagementStyles = () => ({
   fieldsRow: {
     display: 'flex',
     gap: '1.5rem',
-    marginTop: '1rem',
   },
   subSections: {
     display: 'flex',
