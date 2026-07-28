@@ -7,6 +7,7 @@ import {
   TOOL_ACTION_TYPES,
   ToolActionStatus,
 } from '@/common/constants';
+import { hasUnresolvedSkillAction, mentionSkillActions } from '@/common/mentionSkillTrace';
 
 export const isUserMessage = (author_participant_id, sent_to_id, userIds, reply_to_id, sent_to) => {
   return (
@@ -283,6 +284,7 @@ export const convertToAIAnswer = (message_group, message_groups, participants, t
           mcp_server_url: step.metadata?.mcp_server_url,
           langgraph_node: step.metadata?.langgraph_node,
           icon_meta: step.tool_meta?.icon_meta,
+          loaded_skill: step.tool_meta?.loaded_skill,
           agent_type: step.tool_meta?.metadata?.agent_type,
           ...hierarchy,
         },
@@ -295,6 +297,10 @@ export const convertToAIAnswer = (message_group, message_groups, participants, t
       });
     }
   }) || [];
+
+  if (!hasUnresolvedSkillAction(toolActions)) {
+    toolActions.unshift(...mentionSkillActions(toolActions, meta?.invoked_skills, convertTime(created_at)));
+  }
 
   // Reconstruct HITL interrupt state persisted at pause time (#4823). The live
   // socket handler (components/Chat/hooks.js) is the only other place these are

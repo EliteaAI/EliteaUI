@@ -30,6 +30,7 @@ import {
   sioEvents,
 } from '@/common/constants';
 import { convertTime } from '@/common/convertChatConversationMessages.js';
+import { mentionSkillActions, supersedeMentionSkillAction } from '@/common/mentionSkillTrace';
 import { convertJsonToString } from '@/common/utils';
 import { useIsFrom } from '@/hooks/useIsFromSpecificPageHooks';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -834,6 +835,13 @@ export const useChatSocket = ({
             };
             const hierarchy = normalizeExecutionHierarchy(metadata, message.response_metadata);
 
+            if (toolMeta.toolkit_name === 'skills') {
+              msg.toolActions = supersedeMentionSkillAction(
+                msg.toolActions,
+                message.response_metadata?.tool_inputs,
+              );
+            }
+
             msg.toolActions.push({
               // When a lazy-loading wrapper is used, tool_name holds the wrapper's class name (e.g. "LazyLoading")
               // rather than the actual tool name. The SDK signals this by setting metadata.original_name.
@@ -1381,7 +1389,16 @@ export const useChatSocket = ({
         }
         case SocketMessageType.Freeform:
           break;
-        case SocketMessageType.AgentStart:
+        case SocketMessageType.AgentStart: {
+          // A fan-out child re-emits agent_start on the parent's message with an
+          // empty list, so an empty set is never authoritative.
+          const mentionSkills = response_metadata?.invoked_skills;
+          if (Array.isArray(mentionSkills) && mentionSkills.length) {
+            msg.toolActions = [
+              ...(msg.toolActions || []),
+              ...mentionSkillActions(msg.toolActions, mentionSkills, message.created_at),
+            ];
+          }
           // For attachment indexing events, initialize and add message to chat history
           if (msgIndex === -1 && sio_event === 'chat_predict_attachment') {
             msg.isLoading = true;
@@ -1401,6 +1418,7 @@ export const useChatSocket = ({
           }
           onRcvAgentEventRef.current && onRcvAgentEventRef.current({ ...message });
           break;
+        }
         case SocketMessageType.SwarmChildMessage: {
           // Handle swarm child agent message - add as tool action on parent message
           const {
