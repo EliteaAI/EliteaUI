@@ -38,8 +38,8 @@ const indexesApi = eliteaApi
         invalidatesTags: [INDEXES_LIST],
       }),
       deleteIndexSchedule: build.mutation({
-        query: ({ projectId, toolkitId, indexName }) => ({
-          url: `elitea_core/index_schedule/prompt_lib/${projectId}/${toolkitId}/${indexName}`,
+        query: ({ projectId, toolkitId, indexName, userId }) => ({
+          url: `elitea_core/index_schedule/prompt_lib/${projectId}/${toolkitId}/${indexName}${userId != null ? `?user_id=${userId}` : ''}`,
           method: 'DELETE',
         }),
         invalidatesTags: (_, __, { toolkitId }) => [INDEX_SCHEDULE, { type: INDEX_SCHEDULE, id: toolkitId }],

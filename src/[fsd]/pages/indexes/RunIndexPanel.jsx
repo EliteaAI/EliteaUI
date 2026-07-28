@@ -81,7 +81,7 @@ const RunIndexPanel = memo(props => {
   const scheduleData = useMemo(() => {
     const schedule =
       toolkitScheduler[indexName]?.schedules?.[userId] ?? toolkitScheduler[indexName]?.schedules?.[-1];
-    return schedule ?? { cron: IndexCronDefault, enabled: false, credentials: null };
+    return schedule ?? {};
   }, [toolkitScheduler, indexName, userId]);
 
   const runSchema = useGetSelectedToolSchema({
@@ -206,8 +206,8 @@ const RunIndexPanel = memo(props => {
     },
     [updateIndexSchedule, projectId, toolkitId, indexName, toastSuccess, scheduleModalIsEdit, toastError],
   );
-
   const scheduleSummary = useMemo(() => {
+    if (!scheduleData.cron) return null;
     const cron = scheduleData.cron || IndexCronDefault;
     try {
       return cronstrue.toString(cron, { use24HourTimeFormat: true });
@@ -217,6 +217,7 @@ const RunIndexPanel = memo(props => {
   }, [scheduleData.cron]);
 
   const scheduleNextRun = useMemo(() => {
+    if (!scheduleData.cron) return null;
     const date = getNextCronRun(scheduleData.cron || IndexCronDefault);
     if (!date) return null;
     return date.toLocaleDateString(undefined, { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -281,13 +282,23 @@ const RunIndexPanel = memo(props => {
   }, [deleteIndex, index, navigate, projectId, tab, toastError, toastSuccess, toolkitId]);
 
   const closeDeleteSchedule = useCallback(() => setDeleteScheduleOpen(false), []);
+
+  const scheduleOwnerUserId = useMemo(() => {
+    const schedules = toolkitScheduler[indexName]?.schedules ?? {};
+    if (schedules[userId] != null) return userId;
+    if (schedules[-1] != null) return -1;
+    return userId;
+  }, [toolkitScheduler, indexName, userId]);
+
   const confirmDeleteSchedule = useCallback(async () => {
     setDeleteScheduleOpen(false);
     try {
-      await deleteIndexSchedule(
-        { toolkitId, projectId, indexName: index.metadata?.collection ?? indexName },
-        true,
-      ).unwrap();
+      await deleteIndexSchedule({
+        toolkitId,
+        projectId,
+        indexName: index.metadata?.collection ?? indexName,
+        userId: scheduleOwnerUserId,
+      }).unwrap();
       toastSuccess('Schedule has been successfully deleted.');
     } catch {
       toastError('Failed to delete schedule.');
@@ -297,6 +308,7 @@ const RunIndexPanel = memo(props => {
     index.metadata?.collection,
     indexName,
     projectId,
+    scheduleOwnerUserId,
     toastError,
     toastSuccess,
     toolkitId,
