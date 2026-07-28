@@ -1,7 +1,5 @@
 import { memo, useCallback } from 'react';
 
-import { Box } from '@mui/material';
-
 import { Input } from '@/[fsd]/shared/ui';
 
 const TextQuestion = memo(props => {
@@ -14,19 +12,18 @@ const TextQuestion = memo(props => {
   );
 
   return (
-    <Box sx={styles.container}>
-      <Input.InputBase
-        multiline
-        minRows={3}
-        maxRows={3}
-        variant="outlined"
-        value={selectedAnswer ?? ''}
-        onChange={handleChange}
-        placeholder={placeholder}
-        enableAutoBlur={false}
-        sx={styles.input}
-      />
-    </Box>
+    <Input.InputBase
+      variant={Input.INPUT_VARIANTS.outlined}
+      fullWidth
+      multiline
+      minRows={3}
+      maxRows={3}
+      enableAutoBlur={false}
+      value={selectedAnswer ?? ''}
+      onChange={handleChange}
+      placeholder={placeholder}
+      sx={styles.input}
+    />
   );
 });
 
@@ -34,21 +31,19 @@ TextQuestion.displayName = 'TextQuestion';
 
 /** @type {MuiSx} */
 const styles = {
-  container: {
-    width: '100%',
-  },
   input: {
     '& .MuiOutlinedInput-root': {
       background: 'rgba(255, 255, 255, 0.6)',
       borderRadius: '0.5rem',
+
       '& fieldset': {
         border: '1px solid transparent',
       },
       '&:hover fieldset': {
-        border: '1px solid rgba(99, 144, 254, 1)',
+        border: '1px solid rgba(99, 144, 254, 1) !important',
       },
       '&.Mui-focused fieldset': {
-        border: '1px solid rgba(99, 144, 254, 1)',
+        border: '1px solid rgba(99, 144, 254, 1) !important',
       },
     },
     '& .MuiInputBase-input': {
@@ -57,6 +52,8 @@ const styles = {
       fontSize: '0.875rem',
       lineHeight: '1.5rem',
       color: '#0E131D',
+      maxHeight: '5rem !important',
+
       '&::placeholder': {
         color: '#777A83',
         opacity: 1,
