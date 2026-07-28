@@ -120,7 +120,6 @@ const DataTableNameCell = memo(props => {
       )}
       {isForked && (
         <IconLinkWithToolTip
-          tooltip={row.name}
           meta={meta}
           type={getEntityTypeByCardType(cardType)}
         />
