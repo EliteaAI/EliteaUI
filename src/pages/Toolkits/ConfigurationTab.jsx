@@ -29,7 +29,6 @@ const ConfigurationTab = memo(props => {
     updateKey,
     isMCP,
     onValidationStateChange,
-    selectedIndexTools,
     indexingUnavailableReason,
     shouldHideIndexes,
   } = props;
@@ -66,15 +65,8 @@ const ConfigurationTab = memo(props => {
       );
     }
 
-    return (
-      <IndexesContainer
-        listOnly
-        toolkitId={toolkitId}
-        selectedIndexTools={selectedIndexTools}
-        editToolDetail={editToolDetail}
-      />
-    );
-  }, [indexingUnavailableReason, toolkitId, selectedIndexTools, editToolDetail]);
+    return <IndexesContainer toolkitId={toolkitId} />;
+  }, [indexingUnavailableReason, toolkitId]);
 
   return isFetching ? (
     <Box
