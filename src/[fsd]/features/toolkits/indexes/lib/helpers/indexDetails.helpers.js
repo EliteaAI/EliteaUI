@@ -19,7 +19,7 @@ export const formatDate = ts => {
   }
 };
 
-export const bannerVariant = (isIndexing, state) => {
+export const bannerVariant = (isIndexing, state, reindexStats) => {
   if (isIndexing)
     return {
       severity: BannerSeverity.info,
@@ -44,12 +44,24 @@ export const bannerVariant = (isIndexing, state) => {
       label: BannerTitleMap[BannerSeverity.warning],
       message: BannerMessageMap[BannerSeverity.warning],
     };
-  if (RUNNABLE_INDEX_STATUSES.includes(state))
+  if (RUNNABLE_INDEX_STATUSES.includes(state)) {
+    let indexedFiles = 0;
+    let skippedFiles = 0;
+    if (reindexStats.isReindex) {
+      indexedFiles = reindexStats.updated ?? 0;
+      skippedFiles = reindexStats.skipped ?? 0;
+    } else {
+      indexedFiles = reindexStats.firstIndexed ?? 0;
+      skippedFiles = reindexStats.firstSkipped ?? 0;
+    }
     return {
       severity: BannerSeverity.success,
       label: BannerTitleMap[BannerSeverity.success],
-      message: BannerMessageMap[BannerSeverity.success],
+      message: BannerMessageMap[BannerSeverity.success]
+        .replace('{{indexed_files}}', indexedFiles)
+        .replace('{{skipped_files}}', skippedFiles),
     };
+  }
   return {
     severity: BannerSeverity.info,
     label: BannerTitleMap[BannerSeverity.info],

@@ -19,8 +19,7 @@ const RunIndexScheduleContent = memo(props => {
     disabledReason,
   } = props;
   const styles = runIndexScheduleContentStyles();
-
-  if (!enabled)
+  if (!scheduleSummary)
     return (
       <Box sx={styles.placeholderBlock}>
         <Typography
@@ -55,14 +54,14 @@ const RunIndexScheduleContent = memo(props => {
       <Box sx={styles.cardBody}>
         <Typography
           variant="labelMedium"
-          color="text.secondary"
+          color={enabled ? 'text.secondary' : 'text.primary'}
         >
           {scheduleSummary}
         </Typography>
         {nextRun && (
           <Typography
             variant="bodySmall2"
-            color="text.secondary"
+            color={enabled ? 'text.secondary' : 'text.primary'}
           >
             <Typography
               variant="bodySmall2"

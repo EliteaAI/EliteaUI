@@ -52,18 +52,22 @@ const CronBuilder = memo(props => {
     () => PERIOD_OPTIONS.find(o => o.value === state.period) ?? null,
     [state.period],
   );
-  const weekDayOption = useMemo(
-    () => WEEKDAY_OPTIONS.find(o => o.value === state.weekDay) ?? null,
-    [state.weekDay],
+
+  const weekDayOptions = useMemo(
+    () => WEEKDAY_OPTIONS.filter(o => state.weekDays.includes(o.value)),
+    [state.weekDays],
   );
-  const monthDayOption = useMemo(
-    () => MONTH_DAY_OPTIONS.find(o => o.value === state.monthDay) ?? null,
-    [state.monthDay],
+
+  const monthDayOptions = useMemo(
+    () => MONTH_DAY_OPTIONS.filter(o => state.monthDays.includes(o.value)),
+    [state.monthDays],
   );
+
   const hourOption = useMemo(
     () => HOUR_OPTIONS.find(o => o.value === state.hours) ?? HOUR_OPTIONS[0],
     [state.hours],
   );
+
   const minuteOption = useMemo(
     () => MINUTE_OPTIONS.find(o => o.value === state.minutes) ?? MINUTE_OPTIONS[0],
     [state.minutes],
@@ -86,7 +90,7 @@ const CronBuilder = memo(props => {
       <CronSelect
         value={periodOption}
         options={PERIOD_OPTIONS}
-        onChange={opt => emit({ period: opt?.value ?? null, monthDay: null, weekDay: null })}
+        onChange={opt => emit({ period: opt?.value ?? null, monthDays: [], weekDays: [] })}
         allowEmpty={false}
         sx={styles.wideSelect}
       />
@@ -100,11 +104,11 @@ const CronBuilder = memo(props => {
             on
           </Typography>
           <CronSelect
-            value={monthDayOption}
+            value={monthDayOptions}
             options={MONTH_DAY_OPTIONS}
-            onChange={opt => emit({ monthDay: opt?.value ?? null })}
+            onChange={opts => emit({ monthDays: opts.map(o => o.value) })}
             error={monthDayError}
-            allowDeselect
+            multiple
             placeholder="Day"
             sx={styles.wideSelect}
           />
@@ -115,11 +119,11 @@ const CronBuilder = memo(props => {
             and
           </Typography>
           <CronSelect
-            value={weekDayOption}
+            value={weekDayOptions}
             options={WEEKDAY_OPTIONS}
-            onChange={opt => emit({ weekDay: opt?.value ?? null })}
+            onChange={opts => emit({ weekDays: opts.map(o => o.value) })}
             error={weekDayError}
-            allowDeselect
+            multiple
             placeholder="Weekday"
             sx={styles.wideSelect}
           />
@@ -135,11 +139,11 @@ const CronBuilder = memo(props => {
             on
           </Typography>
           <CronSelect
-            value={weekDayOption}
+            value={weekDayOptions}
             options={WEEKDAY_OPTIONS}
-            onChange={opt => emit({ weekDay: opt?.value ?? null })}
+            onChange={opts => emit({ weekDays: opts.map(o => o.value) })}
             error={weekDayError}
-            allowDeselect
+            multiple
             placeholder="Weekday"
             sx={styles.wideSelect}
           />

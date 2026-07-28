@@ -17,6 +17,7 @@ const CronSelect = memo(props => {
     allowDeselect = false,
     allowEmpty = true,
     placeholder = '',
+    multiple = false,
   } = props;
 
   const handleChange = useCallback(
@@ -28,16 +29,19 @@ const CronSelect = memo(props => {
 
   const handleInputChange = useCallback(
     (_event, newInputValue, reason) => {
-      if (allowEmpty && (reason === 'clear' || (reason === 'input' && newInputValue === ''))) {
+      if (!multiple && allowEmpty && (reason === 'clear' || (reason === 'input' && newInputValue === ''))) {
         onChange(null);
       }
     },
-    [onChange, allowEmpty],
+    [onChange, allowEmpty, multiple],
   );
+
+  const multipleValue = multiple ? (value ?? []) : value;
 
   return (
     <Autocomplete
-      value={value}
+      multiple={multiple}
+      value={multipleValue}
       options={options}
       getOptionLabel={o => o.label}
       onChange={handleChange}
@@ -45,9 +49,10 @@ const CronSelect = memo(props => {
       filterOptions={x => x}
       isOptionEqualToValue={isOptionEqualToValue}
       disableClearable
+      disableCloseOnSelect={multiple}
       size="small"
       popupIcon={<ArrowDownIcon />}
-      sx={[selectBaseSx, error && selectErrorSx, sx]}
+      sx={[selectBaseSx, multiple && multipleExtraSx, error && selectErrorSx, sx]}
       slotProps={{
         paper: {
           sx: ({ palette }) => ({
@@ -62,14 +67,28 @@ const CronSelect = memo(props => {
           style: { padding: 0 },
         },
       }}
+      renderTags={selected =>
+        selected.length > 0 ? (
+          <Typography
+            variant="labelMedium"
+            color="text.secondary"
+            noWrap
+            sx={{ maxWidth: '100%', paddingLeft: '0.5rem' }}
+          >
+            {selected.map(o => o.label).join(', ')}
+          </Typography>
+        ) : null
+      }
       renderOption={(optionProps, option, optionState) => {
         const { key, ...rest } = optionProps;
+        const handleClick =
+          !multiple && allowDeselect && optionState.selected ? () => onChange(null) : rest.onClick;
         return (
           <Box
             component="li"
             key={key}
             {...rest}
-            onClick={allowDeselect && optionState.selected ? () => onChange(null) : rest.onClick}
+            onClick={handleClick}
             sx={({ palette }) => ({
               justifyContent: 'space-between !important',
               alignItems: 'center',
@@ -100,7 +119,7 @@ const CronSelect = memo(props => {
           variant="outlined"
           size="small"
           error={error}
-          placeholder={placeholder}
+          placeholder={multipleValue?.length === 0 || multipleValue === null ? placeholder : ''}
         />
       )}
     />
@@ -124,6 +143,18 @@ const selectBaseSx = {
   },
   '& .MuiAutocomplete-popupIndicator': {
     padding: '0.125rem',
+  },
+};
+
+const multipleExtraSx = {
+  '& .MuiOutlinedInput-root': {
+    flexWrap: 'nowrap',
+    overflow: 'hidden',
+  },
+  '& .MuiAutocomplete-input': {
+    minWidth: '0 !important',
+    width: '0 !important',
+    padding: '0 !important',
   },
 };
 

@@ -45,12 +45,14 @@ export const BannerTitleMap = {
 };
 
 export const BannerMessageMap = {
-  [BannerSeverity.success]: 'The index is ready for use.',
+  [BannerSeverity.success]:
+    '{{indexed_files}} files indexed successfully, {{skipped_files}} files skipped (unsupported format). The index is ready to search.',
   [BannerSeverity.warning]:
     'Indexing was stopped before completion. Click Reindex to restart indexing, or check History for the reason it stopped.',
   [BannerSeverity.error]:
-    'An error occurred during the indexing process. Click Reindex to restart indexing, or check History for the reason it failed.',
-  [BannerSeverity.info]: 'The indexing process is currently running. You can stop it if needed.',
+    'Indexing failed before any files could be processed. Check the source connection and permissions, then try Reindex. See History for error details.',
+  [BannerSeverity.info]:
+    "Indexing — this may take a few minutes depending on size. You can navigate to other sections; indexing will continue in the background and you'll be notified when it's done.",
 };
 
 // Statuses that allow the index to be searched and run tools against
