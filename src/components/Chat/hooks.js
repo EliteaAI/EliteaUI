@@ -13,6 +13,10 @@ import {
   mergeHitlInterrupts,
   normalizeHitlInterrupt,
 } from '@/[fsd]/features/chat/lib/helpers/hitl.helpers.js';
+import {
+  mentionSkillActions,
+  supersedeMentionSkillAction,
+} from '@/[fsd]/features/chat/lib/helpers/mentionSkillTrace.helpers.js';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import * as ParsePipelineHelpers from '@/[fsd]/features/pipelines/flow-editor/lib/helpers/parsePipeline.helpers';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
@@ -30,7 +34,6 @@ import {
   sioEvents,
 } from '@/common/constants';
 import { convertTime } from '@/common/convertChatConversationMessages.js';
-import { mentionSkillActions, supersedeMentionSkillAction } from '@/common/mentionSkillTrace';
 import { convertJsonToString } from '@/common/utils';
 import { useIsFrom } from '@/hooks/useIsFromSpecificPageHooks';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';

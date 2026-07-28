@@ -1,13 +1,16 @@
 import { ChatHelpers } from '@/[fsd]/features/chat/lib/helpers';
 import { normalizeExecutionHierarchy } from '@/[fsd]/features/chat/lib/helpers/executionHierarchy.helpers.js';
 import {
+  hasUnresolvedSkillAction,
+  mentionSkillActions,
+} from '@/[fsd]/features/chat/lib/helpers/mentionSkillTrace.helpers.js';
+import {
   ChatParticipantType,
   ROLES,
   TOOL_ACTION_NAMES,
   TOOL_ACTION_TYPES,
   ToolActionStatus,
 } from '@/common/constants';
-import { hasUnresolvedSkillAction, mentionSkillActions } from '@/common/mentionSkillTrace';
 
 export const isUserMessage = (author_participant_id, sent_to_id, userIds, reply_to_id, sent_to) => {
   return (
