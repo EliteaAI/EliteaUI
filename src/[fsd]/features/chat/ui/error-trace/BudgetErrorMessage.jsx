@@ -4,26 +4,10 @@ import { Link as RouterLink } from 'react-router-dom';
 
 import { Box, Link, Typography } from '@mui/material';
 
+import { BudgetErrorConstants } from '@/[fsd]/shared/lib/constants';
 import { useGetPlatformSettingsQuery } from '@/api/platformSettings';
 import ErrorIcon from '@/assets/error-icon.svg?react';
 import { BORDER_RADIUS } from '@/common/designTokens';
-import RouteDefinitions from '@/routes';
-
-// Wording stays period-neutral so it holds whatever the budget period is
-export const BUDGET_ERROR_VARIANTS = {
-  project_budget_exceeded: {
-    message:
-      "This project's budget has been reached. AI requests are unavailable until the budget resets or a project admin increases the limit.",
-    linkLabel: 'View whole project usage',
-    to: `${RouteDefinitions.Settings}/usage`,
-  },
-  member_budget_exceeded: {
-    message:
-      'Your budget for this project has been reached. Your AI requests are unavailable until the budget resets or a project admin increases your limit.',
-    linkLabel: 'View my usage',
-    to: `${RouteDefinitions.Settings}/usage?scope=user`,
-  },
-};
 
 // A budget block is an expected policy outcome, not a platform failure, so it gets a
 // plain explanation and a way to check usage rather than the raw provider error
@@ -33,7 +17,7 @@ const BudgetErrorMessage = memo(props => {
   const styles = budgetErrorMessageStyles();
   const { data: platformSettings } = useGetPlatformSettingsQuery();
 
-  const variant = BUDGET_ERROR_VARIANTS[code];
+  const variant = BudgetErrorConstants.BUDGET_ERROR_VARIANTS[code];
 
   if (!variant) return null;
 

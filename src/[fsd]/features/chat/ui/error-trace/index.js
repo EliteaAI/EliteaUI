@@ -1,2 +1,2 @@
 export { default as ErrorTrace } from './ErrorTrace';
-export { default as BudgetErrorMessage, BUDGET_ERROR_VARIANTS } from './BudgetErrorMessage';
+export { default as BudgetErrorMessage } from './BudgetErrorMessage';
