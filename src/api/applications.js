@@ -917,6 +917,7 @@ export const {
   useGetApplicationIconsQuery,
   useGetApplicationDefaultIconsQuery,
   useForkedFromApplicationDetailsQuery,
+  useLazyForkedFromApplicationDetailsQuery,
   useConvertLegacyApplicationMutation,
   useUpdateApplicationRelationMutation,
   useGetRecommendationsQuery,

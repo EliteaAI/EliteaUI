@@ -3,19 +3,22 @@ import React from 'react';
 import { Box, Link } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip.jsx';
+import { useForkedFromSourceName } from '@/[fsd]/entities/fork/lib';
 import { buildForkedEntityHref } from '@/common/utils.jsx';
 import ForkIcon from '@/components/Icons/ForkIcon.jsx';
 import { useTheme } from '@emotion/react';
 
-export const IconLinkWithToolTip = ({ tooltip, meta, type }) => {
+export const IconLinkWithToolTip = ({ meta, type }) => {
   const theme = useTheme();
   const href = buildForkedEntityHref(type, meta);
+  const { sourceName, loadSourceName } = useForkedFromSourceName(type, meta);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '4px' }}>
       <StyledTooltip
-        title={`Forked from - ${tooltip}`}
+        title={`Forked from - ${sourceName}`}
         placement="top"
+        onOpen={loadSourceName}
       >
         <Link
           sx={{

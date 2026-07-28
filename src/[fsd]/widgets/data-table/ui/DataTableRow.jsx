@@ -160,7 +160,6 @@ const DataTableRow = props => {
           {renderAuthorContainer()}
           {isForked && (
             <IconLinkWithToolTip
-              tooltip={name}
               meta={meta}
               type={getEntityTypeByCardType(cardType)}
             />
