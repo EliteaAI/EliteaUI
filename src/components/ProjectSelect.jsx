@@ -104,11 +104,9 @@ const ProjectSelect = memo(props => {
   );
 
   const projectOptions = useMemo(() => {
+    const excludedIds = filterIds.map(id => +id);
     const handledProjects = projects
-      .filter(
-        i =>
-          !filterIds.map(id => +id).includes(i.id) && (hasPublicProjectAccess || i.id != PUBLIC_PROJECT_ID),
-      )
+      .filter(i => !excludedIds.includes(i.id) && (hasPublicProjectAccess || i.id != PUBLIC_PROJECT_ID))
       .map(item => ({
         label: getProjectName(item),
         value: item.id,
@@ -120,14 +118,19 @@ const ProjectSelect = memo(props => {
       .sort((a, b) => a.label.toLowerCase().localeCompare(b.label.toLowerCase()));
     const result = [publicProject, privateProject, ...leftProjects].filter(item => item);
 
-    const selectedId = project?.id || privateProjectId;
-    if (selectedId && !result.some(item => item.value === selectedId)) {
-      const selectedName = project?.id ? project.name || `Project ${project.id}` : PRIVATE_PROJECT_NAME;
-      result.push({ label: selectedName, value: selectedId });
+    // Keep the selected value present as an option so MUI does not warn about an out-of-range value,
+    // but never resurrect a project the caller explicitly excluded via filterIds.
+    const { id: selectedId } = selectedProject;
+    const isSelectedExcluded = excludedIds.includes(+selectedId);
+    if (selectedId && !isSelectedExcluded && !result.some(item => item.value == selectedId)) {
+      result.push({
+        label: getProjectName(selectedProject) || `Project ${selectedId}`,
+        value: selectedId,
+      });
     }
 
     return result;
-  }, [projects, filterIds, hasPublicProjectAccess, getProjectName, privateProjectId, project]);
+  }, [projects, filterIds, hasPublicProjectAccess, getProjectName, privateProjectId, selectedProject]);
 
   const location = useLocation();
 
