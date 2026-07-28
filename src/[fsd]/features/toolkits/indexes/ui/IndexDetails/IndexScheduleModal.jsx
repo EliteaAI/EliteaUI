@@ -153,7 +153,7 @@ const IndexScheduleModal = props => {
                 {cronState.isValid ? `"${cronState.message}"` : cronState.message}
               </Typography>
               {nextRunComputed && (
-                <>
+                <Box sx={styles.nextRunContainer}>
                   <Typography
                     variant="bodySmall"
                     color="text.primary"
@@ -162,7 +162,7 @@ const IndexScheduleModal = props => {
                     Next run:
                   </Typography>
                   <Typography variant="labelSmall">{nextRunComputed}</Typography>
-                </>
+                </Box>
               )}
             </Box>
 
@@ -216,7 +216,7 @@ const IndexScheduleModal = props => {
 /** @type {MuiSx} */
 const indexScheduleModalStyles = () => ({
   dialog: {
-    width: '43.6rem',
+    width: '35.4rem',
     maxWidth: 'none',
   },
   actionBtn: {
@@ -263,6 +263,12 @@ const indexScheduleModalStyles = () => ({
   previewSummaryError: {
     color: 'error.main',
   },
+  nextRunContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '0.25rem',
+  },
   nextRunLabel: {
     color: 'text.primary',
   },
@@ -291,6 +297,7 @@ const indexScheduleModalStyles = () => ({
     width: '100%',
     '& .react-js-cron': {
       width: '100%',
+      flexWrap: 'wrap',
     },
   },
   cronContainer: ({ palette, typography }) => ({
@@ -333,6 +340,25 @@ const indexScheduleModalStyles = () => ({
         color: palette.text.secondary,
         ...typography.bodySmall,
       },
+    },
+    ' .react-js-cron-hours .react-js-cron-select': {
+      maxWidth: '4.25rem !important',
+      minWidth: '4.25rem !important',
+    },
+
+    ' .react-js-cron-hours .ant-select .ant-select-content': {
+      maxWidth: '2rem !important',
+      minWidth: '2rem !important',
+    },
+
+    ' .react-js-cron-minutes .react-js-cron-select': {
+      maxWidth: '4.25rem !important',
+      minWidth: '4.25rem !important',
+    },
+
+    ' .react-js-cron-minutes .ant-select .ant-select-content': {
+      maxWidth: '2rem !important',
+      minWidth: '2rem !important',
     },
 
     '.react-js-cron-select-dropdown': {
