@@ -109,9 +109,8 @@ describe('reloaded index Activity contract', () => {
       message_group_id: 31,
       kind: 'thinking_step',
       run_id: 'run-1',
-      step_type: 'ChatGenerationChunk',
-      model_name: 'index-progress-model',
-      text: '10 files processed',
+      step_type: null,
+      model_name: null,
       started_at: '2026-07-27T10:00:01Z',
       finished_at: '2026-07-27T10:00:01Z',
       is_error: false,
@@ -135,15 +134,19 @@ describe('reloaded index Activity contract', () => {
       task_id: 'index-execution-1',
       isStreaming: false,
     });
-    expect(history[0].message_items[0].item_details.content).toBe(
-      'Successfully indexed 10 files.',
-    );
+    expect(history[0].message_items[0].item_details.content).toBe('Successfully indexed 10 files.');
     expect(history[0].toolActions).toHaveLength(2);
+    expect(history[0].toolActions[0]).toMatchObject({
+      type: 'tool',
+      name: 'index_data',
+      traceStepId: 51,
+      toolMeta: { display_name: 'configurations' },
+    });
     expect(history[0].toolActions[1]).toMatchObject({
       type: 'llm',
       name: 'loader',
       traceStepId: 52,
-      toolMeta: { ls_model_name: 'index-progress-model' },
+      toolMeta: { ls_model_name: '' },
     });
   });
 

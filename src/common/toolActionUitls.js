@@ -45,9 +45,7 @@ const handleLlmOrSummaryAction = action => {
       : undefined;
   return {
     ...createBaseToolInfo(action),
-    toolkitName:
-      action?.toolMeta?.ls_model_name ||
-      (action?.type === TOOL_ACTION_TYPES.Summary ? action?.name : undefined),
+    toolkitName: action?.toolMeta?.ls_model_name || action?.name || TOOL_ACTION_NAMES.Llm,
     toolkitType: 'model',
     thinking: action?.thinking || '',
     originalToolName,

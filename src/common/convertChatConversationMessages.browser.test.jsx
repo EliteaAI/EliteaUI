@@ -5,61 +5,146 @@ import { Provider } from 'react-redux';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { configureStore } from '@reduxjs/toolkit';
 
-import ChatMessageList from '@/[fsd]/features/chat/ui/chat-box/ChatMessageList';
+import ChatMessageWrapper from '@/[fsd]/features/chat/ui/chat-box/ChatMessageWrapper';
+import darkPalette from '@/darkPalette';
+import { configureStore } from '@reduxjs/toolkit';
 
 import { convertConversationToChatHistory } from './convertChatConversationMessages';
 
-vi.mock('@/[fsd]/features/chat/lib/helpers/hitl.helpers.js', () => ({
+vi.mock('@/[fsd]/features/chat/lib/helpers/hitl.helpers.js', async importOriginal => ({
+  ...(await importOriginal()),
   getPendingHitlMessage: () => null,
-  normalizeHitlInterrupt: value => value,
 }));
 
-vi.mock('@/[fsd]/features/chat/ui/chat-box/ChatMessageWrapper', () => ({
-  default: ({ message }) => {
-    const persistedContent = message.message_items
-      ?.map(item => item.item_details?.content)
-      .filter(Boolean)
-      .join('');
+// Keep the actual ChatMessageWrapper -> ApplicationAnswer ->
+// ApplicationThinkView -> ActionView path. Only unrelated network/store leaves
+// are isolated so this focused browser proof cannot make backend requests.
+vi.mock('@/[fsd]/features/chat/participants/lib/hooks', () => ({
+  useParticipantEntityIcon: () => ({}),
+  useParticipantName: participant => participant?.meta?.name || 'configurations',
+}));
 
-    return (
-      <article data-testid={`${message.role}-activity`}>
-        {message.content || persistedContent}
-      </article>
-    );
+vi.mock('@/[fsd]/features/chat/ui', () => ({
+  ChatAttachment: { ImageAttachment: () => null },
+  ChatBox: () => null,
+  ChatButton: {},
+  ChatContinue: () => null,
+  ChatHitlActions: () => null,
+  ChatModal: {},
+  ErrorTrace: () => null,
+  SlashSuggestionList: () => null,
+  SubAgentAccordion: () => null,
+  VoiceConfigControls: () => null,
+  VoiceConfigDialog: () => null,
+  VoiceControlButton: () => null,
+  VoiceMiniPlayer: () => null,
+  VoicePersonalizationSection: () => null,
+}));
+
+vi.mock('@/[fsd]/shared/ui', () => ({
+  Accordion: {},
+  Autocomplete: {},
+  Banner: {},
+  Button: {
+    BaseBtn: ({ children, ...props }) => <button {...props}>{children}</button>,
+  },
+  Category: {},
+  Checkbox: {},
+  Chip: {},
+  Controls: {},
+  Field: {},
+  Filter: {},
+  Icon: {},
+  Input: {},
+  Label: {},
+  Mention: {},
+  Modal: {},
+  SecretField: {},
+  Select: {},
+  Switch: {},
+  Tab: {},
+  Text: {},
+  Tooltip: {},
+}));
+
+vi.mock('@/[fsd]/app/store', () => ({
+  default: {
+    dispatch: () => null,
+    getState: () => ({}),
+    subscribe: () => () => null,
   },
 }));
 
-vi.mock('@/[fsd]/shared/ui', async () => {
-  const { forwardRef, useImperativeHandle, useRef } = await import('react');
-
+vi.mock('@/api', () => {
+  const eliteaApi = {
+    injectEndpoints: () => ({}),
+  };
+  eliteaApi.enhanceEndpoints = () => eliteaApi;
   return {
-    ScrollableContainer: forwardRef(({ children }, ref) => {
-      const elementRef = useRef(null);
-      useImperativeHandle(ref, () => ({
-        getScrollElement: () => elementRef.current,
-      }));
-      return <div ref={elementRef}>{children}</div>;
-    }),
+    TAG_MODELS: 'TAG_MODELS',
+    eliteaApi,
+    useDeleteConfigurationMutation: () => [() => Promise.resolve({})],
+    useGetConfigurationsBySectionQuery: () => ({ data: [] }),
+    useLazyMessageTraceQuery: () => [() => Promise.resolve({ data: {} }), { isFetching: false }],
+    useStopChatTaskMutation: () => [() => Promise.resolve({})],
   };
 });
 
-vi.mock('@/components/Chat/StyledComponents', () => ({
-  MessageList: ({ children, ...props }) => <div {...props}>{children}</div>,
+vi.mock('@/api/configurations', () => ({
+  useBatchTestConfigurationConnectionMutation: () => [() => Promise.resolve({})],
+  useCreateConfigurationMutation: () => [() => Promise.resolve({})],
+  useDeleteConfigurationMutation: () => [() => Promise.resolve({})],
+  useGetAvailableConfigurationsTypeQuery: () => ({ data: [] }),
+  useGetConfigurationDetailQuery: () => ({ data: null }),
+  useGetConfigurationsByTypeQuery: () => ({ data: [] }),
+  useGetConfigurationsListQuery: () => ({ data: { rows: [] } }),
+  useLazyGetConfigurationsListQuery: () => [() => Promise.resolve({ data: { rows: [] } })],
+  useLazyListModelsQuery: () => [() => Promise.resolve({ data: { items: [] } })],
+  useListCredentialTypesQuery: () => ({ data: [] }),
+  useListModelsQuery: () => ({ data: { items: [] } }),
+  useMakeConfigurationDefaultMutation: () => [() => Promise.resolve({})],
+  useTestConfigurationConnectionMutation: () => [() => Promise.resolve({})],
+  useUpdateConfigurationMutation: () => [() => Promise.resolve({})],
 }));
 
-vi.mock('@/slices/chat', () => {
-  const initialState = { messageIdToView: '' };
+vi.mock('@/components/Chat/ToolModal', () => ({
+  default: () => null,
+}));
 
-  return {
-    default: (state = initialState) => state,
-    actions: {
-      setMessageIdToView: payload => ({ type: 'chat/setMessageIdToView', payload }),
-    },
-    selectMessageIdToView: state => state.chat.messageIdToView,
-  };
-});
+vi.mock('@/components/Canvas', () => ({
+  default: () => null,
+}));
+
+vi.mock('@/components/Chat/EditingPlaceholder', () => ({
+  default: () => null,
+}));
+
+vi.mock('@/components/Chat/NormalAttachment', () => ({
+  default: () => null,
+}));
+
+vi.mock('@/components/EntityIcon', () => ({
+  default: () => <span aria-hidden="true" />,
+}));
+
+vi.mock('@/components/RotatingMessages', () => ({
+  default: () => null,
+}));
+
+vi.mock('@/assets/arrow-right-icon.svg?react', () => ({
+  default: props => (
+    <svg
+      aria-hidden="true"
+      {...props}
+    />
+  ),
+}));
+
+vi.mock('@/hooks/useSelectedProject', async importOriginal => ({
+  ...(await importOriginal()),
+  useSelectedProjectId: () => 1,
+}));
 
 describe('reloaded index Activity rendering', () => {
   let container;
@@ -78,10 +163,16 @@ describe('reloaded index Activity rendering', () => {
     globalThis.IS_REACT_ACT_ENVIRONMENT = false;
   });
 
-  it('mounts one assistant Activity from the current DTO without a synthetic user row', async () => {
+  it('renders one assistant Activity with current tool and thinking pins and no user row', async () => {
     const participants = [
       { id: 11, entity_name: 'user', entity_meta: { id: 7 }, meta: { user_name: 'User' } },
-      { id: 22, entity_name: 'toolkit', entity_meta: { id: 5 }, meta: { name: 'configurations' } },
+      {
+        id: 22,
+        entity_name: 'toolkit',
+        entity_meta: { id: 5 },
+        entity_settings: { toolkit_type: 'github' },
+        meta: { name: 'configurations' },
+      },
     ];
     const messageGroups = [
       {
@@ -115,42 +206,75 @@ describe('reloaded index Activity rendering', () => {
         ],
       },
     ];
-    const history = convertConversationToChatHistory(
-      { message_groups: messageGroups, participants },
-      [
-        {
-          id: 52,
-          message_group_id: 31,
-          kind: 'thinking_step',
-          run_id: 'run-1',
-          model_name: 'index-progress-model',
-          started_at: '2026-07-27T10:00:01Z',
-          finished_at: '2026-07-27T10:00:01Z',
-          attrs: { response_metadata: { tool_name: 'loader' } },
+    const history = convertConversationToChatHistory({ message_groups: messageGroups, participants }, [
+      {
+        id: 51,
+        message_group_id: 31,
+        kind: 'tool_call',
+        run_id: '00000000-0000-0000-0000-000000000001',
+        tool_name: 'index_data',
+        started_at: '2026-07-27T10:00:00Z',
+        finished_at: '2026-07-27T10:00:02Z',
+        is_error: false,
+        has_visible_content: true,
+        step_type: null,
+        model_name: null,
+        finish_reason: 'stop',
+        attrs: {
+          metadata: {
+            initiator: 'user',
+            tool_name: 'index_data',
+            display_name: 'configurations',
+          },
         },
-      ],
-    );
+      },
+      {
+        id: 52,
+        message_group_id: 31,
+        kind: 'thinking_step',
+        run_id: '00000000-0000-0000-0000-000000000001',
+        step_type: null,
+        model_name: null,
+        started_at: '2026-07-27T10:00:01Z',
+        finished_at: '2026-07-27T10:00:01Z',
+        is_error: false,
+        has_visible_content: true,
+        attrs: { response_metadata: { tool_name: 'loader' } },
+      },
+    ]);
     const store = configureStore({
       reducer: {
         user: () => ({ id: 7 }),
         chat: () => ({ messageIdToView: '' }),
+        settings: () => ({ mode: 'dark' }),
       },
     });
 
     await act(async () => {
       root.render(
         <Provider store={store}>
-          <ThemeProvider theme={createTheme()}>
-            <ChatMessageList
+          <ThemeProvider theme={createTheme({ palette: { ...darkPalette, mode: 'dark' } })}>
+            <ChatMessageWrapper
+              message={history[0]}
+              index={0}
               chat_history={history}
-              activeConversation={{ id: 71, author_id: 7, participants }}
-              isLoading={false}
-              isStreaming={false}
-              isLoadingMore={false}
+              activeConversation={{
+                id: 71,
+                uuid: 'conversation-71',
+                author_id: 7,
+                participants,
+              }}
               askingQuestionId=""
               questionItemRef={createRef()}
+              listRefs={{ current: [] }}
               onCopyToClipboard={() => null}
+              canDeleteAllMessage={false}
+              userId={7}
               onRegenerateAnswer={() => null}
+              isLoading={false}
+              isStreaming={false}
+              toolsFromConversation={[participants[1]]}
+              subAgentTypeByName={{}}
             />
           </ThemeProvider>
         </Provider>,
@@ -159,10 +283,23 @@ describe('reloaded index Activity rendering', () => {
 
     expect(history).toHaveLength(1);
     expect(history[0].role).toBe('assistant');
-    expect(container.querySelectorAll('[data-testid="chat-message-list"]')).toHaveLength(1);
-    expect(container.querySelectorAll('[data-testid="assistant-activity"]')).toHaveLength(1);
-    expect(container.querySelectorAll('[data-testid="user-activity"]')).toHaveLength(0);
+    expect(history.filter(message => message.role === 'user')).toHaveLength(0);
+    expect(history[0].toolActions).toHaveLength(2);
+    expect(container.querySelectorAll('[data-testid="chat-message-item"]')).toHaveLength(1);
     expect(container.textContent).toContain('Successfully indexed 10 files.');
+    expect(container.textContent).toContain('Thought for');
     expect(container.textContent).not.toContain('User No Longer Available');
+
+    const thoughtSummary = Array.from(container.querySelectorAll('button')).find(element =>
+      element.textContent?.includes('Thought for'),
+    );
+    expect(thoughtSummary).toBeTruthy();
+    await act(async () => {
+      thoughtSummary.click();
+      await new Promise(resolve => setTimeout(resolve, 300));
+    });
+
+    expect(container.textContent).toContain('configurations: index_data');
+    expect(container.textContent).toContain('loader');
   });
 });

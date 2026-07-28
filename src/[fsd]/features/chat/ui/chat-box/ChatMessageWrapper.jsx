@@ -2,8 +2,10 @@ import { memo, useCallback, useMemo } from 'react';
 
 import * as ChatHelpers from '@/[fsd]/features/chat/lib/helpers/chat.helpers';
 import { isParticipantStillActive } from '@/[fsd]/features/chat/participants/lib/helpers';
-import { ApplicationAnswer, UserMessage } from '@/[fsd]/features/chat/ui/chat-box';
 import { ROLES, WELCOME_MESSAGE_ID } from '@/common/constants';
+
+import ApplicationAnswer from './ApplicationAnswer';
+import UserMessage from './UserMessage';
 
 const ChatMessageWrapper = memo(props => {
   const {

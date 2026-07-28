@@ -307,7 +307,10 @@ export const convertToAIAnswer = (message_group, message_groups, participants, t
           toolkit_name: toolkitName,
           // display_name: human-readable label injected by SDK. handleToolAction prefers this over toolkit_name.
           // For old internal tool history without display_name, handleToolAction falls back to resolveInternalToolDisplayName.
-          display_name: step.tool_meta?.display_name || step.tool_meta?.metadata?.display_name,
+          display_name:
+            step.tool_meta?.display_name ||
+            step.tool_meta?.metadata?.display_name ||
+            step.metadata?.display_name,
           toolkit_type: toolkitType,
           mcp_server_url: step.metadata?.mcp_server_url,
           langgraph_node: step.metadata?.langgraph_node,
