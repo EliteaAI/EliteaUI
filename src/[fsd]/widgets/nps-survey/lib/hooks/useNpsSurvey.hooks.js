@@ -97,6 +97,29 @@ const useNpsSurvey = () => {
     [sortedQuestions],
   );
 
+  const handleToggleCheckbox = useCallback((questionId, value) => {
+    setAnswers(prev => {
+      const next = new Map(prev);
+      const current = Array.isArray(next.get(questionId)) ? [...next.get(questionId)] : [];
+      const index = current.indexOf(value);
+
+      if (index >= 0) current.splice(index, 1);
+      else current.push(value);
+
+      if (current.length > 0) next.set(questionId, current);
+      else next.delete(questionId);
+
+      return next;
+    });
+  }, []);
+
+  const handleNextQuestion = useCallback(() => {
+    setCurrentQuestionIndex(prev => {
+      if (prev < sortedQuestions.length - 1) return prev + 1;
+      return prev;
+    });
+  }, [sortedQuestions]);
+
   const handleSubmit = useCallback(async () => {
     if (!activeSurvey || !allAnswered) return;
 
@@ -142,6 +165,8 @@ const useNpsSurvey = () => {
     phase,
     isSubmitting,
     handleSelectAnswer,
+    handleToggleCheckbox,
+    handleNextQuestion,
     handleSubmit,
     handleDismiss,
   };

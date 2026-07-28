@@ -13,11 +13,15 @@ const NpsSurveyWidget = memo(() => {
   const {
     activeSurvey,
     currentQuestion,
+    currentQuestionIndex,
+    totalQuestions,
     selectedAnswer,
     allAnswered,
     phase,
     isSubmitting,
     handleSelectAnswer,
+    handleToggleCheckbox,
+    handleNextQuestion,
     handleSubmit,
     handleDismiss,
   } = useNpsSurvey();
@@ -72,10 +76,14 @@ const NpsSurveyWidget = memo(() => {
                 <NpsSurveyCard
                   survey={surveyRef.current}
                   currentQuestion={questionRef.current}
+                  currentQuestionIndex={currentQuestionIndex}
+                  totalQuestions={totalQuestions}
                   selectedAnswer={selectedAnswerRef.current}
                   allAnswered={allAnswered}
                   isSubmitting={isSubmitting}
                   onSelectAnswer={handleSelectAnswer}
+                  onToggleCheckbox={handleToggleCheckbox}
+                  onNextQuestion={handleNextQuestion}
                   onSubmit={handleSubmit}
                   onDismiss={handleDismiss}
                 />
