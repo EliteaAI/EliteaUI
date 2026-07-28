@@ -80,7 +80,7 @@ export const useContextStrategySubmit = ({
         });
         throw new Error(JSON.stringify(serverErrors));
       } else {
-        toastError(error?.data?.error || 'Failed to update context strategy');
+        toastError(buildErrorMessage(error) || 'Failed to update context strategy');
       }
     },
     [toastError],
