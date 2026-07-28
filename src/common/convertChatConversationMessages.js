@@ -178,6 +178,7 @@ export const convertToAIAnswer = (message_group, message_groups, participants, t
     references = [],
     is_error = false,
     error,
+    budget_error_code: budgetErrorCode,
     context: { included: contextIncluded } = {},
   } = meta || {};
   const isSummarized = contextIncluded === false;
@@ -331,6 +332,7 @@ export const convertToAIAnswer = (message_group, message_groups, participants, t
     isStreaming: is_streaming,
     isLoading: is_streaming,
     exception: is_error ? error || content || message_items[0]?.item_details?.content : undefined,
+    budgetErrorCode,
     references,
     likes,
     interaction_uuid: foundQuestion?.meta?.interaction_uuid,

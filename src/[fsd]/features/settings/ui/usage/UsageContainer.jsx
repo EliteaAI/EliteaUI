@@ -1,6 +1,7 @@
 import { memo, useMemo, useState } from 'react';
 
 import { useSelector } from 'react-redux';
+import { useSearchParams } from 'react-router-dom';
 
 import { Alert, Box, CircularProgress, Typography } from '@mui/material';
 
@@ -20,6 +21,7 @@ const SCOPE_USER = 'user';
 const UsageContainer = memo(() => {
   const projectId = useSelectedProjectId();
   const personalProjectId = useSelector(state => state.user?.personal_project_id);
+  const [searchParams] = useSearchParams();
 
   const styles = usageContainerStyles();
 
@@ -28,7 +30,10 @@ const UsageContainer = memo(() => {
     [projectId, personalProjectId],
   );
 
-  const [scope, setScope] = useState(SCOPE_PROJECT);
+  // Budget-exceeded errors deep-link straight to the tab that explains the block
+  const [scope, setScope] = useState(() =>
+    searchParams.get('scope') === SCOPE_USER ? SCOPE_USER : SCOPE_PROJECT,
+  );
 
   const activeScope = isPersonalProject ? SCOPE_PROJECT : scope;
 

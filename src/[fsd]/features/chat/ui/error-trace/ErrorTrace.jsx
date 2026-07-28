@@ -7,6 +7,8 @@ import ArrowRightIcon from '@/assets/arrow-right-icon.svg?react';
 import CopyIcon from '@/components/Icons/CopyIcon';
 import DownloadIcon from '@/components/Icons/DownloadIcon';
 
+import BudgetErrorMessage from './BudgetErrorMessage';
+
 // Error / stack-trace view shared by the whole-message exception (sequential and
 // swarm flows) and a parallel sub-agent's own accordion (#4993). Renders the
 // human-readable headline in a red wrapper, plus an on-demand "Error debugging
@@ -14,7 +16,7 @@ import DownloadIcon from '@/components/Icons/DownloadIcon';
 // verbatim from ApplicationAnswer's inline block so both call sites stay
 // pixel-identical; `compact` tightens spacing for the narrower accordion column.
 const ErrorTrace = memo(props => {
-  const { headline, trace: rawTrace, messageId, onCopy, compact = false } = props;
+  const { headline, trace: rawTrace, messageId, onCopy, compact = false, budgetErrorCode } = props;
   // trace/headline are expected to be strings, but defend against callers
   // passing a raw object/array (would crash React error #31 at render time)
   const trace = typeof rawTrace === 'string' || !rawTrace ? rawTrace : JSON.stringify(rawTrace);
@@ -40,9 +42,13 @@ const ErrorTrace = memo(props => {
 
   const styles = errorTraceStyles(isExpanded, compact);
 
+  // A budget block replaces only the headline; the debugging expander below is
+  // untouched so the original provider error stays available
+  const budgetMessage = budgetErrorCode ? <BudgetErrorMessage code={budgetErrorCode} /> : null;
+
   return (
     <>
-      <Box sx={styles.errorWrapper}>{headline || 'Unknown error'}</Box>
+      {budgetMessage || <Box sx={styles.errorWrapper}>{headline || 'Unknown error'}</Box>}
 
       {trace && trace !== headline && (
         <Box sx={styles.errorStackTrace}>
