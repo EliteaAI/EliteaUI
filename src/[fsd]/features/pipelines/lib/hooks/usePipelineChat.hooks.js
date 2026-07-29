@@ -662,20 +662,18 @@ export const usePipelineChat = ({
     ],
   );
 
-  // Handler for updating participant settings (for pipeline page)
+  // Handler for updating participant settings (for pipeline page).
+  // Formik llm_settings updates are handled by ConfigurationTab's handleSetLLMSettings
+  // (called via onSetLLMSettings) — doing it here too would overwrite restored initial
+  // values with resolved defaults, causing a false dirty state on model reselection.
   const onChangeParticipantSettings = useCallback(
     (participantId, updates) => {
       if (!participantId && !isCreating) {
-        return; // Skip updating model on initial settings if the pipeline details is not fully loaded
+        return;
       }
-      if (updates.entity_settings?.llm_settings && setFieldValue) {
-        // Update the pipeline's llm_settings in Formik
-        Object.entries(updates.entity_settings.llm_settings).forEach(([key, value]) => {
-          setFieldValue(`version_details.llm_settings.${key}`, value);
-        });
-      }
+      void updates;
     },
-    [isCreating, setFieldValue],
+    [isCreating],
   );
 
   // LLM Settings setter for the modal dialog
