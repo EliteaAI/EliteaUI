@@ -258,27 +258,36 @@ const PlusChatButton = memo(props => {
 
   const renderSubmenuContent = useCallback(() => {
     if (hoveredItem === SUBMENU_KEYS.INTERNAL_TOOLS && availableTools.length > 0) {
-      return availableTools.map(tool => (
-        <Switch.BaseSwitch
-          key={tool.name}
-          label={tool.title}
-          checked={internal_tools.includes(tool.name)}
-          disabled={disableInternalTools}
-          onChange={(_, checkedValue) =>
-            onInternalToolsConfigChange?.({ key: tool.name, value: checkedValue })
+      return availableTools.map(tool => {
+        const isChecked = internal_tools.includes(tool.name);
+        const handleRowClick = () => {
+          if (!disableInternalTools) {
+            onInternalToolsConfigChange?.({ key: tool.name, value: !isChecked });
           }
-          width="100%"
-          infoTooltip={<Text.TextWithLink {...tool.infoTooltip} />}
-          slotProps={{
-            formControlLabel: {
-              sx: styles.toolFormControlLabel,
-              labelPlacement: 'start',
-            },
-            label: { sx: { whiteSpace: 'nowrap' } },
-            switch: { size: 'small' },
-          }}
-        />
-      ));
+        };
+        return (
+          <Switch.BaseSwitch
+            key={tool.name}
+            label={tool.title}
+            checked={isChecked}
+            disabled={disableInternalTools}
+            onChange={(_, checkedValue) =>
+              onInternalToolsConfigChange?.({ key: tool.name, value: checkedValue })
+            }
+            width="100%"
+            infoTooltip={<Text.TextWithLink {...tool.infoTooltip} />}
+            slotProps={{
+              formControlLabel: {
+                sx: styles.toolFormControlLabel,
+                labelPlacement: 'start',
+                onClick: handleRowClick,
+              },
+              label: { sx: { whiteSpace: 'nowrap' } },
+              switch: { size: 'small', onClick: e => e.stopPropagation() },
+            }}
+          />
+        );
+      });
     }
 
     if (SEARCHABLE_KEYS.includes(hoveredItem)) {
@@ -377,7 +386,10 @@ const PlusChatButton = memo(props => {
                       sx={styles.menuIcon}
                     />
                     <Typography sx={styles.menuLabel}>{label}</Typography>
-                    <ArrowRightIcon sx={styles.chevron} />
+                    <ArrowRightIcon
+                      sx={styles.chevron}
+                      fill={theme.palette.icon.fill.default}
+                    />
                   </MenuItem>
                 ),
               )}
@@ -438,7 +450,7 @@ const plusChatButtonStyles = theme => ({
     minWidth: '15.125rem',
     borderRadius: '.75rem',
     border: `.0625rem solid ${theme.palette.border.lines}`,
-    backgroundColor: theme.palette.background.secondary,
+    background: theme.palette.background.secondary,
     padding: 0,
     overflow: 'hidden',
   },
@@ -464,10 +476,10 @@ const plusChatButtonStyles = theme => ({
       },
     },
     '& > .MuiIconButton-root svg': {
-      width: '.75rem',
-      height: '.75rem',
+      width: '1rem',
+      height: '1rem',
       flexShrink: 0,
-      color: 'rgba(169, 183, 193, 1)',
+      color: theme.palette.icon.fill.default,
     },
     '& > .MuiIconButton-root .MuiTypography-root': {
       fontSize: '.875rem',
@@ -484,11 +496,11 @@ const plusChatButtonStyles = theme => ({
     color: theme.palette.text.secondary,
   },
   menuIcon: {
-    width: '.75rem',
-    height: '.75rem',
-    fontSize: '.75rem',
+    width: '1rem',
+    height: '1rem',
+    fontSize: '1rem',
     flexShrink: 0,
-    color: 'rgba(169, 183, 193, 1)',
+    color: theme.palette.icon.fill.default,
   },
   menuLabel: {
     flex: 1,
@@ -499,7 +511,7 @@ const plusChatButtonStyles = theme => ({
   chevron: {
     fontSize: '1rem',
     flexShrink: 0,
-    color: 'rgba(169, 183, 193, 1)',
+    color: theme.palette.icon.fill.default,
   },
   subPopper: {
     zIndex: 9999,
@@ -508,7 +520,7 @@ const plusChatButtonStyles = theme => ({
     minWidth: '12rem',
     borderRadius: '.75rem',
     border: `.0625rem solid ${theme.palette.border.lines}`,
-    backgroundColor: theme.palette.background.secondary,
+    background: theme.palette.background.secondary,
     padding: '1rem',
     ml: '.25rem',
   },
@@ -516,7 +528,7 @@ const plusChatButtonStyles = theme => ({
     width: '14.25rem',
     borderRadius: '.5rem',
     border: `.0625rem solid ${theme.palette.border.lines}`,
-    backgroundColor: theme.palette.background.secondary,
+    background: theme.palette.background.secondary,
     boxShadow: theme.palette.boxShadow.default,
     padding: 0,
     ml: '.25rem',
@@ -526,7 +538,7 @@ const plusChatButtonStyles = theme => ({
     width: '17rem',
     borderRadius: '.5rem',
     border: `.0625rem solid ${theme.palette.border.lines}`,
-    backgroundColor: theme.palette.background.secondary,
+    background: theme.palette.background.secondary,
     boxShadow: theme.palette.boxShadow.default,
     padding: 0,
     ml: '.25rem',
@@ -536,7 +548,7 @@ const plusChatButtonStyles = theme => ({
     minWidth: '18.75rem',
     borderRadius: '.75rem',
     border: `.0625rem solid ${theme.palette.border.lines}`,
-    backgroundColor: theme.palette.background.secondary,
+    background: theme.palette.background.secondary,
     padding: '.5rem 0',
     ml: '.25rem',
   },
@@ -549,6 +561,15 @@ const plusChatButtonStyles = theme => ({
     padding: '.5rem 1rem',
     gap: '.5rem',
     justifyContent: 'space-between',
+    cursor: 'pointer',
+
+    '&:hover': {
+      backgroundColor: theme.palette.background.select.hover,
+    },
+
+    '&:active': {
+      backgroundColor: theme.palette.background.tabButton.active,
+    },
 
     '& .MuiFormControlLabel-label': {
       marginLeft: '.5rem',

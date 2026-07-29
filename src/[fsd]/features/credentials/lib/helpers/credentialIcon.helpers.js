@@ -1,5 +1,6 @@
-import * as CredentialNameHelpers from './credentialName.helpers';
 import { getToolIconByType } from '@/common/toolkitUtils';
+
+import * as CredentialNameHelpers from './credentialName.helpers';
 
 const getCredentialIcon = (integrationType, theme, toolkitSchemas, configurationsAsSchema) => {
   const toolType = integrationType;
@@ -16,12 +17,11 @@ const getCredentialIcon = (integrationType, theme, toolkitSchemas, configuration
       mappedToolType = toolType;
   }
 
-  return getToolIconByType(
-    mappedToolType,
-    theme,
-    configurationsAsSchema.find(config => config.type === integrationType)?.config_schema?.properties.data ||
-      toolkitSchemas[mappedToolType],
-  );
+  return getToolIconByType(mappedToolType, theme, {
+    toolSchema:
+      configurationsAsSchema.find(config => config.type === integrationType)?.config_schema?.properties
+        .data || toolkitSchemas[mappedToolType],
+  });
 };
 
 export const getCredentialIconData = (credentialType, theme, toolkitSchemas, configurationsAsSchema) => {

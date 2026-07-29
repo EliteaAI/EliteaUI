@@ -2,6 +2,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Box, Tooltip, Typography } from '@mui/material';
 
+import { PROJECT_CONTEXT_MAX_LEN } from '@/[fsd]/features/settings/lib/constants/projectContext.constants';
 import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
 import { Banner, Button, Field } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
@@ -17,8 +18,9 @@ import { markdown } from '@codemirror/lang-markdown';
 
 import GenerateProjectContextButton from './GenerateProjectContextButton';
 import GenerateProjectContextModal from './GenerateProjectContextModal';
+import AIEditProjectContextButton from './ai-edit/AIEditProjectContextButton';
 
-const MAX_CHARS = 2500;
+const MAX_CHARS = PROJECT_CONTEXT_MAX_LEN;
 
 const ProjectContextEditor = memo(props => {
   const { serverData, projectId, isCreate, canEdit, openAiModal, onNavigate } = props;
@@ -78,6 +80,16 @@ const ProjectContextEditor = memo(props => {
     setIsAiModalOpen(false);
     setIsDirty(true);
   }, []);
+
+  const handleAIEditApplySave = useCallback(
+    async suggested => {
+      const enabled = serverData?.enabled ?? true;
+      await updateProjectContext({ projectId, content: suggested, enabled }).unwrap();
+      toastSuccess('Project Context saved');
+      onNavigate('saved');
+    },
+    [serverData, updateProjectContext, projectId, toastSuccess, onNavigate],
+  );
 
   const handleImportClick = useCallback(() => {
     if (!canEdit) return;
@@ -212,10 +224,14 @@ const ProjectContextEditor = memo(props => {
           <Box sx={styles.toolbar}>
             {canEdit && (
               <>
-                <GenerateProjectContextButton
-                  existingContent={content}
-                  onApply={handleAIGenerated}
-                />
+                {content.trim() ? (
+                  <AIEditProjectContextButton
+                    currentContent={content}
+                    onApplySave={handleAIEditApplySave}
+                  />
+                ) : (
+                  <GenerateProjectContextButton onApply={handleAIGenerated} />
+                )}
                 <Tooltip
                   title="Import from markdown file"
                   placement="top"
@@ -288,7 +304,6 @@ const ProjectContextEditor = memo(props => {
         <GenerateProjectContextModal
           open={isAiModalOpen}
           onClose={() => setIsAiModalOpen(false)}
-          existingContent={content}
           onApply={handleAIGenerated}
         />
       )}

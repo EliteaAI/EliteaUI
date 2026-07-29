@@ -85,8 +85,7 @@ const ConversationStarters = memo(props => {
   );
 
   const addTooltipTitle = useMemo(() => {
-    if (values.length >= MAX_CONVERSATION_STARTERS)
-      return 'You have reached the limit of conversation starters';
+    if (values.length >= MAX_CONVERSATION_STARTERS) return 'You have reached the limit of chat starters';
     return '';
   }, [values]);
 

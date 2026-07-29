@@ -199,11 +199,15 @@ const ActionView = memo(props => {
       try {
         inputs = JSON.parse(inputs);
       } catch {
-        return null;
+        inputs = null;
       }
     }
-    return typeof inputs?.skill === 'string' && inputs.skill.trim() ? inputs.skill.trim() : null;
-  }, [action?.toolMeta?.toolkit_name, action?.toolInputs]);
+    if (typeof inputs?.skill === 'string' && inputs.skill.trim()) return inputs.skill.trim();
+    // Reloaded trace rows carry no tool_inputs; the indexer stamps the served
+    // skill's name onto tool_meta so the chip keeps its identity after reload.
+    const stamped = action?.toolMeta?.loaded_skill;
+    return typeof stamped === 'string' && stamped.trim() ? stamped.trim() : null;
+  }, [action?.toolMeta?.toolkit_name, action?.toolMeta?.loaded_skill, action?.toolInputs]);
 
   // Helper to build title with tool name appended when relevant
   const buildTitle = useCallback(
@@ -323,7 +327,7 @@ const ActionView = memo(props => {
   }, []);
 
   const renderIcon = useCallback(() => {
-    if (iconMeta?.url && (toolkitType === 'application' || toolkitType === 'pipeline')) {
+    if (iconMeta?.url && (toolkitType === 'application' || toolkitType === 'pipeline' || loadedSkillName)) {
       return (
         <EliteAImage
           style={styles.imageStyle}
@@ -338,6 +342,7 @@ const ActionView = memo(props => {
   }, [
     iconMeta,
     toolkitType,
+    loadedSkillName,
     theme,
     action?.toolMeta?.toolkit_name,
     styles.imageStyle,

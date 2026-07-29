@@ -63,6 +63,7 @@ const dark8 = 'rgba(61, 68, 86, 0.08)';
 const blue8 = 'rgba(106, 232, 250, 0.08)';
 const blue12 = 'rgba(99, 144, 254, 0.12)'; // conversation selected light
 const gray30 = '#3B3E46';
+const white15 = 'rgba(255, 255, 255, 0.15)';
 const lightGrey = 'rgba(217, 217, 217, 1)';
 export const blue01 = 'rgba(248, 252, 255, 1)';
 const blue02 = 'rgba(110, 177, 255, 1)';
@@ -265,8 +266,8 @@ const lightPalette = {
         shadowDefault: 'none',
         shadowHover: 'none',
         shadowActive: '0px 0px 15px 0px #A754FF33 inset',
-        textGradient: 'linear-gradient(90deg, #DD32FF 0.7%, #8147FF 95.74%)',
-        iconGradient: 'linear-gradient(33.96deg, #E345FF 0%, #A274FF 96.65%)',
+        textGradient: 'linear-gradient(90deg, #DD32FF 0.7%, #8147FF 30%)',
+        iconGradient: 'linear-gradient(33.96deg, #E345FF 0%, #A274FF 80%)',
       },
       iconLabelButton: {
         default: 'transparent',
@@ -309,6 +310,7 @@ const lightPalette = {
     },
     tooltip: {
       default: gray30,
+      code: white15,
     },
     tips: blueFill08,
     attention: orangeFill5,
@@ -399,6 +401,7 @@ const lightPalette = {
   border: {
     lines: light30,
     hover: light10,
+    inputHover: light20,
     category: {
       selected: dark20,
     },

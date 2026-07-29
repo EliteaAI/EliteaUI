@@ -39,12 +39,17 @@ const MemorySummarization = memo(() => {
     <Box sx={styles.container}>
       {/* Enable Toggle */}
       <Box sx={styles.toggleSection}>
-        <Typography
-          variant="headingSmall"
-          sx={{ color: 'text.secondary' }}
-        >
-          Automatic Summarization
-        </Typography>
+        <Box sx={styles.toggleContent}>
+          <Typography
+            variant="headingSmall"
+            sx={{ color: 'text.secondary' }}
+          >
+            Automatic Summarization
+          </Typography>
+          <Typography variant="bodySmall">
+            Summarize older messages to free up context space when the limit is reached
+          </Typography>
+        </Box>
         <Switch.BaseSwitch
           checked={values.enable_summarization}
           onChange={handleSummarizationEnabledChange}
@@ -116,6 +121,11 @@ const memorySummarizationStyles = () => ({
     backgroundColor: palette.background.userInputBackground,
     borderRadius: '0.75rem',
   }),
+  toggleContent: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem',
+  },
   section: {
     display: 'flex',
     flexDirection: 'column',

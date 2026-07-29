@@ -1,6 +1,10 @@
 import { ChatHelpers } from '@/[fsd]/features/chat/lib/helpers';
 import { normalizeExecutionHierarchy } from '@/[fsd]/features/chat/lib/helpers/executionHierarchy.helpers.js';
 import {
+  hasUnresolvedSkillAction,
+  mentionSkillActions,
+} from '@/[fsd]/features/chat/lib/helpers/mentionSkillTrace.helpers.js';
+import {
   ChatParticipantType,
   ROLES,
   TOOL_ACTION_NAMES,
@@ -178,6 +182,7 @@ export const convertToAIAnswer = (message_group, message_groups, participants, t
     references = [],
     is_error = false,
     error,
+    budget_error_code: budgetErrorCode,
     context: { included: contextIncluded } = {},
   } = meta || {};
   const isSummarized = contextIncluded === false;
@@ -283,6 +288,7 @@ export const convertToAIAnswer = (message_group, message_groups, participants, t
           mcp_server_url: step.metadata?.mcp_server_url,
           langgraph_node: step.metadata?.langgraph_node,
           icon_meta: step.tool_meta?.icon_meta,
+          loaded_skill: step.tool_meta?.loaded_skill,
           agent_type: step.tool_meta?.metadata?.agent_type,
           ...hierarchy,
         },
@@ -295,6 +301,10 @@ export const convertToAIAnswer = (message_group, message_groups, participants, t
       });
     }
   }) || [];
+
+  if (!hasUnresolvedSkillAction(toolActions)) {
+    toolActions.unshift(...mentionSkillActions(toolActions, meta?.invoked_skills, convertTime(created_at)));
+  }
 
   // Reconstruct HITL interrupt state persisted at pause time (#4823). The live
   // socket handler (components/Chat/hooks.js) is the only other place these are
@@ -331,6 +341,7 @@ export const convertToAIAnswer = (message_group, message_groups, participants, t
     isStreaming: is_streaming,
     isLoading: is_streaming,
     exception: is_error ? error || content || message_items[0]?.item_details?.content : undefined,
+    budgetErrorCode,
     references,
     likes,
     interaction_uuid: foundQuestion?.meta?.interaction_uuid,

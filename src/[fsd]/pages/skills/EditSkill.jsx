@@ -13,6 +13,7 @@ import { useSetSkillDefaultVersionMutation, useSkillDetailsQuery } from '@/[fsd]
 import { SkillValidateSchema } from '@/[fsd]/features/skill/lib/validation';
 import SkillControls from '@/[fsd]/features/skill/ui/SkillControls';
 import SkillInformation from '@/[fsd]/features/skill/ui/SkillInformation';
+import { AIEditSkillButton } from '@/[fsd]/features/skill/ui/ai-edit-skill-modal';
 import CreateSkillForm from '@/[fsd]/features/skill/ui/skill-details/form/CreateSkillForm';
 import SkillTestPanel from '@/[fsd]/features/skill/ui/skill-test-panel/SkillTestPanel';
 import { eliteaApi } from '@/api/eliteaApi';
@@ -237,6 +238,7 @@ const EditSkill = memo(() => {
                       <ContentContainer height="100%">
                         <CreateSkillForm
                           viewMode={ViewMode.Owner}
+                          summaryEditAction={<AIEditSkillButton />}
                           instructionsKey={`${skillId}:${currentVersionId}:${
                             (data?.version_details?.instructions ?? data?.instructions ?? '').length
                           }`}

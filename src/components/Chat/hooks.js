@@ -13,6 +13,10 @@ import {
   mergeHitlInterrupts,
   normalizeHitlInterrupt,
 } from '@/[fsd]/features/chat/lib/helpers/hitl.helpers.js';
+import {
+  mentionSkillActions,
+  supersedeMentionSkillAction,
+} from '@/[fsd]/features/chat/lib/helpers/mentionSkillTrace.helpers.js';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import * as ParsePipelineHelpers from '@/[fsd]/features/pipelines/flow-editor/lib/helpers/parsePipeline.helpers';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
@@ -834,6 +838,13 @@ export const useChatSocket = ({
             };
             const hierarchy = normalizeExecutionHierarchy(metadata, message.response_metadata);
 
+            if (toolMeta.toolkit_name === 'skills') {
+              msg.toolActions = supersedeMentionSkillAction(
+                msg.toolActions,
+                message.response_metadata?.tool_inputs,
+              );
+            }
+
             msg.toolActions.push({
               // When a lazy-loading wrapper is used, tool_name holds the wrapper's class name (e.g. "LazyLoading")
               // rather than the actual tool name. The SDK signals this by setting metadata.original_name.
@@ -1381,7 +1392,16 @@ export const useChatSocket = ({
         }
         case SocketMessageType.Freeform:
           break;
-        case SocketMessageType.AgentStart:
+        case SocketMessageType.AgentStart: {
+          // A fan-out child re-emits agent_start on the parent's message with an
+          // empty list, so an empty set is never authoritative.
+          const mentionSkills = response_metadata?.invoked_skills;
+          if (Array.isArray(mentionSkills) && mentionSkills.length) {
+            msg.toolActions = [
+              ...(msg.toolActions || []),
+              ...mentionSkillActions(msg.toolActions, mentionSkills, message.created_at),
+            ];
+          }
           // For attachment indexing events, initialize and add message to chat history
           if (msgIndex === -1 && sio_event === 'chat_predict_attachment') {
             msg.isLoading = true;
@@ -1401,6 +1421,7 @@ export const useChatSocket = ({
           }
           onRcvAgentEventRef.current && onRcvAgentEventRef.current({ ...message });
           break;
+        }
         case SocketMessageType.SwarmChildMessage: {
           // Handle swarm child agent message - add as tool action on parent message
           const {

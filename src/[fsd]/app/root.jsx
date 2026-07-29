@@ -15,6 +15,7 @@ import store from '@/[fsd]/app/store';
 import App from '@/[fsd]/app/App';
 import { ToolkitSocketProvider } from '@/[fsd]/app/providers';
 import { DEV, VITE_DEV_TOKEN, VITE_SOCKET_PATH, VITE_SOCKET_SERVER } from '@/common/constants';
+import { NpsSurveyWidget } from '@/[fsd]/widgets/nps-survey';
 import { ToastComponent, ToastProvider } from '@/components/ToastProvider';
 import { FilePreviewNavigationProvider } from '@/contexts/FilePreviewNavigationContext';
 import SocketContext from '@/contexts/SocketContext';
@@ -86,6 +87,7 @@ const RootComponent = memo(() => {
               </ToolkitSocketProvider>
             </FilePreviewNavigationProvider>
             <ToastComponent />
+            <NpsSurveyWidget />
           </ToastProvider>
         </SocketContext.Provider>
       </LocalizationProvider>

@@ -369,7 +369,7 @@ const collapsedPerticapantsListStyles = () => ({
   }),
 
   collapsedIcon: {
-    fontSize: '1.5rem !important',
+    fontSize: '1.25rem !important',
 
     color: ({ palette }) => palette.secondary.main,
   },

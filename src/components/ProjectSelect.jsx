@@ -104,11 +104,10 @@ const ProjectSelect = memo(props => {
   );
 
   const projectOptions = useMemo(() => {
+    const excludedIds = filterIds.map(id => +id);
+    const isExcluded = id => excludedIds.includes(+id);
     const handledProjects = projects
-      .filter(
-        i =>
-          !filterIds.map(id => +id).includes(i.id) && (hasPublicProjectAccess || i.id != PUBLIC_PROJECT_ID),
-      )
+      .filter(i => !isExcluded(i.id) && (hasPublicProjectAccess || i.id != PUBLIC_PROJECT_ID))
       .map(item => ({
         label: getProjectName(item),
         value: item.id,
@@ -120,14 +119,17 @@ const ProjectSelect = memo(props => {
       .sort((a, b) => a.label.toLowerCase().localeCompare(b.label.toLowerCase()));
     const result = [publicProject, privateProject, ...leftProjects].filter(item => item);
 
-    const selectedId = project?.id || privateProjectId;
-    if (selectedId && !result.some(item => item.value === selectedId)) {
-      const selectedName = project?.id ? project.name || `Project ${project.id}` : PRIVATE_PROJECT_NAME;
-      result.push({ label: selectedName, value: selectedId });
+    const { id: selectedId } = selectedProject;
+    const isSelectedListed = result.some(item => item.value == selectedId);
+    if (selectedId && !isExcluded(selectedId) && !isSelectedListed) {
+      result.push({
+        label: getProjectName(selectedProject) || `Project ${selectedId}`,
+        value: selectedId,
+      });
     }
 
     return result;
-  }, [projects, filterIds, hasPublicProjectAccess, getProjectName, privateProjectId, project]);
+  }, [projects, filterIds, hasPublicProjectAccess, getProjectName, privateProjectId, selectedProject]);
 
   const location = useLocation();
 

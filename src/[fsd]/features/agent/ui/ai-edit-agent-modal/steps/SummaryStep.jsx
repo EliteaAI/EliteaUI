@@ -1,8 +1,9 @@
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback, useEffect, useMemo } from 'react';
 
 import { Box, IconButton, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
+import { resolveEntityType } from '@/[fsd]/entities/edit-entity-with-ai/lib/helpers';
 import { Input, Text } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import PlusIcon from '@/assets/plus-icon.svg?react';
@@ -22,12 +23,6 @@ const normalizeToolItem = (item, entityType) => ({
   entityType: item.entity_type || entityType,
 });
 
-const resolveEntityType = item => {
-  if (item.type === 'application') return item.agent_type === 'pipeline' ? 'pipeline' : 'agent';
-  if (item.type === 'skill') return 'skill';
-  return 'toolkit';
-};
-
 const SummaryStep = memo(props => {
   const {
     currentData,
@@ -37,6 +32,7 @@ const SummaryStep = memo(props => {
     fieldApplyFlags,
     onToggleField,
     toolSelections,
+    onValidationChange,
   } = props;
 
   const { mergedName, mergedDescription, mergedInstructions, mergedWelcome, mergedStarters } = useMemo(
@@ -132,9 +128,18 @@ const SummaryStep = memo(props => {
 
   const addStarterTooltip = useMemo(() => {
     if (mergedStarters.length >= MAX_CONVERSATION_STARTERS)
-      return 'You have reached the limit of conversation starters';
+      return 'You have reached the limit of chat starters';
     return '';
   }, [mergedStarters]);
+
+  const hasStarterErrors = useMemo(
+    () => mergedStarters.some(s => s && s.length > MAX_CONVERSATION_STARTER_LENGTH),
+    [mergedStarters],
+  );
+
+  useEffect(() => {
+    onValidationChange?.(!hasStarterErrors);
+  }, [hasStarterErrors, onValidationChange]);
 
   return (
     <Box sx={styles.container}>
@@ -167,8 +172,7 @@ const SummaryStep = memo(props => {
           <Input.InputBase
             fullWidth
             multiline
-            minRows={2}
-            maxRows={4}
+            maxRows={3}
             value={mergedDescription}
             onChange={e => handleFieldChange('description', e.target.value)}
             inputProps={{ maxLength: MAX_DESCRIPTION_LENGTH }}
@@ -210,8 +214,7 @@ const SummaryStep = memo(props => {
           <Input.InputBase
             fullWidth
             multiline
-            minRows={2}
-            maxRows={4}
+            maxRows={3}
             value={mergedWelcome}
             onChange={e => handleFieldChange('welcome_message', e.target.value)}
             inputProps={{ maxLength: MAX_WELCOME_MESSAGE_LENGTH }}
@@ -223,34 +226,58 @@ const SummaryStep = memo(props => {
       </Box>
 
       <Box sx={styles.section}>
-        <Typography sx={styles.sectionLabel}>Conversation starters:</Typography>
+        <Typography sx={styles.sectionLabel}>Chat starters:</Typography>
         <Box sx={styles.startersList}>
-          {mergedStarters.map((starter, index) => (
-            <Box
-              key={index}
-              sx={styles.starterRow}
-            >
-              <Box sx={styles.editableCard}>
-                <Input.InputBase
-                  fullWidth
-                  multiline
-                  disableUnderline
-                  value={starter}
-                  onChange={e => handleStarterChange(index, e.target.value)}
-                  inputProps={{ maxLength: MAX_CONVERSATION_STARTER_LENGTH }}
-                  enableAutoBlur={false}
-                  sx={styles.cardInput}
-                />
-              </Box>
-              <IconButton
-                size="small"
-                onClick={() => handleRemoveStarter(index)}
-                sx={styles.removeBtn}
+          {mergedStarters.map((starter, index) => {
+            const isOverLimit = starter && starter.length > MAX_CONVERSATION_STARTER_LENGTH;
+
+            return (
+              <Box
+                key={index}
+                sx={styles.starterRow}
               >
-                <CloseIcon sx={styles.removeIcon} />
-              </IconButton>
-            </Box>
-          ))}
+                <Box sx={styles.starterColumn}>
+                  <Box sx={[styles.starterCard, isOverLimit && styles.starterCardError]}>
+                    <Input.InputBase
+                      fullWidth
+                      multiline
+                      maxRows={3}
+                      minRows={1}
+                      disableUnderline
+                      value={starter}
+                      onChange={e => handleStarterChange(index, e.target.value)}
+                      enableAutoBlur={false}
+                      sx={styles.starterInput}
+                    />
+                  </Box>
+                  {(isOverLimit || starter?.length > 0) && (
+                    <Box sx={styles.starterFooter}>
+                      {isOverLimit ? (
+                        <Typography sx={styles.fieldError}>
+                          {`Chat starter must be ${MAX_CONVERSATION_STARTER_LENGTH} characters or less`}
+                        </Typography>
+                      ) : (
+                        <Box />
+                      )}
+                      <Text.CharacterCounter
+                        value={starter}
+                        maxLength={MAX_CONVERSATION_STARTER_LENGTH}
+                        hideMaxLimitMessage
+                        sx={styles.characterCounter}
+                      />
+                    </Box>
+                  )}
+                </Box>
+                <IconButton
+                  size="small"
+                  onClick={() => handleRemoveStarter(index)}
+                  sx={styles.removeBtn}
+                >
+                  <CloseIcon sx={styles.removeIcon} />
+                </IconButton>
+              </Box>
+            );
+          })}
           <Box sx={styles.addStarterRow}>
             <Tooltip
               placement="top-start"
@@ -301,13 +328,11 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '1rem',
-    padding: '1rem 2rem 1.25rem',
+    paddingBlock: '1rem 1.25rem',
+    paddingInline: 'max(2rem, calc((100% - 46rem) / 2))',
     flex: 1,
     minHeight: 0,
     overflowY: 'auto',
-    maxWidth: '50rem',
-    width: '100%',
-    margin: '0 auto',
   },
   field: {
     display: 'flex',
@@ -327,6 +352,9 @@ const styles = {
     borderRadius: '0.5rem',
     backgroundColor: palette.background.userInputBackground,
     border: `0.0625rem solid ${palette.border.lines}`,
+    transition: 'border-color 0.2s ease',
+    '&:hover': { borderColor: palette.border.hover },
+    '&:focus-within': { borderColor: palette.primary.main },
   }),
   cardInput: ({ palette }) => ({
     '& .MuiInputBase-input': {
@@ -336,6 +364,7 @@ const styles = {
       fontWeight: 400,
       lineHeight: '1.5rem',
       color: palette.text.secondary,
+      caretColor: palette.text.secondary,
     },
     '& .MuiInputBase-root': {
       padding: '0 !important',
@@ -367,6 +396,57 @@ const styles = {
     gap: '0.75rem',
     paddingTop: '0.5rem',
   },
+  starterColumn: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem',
+    flex: 1,
+    minWidth: 0,
+  },
+  starterFooter: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'baseline',
+  },
+  starterCard: ({ palette }) => ({
+    flex: 1,
+    minWidth: 0,
+    padding: '0.5rem 1rem',
+    borderRadius: '0.5rem',
+    backgroundColor: palette.background.userInputBackground,
+    border: `0.0625rem solid ${palette.border.lines}`,
+    transition: 'border-color 0.2s ease',
+    '&:hover': { borderColor: palette.border.hover },
+    '&:focus-within': { borderColor: palette.primary.main },
+  }),
+  starterCardError: ({ palette }) => ({
+    borderColor: palette.error.main,
+    '&:hover': { borderColor: palette.error.main },
+    '&:focus-within': { borderColor: palette.error.main },
+  }),
+  starterInput: ({ palette }) => ({
+    '& .MuiInputBase-input': {
+      padding: '0 !important',
+      margin: '0 !important',
+      fontSize: '0.875rem',
+      fontWeight: 400,
+      lineHeight: '1.5rem',
+      color: palette.text.secondary,
+      caretColor: palette.text.secondary,
+    },
+    '& .MuiInputBase-root': {
+      padding: '0 !important',
+      minHeight: 'unset',
+      '&::before, &::after': {
+        display: 'none !important',
+      },
+    },
+    '& textarea': {
+      padding: '0 !important',
+      margin: '0 !important',
+    },
+    padding: 0,
+  }),
   startersList: {
     display: 'flex',
     flexDirection: 'column',
@@ -377,13 +457,16 @@ const styles = {
     alignItems: 'center',
     gap: '0.625rem',
   },
-  removeBtn: {
-    padding: '0.375rem',
-    color: 'text.secondary',
+  removeBtn: ({ palette }) => ({
+    padding: '0.5rem',
+    color: palette.text.default,
     '&:hover': {
-      backgroundColor: 'transparent',
+      backgroundColor: palette.background.button.tertiary.hover,
     },
-  },
+    '&:active': {
+      backgroundColor: palette.background.button.tertiary.pressed,
+    },
+  }),
   removeIcon: {
     fontSize: '1rem',
   },
@@ -404,6 +487,10 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '0.75rem',
+  },
+  fieldError: {
+    fontSize: '0.75rem',
+    color: 'error.main',
   },
   characterCounter: {
     alignSelf: 'flex-end',

@@ -111,15 +111,8 @@ const BucketsListContent = memo(props => {
           <Typography
             variant="bodyMedium"
             color="text.button.disabled"
-            sx={styles.emptyStateTitle}
           >
-            No buckets created yet
-          </Typography>
-          <Typography
-            variant="bodySmall"
-            color="text.button.disabled"
-          >
-            Create your first bucket to get started
+            No buckets created yet.
           </Typography>
         </Box>
       );
@@ -138,7 +131,7 @@ const bucketsListContentStyles = () => ({
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: '2rem 1rem',
+    padding: '0.5rem 1rem',
     textAlign: 'center',
   },
   emptyStateTitle: {

@@ -7,7 +7,7 @@ import { PathValidationHelpers } from '@/[fsd]/features/artifacts/lib/helpers';
 import { FORBIDDEN_FILENAME_HINT } from '@/[fsd]/features/artifacts/lib/helpers/pathValidation.helpers';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
 import { artifactsApi, useArtifactListQuery } from '@/api/artifacts';
-import { formatFileSize } from '@/common/attachmentValidationUtils';
+import { formatFileSize, isNonSvgImage } from '@/common/attachmentValidationUtils';
 import { useChatConfig } from '@/hooks/useChatConfig';
 import useToast from '@/hooks/useToast';
 import { setSkippedFiles, uploadFile } from '@/slices/upload';
@@ -38,6 +38,7 @@ export const useFileUpload = props => {
   // default 150 MB) — shared with the chat attachment path.
   const { limits } = useChatConfig();
   const maxFileSize = limits.DEFAULT_MAX_FILE_SIZE;
+  const maxImageFileSize = limits.MAX_IMAGE_FILE_SIZE;
 
   // Use the same cached RTK Query data that ArtifactTable already fetches
   const selectedBucketName = queryParams.selectedBucket?.name;
@@ -91,10 +92,24 @@ export const useFileUpload = props => {
       }
       const sizeValidFiles = filesArray.filter(file => file.size <= maxFileSize);
 
-      const validFileNames = sizeValidFiles.filter(
+      // Reject non-SVG images over the image-specific size limit.
+      const oversizedImages = sizeValidFiles
+        .filter(file => isNonSvgImage(file) && file.size > maxImageFileSize)
+        .map(file => file.name);
+
+      if (oversizedImages.length > 0)
+        toastError(
+          `The following images exceed the maximum image size of ${formatFileSize(maxImageFileSize)} and were skipped: ${oversizedImages.join(', ')}`,
+        );
+
+      const imageValidFiles = sizeValidFiles.filter(
+        file => !isNonSvgImage(file) || file.size <= maxImageFileSize,
+      );
+
+      const validFileNames = imageValidFiles.filter(
         file => !PathValidationHelpers.validateFileName(file.name),
       );
-      const invalidFileNames = sizeValidFiles
+      const invalidFileNames = imageValidFiles
         .filter(file => PathValidationHelpers.validateFileName(file.name))
         .map(file => file.name);
 
@@ -179,6 +194,7 @@ export const useFileUpload = props => {
       trackEvent,
       handlePrefixChange,
       maxFileSize,
+      maxImageFileSize,
     ],
   );
 

@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useMemo } from 'react';
 
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 import { Box } from '@mui/material';
@@ -15,6 +15,7 @@ import EnvironmentIcon from '@/assets/environment-icon.svg?react';
 import KeyIcon from '@/assets/key-icon.svg?react';
 import LogoutIcon from '@/assets/logout-icon.svg?react';
 import PersonalizationIcon from '@/assets/personalization-icon.svg?react';
+import PieChartIcon from '@/assets/pie-chart-icon.svg?react';
 import ReasonIcon from '@/assets/reason-icon.svg?react';
 import { PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';
 import BellIcon from '@/components/Icons/BellIcon';
@@ -38,6 +39,7 @@ const VALID_TAB_IDS = [
   'secrets',
   'users',
   'analytics',
+  'usage',
   'preferences',
   'ai-personality',
   'memory',
@@ -98,6 +100,11 @@ const SETTINGS_TABS_CONFIG = [
         label: 'Analytics',
         icon: <AnalyticsIcon />,
       },
+      {
+        id: 'usage',
+        label: 'Usage',
+        icon: <PieChartIcon />,
+      },
     ],
   },
   {
@@ -144,12 +151,21 @@ const LEGACY_TAB_REDIRECTS = ['configuration', 'information'];
 const Settings = memo(() => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const styles = settingsPageStyles();
-  const { state: locationState, pathname } = useLocation();
-  const tab = VALID_TAB_IDS.find(id => pathname === `${RouteDefinitions.Settings}/${id}`) ?? DEFAULT_TAB;
   const projectId = useSelectedProjectId();
+
+  const styles = settingsPageStyles();
+
+  const { state: locationState, pathname } = useLocation();
+
+  const user = useSelector(state => state.user);
+
+  const tab = VALID_TAB_IDS.find(id => pathname === `${RouteDefinitions.Settings}/${id}`) ?? DEFAULT_TAB;
+
   const { checkPermission } = useCheckPermission();
   const { data: platformSettings } = useGetPlatformSettingsQuery();
+
+  const isPrivateProject = projectId == user.personal_project_id;
+  const showUsersSection = !isPrivateProject;
 
   const sections = useMemo(
     () =>
@@ -162,10 +178,19 @@ const Settings = memo(() => {
             if (item.publicOnly) return projectId == PUBLIC_PROJECT_ID;
             if (item.id === 'project-context') return projectId !== PUBLIC_PROJECT_ID;
             if (item.id === 'analytics' && platformSettings?.analytics_enabled === false) return false;
+            if (item.id === 'usage' && !platformSettings?.cost_budgets_enabled) return false;
+            if (item.id === 'users' && !showUsersSection) return false;
+
             return true;
           }),
       })).filter(section => section.tabs.length > 0),
-    [checkPermission, projectId, platformSettings],
+    [
+      checkPermission,
+      projectId,
+      platformSettings?.analytics_enabled,
+      platformSettings?.cost_budgets_enabled,
+      showUsersSection,
+    ],
   );
 
   const onLogout = useCallback(() => {
@@ -219,9 +244,23 @@ const Settings = memo(() => {
     }
   }, [navigate, projectId, tab]);
 
+  // Guard: hide Users for private projects
+  useEffect(() => {
+    if (tab === 'users' && !showUsersSection) {
+      handleSettingsItemClick(DEFAULT_TAB);
+    }
+  }, [handleSettingsItemClick, showUsersSection, tab]);
+
   // Guard: redirect away from analytics if disabled at platform level
   useEffect(() => {
     if (tab === 'analytics' && platformSettings?.analytics_enabled === false) {
+      handleSettingsItemClick(DEFAULT_TAB);
+    }
+  }, [handleSettingsItemClick, platformSettings, tab]);
+
+  // Guard: redirect away from usage when cost tracking is off (wait for settings to load)
+  useEffect(() => {
+    if (tab === 'usage' && platformSettings && !platformSettings.cost_budgets_enabled) {
       handleSettingsItemClick(DEFAULT_TAB);
     }
   }, [handleSettingsItemClick, platformSettings, tab]);

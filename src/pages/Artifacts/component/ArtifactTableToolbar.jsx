@@ -53,16 +53,15 @@ const ArtifactTableToolbar = memo(props => {
     [styles, currentPrefix],
   );
 
-  const deleteButtonIconColor = !rowSelectionModel.length
-    ? theme.palette.icon.fill.disabled
-    : theme.palette.icon.fill.default;
+  const hasSelection = rowSelectionModel.length > 0;
+  const disabledIconColor = theme.palette.icon.fill.disabled;
+  const defaultIconColor = theme.palette.icon.fill.default;
 
   return (
     <Box sx={styles.toolbarContainer}>
       {/* Left side: Bucket name with breadcrumbs and info icon */}
       <Box sx={styles.leftSection}>
         <Typography
-          data-testid="artifacts-breadcrumb-bucket-label"
           variant="headingSmall"
           sx={rootBucketSx}
           onClick={currentPrefix ? handleRootClick : undefined}
@@ -106,43 +105,6 @@ const ArtifactTableToolbar = memo(props => {
           onChange={handleFileChange}
         />
 
-        <Tooltip
-          title="Download files"
-          placement="top"
-        >
-          <Box
-            component="span"
-            data-testid="artifacts-download-files-tooltip"
-          >
-            <Button.BaseBtn
-              variant="icon"
-              sx={styles.actionButton}
-              onClick={onDownloadFiles}
-              disabled={!rowSelectionModel.length}
-              data-testid="artifacts-download-files-button"
-            >
-              <DownloadIcon sx={styles.actionIcon} />
-            </Button.BaseBtn>
-          </Box>
-        </Tooltip>
-
-        {canDeleteFiles && (
-          <DeleteEntityButton
-            testId="artifacts-delete-files-button"
-            name={rowSelectionModel.length === totalRows ? 'all files' : 'selected files'}
-            entity_name="file"
-            onDelete={onDeleteArtifacts}
-            title={`Delete ${rowSelectionModel.length === totalRows ? 'all files' : 'selected files'}`}
-            isLoading={false}
-            sx={styles.deleteEntityButton}
-            buttonColor="secondary"
-            buttonClassName="action"
-            iconColor={deleteButtonIconColor}
-            disabled={!rowSelectionModel.length}
-            shouldRequestInputName={false}
-          />
-        )}
-
         {checkPermission(PERMISSIONS.artifacts.create) && bucket && (
           <Tooltip
             title="Upload files"
@@ -160,6 +122,42 @@ const ArtifactTableToolbar = memo(props => {
               </Button.BaseBtn>
             </Box>
           </Tooltip>
+        )}
+
+        <Tooltip
+          title="Download files"
+          placement="top"
+        >
+          <Box component="span">
+            <Button.BaseBtn
+              variant="icon"
+              sx={styles.actionButton}
+              onClick={onDownloadFiles}
+              disabled={!hasSelection}
+              data-testid="artifacts-download-files-button"
+            >
+              <DownloadIcon
+                sx={styles.actionIcon}
+                fill={hasSelection ? defaultIconColor : disabledIconColor}
+              />
+            </Button.BaseBtn>
+          </Box>
+        </Tooltip>
+
+        {canDeleteFiles && (
+          <DeleteEntityButton
+            name={rowSelectionModel.length === totalRows ? 'all files' : 'selected files'}
+            entity_name="file"
+            onDelete={onDeleteArtifacts}
+            title={`Delete ${rowSelectionModel.length === totalRows ? 'all files' : 'selected files'}`}
+            isLoading={false}
+            sx={styles.deleteEntityButton}
+            buttonColor="secondary"
+            buttonClassName="action"
+            iconColor={hasSelection ? defaultIconColor : disabledIconColor}
+            disabled={!hasSelection}
+            shouldRequestInputName={false}
+          />
         )}
       </Box>
     </Box>

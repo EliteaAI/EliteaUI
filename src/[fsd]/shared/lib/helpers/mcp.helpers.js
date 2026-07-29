@@ -20,3 +20,16 @@ export const isRemoteMcpToolkitType = type => type === 'mcp';
  * Checks item.type and item.meta.mcp (used by pipeline nodes).
  */
 export const isMcpToolkit = item => isMcpToolkitType(item?.type) || item?.meta?.mcp === true;
+
+export const resolveToolkitSchemaByType = (type, toolkitSchemas = {}) => {
+  if (!type) return undefined;
+  if (toolkitSchemas[type]) return toolkitSchemas[type];
+  const prefix = McpAuthConstants.MCP_PREBUILD_PREFIX;
+  if (!type.toLowerCase().startsWith(prefix)) return undefined;
+  const normalize = key => prefix + key.slice(prefix.length).toLowerCase().replace(/ /g, '_');
+  const wanted = normalize(type);
+  const key = Object.keys(toolkitSchemas).find(
+    k => k.toLowerCase().startsWith(prefix) && normalize(k) === wanted,
+  );
+  return key ? toolkitSchemas[key] : undefined;
+};

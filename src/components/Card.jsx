@@ -306,7 +306,6 @@ const Card = memo(props => {
                     )}
                     {isForked && (
                       <IconLinkWithToolTip
-                        tooltip={name}
                         meta={meta}
                         type={getEntityTypeByCardType(type)}
                       />

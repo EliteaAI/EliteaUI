@@ -84,8 +84,7 @@ const GenerateAgentReviewForm = memo(props => {
   );
 
   const addStarterTooltip = useMemo(() => {
-    if (starters.length >= MAX_CONVERSATION_STARTERS)
-      return 'You have reached the limit of conversation starters';
+    if (starters.length >= MAX_CONVERSATION_STARTERS) return 'You have reached the limit of chat starters';
     return '';
   }, [starters]);
 
@@ -94,7 +93,6 @@ const GenerateAgentReviewForm = memo(props => {
       <Box sx={styles.field}>
         <Input.InputBase
           label="Name"
-          labelVariant="bodyMedium"
           variant={Input.INPUT_VARIANTS.outlined}
           fullWidth
           size="small"
@@ -120,7 +118,6 @@ const GenerateAgentReviewForm = memo(props => {
       <Box sx={styles.field}>
         <Input.InputBase
           label="Description"
-          labelVariant="bodyMedium"
           variant={Input.INPUT_VARIANTS.outlined}
           fullWidth
           size="small"
@@ -148,7 +145,6 @@ const GenerateAgentReviewForm = memo(props => {
       <Box sx={styles.field}>
         <Input.InputBase
           label="Instructions"
-          labelVariant="bodyMedium"
           variant={Input.INPUT_VARIANTS.outlined}
           fullWidth
           size="small"
@@ -164,7 +160,6 @@ const GenerateAgentReviewForm = memo(props => {
         <Input.InputBase
           variant={Input.INPUT_VARIANTS.outlined}
           label="Welcome Message"
-          labelVariant="bodyMedium"
           multiline
           minRows={1}
           maxRows={4}
@@ -190,7 +185,7 @@ const GenerateAgentReviewForm = memo(props => {
 
       {starters.length > 0 && (
         <Box sx={styles.section}>
-          <Typography sx={styles.sectionLabel}>Conversation starters:</Typography>
+          <Typography sx={styles.sectionLabel}>Chat starters:</Typography>
           <Box sx={styles.startersList}>
             {starters.map((starter, index) => (
               <Box
@@ -208,7 +203,15 @@ const GenerateAgentReviewForm = memo(props => {
                     onFocus={() => toggleFieldFocus(`starter_${index}`)}
                     onBlur={() => toggleFieldFocus(null)}
                     slotProps={{ htmlInput: { maxLength: MAX_CONVERSATION_STARTER_LENGTH } }}
-                    error={!starter?.trim() && starter !== undefined}
+                    error={
+                      (!starter?.trim() && starter !== undefined) ||
+                      starter?.length > MAX_CONVERSATION_STARTER_LENGTH
+                    }
+                    helperText={
+                      starter?.length > MAX_CONVERSATION_STARTER_LENGTH
+                        ? `Chat starter must be ${MAX_CONVERSATION_STARTER_LENGTH} characters or less`
+                        : undefined
+                    }
                     hasActionsToolBar={false}
                     sx={styles.compactMultilineInput}
                     containerProps={{ sx: { flex: 1 } }}

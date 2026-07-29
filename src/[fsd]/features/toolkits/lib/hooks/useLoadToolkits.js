@@ -3,8 +3,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTheme } from '@mui/material';
 
 import { CredentialNameHelpers } from '@/[fsd]/features/credentials/lib/helpers';
+import { McpAuthConstants } from '@/[fsd]/features/mcp/lib/constants';
 import { McpConstants } from '@/[fsd]/features/toolkits/lib/constants';
-import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
+import { McpToolkitHelpers, ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useListToolkitTypesQuery, useToolkitsListQuery } from '@/api/toolkits.js';
 import useTypes from '@/hooks/toolkit/useTypes';
 import usePageQuery from '@/hooks/usePageQuery';
@@ -39,21 +40,52 @@ export const useLoadToolkits = ({
     { projectId, params: { mcp: isMCP || undefined, application: isApplication || undefined } },
     { skip: !projectId || forceSkip },
   );
-  const toolkitTypeNameTypeMap = useMemo(
-    () =>
-      toolkitTypesData?.rows?.reduce((acc, type) => {
-        // Use metadata.label from toolkit schemas if available (matches projectWideTagList logic)
-        const typeInfo = toolkitSchemas?.[type];
-        const label = typeInfo?.metadata?.label || CredentialNameHelpers.extraCredentialName(type);
-        acc[label] = type;
-        return acc;
-      }, {}) || {},
-    [toolkitTypesData, toolkitSchemas],
-  );
+  const mcpGroupByType = useMemo(() => {
+    const prefix = McpAuthConstants.MCP_PREBUILD_PREFIX;
+    const map = {};
+    Object.entries(toolkitSchemas || {}).forEach(([key, schema]) => {
+      const group = schema?.metadata?.group;
+      if (!group || !key.toLowerCase().startsWith(prefix)) return;
+      const normalized = prefix + key.slice(prefix.length).toLowerCase().replace(/ /g, '_');
+      map[key] = group;
+      map[normalized] = group;
+    });
+    return map;
+  }, [toolkitSchemas]);
+
+  const { mcpTypesByGroup, nonMcpTypes } = useMemo(() => {
+    const byGroup = {};
+    const nonMcp = [];
+    (toolkitTypesData?.rows || []).forEach(type => {
+      const schema = toolkitSchemas?.[type];
+      const isMcpType =
+        type === 'mcp' || type.startsWith(McpAuthConstants.MCP_PREBUILD_PREFIX) || schema?.type === 'mcp';
+      if (isMcpType) {
+        const group = mcpGroupByType[type] || McpConstants.MCP_OTHER_GROUP;
+        (byGroup[group] ||= []).push(type);
+      } else {
+        nonMcp.push(type);
+      }
+    });
+    return { mcpTypesByGroup: byGroup, nonMcpTypes: nonMcp };
+  }, [toolkitTypesData?.rows, toolkitSchemas, mcpGroupByType]);
+
+  const typeNameToTypes = useMemo(() => {
+    const map = {};
+    nonMcpTypes.forEach(type => {
+      const label =
+        toolkitSchemas?.[type]?.metadata?.label || CredentialNameHelpers.extraCredentialName(type);
+      map[label] = [type];
+    });
+    Object.entries(mcpTypesByGroup).forEach(([group, types]) => {
+      map[group] = types;
+    });
+    return map;
+  }, [nonMcpTypes, mcpTypesByGroup, toolkitSchemas]);
 
   useEffect(() => {
     if (!isMCP) {
-      setSelectedTypes(selectedTypeNames.map(name => toolkitTypeNameTypeMap[name]).filter(Boolean));
+      setSelectedTypes(selectedTypeNames.flatMap(name => typeNameToTypes[name] || []));
     } else {
       let selectedMcpTypes = [];
       if (selectedTypeNames.includes(McpConstants.McpCategory.Local)) {
@@ -64,7 +96,7 @@ export const useLoadToolkits = ({
       }
       setSelectedTypes(selectedMcpTypes);
     }
-  }, [isMCP, selectedTypeNames, toolkitTypeNameTypeMap, toolkitTypesData?.rows]);
+  }, [isMCP, selectedTypeNames, typeNameToTypes, toolkitTypesData?.rows]);
 
   const {
     onLoadMoreToolkits: onLoadMoreCardViewToolkits,
@@ -99,24 +131,21 @@ export const useLoadToolkits = ({
   });
 
   const projectWideTagList = useMemo(() => {
-    return (
-      toolkitTypesData?.rows
-        ?.map((type, index) => {
-          // Use metadata.label from toolkit schemas if available (matches card tag logic)
-          // This ensures filter panel tags use the same names as card tags
-          const typeInfo = toolkitSchemas?.[type];
-          const label = typeInfo?.metadata?.label || CredentialNameHelpers.extraCredentialName(type);
-          return {
-            id: index + 1,
-            name: label,
-            data: {
-              type,
-            },
-          };
-        })
-        .sort((a, b) => a.name.localeCompare(b.name)) || []
-    );
-  }, [toolkitTypesData?.rows, toolkitSchemas]);
+    const nonMcpTags = nonMcpTypes
+      .map(type => {
+        const label =
+          toolkitSchemas?.[type]?.metadata?.label || CredentialNameHelpers.extraCredentialName(type);
+        return { name: label, data: { type } };
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    const mcpGroupTags = McpToolkitHelpers.orderMcpToolkitGroups(Object.keys(mcpTypesByGroup)).map(group => ({
+      name: group,
+      data: { group, types: mcpTypesByGroup[group] },
+    }));
+
+    return [...nonMcpTags, ...mcpGroupTags].map((tag, index) => ({ id: index + 1, ...tag }));
+  }, [nonMcpTypes, mcpTypesByGroup, toolkitSchemas]);
 
   const {
     onLoadMoreToolkits: onLoadMoreTableViewToolkits,

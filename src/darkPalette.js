@@ -13,6 +13,7 @@ const warning40 = 'rgba(233, 121, 18, 0.4)';
 
 const white10 = 'rgba(255, 255, 255, 0.10)';
 const white14 = 'rgba(255, 255, 255, 0.14)';
+const dark20 = 'rgba(61, 68, 86, 0.2)';
 const white20 = 'rgba(255, 255, 255, 0.20)';
 const white50 = 'rgba(255, 255, 255, 0.50)';
 const whiteStepBorder = '#757575';
@@ -266,8 +267,8 @@ const darkPalette = {
         shadowDefault: 'none',
         shadowHover: 'none',
         shadowActive: '0px 0px 12px 0px #66D1FF1A inset',
-        textGradient: 'linear-gradient(90deg, #58CDEA 0.7%, #AF64FF 101.06%)',
-        iconGradient: 'linear-gradient(33.96deg, #58CDEA 0%, #AF64FF 96.65%)',
+        textGradient: 'linear-gradient(90deg, #58CDEA 0.7%, #AF64FF 25%)',
+        iconGradient: 'linear-gradient(33.96deg, #58CDEA 0%, #AF64FF 80%)',
       },
       iconLabelButton: {
         default: 'transparent',
@@ -310,6 +311,7 @@ const darkPalette = {
     },
     tooltip: {
       default: gray00,
+      code: dark20,
     },
     tips: blue5,
     attention: orangeFill5,
@@ -400,6 +402,7 @@ const darkPalette = {
   border: {
     lines: gray30,
     hover: gray10,
+    inputHover: gray20,
     category: {
       selected: white20,
     },

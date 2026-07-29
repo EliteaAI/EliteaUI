@@ -84,6 +84,7 @@ const ApplicationSkills = memo(({ style, disabled, entityProjectId }) => {
                   skill={skill}
                   entityVersionId={entityVersionId}
                   disabled={disabled || isVersionLocked}
+                  isPublicView={disabled}
                 />
               ))}
             </Box>

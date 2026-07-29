@@ -3,7 +3,12 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFormikContext } from 'formik';
 import { flushSync } from 'react-dom';
 
-import { EditEntityModal } from '@/[fsd]/entities/edit-entity-with-ai';
+import {
+  EditEntityGeneralStep,
+  EditEntityInstructionsStep,
+  EditEntityModal,
+} from '@/[fsd]/entities/edit-entity-with-ai';
+import { resolveEntityType } from '@/[fsd]/entities/edit-entity-with-ai/lib/helpers';
 import { useGenerateAgentDraftMutation } from '@/[fsd]/features/agent/api';
 import { EDIT_STEP_KEYS } from '@/[fsd]/features/agent/lib/constants';
 import { AgentAIEditionStepsHelpers } from '@/[fsd]/features/agent/lib/helpers';
@@ -27,7 +32,7 @@ import useSaveVersion from '@/hooks/application/useSaveVersion';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 
-import { GeneralStep, InstructionsStep, SummaryStep, ToolsSkillsStep, UserInteractionStep } from './steps';
+import { SummaryStep, ToolsSkillsStep, UserInteractionStep } from './steps';
 
 const DEFAULT_FIELD_FLAGS = {
   name: true,
@@ -118,12 +123,6 @@ const AIEditAgentModal = memo(props => {
     [generateDraft, projectId, formik.values],
   );
 
-  const resolveEntityType = useCallback(item => {
-    if (item.type === 'application') return item.agent_type === 'pipeline' ? 'pipeline' : 'agent';
-    if (item.type === 'skill') return 'skill';
-    return 'toolkit';
-  }, []);
-
   const handleDraftGenerated = useCallback(
     draftData => {
       const currentAppId = currentDataRef.current?.id;
@@ -169,7 +168,7 @@ const AIEditAgentModal = memo(props => {
 
       return filtered;
     },
-    [applicationSkills?.skills, resolveEntityType],
+    [applicationSkills?.skills],
   );
 
   const handleToggleField = useCallback(field => {
@@ -375,7 +374,6 @@ const AIEditAgentModal = memo(props => {
       formik.values,
       toolSelections,
       applicationSkills?.skills,
-      resolveEntityType,
       associateToolkit,
       updateApplicationRelation,
       updateSkillRelation,
@@ -519,7 +517,7 @@ const AIEditAgentModal = memo(props => {
   }, [currentData?.version_details?.tools, applicationSkills?.skills]);
 
   const renderStep = useCallback(
-    (stepKey, draftData, setDraftData) => {
+    (stepKey, draftData, setDraftData, onValidationChange) => {
       const stepProps = {
         currentData,
         draftData,
@@ -530,9 +528,9 @@ const AIEditAgentModal = memo(props => {
 
       switch (stepKey) {
         case EDIT_STEP_KEYS.GENERAL:
-          return <GeneralStep {...stepProps} />;
+          return <EditEntityGeneralStep {...stepProps} />;
         case EDIT_STEP_KEYS.INSTRUCTIONS:
-          return <InstructionsStep {...stepProps} />;
+          return <EditEntityInstructionsStep {...stepProps} />;
         case EDIT_STEP_KEYS.USER_INTERACTION:
           return <UserInteractionStep {...stepProps} />;
         case EDIT_STEP_KEYS.TOOLS_SKILLS:
@@ -554,6 +552,7 @@ const AIEditAgentModal = memo(props => {
               fieldApplyFlags={fieldApplyFlags}
               onToggleField={handleToggleField}
               toolSelections={toolSelections}
+              onValidationChange={onValidationChange}
             />
           );
         default:

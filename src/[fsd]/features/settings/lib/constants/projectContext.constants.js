@@ -1,0 +1,1 @@
+export const PROJECT_CONTEXT_MAX_LEN = 2500;
