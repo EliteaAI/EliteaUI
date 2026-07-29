@@ -358,7 +358,11 @@ export const parseRunEvent = (
         // One run failed
         setIsRunningPipeline(false);
         runPipelineStatus.current.data.status = PipelineStatus.Error;
-        runPipelineStatus.current.data.error = convertJsonToString(event.content ?? '');
+        // event.content is an internal label ("InternalSDKError on user input"), so
+        // prefer the user-facing text the runtime sends alongside it
+        runPipelineStatus.current.data.error =
+          event.response_metadata?.human_readable || convertJsonToString(event.content ?? '');
+        runPipelineStatus.current.data.budgetErrorCode = event.response_metadata?.budget_error_code;
         if (runPipelineStatus.current.data.timeline[runPipelineStatus.current.data.timeline.length - 1]) {
           runPipelineStatus.current.data.timeline[runPipelineStatus.current.data.timeline.length - 1].status =
             PipelineStatus.Completed;
