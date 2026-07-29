@@ -56,12 +56,31 @@ export const fillDailyGaps = (daily = [], periodStart, periodEnd) => {
   return result;
 };
 
-export const usageSeverity = percentUsed => {
+/** Warning threshold used when the backend has not supplied a configured one. */
+export const DEFAULT_WARNING_PCT = 80;
+
+export const usageSeverity = (percentUsed, warningPct = DEFAULT_WARNING_PCT) => {
   if (percentUsed === null || percentUsed === undefined) return 'none';
   if (percentUsed >= 100) return 'exceeded';
-  if (percentUsed >= 80) return 'warning';
+
+  // An out-of-range or missing configured value must not silence the warning
+  const threshold =
+    Number(warningPct) >= 1 && Number(warningPct) <= 100 ? Number(warningPct) : DEFAULT_WARNING_PCT;
+
+  if (percentUsed >= threshold) return 'warning';
 
   return 'ok';
+};
+
+/** Members whose name or email contains the search term, case-insensitively. */
+export const filterMembers = (rows = [], search = '') => {
+  const term = String(search).trim().toLowerCase();
+
+  if (!term) return rows;
+
+  return rows.filter(
+    row => (row.name || '').toLowerCase().includes(term) || (row.email || '').toLowerCase().includes(term),
+  );
 };
 
 /** Days until the monthly budget resets, for a plain-language label. */

@@ -1990,7 +1990,8 @@ const ChatBox = forwardRef((props, boxRef) => {
   const onSelectModel = useCallback(
     async newModel => {
       if (isAgentsPage) {
-        // For agents page, update the participant's llm_settings
+        if (selectedModel?.name === newModel.name) return;
+
         setSelectedModel(newModel);
         const newLLMSettings = {
           ...activeParticipant?.entity_settings.llm_settings,
@@ -2004,9 +2005,12 @@ const ChatBox = forwardRef((props, boxRef) => {
           steps_limit: activeParticipant?.entity_settings.llm_settings?.steps_limit ?? DEFAULT_STEPS_LIMIT,
         };
 
-        // Update Formik so Save button persists the new model
+        // Update Formik so Save button persists the new model —
+        // strip steps_limit as it lives in conversation meta, not llm_settings.
         if (onSetLLMSettings) {
-          onSetLLMSettings(newLLMSettings);
+          // eslint-disable-next-line no-unused-vars
+          const { steps_limit: _, ...llmSettingsForFormik } = newLLMSettings;
+          onSetLLMSettings(llmSettingsForFormik);
         }
 
         // Update the participant's entity_settings.llm_settings
@@ -2060,6 +2064,7 @@ const ChatBox = forwardRef((props, boxRef) => {
     },
     [
       isAgentsPage,
+      selectedModel,
       onSetLLMSettings,
       onChangeParticipantSettings,
       activeParticipant?.entity_settings,

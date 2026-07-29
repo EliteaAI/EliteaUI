@@ -13,6 +13,7 @@ const warning40 = 'rgba(233, 121, 18, 0.4)';
 
 const white10 = 'rgba(255, 255, 255, 0.10)';
 const white14 = 'rgba(255, 255, 255, 0.14)';
+const dark20 = 'rgba(61, 68, 86, 0.2)';
 const white20 = 'rgba(255, 255, 255, 0.20)';
 const white50 = 'rgba(255, 255, 255, 0.50)';
 const whiteStepBorder = '#757575';
@@ -310,6 +311,7 @@ const darkPalette = {
     },
     tooltip: {
       default: gray00,
+      code: dark20,
     },
     tips: blue5,
     attention: orangeFill5,

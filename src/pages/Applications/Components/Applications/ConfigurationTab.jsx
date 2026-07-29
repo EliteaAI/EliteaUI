@@ -222,7 +222,11 @@ const ConfigurationTab = memo(props => {
 
   const viewMode = useViewMode();
   const projectId = useSelectedProjectId();
-  const { values: { version_details = {}, id, name, versions } = {}, setFieldValue } = useFormikContext();
+  const {
+    values: { version_details = {}, id, name, versions } = {},
+    initialValues,
+    setFieldValue,
+  } = useFormikContext();
 
   useAgentMCPToolsStatusMonitor();
   const lgGridColumns = useMemo(() => (isFullScreenChat ? 12 : 6), [isFullScreenChat]);
@@ -260,11 +264,27 @@ const ConfigurationTab = memo(props => {
 
   const handleSetLLMSettings = useCallback(
     newSettings => {
-      Object.entries(newSettings).forEach(([key, value]) => {
-        setFieldValue(`version_details.llm_settings.${key}`, value);
-      });
+      // eslint-disable-next-line no-unused-vars
+      const { steps_limit, ...llmSettings } = newSettings;
+      const currentModelName = version_details?.llm_settings?.model_name;
+      const isModelSwitch = 'model_name' in llmSettings && llmSettings.model_name !== currentModelName;
+
+      if (isModelSwitch) {
+        const initialLlmSettings = initialValues?.version_details?.llm_settings;
+
+        if (initialLlmSettings?.model_name === llmSettings.model_name) {
+          setFieldValue('version_details.llm_settings', initialLlmSettings);
+        } else {
+          const cleaned = Object.fromEntries(Object.entries(llmSettings).filter(([, v]) => v !== null));
+          setFieldValue('version_details.llm_settings', cleaned);
+        }
+      } else {
+        Object.entries(llmSettings).forEach(([key, value]) => {
+          setFieldValue(`version_details.llm_settings.${key}`, value);
+        });
+      }
     },
-    [setFieldValue],
+    [setFieldValue, version_details?.llm_settings, initialValues],
   );
 
   const handleShowHistory = useCallback(() => {

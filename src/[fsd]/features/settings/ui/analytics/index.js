@@ -7,6 +7,7 @@ export { default as ModelUsageTable } from './components/ModelUsageTable';
 
 export { default as AnalyticsOverview } from './AnalyticsOverview';
 export { default as AnalyticsAgentDetailed } from './AnalyticsAgentDetailed';
+export { default as AnalyticsCosts } from './AnalyticsCosts';
 export { default as AnalyticsAgents } from './AnalyticsAgents';
 export { default as AnalyticsToolDetailed } from './AnalyticsToolDetailed';
 export { default as AnalyticsTools } from './AnalyticsTools';

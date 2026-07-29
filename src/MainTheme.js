@@ -343,7 +343,7 @@ const getDesignTokens = mode => ({
       styleOverrides: {
         tooltip: ({ theme }) => ({
           backgroundColor: theme.palette.background.tooltip.default,
-          color: theme.palette.text.button.primary,
+          color: theme.palette.text.tooltip,
           ...typographyVariants.labelSmall,
           '& .MuiTooltip-arrow': {
             color: theme.palette.background.tooltip.default,

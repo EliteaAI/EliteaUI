@@ -46,7 +46,7 @@ const ConfigurationTab = memo(props => {
   const chatPanelRef = useRef();
   const editorPanelRef = useRef();
 
-  const { values: formValues } = useFormikContext();
+  const { values: formValues, initialValues, setFieldValue } = useFormikContext();
   const projectId = useSelectedProjectId();
 
   useAgentMCPToolsStatusMonitor();
@@ -74,8 +74,6 @@ const ConfigurationTab = memo(props => {
   const handleStopRun = useCallback(() => {
     editorPanelRef.current?.onStopRun();
   }, []);
-
-  const { setFieldValue } = useFormikContext();
 
   const {
     llm_settings: rawLlmSettings,
@@ -115,6 +113,31 @@ const ConfigurationTab = memo(props => {
     [llm_settings],
   );
 
+  const handleSetLLMSettings = useCallback(
+    newSettings => {
+      // eslint-disable-next-line no-unused-vars
+      const { steps_limit, ...llmSettings } = newSettings;
+      const currentModelName = formValues?.version_details?.llm_settings?.model_name;
+      const isModelSwitch = 'model_name' in llmSettings && llmSettings.model_name !== currentModelName;
+
+      if (isModelSwitch) {
+        const initialLlmSettings = initialValues?.version_details?.llm_settings;
+
+        if (initialLlmSettings?.model_name === llmSettings.model_name) {
+          setFieldValue('version_details.llm_settings', initialLlmSettings);
+        } else {
+          const cleaned = Object.fromEntries(Object.entries(llmSettings).filter(([, v]) => v !== null));
+          setFieldValue('version_details.llm_settings', cleaned);
+        }
+      } else {
+        Object.entries(llmSettings).forEach(([key, value]) => {
+          setFieldValue(`version_details.llm_settings.${key}`, value);
+        });
+      }
+    },
+    [setFieldValue, formValues?.version_details?.llm_settings, initialValues],
+  );
+
   const { uploadAttachments, isUploading: isUploadingAttachments, uploadProgress } = useUploadAttachments();
 
   const {
@@ -127,7 +150,6 @@ const ConfigurationTab = memo(props => {
     onDeleteMessage,
     onDeleteAllMessages,
     onChangeParticipantSettings,
-    onSetLLMSettings,
     onSend,
     onSelectThisParticipant,
     onClearActiveParticipant,
@@ -177,7 +199,7 @@ const ConfigurationTab = memo(props => {
       isStreaming,
       onStopStreaming,
       llmSettings: memoizedLlmSettings,
-      onSetLLMSettings,
+      onSetLLMSettings: handleSetLLMSettings,
       type,
       conversationStarters,
       isFullScreenChat: false,
@@ -217,7 +239,7 @@ const ConfigurationTab = memo(props => {
       onChangeParticipantSettings,
       isStreaming,
       onStopStreaming,
-      onSetLLMSettings,
+      handleSetLLMSettings,
       type,
       conversationStarters,
       tools,

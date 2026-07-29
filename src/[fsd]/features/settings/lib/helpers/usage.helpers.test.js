@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { UsageHelpers } from '../index.js';
+import { UsageHelpers } from './index.js';
 
 describe('formatMoney', () => {
   it('renders whole amounts to two decimals', () => {
@@ -79,12 +79,12 @@ describe('usageSeverity', () => {
     expect(UsageHelpers.usageSeverity(150)).toBe('exceeded');
   });
 
-  it('warns from 80% up to but not including 100%', () => {
+  it('warns from 80% up to but not including 100% by default', () => {
     expect(UsageHelpers.usageSeverity(80)).toBe('warning');
     expect(UsageHelpers.usageSeverity(99.9)).toBe('warning');
   });
 
-  it('is ok below 80%', () => {
+  it('is ok below 80% by default', () => {
     expect(UsageHelpers.usageSeverity(79.9)).toBe('ok');
     expect(UsageHelpers.usageSeverity(0)).toBe('ok');
   });
@@ -92,6 +92,81 @@ describe('usageSeverity', () => {
   it('reports no severity when there is no limit to measure against', () => {
     expect(UsageHelpers.usageSeverity(null)).toBe('none');
     expect(UsageHelpers.usageSeverity(undefined)).toBe('none');
+  });
+
+  it('warns at the configured threshold instead of the default', () => {
+    expect(UsageHelpers.usageSeverity(50, 50)).toBe('warning');
+    expect(UsageHelpers.usageSeverity(49.9, 50)).toBe('ok');
+    // A high threshold must not warn at what the default would have flagged
+    expect(UsageHelpers.usageSeverity(80, 95)).toBe('ok');
+    expect(UsageHelpers.usageSeverity(95, 95)).toBe('warning');
+  });
+
+  it('still reports exceeded at 100% whatever the threshold', () => {
+    expect(UsageHelpers.usageSeverity(100, 50)).toBe('exceeded');
+    expect(UsageHelpers.usageSeverity(100, 100)).toBe('exceeded');
+  });
+
+  // A bad configured value must degrade to the default, never silence the warning
+  it('falls back to 80% for a missing or out-of-range threshold', () => {
+    expect(UsageHelpers.usageSeverity(85, null)).toBe('warning');
+    expect(UsageHelpers.usageSeverity(85, undefined)).toBe('warning');
+    expect(UsageHelpers.usageSeverity(85, 0)).toBe('warning');
+    expect(UsageHelpers.usageSeverity(85, 150)).toBe('warning');
+    expect(UsageHelpers.usageSeverity(85, 'abc')).toBe('warning');
+  });
+});
+
+describe('filterMembers', () => {
+  const rows = [
+    { user_id: 1, name: 'Ada Lovelace', email: 'ada@example.com' },
+    { user_id: 2, name: 'Alan Turing', email: 'alan@example.com' },
+    { user_id: 3, name: null, email: 'grace@example.com' },
+  ];
+
+  const ids = result => result.map(row => row.user_id);
+
+  it('returns every member for an empty search', () => {
+    expect(ids(UsageHelpers.filterMembers(rows, ''))).toEqual([1, 2, 3]);
+    expect(ids(UsageHelpers.filterMembers(rows))).toEqual([1, 2, 3]);
+  });
+
+  it('matches on name', () => {
+    expect(ids(UsageHelpers.filterMembers(rows, 'lovelace'))).toEqual([1]);
+  });
+
+  it('matches on email', () => {
+    expect(ids(UsageHelpers.filterMembers(rows, 'alan@'))).toEqual([2]);
+  });
+
+  it('is case-insensitive', () => {
+    expect(ids(UsageHelpers.filterMembers(rows, 'ALAN TURING'))).toEqual([2]);
+  });
+
+  // A member with no display name must still be findable by the email shown in the row
+  it('matches on email when the member has no name', () => {
+    expect(ids(UsageHelpers.filterMembers(rows, 'grace'))).toEqual([3]);
+  });
+
+  it('ignores surrounding whitespace', () => {
+    expect(ids(UsageHelpers.filterMembers(rows, '  ada  '))).toEqual([1]);
+  });
+
+  it('can match more than one member', () => {
+    expect(ids(UsageHelpers.filterMembers(rows, 'example.com'))).toEqual([1, 2, 3]);
+  });
+
+  it('returns nothing when no member matches', () => {
+    expect(UsageHelpers.filterMembers(rows, 'nobody-by-that-name')).toEqual([]);
+  });
+
+  it('does not mutate the input', () => {
+    UsageHelpers.filterMembers(rows, 'ada');
+    expect(rows).toHaveLength(3);
+  });
+
+  it('tolerates a missing rows list', () => {
+    expect(UsageHelpers.filterMembers(undefined, 'ada')).toEqual([]);
   });
 });
 

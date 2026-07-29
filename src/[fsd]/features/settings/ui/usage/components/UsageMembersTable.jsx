@@ -1,8 +1,9 @@
-import { memo } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
 import { UsageHelpers } from '@/[fsd]/features/settings/lib/helpers';
+import { SimpleSearchBar } from '@/[fsd]/shared/ui/input';
 
 const SEVERITY_COLOR = {
   exceeded: 'error',
@@ -10,70 +11,102 @@ const SEVERITY_COLOR = {
 };
 
 const UsageMembersTable = memo(props => {
-  const { rows = [] } = props;
+  const { rows = [], warningPct } = props;
 
   const styles = usageMembersTableStyles();
 
-  if (!rows.length) return null;
+  const [search, setSearch] = useState('');
 
-  const sorted = [...rows].sort((a, b) => (b.spend || 0) - (a.spend || 0));
+  const handleSearchClear = useCallback(() => setSearch(''), []);
+
+  const sorted = useMemo(
+    () => [...UsageHelpers.filterMembers(rows, search)].sort((a, b) => (b.spend || 0) - (a.spend || 0)),
+    [rows, search],
+  );
+
+  if (!rows.length) return null;
 
   return (
     <Box sx={styles.card}>
-      <Typography
-        variant="labelMedium"
-        sx={styles.title}
-      >
-        Members
-      </Typography>
-      <Typography
-        variant="bodySmall"
-        sx={styles.subtitle}
-      >
-        Per-member usage against each member&apos;s own limit in this project
-      </Typography>
-
-      <Box sx={styles.tableHeader}>
-        <Typography sx={[styles.cell, { flex: 3 }]}>Member</Typography>
-        <Typography sx={[styles.cell, styles.right, { flex: 1.2 }]}>Spend</Typography>
-        <Typography sx={[styles.cell, styles.right, { flex: 1.2 }]}>Limit</Typography>
-        <Typography sx={[styles.cell, styles.right, { flex: 1 }]}>Used</Typography>
+      <Box sx={styles.header}>
+        <Box sx={styles.headerText}>
+          <Typography
+            variant="labelMedium"
+            sx={styles.title}
+          >
+            Members
+          </Typography>
+          <Typography
+            variant="bodySmall"
+            sx={styles.subtitle}
+          >
+            Per-member usage against each member&apos;s own limit in this project
+          </Typography>
+        </Box>
+        <SimpleSearchBar
+          searchQuery={search}
+          onSearchChange={setSearch}
+          onSearchClear={handleSearchClear}
+          placeholder="Search by name or email"
+          autoFocus={false}
+          sx={styles.search}
+        />
       </Box>
 
-      {sorted.map(row => {
-        const severity = UsageHelpers.usageSeverity(row.percent_used);
-        const color = SEVERITY_COLOR[severity];
+      {!sorted.length && (
+        <Typography
+          variant="bodySmall"
+          sx={styles.empty}
+        >
+          No members found.
+        </Typography>
+      )}
 
-        return (
-          <Box
-            key={row.user_id}
-            sx={styles.row}
-          >
-            <Box sx={{ flex: 3, minWidth: 0 }}>
-              <Typography sx={styles.value}>{row.name || row.email || `User ${row.user_id}`}</Typography>
-              {row.email && row.name && row.name !== row.email && (
-                <Typography sx={styles.emailText}>{row.email}</Typography>
-              )}
-            </Box>
-            <Typography sx={[styles.value, styles.right, { flex: 1.2 }]}>
-              {UsageHelpers.formatMoney(row.spend, row.currency)}
-            </Typography>
-            <Typography sx={[styles.value, styles.right, styles.muted, { flex: 1.2 }]}>
-              {UsageHelpers.formatLimit(row.effective_limit, row.currency)}
-            </Typography>
-            <Typography
-              sx={[
-                styles.value,
-                styles.right,
-                { flex: 1 },
-                color ? ({ palette }) => ({ color: palette[color].main, fontWeight: 600 }) : {},
-              ]}
-            >
-              {row.percent_used === null || row.percent_used === undefined ? '—' : `${row.percent_used}%`}
-            </Typography>
+      {!!sorted.length && (
+        <>
+          <Box sx={styles.tableHeader}>
+            <Typography sx={[styles.cell, { flex: 3 }]}>Member</Typography>
+            <Typography sx={[styles.cell, styles.right, { flex: 1.2 }]}>Spent</Typography>
+            <Typography sx={[styles.cell, styles.right, { flex: 1.2 }]}>Limit</Typography>
+            <Typography sx={[styles.cell, styles.right, { flex: 1 }]}>Used</Typography>
           </Box>
-        );
-      })}
+
+          {sorted.map(row => {
+            const severity = UsageHelpers.usageSeverity(row.percent_used, warningPct);
+            const color = SEVERITY_COLOR[severity];
+
+            return (
+              <Box
+                key={row.user_id}
+                sx={styles.row}
+              >
+                <Box sx={{ flex: 3, minWidth: 0 }}>
+                  <Typography sx={styles.value}>{row.name || row.email || `User ${row.user_id}`}</Typography>
+                  {row.email && row.name && row.name !== row.email && (
+                    <Typography sx={styles.emailText}>{row.email}</Typography>
+                  )}
+                </Box>
+                <Typography sx={[styles.value, styles.right, { flex: 1.2 }]}>
+                  {UsageHelpers.formatMoney(row.spend, row.currency)}
+                </Typography>
+                <Typography sx={[styles.value, styles.right, styles.muted, { flex: 1.2 }]}>
+                  {UsageHelpers.formatLimit(row.effective_limit, row.currency)}
+                </Typography>
+                <Typography
+                  sx={[
+                    styles.value,
+                    styles.right,
+                    { flex: 1 },
+                    color ? ({ palette }) => ({ color: palette[color].main, fontWeight: 600 }) : {},
+                  ]}
+                >
+                  {row.percent_used === null || row.percent_used === undefined ? '—' : `${row.percent_used}%`}
+                </Typography>
+              </Box>
+            );
+          })}
+        </>
+      )}
     </Box>
   );
 });
@@ -96,7 +129,29 @@ const usageMembersTableStyles = () => ({
   }),
   subtitle: ({ palette }) => ({
     color: palette.text.metrics || palette.text.disabled,
+  }),
+  header: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: '1rem',
     marginBottom: '0.75rem',
+  },
+  // These Typography variants render inline, so the column has to come from here
+  headerText: {
+    display: 'flex',
+    flexDirection: 'column',
+    minWidth: 0,
+  },
+  // SimpleSearchBar already draws its own border, so it stays visible on this card's fill
+  search: {
+    width: '15rem',
+    flexShrink: 0,
+  },
+  empty: ({ palette }) => ({
+    color: palette.text.metrics || palette.text.disabled,
+    marginTop: '0.5rem',
   }),
   tableHeader: ({ palette }) => ({
     display: 'flex',

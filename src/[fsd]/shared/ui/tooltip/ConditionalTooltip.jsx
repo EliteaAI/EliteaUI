@@ -49,20 +49,14 @@ const ConditionalTooltip = memo(props => {
 
 /** @type {MuiSx} */
 const conditionalTooltipStyles = () => ({
-  tooltip: ({ palette, typography }) => ({
-    backgroundColor: palette.background.tooltip.default,
-    color: palette.text.button.primary,
+  tooltip: {
     fontStyle: 'normal',
     padding: '0.25rem 0.5rem',
     borderRadius: '0.25rem',
     maxWidth: '18.75rem',
     margin: '0.125rem',
     wordWrap: 'break-word',
-    ...typography.labelSmall,
-    '& .MuiTooltip-arrow': {
-      color: palette.background.tooltip.default,
-    },
-  }),
+  },
   popper: ({ zIndex, vars }) => ({
     zIndex: (vars || zIndex).tooltip,
   }),
