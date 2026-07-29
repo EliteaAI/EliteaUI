@@ -10,7 +10,7 @@ const SEVERITY_COLOR = {
 };
 
 const UsageMembersTable = memo(props => {
-  const { rows = [] } = props;
+  const { rows = [], warningPct } = props;
 
   const styles = usageMembersTableStyles();
 
@@ -41,7 +41,7 @@ const UsageMembersTable = memo(props => {
       </Box>
 
       {sorted.map(row => {
-        const severity = UsageHelpers.usageSeverity(row.percent_used);
+        const severity = UsageHelpers.usageSeverity(row.percent_used, warningPct);
         const color = SEVERITY_COLOR[severity];
 
         return (
