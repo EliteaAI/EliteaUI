@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { UsageHelpers } from '../index.js';
+import { UsageHelpers } from './index.js';
 
 describe('formatMoney', () => {
   it('renders whole amounts to two decimals', () => {
