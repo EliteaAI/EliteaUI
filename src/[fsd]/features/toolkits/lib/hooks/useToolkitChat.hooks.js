@@ -220,12 +220,20 @@ export const useToolkitChat = props => {
         return;
       }
 
+      // Call onStartTask here (outside the setChatHistory updater) so that
+      // traceNewIndex → setReindexRunning (parent state) is never called from
+      // inside a React state-updater function, which would trigger the
+      // "Cannot update a component while rendering" warning.
+      if (message.type === SocketMessageType.StartTask) {
+        const { task_id } = message.content instanceof Object ? message.content : {};
+        onStartTask(task_id);
+      }
+
       setChatHistory(prev =>
         generateChatMessageBasedOnResponse({
           message,
           chatHistory: prev,
           onFinish: onRunFinish,
-          onStartTask,
         }),
       );
     },
@@ -460,7 +468,7 @@ export const useToolkitChat = props => {
       setActiveTaskId(null);
       toastSuccess('Indexing stopped successfully');
       setIsRunning(false);
-      setChatHistory(prev => prev.map(msg => ({ ...msg, isStreaming: false })));
+      setChatHistory(prev => prev.map(msg => ({ ...msg, isStreaming: false, isLoading: false })));
 
       if (cancelIndexingCallback) cancelIndexingCallback(EditViewTabsEnum.configuration);
     } catch {

@@ -13,6 +13,7 @@ import {
 import { IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import { selectIndexesList } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
 import { HeadlessReindexRunner, IndexesList } from '@/[fsd]/features/toolkits/indexes/ui';
+import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { Modal } from '@/[fsd]/shared/ui';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
@@ -92,12 +93,20 @@ const IndexesContainer = memo(props => {
     );
   }, [indexesList, reindexRunning]);
 
-  const traceReindex = useCallback((id, metadata) => {
-    if (!id) return;
-    setReindexRunning(prev =>
-      prev && prev.id === id ? { ...prev, metadata: { ...prev.metadata, ...metadata } } : prev,
-    );
-  }, []);
+  const traceReindex = useCallback(
+    (id, metadata) => {
+      if (!id) return;
+      setReindexRunning(prev =>
+        prev && prev.id === id ? { ...prev, metadata: { ...prev.metadata, ...metadata } } : prev,
+      );
+      if (metadata.state === IndexStatuses.success) {
+        toastSuccess('Reindex has completed successfully!');
+      } else if (metadata.state === IndexStatuses.fail) {
+        toastError('Reindexing has failed!');
+      }
+    },
+    [toastError, toastSuccess],
+  );
 
   const handleRefetchIndexesList = useCallback(async () => {
     await refetch({ toolkitId, projectId });
@@ -193,15 +202,24 @@ const IndexesContainer = memo(props => {
           onConfirm={confirmIndexDeleting}
         />
       )}
-      <Modal.BaseModal
-        variant="simple"
+      <Modal.DeleteEntityModal
+        title="Reindex confirmation"
+        name={reindexRunningTargetName}
+        shouldRequestInputName={false}
         open={reindexConfirmOpen}
-        title={`Reindex ${reindexRunningTargetName}?`}
-        content={<Typography variant="bodyMedium">This will replace the current index data.</Typography>}
         confirmButtonText="Reindex"
         cancelButtonText="Cancel"
         onClose={cancelReindexConfirm}
         onConfirm={confirmReindex}
+        textContent="Are you sure to reindex the "
+        inlineExtraContent=" index?"
+        extraContent={
+          <Typography variant="bodyMedium">
+            {"This will replace all current index data and can't be undone once started."}
+          </Typography>
+        }
+        alarm={false}
+        titleIcon={ModalConstants.MODAL_ICON_TYPE.info}
       />
       {reindexRunning && (
         <HeadlessReindexRunner
