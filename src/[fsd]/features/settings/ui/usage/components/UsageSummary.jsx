@@ -28,9 +28,10 @@ const UsageSummary = memo(props => {
     api_requests: apiRequests,
     resets_at: resetsAt,
     can_see_amounts: canSeeAmounts,
+    warning_pct: warningPct,
   } = data;
 
-  const severity = UsageHelpers.usageSeverity(percentUsed);
+  const severity = UsageHelpers.usageSeverity(percentUsed, warningPct);
 
   const getPrimaryLabel = () => {
     if (canSeeAmounts)
@@ -67,6 +68,7 @@ const UsageSummary = memo(props => {
           percentUsed={percentUsed}
           primaryLabel={primaryLabel}
           secondaryLabel={secondaryLabel}
+          warningPct={warningPct}
         />
 
         <Typography
@@ -90,7 +92,7 @@ const UsageSummary = memo(props => {
             severity="warning"
             sx={styles.alert}
           >
-            You have used over 80% of this budget.
+            You have used over {warningPct ?? UsageHelpers.DEFAULT_WARNING_PCT}% of this budget.
           </Alert>
         )}
       </Box>

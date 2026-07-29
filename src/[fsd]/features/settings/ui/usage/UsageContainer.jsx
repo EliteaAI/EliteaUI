@@ -122,7 +122,10 @@ const UsageContainer = memo(() => {
             />
 
             {activeScope === SCOPE_PROJECT && memberRows.length > 0 && (
-              <UsageMembersTable rows={memberRows} />
+              <UsageMembersTable
+                rows={memberRows}
+                warningPct={membersData?.warning_pct}
+              />
             )}
 
             <Typography
