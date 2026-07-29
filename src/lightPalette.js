@@ -1,4 +1,4 @@
-import { white, white15 } from './darkPalette';
+import { white } from './darkPalette';
 
 // const white14 = 'rgba(255, 255, 255, 0.14)';
 // const veryLightBlue = '#C7EBFF';
@@ -63,6 +63,7 @@ const dark8 = 'rgba(61, 68, 86, 0.08)';
 const blue8 = 'rgba(106, 232, 250, 0.08)';
 const blue12 = 'rgba(99, 144, 254, 0.12)'; // conversation selected light
 const gray30 = '#3B3E46';
+const white15 = 'rgba(255, 255, 255, 0.15)';
 const lightGrey = 'rgba(217, 217, 217, 1)';
 export const blue01 = 'rgba(248, 252, 255, 1)';
 const blue02 = 'rgba(110, 177, 255, 1)';
@@ -431,9 +432,6 @@ const lightPalette = {
     onboarding: `0rem 3.975rem 4.2625rem -3.8125rem ${skyBlue20}`,
     aiAnswer: '0px 2px 7px 0px rgba(0, 0, 0, 0.12)',
   },
-  dropShadow: {
-    tooltip: '0 0.125rem 0.5rem rgba(100, 119, 136, 0.3)',
-  },
   text: {
     default: light10,
     primary: light10,
@@ -480,7 +478,6 @@ const lightPalette = {
     tips: darkBlue,
     attention: warningStatusText,
     metrics: light00,
-    emphasis: gray30,
     contextHighLight: '#3d3d3d',
     warningText: red,
     deleteAlertEntityName: darkBlue,

@@ -82,7 +82,7 @@ const getStyles = () => ({
     fontWeight: 600,
   }),
   description: ({ palette }) => ({
-    color: palette.text.emphasis,
+    color: palette.background.tooltip.default,
     fontSize: '0.875rem',
     lineHeight: 1.5,
     maxWidth: '30rem',
