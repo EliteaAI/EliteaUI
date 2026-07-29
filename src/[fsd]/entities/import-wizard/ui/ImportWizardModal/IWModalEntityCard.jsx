@@ -113,18 +113,6 @@ const IWModalEntityCard = memo(props => {
 
           {Boolean(toolkits.length) && <IWModalEntityToolkitsField toolkits={toolkits} />}
 
-          {isSkill && (
-            <Box>
-              <Typography sx={styles.label}>Version:</Typography>
-              <Typography
-                variant="bodyMedium"
-                sx={({ palette }) => ({ color: palette.text.secondary })}
-              >
-                {entity?.details?.name || 'base'}
-              </Typography>
-            </Box>
-          )}
-
           {!isSkill && (
             <>
               <IWModalEntityTextField
