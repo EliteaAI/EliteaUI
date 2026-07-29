@@ -130,14 +130,6 @@ export const parseIndexStartConflictTaskId = error => {
   return body.task_id;
 };
 
-const isBoundedConversationId = value =>
-  (Number.isSafeInteger(value) && value > 0) ||
-  (typeof value === 'string' &&
-    value.length > 0 &&
-    value === value.trim() &&
-    !/[\0\r\n]/.test(value) &&
-    new TextEncoder().encode(value).length <= MAX_INDEX_EXECUTION_TASK_ID_BYTES);
-
 export const findAuthoritativeActiveIndex = (indexes, indexName, taskId) => {
   if (
     !Array.isArray(indexes) ||
@@ -155,8 +147,7 @@ export const findAuthoritativeActiveIndex = (indexes, indexName, taskId) => {
         typeof candidate === 'object' &&
         candidate.metadata?.collection === indexName &&
         candidate.metadata?.state === IndexStatuses.progress &&
-        candidate.metadata?.task_id === taskId &&
-        isBoundedConversationId(candidate.metadata?.conversation_id),
+        candidate.metadata?.task_id === taskId,
     ) || null
   );
 };

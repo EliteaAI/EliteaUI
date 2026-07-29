@@ -102,14 +102,14 @@ describe('index execution contract', () => {
     );
   });
 
-  it('selects only matching active server metadata with a conversation', () => {
+  it('selects only exact active server metadata without requiring a conversation', () => {
     const active = {
       id: 9,
       metadata: {
         collection: 'docs',
         state: IndexStatuses.progress,
         task_id: 'task-active',
-        conversation_id: 17,
+        conversation_id: null,
       },
     };
     expect(findAuthoritativeActiveIndex([active], 'docs', 'task-active')).toBe(active);
@@ -122,7 +122,14 @@ describe('index execution contract', () => {
     ).toBeNull();
     expect(
       findAuthoritativeActiveIndex(
-        [{ ...active, metadata: { ...active.metadata, conversation_id: null } }],
+        [{ ...active, metadata: { ...active.metadata, collection: 'other-index' } }],
+        'docs',
+        'task-active',
+      ),
+    ).toBeNull();
+    expect(
+      findAuthoritativeActiveIndex(
+        [{ ...active, metadata: { ...active.metadata, state: IndexStatuses.success } }],
         'docs',
         'task-active',
       ),
