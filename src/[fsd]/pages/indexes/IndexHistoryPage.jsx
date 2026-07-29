@@ -213,7 +213,7 @@ const indexHistoryPageStyles = () => ({
     overflow: 'hidden',
   },
   historyColumn: {
-    flex: '0 0 24rem',
+    flex: '0 0 25.56rem',
     minWidth: '20rem',
     maxWidth: '28rem',
     overflow: 'hidden',

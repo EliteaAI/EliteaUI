@@ -56,7 +56,11 @@ export const BannerMessageMap = {
 };
 
 // Statuses that allow the index to be searched and run tools against
-export const RUNNABLE_INDEX_STATUSES = [IndexStatuses.success, IndexStatuses.partlyOk];
+export const RUNNABLE_INDEX_STATUSES = [
+  IndexStatuses.success,
+  IndexStatuses.partlyOk,
+  IndexStatuses.scheduledReindex,
+];
 
 export const IndexHistoryItemsLabels = {
   [IndexStatuses.success]: 'Indexed',

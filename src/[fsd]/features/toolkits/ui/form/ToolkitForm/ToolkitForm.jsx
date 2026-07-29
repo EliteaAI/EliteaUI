@@ -624,7 +624,6 @@ export default ToolkitForm;
 /** @type {MuiSx} */
 const toolkitFormStyles = () => ({
   container: {
-    margin: '0 auto',
     position: 'relative',
   },
   historyButtonWrapper: {

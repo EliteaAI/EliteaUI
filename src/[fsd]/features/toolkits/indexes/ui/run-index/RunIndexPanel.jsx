@@ -30,6 +30,7 @@ import { selectToolkitScheduler } from '@/[fsd]/features/toolkits/indexes/model/
 import { IndexError, IndexScheduleModal, IndexSuccess } from '@/[fsd]/features/toolkits/indexes/ui';
 import { ToolkitChatHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useGetCurrentToolkitSchemas, useToolkitChat } from '@/[fsd]/features/toolkits/lib/hooks';
+import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { Button, Modal } from '@/[fsd]/shared/ui';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
 import { useDeleteIndexScheduleMutation } from '@/api';
@@ -571,25 +572,25 @@ const RunIndexPanel = memo(props => {
         onClose={closeDelete}
         onConfirm={confirmDelete}
       />
-      <Modal.BaseModal
-        variant="simple"
+
+      <Modal.DeleteEntityModal
+        title="Reindex confirmation"
+        name={indexName}
+        shouldRequestInputName={false}
         open={reindexConfirmOpen}
-        title={`Reindex confirmation`}
-        content={
-          <Box>
-            <Typography variant="bodyMedium">{`Are you sure to reindex the ${indexName} index?`}</Typography>
-            <Typography
-              variant="bodyMedium"
-              component={Box}
-            >
-              {"This will replace all current index data and can't be undone once started."}
-            </Typography>
-          </Box>
-        }
         confirmButtonText="Reindex"
         cancelButtonText="Cancel"
         onClose={cancelReindexConfirm}
         onConfirm={confirmReindex}
+        textContent="Are you sure to reindex the "
+        inlineExtraContent=" index?"
+        extraContent={
+          <Typography variant="bodyMedium">
+            {"This will replace all current index data and can't be undone once started."}
+          </Typography>
+        }
+        alarm={false}
+        titleIcon={ModalConstants.MODAL_ICON_TYPE.info}
       />
       <IndexScheduleModal
         open={scheduleModalOpen}

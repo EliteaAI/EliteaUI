@@ -460,6 +460,7 @@ export const useToolkitChat = props => {
       setActiveTaskId(null);
       toastSuccess('Indexing stopped successfully');
       setIsRunning(false);
+      setChatHistory(prev => prev.map(msg => ({ ...msg, isStreaming: false })));
 
       if (cancelIndexingCallback) cancelIndexingCallback(EditViewTabsEnum.configuration);
     } catch {
