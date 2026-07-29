@@ -1,12 +1,19 @@
 import { describe, expect, it } from 'vitest';
 
-import { fmtCost, fmtDuration, fmtNum } from './analyticsCommon.helpers.js';
+import { axisTick, fmtCost, fmtDuration, fmtNum } from './analyticsCommon.helpers.js';
 
 describe('fmtNum', () => {
-  it('formats null as 0', () => expect(fmtNum(null)).toBe('0'));
+  it('formats null as dash', () => expect(fmtNum(null)).toBe('-'));
+  it('formats undefined as dash', () => expect(fmtNum(undefined)).toBe('-'));
+  it('formats zero as 0', () => expect(fmtNum(0)).toBe('0'));
   it('formats millions', () => expect(fmtNum(1_500_000)).toBe('1.5M'));
   it('formats thousands', () => expect(fmtNum(2500)).toBe('2.5K'));
   it('formats small numbers', () => expect(fmtNum(42)).toBe('42'));
+});
+
+describe('axisTick', () => {
+  it('builds a tick style from a stroke color', () => expect(axisTick('#fff')).toEqual({ fill: '#fff', fontSize: 11 }));
+  it('accepts a custom font size', () => expect(axisTick('#000', 13)).toEqual({ fill: '#000', fontSize: 13 }));
 });
 
 describe('fmtDuration', () => {

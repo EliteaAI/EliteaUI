@@ -14,7 +14,7 @@ const AnalyticsCosts = memo(props => {
 
   const { palette } = useTheme();
   const axisStroke = palette.text.primary;
-  const axisTickStyle = styles.axisTickStyle(axisStroke);
+  const axisTickStyle = AnalyticCommonHelpers.axisTick(axisStroke);
 
   const { data, isFetching, isError } = useAnalyticsCostsQuery(
     { projectId, dateFrom, dateTo },
@@ -23,11 +23,16 @@ const AnalyticsCosts = memo(props => {
 
   const modelChartData = useMemo(
     () =>
-      (data?.by_model || []).slice(0, AnalyticsCommonConstants.MODEL_CHART_SIZE).map((m, i) => ({
-        name: m.display_name || m.model_name,
-        cost: m.total_cost,
-        color: AnalyticsCommonConstants.CHART_COLORS[i % AnalyticsCommonConstants.CHART_COLORS.length],
-      })),
+      // Sort by cost desc before truncating so the chart shows the priciest
+      // models even if the API returns them unordered.
+      [...(data?.by_model || [])]
+        .sort((a, b) => (b.total_cost ?? 0) - (a.total_cost ?? 0))
+        .slice(0, AnalyticsCommonConstants.MODEL_CHART_SIZE)
+        .map((m, i) => ({
+          name: m.display_name || m.model_name,
+          cost: m.total_cost,
+          color: AnalyticsCommonConstants.CHART_COLORS[i % AnalyticsCommonConstants.CHART_COLORS.length],
+        })),
     [data?.by_model],
   );
 
@@ -280,7 +285,6 @@ const AnalyticsCosts = memo(props => {
 });
 
 const styles = {
-  axisTickStyle: fill => ({ fill, fontSize: 11 }),
   centered: { display: 'flex', justifyContent: 'center', p: 4 },
   noDataText: { p: 2 },
   container: { display: 'flex', flexDirection: 'column', gap: '1rem' },

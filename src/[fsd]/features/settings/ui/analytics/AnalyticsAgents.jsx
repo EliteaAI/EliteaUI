@@ -233,7 +233,7 @@ const AnalyticsAgents = memo(props => {
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Users</Typography>
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Avg Latency</Typography>
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Errors</Typography>
-            <Typography sx={[styles.tableCell, { flex: 1 }]}>Tokens</Typography>
+            <Typography sx={[styles.tableCell, styles.flexOne]}>Tokens</Typography>
           </Box>
           {isFetching && (
             <Box sx={styles.loadingState}>

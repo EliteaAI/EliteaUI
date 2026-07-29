@@ -15,7 +15,7 @@ const AnalyticsOverview = memo(props => {
   const styles = analyticsOverviewStyles();
   const { palette } = useTheme();
   const axisStroke = palette.text.primary;
-  const axisTickStyle = { fill: axisStroke, fontSize: 11 };
+  const axisTickStyle = AnalyticCommonHelpers.axisTick(axisStroke);
 
   const { kpis, top_ai_users = [], daily_activity = [], models = [] } = data;
 

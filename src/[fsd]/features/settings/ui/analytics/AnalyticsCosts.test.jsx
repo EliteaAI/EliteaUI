@@ -42,6 +42,7 @@ vi.mock('@/[fsd]/features/settings/lib/helpers', () => ({
   AnalyticCommonHelpers: {
     fmtCost: v => `$${v ?? 0}`,
     fmtNum: v => String(v ?? 0),
+    axisTick: stroke => ({ fill: stroke, fontSize: 11 }),
   },
 }));
 
