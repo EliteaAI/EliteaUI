@@ -13,6 +13,7 @@ const warning40 = 'rgba(233, 121, 18, 0.4)';
 
 const white10 = 'rgba(255, 255, 255, 0.10)';
 const white14 = 'rgba(255, 255, 255, 0.14)';
+export const white15 = 'rgba(255, 255, 255, 0.15)';
 const white20 = 'rgba(255, 255, 255, 0.20)';
 const white50 = 'rgba(255, 255, 255, 0.50)';
 const whiteStepBorder = '#757575';
@@ -309,7 +310,8 @@ const darkPalette = {
       disabled: gray20,
     },
     tooltip: {
-      default: gray00,
+      default: gray30,
+      code: white15,
     },
     tips: blue5,
     attention: orangeFill5,
@@ -431,11 +433,14 @@ const darkPalette = {
     tag: 'none',
     onboarding: `0rem 3.975rem 4.2625rem -3.8125rem ${skyBlue20}`,
   },
+  dropShadow: {
+    tooltip: '0 0.125rem 0.5rem rgba(0, 0, 0, 0.4)',
+  },
   text: {
     default: gray10,
     primary: gray10,
     secondary: white,
-    tooltip: gray60,
+    tooltip: white,
     error: dangerRed,
     groupedTitle: {
       default: gray10,
@@ -476,6 +481,7 @@ const darkPalette = {
     tips: veryLightBlue,
     attention: lightOrange,
     metrics: gray00,
+    emphasis: gray00,
     contextHighLight: '#3d3d3d',
     warningText: lightRed,
     deleteAlertEntityName: skyBlue,

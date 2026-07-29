@@ -287,7 +287,7 @@ const analyticsContainerStyles = () => ({
     borderRadius: '.75rem',
 
     span: {
-      color: palette.background.tooltip.default,
+      color: palette.text.emphasis,
       fontWeight: 500,
       lineHeight: '1rem',
     },
@@ -371,7 +371,7 @@ const analyticsContainerStyles = () => ({
           height: '1rem',
           fontSize: '1rem',
 
-          '& path': { fill: palette.background.tooltip.default },
+          '& path': { fill: palette.text.emphasis },
         },
       },
     }),

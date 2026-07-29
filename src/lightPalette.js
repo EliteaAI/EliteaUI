@@ -1,4 +1,4 @@
-import { white } from './darkPalette';
+import { white, white15 } from './darkPalette';
 
 // const white14 = 'rgba(255, 255, 255, 0.14)';
 // const veryLightBlue = '#C7EBFF';
@@ -309,6 +309,7 @@ const lightPalette = {
     },
     tooltip: {
       default: gray30,
+      code: white15,
     },
     tips: blueFill08,
     attention: orangeFill5,
@@ -430,6 +431,9 @@ const lightPalette = {
     onboarding: `0rem 3.975rem 4.2625rem -3.8125rem ${skyBlue20}`,
     aiAnswer: '0px 2px 7px 0px rgba(0, 0, 0, 0.12)',
   },
+  dropShadow: {
+    tooltip: '0 0.125rem 0.5rem rgba(100, 119, 136, 0.3)',
+  },
   text: {
     default: light10,
     primary: light10,
@@ -476,6 +480,7 @@ const lightPalette = {
     tips: darkBlue,
     attention: warningStatusText,
     metrics: light00,
+    emphasis: gray30,
     contextHighLight: '#3d3d3d',
     warningText: red,
     deleteAlertEntityName: darkBlue,
