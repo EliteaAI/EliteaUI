@@ -109,7 +109,13 @@ const RunIndexPanel = memo(props => {
     setHasIndexedThisSession(true);
     setLocalMetaOverride(prev => ({ ...(prev || {}), ...metadata }));
   }, []);
-  const { handleMcpAuthRequired, getModalProps } = useMcpAuthModal({ values });
+
+  // Stable ref wrapper so useMcpAuthModal can be declared after useToolkitChat
+  // without creating a circular dependency.
+  const mcpAuthRequiredRef = useRef(null);
+  const onMcpAuthRequiredStable = useCallback(message => {
+    mcpAuthRequiredRef.current?.(message);
+  }, []);
 
   const {
     chatHistory,
@@ -121,6 +127,7 @@ const RunIndexPanel = memo(props => {
     handleClearActiveConversation,
     handleIndexData,
     handleRunTool,
+    retryLastRun,
     onCancelIndexing,
   } = useToolkitChat({
     cancelIndexingCallback: () => {
@@ -140,8 +147,17 @@ const RunIndexPanel = memo(props => {
     values,
     modes: [],
     initialConversation,
-    onMcpAuthRequired: handleMcpAuthRequired,
+    onMcpAuthRequired: onMcpAuthRequiredStable,
   });
+
+  const { handleMcpAuthRequired, getModalProps } = useMcpAuthModal({
+    values,
+    onSuccess: retryLastRun,
+    showSuccessToast: false,
+  });
+
+  // Wire the stable wrapper to the real handler after both hooks are initialized.
+  mcpAuthRequiredRef.current = handleMcpAuthRequired;
 
   const [deleteIndex, { isLoading: isDeleting }] = useDeleteIndexItemMutation();
 

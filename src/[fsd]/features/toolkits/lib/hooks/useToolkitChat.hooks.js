@@ -481,6 +481,10 @@ export const useToolkitChat = props => {
 
   const handleRunTool = useCallback(() => run(runTool), [run, runTool]);
 
+  const retryLastRun = useCallback(() => {
+    if (runningToolRef.current) run(runningToolRef.current);
+  }, [run]);
+
   const handleClearChat = useCallback(() => {
     setChatHistory([generateWelcomeMessage(runTool, isTestToolsMode)]);
     setProgressingIndexHistoryRecovered(false);
@@ -508,6 +512,7 @@ export const useToolkitChat = props => {
     handleClearChat,
     handleIndexData,
     handleRunTool,
+    retryLastRun,
     llmSettings,
     modelList,
     onCancelIndexing,

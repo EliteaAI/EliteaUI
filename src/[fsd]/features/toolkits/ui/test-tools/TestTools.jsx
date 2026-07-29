@@ -39,8 +39,11 @@ const TestTools = memo(props => {
   const [selectedTool, setSelectedTool] = useState(null);
   const [toolInputVariables, setToolInputVariables] = useState([]);
 
-  // MCP Auth Modal hook
-  const { handleMcpAuthRequired, getModalProps } = useMcpAuthModal({ values: formValues });
+  // Stable ref wrapper to break circular dependency between useToolkitChat and useMcpAuthModal.
+  const mcpAuthRequiredRef = useRef(null);
+  const onMcpAuthRequiredStable = useCallback(message => {
+    mcpAuthRequiredRef.current?.(message);
+  }, []);
 
   const toolSchema = useGetSelectedToolSchema({
     toolkitType: formValues.type,
@@ -72,6 +75,7 @@ const TestTools = memo(props => {
     handleRunTool,
     handleClearChat,
     isRunning,
+    retryLastRun,
     modelList,
     onSelectModel,
     onSetLLMSettings,
@@ -84,8 +88,18 @@ const TestTools = memo(props => {
     isValidForm,
     values: formValues,
     modes: [ToolkitChatModesEnum.testTools],
-    onMcpAuthRequired: handleMcpAuthRequired,
+    onMcpAuthRequired: onMcpAuthRequiredStable,
   });
+
+  // MCP Auth Modal hook — must be after useToolkitChat to get retryLastRun.
+  const { handleMcpAuthRequired, getModalProps } = useMcpAuthModal({
+    values: formValues,
+    onSuccess: retryLastRun,
+    showSuccessToast: false,
+  });
+
+  // Wire stable wrapper to the real handler.
+  mcpAuthRequiredRef.current = handleMcpAuthRequired;
 
   const onCopyToClipboard = useChatCopyToClipboard(chatHistory);
 

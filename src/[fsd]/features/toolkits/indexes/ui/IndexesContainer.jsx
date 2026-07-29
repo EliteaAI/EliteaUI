@@ -124,10 +124,10 @@ const IndexesContainer = memo(props => {
       if (!name) return;
       const baseUrl = `${window.location.protocol}//${window.location.host}`;
       const basename = getBasename();
-      const url = `${baseUrl}${basename}${buildIndexPath(RouteDefinitions.ToolkitIndex, name)}`;
+      const url = `${baseUrl}${basename}/${projectId}${buildIndexPath(RouteDefinitions.ToolkitIndex, name)}`;
       window.open(url, '_blank', 'noopener,noreferrer');
     },
-    [buildIndexPath],
+    [buildIndexPath, projectId],
   );
 
   const cancelReindexConfirm = useCallback(() => {
