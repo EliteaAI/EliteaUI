@@ -107,21 +107,22 @@ const ConfigurationTab = memo(props => {
                 isMCP={isMCP}
                 onSyntaxError={() => {}}
                 onValidationStateChange={onValidationStateChange}
+                extraContent={
+                  !shouldHideIndexes ? (
+                    <BasicAccordion
+                      data-testid="toolkit-indexes-accordion"
+                      style={styles.indexesAccordionWrapper}
+                      accordionSX={styles.indexesAccordion}
+                      items={[
+                        {
+                          title: 'Indexes',
+                          content: indexesAccordionContent,
+                        },
+                      ]}
+                    />
+                  ) : null
+                }
               />
-
-              {!shouldHideIndexes && (
-                <BasicAccordion
-                  data-testid="toolkit-indexes-accordion"
-                  style={styles.indexesAccordionWrapper}
-                  accordionSX={styles.indexesAccordion}
-                  items={[
-                    {
-                      title: 'Indexes',
-                      content: indexesAccordionContent,
-                    },
-                  ]}
-                />
-              )}
             </Grid>
           )}
           <Grid
@@ -182,6 +183,7 @@ const styles = {
   },
   indexesAccordionWrapper: {
     width: '100%',
+    marginTop: '1rem',
   },
   indexesAccordion: {
     width: '100%',

@@ -54,6 +54,7 @@ export const ToolkitForm = memo(props => {
     onSyntaxError,
     validationTrigger,
     revertCredentialsRef,
+    extraContent,
   } = props;
   const hasSetViewManually = useRef(false);
   const [view, setView] = useState(ToolkitViewOptions.Form);
@@ -574,6 +575,7 @@ export const ToolkitForm = memo(props => {
         excludedFields={toolType !== 'mcp' ? [] : ['discovery_mode', 'discovery_interval']}
         onCredentialReload={onCredentialReload}
       />
+      {extraContent}
     </Box>
   );
 });
