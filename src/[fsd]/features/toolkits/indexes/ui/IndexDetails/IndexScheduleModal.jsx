@@ -222,7 +222,7 @@ const IndexScheduleModal = props => {
 /** @type {MuiSx} */
 const indexScheduleModalStyles = () => ({
   dialog: {
-    width: '35.4rem',
+    width: '38.74rem',
     maxWidth: 'none',
   },
   actionBtn: {
