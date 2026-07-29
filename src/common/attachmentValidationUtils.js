@@ -160,7 +160,7 @@ export const getFileTypeDisplayName = (file, allowedFileTypes = {}, allowedExten
  * @param {File} file - File to check
  * @returns {boolean} True if file is an image and not SVG
  */
-const isNonSvgImage = file => {
+export const isNonSvgImage = file => {
   if (!isFileObjectImage(file)) return false;
   const name = (file.name || '').toLowerCase();
   if (name.endsWith('.svg')) return false;
