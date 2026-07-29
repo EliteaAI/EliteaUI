@@ -1,3 +1,7 @@
+export const TOP_LIST_SIZE = 10;
+
+export const MODEL_CHART_SIZE = 15;
+
 export const MEDAL_COLORS = ['#FFD700', '#C0C0C0', '#CD7F32'];
 
 export const CHART_COLORS = [

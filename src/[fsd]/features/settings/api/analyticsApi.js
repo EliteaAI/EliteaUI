@@ -141,6 +141,20 @@ export const analyticsApi = eliteaApi
         },
         keepUnusedDataFor: CACHE_LIFETIME,
       }),
+      analyticsCosts: build.query({
+        query: ({ projectId, dateFrom, dateTo }) => {
+          const params = new URLSearchParams();
+          if (dateFrom) params.set('date_from', dateFrom);
+          if (dateTo) params.set('date_to', dateTo);
+          const qs = params.toString();
+          return {
+            url: `/elitea_core/analytics_costs/prompt_lib/${projectId}${qs ? `?${qs}` : ''}`,
+            method: 'GET',
+          };
+        },
+        keepUnusedDataFor: CACHE_LIFETIME,
+        providesTags: [TAG_TYPE_ANALYTICS],
+      }),
     }),
   });
 
@@ -153,4 +167,5 @@ export const {
   useAnalyticsToolDetailQuery,
   useAnalyticsAgentsQuery,
   useAnalyticsAgentDetailQuery,
+  useAnalyticsCostsQuery,
 } = analyticsApi;

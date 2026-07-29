@@ -15,7 +15,7 @@ const AnalyticsOverview = memo(props => {
   const styles = analyticsOverviewStyles();
   const { palette } = useTheme();
   const axisStroke = palette.text.primary;
-  const axisTickStyle = { fill: axisStroke, fontSize: 11 };
+  const axisTickStyle = AnalyticCommonHelpers.axisTick(axisStroke);
 
   const { kpis, top_ai_users = [], daily_activity = [], models = [] } = data;
 
@@ -58,6 +58,16 @@ const AnalyticsOverview = memo(props => {
           label="AGENT RUNS"
           value={AnalyticCommonHelpers.fmtNum(kpis.agent_runs)}
           subtitle="agents and pipelines interactions"
+        />
+        <KPICard
+          label="TOKENS"
+          value={AnalyticCommonHelpers.fmtNum(kpis.total_tokens)}
+          subtitle="total LLM tokens consumed"
+        />
+        <KPICard
+          label="LLM COST"
+          value={AnalyticCommonHelpers.fmtCost(kpis.total_llm_cost)}
+          subtitle="estimated USD cost"
         />
       </Box>
       <Box sx={styles.chartsRowEqual}>
