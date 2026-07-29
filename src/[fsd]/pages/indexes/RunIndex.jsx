@@ -11,14 +11,13 @@ import { useGetIndexScheduleQuery, useGetIndexesListQuery } from '@/[fsd]/featur
 import { IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import { selectIndexesList } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
 import { IndexBreadcrumb } from '@/[fsd]/features/toolkits/indexes/ui';
+import RunIndexPanel from '@/[fsd]/features/toolkits/indexes/ui/run-index/RunIndexPanel';
 import { useToolkitsDetailsQuery } from '@/api/toolkits.js';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils.jsx';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast.jsx';
 import Page404 from '@/pages/Page404.jsx';
 import RouteDefinitions from '@/routes';
-
-import RunIndexPanel from './RunIndexPanel';
 
 const emptyToolDetail = {};
 const CREATING_POLL_INTERVAL_MS = 2000;
