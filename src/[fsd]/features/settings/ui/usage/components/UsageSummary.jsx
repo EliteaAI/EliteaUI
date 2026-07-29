@@ -14,7 +14,7 @@ const LIMIT_SOURCE_HINT = {
 };
 
 const UsageSummary = memo(props => {
-  const { data, scope, isPersonalProject } = props;
+  const { data, scope } = props;
 
   const styles = usageSummaryStyles();
 
@@ -83,8 +83,8 @@ const UsageSummary = memo(props => {
             severity="error"
             sx={styles.alert}
           >
-            This budget is exhausted. Calls to shared models are being rejected until the limit is raised or
-            the period resets.
+            This budget has been reached. Requests to platform-shared models are unavailable until the limit
+            is increased or the current budget period resets.
           </Alert>
         )}
         {severity === 'warning' && (
@@ -92,19 +92,24 @@ const UsageSummary = memo(props => {
             severity="warning"
             sx={styles.alert}
           >
-            You have used over {warningPct ?? UsageHelpers.DEFAULT_WARNING_PCT}% of this budget.
+            This budget is nearing its limit. {Math.round(percentUsed)}% has been used.
           </Alert>
         )}
       </Box>
 
-      <Box sx={styles.kpiRow}>
+      <Box sx={styles.kpiRow(canSeeAmounts)}>
         {canSeeAmounts && (
           <KPICard
-            label="SPEND"
+            label="SPENT"
             value={UsageHelpers.formatMoney(spend, currency)}
             subtitle="this billing period"
           />
         )}
+        <KPICard
+          label="LIMIT"
+          value={canSeeAmounts ? UsageHelpers.formatLimit(limit, currency) : limit ? 'Set' : 'Unlimited'}
+          subtitle={limitSource === 'default' ? 'platform default' : 'current period'}
+        />
         <KPICard
           label="TOKENS"
           value={UsageHelpers.formatTokens(totalTokens)}
@@ -115,23 +120,7 @@ const UsageSummary = memo(props => {
           value={String(apiRequests || 0)}
           subtitle="requests to shared models"
         />
-        <KPICard
-          label="LIMIT"
-          value={canSeeAmounts ? UsageHelpers.formatLimit(limit, currency) : limit ? 'Set' : 'Unlimited'}
-          subtitle={limitSource === 'default' ? 'platform default' : 'monthly'}
-        />
       </Box>
-
-      {isPersonalProject && (
-        <Alert
-          severity="info"
-          sx={styles.alert}
-        >
-          This is your private project. Requests that do not specify a project are billed here — including
-          personal access tokens used by external tools such as Claude Code, IDE extensions and your own
-          scripts.
-        </Alert>
-      )}
     </Box>
   );
 });
@@ -174,11 +163,12 @@ const usageSummaryStyles = () => ({
   hint: ({ palette }) => ({
     color: palette.text.metrics || palette.text.disabled,
   }),
-  kpiRow: {
+  // Members without cost visibility see no Spent card, so the grid must not leave a gap
+  kpiRow: canSeeAmounts => ({
     display: 'grid',
-    gridTemplateColumns: 'repeat(4, 1fr)',
+    gridTemplateColumns: `repeat(${canSeeAmounts ? 4 : 3}, 1fr)`,
     gap: '0.75rem',
-  },
+  }),
   alert: {
     fontSize: '0.8125rem',
   },

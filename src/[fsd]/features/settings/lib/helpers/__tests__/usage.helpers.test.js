@@ -117,6 +117,59 @@ describe('usageSeverity', () => {
   });
 });
 
+describe('filterMembers', () => {
+  const rows = [
+    { user_id: 1, name: 'Ada Lovelace', email: 'ada@example.com' },
+    { user_id: 2, name: 'Alan Turing', email: 'alan@example.com' },
+    { user_id: 3, name: null, email: 'grace@example.com' },
+  ];
+
+  const ids = result => result.map(row => row.user_id);
+
+  it('returns every member for an empty search', () => {
+    expect(ids(UsageHelpers.filterMembers(rows, ''))).toEqual([1, 2, 3]);
+    expect(ids(UsageHelpers.filterMembers(rows))).toEqual([1, 2, 3]);
+  });
+
+  it('matches on name', () => {
+    expect(ids(UsageHelpers.filterMembers(rows, 'lovelace'))).toEqual([1]);
+  });
+
+  it('matches on email', () => {
+    expect(ids(UsageHelpers.filterMembers(rows, 'alan@'))).toEqual([2]);
+  });
+
+  it('is case-insensitive', () => {
+    expect(ids(UsageHelpers.filterMembers(rows, 'ALAN TURING'))).toEqual([2]);
+  });
+
+  // A member with no display name must still be findable by the email shown in the row
+  it('matches on email when the member has no name', () => {
+    expect(ids(UsageHelpers.filterMembers(rows, 'grace'))).toEqual([3]);
+  });
+
+  it('ignores surrounding whitespace', () => {
+    expect(ids(UsageHelpers.filterMembers(rows, '  ada  '))).toEqual([1]);
+  });
+
+  it('can match more than one member', () => {
+    expect(ids(UsageHelpers.filterMembers(rows, 'example.com'))).toEqual([1, 2, 3]);
+  });
+
+  it('returns nothing when no member matches', () => {
+    expect(UsageHelpers.filterMembers(rows, 'nobody-by-that-name')).toEqual([]);
+  });
+
+  it('does not mutate the input', () => {
+    UsageHelpers.filterMembers(rows, 'ada');
+    expect(rows).toHaveLength(3);
+  });
+
+  it('tolerates a missing rows list', () => {
+    expect(UsageHelpers.filterMembers(undefined, 'ada')).toEqual([]);
+  });
+});
+
 describe('reset labels', () => {
   afterEach(() => {
     vi.useRealTimers();

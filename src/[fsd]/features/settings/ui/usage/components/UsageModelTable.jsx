@@ -10,13 +10,14 @@ const UsageModelTable = memo(props => {
 
   const styles = usageModelTableStyles();
 
-  // Different raw models can share a display name once provider/project prefixes are
-  // stripped (e.g. two distinct "gpt-5" registrations) - fall back to the raw name for those
+  // Prefer the configured display name; only models missing from the registry need formatting.
+  // Different raw models can still share a label (e.g. two distinct "gpt-5" registrations)
+  // - fall back to the raw name for those
   const displayNames = useMemo(() => {
-    const stripped = models.map(model => UsageHelpers.formatModelName(model.model));
-    const counts = stripped.reduce((acc, name) => acc.set(name, (acc.get(name) || 0) + 1), new Map());
+    const resolved = models.map(model => model.display_name || UsageHelpers.formatModelName(model.model));
+    const counts = resolved.reduce((acc, name) => acc.set(name, (acc.get(name) || 0) + 1), new Map());
 
-    return stripped.map((name, index) => (counts.get(name) > 1 ? models[index].model || name : name));
+    return resolved.map((name, index) => (counts.get(name) > 1 ? models[index].model || name : name));
   }, [models]);
 
   if (!models.length) {
