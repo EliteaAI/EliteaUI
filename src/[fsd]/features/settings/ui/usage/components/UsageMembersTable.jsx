@@ -3,7 +3,7 @@ import { memo, useCallback, useMemo, useState } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import { UsageHelpers } from '@/[fsd]/features/settings/lib/helpers';
-import StyledSearchInput from '@/components/SearchInput';
+import { SimpleSearchBar } from '@/[fsd]/shared/ui/input';
 
 const SEVERITY_COLOR = {
   exceeded: 'error',
@@ -17,7 +17,7 @@ const UsageMembersTable = memo(props => {
 
   const [search, setSearch] = useState('');
 
-  const handleSearchChange = useCallback(event => setSearch(event.target.value), []);
+  const handleSearchClear = useCallback(() => setSearch(''), []);
 
   const sorted = useMemo(
     () => [...UsageHelpers.filterMembers(rows, search)].sort((a, b) => (b.spend || 0) - (a.spend || 0)),
@@ -43,10 +43,12 @@ const UsageMembersTable = memo(props => {
             Per-member usage against each member&apos;s own limit in this project
           </Typography>
         </Box>
-        <StyledSearchInput
-          search={search}
-          onChangeSearch={handleSearchChange}
+        <SimpleSearchBar
+          searchQuery={search}
+          onSearchChange={setSearch}
+          onSearchClear={handleSearchClear}
           placeholder="Search by name or email"
+          autoFocus={false}
           sx={styles.search}
         />
       </Box>
@@ -142,19 +144,11 @@ const usageMembersTableStyles = () => ({
     flexDirection: 'column',
     minWidth: 0,
   },
-  // Analytics puts this pill on a contrasting fill, but this card already uses that
-  // colour, so a border is what makes the field visible here. The input's own width
-  // exceeds the container and has to be reined in.
-  search: ({ palette }) => ({
+  // SimpleSearchBar already draws its own border, so it stays visible on this card's fill
+  search: {
     width: '15rem',
-    height: '2.25rem',
     flexShrink: 0,
-    border: `0.0625rem solid ${palette.border.lines}`,
-    borderRadius: '1.6875rem',
-    gap: '0.5rem',
-    padding: '0.375rem 0.75rem',
-    '& .MuiInputBase-root': { width: '100%' },
-  }),
+  },
   empty: ({ palette }) => ({
     color: palette.text.metrics || palette.text.disabled,
     marginTop: '0.5rem',
