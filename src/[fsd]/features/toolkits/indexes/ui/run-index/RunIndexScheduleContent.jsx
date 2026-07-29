@@ -3,8 +3,11 @@ import { memo } from 'react';
 import { Box, Tooltip, Typography } from '@mui/material';
 
 import { Button, Switch } from '@/[fsd]/shared/ui';
+import InfoIcon from '@/assets/info.svg?react';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import EditIcon from '@/components/Icons/EditIcon';
+
+import RunIndexBanner from '../RunIndexBanner';
 
 const RunIndexScheduleContent = memo(props => {
   const {
@@ -50,88 +53,102 @@ const RunIndexScheduleContent = memo(props => {
     );
 
   return (
-    <Box sx={styles.scheduleCard}>
-      <Box sx={styles.cardBody}>
-        <Typography
-          variant="labelMedium"
-          color={enabled ? 'text.secondary' : 'text.primary'}
-        >
-          {scheduleSummary}
-        </Typography>
-        {nextRun && (
+    <>
+      <Box sx={styles.scheduleCard}>
+        <Box sx={styles.cardBody}>
           <Typography
-            variant="bodySmall2"
+            variant="labelMedium"
             color={enabled ? 'text.secondary' : 'text.primary'}
           >
+            {scheduleSummary}
+          </Typography>
+          {nextRun && (
             <Typography
               variant="bodySmall2"
-              component="span"
-              color="text.primary"
-              sx={styles.nextRunLabel}
+              color={enabled ? 'text.secondary' : 'text.primary'}
             >
-              Next run:
+              <Typography
+                variant="bodySmall2"
+                component="span"
+                color="text.primary"
+                sx={styles.nextRunLabel}
+              >
+                Next run:
+              </Typography>
+              {nextRun}
             </Typography>
-            {nextRun}
-          </Typography>
-        )}
-        {credentialsTitle && (
-          <Typography
-            variant="bodySmall2"
-            color="text.secondary"
-          >
+          )}
+          {credentialsTitle && (
             <Typography
               variant="bodySmall2"
-              component="span"
-              color="text.primary"
-              sx={styles.nextRunLabel}
+              color="text.secondary"
             >
-              Use credentials:
+              <Typography
+                variant="bodySmall2"
+                component="span"
+                color="text.primary"
+                sx={styles.nextRunLabel}
+              >
+                Use credentials:
+              </Typography>
+              {credentialsTitle}
             </Typography>
-            {credentialsTitle}
-          </Typography>
-        )}
+          )}
+        </Box>
+        <Box sx={styles.cardActions}>
+          <Tooltip title="Edit schedule">
+            <Box component="span">
+              <Button.BaseBtn
+                variant={Button.BUTTON_VARIANTS.tertiary}
+                size="small"
+                startIcon={<EditIcon fill={styles.iconFill} />}
+                onClick={e => {
+                  e.stopPropagation();
+                  onEdit();
+                }}
+              />
+            </Box>
+          </Tooltip>
+          <Tooltip title="Delete schedule">
+            <Box component="span">
+              <Button.BaseBtn
+                variant={Button.BUTTON_VARIANTS.tertiary}
+                size="small"
+                startIcon={<DeleteIcon fill={styles.iconFill} />}
+                onClick={e => {
+                  e.stopPropagation();
+                  onDelete();
+                }}
+              />
+            </Box>
+          </Tooltip>
+          <Tooltip title={disabledReason || ''}>
+            <Box component="span">
+              <Switch.BaseSwitch
+                checked={enabled}
+                onChange={e => {
+                  e.stopPropagation();
+                  onToggle();
+                }}
+                disabled={Boolean(disabledReason)}
+              />
+            </Box>
+          </Tooltip>
+        </Box>
       </Box>
-      <Box sx={styles.cardActions}>
-        <Tooltip title="Edit schedule">
-          <Box component="span">
-            <Button.BaseBtn
-              variant={Button.BUTTON_VARIANTS.tertiary}
-              size="small"
-              startIcon={<EditIcon fill={styles.iconFill} />}
-              onClick={e => {
-                e.stopPropagation();
-                onEdit();
-              }}
-            />
-          </Box>
-        </Tooltip>
-        <Tooltip title="Delete schedule">
-          <Box component="span">
-            <Button.BaseBtn
-              variant={Button.BUTTON_VARIANTS.tertiary}
-              size="small"
-              startIcon={<DeleteIcon fill={styles.iconFill} />}
-              onClick={e => {
-                e.stopPropagation();
-                onDelete();
-              }}
-            />
-          </Box>
-        </Tooltip>
-        <Tooltip title={disabledReason || ''}>
-          <Box component="span">
-            <Switch.BaseSwitch
-              checked={enabled}
-              onChange={e => {
-                e.stopPropagation();
-                onToggle();
-              }}
-              disabled={Boolean(disabledReason)}
-            />
-          </Box>
-        </Tooltip>
-      </Box>
-    </Box>
+      {!enabled && (
+        <RunIndexBanner
+          banner={{
+            severity: 'info',
+            label: 'Schedule is turned off.',
+            message: '',
+          }}
+          CustomIcon={() => <InfoIcon />}
+          sx={styles.banner}
+          contentSX={styles.bannerContent}
+        />
+      )}
+    </>
   );
 });
 
@@ -172,6 +189,14 @@ const runIndexScheduleContentStyles = () => ({
   },
   nextRunLabel: { marginRight: '0.5rem' },
   iconFill: ({ palette }) => palette.icon.secondary,
+  banner: {
+    marginTop: '0.5rem',
+    padding: '0rem !important',
+  },
+  bannerContent: {
+    padding: '0.5rem',
+    borderRadius: '0.5rem',
+  },
 });
 
 export default RunIndexScheduleContent;

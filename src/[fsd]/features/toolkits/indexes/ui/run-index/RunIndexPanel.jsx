@@ -241,9 +241,12 @@ const RunIndexPanel = memo(props => {
 
   const handleApplyScheduleModal = useCallback(
     (cron, credentials) => {
-      handleChangeIndexSchedule({ ...scheduleData, cron, credentials }, false);
+      handleChangeIndexSchedule(
+        { ...scheduleData, cron, credentials, enabled: scheduleModalIsEdit ? scheduleData.enabled : true },
+        false,
+      );
     },
-    [scheduleData, handleChangeIndexSchedule],
+    [handleChangeIndexSchedule, scheduleData, scheduleModalIsEdit],
   );
 
   useEffect(() => {
@@ -614,7 +617,6 @@ const runIndexPanelStyles = () => ({
   },
   leftColumn: {
     flex: 0.8,
-    maxWidth: '37.5rem',
     display: 'flex',
     flexDirection: 'column',
     gap: '0.75rem',

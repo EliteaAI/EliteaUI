@@ -624,7 +624,6 @@ export default ToolkitForm;
 /** @type {MuiSx} */
 const toolkitFormStyles = () => ({
   container: {
-    maxWidth: '40.1875rem',
     margin: '0 auto',
     position: 'relative',
   },
