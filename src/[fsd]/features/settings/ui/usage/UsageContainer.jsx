@@ -3,6 +3,7 @@ import { memo, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router-dom';
 
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { Alert, Box, CircularProgress, Typography } from '@mui/material';
 
 import { DrawerPage } from '@/[fsd]/features/settings/ui/drawer-page';
@@ -17,6 +18,12 @@ import UsageSummary from './components/UsageSummary';
 
 const SCOPE_PROJECT = 'project';
 const SCOPE_USER = 'user';
+
+const PRIVATE_PROJECT_INFO =
+  'This is your Private project. Requests made without selecting a "Team" project are charged here, including requests made with personal access tokens from external tools such as Claude Code, IDE extensions, and scripts.';
+
+const SHARED_MODELS_INFO =
+  'Only requests to platform-managed shared models count toward this budget. Usage of models configured with your own provider credentials is billed by that provider and is not included here.';
 
 const UsageContainer = memo(() => {
   const projectId = useSelectedProjectId();
@@ -92,6 +99,29 @@ const UsageContainer = memo(() => {
 
         {!isLoading && data && (
           <>
+            <Box sx={styles.infoNotes}>
+              {isPersonalProject && (
+                <Box sx={styles.infoNote}>
+                  <InfoOutlinedIcon sx={styles.infoIcon} />
+                  <Typography
+                    variant="bodySmall"
+                    sx={styles.infoText}
+                  >
+                    {PRIVATE_PROJECT_INFO}
+                  </Typography>
+                </Box>
+              )}
+              <Box sx={styles.infoNote}>
+                <InfoOutlinedIcon sx={styles.infoIcon} />
+                <Typography
+                  variant="bodySmall"
+                  sx={styles.infoText}
+                >
+                  {SHARED_MODELS_INFO}
+                </Typography>
+              </Box>
+            </Box>
+
             {!data.spend_available && (
               <Alert severity="info">
                 Usage figures are still being collected for this period. They may lag live activity by a short
@@ -102,7 +132,6 @@ const UsageContainer = memo(() => {
             <UsageSummary
               data={data}
               scope={activeScope}
-              isPersonalProject={isPersonalProject}
             />
 
             <Box sx={styles.row}>
@@ -121,20 +150,12 @@ const UsageContainer = memo(() => {
               currency={data.currency}
             />
 
-            {activeScope === SCOPE_PROJECT && memberRows.length > 0 && (
+            {!isPersonalProject && activeScope === SCOPE_PROJECT && memberRows.length > 0 && (
               <UsageMembersTable
                 rows={memberRows}
                 warningPct={membersData?.warning_pct}
               />
             )}
-
-            <Typography
-              variant="bodySmall"
-              sx={styles.footnote}
-            >
-              Only calls to platform-shared models count towards these budgets. Models you configure with your
-              own credentials are billed by that provider and are not tracked here.
-            </Typography>
           </>
         )}
       </Box>
@@ -182,7 +203,25 @@ const usageContainerStyles = () => ({
     gap: '1rem',
     flexWrap: 'wrap',
   },
-  footnote: ({ palette }) => ({
+  infoNotes: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
+  },
+  infoNote: {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: '0.5rem',
+  },
+  infoIcon: ({ palette }) => ({
+    fontSize: '1rem',
+    // Nudge onto the first line's baseline rather than the top of the text box
+    marginTop: '0.125rem',
+    flexShrink: 0,
+    color: palette.text.metrics || palette.text.disabled,
+  }),
+  infoText: ({ palette }) => ({
     color: palette.text.metrics || palette.text.disabled,
   }),
 });
