@@ -17,6 +17,7 @@ import {
 } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
+import { BudgetErrorMessage } from '@/[fsd]/features/chat/ui/error-trace';
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
@@ -404,6 +405,20 @@ const RunStateDialog = memo(props => {
                   ]}
                 />
               </Stepper>
+              {data.status === FlowEditorConstants.PipelineStatus.Error && !!data.error && (
+                <Box sx={styles.runError}>
+                  {data.budgetErrorCode ? (
+                    <BudgetErrorMessage code={data.budgetErrorCode} />
+                  ) : (
+                    <Typography
+                      variant="bodySmall"
+                      sx={styles.runErrorText}
+                    >
+                      {data.error}
+                    </Typography>
+                  )}
+                </Box>
+              )}
               <Box sx={styles.statesHeader}>
                 <Typography
                   variant="subtitle"
@@ -651,6 +666,7 @@ const runStateDialogStyles = (editorWidth, editorHeight) => ({
     marginLeft: 0,
   },
   contentContainer: {
+    height: 'calc(100% - 2.75rem)',
     maxHeight: 'calc(100% - 2.75rem)',
     overflow: 'hidden',
     display: 'flex',
@@ -725,13 +741,27 @@ const runStateDialogStyles = (editorWidth, editorHeight) => ({
       zIndex: 0,
     },
   }),
+  runError: {
+    padding: '0 1.5rem 0.75rem 1.5rem',
+    // A long provider error must not push the States list out of the dialog
+    maxHeight: '7rem',
+    overflow: 'auto',
+  },
+  runErrorText: ({ palette }) => ({
+    color: palette.status.rejected,
+    whiteSpace: 'pre-wrap',
+    wordBreak: 'break-word',
+  }),
   statesHeader: ({ palette }) => ({
     padding: '0 1.5rem 0.75rem 1.5rem',
     height: '1.75rem',
     borderBottom: `0.0625rem solid ${palette.border.flowNode}`,
   }),
   statesContainer: {
-    height: 'calc(100% - 7.375rem)',
+    // Flex rather than a fixed calc: the error block above is conditional, so a
+    // hardcoded offset would overflow the dialog whenever a run fails
+    flex: 1,
+    minHeight: 0,
     display: 'flex',
     flexDirection: 'column',
     paddingInline: '1.5rem',
