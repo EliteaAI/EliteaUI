@@ -7,6 +7,7 @@ import { Box } from '@mui/material';
 
 import { AuthorInformation } from '@/[fsd]/entities/author/ui';
 import { EmptyStatePage } from '@/[fsd]/entities/empty-state-page';
+import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useLoadToolkits } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitTypesPanel, ToolkitsEmptyListPlaceHolder } from '@/[fsd]/features/toolkits/ui/list';
 import { isMcpToolkit } from '@/[fsd]/shared/lib/helpers';
@@ -145,24 +146,12 @@ const ToolkitsList = memo(props => {
   ]);
 
   const uniqueDataList = useMemo(() => {
-    const getToolkitItemName = item => {
-      if (!item.name || item.name.trim() === '') {
-        const fallbackName =
-          item.toolkit_name ||
-          item.settings?.elitea_title ||
-          item.settings?.configuration_title ||
-          item.type.charAt(0).toUpperCase() + item.type.slice(1);
-        return fallbackName;
-      }
-      return item.name;
-    };
-
     const items = uniqueArrayByProp(
       (data || [])
         .filter(item => isMcpVisible || !isMcpToolkit(item))
         .map(item => ({
           ...item,
-          name: getToolkitItemName(item),
+          name: ToolkitsHelpers.getToolkitDisplayName(item),
         })),
       'id',
     );

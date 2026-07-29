@@ -1,7 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useFormikContext } from 'formik';
-import { useDispatch } from 'react-redux';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { Box } from '@mui/material';
@@ -26,7 +25,6 @@ import { useIsFrom } from '@/hooks/useIsFromSpecificPageHooks';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes.js';
-import { actions } from '@/slices/search';
 
 const pageSize = 20;
 
@@ -68,7 +66,6 @@ const ToolMenu = memo(props => {
   const trackEvent = useTrackEvent();
 
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
   const { toastSuccess } = useToast();
   const formik = useFormikContext();
@@ -168,13 +165,27 @@ const ToolMenu = memo(props => {
     isFetching: isFetchingToolkits,
     handleAssociateToolkit,
     onLoadMoreToolkits,
-  } = useLibraryToolkits(handleSelectToolkitFromLibrary, applicationId, versionId, formik);
+  } = useLibraryToolkits(
+    handleSelectToolkitFromLibrary,
+    applicationId,
+    versionId,
+    formik,
+    false,
+    debouncedToolkitSearch,
+  );
 
   const {
     menuItems: libraryMCPs,
     isFetching: isFetchingMCPs,
     onLoadMoreToolkits: onLoadMoreMCPs,
-  } = useLibraryToolkits(handleSelectToolkitFromLibrary, applicationId, versionId, formik, true);
+  } = useLibraryToolkits(
+    handleSelectToolkitFromLibrary,
+    applicationId,
+    versionId,
+    formik,
+    true,
+    debouncedMCPSearch,
+  );
 
   // Function to handle adding newly created toolkit
   const handleAddNewlyCreatedToolkit = useCallback(
@@ -285,19 +296,19 @@ const ToolMenu = memo(props => {
 
   const handleMCPMenuClose = useCallback(() => {
     setMCPAnchor(null);
-    setToolkitSearch(''); // Clear search when menu closes
+    setMCPSearch('');
   }, []);
   const handleToolkitMenuClose = useCallback(() => {
     setToolkitAnchor(null);
-    setToolkitSearch(''); // Clear search when menu closes
+    setToolkitSearch('');
   }, []);
   const handleAgentMenuClose = useCallback(() => {
     setAgentAnchor(null);
-    setAgentSearch(''); // Clear search when menu closes
+    setAgentSearch('');
   }, []);
   const handlePipelineMenuClose = useCallback(() => {
     setPipelineAnchor(null);
-    setPipelineSearch(''); // Clear search when menu closes
+    setPipelineSearch('');
   }, []);
 
   const handleToolkitSearchChange = useCallback(e => setToolkitSearch(e.target.value), []);
@@ -496,7 +507,6 @@ const ToolMenu = memo(props => {
       .sort((a, b) => a.label.localeCompare(b.label));
   }, [pipelineMenuItems, pipelineSearch, filterPipelines]);
 
-  // Filter toolkit items based on search and exclude already-added toolkits (regular toolkits only)
   const allToolkitItems = useMemo(() => {
     if (!libraryToolkits) return [];
     const availableToolkits = filterToolkits(libraryToolkits);
@@ -514,10 +524,6 @@ const ToolMenu = memo(props => {
     }));
   }, [libraryToolkits, filterToolkits, styles.entityIcon, styles.entityImageStyle]);
 
-  useEffect(() => {
-    dispatch(actions.setQuery({ query: debouncedToolkitSearch, queryTags: [] }));
-  }, [dispatch, debouncedToolkitSearch]);
-
   // Handle scroll event to detect when user reaches the end
   const handleToolkitScroll = useCallback(() => {
     if (!isFetchingToolkits) {
@@ -526,12 +532,10 @@ const ToolMenu = memo(props => {
     }
   }, [onLoadMoreToolkits, isFetchingToolkits]);
 
-  // Filter mcp items based on search and exclude already-added toolkits (regular toolkits only)
-  const filteredMCPItems = useMemo(() => {
+  const allMCPItems = useMemo(() => {
     if (!libraryMCPs) return [];
     const availableMCPs = filterToolkits(libraryMCPs);
     return availableMCPs
-      .filter(mcp => mcp.label.toLowerCase().includes(mcpSearch.toLowerCase()))
       .sort((a, b) => a.label.localeCompare(b.label))
       .map(item => ({
         ...item,
@@ -545,16 +549,7 @@ const ToolMenu = memo(props => {
           />
         ),
       }));
-  }, [libraryMCPs, mcpSearch, filterToolkits, styles.entityIcon, styles.entityImageStyle]);
-
-  const allMCPItems = useMemo(() => {
-    // For the mcp button dropdown, show only regular mcp (not agents/pipelines)
-    return filteredMCPItems.sort((a, b) => a.label.localeCompare(b.label));
-  }, [filteredMCPItems]);
-
-  useEffect(() => {
-    dispatch(actions.setQuery({ query: debouncedMCPSearch, queryTags: [] }));
-  }, [dispatch, debouncedMCPSearch]);
+  }, [libraryMCPs, filterToolkits, styles.entityIcon, styles.entityImageStyle]);
 
   // Handle scroll event to detect when user reaches the end
   const handleMCPScroll = useCallback(() => {

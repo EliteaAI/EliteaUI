@@ -249,6 +249,22 @@ const prettifyToolkitMessage = message => {
   return message;
 };
 
+// Single source of truth for the human-facing toolkit label. `toolkit_name` is a
+// sanitized runtime identifier (spaces stripped), so it comes after the readable
+// titles and is only ever shown for legacy rows that have nothing better.
+export const getToolkitDisplayName = toolkit => {
+  const name = typeof toolkit?.name === 'string' ? toolkit.name.trim() : toolkit?.name;
+  const type = toolkit?.type || '';
+  return (
+    name ||
+    toolkit?.settings?.elitea_title ||
+    toolkit?.settings?.configuration_title ||
+    toolkit?.toolkit_name ||
+    (type && type.charAt(0).toUpperCase() + type.slice(1)) ||
+    ''
+  );
+};
+
 export const genToolkitName = (toolkit, schemaOfTools) => {
   // console.warn('If this function ever runs - ask why and fix it.', toolkit)
   const schema = schemaOfTools[toolkit.type] || {};
