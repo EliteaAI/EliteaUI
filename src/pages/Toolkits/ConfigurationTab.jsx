@@ -1,15 +1,11 @@
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback } from 'react';
 
 import { useNavigate } from 'react-router-dom';
 
 import { Box, CircularProgress, Grid } from '@mui/material';
 
-import { IndexesContainer, RunIndexBanner } from '@/[fsd]/features/toolkits/indexes/ui';
 import { TestTools } from '@/[fsd]/features/toolkits/ui';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui/form/ToolkitForm';
-import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
-import { ViewRunHistoryButton } from '@/[fsd]/shared/ui/button';
-import InfoIcon from '@/assets/info.svg?react';
 import DirtyDetector from '@/components/Formik/DirtyDetector.jsx';
 import { CONFIGURATION_VIEW_OPTIONS } from '@/pages/Applications/Components/Tools/ToolConfigurationForm.jsx';
 import RouteDefinitions from '@/routes';
@@ -30,7 +26,7 @@ const ConfigurationTab = memo(props => {
     isMCP,
     onValidationStateChange,
     indexingUnavailableReason,
-    shouldHideIndexes,
+    shouldHideIndexes = true,
   } = props;
   const navigate = useNavigate();
 
@@ -49,24 +45,6 @@ const ConfigurationTab = memo(props => {
       `${RouteDefinitions.ToolkitRunHistory.replace(':tab', 'all').replace(':toolkitId', String(toolkitId))}?isMCP=${isMCP}`,
     );
   }, [isMCP, navigate, toolkitId]);
-
-  const indexesAccordionContent = useMemo(() => {
-    if (indexingUnavailableReason) {
-      return (
-        <RunIndexBanner
-          banner={{
-            severity: 'info',
-            label: 'Indexing is not available for now',
-            message: 'Enable the “Index data” tool to activate indexing and create indexes.',
-          }}
-          CustomIcon={() => <InfoIcon />}
-          sx={styles.banner}
-        />
-      );
-    }
-
-    return <IndexesContainer toolkitId={toolkitId} />;
-  }, [indexingUnavailableReason, toolkitId]);
 
   return isFetching ? (
     <Box
@@ -88,9 +66,6 @@ const ConfigurationTab = memo(props => {
               size={{ md: 12, lg: 6 }}
               sx={styles.leftPanel}
             >
-              <Box sx={styles.historyButtonWrapper}>
-                <ViewRunHistoryButton onShowHistory={handleShowHistory} />
-              </Box>
               <ToolkitForm
                 editToolDetail={editToolDetail}
                 onChangeToolDetail={onChangeToolDetail}
@@ -107,21 +82,10 @@ const ConfigurationTab = memo(props => {
                 isMCP={isMCP}
                 onSyntaxError={() => {}}
                 onValidationStateChange={onValidationStateChange}
-                extraContent={
-                  !shouldHideIndexes ? (
-                    <BasicAccordion
-                      data-testid="toolkit-indexes-accordion"
-                      style={styles.indexesAccordionWrapper}
-                      accordionSX={styles.indexesAccordion}
-                      items={[
-                        {
-                          title: 'Indexes',
-                          content: indexesAccordionContent,
-                        },
-                      ]}
-                    />
-                  ) : null
-                }
+                shouldHideIndexes={shouldHideIndexes}
+                indexingUnavailableReason={indexingUnavailableReason}
+                toolkitId={toolkitId}
+                handleShowHistory={handleShowHistory}
               />
             </Grid>
           )}
@@ -133,7 +97,6 @@ const ConfigurationTab = memo(props => {
             <TestTools
               applicationId={applicationId}
               toolkitId={toolkitId}
-              onShowHistory={handleShowHistory}
             />
           </Grid>
         </Grid>
@@ -154,14 +117,6 @@ const styles = {
     paddingLeft: '0rem !important',
     paddingRight: '0rem !important',
   },
-  banner: {
-    padding: '0rem !important',
-  },
-  historyButtonWrapper: {
-    position: 'absolute',
-    top: '1rem',
-    right: '1.5rem',
-  },
   leftPanel: {
     overflow: 'auto',
     maxHeight: '100%',
@@ -180,14 +135,6 @@ const styles = {
   rightPanel: {
     height: '100%',
     maxHeight: '100%',
-  },
-  indexesAccordionWrapper: {
-    width: '100%',
-    marginTop: '1rem',
-  },
-  indexesAccordion: {
-    width: '100%',
-    background: ({ palette }) => `${palette.background.tabPanel} !important`,
   },
   indexesUnavailable: ({ palette }) => ({
     padding: '1rem',

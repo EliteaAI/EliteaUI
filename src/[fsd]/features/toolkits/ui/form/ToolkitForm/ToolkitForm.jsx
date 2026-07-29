@@ -8,13 +8,18 @@ import { Box, CircularProgress } from '@mui/material';
 
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { McpPatBanner } from '@/[fsd]/features/mcp/ui';
+import IndexesContainer from '@/[fsd]/features/toolkits/indexes/ui/IndexesContainer.jsx';
+import RunIndexBanner from '@/[fsd]/features/toolkits/indexes/ui/RunIndexBanner.jsx';
 import { ToolkitFormConstants } from '@/[fsd]/features/toolkits/lib/constants';
 import { ToolComponentHelpers, ToolkitFormHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { CONFIGURATION_VIEW_OPTIONS } from '@/[fsd]/features/toolkits/lib/helpers/toolkitForm.helpers';
 import { useGetCurrentToolkitSchemas, useToolkitNameProp } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitForm as GeneralToolkitForm } from '@/[fsd]/features/toolkits/ui';
+import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion.jsx';
+import ViewRunHistoryButton from '@/[fsd]/shared/ui/button/ViewRunHistoryButton.jsx';
 import { useGetConfigurationsListQuery } from '@/api/configurations.js';
 import { useToolkitAvailableToolsQuery, useValidateToolkitQuery } from '@/api/toolkits.js';
+import InfoIcon from '@/assets/info.svg?react';
 import { ToolkitViewOptions } from '@/common/constants';
 import { convertToolkitSchema } from '@/common/toolkitSchemaUtils';
 import { updateObjectByPath } from '@/common/utils.jsx';
@@ -54,7 +59,10 @@ export const ToolkitForm = memo(props => {
     onSyntaxError,
     validationTrigger,
     revertCredentialsRef,
-    extraContent,
+    shouldHideIndexes = true,
+    indexingUnavailableReason = '',
+    toolkitId,
+    handleShowHistory,
   } = props;
   const hasSetViewManually = useRef(false);
   const [view, setView] = useState(ToolkitViewOptions.Form);
@@ -505,6 +513,11 @@ export const ToolkitForm = memo(props => {
     </Box>
   ) : (
     <Box sx={[styles.container, sx]}>
+      {handleShowHistory && (
+        <Box sx={styles.historyButtonWrapper}>
+          <ViewRunHistoryButton onShowHistory={handleShowHistory} />
+        </Box>
+      )}
       <McpPatBanner
         projectId={selectedProjectId}
         toolkitType={editToolDetail?.type || values?.type || toolkitType}
@@ -575,7 +588,31 @@ export const ToolkitForm = memo(props => {
         excludedFields={toolType !== 'mcp' ? [] : ['discovery_mode', 'discovery_interval']}
         onCredentialReload={onCredentialReload}
       />
-      {extraContent}
+      {!shouldHideIndexes && (
+        <BasicAccordion
+          data-testid="toolkit-indexes-accordion"
+          style={styles.indexesAccordionWrapper}
+          accordionSX={styles.indexesAccordion}
+          items={[
+            {
+              title: 'Indexes',
+              content: indexingUnavailableReason ? (
+                <RunIndexBanner
+                  banner={{
+                    severity: 'info',
+                    label: 'Indexing is not available for now',
+                    message: 'Enable the “Index data” tool to activate indexing and create indexes.',
+                  }}
+                  CustomIcon={() => <InfoIcon />}
+                  sx={styles.banner}
+                />
+              ) : (
+                <IndexesContainer toolkitId={toolkitId} />
+              ),
+            },
+          ]}
+        />
+      )}
     </Box>
   );
 });
@@ -589,9 +626,18 @@ const toolkitFormStyles = () => ({
   container: {
     maxWidth: '40.1875rem',
     margin: '0 auto',
+    position: 'relative',
+  },
+  historyButtonWrapper: {
+    position: 'absolute',
+    top: '0rem',
+    right: '0rem',
   },
   formViewToggle: {
     marginBottom: '0.625rem',
+  },
+  banner: {
+    padding: '0rem !important',
   },
   loadingContainer: {
     display: 'flex',
@@ -599,5 +645,12 @@ const toolkitFormStyles = () => ({
     justifyContent: 'center',
     width: '100%',
     height: '100%',
+  },
+  indexesAccordionWrapper: {
+    width: '100%',
+    marginTop: '1rem',
+  },
+  indexesAccordion: {
+    width: '100%',
   },
 });
