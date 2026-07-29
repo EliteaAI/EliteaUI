@@ -52,6 +52,8 @@ const IndexHistory = memo(props => {
     item => {
       if (item.state === IndexStatuses.success && item.updated_on !== initialCompletedTs) {
         return 'Reindexed';
+      } else if (item.state === IndexStatuses.runTest) {
+        return 'Search index';
       }
       return IndexHistoryItemsLabels[item.state] || item.state;
     },
