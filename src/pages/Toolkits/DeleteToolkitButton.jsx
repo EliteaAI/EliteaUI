@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo } from 'react';
 import { useFormikContext } from 'formik';
 import { useNavigate, useParams } from 'react-router-dom';
 
+import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useToolkitDeleteMutation } from '@/api/toolkits';
 import { buildErrorMessage } from '@/common/utils';
 import DeleteEntityButton from '@/components/DeleteEntityButton';
@@ -41,7 +42,8 @@ const useDeleteToolkit = (setBlockNav, isMCP) => {
 
   const toastProps = useMemo(() => ({ onCloseToast }), [onCloseToast]);
   const { toastSuccess, toastError } = useToast(toastProps);
-  const entityName = name || toolkit_name || settings?.elitea_title || settings?.configuration_title || (isMCP ? 'MCP' : 'Toolkit');
+  const displayName = ToolkitsHelpers.getToolkitDisplayName({ name, toolkit_name, settings });
+  const entityName = displayName || (isMCP ? 'MCP' : 'Toolkit');
   const onDelete = useCallback(async () => {
     await deleteToolkit({ projectId, toolkitId: !isMCP ? toolkitId : mcpId });
   }, [deleteToolkit, isMCP, mcpId, projectId, toolkitId]);
@@ -56,7 +58,7 @@ const useDeleteToolkit = (setBlockNav, isMCP) => {
   }, [entityName, error, isError, isMCP, isSuccess, reset, toastError, toastSuccess]);
 
   return {
-    name: name || toolkit_name || settings?.elitea_title || settings?.configuration_title || 'Toolkit',
+    name: entityName,
     onDelete,
     isLoading,
   };

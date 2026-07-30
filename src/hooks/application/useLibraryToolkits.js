@@ -1,8 +1,9 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { useTheme } from '@mui/material';
 
 import { useSetRefetchDetails } from '@/[fsd]/features/agent/lib/hooks';
+import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useGetCurrentMCPSchemas, useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
 import { resolveToolkitSchemaByType } from '@/[fsd]/shared/lib/helpers';
 import { useApplicationDetailsQuery } from '@/api/applications';
@@ -10,7 +11,6 @@ import { useToolkitAssociateMutation, useToolkitsListQuery } from '@/api/toolkit
 import { PAGE_SIZE_TOOLKITS_DROPDOWN_LIST } from '@/common/constants';
 import { getToolIconByType } from '@/common/toolkitUtils';
 import { buildErrorMessage } from '@/common/utils';
-import usePageQuery from '@/hooks/usePageQuery';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useSortQueryParamsFromUrl from '@/hooks/useSortQueryParamsFromUrl';
 import useToast from '@/hooks/useToast';
@@ -140,7 +140,14 @@ export const useAssociateToolkit = ({ applicationId, versionId, onSelectToolkit,
 /**
  * Custom hook to load available toolkits from the library for selection
  */
-export const useLibraryToolkits = (onSelectToolkit = () => {}, applicationId, versionId, formik, isMCP) => {
+export const useLibraryToolkits = (
+  onSelectToolkit = () => {},
+  applicationId,
+  versionId,
+  formik,
+  isMCP,
+  query = '',
+) => {
   const projectId = useSelectedProjectId();
   const theme = useTheme();
   const { toolkitSchemas } = useGetCurrentToolkitSchemas({ skip: isMCP });
@@ -159,7 +166,17 @@ export const useLibraryToolkits = (onSelectToolkit = () => {}, applicationId, ve
   // Determine entity type for context-aware messaging
   const entityType = applicationDetails?.version_details?.agent_type === 'pipeline' ? 'pipeline' : 'agent';
 
-  const { query, page, setPage } = usePageQuery();
+  // Query is passed per-instance (not read from the global search slice) so the
+  // toolkit and MCP dropdowns filter independently and never clobber page-level search.
+  const [page, setPage] = useState(0);
+  const [prevPageKey, setPrevPageKey] = useState(`${projectId}:${query}`);
+  const pageKey = `${projectId}:${query}`;
+  if (pageKey !== prevPageKey) {
+    // Reset during render (not in an effect) so a query change never fires a
+    // request with the previous page's offset first.
+    setPrevPageKey(pageKey);
+    setPage(0);
+  }
   const { sort_by, sort_order } = useSortQueryParamsFromUrl({
     defaultSortOrder: 'asc',
     defaultSortBy: 'name',
@@ -216,7 +233,7 @@ export const useLibraryToolkits = (onSelectToolkit = () => {}, applicationId, ve
 
         return {
           key: `library-toolkit-${toolkit.id}`,
-          label: toolkit.toolkit_name || toolkit.name || toolkit.type,
+          label: ToolkitsHelpers.getToolkitDisplayName(toolkit),
           description: toolkit.description,
           type: toolkit.type,
           toolkitId: toolkit.id,

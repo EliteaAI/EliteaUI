@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useTheme } from '@mui/material';
 
+import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
 import { isMcpToolkit, resolveToolkitSchemaByType } from '@/[fsd]/shared/lib/helpers';
 import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
@@ -254,18 +255,7 @@ export const useDropdownData = ({ agentQuery, pipelineQuery, toolkitQuery, mcpQu
       }));
 
     return regularToolkits.map(toolkit => {
-      // Get the preferred title following the hierarchy used in ToolkitsList
-      const getToolkitTitle = item => {
-        return (
-          item.settings?.elitea_title ||
-          item.settings?.configuration_title ||
-          item.name ||
-          item.toolkit_name ||
-          item.type.charAt(0).toUpperCase() + item.type.slice(1)
-        );
-      };
-
-      const title = getToolkitTitle(toolkit);
+      const title = ToolkitsHelpers.getToolkitDisplayName(toolkit);
 
       return {
         key: `toolkit-${toolkit.project_id}-${toolkit.id}`,
@@ -299,18 +289,7 @@ export const useDropdownData = ({ agentQuery, pipelineQuery, toolkitQuery, mcpQu
     const allMCPs = [...regularMCPs];
 
     return allMCPs.map(mcp => {
-      // Get the preferred title following the hierarchy used in MCPsList
-      const getMCPTitle = item => {
-        return (
-          item.settings?.elitea_title ||
-          item.settings?.configuration_title ||
-          item.name ||
-          item.toolkit_name ||
-          item.type.charAt(0).toUpperCase() + item.type.slice(1)
-        );
-      };
-
-      const title = getMCPTitle(mcp);
+      const title = ToolkitsHelpers.getToolkitDisplayName(mcp);
 
       return {
         key: `mcp-${mcp.project_id}-${mcp.id}`,
