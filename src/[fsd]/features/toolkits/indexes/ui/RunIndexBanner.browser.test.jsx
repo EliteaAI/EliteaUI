@@ -1,7 +1,7 @@
 import { act } from 'react';
 
 import { createRoot } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 
@@ -12,6 +12,16 @@ import {
 import { bannerVariant } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
 
 import RunIndexBanner from './RunIndexBanner';
+
+vi.mock('@/[fsd]/shared/ui', () => ({
+  Button: {
+    BUTTON_VARIANTS: { alarm: 'alarm' },
+    BaseBtn: props => <button disabled={props.disabled}>{props.children}</button>,
+  },
+}));
+vi.mock('@/assets/error-icon.svg?react', () => ({ default: () => <span data-testid="error-icon" /> }));
+vi.mock('@/assets/fail-icon.svg?react', () => ({ default: () => <span data-testid="warning-icon" /> }));
+vi.mock('@/assets/success-icon.svg?react', () => ({ default: () => <span data-testid="success-icon" /> }));
 
 describe('RunIndexBanner partial index presentation', () => {
   let container;
