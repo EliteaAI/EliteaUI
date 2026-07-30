@@ -1,7 +1,7 @@
 export { useGetCurrentToolkitSchemas } from './useGetCurrentToolkitSchemas.hooks';
 export { useGetCurrentMCPSchemas } from './useGetCurrentMCPSchemas.hooks';
 export { useToolkitChat } from './useToolkitChat.hooks';
-export { useLoadToolkits } from './useLoadToolkits.js';
+export { useLoadToolkits } from './useLoadToolkits.hooks.js';
 export { useToolkitNameProp } from './useToolkitNameProp.hooks';
 export { useParseSections } from './useParseSections.hooks';
-export { useToolkitToolOptions } from './useToolkitToolOptions.js';
+export { useToolkitToolOptions } from './useToolkitToolOptions.hooks.js';

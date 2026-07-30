@@ -35,14 +35,15 @@ export const useToolkitToolOptions = ({ toolkitId }) => {
     return tools.map(t => t?.name).filter(name => typeof name === 'string' && name.trim());
   }, [toolkitAvailableToolsData?.tools]);
 
+  const dynamicOrSchemaToolNames = useMemo(
+    () => (dynamicToolNames.length ? dynamicToolNames : schemaToolNames),
+    [dynamicToolNames, schemaToolNames],
+  );
+
   const allToolsOptions = useMemo(() => {
     const explicitSelectedTools = values?.settings?.selected_tools || [];
     const hasExplicitSelection = Array.isArray(explicitSelectedTools) && explicitSelectedTools.length > 0;
-    const availableTools = hasExplicitSelection
-      ? explicitSelectedTools
-      : dynamicToolNames.length
-        ? dynamicToolNames
-        : schemaToolNames;
+    const availableTools = hasExplicitSelection ? explicitSelectedTools : dynamicOrSchemaToolNames;
 
     const indexToolNames = new Set(Object.values(IndexesToolsEnum));
 
@@ -59,7 +60,7 @@ export const useToolkitToolOptions = ({ toolkitId }) => {
         value: tool,
       }))
       .sort((a, b) => (a.label || '').toLowerCase().localeCompare((b.label || '').toLowerCase()));
-  }, [dynamicToolNames, schemaToolNames, values?.settings?.selected_tools]);
+  }, [dynamicOrSchemaToolNames, values?.settings?.selected_tools]);
 
   return { allToolsOptions };
 };

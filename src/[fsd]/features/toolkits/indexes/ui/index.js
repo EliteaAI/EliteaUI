@@ -1,13 +1,13 @@
 // Index Details
 export { default as IndexHistory } from './index-history/IndexHistory';
-export { default as IndexScheduleModal } from './IndexDetails/IndexScheduleModal';
+export { default as IndexScheduleModal } from './index-details/IndexScheduleModal';
 
 // Index Chat
-export { default as IndexChatContainer } from './IndexDetails/IndexChat';
+export { default as IndexChatContainer } from './index-details/IndexChat';
 
 // Indexes List
-export { default as IndexListItem } from './IndexesList/IndexListItem';
-export { default as IndexesList } from './IndexesList';
+export { default as IndexListItem } from './index-list/IndexListItem';
+export { default as IndexesList } from './index-list';
 
 // Breadcrumb
 export { default as IndexBreadcrumb } from './IndexBreadcrumb';
