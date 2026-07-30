@@ -10,7 +10,8 @@ export const validateSkillDraft = draft => {
   else if (name.length > SKILL_NAME_MAX_LENGTH)
     errors.name = `Name must be ${SKILL_NAME_MAX_LENGTH} characters or less`;
   else if (!SKILL_NAME_RE.test(name))
-    errors.name = 'Name must be lowercase letters, digits and hyphens only, cannot start or end with a hyphen';
+    errors.name =
+      'Name must be lowercase letters, digits and hyphens only, cannot start or end with a hyphen';
   else if (name.includes('claude') || name.includes('anthropic'))
     errors.name = 'Name cannot contain "claude" or "anthropic"';
 

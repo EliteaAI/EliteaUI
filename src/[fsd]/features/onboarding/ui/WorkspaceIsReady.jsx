@@ -3,7 +3,6 @@ import { memo } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import { Button } from '@/[fsd]/shared/ui';
-
 import WelcomeImage from '@/assets/chat-welcome.png';
 
 const WorkspaceIsReady = memo(props => {

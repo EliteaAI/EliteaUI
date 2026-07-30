@@ -1,10 +1,10 @@
 import { useCallback } from 'react';
 
 import { Typography } from '@mui/material';
-
-import { Button } from '@/[fsd]/shared/ui';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
+
+import { Button } from '@/[fsd]/shared/ui';
 
 import { StyledDialog, StyledDialogActions, StyledDialogContentText } from './StyledDialog';
 

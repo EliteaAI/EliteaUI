@@ -1,11 +1,12 @@
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+import { addEdge } from '@xyflow/react';
+
 import * as ConditionDecisionBuildersHelpers from './conditionDecisionBuilders.helpers';
 import * as EdgeOperationsHelpers from './edgeOperations.helpers';
 import * as FlowEditorHelpers from './flowEditor.helpers';
 import * as FlowNodeUpdateHelpers from './flowNodeUpdate.helpers';
 import * as NodeOperationsHelpers from './nodeOperations.helpers';
 import * as NodeTypeHelpers from './nodeType.helpers';
-import { addEdge } from '@xyflow/react';
 
 export const updateYamlAndFlowNode = ({
   yamlNode,

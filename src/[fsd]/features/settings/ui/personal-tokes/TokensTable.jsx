@@ -19,12 +19,12 @@ import VsCodeIcon from '@/assets/vscode.svg?react';
 import { calculateExpiryInDays } from '@/common/utils';
 import DeleteEntityButton from '@/components/DeleteEntityButton';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
-import useToast from '@/hooks/useToast';
 import JetBrainsIcon from '@/components/Icons/JetBrainsIcon';
 import OpenEyeIcon from '@/components/Icons/OpenEyeIcon';
 import RemoveIcon from '@/components/Icons/RemoveIcon';
 import SuccessIcon from '@/components/Icons/SuccessIcon';
 import useGetWindowWidth from '@/hooks/useGetWindowWidth';
+import useToast from '@/hooks/useToast';
 
 const TOKENS_TABLE_CONFIG = {
   DEFAULT_PAGE_SIZE: 10,

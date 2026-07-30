@@ -14,7 +14,9 @@ import ConfigurationIcon from './ConfigurationIcon';
 
 const { getConfigurationDisplayName, getConfigurationStatus, isConfigurationEditable } = ConfigurationHelpers;
 
-const ConfigurationCard = memo(({ configuration, canEdit, isDefault }) => {
+const ConfigurationCard = memo(props => {
+  const { configuration, canEdit, isDefault, isHighTier, isLowTier } = props;
+
   const styles = getStyles();
   const projectId = useSelectedProjectId();
   const { navigateToConfiguration } = useConfigurationNavigation();
@@ -82,7 +84,7 @@ const ConfigurationCard = memo(({ configuration, canEdit, isDefault }) => {
             sx={styles.statusText}
           >
             {statusText}
-            {configuration.data?.high_tier && (
+            {isHighTier && (
               <Typography
                 component={Box}
                 variant="bodySmall"
@@ -92,7 +94,7 @@ const ConfigurationCard = memo(({ configuration, canEdit, isDefault }) => {
                 High-Tier
               </Typography>
             )}
-            {configuration.data?.low_tier && (
+            {isLowTier && (
               <Typography
                 component={Box}
                 variant="bodySmall"

@@ -39,7 +39,12 @@ const CommonBooleanField = memo(props => {
         label={
           <Box sx={styles.header}>
             <Typography variant="bodyMedium">{`${label}${isRequired ? ' *' : ''}`}</Typography>
-            {description && <InfoTooltip infoTooltip={description} sx={styles.infoIconWrapper} />}
+            {description && (
+              <InfoTooltip
+                infoTooltip={description}
+                sx={styles.infoIconWrapper}
+              />
+            )}
           </Box>
         }
         sx={styles.formControlLabel}
