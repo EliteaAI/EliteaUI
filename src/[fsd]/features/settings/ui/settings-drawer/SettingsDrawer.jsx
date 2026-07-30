@@ -7,6 +7,7 @@ import { Box, Divider, Typography } from '@mui/material';
 import { SettingsLayoutConstants } from '@/[fsd]/features/settings/lib/constants';
 import AnalyticsIcon from '@/assets/analytics-icon.svg?react';
 import BrainIcon from '@/assets/brain.svg?react';
+import CoinIcon from '@/assets/coin-icon.svg?react';
 import CompassIcon from '@/assets/compass.svg?react';
 import ConfigurationIcon from '@/assets/configuration-icon.svg?react';
 import KeyIcon from '@/assets/key-icon.svg?react';
@@ -31,6 +32,7 @@ const ICON_COMPONENTS = {
   secrets: Lock,
   users: UsersIcon,
   analytics: AnalyticsIcon,
+  usage: CoinIcon,
   preferences: PersonalizationIcon,
   'ai-personality': ReasonIcon,
   memory: BrainIcon,

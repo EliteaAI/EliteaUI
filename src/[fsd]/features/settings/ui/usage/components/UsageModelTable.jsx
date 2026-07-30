@@ -1,6 +1,6 @@
 import { memo, useMemo } from 'react';
 
-import { Box, Tooltip, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import { UsageHelpers } from '@/[fsd]/features/settings/lib/helpers';
@@ -82,14 +82,11 @@ const UsageModelTable = memo(props => {
               sx={styles.row}
             >
               <Typography sx={[styles.value, styles.muted, { flex: '0 0 1.75rem' }]}>{index + 1}</Typography>
-              <Tooltip
-                title={model.model}
-                placement="top"
-              >
-                <Typography sx={[styles.value, styles.modelName, { flex: 3 }]}>
-                  {displayNames[index]}
-                </Typography>
-              </Tooltip>
+
+              <Typography sx={[styles.value, styles.modelName, { flex: 3 }]}>
+                {displayNames[index]}
+              </Typography>
+
               {canSeeAmounts && (
                 <Typography sx={[styles.value, styles.right, { flex: 1.2 }]}>
                   {UsageHelpers.formatMoney(model.spend, currency)}

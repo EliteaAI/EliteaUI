@@ -10,12 +10,12 @@ import { SettingsDrawer, SettingsRedirect } from '@/[fsd]/features/settings/ui/s
 import { useGetPlatformSettingsQuery } from '@/api/platformSettings';
 import AnalyticsIcon from '@/assets/analytics-icon.svg?react';
 import BrainIcon from '@/assets/brain.svg?react';
+import CoinIcon from '@/assets/coin-icon.svg?react';
 import ConfigurationIcon from '@/assets/configuration-icon.svg?react';
 import EnvironmentIcon from '@/assets/environment-icon.svg?react';
 import KeyIcon from '@/assets/key-icon.svg?react';
 import LogoutIcon from '@/assets/logout-icon.svg?react';
 import PersonalizationIcon from '@/assets/personalization-icon.svg?react';
-import PieChartIcon from '@/assets/pie-chart-icon.svg?react';
 import ReasonIcon from '@/assets/reason-icon.svg?react';
 import { PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';
 import BellIcon from '@/components/Icons/BellIcon';
@@ -103,7 +103,7 @@ const SETTINGS_TABS_CONFIG = [
       {
         id: 'usage',
         label: 'Usage',
-        icon: <PieChartIcon />,
+        icon: <CoinIcon />,
       },
     ],
   },
