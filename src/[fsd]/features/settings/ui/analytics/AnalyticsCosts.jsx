@@ -67,11 +67,17 @@ const AnalyticsCosts = memo(props => {
 
   return (
     <Box sx={styles.container}>
+      <Typography
+        variant="caption"
+        sx={styles.disclaimer}
+      >
+        Costs are estimated from a local model-price table; actual provider invoices may differ.
+      </Typography>
       <Box sx={styles.kpiRow}>
         <KPICard
           label="TOTAL COST"
           value={AnalyticCommonHelpers.fmtCost(kpis.total_cost)}
-          subtitle="LLM spend in period"
+          subtitle="estimated LLM spend"
         />
         <KPICard
           label="TOTAL TOKENS"
@@ -91,7 +97,7 @@ const AnalyticsCosts = memo(props => {
         <KPICard
           label="AVG COST / CALL"
           value={AnalyticCommonHelpers.fmtCost(kpis.avg_cost_per_call)}
-          subtitle="per LLM invocation"
+          subtitle="estimated per call"
         />
       </Box>
 
@@ -226,12 +232,22 @@ const AnalyticsCosts = memo(props => {
               >
                 {a.entity_name}
               </Typography>
-              <Typography
-                variant="body2"
-                sx={styles.listValue}
-              >
-                {AnalyticCommonHelpers.fmtCost(a.total_cost)}
-              </Typography>
+              <Box sx={styles.listValueGroup}>
+                <Typography
+                  variant="body2"
+                  sx={styles.listValue}
+                >
+                  {AnalyticCommonHelpers.fmtCost(a.total_cost)}
+                </Typography>
+                {a.calls > 0 && (
+                  <Typography
+                    variant="caption"
+                    sx={styles.listValueCaption}
+                  >
+                    {a.calls} calls · {AnalyticCommonHelpers.fmtCost(a.avg_cost)} avg
+                  </Typography>
+                )}
+              </Box>
             </Box>
           ))}
           {!data.by_agent?.length && (
@@ -288,6 +304,7 @@ const styles = {
   centered: { display: 'flex', justifyContent: 'center', p: 4 },
   noDataText: { p: 2 },
   container: { display: 'flex', flexDirection: 'column', gap: '1rem' },
+  disclaimer: ({ palette }) => ({ color: palette.text.secondary, fontStyle: 'italic' }),
   kpiRow: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(9rem, 1fr))', gap: '1rem' },
   chartsRow: {
     display: 'grid',
@@ -317,9 +334,14 @@ const styles = {
     flexDirection: 'column',
     minWidth: 0,
   }),
-  listItem: { display: 'flex', justifyContent: 'space-between', py: 0.5 },
+  listItem: { display: 'flex', justifyContent: 'space-between', py: 0.5, alignItems: 'flex-start' },
   listLabel: { flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
   listValue: { ml: 2, fontVariantNumeric: 'tabular-nums' },
+  listValueGroup: { ml: 2, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' },
+  listValueCaption: ({ palette }) => ({
+    color: palette.text.secondary,
+    fontVariantNumeric: 'tabular-nums',
+  }),
 };
 
 AnalyticsCosts.displayName = 'AnalyticsCosts';

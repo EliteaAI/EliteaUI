@@ -87,6 +87,28 @@ const AnalyticsUserDetailed = memo(props => {
           value={AnalyticCommonHelpers.fmtNum(kpis.errors)}
           color={kpis.errors > 0 ? palette.status.rejected : undefined}
         />
+        <KPICard
+          label="Total Tokens"
+          value={AnalyticCommonHelpers.fmtNum(kpis.total_tokens)}
+        />
+        <KPICard
+          label="Input Tokens"
+          value={AnalyticCommonHelpers.fmtNum(kpis.input_tokens)}
+        />
+        <KPICard
+          label="Output Tokens"
+          value={AnalyticCommonHelpers.fmtNum(kpis.output_tokens)}
+        />
+        <KPICard
+          label="Total Cost"
+          value={AnalyticCommonHelpers.fmtCost(kpis.llm_cost)}
+          subtitle="estimated"
+        />
+        <KPICard
+          label="Avg Cost / Call"
+          value={AnalyticCommonHelpers.fmtCost(kpis.avg_cost_per_call)}
+          subtitle="estimated"
+        />
       </Box>
 
       {daily_activity.length > 0 && (

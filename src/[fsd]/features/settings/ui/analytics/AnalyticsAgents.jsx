@@ -233,7 +233,11 @@ const AnalyticsAgents = memo(props => {
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Users</Typography>
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Avg Latency</Typography>
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Errors</Typography>
+            <Typography sx={[styles.tableCell, styles.flexOne]}>Input</Typography>
+            <Typography sx={[styles.tableCell, styles.flexOne]}>Output</Typography>
             <Typography sx={[styles.tableCell, styles.flexOne]}>Tokens</Typography>
+            <Typography sx={[styles.tableCell, styles.flexOne]}>Avg / Call</Typography>
+            <Typography sx={[styles.tableCell, styles.flexOne]}>Cost</Typography>
           </Box>
           {isFetching && (
             <Box sx={styles.loadingState}>
@@ -269,7 +273,19 @@ const AnalyticsAgents = memo(props => {
                   {a.errors}
                 </Typography>
                 <Typography sx={[styles.tableCellValue, styles.flexOne]}>
+                  {AnalyticCommonHelpers.fmtNum(a.input_tokens)}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
+                  {AnalyticCommonHelpers.fmtNum(a.output_tokens)}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
                   {AnalyticCommonHelpers.fmtNum(a.total_tokens)}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
+                  {AnalyticCommonHelpers.fmtNum(Math.round(a.avg_tokens_per_call || 0))}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
+                  {AnalyticCommonHelpers.fmtCost(a.llm_cost)}
                 </Typography>
               </Box>
             ))}
