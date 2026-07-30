@@ -92,6 +92,7 @@ const VoiceConfigControls = memo(props => {
             valueLabelDisplay="auto"
             valueLabelFormat={v => `${v}×`}
             size="small"
+            sx={styles.speedSlider}
           />
         </Box>
         <Box sx={styles.sliderRow}>
@@ -111,6 +112,7 @@ const VoiceConfigControls = memo(props => {
             valueLabelDisplay="auto"
             valueLabelFormat={v => `${Math.round(v * 100)}%`}
             size="small"
+            sx={styles.volumeSlider}
           />
         </Box>
       </Box>
@@ -157,5 +159,27 @@ const voiceConfigControlsStyles = () => ({
   },
   sliderLabel: {
     color: 'text.default',
+  },
+  speedSlider: {
+    '& .MuiSlider-markLabel': {
+      color: 'text.secondary',
+    },
+    '& .MuiSlider-markLabel[data-index="0"]': {
+      transform: 'translateX(0)',
+    },
+    '& .MuiSlider-markLabel[data-index="3"]': {
+      transform: 'translateX(-100%)',
+    },
+  },
+  volumeSlider: {
+    '& .MuiSlider-markLabel': {
+      color: 'text.secondary',
+    },
+    '& .MuiSlider-markLabel[data-index="0"]': {
+      transform: 'translateX(0)',
+    },
+    '& .MuiSlider-markLabel[data-index="2"]': {
+      transform: 'translateX(-100%)',
+    },
   },
 });

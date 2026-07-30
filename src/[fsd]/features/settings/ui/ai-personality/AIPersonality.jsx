@@ -15,6 +15,7 @@ const AIPersonality = memo(() => {
         <Typography
           variant="labelMedium"
           color="text.secondary"
+          fontWeight={600}
         >
           AI Personality
         </Typography>

@@ -60,6 +60,7 @@ const SoundNotificationControls = memo(props => {
             valueLabelFormat={v => `${Math.round(v * 100)}%`}
             size="small"
             aria-label="Notification volume"
+            sx={styles.slider}
           />
         </Box>
       )}
@@ -111,5 +112,16 @@ const soundNotificationControlsStyles = () => ({
   },
   sliderLabel: {
     color: 'text.secondary',
+  },
+  slider: {
+    '& .MuiSlider-markLabel': {
+      color: 'text.secondary',
+    },
+    '& .MuiSlider-markLabel[data-index="0"]': {
+      transform: 'translateX(0)',
+    },
+    '& .MuiSlider-markLabel[data-index="2"]': {
+      transform: 'translateX(-100%)',
+    },
   },
 });

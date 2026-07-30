@@ -52,7 +52,7 @@ const MemoryContextManagement = memo(props => {
       accordionSX={styles.accordion}
       items={[
         {
-          title: 'Default Context Management',
+          title: 'Context Management',
           content: (
             <Box sx={styles.accordionContent}>
               {/* Enable Context Management */}
@@ -73,80 +73,75 @@ const MemoryContextManagement = memo(props => {
                 />
               </Box>
 
-              {/* Token Fields Row */}
-              <Box sx={styles.fieldsRow}>
-                {/* Max Context Tokens */}
-                <Box sx={styles.field}>
-                  <Label.InfoLabelWithTooltip
-                    label="Max Context Tokens"
-                    tooltip="Maximum number of tokens to keep in conversation context"
-                    sx={styles.label}
-                  />
-                  <FormInput
-                    sx={styles.formInput}
-                    type="text"
-                    inputMode="numeric"
-                    value={values.max_context_tokens}
-                    onChange={e => handleNumericInputChange(e, 'max_context_tokens')}
-                    error={!!errors.max_context_tokens}
-                    helperText={errors.max_context_tokens || ' '}
-                    disabled={!isEnabled}
-                    inputProps={{
-                      pattern: '[1-9][0-9]*',
-                      'data-testid': 'max-context-tokens-input',
-                    }}
-                  />
-                </Box>
+              {isEnabled && (
+                <>
+                  <Box sx={styles.fieldsRow}>
+                    <Box sx={styles.field}>
+                      <Label.InfoLabelWithTooltip
+                        label="Max Context Tokens"
+                        tooltip="Maximum number of tokens to keep in conversation context"
+                        sx={styles.label}
+                      />
+                      <FormInput
+                        sx={styles.formInput}
+                        type="text"
+                        inputMode="numeric"
+                        value={values.max_context_tokens}
+                        onChange={e => handleNumericInputChange(e, 'max_context_tokens')}
+                        error={!!errors.max_context_tokens}
+                        helperText={errors.max_context_tokens || ' '}
+                        inputProps={{
+                          pattern: '[1-9][0-9]*',
+                          'data-testid': 'max-context-tokens-input',
+                        }}
+                      />
+                    </Box>
 
-                {/* Preserve Recent Messages */}
-                <Box sx={styles.field}>
-                  <Label.InfoLabelWithTooltip
-                    label="Preserve Recent Messages"
-                    tooltip="Number of most recent messages to always keep in context"
-                    sx={styles.label}
-                  />
-                  <FormInput
-                    sx={styles.formInput}
-                    type="text"
-                    inputMode="numeric"
-                    value={values.preserve_recent_messages}
-                    onChange={e => handleNumericInputChange(e, 'preserve_recent_messages')}
-                    error={!!errors.preserve_recent_messages}
-                    helperText={errors.preserve_recent_messages || ' '}
-                    disabled={!isEnabled}
-                    inputProps={{
-                      pattern: '[1-9][0-9]*',
-                    }}
-                  />
-                </Box>
-              </Box>
+                    <Box sx={styles.field}>
+                      <Label.InfoLabelWithTooltip
+                        label="Preserve Recent Messages"
+                        tooltip="Number of most recent messages to always keep in context"
+                        sx={styles.label}
+                      />
+                      <FormInput
+                        sx={styles.formInput}
+                        type="text"
+                        inputMode="numeric"
+                        value={values.preserve_recent_messages}
+                        onChange={e => handleNumericInputChange(e, 'preserve_recent_messages')}
+                        error={!!errors.preserve_recent_messages}
+                        helperText={errors.preserve_recent_messages || ' '}
+                        inputProps={{
+                          pattern: '[1-9][0-9]*',
+                        }}
+                      />
+                    </Box>
+                  </Box>
 
-              {/* Context Editing (clear stale tool outputs) */}
-              <Box sx={styles.toggleSection}>
-                <Box sx={styles.toggleContent}>
-                  <Typography
-                    variant="headingSmall"
-                    sx={{ color: 'text.secondary' }}
-                  >
-                    Context Editing
-                  </Typography>
-                  <Typography variant="bodySmall">
-                    Clear older tool outputs when the context grows large, keeping recent results
-                  </Typography>
-                </Box>
-                <Switch.BaseSwitch
-                  data-testid="context-editing-toggle"
-                  checked={values.enable_context_editing}
-                  onChange={handleContextEditingChange}
-                  disabled={!isEnabled}
-                />
-              </Box>
+                  <Box sx={styles.toggleSection}>
+                    <Box sx={styles.toggleContent}>
+                      <Typography
+                        variant="headingSmall"
+                        sx={{ color: 'text.secondary' }}
+                      >
+                        Context Editing
+                      </Typography>
+                      <Typography variant="bodySmall">
+                        Clear older tool outputs when the context grows large, keeping recent results
+                      </Typography>
+                    </Box>
+                    <Switch.BaseSwitch
+                      data-testid="context-editing-toggle"
+                      checked={values.enable_context_editing}
+                      onChange={handleContextEditingChange}
+                    />
+                  </Box>
 
-              {/* Sub-sections nested under Default Context Management */}
-              <Box sx={styles.subSections}>
-                <MemorySummarization modelList={modelList} />
-                {/* <MemoryLongTermMemory /> */}
-              </Box>
+                  <Box sx={styles.subSections}>
+                    <MemorySummarization modelList={modelList} />
+                  </Box>
+                </>
+              )}
             </Box>
           ),
         },
