@@ -85,6 +85,9 @@ const CreateIndex = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/index
 const RunIndex = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/indexes/RunIndex'));
 const IndexHistoryPage = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/indexes/IndexHistoryPage'));
 const UserPublic = ChunkHelpers.lazyWithRetry(() => import('@/pages/UserPublic/UserPublic'));
+const Profile = ChunkHelpers.lazyWithRetry(
+  () => import('@/[fsd]/features/settings/ui/profile/Profile'),
+);
 const Preferences = ChunkHelpers.lazyWithRetry(
   () => import('@/[fsd]/features/settings/ui/preference/Preferences'),
 );
@@ -368,6 +371,10 @@ const ProtectedRoutes = () => {
             <Route
               path="usage"
               element={<UsageContainer />}
+            />
+            <Route
+              path="profile"
+              element={<Profile />}
             />
             <Route
               path="preferences"

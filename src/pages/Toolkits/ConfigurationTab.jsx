@@ -133,8 +133,8 @@ const styles = {
     },
 
     '>div': {
-      maxWidth: '40.1875rem',
-      margin: '0 auto',
+      maxWidth: { lg: 'unset', xs: '40.1875rem' },
+      margin: { lg: 'unset', xs: '0 auto' },
     },
   },
   rightPanel: {
