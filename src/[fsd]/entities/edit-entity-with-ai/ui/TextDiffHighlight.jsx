@@ -89,6 +89,45 @@ const TextDiffHighlight = memo(props => {
     onChange?.(truncated);
   }, [maxLength, onChange]);
 
+  const handlePaste = useCallback(
+    e => {
+      // Force plain-text-only paste: strip images and rich formatting before insertion.
+      e.preventDefault();
+
+      const plainText = (e.clipboardData || window.clipboardData)?.getData('text/plain') || '';
+      if (!plainText) return;
+
+      if (document.execCommand) {
+        document.execCommand('insertText', false, plainText);
+        return;
+      }
+
+      const selection = window.getSelection();
+      if (!selection || selection.rangeCount === 0) return;
+
+      const range = selection.getRangeAt(0);
+      range.deleteContents();
+      const node = document.createTextNode(plainText);
+      range.insertNode(node);
+      range.setStartAfter(node);
+      range.collapse(true);
+      selection.removeAllRanges();
+      selection.addRange(range);
+
+      handleInput();
+    },
+    [handleInput],
+  );
+
+  const handleDrop = useCallback(e => {
+    // Block dropped images / rich content — same vector as paste.
+    e.preventDefault();
+  }, []);
+
+  const handleDragOver = useCallback(e => {
+    e.preventDefault();
+  }, []);
+
   if (editable) {
     return (
       <Box
@@ -98,6 +137,9 @@ const TextDiffHighlight = memo(props => {
         onFocus={handleFocus}
         onBlur={handleBlur}
         onInput={handleInput}
+        onPaste={handlePaste}
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
         sx={[styles.container, styles.editable]}
       />
     );
