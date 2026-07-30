@@ -1,15 +1,19 @@
-import { memo, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router-dom';
 
+import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import { Alert, Box, CircularProgress, Typography } from '@mui/material';
+import { Alert, Box, CircularProgress, Snackbar, Tooltip, Typography } from '@mui/material';
 
+import { UsageExportHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { DrawerPage } from '@/[fsd]/features/settings/ui/drawer-page';
+import { exportToExcel } from '@/[fsd]/shared/lib/utils';
+import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import { BaseTab, BaseTabs } from '@/[fsd]/shared/ui/tabs';
 import { useProjectUsageQuery, useUsageMembersQuery } from '@/api';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
+import { useSelectedProject, useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import UsageDailyChart from './components/UsageDailyChart';
 import UsageMembersTable from './components/UsageMembersTable';
@@ -49,13 +53,56 @@ const UsageContainer = memo(() => {
     { skip: !projectId, refetchOnMountOrArgChange: true },
   );
 
-  const { data: membersData } = useUsageMembersQuery(
+  const { data: membersData, isFetching: isMembersFetching } = useUsageMembersQuery(
     { projectId },
     { skip: !projectId || isPersonalProject },
   );
 
   const canSeeAmounts = Boolean(data?.can_see_amounts);
-  const memberRows = membersData?.rows || [];
+  const memberRows = useMemo(() => membersData?.rows || [], [membersData]);
+  const membersWarningPct = membersData?.warning_pct;
+
+  const showsMembers = !isPersonalProject && activeScope === SCOPE_PROJECT;
+
+  const project = useSelectedProject();
+
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState(false);
+
+  const handleExport = useCallback(async () => {
+    setExporting(true);
+    setExportError(false);
+
+    try {
+      const args = {
+        projectName: project?.name,
+        scope: activeScope,
+        isPersonalProject,
+      };
+
+      await exportToExcel(
+        UsageExportHelpers.usageExportFileName(args),
+        // Member rows come straight from the query, so an active search or the table's
+        // own paging cannot narrow what gets exported
+        UsageExportHelpers.buildUsageSheets({
+          ...args,
+          data,
+          memberRows,
+          membersWarningPct,
+        }),
+      );
+    } catch {
+      setExportError(true);
+    } finally {
+      setExporting(false);
+    }
+  }, [project, activeScope, isPersonalProject, data, memberRows, membersWarningPct]);
+
+  const handleCloseExportError = useCallback(() => setExportError(false), []);
+
+  // Exporting while members are still loading would produce an empty Members sheet and
+  // look like it worked, so the action waits for them too
+  const exportDisabled = exporting || isLoading || !data || (showsMembers && isMembersFetching);
 
   return (
     <DrawerPage>
@@ -66,6 +113,26 @@ const UsageContainer = memo(() => {
         >
           Usage
         </Typography>
+        <Tooltip
+          title={exporting ? 'Preparing export…' : 'Export to Excel'}
+          placement="top"
+        >
+          <Box
+            component="span"
+            sx={styles.exportButtonWrapper}
+          >
+            <BaseBtn
+              variant={BUTTON_VARIANTS.icon}
+              color="secondary"
+              onClick={handleExport}
+              disabled={exportDisabled}
+              aria-label="Export to Excel"
+              data-testid="usage-export-button"
+            >
+              {exporting ? <CircularProgress size={16} /> : <FileDownloadOutlinedIcon fontSize="small" />}
+            </BaseBtn>
+          </Box>
+        </Tooltip>
       </Box>
 
       {!isPersonalProject && (
@@ -150,7 +217,7 @@ const UsageContainer = memo(() => {
               currency={data.currency}
             />
 
-            {!isPersonalProject && activeScope === SCOPE_PROJECT && memberRows.length > 0 && (
+            {showsMembers && memberRows.length > 0 && (
               <UsageMembersTable
                 rows={memberRows}
                 warningPct={membersData?.warning_pct}
@@ -159,6 +226,21 @@ const UsageContainer = memo(() => {
           </>
         )}
       </Box>
+
+      <Snackbar
+        open={exportError}
+        autoHideDuration={8000}
+        onClose={handleCloseExportError}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={handleCloseExportError}
+          severity="error"
+          variant="filled"
+        >
+          Unable to export usage data. Please try again.
+        </Alert>
+      </Snackbar>
     </DrawerPage>
   );
 });
@@ -177,6 +259,10 @@ const usageContainerStyles = () => ({
     boxSizing: 'border-box',
     borderBottom: `0.0625rem solid ${palette.border.table}`,
   }),
+  // Keeps the export action at the far edge, away from the page title
+  exportButtonWrapper: {
+    marginLeft: 'auto',
+  },
   tabsContainer: ({ palette }) => ({
     padding: '0 1.5rem',
     borderBottom: `1px solid ${palette.border.table}`,
