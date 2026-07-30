@@ -23,23 +23,24 @@ const useSaveSkill = () => {
     const tags = normalizeTagsForSave(values?.version_details?.tags);
 
     // Without a version id the viewed version cannot be addressed — the
-    // version-less endpoint would silently write to the default version.
+    // backend would fall back to the default version.
     if (!selectedVersionId) {
       toastError('Unable to determine the skill version to save. Please reload and try again.');
       return false;
     }
 
     try {
-      // Version first: the backend rejects writes to published versions, and
-      // failing here keeps the whole save all-or-nothing.
       await updateSkill({
         projectId,
         skillId,
-        versionId: selectedVersionId,
-        instructions,
-        tags,
+        name,
+        description,
+        version: {
+          id: selectedVersionId,
+          instructions,
+          tags,
+        },
       }).unwrap();
-      await updateSkill({ projectId, skillId, name, description }).unwrap();
 
       resetForm({ values });
       toastSuccess('Skill saved');
