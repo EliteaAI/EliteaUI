@@ -42,8 +42,8 @@ const useDeleteToolkit = (setBlockNav, isMCP) => {
 
   const toastProps = useMemo(() => ({ onCloseToast }), [onCloseToast]);
   const { toastSuccess, toastError } = useToast(toastProps);
-  const entityName =
-    ToolkitsHelpers.getToolkitDisplayName({ name, toolkit_name, settings }) || (isMCP ? 'MCP' : 'Toolkit');
+  const displayName = ToolkitsHelpers.getToolkitDisplayName({ name, toolkit_name, settings });
+  const entityName = displayName || (isMCP ? 'MCP' : 'Toolkit');
   const onDelete = useCallback(async () => {
     await deleteToolkit({ projectId, toolkitId: !isMCP ? toolkitId : mcpId });
   }, [deleteToolkit, isMCP, mcpId, projectId, toolkitId]);
@@ -58,7 +58,7 @@ const useDeleteToolkit = (setBlockNav, isMCP) => {
   }, [entityName, error, isError, isMCP, isSuccess, reset, toastError, toastSuccess]);
 
   return {
-    name: ToolkitsHelpers.getToolkitDisplayName({ name, toolkit_name, settings }) || 'Toolkit',
+    name: entityName,
     onDelete,
     isLoading,
   };

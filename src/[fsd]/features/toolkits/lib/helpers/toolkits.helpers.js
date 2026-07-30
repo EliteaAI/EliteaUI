@@ -253,7 +253,7 @@ const prettifyToolkitMessage = message => {
 // sanitized runtime identifier (spaces stripped), so it comes after the readable
 // titles and is only ever shown for legacy rows that have nothing better.
 export const getToolkitDisplayName = toolkit => {
-  const name = typeof toolkit?.name === 'string' ? toolkit.name.trim() : toolkit?.name;
+  const name = typeof toolkit?.name === 'string' ? toolkit.name.trim() : '';
   const type = toolkit?.type || '';
   return (
     name ||

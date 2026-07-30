@@ -535,20 +535,18 @@ const ToolMenu = memo(props => {
   const allMCPItems = useMemo(() => {
     if (!libraryMCPs) return [];
     const availableMCPs = filterToolkits(libraryMCPs);
-    return availableMCPs
-      .sort((a, b) => a.label.localeCompare(b.label))
-      .map(item => ({
-        ...item,
-        icon: (
-          <EntityIcon
-            sx={styles.entityIcon}
-            imageStyle={styles.entityImageStyle}
-            icon={{ component: item.icon }}
-            editable={false}
-            specifiedFontSize={DROPDOWN_CONSTANTS.DIMENSIONS.ICON_SVG_SIZE}
-          />
-        ),
-      }));
+    return availableMCPs.map(item => ({
+      ...item,
+      icon: (
+        <EntityIcon
+          sx={styles.entityIcon}
+          imageStyle={styles.entityImageStyle}
+          icon={{ component: item.icon }}
+          editable={false}
+          specifiedFontSize={DROPDOWN_CONSTANTS.DIMENSIONS.ICON_SVG_SIZE}
+        />
+      ),
+    }));
   }, [libraryMCPs, filterToolkits, styles.entityIcon, styles.entityImageStyle]);
 
   // Handle scroll event to detect when user reaches the end
