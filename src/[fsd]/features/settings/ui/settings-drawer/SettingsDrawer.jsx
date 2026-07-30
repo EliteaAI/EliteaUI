@@ -183,7 +183,7 @@ const getStyles = () => ({
     lineHeight: '1rem',
     letterSpacing: '0.06em',
     textTransform: 'uppercase',
-    padding: '1rem',
+    padding: '1rem 1rem 1rem 1.5rem',
   }),
 
   sectionDivider: ({ palette }) => ({
@@ -194,12 +194,12 @@ const getStyles = () => ({
   menuItem:
     isActive =>
     ({ palette }) => ({
-      padding: '0.5rem 1rem',
-      margin: '0 1rem',
+      padding: '0.5rem 0.75rem',
+      margin: '0 0.75rem',
       gap: '0.5rem',
       display: 'flex',
       alignItems: 'center',
-      maxWidth: 'calc(100% - 2rem)',
+      maxWidth: 'calc(100% - 1.5rem)',
       height: '2rem',
       background: isActive
         ? palette.background.userInputBackgroundActive
@@ -218,17 +218,17 @@ const getStyles = () => ({
     ({ palette }) => ({
       display: 'flex',
       alignItems: 'center',
-      minWidth: '0.875rem',
+      minWidth: '1rem',
       color: isActive ? palette.text.secondary : palette.icon.fill.stateButtonHover,
       '& svg': {
         fill: isActive ? palette.text.secondary : palette.icon.fill.stateButtonHover,
-        width: '0.875rem',
-        height: '0.875rem',
+        width: '1rem',
+        height: '1rem',
       },
     }),
 
   icon: {
-    fontSize: '0.875rem',
+    fontSize: '1rem',
   },
 
   menuItemText:
