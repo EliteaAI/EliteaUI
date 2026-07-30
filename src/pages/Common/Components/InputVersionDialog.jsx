@@ -1,6 +1,5 @@
 import React, { useCallback } from 'react';
 
-import { Button } from '@/[fsd]/shared/ui';
 import Box from '@mui/material/Box';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -9,6 +8,7 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { styled } from '@mui/material/styles';
 
+import { Button } from '@/[fsd]/shared/ui';
 import { CREATE_VERSION, MAX_VERSION_LENGTH, SAVE } from '@/common/constants';
 import { useCtrlEnterKeyEventsHandler } from '@/components/Chat/hooks';
 import FrameIcon from '@/components/Icons/FrameIcon';

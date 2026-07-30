@@ -12,8 +12,10 @@ describe('fmtNum', () => {
 });
 
 describe('axisTick', () => {
-  it('builds a tick style from a stroke color', () => expect(axisTick('#fff')).toEqual({ fill: '#fff', fontSize: 11 }));
-  it('accepts a custom font size', () => expect(axisTick('#000', 13)).toEqual({ fill: '#000', fontSize: 13 }));
+  it('builds a tick style from a stroke color', () =>
+    expect(axisTick('#fff')).toEqual({ fill: '#fff', fontSize: 11 }));
+  it('accepts a custom font size', () =>
+    expect(axisTick('#000', 13)).toEqual({ fill: '#000', fontSize: 13 }));
 });
 
 describe('fmtDuration', () => {

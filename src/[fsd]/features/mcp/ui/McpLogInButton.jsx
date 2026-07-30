@@ -1,9 +1,8 @@
 import { memo } from 'react';
 
-import { Button } from '@/[fsd]/shared/ui';
-
 import { useMcpLogin } from '@/[fsd]/features/mcp/lib/hooks';
 import { McpAuthModal } from '@/[fsd]/features/mcp/ui';
+import { Button } from '@/[fsd]/shared/ui';
 
 const McpLogInButton = memo(props => {
   const { values, onSuccess, sx, title = 'Log in', authConfig } = props;

@@ -3,7 +3,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { DialogContent, DialogTitle, Typography, useTheme } from '@mui/material';
 
 import { Button } from '@/[fsd]/shared/ui';
-
 import { StyledDialog, StyledDialogActions } from '@/components/StyledDialog';
 import VariableList from '@/components/VariableList';
 

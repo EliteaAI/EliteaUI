@@ -32,9 +32,7 @@ const ToolItemCard = memo(props => {
   const typeLabel = ENTITY_TYPE_LABELS[entityType] || entityType;
   const openTooltipText = `Open ${typeLabel.toLowerCase()} in new tab`;
 
-  const isDisabled = item.type === 'application'
-    ? !item.settings?.application_id
-    : !item.id;
+  const isDisabled = item.type === 'application' ? !item.settings?.application_id : !item.id;
 
   const handleOpenClick = useCallback(
     e => {
@@ -54,7 +52,13 @@ const ToolItemCard = memo(props => {
         url += `?${SearchParams.ViewMode}=${viewMode}&name=${nameParam}`;
         window.open(url, '_blank');
       } else {
-        const routeMap = { toolkit: 'toolkits', mcp: 'mcps', agent: 'agents', pipeline: 'pipelines', skill: 'skills' };
+        const routeMap = {
+          toolkit: 'toolkits',
+          mcp: 'mcps',
+          agent: 'agents',
+          pipeline: 'pipelines',
+          skill: 'skills',
+        };
         const route = routeMap[entityType] || 'agents';
         const url = `${baseUrl}${basename}/${route}/all/${item.id}?${SearchParams.ViewMode}=${viewMode}&name=${nameParam}`;
         window.open(url, '_blank');
@@ -100,7 +104,10 @@ const ToolItemCard = memo(props => {
           disabled={isDisabled}
           sx={styles.openLinkBtn}
         >
-          <OpenNewIcon sx={styles.openLinkIcon} fill={!isDisabled ? theme.palette.icon.fill.default : theme.palette.icon.fill.disabled} />
+          <OpenNewIcon
+            sx={styles.openLinkIcon}
+            fill={!isDisabled ? theme.palette.icon.fill.default : theme.palette.icon.fill.disabled}
+          />
         </IconButton>
       </Tooltip>
 
