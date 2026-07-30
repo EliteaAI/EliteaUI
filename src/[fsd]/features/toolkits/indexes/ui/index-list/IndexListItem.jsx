@@ -2,21 +2,24 @@ import { memo, useMemo } from 'react';
 
 import { format } from 'date-fns';
 
-import { Box, CircularProgress, IconButton, Skeleton, Typography } from '@mui/material';
+import { Box, CircularProgress, Skeleton, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
+import { Button } from '@/[fsd]/shared/ui';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import ClockIcon from '@/assets/clock.svg?react';
 import FileIcon from '@/assets/file.svg?react';
+import IndexingIcon from '@/assets/indexing.svg?react';
 import OpenInNewIcon from '@/assets/open-new-icon.svg?react';
-import RefreshIcon from '@/assets/refresh-icon.svg?react';
 import StopIcon from '@/assets/stop-icon.svg?react';
 import { PERMISSIONS } from '@/common/constants';
+import EntityIcon from '@/components/EntityIcon';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
+import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const IndexListItem = memo(props => {
   const {
@@ -30,11 +33,12 @@ const IndexListItem = memo(props => {
     onCardOpenNewTab,
     isReindexing,
   } = props;
-  const styles = indexListItem(listOnly);
+  const styles = indexListItem();
   const { isPrivate } = useProjectType();
   const { checkPermission } = useCheckPermission();
 
   const canDeleteIndex = isPrivate || checkPermission(PERMISSIONS.index.delete);
+  const projectId = useSelectedProjectId();
 
   const isSelected = useMemo(() => currentIndex?.id === index.id, [currentIndex, index]);
   const isInProgress = index?.metadata?.state === IndexStatuses.progress;
@@ -130,6 +134,11 @@ const IndexListItem = memo(props => {
       className={isSelected && true ? 'selected' : ''}
       onClick={handleCardClick}
     >
+      <EntityIcon
+        entityType="index"
+        projectId={projectId}
+        editable={false}
+      />
       <Box sx={styles.mainContent}>
         <Typography
           variant="bodyMedium"
@@ -181,25 +190,19 @@ const IndexListItem = memo(props => {
       </Box>
 
       {listOnly && (onCardReindex || onCardDelete || onCardOpenNewTab) && (
-        <Box
-          sx={styles.actions}
-          className="index-card-actions"
-        >
+        <Box sx={styles.actions}>
           {onCardOpenNewTab && (
             <Tooltip
               title="Open in new tab"
               placement="top"
             >
-              <Box component="span">
-                <IconButton
-                  size="small"
-                  onClick={handleOpenNewTabClick}
-                  data-testid="index-card-open-new-tab-btn"
-                  sx={styles.actionButton}
-                >
-                  <OpenInNewIcon />
-                </IconButton>
-              </Box>
+              <Button.BaseBtn
+                className="index-card-actions"
+                variant={Button.BUTTON_VARIANTS.tertiary}
+                startIcon={<OpenInNewIcon sx={styles.actionIcon} />}
+                onClick={handleOpenNewTabClick}
+                data-testid="index-card-open-new-tab-btn"
+              />
             </Tooltip>
           )}
           {onCardReindex && (
@@ -207,17 +210,13 @@ const IndexListItem = memo(props => {
               title="Reindex"
               placement="top"
             >
-              <Box component="span">
-                <IconButton
-                  size="small"
-                  disabled={disableActions}
-                  onClick={handleReindexClick}
-                  data-testid="index-card-reindex-btn"
-                  sx={styles.actionButton}
-                >
-                  <RefreshIcon />
-                </IconButton>
-              </Box>
+              <Button.BaseBtn
+                className="index-card-actions"
+                variant={Button.BUTTON_VARIANTS.tertiary}
+                startIcon={<IndexingIcon sx={styles.actionIcon} />}
+                onClick={handleReindexClick}
+                data-testid="index-card-reindex-btn"
+              />
             </Tooltip>
           )}
           {onCardDelete && canDeleteIndex && (
@@ -225,51 +224,50 @@ const IndexListItem = memo(props => {
               title="Delete"
               placement="top"
             >
-              <Box component="span">
-                <IconButton
-                  size="small"
-                  disabled={disableActions}
-                  onClick={handleDeleteClick}
-                  data-testid="index-card-delete-btn"
-                  sx={styles.actionButton}
-                >
-                  <DeleteIcon sx={{ fontSize: '1rem' }} />
-                </IconButton>
-              </Box>
+              <Button.BaseBtn
+                className="index-card-actions"
+                variant={Button.BUTTON_VARIANTS.tertiary}
+                startIcon={<DeleteIcon sx={styles.actionIcon} />}
+                onClick={handleDeleteClick}
+                data-testid="index-card-delete-btn"
+              />
             </Tooltip>
           )}
-        </Box>
-      )}
+          {index.metadata.state !== IndexStatuses.success && (
+            <Box style={styles.stateIconContainer}>
+              {index.metadata.state === IndexStatuses.progress && (
+                <CircularProgress
+                  sx={styles.stateIcon}
+                  size={14}
+                  thickness={5}
+                />
+              )}
+              {index.metadata.state === IndexStatuses.fail && (
+                <InfoTooltip
+                  infoTooltip={{ icon: styles.error }}
+                  disableTooltip
+                  sx={styles.stateIcon}
+                />
+              )}
 
-      {index.metadata.state === IndexStatuses.progress && (
-        <CircularProgress
-          sx={styles.stateIcon}
-          size={14}
-          thickness={5}
-        />
-      )}
-      {index.metadata.state === IndexStatuses.fail && (
-        <InfoTooltip
-          infoTooltip={{ icon: styles.error }}
-          disableTooltip
-          sx={styles.stateIcon}
-        />
-      )}
-
-      {index.metadata.state === IndexStatuses.cancelled && (
-        <Box sx={[styles.stateIcon, styles.warning]}>
-          <StopIcon
-            width={16}
-            height={16}
-          />
-        </Box>
-      )}
-      {index.metadata.state === IndexStatuses.partlyOk && (
-        <Box sx={[styles.stateIcon, styles.warning]}>
-          <AttentionIcon
-            width={16}
-            height={16}
-          />
+              {index.metadata.state === IndexStatuses.cancelled && (
+                <Box sx={[styles.stateIcon, styles.warning, styles.stateIconContainer]}>
+                  <StopIcon
+                    width={16}
+                    height={16}
+                  />
+                </Box>
+              )}
+              {index.metadata.state === IndexStatuses.partlyOk && (
+                <Box sx={[styles.stateIcon, styles.warning, styles.stateIconContainer]}>
+                  <AttentionIcon
+                    width={16}
+                    height={16}
+                  />
+                </Box>
+              )}
+            </Box>
+          )}
         </Box>
       )}
     </Box>
@@ -279,7 +277,7 @@ const IndexListItem = memo(props => {
 IndexListItem.displayName = 'IndexListItem';
 
 /** @type {MuiSx} */
-const indexListItem = listOnly => ({
+const indexListItem = () => ({
   wrapper: ({ palette }) => ({
     display: 'flex',
     flexDirection: 'row',
@@ -289,10 +287,10 @@ const indexListItem = listOnly => ({
     minHeight: '4rem',
     borderRadius: '.5rem',
     background: `${palette.background.userInputBackground}`,
-    padding: '.375rem 1rem',
-    border: `.0625rem solid transparent`,
+    padding: '.5rem 1rem',
+    border: `.0625rem solid ${palette.border.table}`,
     position: 'relative',
-    gap: '.5rem',
+    gap: '1rem',
 
     '& .index-card-actions': {
       opacity: 0,
@@ -300,8 +298,7 @@ const indexListItem = listOnly => ({
     },
 
     '&:hover': {
-      background: palette.split.pressed,
-      border: `.0625rem solid ${palette.split.hover}`,
+      border: `.0625rem solid ${palette.border.lines}`,
       cursor: 'pointer',
 
       '& .index-card-actions': {
@@ -349,7 +346,8 @@ const indexListItem = listOnly => ({
   additionalInfo: {
     display: 'flex',
     gap: '0.5rem',
-    flexWrap: 'wrap',
+    flexWrap: 'nowrap',
+    alignItems: 'center',
   },
 
   infoItem: {
@@ -372,6 +370,8 @@ const indexListItem = listOnly => ({
     alignItems: 'center',
     gap: '0.25rem',
     flexShrink: 0,
+    position: 'absolute',
+    right: '0.75rem',
   },
 
   actionButton: ({ palette }) => ({
@@ -385,13 +385,15 @@ const indexListItem = listOnly => ({
       opacity: 0.4,
     },
   }),
-
+  stateIconContainer: {
+    width: '1.5rem',
+    height: '1.5rem',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   stateIcon: ({ palette }) => ({
     color: palette.text.info,
-    position: 'absolute',
-    top: '50%',
-    right: listOnly ? '8rem' : '1rem',
-    marginTop: '-.4375rem',
   }),
   error: {
     fill: '#D71616',
@@ -404,6 +406,9 @@ const indexListItem = listOnly => ({
   skippedText: ({ palette }) => ({
     color: palette.background.warning,
   }),
+  actionIcon: {
+    fontSize: '1rem',
+  },
 });
 
 export default IndexListItem;

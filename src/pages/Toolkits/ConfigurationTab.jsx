@@ -1,16 +1,14 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback } from 'react';
 
-import { Box, CircularProgress, Grid, Typography } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
-import { RunHistoryContainer } from '@/[fsd]/entities/run-history/ui';
-import { ParticipantEntityTypes } from '@/[fsd]/features/chat/participants/lib/constants/participant.constants';
-import { IndexesContainer } from '@/[fsd]/features/toolkits/indexes/ui';
+import { Box, CircularProgress, Grid } from '@mui/material';
+
 import { TestTools } from '@/[fsd]/features/toolkits/ui';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui/form/ToolkitForm';
-import { useShowRunHistoryFromUrl } from '@/[fsd]/shared/lib/hooks';
-import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
 import DirtyDetector from '@/components/Formik/DirtyDetector.jsx';
 import { CONFIGURATION_VIEW_OPTIONS } from '@/pages/Applications/Components/Tools/ToolConfigurationForm.jsx';
+import RouteDefinitions from '@/routes';
 
 const ConfigurationTab = memo(props => {
   const {
@@ -27,12 +25,10 @@ const ConfigurationTab = memo(props => {
     updateKey,
     isMCP,
     onValidationStateChange,
-    selectedIndexTools,
     indexingUnavailableReason,
-    shouldHideIndexes,
+    shouldHideIndexes = true,
   } = props;
-  const [showHistory, setShowHistory] = useState(false);
-  useShowRunHistoryFromUrl({ setShowHistory });
+  const navigate = useNavigate();
 
   const onChangeToolDetail = useCallback(
     (updater, options) => {
@@ -45,34 +41,10 @@ const ConfigurationTab = memo(props => {
   );
 
   const handleShowHistory = useCallback(() => {
-    setShowHistory(true);
-  }, []);
-
-  const [isFullScreenChat, setIsFullScreenChat] = useState(false);
-
-  const indexesAccordionContent = (() => {
-    if (indexingUnavailableReason) {
-      return (
-        <Box sx={styles.indexesUnavailable}>
-          <Typography
-            variant="bodyMedium"
-            color="text.default"
-          >
-            Indexing is not available for now
-          </Typography>
-        </Box>
-      );
-    }
-
-    return (
-      <IndexesContainer
-        listOnly
-        toolkitId={toolkitId}
-        selectedIndexTools={selectedIndexTools}
-        editToolDetail={editToolDetail}
-      />
+    navigate(
+      `${RouteDefinitions.ToolkitRunHistory.replace(':tab', 'all').replace(':toolkitId', String(toolkitId))}?isMCP=${isMCP}`,
     );
-  })();
+  }, [isMCP, navigate, toolkitId]);
 
   return isFetching ? (
     <Box
@@ -83,23 +55,15 @@ const ConfigurationTab = memo(props => {
   ) : (
     <>
       <DirtyDetector setDirty={setDirty} />
-      {showHistory && (
-        <RunHistoryContainer
-          entityId={toolkitId}
-          source={isMCP ? ParticipantEntityTypes.MCP : ParticipantEntityTypes.Toolkit}
-          versions={null}
-          onClose={() => setShowHistory(false)}
-        />
-      )}
-      {!showHistory && (
+      <>
         <Grid
           container
-          columnSpacing={'2rem'}
+          // columnSpacing={'2rem'}
           sx={styles.gridContainer}
         >
-          {editToolDetail && !isFullScreenChat && (
+          {editToolDetail && (
             <Grid
-              size={{ md: 12, lg: 4 }}
+              size={{ md: 12, lg: 6 }}
               sx={styles.leftPanel}
             >
               <ToolkitForm
@@ -118,37 +82,25 @@ const ConfigurationTab = memo(props => {
                 isMCP={isMCP}
                 onSyntaxError={() => {}}
                 onValidationStateChange={onValidationStateChange}
+                shouldHideIndexes={shouldHideIndexes}
+                indexingUnavailableReason={indexingUnavailableReason}
+                toolkitId={toolkitId}
+                handleShowHistory={handleShowHistory}
               />
-              {!shouldHideIndexes && (
-                <BasicAccordion
-                  data-testid="toolkit-indexes-accordion"
-                  style={styles.indexesAccordionWrapper}
-                  accordionSX={styles.indexesAccordion}
-                  items={[
-                    {
-                      title: 'Indexes',
-                      content: indexesAccordionContent,
-                    },
-                  ]}
-                />
-              )}
             </Grid>
           )}
           <Grid
-            size={{ md: 12, lg: !editToolDetail || isFullScreenChat ? 12 : 8 }}
+            size={{ md: 12, lg: 6 }}
             sx={styles.rightPanel}
             container
           >
             <TestTools
-              isFullScreenChat={isFullScreenChat}
-              setIsFullScreenChat={setIsFullScreenChat}
               applicationId={applicationId}
               toolkitId={toolkitId}
-              onShowHistory={handleShowHistory}
             />
           </Grid>
         </Grid>
-      )}
+      </>
     </>
   );
 });
@@ -160,10 +112,10 @@ const styles = {
   gridContainer: {
     height: '100%',
     maxHeight: '100%',
-    paddingTop: '1rem',
-    paddingBottom: '1.5rem',
-    paddingLeft: '1.5rem !important',
-    paddingRight: '1.5rem !important',
+    paddingTop: '0rem',
+    paddingBottom: '0rem',
+    paddingLeft: '0rem !important',
+    paddingRight: '0rem !important',
   },
   leftPanel: {
     overflow: 'auto',
@@ -172,16 +124,17 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '1rem',
+    padding: '1rem 1.5rem',
+    borderRight: ({ palette }) => `0.0625rem solid ${palette.border.table}`,
+    position: 'relative',
+    background: ({ palette }) => palette.background.toolkitDetailLeftPanel,
+    ' & .MuiAccordion-root': {
+      background: ({ palette }) => `${palette.background.toolkitDetailLeftPanel} !important`,
+    },
   },
   rightPanel: {
     height: '100%',
     maxHeight: '100%',
-  },
-  indexesAccordionWrapper: {
-    width: '100%',
-  },
-  indexesAccordion: {
-    width: '100%',
   },
   indexesUnavailable: ({ palette }) => ({
     padding: '1rem',

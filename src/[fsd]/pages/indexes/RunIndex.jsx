@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Formik } from 'formik';
 import { useSelector } from 'react-redux';
@@ -11,14 +11,13 @@ import { useGetIndexScheduleQuery, useGetIndexesListQuery } from '@/[fsd]/featur
 import { IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import { selectIndexesList } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
 import { IndexBreadcrumb } from '@/[fsd]/features/toolkits/indexes/ui';
+import RunIndexPanel from '@/[fsd]/features/toolkits/indexes/ui/run-index/RunIndexPanel';
 import { useToolkitsDetailsQuery } from '@/api/toolkits.js';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils.jsx';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast.jsx';
 import Page404 from '@/pages/Page404.jsx';
 import RouteDefinitions from '@/routes';
-
-import RunIndexPanel from './RunIndexPanel';
 
 const emptyToolDetail = {};
 const CREATING_POLL_INTERVAL_MS = 2000;
@@ -46,7 +45,7 @@ const RunIndex = memo(() => {
   }, [navigate, tab]);
 
   const {
-    data: publicToolkitData = emptyToolDetail,
+    data: toolkitData = emptyToolDetail,
     isFetching,
     isError,
     error,
@@ -116,21 +115,18 @@ const RunIndex = memo(() => {
     return () => clearInterval(interval);
   }, [awaitingCreation, currentIndex, refetchIndexesList]);
 
-  const selectedIndexTools = useMemo(
-    () => publicToolkitData?.settings?.selected_tools ?? [],
-    [publicToolkitData],
-  );
+  const selectedIndexTools = useMemo(() => toolkitData?.settings?.selected_tools ?? [], [toolkitData]);
 
   const shouldShowNotFoundPage = isError && isNotFoundError(error);
 
   const initialValues = useMemo(() => {
-    if (!publicToolkitData?.id) return {};
+    if (!toolkitData?.id) return {};
     return {
-      ...publicToolkitData,
-      settings: publicToolkitData.settings || {},
-      type: publicToolkitData.type || '',
+      ...toolkitData,
+      settings: toolkitData.settings || {},
+      type: toolkitData.type || '',
     };
-  }, [publicToolkitData]);
+  }, [toolkitData]);
 
   const handleRefetch = useCallback(async () => {
     await refetchIndexesList();
@@ -141,25 +137,31 @@ const RunIndex = memo(() => {
     if (isError && !shouldShowNotFoundPage) toastError(buildErrorMessage(error));
   }, [error, isError, shouldShowNotFoundPage, toastError]);
 
+  const stableIndexRef = useRef(null);
+
   if (shouldShowNotFoundPage) return <Page404 />;
 
   const effectiveIndex = currentIndex ?? inflightIndex;
+
+  if (effectiveIndex) stableIndexRef.current = effectiveIndex;
+
+  const stableIndex = stableIndexRef.current;
+
   // When we already have the inflight index from CreateIndex, don't block RunIndexPanel behind
   // the indexes-list fetch — we need to mount the socket listener immediately so streaming events
-  // aren't dropped.
-  const isLoading = effectiveIndex
-    ? isFetching || !publicToolkitData?.id
-    : isFetching || indexesLoading || indexesFetching || !hasData || !publicToolkitData?.id;
+  // aren't dropped. Use stableIndex so background refetches don't unmount the panel.
+  const isLoading = stableIndex
+    ? !toolkitData?.id
+    : isFetching || indexesLoading || indexesFetching || !hasData || !toolkitData?.id;
 
-  const showCreatingPlaceholder = awaitingCreation && !effectiveIndex;
-
+  const showCreatingPlaceholder = awaitingCreation && !stableIndex;
   return (
     <Box sx={styles.wrapper}>
       <DrawerPageHeader
         showBorder
         title={
           <IndexBreadcrumb
-            toolkitName={publicToolkitData?.name || ''}
+            toolkitName={toolkitData?.name || ''}
             current={indexName || 'Index'}
             onToolkitsClick={goToToolkitsList}
             onToolkitClick={goBackToToolkit}
@@ -180,7 +182,7 @@ const RunIndex = memo(() => {
               </Typography>
             )}
           </Box>
-        ) : !effectiveIndex ? (
+        ) : !stableIndex ? (
           <Box sx={styles.loading}>
             <Typography
               variant="bodyMedium"
@@ -199,11 +201,12 @@ const RunIndex = memo(() => {
               toolkitId={toolkitId}
               tab={tab}
               indexName={indexName}
-              index={effectiveIndex}
+              index={effectiveIndex ?? stableIndex}
               selectedIndexTools={selectedIndexTools}
               refetchIndexesList={handleRefetch}
               isCreating={isCreating}
               initialConversation={initialConversation}
+              toolkitName={toolkitData?.name || ''}
             />
           </Formik>
         )}
@@ -227,7 +230,6 @@ const runIndexStyles = () => ({
     flexDirection: 'column',
     flex: 1,
     minHeight: 0,
-    padding: '1rem 1.5rem',
     gap: '1rem',
     overflow: 'hidden',
   },

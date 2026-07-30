@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef } from 'react';
+import { memo, useCallback, useEffect, useRef } from 'react';
 
 import { useFormikContext } from 'formik';
 
@@ -10,9 +10,14 @@ const HeadlessReindexRunner = memo(props => {
   const { index, toolkitId, traceNewIndex, refetchIndexesList, onDone } = props;
 
   const { values } = useFormikContext();
-  const { handleMcpAuthRequired, getModalProps } = useMcpAuthModal({ values });
 
-  const { handleIndexData, isRunning, isIndexing } = useToolkitChat({
+  // Stable ref wrapper to break circular dependency between useToolkitChat and useMcpAuthModal.
+  const mcpAuthRequiredRef = useRef(null);
+  const onMcpAuthRequiredStable = useCallback(message => {
+    mcpAuthRequiredRef.current?.(message);
+  }, []);
+
+  const { handleIndexData, isRunning, isIndexing, retryLastRun } = useToolkitChat({
     cancelIndexingCallback: null,
     index,
     isValidForm: true,
@@ -23,8 +28,17 @@ const HeadlessReindexRunner = memo(props => {
     traceNewIndex,
     values,
     modes: [],
-    onMcpAuthRequired: handleMcpAuthRequired,
+    onMcpAuthRequired: onMcpAuthRequiredStable,
   });
+
+  const { handleMcpAuthRequired, getModalProps } = useMcpAuthModal({
+    values,
+    onSuccess: retryLastRun,
+    showSuccessToast: false,
+  });
+
+  // Wire stable wrapper to the real handler.
+  mcpAuthRequiredRef.current = handleMcpAuthRequired;
 
   const startedRef = useRef(false);
   const wasActiveRef = useRef(false);

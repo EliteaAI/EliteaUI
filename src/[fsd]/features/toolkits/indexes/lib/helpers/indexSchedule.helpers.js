@@ -6,6 +6,7 @@ const DAILY_FLOOR_MSG = 'Frequency cannot be more than once per day';
 const validateMinimumFrequency = (minute, hour) => {
   const invalid = {
     isValid: false,
+    field: 'minutes',
     message: HOURLY_FLOOR_MSG,
   };
 
@@ -41,6 +42,7 @@ const validateMinimumFrequency = (minute, hour) => {
       if (stepValue === 0)
         return {
           isValid: false,
+          field: 'hours',
           message: 'Invalid hour step value. Step cannot be 0.',
         };
     }
@@ -55,6 +57,7 @@ const validateMinimumFrequency = (minute, hour) => {
 const validateMinimumDailyFrequency = (minute, hour) => {
   const invalid = {
     isValid: false,
+    field: 'hours',
     message: DAILY_FLOOR_MSG,
   };
 
@@ -123,20 +126,37 @@ export const validateCronExpression = input => {
   const weekdayPattern = /^(\*|[0-7](,[0-7])*|[0-7]-[0-7]|(\*\/[0-7]))$/;
 
   if (!minutePattern.test(minute))
-    return { isValid: false, message: 'Invalid minute (0-59, *, ranges, lists, steps allowed)' };
+    return {
+      isValid: false,
+      field: 'minutes',
+      message: 'Invalid minute (0-59, *, ranges, lists, steps allowed)',
+    };
 
   if (!hourPattern.test(hour))
-    return { isValid: false, message: 'Invalid hour (0-23, *, ranges, lists, steps allowed)' };
+    return {
+      isValid: false,
+      field: 'hours',
+      message: 'Invalid hour (0-23, *, ranges, lists, steps allowed)',
+    };
 
   if (!dayPattern.test(day))
-    return { isValid: false, message: 'Invalid day (1-31, *, ranges, lists, steps allowed)' };
+    return {
+      isValid: false,
+      field: 'month-days',
+      message: 'Invalid day (1-31, *, ranges, lists, steps allowed)',
+    };
 
   if (!monthPattern.test(month))
-    return { isValid: false, message: 'Invalid month (1-12, *, ranges, lists, steps allowed)' };
+    return {
+      isValid: false,
+      field: 'months',
+      message: 'Invalid month (1-12, *, ranges, lists, steps allowed)',
+    };
 
   if (!weekdayPattern.test(weekday))
     return {
       isValid: false,
+      field: 'week-days',
       message: 'Invalid weekday (0-7 where 0,7=Sunday, *, ranges, lists, steps allowed)',
     };
 
@@ -150,6 +170,56 @@ export const validateCronExpression = input => {
   }
 };
 
+const matchesCronField = (value, field) => {
+  if (field === '*') return true;
+  if (field.includes('/')) {
+    const [, step] = field.split('/');
+    return value % parseInt(step, 10) === 0;
+  }
+  if (field.includes('-')) {
+    const [start, end] = field.split('-').map(Number);
+    return value >= start && value <= end;
+  }
+  if (field.includes(',')) {
+    return field.split(',').map(Number).includes(value);
+  }
+  return value === parseInt(field, 10);
+};
+
+export const getNextCronRun = (expression, fromDate = new Date()) => {
+  if (!expression || typeof expression !== 'string') return null;
+  const parts = expression.trim().split(/\s+/);
+  if (parts.length !== 5) return null;
+  const [minuteF, hourF, dayF, monthF, weekdayF] = parts;
+
+  const d = new Date(fromDate);
+  d.setSeconds(0, 0);
+  d.setMinutes(d.getMinutes() + 1);
+
+  for (let i = 0; i < 366 * 24 * 60; i++) {
+    const mon = d.getMonth() + 1;
+    const dom = d.getDate();
+    const dow = d.getDay();
+    const hr = d.getHours();
+    const min = d.getMinutes();
+
+    const dowMatch =
+      weekdayF === '*' || matchesCronField(dow, weekdayF) || (dow === 0 && matchesCronField(7, weekdayF));
+
+    if (
+      matchesCronField(mon, monthF) &&
+      matchesCronField(dom, dayF) &&
+      dowMatch &&
+      matchesCronField(hr, hourF) &&
+      matchesCronField(min, minuteF)
+    ) {
+      return d;
+    }
+    d.setMinutes(d.getMinutes() + 1);
+  }
+  return null;
+};
+
 export const validateCronExpressionDaily = input => {
   const base = validateCronExpression(input);
   if (!base.isValid) {
@@ -157,7 +227,7 @@ export const validateCronExpressionDaily = input => {
     // the index modal those rejections must surface the daily-floor message
     // instead. Other rejections (syntax errors, hour-step-zero) pass through.
     if (base.message === HOURLY_FLOOR_MSG) {
-      return { isValid: false, message: DAILY_FLOOR_MSG };
+      return { isValid: false, field: base.field, message: DAILY_FLOOR_MSG };
     }
     return base;
   }

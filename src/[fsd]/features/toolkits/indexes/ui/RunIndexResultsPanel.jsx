@@ -2,10 +2,12 @@ import { memo } from 'react';
 
 import { ChatMessageList } from '@/[fsd]/features/chat/ui/chat-box';
 import { ChatBodyContainer } from '@/components/Chat/StyledComponents';
+import useChatCopyToClipboard from '@/hooks/chat/useChatCopyToClipboard';
 
 const RunIndexResultsPanel = memo(props => {
   const { chatHistory, chatConversation, questionItemRef } = props;
   const styles = runIndexResultsPanelStyles();
+  const onCopyToClipboard = useChatCopyToClipboard(chatHistory);
 
   return (
     <ChatBodyContainer sx={styles.chatBody}>
@@ -20,7 +22,7 @@ const RunIndexResultsPanel = memo(props => {
         lastResponseMinHeight={0}
         questionItemRef={questionItemRef}
         onRegenerateAnswer={() => null}
-        onCopyToClipboard={() => null}
+        onCopyToClipboard={onCopyToClipboard}
       />
     </ChatBodyContainer>
   );
@@ -33,6 +35,8 @@ const runIndexResultsPanelStyles = () => ({
   chatBody: {
     flex: 1,
     minHeight: 0,
+    borderRadius: '0 !important',
+    border: 'none !important',
   },
 });
 

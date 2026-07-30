@@ -23,6 +23,8 @@ const IndexChatContainer = memo(props => {
     clearChat,
     chatHistory,
     conversation,
+    showHeader = true,
+    chatContainerSX,
   } = props;
   const styles = indexChatContainerStyles();
   const questionItemRef = useRef();
@@ -63,30 +65,34 @@ const IndexChatContainer = memo(props => {
   return (
     <Box sx={styles.wrapper}>
       <ContentContainer height="100%">
-        <Box sx={styles.header}>
-          <Box sx={styles.headerLeft}>
-            {isHistoryMode ? (
-              <Box />
-            ) : (
-              <LLMModelSelector
-                selectedModel={selectedModel}
-                onSelectModel={onSelectModel}
-                models={modelList}
-                llmSettings={llmSettings}
-                onSetLLMSettings={onSetLLMSettings}
-              />
-            )}
+        {showHeader && (
+          <Box sx={styles.header}>
+            <Box sx={styles.headerLeft}>
+              {isHistoryMode ? (
+                <Box />
+              ) : (
+                <LLMModelSelector
+                  selectedModel={selectedModel}
+                  onSelectModel={onSelectModel}
+                  models={modelList}
+                  llmSettings={llmSettings}
+                  onSetLLMSettings={onSetLLMSettings}
+                />
+              )}
+            </Box>
+            <Box sx={styles.additionalControls}>
+              {toggleFullScreenChat && (
+                <FullScreenToggle
+                  isFullScreenChat={isFullScreenChat}
+                  setIsFullScreenChat={toggleFullScreenChat}
+                />
+              )}
+              {!isHistoryMode && <ChatButton.ClearChatButton onClear={clearChat} />}
+            </Box>
           </Box>
-          <Box sx={styles.additionalControls}>
-            <FullScreenToggle
-              isFullScreenChat={isFullScreenChat}
-              setIsFullScreenChat={toggleFullScreenChat}
-            />
-            {!isHistoryMode && <ChatButton.ClearChatButton onClear={clearChat} />}
-          </Box>
-        </Box>
+        )}
 
-        <ChatBodyContainer sx={styles.chatContainer}>
+        <ChatBodyContainer sx={[styles.chatContainer, chatContainerSX]}>
           <ChatMessageList
             chat_history={chatHistory}
             activeConversation={conversation}

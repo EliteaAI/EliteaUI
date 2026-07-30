@@ -98,7 +98,6 @@ const runHistoryChatStyles = isSmallWindow => ({
     flexDirection: 'column',
     height: '100%',
     gap: '.75rem',
-    paddingRight: '1.5rem',
 
     ...(isSmallWindow ? { paddingLeft: '1.5rem', minHeight: '40rem', paddingBottom: '1.5rem' } : {}),
   },

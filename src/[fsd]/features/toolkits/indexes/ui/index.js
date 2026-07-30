@@ -1,19 +1,13 @@
 // Index Details
-export { default as IndexActions } from './IndexDetails/IndexActions';
-export { default as IndexConfig } from './IndexDetails/IndexConfig';
-export { default as IndexDetails } from './IndexDetails';
-export { default as IndexViewToggler } from './IndexDetails/IndexViewToggler';
-export { default as IndexViews } from './IndexDetails/IndexViews';
-export { default as IndexHistory } from './IndexDetails/IndexHistory';
-export { default as IndexScheduleModal } from './IndexDetails/IndexScheduleModal';
-export { default as IndexNameWrapper } from './IndexDetails/IndexNameWrapper';
+export { default as IndexHistory } from './index-history/IndexHistory';
+export { default as IndexScheduleModal } from './index-details/IndexScheduleModal';
 
 // Index Chat
-export { default as IndexChatContainer } from './IndexDetails/IndexChat';
+export { default as IndexChatContainer } from './index-details/IndexChat';
 
 // Indexes List
-export { default as IndexListItem } from './IndexesList/IndexListItem';
-export { default as IndexesList } from './IndexesList';
+export { default as IndexListItem } from './index-list/IndexListItem';
+export { default as IndexesList } from './index-list';
 
 // Breadcrumb
 export { default as IndexBreadcrumb } from './IndexBreadcrumb';
@@ -23,3 +17,6 @@ export { default as IndexesContainer } from './IndexesContainer';
 
 // Headless reindex runner
 export { default as HeadlessReindexRunner } from './HeadlessReindexRunner';
+export { default as RunIndexBanner } from './RunIndexBanner';
+export { IndexSuccess } from './index-success';
+export { IndexError } from './index-error';

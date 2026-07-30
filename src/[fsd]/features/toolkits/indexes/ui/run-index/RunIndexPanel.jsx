@@ -5,14 +5,16 @@ import { useFormikContext } from 'formik';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
-import { Box, Button, Tab, Tabs, Tooltip, Typography } from '@mui/material';
+import { Box, Tooltip, Typography } from '@mui/material';
 
-import { ChatButton } from '@/[fsd]/features/chat/ui';
+import { useMcpAuthModal } from '@/[fsd]/features/mcp/lib/hooks';
+import { McpAuthModal } from '@/[fsd]/features/mcp/ui';
 import {
   useDeleteIndexItemMutation,
   useUpdateIndexScheduleMutation,
 } from '@/[fsd]/features/toolkits/indexes/api';
 import {
+  BannerSeverity,
   IndexCronDefault,
   IndexStatuses,
   IndexesToolsEnum,
@@ -23,30 +25,26 @@ import {
   getMockToolkitIndexConversation,
 } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexChat.helpers';
 import { bannerVariant } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
+import { getNextCronRun } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexSchedule.helpers.js';
 import { selectToolkitScheduler } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
-import { IndexScheduleModal } from '@/[fsd]/features/toolkits/indexes/ui';
+import { IndexError, IndexScheduleModal, IndexSuccess } from '@/[fsd]/features/toolkits/indexes/ui';
 import { ToolkitChatHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useGetCurrentToolkitSchemas, useToolkitChat } from '@/[fsd]/features/toolkits/lib/hooks';
-import { Modal } from '@/[fsd]/shared/ui';
+import { ModalConstants } from '@/[fsd]/shared/lib/constants';
+import { Button, Modal } from '@/[fsd]/shared/ui';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
-import { PERMISSIONS } from '@/common/constants';
+import { useDeleteIndexScheduleMutation } from '@/api';
+import ClockIcon from '@/assets/clock_icon.svg?react';
+import { PERMISSIONS, WELCOME_MESSAGE_ID } from '@/common/constants';
 import { convertToolkitSchema } from '@/common/toolkitSchemaUtils';
-import RocketIcon from '@/components/Icons/RocketIcon';
 import { useGetSelectedToolSchema } from '@/hooks/toolkit/useGetSelectedToolSchema';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast.jsx';
 import RouteDefinitions from '@/routes';
 
-import RunIndexBanner from './RunIndexBanner';
 import RunIndexConfigSection from './RunIndexConfigSection';
 import RunIndexGeneralSection from './RunIndexGeneralSection';
-import RunIndexResultsPanel from './RunIndexResultsPanel';
-import RunIndexScheduleAction from './RunIndexScheduleAction';
 import RunIndexScheduleContent from './RunIndexScheduleContent';
-import RunIndexSettingsPanel from './RunIndexSettingsPanel';
-
-const RIGHT_TAB_RUN_SETTINGS = 'runSettings';
-const RIGHT_TAB_RESULTS = 'results';
 
 const RunIndexPanel = memo(props => {
   const {
@@ -56,8 +54,8 @@ const RunIndexPanel = memo(props => {
     refetchIndexesList,
     selectedIndexTools,
     tab,
-    isCreating,
     initialConversation,
+    toolkitName,
   } = props;
   const styles = runIndexPanelStyles();
   const navigate = useNavigate();
@@ -65,41 +63,31 @@ const RunIndexPanel = memo(props => {
   const { toastSuccess, toastError } = useToast();
   const { values } = useFormikContext();
 
-  const runToolOptions = useMemo(
-    () =>
-      [
-        { label: 'Search Index', value: IndexesToolsEnum.searchIndexData },
-        { label: 'Stepback Search Index', value: IndexesToolsEnum.stepbackSearchIndex },
-        { label: 'Stepback Summary Index', value: IndexesToolsEnum.stepbackSummaryIndex },
-      ].filter(opt => (selectedIndexTools || []).includes(opt.value)),
-    [selectedIndexTools],
-  );
-
-  const [selectedRunTool, setSelectedRunTool] = useState(runToolOptions[0]?.value ?? null);
-  const [activeRightTab, setActiveRightTab] = useState(
-    isCreating ? RIGHT_TAB_RESULTS : RIGHT_TAB_RUN_SETTINGS,
-  );
+  const [selectedSearchTool, setSelectedSearchTool] = useState(null);
+  const [hasSearchResults, setHasSearchResults] = useState(false);
+  const [hasIndexedThisSession, setHasIndexedThisSession] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [reindexConfirmOpen, setReindexConfirmOpen] = useState(false);
   const [toolInputVariables, setToolInputVariables] = useState({});
   const [configInputVariables, setConfigInputVariables] = useState({});
   const [localMetaOverride, setLocalMetaOverride] = useState(null);
-  const [bannerDismissed, setBannerDismissed] = useState(false);
+  const [deleteScheduleOpen, setDeleteScheduleOpen] = useState(false);
 
   const { id: userId, permissions: userPermissions } = useSelector(state => state.user);
   const currentProjectName = useSelector(state => state.settings.project.name);
   const toolkitScheduler = useSelector(selectToolkitScheduler);
   const [updateIndexSchedule] = useUpdateIndexScheduleMutation();
+  const [deleteIndexSchedule] = useDeleteIndexScheduleMutation();
 
   const scheduleData = useMemo(() => {
     const schedule =
       toolkitScheduler[indexName]?.schedules?.[userId] ?? toolkitScheduler[indexName]?.schedules?.[-1];
-    return schedule ?? { cron: IndexCronDefault, enabled: false, credentials: null };
+    return schedule ?? {};
   }, [toolkitScheduler, indexName, userId]);
 
   const runSchema = useGetSelectedToolSchema({
     toolkitType: values.type,
-    toolOptionType: selectedRunTool || IndexesToolsEnum.searchIndexData,
+    toolOptionType: selectedSearchTool || IndexesToolsEnum.searchIndexData,
   });
 
   const adjustedRunSchema = useMemo(() => {
@@ -119,8 +107,15 @@ const RunIndexPanel = memo(props => {
 
   const traceNewIndex = useCallback((id, metadata) => {
     if (!metadata) return;
-    setBannerDismissed(false);
+    setHasIndexedThisSession(true);
     setLocalMetaOverride(prev => ({ ...(prev || {}), ...metadata }));
+  }, []);
+
+  // Stable ref wrapper so useMcpAuthModal can be declared after useToolkitChat
+  // without creating a circular dependency.
+  const mcpAuthRequiredRef = useRef(null);
+  const onMcpAuthRequiredStable = useCallback(message => {
+    mcpAuthRequiredRef.current?.(message);
   }, []);
 
   const {
@@ -128,24 +123,42 @@ const RunIndexPanel = memo(props => {
     isIndexing,
     isRunning,
     isStoppingIndexing,
+    canStopIndexing,
     handleClearChat,
     handleClearActiveConversation,
     handleIndexData,
     handleRunTool,
+    retryLastRun,
     onCancelIndexing,
   } = useToolkitChat({
+    cancelIndexingCallback: () => {
+      traceNewIndex(index?.id ?? null, {
+        state: IndexStatuses.cancelled,
+        task_id: null,
+      });
+    },
     index,
     indexConfigOverride: configInputVariables,
     isValidForm: isRunFormValid,
     refetchIndexesList,
-    runTool: selectedRunTool,
+    runTool: selectedSearchTool,
     toolkitId,
     toolInputVariables,
     traceNewIndex,
     values,
     modes: [],
     initialConversation,
+    onMcpAuthRequired: onMcpAuthRequiredStable,
   });
+
+  const { handleMcpAuthRequired, getModalProps } = useMcpAuthModal({
+    values,
+    onSuccess: retryLastRun,
+    showSuccessToast: false,
+  });
+
+  // Wire the stable wrapper to the real handler after both hooks are initialized.
+  mcpAuthRequiredRef.current = handleMcpAuthRequired;
 
   const [deleteIndex, { isLoading: isDeleting }] = useDeleteIndexItemMutation();
 
@@ -165,11 +178,8 @@ const RunIndexPanel = memo(props => {
   }, [toolkitSchema]);
 
   const effectiveState = localMetaOverride?.state ?? index?.metadata?.state;
-  const banner = useMemo(
-    () => bannerVariant(isRunning, isIndexing, effectiveState),
-    [isRunning, isIndexing, effectiveState],
-  );
-  const canRunTools = selectedRunTool && RUNNABLE_INDEX_STATUSES.includes(effectiveState);
+  const effectiveIsIndexing = isIndexing || effectiveState === IndexStatuses.progress;
+  // const canRunTools = selectedSearchTool && RUNNABLE_INDEX_STATUSES.includes(effectiveState);
 
   const schedulingTooltipMessage = useMemo(() => {
     if (effectiveState === IndexStatuses.cancelled || effectiveState === IndexStatuses.fail)
@@ -184,8 +194,11 @@ const RunIndexPanel = memo(props => {
     return null;
   }, [effectiveState, userPermissions, scheduleData.enabled, currentProjectName]);
 
+  const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
+  const [scheduleModalIsEdit, setScheduleModalIsEdit] = useState(false);
+
   const handleChangeIndexSchedule = useCallback(
-    async (data, notification) => {
+    async (data, enabling) => {
       const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
       try {
         await updateIndexSchedule({
@@ -195,34 +208,46 @@ const RunIndexPanel = memo(props => {
           timezone,
           ...data,
         }).unwrap();
-        if (notification) toastSuccess(`Schedule is ${data.enabled ? 'enabled' : 'disabled'} for index!`);
+        if (enabling) {
+          toastSuccess(`Schedule has been successfully ${data.enabled ? 'enabled' : 'disabled'}.`);
+        } else {
+          toastSuccess(`Schedule has been successfully ${scheduleModalIsEdit ? 'updated' : 'created'}.`);
+        }
       } catch {
-        if (notification)
-          toastError(
-            `An error occurred while ${data.enabled ? 'enabling' : 'disabling'} schedule for index!`,
-          );
+        if (enabling) {
+          toastError(`Failed to ${data.enabled ? 'enable' : 'disable'} schedule.`);
+        } else {
+          toastError(`Failed to ${scheduleModalIsEdit ? 'update' : 'create'} schedule.`);
+        }
       }
     },
-    [updateIndexSchedule, projectId, toolkitId, indexName, toastSuccess, toastError],
+    [updateIndexSchedule, projectId, toolkitId, indexName, toastSuccess, scheduleModalIsEdit, toastError],
   );
-
-  const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
-
   const scheduleSummary = useMemo(() => {
-    if (!scheduleData.enabled) return null;
+    if (!scheduleData.cron) return null;
     const cron = scheduleData.cron || IndexCronDefault;
     try {
       return cronstrue.toString(cron, { use24HourTimeFormat: true });
     } catch {
       return cron;
     }
-  }, [scheduleData.enabled, scheduleData.cron]);
+  }, [scheduleData.cron]);
+
+  const scheduleNextRun = useMemo(() => {
+    if (!scheduleData.cron) return null;
+    const date = getNextCronRun(scheduleData.cron || IndexCronDefault);
+    if (!date) return null;
+    return date.toLocaleDateString(undefined, { day: '2-digit', month: '2-digit', year: 'numeric' });
+  }, [scheduleData.cron]);
 
   const handleApplyScheduleModal = useCallback(
     (cron, credentials) => {
-      handleChangeIndexSchedule({ ...scheduleData, cron, credentials, enabled: true }, true);
+      handleChangeIndexSchedule(
+        { ...scheduleData, cron, credentials, enabled: scheduleModalIsEdit ? scheduleData.enabled : true },
+        false,
+      );
     },
-    [scheduleData, handleChangeIndexSchedule],
+    [handleChangeIndexSchedule, scheduleData, scheduleModalIsEdit],
   );
 
   useEffect(() => {
@@ -232,13 +257,23 @@ const RunIndexPanel = memo(props => {
 
   const onChangeInputVariables = useCallback(value => setToolInputVariables(value), []);
 
+  const handleSelectSearchTool = useCallback(tool => {
+    if (!tool) setHasSearchResults(false);
+    setSelectedSearchTool(tool);
+  }, []);
+
+  const handleRunSearch = useCallback(() => {
+    setHasSearchResults(true);
+    handleRunTool();
+  }, [handleRunTool]);
+
   const handleReindex = useCallback(() => setReindexConfirmOpen(true), []);
   const confirmReindex = useCallback(() => {
     setReindexConfirmOpen(false);
+    setHasSearchResults(false);
     handleClearActiveConversation();
     handleClearChat();
     handleIndexData();
-    setActiveRightTab(RIGHT_TAB_RESULTS);
   }, [handleClearActiveConversation, handleClearChat, handleIndexData]);
   const cancelReindexConfirm = useCallback(() => setReindexConfirmOpen(false), []);
 
@@ -253,7 +288,7 @@ const RunIndexPanel = memo(props => {
         indexId: index.id,
         indexName: index.metadata?.collection,
       }).unwrap();
-      toastSuccess('Index deleted successfully');
+      toastSuccess(`The ${index.metadata?.collection} index has been successfully deleted.`);
       setDeleteOpen(false);
       const target = RouteDefinitions.ToolkitDetail.replace(':tab', tab ?? 'all').replace(
         ':toolkitId',
@@ -265,6 +300,39 @@ const RunIndexPanel = memo(props => {
       toastError('Failed to delete index');
     }
   }, [deleteIndex, index, navigate, projectId, tab, toastError, toastSuccess, toolkitId]);
+
+  const closeDeleteSchedule = useCallback(() => setDeleteScheduleOpen(false), []);
+
+  const scheduleOwnerUserId = useMemo(() => {
+    const schedules = toolkitScheduler[indexName]?.schedules ?? {};
+    if (schedules[userId] != null) return userId;
+    if (schedules[-1] != null) return -1;
+    return userId;
+  }, [toolkitScheduler, indexName, userId]);
+
+  const confirmDeleteSchedule = useCallback(async () => {
+    setDeleteScheduleOpen(false);
+    try {
+      await deleteIndexSchedule({
+        toolkitId,
+        projectId,
+        indexName: index.metadata?.collection ?? indexName,
+        userId: scheduleOwnerUserId,
+      }).unwrap();
+      toastSuccess('Schedule has been successfully deleted.');
+    } catch {
+      toastError('Failed to delete schedule.');
+    }
+  }, [
+    deleteIndexSchedule,
+    index.metadata?.collection,
+    indexName,
+    projectId,
+    scheduleOwnerUserId,
+    toastError,
+    toastSuccess,
+    toolkitId,
+  ]);
 
   const configFields = useMemo(() => Object.keys(configSchema?.properties || {}), [configSchema]);
 
@@ -279,31 +347,64 @@ const RunIndexPanel = memo(props => {
   }, [configSchema, configuredValues]);
 
   const runFormFields = useMemo(() => Object.keys(adjustedRunSchema?.properties || {}), [adjustedRunSchema]);
-
   const reindexStats = useMemo(() => {
     const md = index?.metadata;
     if (!md) return { isReindex: false, updatedOn: null, updated: null, skipped: 0 };
 
-    const completedRuns = Array.isArray(md.history)
-      ? md.history.filter(h => h?.state === 'completed').length
-      : 0;
-    const isReindex = completedRuns > 1;
-
+    const completedRuns = Array.isArray(md.history) ? md.history.filter(h => h?.state === 'completed') : [];
+    const isReindex = completedRuns.length > 1;
+    const sortedHistory = Array.isArray(completedRuns)
+      ? completedRuns.sort((a, b) => (a?.created_on ?? 0) - (b?.created_on ?? 0))
+      : [];
     let skipped = 0;
     try {
-      const parsed = typeof md.skipped === 'string' ? JSON.parse(md.skipped) : md.skipped;
+      const parsed =
+        typeof sortedHistory[sortedHistory.length - 1]?.skipped === 'string'
+          ? JSON.parse(sortedHistory[sortedHistory.length - 1]?.skipped)
+          : sortedHistory[sortedHistory.length - 1]?.skipped;
       skipped = Number(parsed?.total_skipped ?? 0) || 0;
     } catch {
       skipped = 0;
     }
+    let firstSkipped = 0;
+    try {
+      const parsedFirstSkipped =
+        typeof sortedHistory[0]?.skipped === 'string'
+          ? JSON.parse(sortedHistory[0]?.skipped)
+          : sortedHistory[0]?.skipped;
+      firstSkipped = Number(parsedFirstSkipped?.total_skipped ?? 0) || 0;
+    } catch {
+      firstSkipped = 0;
+    }
 
     return {
       isReindex,
+      createdOn: sortedHistory[0]?.created_on ?? null,
+      firstIndexed: sortedHistory[0]?.indexed ?? null,
+      firstSkipped,
       updatedOn: md.updated_on ?? null,
-      updated: md.updated ?? null,
+      updated: sortedHistory[sortedHistory.length - 1]?.indexed ?? null,
       skipped,
     };
   }, [index?.metadata]);
+  const banner = useMemo(
+    () => bannerVariant(effectiveIsIndexing, effectiveState, reindexStats),
+    [effectiveIsIndexing, effectiveState, reindexStats],
+  );
+
+  const onAddSchedule = useCallback(() => {
+    setScheduleModalIsEdit(false);
+    setScheduleModalOpen(true);
+  }, []);
+
+  const onEditSchedule = useCallback(() => {
+    setScheduleModalIsEdit(true);
+    setScheduleModalOpen(true);
+  }, []);
+
+  const onDeleteSchedule = useCallback(() => {
+    setDeleteScheduleOpen(true);
+  }, []);
 
   const accordionSections = [
     {
@@ -315,7 +416,7 @@ const RunIndexPanel = memo(props => {
           index={index}
           reindexStats={reindexStats}
           isRunning={isRunning}
-          isIndexing={isIndexing}
+          isIndexing={effectiveIsIndexing}
           isDeleting={isDeleting}
           onReindex={handleReindex}
           onOpenDelete={openDelete}
@@ -330,17 +431,16 @@ const RunIndexPanel = memo(props => {
         <RunIndexScheduleContent
           enabled={scheduleData.enabled}
           scheduleSummary={scheduleSummary}
+          nextRun={scheduleNextRun}
           credentialsTitle={scheduleData.credentials?.elitea_title}
-        />
-      ),
-      summaryAction: (
-        <RunIndexScheduleAction
-          enabled={scheduleData.enabled}
-          disabledReason={schedulingTooltipMessage}
-          onConfigure={() => setScheduleModalOpen(true)}
+          onAddSchedule={onAddSchedule}
+          onEdit={onEditSchedule}
+          onDelete={onDeleteSchedule}
           onToggle={() =>
             handleChangeIndexSchedule({ ...scheduleData, enabled: !scheduleData.enabled }, true)
           }
+          disabledReason={schedulingTooltipMessage}
+          toolkitName={toolkitName}
         />
       ),
       defaultExpanded: false,
@@ -354,18 +454,25 @@ const RunIndexPanel = memo(props => {
           configSchema={configSchema}
           configInputVariables={configInputVariables}
           onChangeInputVariables={setConfigInputVariables}
-          disabled={isRunning || isIndexing}
+          disabled={isRunning || effectiveIsIndexing}
         />
       ),
       defaultExpanded: false,
     },
   ];
-
-  const chatConversation = useMemo(() => getMockToolkitIndexConversation(chatHistory), [chatHistory]);
+  const chatConversation = useMemo(
+    () => getMockToolkitIndexConversation(chatHistory?.filter(msg => msg.id !== WELCOME_MESSAGE_ID)),
+    [chatHistory],
+  );
   const questionItemRef = useRef();
 
-  const historyDisabled =
-    !index?.metadata?.history?.length || effectiveState === IndexStatuses.progress || isIndexing;
+  const historyDisabled = !index?.metadata?.history?.length || effectiveIsIndexing;
+
+  const showSearchResults = (isRunning && Boolean(selectedSearchTool)) || hasSearchResults;
+  const showIndexingResults =
+    (isRunning && !selectedSearchTool) ||
+    effectiveIsIndexing ||
+    (banner.severity !== BannerSeverity.success && chatConversation?.chat_history?.length > 0);
 
   const goToHistory = useCallback(() => {
     const target = RouteDefinitions.ToolkitIndexHistory.replace(':tab', tab ?? 'all')
@@ -378,22 +485,17 @@ const RunIndexPanel = memo(props => {
     <Box sx={styles.body}>
       <Box sx={styles.leftColumn}>
         <Box sx={styles.leftHeader}>
-          <Typography
-            variant="labelMedium"
-            color="text.secondary"
-          >
-            Index details
-          </Typography>
           <Tooltip title={historyDisabled ? 'No history available' : 'View index history'}>
             <Box component="span">
-              <Button
-                variant="secondary"
+              <Button.BaseBtn
+                variant={Button.BUTTON_VARIANTS.iconLabel}
                 size="small"
                 disabled={historyDisabled}
                 onClick={goToHistory}
+                startIcon={<ClockIcon />}
               >
                 History
-              </Button>
+              </Button.BaseBtn>
             </Box>
           </Tooltip>
         </Box>
@@ -404,6 +506,7 @@ const RunIndexPanel = memo(props => {
           {accordionSections.map(section => (
             <BasicAccordion
               key={section.key}
+              accordionSX={styles.accordion}
               items={[
                 {
                   title: section.title,
@@ -418,87 +521,49 @@ const RunIndexPanel = memo(props => {
       </Box>
 
       <Box sx={styles.rightColumn}>
-        <RunIndexBanner
-          banner={banner}
-          dismissed={bannerDismissed}
-          onDismiss={() => setBannerDismissed(true)}
-          isIndexing={isIndexing}
-          isStoppingIndexing={isStoppingIndexing}
-          onCancelIndexing={onCancelIndexing}
-        />
-        <Box sx={styles.rightTabsBar}>
-          <Tabs
-            value={activeRightTab}
-            onChange={(_, v) => setActiveRightTab(v)}
-          >
-            <Tab
-              value={RIGHT_TAB_RUN_SETTINGS}
-              label="Search Settings"
-            />
-            <Tab
-              value={RIGHT_TAB_RESULTS}
-              label="Activity"
-            />
-          </Tabs>
-        </Box>
-
-        <Box sx={styles.rightContent}>
-          {activeRightTab === RIGHT_TAB_RUN_SETTINGS ? (
-            <RunIndexSettingsPanel
-              runToolOptions={runToolOptions}
-              selectedRunTool={selectedRunTool}
-              onSelectRunTool={value => setSelectedRunTool(value || null)}
-              runFormFields={runFormFields}
-              adjustedRunSchema={adjustedRunSchema}
-              toolInputVariables={toolInputVariables}
-              onChangeInputVariables={onChangeInputVariables}
-              disabled={isRunning || isIndexing}
-            />
-          ) : (
-            <RunIndexResultsPanel
-              chatHistory={chatHistory}
-              chatConversation={chatConversation}
-              questionItemRef={questionItemRef}
-            />
-          )}
-        </Box>
-
-        {!canRunTools && !isIndexing && (
-          <Box sx={styles.readyRow}>
-            <Box sx={styles.readyRowInner}>
-              <RocketIcon />
-              <Typography
-                variant="bodyMedium"
-                color="text.secondary"
-              >
-                Reindex to enable running tools against this index.
-              </Typography>
-            </Box>
-          </Box>
+        {banner.severity === BannerSeverity.success && (
+          <IndexSuccess
+            banner={banner}
+            onSelectSearchTool={handleSelectSearchTool}
+            selectedSearchTool={selectedSearchTool}
+            selectedIndexTools={selectedIndexTools}
+            runFormFields={runFormFields}
+            adjustedRunSchema={adjustedRunSchema}
+            toolInputVariables={toolInputVariables}
+            onChangeInputVariables={onChangeInputVariables}
+            isRunning={isRunning}
+            effectiveIsIndexing={effectiveIsIndexing}
+            handleRunTool={handleRunSearch}
+            chatHistory={chatHistory}
+            chatConversation={chatConversation}
+            questionItemRef={questionItemRef}
+            isRunFormValid={isRunFormValid}
+            showResults={showSearchResults}
+            showBanner={hasIndexedThisSession}
+          />
         )}
-        <Box sx={styles.rightFooter}>
-          <Box sx={styles.footerRunSlot}>
-            <Button
-              variant="special"
-              disabled={!canRunTools || !isRunFormValid || isRunning || isIndexing}
-              onClick={() => {
-                setActiveRightTab(RIGHT_TAB_RESULTS);
-                handleRunTool();
-              }}
-            >
-              Search
-            </Button>
-          </Box>
-          {activeRightTab === RIGHT_TAB_RESULTS && (
-            <Box sx={styles.footerClearSlot}>
-              <ChatButton.ClearChatButton
-                disabled={isRunning || isIndexing}
-                onClear={handleClearChat}
-              />
-            </Box>
-          )}
-        </Box>
+        {banner.severity !== BannerSeverity.success && (
+          <IndexError
+            banner={banner}
+            isIndexing={effectiveIsIndexing}
+            isStoppingIndexing={isStoppingIndexing}
+            canStopIndexing={canStopIndexing}
+            onStop={onCancelIndexing}
+            chatHistory={chatHistory}
+            chatConversation={chatConversation}
+            questionItemRef={questionItemRef}
+            showResults={showIndexingResults}
+          />
+        )}
       </Box>
+
+      <Modal.DeleteEntityModal
+        name="schedule"
+        shouldRequestInputName={false}
+        open={deleteScheduleOpen}
+        onClose={closeDeleteSchedule}
+        onConfirm={confirmDeleteSchedule}
+      />
 
       <Modal.DeleteEntityModal
         name={index?.metadata?.collection || indexName}
@@ -507,24 +572,37 @@ const RunIndexPanel = memo(props => {
         onClose={closeDelete}
         onConfirm={confirmDelete}
       />
-      <Modal.BaseModal
-        variant="simple"
+
+      <Modal.DeleteEntityModal
+        title="Reindex confirmation"
+        name={indexName}
+        shouldRequestInputName={false}
         open={reindexConfirmOpen}
-        title={`Reindex ${indexName}?`}
-        content={<Typography variant="bodyMedium">This will replace the current index data.</Typography>}
         confirmButtonText="Reindex"
         cancelButtonText="Cancel"
         onClose={cancelReindexConfirm}
         onConfirm={confirmReindex}
+        textContent="Are you sure to reindex the "
+        inlineExtraContent=" index?"
+        extraContent={
+          <Typography variant="bodyMedium">
+            {"This will replace all current index data and can't be undone once started."}
+          </Typography>
+        }
+        alarm={false}
+        titleIcon={ModalConstants.MODAL_ICON_TYPE.info}
       />
       <IndexScheduleModal
         open={scheduleModalOpen}
         onClose={() => setScheduleModalOpen(false)}
         onSubmit={handleApplyScheduleModal}
-        cron={scheduleData.cron}
+        cron={scheduleData.cron ?? IndexCronDefault}
         credentials={scheduleData.credentials}
         credentialsData={credentialsData}
+        isEdit={scheduleModalIsEdit}
+        toolkitName={toolkitName}
       />
+      <McpAuthModal {...getModalProps()} />
     </Box>
   );
 });
@@ -537,22 +615,30 @@ const runIndexPanelStyles = () => ({
     display: 'flex',
     flex: 1,
     minHeight: 0,
-    gap: '1.5rem',
   },
   leftColumn: {
-    flex: '0 0 24rem',
-    minWidth: '20rem',
-    maxWidth: '26rem',
+    flex: 0.8,
     display: 'flex',
     flexDirection: 'column',
     gap: '0.75rem',
     minHeight: 0,
+    padding: '0.5rem 1.5rem 1rem 1.5rem',
+    borderRight: ({ palette }) => `1px solid ${palette.border.table}`,
+    position: 'relative',
+    background: ({ palette }) => palette.background.toolkitDetailLeftPanel,
   },
   leftHeader: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: '0.5rem',
+    position: 'absolute',
+    top: '1rem',
+    right: '1.5rem',
+    zIndex: 999,
+  },
+  accordion: {
+    background: ({ palette }) => palette.background.toolkitDetailLeftPanel,
   },
   accordionWrapper: {
     flex: 1,
@@ -567,17 +653,13 @@ const runIndexPanelStyles = () => ({
     gap: '0.75rem',
     minHeight: 0,
   },
-  rightTabsBar: {
-    display: 'flex',
-    alignItems: 'center',
-    borderBottom: theme => `1px solid ${theme.palette.divider}`,
-  },
   rightContent: {
     flex: 1,
     minHeight: 0,
     display: 'flex',
     flexDirection: 'column',
     overflow: 'hidden',
+    alignItems: 'center',
   },
   rightFooter: {
     display: 'flex',
@@ -585,6 +667,7 @@ const runIndexPanelStyles = () => ({
     paddingTop: '0.5rem',
     width: '100%',
     position: 'relative',
+    justifyContent: 'center',
   },
   footerRunSlot: {
     width: '100%',
@@ -593,11 +676,9 @@ const runIndexPanelStyles = () => ({
     justifyContent: 'center',
   },
   footerClearSlot: {
-    position: 'absolute',
-    right: 0,
-    top: '50%',
-    transform: 'translateY(-50%)',
-    marginTop: '0.25rem',
+    display: 'flex',
+    justifyContent: 'flex-end',
+    width: '100%',
   },
   readyRow: {
     width: '100%',
@@ -605,6 +686,7 @@ const runIndexPanelStyles = () => ({
     display: 'flex',
     justifyContent: 'center',
     paddingTop: '0.25rem',
+    alignSelf: 'center',
   },
   readyRowInner: {
     display: 'flex',

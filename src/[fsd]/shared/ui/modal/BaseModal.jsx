@@ -34,6 +34,7 @@ const BaseModal = memo(props => {
     confirmButtonTestId,
     cancelButtonTestId,
     footer,
+    showCloseButton = true,
   } = props;
 
   const theme = useTheme();
@@ -140,14 +141,16 @@ const BaseModal = memo(props => {
         </Box>
         <Box sx={styles.headerRight}>
           {!isSimple && headerActions}
-          <Button.BaseBtn
-            variant={BUTTON_VARIANTS.tertiary}
-            aria-label="Close"
-            data-testid={closeButtonTestId}
-            startIcon={<CloseIcon />}
-            onClick={onClose}
-            sx={styles.closeButton}
-          />
+          {showCloseButton && (
+            <Button.BaseBtn
+              variant={BUTTON_VARIANTS.tertiary}
+              aria-label="Close"
+              data-testid={closeButtonTestId}
+              startIcon={<CloseIcon />}
+              onClick={onClose}
+              sx={styles.closeButton}
+            />
+          )}
         </Box>
       </DialogTitle>
 

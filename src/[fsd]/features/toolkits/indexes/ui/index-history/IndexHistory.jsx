@@ -52,6 +52,8 @@ const IndexHistory = memo(props => {
     item => {
       if (item.state === IndexStatuses.success && item.updated_on !== initialCompletedTs) {
         return 'Reindexed';
+      } else if (item.state === IndexStatuses.runTest) {
+        return 'Search index';
       }
       return IndexHistoryItemsLabels[item.state] || item.state;
     },
@@ -92,7 +94,7 @@ const IndexHistory = memo(props => {
         headerItems={tableHeaderItems}
         sortConfig={sortConfig}
         onSort={handleSortItems}
-        gridTemplateColumns="0.5fr 1fr"
+        gridTemplateColumns="1fr 1fr"
       />
       <Box sx={styles.scrollableContent}>
         {sortedHistory.map((historyItem, idx) => (
@@ -107,14 +109,13 @@ const IndexHistory = memo(props => {
             onClick={() => handleSelectHistoryItem(historyItem)}
           >
             <Typography
-              variant="bodyM"
+              variant="bodyMedium"
               color="text.secondary"
-              sx={{ width: '6.5rem' }}
             >
               {resolveLabel(historyItem)}
             </Typography>
             <Typography
-              variant="bodyM"
+              variant="bodyMedium"
               color="text.secondary"
             >
               {format(new Date(fromUnixTime(historyItem.updated_on)), 'dd-MM-yyyy, hh:mm a')}
@@ -146,7 +147,7 @@ const indexHistoryStyles = () => ({
   },
   historyItem: ({ palette }) => ({
     display: 'grid',
-    gridTemplateColumns: '0.5fr 1fr',
+    gridTemplateColumns: '1fr 1fr',
     alignItems: 'center',
     padding: '.5rem 1rem',
     width: '100%',

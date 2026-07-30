@@ -129,7 +129,7 @@ const findOrCreateStreamingMessage = (history, message_id, task_id) => {
   return idx;
 };
 
-export const generateChatMessageBasedOnResponse = ({ message, chatHistory, onFinish, onStartTask }) => {
+export const generateChatMessageBasedOnResponse = ({ message, chatHistory, onFinish }) => {
   const { message_id, type: socketMessageType, response_metadata } = message;
   const { task_id } = message.content instanceof Object ? message.content : {};
 
@@ -148,8 +148,6 @@ export const generateChatMessageBasedOnResponse = ({ message, chatHistory, onFin
         created_at: new Date().getTime(),
         participant_id: 'system',
       };
-
-      if (onStartTask) onStartTask(task_id);
 
       return [...updatedHistory, loadingMessage];
     }
