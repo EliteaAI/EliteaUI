@@ -337,7 +337,7 @@ Card.displayName = 'Card';
 
 const lineClamp = lines => ({
   width: '100%',
-  wordWrap: 'wrap',
+  wordWrap: 'break-word',
   overflowWrap: 'break-word',
   textOverflow: 'ellipsis',
   overflow: 'hidden',
@@ -392,6 +392,8 @@ const cardStyles = (hasCardDetails, showCardBottom, isWholeCardClickable, isClic
   cardTitleWrapper: {
     display: 'flex',
     flexDirection: 'column',
+    minWidth: 0,
+    overflow: 'hidden',
   },
   cardTitle: {
     maxHeight: '3rem',
