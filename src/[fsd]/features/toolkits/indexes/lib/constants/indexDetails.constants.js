@@ -33,6 +33,9 @@ export const IndexStatuses = {
 // Statuses that allow the index to be searched and run tools against
 export const RUNNABLE_INDEX_STATUSES = [IndexStatuses.success, IndexStatuses.partlyOk];
 
+export const PARTLY_INDEXED_REINDEX_MESSAGE =
+  'Index completed with partial results. Reindex to retry skipped content.';
+
 export const IndexHistoryItemsLabels = {
   [IndexStatuses.success]: 'Indexed',
   [IndexStatuses.created]: 'Created',

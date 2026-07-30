@@ -7,6 +7,7 @@ import {
   EditViewTabsEnum,
   IndexStatuses,
   IndexesToolsEnum,
+  PARTLY_INDEXED_REINDEX_MESSAGE,
 } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import {
   generateChatMessageBasedOnResponse,
@@ -59,7 +60,7 @@ export const useToolkitChat = props => {
   const indexEventSourceRef = useRef(null);
   const admittedIndexTaskIdRef = useRef(null);
   const settledIndexExecutionRef = useRef(null);
-  const { toastSuccess, toastError } = useToast();
+  const { toastSuccess, toastError, toastWarning } = useToast();
   const projectId = useSelectedProjectId();
 
   // Get toolkit socket context to check if auth check is in progress
@@ -223,6 +224,8 @@ export const useToolkitChat = props => {
       setIndexExecutionState(state);
       setIsStopRequested(false);
 
+      if (state === IndexStatuses.partlyOk) toastWarning(PARTLY_INDEXED_REINDEX_MESSAGE);
+
       if (traceNewIndex)
         traceNewIndex(index?.id ?? null, {
           state,
@@ -235,7 +238,7 @@ export const useToolkitChat = props => {
         refetchIndexesList();
       }, 500);
     },
-    [cancelIndexingCallback, index, isTestToolsMode, refetchIndexesList, traceNewIndex],
+    [cancelIndexingCallback, index, isTestToolsMode, refetchIndexesList, toastWarning, traceNewIndex],
   );
 
   const onStartTask = useCallback(

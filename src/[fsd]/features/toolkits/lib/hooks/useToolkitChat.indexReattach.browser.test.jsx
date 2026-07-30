@@ -3,6 +3,7 @@ import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import { ACTIVE_INDEX_CONFLICT_MESSAGE } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexExecution.helpers';
 
 import { useToolkitChat } from './useToolkitChat.hooks';
@@ -20,6 +21,7 @@ const mocks = vi.hoisted(() => ({
   stopIndex: vi.fn(),
   toastError: vi.fn(),
   toastSuccess: vi.fn(),
+  toastWarning: vi.fn(),
   traceNewIndex: vi.fn(),
 }));
 
@@ -87,6 +89,7 @@ vi.mock('@/hooks/useToast', () => ({
   default: () => ({
     toastError: mocks.toastError,
     toastSuccess: mocks.toastSuccess,
+    toastWarning: mocks.toastWarning,
   }),
 }));
 
@@ -592,6 +595,50 @@ describe('useToolkitChat active index reattachment', () => {
       content: '✅ Indexed terminal result',
     });
     expect(current.isRunning).toBe(false);
+  });
+
+  it('settles partial SSE results as runnable and recommends reindexing once', async () => {
+    const taskId = '77777777777777777777777777777777';
+
+    await renderHook({
+      ...baseProps,
+      index: activeIndexFor(taskId, { index_generation: 17 }),
+    });
+    const source = FakeEventSource.instances[0];
+
+    await act(async () => {
+      source.emit('index.ingest.completed', {
+        status: 'partly_indexed',
+        message: 'Indexed 10 of 12 files',
+      });
+      await flush();
+    });
+
+    expect(current.chatHistory.find(message => message.task_id === taskId)).toMatchObject({
+      task_id: taskId,
+      content: '⚠️ Indexed 10 of 12 files',
+      isLoading: false,
+      isStreaming: false,
+    });
+    expect(mocks.traceNewIndex).toHaveBeenCalledWith(
+      baseIndex.id + 1,
+      expect.objectContaining({ state: IndexStatuses.partlyOk }),
+    );
+    expect(mocks.toastWarning).toHaveBeenCalledOnce();
+    expect(mocks.toastWarning).toHaveBeenCalledWith(
+      'Index completed with partial results. Reindex to retry skipped content.',
+    );
+    expect(source.closed).toBe(true);
+    expect(current.isRunning).toBe(false);
+
+    await act(async () => {
+      source.emit('index.ingest.completed', {
+        status: 'partly_indexed',
+        message: 'Duplicate terminal event',
+      });
+      await flush();
+    });
+    expect(mocks.toastWarning).toHaveBeenCalledOnce();
   });
 
   it('keeps a newly admitted terminal result when metadata later advances to the new generation', async () => {
