@@ -11,7 +11,6 @@ import CoinIcon from '@/assets/coin-icon.svg?react';
 import CompassIcon from '@/assets/compass.svg?react';
 import ConfigurationIcon from '@/assets/configuration-icon.svg?react';
 import KeyIcon from '@/assets/key-icon.svg?react';
-import LogoutIcon from '@/assets/logout-icon.svg?react';
 import ModelIcon from '@/assets/model-icon.svg?react';
 import EnvironmentIcon from '@/assets/new-environment-icon.svg?react';
 import PersonalizationIcon from '@/assets/personalization-icon.svg?react';
@@ -20,6 +19,7 @@ import ReasonIcon from '@/assets/reason-icon.svg?react';
 import BellIcon from '@/components/Icons/BellIcon';
 import BriefcaseIcon from '@/components/Icons/BriefcaseIcon';
 import Lock from '@/components/Icons/Lock.jsx';
+import Person from '@/components/Icons/Person';
 import UsersIcon from '@/components/Icons/UsersIcon';
 
 const ICON_COMPONENTS = {
@@ -37,7 +37,7 @@ const ICON_COMPONENTS = {
   'ai-personality': ReasonIcon,
   memory: BrainIcon,
   notifications: BellIcon,
-  logout: LogoutIcon,
+  profile: Person,
 };
 
 const getIconComponent = tabId => {

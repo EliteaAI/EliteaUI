@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useMemo } from 'react';
 
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 import { Box } from '@mui/material';
@@ -14,7 +14,6 @@ import CoinIcon from '@/assets/coin-icon.svg?react';
 import ConfigurationIcon from '@/assets/configuration-icon.svg?react';
 import EnvironmentIcon from '@/assets/environment-icon.svg?react';
 import KeyIcon from '@/assets/key-icon.svg?react';
-import LogoutIcon from '@/assets/logout-icon.svg?react';
 import PersonalizationIcon from '@/assets/personalization-icon.svg?react';
 import ReasonIcon from '@/assets/reason-icon.svg?react';
 import { PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';
@@ -22,11 +21,11 @@ import BellIcon from '@/components/Icons/BellIcon';
 import BriefcaseIcon from '@/components/Icons/BriefcaseIcon';
 import Lock from '@/components/Icons/Lock.jsx';
 import ModelIcon from '@/components/Icons/ModelIcon';
+import Person from '@/components/Icons/Person';
 import UsersIcon from '@/components/Icons/UsersIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import RouteDefinitions, { PathSessionMap } from '@/routes';
-import { logout } from '@/slices/user.js';
 
 const VALID_TAB_IDS = [
   'ai-providers',
@@ -40,11 +39,11 @@ const VALID_TAB_IDS = [
   'users',
   'analytics',
   'usage',
+  'profile',
   'preferences',
   'ai-personality',
   'memory',
   'notifications',
-  'logout',
 ];
 
 const SETTINGS_SECTIONS = {
@@ -111,6 +110,11 @@ const SETTINGS_TABS_CONFIG = [
     section: SETTINGS_SECTIONS.PERSONAL,
     tabs: [
       {
+        id: 'profile',
+        label: 'Profile',
+        icon: <Person />,
+      },
+      {
         id: 'preferences',
         label: 'Preferences',
         icon: <PersonalizationIcon />,
@@ -135,12 +139,6 @@ const SETTINGS_TABS_CONFIG = [
         label: 'Notifications',
         icon: <BellIcon />,
       },
-      {
-        id: 'logout',
-        label: 'Log out',
-        icon: <LogoutIcon />,
-        isAction: true,
-      },
     ],
   },
 ];
@@ -150,7 +148,6 @@ const LEGACY_TAB_REDIRECTS = ['configuration', 'information'];
 
 const Settings = memo(() => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const projectId = useSelectedProjectId();
 
   const styles = settingsPageStyles();
@@ -193,21 +190,8 @@ const Settings = memo(() => {
     ],
   );
 
-  const onLogout = useCallback(() => {
-    dispatch(logout());
-    window.location.href = window.location.origin.toString() + '/forward-auth/logout';
-  }, [dispatch]);
-
   const handleSettingsItemClick = useCallback(
     tabId => {
-      // Find the tab config to check for actions
-      const tabConfig = SETTINGS_TABS_CONFIG.flatMap(s => s.tabs).find(t => t.id === tabId);
-
-      if (tabConfig?.isAction && tabId === 'logout') {
-        onLogout();
-        return;
-      }
-
       const pagePath = `${RouteDefinitions.Settings}/${tabId}`;
       navigate(pagePath, {
         state: locationState || {
@@ -220,7 +204,7 @@ const Settings = memo(() => {
         },
       });
     },
-    [navigate, locationState, onLogout],
+    [navigate, locationState],
   );
 
   // Handle legacy route redirects
