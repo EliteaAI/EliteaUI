@@ -166,27 +166,30 @@ const UsageContainer = memo(() => {
 
         {!isLoading && data && (
           <>
-            <Box sx={styles.infoNotes}>
-              {isPersonalProject && (
-                <Box sx={styles.infoNote}>
-                  <InfoOutlinedIcon sx={styles.infoIcon} />
-                  <Typography
-                    variant="bodySmall"
-                    sx={styles.infoText}
-                  >
-                    {PRIVATE_PROJECT_INFO}
-                  </Typography>
-                </Box>
-              )}
-              <Box sx={styles.infoNote}>
-                <InfoOutlinedIcon sx={styles.infoIcon} />
+            <Box sx={styles.infoBanner}>
+              <Box sx={styles.infoBannerTitle}>
+                <InfoOutlinedIcon sx={styles.infoBannerIcon} />
                 <Typography
-                  variant="bodySmall"
-                  sx={styles.infoText}
+                  variant="labelMedium"
+                  sx={styles.infoBannerTitleText}
                 >
-                  {SHARED_MODELS_INFO}
+                  Note
                 </Typography>
               </Box>
+              {isPersonalProject && (
+                <Typography
+                  variant="bodyMedium"
+                  sx={styles.infoBannerText}
+                >
+                  {PRIVATE_PROJECT_INFO}
+                </Typography>
+              )}
+              <Typography
+                variant="bodyMedium"
+                sx={styles.infoBannerText}
+              >
+                {SHARED_MODELS_INFO}
+              </Typography>
             </Box>
 
             {!data.spend_available && (
@@ -289,26 +292,29 @@ const usageContainerStyles = () => ({
     gap: '1rem',
     flexWrap: 'wrap',
   },
-  infoNotes: {
+  infoBanner: ({ palette }) => ({
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.5rem',
-  },
-  infoNote: {
-    display: 'flex',
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: '0.5rem',
-  },
-  infoIcon: ({ palette }) => ({
-    fontSize: '1rem',
-    // Nudge onto the first line's baseline rather than the top of the text box
-    marginTop: '0.125rem',
-    flexShrink: 0,
-    color: palette.text.metrics || palette.text.disabled,
+    gap: '0.375rem',
+    padding: '0.75rem 1rem',
+    background: palette.background.indexResult.info,
+    borderRadius: '0.75rem',
+    border: `0.0625rem solid ${palette.border.indexResult.info}`,
   }),
-  infoText: ({ palette }) => ({
-    color: palette.text.metrics || palette.text.disabled,
+  infoBannerTitle: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.375rem',
+  },
+  infoBannerIcon: ({ palette }) => ({
+    fontSize: '1rem',
+    color: palette.icon.indexResult.info,
+  }),
+  infoBannerTitleText: ({ palette }) => ({
+    color: palette.text.indexResult.info,
+  }),
+  infoBannerText: ({ palette }) => ({
+    color: palette.text.indexResult.info,
   }),
 });
 

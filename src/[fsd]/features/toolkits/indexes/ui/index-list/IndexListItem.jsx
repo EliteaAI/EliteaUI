@@ -14,6 +14,7 @@ import FileIcon from '@/assets/file.svg?react';
 import IndexingIcon from '@/assets/indexing.svg?react';
 import OpenInNewIcon from '@/assets/open-new-icon.svg?react';
 import StopIcon from '@/assets/stop-icon.svg?react';
+import UnavailableIcon from '@/assets/unavailable.svg?react';
 import { PERMISSIONS } from '@/common/constants';
 import EntityIcon from '@/components/EntityIcon';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
@@ -168,18 +169,15 @@ const IndexListItem = memo(props => {
           </Box>
 
           {Number(documents.skipped) > 0 && (
-            <Box sx={[styles.infoItem, { svg: { mt: '.15rem' } }]}>
-              <AttentionIcon
-                width={16}
-                height={16}
-              />
+            <Box sx={[styles.infoItem]}>
+              <UnavailableIcon />
               <Tooltip
                 title="total skipped during indexing"
                 placement="top"
               >
                 <Typography
                   variant="bodySmall2"
-                  sx={styles.skippedText}
+                  noWrap
                 >
                   {documents.skipped}
                 </Typography>
@@ -403,9 +401,7 @@ const indexListItem = () => ({
       fill: palette.background.warning,
     }),
   },
-  skippedText: ({ palette }) => ({
-    color: palette.background.warning,
-  }),
+
   actionIcon: {
     fontSize: '1rem',
   },

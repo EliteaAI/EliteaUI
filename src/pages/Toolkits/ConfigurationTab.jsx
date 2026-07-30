@@ -131,6 +131,11 @@ const styles = {
     ' & .MuiAccordion-root': {
       background: ({ palette }) => `${palette.background.toolkitDetailLeftPanel} !important`,
     },
+
+    '>div': {
+      maxWidth: '40.1875rem',
+      margin: '0 auto',
+    },
   },
   rightPanel: {
     height: '100%',
