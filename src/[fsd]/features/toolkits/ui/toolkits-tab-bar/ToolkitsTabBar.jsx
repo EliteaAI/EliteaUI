@@ -7,6 +7,7 @@ import { Box, Button as MuiButton, Typography } from '@mui/material';
 
 import { selectIndexesAvailable } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
 import ToolkitsTabBarPlaceholder from '@/[fsd]/features/toolkits/ui/toolkits-tab-bar/ToolkitsTabBarPlaceholder';
+import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { useFormDirtyExcluding } from '@/[fsd]/shared/lib/hooks';
 import { Button, Modal } from '@/[fsd]/shared/ui';
 import { useToolkitEditMutation } from '@/api/toolkits';
@@ -163,8 +164,10 @@ const ToolkitsTabBarContainer = memo(props => {
       <Modal.BaseModal
         hideSections
         open={alertSaving}
+        variant={ModalConstants.MODAL_VARIANT.simple}
         title="Warning!"
-        onClose={() => setAlertSaving(false)}
+        titleIcon={ModalConstants.MODAL_ICON_TYPE.warning}
+        showCloseButton={false}
         content={
           <Typography>
             Are you sure to save changes for the Embedding Model? That will make all existing indexes

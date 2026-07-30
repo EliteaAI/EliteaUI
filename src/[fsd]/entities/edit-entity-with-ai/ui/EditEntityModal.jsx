@@ -177,7 +177,9 @@ const EditEntityModal = memo(props => {
             steps={steps}
             activeStepIndex={activeStepIndex}
           />
-          <Box sx={styles.stepContent}>{renderStep(activeStep.key, draftData, setDraftData, setIsDraftValid)}</Box>
+          <Box sx={styles.stepContent}>
+            {renderStep(activeStep.key, draftData, setDraftData, setIsDraftValid)}
+          </Box>
         </Box>
       );
     }

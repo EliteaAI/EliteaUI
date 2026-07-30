@@ -134,6 +134,12 @@ export const useToolkitChat = props => {
   const [isStopRequested, setIsStopRequested] = useState(false);
   const effectiveIndexState = resolveIndexExecutionState(index?.metadata?.state, indexExecutionState);
   const isIndexing = effectiveIndexState === IndexStatuses.progress;
+  const activeIndexTaskId = resolveAuthoritativeIndexExecutionTaskId(
+    index?.metadata?.state,
+    index?.metadata?.task_id,
+    admittedIndexTaskIdRef.current,
+  );
+  const canStopIndexing = Boolean(activeIndexTaskId) && isIndexing && !isStopRequested;
   const currentIndexGeneration =
     index?.metadata?.index_generation ?? index?.metadata?.execution_generation ?? null;
 
@@ -253,13 +259,9 @@ export const useToolkitChat = props => {
   );
 
   const onRunFinishRef = useRef(onRunFinish);
-  const onStartTaskRef = useRef(onStartTask);
   useEffect(() => {
     onRunFinishRef.current = onRunFinish;
   }, [onRunFinish]);
-  useEffect(() => {
-    onStartTaskRef.current = onStartTask;
-  }, [onStartTask]);
 
   const closeIndexEventStream = useCallback(() => {
     indexEventSourceRef.current?.close();
@@ -362,7 +364,6 @@ export const useToolkitChat = props => {
           return generateChatMessageBasedOnResponse({
             message,
             chatHistory: correlatedHistory,
-            onStartTask: startedTaskId => onStartTaskRef.current(startedTaskId),
             allowTerminalSideEffects: false,
           });
         });
@@ -524,12 +525,20 @@ export const useToolkitChat = props => {
         return;
       }
 
+      // Call onStartTask here (outside the setChatHistory updater) so that
+      // traceNewIndex → setReindexRunning (parent state) is never called from
+      // inside a React state-updater function, which would trigger the
+      // "Cannot update a component while rendering" warning.
+      if (message.type === SocketMessageType.StartTask) {
+        const { task_id } = message.content instanceof Object ? message.content : {};
+        onStartTask(task_id);
+      }
+
       setChatHistory(prev =>
         generateChatMessageBasedOnResponse({
           message,
           chatHistory: prev,
           onFinish: onRunFinish,
-          onStartTask,
         }),
       );
     },
@@ -873,7 +882,7 @@ export const useToolkitChat = props => {
         index?.metadata?.task_id,
         admittedIndexTaskIdRef.current,
       );
-      if (!taskId) throw new Error('The indexing task identifier is unavailable.');
+      if (!canStopIndexing || !taskId) return;
 
       await stopIndex({
         projectId,
@@ -888,11 +897,15 @@ export const useToolkitChat = props => {
       setIsStopRequested(false);
       toastError('Failed to stop indexing');
     }
-  }, [index, projectId, stopIndex, toastError, toastSuccess, toolkitId]);
+  }, [canStopIndexing, index, projectId, stopIndex, toastError, toastSuccess, toolkitId]);
 
   const handleIndexData = useCallback(() => run(), [run]);
 
   const handleRunTool = useCallback(() => run(runTool), [run, runTool]);
+
+  const retryLastRun = useCallback(() => {
+    if (runningToolRef.current) run(runningToolRef.current);
+  }, [run]);
 
   const handleClearChat = useCallback(() => {
     setChatHistory([generateWelcomeMessage(runTool, isTestToolsMode)]);
@@ -916,10 +929,12 @@ export const useToolkitChat = props => {
     isFullScreenChat,
     isRunning,
     isStoppingIndexing: isStoppingIndexing || isStopRequested,
+    canStopIndexing,
     handleClearActiveConversation,
     handleClearChat,
     handleIndexData,
     handleRunTool,
+    retryLastRun,
     llmSettings,
     modelList,
     onCancelIndexing,

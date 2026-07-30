@@ -142,7 +142,9 @@ const BaseEditor = ({
         variant={ModalConstants.MODAL_VARIANT.simple}
         titleIcon={ModalConstants.MODAL_ICON_TYPE.warning}
         title="Warning"
-        content={<Typography variant="bodyMedium">{ModalConstants.WARNING_MESSAGES.UNSAVED_CHANGES}</Typography>}
+        content={
+          <Typography variant="bodyMedium">{ModalConstants.WARNING_MESSAGES.UNSAVED_CHANGES}</Typography>
+        }
         open={showWarning}
         onClose={handleDialogCancel}
         onConfirm={handleDialogConfirm}

@@ -138,7 +138,6 @@ const runHistoryListStyles = isSmallWindow => {
       width: wrapperWidth,
       minWidth: wrapperWidth,
       maxWidth: wrapperWidth,
-      padding: '0rem 2rem 0.5rem 2rem',
       display: 'flex',
       flexDirection: 'column',
       boxSizing: 'border-box',

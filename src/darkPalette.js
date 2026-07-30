@@ -31,6 +31,7 @@ const gray58 = 'rgba(12, 17, 25, 1)';
 const gray60 = '#0E131D';
 const blue5 = 'rgba(41, 184, 245, 0.05)';
 const blue8 = 'rgba(106, 232, 250, 0.08)';
+const blueFill8 = 'rgba(41, 184, 245, 0.08)';
 const blue10 = 'rgba(106, 232, 250, 0.10)';
 const blue16 = 'rgba(106, 232, 250, 0.16)';
 const blue20 = 'rgba(106, 232, 250, 0.20)';
@@ -87,6 +88,9 @@ const darkPurpleBgr = '#2A2F46';
 const darkOrangeBgr = '#362F2E';
 const darkPurple = '#7C69B4';
 const darkOrange = '#A5695C';
+const yellow = '#F1BD17';
+const greenOutline40 = 'rgba(42, 179, 122, 0.4)';
+const lightBlue = 'rgba(215, 241, 255, 1)';
 
 const darkPalette = {
   mode: 'dark',
@@ -398,6 +402,13 @@ const darkPalette = {
     emptyState: {
       default: white3,
     },
+    toolkitDetailLeftPanel: 'rgba(21, 28, 37, 1)',
+    indexResult: {
+      success: green8,
+      error: red8,
+      warning: orange8,
+      info: blueFill8,
+    },
   },
   border: {
     lines: gray30,
@@ -426,6 +437,13 @@ const darkPalette = {
     chatContinue: blue30,
     aiProviderAccordion:
       'linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.0014) 100%)',
+    reindexInfoContainer: yellow,
+    indexResult: {
+      success: greenOutline40,
+      error: red40,
+      warning: orangeOutline40,
+      info: blue40,
+    },
   },
   boxShadow: {
     default: `0px 0px 8px 0px ${white14}`,
@@ -491,6 +509,12 @@ const darkPalette = {
     link: blue,
     linkSeen: blue70,
     highlighted: white,
+    indexResult: {
+      success: lightGreen,
+      error: lightRed,
+      warning: lightOrange,
+      info: lightBlue,
+    },
   },
   icon: {
     main: gray10,
@@ -522,6 +546,12 @@ const darkPalette = {
       hover: white,
       active: white,
       disabled: gray20,
+    },
+    indexResult: {
+      success: greenHoverBtn,
+      error: dangerRed,
+      warning: orange,
+      info: blue,
     },
   },
   checkbox: {

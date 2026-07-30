@@ -2,9 +2,8 @@ import React, { memo, useCallback, useMemo, useState } from 'react';
 
 import { Box, InputAdornment, TextField, Typography } from '@mui/material';
 
-import { Button } from '@/[fsd]/shared/ui';
-
 import { PathValidationHelpers } from '@/[fsd]/features/artifacts/lib/helpers';
+import { Button } from '@/[fsd]/shared/ui';
 import BaseModal from '@/[fsd]/shared/ui/modal/BaseModal';
 
 const MAX_FOLDER_DEPTH = 10;

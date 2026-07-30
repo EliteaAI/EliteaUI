@@ -40,6 +40,9 @@ function useBrowserPageTitle() {
       return `Pipelines - ${projectName}`;
     } else if (location.pathname.startsWith('/toolkits')) {
       if (params.toolkitId) {
+        if (params.indexName) {
+          return `Index: ${name || params.toolkitId}/${params.indexName} - ${projectName}`;
+        }
         return `Toolkit: ${name || params.toolkitId} - ${projectName}`;
       } else if (params.tab) {
         return `Toolkits: ${params.tab} - ${projectName}`;
@@ -111,6 +114,7 @@ function useBrowserPageTitle() {
     params.credential_uid,
     params.skillId,
     params.appId,
+    params.indexName,
     projectName,
     name,
   ]);

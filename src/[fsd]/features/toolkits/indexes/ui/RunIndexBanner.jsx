@@ -1,0 +1,110 @@
+import { memo, useMemo } from 'react';
+
+import { Box, CircularProgress, Typography } from '@mui/material';
+
+import { Button } from '@/[fsd]/shared/ui';
+import ErrorIcon from '@/assets/error-icon.svg?react';
+import FailIcon from '@/assets/fail-icon.svg?react';
+import SuccessIcon from '@/assets/success-icon.svg?react';
+
+import { BannerSeverity } from '../lib/constants';
+
+const IconMap = {
+  [BannerSeverity.success]: SuccessIcon,
+  [BannerSeverity.warning]: FailIcon,
+  [BannerSeverity.error]: ErrorIcon,
+};
+
+const RunIndexBanner = memo(props => {
+  const {
+    banner: {
+      severity,
+      label,
+      message = 'Some description of status, important details or instructions.',
+    } = {},
+    isIndexing,
+    isStoppingIndexing,
+    canStopIndexing = true,
+    onStop,
+    showBottomBorder = true,
+    CustomIcon,
+    sx,
+    contentSX,
+  } = props;
+  const styles = useMemo(() => getStyles(severity, showBottomBorder), [severity, showBottomBorder]);
+  const Icon = IconMap[severity];
+  return (
+    <Box sx={[styles.root, sx]}>
+      <Box sx={[styles.contentContainer, contentSX]}>
+        <Box sx={styles.titleContainer}>
+          {CustomIcon ? <CustomIcon /> : Icon && <Icon />}
+          {severity === BannerSeverity.info && !CustomIcon && <CircularProgress size={16} />}
+          {label && (
+            <Typography
+              sx={styles.title}
+              variant="labelMedium"
+            >
+              {label}
+            </Typography>
+          )}
+        </Box>
+        {message && (
+          <Typography
+            sx={styles.message}
+            variant="bodyMedium"
+          >
+            {message}
+          </Typography>
+        )}
+      </Box>
+      {isIndexing && onStop && (
+        <Button.BaseBtn
+          variant={Button.BUTTON_VARIANTS.alarm}
+          onClick={onStop}
+          disabled={isStoppingIndexing || !canStopIndexing}
+        >
+          {isStoppingIndexing ? 'Stopping...' : canStopIndexing ? 'Stop' : 'Starting...'}
+        </Button.BaseBtn>
+      )}
+    </Box>
+  );
+});
+
+RunIndexBanner.displayName = 'RunIndexBanner';
+
+/** @type {MuiSx} */
+const getStyles = (severity, showBottomBorder) => ({
+  root: {
+    display: 'flex',
+    gap: '1rem',
+    alignItems: 'center',
+    padding: '1rem 1.5rem',
+    borderBottom: showBottomBorder ? ({ palette }) => `0.0625rem solid ${palette.border.table}` : 'none',
+  },
+  contentContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    flex: 1,
+    gap: '0.375rem',
+    padding: '0.75rem 1rem',
+    background: ({ palette }) =>
+      palette.background.indexResult[severity] || palette.background.indexResult.info,
+    borderRadius: '0.75rem',
+    border: ({ palette }) =>
+      `0.0625rem solid ${palette.border.indexResult[severity] || palette.border.indexResult.info}`,
+  },
+  titleContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.375rem',
+    color: ({ palette }) => palette.icon.indexResult[severity] || palette.icon.indexResult.info,
+  },
+  title: {
+    color: ({ palette }) => palette.text.indexResult[severity] || palette.text.indexResult.info,
+  },
+  message: {
+    color: ({ palette }) => palette.text.indexResult[severity] || palette.text.indexResult.info,
+  },
+});
+
+export default RunIndexBanner;

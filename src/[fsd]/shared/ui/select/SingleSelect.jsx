@@ -684,7 +684,10 @@ const SingleSelect = memo(props => {
   };
 
   return separateLabel ? (
-    <Box sx={[styles.labelContainer, labelContainerSx]}>
+    <Box
+      sx={[styles.labelContainer, labelContainerSx]}
+      onClick={handleMenuOpen}
+    >
       <Typography
         variant="labelMedium"
         color="text.primary"
@@ -692,7 +695,9 @@ const SingleSelect = memo(props => {
       >
         {label}
       </Typography>
-      <Box>{renderSelectComponent(styles.selectwithLabel, styles.selectIconWithLabel)}</Box>
+      <Box onClick={e => e.stopPropagation()}>
+        {renderSelectComponent(styles.selectwithLabel, styles.selectIconWithLabel)}
+      </Box>
     </Box>
   ) : (
     renderSelectComponent()
@@ -716,6 +721,7 @@ const singleSelectStyles = (
     display: 'flex',
     alignItems: 'center',
     flexDirection: 'row',
+    cursor: 'pointer',
   },
   valueItem: {
     display: 'flex',
@@ -725,6 +731,9 @@ const singleSelectStyles = (
   selectwithLabel: {
     margin: '0 !important',
     padding: '0.385rem !important',
+    '&.MuiInput-underline:before, &.MuiInput-underline:after': {
+      display: 'none',
+    },
     '& .MuiInput-input': {
       paddingBottom: '0.1875rem !important',
     },

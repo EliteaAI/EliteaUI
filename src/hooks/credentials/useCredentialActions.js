@@ -52,7 +52,8 @@ export const useCredentialActions = ({ integration, refetch }) => {
         });
         if (!error) {
           await refetch();
-          const credentialName = integration?.settings?.title || integration?.title || integration?.config?.name || 'credential';
+          const credentialName =
+            integration?.settings?.title || integration?.title || integration?.config?.name || 'credential';
           toastSuccess(`The ${credentialName} credential has been successfully deleted.`);
         } else {
           toastError(error?.status === 403 ? 'The action is not allowed' : buildErrorMessage(error));

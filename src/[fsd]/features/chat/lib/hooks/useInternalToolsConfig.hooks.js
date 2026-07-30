@@ -43,9 +43,7 @@ export const useInternalToolsConfig = ({ activeConversation, setActiveConversati
             internal_tools: activeConversation.meta?.internal_tools,
           },
         });
-        toastError(
-          buildErrorMessage(result.error) || 'Failed to update modules config, please try again.',
-        );
+        toastError(buildErrorMessage(result.error) || 'Failed to update modules config, please try again.');
       }
     }, 0);
   };

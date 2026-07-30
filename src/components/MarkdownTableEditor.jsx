@@ -76,7 +76,9 @@ export const parseMarkdownTable = markdown => {
 
 // Convert the grid back to Markdown
 const convertToMarkdown = (columns, rows) => {
-  const headers = columns.map(col => col.headerName.replace(/\\/g, '\\\\').replace(/\n/g, '<br>').replace(/\|/g, '\\|')).join(' | ');
+  const headers = columns
+    .map(col => col.headerName.replace(/\\/g, '\\\\').replace(/\n/g, '<br>').replace(/\|/g, '\\|'))
+    .join(' | ');
   const separator = columns.map(() => '---').join(' | ');
   const dataRows = rows
     .map(

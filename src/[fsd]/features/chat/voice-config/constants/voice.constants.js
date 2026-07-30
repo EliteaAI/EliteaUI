@@ -8,7 +8,7 @@ export const VOICE_SPEED_MARKS = [
 ];
 
 export const VOICE_VOLUME_MARKS = [
-  { value: 0, label: 'Mute' },
+  { value: 0, label: '0%' },
   { value: 0.5, label: '50%' },
   { value: 1, label: '100%' },
 ];

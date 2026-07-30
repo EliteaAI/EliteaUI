@@ -133,7 +133,7 @@ const ToolCard = memo(props => {
 
   const { values } = useFormikContext();
   const versionId = values?.version_details?.id;
-  const { getToolkitNameFromSchema, getSelectedTools } = useGetToolkitNameFromSchema();
+  const { getSelectedTools } = useGetToolkitNameFromSchema();
   const validationInfo = useToolValidationInfo({
     projectId,
     applicationId,
@@ -172,17 +172,8 @@ const ToolCard = memo(props => {
     if (tool?.type === 'application') {
       return tool.name || 'Unnamed';
     }
-    // For regular toolkits, use existing logic, but guard against undefined type
-    const safeType = typeof tool.type === 'string' ? tool.type : '';
-    return (
-      tool.elitea_title ||
-      tool.name ||
-      tool.toolkit_name ||
-      tool.settings?.configuration_title ||
-      (safeType ? safeType.charAt(0).toUpperCase() + safeType.slice(1) : 'Toolkit') ||
-      getToolkitNameFromSchema(tool)
-    );
-  }, [getToolkitNameFromSchema, tool]);
+    return ToolkitsHelpers.getToolkitDisplayName(tool) || 'Toolkit';
+  }, [tool]);
 
   const availableTools = useMemo(() => {
     if (tool?.type === 'application') {

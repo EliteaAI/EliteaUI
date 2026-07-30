@@ -2226,7 +2226,6 @@ const ChatBox = forwardRef((props, boxRef) => {
           askingQuestionId={askingQuestionId}
           questionItemRef={questionItemRef}
           onRemoveAttachment={onRemoveAttachment}
-          hideContinueButton={isAgentsPage}
           onOpenArtifactPreview={onOpenArtifactPreview}
           isSpeakingMode={isSpeakingMode}
           onAutoSpeak={handleAutoSpeak}

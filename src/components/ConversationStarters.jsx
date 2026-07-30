@@ -69,10 +69,7 @@ const ConversationStarters = memo(props => {
     },
     [setFieldValue, values, valuesPath],
   );
-  const disableAdd = useMemo(
-    () => values.length >= MAX_CONVERSATION_STARTERS,
-    [values],
-  );
+  const disableAdd = useMemo(() => values.length >= MAX_CONVERSATION_STARTERS, [values]);
 
   const addTooltipTitle = useMemo(() => {
     if (values.length >= MAX_CONVERSATION_STARTERS) return 'You have reached the limit of chat starters';

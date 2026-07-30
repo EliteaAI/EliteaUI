@@ -3,8 +3,10 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFormikContext } from 'formik';
 import { useNavigate } from 'react-router-dom';
 
-import { Box, Button, CircularProgress } from '@mui/material';
+import { Box, CircularProgress } from '@mui/material';
 
+import { useMcpAuthModal } from '@/[fsd]/features/mcp/lib/hooks';
+import { McpAuthModal } from '@/[fsd]/features/mcp/ui';
 import { useLazyGetIndexesListQuery } from '@/[fsd]/features/toolkits/indexes/api';
 import {
   IndexStatuses,
@@ -16,6 +18,7 @@ import { ToolkitChatModesEnum } from '@/[fsd]/features/toolkits/lib/constants';
 import { ToolkitChatHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useToolkitChat } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
+import { Button } from '@/[fsd]/shared/ui';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
 import { useGetSelectedToolSchema } from '@/hooks/toolkit/useGetSelectedToolSchema';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -169,6 +172,7 @@ const CreateIndexForm = memo(props => {
     },
     [navigate, tab, toolkitId],
   );
+  const { handleMcpAuthRequired, getModalProps } = useMcpAuthModal({ values });
 
   const { handleIndexData, isRunning } = useToolkitChat({
     index: null,
@@ -181,6 +185,7 @@ const CreateIndexForm = memo(props => {
     values,
     onActiveIndexReattach: handleActiveIndexReattach,
     modes: [ToolkitChatModesEnum.createIndex],
+    onMcpAuthRequired: handleMcpAuthRequired,
   });
 
   const onChangeInputVariables = useCallback(
@@ -234,29 +239,32 @@ const CreateIndexForm = memo(props => {
   );
 
   return (
-    <Box sx={styles.body}>
-      <BasicAccordion
-        data-testid="create-index-configuration-accordion"
-        style={styles.accordionWrapper}
-        items={[{ title: 'Index configuration', content: accordionContent }]}
-      />
-      <Box sx={styles.actions}>
-        <Button
-          variant="special"
-          onClick={handleIndexData}
-          disabled={!isValidForm || isRunning}
-        >
-          Index
-        </Button>
-        <Button
-          variant="secondary"
-          onClick={handleCancel}
-          disabled={isRunning}
-        >
-          Cancel
-        </Button>
+    <>
+      <Box sx={styles.body}>
+        <BasicAccordion
+          data-testid="create-index-configuration-accordion"
+          style={styles.accordionWrapper}
+          items={[{ title: 'Index configuration', content: accordionContent }]}
+        />
+        <Box sx={styles.actions}>
+          <Button.BaseBtn
+            variant={Button.BUTTON_VARIANTS.elitea}
+            onClick={handleIndexData}
+            disabled={!isValidForm || isRunning}
+          >
+            Index
+          </Button.BaseBtn>
+          <Button.BaseBtn
+            variant={Button.BUTTON_VARIANTS.secondary}
+            onClick={handleCancel}
+            disabled={isRunning}
+          >
+            Cancel
+          </Button.BaseBtn>
+        </Box>
       </Box>
-    </Box>
+      <McpAuthModal {...getModalProps()} />
+    </>
   );
 });
 
@@ -271,7 +279,7 @@ const createIndexFormStyles = () => ({
     flex: 1,
     minHeight: 0,
     width: '100%',
-    maxWidth: '52rem',
+    maxWidth: '36.525rem',
     marginX: 'auto',
   },
   accordionWrapper: {
@@ -288,6 +296,7 @@ const createIndexFormStyles = () => ({
     display: 'flex',
     justifyContent: 'flex-start',
     gap: '0.75rem',
+    paddingLeft: '2.25rem',
   },
   loading: {
     display: 'flex',

@@ -3,7 +3,6 @@ import { useCallback, useMemo } from 'react';
 import { useFormikContext } from 'formik';
 
 import { Button } from '@/[fsd]/shared/ui';
-
 import { useToolkitCreateMutation } from '@/api/toolkits';
 import { buildErrorMessage } from '@/common/utils';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';

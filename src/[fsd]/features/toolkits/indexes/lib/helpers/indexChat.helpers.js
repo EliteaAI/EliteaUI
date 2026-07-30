@@ -137,7 +137,6 @@ export const generateChatMessageBasedOnResponse = ({
   message,
   chatHistory,
   onFinish,
-  onStartTask,
   allowTerminalSideEffects = true,
 }) => {
   const { message_id, type: socketMessageType, response_metadata } = message;
@@ -158,8 +157,6 @@ export const generateChatMessageBasedOnResponse = ({
         created_at: new Date().getTime(),
         participant_id: 'system',
       };
-
-      if (onStartTask) onStartTask(task_id);
 
       return [...updatedHistory, loadingMessage];
     }

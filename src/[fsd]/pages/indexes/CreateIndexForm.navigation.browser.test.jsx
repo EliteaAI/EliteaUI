@@ -19,6 +19,18 @@ vi.mock('@mui/material', () => ({
   Box: props => <div>{props.children}</div>,
   Button: props => <button onClick={props.onClick}>{props.children}</button>,
   CircularProgress: () => null,
+  Typography: props => <span>{props.children}</span>,
+}));
+
+vi.mock('@/[fsd]/features/mcp/lib/hooks', () => ({
+  useMcpAuthModal: () => ({
+    handleMcpAuthRequired: vi.fn(),
+    getModalProps: () => ({}),
+  }),
+}));
+
+vi.mock('@/[fsd]/features/mcp/ui', () => ({
+  McpAuthModal: () => null,
 }));
 
 vi.mock('@/[fsd]/features/toolkits/indexes/api', () => ({
@@ -59,6 +71,16 @@ vi.mock('@/[fsd]/features/toolkits/ui', () => ({
 
 vi.mock('@/[fsd]/shared/ui/accordion', () => ({
   BasicAccordion: () => null,
+}));
+
+vi.mock('@/[fsd]/shared/ui', () => ({
+  Button: {
+    BUTTON_VARIANTS: {
+      elitea: 'elitea',
+      secondary: 'secondary',
+    },
+    BaseBtn: props => <button onClick={props.onClick}>{props.children}</button>,
+  },
 }));
 
 vi.mock('@/hooks/toolkit/useGetSelectedToolSchema', () => ({
