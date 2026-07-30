@@ -1,6 +1,12 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
-import {
+// The helper reaches @/common/utils, which pulls in the redux store and cannot load
+// in this environment; only isNullOrUndefined is actually needed here.
+vi.mock('@/common/utils', () => ({
+  isNullOrUndefined: value => value === null || value === undefined,
+}));
+
+const {
   budgetStatus,
   buildDailySheet,
   buildMembersSheet,
@@ -8,7 +14,7 @@ import {
   buildSummarySheet,
   buildUsageSheets,
   usageExportFileName,
-} from './usageExport.helpers';
+} = await import('./usageExport.helpers');
 
 /** A limited team-project payload, shaped like the live /usage response. */
 const limitedUsage = () => ({

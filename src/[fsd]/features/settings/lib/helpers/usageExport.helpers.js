@@ -1,5 +1,6 @@
 // Imported directly rather than through the barrel, which pulls in the redux store
 import { ExcelFormats, sanitizeFileNamePart } from '@/[fsd]/shared/lib/utils/exportToExcel.utils';
+import { isNullOrUndefined } from '@/common/utils';
 
 import { fillDailyGaps, formatModelName, usageSeverity } from './usage.helpers';
 
@@ -24,10 +25,10 @@ const STATUS_BY_SEVERITY = {
   none: UNLIMITED,
 };
 
-const hasLimit = limit => limit !== null && limit !== undefined;
+const hasLimit = limit => !isNullOrUndefined(limit);
 
 /** Blank rather than zero: an absent figure is not the same as nothing spent. */
-const orBlank = value => (value === null || value === undefined ? '' : value);
+const orBlank = value => (isNullOrUndefined(value) ? '' : value);
 
 export const budgetStatus = (percentUsed, warningPct) =>
   STATUS_BY_SEVERITY[usageSeverity(percentUsed, warningPct)] || UNLIMITED;

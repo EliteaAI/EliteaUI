@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { UsageHelpers } from './index.js';
+// Imported directly rather than through the barrel: a sibling helper reaches
+// @/common/utils, which pulls in the redux store and cannot load in this environment
+import * as UsageHelpers from './usage.helpers.js';
 
 describe('formatMoney', () => {
   it('renders whole amounts to two decimals', () => {

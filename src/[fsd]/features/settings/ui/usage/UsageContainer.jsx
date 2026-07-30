@@ -5,11 +5,12 @@ import { useSearchParams } from 'react-router-dom';
 
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import { Alert, Box, CircularProgress, IconButton, Snackbar, Tooltip, Typography } from '@mui/material';
+import { Alert, Box, CircularProgress, Snackbar, Tooltip, Typography } from '@mui/material';
 
 import { UsageExportHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { DrawerPage } from '@/[fsd]/features/settings/ui/drawer-page';
 import { exportToExcel } from '@/[fsd]/shared/lib/utils';
+import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import { BaseTab, BaseTabs } from '@/[fsd]/shared/ui/tabs';
 import { useProjectUsageQuery, useUsageMembersQuery } from '@/api';
 import { useSelectedProject, useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -52,13 +53,16 @@ const UsageContainer = memo(() => {
     { skip: !projectId, refetchOnMountOrArgChange: true },
   );
 
-  const { data: membersData } = useUsageMembersQuery(
+  const { data: membersData, isFetching: isMembersFetching } = useUsageMembersQuery(
     { projectId },
     { skip: !projectId || isPersonalProject },
   );
 
   const canSeeAmounts = Boolean(data?.can_see_amounts);
   const memberRows = useMemo(() => membersData?.rows || [], [membersData]);
+  const membersWarningPct = membersData?.warning_pct;
+
+  const showsMembers = !isPersonalProject && activeScope === SCOPE_PROJECT;
 
   const project = useSelectedProject();
 
@@ -84,7 +88,7 @@ const UsageContainer = memo(() => {
           ...args,
           data,
           memberRows,
-          membersWarningPct: membersData?.warning_pct,
+          membersWarningPct,
         }),
       );
     } catch {
@@ -92,9 +96,13 @@ const UsageContainer = memo(() => {
     } finally {
       setExporting(false);
     }
-  }, [project, activeScope, isPersonalProject, data, memberRows, membersData]);
+  }, [project, activeScope, isPersonalProject, data, memberRows, membersWarningPct]);
 
   const handleCloseExportError = useCallback(() => setExportError(false), []);
+
+  // Exporting while members are still loading would produce an empty Members sheet and
+  // look like it worked, so the action waits for them too
+  const exportDisabled = exporting || isLoading || !data || (showsMembers && isMembersFetching);
 
   return (
     <DrawerPage>
@@ -113,14 +121,16 @@ const UsageContainer = memo(() => {
             component="span"
             sx={styles.exportButtonWrapper}
           >
-            <IconButton
-              size="small"
+            <BaseBtn
+              variant={BUTTON_VARIANTS.icon}
+              color="secondary"
               onClick={handleExport}
-              disabled={exporting || isLoading || !data}
+              disabled={exportDisabled}
+              aria-label="Export to Excel"
               data-testid="usage-export-button"
             >
               {exporting ? <CircularProgress size={16} /> : <FileDownloadOutlinedIcon fontSize="small" />}
-            </IconButton>
+            </BaseBtn>
           </Box>
         </Tooltip>
       </Box>
@@ -207,7 +217,7 @@ const UsageContainer = memo(() => {
               currency={data.currency}
             />
 
-            {!isPersonalProject && activeScope === SCOPE_PROJECT && memberRows.length > 0 && (
+            {showsMembers && memberRows.length > 0 && (
               <UsageMembersTable
                 rows={memberRows}
                 warningPct={membersData?.warning_pct}

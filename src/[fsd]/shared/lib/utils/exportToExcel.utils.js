@@ -1,6 +1,9 @@
 const MAX_COLUMN_WIDTH = 50;
 const MIN_COLUMN_WIDTH = 10;
 
+// Long enough for any browser to start reading the blob, short enough not to leak
+const REVOKE_DELAY_MS = 60_000;
+
 const HEADER_FILL = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEFEFEF' } };
 
 /** Excel formats, so cells stay numeric and remain usable in formulas. */
@@ -68,8 +71,15 @@ export const exportToExcel = async (fileName, sheets) => {
 
   link.href = url;
   link.download = fileName;
+  // Safari requires the link to be in the DOM
+  link.style.display = 'none';
+  document.body.appendChild(link);
   link.click();
-  URL.revokeObjectURL(url);
+  // Revoking before the browser has read the blob cancels the download silently
+  setTimeout(() => {
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }, REVOKE_DELAY_MS);
 };
 
 /** Make a project name safe for a filename: no separators, no runs of whitespace. */
