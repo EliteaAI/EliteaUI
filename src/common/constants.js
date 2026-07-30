@@ -291,6 +291,7 @@ export const SearchParams = {
   DeploymentConfigName: 'config_name',
   CreateConversation: 'create',
   Conversation: 'conversation',
+  Scope: 'scope',
   MessageId: 'message_id',
   DestTab: 'destTab',
   ToolkitType: 'toolkit_type',
@@ -1036,6 +1037,10 @@ export const NotificationType = {
   PersonalAccessTokenExpiring: 'personal_access_token_expiring',
   ModerationRejected: 'moderation_rejected',
   ModerationApproved: 'moderation_approved',
+  BudgetThresholdReached: 'budget_threshold_reached',
+  BudgetLimitReached: 'budget_limit_reached',
+  MemberBudgetThresholdReached: 'member_budget_threshold_reached',
+  MemberBudgetLimitReached: 'member_budget_limit_reached',
 };
 
 export const dummyConversation = { name: '', chat_history: [], participants: [], is_private: true };
