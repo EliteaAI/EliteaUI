@@ -9,7 +9,7 @@ export default function EditIcon(props) {
       viewBox="0 0 16 16"
       sx={({ palette }) => ({
         '& path': {
-          fill: `${fill || palette.icon.fill.secondary} !important`,
+          fill: `${fill || palette.icon.fill.secondary}`,
         },
         ...sx,
       })}
