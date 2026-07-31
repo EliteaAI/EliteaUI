@@ -37,7 +37,7 @@ const CreateToolkit = memo(props => {
   const [showIframeFallback, setShowIframeFallback] = useState(false);
   const { toastInfo } = useToast();
 
-  const styles = createToolkitStyles(toolkitType);
+  const styles = createToolkitStyles(toolType);
 
   const onChangeToolDetail = useCallback((...args) => {
     setIsToolDirty(!!args[0]);
@@ -120,6 +120,9 @@ const CreateToolkit = memo(props => {
     const suffix = isMCP ? mcpSuffix : 'Toolkit';
     return `New ${typeLabel}${suffix}`;
   }, [toolSchema, toolType, isMCP, isApplication]);
+
+  // console.log('toolType', toolType);
+  // console.log('mcpType', mcpType);
 
   return (
     <Formik
@@ -218,7 +221,7 @@ const CreateToolkit = memo(props => {
 CreateToolkit.displayName = 'CreateToolkit';
 
 /** @type {MuiSx} */
-const createToolkitStyles = toolkitType => ({
+const createToolkitStyles = toolType => ({
   emptyPanelStyle: {
     padding: '0 0 !important',
   },
@@ -260,7 +263,7 @@ const createToolkitStyles = toolkitType => ({
     [breakpoints.down('lg')]: {
       marginBottom: '1.5rem',
     },
-    ...(toolkitType
+    ...(toolType
       ? {
           '>div': {
             maxWidth: '40.1875rem',
