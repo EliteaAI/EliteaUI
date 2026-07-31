@@ -390,8 +390,8 @@ const RunIndexPanel = memo(props => {
     };
   }, [index?.metadata]);
   const banner = useMemo(
-    () => bannerVariant(effectiveIsIndexing, effectiveState, reindexStats),
-    [effectiveIsIndexing, effectiveState, reindexStats],
+    () => bannerVariant(effectiveIsIndexing, effectiveState, reindexStats, index?.metadata?.error),
+    [effectiveIsIndexing, effectiveState, reindexStats, index?.metadata?.error],
   );
 
   const onAddSchedule = useCallback(() => {

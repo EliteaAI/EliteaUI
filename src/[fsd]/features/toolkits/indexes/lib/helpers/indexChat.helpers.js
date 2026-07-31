@@ -304,6 +304,10 @@ export const generateChatMessageBasedOnResponse = ({ message, chatHistory, onFin
         msg.isLoading = false;
         msg.isStreaming = false;
         msg.exception = message.content;
+        // Without the scope the headline stays "🔄 Testing tool...", which reads as still
+        // running, and the block goes unexplained until the page is reloaded
+        msg.budgetErrorCode = response_metadata?.budget_error_code;
+        if (msg.budgetErrorCode) msg.content = '';
 
         onFinish(IndexStatuses.fail);
       } else {
