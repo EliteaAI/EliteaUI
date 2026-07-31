@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 
-import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 
+import { useEliteATheme } from '@/[fsd]/shared/lib/hooks';
 import { useToolkitsDetailsQuery } from '@/api/toolkits.js';
 import { buildErrorMessage } from '@/common/utils.jsx';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -12,7 +12,7 @@ export const useAppDetail = () => {
   const { toastError } = useToast();
   const { appId } = useParams();
   const currentProjectId = useSelectedProjectId();
-  const mode = useSelector(state => state.settings.mode);
+  const { resolvedMode } = useEliteATheme();
   const [iframeKey, setIframeKey] = useState(0);
 
   const {
@@ -40,7 +40,7 @@ export const useAppDetail = () => {
     if (customUIRoute) {
       setIframeKey(prev => prev + 1);
     }
-  }, [mode, customUIRoute]);
+  }, [resolvedMode, customUIRoute]);
 
   const provider = useMemo(() => {
     return appData?.provider || null;
@@ -54,12 +54,12 @@ export const useAppDetail = () => {
     // Build iframe URL: /ui_host/{provider}/{ui_route}/{project_id}/?theme={mode}&toolkit_id={appId}
     const baseUrl = `/ui_host/${provider}/${customUIRoute}/${currentProjectId}/`;
     const params = new URLSearchParams({
-      theme: mode,
+      theme: resolvedMode,
       toolkit_id: appId,
     });
 
     return `${baseUrl}?${params.toString()}`;
-  }, [customUIRoute, provider, currentProjectId, appId, mode]);
+  }, [customUIRoute, provider, currentProjectId, appId, resolvedMode]);
 
   const appName = useMemo(() => {
     return appData?.name || 'Application';

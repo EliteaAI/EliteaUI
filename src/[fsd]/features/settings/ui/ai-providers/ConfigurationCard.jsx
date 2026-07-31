@@ -134,13 +134,13 @@ const getStyles = () => ({
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      flex: '0 0 calc((100% - 1.5rem) / 3)',
-      maxWidth: 'calc((100% - 1.5rem) / 3)',
+      flex: '0 0 calc((100% - 2rem) / 3)',
+      maxWidth: 'calc((100% - 2rem) / 3)',
       minWidth: '20rem',
       ...getCardGradientStyles(palette, { enableHover: !disabled }),
       [breakpoints.down('prompt_list_md')]: {
-        flex: '0 0 calc((100% - 1.5rem) / 2)',
-        maxWidth: 'calc((100% - 1.5rem) / 2)',
+        flex: '0 0 calc((100% - 1rem) / 2)',
+        maxWidth: 'calc((100% - 1rem) / 2)',
       },
       [breakpoints.down('tablet')]: {
         flex: '0 0 100%',

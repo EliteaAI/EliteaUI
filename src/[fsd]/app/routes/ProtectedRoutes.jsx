@@ -67,7 +67,6 @@ const CreateCredentialFromMain = ChunkHelpers.lazyWithRetry(
 );
 const Credentials = ChunkHelpers.lazyWithRetry(() => import('@/pages/Credentials/Credentials'));
 const EditCredentialFromMain = ChunkHelpers.lazyWithRetry(() => import('@/pages/Credentials/EditCredential'));
-const ModeSwitch = ChunkHelpers.lazyWithRetry(() => import('@/pages/ModeSwitch'));
 const ChatWrapper = ChunkHelpers.lazyWithRetry(() => import('@/pages/NewChat/index'));
 const NotificationCenter = ChunkHelpers.lazyWithRetry(
   () => import('@/pages/NotificationCenter/NotificationCenter'),
@@ -85,9 +84,7 @@ const CreateIndex = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/index
 const RunIndex = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/indexes/RunIndex'));
 const IndexHistoryPage = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/indexes/IndexHistoryPage'));
 const UserPublic = ChunkHelpers.lazyWithRetry(() => import('@/pages/UserPublic/UserPublic'));
-const Profile = ChunkHelpers.lazyWithRetry(
-  () => import('@/[fsd]/features/settings/ui/profile/Profile'),
-);
+const Profile = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/features/settings/ui/profile/Profile'));
 const Preferences = ChunkHelpers.lazyWithRetry(
   () => import('@/[fsd]/features/settings/ui/preference/Preferences'),
 );
@@ -271,7 +268,6 @@ const ProtectedRoutes = () => {
       { path: RouteDefinitions.UserPublicToolkitDetail, element: <EditToolkit /> },
       { path: RouteDefinitions.UserPublicMCPDetail, element: <EditToolkit isMCP /> },
       { path: RouteDefinitions.UserPublicAppDetail, element: <AppDetail /> },
-      { path: RouteDefinitions.ModeSwitch, element: <ModeSwitch /> },
 
       // artifacts
       { path: RouteDefinitions.Artifacts, element: <Artifacts /> },

@@ -1,7 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Form, Formik } from 'formik';
-import { useSelector } from 'react-redux';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import { Box, Typography } from '@mui/material';
@@ -14,6 +13,7 @@ import { IndexesToolsEnum } from '@/[fsd]/features/toolkits/indexes/lib/constant
 import { LegacyOpenApiMigration } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitsControls, ToolkitsTabBar } from '@/[fsd]/features/toolkits/ui';
+import { useEliteATheme } from '@/[fsd]/shared/lib/hooks';
 import { useListModelsQuery } from '@/api/configurations.js';
 import { useToolkitsDetailsQuery } from '@/api/toolkits.js';
 import { CapabilityTypes, SearchParams } from '@/common/constants.js';
@@ -48,7 +48,7 @@ const EditToolkit = memo(props => {
   const [dirty, setDirty] = useState(false);
   const [updateConfigKey, setUpdateConfigKey] = useState(1);
   const [hasValidationErrors, setHasValidationErrors] = useState(false);
-  const mode = useSelector(state => state.settings.mode);
+  const { resolvedMode } = useEliteATheme();
   const iframeRef = useRef(null);
   const [iframeKey, setIframeKey] = useState(0);
   const [showIframeFallback, setShowIframeFallback] = useState(false);
@@ -118,9 +118,9 @@ const EditToolkit = memo(props => {
     return interpolateUrl(appUrl, {
       projectId: currentProjectId,
       toolkitId: realId,
-      theme: mode,
+      theme: resolvedMode,
     });
-  }, [appUrl, currentProjectId, mode, realId]);
+  }, [appUrl, currentProjectId, resolvedMode, realId]);
 
   // Reload iframe when theme changes
   useEffect(() => {

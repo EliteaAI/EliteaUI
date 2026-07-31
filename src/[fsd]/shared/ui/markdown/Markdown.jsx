@@ -4,7 +4,7 @@ import { marked } from 'marked';
 
 import { Box, ThemeProvider } from '@mui/material';
 
-import useEliteATheme from '@/hooks/useEliteATheme';
+import { useEliteATheme } from '@/[fsd]/shared/lib/hooks';
 
 import Token from './Token';
 
