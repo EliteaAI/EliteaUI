@@ -20,6 +20,7 @@ const PopoverSelect = memo(props => {
     startIcon,
     endIcon,
     buttonSx,
+    'data-testid': dataTestId,
   } = props;
 
   const [anchorEl, setAnchorEl] = useState(null);
@@ -64,6 +65,7 @@ const PopoverSelect = memo(props => {
     <>
       <Button.BaseBtn
         ref={buttonRef}
+        data-testid={dataTestId}
         variant={buttonVariant}
         color={buttonColor}
         endIcon={endIcon}
