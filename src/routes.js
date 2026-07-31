@@ -65,8 +65,6 @@ const RouteDefinitions = {
   CreateConfigurationWithType: '/settings/create-ai-provider/:credentialType',
   CreatePersonalToken: '/settings/create-personal-token',
   EditConfiguration: '/settings/edit-ai-provider/:uid',
-  ModeSwitch: '/mode-switch',
-
   Artifacts: '/artifacts',
   CreateBucket: '/artifacts/create-bucket',
   EditBucket: '/artifacts/edit-bucket',
@@ -125,7 +123,6 @@ export const PathSessionMap = {
   [RouteDefinitions.Settings]: 'Settings',
   [RouteDefinitions.CreatePersonalToken]: 'New personal token',
   [RouteDefinitions.CreateCredentialFromMain]: 'New Credential',
-  [RouteDefinitions.ModeSwitch]: 'ModeSwitch',
   [RouteDefinitions.Applications]: 'Agents',
   [RouteDefinitions.Skills]: 'Skills',
   [RouteDefinitions.Pipelines]: 'Pipelines',

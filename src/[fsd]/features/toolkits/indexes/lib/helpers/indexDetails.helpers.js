@@ -6,6 +6,17 @@ import {
   PARTLY_INDEXED_REINDEX_MESSAGE,
   RUNNABLE_INDEX_STATUSES,
 } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
+import { BUDGET_ERROR_VARIANTS } from '@/[fsd]/shared/lib/constants/budgetError.constants';
+
+// The scope code the backend puts in the persisted index error. Reusing the shared copy
+// keeps the banner and the message below it from drifting apart.
+const budgetErrorMessage = error => {
+  if (typeof error !== 'string') return null;
+
+  const code = Object.keys(BUDGET_ERROR_VARIANTS).find(scope => error.includes(scope));
+
+  return code ? BUDGET_ERROR_VARIANTS[code].message : null;
+};
 
 export const formatDate = ts => {
   if (!ts) return '—';
@@ -20,7 +31,7 @@ export const formatDate = ts => {
   }
 };
 
-export const bannerVariant = (isIndexing, state, reindexStats = {}) => {
+export const bannerVariant = (isIndexing, state, reindexStats = {}, error) => {
   if (isIndexing)
     return {
       severity: BannerSeverity.info,
@@ -37,7 +48,9 @@ export const bannerVariant = (isIndexing, state, reindexStats = {}) => {
     return {
       severity: BannerSeverity.error,
       label: BannerTitleMap[BannerSeverity.error],
-      message: BannerMessageMap[BannerSeverity.error],
+      // A budget block is not a source-connection problem, and Reindex cannot succeed
+      // until the budget resets — the default copy would send the user the wrong way
+      message: budgetErrorMessage(error) || BannerMessageMap[BannerSeverity.error],
     };
   if (state === IndexStatuses.cancelled)
     return {

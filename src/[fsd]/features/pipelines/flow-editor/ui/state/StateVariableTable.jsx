@@ -7,10 +7,10 @@ import { DataGrid, GridRowEditStopReasons, gridClasses, useGridApiRef } from '@m
 
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { FlowEditorSettings } from '@/[fsd]/features/pipelines/flow-editor/ui';
+import { useEliteATheme } from '@/[fsd]/shared/lib/hooks';
 import { Switch } from '@/[fsd]/shared/ui';
 import AlertDialog from '@/components/AlertDialog.jsx';
 import DeleteIcon from '@/components/Icons/DeleteIcon.jsx';
-import useEliteATheme from '@/hooks/useEliteATheme';
 import useToast from '@/hooks/useToast';
 import { useTheme } from '@emotion/react';
 

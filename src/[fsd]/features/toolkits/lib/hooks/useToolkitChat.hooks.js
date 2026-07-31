@@ -81,6 +81,7 @@ export const useToolkitChat = props => {
     onMcpAuthRequired,
     onActiveIndexReattach,
     initialConversation,
+    isCreating,
   } = props;
 
   // Keep callback ref updated
@@ -904,8 +905,12 @@ export const useToolkitChat = props => {
   const handleRunTool = useCallback(() => run(runTool), [run, runTool]);
 
   const retryLastRun = useCallback(() => {
-    if (runningToolRef.current) run(runningToolRef.current);
-  }, [run]);
+    if (runningToolRef.current) {
+      run(runningToolRef.current);
+    } else if (isCreating) {
+      run(IndexesToolsEnum.indexData);
+    }
+  }, [run, isCreating]);
 
   const handleClearChat = useCallback(() => {
     setChatHistory([generateWelcomeMessage(runTool, isTestToolsMode)]);

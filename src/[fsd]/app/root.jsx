@@ -19,7 +19,7 @@ import { NpsSurveyWidget } from '@/[fsd]/widgets/nps-survey';
 import { ToastComponent, ToastProvider } from '@/components/ToastProvider';
 import { FilePreviewNavigationProvider } from '@/contexts/FilePreviewNavigationContext';
 import SocketContext from '@/contexts/SocketContext';
-import useEliteATheme from '@/hooks/useEliteATheme';
+import { useEliteATheme } from '@/[fsd]/shared/lib/hooks';
 import { actions as settingsActions } from '@/slices/settings.js';
 import { startTokenRefreshScheduler } from '@/[fsd]/features/mcp/lib/helpers/mcpAuth.helpers';
 import { logVersion } from '@/utils.js';

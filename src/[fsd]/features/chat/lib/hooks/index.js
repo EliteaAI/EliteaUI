@@ -13,6 +13,7 @@ export { useSpeechRecognition } from './useSpeechRecognition.hooks';
 export { useStreamingSpeechRecognition } from './useStreamingSpeechRecognition.hooks';
 export { useTextToSpeech } from './useTextToSpeech.hooks';
 export { useReadAloud } from './useReadAloud.hooks';
+export { useBudgetWarning } from './useBudgetWarning.hooks';
 export { useSpeakingModeLoop } from './useSpeakingModeLoop.hooks';
 export {
   useNewInputKeyDownHandler,

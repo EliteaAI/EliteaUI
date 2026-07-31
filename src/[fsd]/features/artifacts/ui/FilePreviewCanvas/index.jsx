@@ -80,7 +80,7 @@ const FilePreviewCanvas = memo(props => {
   const [parsedData, setParsedData] = useState(null);
   const [docxResetKey, setDocxResetKey] = useState(0);
 
-  const [codeMirrorExtension, setCodeMirrorExtension] = useState([]);
+  const [codeMirrorExtensions, setCodeMirrorExtensions] = useState([]);
 
   const hasChanges = useMemo(
     () => editedContent && editedContent !== fileContent,
@@ -206,13 +206,13 @@ const FilePreviewCanvas = memo(props => {
 
   useEffect(() => {
     if (!fileContent) {
-      setCodeMirrorExtension([]);
+      setCodeMirrorExtensions([]);
       return;
     }
 
     CodeMirrorLinterHelpers.getExtensionsByLang(currentLanguage).then(
       ({ extensionWithLinter, extensionWithoutLinter }) =>
-        setCodeMirrorExtension(extensionWithLinter || extensionWithoutLinter || []),
+        setCodeMirrorExtensions(extensionWithLinter || extensionWithoutLinter || []),
     );
   }, [fileContent, currentLanguage]);
 
@@ -512,7 +512,7 @@ const FilePreviewCanvas = memo(props => {
             isDataFile={isDataFile}
             parsedData={parsedData}
             dataFileType={dataFileType}
-            codeMirrorExtensions={codeMirrorExtension}
+            codeMirrorExtensions={codeMirrorExtensions}
             isMermaidFile={isMermaidFile}
             isImageFileType={isImageFileType}
             imageBlobUrl={imageBlobUrl}

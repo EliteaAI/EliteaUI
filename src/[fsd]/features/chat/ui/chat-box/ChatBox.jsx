@@ -28,6 +28,7 @@ import {
 } from '@/[fsd]/features/chat/lib/helpers/hitl.helpers.js';
 import * as NewConversationHelpers from '@/[fsd]/features/chat/lib/helpers/newConversation.helpers';
 import {
+  useBudgetWarning,
   useChatSkillMention,
   useDeleteMessageAlert,
   useNewInputKeyDownHandler,
@@ -35,7 +36,7 @@ import {
   useSlashMention,
 } from '@/[fsd]/features/chat/lib/hooks';
 import { useFetchParticipantDetails } from '@/[fsd]/features/chat/participants/lib/hooks';
-import { SlashSuggestionList, VoiceMiniPlayer } from '@/[fsd]/features/chat/ui';
+import { BudgetWarningBanner, SlashSuggestionList, VoiceMiniPlayer } from '@/[fsd]/features/chat/ui';
 import { ChatMessageList } from '@/[fsd]/features/chat/ui/chat-box';
 import { UserMentionList } from '@/[fsd]/features/chat/ui/user-mention-list';
 import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
@@ -187,6 +188,13 @@ const ChatBox = forwardRef((props, boxRef) => {
   const { emit: emitContinue } = useSocket(sioEvents.chat_continue_predict);
 
   const projectId = useSelectedProjectId();
+
+  // Advance notice above the input. Shared by chat, agent and pipeline, all of which render
+  // through this component.
+  const budgetWarning = useBudgetWarning({
+    projectId,
+    conversationId: activeConversation?.id,
+  });
 
   const [regenerate] = useRegenerateMutation();
   const [conversationEdit] = useConversationEditMutation();
@@ -2292,6 +2300,13 @@ const ChatBox = forwardRef((props, boxRef) => {
               highlightedIndex={skillHighlightedIndex}
               onSelectItem={onSelectSkill}
               onClose={resetSkill}
+            />
+          )}
+          {budgetWarning.shouldShow && (
+            <BudgetWarningBanner
+              scope={budgetWarning.scope}
+              percentUsed={budgetWarning.percentUsed}
+              onDismiss={budgetWarning.dismiss}
             />
           )}
           <NewChatInput
