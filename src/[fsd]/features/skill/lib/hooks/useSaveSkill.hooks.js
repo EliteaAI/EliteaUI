@@ -22,27 +22,24 @@ const useSaveSkill = () => {
     const instructions = values?.version_details?.instructions || '';
     const tags = normalizeTagsForSave(values?.version_details?.tags);
 
-    // Guard: without a version id we cannot address the viewed version. Bail
-    // instead of falling back to the version-less endpoint, which would write
-    // the content to the skill's default version (see comment below).
+    // Without a version id the viewed version cannot be addressed — the
+    // backend would fall back to the default version.
     if (!selectedVersionId) {
       toastError('Unable to determine the skill version to save. Please reload and try again.');
       return false;
     }
 
     try {
-      // Update skill-level metadata, then the content of the version actually
-      // being viewed, addressed by id. Do NOT route through the version-less
-      // endpoint: a version-less write targets the skill's default version,
-      // which may be a different version — so the edit would silently land on
-      // the default version instead of the one being viewed.
-      await updateSkill({ projectId, skillId, name, description }).unwrap();
       await updateSkill({
         projectId,
         skillId,
-        versionId: selectedVersionId,
-        instructions,
-        tags,
+        name,
+        description,
+        version: {
+          id: selectedVersionId,
+          instructions,
+          tags,
+        },
       }).unwrap();
 
       resetForm({ values });
