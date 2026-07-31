@@ -106,8 +106,8 @@ const settingsSlice = createSlice({
     socketConnected: false,
   },
   reducers: {
-    switchMode: state => {
-      state.mode = state.mode === 'light' ? 'dark' : 'light';
+    setMode: (state, { payload }) => {
+      state.mode = payload;
       localStorage.setItem('mode', state.mode);
     },
     setSideBarCollapsed: (state, { payload }) => {

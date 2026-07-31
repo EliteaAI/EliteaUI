@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { CodeMirrorEditorHelpers } from '@/[fsd]/shared/lib/helpers';
-import useEliteATheme from '@/hooks/useEliteATheme';
+import { useEliteATheme } from '@/[fsd]/shared/lib/hooks/useEliteATheme.hooks';
 import { lintGutter } from '@codemirror/lint';
 import { search } from '@codemirror/search';
 import { EditorView, basicSetup } from '@uiw/react-codemirror';

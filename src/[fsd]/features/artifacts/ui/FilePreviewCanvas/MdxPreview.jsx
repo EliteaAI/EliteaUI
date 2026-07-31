@@ -9,8 +9,8 @@ import { typographyVariants } from '@/MainTheme';
 import { MdxStatus } from '@/[fsd]/features/artifacts/lib/constants/previewMdx.constants';
 import { useMdxEvaluator } from '@/[fsd]/features/artifacts/lib/hooks';
 import MdxAlert from '@/[fsd]/features/artifacts/ui/FilePreviewCanvas/MdxAlert';
+import { useEliteATheme } from '@/[fsd]/shared/lib/hooks';
 import Markdown from '@/[fsd]/shared/ui/markdown';
-import useEliteATheme from '@/hooks/useEliteATheme';
 import { MDXProvider } from '@mdx-js/react';
 
 const UnknownComponentFallback = ({ children }) => (

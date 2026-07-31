@@ -14,11 +14,11 @@ import {
 import Table from '@mui/material/Table';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
+import { useEliteATheme } from '@/[fsd]/shared/lib/hooks';
 import { PERMISSIONS } from '@/common/constants';
 import useCopyDownloadHandlers from '@/hooks/chat/useCopyEventHandlers';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import useDownloadTable, { downloadTableOptions } from '@/hooks/useDownloadTable';
-import useEliteATheme from '@/hooks/useEliteATheme';
 import useToast from '@/hooks/useToast';
 import { useTheme } from '@emotion/react';
 
