@@ -7,10 +7,10 @@ import { Box } from '@mui/material';
 
 import { SIDEBAR_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import NotificationList from '@/[fsd]/widgets/Notifications/ui';
+import { useNotificationEvents } from '@/[fsd]/widgets/sidebar-root/lib/hooks';
 import { useNotificationListQuery } from '@/api/notifications';
-import { sioEvents } from '@/common/constants';
+import { VITE_SERVER_URL } from '@/common/constants';
 import BellIcon from '@/components/Icons/BellIcon';
-import useSocket from '@/hooks/useSocket';
 import RouteDefinitions from '@/routes';
 
 const NotificationButton = memo(() => {
@@ -20,7 +20,7 @@ const NotificationButton = memo(() => {
   const [hasMessages, setHasMessages] = useState(false);
   const [notificationListAnchorEl, setNotificationListAnchorEl] = useState(null);
 
-  const { data } = useNotificationListQuery(
+  const { data, refetch } = useNotificationListQuery(
     {
       projectId: personal_project_id,
       page: 0,
@@ -40,7 +40,16 @@ const NotificationButton = memo(() => {
     setHasMessages(true);
   }, []);
 
-  useSocket(sioEvents.notifications_notify, onNotificationEvent);
+  const onNotificationStreamReady = useCallback(() => {
+    refetch();
+  }, [refetch]);
+
+  useNotificationEvents({
+    baseUrl: VITE_SERVER_URL,
+    projectId: personal_project_id,
+    onNotification: onNotificationEvent,
+    onReady: onNotificationStreamReady,
+  });
 
   const onCloseNotificationList = useCallback(() => {
     setNotificationListAnchorEl(null);

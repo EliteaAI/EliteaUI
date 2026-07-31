@@ -6,7 +6,7 @@ export const TAG_NOTIFICATIONS = 'TAG_NOTIFICATIONS';
 
 export const notificationsApi = eliteaApi
   .enhanceEndpoints({
-    addTagTypes: ['notifications'],
+    addTagTypes: [TAG_NOTIFICATIONS],
   })
   .injectEndpoints({
     endpoints: build => ({
