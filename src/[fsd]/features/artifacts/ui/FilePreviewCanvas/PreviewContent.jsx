@@ -41,7 +41,7 @@ const PreviewContent = forwardRef((props, documentReaderRef) => {
     isDataFile,
     parsedData,
     dataFileType,
-    codeMirrorExtension,
+    codeMirrorExtensions,
     isMermaidFile,
     isImageFileType,
     isDocxFile,
@@ -282,7 +282,7 @@ const PreviewContent = forwardRef((props, documentReaderRef) => {
                   autoHeight
                   readOnly={!canEdit}
                   value={fileContent}
-                  extensions={codeMirrorExtension}
+                  extensions={codeMirrorExtensions}
                   maxHeight="none"
                   variant="caption"
                   width="100%"
