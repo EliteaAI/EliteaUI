@@ -146,6 +146,7 @@ const ArtifactTableToolbar = memo(props => {
 
         {canDeleteFiles && (
           <DeleteEntityButton
+            testId="artifacts-delete-files-button"
             name={rowSelectionModel.length === totalRows ? 'all files' : 'selected files'}
             entity_name="file"
             onDelete={onDeleteArtifacts}
