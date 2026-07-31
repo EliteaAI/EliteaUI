@@ -319,6 +319,7 @@ export const ToolkitViewOptions = {
 };
 
 export const ThemeModeOptions = {
+  System: 'system',
   Dark: 'dark',
   Light: 'light',
 };

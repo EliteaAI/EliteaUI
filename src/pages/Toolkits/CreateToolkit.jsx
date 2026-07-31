@@ -1,12 +1,12 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Form, Formik } from 'formik';
-import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 
 import { Box, Grid } from '@mui/material';
 
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui/form/ToolkitForm';
+import { useEliteATheme } from '@/[fsd]/shared/lib/hooks';
 import { NAV_BAR_HEIGHT_IN_PX } from '@/common/constants';
 import StyledTabs from '@/components/StyledTabs';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -30,14 +30,14 @@ const CreateToolkit = memo(props => {
   });
   const [isToolDirty, setIsToolDirty] = useState(false);
   const [showValidation, setShowValidation] = useState(false);
-  const mode = useSelector(state => state.settings.mode);
+  const { resolvedMode } = useEliteATheme();
   const currentProjectId = useSelectedProjectId();
   const iframeRef = useRef(null);
   const [iframeKey, setIframeKey] = useState(0);
   const [showIframeFallback, setShowIframeFallback] = useState(false);
   const { toastInfo } = useToast();
 
-  const styles = createToolkitStyles();
+  const styles = createToolkitStyles(toolkitType);
 
   const onChangeToolDetail = useCallback((...args) => {
     setIsToolDirty(!!args[0]);
@@ -74,16 +74,16 @@ const CreateToolkit = memo(props => {
     return interpolateUrl(createUrl, {
       projectId: currentProjectId,
       toolkitId: null, // No toolkit ID yet during creation
-      theme: mode,
+      theme: resolvedMode,
     });
-  }, [createUrl, currentProjectId, mode]);
+  }, [createUrl, currentProjectId, resolvedMode]);
 
   // Reload iframe when theme changes
   useEffect(() => {
     if (interpolatedCreateUrl && !showIframeFallback) {
       setIframeKey(prev => prev + 1);
     }
-  }, [mode, interpolatedCreateUrl, showIframeFallback]);
+  }, [resolvedMode, interpolatedCreateUrl, showIframeFallback]);
 
   // Handle iframe load error
   const handleIframeError = useCallback(() => {
@@ -218,7 +218,7 @@ const CreateToolkit = memo(props => {
 CreateToolkit.displayName = 'CreateToolkit';
 
 /** @type {MuiSx} */
-const createToolkitStyles = () => ({
+const createToolkitStyles = toolkitType => ({
   emptyPanelStyle: {
     padding: '0 0 !important',
   },
@@ -260,10 +260,14 @@ const createToolkitStyles = () => ({
     [breakpoints.down('lg')]: {
       marginBottom: '1.5rem',
     },
-    '>div': {
-      maxWidth: '40.1875rem',
-      margin: '0 auto',
-    },
+    ...(toolkitType
+      ? {
+          '>div': {
+            maxWidth: '40.1875rem',
+            margin: '0 auto',
+          },
+        }
+      : {}),
   }),
   toolkitForm: {
     paddingBottom: '1.5rem',
