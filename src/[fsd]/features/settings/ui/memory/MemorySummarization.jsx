@@ -8,7 +8,7 @@ import { Input, Switch } from '@/[fsd]/shared/ui';
 import { CONTEXT_MESSAGES } from '@/[fsd]/widgets/context-budget/lib/constants';
 import { handleConvertToNumberChange } from '@/[fsd]/widgets/context-budget/lib/validation';
 
-const MemorySummarization = memo(() => {
+const MemorySummarization = memo(({ onAutoSaveRequested }) => {
   const { values, errors, setFieldValue } = useFormikContext();
 
   const styles = memorySummarizationStyles();
@@ -18,8 +18,9 @@ const MemorySummarization = memo(() => {
   const handleSummarizationEnabledChange = useCallback(
     (event, checkedValue) => {
       setFieldValue('enable_summarization', checkedValue);
+      onAutoSaveRequested?.();
     },
-    [setFieldValue],
+    [setFieldValue, onAutoSaveRequested],
   );
 
   const handleInstructionsChange = useCallback(
