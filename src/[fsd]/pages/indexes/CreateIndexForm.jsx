@@ -132,9 +132,13 @@ const CreateIndexForm = memo(props => {
   );
 
   const refetchIndexesList = useCallback(() => Promise.resolve(), []);
-  const { handleMcpAuthRequired, getModalProps } = useMcpAuthModal({ values });
 
-  const { handleIndexData, isRunning } = useToolkitChat({
+  const mcpAuthRequiredRef = useRef(null);
+  const onMcpAuthRequiredStable = useCallback(message => {
+    mcpAuthRequiredRef.current?.(message);
+  }, []);
+
+  const { handleIndexData, isRunning, retryLastRun } = useToolkitChat({
     index: null,
     isValidForm,
     refetchIndexesList,
@@ -144,8 +148,16 @@ const CreateIndexForm = memo(props => {
     traceNewIndex,
     values,
     modes: [ToolkitChatModesEnum.createIndex],
-    onMcpAuthRequired: handleMcpAuthRequired,
+    onMcpAuthRequired: onMcpAuthRequiredStable,
   });
+
+  const { handleMcpAuthRequired, getModalProps } = useMcpAuthModal({
+    values,
+    onSuccess: retryLastRun,
+    showSuccessToast: false,
+  });
+
+  mcpAuthRequiredRef.current = handleMcpAuthRequired;
 
   const onChangeInputVariables = useCallback(
     value => {

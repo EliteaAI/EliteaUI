@@ -56,6 +56,7 @@ const RunIndexPanel = memo(props => {
     tab,
     initialConversation,
     toolkitName,
+    isCreating,
   } = props;
   const styles = runIndexPanelStyles();
   const navigate = useNavigate();
@@ -148,6 +149,7 @@ const RunIndexPanel = memo(props => {
     values,
     modes: [],
     initialConversation,
+    isCreating,
     onMcpAuthRequired: onMcpAuthRequiredStable,
   });
 
