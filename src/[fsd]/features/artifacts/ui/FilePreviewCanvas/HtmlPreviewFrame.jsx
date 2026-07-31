@@ -2,7 +2,7 @@ import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from '
 
 import createDOMPurify from 'dompurify';
 
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, useTheme } from '@mui/material';
 
 import { Modal } from '@/[fsd]/shared/ui';
 
@@ -33,7 +33,16 @@ const buildLinkInterceptScript = (nonce, targetOrigin) =>
     document.addEventListener('submit', function(e) { e.preventDefault(); });
   </script>`;
 
-const sanitizeForPreview = (rawHtml, nonce, hostOrigin) => {
+const buildFallbackStyles = ({ textColor, backgroundColor, themeMode }) =>
+  `<style id="elitea-html-preview-theme">
+    :root { color-scheme: ${themeMode}; }
+    html, body {
+      color: ${textColor};
+      background-color: ${backgroundColor};
+    }
+  </style>`;
+
+const sanitizeForPreview = (rawHtml, nonce, hostOrigin, fallbackStyles) => {
   purifyInstance.addHook('afterSanitizeAttributes', node => {
     if (node.tagName === 'A' || node.tagName === 'AREA') {
       const href = node.getAttribute('href');
@@ -54,7 +63,7 @@ const sanitizeForPreview = (rawHtml, nonce, hostOrigin) => {
 
   if (!clean) return null;
 
-  const injection = `<meta http-equiv="Content-Security-Policy" content="${buildPreviewCsp(nonce)}">${buildLinkInterceptScript(nonce, hostOrigin)}`;
+  const injection = `<meta http-equiv="Content-Security-Policy" content="${buildPreviewCsp(nonce)}">${fallbackStyles}${buildLinkInterceptScript(nonce, hostOrigin)}`;
 
   if (/<head([^>]*)>/i.test(clean)) {
     return clean.replace(/<head([^>]*)>/i, `<head$1>${injection}`);
@@ -71,21 +80,31 @@ const HtmlPreviewFrame = memo(props => {
   const { htmlContent } = props;
   const iframeRef = useRef(null);
   const [clickedUrl, setClickedUrl] = useState(null);
+  const theme = useTheme();
 
   const nonce = useMemo(() => window.crypto.randomUUID().replace(/-/g, ''), []);
   const hostOrigin = useMemo(() => window.location.origin, []);
+  const fallbackStyles = useMemo(
+    () =>
+      buildFallbackStyles({
+        textColor: theme.palette.text.primary,
+        backgroundColor: theme.palette.background.default,
+        themeMode: theme.palette.mode,
+      }),
+    [theme.palette.text.primary, theme.palette.background.default, theme.palette.mode],
+  );
 
   const sanitizeResult = useMemo(() => {
     if (!htmlContent || !htmlContent.trim()) return { empty: true };
 
     try {
-      const html = sanitizeForPreview(htmlContent, nonce, hostOrigin);
+      const html = sanitizeForPreview(htmlContent, nonce, hostOrigin, fallbackStyles);
       if (!html) return { error: true };
       return { html };
     } catch {
       return { error: true };
     }
-  }, [htmlContent, nonce, hostOrigin]);
+  }, [htmlContent, nonce, hostOrigin, fallbackStyles]);
 
   useEffect(() => {
     const handleMessage = e => {
