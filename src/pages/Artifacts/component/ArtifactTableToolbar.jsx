@@ -62,6 +62,7 @@ const ArtifactTableToolbar = memo(props => {
       {/* Left side: Bucket name with breadcrumbs and info icon */}
       <Box sx={styles.leftSection}>
         <Typography
+          data-testid="artifacts-breadcrumb-bucket-label"
           variant="headingSmall"
           sx={rootBucketSx}
           onClick={currentPrefix ? handleRootClick : undefined}
