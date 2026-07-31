@@ -59,9 +59,22 @@ export const getIcon = (type, theme, notification) => {
     case NotificationType.SpendingLimitExpiring:
     case NotificationType.BucketExpirationWarning:
     case NotificationType.PersonalAccessTokenExpiring:
+    case NotificationType.BudgetThresholdReached:
+    case NotificationType.MemberBudgetThresholdReached:
       return (
         <AttentionIcon
           fill={theme.palette.status.onModeration}
+          size={16}
+        />
+      );
+
+    // A reached limit is informational rather than a warning: nothing is at risk any
+    // more, the budget is simply spent
+    case NotificationType.BudgetLimitReached:
+    case NotificationType.MemberBudgetLimitReached:
+      return (
+        <AttentionIcon
+          fill={theme.palette.icon.fill.tips}
           size={16}
         />
       );

@@ -4,6 +4,7 @@ import { Box } from '@mui/material';
 
 import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
 import WelcomeImage from '@/assets/chat-welcome.png';
+import IndexIcon from '@/assets/file-code.svg?react';
 import FlowIcon from '@/assets/flow-icon.svg?react';
 import MCPIcon from '@/assets/mcp-icon.svg?react';
 import SkillIcon from '@/assets/skill-icon.svg?react';
@@ -117,7 +118,13 @@ export const EntityTypeIcon = memo(props => {
           sx={{ color: fill, width: sizeNumeric, height: sizeNumeric }}
         />
       );
-
+    case 'index':
+      return (
+        <Box
+          component={IndexIcon}
+          sx={{ color: fill, width: sizeNumeric, height: sizeNumeric }}
+        />
+      );
     default:
       return (
         <EmojiIcon

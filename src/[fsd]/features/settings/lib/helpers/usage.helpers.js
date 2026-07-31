@@ -72,6 +72,17 @@ export const usageSeverity = (percentUsed, warningPct = DEFAULT_WARNING_PCT) => 
   return 'ok';
 };
 
+/** Members whose name or email contains the search term, case-insensitively. */
+export const filterMembers = (rows = [], search = '') => {
+  const term = String(search).trim().toLowerCase();
+
+  if (!term) return rows;
+
+  return rows.filter(
+    row => (row.name || '').toLowerCase().includes(term) || (row.email || '').toLowerCase().includes(term),
+  );
+};
+
 /** Days until the monthly budget resets, for a plain-language label. */
 export const daysUntilReset = resetsAt => {
   if (!resetsAt) return null;

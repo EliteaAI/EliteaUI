@@ -70,6 +70,15 @@ const ConfigurationSection = memo(props => {
     return [...configurations].sort(ConfigurationHelpers.sortConfigurationsByDisplayName);
   }, [configurations, groupTheModelsByProvider]);
 
+  const highTierValue = useMemo(
+    () => additionalDefaultSettings.find(s => s?.key === 'high-tier-model')?.value,
+    [additionalDefaultSettings],
+  );
+  const lowTierValue = useMemo(
+    () => additionalDefaultSettings.find(s => s?.key === 'low-tier-model')?.value,
+    [additionalDefaultSettings],
+  );
+
   const { checkPermission } = useCheckPermission();
   const canEdit = useMemo(() => checkPermission(PERMISSIONS.configuration.update), [checkPermission]);
   const styles = getStyles(defaultSettingsLayout);
@@ -172,34 +181,40 @@ const ConfigurationSection = memo(props => {
                     {groupLabel}
                   </Typography>
                   <Box sx={styles.configurationsContainer({ isGroup: true })}>
-                    {groupConfigs.map((configuration, index) => (
-                      <ConfigurationCard
-                        key={`${configuration.id || configuration.name}-${index}`}
-                        configuration={configuration}
-                        canEdit={canEdit}
-                        locationState={locationState}
-                        isDefault={
-                          defaultSettingValue === `${configuration.data?.name}<<>>${configuration.project_id}`
-                        }
-                      />
-                    ))}
+                    {groupConfigs.map((configuration, index) => {
+                      const configKey = `${configuration.data?.name}<<>>${configuration.project_id}`;
+                      return (
+                        <ConfigurationCard
+                          key={`${configuration.id || configuration.name}-${index}`}
+                          configuration={configuration}
+                          canEdit={canEdit}
+                          locationState={locationState}
+                          isDefault={defaultSettingValue === configKey}
+                          isHighTier={highTierValue === configKey}
+                          isLowTier={lowTierValue === configKey}
+                        />
+                      );
+                    })}
                   </Box>
                 </Box>
               );
             })
           ) : (
             <Box sx={styles.configurationsContainer()}>
-              {sortedConfigurations.map((configuration, index) => (
-                <ConfigurationCard
-                  key={`${configuration.id || configuration.name}-${index}`}
-                  configuration={configuration}
-                  canEdit={canEdit}
-                  locationState={locationState}
-                  isDefault={
-                    defaultSettingValue === `${configuration.data?.name}<<>>${configuration.project_id}`
-                  }
-                />
-              ))}
+              {sortedConfigurations.map((configuration, index) => {
+                const configKey = `${configuration.data?.name}<<>>${configuration.project_id}`;
+                return (
+                  <ConfigurationCard
+                    key={`${configuration.id || configuration.name}-${index}`}
+                    configuration={configuration}
+                    canEdit={canEdit}
+                    locationState={locationState}
+                    isDefault={defaultSettingValue === configKey}
+                    isHighTier={highTierValue === configKey}
+                    isLowTier={lowTierValue === configKey}
+                  />
+                );
+              })}
             </Box>
           )}
         </AIProviderAccordion>
@@ -213,7 +228,7 @@ ConfigurationSection.displayName = 'ConfigurationSection';
 /** @type {MuiSx} */
 const getStyles = defaultSettingsLayout => ({
   container: {
-    padding: '1rem 1.5rem',
+    padding: '0.5rem 1.5rem',
     gap: '.5rem',
     display: 'flex',
     flexDirection: 'column',
@@ -228,7 +243,7 @@ const getStyles = defaultSettingsLayout => ({
     flexWrap: defaultSettingsLayout === DEFAULT_SETTINGS_LAYOUT.INLINE ? 'wrap' : 'nowrap',
     alignItems: defaultSettingsLayout === DEFAULT_SETTINGS_LAYOUT.INLINE ? 'center' : 'stretch',
     justifyContent: 'flex-start',
-    gap: '1.5rem',
+    gap: '1rem',
   },
   defaultSettingRow: {
     display: 'flex',
@@ -246,7 +261,7 @@ const getStyles = defaultSettingsLayout => ({
     display: 'flex',
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: '0.75rem',
+    gap: '1rem',
     justifyContent: 'flex-start',
     marginTop: isGroup ? '1rem' : '.25rem',
   }),
@@ -263,6 +278,10 @@ const getStyles = defaultSettingsLayout => ({
     borderRadius: '0.75rem',
     border: '0.0625rem solid',
     borderColor: ({ palette }) => palette.border.cardsOutlines,
+    '&:hover': {
+      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+      borderColor: 'rgba(38, 43, 52, 1)',
+    },
   },
 });
 

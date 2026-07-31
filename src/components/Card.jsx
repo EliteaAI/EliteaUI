@@ -201,19 +201,31 @@ const Card = memo(props => {
                 </>
               }
             >
-              <Typography
-                ref={cardTitleRef}
-                color="text.secondary"
-                variant="headingSmall"
-                sx={styles.cardTitle}
-                data-testid="entity-card-name"
-              >
-                <HighlightQuery
-                  text={name}
+              <Box sx={styles.cardTitleWrapper}>
+                <Typography
+                  ref={cardTitleRef}
                   color="text.secondary"
                   variant="headingSmall"
-                />
-              </Typography>
+                  sx={styles.cardTitle}
+                  data-testid="entity-card-name"
+                >
+                  <HighlightQuery
+                    text={name}
+                    color="text.secondary"
+                    variant="headingSmall"
+                  />
+                </Typography>
+                {isToolkitCard(type) && typeof data.indexes_count === 'number' && (
+                  <Typography
+                    variant="bodySmall"
+                    sx={styles.indexesCount}
+                    color="text.primary"
+                    data-testid="toolkit-indexes-count"
+                  >
+                    {`Indexes: ${data.indexes_count}`}
+                  </Typography>
+                )}
+              </Box>
             </StyledTooltip>
           </Box>
           {hasCardDetails && <Box sx={styles.cardDetailsSection}>{cardDetails}</Box>}
@@ -249,20 +261,6 @@ const Card = memo(props => {
                 />
               </Box>
               <Box sx={styles.bottomRightSection}>
-                {isToolkitCard(type) && typeof data.indexes_count === 'number' && (
-                  <StyledTooltip
-                    placement="top"
-                    title={`${data.indexes_count} ${data.indexes_count === 1 ? 'index' : 'indexes'}`}
-                  >
-                    <Typography
-                      variant="bodySmall2"
-                      sx={styles.indexesCount}
-                      data-testid="toolkit-indexes-count"
-                    >
-                      {data.indexes_count} {data.indexes_count === 1 ? 'index' : 'indexes'}
-                    </Typography>
-                  </StyledTooltip>
-                )}
                 {!disableCardActions && (
                   <>
                     {isSupportAssistant && (
@@ -341,7 +339,7 @@ Card.displayName = 'Card';
 
 const lineClamp = lines => ({
   width: '100%',
-  wordWrap: 'wrap',
+  wordWrap: 'break-word',
   overflowWrap: 'break-word',
   textOverflow: 'ellipsis',
   overflow: 'hidden',
@@ -392,6 +390,12 @@ const cardStyles = (hasCardDetails, showCardBottom, isWholeCardClickable, isClic
     justifyContent: 'flex-start',
     alignItems: 'center',
     gap: '1rem',
+  },
+  cardTitleWrapper: {
+    display: 'flex',
+    flexDirection: 'column',
+    minWidth: 0,
+    overflow: 'hidden',
   },
   cardTitle: {
     maxHeight: '3rem',
@@ -479,15 +483,11 @@ const cardStyles = (hasCardDetails, showCardBottom, isWholeCardClickable, isClic
     },
     svg: { path: { fill: `${palette.icon.fill.default} !important` } },
   }),
-  indexesCount: ({ palette }) => ({
+  indexesCount: {
     display: 'inline-flex',
     alignItems: 'center',
-    height: '1.5rem',
-    padding: '0 0.5rem',
-    marginRight: '0.25rem',
-    color: palette.text.metrics,
     whiteSpace: 'nowrap',
-  }),
+  },
   likeContainer: {
     display: 'flex',
     minWidth: '3.25rem',

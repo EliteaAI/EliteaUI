@@ -122,6 +122,7 @@ const useSaveVersion = () => {
     const savedVersionDetails = {
       ...version_details,
       llm_settings: cleanedLlmSettings,
+      conversation_starters: filterEmptyStrings(version_details?.conversation_starters),
       instructions: !isFromPipeline ? version_details.instructions : yamlCode,
       ...(isFromPipeline && {
         pipeline_settings: {

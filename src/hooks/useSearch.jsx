@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo } from 'react';
 
+import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useLazyAutoSuggestQuery } from '@/api/search';
 import { useLazyToolkitsListQuery } from '@/api/toolkits';
 import { PAGE_SIZE, SortFields, SortOrderOptions } from '@/common/constants';
@@ -58,7 +59,7 @@ export default function useSearch() {
       [...toolkitResult]
         .map(item => ({
           ...item,
-          displayName: item.name || 'Toolkit ' + item.id || '',
+          displayName: ToolkitsHelpers.getToolkitDisplayName(item) || 'Toolkit ' + item.id,
         }))
         .sort((a, b) => a.displayName?.toLowerCase().localeCompare(b.displayName?.toLowerCase())),
     [toolkitResult],
@@ -68,13 +69,7 @@ export default function useSearch() {
       [...mcpResults]
         .map(item => ({
           ...item,
-          displayName:
-            item.name ||
-            item.toolkit_name ||
-            item.settings?.elitea_title ||
-            item.type ||
-            'MCP ' + item.id ||
-            '',
+          displayName: ToolkitsHelpers.getToolkitDisplayName(item) || 'MCP ' + item.id,
         }))
         .sort((a, b) => a.displayName.toLowerCase().localeCompare(b.displayName.toLowerCase())),
     [mcpResults],

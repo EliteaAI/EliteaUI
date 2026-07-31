@@ -15,6 +15,7 @@ const Memory = memo(() => {
         <Typography
           variant="labelMedium"
           color="text.secondary"
+          fontWeight={600}
         >
           Memory
         </Typography>

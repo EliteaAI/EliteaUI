@@ -48,6 +48,20 @@ export const resolveHref = (eventType, meta, projectId) => {
       return null;
     }
 
+    // Prefixing the project id routes through the project switcher, so the link both
+    // selects the project the budget belongs to and lands on its Usage page — Settings
+    // itself has no project segment and would otherwise show whichever is selected.
+    case NotificationType.BudgetThresholdReached:
+    case NotificationType.BudgetLimitReached:
+      return `${base}/${projectId}${RouteDefinitions.SettingsWithTab.replace(':tab', 'usage')}`;
+
+    case NotificationType.MemberBudgetThresholdReached:
+    case NotificationType.MemberBudgetLimitReached:
+      return (
+        `${base}/${projectId}${RouteDefinitions.SettingsWithTab.replace(':tab', 'usage')}` +
+        `?${SearchParams.Scope}=user`
+      );
+
     default:
       return null;
   }

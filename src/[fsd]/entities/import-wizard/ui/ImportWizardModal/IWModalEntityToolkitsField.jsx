@@ -14,7 +14,7 @@ const IWModalEntityToolkitsField = memo(props => {
 
   return (
     <Box>
-      {!hideTitle && <Typography sx={styles.label}>Toolkits:</Typography>}
+      {!hideTitle && <Typography sx={styles.label}>Tools:</Typography>}
       <Box
         sx={[
           styles.wrapper,

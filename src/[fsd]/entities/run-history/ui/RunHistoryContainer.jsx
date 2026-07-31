@@ -2,18 +2,17 @@ import { memo, useCallback, useEffect, useState } from 'react';
 
 import { useSearchParams } from 'react-router-dom';
 
-import { Box, IconButton, Typography } from '@mui/material';
+import { Box } from '@mui/material';
 
 import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
 import { RunHistoryChat, RunHistoryList } from '@/[fsd]/entities/run-history/ui';
 import { ParticipantEntityTypes } from '@/[fsd]/features/chat/participants/lib/constants/participant.constants';
 import { SearchParams } from '@/common/constants';
-import CloseIcon from '@/components/Icons/CloseIcon';
 import useIsSmallWindow from '@/hooks/useIsSmallWindow';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const RunHistoryContainer = memo(props => {
-  const { entityId, versions, source, handleRestoreConversation, onClose } = props;
+  const { entityId, versions, source, handleRestoreConversation } = props;
 
   const projectId = useSelectedProjectId();
   const [searchParams] = useSearchParams();
@@ -69,47 +68,29 @@ const RunHistoryContainer = memo(props => {
   const styles = runHistoryContainerStyles(isSmallWindow);
 
   return (
-    <>
-      <Box sx={styles.header}>
-        <IconButton
-          variant="elitea"
-          color="tertiary"
-          aria-label="clear the chat"
-          onClick={onClose}
-        >
-          <CloseIcon sx={styles.iconClose} />
-        </IconButton>
-        <Typography
-          variant="headingSmall"
-          color="text.secondary"
-        >
-          Run History
-        </Typography>
-      </Box>
-      <Box sx={styles.wrapper}>
-        <Box sx={styles.historyList}>
-          <RunHistoryList
-            conversations={allConversations}
-            versions={versions}
-            isLoading={isLoading && page === 0}
-            isLoadingMore={isFetching && page > 0}
-            listCurrentSize={allConversations.length}
-            totalAvailableCount={data?.total || 0}
-            onLoadMore={handleLoadMore}
-            resetPageDependencies={[projectId, entityId]}
-            handleHistoryItemSelect={handleHistoryItemSelect}
-            selectedHistoryItem={selectedHistoryItem}
-            source={source}
-            handleRestoreConversation={handleRestoreConversation}
-          />
-        </Box>
-
-        <RunHistoryChat
+    <Box sx={styles.wrapper}>
+      <Box sx={styles.historyList}>
+        <RunHistoryList
+          conversations={allConversations}
+          versions={versions}
+          isLoading={isLoading && page === 0}
+          isLoadingMore={isFetching && page > 0}
+          listCurrentSize={allConversations.length}
+          totalAvailableCount={data?.total || 0}
+          onLoadMore={handleLoadMore}
+          resetPageDependencies={[projectId, entityId]}
+          handleHistoryItemSelect={handleHistoryItemSelect}
           selectedHistoryItem={selectedHistoryItem}
-          prettifyChat={[ParticipantEntityTypes.Toolkit, ParticipantEntityTypes.MCP].includes(source)}
+          source={source}
+          handleRestoreConversation={handleRestoreConversation}
         />
       </Box>
-    </>
+
+      <RunHistoryChat
+        selectedHistoryItem={selectedHistoryItem}
+        prettifyChat={[ParticipantEntityTypes.Toolkit, ParticipantEntityTypes.MCP].includes(source)}
+      />
+    </Box>
   );
 });
 
@@ -132,12 +113,12 @@ const runHistoryContainerStyles = isSmallWindow => ({
     height: '1.25rem',
   },
   wrapper: {
-    height: 'calc(100vh - 7.0625rem)',
-    paddingBottom: '0.75rem',
+    height: 'calc(100vh - 6rem)',
     paddingTop: '0rem',
     display: 'flex',
     boxSizing: 'border-box',
     flexDirection: isSmallWindow ? 'column' : 'row',
+    gap: '1.5rem',
   },
   historyList: {
     flex: 3,

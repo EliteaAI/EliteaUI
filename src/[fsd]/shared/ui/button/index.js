@@ -1,4 +1,4 @@
-export { default as BaseBtn } from './BaseBtn';
+export { default as BaseBtn, BUTTON_VARIANTS } from './BaseBtn';
 export { default as OneClickButton } from './OneClickButton';
 export { default as DiscardButton } from './DiscardButton';
 export { default as CopyToClipboardButton } from './CopyToClipboardButton';

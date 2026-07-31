@@ -1990,7 +1990,8 @@ const ChatBox = forwardRef((props, boxRef) => {
   const onSelectModel = useCallback(
     async newModel => {
       if (isAgentsPage) {
-        // For agents page, update the participant's llm_settings
+        if (selectedModel?.name === newModel.name) return;
+
         setSelectedModel(newModel);
         const newLLMSettings = {
           ...activeParticipant?.entity_settings.llm_settings,
@@ -2063,6 +2064,7 @@ const ChatBox = forwardRef((props, boxRef) => {
     },
     [
       isAgentsPage,
+      selectedModel,
       onSetLLMSettings,
       onChangeParticipantSettings,
       activeParticipant?.entity_settings,
@@ -2224,7 +2226,6 @@ const ChatBox = forwardRef((props, boxRef) => {
           askingQuestionId={askingQuestionId}
           questionItemRef={questionItemRef}
           onRemoveAttachment={onRemoveAttachment}
-          hideContinueButton={isAgentsPage}
           onOpenArtifactPreview={onOpenArtifactPreview}
           isSpeakingMode={isSpeakingMode}
           onAutoSpeak={handleAutoSpeak}

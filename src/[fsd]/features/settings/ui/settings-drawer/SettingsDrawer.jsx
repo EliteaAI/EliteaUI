@@ -7,10 +7,10 @@ import { Box, Divider, Typography } from '@mui/material';
 import { SettingsLayoutConstants } from '@/[fsd]/features/settings/lib/constants';
 import AnalyticsIcon from '@/assets/analytics-icon.svg?react';
 import BrainIcon from '@/assets/brain.svg?react';
+import CoinIcon from '@/assets/coin-icon.svg?react';
 import CompassIcon from '@/assets/compass.svg?react';
 import ConfigurationIcon from '@/assets/configuration-icon.svg?react';
 import KeyIcon from '@/assets/key-icon.svg?react';
-import LogoutIcon from '@/assets/logout-icon.svg?react';
 import ModelIcon from '@/assets/model-icon.svg?react';
 import EnvironmentIcon from '@/assets/new-environment-icon.svg?react';
 import PersonalizationIcon from '@/assets/personalization-icon.svg?react';
@@ -19,6 +19,7 @@ import ReasonIcon from '@/assets/reason-icon.svg?react';
 import BellIcon from '@/components/Icons/BellIcon';
 import BriefcaseIcon from '@/components/Icons/BriefcaseIcon';
 import Lock from '@/components/Icons/Lock.jsx';
+import Person from '@/components/Icons/Person';
 import UsersIcon from '@/components/Icons/UsersIcon';
 
 const ICON_COMPONENTS = {
@@ -31,11 +32,12 @@ const ICON_COMPONENTS = {
   secrets: Lock,
   users: UsersIcon,
   analytics: AnalyticsIcon,
+  usage: CoinIcon,
   preferences: PersonalizationIcon,
   'ai-personality': ReasonIcon,
   memory: BrainIcon,
   notifications: BellIcon,
-  logout: LogoutIcon,
+  profile: Person,
 };
 
 const getIconComponent = tabId => {
@@ -183,7 +185,7 @@ const getStyles = () => ({
     lineHeight: '1rem',
     letterSpacing: '0.06em',
     textTransform: 'uppercase',
-    padding: '1rem',
+    padding: '1rem 1rem 1rem 1.5rem',
   }),
 
   sectionDivider: ({ palette }) => ({
@@ -194,12 +196,12 @@ const getStyles = () => ({
   menuItem:
     isActive =>
     ({ palette }) => ({
-      padding: '0.5rem 1rem',
-      margin: '0 1rem',
+      padding: '0.5rem 0.75rem',
+      margin: '0 0.75rem',
       gap: '0.5rem',
       display: 'flex',
       alignItems: 'center',
-      maxWidth: 'calc(100% - 2rem)',
+      maxWidth: 'calc(100% - 1.5rem)',
       height: '2rem',
       background: isActive
         ? palette.background.userInputBackgroundActive
@@ -218,17 +220,17 @@ const getStyles = () => ({
     ({ palette }) => ({
       display: 'flex',
       alignItems: 'center',
-      minWidth: '0.875rem',
+      minWidth: '1rem',
       color: isActive ? palette.text.secondary : palette.icon.fill.stateButtonHover,
       '& svg': {
         fill: isActive ? palette.text.secondary : palette.icon.fill.stateButtonHover,
-        width: '0.875rem',
-        height: '0.875rem',
+        width: '1rem',
+        height: '1rem',
       },
     }),
 
   icon: {
-    fontSize: '0.875rem',
+    fontSize: '1rem',
   },
 
   menuItemText:

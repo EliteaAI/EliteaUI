@@ -39,7 +39,6 @@ const ConversationStarters = memo(props => {
 
   const inputRefs = useRef({});
   const [shouldFocusIndex, setShouldFocusIndex] = useState(null);
-  const [blurredIndices, setBlurredIndices] = useState(new Set());
 
   const onAdd = useCallback(() => {
     const newIndex = values.length;
@@ -55,8 +54,7 @@ const ConversationStarters = memo(props => {
   }, [shouldFocusIndex, values.length]);
 
   const onStarterBlur = useCallback(
-    index => () => {
-      setBlurredIndices(prev => new Set([...prev, index]));
+    () => () => {
       toggleFieldFocus(null);
     },
     [toggleFieldFocus],
@@ -68,21 +66,10 @@ const ConversationStarters = memo(props => {
         valuesPath,
         values.filter((_, i) => i !== index),
       );
-      setBlurredIndices(
-        prev =>
-          new Set(
-            Array.from(prev)
-              .filter(i => i !== index)
-              .map(i => (i > index ? i - 1 : i)),
-          ),
-      );
     },
     [setFieldValue, values, valuesPath],
   );
-  const disableAdd = useMemo(
-    () => values.length >= MAX_CONVERSATION_STARTERS || values.some(v => !v?.trim()),
-    [values],
-  );
+  const disableAdd = useMemo(() => values.length >= MAX_CONVERSATION_STARTERS, [values]);
 
   const addTooltipTitle = useMemo(() => {
     if (values.length >= MAX_CONVERSATION_STARTERS) return 'You have reached the limit of chat starters';
@@ -103,7 +90,6 @@ const ConversationStarters = memo(props => {
             <Box data-tour={AGENT_TOUR_TARGET_IDS.conversationStarters}>
               {values.map((value, index) => {
                 const starterFocusId = `${PROMPT_PAYLOAD_KEY.conversationStarters}_${index}`;
-                const hasStarterError = blurredIndices.has(index) && !value?.trim();
                 return (
                   <Box
                     sx={styles.starterRow}
@@ -133,8 +119,6 @@ const ConversationStarters = memo(props => {
                         }}
                         showCharacterCounter
                         inputRef={el => (inputRefs.current[index] = el)}
-                        error={hasStarterError}
-                        helperText={hasStarterError ? 'Conversation starter cannot be empty' : undefined}
                         fullScreenButtonProps={{ 'data-testid': 'agent-conversation-starter-expand' }}
                         modalDataTestId="agent-conversation-starter-dialog"
                       />

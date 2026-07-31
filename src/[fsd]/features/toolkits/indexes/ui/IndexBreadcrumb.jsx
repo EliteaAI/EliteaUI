@@ -13,7 +13,7 @@ const IndexBreadcrumb = memo(props => {
         sx={styles.link}
         onClick={onToolkitsClick}
       >
-        Toolkits
+        Toolkits & Indexes
       </Typography>
       {toolkitName && (
         <>
@@ -77,12 +77,12 @@ const indexBreadcrumbStyles = () => ({
     overflow: 'hidden',
   },
   separator: ({ palette }) => ({
-    color: palette.text.secondary,
+    color: palette.text.primary,
     marginX: '0.5rem',
     flexShrink: 0,
   }),
   link: ({ palette }) => ({
-    color: palette.text.secondary,
+    color: palette.text.primary,
     whiteSpace: 'nowrap',
     cursor: 'pointer',
     '&:hover': {

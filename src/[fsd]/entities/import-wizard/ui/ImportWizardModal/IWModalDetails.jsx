@@ -51,8 +51,8 @@ const IWModalDetails = memo(props => {
         return nestedEntities ? nestedEntities.map(item => ({ ...item, details: item.versions[0] })) : [];
 
       return nestedEntities
-        .filter(item => item.entity === 'agents')
-        .map(agent => prepareApplicationEntity(agent));
+        .filter(item => item.entity === 'agents' || item.entity === 'skills')
+        .map(item => prepareApplicationEntity(item));
     },
     [isForking, prepareApplicationEntity],
   );

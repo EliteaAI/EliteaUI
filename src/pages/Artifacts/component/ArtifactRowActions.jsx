@@ -2,10 +2,13 @@ import { memo, useCallback, useMemo } from 'react';
 
 import { Box, IconButton, Tooltip } from '@mui/material';
 
+import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
 import ViewFileIcon from '@/assets/icons/ViewFileIcon.svg?react';
+import { PERMISSIONS } from '@/common/constants';
 import DotMenu from '@/components/DotMenu';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import DownloadIcon from '@/components/Icons/DownloadIcon';
+import useCheckPermission from '@/hooks/useCheckPermission';
 
 import { ARTIFACT_TYPES } from './constants';
 
@@ -15,6 +18,9 @@ import { ARTIFACT_TYPES } from './constants';
  */
 const ArtifactRowActions = memo(props => {
   const { row, onPreview, onDownload, onDelete } = props;
+
+  const { checkPermission } = useCheckPermission();
+  const { isPrivate } = useProjectType();
 
   const handlePreview = useCallback(
     e => {
@@ -33,32 +39,32 @@ const ArtifactRowActions = memo(props => {
   }, [onDelete, row]);
 
   const menuItems = useMemo(() => {
-    // Only show actions for files, not for folders
     const isFile = row.type === ARTIFACT_TYPES.FILE;
+    const canDelete = isPrivate || checkPermission(PERMISSIONS.artifacts.delete);
     const items = [];
 
     if (isFile) {
       items.push({
-        key: 'artifacts-file-download',
         label: 'Download',
         icon: <DownloadIcon sx={styles.menuIcon} />,
         onClick: handleDownload,
       });
 
-      items.push({
-        key: 'artifacts-file-delete',
-        label: 'Delete',
-        icon: <DeleteIcon sx={styles.menuIcon} />,
-        entityName: row.name,
-        shouldRequestInputName: false,
-        inlineExtraContent: `? It can't be restored.`,
-        modalSx: { paper: { width: '30rem' } },
-        onConfirm: handleDelete,
-      });
+      if (canDelete) {
+        items.push({
+          label: 'Delete',
+          icon: <DeleteIcon sx={styles.menuIcon} />,
+          entityName: row.name,
+          shouldRequestInputName: false,
+          inlineExtraContent: `? It can't be restored.`,
+          modalSx: { paper: { width: '30rem' } },
+          onConfirm: handleDelete,
+        });
+      }
     }
 
     return items;
-  }, [handleDownload, handleDelete, row.name, row.type]);
+  }, [handleDownload, handleDelete, row.name, row.type, isPrivate, checkPermission]);
 
   return (
     <Box sx={styles.actionsContainer}>

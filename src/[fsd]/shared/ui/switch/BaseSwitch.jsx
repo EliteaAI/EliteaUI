@@ -50,7 +50,10 @@ const BaseSwitch = memo(
     );
 
     const tooltipIcon = infoTooltip ? (
-      <InfoTooltip infoTooltip={infoTooltip} slotProps={slotProps} />
+      <InfoTooltip
+        infoTooltip={infoTooltip}
+        slotProps={slotProps}
+      />
     ) : null;
 
     if (label) {

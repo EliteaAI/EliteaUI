@@ -43,7 +43,10 @@ const ConfigurationsPanel = memo(props => {
             {label}
           </Typography>
           <InfoTooltip
-            infoTooltip={tooltipText}
+            infoTooltip={{
+              title: tooltipText,
+              icon: { width: 12, height: 12 },
+            }}
             sx={styles.inlineInfoIconWrapper}
           />
         </Box>
@@ -188,6 +191,7 @@ const getStyles = () => ({
     minHeight: 0,
     overflow: 'auto',
     height: '100%',
+    padding: '0.5rem 0rem',
   },
   configurationsContent: ({ palette }) => ({
     display: 'flex',
@@ -211,7 +215,7 @@ const getStyles = () => ({
     gap: '0.25rem',
   },
   inlineDefaultLabelText: {
-    fontWeight: 500,
+    fontFamily: '"Montserrat", sans-serif',
     whiteSpace: 'nowrap',
   },
   inlineInfoIconWrapper: {
@@ -219,6 +223,7 @@ const getStyles = () => ({
     alignItems: 'center',
     justifyContent: 'center',
     paddingLeft: '0.125rem',
+    marginTop: '0.125rem',
   },
 });
 

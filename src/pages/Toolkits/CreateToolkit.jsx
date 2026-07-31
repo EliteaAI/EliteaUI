@@ -260,6 +260,10 @@ const createToolkitStyles = () => ({
     [breakpoints.down('lg')]: {
       marginBottom: '1.5rem',
     },
+    '>div': {
+      maxWidth: '40.1875rem',
+      margin: '0 auto',
+    },
   }),
   toolkitForm: {
     paddingBottom: '1.5rem',
