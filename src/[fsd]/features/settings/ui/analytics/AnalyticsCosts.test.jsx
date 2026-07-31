@@ -48,7 +48,12 @@ vi.mock('@/[fsd]/features/settings/lib/helpers', () => ({
 
 vi.mock('@/[fsd]/features/settings/ui/analytics', () => ({
   ChartTooltip: () => null,
-  KPICard: ({ label, value }) => <div data-testid={`kpi-${label}`}>{value}</div>,
+  KPICard: ({ label, value, subtitle }) => (
+    <div data-testid={`kpi-${label}`}>
+      <span>{value}</span>
+      {subtitle && <span data-testid={`kpi-${label}-subtitle`}>{subtitle}</span>}
+    </div>
+  ),
 }));
 
 const theme = createTheme();
@@ -80,7 +85,16 @@ const MOCK_DATA = {
       total_cost: 17.56,
     },
   ],
-  by_agent: [{ entity_id: 1, entity_name: 'Code Review Bot', total_cost: 10.5, total_tokens: 500000 }],
+  by_agent: [
+    {
+      entity_id: 1,
+      entity_name: 'Code Review Bot',
+      total_cost: 10.5,
+      total_tokens: 500000,
+      calls: 42,
+      avg_cost: 0.25,
+    },
+  ],
   by_user: [{ user_id: 42, user_email: 'alice@example.com', total_cost: 8.2, total_tokens: 400000 }],
   daily: [{ date: '2026-01-15', total_cost: 5.0, total_tokens: 250000 }],
 };
@@ -251,5 +265,73 @@ describe('AnalyticsCosts', () => {
       { wrapper: Wrapper },
     );
     expect(container.firstChild).toBeNull();
+  });
+
+  it('renders the estimated-cost disclaimer above the KPI row', () => {
+    useAnalyticsCostsQuery.mockReturnValue({ data: MOCK_DATA, isFetching: false, isError: false });
+    render(
+      <AnalyticsCosts
+        projectId={1}
+        dateFrom="2026-01-01"
+        dateTo="2026-01-31"
+      />,
+      { wrapper: Wrapper },
+    );
+    expect(screen.getByText(/estimated from a local model-price table/i)).toBeTruthy();
+  });
+
+  it('labels Total Cost and Avg Cost / Call KPIs as estimated', () => {
+    useAnalyticsCostsQuery.mockReturnValue({ data: MOCK_DATA, isFetching: false, isError: false });
+    render(
+      <AnalyticsCosts
+        projectId={1}
+        dateFrom="2026-01-01"
+        dateTo="2026-01-31"
+      />,
+      { wrapper: Wrapper },
+    );
+    expect(screen.getByTestId('kpi-TOTAL COST-subtitle').textContent).toMatch(/estimated/i);
+    expect(screen.getByTestId('kpi-AVG COST / CALL-subtitle').textContent).toMatch(/estimated/i);
+  });
+
+  it('renders per-agent calls · avg cost caption', () => {
+    useAnalyticsCostsQuery.mockReturnValue({ data: MOCK_DATA, isFetching: false, isError: false });
+    render(
+      <AnalyticsCosts
+        projectId={1}
+        dateFrom="2026-01-01"
+        dateTo="2026-01-31"
+      />,
+      { wrapper: Wrapper },
+    );
+    // Caption format: "42 calls · $0.25 avg" (fmtCost is mocked to return $0.25)
+    expect(screen.getByText(/42 calls/)).toBeTruthy();
+    expect(screen.getByText(/\$0\.25 avg/)).toBeTruthy();
+  });
+
+  it('omits the per-agent caption when calls == 0', () => {
+    const dataNoCalls = {
+      ...MOCK_DATA,
+      by_agent: [
+        {
+          entity_id: 1,
+          entity_name: 'Zero Calls Agent',
+          total_cost: 0,
+          total_tokens: 0,
+          calls: 0,
+          avg_cost: 0,
+        },
+      ],
+    };
+    useAnalyticsCostsQuery.mockReturnValue({ data: dataNoCalls, isFetching: false, isError: false });
+    render(
+      <AnalyticsCosts
+        projectId={1}
+        dateFrom="2026-01-01"
+        dateTo="2026-01-31"
+      />,
+      { wrapper: Wrapper },
+    );
+    expect(screen.queryByText(/calls · /)).toBeNull();
   });
 });
