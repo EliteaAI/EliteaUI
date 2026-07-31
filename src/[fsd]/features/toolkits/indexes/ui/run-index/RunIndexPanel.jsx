@@ -56,6 +56,7 @@ const RunIndexPanel = memo(props => {
     tab,
     initialConversation,
     toolkitName,
+    isCreating,
   } = props;
   const styles = runIndexPanelStyles();
   const navigate = useNavigate();
@@ -148,6 +149,7 @@ const RunIndexPanel = memo(props => {
     values,
     modes: [],
     initialConversation,
+    isCreating,
     onMcpAuthRequired: onMcpAuthRequiredStable,
   });
 
@@ -388,8 +390,8 @@ const RunIndexPanel = memo(props => {
     };
   }, [index?.metadata]);
   const banner = useMemo(
-    () => bannerVariant(effectiveIsIndexing, effectiveState, reindexStats),
-    [effectiveIsIndexing, effectiveState, reindexStats],
+    () => bannerVariant(effectiveIsIndexing, effectiveState, reindexStats, index?.metadata?.error),
+    [effectiveIsIndexing, effectiveState, reindexStats, index?.metadata?.error],
   );
 
   const onAddSchedule = useCallback(() => {
