@@ -1358,6 +1358,9 @@ export const useChatSocket = ({
             msg.isLoading = false;
             msg.isStreaming = false;
             msg.exception = message.content;
+            // Without this the live view shows the raw trace: the scope only reached the
+            // message on reload, via the persisted meta
+            msg.budgetErrorCode = response_metadata?.budget_error_code;
             msg.hitlInterrupt = undefined;
             msg.hitlInterrupts = undefined;
           }
