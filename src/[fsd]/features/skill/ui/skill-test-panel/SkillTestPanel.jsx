@@ -6,8 +6,8 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { Box } from '@mui/material';
 
-import { useReadAloud } from '@/[fsd]/features/chat/lib/hooks';
-import { ChatButton, VoiceMiniPlayer } from '@/[fsd]/features/chat/ui';
+import { useBudgetWarning, useReadAloud } from '@/[fsd]/features/chat/lib/hooks';
+import { BudgetWarningBanner, ChatButton, VoiceMiniPlayer } from '@/[fsd]/features/chat/ui';
 import { ChatMessageList } from '@/[fsd]/features/chat/ui/chat-box';
 import { DEFAULT_MAX_TOKENS, DEFAULT_TEMPERATURE } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
 import { useListModelsQuery } from '@/api/configurations.js';
@@ -65,6 +65,8 @@ const extractEditedText = items => {
  */
 const SkillTestPanel = memo(({ isFullScreenChat, setIsFullScreenChat }) => {
   const projectId = useSelectedProjectId();
+  // This panel keeps no persisted conversation, so a dismissal lasts for the panel session
+  const budgetWarning = useBudgetWarning({ projectId });
   const { values } = useFormikContext();
   const { toastError, toastInfo } = useToast();
   const socket = useContext(SocketContext);
@@ -502,6 +504,13 @@ const SkillTestPanel = memo(({ isFullScreenChat, setIsFullScreenChat }) => {
           />
           {showPlayer && <VoiceMiniPlayer {...voicePlayerProps} />}
           <Box sx={styles.inputWrapper}>
+            {budgetWarning.shouldShow && (
+              <BudgetWarningBanner
+                scope={budgetWarning.scope}
+                percentUsed={budgetWarning.percentUsed}
+                onDismiss={budgetWarning.dismiss}
+              />
+            )}
             <NewChatInput
               isAgentsPage
               hideAttachments
