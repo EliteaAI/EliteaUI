@@ -11,8 +11,15 @@ import useToast from '@/hooks/useToast';
 const CommonStringField = memo(props => {
   const { toastInfo } = useToast();
 
-  const { fieldKey, fieldValue, fieldProperties, onChangeInputVariables, toolInputVariables, property } =
-    props;
+  const {
+    fieldKey,
+    fieldValue,
+    fieldProperties,
+    onChangeInputVariables,
+    toolInputVariables,
+    property,
+    inputTestId,
+  } = props;
   const { enumValues, isRequired, label, description, codeLanguage, lines, disabled, error, clipboard } =
     fieldProperties;
 
@@ -186,7 +193,7 @@ const CommonStringField = memo(props => {
         onChange={event => handleInputChange(fieldKey, event)}
         inputProps={{
           maxLength: property?.maxLength,
-          'data-testid': `toolkit-test-param-${fieldKey}-input`,
+          'data-testid': inputTestId,
         }}
         disabled={disabled}
         error={Boolean(error)}

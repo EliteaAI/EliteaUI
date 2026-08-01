@@ -10,6 +10,7 @@ const ToolFormContainer = memo(props => {
     schema,
     onChangeInputVariables,
     changesDisabled = false,
+    inputTestId,
   } = props;
 
   const fieldValue = useMemo(() => {
@@ -158,6 +159,7 @@ const ToolFormContainer = memo(props => {
         <Field.CommonStringField
           {...fieldPropsShared}
           property={property}
+          inputTestId={inputTestId}
         />
       );
   }

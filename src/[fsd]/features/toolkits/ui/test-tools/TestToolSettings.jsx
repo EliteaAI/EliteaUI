@@ -112,6 +112,7 @@ const TestToolSettings = memo(props => {
             toolInputVariables={toolInputVariables}
             schema={selectedToolSchema}
             onChangeInputVariables={onChangeInputVariablesWrapper}
+            inputTestId={`toolkit-test-param-${key}-input`}
           />
         ))}
       </ContentContainer>
