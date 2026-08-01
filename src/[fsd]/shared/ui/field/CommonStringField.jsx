@@ -186,6 +186,7 @@ const CommonStringField = memo(props => {
         onChange={event => handleInputChange(fieldKey, event)}
         inputProps={{
           maxLength: property?.maxLength,
+          'data-testid': `toolkit-test-param-${fieldKey}-input`,
         }}
         disabled={disabled}
         error={Boolean(error)}
