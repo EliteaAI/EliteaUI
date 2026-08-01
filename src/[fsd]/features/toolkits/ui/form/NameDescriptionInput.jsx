@@ -74,7 +74,7 @@ const NameDescriptionInput = memo(props => {
               onChange={handleInputChange('name')}
               error={showValidation && toolErrors?.name}
               helperText={showValidation && toolErrors?.name && 'Field is required'}
-              inputProps={{ maxLength: MAX_NAME_LENGTH }}
+              inputProps={{ maxLength: MAX_NAME_LENGTH, 'data-testid': 'toolkit-form-name-input' }}
               onFocus={() => toggleFieldFocus(PROMPT_PAYLOAD_KEY.name)}
               onBlur={() => toggleFieldFocus(null)}
               hasActionsToolBar
@@ -107,7 +107,10 @@ const NameDescriptionInput = memo(props => {
             onChange={handleInputChange('description')}
             error={showValidation && toolErrors?.description}
             helperText={showValidation && toolErrors?.description && 'Field is required'}
-            inputProps={{ maxLength: MAX_DESCRIPTION_LENGTH }}
+            inputProps={{
+              maxLength: MAX_DESCRIPTION_LENGTH,
+              'data-testid': 'toolkit-form-description-input',
+            }}
             disabled={disabled}
             language="text"
             fieldName="Description"

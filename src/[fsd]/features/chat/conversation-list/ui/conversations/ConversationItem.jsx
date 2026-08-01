@@ -163,6 +163,7 @@ const ConversationItem = memo(props => {
     const items = !isPlayback
       ? [
           {
+            key: 'chat-conversation-menu-rename',
             label: 'Rename',
             icon: (
               <Box sx={{ svg: { path: { fill: ({ palette }) => `${palette.secondary.main} !important` } } }}>
@@ -173,6 +174,7 @@ const ConversationItem = memo(props => {
             onClick: handleEdit,
           },
           {
+            key: 'chat-conversation-menu-move-to',
             label: (
               <Box
                 style={{
@@ -196,12 +198,14 @@ const ConversationItem = memo(props => {
             subMenuItems: moveToFoldersMenuItems,
           },
           {
+            key: 'chat-conversation-menu-playback',
             label: 'Playback',
             icon: <PlayIcon sx={{ fontSize: '1rem' }} />,
             disabled: isActive && isEditingCanvas,
             onClick: handlePlayback,
           },
           {
+            key: 'chat-conversation-menu-make-public',
             label: 'Make public',
             icon: <OpenEyeIcon sx={{ fontSize: '1rem' }} />,
             alertTitle: 'Public conversation?',
@@ -216,6 +220,7 @@ const ConversationItem = memo(props => {
             disabled: isActive && isEditingCanvas,
           },
           {
+            key: 'chat-conversation-menu-share',
             label: 'Share',
             icon: (
               <Box sx={{ svg: { path: { fill: ({ palette }) => palette.secondary.main } } }}>
@@ -226,12 +231,14 @@ const ConversationItem = memo(props => {
             display: projectId == personal_project_id ? 'none' : undefined,
           },
           {
+            key: 'chat-conversation-menu-pin',
             label: isPinned ? 'Unpin' : 'Pin on top',
             icon: <PinIcon sx={{ fontSize: '1rem' }} />,
             disabled: !isPinned && !!conversation.folder_id,
             onClick: handlePin,
           },
           {
+            key: 'chat-conversation-menu-delete',
             label: 'Delete',
             icon: <DeleteIcon sx={{ fontSize: '1rem' }} />,
             entityName: name,
@@ -339,6 +346,8 @@ const ConversationItem = memo(props => {
 
   const renderConversationContent = () => (
     <Box
+      data-testid={`chat-conversation-item-${conversation.id}`}
+      data-active={isActive ? 'true' : 'false'}
       sx={styles.conversationContentWrapper}
       onClick={onClickConversation}
       onMouseEnter={onMouseEnter}
@@ -380,7 +389,11 @@ const ConversationItem = memo(props => {
         </Box>
       </Box>
       {/* Updated icon logic based on conversation type */}
-      <Box sx={styles.conversationIconWrapper}>
+      <Box
+        data-testid="conversation-multi-user-icon"
+        data-has-icon={conversationType === 'private_with_users' || conversationType === 'public'}
+        sx={styles.conversationIconWrapper}
+      >
         {/* Always show users icon with appropriate color based on type */}
         {conversationType === 'private_with_users' && (
           <UsersIcon

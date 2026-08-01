@@ -8,6 +8,15 @@ import SummaryDetailsButton from './SummaryDetailsButton';
  * Reusable stats display component for context budget information.
  * Displays strategy, messages, summaries, and optionally token usage.
  */
+// Per-row testid for the plain (non-SummaryDetailsButton) value render path.
+// "Messages" always renders through this path; "Summaries" only renders here
+// when isCompact is false (the compact/expanded-panel path uses
+// SummaryDetailsButton instead, which carries its own testid).
+const STAT_VALUE_TESTIDS = {
+  Messages: 'context-budget-messages-count',
+  Summaries: 'context-budget-summaries-count',
+};
+
 const ContextBudgetStatsDisplay = memo(props => {
   const {
     stats,
@@ -69,6 +78,7 @@ const ContextBudgetStatsDisplay = memo(props => {
             <Typography
               variant={typographyVariant}
               sx={valueStyle}
+              data-testid={STAT_VALUE_TESTIDS[item.label]}
             >
               {item.value}
             </Typography>

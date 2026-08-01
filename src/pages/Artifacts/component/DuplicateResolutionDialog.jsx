@@ -14,6 +14,7 @@ const DuplicateResolutionDialog = memo(props => {
 
   return (
     <Modal.BaseModal
+      data-testid="artifacts-resolve-duplicates-dialog"
       open={open}
       onClose={onCancel}
       title="Resolve duplicates"
@@ -25,6 +26,7 @@ const DuplicateResolutionDialog = memo(props => {
       actions={
         <Box sx={styles.actions}>
           <Button.BaseBtn
+            data-testid="artifacts-resolve-duplicates-cancel-button"
             variant={BUTTON_VARIANTS.secondary}
             onClick={onCancel}
           >

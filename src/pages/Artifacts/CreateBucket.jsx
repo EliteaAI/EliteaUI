@@ -235,7 +235,10 @@ const CreateBucket = memo(() => {
                   error={formik.touched.name && Boolean(formik.errors.name)}
                   helperText={formik.touched.name && formik.errors.name}
                   disabled={!!currentBucket}
-                  inputProps={{ maxLength: MAX_BUCKET_NAME_LENGTH }}
+                  inputProps={{
+                    maxLength: MAX_BUCKET_NAME_LENGTH,
+                    'data-testid': 'artifacts-bucket-name-input',
+                  }}
                 />
                 {isFocused('name') && formik.values.name?.length === MAX_BUCKET_NAME_LENGTH && (
                   <Text.CharacterCounter
@@ -249,6 +252,7 @@ const CreateBucket = memo(() => {
               <Box sx={styles.retentionPolicyWrapper}>
                 <Box sx={styles.selectWrapper}>
                   <Select.SingleSelect
+                    data-testid="artifacts-bucket-retention-measure-select"
                     showBorder
                     id="expiration_measure"
                     name="expiration_measure"
@@ -275,11 +279,13 @@ const CreateBucket = memo(() => {
                     error={formik.touched.expiration_value && Boolean(formik.errors.expiration_value)}
                     helperText={formik.touched.expiration_value && formik.errors.expiration_value}
                     sx={styles.valueField}
+                    inputProps={{ 'data-testid': 'artifacts-bucket-retention-value-input' }}
                   />
                 </Box>
               </Box>
               <Box sx={styles.buttonWrapper}>
                 <Button.BaseBtn
+                  data-testid="artifacts-bucket-save-button"
                   onClick={onSave}
                   variant="elitea"
                   color="primary"

@@ -204,7 +204,10 @@ const ChatMessageList = memo(props => {
   const styles = chatMessageListStyles(bottomSpacer);
 
   return (
-    <ScrollableContainer ref={listRef}>
+    <ScrollableContainer
+      ref={listRef}
+      testId="chat-messages-scroll-container"
+    >
       <MessageList
         data-testid="chat-message-list"
         sx={sx}

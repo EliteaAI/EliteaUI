@@ -51,6 +51,7 @@ const WelcomeMessage = memo(props => {
       items={[
         {
           title: 'Welcome message',
+          testId: 'agent-canvas-section-welcome-message',
           content: (
             <>
               <Box data-tour={AGENT_TOUR_TARGET_IDS.welcomeMessage}>

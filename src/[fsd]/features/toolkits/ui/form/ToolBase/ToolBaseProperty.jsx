@@ -302,6 +302,7 @@ const ToolBaseProperty = memo(props => {
         disabled={disabled}
         editField={editField}
         buildEditFieldPath={buildEditFieldPath}
+        testId={`toolkit-field-${k}-input`}
       />
     );
   } else {
@@ -336,6 +337,7 @@ const ToolBaseProperty = memo(props => {
           required={required}
           specifiedProjectId={specifiedProjectId}
           description={description}
+          testId={`toolkit-field-${k}-input`}
         />
       );
     } else if (type === 'object' || anyOf?.find(item => item.type === 'object')) {
@@ -358,6 +360,8 @@ const ToolBaseProperty = memo(props => {
               fieldName={title}
               onChange={handleObjectFieldChange}
               readOnly={disableConfigFields || disabled}
+              data-testid={`toolkit-field-${k}-editor`}
+              contentTestId={`toolkit-field-${k}-editor-content`}
             />
           </Box>
         );
@@ -383,6 +387,8 @@ const ToolBaseProperty = memo(props => {
                     fieldName={title}
                     onChange={handleObjectFieldChange}
                     readOnly={disableConfigFields || disabled}
+                    data-testid={`toolkit-field-${k}-editor`}
+                    contentTestId={`toolkit-field-${k}-editor-content`}
                   />
                 ),
               },
@@ -405,6 +411,8 @@ const ToolBaseProperty = memo(props => {
             sx={styles.formControlLabel}
             control={
               <Checkbox.BaseCheckbox
+                data-testid={`toolkit-field-${k}-checkbox`}
+                inputProps={{ 'data-testid': `toolkit-field-${k}-checkbox-field` }}
                 checked={!!settings[k]}
                 onChange={(_, value) => {
                   editField(buildEditFieldPath(k), value);
@@ -604,7 +612,7 @@ const ToolBaseProperty = memo(props => {
     } else {
       const isInteger = type === 'integer' || anyOf?.some(item => item.type === 'integer');
       const maxLength = k === 'label' ? MAX_NAME_LENGTH : max_toolkit_length;
-      const inputProps = maxLength ? { maxLength } : undefined;
+      const inputProps = { ...(maxLength ? { maxLength } : {}), 'data-testid': `toolkit-field-${k}-input` };
 
       // Get placeholder - use schema placeholder if provided, or default value for integer fields
       // Check both direct property and anyOf (for Optional[int] types)
@@ -628,6 +636,10 @@ const ToolBaseProperty = memo(props => {
             disabled={disableConfigFields || disabled}
             inputProps={inputProps}
             placeholder={placeholder}
+            {...(k === 'bucket' && {
+              tooltipTestId: 'toolkit-field-bucket-info-icon',
+              tooltipContentTestId: 'toolkit-field-bucket-info-tooltip-content',
+            })}
             onFocus={() => toggleFieldFocus(k)}
             onBlur={() => toggleFieldFocus(null)}
             {...(isNameField && {

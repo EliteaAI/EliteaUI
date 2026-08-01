@@ -147,6 +147,7 @@ const ToolkitsTabBarContainer = memo(props => {
     <>
       <TabBarItems>
         <MuiButton
+          data-testid="toolkit-detail-save-button"
           disabled={shouldDisableSave}
           variant="elitea"
           color="primary"
@@ -156,6 +157,7 @@ const ToolkitsTabBarContainer = memo(props => {
           {isSaving && <StyledCircleProgress size={20} />}
         </MuiButton>
         <Button.DiscardButton
+          dataTestId="toolkit-detail-discard-button"
           disabled={isSaving || !isFormDirtyExcluding}
           onDiscard={discardApplicationChanges}
         />

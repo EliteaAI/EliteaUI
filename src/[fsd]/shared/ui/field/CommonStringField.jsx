@@ -104,6 +104,7 @@ const CommonStringField = memo(props => {
   if (enumOptions) {
     return (
       <Box
+        data-testid={`toolkit-test-param-${fieldKey}`}
         sx={styles.wrapper(disabled)}
         key={fieldKey}
         className="index-config-field"
@@ -128,6 +129,7 @@ const CommonStringField = memo(props => {
   if (codeLanguage !== undefined) {
     return (
       <Box
+        data-testid={`toolkit-test-param-${fieldKey}`}
         sx={styles.wrapper(disabled)}
         key={fieldKey}
         className="index-config-field"
@@ -149,6 +151,7 @@ const CommonStringField = memo(props => {
 
   return (
     <Box
+      data-testid={`toolkit-test-param-${fieldKey}`}
       sx={styles.wrapper(disabled)}
       key={fieldKey}
       className="index-config-field"

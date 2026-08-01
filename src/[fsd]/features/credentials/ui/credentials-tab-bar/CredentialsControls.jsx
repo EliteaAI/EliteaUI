@@ -144,6 +144,7 @@ const CredentialsControls = memo(props => {
       [
         {
           ...pinMenuItem,
+          key: 'pin-toggle-credential',
           disabled: !(credentialDetails?.id && credentialDetails?.uuid),
         },
         canDelete && {

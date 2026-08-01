@@ -443,6 +443,7 @@ const DataTable = memo(props => {
               onSort={handleSort}
               gridTemplateColumns={gridTemplateColumns}
               showCheckbox={false}
+              columnTestIdPrefix={isMCPs ? 'mcp-table' : undefined}
             />
             <GridTableBody
               sx={styles.tableBody}

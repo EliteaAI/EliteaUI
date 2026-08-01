@@ -150,6 +150,7 @@ export const BucketItem = forwardRef((props, ref) => {
 
     return [
       {
+        key: 'bucket-menu-upload-files',
         label: 'Upload files',
         icon: (
           <Box
@@ -199,6 +200,7 @@ export const BucketItem = forwardRef((props, ref) => {
         display: isPersonalProject ? 'none' : undefined,
       },
       canDelete && {
+        key: 'bucket-menu-delete',
         label: 'Delete',
         icon: (
           <DeleteIcon
@@ -236,6 +238,8 @@ export const BucketItem = forwardRef((props, ref) => {
 
   return (
     <Box
+      data-testid={`artifacts-bucket-row-${name}`}
+      data-selected={isActive ? 'true' : 'false'}
       ref={ref}
       sx={styles.container}
       onClick={handleSelectBucket}
@@ -288,7 +292,7 @@ export const BucketItem = forwardRef((props, ref) => {
         onClick={handleMenuClick}
       >
         <DotMenu
-          id="bucket-menu"
+          id={`bucket-menu-${name}`}
           slotProps={styles.menuSlotProps}
           onClose={onCloseMenuList}
           onShowMenuList={onShowMenuList}

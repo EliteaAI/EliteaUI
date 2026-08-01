@@ -66,6 +66,7 @@ const DuplicateDialogContent = memo(props => {
         {visibleFilenameParts.map(({ filename, baseName, extension }, index) => (
           <Box
             key={`${index}-${filename}`}
+            data-testid="artifacts-resolve-duplicates-filename"
             sx={styles.filenameRow}
           >
             <Box

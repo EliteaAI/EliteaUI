@@ -9,12 +9,16 @@ const FORM_VIEW_TABS = [
     value: ToolkitViewOptions.Form,
     label: 'Form',
     tooltip: 'Form view',
+    buttonProps: { 'data-testid': 'toolkit-form-view-toggle' },
   },
   {
     value: ToolkitViewOptions.Json,
     label: 'Raw Json',
     tooltip: 'Raw Json view',
-    buttonProps: { 'data-tour': SHARED_TOUR_TARGET_IDS.rawJsonTab },
+    buttonProps: {
+      'data-tour': SHARED_TOUR_TARGET_IDS.rawJsonTab,
+      'data-testid': 'toolkit-raw-json-view-toggle',
+    },
   },
 ];
 

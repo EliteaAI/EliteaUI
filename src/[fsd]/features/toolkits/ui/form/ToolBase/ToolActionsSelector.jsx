@@ -112,6 +112,7 @@ export const ToolActionsSelector = memo(props => {
                 isRemoteMcp || isPreconfiguredMcp ? (
                   <Tooltip title={patInvalid ? PAT_REQUIRED_ACTION_HINT : ''}>
                     <Typography
+                      data-testid="toolkit-load-tools-button"
                       variant="labelSmall"
                       sx={styles.syncButton(!canGetTools || isFetchingTools)}
                       onClick={onClickGetTools}

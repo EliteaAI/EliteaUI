@@ -102,12 +102,15 @@ const CreateAgentForm = memo(props => {
         items={[
           {
             title: 'General',
+            testId: 'agent-canvas-section-general',
             summaryAction:
               entityType !== 'pipeline' ? <GenerateAgentButton onAgentCreated={onAgentCreated} /> : null,
             content: (
               <Box sx={styles.accordionContent}>
                 <Box sx={styles.nameContainer}>
                   <EntityIcon
+                    data-testid="agent-form-icon-button"
+                    imgTestId="agent-form-icon-img"
                     icon={formik.values?.version_details?.meta?.icon_meta}
                     entityType={entityType}
                     editable={true}

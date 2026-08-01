@@ -8,7 +8,10 @@ const EmptyMcpTools = memo(() => {
   const theme = useTheme();
   const styles = getStyles(theme);
   return (
-    <Box sx={styles.container}>
+    <Box
+      sx={styles.container}
+      data-testid="toolkit-tools-empty-state"
+    >
       <InfoTooltip
         infoTooltip={{ icon: styles.info }}
         disableTooltip
