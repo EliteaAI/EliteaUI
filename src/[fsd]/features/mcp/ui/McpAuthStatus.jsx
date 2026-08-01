@@ -132,6 +132,7 @@ const McpAuthStatus = memo(({ authConfig } = {}) => {
         <Box sx={styles.statusContent}>
           <OnlineIcon style={styles.statusIconOnline} />
           <Typography
+            data-testid="toolkit-connection-status"
             variant="bodySmall"
             sx={styles.loginStatusText}
           >

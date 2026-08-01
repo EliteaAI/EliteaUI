@@ -102,6 +102,7 @@ const LLMModelSelector = memo(props => {
             </Typography>
             <Box sx={styles.fieldValueRow}>
               <Typography
+                data-testid="model-selector-name"
                 variant="labelMedium"
                 color="text.secondary"
                 noWrap
