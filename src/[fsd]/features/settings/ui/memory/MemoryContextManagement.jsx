@@ -30,8 +30,9 @@ const MemoryContextManagement = memo(props => {
   const handleContextEditingChange = useCallback(
     (event, checkedValue) => {
       setFieldValue('enable_context_editing', checkedValue);
+      onAutoSaveRequested?.();
     },
-    [setFieldValue],
+    [setFieldValue, onAutoSaveRequested],
   );
 
   const handleNumericInputChange = useCallback(
@@ -138,7 +139,10 @@ const MemoryContextManagement = memo(props => {
                   </Box>
 
                   <Box sx={styles.subSections}>
-                    <MemorySummarization modelList={modelList} />
+                    <MemorySummarization
+                      modelList={modelList}
+                      onAutoSaveRequested={onAutoSaveRequested}
+                    />
                   </Box>
                 </>
               )}
