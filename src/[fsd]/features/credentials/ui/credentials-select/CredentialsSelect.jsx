@@ -511,7 +511,7 @@ const CredentialsSelect = memo(
     return (
       <Box sx={[styles.container, sx]}>
         <Select.SingleSelect
-          dataTestId={`toolkit-credential-select-${type}`}
+          data-testid={`toolkit-credential-select-${type}`}
           label={label}
           shrinkLabel
           infoIconDescription={description}
