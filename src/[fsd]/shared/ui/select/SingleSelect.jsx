@@ -412,6 +412,7 @@ const SingleSelect = memo(props => {
                             key={rowKey}
                             value={option.value}
                             sx={styles.groupAction}
+                            data-testid={option.testId ?? `select-option-${option.value}`}
                           >
                             {option.label}
                           </MenuItem>
