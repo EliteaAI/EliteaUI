@@ -104,6 +104,7 @@ const PopoverSelect = memo(props => {
           {filteredOptions.map(option => (
             <MenuItem
               key={option.value}
+              data-testid={option.testId ?? `select-option-${option.value}`}
               onClick={() => handleSelect(option.value)}
               sx={styles.menuItem}
             >
