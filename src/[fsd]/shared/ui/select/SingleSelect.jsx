@@ -380,6 +380,7 @@ const SingleSelect = memo(props => {
                     <Typography
                       variant="labelSmall"
                       sx={styles.groupHeaderTitle}
+                      data-testid={`select-group-header-${groupKey}`}
                     >
                       {group.title}
                     </Typography>
