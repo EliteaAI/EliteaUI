@@ -101,6 +101,7 @@ const GenerateAgentReviewForm = memo(props => {
           onFocus={() => toggleFieldFocus('name')}
           onBlur={() => toggleFieldFocus(null)}
           slotProps={{ htmlInput: { maxLength: MAX_NAME_LENGTH } }}
+          inputProps={{ 'data-testid': 'generate-agent-review-name-input' }}
           helperText={validationErrors.name}
           error={!!validationErrors.name}
           sx={styles.compactMultilineInput}
@@ -129,6 +130,7 @@ const GenerateAgentReviewForm = memo(props => {
           onFocus={() => toggleFieldFocus('description')}
           onBlur={() => toggleFieldFocus(null)}
           slotProps={{ htmlInput: { maxLength: MAX_DESCRIPTION_LENGTH } }}
+          inputProps={{ 'data-testid': 'generate-agent-review-description-input' }}
           helperText={validationErrors.description}
           error={!!validationErrors.description}
         />
@@ -153,6 +155,7 @@ const GenerateAgentReviewForm = memo(props => {
           maxRows={10}
           value={draft.instructions || ''}
           onChange={e => handleFieldChange('instructions', e.target.value)}
+          inputProps={{ 'data-testid': 'generate-agent-review-instructions-input' }}
         />
       </Box>
 
