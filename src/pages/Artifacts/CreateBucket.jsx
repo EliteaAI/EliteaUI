@@ -239,6 +239,9 @@ const CreateBucket = memo(() => {
                     maxLength: MAX_BUCKET_NAME_LENGTH,
                     'data-testid': 'artifacts-bucket-name-input',
                   }}
+                  FormHelperTextProps={{
+                    'data-testid': 'artifacts-bucket-name-helper-text',
+                  }}
                 />
                 {isFocused('name') && formik.values.name?.length === MAX_BUCKET_NAME_LENGTH && (
                   <Text.CharacterCounter
