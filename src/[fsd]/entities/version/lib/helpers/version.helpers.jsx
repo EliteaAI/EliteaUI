@@ -44,7 +44,7 @@ export const buildVersionOption =
             <PublishIcon sx={{ fontSize: '1rem' }} />
           </Box>
         );
-      if (defaultVersionID === id) return <PinIcon />;
+      if (defaultVersionID === id) return <PinIcon data-testid="version-option-pin-icon" />;
 
       if (handleSetDefaultVersion && !disableSetAsADefault())
         return (
