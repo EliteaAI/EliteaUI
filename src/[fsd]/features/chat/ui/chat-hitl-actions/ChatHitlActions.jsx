@@ -193,13 +193,17 @@ const ChatHitlActions = memo(props => {
   }
 
   return (
-    <Box sx={styles.container}>
+    <Box
+      data-testid="chat-hitl-actions-panel"
+      sx={styles.container}
+    >
       <Box sx={styles.message}>
         <Markdown>{message?.trim() ? message : DEFAULT_HITL_MESSAGE}</Markdown>
       </Box>
       <Box sx={styles.buttonContainer}>
         {available_actions.includes('approve') && (
           <BaseBtn
+            data-testid="chat-hitl-approve-button"
             variant="positive"
             startIcon={<CheckedIcon />}
             onClick={handleApprove}
@@ -217,6 +221,7 @@ const ChatHitlActions = memo(props => {
         )}
         {available_actions.includes('reject') && (
           <BaseBtn
+            data-testid="chat-hitl-reject-button"
             variant="alarm"
             startIcon={<RejectIcon />}
             onClick={handleReject}

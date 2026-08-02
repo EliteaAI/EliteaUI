@@ -23,6 +23,7 @@ const NodeFieldInput = memo(props => {
     modelConfig,
     enableFStringAutocomplete = false,
     stateVariableOptions = [],
+    dataTestId,
   } = props;
 
   const resolvedValue = typeof value !== 'string' ? JSON.stringify(value) : value;
@@ -74,6 +75,7 @@ const NodeFieldInput = memo(props => {
       className: 'nopan nodrag nowheel',
     },
     inputRef,
+    inputProps: dataTestId ? { 'data-testid': dataTestId } : undefined,
   };
 
   const popperSx = nodeFieldInputStyles(containerRef.current?.clientWidth);
@@ -119,6 +121,12 @@ const SimpleLLMInputItem = memo(props => {
     // AI Assistant props
     enableAIAssistant = false,
     modelConfig = null,
+    // Testid props (ELITEA-2014/2015) — this component is shared across
+    // Pipeline node types (HITL/LLM/Printer/etc.); testids are threaded
+    // through optional props and wired at each call site, never hardcoded
+    // here, per .agents/testing.md § Locator policy (shared components).
+    typeSelectTestId,
+    valueFieldTestId,
   } = props;
 
   const typeOptions = useMemo(() => FlowEditorConstants.agentTaskTypeOptions, []);
@@ -196,6 +204,7 @@ const SimpleLLMInputItem = memo(props => {
             disabled={disabled}
             showBorder
             className="nopan nodrag"
+            data-testid={typeSelectTestId}
           />
         </Box>
         <Box sx={styles.valueWrapper}>
@@ -211,6 +220,7 @@ const SimpleLLMInputItem = memo(props => {
               modelConfig={modelConfig}
               enableFStringAutocomplete={enableFStringAutocomplete}
               stateVariableOptions={stateVariableOptions}
+              dataTestId={valueFieldTestId}
             />
           ) : (
             <SingleSelect
