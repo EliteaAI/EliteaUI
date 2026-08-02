@@ -183,6 +183,14 @@ const CreateAgentForm = memo(props => {
 
                 <TagEditor
                   id="tags"
+                  // Sub-element testids threaded through AutoCompleteDropDown
+                  // — same values as ApplicationEditForm.jsx's Tags field
+                  // (the pipeline DETAIL page's General section), since this
+                  // create-form Tags value must be located the same way on
+                  // both surfaces (ELITEA-2021). Agent branch stays
+                  // undefined — no case exercises Agent Tags yet (canon #511).
+                  inputTestId={entityType === 'pipeline' ? 'pipeline-tags-input' : undefined}
+                  chipTestId={entityType === 'pipeline' ? 'pipeline-tags-chip' : undefined}
                   label="Tags"
                   tagList={tagList || []}
                   stateTags={formik.values?.version_details?.tags || []}
@@ -207,7 +215,13 @@ const CreateAgentForm = memo(props => {
       />
       <AgentInput.WelcomeMessageInput style={styles.welcomeMessageInput} />
       <ConversationStarters style={styles.conversationStarters} />
-      <ApplicationAdvanceSettings style={styles.advanceSettings} />
+      <ApplicationAdvanceSettings
+        style={styles.advanceSettings}
+        // Same testid as the pipeline DETAIL page's Advanced section
+        // (PipelineConfigurationForm.jsx) — the create-form's Step limit
+        // value must be located the same way on both surfaces (ELITEA-2021).
+        stepLimitTestId={entityType === 'pipeline' ? 'pipeline-step-limit-input' : undefined}
+      />
     </Box>
   );
 });
