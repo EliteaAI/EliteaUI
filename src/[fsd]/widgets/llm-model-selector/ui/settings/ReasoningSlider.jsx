@@ -62,6 +62,7 @@ const ReasoningSlider = memo(props => {
 
   return (
     <DiscreteSlider
+      testId="model-settings-reasoning-slider"
       label="Reasoning"
       value={numericValue}
       onChange={handleChange}
