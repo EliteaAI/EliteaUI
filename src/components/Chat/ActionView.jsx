@@ -357,6 +357,7 @@ const ActionView = memo(props => {
             <Box
               sx={styles.toolkitBadge}
               onClick={onClickToolkit}
+              data-testid={toolkitType === 'model' ? 'chat-answer-model-chip' : undefined}
             >
               <Box sx={styles.iconContainer}>
                 {showProgress ? (
@@ -470,6 +471,7 @@ const ActionView = memo(props => {
             {isStreaming && (
               <Box sx={styles.streamingControlsContainer}>
                 <Typography
+                  data-testid="chat-answer-pause-scroll-toggle"
                   onClick={onToggleAutoScroll}
                   variant="bodySmall"
                   sx={styles.streamingToggleButton}

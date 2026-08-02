@@ -992,6 +992,7 @@ const ApplicationThinkView = memo(props => {
 
   return (
     <StyledAccordion
+      data-testid="chat-answer-thought-accordion"
       showMode={AccordionConstants.AccordionShowMode.LeftMode}
       defaultExpanded={defaultExpanded}
       expanded={isStreaming || expanded}
