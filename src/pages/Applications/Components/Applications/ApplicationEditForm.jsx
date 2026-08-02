@@ -173,6 +173,14 @@ const ApplicationEditForm = memo(props => {
 
               <TagEditor
                 id="tags"
+                // Sub-element testids threaded through AutoCompleteDropDown
+                // (same pattern as CreateSkillForm's skill-tags-input-field).
+                // Shared component (Agent + Pipeline forms) — only the
+                // Pipeline surface has a case exercising Tags today, so the
+                // Agent branch stays undefined (no orphan testid; canon #511
+                // scope discipline).
+                inputTestId={isFromPipeline ? 'pipeline-tags-input' : undefined}
+                chipTestId={isFromPipeline ? 'pipeline-tags-chip' : undefined}
                 label="Tags"
                 tagList={tagList || []}
                 stateTags={formik.values?.version_details?.tags || []}

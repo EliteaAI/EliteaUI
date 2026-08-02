@@ -10,7 +10,15 @@ import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { MAX_STEP_LIMIT, MIN_STEP_LIMIT } from '@/common/constants';
 
 const ApplicationAdvanceSettings = memo(props => {
-  const { style, disabled, showIgnoreProjectContext = false } = props;
+  const {
+    style,
+    disabled,
+    showIgnoreProjectContext = false,
+    // Optional stable test hook (testid-only locator policy). No-op when
+    // omitted, so the Agent call site (no case exercises Step limit there
+    // yet) is unaffected — canon #511 scope discipline.
+    stepLimitTestId,
+  } = props;
 
   const { values: { version_details } = {}, setFieldValue } = useFormikContext();
 
@@ -106,6 +114,7 @@ const ApplicationAdvanceSettings = memo(props => {
                 pattern: '[0-9]*',
                 min: MIN_STEP_LIMIT,
                 max: MAX_STEP_LIMIT,
+                ...(stepLimitTestId ? { 'data-testid': stepLimitTestId } : {}),
               }}
             />
             {showIgnoreProjectContext && (
@@ -136,6 +145,7 @@ const ApplicationAdvanceSettings = memo(props => {
       disabled,
       styles,
       showIgnoreProjectContext,
+      stepLimitTestId,
     ],
   );
 
