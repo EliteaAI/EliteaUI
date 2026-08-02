@@ -277,7 +277,10 @@ const PreviewContent = forwardRef((props, documentReaderRef) => {
             );
           default:
             return (
-              <Box sx={styles.codeEditorWrapper}>
+              <Box
+                sx={styles.codeEditorWrapper}
+                data-testid="artifacts-preview-code-editor"
+              >
                 <Field.CodeMirrorEditor
                   autoHeight
                   readOnly={!canEdit}
@@ -287,6 +290,7 @@ const PreviewContent = forwardRef((props, documentReaderRef) => {
                   variant="caption"
                   width="100%"
                   notifyChange={canEdit ? onContentChange : undefined}
+                  contentTestId="artifacts-preview-code-content"
                 />
               </Box>
             );

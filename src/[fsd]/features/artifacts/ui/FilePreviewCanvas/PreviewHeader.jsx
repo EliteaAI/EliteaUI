@@ -132,6 +132,7 @@ const PreviewHeader = memo(props => {
     () =>
       [
         {
+          key: 'artifacts-preview-copy-content',
           label: 'Copy Content',
           icon: <CopyIcon sx={styles.iconAction} />,
           onClick: handleCopyContent,
@@ -139,6 +140,7 @@ const PreviewHeader = memo(props => {
           show: canPreview && fileContent && !isImageFileType,
         },
         {
+          key: 'artifacts-preview-download',
           label: 'Download',
           icon: <DownloadIcon sx={styles.iconAction} />,
           onClick: handleDownload,
@@ -146,6 +148,7 @@ const PreviewHeader = memo(props => {
           show: true,
         },
         {
+          key: 'artifacts-preview-delete',
           label: 'Delete',
           icon: <DeleteIcon sx={styles.iconAction} />,
           onClick: handleDelete,
@@ -173,6 +176,7 @@ const PreviewHeader = memo(props => {
             onClick={onClose}
             sx={styles.actionButton}
             aria-label="Close preview"
+            data-testid="artifacts-preview-close-button"
           >
             <CloseIcon sx={styles.iconClose} />
           </IconButton>
@@ -187,6 +191,7 @@ const PreviewHeader = memo(props => {
             <Typography
               variant="headingSmall"
               sx={styles.titleText}
+              data-testid="artifacts-preview-file-path"
             >
               {canvasTitle}
             </Typography>
@@ -201,6 +206,7 @@ const PreviewHeader = memo(props => {
                 color={BUTTON_COLORS.primary}
                 onClick={handleSaveChanges}
                 disabled={isSaving || !hasUnsavedChanges}
+                data-testid="artifacts-preview-save-button"
               >
                 Save
               </Button.BaseBtn>
@@ -208,6 +214,7 @@ const PreviewHeader = memo(props => {
                 onDiscard={onDiscard}
                 disabled={isSaving || !hasUnsavedChanges}
                 discarding={false}
+                dataTestId="artifacts-preview-discard-button"
               />
             </>
           )}
@@ -282,6 +289,7 @@ const PreviewHeader = memo(props => {
                 sx={styles.languageSelect}
                 showBorder={false}
                 customMenuProps={{ sx: styles.languageSelectMenuSx }}
+                data-testid="artifacts-preview-language-select"
               />
             </Box>
           )}

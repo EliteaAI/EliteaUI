@@ -80,6 +80,7 @@ const ArtifactRowActions = memo(props => {
             sx={styles.actionButton}
             size="small"
             aria-label={`Preview ${row.name}`}
+            data-testid={`artifacts-file-preview-button-${row.name}`}
           >
             <Box
               component={ViewFileIcon}
