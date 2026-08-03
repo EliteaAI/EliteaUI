@@ -17,7 +17,7 @@ export const EMPTY_PERSONALITY_INSTRUCTIONS = PERSONA_OPTIONS.reduce(
 export const PROFILE_INITIAL_VALUES = {
   persona: DEFAULT_PERSONA,
   personality_instructions: { ...EMPTY_PERSONALITY_INSTRUCTIONS },
-  default_internal_mcp_enabled: true,
+  default_internal_mcp_enabled: false,
   context_enabled: DEFAULT_CONTEXT_STRATEGY.ENABLED,
   max_context_tokens: DEFAULT_CONTEXT_STRATEGY.MAX_CONTEXT_TOKENS,
   preserve_recent_messages: DEFAULT_CONTEXT_STRATEGY.PRESERVE_RECENT_MESSAGES,
@@ -57,7 +57,7 @@ export const serializeProfileFormData = (authorData, defaultModel, selectedProje
       ...EMPTY_PERSONALITY_INSTRUCTIONS,
       ...(p.personality_instructions || {}),
     },
-    default_internal_mcp_enabled: p.default_internal_mcp_enabled ?? true,
+    default_internal_mcp_enabled: p.default_internal_mcp_enabled ?? false,
     context_enabled: cm.enabled ?? DEFAULT_CONTEXT_STRATEGY.ENABLED,
     max_context_tokens: cm.max_context_tokens ?? DEFAULT_CONTEXT_STRATEGY.MAX_CONTEXT_TOKENS,
     preserve_recent_messages:
