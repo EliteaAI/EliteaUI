@@ -115,6 +115,7 @@ const CommonInterruptSettings = memo(props => {
               yamlJsonObject.entry_point === id ? false : !!realInterruptBefore.find(item => item === id)
             }
             onChange={onChangeInterruptBefore}
+            data-testid={`pipeline-node-interrupt-before-toggle-${id}`}
           />
         }
         label={
