@@ -33,6 +33,28 @@ const AnalyticsCosts = memo(props => {
     }));
   }, [data?.by_model]);
 
+  const agentTableData = useMemo(() => {
+    const sorted = [...(data?.by_agent || [])].sort((a, b) => (b.total_cost ?? 0) - (a.total_cost ?? 0));
+    const totalCost = sorted.reduce((sum, a) => sum + (a.total_cost ?? 0), 0);
+    return sorted.map(a => ({
+      name: a.entity_name,
+      cost: a.total_cost,
+      calls: a.calls,
+      avgCostPerCall: a.calls > 0 ? a.total_cost / a.calls : null,
+      share: totalCost > 0 ? (a.total_cost / totalCost) * 100 : null,
+    }));
+  }, [data?.by_agent]);
+
+  const userTableData = useMemo(() => {
+    const sorted = [...(data?.by_user || [])].sort((a, b) => (b.total_cost ?? 0) - (a.total_cost ?? 0));
+    const totalCost = sorted.reduce((sum, u) => sum + (u.total_cost ?? 0), 0);
+    return sorted.map(u => ({
+      name: u.user_email,
+      cost: u.total_cost,
+      share: totalCost > 0 ? (u.total_cost / totalCost) * 100 : null,
+    }));
+  }, [data?.by_user]);
+
   const dailyChartData = useMemo(
     () => (data?.daily || []).map(d => ({ ...d, date: d.date?.slice(5) })),
     [data?.daily],
@@ -110,11 +132,11 @@ const AnalyticsCosts = memo(props => {
         {modelTableData.length > 0 ? (
           <Box sx={styles.tableWrapper}>
             <Box sx={styles.tableHeader}>
-              <Typography sx={[styles.tableCell, { flex: 3 }]}>Model</Typography>
-              <Typography sx={[styles.tableCell, styles.flexOneHalf]}>Cost</Typography>
-              <Typography sx={[styles.tableCell, styles.flexOne]}>Calls</Typography>
-              <Typography sx={[styles.tableCell, styles.flexOneHalf]}>Avg Cost / Call</Typography>
-              <Typography sx={[styles.tableCell, styles.flexOne]}>Share</Typography>
+              <Typography sx={[styles.tableCell, { flex: 3 }]}>MODEL</Typography>
+              <Typography sx={[styles.tableCell, styles.flexOneHalf]}>COST</Typography>
+              <Typography sx={[styles.tableCell, styles.flexOne]}>CALLS</Typography>
+              <Typography sx={[styles.tableCell, styles.flexOneHalf]}>AVG COST / CALL</Typography>
+              <Typography sx={[styles.tableCell, styles.flexOne]}>SHARE</Typography>
             </Box>
             {modelTableData.map((m, i) => (
               <Box
@@ -202,88 +224,102 @@ const AnalyticsCosts = memo(props => {
         )}
       </Box>
 
-      <Box sx={styles.listsRow}>
-        <Box sx={styles.listCard}>
-          <Typography
-            variant="labelMedium"
-            sx={styles.chartTitle}
-          >
-            Cost by Agent & Pipeline
-          </Typography>
-          {(data.by_agent || []).slice(0, AnalyticsCommonConstants.TOP_LIST_SIZE).map((a, i) => (
-            <Box
-              key={a.entity_id || i}
-              sx={styles.listItem}
-            >
-              <Typography
-                variant="body2"
-                sx={styles.listLabel}
+      <Box sx={styles.chartCard}>
+        <Typography
+          variant="labelMedium"
+          sx={styles.chartTitle}
+        >
+          Cost by Agent & Pipeline
+        </Typography>
+        {agentTableData.length > 0 ? (
+          <Box sx={styles.tableWrapper}>
+            <Box sx={styles.tableHeader}>
+              <Typography sx={[styles.tableCell, { flex: 3 }]}>AGENT / PIPELINE</Typography>
+              <Typography sx={[styles.tableCell, styles.flexOneHalf]}>COST</Typography>
+              <Typography sx={[styles.tableCell, styles.flexOne]}>CALLS</Typography>
+              <Typography sx={[styles.tableCell, styles.flexOneHalf]}>AVG COST / CALL</Typography>
+              <Typography sx={[styles.tableCell, styles.flexOne]}>SHARE</Typography>
+            </Box>
+            {agentTableData.map((a, i) => (
+              <Box
+                key={i}
+                sx={styles.tableRow}
               >
-                {a.entity_name}
-              </Typography>
-              <Box sx={styles.listValueGroup}>
                 <Typography
-                  variant="body2"
-                  sx={styles.listValue}
+                  sx={[styles.tableCellValue, { flex: 3 }]}
+                  noWrap
                 >
-                  {AnalyticCommonHelpers.fmtCost(a.total_cost)}
+                  {a.name}
                 </Typography>
-                {a.calls > 0 && (
-                  <Typography
-                    variant="caption"
-                    sx={styles.listValueCaption}
-                  >
-                    {a.calls} calls · {AnalyticCommonHelpers.fmtCost(a.avg_cost)} avg
-                  </Typography>
-                )}
+                <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
+                  {AnalyticCommonHelpers.fmtCost(a.cost)}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
+                  {a.calls != null ? AnalyticCommonHelpers.fmtNum(a.calls) : '—'}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
+                  {a.avgCostPerCall != null ? AnalyticCommonHelpers.fmtCost(a.avgCostPerCall) : '—'}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
+                  {a.share != null ? `${a.share.toFixed(1)}%` : '—'}
+                </Typography>
               </Box>
-            </Box>
-          ))}
-          {!data.by_agent?.length && (
-            <Typography
-              variant="body2"
-              color="text.secondary"
-            >
-              No data
-            </Typography>
-          )}
-        </Box>
-
-        <Box sx={styles.listCard}>
+            ))}
+          </Box>
+        ) : (
           <Typography
-            variant="labelMedium"
-            sx={styles.chartTitle}
+            variant="body2"
+            color="text.secondary"
+            sx={styles.noDataText}
           >
-            Cost by User
+            No agent & pipeline cost data is available for the selected date range.
           </Typography>
-          {(data.by_user || []).slice(0, AnalyticsCommonConstants.TOP_LIST_SIZE).map((u, i) => (
-            <Box
-              key={u.user_id || i}
-              sx={styles.listItem}
-            >
-              <Typography
-                variant="body2"
-                sx={styles.listLabel}
-              >
-                {u.user_email}
-              </Typography>
-              <Typography
-                variant="body2"
-                sx={styles.listValue}
-              >
-                {AnalyticCommonHelpers.fmtCost(u.total_cost)}
-              </Typography>
+        )}
+      </Box>
+
+      <Box sx={styles.chartCard}>
+        <Typography
+          variant="labelMedium"
+          sx={styles.chartTitle}
+        >
+          Cost by User
+        </Typography>
+        {userTableData.length > 0 ? (
+          <Box sx={styles.tableWrapper}>
+            <Box sx={styles.tableHeader}>
+              <Typography sx={[styles.tableCell, { flex: 3 }]}>USER</Typography>
+              <Typography sx={[styles.tableCell, styles.flexOneHalf]}>COST</Typography>
+              <Typography sx={[styles.tableCell, styles.flexOne]}>SHARE</Typography>
             </Box>
-          ))}
-          {!data.by_user?.length && (
-            <Typography
-              variant="body2"
-              color="text.secondary"
-            >
-              No data
-            </Typography>
-          )}
-        </Box>
+            {userTableData.map((u, i) => (
+              <Box
+                key={i}
+                sx={styles.tableRow}
+              >
+                <Typography
+                  sx={[styles.tableCellValue, { flex: 3 }]}
+                  noWrap
+                >
+                  {u.name}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
+                  {AnalyticCommonHelpers.fmtCost(u.cost)}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
+                  {u.share != null ? `${u.share.toFixed(1)}%` : '—'}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        ) : (
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={styles.noDataText}
+          >
+            No user cost data is available for the selected date range.
+          </Typography>
+        )}
       </Box>
     </Box>
   );
@@ -307,19 +343,20 @@ const styles = {
   tableWrapper: { display: 'flex', flexDirection: 'column', width: '100%', overflow: 'auto' },
   tableHeader: ({ palette }) => ({
     display: 'flex',
-    padding: '0.625rem 1rem',
+    padding: '0.5rem 0.75rem',
     borderBottom: `1px solid ${palette.border.table}`,
-    gap: '1rem',
+    gap: '0.5rem',
   }),
   tableCell: ({ palette }) => ({
-    fontSize: '0.75rem',
+    fontSize: '0.6875rem',
     fontWeight: 600,
-    color: palette.text.secondary,
+    color: palette.text.metrics || palette.text.disabled,
+    textTransform: 'uppercase',
   }),
   tableRow: ({ palette }) => ({
     display: 'flex',
-    padding: '0.75rem 1rem',
-    gap: '1rem',
+    padding: '0.5rem 0.75rem',
+    gap: '0.5rem',
     borderBottom: `1px solid ${palette.border.table}`,
     '&:last-child': { borderBottom: 'none' },
   }),
@@ -327,30 +364,12 @@ const styles = {
     fontSize: '0.8125rem',
     color: palette.text.secondary,
     fontVariantNumeric: 'tabular-nums',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
   }),
   flexOne: { flex: 1 },
   flexOneHalf: { flex: 1.5 },
-  listsRow: {
-    display: 'grid',
-    gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
-    gap: '1rem',
-  },
-  listCard: ({ palette }) => ({
-    padding: '1rem',
-    borderRadius: '0.5rem',
-    backgroundColor: palette.background.userInputBackground,
-    display: 'flex',
-    flexDirection: 'column',
-    minWidth: 0,
-  }),
-  listItem: { display: 'flex', justifyContent: 'space-between', py: 0.5, alignItems: 'flex-start' },
-  listLabel: { flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
-  listValue: { ml: 2, fontVariantNumeric: 'tabular-nums' },
-  listValueGroup: { ml: 2, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' },
-  listValueCaption: ({ palette }) => ({
-    color: palette.text.secondary,
-    fontVariantNumeric: 'tabular-nums',
-  }),
 };
 
 AnalyticsCosts.displayName = 'AnalyticsCosts';
