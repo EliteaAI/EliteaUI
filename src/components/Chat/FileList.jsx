@@ -72,6 +72,7 @@ const FileList = memo(props => {
       {visibleAttachments.map((attachment, index) => (
         <Box
           key={index}
+          data-testid={`chat-attachment-chip-${index}`}
           display="flex"
           flexDirection="row"
           width="200px"
@@ -107,6 +108,7 @@ const FileList = memo(props => {
         <>
           <Button.BaseBtn
             ref={anchorRef}
+            data-testid="chat-attachment-overflow-button"
             variant={BUTTON_VARIANTS.elitea}
             color={BUTTON_COLORS.secondary}
             onClick={handleMoreClick}
@@ -144,6 +146,7 @@ const FileList = memo(props => {
               return (
                 <MenuItem
                   key={actualIndex}
+                  data-testid={`chat-attachment-overflow-item-${actualIndex}`}
                   sx={styles.menuItem}
                 >
                   <ListItemIcon sx={styles.menuItemIcon}>
