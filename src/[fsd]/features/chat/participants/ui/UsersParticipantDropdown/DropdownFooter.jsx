@@ -38,6 +38,7 @@ const DropdownFooter = memo(props => {
           onMouseLeave={() => setIsHovering(false)}
           onClick={onAllUsersClick}
           sx={styles.itemWrapper}
+          data-testid="chat-participants-all-users-button"
         >
           <Box
             sx={styles.contentRow}
