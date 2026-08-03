@@ -145,6 +145,7 @@ const McpAuthStatus = memo(({ authConfig } = {}) => {
               onClick={hasLoggedInToMcp ? onLogout : onLogin}
               disabled={isButtonDisabled}
               variant={BUTTON_VARIANTS.secondary}
+              data-testid="toolkit-connection-login-button"
             >
               {buttonLabel}
             </Button.BaseBtn>
