@@ -46,6 +46,7 @@ describe('agent execution SSE', () => {
     };
 
     expect(isAgentExecutionSseEligible(base)).toBe(true);
+    expect(isAgentExecutionSseEligible({ ...base, isAgentsPage: false })).toBe(false);
     expect(isAgentExecutionSseEligible({ ...base, participant: { entity_name: 'pipeline' } })).toBe(false);
     expect(isAgentExecutionSseEligible({ ...base, hasLLMOverride: true })).toBe(false);
     expect(
@@ -112,6 +113,54 @@ describe('agent execution SSE', () => {
     expect(onNodeEvent).toHaveBeenCalledWith(terminal);
     expect(result.source.close).toHaveBeenCalledOnce();
     expect(onClosed).toHaveBeenCalledOnce();
+  });
+
+  it('starts distinct editor turns on the same conversation execution stream', async () => {
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce({
+        status: 200,
+        ok: true,
+        json: async () => ({ execution_id: 'execution-1', events_url: '/events/1' }),
+      })
+      .mockResolvedValueOnce({
+        status: 200,
+        ok: true,
+        json: async () => ({ execution_id: 'execution-2', events_url: '/events/2' }),
+      });
+
+    await startAgentExecutionSse({
+      projectId: 7,
+      conversationUuid: 'conversation-id',
+      eventPayload: { ...payload, question_id: 'question-1', payload: { user_input: 'first' } },
+      onNodeEvent: vi.fn(),
+      onError: vi.fn(),
+      fetchImpl,
+      EventSourceImpl: FakeEventSource,
+    });
+    await startAgentExecutionSse({
+      projectId: 7,
+      conversationUuid: 'conversation-id',
+      eventPayload: { ...payload, question_id: 'question-2', payload: { user_input: 'second' } },
+      onNodeEvent: vi.fn(),
+      onError: vi.fn(),
+      fetchImpl,
+      EventSourceImpl: FakeEventSource,
+    });
+
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+    expect(fetchImpl.mock.calls.map(call => JSON.parse(call[1].body))).toEqual([
+      expect.objectContaining({
+        conversation_uuid: 'conversation-id',
+        question_id: 'question-1',
+        payload: { user_input: 'first' },
+      }),
+      expect.objectContaining({
+        conversation_uuid: 'conversation-id',
+        question_id: 'question-2',
+        payload: { user_input: 'second' },
+      }),
+    ]);
   });
 
   it('maps a safe runtime failure into the current socket-error contract', async () => {
