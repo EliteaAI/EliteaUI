@@ -1328,7 +1328,11 @@ const ChatBox = forwardRef((props, boxRef) => {
       // (routed by tool_call_id) — the single `hitl_action` path would drop the
       // SDK to the sequential resume and the suffixed child thread_id would
       // never match. Fan-out children take the independent path above instead.
+      // A clarifying-question ('answer') is always a single scalar pause — it
+      // never fans out — so it must resume via top-level hitl_action/hitl_value,
+      // never the hitl_decisions list protocol.
       const isParallel =
+        action !== 'answer' &&
         !isFanoutChild &&
         Array.isArray(lastMessage.hitlInterrupts) &&
         lastMessage.hitlInterrupts.length > 0 &&
@@ -1480,9 +1484,12 @@ const ChatBox = forwardRef((props, boxRef) => {
       } else {
         payload.hitl_action = action;
         // `edit` carries the rewritten prompt; `block_with_comment` carries the
-        // user's free-text note (-> SDK blocked-tool `denial_reason`, #5318).
+        // user's free-text note (-> SDK blocked-tool `denial_reason`, #5318);
+        // `answer` carries the clarifying-question answers object.
         if (action === 'edit' || action === 'block_with_comment') {
           payload.hitl_value = value ?? '';
+        } else if (action === 'answer') {
+          payload.hitl_value = value ?? {};
         }
       }
 

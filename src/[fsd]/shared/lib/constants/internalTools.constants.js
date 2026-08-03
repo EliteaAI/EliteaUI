@@ -70,6 +70,15 @@ export const INTERNAL_TOOLS_LIST = [
     toolkitNames: ['pyodide'],
   },
   {
+    name: 'ask_user',
+    title: 'Ask User',
+    icon: 'ChatIcon',
+    infoTooltip: {
+      text: 'Let the agent pause and ask you a clarifying question (multiple choice or free text) when it is uncertain, instead of guessing.',
+    },
+    toolkitNames: ['ask_user'],
+  },
+  {
     name: 'swarm',
     title: 'Swarm Mode',
     icon: 'UsersIcon',
