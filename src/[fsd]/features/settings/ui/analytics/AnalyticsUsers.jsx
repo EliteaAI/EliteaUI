@@ -105,7 +105,7 @@ const AnalyticsUsers = memo(props => {
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Days</Typography>
             <Typography sx={[styles.tableCell, { flex: 1 }]}>LLM</Typography>
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Tool</Typography>
-            <Typography sx={[styles.tableCell, { flex: 1 }]}>Agent</Typography>
+            <Typography sx={[styles.tableCell, { flex: 1 }]}>Agent / Pipeline</Typography>
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Chat Msg</Typography>
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Errors</Typography>
             <Typography sx={[styles.tableCell, styles.flexOne]}>Tokens</Typography>

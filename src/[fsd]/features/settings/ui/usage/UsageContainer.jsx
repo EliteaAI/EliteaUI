@@ -4,10 +4,10 @@ import { useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router-dom';
 
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { Alert, Box, CircularProgress, Snackbar, Tooltip, Typography } from '@mui/material';
 
 import { UsageExportHelpers } from '@/[fsd]/features/settings/lib/helpers';
+import { InfoBanner, infoBannerTextSx } from '@/[fsd]/features/settings/ui/analytics';
 import { DrawerPage } from '@/[fsd]/features/settings/ui/drawer-page';
 import { exportToExcel } from '@/[fsd]/shared/lib/utils';
 import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
@@ -166,31 +166,22 @@ const UsageContainer = memo(() => {
 
         {!isLoading && data && (
           <>
-            <Box sx={styles.infoBanner}>
-              <Box sx={styles.infoBannerTitle}>
-                <InfoOutlinedIcon sx={styles.infoBannerIcon} />
-                <Typography
-                  variant="labelMedium"
-                  sx={styles.infoBannerTitleText}
-                >
-                  Note
-                </Typography>
-              </Box>
+            <InfoBanner>
               {isPersonalProject && (
                 <Typography
                   variant="bodyMedium"
-                  sx={styles.infoBannerText}
+                  sx={infoBannerTextSx}
                 >
                   {PRIVATE_PROJECT_INFO}
                 </Typography>
               )}
               <Typography
                 variant="bodyMedium"
-                sx={styles.infoBannerText}
+                sx={infoBannerTextSx}
               >
                 {SHARED_MODELS_INFO}
               </Typography>
-            </Box>
+            </InfoBanner>
 
             {!data.spend_available && (
               <Alert severity="info">
@@ -292,30 +283,6 @@ const usageContainerStyles = () => ({
     gap: '1rem',
     flexWrap: 'wrap',
   },
-  infoBanner: ({ palette }) => ({
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.375rem',
-    padding: '0.75rem 1rem',
-    background: palette.background.indexResult.info,
-    borderRadius: '0.75rem',
-    border: `0.0625rem solid ${palette.border.indexResult.info}`,
-  }),
-  infoBannerTitle: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.375rem',
-  },
-  infoBannerIcon: ({ palette }) => ({
-    fontSize: '1rem',
-    color: palette.icon.indexResult.info,
-  }),
-  infoBannerTitleText: ({ palette }) => ({
-    color: palette.text.indexResult.info,
-  }),
-  infoBannerText: ({ palette }) => ({
-    color: palette.text.indexResult.info,
-  }),
 });
 
 export default UsageContainer;

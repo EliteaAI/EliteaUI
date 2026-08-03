@@ -55,7 +55,7 @@ const AnalyticsOverview = memo(props => {
           subtitle="user messages sent"
         />
         <KPICard
-          label="AGENT RUNS"
+          label="AGENT & PIPELINE RUNS"
           value={AnalyticCommonHelpers.fmtNum(kpis.agent_runs)}
           subtitle="agents and pipelines interactions"
         />
@@ -140,7 +140,7 @@ const AnalyticsOverview = memo(props => {
             variant="bodySmall"
             sx={styles.chartSubtitle}
           >
-            Leaderboard by AI events (LLM + Tool + Agent)
+            Leaderboard by AI events (LLM + Tool + Agent / Pipeline)
           </Typography>
 
           {top_ai_users.length > 0 ? (
@@ -194,7 +194,7 @@ const AnalyticsOverview = memo(props => {
                     >
                       {AnalyticCommonHelpers.fmtNum(u.llm_calls)} LLM &middot;{' '}
                       {AnalyticCommonHelpers.fmtNum(u.tool_runs)} Tool &middot;{' '}
-                      {AnalyticCommonHelpers.fmtNum(u.agent_runs)} Agent
+                      {AnalyticCommonHelpers.fmtNum(u.agent_runs)} Agent / Pipeline
                     </Typography>
                   </Box>
                   <Typography
@@ -227,7 +227,7 @@ const AnalyticsOverview = memo(props => {
 /** @type {MuiSx} */
 const analyticsOverviewStyles = () => ({
   overviewContent: { display: 'flex', flexDirection: 'column', gap: '1rem' },
-  kpiRow: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(9rem, 1fr))', gap: '1rem' },
+  kpiRow: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' },
   chartsRowEqual: {
     display: 'grid',
     gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },

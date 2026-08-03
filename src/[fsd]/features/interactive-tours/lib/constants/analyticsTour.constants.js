@@ -40,7 +40,7 @@ Data is cached for up to 5 minutes.`,
 - **LLM CALLS** — total AI model invocations
 - **TOOL RUNS** — total tool executions
 - **CHAT MSG** — total user messages sent in chat
-- **AGENT RUNS** — total interactions with agents and pipelines
+- **AGENT & PIPELINE RUNS** — total interactions with agents and pipelines
 
 Below the cards: a **Daily Activity** area chart, a **Top 5 AI Adopters** leaderboard, and a **Model Usage Breakdown** table. Click any user in the leaderboard to open their detailed view.`,
   },
@@ -49,10 +49,10 @@ Below the cards: a **Daily Activity** area chart, a **Top 5 AI Adopters** leader
     tabIndex: 1,
     target: ANALYTICS_TOUR_TARGETS.tabSection,
     placement: 'right',
-    title: 'Agents Tab',
-    content: `The **Agents** tab shows usage and reliability for each agent in the project. A bar chart highlights the top 20 agents by event count.
+    title: 'Agents & Pipelines Tab',
+    content: `The **Agents & Pipelines** tab shows usage and reliability for each agent and pipeline in the project. A bar chart highlights the top 20 by event count.
 
-The **Agent Activity** table lists all agents with total events, distinct users, average latency, and error count. Click any agent row to open a drill-down with daily usage trends, a per-user breakdown, and the tools called by that agent.`,
+The **Agent & Pipeline Activity** table lists all agents and pipelines with total events, distinct users, average latency, and error count. Click any row to open a drill-down with daily usage trends, a per-user breakdown, and the tools called by that agent or pipeline.`,
   },
   {
     id: 'tools-tab',
@@ -92,7 +92,7 @@ The **Health by Event Type** table shows error rate and average latency for each
     title: 'Costs Tab',
     content: `The **Costs** tab breaks down LLM spend for the selected period. KPI tiles summarize total cost and token usage, while charts show cost by model and a daily cost trend.
 
-The **Cost by Agent** and **Cost by User** lists rank the top spenders, helping you attribute spend and spot unexpectedly expensive workloads.`,
+The **Cost by Agent & Pipeline** and **Cost by User** lists rank the top spenders, helping you attribute spend and spot unexpectedly expensive workloads.`,
   },
   {
     id: 'guide-tab',

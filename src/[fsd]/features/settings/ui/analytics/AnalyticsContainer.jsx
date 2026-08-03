@@ -25,12 +25,16 @@ import BriefcaseIcon from '@/components/Icons/BriefcaseIcon.jsx';
 import CalendarIcon from '@/components/Icons/CalendarIcon';
 import { useSelectedProjectId, useSelectedProjectName } from '@/hooks/useSelectedProject';
 
-const DATE_FILTER_PRESETS = [
+const CUSTOM_PRESET_VALUE = 'custom';
+
+const DEFAULT_PRESETS = [
   { label: 'Last 24h', value: 1 },
   { label: 'Last 7d', value: 7 },
   { label: 'Last 30d', value: 30 },
   { label: 'Last 90d', value: 90 },
 ];
+
+const PRESETS_WITH_CUSTOM = [...DEFAULT_PRESETS, { label: 'Custom', value: CUSTOM_PRESET_VALUE }];
 
 const AnalyticsContainer = memo(() => {
   const projectId = useSelectedProjectId();
@@ -63,22 +67,37 @@ const AnalyticsContainer = memo(() => {
   );
 
   // Only fetch overview data for Overview (0) and Health (4) tabs
-  const needsOverview = activeTab === 0 || activeTab === 4;
+  const needsOverview = activeTab === 0 || activeTab === 5;
 
   const { data, isFetching, isError } = useProjectAnalyticsQuery(queryParams, {
     skip: !projectId || !needsOverview,
   });
+
+  const isCustomRange = selectedDatePreset === CUSTOM_PRESET_VALUE;
+  const dateFilterPresets = isCustomRange ? PRESETS_WITH_CUSTOM : DEFAULT_PRESETS;
 
   const handleDatePresetChange = useCallback((_, newDays) => {
     if (newDays === null) return;
 
     setSelectedDatePreset(newDays);
 
+    if (newDays === CUSTOM_PRESET_VALUE) return;
+
     const from = new Date();
     from.setDate(from.getDate() - newDays);
 
     setDateFrom(from);
     setDateTo(new Date());
+  }, []);
+
+  const handleDateFromChange = useCallback(value => {
+    setDateFrom(value);
+    setSelectedDatePreset(CUSTOM_PRESET_VALUE);
+  }, []);
+
+  const handleDateToChange = useCallback(value => {
+    setDateTo(value);
+    setSelectedDatePreset(CUSTOM_PRESET_VALUE);
   }, []);
 
   const handleTabChange = useCallback((_, newTab) => {
@@ -88,7 +107,7 @@ const AnalyticsContainer = memo(() => {
 
   const handleOverviewUserClick = useCallback(userId => {
     setPendingUserId(userId);
-    setActiveTab(3);
+    setActiveTab(4);
   }, []);
 
   const handleBackToOverview = useCallback(() => {
@@ -147,7 +166,7 @@ const AnalyticsContainer = memo(() => {
         <TabGroupButton
           exclusive
           disableTooltip
-          arrayBtn={DATE_FILTER_PRESETS}
+          arrayBtn={dateFilterPresets}
           value={selectedDatePreset}
           onChange={handleDatePresetChange}
         />
@@ -157,7 +176,7 @@ const AnalyticsContainer = memo(() => {
             <Typography sx={styles.datePickerLabel}>From:</Typography>
             <DateTimePicker
               value={dateFrom}
-              onChange={setDateFrom}
+              onChange={handleDateFromChange}
               maxDateTime={dateTo}
               open={fromOpen}
               onOpen={() => setFromOpen(true)}
@@ -169,7 +188,7 @@ const AnalyticsContainer = memo(() => {
             <Typography sx={styles.datePickerLabel}>To:</Typography>
             <DateTimePicker
               value={dateTo}
-              onChange={setDateTo}
+              onChange={handleDateToChange}
               minDateTime={dateFrom}
               open={toOpen}
               onOpen={() => setToOpen(true)}
@@ -191,7 +210,7 @@ const AnalyticsContainer = memo(() => {
             value={activeTab}
             onChange={handleTabChange}
           >
-            {['Overview', 'Agents', 'Tools', 'Users', 'Health', 'Costs', 'Guide'].map(label => (
+            {['Overview', 'Costs', 'Agents & Pipelines', 'Tools', 'Users', 'Health', 'Guide'].map(label => (
               <BaseTab
                 key={label}
                 label={label}
@@ -223,20 +242,27 @@ const AnalyticsContainer = memo(() => {
             />
           )}
           {activeTab === 1 && (
-            <AnalyticsAgents
+            <AnalyticsCosts
               projectId={projectId}
               dateFrom={dateFromISO}
               dateTo={dateToISO}
             />
           )}
           {activeTab === 2 && (
-            <AnalyticsTools
+            <AnalyticsAgents
               projectId={projectId}
               dateFrom={dateFromISO}
               dateTo={dateToISO}
             />
           )}
           {activeTab === 3 && (
+            <AnalyticsTools
+              projectId={projectId}
+              dateFrom={dateFromISO}
+              dateTo={dateToISO}
+            />
+          )}
+          {activeTab === 4 && (
             <AnalyticsUsers
               projectId={projectId}
               dateFrom={dateFromISO}
@@ -245,17 +271,10 @@ const AnalyticsContainer = memo(() => {
               onBackToSource={handleBackToOverview}
             />
           )}
-          {data && !isFetching && activeTab === 4 && (
+          {data && !isFetching && activeTab === 5 && (
             <AnalyticsHealth
               health={data.health}
               daily_activity={data.daily_activity}
-            />
-          )}
-          {activeTab === 5 && (
-            <AnalyticsCosts
-              projectId={projectId}
-              dateFrom={dateFromISO}
-              dateTo={dateToISO}
             />
           )}
           {activeTab === 6 && <AnalyticsGuide />}

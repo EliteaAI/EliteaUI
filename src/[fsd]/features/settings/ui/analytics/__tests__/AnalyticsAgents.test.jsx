@@ -5,14 +5,14 @@ import { useAnalyticsAgentsQuery } from '@/api';
 import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 
-import AnalyticsAgents from './AnalyticsAgents';
-import { AnalyticsTestWrapper as Wrapper } from './_testHelpers';
+import AnalyticsAgents from '../AnalyticsAgents';
+import { AnalyticsTestWrapper as Wrapper } from '../_testHelpers';
 
 // Stub browser globals via vi.hoisted BEFORE any vi.mock factory or ESM
 // import can touch slices/settings.js (localStorage) or MUI TablePagination
 // (ResizeObserver) at module scope.
 vi.hoisted(async () => {
-  const { installGlobalStubs } = await import('./_testHelpers');
+  const { installGlobalStubs } = await import('../_testHelpers');
   installGlobalStubs();
 });
 

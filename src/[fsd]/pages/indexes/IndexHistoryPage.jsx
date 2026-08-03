@@ -16,7 +16,6 @@ import { useToolkitsDetailsQuery } from '@/api/toolkits.js';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils.jsx';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast.jsx';
-import Page404 from '@/pages/Page404.jsx';
 import RouteDefinitions from '@/routes';
 
 const IndexHistoryPage = memo(() => {
@@ -111,7 +110,11 @@ const IndexHistoryPage = memo(() => {
 
   const isLoading = indexesLoading || indexesFetching || !hasData || runHistoryLoading;
 
-  if (shouldShowNotFoundPage) return <Page404 />;
+  useEffect(() => {
+    if (shouldShowNotFoundPage) goToToolkitsList();
+  }, [shouldShowNotFoundPage, goToToolkitsList]);
+
+  if (shouldShowNotFoundPage) return null;
 
   const toolkitName = publicToolkitData?.name || '';
 
