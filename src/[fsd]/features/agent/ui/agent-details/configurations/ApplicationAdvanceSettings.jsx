@@ -4,6 +4,7 @@ import { useFormikContext } from 'formik';
 
 import { Box } from '@mui/material';
 
+import AgentMetaSwitch from '@/[fsd]/features/agent/ui/agent-details/configurations/switch/AgentMetaSwitch';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { Checkbox, Input, Label } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
@@ -122,6 +123,12 @@ const ApplicationAdvanceSettings = memo(props => {
                 />
               </Box>
             )}
+            <AgentMetaSwitch
+              title="Start New Conversation"
+              metaKey="start_new_conversation"
+              defaultValue={false}
+              disabled={disabled}
+            />
           </Box>
         ),
       },
