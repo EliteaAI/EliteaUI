@@ -69,6 +69,8 @@ const Participants = memo(props => {
               variant="elitea"
               color="tertiary"
               onClick={onCollapsed}
+              data-testid="chat-participants-panel-toggle-button"
+              data-expanded={collapsed ? 'false' : 'true'}
             >
               <ExpandCollapseButton
                 fill={theme.palette.icon.fill.default}

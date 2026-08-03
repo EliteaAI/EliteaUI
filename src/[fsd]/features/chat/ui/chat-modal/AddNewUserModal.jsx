@@ -109,6 +109,7 @@ const AddNewUserModal = memo(props => {
             onChangeUsers={onChangeUsers}
             inputTestId="add-users-search-input"
             chipTestId={user => `add-users-chip-${user.id}`}
+            chipDeleteTestId={user => `add-users-chip-remove-${user.id}`}
             getOptionTestId={option => `add-users-option-${option.id}`}
             slotProps={{
               listBox: {

@@ -23,6 +23,7 @@ const UserMentionItem = memo(props => {
     <Box
       onClick={handleClick}
       sx={userMentionItemStyles.item(isActive)}
+      data-testid={`chat-user-mention-item-${user.id}`}
     >
       <UserAvatar
         name={avatarName}
@@ -83,7 +84,10 @@ const UserMentionList = memo(props => {
 
   return (
     <ClickAwayListener onClickAway={onClose}>
-      <Box sx={userMentionListStyles.container}>
+      <Box
+        sx={userMentionListStyles.container}
+        data-testid="chat-user-mention-list"
+      >
         <Box sx={userMentionListStyles.header}>
           <Typography
             variant="subtitle"

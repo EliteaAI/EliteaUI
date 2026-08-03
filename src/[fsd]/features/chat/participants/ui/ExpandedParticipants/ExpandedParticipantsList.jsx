@@ -106,6 +106,7 @@ const ExpandedPerticapantsList = memo(props => {
                 variant="bodyMedium"
                 color="text.primary"
                 sx={styles.usersCountText}
+                data-testid="chat-participants-users-overflow-count"
               >
                 {users.length > usersToDisplay.length ? `+${users.length - usersToDisplay.length}` : ''}
               </Typography>
