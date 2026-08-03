@@ -685,6 +685,7 @@ const Conversations = memo(props => {
               data-testid="conversation-search-input"
             />
             <IconButton
+              data-testid="conversation-search-clear-button"
               onClick={handleSearchClear}
               variant="elitea"
               color="tertiary"

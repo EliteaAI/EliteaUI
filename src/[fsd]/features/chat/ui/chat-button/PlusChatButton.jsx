@@ -283,7 +283,11 @@ const PlusChatButton = memo(props => {
                 onClick: handleRowClick,
               },
               label: { sx: { whiteSpace: 'nowrap' } },
-              switch: { size: 'small', onClick: e => e.stopPropagation() },
+              switch: {
+                size: 'small',
+                onClick: e => e.stopPropagation(),
+                inputProps: { 'data-testid': `modules-toggle-${tool.name}` },
+              },
             }}
           />
         );
