@@ -137,6 +137,7 @@ const CommonInterruptSettings = memo(props => {
                 : !!realInterruptAfter.find(item => item === id)
             }
             onChange={onChangeInterruptAfter}
+            data-testid={`pipeline-node-interrupt-after-toggle-${id}`}
           />
         }
         label={
