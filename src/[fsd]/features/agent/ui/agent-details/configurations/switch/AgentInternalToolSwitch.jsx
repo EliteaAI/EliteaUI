@@ -92,6 +92,7 @@ const AgentInternalToolSwitch = memo(props => {
             checked={allowTool}
             onChange={onChange}
             disabled={disabled}
+            inputProps={{ 'data-testid': `agent-canvas-tools-toggle-${name}` }}
           />
         }
         label=""

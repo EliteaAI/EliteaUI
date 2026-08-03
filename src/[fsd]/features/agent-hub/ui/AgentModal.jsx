@@ -242,6 +242,7 @@ const AgentModal = memo(props => {
                 variant="bodySmall"
                 sx={styles.showContext}
                 onClick={onShowContext}
+                data-testid="catalog-agent-modal-show-instructions-link"
               >
                 Show instructions
               </Typography>
@@ -257,6 +258,7 @@ const AgentModal = memo(props => {
           <DialogActions sx={styles.dialogActions}>
             <Button
               data-tour={ELITEA_CATALOG_TOUR_TARGET_IDS.primaryActionButton}
+              data-testid="catalog-agent-modal-start-chat-button"
               variant="elitea"
               color="primary"
               onClick={onStartConversation()}

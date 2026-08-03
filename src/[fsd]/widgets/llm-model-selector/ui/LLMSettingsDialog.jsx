@@ -83,6 +83,7 @@ const LLMSettingsDialog = memo(props => {
             Cancel
           </Button.BaseBtn>
           <Button.BaseBtn
+            data-testid="model-settings-apply-button"
             variant="elitea"
             onClick={handleOK}
             disabled={isDisabled}

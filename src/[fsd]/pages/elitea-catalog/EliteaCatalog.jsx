@@ -64,6 +64,7 @@ const EliteaCatalog = memo(() => {
         <Typography
           variant="headingLarge"
           sx={styles.title}
+          data-testid="catalog-page-heading"
         >
           Welcome to ELITEA Catalog!
         </Typography>
@@ -79,6 +80,7 @@ const EliteaCatalog = memo(() => {
             sx={styles.searchField}
             variant="outlined"
             size="small"
+            inputProps={{ 'data-testid': 'catalog-search-input' }}
           />
         </Box>
 

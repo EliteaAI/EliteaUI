@@ -20,6 +20,8 @@ import useIsPipelineYamlCodeDirty from '@/pages/Pipelines/useIsPipelineYamlCodeD
  *   (never hardcoded here) since this component is shared across Agent/Pipeline/Toolkit editors.
  * @param {string} [subtitleTestId] - Optional data-testid for the subtitle Typography.
  * @param {string} [closeButtonTestId] - Optional data-testid for the close (X) IconButton.
+ * @param {string} [publicLabelTestId] - Optional data-testid for the "Public" label Typography
+ *   shown instead of Discard/Save when `isPublic` is true (ELITEA-2075).
  */
 const EditorHeader = ({
   title,
@@ -31,6 +33,7 @@ const EditorHeader = ({
   titleTestId,
   subtitleTestId,
   closeButtonTestId,
+  publicLabelTestId,
 }) => {
   const theme = useTheme();
   const { discardApplicationChanges } = useDiscardApplicationChanges(onDiscard);
@@ -92,6 +95,7 @@ const EditorHeader = ({
               <Typography
                 variant="bodySmall"
                 sx={styles.publicLabel}
+                data-testid={publicLabelTestId}
               >
                 Public
               </Typography>

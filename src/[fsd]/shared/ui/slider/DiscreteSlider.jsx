@@ -17,6 +17,7 @@ const DiscreteSlider = memo(props => {
     max,
     showLabels = false,
     testId,
+    markTestIdPrefix,
     ...sliderProps
   } = props;
 
@@ -96,6 +97,7 @@ const DiscreteSlider = memo(props => {
                 >
                   <Box
                     onClick={handleMarkClick(mark.value)}
+                    data-testid={markTestIdPrefix ? `${markTestIdPrefix}-${mark.value}` : undefined}
                     sx={{
                       ...styles.markTooltipTrigger,
                       left: `${position}%`,
