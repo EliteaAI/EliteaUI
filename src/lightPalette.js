@@ -90,7 +90,6 @@ const lightPurple = '#A48EE3';
 const lightOrange = '#FFB380';
 const yellow = '#FEBD17';
 const greenOutline40 = 'rgba(42, 179, 122, 0.4)';
-const lightBlue = 'rgba(215, 241, 255, 1)';
 
 const lightPalette = {
   mode: 'light',
@@ -512,7 +511,7 @@ const lightPalette = {
       success: green,
       error: red,
       warning: orange,
-      info: lightBlue,
+      info: darkBlue,
     },
   },
   icon: {
@@ -550,7 +549,7 @@ const lightPalette = {
       success: greenHoverBtn,
       error: dangerRed,
       warning: orange,
-      info: blue,
+      info: darkBlue,
     },
   },
   checkbox: {

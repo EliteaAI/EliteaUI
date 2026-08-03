@@ -39,7 +39,7 @@ export const useChatSkillMention = ({
     activeParticipant?.entity_settings?.version_id || activeParticipantDetails?.version_details?.id;
   const participantProjectId = activeParticipant?.entity_meta?.project_id || projectId;
 
-  const { data: applicationSkills } = useGetApplicationSkillsQuery(
+  const { currentData: applicationSkills } = useGetApplicationSkillsQuery(
     { projectId: participantProjectId, appVersionId },
     { skip: !isAgent || !participantProjectId || !appVersionId },
   );
