@@ -49,7 +49,10 @@ const ContextBudgetProgress = memo(props => {
                 },
               }}
             >
-              <Box sx={styles.attentionIconWrapper}>
+              <Box
+                sx={styles.attentionIconWrapper}
+                data-testid="context-budget-warning-icon"
+              >
                 <AttentionIcon
                   width={16}
                   height={16}
