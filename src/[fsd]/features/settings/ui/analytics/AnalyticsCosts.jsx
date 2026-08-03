@@ -1,12 +1,12 @@
 import { memo, useMemo } from 'react';
 
-import { Bar, BarChart, Cell, Tooltip as RechartsTooltip, ResponsiveContainer, XAxis, YAxis } from 'recharts';
+import { Bar, BarChart, Tooltip as RechartsTooltip, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 
 import { Box, CircularProgress, Typography, useTheme } from '@mui/material';
 
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
-import { ChartTooltip, KPICard } from '@/[fsd]/features/settings/ui/analytics';
+import { ChartTooltip, InfoBanner, KPICard, infoBannerTextSx } from '@/[fsd]/features/settings/ui/analytics';
 import { useAnalyticsCostsQuery } from '@/api';
 
 const AnalyticsCosts = memo(props => {
@@ -21,20 +21,17 @@ const AnalyticsCosts = memo(props => {
     { skip: !projectId },
   );
 
-  const modelChartData = useMemo(
-    () =>
-      // Sort by cost desc before truncating so the chart shows the priciest
-      // models even if the API returns them unordered.
-      [...(data?.by_model || [])]
-        .sort((a, b) => (b.total_cost ?? 0) - (a.total_cost ?? 0))
-        .slice(0, AnalyticsCommonConstants.MODEL_CHART_SIZE)
-        .map((m, i) => ({
-          name: m.display_name || m.model_name,
-          cost: m.total_cost,
-          color: AnalyticsCommonConstants.CHART_COLORS[i % AnalyticsCommonConstants.CHART_COLORS.length],
-        })),
-    [data?.by_model],
-  );
+  const modelTableData = useMemo(() => {
+    const sorted = [...(data?.by_model || [])].sort((a, b) => (b.total_cost ?? 0) - (a.total_cost ?? 0));
+    const totalCost = sorted.reduce((sum, m) => sum + (m.total_cost ?? 0), 0);
+    return sorted.map(m => ({
+      name: m.display_name || m.model_name,
+      cost: m.total_cost,
+      calls: m.calls,
+      avgCostPerCall: m.calls > 0 ? m.total_cost / m.calls : null,
+      share: totalCost > 0 ? (m.total_cost / totalCost) * 100 : null,
+    }));
+  }, [data?.by_model]);
 
   const dailyChartData = useMemo(
     () => (data?.daily || []).map(d => ({ ...d, date: d.date?.slice(5) })),
@@ -67,12 +64,14 @@ const AnalyticsCosts = memo(props => {
 
   return (
     <Box sx={styles.container}>
-      <Typography
-        variant="caption"
-        sx={styles.disclaimer}
-      >
-        Costs are estimated from a local model-price table; actual provider invoices may differ.
-      </Typography>
+      <InfoBanner>
+        <Typography
+          variant="bodyMedium"
+          sx={infoBannerTextSx}
+        >
+          Costs are estimated from a local model-price table; actual provider invoices may differ.
+        </Typography>
+      </InfoBanner>
       <Box sx={styles.kpiRow}>
         <KPICard
           label="TOTAL COST"
@@ -101,116 +100,106 @@ const AnalyticsCosts = memo(props => {
         />
       </Box>
 
-      <Box sx={styles.chartsRow}>
-        <Box sx={styles.chartCard}>
-          <Typography
-            variant="labelMedium"
-            sx={styles.chartTitle}
-          >
-            Cost by Model
-          </Typography>
-          {modelChartData.length ? (
-            <Box sx={styles.chartWrapper}>
-              <ResponsiveContainer
-                width="100%"
-                height="100%"
+      <Box sx={styles.chartCard}>
+        <Typography
+          variant="labelMedium"
+          sx={styles.chartTitle}
+        >
+          Cost by Model
+        </Typography>
+        {modelTableData.length > 0 ? (
+          <Box sx={styles.tableWrapper}>
+            <Box sx={styles.tableHeader}>
+              <Typography sx={[styles.tableCell, { flex: 3 }]}>Model</Typography>
+              <Typography sx={[styles.tableCell, styles.flexOneHalf]}>Cost</Typography>
+              <Typography sx={[styles.tableCell, styles.flexOne]}>Calls</Typography>
+              <Typography sx={[styles.tableCell, styles.flexOneHalf]}>Avg Cost / Call</Typography>
+              <Typography sx={[styles.tableCell, styles.flexOne]}>Share</Typography>
+            </Box>
+            {modelTableData.map((m, i) => (
+              <Box
+                key={i}
+                sx={styles.tableRow}
               >
-                <BarChart
-                  data={modelChartData}
-                  layout="vertical"
+                <Typography
+                  sx={[styles.tableCellValue, { flex: 3 }]}
+                  noWrap
                 >
-                  <XAxis
-                    type="number"
-                    tick={axisTickStyle}
-                    tickFormatter={v => AnalyticCommonHelpers.fmtCost(v)}
-                    axisLine={{ stroke: axisStroke }}
-                    tickLine={{ stroke: axisStroke }}
-                  />
-                  <YAxis
-                    type="category"
-                    dataKey="name"
-                    tick={axisTickStyle}
-                    width={100}
-                    axisLine={{ stroke: axisStroke }}
-                    tickLine={{ stroke: axisStroke }}
-                  />
-                  <RechartsTooltip
-                    content={<ChartTooltip formatter={v => AnalyticCommonHelpers.fmtCost(v)} />}
-                  />
-                  <Bar
-                    dataKey="cost"
-                    name="Cost"
-                    radius={[0, 4, 4, 0]}
-                  >
-                    {modelChartData.map((entry, i) => (
-                      <Cell
-                        key={`${entry.name}-${i}`}
-                        fill={entry.color}
-                      />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </Box>
-          ) : (
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={styles.noDataText}
-            >
-              No data
-            </Typography>
-          )}
-        </Box>
-
-        <Box sx={styles.chartCard}>
+                  {m.name}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
+                  {AnalyticCommonHelpers.fmtCost(m.cost)}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
+                  {m.calls != null ? AnalyticCommonHelpers.fmtNum(m.calls) : '—'}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
+                  {m.avgCostPerCall != null ? AnalyticCommonHelpers.fmtCost(m.avgCostPerCall) : '—'}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
+                  {m.share != null ? `${m.share.toFixed(1)}%` : '—'}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        ) : (
           <Typography
-            variant="labelMedium"
-            sx={styles.chartTitle}
+            variant="body2"
+            color="text.secondary"
+            sx={styles.noDataText}
           >
-            Daily Cost Trend
+            No model cost data is available for the selected date range.
           </Typography>
-          {dailyChartData.length ? (
-            <Box sx={styles.chartWrapper}>
-              <ResponsiveContainer
-                width="100%"
-                height="100%"
-              >
-                <BarChart data={dailyChartData}>
-                  <XAxis
-                    dataKey="date"
-                    tick={axisTickStyle}
-                    axisLine={{ stroke: axisStroke }}
-                    tickLine={{ stroke: axisStroke }}
-                  />
-                  <YAxis
-                    tick={axisTickStyle}
-                    tickFormatter={v => AnalyticCommonHelpers.fmtCost(v)}
-                    axisLine={{ stroke: axisStroke }}
-                    tickLine={{ stroke: axisStroke }}
-                  />
-                  <RechartsTooltip
-                    content={<ChartTooltip formatter={v => AnalyticCommonHelpers.fmtCost(v)} />}
-                  />
-                  <Bar
-                    dataKey="total_cost"
-                    name="Cost"
-                    fill={AnalyticsCommonConstants.CHART_COLORS[0]}
-                    radius={[4, 4, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </Box>
-          ) : (
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={styles.noDataText}
+        )}
+      </Box>
+
+      <Box sx={styles.chartCard}>
+        <Typography
+          variant="labelMedium"
+          sx={styles.chartTitle}
+        >
+          Daily Cost Trend
+        </Typography>
+        {dailyChartData.length ? (
+          <Box sx={styles.chartWrapper}>
+            <ResponsiveContainer
+              width="100%"
+              height="100%"
             >
-              No data
-            </Typography>
-          )}
-        </Box>
+              <BarChart data={dailyChartData}>
+                <XAxis
+                  dataKey="date"
+                  tick={axisTickStyle}
+                  axisLine={{ stroke: axisStroke }}
+                  tickLine={{ stroke: axisStroke }}
+                />
+                <YAxis
+                  tick={axisTickStyle}
+                  tickFormatter={v => AnalyticCommonHelpers.fmtCost(v)}
+                  axisLine={{ stroke: axisStroke }}
+                  tickLine={{ stroke: axisStroke }}
+                />
+                <RechartsTooltip
+                  content={<ChartTooltip formatter={v => AnalyticCommonHelpers.fmtCost(v)} />}
+                />
+                <Bar
+                  dataKey="total_cost"
+                  name="Cost"
+                  fill={AnalyticsCommonConstants.CHART_COLORS[0]}
+                  radius={[4, 4, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </Box>
+        ) : (
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={styles.noDataText}
+          >
+            No data
+          </Typography>
+        )}
       </Box>
 
       <Box sx={styles.listsRow}>
@@ -219,7 +208,7 @@ const AnalyticsCosts = memo(props => {
             variant="labelMedium"
             sx={styles.chartTitle}
           >
-            Cost by Agent
+            Cost by Agent & Pipeline
           </Typography>
           {(data.by_agent || []).slice(0, AnalyticsCommonConstants.TOP_LIST_SIZE).map((a, i) => (
             <Box
@@ -304,13 +293,7 @@ const styles = {
   centered: { display: 'flex', justifyContent: 'center', p: 4 },
   noDataText: { p: 2 },
   container: { display: 'flex', flexDirection: 'column', gap: '1rem' },
-  disclaimer: ({ palette }) => ({ color: palette.text.secondary, fontStyle: 'italic' }),
   kpiRow: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(9rem, 1fr))', gap: '1rem' },
-  chartsRow: {
-    display: 'grid',
-    gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
-    gap: '1rem',
-  },
   chartCard: ({ palette }) => ({
     padding: '1rem',
     borderRadius: '0.5rem',
@@ -319,8 +302,34 @@ const styles = {
     flexDirection: 'column',
     minWidth: 0,
   }),
-  chartTitle: ({ palette }) => ({ color: palette.text.secondary, marginBottom: '0.25rem', display: 'block' }),
-  chartWrapper: { width: '100%', overflow: 'hidden', flex: 1, minHeight: 240 },
+  chartTitle: ({ palette }) => ({ color: palette.text.secondary, marginBottom: '0.5rem', display: 'block' }),
+  chartWrapper: { width: '100%', overflow: 'hidden', height: 240 },
+  tableWrapper: { display: 'flex', flexDirection: 'column', width: '100%', overflow: 'auto' },
+  tableHeader: ({ palette }) => ({
+    display: 'flex',
+    padding: '0.625rem 1rem',
+    borderBottom: `1px solid ${palette.border.table}`,
+    gap: '1rem',
+  }),
+  tableCell: ({ palette }) => ({
+    fontSize: '0.75rem',
+    fontWeight: 600,
+    color: palette.text.secondary,
+  }),
+  tableRow: ({ palette }) => ({
+    display: 'flex',
+    padding: '0.75rem 1rem',
+    gap: '1rem',
+    borderBottom: `1px solid ${palette.border.table}`,
+    '&:last-child': { borderBottom: 'none' },
+  }),
+  tableCellValue: ({ palette }) => ({
+    fontSize: '0.8125rem',
+    color: palette.text.secondary,
+    fontVariantNumeric: 'tabular-nums',
+  }),
+  flexOne: { flex: 1 },
+  flexOneHalf: { flex: 1.5 },
   listsRow: {
     display: 'grid',
     gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },

@@ -6,7 +6,7 @@ import { ThemeProvider, createTheme } from '@mui/material';
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
-import AnalyticsOverview from './AnalyticsOverview';
+import AnalyticsOverview from '../AnalyticsOverview';
 
 vi.mock('recharts', () => ({
   ResponsiveContainer: ({ children }) => <div>{children}</div>,

@@ -75,7 +75,7 @@ const AnalyticsUserDetailed = memo(props => {
           value={AnalyticCommonHelpers.fmtNum(kpis.chat_events)}
         />
         <KPICard
-          label="Agent Runs"
+          label="Agent & Pipeline Runs"
           value={AnalyticCommonHelpers.fmtNum(kpis.agent_events)}
         />
         <KPICard
@@ -313,13 +313,13 @@ const AnalyticsUserDetailed = memo(props => {
             variant="labelMedium"
             sx={styles.chartTitle}
           >
-            Agents Used
+            Agents & Pipelines Used
           </Typography>
           <Typography
             variant="bodySmall"
             sx={styles.chartSubtitle}
           >
-            {agents.length} agents
+            {agents.length} agents & pipelines
           </Typography>
           <Box sx={styles.fixedScrollList}>
             {agents.length > 0 ? (
@@ -348,7 +348,7 @@ const AnalyticsUserDetailed = memo(props => {
                 variant="bodySmall"
                 sx={styles.emptyText}
               >
-                No agent activity
+                No agent or pipeline activity
               </Typography>
             )}
           </Box>

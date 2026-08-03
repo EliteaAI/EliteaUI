@@ -55,7 +55,7 @@ const AnalyticsOverview = memo(props => {
           subtitle="user messages sent"
         />
         <KPICard
-          label="AGENT RUNS"
+          label="AGENT & PIPELINE RUNS"
           value={AnalyticCommonHelpers.fmtNum(kpis.agent_runs)}
           subtitle="agents and pipelines interactions"
         />
