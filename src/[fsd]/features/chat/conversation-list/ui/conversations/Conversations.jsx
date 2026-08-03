@@ -339,7 +339,11 @@ const Conversations = memo(props => {
       const newFolderMenuItem = [
         {
           disabled: !checkPermission(PERMISSIONS.chat.folders.create),
-          key: 'create_folder',
+          // Renamed from 'create_folder' -> the shared {section}-{element}-{type}
+          // testid family (ELITEA-2135/2137 analyst pass). DotMenu.jsx's
+          // submenu BasicMenuItem now forwards `testId={subMenuItem.key}`,
+          // which renders `data-testid="chat-move-to-create-folder-menuitem"`.
+          key: 'chat-move-to-create-folder',
           label: (
             <Box style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <NewFolder
@@ -363,7 +367,8 @@ const Conversations = memo(props => {
         {
           addSeparator: true,
           disabled: !conversation.folder_id || !checkPermission(PERMISSIONS.chat.folders.update),
-          key: 'back_to_the_list',
+          // Renamed from 'back_to_the_list' -> testid family, see note above.
+          key: 'chat-move-to-back-to-list',
           label: (
             <Box style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <FromFolder
@@ -388,6 +393,14 @@ const Conversations = memo(props => {
 
       const folderItems = folders.map(targetFolder => {
         return {
+          // ADDED (ELITEA-2135/2137 analyst pass) — was previously absent,
+          // so DotMenu.jsx's submenu React `key` fell back to `label`
+          // (the folder's plain name). Two same-named folders (the common
+          // "New folder" default) then collided on that key, producing a
+          // live-confirmed "two children with the same key" React warning.
+          // The `.id`-keyed value also drives this item's own
+          // `data-testid="chat-move-to-folder-{id}-menuitem"`.
+          key: `chat-move-to-folder-${targetFolder.id}`,
           label: targetFolder.name,
           disabled:
             targetFolder?.owner_id !== userId ||

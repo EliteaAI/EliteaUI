@@ -348,6 +348,7 @@ const ConversationItem = memo(props => {
     <Box
       data-testid={`chat-conversation-item-${conversation.id}`}
       data-active={isActive ? 'true' : 'false'}
+      data-pinned={isPinned ? 'true' : 'false'}
       sx={styles.conversationContentWrapper}
       onClick={onClickConversation}
       onMouseEnter={onMouseEnter}
@@ -409,7 +410,12 @@ const ConversationItem = memo(props => {
         )}
         {/* Private without users shows nothing as requested */}
         {/* Pin icon */}
-        {isPinned && !isPlayback && <PinIcon sx={{ fontSize: '.875rem' }} />}
+        {isPinned && !isPlayback && (
+          <PinIcon
+            data-testid="chat-pin-icon"
+            sx={{ fontSize: '.875rem' }}
+          />
+        )}
       </Box>
       {!isNamingPending && (
         <Box
