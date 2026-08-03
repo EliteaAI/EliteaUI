@@ -24,6 +24,7 @@ const EditingPlaceholder = ({ title = 'Response editing...' }) => {
       }}
     >
       <Box
+        data-testid="chat-canvas-editing-indicator"
         display="flex"
         borderRadius={'8px'}
         gap="8px"
