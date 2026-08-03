@@ -7,7 +7,7 @@ import { useAnalyticsCostsQuery } from '@/api';
 import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 
-import AnalyticsCosts from './AnalyticsCosts';
+import AnalyticsCosts from '../AnalyticsCosts';
 
 vi.mock('@/api', () => ({
   useAnalyticsCostsQuery: vi.fn(),

@@ -144,7 +144,7 @@ const AnalyticsAgents = memo(props => {
             variant="labelMedium"
             sx={styles.chartTitle}
           >
-            Most Active Agents
+            Most Active Agents & Pipelines
           </Typography>
           <Typography
             variant="bodySmall"
@@ -210,25 +210,25 @@ const AnalyticsAgents = memo(props => {
               variant="labelMedium"
               sx={styles.chartTitle}
             >
-              Agent Activity
+              Agent & Pipeline Activity
             </Typography>
             <Typography
               variant="bodySmall"
               sx={styles.chartSubtitle}
             >
-              {total} agents
+              {total} agents & pipelines
             </Typography>
           </Box>
           <StyledSearchInput
             search={search}
             onChangeSearch={handleSearchChange}
-            placeholder="Search by agent name"
+            placeholder="Search by agent or pipeline name"
             sx={styles.userSearch}
           />
         </Box>
         <Box sx={styles.tableWrapper}>
           <Box sx={styles.tableHeader}>
-            <Typography sx={[styles.tableCell, { flex: 3 }]}>Agent</Typography>
+            <Typography sx={[styles.tableCell, { flex: 3 }]}>Agent / Pipeline</Typography>
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Events</Typography>
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Users</Typography>
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Avg Latency</Typography>

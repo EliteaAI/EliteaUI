@@ -218,17 +218,17 @@ const AnalyticsToolDetailed = memo(props => {
             variant="labelMedium"
             sx={styles.chartTitle}
           >
-            Agents
+            Agents & Pipelines
           </Typography>
           <Typography
             variant="bodySmall"
             sx={styles.chartSubtitle}
           >
-            {agents.length} agents used this tool
+            {agents.length} agents & pipelines used this tool
           </Typography>
           <Box sx={styles.tableWrapper}>
             <Box sx={styles.tableHeader}>
-              <Typography sx={[styles.tableCell, { flex: 3 }]}>Agent</Typography>
+              <Typography sx={[styles.tableCell, { flex: 3 }]}>Agent / Pipeline</Typography>
               <Typography sx={[styles.tableCell, { flex: 1 }]}>Calls</Typography>
             </Box>
             <Box sx={styles.fixedScrollList}>
