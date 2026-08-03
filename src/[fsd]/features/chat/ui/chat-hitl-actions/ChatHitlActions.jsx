@@ -173,6 +173,7 @@ const ChatHitlActions = memo(props => {
             Authorize
           </BaseBtn>
           <BaseBtn
+            data-testid="sensitive-action-block-button"
             variant="alarm"
             startIcon={<RejectIcon />}
             onClick={handleReject}
@@ -185,6 +186,9 @@ const ChatHitlActions = memo(props => {
             <BlockWithCommentControl
               onSubmit={handleBlockWithComment}
               disabled={disabled}
+              triggerTestId="sensitive-action-block-with-comment-button"
+              textareaTestId="sensitive-action-block-comment-input"
+              submitTestId="sensitive-action-block-comment-submit-button"
             />
           )}
         </Box>
