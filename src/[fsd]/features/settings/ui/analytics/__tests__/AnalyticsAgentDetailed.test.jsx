@@ -1,20 +1,20 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useAnalyticsUserDetailQuery } from '@/[fsd]/features/settings/api/analyticsApi';
+import { useAnalyticsAgentDetailQuery } from '@/[fsd]/features/settings/api/analyticsApi';
 import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 
-import AnalyticsUserDetailed from './AnalyticsUserDetailed';
-import { AnalyticsTestWrapper as Wrapper } from './_testHelpers';
+import AnalyticsAgentDetailed from '../AnalyticsAgentDetailed';
+import { AnalyticsTestWrapper as Wrapper } from '../_testHelpers';
 
 vi.hoisted(async () => {
-  const { installGlobalStubs } = await import('./_testHelpers');
+  const { installGlobalStubs } = await import('../_testHelpers');
   installGlobalStubs();
 });
 
 vi.mock('@/[fsd]/features/settings/api/analyticsApi', () => ({
-  useAnalyticsUserDetailQuery: vi.fn(),
+  useAnalyticsAgentDetailQuery: vi.fn(),
 }));
 
 vi.mock('@/components/Icons/ArrowBackIcon', () => ({ default: () => null }));
@@ -47,41 +47,37 @@ vi.mock('@/[fsd]/features/settings/lib/helpers', () => ({
 }));
 
 const MOCK = {
-  user_id: 7,
-  user_email: 'alice@example.com',
+  entity_name: 'CodeReviewBot',
   kpis: {
     total_events: 100,
-    active_days: 5,
-    llm_events: 20,
-    tool_events: 30,
-    agent_events: 10,
-    chat_events: 5,
+    unique_users: 3,
+    avg_duration_ms: 1500,
     errors: 0,
-    input_tokens: 1000,
-    output_tokens: 500,
-    total_tokens: 1500,
-    llm_cost: 0.0234,
-    avg_cost_per_call: 0.00117,
+    error_rate: 0,
+    input_tokens: 12345,
+    output_tokens: 6789,
+    total_tokens: 19134,
+    llm_cost: 0.4321,
+    avg_cost_per_call: 0.001,
   },
-  models: [],
+  users: [],
   tools: [],
-  agents: [],
-  daily_activity: [],
+  daily_usage: [],
 };
 
-describe('AnalyticsUserDetailed', () => {
+describe('AnalyticsAgentDetailed', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    useAnalyticsUserDetailQuery.mockReturnValue({ data: MOCK, isFetching: false });
+    useAnalyticsAgentDetailQuery.mockReturnValue({ data: MOCK, isFetching: false });
   });
 
   afterEach(() => cleanup());
 
   it('renders the 5 new token/cost KPI cards', () => {
     render(
-      <AnalyticsUserDetailed
+      <AnalyticsAgentDetailed
         projectId={1}
-        userId={7}
+        entityId={42}
         dateFrom="2026-01-01"
         dateTo="2026-01-31"
       />,
@@ -96,9 +92,9 @@ describe('AnalyticsUserDetailed', () => {
 
   it('labels the two cost KPIs as estimated', () => {
     render(
-      <AnalyticsUserDetailed
+      <AnalyticsAgentDetailed
         projectId={1}
-        userId={7}
+        entityId={42}
         dateFrom="2026-01-01"
         dateTo="2026-01-31"
       />,
@@ -110,18 +106,18 @@ describe('AnalyticsUserDetailed', () => {
 
   it('renders formatted token and cost values from kpis', () => {
     render(
-      <AnalyticsUserDetailed
+      <AnalyticsAgentDetailed
         projectId={1}
-        userId={7}
+        entityId={42}
         dateFrom="2026-01-01"
         dateTo="2026-01-31"
       />,
       { wrapper: Wrapper },
     );
-    expect(screen.getByText('1500')).toBeTruthy(); // total_tokens
-    expect(screen.getByText('1000')).toBeTruthy(); // input_tokens
-    expect(screen.getByText('500')).toBeTruthy(); // output_tokens
-    expect(screen.getByText('$0.0234')).toBeTruthy(); // llm_cost
-    expect(screen.getByText('$0.0012')).toBeTruthy(); // avg_cost_per_call (rounded to 4)
+    expect(screen.getByText('19134')).toBeTruthy(); // total_tokens
+    expect(screen.getByText('12345')).toBeTruthy(); // input_tokens
+    expect(screen.getByText('6789')).toBeTruthy(); // output_tokens
+    expect(screen.getByText('$0.4321')).toBeTruthy(); // llm_cost
+    expect(screen.getByText('$0.0010')).toBeTruthy(); // avg_cost_per_call
   });
 });

@@ -187,7 +187,7 @@ const AnalyticAgentDetailed = memo(props => {
             variant="bodySmall"
             sx={styles.chartSubtitle}
           >
-            {users.length} users used this agent
+            {users.length} users used this agent / pipeline
           </Typography>
           <Box sx={styles.tableWrapper}>
             <Box sx={styles.tableHeader}>
@@ -246,7 +246,7 @@ const AnalyticAgentDetailed = memo(props => {
             variant="bodySmall"
             sx={styles.chartSubtitle}
           >
-            {tools.length} tools used by this agent
+            {tools.length} tools used by this agent / pipeline
           </Typography>
           <Box sx={styles.tableWrapper}>
             <Box sx={styles.tableHeader}>
