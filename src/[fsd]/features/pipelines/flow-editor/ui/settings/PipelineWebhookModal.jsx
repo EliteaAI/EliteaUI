@@ -170,6 +170,7 @@ const PipelineWebhookModal = props => {
       open={open}
       onClose={onClose}
       title="Webhook settings"
+      data-testid="pipeline-webhook-settings-modal"
       sx={{ '& .MuiDialog-paper': { maxWidth: 'unset !important', width: '35rem !important' } }}
       content={
         <Box sx={styles.contentWrapper}>
@@ -184,10 +185,12 @@ const PipelineWebhookModal = props => {
               value={selectedWebhookType}
               items={WEBHOOK_TYPE_OPTIONS}
               onChange={setSelectedWebhookType}
+              testId="pipeline-webhook-type-radio"
             />
             <Typography
               variant="bodySmall"
               sx={styles.description}
+              data-testid="pipeline-webhook-type-description"
             >
               {currentDescription}
             </Typography>
@@ -206,6 +209,7 @@ const PipelineWebhookModal = props => {
                   value={fullWebhookUrl}
                   readOnly
                   sx={styles.urlInput}
+                  inputProps={{ 'data-testid': 'pipeline-webhook-url-input' }}
                 />
                 <Tooltip
                   title="Copy URL"
@@ -214,6 +218,7 @@ const PipelineWebhookModal = props => {
                   <IconButton
                     onClick={handleCopyUrl}
                     sx={styles.copyButton}
+                    data-testid="pipeline-webhook-url-copy-button"
                   >
                     <ContentCopyIcon sx={{ fontSize: '1rem' }} />
                   </IconButton>
@@ -238,6 +243,7 @@ const PipelineWebhookModal = props => {
                   value={showSecretValue ? displaySecretValue : '•'.repeat(displaySecretValue?.length || 32)}
                   readOnly
                   sx={[styles.urlInput, isPendingRegenerate && styles.pendingInput]}
+                  inputProps={{ 'data-testid': 'pipeline-webhook-secret-input' }}
                 />
                 <Tooltip
                   title={showSecretValue ? 'Hide secret' : 'Show secret'}
@@ -246,6 +252,7 @@ const PipelineWebhookModal = props => {
                   <IconButton
                     onClick={handleToggleSecretVisibility}
                     sx={styles.copyButton}
+                    data-testid="pipeline-webhook-secret-toggle-button"
                   >
                     {showSecretValue ? (
                       <VisibilityOffIcon sx={{ fontSize: '1rem' }} />
@@ -261,6 +268,7 @@ const PipelineWebhookModal = props => {
                   <IconButton
                     onClick={handleCopySecret}
                     sx={styles.copyButton}
+                    data-testid="pipeline-webhook-secret-copy-button"
                   >
                     <ContentCopyIcon sx={{ fontSize: '1rem' }} />
                   </IconButton>
@@ -272,6 +280,7 @@ const PipelineWebhookModal = props => {
                   <IconButton
                     onClick={handleRegenerateClick}
                     sx={styles.copyButton}
+                    data-testid="pipeline-webhook-secret-regenerate-button"
                   >
                     <RefreshIcon sx={{ fontSize: '1rem' }} />
                   </IconButton>
@@ -281,6 +290,7 @@ const PipelineWebhookModal = props => {
                 <Typography
                   variant="bodySmall"
                   sx={styles.helperText}
+                  data-testid="pipeline-webhook-secret-helper-text"
                 >
                   {displayedSecretInstructions}
                 </Typography>
@@ -298,6 +308,7 @@ const PipelineWebhookModal = props => {
             <Typography
               variant="bodySmall"
               sx={styles.description}
+              data-testid="pipeline-webhook-payload-format-description"
             >
               Send a POST request with any body content. The raw request body will be passed directly to the
               pipeline as user input.
@@ -320,6 +331,7 @@ const PipelineWebhookModal = props => {
                   <IconButton
                     onClick={handleCopyExample}
                     sx={styles.copyButton}
+                    data-testid="pipeline-webhook-example-request-copy-button"
                   >
                     <ContentCopyIcon sx={{ fontSize: '1rem' }} />
                   </IconButton>
@@ -329,6 +341,7 @@ const PipelineWebhookModal = props => {
                 <Typography
                   component="pre"
                   sx={styles.codeText}
+                  data-testid="pipeline-webhook-example-request-block"
                 >
                   {exampleRequest}
                 </Typography>
@@ -344,6 +357,7 @@ const PipelineWebhookModal = props => {
             variant="elitea"
             color="secondary"
             onClick={onClose}
+            data-testid="pipeline-webhook-modal-cancel-button"
           >
             Cancel
           </Button>
@@ -353,6 +367,7 @@ const PipelineWebhookModal = props => {
             color="primary"
             onClick={applyChanges}
             disabled={isLoading}
+            data-testid="pipeline-webhook-modal-apply-button"
           >
             Apply
           </Button>
