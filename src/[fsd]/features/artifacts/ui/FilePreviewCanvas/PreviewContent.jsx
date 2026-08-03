@@ -121,7 +121,10 @@ const PreviewContent = forwardRef((props, documentReaderRef) => {
         switch (previewType) {
           case PreviewTypeEnum.MARKDOWN:
             return (
-              <Box sx={styles.markdownWrapper}>
+              <Box
+                sx={styles.markdownWrapper}
+                data-testid="artifacts-preview-markdown-content"
+              >
                 <Markdown>{fileContent}</Markdown>
               </Box>
             );
@@ -247,6 +250,7 @@ const PreviewContent = forwardRef((props, documentReaderRef) => {
                     alt={file.name}
                     sx={styles.image}
                     onError={handleImageError}
+                    data-testid="artifacts-preview-image"
                   />
                 ) : (
                   <Box sx={styles.noImageWrapper}>

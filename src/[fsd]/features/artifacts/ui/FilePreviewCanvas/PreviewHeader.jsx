@@ -258,11 +258,13 @@ const PreviewHeader = memo(props => {
               exclusive={true}
               aria-label="Render Mode Toggle"
               sx={{ mr: 1 }}
+              data-testid="artifacts-preview-mode-toggle-group"
             >
               <ToggleButton
                 value="rendered"
                 variant="elitea"
                 sx={styles.toggleLeftButton}
+                data-testid="artifacts-preview-mode-toggle-rendered"
               >
                 {isMarkdownFile || isHtmlFile || isMdxFile ? 'Preview' : isDataFile ? 'Table' : 'Diagram'}
               </ToggleButton>
@@ -270,6 +272,7 @@ const PreviewHeader = memo(props => {
                 variant="elitea"
                 value="code"
                 sx={styles.toggleRightButton}
+                data-testid="artifacts-preview-mode-toggle-code"
               >
                 Raw
               </ToggleButton>
