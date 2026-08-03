@@ -239,6 +239,8 @@ const ToolkitEditor = ({ toolkit, onCloseToolkitEditor, onToolkitCreated, onTool
       onDiscard={handleDiscard}
       initialValues={normalizedInitialValues}
       error={error}
+      titleTestId={isMCP ? 'mcp-canvas-title' : undefined}
+      closeButtonTestId={isMCP ? 'mcp-canvas-close-button' : undefined}
       saveButton={
         isCreating ? (
           <CreateToolkitButton
@@ -246,6 +248,7 @@ const ToolkitEditor = ({ toolkit, onCloseToolkitEditor, onToolkitCreated, onTool
             onToolkitCreated={handleToolkitCreated}
             hasErrors={validationState.hasErrors}
             triggerValidation={validationState.triggerValidation}
+            testId={isMCP ? 'mcp-canvas-create-button' : undefined}
           />
         ) : (
           <SaveToolkitButton
