@@ -16,6 +16,11 @@ import { v4 as uuidv4 } from 'uuid';
 import { Box } from '@mui/system';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
+import {
+  AgentExecutionStartError,
+  isAgentExecutionSseEligible,
+  startAgentExecutionSse,
+} from '@/[fsd]/features/chat/lib/agentExecutionSse';
 import * as ChatHelpers from '@/[fsd]/features/chat/lib/helpers/chat.helpers';
 import {
   actionBelongsToInvocationSet,
@@ -172,6 +177,7 @@ const ChatBox = forwardRef((props, boxRef) => {
   const setActiveConversationRef = useRef(setActiveConversation);
   const questionItemRef = useRef();
   const activeConversationRef = useRef(activeConversation);
+  const agentEventSourcesRef = useRef(new Map());
   // Store the participant_id from conversation creation to use for subsequent messages
   // This ensures we use the correct participant_id even before React state update propagates
   const participantIdRef = useRef(null);
@@ -566,7 +572,7 @@ const ChatBox = forwardRef((props, boxRef) => {
     [onDeleteAllMessages],
   );
 
-  const { chatHistoryRef, emit, emitLeaveRoom } = useChatSocket({
+  const { chatHistoryRef, emit, emitLeaveRoom, handleSocketEvent, handleSocketErrorEvent } = useChatSocket({
     mode: 'chat',
     handleError,
     chatHistory: chat_history,
@@ -629,6 +635,25 @@ const ChatBox = forwardRef((props, boxRef) => {
   useEffect(() => {
     activeConversationRef.current = activeConversation;
   }, [activeConversation]);
+
+  useEffect(() => {
+    const currentConversationUuid = activeConversation?.uuid;
+    if (!currentConversationUuid) return;
+
+    agentEventSourcesRef.current.forEach((stream, questionId) => {
+      if (stream.conversationUuid === currentConversationUuid) return;
+      stream.close();
+      agentEventSourcesRef.current.delete(questionId);
+    });
+  }, [activeConversation?.uuid]);
+
+  useEffect(
+    () => () => {
+      agentEventSourcesRef.current.forEach(stream => stream.close());
+      agentEventSourcesRef.current.clear();
+    },
+    [],
+  );
 
   // Reset session-declined MCP servers when the conversation changes
   useEffect(() => {
@@ -952,10 +977,48 @@ const ChatBox = forwardRef((props, boxRef) => {
           sendResult?.createdConversation?.uuid ||
           activeConversation?.uuid;
         if (conversationUuid) {
-          emit({
+          const finalEventPayload = {
             ...eventPayload,
             conversation_uuid: conversationUuid,
+          };
+          const sseEligible = isAgentExecutionSseEligible({
+            isAgentsPage,
+            participant,
+            eventPayload: finalEventPayload,
+            hasAttachments: attachments.length > 0,
+            hasLLMOverride: Object.keys(unsavedLLMSettings || {}).length > 0,
+            isSendingToUser,
           });
+          let handledByDirectExecution = false;
+
+          if (sseEligible) {
+            try {
+              const directExecution = await startAgentExecutionSse({
+                projectId,
+                conversationUuid,
+                eventPayload: finalEventPayload,
+                onNodeEvent: handleSocketEvent,
+                onError: handleSocketErrorEvent,
+                onClosed: () => agentEventSourcesRef.current.delete(question_id),
+              });
+              handledByDirectExecution = directExecution.started;
+              if (directExecution.started) {
+                agentEventSourcesRef.current.set(question_id, directExecution);
+              }
+            } catch (error) {
+              handledByDirectExecution = true;
+              await handleSocketErrorEvent({
+                type: 'error',
+                message_id: question_id,
+                content:
+                  error instanceof AgentExecutionStartError
+                    ? error.message
+                    : 'Failed to start agent execution. Please try again.',
+              });
+            }
+          }
+
+          if (!handledByDirectExecution) emit(finalEventPayload);
           clearMentions();
         }
 
@@ -996,6 +1059,8 @@ const ChatBox = forwardRef((props, boxRef) => {
       conversationEdit,
       emit,
       getPayload,
+      handleSocketErrorEvent,
+      handleSocketEvent,
       isAgentsPage,
       isSendingToUser,
       name,

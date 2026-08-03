@@ -1617,6 +1617,7 @@ export const useChatSocket = ({
                 if (item.question_id === message_id) {
                   return {
                     ...item,
+                    content: message.headline || item.content,
                     exception: exceptionText,
                     isLoading: false,
                     isStreaming: false,
@@ -1663,6 +1664,8 @@ export const useChatSocket = ({
     chatHistoryRef,
     emit,
     emitLeaveRoom,
+    handleSocketEvent,
+    handleSocketErrorEvent,
     completionResult,
     setCompletionResult,
   };
