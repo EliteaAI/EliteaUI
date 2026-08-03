@@ -51,10 +51,17 @@ const UserMessage = React.forwardRef((props, ref) => {
   const [editAttachments, setEditAttachments] = useState([]);
   const { highLightMe } = useHighlightUserMessage(messageId);
   const participantName = useParticipantName(sentTo);
-  const questionItem = useMemo(
-    () => message_items?.find(item => item.item_type === 'text_message'),
+  // A turn the user interjected into has more than one text item: the original
+  // question plus each mid-turn injection, in order_index order.
+  const textItems = useMemo(
+    () => message_items?.filter(item => item.item_type === 'text_message') || [],
     [message_items],
   );
+  const questionItem = textItems[0];
+  const injectedItems = useMemo(() => textItems.slice(1), [textItems]);
+  // Editing rebuilds the group from questionItem alone, which would drop the
+  // injections. Disable it rather than silently losing them.
+  const hasInjections = injectedItems.length > 0;
   const attachmentItems = useMemo(
     () => message_items?.filter(item => item.item_type === 'attachment_message'),
     [message_items],
@@ -181,6 +188,27 @@ const UserMessage = React.forwardRef((props, ref) => {
               </Box>
             ))
           )}
+          {injectedItems.map(item => (
+            <Box
+              key={item.uuid}
+              sx={styles.injectedChunk}
+              data-testid="injected-message-chunk"
+            >
+              <Typography
+                variant="bodySmall"
+                color="text.secondary"
+                sx={styles.injectedLabel}
+              >
+                sent while running
+              </Typography>
+              <Typography
+                sx={styles.textContent}
+                variant="bodyMedium"
+              >
+                {item.item_details?.content || ''}
+              </Typography>
+            </Box>
+          ))}
           <MessageAttachmentList
             items={attachmentItems}
             onRemoveAttachment={onRemoveAttachment}
@@ -221,14 +249,18 @@ const UserMessage = React.forwardRef((props, ref) => {
             )}
             {verticalMode && onSubmit && (
               <StyledTooltip
-                title={'Edit the message and regenerate answer'}
+                title={
+                  hasInjections
+                    ? 'Editing is unavailable for messages you added to mid-run'
+                    : 'Edit the message and regenerate answer'
+                }
                 placement="top"
               >
                 <IconButton
                   sx={styles.iconButton}
                   variant="elitea"
                   color="tertiary"
-                  disabled={shouldDisableEdit}
+                  disabled={shouldDisableEdit || hasInjections}
                   onClick={onEdit}
                 >
                   <EditIcon sx={styles.icon} />
@@ -322,6 +354,17 @@ const styles = {
     color: palette.text.secondary,
     boxShadow: palette.boxShadow.aiAnswer,
   }),
+  injectedChunk: ({ palette }) => ({
+    marginTop: '0.5rem',
+    paddingLeft: '0.75rem',
+    borderLeft: `0.125rem solid ${palette.border.default || palette.text.secondary}`,
+  }),
+  injectedLabel: {
+    display: 'block',
+    fontStyle: 'italic',
+    opacity: 0.7,
+    marginBottom: '0.125rem',
+  },
   messageVertical:
     highLightMe =>
     ({ palette }) => ({

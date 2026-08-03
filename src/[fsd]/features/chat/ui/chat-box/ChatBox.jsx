@@ -61,6 +61,7 @@ import {
   useUpdateParticipantLlmSettingsMutation,
 } from '@/api';
 import { useListModelsQuery } from '@/api/configurations.js';
+import { useInjectMessageMutation } from '@/api/injectMessage.js';
 import {
   ChatParticipantType,
   PROMPT_PAYLOAD_KEY,
@@ -197,6 +198,7 @@ const ChatBox = forwardRef((props, boxRef) => {
   });
 
   const [regenerate] = useRegenerateMutation();
+  const [injectMessage] = useInjectMessageMutation();
   const [conversationEdit] = useConversationEditMutation();
   const [removeAttachment] = useRemoveAttachmentsMutation();
   const [updateChatLlmSettings, { isLoading: modelSettingsAreSaving }] =
@@ -566,6 +568,20 @@ const ChatBox = forwardRef((props, boxRef) => {
     [onDeleteAllMessages],
   );
 
+  // injection_id -> text, for injections sent but not yet confirmed consumed.
+  const pendingInjectionsRef = useRef(new Map());
+
+  // Turn ended: anything still pending was never folded in, so re-send it as a
+  // normal message rather than leaving it silently stranded in history.
+  const onInjectionReport = useCallback(({ consumed }) => {
+    const pending = pendingInjectionsRef.current;
+    if (!pending.size) return;
+    (consumed || []).forEach(id => pending.delete(id));
+    const unconsumed = [...pending.values()];
+    pendingInjectionsRef.current = new Map();
+    unconsumed.forEach(text => onPredictStreamRef.current?.(text));
+  }, []);
+
   const { chatHistoryRef, emit, emitLeaveRoom } = useChatSocket({
     mode: 'chat',
     handleError,
@@ -574,6 +590,7 @@ const ChatBox = forwardRef((props, boxRef) => {
     activeParticipant,
     participants: activeConversation?.participants || [],
     onRcvAgentEvent,
+    onInjectionReport,
     isMonoChatting: isAgentsPage,
   });
 
@@ -1592,6 +1609,40 @@ const ChatBox = forwardRef((props, boxRef) => {
     [hasPendingHitlInterrupt, onPredictStream, resetSlash, stopTTS],
   );
 
+  // Rollback re-sends through the normal path; ref because onPredictStream is
+  // declared after the socket hook that owns the report callback.
+  const onPredictStreamRef = useRef(onPredictStream);
+  useEffect(() => {
+    onPredictStreamRef.current = onPredictStream;
+  }, [onPredictStream]);
+
+  const onInjectMessage = useCallback(
+    async question => {
+      const text = question?.trim();
+      if (!text || !activeConversation?.uuid) return;
+      stopTTS?.();
+      resetSlash();
+
+      const injectionId = uuidv4();
+      pendingInjectionsRef.current.set(injectionId, text);
+      try {
+        await injectMessage({
+          projectId,
+          conversationUuid: activeConversation.uuid,
+          userInput: text,
+          injectionId,
+        }).unwrap();
+      } catch {
+        // The turn may have ended between enabling the control and sending (409),
+        // or the text may be over the size cap (400). Either way it was never
+        // delivered, so fall back to a normal message.
+        pendingInjectionsRef.current.delete(injectionId);
+        return onPredictStreamRef.current?.(text);
+      }
+    },
+    [activeConversation?.uuid, injectMessage, projectId, resetSlash, stopTTS],
+  );
+
   const {
     onKeyDown,
     isProcessingSymbols,
@@ -2124,6 +2175,15 @@ const ChatBox = forwardRef((props, boxRef) => {
 
   const displayConversationStarters = !isProcessingSymbols && conversationStarters?.length > 0;
 
+  // Scoped to the in-flight turn, not global: the indexer sets isInjectable on
+  // the specific streaming message, so multi-participant conversations with more
+  // than one turn running only open the affordance for a turn that is listening.
+  const isInjectable = useMemo(() => {
+    if (!isStreamingNow || hasPendingHitlInterrupt) return false;
+    const streaming = chat_history.find(msg => msg.isStreaming && msg.isInjectable);
+    return Boolean(streaming);
+  }, [chat_history, hasPendingHitlInterrupt, isStreamingNow]);
+
   const isInputLoading = useMemo(
     () =>
       isLoadingConversation ||
@@ -2132,7 +2192,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       isUploadingAttachments ||
       isUpdatingInternalToolsConfig ||
       activeConversation?.isSending ||
-      isStreamingNow,
+      (isStreamingNow && !isInjectable),
     [
       isLoadingConversation,
       isFetchingParticipant,
@@ -2141,6 +2201,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       isUpdatingInternalToolsConfig,
       activeConversation?.isSending,
       isStreamingNow,
+      isInjectable,
     ],
   );
 
@@ -2183,7 +2244,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       isUpdatingInternalToolsConfig ||
       activeConversation?.isSending ||
       hasPendingHitlInterrupt ||
-      isStreamingNow ||
+      (isStreamingNow && !isInjectable) ||
       isActiveParticipantBroken,
     [
       isLoadingConversation,
@@ -2194,6 +2255,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       activeConversation?.isSending,
       hasPendingHitlInterrupt,
       isStreamingNow,
+      isInjectable,
       isActiveParticipantBroken,
     ],
   );
@@ -2337,6 +2399,8 @@ const ChatBox = forwardRef((props, boxRef) => {
             selectedModel={selectedModel}
             selectSavedOrDefaultModel={selectSavedOrDefaultModel}
             isStreaming={isStreamingNow || isStreaming}
+            isInjectable={isInjectable}
+            onInject={onInjectMessage}
             onStopGeneration={handleStopStreaming}
             disableSwitchingParticipant={shouldDisableSwitchingParticipant}
             users={users}

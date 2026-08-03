@@ -280,6 +280,7 @@ export const useChatSocket = ({
   activeParticipant,
   participants,
   onRcvAgentEvent,
+  onInjectionReport,
 }) => {
   const trackEvent = useTrackEvent();
 
@@ -307,6 +308,7 @@ export const useChatSocket = ({
   const activeParticipantRef = useRef();
   const participantsRef = useRef(participants);
   const onRcvAgentEventRef = useRef(onRcvAgentEvent);
+  const onInjectionReportRef = useRef(onInjectionReport);
   const isMonoChattingRef = useRef(isMonoChatting);
   const setChatHistoryRef = useRef(setChatHistory);
   const setIsRunningRef = useRef(setIsRunning);
@@ -327,6 +329,10 @@ export const useChatSocket = ({
   useEffect(() => {
     onRcvAgentEventRef.current = onRcvAgentEvent;
   }, [onRcvAgentEvent]);
+
+  useEffect(() => {
+    onInjectionReportRef.current = onInjectionReport;
+  }, [onInjectionReport]);
 
   useEffect(() => {
     activeParticipantRef.current = activeParticipant;
@@ -1306,6 +1312,32 @@ export const useChatSocket = ({
             [GA_EVENT_PARAMS.TIMESTAMP]: new Date().toISOString(),
           });
           onRcvAgentEventRef.current && onRcvAgentEventRef.current({ ...message });
+          break;
+        }
+        case SocketMessageType.InjectionReady:
+          // The agent loop is now listening, so the UI may offer the inject
+          // affordance. Before this arrives there is no registered thread to
+          // deliver into, which is what removes the registration race.
+          msg.isInjectable = true;
+          break;
+        case SocketMessageType.InjectionConsumed: {
+          // Live ack — instant feedback only. The end-of-turn report is what
+          // decides whether an injection needs re-sending.
+          const consumedId = response_metadata?.injection_id;
+          if (consumedId) {
+            msg.consumedInjectionIds = [...(msg.consumedInjectionIds || []), consumedId];
+          }
+          break;
+        }
+        case SocketMessageType.InjectionConsumedReport: {
+          // Authoritative: anything sent but absent here was never folded into
+          // the turn. Emitted even when empty, so silence is meaningful.
+          msg.isInjectable = false;
+          msg.consumedInjectionIds = response_metadata?.consumed || [];
+          onInjectionReportRef.current?.({
+            messageId: msg.id,
+            consumed: msg.consumedInjectionIds,
+          });
           break;
         }
         case SocketMessageType.References:

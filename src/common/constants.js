@@ -186,6 +186,11 @@ export const SocketMessageType = {
   AgentThinkingStepUpdate: 'agent_thinking_step_update',
   ChatPredictSummaryStarted: 'chat_predict_summary_started',
   ChatPredictSummaryFinished: 'chat_predict_summary_finished',
+  // Mid-turn user input injection: readiness gate, per-message ack, and the
+  // authoritative end-of-turn list of what the agent loop actually consumed.
+  InjectionReady: 'injection_ready',
+  InjectionConsumed: 'agent_midturn_injection_consumed',
+  InjectionConsumedReport: 'injection_consumed_report',
   // Swarm mode events - for multi-agent collaboration visibility
   SwarmChildMessage: 'swarm_child_message',
   AgentSwarmAgentStart: 'agent_swarm_agent_start',
