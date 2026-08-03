@@ -286,7 +286,14 @@ const PlusChatButton = memo(props => {
               switch: {
                 size: 'small',
                 onClick: e => e.stopPropagation(),
-                inputProps: { 'data-testid': `modules-toggle-${tool.name}` },
+                // MUI v7's <Switch> only forwards a testid placed on
+                // slotProps.input to the underlying <input> — the legacy
+                // `inputProps` prop is silently dropped once Switch.js's own
+                // explicit `slotProps.input` (merged via mergeSlotProps)
+                // shadows it, so `inputProps` alone never reaches the DOM
+                // (live-confirmed: `[data-testid^="modules-toggle-"]`
+                // resolved 0 elements with `inputProps`, ELITEA-2162).
+                slotProps: { input: { 'data-testid': `modules-toggle-${tool.name}` } },
               },
             }}
           />
