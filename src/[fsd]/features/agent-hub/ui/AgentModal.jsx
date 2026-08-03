@@ -229,6 +229,7 @@ const AgentModal = memo(props => {
               <Typography
                 variant="headingMedium"
                 color="text.secondary"
+                data-testid="catalog-agent-modal-agent-name"
               >
                 {name}
               </Typography>
