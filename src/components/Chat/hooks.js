@@ -521,17 +521,38 @@ export const useChatSocket = ({
             participant => participant.id === author_participant_id,
           );
           const sentTo = participantsRef.current?.find(participant => participant.id === sent_to_id);
-          msg.id = userMessageId;
-          msg.role = ROLES.User;
-          msg.name = theUser?.meta.user_name || '';
-          msg.avatar = theUser?.meta.user_avatar || '';
-          msg.content = question;
-          msg.message_items = message_items;
-          msg.created_at = new Date(convertTime(created_at)).getTime();
-          msg.user_id = author_participant_id;
-          msg.participant_id = sent_to_id;
-          msg.sentTo = sentTo;
-          setChatHistoryRef.current?.(prev => [...prev, { ...msg }]);
+          // A mid-turn injection re-emits a group the sender already has, with one
+          // extra text item. Appending would duplicate the bubble, so update that
+          // group in place and only append when it is genuinely new (another user's
+          // message arriving in a shared conversation).
+          //
+          // Do NOT mutate `msg` here: for an injection it resolves to the streaming
+          // ASSISTANT message (matched on message_id), and stamping role/content
+          // onto it would turn the in-flight answer into a user bubble.
+          setChatHistoryRef.current?.(prev => {
+            const existingIdx = prev.findIndex(m => m.id === userMessageId);
+            if (existingIdx >= 0) {
+              const next = [...prev];
+              next[existingIdx] = { ...next[existingIdx], message_items, content: question };
+              return next;
+            }
+            return [
+              ...prev,
+              {
+                ...msg,
+                id: userMessageId,
+                role: ROLES.User,
+                name: theUser?.meta.user_name || '',
+                avatar: theUser?.meta.user_avatar || '',
+                content: question,
+                message_items,
+                created_at: new Date(convertTime(created_at)).getTime(),
+                user_id: author_participant_id,
+                participant_id: sent_to_id,
+                sentTo,
+              },
+            ];
+          });
           break;
         }
         case SocketMessageType.Chunk:
