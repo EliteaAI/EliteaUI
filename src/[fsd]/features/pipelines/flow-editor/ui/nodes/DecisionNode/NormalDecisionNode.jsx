@@ -87,6 +87,7 @@ const NormalDecisionNode = memo(props => {
               isRunningPipeline={isRunningPipeline}
               isPerforming={data?.isPerforming}
               style={styles.nodesHandle}
+              testId="pipeline-decision-node-output-handle"
             />
             <FlowEditorNodes.CustomHandle
               type="source"
@@ -96,6 +97,7 @@ const NormalDecisionNode = memo(props => {
               isRunningPipeline={isRunningPipeline}
               isPerforming={data?.isPerforming}
               style={styles.defaultOutputHandle}
+              testId="pipeline-decision-node-default-output-handle"
             />
           </>
         );
