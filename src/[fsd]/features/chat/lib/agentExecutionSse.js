@@ -8,6 +8,8 @@ const FALLBACK_STATUSES = new Set([404, 422]);
 const PARTIAL_NODE_EVENT = 'partial_message';
 const TERMINAL_NODE_EVENT = 'full_message';
 const RUNTIME_FAILURE_EVENT = 'execution.failed';
+const REPLAY_RESET_EVENT = 'execution.replay_reset';
+const MAX_EXECUTION_ID_BYTES = 512;
 const ACTIVITY_NODE_EVENTS = new Set([
   'agent_llm_start',
   'agent_llm_end',
@@ -69,6 +71,57 @@ const hasSelectedModel = eventPayload =>
 
 const apiUrl = path => `${String(VITE_SERVER_URL || '').replace(/\/$/, '')}${path}`;
 
+const isBoundedExecutionIdentifier = value =>
+  typeof value === 'string' &&
+  value.length > 0 &&
+  value === value.trim() &&
+  !/[\0\r\n]/.test(value) &&
+  new TextEncoder().encode(value).length <= MAX_EXECUTION_ID_BYTES;
+
+export const buildAgentExecutionEventsUrl = (baseUrl, projectId, executionId) => {
+  const normalizedBase = String(baseUrl || '').replace(/\/$/, '');
+  return `${normalizedBase}/executions/${encodeURIComponent(projectId)}/${encodeURIComponent(
+    executionId,
+  )}/events`;
+};
+
+export const getAgentExecutionResumeCandidate = ({
+  isAgentsPage,
+  conversationParticipants,
+  conversationMeta,
+  chatHistory,
+}) => {
+  if (isAgentsPage || !isEmptyArray(conversationMeta?.internal_tools)) return null;
+
+  const applications = (conversationParticipants || []).filter(
+    participant => participant?.entity_name === 'application',
+  );
+  if (
+    applications.length !== 1 ||
+    !supportsBoundedApplicationConversation(conversationParticipants, applications[0])
+  ) {
+    return null;
+  }
+
+  const streamingResponses = (chatHistory || []).filter(
+    message => message?.isStreaming === true && isBoundedExecutionIdentifier(message?.task_id),
+  );
+  if (streamingResponses.length !== 1) return null;
+
+  const response = streamingResponses[0];
+  const responseMessageId = String(response.id || '');
+  const questionId = String(response.question_id || response.replyTo?.uuid || response.replyTo?.id || '');
+  if (!isBoundedExecutionIdentifier(responseMessageId) || !isBoundedExecutionIdentifier(questionId)) {
+    return null;
+  }
+
+  return {
+    executionId: response.task_id,
+    questionId,
+    responseMessageId,
+  };
+};
+
 const yieldToBrowserRenderer = () =>
   new Promise(resolve => {
     if (typeof globalThis.requestAnimationFrame !== 'function') {
@@ -100,6 +153,7 @@ export const getAgentExecutionSseContract = ({
   isAgentsPage,
   participant,
   conversationParticipants,
+  conversationMeta,
   eventPayload,
   hasAttachments,
   hasLLMOverride,
@@ -118,7 +172,9 @@ export const getAgentExecutionSseContract = ({
     !hasLLMOverride &&
     isEmptyObject(eventPayload?.mcp_tokens) &&
     isEmptyArray(eventPayload?.user_ids) &&
-    (isAgentsPage || supportsBoundedApplicationConversation(conversationParticipants, participant))
+    (isAgentsPage ||
+      (isEmptyArray(conversationMeta?.internal_tools) &&
+        supportsBoundedApplicationConversation(conversationParticipants, participant)))
   ) {
     return AGENT_APPLICATION_EXECUTION_CONTRACT;
   }
@@ -144,6 +200,7 @@ export const getAgentRegenerationSseContract = ({
   isAgentsPage,
   participant,
   conversationParticipants,
+  conversationMeta,
   eventPayload,
   hasAttachments,
   hasUpdatedItems,
@@ -161,7 +218,9 @@ export const getAgentRegenerationSseContract = ({
     commonEligible &&
     participant?.entity_name === 'application' &&
     !hasLLMOverride &&
-    (isAgentsPage || supportsBoundedApplicationConversation(conversationParticipants, participant))
+    (isAgentsPage ||
+      (isEmptyArray(conversationMeta?.internal_tools) &&
+        supportsBoundedApplicationConversation(conversationParticipants, participant)))
   ) {
     return AGENT_REGENERATION_EXECUTION_CONTRACT;
   }
@@ -205,6 +264,81 @@ const notifyStreamFailure = ({ onError, questionId, message }) => {
   onError({ type: 'error', message_id: questionId, headline: message, content: message });
 };
 
+const openAgentExecutionEventStream = ({
+  eventsUrl,
+  conversationUuid,
+  questionId,
+  onNodeEvent,
+  onError,
+  onClosed,
+  onTerminal,
+  onReplayReset,
+  EventSourceImpl,
+  yieldToRenderer,
+}) => {
+  const source = new EventSourceImpl(eventsUrl, { withCredentials: true });
+  let closed = false;
+  const close = () => {
+    if (closed) return;
+    closed = true;
+    source.close();
+    onClosed?.();
+  };
+  const fail = message => {
+    notifyStreamFailure({ onError, questionId, message });
+    close();
+  };
+
+  // EventSource does not await async listeners. Serialize durable replay so a
+  // fast burst cannot apply tool_end before tool_start, and yield after visible
+  // activity boundaries so existing Socket.IO chip rendering stays realtime.
+  let nodeEventQueue = Promise.resolve();
+  const enqueueNodeEvent = task => {
+    nodeEventQueue = nodeEventQueue.then(task).catch(() => {
+      fail('Agent execution returned an invalid event. Please refresh the conversation.');
+    });
+    return nodeEventQueue;
+  };
+
+  source.addEventListener('execution.node_event', event =>
+    enqueueNodeEvent(async () => {
+      const nodeEvent = JSON.parse(event.data);
+      // partial_message and full_message are SDK persistence envelopes. The
+      // existing reducer consumes their agent_* events and agent_response;
+      // forwarding the envelopes creates unknown-event warnings and duplicate
+      // response state. full_message remains the stream terminal authority.
+      if (nodeEvent?.type === TERMINAL_NODE_EVENT) {
+        await onTerminal?.(nodeEvent);
+        close();
+        return;
+      }
+      if (nodeEvent?.type === PARTIAL_NODE_EVENT) return;
+      await onNodeEvent(nodeEvent);
+      if (ACTIVITY_NODE_EVENTS.has(nodeEvent?.type)) await yieldToRenderer();
+    }),
+  );
+  source.addEventListener(RUNTIME_FAILURE_EVENT, event => {
+    try {
+      const failure = JSON.parse(event.data);
+      fail(failure?.safe_message || 'Agent execution failed. Please try again.');
+    } catch {
+      fail('Agent execution failed. Please try again.');
+    }
+  });
+  source.addEventListener(REPLAY_RESET_EVENT, () => {
+    if (!onReplayReset) {
+      fail('Live agent history expired. Please refresh the conversation.');
+      return;
+    }
+    enqueueNodeEvent(async () => {
+      await onReplayReset();
+      close();
+    });
+  });
+
+  return { started: true, source, conversationUuid, close };
+};
+
 const startAgentExecutionRequest = async ({
   startPath,
   startBody,
@@ -213,6 +347,8 @@ const startAgentExecutionRequest = async ({
   onNodeEvent,
   onError,
   onClosed,
+  onTerminal,
+  onReplayReset,
   fetchImpl = fetch,
   EventSourceImpl = EventSource,
   yieldToRenderer = yieldToBrowserRenderer,
@@ -255,59 +391,51 @@ const startAgentExecutionRequest = async ({
   // is resolved against a stale message ref and discarded.
   await yieldToRenderer();
 
-  const source = new EventSourceImpl(admission.events_url, { withCredentials: true });
-  let closed = false;
-  const close = () => {
-    if (closed) return;
-    closed = true;
-    source.close();
-    onClosed?.();
-  };
-  const fail = message => {
-    notifyStreamFailure({ onError, questionId: eventPayload.question_id, message });
-    close();
-  };
-
-  // EventSource does not await async listeners. Serialize durable replay so a
-  // fast burst cannot apply tool_end before tool_start, and yield after visible
-  // activity boundaries so existing Socket.IO chip rendering stays realtime.
-  let nodeEventQueue = Promise.resolve();
-  const enqueueNodeEvent = task => {
-    nodeEventQueue = nodeEventQueue.then(task).catch(() => {
-      fail('Agent execution returned an invalid event. Please refresh the conversation.');
-    });
-    return nodeEventQueue;
-  };
-
-  source.addEventListener('execution.node_event', event =>
-    enqueueNodeEvent(async () => {
-      const nodeEvent = JSON.parse(event.data);
-      // partial_message and full_message are SDK persistence envelopes. The
-      // existing reducer consumes their agent_* events and agent_response;
-      // forwarding the envelopes creates unknown-event warnings and duplicate
-      // response state. full_message remains the stream terminal authority.
-      if (nodeEvent?.type === TERMINAL_NODE_EVENT) {
-        close();
-        return;
-      }
-      if (nodeEvent?.type === PARTIAL_NODE_EVENT) return;
-      await onNodeEvent(nodeEvent);
-      if (ACTIVITY_NODE_EVENTS.has(nodeEvent?.type)) await yieldToRenderer();
+  return {
+    ...openAgentExecutionEventStream({
+      eventsUrl: admission.events_url,
+      conversationUuid,
+      questionId: eventPayload.question_id,
+      onNodeEvent,
+      onError,
+      onClosed,
+      onTerminal,
+      onReplayReset,
+      EventSourceImpl,
+      yieldToRenderer,
     }),
-  );
-  source.addEventListener(RUNTIME_FAILURE_EVENT, event => {
-    try {
-      const failure = JSON.parse(event.data);
-      fail(failure?.safe_message || 'Agent execution failed. Please try again.');
-    } catch {
-      fail('Agent execution failed. Please try again.');
-    }
-  });
-  source.addEventListener('execution.replay_reset', () => {
-    fail('Live agent history expired. Please refresh the conversation.');
-  });
+    admission,
+  };
+};
 
-  return { started: true, source, admission, conversationUuid, close };
+export const resumeAgentExecutionSse = ({
+  projectId,
+  executionId,
+  conversationUuid,
+  questionId,
+  onNodeEvent,
+  onError,
+  onClosed,
+  onTerminal,
+  onReplayReset,
+  EventSourceImpl = EventSource,
+  yieldToRenderer = yieldToBrowserRenderer,
+}) => {
+  if (!isBoundedExecutionIdentifier(executionId) || !isBoundedExecutionIdentifier(questionId)) {
+    return { started: false };
+  }
+  return openAgentExecutionEventStream({
+    eventsUrl: buildAgentExecutionEventsUrl(VITE_SERVER_URL, projectId, executionId),
+    conversationUuid,
+    questionId,
+    onNodeEvent,
+    onError,
+    onClosed,
+    onTerminal,
+    onReplayReset,
+    EventSourceImpl,
+    yieldToRenderer,
+  });
 };
 
 export const startAgentExecutionSse = async ({

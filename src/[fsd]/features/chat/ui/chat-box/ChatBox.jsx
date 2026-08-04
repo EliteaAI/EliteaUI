@@ -18,8 +18,10 @@ import { Box } from '@mui/system';
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import {
   AgentExecutionStartError,
+  getAgentExecutionResumeCandidate,
   getAgentExecutionSseContract,
   getAgentRegenerationSseContract,
+  resumeAgentExecutionSse,
   startAgentExecutionSse,
   startAgentRegenerationSse,
 } from '@/[fsd]/features/chat/lib/agentExecutionSse';
@@ -63,6 +65,8 @@ import {
 import { Modal } from '@/[fsd]/shared/ui';
 import {
   useConversationEditMutation,
+  useLazyConversationDetailsQuery,
+  useLazyMessageTracesQuery,
   useRegenerateMutation,
   useRemoveAttachmentsMutation,
   useUpdateParticipantLlmSettingsMutation,
@@ -77,6 +81,10 @@ import {
   WELCOME_MESSAGE_ID,
   sioEvents,
 } from '@/common/constants';
+import {
+  buildTraceListParams,
+  convertConversationToChatHistory,
+} from '@/common/convertChatConversationMessages';
 import { initializeNewMessages } from '@/common/initializeNewMessages';
 import {
   generateApplicationStreamingPayload,
@@ -98,6 +106,9 @@ import NewChatInput from '@/pages/NewChat/NewChatInput';
 import RecommendationList from '@/pages/NewChat/Recommendations/RecommendationList';
 import SearchResultList from '@/pages/NewChat/Recommendations/SearchResultList';
 import { actions as chatActions } from '@/slices/chat';
+
+const AGENT_PROJECTION_RETRY_DELAYS_MS = [0, 100, 250, 500, 1000, 2000, 4000];
+const waitForProjectionRetry = delay => new Promise(resolve => globalThis.setTimeout(resolve, delay));
 
 const ChatBox = forwardRef((props, boxRef) => {
   const {
@@ -206,6 +217,8 @@ const ChatBox = forwardRef((props, boxRef) => {
 
   const [regenerate] = useRegenerateMutation();
   const [conversationEdit] = useConversationEditMutation();
+  const [getConversationDetail] = useLazyConversationDetailsQuery();
+  const [getMessageTraces] = useLazyMessageTracesQuery();
   const [removeAttachment] = useRemoveAttachmentsMutation();
   const [updateChatLlmSettings, { isLoading: modelSettingsAreSaving }] =
     useUpdateParticipantLlmSettingsMutation();
@@ -223,6 +236,17 @@ const ChatBox = forwardRef((props, boxRef) => {
 
   const hasPendingHitlInterrupt = Boolean(
     pendingHitlMessage?.hitlInterrupt || pendingHitlMessage?.hitlInterrupts?.length,
+  );
+
+  const agentExecutionResumeCandidate = useMemo(
+    () =>
+      getAgentExecutionResumeCandidate({
+        isAgentsPage,
+        conversationParticipants: activeConversation?.participants,
+        conversationMeta: activeConversation?.meta,
+        chatHistory: chat_history,
+      }),
+    [activeConversation?.meta, activeConversation?.participants, chat_history, isAgentsPage],
   );
 
   // Chat states
@@ -638,6 +662,118 @@ const ChatBox = forwardRef((props, boxRef) => {
     activeConversationRef.current = activeConversation;
   }, [activeConversation]);
 
+  const reconcilePersistedAgentExecution = useCallback(
+    async ({ conversationId, conversationUuid, executionId, responseMessageId }) => {
+      for (const retryDelay of AGENT_PROJECTION_RETRY_DELAYS_MS) {
+        if (retryDelay > 0) await waitForProjectionRetry(retryDelay);
+
+        const currentConversation = activeConversationRef.current;
+        if (currentConversation?.id !== conversationId || currentConversation?.uuid !== conversationUuid) {
+          return false;
+        }
+
+        let conversationDetails;
+        try {
+          conversationDetails = await getConversationDetail(
+            {
+              projectId,
+              id: conversationId,
+              messages_offset: 0,
+              messages_limit: 10,
+              sort_order: 'desc',
+            },
+            false,
+          ).unwrap();
+        } catch {
+          continue;
+        }
+
+        const responseGroup = conversationDetails?.message_groups?.find(
+          group => group?.task_id === executionId || group?.uuid === responseMessageId,
+        );
+        if (!responseGroup || responseGroup.is_streaming === true) continue;
+
+        let traceSteps = [];
+        try {
+          traceSteps = await getMessageTraces(
+            {
+              projectId,
+              conversationId,
+              params: buildTraceListParams(conversationDetails.message_groups),
+            },
+            false,
+          ).unwrap();
+        } catch {
+          // Trace pins are supplementary. A committed answer must still replace
+          // the stale streaming placeholder when trace hydration is unavailable.
+        }
+
+        const hydratedConversation = {
+          ...conversationDetails,
+          chat_history: convertConversationToChatHistory(conversationDetails, traceSteps),
+        };
+        setActiveConversationRef.current?.(previous =>
+          previous?.id === conversationId && previous?.uuid === conversationUuid
+            ? { ...previous, ...hydratedConversation }
+            : previous,
+        );
+        return true;
+      }
+      return false;
+    },
+    [getConversationDetail, getMessageTraces, projectId],
+  );
+
+  useEffect(() => {
+    const conversationId = activeConversation?.id;
+    const conversationUuid = activeConversation?.uuid;
+    const executionId = agentExecutionResumeCandidate?.executionId;
+    const questionId = agentExecutionResumeCandidate?.questionId;
+    const responseMessageId = agentExecutionResumeCandidate?.responseMessageId;
+    if (!conversationId || !conversationUuid || !executionId || !questionId || !responseMessageId) {
+      return undefined;
+    }
+    const eventSources = agentEventSourcesRef.current;
+    if (eventSources.has(questionId)) return undefined;
+
+    const reconcile = () =>
+      reconcilePersistedAgentExecution({
+        conversationId,
+        conversationUuid,
+        executionId,
+        responseMessageId,
+      });
+    const resumedExecution = resumeAgentExecutionSse({
+      projectId,
+      executionId,
+      conversationUuid,
+      questionId,
+      onNodeEvent: handleSocketEvent,
+      onError: handleSocketErrorEvent,
+      onTerminal: reconcile,
+      onReplayReset: reconcile,
+      onClosed: () => eventSources.delete(questionId),
+    });
+    if (!resumedExecution.started) return undefined;
+
+    eventSources.set(questionId, resumedExecution);
+    return () => {
+      if (eventSources.get(questionId) !== resumedExecution) return;
+      resumedExecution.close();
+      eventSources.delete(questionId);
+    };
+  }, [
+    activeConversation?.id,
+    activeConversation?.uuid,
+    agentExecutionResumeCandidate?.executionId,
+    agentExecutionResumeCandidate?.questionId,
+    agentExecutionResumeCandidate?.responseMessageId,
+    handleSocketErrorEvent,
+    handleSocketEvent,
+    projectId,
+    reconcilePersistedAgentExecution,
+  ]);
+
   useEffect(() => {
     const currentConversationUuid = activeConversation?.uuid;
     if (!currentConversationUuid) return;
@@ -987,6 +1123,7 @@ const ChatBox = forwardRef((props, boxRef) => {
             isAgentsPage,
             participant,
             conversationParticipants: activeConversation?.participants,
+            conversationMeta: activeConversation?.meta,
             eventPayload: finalEventPayload,
             hasAttachments: attachments.length > 0,
             hasLLMOverride: Object.keys(unsavedLLMSettings || {}).length > 0,
@@ -1189,6 +1326,7 @@ const ChatBox = forwardRef((props, boxRef) => {
         isAgentsPage,
         participant: messageParticipant,
         conversationParticipants: activeConversation?.participants,
+        conversationMeta: activeConversation?.meta,
         eventPayload: payload,
         hasAttachments: attachmentList.length > 0,
         hasUpdatedItems: Boolean(updatedItems?.length),
@@ -1242,6 +1380,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       getRegeneratePayload,
       setStreamingInfo,
       isAgentsPage,
+      activeConversation?.meta,
       activeConversation?.participants,
       unsavedLLMSettings,
       handleSocketEvent,

@@ -4,10 +4,13 @@ import {
   AGENT_ADHOC_EXECUTION_CONTRACT,
   AGENT_APPLICATION_EXECUTION_CONTRACT,
   AGENT_REGENERATION_EXECUTION_CONTRACT,
+  buildAgentExecutionEventsUrl,
   buildAgentExecutionStartBody,
+  getAgentExecutionResumeCandidate,
   getAgentExecutionSseContract,
   getAgentRegenerationSseContract,
   isAgentExecutionSseEligible,
+  resumeAgentExecutionSse,
   startAgentExecutionSse,
   startAgentRegenerationSse,
 } from './agentExecutionSse';
@@ -71,6 +74,7 @@ describe('agent execution SSE', () => {
       isAgentsPage: false,
       participant: application,
       conversationParticipants: [{ entity_name: 'user' }, { entity_name: 'dummy' }, application],
+      conversationMeta: { internal_tools: [] },
       eventPayload: payload,
       hasAttachments: false,
       hasLLMOverride: false,
@@ -78,6 +82,12 @@ describe('agent execution SSE', () => {
     };
 
     expect(getAgentExecutionSseContract(options)).toBe(AGENT_APPLICATION_EXECUTION_CONTRACT);
+    expect(
+      getAgentExecutionSseContract({
+        ...options,
+        conversationMeta: { internal_tools: ['internal_mcp'] },
+      }),
+    ).toBeNull();
     expect(
       getAgentExecutionSseContract({
         ...options,
@@ -100,6 +110,54 @@ describe('agent execution SSE', () => {
       getAgentExecutionSseContract({
         ...options,
         participant: { ...application, entity_settings: { agent_type: 'pipeline' } },
+      }),
+    ).toBeNull();
+  });
+
+  it('selects exactly one persisted configured-agent execution for reload reattachment', () => {
+    const application = {
+      id: 19,
+      entity_name: 'application',
+      entity_settings: { agent_type: 'agent' },
+    };
+    const options = {
+      isAgentsPage: false,
+      conversationParticipants: [{ entity_name: 'user' }, { entity_name: 'dummy' }, application],
+      conversationMeta: { internal_tools: [] },
+      chatHistory: [
+        { id: 'question-id', role: 'user' },
+        {
+          id: 'response-id',
+          question_id: 'question-id',
+          task_id: 'execution-id',
+          isStreaming: true,
+        },
+      ],
+    };
+
+    expect(getAgentExecutionResumeCandidate(options)).toEqual({
+      executionId: 'execution-id',
+      questionId: 'question-id',
+      responseMessageId: 'response-id',
+    });
+    expect(
+      getAgentExecutionResumeCandidate({
+        ...options,
+        conversationMeta: { internal_tools: ['internal_mcp'] },
+      }),
+    ).toBeNull();
+    expect(
+      getAgentExecutionResumeCandidate({
+        ...options,
+        chatHistory: [
+          ...options.chatHistory,
+          {
+            id: 'another-response',
+            question_id: 'another-question',
+            task_id: 'another-execution',
+            isStreaming: true,
+          },
+        ],
       }),
     ).toBeNull();
   });
@@ -169,12 +227,29 @@ describe('agent execution SSE', () => {
           { entity_name: 'dummy' },
           { id: 19, entity_name: 'application', entity_settings: { agent_type: 'agent' } },
         ],
+        conversationMeta: { internal_tools: [] },
         eventPayload: applicationPayload,
         hasAttachments: false,
         hasUpdatedItems: false,
         hasLLMOverride: false,
       }),
     ).toBe(AGENT_REGENERATION_EXECUTION_CONTRACT);
+    expect(
+      getAgentRegenerationSseContract({
+        isAgentsPage: false,
+        participant: { id: 19, entity_name: 'application' },
+        conversationParticipants: [
+          { entity_name: 'user' },
+          { entity_name: 'dummy' },
+          { id: 19, entity_name: 'application', entity_settings: { agent_type: 'agent' } },
+        ],
+        conversationMeta: { internal_tools: ['internal_mcp'] },
+        eventPayload: applicationPayload,
+        hasAttachments: false,
+        hasUpdatedItems: false,
+        hasLLMOverride: false,
+      }),
+    ).toBeNull();
     expect(
       getAgentRegenerationSseContract({
         isAgentsPage: true,
@@ -346,6 +421,7 @@ describe('agent execution SSE', () => {
   it('reconciles the optimistic response, feeds reducer events, and closes on full_message', async () => {
     const onNodeEvent = vi.fn();
     const onClosed = vi.fn();
+    const onTerminal = vi.fn();
     const yieldToRenderer = vi.fn().mockResolvedValue();
     const result = await startAgentExecutionSse({
       projectId: 7,
@@ -354,6 +430,7 @@ describe('agent execution SSE', () => {
       onNodeEvent,
       onError: vi.fn(),
       onClosed,
+      onTerminal,
       yieldToRenderer,
       fetchImpl: vi.fn().mockResolvedValue({
         status: 200,
@@ -403,6 +480,60 @@ describe('agent execution SSE', () => {
     expect(onNodeEvent).toHaveBeenLastCalledWith(agentEvent);
     expect(result.source.close).toHaveBeenCalledOnce();
     expect(onClosed).toHaveBeenCalledOnce();
+    expect(onTerminal).toHaveBeenCalledWith(terminal);
+  });
+
+  it('reattaches an admitted execution without issuing another start request', async () => {
+    const onNodeEvent = vi.fn();
+    const onTerminal = vi.fn();
+    const onReplayReset = vi.fn();
+    const result = resumeAgentExecutionSse({
+      projectId: 7,
+      executionId: 'execution-id',
+      conversationUuid: 'conversation-id',
+      questionId: 'question-id',
+      onNodeEvent,
+      onError: vi.fn(),
+      onTerminal,
+      onReplayReset,
+      EventSourceImpl: FakeEventSource,
+      yieldToRenderer: vi.fn().mockResolvedValue(),
+    });
+
+    expect(buildAgentExecutionEventsUrl('/api/v2/', 7, 'execution/id')).toBe(
+      '/api/v2/executions/7/execution%2Fid/events',
+    );
+    expect(result.started).toBe(true);
+    expect(result.source.url).toContain('/executions/7/execution-id/events');
+    expect(result.source.options).toEqual({ withCredentials: true });
+
+    const response = {
+      type: 'agent_response',
+      message_id: 'response-id',
+      content: 'recovered',
+      response_metadata: { finish_reason: 'stop' },
+    };
+    await result.source.dispatch('execution.node_event', response);
+    expect(onNodeEvent).toHaveBeenCalledWith(response);
+
+    const terminal = { type: 'full_message', message_id: 'response-id', content: 'recovered' };
+    await result.source.dispatch('execution.node_event', terminal);
+    expect(onTerminal).toHaveBeenCalledWith(terminal);
+    expect(result.source.close).toHaveBeenCalledOnce();
+
+    const replayReset = resumeAgentExecutionSse({
+      projectId: 7,
+      executionId: 'second-execution',
+      conversationUuid: 'conversation-id',
+      questionId: 'second-question',
+      onNodeEvent: vi.fn(),
+      onError: vi.fn(),
+      onReplayReset,
+      EventSourceImpl: FakeEventSource,
+    });
+    await replayReset.source.dispatch('execution.replay_reset', {});
+    expect(onReplayReset).toHaveBeenCalledOnce();
+    expect(replayReset.source.close).toHaveBeenCalledOnce();
   });
 
   it('starts distinct editor turns on the same conversation execution stream', async () => {
