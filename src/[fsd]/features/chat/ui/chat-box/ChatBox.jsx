@@ -18,7 +18,7 @@ import { Box } from '@mui/system';
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import {
   AgentExecutionStartError,
-  isAgentExecutionSseEligible,
+  getAgentExecutionSseContract,
   startAgentExecutionSse,
 } from '@/[fsd]/features/chat/lib/agentExecutionSse';
 import * as ChatHelpers from '@/[fsd]/features/chat/lib/helpers/chat.helpers';
@@ -981,9 +981,10 @@ const ChatBox = forwardRef((props, boxRef) => {
             ...eventPayload,
             conversation_uuid: conversationUuid,
           };
-          const sseEligible = isAgentExecutionSseEligible({
+          const sseContract = getAgentExecutionSseContract({
             isAgentsPage,
             participant,
+            conversationParticipants: activeConversation?.participants,
             eventPayload: finalEventPayload,
             hasAttachments: attachments.length > 0,
             hasLLMOverride: Object.keys(unsavedLLMSettings || {}).length > 0,
@@ -991,9 +992,10 @@ const ChatBox = forwardRef((props, boxRef) => {
           });
           let handledByDirectExecution = false;
 
-          if (sseEligible) {
+          if (sseContract) {
             try {
               const directExecution = await startAgentExecutionSse({
+                contract: sseContract,
                 projectId,
                 conversationUuid,
                 eventPayload: finalEventPayload,

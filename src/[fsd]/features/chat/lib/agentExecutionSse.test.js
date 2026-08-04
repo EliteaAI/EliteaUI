@@ -1,7 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import {
+  AGENT_ADHOC_EXECUTION_CONTRACT,
+  AGENT_APPLICATION_EXECUTION_CONTRACT,
   buildAgentExecutionStartBody,
+  getAgentExecutionSseContract,
   isAgentExecutionSseEligible,
   startAgentExecutionSse,
 } from './agentExecutionSse';
@@ -46,12 +49,50 @@ describe('agent execution SSE', () => {
     };
 
     expect(isAgentExecutionSseEligible(base)).toBe(true);
+    expect(getAgentExecutionSseContract(base)).toBe(AGENT_APPLICATION_EXECUTION_CONTRACT);
     expect(isAgentExecutionSseEligible({ ...base, isAgentsPage: false })).toBe(false);
     expect(isAgentExecutionSseEligible({ ...base, participant: { entity_name: 'pipeline' } })).toBe(false);
     expect(isAgentExecutionSseEligible({ ...base, hasLLMOverride: true })).toBe(false);
     expect(
       isAgentExecutionSseEligible({ ...base, eventPayload: { ...payload, mcp_tokens: { server: {} } } }),
     ).toBe(false);
+  });
+
+  it('selects ad-hoc execution for a current chat with only standard toolkit attachments', () => {
+    const options = {
+      isAgentsPage: false,
+      participant: undefined,
+      conversationParticipants: [
+        { entity_name: 'user' },
+        { entity_name: 'dummy' },
+        { entity_name: 'toolkit', entity_settings: { toolkit_type: 'aha' } },
+      ],
+      eventPayload: {
+        ...payload,
+        participant_id: undefined,
+        llm_settings: { model_name: 'eu.anthropic.claude', model_project_id: 7 },
+      },
+      hasAttachments: false,
+      hasLLMOverride: true,
+      isSendingToUser: false,
+    };
+
+    expect(getAgentExecutionSseContract(options)).toBe(AGENT_ADHOC_EXECUTION_CONTRACT);
+    expect(
+      getAgentExecutionSseContract({
+        ...options,
+        conversationParticipants: [...options.conversationParticipants, { entity_name: 'application' }],
+      }),
+    ).toBeNull();
+    expect(
+      getAgentExecutionSseContract({
+        ...options,
+        conversationParticipants: [
+          ...options.conversationParticipants,
+          { entity_name: 'toolkit', meta: { mcp: true }, entity_settings: { toolkit_type: 'mcp' } },
+        ],
+      }),
+    ).toBeNull();
   });
 
   it('normalizes current payloads without forwarding model settings or credentials', () => {
@@ -73,6 +114,65 @@ describe('agent execution SSE', () => {
     });
   });
 
+  it('carries only selected model settings for bounded ad-hoc execution', () => {
+    expect(
+      buildAgentExecutionStartBody({
+        contract: AGENT_ADHOC_EXECUTION_CONTRACT,
+        projectId: '7',
+        conversationUuid: 'conversation-id',
+        eventPayload: {
+          ...payload,
+          participant_id: undefined,
+          llm_settings: {
+            model_name: 'eu.anthropic.claude',
+            model_project_id: 7,
+            temperature: 0.2,
+          },
+        },
+      }),
+    ).toEqual({
+      payload: { user_input: 'hello' },
+      project_id: 7,
+      participant_id: 0,
+      conversation_uuid: 'conversation-id',
+      question_id: 'question-id',
+      interaction_uuid: 'interaction-id',
+      attachments_info: [],
+      llm_settings: {
+        model_name: 'eu.anthropic.claude',
+        model_project_id: 7,
+        temperature: 0.2,
+      },
+      mcp_tokens: {},
+    });
+  });
+
+  it('starts the ad-hoc contract on the same current messages route', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue({ status: 422, ok: false });
+    await startAgentExecutionSse({
+      contract: AGENT_ADHOC_EXECUTION_CONTRACT,
+      projectId: 7,
+      conversationUuid: 'conversation-id',
+      eventPayload: {
+        ...payload,
+        participant_id: undefined,
+        llm_settings: { model_name: 'eu.anthropic.claude', model_project_id: 7 },
+      },
+      onNodeEvent: vi.fn(),
+      onError: vi.fn(),
+      fetchImpl,
+      EventSourceImpl: FakeEventSource,
+    });
+
+    expect(fetchImpl.mock.calls[0][0]).toContain('execution_contract=agent.execute.adhoc.v1');
+    expect(JSON.parse(fetchImpl.mock.calls[0][1].body)).toEqual(
+      expect.objectContaining({
+        participant_id: 0,
+        llm_settings: { model_name: 'eu.anthropic.claude', model_project_id: 7 },
+      }),
+    );
+  });
+
   it('falls back before opening SSE when the direct route does not support the turn', async () => {
     const fetchImpl = vi.fn().mockResolvedValue({ status: 422, ok: false });
     const result = await startAgentExecutionSse({
@@ -89,9 +189,10 @@ describe('agent execution SSE', () => {
     expect(fetchImpl).toHaveBeenCalledOnce();
   });
 
-  it('feeds exact NodeEvents to the existing reducer and closes on full_message', async () => {
+  it('reconciles the optimistic response, feeds reducer events, and closes on full_message', async () => {
     const onNodeEvent = vi.fn();
     const onClosed = vi.fn();
+    const yieldToRenderer = vi.fn().mockResolvedValue();
     const result = await startAgentExecutionSse({
       projectId: 7,
       conversationUuid: 'conversation-id',
@@ -99,18 +200,53 @@ describe('agent execution SSE', () => {
       onNodeEvent,
       onError: vi.fn(),
       onClosed,
+      yieldToRenderer,
       fetchImpl: vi.fn().mockResolvedValue({
         status: 200,
         ok: true,
-        json: async () => ({ execution_id: 'execution-id', events_url: '/events' }),
+        json: async () => ({
+          task_id: 'execution-id',
+          execution_id: 'execution-id',
+          response_message_id: 'response-id',
+          events_url: '/events',
+        }),
       }),
       EventSourceImpl: FakeEventSource,
     });
 
+    expect(onNodeEvent).toHaveBeenCalledWith({
+      type: 'start_task',
+      message_id: 'response-id',
+      question_id: 'question-id',
+      content: {
+        task_id: 'execution-id',
+        participant_id: 19,
+        question_id: 'question-id',
+      },
+      sio_event: 'chat_predict',
+    });
+    expect(yieldToRenderer).toHaveBeenCalledOnce();
+
+    const llmStart = {
+      type: 'agent_llm_start',
+      message_id: 'response-id',
+      response_metadata: { tool_run_id: 'llm-1', model_name: 'model' },
+    };
+    await result.source.dispatch('execution.node_event', llmStart);
+    expect(onNodeEvent).toHaveBeenLastCalledWith(llmStart);
+    expect(yieldToRenderer).toHaveBeenCalledTimes(2);
+
+    const agentEvent = { type: 'agent_response', message_id: 'response-id', content: 'done' };
+    await result.source.dispatch('execution.node_event', agentEvent);
+    await result.source.dispatch('execution.node_event', {
+      type: 'partial_message',
+      message_id: 'response-id',
+    });
     const terminal = { type: 'full_message', message_id: 'response-id', content: 'done' };
     await result.source.dispatch('execution.node_event', terminal);
 
-    expect(onNodeEvent).toHaveBeenCalledWith(terminal);
+    expect(onNodeEvent).toHaveBeenCalledTimes(3);
+    expect(onNodeEvent).toHaveBeenLastCalledWith(agentEvent);
     expect(result.source.close).toHaveBeenCalledOnce();
     expect(onClosed).toHaveBeenCalledOnce();
   });
