@@ -1,11 +1,15 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Box, CircularProgress, Typography } from '@mui/material';
+import { useStore } from 'react-redux';
+
+import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
+import { Alert, Box, CircularProgress, Snackbar, Tooltip, Typography } from '@mui/material';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 
 import { useInteractiveTour } from '@/[fsd]/app/providers';
 import { ANALYTICS_TOUR_ID, ANALYTICS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
-import { useProjectAnalyticsQuery } from '@/[fsd]/features/settings/api/analyticsApi';
+import { analyticsApi, useProjectAnalyticsQuery } from '@/[fsd]/features/settings/api/analyticsApi';
+import { AnalyticsExportHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import {
   AnalyticsAgents,
   AnalyticsCosts,
@@ -16,6 +20,8 @@ import {
   AnalyticsUsers,
 } from '@/[fsd]/features/settings/ui/analytics';
 import { DrawerPage } from '@/[fsd]/features/settings/ui/drawer-page';
+import { exportToExcel } from '@/[fsd]/shared/lib/utils';
+import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import TabGroupButton from '@/[fsd]/shared/ui/tab-group-button/TabGroupButton';
 import { BaseTab, BaseTabs } from '@/[fsd]/shared/ui/tabs';
 import ArrowDownIcon from '@/components/Icons/ArrowDownIcon';
@@ -39,6 +45,7 @@ const PRESETS_WITH_CUSTOM = [...DEFAULT_PRESETS, { label: 'Custom', value: CUSTO
 const AnalyticsContainer = memo(() => {
   const projectId = useSelectedProjectId();
   const projectName = useSelectedProjectName();
+  const store = useStore();
 
   const { currentStep, tourId } = useInteractiveTour() ?? {};
 
@@ -57,6 +64,9 @@ const AnalyticsContainer = memo(() => {
   const [activeTab, setActiveTab] = useState(0);
 
   const [pendingUserId, setPendingUserId] = useState(null);
+
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState(false);
 
   const dateFromISO = useMemo(() => dateFrom?.toISOString(), [dateFrom]);
   const dateToISO = useMemo(() => dateTo?.toISOString(), [dateTo]);
@@ -115,6 +125,41 @@ const AnalyticsContainer = memo(() => {
     setActiveTab(0);
   }, []);
 
+  const handleExport = useCallback(async () => {
+    setExporting(true);
+    setExportError(false);
+
+    try {
+      const allData = await AnalyticsExportHelpers.fetchAllAnalyticsData(
+        store.dispatch,
+        analyticsApi.endpoints,
+        { projectId, dateFrom: dateFromISO, dateTo: dateToISO },
+      );
+
+      const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+      const sheets = AnalyticsExportHelpers.buildAnalyticsSheets({
+        ...allData,
+        meta: { projectName, dateFrom: dateFromISO, dateTo: dateToISO, timeZone },
+      });
+
+      await exportToExcel(
+        AnalyticsExportHelpers.analyticsExportFileName({
+          projectName,
+          dateFrom: dateFromISO,
+          dateTo: dateToISO,
+        }),
+        sheets,
+      );
+    } catch {
+      setExportError(true);
+    } finally {
+      setExporting(false);
+    }
+  }, [store, projectId, projectName, dateFromISO, dateToISO]);
+
+  const handleCloseExportError = useCallback(() => setExportError(false), []);
+
   useEffect(() => {
     if (tourId !== ANALYTICS_TOUR_ID || !currentStep) return;
     if (typeof currentStep.tabIndex === 'number') {
@@ -158,6 +203,26 @@ const AnalyticsContainer = memo(() => {
             <Typography variant="bodySmall">Project: {projectName}</Typography>
           </Box>
         )}
+        <Tooltip
+          title={exporting ? 'Preparing export…' : 'Export to Excel'}
+          placement="top"
+        >
+          <Box
+            component="span"
+            sx={styles.exportButtonWrapper}
+          >
+            <BaseBtn
+              variant={BUTTON_VARIANTS.icon}
+              color="secondary"
+              onClick={handleExport}
+              disabled={exporting}
+              aria-label="Export to Excel"
+              data-testid="analytics-export-button"
+            >
+              {exporting ? <CircularProgress size={16} /> : <FileDownloadOutlinedIcon fontSize="small" />}
+            </BaseBtn>
+          </Box>
+        </Tooltip>
       </Box>
       <Box
         sx={styles.filterBar}
@@ -280,6 +345,21 @@ const AnalyticsContainer = memo(() => {
           {activeTab === 6 && <AnalyticsGuide />}
         </Box>
       </Box>
+
+      <Snackbar
+        open={exportError}
+        autoHideDuration={8000}
+        onClose={handleCloseExportError}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={handleCloseExportError}
+          severity="error"
+          variant="filled"
+        >
+          Unable to export Analytics data. Please try again.
+        </Alert>
+      </Snackbar>
     </DrawerPage>
   );
 });
@@ -296,6 +376,9 @@ const analyticsContainerStyles = () => ({
     gap: '0.75rem',
     padding: '0 1.5rem',
     boxSizing: 'border-box',
+  },
+  exportButtonWrapper: {
+    marginLeft: 'auto',
   },
   projectLabel: ({ palette }) => ({
     display: 'flex',

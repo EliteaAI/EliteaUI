@@ -101,15 +101,14 @@ const AnalyticsUsers = memo(props => {
         <Box sx={styles.tableWrapper}>
           <Box sx={styles.tableHeader}>
             <Typography sx={[styles.tableCell, { flex: 3 }]}>User</Typography>
-            <Typography sx={[styles.tableCell, { flex: 1 }]}>Events</Typography>
-            <Typography sx={[styles.tableCell, { flex: 1 }]}>Days</Typography>
-            <Typography sx={[styles.tableCell, { flex: 1 }]}>LLM</Typography>
-            <Typography sx={[styles.tableCell, { flex: 1 }]}>Tool</Typography>
-            <Typography sx={[styles.tableCell, { flex: 1 }]}>Agent / Pipeline</Typography>
+            <Typography sx={[styles.tableCell, { flex: 1 }]}>Active Days</Typography>
+            <Typography sx={[styles.tableCell, { flex: 1 }]}>LLM Calls</Typography>
+            <Typography sx={[styles.tableCell, { flex: 1 }]}>Tool Calls</Typography>
+            <Typography sx={[styles.tableCell, { flex: 1 }]}>Agent/Pipeline Runs</Typography>
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Chat Msg</Typography>
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Errors</Typography>
-            <Typography sx={[styles.tableCell, styles.flexOne]}>Tokens</Typography>
-            <Typography sx={[styles.tableCell, styles.flexOne]}>Cost</Typography>
+            <Typography sx={[styles.tableCell, styles.flexOne]}>Total Tokens</Typography>
+            <Typography sx={[styles.tableCell, styles.flexOne]}>Total Cost</Typography>
           </Box>
           {isFetching && (
             <Box sx={styles.loadingState}>
@@ -128,9 +127,6 @@ const AnalyticsUsers = memo(props => {
                   noWrap
                 >
                   {u.user_email || `User ${u.user_id}`}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
-                  {AnalyticCommonHelpers.fmtNum(u.total_events)}
                 </Typography>
                 <Typography sx={[styles.tableCellValue, { flex: 1 }]}>{u.active_days}</Typography>
                 <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
