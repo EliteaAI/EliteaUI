@@ -4,6 +4,7 @@ import { Box, Typography } from '@mui/material';
 
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
+import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 
 const ModelUsageTable = memo(props => {
   const { models = [], totalCalls } = props;
@@ -22,19 +23,27 @@ const ModelUsageTable = memo(props => {
       >
         Model Usage Breakdown
       </Typography>
-      <Typography
-        variant="bodySmall"
-        sx={styles.chartSubtitle}
-      >
-        LLM calls per model
-      </Typography>
+      <Box sx={styles.subtitleRow}>
+        <Typography
+          variant="bodySmall"
+          sx={styles.chartSubtitle}
+        >
+          LLM calls per model
+        </Typography>
+        <InfoTooltip
+          infoTooltip={{
+            title: AnalyticsCommonConstants.TOOLTIP_TEXTS.overview.MODEL_USAGE,
+            icon: { width: 12, height: 12 },
+          }}
+        />
+      </Box>
       <Box sx={styles.tableWrapper}>
         <Box sx={styles.tableHeader}>
-          <Typography sx={[styles.tableCell, { flex: '0 0 2rem' }]}>#</Typography>
+          <Typography sx={[styles.tableCell, { flex: '0 0 2rem', textAlign: 'right' }]}>#</Typography>
           <Typography sx={[styles.tableCell, { flex: 3 }]}>Model</Typography>
           <Typography sx={[styles.tableCell, { flex: 1, textAlign: 'right' }]}>Calls</Typography>
           <Typography sx={[styles.tableCell, { flex: 1, textAlign: 'right' }]}>Users</Typography>
-          <Typography sx={[styles.tableCell, { flex: 2 }]}>Share</Typography>
+          <Typography sx={[styles.tableCell, { flex: 2, textAlign: 'right' }]}>Share</Typography>
         </Box>
         {models.map((model, index) => {
           const share = totalCalls > 0 ? (model.calls / totalCalls) * 100 : 0;
@@ -49,7 +58,7 @@ const ModelUsageTable = memo(props => {
               <Typography
                 sx={[
                   styles.tableCellValue,
-                  { flex: '0 0 2rem' },
+                  { flex: '0 0 2rem', textAlign: 'right' },
                   ({ palette }) => ({ color: palette.text.metrics || palette.text.disabled }),
                 ]}
               >
@@ -124,9 +133,13 @@ const modelUsageTableStyles = () => ({
   chartSubtitle: ({ palette }) => ({
     color: palette.text.metrics || palette.text.disabled,
     fontSize: '0.6875rem',
-    marginBottom: '0.5rem',
-    display: 'block',
   }),
+  subtitleRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.25rem',
+    marginBottom: '0.5rem',
+  },
   tableWrapper: { display: 'flex', flexDirection: 'column', width: '100%', overflow: 'auto' },
   tableHeader: ({ palette }) => ({
     display: 'flex',
