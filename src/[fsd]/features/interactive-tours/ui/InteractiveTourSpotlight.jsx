@@ -15,7 +15,12 @@ const InteractiveTourSpotlight = memo(props => {
       <Box sx={blockerSx(hasTarget)} />
 
       {/* Spotlight — transparent box with dim shadow + gradient ring via ::before */}
-      {hasTarget && <Box sx={spotlightSx(targetRect, borderRadius)} />}
+      {hasTarget && (
+        <Box
+          data-testid="interactive-tour-spotlight"
+          sx={spotlightSx(targetRect, borderRadius)}
+        />
+      )}
     </>
   );
 });

@@ -68,6 +68,7 @@ const TourCompleteCard = memo(props => {
           {keepExploring.length > 0 && (
             <Box sx={styles.keepExploringSection}>
               <Typography
+                data-testid="interactive-tour-complete-keep-exploring-label"
                 variant="headingSmall"
                 sx={styles.keepExploringLabel}
               >
@@ -78,6 +79,7 @@ const TourCompleteCard = memo(props => {
                 {keepExploring.map(item => (
                   <BaseBtn
                     key={item.tourId}
+                    data-testid={`interactive-tour-complete-keep-exploring-${item.tourId}`}
                     data-tour-id={item.tourId}
                     data-path={item.path}
                     variant={BUTTON_VARIANTS.secondary}
@@ -93,6 +95,7 @@ const TourCompleteCard = memo(props => {
 
           <Box sx={styles.footer}>
             <BaseBtn
+              data-testid="interactive-tour-complete-done-button"
               variant={BUTTON_VARIANTS.secondary}
               onClick={closeComplete}
             >
