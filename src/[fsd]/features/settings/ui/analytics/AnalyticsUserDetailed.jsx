@@ -8,6 +8,7 @@ import { useAnalyticsUserDetailQuery } from '@/[fsd]/features/settings/api/analy
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { ChartTooltip, KPICard } from '@/[fsd]/features/settings/ui/analytics';
+import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 import ArrowBackIcon from '@/components/Icons/ArrowBackIcon';
 
 const AnalyticsUserDetailed = memo(props => {
@@ -44,6 +45,8 @@ const AnalyticsUserDetailed = memo(props => {
 
   const { kpis, models = [], tools = [], agents = [], daily_activity = [] } = data;
 
+  const tt = AnalyticsCommonConstants.TOOLTIP_TEXTS.userDetail;
+
   return (
     <Box sx={styles.userDetailedContent}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
@@ -63,51 +66,56 @@ const AnalyticsUserDetailed = memo(props => {
 
       <Box sx={styles.kpiRow}>
         <KPICard
-          label="LLM Calls"
-          value={AnalyticCommonHelpers.fmtNum(kpis.llm_events)}
-        />
-        <KPICard
-          label="Tool Calls"
-          value={AnalyticCommonHelpers.fmtNum(kpis.tool_events)}
-        />
-        <KPICard
-          label="Chat Msg"
-          value={AnalyticCommonHelpers.fmtNum(kpis.chat_events)}
-        />
-        <KPICard
-          label="Agent & Pipeline Runs"
-          value={AnalyticCommonHelpers.fmtNum(kpis.agent_events)}
-        />
-        <KPICard
-          label="Active Days"
+          label="ACTIVE DAYS"
           value={String(kpis.active_days)}
+          tooltip={tt.ACTIVE_DAYS}
         />
         <KPICard
-          label="Errors"
+          label="LLM CALLS"
+          value={AnalyticCommonHelpers.fmtNum(kpis.llm_events)}
+          tooltip={tt.LLM_CALLS}
+        />
+        <KPICard
+          label="TOOL CALLS"
+          value={AnalyticCommonHelpers.fmtNum(kpis.tool_events)}
+          tooltip={tt.TOOL_CALLS}
+        />
+        <KPICard
+          label="AGENT & PIPELINE RUNS"
+          value={AnalyticCommonHelpers.fmtNum(kpis.agent_events)}
+          tooltip={tt.AGENT_PIPELINE_RUNS}
+        />
+        <KPICard
+          label="CHAT MSG"
+          value={AnalyticCommonHelpers.fmtNum(kpis.chat_events)}
+          tooltip={tt.CHAT_MSG}
+        />
+        <KPICard
+          label="ERRORS"
           value={AnalyticCommonHelpers.fmtNum(kpis.errors)}
           color={kpis.errors > 0 ? palette.status.rejected : undefined}
+          tooltip={tt.ERRORS}
         />
         <KPICard
-          label="Total Tokens"
+          label="TOTAL TOKENS"
           value={AnalyticCommonHelpers.fmtNum(kpis.total_tokens)}
+          tooltip={tt.TOTAL_TOKENS}
         />
         <KPICard
-          label="Input Tokens"
+          label="INPUT TOKENS"
           value={AnalyticCommonHelpers.fmtNum(kpis.input_tokens)}
+          tooltip={tt.INPUT_TOKENS}
         />
         <KPICard
-          label="Output Tokens"
+          label="OUTPUT TOKENS"
           value={AnalyticCommonHelpers.fmtNum(kpis.output_tokens)}
+          tooltip={tt.OUTPUT_TOKENS}
         />
         <KPICard
-          label="Total Cost"
+          label="TOTAL COST"
           value={AnalyticCommonHelpers.fmtCost(kpis.llm_cost)}
           subtitle="estimated"
-        />
-        <KPICard
-          label="Avg Cost / Call"
-          value={AnalyticCommonHelpers.fmtCost(kpis.avg_cost_per_call)}
-          subtitle="estimated"
+          tooltip={tt.TOTAL_COST}
         />
       </Box>
 
@@ -119,12 +127,20 @@ const AnalyticsUserDetailed = memo(props => {
           >
             Daily Activity
           </Typography>
-          <Typography
-            variant="bodySmall"
-            sx={styles.chartSubtitle}
-          >
-            Events by type per day
-          </Typography>
+          <Box sx={styles.subtitleRow}>
+            <Typography
+              variant="bodySmall"
+              sx={styles.chartSubtitle}
+            >
+              Events by type per day
+            </Typography>
+            <InfoTooltip
+              infoTooltip={{
+                title: tt.DAILY_ACTIVITY,
+                icon: { width: 12, height: 12 },
+              }}
+            />
+          </Box>
           <Box sx={styles.chartWrapper}>
             <ResponsiveContainer
               width="100%"
@@ -270,12 +286,20 @@ const AnalyticsUserDetailed = memo(props => {
           >
             Tools Used
           </Typography>
-          <Typography
-            variant="bodySmall"
-            sx={styles.chartSubtitle}
-          >
-            {tools.length} tools
-          </Typography>
+          <Box sx={styles.subtitleRow}>
+            <Typography
+              variant="bodySmall"
+              sx={styles.chartSubtitle}
+            >
+              {tools.length} tools
+            </Typography>
+            <InfoTooltip
+              infoTooltip={{
+                title: tt.TOOLS_SECTION,
+                icon: { width: 12, height: 12 },
+              }}
+            />
+          </Box>
           <Box sx={styles.fixedScrollList}>
             {tools.length > 0 ? (
               tools.map((t, i) => (
@@ -315,12 +339,20 @@ const AnalyticsUserDetailed = memo(props => {
           >
             Agents & Pipelines Used
           </Typography>
-          <Typography
-            variant="bodySmall"
-            sx={styles.chartSubtitle}
-          >
-            {agents.length} agents & pipelines
-          </Typography>
+          <Box sx={styles.subtitleRow}>
+            <Typography
+              variant="bodySmall"
+              sx={styles.chartSubtitle}
+            >
+              {agents.length} agents & pipelines
+            </Typography>
+            <InfoTooltip
+              infoTooltip={{
+                title: tt.AGENTS_SECTION,
+                icon: { width: 12, height: 12 },
+              }}
+            />
+          </Box>
           <Box sx={styles.fixedScrollList}>
             {agents.length > 0 ? (
               agents.map((a, i) => (
@@ -363,7 +395,7 @@ AnalyticsUserDetailed.displayName = 'AnalyticsUserDetailed';
 /** @type {MuiSx} */
 const analyticsUserDetailedStyles = () => ({
   userDetailedContent: { display: 'flex', flexDirection: 'column', gap: '1rem' },
-  kpiRow: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(9rem, 1fr))', gap: '0.75rem' },
+  kpiRow: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' },
   chartCard: ({ palette }) => ({
     padding: '1rem',
     borderRadius: '0.5rem',
@@ -376,9 +408,13 @@ const analyticsUserDetailedStyles = () => ({
   chartSubtitle: ({ palette }) => ({
     color: palette.text.metrics || palette.text.disabled,
     fontSize: '0.6875rem',
-    marginBottom: '0.5rem',
-    display: 'block',
   }),
+  subtitleRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.25rem',
+    marginBottom: '0.5rem',
+  },
   chartWrapper: { width: '100%', overflow: 'hidden', flex: 1, minHeight: 200 },
   loadingState: {
     display: 'flex',

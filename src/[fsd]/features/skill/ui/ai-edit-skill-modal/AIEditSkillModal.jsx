@@ -102,10 +102,10 @@ const AIEditSkillModal = memo(props => {
       flushSync(() => {
         applyFieldChanges(draftData);
       });
-      const ok = await saveSkillRef.current();
-      if (!ok) throw new Error('Skill save failed');
+      const saved = await saveSkillRef.current();
+      if (!saved) formik.resetForm();
     },
-    [applyFieldChanges],
+    [applyFieldChanges, formik],
   );
 
   const handleSaveAsVersionClick = useCallback(draftData => {

@@ -101,7 +101,6 @@ const ToolBaseProperty = memo(props => {
   const errorText =
     (isIntegerConstraintError || (showValidation && (toolErrors[k] || validationErrorMessages?.[k]))) &&
     (typeof toolErrors[k] === 'string' ? toolErrors[k] : validationErrorMessages?.[k] || 'Field is required');
-  const compactLabelSX = v?.compact_label ? { fontSize: '0.875rem' } : undefined;
 
   const buildEditFieldPath = useCallback(
     fieldKey => {
@@ -533,7 +532,6 @@ const ToolBaseProperty = memo(props => {
           disabled={disableConfigFields || disabled}
           error={!!toastError}
           helperText={errorText}
-          labelSX={compactLabelSX}
         />
       );
     } else if (type === 'embedding_model') {
@@ -575,7 +573,6 @@ const ToolBaseProperty = memo(props => {
           disabled={disableConfigFields || disabled}
           multiple={v.originalType === 'array'}
           filters={v.toolkit_filter}
-          labelSX={compactLabelSX}
         />
       );
     } else if (type === 'agent_reference') {

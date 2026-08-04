@@ -194,7 +194,7 @@ export const BucketItem = forwardRef((props, ref) => {
         display: isPersonalProject ? 'none' : undefined,
       },
       {
-        label: 'Manage access',
+        label: 'Manage permissions',
         icon: <GroupsIcon color={theme.palette.icon.fill.default} />,
         onClick: handleManageAccessClick,
         display: isPersonalProject ? 'none' : undefined,

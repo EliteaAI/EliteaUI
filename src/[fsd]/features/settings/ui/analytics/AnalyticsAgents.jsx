@@ -1,5 +1,7 @@
 import { memo, useCallback, useMemo, useState } from 'react';
 
+import { useSelector } from 'react-redux';
+
 import {
   Area,
   AreaChart,
@@ -17,8 +19,10 @@ import { Box, CircularProgress, TablePagination, Typography, useTheme } from '@m
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { AnalyticsAgentDetailed, ChartTooltip } from '@/[fsd]/features/settings/ui/analytics';
+import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 import { useAnalyticsAgentsQuery } from '@/api';
 import StyledSearchInput from '@/components/SearchInput';
+import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const AnalyticsAgents = memo(props => {
   const { projectId, dateFrom, dateTo } = props;
@@ -31,6 +35,13 @@ const AnalyticsAgents = memo(props => {
   const { palette } = useTheme();
   const axisStroke = palette.text.primary;
   const axisTickStyle = { fill: axisStroke, fontSize: 11 };
+
+  const selectedProjectId = useSelectedProjectId();
+  const personalProjectId = useSelector(state => state.user?.personal_project_id);
+  const isPersonalProject = useMemo(
+    () => Boolean(personalProjectId) && String(selectedProjectId) === String(personalProjectId),
+    [selectedProjectId, personalProjectId],
+  );
 
   const { data, isFetching } = useAnalyticsAgentsQuery(
     {
@@ -48,7 +59,7 @@ const AnalyticsAgents = memo(props => {
     () =>
       (data?.rows || []).slice(0, 20).map((a, i) => ({
         name: a.entity_name || `Agent #${a.entity_id}`,
-        events: a.events,
+        runs: a.events,
         color: AnalyticsCommonConstants.CHART_COLORS[i % AnalyticsCommonConstants.CHART_COLORS.length],
       })),
     [data?.rows],
@@ -88,6 +99,72 @@ const AnalyticsAgents = memo(props => {
 
   return (
     <Box sx={styles.agentsContent}>
+      {/* Top agents chart */}
+      {agentChartData.length > 0 && (
+        <Box sx={styles.chartCard}>
+          <Typography
+            variant="labelMedium"
+            sx={styles.chartTitle}
+          >
+            Most Active Agents & Pipelines
+          </Typography>
+          <Box sx={styles.subtitleRow}>
+            <Typography
+              variant="bodySmall"
+              sx={styles.chartSubtitle}
+            >
+              Top {agentChartData.length} by runs
+            </Typography>
+            <InfoTooltip
+              infoTooltip={{
+                title: AnalyticsCommonConstants.TOOLTIP_TEXTS.agents.MOST_ACTIVE,
+                icon: { width: 12, height: 12 },
+              }}
+            />
+          </Box>
+          <Box sx={styles.chartWrapper}>
+            <ResponsiveContainer
+              width="100%"
+              height={200}
+            >
+              <BarChart
+                data={agentChartData}
+                margin={{ left: 5, right: 20, top: 5, bottom: 40 }}
+              >
+                <XAxis
+                  dataKey="name"
+                  tick={{ ...axisTickStyle, fontSize: 10 }}
+                  angle={-45}
+                  textAnchor="end"
+                  interval={0}
+                  height={50}
+                  axisLine={{ stroke: axisStroke }}
+                  tickLine={{ stroke: axisStroke }}
+                />
+                <YAxis
+                  tick={axisTickStyle}
+                  axisLine={{ stroke: axisStroke }}
+                  tickLine={{ stroke: axisStroke }}
+                />
+                <RechartsTooltip content={<ChartTooltip />} />
+                <Bar
+                  dataKey="runs"
+                  name="Runs"
+                  radius={[4, 4, 0, 0]}
+                >
+                  {agentChartData.map((d, i) => (
+                    <Cell
+                      key={i}
+                      fill={d.color}
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </Box>
+        </Box>
+      )}
+
       {/* Daily Chat Messages chart */}
       {chatDaily.length > 0 && (
         <Box sx={styles.chartCard}>
@@ -97,12 +174,20 @@ const AnalyticsAgents = memo(props => {
           >
             Chat Messages
           </Typography>
-          <Typography
-            variant="bodySmall"
-            sx={styles.chartSubtitle}
-          >
-            User messages per day
-          </Typography>
+          <Box sx={styles.subtitleRow}>
+            <Typography
+              variant="bodySmall"
+              sx={styles.chartSubtitle}
+            >
+              User messages per day
+            </Typography>
+            <InfoTooltip
+              infoTooltip={{
+                title: AnalyticsCommonConstants.TOOLTIP_TEXTS.agents.CHAT_MESSAGES,
+                icon: { width: 12, height: 12 },
+              }}
+            />
+          </Box>
           <Box sx={styles.chartWrapper}>
             <ResponsiveContainer
               width="100%"
@@ -137,64 +222,6 @@ const AnalyticsAgents = memo(props => {
         </Box>
       )}
 
-      {/* Top agents chart */}
-      {agentChartData.length > 0 && (
-        <Box sx={styles.chartCard}>
-          <Typography
-            variant="labelMedium"
-            sx={styles.chartTitle}
-          >
-            Most Active Agents & Pipelines
-          </Typography>
-          <Typography
-            variant="bodySmall"
-            sx={styles.chartSubtitle}
-          >
-            Top {agentChartData.length} by events
-          </Typography>
-          <Box sx={styles.chartWrapper}>
-            <ResponsiveContainer
-              width="100%"
-              height={200}
-            >
-              <BarChart
-                data={agentChartData}
-                margin={{ left: 5, right: 20, top: 5, bottom: 40 }}
-              >
-                <XAxis
-                  dataKey="name"
-                  tick={{ ...axisTickStyle, fontSize: 10 }}
-                  angle={-45}
-                  textAnchor="end"
-                  interval={0}
-                  height={50}
-                  axisLine={{ stroke: axisStroke }}
-                  tickLine={{ stroke: axisStroke }}
-                />
-                <YAxis
-                  tick={axisTickStyle}
-                  axisLine={{ stroke: axisStroke }}
-                  tickLine={{ stroke: axisStroke }}
-                />
-                <RechartsTooltip content={<ChartTooltip />} />
-                <Bar
-                  dataKey="events"
-                  name="Events"
-                  radius={[4, 4, 0, 0]}
-                >
-                  {agentChartData.map((d, i) => (
-                    <Cell
-                      key={i}
-                      fill={d.color}
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </Box>
-        </Box>
-      )}
-
       {/* Paginated agent table */}
       <Box sx={styles.chartCard}>
         <Box
@@ -212,12 +239,20 @@ const AnalyticsAgents = memo(props => {
             >
               Agent & Pipeline Activity
             </Typography>
-            <Typography
-              variant="bodySmall"
-              sx={styles.chartSubtitle}
-            >
-              {total} agents & pipelines
-            </Typography>
+            <Box sx={styles.subtitleRow}>
+              <Typography
+                variant="bodySmall"
+                sx={styles.chartSubtitle}
+              >
+                {total} agents & pipelines
+              </Typography>
+              <InfoTooltip
+                infoTooltip={{
+                  title: AnalyticsCommonConstants.TOOLTIP_TEXTS.agents.ACTIVITY_COUNT,
+                  icon: { width: 12, height: 12 },
+                }}
+              />
+            </Box>
           </Box>
           <StyledSearchInput
             search={search}
@@ -229,15 +264,16 @@ const AnalyticsAgents = memo(props => {
         <Box sx={styles.tableWrapper}>
           <Box sx={styles.tableHeader}>
             <Typography sx={[styles.tableCell, { flex: 3 }]}>Agent / Pipeline</Typography>
-            <Typography sx={[styles.tableCell, { flex: 1 }]}>Events</Typography>
-            <Typography sx={[styles.tableCell, { flex: 1 }]}>Users</Typography>
+            <Typography sx={[styles.tableCell, { flex: 1 }]}>Runs</Typography>
+            {!isPersonalProject && (
+              <Typography sx={[styles.tableCell, { flex: 1 }]}>Users</Typography>
+            )}
+            <Typography sx={[styles.tableCell, styles.flexOne]}>Cost</Typography>
+            <Typography sx={[styles.tableCell, styles.flexOne]}>Total Tokens</Typography>
+            <Typography sx={[styles.tableCell, styles.flexOne]}>Input Tokens</Typography>
+            <Typography sx={[styles.tableCell, styles.flexOne]}>Output Tokens</Typography>
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Avg Latency</Typography>
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Errors</Typography>
-            <Typography sx={[styles.tableCell, styles.flexOne]}>Input</Typography>
-            <Typography sx={[styles.tableCell, styles.flexOne]}>Output</Typography>
-            <Typography sx={[styles.tableCell, styles.flexOne]}>Tokens</Typography>
-            <Typography sx={[styles.tableCell, styles.flexOne]}>Avg / Call</Typography>
-            <Typography sx={[styles.tableCell, styles.flexOne]}>Cost</Typography>
           </Box>
           {isFetching && (
             <Box sx={styles.loadingState}>
@@ -260,7 +296,21 @@ const AnalyticsAgents = memo(props => {
                 <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
                   {AnalyticCommonHelpers.fmtNum(a.events)}
                 </Typography>
-                <Typography sx={[styles.tableCellValue, { flex: 1 }]}>{a.users}</Typography>
+                {!isPersonalProject && (
+                  <Typography sx={[styles.tableCellValue, { flex: 1 }]}>{a.users}</Typography>
+                )}
+                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
+                  {AnalyticCommonHelpers.fmtCost(a.llm_cost)}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
+                  {AnalyticCommonHelpers.fmtNum(a.total_tokens)}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
+                  {AnalyticCommonHelpers.fmtNum(a.input_tokens)}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
+                  {AnalyticCommonHelpers.fmtNum(a.output_tokens)}
+                </Typography>
                 <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
                   {AnalyticCommonHelpers.fmtDuration(a.avg_duration_ms)}
                 </Typography>
@@ -271,21 +321,6 @@ const AnalyticsAgents = memo(props => {
                   ]}
                 >
                   {a.errors}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
-                  {AnalyticCommonHelpers.fmtNum(a.input_tokens)}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
-                  {AnalyticCommonHelpers.fmtNum(a.output_tokens)}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
-                  {AnalyticCommonHelpers.fmtNum(a.total_tokens)}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
-                  {AnalyticCommonHelpers.fmtNum(Math.round(a.avg_tokens_per_call || 0))}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
-                  {AnalyticCommonHelpers.fmtCost(a.llm_cost)}
                 </Typography>
               </Box>
             ))}
@@ -322,9 +357,13 @@ const styles = {
   chartSubtitle: ({ palette }) => ({
     color: palette.text.metrics || palette.text.disabled,
     fontSize: '0.6875rem',
-    marginBottom: '0.5rem',
-    display: 'block',
   }),
+  subtitleRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.25rem',
+    marginBottom: '0.5rem',
+  },
   chartWrapper: { width: '100%', overflow: 'hidden', flex: 1, minHeight: 200 },
   loadingState: { display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem' },
   emptyState: { display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem' },
