@@ -232,6 +232,7 @@ const SimpleLLMInputItem = memo(props => {
               disabled={disabled}
               showBorder
               className="nopan nodrag"
+              data-testid={valueFieldTestId}
             />
           )}
         </Box>
