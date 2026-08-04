@@ -513,6 +513,7 @@ const FlowEditor = forwardRef((props, ref) => {
               </Box>
             }
             sx={styles.stateDrawerButton}
+            data-testid="pipeline-state-drawer-toggle-button"
           >
             State
           </Button.BaseBtn>
