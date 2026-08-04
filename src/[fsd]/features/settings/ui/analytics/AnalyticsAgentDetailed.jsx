@@ -5,8 +5,10 @@ import { Area, AreaChart, Tooltip as RechartsTooltip, ResponsiveContainer, XAxis
 import { Box, CircularProgress, IconButton, Typography, useTheme } from '@mui/material';
 
 import { useAnalyticsAgentDetailQuery } from '@/[fsd]/features/settings/api/analyticsApi';
+import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { ChartTooltip, KPICard } from '@/[fsd]/features/settings/ui/analytics';
+import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 import ArrowBackIcon from '@/components/Icons/ArrowBackIcon';
 
 const AnalyticAgentDetailed = memo(props => {
@@ -43,6 +45,8 @@ const AnalyticAgentDetailed = memo(props => {
 
   const { entity_name, kpis, users = [], tools = [], daily_usage = [] } = data;
 
+  const tt = AnalyticsCommonConstants.TOOLTIP_TEXTS.agentDetail;
+
   return (
     <Box sx={styles.agentDetailedContent}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
@@ -62,48 +66,46 @@ const AnalyticAgentDetailed = memo(props => {
 
       <Box sx={styles.kpiRow}>
         <KPICard
-          label="Total Events"
+          label="TOTAL RUNS"
           value={AnalyticCommonHelpers.fmtNum(kpis.total_events)}
+          tooltip={tt.TOTAL_RUNS}
         />
         <KPICard
-          label="Unique Users"
+          label="UNIQUE USERS"
           value={AnalyticCommonHelpers.fmtNum(kpis.unique_users)}
+          tooltip={tt.UNIQUE_USERS}
         />
         <KPICard
-          label="Avg Latency"
-          value={AnalyticCommonHelpers.fmtDuration(kpis.avg_duration_ms)}
-        />
-        <KPICard
-          label="Errors"
-          value={AnalyticCommonHelpers.fmtNum(kpis.errors)}
-          color={kpis.errors > 0 ? palette.status.rejected : undefined}
-        />
-        <KPICard
-          label="Error Rate"
-          value={`${kpis.error_rate}%`}
-          color={kpis.error_rate > 5 ? palette.status.rejected : undefined}
-        />
-        <KPICard
-          label="Total Tokens"
-          value={AnalyticCommonHelpers.fmtNum(kpis.total_tokens)}
-        />
-        <KPICard
-          label="Input Tokens"
-          value={AnalyticCommonHelpers.fmtNum(kpis.input_tokens)}
-        />
-        <KPICard
-          label="Output Tokens"
-          value={AnalyticCommonHelpers.fmtNum(kpis.output_tokens)}
-        />
-        <KPICard
-          label="Total Cost"
+          label="TOTAL COST"
           value={AnalyticCommonHelpers.fmtCost(kpis.llm_cost)}
           subtitle="estimated"
+          tooltip={tt.TOTAL_COST}
         />
         <KPICard
-          label="Avg Cost / Call"
-          value={AnalyticCommonHelpers.fmtCost(kpis.avg_cost_per_call)}
-          subtitle="estimated"
+          label="TOTAL TOKENS"
+          value={AnalyticCommonHelpers.fmtNum(kpis.total_tokens)}
+          tooltip={tt.TOTAL_TOKENS}
+        />
+        <KPICard
+          label="INPUT TOKENS"
+          value={AnalyticCommonHelpers.fmtNum(kpis.input_tokens)}
+          tooltip={tt.INPUT_TOKENS}
+        />
+        <KPICard
+          label="OUTPUT TOKENS"
+          value={AnalyticCommonHelpers.fmtNum(kpis.output_tokens)}
+          tooltip={tt.OUTPUT_TOKENS}
+        />
+        <KPICard
+          label="AVG LATENCY"
+          value={AnalyticCommonHelpers.fmtDuration(kpis.avg_duration_ms)}
+          tooltip={tt.AVG_LATENCY}
+        />
+        <KPICard
+          label="ERRORS"
+          value={AnalyticCommonHelpers.fmtNum(kpis.errors)}
+          color={kpis.errors > 0 ? palette.status.rejected : undefined}
+          tooltip={tt.ERRORS}
         />
       </Box>
 
@@ -113,7 +115,7 @@ const AnalyticAgentDetailed = memo(props => {
             variant="labelMedium"
             sx={styles.chartTitle}
           >
-            Daily Usage
+            Runs by Day
           </Typography>
           <Box sx={styles.chartWrapper}>
             <ResponsiveContainer
@@ -129,7 +131,7 @@ const AnalyticAgentDetailed = memo(props => {
                   tickLine={{ stroke: axisStroke }}
                 />
                 <YAxis
-                  yAxisId="events"
+                  yAxisId="runs"
                   tick={axisTickStyle}
                   axisLine={{ stroke: axisStroke }}
                   tickLine={{ stroke: axisStroke }}
@@ -143,10 +145,10 @@ const AnalyticAgentDetailed = memo(props => {
                 />
                 <RechartsTooltip content={<ChartTooltip />} />
                 <Area
-                  yAxisId="events"
+                  yAxisId="runs"
                   type="monotone"
                   dataKey="events"
-                  name="Events"
+                  name="Runs"
                   stroke={palette.status.draft}
                   fill={palette.status.draft}
                   fillOpacity={0.15}
@@ -183,16 +185,24 @@ const AnalyticAgentDetailed = memo(props => {
           >
             Users
           </Typography>
-          <Typography
-            variant="bodySmall"
-            sx={styles.chartSubtitle}
-          >
-            {users.length} users used this agent / pipeline
-          </Typography>
+          <Box sx={styles.subtitleRow}>
+            <Typography
+              variant="bodySmall"
+              sx={styles.chartSubtitle}
+            >
+              {users.length} users used this agent / pipeline
+            </Typography>
+            <InfoTooltip
+              infoTooltip={{
+                title: tt.USERS_SECTION,
+                icon: { width: 12, height: 12 },
+              }}
+            />
+          </Box>
           <Box sx={styles.tableWrapper}>
             <Box sx={styles.tableHeader}>
               <Typography sx={[styles.tableCell, { flex: 3 }]}>User</Typography>
-              <Typography sx={[styles.tableCell, { flex: 1 }]}>Events</Typography>
+              <Typography sx={[styles.tableCell, { flex: 1 }]}>Runs</Typography>
               <Typography sx={[styles.tableCell, { flex: 1 }]}>Avg Latency</Typography>
               <Typography sx={[styles.tableCell, { flex: 1 }]}>Errors</Typography>
             </Box>
@@ -229,7 +239,7 @@ const AnalyticAgentDetailed = memo(props => {
                   variant="bodySmall"
                   sx={styles.emptyText}
                 >
-                  No user data
+                  No runs recorded
                 </Typography>
               )}
             </Box>
@@ -242,12 +252,20 @@ const AnalyticAgentDetailed = memo(props => {
           >
             Tools
           </Typography>
-          <Typography
-            variant="bodySmall"
-            sx={styles.chartSubtitle}
-          >
-            {tools.length} tools used by this agent / pipeline
-          </Typography>
+          <Box sx={styles.subtitleRow}>
+            <Typography
+              variant="bodySmall"
+              sx={styles.chartSubtitle}
+            >
+              {tools.length} tools used by this agent / pipeline
+            </Typography>
+            <InfoTooltip
+              infoTooltip={{
+                title: tt.TOOLS_SECTION,
+                icon: { width: 12, height: 12 },
+              }}
+            />
+          </Box>
           <Box sx={styles.tableWrapper}>
             <Box sx={styles.tableHeader}>
               <Typography sx={[styles.tableCell, { flex: 3 }]}>Tool</Typography>
@@ -291,7 +309,7 @@ AnalyticAgentDetailed.displayName = 'AnalyticAgentDetailed';
 /** @type {MuiSx} */
 const analyticsAgentDetailedStyles = () => ({
   agentDetailedContent: { display: 'flex', flexDirection: 'column', gap: '1rem' },
-  kpiRow: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(9rem, 1fr))', gap: '0.75rem' },
+  kpiRow: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' },
   chartCard: ({ palette }) => ({
     padding: '1rem',
     borderRadius: '0.5rem',
@@ -304,9 +322,13 @@ const analyticsAgentDetailedStyles = () => ({
   chartSubtitle: ({ palette }) => ({
     color: palette.text.metrics || palette.text.disabled,
     fontSize: '0.6875rem',
-    marginBottom: '0.5rem',
-    display: 'block',
   }),
+  subtitleRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.25rem',
+    marginBottom: '0.5rem',
+  },
   chartWrapper: { width: '100%', overflow: 'hidden', flex: 1, minHeight: 200 },
   loadingState: {
     display: 'flex',
