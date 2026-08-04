@@ -122,6 +122,16 @@ export const getAgentExecutionResumeCandidate = ({
   };
 };
 
+export const resetAgentExecutionReplayProjection = (chatHistory, responseMessageId) => {
+  let changed = false;
+  const next = (chatHistory || []).map(message => {
+    if (message?.id !== responseMessageId || !message.toolActions?.length) return message;
+    changed = true;
+    return { ...message, toolActions: [] };
+  });
+  return changed ? next : chatHistory;
+};
+
 const yieldToBrowserRenderer = () =>
   new Promise(resolve => {
     if (typeof globalThis.requestAnimationFrame !== 'function') {
@@ -273,6 +283,7 @@ const openAgentExecutionEventStream = ({
   onClosed,
   onTerminal,
   onReplayReset,
+  onReplayStart,
   EventSourceImpl,
   yieldToRenderer,
 }) => {
@@ -293,6 +304,7 @@ const openAgentExecutionEventStream = ({
   // fast burst cannot apply tool_end before tool_start, and yield after visible
   // activity boundaries so existing Socket.IO chip rendering stays realtime.
   let nodeEventQueue = Promise.resolve();
+  let replayStarted = false;
   const enqueueNodeEvent = task => {
     nodeEventQueue = nodeEventQueue.then(task).catch(() => {
       fail('Agent execution returned an invalid event. Please refresh the conversation.');
@@ -303,6 +315,17 @@ const openAgentExecutionEventStream = ({
   source.addEventListener('execution.node_event', event =>
     enqueueNodeEvent(async () => {
       const nodeEvent = JSON.parse(event.data);
+      // A reload starts with trace pins already projected from PostgreSQL, while
+      // the durable SSE endpoint replays the same execution from its beginning.
+      // Give the owner one atomic opportunity to discard that stale projection
+      // before the first replayed event is reduced. Regeneration already clears
+      // its target response before opening the stream; fresh-turn resume must do
+      // the equivalent once to avoid rendering persisted + replayed chips.
+      if (!replayStarted) {
+        replayStarted = true;
+        await onReplayStart?.();
+        if (onReplayStart) await yieldToRenderer();
+      }
       // partial_message and full_message are SDK persistence envelopes. The
       // existing reducer consumes their agent_* events and agent_response;
       // forwarding the envelopes creates unknown-event warnings and duplicate
@@ -418,6 +441,7 @@ export const resumeAgentExecutionSse = ({
   onClosed,
   onTerminal,
   onReplayReset,
+  onReplayStart,
   EventSourceImpl = EventSource,
   yieldToRenderer = yieldToBrowserRenderer,
 }) => {
@@ -433,6 +457,7 @@ export const resumeAgentExecutionSse = ({
     onClosed,
     onTerminal,
     onReplayReset,
+    onReplayStart,
     EventSourceImpl,
     yieldToRenderer,
   });

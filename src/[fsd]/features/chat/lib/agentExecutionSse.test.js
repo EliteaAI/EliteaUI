@@ -10,6 +10,7 @@ import {
   getAgentExecutionSseContract,
   getAgentRegenerationSseContract,
   isAgentExecutionSseEligible,
+  resetAgentExecutionReplayProjection,
   resumeAgentExecutionSse,
   startAgentExecutionSse,
   startAgentRegenerationSse,
@@ -160,6 +161,26 @@ describe('agent execution SSE', () => {
         ],
       }),
     ).toBeNull();
+  });
+
+  it('clears only the stale persisted activity projection before durable replay', () => {
+    const question = { id: 'question-id', role: 'user' };
+    const response = {
+      id: 'response-id',
+      role: 'assistant',
+      content: '...',
+      toolActions: [{ id: 'trace_step_1' }, { id: 'trace_step_2' }],
+    };
+    const otherResponse = {
+      id: 'other-response',
+      role: 'assistant',
+      toolActions: [{ id: 'trace_step_3' }],
+    };
+
+    const reset = resetAgentExecutionReplayProjection([question, response, otherResponse], 'response-id');
+
+    expect(reset).toEqual([question, { ...response, toolActions: [] }, otherResponse]);
+    expect(resetAgentExecutionReplayProjection(reset, 'response-id')).toBe(reset);
   });
 
   it('selects ad-hoc execution for a current chat with only standard toolkit attachments', () => {
@@ -487,6 +508,8 @@ describe('agent execution SSE', () => {
     const onNodeEvent = vi.fn();
     const onTerminal = vi.fn();
     const onReplayReset = vi.fn();
+    const onReplayStart = vi.fn();
+    const yieldToRenderer = vi.fn().mockResolvedValue();
     const result = resumeAgentExecutionSse({
       projectId: 7,
       executionId: 'execution-id',
@@ -496,8 +519,9 @@ describe('agent execution SSE', () => {
       onError: vi.fn(),
       onTerminal,
       onReplayReset,
+      onReplayStart,
       EventSourceImpl: FakeEventSource,
-      yieldToRenderer: vi.fn().mockResolvedValue(),
+      yieldToRenderer,
     });
 
     expect(buildAgentExecutionEventsUrl('/api/v2/', 7, 'execution/id')).toBe(
@@ -514,10 +538,14 @@ describe('agent execution SSE', () => {
       response_metadata: { finish_reason: 'stop' },
     };
     await result.source.dispatch('execution.node_event', response);
+    expect(onReplayStart).toHaveBeenCalledOnce();
+    expect(onReplayStart.mock.invocationCallOrder[0]).toBeLessThan(onNodeEvent.mock.invocationCallOrder[0]);
+    expect(yieldToRenderer).toHaveBeenCalledOnce();
     expect(onNodeEvent).toHaveBeenCalledWith(response);
 
     const terminal = { type: 'full_message', message_id: 'response-id', content: 'recovered' };
     await result.source.dispatch('execution.node_event', terminal);
+    expect(onReplayStart).toHaveBeenCalledOnce();
     expect(onTerminal).toHaveBeenCalledWith(terminal);
     expect(result.source.close).toHaveBeenCalledOnce();
 

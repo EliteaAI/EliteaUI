@@ -21,6 +21,7 @@ import {
   getAgentExecutionResumeCandidate,
   getAgentExecutionSseContract,
   getAgentRegenerationSseContract,
+  resetAgentExecutionReplayProjection,
   resumeAgentExecutionSse,
   startAgentExecutionSse,
   startAgentRegenerationSse,
@@ -743,6 +744,9 @@ const ChatBox = forwardRef((props, boxRef) => {
         executionId,
         responseMessageId,
       });
+    const prepareReplay = () => {
+      setChatHistory(previous => resetAgentExecutionReplayProjection(previous, responseMessageId));
+    };
     const resumedExecution = resumeAgentExecutionSse({
       projectId,
       executionId,
@@ -752,6 +756,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       onError: handleSocketErrorEvent,
       onTerminal: reconcile,
       onReplayReset: reconcile,
+      onReplayStart: prepareReplay,
       onClosed: () => eventSources.delete(questionId),
     });
     if (!resumedExecution.started) return undefined;
@@ -772,6 +777,7 @@ const ChatBox = forwardRef((props, boxRef) => {
     handleSocketEvent,
     projectId,
     reconcilePersistedAgentExecution,
+    setChatHistory,
   ]);
 
   useEffect(() => {
