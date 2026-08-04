@@ -1,14 +1,12 @@
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback } from 'react';
 
 import { useFormikContext } from 'formik';
 
 import { Box } from '@mui/material';
 
-import { useFormikAutoSaveOnBlur } from '@/[fsd]/shared/lib/hooks';
-import { useGetPlatformSettingsQuery } from '@/api/platformSettings';
+import { useFormikAutoSaveOnBlur, useIsMidturnInjectionAvailable } from '@/[fsd]/shared/lib/hooks';
 import { PERMISSIONS } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import EnableToggleCard from '../project-context/EnableToggleCard';
 
@@ -20,14 +18,7 @@ const MidturnInjection = memo(() => {
   const canViewProjectContext = checkPermission(PERMISSIONS.projectContext.view);
   const canEditProjectContext = checkPermission(PERMISSIONS.projectContext.edit);
 
-  const projectId = useSelectedProjectId();
-  const { data: platformSettings } = useGetPlatformSettingsQuery();
-
-  const isBlockedByPlatform = useMemo(() => {
-    if (!platformSettings?.is_midturn_injection_blocked) return false;
-    const whitelist = platformSettings?.midturn_injection_whitelist_project_ids || [];
-    return !whitelist.includes(Number(projectId));
-  }, [platformSettings, projectId]);
+  const isAvailableOnPlatform = useIsMidturnInjectionAvailable();
 
   const { values, setFieldValue } = useFormikContext();
   const { onBlur, requestSubmit } = useFormikAutoSaveOnBlur();
@@ -45,7 +36,7 @@ const MidturnInjection = memo(() => {
 
   // Hidden rather than disabled when the platform hasn't enabled this project: a dead
   // toggle invites support questions about a feature that isn't on offer here.
-  if (!canViewProjectContext || isBlockedByPlatform) {
+  if (!canViewProjectContext || !isAvailableOnPlatform) {
     return null;
   }
 

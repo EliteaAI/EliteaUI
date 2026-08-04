@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react';
+import { memo } from 'react';
 
 import { Box } from '@mui/material';
 
@@ -8,22 +8,15 @@ import MidturnInjection from '@/[fsd]/features/settings/ui/project-general/Midtu
 import { ProjectParamsHeader } from '@/[fsd]/features/settings/ui/project-general/general';
 import { ProjectAIConfigurations } from '@/[fsd]/features/settings/ui/project-general/project-ai-configurations';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
+import { useIsMidturnInjectionAvailable } from '@/[fsd]/shared/lib/hooks';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
-import { useGetPlatformSettingsQuery } from '@/api/platformSettings';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import SettingsFormProvider from '../shared/SettingsFormProvider';
 
 const ProjectGeneralContent = memo(() => {
   const styles = componentStyles();
 
-  const projectId = useSelectedProjectId();
-  const { data: platformSettings } = useGetPlatformSettingsQuery();
-  const isMidturnInjectionAvailable = useMemo(() => {
-    if (!platformSettings?.is_midturn_injection_blocked) return true;
-    const whitelist = platformSettings?.midturn_injection_whitelist_project_ids || [];
-    return whitelist.includes(Number(projectId));
-  }, [platformSettings, projectId]);
+  const isMidturnInjectionAvailable = useIsMidturnInjectionAvailable();
 
   return (
     <Box sx={styles.root}>
