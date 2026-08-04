@@ -27,8 +27,6 @@ const AnalyticsCosts = memo(props => {
     return sorted.map(m => ({
       name: m.display_name || m.model_name,
       cost: m.total_cost,
-      calls: m.calls,
-      avgCostPerCall: m.calls > 0 ? m.total_cost / m.calls : null,
       share: totalCost > 0 ? (m.total_cost / totalCost) * 100 : null,
     }));
   }, [data?.by_model]);
@@ -39,8 +37,6 @@ const AnalyticsCosts = memo(props => {
     return sorted.map(a => ({
       name: a.entity_name,
       cost: a.total_cost,
-      calls: a.calls,
-      avgCostPerCall: a.calls > 0 ? a.total_cost / a.calls : null,
       share: totalCost > 0 ? (a.total_cost / totalCost) * 100 : null,
     }));
   }, [data?.by_agent]);
@@ -98,81 +94,27 @@ const AnalyticsCosts = memo(props => {
         <KPICard
           label="TOTAL COST"
           value={AnalyticCommonHelpers.fmtCost(kpis.total_cost)}
-          subtitle="estimated LLM spend"
+          subtitle="estimated USD cost"
+          tooltip={AnalyticsCommonConstants.TOOLTIP_TEXTS.costs.TOTAL_COST}
         />
         <KPICard
           label="TOTAL TOKENS"
           value={AnalyticCommonHelpers.fmtNum(kpis.total_tokens)}
           subtitle="input + output tokens"
+          tooltip={AnalyticsCommonConstants.TOOLTIP_TEXTS.costs.TOTAL_TOKENS}
         />
         <KPICard
           label="INPUT TOKENS"
           value={AnalyticCommonHelpers.fmtNum(kpis.total_input_tokens)}
           subtitle="prompt tokens"
+          tooltip={AnalyticsCommonConstants.TOOLTIP_TEXTS.costs.INPUT_TOKENS}
         />
         <KPICard
           label="OUTPUT TOKENS"
           value={AnalyticCommonHelpers.fmtNum(kpis.total_output_tokens)}
           subtitle="completion tokens"
+          tooltip={AnalyticsCommonConstants.TOOLTIP_TEXTS.costs.OUTPUT_TOKENS}
         />
-        <KPICard
-          label="AVG COST / CALL"
-          value={AnalyticCommonHelpers.fmtCost(kpis.avg_cost_per_call)}
-          subtitle="estimated per call"
-        />
-      </Box>
-
-      <Box sx={styles.chartCard}>
-        <Typography
-          variant="labelMedium"
-          sx={styles.chartTitle}
-        >
-          Cost by Model
-        </Typography>
-        {modelTableData.length > 0 ? (
-          <Box sx={styles.tableWrapper}>
-            <Box sx={styles.tableHeader}>
-              <Typography sx={[styles.tableCell, { flex: 3 }]}>MODEL</Typography>
-              <Typography sx={[styles.tableCell, styles.flexOneHalf]}>COST</Typography>
-              <Typography sx={[styles.tableCell, styles.flexOne]}>CALLS</Typography>
-              <Typography sx={[styles.tableCell, styles.flexOneHalf]}>AVG COST / CALL</Typography>
-              <Typography sx={[styles.tableCell, styles.flexOne]}>SHARE</Typography>
-            </Box>
-            {modelTableData.map((m, i) => (
-              <Box
-                key={i}
-                sx={styles.tableRow}
-              >
-                <Typography
-                  sx={[styles.tableCellValue, { flex: 3 }]}
-                  noWrap
-                >
-                  {m.name}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
-                  {AnalyticCommonHelpers.fmtCost(m.cost)}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
-                  {m.calls != null ? AnalyticCommonHelpers.fmtNum(m.calls) : '—'}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
-                  {m.avgCostPerCall != null ? AnalyticCommonHelpers.fmtCost(m.avgCostPerCall) : '—'}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
-                  {m.share != null ? `${m.share.toFixed(1)}%` : '—'}
-                </Typography>
-              </Box>
-            ))}
-          </Box>
-        ) : (
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={styles.noDataText}
-          >
-            No model cost data is available for the selected date range.
-          </Typography>
-        )}
       </Box>
 
       <Box sx={styles.chartCard}>
@@ -229,59 +171,6 @@ const AnalyticsCosts = memo(props => {
           variant="labelMedium"
           sx={styles.chartTitle}
         >
-          Cost by Agent & Pipeline
-        </Typography>
-        {agentTableData.length > 0 ? (
-          <Box sx={styles.tableWrapper}>
-            <Box sx={styles.tableHeader}>
-              <Typography sx={[styles.tableCell, { flex: 3 }]}>AGENT / PIPELINE</Typography>
-              <Typography sx={[styles.tableCell, styles.flexOneHalf]}>COST</Typography>
-              <Typography sx={[styles.tableCell, styles.flexOne]}>CALLS</Typography>
-              <Typography sx={[styles.tableCell, styles.flexOneHalf]}>AVG COST / CALL</Typography>
-              <Typography sx={[styles.tableCell, styles.flexOne]}>SHARE</Typography>
-            </Box>
-            {agentTableData.map((a, i) => (
-              <Box
-                key={i}
-                sx={styles.tableRow}
-              >
-                <Typography
-                  sx={[styles.tableCellValue, { flex: 3 }]}
-                  noWrap
-                >
-                  {a.name}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
-                  {AnalyticCommonHelpers.fmtCost(a.cost)}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
-                  {a.calls != null ? AnalyticCommonHelpers.fmtNum(a.calls) : '—'}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
-                  {a.avgCostPerCall != null ? AnalyticCommonHelpers.fmtCost(a.avgCostPerCall) : '—'}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
-                  {a.share != null ? `${a.share.toFixed(1)}%` : '—'}
-                </Typography>
-              </Box>
-            ))}
-          </Box>
-        ) : (
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={styles.noDataText}
-          >
-            No agent & pipeline cost data is available for the selected date range.
-          </Typography>
-        )}
-      </Box>
-
-      <Box sx={styles.chartCard}>
-        <Typography
-          variant="labelMedium"
-          sx={styles.chartTitle}
-        >
           Cost by User
         </Typography>
         {userTableData.length > 0 ? (
@@ -318,6 +207,96 @@ const AnalyticsCosts = memo(props => {
             sx={styles.noDataText}
           >
             No user cost data is available for the selected date range.
+          </Typography>
+        )}
+      </Box>
+
+      <Box sx={styles.chartCard}>
+        <Typography
+          variant="labelMedium"
+          sx={styles.chartTitle}
+        >
+          Cost by Model
+        </Typography>
+        {modelTableData.length > 0 ? (
+          <Box sx={styles.tableWrapper}>
+            <Box sx={styles.tableHeader}>
+              <Typography sx={[styles.tableCell, { flex: 3 }]}>MODEL</Typography>
+              <Typography sx={[styles.tableCell, styles.flexOneHalf]}>COST</Typography>
+              <Typography sx={[styles.tableCell, styles.flexOne]}>SHARE</Typography>
+            </Box>
+            {modelTableData.map((m, i) => (
+              <Box
+                key={i}
+                sx={styles.tableRow}
+              >
+                <Typography
+                  sx={[styles.tableCellValue, { flex: 3 }]}
+                  noWrap
+                >
+                  {m.name}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
+                  {AnalyticCommonHelpers.fmtCost(m.cost)}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
+                  {m.share != null ? `${m.share.toFixed(1)}%` : '—'}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        ) : (
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={styles.noDataText}
+          >
+            No model cost data is available for the selected date range.
+          </Typography>
+        )}
+      </Box>
+
+      <Box sx={styles.chartCard}>
+        <Typography
+          variant="labelMedium"
+          sx={styles.chartTitle}
+        >
+          Cost by Agent & Pipeline
+        </Typography>
+        {agentTableData.length > 0 ? (
+          <Box sx={styles.tableWrapper}>
+            <Box sx={styles.tableHeader}>
+              <Typography sx={[styles.tableCell, { flex: 3 }]}>AGENT / PIPELINE</Typography>
+              <Typography sx={[styles.tableCell, styles.flexOneHalf]}>COST</Typography>
+              <Typography sx={[styles.tableCell, styles.flexOne]}>SHARE</Typography>
+            </Box>
+            {agentTableData.map((a, i) => (
+              <Box
+                key={i}
+                sx={styles.tableRow}
+              >
+                <Typography
+                  sx={[styles.tableCellValue, { flex: 3 }]}
+                  noWrap
+                >
+                  {a.name}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
+                  {AnalyticCommonHelpers.fmtCost(a.cost)}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
+                  {a.share != null ? `${a.share.toFixed(1)}%` : '—'}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        ) : (
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={styles.noDataText}
+          >
+            No agent & pipeline cost data is available for the selected date range.
           </Typography>
         )}
       </Box>

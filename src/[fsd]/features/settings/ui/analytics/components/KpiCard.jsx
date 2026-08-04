@@ -2,19 +2,31 @@ import { memo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
+import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
+
 const KpiCard = memo(props => {
-  const { label, value, valueSuffix, subtitle, color, badge } = props;
+  const { label, value, valueSuffix, subtitle, color, badge, tooltip } = props;
 
   const styles = kpiCardStyles();
 
   return (
     <Box sx={styles.kpiCard}>
-      <Typography
-        variant="labelSmall"
-        sx={styles.kpiLabel}
-      >
-        {label}
-      </Typography>
+      <Box sx={styles.kpiLabelRow}>
+        <Typography
+          variant="labelSmall"
+          sx={styles.kpiLabel}
+        >
+          {label}
+        </Typography>
+        {tooltip && (
+          <InfoTooltip
+            infoTooltip={{
+              title: tooltip,
+              icon: { width: 12, height: 12 },
+            }}
+          />
+        )}
+      </Box>
       <Box sx={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
         <Typography
           variant="headingMedium"
@@ -64,6 +76,11 @@ const kpiCardStyles = () => ({
     flexDirection: 'column',
     gap: '0.25rem',
   }),
+  kpiLabelRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.25rem',
+  },
   kpiLabel: ({ palette }) => ({
     color: palette.text.metrics || palette.text.disabled,
     fontSize: '0.6875rem',
