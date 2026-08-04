@@ -788,9 +788,10 @@ const singleSelectStyles = (
     left: '0.75rem',
     fontSize: '1rem',
     fontWeight: 500,
-    ...(effectiveMultiple && {
-      '&:not(.MuiInputLabel-shrink)': { top: '0.5rem' },
-    }),
+    '&:not(.MuiInputLabel-shrink)': {
+      fontSize: '0.875rem',
+      ...(effectiveMultiple && { top: '0.5rem' }),
+    },
     ...(required && {
       '& .MuiInputLabel-asterisk, & .MuiFormLabel-asterisk': { display: 'none' },
     }),
