@@ -191,7 +191,10 @@ const NotificationTable = memo(props => {
     (column, value, row) => {
       if (column.field === 'notification_text') {
         return (
-          <Box sx={styles.notificationCell}>
+          <Box
+            data-testid="notification-message-text"
+            sx={styles.notificationCell}
+          >
             <NotificationListItem
               notification={row}
               clampLines={0}
@@ -248,10 +251,11 @@ const NotificationTable = memo(props => {
           sortConfig={sortModel}
           onSort={handleSort}
         />
-        <GridTableBody>
+        <GridTableBody data-testid="notification-table-body">
           {rows.map(row => (
             <GridTableRow
               key={row.id}
+              data-testid="notification-row"
               row={row}
               isSelected={rowSelectionModel.includes(row.id)}
               isHovered={hoveredRowId === row.id}
@@ -278,6 +282,7 @@ const NotificationTable = memo(props => {
             endRow={endRow}
             pageSizeSelectOptions={pageSizeSelectOptions}
             pageSize={pageSize}
+            nextButtonTestId="notifications-pagination-next-button"
             handlePrevPage={handlePrevPage}
             handleNextPage={handleNextPage}
             handlePageSizeChange={handlePageSizeChange}
