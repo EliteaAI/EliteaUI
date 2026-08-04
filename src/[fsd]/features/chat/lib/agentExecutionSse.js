@@ -2,6 +2,7 @@ import { DEV, VITE_DEV_TOKEN, VITE_SERVER_URL } from '@/common/constants.js';
 
 export const AGENT_APPLICATION_EXECUTION_CONTRACT = 'agent.execute.application.v1';
 export const AGENT_ADHOC_EXECUTION_CONTRACT = 'agent.execute.adhoc.v1';
+export const AGENT_REGENERATION_EXECUTION_CONTRACT = 'agent.regenerate.v1';
 
 const FALLBACK_STATUSES = new Set([404, 422]);
 const PARTIAL_NODE_EVENT = 'partial_message';
@@ -110,6 +111,42 @@ export const getAgentExecutionSseContract = ({
 
 export const isAgentExecutionSseEligible = options => Boolean(getAgentExecutionSseContract(options));
 
+export const getAgentRegenerationSseContract = ({
+  isAgentsPage,
+  participant,
+  conversationParticipants,
+  eventPayload,
+  hasAttachments,
+  hasUpdatedItems,
+  hasLLMOverride,
+}) => {
+  const payload = eventPayload?.payload;
+  const commonEligible =
+    !hasAttachments &&
+    !hasUpdatedItems &&
+    isEmptyArray(payload?.attachments_info) &&
+    isEmptyObject(payload?.mcp_tokens) &&
+    isEmptyArray(payload?.user_ids);
+
+  if (commonEligible && participant?.entity_name === 'application' && !hasLLMOverride) {
+    return AGENT_REGENERATION_EXECUTION_CONTRACT;
+  }
+
+  if (
+    commonEligible &&
+    !isAgentsPage &&
+    (!participant || participant.entity_name === 'dummy') &&
+    hasSelectedModel(payload) &&
+    Array.isArray(conversationParticipants) &&
+    conversationParticipants.length > 0 &&
+    conversationParticipants.every(supportsBoundedAdhocParticipant)
+  ) {
+    return AGENT_REGENERATION_EXECUTION_CONTRACT;
+  }
+
+  return null;
+};
+
 export const buildAgentExecutionStartBody = ({ contract, projectId, conversationUuid, eventPayload }) => {
   const body = {
     payload: {
@@ -134,9 +171,9 @@ const notifyStreamFailure = ({ onError, questionId, message }) => {
   onError({ type: 'error', message_id: questionId, headline: message, content: message });
 };
 
-export const startAgentExecutionSse = async ({
-  contract = AGENT_APPLICATION_EXECUTION_CONTRACT,
-  projectId,
+const startAgentExecutionRequest = async ({
+  startPath,
+  startBody,
   conversationUuid,
   eventPayload,
   onNodeEvent,
@@ -149,16 +186,11 @@ export const startAgentExecutionSse = async ({
   const headers = { 'Content-Type': 'application/json' };
   if (DEV && VITE_DEV_TOKEN) headers.Authorization = `Bearer ${VITE_DEV_TOKEN}`;
 
-  const startPath = `/elitea_core/messages/prompt_lib/${encodeURIComponent(projectId)}/${encodeURIComponent(
-    conversationUuid,
-  )}?execution_contract=${encodeURIComponent(contract)}`;
   const response = await fetchImpl(apiUrl(startPath), {
     method: 'POST',
     headers,
     credentials: 'include',
-    body: JSON.stringify(
-      buildAgentExecutionStartBody({ contract, projectId, conversationUuid, eventPayload }),
-    ),
+    body: JSON.stringify(startBody),
   });
 
   if (FALLBACK_STATUSES.has(response.status)) return { started: false };
@@ -242,4 +274,46 @@ export const startAgentExecutionSse = async ({
   });
 
   return { started: true, source, admission, conversationUuid, close };
+};
+
+export const startAgentExecutionSse = async ({
+  contract = AGENT_APPLICATION_EXECUTION_CONTRACT,
+  projectId,
+  conversationUuid,
+  eventPayload,
+  ...streamOptions
+}) => {
+  const startPath = `/elitea_core/messages/prompt_lib/${encodeURIComponent(projectId)}/${encodeURIComponent(
+    conversationUuid,
+  )}?execution_contract=${encodeURIComponent(contract)}`;
+  return startAgentExecutionRequest({
+    startPath,
+    startBody: buildAgentExecutionStartBody({ contract, projectId, conversationUuid, eventPayload }),
+    conversationUuid,
+    eventPayload,
+    ...streamOptions,
+  });
+};
+
+export const startAgentRegenerationSse = async ({
+  projectId,
+  conversationUuid,
+  responseMessageId,
+  regenerationId,
+  eventPayload,
+  ...streamOptions
+}) => {
+  const startPath = `/elitea_core/regenerate/prompt_lib/${encodeURIComponent(projectId)}/${encodeURIComponent(
+    responseMessageId,
+  )}?execution_contract=${encodeURIComponent(AGENT_REGENERATION_EXECUTION_CONTRACT)}`;
+  return startAgentExecutionRequest({
+    startPath,
+    startBody: {
+      ...eventPayload,
+      regeneration_id: regenerationId,
+    },
+    conversationUuid,
+    eventPayload,
+    ...streamOptions,
+  });
 };

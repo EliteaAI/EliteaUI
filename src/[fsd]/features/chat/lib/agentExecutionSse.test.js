@@ -3,10 +3,13 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   AGENT_ADHOC_EXECUTION_CONTRACT,
   AGENT_APPLICATION_EXECUTION_CONTRACT,
+  AGENT_REGENERATION_EXECUTION_CONTRACT,
   buildAgentExecutionStartBody,
   getAgentExecutionSseContract,
+  getAgentRegenerationSseContract,
   isAgentExecutionSseEligible,
   startAgentExecutionSse,
+  startAgentRegenerationSse,
 } from './agentExecutionSse';
 
 const payload = {
@@ -93,6 +96,63 @@ describe('agent execution SSE', () => {
         ],
       }),
     ).toBeNull();
+  });
+
+  it('selects regeneration only for the bounded application and ad-hoc slices', () => {
+    const applicationPayload = {
+      ...payload,
+      payload: {
+        user_input: 'hello again',
+        attachments_info: [],
+        mcp_tokens: {},
+      },
+    };
+    expect(
+      getAgentRegenerationSseContract({
+        isAgentsPage: true,
+        participant: { entity_name: 'application' },
+        eventPayload: applicationPayload,
+        hasAttachments: false,
+        hasUpdatedItems: false,
+        hasLLMOverride: false,
+      }),
+    ).toBe(AGENT_REGENERATION_EXECUTION_CONTRACT);
+    expect(
+      getAgentRegenerationSseContract({
+        isAgentsPage: true,
+        participant: { entity_name: 'application' },
+        eventPayload: applicationPayload,
+        hasAttachments: false,
+        hasUpdatedItems: true,
+        hasLLMOverride: false,
+      }),
+    ).toBeNull();
+
+    const adhocPayload = {
+      ...payload,
+      participant_id: undefined,
+      payload: {
+        user_input: 'hello again',
+        attachments_info: [],
+        llm_settings: { model_name: 'eu.anthropic.claude', model_project_id: 7 },
+        mcp_tokens: {},
+      },
+    };
+    expect(
+      getAgentRegenerationSseContract({
+        isAgentsPage: false,
+        participant: undefined,
+        conversationParticipants: [
+          { entity_name: 'user' },
+          { entity_name: 'dummy' },
+          { entity_name: 'toolkit', entity_settings: { toolkit_type: 'aha' } },
+        ],
+        eventPayload: adhocPayload,
+        hasAttachments: false,
+        hasUpdatedItems: false,
+        hasLLMOverride: true,
+      }),
+    ).toBe(AGENT_REGENERATION_EXECUTION_CONTRACT);
   });
 
   it('normalizes current payloads without forwarding model settings or credentials', () => {
@@ -187,6 +247,42 @@ describe('agent execution SSE', () => {
 
     expect(result).toEqual({ started: false });
     expect(fetchImpl).toHaveBeenCalledOnce();
+  });
+
+  it('regenerates the existing response through the focused contract', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue({ status: 422, ok: false });
+    const eventPayload = {
+      ...payload,
+      message_id: 'response-id',
+      stream_id: 'response-id',
+      payload: {
+        user_input: 'hello again',
+        llm_settings: { model_name: 'eu.anthropic.claude', model_project_id: 7 },
+        attachments_info: [],
+        mcp_tokens: {},
+      },
+    };
+
+    const result = await startAgentRegenerationSse({
+      projectId: 7,
+      conversationUuid: 'conversation-id',
+      responseMessageId: 'response-id',
+      regenerationId: 'regeneration-id',
+      eventPayload,
+      onNodeEvent: vi.fn(),
+      onError: vi.fn(),
+      fetchImpl,
+      EventSourceImpl: FakeEventSource,
+    });
+
+    expect(result).toEqual({ started: false });
+    expect(fetchImpl.mock.calls[0][0]).toContain(
+      '/elitea_core/regenerate/prompt_lib/7/response-id?execution_contract=agent.regenerate.v1',
+    );
+    expect(JSON.parse(fetchImpl.mock.calls[0][1].body)).toEqual({
+      ...eventPayload,
+      regeneration_id: 'regeneration-id',
+    });
   });
 
   it('reconciles the optimistic response, feeds reducer events, and closes on full_message', async () => {

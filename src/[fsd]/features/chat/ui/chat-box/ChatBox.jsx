@@ -19,7 +19,9 @@ import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import {
   AgentExecutionStartError,
   getAgentExecutionSseContract,
+  getAgentRegenerationSseContract,
   startAgentExecutionSse,
+  startAgentRegenerationSse,
 } from '@/[fsd]/features/chat/lib/agentExecutionSse';
 import * as ChatHelpers from '@/[fsd]/features/chat/lib/helpers/chat.helpers';
 import {
@@ -1182,6 +1184,45 @@ const ChatBox = forwardRef((props, boxRef) => {
       setTimeout(() => {
         setStreamingInfo(question_id);
       }, 20);
+
+      const regenerationContract = getAgentRegenerationSseContract({
+        isAgentsPage,
+        participant: messageParticipant,
+        conversationParticipants: activeConversation?.participants,
+        eventPayload: payload,
+        hasAttachments: attachmentList.length > 0,
+        hasUpdatedItems: Boolean(updatedItems?.length),
+        hasLLMOverride: Object.keys(unsavedLLMSettings || {}).length > 0,
+      });
+      if (regenerationContract) {
+        try {
+          const directExecution = await startAgentRegenerationSse({
+            projectId,
+            conversationUuid: payload.conversation_uuid,
+            responseMessageId: uuid,
+            regenerationId: uuidv4(),
+            eventPayload: payload,
+            onNodeEvent: handleSocketEvent,
+            onError: handleSocketErrorEvent,
+            onClosed: () => agentEventSourcesRef.current.delete(question_id),
+          });
+          if (directExecution.started) {
+            agentEventSourcesRef.current.set(question_id, directExecution);
+            return;
+          }
+        } catch (error) {
+          toastError(
+            error instanceof AgentExecutionStartError
+              ? error.message
+              : 'Failed to start agent regeneration. Please try again.',
+          );
+          setChatHistory(prevMessages => {
+            return prevMessages.map(message => (message.id !== uuid ? message : { ...prevMessage }));
+          });
+          return;
+        }
+      }
+
       const { error: regenerateError } = await regenerate({
         ...payload,
         sid: socket?.id,
@@ -1200,6 +1241,11 @@ const ChatBox = forwardRef((props, boxRef) => {
       chat_history,
       getRegeneratePayload,
       setStreamingInfo,
+      isAgentsPage,
+      activeConversation?.participants,
+      unsavedLLMSettings,
+      handleSocketEvent,
+      handleSocketErrorEvent,
       regenerate,
       socket?.id,
       projectId,
