@@ -349,6 +349,25 @@ const ActionView = memo(props => {
     styles.modelIconStyle,
   ]);
 
+  // A mid-turn interjection is the user's own words, not agent activity: render it as
+  // a plain marked-up line in the timeline rather than an expandable toolkit pin.
+  if (action.type === TOOL_ACTION_TYPES.MidturnInjection) {
+    return (
+      <Box
+        sx={styles.injectionContainer}
+        data-testid="midturn-injection-pin"
+      >
+        <Typography
+          variant="bodySmall"
+          sx={styles.injectionLabel}
+        >
+          You interjected
+        </Typography>
+        <Typography variant="bodySmall">{action.content || action.toolOutputs || ''}</Typography>
+      </Box>
+    );
+  }
+
   return (
     <>
       <Box sx={styles.container(width)}>
@@ -510,6 +529,19 @@ const actionViewStyles = () => ({
     display: 'flex',
     flexDirection: 'column',
     gap: '0.5rem',
+  }),
+  injectionContainer: ({ palette }) => ({
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.125rem',
+    paddingLeft: '0.75rem',
+    borderLeft: `0.125rem solid ${palette.border?.default || palette.text.secondary}`,
+    margin: '0.25rem 0',
+  }),
+  injectionLabel: ({ palette }) => ({
+    fontStyle: 'italic',
+    opacity: 0.7,
+    color: palette.text.secondary,
   }),
   header: {
     width: '100%',

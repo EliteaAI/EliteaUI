@@ -188,27 +188,11 @@ const UserMessage = React.forwardRef((props, ref) => {
               </Box>
             ))
           )}
-          {injectedItems.map(item => (
-            <Box
-              key={item.uuid}
-              sx={styles.injectedChunk}
-              data-testid="injected-message-chunk"
-            >
-              <Typography
-                variant="bodySmall"
-                color="text.secondary"
-                sx={styles.injectedLabel}
-              >
-                sent while running
-              </Typography>
-              <Typography
-                sx={styles.textContent}
-                variant="bodyMedium"
-              >
-                {item.item_details?.content || ''}
-              </Typography>
-            </Box>
-          ))}
+          {/* Injected chunks are NOT rendered here. A consumed injection appears as a
+              timeline pin in the answer below, where it reads chronologically — drawing it
+              in this bubble too would duplicate it, and the bubble is scrolled away while
+              a turn streams anyway (which is what made injections look lost). The text
+              still lives in this group: that is what reaches the LLM via chat history. */}
           <MessageAttachmentList
             items={attachmentItems}
             onRemoveAttachment={onRemoveAttachment}

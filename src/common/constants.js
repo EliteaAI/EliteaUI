@@ -1099,6 +1099,7 @@ export const TOOL_ACTION_TYPES = {
   Tool: 'tool',
   Llm: 'llm',
   SwarmChild: 'swarm_child',
+  MidturnInjection: 'midturn_injection',
 };
 
 export const TOOL_ACTION_NAMES = {
@@ -1107,6 +1108,7 @@ export const TOOL_ACTION_NAMES = {
   Tool: 'tool',
   Llm: 'Thinking step',
   SwarmChild: 'Sub-agent response',
+  MidturnInjection: 'You interjected',
 };
 
 // Persona options for user personalization (single source of truth)

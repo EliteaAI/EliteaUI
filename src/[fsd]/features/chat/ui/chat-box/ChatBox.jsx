@@ -15,6 +15,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { Box } from '@mui/system';
 
+import StyledCircleProgress from '@/ComponentsLib/CircularProgress';
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import * as ChatHelpers from '@/[fsd]/features/chat/lib/helpers/chat.helpers';
 import {
@@ -568,8 +569,17 @@ const ChatBox = forwardRef((props, boxRef) => {
     [onDeleteAllMessages],
   );
 
-  // injection_id -> text, for injections sent but not yet confirmed consumed.
+  // Injections sent but not yet confirmed consumed. Mirrored into state because the
+  // queue is rendered above the input: with no visible "waiting" chip an injection
+  // looks like it vanished, since its own bubble is scrolled away behind live pins.
+  const [pendingInjections, setPendingInjections] = useState([]);
   const pendingInjectionsRef = useRef(new Map());
+
+  // Acked: the loop folded it in and a timeline pin now shows it, so stop waiting.
+  const onInjectionConsumed = useCallback(injectionId => {
+    pendingInjectionsRef.current.delete(injectionId);
+    setPendingInjections(prev => prev.filter(item => item.id !== injectionId));
+  }, []);
 
   // Turn ended: anything still pending was never folded in, so re-send it as a
   // normal message rather than leaving it silently stranded in history.
@@ -579,6 +589,7 @@ const ChatBox = forwardRef((props, boxRef) => {
     (consumed || []).forEach(id => pending.delete(id));
     const unconsumed = [...pending.values()];
     pendingInjectionsRef.current = new Map();
+    setPendingInjections([]);
     unconsumed.forEach(text => onPredictStreamRef.current?.(text));
   }, []);
 
@@ -591,6 +602,7 @@ const ChatBox = forwardRef((props, boxRef) => {
     participants: activeConversation?.participants || [],
     onRcvAgentEvent,
     onInjectionReport,
+    onInjectionConsumed,
     isMonoChatting: isAgentsPage,
   });
 
@@ -1625,6 +1637,10 @@ const ChatBox = forwardRef((props, boxRef) => {
 
       const injectionId = uuidv4();
       pendingInjectionsRef.current.set(injectionId, text);
+      setPendingInjections(prev => [...prev, { id: injectionId, text }]);
+      // Chat passes clearInputAfterSubmit={false}, so clearing is the caller's job
+      // here just as it is in onPredictStream.
+      chatInput.current?.reset();
       try {
         await injectMessage({
           projectId,
@@ -1637,6 +1653,7 @@ const ChatBox = forwardRef((props, boxRef) => {
         // or the text may be over the size cap (400). Either way it was never
         // delivered, so fall back to a normal message.
         pendingInjectionsRef.current.delete(injectionId);
+        setPendingInjections(prev => prev.filter(item => item.id !== injectionId));
         return onPredictStreamRef.current?.(text);
       }
     },
@@ -2371,6 +2388,20 @@ const ChatBox = forwardRef((props, boxRef) => {
               onDismiss={budgetWarning.dismiss}
             />
           )}
+          {pendingInjections.length > 0 && (
+            <Box sx={styles.pendingInjections}>
+              {pendingInjections.map(item => (
+                <Box
+                  key={item.id}
+                  sx={styles.pendingInjectionChip}
+                  data-testid="pending-injection-chip"
+                >
+                  <StyledCircleProgress size={12} />
+                  <span>{item.text}</span>
+                </Box>
+              ))}
+            </Box>
+          )}
           <NewChatInput
             fromTheChat={fromTheChat}
             conversationId={activeConversation?.id}
@@ -2475,6 +2506,26 @@ const chatBoxStyles = () => ({
     padding: '0 0.5rem 0.5rem 0.5rem',
     gap: '0.5rem',
   },
+  pendingInjections: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem',
+    padding: '0 0.75rem 0.25rem 0.75rem',
+  },
+  pendingInjectionChip: ({ palette }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    fontSize: '0.75rem',
+    fontStyle: 'italic',
+    color: palette.text.secondary,
+    opacity: 0.8,
+    '& > span': {
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      whiteSpace: 'nowrap',
+    },
+  }),
 });
 
 export default memo(ChatBox);

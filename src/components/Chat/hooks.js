@@ -281,6 +281,7 @@ export const useChatSocket = ({
   participants,
   onRcvAgentEvent,
   onInjectionReport,
+  onInjectionConsumed,
 }) => {
   const trackEvent = useTrackEvent();
 
@@ -309,6 +310,7 @@ export const useChatSocket = ({
   const participantsRef = useRef(participants);
   const onRcvAgentEventRef = useRef(onRcvAgentEvent);
   const onInjectionReportRef = useRef(onInjectionReport);
+  const onInjectionConsumedRef = useRef(onInjectionConsumed);
   const isMonoChattingRef = useRef(isMonoChatting);
   const setChatHistoryRef = useRef(setChatHistory);
   const setIsRunningRef = useRef(setIsRunning);
@@ -333,6 +335,10 @@ export const useChatSocket = ({
   useEffect(() => {
     onInjectionReportRef.current = onInjectionReport;
   }, [onInjectionReport]);
+
+  useEffect(() => {
+    onInjectionConsumedRef.current = onInjectionConsumed;
+  }, [onInjectionConsumed]);
 
   useEffect(() => {
     activeParticipantRef.current = activeParticipant;
@@ -1342,11 +1348,29 @@ export const useChatSocket = ({
           msg.isInjectable = true;
           break;
         case SocketMessageType.InjectionConsumed: {
-          // Live ack — instant feedback only. The end-of-turn report is what
-          // decides whether an injection needs re-sending.
+          // Live ack. Also drop a pin into the running turn's timeline so the user
+          // sees where their interjection landed among the tool/thinking chips —
+          // the same row the backend persists, so live and reloaded views match.
           const consumedId = response_metadata?.injection_id;
           if (consumedId) {
             msg.consumedInjectionIds = [...(msg.consumedInjectionIds || []), consumedId];
+            const pinId = `injection_${consumedId}`;
+            if (msg.toolActions === undefined) msg.toolActions = [];
+            if (!msg.toolActions.find(i => i.id === pinId)) {
+              const injectedText = response_metadata?.text || '';
+              msg.toolActions.push({
+                name: TOOL_ACTION_NAMES.MidturnInjection,
+                id: pinId,
+                injectionId: consumedId,
+                status: ToolActionStatus.complete,
+                type: TOOL_ACTION_TYPES.MidturnInjection,
+                toolInputs: '',
+                toolOutputs: injectedText,
+                content: injectedText,
+                created_at: message.created_at,
+              });
+            }
+            onInjectionConsumedRef.current?.(consumedId);
           }
           break;
         }
