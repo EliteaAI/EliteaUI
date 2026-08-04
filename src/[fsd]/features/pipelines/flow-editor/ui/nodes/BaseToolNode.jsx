@@ -225,20 +225,15 @@ const BaseToolNode = memo(props => {
         showStructuredOutput={showStructuredOutput}
         type={nodeType}
         disabled={isRunningPipeline}
-        // Toolkit-only (ELITEA-2010) — same discipline as typeTestIdPrefix
-        // above: only the node type this PR's test exercises gets a
-        // testid, so the MCP node's Interrupt after / Structured output
-        // toggles stay untagged.
-        interruptAfterTestId={
-          nodeType === FlowEditorConstants.PipelineNodeTypes.Toolkit
-            ? `${testIdPrefix}-interrupt-after-toggle`
-            : undefined
-        }
-        structuredOutputTestId={
-          nodeType === FlowEditorConstants.PipelineNodeTypes.Toolkit
-            ? `${testIdPrefix}-structured-output-toggle`
-            : undefined
-        }
+        // Widened to every node type in TEST_ID_PREFIX_BY_NODE_TYPE
+        // (Toolkit since ELITEA-2010, MCP since ELITEA-2037) — both node
+        // types' tests now assert these toggles' visibility (case step 6),
+        // so `testIdPrefix` truthiness is exactly the "referenced by a
+        // test" set (.agents/testing.md § Locator policy — testid scope is
+        // load-bearing). Other node types sharing this base component still
+        // resolve testIdPrefix to undefined, so they stay untagged.
+        interruptAfterTestId={testIdPrefix ? `${testIdPrefix}-interrupt-after-toggle` : undefined}
+        structuredOutputTestId={testIdPrefix ? `${testIdPrefix}-structured-output-toggle` : undefined}
       />
     </FlowEditorNodes.NodeCard>
   );
