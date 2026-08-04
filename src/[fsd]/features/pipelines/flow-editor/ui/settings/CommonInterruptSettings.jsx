@@ -131,7 +131,22 @@ const CommonInterruptSettings = memo(props => {
               yamlJsonObject.entry_point === id ? false : !!realInterruptBefore.find(item => item === id)
             }
             onChange={onChangeInterruptBefore}
-            data-testid={`pipeline-node-interrupt-before-toggle-${id}`}
+            // data-testid on the native <input>, not the MuiSwitch-switchBase
+            // wrapper: MUI v7's Switch silently DROPS a legacy `inputProps`
+            // testid (its own `slotProps.input` is applied after `...other`
+            // and always wins), so the testid has to reach MuiSwitch's real
+            // `slotProps.input` — BaseSwitch's own `slotProps` prop only
+            // spreads `slotProps.switch` onto <MuiSwitch> as raw props, so
+            // nesting one level (`switch.slotProps.input`) is what actually
+            // lands it on MuiSwitch's `slotProps` (confirmed live,
+            // ELITEA-2008 automation fix; same family as ELITEA-2162).
+            slotProps={{
+              switch: {
+                slotProps: {
+                  input: { 'data-testid': `pipeline-node-interrupt-before-toggle-${id}` },
+                },
+              },
+            }}
           />
         }
         label={
