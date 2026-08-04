@@ -204,7 +204,7 @@ const ToolkitSelect = memo(
             sx={[
               {
                 left: '0.75rem',
-                fontSize: '1rem',
+                fontSize: '0.75rem',
                 fontWeight: 500,
                 position: 'relative',
                 transform: 'none',
