@@ -18,6 +18,15 @@ import { ToolTypes } from '@/pages/Applications/Components/Tools/consts';
 
 const filterTypes = tool => ![ToolTypes.application.value].includes(tool.type);
 
+// Testid prefix per node type sharing this base component — ELITEA-1954 (MCP)
+// + ELITEA-2010 (Toolkit). A node type absent from this map renders every
+// field below untagged (see the isMcpNode/testIdPrefix comment in the
+// component body).
+const TEST_ID_PREFIX_BY_NODE_TYPE = {
+  [FlowEditorConstants.PipelineNodeTypes.Mcp]: 'pipeline-mcp-node',
+  [FlowEditorConstants.PipelineNodeTypes.Toolkit]: 'pipeline-toolkit-node',
+};
+
 const BaseToolNode = memo(props => {
   const {
     id,
@@ -28,13 +37,14 @@ const BaseToolNode = memo(props => {
     customFilterTypes = filterTypes,
   } = props;
 
-  // Stable, scoped test handles are only added for the MCP node — this is the
-  // only node type whose Toolkit/Tool/Input/Output/Input-mapping fields are
-  // exercised by automation today (ELITEA-1954). Other node types sharing
-  // this base component (Function/Agent/etc.) intentionally get `undefined`
-  // so untested UI doesn't light up as "covered" (.agents/testing.md § Locator
+  // Stable, scoped test handles are added for the MCP node (ELITEA-1954) and
+  // the Toolkit node (ELITEA-2010) — the two node types sharing this base
+  // component whose Toolkit/Tool/Input/Output/Input-mapping fields are
+  // exercised by automation today. Other node types sharing this base
+  // component (Function/Agent/etc.) intentionally resolve to `undefined` so
+  // untested UI doesn't light up as "covered" (.agents/testing.md § Locator
   // policy — testid scope is load-bearing).
-  const isMcpNode = nodeType === FlowEditorConstants.PipelineNodeTypes.Mcp;
+  const testIdPrefix = TEST_ID_PREFIX_BY_NODE_TYPE[nodeType];
 
   const { isRunningPipeline, yamlJsonObject, setYamlJsonObject } = useContext(FlowEditorContext);
   const yamlNode = useMemo(
@@ -153,7 +163,7 @@ const BaseToolNode = memo(props => {
         selectedToolkit={toolkit}
         disabled={isRunningPipeline}
         filterTypes={customFilterTypes}
-        data-testid={isMcpNode ? 'pipeline-mcp-node-toolkit-select' : undefined}
+        data-testid={testIdPrefix ? `${testIdPrefix}-toolkit-select` : undefined}
       />
       {functionOptions.length > 0 && (
         <SingleSelect
@@ -166,20 +176,20 @@ const BaseToolNode = memo(props => {
           showBorder
           className={'nopan nodrag'}
           onClear={onClearTool}
-          data-testid={isMcpNode ? 'pipeline-mcp-node-tool-select' : undefined}
+          data-testid={testIdPrefix ? `${testIdPrefix}-tool-select` : undefined}
         />
       )}
       <FlowEditorSelect.InputSelect
         id={id}
         inputFieldName={'input'}
         disabled={isRunningPipeline}
-        dataTestId={isMcpNode ? 'pipeline-mcp-node-input-select' : undefined}
+        dataTestId={testIdPrefix ? `${testIdPrefix}-input-select` : undefined}
       />
       <FlowEditorSelect.OutputSelect
         id={id}
         label="Output"
         outputFieldName="output"
-        dataTestId={isMcpNode ? 'pipeline-mcp-node-output-select' : undefined}
+        dataTestId={testIdPrefix ? `${testIdPrefix}-output-select` : undefined}
       />
       <FlowEditorSettings.InputMapping
         requiredInputs={requiredInputs}
@@ -189,8 +199,9 @@ const BaseToolNode = memo(props => {
         values={yamlNode?.input_mapping || {}}
         onChangeMapping={onChangeMapping}
         disabled={isRunningPipeline}
-        valueTestIdPrefix={isMcpNode ? 'pipeline-mcp-node-input-mapping-value' : undefined}
-        requiredHeadingTestId={isMcpNode ? 'pipeline-mcp-node-input-mapping-heading' : undefined}
+        valueTestIdPrefix={testIdPrefix ? `${testIdPrefix}-input-mapping-value` : undefined}
+        typeTestIdPrefix={testIdPrefix ? `${testIdPrefix}-input-mapping-type` : undefined}
+        requiredHeadingTestId={testIdPrefix ? `${testIdPrefix}-input-mapping-heading` : undefined}
       />
       <FlowEditorSettings.CommonInterruptSettings
         id={id}

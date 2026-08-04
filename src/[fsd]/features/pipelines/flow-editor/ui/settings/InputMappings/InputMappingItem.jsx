@@ -147,6 +147,7 @@ const InputMappingItem = memo(props => {
     defaultValues,
     mappingInfo,
     valueTestId,
+    typeTestId,
   } = props;
   const inputOptions = useInputOptions();
   const isStringType = type === 'string' || type === 'fstring' || type === 'fixed';
@@ -326,6 +327,7 @@ const InputMappingItem = memo(props => {
             disabled={disabled || dataType === 'boolean'}
             showBorder
             className="nopan nodrag"
+            data-testid={typeTestId}
           />
         </Box>
         <Box sx={styles.valueWrapper}>

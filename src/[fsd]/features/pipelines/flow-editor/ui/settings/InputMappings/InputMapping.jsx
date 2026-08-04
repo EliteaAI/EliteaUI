@@ -30,6 +30,7 @@ const InputMapping = memo(props => {
     requiredInputs = [],
     disabled,
     valueTestIdPrefix,
+    typeTestIdPrefix,
     requiredHeadingTestId,
   } = props;
   const inputOptions = useInputOptions();
@@ -57,6 +58,7 @@ const InputMapping = memo(props => {
           defaultValues={defaultValues}
           mappingInfo={mappingInfo}
           valueTestId={valueTestIdPrefix ? `${valueTestIdPrefix}-${key}` : undefined}
+          typeTestId={typeTestIdPrefix ? `${typeTestIdPrefix}-${key}` : undefined}
         />
       );
     },
@@ -69,6 +71,7 @@ const InputMapping = memo(props => {
       onChangeMapping,
       disabled,
       valueTestIdPrefix,
+      typeTestIdPrefix,
     ],
   );
 
