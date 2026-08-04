@@ -161,6 +161,7 @@ const StateVariableItem = memo(props => {
             placeholder={isCreateMode ? 'name' : undefined}
             width={nameFieldWidth}
             disabled={disabled}
+            dataTestId={isCreateMode ? 'pipeline-state-add-variable-name-input' : undefined}
           />
         ) : (
           <Box

@@ -108,6 +108,7 @@ const NormalDecisionNode = memo(props => {
         id={id}
         inputFieldName={'input'}
         disabled={isRunningPipeline}
+        dataTestId="pipeline-decision-node-input-select"
       />
       <AIAssistantInput
         autoComplete="off"
@@ -127,6 +128,7 @@ const NormalDecisionNode = memo(props => {
         containerProps={styles.inputEnhancerContainer}
         disabled={isRunningPipeline || disabled}
         modelConfig={pipelineLLMConfig}
+        inputProps={{ 'data-testid': 'pipeline-decision-node-description-input' }}
       />
       <DecisionOutputs
         id={id}
@@ -140,6 +142,7 @@ const NormalDecisionNode = memo(props => {
         showStructuredOutput={false}
         type={FlowEditorConstants.PipelineNodeTypes.Decision}
         disabled={isRunningPipeline}
+        interruptAfterTestId="pipeline-decision-node-interrupt-after-toggle"
       />
     </FlowEditorNodes.NodeCard>
   );
