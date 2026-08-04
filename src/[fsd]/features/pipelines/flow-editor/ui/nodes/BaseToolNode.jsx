@@ -200,7 +200,16 @@ const BaseToolNode = memo(props => {
         onChangeMapping={onChangeMapping}
         disabled={isRunningPipeline}
         valueTestIdPrefix={testIdPrefix ? `${testIdPrefix}-input-mapping-value` : undefined}
-        typeTestIdPrefix={testIdPrefix ? `${testIdPrefix}-input-mapping-type` : undefined}
+        // Toolkit-only (ELITEA-2010): the Input-mapping Type select is exercised only by
+        // the Toolkit node's test. The MCP node's equivalent select is untouched by any
+        // test and still relies on the positional `#simple-select-Type` workaround — do
+        // not widen this to `testIdPrefix` (that would add an unreferenced testid on MCP,
+        // .agents/testing.md § Locator policy — testid scope is load-bearing).
+        typeTestIdPrefix={
+          nodeType === FlowEditorConstants.PipelineNodeTypes.Toolkit
+            ? `${testIdPrefix}-input-mapping-type`
+            : undefined
+        }
         requiredHeadingTestId={testIdPrefix ? `${testIdPrefix}-input-mapping-heading` : undefined}
       />
       <FlowEditorSettings.CommonInterruptSettings
@@ -208,6 +217,20 @@ const BaseToolNode = memo(props => {
         showStructuredOutput={showStructuredOutput}
         type={nodeType}
         disabled={isRunningPipeline}
+        // Toolkit-only (ELITEA-2010) — same discipline as typeTestIdPrefix
+        // above: only the node type this PR's test exercises gets a
+        // testid, so the MCP node's Interrupt after / Structured output
+        // toggles stay untagged.
+        interruptAfterTestId={
+          nodeType === FlowEditorConstants.PipelineNodeTypes.Toolkit
+            ? `${testIdPrefix}-interrupt-after-toggle`
+            : undefined
+        }
+        structuredOutputTestId={
+          nodeType === FlowEditorConstants.PipelineNodeTypes.Toolkit
+            ? `${testIdPrefix}-structured-output-toggle`
+            : undefined
+        }
       />
     </FlowEditorNodes.NodeCard>
   );

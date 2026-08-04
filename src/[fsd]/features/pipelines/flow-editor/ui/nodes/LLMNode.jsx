@@ -120,6 +120,7 @@ const LLMNode = memo(props => {
       <FlowEditorSelect.ToolkitsSelect
         id={id}
         disabled={isRunningPipeline || disabled}
+        data-testid="pipeline-llm-node-toolkits-select"
       />
       {Object.keys(yamlNode?.tool_names || {}).map(toolkitName => {
         const toolkitObj = allToolkits.find(
@@ -147,6 +148,8 @@ const LLMNode = memo(props => {
         id={id}
         type={FlowEditorConstants.PipelineNodeTypes.LLM}
         disabled={isRunningPipeline || disabled}
+        interruptAfterTestId="pipeline-llm-node-interrupt-after-toggle"
+        structuredOutputTestId="pipeline-llm-node-structured-output-toggle"
       />
     </FlowEditorNodes.NodeCard>
   );

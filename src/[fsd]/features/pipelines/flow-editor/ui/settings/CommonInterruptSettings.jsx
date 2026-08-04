@@ -20,8 +20,24 @@ const StyledFormControlLabel = styled(FormControlLabel)(({ theme }) => ({
   background: theme.palette.background.userInputBackground,
 }));
 
+// interruptAfterTestId / structuredOutputTestId (ELITEA-2004/2010): this
+// component is shared across every node type (LLM, Toolkit, MCP, Agent,
+// Code, Decision, Subgraph, deprecated Loop/Tool, ...). Unlike the sibling
+// "Interrupt before" toggle (pipeline-node-interrupt-before-toggle-${id},
+// ELITEA-2008 — unconditional, every node type), these two testids are
+// caller-supplied and therefore opt-in per call site: only the node types a
+// test actually touches pass a value; every other caller leaves them
+// `undefined` so untested node types don't light up as "covered"
+// (.agents/testing.md § Locator policy — testid scope is load-bearing).
 const CommonInterruptSettings = memo(props => {
-  const { id, showStructuredOutput = true, type, disabled } = props;
+  const {
+    id,
+    showStructuredOutput = true,
+    type,
+    disabled,
+    interruptAfterTestId,
+    structuredOutputTestId,
+  } = props;
 
   const { setYamlJsonObject, setFlowEdges, yamlJsonObject } = useContext(FlowEditorContext);
   const realInterruptBefore = useMemo(
@@ -138,6 +154,7 @@ const CommonInterruptSettings = memo(props => {
                 : !!realInterruptAfter.find(item => item === id)
             }
             onChange={onChangeInterruptAfter}
+            data-testid={interruptAfterTestId}
           />
         }
         label={
@@ -157,6 +174,7 @@ const CommonInterruptSettings = memo(props => {
               disabled={disabled}
               checked={!!yamlNode?.structured_output}
               onChange={onChangeStructuredOutput}
+              data-testid={structuredOutputTestId}
             />
           }
           label={
