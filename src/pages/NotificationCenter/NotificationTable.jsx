@@ -256,6 +256,7 @@ const NotificationTable = memo(props => {
             <GridTableRow
               key={row.id}
               data-testid="notification-row"
+              checkboxTestId={`notification-checkbox-${row.id}`}
               row={row}
               isSelected={rowSelectionModel.includes(row.id)}
               isHovered={hoveredRowId === row.id}
