@@ -211,6 +211,14 @@ const BaseToolNode = memo(props => {
             : undefined
         }
         requiredHeadingTestId={testIdPrefix ? `${testIdPrefix}-input-mapping-heading` : undefined}
+        // Toolkit-only (ELITEA-2010) — same discipline as typeTestIdPrefix
+        // above: only the node type this PR's test exercises gets a
+        // testid, so the MCP node's optional-mapping heading stays untagged.
+        optionalHeadingTestId={
+          nodeType === FlowEditorConstants.PipelineNodeTypes.Toolkit
+            ? `${testIdPrefix}-input-mapping-optional-heading`
+            : undefined
+        }
       />
       <FlowEditorSettings.CommonInterruptSettings
         id={id}
