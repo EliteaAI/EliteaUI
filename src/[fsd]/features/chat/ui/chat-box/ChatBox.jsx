@@ -15,7 +15,6 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { Box } from '@mui/system';
 
-import StyledCircleProgress from '@/ComponentsLib/CircularProgress';
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import * as ChatHelpers from '@/[fsd]/features/chat/lib/helpers/chat.helpers';
 import {
@@ -2396,7 +2395,12 @@ const ChatBox = forwardRef((props, boxRef) => {
                   sx={styles.pendingInjectionChip}
                   data-testid="pending-injection-chip"
                 >
-                  <StyledCircleProgress size={12} />
+                  <Box
+                    component="span"
+                    sx={styles.pendingInjectionLabel}
+                  >
+                    Queued
+                  </Box>
                   <span>{item.text}</span>
                 </Box>
               ))}
@@ -2520,11 +2524,24 @@ const chatBoxStyles = () => ({
     fontStyle: 'italic',
     color: palette.text.secondary,
     opacity: 0.8,
+    minWidth: 0,
     '& > span': {
       overflow: 'hidden',
       textOverflow: 'ellipsis',
       whiteSpace: 'nowrap',
     },
+  }),
+  // A plain word, not a spinner: StyledCircleProgress is position:absolute, so it
+  // takes no layout space and lands on top of the text beside it.
+  pendingInjectionLabel: ({ palette }) => ({
+    flexShrink: 0,
+    fontStyle: 'normal',
+    padding: '0.0625rem 0.375rem',
+    borderRadius: '0.25rem',
+    border: `0.0625rem solid ${palette.border.lines}`,
+    fontSize: '0.6875rem',
+    textTransform: 'uppercase',
+    letterSpacing: '0.03em',
   }),
 });
 
