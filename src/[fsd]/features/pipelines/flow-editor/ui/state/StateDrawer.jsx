@@ -117,6 +117,7 @@ const StateDrawer = memo(props => {
             variant="elitea"
             color="tertiary"
             onClick={onClose}
+            data-testid="pipeline-state-drawer-close-button"
           >
             <CloseIcon
               fill={theme.palette.icon.fill.default}
