@@ -58,6 +58,7 @@ export const serializeProfileFormData = (authorData, defaultModel, selectedProje
       ...(p.personality_instructions || {}),
     },
     default_internal_mcp_enabled: p.default_internal_mcp_enabled ?? false,
+    midturn_injection_enabled: p.midturn_injection_enabled ?? false,
     context_enabled: cm.enabled ?? DEFAULT_CONTEXT_STRATEGY.ENABLED,
     max_context_tokens: cm.max_context_tokens ?? DEFAULT_CONTEXT_STRATEGY.MAX_CONTEXT_TOKENS,
     preserve_recent_messages:
@@ -79,6 +80,7 @@ export const deserializeProfileFormData = formValues => ({
     // #5392: send the full per-persona map; default_instructions is server-owned now.
     personality_instructions: formValues.personality_instructions,
     default_internal_mcp_enabled: formValues.default_internal_mcp_enabled,
+    midturn_injection_enabled: formValues.midturn_injection_enabled,
   },
   default_context_management: {
     enabled: formValues.context_enabled,

@@ -1,18 +1,29 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 
 import { Box } from '@mui/material';
 
 import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
 import AgentPipelineBuilder from '@/[fsd]/features/settings/ui/project-general/AgentPipelineBuilder';
+import MidturnInjection from '@/[fsd]/features/settings/ui/project-general/MidturnInjection';
 import { ProjectParamsHeader } from '@/[fsd]/features/settings/ui/project-general/general';
 import { ProjectAIConfigurations } from '@/[fsd]/features/settings/ui/project-general/project-ai-configurations';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
+import { useGetPlatformSettingsQuery } from '@/api/platformSettings';
+import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import SettingsFormProvider from '../shared/SettingsFormProvider';
 
 const ProjectGeneralContent = memo(() => {
   const styles = componentStyles();
+
+  const projectId = useSelectedProjectId();
+  const { data: platformSettings } = useGetPlatformSettingsQuery();
+  const isMidturnInjectionAvailable = useMemo(() => {
+    if (!platformSettings?.is_midturn_injection_blocked) return true;
+    const whitelist = platformSettings?.midturn_injection_whitelist_project_ids || [];
+    return whitelist.includes(Number(projectId));
+  }, [platformSettings, projectId]);
 
   return (
     <Box sx={styles.root}>
@@ -69,6 +80,25 @@ const ProjectGeneralContent = memo(() => {
             },
           ]}
         />
+        {/* MidturnInjection renders null unless the platform enabled this project, so the
+            accordion would otherwise show an empty section — gate the whole thing. */}
+        {isMidturnInjectionAvailable && (
+          <BasicAccordion
+            data-testid="midturn-injection-section"
+            showMode={AccordionConstants.AccordionShowMode.LeftMode}
+            accordionSX={styles.accordionStyles}
+            items={[
+              {
+                title: 'Chat',
+                content: (
+                  <Box sx={styles.containerStyles}>
+                    <SettingsFormProvider FormContent={MidturnInjection} />
+                  </Box>
+                ),
+              },
+            ]}
+          />
+        )}
       </Box>
     </Box>
   );

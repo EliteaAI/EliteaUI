@@ -62,6 +62,7 @@ import {
 } from '@/api';
 import { useListModelsQuery } from '@/api/configurations.js';
 import { useInjectMessageMutation } from '@/api/injectMessage.js';
+import { useGetPlatformSettingsQuery } from '@/api/platformSettings';
 import {
   ChatParticipantType,
   PROMPT_PAYLOAD_KEY,
@@ -204,7 +205,8 @@ const ChatBox = forwardRef((props, boxRef) => {
   const [updateChatLlmSettings, { isLoading: modelSettingsAreSaving }] =
     useUpdateParticipantLlmSettingsMutation();
 
-  const { name, id: userId, avatar } = useSelector(state => state.user);
+  const { name, id: userId, avatar, personalization: userPersonalization } = useSelector(state => state.user);
+  const { data: platformSettings } = useGetPlatformSettingsQuery();
 
   const { chat_history, pendingHitlMessage } = useMemo(() => {
     const history = activeConversation?.chat_history || [];
@@ -2194,11 +2196,22 @@ const ChatBox = forwardRef((props, boxRef) => {
   // Scoped to the in-flight turn, not global: the indexer sets isInjectable on
   // the specific streaming message, so multi-participant conversations with more
   // than one turn running only open the affordance for a turn that is listening.
+  // Two-tier feature gate: the platform admin decides which projects get the feature,
+  // and the user opts in per-user within those. The endpoint enforces the platform tier
+  // independently, so this is UX rather than the security boundary.
+  const isMidturnInjectionEnabled = useMemo(() => {
+    if (!userPersonalization?.midturn_injection_enabled) return false;
+    if (!platformSettings?.is_midturn_injection_blocked) return true;
+    const whitelist = platformSettings?.midturn_injection_whitelist_project_ids || [];
+    return whitelist.includes(Number(projectId));
+  }, [userPersonalization?.midturn_injection_enabled, platformSettings, projectId]);
+
   const isInjectable = useMemo(() => {
+    if (!isMidturnInjectionEnabled) return false;
     if (!isStreamingNow || hasPendingHitlInterrupt) return false;
     const streaming = chat_history.find(msg => msg.isStreaming && msg.isInjectable);
     return Boolean(streaming);
-  }, [chat_history, hasPendingHitlInterrupt, isStreamingNow]);
+  }, [chat_history, hasPendingHitlInterrupt, isMidturnInjectionEnabled, isStreamingNow]);
 
   const isInputLoading = useMemo(
     () =>
