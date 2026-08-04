@@ -7,3 +7,4 @@ export * as ProfileHelpers from './profile.helpers.js';
 export * as UsageHelpers from './usage.helpers.js';
 export * as UsageExportHelpers from './usageExport.helpers.js';
 export * as AnalyticCommonHelpers from './analyticsCommon.helpers.js';
+export * as AnalyticsExportHelpers from './analyticsExport.helpers.js';

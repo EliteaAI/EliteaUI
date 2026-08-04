@@ -8,6 +8,7 @@ import { ANALYTICS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { ChartTooltip, KPICard, ModelUsageTable } from '@/[fsd]/features/settings/ui/analytics';
+import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 
 const AnalyticsOverview = memo(props => {
   const { data, onUserClick } = props;
@@ -21,6 +22,8 @@ const AnalyticsOverview = memo(props => {
 
   const totalModelCalls = useMemo(() => models.reduce((s, m) => s + m.calls, 0), [models]);
 
+  const tt = AnalyticsCommonConstants.TOOLTIP_TEXTS.overview;
+
   return (
     <Box sx={styles.overviewContent}>
       <Box
@@ -32,42 +35,50 @@ const AnalyticsOverview = memo(props => {
           value={AnalyticCommonHelpers.fmtNum(kpis.unique_users)}
           valueSuffix={`of ${AnalyticCommonHelpers.fmtNum(kpis.total_project_users)}`}
           subtitle="active members"
+          tooltip={tt.TEAM}
         />
         <KPICard
           label="AI ACTIVE"
           value={AnalyticCommonHelpers.fmtNum(kpis.ai_active_users)}
           badge={kpis.adoption_rate > 0 ? `↑${kpis.adoption_rate}%` : undefined}
           subtitle={`${kpis.adoption_rate}% adoption`}
+          tooltip={tt.AI_ACTIVE}
         />
         <KPICard
           label="LLM CALLS"
           value={AnalyticCommonHelpers.fmtNum(kpis.llm_calls)}
           subtitle="event_type = llm"
+          tooltip={tt.LLM_CALLS}
         />
         <KPICard
           label="TOOL RUNS"
           value={AnalyticCommonHelpers.fmtNum(kpis.tool_runs)}
           subtitle="event_type = tool"
+          tooltip={tt.TOOL_RUNS}
         />
         <KPICard
           label="CHAT MSG"
           value={AnalyticCommonHelpers.fmtNum(kpis.chat_msgs)}
           subtitle="user messages sent"
+          tooltip={tt.CHAT_MSG}
         />
         <KPICard
           label="AGENT & PIPELINE RUNS"
           value={AnalyticCommonHelpers.fmtNum(kpis.agent_runs)}
           subtitle="agents and pipelines interactions"
+          tooltip={tt.AGENT_PIPELINE_RUNS}
         />
         <KPICard
           label="TOKENS"
           value={AnalyticCommonHelpers.fmtNum(kpis.total_tokens)}
           subtitle="total LLM tokens consumed"
+          tooltip={tt.TOKENS}
         />
         <KPICard
-          label="LLM COST"
+          label="COST"
           value={AnalyticCommonHelpers.fmtCost(kpis.total_llm_cost)}
           subtitle="estimated USD cost"
+          tooltip={tt.COST}
         />
       </Box>
       <Box sx={styles.chartsRowEqual}>
@@ -136,12 +147,20 @@ const AnalyticsOverview = memo(props => {
           >
             Top 5 AI Adopters
           </Typography>
-          <Typography
-            variant="bodySmall"
-            sx={styles.chartSubtitle}
-          >
-            Leaderboard by AI events (LLM + Tool + Agent / Pipeline)
-          </Typography>
+          <Box sx={styles.subtitleRow}>
+            <Typography
+              variant="bodySmall"
+              sx={styles.chartSubtitle}
+            >
+              Leaderboard by AI events (LLM + Tool + Agent / Pipeline)
+            </Typography>
+            <InfoTooltip
+              infoTooltip={{
+                title: tt.LEADERBOARD,
+                icon: { width: 12, height: 12 },
+              }}
+            />
+          </Box>
 
           {top_ai_users.length > 0 ? (
             <Box sx={styles.tableWrapper}>
@@ -246,9 +265,13 @@ const analyticsOverviewStyles = () => ({
   chartSubtitle: ({ palette }) => ({
     color: palette.text.metrics || palette.text.disabled,
     fontSize: '0.6875rem',
-    marginBottom: '0.5rem',
-    display: 'block',
   }),
+  subtitleRow: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.25rem',
+    marginBottom: '0.5rem',
+  },
   chartWrapper: { width: '100%', overflow: 'hidden', flex: 1, minHeight: 200 },
   tableWrapper: { display: 'flex', flexDirection: 'column', width: '100%', overflow: 'auto' },
   leaderboardRow: ({ palette }) => ({
