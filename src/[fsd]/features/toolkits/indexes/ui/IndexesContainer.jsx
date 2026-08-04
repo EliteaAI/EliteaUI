@@ -1,16 +1,13 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { Box, Typography } from '@mui/material';
 
-import {
-  useDeleteIndexItemMutation,
-  useGetIndexScheduleQuery,
-  useGetIndexesListQuery,
-} from '@/[fsd]/features/toolkits/indexes/api';
+import { useDeleteIndexItemMutation, useGetIndexScheduleQuery } from '@/[fsd]/features/toolkits/indexes/api';
 import { IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
+import { useIndexesListPolling } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import { selectIndexesList } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
 import { HeadlessReindexRunner, IndexesList } from '@/[fsd]/features/toolkits/indexes/ui';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
@@ -63,15 +60,33 @@ const IndexesContainer = memo(props => {
     },
   );
 
-  const { refetch } = useGetIndexesListQuery({ toolkitId, projectId });
-
   const [reindexTarget, setReindexTarget] = useState(null);
   const [reindexConfirmOpen, setReindexConfirmOpen] = useState(false);
   const [reindexRunning, setReindexRunning] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleteIndexModal, setDeleteIndexModal] = useState(false);
 
+  const { refetch, startedTimeStamp, fulfilledTimeStamp } = useIndexesListPolling({
+    toolkitId,
+    projectId,
+    forcePoll: Boolean(reindexRunning),
+  });
+
   const { data: indexesList, isLoading, isFetching } = useSelector(selectIndexesList);
+
+  // A hard-killed run never emits the terminal trace onDone needs, so the stub (and
+  // its isReindexing lock) would pin the cards all session. Expire it only on a
+  // completed snapshot from a request issued after the last observed activity
+  // (in-flight fetches carry pre-run data) that shows the row stale or gone — "not
+  // in_progress" is no evidence, since a post-click GET isn't ordered against the
+  // socket-side pre-create.
+  useEffect(() => {
+    if (!reindexRunning?.observedAt || !startedTimeStamp || !fulfilledTimeStamp) return;
+    if (startedTimeStamp <= reindexRunning.observedAt) return;
+    if (fulfilledTimeStamp < startedTimeStamp) return;
+    const serverRow = indexesList?.find(item => item.id === reindexRunning.id);
+    if (!serverRow || serverRow.stale) setReindexRunning(null);
+  }, [reindexRunning, startedTimeStamp, fulfilledTimeStamp, indexesList]);
 
   const [deleteIndex, { isLoading: isIndexDeleting }] = useDeleteIndexItemMutation();
 
@@ -82,6 +97,9 @@ const IndexesContainer = memo(props => {
       item.id === reindexRunning.id
         ? {
             ...item,
+            // An observed start proves not-stale; the expiry effect above owns the
+            // other direction — while the stub lives, the run counts as alive.
+            stale: false,
             metadata: {
               ...item.metadata,
               state: reindexRunning.metadata?.state ?? item.metadata?.state,
@@ -97,7 +115,9 @@ const IndexesContainer = memo(props => {
     (id, metadata) => {
       if (!id) return;
       setReindexRunning(prev =>
-        prev && prev.id === id ? { ...prev, metadata: { ...prev.metadata, ...metadata } } : prev,
+        prev && prev.id === id
+          ? { ...prev, observedAt: Date.now(), metadata: { ...prev.metadata, ...metadata } }
+          : prev,
       );
       if (metadata.state === IndexStatuses.success) {
         toastSuccess('Reindex has completed successfully!');
@@ -148,6 +168,7 @@ const IndexesContainer = memo(props => {
     if (!reindexTarget) return;
     setReindexRunning({
       ...reindexTarget,
+      observedAt: Date.now(),
       metadata: { ...reindexTarget.metadata, state: IndexStatuses.progress },
     });
     setReindexConfirmOpen(false);
