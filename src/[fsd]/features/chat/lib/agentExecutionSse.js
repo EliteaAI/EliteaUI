@@ -34,6 +34,35 @@ const supportsBoundedAdhocParticipant = participant => {
   return participant?.entity_name === 'toolkit' && !isMcpParticipant(participant);
 };
 
+const isPipelineApplication = participant =>
+  participant?.entity_name === 'application' &&
+  String(participant?.entity_settings?.agent_type || participant?.agent_type || '').toLowerCase() ===
+    'pipeline';
+
+const applicationIdentity = participant =>
+  String(participant?.id ?? participant?.entity_meta?.id ?? participant?.uuid ?? '');
+
+const supportsBoundedApplicationConversation = (participants, selectedParticipant) => {
+  if (
+    !Array.isArray(participants) ||
+    participants.length === 0 ||
+    isPipelineApplication(selectedParticipant)
+  ) {
+    return false;
+  }
+  if (
+    !participants.every(participant => ['user', 'dummy', 'application'].includes(participant?.entity_name))
+  ) {
+    return false;
+  }
+  const applications = participants.filter(participant => participant?.entity_name === 'application');
+  if (applications.length !== 1 || isPipelineApplication(applications[0])) return false;
+
+  const selectedIdentity = applicationIdentity(selectedParticipant);
+  const conversationIdentity = applicationIdentity(applications[0]);
+  return !selectedIdentity || !conversationIdentity || selectedIdentity === conversationIdentity;
+};
+
 const hasSelectedModel = eventPayload =>
   typeof eventPayload?.llm_settings?.model_name === 'string' &&
   eventPayload.llm_settings.model_name.length > 0;
@@ -85,11 +114,11 @@ export const getAgentExecutionSseContract = ({
 
   if (
     commonEligible &&
-    isAgentsPage &&
     participant?.entity_name === 'application' &&
     !hasLLMOverride &&
     isEmptyObject(eventPayload?.mcp_tokens) &&
-    isEmptyArray(eventPayload?.user_ids)
+    isEmptyArray(eventPayload?.user_ids) &&
+    (isAgentsPage || supportsBoundedApplicationConversation(conversationParticipants, participant))
   ) {
     return AGENT_APPLICATION_EXECUTION_CONTRACT;
   }
@@ -128,7 +157,12 @@ export const getAgentRegenerationSseContract = ({
     isEmptyObject(payload?.mcp_tokens) &&
     isEmptyArray(payload?.user_ids);
 
-  if (commonEligible && participant?.entity_name === 'application' && !hasLLMOverride) {
+  if (
+    commonEligible &&
+    participant?.entity_name === 'application' &&
+    !hasLLMOverride &&
+    (isAgentsPage || supportsBoundedApplicationConversation(conversationParticipants, participant))
+  ) {
     return AGENT_REGENERATION_EXECUTION_CONTRACT;
   }
 

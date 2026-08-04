@@ -61,6 +61,49 @@ describe('agent execution SSE', () => {
     ).toBe(false);
   });
 
+  it('selects configured application execution in main Chat only for one bounded agent participant', () => {
+    const application = {
+      id: 19,
+      entity_name: 'application',
+      entity_settings: { agent_type: 'agent' },
+    };
+    const options = {
+      isAgentsPage: false,
+      participant: application,
+      conversationParticipants: [{ entity_name: 'user' }, { entity_name: 'dummy' }, application],
+      eventPayload: payload,
+      hasAttachments: false,
+      hasLLMOverride: false,
+      isSendingToUser: false,
+    };
+
+    expect(getAgentExecutionSseContract(options)).toBe(AGENT_APPLICATION_EXECUTION_CONTRACT);
+    expect(
+      getAgentExecutionSseContract({
+        ...options,
+        conversationParticipants: [
+          ...options.conversationParticipants,
+          { entity_name: 'toolkit', entity_settings: { toolkit_type: 'aha' } },
+        ],
+      }),
+    ).toBeNull();
+    expect(
+      getAgentExecutionSseContract({
+        ...options,
+        conversationParticipants: [
+          ...options.conversationParticipants,
+          { id: 20, entity_name: 'application', entity_settings: { agent_type: 'agent' } },
+        ],
+      }),
+    ).toBeNull();
+    expect(
+      getAgentExecutionSseContract({
+        ...options,
+        participant: { ...application, entity_settings: { agent_type: 'pipeline' } },
+      }),
+    ).toBeNull();
+  });
+
   it('selects ad-hoc execution for a current chat with only standard toolkit attachments', () => {
     const options = {
       isAgentsPage: false,
@@ -111,6 +154,21 @@ describe('agent execution SSE', () => {
       getAgentRegenerationSseContract({
         isAgentsPage: true,
         participant: { entity_name: 'application' },
+        eventPayload: applicationPayload,
+        hasAttachments: false,
+        hasUpdatedItems: false,
+        hasLLMOverride: false,
+      }),
+    ).toBe(AGENT_REGENERATION_EXECUTION_CONTRACT);
+    expect(
+      getAgentRegenerationSseContract({
+        isAgentsPage: false,
+        participant: { id: 19, entity_name: 'application' },
+        conversationParticipants: [
+          { entity_name: 'user' },
+          { entity_name: 'dummy' },
+          { id: 19, entity_name: 'application', entity_settings: { agent_type: 'agent' } },
+        ],
         eventPayload: applicationPayload,
         hasAttachments: false,
         hasUpdatedItems: false,
