@@ -188,11 +188,31 @@ const UserMessage = React.forwardRef((props, ref) => {
               </Box>
             ))
           )}
-          {/* Injected chunks are NOT rendered here. A consumed injection appears as a
-              timeline pin in the answer below, where it reads chronologically — drawing it
-              in this bubble too would duplicate it, and the bubble is scrolled away while
-              a turn streams anyway (which is what made injections look lost). The text
-              still lives in this group: that is what reaches the LLM via chat history. */}
+          {/* Also shown as a timeline pin in the answer below, which is where it reads
+              chronologically. Kept here too because pins are trace-step rows on the
+              assistant group and regenerate clears them — without this the text would
+              keep influencing the model with no visible trace at all. */}
+          {injectedItems.map(item => (
+            <Box
+              key={item.uuid}
+              sx={styles.injectedChunk}
+              data-testid="injected-message-chunk"
+            >
+              <Typography
+                variant="bodySmall"
+                color="text.secondary"
+                sx={styles.injectedLabel}
+              >
+                sent while running
+              </Typography>
+              <Typography
+                sx={styles.textContent}
+                variant="bodyMedium"
+              >
+                {item.item_details?.content || ''}
+              </Typography>
+            </Box>
+          ))}
           <MessageAttachmentList
             items={attachmentItems}
             onRemoveAttachment={onRemoveAttachment}
