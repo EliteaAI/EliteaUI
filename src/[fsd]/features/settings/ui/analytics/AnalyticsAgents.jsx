@@ -1,7 +1,6 @@
 import { memo, useCallback, useMemo, useState } from 'react';
 
 import { useSelector } from 'react-redux';
-
 import {
   Area,
   AreaChart,
@@ -265,9 +264,7 @@ const AnalyticsAgents = memo(props => {
           <Box sx={styles.tableHeader}>
             <Typography sx={[styles.tableCell, { flex: 3 }]}>Agent / Pipeline</Typography>
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Runs</Typography>
-            {!isPersonalProject && (
-              <Typography sx={[styles.tableCell, { flex: 1 }]}>Users</Typography>
-            )}
+            {!isPersonalProject && <Typography sx={[styles.tableCell, { flex: 1 }]}>Users</Typography>}
             <Typography sx={[styles.tableCell, styles.flexOne]}>Cost</Typography>
             <Typography sx={[styles.tableCell, styles.flexOne]}>Total Tokens</Typography>
             <Typography sx={[styles.tableCell, styles.flexOne]}>Input Tokens</Typography>
