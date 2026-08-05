@@ -221,6 +221,10 @@ const Users = memo(() => {
                   sx={styles.actionButton}
                   isBatchEdit
                   testId="users-header-edit-button"
+                  dialogTestId="users-edit-roles-dialog"
+                  dialogTitleTestId="users-edit-roles-title"
+                  roleSelectTestId="users-edit-roles-select"
+                  saveButtonTestId="users-edit-roles-save-button"
                 />
               )}
               {checkPermission(PERMISSIONS.users.delete) && (

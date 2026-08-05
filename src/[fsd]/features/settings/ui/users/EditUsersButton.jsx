@@ -10,7 +10,19 @@ import EditIcon from '@/components/Icons/EditIcon';
 import useToast from '@/hooks/useToast';
 
 const EditUsersButton = memo(props => {
-  const { users, refetch, disabled, setSelectedUsers, rolesOptions, isBatchEdit, testId } = props;
+  const {
+    users,
+    refetch,
+    disabled,
+    setSelectedUsers,
+    rolesOptions,
+    isBatchEdit,
+    testId,
+    dialogTestId,
+    dialogTitleTestId,
+    roleSelectTestId,
+    saveButtonTestId,
+  } = props;
 
   const { toastError, toastSuccess } = useToast();
   const [openEdit, setOpenEdit] = useState(false);
@@ -92,6 +104,10 @@ const EditUsersButton = memo(props => {
         onConfirm={handleConfirmEdit}
         rolesOptions={rolesOptions}
         originalRoles={isBatchEdit ? [] : user?.roles || []}
+        dialogTestId={dialogTestId}
+        titleTestId={dialogTitleTestId}
+        roleSelectTestId={roleSelectTestId}
+        saveButtonTestId={saveButtonTestId}
       />
     </>
   );
