@@ -51,7 +51,14 @@ const GridTableHeader = memo(props => {
             onClick={isSortable || column.sortable ? () => onSort(column.field) : undefined}
           >
             {isSortable && (
-              <Box sx={styles.sortButton}>
+              <Box
+                sx={styles.sortButton}
+                data-testid={
+                  columnTestIdPrefix
+                    ? `${columnTestIdPrefix}-column-header-${column.field}-sort-icon`
+                    : undefined
+                }
+              >
                 <SortArrows style={styles.sortIcon(isActive, sortConfig?.direction === 'desc')} />
               </Box>
             )}
