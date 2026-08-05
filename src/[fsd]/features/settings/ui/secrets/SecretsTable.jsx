@@ -509,6 +509,7 @@ const SecretsTable = memo(props => {
           )}
           {/* More actions menu */}
           <IconButton
+            data-testid="secret-row-actions-button"
             variant="elitea"
             color="tertiary"
             onClick={handleActionsMenuClick(row.id)}
