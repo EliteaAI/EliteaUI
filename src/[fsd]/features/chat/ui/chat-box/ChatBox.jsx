@@ -33,6 +33,7 @@ import {
   useDeleteMessageAlert,
   useIsMidturnInjectionEnabled,
   useNewInputKeyDownHandler,
+  useNextInputSuggestion,
   useReadAloud,
   useSlashMention,
 } from '@/[fsd]/features/chat/lib/hooks';
@@ -604,6 +605,16 @@ const ChatBox = forwardRef((props, boxRef) => {
     onInjectionReport,
     onInjectionConsumed,
     isMonoChatting: isAgentsPage,
+  });
+
+  const {
+    suggestion: nextInputSuggestion,
+    accept: acceptNextInputSuggestion,
+    dismiss: dismissNextInputSuggestion,
+  } = useNextInputSuggestion({
+    chatHistoryRef,
+    conversationUuid: activeConversation?.uuid,
+    getInputContent: () => chatInput.current?.getInputContent(),
   });
 
   const userParticipantId = useMemo(
@@ -1611,6 +1622,7 @@ const ChatBox = forwardRef((props, boxRef) => {
     async question => {
       stopTTS?.();
       resetSlash();
+      dismissNextInputSuggestion();
 
       if (hasPendingHitlInterrupt) {
         return;
@@ -1618,7 +1630,7 @@ const ChatBox = forwardRef((props, boxRef) => {
 
       return onPredictStream(question);
     },
-    [hasPendingHitlInterrupt, onPredictStream, resetSlash, stopTTS],
+    [hasPendingHitlInterrupt, onPredictStream, resetSlash, stopTTS, dismissNextInputSuggestion],
   );
 
   // Rollback re-sends through the normal path; ref because onPredictStream is
@@ -1675,6 +1687,12 @@ const ChatBox = forwardRef((props, boxRef) => {
 
   const combinedKeyDown = useCallback(
     event => {
+      if (event.key === 'Tab' && nextInputSuggestion && !chatInput.current?.getInputContent()) {
+        event.preventDefault();
+        const accepted = acceptNextInputSuggestion();
+        if (accepted) chatInput.current?.setValue(accepted);
+        return;
+      }
       onKeyDown(event);
       if (isSkillPhaseActive) {
         onSkillKeyDown(event);
@@ -1682,7 +1700,14 @@ const ChatBox = forwardRef((props, boxRef) => {
       }
       slashOnKeyDown(event);
     },
-    [onKeyDown, slashOnKeyDown, isSkillPhaseActive, onSkillKeyDown],
+    [
+      onKeyDown,
+      slashOnKeyDown,
+      isSkillPhaseActive,
+      onSkillKeyDown,
+      nextInputSuggestion,
+      acceptNextInputSuggestion,
+    ],
   );
 
   const combinedInputChange = useCallback(
@@ -2419,6 +2444,7 @@ const ChatBox = forwardRef((props, boxRef) => {
             fromTheChat={fromTheChat}
             conversationId={activeConversation?.id}
             placeholder={inputPlaceholder}
+            suggestion={nextInputSuggestion}
             ref={chatInput}
             onSend={onSendMessage}
             isLoading={isInputLoading}
