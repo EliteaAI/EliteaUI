@@ -36,3 +36,5 @@ export {
   useRemoveAttachmentsMutation,
   TAG_TYPE_CONVERSATION_DETAILS,
 } from './chat.api';
+
+export { useInjectMessageMutation } from './injectMessage.api';

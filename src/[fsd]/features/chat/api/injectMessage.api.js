@@ -1,4 +1,4 @@
-import { eliteaApi } from './eliteaApi.js';
+import { eliteaApi } from '@/api/eliteaApi';
 
 const apiSlicePath = '/elitea_core/inject';
 

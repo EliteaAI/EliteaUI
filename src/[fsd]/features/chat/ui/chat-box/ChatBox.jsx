@@ -31,6 +31,7 @@ import {
   useBudgetWarning,
   useChatSkillMention,
   useDeleteMessageAlert,
+  useIsMidturnInjectionEnabled,
   useNewInputKeyDownHandler,
   useReadAloud,
   useSlashMention,
@@ -48,7 +49,6 @@ import {
   DEFAULT_STEPS_LIMIT,
   DEFAULT_TEMPERATURE,
 } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
-import { useIsMidturnInjectionEnabled } from '@/[fsd]/shared/lib/hooks';
 import {
   cleanLLMSettings,
   isLLMSettingsFamilyConflict,
@@ -57,12 +57,12 @@ import {
 import { Modal } from '@/[fsd]/shared/ui';
 import {
   useConversationEditMutation,
+  useInjectMessageMutation,
   useRegenerateMutation,
   useRemoveAttachmentsMutation,
   useUpdateParticipantLlmSettingsMutation,
 } from '@/api';
 import { useListModelsQuery } from '@/api/configurations.js';
-import { useInjectMessageMutation } from '@/api/injectMessage.js';
 import {
   ChatParticipantType,
   PROMPT_PAYLOAD_KEY,
@@ -2405,7 +2405,12 @@ const ChatBox = forwardRef((props, boxRef) => {
                   >
                     Queued
                   </Box>
-                  <span>{item.text}</span>
+                  <Box
+                    component="span"
+                    sx={styles.pendingInjectionText}
+                  >
+                    {item.text}
+                  </Box>
                 </Box>
               ))}
             </Box>
@@ -2529,12 +2534,12 @@ const chatBoxStyles = () => ({
     color: palette.text.secondary,
     opacity: 0.8,
     minWidth: 0,
-    '& > span': {
-      overflow: 'hidden',
-      textOverflow: 'ellipsis',
-      whiteSpace: 'nowrap',
-    },
   }),
+  pendingInjectionText: {
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
   // A plain word, not a spinner: StyledCircleProgress is position:absolute, so it
   // takes no layout space and lands on top of the text beside it.
   pendingInjectionLabel: ({ palette }) => ({

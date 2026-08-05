@@ -2,13 +2,13 @@ import { memo } from 'react';
 
 import { Box } from '@mui/material';
 
+import { useIsMidturnInjectionAvailable } from '@/[fsd]/features/chat/lib/hooks';
 import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
 import AgentPipelineBuilder from '@/[fsd]/features/settings/ui/project-general/AgentPipelineBuilder';
 import MidturnInjection from '@/[fsd]/features/settings/ui/project-general/MidturnInjection';
 import { ProjectParamsHeader } from '@/[fsd]/features/settings/ui/project-general/general';
 import { ProjectAIConfigurations } from '@/[fsd]/features/settings/ui/project-general/project-ai-configurations';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
-import { useIsMidturnInjectionAvailable } from '@/[fsd]/shared/lib/hooks';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
 
 import SettingsFormProvider from '../shared/SettingsFormProvider';
