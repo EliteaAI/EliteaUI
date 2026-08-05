@@ -1,6 +1,6 @@
 import { memo } from 'react';
 
-import { Box, Typography } from '@mui/material';
+import { alpha, Box, Typography } from '@mui/material';
 
 const EditEntityStepIndicator = memo(props => {
   const { steps, activeStepIndex } = props;
@@ -52,14 +52,14 @@ const styles = {
     width: '1.5rem',
     height: '0.25rem',
     borderRadius: '0.25rem',
-    backgroundColor: palette.primary.hover,
+    backgroundColor: palette.primary.main,
   }),
-  segmentInactive: {
+  segmentInactive: ({ palette }) => ({
     width: '1.5rem',
     height: '0.125rem',
     borderRadius: '0.25rem',
-    backgroundColor: 'rgba(106, 232, 250, 0.3)',
-  },
+    backgroundColor: alpha(palette.primary.main, 0.3),
+  }),
 };
 
 export default EditEntityStepIndicator;
