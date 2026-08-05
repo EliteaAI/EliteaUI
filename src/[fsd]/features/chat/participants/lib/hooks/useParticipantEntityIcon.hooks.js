@@ -1,11 +1,12 @@
 import { createElement, useMemo } from 'react';
 
+import { useTheme } from '@mui/material';
+
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
 import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
 import { ChatParticipantType } from '@/common/constants';
 import { EntityTypeIcon } from '@/components/EntityIcon';
-import { useTheme } from '@emotion/react';
 
 export const useParticipantEntityIcon = participant => {
   const theme = useTheme();

@@ -257,7 +257,7 @@ const runHistoryListItemStyles = (noVersions, actionsMenuOpened) => ({
       top: 0,
       left: 0,
       width: '100%',
-      height: '1px',
+      height: '0.0625rem',
       backgroundColor: palette.divider,
     },
 

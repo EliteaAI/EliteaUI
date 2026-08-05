@@ -57,7 +57,7 @@ const ArrayFieldInput = memo(
 /** @type {MuiSx} */
 const getStyles = () => ({
   helperText: ({ palette }) => ({
-    marginTop: '4px',
+    marginTop: '0.25rem',
     color: palette.text.primary,
   }),
 });

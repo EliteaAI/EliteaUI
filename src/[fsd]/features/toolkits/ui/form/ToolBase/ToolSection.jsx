@@ -1,12 +1,11 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, useTheme } from '@mui/material';
 
 import { ToolBaseHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { Checkbox } from '@/[fsd]/shared/ui';
 import { capitalizeFirstChar, isNullOrUndefined } from '@/common/utils';
-import { useTheme } from '@emotion/react';
 
 const ToolSection = memo(props => {
   const {

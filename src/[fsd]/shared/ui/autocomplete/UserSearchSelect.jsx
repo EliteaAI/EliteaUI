@@ -1,12 +1,11 @@
 import { useCallback } from 'react';
 
-import { Typography } from '@mui/material';
+import { Typography, useTheme } from '@mui/material';
 import { Box } from '@mui/system';
 
 import AutoCompleteDropDown from '@/ComponentsLib/AutoCompleteDropDown';
 import SearchIcon from '@/components/Icons/SearchIcon';
 import UserAvatar from '@/components/UserAvatar';
-import { useTheme } from '@emotion/react';
 
 export default function UserSearchSelect({
   userList,
@@ -21,7 +20,7 @@ export default function UserSearchSelect({
   const theme = useTheme();
   const renderOptionBody = useCallback(option => {
     return (
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
         <UserAvatar
           name={option.name}
           avatar={option.avatar}

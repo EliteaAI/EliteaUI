@@ -1,6 +1,6 @@
 import { memo, useCallback, useMemo, useState } from 'react';
 
-import { Box, IconButton, Tooltip } from '@mui/material';
+import { Box, IconButton, Tooltip, useTheme } from '@mui/material';
 
 import { useDetachSkill } from '@/[fsd]/features/skill/lib/hooks';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
@@ -13,7 +13,6 @@ import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import EliteAImage from '@/components/EliteAImage';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import RouteDefinitions, { getBasename } from '@/routes';
-import { useTheme } from '@emotion/react';
 
 import SkillVersionSelector from './SkillVersionSelector.jsx';
 

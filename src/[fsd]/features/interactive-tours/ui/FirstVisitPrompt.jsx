@@ -1,11 +1,10 @@
 import { memo, useCallback } from 'react';
 
-import { Box, Unstable_TrapFocus as TrapFocus, Typography } from '@mui/material';
+import { Box, Unstable_TrapFocus as TrapFocus, Typography, useTheme } from '@mui/material';
 
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import TutorialsPromptIconDark from '@/assets/tutorials-prompt-icon-dark.svg?react';
 import TutorialsPromptIconLight from '@/assets/tutorials-prompt-icon-light.svg?react';
-import { useTheme } from '@emotion/react';
 
 import InteractiveTourBackdrop from './InteractiveTourBackdrop';
 import TourCard from './TourCard';

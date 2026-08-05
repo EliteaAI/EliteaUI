@@ -84,7 +84,7 @@ const styles = {
   gradientBorder: ({ palette }) => ({
     height: '15.375rem',
     width: '42.5rem',
-    padding: '1px',
+    padding: '0.0625rem',
     borderRadius: '1.5rem',
     background: palette.background.welcome.outside,
   }),

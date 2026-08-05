@@ -117,7 +117,7 @@ const ProjectContextSavedView = memo(props => {
                 ListItemIcon: {
                   sx: {
                     minWidth: '16px !important',
-                    marginRight: '12px',
+                    marginRight: '0.75rem',
                   },
                 },
               }}

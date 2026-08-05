@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
-import { Box, IconButton, Typography } from '@mui/material';
+import { Box, IconButton, Typography, useTheme } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
@@ -11,7 +11,6 @@ import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { handleCopy } from '@/common/utils';
 import CopyIcon from '@/components/Icons/CopyIcon';
 import useToast from '@/hooks/useToast';
-import { useTheme } from '@emotion/react';
 
 const ExpandedViewerModal = memo(props => {
   const {

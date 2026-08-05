@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { useTheme } from '@mui/material';
+
 import { McpAuthConstants } from '@/[fsd]/features/mcp/lib/constants';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { MentionConstants } from '@/[fsd]/shared/lib/constants';
@@ -10,7 +12,6 @@ import {
   parseMentionRanges,
 } from '@/[fsd]/shared/lib/utils/instructionsMention.utils';
 import { useToolsValidationInfo } from '@/hooks/application/useValidateApplicationVersion';
-import { useTheme } from '@emotion/react';
 
 import { useInstructionsSlashCommand } from './useInstructionsSlashCommand.hooks';
 
