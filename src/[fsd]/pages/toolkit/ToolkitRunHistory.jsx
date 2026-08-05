@@ -82,7 +82,6 @@ const ToolkitRunHistory = memo(() => {
           entityId={toolkitId}
           source={isMCP ? ParticipantEntityTypes.MCP : ParticipantEntityTypes.Toolkit}
           versions={null}
-          onClose={goBackToRunIndex}
         />
       </Box>
     </Box>
