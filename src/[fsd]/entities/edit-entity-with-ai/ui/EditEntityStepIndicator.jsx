@@ -1,6 +1,6 @@
 import { memo } from 'react';
 
-import { alpha, Box, Typography } from '@mui/material';
+import { Box, Typography, alpha } from '@mui/material';
 
 const EditEntityStepIndicator = memo(props => {
   const { steps, activeStepIndex } = props;

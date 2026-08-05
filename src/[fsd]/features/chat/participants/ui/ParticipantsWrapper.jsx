@@ -1,13 +1,12 @@
 import React, { memo, useMemo } from 'react';
 
-import { Grid } from '@mui/material';
+import { Grid, useTheme } from '@mui/material';
 
 import { ParticipantDetailsProvider } from '@/[fsd]/features/chat/participants/lib/context/ParticipantDetailsContext';
 import { getChatParticipantUniqueId } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { PERMISSIONS } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import useIsSmallWindow from '@/hooks/useIsSmallWindow';
-import { useTheme } from '@emotion/react';
 
 import Participants from './Participants';
 

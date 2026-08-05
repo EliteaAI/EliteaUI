@@ -1,10 +1,9 @@
 import { memo } from 'react';
 
-import { Box, Tooltip, Typography } from '@mui/material';
+import { Box, Tooltip, Typography, useTheme } from '@mui/material';
 
 import { CONTEXT_MESSAGES, TOOLTIP_CONFIG } from '@/[fsd]/widgets/context-budget/lib/constants';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
-import { useTheme } from '@emotion/react';
 
 /**
  * Progress bar section showing token usage and utilization percentage

@@ -1,6 +1,6 @@
 import { memo, useMemo } from 'react';
 
-import { Box, IconButton, Typography } from '@mui/material';
+import { Box, IconButton, Typography, useTheme } from '@mui/material';
 
 import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { ContextBudgetUI } from '@/[fsd]/widgets/context-budget';
@@ -8,7 +8,6 @@ import DoubleLeftIcon from '@/components/Icons/DoubleLeftIcon';
 import DoubleRightIcon from '@/components/Icons/DoubleRightIcon';
 import useGetComponentWidth from '@/hooks/useGetComponentWidth';
 import useIsSmallWindow from '@/hooks/useIsSmallWindow';
-import { useTheme } from '@emotion/react';
 
 import CollapsedPerticapantsList from './CollapsedParticipants/CollapsedPerticapantsList';
 import ExpandedPerticapantsList from './ExpandedParticipants/ExpandedParticipantsList';

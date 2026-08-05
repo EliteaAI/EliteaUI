@@ -209,8 +209,8 @@ const imageAttachmentStyles = () => ({
     '& .attachActionButtons': {
       visibility: 'hidden',
       position: 'absolute',
-      top: '0px',
-      left: '0px',
+      top: 0,
+      left: 0,
       width: '100%',
       height: '100%',
       display: 'flex',
@@ -231,7 +231,7 @@ const imageAttachmentStyles = () => ({
     maxHeight: '100%',
   },
   iconButton: {
-    marginLeft: '0px',
+    marginLeft: 0,
   },
   icon: {
     fontSize: '1rem',
@@ -249,7 +249,7 @@ const imageAttachmentStyles = () => ({
     pointerEvents: 'none',
   }),
   checkbox: {
-    padding: '0px',
+    padding: 0,
     marginTop: '0.3125rem',
   },
   extraContentBox: {

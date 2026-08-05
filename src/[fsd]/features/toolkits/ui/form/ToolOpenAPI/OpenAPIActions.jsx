@@ -1,10 +1,9 @@
 import { memo } from 'react';
 
-import { Box } from '@mui/material';
+import { Box, useTheme } from '@mui/material';
 
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
-import { useTheme } from '@emotion/react';
 
 import OpenAPIActionsTable from './OpenAPIActionsTable.jsx';
 

@@ -218,7 +218,7 @@ const customHandleStyles = ({
         color: theme.palette.primary.main,
       },
     },
-    plusIcon: { width: '.625rem', height: '10px' },
+    plusIcon: { width: '.625rem', height: '0.625rem' },
   };
 };
 

@@ -89,7 +89,7 @@ const anyOfPatternFieldStyles = () => ({
     flexDirection: 'column',
     justifyContent: 'center',
     height: '100%',
-    width: '16px',
+    width: '1rem',
     cursor: 'pointer',
     pointerEvents: 'auto',
   },

@@ -1,10 +1,9 @@
 import { memo, useCallback, useState } from 'react';
 
-import { Box, IconButton } from '@mui/material';
+import { Box, IconButton, useTheme } from '@mui/material';
 
 import AlertDialog from '@/components/AlertDialog';
 import CloseIcon from '@/components/Icons/CloseIcon';
-import { useTheme } from '@emotion/react';
 
 import IconItem from './ProjectIconItem';
 

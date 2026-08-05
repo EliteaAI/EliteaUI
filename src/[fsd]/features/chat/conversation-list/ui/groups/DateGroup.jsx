@@ -1,10 +1,9 @@
 import React, { memo, useCallback, useMemo, useState } from 'react';
 
 import ArrowForwardIosSharpIcon from '@mui/icons-material/ArrowForwardIosSharp';
-import { Box, Collapse, IconButton, Skeleton, Typography } from '@mui/material';
+import { Box, Collapse, IconButton, Skeleton, Typography, useTheme } from '@mui/material';
 
 import ListInfiniteMoreLoader from '@/ComponentsLib/ListInfiniteMoreLoader';
-import { useTheme } from '@emotion/react';
 
 const DateGroup = memo(props => {
   const {
@@ -62,7 +61,7 @@ const DateGroup = memo(props => {
     // Today specifically" (ELITEA-2095), not just "X and Today both exist
     // somewhere on the page".
     <Box
-      sx={{ marginBottom: '8px' }}
+      sx={{ marginBottom: '0.5rem' }}
       data-testid={`chat-conversation-group-header-${group.name}`}
     >
       <Box
@@ -79,7 +78,7 @@ const DateGroup = memo(props => {
             transition: 'transform 0.15s',
           }}
         >
-          <ArrowForwardIosSharpIcon sx={{ fontSize: '14px' }} />
+          <ArrowForwardIosSharpIcon sx={{ fontSize: '0.875rem' }} />
         </IconButton>
         <Typography
           variant="subtitle2"
@@ -97,7 +96,7 @@ const DateGroup = memo(props => {
       <Collapse in={isExpanded}>
         <Box
           sx={{
-            paddingLeft: '16px',
+            paddingLeft: '1rem',
           }}
         >
           {group.conversations.map((conversation, index) => {
@@ -114,7 +113,7 @@ const DateGroup = memo(props => {
                 variant="rectangular"
                 width="100%"
                 height="2.5rem"
-                sx={{ borderRadius: '.375rem', marginBottom: '2px' }}
+                sx={{ borderRadius: '.375rem', marginBottom: '0.125rem' }}
               />
             ))}
 

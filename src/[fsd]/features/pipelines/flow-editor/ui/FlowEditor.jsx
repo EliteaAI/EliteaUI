@@ -2,7 +2,7 @@ import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useRef, 
 
 import { useDispatch, useSelector } from 'react-redux';
 
-import { Box, Tooltip } from '@mui/material';
+import { Box, Tooltip, useTheme } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { deepClone } from '@mui/x-data-grid/internals';
 
@@ -37,7 +37,6 @@ import CollapseIcon from '@/assets/collapse-second-icon.svg?react';
 import ExpandIcon from '@/assets/expand-third-icon.svg?react';
 import PolylineOutlinedIcon from '@/assets/polyline-outline-icon.svg?react';
 import { actions } from '@/slices/pipeline';
-import { useTheme } from '@emotion/react';
 import {
   Background,
   ControlButton,

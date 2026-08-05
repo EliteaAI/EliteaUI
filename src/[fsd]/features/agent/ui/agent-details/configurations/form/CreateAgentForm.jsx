@@ -2,7 +2,7 @@ import { memo, useCallback, useEffect, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { Box } from '@mui/material';
+import { Box, useTheme } from '@mui/material';
 
 import { AgentInput } from '@/[fsd]/features/agent/ui/agent-details/configurations';
 import ApplicationAdvanceSettings from '@/[fsd]/features/agent/ui/agent-details/configurations/ApplicationAdvanceSettings';
@@ -19,7 +19,6 @@ import EntityIcon from '@/components/EntityIcon';
 import useCreateApplication from '@/hooks/application/useCreateApplication';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import TagEditor from '@/pages/Common/Components/TagEditor';
-import { useTheme } from '@emotion/react';
 
 const CreateAgentForm = memo(props => {
   const { accordionStyle, sx, showInstructions = true, entityType = 'application', onAgentCreated } = props;

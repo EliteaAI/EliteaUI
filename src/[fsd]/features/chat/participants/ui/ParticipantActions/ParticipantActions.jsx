@@ -23,7 +23,7 @@ const ParticipantActions = memo(props => {
   const isPublic = participant.entity_meta?.project_id == PUBLIC_PROJECT_ID;
 
   return (
-    <Box sx={{ display: showButtons ? 'flex' : 'none', gap: '4px', alignItems: 'center' }}>
+    <Box sx={{ display: showButtons ? 'flex' : 'none', gap: '0.25rem', alignItems: 'center' }}>
       {hasRemoteMcpLoggedIn && <McpLogoutButton serverUrl={serverUrl} />}
       {showEditButton && (
         <EditParticipantButton

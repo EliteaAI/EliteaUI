@@ -170,7 +170,7 @@ const CommonStringField = memo(props => {
             variant="elitea"
             color="tertiary"
             sx={{
-              padding: '6px',
+              padding: '0.375rem',
             }}
           >
             <CopyIcon

@@ -297,7 +297,7 @@ const collapsedPerticapantsListStyles = () => ({
     (count, hasError, hasInfo) =>
     ({ palette }) => ({
       padding: '.375rem',
-      borderRadius: '8px',
+      borderRadius: '0.5rem',
       width: '2.25rem',
       height: '2.25rem',
       position: 'relative',

@@ -135,7 +135,7 @@ const resizableCodeMirrorEditorStyles = ({ minHeight }) => ({
     minHeight,
     height: 200,
     border: `1px solid ${palette.border.table}`,
-    borderRadius: '6px',
+    borderRadius: '0.375rem',
     transition: 'border-color 0.2s ease',
 
     '&:hover': {

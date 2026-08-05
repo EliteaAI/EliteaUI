@@ -490,7 +490,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
   // Swarm child message styles
   const swarmChildStyles = isSwarmChild
     ? {
-        marginLeft: '48px',
+        marginLeft: '3rem',
         // Account for margin in width calculation to prevent overflow
         width: 'calc(100% - 48px)',
         maxWidth: 'calc(100% - 48px)',
@@ -1180,7 +1180,7 @@ const applicationAnswerStyles = (
   }),
   swarmChildDetails: {
     padding: '0.75rem',
-    maxHeight: '400px',
+    maxHeight: '25rem',
     overflow: 'auto',
     '& p': {
       margin: '0 0 0.5rem 0',

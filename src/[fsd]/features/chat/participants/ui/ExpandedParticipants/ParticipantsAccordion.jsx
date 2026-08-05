@@ -1,10 +1,9 @@
 import { memo, useCallback, useState } from 'react';
 
-import { Box, IconButton, Tooltip, Typography } from '@mui/material';
+import { Box, IconButton, Tooltip, Typography, useTheme } from '@mui/material';
 
 import RefreshIcon from '@/assets/refresh-icon.svg?react';
 import ArrowDownIcon from '@/components/Icons/ArrowDownIcon';
-import { useTheme } from '@emotion/react';
 
 const ParticipantsAccordion = memo(props => {
   const { title, children, onRefresh, collapsed = false, defaultExpanded = true } = props;

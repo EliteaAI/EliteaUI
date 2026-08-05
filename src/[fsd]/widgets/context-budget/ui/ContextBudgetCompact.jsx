@@ -1,6 +1,6 @@
 import { memo, useMemo } from 'react';
 
-import { Box, IconButton, Tooltip, Typography } from '@mui/material';
+import { Box, IconButton, Tooltip, Typography, useTheme } from '@mui/material';
 
 import { TOOLTIP_CONFIG } from '@/[fsd]/widgets/context-budget/lib/constants';
 import { ContextBudgetTooltipContent, SummaryDetailsButton } from '@/[fsd]/widgets/context-budget/ui';
@@ -9,7 +9,6 @@ import MessagesIcon from '@/assets/messages-icon.svg?react';
 import TokensIcon from '@/assets/tokens-icon.svg?react';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
 import EditIcon from '@/components/Icons/EditIcon';
-import { useTheme } from '@emotion/react';
 
 /**
  * Compact horizontal view of context budget for agents page.

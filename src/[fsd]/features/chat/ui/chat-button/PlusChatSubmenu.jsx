@@ -263,7 +263,7 @@ const submenuStyles = theme => ({
   },
   dividerLine: {
     width: '100%',
-    height: '1px',
+    height: '0.0625rem',
     backgroundColor: theme.palette.border.lines,
   },
   ellipsisText: {

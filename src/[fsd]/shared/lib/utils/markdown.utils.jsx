@@ -78,7 +78,7 @@ export const MarkdownMapping = {
     component: 'p',
     props: {
       style: {
-        marginBlockStart: '0px',
+        marginBlockStart: 0,
         marginBottom: '0.8em',
         whiteSpace: 'pre-wrap',
       },
@@ -102,7 +102,7 @@ export const MarkdownMapping = {
     props: {
       style: {
         ...typographyVariants.bodyMedium,
-        paddingLeft: '24px',
+        paddingLeft: '1.5rem',
         margin: '8px 0',
         listStyleType: 'decimal',
         listStylePosition: 'outside',
@@ -114,7 +114,7 @@ export const MarkdownMapping = {
     props: {
       style: {
         ...typographyVariants.bodyMedium,
-        paddingLeft: '24px',
+        paddingLeft: '1.5rem',
         margin: '8px 0',
         listStyleType: 'disc',
         listStylePosition: 'outside',
@@ -129,8 +129,8 @@ export const MarkdownMapping = {
         whiteSpaceCollapse: 'preserve',
         display: 'list-item',
         listStylePosition: 'outside',
-        paddingLeft: '4px',
-        marginBottom: '4px',
+        paddingLeft: '0.25rem',
+        marginBottom: '0.25rem',
       },
     },
   },

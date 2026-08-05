@@ -187,7 +187,7 @@ const EditSkill = memo(() => {
         <StyledTabs
           fullWidth
           forceShowLabel
-          tabSX={{ paddingX: '24px' }}
+          tabSX={{ paddingX: '1.5rem' }}
           panelStyle={styles.tabPanel}
           tabsSX={styles.tabContainer}
           leftTabbarSectionSX={styles.leftTabbarSection}

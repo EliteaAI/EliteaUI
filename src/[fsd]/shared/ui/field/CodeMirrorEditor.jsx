@@ -1,12 +1,13 @@
 import { forwardRef, memo, useImperativeHandle, useMemo, useRef } from 'react';
 
+import { useTheme } from '@mui/material';
+
 import { useCodeMirror } from '@/[fsd]/shared/lib/hooks';
 import { history, redo, redoDepth, undo, undoDepth } from '@codemirror/commands';
 import { lintGutter } from '@codemirror/lint';
 import { searchKeymap } from '@codemirror/search';
 import { EditorState } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
-import { useTheme } from '@emotion/react';
 import { vscodeDarkInit, vscodeLightInit } from '@uiw/codemirror-theme-vscode';
 import CodeMirror, { EditorView } from '@uiw/react-codemirror';
 
@@ -184,7 +185,7 @@ const CodeMirrorEditor = forwardRef((props, ref) => {
         lineHeight: typography.lineHeight,
       },
       '.cm-editor': {
-        borderRadius: '4px',
+        borderRadius: '0.25rem',
       },
     };
 
@@ -209,16 +210,16 @@ const CodeMirrorEditor = forwardRef((props, ref) => {
       EditorView.theme({
         '&': {
           height: 'auto',
-          minHeight: '60px',
+          minHeight: '3.75rem',
           maxHeight: maxHeight || '100%',
         },
         '.cm-scroller': {
-          minHeight: '60px',
+          minHeight: '3.75rem',
           maxHeight: maxHeight || '100%',
           overflow: 'auto',
         },
         '.cm-content': {
-          minHeight: '60px',
+          minHeight: '3.75rem',
           padding: '8px 0',
         },
         '.cm-focused': {

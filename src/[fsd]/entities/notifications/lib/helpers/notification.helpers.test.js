@@ -50,9 +50,7 @@ describe('sanitizePrivateProjectName', () => {
   });
 
   it('leaves team project names untouched', () => {
-    expect(sanitizePrivateProjectName('Acme has reached its budget.')).toBe(
-      'Acme has reached its budget.',
-    );
+    expect(sanitizePrivateProjectName('Acme has reached its budget.')).toBe('Acme has reached its budget.');
   });
 
   it('returns null/undefined as-is', () => {

@@ -2,13 +2,12 @@ import { memo, useCallback } from 'react';
 
 import { useNavigate } from 'react-router-dom';
 
-import { Box, Unstable_TrapFocus as TrapFocus, Typography } from '@mui/material';
+import { Box, Unstable_TrapFocus as TrapFocus, Typography, useTheme } from '@mui/material';
 
 import { useInteractiveTour } from '@/[fsd]/app/providers/InteractiveTourProvider';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import TutorialsSuccessIconDark from '@/assets/tutorials-success-icon-dark.svg?react';
 import TutorialsSuccessIconLight from '@/assets/tutorials-success-icon-light.svg?react';
-import { useTheme } from '@emotion/react';
 
 import InteractiveTourBackdrop from './InteractiveTourBackdrop';
 import TourCard from './TourCard';

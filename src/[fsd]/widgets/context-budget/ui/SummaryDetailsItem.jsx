@@ -2,14 +2,13 @@ import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 import { format } from 'date-fns';
 
-import { Box, IconButton, Link, Tooltip, Typography } from '@mui/material';
+import { Box, IconButton, Link, Tooltip, Typography, useTheme } from '@mui/material';
 
 import ClockIcon from '@/assets/clock.svg?react';
 import { BORDER_RADIUS } from '@/common/designTokens';
 import DeleteEntityButton from '@/components/DeleteEntityButton';
 import EditIcon from '@/components/Icons/EditIcon';
 import StyledInputModal from '@/components/StyledInputModal';
-import { useTheme } from '@emotion/react';
 
 const ExpandableText = memo(props => {
   const { text, maxLines = 5 } = props;

@@ -2,7 +2,7 @@ import { memo, useCallback, useContext, useMemo, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { Box, IconButton, TextField, Tooltip, Typography } from '@mui/material';
+import { Box, IconButton, TextField, Tooltip, Typography, useTheme } from '@mui/material';
 import { deepClone } from '@mui/x-data-grid/internals';
 
 import { FlowEditorContext } from '@/[fsd]/app/providers';
@@ -19,7 +19,6 @@ import ExpandIcon from '@/assets/expand-icon.svg?react';
 import DotMenu from '@/components/DotMenu';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import useToast from '@/hooks/useToast';
-import { useTheme } from '@emotion/react';
 
 const NodeCardHeader = memo(props => {
   const { name, isEntrypoint, isExpanded, onExpand, type, id, disabled } = props;

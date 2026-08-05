@@ -335,10 +335,10 @@ const styledInputBaseStyles = (
     },
     expandIconButton: {
       zIndex: 100,
-      marginLeft: '0px',
+      marginLeft: 0,
       position: 'absolute',
       top: '-1.875rem',
-      right: '0px',
+      right: 0,
     },
     iconSize: {
       fontSize: '1rem',

@@ -3,13 +3,12 @@ import { memo, useCallback, useMemo } from 'react';
 import DOMPurify from 'dompurify';
 import { MuiMarkdown, getOverrides } from 'mui-markdown';
 
-import { Box } from '@mui/material';
+import { Box, useTheme } from '@mui/material';
 
 import { MarkdownConstants } from '@/[fsd]/shared/lib/constants';
 import { MarkdownMapping, removeHTMLTags } from '@/[fsd]/shared/lib/utils';
 import CodeBlock from '@/components/CodeBlock';
 import MarkdownTableBlock from '@/components/MarkdownTableBlock';
-import { useTheme } from '@emotion/react';
 
 import DefaultMarkdown from './DefaultMarkdown';
 
@@ -396,7 +395,7 @@ const getStyles = ({ palette }) => ({
       marginTop: '1.2em',
     },
     '& p': {
-      marginBlockStart: '0px',
+      marginBlockStart: 0,
       marginBottom: '0.8em',
       whiteSpace: 'pre-wrap',
     },
@@ -407,13 +406,13 @@ const getStyles = ({ palette }) => ({
     },
     '& ol, & ul': {
       fontSize: '0.875rem',
-      paddingLeft: '24px',
+      paddingLeft: '1.5rem',
       margin: '8px 0',
     },
     '& li': {
       display: 'list-item',
-      paddingLeft: '4px',
-      marginBottom: '4px',
+      paddingLeft: '0.25rem',
+      marginBottom: '0.25rem',
     },
     '& strong': { whiteSpace: 'pre-wrap' },
     '& em': { whiteSpace: 'pre-wrap' },

@@ -65,7 +65,7 @@ const scrollableContainerStyles = {
     height: '100%',
     width: '100%',
     '& .simplebar-scrollbar::before': {
-      borderRadius: '999px',
+      borderRadius: '62.4375rem',
       backgroundColor: palette.scrollbar.thumb,
       opacity: 1,
       transition: 'background-color 0.2s ease-in-out, opacity 0.2s ease-in-out',

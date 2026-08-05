@@ -2,7 +2,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 
-import { Box, Button, IconButton, Skeleton, Typography } from '@mui/material';
+import { Box, Button, IconButton, Skeleton, Typography, useTheme } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import {
@@ -31,7 +31,6 @@ import usePreventDoubleClick from '@/hooks/usePreventDoubleClick';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useSortQueryParamsFromUrl from '@/hooks/useSortQueryParamsFromUrl';
 import { DndContext, closestCenter } from '@dnd-kit/core';
-import { useTheme } from '@emotion/react';
 
 const Conversations = memo(props => {
   const {
@@ -345,11 +344,11 @@ const Conversations = memo(props => {
           // which renders `data-testid="chat-move-to-create-folder-menuitem"`.
           key: 'chat-move-to-create-folder',
           label: (
-            <Box style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <Box style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <NewFolder
                 sx={{
-                  width: '16px',
-                  height: '16px',
+                  width: '1rem',
+                  height: '1rem',
                 }}
                 fill={
                   checkPermission(PERMISSIONS.chat.folders.create)
@@ -370,11 +369,11 @@ const Conversations = memo(props => {
           // Renamed from 'back_to_the_list' -> testid family, see note above.
           key: 'chat-move-to-back-to-list',
           label: (
-            <Box style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <Box style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <FromFolder
                 sx={{
-                  width: '16px',
-                  height: '16px',
+                  width: '1rem',
+                  height: '1rem',
                 }}
                 fill={
                   checkPermission(PERMISSIONS.chat.folders.update)
@@ -540,14 +539,14 @@ const Conversations = memo(props => {
     >
       <Box
         data-tour={CHAT_TOUR_TARGET_IDS.conversations}
-        sx={{ height: '100%', position: 'relative', width: collapsed && !isSmallWindow ? '36px' : '100%' }}
+        sx={{ height: '100%', position: 'relative', width: collapsed && !isSmallWindow ? '2.25rem' : '100%' }}
       >
         <Box
           sx={{
             display: 'flex',
             flexDirection: 'row',
             justifyContent: collapsed && !isSmallWindow ? 'center' : 'space-between',
-            height: '32px',
+            height: '2rem',
             alignItems: 'center',
           }}
         >
@@ -555,7 +554,7 @@ const Conversations = memo(props => {
             display={'flex'}
             flexDirection={'row'}
             alignItems={'center'}
-            gap={'8px'}
+            gap={'0.5rem'}
           >
             {(!collapsed || isSmallWindow) && (
               <Typography
@@ -581,7 +580,7 @@ const Conversations = memo(props => {
                       sx={{
                         minWidth: '28px !important',
                         width: '28px !important',
-                        height: '28px',
+                        height: '1.75rem',
                         boxSizing: 'border-box',
                         padding: '6px !important',
                         display: 'flex',
@@ -591,8 +590,8 @@ const Conversations = memo(props => {
                     >
                       <NewFolder
                         sx={{
-                          width: '16px',
-                          height: '16px',
+                          width: '1rem',
+                          height: '1rem',
                         }}
                         fill={
                           checkPermission(PERMISSIONS.chat.folders.create)
@@ -613,7 +612,7 @@ const Conversations = memo(props => {
           </Box>
           {!isSmallWindow && (
             <IconButton
-              sx={{ marginLeft: '0px' }}
+              sx={{ marginLeft: 0 }}
               variant="elitea"
               color="tertiary"
               onClick={onCollapsed}
@@ -637,7 +636,7 @@ const Conversations = memo(props => {
             sx={{
               display: 'flex',
               flexDirection: 'column',
-              gap: '8px',
+              gap: '0.5rem',
               justifyContent: 'center',
               alignItems: 'center',
               width: '100%',
@@ -657,7 +656,7 @@ const Conversations = memo(props => {
                   sx={{
                     minWidth: '28px !important',
                     width: '28px !important',
-                    height: '28px',
+                    height: '1.75rem',
                     boxSizing: 'border-box',
                     padding: '6px !important',
                     display: 'flex',
@@ -667,8 +666,8 @@ const Conversations = memo(props => {
                 >
                   <NewFolder
                     sx={{
-                      width: '16px',
-                      height: '16px',
+                      width: '1rem',
+                      height: '1rem',
                     }}
                     fill={
                       checkPermission(PERMISSIONS.chat.folders.create)
@@ -716,19 +715,19 @@ const Conversations = memo(props => {
               variant="rectangular"
               width="100%"
               height="74px"
-              sx={{ marginTop: '8px' }}
+              sx={{ marginTop: '0.5rem' }}
             />
           ))
         ) : (
           <Box
             ref={listRef}
             sx={{
-              marginTop: '8px',
+              marginTop: '0.5rem',
               display: collapsed && !isSmallWindow ? 'none' : 'flex',
               flexDirection: 'column',
               overflowY: 'scroll',
               height: `calc(100% - 40px)`,
-              paddingBottom: '32px',
+              paddingBottom: '2rem',
             }}
           >
             {renderFoldersSection({ isPinned: true })}
@@ -777,7 +776,7 @@ const Conversations = memo(props => {
                   <Typography
                     variant="bodyMedium"
                     color="text.button.disabled"
-                    sx={{ marginBottom: '8px' }}
+                    sx={{ marginBottom: '0.5rem' }}
                   >
                     No conversations found
                   </Typography>
