@@ -92,6 +92,7 @@ const NewChatInput = forwardRef((props, ref) => {
     participants = [],
 
     slashHighlights = [],
+    suggestion = null,
 
     // Speaking mode
     isSpeakingMode = false,
@@ -372,6 +373,10 @@ const NewChatInput = forwardRef((props, ref) => {
         highlight: {
           ranges: slashHighlights,
           color: theme.palette.primary.main,
+        },
+        suggestion: {
+          text: suggestion,
+          color: theme.palette.text.metrics,
         },
       }}
       clearInputAfterSend={clearInputAfterSubmit}
