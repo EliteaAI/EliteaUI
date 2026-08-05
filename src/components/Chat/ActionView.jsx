@@ -2,7 +2,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { Box, Collapse, Typography } from '@mui/material';
+import { Box, Collapse, Tooltip, Typography } from '@mui/material';
 
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
@@ -18,6 +18,7 @@ import { useTheme } from '@emotion/react';
 
 import EliteAImage from '../EliteAImage';
 import ModelIcon from '../Icons/ModelIcon';
+import UserIcon from '../Icons/UserIcon';
 import { StyledCircleProgress } from './StyledComponents';
 import ToolModal from './ToolModal';
 
@@ -349,6 +350,52 @@ const ActionView = memo(props => {
     styles.modelIconStyle,
   ]);
 
+  // A mid-turn interjection is the user's own words, not agent activity. Render it as a
+  // chip sized like its neighbours — injected text can run to a few thousand characters,
+  // which inline would stretch the wrap row and squeeze the surrounding pins — and put
+  // the full text in the same click-through modal the other pins use.
+  if (action.type === TOOL_ACTION_TYPES.MidturnInjection) {
+    const injectedText = action.content || action.toolOutputs || '';
+    return (
+      <>
+        <Box sx={styles.container(width)}>
+          <Box sx={styles.header}>
+            <Tooltip
+              title={injectedText}
+              placement="top"
+            >
+              <Box
+                sx={styles.injectionBadge}
+                onClick={() => setOpenModalView(true)}
+                data-testid="midturn-injection-pin"
+              >
+                <Box sx={styles.iconContainer}>
+                  <UserIcon sx={styles.injectionIconStyle} />
+                </Box>
+                <Typography
+                  variant="bodySmall2"
+                  color="text.secondary"
+                  sx={styles.toolkitName}
+                >
+                  You interjected: {injectedText}
+                </Typography>
+              </Box>
+            </Tooltip>
+          </Box>
+        </Box>
+        {/* The text is the modal's INPUT: an interjection is something the user fed the
+            run, not something the run produced. */}
+        <ToolModal
+          open={openModalView}
+          onClose={onCloseModalView}
+          toolData={action}
+          title="You interjected"
+          input={injectedText}
+        />
+      </>
+    );
+  }
+
   return (
     <>
       <Box sx={styles.container(width)}>
@@ -511,6 +558,27 @@ const actionViewStyles = () => ({
     flexDirection: 'column',
     gap: '0.5rem',
   }),
+  injectionBadge: ({ palette }) => ({
+    height: '1.75rem',
+    // Injected text is only capped at a few KB, so the chip must not size to its
+    // content: without this it stretches the flex-wrap row and squeezes its neighbours.
+    maxWidth: '22rem',
+    display: 'flex',
+    padding: '0.125rem 0.75rem',
+    gap: '0.5rem',
+    borderRadius: '0.5rem',
+    border: `0.0625rem dashed ${palette.border.lines}`,
+    alignItems: 'center',
+    cursor: 'pointer',
+    fontStyle: 'italic',
+    '&:hover': {
+      background: palette.background.participant.hover,
+    },
+  }),
+  injectionIconStyle: {
+    width: '0.875rem',
+    height: '0.875rem',
+  },
   header: {
     width: '100%',
     height: 'auto',

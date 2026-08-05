@@ -143,6 +143,22 @@ export const convertToPlayerQuestion = (message_group, playerInfo, participants)
 export const traceRowToStep = row => {
   const attrs = row.attrs || {};
   if (row.kind === 'thinking_step') {
+    // A mid-turn injection rides the thinking_step kind but renders as the user's own
+    // interjection. Its text comes from attrs (the list path never selects `text`), so
+    // the pin is complete at rest and needs no detail fetch.
+    if (attrs.midturn_injection_id) {
+      return {
+        ...attrs,
+        stepType: 'midturn_injection',
+        injectionId: attrs.midturn_injection_id,
+        text: attrs.midturn_injection_text || '',
+        thinking: '',
+        timestamp_start: row.started_at,
+        timestamp_finish: row.finished_at,
+        _traceStepId: row.id,
+        _traceMessageGroupId: row.message_group_id,
+      };
+    }
     return {
       ...attrs,
       stepType: 'thinking_step',
@@ -221,6 +237,23 @@ export const convertToAIAnswer = (message_group, message_groups, participants, t
         new Date(b.timestamp_start || b.timestamp_finish).getTime(),
     );
   sortedSteps?.forEach(step => {
+    if (step.stepType === 'midturn_injection') {
+      toolActions.push({
+        name: TOOL_ACTION_NAMES.MidturnInjection,
+        id: `injection_${step.injectionId}`,
+        injectionId: step.injectionId,
+        traceStepId: step._traceStepId,
+        traceMessageGroupId: step._traceMessageGroupId,
+        status: ToolActionStatus.complete,
+        type: TOOL_ACTION_TYPES.MidturnInjection,
+        toolInputs: '',
+        toolOutputs: step.text,
+        content: step.text,
+        timestampStart: step.timestamp_start,
+        timestampFinish: step.timestamp_finish,
+      });
+      return;
+    }
     if (step.stepType === 'thinking_step') {
       // Handle thinking step
       const {

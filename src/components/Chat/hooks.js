@@ -280,6 +280,8 @@ export const useChatSocket = ({
   activeParticipant,
   participants,
   onRcvAgentEvent,
+  onInjectionReport,
+  onInjectionConsumed,
 }) => {
   const trackEvent = useTrackEvent();
 
@@ -307,6 +309,8 @@ export const useChatSocket = ({
   const activeParticipantRef = useRef();
   const participantsRef = useRef(participants);
   const onRcvAgentEventRef = useRef(onRcvAgentEvent);
+  const onInjectionReportRef = useRef(onInjectionReport);
+  const onInjectionConsumedRef = useRef(onInjectionConsumed);
   const isMonoChattingRef = useRef(isMonoChatting);
   const setChatHistoryRef = useRef(setChatHistory);
   const setIsRunningRef = useRef(setIsRunning);
@@ -327,6 +331,14 @@ export const useChatSocket = ({
   useEffect(() => {
     onRcvAgentEventRef.current = onRcvAgentEvent;
   }, [onRcvAgentEvent]);
+
+  useEffect(() => {
+    onInjectionReportRef.current = onInjectionReport;
+  }, [onInjectionReport]);
+
+  useEffect(() => {
+    onInjectionConsumedRef.current = onInjectionConsumed;
+  }, [onInjectionConsumed]);
 
   useEffect(() => {
     activeParticipantRef.current = activeParticipant;
@@ -522,17 +534,38 @@ export const useChatSocket = ({
             participant => participant.id === author_participant_id,
           );
           const sentTo = participantsRef.current?.find(participant => participant.id === sent_to_id);
-          msg.id = userMessageId;
-          msg.role = ROLES.User;
-          msg.name = theUser?.meta.user_name || '';
-          msg.avatar = theUser?.meta.user_avatar || '';
-          msg.content = question;
-          msg.message_items = message_items;
-          msg.created_at = new Date(convertTime(created_at)).getTime();
-          msg.user_id = author_participant_id;
-          msg.participant_id = sent_to_id;
-          msg.sentTo = sentTo;
-          setChatHistoryRef.current?.(prev => [...prev, { ...msg }]);
+          // A mid-turn injection re-emits a group the sender already has, with one
+          // extra text item. Appending would duplicate the bubble, so update that
+          // group in place and only append when it is genuinely new (another user's
+          // message arriving in a shared conversation).
+          //
+          // Do NOT mutate `msg` here: for an injection it resolves to the streaming
+          // ASSISTANT message (matched on message_id), and stamping role/content
+          // onto it would turn the in-flight answer into a user bubble.
+          setChatHistoryRef.current?.(prev => {
+            const existingIdx = prev.findIndex(m => m.id === userMessageId);
+            if (existingIdx >= 0) {
+              const next = [...prev];
+              next[existingIdx] = { ...next[existingIdx], message_items, content: question };
+              return next;
+            }
+            return [
+              ...prev,
+              {
+                ...msg,
+                id: userMessageId,
+                role: ROLES.User,
+                name: theUser?.meta.user_name || '',
+                avatar: theUser?.meta.user_avatar || '',
+                content: question,
+                message_items,
+                created_at: new Date(convertTime(created_at)).getTime(),
+                user_id: author_participant_id,
+                participant_id: sent_to_id,
+                sentTo,
+              },
+            ];
+          });
           break;
         }
         case SocketMessageType.Chunk:
@@ -1313,6 +1346,50 @@ export const useChatSocket = ({
             [GA_EVENT_PARAMS.TIMESTAMP]: new Date().toISOString(),
           });
           onRcvAgentEventRef.current && onRcvAgentEventRef.current({ ...message });
+          break;
+        }
+        case SocketMessageType.InjectionReady:
+          // The agent loop is now listening, so the UI may offer the inject
+          // affordance. Before this arrives there is no registered thread to
+          // deliver into, which is what removes the registration race.
+          msg.isInjectable = true;
+          break;
+        case SocketMessageType.InjectionConsumed: {
+          // Live ack. Also drop a pin into the running turn's timeline so the user
+          // sees where their interjection landed among the tool/thinking chips —
+          // the same row the backend persists, so live and reloaded views match.
+          const consumedId = response_metadata?.injection_id;
+          if (consumedId) {
+            msg.consumedInjectionIds = [...(msg.consumedInjectionIds || []), consumedId];
+            const pinId = `injection_${consumedId}`;
+            if (msg.toolActions === undefined) msg.toolActions = [];
+            if (!msg.toolActions.find(i => i.id === pinId)) {
+              const injectedText = response_metadata?.text || '';
+              msg.toolActions.push({
+                name: TOOL_ACTION_NAMES.MidturnInjection,
+                id: pinId,
+                injectionId: consumedId,
+                status: ToolActionStatus.complete,
+                type: TOOL_ACTION_TYPES.MidturnInjection,
+                toolInputs: '',
+                toolOutputs: injectedText,
+                content: injectedText,
+                created_at: message.created_at,
+              });
+            }
+            onInjectionConsumedRef.current?.(consumedId);
+          }
+          break;
+        }
+        case SocketMessageType.InjectionConsumedReport: {
+          // Authoritative: anything sent but absent here was never folded into
+          // the turn. Emitted even when empty, so silence is meaningful.
+          msg.isInjectable = false;
+          msg.consumedInjectionIds = response_metadata?.consumed || [];
+          onInjectionReportRef.current?.({
+            messageId: msg.id,
+            consumed: msg.consumedInjectionIds,
+          });
           break;
         }
         case SocketMessageType.References:

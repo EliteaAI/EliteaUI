@@ -42,7 +42,9 @@ import {
   useBudgetWarning,
   useChatSkillMention,
   useDeleteMessageAlert,
+  useIsMidturnInjectionEnabled,
   useNewInputKeyDownHandler,
+  useNextInputSuggestion,
   useReadAloud,
   useSlashMention,
 } from '@/[fsd]/features/chat/lib/hooks';
@@ -67,6 +69,7 @@ import {
 import { Modal } from '@/[fsd]/shared/ui';
 import {
   useConversationEditMutation,
+  useInjectMessageMutation,
   useLazyConversationDetailsQuery,
   useLazyMessageTracesQuery,
   useRegenerateMutation,
@@ -218,6 +221,7 @@ const ChatBox = forwardRef((props, boxRef) => {
   });
 
   const [regenerate] = useRegenerateMutation();
+  const [injectMessage] = useInjectMessageMutation();
   const [conversationEdit] = useConversationEditMutation();
   const [getConversationDetail] = useLazyConversationDetailsQuery();
   const [getMessageTraces] = useLazyMessageTracesQuery();
@@ -225,7 +229,7 @@ const ChatBox = forwardRef((props, boxRef) => {
   const [updateChatLlmSettings, { isLoading: modelSettingsAreSaving }] =
     useUpdateParticipantLlmSettingsMutation();
 
-  const { name, id: userId, avatar } = useSelector(state => state.user);
+  const { name, id: userId, avatar, personalization: userPersonalization } = useSelector(state => state.user);
 
   const { chat_history, pendingHitlMessage } = useMemo(() => {
     const history = activeConversation?.chat_history || [];
@@ -600,6 +604,30 @@ const ChatBox = forwardRef((props, boxRef) => {
     [onDeleteAllMessages],
   );
 
+  // Injections sent but not yet confirmed consumed. Mirrored into state because the
+  // queue is rendered above the input: with no visible "waiting" chip an injection
+  // looks like it vanished, since its own bubble is scrolled away behind live pins.
+  const [pendingInjections, setPendingInjections] = useState([]);
+  const pendingInjectionsRef = useRef(new Map());
+
+  // Acked: the loop folded it in and a timeline pin now shows it, so stop waiting.
+  const onInjectionConsumed = useCallback(injectionId => {
+    pendingInjectionsRef.current.delete(injectionId);
+    setPendingInjections(prev => prev.filter(item => item.id !== injectionId));
+  }, []);
+
+  // Turn ended: anything still pending was never folded in, so re-send it as a
+  // normal message rather than leaving it silently stranded in history.
+  const onInjectionReport = useCallback(({ consumed }) => {
+    const pending = pendingInjectionsRef.current;
+    if (!pending.size) return;
+    (consumed || []).forEach(id => pending.delete(id));
+    const unconsumed = [...pending.values()];
+    pendingInjectionsRef.current = new Map();
+    setPendingInjections([]);
+    unconsumed.forEach(text => onPredictStreamRef.current?.(text));
+  }, []);
+
   const { chatHistoryRef, emit, emitLeaveRoom, handleSocketEvent, handleSocketErrorEvent } = useChatSocket({
     mode: 'chat',
     handleError,
@@ -608,7 +636,19 @@ const ChatBox = forwardRef((props, boxRef) => {
     activeParticipant,
     participants: activeConversation?.participants || [],
     onRcvAgentEvent,
+    onInjectionReport,
+    onInjectionConsumed,
     isMonoChatting: isAgentsPage,
+  });
+
+  const {
+    suggestion: nextInputSuggestion,
+    accept: acceptNextInputSuggestion,
+    dismiss: dismissNextInputSuggestion,
+  } = useNextInputSuggestion({
+    chatHistoryRef,
+    conversationUuid: activeConversation?.uuid,
+    getInputContent: () => chatInput.current?.getInputContent(),
   });
 
   const userParticipantId = useMemo(
@@ -1601,7 +1641,11 @@ const ChatBox = forwardRef((props, boxRef) => {
       // (routed by tool_call_id) — the single `hitl_action` path would drop the
       // SDK to the sequential resume and the suffixed child thread_id would
       // never match. Fan-out children take the independent path above instead.
+      // A clarifying-question ('answer') is always a single scalar pause — it
+      // never fans out — so it must resume via top-level hitl_action/hitl_value,
+      // never the hitl_decisions list protocol.
       const isParallel =
+        action !== 'answer' &&
         !isFanoutChild &&
         Array.isArray(lastMessage.hitlInterrupts) &&
         lastMessage.hitlInterrupts.length > 0 &&
@@ -1753,9 +1797,12 @@ const ChatBox = forwardRef((props, boxRef) => {
       } else {
         payload.hitl_action = action;
         // `edit` carries the rewritten prompt; `block_with_comment` carries the
-        // user's free-text note (-> SDK blocked-tool `denial_reason`, #5318).
+        // user's free-text note (-> SDK blocked-tool `denial_reason`, #5318);
+        // `answer` carries the clarifying-question answers object.
         if (action === 'edit' || action === 'block_with_comment') {
           payload.hitl_value = value ?? '';
+        } else if (action === 'answer') {
+          payload.hitl_value = value ?? {};
         }
       }
 
@@ -1855,6 +1902,7 @@ const ChatBox = forwardRef((props, boxRef) => {
     async question => {
       stopTTS?.();
       resetSlash();
+      dismissNextInputSuggestion();
 
       if (hasPendingHitlInterrupt) {
         return;
@@ -1862,7 +1910,46 @@ const ChatBox = forwardRef((props, boxRef) => {
 
       return onPredictStream(question);
     },
-    [hasPendingHitlInterrupt, onPredictStream, resetSlash, stopTTS],
+    [hasPendingHitlInterrupt, onPredictStream, resetSlash, stopTTS, dismissNextInputSuggestion],
+  );
+
+  // Rollback re-sends through the normal path; ref because onPredictStream is
+  // declared after the socket hook that owns the report callback.
+  const onPredictStreamRef = useRef(onPredictStream);
+  useEffect(() => {
+    onPredictStreamRef.current = onPredictStream;
+  }, [onPredictStream]);
+
+  const onInjectMessage = useCallback(
+    async question => {
+      const text = question?.trim();
+      if (!text || !activeConversation?.uuid) return;
+      stopTTS?.();
+      resetSlash();
+
+      const injectionId = uuidv4();
+      pendingInjectionsRef.current.set(injectionId, text);
+      setPendingInjections(prev => [...prev, { id: injectionId, text }]);
+      // Chat passes clearInputAfterSubmit={false}, so clearing is the caller's job
+      // here just as it is in onPredictStream.
+      chatInput.current?.reset();
+      try {
+        await injectMessage({
+          projectId,
+          conversationUuid: activeConversation.uuid,
+          userInput: text,
+          injectionId,
+        }).unwrap();
+      } catch {
+        // The turn may have ended between enabling the control and sending (409),
+        // or the text may be over the size cap (400). Either way it was never
+        // delivered, so fall back to a normal message.
+        pendingInjectionsRef.current.delete(injectionId);
+        setPendingInjections(prev => prev.filter(item => item.id !== injectionId));
+        return onPredictStreamRef.current?.(text);
+      }
+    },
+    [activeConversation?.uuid, injectMessage, projectId, resetSlash, stopTTS],
   );
 
   const {
@@ -1880,6 +1967,12 @@ const ChatBox = forwardRef((props, boxRef) => {
 
   const combinedKeyDown = useCallback(
     event => {
+      if (event.key === 'Tab' && nextInputSuggestion && !chatInput.current?.getInputContent()) {
+        event.preventDefault();
+        const accepted = acceptNextInputSuggestion();
+        if (accepted) chatInput.current?.setValue(accepted);
+        return;
+      }
       onKeyDown(event);
       if (isSkillPhaseActive) {
         onSkillKeyDown(event);
@@ -1887,7 +1980,14 @@ const ChatBox = forwardRef((props, boxRef) => {
       }
       slashOnKeyDown(event);
     },
-    [onKeyDown, slashOnKeyDown, isSkillPhaseActive, onSkillKeyDown],
+    [
+      onKeyDown,
+      slashOnKeyDown,
+      isSkillPhaseActive,
+      onSkillKeyDown,
+      nextInputSuggestion,
+      acceptNextInputSuggestion,
+    ],
   );
 
   const combinedInputChange = useCallback(
@@ -2397,6 +2497,18 @@ const ChatBox = forwardRef((props, boxRef) => {
 
   const displayConversationStarters = !isProcessingSymbols && conversationStarters?.length > 0;
 
+  const isMidturnInjectionEnabled = useIsMidturnInjectionEnabled(userPersonalization);
+
+  // Scoped to the in-flight turn, not global: the indexer sets isInjectable on
+  // the specific streaming message, so multi-participant conversations with more
+  // than one turn running only open the affordance for a turn that is listening.
+  const isInjectable = useMemo(() => {
+    if (!isMidturnInjectionEnabled) return false;
+    if (!isStreamingNow || hasPendingHitlInterrupt) return false;
+    const streaming = chat_history.find(msg => msg.isStreaming && msg.isInjectable);
+    return Boolean(streaming);
+  }, [chat_history, hasPendingHitlInterrupt, isMidturnInjectionEnabled, isStreamingNow]);
+
   const isInputLoading = useMemo(
     () =>
       isLoadingConversation ||
@@ -2405,7 +2517,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       isUploadingAttachments ||
       isUpdatingInternalToolsConfig ||
       activeConversation?.isSending ||
-      isStreamingNow,
+      (isStreamingNow && !isInjectable),
     [
       isLoadingConversation,
       isFetchingParticipant,
@@ -2414,6 +2526,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       isUpdatingInternalToolsConfig,
       activeConversation?.isSending,
       isStreamingNow,
+      isInjectable,
     ],
   );
 
@@ -2456,7 +2569,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       isUpdatingInternalToolsConfig ||
       activeConversation?.isSending ||
       hasPendingHitlInterrupt ||
-      isStreamingNow ||
+      (isStreamingNow && !isInjectable) ||
       isActiveParticipantBroken,
     [
       isLoadingConversation,
@@ -2467,6 +2580,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       activeConversation?.isSending,
       hasPendingHitlInterrupt,
       isStreamingNow,
+      isInjectable,
       isActiveParticipantBroken,
     ],
   );
@@ -2582,10 +2696,35 @@ const ChatBox = forwardRef((props, boxRef) => {
               onDismiss={budgetWarning.dismiss}
             />
           )}
+          {pendingInjections.length > 0 && (
+            <Box sx={styles.pendingInjections}>
+              {pendingInjections.map(item => (
+                <Box
+                  key={item.id}
+                  sx={styles.pendingInjectionChip}
+                  data-testid="pending-injection-chip"
+                >
+                  <Box
+                    component="span"
+                    sx={styles.pendingInjectionLabel}
+                  >
+                    Queued
+                  </Box>
+                  <Box
+                    component="span"
+                    sx={styles.pendingInjectionText}
+                  >
+                    {item.text}
+                  </Box>
+                </Box>
+              ))}
+            </Box>
+          )}
           <NewChatInput
             fromTheChat={fromTheChat}
             conversationId={activeConversation?.id}
             placeholder={inputPlaceholder}
+            suggestion={nextInputSuggestion}
             ref={chatInput}
             onSend={onSendMessage}
             isLoading={isInputLoading}
@@ -2610,6 +2749,8 @@ const ChatBox = forwardRef((props, boxRef) => {
             selectedModel={selectedModel}
             selectSavedOrDefaultModel={selectSavedOrDefaultModel}
             isStreaming={isStreamingNow || isStreaming}
+            isInjectable={isInjectable}
+            onInject={onInjectMessage}
             onStopGeneration={handleStopStreaming}
             disableSwitchingParticipant={shouldDisableSwitchingParticipant}
             users={users}
@@ -2684,6 +2825,39 @@ const chatBoxStyles = () => ({
     padding: '0 0.5rem 0.5rem 0.5rem',
     gap: '0.5rem',
   },
+  pendingInjections: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem',
+    padding: '0 0.75rem 0.25rem 0.75rem',
+  },
+  pendingInjectionChip: ({ palette }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    fontSize: '0.75rem',
+    fontStyle: 'italic',
+    color: palette.text.secondary,
+    opacity: 0.8,
+    minWidth: 0,
+  }),
+  pendingInjectionText: {
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  // A plain word, not a spinner: StyledCircleProgress is position:absolute, so it
+  // takes no layout space and lands on top of the text beside it.
+  pendingInjectionLabel: ({ palette }) => ({
+    flexShrink: 0,
+    fontStyle: 'normal',
+    padding: '0.0625rem 0.375rem',
+    borderRadius: '0.25rem',
+    border: `0.0625rem solid ${palette.border.lines}`,
+    fontSize: '0.6875rem',
+    textTransform: 'uppercase',
+    letterSpacing: '0.03em',
+  }),
 });
 
 export default memo(ChatBox);

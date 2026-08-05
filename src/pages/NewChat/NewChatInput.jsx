@@ -20,6 +20,8 @@ const NewChatInput = forwardRef((props, ref) => {
     onSend,
     isLoading,
     isStreaming = false,
+    isInjectable = false,
+    onInject,
     onStopGeneration,
     disabledSend,
     placeholder = '',
@@ -90,6 +92,7 @@ const NewChatInput = forwardRef((props, ref) => {
     participants = [],
 
     slashHighlights = [],
+    suggestion = null,
 
     // Speaking mode
     isSpeakingMode = false,
@@ -160,6 +163,14 @@ const NewChatInput = forwardRef((props, ref) => {
     [onSend],
   );
 
+  const handleInject = useCallback(
+    question => {
+      voiceButtonRef.current?.stop();
+      onInject?.(question);
+    },
+    [onInject],
+  );
+
   useEffect(() => {
     voiceButtonRef.current?.stop();
   }, [conversationId]);
@@ -210,6 +221,8 @@ const NewChatInput = forwardRef((props, ref) => {
     <UserInput
       dataTourTargetId={CHAT_TOUR_TARGET_IDS.messageInput}
       isStreaming={isStreaming}
+      isInjectable={isInjectable}
+      onInject={handleInject}
       onStop={onStopGeneration}
       attachments={attachments}
       onDeleteAttachment={onDeleteAttachment}
@@ -360,6 +373,10 @@ const NewChatInput = forwardRef((props, ref) => {
         highlight: {
           ranges: slashHighlights,
           color: theme.palette.primary.main,
+        },
+        suggestion: {
+          text: suggestion,
+          color: theme.palette.text.metrics,
         },
       }}
       clearInputAfterSend={clearInputAfterSubmit}

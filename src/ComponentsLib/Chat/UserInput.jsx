@@ -23,6 +23,7 @@ import { BaseBtn } from '@/[fsd]/shared/ui/button';
 import StopIcon from '@/assets/stop-icon.svg?react';
 import { generateRandomAppendix, renameFile } from '@/common/attachmentValidationUtils';
 import FileList from '@/components/Chat/FileList';
+import SendIcon from '@/components/Icons/SendIcon';
 
 import { useMentionDetection } from './useMentionDetection';
 
@@ -68,17 +69,20 @@ const UserInput = forwardRef((props, ref) => {
       },
       footerContainer = {},
       highlight = {},
+      suggestion = {},
     } = {},
     clearInputAfterSend = true,
     disabledSend,
     disabledInput,
     onSend,
     onStop,
+    onInject,
     onNormalKeyDown,
     onInputChange,
     tooltipOfSendButton,
     showLoading = false,
     isStreaming = false,
+    isInjectable = false,
     attachments = [],
     onDeleteAttachment,
     onFilePaste,
@@ -143,6 +147,9 @@ const UserInput = forwardRef((props, ref) => {
 
   const { ranges: highlightRanges = [] } = highlight;
   const hasHighlights = highlightRanges.length > 0 && !!inputContent;
+
+  const { text: suggestionText, color: suggestionColor } = suggestion;
+  const hasSuggestion = !!suggestionText && !inputContent;
 
   const styles = userInputStyles(isFocused, isDragOver, isRecording);
 
@@ -335,9 +342,25 @@ const UserInput = forwardRef((props, ref) => {
     insertTextAtCursor('\n');
   }, [insertTextAtCursor]);
 
+  // Injection has its own path rather than relaxing sendQuestion's guard: that
+  // guard must keep blocking normal sends while a turn is streaming.
+  const injectQuestion = useCallback(() => {
+    if (!question.trim()) return;
+    if (clearInputAfterSend) {
+      setInputContentWithRef('');
+      setQuestion('');
+      setShowExpandIcon(false);
+    }
+    onInject?.(question);
+  }, [clearInputAfterSend, onInject, question, setInputContentWithRef]);
+
   const onEnterDown = useCallback(() => {
+    if (isInjectable) {
+      injectQuestion();
+      return;
+    }
     sendQuestion();
-  }, [sendQuestion]);
+  }, [injectQuestion, isInjectable, sendQuestion]);
 
   const handlePaste = useCallback(
     event => {
@@ -416,6 +439,14 @@ const UserInput = forwardRef((props, ref) => {
                 />
               </div>
             )}
+            {hasSuggestion && (
+              <Box
+                ref={mirrorCallbackRef}
+                sx={{ color: suggestionColor, opacity: 0.6 }}
+              >
+                {suggestionText}
+              </Box>
+            )}
             <TextField
               data-testid="chat-input"
               value={inputContent}
@@ -491,21 +522,43 @@ const UserInput = forwardRef((props, ref) => {
                 )}
               </Box>
             ) : (
-              <Tooltip
-                title={stopButton?.tooltip?.title || ''}
-                placement="top"
-              >
-                <Box component="span">
-                  <BaseBtn
-                    variant="icon"
-                    color="secondary"
-                    sx={styles.stopButton(stopButton)}
-                    onClick={onStop}
+              <Box sx={styles.sendButtonContainer}>
+                {/* Stop stays available while streaming; inject is offered alongside
+                    it only once the running turn reports that it is listening. */}
+                {isInjectable && (
+                  <Tooltip
+                    title="Send to the running agent"
+                    placement="top"
                   >
-                    <StopIcon style={styles.stopIconStyle} />
-                  </BaseBtn>
-                </Box>
-              </Tooltip>
+                    <Box component="span">
+                      <BaseBtn
+                        variant="icon"
+                        color="secondary"
+                        data-testid="chat-inject-button"
+                        disabled={!question.trim()}
+                        onClick={injectQuestion}
+                      >
+                        <SendIcon />
+                      </BaseBtn>
+                    </Box>
+                  </Tooltip>
+                )}
+                <Tooltip
+                  title={stopButton?.tooltip?.title || ''}
+                  placement="top"
+                >
+                  <Box component="span">
+                    <BaseBtn
+                      variant="icon"
+                      color="secondary"
+                      sx={styles.stopButton(stopButton)}
+                      onClick={onStop}
+                    >
+                      <StopIcon style={styles.stopIconStyle} />
+                    </BaseBtn>
+                  </Box>
+                </Tooltip>
+              </Box>
             )}
           </Box>
         </Box>
