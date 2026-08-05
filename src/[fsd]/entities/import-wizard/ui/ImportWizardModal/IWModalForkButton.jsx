@@ -203,10 +203,15 @@ const IWModalForkButton = memo(({ selectedProject, onSuccess }) => {
         response = await forkFunc({ projectId: selectedProjectId, data: selectedData });
         break;
       default: {
+        // main_entity spares the backend from inferring the user's pick from payload shape.
         const body =
           mainEntityName === 'agents'
-            ? { applications: selectedData, ...(selectedSkills.length ? { skills: selectedSkills } : {}) }
-            : { [mainEntityName]: selectedData };
+            ? {
+                main_entity: mainEntityName,
+                applications: selectedData,
+                ...(selectedSkills.length ? { skills: selectedSkills } : {}),
+              }
+            : { main_entity: mainEntityName, [mainEntityName]: selectedData };
         response = await forkFunc({ projectId: selectedProjectId, body });
       }
     }
