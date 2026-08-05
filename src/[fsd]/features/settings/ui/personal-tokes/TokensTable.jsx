@@ -287,9 +287,12 @@ const TokensTable = memo(props => {
   const renderCell = useCallback(
     (column, value, row) => {
       if (column.field === 'name') {
+        // Dead branch for THIS table: GridTableRow special-cases the name
+        // column via GridTableRowNameCell / nameCellTestId (below), never
+        // through renderCell — kept only because TOKENS_COLUMNS declares a
+        // 'name' field and other renderCell callers rely on this shape.
         return (
           <Text.EllipsisTypography
-            data-testid="token-name-cell"
             variant="bodyMedium"
             color="text.secondary"
             sx={styles.nameCell}
@@ -362,6 +365,7 @@ const TokensTable = memo(props => {
             <GridTableRow
               key={row.id}
               data-testid="token-row"
+              nameCellTestId="token-name-cell"
               row={row}
               isSelected={false}
               isHovered={hoveredRowId === row.id}

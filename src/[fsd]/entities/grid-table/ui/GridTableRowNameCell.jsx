@@ -6,7 +6,7 @@ import { Tooltip } from '@/[fsd]/shared/ui';
 import { DataTableNameCell } from '@/[fsd]/widgets/data-table';
 
 const DefaultNameCellContent = memo(props => {
-  const { namePrefix, isLoading, loadingProgress, rowName, styles } = props;
+  const { namePrefix, isLoading, loadingProgress, rowName, styles, nameCellTestId } = props;
 
   return (
     <>
@@ -15,6 +15,7 @@ const DefaultNameCellContent = memo(props => {
         {isLoading ? (
           <>
             <Typography
+              data-testid={nameCellTestId}
               variant="bodyMedium"
               color="text.primary"
               sx={styles.nameText}
@@ -29,6 +30,7 @@ const DefaultNameCellContent = memo(props => {
           </>
         ) : (
           <Tooltip.TypographyWithConditionalTooltip
+            data-testid={nameCellTestId}
             title={rowName}
             placement="top"
             variant="bodyMedium"
@@ -57,6 +59,7 @@ const GridTableRowNameCell = memo(props => {
     loadingProgress,
     rowName,
     styles,
+    nameCellTestId,
   } = props;
 
   if (isRedesign) {
@@ -86,6 +89,7 @@ const GridTableRowNameCell = memo(props => {
       loadingProgress={loadingProgress}
       rowName={rowName}
       styles={styles}
+      nameCellTestId={nameCellTestId}
     />
   );
 });
