@@ -227,6 +227,7 @@ const AgentsTab = memo(props => {
           renderCategory={renderCategory}
           renderNoResults={renderNoResults}
           onSelectCategory={handleTagSelect}
+          chipTestIdPrefix="catalog-agent-category-filter-chip"
         />
         {selectedApplication && (
           <AgentModal

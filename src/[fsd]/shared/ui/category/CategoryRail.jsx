@@ -2,8 +2,19 @@ import { memo } from 'react';
 
 import { Box, Chip, Typography } from '@mui/material';
 
+const slugifyCategory = category =>
+  String(category)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-');
+
 const CategoryRail = memo(props => {
-  const { featuredCategories = [], categories = [], selectedCategories = [], onSelectCategory } = props;
+  const {
+    featuredCategories = [],
+    categories = [],
+    selectedCategories = [],
+    onSelectCategory,
+    chipTestIdPrefix,
+  } = props;
 
   const styles = categoryRailStyles();
 
@@ -12,6 +23,7 @@ const CategoryRail = memo(props => {
       key={category}
       label={category}
       clickable
+      data-testid={chipTestIdPrefix ? `${chipTestIdPrefix}-${slugifyCategory(category)}` : undefined}
       onClick={() => onSelectCategory?.(category)}
       sx={selectedCategories.includes(category) ? styles.selectedChip : styles.chip}
     />
