@@ -104,6 +104,7 @@ const AnalyticsAgents = memo(props => {
           <Typography
             variant="labelMedium"
             sx={styles.chartTitle}
+            data-testid="analytics-agents-chart-title"
           >
             Most Active Agents & Pipelines
           </Typography>
@@ -111,6 +112,7 @@ const AnalyticsAgents = memo(props => {
             <Typography
               variant="bodySmall"
               sx={styles.chartSubtitle}
+              data-testid="analytics-agents-chart-subtitle"
             >
               Top {agentChartData.length} by runs
             </Typography>
@@ -121,7 +123,10 @@ const AnalyticsAgents = memo(props => {
               }}
             />
           </Box>
-          <Box sx={styles.chartWrapper}>
+          <Box
+            sx={styles.chartWrapper}
+            data-testid="analytics-agents-chart-container"
+          >
             <ResponsiveContainer
               width="100%"
               height={200}
@@ -170,6 +175,7 @@ const AnalyticsAgents = memo(props => {
           <Typography
             variant="labelMedium"
             sx={styles.chartTitle}
+            data-testid="analytics-agents-chat-chart-title"
           >
             Chat Messages
           </Typography>
@@ -177,6 +183,7 @@ const AnalyticsAgents = memo(props => {
             <Typography
               variant="bodySmall"
               sx={styles.chartSubtitle}
+              data-testid="analytics-agents-chat-chart-subtitle"
             >
               User messages per day
             </Typography>
@@ -187,7 +194,10 @@ const AnalyticsAgents = memo(props => {
               }}
             />
           </Box>
-          <Box sx={styles.chartWrapper}>
+          <Box
+            sx={styles.chartWrapper}
+            data-testid="analytics-agents-chat-chart-container"
+          >
             <ResponsiveContainer
               width="100%"
               height={200}
@@ -235,6 +245,7 @@ const AnalyticsAgents = memo(props => {
             <Typography
               variant="labelMedium"
               sx={styles.chartTitle}
+              data-testid="analytics-agents-activity-title"
             >
               Agent & Pipeline Activity
             </Typography>
@@ -242,6 +253,7 @@ const AnalyticsAgents = memo(props => {
               <Typography
                 variant="bodySmall"
                 sx={styles.chartSubtitle}
+                data-testid="analytics-agents-count"
               >
                 {total} agents & pipelines
               </Typography>
@@ -258,10 +270,14 @@ const AnalyticsAgents = memo(props => {
             onChangeSearch={handleSearchChange}
             placeholder="Search by agent or pipeline name"
             sx={styles.userSearch}
+            testId="analytics-agents-search-input"
           />
         </Box>
         <Box sx={styles.tableWrapper}>
-          <Box sx={styles.tableHeader}>
+          <Box
+            sx={styles.tableHeader}
+            data-testid="analytics-agents-table-header"
+          >
             <Typography sx={[styles.tableCell, { flex: 3 }]}>Agent / Pipeline</Typography>
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Runs</Typography>
             {!isPersonalProject && <Typography sx={[styles.tableCell, { flex: 1 }]}>Users</Typography>}
@@ -273,7 +289,10 @@ const AnalyticsAgents = memo(props => {
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Errors</Typography>
           </Box>
           {isFetching && (
-            <Box sx={styles.loadingState}>
+            <Box
+              sx={styles.loadingState}
+              data-testid="analytics-agents-loading-indicator"
+            >
               <CircularProgress size={24} />
             </Box>
           )}
@@ -283,6 +302,7 @@ const AnalyticsAgents = memo(props => {
                 key={i}
                 sx={styles.clickableRow}
                 onClick={() => handleAgentClick(a.entity_id)}
+                data-testid="analytics-agents-row"
               >
                 <Typography
                   sx={[styles.tableCellValue, { flex: 3 }]}
@@ -316,6 +336,7 @@ const AnalyticsAgents = memo(props => {
                     styles.tableCellValue,
                     { flex: 1, color: a.errors > 0 ? palette.status.rejected : undefined },
                   ]}
+                  data-testid="analytics-agents-row-errors"
                 >
                   {a.errors}
                 </Typography>
@@ -331,6 +352,14 @@ const AnalyticsAgents = memo(props => {
           onRowsPerPageChange={handleRowsPerPageChange}
           rowsPerPageOptions={[10, 20, 50]}
           sx={styles.pagination}
+          slotProps={{
+            select: { 'data-testid': 'analytics-agents-pagination-rows-select' },
+            displayedRows: { 'data-testid': 'analytics-agents-pagination-range' },
+            actions: {
+              previousButton: { 'data-testid': 'analytics-agents-pagination-prev' },
+              nextButton: { 'data-testid': 'analytics-agents-pagination-next' },
+            },
+          }}
         />
       </Box>
     </Box>
