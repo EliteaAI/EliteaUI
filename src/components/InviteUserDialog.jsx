@@ -78,7 +78,18 @@ const validateEmails = emails => {
 };
 
 const InviteUserDialog = memo(props => {
-  const { title, open, onClose, onCancel, onConfirm, confirmButtonText = 'Invite', rolesOptions } = props;
+  const {
+    title,
+    open,
+    onClose,
+    onCancel,
+    onConfirm,
+    confirmButtonText = 'Invite',
+    rolesOptions,
+    emailsInputTestId,
+    roleSelectTestId,
+    confirmButtonTestId,
+  } = props;
 
   const [inputText, setInputText] = useState('');
   const [emails, setEmails] = useState([]);
@@ -191,6 +202,7 @@ const InviteUserDialog = memo(props => {
                 label="Emails"
                 enableAutoBlur={false}
                 onBlur={handleBlur}
+                inputProps={{ 'data-testid': emailsInputTestId }}
               />
               {error && <FormHelperText>{helperText}</FormHelperText>}
             </StyledFormControl>
@@ -202,6 +214,7 @@ const InviteUserDialog = memo(props => {
             options={rolesOptions}
             multiple
             showBorder
+            data-testid={roleSelectTestId}
           />
         </Box>
       }
@@ -219,6 +232,7 @@ const InviteUserDialog = memo(props => {
             color="primary"
             onClick={handleConfirm}
             disabled={!emails.length || !selectedRoles.length || error}
+            data-testid={confirmButtonTestId}
           >
             {confirmButtonText}
           </Button.BaseBtn>

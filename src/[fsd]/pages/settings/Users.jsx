@@ -275,6 +275,9 @@ const Users = memo(() => {
         onCancel={handleCloseInviteDialog}
         onConfirm={handleConfirmInvite}
         rolesOptions={rolesOptions}
+        emailsInputTestId="users-invite-emails-input"
+        roleSelectTestId="users-invite-role-select"
+        confirmButtonTestId="users-invite-confirm-button"
       />
     </>
   );
