@@ -67,12 +67,19 @@ export const resolveHref = (eventType, meta, projectId) => {
   }
 };
 
+const PRIVATE_PROJECT_NAME_RE = /project_user_\d+/g;
+const PRIVATE_LABEL = 'Private';
+
+export const sanitizePrivateProjectName = text =>
+  text ? text.replace(PRIVATE_PROJECT_NAME_RE, PRIVATE_LABEL) : text;
+
 /**
  * Parses a stored notification message into renderable segments.
  * Link syntax: [visible text]() — empty href, URL resolved at render time by resolveHref.
  *
  */
-export const parseMessage = message => {
+export const parseMessage = rawMessage => {
+  const message = sanitizePrivateProjectName(rawMessage);
   if (!message) return [];
   const segments = [];
   const linkRegex = /\[([^\]]+)\]\([^)]*\)/g;
