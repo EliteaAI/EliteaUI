@@ -2,8 +2,10 @@ import { memo } from 'react';
 
 import { Box } from '@mui/material';
 
+import { useIsMidturnInjectionAvailable } from '@/[fsd]/features/chat/lib/hooks';
 import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
 import AgentPipelineBuilder from '@/[fsd]/features/settings/ui/project-general/AgentPipelineBuilder';
+import MidturnInjection from '@/[fsd]/features/settings/ui/project-general/MidturnInjection';
 import { ProjectParamsHeader } from '@/[fsd]/features/settings/ui/project-general/general';
 import { ProjectAIConfigurations } from '@/[fsd]/features/settings/ui/project-general/project-ai-configurations';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
@@ -13,6 +15,8 @@ import SettingsFormProvider from '../shared/SettingsFormProvider';
 
 const ProjectGeneralContent = memo(() => {
   const styles = componentStyles();
+
+  const isMidturnInjectionAvailable = useIsMidturnInjectionAvailable();
 
   return (
     <Box sx={styles.root}>
@@ -69,6 +73,25 @@ const ProjectGeneralContent = memo(() => {
             },
           ]}
         />
+        {/* MidturnInjection renders null unless the platform enabled this project, so the
+            accordion would otherwise show an empty section — gate the whole thing. */}
+        {isMidturnInjectionAvailable && (
+          <BasicAccordion
+            data-testid="midturn-injection-section"
+            showMode={AccordionConstants.AccordionShowMode.LeftMode}
+            accordionSX={styles.accordionStyles}
+            items={[
+              {
+                title: 'Chat',
+                content: (
+                  <Box sx={styles.containerStyles}>
+                    <SettingsFormProvider FormContent={MidturnInjection} />
+                  </Box>
+                ),
+              },
+            ]}
+          />
+        )}
       </Box>
     </Box>
   );
