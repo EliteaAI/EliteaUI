@@ -106,13 +106,13 @@ const stylesAuthorInformation = () => ({
     flexDirection: 'row',
   },
   userInfoBlock: {
-    marginLeft: '16px',
+    marginLeft: '1rem',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'center',
   },
   nameBlock: {
-    height: '24px',
+    height: '1.5rem',
     display: 'flex',
     alignItems: 'center',
   },
@@ -121,7 +121,7 @@ const stylesAuthorInformation = () => ({
     marginBottom: '4rem',
   },
   skeleton: {
-    marginTop: '10px',
+    marginTop: '0.625rem',
     width: '100%',
     height: '3.75rem',
   },

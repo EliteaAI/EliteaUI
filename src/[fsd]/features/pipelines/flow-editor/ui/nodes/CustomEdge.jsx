@@ -1,8 +1,7 @@
 import React, { memo, useEffect } from 'react';
 
-import { Typography } from '@mui/material';
+import { Typography, useTheme } from '@mui/material';
 
-import { useTheme } from '@emotion/react';
 import { BaseEdge, EdgeLabelRenderer, getBezierPath, useNodes } from '@xyflow/react';
 
 const CustomEdge = memo(props => {
@@ -71,7 +70,7 @@ const CustomEdge = memo(props => {
               transform: `translate(-50%, -50%) translate(${fallbackLabelX}px,${fallbackLabelY}px)`,
               background: theme.palette.background.tabPanel,
               padding: '8px 16px',
-              borderRadius: '8px',
+              borderRadius: '0.5rem',
               border: `1px solid ${!selected ? theme.palette.border.flowNode : theme.palette.primary.main}`,
               zIndex: selected ? 10 : undefined,
             }}

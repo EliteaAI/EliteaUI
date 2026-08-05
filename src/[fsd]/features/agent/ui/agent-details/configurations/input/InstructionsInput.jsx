@@ -2,7 +2,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { Box } from '@mui/material';
+import { Box, useTheme } from '@mui/material';
 
 import { useInstructionsInputRefContext } from '@/[fsd]/app/providers';
 import { useInstructionsMention } from '@/[fsd]/features/agent/lib/hooks/useInstructionsMention.hooks';
@@ -14,7 +14,6 @@ import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { FileReaderEnhancer } from '@/[fsd]/shared/ui/input';
 import { contextResolver } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import { useTheme } from '@emotion/react';
 
 import InstructionsSlashSuggestionList from './InstructionsSlashSuggestionList';
 

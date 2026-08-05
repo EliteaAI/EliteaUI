@@ -2,7 +2,7 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, useTheme } from '@mui/material';
 
 import { SKILL_NAME_MAX_LENGTH } from '@/[fsd]/features/skill/lib/constants';
 import { GenerateSkillButton } from '@/[fsd]/features/skill/ui/generate-skill-modal';
@@ -25,7 +25,6 @@ import useCheckPermission from '@/hooks/useCheckPermission';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import TagEditor from '@/pages/Common/Components/TagEditor';
 import { markdown } from '@codemirror/lang-markdown';
-import { useTheme } from '@emotion/react';
 
 const CreateSkillForm = memo(props => {
   const {
