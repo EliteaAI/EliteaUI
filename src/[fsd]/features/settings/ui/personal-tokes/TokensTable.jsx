@@ -150,6 +150,7 @@ const TokenActionsCell = memo(props => {
           placement="top"
         >
           <IconButton
+            data-testid="token-action-preview-button"
             variant="elitea"
             size="small"
             color="tertiary"
@@ -165,6 +166,7 @@ const TokenActionsCell = memo(props => {
           placement="top"
         >
           <Box
+            data-testid="token-action-vscode-button"
             sx={styles.downloadBox}
             onClick={onVsCodeDownload}
           >
@@ -181,6 +183,7 @@ const TokenActionsCell = memo(props => {
           placement="top"
         >
           <Box
+            data-testid="token-action-jetbrains-button"
             sx={styles.downloadBox}
             onClick={onDownload}
           >
@@ -195,6 +198,7 @@ const TokenActionsCell = memo(props => {
         isLoading={isDeleting}
         validatePermission={false}
         buttonColor="tertiary"
+        testId="token-action-delete-button"
       />
     </Box>
   );
@@ -332,12 +336,14 @@ const TokensTable = memo(props => {
           onSort={handleSort}
           gridTemplateColumns={gridTemplateColumns}
           showCheckbox={false}
+          columnTestIdPrefix="personal-token"
         />
 
         <GridTableBody>
           {paginatedTokens.map(row => (
             <GridTableRow
               key={row.id}
+              data-testid="token-row"
               row={row}
               isSelected={false}
               isHovered={hoveredRowId === row.id}

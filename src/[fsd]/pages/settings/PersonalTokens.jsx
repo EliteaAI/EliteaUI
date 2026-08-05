@@ -245,6 +245,7 @@ const PersonalTokens = memo(() => {
       <>
         <DrawerPageHeader
           title="Personal Tokens"
+          titleTestId="personal-tokens-page-title"
           showSearchInput
           showAddButton
           slotProps={{
@@ -252,12 +253,14 @@ const PersonalTokens = memo(() => {
               placeholder: 'Search tokens...',
               search,
               onChangeSearch: setSearch,
+              testId: 'personal-tokens-search-input',
             },
             addButton: {
               onAdd: onAddPersonalToken,
               disabled: isFetching || configurations.length === 0,
               tooltip: 'Generate new token',
               tourId: PERSONAL_TOKENS_TOUR_TARGET_IDS.addButton,
+              testId: 'personal-tokens-add-button',
             },
           }}
         />
