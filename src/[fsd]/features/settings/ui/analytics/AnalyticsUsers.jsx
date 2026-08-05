@@ -81,12 +81,14 @@ const AnalyticsUsers = memo(props => {
             <Typography
               variant="labelMedium"
               sx={styles.chartTitle}
+              data-testid="analytics-users-activity-title"
             >
               User Activity
             </Typography>
             <Typography
               variant="bodySmall"
               sx={styles.chartSubtitle}
+              data-testid="analytics-users-count"
             >
               {total} users
             </Typography>
@@ -96,10 +98,14 @@ const AnalyticsUsers = memo(props => {
             onChangeSearch={handleSearchChange}
             placeholder="Search by email"
             sx={styles.userSearch}
+            testId="analytics-users-search-input"
           />
         </Box>
         <Box sx={styles.tableWrapper}>
-          <Box sx={styles.tableHeader}>
+          <Box
+            sx={styles.tableHeader}
+            data-testid="analytics-users-table-header"
+          >
             <Typography sx={[styles.tableCell, { flex: 3 }]}>User</Typography>
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Active Days</Typography>
             <Typography sx={[styles.tableCell, { flex: 1 }]}>LLM Calls</Typography>
@@ -121,6 +127,7 @@ const AnalyticsUsers = memo(props => {
                 key={i}
                 sx={styles.clickableRow}
                 onClick={() => handleUserClick(u.user_id)}
+                data-testid="analytics-users-row"
               >
                 <Typography
                   sx={[styles.tableCellValue, { flex: 3 }]}
@@ -146,6 +153,7 @@ const AnalyticsUsers = memo(props => {
                     styles.tableCellValue,
                     { flex: 1, color: u.errors > 0 ? palette.status.rejected : undefined },
                   ]}
+                  data-testid="analytics-users-row-errors"
                 >
                   {u.errors}
                 </Typography>
@@ -167,6 +175,14 @@ const AnalyticsUsers = memo(props => {
           onRowsPerPageChange={handleRowsPerPageChange}
           rowsPerPageOptions={[10, 20, 50]}
           sx={styles.pagination}
+          slotProps={{
+            select: { 'data-testid': 'analytics-users-pagination-rows-select' },
+            displayedRows: { 'data-testid': 'analytics-users-pagination-range' },
+            actions: {
+              previousButton: { 'data-testid': 'analytics-users-pagination-prev' },
+              nextButton: { 'data-testid': 'analytics-users-pagination-next' },
+            },
+          }}
         />
       </Box>
     </Box>
