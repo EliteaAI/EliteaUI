@@ -177,7 +177,10 @@ const AgentModal = memo(props => {
         aria-describedby="agent-modal-description"
         sx={styles.dialog}
       >
-        <Box sx={styles.mainPanel}>
+        <Box
+          sx={styles.mainPanel}
+          data-testid="catalog-agent-modal"
+        >
           <DialogTitle sx={styles.dialogTitle}>
             <Box sx={styles.authorContainer}>
               <AuthorContainer
