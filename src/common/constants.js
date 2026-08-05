@@ -958,6 +958,9 @@ export const sioEvents = {
   tts_audio_chunk: 'tts_audio_chunk',
   tts_done: 'tts_done',
   tts_error: 'tts_error',
+
+  // Next-input suggestion (ephemeral, per-sid ghost-text hint)
+  next_input_suggestion_ready: 'next_input_suggestion_ready',
 };
 
 export const ToolActionStatus = {

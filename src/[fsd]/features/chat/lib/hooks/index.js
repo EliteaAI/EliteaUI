@@ -21,5 +21,6 @@ export {
 } from './useInputKeyDownHandler.hooks';
 export { useDeleteMessageAlert } from './useDeleteMessageAlert.hooks';
 export { useIsMidturnInjectionAvailable, useIsMidturnInjectionEnabled } from './useMidturnInjection.hooks';
+export { useNextInputSuggestion } from './useNextInputSuggestion.hook';
 
 export * from './chat-button/useApplicationSubmenu.hooks';

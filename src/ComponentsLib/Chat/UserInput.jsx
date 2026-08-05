@@ -69,6 +69,7 @@ const UserInput = forwardRef((props, ref) => {
       },
       footerContainer = {},
       highlight = {},
+      suggestion = {},
     } = {},
     clearInputAfterSend = true,
     disabledSend,
@@ -146,6 +147,9 @@ const UserInput = forwardRef((props, ref) => {
 
   const { ranges: highlightRanges = [] } = highlight;
   const hasHighlights = highlightRanges.length > 0 && !!inputContent;
+
+  const { text: suggestionText, color: suggestionColor } = suggestion;
+  const hasSuggestion = !!suggestionText && !inputContent;
 
   const styles = userInputStyles(isFocused, isDragOver, isRecording);
 
@@ -434,6 +438,14 @@ const UserInput = forwardRef((props, ref) => {
                   ranges={highlightRanges}
                 />
               </div>
+            )}
+            {hasSuggestion && (
+              <Box
+                ref={mirrorCallbackRef}
+                sx={{ color: suggestionColor, opacity: 0.6 }}
+              >
+                {suggestionText}
+              </Box>
             )}
             <TextField
               data-testid="chat-input"
