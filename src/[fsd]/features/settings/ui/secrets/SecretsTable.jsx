@@ -502,9 +502,15 @@ const SecretsTable = memo(props => {
               sx={styles.actionButton}
             >
               {isSecretVisible ? (
-                <VisibilityOffIcon sx={styles.actionIcon} />
+                <VisibilityOffIcon
+                  data-testid="secret-row-visibility-icon-hide"
+                  sx={styles.actionIcon}
+                />
               ) : (
-                <VisibilityIcon sx={styles.actionIcon} />
+                <VisibilityIcon
+                  data-testid="secret-row-visibility-icon-show"
+                  sx={styles.actionIcon}
+                />
               )}
             </IconButton>
           )}
