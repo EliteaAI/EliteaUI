@@ -117,7 +117,10 @@ const AnalyticsUsers = memo(props => {
             <Typography sx={[styles.tableCell, styles.flexOne]}>Total Cost</Typography>
           </Box>
           {isFetching && (
-            <Box sx={styles.loadingState}>
+            <Box
+              sx={styles.loadingState}
+              data-testid="analytics-users-loading-indicator"
+            >
               <CircularProgress size={24} />
             </Box>
           )}
