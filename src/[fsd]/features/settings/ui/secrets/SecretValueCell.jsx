@@ -43,6 +43,7 @@ const SecretValueCell = memo(props => {
           onClick={isSafariBrowser ? undefined : handleDirectCopy}
         >
           <Text.EllipsisTypography
+            data-testid="secret-value-cell"
             variant="bodyMedium"
             color="text.secondary"
           >
