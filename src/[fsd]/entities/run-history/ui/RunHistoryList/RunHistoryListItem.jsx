@@ -132,6 +132,7 @@ const RunHistoryListItem = memo(props => {
           variant="text"
           width={noVersions ? '50%' : '30%'}
           height={20}
+          sx={{ minWidth: '5rem' }}
         />
       </Box>
     );
