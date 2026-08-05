@@ -27,7 +27,6 @@ export const useActiveParticipantDetails = props => {
         });
 
         let versionDetails = null;
-        let versionMissing = false;
         const needsVersionFetch =
           entity_settings.version_id && details.version_details?.id !== entity_settings.version_id;
 
@@ -42,8 +41,6 @@ export const useActiveParticipantDetails = props => {
               entityProjectId,
               versionName,
             );
-          } else {
-            versionMissing = true;
           }
         }
 

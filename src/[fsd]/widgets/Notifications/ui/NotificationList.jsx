@@ -245,10 +245,10 @@ const notificationListStyles = () => ({
   viewAllButton: ({ palette }) => ({
     height: '3rem',
     borderTop: `0.0625rem solid ${palette.border.notificationItem}`,
-    borderRadius: '0px',
+    borderRadius: 0,
     '&:hover': {
       backgroundColor: palette.background.tabButton.default,
-      borderRadius: '0px',
+      borderRadius: 0,
     },
   }),
   viewAllButtonText: ({ palette }) => ({

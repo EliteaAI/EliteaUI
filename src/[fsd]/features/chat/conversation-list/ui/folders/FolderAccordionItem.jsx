@@ -1,9 +1,8 @@
 import { memo, useCallback, useMemo, useState } from 'react';
 
-import { Box, Skeleton, Typography } from '@mui/material';
+import { Box, Skeleton, Typography, useTheme } from '@mui/material';
 
 import ListInfiniteMoreLoader from '@/ComponentsLib/ListInfiniteMoreLoader';
-import { useTheme } from '@emotion/react';
 
 const FolderAccordionItem = memo(props => {
   const { folder, renderConversationItem, onLoadMore, isLoadingMore } = props;
@@ -53,7 +52,7 @@ const FolderAccordionItem = memo(props => {
                 variant="rectangular"
                 width="100%"
                 height="2.5rem"
-                sx={{ borderRadius: '.375rem', marginBottom: '2px' }}
+                sx={{ borderRadius: '.375rem', marginBottom: '0.125rem' }}
               />
             ))}
           <ListInfiniteMoreLoader
@@ -67,8 +66,8 @@ const FolderAccordionItem = memo(props => {
         <Typography
           variant="bodyMedium"
           sx={{
-            lineHeight: '48px',
-            marginLeft: '8px',
+            lineHeight: '3rem',
+            marginLeft: '0.5rem',
           }}
         >
           No conversations added

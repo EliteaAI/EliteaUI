@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 
 import { NotificationType } from '@/common/constants';
 
-import { parseMessage, resolveHref } from './notification.helpers';
+import { parseMessage, resolveHref, sanitizePrivateProjectName } from './notification.helpers';
 
 // resolveHref reads window.location to build an absolute URL
 beforeAll(() => {
@@ -35,6 +35,38 @@ describe('resolveHref for budget notifications', () => {
 
   it('leaves unrelated event types unresolved', () => {
     expect(resolveHref('something_else', {}, 25)).toBeNull();
+  });
+});
+
+describe('sanitizePrivateProjectName', () => {
+  it('replaces project_user_<id> with Private', () => {
+    expect(sanitizePrivateProjectName('project_user_9 has reached its budget.')).toBe(
+      'Private has reached its budget.',
+    );
+  });
+
+  it('replaces multiple occurrences', () => {
+    expect(sanitizePrivateProjectName('project_user_1 and project_user_42')).toBe('Private and Private');
+  });
+
+  it('leaves team project names untouched', () => {
+    expect(sanitizePrivateProjectName('Acme has reached its budget.')).toBe('Acme has reached its budget.');
+  });
+
+  it('returns null/undefined as-is', () => {
+    expect(sanitizePrivateProjectName(null)).toBeNull();
+    expect(sanitizePrivateProjectName(undefined)).toBeUndefined();
+  });
+});
+
+describe('parseMessage sanitizes private project names', () => {
+  it('replaces project_user_<id> with Private in parsed segments', () => {
+    const segments = parseMessage(
+      'Budget limit reached: project_user_9 has reached its monthly budget limit. [View project usage]()',
+    );
+
+    expect(segments[0].text).toContain('Private');
+    expect(segments[0].text).not.toContain('project_user_9');
   });
 });
 

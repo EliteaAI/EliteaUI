@@ -3,11 +3,11 @@ import { memo, useCallback, useEffect, useRef } from 'react';
 import { MuiMarkdown } from 'mui-markdown';
 
 import { Box, Typography } from '@mui/material';
+import { keyframes } from '@mui/material/styles';
 
 import { useInteractiveTour } from '@/[fsd]/app/providers/InteractiveTourProvider';
 import { MarkdownMapping } from '@/[fsd]/shared/lib/utils/markdown.utils';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
-import { keyframes } from '@emotion/react';
 
 import { CARD_WIDTH_PX } from '../lib/constants';
 import { useTourCardPosition } from '../lib/hooks';

@@ -25,7 +25,7 @@ const DroppableGroupedArea = memo(props => {
     <Box
       sx={{
         // Add padding when drag is active to ensure border has space
-        padding: shouldShowDropFeedback || (isValidDropTarget && isActive && !isOver) ? '2px' : '0px',
+        padding: shouldShowDropFeedback || (isValidDropTarget && isActive && !isOver) ? '0.125rem' : 0,
         transition: 'padding 0.2s ease-in-out',
       }}
     >

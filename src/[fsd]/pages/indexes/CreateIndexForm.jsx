@@ -251,28 +251,30 @@ const CreateIndexForm = memo(props => {
 
   return (
     <>
-      <Box sx={styles.body}>
-        <BasicAccordion
-          data-testid="create-index-configuration-accordion"
-          style={styles.accordionWrapper}
-          items={[{ title: 'Index configuration', content: accordionContent }]}
-        />
-        <Box sx={styles.actions}>
-          <Button.BaseBtn
-            variant={Button.BUTTON_VARIANTS.elitea}
-            onClick={handleIndexData}
-            disabled={!isValidForm || isRunning}
-          >
-            Index
-          </Button.BaseBtn>
-          <Button.BaseBtn
-            variant={Button.BUTTON_VARIANTS.secondary}
-            onClick={handleCancel}
-            disabled={isRunning}
-          >
-            Cancel
-          </Button.BaseBtn>
+      <Box sx={styles.scrollArea}>
+        <Box sx={styles.body}>
+          <BasicAccordion
+            data-testid="create-index-configuration-accordion"
+            style={styles.accordionWrapper}
+            items={[{ title: 'Index configuration', content: accordionContent }]}
+          />
         </Box>
+      </Box>
+      <Box sx={styles.actions}>
+        <Button.BaseBtn
+          variant={Button.BUTTON_VARIANTS.elitea}
+          onClick={handleIndexData}
+          disabled={!isValidForm || isRunning}
+        >
+          Index
+        </Button.BaseBtn>
+        <Button.BaseBtn
+          variant={Button.BUTTON_VARIANTS.secondary}
+          onClick={handleCancel}
+          disabled={isRunning}
+        >
+          Cancel
+        </Button.BaseBtn>
       </Box>
       <McpAuthModal {...getModalProps()} />
     </>
@@ -283,21 +285,20 @@ CreateIndexForm.displayName = 'CreateIndexForm';
 
 /** @type {MuiSx} */
 const createIndexFormStyles = () => ({
-  body: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-    flex: 1,
-    minHeight: 0,
-    width: '100%',
-    maxWidth: '36.525rem',
-    marginX: 'auto',
-  },
-  accordionWrapper: {
+  scrollArea: {
     flex: 1,
     minHeight: 0,
     overflowY: 'auto',
   },
+  body: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+    width: '100%',
+    maxWidth: '36.525rem',
+    marginX: 'auto',
+  },
+  accordionWrapper: {},
   accordionContent: {
     display: 'flex',
     flexDirection: 'column',
@@ -307,7 +308,12 @@ const createIndexFormStyles = () => ({
     display: 'flex',
     justifyContent: 'flex-start',
     gap: '0.75rem',
+    paddingTop: '0.75rem',
     paddingLeft: '2.25rem',
+    maxWidth: '36.525rem',
+    marginX: 'auto',
+    width: '100%',
+    boxSizing: 'border-box',
   },
   loading: {
     display: 'flex',

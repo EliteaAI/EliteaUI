@@ -554,7 +554,7 @@ const conversationItemStyles = ({
     },
     menuWrapper: {
       height: '100%',
-      width: isHovering ? undefined : '0px',
+      width: isHovering ? undefined : 0,
       visibility: showMenu ? 'visible' : 'hidden',
       display: isHovering || showMenu ? 'flex' : 'none',
       justifyContent: 'center',

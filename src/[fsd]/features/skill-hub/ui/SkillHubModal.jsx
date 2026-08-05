@@ -116,8 +116,6 @@ const SkillHubModal = memo(props => {
                   entityType={ChatParticipantType.Skills}
                   projectId={PUBLIC_PROJECT_ID}
                   editable={false}
-                  specifiedFontSize="2.5rem"
-                  sx={styles.icon}
                 />
               </Box>
               <Typography
@@ -236,7 +234,6 @@ const skillHubModalStyles = () => ({
     width: '2.5rem',
     height: '2.5rem',
   },
-  icon: { width: '2.5rem', height: '2.5rem' },
   name: { textAlign: 'center', marginTop: '1.25rem' },
   description: ({ palette }) => ({
     textAlign: 'center',

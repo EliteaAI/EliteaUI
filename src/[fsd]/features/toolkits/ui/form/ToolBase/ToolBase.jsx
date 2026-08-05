@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useState } from 'react';
 
-import { Box } from '@mui/material';
+import { Box, useTheme } from '@mui/material';
 
 import { SHARED_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { McpAuthStatus } from '@/[fsd]/features/mcp/ui';
@@ -21,7 +21,6 @@ import { MAX_NAME_LENGTH } from '@/common/constants';
 import { getPropValue } from '@/common/getToolInitialValueBySchema';
 import { useToolkitView } from '@/hooks/toolkit/useToolkitView.js';
 import useToolkitConfigurationProperties from '@/hooks/useToolkitConfigurationProperties';
-import { useTheme } from '@emotion/react';
 
 const ToolBase = memo(props => {
   const {

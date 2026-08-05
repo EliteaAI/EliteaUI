@@ -1,6 +1,6 @@
 import React, { memo, useCallback, useState } from 'react';
 
-import { ThemeProvider, Typography } from '@mui/material';
+import { ThemeProvider, Typography, useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import { DataGrid, GridRowEditStopReasons, gridClasses, useGridApiRef } from '@mui/x-data-grid';
@@ -12,7 +12,6 @@ import { Switch } from '@/[fsd]/shared/ui';
 import AlertDialog from '@/components/AlertDialog.jsx';
 import DeleteIcon from '@/components/Icons/DeleteIcon.jsx';
 import useToast from '@/hooks/useToast';
-import { useTheme } from '@emotion/react';
 
 const isRowSelectable = () => false;
 const getRowHeight = () => 'auto';

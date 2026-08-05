@@ -43,7 +43,7 @@ const CreateSkill = memo(() => {
             content: (
               <Form style={{ height: '100%' }}>
                 <StyledGridContainer
-                  columnSpacing={'32px'}
+                  columnSpacing={'2rem'}
                   container
                 >
                   <Grid
@@ -68,7 +68,7 @@ const CreateSkill = memo(() => {
 CreateSkill.displayName = 'CreateSkill';
 
 const createSkillStyles = () => ({
-  tab: { paddingX: '24px' },
+  tab: { paddingX: '1.5rem' },
   formContainer: {
     margin: '0.75rem auto 0',
     maxWidth: '40.1875rem',
@@ -84,7 +84,7 @@ const createSkillStyles = () => ({
       },
     },
     [theme.breakpoints.down('lg')]: {
-      marginBottom: '24px',
+      marginBottom: '1.5rem',
     },
   }),
 });

@@ -194,7 +194,7 @@ const ToolNode = memo(props => {
         />
         {functionOptions.length > 0 && (
           <SingleSelect
-            sx={{ marginBottom: '0px' }}
+            sx={{ marginBottom: 0 }}
             label="Tool"
             value={toolValue}
             onValueChange={handleSetTool}

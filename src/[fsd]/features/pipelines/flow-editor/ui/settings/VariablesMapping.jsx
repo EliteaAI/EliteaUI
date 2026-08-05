@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useMemo } from 'react';
 
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, useTheme } from '@mui/material';
 
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { useInputOptions } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
@@ -10,7 +10,6 @@ import { Input } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { capitalizeFirstChar } from '@/common/utils.jsx';
-import { useTheme } from '@emotion/react';
 
 const variableSourceOptions = [
   {

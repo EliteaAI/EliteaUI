@@ -174,7 +174,7 @@ const VersionReplacementModal = memo(props => {
             options={versionSelectOptions}
             inputSX={styles.versionSelectInput}
             labelSX={styles.versionSelectLabel}
-            maxDisplayValueLength={'200px'}
+            maxDisplayValueLength={'12.5rem'}
             label="Replace with version"
             showBorder
           />

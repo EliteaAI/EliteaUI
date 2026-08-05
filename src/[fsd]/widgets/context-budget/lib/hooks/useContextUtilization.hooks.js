@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import { useTheme } from '@emotion/react';
+import { useTheme } from '@mui/material';
 
 import { CONTEXT_BUDGET } from '../constants';
 

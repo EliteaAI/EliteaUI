@@ -1,6 +1,6 @@
 import { memo, useCallback } from 'react';
 
-import { Box, IconButton, Typography } from '@mui/material';
+import { Box, IconButton, Typography, useTheme } from '@mui/material';
 
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { StateHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
@@ -8,7 +8,6 @@ import { useResizableDrawer } from '@/[fsd]/features/pipelines/flow-editor/lib/h
 import { FlowEditorState } from '@/[fsd]/features/pipelines/flow-editor/ui';
 import ClipboardIcon from '@/assets/clipboard-icon.svg?react';
 import CloseIcon from '@/components/Icons/CloseIcon';
-import { useTheme } from '@emotion/react';
 
 const StateDrawer = memo(props => {
   const { isOpen, onClose, setYamlJsonObject, yamlJsonObject, disabled } = props;
