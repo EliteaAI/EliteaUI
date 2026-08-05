@@ -89,7 +89,11 @@ const EditSecretInputGridTable = memo(props => {
       onKeyDown={handleKeyDown}
       value={inputValue}
       error={Boolean(validationError) || isAtCharacterLimit}
-      helperText={helperText}
+      helperText={
+        helperText ? (
+          <span data-testid={field === 'name' ? 'secret-name-error' : undefined}>{helperText}</span>
+        ) : null
+      }
       inputProps={{
         maxLength: MAX_VARIABLES_LENGTH,
         'data-testid': field === 'name' ? 'secret-name-input' : 'secret-value-input',
