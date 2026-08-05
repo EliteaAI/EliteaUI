@@ -24,6 +24,7 @@ const CategoryRail = memo(props => {
       label={category}
       clickable
       data-testid={chipTestIdPrefix ? `${chipTestIdPrefix}-${slugifyCategory(category)}` : undefined}
+      data-selected={selectedCategories.includes(category) ? 'true' : 'false'}
       onClick={() => onSelectCategory?.(category)}
       sx={selectedCategories.includes(category) ? styles.selectedChip : styles.chip}
     />
