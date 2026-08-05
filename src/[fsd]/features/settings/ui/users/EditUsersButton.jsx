@@ -10,7 +10,7 @@ import EditIcon from '@/components/Icons/EditIcon';
 import useToast from '@/hooks/useToast';
 
 const EditUsersButton = memo(props => {
-  const { users, refetch, disabled, setSelectedUsers, rolesOptions, isBatchEdit } = props;
+  const { users, refetch, disabled, setSelectedUsers, rolesOptions, isBatchEdit, testId } = props;
 
   const { toastError, toastSuccess } = useToast();
   const [openEdit, setOpenEdit] = useState(false);
@@ -73,6 +73,7 @@ const EditUsersButton = memo(props => {
       >
         <Box component="span">
           <IconButton
+            data-testid={testId}
             disabled={disabled || isLoading}
             variant="elitea"
             color={isBatchEdit ? 'secondary' : 'tertiary'}

@@ -15,13 +15,19 @@ function getCellContent(column, value, row, renderCell) {
 }
 
 const GridTableRowDataCell = memo(props => {
-  const { column, row, renderCell, dataCellSx, styles } = props;
+  const { column, row, renderCell, dataCellSx, styles, dataCellTestIdPrefix } = props;
   const value = row[column.displayField || column.field];
   const cellContent = getCellContent(column, value, row, renderCell);
+  const dataTestId = dataCellTestIdPrefix
+    ? `${dataCellTestIdPrefix}-column-value-${column.field}`
+    : undefined;
 
   if (typeof cellContent === 'string') {
     return (
-      <Box sx={[({ palette }) => styles.dataCell(column, palette), dataCellSx]}>
+      <Box
+        data-testid={dataTestId}
+        sx={[({ palette }) => styles.dataCell(column, palette), dataCellSx]}
+      >
         <Tooltip.TypographyWithConditionalTooltip
           title={cellContent}
           placement="top"
@@ -34,7 +40,14 @@ const GridTableRowDataCell = memo(props => {
     );
   }
 
-  return <Box sx={[({ palette }) => styles.dataCell(column, palette), dataCellSx]}>{cellContent}</Box>;
+  return (
+    <Box
+      data-testid={dataTestId}
+      sx={[({ palette }) => styles.dataCell(column, palette), dataCellSx]}
+    >
+      {cellContent}
+    </Box>
+  );
 });
 
 GridTableRowDataCell.displayName = 'GridTableRowDataCell';
