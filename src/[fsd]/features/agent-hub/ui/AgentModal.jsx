@@ -190,6 +190,7 @@ const AgentModal = memo(props => {
               <Typography
                 variant="bodyMedium"
                 color="text.secondary"
+                data-testid="catalog-agent-modal-owner-name"
               >
                 {cardAuthors[0]?.name || 'Author'}
               </Typography>
@@ -198,6 +199,7 @@ const AgentModal = memo(props => {
               <AgentHubLike
                 viewMode={ViewMode.Public}
                 data={agent?.name ? agent : agentDetails || {}}
+                testId="catalog-agent-modal-like-button"
               />
               <AgentHubModalMenu
                 agentId={agent?.id}
@@ -206,6 +208,7 @@ const AgentModal = memo(props => {
                 link={link}
               />
               <IconButton
+                data-testid="catalog-agent-modal-close-button"
                 variant="elitea"
                 color="secondary"
                 aria-label="close"
@@ -224,6 +227,7 @@ const AgentModal = memo(props => {
                   entityType={ChatParticipantType.Applications}
                   projectId={PUBLIC_PROJECT_ID}
                   editable={false}
+                  data-testid="catalog-agent-modal-agent-icon"
                 />
               </Box>
               <Typography
@@ -236,6 +240,7 @@ const AgentModal = memo(props => {
               <Typography
                 variant="bodySmall2"
                 sx={styles.description(isSmallHeight)}
+                data-testid="catalog-agent-modal-description"
               >
                 {description}
               </Typography>
@@ -251,8 +256,12 @@ const AgentModal = memo(props => {
                 <AgentConversationStarters
                   conversation_starters={agentDetails?.version_details?.conversation_starters || []}
                   onSelectStarter={onSelectStarter}
+                  testId="catalog-agent-modal-chat-starters-section"
                 />
-                <AgentWelcomeMessage welcome_message={welcomeMessage} />
+                <AgentWelcomeMessage
+                  welcome_message={welcomeMessage}
+                  testId="catalog-agent-modal-welcome-message-section"
+                />
               </Box>
             </Box>
           </DialogContent>

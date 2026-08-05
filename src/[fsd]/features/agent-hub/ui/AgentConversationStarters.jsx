@@ -6,7 +6,7 @@ import { conversationStartersHelpers } from '../../agent/lib/helpers';
 import AgentConversationStarterItem from './AgentConversationStarterItem';
 
 const AgentConversationStarters = memo(props => {
-  const { conversation_starters, onSelectStarter } = props;
+  const { conversation_starters, onSelectStarter, testId } = props;
   const styles = agentConversationStartersStyles();
 
   const filteredStarters = useMemo(
@@ -16,7 +16,10 @@ const AgentConversationStarters = memo(props => {
   );
 
   return (
-    <Box sx={styles.container}>
+    <Box
+      sx={styles.container}
+      data-testid={testId}
+    >
       <Typography
         variant="subtitle"
         sx={styles.header}
