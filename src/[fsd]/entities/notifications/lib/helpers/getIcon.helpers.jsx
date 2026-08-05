@@ -68,13 +68,11 @@ export const getIcon = (type, theme, notification) => {
         />
       );
 
-    // A reached limit is informational rather than a warning: nothing is at risk any
-    // more, the budget is simply spent
     case NotificationType.BudgetLimitReached:
     case NotificationType.MemberBudgetLimitReached:
       return (
-        <AttentionIcon
-          fill={theme.palette.icon.fill.tips}
+        <ErrorIcon
+          fill={theme.palette.status.rejected}
           size={16}
         />
       );

@@ -6,7 +6,7 @@ import { Box, IconButton, Link, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { BudgetWarningConstants } from '@/[fsd]/shared/lib/constants';
-import ErrorIcon from '@/assets/error-icon.svg?react';
+import AttentionIcon from '@/assets/attention-icon.svg?react';
 import { BORDER_RADIUS } from '@/common/designTokens';
 import CloseIcon from '@/components/Icons/CloseIcon';
 
@@ -29,7 +29,7 @@ const BudgetWarningBanner = memo(props => {
   return (
     <Box sx={styles.container}>
       <Box
-        component={ErrorIcon}
+        component={AttentionIcon}
         sx={styles.icon}
       />
       <Typography
@@ -72,20 +72,20 @@ const budgetWarningBannerStyles = () => ({
     alignItems: 'center',
     gap: '0.5rem',
     padding: '0.375rem 0.75rem',
-    backgroundColor: palette.background.errorBkg,
-    border: `0.0625rem solid ${palette.background.wrongBkg}`,
+    backgroundColor: palette.background.warning8,
+    border: `0.0625rem solid ${palette.background.warning40}`,
     borderRadius: BORDER_RADIUS.MD,
     marginBottom: '0.5rem',
   }),
   icon: ({ palette }) => ({
     fontSize: '1rem',
-    color: palette.icon.fill.error,
+    color: palette.icon.fill.warning,
     flexShrink: 0,
   }),
   // Wraps rather than truncating on a narrow viewport, so the percentage stays readable
   text: ({ palette }) => ({
     flex: 1,
-    color: palette.text.warningText,
+    color: palette.status.warningText,
     wordBreak: 'break-word',
   }),
   link: ({ palette }) => ({
