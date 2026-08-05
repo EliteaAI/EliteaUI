@@ -165,7 +165,12 @@ const ChatPanel = forwardRef((props, ref) => {
                   boxRef.current?.onClear();
                 }}
               />
-              {onShowHistory && <ViewRunHistoryButton onShowHistory={onShowHistory} />}
+              {onShowHistory && (
+                <ViewRunHistoryButton
+                  onShowHistory={onShowHistory}
+                  compact={!!activeConversation?.id}
+                />
+              )}
             </Box>
           </Box>
           {!collapsed && (
