@@ -495,6 +495,7 @@ const SecretsTable = memo(props => {
           {/* Show/Hide secret action */}
           {checkPermission(PERMISSIONS.secrets.unsecret) && !row.isNew && (
             <IconButton
+              data-testid="secret-row-visibility-toggle-button"
               variant="elitea"
               color="tertiary"
               onClick={isSecretVisible ? () => handleHideSecret(row.id) : () => handleShowSecret(row.id)}
