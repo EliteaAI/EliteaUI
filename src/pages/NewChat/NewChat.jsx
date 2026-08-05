@@ -152,9 +152,9 @@ const NewChat = props => {
   const isNewConversation = useMemo(
     () =>
       activeConversation?.isNew ||
-      (!conversations?.length && folders?.every(folder => !folder.conversations?.length)) ||
+      (!sidebarSearchQuery && !conversations?.length && folders?.every(folder => !folder.conversations?.length)) ||
       !activeConversation?.name,
-    [activeConversation?.isNew, activeConversation?.name, conversations?.length, folders],
+    [activeConversation?.isNew, activeConversation?.name, conversations?.length, folders, sidebarSearchQuery],
   );
   const showNewConversationView = useMemo(
     () => !isPlayback && isNewConversation,
@@ -1071,8 +1071,9 @@ const NewChat = props => {
   ]);
 
   const shouldShowConversationLoader = useMemo(() => {
-    if (isLoadMoreConversations) return true;
     if (isSelectingConversation) return true;
+    if (sidebarSearchQuery) return false;
+    if (isLoadMoreConversations) return true;
     if (!conversations?.length && !isConversationsLoaded) return true;
     if (conversations?.length && isConversationsLoaded && !activeConversation?.name) return true;
 
@@ -1083,6 +1084,7 @@ const NewChat = props => {
     conversations?.length,
     isConversationsLoaded,
     activeConversation?.name,
+    sidebarSearchQuery,
   ]);
 
   const messageIdFromUrl = searchParams.get(SearchParams.MessageId);
