@@ -24,7 +24,11 @@ Push changes and create a pull request on GitHub with a well-structured descript
 
 ### 4. Create PR
 
+<<<<<<< Updated upstream
 Use `gh pr create` with this structure:
+=======
+**Option A — `gh` CLI (preferred if available):**
+>>>>>>> Stashed changes
 
 ```
 gh pr create --title "<title>" --body "$(cat <<'EOF'
@@ -50,6 +54,20 @@ EOF
 )"
 ```
 
+<<<<<<< Updated upstream
+=======
+**Option B — GitHub MCP tool (fallback when `gh` is not installed):**
+
+Use `mcp__github__create_pull_request` with:
+
+- `owner`: `EliteaAI`
+- `repo`: `EliteaUI`
+- `title`: same convention as above
+- `head`: current branch name
+- `base`: `main`
+- `body`: same markdown structure as above
+
+>>>>>>> Stashed changes
 ### PR title convention
 
 Same as commit message: `<type>: [<TICKET>] <Short description>`
