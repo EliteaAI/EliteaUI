@@ -65,6 +65,7 @@ const FolderAccordionItem = memo(props => {
         </>
       ) : (
         <Typography
+          data-testid="chat-folder-empty-state"
           variant="bodyMedium"
           sx={{
             lineHeight: '48px',

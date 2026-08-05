@@ -18,6 +18,7 @@ const ResizableCodeMirrorEditor = memo(props => {
     extensions = [json(), CodeMirrorLinterHelpers.jsonLinter],
     minHeight = 120,
     expandAction = false,
+    'data-testid': dataTestId,
     ...rest
   } = props;
   const [currentValue, setCurrentValue] = useState(value);
@@ -73,6 +74,7 @@ const ResizableCodeMirrorEditor = memo(props => {
         ref={resizeBoxRef}
         sx={styles.wrapper}
         className="index-config-field"
+        data-testid={dataTestId}
       >
         {expandAction && (
           <Box

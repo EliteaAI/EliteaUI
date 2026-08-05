@@ -226,6 +226,7 @@ const EditToolkit = memo(props => {
       {
         label: 'Configuration',
         icon: <GearIcon />,
+        tabProps: { 'data-testid': 'toolkit-detail-configuration-tab' },
         tabBarItems: !isFetchingPublic && (
           <ToolkitsTabBar
             showPlaceholder={!editToolDetail}
@@ -416,6 +417,7 @@ const EditToolkit = memo(props => {
               <Typography
                 variant="headingSmall"
                 color="text.secondary"
+                data-testid="toolkit-detail-title"
               >
                 {publicToolkitData?.name || 'Edit Toolkit'}
               </Typography>

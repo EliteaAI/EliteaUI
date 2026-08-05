@@ -96,6 +96,7 @@ const FolderItem = memo(props => {
         onClick: handlePinFolder,
       },
       {
+        key: 'chat-folder-menu-delete',
         label: 'Delete',
         icon: (
           <DeleteIcon
@@ -209,6 +210,7 @@ const FolderItem = memo(props => {
         showMode={AccordionConstants.AccordionShowMode.LeftMode}
         defaultExpanded={containsActiveConversation}
         isPinned={folder.meta?.is_pinned}
+        folderId={folder.id}
         items={[
           {
             title: name || '',
@@ -280,12 +282,14 @@ const FolderItem = memo(props => {
         onChange={onChangeFolderName} //splice
         containerProps={{ display: 'flex', flex: 1 }}
         onKeyDown={handleOnKeyDownFolder}
+        inputProps={{ 'data-testid': 'chat-folder-name-input' }}
       />
       <Tooltip
         title={isFolderNameValid ? '' : FolderNameWarningMessage}
         placement="top"
       >
         <Box
+          data-testid="chat-folder-name-confirm-button"
           onClick={isFolderNameValid ? (isNewFolder ? handleOnCreateFolder : handleOnSaveFolder) : null}
           sx={styles.checkButton}
         >
@@ -295,6 +299,7 @@ const FolderItem = memo(props => {
         </Box>
       </Tooltip>
       <Box
+        data-testid="chat-folder-name-cancel-button"
         onClick={isNewFolder ? handleOnCancelCreateFolder : handleOnCloseEditFolder}
         sx={styles.cancelButton}
       >

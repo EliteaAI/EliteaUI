@@ -171,6 +171,7 @@ const ToolkitTypeSelector = memo(
           EmptyPlaceholder={
             isMCP ? (
               <Typography
+                data-testid="mcp-type-picker-local-empty-state"
                 variant="bodyMedium"
                 color="text.primary"
               >
@@ -219,6 +220,7 @@ const ToolkitTypeSelector = memo(
           allowEmptyCategory={isMCP}
           renderCategory={renderCategory}
           renderNoResults={renderNoResults}
+          searchInputTestId={!isApplication && !isMCP ? 'toolkit-wizard-type-search-input' : undefined}
           {...searchProps}
         />
       </>

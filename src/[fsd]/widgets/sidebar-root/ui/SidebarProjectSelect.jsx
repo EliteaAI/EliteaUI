@@ -90,6 +90,7 @@ const SidebarProjectSelect = memo(() => {
     >
       <ProjectSelect
         tourId={SIDEBAR_TOUR_TARGET_IDS.projectSwitcher}
+        data-testid="project-selector-trigger"
         sx={styles.selectWrapper}
         selectSX={styles.selectSX}
         containerSX={styles.containerSX}

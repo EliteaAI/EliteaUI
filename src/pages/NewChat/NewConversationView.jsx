@@ -871,7 +871,10 @@ const NewConversationView = forwardRef(
           sx={styles.mainContainer}
           data-tour={CHAT_TOUR_TARGET_IDS.workspace}
         >
-          <Box sx={styles.welcomeSection}>
+          <Box
+            data-testid="chat-new-conversation-greeting"
+            sx={styles.welcomeSection}
+          >
             <Box
               component="img"
               height={60}

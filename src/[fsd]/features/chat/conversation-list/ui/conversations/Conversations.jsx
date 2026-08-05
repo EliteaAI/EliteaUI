@@ -544,7 +544,14 @@ const Conversations = memo(props => {
             alignItems={'center'}
             gap={'8px'}
           >
-            {(!collapsed || isSmallWindow) && <Typography variant="subtitle">Chats</Typography>}
+            {(!collapsed || isSmallWindow) && (
+              <Typography
+                data-testid="chat-conversations-heading"
+                variant="subtitle"
+              >
+                Chats
+              </Typography>
+            )}
             {(!collapsed || isSmallWindow) && (
               <>
                 <Tooltip
@@ -553,6 +560,7 @@ const Conversations = memo(props => {
                 >
                   <span>
                     <Button
+                      data-testid="chat-create-folder-button"
                       disabled={!checkPermission(PERMISSIONS.chat.folders.create)}
                       onClick={clickCreateNewFolder(false)}
                       variant="elitea"
@@ -628,6 +636,7 @@ const Conversations = memo(props => {
             >
               <Box component="span">
                 <Button
+                  data-testid="chat-create-folder-button"
                   disabled={!checkPermission(PERMISSIONS.chat.folders.create)}
                   onClick={clickCreateNewFolder(true)}
                   variant="elitea"

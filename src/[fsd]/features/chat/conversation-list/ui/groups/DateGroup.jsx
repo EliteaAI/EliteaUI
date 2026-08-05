@@ -56,7 +56,15 @@ const DateGroup = memo(props => {
   };
 
   return (
-    <Box sx={{ marginBottom: '8px' }}>
+    // data-testid scopes BOTH the group's header row AND its own Collapse'd
+    // conversation items (rendered in this same component instance, below) —
+    // the reliable way for automation to assert "conversation X is under
+    // Today specifically" (ELITEA-2095), not just "X and Today both exist
+    // somewhere on the page".
+    <Box
+      sx={{ marginBottom: '8px' }}
+      data-testid={`chat-conversation-group-header-${group.name}`}
+    >
       <Box
         sx={groupHeaderStyle}
         onClick={handleToggleExpanded}
