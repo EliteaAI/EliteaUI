@@ -76,6 +76,7 @@ const AgentCard = memo(props => {
         <AgentHubLike
           viewMode={ViewMode.Public}
           data={application}
+          testId={`catalog-agent-like-button-${application.id}`}
         />
       </Box>
     </Card>
