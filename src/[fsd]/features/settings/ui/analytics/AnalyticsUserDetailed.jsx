@@ -75,30 +75,35 @@ const AnalyticsUserDetailed = memo(props => {
           value={String(kpis.active_days)}
           tooltip={tt.ACTIVE_DAYS}
           testId="analytics-user-detail-kpi-card"
+          valueTestId="analytics-user-detail-kpi-value"
         />
         <KPICard
           label="LLM CALLS"
           value={AnalyticCommonHelpers.fmtNum(kpis.llm_events)}
           tooltip={tt.LLM_CALLS}
           testId="analytics-user-detail-kpi-card"
+          valueTestId="analytics-user-detail-kpi-value"
         />
         <KPICard
           label="TOOL CALLS"
           value={AnalyticCommonHelpers.fmtNum(kpis.tool_events)}
           tooltip={tt.TOOL_CALLS}
           testId="analytics-user-detail-kpi-card"
+          valueTestId="analytics-user-detail-kpi-value"
         />
         <KPICard
           label="AGENT & PIPELINE RUNS"
           value={AnalyticCommonHelpers.fmtNum(kpis.agent_events)}
           tooltip={tt.AGENT_PIPELINE_RUNS}
           testId="analytics-user-detail-kpi-card"
+          valueTestId="analytics-user-detail-kpi-value"
         />
         <KPICard
           label="CHAT MSG"
           value={AnalyticCommonHelpers.fmtNum(kpis.chat_events)}
           tooltip={tt.CHAT_MSG}
           testId="analytics-user-detail-kpi-card"
+          valueTestId="analytics-user-detail-kpi-value"
         />
         <KPICard
           label="ERRORS"
@@ -106,25 +111,28 @@ const AnalyticsUserDetailed = memo(props => {
           color={kpis.errors > 0 ? palette.status.rejected : undefined}
           tooltip={tt.ERRORS}
           testId="analytics-user-detail-kpi-card"
-          valueTestId="analytics-user-detail-kpi-errors-value"
+          valueTestId="analytics-user-detail-kpi-value"
         />
         <KPICard
           label="TOTAL TOKENS"
           value={AnalyticCommonHelpers.fmtNum(kpis.total_tokens)}
           tooltip={tt.TOTAL_TOKENS}
           testId="analytics-user-detail-kpi-card"
+          valueTestId="analytics-user-detail-kpi-value"
         />
         <KPICard
           label="INPUT TOKENS"
           value={AnalyticCommonHelpers.fmtNum(kpis.input_tokens)}
           tooltip={tt.INPUT_TOKENS}
           testId="analytics-user-detail-kpi-card"
+          valueTestId="analytics-user-detail-kpi-value"
         />
         <KPICard
           label="OUTPUT TOKENS"
           value={AnalyticCommonHelpers.fmtNum(kpis.output_tokens)}
           tooltip={tt.OUTPUT_TOKENS}
           testId="analytics-user-detail-kpi-card"
+          valueTestId="analytics-user-detail-kpi-value"
         />
         <KPICard
           label="TOTAL COST"
@@ -132,6 +140,7 @@ const AnalyticsUserDetailed = memo(props => {
           subtitle="estimated"
           tooltip={tt.TOTAL_COST}
           testId="analytics-user-detail-kpi-card"
+          valueTestId="analytics-user-detail-kpi-value"
         />
       </Box>
 
