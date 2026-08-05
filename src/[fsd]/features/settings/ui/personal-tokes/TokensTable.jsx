@@ -46,7 +46,11 @@ const ExpiryInDays = memo(props => {
 
   if (expiryInDays > 7) {
     return (
-      <Box sx={styles.container}>
+      <Box
+        data-testid="token-expiration-status"
+        data-expiration-state="active"
+        sx={styles.container}
+      >
         <SuccessIcon
           width={16}
           height={16}
@@ -65,7 +69,11 @@ const ExpiryInDays = memo(props => {
 
   if (expiryInDays > 0) {
     return (
-      <Box sx={styles.container}>
+      <Box
+        data-testid="token-expiration-status"
+        data-expiration-state="warning"
+        sx={styles.container}
+      >
         <AttentionIcon
           width={16}
           height={16}
@@ -84,7 +92,11 @@ const ExpiryInDays = memo(props => {
 
   if (expiryInDays === -1) {
     return (
-      <Box sx={styles.container}>
+      <Box
+        data-testid="token-expiration-status"
+        data-expiration-state="never"
+        sx={styles.container}
+      >
         <SuccessIcon
           width={16}
           height={16}
@@ -102,7 +114,11 @@ const ExpiryInDays = memo(props => {
   }
 
   return (
-    <Box sx={styles.container}>
+    <Box
+      data-testid="token-expiration-status"
+      data-expiration-state="expired"
+      sx={styles.container}
+    >
       <RemoveIcon
         width={16}
         height={16}
@@ -273,6 +289,7 @@ const TokensTable = memo(props => {
       if (column.field === 'name') {
         return (
           <Text.EllipsisTypography
+            data-testid="token-name-cell"
             variant="bodyMedium"
             color="text.secondary"
             sx={styles.nameCell}
@@ -285,6 +302,7 @@ const TokensTable = memo(props => {
       if (column.field === 'token') {
         return (
           <Text.EllipsisTypography
+            data-testid="token-value-cell"
             variant="bodyMedium"
             color="text.secondary"
           >
