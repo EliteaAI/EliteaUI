@@ -5,6 +5,10 @@ export const AGENT_ADHOC_EXECUTION_CONTRACT = 'agent.execute.adhoc.v1';
 export const AGENT_REGENERATION_EXECUTION_CONTRACT = 'agent.regenerate.v1';
 
 const FALLBACK_STATUSES = new Set([404, 422]);
+const REGENERATION_PENDING_STATUS = 409;
+const REGENERATION_PENDING_CODE = 'agent_regeneration_pending';
+const MAX_REGENERATION_FINALIZATION_RETRIES = 4;
+const DEFAULT_REGENERATION_RETRY_DELAY_MS = 1000;
 const PARTIAL_NODE_EVENT = 'partial_message';
 const TERMINAL_NODE_EVENT = 'full_message';
 const RUNTIME_FAILURE_EVENT = 'execution.failed';
@@ -31,15 +35,16 @@ const isMcpParticipant = participant => {
   return participant?.meta?.mcp === true || toolkitType === 'mcp' || toolkitType.endsWith('_mcp');
 };
 
-const supportsBoundedAdhocParticipant = participant => {
-  if (participant?.entity_name === 'user' || participant?.entity_name === 'dummy') return true;
-  return participant?.entity_name === 'toolkit' && !isMcpParticipant(participant);
-};
-
 const isPipelineApplication = participant =>
   participant?.entity_name === 'application' &&
   String(participant?.entity_settings?.agent_type || participant?.agent_type || '').toLowerCase() ===
     'pipeline';
+
+const supportsBoundedAdhocParticipant = participant => {
+  if (participant?.entity_name === 'user' || participant?.entity_name === 'dummy') return true;
+  if (participant?.entity_name === 'application') return !isPipelineApplication(participant);
+  return participant?.entity_name === 'toolkit' && !isMcpParticipant(participant);
+};
 
 const applicationIdentity = participant =>
   String(participant?.id ?? participant?.entity_meta?.id ?? participant?.uuid ?? '');
@@ -69,6 +74,9 @@ const hasSelectedModel = eventPayload =>
   typeof eventPayload?.llm_settings?.model_name === 'string' &&
   eventPayload.llm_settings.model_name.length > 0;
 
+const conversationHasSelectedModel = participants =>
+  (participants || []).some(participant => hasSelectedModel(participant?.entity_settings));
+
 const apiUrl = path => `${String(VITE_SERVER_URL || '').replace(/\/$/, '')}${path}`;
 
 const isBoundedExecutionIdentifier = value =>
@@ -91,17 +99,21 @@ export const getAgentExecutionResumeCandidate = ({
   conversationMeta,
   chatHistory,
 }) => {
-  if (isAgentsPage || !isEmptyArray(conversationMeta?.internal_tools)) return null;
+  if (isAgentsPage) return null;
 
   const applications = (conversationParticipants || []).filter(
     participant => participant?.entity_name === 'application',
   );
-  if (
-    applications.length !== 1 ||
-    !supportsBoundedApplicationConversation(conversationParticipants, applications[0])
-  ) {
-    return null;
-  }
+  const configuredApplicationEligible =
+    isEmptyArray(conversationMeta?.internal_tools) &&
+    applications.length === 1 &&
+    supportsBoundedApplicationConversation(conversationParticipants, applications[0]);
+  const adHocEligible =
+    Array.isArray(conversationParticipants) &&
+    conversationParticipants.length > 0 &&
+    conversationParticipants.every(supportsBoundedAdhocParticipant) &&
+    conversationHasSelectedModel(conversationParticipants);
+  if (!configuredApplicationEligible && !adHocEligible) return null;
 
   const streamingResponses = (chatHistory || []).filter(
     message => message?.isStreaming === true && isBoundedExecutionIdentifier(message?.task_id),
@@ -132,6 +144,30 @@ export const resetAgentExecutionReplayProjection = (chatHistory, responseMessage
   return changed ? next : chatHistory;
 };
 
+export const settleAgentExecutionReplayProjection = (chatHistory, responseMessageId) => {
+  let changed = false;
+  const next = (chatHistory || []).map(message => {
+    if (message?.id !== responseMessageId) return message;
+    if (
+      message.isStreaming !== true &&
+      message.isLoading !== true &&
+      message.isRegenerating !== true &&
+      message.isSending !== true
+    ) {
+      return message;
+    }
+    changed = true;
+    return {
+      ...message,
+      isStreaming: false,
+      isLoading: false,
+      isRegenerating: false,
+      isSending: false,
+    };
+  });
+  return changed ? next : chatHistory;
+};
+
 const yieldToBrowserRenderer = () =>
   new Promise(resolve => {
     if (typeof globalThis.requestAnimationFrame !== 'function') {
@@ -141,23 +177,46 @@ const yieldToBrowserRenderer = () =>
     globalThis.requestAnimationFrame(() => globalThis.setTimeout(resolve, 0));
   });
 
-const safeResponseMessage = async response => {
+const safeResponseDetails = async response => {
   try {
     const body = await response.json();
-    if (typeof body?.message === 'string' && body.message) return body.message;
-    if (typeof body?.error === 'string' && body.error) return body.error;
+    return {
+      code: typeof body?.error === 'string' ? body.error : '',
+      message:
+        (typeof body?.message === 'string' && body.message) ||
+        (typeof body?.error === 'string' && body.error) ||
+        'Failed to start agent execution. Please try again.',
+      retryable: body?.retryable === true,
+    };
   } catch {
     // Proxy-generated and malformed bodies do not cross the safe UI boundary.
   }
-  return 'Failed to start agent execution. Please try again.';
+  return {
+    code: '',
+    message: 'Failed to start agent execution. Please try again.',
+    retryable: false,
+  };
 };
 
 export class AgentExecutionStartError extends Error {
-  constructor(message) {
+  constructor(message, { status = 0, code = '', retryable = false } = {}) {
     super(message);
     this.name = 'AgentExecutionStartError';
+    this.status = status;
+    this.code = code;
+    this.retryable = retryable;
   }
 }
+
+const waitForRegenerationRetry = delayMs => new Promise(resolve => globalThis.setTimeout(resolve, delayMs));
+
+const regenerationRetryDelayMs = response => {
+  const retryAfterSeconds = Number(response.headers?.get?.('Retry-After'));
+  if (!Number.isFinite(retryAfterSeconds) || retryAfterSeconds < 0) {
+    return DEFAULT_REGENERATION_RETRY_DELAY_MS;
+  }
+  return Math.min(1000, Math.max(50, retryAfterSeconds * 1000));
+};
 
 export const getAgentExecutionSseContract = ({
   isAgentsPage,
@@ -375,19 +434,44 @@ const startAgentExecutionRequest = async ({
   fetchImpl = fetch,
   EventSourceImpl = EventSource,
   yieldToRenderer = yieldToBrowserRenderer,
+  retryFinalizingRegeneration = false,
+  waitForRetry = waitForRegenerationRetry,
 }) => {
   const headers = { 'Content-Type': 'application/json' };
   if (DEV && VITE_DEV_TOKEN) headers.Authorization = `Bearer ${VITE_DEV_TOKEN}`;
 
-  const response = await fetchImpl(apiUrl(startPath), {
-    method: 'POST',
-    headers,
-    credentials: 'include',
-    body: JSON.stringify(startBody),
-  });
+  let response;
+  for (let attempt = 0; ; attempt += 1) {
+    response = await fetchImpl(apiUrl(startPath), {
+      method: 'POST',
+      headers,
+      credentials: 'include',
+      body: JSON.stringify(startBody),
+    });
+
+    if (response.status !== REGENERATION_PENDING_STATUS) break;
+    const details = await safeResponseDetails(response);
+    const projectionPending =
+      retryFinalizingRegeneration && details.code === REGENERATION_PENDING_CODE && details.retryable;
+    if (!projectionPending || attempt >= MAX_REGENERATION_FINALIZATION_RETRIES) {
+      throw new AgentExecutionStartError(details.message, {
+        status: response.status,
+        code: details.code,
+        retryable: details.retryable,
+      });
+    }
+    await waitForRetry(regenerationRetryDelayMs(response));
+  }
 
   if (FALLBACK_STATUSES.has(response.status)) return { started: false };
-  if (!response.ok) throw new AgentExecutionStartError(await safeResponseMessage(response));
+  if (!response.ok) {
+    const details = await safeResponseDetails(response);
+    throw new AgentExecutionStartError(details.message, {
+      status: response.status,
+      code: details.code,
+      retryable: details.retryable,
+    });
+  }
 
   const admission = await response.json();
   if (!admission?.execution_id || !admission?.events_url) {
@@ -501,6 +585,7 @@ export const startAgentRegenerationSse = async ({
     },
     conversationUuid,
     eventPayload,
+    retryFinalizingRegeneration: true,
     ...streamOptions,
   });
 };

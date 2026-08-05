@@ -23,6 +23,7 @@ import {
   getAgentRegenerationSseContract,
   resetAgentExecutionReplayProjection,
   resumeAgentExecutionSse,
+  settleAgentExecutionReplayProjection,
   startAgentExecutionSse,
   startAgentRegenerationSse,
 } from '@/[fsd]/features/chat/lib/agentExecutionSse';
@@ -718,11 +719,12 @@ const ChatBox = forwardRef((props, boxRef) => {
             ? { ...previous, ...hydratedConversation }
             : previous,
         );
+        clearConversationStreamingInfo?.();
         return true;
       }
       return false;
     },
-    [getConversationDetail, getMessageTraces, projectId],
+    [clearConversationStreamingInfo, getConversationDetail, getMessageTraces, projectId],
   );
 
   useEffect(() => {
@@ -744,6 +746,18 @@ const ChatBox = forwardRef((props, boxRef) => {
         executionId,
         responseMessageId,
       });
+    const finalize = async () => {
+      const reconciled = await reconcile();
+      if (reconciled) return;
+
+      // full_message is the durable execution terminal authority. If the
+      // current-schema projection is still not readable after the bounded
+      // reconciliation window, do not leave this conversation poisoned with a
+      // stale streaming answer. Preserve the streamed content, trace actions,
+      // and any control-return state; settle only transient loading flags.
+      setChatHistory(previous => settleAgentExecutionReplayProjection(previous, responseMessageId));
+      clearConversationStreamingInfo?.();
+    };
     const prepareReplay = () => {
       setChatHistory(previous => resetAgentExecutionReplayProjection(previous, responseMessageId));
     };
@@ -754,7 +768,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       questionId,
       onNodeEvent: handleSocketEvent,
       onError: handleSocketErrorEvent,
-      onTerminal: reconcile,
+      onTerminal: finalize,
       onReplayReset: reconcile,
       onReplayStart: prepareReplay,
       onClosed: () => eventSources.delete(questionId),
@@ -775,6 +789,7 @@ const ChatBox = forwardRef((props, boxRef) => {
     agentExecutionResumeCandidate?.responseMessageId,
     handleSocketErrorEvent,
     handleSocketEvent,
+    clearConversationStreamingInfo,
     projectId,
     reconcilePersistedAgentExecution,
     setChatHistory,

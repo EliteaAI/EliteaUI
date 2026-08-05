@@ -12,6 +12,7 @@ import {
   isAgentExecutionSseEligible,
   resetAgentExecutionReplayProjection,
   resumeAgentExecutionSse,
+  settleAgentExecutionReplayProjection,
   startAgentExecutionSse,
   startAgentRegenerationSse,
 } from './agentExecutionSse';
@@ -163,6 +164,58 @@ describe('agent execution SSE', () => {
     ).toBeNull();
   });
 
+  it('reattaches an admitted ad-hoc agent execution with the persisted chat model', () => {
+    const options = {
+      isAgentsPage: false,
+      conversationParticipants: [
+        {
+          entity_name: 'user',
+          entity_settings: { llm_settings: { model_name: 'eu.anthropic.claude' } },
+        },
+        { entity_name: 'dummy' },
+        { entity_name: 'application', entity_settings: { agent_type: 'agent' } },
+      ],
+      conversationMeta: { internal_tools: ['internal_mcp'] },
+      chatHistory: [
+        { id: 'question-id', role: 'user' },
+        {
+          id: 'response-id',
+          question_id: 'question-id',
+          task_id: 'execution-id',
+          isStreaming: true,
+        },
+      ],
+    };
+
+    expect(getAgentExecutionResumeCandidate(options)).toEqual({
+      executionId: 'execution-id',
+      questionId: 'question-id',
+      responseMessageId: 'response-id',
+    });
+    expect(
+      getAgentExecutionResumeCandidate({
+        ...options,
+        conversationParticipants: [
+          ...options.conversationParticipants,
+          { entity_name: 'toolkit', entity_settings: { toolkit_type: 'github' } },
+        ],
+      }),
+    ).toEqual({
+      executionId: 'execution-id',
+      questionId: 'question-id',
+      responseMessageId: 'response-id',
+    });
+    expect(
+      getAgentExecutionResumeCandidate({
+        ...options,
+        conversationParticipants: [
+          ...options.conversationParticipants,
+          { entity_name: 'toolkit', entity_settings: { toolkit_type: 'mcp' } },
+        ],
+      }),
+    ).toBeNull();
+  });
+
   it('clears only the stale persisted activity projection before durable replay', () => {
     const question = { id: 'question-id', role: 'user' };
     const response = {
@@ -183,7 +236,38 @@ describe('agent execution SSE', () => {
     expect(resetAgentExecutionReplayProjection(reset, 'response-id')).toBe(reset);
   });
 
-  it('selects ad-hoc execution for a current chat with only standard toolkit attachments', () => {
+  it('settles only the resumed response when terminal projection hydration times out', () => {
+    const response = {
+      id: 'response-id',
+      role: 'assistant',
+      content: 'already streamed',
+      isStreaming: true,
+      isLoading: true,
+      isRegenerating: true,
+      isSending: true,
+      hitlInterrupt: { interrupt_id: 'preserved' },
+      toolActions: [{ id: 'trace_step_1' }],
+    };
+    const otherResponse = { id: 'other-response', isStreaming: true };
+
+    const settled = settleAgentExecutionReplayProjection([response, otherResponse], 'response-id');
+
+    expect(settled).toEqual([
+      {
+        ...response,
+        isStreaming: false,
+        isLoading: false,
+        isRegenerating: false,
+        isSending: false,
+      },
+      otherResponse,
+    ]);
+    expect(settled[0].toolActions).toBe(response.toolActions);
+    expect(settled[0].hitlInterrupt).toBe(response.hitlInterrupt);
+    expect(settleAgentExecutionReplayProjection(settled, 'response-id')).toBe(settled);
+  });
+
+  it('selects ad-hoc execution for standard toolkits and leaf application participants', () => {
     const options = {
       isAgentsPage: false,
       participant: undefined,
@@ -206,7 +290,19 @@ describe('agent execution SSE', () => {
     expect(
       getAgentExecutionSseContract({
         ...options,
-        conversationParticipants: [...options.conversationParticipants, { entity_name: 'application' }],
+        conversationParticipants: [
+          ...options.conversationParticipants,
+          { entity_name: 'application', entity_settings: { agent_type: 'agent' } },
+        ],
+      }),
+    ).toBe(AGENT_ADHOC_EXECUTION_CONTRACT);
+    expect(
+      getAgentExecutionSseContract({
+        ...options,
+        conversationParticipants: [
+          ...options.conversationParticipants,
+          { entity_name: 'application', entity_settings: { agent_type: 'pipeline' } },
+        ],
       }),
     ).toBeNull();
     expect(
@@ -437,6 +533,115 @@ describe('agent execution SSE', () => {
       ...eventPayload,
       regeneration_id: 'regeneration-id',
     });
+  });
+
+  it('retries a finalizing regeneration without falling back to the WebSocket route', async () => {
+    const pendingResponse = () => ({
+      status: 409,
+      ok: false,
+      headers: { get: name => (name === 'Retry-After' ? '1' : null) },
+      json: async () => ({
+        error: 'agent_regeneration_pending',
+        message: 'The previous agent response is still being finalized. Please retry shortly.',
+        retryable: true,
+      }),
+    });
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce(pendingResponse())
+      .mockResolvedValueOnce(pendingResponse())
+      .mockResolvedValueOnce({
+        status: 200,
+        ok: true,
+        json: async () => ({
+          task_id: 'execution-id',
+          execution_id: 'execution-id',
+          response_message_id: 'response-id',
+          events_url: '/events',
+        }),
+      });
+    const waitForRetry = vi.fn().mockResolvedValue();
+    const onNodeEvent = vi.fn();
+    const eventPayload = {
+      ...payload,
+      message_id: 'response-id',
+      stream_id: 'response-id',
+      payload: {
+        user_input: 'hello again',
+        llm_settings: { model_name: 'eu.anthropic.claude', model_project_id: 7 },
+        attachments_info: [],
+        mcp_tokens: {},
+      },
+    };
+
+    const result = await startAgentRegenerationSse({
+      projectId: 7,
+      conversationUuid: 'conversation-id',
+      responseMessageId: 'response-id',
+      regenerationId: 'regeneration-id',
+      eventPayload,
+      onNodeEvent,
+      onError: vi.fn(),
+      fetchImpl,
+      waitForRetry,
+      yieldToRenderer: vi.fn().mockResolvedValue(),
+      EventSourceImpl: FakeEventSource,
+    });
+
+    expect(result.started).toBe(true);
+    expect(fetchImpl).toHaveBeenCalledTimes(3);
+    expect(fetchImpl.mock.calls.map(call => call[1].body)).toEqual([
+      fetchImpl.mock.calls[0][1].body,
+      fetchImpl.mock.calls[0][1].body,
+      fetchImpl.mock.calls[0][1].body,
+    ]);
+    expect(waitForRetry).toHaveBeenCalledTimes(2);
+    expect(waitForRetry).toHaveBeenNthCalledWith(1, 1000);
+    expect(onNodeEvent).toHaveBeenCalledOnce();
+  });
+
+  it('does not fall back after bounded finalization retries are exhausted', async () => {
+    const fetchImpl = vi.fn().mockImplementation(async () => ({
+      status: 409,
+      ok: false,
+      headers: { get: () => '0' },
+      json: async () => ({
+        error: 'agent_regeneration_pending',
+        message: 'The previous agent response is still being finalized. Please retry shortly.',
+        retryable: true,
+      }),
+    }));
+
+    await expect(
+      startAgentRegenerationSse({
+        projectId: 7,
+        conversationUuid: 'conversation-id',
+        responseMessageId: 'response-id',
+        regenerationId: 'regeneration-id',
+        eventPayload: {
+          ...payload,
+          message_id: 'response-id',
+          stream_id: 'response-id',
+          payload: {
+            user_input: 'hello again',
+            llm_settings: { model_name: 'eu.anthropic.claude', model_project_id: 7 },
+            attachments_info: [],
+            mcp_tokens: {},
+          },
+        },
+        onNodeEvent: vi.fn(),
+        onError: vi.fn(),
+        fetchImpl,
+        waitForRetry: vi.fn().mockResolvedValue(),
+        EventSourceImpl: FakeEventSource,
+      }),
+    ).rejects.toMatchObject({
+      name: 'AgentExecutionStartError',
+      status: 409,
+      code: 'agent_regeneration_pending',
+      retryable: true,
+    });
+    expect(fetchImpl).toHaveBeenCalledTimes(5);
   });
 
   it('reconciles the optimistic response, feeds reducer events, and closes on full_message', async () => {

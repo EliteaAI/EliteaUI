@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { v4 as uuidv4, v4 } from 'uuid';
 
@@ -336,7 +336,14 @@ export const useChatSocket = ({
     modeRef.current = mode;
   }, [mode]);
 
-  useEffect(() => {
+  // The durable SSE route can replay its first agent/tool events immediately
+  // after StartTask inserts the optimistic assistant response. Keep the lookup
+  // ref in sync during the same commit, before the browser paints and before
+  // the EventSource is opened. A passive effect runs too late here: the shell
+  // renders, while the first nested-agent actions are resolved against the
+  // previous history and discarded, leaving only an empty divider until the
+  // terminal reconciliation reloads persisted traces.
+  useLayoutEffect(() => {
     chatHistoryRef.current = chatHistory;
   }, [chatHistory]);
 
