@@ -89,6 +89,7 @@ const InviteUserDialog = memo(props => {
     emailsInputTestId,
     roleSelectTestId,
     confirmButtonTestId,
+    emailsErrorTestId,
   } = props;
 
   const [inputText, setInputText] = useState('');
@@ -204,7 +205,7 @@ const InviteUserDialog = memo(props => {
                 onBlur={handleBlur}
                 inputProps={{ 'data-testid': emailsInputTestId }}
               />
-              {error && <FormHelperText>{helperText}</FormHelperText>}
+              {error && <FormHelperText data-testid={emailsErrorTestId}>{helperText}</FormHelperText>}
             </StyledFormControl>
           </Box>
           <Select.SingleSelect

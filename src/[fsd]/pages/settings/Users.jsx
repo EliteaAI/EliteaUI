@@ -278,6 +278,7 @@ const Users = memo(() => {
         emailsInputTestId="users-invite-emails-input"
         roleSelectTestId="users-invite-role-select"
         confirmButtonTestId="users-invite-confirm-button"
+        emailsErrorTestId="users-invite-emails-error-text"
       />
     </>
   );
