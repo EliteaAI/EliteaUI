@@ -5,7 +5,7 @@ import { Box, Typography } from '@mui/material';
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 
 const ChartTooltip = memo(props => {
-  const { active, payload, label, formatter } = props;
+  const { active, payload, label, formatter, testId } = props;
 
   const styles = chartTooltipStyles();
 
@@ -14,7 +14,10 @@ const ChartTooltip = memo(props => {
   const formatValue = formatter || (v => (typeof v === 'number' ? AnalyticCommonHelpers.fmtNum(v) : v));
 
   return (
-    <Box sx={styles.chartTooltip}>
+    <Box
+      sx={styles.chartTooltip}
+      data-testid={testId}
+    >
       <Typography
         variant="labelSmall"
         sx={styles.tooltipLabel}
