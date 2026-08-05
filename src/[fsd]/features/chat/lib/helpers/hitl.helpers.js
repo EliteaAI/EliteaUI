@@ -26,6 +26,7 @@ export const normalizeHitlInterrupt = (raw = {}, overlay = {}) => {
     toolkit_name: raw.toolkit_name || overlay.toolkit_name || '',
     toolkit_type: raw.toolkit_type || overlay.toolkit_type || '',
     action_label: raw.action_label || overlay.action_label || '',
+    questions: raw.questions ?? overlay.questions ?? [],
     tool_args: raw.tool_args ?? overlay.tool_args ?? null,
     policy_message: raw.policy_message || overlay.policy_message || '',
     interrupt_id: nonEmpty(raw.interrupt_id) || nonEmpty(overlay.interrupt_id) || '',
