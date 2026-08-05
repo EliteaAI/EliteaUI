@@ -33,6 +33,7 @@ import {
   useDeleteMessageAlert,
   useIsMidturnInjectionEnabled,
   useNewInputKeyDownHandler,
+  useNextInputSuggestion,
   useReadAloud,
   useSlashMention,
 } from '@/[fsd]/features/chat/lib/hooks';
@@ -85,7 +86,6 @@ import { useChatSocket, useStopStreaming } from '@/components/Chat/hooks';
 import SocketContext from '@/contexts/SocketContext';
 import useChatStreaming from '@/hooks/chat/useChatStreaming';
 import useLoadMoreMessages from '@/hooks/chat/useLoadMoreMessages';
-import useNextInputSuggestion from '@/hooks/chat/useNextInputSuggestion';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useSocket from '@/hooks/useSocket';
 import useToast from '@/hooks/useToast';

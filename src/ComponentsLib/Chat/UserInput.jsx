@@ -440,12 +440,12 @@ const UserInput = forwardRef((props, ref) => {
               </div>
             )}
             {hasSuggestion && (
-              <div
+              <Box
                 ref={mirrorCallbackRef}
-                style={{ color: suggestionColor, opacity: 0.6 }}
+                sx={{ color: suggestionColor, opacity: 0.6 }}
               >
                 {suggestionText}
-              </div>
+              </Box>
             )}
             <TextField
               data-testid="chat-input"
