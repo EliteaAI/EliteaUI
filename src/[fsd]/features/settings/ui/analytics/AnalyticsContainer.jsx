@@ -34,13 +34,26 @@ import { useSelectedProjectId, useSelectedProjectName } from '@/hooks/useSelecte
 const CUSTOM_PRESET_VALUE = 'custom';
 
 const DEFAULT_PRESETS = [
-  { label: 'Last 24h', value: 1 },
-  { label: 'Last 7d', value: 7 },
-  { label: 'Last 30d', value: 30 },
-  { label: 'Last 90d', value: 90 },
+  { label: 'Last 24h', value: 1, buttonProps: { 'data-testid': 'analytics-date-preset-1' } },
+  { label: 'Last 7d', value: 7, buttonProps: { 'data-testid': 'analytics-date-preset-7' } },
+  { label: 'Last 30d', value: 30, buttonProps: { 'data-testid': 'analytics-date-preset-30' } },
+  { label: 'Last 90d', value: 90, buttonProps: { 'data-testid': 'analytics-date-preset-90' } },
 ];
 
 const PRESETS_WITH_CUSTOM = [...DEFAULT_PRESETS, { label: 'Custom', value: CUSTOM_PRESET_VALUE }];
+
+// {label, testid} pairs for the seven Analytics tabs (ELITEA-2310) — kept as a
+// module-level template so the testid inventory stays greppable, per
+// .agents/testing.md § Locator policy (dynamic/derived-list testid pattern).
+const ANALYTICS_TABS = [
+  { label: 'Overview', testid: 'analytics-tab-overview' },
+  { label: 'Costs', testid: 'analytics-tab-costs' },
+  { label: 'Agents & Pipelines', testid: 'analytics-tab-agents-pipelines' },
+  { label: 'Tools', testid: 'analytics-tab-tools' },
+  { label: 'Users', testid: 'analytics-tab-users' },
+  { label: 'Health', testid: 'analytics-tab-health' },
+  { label: 'Guide', testid: 'analytics-tab-guide' },
+];
 
 const AnalyticsContainer = memo(() => {
   const projectId = useSelectedProjectId();
@@ -178,15 +191,23 @@ const AnalyticsContainer = memo(() => {
       rightArrowIcon: ArrowRightIcon,
       switchViewIcon: ArrowDownIcon,
     },
-    slotProps: {
-      textField: { size: 'small', sx: styles.dateInput, variant: 'standard' },
-      actionBar: { actions: ['clear', 'accept'] },
-      popper: {
-        sx: styles.datePickerPopper,
-        modifiers: [{ name: 'offset', options: { offset: [0, 8] } }],
-      },
-    },
   };
+
+  // Per-field slotProps (From/To need distinct testids on their <input>,
+  // so they can no longer share one slotProps object — ELITEA-2310).
+  const getDateFieldSlotProps = testid => ({
+    textField: {
+      size: 'small',
+      sx: styles.dateInput,
+      variant: 'standard',
+      inputProps: { 'data-testid': testid },
+    },
+    actionBar: { actions: ['clear', 'accept'] },
+    popper: {
+      sx: styles.datePickerPopper,
+      modifiers: [{ name: 'offset', options: { offset: [0, 8] } }],
+    },
+  });
 
   return (
     <DrawerPage data-tour={ANALYTICS_TOUR_TARGET_IDS.page}>
@@ -194,11 +215,15 @@ const AnalyticsContainer = memo(() => {
         <Typography
           variant="headingSmall"
           color="text.secondary"
+          data-testid="analytics-page-title"
         >
           Analytics
         </Typography>
         {projectName && (
-          <Box sx={styles.projectLabel}>
+          <Box
+            sx={styles.projectLabel}
+            data-testid="analytics-project-badge"
+          >
             <BriefcaseIcon />
             <Typography variant="bodySmall">Project: {projectName}</Typography>
           </Box>
@@ -247,6 +272,7 @@ const AnalyticsContainer = memo(() => {
               onOpen={() => setFromOpen(true)}
               onClose={() => setFromOpen(false)}
               {...datePickerCommonProps}
+              slotProps={getDateFieldSlotProps('analytics-date-from-input')}
             />
           </Box>
           <Box sx={[styles.datePickerField, toOpen && styles.datePickerFieldActive]}>
@@ -259,6 +285,7 @@ const AnalyticsContainer = memo(() => {
               onOpen={() => setToOpen(true)}
               onClose={() => setToOpen(false)}
               {...datePickerCommonProps}
+              slotProps={getDateFieldSlotProps('analytics-date-to-input')}
             />
           </Box>
         </Box>
@@ -275,10 +302,11 @@ const AnalyticsContainer = memo(() => {
             value={activeTab}
             onChange={handleTabChange}
           >
-            {['Overview', 'Costs', 'Agents & Pipelines', 'Tools', 'Users', 'Health', 'Guide'].map(label => (
+            {ANALYTICS_TABS.map(({ label, testid }) => (
               <BaseTab
                 key={label}
                 label={label}
+                data-testid={testid}
               />
             ))}
           </BaseTabs>
@@ -286,7 +314,10 @@ const AnalyticsContainer = memo(() => {
 
         <Box sx={styles.contentArea}>
           {needsOverview && isFetching && (
-            <Box sx={styles.loadingState}>
+            <Box
+              sx={styles.loadingState}
+              data-testid="analytics-loading-indicator"
+            >
               <CircularProgress size={32} />
             </Box>
           )}
