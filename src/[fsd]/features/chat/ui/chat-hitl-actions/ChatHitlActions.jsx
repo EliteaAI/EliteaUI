@@ -8,6 +8,7 @@ import CheckedIcon from '@/assets/checked-icon.svg?react';
 import RejectIcon from '@/assets/reject.svg?react';
 
 import BlockWithCommentControl from './BlockWithCommentControl';
+import ClarifyingQuestionControl from './ClarifyingQuestionControl';
 import EditControl from './EditControl';
 
 const SENSITIVE_PARAM_MASK = '***';
@@ -94,11 +95,19 @@ SensitiveToolParams.displayName = 'SensitiveToolParams';
 
 const ChatHitlActions = memo(props => {
   const { hitlInterrupt, onHitlResume, disabled, toolCallId, interruptId } = props;
-  const { available_actions = [], guardrail_type, message } = hitlInterrupt || {};
+  const { available_actions = [], guardrail_type, message, questions } = hitlInterrupt || {};
   // Parallel sub-agent fan-out surfaces multiple sensitive-tool pauses at once.
   const isSensitiveTool =
     guardrail_type === 'sensitive_tool' || guardrail_type === 'parallel_sensitive_tools';
+  const isClarifyingQuestion = guardrail_type === 'clarifying_question';
   const styles = getStyles();
+
+  const handleClarifyingSubmit = useCallback(
+    value => {
+      onHitlResume?.({ action: 'answer', value, toolCallId, interruptId });
+    },
+    [interruptId, onHitlResume, toolCallId],
+  );
 
   const handleApprove = useCallback(() => {
     onHitlResume?.({ action: 'approve', toolCallId, interruptId });
@@ -125,6 +134,23 @@ const ChatHitlActions = memo(props => {
   );
 
   if (!hitlInterrupt) return null;
+
+  if (isClarifyingQuestion) {
+    return (
+      <Box sx={styles.container}>
+        {message?.trim() && (
+          <Box sx={styles.message}>
+            <Markdown>{message}</Markdown>
+          </Box>
+        )}
+        <ClarifyingQuestionControl
+          questions={questions}
+          onSubmit={handleClarifyingSubmit}
+          disabled={disabled}
+        />
+      </Box>
+    );
+  }
 
   if (isSensitiveTool) {
     return (
