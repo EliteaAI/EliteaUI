@@ -206,7 +206,7 @@ const SkillControls = memo(props => {
           slotProps: { MenuItem: { sx: { pointerEvents: 'none' } } },
         },
         shareSkillMenuItem,
-        pinMenuItem,
+        { ...pinMenuItem, key: 'pin-toggle-skill' },
         canDeleteSkill && {
           key: 'delete-skill',
           label: 'Delete skill',
