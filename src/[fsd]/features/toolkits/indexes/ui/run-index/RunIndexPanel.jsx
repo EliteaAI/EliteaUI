@@ -26,6 +26,7 @@ import {
 } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexChat.helpers';
 import { bannerVariant } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
 import { getNextCronRun } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexSchedule.helpers.js';
+import { useIndexesListPolling } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import { selectToolkitScheduler } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
 import { IndexError, IndexScheduleModal, IndexSuccess } from '@/[fsd]/features/toolkits/indexes/ui';
 import { ToolkitChatHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
@@ -72,6 +73,7 @@ const RunIndexPanel = memo(props => {
   const [toolInputVariables, setToolInputVariables] = useState({});
   const [configInputVariables, setConfigInputVariables] = useState({});
   const [localMetaOverride, setLocalMetaOverride] = useState(null);
+  const overrideObservedAtRef = useRef(null);
   const [deleteScheduleOpen, setDeleteScheduleOpen] = useState(false);
 
   const { id: userId, permissions: userPermissions } = useSelector(state => state.user);
@@ -109,6 +111,7 @@ const RunIndexPanel = memo(props => {
   const traceNewIndex = useCallback((id, metadata) => {
     if (!metadata) return;
     setHasIndexedThisSession(true);
+    overrideObservedAtRef.current = Date.now();
     setLocalMetaOverride(prev => ({ ...(prev || {}), ...metadata }));
   }, []);
 
@@ -124,6 +127,7 @@ const RunIndexPanel = memo(props => {
     isIndexing,
     isRunning,
     isStoppingIndexing,
+    isWaitingForTaskStart,
     canStopIndexing,
     handleClearChat,
     handleClearActiveConversation,
@@ -181,6 +185,27 @@ const RunIndexPanel = memo(props => {
 
   const effectiveState = localMetaOverride?.state ?? index?.metadata?.state;
   const effectiveIsIndexing = isIndexing || effectiveState === IndexStatuses.progress;
+  // Runs observed here aren't in the slice until a fetch happens — arm the poll from
+  // local belief. (Second subscription on this route is deliberate; see the hook.)
+  const { startedTimeStamp, fulfilledTimeStamp } = useIndexesListPolling({
+    toolkitId,
+    projectId,
+    skip: !projectId || !toolkitId,
+    forcePoll: effectiveState === IndexStatuses.progress,
+  });
+  // The row-level stale flag is untouched by the metadata-only overrides, so an
+  // observed transition suppresses it — but a hard-killed run never emits the
+  // terminal trace that would end the suppression, so a completed snapshot from a
+  // request issued after the observation supersedes it (in-flight fetches carry
+  // pre-run data).
+  const serverSupersedes = Boolean(
+    startedTimeStamp &&
+    fulfilledTimeStamp &&
+    overrideObservedAtRef.current &&
+    startedTimeStamp > overrideObservedAtRef.current &&
+    fulfilledTimeStamp >= startedTimeStamp,
+  );
+  const effectiveStale = localMetaOverride?.state && !serverSupersedes ? false : index?.stale;
   // const canRunTools = selectedSearchTool && RUNNABLE_INDEX_STATUSES.includes(effectiveState);
 
   const schedulingTooltipMessage = useMemo(() => {
@@ -419,6 +444,11 @@ const RunIndexPanel = memo(props => {
           reindexStats={reindexStats}
           isRunning={isRunning}
           isIndexing={effectiveIsIndexing}
+          isStale={effectiveStale}
+          // A kill before the StartTask event leaves the waiting flag with nothing to
+          // clear it — a post-activity server payload expires that belief too.
+          isWaitingForTaskStart={isWaitingForTaskStart && !serverSupersedes}
+          canStopIndexing={canStopIndexing}
           isDeleting={isDeleting}
           onReindex={handleReindex}
           onOpenDelete={openDelete}

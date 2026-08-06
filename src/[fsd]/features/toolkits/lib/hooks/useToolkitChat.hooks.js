@@ -98,6 +98,7 @@ export const useToolkitChat = props => {
   // Action state
   const [isRunning, setIsRunning] = useState(false);
   const [activeTaskId, setActiveTaskId] = useState(index?.metadata?.task_id ?? null);
+  const seededIndexIdRef = useRef(index?.id ?? null);
   const [isWaitingForTaskStart, setIsWaitingForTaskStart] = useState(false);
   const isIndexing = useMemo(() => index?.metadata?.state === IndexStatuses.progress, [index]);
   const canStopIndexing = useMemo(
@@ -213,8 +214,10 @@ export const useToolkitChat = props => {
 
       // Handle MCP authorization required message
       if (message.type === SocketMessageType.McpAuthorizationRequired) {
-        // Reset running state so the retry triggered by onSuccess can proceed
+        // Reset running state so the retry triggered by onSuccess can proceed; nothing
+        // else clears the waiting flag on an aborted start, and it gates Delete.
         setIsRunning(false);
+        setIsWaitingForTaskStart(false);
         if (onMcpAuthRequiredRef.current) {
           onMcpAuthRequiredRef.current(message);
         }
@@ -250,7 +253,14 @@ export const useToolkitChat = props => {
   }, [modelsFetchSuccess, defaultModel, selectedModel]);
 
   useEffect(() => {
-    setActiveTaskId(index?.metadata?.task_id ?? null);
+    const indexChanged = seededIndexIdRef.current !== (index?.id ?? null);
+    seededIndexIdRef.current = index?.id ?? null;
+    // A refetch can return the row with task_id wiped mid-run (lost update on the
+    // shared blob) — a null row value must not clobber the socket-provided id.
+    const rowTaskId = index?.metadata?.task_id ?? null;
+    if (indexChanged || rowTaskId) {
+      setActiveTaskId(rowTaskId);
+    }
 
     if (index?.metadata?.state !== IndexStatuses.progress || index?.metadata?.task_id) {
       setIsWaitingForTaskStart(false);
@@ -312,6 +322,7 @@ export const useToolkitChat = props => {
         return conversation;
       } catch {
         setIsRunning(false);
+        setIsWaitingForTaskStart(false);
         return null;
       }
     },
@@ -367,6 +378,7 @@ export const useToolkitChat = props => {
         socketEmit(specificToolkitPayload);
       } catch (error) {
         setIsRunning(false);
+        setIsWaitingForTaskStart(false);
 
         if (traceNewIndex && indexing)
           traceNewIndex(index?.id ?? null, {
@@ -459,12 +471,30 @@ export const useToolkitChat = props => {
 
       const resolvedTaskId = activeTaskId;
 
-      await stopIndex({
+      const result = await stopIndex({
         projectId,
         toolkitId,
         indexName: index.metadata.collection,
         taskId: resolvedTaskId,
       }).unwrap();
+
+      // The row can be gone entirely (deleted from another tab) — the caller's goal is
+      // met, so clean up as a stop but say what actually happened.
+      if (result?.reason === 'not_found') {
+        setActiveTaskId(null);
+        toastSuccess('Index no longer exists');
+        setIsRunning(false);
+        setChatHistory(prev => prev.map(msg => ({ ...msg, isStreaming: false, isLoading: false })));
+        if (cancelIndexingCallback) cancelIndexingCallback(EditViewTabsEnum.configuration);
+        return;
+      }
+
+      // A stale task id is a no-op server-side — pretending it stopped would hide a
+      // still-running index behind a success toast.
+      if (result?.cancelled === false) {
+        toastError('Indexing could not be stopped — refresh the page and try again');
+        return;
+      }
 
       setActiveTaskId(null);
       toastSuccess('Indexing stopped successfully');
@@ -521,6 +551,7 @@ export const useToolkitChat = props => {
     isFullScreenChat,
     isRunning,
     isStoppingIndexing,
+    isWaitingForTaskStart,
     canStopIndexing,
     handleClearActiveConversation,
     handleClearChat,
