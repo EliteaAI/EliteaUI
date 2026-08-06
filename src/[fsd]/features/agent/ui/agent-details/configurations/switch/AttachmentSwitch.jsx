@@ -22,7 +22,8 @@ const ATTACHMENTS_INTERNAL_TOOL = 'attachments';
  * When enabled, adds 'attachments' to the agent's internal_tools list, which causes
  * the backend to auto-inject the artifact toolkit at predict time.
  */
-const AttachmentSwitch = memo(({ disabled }) => {
+const AttachmentSwitch = memo(props => {
+  const { disabled } = props;
   const { checkPermission } = useCheckPermission();
   const { values, setFieldValue } = useFormikContext();
   const dispatch = useDispatch();

@@ -4,7 +4,8 @@ import { Box, IconButton, Tooltip, useTheme } from '@mui/material';
 
 import ClearIcon from '@/components/Icons/ClearIcon';
 
-const ClearChatButton = memo(({ disabled, onClear }) => {
+const ClearChatButton = memo(props => {
+  const { disabled, onClear } = props;
   const theme = useTheme();
 
   return (

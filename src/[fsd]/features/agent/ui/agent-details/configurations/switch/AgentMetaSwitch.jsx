@@ -15,7 +15,8 @@ import { Switch, Text } from '@/[fsd]/shared/ui';
  * @param {boolean} disabled - Whether the switch is disabled
  * @param {object} infoTooltip - Tooltip configuration with text, linkText, linkUrl
  */
-const AgentMetaSwitch = memo(({ title, metaKey, defaultValue = true, disabled, infoTooltip }) => {
+const AgentMetaSwitch = memo(props => {
+  const { title, metaKey, defaultValue = true, disabled, infoTooltip } = props;
   const { values, setFieldValue } = useFormikContext();
 
   // Get current value from meta, falling back to defaultValue

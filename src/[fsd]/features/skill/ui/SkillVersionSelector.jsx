@@ -21,7 +21,8 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
  * @param {number} props.entityVersionId - The agent (application) version id being edited.
  * @param {boolean} [props.disabled]
  */
-const SkillVersionSelector = memo(({ skill, entityVersionId, disabled }) => {
+const SkillVersionSelector = memo(props => {
+  const { skill, entityVersionId, disabled } = props;
   const projectId = useSelectedProjectId();
   const [anchorEl, setAnchorEl] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);

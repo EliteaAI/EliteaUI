@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
 
 import { Cron } from 'react-js-cron';
 import 'react-js-cron/dist/styles.css';
@@ -13,7 +13,7 @@ import FormInput from '@/components/FormInput';
 // Default cron: every Saturday at midnight
 const PipelineCronDefault = '0 0 * * 6';
 
-const PipelineScheduleModal = props => {
+const PipelineScheduleModal = memo(props => {
   const { open, onClose, onSubmit, cron, isLoading } = props;
 
   const styles = pipelineScheduleModalStyles();
@@ -127,7 +127,9 @@ const PipelineScheduleModal = props => {
       />
     </>
   );
-};
+});
+
+PipelineScheduleModal.displayName = 'PipelineScheduleModal';
 
 /** @type {MuiSx} */
 const pipelineScheduleModalStyles = () => ({

@@ -16,7 +16,8 @@ import RouteDefinitions, { getBasename } from '@/routes';
 
 import SkillVersionSelector from './SkillVersionSelector.jsx';
 
-const SkillCard = memo(({ skill, entityVersionId, disabled, isPublicView, parentEntityType = 'agent' }) => {
+const SkillCard = memo(props => {
+  const { skill, entityVersionId, disabled, isPublicView, parentEntityType = 'agent' } = props;
   const theme = useTheme();
   const [openAlert, setOpenAlert] = useState(false);
   const { detachSkill, isLoading } = useDetachSkill({ entityVersionId });

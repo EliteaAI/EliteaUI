@@ -20,7 +20,8 @@ import { json } from '@codemirror/lang-json';
 const MIN_HEIGHT = '18.75rem';
 const MAX_HEIGHT = '37.5rem';
 
-const CustomNodeInput = memo(({ id }) => {
+const CustomNodeInput = memo(props => {
+  const { id } = props;
   const editorRef = useRef();
   const fullScreenEditorRef = useRef();
   const theme = useTheme();

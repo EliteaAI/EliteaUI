@@ -9,7 +9,8 @@ import { CopyToClipboardButton } from '@/[fsd]/shared/ui/button';
 import { buildForkedEntityHref } from '@/common/utils.jsx';
 import { LabelLinkWithToolTip } from '@/components/Fork/LabelLinkWithToolTip.jsx';
 
-const SkillInformation = memo(({ id, versionId, meta }) => {
+const SkillInformation = memo(props => {
+  const { id, versionId, meta } = props;
   const styles = skillInformationStyles();
 
   const isForked = Boolean(meta?.parent_project_id && meta?.parent_entity_id);

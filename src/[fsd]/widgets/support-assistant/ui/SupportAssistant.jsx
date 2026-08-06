@@ -9,7 +9,8 @@ import { EliteaAssistant } from '@eliteaai/elitea-assistant';
 import { EliteaAssistantProvider } from '../lib/context';
 import { useAssistantContext } from '../lib/hooks';
 
-const SupportAssistantWidget = memo(({ children }) => {
+const SupportAssistantWidget = memo(props => {
+  const { children } = props;
   const assistantRef = useRef(null);
   const theme = useTheme();
   const assistantContext = useAssistantContext();

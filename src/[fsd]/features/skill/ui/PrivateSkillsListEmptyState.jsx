@@ -2,7 +2,8 @@ import { memo } from 'react';
 
 import { Box } from '@mui/material';
 
-const PrivateSkillsListEmptyState = memo(({ query }) => {
+const PrivateSkillsListEmptyState = memo(props => {
+  const { query } = props;
   if (!query) {
     return <Box>{`You have no skills.`}</Box>;
   }

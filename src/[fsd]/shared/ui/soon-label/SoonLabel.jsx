@@ -2,17 +2,20 @@ import { memo } from 'react';
 
 import { Box } from '@mui/material';
 
-const SoonLabel = memo(({ text, sx }) => (
-  <Box sx={[styles.root, sx]}>
-    <Box component="span">{text}</Box>
-    <Box
-      component="span"
-      sx={styles.chip}
-    >
-      Soon
+const SoonLabel = memo(props => {
+  const { text, sx } = props;
+  return (
+    <Box sx={[styles.root, sx]}>
+      <Box component="span">{text}</Box>
+      <Box
+        component="span"
+        sx={styles.chip}
+      >
+        Soon
+      </Box>
     </Box>
-  </Box>
-));
+  );
+});
 
 SoonLabel.displayName = 'SoonLabel';
 

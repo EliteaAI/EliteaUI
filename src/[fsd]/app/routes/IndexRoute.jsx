@@ -1,10 +1,12 @@
+import { memo } from 'react';
+
 import { useSelector } from 'react-redux';
 import { Navigate } from 'react-router-dom';
 
 import LoadingPage from '@/pages/LoadingPage';
 import RouteDefinitions from '@/routes';
 
-const IndexRoute = () => {
+const IndexRoute = memo(() => {
   const user = useSelector(state => state.user);
 
   // Show loading page while user info is being fetched
@@ -24,7 +26,7 @@ const IndexRoute = () => {
       replace
     />
   );
-};
+});
 
 IndexRoute.displayName = 'IndexRoute';
 

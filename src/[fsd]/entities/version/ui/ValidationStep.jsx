@@ -98,7 +98,8 @@ const buildPlainText = (critical_issues = [], warnings = [], recommendations = [
   return parts.join('\n').trimEnd();
 };
 
-const ValidationStep = memo(({ isValidating, validationResult, entityLabel = 'agent' }) => {
+const ValidationStep = memo(props => {
+  const { isValidating, validationResult, entityLabel = 'agent' } = props;
   if (isValidating) {
     return (
       <Box sx={styles.loadingRoot}>
@@ -128,7 +129,8 @@ const ValidationStep = memo(({ isValidating, validationResult, entityLabel = 'ag
 
 ValidationStep.displayName = 'ValidationStep';
 
-const ValidationResult = memo(({ result, entityLabel = 'agent' }) => {
+const ValidationResult = memo(props => {
+  const { result, entityLabel = 'agent' } = props;
   const { status, counts = {}, critical_issues = [], warnings = [], recommendations = [] } = result;
   const config = STATUS_CONFIG[status] || STATUS_CONFIG.FAIL;
   const studioName = ENTITY_STUDIO[entityLabel] || ENTITY_STUDIO.agent;
@@ -291,106 +293,112 @@ const ValidationResult = memo(({ result, entityLabel = 'agent' }) => {
 
 ValidationResult.displayName = 'ValidationResult';
 
-const DetailsContent = memo(({ critical_issues, warnings, recommendations }) => (
-  <Box sx={styles.detailsContent}>
-    {critical_issues.length > 0 && (
-      <Box id={SECTION_IDS.critical}>
-        <Typography
-          variant="bodySmall"
-          color="text.secondary"
-          sx={{ fontWeight: 700 }}
-        >
-          Critical Issues ({critical_issues.length})
-        </Typography>
-        {critical_issues.map((item, idx) => (
-          <IssueItem
-            key={idx}
-            item={item}
-            type="critical"
-          />
-        ))}
-      </Box>
-    )}
-    {warnings.length > 0 && (
-      <Box id={SECTION_IDS.warnings}>
-        <Typography
-          variant="bodySmall"
-          color="text.secondary"
-          sx={{ fontWeight: 700 }}
-        >
-          Warnings ({warnings.length})
-        </Typography>
-        {warnings.map((item, idx) => (
-          <IssueItem
-            key={idx}
-            item={item}
-            type="warning"
-          />
-        ))}
-      </Box>
-    )}
-    {recommendations.length > 0 && (
-      <Box id={SECTION_IDS.suggestions}>
-        <Typography
-          variant="bodySmall"
-          color="text.secondary"
-          sx={{ fontWeight: 700 }}
-        >
-          Suggestions ({recommendations.length})
-        </Typography>
-        {recommendations.map((item, idx) => (
-          <IssueItem
-            key={idx}
-            item={item}
-            type="suggestion"
-          />
-        ))}
-      </Box>
-    )}
-  </Box>
-));
+const DetailsContent = memo(props => {
+  const { critical_issues, warnings, recommendations } = props;
+  return (
+    <Box sx={styles.detailsContent}>
+      {critical_issues.length > 0 && (
+        <Box id={SECTION_IDS.critical}>
+          <Typography
+            variant="bodySmall"
+            color="text.secondary"
+            sx={{ fontWeight: 700 }}
+          >
+            Critical Issues ({critical_issues.length})
+          </Typography>
+          {critical_issues.map((item, idx) => (
+            <IssueItem
+              key={idx}
+              item={item}
+              type="critical"
+            />
+          ))}
+        </Box>
+      )}
+      {warnings.length > 0 && (
+        <Box id={SECTION_IDS.warnings}>
+          <Typography
+            variant="bodySmall"
+            color="text.secondary"
+            sx={{ fontWeight: 700 }}
+          >
+            Warnings ({warnings.length})
+          </Typography>
+          {warnings.map((item, idx) => (
+            <IssueItem
+              key={idx}
+              item={item}
+              type="warning"
+            />
+          ))}
+        </Box>
+      )}
+      {recommendations.length > 0 && (
+        <Box id={SECTION_IDS.suggestions}>
+          <Typography
+            variant="bodySmall"
+            color="text.secondary"
+            sx={{ fontWeight: 700 }}
+          >
+            Suggestions ({recommendations.length})
+          </Typography>
+          {recommendations.map((item, idx) => (
+            <IssueItem
+              key={idx}
+              item={item}
+              type="suggestion"
+            />
+          ))}
+        </Box>
+      )}
+    </Box>
+  );
+});
 
 DetailsContent.displayName = 'DetailsContent';
 
-const IssueItem = memo(({ item, type }) => (
-  <Box sx={styles.issueItem}>
-    <Typography
-      variant="bodySmall"
-      color="text.secondary"
-      sx={{ fontWeight: 600 }}
-    >
-      {'\u2022 '}
-      {item.field}
-      {item.context && (
-        <Typography
-          component="span"
-          variant="bodySmall"
-          color="text.secondary"
-          sx={styles.issueContext}
-        >
-          {` [${item.context}]`}
-        </Typography>
-      )}
-      :
-    </Typography>
-    <Typography
-      variant="bodySmall"
-      color="text.secondary"
-      sx={{ paddingLeft: '0.75rem' }}
-    >
-      {type === 'suggestion' ? item.suggestion : item.issue}
-    </Typography>
-    {item.fix && (
+const IssueItem = memo(props => {
+  const { item, type } = props;
+  return (
+    <Box sx={styles.issueItem}>
       <Typography
         variant="bodySmall"
-        color="text.tips"
+        color="text.secondary"
+        sx={{ fontWeight: 600 }}
+      >
+        {'\u2022 '}
+        {item.field}
+        {item.context && (
+          <Typography
+            component="span"
+            variant="bodySmall"
+            color="text.secondary"
+            sx={styles.issueContext}
+          >
+            {` [${item.context}]`}
+          </Typography>
+        )}
+        :
+      </Typography>
+      <Typography
+        variant="bodySmall"
+        color="text.secondary"
         sx={{ paddingLeft: '0.75rem' }}
       >
-        Fix: {item.fix}
+        {type === 'suggestion' ? item.suggestion : item.issue}
       </Typography>
-    )}
-  </Box>
-));
+      {item.fix && (
+        <Typography
+          variant="bodySmall"
+          color="text.tips"
+          sx={{ paddingLeft: '0.75rem' }}
+        >
+          Fix: {item.fix}
+        </Typography>
+      )}
+    </Box>
+  );
+});
 
 IssueItem.displayName = 'IssueItem';
 
@@ -398,35 +406,38 @@ IssueItem.displayName = 'IssueItem';
  * Reusable severity badge with icon, label and count.
  * @param {{ icon: React.ReactNode, label: string, count: number, onClick: () => void, disabled: boolean }} props
  */
-const SeverityBadge = memo(({ icon, label, count, onClick, disabled }) => (
-  <Box
-    sx={[
-      styles.counter,
-      {
-        cursor: disabled ? 'default' : 'pointer',
-        '&:hover': disabled ? {} : { opacity: 0.8 },
-      },
-    ]}
-    onClick={disabled ? undefined : onClick}
-    role={disabled ? undefined : 'button'}
-    tabIndex={disabled ? undefined : 0}
-  >
-    {icon && <Box sx={styles.counterIcon}>{icon}</Box>}
-    <Typography
-      variant="bodySmall"
-      color="text.secondary"
+const SeverityBadge = memo(props => {
+  const { icon, label, count, onClick, disabled } = props;
+  return (
+    <Box
+      sx={[
+        styles.counter,
+        {
+          cursor: disabled ? 'default' : 'pointer',
+          '&:hover': disabled ? {} : { opacity: 0.8 },
+        },
+      ]}
+      onClick={disabled ? undefined : onClick}
+      role={disabled ? undefined : 'button'}
+      tabIndex={disabled ? undefined : 0}
     >
-      {label}
-    </Typography>
-    <Typography
-      variant="bodySmall"
-      color="text.secondary"
-      sx={{ fontWeight: 600, marginLeft: 'auto' }}
-    >
-      {count}
-    </Typography>
-  </Box>
-));
+      {icon && <Box sx={styles.counterIcon}>{icon}</Box>}
+      <Typography
+        variant="bodySmall"
+        color="text.secondary"
+      >
+        {label}
+      </Typography>
+      <Typography
+        variant="bodySmall"
+        color="text.secondary"
+        sx={{ fontWeight: 600, marginLeft: 'auto' }}
+      >
+        {count}
+      </Typography>
+    </Box>
+  );
+});
 
 SeverityBadge.displayName = 'SeverityBadge';
 

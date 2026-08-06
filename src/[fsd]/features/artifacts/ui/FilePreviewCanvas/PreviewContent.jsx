@@ -1,4 +1,4 @@
-import React, { forwardRef, useMemo } from 'react';
+import React, { forwardRef, memo, useMemo } from 'react';
 
 import {
   Box,
@@ -30,271 +30,273 @@ const PreviewTypeEnum = {
   MDX: 'MDX',
 };
 
-const PreviewContent = forwardRef((props, documentReaderRef) => {
-  const {
-    isLoading,
-    isRenderLoading,
-    loadError,
-    isMarkdownFile,
-    renderMode,
-    fileContent,
-    isDataFile,
-    parsedData,
-    dataFileType,
-    codeMirrorExtensions,
-    isMermaidFile,
-    isImageFileType,
-    isDocxFile,
-    isHtmlFile,
-    isMdxFile,
-    imageBlobUrl,
-    file,
-    documentBuffer,
-    docxResetKey,
-    handleImageError,
-    onContentChange,
-    canEdit,
-  } = props;
+const PreviewContent = memo(
+  forwardRef((props, documentReaderRef) => {
+    const {
+      isLoading,
+      isRenderLoading,
+      loadError,
+      isMarkdownFile,
+      renderMode,
+      fileContent,
+      isDataFile,
+      parsedData,
+      dataFileType,
+      codeMirrorExtensions,
+      isMermaidFile,
+      isImageFileType,
+      isDocxFile,
+      isHtmlFile,
+      isMdxFile,
+      imageBlobUrl,
+      file,
+      documentBuffer,
+      docxResetKey,
+      handleImageError,
+      onContentChange,
+      canEdit,
+    } = props;
 
-  const styles = previewContentStyles();
+    const styles = previewContentStyles();
 
-  const previewType = useMemo(() => {
-    const isRenderMode = renderMode === FilePreviewCanvasConstants.RenderModeOptionsEnum.RENDERED;
+    const previewType = useMemo(() => {
+      const isRenderMode = renderMode === FilePreviewCanvasConstants.RenderModeOptionsEnum.RENDERED;
 
-    if (isMarkdownFile && isRenderMode) return PreviewTypeEnum.MARKDOWN;
-    if (isDataFile && isRenderMode) return PreviewTypeEnum.DATA;
-    if (isMermaidFile && isRenderMode) return PreviewTypeEnum.MERMAID;
-    if (isHtmlFile && isRenderMode) return PreviewTypeEnum.HTML;
-    if (isMdxFile && isRenderMode) return PreviewTypeEnum.MDX;
-    if (isImageFileType) return PreviewTypeEnum.IMAGE;
-    if (isDocxFile) return PreviewTypeEnum.DOCX;
+      if (isMarkdownFile && isRenderMode) return PreviewTypeEnum.MARKDOWN;
+      if (isDataFile && isRenderMode) return PreviewTypeEnum.DATA;
+      if (isMermaidFile && isRenderMode) return PreviewTypeEnum.MERMAID;
+      if (isHtmlFile && isRenderMode) return PreviewTypeEnum.HTML;
+      if (isMdxFile && isRenderMode) return PreviewTypeEnum.MDX;
+      if (isImageFileType) return PreviewTypeEnum.IMAGE;
+      if (isDocxFile) return PreviewTypeEnum.DOCX;
 
-    return PreviewTypeEnum.CODE;
-  }, [
-    renderMode,
-    isMarkdownFile,
-    isDataFile,
-    isMermaidFile,
-    isHtmlFile,
-    isMdxFile,
-    isImageFileType,
-    isDocxFile,
-  ]);
+      return PreviewTypeEnum.CODE;
+    }, [
+      renderMode,
+      isMarkdownFile,
+      isDataFile,
+      isMermaidFile,
+      isHtmlFile,
+      isMdxFile,
+      isImageFileType,
+      isDocxFile,
+    ]);
 
-  if (isLoading || isRenderLoading)
+    if (isLoading || isRenderLoading)
+      return (
+        <Box sx={styles.loaderWrapper}>
+          <CircularProgress
+            size={32}
+            sx={styles.circularProgress}
+          />
+          <Typography
+            variant="bodySmall"
+            sx={styles.loadingMessage}
+          >
+            {'Loading file content...'}
+          </Typography>
+        </Box>
+      );
+
+    if (loadError)
+      return (
+        <Box sx={styles.errorWrapper}>
+          <Typography
+            variant="bodyMedium"
+            sx={styles.errorTitle}
+          >
+            Failed to Load File
+          </Typography>
+          <Typography
+            variant="bodySmall"
+            sx={styles.loadingMessage}
+          >
+            {loadError}
+          </Typography>
+        </Box>
+      );
+
     return (
-      <Box sx={styles.loaderWrapper}>
-        <CircularProgress
-          size={32}
-          sx={styles.circularProgress}
-        />
-        <Typography
-          variant="bodySmall"
-          sx={styles.loadingMessage}
-        >
-          {'Loading file content...'}
-        </Typography>
-      </Box>
-    );
+      <Box sx={styles.contentWrapper}>
+        {(() => {
+          switch (previewType) {
+            case PreviewTypeEnum.MARKDOWN:
+              return (
+                <Box sx={styles.markdownWrapper}>
+                  <Markdown>{fileContent}</Markdown>
+                </Box>
+              );
 
-  if (loadError)
-    return (
-      <Box sx={styles.errorWrapper}>
-        <Typography
-          variant="bodyMedium"
-          sx={styles.errorTitle}
-        >
-          Failed to Load File
-        </Typography>
-        <Typography
-          variant="bodySmall"
-          sx={styles.loadingMessage}
-        >
-          {loadError}
-        </Typography>
-      </Box>
-    );
-
-  return (
-    <Box sx={styles.contentWrapper}>
-      {(() => {
-        switch (previewType) {
-          case PreviewTypeEnum.MARKDOWN:
-            return (
-              <Box sx={styles.markdownWrapper}>
-                <Markdown>{fileContent}</Markdown>
-              </Box>
-            );
-
-          case PreviewTypeEnum.DATA:
-            return (
-              <Box sx={styles.dataFileWrapper}>
-                {parsedData && parsedData.headers.length > 0 ? (
-                  <TableContainer
-                    component={Paper}
-                    sx={styles.dataTableContainer}
-                  >
-                    <Table
-                      size="small"
-                      stickyHeader
+            case PreviewTypeEnum.DATA:
+              return (
+                <Box sx={styles.dataFileWrapper}>
+                  {parsedData && parsedData.headers.length > 0 ? (
+                    <TableContainer
+                      component={Paper}
+                      sx={styles.dataTableContainer}
                     >
-                      <TableHead>
-                        <TableRow>
-                          {parsedData.headers.map((header, index) => (
-                            <TableCell
-                              key={index}
-                              sx={[
-                                styles.dataTableCellHeader,
-                                ({ palette }) => ({
-                                  borderRight:
-                                    index < parsedData.headers.length - 1
-                                      ? `.0625rem solid ${palette.border.lines}`
-                                      : 'none',
-                                }),
-                              ]}
-                            >
-                              {header || `Column ${index + 1}`}
-                            </TableCell>
-                          ))}
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {parsedData.rows.map((row, rowIndex) => (
-                          <TableRow
-                            key={rowIndex}
-                            sx={styles.dataTableRow}
-                          >
-                            {parsedData.headers.map((_, cellIndex) => (
+                      <Table
+                        size="small"
+                        stickyHeader
+                      >
+                        <TableHead>
+                          <TableRow>
+                            {parsedData.headers.map((header, index) => (
                               <TableCell
-                                key={cellIndex}
+                                key={index}
                                 sx={[
-                                  styles.dataTableCellBody,
+                                  styles.dataTableCellHeader,
                                   ({ palette }) => ({
                                     borderRight:
-                                      cellIndex < parsedData.headers.length - 1
-                                        ? `1px solid ${palette.border.lines}`
+                                      index < parsedData.headers.length - 1
+                                        ? `.0625rem solid ${palette.border.lines}`
                                         : 'none',
                                   }),
                                 ]}
-                                title={row[cellIndex] || ''}
                               >
-                                {row[cellIndex] || ''}
+                                {header || `Column ${index + 1}`}
                               </TableCell>
                             ))}
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                ) : (
-                  <Box sx={styles.noDataWrapper}>
-                    <Typography
-                      variant="bodyMedium"
-                      sx={styles.noDataMessage}
-                    >
-                      No data to display
-                    </Typography>
-                    <Typography
-                      variant="bodySmall"
-                      sx={({ palette }) => ({
-                        color: palette.text.tertiary,
-                      })}
-                    >
-                      The {dataFileType?.toUpperCase()} file appears to be empty or has no valid data rows.
-                    </Typography>
-                  </Box>
-                )}
-              </Box>
-            );
-          case PreviewTypeEnum.HTML:
-            return <HtmlPreviewFrame htmlContent={fileContent} />;
+                        </TableHead>
+                        <TableBody>
+                          {parsedData.rows.map((row, rowIndex) => (
+                            <TableRow
+                              key={rowIndex}
+                              sx={styles.dataTableRow}
+                            >
+                              {parsedData.headers.map((_, cellIndex) => (
+                                <TableCell
+                                  key={cellIndex}
+                                  sx={[
+                                    styles.dataTableCellBody,
+                                    ({ palette }) => ({
+                                      borderRight:
+                                        cellIndex < parsedData.headers.length - 1
+                                          ? `1px solid ${palette.border.lines}`
+                                          : 'none',
+                                    }),
+                                  ]}
+                                  title={row[cellIndex] || ''}
+                                >
+                                  {row[cellIndex] || ''}
+                                </TableCell>
+                              ))}
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  ) : (
+                    <Box sx={styles.noDataWrapper}>
+                      <Typography
+                        variant="bodyMedium"
+                        sx={styles.noDataMessage}
+                      >
+                        No data to display
+                      </Typography>
+                      <Typography
+                        variant="bodySmall"
+                        sx={({ palette }) => ({
+                          color: palette.text.tertiary,
+                        })}
+                      >
+                        The {dataFileType?.toUpperCase()} file appears to be empty or has no valid data rows.
+                      </Typography>
+                    </Box>
+                  )}
+                </Box>
+              );
+            case PreviewTypeEnum.HTML:
+              return <HtmlPreviewFrame htmlContent={fileContent} />;
 
-          case PreviewTypeEnum.MDX:
-            return <MdxPreview mdxContent={fileContent} />;
+            case PreviewTypeEnum.MDX:
+              return <MdxPreview mdxContent={fileContent} />;
 
-          case PreviewTypeEnum.MERMAID:
-            return (
-              <Box sx={styles.mermaidWrapper}>
-                {fileContent && fileContent.trim() ? (
-                  <Box sx={styles.diagramContent}>
-                    <MermaidDiagramOutput code={fileContent} />
-                  </Box>
-                ) : (
-                  <Box sx={styles.noDiagramWrapper}>
-                    <Typography
-                      variant="bodyMedium"
-                      sx={styles.noDiagramTitle}
-                    >
-                      No diagram to display
-                    </Typography>
-                    <Typography
-                      variant="bodySmall"
-                      sx={styles.noDiagramDescription}
-                    >
-                      The Mermaid file appears to be empty or contains invalid syntax.
-                    </Typography>
-                  </Box>
-                )}
-              </Box>
-            );
-          case PreviewTypeEnum.IMAGE:
-            return (
-              <Box sx={styles.imageWrapper}>
-                {fileContent && imageBlobUrl ? (
-                  <Box
-                    component="img"
-                    src={imageBlobUrl}
-                    alt={file.name}
-                    sx={styles.image}
-                    onError={handleImageError}
-                  />
-                ) : (
-                  <Box sx={styles.noImageWrapper}>
-                    <Typography
-                      variant="bodyMedium"
-                      sx={styles.noImageTitle}
-                    >
-                      No image to display
-                    </Typography>
-                    <Typography
-                      variant="bodySmall"
-                      sx={styles.noImageDescription}
-                    >
-                      The image file appears to be empty or corrupted.
-                    </Typography>
-                  </Box>
-                )}
-              </Box>
-            );
-          case PreviewTypeEnum.DOCX:
-            return (
-              <PreviewDocument
-                key={docxResetKey}
-                ref={documentReaderRef}
-                documentBuffer={documentBuffer}
-                onChange={onContentChange}
-              />
-            );
-          default:
-            return (
-              <Box sx={styles.codeEditorWrapper}>
-                <Field.CodeMirrorEditor
-                  autoHeight
-                  readOnly={!canEdit}
-                  value={fileContent}
-                  extensions={codeMirrorExtensions}
-                  maxHeight="none"
-                  variant="caption"
-                  width="100%"
-                  notifyChange={canEdit ? onContentChange : undefined}
+            case PreviewTypeEnum.MERMAID:
+              return (
+                <Box sx={styles.mermaidWrapper}>
+                  {fileContent && fileContent.trim() ? (
+                    <Box sx={styles.diagramContent}>
+                      <MermaidDiagramOutput code={fileContent} />
+                    </Box>
+                  ) : (
+                    <Box sx={styles.noDiagramWrapper}>
+                      <Typography
+                        variant="bodyMedium"
+                        sx={styles.noDiagramTitle}
+                      >
+                        No diagram to display
+                      </Typography>
+                      <Typography
+                        variant="bodySmall"
+                        sx={styles.noDiagramDescription}
+                      >
+                        The Mermaid file appears to be empty or contains invalid syntax.
+                      </Typography>
+                    </Box>
+                  )}
+                </Box>
+              );
+            case PreviewTypeEnum.IMAGE:
+              return (
+                <Box sx={styles.imageWrapper}>
+                  {fileContent && imageBlobUrl ? (
+                    <Box
+                      component="img"
+                      src={imageBlobUrl}
+                      alt={file.name}
+                      sx={styles.image}
+                      onError={handleImageError}
+                    />
+                  ) : (
+                    <Box sx={styles.noImageWrapper}>
+                      <Typography
+                        variant="bodyMedium"
+                        sx={styles.noImageTitle}
+                      >
+                        No image to display
+                      </Typography>
+                      <Typography
+                        variant="bodySmall"
+                        sx={styles.noImageDescription}
+                      >
+                        The image file appears to be empty or corrupted.
+                      </Typography>
+                    </Box>
+                  )}
+                </Box>
+              );
+            case PreviewTypeEnum.DOCX:
+              return (
+                <PreviewDocument
+                  key={docxResetKey}
+                  ref={documentReaderRef}
+                  documentBuffer={documentBuffer}
+                  onChange={onContentChange}
                 />
-              </Box>
-            );
-        }
-      })()}
-    </Box>
-  );
-});
+              );
+            default:
+              return (
+                <Box sx={styles.codeEditorWrapper}>
+                  <Field.CodeMirrorEditor
+                    autoHeight
+                    readOnly={!canEdit}
+                    value={fileContent}
+                    extensions={codeMirrorExtensions}
+                    maxHeight="none"
+                    variant="caption"
+                    width="100%"
+                    notifyChange={canEdit ? onContentChange : undefined}
+                  />
+                </Box>
+              );
+          }
+        })()}
+      </Box>
+    );
+  }),
+);
 
 PreviewContent.displayName = 'PreviewContent';
 

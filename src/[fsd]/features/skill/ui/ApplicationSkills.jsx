@@ -24,7 +24,8 @@ const SKILLS_TITLE = 'Skills';
  * @param {boolean} [props.disabled]
  * @param {string} [props.entityProjectId]
  */
-const ApplicationSkills = memo(({ style, disabled, entityProjectId }) => {
+const ApplicationSkills = memo(props => {
+  const { style, disabled, entityProjectId } = props;
   const selectedProjectId = useSelectedProjectId();
   const projectId = entityProjectId || selectedProjectId;
   const { values } = useFormikContext();

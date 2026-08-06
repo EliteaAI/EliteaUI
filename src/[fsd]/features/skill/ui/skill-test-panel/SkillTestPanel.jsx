@@ -63,7 +63,8 @@ const extractEditedText = items => {
  * predict_llm endpoint (useGenerateContentStreamingMutation). No conversation,
  * agent, subagent, participant or context fork is ever created on the backend.
  */
-const SkillTestPanel = memo(({ isFullScreenChat, setIsFullScreenChat }) => {
+const SkillTestPanel = memo(props => {
+  const { isFullScreenChat, setIsFullScreenChat } = props;
   const projectId = useSelectedProjectId();
   // This panel keeps no persisted conversation, so a dismissal lasts for the panel session
   const budgetWarning = useBudgetWarning({ projectId });
