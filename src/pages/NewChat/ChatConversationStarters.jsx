@@ -36,7 +36,6 @@ const ChatConversationStarters = memo(props => {
           onClick={handleClick(item)}
           sx={styles.starterItem}
           textSX={styles.starterText}
-          testId="chat-conversation-starter-tile"
         />
       ))}
     </Box>
