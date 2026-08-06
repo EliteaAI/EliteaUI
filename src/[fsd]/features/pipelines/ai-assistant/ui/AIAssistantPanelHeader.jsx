@@ -2,7 +2,8 @@ import { memo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-const AIAssistantPanelHeader = memo(({ title, actions }) => {
+const AIAssistantPanelHeader = memo(props => {
+  const { title, actions } = props;
   const styles = aiAssistantPanelHeaderStyles();
 
   return (

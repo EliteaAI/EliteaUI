@@ -6,7 +6,8 @@ import DeleteIcon from '@/components/Icons/DeleteIcon.jsx';
 import EditPenIcon from '@/components/Icons/EditPenIcon.jsx';
 import LockSimple from '@/components/Icons/LockSimple.jsx';
 
-const SecretActionsMenu = memo(({ rowId, isNew, isDefault, anchorEl, onClose, onEdit, onHide, onDelete }) => {
+const SecretActionsMenu = memo(props => {
+  const { rowId, isNew, isDefault, anchorEl, onClose, onEdit, onHide, onDelete } = props;
   const theme = useTheme();
 
   return (

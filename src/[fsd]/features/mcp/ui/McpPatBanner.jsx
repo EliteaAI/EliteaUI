@@ -10,7 +10,8 @@ import { Button } from '@/[fsd]/shared/ui';
 import RouteDefinitions, { getBasename } from '@/routes';
 
 // Warns when the caller's PAT is missing/expired for an internal MCP toolkit.
-const McpPatBanner = memo(({ projectId, toolkitType }) => {
+const McpPatBanner = memo(props => {
+  const { projectId, toolkitType } = props;
   const { patState } = useInternalMcpPatStatus({ projectId, toolkitType });
   const copy = PAT_GATE_COPY[patState];
 

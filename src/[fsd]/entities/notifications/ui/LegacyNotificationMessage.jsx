@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { memo, useCallback } from 'react';
 
 import { Link, Typography } from '@mui/material';
 
@@ -14,7 +14,7 @@ import useNotificationNavigate from '@/hooks/useNotificationNavigate';
 import useNotificationNewTabNavigate from '@/hooks/useNotificationNewTabNavigate.js';
 import { getBasename } from '@/routes';
 
-const MyNewTabLink = props => {
+const MyNewTabLink = memo(props => {
   const { linkInfo, needTrim, event_type } = props;
   const { linkText, project_id, id, indexName } = linkInfo;
 
@@ -35,9 +35,12 @@ const MyNewTabLink = props => {
       {needTrim ? formatName(linkText) : linkText}
     </Link>
   );
-};
+});
 
-const MyCurrentTabLink = ({ linkInfo, needTrim, onCloseNotificationList, event_type }) => {
+MyNewTabLink.displayName = 'MyNewTabLink';
+
+const MyCurrentTabLink = memo(props => {
+  const { linkInfo, needTrim, onCloseNotificationList, event_type } = props;
   const { linkText, project_id, id, version_id, version_name, indexName } = linkInfo;
   const viewMode = project_id == PUBLIC_PROJECT_ID ? ViewMode.Public : ViewMode.Owner;
 
@@ -67,19 +70,19 @@ const MyCurrentTabLink = ({ linkInfo, needTrim, onCloseNotificationList, event_t
       {needTrim ? formatName(linkText) : linkText}
     </Link>
   );
-};
+});
 
-const MyLink = props => {
+MyCurrentTabLink.displayName = 'MyCurrentTabLink';
+
+const MyLink = memo(props => {
   const { linkInfo } = props;
 
   return linkInfo?.isNewTab ? <MyNewTabLink {...props} /> : <MyCurrentTabLink {...props} />;
-};
+});
 
-/**
- * Legacy fallback renderer for notifications that pre-date meta.message storage.
- * Remove once all environments have run the backfill migration.
- */
-const LegacyNotificationMessage = props => {
+MyLink.displayName = 'MyLink';
+
+const LegacyNotificationMessage = memo(props => {
   const { notification, onCloseNotificationList, textVariant, textColor } = props;
   const {
     event_type,
@@ -167,7 +170,7 @@ const LegacyNotificationMessage = props => {
       {endingText(endingTextParam)[event_type]}
     </Typography>
   );
-};
+});
 
 LegacyNotificationMessage.displayName = 'LegacyNotificationMessage';
 

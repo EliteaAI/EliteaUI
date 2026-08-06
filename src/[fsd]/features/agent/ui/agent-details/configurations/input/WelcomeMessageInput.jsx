@@ -4,7 +4,8 @@ import { useFormikContext } from 'formik';
 
 import WelcomeMessage from '@/components/WelcomeMessage';
 
-const WelcomeMessageInput = memo(({ style, disabled }) => {
+const WelcomeMessageInput = memo(props => {
+  const { style, disabled } = props;
   const {
     values: { version_details },
     setFieldValue,

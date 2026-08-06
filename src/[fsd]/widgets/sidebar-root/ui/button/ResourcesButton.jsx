@@ -9,7 +9,8 @@ import { SIDEBAR_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/
 import HelpCenterIcon from '@/assets/help-center.svg?react';
 import RouteDefinitions from '@/routes';
 
-const ResourcesButton = memo(({ fullWidth = false }) => {
+const ResourcesButton = memo(props => {
+  const { fullWidth = false } = props;
   const isOnResources = useMatch({ path: RouteDefinitions.HelpCenter });
   const navigate = useNavigate();
   const location = useLocation();

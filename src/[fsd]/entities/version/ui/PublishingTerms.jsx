@@ -86,7 +86,8 @@ const buildSkillTermsSections = () => [
 
 const COLLAPSED_HEIGHT = '10rem';
 
-const PublishingTerms = memo(({ entityLabel = 'agent' }) => {
+const PublishingTerms = memo(props => {
+  const { entityLabel = 'agent' } = props;
   const [isHovering, setIsHovering] = useState(false);
   const [showFullScreen, setShowFullScreen] = useState(false);
 
@@ -152,34 +153,37 @@ const PublishingTerms = memo(({ entityLabel = 'agent' }) => {
 
 PublishingTerms.displayName = 'PublishingTerms';
 
-const TermsContent = memo(({ sections }) => (
-  <Box sx={styles.termsContent}>
-    {sections.map((section, idx) => (
-      <Box
-        key={idx}
-        sx={styles.section}
-      >
-        <Typography
-          variant="bodySmall"
-          color="text.secondary"
-          sx={{ fontWeight: 700 }}
+const TermsContent = memo(props => {
+  const { sections } = props;
+  return (
+    <Box sx={styles.termsContent}>
+      {sections.map((section, idx) => (
+        <Box
+          key={idx}
+          sx={styles.section}
         >
-          {section.heading}
-        </Typography>
-        {section.lines.map((line, lineIdx) => (
           <Typography
-            key={lineIdx}
             variant="bodySmall"
             color="text.secondary"
-            sx={line === '' ? { height: '0.5rem' } : undefined}
+            sx={{ fontWeight: 700 }}
           >
-            {line}
+            {section.heading}
           </Typography>
-        ))}
-      </Box>
-    ))}
-  </Box>
-));
+          {section.lines.map((line, lineIdx) => (
+            <Typography
+              key={lineIdx}
+              variant="bodySmall"
+              color="text.secondary"
+              sx={line === '' ? { height: '0.5rem' } : undefined}
+            >
+              {line}
+            </Typography>
+          ))}
+        </Box>
+      ))}
+    </Box>
+  );
+});
 
 TermsContent.displayName = 'TermsContent';
 

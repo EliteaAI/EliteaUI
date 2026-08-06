@@ -22,7 +22,8 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes';
 
-const McpAuthStatus = memo(({ authConfig } = {}) => {
+const McpAuthStatus = memo((props = {}) => {
+  const { authConfig } = props;
   const { values } = useFormikContext();
   const { id, type: toolkitType, settings: { url, client_id, client_secret, scopes } = {} } = values ?? {};
   const { values: formValues } = useFormikContext();

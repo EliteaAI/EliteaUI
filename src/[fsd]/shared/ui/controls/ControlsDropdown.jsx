@@ -3,7 +3,8 @@ import { memo } from 'react';
 import DotMenu from '@/components/DotMenu';
 import HeaderContainer from '@/components/HeaderContainer';
 
-const ControlsDropdown = memo(({ menuItems = [], anchorButtonProps = {}, id = 'controls' }) => {
+const ControlsDropdown = memo(props => {
+  const { menuItems = [], anchorButtonProps = {}, id = 'controls' } = props;
   const styles = controlsDropdownStyles();
 
   return (

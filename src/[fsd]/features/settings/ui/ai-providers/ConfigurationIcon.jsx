@@ -19,7 +19,8 @@ import VertexAIIcon from '@/components/Icons/VertexAIIcon';
 
 const { getIconTypeKey } = ConfigurationHelpers;
 
-const ConfigurationIcon = memo(({ name, type, label }) => {
+const ConfigurationIcon = memo(props => {
+  const { name, type, label } = props;
   const iconType = getIconTypeKey(name, type, label);
 
   const renderIcon = () => {

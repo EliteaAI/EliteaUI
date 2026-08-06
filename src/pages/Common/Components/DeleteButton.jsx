@@ -12,7 +12,7 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 import { useTheme } from '@emotion/react';
 
-const useDeleteEntity = (entityType, setBlockNav) => {
+const useDeleteEntity = (_, setBlockNav) => {
   const projectId = useSelectedProjectId();
   const navigate = useNavigate();
 

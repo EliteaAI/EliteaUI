@@ -4,7 +4,7 @@ import { Box } from '@mui/material';
 
 import { Tooltip } from '@/[fsd]/shared/ui';
 
-function getCellContent(column, value, row, renderCell) {
+const getCellContent = (column, value, row, renderCell) => {
   if (typeof column.format === 'function') {
     return column.format(value, row);
   }
@@ -12,7 +12,7 @@ function getCellContent(column, value, row, renderCell) {
     return renderCell(column, value, row);
   }
   return value ?? '-';
-}
+};
 
 const GridTableRowDataCell = memo(props => {
   const { column, row, renderCell, dataCellSx, styles } = props;
