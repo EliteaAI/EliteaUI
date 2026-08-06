@@ -175,12 +175,23 @@ const ApplicationEditForm = memo(props => {
                 id="tags"
                 // Sub-element testids threaded through AutoCompleteDropDown
                 // (same pattern as CreateSkillForm's skill-tags-input-field).
-                // Shared component (Agent + Pipeline forms) — only the
-                // Pipeline surface has a case exercising Tags today, so the
-                // Agent branch stays undefined (no orphan testid; canon #511
-                // scope discipline).
-                inputTestId={isFromPipeline ? 'pipeline-tags-input' : undefined}
-                chipTestId={isFromPipeline ? 'pipeline-tags-chip' : undefined}
+                // Shared component (Agent + Pipeline forms). ELITEA-1878/1879
+                // are the first cases exercising the Agent branch's Tags
+                // field, so it now carries its own testids too (canon #511
+                // scope discipline — wired only because these cases actually
+                // call these locators). Agent chips use a per-tag dynamic
+                // testid (chipTestId as a function of the option) so each
+                // committed tag is independently addressable; the Pipeline
+                // branch keeps its pre-existing static testid, untouched.
+                // chipDeleteTestId is new — ELITEA-1879 is the first case to
+                // remove a tag, so only the Agent branch wires it.
+                inputTestId={isFromPipeline ? 'pipeline-tags-input' : 'agent-tags-input'}
+                chipTestId={
+                  isFromPipeline ? 'pipeline-tags-chip' : option => `agent-tags-chip-${option.name}`
+                }
+                chipDeleteTestId={
+                  isFromPipeline ? undefined : option => `agent-tags-chip-delete-${option.name}`
+                }
                 label="Tags"
                 tagList={tagList || []}
                 stateTags={formik.values?.version_details?.tags || []}
