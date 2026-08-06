@@ -50,6 +50,7 @@ export const buildVersionOption =
         return (
           <Box
             id="show-on-hover"
+            data-testid={`version-option-set-default-${name}`}
             sx={({ palette }) => ({
               display: 'none',
               borderRadius: '50%',
