@@ -145,6 +145,7 @@ const ConfigurationSection = memo(props => {
                 options={defaultSettingOptions}
                 disabled={!canEdit}
                 showOptionIcon
+                data-testid={sectionTestId ? `${sectionTestId}-default-selector` : undefined}
                 sx={{ marginRight: '0rem !important', paddingRight: '.75rem !important' }}
               />
 
@@ -161,6 +162,9 @@ const ConfigurationSection = memo(props => {
                     options={setting.options}
                     disabled={!canEdit}
                     showOptionIcon
+                    data-testid={
+                      sectionTestId && setting.key ? `${sectionTestId}-${setting.key}-selector` : undefined
+                    }
                     sx={{ marginRight: '0rem !important', paddingRight: '.75rem !important' }}
                   />
                 ))}
