@@ -152,7 +152,9 @@ const NewChat = props => {
   const isNewConversation = useMemo(
     () =>
       activeConversation?.isNew ||
-      (!sidebarSearchQuery && !conversations?.length && folders?.every(folder => !folder.conversations?.length)) ||
+      (!sidebarSearchQuery &&
+        !conversations?.length &&
+        folders?.every(folder => !folder.conversations?.length)) ||
       !activeConversation?.name,
     [activeConversation?.isNew, activeConversation?.name, conversations?.length, folders, sidebarSearchQuery],
   );
@@ -1714,24 +1716,21 @@ const chatStyles = ({
   showResizeGutter,
   isAnyEditorOpen,
 }) => {
-  const everythingCollapsed = collapsedConversations && collapsedParticipants;
-  const onlyConversationCollapsed = collapsedConversations && !collapsedParticipants;
-  const onlyParticipantsCollapsed = !collapsedConversations && collapsedParticipants;
-  const somethingCollapsed = collapsedConversations || collapsedParticipants;
+  const COLLAPSED_LEFT = 60;
+  const COLLAPSED_RIGHT = 80;
 
   const getChatWidthLG = () => {
-    if (everythingCollapsed) return 'calc(100% - 8.25rem - 1.25rem) !important';
-    if (onlyConversationCollapsed) return `calc(100% - ${rightPanelWidth + 60}px) !important`;
-    if (onlyParticipantsCollapsed) return `calc(100% - ${leftPanelWidth + 60}px - 1.25rem) !important`;
-
-    return `calc(100% - ${rightPanelWidth}px - ${leftPanelWidth}px) !important`;
+    const left = collapsedConversations ? COLLAPSED_LEFT : leftPanelWidth;
+    const right = collapsedParticipants ? COLLAPSED_RIGHT : rightPanelWidth;
+    return `calc(100% - ${left + right}px) !important`;
   };
 
   const getChatWidthSM = () => {
-    if (everythingCollapsed) return 'calc(100% - 7.5rem) !important';
-    if (somethingCollapsed) return 'calc(75% - 3.75rem - 1.25rem) !important';
-
-    return `calc(75% - ${rightPanelWidth}px) !important`;
+    const right = collapsedParticipants ? COLLAPSED_RIGHT : rightPanelWidth;
+    if (collapsedConversations) {
+      return `calc(100% - ${COLLAPSED_LEFT + right}px) !important`;
+    }
+    return `calc(75% - ${right}px) !important`;
   };
 
   return {
