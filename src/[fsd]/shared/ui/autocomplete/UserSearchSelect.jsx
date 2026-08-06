@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { memo, useCallback } from 'react';
 
 import { Typography, useTheme } from '@mui/material';
 import { Box } from '@mui/system';
@@ -7,16 +7,16 @@ import AutoCompleteDropDown from '@/ComponentsLib/AutoCompleteDropDown';
 import SearchIcon from '@/components/Icons/SearchIcon';
 import UserAvatar from '@/components/UserAvatar';
 
-export default function UserSearchSelect({
-  userList,
-  selectedUsers,
-  onChangeUsers,
-  disabled,
-  slotProps = {
-    listBox: {},
-  },
-  ...props
-}) {
+const UserSearchSelect = memo(props => {
+  const {
+    userList,
+    selectedUsers,
+    onChangeUsers,
+    disabled,
+    slotProps = { listBox: {} },
+    ...restProps
+  } = props;
+
   const theme = useTheme();
   const renderOptionBody = useCallback(option => {
     return (
@@ -65,7 +65,11 @@ export default function UserSearchSelect({
           />
         ),
       }}
-      {...props}
+      {...restProps}
     />
   );
-}
+});
+
+UserSearchSelect.displayName = 'UserSearchSelect';
+
+export default UserSearchSelect;

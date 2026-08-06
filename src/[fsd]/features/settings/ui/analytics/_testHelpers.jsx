@@ -21,7 +21,7 @@ const _mkStore = () => {
   };
 };
 
-export function installGlobalStubs() {
+export const installGlobalStubs = () => {
   if (typeof globalThis.localStorage === 'undefined') {
     globalThis.localStorage = _mkStore();
   }
@@ -35,7 +35,7 @@ export function installGlobalStubs() {
       disconnect() {}
     };
   }
-}
+};
 
 export const analyticsTestTheme = createTheme({
   palette: {

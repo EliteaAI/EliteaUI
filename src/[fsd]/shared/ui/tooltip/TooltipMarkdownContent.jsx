@@ -6,7 +6,8 @@ import remarkGfm from 'remark-gfm';
 
 import { Box } from '@mui/material';
 
-const TooltipMarkdownContent = memo(({ children: externalChildren }) => {
+const TooltipMarkdownContent = memo(props => {
+  const { children: externalChildren } = props;
   const styles = tooltipMarkdownContentStyles();
 
   if (!externalChildren) return null;

@@ -5,7 +5,8 @@ const InstructionsInputRefContext = React.createContext();
 /**
  * Provider component for instructions input reference management
  */
-export const InstructionsInputRefProvider = memo(({ inputRef, children }) => {
+export const InstructionsInputRefProvider = memo(props => {
+  const { inputRef, children } = props;
   return (
     <InstructionsInputRefContext.Provider value={inputRef}>{children}</InstructionsInputRefContext.Provider>
   );

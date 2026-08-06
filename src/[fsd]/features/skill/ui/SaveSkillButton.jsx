@@ -7,7 +7,8 @@ import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 
-const SaveSkillButton = memo(({ onSuccess }) => {
+const SaveSkillButton = memo(props => {
+  const { onSuccess } = props;
   const { values, dirty, isValid, validateForm, setTouched } = useFormikContext();
   const { onSave, isSaving } = useSaveSkill();
 

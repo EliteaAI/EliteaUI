@@ -20,27 +20,30 @@ import useCheckPermission from '@/hooks/useCheckPermission';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 
-const RestoreButton = memo(({ onClick, disabled, title, itemKey, sx }) => (
-  <Tooltip
-    title={title}
-    placement="top"
-  >
-    <Box
-      sx={sx}
-      component="span"
+const RestoreButton = memo(props => {
+  const { onClick, disabled, title, itemKey, sx } = props;
+  return (
+    <Tooltip
+      title={title}
+      placement="top"
     >
-      <IconButton
-        variant="elitea"
-        color="tertiary"
-        onClick={onClick}
-        disabled={disabled}
-        aria-label={`restore-service-prompt-default-${itemKey || ''}`}
+      <Box
+        sx={sx}
+        component="span"
       >
-        <RestoreOutlinedIcon fontSize="small" />
-      </IconButton>
-    </Box>
-  </Tooltip>
-));
+        <IconButton
+          variant="elitea"
+          color="tertiary"
+          onClick={onClick}
+          disabled={disabled}
+          aria-label={`restore-service-prompt-default-${itemKey || ''}`}
+        >
+          <RestoreOutlinedIcon fontSize="small" />
+        </IconButton>
+      </Box>
+    </Tooltip>
+  );
+});
 
 RestoreButton.displayName = 'RestoreButton';
 

@@ -2,7 +2,8 @@ import { memo } from 'react';
 
 import UserAvatar from '@/components/UserAvatar';
 
-const VersionAuthorAvatar = memo(({ name, avatar, ...restProps }) => {
+const VersionAuthorAvatar = memo(props => {
+  const { name, avatar, ...restProps } = props;
   return (
     <UserAvatar
       name={name}

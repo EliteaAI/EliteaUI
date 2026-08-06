@@ -21,7 +21,8 @@ import SaveNewVersionButton from '@/pages/Applications/Components/Applications/S
 import useDiscardApplicationChanges from '@/pages/Applications/useDiscardApplicationChanges';
 import useIsPipelineYamlCodeDirty from '@/pages/Pipelines/useIsPipelineYamlCodeDirty';
 
-const ApplicationTabBar = memo(({ onSuccess, onDiscard }) => {
+const ApplicationTabBar = memo(props => {
+  const { onSuccess, onDiscard } = props;
   const viewMode = useViewMode();
 
   const projectId = useSelectedProjectId();

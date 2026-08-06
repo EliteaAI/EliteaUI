@@ -1,4 +1,4 @@
-import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { Suspense, memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import ReactGA from 'react-ga4';
 import { useDispatch, useSelector } from 'react-redux';
@@ -97,7 +97,7 @@ let userInfoTimer = undefined;
 
 // Reads location at render time so the memoized route table does not need to
 // be re-created on every navigation just for this redirect.
-const LegacyCatalogRedirect = () => {
+const LegacyCatalogRedirect = memo(() => {
   const location = useLocation();
   return (
     <Navigate
@@ -106,9 +106,11 @@ const LegacyCatalogRedirect = () => {
       replace
     />
   );
-};
+});
 
-const ProtectedRoutes = () => {
+LegacyCatalogRedirect.displayName = 'LegacyCatalogRedirect';
+
+const ProtectedRoutes = memo(() => {
   const location = useLocation();
   const dispatch = useDispatch();
 
@@ -443,7 +445,7 @@ const ProtectedRoutes = () => {
       </Routes>
     </Suspense>
   );
-};
+});
 
 ProtectedRoutes.displayName = 'ProtectedRoutes';
 

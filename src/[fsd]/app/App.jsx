@@ -1,3 +1,5 @@
+import { memo } from 'react';
+
 import { RouterProvider } from 'react-router-dom';
 
 import { gaInit } from '@/GA';
@@ -7,9 +9,9 @@ import EnvMissingPage from '@/pages/EnvMissingPage';
 
 gaInit();
 
-const App = () => {
+const App = memo(() => {
   return MISSING_ENVS.length > 0 ? <EnvMissingPage /> : <RouterProvider router={router} />;
-};
+});
 
 App.displayName = 'App';
 

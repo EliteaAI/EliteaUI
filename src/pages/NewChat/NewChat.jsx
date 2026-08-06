@@ -152,7 +152,9 @@ const NewChat = props => {
   const isNewConversation = useMemo(
     () =>
       activeConversation?.isNew ||
-      (!sidebarSearchQuery && !conversations?.length && folders?.every(folder => !folder.conversations?.length)) ||
+      (!sidebarSearchQuery &&
+        !conversations?.length &&
+        folders?.every(folder => !folder.conversations?.length)) ||
       !activeConversation?.name,
     [activeConversation?.isNew, activeConversation?.name, conversations?.length, folders, sidebarSearchQuery],
   );

@@ -5,7 +5,8 @@ import { Box } from '@mui/material';
 import { CodeMirrorLinterHelpers } from '@/[fsd]/shared/lib/helpers';
 import { Field } from '@/[fsd]/shared/ui';
 
-const CodePreviewContent = memo(({ codeExample, editorLanguage, modelName }) => {
+const CodePreviewContent = memo(props => {
+  const { codeExample, editorLanguage, modelName } = props;
   const styles = getStyles();
 
   const [extensions, setExtensions] = useState([]);
