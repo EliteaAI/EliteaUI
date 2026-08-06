@@ -208,7 +208,7 @@ ConversationStarters.displayName = 'ConversationStarters';
 export default ConversationStarters;
 
 export const EllipsisTextWithTooltip = memo(props => {
-  const { text, onClick, sx, textSX } = props;
+  const { text, onClick, sx, textSX, testId } = props;
 
   const styles = ellipsisTextWithTooltipStyles();
   const [isTooltipVisible, setIsTooltipVisible] = useState(false);
@@ -239,6 +239,7 @@ export const EllipsisTextWithTooltip = memo(props => {
 
   return (
     <Box
+      data-testid={testId}
       sx={[styles.starterItem, sx]}
       onClick={onClick}
       onMouseEnter={handleMouseEnter}
