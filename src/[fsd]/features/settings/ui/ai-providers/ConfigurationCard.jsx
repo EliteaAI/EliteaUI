@@ -87,6 +87,7 @@ const ConfigurationCard = memo(props => {
             {statusText}
             {isHighTier && (
               <Typography
+                data-testid="ai-provider-configuration-badge"
                 component={Box}
                 variant="bodySmall"
                 color="text.secondary"
@@ -97,6 +98,7 @@ const ConfigurationCard = memo(props => {
             )}
             {isLowTier && (
               <Typography
+                data-testid="ai-provider-configuration-badge"
                 component={Box}
                 variant="bodySmall"
                 color="text.secondary"
@@ -107,6 +109,7 @@ const ConfigurationCard = memo(props => {
             )}
             {isDefault && (
               <Typography
+                data-testid="ai-provider-configuration-badge"
                 component={Box}
                 variant="bodySmall"
                 color="text.secondary"
