@@ -4,7 +4,16 @@ import { useTheme } from '@emotion/react';
 
 import CloseIcon from './Icons/CloseIcon';
 
-export default function PipelineStateViewModal({ open, onClose, value = '', label = '' }) {
+export default function PipelineStateViewModal({
+  open,
+  onClose,
+  value = '',
+  label = '',
+  testId,
+  headerTestId,
+  closeButtonTestId,
+  contentTestId,
+}) {
   const theme = useTheme();
 
   const handleKeyDown = event => {
@@ -18,7 +27,7 @@ export default function PipelineStateViewModal({ open, onClose, value = '', labe
     <Dialog
       open={open}
       onKeyDown={handleKeyDown}
-      data-testid="pipeline-run-details-value-modal"
+      data-testid={testId}
       slotProps={{
         paper: {
           sx: {
@@ -40,7 +49,7 @@ export default function PipelineStateViewModal({ open, onClose, value = '', labe
         variant="headingMedium"
         color="text.secondary"
         sx={{ height: '60px', padding: '16px 32px' }}
-        data-testid="pipeline-run-details-value-modal-header"
+        data-testid={headerTestId}
       >
         <Box
           display={'flex'}
@@ -54,7 +63,7 @@ export default function PipelineStateViewModal({ open, onClose, value = '', labe
             variant="elitea"
             color="tertiary"
             onClick={onClose}
-            data-testid="pipeline-run-details-value-modal-close-button"
+            data-testid={closeButtonTestId}
           >
             <CloseIcon
               fill={theme.palette.icon.fill.default}
@@ -76,7 +85,7 @@ export default function PipelineStateViewModal({ open, onClose, value = '', labe
           flexDirection: 'column',
           gap: '16px',
         }}
-        data-testid="pipeline-run-details-value-modal-content"
+        data-testid={contentTestId}
       >
         {JSON.stringify(value)}
       </DialogContent>

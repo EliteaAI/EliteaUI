@@ -509,6 +509,10 @@ const RunStateDialog = memo(props => {
         onClose={onCloseValueModal}
         label={selectedState?.name}
         value={selectedState.value}
+        testId="pipeline-run-details-value-modal"
+        headerTestId="pipeline-run-details-value-modal-header"
+        closeButtonTestId="pipeline-run-details-value-modal-close-button"
+        contentTestId="pipeline-run-details-value-modal-content"
       />
     </>
   );
