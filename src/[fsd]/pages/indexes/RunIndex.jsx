@@ -7,8 +7,9 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Box, CircularProgress, Typography } from '@mui/material';
 
 import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
-import { useGetIndexScheduleQuery, useGetIndexesListQuery } from '@/[fsd]/features/toolkits/indexes/api';
+import { useGetIndexScheduleQuery } from '@/[fsd]/features/toolkits/indexes/api';
 import { IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
+import { useIndexesListPolling } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import { selectIndexesList } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
 import { IndexBreadcrumb } from '@/[fsd]/features/toolkits/indexes/ui';
 import RunIndexPanel from '@/[fsd]/features/toolkits/indexes/ui/run-index/RunIndexPanel';
@@ -51,10 +52,11 @@ const RunIndex = memo(() => {
     refetch: refetchToolkit,
   } = useToolkitsDetailsQuery({ projectId, toolkitId }, { skip: !projectId || !toolkitId });
 
-  const { refetch: refetchIndexesList } = useGetIndexesListQuery(
-    { toolkitId, projectId },
-    { skip: !projectId || !toolkitId },
-  );
+  const { refetch: refetchIndexesList } = useIndexesListPolling({
+    toolkitId,
+    projectId,
+    skip: !projectId || !toolkitId,
+  });
 
   useGetIndexScheduleQuery(
     { projectId, toolkitId },

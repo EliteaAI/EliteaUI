@@ -43,7 +43,9 @@ const IndexListItem = memo(props => {
 
   const isSelected = useMemo(() => currentIndex?.id === index.id, [currentIndex, index]);
   const isInProgress = index?.metadata?.state === IndexStatuses.progress;
-  const disableActions = isReindexing || isInProgress;
+  // Only the backend's stale flag proves an in_progress run dead, and the lock must
+  // be a visible disabled state — a swallowed click reads as "delete broken".
+  const disableStuckActions = isReindexing || (isInProgress && !index?.stale);
 
   const documents = useMemo(() => {
     if (!index.metadata) return { tooltip: '-', count: '–', skipped: '-' };
@@ -105,13 +107,13 @@ const IndexListItem = memo(props => {
 
   const handleReindexClick = e => {
     e.stopPropagation();
-    if (disableActions) return;
+    if (disableStuckActions) return;
     onCardReindex?.(index);
   };
 
   const handleDeleteClick = e => {
     e.stopPropagation();
-    if (disableActions) return;
+    if (disableStuckActions) return;
     onCardDelete?.(index);
   };
 
@@ -205,30 +207,42 @@ const IndexListItem = memo(props => {
           )}
           {onCardReindex && (
             <Tooltip
-              title="Reindex"
+              title={disableStuckActions ? 'Unavailable while indexing is in progress' : 'Reindex'}
               placement="top"
             >
-              <Button.BaseBtn
-                className="index-card-actions"
-                variant={Button.BUTTON_VARIANTS.tertiary}
-                startIcon={<IndexingIcon sx={styles.actionIcon} />}
-                onClick={handleReindexClick}
-                data-testid="index-card-reindex-btn"
-              />
+              <Box
+                component="span"
+                sx={styles.actionWrapper}
+              >
+                <Button.BaseBtn
+                  className="index-card-actions"
+                  variant={Button.BUTTON_VARIANTS.tertiary}
+                  startIcon={<IndexingIcon sx={styles.actionIcon} />}
+                  onClick={handleReindexClick}
+                  disabled={disableStuckActions}
+                  data-testid="index-card-reindex-btn"
+                />
+              </Box>
             </Tooltip>
           )}
           {onCardDelete && canDeleteIndex && (
             <Tooltip
-              title="Delete"
+              title={disableStuckActions ? 'Unavailable while the run may still be alive' : 'Delete'}
               placement="top"
             >
-              <Button.BaseBtn
-                className="index-card-actions"
-                variant={Button.BUTTON_VARIANTS.tertiary}
-                startIcon={<DeleteIcon sx={styles.actionIcon} />}
-                onClick={handleDeleteClick}
-                data-testid="index-card-delete-btn"
-              />
+              <Box
+                component="span"
+                sx={styles.actionWrapper}
+              >
+                <Button.BaseBtn
+                  className="index-card-actions"
+                  variant={Button.BUTTON_VARIANTS.tertiary}
+                  startIcon={<DeleteIcon sx={styles.actionIcon} />}
+                  onClick={handleDeleteClick}
+                  disabled={disableStuckActions}
+                  data-testid="index-card-delete-btn"
+                />
+              </Box>
             </Tooltip>
           )}
           {index.metadata.state !== IndexStatuses.success && (
@@ -404,6 +418,12 @@ const indexListItem = () => ({
 
   actionIcon: {
     fontSize: '1rem',
+  },
+
+  // A disabled button swallows the hover events Tooltip needs; inline-flex keeps the
+  // wrapper the same flex child the bare button was.
+  actionWrapper: {
+    display: 'inline-flex',
   },
 });
 
