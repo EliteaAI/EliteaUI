@@ -37,14 +37,9 @@ const isMcpParticipant = participant => {
   return participant?.meta?.mcp === true || toolkitType === 'mcp' || toolkitType.endsWith('_mcp');
 };
 
-const isPipelineApplication = participant =>
-  participant?.entity_name === 'application' &&
-  String(participant?.entity_settings?.agent_type || participant?.agent_type || '').toLowerCase() ===
-    'pipeline';
-
 const supportsBoundedAdhocParticipant = participant => {
   if (participant?.entity_name === 'user' || participant?.entity_name === 'dummy') return true;
-  if (participant?.entity_name === 'application') return !isPipelineApplication(participant);
+  if (participant?.entity_name === 'application') return true;
   return participant?.entity_name === 'toolkit' && !isMcpParticipant(participant);
 };
 
@@ -52,11 +47,7 @@ const applicationIdentity = participant =>
   String(participant?.id ?? participant?.entity_meta?.id ?? participant?.uuid ?? '');
 
 const supportsBoundedApplicationConversation = (participants, selectedParticipant) => {
-  if (
-    !Array.isArray(participants) ||
-    participants.length === 0 ||
-    isPipelineApplication(selectedParticipant)
-  ) {
+  if (!Array.isArray(participants) || participants.length === 0) {
     return false;
   }
   if (
@@ -65,7 +56,7 @@ const supportsBoundedApplicationConversation = (participants, selectedParticipan
     return false;
   }
   const applications = participants.filter(participant => participant?.entity_name === 'application');
-  if (applications.length !== 1 || isPipelineApplication(applications[0])) return false;
+  if (applications.length !== 1) return false;
 
   const selectedIdentity = applicationIdentity(selectedParticipant);
   const conversationIdentity = applicationIdentity(applications[0]);
@@ -87,6 +78,19 @@ const isBoundedExecutionIdentifier = value =>
   value === value.trim() &&
   !/[\0\r\n]/.test(value) &&
   new TextEncoder().encode(value).length <= MAX_EXECUTION_ID_BYTES;
+
+export const isAgentSequentialHITLContinuationEligible = ({ interrupt, action }) =>
+  Boolean(interrupt) &&
+  ['approve', 'reject', 'edit', 'block_with_comment'].includes(action) &&
+  !interrupt.child_thread_id &&
+  interrupt.resume_strategy !== 'aggregate_child' &&
+  !interrupt.via_call_id &&
+  !interrupt._via_call_id;
+
+export const getAgentHITLChildThreadId = interrupt =>
+  interrupt?.resume_strategy === 'aggregate_child'
+    ? interrupt.child_thread_id || interrupt.thread_id || ''
+    : interrupt?.child_thread_id || '';
 
 export const buildAgentExecutionEventsUrl = (baseUrl, projectId, executionId) => {
   const normalizedBase = String(baseUrl || '').replace(/\/$/, '');
@@ -146,21 +150,28 @@ export const resetAgentExecutionReplayProjection = (chatHistory, responseMessage
   return changed ? next : chatHistory;
 };
 
-export const settleAgentExecutionReplayProjection = (chatHistory, responseMessageId) => {
+export const settleAgentExecutionReplayProjection = (chatHistory, responseMessageId, terminalEvent) => {
   let changed = false;
   const next = (chatHistory || []).map(message => {
     if (message?.id !== responseMessageId) return message;
+    const terminalContent =
+      terminalEvent?.type === TERMINAL_NODE_EVENT && typeof terminalEvent?.content === 'string'
+        ? terminalEvent.content
+        : '';
+    const shouldRestoreTerminalContent = !message.content && terminalContent;
     if (
       message.isStreaming !== true &&
       message.isLoading !== true &&
       message.isRegenerating !== true &&
-      message.isSending !== true
+      message.isSending !== true &&
+      !shouldRestoreTerminalContent
     ) {
       return message;
     }
     changed = true;
     return {
       ...message,
+      ...(shouldRestoreTerminalContent ? { content: terminalContent } : {}),
       isStreaming: false,
       isLoading: false,
       isRegenerating: false,
@@ -427,19 +438,10 @@ const openAgentExecutionEventStream = ({
   return { started: true, source, conversationUuid, close };
 };
 
-const startAgentExecutionRequest = async ({
+const admitAgentExecutionRequest = async ({
   startPath,
   startBody,
-  conversationUuid,
-  eventPayload,
-  onNodeEvent,
-  onError,
-  onClosed,
-  onTerminal,
-  onReplayReset,
   fetchImpl = fetch,
-  EventSourceImpl = EventSource,
-  yieldToRenderer = yieldToBrowserRenderer,
   retryFinalizingRegeneration = false,
   waitForRetry = waitForRegenerationRetry,
 }) => {
@@ -484,6 +486,35 @@ const startAgentExecutionRequest = async ({
     throw new AgentExecutionStartError('Agent execution returned an invalid response. Please try again.');
   }
 
+  return { started: true, admission };
+};
+
+const startAgentExecutionRequest = async ({
+  startPath,
+  startBody,
+  conversationUuid,
+  eventPayload,
+  onNodeEvent,
+  onError,
+  onClosed,
+  onTerminal,
+  onReplayReset,
+  fetchImpl = fetch,
+  EventSourceImpl = EventSource,
+  yieldToRenderer = yieldToBrowserRenderer,
+  retryFinalizingRegeneration = false,
+  waitForRetry = waitForRegenerationRetry,
+}) => {
+  const admitted = await admitAgentExecutionRequest({
+    startPath,
+    startBody,
+    fetchImpl,
+    retryFinalizingRegeneration,
+    waitForRetry,
+  });
+  if (!admitted.started) return admitted;
+  const { admission } = admitted;
+
   // The current Socket.IO path emits start_task before the SDK NodeEvents. The
   // durable execution route already returns the identities needed to preserve
   // that UI contract, so reconcile the optimistic response before streaming.
@@ -519,6 +550,23 @@ const startAgentExecutionRequest = async ({
     }),
     admission,
   };
+};
+
+export const admitAgentExecution = async ({
+  contract = AGENT_APPLICATION_EXECUTION_CONTRACT,
+  projectId,
+  conversationUuid,
+  eventPayload,
+  fetchImpl = fetch,
+}) => {
+  const startPath = `/elitea_core/messages/prompt_lib/${encodeURIComponent(projectId)}/${encodeURIComponent(
+    conversationUuid,
+  )}?execution_contract=${encodeURIComponent(contract)}`;
+  return admitAgentExecutionRequest({
+    startPath,
+    startBody: buildAgentExecutionStartBody({ contract, projectId, conversationUuid, eventPayload }),
+    fetchImpl,
+  });
 };
 
 export const resumeAgentExecutionSse = ({

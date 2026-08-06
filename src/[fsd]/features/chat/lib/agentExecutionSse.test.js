@@ -5,13 +5,16 @@ import {
   AGENT_APPLICATION_EXECUTION_CONTRACT,
   AGENT_HITL_CONTINUATION_EXECUTION_CONTRACT,
   AGENT_REGENERATION_EXECUTION_CONTRACT,
+  admitAgentExecution,
   buildAgentExecutionEventsUrl,
   buildAgentExecutionStartBody,
   buildAgentHITLContinuationBody,
   getAgentExecutionResumeCandidate,
   getAgentExecutionSseContract,
+  getAgentHITLChildThreadId,
   getAgentRegenerationSseContract,
   isAgentExecutionSseEligible,
+  isAgentSequentialHITLContinuationEligible,
   resetAgentExecutionReplayProjection,
   resumeAgentExecutionSse,
   settleAgentExecutionReplayProjection,
@@ -49,6 +52,52 @@ class FakeEventSource {
 }
 
 describe('agent execution SSE', () => {
+  it('admits one root or synchronously nested HITL decision but not child-thread routing', () => {
+    expect(
+      isAgentSequentialHITLContinuationEligible({
+        interrupt: { interrupt_id: 'root-1', thread_id: 'parent-checkpoint-1' },
+        action: 'approve',
+      }),
+    ).toBe(true);
+    expect(
+      isAgentSequentialHITLContinuationEligible({
+        interrupt: {
+          interrupt_id: 'nested-1',
+          parent_agent_call_id: 'call-pipeline-1',
+          parent_agent_path: [{ name: 'artifact_test', call_id: 'call-pipeline-1' }],
+        },
+        action: 'block_with_comment',
+      }),
+    ).toBe(true);
+    expect(
+      isAgentSequentialHITLContinuationEligible({
+        interrupt: { interrupt_id: 'child-1', child_thread_id: 'child-thread-1' },
+        action: 'approve',
+      }),
+    ).toBe(false);
+    expect(
+      isAgentSequentialHITLContinuationEligible({
+        interrupt: { interrupt_id: 'nested-1', parent_agent_call_id: 'call-pipeline-1' },
+        action: 'answer',
+      }),
+    ).toBe(false);
+  });
+
+  it('distinguishes the parent checkpoint thread from a parallel child thread', () => {
+    expect(
+      getAgentHITLChildThreadId({
+        thread_id: 'parent-checkpoint-1',
+        resume_strategy: 'single',
+      }),
+    ).toBe('');
+    expect(
+      getAgentHITLChildThreadId({
+        thread_id: 'child-thread-1',
+        resume_strategy: 'aggregate_child',
+      }),
+    ).toBe('child-thread-1');
+  });
+
   it('only selects the direct path for the bounded application slice', () => {
     const base = {
       isAgentsPage: true,
@@ -69,7 +118,7 @@ describe('agent execution SSE', () => {
     ).toBe(false);
   });
 
-  it('selects configured application execution in main Chat only for one bounded agent participant', () => {
+  it('selects configured application execution in main Chat for one bounded agent or pipeline participant', () => {
     const application = {
       id: 19,
       entity_name: 'application',
@@ -115,8 +164,13 @@ describe('agent execution SSE', () => {
       getAgentExecutionSseContract({
         ...options,
         participant: { ...application, entity_settings: { agent_type: 'pipeline' } },
+        conversationParticipants: [
+          { entity_name: 'user' },
+          { entity_name: 'dummy' },
+          { ...application, entity_settings: { agent_type: 'pipeline' } },
+        ],
       }),
-    ).toBeNull();
+    ).toBe(AGENT_APPLICATION_EXECUTION_CONTRACT);
   });
 
   it('selects exactly one persisted configured-agent execution for reload reattachment', () => {
@@ -141,6 +195,20 @@ describe('agent execution SSE', () => {
     };
 
     expect(getAgentExecutionResumeCandidate(options)).toEqual({
+      executionId: 'execution-id',
+      questionId: 'question-id',
+      responseMessageId: 'response-id',
+    });
+    expect(
+      getAgentExecutionResumeCandidate({
+        ...options,
+        conversationParticipants: [
+          { entity_name: 'user' },
+          { entity_name: 'dummy' },
+          { ...application, entity_settings: { agent_type: 'pipeline' } },
+        ],
+      }),
+    ).toEqual({
       executionId: 'execution-id',
       questionId: 'question-id',
       responseMessageId: 'response-id',
@@ -191,6 +259,20 @@ describe('agent execution SSE', () => {
     };
 
     expect(getAgentExecutionResumeCandidate(options)).toEqual({
+      executionId: 'execution-id',
+      questionId: 'question-id',
+      responseMessageId: 'response-id',
+    });
+    expect(
+      getAgentExecutionResumeCandidate({
+        ...options,
+        conversationParticipants: options.conversationParticipants.map(participant =>
+          participant.entity_name === 'application'
+            ? { ...participant, entity_settings: { agent_type: 'pipeline' } }
+            : participant,
+        ),
+      }),
+    ).toEqual({
       executionId: 'execution-id',
       questionId: 'question-id',
       responseMessageId: 'response-id',
@@ -270,7 +352,43 @@ describe('agent execution SSE', () => {
     expect(settleAgentExecutionReplayProjection(settled, 'response-id')).toBe(settled);
   });
 
-  it('selects ad-hoc execution for standard toolkits and leaf application participants', () => {
+  it('settles a completed continuation from full_message without duplicating streamed content', () => {
+    const response = {
+      id: 'response-id',
+      role: 'assistant',
+      content: '',
+      isStreaming: true,
+      isLoading: true,
+      toolActions: [{ id: 'trace_step_1' }],
+    };
+    const terminal = {
+      type: 'full_message',
+      message_id: 'response-id',
+      content: 'Pipeline completed after HITL.',
+    };
+
+    const settled = settleAgentExecutionReplayProjection([response], 'response-id', terminal);
+
+    expect(settled).toEqual([
+      {
+        ...response,
+        content: terminal.content,
+        isStreaming: false,
+        isLoading: false,
+        isRegenerating: false,
+        isSending: false,
+      },
+    ]);
+    expect(
+      settleAgentExecutionReplayProjection(
+        [{ ...response, content: 'Already streamed.' }],
+        'response-id',
+        terminal,
+      )[0].content,
+    ).toBe('Already streamed.');
+  });
+
+  it('selects ad-hoc execution for standard toolkits and application participants', () => {
     const options = {
       isAgentsPage: false,
       participant: undefined,
@@ -307,7 +425,7 @@ describe('agent execution SSE', () => {
           { entity_name: 'application', entity_settings: { agent_type: 'pipeline' } },
         ],
       }),
-    ).toBeNull();
+    ).toBe(AGENT_ADHOC_EXECUTION_CONTRACT);
     expect(
       getAgentExecutionSseContract({
         ...options,
@@ -332,6 +450,22 @@ describe('agent execution SSE', () => {
       getAgentRegenerationSseContract({
         isAgentsPage: true,
         participant: { entity_name: 'application' },
+        eventPayload: applicationPayload,
+        hasAttachments: false,
+        hasUpdatedItems: false,
+        hasLLMOverride: false,
+      }),
+    ).toBe(AGENT_REGENERATION_EXECUTION_CONTRACT);
+    expect(
+      getAgentRegenerationSseContract({
+        isAgentsPage: false,
+        participant: { id: 19, entity_name: 'application', entity_settings: { agent_type: 'pipeline' } },
+        conversationParticipants: [
+          { entity_name: 'user' },
+          { entity_name: 'dummy' },
+          { id: 19, entity_name: 'application', entity_settings: { agent_type: 'pipeline' } },
+        ],
+        conversationMeta: { internal_tools: [] },
         eventPayload: applicationPayload,
         hasAttachments: false,
         hasUpdatedItems: false,
@@ -399,6 +533,21 @@ describe('agent execution SSE', () => {
           { entity_name: 'user' },
           { entity_name: 'dummy' },
           { entity_name: 'toolkit', entity_settings: { toolkit_type: 'aha' } },
+        ],
+        eventPayload: adhocPayload,
+        hasAttachments: false,
+        hasUpdatedItems: false,
+        hasLLMOverride: true,
+      }),
+    ).toBe(AGENT_REGENERATION_EXECUTION_CONTRACT);
+    expect(
+      getAgentRegenerationSseContract({
+        isAgentsPage: false,
+        participant: undefined,
+        conversationParticipants: [
+          { entity_name: 'user' },
+          { entity_name: 'dummy' },
+          { entity_name: 'application', entity_settings: { agent_type: 'pipeline' } },
         ],
         eventPayload: adhocPayload,
         hasAttachments: false,
@@ -483,6 +632,46 @@ describe('agent execution SSE', () => {
         participant_id: 0,
         llm_settings: { model_name: 'eu.anthropic.claude', model_project_id: 7 },
       }),
+    );
+  });
+
+  it('admits a first turn without opening a second realtime transport', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue({
+      status: 200,
+      ok: true,
+      json: async () => ({
+        task_id: 'execution-id',
+        execution_id: 'execution-id',
+        response_message_id: 'response-id',
+        events_url: '/events',
+      }),
+    });
+
+    const result = await admitAgentExecution({
+      contract: AGENT_ADHOC_EXECUTION_CONTRACT,
+      projectId: 7,
+      conversationUuid: 'conversation-id',
+      eventPayload: {
+        ...payload,
+        participant_id: undefined,
+        llm_settings: { model_name: 'eu.anthropic.claude', model_project_id: 7 },
+      },
+      fetchImpl,
+    });
+
+    expect(result).toEqual({
+      started: true,
+      admission: {
+        task_id: 'execution-id',
+        execution_id: 'execution-id',
+        response_message_id: 'response-id',
+        events_url: '/events',
+      },
+    });
+    expect(fetchImpl).toHaveBeenCalledOnce();
+    expect(fetchImpl.mock.calls[0][0]).toContain('execution_contract=agent.execute.adhoc.v1');
+    expect(fetchImpl.mock.calls[0][1]).toEqual(
+      expect.objectContaining({ method: 'POST', credentials: 'include' }),
     );
   });
 

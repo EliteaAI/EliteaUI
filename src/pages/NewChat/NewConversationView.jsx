@@ -5,6 +5,11 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { Box, Typography } from '@mui/material';
 
+import {
+  AgentExecutionStartError,
+  admitAgentExecution,
+  getAgentExecutionSseContract,
+} from '@/[fsd]/features/chat/lib/agentExecutionSse';
 import { NewConversationHelpers } from '@/[fsd]/features/chat/lib/helpers';
 import {
   useChatSkillMention,
@@ -84,7 +89,7 @@ const NewConversationView = forwardRef(
   ) => {
     const styles = newConversationViewStyles();
     const selectedProjectId = useSelectedProjectId();
-    const { toastSuccess } = useToast();
+    const { toastError, toastSuccess } = useToast();
     const systemSenderName = useSystemSenderName();
     const { selectedAgent, selectedAgentStarter } = useSelector(state => state.chat);
     const dispatch = useDispatch();
@@ -168,22 +173,29 @@ const NewConversationView = forwardRef(
 
     const { emit } = useSocket(sioEvents.chat_predict);
     const getPayload = useCallback(
-      ({ question, question_id, participant, conversationUuid, attachmentList }) => {
+      ({
+        question,
+        question_id,
+        participant,
+        conversationUuid,
+        conversationParticipants,
+        attachmentList,
+      }) => {
         return generateMessagePayload({
           question,
           question_id,
           participant,
-          conversation_uuid: conversationUuid || activeConversation.uuid,
+          conversation_uuid: conversationUuid || activeConversation?.uuid,
           projectId: selectedProjectId,
           interaction_uuid,
           selectedModel,
           attachmentList,
-          participants: activeConversation.participants || [],
+          participants: conversationParticipants || activeConversation?.participants || [],
         });
       },
       [
-        activeConversation.uuid,
-        activeConversation.participants,
+        activeConversation?.uuid,
+        activeConversation?.participants,
         interaction_uuid,
         selectedModel,
         selectedProjectId,
@@ -243,6 +255,7 @@ const NewConversationView = forwardRef(
         }
 
         const emitEvent = async (uuid, participant) => {
+          const conversationParticipants = conversation?.participants || [];
           const question_id = uuidv4();
           let newMessages = initializeNewMessages({
             question,
@@ -277,9 +290,88 @@ const NewConversationView = forwardRef(
             participant,
             question_id,
             conversationUuid: uuid,
+            conversationParticipants,
             attachmentList: updatedAttachments || attachments,
           });
-          emit(payload);
+          const attachmentList = updatedAttachments || attachments;
+          const executionContract = getAgentExecutionSseContract({
+            isAgentsPage: false,
+            participant,
+            conversationParticipants,
+            conversationMeta: conversation?.meta,
+            eventPayload: payload,
+            hasAttachments: attachmentList.length > 0,
+            hasLLMOverride: false,
+            isSendingToUser: false,
+          });
+          let handledByDirectExecution = false;
+
+          if (executionContract) {
+            try {
+              const directExecution = await admitAgentExecution({
+                contract: executionContract,
+                projectId: selectedProjectId,
+                conversationUuid: uuid,
+                eventPayload: payload,
+              });
+              handledByDirectExecution = directExecution.started;
+              if (directExecution.started) {
+                const { admission } = directExecution;
+                if (!admission?.response_message_id) {
+                  throw new AgentExecutionStartError(
+                    'Agent execution returned an invalid response. Please try again.',
+                  );
+                }
+                setChatHistory(previous =>
+                  previous.map(message =>
+                    message.question_id !== question_id || message.role !== 'assistant'
+                      ? message
+                      : {
+                          ...message,
+                          id: admission.response_message_id,
+                          task_id: admission.task_id || admission.execution_id,
+                          participant_id: payload.participant_id || message.participant_id,
+                          isLoading: true,
+                          isStreaming: true,
+                          isSending: false,
+                        },
+                  ),
+                );
+              }
+            } catch (error) {
+              handledByDirectExecution = true;
+              const safeMessage =
+                error instanceof AgentExecutionStartError
+                  ? error.message
+                  : 'Failed to start agent execution. Please try again.';
+              setChatHistory(previous =>
+                previous.map(message =>
+                  message.question_id !== question_id || message.role !== 'assistant'
+                    ? message
+                    : {
+                        ...message,
+                        content: safeMessage,
+                        exception: safeMessage,
+                        isLoading: false,
+                        isStreaming: false,
+                        isSending: false,
+                      },
+                ),
+              );
+              dispatch(
+                actions.clearConversationStreamingInfo({
+                  projectId: selectedProjectId,
+                  conversationId: uuid,
+                }),
+              );
+              toastError(safeMessage);
+            }
+          }
+
+          // Preserve the current compatibility path for unsupported first-turn
+          // combinations such as attachments and MCP. A successful durable
+          // admission is resumed by ChatBox after the newly-created chat mounts.
+          if (!handledByDirectExecution) emit(payload);
           clearMentions();
           onClearAttachments?.();
           setActiveConversation(prev => ({
@@ -296,6 +388,8 @@ const NewConversationView = forwardRef(
         setConversationStreamingInfo,
         getPayload,
         emit,
+        selectedProjectId,
+        toastError,
         user.name,
         user.avatar,
         user.id,
@@ -734,14 +828,15 @@ const NewConversationView = forwardRef(
                   });
 
                 await addNewParticipants(selectedParticipantFiltered, createdConversation, participants => {
-                  onComplete?.([
+                  const conversationParticipants = [
                     ...participants,
                     ...NewConversationHelpers.setUserLLmSettings(createdConversation.participants, user.id, {
                       model_name: selectedModel?.name,
                       model_project_id: selectedModel?.project_id,
                       ...llmSettingsOnly,
                     }),
-                  ]);
+                  ];
+                  onComplete?.(conversationParticipants);
                   const participant = participants.find(
                     p =>
                       (p.entity_name === selectedParticipant.entity_name ||
@@ -752,7 +847,10 @@ const NewConversationView = forwardRef(
                   setLocalActiveParticipant(createdConversation?.id, getChatParticipantUniqueId(participant));
 
                   setTimeout(() => {
-                    onPredictStreamRef.current?.(question, participant, createdConversation);
+                    onPredictStreamRef.current?.(question, participant, {
+                      ...createdConversation,
+                      participants: conversationParticipants,
+                    });
                   }, 30);
                 });
                 setIsSending(false);
@@ -784,7 +882,7 @@ const NewConversationView = forwardRef(
                     selectedParticipantFiltered,
                     createdConversation,
                     async participants => {
-                      onComplete?.([
+                      const conversationParticipants = [
                         ...participants,
                         ...NewConversationHelpers.setUserLLmSettings(
                           createdConversation.participants,
@@ -795,24 +893,34 @@ const NewConversationView = forwardRef(
                             ...llmSettingsOnly,
                           },
                         ),
-                      ]);
+                      ];
+                      onComplete?.(conversationParticipants);
                       setTimeout(() => {
-                        onPredictStreamRef.current?.(question, null, createdConversation);
+                        onPredictStreamRef.current?.(question, null, {
+                          ...createdConversation,
+                          participants: conversationParticipants,
+                        });
                       }, 30);
                     },
                   );
                   setIsSending(false);
                 }, 0);
               } else {
-                onComplete?.(
-                  NewConversationHelpers.setUserLLmSettings(createdConversation.participants, user.id, {
+                const conversationParticipants = NewConversationHelpers.setUserLLmSettings(
+                  createdConversation.participants,
+                  user.id,
+                  {
                     model_name: selectedModel?.name,
                     model_project_id: selectedModel?.project_id,
                     ...llmSettingsOnly,
-                  }),
+                  },
                 );
+                onComplete?.(conversationParticipants);
                 setTimeout(() => {
-                  onPredictStreamRef.current?.(question, null, createdConversation);
+                  onPredictStreamRef.current?.(question, null, {
+                    ...createdConversation,
+                    participants: conversationParticipants,
+                  });
                 }, 30);
               }
             }

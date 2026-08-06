@@ -20,7 +20,9 @@ import {
   AgentExecutionStartError,
   getAgentExecutionResumeCandidate,
   getAgentExecutionSseContract,
+  getAgentHITLChildThreadId,
   getAgentRegenerationSseContract,
+  isAgentSequentialHITLContinuationEligible,
   resetAgentExecutionReplayProjection,
   resumeAgentExecutionSse,
   settleAgentExecutionReplayProjection,
@@ -197,6 +199,10 @@ const ChatBox = forwardRef((props, boxRef) => {
   const questionItemRef = useRef();
   const activeConversationRef = useRef(activeConversation);
   const agentEventSourcesRef = useRef(new Map());
+  // A typed admission projects start_task before startAgentExecutionSse returns
+  // the opened EventSource. Reserve the question across that await so the
+  // persisted-resume effect cannot open a duplicate stream in the same render.
+  const agentExecutionStartsRef = useRef(new Set());
   // Store the participant_id from conversation creation to use for subsequent messages
   // This ensures we use the correct participant_id even before React state update propagates
   const participantIdRef = useRef(null);
@@ -768,6 +774,17 @@ const ChatBox = forwardRef((props, boxRef) => {
     [clearConversationStreamingInfo, getConversationDetail, getMessageTraces, projectId],
   );
 
+  const settleLiveAgentExecution = useCallback(
+    (terminalEvent, responseMessageId = terminalEvent?.message_id) => {
+      if (!responseMessageId) return;
+      setChatHistory(previous =>
+        settleAgentExecutionReplayProjection(previous, responseMessageId, terminalEvent),
+      );
+      clearConversationStreamingInfo?.();
+    },
+    [clearConversationStreamingInfo, setChatHistory],
+  );
+
   useEffect(() => {
     const conversationId = activeConversation?.id;
     const conversationUuid = activeConversation?.uuid;
@@ -778,7 +795,9 @@ const ChatBox = forwardRef((props, boxRef) => {
       return undefined;
     }
     const eventSources = agentEventSourcesRef.current;
-    if (eventSources.has(questionId)) return undefined;
+    if (eventSources.has(questionId) || agentExecutionStartsRef.current.has(questionId)) {
+      return undefined;
+    }
 
     const reconcile = () =>
       reconcilePersistedAgentExecution({
@@ -787,7 +806,7 @@ const ChatBox = forwardRef((props, boxRef) => {
         executionId,
         responseMessageId,
       });
-    const finalize = async () => {
+    const finalize = async terminalEvent => {
       const reconciled = await reconcile();
       if (reconciled) return;
 
@@ -796,8 +815,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       // reconciliation window, do not leave this conversation poisoned with a
       // stale streaming answer. Preserve the streamed content, trace actions,
       // and any control-return state; settle only transient loading flags.
-      setChatHistory(previous => settleAgentExecutionReplayProjection(previous, responseMessageId));
-      clearConversationStreamingInfo?.();
+      settleLiveAgentExecution(terminalEvent, responseMessageId);
     };
     const prepareReplay = () => {
       setChatHistory(previous => resetAgentExecutionReplayProjection(previous, responseMessageId));
@@ -834,6 +852,7 @@ const ChatBox = forwardRef((props, boxRef) => {
     projectId,
     reconcilePersistedAgentExecution,
     setChatHistory,
+    settleLiveAgentExecution,
   ]);
 
   useEffect(() => {
@@ -1194,6 +1213,7 @@ const ChatBox = forwardRef((props, boxRef) => {
           let handledByDirectExecution = false;
 
           if (sseContract) {
+            agentExecutionStartsRef.current.add(question_id);
             try {
               const directExecution = await startAgentExecutionSse({
                 contract: sseContract,
@@ -1202,6 +1222,7 @@ const ChatBox = forwardRef((props, boxRef) => {
                 eventPayload: finalEventPayload,
                 onNodeEvent: handleSocketEvent,
                 onError: handleSocketErrorEvent,
+                onTerminal: terminalEvent => settleLiveAgentExecution(terminalEvent),
                 onClosed: () => agentEventSourcesRef.current.delete(question_id),
               });
               handledByDirectExecution = directExecution.started;
@@ -1218,6 +1239,8 @@ const ChatBox = forwardRef((props, boxRef) => {
                     ? error.message
                     : 'Failed to start agent execution. Please try again.',
               });
+            } finally {
+              agentExecutionStartsRef.current.delete(question_id);
             }
           }
 
@@ -1275,6 +1298,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       setChatHistory,
       setSelectedUsers,
       setStreamingInfo,
+      settleLiveAgentExecution,
       unsavedLLMSettings,
       uploadAttachments,
       userId,
@@ -1395,6 +1419,7 @@ const ChatBox = forwardRef((props, boxRef) => {
         hasLLMOverride: Object.keys(unsavedLLMSettings || {}).length > 0,
       });
       if (regenerationContract) {
+        agentExecutionStartsRef.current.add(question_id);
         try {
           const directExecution = await startAgentRegenerationSse({
             projectId,
@@ -1404,6 +1429,7 @@ const ChatBox = forwardRef((props, boxRef) => {
             eventPayload: payload,
             onNodeEvent: handleSocketEvent,
             onError: handleSocketErrorEvent,
+            onTerminal: terminalEvent => settleLiveAgentExecution(terminalEvent, uuid),
             onClosed: () => agentEventSourcesRef.current.delete(question_id),
           });
           if (directExecution.started) {
@@ -1420,6 +1446,8 @@ const ChatBox = forwardRef((props, boxRef) => {
             return prevMessages.map(message => (message.id !== uuid ? message : { ...prevMessage }));
           });
           return;
+        } finally {
+          agentExecutionStartsRef.current.delete(question_id);
         }
       }
 
@@ -1450,6 +1478,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       regenerate,
       socket?.id,
       projectId,
+      settleLiveAgentExecution,
       stopTTS,
       toastError,
     ],
@@ -1631,7 +1660,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       // Track 2 fan-out child: each paused child carries its OWN thread_id and
       // resumes INDEPENDENTLY — emit immediately on that child's thread while
       // siblings keep running, instead of batching until every card is decided.
-      const childThreadId = decidedEntry?.thread_id || decidedEntry?.child_thread_id || '';
+      const childThreadId = getAgentHITLChildThreadId(decidedEntry);
       const isFanoutChild = Boolean(childThreadId);
       const resumeGroup = getHitlResumeGroup(interrupts, decidedEntry);
 
@@ -1886,16 +1915,13 @@ const ChatBox = forwardRef((props, boxRef) => {
       setStreamingInfo(question_id);
 
       const soleInterrupt = interrupts.length === 1 ? interrupts[0] : null;
-      const isBoundedRootInterrupt =
-        Boolean(soleInterrupt) &&
-        ['approve', 'reject', 'edit', 'block_with_comment'].includes(action) &&
-        !childThreadId &&
-        !soleInterrupt.parent_agent_call_id &&
-        !soleInterrupt.via_call_id &&
-        !soleInterrupt._via_call_id &&
-        (!Array.isArray(soleInterrupt.parent_agent_path) || soleInterrupt.parent_agent_path.length === 0);
+      const isBoundedSequentialInterrupt = isAgentSequentialHITLContinuationEligible({
+        interrupt: soleInterrupt,
+        action,
+      });
       let handledByDirectExecution = false;
-      if (isBoundedRootInterrupt) {
+      if (isBoundedSequentialInterrupt) {
+        agentExecutionStartsRef.current.add(question_id);
         try {
           const directExecution = await startAgentHITLContinuationSse({
             projectId,
@@ -1910,6 +1936,7 @@ const ChatBox = forwardRef((props, boxRef) => {
             },
             onNodeEvent: handleSocketEvent,
             onError: handleSocketErrorEvent,
+            onTerminal: terminalEvent => settleLiveAgentExecution(terminalEvent, lastMessage.id),
             onClosed: () => agentEventSourcesRef.current.delete(question_id),
           });
           handledByDirectExecution = directExecution.started;
@@ -1926,6 +1953,8 @@ const ChatBox = forwardRef((props, boxRef) => {
                 ? error.message
                 : 'Failed to continue agent execution. Please try again.',
           });
+        } finally {
+          agentExecutionStartsRef.current.delete(question_id);
         }
       }
       if (!handledByDirectExecution) emitContinue(payload);
@@ -1942,6 +1971,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       emitContinue,
       handleSocketErrorEvent,
       handleSocketEvent,
+      settleLiveAgentExecution,
     ],
   );
 
