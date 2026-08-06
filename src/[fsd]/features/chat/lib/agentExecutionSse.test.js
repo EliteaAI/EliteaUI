@@ -3,9 +3,11 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   AGENT_ADHOC_EXECUTION_CONTRACT,
   AGENT_APPLICATION_EXECUTION_CONTRACT,
+  AGENT_HITL_CONTINUATION_EXECUTION_CONTRACT,
   AGENT_REGENERATION_EXECUTION_CONTRACT,
   buildAgentExecutionEventsUrl,
   buildAgentExecutionStartBody,
+  buildAgentHITLContinuationBody,
   getAgentExecutionResumeCandidate,
   getAgentExecutionSseContract,
   getAgentRegenerationSseContract,
@@ -14,6 +16,7 @@ import {
   resumeAgentExecutionSse,
   settleAgentExecutionReplayProjection,
   startAgentExecutionSse,
+  startAgentHITLContinuationSse,
   startAgentRegenerationSse,
 } from './agentExecutionSse';
 
@@ -535,6 +538,58 @@ describe('agent execution SSE', () => {
     });
   });
 
+  it('continues one root HITL decision without forwarding browser configuration', async () => {
+    expect(
+      buildAgentHITLContinuationBody({
+        projectId: '7',
+        conversationUuid: 'conversation-id',
+        responseMessageId: 'response-id',
+        threadId: 'thread-id',
+        action: 'edit',
+        value: 'sanitized replacement',
+      }),
+    ).toEqual({
+      project_id: 7,
+      conversation_uuid: 'conversation-id',
+      message_id: 'response-id',
+      thread_id: 'thread-id',
+      hitl_resume: true,
+      hitl_action: 'edit',
+      hitl_value: 'sanitized replacement',
+      hitl_decisions: [],
+      mcp_tokens: {},
+      ignored_mcp_servers: [],
+      user_declined_mcp_servers: [],
+    });
+
+    const fetchImpl = vi.fn().mockResolvedValue({ status: 422, ok: false });
+    const result = await startAgentHITLContinuationSse({
+      projectId: 7,
+      conversationUuid: 'conversation-id',
+      responseMessageId: 'response-id',
+      threadId: 'thread-id',
+      action: 'approve',
+      eventPayload: { question_id: 'question-id', participant_id: 19 },
+      onNodeEvent: vi.fn(),
+      onError: vi.fn(),
+      fetchImpl,
+      EventSourceImpl: FakeEventSource,
+    });
+
+    expect(result).toEqual({ started: false });
+    expect(fetchImpl.mock.calls[0][0]).toContain(
+      `/elitea_core/continue_predict/prompt_lib/7/conversation-id?execution_contract=${AGENT_HITL_CONTINUATION_EXECUTION_CONTRACT}`,
+    );
+    expect(JSON.parse(fetchImpl.mock.calls[0][1].body)).toEqual(
+      expect.objectContaining({
+        hitl_action: 'approve',
+        hitl_resume: true,
+        message_id: 'response-id',
+      }),
+    );
+    expect(JSON.parse(fetchImpl.mock.calls[0][1].body)).not.toHaveProperty('hitl_value');
+  });
+
   it('retries a finalizing regeneration without falling back to the WebSocket route', async () => {
     const pendingResponse = () => ({
       status: 409,
@@ -707,6 +762,42 @@ describe('agent execution SSE', () => {
     expect(result.source.close).toHaveBeenCalledOnce();
     expect(onClosed).toHaveBeenCalledOnce();
     expect(onTerminal).toHaveBeenCalledWith(terminal);
+  });
+
+  it('forwards the durable HITL card and closes the paused execution stream', async () => {
+    const onNodeEvent = vi.fn();
+    const onTerminal = vi.fn();
+    const result = await startAgentExecutionSse({
+      projectId: 7,
+      conversationUuid: 'conversation-id',
+      eventPayload: payload,
+      onNodeEvent,
+      onError: vi.fn(),
+      onTerminal,
+      fetchImpl: vi.fn().mockResolvedValue({
+        status: 200,
+        ok: true,
+        json: async () => ({
+          task_id: 'execution-id',
+          execution_id: 'execution-id',
+          response_message_id: 'response-id',
+          events_url: '/events',
+        }),
+      }),
+      yieldToRenderer: vi.fn().mockResolvedValue(),
+      EventSourceImpl: FakeEventSource,
+    });
+    const interrupt = {
+      type: 'agent_hitl_interrupt',
+      message_id: 'response-id',
+      response_metadata: { hitl_interrupt: { interrupt_id: 'interrupt-1' } },
+    };
+
+    await result.source.dispatch('execution.node_event', interrupt);
+
+    expect(onNodeEvent).toHaveBeenLastCalledWith(interrupt);
+    expect(onTerminal).toHaveBeenCalledWith(interrupt);
+    expect(result.source.close).toHaveBeenCalledOnce();
   });
 
   it('reattaches an admitted execution without issuing another start request', async () => {

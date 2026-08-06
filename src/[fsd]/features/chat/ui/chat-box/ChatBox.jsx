@@ -25,6 +25,7 @@ import {
   resumeAgentExecutionSse,
   settleAgentExecutionReplayProjection,
   startAgentExecutionSse,
+  startAgentHITLContinuationSse,
   startAgentRegenerationSse,
 } from '@/[fsd]/features/chat/lib/agentExecutionSse';
 import * as ChatHelpers from '@/[fsd]/features/chat/lib/helpers/chat.helpers';
@@ -1883,7 +1884,51 @@ const ChatBox = forwardRef((props, boxRef) => {
       });
 
       setStreamingInfo(question_id);
-      emitContinue(payload);
+
+      const soleInterrupt = interrupts.length === 1 ? interrupts[0] : null;
+      const isBoundedRootInterrupt =
+        Boolean(soleInterrupt) &&
+        ['approve', 'reject', 'edit', 'block_with_comment'].includes(action) &&
+        !childThreadId &&
+        !soleInterrupt.parent_agent_call_id &&
+        !soleInterrupt.via_call_id &&
+        !soleInterrupt._via_call_id &&
+        (!Array.isArray(soleInterrupt.parent_agent_path) || soleInterrupt.parent_agent_path.length === 0);
+      let handledByDirectExecution = false;
+      if (isBoundedRootInterrupt) {
+        try {
+          const directExecution = await startAgentHITLContinuationSse({
+            projectId,
+            conversationUuid: activeConversation?.uuid,
+            responseMessageId: lastMessage.id,
+            threadId,
+            action,
+            value,
+            eventPayload: {
+              question_id,
+              participant_id,
+            },
+            onNodeEvent: handleSocketEvent,
+            onError: handleSocketErrorEvent,
+            onClosed: () => agentEventSourcesRef.current.delete(question_id),
+          });
+          handledByDirectExecution = directExecution.started;
+          if (directExecution.started) {
+            agentEventSourcesRef.current.set(question_id, directExecution);
+          }
+        } catch (error) {
+          handledByDirectExecution = true;
+          await handleSocketErrorEvent({
+            type: 'error',
+            message_id: lastMessage.id,
+            content:
+              error instanceof AgentExecutionStartError
+                ? error.message
+                : 'Failed to continue agent execution. Please try again.',
+          });
+        }
+      }
+      if (!handledByDirectExecution) emitContinue(payload);
     },
     [
       pendingHitlMessage,
@@ -1895,6 +1940,8 @@ const ChatBox = forwardRef((props, boxRef) => {
       setChatHistory,
       setStreamingInfo,
       emitContinue,
+      handleSocketErrorEvent,
+      handleSocketEvent,
     ],
   );
 

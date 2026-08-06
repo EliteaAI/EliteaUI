@@ -3,6 +3,7 @@ import { DEV, VITE_DEV_TOKEN, VITE_SERVER_URL } from '@/common/constants.js';
 export const AGENT_APPLICATION_EXECUTION_CONTRACT = 'agent.execute.application.v1';
 export const AGENT_ADHOC_EXECUTION_CONTRACT = 'agent.execute.adhoc.v1';
 export const AGENT_REGENERATION_EXECUTION_CONTRACT = 'agent.regenerate.v1';
+export const AGENT_HITL_CONTINUATION_EXECUTION_CONTRACT = 'agent.continue.hitl.v1';
 
 const FALLBACK_STATUSES = new Set([404, 422]);
 const REGENERATION_PENDING_STATUS = 409;
@@ -11,6 +12,7 @@ const MAX_REGENERATION_FINALIZATION_RETRIES = 4;
 const DEFAULT_REGENERATION_RETRY_DELAY_MS = 1000;
 const PARTIAL_NODE_EVENT = 'partial_message';
 const TERMINAL_NODE_EVENT = 'full_message';
+const HITL_TERMINAL_NODE_EVENT = 'agent_hitl_interrupt';
 const RUNTIME_FAILURE_EVENT = 'execution.failed';
 const REPLAY_RESET_EVENT = 'execution.replay_reset';
 const MAX_EXECUTION_ID_BYTES = 512;
@@ -397,6 +399,10 @@ const openAgentExecutionEventStream = ({
       if (nodeEvent?.type === PARTIAL_NODE_EVENT) return;
       await onNodeEvent(nodeEvent);
       if (ACTIVITY_NODE_EVENTS.has(nodeEvent?.type)) await yieldToRenderer();
+      if (nodeEvent?.type === HITL_TERMINAL_NODE_EVENT) {
+        await onTerminal?.(nodeEvent);
+        close();
+      }
     }),
   );
   source.addEventListener(RUNTIME_FAILURE_EVENT, event => {
@@ -586,6 +592,58 @@ export const startAgentRegenerationSse = async ({
     conversationUuid,
     eventPayload,
     retryFinalizingRegeneration: true,
+    ...streamOptions,
+  });
+};
+
+export const buildAgentHITLContinuationBody = ({
+  projectId,
+  conversationUuid,
+  responseMessageId,
+  threadId,
+  action,
+  value,
+}) => ({
+  project_id: Number(projectId),
+  conversation_uuid: conversationUuid,
+  message_id: responseMessageId,
+  thread_id: threadId,
+  hitl_resume: true,
+  hitl_action: action,
+  ...(action === 'edit' || action === 'block_with_comment' ? { hitl_value: value ?? '' } : {}),
+  hitl_decisions: [],
+  mcp_tokens: {},
+  ignored_mcp_servers: [],
+  user_declined_mcp_servers: [],
+});
+
+export const startAgentHITLContinuationSse = async ({
+  projectId,
+  conversationUuid,
+  responseMessageId,
+  threadId,
+  action,
+  value,
+  eventPayload,
+  ...streamOptions
+}) => {
+  const startPath = `/elitea_core/continue_predict/prompt_lib/${encodeURIComponent(
+    projectId,
+  )}/${encodeURIComponent(conversationUuid)}?execution_contract=${encodeURIComponent(
+    AGENT_HITL_CONTINUATION_EXECUTION_CONTRACT,
+  )}`;
+  return startAgentExecutionRequest({
+    startPath,
+    startBody: buildAgentHITLContinuationBody({
+      projectId,
+      conversationUuid,
+      responseMessageId,
+      threadId,
+      action,
+      value,
+    }),
+    conversationUuid,
+    eventPayload,
     ...streamOptions,
   });
 };
