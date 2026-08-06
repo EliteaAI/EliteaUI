@@ -18,6 +18,7 @@ export default function PipelineStateViewModal({ open, onClose, value = '', labe
     <Dialog
       open={open}
       onKeyDown={handleKeyDown}
+      data-testid="pipeline-run-details-value-modal"
       slotProps={{
         paper: {
           sx: {
@@ -39,6 +40,7 @@ export default function PipelineStateViewModal({ open, onClose, value = '', labe
         variant="headingMedium"
         color="text.secondary"
         sx={{ height: '60px', padding: '16px 32px' }}
+        data-testid="pipeline-run-details-value-modal-header"
       >
         <Box
           display={'flex'}
@@ -52,6 +54,7 @@ export default function PipelineStateViewModal({ open, onClose, value = '', labe
             variant="elitea"
             color="tertiary"
             onClick={onClose}
+            data-testid="pipeline-run-details-value-modal-close-button"
           >
             <CloseIcon
               fill={theme.palette.icon.fill.default}
@@ -73,6 +76,7 @@ export default function PipelineStateViewModal({ open, onClose, value = '', labe
           flexDirection: 'column',
           gap: '16px',
         }}
+        data-testid="pipeline-run-details-value-modal-content"
       >
         {JSON.stringify(value)}
       </DialogContent>

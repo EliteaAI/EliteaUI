@@ -44,7 +44,7 @@ const ProcessConnector = memo(props => {
 ProcessConnector.displayName = 'ProcessConnector';
 
 const StateItemViewHeader = memo(props => {
-  const { title, onFullScreen } = props;
+  const { title, onFullScreen, testId } = props;
 
   const styles = stateItemViewHeaderStyles();
 
@@ -61,6 +61,7 @@ const StateItemViewHeader = memo(props => {
         variant="elitea"
         color="tertiary"
         onClick={onFullScreen}
+        data-testid={testId}
       >
         <FullscreenOutlinedIcon sx={styles.icon} />
       </IconButton>
@@ -89,15 +90,27 @@ const StateItemView = memo(props => {
         <StateItemViewHeader
           title="Before"
           onFullScreen={onBeforeValueFullScreen}
+          testId={`pipeline-run-details-state-expand-before-${name}`}
         />
-        <Box sx={styles.valueBox}>{JSON.stringify(valueBefore)}</Box>
+        <Box
+          sx={styles.valueBox}
+          data-testid={`pipeline-run-details-state-value-before-${name}`}
+        >
+          {JSON.stringify(valueBefore)}
+        </Box>
       </Box>
       <Box sx={styles.section}>
         <StateItemViewHeader
           title="After"
           onFullScreen={onAfterValueFullScreen}
+          testId={`pipeline-run-details-state-expand-after-${name}`}
         />
-        <Box sx={styles.valueBox}>{JSON.stringify(valueAfter)}</Box>
+        <Box
+          sx={styles.valueBox}
+          data-testid={`pipeline-run-details-state-value-after-${name}`}
+        >
+          {JSON.stringify(valueAfter)}
+        </Box>
       </Box>
     </Box>
   );
@@ -122,6 +135,7 @@ const ProcessStepIcon = memo(props => {
       <Box
         sx={styles.outerBox}
         onClick={onClick}
+        data-testid={`pipeline-run-details-timeline-step-${index}`}
       >
         <Box sx={styles.innerBox} />
       </Box>
@@ -467,6 +481,7 @@ const RunStateDialog = memo(props => {
                         items={[
                           {
                             title: variable,
+                            testId: `pipeline-run-details-state-row-${variable}`,
                             content: (
                               <StateItemView
                                 name={variable}
