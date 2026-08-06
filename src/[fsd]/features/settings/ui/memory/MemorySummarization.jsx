@@ -80,6 +80,9 @@ const MemorySummarization = memo(({ onAutoSaveRequested }) => {
           showExpandAction={false}
           fieldName="Summarization Instructions"
           containerProps={styles.inputContainer}
+          inputProps={{
+            'data-testid': 'summarization-instructions-textarea',
+          }}
         />
       </Box>
 
@@ -99,6 +102,7 @@ const MemorySummarization = memo(({ onAutoSaveRequested }) => {
           containerProps={styles.inputContainer}
           inputProps={{
             pattern: '[1-9][0-9]*',
+            'data-testid': 'target-summary-tokens-input',
           }}
         />
       </Box>
