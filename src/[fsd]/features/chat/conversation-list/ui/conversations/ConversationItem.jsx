@@ -2,7 +2,7 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 
-import { Box, CircularProgress, Typography, useTheme } from '@mui/material';
+import { Box, ClickAwayListener, CircularProgress, Typography, useTheme } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { DraggableConversationItem } from '@/[fsd]/features/chat/conversation-list/ui';
@@ -81,12 +81,17 @@ const ConversationItem = memo(props => {
     [conversationName],
   );
 
+  const isSaveEnabled = useMemo(
+    () => isConversationNameValid && (isNew || conversationName !== name),
+    [isConversationNameValid, isNew, conversationName, name],
+  );
+
   const styles = conversationItemStyles({
     isActive,
     isHovering,
     isNextItemHovered,
     showMenu,
-    isConversationNameValid,
+    isSaveEnabled,
   });
 
   // Sync local conversationName state with the name prop when it changes
@@ -325,11 +330,11 @@ const ConversationItem = memo(props => {
 
   const onKeyDown = useCallback(
     event => {
-      if (event.key === 'Enter' && isConversationNameValid) {
+      if (event.key === 'Enter' && isSaveEnabled) {
         isNew ? onCreate() : onSave();
       }
     },
-    [isConversationNameValid, isNew, onCreate, onSave],
+    [isSaveEnabled, isNew, onCreate, onSave],
   );
 
   const onCloseEdit = useCallback(() => {
@@ -449,41 +454,43 @@ const ConversationItem = memo(props => {
     );
 
   return (
-    <Box sx={styles.inputWrapper}>
-      <Input.StyledInputEnhancer
-        autoFocus
-        autoComplete="off"
-        maxRows={1}
-        variant="standard"
-        fullWidth
-        label=""
-        value={conversationName}
-        onChange={onChangeConversationName}
-        containerProps={{ display: 'flex', flex: 1 }}
-        onKeyDown={onKeyDown}
-      />
-      <Tooltip
-        title={isConversationNameValid ? '' : ConversationNameWarningMessage}
-        placement="top"
-      >
-        <Box
-          onClick={isConversationNameValid ? (isNew ? onCreate : onSave) : null}
-          sx={styles.checkedIconWrapper}
+    <ClickAwayListener onClickAway={isNew ? onCancelCreate : onCloseEdit}>
+      <Box sx={styles.inputWrapper}>
+        <Input.StyledInputEnhancer
+          autoFocus
+          autoComplete="off"
+          maxRows={1}
+          variant="standard"
+          fullWidth
+          label=""
+          value={conversationName}
+          onChange={onChangeConversationName}
+          containerProps={{ display: 'flex', flex: 1 }}
+          onKeyDown={onKeyDown}
+        />
+        <Tooltip
+          title={isConversationNameValid ? '' : ConversationNameWarningMessage}
+          placement="top"
         >
-          <CheckedIcon
-            fill={
-              isConversationNameValid ? theme.palette.icon.fill.default : theme.palette.icon.fill.disabled
-            }
-          />
+          <Box
+            onClick={isSaveEnabled ? (isNew ? onCreate : onSave) : null}
+            sx={styles.checkedIconWrapper}
+          >
+            <CheckedIcon
+              fill={
+                isSaveEnabled ? theme.palette.icon.fill.default : theme.palette.icon.fill.disabled
+              }
+            />
+          </Box>
+        </Tooltip>
+        <Box
+          onClick={isNew ? onCancelCreate : onCloseEdit}
+          sx={styles.cancelIconWrapper}
+        >
+          <CancelIcon fill={theme.palette.icon.fill.default} />
         </Box>
-      </Tooltip>
-      <Box
-        onClick={isNew ? onCancelCreate : onCloseEdit}
-        sx={styles.cancelIconWrapper}
-      >
-        <CancelIcon fill={theme.palette.icon.fill.default} />
       </Box>
-    </Box>
+    </ClickAwayListener>
   );
 });
 
@@ -494,7 +501,7 @@ const conversationItemStyles = ({
   isActive,
   isHovering,
   isNextItemHovered,
-  isConversationNameValid,
+  isSaveEnabled,
   showMenu,
 }) => {
   const getBackgroundColor = palette => {
@@ -579,11 +586,11 @@ const conversationItemStyles = ({
       justifyContent: 'center',
       alignItems: 'center',
       borderRadius: '1rem',
-      cursor: isConversationNameValid ? 'pointer' : 'default',
+      cursor: isSaveEnabled ? 'pointer' : 'default',
       boxSizing: 'border-box',
 
       '&:hover': {
-        background: isConversationNameValid ? palette.background.select.hover : undefined,
+        background: isSaveEnabled ? palette.background.select.hover : undefined,
       },
     }),
     cancelIconWrapper: ({ palette }) => ({
