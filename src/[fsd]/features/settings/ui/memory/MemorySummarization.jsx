@@ -52,6 +52,7 @@ const MemorySummarization = memo(({ onAutoSaveRequested }) => {
           </Typography>
         </Box>
         <Switch.BaseSwitch
+          data-testid="automatic-summarization-toggle"
           checked={values.enable_summarization}
           onChange={handleSummarizationEnabledChange}
           disabled={!values.context_enabled}
