@@ -1017,6 +1017,7 @@ const NewConversationView = forwardRef(
                       onClick={onSendStarter(item)}
                       sx={styles.starterItem}
                       textSX={styles.starterTextSX}
+                      testId="chat-conversation-starter-tile"
                     />
                   ))}
               </Box>
