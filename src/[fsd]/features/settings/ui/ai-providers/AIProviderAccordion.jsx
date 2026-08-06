@@ -8,7 +8,7 @@ import ArrowRightIcon from '@/components/Icons/ArrowRightIcon';
 import InfoIcon from '@/components/Icons/InfoIcon';
 
 const AIProviderAccordion = memo(props => {
-  const { title, count, metaItems = [], defaultExpanded = false, children } = props;
+  const { title, count, metaItems = [], defaultExpanded = false, children, testId } = props;
 
   const [expanded, setExpanded] = useState(defaultExpanded);
 
@@ -23,6 +23,7 @@ const AIProviderAccordion = memo(props => {
       slotProps={{ transition: { unmountOnExit: true } }}
     >
       <StyledAccordionSummary
+        data-testid={testId}
         expandIcon={<ArrowRightIcon style={aiProviderAccordionStyles.expandIconStyle} />}
         showMode={AccordionConstants.AccordionShowMode.LeftMode}
         sx={aiProviderAccordionStyles.summary}

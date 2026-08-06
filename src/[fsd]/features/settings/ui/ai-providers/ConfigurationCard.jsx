@@ -43,6 +43,7 @@ const ConfigurationCard = memo(props => {
 
   return (
     <Box
+      data-testid="ai-provider-configuration-card"
       onClick={handleCardClick}
       sx={styles.cardContainer(disabled)}
     >

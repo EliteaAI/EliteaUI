@@ -38,6 +38,7 @@ const ConfigurationSection = memo(props => {
     groupTheModelsByProvider = false,
     tourTargetId,
     defaultExpanded = false,
+    sectionTestId,
   } = props;
 
   const groupedConfigurations = useMemo(() => {
@@ -114,6 +115,7 @@ const ConfigurationSection = memo(props => {
       >
         <AIProviderAccordion
           title={title}
+          testId={sectionTestId}
           count={configurations.length}
           defaultExpanded={defaultExpanded}
           metaItems={[
