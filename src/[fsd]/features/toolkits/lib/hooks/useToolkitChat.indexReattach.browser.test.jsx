@@ -276,7 +276,9 @@ describe('useToolkitChat active index reattachment', () => {
       indexName: 'docs',
       taskId,
     });
-    expect(mocks.toastSuccess).toHaveBeenCalledWith('Stop requested');
+    expect(mocks.toastSuccess).toHaveBeenCalledWith(
+      'Indexing stopped successfully',
+    );
 
     await act(async () => {
       source.emit('index.ingest.completed', { status: 'ok', message: 'Indexed 10 files' });

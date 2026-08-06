@@ -133,6 +133,7 @@ export const useToolkitChat = props => {
   const [isRunning, setIsRunning] = useState(false);
   const [indexExecutionState, setIndexExecutionState] = useState(null);
   const [isStopRequested, setIsStopRequested] = useState(false);
+  const [isWaitingForTaskStart, setIsWaitingForTaskStart] = useState(false);
   const effectiveIndexState = resolveIndexExecutionState(index?.metadata?.state, indexExecutionState);
   const isIndexing = effectiveIndexState === IndexStatuses.progress;
   const activeIndexTaskId = resolveAuthoritativeIndexExecutionTaskId(
@@ -140,7 +141,8 @@ export const useToolkitChat = props => {
     index?.metadata?.task_id,
     admittedIndexTaskIdRef.current,
   );
-  const canStopIndexing = Boolean(activeIndexTaskId) && isIndexing && !isStopRequested;
+  const canStopIndexing =
+    Boolean(activeIndexTaskId) && isIndexing && !isStopRequested && !isWaitingForTaskStart;
   const currentIndexGeneration =
     index?.metadata?.index_generation ?? index?.metadata?.execution_generation ?? null;
 
@@ -150,6 +152,7 @@ export const useToolkitChat = props => {
     indexStartPendingRef.current = false;
     setIndexExecutionState(null);
     setIsStopRequested(false);
+    setIsWaitingForTaskStart(false);
   }, [currentIndexName]);
 
   useEffect(() => {
@@ -223,6 +226,7 @@ export const useToolkitChat = props => {
   const onRunFinish = useCallback(
     state => {
       setIsRunning(false);
+      if (runningToolRef.current === IndexesToolsEnum.indexData) setIsWaitingForTaskStart(false);
 
       if (isTestToolsMode) return;
 
@@ -251,6 +255,8 @@ export const useToolkitChat = props => {
   const onStartTask = useCallback(
     taskId => {
       if (isTestToolsMode) return;
+
+      if (runningToolRef.current === IndexesToolsEnum.indexData) setIsWaitingForTaskStart(false);
 
       traceNewIndex(index?.id ?? null, {
         task_id: resolveIndexExecutionTaskId(taskId, admittedIndexTaskIdRef.current),
@@ -304,6 +310,7 @@ export const useToolkitChat = props => {
       });
       admittedIndexTaskIdRef.current = taskId;
       setIndexExecutionState(IndexStatuses.progress);
+      setIsWaitingForTaskStart(false);
       indexEventSourceRef.current = source;
 
       const settle = result => {
@@ -382,6 +389,7 @@ export const useToolkitChat = props => {
         setIndexExecutionState(null);
         setIsRunning(false);
         setIsStopRequested(false);
+        setIsWaitingForTaskStart(false);
         try {
           sessionStorage.removeItem(storageKey);
         } catch {
@@ -485,6 +493,7 @@ export const useToolkitChat = props => {
     runningToolRef.current = IndexesToolsEnum.indexData;
     admittedIndexTaskIdRef.current = pending.taskId;
     setIndexExecutionState(IndexStatuses.progress);
+    setIsWaitingForTaskStart(false);
     setIsRunning(true);
     openIndexEventStream({
       taskId: pending.taskId,
@@ -518,8 +527,10 @@ export const useToolkitChat = props => {
 
       // Handle MCP authorization required message
       if (message.type === SocketMessageType.McpAuthorizationRequired) {
-        // Reset running state so the retry triggered by onSuccess can proceed
+        // Reset running state so the retry triggered by onSuccess can proceed; nothing
+        // else clears the waiting flag on an aborted start, and it gates Delete.
         setIsRunning(false);
+        setIsWaitingForTaskStart(false);
         if (onMcpAuthRequiredRef.current) {
           onMcpAuthRequiredRef.current(message);
         }
@@ -553,6 +564,12 @@ export const useToolkitChat = props => {
   useEffect(() => {
     modelsFetchSuccess && selectedModel === null && setSelectedModel(defaultModel);
   }, [modelsFetchSuccess, defaultModel, selectedModel]);
+
+  useEffect(() => {
+    if (index?.metadata?.state !== IndexStatuses.progress || index?.metadata?.task_id) {
+      setIsWaitingForTaskStart(false);
+    }
+  }, [index?.metadata?.task_id, index?.metadata?.state]);
 
   // llmSettings is seeded before the model resolves (generateLLMSettings(null) → temperature-only).
   // Realign the family pair once the model is known so a reasoning model never shows/persists a
@@ -609,6 +626,7 @@ export const useToolkitChat = props => {
         return conversation;
       } catch {
         setIsRunning(false);
+        setIsWaitingForTaskStart(false);
         return null;
       }
     },
@@ -665,6 +683,7 @@ export const useToolkitChat = props => {
       admittedIndexTaskIdRef.current = taskId;
       setIndexExecutionState(IndexStatuses.progress);
       setIsStopRequested(false);
+      setIsWaitingForTaskStart(false);
 
       const storageKey = buildPendingIndexExecutionKey({
         projectId,
@@ -777,6 +796,7 @@ export const useToolkitChat = props => {
         socketEmit(specificToolkitPayload);
       } catch (error) {
         setIsRunning(false);
+        setIsWaitingForTaskStart(false);
 
         if (indexing) indexStartPendingRef.current = false;
 
@@ -850,6 +870,7 @@ export const useToolkitChat = props => {
         if (indexing) {
           setIndexExecutionState(IndexStatuses.progress);
           setIsStopRequested(false);
+          setIsWaitingForTaskStart(true);
         }
         runningToolRef.current = tool;
 
@@ -885,20 +906,57 @@ export const useToolkitChat = props => {
       );
       if (!canStopIndexing || !taskId) return;
 
-      await stopIndex({
+      const result = await stopIndex({
         projectId,
         toolkitId,
         indexName: index.metadata.collection,
         taskId,
       }).unwrap();
 
-      setIsStopRequested(true);
-      toastSuccess('Stop requested');
+      // The row can be gone entirely (deleted from another tab) — the caller's goal is
+      // met, so clean up as a stop but say what actually happened.
+      if (result?.reason === 'not_found') {
+        admittedIndexTaskIdRef.current = null;
+        setIndexExecutionState(IndexStatuses.cancelled);
+        setIsStopRequested(false);
+        setIsWaitingForTaskStart(false);
+        toastSuccess('Index no longer exists');
+        setIsRunning(false);
+        setChatHistory(prev => prev.map(msg => ({ ...msg, isStreaming: false, isLoading: false })));
+        if (cancelIndexingCallback) cancelIndexingCallback(EditViewTabsEnum.configuration);
+        return;
+      }
+
+      // A stale task id is a no-op server-side — pretending it stopped would hide a
+      // still-running index behind a success toast.
+      if (result?.cancelled === false) {
+        toastError('Indexing could not be stopped — refresh the page and try again');
+        return;
+      }
+
+      admittedIndexTaskIdRef.current = null;
+      setIndexExecutionState(IndexStatuses.cancelled);
+      setIsStopRequested(false);
+      setIsWaitingForTaskStart(false);
+      toastSuccess('Indexing stopped successfully');
+      setIsRunning(false);
+      setChatHistory(prev => prev.map(msg => ({ ...msg, isStreaming: false, isLoading: false })));
+
+      if (cancelIndexingCallback) cancelIndexingCallback(EditViewTabsEnum.configuration);
     } catch {
       setIsStopRequested(false);
       toastError('Failed to stop indexing');
     }
-  }, [canStopIndexing, index, projectId, stopIndex, toastError, toastSuccess, toolkitId]);
+  }, [
+    canStopIndexing,
+    cancelIndexingCallback,
+    index,
+    projectId,
+    stopIndex,
+    toastError,
+    toastSuccess,
+    toolkitId,
+  ]);
 
   const handleIndexData = useCallback(() => run(), [run]);
 
@@ -934,6 +992,7 @@ export const useToolkitChat = props => {
     isFullScreenChat,
     isRunning,
     isStoppingIndexing: isStoppingIndexing || isStopRequested,
+    isWaitingForTaskStart,
     canStopIndexing,
     handleClearActiveConversation,
     handleClearChat,

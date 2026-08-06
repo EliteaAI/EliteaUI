@@ -17,13 +17,28 @@ import useCheckPermission from '@/hooks/useCheckPermission';
 import IndexStatItem from './IndexStatItem';
 
 const RunIndexGeneralSection = memo(props => {
-  const { indexName, index, reindexStats, isRunning, isIndexing, isDeleting, onReindex, onOpenDelete } =
-    props;
+  const {
+    indexName,
+    index,
+    reindexStats,
+    isRunning,
+    isIndexing,
+    isStale = false,
+    isWaitingForTaskStart = false,
+    canStopIndexing = false,
+    isDeleting,
+    onReindex,
+    onOpenDelete,
+  } = props;
   const styles = runIndexGeneralSectionStyles();
   const { isPrivate } = useProjectType();
   const { checkPermission } = useCheckPermission();
 
   const canDeleteIndex = isPrivate || checkPermission(PERMISSIONS.index.delete);
+
+  // Only the backend's stale flag proves a run dead — agent-started runs never carry
+  // a task id in this panel, and acting on a live run orphans its vectors.
+  const isDeadRun = isIndexing && !canStopIndexing && isStale;
 
   return (
     <Box sx={styles.root}>
@@ -91,7 +106,9 @@ const RunIndexGeneralSection = memo(props => {
         <Button.BaseBtn
           variant={BUTTON_VARIANTS.elitea}
           onClick={onReindex}
-          disabled={isRunning || isIndexing}
+          // isRunning stays in this gate (unlike Delete's): a live non-indexing tool
+          // run must not start a concurrent index.
+          disabled={isRunning || isWaitingForTaskStart || (isIndexing && !isDeadRun)}
         >
           Reindex
         </Button.BaseBtn>
@@ -99,7 +116,9 @@ const RunIndexGeneralSection = memo(props => {
           <Button.BaseBtn
             variant={BUTTON_VARIANTS.secondary}
             onClick={onOpenDelete}
-            disabled={isDeleting || isIndexing}
+            // No isRunning here — recovering an in-progress conversation on page load
+            // sets it too, which is the stuck case this escape hatch exists for.
+            disabled={isDeleting || isWaitingForTaskStart || (isIndexing && !isDeadRun)}
           >
             Delete Index
           </Button.BaseBtn>
