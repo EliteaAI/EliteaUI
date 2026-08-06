@@ -90,6 +90,7 @@ const RunStateNode = memo(props => {
             variant="labelMedium"
             sx={styles.runName}
             onClick={onOpen}
+            data-testid="pipeline-run-node-label"
           >
             {data.label}
           </Typography>

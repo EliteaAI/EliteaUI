@@ -137,7 +137,11 @@ const RunStatus = memo(props => {
   const styles = runStatusStyles(status);
 
   return (
-    <Box sx={styles.container}>
+    <Box
+      sx={styles.container}
+      data-testid="pipeline-run-details-status-badge"
+      data-status={status}
+    >
       <Typography
         component="div"
         variant="labelSmall"
@@ -203,12 +207,16 @@ const RunStateDialog = memo(props => {
           },
         }}
       >
-        <DialogContent sx={styles.dialogContent}>
+        <DialogContent
+          sx={styles.dialogContent}
+          data-testid="pipeline-run-details-panel"
+        >
           <Box sx={styles.mainContainer}>
             <Box sx={styles.header}>
               <Typography
                 variant="labelMedium"
                 color="text.secondary"
+                data-testid="pipeline-run-details-header"
               >
                 {data.label}
               </Typography>
@@ -234,6 +242,7 @@ const RunStateDialog = memo(props => {
                     color="tertiary"
                     sx={styles.iconButton}
                     onClick={onDelete}
+                    data-testid="pipeline-run-details-delete-button"
                   >
                     <DeleteIcon sx={{ fontSize: '1rem' }} />
                   </IconButton>
@@ -243,6 +252,7 @@ const RunStateDialog = memo(props => {
                   color="tertiary"
                   sx={styles.iconButton}
                   onClick={onClose}
+                  data-testid="pipeline-run-details-close-button"
                 >
                   <Box sx={({ palette }) => ({ color: palette.icon.fill.secondary })}>
                     <CollapseIcon
@@ -254,157 +264,168 @@ const RunStateDialog = memo(props => {
               </Box>
             </Box>
             <Box sx={styles.contentContainer}>
-              <Box sx={styles.timelineHeader}>
-                <Box sx={styles.timelineStep}>
-                  <Typography
-                    variant="subtitle"
-                    color="text.primary"
-                  >
-                    Timeline step:
-                  </Typography>
-                  <Typography
-                    variant="bodyMedium"
-                    color="text.secondary"
-                  >
-                    {data.status === FlowEditorConstants.PipelineStatus.InProgress
-                      ? data.timeline[data.timeline.length - 2]?.id || 'Start'
-                      : data.timeline[selectedStep]?.id}
-                  </Typography>
-                </Box>
-                {(data.status === FlowEditorConstants.PipelineStatus.InProgress ||
-                  data.status === FlowEditorConstants.PipelineStatus.Error ||
-                  data.status === FlowEditorConstants.PipelineStatus.Interrupt) && (
-                  <Box sx={styles.statusIndicator}>
+              <Box
+                sx={{ display: 'contents' }}
+                data-testid="pipeline-run-details-timeline-section"
+              >
+                <Box sx={styles.timelineHeader}>
+                  <Box sx={styles.timelineStep}>
+                    <Typography
+                      variant="subtitle"
+                      color="text.primary"
+                    >
+                      Timeline step:
+                    </Typography>
                     <Typography
                       variant="bodyMedium"
                       color="text.secondary"
                     >
-                      {`${data.timeline[data.timeline.length - 1]?.id || ''}:`}
+                      {data.status === FlowEditorConstants.PipelineStatus.InProgress
+                        ? data.timeline[data.timeline.length - 2]?.id || 'Start'
+                        : data.timeline[selectedStep]?.id}
                     </Typography>
-                    {data.timeline[data.timeline.length - 1]?.status ===
-                      FlowEditorConstants.PipelineStatus.InProgress && (
-                      <>
-                        <Box sx={styles.progressBox}>
-                          <StyledCircleProgress
-                            size={14}
-                            sx={styles.progressColor}
-                          />
-                        </Box>
-                        <Typography
-                          variant="bodyMedium"
-                          sx={styles.statusTextInactive}
-                        >
-                          Performing
-                        </Typography>
-                      </>
-                    )}
-                    {data.timeline[data.timeline.length - 1]?.status ===
-                      FlowEditorConstants.PipelineStatus.Error && (
-                      <>
-                        <Box sx={styles.progressBox}>
-                          <ErrorOutlineIcon
-                            fontSize="1rem"
-                            sx={styles.errorIcon}
-                          />
-                        </Box>
-                        <Typography
-                          variant="bodyMedium"
-                          sx={styles.statusTextError}
-                        >
-                          Error
-                        </Typography>
-                      </>
-                    )}
-                    {data.timeline[data.timeline.length - 1]?.status ===
-                      FlowEditorConstants.PipelineStatus.Interrupt && (
-                      <>
-                        <Box
-                          sx={[styles.progressBox, ({ palette }) => ({ color: palette.status.onModeration })]}
-                        >
-                          <AttentionIcon
-                            width="14"
-                            height="14"
-                          />
-                        </Box>
-                        <Typography
-                          variant="bodyMedium"
-                          sx={styles.statusTextInactive}
-                        >
-                          User action waiting...
-                        </Typography>
-                      </>
-                    )}
-                    {data.timeline[data.timeline.length - 1]?.status ===
-                      FlowEditorConstants.PipelineStatus.Completed && (
-                      <>
-                        <Typography
-                          variant="bodyMedium"
-                          sx={styles.statusTextPublished}
-                        >
-                          Completed
-                        </Typography>
-                      </>
-                    )}
-                    {data.timeline[data.timeline.length - 1]?.status ===
-                      FlowEditorConstants.PipelineStatus.Stopped && (
-                      <>
-                        <Box
-                          sx={[styles.progressBox, ({ palette }) => ({ color: palette.status.onModeration })]}
-                        >
-                          <AttentionIcon
-                            width="14"
-                            height="14"
-                          />
-                        </Box>
-                        <Typography
-                          variant="bodyMedium"
-                          sx={styles.statusTextInactive}
-                        >
-                          Stopped
-                        </Typography>
-                      </>
-                    )}
                   </Box>
-                )}
-              </Box>
-              <Stepper
-                sx={styles.stepper}
-                activeStep={data.timeline.findIndex(
-                  step => step.status === FlowEditorConstants.PipelineStatus.InProgress,
-                )}
-                connector={
-                  <ProcessConnector isError={data.status === FlowEditorConstants.PipelineStatus.Error} />
-                }
-              >
-                {data.timeline.map((step, index) => (
-                  <Step
-                    key={index}
-                    sx={styles.step}
-                  >
-                    <ProcessStepIcon
-                      onSelect={onSelect}
-                      index={index}
-                      tooltip={step.id}
-                      active={index === selectedStep}
-                      isError={data.status === FlowEditorConstants.PipelineStatus.Error}
-                    />
-                    <Typography
-                      sx={styles.stepLabel}
-                      variant="bodySmall"
+                  {(data.status === FlowEditorConstants.PipelineStatus.InProgress ||
+                    data.status === FlowEditorConstants.PipelineStatus.Error ||
+                    data.status === FlowEditorConstants.PipelineStatus.Interrupt) && (
+                    <Box sx={styles.statusIndicator}>
+                      <Typography
+                        variant="bodyMedium"
+                        color="text.secondary"
+                      >
+                        {`${data.timeline[data.timeline.length - 1]?.id || ''}:`}
+                      </Typography>
+                      {data.timeline[data.timeline.length - 1]?.status ===
+                        FlowEditorConstants.PipelineStatus.InProgress && (
+                        <>
+                          <Box sx={styles.progressBox}>
+                            <StyledCircleProgress
+                              size={14}
+                              sx={styles.progressColor}
+                            />
+                          </Box>
+                          <Typography
+                            variant="bodyMedium"
+                            sx={styles.statusTextInactive}
+                          >
+                            Performing
+                          </Typography>
+                        </>
+                      )}
+                      {data.timeline[data.timeline.length - 1]?.status ===
+                        FlowEditorConstants.PipelineStatus.Error && (
+                        <>
+                          <Box sx={styles.progressBox}>
+                            <ErrorOutlineIcon
+                              fontSize="1rem"
+                              sx={styles.errorIcon}
+                            />
+                          </Box>
+                          <Typography
+                            variant="bodyMedium"
+                            sx={styles.statusTextError}
+                          >
+                            Error
+                          </Typography>
+                        </>
+                      )}
+                      {data.timeline[data.timeline.length - 1]?.status ===
+                        FlowEditorConstants.PipelineStatus.Interrupt && (
+                        <>
+                          <Box
+                            sx={[
+                              styles.progressBox,
+                              ({ palette }) => ({ color: palette.status.onModeration }),
+                            ]}
+                          >
+                            <AttentionIcon
+                              width="14"
+                              height="14"
+                            />
+                          </Box>
+                          <Typography
+                            variant="bodyMedium"
+                            sx={styles.statusTextInactive}
+                          >
+                            User action waiting...
+                          </Typography>
+                        </>
+                      )}
+                      {data.timeline[data.timeline.length - 1]?.status ===
+                        FlowEditorConstants.PipelineStatus.Completed && (
+                        <>
+                          <Typography
+                            variant="bodyMedium"
+                            sx={styles.statusTextPublished}
+                          >
+                            Completed
+                          </Typography>
+                        </>
+                      )}
+                      {data.timeline[data.timeline.length - 1]?.status ===
+                        FlowEditorConstants.PipelineStatus.Stopped && (
+                        <>
+                          <Box
+                            sx={[
+                              styles.progressBox,
+                              ({ palette }) => ({ color: palette.status.onModeration }),
+                            ]}
+                          >
+                            <AttentionIcon
+                              width="14"
+                              height="14"
+                            />
+                          </Box>
+                          <Typography
+                            variant="bodyMedium"
+                            sx={styles.statusTextInactive}
+                          >
+                            Stopped
+                          </Typography>
+                        </>
+                      )}
+                    </Box>
+                  )}
+                </Box>
+                <Stepper
+                  sx={styles.stepper}
+                  activeStep={data.timeline.findIndex(
+                    step => step.status === FlowEditorConstants.PipelineStatus.InProgress,
+                  )}
+                  connector={
+                    <ProcessConnector isError={data.status === FlowEditorConstants.PipelineStatus.Error} />
+                  }
+                >
+                  {data.timeline.map((step, index) => (
+                    <Step
+                      key={index}
+                      sx={styles.step}
                     >
-                      {format(new Date(step.created_at), 'HH:mm:ss')}
-                    </Typography>
-                  </Step>
-                ))}
-                <StepConnector
-                  sx={[
-                    styles.stepConnector,
-                    {
-                      display: data.timeline.length < 2 ? undefined : 'none',
-                    },
-                  ]}
-                />
-              </Stepper>
+                      <ProcessStepIcon
+                        onSelect={onSelect}
+                        index={index}
+                        tooltip={step.id}
+                        active={index === selectedStep}
+                        isError={data.status === FlowEditorConstants.PipelineStatus.Error}
+                      />
+                      <Typography
+                        sx={styles.stepLabel}
+                        variant="bodySmall"
+                      >
+                        {format(new Date(step.created_at), 'HH:mm:ss')}
+                      </Typography>
+                    </Step>
+                  ))}
+                  <StepConnector
+                    sx={[
+                      styles.stepConnector,
+                      {
+                        display: data.timeline.length < 2 ? undefined : 'none',
+                      },
+                    ]}
+                  />
+                </Stepper>
+              </Box>
               {data.status === FlowEditorConstants.PipelineStatus.Error && !!data.error && (
                 <Box sx={styles.runError}>
                   {data.budgetErrorCode ? (
@@ -419,45 +440,50 @@ const RunStateDialog = memo(props => {
                   )}
                 </Box>
               )}
-              <Box sx={styles.statesHeader}>
-                <Typography
-                  variant="subtitle"
-                  color="text.secondary"
-                >
-                  States
-                </Typography>
-              </Box>
-              <Box sx={styles.statesContainer}>
-                {variables.map((variable, index) => {
-                  return (
-                    <BasicAccordion
-                      key={variable + index}
-                      showMode={AccordionConstants.AccordionShowMode.LeftMode}
-                      accordionSX={styles.accordionSx}
-                      summarySX={styles.accordionSummarySx}
-                      titleSX={{
-                        color: 'text.secondary',
-                      }}
-                      accordionDetailsSX={styles.accordionDetailsSx}
-                      items={[
-                        {
-                          title: variable,
-                          content: (
-                            <StateItemView
-                              name={variable}
-                              onFullScreen={onFullScreen}
-                              valueBefore={
-                                selectedStep ? data.timeline[selectedStep - 1].state[variable] : ''
-                              }
-                              valueAfter={data.timeline[selectedStep]?.state[variable]}
-                            />
-                          ),
-                        },
-                      ]}
-                      defaultExpanded={!index}
-                    />
-                  );
-                })}
+              <Box
+                sx={{ display: 'contents' }}
+                data-testid="pipeline-run-details-states-section"
+              >
+                <Box sx={styles.statesHeader}>
+                  <Typography
+                    variant="subtitle"
+                    color="text.secondary"
+                  >
+                    States
+                  </Typography>
+                </Box>
+                <Box sx={styles.statesContainer}>
+                  {variables.map((variable, index) => {
+                    return (
+                      <BasicAccordion
+                        key={variable + index}
+                        showMode={AccordionConstants.AccordionShowMode.LeftMode}
+                        accordionSX={styles.accordionSx}
+                        summarySX={styles.accordionSummarySx}
+                        titleSX={{
+                          color: 'text.secondary',
+                        }}
+                        accordionDetailsSX={styles.accordionDetailsSx}
+                        items={[
+                          {
+                            title: variable,
+                            content: (
+                              <StateItemView
+                                name={variable}
+                                onFullScreen={onFullScreen}
+                                valueBefore={
+                                  selectedStep ? data.timeline[selectedStep - 1].state[variable] : ''
+                                }
+                                valueAfter={data.timeline[selectedStep]?.state[variable]}
+                              />
+                            ),
+                          },
+                        ]}
+                        defaultExpanded={!index}
+                      />
+                    );
+                  })}
+                </Box>
               </Box>
             </Box>
           </Box>
