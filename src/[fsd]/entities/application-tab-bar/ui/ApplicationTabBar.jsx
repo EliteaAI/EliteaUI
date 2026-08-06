@@ -72,6 +72,8 @@ const ApplicationTabBar = memo(props => {
 
           <Button.DiscardButton
             dataTestId="discard-button"
+            modalDataTestId="discard-confirm-modal"
+            confirmButtonDataTestId="discard-confirm-button"
             disabled={!isFormDirtyExcluding && !isYamlCodeDirty}
             onDiscard={discardApplicationChanges}
           />
