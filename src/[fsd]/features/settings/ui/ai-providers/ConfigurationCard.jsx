@@ -58,6 +58,7 @@ const ConfigurationCard = memo(props => {
         <Box sx={styles.textContainer}>
           <Box sx={styles.titleRow}>
             <Typography
+              data-testid="ai-provider-configuration-card-name"
               variant="bodyMedium"
               color="text.secondary"
               sx={styles.displayName}
