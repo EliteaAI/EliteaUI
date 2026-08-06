@@ -2,7 +2,7 @@
 
 import { useSelector } from 'react-redux';
 
-import { Box, useTheme } from '@mui/material';
+import { Box, ClickAwayListener, useTheme } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { FolderAccordion, FolderAccordionItem } from '@/[fsd]/features/chat/conversation-list/ui';
@@ -62,7 +62,12 @@ const FolderItem = memo(props => {
 
   const isFolderNameValid = useMemo(() => ConversationNameRegExp.test(folderName ?? ''), [folderName]);
 
-  const styles = folderItemStyles(isFolderNameValid);
+  const isFolderSaveEnabled = useMemo(
+    () => isFolderNameValid && (isNewFolder || folderName !== name),
+    [isFolderNameValid, isNewFolder, folderName, name],
+  );
+
+  const styles = folderItemStyles(isFolderSaveEnabled);
 
   const handleDeleteFolder = useCallback(async () => {
     onDeleteFolder(folder);
@@ -96,7 +101,6 @@ const FolderItem = memo(props => {
         onClick: handlePinFolder,
       },
       {
-        key: 'chat-folder-menu-delete',
         label: 'Delete',
         icon: (
           <DeleteIcon
@@ -183,11 +187,11 @@ const FolderItem = memo(props => {
 
   const handleOnKeyDownFolder = useCallback(
     event => {
-      if (event.key === 'Enter' && isFolderNameValid) {
+      if (event.key === 'Enter' && isFolderSaveEnabled) {
         isNewFolder ? handleOnCreateFolder() : handleOnSaveFolder();
       }
     },
-    [isFolderNameValid, isNewFolder, handleOnCreateFolder, handleOnSaveFolder],
+    [isFolderSaveEnabled, isNewFolder, handleOnCreateFolder, handleOnSaveFolder],
   );
 
   const handleOnCloseEditFolder = useCallback(() => {
@@ -210,7 +214,6 @@ const FolderItem = memo(props => {
         showMode={AccordionConstants.AccordionShowMode.LeftMode}
         defaultExpanded={containsActiveConversation}
         isPinned={folder.meta?.is_pinned}
-        folderId={folder.id}
         items={[
           {
             title: name || '',
@@ -270,47 +273,49 @@ const FolderItem = memo(props => {
       )}
     </>
   ) : (
-    <Box sx={styles.editorContainer}>
-      <Input.StyledInputEnhancer
-        autoComplete="off"
-        autoFocus
-        maxRows={1}
-        variant="standard"
-        fullWidth
-        label=""
-        value={folderName}
-        onChange={onChangeFolderName} //splice
-        containerProps={{ display: 'flex', flex: 1 }}
-        onKeyDown={handleOnKeyDownFolder}
-        inputProps={{ 'data-testid': 'chat-folder-name-input' }}
-      />
-      <Tooltip
-        title={isFolderNameValid ? '' : FolderNameWarningMessage}
-        placement="top"
-      >
-        <Box
-          data-testid="chat-folder-name-confirm-button"
-          onClick={isFolderNameValid ? (isNewFolder ? handleOnCreateFolder : handleOnSaveFolder) : null}
-          sx={styles.checkButton}
+    <ClickAwayListener onClickAway={isNewFolder ? handleOnCancelCreateFolder : handleOnCloseEditFolder}>
+      <Box sx={styles.editorContainer}>
+        <Input.StyledInputEnhancer
+          autoComplete="off"
+          autoFocus
+          maxRows={1}
+          variant="standard"
+          fullWidth
+          label=""
+          value={folderName}
+          onChange={onChangeFolderName} //splice
+          containerProps={{ display: 'flex', flex: 1 }}
+          onKeyDown={handleOnKeyDownFolder}
+          inputProps={{ 'data-testid': 'chat-folder-name-input' }}
+        />
+        <Tooltip
+          title={isFolderNameValid ? '' : FolderNameWarningMessage}
+          placement="top"
         >
-          <CheckedIcon
-            fill={isFolderNameValid ? theme.palette.icon.fill.default : theme.palette.icon.fill.disabled}
-          />
+          <Box
+            data-testid="chat-folder-name-confirm-button"
+            onClick={isFolderSaveEnabled ? (isNewFolder ? handleOnCreateFolder : handleOnSaveFolder) : null}
+            sx={styles.checkButton}
+          >
+            <CheckedIcon
+              fill={isFolderSaveEnabled ? theme.palette.icon.fill.default : theme.palette.icon.fill.disabled}
+            />
+          </Box>
+        </Tooltip>
+        <Box
+          data-testid="chat-folder-name-cancel-button"
+          onClick={isNewFolder ? handleOnCancelCreateFolder : handleOnCloseEditFolder}
+          sx={styles.cancelButton}
+        >
+          <CancelIcon fill={theme.palette.icon.fill.default} />
         </Box>
-      </Tooltip>
-      <Box
-        data-testid="chat-folder-name-cancel-button"
-        onClick={isNewFolder ? handleOnCancelCreateFolder : handleOnCloseEditFolder}
-        sx={styles.cancelButton}
-      >
-        <CancelIcon fill={theme.palette.icon.fill.default} />
       </Box>
-    </Box>
+    </ClickAwayListener>
   );
 });
 
 /** @type {MuiSx} */
-const folderItemStyles = isFolderNameValid => ({
+const folderItemStyles = isFolderSaveEnabled => ({
   slotProps: {
     summary: {
       sx: {
@@ -350,10 +355,10 @@ const folderItemStyles = isFolderNameValid => ({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: '1rem',
-    cursor: isFolderNameValid ? 'pointer' : 'default',
+    cursor: isFolderSaveEnabled ? 'pointer' : 'default',
     boxSizing: 'border-box',
     '&:hover': {
-      background: isFolderNameValid ? palette.background.select.hover : undefined,
+      background: isFolderSaveEnabled ? palette.background.select.hover : undefined,
     },
   }),
   cancelButton: ({ palette }) => ({

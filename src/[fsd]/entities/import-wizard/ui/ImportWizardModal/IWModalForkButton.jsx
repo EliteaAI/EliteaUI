@@ -17,7 +17,8 @@ import { buildErrorMessage, genForkedEntityLink } from '@/common/utils';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import useToast from '@/hooks/useToast.jsx';
 
-const IWModalForkButton = memo(({ selectedProject, onSuccess }) => {
+const IWModalForkButton = memo(props => {
+  const { selectedProject, onSuccess } = props;
   const selectedProjectId = selectedProject?.id;
 
   const { toastError, toastWarning } = useToast();

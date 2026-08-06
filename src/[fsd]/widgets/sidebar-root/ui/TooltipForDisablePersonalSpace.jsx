@@ -4,11 +4,12 @@ import Tooltip from '@/ComponentsLib/Tooltip';
 import { PersonalSpaceConstants } from '@/[fsd]/widgets/sidebar-root/lib/constants';
 import { useDisablePersonalSpace } from '@/[fsd]/widgets/sidebar-root/lib/hooks';
 
-const TooltipForDisablePersonalSpace = memo(({ children, ...props }) => {
+const TooltipForDisablePersonalSpace = memo(props => {
+  const { children, ...restProps } = props;
   const { shouldDisablePersonalSpace } = useDisablePersonalSpace();
   return (
     <Tooltip
-      {...props}
+      {...restProps}
       title={shouldDisablePersonalSpace ? PersonalSpaceConstants.TipContent : ''}
     >
       {children}

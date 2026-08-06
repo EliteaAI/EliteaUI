@@ -2,7 +2,8 @@ import { memo } from 'react';
 
 import { Box } from '@mui/material';
 
-const MaintenaceTipsContainer = memo(({ children, sx }) => {
+const MaintenaceTipsContainer = memo(props => {
+  const { children, sx } = props;
   const styles = getStyles();
 
   return (

@@ -25,7 +25,8 @@ import { useDeleteApplicationMenu } from '@/pages/Applications/Components/Applic
 import { useExportApplicationMenu } from '@/pages/Applications/Components/Applications/ExportApplicationButton';
 import { AuthorsButton } from '@/pages/Common';
 
-const ApplicationControls = memo(({ setBlockNav, onSuccess }) => {
+const ApplicationControls = memo(props => {
+  const { setBlockNav, onSuccess } = props;
   const { checkPermission } = useCheckPermission();
   const { isPrivate } = useProjectType();
   const isFromPipeline = useIsFromPipelineDetail();

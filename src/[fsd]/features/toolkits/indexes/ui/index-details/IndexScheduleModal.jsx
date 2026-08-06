@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 
@@ -23,7 +23,7 @@ const viewButtons = [
   { value: 'cron', label: 'Cron Expression' },
 ];
 
-const IndexScheduleModal = props => {
+const IndexScheduleModal = memo(props => {
   const {
     open,
     onClose,
@@ -217,7 +217,9 @@ const IndexScheduleModal = props => {
       />
     </>
   );
-};
+});
+
+IndexScheduleModal.displayName = 'IndexScheduleModal';
 
 /** @type {MuiSx} */
 const indexScheduleModalStyles = () => ({

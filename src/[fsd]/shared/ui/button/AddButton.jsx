@@ -4,7 +4,8 @@ import { IconButton, Tooltip } from '@mui/material';
 
 import PlusIcon from '@/assets/plus-icon.svg?react';
 
-const AddButton = memo(({ onAdd, tooltip = 'Add', sx }) => {
+const AddButton = memo(props => {
+  const { onAdd, tooltip = 'Add', sx } = props;
   const styles = getStyles();
 
   return (

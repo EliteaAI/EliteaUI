@@ -2,7 +2,8 @@ import { memo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-const IWModalEntityCardFullscreenText = memo(({ content }) => {
+const IWModalEntityCardFullscreenText = memo(props => {
+  const { content } = props;
   const styles = iWModalEntityCardFullscreenTextStyles();
   return (
     <Box sx={[styles.textBlock, { height: '34rem', overflowY: 'auto' }]}>

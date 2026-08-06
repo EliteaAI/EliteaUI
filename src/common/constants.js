@@ -572,7 +572,7 @@ export const PERMISSIONS = {
     delete: 'models.applications.version.delete',
   },
   mcps: {
-    delete: 'configuration.integrations.integrations.delete',
+    delete: 'models.applications.tool.delete',
   },
 
   users: {

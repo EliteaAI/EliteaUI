@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -69,7 +69,7 @@ const buildExampleRequest = (webhookType, webhookUrl, secretValue, secretHeader,
   return null;
 };
 
-const PipelineWebhookModal = props => {
+const PipelineWebhookModal = memo(props => {
   const {
     open,
     onClose,
@@ -375,7 +375,9 @@ const PipelineWebhookModal = props => {
       }
     />
   );
-};
+});
+
+PipelineWebhookModal.displayName = 'PipelineWebhookModal';
 
 /** @type {MuiSx} */
 const pipelineWebhookModalStyles = () => ({

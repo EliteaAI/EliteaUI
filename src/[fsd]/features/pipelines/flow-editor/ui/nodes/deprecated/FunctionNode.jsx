@@ -4,7 +4,9 @@ import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/
 import { FlowEditorNodes } from '@/[fsd]/features/pipelines/flow-editor/ui';
 import { ToolTypes } from '@/pages/Applications/Components/Tools/consts';
 
-const FunctionNode = memo(({ id, data, selected }) => {
+const FunctionNode = memo(props => {
+  const { id, data, selected } = props;
+
   return (
     <FlowEditorNodes.BaseToolNode
       id={id}

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
 import { Box, IconButton, TableCell, TableRow, Typography } from '@mui/material';
 
@@ -19,7 +19,7 @@ import useCardNavigate from '@/hooks/useCardNavigate';
 import useDataViewMode from '@/hooks/useDataViewMode';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
-const DataTableRow = props => {
+const DataTableRow = memo(props => {
   const styles = dataTableRowStyles();
   const { columns, data: row, cardType, viewMode, onPinChange } = props;
   const projectId = useSelectedProjectId();
@@ -211,7 +211,7 @@ const DataTableRow = props => {
       })}
     </TableRow>
   );
-};
+});
 
 DataTableRow.displayName = 'DataTableRow';
 

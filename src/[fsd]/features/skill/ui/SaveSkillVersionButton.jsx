@@ -11,7 +11,8 @@ import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import useNavBlocker from '@/hooks/useNavBlocker';
 import useToast from '@/hooks/useToast';
 
-const SaveSkillVersionButton = memo(({ onSuccess, onChangeVersion }) => {
+const SaveSkillVersionButton = memo(props => {
+  const { onSuccess, onChangeVersion } = props;
   const { values, isValid, validateForm, setTouched } = useFormikContext();
   const { toastError } = useToast();
   const { setBlockNav } = useNavBlocker();
