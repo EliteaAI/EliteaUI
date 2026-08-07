@@ -2,110 +2,12 @@ import { memo, useCallback, useMemo } from 'react';
 
 import { Box } from '@mui/material';
 
-import { AIAssistantInput } from '@/[fsd]/features/pipelines/ai-assistant/ui';
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { useInputOptions } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
-import { useFStringInputAutocomplete } from '@/[fsd]/features/pipelines/fstring-autocomplete/lib/hooks';
-import { FStringAutocompletePopper } from '@/[fsd]/features/pipelines/fstring-autocomplete/ui';
-import { Chip, Input } from '@/[fsd]/shared/ui';
+import NodeFieldInput from '@/[fsd]/features/pipelines/flow-editor/ui/settings/NodeFieldInput';
+import { Chip } from '@/[fsd]/shared/ui';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { capitalizeFirstChar } from '@/common/utils.jsx';
-
-const NodeFieldInput = memo(props => {
-  const {
-    shouldEnableAIAssistant,
-    variable,
-    value,
-    disabled,
-    onInput,
-    variableName,
-    language,
-    modelConfig,
-    enableFStringAutocomplete = false,
-    stateVariableOptions = [],
-  } = props;
-
-  const resolvedValue = typeof value !== 'string' ? JSON.stringify(value) : value;
-
-  const {
-    autocompleteState,
-    closeAutocomplete,
-    containerRef,
-    filteredOptions: filteredStateVariableOptions,
-    handleAutocompleteKeyDown,
-    handleChange: handleInput,
-    handleCursorChange,
-    handleSuggestionSelect,
-    highlightedOptionIndex,
-    inputRef,
-  } = useFStringInputAutocomplete({
-    resolvedValue,
-    onInput,
-    enabled: enableFStringAutocomplete && !disabled,
-    options: stateVariableOptions,
-  });
-
-  const commonProps = {
-    autoComplete: 'off',
-    disabled,
-    variant: 'standard',
-    fullWidth: true,
-    name: 'value',
-    id: `${variable}-value`,
-    label: 'Value',
-    placeholder: enableFStringAutocomplete ? 'Use {state_key} for variables' : '',
-    value: resolvedValue,
-    onBlur: closeAutocomplete,
-    onClick: handleCursorChange,
-    onFocus: handleCursorChange,
-    onInput: handleInput,
-    onKeyDown: handleAutocompleteKeyDown,
-    onKeyUp: handleCursorChange,
-    hasActionsToolBar: true,
-    showCopyAction: true,
-    showExpandAction: true,
-    fieldName: variableName,
-    language,
-    multiline: true,
-    minRows: 1,
-    collapseContent: true,
-    containerProps: {
-      marginBottom: '0px !important',
-      className: 'nopan nodrag nowheel',
-    },
-    inputRef,
-  };
-
-  const popperSx = nodeFieldInputStyles(containerRef.current?.clientWidth);
-
-  return (
-    <Box ref={containerRef}>
-      {shouldEnableAIAssistant ? (
-        <AIAssistantInput
-          {...commonProps}
-          modelConfig={modelConfig}
-          enableFStringAutocomplete={enableFStringAutocomplete}
-          stateVariableOptions={stateVariableOptions}
-        />
-      ) : (
-        <Input.StyledInputEnhancer
-          {...commonProps}
-          multiline={variable === 'chat_history'}
-        />
-      )}
-      <FStringAutocompletePopper
-        open={filteredStateVariableOptions.length > 0 && autocompleteState.isOpen}
-        anchorEl={containerRef.current}
-        options={filteredStateVariableOptions}
-        highlightedIndex={highlightedOptionIndex}
-        onSelect={handleSuggestionSelect}
-        popperSx={popperSx}
-      />
-    </Box>
-  );
-});
-
-NodeFieldInput.displayName = 'NodeFieldInput';
 
 const SimpleLLMInputItem = memo(props => {
   const {
@@ -116,7 +18,6 @@ const SimpleLLMInputItem = memo(props => {
     defaultValue,
     onChangeMapping,
     disabled,
-    // AI Assistant props
     enableAIAssistant = false,
     modelConfig = null,
   } = props;
@@ -129,8 +30,6 @@ const SimpleLLMInputItem = memo(props => {
   const onChange = useCallback(
     (field, newValue) => {
       if (field === 'type') {
-        // Preserve value when switching between 'fstring' and 'fixed'
-        // Clear value when switching to/from 'variable'
         const shouldPreserveValue =
           (type === 'fstring' && newValue === 'fixed') || (type === 'fixed' && newValue === 'fstring');
 
@@ -255,11 +154,6 @@ const simpleLLMInputItemStyles = (isStringType = true) => ({
   select: {
     marginBottom: '0rem',
   },
-});
-
-/** @type {MuiSx} */
-const nodeFieldInputStyles = anchorWidth => ({
-  width: anchorWidth || undefined,
 });
 
 export default SimpleLLMInputItem;

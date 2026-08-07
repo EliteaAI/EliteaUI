@@ -4,9 +4,7 @@ import { useFormikContext } from 'formik';
 
 import { Box, DialogContent, DialogTitle, IconButton } from '@mui/material';
 
-import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { Button, Switch } from '@/[fsd]/shared/ui';
-import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { SEPARATOR } from '@/[fsd]/widgets/context-budget/lib/constants';
 import { handleConvertToNumberChange } from '@/[fsd]/widgets/context-budget/lib/validation';
@@ -16,6 +14,7 @@ import {
   ContextStrategySystemMessages,
   ContextStrategyTokenManagement,
 } from '@/[fsd]/widgets/context-budget/ui';
+import ContextAccordion from '@/[fsd]/widgets/context-budget/ui/ContextAccordion';
 import AlertDialog from '@/components/AlertDialog';
 import CloseIcon from '@/components/Icons/CloseIcon';
 import { StyledDialogActions } from '@/components/StyledDialog';
@@ -28,41 +27,14 @@ const parseModelValue = value => {
   };
 };
 
-const ContextAccordion = memo(props => {
-  const { title, content, expanded, isEnabled, onChange } = props;
-
-  return (
-    <BasicAccordion
-      showMode={AccordionConstants.AccordionShowMode.LeftMode}
-      expanded={expanded}
-      onChange={onChange}
-      accordionSX={{
-        background: 'transparent !important',
-        opacity: isEnabled ? 1 : 0.6,
-        pointerEvents: isEnabled ? 'auto' : 'none',
-      }}
-      items={[
-        {
-          title,
-          content,
-        },
-      ]}
-    />
-  );
-});
-
-ContextAccordion.displayName = 'ContextAccordion';
-
 const ContextStrategyModalContent = memo(props => {
   const {
     onClose,
     stats,
     conversationId,
-    // isHighUtilization, // HIDDEN: Optimize context temporarily disabled
     expandedAccordions,
     setExpandedAccordions,
     showOptimizeDialog,
-    // handleOptimizeClick, // HIDDEN: Optimize context temporarily disabled
     handleOptimizeCancel,
     handleOptimizeNow,
     isOptimizing,
@@ -72,7 +44,6 @@ const ContextStrategyModalContent = memo(props => {
   const styles = componentStyles();
   const { values, errors, setFieldValue, dirty, isValid, isSubmitting, submitForm } = useFormikContext();
 
-  // Collapse/expand context-dependent accordions when Content Management toggle changes
   useEffect(() => {
     setExpandedAccordions({
       tokenManagement: values.enabled,
@@ -177,29 +148,6 @@ const ContextStrategyModalContent = memo(props => {
 
       <DialogContent sx={styles.dialogContent}>
         <Box sx={styles.contentContainer}>
-          {/* HIDDEN: Optimize context functionality temporarily disabled
-          {isHighUtilization && (
-            <Box sx={styles.warningBanner}>
-              <Typography
-                variant="bodySmall"
-                sx={styles.warningText}
-              >
-                {CONTEXT_MESSAGES.HIGH_USAGE_WARNING}
-              </Typography>
-              <Button
-                variant="elitea"
-                color="secondary"
-                size="small"
-                onClick={handleOptimizeClick}
-                disabled={isOptimizing}
-                sx={styles.summarizeButton}
-              >
-                {isOptimizing ? 'Optimizing...' : 'Optimize now'}
-              </Button>
-            </Box>
-          )}
-          */}
-
           <ContextBudgetStats
             stats={stats}
             conversationId={conversationId}
@@ -349,9 +297,9 @@ const componentStyles = () => ({
     alignItems: 'center',
     gap: '0.75rem',
     padding: '0.5rem 1rem',
-    backgroundColor: `${palette.warning.yellow}14`, // #E8B747 at 8% opacity (14 in hex)
+    backgroundColor: `${palette.warning.yellow}14`,
     borderRadius: '0.5rem',
-    border: `0.0625rem solid ${palette.warning.yellow}66`, // #E8B747 at 40% opacity (66 in hex)
+    border: `0.0625rem solid ${palette.warning.yellow}66`,
     marginTop: '1rem',
     marginBottom: '0.25rem',
   }),
