@@ -24,10 +24,29 @@ Push changes and create a pull request on GitHub with a well-structured descript
 
 ### 4. Create PR
 
-**Option A — `gh` CLI (preferred if available):**
+**Option A — GitHub MCP tool (preferred):**
+
+Use `mcp__github__create_pull_request` with:
+
+- `owner`: `EliteaAI`
+- `repo`: `EliteaUI`
+- `title`: same convention as below
+- `head`: current branch name
+- `base`: `main`
+- `body`: markdown structure as below
+
+**Option B — `gh` CLI (fallback when MCP is not available):**
 
 ```
 gh pr create --title "<title>" --body "$(cat <<'EOF'
+<body>
+EOF
+)"
+```
+
+**PR body structure:**
+
+```markdown
 ## Summary
 
 <Brief description of what this PR does and why>
@@ -46,20 +65,7 @@ gh pr create --title "<title>" --body "$(cat <<'EOF'
 ## Ticket
 
 [<TICKET>](https://eliteaai.atlassian.net/browse/<TICKET>)
-EOF
-)"
 ```
-
-**Option B — GitHub MCP tool (fallback when `gh` is not installed):**
-
-Use `mcp__github__create_pull_request` with:
-
-- `owner`: `EliteaAI`
-- `repo`: `EliteaUI`
-- `title`: same convention as above
-- `head`: current branch name
-- `base`: `main`
-- `body`: same markdown structure as above
 
 ### PR title convention
 
