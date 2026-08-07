@@ -93,13 +93,29 @@ const isBoundedExecutionIdentifier = value =>
 // must never be attached to the authenticated Go SSE endpoint after reload.
 const isDurableAgentExecutionIdentifier = value => typeof value === 'string' && /^[0-9a-f]{32}$/.test(value);
 
-export const isAgentSequentialHITLContinuationEligible = ({ interrupt, action }) =>
-  Boolean(interrupt) &&
-  ['approve', 'reject', 'edit', 'block_with_comment'].includes(action) &&
+const isBoundedInProcessHITLInterrupt = interrupt =>
+  Boolean(interrupt?.interrupt_id) &&
   !interrupt.child_thread_id &&
   interrupt.resume_strategy !== 'aggregate_child' &&
   !interrupt.via_call_id &&
   !interrupt._via_call_id;
+
+export const isAgentHITLContinuationEligible = ({ interrupts, decisions, action }) => {
+  if (!Array.isArray(interrupts) || interrupts.length < 1 || interrupts.length > 16) return false;
+  if (!interrupts.every(isBoundedInProcessHITLInterrupt)) return false;
+
+  if (!Array.isArray(decisions) || decisions.length === 0) {
+    return interrupts.length === 1 && ['approve', 'reject', 'edit', 'block_with_comment'].includes(action);
+  }
+  if (decisions.length !== interrupts.length) return false;
+
+  const pendingIds = new Set(interrupts.map(interrupt => interrupt.interrupt_id));
+  return decisions.every(
+    decision =>
+      pendingIds.delete(decision?.interrupt_id) &&
+      ['approve', 'reject', 'edit', 'block_with_comment'].includes(decision?.action),
+  );
+};
 
 export const getAgentHITLChildThreadId = interrupt =>
   interrupt?.resume_strategy === 'aggregate_child'
@@ -668,15 +684,20 @@ export const buildAgentHITLContinuationBody = ({
   threadId,
   action,
   value,
+  hitlDecisions = [],
 }) => ({
   project_id: Number(projectId),
   conversation_uuid: conversationUuid,
   message_id: responseMessageId,
   thread_id: threadId,
   hitl_resume: true,
-  hitl_action: action,
-  ...(action === 'edit' || action === 'block_with_comment' ? { hitl_value: value ?? '' } : {}),
-  hitl_decisions: [],
+  ...(hitlDecisions.length
+    ? { hitl_decisions: hitlDecisions }
+    : {
+        hitl_action: action,
+        ...(action === 'edit' || action === 'block_with_comment' ? { hitl_value: value ?? '' } : {}),
+        hitl_decisions: [],
+      }),
   mcp_tokens: {},
   ignored_mcp_servers: [],
   user_declined_mcp_servers: [],
@@ -689,6 +710,7 @@ export const startAgentHITLContinuationSse = async ({
   threadId,
   action,
   value,
+  hitlDecisions = [],
   eventPayload,
   ...streamOptions
 }) => {
@@ -706,6 +728,7 @@ export const startAgentHITLContinuationSse = async ({
       threadId,
       action,
       value,
+      hitlDecisions,
     }),
     conversationUuid,
     eventPayload,

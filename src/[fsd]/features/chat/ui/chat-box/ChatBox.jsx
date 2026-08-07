@@ -22,7 +22,7 @@ import {
   getAgentExecutionSseContract,
   getAgentHITLChildThreadId,
   getAgentRegenerationSseContract,
-  isAgentSequentialHITLContinuationEligible,
+  isAgentHITLContinuationEligible,
   resetAgentExecutionReplayProjection,
   resumeAgentExecutionSse,
   settleAgentExecutionReplayProjection,
@@ -1972,13 +1972,14 @@ const ChatBox = forwardRef((props, boxRef) => {
 
       setStreamingInfo(question_id);
 
-      const soleInterrupt = interrupts.length === 1 ? interrupts[0] : null;
-      const isBoundedSequentialInterrupt = isAgentSequentialHITLContinuationEligible({
-        interrupt: soleInterrupt,
+      const directHITLDecisions = isParallel ? payload.hitl_decisions : [];
+      const isBoundedInProcessInterrupt = isAgentHITLContinuationEligible({
+        interrupts,
+        decisions: directHITLDecisions,
         action,
       });
       let handledByDirectExecution = false;
-      if (isBoundedSequentialInterrupt) {
+      if (isBoundedInProcessInterrupt) {
         agentExecutionStartsRef.current.add(question_id);
         try {
           const directExecution = await startAgentHITLContinuationSse({
@@ -1988,6 +1989,7 @@ const ChatBox = forwardRef((props, boxRef) => {
             threadId,
             action,
             value,
+            hitlDecisions: directHITLDecisions,
             eventPayload: {
               question_id,
               participant_id,

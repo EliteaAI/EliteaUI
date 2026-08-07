@@ -16,7 +16,7 @@ import {
   getAgentHITLChildThreadId,
   getAgentRegenerationSseContract,
   isAgentExecutionSseEligible,
-  isAgentSequentialHITLContinuationEligible,
+  isAgentHITLContinuationEligible,
   resetAgentExecutionReplayProjection,
   resumeAgentExecutionSse,
   settleAgentExecutionReplayProjection,
@@ -58,33 +58,48 @@ class FakeEventSource {
 }
 
 describe('agent execution SSE', () => {
-  it('admits one root or synchronously nested HITL decision but not child-thread routing', () => {
+  it('admits bounded in-process HITL decisions but not child-thread routing', () => {
     expect(
-      isAgentSequentialHITLContinuationEligible({
-        interrupt: { interrupt_id: 'root-1', thread_id: 'parent-checkpoint-1' },
+      isAgentHITLContinuationEligible({
+        interrupts: [{ interrupt_id: 'root-1', thread_id: 'parent-checkpoint-1' }],
         action: 'approve',
       }),
     ).toBe(true);
     expect(
-      isAgentSequentialHITLContinuationEligible({
-        interrupt: {
+      isAgentHITLContinuationEligible({
+        interrupts: [{
           interrupt_id: 'nested-1',
           parent_agent_call_id: 'call-pipeline-1',
           parent_agent_path: [{ name: 'artifact_test', call_id: 'call-pipeline-1' }],
-        },
+        }],
         action: 'block_with_comment',
       }),
     ).toBe(true);
     expect(
-      isAgentSequentialHITLContinuationEligible({
-        interrupt: { interrupt_id: 'child-1', child_thread_id: 'child-thread-1' },
+      isAgentHITLContinuationEligible({
+        interrupts: [{ interrupt_id: 'child-1', child_thread_id: 'child-thread-1' }],
         action: 'approve',
       }),
     ).toBe(false);
     expect(
-      isAgentSequentialHITLContinuationEligible({
-        interrupt: { interrupt_id: 'nested-1', parent_agent_call_id: 'call-pipeline-1' },
+      isAgentHITLContinuationEligible({
+        interrupts: [{ interrupt_id: 'nested-1', parent_agent_call_id: 'call-pipeline-1' }],
         action: 'answer',
+      }),
+    ).toBe(false);
+    expect(
+      isAgentHITLContinuationEligible({
+        interrupts: [{ interrupt_id: 'one' }, { interrupt_id: 'two' }],
+        decisions: [
+          { interrupt_id: 'one', action: 'approve' },
+          { interrupt_id: 'two', action: 'reject' },
+        ],
+      }),
+    ).toBe(true);
+    expect(
+      isAgentHITLContinuationEligible({
+        interrupts: [{ interrupt_id: 'one' }, { interrupt_id: 'two' }],
+        decisions: [{ interrupt_id: 'one', action: 'approve' }],
       }),
     ).toBe(false);
   });
@@ -801,6 +816,38 @@ describe('agent execution SSE', () => {
       }),
     );
     expect(JSON.parse(fetchImpl.mock.calls[0][1].body)).not.toHaveProperty('hitl_value');
+  });
+
+  it('continues one atomic parallel HITL decision set without scalar or private routing fields', () => {
+    const decisions = [
+      { interrupt_id: 'one', action: 'approve', value: '' },
+      {
+        interrupt_id: 'two',
+        tool_call_id: 'tool-two',
+        action: 'block_with_comment',
+        value: 'retain the file',
+      },
+    ];
+
+    expect(
+      buildAgentHITLContinuationBody({
+        projectId: '7',
+        conversationUuid: 'conversation-id',
+        responseMessageId: 'response-id',
+        threadId: 'thread-id',
+        hitlDecisions: decisions,
+      }),
+    ).toEqual({
+      project_id: 7,
+      conversation_uuid: 'conversation-id',
+      message_id: 'response-id',
+      thread_id: 'thread-id',
+      hitl_resume: true,
+      hitl_decisions: decisions,
+      mcp_tokens: {},
+      ignored_mcp_servers: [],
+      user_declined_mcp_servers: [],
+    });
   });
 
   it('continues exactly one toolkit authorization request with private runtime tokens', async () => {
