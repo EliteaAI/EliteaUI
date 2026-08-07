@@ -215,6 +215,7 @@ const FolderItem = memo(props => {
         showMode={AccordionConstants.AccordionShowMode.LeftMode}
         defaultExpanded={containsActiveConversation}
         isPinned={folder.meta?.is_pinned}
+        folderId={folder.id}
         items={[
           {
             title: name || '',
