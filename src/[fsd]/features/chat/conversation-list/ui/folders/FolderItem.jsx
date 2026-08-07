@@ -84,6 +84,7 @@ const FolderItem = memo(props => {
   const menuItems = useMemo(() => {
     const items = [
       {
+        key: 'chat-folder-menu-rename',
         label: 'Rename',
         icon: (
           <EditIcon
@@ -291,9 +292,11 @@ const FolderItem = memo(props => {
         <Tooltip
           title={isFolderNameValid ? '' : FolderNameWarningMessage}
           placement="top"
+          slotProps={{ popper: { 'data-testid': 'chat-folder-name-confirm-tooltip-content' } }}
         >
           <Box
             data-testid="chat-folder-name-confirm-button"
+            data-disabled={!isFolderSaveEnabled ? 'true' : 'false'}
             onClick={isFolderSaveEnabled ? (isNewFolder ? handleOnCreateFolder : handleOnSaveFolder) : null}
             sx={styles.checkButton}
           >
