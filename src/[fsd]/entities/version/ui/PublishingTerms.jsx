@@ -3,6 +3,7 @@ import { memo, useState } from 'react';
 import { Box, Dialog, DialogContent, DialogTitle, IconButton, Typography } from '@mui/material';
 
 import { ENTITY_STUDIO } from '@/[fsd]/entities/version/lib/constants';
+import TermsContent from '@/[fsd]/entities/version/ui/TermsContent';
 import InputActionsToolbar from '@/[fsd]/shared/ui/input/InputActionsToolbar';
 import CloseIcon from '@/components/Icons/CloseIcon';
 
@@ -153,40 +154,6 @@ const PublishingTerms = memo(props => {
 
 PublishingTerms.displayName = 'PublishingTerms';
 
-const TermsContent = memo(props => {
-  const { sections } = props;
-  return (
-    <Box sx={styles.termsContent}>
-      {sections.map((section, idx) => (
-        <Box
-          key={idx}
-          sx={styles.section}
-        >
-          <Typography
-            variant="bodySmall"
-            color="text.secondary"
-            sx={{ fontWeight: 700 }}
-          >
-            {section.heading}
-          </Typography>
-          {section.lines.map((line, lineIdx) => (
-            <Typography
-              key={lineIdx}
-              variant="bodySmall"
-              color="text.secondary"
-              sx={line === '' ? { height: '0.5rem' } : undefined}
-            >
-              {line}
-            </Typography>
-          ))}
-        </Box>
-      ))}
-    </Box>
-  );
-});
-
-TermsContent.displayName = 'TermsContent';
-
 /** @type {MuiSx} */
 const styles = {
   container: ({ palette }) => ({
@@ -201,16 +168,6 @@ const styles = {
   scrollArea: {
     overflowY: 'auto',
     transition: 'max-height 0.2s ease',
-  },
-  termsContent: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.75rem',
-  },
-  section: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.125rem',
   },
   toolbar: {
     position: 'absolute',

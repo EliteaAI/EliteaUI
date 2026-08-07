@@ -3,7 +3,6 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { format } from 'date-fns';
 
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
-import FullscreenOutlinedIcon from '@mui/icons-material/FullscreenOutlined';
 import {
   Box,
   Dialog,
@@ -13,12 +12,14 @@ import {
   StepConnector,
   Stepper,
   Typography,
-  stepConnectorClasses,
 } from '@mui/material';
 
-import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { BudgetErrorMessage } from '@/[fsd]/features/chat/ui/error-trace';
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+import ProcessConnector from '@/[fsd]/features/pipelines/flow-editor/ui/state/ProcessConnector';
+import ProcessStepIcon from '@/[fsd]/features/pipelines/flow-editor/ui/state/ProcessStepIcon';
+import RunStatus from '@/[fsd]/features/pipelines/flow-editor/ui/state/RunStatus';
+import StateItemView from '@/[fsd]/features/pipelines/flow-editor/ui/state/StateItemView';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import AttentionIcon from '@/assets/attention-icon.svg?react';
@@ -27,129 +28,6 @@ import StopIcon from '@/assets/stop-icon.svg?react';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import PipelineStateViewModal from '@/components/PipelineStateViewModal';
-
-const ProcessConnector = memo(props => {
-  const { isError, ...rest } = props;
-
-  const styles = processConnectorStyles(isError);
-
-  return (
-    <StepConnector
-      sx={styles.connector}
-      {...rest}
-    />
-  );
-});
-
-ProcessConnector.displayName = 'ProcessConnector';
-
-const StateItemViewHeader = memo(props => {
-  const { title, onFullScreen } = props;
-
-  const styles = stateItemViewHeaderStyles();
-
-  return (
-    <Box sx={styles.container}>
-      <Typography
-        variant="labelMedium"
-        color="text.default"
-      >
-        {title}
-      </Typography>
-      <IconButton
-        sx={styles.iconButton}
-        variant="elitea"
-        color="tertiary"
-        onClick={onFullScreen}
-      >
-        <FullscreenOutlinedIcon sx={styles.icon} />
-      </IconButton>
-    </Box>
-  );
-});
-
-StateItemViewHeader.displayName = 'StateItemViewHeader';
-
-const StateItemView = memo(props => {
-  const { onFullScreen, name, valueBefore, valueAfter } = props;
-
-  const styles = stateItemViewStyles();
-
-  const onBeforeValueFullScreen = useCallback(() => {
-    onFullScreen(name, valueBefore);
-  }, [name, onFullScreen, valueBefore]);
-
-  const onAfterValueFullScreen = useCallback(() => {
-    onFullScreen(name, valueAfter);
-  }, [name, onFullScreen, valueAfter]);
-
-  return (
-    <Box sx={styles.container}>
-      <Box sx={styles.section}>
-        <StateItemViewHeader
-          title="Before"
-          onFullScreen={onBeforeValueFullScreen}
-        />
-        <Box sx={styles.valueBox}>{JSON.stringify(valueBefore)}</Box>
-      </Box>
-      <Box sx={styles.section}>
-        <StateItemViewHeader
-          title="After"
-          onFullScreen={onAfterValueFullScreen}
-        />
-        <Box sx={styles.valueBox}>{JSON.stringify(valueAfter)}</Box>
-      </Box>
-    </Box>
-  );
-});
-
-StateItemView.displayName = 'StateItemView';
-
-const ProcessStepIcon = memo(props => {
-  const { active, tooltip, index, onSelect, isError } = props;
-
-  const styles = processStepIconStyles(active, isError);
-
-  const onClick = useCallback(() => {
-    onSelect(index);
-  }, [index, onSelect]);
-
-  return (
-    <StyledTooltip
-      title={tooltip}
-      placement="top"
-    >
-      <Box
-        sx={styles.outerBox}
-        onClick={onClick}
-      >
-        <Box sx={styles.innerBox} />
-      </Box>
-    </StyledTooltip>
-  );
-});
-
-ProcessStepIcon.displayName = 'ProcessStepIcon';
-
-const RunStatus = memo(props => {
-  const { status } = props;
-
-  const styles = runStatusStyles(status);
-
-  return (
-    <Box sx={styles.container}>
-      <Typography
-        component="div"
-        variant="labelSmall"
-        sx={styles.text}
-      >
-        {status}
-      </Typography>
-    </Box>
-  );
-});
-
-RunStatus.displayName = 'RunStatus';
 
 const RunStateDialog = memo(props => {
   const { data, state, open, onClose, onStop, onDelete, editorHeight, editorWidth } = props;
@@ -476,144 +354,6 @@ const RunStateDialog = memo(props => {
 RunStateDialog.displayName = 'RunStateDialog';
 
 /** @type {MuiSx} */
-const processConnectorStyles = isError => ({
-  connector: ({ palette }) => ({
-    [`&.${stepConnectorClasses.active}`]: {
-      [`& .${stepConnectorClasses.line}`]: {
-        borderColor: !isError ? palette.status.published : palette.status.rejected,
-      },
-    },
-    [`&.${stepConnectorClasses.completed}`]: {
-      [`& .${stepConnectorClasses.line}`]: {
-        borderColor: !isError ? palette.status.published : palette.status.rejected,
-      },
-    },
-    [`& .${stepConnectorClasses.line}`]: {
-      marginLeft: '-1.0625rem',
-      marginRight: '-1.0625rem',
-      borderColor: !isError ? palette.status.published : palette.status.rejected,
-      borderTopWidth: '0.375rem',
-      borderRadius: '0.625rem',
-      zIndex: 0,
-    },
-  }),
-});
-
-/** @type {MuiSx} */
-const stateItemViewHeaderStyles = () => ({
-  container: {
-    display: 'flex',
-    height: '1.75rem',
-    justifyContent: 'space-between',
-    width: '100%',
-  },
-  iconButton: {
-    marginLeft: 0,
-  },
-  icon: {
-    fontSize: '1.3125rem',
-  },
-});
-
-/** @type {MuiSx} */
-const stateItemViewStyles = () => ({
-  container: {
-    display: 'flex',
-    maxWidth: '100%',
-    width: '100%',
-    paddingLeft: '1.625rem',
-    boxSizing: 'border-box',
-    gap: '0.625rem',
-  },
-  section: {
-    maxHeight: '7.9375rem',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.625rem',
-    flex: 1,
-    maxWidth: 'calc(50% - 0.3125rem)',
-  },
-  valueBox: ({ palette }) => ({
-    width: '100%',
-    minHeight: '2.625rem',
-    flex: 1,
-    borderRadius: '0.5rem',
-    padding: '0.5rem 1rem',
-    border: `0.0625rem solid ${palette.border.lines}`,
-    overflow: 'auto',
-  }),
-});
-
-/** @type {MuiSx} */
-const processStepIconStyles = (active, isError) => ({
-  outerBox: ({ palette }) => ({
-    width: '1.3125rem',
-    height: '1.3125rem',
-    borderRadius: '50%',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    boxSizing: 'border-box',
-    border: active ? `0.0625rem solid ${!isError ? palette.status.published : palette.status.rejected}` : 0,
-    zIndex: 1,
-    '&:hover': {
-      width: '1.5rem',
-      height: '1.5rem',
-    },
-  }),
-  innerBox: ({ palette }) => ({
-    width: '1.25rem',
-    height: '1.25rem',
-    borderRadius: '50%',
-    boxSizing: 'border-box',
-    backgroundColor: !isError ? palette.status.published : palette.status.rejected,
-    border: `0.1875rem solid ${palette.background.tabPanel}`,
-    zIndex: 1,
-    '&:hover': {
-      width: '1.4375rem',
-      height: '1.4375rem',
-    },
-  }),
-});
-
-/** @type {MuiSx} */
-const runStatusStyles = status => ({
-  container: ({ palette }) => {
-    const borderColor =
-      status === FlowEditorConstants.PipelineStatus.Completed
-        ? palette.status.published
-        : status === FlowEditorConstants.PipelineStatus.Error
-          ? palette.status.rejected
-          : status === FlowEditorConstants.PipelineStatus.Stopped
-            ? palette.status.onModeration
-            : palette.icon.fill.inactive;
-
-    return {
-      height: '1.5rem',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: 0,
-      borderRadius: '1.25rem',
-      width: '5.8125rem',
-      border: `0.0625rem solid ${borderColor}`,
-    };
-  },
-  text: ({ palette }) => {
-    const color =
-      status === FlowEditorConstants.PipelineStatus.Completed
-        ? palette.status.published
-        : status === FlowEditorConstants.PipelineStatus.Error
-          ? palette.status.rejected
-          : status === FlowEditorConstants.PipelineStatus.Stopped
-            ? palette.status.onModeration
-            : palette.icon.fill.inactive;
-
-    return { color };
-  },
-});
-
-/** @type {MuiSx} */
 const runStateDialogStyles = (editorWidth, editorHeight) => ({
   dialogPaper: ({ palette }) => ({
     borderRadius: '0.5rem',
@@ -743,7 +483,6 @@ const runStateDialogStyles = (editorWidth, editorHeight) => ({
   }),
   runError: {
     padding: '0 1.5rem 0.75rem 1.5rem',
-    // A long provider error must not push the States list out of the dialog
     maxHeight: '7rem',
     overflow: 'auto',
   },
@@ -758,8 +497,6 @@ const runStateDialogStyles = (editorWidth, editorHeight) => ({
     borderBottom: `0.0625rem solid ${palette.border.flowNode}`,
   }),
   statesContainer: {
-    // Flex rather than a fixed calc: the error block above is conditional, so a
-    // hardcoded offset would overflow the dialog whenever a run fails
     flex: 1,
     minHeight: 0,
     display: 'flex',
