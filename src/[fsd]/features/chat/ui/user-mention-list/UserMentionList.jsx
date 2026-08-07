@@ -1,47 +1,8 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
 
 import { Box, ClickAwayListener, Typography } from '@mui/material';
 
-import UserAvatar from '@/components/UserAvatar';
-
-const UserMentionItem = memo(props => {
-  const { user, onClick, isActive } = props;
-
-  const handleClick = useCallback(
-    event => {
-      event.stopPropagation();
-      event.preventDefault();
-      onClick(user);
-    },
-    [onClick, user],
-  );
-
-  const avatarName = user.participant?.meta?.user_name || user.name;
-  const avatarSrc = user.participant?.meta?.user_avatar;
-
-  return (
-    <Box
-      onClick={handleClick}
-      sx={userMentionItemStyles.item(isActive)}
-      data-testid={`chat-user-mention-item-${user.id}`}
-    >
-      <UserAvatar
-        name={avatarName}
-        avatar={avatarSrc}
-        size={24}
-      />
-      <Typography
-        variant="headingSmall"
-        color="text.secondary"
-        sx={userMentionItemStyles.name}
-      >
-        {user.name}
-      </Typography>
-    </Box>
-  );
-});
-
-UserMentionItem.displayName = 'UserMentionItem';
+import UserMentionItem from '@/[fsd]/features/chat/ui/user-mention-list/UserMentionItem';
 
 const UserMentionList = memo(props => {
   const { users = [], query, onSelectUser, onClose } = props;
@@ -85,10 +46,10 @@ const UserMentionList = memo(props => {
   return (
     <ClickAwayListener onClickAway={onClose}>
       <Box
-        sx={userMentionListStyles.container}
+        sx={styles.container}
         data-testid="chat-user-mention-list"
       >
-        <Box sx={userMentionListStyles.header}>
+        <Box sx={styles.header}>
           <Typography
             variant="subtitle"
             color="text.primary"
@@ -96,7 +57,7 @@ const UserMentionList = memo(props => {
             Participants
           </Typography>
         </Box>
-        <Box sx={userMentionListStyles.list}>
+        <Box sx={styles.list}>
           {filteredUsers.map((user, index) => (
             <UserMentionItem
               key={user.id}
@@ -114,31 +75,7 @@ const UserMentionList = memo(props => {
 UserMentionList.displayName = 'UserMentionList';
 
 /** @type {MuiSx} */
-const userMentionItemStyles = {
-  item:
-    isActive =>
-    ({ palette }) => ({
-      display: 'flex',
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: '0.5rem',
-      padding: '0.375rem 0.5rem',
-      borderRadius: '0.5rem',
-      cursor: 'pointer',
-      backgroundColor: isActive ? palette.action.hover : 'transparent',
-      '&:hover': {
-        backgroundColor: palette.action.hover,
-      },
-    }),
-  name: {
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-  },
-};
-
-/** @type {MuiSx} */
-const userMentionListStyles = {
+const styles = {
   container: ({ palette }) => ({
     border: `0.0625rem solid ${palette.border.lines}`,
     width: '100%',

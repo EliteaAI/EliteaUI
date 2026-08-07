@@ -1,6 +1,6 @@
-import { memo, useCallback, useId, useMemo, useState } from 'react';
+import { memo, useCallback } from 'react';
 
-import { Box, Collapse, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import BaseBtn from '@/[fsd]/shared/ui/button/BaseBtn';
 import Markdown from '@/[fsd]/shared/ui/markdown';
@@ -10,93 +10,14 @@ import RejectIcon from '@/assets/reject.svg?react';
 import BlockWithCommentControl from './BlockWithCommentControl';
 import ClarifyingQuestionControl from './ClarifyingQuestionControl';
 import EditControl from './EditControl';
+import SensitiveToolParams from './SensitiveToolParams';
 
-const SENSITIVE_PARAM_MASK = '***';
 const BLOCK_WITH_COMMENT_ACTION = 'block_with_comment';
 const DEFAULT_HITL_MESSAGE = 'Here are some results. Choose the action to proceed.';
-
-const SensitiveToolParams = memo(props => {
-  const { toolArgs } = props;
-  // Shown collapsed by default to keep the authorization card compact (#4993).
-  const [expanded, setExpanded] = useState(false);
-  const contentId = useId();
-
-  const toggleExpanded = useCallback(() => {
-    setExpanded(prev => !prev);
-  }, []);
-
-  const handleKeyDown = useCallback(
-    event => {
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        toggleExpanded();
-      }
-    },
-    [toggleExpanded],
-  );
-
-  const paramEntries = useMemo(() => {
-    if (!toolArgs || typeof toolArgs !== 'object') return [];
-    return Object.entries(toolArgs);
-  }, [toolArgs]);
-
-  if (paramEntries.length === 0) return null;
-
-  return (
-    <Box sx={sensitiveToolParamsStyles.wrapper}>
-      <Box
-        sx={sensitiveToolParamsStyles.header}
-        onClick={toggleExpanded}
-        onKeyDown={handleKeyDown}
-        role="button"
-        tabIndex={0}
-        aria-expanded={expanded}
-        aria-controls={contentId}
-      >
-        <Typography
-          variant="labelSmall"
-          sx={sensitiveToolParamsStyles.headerText}
-        >
-          Parameters {expanded ? '▾' : '▸'}
-        </Typography>
-      </Box>
-      <Collapse
-        in={expanded}
-        id={contentId}
-      >
-        <Box sx={sensitiveToolParamsStyles.paramList}>
-          {paramEntries.map(([key, value]) => (
-            <Box
-              key={key}
-              sx={sensitiveToolParamsStyles.paramRow}
-            >
-              <Typography
-                variant="labelSmall"
-                sx={sensitiveToolParamsStyles.paramKey}
-              >
-                {key}:
-              </Typography>
-              <Typography
-                variant="labelSmall"
-                sx={sensitiveToolParamsStyles.paramValue}
-              >
-                {value === SENSITIVE_PARAM_MASK
-                  ? SENSITIVE_PARAM_MASK
-                  : String(typeof value === 'object' ? JSON.stringify(value) : value)}
-              </Typography>
-            </Box>
-          ))}
-        </Box>
-      </Collapse>
-    </Box>
-  );
-});
-SensitiveToolParams.displayName = 'SensitiveToolParams';
 
 const ChatHitlActions = memo(props => {
   const { hitlInterrupt, onHitlResume, disabled, toolCallId, interruptId } = props;
   const { available_actions = [], guardrail_type, message, questions } = hitlInterrupt || {};
-  // Parallel sub-agent fan-out surfaces multiple sensitive-tool pauses at once.
   const isSensitiveTool =
     guardrail_type === 'sensitive_tool' || guardrail_type === 'parallel_sensitive_tools';
   const isClarifyingQuestion = guardrail_type === 'clarifying_question';
@@ -272,54 +193,7 @@ const ChatHitlActions = memo(props => {
   );
 });
 
-/** @type {MuiSx} */
-const sensitiveToolParamsStyles = {
-  wrapper: ({ palette }) => ({
-    width: '100%',
-    borderRadius: '0.375rem',
-    border: `0.0625rem solid ${palette.border?.lines || palette.divider}`,
-    overflow: 'hidden',
-  }),
-  header: ({ palette }) => ({
-    display: 'flex',
-    alignItems: 'center',
-    padding: '0.375rem 0.625rem',
-    cursor: 'pointer',
-    userSelect: 'none',
-    backgroundColor: palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.02)',
-    '&:hover': {
-      backgroundColor: palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
-    },
-  }),
-  headerText: ({ palette }) => ({
-    fontSize: '0.75rem',
-    fontWeight: 600,
-    color: palette.text.secondary,
-  }),
-  paramList: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.125rem',
-    padding: '0.375rem 0.625rem',
-  },
-  paramRow: {
-    display: 'flex',
-    gap: '0.5rem',
-    alignItems: 'flex-start',
-  },
-  paramKey: ({ palette }) => ({
-    fontSize: '0.75rem',
-    fontWeight: 600,
-    color: palette.text.secondary,
-    flexShrink: 0,
-  }),
-  paramValue: ({ palette }) => ({
-    fontSize: '0.75rem',
-    fontWeight: 400,
-    color: palette.text.primary,
-    wordBreak: 'break-word',
-  }),
-};
+ChatHitlActions.displayName = 'ChatHitlActions';
 
 /** @type {MuiSx} */
 const getStyles = () => ({
@@ -390,7 +264,5 @@ const getStyles = () => ({
     },
   },
 });
-
-ChatHitlActions.displayName = 'ChatHitlActions';
 
 export default ChatHitlActions;

@@ -2,7 +2,7 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 
-import { Box, IconButton, Skeleton, Tooltip, Typography, useTheme } from '@mui/material';
+import { Box, Skeleton } from '@mui/material';
 
 import { usePagination, useResponsiveColumns, useTableSort } from '@/[fsd]/entities/grid-table/lib';
 import {
@@ -13,18 +13,11 @@ import {
   GridTableRow,
 } from '@/[fsd]/entities/grid-table/ui';
 import { PERSONAL_TOKENS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/personalTokensTourTargets.constants';
+import ExpiryInDays from '@/[fsd]/features/settings/ui/personal-tokes/ExpiryInDays';
+import TokenActionsCell from '@/[fsd]/features/settings/ui/personal-tokes/TokenActionsCell';
 import { Text } from '@/[fsd]/shared/ui';
 import { useTokenDeleteMutation, useTokenListQuery } from '@/api/auth';
-import VsCodeIcon from '@/assets/vscode.svg?react';
-import { calculateExpiryInDays } from '@/common/utils';
-import DeleteEntityButton from '@/components/DeleteEntityButton';
-import AttentionIcon from '@/components/Icons/AttentionIcon';
-import JetBrainsIcon from '@/components/Icons/JetBrainsIcon';
-import OpenEyeIcon from '@/components/Icons/OpenEyeIcon';
-import RemoveIcon from '@/components/Icons/RemoveIcon';
-import SuccessIcon from '@/components/Icons/SuccessIcon';
 import useGetWindowWidth from '@/hooks/useGetWindowWidth';
-import useToast from '@/hooks/useToast';
 
 const TOKENS_TABLE_CONFIG = {
   DEFAULT_PAGE_SIZE: 10,
@@ -37,190 +30,6 @@ const TOKENS_COLUMNS = [
   { field: 'expires', label: 'Expiration', width: '0.8fr', sortable: true },
   { field: 'actions', label: 'Actions', width: '9.375rem', sortable: false },
 ];
-
-const ExpiryInDays = memo(props => {
-  const { expires } = props;
-  const theme = useTheme();
-  const styles = expiryInDaysStyles();
-  const expiryInDays = calculateExpiryInDays(expires);
-
-  if (expiryInDays > 7) {
-    return (
-      <Box
-        data-testid="token-expiration-status"
-        data-expiration-state="active"
-        sx={styles.container}
-      >
-        <SuccessIcon
-          width={16}
-          height={16}
-          fill={theme.palette.status.published}
-        />
-        <Text.EllipsisTypography
-          sx={styles.text}
-          color="text.secondary"
-          variant="bodySmall"
-        >
-          {`in ${expiryInDays} days`}
-        </Text.EllipsisTypography>
-      </Box>
-    );
-  }
-
-  if (expiryInDays > 0) {
-    return (
-      <Box
-        data-testid="token-expiration-status"
-        data-expiration-state="warning"
-        sx={styles.container}
-      >
-        <AttentionIcon
-          width={16}
-          height={16}
-          fill={theme.palette.status.onModeration}
-        />
-        <Text.EllipsisTypography
-          sx={styles.text}
-          color="text.secondary"
-          variant="bodyMedium"
-        >
-          {`in ${expiryInDays} days`}
-        </Text.EllipsisTypography>
-      </Box>
-    );
-  }
-
-  if (expiryInDays === -1) {
-    return (
-      <Box
-        data-testid="token-expiration-status"
-        data-expiration-state="never"
-        sx={styles.container}
-      >
-        <SuccessIcon
-          width={16}
-          height={16}
-          fill={theme.palette.status.published}
-        />
-        <Text.EllipsisTypography
-          sx={styles.textNever}
-          color="text.secondary"
-          variant="bodyMedium"
-        >
-          Never
-        </Text.EllipsisTypography>
-      </Box>
-    );
-  }
-
-  return (
-    <Box
-      data-testid="token-expiration-status"
-      data-expiration-state="expired"
-      sx={styles.container}
-    >
-      <RemoveIcon
-        width={16}
-        height={16}
-        fill={theme.palette.icon.fill.disabled}
-      />
-      <Typography
-        sx={styles.textNever}
-        color="text.primary"
-        variant="bodyMedium"
-      >
-        Expired
-      </Typography>
-    </Box>
-  );
-});
-
-ExpiryInDays.displayName = 'ExpiryInDays';
-
-const TokenActionsCell = memo(props => {
-  const { token, deleteToken, refetch, onDownload, onVsCodeDownload, onPreview, showDownload } = props;
-  const styles = tokenActionsCellStyles();
-  const [isDeleting, setIsDeleting] = useState(false);
-  const { toastSuccess } = useToast();
-
-  const onClickDelete = useCallback(async () => {
-    if (!isDeleting) {
-      setIsDeleting(true);
-      const { error } = await deleteToken({ uuid: token.uuid });
-      if (!error) {
-        toastSuccess(`The ${token.name || 'personal token'} personal token has been successfully deleted.`);
-        await refetch();
-      }
-      setIsDeleting(false);
-    }
-  }, [deleteToken, isDeleting, refetch, token.uuid, token.name, toastSuccess]);
-
-  return (
-    <Box
-      data-tour={PERSONAL_TOKENS_TOUR_TARGET_IDS.ideSettings}
-      sx={styles.container}
-    >
-      {showDownload && (
-        <Tooltip
-          title="Preview settings"
-          placement="top"
-        >
-          <IconButton
-            data-testid="token-action-preview-button"
-            variant="elitea"
-            size="small"
-            color="tertiary"
-            onClick={onPreview}
-          >
-            <OpenEyeIcon sx={styles.icon} />
-          </IconButton>
-        </Tooltip>
-      )}
-      {showDownload && (
-        <Tooltip
-          title="Download VScode settings"
-          placement="top"
-        >
-          <Box
-            data-testid="token-action-vscode-button"
-            sx={styles.downloadBox}
-            onClick={onVsCodeDownload}
-          >
-            <VsCodeIcon
-              width={14}
-              height={14}
-            />
-          </Box>
-        </Tooltip>
-      )}
-      {showDownload && (
-        <Tooltip
-          title="Download Jetbrains settings"
-          placement="top"
-        >
-          <Box
-            data-testid="token-action-jetbrains-button"
-            sx={styles.downloadBox}
-            onClick={onDownload}
-          >
-            <JetBrainsIcon sx={styles.icon} />
-          </Box>
-        </Tooltip>
-      )}
-      <DeleteEntityButton
-        name={token.name}
-        onDelete={onClickDelete}
-        title={`Delete token`}
-        isLoading={isDeleting}
-        validatePermission={false}
-        buttonColor="tertiary"
-        testId="token-action-delete-button"
-      />
-    </Box>
-  );
-});
-
-TokenActionsCell.displayName = 'TokenActionsCell';
 
 const TokensTable = memo(props => {
   const { showDownload, onIdeSettingsDownload, onPreviewSettings, filteredTokens = null } = props;
@@ -236,15 +45,13 @@ const TokensTable = memo(props => {
   const [hoveredRowId, setHoveredRowId] = useState(null);
   const sideBarCollapsed = useSelector(state => state.settings.sideBarCollapsed);
 
-  // Use filtered tokens if provided, otherwise use all tokens
   const displayTokens = filteredTokens !== null ? filteredTokens : tokens;
 
-  // Grid table hooks
   const { visibleColumns, gridTemplateColumns, dataColumns } = useResponsiveColumns({
     columns: TOKENS_COLUMNS,
     containerWidth: windowWidth,
     showCheckbox: false,
-    actionsColumnWidth: '9.375rem', // 150px to fit all 4 action buttons
+    actionsColumnWidth: '9.375rem',
   });
 
   const { sortConfig, handleSort, sortData } = useTableSort({
@@ -401,67 +208,6 @@ const TokensTable = memo(props => {
 });
 
 TokensTable.displayName = 'TokensTable';
-
-/** @type {MuiSx} */
-const expiryInDaysStyles = () => ({
-  container: {
-    display: 'flex',
-    flexDirection: 'row',
-    alignItems: 'center',
-    height: '100%',
-    minHeight: '100%',
-    width: '100%',
-    gap: '0.5rem',
-    boxSizing: 'border-box',
-  },
-  text: {
-    width: 'calc(100% - 1.5rem)',
-  },
-  textNever: {
-    lineHeight: '100%',
-    width: 'calc(100% - 1.5rem)',
-  },
-});
-
-/** @type {MuiSx} */
-const tokenActionsCellStyles = () => ({
-  container: {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    gap: { xs: '0.25rem', sm: '0.5rem' },
-    minWidth: 0,
-    overflow: 'hidden',
-  },
-  iconButton: {
-    padding: 0,
-    minWidth: '1.5rem',
-    width: '1.5rem',
-    height: '1.5rem',
-  },
-  downloadBox: {
-    padding: '0.125rem',
-    cursor: 'pointer',
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    minWidth: '1.25rem',
-    height: '1.25rem',
-  },
-  deleteButton: {
-    marginRight: 0,
-    minWidth: '1.5rem',
-    width: '1.5rem',
-    height: '1.5rem',
-    padding: 0,
-  },
-  icon: ({ palette }) => ({
-    color: palette.icon.fill.default,
-    fontSize: '0.875rem',
-  }),
-});
 
 /** @type {MuiSx} */
 const tokensTableStyles = () => ({

@@ -1,85 +1,15 @@
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useState } from 'react';
 
 import { format } from 'date-fns';
 
-import { Box, IconButton, Link, Tooltip, Typography, useTheme } from '@mui/material';
+import { Box, IconButton, Tooltip, Typography, useTheme } from '@mui/material';
 
+import ExpandableText from '@/[fsd]/widgets/context-budget/ui/ExpandableText';
 import ClockIcon from '@/assets/clock.svg?react';
 import { BORDER_RADIUS } from '@/common/designTokens';
 import DeleteEntityButton from '@/components/DeleteEntityButton';
 import EditIcon from '@/components/Icons/EditIcon';
 import StyledInputModal from '@/components/StyledInputModal';
-
-const ExpandableText = memo(props => {
-  const { text, maxLines = 5 } = props;
-
-  const [expanded, setExpanded] = useState(false);
-  const [needsExpansion, setNeedsExpansion] = useState(false);
-  const textRef = useRef(null);
-  const checkedRef = useRef(false);
-
-  const toggleExpanded = useCallback(() => {
-    setExpanded(prev => !prev);
-  }, []);
-
-  // Reset check when text changes (e.g., after editing)
-  useEffect(() => {
-    checkedRef.current = false;
-    setExpanded(false);
-  }, [text]);
-
-  useEffect(() => {
-    // Only check once per text change when component is not expanded
-    if (checkedRef.current) return;
-
-    const checkTruncation = () => {
-      if (textRef.current && !expanded) {
-        const element = textRef.current;
-        // scrollHeight gives the full content height even when overflow:hidden
-        // clientHeight gives the visible height (clamped by line-clamp/maxHeight)
-        const fullHeight = element.scrollHeight;
-        const visibleHeight = element.clientHeight;
-
-        const shouldExpand = fullHeight > visibleHeight;
-        setNeedsExpansion(shouldExpand);
-        checkedRef.current = true;
-      }
-    };
-
-    // Delay check to ensure DOM is fully rendered with styles applied
-    const timeoutId = setTimeout(checkTruncation, 150);
-
-    return () => {
-      clearTimeout(timeoutId);
-    };
-  }, [text, maxLines, expanded]);
-
-  const styles = expandableTextStyles(maxLines, expanded);
-
-  return (
-    <Box sx={styles.container}>
-      <Typography
-        ref={textRef}
-        variant="bodyMedium"
-        sx={styles.text}
-      >
-        {text}
-      </Typography>
-      {needsExpansion && (
-        <Link
-          component="button"
-          variant="labelSmall"
-          onClick={toggleExpanded}
-          sx={styles.expandLink}
-        >
-          {expanded ? 'Show less' : 'Show more'}
-        </Link>
-      )}
-    </Box>
-  );
-});
-
-ExpandableText.displayName = 'ExpandableText';
 
 const SummaryDetailsItem = memo(props => {
   const { summary, index, onDelete, onEdit } = props;
@@ -189,36 +119,6 @@ const SummaryDetailsItem = memo(props => {
 });
 
 SummaryDetailsItem.displayName = 'SummaryDetailsItem';
-
-/** @type {MuiSx} */
-const expandableTextStyles = (maxLines, expanded) => ({
-  container: {
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  text: ({ palette }) => ({
-    color: palette.text.secondary,
-    whiteSpace: 'pre-wrap',
-    wordBreak: 'break-word',
-    display: '-webkit-box',
-    WebkitBoxOrient: 'vertical',
-    overflow: expanded ? 'visible' : 'hidden',
-    WebkitLineClamp: expanded ? 'none' : maxLines,
-    // Fallback for browsers that don't support line-clamp
-    maxHeight: expanded ? 'none' : `${maxLines * 1.5}rem`, // assuming line-height of 1.5rem
-  }),
-  expandLink: ({ palette, typography }) => ({
-    alignSelf: 'flex-start',
-    marginTop: '0.5rem',
-    cursor: 'pointer',
-    textDecoration: 'underline',
-    fontFamily: typography.fontFamily,
-    color: palette.background.button.primary.hover,
-    '&:hover': {
-      color: palette.text.button.showMore,
-    },
-  }),
-});
 
 /** @type {MuiSx} */
 const summaryDetailsItemStyles = () => ({
