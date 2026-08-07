@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import { ToolActionStatus } from '@/common/constants';
+
 import {
   buildTraceListParams,
   convertConversationToChatHistory,
@@ -168,5 +170,75 @@ describe('reloaded index Activity contract', () => {
     );
 
     expect(history.map(message => message.role)).toEqual(['user', 'user']);
+  });
+});
+
+describe('reloaded toolkit authorization contract', () => {
+  it('restores every exact pending authorization request from current chat metadata', () => {
+    const participants = [
+      { id: 11, entity_name: 'user', entity_meta: { id: 7 }, meta: { user_name: 'User' } },
+      { id: 22, entity_name: 'application', entity_meta: { id: 5 }, meta: { user_name: 'Agent' } },
+    ];
+    const question = {
+      id: 30,
+      uuid: 'question-uuid',
+      author_participant_id: 11,
+      sent_to_id: 22,
+      created_at: '2026-08-06T10:00:00Z',
+      meta: {},
+      message_items: [],
+    };
+    const response = {
+      id: 31,
+      uuid: 'response-uuid',
+      author_participant_id: 22,
+      reply_to_id: 30,
+      task_id: 'execution-1',
+      created_at: '2026-08-06T10:00:01Z',
+      updated_at: '2026-08-06T10:00:02Z',
+      is_streaming: false,
+      meta: {
+        thread_id: 'checkpoint-thread-1',
+        authorization_requests: [
+          {
+            tool_run_id: 'auth-call-1',
+            tool_name: 'search_files',
+            toolkit_name: 'documents',
+            toolkit_type: 'sharepoint',
+            server_url: 'https://sharepoint.example/mcp',
+            resource_metadata: {
+              resource_name: 'SharePoint',
+              authorization_servers: ['https://login.example/tenant'],
+            },
+          },
+          {
+            tool_run_id: 'auth-call-2',
+            tool_name: 'read_api',
+            toolkit_name: 'service-api',
+            toolkit_type: 'openapi',
+            server_url: 'https://api.example/mcp',
+            resource_metadata: {
+              resource_name: 'OpenAPI',
+              authorization_servers: ['https://identity.example'],
+            },
+          },
+        ],
+      },
+      message_items: [],
+    };
+
+    const history = convertConversationToChatHistory({ message_groups: [question, response], participants });
+    const answer = history.find(message => message.id === 'response-uuid');
+
+    expect(answer.threadId).toBe('checkpoint-thread-1');
+    expect(answer.toolActions).toHaveLength(2);
+    expect(answer.toolActions.map(action => action.authorizationRequestId)).toEqual([
+      'auth-call-1',
+      'auth-call-2',
+    ]);
+    expect(answer.toolActions.map(action => action.status)).toEqual([
+      ToolActionStatus.actionRequired,
+      ToolActionStatus.actionRequired,
+    ]);
   });
 });

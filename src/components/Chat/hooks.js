@@ -14,6 +14,10 @@ import {
   normalizeHitlInterrupt,
 } from '@/[fsd]/features/chat/lib/helpers/hitl.helpers.js';
 import {
+  buildMcpAuthorizationToolAction,
+  getMcpAuthorizationRequests,
+} from '@/[fsd]/features/chat/lib/helpers/mcpAuthorization.helpers.js';
+import {
   mentionSkillActions,
   supersedeMentionSkillAction,
 } from '@/[fsd]/features/chat/lib/helpers/mentionSkillTrace.helpers.js';
@@ -1070,95 +1074,23 @@ export const useChatSocket = ({
           if (msg.toolActions === undefined) {
             msg.toolActions = [];
           }
-          const toolRunId = response_metadata?.tool_run_id || v4();
-          const existingAction = msg.toolActions.find(i => i.id === toolRunId);
-          const resourceMetadataUrl = response_metadata?.resource_metadata_url;
-          const toolName = response_metadata?.tool_name || 'MCP toolkit';
-          const serverUrl = response_metadata?.server_url || 'MCP server';
-          const statusCode = response_metadata?.status || 401;
-
-          // Check if we have authorization servers (either from resource_metadata or directly)
-          const authServers =
-            response_metadata?.resource_metadata?.authorization_servers ||
-            response_metadata?.authorization_servers;
-          const hasAuthServers = authServers && authServers.length > 0;
-
-          // Token storage key must match what get_toolkit() looks up in kwargs['tokens'].
-          // SharePoint and OpenAPI use a composite key or the oauth discovery endpoint (not server URL).
-          // Pre-built MCPs (type starts with "mcp_") use toolkit_type as the key — the backend
-          // looks up tokens by server_name / toolkit_name, not by the OAuth server URL.
-          // All other toolkits (regular MCP) use serverUrl (the MCP server URL = oauth endpoint).
-          const isSharePoint = response_metadata?.resource_metadata?.resource_name === 'SharePoint';
-          const isOpenApi = response_metadata?.resource_metadata?.resource_name === 'OpenAPI';
-          const configUuid = response_metadata?.resource_metadata?.configuration_uuid;
-          const oauthEndpoint = authServers?.[0];
-          const toolkitType = response_metadata?.toolkit_type;
-          const isPrebuildMcpToolkit =
-            typeof toolkitType === 'string' && toolkitType.startsWith('mcp_') && toolkitType !== 'mcp';
-          const effectiveServerUrl = isPrebuildMcpToolkit
-            ? // Pre-built MCP: use toolkit type as token storage key so backend can match it.
-              toolkitType
-            : configUuid && oauthEndpoint
-              ? // Composite key "{configUuid}:{oauthEndpoint}" — matches SDK primary lookup for
-                // any delegated OAuth toolkit where configuration_uuid is present.
-                `${configUuid}:${oauthEndpoint}`
-              : isSharePoint || isOpenApi
-                ? // Delegated OAuth without configUuid: token lives under the discovery endpoint.
-                  oauthEndpoint || serverUrl
-                : // Regular MCP: the MCP server URL is itself the OAuth endpoint.
-                  serverUrl;
-
-          let contentMessage;
-          let status;
-
-          if (!hasAuthServers) {
-            // Cannot process authorization - show error message
-            contentMessage =
-              `${statusCode}: Authorization error in "${toolName}" toolkit.\n\n` +
-              `The MCP server at ${serverUrl} requires OAuth authorization, but the server ` +
-              `did not provide the authorization server configuration. ` +
-              `Please contact the server administrator or check the toolkit configuration.`;
-            status = ToolActionStatus.error;
-          } else {
-            // Can process authorization - show normal message
-            const baseMessage = convertJsonToString(message?.content ?? 'Authorization required.', true);
-            const metadataInfo = resourceMetadataUrl
-              ? `\n\nResource metadata: ${resourceMetadataUrl}`
-              : `\n\nAuthorization servers: ${authServers.join(', ')}`;
-            contentMessage = `${baseMessage}${metadataInfo}`;
-            status = ToolActionStatus.actionRequired;
-          }
-
-          const toolActionPayload = {
-            name: toolName,
-            id: toolRunId,
-            status,
-            toolInputs: undefined,
-            toolOutputs: hasAuthServers
-              ? {
-                  resource_metadata_url: resourceMetadataUrl || null,
-                  authorization_servers: authServers,
-                  server_url: effectiveServerUrl,
-                }
-              : undefined,
-            toolMeta: response_metadata,
-            created_at: message.created_at,
-            ended_at: message.created_at,
-            type: TOOL_ACTION_TYPES.Toolkit,
-            markdown: false,
-            renderHtml: false,
-            content: contentMessage,
-          };
-
-          if (existingAction) {
-            // Create new array with updated action to trigger React re-render
-            msg.toolActions = msg.toolActions.map(action =>
-              action.id === existingAction.id ? { ...action, ...toolActionPayload } : action,
-            );
-          } else {
-            // Create new array reference to trigger React re-render
-            msg.toolActions = [...msg.toolActions, toolActionPayload];
-          }
+          const requests = getMcpAuthorizationRequests(response_metadata);
+          const actions = requests
+            .map((metadata, index) =>
+              buildMcpAuthorizationToolAction({
+                metadata,
+                content: message?.content,
+                createdAt: message.created_at,
+                // Keep the current WebSocket fallback for pre-ID baseline events.
+                // The durable SSE continuation is attempted only when the real
+                // authorizationRequestId is present.
+                fallbackId: `${v4()}-${index}`,
+              }),
+            )
+            .filter(Boolean);
+          const byId = new Map(msg.toolActions.map(action => [action.id, action]));
+          actions.forEach(action => byId.set(action.id, { ...byId.get(action.id), ...action }));
+          msg.toolActions = [...byId.values()];
 
           // Stop streaming/loading/regenerating state when auth is required - user needs to take action
           msg.isLoading = false;

@@ -2,7 +2,7 @@ import { memo, useCallback, useMemo } from 'react';
 
 import * as ChatHelpers from '@/[fsd]/features/chat/lib/helpers/chat.helpers';
 import { isParticipantStillActive } from '@/[fsd]/features/chat/participants/lib/helpers';
-import { ROLES, WELCOME_MESSAGE_ID } from '@/common/constants';
+import { ROLES, ToolActionStatus, WELCOME_MESSAGE_ID } from '@/common/constants';
 
 import ApplicationAnswer from './ApplicationAnswer';
 import UserMessage from './UserMessage';
@@ -46,6 +46,10 @@ const ChatMessageWrapper = memo(props => {
   } = props;
 
   const isLastMessage = chat_history.length - 1 === index;
+  const hasPendingAuth = useMemo(
+    () => message.toolActions?.some(action => action.status === ToolActionStatus.actionRequired),
+    [message.toolActions],
+  );
 
   const messageParticipant = useMemo(
     () =>
@@ -133,6 +137,7 @@ const ChatMessageWrapper = memo(props => {
       onCopy={onCopyToClipboard ? onCopy : undefined}
       onDelete={
         isLastMessage &&
+        !hasPendingAuth &&
         !message.archivedFromHitl &&
         !message.isSummarized &&
         message.id !== WELCOME_MESSAGE_ID &&
@@ -147,6 +152,7 @@ const ChatMessageWrapper = memo(props => {
       }
       onRegenerate={
         !message.archivedFromHitl &&
+        !hasPendingAuth &&
         !message.isSummarized &&
         isLastMessage &&
         isParticipantStillActive(messageParticipant) &&

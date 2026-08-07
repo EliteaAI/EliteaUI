@@ -4,6 +4,7 @@ export const AGENT_APPLICATION_EXECUTION_CONTRACT = 'agent.execute.application.v
 export const AGENT_ADHOC_EXECUTION_CONTRACT = 'agent.execute.adhoc.v1';
 export const AGENT_REGENERATION_EXECUTION_CONTRACT = 'agent.regenerate.v1';
 export const AGENT_HITL_CONTINUATION_EXECUTION_CONTRACT = 'agent.continue.hitl.v1';
+export const AGENT_AUTHORIZATION_CONTINUATION_EXECUTION_CONTRACT = 'agent.continue.authorization.v1';
 
 const FALLBACK_STATUSES = new Set([404, 422]);
 const REGENERATION_PENDING_STATUS = 409;
@@ -13,6 +14,7 @@ const DEFAULT_REGENERATION_RETRY_DELAY_MS = 1000;
 const PARTIAL_NODE_EVENT = 'partial_message';
 const TERMINAL_NODE_EVENT = 'full_message';
 const HITL_TERMINAL_NODE_EVENT = 'agent_hitl_interrupt';
+const AUTHORIZATION_TERMINAL_NODE_EVENT = 'mcp_authorization_required';
 const RUNTIME_FAILURE_EVENT = 'execution.failed';
 const REPLAY_RESET_EVENT = 'execution.replay_reset';
 const MAX_EXECUTION_ID_BYTES = 512;
@@ -30,6 +32,13 @@ const isEmptyObject = value =>
   value == null || (typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length === 0);
 
 const isEmptyArray = value => value == null || (Array.isArray(value) && value.length === 0);
+
+// New Main Chat conversations carry internal_mcp by default. The bounded
+// configured-application slice intentionally does not activate that optional
+// conversation tool, but it must not force an otherwise supported selected
+// agent or pipeline back onto the legacy Socket.IO path.
+const supportsBoundedApplicationConversationTools = value =>
+  isEmptyArray(value) || (Array.isArray(value) && value.length === 1 && value[0] === 'internal_mcp');
 
 const isMcpParticipant = participant => {
   if (participant?.entity_name !== 'toolkit') return false;
@@ -79,6 +88,11 @@ const isBoundedExecutionIdentifier = value =>
   !/[\0\r\n]/.test(value) &&
   new TextEncoder().encode(value).length <= MAX_EXECUTION_ID_BYTES;
 
+// Durable Go execution IDs are 16 random bytes rendered as lowercase hex.
+// Legacy Socket.IO task UUIDs are not valid durable replay identifiers and
+// must never be attached to the authenticated Go SSE endpoint after reload.
+const isDurableAgentExecutionIdentifier = value => typeof value === 'string' && /^[0-9a-f]{32}$/.test(value);
+
 export const isAgentSequentialHITLContinuationEligible = ({ interrupt, action }) =>
   Boolean(interrupt) &&
   ['approve', 'reject', 'edit', 'block_with_comment'].includes(action) &&
@@ -111,7 +125,7 @@ export const getAgentExecutionResumeCandidate = ({
     participant => participant?.entity_name === 'application',
   );
   const configuredApplicationEligible =
-    isEmptyArray(conversationMeta?.internal_tools) &&
+    supportsBoundedApplicationConversationTools(conversationMeta?.internal_tools) &&
     applications.length === 1 &&
     supportsBoundedApplicationConversation(conversationParticipants, applications[0]);
   const adHocEligible =
@@ -122,7 +136,7 @@ export const getAgentExecutionResumeCandidate = ({
   if (!configuredApplicationEligible && !adHocEligible) return null;
 
   const streamingResponses = (chatHistory || []).filter(
-    message => message?.isStreaming === true && isBoundedExecutionIdentifier(message?.task_id),
+    message => message?.isStreaming === true && isDurableAgentExecutionIdentifier(message?.task_id),
   );
   if (streamingResponses.length !== 1) return null;
 
@@ -255,7 +269,7 @@ export const getAgentExecutionSseContract = ({
     isEmptyObject(eventPayload?.mcp_tokens) &&
     isEmptyArray(eventPayload?.user_ids) &&
     (isAgentsPage ||
-      (isEmptyArray(conversationMeta?.internal_tools) &&
+      (supportsBoundedApplicationConversationTools(conversationMeta?.internal_tools) &&
         supportsBoundedApplicationConversation(conversationParticipants, participant)))
   ) {
     return AGENT_APPLICATION_EXECUTION_CONTRACT;
@@ -301,7 +315,7 @@ export const getAgentRegenerationSseContract = ({
     participant?.entity_name === 'application' &&
     !hasLLMOverride &&
     (isAgentsPage ||
-      (isEmptyArray(conversationMeta?.internal_tools) &&
+      (supportsBoundedApplicationConversationTools(conversationMeta?.internal_tools) &&
         supportsBoundedApplicationConversation(conversationParticipants, participant)))
   ) {
     return AGENT_REGENERATION_EXECUTION_CONTRACT;
@@ -410,7 +424,10 @@ const openAgentExecutionEventStream = ({
       if (nodeEvent?.type === PARTIAL_NODE_EVENT) return;
       await onNodeEvent(nodeEvent);
       if (ACTIVITY_NODE_EVENTS.has(nodeEvent?.type)) await yieldToRenderer();
-      if (nodeEvent?.type === HITL_TERMINAL_NODE_EVENT) {
+      const isAuthorizationTerminal =
+        nodeEvent?.type === AUTHORIZATION_TERMINAL_NODE_EVENT &&
+        Array.isArray(nodeEvent?.response_metadata?.authorization_requests);
+      if (nodeEvent?.type === HITL_TERMINAL_NODE_EVENT || isAuthorizationTerminal) {
         await onTerminal?.(nodeEvent);
         close();
       }
@@ -689,6 +706,67 @@ export const startAgentHITLContinuationSse = async ({
       threadId,
       action,
       value,
+    }),
+    conversationUuid,
+    eventPayload,
+    ...streamOptions,
+  });
+};
+
+export const buildAgentAuthorizationContinuationBody = ({
+  projectId,
+  conversationUuid,
+  responseMessageId,
+  threadId,
+  authorizationRequestId,
+  authorizationAction,
+  mcpTokens = {},
+  ignoredMcpServers = [],
+  userDeclinedMcpServers = [],
+}) => ({
+  project_id: Number(projectId),
+  conversation_uuid: conversationUuid,
+  message_id: responseMessageId,
+  thread_id: threadId,
+  authorization_request_id: authorizationRequestId,
+  authorization_action: authorizationAction,
+  hitl_resume: false,
+  hitl_decisions: [],
+  mcp_tokens: mcpTokens,
+  ignored_mcp_servers: ignoredMcpServers,
+  user_declined_mcp_servers: userDeclinedMcpServers,
+});
+
+export const startAgentAuthorizationContinuationSse = async ({
+  projectId,
+  conversationUuid,
+  responseMessageId,
+  threadId,
+  authorizationRequestId,
+  authorizationAction,
+  mcpTokens,
+  ignoredMcpServers,
+  userDeclinedMcpServers,
+  eventPayload,
+  ...streamOptions
+}) => {
+  const startPath = `/elitea_core/continue_predict/prompt_lib/${encodeURIComponent(
+    projectId,
+  )}/${encodeURIComponent(conversationUuid)}?execution_contract=${encodeURIComponent(
+    AGENT_AUTHORIZATION_CONTINUATION_EXECUTION_CONTRACT,
+  )}`;
+  return startAgentExecutionRequest({
+    startPath,
+    startBody: buildAgentAuthorizationContinuationBody({
+      projectId,
+      conversationUuid,
+      responseMessageId,
+      threadId,
+      authorizationRequestId,
+      authorizationAction,
+      mcpTokens,
+      ignoredMcpServers,
+      userDeclinedMcpServers,
     }),
     conversationUuid,
     eventPayload,

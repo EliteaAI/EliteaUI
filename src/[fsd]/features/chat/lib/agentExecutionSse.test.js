@@ -3,9 +3,11 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   AGENT_ADHOC_EXECUTION_CONTRACT,
   AGENT_APPLICATION_EXECUTION_CONTRACT,
+  AGENT_AUTHORIZATION_CONTINUATION_EXECUTION_CONTRACT,
   AGENT_HITL_CONTINUATION_EXECUTION_CONTRACT,
   AGENT_REGENERATION_EXECUTION_CONTRACT,
   admitAgentExecution,
+  buildAgentAuthorizationContinuationBody,
   buildAgentExecutionEventsUrl,
   buildAgentExecutionStartBody,
   buildAgentHITLContinuationBody,
@@ -18,6 +20,7 @@ import {
   resetAgentExecutionReplayProjection,
   resumeAgentExecutionSse,
   settleAgentExecutionReplayProjection,
+  startAgentAuthorizationContinuationSse,
   startAgentExecutionSse,
   startAgentHITLContinuationSse,
   startAgentRegenerationSse,
@@ -33,6 +36,9 @@ const payload = {
   attachments_info: [],
   mcp_tokens: {},
 };
+
+const durableExecutionId = '0123456789abcdef0123456789abcdef';
+const anotherDurableExecutionId = 'fedcba9876543210fedcba9876543210';
 
 class FakeEventSource {
   constructor(url, options) {
@@ -141,6 +147,12 @@ describe('agent execution SSE', () => {
         ...options,
         conversationMeta: { internal_tools: ['internal_mcp'] },
       }),
+    ).toBe(AGENT_APPLICATION_EXECUTION_CONTRACT);
+    expect(
+      getAgentExecutionSseContract({
+        ...options,
+        conversationMeta: { internal_tools: ['attachments'] },
+      }),
     ).toBeNull();
     expect(
       getAgentExecutionSseContract({
@@ -188,14 +200,14 @@ describe('agent execution SSE', () => {
         {
           id: 'response-id',
           question_id: 'question-id',
-          task_id: 'execution-id',
+          task_id: durableExecutionId,
           isStreaming: true,
         },
       ],
     };
 
     expect(getAgentExecutionResumeCandidate(options)).toEqual({
-      executionId: 'execution-id',
+      executionId: durableExecutionId,
       questionId: 'question-id',
       responseMessageId: 'response-id',
     });
@@ -209,7 +221,7 @@ describe('agent execution SSE', () => {
         ],
       }),
     ).toEqual({
-      executionId: 'execution-id',
+      executionId: durableExecutionId,
       questionId: 'question-id',
       responseMessageId: 'response-id',
     });
@@ -217,6 +229,18 @@ describe('agent execution SSE', () => {
       getAgentExecutionResumeCandidate({
         ...options,
         conversationMeta: { internal_tools: ['internal_mcp'] },
+      }),
+    ).toEqual({
+      executionId: durableExecutionId,
+      questionId: 'question-id',
+      responseMessageId: 'response-id',
+    });
+    expect(
+      getAgentExecutionResumeCandidate({
+        ...options,
+        chatHistory: options.chatHistory.map(message =>
+          message.task_id ? { ...message, task_id: 'f2c986f5-e5bf-4de9-b488-a304407dd24c' } : message,
+        ),
       }),
     ).toBeNull();
     expect(
@@ -227,7 +251,7 @@ describe('agent execution SSE', () => {
           {
             id: 'another-response',
             question_id: 'another-question',
-            task_id: 'another-execution',
+            task_id: anotherDurableExecutionId,
             isStreaming: true,
           },
         ],
@@ -252,14 +276,14 @@ describe('agent execution SSE', () => {
         {
           id: 'response-id',
           question_id: 'question-id',
-          task_id: 'execution-id',
+          task_id: durableExecutionId,
           isStreaming: true,
         },
       ],
     };
 
     expect(getAgentExecutionResumeCandidate(options)).toEqual({
-      executionId: 'execution-id',
+      executionId: durableExecutionId,
       questionId: 'question-id',
       responseMessageId: 'response-id',
     });
@@ -273,7 +297,7 @@ describe('agent execution SSE', () => {
         ),
       }),
     ).toEqual({
-      executionId: 'execution-id',
+      executionId: durableExecutionId,
       questionId: 'question-id',
       responseMessageId: 'response-id',
     });
@@ -286,7 +310,7 @@ describe('agent execution SSE', () => {
         ],
       }),
     ).toEqual({
-      executionId: 'execution-id',
+      executionId: durableExecutionId,
       questionId: 'question-id',
       responseMessageId: 'response-id',
     });
@@ -503,7 +527,7 @@ describe('agent execution SSE', () => {
         hasUpdatedItems: false,
         hasLLMOverride: false,
       }),
-    ).toBeNull();
+    ).toBe(AGENT_REGENERATION_EXECUTION_CONTRACT);
     expect(
       getAgentRegenerationSseContract({
         isAgentsPage: true,
@@ -779,6 +803,65 @@ describe('agent execution SSE', () => {
     expect(JSON.parse(fetchImpl.mock.calls[0][1].body)).not.toHaveProperty('hitl_value');
   });
 
+  it('continues exactly one toolkit authorization request with private runtime tokens', async () => {
+    expect(
+      buildAgentAuthorizationContinuationBody({
+        projectId: '7',
+        conversationUuid: 'conversation-id',
+        responseMessageId: 'response-id',
+        threadId: 'thread-id',
+        authorizationRequestId: 'tool-call-2',
+        authorizationAction: 'authorize',
+        mcpTokens: { 'configuration:issuer': { access_token: 'private-token' } },
+        ignoredMcpServers: ['https://ignored.example'],
+        userDeclinedMcpServers: [],
+      }),
+    ).toEqual({
+      project_id: 7,
+      conversation_uuid: 'conversation-id',
+      message_id: 'response-id',
+      thread_id: 'thread-id',
+      authorization_request_id: 'tool-call-2',
+      authorization_action: 'authorize',
+      hitl_resume: false,
+      hitl_decisions: [],
+      mcp_tokens: { 'configuration:issuer': { access_token: 'private-token' } },
+      ignored_mcp_servers: ['https://ignored.example'],
+      user_declined_mcp_servers: [],
+    });
+
+    const fetchImpl = vi.fn().mockResolvedValue({ status: 422, ok: false });
+    const result = await startAgentAuthorizationContinuationSse({
+      projectId: 7,
+      conversationUuid: 'conversation-id',
+      responseMessageId: 'response-id',
+      threadId: 'thread-id',
+      authorizationRequestId: 'tool-call-2',
+      authorizationAction: 'skip',
+      mcpTokens: {},
+      ignoredMcpServers: ['https://mcp.example'],
+      userDeclinedMcpServers: ['https://mcp.example'],
+      eventPayload: { question_id: 'question-id', participant_id: 19 },
+      onNodeEvent: vi.fn(),
+      onError: vi.fn(),
+      fetchImpl,
+      EventSourceImpl: FakeEventSource,
+    });
+
+    expect(result).toEqual({ started: false });
+    expect(fetchImpl.mock.calls[0][0]).toContain(
+      `/elitea_core/continue_predict/prompt_lib/7/conversation-id?execution_contract=${AGENT_AUTHORIZATION_CONTINUATION_EXECUTION_CONTRACT}`,
+    );
+    expect(JSON.parse(fetchImpl.mock.calls[0][1].body)).toEqual(
+      expect.objectContaining({
+        authorization_action: 'skip',
+        authorization_request_id: 'tool-call-2',
+        hitl_resume: false,
+      }),
+    );
+    expect(JSON.parse(fetchImpl.mock.calls[0][1].body)).not.toHaveProperty('provided_settings');
+  });
+
   it('retries a finalizing regeneration without falling back to the WebSocket route', async () => {
     const pendingResponse = () => ({
       status: 409,
@@ -986,6 +1069,56 @@ describe('agent execution SSE', () => {
 
     expect(onNodeEvent).toHaveBeenLastCalledWith(interrupt);
     expect(onTerminal).toHaveBeenCalledWith(interrupt);
+    expect(result.source.close).toHaveBeenCalledOnce();
+  });
+
+  it('keeps streaming on an auth observation and closes on the bounded authorization pause', async () => {
+    const onNodeEvent = vi.fn();
+    const onTerminal = vi.fn();
+    const result = await startAgentExecutionSse({
+      projectId: 7,
+      conversationUuid: 'conversation-id',
+      eventPayload: payload,
+      onNodeEvent,
+      onError: vi.fn(),
+      onTerminal,
+      fetchImpl: vi.fn().mockResolvedValue({
+        status: 200,
+        ok: true,
+        json: async () => ({
+          task_id: 'execution-id',
+          execution_id: 'execution-id',
+          response_message_id: 'response-id',
+          events_url: '/events',
+        }),
+      }),
+      yieldToRenderer: vi.fn().mockResolvedValue(),
+      EventSourceImpl: FakeEventSource,
+    });
+    const observation = {
+      type: 'mcp_authorization_required',
+      message_id: 'response-id',
+      response_metadata: { tool_run_id: 'tool-call-1' },
+    };
+    const terminal = {
+      ...observation,
+      response_metadata: {
+        tool_run_id: 'tool-call-2',
+        authorization_requests: [
+          { tool_run_id: 'tool-call-1', server_url: 'https://one.example' },
+          { tool_run_id: 'tool-call-2', server_url: 'https://two.example' },
+        ],
+      },
+    };
+
+    await result.source.dispatch('execution.node_event', observation);
+    expect(onNodeEvent).toHaveBeenLastCalledWith(observation);
+    expect(onTerminal).not.toHaveBeenCalled();
+    expect(result.source.close).not.toHaveBeenCalled();
+
+    await result.source.dispatch('execution.node_event', terminal);
+    expect(onNodeEvent).toHaveBeenLastCalledWith(terminal);
+    expect(onTerminal).toHaveBeenCalledWith(terminal);
     expect(result.source.close).toHaveBeenCalledOnce();
   });
 

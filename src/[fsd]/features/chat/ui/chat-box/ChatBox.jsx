@@ -26,6 +26,7 @@ import {
   resetAgentExecutionReplayProjection,
   resumeAgentExecutionSse,
   settleAgentExecutionReplayProjection,
+  startAgentAuthorizationContinuationSse,
   startAgentExecutionSse,
   startAgentHITLContinuationSse,
   startAgentRegenerationSse,
@@ -40,6 +41,7 @@ import {
   getInterruptIdentity,
   getPendingHitlMessage,
 } from '@/[fsd]/features/chat/lib/helpers/hitl.helpers.js';
+import { buildToolkitAuthorizationDecline } from '@/[fsd]/features/chat/lib/helpers/mcpAuthorization.helpers.js';
 import * as NewConversationHelpers from '@/[fsd]/features/chat/lib/helpers/newConversation.helpers';
 import {
   useBudgetWarning,
@@ -1490,7 +1492,7 @@ const ChatBox = forwardRef((props, boxRef) => {
    * @param {boolean} addToIgnoreList - If true, adds the MCP server to ignore list (for "Skip" button)
    */
   const continueMcpExecution = useCallback(
-    async (messageId, addToIgnoreList = false) => {
+    async (messageId, addToIgnoreList = false, authorizationRequestId = '') => {
       const message = chat_history.find(item => item.id === messageId);
       const questionIndex = chat_history.findIndex(item => item.id === message?.question_id);
       const theQuestion =
@@ -1501,32 +1503,30 @@ const ChatBox = forwardRef((props, boxRef) => {
       }
 
       // Track or remove the MCP server in the session-declined ref (never localStorage)
-      const authRequiredAction = message.toolActions?.find(
+      const pendingAuthorizationActions = (message.toolActions || []).filter(
         action => action.status === ToolActionStatus.actionRequired,
       );
+      const authRequiredAction = authorizationRequestId
+        ? pendingAuthorizationActions.find(
+            action =>
+              action.authorizationRequestId === authorizationRequestId ||
+              action.id === authorizationRequestId,
+          )
+        : pendingAuthorizationActions[0];
+      if (!authRequiredAction) return;
       const serverUrl = authRequiredAction?.toolOutputs?.server_url;
       if (addToIgnoreList) {
         // User clicked "Skip" — track as declined for this conversation only
         if (serverUrl) {
-          const outputs = authRequiredAction?.toolOutputs || {};
-          const toolMeta = authRequiredAction?.toolMeta || {};
-          const authorizationServers =
-            outputs.authorization_servers ||
-            toolMeta.authorization_servers ||
-            toolMeta.resource_metadata?.authorization_servers ||
-            null;
-          const skipReason =
-            outputs.skip_reason || outputs.denial_reason || 'User skipped MCP login for this run.';
-          sessionDeclinedMcpServersRef.current.set(serverUrl, {
-            actual_server_url: toolMeta.server_url || null,
-            tool_name: outputs.tool_name || toolMeta.tool_name || authRequiredAction?.name || '',
-            resource_metadata_url: outputs.resource_metadata_url || toolMeta.resource_metadata_url || null,
-            www_authenticate: outputs.www_authenticate || toolMeta.www_authenticate || null,
-            resource_metadata: outputs.resource_metadata || toolMeta.resource_metadata || null,
-            authorization_servers: authorizationServers,
-            toolkit_type: outputs.toolkit_type || toolMeta.toolkit_type || null,
-            skip_reason: skipReason,
-          });
+          const decline = buildToolkitAuthorizationDecline(authRequiredAction);
+          if (decline) {
+            sessionDeclinedMcpServersRef.current.set(serverUrl, {
+              actual_server_url: decline.server_url,
+              tool_name: decline.tool_name,
+              toolkit_type: decline.toolkit_type,
+              skip_reason: decline.skip_reason,
+            });
+          }
         }
       } else {
         // Auth succeeded — remove from session-declined so the tool is available again
@@ -1553,26 +1553,84 @@ const ChatBox = forwardRef((props, boxRef) => {
         question: theQuestion,
         sessionDeclinedMcpServers,
       });
+      const exactAuthorizationRequestId = authRequiredAction.authorizationRequestId || '';
+      const authorizationAction = addToIgnoreList ? 'skip' : 'authorize';
+      payload.authorization_request_id = exactAuthorizationRequestId;
+      payload.authorization_action = authorizationAction;
 
       setChatHistory(prevMessages =>
         prevMessages.map(msg =>
-          msg.id !== messageId
-            ? msg
-            : {
-                ...msg,
-                isLoading: true,
-                isStreaming: true,
-                toolActions: msg.toolActions?.filter(
-                  action => action.status !== ToolActionStatus.actionRequired,
-                ),
-              },
+          msg.id !== messageId ? msg : { ...msg, isLoading: true, isStreaming: true },
         ),
       );
 
       setStreamingInfo(question_id);
-      emitContinue(payload);
+      let handledByDirectExecution = false;
+      if (exactAuthorizationRequestId) {
+        agentExecutionStartsRef.current.add(question_id);
+        try {
+          const directExecution = await startAgentAuthorizationContinuationSse({
+            projectId,
+            conversationUuid: activeConversation?.uuid,
+            responseMessageId: messageId,
+            threadId,
+            authorizationRequestId: exactAuthorizationRequestId,
+            authorizationAction,
+            mcpTokens: payload.mcp_tokens,
+            ignoredMcpServers: payload.ignored_mcp_servers,
+            userDeclinedMcpServers: payload.user_declined_mcp_servers,
+            eventPayload: {
+              question_id,
+              participant_id: message.participant_id,
+            },
+            onNodeEvent: handleSocketEvent,
+            onError: handleSocketErrorEvent,
+            onTerminal: terminalEvent => settleLiveAgentExecution(terminalEvent, messageId),
+            onClosed: () => agentEventSourcesRef.current.delete(question_id),
+          });
+          handledByDirectExecution = directExecution.started;
+          if (directExecution.started) {
+            setChatHistory(prevMessages =>
+              prevMessages.map(msg =>
+                msg.id !== messageId
+                  ? msg
+                  : {
+                      ...msg,
+                      toolActions: msg.toolActions?.filter(
+                        action => action.status !== ToolActionStatus.actionRequired,
+                      ),
+                    },
+              ),
+            );
+            agentEventSourcesRef.current.set(question_id, directExecution);
+          }
+        } catch (error) {
+          handledByDirectExecution = true;
+          await handleSocketErrorEvent({
+            type: 'error',
+            message_id: messageId,
+            content:
+              error instanceof AgentExecutionStartError
+                ? error.message
+                : 'Failed to continue toolkit authorization. Please try again.',
+          });
+        } finally {
+          agentExecutionStartsRef.current.delete(question_id);
+        }
+      }
+      if (!handledByDirectExecution) emitContinue(payload);
     },
-    [chat_history, activeConversation, projectId, setChatHistory, setStreamingInfo, emitContinue],
+    [
+      chat_history,
+      activeConversation,
+      projectId,
+      setChatHistory,
+      setStreamingInfo,
+      emitContinue,
+      handleSocketEvent,
+      handleSocketErrorEvent,
+      settleLiveAgentExecution,
+    ],
   );
 
   /**
