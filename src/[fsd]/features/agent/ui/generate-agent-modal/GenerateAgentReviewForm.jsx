@@ -102,6 +102,7 @@ const GenerateAgentReviewForm = memo(props => {
           onBlur={() => toggleFieldFocus(null)}
           slotProps={{ htmlInput: { maxLength: MAX_NAME_LENGTH } }}
           inputProps={{ 'data-testid': 'generate-agent-review-name-input' }}
+          helperTextTestId="generate-agent-review-name-helper-text"
           helperText={validationErrors.name}
           error={!!validationErrors.name}
           sx={styles.compactMultilineInput}

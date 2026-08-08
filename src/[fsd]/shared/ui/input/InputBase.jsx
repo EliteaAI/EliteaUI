@@ -98,6 +98,7 @@ const InputBase = memo(props => {
     tooltipDescription,
     tooltipTestId,
     tooltipContentTestId,
+    helperTextTestId,
     forceShowActionsToolbar = false,
     fullScreenButtonProps = {},
     labelVariant,
@@ -265,6 +266,9 @@ const InputBase = memo(props => {
               disableUnderline,
             },
             htmlInput: inputProps,
+            formHelperText: {
+              'data-testid': helperTextTestId,
+            },
             inputLabel: {
               ...InputLabelProps,
               sx: {
