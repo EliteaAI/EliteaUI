@@ -269,7 +269,7 @@ const Pipelines = memo(() => {
               </Box>
             </Box>
           )}
-          <ToolbarImportButton />
+          <ToolbarImportButton testId="pipelines-import-button" />
           <ViewToggle
             tableViewTestId="pipeline-table-view"
             cardViewTestId="pipeline-card-view"
