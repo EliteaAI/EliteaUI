@@ -16,8 +16,17 @@ import {
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { ToolTypes } from '@/pages/Applications/Components/Tools/consts';
 
+// Testid prefix — ELITEA-2036. This component also renders the 'defaultType'
+// node type (see FlowEditor.jsx's nodeTypes map); only 'custom' is exercised
+// by automation today, so 'defaultType' stays untagged (.agents/testing.md
+// § Locator policy — testid scope is load-bearing).
+const TEST_ID_PREFIX_BY_NODE_TYPE = {
+  custom: 'pipeline-custom-node',
+};
+
 const DefaultNode = memo(props => {
   const { id, data, selected, type } = props;
+  const testIdPrefix = TEST_ID_PREFIX_BY_NODE_TYPE[type];
 
   const { isRunningPipeline, yamlJsonObject, setYamlJsonObject, disabled } = useContext(FlowEditorContext);
   const yamlNode = useMemo(
@@ -155,6 +164,7 @@ const DefaultNode = memo(props => {
         onSelectTool={onSelectToolkit}
         selectedToolkit={toolkit}
         disabled={isRunningPipeline || disabled}
+        data-testid={testIdPrefix ? `${testIdPrefix}-toolkit-select` : undefined}
       />
       {functionOptions.length > 0 && (
         <SingleSelect
@@ -166,18 +176,21 @@ const DefaultNode = memo(props => {
           disabled={isRunningPipeline || disabled}
           showBorder
           className={'nopan nodrag'}
+          data-testid={testIdPrefix ? `${testIdPrefix}-tool-select` : undefined}
         />
       )}
       <FlowEditorSelect.InputSelect
         id={id}
         inputFieldName={'input'}
         disabled={isRunningPipeline || disabled}
+        dataTestId={testIdPrefix ? `${testIdPrefix}-input-select` : undefined}
       />
       <FlowEditorSelect.OutputSelect
         id={id}
         label="Output"
         outputFieldName="output"
         disabled={isRunningPipeline || disabled}
+        dataTestId={testIdPrefix ? `${testIdPrefix}-output-select` : undefined}
       />
       <FlowEditorSettings.InputMapping
         requiredInputs={requiredInputs}
@@ -187,14 +200,23 @@ const DefaultNode = memo(props => {
         values={yamlNode?.input_mapping || {}}
         onChangeMapping={onChangeMapping}
         disabled={isRunningPipeline || disabled}
+        valueTestIdPrefix={testIdPrefix ? `${testIdPrefix}-input-mapping-value` : undefined}
+        typeTestIdPrefix={testIdPrefix ? `${testIdPrefix}-input-mapping-type` : undefined}
+        requiredHeadingTestId={testIdPrefix ? `${testIdPrefix}-input-mapping-heading` : undefined}
+        optionalHeadingTestId={testIdPrefix ? `${testIdPrefix}-input-mapping-optional-heading` : undefined}
       />
       <FlowEditorSettings.CommonInterruptSettings
         id={id}
         showStructuredOutput={true}
         type={type}
         disabled={isRunningPipeline || disabled}
+        interruptAfterTestId={testIdPrefix ? `${testIdPrefix}-interrupt-after-toggle` : undefined}
+        structuredOutputTestId={testIdPrefix ? `${testIdPrefix}-structured-output-toggle` : undefined}
       />
-      <FlowEditorSettings.CustomNodeInput id={id} />
+      <FlowEditorSettings.CustomNodeInput
+        id={id}
+        contentTestId={testIdPrefix ? `${testIdPrefix}-json-editor-content` : undefined}
+      />
     </FlowEditorNodes.NodeCard>
   );
 });

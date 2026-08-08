@@ -21,7 +21,7 @@ const MIN_HEIGHT = '18.75rem';
 const MAX_HEIGHT = '37.5rem';
 
 const CustomNodeInput = memo(props => {
-  const { id } = props;
+  const { id, contentTestId } = props;
   const editorRef = useRef();
   const fullScreenEditorRef = useRef();
   const theme = useTheme();
@@ -195,6 +195,7 @@ const CustomNodeInput = memo(props => {
           notifyChange={handleChange}
           onBlur={handleBlur}
           ref={editorRef}
+          contentTestId={contentTestId}
         />
       </Box>
       <Dialog
