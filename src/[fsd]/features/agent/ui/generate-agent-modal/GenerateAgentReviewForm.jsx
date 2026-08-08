@@ -171,6 +171,7 @@ const GenerateAgentReviewForm = memo(props => {
           onFocus={() => toggleFieldFocus('welcome_message')}
           onBlur={() => toggleFieldFocus(null)}
           slotProps={{ htmlInput: { maxLength: MAX_WELCOME_MESSAGE_LENGTH } }}
+          inputProps={{ 'data-testid': 'generate-agent-review-welcome-message-input' }}
           helperText={validationErrors.welcome_message}
           error={!!validationErrors.welcome_message}
           hasActionsToolBar={false}
@@ -206,6 +207,7 @@ const GenerateAgentReviewForm = memo(props => {
                     onFocus={() => toggleFieldFocus(`starter_${index}`)}
                     onBlur={() => toggleFieldFocus(null)}
                     slotProps={{ htmlInput: { maxLength: MAX_CONVERSATION_STARTER_LENGTH } }}
+                    inputProps={{ 'data-testid': `generate-agent-review-starter-input-${index}` }}
                     error={
                       (!starter?.trim() && starter !== undefined) ||
                       starter?.length > MAX_CONVERSATION_STARTER_LENGTH
