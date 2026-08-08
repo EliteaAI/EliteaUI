@@ -77,6 +77,7 @@ const PrinterNode = memo(props => {
               isConnectable={!isRunningPipeline && !disabled}
               isRunningPipeline={isRunningPipeline}
               isPerforming={data?.isPerforming}
+              testId="pipeline-printer-node-target-handle"
             />
             <FlowEditorNodes.CustomHandle
               type="source"
@@ -84,6 +85,7 @@ const PrinterNode = memo(props => {
               isConnectable={isSourceConnectable && !isRunningPipeline && !disabled}
               isRunningPipeline={isRunningPipeline}
               isPerforming={data?.isPerforming}
+              testId="pipeline-printer-node-source-handle"
             />
           </>
         );
