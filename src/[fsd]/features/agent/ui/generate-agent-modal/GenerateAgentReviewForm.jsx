@@ -189,7 +189,12 @@ const GenerateAgentReviewForm = memo(props => {
 
       {starters.length > 0 && (
         <Box sx={styles.section}>
-          <Typography sx={styles.sectionLabel}>Chat starters:</Typography>
+          <Typography
+            data-testid="generate-agent-review-starters-header"
+            sx={styles.sectionLabel}
+          >
+            Chat starters:
+          </Typography>
           <Box sx={styles.startersList}>
             {starters.map((starter, index) => (
               <Box
