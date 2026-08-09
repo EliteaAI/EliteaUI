@@ -75,6 +75,7 @@ const RunHistoryContainer = memo(props => {
       {onClose && (
         <Box sx={styles.header}>
           <IconButton
+            data-testid="run-history-close-button"
             variant="elitea"
             color="tertiary"
             aria-label="close run history"
