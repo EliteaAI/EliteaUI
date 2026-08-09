@@ -16,6 +16,8 @@ const TERMINAL_NODE_EVENT = 'full_message';
 const HITL_TERMINAL_NODE_EVENT = 'agent_hitl_interrupt';
 const AUTHORIZATION_TERMINAL_NODE_EVENT = 'mcp_authorization_required';
 const RUNTIME_FAILURE_EVENT = 'execution.failed';
+const RUNTIME_CANCELLED_CODE = 'CANCELLED';
+const RUNTIME_CANCELLED_EVENT = 'execution.cancelled';
 const REPLAY_RESET_EVENT = 'execution.replay_reset';
 const MAX_EXECUTION_ID_BYTES = 512;
 const ACTIVITY_NODE_EVENTS = new Set([
@@ -380,6 +382,7 @@ const openAgentExecutionEventStream = ({
   eventsUrl,
   conversationUuid,
   questionId,
+  responseMessageId,
   onNodeEvent,
   onError,
   onClosed,
@@ -452,6 +455,20 @@ const openAgentExecutionEventStream = ({
   source.addEventListener(RUNTIME_FAILURE_EVENT, event => {
     try {
       const failure = JSON.parse(event.data);
+      if (failure?.code === RUNTIME_CANCELLED_CODE) {
+        enqueueNodeEvent(async () => {
+          if (responseMessageId) {
+            await onTerminal?.({
+              type: RUNTIME_CANCELLED_EVENT,
+              message_id: responseMessageId,
+              question_id: questionId,
+              content: '',
+            });
+          }
+          close();
+        });
+        return;
+      }
       fail(failure?.safe_message || 'Agent execution failed. Please try again.');
     } catch {
       fail('Agent execution failed. Please try again.');
@@ -573,6 +590,7 @@ const startAgentExecutionRequest = async ({
       eventsUrl: admission.events_url,
       conversationUuid,
       questionId: eventPayload.question_id,
+      responseMessageId: admission.response_message_id,
       onNodeEvent,
       onError,
       onClosed,
@@ -607,6 +625,7 @@ export const resumeAgentExecutionSse = ({
   executionId,
   conversationUuid,
   questionId,
+  responseMessageId,
   onNodeEvent,
   onError,
   onClosed,
@@ -623,6 +642,7 @@ export const resumeAgentExecutionSse = ({
     eventsUrl: buildAgentExecutionEventsUrl(VITE_SERVER_URL, projectId, executionId),
     conversationUuid,
     questionId,
+    responseMessageId,
     onNodeEvent,
     onError,
     onClosed,

@@ -827,6 +827,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       executionId,
       conversationUuid,
       questionId,
+      responseMessageId,
       onNodeEvent: handleSocketEvent,
       onError: handleSocketErrorEvent,
       onTerminal: finalize,

@@ -1303,4 +1303,44 @@ describe('agent execution SSE', () => {
     });
     expect(result.source.close).toHaveBeenCalledOnce();
   });
+
+  it('settles cancellation without converting retained partial output into an error', async () => {
+    const onError = vi.fn();
+    const onTerminal = vi.fn();
+    const result = await startAgentExecutionSse({
+      projectId: 7,
+      conversationUuid: 'conversation-id',
+      eventPayload: payload,
+      onNodeEvent: vi.fn(),
+      onError,
+      onTerminal,
+      fetchImpl: vi.fn().mockResolvedValue({
+        status: 200,
+        ok: true,
+        json: async () => ({
+          execution_id: 'execution-id',
+          response_message_id: 'response-id',
+          events_url: '/events',
+        }),
+      }),
+      EventSourceImpl: FakeEventSource,
+    });
+
+    await result.source.dispatch('execution.failed', {
+      code: 'CANCELLED',
+      safe_message: 'Execution was cancelled.',
+      retryable: false,
+    });
+
+    await vi.waitFor(() =>
+      expect(onTerminal).toHaveBeenCalledWith({
+        type: 'execution.cancelled',
+        message_id: 'response-id',
+        question_id: 'question-id',
+        content: '',
+      }),
+    );
+    expect(onError).not.toHaveBeenCalled();
+    expect(result.source.close).toHaveBeenCalledOnce();
+  });
 });
