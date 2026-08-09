@@ -648,6 +648,7 @@ const ToolMenu = memo(props => {
         >
           <Box component="span">
             <BaseBtn
+              data-testid="agent-add-pipeline-button"
               variant={BUTTON_VARIANTS.iconLabel}
               startIcon={<PlusIcon />}
               disableRipple
