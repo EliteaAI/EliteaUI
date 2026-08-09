@@ -137,6 +137,7 @@ const ConversationStarters = memo(props => {
                           title="Delete"
                         >
                           <BaseBtn
+                            data-testid="agent-conversation-starter-delete"
                             variant={BUTTON_VARIANTS.tertiary}
                             aria-label="delete starter"
                             onClick={onDelete(index)}
