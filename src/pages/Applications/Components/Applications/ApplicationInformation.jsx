@@ -156,6 +156,7 @@ const ApplicationInformation = memo(props => {
               <Box sx={styles.pipelineLink}>
                 <Typography variant="bodyMedium">Pipeline:</Typography>
                 <Typography
+                  data-testid="pipeline-information-show-link"
                   sx={styles.showLink}
                   variant="bodyMedium"
                   onClick={onShowPipelineModal}
