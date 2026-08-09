@@ -260,6 +260,7 @@ const AttachmentButton = forwardRef((props, ref) => {
     <Tooltip
       title={processStatus}
       placement="top"
+      slotProps={{ tooltip: { 'data-testid': 'chat-attach-button-tooltip' } }}
     >
       <Box
         component="span"
