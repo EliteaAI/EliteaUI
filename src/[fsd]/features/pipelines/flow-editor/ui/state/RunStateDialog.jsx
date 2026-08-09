@@ -285,6 +285,7 @@ const RunStateDialog = memo(props => {
                       <Typography
                         sx={styles.stepLabel}
                         variant="bodySmall"
+                        data-testid={`pipeline-run-details-timeline-timestamp-${index}`}
                       >
                         {format(new Date(step.created_at), 'HH:mm:ss')}
                       </Typography>

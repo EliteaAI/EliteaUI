@@ -22,6 +22,7 @@ const ProcessStepIcon = memo(props => {
         sx={styles.outerBox}
         onClick={onClick}
         data-testid={`pipeline-run-details-timeline-step-${index}`}
+        data-status={isError ? 'error' : 'completed'}
       >
         <Box sx={styles.innerBox} />
       </Box>
