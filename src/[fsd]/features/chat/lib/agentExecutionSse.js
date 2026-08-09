@@ -93,7 +93,8 @@ const isBoundedExecutionIdentifier = value =>
 // Durable Go execution IDs are 16 random bytes rendered as lowercase hex.
 // Legacy Socket.IO task UUIDs are not valid durable replay identifiers and
 // must never be attached to the authenticated Go SSE endpoint after reload.
-const isDurableAgentExecutionIdentifier = value => typeof value === 'string' && /^[0-9a-f]{32}$/.test(value);
+export const isDurableAgentExecutionIdentifier = value =>
+  typeof value === 'string' && /^[0-9a-f]{32}$/.test(value);
 
 const isBoundedInProcessHITLInterrupt = interrupt =>
   Boolean(interrupt?.interrupt_id) &&

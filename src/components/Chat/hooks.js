@@ -9,6 +9,7 @@ import {
   getSubAgentInstanceKey,
   normalizeExecutionHierarchy,
 } from '@/[fsd]/features/chat/lib/helpers/executionHierarchy.helpers.js';
+import { isDurableAgentExecutionIdentifier } from '@/[fsd]/features/chat/lib/agentExecutionSse.js';
 import {
   mergeHitlInterrupts,
   normalizeHitlInterrupt,
@@ -97,9 +98,21 @@ export const useStopStreaming = ({
     message => async () => {
       const { id: streamId, task_id } = message;
       if (task_id) {
-        await stopChatTask({ projectId, messageGroupUuid: streamId });
+        try {
+          await stopChatTask({ projectId, messageGroupUuid: streamId }).unwrap();
+        } catch {
+          // Keep the live run visible when the server rejects Stop. The
+          // mutation error is surfaced through isStopError/stopError below.
+          return;
+        }
       }
       emitLeaveRoom([streamId]);
+      // Durable Go executions settle through execution.failed(CANCELLED), then
+      // hydrate the server-projected partial result. Clearing local streaming
+      // state here closes EventSource before that terminal event and makes the
+      // result appear only after a browser reload. Legacy Socket.IO tasks keep
+      // their existing optimistic 200 ms settlement below.
+      if (isDurableAgentExecutionIdentifier(task_id)) return;
       setTimeout(
         () =>
           setChatHistory?.(prevState =>

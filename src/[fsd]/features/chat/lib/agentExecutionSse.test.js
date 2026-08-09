@@ -17,6 +17,7 @@ import {
   getAgentRegenerationSseContract,
   isAgentExecutionSseEligible,
   isAgentHITLContinuationEligible,
+  isDurableAgentExecutionIdentifier,
   resetAgentExecutionReplayProjection,
   resumeAgentExecutionSse,
   settleAgentExecutionReplayProjection,
@@ -58,6 +59,13 @@ class FakeEventSource {
 }
 
 describe('agent execution SSE', () => {
+  it('recognizes only durable Go execution identifiers', () => {
+    expect(isDurableAgentExecutionIdentifier(durableExecutionId)).toBe(true);
+    expect(isDurableAgentExecutionIdentifier('9364395E66BD5A34E4FB13BBDCDE9E64')).toBe(false);
+    expect(isDurableAgentExecutionIdentifier('10000000-0000-4000-8000-000000000041')).toBe(false);
+    expect(isDurableAgentExecutionIdentifier('')).toBe(false);
+  });
+
   it('admits bounded in-process HITL decisions but not child-thread routing', () => {
     expect(
       isAgentHITLContinuationEligible({
