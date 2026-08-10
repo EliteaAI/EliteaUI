@@ -14,10 +14,11 @@ const ToolFormContainer = memo(props => {
 
   const fieldValue = useMemo(() => {
     let result = toolInputVariables?.[fieldKey];
+    const keyExists = toolInputVariables && fieldKey in toolInputVariables;
+    const shouldUseDefault =
+      !keyExists && (result === undefined || typeof result === 'function') && property?.default !== undefined;
 
-    // Fallback: if result is undefined but we have a default in the schema, use it
-    if ((result === undefined || typeof result == 'function') && property?.default !== undefined)
-      result = property.default;
+    if (shouldUseDefault) result = property.default;
 
     return result;
   }, [fieldKey, property, toolInputVariables]);
