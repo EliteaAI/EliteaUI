@@ -13,6 +13,7 @@ export const useDeleteMessageAlert = props => {
     resetSessionRef,
     deleteAllRunNodes,
     onStopTTS,
+    dismissNextInputSuggestion,
   } = props;
 
   const [openAlert, setOpenAlert] = useState(false);
@@ -47,6 +48,7 @@ export const useDeleteMessageAlert = props => {
 
   const onConfirmDelete = useCallback(() => {
     onStopTTS?.();
+    dismissNextInputSuggestion?.();
 
     if (messageIdToDelete === ALL_MESSAGES) {
       if (!onDeleteAllChatMessages) onClearChat();
@@ -68,6 +70,7 @@ export const useDeleteMessageAlert = props => {
     onDeleteChatMessage,
     setChatHistory,
     onStopTTS,
+    dismissNextInputSuggestion,
   ]);
 
   return {
