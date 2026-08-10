@@ -33,7 +33,7 @@ const RouteDefinitions = {
   CreateToolkitType: '/toolkits/create/:toolkitType',
   ToolkitDetail: '/toolkits/:tab/:toolkitId',
   ToolkitRunHistory: '/toolkits/:tab/:toolkitId/history',
-  ToolkitIndexNew: '/toolkits/:tab/:toolkitId/index/new',
+  ToolkitIndexNew: '/toolkits/:tab/:toolkitId/create-index',
   ToolkitIndex: '/toolkits/:tab/:toolkitId/index/:indexName',
   ToolkitIndexHistory: '/toolkits/:tab/:toolkitId/index/:indexName/history',
 
