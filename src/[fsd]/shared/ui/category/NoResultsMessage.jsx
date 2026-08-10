@@ -19,12 +19,14 @@ const NoResultsMessage = memo(props => {
   return (
     <Box sx={styles.noResultsContainer}>
       <Typography
+        data-testid="catalog-no-results-title"
         variant="headingMedium"
         sx={styles.noResultsTitle}
       >
         {title}
       </Typography>
       <Typography
+        data-testid="catalog-no-results-description"
         variant="bodyMedium"
         sx={styles.noResultsDescription}
       >
