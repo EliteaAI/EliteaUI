@@ -12,11 +12,12 @@ const projectInfoApi = eliteaApi
   .injectEndpoints({
     endpoints: build => ({
       projectInfo: build.query({
-        query: projectId => ({
+        query: ({ projectId, fields } = {}) => ({
           url: `${apiSlicePath}/project_info/prompt_lib/${projectId}/project-info`,
+          params: fields ? { fields } : undefined,
         }),
-        providesTags: (_, error, projectId) => {
-          if (error) return [];
+        keepUnusedDataFor: 300,
+        providesTags: (_, _error, { projectId } = {}) => {
           return [{ type: TAG_TYPE_PROJECT_INFO, id: projectId }];
         },
       }),

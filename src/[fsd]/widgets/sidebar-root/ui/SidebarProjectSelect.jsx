@@ -6,6 +6,7 @@ import { Box, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { SIDEBAR_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
+import LazyProjectAvatar from '@/[fsd]/widgets/sidebar-root/ui/LazyProjectAvatar';
 import ProjectAvatar from '@/[fsd]/widgets/sidebar-root/ui/ProjectAvatar';
 import ProjectSelect from '@/components/ProjectSelect';
 
@@ -66,7 +67,7 @@ const SidebarProjectSelect = memo(() => {
   const customRenderOption = useCallback(option => {
     return (
       <Box sx={optionStyles.optionRow}>
-        <ProjectAvatar
+        <LazyProjectAvatar
           projectName={option?.label}
           projectId={option?.value}
           size="1.5rem"
@@ -98,6 +99,7 @@ const SidebarProjectSelect = memo(() => {
         customRenderOption={customRenderOption}
         inputSX={styles.inputSX}
         showBorder={false}
+        maxListHeight="15.5rem"
         selectPlaceholder={
           <StyledTooltip
             placement="right"
