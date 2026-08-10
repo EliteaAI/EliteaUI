@@ -18,7 +18,7 @@ const LazyProjectAvatar = memo(({ projectName, projectId, size = '2rem' }) => {
           observer.disconnect();
         }
       },
-      { rootMargin: '6.25rem' },
+      { rootMargin: '100px' },
     );
     observer.observe(el);
     return () => observer.disconnect();
