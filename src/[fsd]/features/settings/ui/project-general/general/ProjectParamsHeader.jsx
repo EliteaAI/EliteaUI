@@ -22,9 +22,12 @@ const ProjectParamsHeader = memo(() => {
 
   const canEdit = checkPermission(PERMISSIONS.projectContext.edit);
 
-  const { data: projectInfo } = useProjectInfoQuery(projectId, {
-    skip: !projectId,
-  });
+  const { data: projectInfo } = useProjectInfoQuery(
+    { projectId },
+    {
+      skip: !projectId,
+    },
+  );
 
   const [openIconDialog, setOpenIconDialog] = useState(false);
 
