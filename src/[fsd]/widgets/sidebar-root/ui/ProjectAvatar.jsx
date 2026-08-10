@@ -4,13 +4,15 @@ import { Box, Typography } from '@mui/material';
 
 import { useProjectInfoQuery } from '@/[fsd]/features/settings/api/projectInfoApi';
 import { getProjectAvatarColor } from '@/[fsd]/widgets/sidebar-root/lib/helpers';
+import { PUBLIC_PROJECT_ID } from '@/common/constants';
 
 const ProjectAvatar = memo(props => {
-  const { projectName, projectId, iconMeta: iconMetaProp, size = '2rem' } = props;
+  const { projectName, projectId, iconMeta: iconMetaProp, size = '2rem', fields } = props;
 
-  const { data: projectInfo } = useProjectInfoQuery(projectId, {
-    skip: !projectId || !!iconMetaProp,
-  });
+  const { data: projectInfo } = useProjectInfoQuery(
+    { projectId, fields },
+    { skip: !projectId || !!iconMetaProp || projectId === PUBLIC_PROJECT_ID },
+  );
 
   const iconMeta = iconMetaProp || projectInfo?.icon_meta;
 
