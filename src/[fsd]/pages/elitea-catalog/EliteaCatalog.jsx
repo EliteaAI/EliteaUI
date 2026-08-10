@@ -90,11 +90,13 @@ const EliteaCatalog = memo(() => {
           sx={styles.tabs}
         >
           <BaseTab
+            data-testid="catalog-agents-tab"
             value={CATALOG_TABS.agents}
             label="Agents"
             icon={<ApplicationsIcon />}
           />
           <BaseTab
+            data-testid="catalog-skills-tab"
             value={CATALOG_TABS.skills}
             label="Skills"
             icon={<SkillsIcon />}
