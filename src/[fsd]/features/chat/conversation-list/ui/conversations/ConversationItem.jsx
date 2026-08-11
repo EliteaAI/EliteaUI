@@ -20,6 +20,7 @@ import {
 import DotMenu from '@/components/DotMenu';
 import ArrowRightIcon from '@/components/Icons/ArrowRightIcon.jsx';
 import CancelIcon from '@/components/Icons/CancelIcon';
+import CopyIcon from '@/components/Icons/CopyIcon';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import EditIcon from '@/components/Icons/EditIcon';
 import MoveTo from '@/components/Icons/MoveTo';
@@ -41,6 +42,8 @@ const ConversationItem = memo(props => {
     onEdit,
     onPlayback,
     onPin,
+    onDuplicate,
+    isDuplicating,
     onCreateConversation,
     onCancelCreate,
     onChangeActiveConversationName,
@@ -92,6 +95,7 @@ const ConversationItem = memo(props => {
     isNextItemHovered,
     showMenu,
     isSaveEnabled,
+    isDuplicating,
   });
 
   // Sync local conversationName state with the name prop when it changes
@@ -153,6 +157,10 @@ const ConversationItem = memo(props => {
     onPlayback(conversation);
   }, [conversation, onPlayback]);
 
+  const handleDuplicate = useCallback(() => {
+    onDuplicate(conversation);
+  }, [conversation, onDuplicate]);
+
   const handleShareConversation = useCallback(async () => {
     const baseUrl = `${window.location.protocol}//${window.location.host}`;
     const basename = getBasename();
@@ -208,6 +216,12 @@ const ConversationItem = memo(props => {
             icon: <PlayIcon sx={{ fontSize: '1rem' }} />,
             disabled: isActive && isEditingCanvas,
             onClick: handlePlayback,
+          },
+          {
+            label: 'Duplicate',
+            icon: <CopyIcon sx={{ fontSize: '1rem' }} />,
+            disabled: isActive && isEditingCanvas,
+            onClick: handleDuplicate,
           },
           {
             key: 'chat-conversation-menu-make-public',
@@ -279,6 +293,7 @@ const ConversationItem = memo(props => {
     isEditingCanvas,
     handleDelete,
     handleEdit,
+    handleDuplicate,
     isPinned,
     checkPermission,
     moveToFoldersMenuItems,
@@ -427,33 +442,40 @@ const ConversationItem = memo(props => {
           id="Menu"
           sx={styles.menuWrapper}
         >
-          <DotMenu
-            id="conversation-menu"
-            slotProps={{
-              ListItemText: {
-                sx: { color: theme.palette.text.secondary },
-                primaryTypographyProps: { variant: 'bodyMedium' },
-              },
-              ListItemIcon: {
-                sx: {
-                  minWidth: '1rem !important',
-                  marginRight: '.75rem',
+          {isDuplicating ? (
+            <CircularProgress
+              size={16}
+              thickness={5}
+            />
+          ) : (
+            <DotMenu
+              id="conversation-menu"
+              slotProps={{
+                ListItemText: {
+                  sx: { color: theme.palette.text.secondary },
+                  primaryTypographyProps: { variant: 'bodyMedium' },
                 },
-              },
-            }}
-            onClose={onCloseMenuList}
-            onShowMenuList={onShowMenuList}
-            anchorOrigin={{
-              vertical: 'bottom',
-              horizontal: 'right',
-            }}
-            transformOrigin={{
-              vertical: 'top',
-              horizontal: 'right',
-            }}
-          >
-            {menuItems}
-          </DotMenu>
+                ListItemIcon: {
+                  sx: {
+                    minWidth: '1rem !important',
+                    marginRight: '.75rem',
+                  },
+                },
+              }}
+              onClose={onCloseMenuList}
+              onShowMenuList={onShowMenuList}
+              anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'right',
+              }}
+              transformOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+              }}
+            >
+              {menuItems}
+            </DotMenu>
+          )}
         </Box>
       )}
     </Box>
@@ -514,7 +536,14 @@ const ConversationItem = memo(props => {
 ConversationItem.displayName = 'ConversationItem';
 
 /** @type {MuiSx} */
-const conversationItemStyles = ({ isActive, isHovering, isNextItemHovered, isSaveEnabled, showMenu }) => {
+const conversationItemStyles = ({
+  isActive,
+  isHovering,
+  isNextItemHovered,
+  isDuplicating,
+  isSaveEnabled,
+  showMenu,
+}) => {
   const getBackgroundColor = palette => {
     if (isActive) return palette.background.conversation.selected;
     if (isHovering && !isActive) return palette.background.conversation.hover;
@@ -572,9 +601,9 @@ const conversationItemStyles = ({ isActive, isHovering, isNextItemHovered, isSav
     },
     menuWrapper: {
       height: '100%',
-      width: isHovering ? undefined : 0,
-      visibility: showMenu ? 'visible' : 'hidden',
-      display: isHovering || showMenu ? 'flex' : 'none',
+      width: isHovering || isDuplicating ? undefined : 0,
+      visibility: showMenu || isDuplicating ? 'visible' : 'hidden',
+      display: isHovering || showMenu || isDuplicating ? 'flex' : 'none',
       justifyContent: 'center',
       alignItems: 'center',
       alignSelf: 'center',

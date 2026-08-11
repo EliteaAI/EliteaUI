@@ -181,6 +181,7 @@ const buildApplicationObject = props => {
         pipeline_settings: pipelineSettings,
         conversation_starters: frontmatter.conversation_starters || [],
         welcome_message: frontmatter.welcome_message || '',
+        notes: frontmatter.notes || '',
         // Per-version skill refs so the backend re-attaches imported skills (omitted when none).
         ...(skillRefs?.length ? { skills: skillRefs } : {}),
       },

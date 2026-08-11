@@ -1,1 +1,5 @@
-export { redistributeConversationsIntoGroups, sortConversations } from './conversationList.helpers';
+export {
+  generateDuplicateName,
+  redistributeConversationsIntoGroups,
+  sortConversations,
+} from './conversationList.helpers';
