@@ -1,11 +1,10 @@
 import { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Box, IconButton } from '@mui/material';
+import { Box } from '@mui/material';
 import MuiAlert from '@mui/material/Alert';
 import Snackbar from '@mui/material/Snackbar';
 
 import { TOAST_DURATION_DEFAULTS } from '@/common/constants';
-import CloseIcon from '@/components/Icons/CloseIcon';
 
 const Alert = forwardRef((props, ref) => {
   return (
@@ -64,17 +63,12 @@ const Toast = ({
         severity={severity}
         sx={{ width: '100%' }}
         icon={icon}
-        action={
-          <IconButton
-            data-testid="toast-dismiss-button"
-            aria-label="Close"
-            color="inherit"
-            size="small"
-            onClick={onCloseHandler}
-          >
-            <CloseIcon fontSize="16px" />
-          </IconButton>
-        }
+        // Testid goes onto MuiAlert's OWN close button via its `closeButton`
+        // slot. Do NOT reach for the `action` prop instead: Alert.js renders
+        // its built-in close button only when `action == null && onClose`, so
+        // passing `action` REPLACES that button — which silently changes the
+        // icon, its size and its color on every toast in the product.
+        slotProps={{ closeButton: { 'data-testid': 'toast-dismiss-button' } }}
       >
         <Box
           data-testid="toast-message"
