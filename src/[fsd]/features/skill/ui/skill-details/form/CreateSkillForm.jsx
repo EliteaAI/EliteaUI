@@ -54,11 +54,13 @@ const CreateSkillForm = memo(props => {
         value: 'edit',
         icon: t => <CodeIcon fill={t.palette.icon.fill.secondary} />,
         tooltip: 'Edit mode',
+        buttonProps: { 'data-testid': 'skill-instructions-edit-mode-button' },
       },
       {
         value: 'preview',
         icon: t => <OpenEyeIcon fill={t.palette.icon.fill.secondary} />,
         tooltip: 'Preview mode',
+        buttonProps: { 'data-testid': 'skill-instructions-preview-mode-button' },
       },
     ],
     [],
@@ -320,7 +322,10 @@ const CreateSkillForm = memo(props => {
                   </Box>
                 ) : (
                   <Box sx={styles.instructionsWrapper}>
-                    <Box sx={[styles.instructionsPreview, Boolean(instructionsError) && styles.errorBorder]}>
+                    <Box
+                      data-testid="skill-instructions-preview-content"
+                      sx={[styles.instructionsPreview, Boolean(instructionsError) && styles.errorBorder]}
+                    >
                       {instructions ? (
                         <Markdown>{instructions}</Markdown>
                       ) : (
