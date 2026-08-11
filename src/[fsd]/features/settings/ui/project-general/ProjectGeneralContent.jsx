@@ -2,7 +2,7 @@ import { memo } from 'react';
 
 import { Box } from '@mui/material';
 
-import { useIsMidturnInjectionAvailable } from '@/[fsd]/features/chat/lib/hooks';
+import { useIsMidturnInjectionAvailable } from '@/[fsd]/features/chat';
 import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
 import AgentPipelineBuilder from '@/[fsd]/features/settings/ui/project-general/AgentPipelineBuilder';
 import MidturnInjection from '@/[fsd]/features/settings/ui/project-general/MidturnInjection';

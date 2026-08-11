@@ -5,8 +5,8 @@ import { useNavigate } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
-import { SIDEBAR_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
-import NotificationList from '@/[fsd]/widgets/Notifications/ui';
+import { SIDEBAR_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
+import NotificationList from '@/[fsd]/widgets/sidebar-root/ui/NotificationList';
 import { useNotificationListQuery } from '@/api/notifications';
 import { sioEvents } from '@/common/constants';
 import BellIcon from '@/components/Icons/BellIcon';

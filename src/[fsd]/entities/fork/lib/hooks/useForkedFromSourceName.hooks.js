@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 
-import { useLazySkillDetailsQuery } from '@/[fsd]/features/skill/api';
+import { useLazySkillDetailsQuery } from '@/[fsd]/features/skill';
 import { useLazyForkedFromApplicationDetailsQuery } from '@/api/applications';
 
 const APPLICATION_ENTITIES = ['agents', 'pipelines'];

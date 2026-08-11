@@ -2,7 +2,7 @@ import { memo, useMemo } from 'react';
 
 import { Box, IconButton, Typography, useTheme } from '@mui/material';
 
-import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
+import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { ContextBudgetUI } from '@/[fsd]/widgets/context-budget';
 import DoubleLeftIcon from '@/components/Icons/DoubleLeftIcon';
 import DoubleRightIcon from '@/components/Icons/DoubleRightIcon';

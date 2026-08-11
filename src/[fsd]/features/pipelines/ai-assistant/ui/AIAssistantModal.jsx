@@ -3,7 +3,6 @@ import { memo, useCallback, useContext, useEffect, useMemo, useRef, useState } f
 import { Box, IconButton, useTheme } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
-import { FlowEditorContext } from '@/[fsd]/app/providers';
 import { useAIContentGenerationStreaming } from '@/[fsd]/features/pipelines/ai-assistant/lib/hooks';
 import { AIAssistantPanelHeader, AIPromptInput } from '@/[fsd]/features/pipelines/ai-assistant/ui';
 import AIAssistantCodeMirrorInput from '@/[fsd]/features/pipelines/ai-assistant/ui/AIAssistantCodeMirrorInput';
@@ -11,6 +10,7 @@ import {
   formatAvailableNodesForPrompt,
   formatStateVariablesForPrompt,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers/state.helpers';
+import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import { CodeMirrorEditorHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useLanguageLinter } from '@/[fsd]/shared/lib/hooks';
 import { Button, Modal, Text } from '@/[fsd]/shared/ui';

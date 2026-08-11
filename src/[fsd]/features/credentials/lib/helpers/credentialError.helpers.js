@@ -1,4 +1,4 @@
-import { ToolBaseHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
+import { ToolBaseHelpers } from '@/[fsd]/features/toolkits';
 
 export const extractInformationFromCredentialError = ({ error, schemaProperties, settings }) => {
   const newErrors = {};

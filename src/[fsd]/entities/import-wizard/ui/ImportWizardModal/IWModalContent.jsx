@@ -6,7 +6,7 @@ import { Box, Typography } from '@mui/material';
 
 import { rematchModels } from '@/[fsd]/entities/import-wizard/lib/helpers';
 import IWModalDetails from '@/[fsd]/entities/import-wizard/ui/ImportWizardModal/IWModalDetails';
-import { ProjectSelectShowMode } from '@/[fsd]/features/project/lib/constants';
+import { ProjectSelectShowMode } from '@/[fsd]/features/project';
 import { useListModelsQuery } from '@/api';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
 import ProjectSelect from '@/components/ProjectSelect';

@@ -6,7 +6,7 @@ import { Box, Divider, Typography } from '@mui/material';
 
 import { IWModalEntityCardWrapper, IWModalEntityTextField } from '@/[fsd]/entities/import-wizard/ui';
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
-import { ProjectSelectShowMode } from '@/[fsd]/features/project/lib/constants';
+import { ProjectSelectShowMode } from '@/[fsd]/features/project';
 import { Button, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import SkillIcon from '@/assets/skill-icon.svg?react';

@@ -1,16 +1,14 @@
 import yaml from 'js-yaml';
 import { v4 as uuidv4 } from 'uuid';
 
-import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
-import {
-  LAYOUT_VERSION,
-  ORIENTATION,
-} from '@/[fsd]/features/pipelines/flow-editor/lib/constants/flowEditor.constants';
+import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
 import {
   FlowEditorHelpers,
+  LAYOUT_VERSION,
   LayoutHelpers,
+  ORIENTATION,
   ParsePipelineHelpers,
-} from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+} from '@/[fsd]/features/pipelines';
 import { deepCloneObject } from '@/common/utils';
 
 import { setDefaultModelsForImportedAgents } from './importWizardModels.helpers';

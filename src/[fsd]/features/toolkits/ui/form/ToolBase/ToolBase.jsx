@@ -2,13 +2,12 @@ import { memo, useCallback, useEffect, useState } from 'react';
 
 import { Box, useTheme } from '@mui/material';
 
-import { SHARED_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
-import { McpAuthStatus } from '@/[fsd]/features/mcp/ui';
+import { McpAuthStatus } from '@/[fsd]/features/mcp';
 import { OpenApiOAuthStatus } from '@/[fsd]/features/openapi/ui';
-import { SharepointOAuthStatus } from '@/[fsd]/features/sharepoint/ui';
+import { SharepointOAuthStatus } from '@/[fsd]/features/sharepoint';
 import { ToolBaseHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
-import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
+import { AccordionConstants, TourTargetConstants } from '@/[fsd]/shared/lib/constants';
 import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
 import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
@@ -219,7 +218,7 @@ const ToolBase = memo(props => {
   const toolBaseConfiguration = (
     <Box
       sx={styles.configurationContainer}
-      data-tour={SHARED_TOUR_TARGET_IDS.configurationForm}
+      data-tour={TourTargetConstants.SHARED_TOUR_TARGET_IDS.configurationForm}
     >
       {!hideNameDescriptionInput && (
         <ToolkitForm.NameDescriptionInput

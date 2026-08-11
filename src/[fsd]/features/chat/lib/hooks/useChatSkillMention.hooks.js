@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useGetApplicationSkillsQuery } from '@/[fsd]/features/skill/api';
+import { useGetApplicationSkillsQuery } from '@/[fsd]/features/skill';
 import { MentionConstants } from '@/[fsd]/shared/lib/constants';
 import { parseMentionRanges } from '@/[fsd]/shared/lib/utils/instructionsMention.utils';
 import { ChatParticipantType } from '@/common/constants';

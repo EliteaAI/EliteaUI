@@ -4,16 +4,13 @@ import { useLocation, useSearchParams } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
-import { SkillHubContext, useInteractiveTour } from '@/[fsd]/app/providers';
-import {
-  ELITEA_CATALOG_TOUR_ID,
-  ELITEA_CATALOG_TOUR_TARGET_IDS,
-} from '@/[fsd]/features/interactive-tours/lib/constants';
+import { ELITEA_CATALOG_TOUR_ID, ELITEA_CATALOG_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { SkillHubConstants } from '@/[fsd]/features/skill-hub/lib/constants';
 import { SkillHubHelpers } from '@/[fsd]/features/skill-hub/lib/helpers';
 import { useCatalogAutoRefresh, useSkillHubData } from '@/[fsd]/features/skill-hub/lib/hooks';
 import SkillCategorySection from '@/[fsd]/features/skill-hub/ui/SkillCategorySection';
 import SkillHubModal from '@/[fsd]/features/skill-hub/ui/SkillHubModal';
+import { SkillHubContext, useInteractiveTour } from '@/[fsd]/shared/lib/context';
 import { useGroupedCategories } from '@/[fsd]/shared/lib/hooks';
 import { Category } from '@/[fsd]/shared/ui';
 import useDebounceValue from '@/hooks/useDebounceValue';

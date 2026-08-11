@@ -2,8 +2,7 @@ import { memo, useCallback, useEffect, useRef } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { useMcpAuthModal } from '@/[fsd]/features/mcp/lib/hooks';
-import { McpAuthModal } from '@/[fsd]/features/mcp/ui';
+import { McpAuthModal, useMcpAuthModal } from '@/[fsd]/features/mcp';
 import { useToolkitChat } from '@/[fsd]/features/toolkits/lib/hooks';
 
 const HeadlessReindexRunner = memo(props => {

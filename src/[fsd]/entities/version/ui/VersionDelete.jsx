@@ -6,7 +6,7 @@ import { useParams } from 'react-router-dom';
 import { Box, Typography } from '@mui/material';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
-import { AgentDetails } from '@/[fsd]/features/agent/ui';
+import { AgentDetails } from '@/[fsd]/features/agent';
 import { Button, Modal } from '@/[fsd]/shared/ui';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import DeleteIcon from '@/components/Icons/DeleteIcon';

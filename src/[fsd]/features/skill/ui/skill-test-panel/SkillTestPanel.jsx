@@ -6,10 +6,15 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { Box } from '@mui/material';
 
-import { useBudgetWarning, useReadAloud } from '@/[fsd]/features/chat/lib/hooks';
-import { BudgetWarningBanner, ChatButton, VoiceMiniPlayer } from '@/[fsd]/features/chat/ui';
-import { ChatMessageList } from '@/[fsd]/features/chat/ui/chat-box';
-import { DEFAULT_MAX_TOKENS, DEFAULT_TEMPERATURE } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
+import {
+  BudgetWarningBanner,
+  ChatButton,
+  ChatMessageList,
+  VoiceMiniPlayer,
+  useBudgetWarning,
+  useReadAloud,
+} from '@/[fsd]/features/chat';
+import { LLMSettingsConstants } from '@/[fsd]/shared/lib/constants';
 import { useListModelsQuery } from '@/api/configurations.js';
 import { useGenerateContentStreamingMutation, useStopLlmTaskMutation } from '@/api/llm';
 import { ChatParticipantType, ROLES, SocketMessageType, sioEvents } from '@/common/constants';
@@ -23,6 +28,8 @@ import { useManualSocket } from '@/hooks/useSocket';
 import useToast from '@/hooks/useToast';
 import { ContentContainer } from '@/pages/Common/Components/StyledComponents';
 import NewChatInput from '@/pages/NewChat/NewChatInput';
+
+const { DEFAULT_MAX_TOKENS, DEFAULT_TEMPERATURE } = LLMSettingsConstants;
 
 const SYNTHETIC_PARTICIPANT_ID = 'skill-test-participant';
 

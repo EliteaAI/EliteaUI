@@ -2,8 +2,7 @@ import { memo, useCallback, useMemo } from 'react';
 
 import { Box, Tooltip } from '@mui/material';
 
-import { useConfigOAuthModal, useMcpTokenChange } from '@/[fsd]/features/mcp/lib/hooks';
-import { McpAuthModal } from '@/[fsd]/features/mcp/ui';
+import { McpAuthModal, useConfigOAuthModal, useMcpTokenChange } from '@/[fsd]/features/mcp';
 import { useOpenApiCheckConnection } from '@/[fsd]/features/openapi/lib/hooks';
 import BaseBtn from '@/[fsd]/shared/ui/button/BaseBtn';
 import OfflineIcon from '@/assets/offline-icon.svg?react';

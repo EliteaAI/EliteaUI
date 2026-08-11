@@ -1,5 +1,4 @@
 /* global process */
-/* eslint-env node */
 
 export function getEnvVar(key, fallback = undefined) {
   // 1. Check elitea_ui_config on globalThis or window

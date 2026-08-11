@@ -2,7 +2,7 @@ import { memo, useCallback } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { AI_CONFIG_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/aiConfigurationTourTargets.constants';
+import { AI_CONFIG_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import ConfigurationSection from '@/[fsd]/features/settings/ui/ai-providers/ConfigurationSection';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 

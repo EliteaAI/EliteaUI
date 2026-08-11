@@ -2,8 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useTheme } from '@mui/material';
 
-import { McpAuthConstants } from '@/[fsd]/features/mcp/lib/constants';
-import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
+import { McpAuthConstants, McpAuthHelpers } from '@/[fsd]/features/mcp';
 import { MentionConstants } from '@/[fsd]/shared/lib/constants';
 import {
   createMentionCmExtension,

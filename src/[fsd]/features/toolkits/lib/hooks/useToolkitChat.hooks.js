@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { v4 as uuidv4 } from 'uuid';
 
-import { useToolkitSocketContext } from '@/[fsd]/app/providers';
 import {
   EditViewTabsEnum,
   IndexStatuses,
@@ -20,6 +19,7 @@ import {
   createToolkitConversationWithParticipant,
   findToolkitParticipant,
 } from '@/[fsd]/features/toolkits/lib/helpers/toolkitConversation.helpers';
+import { useToolkitSocketContext } from '@/[fsd]/shared/lib/context';
 import { generateLLMSettings, resetLLMSettingsForModel } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
 import {
   useAddParticipantIntoConversationMutation,

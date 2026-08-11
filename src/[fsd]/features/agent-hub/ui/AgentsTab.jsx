@@ -4,16 +4,13 @@ import { useLocation, useSearchParams } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
-import { AgentHubContext, useInteractiveTour } from '@/[fsd]/app/providers';
 import { AgentHubConstants } from '@/[fsd]/features/agent-hub/lib/constants';
 import { AgentHubHelpers } from '@/[fsd]/features/agent-hub/lib/helpers';
 import { useAgentHubData, useCatalogAutoRefresh } from '@/[fsd]/features/agent-hub/lib/hooks';
 import AgentCategorySection from '@/[fsd]/features/agent-hub/ui/AgentCategorySection';
 import AgentModal from '@/[fsd]/features/agent-hub/ui/AgentModal';
-import {
-  ELITEA_CATALOG_TOUR_ID,
-  ELITEA_CATALOG_TOUR_TARGET_IDS,
-} from '@/[fsd]/features/interactive-tours/lib/constants';
+import { ELITEA_CATALOG_TOUR_ID, ELITEA_CATALOG_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
+import { AgentHubContext, useInteractiveTour } from '@/[fsd]/shared/lib/context';
 import { useGroupedCategories } from '@/[fsd]/shared/lib/hooks';
 import { Category } from '@/[fsd]/shared/ui';
 import useDebounceValue from '@/hooks/useDebounceValue';

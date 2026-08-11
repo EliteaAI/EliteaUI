@@ -2,7 +2,7 @@ import { memo, useCallback, useMemo } from 'react';
 
 import { useSelector } from 'react-redux';
 
-import { useForkSkill, useSkillExport } from '@/[fsd]/features/skill/lib/hooks';
+import { useForkSkill, useSkillExport } from '@/[fsd]/features/skill';
 import { Controls } from '@/[fsd]/shared/ui';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
 import { useCopyLinkMenu } from '@/components/CopyLinkToEntityButton.jsx';

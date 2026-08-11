@@ -2,9 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useDispatch, useSelector } from 'react-redux';
 
+import { useGetSkillCategoriesQuery } from '@/[fsd]/features/skill';
 import { useLazyPublicSkillsListQuery } from '@/[fsd]/features/skill-hub/api';
 import { SkillHubConstants } from '@/[fsd]/features/skill-hub/lib/constants';
-import { useGetSkillCategoriesQuery } from '@/[fsd]/features/skill/api';
 import { PAGE_SIZE, PUBLIC_PROJECT_ID } from '@/common/constants';
 import {
   selectIsCacheValid,

@@ -1,12 +1,10 @@
 import * as yup from 'yup';
 
-import { DEFAULT_MAX_TOKENS_CUSTOM } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
-import {
-  DEFAULT_CONTEXT_STRATEGY,
-  SEPARATOR,
-  VALIDATION_LIMITS,
-} from '@/[fsd]/widgets/context-budget/lib/constants';
+import { ContextStrategyConstants, LLMSettingsConstants } from '@/[fsd]/shared/lib/constants';
 import { DEFAULT_PERSONA, PERSONA_OPTIONS } from '@/common/constants';
+
+const { DEFAULT_CONTEXT_STRATEGY, SEPARATOR, VALIDATION_LIMITS } = ContextStrategyConstants;
+const { DEFAULT_MAX_TOKENS_CUSTOM } = LLMSettingsConstants;
 
 // #5392: every persona starts with an empty instructions slot.
 export const EMPTY_PERSONALITY_INSTRUCTIONS = PERSONA_OPTIONS.reduce(

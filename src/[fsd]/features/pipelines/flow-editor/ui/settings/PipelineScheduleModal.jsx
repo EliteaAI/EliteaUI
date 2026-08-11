@@ -5,7 +5,7 @@ import 'react-js-cron/dist/styles.css';
 
 import { Box, Button, GlobalStyles, Typography } from '@mui/material';
 
-import { validateCronExpression } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexSchedule.helpers.js';
+import { validateCronExpression } from '@/[fsd]/features/toolkits';
 import { Checkbox, Modal } from '@/[fsd]/shared/ui';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import FormInput from '@/components/FormInput';

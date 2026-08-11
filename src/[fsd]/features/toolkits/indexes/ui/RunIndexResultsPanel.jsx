@@ -1,6 +1,6 @@
 import { memo } from 'react';
 
-import { ChatMessageList } from '@/[fsd]/features/chat/ui/chat-box';
+import { ChatMessageList } from '@/[fsd]/features/chat';
 import { ChatBodyContainer } from '@/components/Chat/StyledComponents';
 import useChatCopyToClipboard from '@/hooks/chat/useChatCopyToClipboard';
 
