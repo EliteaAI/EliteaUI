@@ -158,11 +158,8 @@ const CreatePersonalToken = memo(() => {
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   error={nameHasError || isAtCharacterLimit}
-                  helperText={
-                    getNameHelperText() ? (
-                      <span data-testid="create-personal-token-name-error">{getNameHelperText()}</span>
-                    ) : undefined
-                  }
+                  helperText={getNameHelperText()}
+                  helperTextTestId="create-personal-token-name-error"
                   inputProps={{
                     'data-testid': 'create-personal-token-name-input',
                     maxLength: MAX_VARIABLES_LENGTH,
