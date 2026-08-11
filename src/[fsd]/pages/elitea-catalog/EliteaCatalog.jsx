@@ -99,7 +99,7 @@ const EliteaCatalog = memo(() => {
             data-testid="catalog-skills-tab"
             value={CATALOG_TABS.skills}
             label="Skills"
-            icon={<SkillsIcon />}
+            icon={<SkillsIcon data-testid="catalog-skills-tab-icon" />}
           />
         </BaseTabs>
       </Box>
