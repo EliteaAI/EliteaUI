@@ -62,6 +62,7 @@ const Skills = memo(() => {
       onChangeTab={onChangeTab}
       showTitleAndSwitchBySelect
       title="Skills"
+      titleTestId="skills-page-header"
       containerStyle={{ padding: '0 1.5rem 0 0' }}
       tabBarStyle={{ padding: '0 0.5rem 0 1.5rem' }}
       middleTabComponent={
