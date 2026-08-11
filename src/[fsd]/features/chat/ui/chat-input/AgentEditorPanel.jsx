@@ -226,6 +226,7 @@ const AgentEditorPanel = memo(props => {
               showBackgroundColor={false}
               sx={styles.entityIcon}
               imageStyle={styles.imageStyle}
+              imgTestId="chat-switch-participant-avatar"
             />
             {!isSmallView && (
               <Typography
