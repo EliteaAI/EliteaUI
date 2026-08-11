@@ -195,6 +195,7 @@ const Card = memo(props => {
                   <Typography
                     variant="bodySmall2"
                     sx={styles.descriptionTooltip}
+                    data-testid="entity-card-description-tooltip"
                   >
                     {description || ''}
                   </Typography>
