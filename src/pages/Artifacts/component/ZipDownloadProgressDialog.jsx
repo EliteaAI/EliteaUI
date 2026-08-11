@@ -56,21 +56,12 @@ const ZipDownloadProgressDialog = memo(props => {
     </Button.BaseBtn>
   );
 
-  const titleNode = (
-    <Typography
-      variant="headingSmall"
-      color="text.secondary"
-      data-testid="artifacts-zip-download-progress-title"
-    >
-      Preparing {bucket || 'artifacts'}.zip
-    </Typography>
-  );
-
   return (
     <BaseModal
       open={open}
       data-testid="artifacts-zip-download-progress-dialog"
-      title={titleNode}
+      title={`Preparing ${bucket || 'artifacts'}.zip`}
+      titleTestId="artifacts-zip-download-progress-title"
       content={content}
       actions={actions}
       onClose={onCancel}
