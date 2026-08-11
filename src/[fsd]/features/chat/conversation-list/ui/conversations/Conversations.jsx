@@ -47,6 +47,8 @@ const Conversations = memo(props => {
     onEditConversation,
     onPlaybackConversation,
     onDeleteConversation,
+    onDuplicateConversation,
+    duplicatingConversationId,
     onLoadMore,
     isLoadConversations,
     isLoadMoreConversations,
@@ -427,6 +429,8 @@ const Conversations = memo(props => {
         onEdit={onEditConversation}
         onPlayback={onPlaybackConversation}
         onDelete={onDeleteConversation}
+        onDuplicate={onDuplicateConversation}
+        isDuplicating={duplicatingConversationId === conversation.id}
         onPin={onPinConversation}
         onCreateConversation={onCreateConversation}
         onCancelCreate={onCancelCreateConversation}
@@ -441,12 +445,14 @@ const Conversations = memo(props => {
     ),
     [
       collapsed,
+      duplicatingConversationId,
       getMoveConversationToFoldersMenuItems,
       isSmallWindow,
       onCancelCreateConversation,
       onChangeActiveConversationName,
       onCreateConversation,
       onDeleteConversation,
+      onDuplicateConversation,
       onEditConversation,
       onPinConversation,
       onPlaybackConversation,

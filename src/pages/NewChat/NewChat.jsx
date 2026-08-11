@@ -13,6 +13,7 @@ import { redistributeConversationsIntoGroups } from '@/[fsd]/features/chat/conve
 import {
   useCreateFolder,
   useDeleteFolder,
+  useDuplicateConversation,
   useMoveToFolderConversation,
   usePinConversation,
   useQueryFoldersList,
@@ -534,6 +535,19 @@ const NewChat = props => {
     setFolders,
     toastError,
     setActiveParticipant,
+  });
+
+  const { onDuplicateConversation, duplicatingConversationId } = useDuplicateConversation({
+    conversations,
+    setActiveConversation,
+    setConversations,
+    emitEnterRoom,
+    emitLeaveRoom,
+    activeConversation,
+    listenCanvasEditorsChangeEvent,
+    stopListenCanvasEditorsChangeEvent,
+    listenCanvasContentChangeEvent,
+    stopListenCanvasContentChangeEvent,
   });
 
   const { addNewParticipants, addParticipantsToNewConversation } = useAddNewParticipants({
@@ -1386,6 +1400,8 @@ const NewChat = props => {
             onSelectConversation={onHandleSelectConversation}
             onEditConversation={onEditConversation}
             onDeleteConversation={onDeleteConversation}
+            onDuplicateConversation={onDuplicateConversation}
+            duplicatingConversationId={duplicatingConversationId}
             onPlaybackConversation={onPlaybackConversation}
             collapsed={collapsedConversations}
             onCollapsed={onConversationCollapsed}
