@@ -51,12 +51,19 @@ const sanitizeForPreview = (rawHtml, nonce, hostOrigin, fallbackStyles) => {
       node.removeAttribute('target');
       node.removeAttribute('xlink:href');
     }
+    // Stamp inline scripts with the per-render nonce so CSP allows them.
+    // External scripts (with src) intentionally receive no nonce — CSP blocks them.
+    if (node.tagName === 'SCRIPT' && !node.hasAttribute('src')) {
+      node.setAttribute('nonce', nonce);
+    }
   });
 
   const clean = purifyInstance.sanitize(rawHtml, {
     WHOLE_DOCUMENT: true,
     FORCE_BODY: false,
     FORBID_ATTR: ['target'],
+    ADD_TAGS: ['script'],
+    ADD_ATTR: ['nonce'],
   });
 
   purifyInstance.removeHook('afterSanitizeAttributes');
