@@ -912,6 +912,7 @@ const ChatBox = forwardRef((props, boxRef) => {
     onDeleteAllChatMessages,
     deleteAllRunNodes,
     onStopTTS: stopTTS,
+    dismissNextInputSuggestion,
   });
 
   const onClickClearChat = useCallback(() => {
@@ -2213,6 +2214,7 @@ const ChatBox = forwardRef((props, boxRef) => {
 
   const onSubmitEditedMessage = useCallback(
     (id, updatedItems, newAttachmentItems) => {
+      dismissNextInputSuggestion();
       const textUpdate = updatedItems?.find(u => u.item_type === 'text_message');
       setChatHistory(prev =>
         prev.map(item => {
@@ -2252,7 +2254,14 @@ const ChatBox = forwardRef((props, boxRef) => {
         onResendQuestionStream(id, question, attachmentList);
       }
     },
-    [chat_history, activeConversation, onRegenerateAnswer, onResendQuestionStream, setChatHistory],
+    [
+      chat_history,
+      activeConversation,
+      onRegenerateAnswer,
+      onResendQuestionStream,
+      setChatHistory,
+      dismissNextInputSuggestion,
+    ],
   );
 
   const { onLoadMoreMessages, isLoadingMore } = useLoadMoreMessages({
