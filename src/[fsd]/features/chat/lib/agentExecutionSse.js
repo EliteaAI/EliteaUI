@@ -28,6 +28,12 @@ const ACTIVITY_NODE_EVENTS = new Set([
   'agent_tool_error',
   'agent_thinking_step',
   'agent_thinking_step_update',
+  // The next-input hint is emitted immediately after agent_response. Yield
+  // once here so React commits the first conversation's terminal assistant
+  // message before the identity-bound hint is reduced; otherwise the hint is
+  // buffered against the pre-terminal history and can remain invisible until
+  // a reload hydrates the persisted message.
+  'agent_response',
 ]);
 
 const isEmptyObject = value =>
@@ -95,6 +101,15 @@ const isBoundedExecutionIdentifier = value =>
 // must never be attached to the authenticated Go SSE endpoint after reload.
 export const isDurableAgentExecutionIdentifier = value =>
   typeof value === 'string' && /^[0-9a-f]{32}$/.test(value);
+
+export const getOptimisticAgentResponseParticipantId = ({
+  eventPayload,
+  participant,
+  conversationParticipants,
+}) =>
+  eventPayload?.participant_id ||
+  participant?.id ||
+  conversationParticipants?.find(candidate => candidate?.entity_name === 'dummy')?.id;
 
 const isBoundedInProcessHITLInterrupt = interrupt =>
   Boolean(interrupt?.interrupt_id) &&

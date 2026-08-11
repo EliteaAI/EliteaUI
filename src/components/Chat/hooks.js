@@ -3,13 +3,13 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { v4 as uuidv4, v4 } from 'uuid';
 
 import { useTrackEvent } from '@/GA';
+import { isDurableAgentExecutionIdentifier } from '@/[fsd]/features/chat/lib/agentExecutionSse.js';
 import { ChatHelpers } from '@/[fsd]/features/chat/lib/helpers';
 import {
   agentPathsEqual,
   getSubAgentInstanceKey,
   normalizeExecutionHierarchy,
 } from '@/[fsd]/features/chat/lib/helpers/executionHierarchy.helpers.js';
-import { isDurableAgentExecutionIdentifier } from '@/[fsd]/features/chat/lib/agentExecutionSse.js';
 import {
   mergeHitlInterrupts,
   normalizeHitlInterrupt,
@@ -299,6 +299,7 @@ export const useChatSocket = ({
   onRcvAgentEvent,
   onInjectionReport,
   onInjectionConsumed,
+  onNextInputSuggestion,
 }) => {
   const trackEvent = useTrackEvent();
 
@@ -328,6 +329,7 @@ export const useChatSocket = ({
   const onRcvAgentEventRef = useRef(onRcvAgentEvent);
   const onInjectionReportRef = useRef(onInjectionReport);
   const onInjectionConsumedRef = useRef(onInjectionConsumed);
+  const onNextInputSuggestionRef = useRef(onNextInputSuggestion);
   const isMonoChattingRef = useRef(isMonoChatting);
   const setChatHistoryRef = useRef(setChatHistory);
   const setIsRunningRef = useRef(setIsRunning);
@@ -356,6 +358,10 @@ export const useChatSocket = ({
   useEffect(() => {
     onInjectionConsumedRef.current = onInjectionConsumed;
   }, [onInjectionConsumed]);
+
+  useEffect(() => {
+    onNextInputSuggestionRef.current = onNextInputSuggestion;
+  }, [onNextInputSuggestion]);
 
   useEffect(() => {
     activeParticipantRef.current = activeParticipant;
@@ -1602,6 +1608,13 @@ export const useChatSocket = ({
           // Raw swarm events forwarded by the backend - no UI action needed.
           // The actual UI rendering is handled via SwarmChildMessage above.
           break;
+        case SocketMessageType.NextInputSuggestionReady:
+          onNextInputSuggestionRef.current?.({
+            stream_id: message.stream_id,
+            message_id: message.message_id,
+            suggestion: message.response_metadata?.suggestion,
+          });
+          return;
         default:
           if (socketMessageType?.startsWith('agent_on')) {
             onRcvAgentEventRef.current && onRcvAgentEventRef.current({ ...message });

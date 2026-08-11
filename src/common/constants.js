@@ -186,6 +186,7 @@ export const SocketMessageType = {
   AgentThinkingStepUpdate: 'agent_thinking_step_update',
   AgentIndexDataStatus: 'agent_index_data_status',
   AgentIndexDataRemoved: 'agent_index_data_removed',
+  NextInputSuggestionReady: 'next_input_suggestion_ready',
   ChatPredictSummaryStarted: 'chat_predict_summary_started',
   ChatPredictSummaryFinished: 'chat_predict_summary_finished',
   // Mid-turn user input injection: readiness gate, per-message ack, and the

@@ -618,6 +618,7 @@ const ChatBox = forwardRef((props, boxRef) => {
   // looks like it vanished, since its own bubble is scrolled away behind live pins.
   const [pendingInjections, setPendingInjections] = useState([]);
   const pendingInjectionsRef = useRef(new Map());
+  const nextInputSuggestionReadyRef = useRef(null);
 
   // Acked: the loop folded it in and a timeline pin now shows it, so stop waiting.
   const onInjectionConsumed = useCallback(injectionId => {
@@ -647,6 +648,7 @@ const ChatBox = forwardRef((props, boxRef) => {
     onRcvAgentEvent,
     onInjectionReport,
     onInjectionConsumed,
+    onNextInputSuggestion: payload => nextInputSuggestionReadyRef.current?.(payload),
     isMonoChatting: isAgentsPage,
   });
 
@@ -654,11 +656,17 @@ const ChatBox = forwardRef((props, boxRef) => {
     suggestion: nextInputSuggestion,
     accept: acceptNextInputSuggestion,
     dismiss: dismissNextInputSuggestion,
+    onSuggestionReady: handleNextInputSuggestionReady,
   } = useNextInputSuggestion({
+    chatHistory: chat_history,
     chatHistoryRef,
     conversationUuid: activeConversation?.uuid,
     getInputContent: () => chatInput.current?.getInputContent(),
   });
+  // Durable replay can start while ChatBox effects are mounting. Keep the SSE
+  // callback bridge synchronous so the first suggestion is buffered rather
+  // than lost before the conversation history settles.
+  nextInputSuggestionReadyRef.current = handleNextInputSuggestionReady;
 
   const userParticipantId = useMemo(
     () =>
@@ -838,11 +846,15 @@ const ChatBox = forwardRef((props, boxRef) => {
     if (!resumedExecution.started) return undefined;
 
     eventSources.set(questionId, resumedExecution);
-    return () => {
-      if (eventSources.get(questionId) !== resumedExecution) return;
-      resumedExecution.close();
-      eventSources.delete(questionId);
-    };
+    // Once the first-turn execution has been resumed, the stream owns its
+    // lifecycle until a terminal event, navigation to another conversation,
+    // or ChatBox unmount. The optimistic response stops matching the resume
+    // candidate as soon as replay updates its transient streaming flags. An
+    // effect cleanup tied to that candidate therefore detached EventSource
+    // before the trailing next_input_suggestion_ready/full_message events.
+    // The terminal callback and the two lifecycle effects below already close
+    // and remove the owned stream at the correct boundaries.
+    return undefined;
   }, [
     activeConversation?.id,
     activeConversation?.uuid,

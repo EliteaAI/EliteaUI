@@ -9,6 +9,7 @@ import {
   AgentExecutionStartError,
   admitAgentExecution,
   getAgentExecutionSseContract,
+  getOptimisticAgentResponseParticipantId,
 } from '@/[fsd]/features/chat/lib/agentExecutionSse';
 import { NewConversationHelpers } from '@/[fsd]/features/chat/lib/helpers';
 import {
@@ -322,6 +323,11 @@ const NewConversationView = forwardRef(
                     'Agent execution returned an invalid response. Please try again.',
                   );
                 }
+                const responseParticipantId = getOptimisticAgentResponseParticipantId({
+                  eventPayload: payload,
+                  participant,
+                  conversationParticipants,
+                });
                 setChatHistory(previous =>
                   previous.map(message =>
                     message.question_id !== question_id || message.role !== 'assistant'
@@ -330,7 +336,7 @@ const NewConversationView = forwardRef(
                           ...message,
                           id: admission.response_message_id,
                           task_id: admission.task_id || admission.execution_id,
-                          participant_id: payload.participant_id || message.participant_id,
+                          participant_id: responseParticipantId || message.participant_id,
                           isLoading: true,
                           isStreaming: true,
                           isSending: false,

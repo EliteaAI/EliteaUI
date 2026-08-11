@@ -14,6 +14,7 @@ import {
   getAgentExecutionResumeCandidate,
   getAgentExecutionSseContract,
   getAgentHITLChildThreadId,
+  getOptimisticAgentResponseParticipantId,
   getAgentRegenerationSseContract,
   isAgentExecutionSseEligible,
   isAgentHITLContinuationEligible,
@@ -59,6 +60,29 @@ class FakeEventSource {
 }
 
 describe('agent execution SSE', () => {
+  it('projects the durable dummy participant onto a first ad-hoc response', () => {
+    expect(
+      getOptimisticAgentResponseParticipantId({
+        eventPayload: {},
+        participant: null,
+        conversationParticipants: [
+          { id: 11, entity_name: 'user' },
+          { id: 12, entity_name: 'dummy' },
+        ],
+      }),
+    ).toBe(12);
+  });
+
+  it('keeps an explicitly selected participant ahead of the ad-hoc fallback', () => {
+    expect(
+      getOptimisticAgentResponseParticipantId({
+        eventPayload: { participant_id: 21 },
+        participant: { id: 22, entity_name: 'application' },
+        conversationParticipants: [{ id: 23, entity_name: 'dummy' }],
+      }),
+    ).toBe(21);
+  });
+
   it('recognizes only durable Go execution identifiers', () => {
     expect(isDurableAgentExecutionIdentifier(durableExecutionId)).toBe(true);
     expect(isDurableAgentExecutionIdentifier('9364395E66BD5A34E4FB13BBDCDE9E64')).toBe(false);
@@ -1077,6 +1101,7 @@ describe('agent execution SSE', () => {
 
     const agentEvent = { type: 'agent_response', message_id: 'response-id', content: 'done' };
     await result.source.dispatch('execution.node_event', agentEvent);
+    expect(yieldToRenderer).toHaveBeenCalledTimes(3);
     await result.source.dispatch('execution.node_event', {
       type: 'partial_message',
       message_id: 'response-id',
@@ -1213,7 +1238,7 @@ describe('agent execution SSE', () => {
     await result.source.dispatch('execution.node_event', response);
     expect(onReplayStart).toHaveBeenCalledOnce();
     expect(onReplayStart.mock.invocationCallOrder[0]).toBeLessThan(onNodeEvent.mock.invocationCallOrder[0]);
-    expect(yieldToRenderer).toHaveBeenCalledOnce();
+    expect(yieldToRenderer).toHaveBeenCalledTimes(2);
     expect(onNodeEvent).toHaveBeenCalledWith(response);
 
     const terminal = { type: 'full_message', message_id: 'response-id', content: 'recovered' };
