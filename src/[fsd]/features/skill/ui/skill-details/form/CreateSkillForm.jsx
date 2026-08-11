@@ -255,6 +255,7 @@ const CreateSkillForm = memo(props => {
                   // dropdown option (keyed by the option's own name).
                   inputTestId="skill-tags-input-field"
                   chipTestId="skill-tag-chip"
+                  chipDeleteTestId={option => `skill-tag-chip-delete-${option?.name}`}
                   getOptionTestId={option => `skill-tag-option-${option?.name}`}
                   label="Tags"
                   tagList={tagList || []}
