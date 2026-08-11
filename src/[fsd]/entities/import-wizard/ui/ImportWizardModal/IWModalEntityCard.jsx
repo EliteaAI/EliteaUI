@@ -133,6 +133,16 @@ const IWModalEntityCard = memo(props => {
                 type="markdown"
               />
 
+              <IWModalEntityTextField
+                title="Editor Notes"
+                description={entity.details.notes}
+                lineClamp={3}
+                setFullscreenData={setFullscreenData}
+                height="4rem"
+                type="markdown"
+                testId="agent-import-preview-notes"
+              />
+
               {Boolean(entity?.details?.internal_tools?.length) && (
                 <Box>
                   <Typography sx={styles.label}>Internal tools:</Typography>
