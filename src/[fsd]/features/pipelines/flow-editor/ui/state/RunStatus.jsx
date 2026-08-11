@@ -10,7 +10,11 @@ const RunStatus = memo(props => {
   const styles = runStatusStyles(status);
 
   return (
-    <Box sx={styles.container}>
+    <Box
+      sx={styles.container}
+      data-testid="pipeline-run-details-status-badge"
+      data-status={status}
+    >
       <Typography
         component="div"
         variant="labelSmall"

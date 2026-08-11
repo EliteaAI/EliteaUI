@@ -16,7 +16,11 @@ const ExpiryInDays = memo(props => {
 
   if (expiryInDays > 7) {
     return (
-      <Box sx={styles.container}>
+      <Box
+        data-testid="token-expiration-status"
+        data-expiration-state="active"
+        sx={styles.container}
+      >
         <SuccessIcon
           width={16}
           height={16}
@@ -35,7 +39,11 @@ const ExpiryInDays = memo(props => {
 
   if (expiryInDays > 0) {
     return (
-      <Box sx={styles.container}>
+      <Box
+        data-testid="token-expiration-status"
+        data-expiration-state="warning"
+        sx={styles.container}
+      >
         <AttentionIcon
           width={16}
           height={16}
@@ -54,7 +62,11 @@ const ExpiryInDays = memo(props => {
 
   if (expiryInDays === -1) {
     return (
-      <Box sx={styles.container}>
+      <Box
+        data-testid="token-expiration-status"
+        data-expiration-state="never"
+        sx={styles.container}
+      >
         <SuccessIcon
           width={16}
           height={16}
@@ -72,7 +84,11 @@ const ExpiryInDays = memo(props => {
   }
 
   return (
-    <Box sx={styles.container}>
+    <Box
+      data-testid="token-expiration-status"
+      data-expiration-state="expired"
+      sx={styles.container}
+    >
       <RemoveIcon
         width={16}
         height={16}

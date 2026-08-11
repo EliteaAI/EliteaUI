@@ -33,6 +33,7 @@ const AttachmentButton = forwardRef((props, ref) => {
     attachments = [],
     showLabel = false,
     disabledTooltip,
+    testId,
   } = props;
 
   const buttonRef = useRef(null);
@@ -200,6 +201,7 @@ const AttachmentButton = forwardRef((props, ref) => {
       variant="elitea"
       color="secondary"
       aria-label="attach files"
+      data-testid={testId}
       onClick={handleClickAttach}
       disabled={isDisabled}
       sx={{
@@ -258,6 +260,7 @@ const AttachmentButton = forwardRef((props, ref) => {
     <Tooltip
       title={processStatus}
       placement="top"
+      slotProps={{ tooltip: { 'data-testid': 'chat-attach-button-tooltip' } }}
     >
       <Box
         component="span"

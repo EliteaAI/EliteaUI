@@ -45,7 +45,17 @@ const ToolkitEditor = ({ toolkit, onCloseToolkitEditor, onToolkitCreated, onTool
   const [editToolDetail, setEditToolDetail] = useState(null);
 
   const isCreating = toolkit?.isCreating || false;
-  const isMCP = toolkit?.isMCP || toolkit?.meta?.mcp || false;
+  // Captured once at mount (lazy initializer), NOT re-derived from `toolkit`
+  // on every render: onToolkitEditorCreated() replaces the whole `toolkit`
+  // prop with the raw API-created entity once Create succeeds
+  // (useEditToolkit.js's onToolkitEditorCreated -> setEditingToolkit), and
+  // that entity does not reliably carry an isMCP/meta.mcp flag — which used
+  // to silently flip `isMCP` (and every conditional testid derived from it:
+  // mcp-canvas-title/-close-button/-create-button) to false right after
+  // creation, mid-session (ELITEA-2085 fix). The editor instance always
+  // remounts fresh per open/close cycle (conditionally rendered in
+  // NewChat.jsx), so a lazy useState initializer is safe and correct here.
+  const [isMCP] = useState(() => toolkit?.isMCP || toolkit?.meta?.mcp || false);
 
   const [validationState, setValidationState] = useState({
     hasErrors: false,
@@ -238,6 +248,8 @@ const ToolkitEditor = ({ toolkit, onCloseToolkitEditor, onToolkitCreated, onTool
       onDiscard={handleDiscard}
       initialValues={normalizedInitialValues}
       error={error}
+      titleTestId={isMCP ? 'mcp-canvas-title' : undefined}
+      closeButtonTestId={isMCP ? 'mcp-canvas-close-button' : undefined}
       saveButton={
         isCreating ? (
           <CreateToolkitButton
@@ -245,6 +257,7 @@ const ToolkitEditor = ({ toolkit, onCloseToolkitEditor, onToolkitCreated, onTool
             onToolkitCreated={handleToolkitCreated}
             hasErrors={validationState.hasErrors}
             triggerValidation={validationState.triggerValidation}
+            testId={isMCP ? 'mcp-canvas-create-button' : undefined}
           />
         ) : (
           <SaveToolkitButton

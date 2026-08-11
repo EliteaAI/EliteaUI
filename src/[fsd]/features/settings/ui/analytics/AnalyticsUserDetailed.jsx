@@ -26,7 +26,10 @@ const AnalyticsUserDetailed = memo(props => {
 
   if (isFetching)
     return (
-      <Box sx={styles.loadingState}>
+      <Box
+        sx={styles.loadingState}
+        data-testid="analytics-user-detail-loading-indicator"
+      >
         <CircularProgress size={32} />
       </Box>
     );
@@ -53,12 +56,14 @@ const AnalyticsUserDetailed = memo(props => {
         <IconButton
           onClick={onBack}
           size="small"
+          data-testid="analytics-user-detail-back-button"
         >
           <ArrowBackIcon />
         </IconButton>
         <Typography
           variant="labelMedium"
           sx={styles.chartTitle}
+          data-testid="analytics-user-detail-title"
         >
           {data.user_email}
         </Typography>
@@ -69,53 +74,73 @@ const AnalyticsUserDetailed = memo(props => {
           label="ACTIVE DAYS"
           value={String(kpis.active_days)}
           tooltip={tt.ACTIVE_DAYS}
+          testId="analytics-user-detail-kpi-card"
+          valueTestId="analytics-user-detail-kpi-value"
         />
         <KPICard
           label="LLM CALLS"
           value={AnalyticCommonHelpers.fmtNum(kpis.llm_events)}
           tooltip={tt.LLM_CALLS}
+          testId="analytics-user-detail-kpi-card"
+          valueTestId="analytics-user-detail-kpi-value"
         />
         <KPICard
           label="TOOL CALLS"
           value={AnalyticCommonHelpers.fmtNum(kpis.tool_events)}
           tooltip={tt.TOOL_CALLS}
+          testId="analytics-user-detail-kpi-card"
+          valueTestId="analytics-user-detail-kpi-value"
         />
         <KPICard
           label="AGENT & PIPELINE RUNS"
           value={AnalyticCommonHelpers.fmtNum(kpis.agent_events)}
           tooltip={tt.AGENT_PIPELINE_RUNS}
+          testId="analytics-user-detail-kpi-card"
+          valueTestId="analytics-user-detail-kpi-value"
         />
         <KPICard
           label="CHAT MSG"
           value={AnalyticCommonHelpers.fmtNum(kpis.chat_events)}
           tooltip={tt.CHAT_MSG}
+          testId="analytics-user-detail-kpi-card"
+          valueTestId="analytics-user-detail-kpi-value"
         />
         <KPICard
           label="ERRORS"
           value={AnalyticCommonHelpers.fmtNum(kpis.errors)}
           color={kpis.errors > 0 ? palette.status.rejected : undefined}
           tooltip={tt.ERRORS}
+          testId="analytics-user-detail-kpi-card"
+          valueTestId="analytics-user-detail-kpi-value"
         />
         <KPICard
           label="TOTAL TOKENS"
           value={AnalyticCommonHelpers.fmtNum(kpis.total_tokens)}
           tooltip={tt.TOTAL_TOKENS}
+          testId="analytics-user-detail-kpi-card"
+          valueTestId="analytics-user-detail-kpi-value"
         />
         <KPICard
           label="INPUT TOKENS"
           value={AnalyticCommonHelpers.fmtNum(kpis.input_tokens)}
           tooltip={tt.INPUT_TOKENS}
+          testId="analytics-user-detail-kpi-card"
+          valueTestId="analytics-user-detail-kpi-value"
         />
         <KPICard
           label="OUTPUT TOKENS"
           value={AnalyticCommonHelpers.fmtNum(kpis.output_tokens)}
           tooltip={tt.OUTPUT_TOKENS}
+          testId="analytics-user-detail-kpi-card"
+          valueTestId="analytics-user-detail-kpi-value"
         />
         <KPICard
           label="TOTAL COST"
           value={AnalyticCommonHelpers.fmtCost(kpis.llm_cost)}
           subtitle="estimated"
           tooltip={tt.TOTAL_COST}
+          testId="analytics-user-detail-kpi-card"
+          valueTestId="analytics-user-detail-kpi-value"
         />
       </Box>
 
@@ -124,6 +149,7 @@ const AnalyticsUserDetailed = memo(props => {
           <Typography
             variant="labelMedium"
             sx={styles.chartTitle}
+            data-testid="analytics-user-detail-chart-title"
           >
             Daily Activity
           </Typography>
@@ -131,6 +157,7 @@ const AnalyticsUserDetailed = memo(props => {
             <Typography
               variant="bodySmall"
               sx={styles.chartSubtitle}
+              data-testid="analytics-user-detail-chart-subtitle"
             >
               Events by type per day
             </Typography>
@@ -141,7 +168,10 @@ const AnalyticsUserDetailed = memo(props => {
               }}
             />
           </Box>
-          <Box sx={styles.chartWrapper}>
+          <Box
+            sx={styles.chartWrapper}
+            data-testid="analytics-user-detail-chart-container"
+          >
             <ResponsiveContainer
               width="100%"
               height={220}
@@ -167,7 +197,14 @@ const AnalyticsUserDetailed = memo(props => {
                   axisLine={{ stroke: axisStroke }}
                   tickLine={{ stroke: axisStroke }}
                 />
-                <RechartsTooltip content={<ChartTooltip />} />
+                <RechartsTooltip
+                  content={tooltipProps => (
+                    <ChartTooltip
+                      {...tooltipProps}
+                      testId="analytics-user-detail-chart-tooltip"
+                    />
+                  )}
+                />
                 <Area
                   yAxisId="left"
                   type="monotone"
@@ -222,7 +259,10 @@ const AnalyticsUserDetailed = memo(props => {
           alignItems: 'stretch',
         }}
       >
-        <Box sx={styles.chartCard}>
+        <Box
+          sx={styles.chartCard}
+          data-testid="analytics-user-detail-models-panel"
+        >
           <Typography
             variant="labelMedium"
             sx={styles.chartTitle}
@@ -279,7 +319,10 @@ const AnalyticsUserDetailed = memo(props => {
             )}
           </Box>
         </Box>
-        <Box sx={styles.chartCard}>
+        <Box
+          sx={styles.chartCard}
+          data-testid="analytics-user-detail-tools-panel"
+        >
           <Typography
             variant="labelMedium"
             sx={styles.chartTitle}
@@ -332,7 +375,10 @@ const AnalyticsUserDetailed = memo(props => {
             )}
           </Box>
         </Box>
-        <Box sx={styles.chartCard}>
+        <Box
+          sx={styles.chartCard}
+          data-testid="analytics-user-detail-agents-panel"
+        >
           <Typography
             variant="labelMedium"
             sx={styles.chartTitle}

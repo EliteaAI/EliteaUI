@@ -22,6 +22,7 @@ export const IconLinkWithToolTip = ({ meta, type }) => {
         onOpen={loadSourceName}
       >
         <Link
+          data-testid="entity-card-forked-from-link"
           sx={{
             display: 'flex',
             justifyContent: 'center',

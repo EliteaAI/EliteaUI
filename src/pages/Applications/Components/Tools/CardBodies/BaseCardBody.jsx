@@ -19,6 +19,7 @@ const BaseCardBody = memo(({ tool, onClickShowActions, showActions }) => {
         </TypographyWithConditionalTooltip>
       ) : (
         <TypographyWithConditionalTooltip
+          data-testid="toolkit-card-tools-toggle"
           title={showActions ? 'Hide tools' : 'Show tools'}
           placement="top"
           component="div"

@@ -55,6 +55,7 @@ const DuplicateDialogContent = memo(props => {
     <Box sx={styles.wrapper}>
       <Box sx={styles.labelSection}>
         <Typography
+          data-testid="artifacts-resolve-duplicates-message-text"
           variant="labelMedium"
           color="text.secondary"
         >
@@ -66,6 +67,7 @@ const DuplicateDialogContent = memo(props => {
         {visibleFilenameParts.map(({ filename, baseName, extension }, index) => (
           <Box
             key={`${index}-${filename}`}
+            data-testid="artifacts-resolve-duplicates-filename"
             sx={styles.filenameRow}
           >
             <Box

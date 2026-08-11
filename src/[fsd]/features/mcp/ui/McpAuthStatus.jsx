@@ -133,6 +133,7 @@ const McpAuthStatus = memo((props = {}) => {
         <Box sx={styles.statusContent}>
           <OnlineIcon style={styles.statusIconOnline} />
           <Typography
+            data-testid="toolkit-connection-status"
             variant="bodySmall"
             sx={styles.loginStatusText}
           >
@@ -145,6 +146,7 @@ const McpAuthStatus = memo((props = {}) => {
               onClick={hasLoggedInToMcp ? onLogout : onLogin}
               disabled={isButtonDisabled}
               variant={BUTTON_VARIANTS.secondary}
+              data-testid="toolkit-connection-login-button"
             >
               {buttonLabel}
             </Button.BaseBtn>

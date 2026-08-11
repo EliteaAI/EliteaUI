@@ -17,6 +17,7 @@ const CatalogBody = memo(props => {
     renderNoResults,
     noResultsTitle,
     noResultsDescription,
+    chipTestIdPrefix,
   } = props;
 
   const styles = catalogBodyStyles();
@@ -70,6 +71,7 @@ const CatalogBody = memo(props => {
           categories={categories}
           selectedCategories={selectedCategories}
           onSelectCategory={onSelectCategory}
+          chipTestIdPrefix={chipTestIdPrefix}
         />
       </Box>
     </Box>

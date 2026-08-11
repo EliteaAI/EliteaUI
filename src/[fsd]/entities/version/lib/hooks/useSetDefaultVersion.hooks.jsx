@@ -101,6 +101,7 @@ export const useSetDefaultVersion = onSuccess => {
       onConfirm={handleConfirmSetDefaultVersion}
       confirming={isSettingDefaultVersion}
       versionName={pendingVersionName}
+      confirmButtonTestId="agent-set-default-version-confirm-button"
     />
   );
 

@@ -12,14 +12,26 @@ const DrawerPageHeader = memo(props => {
     sx,
     showBackButton,
     title,
+    titleTestId,
     showSearchInput,
     showAddButton,
     extraContent,
     slotProps,
     onBack,
   } = props;
-  const { search, onChangeSearch, placeholder = 'Search something amazing!' } = slotProps?.searchInput || {};
-  const { onAdd, disabled, tooltip: addButtonTooltip, tourId: addButtonTourId } = slotProps?.addButton || {};
+  const {
+    search,
+    onChangeSearch,
+    placeholder = 'Search something amazing!',
+    testId: searchInputTestId,
+  } = slotProps?.searchInput || {};
+  const {
+    onAdd,
+    disabled,
+    tooltip: addButtonTooltip,
+    tourId: addButtonTourId,
+    testId: addButtonTestId,
+  } = slotProps?.addButton || {};
   const styles = getStyles();
 
   const handleSearchClear = useCallback(() => onChangeSearch(''), [onChangeSearch]);
@@ -38,6 +50,7 @@ const DrawerPageHeader = memo(props => {
           </IconButton>
         )}
         <Typography
+          data-testid={titleTestId}
           variant="headingSmall"
           color="text.secondary"
           component={'div'}
@@ -48,6 +61,7 @@ const DrawerPageHeader = memo(props => {
       <Box sx={styles.body}>
         {showSearchInput && (
           <Input.SimpleSearchBar
+            data-testid={searchInputTestId}
             searchQuery={search}
             onSearchChange={onChangeSearch}
             onSearchClear={handleSearchClear}
@@ -67,6 +81,7 @@ const DrawerPageHeader = memo(props => {
               data-tour={addButtonTourId || undefined}
             >
               <IconButton
+                data-testid={addButtonTestId}
                 disabled={!!disabled}
                 disableRipple
                 variant="elitea"

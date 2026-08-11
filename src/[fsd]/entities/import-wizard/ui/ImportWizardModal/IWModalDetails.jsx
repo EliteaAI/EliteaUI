@@ -88,6 +88,9 @@ const IWModalDetails = memo(props => {
               <IWModalEntityCard
                 key={index}
                 entity={entity}
+                titleTestId="agent-import-preview-nested-agent-name"
+                toggleTestId="agent-import-preview-card-toggle"
+                instructionsTestId="agent-import-preview-nested-agent-instructions"
               />
             ))}
           </Box>

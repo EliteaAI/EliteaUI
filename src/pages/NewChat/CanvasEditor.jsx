@@ -645,7 +645,10 @@ const CanvasEditor = forwardRef(
                 width: '100%',
               }}
             >
-              <Box sx={styles.mermaidCodeEditorContainer}>
+              <Box
+                data-testid="chat-canvas-mermaid-editor-content"
+                sx={styles.mermaidCodeEditorContainer}
+              >
                 <Field.CodeMirrorEditor
                   height="100%"
                   minHeight="100%"

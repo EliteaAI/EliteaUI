@@ -23,15 +23,27 @@ const StateItemView = memo(props => {
         <StateItemViewHeader
           title="Before"
           onFullScreen={onBeforeValueFullScreen}
+          testId={`pipeline-run-details-state-expand-before-${name}`}
         />
-        <Box sx={styles.valueBox}>{JSON.stringify(valueBefore)}</Box>
+        <Box
+          sx={styles.valueBox}
+          data-testid={`pipeline-run-details-state-value-before-${name}`}
+        >
+          {JSON.stringify(valueBefore)}
+        </Box>
       </Box>
       <Box sx={styles.section}>
         <StateItemViewHeader
           title="After"
           onFullScreen={onAfterValueFullScreen}
+          testId={`pipeline-run-details-state-expand-after-${name}`}
         />
-        <Box sx={styles.valueBox}>{JSON.stringify(valueAfter)}</Box>
+        <Box
+          sx={styles.valueBox}
+          data-testid={`pipeline-run-details-state-value-after-${name}`}
+        >
+          {JSON.stringify(valueAfter)}
+        </Box>
       </Box>
     </Box>
   );

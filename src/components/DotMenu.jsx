@@ -113,6 +113,14 @@ const BasicMenuItem = ({
               isSelected: subMenuItem.isSelected,
               entityName: subMenuItem.entityName,
               showCheckIcon: subMenuItem.entityName,
+              // ADDED (ELITEA-2135/2137 analyst pass) — previously dropped,
+              // so no submenu item (Move to > Create folder / Back to the
+              // list / a folder name) ever rendered a data-testid, even
+              // when the caller supplied a `key`. BasicMenuItem's own
+              // MenuItem already does `data-testid={testId}-menuitem`
+              // (mirrors the top-level items below) — it just never
+              // received the prop for nested items until now.
+              testId: subMenuItem.key,
             };
             return subMenuItem.onConfirm || subMenuItem.confirmText ? (
               <ActionWithDialog

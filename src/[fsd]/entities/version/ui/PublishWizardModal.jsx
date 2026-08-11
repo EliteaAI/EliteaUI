@@ -288,6 +288,7 @@ const PublishWizardModal = memo(
             <>
               {step === PUBLISH_STEPS.PREPARATION && (
                 <Button.BaseBtn
+                  data-testid="agent-publish-continue-button"
                   variant="contained"
                   disabled={!canContinue}
                   onClick={onContinue}
@@ -298,6 +299,7 @@ const PublishWizardModal = memo(
 
               {step === PUBLISH_STEPS.VALIDATION && validationResult && (
                 <Button.BaseBtn
+                  data-testid="agent-publish-confirm-button"
                   variant="contained"
                   disabled={!canPublish}
                   onClick={onPublish}

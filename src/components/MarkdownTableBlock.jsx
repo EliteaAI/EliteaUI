@@ -109,6 +109,7 @@ export default function MarkdownTableBlock({
           >
             <span>
               <IconButton
+                data-testid="chat-table-edit-button"
                 variant="elitea"
                 color="tertiary"
                 disabled={shouldDisableEdit}

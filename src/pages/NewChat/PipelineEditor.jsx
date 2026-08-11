@@ -474,6 +474,7 @@ const PipelineEditor = forwardRef(
           validationSchema={getValidateSchema}
           error={error}
           onDirtyStateChange={onPipelineDirtyStateChange}
+          closeButtonTestId="pipeline-canvas-close-button"
           formContent={
             !isCreateMode ? (
               <StyledTabBar sx={styles.tabBar}>
@@ -489,12 +490,14 @@ const PipelineEditor = forwardRef(
                       icon={<GearIcon />}
                       label="Configuration"
                       iconPosition="start"
+                      data-testid="pipeline-canvas-tab-configuration"
                     />
                     <Tab
                       sx={styles.tab}
                       icon={<FlowIcon />}
                       label="Flow editor"
                       iconPosition="start"
+                      data-testid="pipeline-canvas-tab-flow"
                     />
                   </Tabs>
                 </Box>
@@ -503,7 +506,10 @@ const PipelineEditor = forwardRef(
           }
           saveButton={
             isCreateMode ? (
-              <CreateApplicationSaveButton onSuccess={handlePipelineCreated} />
+              <CreateApplicationSaveButton
+                onSuccess={handlePipelineCreated}
+                data-testid="agent-save-button"
+              />
             ) : (
               <SaveApplicationButton onSuccess={handleSaveSuccess} />
             )

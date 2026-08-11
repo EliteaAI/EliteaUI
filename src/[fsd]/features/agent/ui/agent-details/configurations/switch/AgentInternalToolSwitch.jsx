@@ -92,6 +92,21 @@ const AgentInternalToolSwitch = memo(props => {
             checked={allowTool}
             onChange={onChange}
             disabled={disabled}
+            // NOTE: the legacy `inputProps` prop on MUI v7's <Switch> is
+            // silently discarded — Switch.js unconditionally rebuilds its
+            // own `slotProps.input` (merging in `role: "switch"`) and passes
+            // it as an explicit `slotProps` prop to SwitchBase, which then
+            // overwrites SwitchBase's own `input: inputProps` mapping via
+            // object-spread order (confirmed via node_modules source,
+            // ELITEA-2075). The native MUI channel is `slotProps.input`,
+            // threaded here through BaseSwitch's own `slotProps.switch`
+            // passthrough (BaseSwitch's `slotProps` prop has a DIFFERENT,
+            // custom shape — `switch`/`container`/`label`/`formControlLabel`
+            // — so `slotProps.switch` is spread directly onto the
+            // underlying `<MuiSwitch>` as a real prop object).
+            slotProps={{
+              switch: { slotProps: { input: { 'data-testid': `agent-canvas-tools-toggle-${name}` } } },
+            }}
           />
         }
         label=""

@@ -53,6 +53,7 @@ const MemorySummarization = memo(props => {
           </Typography>
         </Box>
         <Switch.BaseSwitch
+          data-testid="automatic-summarization-toggle"
           checked={values.enable_summarization}
           onChange={handleSummarizationEnabledChange}
           disabled={!values.context_enabled}
@@ -80,6 +81,9 @@ const MemorySummarization = memo(props => {
           showExpandAction={false}
           fieldName="Summarization Instructions"
           containerProps={styles.inputContainer}
+          inputProps={{
+            'data-testid': 'summarization-instructions-textarea',
+          }}
         />
       </Box>
 
@@ -99,6 +103,7 @@ const MemorySummarization = memo(props => {
           containerProps={styles.inputContainer}
           inputProps={{
             pattern: '[1-9][0-9]*',
+            'data-testid': 'target-summary-tokens-input',
           }}
         />
       </Box>

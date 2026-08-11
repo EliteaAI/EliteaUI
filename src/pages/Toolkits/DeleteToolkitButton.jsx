@@ -69,6 +69,7 @@ export const useDeleteToolkitMenu = (setBlockNav, disabled, isMCP) => {
   const { name, onDelete, isLoading } = useDeleteToolkit(setBlockNav, isMCP);
   const menuItem = useMemo(
     () => ({
+      key: 'toolkit-actions-delete',
       label: 'Delete',
       icon: (
         <DeleteIcon

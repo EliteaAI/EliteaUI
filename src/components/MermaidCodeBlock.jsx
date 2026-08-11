@@ -319,6 +319,7 @@ const MermaidCodeBlock = ({
           >
             <span>
               <IconButton
+                data-testid="chat-diagram-edit-button"
                 variant="elitea"
                 color="tertiary"
                 disabled={shouldDisableEdit}

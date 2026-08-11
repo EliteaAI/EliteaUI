@@ -46,6 +46,7 @@ const EmptyStatePage = memo(props => {
       <Typography
         variant="headingSmall"
         sx={styles.title}
+        data-testid="empty-state-title"
       >
         {title}
       </Typography>

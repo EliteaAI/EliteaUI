@@ -19,6 +19,7 @@ const EditParticipantButton = memo(props => {
     tooltip = 'Edit',
     placement = 'top',
     isPublic,
+    testId,
   } = props;
 
   const theme = useTheme();
@@ -45,6 +46,7 @@ const EditParticipantButton = memo(props => {
         variant="elitea"
         color="tertiary"
         id={id}
+        data-testid={testId}
         sx={[styles.listItemIcon, sx]}
       >
         {canEdit ? (

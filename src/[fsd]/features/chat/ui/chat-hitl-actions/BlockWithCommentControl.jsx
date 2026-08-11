@@ -19,7 +19,7 @@ const MAX_COMMENT_LENGTH = 2000;
  * never bleed between simultaneously-paused cards.
  */
 const BlockWithCommentControl = memo(props => {
-  const { onSubmit, disabled } = props;
+  const { onSubmit, disabled, triggerTestId, textareaTestId, submitTestId } = props;
   const [open, setOpen] = useState(false);
   const [comment, setComment] = useState('');
   const styles = getStyles();
@@ -71,6 +71,7 @@ const BlockWithCommentControl = memo(props => {
   if (!open) {
     return (
       <BaseBtn
+        data-testid={triggerTestId}
         variant={BUTTON_VARIANTS.secondary}
         startIcon={<RejectIcon />}
         onClick={handleOpen}
@@ -96,7 +97,7 @@ const BlockWithCommentControl = memo(props => {
         onKeyDown={handleKeyDown}
         disabled={disabled}
         placeholder="Tell the agent why this call is blocked and what to do instead. Press ⌘/Ctrl+Enter to send."
-        slotProps={{ htmlInput: { maxLength: MAX_COMMENT_LENGTH } }}
+        slotProps={{ htmlInput: { maxLength: MAX_COMMENT_LENGTH, 'data-testid': textareaTestId } }}
         sx={styles.commentInput}
       />
       <Box sx={styles.commentActions}>
@@ -108,6 +109,7 @@ const BlockWithCommentControl = memo(props => {
           Cancel
         </BaseBtn>
         <BaseBtn
+          data-testid={submitTestId}
           variant={BUTTON_VARIANTS.alarm}
           startIcon={<RejectIcon />}
           onClick={handleSubmit}

@@ -122,7 +122,10 @@ const PreviewContent = memo(
           switch (previewType) {
             case PreviewTypeEnum.MARKDOWN:
               return (
-                <Box sx={styles.markdownWrapper}>
+                <Box
+                  sx={styles.markdownWrapper}
+                  data-testid="artifacts-preview-markdown-content"
+                >
                   <Markdown>{fileContent}</Markdown>
                 </Box>
               );
@@ -248,6 +251,7 @@ const PreviewContent = memo(
                       alt={file.name}
                       sx={styles.image}
                       onError={handleImageError}
+                      data-testid="artifacts-preview-image"
                     />
                   ) : (
                     <Box sx={styles.noImageWrapper}>
@@ -278,7 +282,10 @@ const PreviewContent = memo(
               );
             default:
               return (
-                <Box sx={styles.codeEditorWrapper}>
+                <Box
+                  sx={styles.codeEditorWrapper}
+                  data-testid="artifacts-preview-code-editor"
+                >
                   <Field.CodeMirrorEditor
                     autoHeight
                     readOnly={!canEdit}
@@ -288,6 +295,7 @@ const PreviewContent = memo(
                     variant="caption"
                     width="100%"
                     notifyChange={canEdit ? onContentChange : undefined}
+                    contentTestId="artifacts-preview-code-content"
                   />
                 </Box>
               );

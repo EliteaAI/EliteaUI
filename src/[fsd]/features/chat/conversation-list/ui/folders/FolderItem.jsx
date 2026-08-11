@@ -84,6 +84,7 @@ const FolderItem = memo(props => {
   const menuItems = useMemo(() => {
     const items = [
       {
+        key: 'chat-folder-menu-rename',
         label: 'Rename',
         icon: (
           <EditIcon
@@ -214,6 +215,7 @@ const FolderItem = memo(props => {
         showMode={AccordionConstants.AccordionShowMode.LeftMode}
         defaultExpanded={containsActiveConversation}
         isPinned={folder.meta?.is_pinned}
+        folderId={folder.id}
         items={[
           {
             title: name || '',
@@ -286,12 +288,16 @@ const FolderItem = memo(props => {
           onChange={onChangeFolderName} //splice
           containerProps={{ display: 'flex', flex: 1 }}
           onKeyDown={handleOnKeyDownFolder}
+          inputProps={{ 'data-testid': 'chat-folder-name-input' }}
         />
         <Tooltip
           title={isFolderNameValid ? '' : FolderNameWarningMessage}
           placement="top"
+          slotProps={{ popper: { 'data-testid': 'chat-folder-name-confirm-tooltip-content' } }}
         >
           <Box
+            data-testid="chat-folder-name-confirm-button"
+            data-disabled={!isFolderSaveEnabled ? 'true' : 'false'}
             onClick={isFolderSaveEnabled ? (isNewFolder ? handleOnCreateFolder : handleOnSaveFolder) : null}
             sx={styles.checkButton}
           >
@@ -301,6 +307,7 @@ const FolderItem = memo(props => {
           </Box>
         </Tooltip>
         <Box
+          data-testid="chat-folder-name-cancel-button"
           onClick={isNewFolder ? handleOnCancelCreateFolder : handleOnCloseEditFolder}
           sx={styles.cancelButton}
         >

@@ -183,6 +183,7 @@ const ProjectContextEditor = memo(props => {
   const headerActions = (
     <Box sx={styles.headerActions}>
       <Button.BaseBtn
+        data-testid="project-context-save-button"
         variant={BUTTON_VARIANTS.contained}
         disabled={!isDirty || isSaving}
         onClick={handleSave}
@@ -272,6 +273,7 @@ const ProjectContextEditor = memo(props => {
             onBlur={handleEditorBlur}
           >
             <Field.CodeMirrorEditor
+              contentTestId="project-context-editor-content"
               value={content}
               notifyChange={handleContentChange}
               extensions={markdownExtensions}
@@ -290,6 +292,7 @@ const ProjectContextEditor = memo(props => {
         {canEdit && (
           <Box sx={styles.charCounterWrapper}>
             <Typography
+              data-testid="project-context-char-counter"
               variant="bodySmall"
               sx={styles.charCounter}
             >

@@ -114,6 +114,7 @@ const MemoryContextManagement = memo(props => {
                         helperText={errors.preserve_recent_messages || ' '}
                         inputProps={{
                           pattern: '[1-9][0-9]*',
+                          'data-testid': 'preserve-recent-messages-input',
                         }}
                       />
                     </Box>

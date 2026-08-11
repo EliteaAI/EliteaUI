@@ -9,6 +9,7 @@ import DeleteIcon from '@/components/Icons/DeleteIcon';
 
 const StateVariableItemActions = memo(props => {
   const {
+    name,
     type,
     enabled,
     showToggle = false,
@@ -36,6 +37,7 @@ const StateVariableItemActions = memo(props => {
           onChange={handleToggle}
           sx={styles.switch}
           disabled={disabled}
+          data-testid={`pipeline-state-variable-toggle-${name}`}
         />
       </Box>
     );
@@ -45,6 +47,7 @@ const StateVariableItemActions = memo(props => {
     <>
       {/* Type selector */}
       <FlowEditorState.StateTypeSelector
+        name={name}
         type={
           type === FlowEditorConstants.LegacyIntType ? FlowEditorConstants.StateVariableTypes.Number : type
         }
@@ -68,6 +71,7 @@ const StateVariableItemActions = memo(props => {
           color="tertiary"
           disabled={disabled}
           sx={styles.deleteButton}
+          data-testid={`pipeline-state-variable-delete-${name}`}
         >
           <Box
             component={DeleteIcon}

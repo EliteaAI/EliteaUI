@@ -67,10 +67,11 @@ export default function AutoCompleteDropDown({
   },
   sx,
   filterOptions: filterOptionsProp,
-  // Optional stable test hooks (testid-only locator policy). All three are
+  // Optional stable test hooks (testid-only locator policy). All four are
   // additive/no-op when omitted, so existing callers are unaffected.
   inputTestId,
   chipTestId,
+  chipDeleteTestId,
   getOptionTestId,
   ...props
 }) {
@@ -210,7 +211,7 @@ export default function AutoCompleteDropDown({
         const { key: notUsedKey, ...optionPropsWithoutKey } = optionProps;
         return (
           <StyledChip
-            data-testid={chipTestId}
+            data-testid={typeof chipTestId === 'function' ? chipTestId(option) : chipTestId}
             label={
               <Box
                 height={'100%'}
@@ -236,13 +237,28 @@ export default function AutoCompleteDropDown({
             }
             key={index}
             sx={styles.mergedChipSx}
-            deleteIcon={<RemoveIcon fill={styles.mergedRemoveIcon.fill} />}
+            deleteIcon={
+              <RemoveIcon
+                fill={styles.mergedRemoveIcon.fill}
+                data-testid={
+                  typeof chipDeleteTestId === 'function' ? chipDeleteTestId(option) : chipDeleteTestId
+                }
+              />
+            }
             {...optionPropsWithoutKey}
             onDelete={() => handleDelete(option)}
           />
         );
       }),
-    [avatarField, chipTestId, handleDelete, nameField, styles.mergedChipSx, styles.mergedRemoveIcon.fill],
+    [
+      avatarField,
+      chipDeleteTestId,
+      chipTestId,
+      handleDelete,
+      nameField,
+      styles.mergedChipSx,
+      styles.mergedRemoveIcon.fill,
+    ],
   );
   const renderInput = useCallback(
     params => (

@@ -140,6 +140,10 @@ const ResourcesPage = memo(() => {
                     link.url ? (
                       <Link
                         key={idx}
+                        data-testid={`help-center-tour-link-${link.title
+                          .toLowerCase()
+                          .replace(/[^a-z0-9]+/g, '-')
+                          .replace(/(^-|-$)/g, '')}`}
                         href={link.url}
                         target="_blank"
                         rel="noopener noreferrer"

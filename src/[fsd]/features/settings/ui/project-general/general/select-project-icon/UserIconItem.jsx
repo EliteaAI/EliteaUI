@@ -8,7 +8,7 @@ import CloseIcon from '@/components/Icons/CloseIcon';
 import IconItem from './ProjectIconItem';
 
 const UserIconItem = memo(props => {
-  const { isSelected, children, onDelete, onClick } = props;
+  const { isSelected, children, onDelete, onClick, 'data-testid': dataTestId } = props;
   const theme = useTheme();
   const styles = userIconItemStyles();
 
@@ -30,6 +30,7 @@ const UserIconItem = memo(props => {
     <>
       <Box sx={styles.wrapper}>
         <IconItem
+          data-testid={dataTestId}
           isSelected={isSelected}
           onClick={onClick}
         >

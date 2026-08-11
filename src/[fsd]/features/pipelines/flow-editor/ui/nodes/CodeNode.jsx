@@ -11,6 +11,18 @@ import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import useCodeInputMapping from '@/hooks/pipeline/useCodeInputMapping.js';
 import { useEdges } from '@xyflow/react';
 
+// Testid map for the Code node's CODE section (ELITEA-2009) — SimpleLLMInputs
+// is shared with LLM/Printer nodes, so testids are supplied only at this call
+// site (.agents/testing.md § Locator policy — testid scope is load-bearing;
+// other node types stay untagged). Same shape as LLM_NODE_INPUT_TEST_IDS in
+// LLMNode.jsx (ELITEA-2004).
+const CODE_NODE_INPUT_TEST_IDS = {
+  code: {
+    typeSelectTestId: 'pipeline-code-node-type-select',
+    valueFieldTestId: 'pipeline-code-node-value',
+  },
+};
+
 const CodeNode = memo(props => {
   const { id, data, selected } = props;
 
@@ -76,6 +88,7 @@ const CodeNode = memo(props => {
         defaultValues={defaultValues}
         disabled={isRunningPipeline || disabled}
         modelConfig={pipelineLLMConfig}
+        testIdsByKey={CODE_NODE_INPUT_TEST_IDS}
       />
 
       <FlowEditorSelect.InputSelect
@@ -83,17 +96,21 @@ const CodeNode = memo(props => {
         label="Input"
         disabled={isRunningPipeline || disabled}
         inputFieldName="input"
+        dataTestId="pipeline-code-node-input-select"
       />
       <FlowEditorSelect.OutputSelect
         id={id}
         label="Output"
         outputFieldName="output"
         disabled={isRunningPipeline || disabled}
+        dataTestId="pipeline-code-node-output-select"
       />
       <FlowEditorSettings.CommonInterruptSettings
         id={id}
         type={FlowEditorConstants.PipelineNodeTypes.Code}
         disabled={isRunningPipeline || disabled}
+        interruptAfterTestId="pipeline-code-node-interrupt-after-toggle"
+        structuredOutputTestId="pipeline-code-node-structured-output-toggle"
       />
     </FlowEditorNodes.NodeCard>
   );

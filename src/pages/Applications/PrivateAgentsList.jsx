@@ -54,7 +54,7 @@ const EmptyListPlaceHolder = ({ query, status }) => {
     }
   } else {
     return (
-      <Box>
+      <Box data-testid="agents-list-empty-state-message">
         Nothing found. <br />
         Create yours now!
       </Box>

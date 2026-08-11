@@ -20,6 +20,7 @@ const GroupedCategory = memo(props => {
     renderCategory,
     renderNoResults,
     allowEmptyCategory = false,
+    searchInputTestId,
     slotProps = {
       categoryList: {
         sx: {},
@@ -38,6 +39,7 @@ const GroupedCategory = memo(props => {
       allCategories={allCategories}
       selectedCategories={selectedCategories}
       onSelectCategory={onSelectCategory}
+      searchInputTestId={searchInputTestId}
       slotProps={slotProps}
     >
       {isLoading ? (

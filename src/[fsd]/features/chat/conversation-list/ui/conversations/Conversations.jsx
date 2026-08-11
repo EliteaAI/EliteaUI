@@ -340,7 +340,11 @@ const Conversations = memo(props => {
       const newFolderMenuItem = [
         {
           disabled: !checkPermission(PERMISSIONS.chat.folders.create),
-          key: 'create_folder',
+          // Renamed from 'create_folder' -> the shared {section}-{element}-{type}
+          // testid family (ELITEA-2135/2137 analyst pass). DotMenu.jsx's
+          // submenu BasicMenuItem now forwards `testId={subMenuItem.key}`,
+          // which renders `data-testid="chat-move-to-create-folder-menuitem"`.
+          key: 'chat-move-to-create-folder',
           label: (
             <Box style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <NewFolder
@@ -364,7 +368,8 @@ const Conversations = memo(props => {
         {
           addSeparator: true,
           disabled: !conversation.folder_id || !checkPermission(PERMISSIONS.chat.folders.update),
-          key: 'back_to_the_list',
+          // Renamed from 'back_to_the_list' -> testid family, see note above.
+          key: 'chat-move-to-back-to-list',
           label: (
             <Box style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <FromFolder
@@ -389,6 +394,14 @@ const Conversations = memo(props => {
 
       const folderItems = folders.map(targetFolder => {
         return {
+          // ADDED (ELITEA-2135/2137 analyst pass) — was previously absent,
+          // so DotMenu.jsx's submenu React `key` fell back to `label`
+          // (the folder's plain name). Two same-named folders (the common
+          // "New folder" default) then collided on that key, producing a
+          // live-confirmed "two children with the same key" React warning.
+          // The `.id`-keyed value also drives this item's own
+          // `data-testid="chat-move-to-folder-{id}-menuitem"`.
+          key: `chat-move-to-folder-${targetFolder.id}`,
           label: targetFolder.name,
           disabled:
             targetFolder?.owner_id !== userId ||
@@ -549,7 +562,14 @@ const Conversations = memo(props => {
             alignItems={'center'}
             gap={'0.5rem'}
           >
-            {(!collapsed || isSmallWindow) && <Typography variant="subtitle">Chats</Typography>}
+            {(!collapsed || isSmallWindow) && (
+              <Typography
+                data-testid="chat-conversations-heading"
+                variant="subtitle"
+              >
+                Chats
+              </Typography>
+            )}
             {(!collapsed || isSmallWindow) && (
               <>
                 <Tooltip
@@ -558,6 +578,7 @@ const Conversations = memo(props => {
                 >
                   <span>
                     <Button
+                      data-testid="chat-create-folder-button"
                       disabled={!checkPermission(PERMISSIONS.chat.folders.create)}
                       onClick={clickCreateNewFolder(false)}
                       variant="elitea"
@@ -633,6 +654,7 @@ const Conversations = memo(props => {
             >
               <Box component="span">
                 <Button
+                  data-testid="chat-create-folder-button"
                   disabled={!checkPermission(PERMISSIONS.chat.folders.create)}
                   onClick={clickCreateNewFolder(true)}
                   variant="elitea"
@@ -681,6 +703,7 @@ const Conversations = memo(props => {
               data-testid="conversation-search-input"
             />
             <IconButton
+              data-testid="conversation-search-clear-button"
               onClick={handleSearchClear}
               variant="elitea"
               color="tertiary"

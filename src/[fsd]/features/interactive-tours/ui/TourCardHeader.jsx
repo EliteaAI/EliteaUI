@@ -12,12 +12,14 @@ const TourCardHeader = memo(props => {
   return (
     <Box sx={styles.wrapper}>
       <Box
+        data-testid="interactive-tour-complete-icon"
         component={icon}
         sx={styles.icon}
         aria-hidden="true"
         focusable="false"
       />
       <Typography
+        data-testid="interactive-tour-complete-title"
         id={titleId}
         variant="headingMedium"
         color="text.secondary"

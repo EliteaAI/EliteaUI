@@ -154,6 +154,8 @@ const EntityIcon = memo(props => {
     showBackgroundColor = true,
     isActive = false,
     specifiedFontSize = '1rem',
+    'data-testid': dataTestId,
+    imgTestId,
   } = props;
   const theme = useTheme();
   const systemSenderName = useSystemSenderName();
@@ -189,6 +191,7 @@ const EntityIcon = memo(props => {
   return (
     <>
       <Box
+        data-testid={dataTestId}
         sx={styles.container}
         onMouseEnter={editable ? onMouseEnter : undefined}
         onMouseLeave={editable ? onMouseLeave : undefined}
@@ -199,6 +202,7 @@ const EntityIcon = memo(props => {
             style={styles.imageStyle}
             image={icon}
             alt="Preview"
+            data-testid={imgTestId}
           />
         )}
         {!icon?.url && !icon?.component && !isHovering && (

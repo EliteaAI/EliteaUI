@@ -2,7 +2,7 @@ import { Avatar, useTheme } from '@mui/material';
 
 import { getInitials, stringToColor } from '@/common/utils';
 
-export default function UserAvatar({ name, avatar, shiftPixels = 0, size = 20, onClick, zIndex }) {
+export default function UserAvatar({ name, avatar, shiftPixels = 0, size = 20, onClick, zIndex, testId }) {
   const theme = useTheme();
   const commonStyle = {
     padding: '0',
@@ -20,6 +20,7 @@ export default function UserAvatar({ name, avatar, shiftPixels = 0, size = 20, o
         style={commonStyle}
         src={avatar}
         alt={name}
+        data-testid={testId}
       />
     );
   }
@@ -35,6 +36,7 @@ export default function UserAvatar({ name, avatar, shiftPixels = 0, size = 20, o
       onClick={onClick}
       style={stringAvatarStyle}
       alt={name}
+      data-testid={testId}
     >
       {name ? getInitials(name) : null}
     </Avatar>

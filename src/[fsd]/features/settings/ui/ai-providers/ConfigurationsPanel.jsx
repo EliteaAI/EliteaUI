@@ -75,6 +75,7 @@ const ConfigurationsPanel = memo(props => {
         hasDefaultSetting
         defaultExpanded={!expandSection || expandSection === 'llm'}
         title="LLMs"
+        sectionTestId="ai-providers-section-llms"
         configurations={configurationsBySections.llm}
         isLoading={configurationsLoading}
         defaultSettingsLayout="inline"
@@ -106,6 +107,7 @@ const ConfigurationsPanel = memo(props => {
       <ConfigurationSection
         tourTargetId={AI_CONFIG_TOUR_TARGET_IDS.embeddingModels}
         title="Embedding Models"
+        sectionTestId="ai-providers-section-embedding-models"
         configurations={configurationsBySections.embedding}
         isLoading={configurationsLoading}
         hasDefaultSetting={true}
@@ -120,6 +122,7 @@ const ConfigurationsPanel = memo(props => {
       <ConfigurationSection
         tourTargetId={AI_CONFIG_TOUR_TARGET_IDS.vectorStorage}
         title="Vector Storage"
+        sectionTestId="ai-providers-section-vector-storage"
         configurations={configurationsBySections.vectorstorage}
         isLoading={configurationsLoading}
         hasDefaultSetting={true}
@@ -134,6 +137,7 @@ const ConfigurationsPanel = memo(props => {
       <ConfigurationSection
         tourTargetId={AI_CONFIG_TOUR_TARGET_IDS.imageGeneration}
         title="Image Generation"
+        sectionTestId="ai-providers-section-image-generation"
         configurations={configurationsBySections.image_generation}
         isLoading={configurationsLoading}
         hasDefaultSetting={true}
@@ -147,6 +151,7 @@ const ConfigurationsPanel = memo(props => {
 
       <ConfigurationSection
         title="Speech Recognition (ASR)"
+        sectionTestId="ai-providers-section-asr"
         configurations={configurationsBySections.asr}
         isLoading={configurationsLoading}
         hasDefaultSetting={true}
@@ -160,6 +165,7 @@ const ConfigurationsPanel = memo(props => {
 
       <ConfigurationSection
         title="Text to Speech (TTS)"
+        sectionTestId="ai-providers-section-tts"
         configurations={configurationsBySections.tts}
         isLoading={configurationsLoading}
         hasDefaultSetting={true}
@@ -174,6 +180,7 @@ const ConfigurationsPanel = memo(props => {
       <ConfigurationSection
         tourTargetId={AI_CONFIG_TOUR_TARGET_IDS.aiCredentials}
         title="AI Credentials"
+        sectionTestId="ai-providers-section-ai-credentials"
         configurations={configurationsBySections.ai_credentials}
         isLoading={configurationsLoading}
         defaultExpanded={expandSection === 'ai_credentials'}

@@ -16,6 +16,25 @@ import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import useLLMInputMapping from '@/hooks/pipeline/useLLMInputMapping';
 import { useEdges } from '@xyflow/react';
 
+// Testid map for the LLM node's SYSTEM/TASK/CHAT HISTORY sections
+// (ELITEA-2004) — SimpleLLMInputs is shared with Code/Printer nodes, so
+// testids are supplied only at this call site (.agents/testing.md § Locator
+// policy — testid scope is load-bearing; other node types stay untagged).
+const LLM_NODE_INPUT_TEST_IDS = {
+  system: {
+    typeSelectTestId: 'pipeline-llm-node-system-type-select',
+    valueFieldTestId: 'pipeline-llm-node-system-value',
+  },
+  task: {
+    typeSelectTestId: 'pipeline-llm-node-task-type-select',
+    valueFieldTestId: 'pipeline-llm-node-task-value',
+  },
+  chat_history: {
+    typeSelectTestId: 'pipeline-llm-node-chat-history-type-select',
+    valueFieldTestId: 'pipeline-llm-node-chat-history-value',
+  },
+};
+
 const LLMNode = memo(props => {
   const { id, data, selected } = props;
 
@@ -81,6 +100,7 @@ const LLMNode = memo(props => {
         enableAIAssistant
         modelConfig={pipelineLLMConfig}
         gap="1rem"
+        testIdsByKey={LLM_NODE_INPUT_TEST_IDS}
       />
 
       <FlowEditorSelect.InputSelect
@@ -88,16 +108,19 @@ const LLMNode = memo(props => {
         label="Input"
         disabled={isRunningPipeline || disabled}
         inputFieldName="input"
+        dataTestId="pipeline-llm-node-input-select"
       />
       <FlowEditorSelect.OutputSelect
         id={id}
         label="Output"
         outputFieldName="output"
         disabled={isRunningPipeline || disabled}
+        dataTestId="pipeline-llm-node-output-select"
       />
       <FlowEditorSelect.ToolkitsSelect
         id={id}
         disabled={isRunningPipeline || disabled}
+        data-testid="pipeline-llm-node-toolkits-select"
       />
       {Object.keys(yamlNode?.tool_names || {}).map(toolkitName => {
         const toolkitObj = allToolkits.find(
@@ -125,6 +148,8 @@ const LLMNode = memo(props => {
         id={id}
         type={FlowEditorConstants.PipelineNodeTypes.LLM}
         disabled={isRunningPipeline || disabled}
+        interruptAfterTestId="pipeline-llm-node-interrupt-after-toggle"
+        structuredOutputTestId="pipeline-llm-node-structured-output-toggle"
       />
     </FlowEditorNodes.NodeCard>
   );

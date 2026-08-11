@@ -96,6 +96,9 @@ const InputBase = memo(props => {
     onFullScreen,
     fullScreenIcon,
     tooltipDescription,
+    tooltipTestId,
+    tooltipContentTestId,
+    helperTextTestId,
     forceShowActionsToolbar = false,
     fullScreenButtonProps = {},
     labelVariant,
@@ -199,6 +202,8 @@ const InputBase = memo(props => {
         {...(!isOutlined && { inheritLabel: true, inheritColor: true })}
         {...(tooltipDescription && {
           tooltip: tooltipDescription,
+          tooltipTestId,
+          tooltipContentTestId,
           ...(!isOutlined && { labelTextPointerEventsNone: true }),
         })}
       />
@@ -261,6 +266,9 @@ const InputBase = memo(props => {
               disableUnderline,
             },
             htmlInput: inputProps,
+            formHelperText: {
+              'data-testid': helperTextTestId,
+            },
             inputLabel: {
               ...InputLabelProps,
               sx: {

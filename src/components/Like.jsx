@@ -30,7 +30,7 @@ export const StyledItemPair = styled(
 }));
 
 const Like = memo(props => {
-  const { viewMode, type = ContentType.ApplicationAll, data, onLikeSuccess } = props;
+  const { viewMode, type = ContentType.ApplicationAll, data, onLikeSuccess, testId } = props;
   const { id, name, likes = 0, is_liked = false, cardType } = data;
 
   const { handleLikeApplicationClick, isLoading } = useLikeApplicationCard({
@@ -63,6 +63,8 @@ const Like = memo(props => {
       color="tertiaryCount"
       disabled={viewMode !== ViewMode.Public || isLoading}
       onClick={handleLikeClick}
+      data-testid={testId}
+      data-liked={testId ? (is_liked ? 'true' : 'false') : undefined}
     >
       {is_liked ? <HeartActiveIcon width={16} /> : <HeartIcon sx={styles.icon} />}
       <Typography variant="bodySmall">{likes || 0}</Typography>

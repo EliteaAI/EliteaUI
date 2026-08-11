@@ -3,11 +3,14 @@ import { memo } from 'react';
 import { Box, Typography } from '@mui/material';
 
 const AgentWelcomeMessage = memo(props => {
-  const { welcome_message } = props;
+  const { welcome_message, testId } = props;
   const styles = agentWelcomeMessageStyles();
 
   return (
-    <Box sx={styles.container}>
+    <Box
+      sx={styles.container}
+      data-testid={testId}
+    >
       <Typography
         variant="subtitle"
         sx={styles.header}

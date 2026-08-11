@@ -186,6 +186,7 @@ export default function CreateToolkitToolTabBar({
         >
           <Box component="span">
             <MuiButton
+              data-testid="toolkit-form-save-button"
               variant="elitea"
               color="primary"
               disabled={shouldDisableSave}
@@ -201,6 +202,9 @@ export default function CreateToolkitToolTabBar({
           disabled={isLoading}
           onDiscard={onCancel}
           alertContent="Are you sure you want to cancel creation of this toolkit?"
+          dataTestId="toolkit-form-cancel-button"
+          modalDataTestId="toolkit-form-cancel-confirm-dialog"
+          confirmButtonDataTestId="toolkit-form-cancel-confirm-button"
         />
       </TabBarItems>
     </>

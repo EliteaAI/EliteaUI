@@ -1,10 +1,11 @@
 import { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Box } from '@mui/material';
+import { Box, IconButton } from '@mui/material';
 import MuiAlert from '@mui/material/Alert';
 import Snackbar from '@mui/material/Snackbar';
 
 import { TOAST_DURATION_DEFAULTS } from '@/common/constants';
+import CloseIcon from '@/components/Icons/CloseIcon';
 
 const Alert = forwardRef((props, ref) => {
   return (
@@ -57,10 +58,23 @@ const Toast = ({
       onClose={onCloseHandler}
     >
       <Alert
+        data-testid="toast-alert"
+        data-severity={severity}
         onClose={onCloseHandler}
         severity={severity}
         sx={{ width: '100%' }}
         icon={icon}
+        action={
+          <IconButton
+            data-testid="toast-dismiss-button"
+            aria-label="Close"
+            color="inherit"
+            size="small"
+            onClick={onCloseHandler}
+          >
+            <CloseIcon fontSize="16px" />
+          </IconButton>
+        }
       >
         <Box
           data-testid="toast-message"
