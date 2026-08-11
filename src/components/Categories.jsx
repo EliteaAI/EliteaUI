@@ -341,6 +341,7 @@ const Categories = ({
               <Typography
                 component="div"
                 variant={'labelSmall'}
+                data-testid="tags-panel-empty-state"
               >
                 {`No ${title.toLowerCase()} to display.`}
               </Typography>
