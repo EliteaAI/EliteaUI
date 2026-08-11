@@ -229,6 +229,44 @@ export const settleAgentExecutionReplayProjection = (chatHistory, responseMessag
   return changed ? next : chatHistory;
 };
 
+export const preserveAgentExecutionMessageIdentity = (persistedHistory, liveHistory) => {
+  if (!Array.isArray(persistedHistory) || !Array.isArray(liveHistory) || liveHistory.length === 0) {
+    return persistedHistory;
+  }
+
+  const liveById = new Map(
+    liveHistory.filter(message => message?.id != null).map(message => [String(message.id), message]),
+  );
+  const liveAssistantByQuestionId = new Map(
+    liveHistory
+      .filter(message => message?.role === 'assistant' && message?.question_id != null)
+      .map(message => [String(message.question_id), message]),
+  );
+
+  let changed = false;
+  const next = persistedHistory.map(message => {
+    const liveMessage =
+      (message?.id != null && liveById.get(String(message.id))) ||
+      (message?.role === 'assistant' && message?.question_id != null
+        ? liveAssistantByQuestionId.get(String(message.question_id))
+        : undefined);
+    if (!liveMessage) return message;
+
+    const missingUserId = message.user_id == null && liveMessage.user_id != null;
+    const missingParticipantId = message.participant_id == null && liveMessage.participant_id != null;
+    if (!missingUserId && !missingParticipantId) return message;
+
+    changed = true;
+    return {
+      ...message,
+      ...(missingUserId ? { user_id: liveMessage.user_id } : {}),
+      ...(missingParticipantId ? { participant_id: liveMessage.participant_id } : {}),
+    };
+  });
+
+  return changed ? next : persistedHistory;
+};
+
 const yieldToBrowserRenderer = () =>
   new Promise(resolve => {
     if (typeof globalThis.requestAnimationFrame !== 'function') {
@@ -560,6 +598,7 @@ const startAgentExecutionRequest = async ({
   startBody,
   conversationUuid,
   eventPayload,
+  responseParticipantId,
   onNodeEvent,
   onError,
   onClosed,
@@ -590,7 +629,7 @@ const startAgentExecutionRequest = async ({
     question_id: eventPayload.question_id,
     content: {
       task_id: admission.task_id || admission.execution_id,
-      participant_id: eventPayload.participant_id || undefined,
+      participant_id: responseParticipantId || eventPayload.participant_id || undefined,
       question_id: eventPayload.question_id,
     },
     sio_event: 'chat_predict',
@@ -675,6 +714,7 @@ export const startAgentExecutionSse = async ({
   projectId,
   conversationUuid,
   eventPayload,
+  responseParticipantId,
   ...streamOptions
 }) => {
   const startPath = `/elitea_core/messages/prompt_lib/${encodeURIComponent(projectId)}/${encodeURIComponent(
@@ -685,6 +725,7 @@ export const startAgentExecutionSse = async ({
     startBody: buildAgentExecutionStartBody({ contract, projectId, conversationUuid, eventPayload }),
     conversationUuid,
     eventPayload,
+    responseParticipantId,
     ...streamOptions,
   });
 };

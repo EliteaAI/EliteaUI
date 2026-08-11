@@ -19,6 +19,7 @@ import {
   isAgentExecutionSseEligible,
   isAgentHITLContinuationEligible,
   isDurableAgentExecutionIdentifier,
+  preserveAgentExecutionMessageIdentity,
   resetAgentExecutionReplayProjection,
   resumeAgentExecutionSse,
   settleAgentExecutionReplayProjection,
@@ -457,6 +458,47 @@ describe('agent execution SSE', () => {
         terminal,
       )[0].content,
     ).toBe('Already streamed.');
+  });
+
+  it('preserves missing live identities when an early terminal projection is hydrated', () => {
+    const persisted = [
+      { id: 'question-id', role: 'user', content: 'hello' },
+      {
+        id: 'response-id',
+        role: 'assistant',
+        question_id: 'question-id',
+        content: 'complete',
+      },
+    ];
+    const live = [
+      { id: 'question-id', role: 'user', user_id: 11, content: 'hello' },
+      {
+        id: 'response-id',
+        role: 'assistant',
+        question_id: 'question-id',
+        participant_id: 22,
+        content: 'streamed',
+      },
+    ];
+
+    expect(preserveAgentExecutionMessageIdentity(persisted, live)).toEqual([
+      { ...persisted[0], user_id: 11 },
+      { ...persisted[1], participant_id: 22 },
+    ]);
+  });
+
+  it('keeps persisted identities authoritative and does not alter unrelated messages', () => {
+    const persisted = [
+      { id: 'question-id', role: 'user', user_id: 31 },
+      { id: 'response-id', role: 'assistant', question_id: 'question-id', participant_id: 32 },
+      { id: 'unrelated', role: 'assistant', question_id: 'other-question' },
+    ];
+    const live = [
+      { id: 'question-id', role: 'user', user_id: 41 },
+      { id: 'response-id', role: 'assistant', question_id: 'question-id', participant_id: 42 },
+    ];
+
+    expect(preserveAgentExecutionMessageIdentity(persisted, live)).toBe(persisted);
   });
 
   it('selects ad-hoc execution for standard toolkits and application participants', () => {
@@ -1114,6 +1156,45 @@ describe('agent execution SSE', () => {
     expect(result.source.close).toHaveBeenCalledOnce();
     expect(onClosed).toHaveBeenCalledOnce();
     expect(onTerminal).toHaveBeenCalledWith(terminal);
+  });
+
+  it('projects the resolved response participant without changing the ad-hoc request participant', async () => {
+    const onNodeEvent = vi.fn();
+    const fetchImpl = vi.fn().mockResolvedValue({
+      status: 200,
+      ok: true,
+      json: async () => ({
+        task_id: 'execution-id',
+        execution_id: 'execution-id',
+        response_message_id: 'response-id',
+        events_url: '/events',
+      }),
+    });
+    const eventPayload = {
+      ...payload,
+      participant_id: undefined,
+    };
+
+    await startAgentExecutionSse({
+      contract: 'agent.execute.adhoc.v1',
+      projectId: 7,
+      conversationUuid: 'conversation-id',
+      eventPayload,
+      responseParticipantId: 23,
+      onNodeEvent,
+      onError: vi.fn(),
+      yieldToRenderer: vi.fn().mockResolvedValue(),
+      fetchImpl,
+      EventSourceImpl: FakeEventSource,
+    });
+
+    expect(JSON.parse(fetchImpl.mock.calls[0][1].body).participant_id).toBe(0);
+    expect(onNodeEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'start_task',
+        content: expect.objectContaining({ participant_id: 23 }),
+      }),
+    );
   });
 
   it('forwards the durable HITL card and closes the paused execution stream', async () => {

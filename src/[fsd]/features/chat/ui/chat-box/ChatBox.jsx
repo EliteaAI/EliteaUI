@@ -22,7 +22,9 @@ import {
   getAgentExecutionSseContract,
   getAgentHITLChildThreadId,
   getAgentRegenerationSseContract,
+  getOptimisticAgentResponseParticipantId,
   isAgentHITLContinuationEligible,
+  preserveAgentExecutionMessageIdentity,
   resetAgentExecutionReplayProjection,
   resumeAgentExecutionSse,
   settleAgentExecutionReplayProjection,
@@ -767,13 +769,17 @@ const ChatBox = forwardRef((props, boxRef) => {
           // the stale streaming placeholder when trace hydration is unavailable.
         }
 
-        const hydratedConversation = {
-          ...conversationDetails,
-          chat_history: convertConversationToChatHistory(conversationDetails, traceSteps),
-        };
+        const persistedChatHistory = convertConversationToChatHistory(conversationDetails, traceSteps);
         setActiveConversationRef.current?.(previous =>
           previous?.id === conversationId && previous?.uuid === conversationUuid
-            ? { ...previous, ...hydratedConversation }
+            ? {
+                ...previous,
+                ...conversationDetails,
+                chat_history: preserveAgentExecutionMessageIdentity(
+                  persistedChatHistory,
+                  previous.chat_history,
+                ),
+              }
             : previous,
         );
         clearConversationStreamingInfo?.();
@@ -1236,6 +1242,11 @@ const ChatBox = forwardRef((props, boxRef) => {
                 projectId,
                 conversationUuid,
                 eventPayload: finalEventPayload,
+                responseParticipantId: getOptimisticAgentResponseParticipantId({
+                  eventPayload: finalEventPayload,
+                  participant,
+                  conversationParticipants: activeConversation?.participants,
+                }),
                 onNodeEvent: handleSocketEvent,
                 onError: handleSocketErrorEvent,
                 onTerminal: terminalEvent => settleLiveAgentExecution(terminalEvent),
