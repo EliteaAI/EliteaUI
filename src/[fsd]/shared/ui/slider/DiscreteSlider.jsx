@@ -18,6 +18,7 @@ const DiscreteSlider = memo(props => {
     showLabels = false,
     testId,
     markTestIdPrefix,
+    inputTestId,
     ...sliderProps
   } = props;
 
@@ -76,6 +77,7 @@ const DiscreteSlider = memo(props => {
             marks={marks.map(m => ({ value: m.value }))}
             disabled={disabled}
             sx={styles.slider}
+            slotProps={inputTestId ? { input: { 'data-testid': inputTestId } } : undefined}
             {...sliderProps}
           />
 

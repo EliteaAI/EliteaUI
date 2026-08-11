@@ -48,6 +48,7 @@ const CreativitySlider = memo(props => {
   return (
     <DiscreteSlider
       testId="model-settings-creativity-slider"
+      inputTestId="model-settings-creativity-slider-input"
       label="Creativity"
       value={creativity}
       onChange={handleChange}
