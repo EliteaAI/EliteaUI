@@ -271,6 +271,7 @@ const ParticipantItem = memo(props => {
             imageStyle={{ width: '1.5rem', height: '1.5rem' }}
             specifiedFontSize="0.875rem"
             isActive={isActive}
+            imgTestId="chat-participant-avatar"
           />
           {!collapsed && (
             <Box sx={styles.nameWrapper}>
