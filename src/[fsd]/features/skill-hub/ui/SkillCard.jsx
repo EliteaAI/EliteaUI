@@ -38,6 +38,7 @@ const SkillCard = memo(props => {
   return (
     <Card
       data-tour={ELITEA_CATALOG_TOUR_TARGET_IDS.entityCard}
+      data-testid={`catalog-skill-card-${skill.id}`}
       sx={styles.card}
       onClick={handleClick}
     >
