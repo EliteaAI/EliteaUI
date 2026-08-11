@@ -19,6 +19,14 @@ export const redistributeConversationsIntoGroups = (prevGroups, newFlatConversat
   }));
 };
 
+export const generateDuplicateName = originalName => {
+  const baseNameMatch = originalName.match(/^(.+?)\s*\((\d+)\)$/);
+
+  if (baseNameMatch) return `${baseNameMatch[1]} (${parseInt(baseNameMatch[2], 10) + 1})`;
+
+  return `${originalName} (1)`;
+};
+
 export const sortConversations = conversations =>
   stableSort(conversations, (a, b) => {
     const dateA = new Date(a.updated_at || a.created_at);
