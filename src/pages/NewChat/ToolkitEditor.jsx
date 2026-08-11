@@ -46,17 +46,16 @@ const ToolkitEditor = ({ toolkit, onCloseToolkitEditor, onToolkitCreated, onTool
   const [editToolDetail, setEditToolDetail] = useState(null);
 
   const isCreating = toolkit?.isCreating || false;
-  // Captured once at mount (lazy initializer), NOT re-derived from `toolkit`
-  // on every render: onToolkitEditorCreated() replaces the whole `toolkit`
-  // prop with the raw API-created entity once Create succeeds
-  // (useEditToolkit.js's onToolkitEditorCreated -> setEditingToolkit), and
-  // that entity does not reliably carry an isMCP/meta.mcp flag — which used
-  // to silently flip `isMCP` (and every conditional testid derived from it:
-  // mcp-canvas-title/-close-button/-create-button) to false right after
-  // creation, mid-session (ELITEA-2085 fix). The editor instance always
-  // remounts fresh per open/close cycle (conditionally rendered in
-  // NewChat.jsx), so a lazy useState initializer is safe and correct here.
-  const [isMCP] = useState(() => toolkit?.isMCP || toolkit?.meta?.mcp || false);
+  const isMCP = toolkit?.isMCP || toolkit?.meta?.mcp || false;
+
+  // Testid scope ONLY — deliberately not used by any product logic. Captured
+  // once at mount because onToolkitEditorCreated() swaps the whole `toolkit`
+  // prop for the raw API-created entity once Create succeeds
+  // (useEditToolkit.js -> setEditingToolkit), and that entity does not reliably
+  // carry isMCP/meta.mcp — which made the mcp-canvas-* testids vanish mid-flow.
+  // Kept separate from `isMCP` so hideNameInput / hideNameDescriptionInput /
+  // header text / analytics stay byte-identical to main.
+  const [isMcpTestIdScope] = useState(() => toolkit?.isMCP || toolkit?.meta?.mcp || false);
 
   const [validationState, setValidationState] = useState({
     hasErrors: false,
@@ -249,8 +248,8 @@ const ToolkitEditor = ({ toolkit, onCloseToolkitEditor, onToolkitCreated, onTool
       onDiscard={handleDiscard}
       initialValues={normalizedInitialValues}
       error={error}
-      titleTestId={isMCP ? 'mcp-canvas-title' : undefined}
-      closeButtonTestId={isMCP ? 'mcp-canvas-close-button' : undefined}
+      titleTestId={isMcpTestIdScope ? 'mcp-canvas-title' : undefined}
+      closeButtonTestId={isMcpTestIdScope ? 'mcp-canvas-close-button' : undefined}
       saveButton={
         isCreating ? (
           <CreateToolkitButton
@@ -258,7 +257,7 @@ const ToolkitEditor = ({ toolkit, onCloseToolkitEditor, onToolkitCreated, onTool
             onToolkitCreated={handleToolkitCreated}
             hasErrors={validationState.hasErrors}
             triggerValidation={validationState.triggerValidation}
-            testId={isMCP ? 'mcp-canvas-create-button' : undefined}
+            testId={isMcpTestIdScope ? 'mcp-canvas-create-button' : undefined}
           />
         ) : (
           <SaveToolkitButton

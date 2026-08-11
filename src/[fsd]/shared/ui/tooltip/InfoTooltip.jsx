@@ -100,18 +100,6 @@ const InfoTooltip = memo(props => {
     titleContent = <TooltipMarkdownContent>{tooltipConfig.title}</TooltipMarkdownContent>;
   }
 
-  // Caller-scoped testid on the popper CONTENT wrapper — opt-in only (per
-  // the shared-component testid ruling, `.agents/testing.md` § Locator
-  // policy: shared components never hardcode a feature-scoped testid).
-  // Wrapping only fires when a caller passes `contentTestId`, so the DOM
-  // for every other InfoTooltip instance on the page (e.g. Pgvector
-  // Configuration, Embedding Model on the Artifact toolkit form) is
-  // unchanged. Added for ELITEA-1866 — see toolkit_creation_page.py's
-  // get_bucket_info_tooltip_text().
-  if (contentTestId) {
-    titleContent = <Box data-testid={contentTestId}>{titleContent}</Box>;
-  }
-
   return (
     <Tooltip
       title={titleContent}
@@ -122,6 +110,11 @@ const InfoTooltip = memo(props => {
             zIndex: tooltipConfig.zIndex,
           },
         },
+        // Caller-scoped testid on MuiTooltip's own `tooltip` slot (the bubble
+        // element that already exists), NOT on a new wrapper node — so the
+        // popper DOM is byte-identical for every InfoTooltip instance,
+        // whether or not a caller opts in. `undefined` renders no attribute.
+        tooltip: { 'data-testid': contentTestId },
       }}
     >
       {iconElement}

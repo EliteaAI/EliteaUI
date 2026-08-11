@@ -197,14 +197,7 @@ const AnalyticsUserDetailed = memo(props => {
                   axisLine={{ stroke: axisStroke }}
                   tickLine={{ stroke: axisStroke }}
                 />
-                <RechartsTooltip
-                  content={tooltipProps => (
-                    <ChartTooltip
-                      {...tooltipProps}
-                      testId="analytics-user-detail-chart-tooltip"
-                    />
-                  )}
-                />
+                <RechartsTooltip content={<ChartTooltip testId="analytics-user-detail-chart-tooltip" />} />
                 <Area
                   yAxisId="left"
                   type="monotone"
