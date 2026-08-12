@@ -571,7 +571,10 @@ const ToolMenu = memo(props => {
           }
           placement="top"
         >
-          <Box component="span">
+          <Box
+            component="span"
+            data-testid="agent-add-toolkit-button-tooltip"
+          >
             <BaseBtn
               data-testid="agent-add-toolkit-button"
               variant={BUTTON_VARIANTS.iconLabel}
@@ -596,7 +599,10 @@ const ToolMenu = memo(props => {
             }
             placement="top"
           >
-            <Box component="span">
+            <Box
+              component="span"
+              data-testid="agent-add-mcp-button-tooltip"
+            >
               <BaseBtn
                 data-testid="agent-add-mcp-button"
                 variant={BUTTON_VARIANTS.iconLabel}
@@ -621,7 +627,10 @@ const ToolMenu = memo(props => {
           }
           placement="top"
         >
-          <Box component="span">
+          <Box
+            component="span"
+            data-testid="agent-add-agent-button-tooltip"
+          >
             <BaseBtn
               data-testid="agent-add-agent-button"
               variant={BUTTON_VARIANTS.iconLabel}
@@ -646,7 +655,10 @@ const ToolMenu = memo(props => {
           }
           placement="top"
         >
-          <Box component="span">
+          <Box
+            component="span"
+            data-testid="agent-add-pipeline-button-tooltip"
+          >
             <BaseBtn
               data-testid="agent-add-pipeline-button"
               variant={BUTTON_VARIANTS.iconLabel}
