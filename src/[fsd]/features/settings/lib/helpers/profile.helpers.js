@@ -16,6 +16,7 @@ export const PROFILE_INITIAL_VALUES = {
   persona: DEFAULT_PERSONA,
   personality_instructions: { ...EMPTY_PERSONALITY_INSTRUCTIONS },
   default_internal_mcp_enabled: false,
+  default_ask_user_enabled: false,
   context_enabled: DEFAULT_CONTEXT_STRATEGY.ENABLED,
   max_context_tokens: DEFAULT_CONTEXT_STRATEGY.MAX_CONTEXT_TOKENS,
   preserve_recent_messages: DEFAULT_CONTEXT_STRATEGY.PRESERVE_RECENT_MESSAGES,
@@ -57,6 +58,7 @@ export const serializeProfileFormData = (authorData, defaultModel, selectedProje
     },
     default_internal_mcp_enabled: p.default_internal_mcp_enabled ?? false,
     midturn_injection_enabled: p.midturn_injection_enabled ?? false,
+    default_ask_user_enabled: p.default_ask_user_enabled ?? false,
     context_enabled: cm.enabled ?? DEFAULT_CONTEXT_STRATEGY.ENABLED,
     max_context_tokens: cm.max_context_tokens ?? DEFAULT_CONTEXT_STRATEGY.MAX_CONTEXT_TOKENS,
     preserve_recent_messages:
@@ -79,6 +81,7 @@ export const deserializeProfileFormData = formValues => ({
     personality_instructions: formValues.personality_instructions,
     default_internal_mcp_enabled: formValues.default_internal_mcp_enabled,
     midturn_injection_enabled: formValues.midturn_injection_enabled,
+    default_ask_user_enabled: formValues.default_ask_user_enabled,
   },
   default_context_management: {
     enabled: formValues.context_enabled,

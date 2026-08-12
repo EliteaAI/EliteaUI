@@ -58,7 +58,7 @@ const ChatHitlActions = memo(props => {
 
   if (isClarifyingQuestion) {
     return (
-      <Box sx={styles.container}>
+      <Box sx={styles.clarifyingContainer}>
         {message?.trim() && (
           <Box sx={styles.message}>
             <Markdown>{message}</Markdown>
@@ -198,6 +198,13 @@ const getStyles = () => ({
     background: palette.background.userInputBackgroundActive,
     alignItems: 'flex-start',
   }),
+  clarifyingContainer: {
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem',
+    alignItems: 'flex-start',
+  },
   sensitiveContainer: ({ palette }) => ({
     width: '100%',
     display: 'flex',

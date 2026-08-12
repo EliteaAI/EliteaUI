@@ -218,6 +218,22 @@ const ChatBox = forwardRef((props, boxRef) => {
     pendingHitlMessage?.hitlInterrupt || pendingHitlMessage?.hitlInterrupts?.length,
   );
 
+  // A clarifying question (ask_user) is a single scalar pause that accepts a
+  // free-text answer. Unlike other HITL pauses it should NOT lock the composer:
+  // the user may either pick an option on the card or type their own reply,
+  // which is routed back as the answer (see onSendMessage).
+  const isPendingClarifyingQuestion = useMemo(() => {
+    if (!pendingHitlMessage) return false;
+    const interrupts = Array.isArray(pendingHitlMessage.hitlInterrupts)
+      ? pendingHitlMessage.hitlInterrupts
+      : pendingHitlMessage.hitlInterrupt
+        ? [pendingHitlMessage.hitlInterrupt]
+        : [];
+    return interrupts.length === 1 && interrupts[0]?.guardrail_type === 'clarifying_question';
+  }, [pendingHitlMessage]);
+
+  const hasBlockingHitlInterrupt = hasPendingHitlInterrupt && !isPendingClarifyingQuestion;
+
   // Chat states
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [hasStarterBeenSent, setHasStarterBeenSent] = useState(false);
@@ -1629,13 +1645,30 @@ const ChatBox = forwardRef((props, boxRef) => {
       resetSlash();
       dismissNextInputSuggestion();
 
-      if (hasPendingHitlInterrupt) {
+      // A clarifying-question pause accepts a free-text reply: route the typed
+      // message back as the answer instead of starting a new turn.
+      if (isPendingClarifyingQuestion) {
+        const text = typeof question === 'string' ? question.trim() : '';
+        if (!text) return;
+        chatInput.current?.reset();
+        return onHitlResume({ action: 'answer', value: text });
+      }
+
+      if (hasBlockingHitlInterrupt) {
         return;
       }
 
       return onPredictStream(question);
     },
-    [hasPendingHitlInterrupt, onPredictStream, resetSlash, stopTTS, dismissNextInputSuggestion],
+    [
+      hasBlockingHitlInterrupt,
+      isPendingClarifyingQuestion,
+      onHitlResume,
+      onPredictStream,
+      resetSlash,
+      stopTTS,
+      dismissNextInputSuggestion,
+    ],
   );
 
   // Rollback re-sends through the normal path; ref because onPredictStream is
@@ -2301,7 +2334,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       isUploadingAttachments ||
       isUpdatingInternalToolsConfig ||
       activeConversation?.isSending ||
-      hasPendingHitlInterrupt ||
+      hasBlockingHitlInterrupt ||
       (isStreamingNow && !isInjectable) ||
       isActiveParticipantBroken,
     [
@@ -2311,7 +2344,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       isUploadingAttachments,
       isUpdatingInternalToolsConfig,
       activeConversation?.isSending,
-      hasPendingHitlInterrupt,
+      hasBlockingHitlInterrupt,
       isStreamingNow,
       isInjectable,
       isActiveParticipantBroken,

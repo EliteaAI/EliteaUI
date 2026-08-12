@@ -100,7 +100,13 @@ const NewConversationView = forwardRef(
     const [selectedParticipantDetails, setSelectedParticipantDetails] = useState(activeParticipant || null);
     const [prevConversation, setPrevConversation] = useState(activeConversation);
     const defaultInternalMcpEnabled = user?.personalization?.default_internal_mcp_enabled ?? false;
-    const [internalTools, setInternalTools] = useState(defaultInternalMcpEnabled ? ['internal_mcp'] : []);
+    const defaultAskUserEnabled = user?.personalization?.default_ask_user_enabled ?? false;
+    const [internalTools, setInternalTools] = useState(() => {
+      const tools = [];
+      if (defaultInternalMcpEnabled) tools.push('internal_mcp');
+      if (defaultAskUserEnabled) tools.push('ask_user');
+      return tools;
+    });
     const [showRecommendationList, setShowRecommendationList] = useState(false);
     const { data: modelsData = { items: [], total: 0 } } = useListModelsQuery(
       { projectId: selectedProjectId, include_shared: true },
