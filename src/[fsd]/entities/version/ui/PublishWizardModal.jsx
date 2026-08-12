@@ -255,6 +255,7 @@ const PublishWizardModal = memo(
 
               {publishError && step !== PUBLISH_STEPS.PREPARATION && (
                 <Alert
+                  data-testid="publish-wizard-error-alert"
                   severity="error"
                   sx={{ marginTop: '1rem' }}
                 >
