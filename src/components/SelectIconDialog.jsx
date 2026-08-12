@@ -304,6 +304,7 @@ export default function SelectIconDialog({
       placement="top"
     >
       <IconButton
+        data-testid="agent-icon-picker-upload-button"
         variant="elitea"
         color="tertiary"
         onClick={isUploading ? undefined : onImport}

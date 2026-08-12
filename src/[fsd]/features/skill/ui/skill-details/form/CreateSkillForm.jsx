@@ -161,6 +161,8 @@ const CreateSkillForm = memo(props => {
               <Box sx={styles.accordionContent}>
                 <Box sx={styles.nameContainer}>
                   <EntityIcon
+                    data-testid="skill-form-icon-button"
+                    imgTestId="skill-form-icon-img"
                     entityType={ChatParticipantType.Skills}
                     icon={formik.values?.version_details?.meta?.icon_meta}
                     editable={canUploadIcon}
