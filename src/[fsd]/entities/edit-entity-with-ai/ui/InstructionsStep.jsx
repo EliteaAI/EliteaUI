@@ -9,7 +9,15 @@ import EditEntityComparisonLayout from './EditEntityComparisonLayout';
 import TextDiffHighlight from './TextDiffHighlight';
 
 const InstructionsStep = memo(props => {
-  const { currentData, draftData, onDraftChange, fieldApplyFlags, onToggleField, maxLength } = props;
+  const {
+    currentData,
+    draftData,
+    onDraftChange,
+    fieldApplyFlags,
+    onToggleField,
+    maxLength,
+    instructionsCheckboxTestId,
+  } = props;
 
   const currentInstructions = currentData.version_details?.instructions || '';
   const suggestedInstructions = draftData.instructions || '';
@@ -50,6 +58,7 @@ const InstructionsStep = memo(props => {
                 checked={fieldApplyFlags.instructions}
                 onChange={() => onToggleField('instructions')}
                 sx={styles.checkbox}
+                data-testid={instructionsCheckboxTestId}
               />
             </Box>
           </Box>

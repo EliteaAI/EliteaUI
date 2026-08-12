@@ -17,6 +17,8 @@ const GeneralStep = memo(props => {
     fieldApplyFlags,
     onToggleField,
     nameMaxLength = MAX_NAME_LENGTH,
+    nameCheckboxTestId,
+    descriptionCheckboxTestId,
   } = props;
 
   const currentName = currentData.name || '';
@@ -80,6 +82,7 @@ const GeneralStep = memo(props => {
                   checked={fieldApplyFlags.name}
                   onChange={() => onToggleField('name')}
                   sx={styles.checkbox}
+                  data-testid={nameCheckboxTestId}
                 />
               </Box>
             </Box>
@@ -112,6 +115,7 @@ const GeneralStep = memo(props => {
                   checked={fieldApplyFlags.description}
                   onChange={() => onToggleField('description')}
                   sx={styles.checkbox}
+                  data-testid={descriptionCheckboxTestId}
                 />
               </Box>
             </Box>

@@ -38,6 +38,12 @@ const EditEntityModal = memo(props => {
     loadingIndicatorTestId,
     generateButtonTestId,
     cancelButtonTestId,
+    stepIndicatorTestId,
+    refinePromptButtonTestId,
+    previousButtonTestId,
+    nextButtonTestId,
+    wizardSaveButtonTestId,
+    saveAsVersionButtonTestId,
   } = props;
 
   const generatePromiseRef = useRef(null);
@@ -176,6 +182,7 @@ const EditEntityModal = memo(props => {
           <EditEntityStepIndicator
             steps={steps}
             activeStepIndex={activeStepIndex}
+            testId={stepIndicatorTestId}
           />
           <Box sx={styles.stepContent}>
             {renderStep(activeStep.key, draftData, setDraftData, setIsDraftValid)}
@@ -254,6 +261,7 @@ const EditEntityModal = memo(props => {
           size="small"
           onClick={handleRefinePrompt}
           disabled={isBusy}
+          data-testid={refinePromptButtonTestId}
         >
           Refine Prompt
         </BaseBtn>
@@ -264,6 +272,7 @@ const EditEntityModal = memo(props => {
               size="small"
               onClick={handlePrevious}
               disabled={isBusy}
+              data-testid={previousButtonTestId}
             >
               Previous
             </BaseBtn>
@@ -275,6 +284,7 @@ const EditEntityModal = memo(props => {
                 size="small"
                 onClick={handleSave}
                 disabled={isSaveDisabled}
+                data-testid={wizardSaveButtonTestId}
               >
                 {isSaving ? savingLabel || 'Saving...' : saveLabel || 'Save'}
               </BaseBtn>
@@ -284,6 +294,7 @@ const EditEntityModal = memo(props => {
                   size="small"
                   onClick={handleSaveAsVersionClick}
                   disabled={isSaveDisabled}
+                  data-testid={saveAsVersionButtonTestId}
                 >
                   {isSavingAsVersion ? 'Saving...' : 'Save as Version'}
                 </BaseBtn>
@@ -294,6 +305,7 @@ const EditEntityModal = memo(props => {
               variant={BUTTON_VARIANTS.elitea}
               size="small"
               onClick={handleNext}
+              data-testid={nextButtonTestId}
             >
               Next
             </BaseBtn>

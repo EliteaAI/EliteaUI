@@ -3,13 +3,16 @@ import { memo } from 'react';
 import { Box, Typography, alpha } from '@mui/material';
 
 const EditEntityStepIndicator = memo(props => {
-  const { steps, activeStepIndex } = props;
+  const { steps, activeStepIndex, testId } = props;
 
   const activeStep = steps[activeStepIndex];
 
   return (
     <Box sx={styles.container}>
-      <Typography sx={styles.title}>{`${activeStepIndex + 1}. ${activeStep?.label}`}</Typography>
+      <Typography
+        sx={styles.title}
+        data-testid={testId}
+      >{`${activeStepIndex + 1}. ${activeStep?.label}`}</Typography>
       <Box sx={styles.progressBar}>
         {steps.map((step, index) => (
           <Box

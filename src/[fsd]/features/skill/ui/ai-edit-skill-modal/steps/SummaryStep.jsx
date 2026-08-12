@@ -7,7 +7,16 @@ import { Input, Text } from '@/[fsd]/shared/ui';
 import { MAX_DESCRIPTION_LENGTH, MAX_INSTRUCTIONS_LENGTH } from '@/common/constants';
 
 const SummaryStep = memo(props => {
-  const { currentData, draftData, onDraftChange, fieldApplyFlags, onToggleField } = props;
+  const {
+    currentData,
+    draftData,
+    onDraftChange,
+    fieldApplyFlags,
+    onToggleField,
+    nameInputTestId,
+    descriptionInputTestId,
+    instructionsInputTestId,
+  } = props;
 
   const { mergedName, mergedDescription, mergedInstructions } = useMemo(
     () => ({
@@ -39,7 +48,7 @@ const SummaryStep = memo(props => {
             fullWidth
             value={mergedName}
             onChange={e => handleFieldChange('name', e.target.value)}
-            inputProps={{ maxLength: SKILL_NAME_MAX_LENGTH }}
+            inputProps={{ maxLength: SKILL_NAME_MAX_LENGTH, 'data-testid': nameInputTestId }}
             enableAutoBlur={false}
             disableUnderline
             sx={styles.cardInput}
@@ -63,7 +72,7 @@ const SummaryStep = memo(props => {
             maxRows={4}
             value={mergedDescription}
             onChange={e => handleFieldChange('description', e.target.value)}
-            inputProps={{ maxLength: MAX_DESCRIPTION_LENGTH }}
+            inputProps={{ maxLength: MAX_DESCRIPTION_LENGTH, 'data-testid': descriptionInputTestId }}
             enableAutoBlur={false}
             disableUnderline
             sx={styles.cardInput}
@@ -87,7 +96,7 @@ const SummaryStep = memo(props => {
             maxRows={10}
             value={mergedInstructions}
             onChange={e => handleFieldChange('instructions', e.target.value)}
-            inputProps={{ maxLength: MAX_INSTRUCTIONS_LENGTH }}
+            inputProps={{ maxLength: MAX_INSTRUCTIONS_LENGTH, 'data-testid': instructionsInputTestId }}
             enableAutoBlur={false}
             disableUnderline
             sx={styles.cardInput}

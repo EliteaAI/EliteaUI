@@ -202,6 +202,8 @@ const AIEditSkillModal = memo(props => {
             <EditEntityGeneralStep
               {...stepProps}
               nameMaxLength={SKILL_NAME_MAX_LENGTH}
+              nameCheckboxTestId="ai-edit-skill-general-name-checkbox"
+              descriptionCheckboxTestId="ai-edit-skill-general-description-checkbox"
             />
           );
         case EDIT_STEP_KEYS.INSTRUCTIONS:
@@ -209,10 +211,18 @@ const AIEditSkillModal = memo(props => {
             <EditEntityInstructionsStep
               {...stepProps}
               maxLength={MAX_INSTRUCTIONS_LENGTH}
+              instructionsCheckboxTestId="ai-edit-skill-instructions-checkbox"
             />
           );
         case EDIT_STEP_KEYS.SUMMARY:
-          return <SummaryStep {...stepProps} />;
+          return (
+            <SummaryStep
+              {...stepProps}
+              nameInputTestId="ai-edit-skill-summary-name-input"
+              descriptionInputTestId="ai-edit-skill-summary-description-input"
+              instructionsInputTestId="ai-edit-skill-summary-instructions-input"
+            />
+          );
         default:
           return null;
       }
@@ -245,6 +255,12 @@ const AIEditSkillModal = memo(props => {
         loadingIndicatorTestId="ai-edit-skill-loading-indicator"
         generateButtonTestId="ai-edit-skill-generate-button"
         cancelButtonTestId="ai-edit-skill-cancel-button"
+        stepIndicatorTestId="ai-edit-skill-step-indicator"
+        refinePromptButtonTestId="ai-edit-skill-wizard-refine-prompt-button"
+        previousButtonTestId="ai-edit-skill-wizard-previous-button"
+        nextButtonTestId="ai-edit-skill-wizard-next-button"
+        wizardSaveButtonTestId="ai-edit-skill-wizard-save-button"
+        saveAsVersionButtonTestId="ai-edit-skill-wizard-save-as-version-button"
       />
       <Modal.BaseModal
         open={showVersionModal}
