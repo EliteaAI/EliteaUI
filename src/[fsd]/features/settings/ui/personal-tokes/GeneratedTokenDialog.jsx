@@ -50,8 +50,14 @@ const GeneratedTokenDialog = memo(props => {
     >
       <DialogContent sx={styles.dialogContent}>
         <Box sx={styles.header}>
-          <Typography sx={styles.title}>New token generated!</Typography>
+          <Typography
+            data-testid="generated-token-dialog-title"
+            sx={styles.title}
+          >
+            New token generated!
+          </Typography>
           <Box
+            data-testid="generated-token-dialog-close-button"
             component={CancelIcon}
             sx={styles.closeIcon}
             onClick={onClose}
@@ -65,6 +71,7 @@ const GeneratedTokenDialog = memo(props => {
             />
           </Box>
           <Typography
+            data-testid="generated-token-dialog-warning"
             variant="bodySmall"
             color="text.attention"
           >
@@ -73,6 +80,7 @@ const GeneratedTokenDialog = memo(props => {
         </StyledTipsContainer>
         <Box sx={styles.tokenContainer}>
           <Typography
+            data-testid="generated-token-dialog-token-name"
             variant="bodySmall"
             color="text.default"
           >
@@ -80,6 +88,7 @@ const GeneratedTokenDialog = memo(props => {
           </Typography>
           <Box sx={styles.tokenScrollBox}>
             <Typography
+              data-testid="generated-token-dialog-token-value"
               sx={styles.tokenText}
               variant="bodyMedium"
               color="text.default"
@@ -91,6 +100,7 @@ const GeneratedTokenDialog = memo(props => {
       </DialogContent>
       <DialogActions sx={styles.dialogActions}>
         <Button
+          data-testid="generated-token-dialog-copy-button"
           variant="elitea"
           color="primary"
           sx={styles.copyButton}

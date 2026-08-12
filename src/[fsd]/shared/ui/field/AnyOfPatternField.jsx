@@ -46,6 +46,7 @@ const AnyOfPatternField = memo(props => {
 
   return (
     <Box
+      data-testid={`toolkit-test-param-${fieldKey}`}
       key={fieldKey}
       sx={styles.wrapper}
       className="index-config-field"

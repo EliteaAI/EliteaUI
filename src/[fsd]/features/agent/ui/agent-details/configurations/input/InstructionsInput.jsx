@@ -331,6 +331,7 @@ const InstructionsInput = memo(props => {
       items={[
         {
           title: 'Instructions',
+          testId: 'agent-canvas-section-instructions',
           content: (
             <Box
               sx={styles.wrapper}

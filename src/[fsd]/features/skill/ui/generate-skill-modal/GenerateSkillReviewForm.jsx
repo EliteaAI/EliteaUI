@@ -41,6 +41,9 @@ const GenerateSkillReviewForm = memo(props => {
               maxLength: SKILL_NAME_MAX_LENGTH,
               'data-testid': 'generate-skill-review-name-input',
             },
+            formHelperText: {
+              'data-testid': 'generate-skill-review-name-helper-text',
+            },
           }}
           helperText={validationErrors.name || `${(draft.name || '').length}/${SKILL_NAME_MAX_LENGTH}`}
           error={!!validationErrors.name}

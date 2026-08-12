@@ -39,6 +39,7 @@ const ToolView = memo(props => {
   return (
     <Box
       key={toolOption.value}
+      data-testid={`toolkit-card-tool-item-${toolOption.value}`}
       sx={styles.toolContainer}
       onClick={toggleHandler}
       onMouseEnter={onMouseEnter}

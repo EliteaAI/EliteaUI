@@ -16,6 +16,8 @@ const DiscreteSlider = memo(props => {
     min = 1,
     max,
     showLabels = false,
+    testId,
+    markTestIdPrefix,
     ...sliderProps
   } = props;
 
@@ -34,7 +36,10 @@ const DiscreteSlider = memo(props => {
   );
 
   return (
-    <Box sx={styles.container}>
+    <Box
+      data-testid={testId}
+      sx={styles.container}
+    >
       <Label.InfoLabelWithTooltip
         label={label}
         tooltip={labelTooltip || (tooltipFormatter ? tooltipFormatter(value, disabled) : '')}
@@ -92,6 +97,7 @@ const DiscreteSlider = memo(props => {
                 >
                   <Box
                     onClick={handleMarkClick(mark.value)}
+                    data-testid={markTestIdPrefix ? `${markTestIdPrefix}-${mark.value}` : undefined}
                     sx={{
                       ...styles.markTooltipTrigger,
                       left: `${position}%`,

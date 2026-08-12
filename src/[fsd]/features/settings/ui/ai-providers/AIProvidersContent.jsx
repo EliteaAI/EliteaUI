@@ -211,6 +211,7 @@ const AIProvidersContent = memo(() => {
     <Box sx={styles.container}>
       <DrawerPageHeader
         title="AI Providers"
+        titleTestId="ai-providers-page-title"
         showBorder
       />
       <ConfigurationsPanel

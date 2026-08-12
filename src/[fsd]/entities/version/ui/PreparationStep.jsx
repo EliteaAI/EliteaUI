@@ -53,13 +53,17 @@ const PreparationStep = memo(
           onChange={handleVersionNameChange}
           error={!!error}
           helperText={error || 'Only letters, numbers, dots, hyphens and underscores allowed.'}
-          inputProps={{ maxLength: VERSION_NAME_MAX_LENGTH }}
+          inputProps={{
+            maxLength: VERSION_NAME_MAX_LENGTH,
+            'data-testid': 'agent-publish-version-name-input',
+          }}
           sx={styles.textField}
         />
 
         <Select.SingleSelect
           showBorder
           displayEmpty
+          data-testid="agent-publish-category-select"
           emptyPlaceholder={
             <Typography
               variant="labelMedium"
@@ -88,6 +92,7 @@ const PreparationStep = memo(
         <FormControlLabel
           control={
             <Checkbox.BaseCheckbox
+              data-testid="agent-publish-agree-checkbox"
               checked={agreed}
               onChange={handleAgreedChange}
             />

@@ -16,8 +16,25 @@ import useIsPipelineYamlCodeDirty from '@/pages/Pipelines/useIsPipelineYamlCodeD
  * @param {function} onCancel - Cancel button handler
  * @param {function} onDiscard - Discard button handler
  * @param {React.ReactNode} saveButton - Save button component to render
+ * @param {string} [titleTestId] - Optional data-testid for the title Typography. Caller-supplied
+ *   (never hardcoded here) since this component is shared across Agent/Pipeline/Toolkit editors.
+ * @param {string} [subtitleTestId] - Optional data-testid for the subtitle Typography.
+ * @param {string} [closeButtonTestId] - Optional data-testid for the close (X) IconButton.
+ * @param {string} [publicLabelTestId] - Optional data-testid for the "Public" label Typography
+ *   shown instead of Discard/Save when `isPublic` is true (ELITEA-2075).
  */
-const EditorHeader = ({ title, subtitle, onCancel, onDiscard, saveButton, isPublic }) => {
+const EditorHeader = ({
+  title,
+  subtitle,
+  onCancel,
+  onDiscard,
+  saveButton,
+  isPublic,
+  titleTestId,
+  subtitleTestId,
+  closeButtonTestId,
+  publicLabelTestId,
+}) => {
   const theme = useTheme();
   const { discardApplicationChanges } = useDiscardApplicationChanges(onDiscard);
   const { dirty: isFormDirty } = useFormikContext();
@@ -31,6 +48,7 @@ const EditorHeader = ({ title, subtitle, onCancel, onDiscard, saveButton, isPubl
           variant="elitea"
           color="tertiary"
           onClick={onCancel}
+          data-testid={closeButtonTestId}
         >
           <CloseIcon
             fill={theme.palette.icon.fill.default}
@@ -43,6 +61,7 @@ const EditorHeader = ({ title, subtitle, onCancel, onDiscard, saveButton, isPubl
             color="text.secondary"
             noWrap
             sx={styles.title}
+            data-testid={titleTestId}
           >
             {title}
           </Typography>
@@ -52,6 +71,7 @@ const EditorHeader = ({ title, subtitle, onCancel, onDiscard, saveButton, isPubl
               color="text.primary"
               noWrap
               sx={styles.subtitle}
+              data-testid={subtitleTestId}
             >
               {subtitle}
             </Typography>
@@ -75,6 +95,7 @@ const EditorHeader = ({ title, subtitle, onCancel, onDiscard, saveButton, isPubl
               <Typography
                 variant="bodySmall"
                 sx={styles.publicLabel}
+                data-testid={publicLabelTestId}
               >
                 Public
               </Typography>

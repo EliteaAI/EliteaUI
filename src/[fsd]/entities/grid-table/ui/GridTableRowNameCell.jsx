@@ -13,6 +13,7 @@ const GridTableRowNameCell = memo(props => {
     loadingProgress,
     rowName,
     styles,
+    nameCellTestId,
   } = props;
 
   if (NameCellComponent) {
@@ -32,6 +33,7 @@ const GridTableRowNameCell = memo(props => {
       loadingProgress={loadingProgress}
       rowName={rowName}
       styles={styles}
+      nameCellTestId={nameCellTestId}
     />
   );
 });

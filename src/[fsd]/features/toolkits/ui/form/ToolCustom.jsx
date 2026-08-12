@@ -215,6 +215,7 @@ const ToolCustom = memo(props => {
             height="100%"
             minHeight="100%"
             notifyChange={handleChange}
+            contentTestId="toolkit-raw-json-editor-content"
           />
         </Box>
       </FormControl>

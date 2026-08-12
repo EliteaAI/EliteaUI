@@ -120,6 +120,7 @@ const ChatHitlActions = memo(props => {
             Authorize
           </BaseBtn>
           <BaseBtn
+            data-testid="sensitive-action-block-button"
             variant="alarm"
             startIcon={<RejectIcon />}
             onClick={handleReject}
@@ -132,6 +133,9 @@ const ChatHitlActions = memo(props => {
             <BlockWithCommentControl
               onSubmit={handleBlockWithComment}
               disabled={disabled}
+              triggerTestId="sensitive-action-block-with-comment-button"
+              textareaTestId="sensitive-action-block-comment-input"
+              submitTestId="sensitive-action-block-comment-submit-button"
             />
           )}
         </Box>
@@ -140,13 +144,17 @@ const ChatHitlActions = memo(props => {
   }
 
   return (
-    <Box sx={styles.container}>
+    <Box
+      data-testid="chat-hitl-actions-panel"
+      sx={styles.container}
+    >
       <Box sx={styles.message}>
         <Markdown>{message?.trim() ? message : DEFAULT_HITL_MESSAGE}</Markdown>
       </Box>
       <Box sx={styles.buttonContainer}>
         {available_actions.includes('approve') && (
           <BaseBtn
+            data-testid="chat-hitl-approve-button"
             variant="positive"
             startIcon={<CheckedIcon />}
             onClick={handleApprove}
@@ -164,6 +172,7 @@ const ChatHitlActions = memo(props => {
         )}
         {available_actions.includes('reject') && (
           <BaseBtn
+            data-testid="chat-hitl-reject-button"
             variant="alarm"
             startIcon={<RejectIcon />}
             onClick={handleReject}

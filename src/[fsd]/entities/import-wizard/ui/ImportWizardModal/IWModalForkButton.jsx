@@ -287,6 +287,7 @@ const IWModalForkButton = memo(props => {
       }
       variant="elitea"
       onClick={onClickFork}
+      data-testid="agent-fork-confirm-button"
     >
       Fork
       {(isForkingAgent || isForkingToolkit) && <StyledCircleProgress size={18} />}

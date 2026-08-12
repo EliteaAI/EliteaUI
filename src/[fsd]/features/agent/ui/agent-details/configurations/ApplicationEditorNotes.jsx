@@ -11,7 +11,15 @@ import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 const NOTES_MAX_LENGTH = 1000;
 
 const ApplicationEditorNotes = memo(props => {
-  const { style, disabled } = props;
+  const {
+    style,
+    disabled,
+    // Optional stable test hooks (testid-only locator policy). No-op when
+    // omitted, so the Agent call site (no case exercises Editor Notes there
+    // yet) is unaffected — canon #511 scope discipline.
+    sectionTestId,
+    notesInputTestId,
+  } = props;
 
   const { values: { version_details } = {}, setFieldValue } = useFormikContext();
 
@@ -28,6 +36,7 @@ const ApplicationEditorNotes = memo(props => {
     () => [
       {
         title: 'EDITOR NOTES',
+        testId: sectionTestId,
         content: (
           <Box sx={styles.fieldContainer}>
             <Input.StyledInputEnhancer
@@ -46,13 +55,16 @@ const ApplicationEditorNotes = memo(props => {
               minRows={1}
               maxRows={10}
               fieldName="Editor Notes"
-              inputProps={{ maxLength: NOTES_MAX_LENGTH }}
+              inputProps={{
+                maxLength: NOTES_MAX_LENGTH,
+                ...(notesInputTestId ? { 'data-testid': notesInputTestId } : {}),
+              }}
             />
           </Box>
         ),
       },
     ],
-    [version_details?.notes, handleNotesChange, disabled, styles],
+    [version_details?.notes, handleNotesChange, disabled, styles, sectionTestId, notesInputTestId],
   );
 
   return (

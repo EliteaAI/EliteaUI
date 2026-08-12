@@ -29,6 +29,7 @@ const DeleteEntityButton = memo(props => {
     disabled,
     shouldRequestInputName = true,
     type = 'button',
+    testId,
   } = props;
 
   const theme = useTheme();
@@ -90,7 +91,10 @@ const DeleteEntityButton = memo(props => {
             title={title}
             placement="top"
           >
-            <Box component="span">
+            <Box
+              component="span"
+              data-testid={testId}
+            >
               <IconButton
                 variant="elitea"
                 color={buttonColor}

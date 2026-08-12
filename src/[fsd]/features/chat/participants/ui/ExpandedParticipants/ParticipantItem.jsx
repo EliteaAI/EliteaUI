@@ -427,7 +427,10 @@ const ParticipantItem = memo(props => {
             />
           )}
         </Box>
-        <Box sx={styles.attentionMessageRow}>
+        <Box
+          sx={styles.attentionMessageRow}
+          data-testid="chat-participant-warning-icon"
+        >
           <Box sx={styles.attentionIcon}>
             <AttentionIcon />
           </Box>

@@ -47,6 +47,7 @@ const ResourceVersionInfo = memo(props => {
   return (
     <Box sx={styles.header}>
       <Typography
+        data-testid="help-center-page-header"
         variant="headingMedium"
         color="text.secondary"
       >

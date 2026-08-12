@@ -271,6 +271,7 @@ const AgentEditorPanel = memo(props => {
           title={settingsTooltipTitle}
         >
           <Button
+            data-testid="chat-participant-settings-button"
             size="small"
             aria-label="agent settings menu"
             aria-haspopup="settings"

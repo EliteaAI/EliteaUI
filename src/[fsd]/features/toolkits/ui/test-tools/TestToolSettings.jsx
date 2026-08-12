@@ -79,6 +79,7 @@ const TestToolSettings = memo(props => {
       <ContentContainer sx={styles.contentContainer}>
         <Box sx={styles.toolSelectContainer}>
           <Select.SingleSelect
+            data-testid="toolkit-test-tool-select"
             value={selectedTool}
             label="Tool"
             onValueChange={onChangeTool}
@@ -110,6 +111,7 @@ const TestToolSettings = memo(props => {
             toolInputVariables={toolInputVariables}
             schema={selectedToolSchema}
             onChangeInputVariables={onChangeInputVariablesWrapper}
+            inputTestId={`toolkit-test-param-${key}-input`}
           />
         ))}
       </ContentContainer>
@@ -117,6 +119,7 @@ const TestToolSettings = memo(props => {
         <Tooltip title={patInvalid ? PAT_REQUIRED_ACTION_HINT : ''}>
           <Box component="span">
             <Button.BaseBtn
+              data-testid="toolkit-test-run-tool-button"
               variant={BUTTON_VARIANTS.special}
               disabled={disabledRunTool}
               onClick={onRunTool}

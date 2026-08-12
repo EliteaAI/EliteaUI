@@ -87,24 +87,28 @@ const StateModifierNode = memo(props => {
           className: 'nowheel',
         }}
         modelConfig={pipelineLLMConfig}
+        inputProps={{ 'data-testid': 'pipeline-state-modifier-node-template-input' }}
       />
       <FlowEditorSelect.InputSelect
         id={id}
         label="Variables to clean"
         inputFieldName="variables_to_clean"
         disabled={isRunningPipeline || disabled}
+        dataTestId="pipeline-state-modifier-node-variables-to-clean-select"
       />
       <FlowEditorSelect.InputSelect
         id={id}
         label="Input"
         inputFieldName="input"
         disabled={isRunningPipeline || disabled}
+        dataTestId="pipeline-state-modifier-node-input-select"
       />
       <FlowEditorSelect.OutputSelect
         id={id}
         label="Output"
         outputFieldName="output"
         disabled={isRunningPipeline || disabled}
+        dataTestId="pipeline-state-modifier-node-output-select"
       />
     </FlowEditorNodes.NodeCard>
   );

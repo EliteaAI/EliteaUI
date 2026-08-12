@@ -22,6 +22,13 @@ import { useEdges } from '@xyflow/react';
 
 const toolkitFilter = tool => tool.type === ToolTypes.application.value;
 
+// Testid prefix for this node type (ELITEA-2038) — mirrors BaseToolNode.jsx's
+// TEST_ID_PREFIX_BY_NODE_TYPE convention, but AgentNode is its own component
+// (not a BaseToolNode caller), so the prefix is a local constant rather than
+// a lookup map. Only the fields ELITEA-2038's test actually exercises are
+// wired (.agents/testing.md § Locator policy — testid scope is load-bearing).
+const AGENT_NODE_TESTID_PREFIX = 'pipeline-agent-node';
+
 const AgentNode = memo(props => {
   const { id, data, selected, nodeType = FlowEditorConstants.PipelineNodeTypes.Agent } = props;
 
@@ -123,18 +130,21 @@ const AgentNode = memo(props => {
           selectedToolkit={yamlNode?.tool}
           disabled={isRunningPipeline || disabled}
           filterTypes={toolkitFilter}
+          data-testid={`${AGENT_NODE_TESTID_PREFIX}-agent-select`}
         />
         <FlowEditorSelect.InputSelect
           id={id}
           label={'Input'}
           inputFieldName={'input'}
           disabled={isRunningPipeline || disabled}
+          dataTestId={`${AGENT_NODE_TESTID_PREFIX}-input-select`}
         />
         <FlowEditorSelect.OutputSelect
           id={id}
           label="Output"
           outputFieldName="output"
           disabled={isRunningPipeline || disabled}
+          dataTestId={`${AGENT_NODE_TESTID_PREFIX}-output-select`}
         />
         {!isOrphan && (
           <FlowEditorSettings.InputMapping
@@ -145,6 +155,9 @@ const AgentNode = memo(props => {
             values={yamlNode?.input_mapping || {}}
             onChangeMapping={onChangeMapping}
             disabled={isRunningPipeline || disabled}
+            valueTestIdPrefix={`${AGENT_NODE_TESTID_PREFIX}-input-mapping-value`}
+            typeTestIdPrefix={`${AGENT_NODE_TESTID_PREFIX}-input-mapping-type`}
+            requiredHeadingTestId={`${AGENT_NODE_TESTID_PREFIX}-input-mapping-heading`}
           />
         )}
         <FlowEditorSettings.CommonInterruptSettings
@@ -152,6 +165,7 @@ const AgentNode = memo(props => {
           type={FlowEditorConstants.PipelineNodeTypes.Agent}
           disabled={isRunningPipeline || disabled}
           showStructuredOutput={false}
+          interruptAfterTestId={`${AGENT_NODE_TESTID_PREFIX}-interrupt-after-toggle`}
         />
       </FlowEditorNodes.NodeCard>
     </>

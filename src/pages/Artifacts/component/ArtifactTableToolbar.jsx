@@ -62,6 +62,7 @@ const ArtifactTableToolbar = memo(props => {
       {/* Left side: Bucket name with breadcrumbs and info icon */}
       <Box sx={styles.leftSection}>
         <Typography
+          data-testid="artifacts-breadcrumb-bucket-label"
           variant="headingSmall"
           sx={rootBucketSx}
           onClick={currentPrefix ? handleRootClick : undefined}
@@ -128,7 +129,10 @@ const ArtifactTableToolbar = memo(props => {
           title="Download files"
           placement="top"
         >
-          <Box component="span">
+          <Box
+            component="span"
+            data-testid="artifacts-download-files-tooltip"
+          >
             <Button.BaseBtn
               variant="icon"
               sx={styles.actionButton}
@@ -146,6 +150,7 @@ const ArtifactTableToolbar = memo(props => {
 
         {canDeleteFiles && (
           <DeleteEntityButton
+            testId="artifacts-delete-files-button"
             name={rowSelectionModel.length === totalRows ? 'all files' : 'selected files'}
             entity_name="file"
             onDelete={onDeleteArtifacts}

@@ -560,6 +560,7 @@ const MermaidDiagramOutput = memo(props => {
           </Box>
         )}
         <Box
+          data-testid="chat-mermaid-diagram-svg-container"
           component="div"
           id={diagramId}
           className={`mermaid ${errorMessage ? 'mermaid-error' : ''}`}

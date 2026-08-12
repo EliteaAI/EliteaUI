@@ -5,7 +5,7 @@ import { Box, LinearProgress, Typography } from '@mui/material';
 import { Tooltip } from '@/[fsd]/shared/ui';
 
 const DefaultNameCellContent = memo(props => {
-  const { namePrefix, isLoading, loadingProgress, rowName, styles } = props;
+  const { namePrefix, isLoading, loadingProgress, rowName, styles, nameCellTestId } = props;
 
   return (
     <>
@@ -14,6 +14,7 @@ const DefaultNameCellContent = memo(props => {
         {isLoading ? (
           <>
             <Typography
+              data-testid={nameCellTestId}
               variant="bodyMedium"
               color="text.primary"
               sx={styles.nameText}
@@ -28,6 +29,7 @@ const DefaultNameCellContent = memo(props => {
           </>
         ) : (
           <Tooltip.TypographyWithConditionalTooltip
+            data-testid={nameCellTestId}
             title={rowName}
             placement="top"
             variant="bodyMedium"

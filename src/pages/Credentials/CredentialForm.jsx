@@ -354,6 +354,7 @@ const CredentialForm = memo(props => {
           variant="bodyMedium"
           component="div"
           sx={styles.errorMessage}
+          data-testid="credential-form-api-error-message"
         >
           {apiError}
         </Typography>

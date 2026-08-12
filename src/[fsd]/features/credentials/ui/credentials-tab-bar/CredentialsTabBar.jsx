@@ -219,6 +219,7 @@ const CredentialTabBar = memo(props => {
             <MuiButton
               variant="elitea"
               color="primary"
+              data-testid="credential-form-save-button"
               disabled={
                 hasErrors ||
                 shouldDisableSave ||
@@ -236,6 +237,9 @@ const CredentialTabBar = memo(props => {
           title={isEditing ? 'Discard' : 'Cancel'}
           disabled={isLoading || isDeleting || !isFormDirtyExcluding}
           onDiscard={onCancel}
+          dataTestId="credential-form-discard-button"
+          modalDataTestId="credential-discard-confirm-modal"
+          confirmButtonDataTestId="credential-discard-confirm-button"
         />
       </TabBarItems>
     </>

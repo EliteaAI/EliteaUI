@@ -45,6 +45,7 @@ const ArtifactRowActions = memo(props => {
 
     if (isFile) {
       items.push({
+        key: 'artifacts-file-download',
         label: 'Download',
         icon: <DownloadIcon sx={styles.menuIcon} />,
         onClick: handleDownload,
@@ -52,6 +53,7 @@ const ArtifactRowActions = memo(props => {
 
       if (canDelete) {
         items.push({
+          key: 'artifacts-file-delete',
           label: 'Delete',
           icon: <DeleteIcon sx={styles.menuIcon} />,
           entityName: row.name,
@@ -78,6 +80,7 @@ const ArtifactRowActions = memo(props => {
             sx={styles.actionButton}
             size="small"
             aria-label={`Preview ${row.name}`}
+            data-testid={`artifacts-file-preview-button-${row.name}`}
           >
             <Box
               component={ViewFileIcon}

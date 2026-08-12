@@ -2,6 +2,7 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import { Box, MenuItem, MenuList, Typography } from '@mui/material';
 
+import { getChatParticipantUniqueId } from '@/[fsd]/features/chat/participants/lib/helpers';
 import UserAvatar from '@/components/UserAvatar';
 
 import DeleteParticipantButton from '../ParticipantActions/DeleteParticipantButton';
@@ -44,6 +45,7 @@ const UserMenu = memo(props => {
               onMouseEnter={() => setHoveredUserId(user.id)}
               onMouseLeave={() => setHoveredUserId(null)}
               sx={itemStyles.root}
+              data-testid={`chat-participant-row-${getChatParticipantUniqueId(user)}`}
             >
               <Box
                 sx={itemStyles.contentRow}

@@ -28,7 +28,7 @@ const EmptyListPlaceHolder = ({ query }) => {
     return <Box>{`You have no credentials.`}</Box>;
   } else {
     return (
-      <Box>
+      <Box data-testid="credentials-search-empty-state">
         Nothing found. <br />
         Create yours now!
       </Box>

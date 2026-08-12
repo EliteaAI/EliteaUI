@@ -47,6 +47,7 @@ const GeneralFormPanel = ({ applicationId, onCollapsed }) => {
       >
         {!isSmallWindow && (
           <IconButton
+            data-testid="pipeline-config-collapse-button"
             sx={{
               padding: '0px',
               marginLeft: '0px',

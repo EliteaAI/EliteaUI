@@ -101,6 +101,8 @@ const GenerateAgentReviewForm = memo(props => {
           onFocus={() => toggleFieldFocus('name')}
           onBlur={() => toggleFieldFocus(null)}
           slotProps={{ htmlInput: { maxLength: MAX_NAME_LENGTH } }}
+          inputProps={{ 'data-testid': 'generate-agent-review-name-input' }}
+          helperTextTestId="generate-agent-review-name-helper-text"
           helperText={validationErrors.name}
           error={!!validationErrors.name}
           sx={styles.compactMultilineInput}
@@ -129,6 +131,7 @@ const GenerateAgentReviewForm = memo(props => {
           onFocus={() => toggleFieldFocus('description')}
           onBlur={() => toggleFieldFocus(null)}
           slotProps={{ htmlInput: { maxLength: MAX_DESCRIPTION_LENGTH } }}
+          inputProps={{ 'data-testid': 'generate-agent-review-description-input' }}
           helperText={validationErrors.description}
           error={!!validationErrors.description}
         />
@@ -153,6 +156,7 @@ const GenerateAgentReviewForm = memo(props => {
           maxRows={10}
           value={draft.instructions || ''}
           onChange={e => handleFieldChange('instructions', e.target.value)}
+          inputProps={{ 'data-testid': 'generate-agent-review-instructions-input' }}
         />
       </Box>
 
@@ -168,6 +172,7 @@ const GenerateAgentReviewForm = memo(props => {
           onFocus={() => toggleFieldFocus('welcome_message')}
           onBlur={() => toggleFieldFocus(null)}
           slotProps={{ htmlInput: { maxLength: MAX_WELCOME_MESSAGE_LENGTH } }}
+          inputProps={{ 'data-testid': 'generate-agent-review-welcome-message-input' }}
           helperText={validationErrors.welcome_message}
           error={!!validationErrors.welcome_message}
           hasActionsToolBar={false}
@@ -185,7 +190,12 @@ const GenerateAgentReviewForm = memo(props => {
 
       {starters.length > 0 && (
         <Box sx={styles.section}>
-          <Typography sx={styles.sectionLabel}>Chat starters:</Typography>
+          <Typography
+            data-testid="generate-agent-review-starters-header"
+            sx={styles.sectionLabel}
+          >
+            Chat starters:
+          </Typography>
           <Box sx={styles.startersList}>
             {starters.map((starter, index) => (
               <Box
@@ -203,6 +213,7 @@ const GenerateAgentReviewForm = memo(props => {
                     onFocus={() => toggleFieldFocus(`starter_${index}`)}
                     onBlur={() => toggleFieldFocus(null)}
                     slotProps={{ htmlInput: { maxLength: MAX_CONVERSATION_STARTER_LENGTH } }}
+                    inputProps={{ 'data-testid': `generate-agent-review-starter-input-${index}` }}
                     error={
                       (!starter?.trim() && starter !== undefined) ||
                       starter?.length > MAX_CONVERSATION_STARTER_LENGTH

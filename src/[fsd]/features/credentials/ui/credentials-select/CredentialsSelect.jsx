@@ -402,6 +402,7 @@ const CredentialsSelect = memo(
             size="small"
             onClick={onRefresh}
             sx={styles.refreshIcon}
+            data-testid="credential-select-refresh-button"
           >
             <RefreshIcon />
           </BaseBtn>
@@ -515,6 +516,7 @@ const CredentialsSelect = memo(
     return (
       <Box sx={[styles.container, sx]}>
         <Select.SingleSelect
+          data-testid={`toolkit-credential-select-${type}`}
           label={label}
           shrinkLabel
           infoIconDescription={description}

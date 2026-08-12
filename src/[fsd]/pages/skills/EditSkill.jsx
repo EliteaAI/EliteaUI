@@ -275,6 +275,7 @@ const EditSkill = memo(() => {
         confirming={isSettingDefault}
         versionName={pendingDefaultVersionName}
         entityType="skill"
+        confirmButtonTestId="skill-set-default-version-confirm-button"
       />
     </>
   );

@@ -99,12 +99,25 @@ const AddNewUserModal = memo(props => {
       onClose={onCancel}
       onKeyDown={handleKeyDown}
       sx={styles.dialog}
+      data-testid="add-users-dialog"
+      closeButtonTestId="add-users-close-button"
       content={
         <Box>
           <Autocomplete.UserSearchSelect
             userList={usersList}
             selectedUsers={localUsers}
             onChangeUsers={onChangeUsers}
+            inputTestId="add-users-search-input"
+            chipTestId={user => `add-users-chip-${user.id}`}
+            // NOTE: deliberately NOT "add-users-chip-remove-{id}" — that
+            // string starts with the same "add-users-chip-" prefix the
+            // already-merged AutoCompleteDropDown/AddNewUserModal chip
+            // testid uses (`ADD_USERS_CHIP_PREFIX` in ChatPage), so a
+            // prefix-match query for chips would also match this delete
+            // icon and double-count it (ELITEA-2168 implementer finding —
+            // amended from the AFS's originally proposed name).
+            chipDeleteTestId={user => `add-users-remove-chip-${user.id}`}
+            getOptionTestId={option => `add-users-option-${option.id}`}
             slotProps={{
               listBox: {
                 ref: listboxRef,
@@ -124,6 +137,7 @@ const AddNewUserModal = memo(props => {
             variant={BUTTON_VARIANTS.elitea}
             color={BUTTON_COLORS.secondary}
             onClick={onCancel}
+            data-testid="add-users-cancel-button"
           >
             Cancel
           </Button.BaseBtn>
@@ -131,6 +145,7 @@ const AddNewUserModal = memo(props => {
             disabled={!localUsers.length}
             variant={BUTTON_VARIANTS.elitea}
             onClick={handleOK}
+            data-testid="add-users-confirm-button"
           >
             Add
           </Button.BaseBtn>

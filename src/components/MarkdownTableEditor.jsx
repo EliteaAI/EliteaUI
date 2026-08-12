@@ -643,7 +643,10 @@ const MarkdownTableEditor = forwardRef(
 
     return (
       <>
-        <Box sx={styles.tableContainer}>
+        <Box
+          data-testid="chat-table-canvas-grid"
+          sx={styles.tableContainer}
+        >
           <DataGrid
             rows={rows}
             columns={[
@@ -712,6 +715,7 @@ const MarkdownTableEditor = forwardRef(
           />
           <Box sx={styles.downloadButtonContainer}>
             <SplitButton
+              testId="chat-table-download-button"
               defaultValue="xlsx"
               options={downloadTableOptions}
               onClick={interaction_uuid ? onClickDownload : onClick}
