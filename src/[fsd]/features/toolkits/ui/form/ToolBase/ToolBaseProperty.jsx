@@ -275,7 +275,7 @@ const ToolBaseProperty = memo(props => {
     );
   }
   if (k === 'selected_tools') {
-    const { items, args_schemas } = v;
+    const { items, args_schemas, tool_groups } = v;
     // Check if args_schemas actually has content (not just empty object)
     const hasArgsSchemas = args_schemas && Object.keys(args_schemas).length > 0;
     const tools = hasArgsSchemas ? Object.keys(args_schemas) : items?.enum;
@@ -283,6 +283,7 @@ const ToolBaseProperty = memo(props => {
       <ToolkitForm.ToolActionsSelector
         key={k}
         availableTools={tools}
+        toolGroups={tool_groups}
         onChange={value => editField(buildEditFieldPath('selected_tools'), value)}
         disabled={disableConfigFields || disabled}
       />

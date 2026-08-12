@@ -19,6 +19,7 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 export const ToolActionsSelector = memo(props => {
   const {
     availableTools = [],
+    toolGroups,
     onChange = () => {},
     extraProperties,
     disabled,
@@ -129,6 +130,7 @@ export const ToolActionsSelector = memo(props => {
                   )}
                   <ToolkitForm.ToolActionsItems
                     toolsOptions={toolsOptions}
+                    toolGroups={toolGroups}
                     warningTools={warningTools}
                     selectedTools={selectedTools}
                     onSelectTool={onSelectTool}
@@ -145,6 +147,7 @@ export const ToolActionsSelector = memo(props => {
           <Typography variant="bodyMedium">Tools</Typography>
           <ToolkitForm.ToolActionsItems
             toolsOptions={toolsOptions}
+            toolGroups={toolGroups}
             warningTools={warningTools}
             selectedTools={selectedTools}
             onSelectTool={onSelectTool}
