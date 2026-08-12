@@ -4,8 +4,7 @@ import { Box } from '@mui/material';
 
 import { useIsMidturnInjectionAvailable } from '@/[fsd]/features/chat';
 import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
-import AgentPipelineBuilder from '@/[fsd]/features/settings/ui/project-general/AgentPipelineBuilder';
-import AskUser from '@/[fsd]/features/settings/ui/project-general/AskUser';
+import DefaultModulesSettings from '@/[fsd]/features/settings/ui/project-general/DefaultModulesSettings';
 import MidturnInjection from '@/[fsd]/features/settings/ui/project-general/MidturnInjection';
 import { ProjectParamsHeader } from '@/[fsd]/features/settings/ui/project-general/general';
 import { ProjectAIConfigurations } from '@/[fsd]/features/settings/ui/project-general/project-ai-configurations';
@@ -60,30 +59,15 @@ const ProjectGeneralContent = memo(() => {
           ]}
         />
         <BasicAccordion
-          data-testid="agent-pipeline-builder-section"
+          data-testid="default-modules-section"
           showMode={AccordionConstants.AccordionShowMode.LeftMode}
           accordionSX={styles.accordionStyles}
           items={[
             {
-              title: 'Agent & Pipeline Builder',
+              title: 'Default Modules',
               content: (
                 <Box sx={styles.containerStyles}>
-                  <SettingsFormProvider FormContent={AgentPipelineBuilder} />
-                </Box>
-              ),
-            },
-          ]}
-        />
-        <BasicAccordion
-          data-testid="ask-user-section"
-          showMode={AccordionConstants.AccordionShowMode.LeftMode}
-          accordionSX={styles.accordionStyles}
-          items={[
-            {
-              title: 'Ask User (Clarifying Questions)',
-              content: (
-                <Box sx={styles.containerStyles}>
-                  <SettingsFormProvider FormContent={AskUser} />
+                  <SettingsFormProvider FormContent={DefaultModulesSettings} />
                 </Box>
               ),
             },
