@@ -423,7 +423,7 @@ export default function SelectIconDialog({
   return (
     <BaseModal
       data-testid="agent-icon-picker-dialog"
-      closeButtonDataTestId="agent-icon-picker-close-button"
+      closeButtonTestId="agent-icon-picker-close-button"
       open={open}
       onClose={onClose}
       title="Choose the image from the list or upload"
