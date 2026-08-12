@@ -6,14 +6,24 @@ import { Box, IconButton, Typography } from '@mui/material';
 
 import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
 import { RunHistoryChat, RunHistoryList } from '@/[fsd]/entities/run-history/ui';
-import { ParticipantEntityTypes } from '@/[fsd]/features/chat/participants/lib/constants/participant.constants';
+import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { SearchParams } from '@/common/constants';
 import CloseIcon from '@/components/Icons/CloseIcon';
 import useIsSmallWindow from '@/hooks/useIsSmallWindow';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
+const { ParticipantEntityTypes } = ParticipantEntityConstants;
+
 const RunHistoryContainer = memo(props => {
-  const { entityId, versions, source, handleRestoreConversation, onClose } = props;
+  const {
+    entityId,
+    versions,
+    source,
+    handleRestoreConversation,
+    onClose,
+    ChatMessageListComponent,
+    prettifyConversation,
+  } = props;
 
   const projectId = useSelectedProjectId();
   const [searchParams] = useSearchParams();
@@ -111,6 +121,8 @@ const RunHistoryContainer = memo(props => {
         <RunHistoryChat
           selectedHistoryItem={selectedHistoryItem}
           prettifyChat={[ParticipantEntityTypes.Toolkit, ParticipantEntityTypes.MCP].includes(source)}
+          ChatMessageListComponent={ChatMessageListComponent}
+          prettifyConversation={prettifyConversation}
         />
       </Box>
     </Box>

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useTheme } from '@mui/material';
 
-import { useGetApplicationSkillsQuery } from '@/[fsd]/features/skill/api';
+import { useGetApplicationSkillsQuery } from '@/[fsd]/features/skill';
 import { MentionConstants } from '@/[fsd]/shared/lib/constants';
 import {
   createMentionCmExtension,

@@ -1,12 +1,7 @@
+import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { ChatParticipantType, PERMISSIONS } from '@/common/constants';
 
-export const ParticipantEntityTypes = {
-  Agent: 'agent',
-  Application: 'application',
-  Pipeline: 'pipeline',
-  Toolkit: 'toolkit',
-  MCP: 'mcp',
-};
+const { ParticipantEntityTypes } = ParticipantEntityConstants;
 
 export const ParticipantCreationPermissionMap = {
   [ParticipantEntityTypes.Agent]: PERMISSIONS.applications.create,

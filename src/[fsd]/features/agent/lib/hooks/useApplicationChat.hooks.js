@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useDispatch } from 'react-redux';
 
-import { ChatHelpers } from '@/[fsd]/features/chat/lib/helpers';
+import { ChatHelpers } from '@/[fsd]/features/chat';
 import {
   useConversationCreateMutation,
   useConversationDetailsQuery,

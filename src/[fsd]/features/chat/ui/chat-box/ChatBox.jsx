@@ -59,15 +59,9 @@ import { useFetchParticipantDetails } from '@/[fsd]/features/chat/participants/l
 import { BudgetWarningBanner, SlashSuggestionList, VoiceMiniPlayer } from '@/[fsd]/features/chat/ui';
 import { ChatMessageList } from '@/[fsd]/features/chat/ui/chat-box';
 import { UserMentionList } from '@/[fsd]/features/chat/ui/user-mention-list';
-import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
-import { MentionSkillList } from '@/[fsd]/features/skill/ui';
-import { MentionConstants } from '@/[fsd]/shared/lib/constants';
-import {
-  DEFAULT_MAX_TOKENS,
-  DEFAULT_REASONING_EFFORT,
-  DEFAULT_STEPS_LIMIT,
-  DEFAULT_TEMPERATURE,
-} from '@/[fsd]/shared/lib/constants/llmSettings.constants';
+import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
+import { MentionSkillList } from '@/[fsd]/features/skill';
+import { LLMSettingsConstants, MentionConstants } from '@/[fsd]/shared/lib/constants';
 import {
   cleanLLMSettings,
   isLLMSettingsFamilyConflict,
@@ -121,6 +115,8 @@ import { actions as chatActions } from '@/slices/chat';
 
 const AGENT_PROJECTION_RETRY_DELAYS_MS = [0, 100, 250, 500, 1000, 2000, 4000];
 const waitForProjectionRetry = delay => new Promise(resolve => globalThis.setTimeout(resolve, delay));
+const { DEFAULT_MAX_TOKENS, DEFAULT_REASONING_EFFORT, DEFAULT_STEPS_LIMIT, DEFAULT_TEMPERATURE } =
+  LLMSettingsConstants;
 
 const ChatBox = forwardRef((props, boxRef) => {
   const {

@@ -14,7 +14,6 @@ import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/an
 import { useToolkitsDetailsQuery } from '@/api/toolkits';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import { CONFIGURATION_VIEW_OPTIONS } from '@/pages/Applications/Components/Tools/ToolConfigurationForm.jsx';
 import BaseEditor from '@/pages/NewChat/components/BaseEditor.jsx';
 import CreateToolkitButton from '@/pages/NewChat/components/CreateToolkitButton.jsx';
 import SaveToolkitButton from '@/pages/Toolkits/SaveToolkitButton.jsx';
@@ -273,7 +272,6 @@ const ToolkitEditor = ({ toolkit, onCloseToolkitEditor, onToolkitCreated, onTool
               showNameFieldForcedly={false}
               showToolkitIcon={false}
               showOnlyConfigurationFields={false}
-              configurationViewOptions={CONFIGURATION_VIEW_OPTIONS.CredentialsSelect}
               hasNotSavedCredentials={false}
               hideNameDescriptionInput={isMCP || isCreating ? false : true}
               hideOperationButtons={isCreating}
@@ -303,7 +301,6 @@ const ToolkitEditor = ({ toolkit, onCloseToolkitEditor, onToolkitCreated, onTool
           showNameFieldForcedly={false}
           showToolkitIcon={false}
           showOnlyConfigurationFields={false}
-          configurationViewOptions={CONFIGURATION_VIEW_OPTIONS.CredentialsSelect}
           hasNotSavedCredentials={false}
           hideNameDescriptionInput={false}
           hideNameInput={!isMCP}

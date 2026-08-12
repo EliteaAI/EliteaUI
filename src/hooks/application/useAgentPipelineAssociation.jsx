@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { useSetRefetchDetails } from '@/[fsd]/features/agent/lib/hooks';
+import { useSetRefetchDetails } from '@/[fsd]/entities/application-tab-bar/lib/hooks';
 import { useLazyApplicationDetailsQuery, useUpdateApplicationRelationMutation } from '@/api/applications';
 import FlowIcon from '@/assets/flow-icon.svg?react';
 import { buildErrorMessage } from '@/common/utils';

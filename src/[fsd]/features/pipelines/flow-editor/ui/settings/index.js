@@ -8,4 +8,5 @@ export { default as SimpleLLMInputItem } from './SimpleLLMInputItem';
 export { default as SimpleLLMInputs } from './SimpleLLMInputs';
 export { default as CustomNodeInput } from './CustomNodeInput';
 export { default as PipelineScheduleModal } from './PipelineScheduleModal';
+export { default as ScheduleInfoDisplay } from './ScheduleInfoDisplay';
 export { default as TriggerTypeSelector, TRIGGER_TYPES } from './TriggerTypeSelector';

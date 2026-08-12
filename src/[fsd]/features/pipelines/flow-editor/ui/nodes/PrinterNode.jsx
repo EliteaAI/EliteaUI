@@ -1,11 +1,11 @@
 import { memo, useCallback, useContext, useMemo } from 'react';
 
-import { FlowEditorContext } from '@/[fsd]/app/providers';
 import { AIAssistantInput } from '@/[fsd]/features/pipelines/ai-assistant/ui';
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { useNodeAiAssistantConfig } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
 import { FlowEditorNodes, FlowEditorSettings } from '@/[fsd]/features/pipelines/flow-editor/ui';
+import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import usePrinterInputMapping from '@/hooks/pipeline/usePrinterInputMapping';
 import { useEdges } from '@xyflow/react';
 

@@ -10,7 +10,7 @@ import {
   useUploadProjectIconMutation,
 } from '@/[fsd]/features/settings/api/projectInfoApi';
 import BaseModal from '@/[fsd]/shared/ui/modal/BaseModal';
-import ProjectAvatar from '@/[fsd]/widgets/sidebar-root/ui/ProjectAvatar';
+import { ProjectAvatar } from '@/[fsd]/widgets/sidebar-root';
 import { useGetApplicationDefaultIconsQuery } from '@/api/applications';
 import ImportIcon from '@/assets/import-icon.svg?react';
 import { buildErrorMessage } from '@/common/utils';

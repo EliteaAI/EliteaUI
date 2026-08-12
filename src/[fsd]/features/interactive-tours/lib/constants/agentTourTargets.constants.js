@@ -1,16 +1,8 @@
+import { TourTargetConstants } from '@/[fsd]/shared/lib/constants';
+
 import { buildTourSelector } from '../helpers/tourSelector.helpers';
 
-export const AGENT_TOUR_TARGET_IDS = {
-  workspace: 'agent-workspace',
-  instructions: 'agent-instructions',
-  tools: 'agent-tools',
-  conversationStarters: 'agent-conversation-starters',
-  advancedSettings: 'agent-advanced-settings',
-  welcomeMessage: 'agent-welcome-message',
-  versions: 'agent-versions',
-  publish: 'agent-publish',
-  testChat: 'agent-test-chat',
-};
+export const { AGENT_TOUR_TARGET_IDS } = TourTargetConstants;
 
 export const AGENT_TOUR_TARGETS = {
   workspace: buildTourSelector(AGENT_TOUR_TARGET_IDS.workspace),

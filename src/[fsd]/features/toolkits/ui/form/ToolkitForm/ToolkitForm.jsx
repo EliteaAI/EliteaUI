@@ -6,13 +6,11 @@ import { useParams, useSearchParams } from 'react-router-dom';
 
 import { Box, CircularProgress } from '@mui/material';
 
-import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
-import { McpPatBanner } from '@/[fsd]/features/mcp/ui';
+import { McpAuthHelpers, McpPatBanner } from '@/[fsd]/features/mcp';
 import IndexesContainer from '@/[fsd]/features/toolkits/indexes/ui/IndexesContainer.jsx';
 import RunIndexBanner from '@/[fsd]/features/toolkits/indexes/ui/RunIndexBanner.jsx';
 import { ToolkitFormConstants } from '@/[fsd]/features/toolkits/lib/constants';
 import { ToolComponentHelpers, ToolkitFormHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
-import { CONFIGURATION_VIEW_OPTIONS } from '@/[fsd]/features/toolkits/lib/helpers/toolkitForm.helpers';
 import { useGetCurrentToolkitSchemas, useToolkitNameProp } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitForm as GeneralToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion.jsx';
@@ -42,7 +40,6 @@ export const ToolkitForm = memo(props => {
     isToolDirty,
     hasNotSavedCredentials,
     isViewToggleVisible = true,
-    configurationViewOptions = CONFIGURATION_VIEW_OPTIONS.ConfigurationSelect,
     hideConfigurationNameInput = false,
     showOnlyRequiredFields = false,
     showOnlyConfigurationFields = false,
@@ -295,7 +292,7 @@ export const ToolkitForm = memo(props => {
 
       // When auto-selecting (e.g., embedding model fallback), update Formik initial values
       // so the form doesn't appear dirty from the auto-correction
-      if (options?.isAutoSelect) {
+      if (options?.isAutoSelect && options?.section !== 'credentials') {
         const updatedValues = updateObjectByPath({ ...currentValuesRef.current }, field, value);
         resetForm({ values: updatedValues });
       }
@@ -498,10 +495,34 @@ export const ToolkitForm = memo(props => {
     }
 
     const validationErrors = ToolkitFormHelpers.parseValidationErrors(error.data?.settings_errors);
-
     if (Object.keys(validationErrors).length > 0) {
-      setServerToolErrors(validationErrors);
-      setShowValidation(true);
+      // Suppress only "Field required" errors for fields that already have a value in the
+      // current form state. This handles the race condition where credentials auto-select
+      // completes before the validate query response arrives, causing a stale "Field required"
+      // error to appear for a field the user has not touched.
+      // All other errors (connection failures, credential_not_found, etc.) are always shown.
+      const currentSettings = currentValuesRef.current?.settings || {};
+      const isFieldEmpty = val => {
+        if (val == null) return true;
+        if (typeof val === 'object' && !Array.isArray(val)) {
+          return (
+            Object.keys(val).length === 0 ||
+            val.elitea_title == null ||
+            String(val.elitea_title).trim() === ''
+          );
+        }
+        return String(val).trim() === '';
+      };
+      const activeErrors = Object.fromEntries(
+        Object.entries(validationErrors).filter(([key, message]) => {
+          const isFieldRequired = message.endsWith('Field required');
+          return !isFieldRequired || isFieldEmpty(currentSettings[key]);
+        }),
+      );
+      if (Object.keys(activeErrors).length > 0) {
+        setServerToolErrors(activeErrors);
+        setShowValidation(true);
+      }
     }
   }, [error, isError]);
 
@@ -571,7 +592,6 @@ export const ToolkitForm = memo(props => {
         setConfiguration={setConfiguration}
         schema={effectiveToolSchema}
         configurationSchema={configurationSchema}
-        configurationViewOptions={configurationViewOptions}
         hideConfigurationNameInput={hideConfigurationNameInput}
         showOnlyRequiredFields={showOnlyRequiredFields}
         showOnlyConfigurationFields={showOnlyConfigurationFields}

@@ -6,8 +6,7 @@ import {
   buildToolkitAuthorizationMessage,
   getToolkitAuthorizationContext,
 } from '@/[fsd]/features/chat/lib/helpers/mcpAuthorization.helpers';
-import { extractMcpAuthMetadata } from '@/[fsd]/features/mcp/lib/hooks';
-import { McpAuthModal } from '@/[fsd]/features/mcp/ui';
+import { McpAuthModal, extractMcpAuthMetadata } from '@/[fsd]/features/mcp';
 import BaseBtn from '@/[fsd]/shared/ui/button/BaseBtn';
 import CheckedIcon from '@/assets/checked-icon.svg?react';
 import ArrowForwardIcon from '@/assets/icons/arrow-forward.svg?react';

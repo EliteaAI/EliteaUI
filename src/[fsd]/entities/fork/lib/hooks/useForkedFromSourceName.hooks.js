@@ -1,6 +1,5 @@
 import { useCallback } from 'react';
 
-import { useLazySkillDetailsQuery } from '@/[fsd]/features/skill/api';
 import { useLazyForkedFromApplicationDetailsQuery } from '@/api/applications';
 
 const APPLICATION_ENTITIES = ['agents', 'pipelines'];
@@ -13,12 +12,12 @@ const PLACEHOLDER_SOURCE_NAMES = {
   skills: 'Original skill',
 };
 
-export const useForkedFromSourceName = (type, meta) => {
+export const useForkedFromSourceName = (type, meta, lazySkillDetailsHook) => {
   const parentProjectId = meta?.parent_project_id;
   const parentEntityId = meta?.parent_entity_id;
 
   const [fetchApplication, applicationResult] = useLazyForkedFromApplicationDetailsQuery();
-  const [fetchSkill, skillResult] = useLazySkillDetailsQuery();
+  const [fetchSkill, skillResult] = lazySkillDetailsHook();
 
   const isSkill = type === 'skills';
   const isApplication = APPLICATION_ENTITIES.includes(type);

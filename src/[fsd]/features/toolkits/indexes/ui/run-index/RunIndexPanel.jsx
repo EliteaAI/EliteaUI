@@ -7,8 +7,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { Box, Tooltip, Typography } from '@mui/material';
 
-import { useMcpAuthModal } from '@/[fsd]/features/mcp/lib/hooks';
-import { McpAuthModal } from '@/[fsd]/features/mcp/ui';
+import { McpAuthModal, useMcpAuthModal } from '@/[fsd]/features/mcp';
 import {
   useDeleteIndexItemMutation,
   useUpdateIndexScheduleMutation,
@@ -25,13 +24,13 @@ import {
   getMockToolkitIndexConversation,
 } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexChat.helpers';
 import { bannerVariant } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
-import { getNextCronRun } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexSchedule.helpers.js';
 import { useIndexesListPolling } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import { selectToolkitScheduler } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
 import { IndexError, IndexScheduleModal, IndexSuccess } from '@/[fsd]/features/toolkits/indexes/ui';
 import { ToolkitChatHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useGetCurrentToolkitSchemas, useToolkitChat } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
+import { ScheduleHelpers } from '@/[fsd]/shared/lib/helpers';
 import { Button, Modal } from '@/[fsd]/shared/ui';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
 import { useDeleteIndexScheduleMutation } from '@/api';
@@ -262,7 +261,7 @@ const RunIndexPanel = memo(props => {
 
   const scheduleNextRun = useMemo(() => {
     if (!scheduleData.cron) return null;
-    const date = getNextCronRun(scheduleData.cron || IndexCronDefault);
+    const date = ScheduleHelpers.getNextCronRun(scheduleData.cron || IndexCronDefault);
     if (!date) return null;
     return date.toLocaleDateString(undefined, { day: '2-digit', month: '2-digit', year: 'numeric' });
   }, [scheduleData.cron]);

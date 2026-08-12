@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { useTheme } from '@mui/system';
 
-import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
+import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits';
 import { isMcpToolkitType, resolveToolkitSchemaByType } from '@/[fsd]/shared/lib/helpers';
 import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
 import { ChatParticipantType } from '@/common/constants';

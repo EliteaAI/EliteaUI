@@ -5,12 +5,12 @@ import { useFormikContext } from 'formik';
 import { Box, IconButton, TextField, Tooltip, Typography, useTheme } from '@mui/material';
 import { deepClone } from '@mui/x-data-grid/internals';
 
-import { FlowEditorContext } from '@/[fsd]/app/providers';
 import {
   DeprecatedConstants,
   FlowEditorConstants,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { NodeHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import { Text } from '@/[fsd]/shared/ui';
 import AttentionIcon from '@/assets/attention-icon.svg?react';
 import CollapseIcon from '@/assets/collapse-icon.svg?react';

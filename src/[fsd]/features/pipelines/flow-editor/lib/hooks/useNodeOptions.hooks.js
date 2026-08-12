@@ -1,6 +1,6 @@
 import { useContext, useMemo } from 'react';
 
-import { FlowEditorContext } from '@/[fsd]/app/providers';
+import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 
 export const useNodeOptions = (nodeFilter = () => true, addEndNode) => {
   const { yamlJsonObject } = useContext(FlowEditorContext);

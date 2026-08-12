@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
 
-import { mapContentTypeToEntityType } from '@/[fsd]/widgets/pin-toggler/lib/helpers';
+import { mapContentTypeToEntityType } from '@/[fsd]/widgets/pin-toggler/lib/helpers/pinToggler.helpers';
 import { useTogglePinItemMutation } from '@/api/social';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
@@ -27,7 +27,6 @@ export const usePinApi = props => {
         onSuccess(id, shouldPin);
       }
     } catch {
-      // Show error toast - optimistic update is automatically reverted at API level
       toastError(shouldPin ? 'Failed to pin item' : 'Failed to unpin item');
     }
   }, [isLoading, isPinned, togglePinItem, id, projectId, entityType, onSuccess, toastError]);

@@ -4,7 +4,7 @@ import YAML from 'js-yaml';
 
 import { Box, FormControlLabel, Typography } from '@mui/material';
 
-import { CredentialsSelect } from '@/[fsd]/features/credentials/ui';
+import { CredentialsSelect } from '@/[fsd]/features/credentials';
 import { OpenApiHelpers, ToolBaseHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { ArrayFieldInput } from '@/[fsd]/features/toolkits/ui/form/ToolBase';
@@ -498,7 +498,7 @@ const ToolBaseProperty = memo(props => {
           label={label}
           description={v.description}
           onSelectConfiguration={(value, options) =>
-            editField(buildEditFieldPath(k), value, undefined, options)
+            editField(buildEditFieldPath(k), value, undefined, { ...options, section })
           }
           onReload={onCredentialReload}
           value={settings[k]}

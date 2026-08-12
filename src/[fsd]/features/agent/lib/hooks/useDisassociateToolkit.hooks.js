@@ -3,7 +3,7 @@ import { useCallback } from 'react';
 import { useFormikContext } from 'formik';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { useSetRefetchDetails } from '@/[fsd]/features/agent/lib/hooks/useRefetchAgentDetails.hooks';
+import { useSetRefetchDetails } from '@/[fsd]/entities/application-tab-bar/lib/hooks';
 import {
   TAG_TYPE_APPLICATION_DETAILS,
   useApplicationEditMutation,

@@ -14,12 +14,12 @@ import {
   Typography,
 } from '@mui/material';
 
+import { AgentDetails } from '@/[fsd]/features/agent';
 import AgentConversationStarters from '@/[fsd]/features/agent-hub/ui/AgentConversationStarters';
 import AgentHubLike from '@/[fsd]/features/agent-hub/ui/AgentHubLike';
 import AgentHubModalMenu from '@/[fsd]/features/agent-hub/ui/AgentHubModalMenu';
 import AgentWelcomeMessage from '@/[fsd]/features/agent-hub/ui/AgentWelcomeMessage';
-import { ConfigurationModal } from '@/[fsd]/features/agent/ui/agent-details/configurations';
-import { ELITEA_CATALOG_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/eliteaCatalogTourTargets.constants';
+import { ELITEA_CATALOG_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { useLazyPublicApplicationDetailsQuery } from '@/api';
 import { ChatParticipantType, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
 import AuthorContainer from '@/components/AuthorContainer';
@@ -267,7 +267,7 @@ const AgentModal = memo(props => {
         </Box>
       </Dialog>
       {showContext && (
-        <ConfigurationModal.StyledShowContextModal
+        <AgentDetails.ConfigurationModal.StyledShowContextModal
           context={agentDetails?.version_details?.instructions || ''}
           open={showContext}
           onClose={() => setShowContext(false)}

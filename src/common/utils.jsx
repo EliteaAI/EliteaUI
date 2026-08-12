@@ -1,7 +1,7 @@
 import { Typography } from '@mui/material';
 
 import { filterProps } from '@/ComponentsLib/utils/common';
-import store from '@/[fsd]/app/store';
+import store from '@/[fsd]/shared/config/store';
 import {
   isApplicationCard,
   isMCPCard,
