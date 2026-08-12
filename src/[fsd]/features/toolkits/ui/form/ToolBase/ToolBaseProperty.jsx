@@ -498,7 +498,7 @@ const ToolBaseProperty = memo(props => {
           label={label}
           description={v.description}
           onSelectConfiguration={(value, options) =>
-            editField(buildEditFieldPath(k), value, undefined, options)
+            editField(buildEditFieldPath(k), value, undefined, { ...options, section })
           }
           onReload={onCredentialReload}
           value={settings[k]}
