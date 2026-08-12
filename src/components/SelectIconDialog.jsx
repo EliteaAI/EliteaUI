@@ -379,6 +379,7 @@ export default function SelectIconDialog({
           {iconList.map((icon, index) => (
             <UserIconItem
               data-testid={`agent-icon-picker-uploaded-${index}`}
+              deleteButtonTestId={`agent-icon-picker-uploaded-${index}-delete-button`}
               key={index}
               isSelected={selectedIcon?.url === icon.url}
               onClick={onClickIcon(icon)}

@@ -8,7 +8,7 @@ import CloseIcon from '@/components/Icons/CloseIcon';
 import IconItem from './ProjectIconItem';
 
 const UserIconItem = memo(props => {
-  const { isSelected, children, onDelete, onClick, 'data-testid': dataTestId } = props;
+  const { isSelected, children, onDelete, onClick, 'data-testid': dataTestId, deleteButtonTestId } = props;
   const theme = useTheme();
   const styles = userIconItemStyles();
 
@@ -40,6 +40,7 @@ const UserIconItem = memo(props => {
           className="deleteButton"
           variant="elitea"
           color="delete"
+          data-testid={deleteButtonTestId}
           onClick={onClickDelete}
           sx={styles.deleteButton}
         >
