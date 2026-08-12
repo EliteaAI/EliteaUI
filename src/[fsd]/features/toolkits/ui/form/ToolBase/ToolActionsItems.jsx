@@ -14,8 +14,13 @@ const TOOL_GROUP_ORDER = [
   { key: 'write', label: 'Create & update', badge: 'Changes data', color: '#ed6c02' },
   { key: 'delete', label: 'Delete', badge: 'Destructive', color: '#d32f2f' },
   { key: 'execute', label: 'Execute', badge: 'Unrestricted', color: '#d32f2f' },
-  { key: UNCLASSIFIED_GROUP, label: 'Unclassified', badge: 'Treated as changes data', color: '#9e9e9e' },
+  { key: UNCLASSIFIED_GROUP, label: 'Unclassified', badge: 'Not classified', color: '#9e9e9e' },
 ];
+
+// Unknown group values must land in Unclassified, never disappear
+const KNOWN_GROUPS = new Set(
+  TOOL_GROUP_ORDER.map(group => group.key).filter(key => key !== UNCLASSIFIED_GROUP),
+);
 
 export const ToolActionsItems = memo(props => {
   const { toolsOptions, toolGroups, warningTools, selectedTools, onSelectTool, disabled, styles } = props;
@@ -84,7 +89,6 @@ export const ToolActionsItems = memo(props => {
     <Stack
       sx={styles.stack}
       direction="column"
-      spacing={2}
     >
       {warningTools.length > 0 && (
         <Stack
@@ -100,7 +104,7 @@ export const ToolActionsItems = memo(props => {
         const groupOptions = toolsOptions
           .filter(option =>
             group.key === UNCLASSIFIED_GROUP
-              ? !toolGroups[option.value]
+              ? !KNOWN_GROUPS.has(toolGroups[option.value])
               : toolGroups[option.value] === group.key,
           )
           .sort((a, b) => (a.label || '').toLowerCase().localeCompare((b.label || '').toLowerCase()));
