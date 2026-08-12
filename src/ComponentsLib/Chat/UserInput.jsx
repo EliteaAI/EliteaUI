@@ -464,7 +464,7 @@ const UserInput = forwardRef((props, ref) => {
               onCompositionEnd={onCompositionEnd}
               onPaste={handlePaste}
               disabled={disabledInput}
-              placeholder={isFocused ? '' : input?.placeholder}
+              placeholder={isFocused || hasSuggestion ? '' : input?.placeholder}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
               sx={styles.textField}
