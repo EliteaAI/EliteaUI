@@ -1,11 +1,9 @@
 import { memo } from 'react';
 
 import DefaultNameCellContent from '@/[fsd]/entities/grid-table/ui/DefaultNameCellContent';
-import { DataTableNameCell } from '@/[fsd]/widgets/data-table';
 
 const GridTableRowNameCell = memo(props => {
   const {
-    isRedesign,
     NameCellComponent,
     nameCellProps,
     row,
@@ -16,16 +14,6 @@ const GridTableRowNameCell = memo(props => {
     rowName,
     styles,
   } = props;
-
-  if (isRedesign) {
-    return (
-      <DataTableNameCell
-        {...nameCellProps}
-        row={row}
-        isRowHovered={isHovered}
-      />
-    );
-  }
 
   if (NameCellComponent) {
     return (

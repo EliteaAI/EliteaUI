@@ -6,8 +6,8 @@ import IWModalEntityCardFullscreenText from '@/[fsd]/entities/import-wizard/ui/I
 import IWModalEntityCardWrapper from '@/[fsd]/entities/import-wizard/ui/ImportWizardModal/IWModalEntityCardWrapper';
 import IWModalEntityTextField from '@/[fsd]/entities/import-wizard/ui/ImportWizardModal/IWModalEntityTextField';
 import IWModalEntityToolkitsField from '@/[fsd]/entities/import-wizard/ui/ImportWizardModal/IWModalEntityToolkitsField';
-import { parseYamlToMermaid } from '@/[fsd]/features/agent';
 import { InternalToolsConstants } from '@/[fsd]/shared/lib/constants';
+import { parseYamlToMermaid } from '@/[fsd]/shared/lib/helpers/parseYamlToMermaid.helpers';
 import AgentIcon from '@/assets/agent.svg?react';
 import FlowIcon from '@/assets/flow-icon.svg?react';
 import FullScreenIconSvg from '@/assets/full-screen-icon.svg?react';

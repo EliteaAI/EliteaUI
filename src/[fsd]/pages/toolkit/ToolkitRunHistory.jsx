@@ -5,7 +5,9 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Box } from '@mui/material';
 
 import { RunHistoryContainer } from '@/[fsd]/entities/run-history/ui';
+import { ChatMessageList } from '@/[fsd]/features/chat';
 import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
+import { ToolkitsHelpers } from '@/[fsd]/features/toolkits';
 import { IndexBreadcrumb } from '@/[fsd]/features/toolkits/indexes/ui';
 import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { useToolkitsDetailsQuery } from '@/api/toolkits.js';
@@ -84,6 +86,8 @@ const ToolkitRunHistory = memo(() => {
           entityId={toolkitId}
           source={isMCP ? ParticipantEntityTypes.MCP : ParticipantEntityTypes.Toolkit}
           versions={null}
+          ChatMessageListComponent={ChatMessageList}
+          prettifyConversation={ToolkitsHelpers.prettifyToolkitConversation}
         />
       </Box>
     </Box>

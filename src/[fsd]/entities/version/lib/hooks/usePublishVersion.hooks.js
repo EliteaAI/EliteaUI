@@ -5,8 +5,8 @@ import { useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { useTrackEvent } from '@/GA';
+import { useGetAgentCategoriesQuery } from '@/[fsd]/entities/version/api';
 import { PUBLISH_STEPS } from '@/[fsd]/entities/version/ui/PublishWizardModal';
-import { useGetAgentCategoriesQuery } from '@/[fsd]/features/agent';
 import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
 import { usePublishApplicationMutation, useValidateForPublishMutation } from '@/api';
 import { useGetPlatformSettingsQuery } from '@/api/platformSettings';

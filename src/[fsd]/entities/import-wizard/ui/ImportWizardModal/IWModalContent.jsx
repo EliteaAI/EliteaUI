@@ -6,7 +6,7 @@ import { Box, Typography } from '@mui/material';
 
 import { rematchModels } from '@/[fsd]/entities/import-wizard/lib/helpers';
 import IWModalDetails from '@/[fsd]/entities/import-wizard/ui/ImportWizardModal/IWModalDetails';
-import { ProjectSelectShowMode } from '@/[fsd]/features/project';
+import { ProjectSelectConstants } from '@/[fsd]/shared/lib/constants';
 import { useListModelsQuery } from '@/api';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
 import ProjectSelect from '@/components/ProjectSelect';
@@ -90,7 +90,7 @@ const IWModalContent = memo(props => {
             showBorder={false}
             name="selectedProject"
             filterIds={excludedProjectIds}
-            showMode={ProjectSelectShowMode.NormalMode}
+            showMode={ProjectSelectConstants.ProjectSelectShowMode.NormalMode}
             value={values.selectedProject}
             onChange={handleProjectSelectChange}
             usePrivateProjectAsDefaultSelected={!isForking}

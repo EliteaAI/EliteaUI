@@ -6,7 +6,7 @@ import { useParams } from 'react-router-dom';
 import { Box, Typography } from '@mui/material';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
-import { AgentDetails } from '@/[fsd]/features/agent';
+import VersionReplacementModal from '@/[fsd]/entities/version/ui/VersionReplacementModal';
 import { Button, Modal } from '@/[fsd]/shared/ui';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
@@ -149,7 +149,7 @@ const VersionDelete = memo(
           inlineExtraContent=" version? It can't be restored."
         />
 
-        <AgentDetails.VersionReplacementModal
+        <VersionReplacementModal
           open={openReplacementModal}
           onClose={onCloseReplacementModal}
           versionName={versionInUseData?.version_name || currentVersionName}

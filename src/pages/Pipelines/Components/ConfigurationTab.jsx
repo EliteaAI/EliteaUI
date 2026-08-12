@@ -6,8 +6,10 @@ import Split from 'react-split';
 import { Box, CircularProgress, Typography } from '@mui/material';
 
 import RunHistoryContainer from '@/[fsd]/entities/run-history/ui/RunHistoryContainer';
+import { ChatMessageList } from '@/[fsd]/features/chat';
 import { PIPELINE_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { usePipelineAttachmentYamlSync, usePipelineChat } from '@/[fsd]/features/pipelines/lib/hooks';
+import { ToolkitsHelpers } from '@/[fsd]/features/toolkits';
 import { LLMSettingsConstants, ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { useShowRunHistoryFromUrl } from '@/[fsd]/shared/lib/hooks';
 import { isReasoningFamilyFromStored } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
@@ -346,6 +348,8 @@ const ConfigurationTab = memo(props => {
           source={ParticipantEntityTypes.Pipeline}
           handleRestoreConversation={handleRestoreConversation}
           onClose={handleCloseHistory}
+          ChatMessageListComponent={ChatMessageList}
+          prettifyConversation={ToolkitsHelpers.prettifyToolkitConversation}
         />
       )}
       {!showHistory && (
