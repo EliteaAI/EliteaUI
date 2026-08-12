@@ -22,3 +22,4 @@ export { default as Markdown } from './markdown';
 export { default as SoonLabel } from './soon-label';
 export * as Mention from './mention';
 export * as SecretField from './secret-field';
+export * as Schedule from './schedule';
