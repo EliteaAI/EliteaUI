@@ -120,7 +120,10 @@ const PublishingTerms = memo(props => {
             iconSizeSx={styles.iconSize}
           />
         )}
-        <Box sx={{ ...styles.scrollArea, maxHeight: COLLAPSED_HEIGHT }}>
+        <Box
+          data-testid="agent-publish-terms-content"
+          sx={{ ...styles.scrollArea, maxHeight: COLLAPSED_HEIGHT }}
+        >
           <TermsContent sections={sections} />
         </Box>
       </Box>
