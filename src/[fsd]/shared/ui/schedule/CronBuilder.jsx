@@ -11,7 +11,7 @@ import {
   WEEKDAY_OPTIONS,
   buildCron,
   parseCron,
-} from '@/[fsd]/features/toolkits/indexes/lib/helpers/cronBuilder.helpers';
+} from '@/[fsd]/shared/lib/helpers/cronBuilder.helpers';
 
 import CronSelect from './CronSelect';
 

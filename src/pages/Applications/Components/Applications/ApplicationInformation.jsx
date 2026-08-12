@@ -5,6 +5,7 @@ import { useFormikContext } from 'formik';
 import { Box, Typography } from '@mui/material';
 
 import { ConfigurationModal } from '@/[fsd]/features/agent/ui/agent-details/configurations/index.js';
+import { ScheduleInfoDisplay } from '@/[fsd]/features/pipelines/flow-editor/ui/settings';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { CopyToClipboardButton } from '@/[fsd]/shared/ui/button';
@@ -102,31 +103,13 @@ const ApplicationInformation = memo(props => {
                 </Typography>
               </Box>
             )}
-            {isPipeline && triggerData?.type === 'schedule' && triggerData?.cron && (
-              <CopyToClipboardButton
-                label="Schedule:"
-                value={triggerData.cron}
-                tooltip="Copy cron expression"
-                copyMessage="The cron expression has been copied to the clipboard."
+            {isPipeline && triggerData?.type === 'schedule' && (
+              <ScheduleInfoDisplay
+                cron={triggerData.cron}
+                timezone={triggerData.timezone}
+                lastRun={triggerData.last_run}
+                sx={styles.scheduleInfo}
               />
-            )}
-            {isPipeline && triggerData?.type === 'schedule' && triggerData?.timezone && (
-              <Box sx={styles.pipelineLink}>
-                <Typography variant="bodyMedium">Timezone:</Typography>
-                <Typography variant="bodyMedium">{triggerData.timezone}</Typography>
-              </Box>
-            )}
-            {isPipeline && triggerData?.type === 'schedule' && triggerData?.last_run && (
-              <Box sx={styles.pipelineLink}>
-                <Typography variant="bodyMedium">Last run:</Typography>
-                <Typography variant="bodyMedium">
-                  {new Intl.DateTimeFormat(undefined, {
-                    timeZone: triggerData.timezone || undefined,
-                    dateStyle: 'short',
-                    timeStyle: 'short',
-                  }).format(new Date(triggerData.last_run))}
-                </Typography>
-              </Box>
             )}
             {isPipeline && triggerData?.type === 'webhook' && triggerData?.webhook_type && (
               <Box sx={styles.pipelineLink}>
@@ -184,6 +167,7 @@ const ApplicationInformation = memo(props => {
       styles.contentContainer,
       styles.pipelineLink,
       styles.showLink,
+      styles.scheduleInfo,
       onShowPipelineModal,
       entityTitle,
     ],
@@ -235,6 +219,11 @@ const applicationInformationStyles = () => ({
     cursor: 'pointer',
     color: palette.text.button.showMore,
   }),
+  scheduleInfo: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
+  },
 });
 
 export default ApplicationInformation;
