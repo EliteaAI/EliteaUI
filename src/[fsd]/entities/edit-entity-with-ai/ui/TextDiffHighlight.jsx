@@ -5,7 +5,7 @@ import { Box, Typography, useTheme } from '@mui/material';
 import { computeWordDiff } from '../lib/helpers';
 
 const TextDiffHighlight = memo(props => {
-  const { original, modified, mode, editable, onChange, maxLength } = props;
+  const { original, modified, mode, editable, onChange, maxLength, testId } = props;
 
   const editableRef = useRef(null);
   const isFocusedRef = useRef(false);
@@ -141,6 +141,7 @@ const TextDiffHighlight = memo(props => {
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         sx={[styles.container, styles.editable]}
+        data-testid={testId}
       />
     );
   }
@@ -149,6 +150,7 @@ const TextDiffHighlight = memo(props => {
     <Typography
       component="div"
       sx={styles.container}
+      data-testid={testId}
     >
       {visibleSegments.map((segment, index) => (
         <Box

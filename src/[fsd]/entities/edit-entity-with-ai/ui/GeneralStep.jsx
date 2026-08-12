@@ -19,6 +19,8 @@ const GeneralStep = memo(props => {
     nameMaxLength = MAX_NAME_LENGTH,
     nameCheckboxTestId,
     descriptionCheckboxTestId,
+    descriptionCurrentTestId,
+    descriptionSuggestedTestId,
   } = props;
 
   const currentName = currentData.name || '';
@@ -62,6 +64,7 @@ const GeneralStep = memo(props => {
                   original={currentDescription}
                   modified={suggestedDescription}
                   mode="original"
+                  testId={descriptionCurrentTestId}
                 />
               ) : (
                 <Typography sx={styles.emptyText}>No description</Typography>
@@ -127,6 +130,7 @@ const GeneralStep = memo(props => {
                 editable
                 onChange={handleDescriptionChange}
                 maxLength={MAX_DESCRIPTION_LENGTH}
+                testId={descriptionSuggestedTestId}
               />
             </Box>
             {suggestedDescription.length > 0 && (

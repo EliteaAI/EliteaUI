@@ -204,6 +204,8 @@ const AIEditSkillModal = memo(props => {
               nameMaxLength={SKILL_NAME_MAX_LENGTH}
               nameCheckboxTestId="ai-edit-skill-general-name-checkbox"
               descriptionCheckboxTestId="ai-edit-skill-general-description-checkbox"
+              descriptionCurrentTestId="ai-edit-skill-general-description-current"
+              descriptionSuggestedTestId="ai-edit-skill-general-description-suggested"
             />
           );
         case EDIT_STEP_KEYS.INSTRUCTIONS:
