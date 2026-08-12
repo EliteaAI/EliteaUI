@@ -4,7 +4,7 @@ import { useFormikContext } from 'formik';
 
 import { Box } from '@mui/material';
 
-import { useIsMidturnInjectionAvailable } from '@/[fsd]/features/chat/lib/hooks';
+import { useIsMidturnInjectionAvailable } from '@/[fsd]/features/chat';
 import { useFormikAutoSaveOnBlur } from '@/[fsd]/shared/lib/hooks';
 import { PERMISSIONS } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';

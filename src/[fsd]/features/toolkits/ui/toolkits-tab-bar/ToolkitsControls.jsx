@@ -4,10 +4,10 @@ import { useFormikContext } from 'formik';
 
 import { Box } from '@mui/material';
 
+import { PinEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
 import { Controls } from '@/[fsd]/shared/ui';
-import { PinEntityType } from '@/[fsd]/widgets/pin-toggler/lib/constants';
-import { usePin, usePinMenu } from '@/[fsd]/widgets/pin-toggler/lib/hooks';
+import { usePin, usePinMenu } from '@/[fsd]/widgets/pin-toggler';
 import { PERMISSIONS, ViewMode } from '@/common/constants';
 import { useCopyLinkMenu } from '@/components/CopyLinkToEntityButton.jsx';
 import { useForkEntityMenu } from '@/components/Fork/ForkEntityButton';
@@ -36,7 +36,7 @@ const ToolkitsControls = memo(props => {
     isLoading: isPinLoading,
   } = usePin({
     entityId: id,
-    entityType: PinEntityType.Toolkit,
+    entityType: PinEntityConstants.PinEntityType.Toolkit,
     formikContext: formik,
   });
 

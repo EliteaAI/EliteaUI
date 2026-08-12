@@ -4,9 +4,9 @@ import { useFormikContext } from 'formik';
 
 import { Box, Typography } from '@mui/material';
 
+import { ContextStrategyConstants } from '@/[fsd]/shared/lib/constants';
+import { handleConvertToNumberChange } from '@/[fsd]/shared/lib/helpers/contextStrategy.helpers';
 import { Input, Switch } from '@/[fsd]/shared/ui';
-import { CONTEXT_MESSAGES } from '@/[fsd]/widgets/context-budget/lib/constants';
-import { handleConvertToNumberChange } from '@/[fsd]/widgets/context-budget/lib/validation';
 
 const MemorySummarization = memo(props => {
   const { onAutoSaveRequested } = props;
@@ -74,7 +74,7 @@ const MemorySummarization = memo(props => {
           error={!!errors.summary_llm_settings?.instructions}
           helperText={errors.summary_llm_settings?.instructions}
           disabled={isSummarizationDisabled}
-          placeholder={CONTEXT_MESSAGES.DEFAULT_SUMMARY_INSTRUCTION}
+          placeholder={ContextStrategyConstants.CONTEXT_MESSAGES.DEFAULT_SUMMARY_INSTRUCTION}
           hasActionsToolBar
           showCopyAction
           showExpandAction={false}

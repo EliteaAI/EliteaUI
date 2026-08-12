@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 
 import StyledCircleProgress from '@/ComponentsLib/CircularProgress';
-import { useLoadToolkits } from '@/[fsd]/features/toolkits/lib/hooks';
+import { useLoadToolkits } from '@/[fsd]/features/toolkits';
 import { Select } from '@/[fsd]/shared/ui';
 import { buildErrorMessage } from '@/common/utils';
 import FormInput from '@/components/FormInput';

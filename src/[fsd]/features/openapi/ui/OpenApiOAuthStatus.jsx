@@ -4,9 +4,13 @@ import { useFormikContext } from 'formik';
 
 import { Box, Typography } from '@mui/material';
 
-import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
-import { useConfigOAuthModal, useMcpTokenChange } from '@/[fsd]/features/mcp/lib/hooks';
-import { McpAuthModal, McpLogoutModal } from '@/[fsd]/features/mcp/ui';
+import {
+  McpAuthHelpers,
+  McpAuthModal,
+  McpLogoutModal,
+  useConfigOAuthModal,
+  useMcpTokenChange,
+} from '@/[fsd]/features/mcp';
 import { useOpenApiCheckConnection, useResolvedOpenApiConfig } from '@/[fsd]/features/openapi/lib/hooks';
 import BaseBtn from '@/[fsd]/shared/ui/button/BaseBtn';
 import OnlineIcon from '@/assets/online-icon.svg?react';

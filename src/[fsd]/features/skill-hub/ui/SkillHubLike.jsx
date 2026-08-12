@@ -2,9 +2,9 @@ import { memo, useCallback, useMemo, useRef } from 'react';
 
 import { IconButton, Typography } from '@mui/material';
 
-import { useSkillHubContext } from '@/[fsd]/app/providers';
 import { useLikeSkillMutation, useUnlikeSkillMutation } from '@/[fsd]/features/skill-hub/api';
 import { SkillHubHelpers } from '@/[fsd]/features/skill-hub/lib/helpers';
+import { useSkillHubContext } from '@/[fsd]/shared/lib/context';
 import { ViewMode } from '@/common/constants';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import HeartActiveIcon from '@/components/Icons/HeartActiveIcon';

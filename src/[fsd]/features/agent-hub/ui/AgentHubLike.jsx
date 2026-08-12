@@ -1,7 +1,7 @@
 import { memo, useCallback, useRef } from 'react';
 
-import { useAgentHubContext } from '@/[fsd]/app/providers';
 import { AgentHubHelpers } from '@/[fsd]/features/agent-hub/lib/helpers';
+import { useAgentHubContext } from '@/[fsd]/shared/lib/context';
 import { ContentType } from '@/common/constants';
 import Like from '@/components/Like';
 

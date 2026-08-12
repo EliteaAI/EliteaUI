@@ -2,7 +2,7 @@ import { createElement, useMemo } from 'react';
 
 import { useTheme } from '@mui/material';
 
-import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
+import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits';
 import { useListToolkitTypesQuery } from '@/api/toolkits';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 

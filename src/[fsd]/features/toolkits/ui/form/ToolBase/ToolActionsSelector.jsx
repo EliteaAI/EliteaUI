@@ -4,12 +4,14 @@ import { useFormikContext } from 'formik';
 
 import { Box, Tooltip, Typography, useTheme } from '@mui/material';
 
-import { SHARED_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
-import { PAT_REQUIRED_ACTION_HINT } from '@/[fsd]/features/mcp/lib/constants';
-import { useGetRemoteMcpTools, useInternalMcpPatStatus } from '@/[fsd]/features/mcp/lib/hooks';
-import { McpAuthModal } from '@/[fsd]/features/mcp/ui';
+import {
+  McpAuthModal,
+  PAT_REQUIRED_ACTION_HINT,
+  useGetRemoteMcpTools,
+  useInternalMcpPatStatus,
+} from '@/[fsd]/features/mcp';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
-import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
+import { AccordionConstants, TourTargetConstants } from '@/[fsd]/shared/lib/constants';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { useToolkitView } from '@/hooks/toolkit/useToolkitView.js';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -92,7 +94,7 @@ export const ToolActionsSelector = memo(props => {
   return (
     <Box
       sx={styles.container(shouldUseAccordionView)}
-      data-tour={SHARED_TOUR_TARGET_IDS.tools}
+      data-tour={TourTargetConstants.SHARED_TOUR_TARGET_IDS.tools}
     >
       {shouldUseAccordionView ? (
         <BasicAccordion

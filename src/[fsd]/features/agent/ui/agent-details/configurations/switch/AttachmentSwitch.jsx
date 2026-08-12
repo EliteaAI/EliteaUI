@@ -4,11 +4,7 @@ import { useFormikContext } from 'formik';
 import YAML from 'js-yaml';
 import { useDispatch, useSelector } from 'react-redux';
 
-import {
-  DefaultState,
-  STATE_INPUT_ATTACHMENTS,
-  StateVariableTypes,
-} from '@/[fsd]/features/pipelines/flow-editor/lib/constants/flowEditor.constants';
+import { DefaultState, STATE_INPUT_ATTACHMENTS, StateVariableTypes } from '@/[fsd]/features/pipelines';
 import { InternalToolsConstants } from '@/[fsd]/shared/lib/constants';
 import { Switch, Text } from '@/[fsd]/shared/ui';
 import { PERMISSIONS } from '@/common/constants';

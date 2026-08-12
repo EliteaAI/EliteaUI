@@ -14,7 +14,7 @@ import {
   Typography,
 } from '@mui/material';
 
-import { BudgetErrorMessage } from '@/[fsd]/features/chat/ui/error-trace';
+import { BudgetErrorMessage } from '@/[fsd]/features/chat';
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import ProcessConnector from '@/[fsd]/features/pipelines/flow-editor/ui/state/ProcessConnector';
 import ProcessStepIcon from '@/[fsd]/features/pipelines/flow-editor/ui/state/ProcessStepIcon';

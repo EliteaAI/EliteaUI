@@ -1,7 +1,7 @@
 import { memo } from 'react';
 
-import { useInteractiveTour } from '@/[fsd]/app/providers/InteractiveTourProvider';
 import { TOUR_COMPLETION_CONFIGS } from '@/[fsd]/features/interactive-tours/lib/helpers';
+import { useInteractiveTour } from '@/[fsd]/shared/lib/context';
 
 import FirstVisitPrompt from './FirstVisitPrompt';
 import InteractiveTourCard from './InteractiveTourCard';

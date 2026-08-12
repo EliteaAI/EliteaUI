@@ -6,7 +6,6 @@ import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import { Alert, Box, CircularProgress, Snackbar, Tooltip, Typography } from '@mui/material';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 
-import { useInteractiveTour } from '@/[fsd]/app/providers';
 import { ANALYTICS_TOUR_ID, ANALYTICS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { analyticsApi, useProjectAnalyticsQuery } from '@/[fsd]/features/settings/api/analyticsApi';
 import { AnalyticsExportHelpers } from '@/[fsd]/features/settings/lib/helpers';
@@ -20,6 +19,7 @@ import {
   AnalyticsUsers,
 } from '@/[fsd]/features/settings/ui/analytics';
 import { DrawerPage } from '@/[fsd]/features/settings/ui/drawer-page';
+import { useInteractiveTour } from '@/[fsd]/shared/lib/context';
 import { exportToExcel } from '@/[fsd]/shared/lib/utils';
 import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import TabGroupButton from '@/[fsd]/shared/ui/tab-group-button/TabGroupButton';

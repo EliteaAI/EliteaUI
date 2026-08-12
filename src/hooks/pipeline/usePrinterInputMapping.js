@@ -1,7 +1,7 @@
 import { useCallback, useContext, useEffect, useMemo } from 'react';
 
-import { FlowEditorContext } from '@/[fsd]/app/providers';
 import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 
 export const getDefaultPrinterInputMapping = () => ({
   printer: { type: 'fixed', value: '' },

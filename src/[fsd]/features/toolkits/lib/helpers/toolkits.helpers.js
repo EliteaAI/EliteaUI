@@ -1,10 +1,12 @@
-import { ParticipantEntityTypes } from '@/[fsd]/features/chat/participants/lib/constants/participant.constants';
-import { CredentialNameHelpers } from '@/[fsd]/features/credentials/lib/helpers';
+import { CredentialNameHelpers } from '@/[fsd]/features/credentials';
 import { McpConstants } from '@/[fsd]/features/toolkits/lib/constants';
+import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { resolveToolkitSchemaByType } from '@/[fsd]/shared/lib/helpers';
 import { BLOCKED_TOOLKITS } from '@/common/constants';
 import { getToolIconByType } from '@/common/toolkitUtils';
 import { ToolTypes } from '@/pages/Applications/Components/Tools/consts';
+
+const { ParticipantEntityTypes } = ParticipantEntityConstants;
 
 // Separator/case-insensitive key, matching the SDK/admin guardrail normalization
 // so 'GitHub', 'github' and 'git_hub' all collapse to the same comparison key.

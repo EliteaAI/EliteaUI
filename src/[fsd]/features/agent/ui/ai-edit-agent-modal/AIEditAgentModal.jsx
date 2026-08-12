@@ -16,7 +16,7 @@ import {
   useGetApplicationSkillsQuery,
   useLazySkillDetailsQuery,
   useUpdateSkillRelationMutation,
-} from '@/[fsd]/features/skill/api';
+} from '@/[fsd]/features/skill';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { Input, Modal } from '@/[fsd]/shared/ui';
 import {

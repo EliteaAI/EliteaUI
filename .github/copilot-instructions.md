@@ -27,10 +27,20 @@ conversation experiences.
 - **Component composition** over inheritance
 - **Custom hooks** for reusable logic (prefix with `use`)
 
+### Golden Rule
+
+> **Never create new files in the old structure.** All new code goes into `src/[fsd]/`. The old `src/`
+> directories (`components/`, `pages/`, `hooks/`, `api/`, `slices/`, `common/`, `utils/`) are legacy.
+> Importing FROM legacy into FSD is acceptable during migration.
+
 ### Key FSD Principles
 
 - **Layering Rule**: Lower layers cannot import from higher layers. For example, `features` cannot import from
-  `app` or `pages`. This prevents circular dependencies and maintains a clear architectural hierarchy.
+  `app` or `pages`. `features/` and `widgets/` are **peers** — they may import from each other. Features are
+  large business modules; widgets are smaller self-contained UI blocks.
+- **Redux store** lives in `shared/config/store.js` — accessible from any layer.
+- **One file = one component.** Never define multiple components in a single file.
+- **Arrow functions only.** No `function` declarations for components or callbacks.
 - **Single Responsibility**: Each FSD segment (`ui`, `model`, `api`, `lib`) has a specific purpose. UI
   components should only handle presentation, while business logic should reside in `lib` or `model`.
 - **Feature Isolation**: Features should be self-contained and independent. This allows them to be reused or
@@ -40,6 +50,40 @@ conversation experiences.
   this public API. This allows internal refactoring without breaking external code. For clarity and to avoid
   circular dependencies, imports should be as specific as possible, pointing to the feature's segment (e.g.
   `features/my-feature/ui`) where appropriate.
+
+### Barrel File Export Patterns
+
+```javascript
+// Components — named re-export of defaults
+export { default as MyComponent } from './MyComponent';
+
+// Hooks/helpers — wildcard re-export
+export * from './useMyHook.hooks';
+
+// Grouped namespace re-export
+export * as Button from './button';
+export * as ModalConstants from './modal.constants';
+```
+
+### Slice Internal Structure
+
+```
+<slice-name>/
+  api/                → RTK Query endpoint definitions (<name>Api.js)
+  lib/
+    constants/        → domain constants (<name>.constants.js, UPPER_SNAKE_CASE)
+    helpers/          → pure functions (<name>.helpers.js)
+    hooks/            → custom React hooks (use<Name>.hooks.js)
+    utils/            → utility functions
+    serialize/        → data transformation (<name>.serialize.js)
+    validation/       → validation schemas
+    context/          → React contexts
+  model/              → Redux slices (<name>.slice.js)
+  ui/                 → React components (PascalCase.jsx)
+  index.js            → public API barrel
+```
+
+Not every slice needs every segment — include only what is needed.
 
 ## File Structure Conventions
 
@@ -190,6 +234,22 @@ Old Structure (pre-FSD):
 └── utils/         # Pure utility functions
 ```
 
+## File Naming Conventions
+
+| Category              | Convention               | Example                           |
+| --------------------- | ------------------------ | --------------------------------- |
+| Component files       | `PascalCase.jsx`         | `AgentCard.jsx`                   |
+| Hook files            | `camelCase.hooks.js`     | `useModal.hooks.js`               |
+| Helper files          | `camelCase.helpers.js`   | `notification.helpers.js`         |
+| Constant files        | `camelCase.constants.js` | `llmSettings.constants.js`        |
+| Redux slice files     | `camelCase.slice.js`     | `importWizard.slice.js`           |
+| API files             | `camelCaseApi.js`        | `runHistoryApi.js`                |
+| Serialize files       | `camelCase.serialize.js` | `runHistory.serialize.js`         |
+| Test files            | `<name>.test.js(x)`      | `budgetWarning.constants.test.js` |
+| Story files           | `PascalCase.stories.jsx` | `BaseBtn.stories.jsx`             |
+| Barrel files          | `index.js`               | always `index.js`                 |
+| FSD slice directories | `kebab-case`             | `agent-hub/`, `grid-table/`       |
+
 ### Path Aliases
 
 Always use `@/` alias for imports from `src/`:
@@ -213,7 +273,7 @@ import { VITE_SERVER_URL } from "../../../common/constants";
 3.  **Internal feature imports (FSD structure)**: `import { FlowEditorContext } from '@/[fsd]/app/providers';`
 4.  **Shared component imports**: `import EntityIcon from '@/components/EntityIcon';`
 5.  **Asset imports**: `import StopIcon from '@/assets/stop-icon.svg?react';`
-6.  **Theme/style imports**: `import { useTheme } from '@emotion/react';`
+6.  **Theme/style imports**: `import { useTheme } from '@mui/material';`
 
 **FSD Import Path Best Practices:**
 
@@ -249,6 +309,8 @@ import { useFormikContext } from 'formik';
 
 // 2. External library imports
 import { Box, IconButton, Typography } from '@mui/material';
+// 6. Theme/style imports
+import { useTheme } from '@mui/material';
 
 // 3. Internal feature imports (FSD structure)
 import { FlowEditorContext } from '@/[fsd]/app/providers';
@@ -259,8 +321,6 @@ import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import StopIcon from '@/assets/stop-icon.svg?react';
 // 4. Shared component imports
 import EntityIcon from '@/components/EntityIcon';
-// 6. Theme/style imports
-import { useTheme } from '@emotion/react';
 ```
 
 ## API Integration Patterns
@@ -315,10 +375,11 @@ theming patterns:
 2. **useTheme hook** - For accessing theme in component logic or complex calculations
 3. **Theme customization** - Define component variants and overrides in the theme (used sparingly)
 
-**Alternative patterns (found in legacy code, avoid in new code):**
+**Banned patterns (never use in new code):**
 
-- **styled() API** - For reusable styled components (prefer sx prop instead)
-- **className prop with CSS modules/emotion** - When other methods aren't suitable
+- **styled() API** - Use `sx` prop with style functions instead
+- **makeStyles / useStyles** - Removed from MUI v5+
+- **className prop with CSS modules/emotion** - Use `sx` prop instead
 
 #### Primary Pattern: sx Prop with Style Functions
 
@@ -421,7 +482,7 @@ action to ensure consistency, maintainability, and adherence to project standard
 
 ```javascript
 // ✅ Access theme in component logic
-import { useTheme } from '@emotion/react';
+import { useTheme } from '@mui/material';
 
 const MyComponent = () => {
   const theme = useTheme();
@@ -727,9 +788,12 @@ import FileUploadIcon from '@/assets/icons/FileUploadIcon.svg?react';
 
 ### Component Creation Checklist
 
+- [ ] One file = one component. Never define multiple components in a single file.
+- [ ] Arrow functions only. No `function` declarations.
 - [ ] Wrap component in `React.memo()`.
 - [ ] Set a `displayName` for the component.
 - [ ] Destructure `props` inside the component body, not in the function signature.
+- [ ] Use `export default` for components.
 - [ ] Use `useMemo` for expensive computations or derived data.
 - [ ] Use `useCallback` only when referential stability is actually needed (for example, memoized child props
       or hook dependencies).
@@ -740,64 +804,43 @@ import FileUploadIcon from '@/assets/icons/FileUploadIcon.svg?react';
 - [ ] Use `/** @type {MuiSx} */` JSDoc annotation for style functions.
 - [ ] Convert pixel values to rem units for better accessibility.
 - [ ] Use theme callbacks instead of passing theme as parameter.
+- [ ] Merge external `sx` with array syntax: `sx={[styles.root, sx]}`.
 
 ### Custom Components
 
-Reuse existing component patterns from `/components` and follow MUI's customization guidelines:
+Reuse existing component patterns and follow the `sx` style function pattern:
 
 ```javascript
-// ✅ Use existing Button with variants
-import { Paper } from '@mui/material';
-// ✅ Create new styled components following MUI patterns
-import { styled } from '@mui/material/styles';
+// ✅ Use BaseBtn for all buttons
+import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 
-import Button from '@/components/Button';
-// ✅ Use existing styled components
-import { StyledDialog } from '@/components/StyledDialog';
-
-<Button
-  color="primary"
-  variant="contained"
+<BaseBtn
+  variant={BUTTON_VARIANTS.contained}
+  onClick={handleSave}
 >
   Save Changes
-</Button>;
-
-const CustomCard = styled(Paper)(({ theme }) => ({
-  padding: theme.spacing(3),
-  borderRadius: theme.shape.borderRadius * 2,
-  backgroundColor: theme.palette.background.default,
-  // Use theme tokens, not hard-coded values
-}));
-
-// ✅ Extend existing MUI components with theme variants
-const theme = createTheme({
-  components: {
-    MuiButton: {
-      variants: [
-        {
-          props: { variant: 'gradient' },
-          style: {
-            background: 'linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)',
-          },
-        },
-      ],
-    },
-  },
-});
+</BaseBtn>;
 ```
+
+**Never use `styled()` API in new code.** Use the `sx` prop with style functions instead.
 
 ### Native HTML vs MUI Components
 
 During refactoring replace raw HTML tags (div, span, p, h1–h6, button, input, label, etc.) with MUI
 components:
 
-- div / span → Box (or Typography component="span" for inline text cases)
-- p / h1–h6 → Typography (using variant)
-- button → MUI Button
-- input / textarea → TextField (or a specialized component from the existing UI library)
-- label → FormLabel / InputLabel
-- ul / ol / li → Box with list-style via sx (or MUI List / ListItem if list semantics needed)
-- form → Box component="form"
+- `<div>` / `<span>` → `<Box>` (or `<Typography component="span">` for inline text)
+- `<p>` / `<h1>`–`<h6>` → `<Typography>` (using variant)
+- `<button>` → `<BaseBtn>` from `@/[fsd]/shared/ui/button` or MUI `<Button>`
+- `<input>` / `<textarea>` → `<Input.InputBase>` from `@/[fsd]/shared/ui/input`
+- `<label>` → `<FormLabel>` / `<InputLabel>`
+- `<ul>` / `<ol>` / `<li>` → MUI `<List>` / `<ListItem>` or `<Box>` with list-style via sx
+- `<form>` → `<Box component="form">`
+- `<a>` → React Router `<Link>` or MUI `<Link>`
+- `<table>` → MUI X `<DataGrid>`
+
+Custom Typography variants: `'bodyMedium'`, `'bodySmall'`, `'bodySmall2'`, `'headingSmall'`, `'labelMedium'`,
+`'labelSmall'`.
 
 Rules:
 
@@ -926,27 +969,30 @@ export const usePageQuery = projectId => {
 
 ### Constants Organization
 
-Store all constants in `/common/constants.js`:
+- **Local-only constants** (used within a single file) — define at the top of that file, no need to move to
+  `lib/constants/`
+- **Shared constants** (exported and used by multiple files) — move to `lib/constants/` in the appropriate
+  slice, file named `<name>.constants.js`, use `UPPER_SNAKE_CASE` for constant object names
 
 ```javascript
-// ✅ Organized constants
-export const UI_CONSTANTS = {
-  SIDE_BAR_WIDTH: 216,
-  NAV_BAR_HEIGHT: 60,
-  RIGHT_PANEL_WIDTH: 328,
-};
+// Local constant — stays in the component file
+const MAX_VISIBLE_ITEMS = 5;
 
-export const API_DEFAULTS = {
-  PAGE_SIZE: 20,
-  MAX_TOKENS: 1024,
-  DEFAULT_TEMPERATURE: 0.2,
+// Shared constant — lives in lib/constants/<name>.constants.js
+export const STATUS_OPTIONS = {
+  active: 'active',
+  archived: 'archived',
+  draft: 'draft',
 };
+```
 
-export const PERMISSION_GROUPS = {
-  READ: 'READ',
-  WRITE: 'WRITE',
-  ADMIN: 'ADMIN',
-};
+**Importing shared constants** — import the namespace from the shared barrel, then destructure:
+
+```javascript
+import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
+
+// Inside component or function:
+const { ParticipantEntityTypes } = ParticipantEntityConstants;
 ```
 
 ### Feature Flags and Environment
@@ -1043,7 +1089,17 @@ const handleSave = async () => {
 
 ## Testing Standards
 
-### Page Object Pattern
+### Unit Tests
+
+**Unit tests:** Vitest + React Testing Library
+
+- Tests must live in a `__tests__/` folder co-located with the code they test (e.g.,
+  `ui/__tests__/MyComponent.test.jsx`, `lib/helpers/__tests__/myHelper.helpers.test.js`)
+- Never place test files alongside source files — always inside `__tests__/`
+- Use `data-testid` attributes for element selection
+- Use `vi.mock()` for module mocking
+
+### E2E Page Object Pattern
 
 Follow the established Playwright testing pattern:
 
@@ -1088,8 +1144,7 @@ Use `data-testid` for test selectors:
   matters.
 - Use `React.memo` on components to prevent re-renders when props have not changed.
 - **Always add a `displayName` to memoized components for better debugging.**
-- Apply `memo` at definition time. If using `forwardRef`, wrap with `memo` at export.
-- Avoid inline `memo(forwardRef(...))` as it harms readability.
+- **`forwardRef` nests inside `memo`**:
 
 ```javascript
 // ✅ Proper memoization with derived data and stable callbacks
@@ -1121,23 +1176,24 @@ export default MyComponent;
 ```
 
 ```javascript
-// ✅ With forwardRef then memo (export-time wrap acceptable)
-const MyComponentWithRef = forwardRef((props, ref) => {
-  const { title } = props;
-  return <Box ref={ref}>{title}</Box>;
-});
-MyComponentWithRef.displayName = 'MyComponentWithRef';
-export default memo(MyComponentWithRef);
-```
-
-```javascript
-// ❌ Avoid: memo wrapping inline forwardRef
-const MyComponent = memo(
+// ✅ With forwardRef — nest inside memo
+const MyComponentWithRef = memo(
   forwardRef((props, ref) => {
     const { title } = props;
     return <Box ref={ref}>{title}</Box>;
   }),
 );
+MyComponentWithRef.displayName = 'MyComponentWithRef';
+export default MyComponentWithRef;
+```
+
+```javascript
+// ❌ Avoid: forwardRef outside memo (export-time wrap)
+const MyComponent = forwardRef((props, ref) => {
+  const { title } = props;
+  return <Box ref={ref}>{title}</Box>;
+});
+export default memo(MyComponent);
 ```
 
 ## Security and Best Practices
@@ -1668,7 +1724,7 @@ For 1-2 conditions, simple ternaries or `&&` operators are acceptable:
 - Name React components and files using **PascalCase** (e.g. `AddItemButton.jsx`)
 - Use **single quotes** for strings and include **semicolons**
 - Use `prefer-const`, and eliminate unused variables to satisfy ESLint rules
-- Use arrow functions or `forwardRef` only when necessary and avoid inline lambdas in JSX when possible
+- Use arrow functions only — no `function` declarations for components or callbacks
 
 ## Quick Reference - Common Patterns
 
@@ -1725,6 +1781,31 @@ export const useMyHook = (param1, param2) => {
 
   return result;
 };
+```
+
+### FSD Import Examples
+
+```javascript
+// ✅ Correct: Explicit layer imports
+import { MyFeature } from '@/[fsd]/features/my-domain/ui';
+import { myHelper } from '@/[fsd]/features/my-domain/lib';
+import { useMyHook } from '@/[fsd]/shared/lib/hooks';
+
+// ❌ Incorrect: Missing layer specification
+import { MyFeature } from '@/[fsd]/features/my-domain';
+```
+
+### Pixel to Rem Quick Reference
+
+```javascript
+// Common conversions
+1px   → 0.0625rem
+8px   → 0.5rem
+16px  → 1rem
+24px  → 1.5rem
+32px  → 2rem
+40px  → 2.5rem
+100px → 6.25rem
 ```
 
 ### FSD Import Examples

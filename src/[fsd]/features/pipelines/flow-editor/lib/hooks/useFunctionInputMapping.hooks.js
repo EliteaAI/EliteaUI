@@ -2,9 +2,9 @@ import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { FlowEditorContext } from '@/[fsd]/app/providers';
 import * as FlowEditorHelpers from '@/[fsd]/features/pipelines/flow-editor/lib/helpers/flowEditor.helpers';
-import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
+import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits';
+import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import { isMcpToolkit } from '@/[fsd]/shared/lib/helpers';
 import { useToolkitAvailableToolsQuery } from '@/api/toolkits.js';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';

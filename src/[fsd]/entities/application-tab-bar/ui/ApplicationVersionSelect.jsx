@@ -4,10 +4,12 @@ import { useFormikContext } from 'formik';
 import { useDispatch } from 'react-redux';
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
-import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
-import { buildVersionOption } from '@/[fsd]/entities/version/lib/helpers';
-import { useSetDefaultVersion } from '@/[fsd]/entities/version/lib/hooks';
-import { VersionSelect } from '@/[fsd]/entities/version/ui';
+import {
+  LATEST_VERSION_NAME,
+  VersionSelect,
+  buildVersionOption,
+  useSetDefaultVersion,
+} from '@/[fsd]/entities/version';
 import { useLazyGetApplicationVersionDetailQuery } from '@/api/applications';
 import { eliteaApi } from '@/api/eliteaApi';
 import { PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';

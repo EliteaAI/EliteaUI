@@ -1,3 +1,4 @@
+export { useAvailableInternalTools } from './useAvailableInternalTools.hooks';
 export { useGetCurrentToolkitSchemas } from './useGetCurrentToolkitSchemas.hooks';
 export { useGetCurrentMCPSchemas } from './useGetCurrentMCPSchemas.hooks';
 export { useToolkitChat } from './useToolkitChat.hooks';

@@ -6,8 +6,7 @@ import { useParams, useSearchParams } from 'react-router-dom';
 
 import { Box, CircularProgress } from '@mui/material';
 
-import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
-import { McpPatBanner } from '@/[fsd]/features/mcp/ui';
+import { McpAuthHelpers, McpPatBanner } from '@/[fsd]/features/mcp';
 import IndexesContainer from '@/[fsd]/features/toolkits/indexes/ui/IndexesContainer.jsx';
 import RunIndexBanner from '@/[fsd]/features/toolkits/indexes/ui/RunIndexBanner.jsx';
 import { ToolkitFormConstants } from '@/[fsd]/features/toolkits/lib/constants';

@@ -11,9 +11,9 @@ import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3';
 
 // Store must be imported before App to ensure API endpoints are injected before slice extraReducers run
-import store from '@/[fsd]/app/store';
+import store from '@/[fsd]/shared/config/store';
 import App from '@/[fsd]/app/App';
-import { ToolkitSocketProvider } from '@/[fsd]/app/providers';
+import { ToolkitSocketProvider } from '@/[fsd]/shared/lib/context';
 import { DEV, VITE_DEV_TOKEN, VITE_SOCKET_PATH, VITE_SOCKET_SERVER } from '@/common/constants';
 import { NpsSurveyWidget } from '@/[fsd]/widgets/nps-survey';
 import { ToastComponent, ToastProvider } from '@/components/ToastProvider';

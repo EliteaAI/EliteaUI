@@ -4,9 +4,8 @@ import { useFormikContext } from 'formik';
 
 import { Box, Grid, Typography } from '@mui/material';
 
-import { ChatMessageList } from '@/[fsd]/features/chat/ui/chat-box';
-import { useMcpAuthModal } from '@/[fsd]/features/mcp/lib/hooks';
-import { McpAuthModal } from '@/[fsd]/features/mcp/ui';
+import { ChatMessageList } from '@/[fsd]/features/chat';
+import { McpAuthModal, useMcpAuthModal } from '@/[fsd]/features/mcp';
 import { IndexesToolsEnum } from '@/[fsd]/features/toolkits/indexes/lib/constants';
 import {
   adjustIndexDataSchema,

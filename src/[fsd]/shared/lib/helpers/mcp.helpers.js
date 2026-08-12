@@ -1,11 +1,11 @@
-import { McpAuthConstants } from '@/[fsd]/features/mcp/lib/constants';
+import { McpConstants } from '@/[fsd]/shared/lib/constants';
 
 /**
  * Returns true if the given type string identifies an MCP toolkit.
  * Covers both remote MCPs ('mcp') and pre-built MCPs ('mcp_*').
  */
 export const isMcpToolkitType = type =>
-  type === 'mcp' || Boolean(type?.startsWith(McpAuthConstants.MCP_PREBUILD_PREFIX));
+  type === 'mcp' || Boolean(type?.startsWith(McpConstants.MCP_PREBUILD_PREFIX));
 
 /**
  * Returns true only for a Remote MCP toolkit — a user-connected external MCP
@@ -24,7 +24,7 @@ export const isMcpToolkit = item => isMcpToolkitType(item?.type) || item?.meta?.
 export const resolveToolkitSchemaByType = (type, toolkitSchemas = {}) => {
   if (!type) return undefined;
   if (toolkitSchemas[type]) return toolkitSchemas[type];
-  const prefix = McpAuthConstants.MCP_PREBUILD_PREFIX;
+  const prefix = McpConstants.MCP_PREBUILD_PREFIX;
   if (!type.toLowerCase().startsWith(prefix)) return undefined;
   const normalize = key => prefix + key.slice(prefix.length).toLowerCase().replace(/ /g, '_');
   const wanted = normalize(type);

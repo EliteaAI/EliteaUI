@@ -6,8 +6,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { useTrackEvent } from '@/GA';
 import { PUBLISH_STEPS } from '@/[fsd]/entities/version/ui/PublishWizardModal';
-import { useGetAgentCategoriesQuery } from '@/[fsd]/features/agent/api/agentCategoriesApi';
-import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
+import { useGetAgentCategoriesQuery } from '@/[fsd]/features/agent';
+import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
 import { usePublishApplicationMutation, useValidateForPublishMutation } from '@/api';
 import { useGetPlatformSettingsQuery } from '@/api/platformSettings';
 import { CollectionStatus, PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';
@@ -15,6 +15,7 @@ import { useIsFromPipelineDetail } from '@/hooks/useIsFromSpecificPageHooks';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 
+const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
 const MAX_AI_RETRIES = 2;
 
 export const usePublishVersion = onSuccess => {

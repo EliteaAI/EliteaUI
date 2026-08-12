@@ -2,8 +2,7 @@ import { memo, useCallback, useRef } from 'react';
 
 import { Box } from '@mui/material';
 
-import { ChatButton } from '@/[fsd]/features/chat/ui';
-import { ChatMessageList } from '@/[fsd]/features/chat/ui/chat-box';
+import { ChatButton, ChatMessageList } from '@/[fsd]/features/chat';
 import { useIndexHistory } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import { LLMModelSelector } from '@/[fsd]/widgets/llm-model-selector';
 import FullScreenToggle from '@/components/Chat/FullScreenToggle';

@@ -6,14 +6,9 @@ import Split from 'react-split';
 import { Box, CircularProgress, Typography } from '@mui/material';
 
 import RunHistoryContainer from '@/[fsd]/entities/run-history/ui/RunHistoryContainer';
-import { ParticipantEntityTypes } from '@/[fsd]/features/chat/participants/lib/constants/participant.constants';
 import { PIPELINE_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { usePipelineAttachmentYamlSync, usePipelineChat } from '@/[fsd]/features/pipelines/lib/hooks';
-import {
-  DEFAULT_MAX_TOKENS,
-  DEFAULT_REASONING_EFFORT,
-  DEFAULT_TEMPERATURE,
-} from '@/[fsd]/shared/lib/constants/llmSettings.constants';
+import { LLMSettingsConstants, ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { useShowRunHistoryFromUrl } from '@/[fsd]/shared/lib/hooks';
 import { isReasoningFamilyFromStored } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
 import DirtyDetector from '@/components/Formik/DirtyDetector';
@@ -25,6 +20,9 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import ChatPanel from './ChatPanel';
 import EditorPanel from './EditorPanel';
 import GeneralFormPanel from './GeneralFormPanel';
+
+const { ParticipantEntityTypes } = ParticipantEntityConstants;
+const { DEFAULT_MAX_TOKENS, DEFAULT_REASONING_EFFORT, DEFAULT_TEMPERATURE } = LLMSettingsConstants;
 
 const ConfigurationTab = memo(props => {
   const {
