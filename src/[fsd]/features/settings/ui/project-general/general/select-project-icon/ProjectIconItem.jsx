@@ -10,6 +10,7 @@ const ProjectIconItem = memo(props => {
   return (
     <Box
       data-testid={dataTestId}
+      data-selected={isSelected}
       onClick={onClick}
       sx={styles.container}
     >
