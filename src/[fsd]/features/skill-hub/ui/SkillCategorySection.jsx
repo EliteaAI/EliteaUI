@@ -51,7 +51,12 @@ const SkillCategorySection = memo(props => {
   }, [initialDisplayCount]);
 
   return (
-    <Box sx={styles.container}>
+    <Box
+      sx={styles.container}
+      data-testid={`catalog-category-section-${String(category)
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')}`}
+    >
       <Box sx={styles.headerContainer}>
         <Typography
           variant="headingMedium"
