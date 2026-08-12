@@ -5,8 +5,8 @@ import { useSelector } from 'react-redux';
 
 import { Box } from '@mui/material';
 
+import { useRefetchAgentDetails } from '@/[fsd]/entities/application-tab-bar/lib/hooks';
 import { ApplicationVersionSelect } from '@/[fsd]/entities/application-tab-bar/ui';
-import { useRefetchAgentDetails } from '@/[fsd]/features/agent';
 import { TourTargetConstants } from '@/[fsd]/shared/lib/constants';
 import { useFormDirtyExcluding } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';

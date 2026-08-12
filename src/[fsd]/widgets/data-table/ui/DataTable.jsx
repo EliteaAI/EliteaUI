@@ -38,6 +38,7 @@ import { actions as settingsActions } from '@/slices/settings';
 
 import DataTableActionsCell from './DataTableActionsCell';
 import DataTableCell from './DataTableCell';
+import DataTableNameCell from './DataTableNameCell';
 
 const DataTable = memo(props => {
   const {
@@ -460,7 +461,7 @@ const DataTable = memo(props => {
                   isHovered={hoveredRowId === row?.id}
                   onMouseEnter={() => setHoveredRowId(row?.id)}
                   onMouseLeave={() => setHoveredRowId(null)}
-                  isRedesign
+                  NameCellComponent={DataTableNameCell}
                   nameCellProps={nameCellProps}
                   ActionsComponent={DataTableActionsCell}
                   actionsProps={actionsProps}

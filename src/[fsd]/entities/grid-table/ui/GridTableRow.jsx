@@ -22,7 +22,6 @@ const GridTableRow = memo(props => {
     nameField = 'name',
     showCheckbox = true,
     namePrefix,
-    isRedesign = false,
     NameCellComponent,
     nameCellProps,
     actions,
@@ -77,7 +76,6 @@ const GridTableRow = memo(props => {
 
       <Box sx={[styles.nameCell, nameCellSx]}>
         <GridTableRowNameCell
-          isRedesign={isRedesign}
           NameCellComponent={NameCellComponent}
           nameCellProps={nameCellProps}
           row={row}

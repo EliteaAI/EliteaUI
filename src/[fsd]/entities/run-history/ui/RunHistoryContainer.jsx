@@ -15,7 +15,15 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 const { ParticipantEntityTypes } = ParticipantEntityConstants;
 
 const RunHistoryContainer = memo(props => {
-  const { entityId, versions, source, handleRestoreConversation, onClose } = props;
+  const {
+    entityId,
+    versions,
+    source,
+    handleRestoreConversation,
+    onClose,
+    ChatMessageListComponent,
+    prettifyConversation,
+  } = props;
 
   const projectId = useSelectedProjectId();
   const [searchParams] = useSearchParams();
@@ -114,6 +122,8 @@ const RunHistoryContainer = memo(props => {
         <RunHistoryChat
           selectedHistoryItem={selectedHistoryItem}
           prettifyChat={[ParticipantEntityTypes.Toolkit, ParticipantEntityTypes.MCP].includes(source)}
+          ChatMessageListComponent={ChatMessageListComponent}
+          prettifyConversation={prettifyConversation}
         />
       </Box>
     </Box>
