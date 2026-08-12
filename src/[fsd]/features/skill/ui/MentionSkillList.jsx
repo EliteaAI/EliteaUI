@@ -88,6 +88,7 @@ const MentionSkillList = memo(props => {
                     style={styles.itemCustomIcon}
                     image={item.icon_meta}
                     alt={item.name}
+                    data-testid="skill-mention-item-icon-img"
                   />
                 ) : (
                   <SkillIcon style={styles.itemIcon} />

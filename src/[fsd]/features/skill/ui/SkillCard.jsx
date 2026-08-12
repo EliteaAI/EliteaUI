@@ -54,6 +54,7 @@ const SkillCard = memo(props => {
                 style={styles.skillCustomIcon}
                 image={skill.icon_meta}
                 alt={skill.name}
+                data-testid="skill-card-icon-img"
               />
             ) : (
               <SkillIcon style={styles.skillIcon} />

@@ -142,6 +142,7 @@ const SkillMenu = memo(props => {
             style={styles.itemCustomIcon}
             image={skill.icon_meta}
             alt={skill.name}
+            data-testid="skill-menu-item-icon-img"
           />
         ) : (
           <SkillIcon style={styles.itemIcon} />
