@@ -12,7 +12,7 @@ import {
   GroupedConversations,
   PinnedConversations,
 } from '@/[fsd]/features/chat/conversation-list/ui';
-import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
+import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { SimpleSearchBar } from '@/[fsd]/shared/ui/input';
 import { useLazyDateGroupConversationsQuery, useLazyFolderConversationsQuery } from '@/api';
 import { PERMISSIONS } from '@/common/constants';

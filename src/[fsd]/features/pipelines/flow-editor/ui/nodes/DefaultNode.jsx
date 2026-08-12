@@ -2,7 +2,6 @@ import { memo, useCallback, useContext, useMemo } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { FlowEditorContext } from '@/[fsd]/app/providers';
 import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import {
   useFunctionInputMapping,
@@ -13,6 +12,7 @@ import {
   FlowEditorSelect,
   FlowEditorSettings,
 } from '@/[fsd]/features/pipelines/flow-editor/ui';
+import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { ToolTypes } from '@/pages/Applications/Components/Tools/consts';
 

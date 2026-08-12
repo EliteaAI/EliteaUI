@@ -2,8 +2,7 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { extractMcpAuthMetadata } from '@/[fsd]/features/mcp/lib/hooks';
-import { McpAuthModal } from '@/[fsd]/features/mcp/ui';
+import { McpAuthModal, extractMcpAuthMetadata } from '@/[fsd]/features/mcp';
 import BaseBtn from '@/[fsd]/shared/ui/button/BaseBtn';
 import ArrowForwardIcon from '@/assets/icons/arrow-forward.svg?react';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';

@@ -5,12 +5,14 @@ import { useFormikContext } from 'formik';
 import { Box, Typography } from '@mui/material';
 
 import { Switch } from '@/[fsd]/features/agent/ui/agent-details/configurations';
-import { AGENT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
-import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
-import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
-import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
+import {
+  ToolkitsHelpers,
+  useAvailableInternalTools,
+  useGetCurrentToolkitSchemas,
+} from '@/[fsd]/features/toolkits';
+import { AccordionConstants, TourTargetConstants } from '@/[fsd]/shared/lib/constants';
 import { isMcpToolkit } from '@/[fsd]/shared/lib/helpers';
-import { useAvailableInternalTools, useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
+import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { markAllDuplicatesByMultipleKeys } from '@/common/utils';
 import ToolCard from '@/pages/Applications/Components/Tools/ToolCard';
@@ -127,7 +129,7 @@ const ApplicationTools = memo(props => {
               {!disabled && (
                 <Box
                   sx={{ margin: '.75rem 0' }}
-                  data-tour={AGENT_TOUR_TARGET_IDS.tools}
+                  data-tour={TourTargetConstants.AGENT_TOUR_TARGET_IDS.tools}
                 >
                   <ToolMenu applicationId={applicationId} />
                 </Box>
@@ -149,7 +151,7 @@ const ApplicationTools = memo(props => {
               {shouldShowInternalTools && (
                 <Box
                   sx={styles.internalToolsContainer}
-                  data-tour={AGENT_TOUR_TARGET_IDS.advancedSettings}
+                  data-tour={TourTargetConstants.AGENT_TOUR_TARGET_IDS.advancedSettings}
                 >
                   <Typography sx={styles.internalToolsTitle}>MODULES</Typography>
                   <Box sx={styles.internalToolsGrid}>

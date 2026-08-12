@@ -2,7 +2,6 @@ import { memo, useContext, useMemo } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { FlowEditorContext } from '@/[fsd]/app/providers';
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import {
   useGetToolkitNameFromSchema,
@@ -13,6 +12,7 @@ import {
   FlowEditorSelect,
   FlowEditorSettings,
 } from '@/[fsd]/features/pipelines/flow-editor/ui';
+import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import useLLMInputMapping from '@/hooks/pipeline/useLLMInputMapping';
 import { useEdges } from '@xyflow/react';
 

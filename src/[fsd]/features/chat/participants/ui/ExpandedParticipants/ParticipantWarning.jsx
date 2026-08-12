@@ -2,8 +2,8 @@ import { memo } from 'react';
 
 import { Typography } from '@mui/material';
 
-import { McpLogInLink } from '@/[fsd]/features/mcp/ui';
-import { SharepointLogInLink } from '@/[fsd]/features/sharepoint/ui';
+import { McpLogInLink } from '@/[fsd]/features/mcp';
+import { SharepointLogInLink } from '@/[fsd]/features/sharepoint';
 import { ChatParticipantType } from '@/common/constants';
 
 const ParticipantWarning = memo(props => {

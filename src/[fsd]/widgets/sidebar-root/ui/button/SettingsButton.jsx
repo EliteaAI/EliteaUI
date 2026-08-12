@@ -2,7 +2,7 @@ import { memo, useCallback } from 'react';
 
 import { useMatch } from 'react-router-dom';
 
-import { SIDEBAR_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
+import { SIDEBAR_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import ConfigurationIcon from '@/assets/gear-icon.svg?react';
 import RouteDefinitions from '@/routes';
 

@@ -1,6 +1,6 @@
 import YAML from 'js-yaml';
 
-import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+import { FlowEditorConstants } from '@/[fsd]/features/pipelines';
 
 // Sanitize ID for Mermaid compatibility (alphanumeric and underscore only)
 const sanitizeId = id => id?.replace(/[^a-zA-Z0-9_]/g, '_') || '';

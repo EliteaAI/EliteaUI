@@ -5,10 +5,12 @@ import { Box } from '@mui/material';
 import ListInfiniteMoreLoader from '@/ComponentsLib/ListInfiniteMoreLoader';
 import { useRunHistorySorting } from '@/[fsd]/entities/run-history/lib/hooks';
 import { RunHistoryListItem, RunHistorySortableHeader } from '@/[fsd]/entities/run-history/ui';
-import { ParticipantEntityTypes } from '@/[fsd]/features/chat/participants/lib/constants/participant.constants';
+import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import useGetWindowWidth from '@/hooks/useGetWindowWidth';
 import useIsSmallWindow from '@/hooks/useIsSmallWindow';
 import { ContentContainer } from '@/pages/Common';
+
+const { ParticipantEntityTypes } = ParticipantEntityConstants;
 
 const SORT_TYPES = {
   DATE: 'date',

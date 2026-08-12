@@ -14,7 +14,7 @@ import {
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import { useParticipantEntityIcon } from '@/[fsd]/features/chat/participants/lib/hooks';
-import { usePublicProjectAccessCheck } from '@/[fsd]/features/project/lib/hooks';
+import { usePublicProjectAccessCheck } from '@/[fsd]/features/project';
 import { PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';
 import EntityIcon from '@/components/EntityIcon';
 import CloseIcon from '@/components/Icons/CloseIcon';

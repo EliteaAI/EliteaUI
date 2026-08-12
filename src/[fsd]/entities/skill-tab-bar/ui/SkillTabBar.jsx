@@ -2,11 +2,8 @@ import { memo, useCallback, useMemo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
-import { buildVersionOption } from '@/[fsd]/entities/version/lib/helpers';
-import DiscardSkillButton from '@/[fsd]/features/skill/ui/DiscardSkillButton';
-import SaveSkillButton from '@/[fsd]/features/skill/ui/SaveSkillButton';
-import SaveSkillVersionButton from '@/[fsd]/features/skill/ui/SaveSkillVersionButton';
+import { LATEST_VERSION_NAME, buildVersionOption } from '@/[fsd]/entities/version';
+import { DiscardSkillButton, SaveSkillButton, SaveSkillVersionButton } from '@/[fsd]/features/skill';
 import { Select } from '@/[fsd]/shared/ui';
 import PublishIcon from '@/assets/publish-version.svg?react';
 import PinIcon from '@/components/Icons/PinIcon';

@@ -1,9 +1,9 @@
 import { memo, useCallback, useContext, useMemo } from 'react';
 
-import { FlowEditorContext } from '@/[fsd]/app/providers';
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { useNodeOptions } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
+import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import { Select } from '@/[fsd]/shared/ui';
 
 const RouteSelect = memo(props => {

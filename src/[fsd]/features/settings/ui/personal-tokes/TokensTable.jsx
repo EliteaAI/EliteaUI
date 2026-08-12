@@ -12,7 +12,7 @@ import {
   GridTablePagination,
   GridTableRow,
 } from '@/[fsd]/entities/grid-table/ui';
-import { PERSONAL_TOKENS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/personalTokensTourTargets.constants';
+import { PERSONAL_TOKENS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import ExpiryInDays from '@/[fsd]/features/settings/ui/personal-tokes/ExpiryInDays';
 import TokenActionsCell from '@/[fsd]/features/settings/ui/personal-tokes/TokenActionsCell';
 import { Text } from '@/[fsd]/shared/ui';

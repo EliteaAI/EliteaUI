@@ -6,7 +6,6 @@ export * from './useModal.hooks';
 export * from './useGroupedCategories.hooks';
 export * from './useFieldFocus.hooks';
 export * from './useFormDirtyExcluding.hooks';
-export * from './useAvailableInternalTools.hooks';
 export * from './useDefaultModel.hooks';
 export * from './useFileDragAndDrop.hooks';
 export * from './useProjectType.hooks';

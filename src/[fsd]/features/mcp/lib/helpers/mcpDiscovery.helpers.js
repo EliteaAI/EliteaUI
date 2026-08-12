@@ -1,5 +1,5 @@
-import store from '@/[fsd]/app/store';
 import { McpAuthFlowConstants } from '@/[fsd]/features/mcp/lib/constants';
+import store from '@/[fsd]/shared/config/store';
 import { mcpOAuthApi } from '@/api/mcpOAuth';
 
 /**

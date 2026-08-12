@@ -4,13 +4,16 @@ import { useFormikContext } from 'formik';
 
 import { Box } from '@mui/material';
 
-import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
-import { useSetDefaultVersion, useUnpublishVersionMenu } from '@/[fsd]/entities/version/lib/hooks';
-import { usePublishApplicationMenu } from '@/[fsd]/entities/version/lib/hooks/usePublishVersionMenu.hooks';
-import VersionDelete from '@/[fsd]/entities/version/ui/VersionDelete';
+import {
+  LATEST_VERSION_NAME,
+  VersionDelete,
+  usePublishApplicationMenu,
+  useSetDefaultVersion,
+  useUnpublishVersionMenu,
+} from '@/[fsd]/entities/version';
+import { PinEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
 import { Controls } from '@/[fsd]/shared/ui';
-import { PinEntityType } from '@/[fsd]/widgets/pin-toggler/lib/constants';
 import { usePin, usePinMenu } from '@/[fsd]/widgets/pin-toggler/lib/hooks';
 import { PERMISSIONS, ViewMode } from '@/common/constants';
 import { useCopyLinkMenu } from '@/components/CopyLinkToEntityButton.jsx';
@@ -47,7 +50,7 @@ const ApplicationControls = memo(props => {
     isLoading: isPinLoading,
   } = usePin({
     entityId: id,
-    entityType: PinEntityType.Application,
+    entityType: PinEntityConstants.PinEntityType.Application,
     formikContext: formik,
   });
 

@@ -6,8 +6,8 @@ import { useSelector } from 'react-redux';
 import { Box } from '@mui/material';
 
 import { ApplicationVersionSelect } from '@/[fsd]/entities/application-tab-bar/ui';
-import { useRefetchAgentDetails } from '@/[fsd]/features/agent/lib/hooks';
-import { AGENT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
+import { useRefetchAgentDetails } from '@/[fsd]/features/agent';
+import { TourTargetConstants } from '@/[fsd]/shared/lib/constants';
 import { useFormDirtyExcluding } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { ViewMode } from '@/common/constants';
@@ -54,7 +54,7 @@ const ApplicationTabBar = memo(props => {
       <Box sx={styles.wrapper}>
         <Box
           sx={styles.centeredBlock}
-          data-tour={AGENT_TOUR_TARGET_IDS.versions}
+          data-tour={TourTargetConstants.AGENT_TOUR_TARGET_IDS.versions}
         >
           <ApplicationVersionSelect
             enableVersionListAvatar={isFromApplications && isPublic && projectId !== personal_project_id}

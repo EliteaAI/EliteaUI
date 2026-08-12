@@ -1,10 +1,12 @@
 import { RunHistorySerialize } from '@/[fsd]/entities/run-history/lib';
-import { ParticipantEntityTypes } from '@/[fsd]/features/chat/participants/lib/constants/participant.constants';
+import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { eliteaApi } from '@/api/eliteaApi.js';
 import { PAGE_SIZE } from '@/common/constants';
 
 const HISTORY_ITEMS_TAG = 'HISTORY_ITEMS_TAG';
 const CONVERSATION_INFO_TAG = 'CONVERSATION_INFO_TAG';
+
+const { ParticipantEntityTypes } = ParticipantEntityConstants;
 
 const runHistoryApi = eliteaApi
   .enhanceEndpoints({

@@ -2,7 +2,7 @@ import { memo } from 'react';
 
 import { Box } from '@mui/material';
 
-import { VoicePersonalizationSection } from '@/[fsd]/features/chat/ui';
+import { VoicePersonalizationSection } from '@/[fsd]/features/chat';
 import PreferenceGeneral from '@/[fsd]/features/settings/ui/preference/PreferenceGeneral';
 import { SoundNotificationSection } from '@/[fsd]/pages/user-settings/ui/SoundNotificationSection';
 

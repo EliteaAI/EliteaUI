@@ -7,10 +7,10 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Box } from '@mui/material';
 
 import { CredentialHelpers, CredentialNameHelpers } from '@/[fsd]/features/credentials/lib/helpers';
+import { PinEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
 import { Controls } from '@/[fsd]/shared/ui';
-import { PinEntityType } from '@/[fsd]/widgets/pin-toggler/lib/constants';
-import { usePin, usePinMenu } from '@/[fsd]/widgets/pin-toggler/lib/hooks';
+import { usePin, usePinMenu } from '@/[fsd]/widgets/pin-toggler';
 import { TAG_MODELS, useDeleteConfigurationMutation, useGetConfigurationsBySectionQuery } from '@/api';
 import { eliteaApi } from '@/api/eliteaApi';
 import { PERMISSIONS } from '@/common/constants';
@@ -41,7 +41,7 @@ const CredentialsControls = memo(props => {
     isLoading: isPinLoading,
   } = usePin({
     entityId: credentialDetails?.id || credentialDetails?.uuid,
-    entityType: PinEntityType.Configuration,
+    entityType: PinEntityConstants.PinEntityType.Configuration,
     formikContext: formik,
     шnitialPinned: !!credentialDetails?.is_pinned,
   });

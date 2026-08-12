@@ -5,14 +5,16 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Box } from '@mui/material';
 
 import { RunHistoryContainer } from '@/[fsd]/entities/run-history/ui';
-import { ParticipantEntityTypes } from '@/[fsd]/features/chat/participants/lib/constants/participant.constants';
 import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
 import { IndexBreadcrumb } from '@/[fsd]/features/toolkits/indexes/ui';
+import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { useToolkitsDetailsQuery } from '@/api/toolkits.js';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils.jsx';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast.jsx';
 import RouteDefinitions from '@/routes';
+
+const { ParticipantEntityTypes } = ParticipantEntityConstants;
 
 const ToolkitRunHistory = memo(() => {
   const { tab, toolkitId } = useParams();

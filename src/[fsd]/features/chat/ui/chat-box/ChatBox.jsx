@@ -41,15 +41,9 @@ import { useFetchParticipantDetails } from '@/[fsd]/features/chat/participants/l
 import { BudgetWarningBanner, SlashSuggestionList, VoiceMiniPlayer } from '@/[fsd]/features/chat/ui';
 import { ChatMessageList } from '@/[fsd]/features/chat/ui/chat-box';
 import { UserMentionList } from '@/[fsd]/features/chat/ui/user-mention-list';
-import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
-import { MentionSkillList } from '@/[fsd]/features/skill/ui';
-import { MentionConstants } from '@/[fsd]/shared/lib/constants';
-import {
-  DEFAULT_MAX_TOKENS,
-  DEFAULT_REASONING_EFFORT,
-  DEFAULT_STEPS_LIMIT,
-  DEFAULT_TEMPERATURE,
-} from '@/[fsd]/shared/lib/constants/llmSettings.constants';
+import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
+import { MentionSkillList } from '@/[fsd]/features/skill';
+import { LLMSettingsConstants, MentionConstants } from '@/[fsd]/shared/lib/constants';
 import {
   cleanLLMSettings,
   isLLMSettingsFamilyConflict,
@@ -94,6 +88,9 @@ import NewChatInput from '@/pages/NewChat/NewChatInput';
 import RecommendationList from '@/pages/NewChat/Recommendations/RecommendationList';
 import SearchResultList from '@/pages/NewChat/Recommendations/SearchResultList';
 import { actions as chatActions } from '@/slices/chat';
+
+const { DEFAULT_MAX_TOKENS, DEFAULT_REASONING_EFFORT, DEFAULT_STEPS_LIMIT, DEFAULT_TEMPERATURE } =
+  LLMSettingsConstants;
 
 const ChatBox = forwardRef((props, boxRef) => {
   const {

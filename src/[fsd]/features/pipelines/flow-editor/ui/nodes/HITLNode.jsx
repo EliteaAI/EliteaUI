@@ -3,7 +3,6 @@ import { memo, useCallback, useContext, useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
-import { FlowEditorContext } from '@/[fsd]/app/providers';
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import {
@@ -17,6 +16,7 @@ import {
   FlowEditorSettings,
 } from '@/[fsd]/features/pipelines/flow-editor/ui';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
+import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import { Chip } from '@/[fsd]/shared/ui';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';

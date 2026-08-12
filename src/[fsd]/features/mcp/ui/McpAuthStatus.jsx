@@ -4,7 +4,7 @@ import { useFormikContext } from 'formik';
 
 import { Box, Tooltip, Typography } from '@mui/material';
 
-import { MCP_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
+import { MCP_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { PAT_REQUIRED_ACTION_HINT } from '@/[fsd]/features/mcp/lib/constants';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import {

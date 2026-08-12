@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import { useGetToolkitNameFromSchema } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
+import { useGetToolkitNameFromSchema } from '@/[fsd]/features/pipelines';
 
 export const useToolkitNameProp = type => {
   const { getToolkitNamePropFromSchema, isNameRequired, getRequiredProperties, schemaOfTools } =

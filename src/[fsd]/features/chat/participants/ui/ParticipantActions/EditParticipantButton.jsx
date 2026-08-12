@@ -4,7 +4,7 @@ import { IconButton, useTheme } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { ParticipantEditPermissionMap } from '@/[fsd]/features/chat/participants/lib/constants/participant.constants';
-import { usePublicProjectAccessCheck } from '@/[fsd]/features/project/lib/hooks';
+import { usePublicProjectAccessCheck } from '@/[fsd]/features/project';
 import EditPenIcon from '@/components/Icons/EditPenIcon';
 import SettingIcon from '@/components/Icons/SettingIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';

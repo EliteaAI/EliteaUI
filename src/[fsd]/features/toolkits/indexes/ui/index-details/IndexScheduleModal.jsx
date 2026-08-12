@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 
 import { Box, Typography } from '@mui/material';
 
-import { CredentialsSelect } from '@/[fsd]/features/credentials/ui';
+import { CredentialsSelect } from '@/[fsd]/features/credentials';
 import {
   getNextCronRun,
   validateCronExpressionDaily as validateCronExpression,

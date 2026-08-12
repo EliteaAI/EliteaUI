@@ -7,8 +7,8 @@ import { Box, Tooltip, Typography } from '@mui/material';
 import { useTrackEvent } from '@/GA';
 import { useCredentialValidation, useCredentialsData } from '@/[fsd]/features/credentials/lib/hooks';
 import { CredentialOptionLabel } from '@/[fsd]/features/credentials/ui';
-import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
-import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
+import { McpAuthHelpers } from '@/[fsd]/features/mcp';
+import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
 import { useContextExecutionEntity } from '@/[fsd]/shared/lib/hooks';
 import { Select } from '@/[fsd]/shared/ui';
 import { BaseBtn } from '@/[fsd]/shared/ui/button';
@@ -21,6 +21,8 @@ import RouteDefinitions, { getBasename } from '@/routes';
 import CredentialCreateLabel from './CredentialCreateLabel';
 import CredentialMismatchFooter from './CredentialMismatchFooter';
 import CredentialNotFoundValue from './CredentialNotFoundValue';
+
+const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
 
 const credentialMenuItemValue = Object.freeze({
   keyKind: 'kind',

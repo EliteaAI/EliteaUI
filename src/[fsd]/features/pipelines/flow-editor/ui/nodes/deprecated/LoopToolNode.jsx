@@ -2,7 +2,6 @@ import { memo, useCallback, useContext, useMemo } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { FlowEditorContext } from '@/[fsd]/app/providers';
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { useGetToolkitNameFromSchema } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
@@ -11,7 +10,8 @@ import {
   FlowEditorSelect,
   FlowEditorSettings,
 } from '@/[fsd]/features/pipelines/flow-editor/ui';
-import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
+import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits';
+import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import { Input } from '@/[fsd]/shared/ui';
 import { useEdges } from '@xyflow/react';
 

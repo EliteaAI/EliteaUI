@@ -7,8 +7,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { Box, Tooltip, Typography } from '@mui/material';
 
-import { useMcpAuthModal } from '@/[fsd]/features/mcp/lib/hooks';
-import { McpAuthModal } from '@/[fsd]/features/mcp/ui';
+import { McpAuthModal, useMcpAuthModal } from '@/[fsd]/features/mcp';
 import {
   useDeleteIndexItemMutation,
   useUpdateIndexScheduleMutation,

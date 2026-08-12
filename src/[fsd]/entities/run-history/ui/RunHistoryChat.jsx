@@ -1,8 +1,8 @@
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
 
 import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
-import { ChatMessageList } from '@/[fsd]/features/chat/ui/chat-box';
-import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
+import { ChatMessageList } from '@/[fsd]/features/chat';
+import { ToolkitsHelpers } from '@/[fsd]/features/toolkits';
 import { useLazyMessageTracesQuery } from '@/api';
 import {
   buildTraceListParams,

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-import { useInteractiveTour } from '@/[fsd]/app/providers/InteractiveTourProvider';
+import { useInteractiveTour } from '@/[fsd]/shared/lib/context';
 
 const getPendingTourKey = tourId => `interactive-tour:${tourId}:pending`;
 

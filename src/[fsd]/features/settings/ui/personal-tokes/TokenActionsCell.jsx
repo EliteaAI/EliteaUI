@@ -2,7 +2,7 @@ import { memo, useCallback, useState } from 'react';
 
 import { Box, IconButton, Tooltip } from '@mui/material';
 
-import { PERSONAL_TOKENS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/personalTokensTourTargets.constants';
+import { PERSONAL_TOKENS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import VsCodeIcon from '@/assets/vscode.svg?react';
 import DeleteEntityButton from '@/components/DeleteEntityButton';
 import JetBrainsIcon from '@/components/Icons/JetBrainsIcon';

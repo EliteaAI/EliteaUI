@@ -2,9 +2,13 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import { Typography } from '@mui/material';
 
-import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
-import { useConfigOAuthModal, useMcpTokenChange } from '@/[fsd]/features/mcp/lib/hooks';
-import { McpAuthModal, McpLogoutModal } from '@/[fsd]/features/mcp/ui';
+import {
+  McpAuthHelpers,
+  McpAuthModal,
+  McpLogoutModal,
+  useConfigOAuthModal,
+  useMcpTokenChange,
+} from '@/[fsd]/features/mcp';
 import { getSharepointConnectionTokenKey } from '@/[fsd]/features/sharepoint/lib/helpers';
 import { useSharepointCheckConnection } from '@/[fsd]/features/sharepoint/lib/hooks/useSharepointCheckConnection.hooks';
 import useToast from '@/hooks/useToast';

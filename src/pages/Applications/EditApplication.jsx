@@ -3,9 +3,9 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Form, Formik } from 'formik';
 import { useParams, useSearchParams } from 'react-router-dom';
 
-import { InstructionsInputRefProvider } from '@/[fsd]/app/providers';
 import { ApplicationControls, ApplicationTabBar } from '@/[fsd]/entities/application-tab-bar/ui';
 import { useIsVersionNotFound } from '@/[fsd]/entities/version/lib/hooks';
+import { InstructionsInputRefProvider } from '@/[fsd]/shared/lib/context';
 import { ViewMode } from '@/common/constants';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils';
 import StyledTabs from '@/components/StyledTabs';

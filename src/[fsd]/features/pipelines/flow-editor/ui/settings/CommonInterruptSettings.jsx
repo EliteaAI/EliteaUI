@@ -2,9 +2,9 @@ import { memo, useCallback, useContext, useMemo } from 'react';
 
 import { Box, FormControlLabel, Typography } from '@mui/material';
 
-import { FlowEditorContext } from '@/[fsd]/app/providers';
 import { PipelineNodeTypes } from '@/[fsd]/features/pipelines/flow-editor/lib/constants/flowEditor.constants';
 import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import { Switch } from '@/[fsd]/shared/ui';
 import styled from '@emotion/styled';
 

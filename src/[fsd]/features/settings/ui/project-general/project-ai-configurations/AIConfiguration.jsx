@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 
 import { Box, Tooltip } from '@mui/material';
 
-import { AI_CONFIG_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/aiConfigurationTourTargets.constants';
+import { AI_CONFIG_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import {
   useCopyConfiguration,
   useModelConfiguration,

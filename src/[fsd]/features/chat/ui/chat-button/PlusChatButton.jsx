@@ -16,7 +16,8 @@ import {
 } from '@mui/material';
 
 import { useApplicationSubmenu } from '@/[fsd]/features/chat/lib/hooks';
-import { useAvailableInternalTools, useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
+import { useAvailableInternalTools } from '@/[fsd]/features/toolkits';
+import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
 import { Switch, Text } from '@/[fsd]/shared/ui';
 import FlowIcon from '@/assets/flow-icon.svg?react';
 import MCPIcon from '@/assets/mcp-icon.svg?react';
