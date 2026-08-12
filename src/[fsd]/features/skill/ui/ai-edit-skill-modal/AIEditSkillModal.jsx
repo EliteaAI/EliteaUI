@@ -261,13 +261,14 @@ const AIEditSkillModal = memo(props => {
         previousButtonTestId="ai-edit-skill-wizard-previous-button"
         nextButtonTestId="ai-edit-skill-wizard-next-button"
         wizardSaveButtonTestId="ai-edit-skill-wizard-save-button"
-        // refinePromptButtonTestId / saveAsVersionButtonTestId deliberately
-        // left unwired (renders no data-testid attribute) — canon #511
-        // scope discipline: ELITEA-2611's test never clicks "Refine Prompt"
-        // or "Save as Version", so neither testid is "referenced" per the
-        // executed-code-path rule. The prop channel stays available on
-        // EditEntityModal for whichever future case actually exercises
-        // either control.
+        refinePromptButtonTestId="ai-edit-skill-wizard-refine-prompt-button"
+        // saveAsVersionButtonTestId deliberately left unwired (renders no
+        // data-testid attribute) — canon #511 scope discipline:
+        // ELITEA-2612's test never clicks "Save as Version", so that
+        // testid is not "referenced" per the executed-code-path rule. The
+        // prop channel stays available on EditEntityModal for whichever
+        // future case actually exercises it. refinePromptButtonTestId IS
+        // wired now — ELITEA-2612 clicks "Refine Prompt" (Part A).
       />
       <Modal.BaseModal
         open={showVersionModal}
