@@ -8,8 +8,8 @@ import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { Box, IconButton, Menu, MenuItem, Tooltip, Typography } from '@mui/material';
 
 import StyledCircleProgress from '@/ComponentsLib/CircularProgress';
+import { useSetRefetchDetails } from '@/[fsd]/entities/application-tab-bar/lib/hooks';
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
-import { useSetRefetchDetails } from '@/[fsd]/features/agent/lib/hooks';
 import {
   useApplicationDetailsQuery,
   useLazyGetApplicationVersionDetailQuery,
