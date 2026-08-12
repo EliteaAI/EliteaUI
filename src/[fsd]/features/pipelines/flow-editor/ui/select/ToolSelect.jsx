@@ -19,6 +19,7 @@ const ToolSelect = memo(props => {
     filterTypes = () => {
       return true;
     },
+    'data-testid': dataTestId,
   } = props;
   const { getToolkitNameFromSchema } = useGetToolkitNameFromSchema();
   const getToolkitIconMeta = useGetToolkitIconMeta();
@@ -91,6 +92,7 @@ const ToolSelect = memo(props => {
       menuItemIconSX={styles.menuItemIcon}
       className={'nopan nodrag'}
       maxDisplayValueLength={'100%'}
+      data-testid={dataTestId}
     />
   );
 });

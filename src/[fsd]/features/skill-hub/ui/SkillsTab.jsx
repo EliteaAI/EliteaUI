@@ -225,6 +225,7 @@ const SkillsTab = memo(props => {
           renderCategory={renderCategory}
           renderNoResults={renderNoResults}
           onSelectCategory={handleTagSelect}
+          chipTestIdPrefix="catalog-skill-category-filter-chip"
         />
         {selectedSkill && (
           <SkillHubModal

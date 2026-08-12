@@ -124,12 +124,14 @@ const BucketsPanel = memo(props => {
       {isSearchActive && !collapsed && (
         <Box sx={styles.searchBarContainer}>
           <SimpleSearchBar
+            data-testid="artifacts-bucket-search-input"
             searchQuery={searchQuery}
             onSearchChange={handleSearchChange}
             onSearchClear={handleSearchClear}
             placeholder="Search buckets..."
           />
           <IconButton
+            data-testid="artifacts-bucket-search-clear-button"
             onClick={handleSearchClear}
             variant="elitea"
             color="tertiary"

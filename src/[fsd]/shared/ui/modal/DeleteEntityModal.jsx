@@ -60,6 +60,7 @@ const DeleteEntityModal = memo(props => {
     >
       <Typography
         id="alert-dialog-description"
+        data-testid="delete-confirm-message"
         color="text.deleteAlertText"
         variant="bodyMedium"
         sx={{ whiteSpaceCollapse: 'preserve' }}
@@ -99,6 +100,7 @@ const DeleteEntityModal = memo(props => {
         variant={BUTTON_VARIANTS.elitea}
         color={BUTTON_COLORS.secondary}
         onClick={e => resetButtonState(e, onClose)}
+        data-testid="delete-confirm-cancel-button"
       >
         {cancelButtonText}
       </Button.BaseBtn>
@@ -107,6 +109,7 @@ const DeleteEntityModal = memo(props => {
         color={alarm ? BUTTON_COLORS.alarm : BUTTON_COLORS.primary}
         disabled={isButtonDisabled}
         onClick={onConfirm}
+        data-testid="delete-confirm-button"
       />
     </>
   );
@@ -117,11 +120,13 @@ const DeleteEntityModal = memo(props => {
       variant={ModalConstants.MODAL_VARIANT.simple}
       titleIcon={titleIcon}
       title={title}
+      titleTestId="delete-confirm-title"
       content={customContent ?? contentNode}
       actions={actions ?? actionsNode}
       onClose={e => resetButtonState(e, onClose)}
       onKeyDown={handleKeyDown}
       sx={sx}
+      data-testid="delete-confirm-dialog"
     />
   );
 });

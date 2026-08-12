@@ -6,6 +6,25 @@ import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { usePin } from '@/[fsd]/widgets/pin-toggler/lib/hooks';
 import PinIconFilled from '@/assets/pin-filled-icon.svg?react';
 import PinIconOutlined from '@/assets/pin-icon.svg?react';
+import {
+  isApplicationCard,
+  isCredentialCard,
+  isMCPCard,
+  isSkillCard,
+  isToolkitCard,
+} from '@/common/checkCardType';
+
+/** Local-only mapping to a clean, stable slug for the per-row pin testid — deliberately
+ * not routed through src/common/utils.jsx's getEntityType/getEntityTypeByCardType,
+ * which have many other callers and don't cover Credentials/MCPs/Toolkits. */
+const getPinTestIdSlug = entityType => {
+  if (isCredentialCard(entityType)) return 'credential';
+  if (isSkillCard(entityType)) return 'skill';
+  if (isToolkitCard(entityType)) return 'toolkit';
+  if (isMCPCard(entityType)) return 'mcp';
+  if (isApplicationCard(entityType)) return 'application';
+  return String(entityType).toLowerCase();
+};
 
 const PinButton = memo(props => {
   const {
@@ -76,6 +95,7 @@ const PinButton = memo(props => {
     >
       <Box component="span">
         <IconButton
+          data-testid={entityId ? `${getPinTestIdSlug(entityType)}-pin-toggle-button-${entityId}` : undefined}
           onClick={handleClick}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}

@@ -28,6 +28,7 @@ const ParticipantActions = memo(props => {
       {showEditButton && (
         <EditParticipantButton
           id="EditButton"
+          testId="chat-participant-edit-view-button"
           sx={{
             width: '1.75rem',
             height: '1.75rem',

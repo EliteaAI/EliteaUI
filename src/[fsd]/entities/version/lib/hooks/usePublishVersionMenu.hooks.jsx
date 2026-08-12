@@ -78,6 +78,7 @@ export const usePublishApplicationMenu = onSuccess => {
     () =>
       canShowPublish
         ? {
+            key: 'publish-version',
             label: 'Publish',
             icon: (
               <Box

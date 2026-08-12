@@ -301,6 +301,7 @@ const TriggerTypeSelector = memo(props => {
           disabled={disabled || isLoading}
           showBorder
           className="nopan nodrag"
+          data-testid="pipeline-entry-point-trigger-select"
         />
 
         {currentTriggerType === TRIGGER_TYPES.schedule && (
@@ -314,6 +315,7 @@ const TriggerTypeSelector = memo(props => {
               sx={styles.scheduleButton}
               onClick={handleScheduleIconClick}
               disabled={disabled || isLoading}
+              data-testid="pipeline-entry-point-trigger-schedule-edit-button"
             >
               <ClockIcon style={styles.iconStyle} />
             </IconButton>

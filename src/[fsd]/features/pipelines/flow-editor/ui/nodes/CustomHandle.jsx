@@ -17,6 +17,7 @@ const CustomHandle = memo(props => {
     isRunningPipeline,
     isPerforming,
     style: specifiedStyle = {},
+    testId,
   } = props;
 
   const theme = useTheme();
@@ -107,6 +108,7 @@ const CustomHandle = memo(props => {
       position={position}
       isConnectable={isConnectable}
       onClick={handleClick}
+      data-testid={testId}
     >
       {isExpanded && (
         <>

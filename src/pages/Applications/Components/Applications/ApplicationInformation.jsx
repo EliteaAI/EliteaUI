@@ -96,7 +96,10 @@ const ApplicationInformation = memo(props => {
               />
             )}
             {isPipeline && triggerData?.type && (
-              <Box sx={styles.pipelineLink}>
+              <Box
+                data-testid="information-trigger-row"
+                sx={styles.pipelineLink}
+              >
                 <Typography variant="bodyMedium">Trigger:</Typography>
                 <Typography variant="bodyMedium">
                   {TRIGGER_TYPE_LABELS[triggerData.type] || triggerData.type}
@@ -136,6 +139,7 @@ const ApplicationInformation = memo(props => {
               <Box sx={styles.pipelineLink}>
                 <Typography variant="bodyMedium">Pipeline:</Typography>
                 <Typography
+                  data-testid="pipeline-information-show-link"
                   sx={styles.showLink}
                   variant="bodyMedium"
                   onClick={onShowPipelineModal}

@@ -90,7 +90,11 @@ const EditSecretInputGridTable = memo(props => {
       value={inputValue}
       error={Boolean(validationError) || isAtCharacterLimit}
       helperText={helperText}
-      inputProps={{ maxLength: MAX_VARIABLES_LENGTH }}
+      helperTextTestId={field === 'name' ? 'secret-name-error' : undefined}
+      inputProps={{
+        maxLength: MAX_VARIABLES_LENGTH,
+        'data-testid': field === 'name' ? 'secret-name-input' : 'secret-value-input',
+      }}
     />
   );
 });

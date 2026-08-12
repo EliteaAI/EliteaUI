@@ -380,6 +380,7 @@ const SingleSelect = memo(props => {
                     <Typography
                       variant="labelSmall"
                       sx={styles.groupHeaderTitle}
+                      data-testid={`select-group-header-${groupKey}`}
                     >
                       {group.title}
                     </Typography>
@@ -412,6 +413,7 @@ const SingleSelect = memo(props => {
                             key={rowKey}
                             value={option.value}
                             sx={styles.groupAction}
+                            data-testid={option.testId ?? `select-option-${option.value}`}
                           >
                             {option.label}
                           </MenuItem>
@@ -656,6 +658,7 @@ const SingleSelect = memo(props => {
           labelId={id ? id + '-label' : 'simple-select-label-' + label}
           id={id || 'simple-select-' + label}
           data-testid={dataTestId}
+          SelectDisplayProps={dataTestId ? { 'data-testid': `${dataTestId}-combobox` } : undefined}
           name={name}
           multiple={effectiveMultiple || undefined}
           value={realValue}

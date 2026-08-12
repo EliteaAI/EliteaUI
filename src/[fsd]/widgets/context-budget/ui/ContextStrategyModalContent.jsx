@@ -220,6 +220,7 @@ const ContextStrategyModalContent = memo(props => {
           type="submit"
           variant={BUTTON_VARIANTS.contained}
           disabled={isUpdating || !dirty || !isValid || isSubmitting}
+          data-testid="context-modal-save-button"
         >
           {isUpdating ? 'Saving...' : 'Save'}
         </Button.BaseBtn>

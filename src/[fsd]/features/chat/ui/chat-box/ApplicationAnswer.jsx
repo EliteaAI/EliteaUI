@@ -895,6 +895,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                       placement="top"
                     >
                       <IconButton
+                        data-testid="chat-copy-button"
                         disabled={isProcessing || !realAnswer}
                         sx={styles.iconButton}
                         variant="elitea"
@@ -928,6 +929,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                     >
                       <Box>
                         <IconButton
+                          data-testid="chat-regenerate-button"
                           sx={styles.iconButton}
                           variant="elitea"
                           color="tertiary"

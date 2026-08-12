@@ -31,6 +31,10 @@ import EditorHeader from '@/pages/NewChat/components/EditorHeader';
  * @param {React.ReactNode} children - Editor-specific content
  * @param {function} onDirtyStateChange - Optional callback when dirty state changes
  * @param {React.ReactNode} formContent - Optional content to render between header and main content (e.g., tabs)
+ * @param {string} [titleTestId] - Optional data-testid forwarded to EditorHeader's title.
+ * @param {string} [subtitleTestId] - Optional data-testid forwarded to EditorHeader's subtitle.
+ * @param {string} [closeButtonTestId] - Optional data-testid forwarded to EditorHeader's close button.
+ * @param {string} [publicLabelTestId] - Optional data-testid forwarded to EditorHeader's "Public" label.
  */
 const BaseEditor = ({
   isVisible,
@@ -50,6 +54,10 @@ const BaseEditor = ({
   formContent,
   isPublic,
   contentSX,
+  titleTestId,
+  subtitleTestId,
+  closeButtonTestId,
+  publicLabelTestId,
 }) => {
   const theme = useTheme();
   const { isSmallWindow } = useIsSmallWindow();
@@ -116,6 +124,10 @@ const BaseEditor = ({
             onDiscard={handleDiscard}
             saveButton={saveButton}
             isPublic={isPublic}
+            titleTestId={titleTestId}
+            subtitleTestId={subtitleTestId}
+            closeButtonTestId={closeButtonTestId}
+            publicLabelTestId={publicLabelTestId}
           />
 
           {/* Optional form content (e.g., tabs) */}

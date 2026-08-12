@@ -188,6 +188,7 @@ const ContextStrategySummarization = memo(props => {
             disabled={!isEnabled || !formData.enable_summarization}
             inputProps={{
               pattern: '[1-9][0-9]*',
+              'data-testid': 'context-modal-target-summary-tokens-input',
             }}
             sx={styles.formInput}
           />

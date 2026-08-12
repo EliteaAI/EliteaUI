@@ -22,7 +22,9 @@ const CredentialMismatchFooter = memo(props => {
       error
       fullWidth
     >
-      <FormHelperText>Your configuration does not match any available configurations.</FormHelperText>
+      <FormHelperText data-testid="credential-select-mismatch-footer">
+        Your configuration does not match any available configurations.
+      </FormHelperText>
     </FormControl>
   );
 });

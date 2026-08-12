@@ -57,10 +57,18 @@ const Toast = ({
       onClose={onCloseHandler}
     >
       <Alert
+        data-testid="toast-alert"
+        data-severity={severity}
         onClose={onCloseHandler}
         severity={severity}
         sx={{ width: '100%' }}
         icon={icon}
+        // Testid goes onto MuiAlert's OWN close button via its `closeButton`
+        // slot. Do NOT reach for the `action` prop instead: Alert.js renders
+        // its built-in close button only when `action == null && onClose`, so
+        // passing `action` REPLACES that button — which silently changes the
+        // icon, its size and its color on every toast in the product.
+        slotProps={{ closeButton: { 'data-testid': 'toast-dismiss-button' } }}
       >
         <Box
           data-testid="toast-message"

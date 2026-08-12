@@ -11,8 +11,15 @@ import useToast from '@/hooks/useToast';
 const CommonStringField = memo(props => {
   const { toastInfo } = useToast();
 
-  const { fieldKey, fieldValue, fieldProperties, onChangeInputVariables, toolInputVariables, property } =
-    props;
+  const {
+    fieldKey,
+    fieldValue,
+    fieldProperties,
+    onChangeInputVariables,
+    toolInputVariables,
+    property,
+    inputTestId,
+  } = props;
   const { enumValues, isRequired, label, description, codeLanguage, lines, disabled, error, clipboard } =
     fieldProperties;
 
@@ -104,6 +111,7 @@ const CommonStringField = memo(props => {
   if (enumOptions) {
     return (
       <Box
+        data-testid={`toolkit-test-param-${fieldKey}`}
         sx={styles.wrapper(disabled)}
         key={fieldKey}
         className="index-config-field"
@@ -128,6 +136,7 @@ const CommonStringField = memo(props => {
   if (codeLanguage !== undefined) {
     return (
       <Box
+        data-testid={`toolkit-test-param-${fieldKey}`}
         sx={styles.wrapper(disabled)}
         key={fieldKey}
         className="index-config-field"
@@ -149,6 +158,7 @@ const CommonStringField = memo(props => {
 
   return (
     <Box
+      data-testid={`toolkit-test-param-${fieldKey}`}
       sx={styles.wrapper(disabled)}
       key={fieldKey}
       className="index-config-field"
@@ -183,6 +193,7 @@ const CommonStringField = memo(props => {
         onChange={event => handleInputChange(fieldKey, event)}
         inputProps={{
           maxLength: property?.maxLength,
+          'data-testid': inputTestId,
         }}
         disabled={disabled}
         error={Boolean(error)}

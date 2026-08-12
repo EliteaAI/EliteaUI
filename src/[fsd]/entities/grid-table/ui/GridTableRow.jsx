@@ -36,6 +36,9 @@ const GridTableRow = memo(props => {
     rowHeight,
     checkboxCellSx,
     'data-testid': dataTestId,
+    checkboxTestId,
+    nameCellTestId,
+    dataCellTestIdPrefix,
   } = props;
 
   const styles = gridTableRowStyles(isSelected, isHovered, gridTemplateColumns, showCheckbox, rowHeight);
@@ -65,6 +68,7 @@ const GridTableRow = memo(props => {
               onChange={handleCheckboxChange}
               sx={styles.checkbox}
               onClick={e => e.stopPropagation()}
+              data-testid={checkboxTestId}
             />
           )}
         </Box>
@@ -81,6 +85,7 @@ const GridTableRow = memo(props => {
           loadingProgress={loadingProgress}
           rowName={rowName}
           styles={styles}
+          nameCellTestId={nameCellTestId}
         />
       </Box>
 
@@ -92,6 +97,7 @@ const GridTableRow = memo(props => {
           renderCell={renderCell}
           dataCellSx={dataCellSx}
           styles={styles}
+          dataCellTestIdPrefix={dataCellTestIdPrefix}
         />
       ))}
 

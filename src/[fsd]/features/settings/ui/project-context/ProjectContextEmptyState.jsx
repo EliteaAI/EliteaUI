@@ -34,6 +34,7 @@ const ProjectContextEmptyState = memo(props => {
         {canEdit && (
           <Box sx={styles.actions}>
             <Button.BaseBtn
+              data-testid="project-context-create-button"
               variant={BUTTON_VARIANTS.elitea}
               onClick={() => onNavigate('create')}
             >

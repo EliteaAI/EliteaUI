@@ -19,6 +19,7 @@ const NodeFieldInput = memo(props => {
     modelConfig,
     enableFStringAutocomplete = false,
     stateVariableOptions = [],
+    dataTestId,
   } = props;
 
   const resolvedValue = typeof value !== 'string' ? JSON.stringify(value) : value;
@@ -70,6 +71,7 @@ const NodeFieldInput = memo(props => {
       className: 'nopan nodrag nowheel',
     },
     inputRef,
+    inputProps: dataTestId ? { 'data-testid': dataTestId } : undefined,
   };
 
   const popperSx = nodeFieldInputPopperStyles(containerRef.current?.clientWidth);

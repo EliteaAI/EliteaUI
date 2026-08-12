@@ -140,6 +140,7 @@ const SecretsContent = memo(() => {
     <>
       <DrawerPageHeader
         title="Secrets"
+        titleTestId="secrets-page-title"
         showSearchInput
         showAddButton
         slotProps={{
@@ -154,6 +155,7 @@ const SecretsContent = memo(() => {
               isFetching || Object.values(rowModesModel).filter(mode => mode.mode === 'edit').length > 0,
             tooltip: 'Create new secret',
             tourId: SECRETS_TOUR_TARGET_IDS.addButton,
+            testId: 'secrets-add-button',
           },
         }}
       />

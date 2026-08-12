@@ -38,6 +38,7 @@ const AgentCard = memo(props => {
   return (
     <Card
       data-tour={ELITEA_CATALOG_TOUR_TARGET_IDS.entityCard}
+      data-testid={`catalog-agent-card-${application.id}`}
       sx={styles.card}
       onClick={handleClick}
     >
@@ -75,6 +76,7 @@ const AgentCard = memo(props => {
         <AgentHubLike
           viewMode={ViewMode.Public}
           data={application}
+          testId={`catalog-agent-like-button-${application.id}`}
         />
       </Box>
     </Card>

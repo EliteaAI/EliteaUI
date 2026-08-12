@@ -71,6 +71,7 @@ const EditControl = memo(props => {
   if (!open) {
     return (
       <BaseBtn
+        data-testid="chat-hitl-edit-button"
         variant={BUTTON_VARIANTS.neutral}
         startIcon={<EditIcon />}
         onClick={handleOpen}

@@ -4,7 +4,7 @@ import FullscreenOutlinedIcon from '@mui/icons-material/FullscreenOutlined';
 import { Box, IconButton, Typography } from '@mui/material';
 
 const StateItemViewHeader = memo(props => {
-  const { title, onFullScreen } = props;
+  const { title, onFullScreen, testId } = props;
 
   const styles = stateItemViewHeaderStyles();
 
@@ -21,6 +21,7 @@ const StateItemViewHeader = memo(props => {
         variant="elitea"
         color="tertiary"
         onClick={onFullScreen}
+        data-testid={testId}
       >
         <FullscreenOutlinedIcon sx={styles.icon} />
       </IconButton>

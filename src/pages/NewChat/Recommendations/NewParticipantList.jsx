@@ -36,6 +36,12 @@ export default function NewParticipantList({
   title = 'Frequently used',
   onLoadMore,
   activeIndex = -1,
+  // ELITEA-2202/2203/2204: caller-supplied testids. This component is shared
+  // with RecommendationList/SearchResultList, so both stay undefined unless a
+  // caller opts in (.agents/testing.md § Locator policy — shared components
+  // never hardcode feature-scoped testids).
+  containerTestId,
+  getItemTestId,
 }) {
   const theme = useTheme();
   const { componentWidth, componentRef } = useGetComponentWidth();
@@ -53,6 +59,7 @@ export default function NewParticipantList({
     <ClickAwayListener onClickAway={onClose}>
       <Box
         ref={containerRef}
+        data-testid={containerTestId}
         border={`1px solid ${theme.palette.border.lines}`}
         width={'100%'}
         maxWidth={'100%'}
@@ -135,6 +142,7 @@ export default function NewParticipantList({
                     itemRef={el => {
                       itemRefs.current[participant._idx] = el;
                     }}
+                    testId={getItemTestId ? getItemTestId(participant) : undefined}
                   />
                 ))}
             {isFetching &&

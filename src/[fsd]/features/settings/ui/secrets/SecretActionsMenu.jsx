@@ -33,6 +33,7 @@ const SecretActionsMenu = memo(props => {
       }}
     >
       <MenuItem
+        data-testid="secret-actions-menu-edit-value"
         onClick={onEdit}
         disabled={isDefault}
       >
@@ -49,6 +50,7 @@ const SecretActionsMenu = memo(props => {
       </MenuItem>
       {!isNew && (
         <MenuItem
+          data-testid="secret-actions-menu-hide"
           onClick={onHide}
           disabled={isDefault}
         >
@@ -65,6 +67,7 @@ const SecretActionsMenu = memo(props => {
         </MenuItem>
       )}
       <MenuItem
+        data-testid="secret-actions-menu-delete"
         onClick={onDelete}
         disabled={isDefault}
       >

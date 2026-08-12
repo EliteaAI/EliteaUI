@@ -16,6 +16,12 @@ const SimpleLLMInputs = memo(props => {
     modelConfig = null,
     // Spacing
     gap,
+    // Testid props (ELITEA-2004) — this component is shared across Pipeline
+    // node types (LLM/Code/Printer); testids are threaded per input-mapping
+    // key via this optional map and wired only at the call sites that need
+    // them, never hardcoded here, per .agents/testing.md § Locator policy
+    // (shared components / testid scope discipline).
+    testIdsByKey = {},
   } = props;
 
   const styles = simpleLLMInputsStyles(gap);
@@ -35,6 +41,8 @@ const SimpleLLMInputs = memo(props => {
           // AI Assistant props
           enableAIAssistant={enableAIAssistant}
           modelConfig={modelConfig}
+          typeSelectTestId={testIdsByKey[key]?.typeSelectTestId}
+          valueFieldTestId={testIdsByKey[key]?.valueFieldTestId}
         />
       ))}
     </Box>

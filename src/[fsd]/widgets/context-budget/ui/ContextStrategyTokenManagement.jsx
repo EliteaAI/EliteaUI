@@ -74,6 +74,7 @@ const ContextStrategyTokenManagement = memo(props => {
           disabled={!isEnabled}
           inputProps={{
             pattern: '[1-9][0-9]*',
+            'data-testid': 'context-modal-max-tokens-input',
           }}
         />
       </Box>
@@ -96,6 +97,7 @@ const ContextStrategyTokenManagement = memo(props => {
           disabled={!isEnabled}
           inputProps={{
             pattern: '[1-9][0-9]*',
+            'data-testid': 'context-modal-preserve-recent-input',
           }}
         />
       </Box>

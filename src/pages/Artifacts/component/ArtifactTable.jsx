@@ -514,6 +514,7 @@ export default function ArtifactTable(props) {
               isAllSelected={isAllSelected}
               isIndeterminate={isIndeterminate}
               gridTemplateColumns={gridTemplateColumns}
+              selectAllCheckboxTestId="artifacts-select-all-checkbox"
             />
 
             <GridTableBody data-testid="artifacts-file-list">
@@ -523,6 +524,7 @@ export default function ArtifactTable(props) {
                   data-testid={
                     row.type === ARTIFACT_TYPES.FOLDER ? 'artifacts-folder-row' : 'artifacts-file-row'
                   }
+                  checkboxTestId={`artifacts-file-checkbox-${row.id}`}
                   row={row}
                   isSelected={rowSelectionModel.includes(row.id)}
                   isHovered={hoveredRowId === row.id}

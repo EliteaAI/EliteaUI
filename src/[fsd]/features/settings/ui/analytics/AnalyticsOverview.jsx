@@ -29,6 +29,7 @@ const AnalyticsOverview = memo(props => {
       <Box
         sx={styles.kpiRow}
         data-tour={ANALYTICS_TOUR_TARGET_IDS.kpiCards}
+        data-testid="analytics-overview-kpi-row"
       >
         <KPICard
           label="TEAM"
