@@ -48,16 +48,10 @@ const isEmptyArray = value => value == null || (Array.isArray(value) && value.le
 const supportsBoundedApplicationConversationTools = value =>
   isEmptyArray(value) || (Array.isArray(value) && value.length === 1 && value[0] === 'internal_mcp');
 
-const isMcpParticipant = participant => {
-  if (participant?.entity_name !== 'toolkit') return false;
-  const toolkitType = String(participant?.entity_settings?.toolkit_type || '').toLowerCase();
-  return participant?.meta?.mcp === true || toolkitType === 'mcp' || toolkitType.endsWith('_mcp');
-};
-
 const supportsBoundedAdhocParticipant = participant => {
   if (participant?.entity_name === 'user' || participant?.entity_name === 'dummy') return true;
   if (participant?.entity_name === 'application') return true;
-  return participant?.entity_name === 'toolkit' && !isMcpParticipant(participant);
+  return participant?.entity_name === 'toolkit';
 };
 
 const applicationIdentity = participant =>
@@ -331,6 +325,7 @@ export const getAgentExecutionSseContract = ({
     !hasAttachments &&
     !isSendingToUser &&
     isEmptyArray(eventPayload?.attachments_info) &&
+    isEmptyObject(eventPayload?.mcp_tokens) &&
     isEmptyArray(eventPayload?.ignored_mcp_servers) &&
     isEmptyArray(eventPayload?.user_ids);
 

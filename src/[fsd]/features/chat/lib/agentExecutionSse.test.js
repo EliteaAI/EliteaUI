@@ -14,8 +14,8 @@ import {
   getAgentExecutionResumeCandidate,
   getAgentExecutionSseContract,
   getAgentHITLChildThreadId,
-  getOptimisticAgentResponseParticipantId,
   getAgentRegenerationSseContract,
+  getOptimisticAgentResponseParticipantId,
   isAgentExecutionSseEligible,
   isAgentHITLContinuationEligible,
   isDurableAgentExecutionIdentifier,
@@ -100,11 +100,13 @@ describe('agent execution SSE', () => {
     ).toBe(true);
     expect(
       isAgentHITLContinuationEligible({
-        interrupts: [{
-          interrupt_id: 'nested-1',
-          parent_agent_call_id: 'call-pipeline-1',
-          parent_agent_path: [{ name: 'artifact_test', call_id: 'call-pipeline-1' }],
-        }],
+        interrupts: [
+          {
+            interrupt_id: 'nested-1',
+            parent_agent_call_id: 'call-pipeline-1',
+            parent_agent_path: [{ name: 'artifact_test', call_id: 'call-pipeline-1' }],
+          },
+        ],
         action: 'block_with_comment',
       }),
     ).toBe(true);
@@ -370,7 +372,11 @@ describe('agent execution SSE', () => {
           { entity_name: 'toolkit', entity_settings: { toolkit_type: 'mcp' } },
         ],
       }),
-    ).toBeNull();
+    ).toEqual({
+      executionId: durableExecutionId,
+      questionId: 'question-id',
+      responseMessageId: 'response-id',
+    });
   });
 
   it('clears only the stale persisted activity projection before durable replay', () => {
@@ -542,6 +548,16 @@ describe('agent execution SSE', () => {
     expect(
       getAgentExecutionSseContract({
         ...options,
+        conversationParticipants: [
+          ...options.conversationParticipants,
+          { entity_name: 'toolkit', meta: { mcp: true }, entity_settings: { toolkit_type: 'mcp' } },
+        ],
+      }),
+    ).toBe(AGENT_ADHOC_EXECUTION_CONTRACT);
+    expect(
+      getAgentExecutionSseContract({
+        ...options,
+        eventPayload: { ...payload, mcp_tokens: { 'saved-mcp': { access_token: 'runtime-only' } } },
         conversationParticipants: [
           ...options.conversationParticipants,
           { entity_name: 'toolkit', meta: { mcp: true }, entity_settings: { toolkit_type: 'mcp' } },
