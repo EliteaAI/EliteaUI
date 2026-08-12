@@ -311,6 +311,7 @@ const PublishWizardModal = memo(
 
               {step === PUBLISH_STEPS.PUBLISHING && publishError && (
                 <Button.BaseBtn
+                  data-testid="agent-publish-confirm-button"
                   variant="contained"
                   disabled
                 >
