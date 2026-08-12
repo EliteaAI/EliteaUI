@@ -312,12 +312,15 @@ const CredentialsSelect = memo(
         return null;
       }
 
-      if (section === 'credentials')
-        return (
-          savedCredentialsMenuData.find(
+      if (section === 'credentials') {
+        if (!isBlankEliteaTitle(value?.elitea_title)) {
+          const sharedMatch = savedCredentialsMenuData.find(
             option => option.elitea_title && option.elitea_title === value?.elitea_title && option.shared,
-          ) || null
-        );
+          );
+          return sharedMatch ?? null;
+        }
+        return savedCredentialsMenuData[0] ?? null;
+      }
 
       return null;
     }, [createMenuData, savedCredentialsMenuData, value, section, projectDefaultVectorStorageModel]);
@@ -330,11 +333,11 @@ const CredentialsSelect = memo(
       if (section === 'vectorstorage') {
         return selectedOption;
       }
-      if (isBlankEliteaTitle(value?.elitea_title)) {
-        return savedCredentialsMenuData[0];
+      if (section === 'credentials') {
+        return selectedOption?.elitea_title !== value?.elitea_title ? selectedOption : null;
       }
       return null;
-    }, [section, savedCredentialsMenuData, selectedOption, value?.elitea_title]);
+    }, [section, selectedOption, value?.elitea_title]);
 
     useEffect(() => {
       if (!hasFetchedData || hasAutoSelectedRef.current || !credentialToAutoSelect) return;

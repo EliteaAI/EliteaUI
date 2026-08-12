@@ -166,6 +166,7 @@ export const usePublishVersion = onSuccess => {
     }
 
     const { data, error } = await callWithAIRetry(publish, {
+      id: applicationId,
       projectId,
       versionId: currentVersionId,
       body: {
@@ -196,7 +197,9 @@ export const usePublishVersion = onSuccess => {
       // Navigate to the published clone version
       const sourceVersionId = data?.source_version_id;
       if (sourceVersionId && applicationId) {
-        navigate(`/agents/${tab || 'latest'}/${applicationId}/${sourceVersionId}?viewMode=owner`);
+        navigate(
+          `/agents/${tab || 'latest'}/${applicationId}/${sourceVersionId}?viewMode=owner&isFromCreation=true`,
+        );
       }
     }
   }, [

@@ -7,7 +7,6 @@ import { Box, CircularProgress, Grid } from '@mui/material';
 import { TestTools } from '@/[fsd]/features/toolkits/ui';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui/form/ToolkitForm';
 import DirtyDetector from '@/components/Formik/DirtyDetector.jsx';
-import { CONFIGURATION_VIEW_OPTIONS } from '@/pages/Applications/Components/Tools/ToolConfigurationForm.jsx';
 import RouteDefinitions from '@/routes';
 
 const ConfigurationTab = memo(props => {
@@ -76,7 +75,6 @@ const ConfigurationTab = memo(props => {
                 showNameFieldForcedly={true}
                 showToolkitIcon={true}
                 hideConfigurationNameInput={true}
-                configurationViewOptions={CONFIGURATION_VIEW_OPTIONS.CredentialsSelect}
                 hasNotSavedCredentials={hasNotSavedCredentials}
                 updateKey={updateKey}
                 isMCP={isMCP}
