@@ -22,7 +22,7 @@ A layer may **only** import from layers **below** it.
 `features/` and `widgets/` are **peers** — they may import from each other.  
 **Redux store** lives in `shared/config/store.js` — accessible from any layer.
 
-### 1.1 Upward Import Violations (13)
+### 1.1 Upward Import Violations (13) ✓
 
 #### `features/` → `pages/` (1)
 
@@ -52,7 +52,7 @@ A layer may **only** import from layers **below** it.
 | `entities/version/lib/hooks/usePublishVersion.hooks.js`             | `import { useGetAgentCategoriesQuery } from '@/[fsd]/features/agent'`               |
 | `entities/skill-tab-bar/ui/SkillTabBar.jsx`                         | `import { DiscardSkillButton, SaveSkillButton, ... } from '@/[fsd]/features/skill'` |
 
-### 1.2 Cross-Slice Barrel Bypass (1)
+### 1.2 Cross-Slice Barrel Bypass (1) ✓
 
 | File                              | Import                                              | Slices                          |
 | --------------------------------- | --------------------------------------------------- | ------------------------------- |
@@ -624,3 +624,27 @@ Should be `kebab-case`:
 from the canonical location — no dead barrels.
 
 **Build verification:** `npm run build` passed with no errors (14.21s).
+
+### 2026-08-13 — Session 3
+
+**Scope:** Section 1.2 — Cross-Slice Barrel Bypass (1 violation resolved).
+
+**Violation:** `features/skill/api/skillsApi.js` imported RTK Query cache tag constants directly from
+`features/skill-hub/api/skillHubApi` (bypassing the barrel, creating cross-slice coupling).
+
+**Fix strategy:** Move shared RTK tag constants to `shared/lib/constants/`.
+
+#### Fix #1: `features/skill` → `features/skill-hub/api/skillHubApi` (1 violation)
+
+- **Created** `shared/lib/constants/rtkTags.constants.js` with `TAG_TYPE_PUBLIC_SKILLS` and
+  `TAG_TYPE_PUBLIC_SKILL_DETAILS`
+- **Updated** `shared/lib/constants/index.js` barrel — added `RtkTagsConstants` export
+- **Updated** `features/skill-hub/api/skillHubApi.js` — removed local constant definitions, now imports from
+  `shared/lib/constants`
+- **Updated** `features/skill/api/skillsApi.js` — removed cross-slice import, now imports from
+  `shared/lib/constants`
+
+**Design decision:** Only constants shared between multiple slices are moved to `shared/`. Slice-local constants
+(e.g., `TAG_TYPE_SKILLS`, `TAG_TYPE_AGENTS_WITH_SKILL`) remain in their respective slices per FSD principles.
+
+**Build verification:** `npm run build` passed with no errors (45.10s).
