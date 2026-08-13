@@ -90,7 +90,6 @@ const FolderItem = memo(props => {
   const menuItems = useMemo(() => {
     const items = [
       {
-        key: 'chat-folder-menu-rename',
         label: 'New conversation',
         icon: (
           <ChatIcon
