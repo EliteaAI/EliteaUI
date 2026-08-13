@@ -1215,10 +1215,12 @@ const ChatBox = forwardRef((props, boxRef) => {
   /**
    * Continue MCP execution - shared logic for both auth success and skip auth flows.
    * @param {string} messageId - The message ID to continue from
-   * @param {boolean} addToIgnoreList - If true, adds the MCP server to ignore list (for "Skip" button)
+   * @param {boolean} addToIgnoreList - If true, adds the toolkit to this run's declined list
+   * @param {string} authorizationRequestId - Exact durable request to resolve
+   * @param {object} selectedAuthorizationAction - Card/routing metadata for that request
    */
   const continueMcpExecution = useCallback(
-    async (messageId, addToIgnoreList = false) => {
+    async (messageId, addToIgnoreList = false, authorizationRequestId, selectedAuthorizationAction) => {
       const message = chat_history.find(item => item.id === messageId);
       const questionIndex = chat_history.findIndex(item => item.id === message?.question_id);
       const theQuestion =
@@ -1229,9 +1231,15 @@ const ChatBox = forwardRef((props, boxRef) => {
       }
 
       // Track or remove the MCP server in the session-declined ref (never localStorage)
-      const authRequiredAction = message.toolActions?.find(
-        action => action.status === ToolActionStatus.actionRequired,
-      );
+      const authRequiredAction =
+        selectedAuthorizationAction ||
+        message.toolActions?.find(
+          action =>
+            action.status === ToolActionStatus.actionRequired &&
+            (!authorizationRequestId ||
+              action.authorizationRequestId === authorizationRequestId ||
+              action.id === authorizationRequestId),
+        );
       const serverUrl = authRequiredAction?.toolOutputs?.server_url;
       if (addToIgnoreList) {
         // User clicked "Skip" — track as declined for this conversation only
@@ -1264,6 +1272,14 @@ const ChatBox = forwardRef((props, boxRef) => {
       }
 
       const { question_id, threadId } = message;
+      const authMeta = authRequiredAction?.toolMeta || {};
+      const resumeThreadId =
+        authMeta.resume_strategy === 'aggregate_child'
+          ? authMeta.child_thread_id || authMeta.thread_id
+          : authMeta.root_thread_id || threadId;
+      const authorizationAction = addToIgnoreList ? 'skip' : 'authorize';
+      const exactRequestId =
+        authorizationRequestId || authRequiredAction?.authorizationRequestId || authRequiredAction?.id;
 
       const sessionDeclinedMcpServers = [...sessionDeclinedMcpServersRef.current.entries()].map(
         ([url, { actual_server_url, ...rest }]) => ({
@@ -1272,15 +1288,32 @@ const ChatBox = forwardRef((props, boxRef) => {
         }),
       );
 
-      const payload = generateMcpContinuePayload({
+      const continuePayload = {
         conversation_uuid: activeConversation?.uuid,
         projectId,
         message_id: messageId,
-        thread_id: threadId,
+        thread_id: resumeThreadId,
         participants: activeConversation?.participants || [],
         question: theQuestion,
         sessionDeclinedMcpServers,
-      });
+      };
+      const isDurableAuthorization = authMeta.guardrail_type === 'mcp_auth' && Boolean(authMeta.interrupt_id);
+      const payload = isDurableAuthorization
+        ? generateMcpContinuePayload({
+            ...continuePayload,
+            authorization_request_id: exactRequestId,
+            authorization_action: authorizationAction,
+            mcp_auth_decisions: [
+              {
+                interrupt_id: exactRequestId,
+                tool_call_id: authMeta.tool_call_id,
+                child_thread_id: authMeta.child_thread_id,
+                action: authorizationAction,
+                value: '',
+              },
+            ],
+          })
+        : generateChatContinuePayload(continuePayload);
 
       setChatHistory(prevMessages =>
         prevMessages.map(msg =>
@@ -1291,7 +1324,7 @@ const ChatBox = forwardRef((props, boxRef) => {
                 isLoading: true,
                 isStreaming: true,
                 toolActions: msg.toolActions?.filter(
-                  action => action.status !== ToolActionStatus.actionRequired,
+                  action => action.authorizationRequestId !== exactRequestId && action.id !== exactRequestId,
                 ),
               },
         ),

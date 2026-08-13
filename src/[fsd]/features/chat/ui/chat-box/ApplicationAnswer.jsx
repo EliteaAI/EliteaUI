@@ -21,6 +21,7 @@ import {
   normalizeExecutionHierarchy,
 } from '@/[fsd]/features/chat/lib/helpers/executionHierarchy.helpers.js';
 import { getInterruptIdentity } from '@/[fsd]/features/chat/lib/helpers/hitl.helpers.js';
+import { groupToolkitAuthorizationActions } from '@/[fsd]/features/chat/lib/helpers/mcpAuthorization.helpers.js';
 import { computeBreadcrumbs } from '@/[fsd]/features/chat/lib/helpers/subAgentGrouping.helpers.js';
 import { useParticipantEntityIcon, useParticipantName } from '@/[fsd]/features/chat/participants/lib/hooks';
 import { ChatAttachment, ChatContinue, ChatHitlActions, ErrorTrace } from '@/[fsd]/features/chat/ui';
@@ -122,20 +123,65 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
   const participantName = useParticipantName(participant);
   const entityIcon = useParticipantEntityIcon(participant);
 
-  // Find the single toolAction that requires auth (should only be one)
-  const authRequiredAction = useMemo(
-    () => toolActions.find(action => action.status === ToolActionStatus.actionRequired),
+  const authRequiredActions = useMemo(
+    () => toolActions.filter(action => action.status === ToolActionStatus.actionRequired),
     [toolActions],
   );
+  const authorizationBuckets = useMemo(
+    () => groupToolkitAuthorizationActions(authRequiredActions, toolActions),
+    [authRequiredActions, toolActions],
+  );
   /** Skip auth for this run - adds server to ignore list */
-  const onContinueWithoutAuth = useCallback(() => {
-    onContinueMcpExecution?.(messageId, true);
-  }, [onContinueMcpExecution, messageId]);
+  const onContinueWithoutAuth = useCallback(
+    authRequiredAction => {
+      onContinueMcpExecution?.(
+        messageId,
+        true,
+        authRequiredAction.authorizationRequestId || authRequiredAction.id,
+        authRequiredAction,
+      );
+    },
+    [onContinueMcpExecution, messageId],
+  );
 
   /** Continue after successful auth - does NOT add to ignore list */
-  const onAuthSuccess = useCallback(() => {
-    onContinueMcpExecution?.(messageId, false);
-  }, [onContinueMcpExecution, messageId]);
+  const onAuthSuccess = useCallback(
+    authRequiredAction => {
+      onContinueMcpExecution?.(
+        messageId,
+        false,
+        authRequiredAction.authorizationRequestId || authRequiredAction.id,
+        authRequiredAction,
+      );
+    },
+    [onContinueMcpExecution, messageId],
+  );
+  const resolveAuthorizationAgentType = useCallback(
+    bucket => {
+      const participantType = subAgentTypeByName?.[bucket.name];
+      if (participantType === 'pipeline') return 'pipeline';
+      if (participantType) return 'application';
+      const action = bucket.actions.find(item => item?.agent_type || item?.toolMeta?.agent_type);
+      const agentType = action?.agent_type || action?.toolMeta?.agent_type;
+      if (agentType === 'pipeline') return 'pipeline';
+      return agentType ? 'application' : '';
+    },
+    [subAgentTypeByName],
+  );
+  const renderAuthorizationCard = useCallback(
+    authRequiredAction => (
+      <ChatContinue
+        key={authRequiredAction.authorizationRequestId || authRequiredAction.id}
+        disabled={!onContinueMcpExecution}
+        onContinue={() => onContinueWithoutAuth(authRequiredAction)}
+        onAuthSuccess={() => onAuthSuccess(authRequiredAction)}
+        authRequiredAction={authRequiredAction}
+        participantName={participantName}
+        continueLabel="Skip"
+      />
+    ),
+    [onAuthSuccess, onContinueMcpExecution, onContinueWithoutAuth, participantName],
+  );
 
   const onContinueWithConfirmation = useCallback(() => {
     if (onContinueTokenLimitExecution && requiresConfirmation) {
@@ -458,7 +504,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
       !!answer ||
       hasRenderableMessageItems ||
       !!exception ||
-      (authRequiredAction && !!onContinueMcpExecution) ||
+      (authRequiredActions.length > 0 && !!onContinueMcpExecution) ||
       (requiresConfirmation && !!onContinueTokenLimitExecution) ||
       effectiveHitlInterrupts.length > 0
     );
@@ -469,7 +515,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
     hasAttachments,
     canRenderContent,
     exception,
-    authRequiredAction,
+    authRequiredActions.length,
     onContinueMcpExecution,
     requiresConfirmation,
     onContinueTokenLimitExecution,
@@ -744,17 +790,21 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                   budgetErrorCode={budgetErrorCode}
                 />
               )}
-              {!!authRequiredAction && (
-                <ChatContinue
-                  message="Authentication required for remote MCP servers. Authenticate now or skip them for this run?"
-                  disabled={!onContinueMcpExecution}
-                  onContinue={onContinueWithoutAuth}
-                  onAuthSuccess={onAuthSuccess}
+              {authorizationBuckets.coordinator.map(renderAuthorizationCard)}
+              {authorizationBuckets.subAgents.map(bucket => (
+                <SubAgentAccordion
+                  key={`authorization-sa-${bucket.instanceKey}`}
+                  name={bucket.name}
+                  label={bucket.label}
                   tools={tools}
-                  authRequiredAction={authRequiredAction}
-                  continueLabel="Skip"
-                />
-              )}
+                  agentType={resolveAuthorizationAgentType(bucket)}
+                  paused
+                  defaultExpanded
+                  transparent
+                >
+                  {bucket.actions.map(renderAuthorizationCard)}
+                </SubAgentAccordion>
+              ))}
               {/* Agent Requires Confirmation - user needs to confirm to proceed */}
               {!hideContinueButton && !!requiresConfirmation && (
                 <ChatContinue
