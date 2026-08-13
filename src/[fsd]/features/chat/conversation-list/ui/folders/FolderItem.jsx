@@ -90,7 +90,7 @@ const FolderItem = memo(props => {
   const menuItems = useMemo(() => {
     const items = [
       {
-        label: 'New conversation',
+        label: 'New chat',
         icon: (
           <ChatIcon
             sx={{ fontSize: '1rem' }}
