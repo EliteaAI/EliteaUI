@@ -666,13 +666,15 @@ const ChatBox = forwardRef((props, boxRef) => {
   }, [stopStreaming]);
 
   useEffect(() => {
-    if (!isStreaming) {
-      if (stopRequestedRef.current && lastSentQuestionRef.current) {
-        chatInput.current?.setValue(lastSentQuestionRef.current);
-      }
-      lastSentQuestionRef.current = '';
-      stopRequestedRef.current = false;
+    if (isStreaming) return;
+
+    const shouldRestore = stopRequestedRef.current && lastSentQuestionRef.current;
+    if (shouldRestore) {
+      chatInput.current?.setValue(lastSentQuestionRef.current);
     }
+
+    lastSentQuestionRef.current = '';
+    stopRequestedRef.current = false;
   }, [isStreaming]);
 
   useEffect(() => {
