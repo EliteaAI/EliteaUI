@@ -33,12 +33,13 @@ const IndexingReportSummary = memo(props => {
           variant="bodyMedium"
           sx={styles.headline}
         >
-          {headline.text}
+          {headline.icon} {headline.text}
         </Typography>
       )}
 
       {categories.map(category => {
         const { tone } = INDEXING_REPORT_KIND_PRESENTATION[category.kind];
+        const { icon, text } = categoryHeadline(category, report);
         return (
           <Box
             key={category.kind}
@@ -49,7 +50,7 @@ const IndexingReportSummary = memo(props => {
               variant="bodyMedium"
               sx={styles.categoryTitle(tone)}
             >
-              {categoryHeadline(category, report).text}
+              {icon} {text}
             </Typography>
 
             {category.groups.map(group => (

@@ -83,12 +83,12 @@ describe('formatIndexingReportText', () => {
   it('describes a run that changed nothing by its unchanged count', () => {
     const source = report({
       status: 'ok',
-      totals: { indexed: 0, skipped: 196, not_indexed: 0, failed: 0, unchanged: 196, total: 196 },
+      totals: { indexed: 0, skipped: 0, not_indexed: 0, failed: 0, unchanged: 196, total: 196 },
       categories: [
         { kind: 'indexed', count: 0, groups: [] },
         {
           kind: 'skipped',
-          count: 196,
+          count: 0,
           groups: [{ reason: 'unchanged', label: 'Already indexed (unchanged)', count: 196, items: [] }],
         },
       ],
@@ -103,12 +103,12 @@ describe('formatIndexingReportText', () => {
 
   it('does not report unchanged items as skipped on an incremental run', () => {
     const source = report({
-      totals: { indexed: 5, skipped: 196, not_indexed: 0, failed: 0, unchanged: 195, total: 201 },
+      totals: { indexed: 5, skipped: 1, not_indexed: 0, failed: 0, unchanged: 195, total: 201 },
       categories: [
         { kind: 'indexed', count: 5, groups: [] },
         {
           kind: 'skipped',
-          count: 196,
+          count: 1,
           groups: [
             { reason: 'unchanged', label: 'Already indexed (unchanged)', count: 195, items: [] },
             { reason: 'filtered', label: 'Excluded by configured filters', count: 1, items: ['x.tmp'] },
@@ -127,12 +127,12 @@ describe('formatIndexingReportText', () => {
 
   it('still reports genuine skips on an otherwise up-to-date run', () => {
     const source = report({
-      totals: { indexed: 0, skipped: 197, not_indexed: 0, failed: 0, unchanged: 196, total: 197 },
+      totals: { indexed: 0, skipped: 1, not_indexed: 0, failed: 0, unchanged: 196, total: 197 },
       categories: [
         { kind: 'indexed', count: 0, groups: [] },
         {
           kind: 'skipped',
-          count: 197,
+          count: 1,
           groups: [
             { reason: 'unchanged', label: 'Already indexed (unchanged)', count: 196, items: [] },
             { reason: 'filtered', label: 'Excluded by configured filters', count: 1, items: ['x.tmp'] },
@@ -239,7 +239,7 @@ describe('unchangedNotice', () => {
 
   it('states the tally on an incremental run', () => {
     const source = report({
-      totals: { indexed: 5, skipped: 195, not_indexed: 0, failed: 0, unchanged: 195, total: 200 },
+      totals: { indexed: 5, skipped: 0, not_indexed: 0, failed: 0, unchanged: 195, total: 200 },
     });
 
     expect(notice(source)).toEqual({ count: 195, text: '195 pages already indexed (unchanged)' });
@@ -247,7 +247,7 @@ describe('unchangedNotice', () => {
 
   it('uses the singular noun for one item', () => {
     const source = report({
-      totals: { indexed: 5, skipped: 1, not_indexed: 0, failed: 0, unchanged: 1, total: 6 },
+      totals: { indexed: 5, skipped: 0, not_indexed: 0, failed: 0, unchanged: 1, total: 6 },
     });
 
     expect(notice(source).text).toBe('1 page already indexed (unchanged)');
@@ -255,7 +255,7 @@ describe('unchangedNotice', () => {
 
   it('stays silent when the headline already carries it', () => {
     const source = report({
-      totals: { indexed: 0, skipped: 196, not_indexed: 0, failed: 0, unchanged: 196, total: 196 },
+      totals: { indexed: 0, skipped: 0, not_indexed: 0, failed: 0, unchanged: 196, total: 196 },
     });
 
     expect(notice(source)).toBeNull();
@@ -301,12 +301,12 @@ describe('summarizeIndexingReport', () => {
 
   it('names unchanged items separately from skipped ones', () => {
     const source = report({
-      totals: { indexed: 5, skipped: 196, not_indexed: 0, failed: 0, unchanged: 195, total: 201 },
+      totals: { indexed: 5, skipped: 1, not_indexed: 0, failed: 0, unchanged: 195, total: 201 },
       categories: [
         { kind: 'indexed', count: 5, groups: [] },
         {
           kind: 'skipped',
-          count: 196,
+          count: 1,
           groups: [
             { reason: 'unchanged', label: 'Already indexed (unchanged)', count: 195, items: [] },
             { reason: 'filtered', label: 'Excluded by configured filters', count: 1, items: [] },

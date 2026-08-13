@@ -202,7 +202,8 @@ describe('normalizeIndexingReport with pre-report rows', () => {
     const report = normalizeIndexingReport(entry);
 
     const skipped = categoryOf(report, 'skipped');
-    expect(skipped.count).toBe(12 + 10 + 1 + 1);
+    // Unchanged is listed but not counted as skipped.
+    expect(skipped.count).toBe(10 + 1 + 1);
     expect(skipped.groups.map(group => group.reason)).toEqual([
       'unchanged',
       'filtered',

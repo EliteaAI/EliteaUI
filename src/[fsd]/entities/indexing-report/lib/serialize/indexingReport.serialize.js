@@ -175,7 +175,9 @@ const fromLegacyEntry = entry => {
     }
     return {
       kind,
-      count: groups.filter(group => !group.dependent).reduce((sum, group) => sum + group.count, 0),
+      count: groups
+        .filter(group => !group.dependent && group.reason !== 'unchanged')
+        .reduce((sum, group) => sum + group.count, 0),
       groups,
     };
   });
@@ -191,7 +193,7 @@ const fromLegacyEntry = entry => {
         sum + category.groups.filter(group => group.dependent).reduce((n, group) => n + group.count, 0),
       0,
     ),
-    total: countOf(entry?.total) || persistedIndexed,
+    total: countOf(entry?.total) || persistedIndexed + unchanged,
   };
 
   const error = (entry?.error || '').trim();

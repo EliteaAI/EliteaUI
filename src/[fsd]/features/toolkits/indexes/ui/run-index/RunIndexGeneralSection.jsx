@@ -25,10 +25,9 @@ const summarizeRun = entry => {
   const { indexed, unchanged, skipped, notIndexed, failed } = report.totals;
   return {
     itemsLabel: capitalize(report.itemLabels.plural),
-    // Both numbers keep the meaning they have always had here: everything the store
-    // holds, and everything left out of it. Unchanged items were not left out.
+    // Everything the store holds, and everything left out of it.
     indexed: indexed + unchanged,
-    skipped: skipped - unchanged + notIndexed + failed,
+    skipped: skipped + notIndexed + failed,
   };
 };
 

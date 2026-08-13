@@ -11,24 +11,14 @@ export const pickItemNoun = (count, labels) => (count === 1 ? labels.singular : 
  * up-to-date run and are already in its headline, so repeating them as "skipped"
  * there would contradict it.
  */
+// The unchanged group is reported on its own line, never under "skipped".
 export const visibleCategoryGroups = category =>
   category.groups.filter(group => group.count > 0 && group.reason !== 'unchanged');
-
-export const visibleCategoryCount = category => {
-  const unchanged = category.groups
-    .filter(group => group.reason === 'unchanged' && !group.dependent)
-    .reduce((sum, group) => sum + group.count, 0);
-  return Math.max(0, category.count - unchanged);
-};
 
 /** Categories with something to say — the count they carry, or a dependent group. */
 export const visibleCategories = report =>
   report.categories
-    .map(category => ({
-      ...category,
-      count: visibleCategoryCount(category),
-      groups: visibleCategoryGroups(category),
-    }))
+    .map(category => ({ ...category, groups: visibleCategoryGroups(category) }))
     .filter(category => category.count > 0 || category.groups.some(group => group.dependent));
 
 export const categoryHeadline = (category, report) => {

@@ -67,13 +67,12 @@ const IndexListItem = memo(props => {
       : 0;
     const total = index.metadata.total ?? index.metadata.indexed ?? '–';
     const indexedDocs = index.metadata.indexed ?? '–';
-    const { skipped = 0, unchanged = 0, notIndexed = 0, failed = 0 } = report?.totals || {};
+    const { skipped = 0, notIndexed = 0, failed = 0 } = report?.totals || {};
 
     return {
       tooltip: completedRuns > 1 ? 'reindexed / total' : 'indexed / total',
       count: `${indexedDocs} / ${total}`,
-      // Unchanged items are in the store, not left out of it, so they stay out of this count.
-      skipped: skipped - unchanged + notIndexed + failed,
+      skipped: skipped + notIndexed + failed,
     };
   }, [index]);
 
