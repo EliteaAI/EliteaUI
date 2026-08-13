@@ -5,22 +5,12 @@ import { useFormikContext } from 'formik';
 import { Box } from '@mui/material';
 
 import { useAvailableInternalTools } from '@/[fsd]/features/toolkits/lib/hooks';
+import { InternalToolsConstants } from '@/[fsd]/shared/lib/constants';
 import { useFormikAutoSaveOnBlur } from '@/[fsd]/shared/lib/hooks';
 import { PERMISSIONS } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
 import EnableToggleCard from '../project-context/EnableToggleCard';
-
-const TOOL_FIELD_MAP = {
-  internal_mcp: 'default_internal_mcp_enabled',
-  ask_user: 'default_ask_user_enabled',
-  image_generation: 'default_image_generation_enabled',
-  data_analysis: 'default_data_analysis_enabled',
-  planner: 'default_planner_enabled',
-  pyodide: 'default_pyodide_enabled',
-  swarm: 'default_swarm_enabled',
-  lazy_tools_mode: 'default_lazy_tools_mode_enabled',
-};
 
 const DefaultModulesSettings = memo(() => {
   const { checkPermission } = useCheckPermission();
@@ -53,7 +43,7 @@ const DefaultModulesSettings = memo(() => {
       onBlur={onBlur}
     >
       {availableTools.map(tool => {
-        const fieldName = TOOL_FIELD_MAP[tool.name];
+        const fieldName = InternalToolsConstants.INTERNAL_TOOL_PERSONALIZATION_FIELD_MAP[tool.name];
         if (!fieldName) return null;
         return (
           <EnableToggleCard

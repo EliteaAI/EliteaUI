@@ -37,12 +37,14 @@ const ClarifyingQuestionControl = memo(props => {
   const total = specs.length;
   const currentSpec = specs[step];
   const isLastStep = step >= total - 1;
+  const qid = currentSpec?.id;
+  const multiSelect = Boolean(currentSpec?.multiSelect);
 
   const buildAnswer = useCallback(
-    qid => {
-      const spec = specs.find(q => q.id === qid) || {};
-      const selection = selections[qid];
-      const typed = (customText[qid] || '').trim();
+    questionId => {
+      const spec = specs.find(q => q.id === questionId) || {};
+      const selection = selections[questionId];
+      const typed = (customText[questionId] || '').trim();
       if (spec.multiSelect) {
         const chosen = Array.isArray(selection) ? selection : [];
         return typed ? [...chosen, typed] : chosen;
@@ -78,43 +80,44 @@ const ClarifyingQuestionControl = memo(props => {
   }, [goNext, isLastStep, submitAll]);
 
   const handleSelectSingle = useCallback(
-    (qid, label) => {
-      setSelections(prev => ({ ...prev, [qid]: label }));
-      setCustomText(prev => ({ ...prev, [qid]: '' }));
+    (questionId, label) => {
+      setSelections(prev => ({ ...prev, [questionId]: label }));
+      setCustomText(prev => ({ ...prev, [questionId]: '' }));
       if (!isLastStep) goNext();
     },
     [goNext, isLastStep],
   );
 
-  const handleToggleMulti = useCallback((qid, label) => {
+  const handleToggleMulti = useCallback((questionId, label) => {
     setSelections(prev => {
-      const current = Array.isArray(prev[qid]) ? prev[qid] : [];
+      const current = Array.isArray(prev[questionId]) ? prev[questionId] : [];
       const next = current.includes(label) ? current.filter(v => v !== label) : [...current, label];
-      return { ...prev, [qid]: next };
+      return { ...prev, [questionId]: next };
     });
   }, []);
 
-  const handleCustomChange = useCallback((qid, value, multiSelect) => {
+  const handleCustomChange = useCallback((questionId, value, allowMultiSelect) => {
     const text = value.slice(0, MAX_CUSTOM_LENGTH);
-    setCustomText(prev => ({ ...prev, [qid]: text }));
-    if (!multiSelect && text) {
-      setSelections(prev => ({ ...prev, [qid]: '' }));
+    setCustomText(prev => ({ ...prev, [questionId]: text }));
+    if (!allowMultiSelect && text) {
+      setSelections(prev => ({ ...prev, [questionId]: '' }));
     }
   }, []);
+
+  const handleRowClick = useCallback(
+    option => {
+      if (disabled) return;
+      if (multiSelect) handleToggleMulti(qid, option.label);
+      else handleSelectSingle(qid, option.label);
+    },
+    [disabled, handleSelectSingle, handleToggleMulti, multiSelect, qid],
+  );
 
   if (total === 0) return null;
 
   const options = Array.isArray(currentSpec?.options) ? currentSpec.options : [];
-  const qid = currentSpec.id;
-  const multiSelect = Boolean(currentSpec.multiSelect);
   const answered = isAnswered(currentSpec);
   const selection = selections[qid];
-
-  const handleRowClick = option => {
-    if (disabled) return;
-    if (multiSelect) handleToggleMulti(qid, option.label);
-    else handleSelectSingle(qid, option.label);
-  };
 
   return (
     <Box sx={styles.container}>
@@ -176,7 +179,7 @@ const ClarifyingQuestionControl = memo(props => {
                 mode={multiSelect ? CHECKBOX_MODES.checkbox : CHECKBOX_MODES.radio}
                 size="small"
                 checked={checked}
-                onChange={() => {}}
+                readOnly
                 disabled={disabled}
                 sx={styles.control}
               />

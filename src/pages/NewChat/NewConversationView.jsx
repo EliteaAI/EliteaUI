@@ -16,7 +16,7 @@ import { useFetchParticipantDetails } from '@/[fsd]/features/chat/participants/l
 import { SlashSuggestionList } from '@/[fsd]/features/chat/ui';
 import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { MentionSkillList } from '@/[fsd]/features/skill/ui';
-import { MentionConstants } from '@/[fsd]/shared/lib/constants';
+import { InternalToolsConstants, MentionConstants } from '@/[fsd]/shared/lib/constants';
 import { DEFAULT_STEPS_LIMIT } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
 import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
 import {
@@ -100,17 +100,7 @@ const NewConversationView = forwardRef(
     const [selectedParticipantDetails, setSelectedParticipantDetails] = useState(activeParticipant || null);
     const [prevConversation, setPrevConversation] = useState(activeConversation);
     const [internalTools, setInternalTools] = useState(() => {
-      const p = user?.personalization ?? {};
-      const tools = [];
-      if (p.default_internal_mcp_enabled) tools.push('internal_mcp');
-      if (p.default_ask_user_enabled) tools.push('ask_user');
-      if (p.default_image_generation_enabled) tools.push('image_generation');
-      if (p.default_data_analysis_enabled) tools.push('data_analysis');
-      if (p.default_planner_enabled) tools.push('planner');
-      if (p.default_pyodide_enabled) tools.push('pyodide');
-      if (p.default_swarm_enabled) tools.push('swarm');
-      if (p.default_lazy_tools_mode_enabled) tools.push('lazy_tools_mode');
-      return tools;
+      return InternalToolsConstants.getEnabledInternalToolNames(user?.personalization ?? {});
     });
     const [showRecommendationList, setShowRecommendationList] = useState(false);
     const { data: modelsData = { items: [], total: 0 } } = useListModelsQuery(
