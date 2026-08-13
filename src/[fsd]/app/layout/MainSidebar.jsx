@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { Box } from '@mui/material';
 
-import { actions as importWizardActions } from '@/[fsd]/entities/import-wizard/model/importWizard.slice';
+import { importWizardActions } from '@/[fsd]/entities/import-wizard';
 import { ImportWizardModal } from '@/[fsd]/entities/import-wizard/ui';
 import { useIsOnboarding } from '@/[fsd]/shared/lib/hooks';
 import { Sidebar } from '@/[fsd]/widgets/sidebar-root/ui';

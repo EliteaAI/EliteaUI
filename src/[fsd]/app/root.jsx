@@ -21,11 +21,11 @@ import { FilePreviewNavigationProvider } from '@/contexts/FilePreviewNavigationC
 import SocketContext from '@/contexts/SocketContext';
 import { useEliteATheme } from '@/[fsd]/shared/lib/hooks';
 import { actions as settingsActions } from '@/slices/settings.js';
-import { startTokenRefreshScheduler } from '@/[fsd]/features/mcp/lib/helpers/mcpAuth.helpers';
+import { McpAuthHelpers } from '@/[fsd]/features/mcp';
 import { logVersion } from '@/utils.js';
 
 logVersion();
-startTokenRefreshScheduler();
+McpAuthHelpers.startTokenRefreshScheduler();
 
 const RootComponent = memo(() => {
   const { globalTheme } = useEliteATheme();

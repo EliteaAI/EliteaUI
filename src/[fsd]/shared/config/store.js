@@ -1,6 +1,4 @@
-import importWizardReducer, {
-  name as importWizardReducerName,
-} from '@/[fsd]/entities/import-wizard/model/importWizard.slice';
+import { importWizardReducer, importWizardReducerName } from '@/[fsd]/entities/import-wizard';
 import indexesReducer, {
   name as indexesReducerName,
 } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';

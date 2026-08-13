@@ -22,7 +22,7 @@ import { useFetchParticipantDetails } from '@/[fsd]/features/chat/participants/l
 import { SlashSuggestionList } from '@/[fsd]/features/chat/ui';
 import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { MentionSkillList } from '@/[fsd]/features/skill/ui';
-import { MentionConstants } from '@/[fsd]/shared/lib/constants';
+import { InternalToolsConstants, MentionConstants } from '@/[fsd]/shared/lib/constants';
 import { DEFAULT_STEPS_LIMIT } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
 import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
 import {
@@ -105,8 +105,9 @@ const NewConversationView = forwardRef(
     const [selectedParticipant, setSelectedParticipant] = useState(activeParticipant || null);
     const [selectedParticipantDetails, setSelectedParticipantDetails] = useState(activeParticipant || null);
     const [prevConversation, setPrevConversation] = useState(activeConversation);
-    const defaultInternalMcpEnabled = user?.personalization?.default_internal_mcp_enabled ?? false;
-    const [internalTools, setInternalTools] = useState(defaultInternalMcpEnabled ? ['internal_mcp'] : []);
+    const [internalTools, setInternalTools] = useState(() => {
+      return InternalToolsConstants.getEnabledInternalToolNames(user?.personalization ?? {});
+    });
     const [showRecommendationList, setShowRecommendationList] = useState(false);
     const { data: modelsData = { items: [], total: 0 } } = useListModelsQuery(
       { projectId: selectedProjectId, include_shared: true },
@@ -781,6 +782,7 @@ const NewConversationView = forwardRef(
         isSending: true,
         hasAttachments: attachments?.length > 0,
       };
+      const pendingFolderId = activeConversationRef.current?.folder_id || null;
       await onCreateConversation(
         newConversation,
         async (createdConversation, onComplete) => {
@@ -935,6 +937,7 @@ const NewConversationView = forwardRef(
           }
         },
         true,
+        pendingFolderId,
       );
     };
 

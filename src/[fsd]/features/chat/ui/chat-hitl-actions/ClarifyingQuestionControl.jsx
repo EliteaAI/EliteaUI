@@ -1,71 +1,60 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Box, Checkbox, FormControlLabel, Radio, RadioGroup, TextField, Typography } from '@mui/material';
+import { Box, TextField, Typography } from '@mui/material';
 
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
-import CheckedIcon from '@/assets/checked-icon.svg?react';
+import BaseCheckbox, { CHECKBOX_MODES } from '@/[fsd]/shared/ui/checkbox/BaseCheckbox';
+import ArrowLeftIcon from '@/assets/arrow-left-icon.svg?react';
+import ArrowRightIcon from '@/assets/arrow-right-icon.svg?react';
 
-const MAX_OTHER_LENGTH = 2000;
-const OTHER_VALUE = '__other__';
+const MAX_CUSTOM_LENGTH = 2000;
 
 /**
  * Clarifying-question control rendered on a HITL card (guardrail_type ===
- * 'clarifying_question'). Renders one group per question — radio (single) or
- * checkbox (multi) options, plus an optional free-text "Other" field — and
- * submits an answers object keyed by question id through the shared
- * onHitlResume({ action: 'answer', value }) path.
+ * 'clarifying_question'). Shows one question at a time with a top-right stepper,
+ * hoverable option rows (radio for single-select, checkbox for multi-select),
+ * an always-visible custom "Your option" input, and a Skip/Continue action.
+ * Submits an answers object keyed by question id through onSubmit.
  */
 const ClarifyingQuestionControl = memo(props => {
   const { questions, onSubmit, disabled } = props;
-  const styles = getStyles();
+  const styles = clarifyingQuestionControlStyles();
 
   const specs = useMemo(() => (Array.isArray(questions) ? questions : []), [questions]);
 
-  // selections: { [questionId]: string | string[] }  |  other: { [questionId]: string }
-  const [selections, setSelections] = useState({});
-  const [otherText, setOtherText] = useState({});
   const [step, setStep] = useState(0);
+  const [selections, setSelections] = useState({});
+  const [customText, setCustomText] = useState({});
 
   useEffect(() => {
     if (disabled) {
-      setSelections({});
-      setOtherText({});
       setStep(0);
+      setSelections({});
+      setCustomText({});
     }
   }, [disabled]);
 
-  const handleRadioChange = useCallback((qid, value) => {
-    setSelections(prev => ({ ...prev, [qid]: value }));
-  }, []);
-
-  const handleCheckboxChange = useCallback((qid, label, checked) => {
-    setSelections(prev => {
-      const current = Array.isArray(prev[qid]) ? prev[qid] : [];
-      const next = checked ? [...current, label] : current.filter(item => item !== label);
-      return { ...prev, [qid]: next };
-    });
-  }, []);
-
-  const handleOtherChange = useCallback((qid, value) => {
-    setOtherText(prev => ({ ...prev, [qid]: value.slice(0, MAX_OTHER_LENGTH) }));
-  }, []);
+  const total = specs.length;
+  const currentSpec = specs[step];
+  const isLastStep = step >= total - 1;
+  const qid = currentSpec?.id;
+  const multiSelect = Boolean(currentSpec?.multiSelect);
 
   const buildAnswer = useCallback(
-    qid => {
-      const spec = specs.find(q => q.id === qid) || {};
-      const selection = selections[qid];
-      const typed = (otherText[qid] || '').trim();
+    questionId => {
+      const spec = specs.find(q => q.id === questionId) || {};
+      const selection = selections[questionId];
+      const typed = (customText[questionId] || '').trim();
       if (spec.multiSelect) {
-        const chosen = (Array.isArray(selection) ? selection : []).filter(v => v !== OTHER_VALUE);
+        const chosen = Array.isArray(selection) ? selection : [];
         return typed ? [...chosen, typed] : chosen;
       }
-      if (selection === OTHER_VALUE) return typed;
-      return selection ?? (typed || '');
+      return typed || selection || '';
     },
-    [otherText, selections, specs],
+    [customText, selections, specs],
   );
 
-  const isQuestionAnswered = useCallback(
+  const isAnswered = useCallback(
     spec => {
       if (!spec) return false;
       const answer = buildAnswer(spec.id);
@@ -74,211 +63,197 @@ const ClarifyingQuestionControl = memo(props => {
     [buildAnswer],
   );
 
-  const currentSpec = specs[step];
-  const isLastStep = step >= specs.length - 1;
-  const currentAnswered = isQuestionAnswered(currentSpec);
+  const goPrev = useCallback(() => setStep(prev => Math.max(0, prev - 1)), []);
+  const goNext = useCallback(() => setStep(prev => Math.min(total - 1, prev + 1)), [total]);
 
-  const handleBack = useCallback(() => {
-    setStep(prev => Math.max(0, prev - 1));
-  }, []);
-
-  const handleNext = useCallback(() => {
-    setStep(prev => Math.min(specs.length - 1, prev + 1));
-  }, [specs.length]);
-
-  const handleSubmit = useCallback(() => {
-    if (!specs.every(isQuestionAnswered)) return;
+  const submitAll = useCallback(() => {
     const value = {};
     specs.forEach(spec => {
       value[spec.id] = buildAnswer(spec.id);
     });
     onSubmit?.(value);
-  }, [buildAnswer, isQuestionAnswered, onSubmit, specs]);
+  }, [buildAnswer, onSubmit, specs]);
 
-  if (specs.length === 0) return null;
+  const handleContinue = useCallback(() => {
+    if (isLastStep) submitAll();
+    else goNext();
+  }, [goNext, isLastStep, submitAll]);
+
+  const handleSelectSingle = useCallback(
+    (questionId, label) => {
+      setSelections(prev => ({ ...prev, [questionId]: label }));
+      setCustomText(prev => ({ ...prev, [questionId]: '' }));
+      if (!isLastStep) goNext();
+    },
+    [goNext, isLastStep],
+  );
+
+  const handleToggleMulti = useCallback((questionId, label) => {
+    setSelections(prev => {
+      const current = Array.isArray(prev[questionId]) ? prev[questionId] : [];
+      const next = current.includes(label) ? current.filter(v => v !== label) : [...current, label];
+      return { ...prev, [questionId]: next };
+    });
+  }, []);
+
+  const handleCustomChange = useCallback((questionId, value, allowMultiSelect) => {
+    const text = value.slice(0, MAX_CUSTOM_LENGTH);
+    setCustomText(prev => ({ ...prev, [questionId]: text }));
+    if (!allowMultiSelect && text) {
+      setSelections(prev => ({ ...prev, [questionId]: '' }));
+    }
+  }, []);
+
+  const handleRowClick = useCallback(
+    option => {
+      if (disabled) return;
+      if (multiSelect) handleToggleMulti(qid, option.label);
+      else handleSelectSingle(qid, option.label);
+    },
+    [disabled, handleSelectSingle, handleToggleMulti, multiSelect, qid],
+  );
+
+  if (total === 0) return null;
 
   const options = Array.isArray(currentSpec?.options) ? currentSpec.options : [];
-  const showOther = currentSpec?.allow_other !== false;
-  const otherSelected = currentSpec?.multiSelect
-    ? Boolean((otherText[currentSpec?.id] || '').length)
-    : selections[currentSpec?.id] === OTHER_VALUE;
+  const answered = isAnswered(currentSpec);
+  const selection = selections[qid];
 
   return (
     <Box sx={styles.container}>
-      {specs.length > 1 && (
-        <Typography
-          variant="labelSmall"
-          sx={styles.stepIndicator}
-        >
-          Question {step + 1} of {specs.length}
-        </Typography>
-      )}
-
-      <Box sx={styles.questionBlock}>
+      <Box sx={styles.header}>
         {currentSpec.header && (
           <Typography
             variant="labelSmall"
-            sx={styles.header}
+            sx={styles.eyebrow}
           >
             {currentSpec.header}
           </Typography>
         )}
-        {currentSpec.question && (
+        <Box sx={styles.headerRow}>
           <Typography
-            variant="labelMedium"
+            variant="headingSmall"
             sx={styles.question}
           >
-            {currentSpec.question}
+            {`${step + 1}. ${currentSpec.question || ''}`}
           </Typography>
-        )}
-
-        {currentSpec.multiSelect ? (
-          <Box sx={styles.optionList}>
-            {options.map(option => (
-              <FormControlLabel
-                key={option.label}
-                control={
-                  <Checkbox
-                    size="small"
-                    checked={
-                      Array.isArray(selections[currentSpec.id]) &&
-                      selections[currentSpec.id].includes(option.label)
-                    }
-                    onChange={event =>
-                      handleCheckboxChange(currentSpec.id, option.label, event.target.checked)
-                    }
-                    disabled={disabled}
-                  />
-                }
-                label={renderOptionLabel(option, styles)}
+          {total > 1 && (
+            <Box sx={styles.stepper}>
+              <BaseBtn
+                variant={BUTTON_VARIANTS.tertiary}
+                onClick={goPrev}
+                disabled={disabled || step === 0}
+                startIcon={<ArrowLeftIcon />}
+                aria-label="Previous question"
               />
-            ))}
-          </Box>
-        ) : (
-          <RadioGroup
-            value={selections[currentSpec.id] ?? ''}
-            onChange={event => handleRadioChange(currentSpec.id, event.target.value)}
-            sx={styles.optionList}
-          >
-            {options.map(option => (
-              <FormControlLabel
-                key={option.label}
-                value={option.label}
-                control={
-                  <Radio
-                    size="small"
-                    disabled={disabled}
-                  />
-                }
-                label={renderOptionLabel(option, styles)}
+              <Typography
+                variant="labelSmall"
+                sx={styles.stepperLabel}
+              >
+                {`${step + 1}/${total}`}
+              </Typography>
+              <BaseBtn
+                variant={BUTTON_VARIANTS.tertiary}
+                onClick={goNext}
+                disabled={disabled || isLastStep}
+                startIcon={<ArrowRightIcon />}
+                aria-label="Next question"
               />
-            ))}
-            {showOther && (
-              <FormControlLabel
-                value={OTHER_VALUE}
-                control={
-                  <Radio
-                    size="small"
-                    disabled={disabled}
-                  />
-                }
-                label="Other"
-              />
-            )}
-          </RadioGroup>
-        )}
-
-        {showOther && (currentSpec.multiSelect || otherSelected) && (
-          <TextField
-            multiline
-            minRows={1}
-            maxRows={4}
-            fullWidth
-            size="small"
-            value={otherText[currentSpec.id] || ''}
-            onChange={event => handleOtherChange(currentSpec.id, event.target.value)}
-            disabled={disabled}
-            placeholder="Type your own answer"
-            slotProps={{ htmlInput: { maxLength: MAX_OTHER_LENGTH } }}
-            sx={styles.otherInput}
-          />
-        )}
+            </Box>
+          )}
+        </Box>
       </Box>
 
-      <Box sx={styles.actions}>
-        {step > 0 && (
-          <BaseBtn
-            variant={BUTTON_VARIANTS.secondary}
-            onClick={handleBack}
-            disabled={disabled}
-          >
-            Back
-          </BaseBtn>
-        )}
-        {isLastStep ? (
-          <BaseBtn
-            variant={BUTTON_VARIANTS.positive}
-            startIcon={<CheckedIcon />}
-            onClick={handleSubmit}
-            disabled={disabled || !currentAnswered}
-            sx={styles.buttonIcon}
-          >
-            Submit
-          </BaseBtn>
-        ) : (
-          <BaseBtn
-            variant={BUTTON_VARIANTS.positive}
-            onClick={handleNext}
-            disabled={disabled || !currentAnswered}
-          >
-            Next
-          </BaseBtn>
-        )}
+      <Box sx={styles.optionList}>
+        {options.map(option => {
+          const checked = multiSelect
+            ? Array.isArray(selection) && selection.includes(option.label)
+            : selection === option.label;
+          return (
+            <Box
+              key={option.label}
+              sx={styles.optionRow}
+              onClick={() => handleRowClick(option)}
+            >
+              <BaseCheckbox
+                mode={multiSelect ? CHECKBOX_MODES.checkbox : CHECKBOX_MODES.radio}
+                size="small"
+                checked={checked}
+                readOnly
+                disabled={disabled}
+                sx={styles.control}
+              />
+              <Box sx={styles.optionLabel}>
+                <Typography
+                  variant="labelMedium"
+                  sx={styles.optionTitle}
+                >
+                  {option.label}
+                </Typography>
+                {option.description && (
+                  <Typography
+                    variant="labelSmall"
+                    sx={styles.optionDescription}
+                  >
+                    {option.description}
+                  </Typography>
+                )}
+              </Box>
+            </Box>
+          );
+        })}
+      </Box>
+
+      <Box sx={styles.inputRow}>
+        <TextField
+          fullWidth
+          size="small"
+          value={customText[qid] || ''}
+          onChange={event => handleCustomChange(qid, event.target.value, multiSelect)}
+          disabled={disabled}
+          placeholder="Your option"
+          slotProps={{ htmlInput: { maxLength: MAX_CUSTOM_LENGTH } }}
+          sx={styles.customInput}
+        />
+        <BaseBtn
+          variant={answered ? BUTTON_VARIANTS.contained : BUTTON_VARIANTS.secondary}
+          onClick={handleContinue}
+          disabled={disabled}
+          sx={styles.actionBtn}
+        >
+          {answered ? 'Continue' : 'Skip'}
+        </BaseBtn>
       </Box>
     </Box>
   );
 });
 
-const renderOptionLabel = (option, styles) => (
-  <Box sx={styles.optionLabel}>
-    <Typography
-      variant="labelMedium"
-      sx={styles.optionTitle}
-    >
-      {option.label}
-    </Typography>
-    {option.description && (
-      <Typography
-        variant="labelSmall"
-        sx={styles.optionDescription}
-      >
-        {option.description}
-      </Typography>
-    )}
-  </Box>
-);
-
 ClarifyingQuestionControl.displayName = 'ClarifyingQuestionControl';
 
 /** @type {MuiSx} */
-const getStyles = () => ({
-  container: {
+const clarifyingQuestionControlStyles = () => ({
+  container: ({ palette }) => ({
     width: '100%',
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.875rem',
-  },
-  stepIndicator: ({ palette }) => ({
-    fontSize: '0.6875rem',
-    fontWeight: 600,
-    color: palette.text.secondary,
+    gap: '0.75rem',
+    padding: '1rem 1.25rem 1.25rem',
+    borderRadius: '0.75rem',
+    background: palette.background.secondary,
+    border: `0.0625rem solid ${palette.border.cardsOutlines}`,
   }),
-  questionBlock: {
+  header: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.25rem',
+    gap: '0.125rem',
   },
-  header: ({ palette }) => ({
+  headerRow: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '0.75rem',
+  },
+  eyebrow: ({ palette }) => ({
     fontSize: '0.6875rem',
     fontWeight: 600,
     textTransform: 'uppercase',
@@ -286,18 +261,50 @@ const getStyles = () => ({
     color: palette.text.secondary,
   }),
   question: ({ palette }) => ({
-    fontSize: '0.875rem',
+    flex: 1,
+    minWidth: 0,
     fontWeight: 600,
     color: palette.text.primary,
+  }),
+  stepper: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.25rem',
+    flexShrink: 0,
+  },
+  stepperLabel: ({ palette }) => ({
+    minWidth: '2rem',
+    textAlign: 'center',
+    fontSize: '0.75rem',
+    fontWeight: 500,
+    color: palette.text.secondary,
   }),
   optionList: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.125rem',
+    gap: '0.25rem',
+  },
+  optionRow: ({ palette }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    minHeight: '2.5rem',
+    padding: '0.25rem 0.5rem',
+    borderRadius: '0.375rem',
+    cursor: 'pointer',
+    transition: 'background-color 0.15s ease',
+    '&:hover': {
+      backgroundColor: palette.background.tabButton.hover,
+    },
+  }),
+  control: {
+    padding: 0,
+    pointerEvents: 'none',
   },
   optionLabel: {
     display: 'flex',
     flexDirection: 'column',
+    justifyContent: 'center',
   },
   optionTitle: ({ palette }) => ({
     fontSize: '0.8125rem',
@@ -309,16 +316,26 @@ const getStyles = () => ({
     fontWeight: 400,
     color: palette.text.secondary,
   }),
-  otherInput: ({ palette }) => ({
-    width: '100%',
+  inputRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem',
     marginTop: '0.25rem',
+  },
+  customInput: ({ palette }) => ({
+    flex: 1,
+    minWidth: 0,
     '& .MuiInputBase-root': {
-      padding: '0.5rem 0.625rem',
-      borderRadius: '0.375rem',
+      padding: '0.625rem 0.875rem',
+      borderRadius: '0.5rem',
       backgroundColor: palette.background.default,
       border: `0.0625rem solid ${palette.border?.lines || palette.divider}`,
       fontSize: '0.8125rem',
       color: palette.text.primary,
+      transition: 'border-color 0.15s ease',
+    },
+    '& .MuiInputBase-root:hover': {
+      borderColor: palette.text.secondary,
     },
     '& .MuiInputBase-root.Mui-focused': {
       borderColor: palette.primary.main,
@@ -327,15 +344,8 @@ const getStyles = () => ({
       border: 'none',
     },
   }),
-  actions: {
-    display: 'flex',
-    gap: '0.5rem',
-    alignItems: 'center',
-  },
-  buttonIcon: {
-    '& .MuiButton-startIcon': {
-      color: 'white',
-    },
+  actionBtn: {
+    flexShrink: 0,
   },
 });
 

@@ -4,13 +4,15 @@ import { useFormikContext } from 'formik';
 
 import { Box } from '@mui/material';
 
+import { useAvailableInternalTools } from '@/[fsd]/features/toolkits/lib/hooks';
+import { InternalToolsConstants } from '@/[fsd]/shared/lib/constants';
 import { useFormikAutoSaveOnBlur } from '@/[fsd]/shared/lib/hooks';
 import { PERMISSIONS } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
 import EnableToggleCard from '../project-context/EnableToggleCard';
 
-const AgentPipelineBuilder = memo(() => {
+const DefaultModulesSettings = memo(() => {
   const { checkPermission } = useCheckPermission();
   const canViewProjectContext = checkPermission(PERMISSIONS.projectContext.view);
   const canEditProjectContext = checkPermission(PERMISSIONS.projectContext.edit);
@@ -18,10 +20,12 @@ const AgentPipelineBuilder = memo(() => {
   const { values, setFieldValue } = useFormikContext();
   const { onBlur, requestSubmit } = useFormikAutoSaveOnBlur();
 
+  const availableTools = useAvailableInternalTools({ includeAgentOnly: false });
+
   const handleToggle = useCallback(
-    (event, checkedValue) => {
+    (fieldName, checkedValue) => {
       if (!canEditProjectContext) return;
-      setFieldValue('default_internal_mcp_enabled', checkedValue);
+      setFieldValue(fieldName, checkedValue);
       requestSubmit();
     },
     [canEditProjectContext, setFieldValue, requestSubmit],
@@ -38,28 +42,29 @@ const AgentPipelineBuilder = memo(() => {
       sx={styles.body}
       onBlur={onBlur}
     >
-      <EnableToggleCard
-        enabled={values.default_internal_mcp_enabled}
-        onToggle={handleToggle}
-        disabled={!canEditProjectContext}
-        title="Agent & Pipeline Builder"
-        description="Create and update agents and pipelines directly from chat."
-      />
+      {availableTools.map(tool => {
+        const fieldName = InternalToolsConstants.INTERNAL_TOOL_PERSONALIZATION_FIELD_MAP[tool.name];
+        if (!fieldName) return null;
+        return (
+          <EnableToggleCard
+            key={tool.name}
+            enabled={values[fieldName]}
+            onToggle={(event, checkedValue) => handleToggle(fieldName, checkedValue)}
+            disabled={!canEditProjectContext}
+            title={tool.title}
+            description={tool.infoTooltip?.text}
+          />
+        );
+      })}
     </Box>
   );
 });
 
-AgentPipelineBuilder.displayName = 'AgentPipelineBuilder';
-export default AgentPipelineBuilder;
+DefaultModulesSettings.displayName = 'DefaultModulesSettings';
+export default DefaultModulesSettings;
 
 /** @type {MuiSx} */
 const componentStyles = () => ({
-  loader: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: '100%',
-  },
   body: {
     flex: 1,
     overflow: 'auto',
