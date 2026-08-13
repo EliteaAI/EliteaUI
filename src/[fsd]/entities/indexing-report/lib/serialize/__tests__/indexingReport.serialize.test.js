@@ -5,7 +5,6 @@ import { normalizeIndexingReport } from '../indexingReport.serialize';
 const canonicalReport = (overrides = {}) => ({
   version: 1,
   status: 'ok',
-  operation: 'reindex',
   item_labels: { singular: 'page', plural: 'pages' },
   dependent_labels: { singular: 'attachment', plural: 'attachments' },
   totals: {
@@ -279,6 +278,45 @@ describe('normalizeIndexingReport with pre-report rows', () => {
     const report = normalizeIndexingReport({ ...entry, skipped: JSON.stringify(legacySkipped) });
 
     expect(report.totals.unchanged).toBe(12);
+  });
+
+  it('derives a missing total without counting unchanged items twice', () => {
+    // metadata.indexed is unchanged-inclusive, so it already stands in for
+    // indexed + unchanged; only the left-out categories are added to it.
+    const report = normalizeIndexingReport({
+      indexed: 191,
+      state: 'completed',
+      skipped: {
+        documents_skipped: { filtered: ['x.tmp'], filtered_count: 10 },
+        documents_already_indexed: { count: 12, items: [] },
+      },
+    });
+
+    expect(report.totals.indexed).toBe(179);
+    expect(report.totals.unchanged).toBe(12);
+    expect(report.totals.skipped).toBe(10);
+    expect(report.totals.total).toBe(201);
+    expect(report.totals.total).toBe(
+      report.totals.indexed +
+        report.totals.skipped +
+        report.totals.notIndexed +
+        report.totals.failed +
+        report.totals.unchanged,
+    );
+  });
+
+  it('reports dependent items with no content as skipped, not failed', () => {
+    const report = normalizeIndexingReport({
+      indexed: 5,
+      total: 6,
+      state: 'completed',
+      skipped: { dependent_items_empty: { count: 2, items: ['a.txt', 'b.txt'] } },
+    });
+
+    const skipped = categoryOf(report, 'skipped');
+    expect(skipped.groups.some(group => group.reason === 'empty' && group.dependent)).toBe(true);
+    expect(skipped.count).toBe(0);
+    expect(report.totals.dependentNotIndexed).toBe(2);
   });
 
   it('degrades to the bare count when no breakdown was ever recorded', () => {

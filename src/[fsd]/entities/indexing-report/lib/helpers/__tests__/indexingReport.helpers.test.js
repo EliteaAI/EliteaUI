@@ -9,7 +9,6 @@ import {
 
 const report = (overrides = {}) => ({
   status: 'ok',
-  operation: 'reindex',
   item_labels: { singular: 'page', plural: 'pages' },
   dependent_labels: { singular: 'attachment', plural: 'attachments' },
   totals: {

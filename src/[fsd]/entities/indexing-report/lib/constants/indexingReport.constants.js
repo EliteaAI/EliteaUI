@@ -118,6 +118,12 @@ export const LEGACY_DEPENDENT_GROUPS = [
     section: 'dependent_items_unsupported',
   },
   {
+    kind: IndexingReportKind.skipped,
+    reason: 'empty',
+    label: 'Contained no indexable content',
+    section: 'dependent_items_empty',
+  },
+  {
     kind: IndexingReportKind.failed,
     reason: 'processing_error',
     label: 'Could not be processed',

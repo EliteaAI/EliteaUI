@@ -32,7 +32,7 @@ const countOf = value => Number(value) || 0;
 export const isUpToDateRun = totals =>
   countOf(totals?.indexed) === 0 && countOf(totals?.failed) === 0 && countOf(totals?.unchanged) > 0;
 
-const buildGroup = ({ reason, label, count, items = [], dependent = false, itemLabels }) => {
+const buildGroup = ({ reason, label, count, items = [], dependent = false, counted = true, itemLabels }) => {
   const shown = items.slice(0, ITEMS_SAMPLE_SIZE);
   return {
     reason,
@@ -42,6 +42,8 @@ const buildGroup = ({ reason, label, count, items = [], dependent = false, itemL
     // A group whose names were never recorded is fully described by its count.
     more: shown.length ? Math.max(0, count - shown.length) : 0,
     dependent,
+    // Where a category has groups, its count is the sum of the counted ones.
+    counted,
     itemLabels: itemLabels || null,
   };
 };
@@ -59,6 +61,7 @@ const normalizeCategories = (categories, dependentLabels) =>
           count: countOf(group.count),
           items: group.items || [],
           dependent: Boolean(group.dependent),
+          counted: group.counted !== false,
           itemLabels: group.dependent ? labelsOf(group.item_labels, dependentLabels) : group.item_labels,
         }),
       ),
@@ -93,7 +96,6 @@ const fromCanonicalReport = (report, entry) => {
 
   return {
     status: report.status || IndexingReportStatus.ok,
-    operation: report.operation || null,
     itemLabels,
     dependentLabels,
     totals: carriedTotals,
@@ -141,6 +143,7 @@ const legacyGroupsFor = (kind, skipped, dependentLabels) => {
       count: countOf(section.count),
       items: section.items || [],
       dependent: true,
+      counted: false,
       itemLabels: dependentLabels,
     });
   });
@@ -170,30 +173,36 @@ const fromLegacyEntry = entry => {
           label: 'Already indexed (unchanged)',
           count: unchanged,
           items: skipped?.documents_already_indexed?.items || [],
+          counted: false,
         }),
       );
     }
     return {
       kind,
-      count: groups
-        .filter(group => !group.dependent && group.reason !== 'unchanged')
-        .reduce((sum, group) => sum + group.count, 0),
+      count: groups.filter(group => group.counted).reduce((sum, group) => sum + group.count, 0),
       groups,
     };
   });
 
+  const countOfKind = kind => categories.find(category => category.kind === kind).count;
+  const skippedCount = countOfKind(IndexingReportKind.skipped);
+  const notIndexedCount = countOfKind(IndexingReportKind.notIndexed);
+  const failedCount = countOfKind(IndexingReportKind.failed);
+
   const totals = {
     indexed: runIndexed,
-    skipped: categories.find(category => category.kind === IndexingReportKind.skipped).count,
-    notIndexed: categories.find(category => category.kind === IndexingReportKind.notIndexed).count,
-    failed: categories.find(category => category.kind === IndexingReportKind.failed).count,
+    skipped: skippedCount,
+    notIndexed: notIndexedCount,
+    failed: failedCount,
     unchanged,
     dependentNotIndexed: categories.reduce(
       (sum, category) =>
         sum + category.groups.filter(group => group.dependent).reduce((n, group) => n + group.count, 0),
       0,
     ),
-    total: countOf(entry?.total) || persistedIndexed + unchanged,
+    // persistedIndexed already counts unchanged items, so it stands in for
+    // indexed + unchanged in the totals contract.
+    total: countOf(entry?.total) || persistedIndexed + skippedCount + notIndexedCount + failedCount,
   };
 
   const error = (entry?.error || '').trim();
@@ -201,7 +210,6 @@ const fromLegacyEntry = entry => {
 
   return {
     status: isFailed ? IndexingReportStatus.error : IndexingReportStatus.ok,
-    operation: null,
     itemLabels,
     dependentLabels,
     totals,
