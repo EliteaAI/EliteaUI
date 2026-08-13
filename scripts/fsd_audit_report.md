@@ -58,12 +58,12 @@ A layer may **only** import from layers **below** it.
 | --------------------------------- | --------------------------------------------------- | ------------------------------- |
 | `features/skill/api/skillsApi.js` | `from '@/[fsd]/features/skill-hub/api/skillHubApi'` | `skill` → `skill-hub` internals |
 
-### 1.3 External Barrel Bypasses (77)
+### 1.3 External Barrel Bypasses (73)
 
 Imports that reach directly into another slice's `ui/`, `lib/`, `model/`, or `api/` instead of importing from
 its `index.js`.
 
-#### `app/` → slice internals (4)
+#### `app/` → slice internals (4) ✓
 
 | File                         | Import                                                             |
 | ---------------------------- | ------------------------------------------------------------------ |
@@ -401,10 +401,10 @@ Should be `kebab-case`:
 | `shared/lib/`        |
 | `stories/shared/`    |
 
-### 4.8 Missing Barrel Files — Segment Level (47)
+### 4.8 Missing Barrel Files — Segment Level (45)
 
 <details>
-<summary>Click to expand full list (47 directories missing index.js)</summary>
+<summary>Click to expand full list (45 directories missing index.js)</summary>
 
 | Directory                                      |
 | ---------------------------------------------- |
@@ -413,7 +413,7 @@ Should be `kebab-case`:
 | `entities/empty-state-page/ui/`                |
 | `entities/generate-entity-with-ai/ui/`         |
 | `entities/import-wizard/lib/`                  |
-| `entities/import-wizard/model/`                |
+| ~~`entities/import-wizard/model/`~~ ✓          |
 | `entities/notifications/lib/`                  |
 | `entities/version/lib/`                        |
 | `features/agent-hub/lib/`                      |
@@ -429,7 +429,7 @@ Should be `kebab-case`:
 | `features/chat/voice-config/ui/`               |
 | `features/credentials/lib/`                    |
 | `features/interactive-tours/lib/`              |
-| `features/interactive-tours/ui/`               |
+| ~~`features/interactive-tours/ui/`~~ ✓         |
 | `features/maintenance/lib/`                    |
 | `features/mcp/lib/`                            |
 | `features/onboarding/lib/`                     |
@@ -648,3 +648,46 @@ from the canonical location — no dead barrels.
 (e.g., `TAG_TYPE_SKILLS`, `TAG_TYPE_AGENTS_WITH_SKILL`) remain in their respective slices per FSD principles.
 
 **Build verification:** `npm run build` passed with no errors (45.10s).
+
+### 2026-08-13 — Session 4
+
+**Scope:** Section 1.3 — External Barrel Bypasses, `app/` → slice internals (4 violations resolved).
+
+**Fix strategy:** Create missing segment-level barrels, update imports to use slice main barrels.
+
+#### Fix #1: `app/root.jsx` → `features/mcp/lib/helpers/mcpAuth.helpers` (1 violation)
+
+- **Updated** `app/root.jsx` — changed import from direct file path to namespace import
+  `{ McpAuthHelpers } from '@/[fsd]/features/mcp'`
+- **Updated** call site to `McpAuthHelpers.startTokenRefreshScheduler()`
+- No barrel changes needed — `McpAuthHelpers` was already exported via `export * as McpAuthHelpers`
+
+#### Fix #2: `app/layout/AppLayout.jsx` → `features/interactive-tours/ui/InteractiveTourRoot` (1 violation)
+
+- **Created** `features/interactive-tours/ui/index.js` barrel — exports `InteractiveTourRoot`
+- **Updated** `features/interactive-tours/index.js` — added `export * from './ui'`
+- **Updated** `app/layout/AppLayout.jsx` — consolidated imports to
+  `{ useInteractiveTourController, InteractiveTourRoot } from '@/[fsd]/features/interactive-tours'`
+
+**Note:** This also resolves one item from Section 4.8 (Missing Barrel Files — Segment Level):
+`features/interactive-tours/ui/` now has `index.js`.
+
+#### Fix #3: `shared/config/store.js` → `entities/import-wizard/model/importWizard.slice` (1 violation)
+
+- **Created** `entities/import-wizard/model/index.js` barrel — exports `importWizardReducer`,
+  `importWizardReducerName`, `importWizardActions`
+- **Updated** `entities/import-wizard/index.js` — added `export * from './model'`
+- **Updated** `shared/config/store.js` — changed import to
+  `{ importWizardReducer, importWizardReducerName } from '@/[fsd]/entities/import-wizard'`
+
+**Note:** This also resolves one item from Section 4.8 (Missing Barrel Files — Segment Level):
+`entities/import-wizard/model/` now has `index.js`.
+
+#### Fix #4: `app/layout/MainSidebar.jsx` → `entities/import-wizard/model/importWizard.slice` (1 violation)
+
+- **Updated** `app/layout/MainSidebar.jsx` — changed import to
+  `{ importWizardActions } from '@/[fsd]/entities/import-wizard'`
+
+**Skipped:** None.
+
+**Build verification:** `npm run build` passed with no errors (47.35s).
