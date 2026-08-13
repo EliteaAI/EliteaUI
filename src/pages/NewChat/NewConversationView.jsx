@@ -681,6 +681,7 @@ const NewConversationView = forwardRef(
         isSending: true,
         hasAttachments: attachments?.length > 0,
       };
+      const pendingFolderId = activeConversationRef.current?.folder_id || null;
       await onCreateConversation(
         newConversation,
         async (createdConversation, onComplete) => {
@@ -821,6 +822,7 @@ const NewConversationView = forwardRef(
           }
         },
         true,
+        pendingFolderId,
       );
     };
 

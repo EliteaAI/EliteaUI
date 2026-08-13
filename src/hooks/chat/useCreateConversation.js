@@ -4,7 +4,11 @@ import { useTrackEvent } from '@/GA';
 import { sortConversations } from '@/[fsd]/features/chat/conversation-list/lib/helpers';
 import { useConversationNavigation } from '@/[fsd]/features/chat/lib/hooks';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
-import { useConversationCreateMutation, useSelectConversationMutation } from '@/api';
+import {
+  useConversationCreateMutation,
+  useConversationEditMutation,
+  useSelectConversationMutation,
+} from '@/api';
 import { DefaultConversationName, dummyConversation } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -16,6 +20,7 @@ export default function useCreateConversation({
   conversations,
   setActiveConversation,
   setConversations,
+  setFolders,
   emitEnterRoom,
   emitLeaveRoom,
   toastError,
@@ -32,11 +37,12 @@ export default function useCreateConversation({
   const [pendingEnterRoomEvent, setPendingEnterRoomEvent] = useState();
   const [createConversation, { isError: isCreateError, error: createError }] =
     useConversationCreateMutation();
+  const [editConversation] = useConversationEditMutation();
   const [selectConversation, { isError: isSelectConversationError, error: selectConversationError }] =
     useSelectConversationMutation();
 
   const onCreateConversation = useCallback(
-    async (newConversation, onCreatedCallback, shouldSetActiveAfterCallback) => {
+    async (newConversation, onCreatedCallback, shouldSetActiveAfterCallback, folderId = null) => {
       if (activeConversation?.id && activeConversation?.uuid && !activeConversation?.isPlayback) {
         stopListenCanvasEditorsChangeEvent();
         stopListenCanvasContentChangeEvent();
@@ -58,7 +64,23 @@ export default function useCreateConversation({
           attachment_participant_id: prev.attachment_participant_id,
         }),
       }));
-      setConversations(prev => [pendingConversation, ...prev.filter(c => !c.isNew)]);
+      if (folderId && setFolders) {
+        setFolders(prev =>
+          prev.map(folder =>
+            folder.id === folderId
+              ? {
+                  ...folder,
+                  conversations: sortConversations([
+                    pendingConversation,
+                    ...(folder.conversations || []).filter(c => !c.isNew),
+                  ]),
+                }
+              : folder,
+          ),
+        );
+      } else {
+        setConversations(prev => [pendingConversation, ...prev.filter(c => !c.isNew)]);
+      }
 
       const result = await createConversation({
         is_private: newConversation.is_private,
@@ -101,6 +123,7 @@ export default function useCreateConversation({
               : prev.participants || [],
             // Only keep isNamingPending if server returned the default name (meaning it's still generating a real name)
             isNamingPending: result.data.name === DefaultConversationName,
+            ...(folderId && { folder_id: folderId }),
             ...(prev?.attachment_participant_id && {
               attachment_participant_id: prev.attachment_participant_id,
             }),
@@ -113,12 +136,29 @@ export default function useCreateConversation({
             isNamingPending: result.data.name === DefaultConversationName,
           };
 
-          const sortedData = sortConversations([
-            ...conversations.filter(item => !item.isNew),
-            conversationWithTimestamp,
-          ]);
+          if (folderId && setFolders) {
+            await editConversation({ projectId, id: result.data.id, folder_id: folderId });
+            setFolders(prev =>
+              prev.map(folder =>
+                folder.id === folderId
+                  ? {
+                      ...folder,
+                      conversations: sortConversations([
+                        { ...conversationWithTimestamp, folder_id: folderId },
+                        ...(folder.conversations || []).filter(c => !c.isNew),
+                      ]),
+                    }
+                  : folder,
+              ),
+            );
+          } else {
+            const sortedData = sortConversations([
+              ...conversations.filter(item => !item.isNew),
+              conversationWithTimestamp,
+            ]);
+            setConversations(sortedData);
+          }
 
-          setConversations(sortedData);
           onCreatedCallback && onCreatedCallback(result.data);
           selectConversation({
             projectId,
@@ -126,7 +166,7 @@ export default function useCreateConversation({
           });
         } else {
           onCreatedCallback &&
-            onCreatedCallback(result.data, participants => {
+            onCreatedCallback(result.data, async participants => {
               if (
                 !emitEnterRoom({
                   conversation_id: result.data.id,
@@ -153,6 +193,7 @@ export default function useCreateConversation({
               };
               setActiveConversation(prev => ({
                 ...updatedConversation,
+                ...(folderId && { folder_id: folderId }),
                 ...(prev?.attachment_participant_id && {
                   attachment_participant_id: prev.attachment_participant_id,
                 }),
@@ -162,12 +203,29 @@ export default function useCreateConversation({
                 ...updatedConversation,
                 updated_at: result.data.updated_at || new Date().toISOString(),
               };
-              const sortedData = sortConversations([
-                ...conversations.filter(item => !item.isNew),
-                conversationWithTimestamp,
-              ]);
 
-              setConversations(sortedData);
+              if (folderId && setFolders) {
+                await editConversation({ projectId, id: result.data.id, folder_id: folderId });
+                setFolders(prev =>
+                  prev.map(folder =>
+                    folder.id === folderId
+                      ? {
+                          ...folder,
+                          conversations: sortConversations([
+                            { ...conversationWithTimestamp, folder_id: folderId },
+                            ...(folder.conversations || []).filter(c => !c.isNew),
+                          ]),
+                        }
+                      : folder,
+                  ),
+                );
+              } else {
+                const sortedData = sortConversations([
+                  ...conversations.filter(item => !item.isNew),
+                  conversationWithTimestamp,
+                ]);
+                setConversations(sortedData);
+              }
               selectConversation({
                 projectId,
                 conversationId: result.data.id,
@@ -176,7 +234,17 @@ export default function useCreateConversation({
         }
       } else {
         setActiveConversation(dummyConversation);
-        setConversations(prev => prev.filter(item => !item.isNew));
+        if (folderId && setFolders) {
+          setFolders(prev =>
+            prev.map(folder =>
+              folder.id === folderId
+                ? { ...folder, conversations: (folder.conversations || []).filter(c => !c.isNew) }
+                : folder,
+            ),
+          );
+        } else {
+          setConversations(prev => prev.filter(item => !item.isNew));
+        }
         onCreatedCallback && onCreatedCallback();
       }
     },
@@ -187,11 +255,13 @@ export default function useCreateConversation({
       changeUrlByConversation,
       conversations,
       createConversation,
+      editConversation,
       emitEnterRoom,
       emitLeaveRoom,
       projectId,
       setActiveConversation,
       setConversations,
+      setFolders,
       selectConversation,
       listenCanvasEditorsChangeEvent,
       stopListenCanvasEditorsChangeEvent,
@@ -204,9 +274,17 @@ export default function useCreateConversation({
   const onCancelCreateConversation = useCallback(() => {
     setActiveConversation(dummyConversation);
     setConversations(prev => prev.filter(item => !item.isNew));
+    if (setFolders) {
+      setFolders(prev =>
+        prev.map(folder => ({
+          ...folder,
+          conversations: (folder.conversations || []).filter(c => !c.isNew),
+        })),
+      );
+    }
     setActiveParticipant();
     resetCreateFlag();
-  }, [resetCreateFlag, setActiveConversation, setActiveParticipant, setConversations]);
+  }, [resetCreateFlag, setActiveConversation, setActiveParticipant, setConversations, setFolders]);
 
   useEffect(() => {
     if (isCreateError) {
