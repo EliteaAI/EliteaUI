@@ -1,7 +1,6 @@
 import { memo } from 'react';
 
-import AIProvidersContent from '@/[fsd]/features/settings/ui/ai-providers/AIProvidersContent';
-import { DrawerPage } from '@/[fsd]/features/settings/ui/drawer-page';
+import { AIProvidersContent, DrawerPage } from '@/[fsd]/features/settings';
 
 const AIProviders = memo(() => {
   return (

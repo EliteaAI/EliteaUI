@@ -4,9 +4,8 @@ import { useLocation, useSearchParams } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
-import { USERS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
-import { DrawerPage, DrawerPageHeader } from '@/[fsd]/features/settings/ui/drawer-page';
-import { DeleteUserButton, EditUsersButton, UsersTable } from '@/[fsd]/features/settings/ui/users';
+import { USERS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
+import { DeleteUserButton, DrawerPage, DrawerPageHeader, EditUsersButton, UsersTable } from '@/[fsd]/features/settings';
 import { useRoleListQuery, useUserCreateMutation, useUserListQuery } from '@/api/admin';
 import { PERMISSIONS } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
