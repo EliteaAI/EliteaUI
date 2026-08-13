@@ -1,7 +1,8 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
+import { normalizeIndexingReport } from '@/[fsd]/entities/indexing-report';
 import { formatDate } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
 import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
 import { Button } from '@/[fsd]/shared/ui';
@@ -15,6 +16,21 @@ import EntityIcon from '@/components/EntityIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
 import IndexStatItem from './IndexStatItem';
+
+const capitalize = word => word.charAt(0).toUpperCase() + word.slice(1);
+
+const summarizeRun = entry => {
+  const report = normalizeIndexingReport(entry);
+  if (!report) return { itemsLabel: 'Files', indexed: null, skipped: 0 };
+  const { indexed, unchanged, skipped, notIndexed, failed } = report.totals;
+  return {
+    itemsLabel: capitalize(report.itemLabels.plural),
+    // Both numbers keep the meaning they have always had here: everything the store
+    // holds, and everything left out of it. Unchanged items were not left out.
+    indexed: indexed + unchanged,
+    skipped: skipped - unchanged + notIndexed + failed,
+  };
+};
 
 const RunIndexGeneralSection = memo(props => {
   const {
@@ -33,6 +49,9 @@ const RunIndexGeneralSection = memo(props => {
   const styles = runIndexGeneralSectionStyles();
   const { isPrivate } = useProjectType();
   const { checkPermission } = useCheckPermission();
+
+  const firstRun = useMemo(() => summarizeRun(reindexStats.firstEntry), [reindexStats.firstEntry]);
+  const latestRun = useMemo(() => summarizeRun(reindexStats.latestEntry), [reindexStats.latestEntry]);
 
   const canDeleteIndex = isPrivate || checkPermission(PERMISSIONS.index.delete);
 
@@ -66,14 +85,14 @@ const RunIndexGeneralSection = memo(props => {
           />
           <IndexStatItem
             icon={FileIcon}
-            label="Files indexed"
-            value={reindexStats.firstIndexed ?? index?.metadata?.indexed ?? index?.metadata?.total}
+            label={`${firstRun.itemsLabel} indexed`}
+            value={firstRun.indexed ?? index?.metadata?.indexed ?? index?.metadata?.total}
             styles={styles}
           />
           <IndexStatItem
             icon={UnavailableIcon}
-            label="Files skipped"
-            value={reindexStats.firstSkipped > 0 ? reindexStats.firstSkipped : 0}
+            label={`${firstRun.itemsLabel} skipped`}
+            value={firstRun.skipped}
             styles={styles}
           />
         </Box>
@@ -85,18 +104,18 @@ const RunIndexGeneralSection = memo(props => {
               value={formatDate(reindexStats.updatedOn)}
               styles={styles}
             />
-            {reindexStats.updated !== null && (
+            {latestRun.indexed !== null && (
               <IndexStatItem
                 icon={IndexingIcon}
-                label="Files reindexed"
-                value={reindexStats.updated}
+                label={`${latestRun.itemsLabel} reindexed`}
+                value={latestRun.indexed}
                 styles={styles}
               />
             )}
             <IndexStatItem
               icon={UnavailableIcon}
-              label="Files skipped"
-              value={reindexStats.skipped}
+              label={`${latestRun.itemsLabel} skipped`}
+              value={latestRun.skipped}
               styles={styles}
             />
           </Box>

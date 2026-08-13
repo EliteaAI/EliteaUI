@@ -9,6 +9,9 @@ export { default as IndexChatContainer } from './index-details/IndexChat';
 export { default as IndexListItem } from './index-list/IndexListItem';
 export { default as IndexesList } from './index-list';
 
+// Run History
+export { default as IndexRunDetail } from './run-history/IndexRunDetail';
+
 // Breadcrumb
 export { default as IndexBreadcrumb } from './IndexBreadcrumb';
 
