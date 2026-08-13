@@ -41,6 +41,19 @@ export default function useCreateConversation({
   const [selectConversation, { isError: isSelectConversationError, error: selectConversationError }] =
     useSelectConversationMutation();
 
+  const updateFolderConversations = useCallback(
+    (folderId, getNextConversations) => {
+      setFolders(prev =>
+        prev.map(folder =>
+          folder.id === folderId
+            ? { ...folder, conversations: getNextConversations(folder.conversations || []) }
+            : folder,
+        ),
+      );
+    },
+    [setFolders],
+  );
+
   const onCreateConversation = useCallback(
     async (newConversation, onCreatedCallback, shouldSetActiveAfterCallback, folderId = null) => {
       if (activeConversation?.id && activeConversation?.uuid && !activeConversation?.isPlayback) {
@@ -65,18 +78,8 @@ export default function useCreateConversation({
         }),
       }));
       if (folderId && setFolders) {
-        setFolders(prev =>
-          prev.map(folder =>
-            folder.id === folderId
-              ? {
-                  ...folder,
-                  conversations: sortConversations([
-                    pendingConversation,
-                    ...(folder.conversations || []).filter(c => !c.isNew),
-                  ]),
-                }
-              : folder,
-          ),
+        updateFolderConversations(folderId, prev =>
+          sortConversations([pendingConversation, ...prev.filter(c => !c.isNew)]),
         );
       } else {
         setConversations(prev => [pendingConversation, ...prev.filter(c => !c.isNew)]);
@@ -137,20 +140,18 @@ export default function useCreateConversation({
           };
 
           if (folderId && setFolders) {
-            await editConversation({ projectId, id: result.data.id, folder_id: folderId });
-            setFolders(prev =>
-              prev.map(folder =>
-                folder.id === folderId
-                  ? {
-                      ...folder,
-                      conversations: sortConversations([
-                        { ...conversationWithTimestamp, folder_id: folderId },
-                        ...(folder.conversations || []).filter(c => !c.isNew),
-                      ]),
-                    }
-                  : folder,
-              ),
-            );
+            const editResult = await editConversation({ projectId, id: result.data.id, folder_id: folderId });
+            if (editResult.error) {
+              toastError(buildErrorMessage(editResult.error));
+              updateFolderConversations(folderId, prev => prev.filter(c => !c.isNew));
+            } else {
+              updateFolderConversations(folderId, prev =>
+                sortConversations([
+                  { ...conversationWithTimestamp, folder_id: folderId },
+                  ...prev.filter(c => !c.isNew),
+                ]),
+              );
+            }
           } else {
             const sortedData = sortConversations([
               ...conversations.filter(item => !item.isNew),
@@ -205,20 +206,22 @@ export default function useCreateConversation({
               };
 
               if (folderId && setFolders) {
-                await editConversation({ projectId, id: result.data.id, folder_id: folderId });
-                setFolders(prev =>
-                  prev.map(folder =>
-                    folder.id === folderId
-                      ? {
-                          ...folder,
-                          conversations: sortConversations([
-                            { ...conversationWithTimestamp, folder_id: folderId },
-                            ...(folder.conversations || []).filter(c => !c.isNew),
-                          ]),
-                        }
-                      : folder,
-                  ),
-                );
+                const editResult = await editConversation({
+                  projectId,
+                  id: result.data.id,
+                  folder_id: folderId,
+                });
+                if (editResult.error) {
+                  toastError(buildErrorMessage(editResult.error));
+                  updateFolderConversations(folderId, prev => prev.filter(c => !c.isNew));
+                } else {
+                  updateFolderConversations(folderId, prev =>
+                    sortConversations([
+                      { ...conversationWithTimestamp, folder_id: folderId },
+                      ...prev.filter(c => !c.isNew),
+                    ]),
+                  );
+                }
               } else {
                 const sortedData = sortConversations([
                   ...conversations.filter(item => !item.isNew),
@@ -235,13 +238,7 @@ export default function useCreateConversation({
       } else {
         setActiveConversation(dummyConversation);
         if (folderId && setFolders) {
-          setFolders(prev =>
-            prev.map(folder =>
-              folder.id === folderId
-                ? { ...folder, conversations: (folder.conversations || []).filter(c => !c.isNew) }
-                : folder,
-            ),
-          );
+          updateFolderConversations(folderId, prev => prev.filter(c => !c.isNew));
         } else {
           setConversations(prev => prev.filter(item => !item.isNew));
         }
@@ -262,7 +259,9 @@ export default function useCreateConversation({
       setActiveConversation,
       setConversations,
       setFolders,
+      updateFolderConversations,
       selectConversation,
+      toastError,
       listenCanvasEditorsChangeEvent,
       stopListenCanvasEditorsChangeEvent,
       listenCanvasContentChangeEvent,

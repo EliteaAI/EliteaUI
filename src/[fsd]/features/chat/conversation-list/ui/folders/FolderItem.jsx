@@ -249,7 +249,6 @@ const FolderItem = memo(props => {
                 hasMore={!folder.exhausted && folder.conversations?.length < (folder.total || 0)}
                 onLoadMore={() => onLoadMoreInFolder?.(folder.id)}
                 isLoadingMore={isLoadingMoreInFolder}
-                onCreateConversationInFolder={onCreateConversationInFolder}
               />
             ),
           },
@@ -274,7 +273,6 @@ const FolderItem = memo(props => {
       styles.slotProps,
       onLoadMoreInFolder,
       isLoadingMoreInFolder,
-      onCreateConversationInFolder,
     ],
   );
 
