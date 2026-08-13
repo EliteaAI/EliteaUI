@@ -69,6 +69,7 @@ const Conversations = memo(props => {
     moveTargetConversationToNewFolder,
     cancelMovingTargetConversationToNewFolder,
     onClickCreateNewFolder,
+    onCreateConversationInFolder,
     enableDragAndDrop = true,
     toastSuccess,
     toastError,
@@ -503,6 +504,7 @@ const Conversations = memo(props => {
         isPinned={isPinned}
         onLoadMoreInFolder={onLoadMoreInFolder}
         loadingFolders={loadingFolders}
+        onCreateConversationInFolder={onCreateConversationInFolder}
       />
     ),
     [
@@ -529,6 +531,7 @@ const Conversations = memo(props => {
       isFolderOperationInProgress,
       onLoadMoreInFolder,
       loadingFolders,
+      onCreateConversationInFolder,
     ],
   );
 
