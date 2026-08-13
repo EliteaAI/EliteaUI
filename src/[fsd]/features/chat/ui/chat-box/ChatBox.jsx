@@ -179,6 +179,8 @@ const ChatBox = forwardRef((props, boxRef) => {
   // Map<serverUrl, { tool_name, resource_metadata_url, www_authenticate, resource_metadata }>
   // Resets automatically when the conversation changes — never written to localStorage.
   const sessionDeclinedMcpServersRef = useRef(new Map());
+  const lastSentQuestionRef = useRef('');
+  const stopRequestedRef = useRef(false);
 
   const dispatch = useDispatch();
   const { toastError, toastInfo } = useToast();
@@ -664,6 +666,16 @@ const ChatBox = forwardRef((props, boxRef) => {
   }, [stopStreaming]);
 
   useEffect(() => {
+    if (!isStreaming) {
+      if (stopRequestedRef.current && lastSentQuestionRef.current) {
+        chatInput.current?.setValue(lastSentQuestionRef.current);
+      }
+      lastSentQuestionRef.current = '';
+      stopRequestedRef.current = false;
+    }
+  }, [isStreaming]);
+
+  useEffect(() => {
     activeConversationRef.current = activeConversation;
   }, [activeConversation]);
 
@@ -691,6 +703,7 @@ const ChatBox = forwardRef((props, boxRef) => {
   }, [activeConversation?.uuid]);
 
   const handleStopStreaming = useCallback(() => {
+    stopRequestedRef.current = true;
     stopStreamingRef.current?.();
     onStopRun?.();
   }, [onStopRun]);
@@ -1012,6 +1025,7 @@ const ChatBox = forwardRef((props, boxRef) => {
           });
         }
 
+        lastSentQuestionRef.current = question;
         onClearAttachments?.();
         chatInput.current?.reset();
         // Handle participant state changes
@@ -1127,6 +1141,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       const theQuestion =
         chat_history[questionIndex]?.message_items?.find(item => item.item_type === 'text_message')
           ?.item_details?.content || '';
+      lastSentQuestionRef.current = theQuestion;
       const attachmentList =
         newAttachmentItems !== undefined
           ? newAttachmentItems.map(i => ({ filepath: i.item_details.filepath }))
