@@ -1,6 +1,6 @@
-import { memo, useCallback, useEffect, useRef } from 'react';
+import { memo, useCallback } from 'react';
 
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import { Box, CircularProgress } from '@mui/material';
 
@@ -8,15 +8,15 @@ import { useProjectContextQuery } from '@/api/projectContext';
 import { PERMISSIONS } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
+import RouteDefinitions from '@/routes';
 
-import ProjectContextEditor from './ProjectContextEditor';
 import ProjectContextEmptyState from './ProjectContextEmptyState';
 import ProjectContextSavedView from './ProjectContextSavedView';
 
 const ProjectContextContent = memo(() => {
   const projectId = useSelectedProjectId();
   const { checkPermission } = useCheckPermission();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   const canViewProjectContext = checkPermission(PERMISSIONS.projectContext.view);
   const canEditProjectContext = checkPermission(PERMISSIONS.projectContext.edit);
@@ -25,29 +25,20 @@ const ProjectContextContent = memo(() => {
     skip: !projectId || !canViewProjectContext,
   });
 
-  const view = searchParams.get('view'); // 'create' | 'edit' | null
-  const openAiModal = searchParams.get('openAi') === 'true';
-
-  // Reset URL params when switching projects
-  const prevProjectIdRef = useRef(projectId);
-  useEffect(() => {
-    if (prevProjectIdRef.current !== projectId) {
-      prevProjectIdRef.current = projectId;
-      setSearchParams({}, { replace: true });
-    }
-  }, [projectId, setSearchParams]);
-
   const handleNavigate = useCallback(
     (newState, options = {}) => {
       if (newState === 'create' || newState === 'edit') {
-        const params = { view: newState };
-        if (options.openAi) params.openAi = 'true';
-        setSearchParams(params);
+        const state = {};
+        if (options.openAi) state.openAi = true;
+        if (options.openAiEdit) state.openAiEdit = true;
+        navigate(RouteDefinitions.ProjectContextEdit, {
+          state: Object.keys(state).length ? state : undefined,
+        });
       } else {
-        setSearchParams({}, { replace: true });
+        navigate(RouteDefinitions.ProjectContext);
       }
     },
-    [setSearchParams],
+    [navigate],
   );
 
   const styles = getStyles();
@@ -63,21 +54,6 @@ const ProjectContextContent = memo(() => {
   if (!canViewProjectContext) return null;
 
   const hasContent = Boolean(serverData?.content?.trim());
-
-  if (view === 'create' || view === 'edit') {
-    return (
-      <Box sx={styles.root}>
-        <ProjectContextEditor
-          serverData={serverData}
-          projectId={projectId}
-          isCreate={view === 'create'}
-          canEdit={canEditProjectContext}
-          openAiModal={openAiModal}
-          onNavigate={handleNavigate}
-        />
-      </Box>
-    );
-  }
 
   if (hasContent) {
     return (

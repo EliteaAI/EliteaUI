@@ -155,7 +155,8 @@ const Settings = memo(() => {
 
   const user = useSelector(state => state.user);
 
-  const tab = VALID_TAB_IDS.find(id => pathname === `${RouteDefinitions.Settings}/${id}`) ?? DEFAULT_TAB;
+  const tab =
+    VALID_TAB_IDS.find(id => pathname.startsWith(`${RouteDefinitions.Settings}/${id}`)) ?? DEFAULT_TAB;
 
   const { checkPermission } = useCheckPermission();
   const { data: platformSettings } = useGetPlatformSettingsQuery();
