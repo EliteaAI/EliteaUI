@@ -513,6 +513,7 @@ const ConversationItem = memo(props => {
         <Tooltip
           title={isConversationNameValid ? '' : ConversationNameWarningMessage}
           placement="top"
+          slotProps={{ popper: { 'data-testid': 'chat-conversation-name-confirm-tooltip-content' } }}
         >
           <Box
             data-testid="chat-conversation-name-confirm-button"
