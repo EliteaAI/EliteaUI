@@ -137,11 +137,17 @@ export const buildToolkitAuthorizationDecline = action => {
   };
 };
 
-export const getToolkitAuthorizationContext = (action, participantName = '') => {
+export const getToolkitAuthorizationContext = action => {
   const metadata = action?.toolMeta || {};
   const resourceName = metadata?.resource_metadata?.resource_name;
   const toolkitName =
-    metadata.toolkit_name || action?.toolOutputs?.toolkit_name || resourceName || action?.name || 'Toolkit';
+    metadata.toolkit_name ||
+    action?.toolOutputs?.toolkit_name ||
+    metadata.toolkit_type ||
+    action?.toolOutputs?.toolkit_type ||
+    resourceName ||
+    action?.name ||
+    'Toolkit';
   const rawType = String(metadata.toolkit_type || action?.toolOutputs?.toolkit_type || resourceName || '');
   const normalizedType = rawType.toLowerCase();
   const toolkitType = normalizedType.includes('sharepoint')
@@ -153,7 +159,7 @@ export const getToolkitAuthorizationContext = (action, participantName = '') => 
         : rawType;
   const hierarchy = normalizeExecutionHierarchy(action, metadata?.metadata, metadata);
   const path = hierarchy.parent_agent_path || [];
-  const originatorName = path.at(-1)?.name || hierarchy.parent_agent_name || participantName || '';
+  const originatorName = path.at(-1)?.name || hierarchy.parent_agent_name || '';
   const authorizationServers = getAuthorizationServers(metadata);
   const rawScopes = metadata?.resource_metadata?.scopes_supported || metadata?.scopes || [];
   const scopes = Array.isArray(rawScopes) ? rawScopes : rawScopes ? [rawScopes] : [];
@@ -172,12 +178,7 @@ export const getToolkitAuthorizationContext = (action, participantName = '') => 
 
 export const buildToolkitAuthorizationMessage = (context, fallbackMessage = DEFAULT_AUTH_MESSAGE) => {
   if (!context) return fallbackMessage;
-  const normalizedName = String(context.toolkitName || '').toLowerCase();
-  const normalizedType = String(context.toolkitType || '').toLowerCase();
-  const typeLabel =
-    context.toolkitType && !normalizedName.includes(normalizedType) ? ` (${context.toolkitType})` : '';
-  const originLabel = context.originatorName ? ` via agent "${context.originatorName}"` : '';
-  return `Authorization is required for toolkit "${context.toolkitName}"${typeLabel}${originLabel}. Authorize now or skip it for this run?`;
+  return `Authorization is required for toolkit "${context.toolkitName}". Authorize now or skip it for this run?`;
 };
 
 /**

@@ -104,7 +104,7 @@ describe('toolkit authorization helpers', () => {
     });
 
     expect(buildToolkitAuthorizationMessage(getToolkitAuthorizationContext(action, 'fallback-agent'))).toBe(
-      'Authorization is required for toolkit "team-documents" (SharePoint) via agent "Researcher". Authorize now or skip it for this run?',
+      'Authorization is required for toolkit "team-documents". Authorize now or skip it for this run?',
     );
   });
 
@@ -138,6 +138,15 @@ describe('toolkit authorization helpers', () => {
     });
 
     const grouped = groupToolkitAuthorizationActions([direct, nested], [direct, nested]);
+
+    expect(getToolkitAuthorizationContext(direct, 'root-agent')).toMatchObject({
+      toolkitName: 'direct-toolkit',
+      originatorName: '',
+      originatorPath: [],
+    });
+    expect(buildToolkitAuthorizationMessage(getToolkitAuthorizationContext(direct, 'root-agent'))).toBe(
+      'Authorization is required for toolkit "direct-toolkit". Authorize now or skip it for this run?',
+    );
 
     expect(grouped.coordinator).toEqual([direct]);
     expect(grouped.subAgents).toHaveLength(1);

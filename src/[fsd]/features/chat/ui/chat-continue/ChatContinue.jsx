@@ -20,7 +20,6 @@ const ChatContinue = memo(props => {
     disabled,
     message,
     authRequiredAction,
-    participantName,
     continueLabel = 'Continue',
   } = props;
   const styles = getStyles();
@@ -36,8 +35,8 @@ const ChatContinue = memo(props => {
     [authRequiredAction],
   );
   const authorizationContext = useMemo(
-    () => (authRequiredAction ? getToolkitAuthorizationContext(authRequiredAction, participantName) : null),
-    [authRequiredAction, participantName],
+    () => (authRequiredAction ? getToolkitAuthorizationContext(authRequiredAction) : null),
+    [authRequiredAction],
   );
   const authorizationMessage = useMemo(
     () => buildToolkitAuthorizationMessage(authorizationContext, message),

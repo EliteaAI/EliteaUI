@@ -176,11 +176,10 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
         onContinue={() => onContinueWithoutAuth(authRequiredAction)}
         onAuthSuccess={() => onAuthSuccess(authRequiredAction)}
         authRequiredAction={authRequiredAction}
-        participantName={participantName}
         continueLabel="Skip"
       />
     ),
-    [onAuthSuccess, onContinueMcpExecution, onContinueWithoutAuth, participantName],
+    [onAuthSuccess, onContinueMcpExecution, onContinueWithoutAuth],
   );
 
   const onContinueWithConfirmation = useCallback(() => {
