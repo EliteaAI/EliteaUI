@@ -23,6 +23,7 @@ import {
 } from '@/[fsd]/features/chat/lib/helpers/executionHierarchy.helpers.js';
 import {
   getHitlResumeGroup,
+  getHitlResumeThreadId,
   getInterruptIdentity,
   getPendingHitlMessage,
 } from '@/[fsd]/features/chat/lib/helpers/hitl.helpers.js';
@@ -1421,7 +1422,11 @@ const ChatBox = forwardRef((props, boxRef) => {
       // Track 2 fan-out child: each paused child carries its OWN thread_id and
       // resumes INDEPENDENTLY — emit immediately on that child's thread while
       // siblings keep running, instead of batching until every card is decided.
-      const childThreadId = decidedEntry?.thread_id || decidedEntry?.child_thread_id || '';
+      // ``child_thread_id`` is the durable worker route backed by Core's Redis
+      // launch stash. ``thread_id`` may identify a deeper in-process LangGraph
+      // leaf and must stay inside the per-leaf decision, not become the socket
+      // resume route.
+      const childThreadId = getHitlResumeThreadId(decidedEntry);
       const isFanoutChild = Boolean(childThreadId);
       const resumeGroup = getHitlResumeGroup(interrupts, decidedEntry);
 
@@ -1452,7 +1457,8 @@ const ChatBox = forwardRef((props, boxRef) => {
         const decisionIdentity = getInterruptIdentity(decidedEntry);
         pendingDecisionsRef.current.decisions[decisionIdentity] = {
           ...(decidedEntry?.interrupt_id ? { interrupt_id: decidedEntry.interrupt_id } : {}),
-          thread_id: childThreadId,
+          ...(decidedEntry?.thread_id ? { thread_id: decidedEntry.thread_id } : {}),
+          ...(decidedEntry?.child_thread_id ? { child_thread_id: decidedEntry.child_thread_id } : {}),
           tool_call_id: toolCallId,
           action,
           value: value ?? '',
@@ -1464,6 +1470,7 @@ const ChatBox = forwardRef((props, boxRef) => {
               ? msg
               : {
                   ...msg,
+                  exception: undefined,
                   hitlInterrupts: msg.hitlInterrupts.map(entry =>
                     getInterruptIdentity(entry) === decisionIdentity ? { ...entry, decided: true } : entry,
                   ),
@@ -1494,26 +1501,9 @@ const ChatBox = forwardRef((props, boxRef) => {
           delete pendingDecisionsRef.current.decisions[identity];
         });
 
-        // Remove the resumed child's card in place (do NOT blank the message).
-        setChatHistory(prevMessages =>
-          prevMessages.map(msg => {
-            if (msg.id !== lastMessage.id || !Array.isArray(msg.hitlInterrupts)) {
-              return msg;
-            }
-            const remaining = msg.hitlInterrupts.filter(
-              entry => !resumeIdentities.has(getInterruptIdentity(entry)),
-            );
-            return {
-              ...msg,
-              hitlInterrupts: remaining,
-              hitlInterrupt: remaining[0],
-              // Keep the message in the streaming state: this child resumes and
-              // its siblings are still running.
-              isStreaming: true,
-              isLoading: true,
-            };
-          }),
-        );
+        // Keep the disabled cards until Core accepts the resume. StartTask is
+        // the acceptance signal and removes only this decided child group;
+        // socket_validation_error restores the cards for another attempt.
         emitContinue(childPayload);
         return;
       }

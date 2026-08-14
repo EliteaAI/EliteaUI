@@ -12,6 +12,7 @@ import {
 import {
   mergeHitlInterrupts,
   normalizeHitlInterrupt,
+  settleHitlResumeAttempt,
 } from '@/[fsd]/features/chat/lib/helpers/hitl.helpers.js';
 import {
   buildMcpAuthorizationToolAction,
@@ -456,8 +457,15 @@ export const useChatSocket = ({
           msg.participant_id = participant_id;
           msg.question_id = question_id;
           msg.requiresConfirmation = undefined; // Clear confirmation state when task resumes
-          msg.hitlInterrupt = undefined; // Clear HITL state when task resumes
-          msg.hitlInterrupts = undefined;
+          const hadDecidedInterrupts = msg.hitlInterrupts?.some(interrupt => interrupt?.decided);
+          if (hadDecidedInterrupts) {
+            const remainingInterrupts = settleHitlResumeAttempt(msg.hitlInterrupts, true);
+            msg.hitlInterrupts = remainingInterrupts.length ? remainingInterrupts : undefined;
+            msg.hitlInterrupt = remainingInterrupts[0];
+          } else {
+            msg.hitlInterrupt = undefined; // Clear scalar/legacy HITL state when task resumes
+            msg.hitlInterrupts = undefined;
+          }
           if (!msg.replyTo) {
             const questionMessage = chatHistoryRef.current.find(m => m.id === question_id);
             if (questionMessage) {
@@ -1633,8 +1641,10 @@ export const useChatSocket = ({
                     isStreaming: false,
                     isRegenerating: false,
                     isSending: false,
-                    hitlInterrupt: undefined,
-                    hitlInterrupts: undefined,
+                    hitlInterrupt: settleHitlResumeAttempt(item.hitlInterrupts, false)[0],
+                    hitlInterrupts: item.hitlInterrupts?.length
+                      ? settleHitlResumeAttempt(item.hitlInterrupts, false)
+                      : item.hitlInterrupts,
                   };
                 }
                 if (item.id === message_id) {
@@ -1644,8 +1654,10 @@ export const useChatSocket = ({
                     isStreaming: false,
                     isRegenerating: false,
                     isSending: false,
-                    hitlInterrupt: undefined,
-                    hitlInterrupts: undefined,
+                    hitlInterrupt: settleHitlResumeAttempt(item.hitlInterrupts, false)[0],
+                    hitlInterrupts: item.hitlInterrupts?.length
+                      ? settleHitlResumeAttempt(item.hitlInterrupts, false)
+                      : item.hitlInterrupts,
                   };
                 }
                 return item;

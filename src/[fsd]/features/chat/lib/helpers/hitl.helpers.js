@@ -13,8 +13,15 @@ export const getInterruptIdentity = interrupt => {
 
 export const normalizeHitlInterrupt = (raw = {}, overlay = {}) => {
   const hierarchy = normalizeExecutionHierarchy(raw, overlay);
-  const childThreadId = nonEmpty(raw.child_thread_id) || nonEmpty(overlay.child_thread_id) || '';
-  const threadId = nonEmpty(raw.thread_id) || nonEmpty(overlay.thread_id) || childThreadId || '';
+  const durableChildThreadId = nonEmpty(overlay.child_thread_id);
+  const nestedChildThreadId = nonEmpty(raw.child_thread_id);
+  const childThreadId = durableChildThreadId || nestedChildThreadId || '';
+  const threadId =
+    nonEmpty(raw.thread_id) ||
+    (durableChildThreadId && nestedChildThreadId !== durableChildThreadId ? nestedChildThreadId : '') ||
+    nonEmpty(overlay.thread_id) ||
+    childThreadId ||
+    '';
   const interrupt = {
     message: raw.message || overlay.message || 'Please review and take action.',
     node_name: raw.node_name || overlay.node_name || '',
@@ -78,4 +85,13 @@ export const getHitlResumeGroup = (interrupts, selected) => {
       interrupt.resume_strategy === 'aggregate_child' &&
       (interrupt.child_thread_id || interrupt.thread_id) === threadId,
   );
+};
+
+export const getHitlResumeThreadId = interrupt =>
+  nonEmpty(interrupt?.child_thread_id) || nonEmpty(interrupt?.thread_id) || '';
+
+export const settleHitlResumeAttempt = (interrupts, accepted) => {
+  const list = Array.isArray(interrupts) ? interrupts : [];
+  if (accepted) return list.filter(interrupt => !interrupt?.decided);
+  return list.map(interrupt => (interrupt?.decided ? { ...interrupt, decided: false } : interrupt));
 };

@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest';
 
 import {
   getHitlResumeGroup,
+  getHitlResumeThreadId,
   getInterruptIdentity,
   getPendingHitlMessage,
   mergeHitlInterrupts,
   normalizeHitlInterrupt,
+  settleHitlResumeAttempt,
 } from './hitl.helpers';
 
 describe('HITL helpers', () => {
@@ -35,6 +37,36 @@ describe('HITL helpers', () => {
       normalizeHitlInterrupt({ interrupt_id: 'i3' }, { child_thread_id: 'c2' }),
     ];
     expect(getHitlResumeGroup(entries, entries[0]).map(item => item.interrupt_id)).toEqual(['i1', 'i2']);
+  });
+
+  it('keeps nested leaf threads while routing the aggregate through the durable child', () => {
+    const first = normalizeHitlInterrupt(
+      { interrupt_id: 'i1', child_thread_id: 'leaf-1', thread_id: 'leaf-1' },
+      { child_thread_id: 'durable-1', resume_strategy: 'aggregate_child' },
+    );
+    const second = normalizeHitlInterrupt(
+      { interrupt_id: 'i2', child_thread_id: 'leaf-2', thread_id: 'leaf-2' },
+      { child_thread_id: 'durable-1', resume_strategy: 'aggregate_child' },
+    );
+
+    expect(first).toMatchObject({ child_thread_id: 'durable-1', thread_id: 'leaf-1' });
+    expect(getHitlResumeThreadId(first)).toBe('durable-1');
+    expect(getHitlResumeGroup([first, second], first).map(item => item.interrupt_id)).toEqual(['i1', 'i2']);
+  });
+
+  it('keeps pending cards until resume acceptance and restores them after rejection', () => {
+    const interrupts = [
+      { interrupt_id: 'i1', decided: true },
+      { interrupt_id: 'i2', decided: true },
+      { interrupt_id: 'i3' },
+    ];
+
+    expect(settleHitlResumeAttempt(interrupts, true)).toEqual([{ interrupt_id: 'i3' }]);
+    expect(settleHitlResumeAttempt(interrupts, false)).toEqual([
+      { interrupt_id: 'i1', decided: false },
+      { interrupt_id: 'i2', decided: false },
+      { interrupt_id: 'i3' },
+    ]);
   });
 
   it('selects only actionable HITL state on the current assistant turn', () => {
