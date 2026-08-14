@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import { styled as muiStyled } from '@mui/material/styles';
 
-import { typographyVariants } from '@/MainTheme';
+import { typographyVariants } from '@/[fsd]/shared/config/theme';
 import CheckedIcon from '@/assets/checked-icon.svg?react';
 import { GROUP_SELECT_VALUE_SEPARATOR } from '@/common/constants';
 import { debounce, filterProps } from '@/common/utils';
