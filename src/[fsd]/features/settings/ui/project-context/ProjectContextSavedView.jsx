@@ -47,8 +47,9 @@ const ProjectContextSavedView = memo(props => {
   }, [content, toastInfo, toastError]);
 
   const handleEditWithAI = useCallback(() => {
-    onNavigate('edit', { openAi: true });
+    onNavigate('edit', { openAiEdit: true });
   }, [onNavigate]);
+
   const handleDeleteConfirm = useCallback(async () => {
     try {
       await deleteProjectContext({ projectId }).unwrap();

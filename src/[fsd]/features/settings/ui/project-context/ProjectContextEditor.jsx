@@ -167,13 +167,15 @@ const ProjectContextEditor = memo(props => {
 
   const handleCancel = useCallback(() => {
     setIsDirty(false);
+    setBlockNav(false);
     onNavigate('empty');
-  }, [onNavigate]);
+  }, [setBlockNav, onNavigate]);
 
   const handleDiscard = useCallback(() => {
     setIsDirty(false);
+    setBlockNav(false);
     onNavigate('saved');
-  }, [onNavigate]);
+  }, [setBlockNav, onNavigate]);
 
   const handleBack = useCallback(() => {
     const hasServerContent = Boolean(serverData?.content?.trim());

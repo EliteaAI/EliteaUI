@@ -1,4 +1,4 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useEffect } from 'react';
 
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -18,6 +18,12 @@ const ProjectContextEdit = memo(() => {
 
   const canEditProjectContext = checkPermission(PERMISSIONS.projectContext.edit);
 
+  useEffect(() => {
+    if (!canEditProjectContext) {
+      navigate(RouteDefinitions.ProjectContext, { replace: true });
+    }
+  }, [canEditProjectContext, navigate]);
+
   const { data: serverData } = useProjectContextQuery(projectId, {
     skip: !projectId || !checkPermission(PERMISSIONS.projectContext.view),
   });
@@ -34,6 +40,8 @@ const ProjectContextEdit = memo(() => {
     },
     [navigate],
   );
+
+  if (!canEditProjectContext) return null;
 
   return (
     <DrawerPage>
