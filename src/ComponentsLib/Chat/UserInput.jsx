@@ -416,6 +416,7 @@ const UserInput = forwardRef((props, ref) => {
         placement={tooltip?.placement}
       >
         <Box
+          data-testid="chat-composer-dropzone"
           sx={styles.container}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
