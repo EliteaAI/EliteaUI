@@ -132,7 +132,10 @@ const Onboarding = memo(() => {
   }, [handlePersonalProjectReady, user.personal_project_id]);
 
   return (
-    <Box sx={styles.page}>
+    <Box
+      data-testid="onboarding-page-container"
+      sx={styles.page}
+    >
       {user.personal_project_id && location.state?.from && (
         <IconButton
           variant="elitea"
@@ -144,7 +147,10 @@ const Onboarding = memo(() => {
         </IconButton>
       )}
       <Box sx={styles.body}>
-        <Box sx={styles.logo}>
+        <Box
+          data-testid="onboarding-page-logo"
+          sx={styles.logo}
+        >
           <Logo />
         </Box>
         <Box sx={styles.gradientBorder}>
@@ -174,7 +180,10 @@ const Onboarding = memo(() => {
           </Box>
         </Box>
         {showTour && !thePrivateProjectIsReady && (
-          <Box sx={styles.footer}>
+          <Box
+            data-testid="onboarding-progress-footer"
+            sx={styles.footer}
+          >
             <Box sx={styles.footerHead}>
               <Typography
                 sx={styles.footerHeadStatus}

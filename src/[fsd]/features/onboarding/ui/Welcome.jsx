@@ -9,14 +9,19 @@ const Welcome = memo(props => {
   const { name = 'there', onShowTour } = props;
 
   return (
-    <Box sx={styles.container}>
+    <Box
+      data-testid="onboarding-welcome-card"
+      sx={styles.container}
+    >
       <Box
+        data-testid="onboarding-welcome-illustration"
         component="img"
         src={WelcomeImage}
         alt="Elitea"
         sx={styles.image}
       />
       <Typography
+        data-testid="onboarding-welcome-title"
         component="div"
         variant="headingMedium"
         sx={styles.title}
@@ -27,6 +32,7 @@ const Welcome = memo(props => {
         <Box sx={styles.cover}>
           <Box sx={styles.mainPanel}>
             <Typography
+              data-testid="onboarding-welcome-greeting"
               variant="bodyMedium"
               component="div"
               sx={styles.message}
@@ -34,6 +40,7 @@ const Welcome = memo(props => {
               {`Hello, ${name}!`}
             </Typography>
             <Typography
+              data-testid="onboarding-welcome-body-text"
               variant="bodyMedium"
               component="div"
               sx={styles.message}
@@ -42,6 +49,7 @@ const Welcome = memo(props => {
               work our magic, take a quick tour through our onboarding slides!
             </Typography>
             <Typography
+              data-testid="onboarding-welcome-secondary-text"
               variant="bodyMedium"
               component="div"
               sx={styles.message}
@@ -49,6 +57,7 @@ const Welcome = memo(props => {
               Ready to explore Elitea&apos;s smart tools and tips?
             </Typography>
             <Button.BaseBtn
+              data-testid="onboarding-welcome-get-started-button"
               variant="elitea"
               color="primary"
               sx={styles.button}
