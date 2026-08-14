@@ -133,6 +133,7 @@ export const INTERNAL_TOOL_AGENT_PERSONALIZATION_FIELD_MAP = {
   internal_mcp: 'default_agent_internal_mcp_enabled',
   skill_builder: 'default_agent_skill_builder_enabled',
   project_context_builder: 'default_agent_project_context_builder_enabled',
+  ask_user: 'default_agent_ask_user_enabled',
   image_generation: 'default_agent_image_generation_enabled',
   data_analysis: 'default_agent_data_analysis_enabled',
   planner: 'default_agent_planner_enabled',
