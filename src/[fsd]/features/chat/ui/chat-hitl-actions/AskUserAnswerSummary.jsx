@@ -6,16 +6,7 @@ import { useLazyMessageTraceQuery } from '@/[fsd]/features/chat/api';
 import { buildAskUserSummary, findAskUserAction } from '@/[fsd]/features/chat/lib/helpers/hitl.helpers.js';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
-/**
- * Read-only summary of a completed ask_user (clarifying-question) interaction,
- * rendered at the top of the assistant response. Lists each question with the
- * user's answer beneath it. Renders nothing when there is no completed ask_user
- * tool action to summarize.
- *
- * On reload, trace steps are loaded via the light pin-list endpoint that omits
- * heavy fields (tool inputs/output), so the reloaded action carries no Q&A. In
- * that case we lazily fetch the trace-step detail to recover it.
- */
+// Summarizes completed ask_user actions, including reloaded traces.
 const AskUserAnswerSummary = memo(props => {
   const { toolActions } = props;
   const styles = askUserAnswerSummaryStyles();

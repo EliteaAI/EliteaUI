@@ -1,4 +1,4 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 
 import { useFormikContext } from 'formik';
 
@@ -17,6 +17,7 @@ const MODULE_ORDER = [
   'internal_mcp',
   'skill_builder',
   'project_context_builder',
+  'ask_user',
   'planner',
   'pyodide',
   'swarm',
@@ -49,8 +50,11 @@ const DefaultModulesSettings = memo(() => {
   );
 
   const styles = componentStyles();
-  const toolsByName = new Map(availableTools.map(tool => [tool.name, tool]));
-  const moduleRows = MODULE_ORDER.map(name => toolsByName.get(name)).filter(Boolean);
+  const toolsByName = useMemo(() => new Map(availableTools.map(tool => [tool.name, tool])), [availableTools]);
+  const moduleRows = useMemo(
+    () => MODULE_ORDER.map(name => toolsByName.get(name)).filter(Boolean),
+    [toolsByName],
+  );
 
   if (!canViewProjectContext) {
     return null;
@@ -84,7 +88,7 @@ const DefaultModulesSettings = memo(() => {
       {moduleRows.map(tool => {
         const conversationField = InternalToolsConstants.INTERNAL_TOOL_PERSONALIZATION_FIELD_MAP[tool.name];
         const agentField = InternalToolsConstants.INTERNAL_TOOL_AGENT_PERSONALIZATION_FIELD_MAP[tool.name];
-        if (!conversationField || !agentField) return null;
+        if (!conversationField) return null;
 
         const description = tool.infoTooltip?.text || '';
 
@@ -116,12 +120,21 @@ const DefaultModulesSettings = memo(() => {
               />
             </Box>
             <Box sx={styles.toggleCell}>
-              <Switch.BaseSwitch
-                checked={Boolean(values[agentField])}
-                onChange={(event, checkedValue) => handleToggle(agentField, checkedValue)}
-                color="primary"
-                disabled={!canEditProjectContext}
-              />
+              {agentField ? (
+                <Switch.BaseSwitch
+                  checked={Boolean(values[agentField])}
+                  onChange={(event, checkedValue) => handleToggle(agentField, checkedValue)}
+                  color="primary"
+                  disabled={!canEditProjectContext}
+                />
+              ) : (
+                <Typography
+                  variant="bodySmall"
+                  color="text.secondary"
+                >
+                  —
+                </Typography>
+              )}
             </Box>
           </Box>
         );
