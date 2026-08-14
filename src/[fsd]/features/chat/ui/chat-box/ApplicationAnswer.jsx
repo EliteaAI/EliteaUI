@@ -23,7 +23,13 @@ import {
 import { getInterruptIdentity } from '@/[fsd]/features/chat/lib/helpers/hitl.helpers.js';
 import { computeBreadcrumbs } from '@/[fsd]/features/chat/lib/helpers/subAgentGrouping.helpers.js';
 import { useParticipantEntityIcon, useParticipantName } from '@/[fsd]/features/chat/participants/lib/hooks';
-import { ChatAttachment, ChatContinue, ChatHitlActions, ErrorTrace } from '@/[fsd]/features/chat/ui';
+import {
+  AskUserAnswerSummary,
+  ChatAttachment,
+  ChatContinue,
+  ChatHitlActions,
+  ErrorTrace,
+} from '@/[fsd]/features/chat/ui';
 import { SubAgentAccordion } from '@/[fsd]/features/chat/ui/sub-agent-section';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
 import { BaseBtn } from '@/[fsd]/shared/ui/button';
@@ -640,6 +646,8 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
               data-testid={isLastMessage ? 'skill-test-last-response' : 'chat-answer-content'}
               sx={styles.answerBlock(messageId === speakingMessageId)}
             >
+              {canRenderContent && <AskUserAnswerSummary toolActions={toolActions} />}
+
               {canRenderContent && !isNullOrUndefined(answer) && !message_items?.length && (
                 <Markdown
                   interaction_uuid={interaction_uuid}
