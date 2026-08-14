@@ -9,12 +9,12 @@ import {
   unchangedNotice,
   visibleCategories,
 } from '../lib/helpers/indexingReport.helpers';
-import { normalizeIndexingReport } from '../lib/serialize/indexingReport.serialize';
+import { resolveIndexingReport } from '../lib/serialize/indexingReport.serialize';
 
 const IndexingReportSummary = memo(props => {
   const { source, sx = {} } = props;
 
-  const report = useMemo(() => (source?.categories ? source : normalizeIndexingReport(source)), [source]);
+  const report = useMemo(() => resolveIndexingReport(source), [source]);
   const categories = useMemo(() => (report ? visibleCategories(report) : []), [report]);
   const headline = useMemo(() => (report ? reportHeadline(report) : null), [report]);
   const unchanged = useMemo(() => (report ? unchangedNotice(report) : null), [report]);
@@ -64,9 +64,9 @@ const IndexingReportSummary = memo(props => {
                 >
                   {group.label} ({group.count})
                 </Typography>
-                {group.items.map(item => (
+                {group.items.map((item, itemIndex) => (
                   <Typography
-                    key={item}
+                    key={`${item}-${itemIndex}`}
                     variant="bodySmall"
                     sx={styles.item}
                   >
@@ -108,9 +108,9 @@ const IndexingReportSummary = memo(props => {
           >
             Errors
           </Typography>
-          {report.errors.map(message => (
+          {report.errors.map((message, messageIndex) => (
             <Typography
-              key={message}
+              key={`${message}-${messageIndex}`}
               variant="bodySmall"
               sx={styles.item}
             >

@@ -22,12 +22,12 @@ const capitalize = word => word.charAt(0).toUpperCase() + word.slice(1);
 const summarizeRun = entry => {
   const report = normalizeIndexingReport(entry);
   if (!report) return { itemsLabel: 'Files', indexed: null, skipped: 0 };
-  const { indexed, unchanged, skipped, notIndexed, failed } = report.totals;
+  const { indexed, unchanged, leftOut } = report.totals;
   return {
     itemsLabel: capitalize(report.itemLabels.plural),
     // Everything the store holds, and everything left out of it.
     indexed: indexed + unchanged,
-    skipped: skipped + notIndexed + failed,
+    skipped: leftOut,
   };
 };
 

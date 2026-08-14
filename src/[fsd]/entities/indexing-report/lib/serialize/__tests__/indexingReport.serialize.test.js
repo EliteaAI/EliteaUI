@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { normalizeIndexingReport } from '../indexingReport.serialize';
+import { normalizeIndexingReport, resolveIndexingReport } from '../indexingReport.serialize';
 
 const canonicalReport = (overrides = {}) => ({
   version: 1,
@@ -116,6 +116,60 @@ describe('normalizeIndexingReport with a canonical report', () => {
   });
 });
 
+describe('resolveIndexingReport', () => {
+  it('normalises a raw surface', () => {
+    const report = resolveIndexingReport({ report: canonicalReport() });
+
+    expect(report.totals.indexed).toBe(179);
+  });
+
+  it('passes an already-normalised report straight through', () => {
+    const normalised = normalizeIndexingReport({ report: canonicalReport() });
+
+    expect(resolveIndexingReport(normalised)).toBe(normalised);
+  });
+
+  it('returns null when there is nothing to resolve', () => {
+    expect(resolveIndexingReport(null)).toBeNull();
+  });
+});
+
+describe('totals.leftOut', () => {
+  it('sums everything the run kept out of the index', () => {
+    const source = canonicalReport({
+      totals: {
+        indexed: 179,
+        skipped: 12,
+        not_indexed: 4,
+        failed: 1,
+        unchanged: 20,
+        dependent_not_indexed: 7,
+        total: 216,
+      },
+    });
+
+    const { totals } = normalizeIndexingReport({ report: source });
+
+    expect(totals.leftOut).toBe(17);
+  });
+
+  it('excludes unchanged and dependent items, which were not left out', () => {
+    const source = canonicalReport({
+      totals: {
+        indexed: 5,
+        skipped: 0,
+        not_indexed: 0,
+        failed: 0,
+        unchanged: 195,
+        dependent_not_indexed: 3,
+        total: 200,
+      },
+    });
+
+    expect(normalizeIndexingReport({ report: source }).totals.leftOut).toBe(0);
+  });
+});
+
 describe('normalizeIndexingReport guards', () => {
   it('discards a successful report left behind on a failed run', () => {
     const report = normalizeIndexingReport({
@@ -191,6 +245,14 @@ describe('normalizeIndexingReport with pre-report rows', () => {
 
     expect(report.totals.indexed).toBe(179);
     expect(report.totals.unchanged).toBe(12);
+  });
+
+  it('derives leftOut the same way as a native report', () => {
+    const report = normalizeIndexingReport(entry);
+
+    expect(report.totals.leftOut).toBe(
+      report.totals.skipped + report.totals.notIndexed + report.totals.failed,
+    );
   });
 
   it('keeps the persisted total untouched so no displayed number shifts', () => {

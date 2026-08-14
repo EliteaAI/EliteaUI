@@ -76,6 +76,8 @@ const normalizeTotals = totals => ({
   unchanged: countOf(totals?.unchanged),
   dependentNotIndexed: countOf(totals?.dependent_not_indexed),
   total: countOf(totals?.total),
+  // Everything the run left out of the index, however it was left out.
+  leftOut: countOf(totals?.skipped) + countOf(totals?.not_indexed) + countOf(totals?.failed),
 });
 
 // A failed run whose report says everything went fine is a report left over from an
@@ -203,6 +205,7 @@ const fromLegacyEntry = entry => {
     // persistedIndexed already counts unchanged items, so it stands in for
     // indexed + unchanged in the totals contract.
     total: countOf(entry?.total) || persistedIndexed + skippedCount + notIndexedCount + failedCount,
+    leftOut: skippedCount + notIndexedCount + failedCount,
   };
 
   const error = (entry?.error || '').trim();
@@ -220,6 +223,13 @@ const fromLegacyEntry = entry => {
     isLegacy: true,
   };
 };
+
+/**
+ * Accept either an already-normalised report or any raw surface that carries one, so
+ * callers do not each have to know how to tell them apart.
+ */
+export const resolveIndexingReport = source =>
+  source?.categories ? source : normalizeIndexingReport(source);
 
 /**
  * Build a renderable report from any surface that carries one: a parsed tool result,

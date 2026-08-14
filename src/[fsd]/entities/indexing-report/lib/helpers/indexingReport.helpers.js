@@ -2,7 +2,7 @@ import {
   INDEXING_REPORT_KIND_PRESENTATION,
   IndexingReportStatus,
 } from '../constants/indexingReport.constants';
-import { normalizeIndexingReport } from '../serialize/indexingReport.serialize';
+import { resolveIndexingReport } from '../serialize/indexingReport.serialize';
 
 export const pickItemNoun = (count, labels) => (count === 1 ? labels.singular : labels.plural);
 
@@ -73,7 +73,7 @@ const groupLine = (group, report) => {
  * chat content: toolkit conversations, index history entries and notification rows.
  */
 export const formatIndexingReportText = source => {
-  const report = source?.categories ? source : normalizeIndexingReport(source);
+  const report = resolveIndexingReport(source);
   if (!report) return '';
 
   const lines = [];
@@ -101,7 +101,7 @@ export const formatIndexingReportText = source => {
 
 /** One-line breakdown for banners and notification rows. */
 export const summarizeIndexingReport = source => {
-  const report = source?.categories ? source : normalizeIndexingReport(source);
+  const report = resolveIndexingReport(source);
   if (!report) return '';
 
   const headline = reportHeadline(report);

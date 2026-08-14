@@ -67,12 +67,10 @@ const IndexListItem = memo(props => {
       : 0;
     const total = index.metadata.total ?? index.metadata.indexed ?? '–';
     const indexedDocs = index.metadata.indexed ?? '–';
-    const { skipped = 0, notIndexed = 0, failed = 0 } = report?.totals || {};
-
     return {
       tooltip: completedRuns > 1 ? 'reindexed / total' : 'indexed / total',
       count: `${indexedDocs} / ${total}`,
-      skipped: skipped + notIndexed + failed,
+      skipped: report?.totals?.leftOut ?? 0,
     };
   }, [index]);
 

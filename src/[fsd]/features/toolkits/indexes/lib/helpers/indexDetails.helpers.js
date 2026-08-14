@@ -11,7 +11,7 @@ import { BUDGET_ERROR_VARIANTS } from '@/[fsd]/shared/lib/constants/budgetError.
 
 // The scope code the backend puts in the persisted index error. Reusing the shared copy
 // keeps the banner and the message below it from drifting apart.
-const budgetErrorMessage = error => {
+export const budgetErrorMessage = error => {
   if (typeof error !== 'string') return null;
 
   const code = Object.keys(BUDGET_ERROR_VARIANTS).find(scope => error.includes(scope));

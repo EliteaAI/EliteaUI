@@ -3,8 +3,10 @@ import { memo } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import { IndexingReportSummary } from '@/[fsd]/entities/indexing-report';
-import { IndexHistoryItemsLabels } from '@/[fsd]/features/toolkits/indexes/lib/constants';
-import { formatDate } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
+import {
+  budgetErrorMessage,
+  formatDate,
+} from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
 import { ContentContainer } from '@/pages/Common';
 
 const IndexRunDetail = memo(props => {
@@ -20,7 +22,7 @@ const IndexRunDetail = memo(props => {
           variant="headingSmall"
           color="text.primary"
         >
-          {IndexHistoryItemsLabels[row.entry.state] || 'Indexed'} — {row.index_name}
+          {row.name}
         </Typography>
         <Typography
           variant="bodySmall"
@@ -33,7 +35,7 @@ const IndexRunDetail = memo(props => {
             variant="bodyMedium"
             color="error.main"
           >
-            {row.entry.error}
+            {budgetErrorMessage(row.entry.error) || row.entry.error}
           </Typography>
         )}
         <IndexingReportSummary source={row.entry} />
