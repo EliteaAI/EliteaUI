@@ -10,6 +10,7 @@ import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { AccordionConstants, TourTargetConstants } from '@/[fsd]/shared/lib/constants';
 import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
 import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
+import { Switch } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import {
   convertToValidEliteaTitle,
@@ -541,19 +542,19 @@ const ToolBase = memo(props => {
         onToolsFetched={handleToolsFetched}
         extraProperties={
           isMcpExposureEnabled ? (
-            <ToolkitForm.ToolBaseProperty
-              k="available_by_mcp"
-              v={{ title: 'Make tools available by MCP', type: 'boolean' }}
-              theme={theme}
-              showValidation={showValidation}
-              toolErrors={toolErrors}
-              settings={meta?.mcp_options || {}}
-              editField={editField}
-              handleInputChange={handleInputChange}
-              showOnlyConfigurationFields={showOnlyConfigurationFields}
-              editFieldRootPath="meta.mcp_options"
+            <Switch.BaseSwitch
+              label="Enable MCP access for selected tools"
+              infoTooltip="Exposes the tools selected in this toolkit through the platform MCP server, so external MCP clients can call them."
+              value={!!meta?.mcp_options?.available_by_mcp}
+              onChange={checked => editField('meta.mcp_options.available_by_mcp', checked)}
               disabled={disabled}
-              validationErrorMessages={validationErrorMessages}
+              slotProps={{
+                formControlLabel: {
+                  labelPlacement: 'start',
+                  sx: { width: '100%', justifyContent: 'space-between', marginLeft: 0, marginRight: 0 },
+                },
+                switch: { slotProps: { input: { 'data-testid': 'toolkit-mcp-access-toggle' } } },
+              }}
             />
           ) : null
         }
