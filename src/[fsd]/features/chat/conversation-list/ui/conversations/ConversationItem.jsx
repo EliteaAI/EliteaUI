@@ -508,12 +508,15 @@ const ConversationItem = memo(props => {
           onChange={onChangeConversationName}
           containerProps={{ display: 'flex', flex: 1 }}
           onKeyDown={onKeyDown}
+          inputProps={{ 'data-testid': 'chat-conversation-name-input' }}
         />
         <Tooltip
           title={isConversationNameValid ? '' : ConversationNameWarningMessage}
           placement="top"
         >
           <Box
+            data-testid="chat-conversation-name-confirm-button"
+            data-disabled={!isSaveEnabled ? 'true' : 'false'}
             onClick={isSaveEnabled ? (isNew ? onCreate : onSave) : null}
             sx={styles.checkedIconWrapper}
           >
@@ -523,6 +526,7 @@ const ConversationItem = memo(props => {
           </Box>
         </Tooltip>
         <Box
+          data-testid="chat-conversation-name-cancel-button"
           onClick={isNew ? onCancelCreate : onCloseEdit}
           sx={styles.cancelIconWrapper}
         >
