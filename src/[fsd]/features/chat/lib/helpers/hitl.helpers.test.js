@@ -32,9 +32,18 @@ describe('HITL helpers', () => {
 
   it('buffers all decisions for one aggregate child but not another child', () => {
     const entries = [
-      normalizeHitlInterrupt({ interrupt_id: 'i1' }, { child_thread_id: 'c1' }),
-      normalizeHitlInterrupt({ interrupt_id: 'i2' }, { child_thread_id: 'c1' }),
-      normalizeHitlInterrupt({ interrupt_id: 'i3' }, { child_thread_id: 'c2' }),
+      normalizeHitlInterrupt(
+        { interrupt_id: 'i1' },
+        { child_thread_id: 'c1', resume_strategy: 'aggregate_child' },
+      ),
+      normalizeHitlInterrupt(
+        { interrupt_id: 'i2' },
+        { child_thread_id: 'c1', resume_strategy: 'aggregate_child' },
+      ),
+      normalizeHitlInterrupt(
+        { interrupt_id: 'i3' },
+        { child_thread_id: 'c2', resume_strategy: 'aggregate_child' },
+      ),
     ];
     expect(getHitlResumeGroup(entries, entries[0]).map(item => item.interrupt_id)).toEqual(['i1', 'i2']);
   });
@@ -52,6 +61,25 @@ describe('HITL helpers', () => {
     expect(first).toMatchObject({ child_thread_id: 'durable-1', thread_id: 'leaf-1' });
     expect(getHitlResumeThreadId(first)).toBe('durable-1');
     expect(getHitlResumeGroup([first, second], first).map(item => item.interrupt_id)).toEqual(['i1', 'i2']);
+  });
+
+  it('keeps an in-process leaf id inside decisions without using it as the socket route', () => {
+    const interrupt = normalizeHitlInterrupt(
+      {
+        interrupt_id: 'i1',
+        child_thread_id: 'sdk-leaf',
+        thread_id: 'sdk-leaf',
+        resume_strategy: 'aggregate_child',
+      },
+      { thread_id: 'root-worker', resume_strategy: 'root' },
+    );
+
+    expect(interrupt).toMatchObject({
+      child_thread_id: 'sdk-leaf',
+      thread_id: 'sdk-leaf',
+      resume_strategy: 'root',
+    });
+    expect(getHitlResumeThreadId(interrupt)).toBe('');
   });
 
   it('keeps pending cards until resume acceptance and restores them after rejection', () => {

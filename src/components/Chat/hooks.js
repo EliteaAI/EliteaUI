@@ -1137,8 +1137,9 @@ export const useChatSocket = ({
           // resume routing, and must NOT stop the message's streaming state (the
           // running siblings still need their live boxes + shimmer).
           const hitlMeta = response_metadata?.metadata || {};
-          const childThreadId = hitlMeta.child_thread_id || '';
-          const isFanoutChild = Boolean(hitlMeta.parent_agent_name && childThreadId);
+          const isFanoutChild =
+            response_metadata?.resume_strategy === 'aggregate_child' && Boolean(hitlMeta.child_thread_id);
+          const childThreadId = isFanoutChild ? hitlMeta.child_thread_id : '';
 
           // Track 1 in-process parallel aggregate (#5379): N paused sub-agents
           // arrive in ONE interrupt, each entry labeled with its parent_agent_name
@@ -1212,6 +1213,7 @@ export const useChatSocket = ({
                 ...hitlMeta,
                 child_thread_id: childThreadId,
                 thread_id: childThreadId,
+                resume_strategy: response_metadata?.resume_strategy,
               },
             );
 
