@@ -587,6 +587,18 @@ describe('resolveSubAgentLiveness', () => {
     ).toEqual({ running: true, done: false });
   });
 
+  it('stops after the wrapper returns even when an inner LLM action remains dangling', () => {
+    expect(
+      resolveSubAgentLiveness({
+        paused: false,
+        lastRoundRunning: true,
+        lastRoundDone: true,
+        hasInflight: true,
+        isLiveCurrent: true,
+      }),
+    ).toEqual({ running: false, done: true });
+  });
+
   it('never shimmers when the child hard-failed (error trace renders instead)', () => {
     expect(
       resolveSubAgentLiveness({

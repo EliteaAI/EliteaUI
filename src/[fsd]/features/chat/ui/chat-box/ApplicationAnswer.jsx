@@ -393,9 +393,23 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
     }
     return hitlInterrupt ? [hitlInterrupt] : [];
   }, [hitlInterrupts, hitlInterrupt]);
-  const pendingAgentPaths = useMemo(
-    () => effectiveHitlInterrupts.map(getActionOwnerPath).filter(path => path.length),
+  // A selected card disappears immediately, but its interrupt stays in the
+  // message state until the root checkpoint acknowledges the decision. This
+  // keeps queue reconciliation durable without making the user wait for the
+  // next aggregate before the card is retired visually.
+  const visibleHitlInterrupts = useMemo(
+    () => effectiveHitlInterrupts.filter(interrupt => !interrupt?.hidden),
     [effectiveHitlInterrupts],
+  );
+  const pendingAgentPaths = useMemo(
+    () =>
+      visibleHitlInterrupts
+        // A submitted decision is the one path that is running again. Keep
+        // queued siblings paused until their serialized root resume is sent.
+        .filter(interrupt => !interrupt?.decided)
+        .map(getActionOwnerPath)
+        .filter(path => path.length),
+    [visibleHitlInterrupts],
   );
 
   // Group paused approvals by the sub-agent they originated from so a parallel
@@ -408,7 +422,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
     const coordinator = [];
     const order = [];
     const byInvocation = new Map();
-    effectiveHitlInterrupts.forEach((interrupt, index) => {
+    visibleHitlInterrupts.forEach((interrupt, index) => {
       const hierarchy = normalizeExecutionHierarchy(interrupt);
       const name = hierarchy.parent_agent_name;
       const entry = { interrupt, index };
@@ -475,7 +489,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
       }),
       hasSubAgents: order.length > 0,
     };
-  }, [effectiveHitlInterrupts, subAgentTypeByName, toolActions]);
+  }, [visibleHitlInterrupts, subAgentTypeByName, toolActions]);
 
   const renderHitlCard = useCallback(
     ({ interrupt, index }) => {
@@ -488,7 +502,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
           toolCallId={toolCallId}
           interruptId={interruptId}
           onHitlResume={onHitlResume}
-          disabled={!onHitlResume || Boolean(interrupt?.decided)}
+          disabled={!onHitlResume || Boolean(interrupt?.decided) || Boolean(interrupt?.queued)}
         />
       );
     },
@@ -505,7 +519,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
       !!exception ||
       (authRequiredActions.length > 0 && !!onContinueMcpExecution) ||
       (requiresConfirmation && !!onContinueTokenLimitExecution) ||
-      effectiveHitlInterrupts.length > 0
+      visibleHitlInterrupts.length > 0
     );
   }, [
     answer,
@@ -518,7 +532,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
     onContinueMcpExecution,
     requiresConfirmation,
     onContinueTokenLimitExecution,
-    effectiveHitlInterrupts.length,
+    visibleHitlInterrupts.length,
   ]);
 
   const isWideView = actionButtonsWrapperWidth > COMPACT_VIEW_BREAKPOINT;
@@ -831,7 +845,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                   ))}
                 </Box>
               ) : (
-                effectiveHitlInterrupts.map((interrupt, index) => renderHitlCard({ interrupt, index }))
+                visibleHitlInterrupts.map((interrupt, index) => renderHitlCard({ interrupt, index }))
               )}
               {/* Add ref for ApplicationAnswer compatibility */}
               {isApplicationParticipant && <Box ref={ref} />}
@@ -1007,7 +1021,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
             // While an approval card is pending (e.g. a fan-out sibling awaiting a
             // decision while another child re-runs after resume) the loading
             // placeholder must not cover the cards (#4993).
-            effectiveHitlInterrupts.length === 0 && (
+            visibleHitlInterrupts.length === 0 && (
               <RotatingMessages
                 sx={styles.rotatingMessages}
                 duration={2000}

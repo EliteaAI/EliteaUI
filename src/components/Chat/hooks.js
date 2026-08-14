@@ -10,6 +10,7 @@ import {
   normalizeExecutionHierarchy,
 } from '@/[fsd]/features/chat/lib/helpers/executionHierarchy.helpers.js';
 import {
+  getInterruptIdentity,
   mergeHitlInterrupts,
   normalizeHitlInterrupt,
   settleHitlResumeAttempt,
@@ -1041,9 +1042,12 @@ export const useChatSocket = ({
             // returns a deferred sentinel; its invocation wrapper still ends here.
             // Flag it so the thinking view keeps the sub-agent's shimmer alive
             // through the approval gap instead of treating the child as finished.
-            if (metadata?.hitl_deferred) {
-              t.hitlDeferred = true;
-            }
+            // The resumed round can reuse this same tool_run_id; its terminal
+            // event is authoritative and must also CLEAR the old deferred flag,
+            // otherwise a completed child spins until the entire message ends.
+            const hitlDeferred = Boolean(metadata?.hitl_deferred);
+            t.hitlDeferred = hitlDeferred;
+            t.toolMeta.hitl_deferred = hitlDeferred;
 
             Object.assign(t, {
               message: undefined, // we clear status messages when the tool ends
@@ -1129,6 +1133,13 @@ export const useChatSocket = ({
           break;
         }
         case SocketMessageType.AgentHitlInterrupt: {
+          // A new interrupt aggregate is the checkpoint acknowledgement for
+          // the previously selected leaf. That leaf is no longer resuming: it
+          // either completed or paused again and will be represented by a new
+          // pending card below. Do not leave its header shimmer/spinner alive
+          // while unresolved siblings remain on screen.
+          msg.resumingAgentPaths = undefined;
+
           // Track 2 fan-out child (#4993): the indexer stamps the child's own
           // thread + sub-agent name into event metadata. Such a pause belongs to
           // ONE child that streams onto the parent's message while its siblings
@@ -1258,7 +1269,18 @@ export const useChatSocket = ({
             // True backend parallel aggregate (Track 1): N entries arrive in
             // hitl_interrupts. Populate the array so ChatBox routes resume via
             // hitl_decisions (keyed by tool_call_id).
-            msg.hitlInterrupts = incomingInterrupts;
+            // Choices made while a previous root decision was in flight are
+            // queued client-side. Preserve that per-card marker across the
+            // authoritative aggregate refresh so queued cards cannot briefly
+            // become clickable again and enqueue a duplicate decision.
+            const queuedIdentities = new Set(
+              (msg.hitlInterrupts || []).filter(interrupt => interrupt?.queued).map(getInterruptIdentity),
+            );
+            msg.hitlInterrupts = incomingInterrupts.map(interrupt =>
+              queuedIdentities.has(getInterruptIdentity(interrupt))
+                ? { ...interrupt, queued: true, hidden: true }
+                : interrupt,
+            );
           } else {
             // Legacy single pause: leave hitlInterrupts UNSET. ChatBox's
             // isParallel detection keys off the mere presence of the array; a

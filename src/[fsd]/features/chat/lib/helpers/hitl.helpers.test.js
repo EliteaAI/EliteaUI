@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  completeRootHitlDecision,
   getHitlResumeGroup,
   getHitlResumeThreadId,
   getInterruptIdentity,
   getPendingHitlMessage,
   mergeHitlInterrupts,
   normalizeHitlInterrupt,
+  scheduleRootHitlDecision,
   settleHitlResumeAttempt,
 } from './hitl.helpers';
 
@@ -82,17 +84,52 @@ describe('HITL helpers', () => {
     expect(getHitlResumeThreadId(interrupt)).toBe('');
   });
 
+  it('resumes one in-process root interrupt without batching its siblings', () => {
+    const first = normalizeHitlInterrupt(
+      { interrupt_id: 'i1', tool_call_id: 't1' },
+      { resume_strategy: 'root' },
+    );
+    const second = normalizeHitlInterrupt(
+      { interrupt_id: 'i2', tool_call_id: 't2' },
+      { resume_strategy: 'root' },
+    );
+
+    expect(getHitlResumeGroup([first, second], first)).toEqual([first]);
+  });
+
+  it('serializes independently selected root cards and skips retired queued identities', () => {
+    const empty = { messageId: null, inFlightIdentity: '', decisions: [] };
+    const first = { interruptId: 'i1', action: 'reject' };
+    const second = { interruptId: 'i2', action: 'approve' };
+    const retired = { interruptId: 'retired', action: 'reject' };
+
+    const scheduledFirst = scheduleRootHitlDecision(empty, 'message-1', first);
+    expect(scheduledFirst.status).toBe('emit');
+    const scheduledRetired = scheduleRootHitlDecision(scheduledFirst.state, 'message-1', retired);
+    const scheduledSecond = scheduleRootHitlDecision(scheduledRetired.state, 'message-1', second);
+    expect(scheduledSecond.status).toBe('queued');
+    expect(scheduleRootHitlDecision(scheduledSecond.state, 'message-1', second).status).toBe('duplicate');
+
+    const completed = completeRootHitlDecision(scheduledSecond.state, [{ interrupt_id: 'i2' }]);
+    expect(completed.nextDecision).toEqual(second);
+    expect(completed.state).toMatchObject({
+      messageId: 'message-1',
+      inFlightIdentity: '',
+      decisions: [],
+    });
+  });
+
   it('keeps pending cards until resume acceptance and restores them after rejection', () => {
     const interrupts = [
-      { interrupt_id: 'i1', decided: true },
-      { interrupt_id: 'i2', decided: true },
+      { interrupt_id: 'i1', decided: true, hidden: true },
+      { interrupt_id: 'i2', decided: true, hidden: true },
       { interrupt_id: 'i3' },
     ];
 
     expect(settleHitlResumeAttempt(interrupts, true)).toEqual([{ interrupt_id: 'i3' }]);
     expect(settleHitlResumeAttempt(interrupts, false)).toEqual([
-      { interrupt_id: 'i1', decided: false },
-      { interrupt_id: 'i2', decided: false },
+      { interrupt_id: 'i1', decided: false, hidden: false },
+      { interrupt_id: 'i2', decided: false, hidden: false },
       { interrupt_id: 'i3' },
     ]);
   });

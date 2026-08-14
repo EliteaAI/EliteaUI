@@ -323,9 +323,14 @@ export function resolveSubAgentLiveness({
   resuming,
   hasError,
 }) {
-  const active =
-    !!resuming || !!hasActiveDescendant || !!lastRoundRunning || !!hasInflight || !!isLiveCurrent;
-  const done = !paused && !active && !!lastRoundDone;
+  // The delegation wrapper is the authoritative "child returned" signal. Its
+  // terminal event must win over a dangling inner LLM/tool action whose own end
+  // event was lost or arrived under a different run id. A resume marker or an
+  // active descendant still wins temporarily because the invocation has been
+  // explicitly re-opened; deferred wrappers never set lastRoundDone upstream.
+  const externallyActive = !!resuming || !!hasActiveDescendant;
+  const done = !paused && !externallyActive && !!lastRoundDone;
+  const active = externallyActive || (!done && (!!lastRoundRunning || !!hasInflight || !!isLiveCurrent));
   const running = !hasError && !paused && !done && active;
   return { running, done };
 }

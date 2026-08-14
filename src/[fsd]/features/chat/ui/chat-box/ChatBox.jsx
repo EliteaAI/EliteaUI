@@ -22,10 +22,12 @@ import {
   getActionOwnerPath,
 } from '@/[fsd]/features/chat/lib/helpers/executionHierarchy.helpers.js';
 import {
+  completeRootHitlDecision,
   getHitlResumeGroup,
   getHitlResumeThreadId,
   getInterruptIdentity,
   getPendingHitlMessage,
+  scheduleRootHitlDecision,
 } from '@/[fsd]/features/chat/lib/helpers/hitl.helpers.js';
 import * as NewConversationHelpers from '@/[fsd]/features/chat/lib/helpers/newConversation.helpers';
 import {
@@ -1387,10 +1389,21 @@ const ChatBox = forwardRef((props, boxRef) => {
     [chat_history, activeConversation, projectId, setChatHistory, setStreamingInfo, emitContinue],
   );
 
-  // Accumulates per-child decisions for a parallel sub-agent fan-out so the
-  // single resume call carries every approve/reject once all N cards are
-  // actioned. Keyed by message id so a fresh interrupt resets the buffer.
+  // A separately dispatched worker child is resumed only once, so decisions
+  // belonging to that durable child are grouped here. In-process root
+  // aggregates do not use this buffer: the SDK supports one leaf decision per
+  // root resume and checkpoints the unresolved siblings.
   const pendingDecisionsRef = useRef({ messageId: null, decisions: {} });
+  // A root LangGraph checkpoint can accept only one resume command at a time.
+  // Keep the cards independently actionable by queueing additional choices in
+  // the browser and draining them serially as each updated interrupt aggregate
+  // arrives. This is deliberately lightweight: it does not turn on worker
+  // park-and-dispatch or keep one worker task alive per paused child.
+  const rootHitlResumeQueueRef = useRef({
+    messageId: null,
+    inFlightIdentity: '',
+    decisions: [],
+  });
 
   const onHitlResume = useCallback(
     async ({ action, value, toolCallId: providedToolCallId, interruptId: providedInterruptId }) => {
@@ -1446,6 +1459,7 @@ const ChatBox = forwardRef((props, boxRef) => {
         Array.isArray(lastMessage.hitlInterrupts) &&
         lastMessage.hitlInterrupts.length > 0 &&
         Boolean(selectedIdentity || toolCallId);
+      let parallelDecision;
 
       // Track 2 independent child resume: emit this child's decision NOW on its
       // own thread; clear ONLY this child's card and leave the parent message
@@ -1508,21 +1522,53 @@ const ChatBox = forwardRef((props, boxRef) => {
         return;
       }
 
-      // Parallel fan-out: buffer this child's decision and disable its card.
-      // Defer the actual resume emit until every child has been actioned.
+      // In-process root aggregate: resume exactly the selected leaf now. The
+      // root checkpoint returns the still-pending siblings with stable public
+      // interrupt IDs, avoiding the memory cost of park-and-dispatch while
+      // keeping every card independently actionable.
       if (isParallel) {
-        if (pendingDecisionsRef.current.messageId !== lastMessage.id) {
-          pendingDecisionsRef.current = { messageId: lastMessage.id, decisions: {} };
-        }
         const decisionIdentity = selectedIdentity || getInterruptIdentity(decidedEntry);
-        pendingDecisionsRef.current.decisions[decisionIdentity] = {
+        const queuedDecision = {
+          action,
+          value: value ?? '',
+          toolCallId,
+          interruptId: decisionIdentity,
+        };
+        const scheduled = scheduleRootHitlDecision(
+          rootHitlResumeQueueRef.current,
+          lastMessage.id,
+          queuedDecision,
+        );
+        rootHitlResumeQueueRef.current = scheduled.state;
+        if (scheduled.status === 'duplicate') return;
+
+        if (scheduled.status === 'queued') {
+          // Only this card becomes queued/disabled. Untouched siblings remain
+          // clickable and every leaf keeps its own paused/resuming indicator.
+          setChatHistory(prevMessages =>
+            prevMessages.map(msg => {
+              if (msg.id !== lastMessage.id || !Array.isArray(msg.hitlInterrupts)) return msg;
+              return {
+                ...msg,
+                hitlInterrupts: msg.hitlInterrupts.map(entry =>
+                  getInterruptIdentity(entry) === decisionIdentity
+                    ? { ...entry, queued: true, hidden: true }
+                    : entry,
+                ),
+              };
+            }),
+          );
+          return;
+        }
+        parallelDecision = {
           ...(decidedEntry?.interrupt_id ? { interrupt_id: decidedEntry.interrupt_id } : {}),
           tool_call_id: toolCallId,
           action,
           value: value ?? '',
         };
 
-        // Mark the just-decided card disabled in place.
+        // Retire the chosen card visually on click while retaining its hidden
+        // state entry until the checkpoint acknowledges the decision.
         setChatHistory(prevMessages =>
           prevMessages.map(msg => {
             if (msg.id !== lastMessage.id || !Array.isArray(msg.hitlInterrupts)) {
@@ -1531,19 +1577,13 @@ const ChatBox = forwardRef((props, boxRef) => {
             return {
               ...msg,
               hitlInterrupts: msg.hitlInterrupts.map(entry =>
-                getInterruptIdentity(entry) === decisionIdentity ? { ...entry, decided: true } : entry,
+                getInterruptIdentity(entry) === decisionIdentity
+                  ? { ...entry, decided: true, queued: false, hidden: true }
+                  : entry,
               ),
             };
           }),
         );
-
-        const allDecided = interrupts.every(
-          entry => pendingDecisionsRef.current.decisions[getInterruptIdentity(entry)],
-        );
-        if (!allDecided) {
-          // Still waiting on sibling card(s); do not emit yet.
-          return;
-        }
       }
 
       const { question_id, threadId, participant_id } = lastMessage;
@@ -1570,11 +1610,7 @@ const ChatBox = forwardRef((props, boxRef) => {
 
       payload.hitl_resume = true;
       if (isParallel) {
-        // One resume carrying every child's decision.
-        payload.hitl_decisions = interrupts.map(
-          entry => pendingDecisionsRef.current.decisions[getInterruptIdentity(entry)],
-        );
-        pendingDecisionsRef.current = { messageId: null, decisions: {} };
+        payload.hitl_decisions = [parallelDecision];
       } else {
         payload.hitl_action = action;
         // `edit` carries the rewritten prompt; `block_with_comment` carries the
@@ -1606,7 +1642,8 @@ const ChatBox = forwardRef((props, boxRef) => {
         // container is also technically unreturned while it waits for that leaf,
         // but it is not itself replayed and must remain mounted/shimmering. Older
         // interrupts without an identified path retain the broad fallback.
-        const resumingAgentPaths = interrupts.map(getActionOwnerPath).filter(path => path.length);
+        const resumingInterrupts = isParallel ? resumeGroup : interrupts;
+        const resumingAgentPaths = resumingInterrupts.map(getActionOwnerPath).filter(path => path.length);
         const resumingInvocationIds = new Set(
           resumingAgentPaths.map(path => path[path.length - 1]?.call_id).filter(Boolean),
         );
@@ -1638,15 +1675,18 @@ const ChatBox = forwardRef((props, boxRef) => {
         // message lingering in the view until reload.
         const resumedAssistantMessage = {
           ...assistantMessage,
-          content: '',
+          content: isParallel ? assistantMessage.content : '',
           isLoading: true,
           isStreaming: true,
           isRegenerating: false,
           isSending: false,
           requiresConfirmation: undefined,
           exception: undefined,
-          hitlInterrupt: undefined,
-          hitlInterrupts: undefined,
+          // A partial root resume keeps sibling cards mounted while the single
+          // worker checkpoint advances. Only the selected/queued cards are
+          // disabled; untouched siblings stay independently actionable.
+          hitlInterrupt: isParallel ? assistantMessage.hitlInterrupt : undefined,
+          hitlInterrupts: isParallel ? assistantMessage.hitlInterrupts : undefined,
           resumingAgentPaths,
           references: [],
           toolActions: preservedToolActions,
@@ -1678,6 +1718,51 @@ const ChatBox = forwardRef((props, boxRef) => {
       emitContinue,
     ],
   );
+
+  // An updated aggregate is the acknowledgement that the previous root resume
+  // finished. Drain the next queued card only after that checkpoint update;
+  // emitting two resume commands concurrently can corrupt LangGraph ordering.
+  useEffect(() => {
+    const queueState = rootHitlResumeQueueRef.current;
+    if (!queueState.inFlightIdentity) return;
+
+    if (!pendingHitlMessage || pendingHitlMessage.id !== queueState.messageId) {
+      rootHitlResumeQueueRef.current = { messageId: null, inFlightIdentity: '', decisions: [] };
+      return;
+    }
+    if (pendingHitlMessage.exception) {
+      rootHitlResumeQueueRef.current = {
+        messageId: pendingHitlMessage.id,
+        inFlightIdentity: '',
+        decisions: [],
+      };
+      setChatHistory(prevMessages =>
+        prevMessages.map(msg =>
+          msg.id !== pendingHitlMessage.id || !Array.isArray(msg.hitlInterrupts)
+            ? msg
+            : {
+                ...msg,
+                hitlInterrupts: msg.hitlInterrupts.map(entry => ({
+                  ...entry,
+                  queued: false,
+                  decided: false,
+                  hidden: false,
+                })),
+              },
+        ),
+      );
+      return;
+    }
+    if (pendingHitlMessage.isLoading) return;
+
+    const currentInterrupts = Array.isArray(pendingHitlMessage.hitlInterrupts)
+      ? pendingHitlMessage.hitlInterrupts
+      : [];
+    const completed = completeRootHitlDecision(queueState, currentInterrupts);
+    rootHitlResumeQueueRef.current = completed.state;
+    const { nextDecision } = completed;
+    if (nextDecision) onHitlResume(nextDecision);
+  }, [onHitlResume, pendingHitlMessage, setChatHistory]);
 
   const onSendMessage = useCallback(
     async question => {
