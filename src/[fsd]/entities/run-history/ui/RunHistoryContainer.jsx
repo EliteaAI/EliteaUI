@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useSearchParams } from 'react-router-dom';
 
@@ -23,6 +23,8 @@ const RunHistoryContainer = memo(props => {
     onClose,
     ChatMessageListComponent,
     prettifyConversation,
+    additionalRows = [],
+    ConversationlessDetailComponent = null,
   } = props;
 
   const projectId = useSelectedProjectId();
@@ -36,15 +38,28 @@ const RunHistoryContainer = memo(props => {
 
   const [fetchRunList, { data, isLoading, isFetching }] = RunHistoryApi.useLazyGetRunHistoryListQuery();
 
+  // Not part of server-side pagination, so they are merged into every page.
+  const historyRows = useMemo(() => {
+    if (!additionalRows.length) return allConversations;
+    return [...allConversations, ...additionalRows].sort(
+      (a, b) => new Date(b.created_at) - new Date(a.created_at),
+    );
+  }, [allConversations, additionalRows]);
+
+  const selectedConversationlessRow = useMemo(
+    () => additionalRows.find(row => row.id === selectedHistoryItem) || null,
+    [additionalRows, selectedHistoryItem],
+  );
+
   useEffect(() => {
     const historyRunId = searchParams.get(SearchParams.HistoryRunId);
 
-    if (historyRunId && allConversations.length > 0) {
+    if (historyRunId && historyRows.length > 0) {
       setSelectedHistoryItem(+historyRunId);
-    } else if (!selectedHistoryItem && allConversations.length > 0) {
-      setSelectedHistoryItem(allConversations[0].id);
+    } else if (!selectedHistoryItem && historyRows.length > 0) {
+      setSelectedHistoryItem(historyRows[0].id);
     }
-  }, [allConversations, searchParams, selectedHistoryItem]);
+  }, [historyRows, searchParams, selectedHistoryItem]);
 
   useEffect(() => {
     if (projectId && entityId) {
@@ -104,7 +119,7 @@ const RunHistoryContainer = memo(props => {
       <Box sx={onClose ? styles.wrapperFlex : styles.wrapper}>
         <Box sx={styles.historyList}>
           <RunHistoryList
-            conversations={allConversations}
+            conversations={historyRows}
             versions={versions}
             isLoading={isLoading && page === 0}
             isLoadingMore={isFetching && page > 0}
@@ -119,12 +134,16 @@ const RunHistoryContainer = memo(props => {
           />
         </Box>
 
-        <RunHistoryChat
-          selectedHistoryItem={selectedHistoryItem}
-          prettifyChat={[ParticipantEntityTypes.Toolkit, ParticipantEntityTypes.MCP].includes(source)}
-          ChatMessageListComponent={ChatMessageListComponent}
-          prettifyConversation={prettifyConversation}
-        />
+        {selectedConversationlessRow && ConversationlessDetailComponent ? (
+          <ConversationlessDetailComponent row={selectedConversationlessRow} />
+        ) : (
+          <RunHistoryChat
+            selectedHistoryItem={selectedHistoryItem}
+            prettifyChat={[ParticipantEntityTypes.Toolkit, ParticipantEntityTypes.MCP].includes(source)}
+            ChatMessageListComponent={ChatMessageListComponent}
+            prettifyConversation={prettifyConversation}
+          />
+        )}
       </Box>
     </Box>
   );

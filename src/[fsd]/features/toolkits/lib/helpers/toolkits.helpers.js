@@ -1,3 +1,4 @@
+import { formatIndexingReportText, normalizeIndexingReport } from '@/[fsd]/entities/indexing-report';
 import { CredentialNameHelpers } from '@/[fsd]/features/credentials';
 import { McpConstants } from '@/[fsd]/features/toolkits/lib/constants';
 import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
@@ -224,6 +225,12 @@ const prettifyToolkitMessage = message => {
   if (match) {
     try {
       const parsed = JSON.parse(match[1]);
+
+      // The regex path below stays for messages persisted before reports existed.
+      if (parsed?.report) {
+        const report = normalizeIndexingReport(parsed);
+        if (report) return formatIndexingReportText(report);
+      }
 
       if (isIndexingResultMessage(parsed)) return prettifyIndexingResultMessage(parsed);
 

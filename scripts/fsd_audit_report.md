@@ -1,21 +1,21 @@
 # FSD Architecture Audit Report
 
 **Date:** 2026-08-11  
-**Scope:** `src/[fsd]/` — **~270 violations** across 4 categories
+**Scope:** `src/[fsd]/` — **~212 violations** across 4 categories
 
 ---
 
 ## Table of Contents
 
-- [1. Layer Import Violations (102)](#1-layer-import-violations-102)
+- [1. Layer Import Violations (51)](#1-layer-import-violations-51)
 - [2. Component Convention Violations (11)](#2-component-convention-violations-11)
-- [3. Styling & HTML Violations (~45)](#3-styling--html-violations-45)
-- [4. File Naming & Structure Violations (~112)](#4-file-naming--structure-violations-112)
+- [3. Styling & HTML Violations (~48)](#3-styling--html-violations-48)
+- [4. File Naming & Structure Violations (~102)](#4-file-naming--structure-violations-102)
 - [5. Priority Recommendations](#5-priority-recommendations)
 
 ---
 
-## 1. Layer Import Violations (91)
+## 1. Layer Import Violations (51)
 
 The FSD import hierarchy is: `app → pages → widgets / features → entities → shared`.  
 A layer may **only** import from layers **below** it.  
@@ -58,7 +58,7 @@ A layer may **only** import from layers **below** it.
 | --------------------------------- | --------------------------------------------------- | ------------------------------- |
 | `features/skill/api/skillsApi.js` | `from '@/[fsd]/features/skill-hub/api/skillHubApi'` | `skill` → `skill-hub` internals |
 
-### 1.3 External Barrel Bypasses (73)
+### 1.3 External Barrel Bypasses (51)
 
 Imports that reach directly into another slice's `ui/`, `lib/`, `model/`, or `api/` instead of importing from
 its `index.js`.
@@ -72,38 +72,38 @@ its `index.js`.
 | `app/store.js`               | `from '@/[fsd]/entities/import-wizard/model/importWizard.slice'`   |
 | `app/layout/MainSidebar.jsx` | `from '@/[fsd]/entities/import-wizard/model/importWizard.slice'`   |
 
-#### `pages/` → `features/` internals (47)
+#### `pages/` → `features/` internals (25)
 
 The `pages/settings/` directory is the largest offender — nearly every settings page reaches into
 `features/settings/ui/` sub-folders.
 
 <details>
-<summary>Click to expand full list (47 bypasses)</summary>
+<summary>Click to expand full list (25 bypasses)</summary>
 
 | File                                     | Import                                                                |
 | ---------------------------------------- | --------------------------------------------------------------------- |
-| `pages/settings/EnvironmentSettings.jsx` | `from '@/[fsd]/features/settings/ui/drawer-page'`                     |
-| `pages/settings/EnvironmentSettings.jsx` | `from '@/[fsd]/features/settings/ui/environment'`                     |
-| `pages/settings/Users.jsx`               | `from '@/[fsd]/features/interactive-tours/lib/constants'`             |
-| `pages/settings/Users.jsx`               | `from '@/[fsd]/features/settings/ui/drawer-page'`                     |
-| `pages/settings/Users.jsx`               | `from '@/[fsd]/features/settings/ui/users'`                           |
-| `pages/settings/ServicePromptsPage.jsx`  | `from '@/[fsd]/features/settings/ui/drawer-page'`                     |
-| `pages/settings/ServicePromptsPage.jsx`  | `from '@/[fsd]/features/settings/ui/system-prompts'`                  |
-| `pages/settings/ProjectContext.jsx`      | `from '@/[fsd]/features/settings/ui/drawer-page'`                     |
-| `pages/settings/ProjectContext.jsx`      | `from '@/[fsd]/features/settings/ui/project-context'`                 |
-| `pages/settings/AIProviders.jsx`         | `from '@/[fsd]/features/settings/ui/ai-providers/AIProvidersContent'` |
-| `pages/settings/AIProviders.jsx`         | `from '@/[fsd]/features/settings/ui/drawer-page'`                     |
-| `pages/settings/Secrets.jsx`             | `from '@/[fsd]/features/settings/ui/drawer-page'`                     |
-| `pages/settings/Secrets.jsx`             | `from '@/[fsd]/features/settings/ui/secrets'`                         |
-| `pages/settings/ProjectGeneral.jsx`      | `from '@/[fsd]/features/settings/ui/drawer-page'`                     |
-| `pages/settings/ProjectGeneral.jsx`      | `from '@/[fsd]/features/settings/ui/project-general'`                 |
-| `pages/settings/CreatePersonalToken.jsx` | `from '@/[fsd]/features/settings/ui/drawer-page'`                     |
-| `pages/settings/CreatePersonalToken.jsx` | `from '@/[fsd]/features/settings/ui/personal-tokes'`                  |
-| `pages/settings/index.jsx`               | `from '@/[fsd]/features/settings/lib/constants'`                      |
-| `pages/settings/index.jsx`               | `from '@/[fsd]/features/settings/ui/settings-drawer'`                 |
-| `pages/settings/PersonalTokens.jsx`      | `from '@/[fsd]/features/interactive-tours/lib/constants/...'`         |
-| `pages/settings/PersonalTokens.jsx`      | `from '@/[fsd]/features/settings/ui/drawer-page'`                     |
-| `pages/settings/PersonalTokens.jsx`      | `from '@/[fsd]/features/settings/ui/personal-tokes'`                  |
+| ~~`pages/settings/EnvironmentSettings.jsx`~~ | ~~`from '@/[fsd]/features/settings/ui/drawer-page'`~~ ✓                     |
+| ~~`pages/settings/EnvironmentSettings.jsx`~~ | ~~`from '@/[fsd]/features/settings/ui/environment'`~~ ✓                     |
+| ~~`pages/settings/Users.jsx`~~               | ~~`from '@/[fsd]/features/interactive-tours/lib/constants'`~~ ✓             |
+| ~~`pages/settings/Users.jsx`~~               | ~~`from '@/[fsd]/features/settings/ui/drawer-page'`~~ ✓                     |
+| ~~`pages/settings/Users.jsx`~~               | ~~`from '@/[fsd]/features/settings/ui/users'`~~ ✓                           |
+| ~~`pages/settings/ServicePromptsPage.jsx`~~  | ~~`from '@/[fsd]/features/settings/ui/drawer-page'`~~ ✓                     |
+| ~~`pages/settings/ServicePromptsPage.jsx`~~  | ~~`from '@/[fsd]/features/settings/ui/system-prompts'`~~ ✓                  |
+| ~~`pages/settings/ProjectContext.jsx`~~      | ~~`from '@/[fsd]/features/settings/ui/drawer-page'`~~ ✓                     |
+| ~~`pages/settings/ProjectContext.jsx`~~      | ~~`from '@/[fsd]/features/settings/ui/project-context'`~~ ✓                 |
+| ~~`pages/settings/AIProviders.jsx`~~         | ~~`from '@/[fsd]/features/settings/ui/ai-providers/AIProvidersContent'`~~ ✓ |
+| ~~`pages/settings/AIProviders.jsx`~~         | ~~`from '@/[fsd]/features/settings/ui/drawer-page'`~~ ✓                     |
+| ~~`pages/settings/Secrets.jsx`~~             | ~~`from '@/[fsd]/features/settings/ui/drawer-page'`~~ ✓                     |
+| ~~`pages/settings/Secrets.jsx`~~             | ~~`from '@/[fsd]/features/settings/ui/secrets'`~~ ✓                         |
+| ~~`pages/settings/ProjectGeneral.jsx`~~      | ~~`from '@/[fsd]/features/settings/ui/drawer-page'`~~ ✓                     |
+| ~~`pages/settings/ProjectGeneral.jsx`~~      | ~~`from '@/[fsd]/features/settings/ui/project-general'`~~ ✓                 |
+| ~~`pages/settings/CreatePersonalToken.jsx`~~ | ~~`from '@/[fsd]/features/settings/ui/drawer-page'`~~ ✓                     |
+| ~~`pages/settings/CreatePersonalToken.jsx`~~ | ~~`from '@/[fsd]/features/settings/ui/personal-tokes'`~~ ✓                  |
+| ~~`pages/settings/index.jsx`~~               | ~~`from '@/[fsd]/features/settings/lib/constants'`~~ ✓                      |
+| ~~`pages/settings/index.jsx`~~               | ~~`from '@/[fsd]/features/settings/ui/settings-drawer'`~~ ✓                 |
+| ~~`pages/settings/PersonalTokens.jsx`~~      | ~~`from '@/[fsd]/features/interactive-tours/lib/constants/...'`~~ ✓         |
+| ~~`pages/settings/PersonalTokens.jsx`~~      | ~~`from '@/[fsd]/features/settings/ui/drawer-page'`~~ ✓                     |
+| ~~`pages/settings/PersonalTokens.jsx`~~      | ~~`from '@/[fsd]/features/settings/ui/personal-tokes'`~~ ✓                  |
 | `pages/auth/index.jsx`                   | `from '@/[fsd]/features/auth/lib/constants'`                          |
 | `pages/auth/index.jsx`                   | `from '@/[fsd]/features/auth/lib/helpers'`                            |
 | `pages/resources/index.jsx`              | `from '@/[fsd]/features/interactive-tours/lib/constants/...'`         |
@@ -223,7 +223,7 @@ Components using named exports instead of `export default`:
 
 ---
 
-## 3. Styling & HTML Violations (~45)
+## 3. Styling & HTML Violations (~48)
 
 ### 3.1 `px` Unit Violations (5)
 
@@ -302,7 +302,7 @@ Components using named exports instead of `export default`:
 
 ---
 
-## 4. File Naming & Structure Violations (~112)
+## 4. File Naming & Structure Violations (~102)
 
 ### 4.1 Hook Files Missing `.hooks.js` Suffix (5)
 
@@ -390,21 +390,21 @@ Should be `kebab-case`:
 | `shared/lib/constants/budgetWarning.constants.test.js`                        |
 | `shared/lib/utils/llmSettings.utils.test.js`                                  |
 
-### 4.7 Missing Barrel Files — Slice Root Level (6)
+### 4.7 Missing Barrel Files — Slice Root Level (5)
 
 | Directory            |
 | -------------------- |
 | `features/apps/`     |
 | `features/auth/`     |
-| `features/settings/` |
+| ~~`features/settings/`~~ ✓ |
 | `shared/config/`     |
 | `shared/lib/`        |
 | `stories/shared/`    |
 
-### 4.8 Missing Barrel Files — Segment Level (45)
+### 4.8 Missing Barrel Files — Segment Level (42)
 
 <details>
-<summary>Click to expand full list (45 directories missing index.js)</summary>
+<summary>Click to expand full list (42 directories missing index.js)</summary>
 
 | Directory                                      |
 | ---------------------------------------------- |
@@ -440,9 +440,9 @@ Should be `kebab-case`:
 | `features/pipelines/lib/`                      |
 | `features/pipelines/yaml-editor/ui/`           |
 | `features/project/lib/`                        |
-| `features/settings/api/`                       |
-| `features/settings/lib/`                       |
-| `features/settings/ui/`                        |
+| ~~`features/settings/api/`~~ ✓                 |
+| ~~`features/settings/lib/`~~ ✓                 |
+| ~~`features/settings/ui/`~~ ✓                  |
 | `features/sharepoint/lib/`                     |
 | `features/skill-hub/lib/`                      |
 | `features/skill/lib/`                          |
@@ -485,8 +485,8 @@ Should be `kebab-case`:
 
 ### P1 — Barrel File Enforcement
 
-5. **Add missing barrel files** (53 directories) — enables proper encapsulation
-6. **Update 77 barrel bypass imports** to use `index.js` barrels
+5. **Add missing barrel files** (47 directories) — enables proper encapsulation
+6. **Update 51 barrel bypass imports** to use `index.js` barrels
 
 ### P2 — Convention Fixes
 
@@ -691,3 +691,43 @@ from the canonical location — no dead barrels.
 **Skipped:** None.
 
 **Build verification:** `npm run build` passed with no errors (47.35s).
+
+### 2026-08-13 — Session 5
+
+**Scope:** Section 1.3 — External Barrel Bypasses, `pages/settings/` → `features/settings` (22 violations resolved).
+
+**Fix strategy:** Create complete barrel file hierarchy for `features/settings`, update all `pages/settings/` imports to use main slice barrel.
+
+#### New barrel files created (8 files):
+
+1. **`features/settings/ui/ai-providers/index.js`** — exports all AI provider components
+2. **`features/settings/ui/profile/index.js`** — exports `Profile`
+3. **`features/settings/ui/shared/index.js`** — exports `SettingsFormProvider`, `SettingsUserInfo`
+4. **`features/settings/ui/index.js`** — aggregates all UI subfolders
+5. **`features/settings/lib/index.js`** — aggregates constants, helpers, hooks
+6. **`features/settings/api/index.js`** — exports all API endpoints
+7. **`features/settings/index.js`** — main slice barrel (api + lib + ui)
+
+#### Files updated (10 pages/settings files):
+
+| File | Violations fixed | New import |
+|------|------------------|------------|
+| `EnvironmentSettings.jsx` | 2 | `{ DrawerPage, DrawerPageHeader, EnvironmentSection } from '@/[fsd]/features/settings'` |
+| `AIProviders.jsx` | 2 | `{ AIProvidersContent, DrawerPage } from '@/[fsd]/features/settings'` |
+| `Users.jsx` | 3 | `{ DeleteUserButton, DrawerPage, DrawerPageHeader, EditUsersButton, UsersTable } from '@/[fsd]/features/settings'` + `{ USERS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours'` |
+| `ServicePromptsPage.jsx` | 2 | `{ DrawerPage, ServicePromptsSection } from '@/[fsd]/features/settings'` |
+| `ProjectContext.jsx` | 2 | `{ DrawerPage, ProjectContextContent } from '@/[fsd]/features/settings'` |
+| `Secrets.jsx` | 2 | `{ DrawerPage, SecretsContent } from '@/[fsd]/features/settings'` |
+| `ProjectGeneral.jsx` | 2 | `{ DrawerPage, ProjectGeneralContent } from '@/[fsd]/features/settings'` |
+| `CreatePersonalToken.jsx` | 2 | `{ DrawerPage, DrawerPageHeader, GeneratedTokenDialog } from '@/[fsd]/features/settings'` |
+| `index.jsx` | 2 | `{ SettingsDrawer, SettingsLayoutConstants, SettingsRedirect } from '@/[fsd]/features/settings'` |
+| `PersonalTokens.jsx` | 3 | `{ DrawerPage, DrawerPageHeader, SettingsPreview, TokensSection } from '@/[fsd]/features/settings'` + `{ PERSONAL_TOKENS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours'` |
+
+**Note:** Section 4.8 (Missing Barrel Files) can mark these directories as resolved:
+- `features/settings/ui/ai-providers/` ✓
+- `features/settings/ui/profile/` ✓
+- `features/settings/ui/shared/` ✓
+
+**Skipped:** None.
+
+**Build verification:** `npm run build` passed with no errors (43.15s).
