@@ -8,6 +8,7 @@ const PRIVATE_AUTHORIZATION_KEYS = new Set([
   'access_token',
   'authorization',
   'client_secret',
+  'id_token',
   'mcp_client_secret',
   'mcp_tokens',
   'provided_settings',

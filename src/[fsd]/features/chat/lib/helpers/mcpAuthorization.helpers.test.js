@@ -42,6 +42,10 @@ describe('toolkit authorization helpers', () => {
           configuration_uuid: 'configuration-1',
           authorization_servers: ['https://login.example/tenant'],
           scopes_supported: ['Files.Read'],
+          oauth_authorization_server: {
+            token_endpoint: 'https://login.example/tenant/token',
+            id_token: 'must-not-be-rendered',
+          },
           provided_settings: {
             mcp_client_id: 'must-not-be-rendered',
             mcp_client_secret: 'must-not-be-rendered',
@@ -76,6 +80,9 @@ describe('toolkit authorization helpers', () => {
     expect(action.toolOutputs).not.toHaveProperty('provided_settings');
     expect(action.toolMeta).not.toHaveProperty('provided_settings');
     expect(action.toolMeta.resource_metadata).not.toHaveProperty('provided_settings');
+    expect(action.toolMeta.resource_metadata.oauth_authorization_server).toEqual({
+      token_endpoint: 'https://login.example/tenant/token',
+    });
     expect(action.content).not.toContain('must-not-be-rendered');
 
     expect(getToolkitAuthorizationContext(action, 'fallback-agent')).toEqual({

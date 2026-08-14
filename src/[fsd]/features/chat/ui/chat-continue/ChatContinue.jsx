@@ -6,8 +6,7 @@ import {
   buildToolkitAuthorizationMessage,
   getToolkitAuthorizationContext,
 } from '@/[fsd]/features/chat/lib/helpers/mcpAuthorization.helpers';
-import { extractMcpAuthMetadata } from '@/[fsd]/features/mcp/lib/hooks';
-import { McpAuthModal } from '@/[fsd]/features/mcp/ui';
+import { McpAuthModal, extractMcpAuthMetadata } from '@/[fsd]/features/mcp';
 import BaseBtn from '@/[fsd]/shared/ui/button/BaseBtn';
 import CheckedIcon from '@/assets/checked-icon.svg?react';
 import ArrowForwardIcon from '@/assets/icons/arrow-forward.svg?react';
@@ -262,7 +261,7 @@ const getStyles = () => ({
     padding: '0.375rem 0.625rem',
     cursor: 'pointer',
     userSelect: 'none',
-    backgroundColor: palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.02)',
+    backgroundColor: palette.action.hover,
   }),
   detailsHeaderText: ({ palette }) => ({
     fontSize: '0.75rem',
