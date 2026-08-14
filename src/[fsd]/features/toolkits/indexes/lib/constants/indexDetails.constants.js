@@ -44,9 +44,10 @@ export const BannerTitleMap = {
   [BannerSeverity.info]: 'Indexing in progress…',
 };
 
+export const BANNER_SUCCESS_SUFFIX = 'The index is ready to search.';
+
 export const BannerMessageMap = {
-  [BannerSeverity.success]:
-    '{{indexed_files}} files indexed successfully, {{skipped_files}} files skipped (unsupported format). The index is ready to search.',
+  [BannerSeverity.success]: `Indexing completed successfully. ${BANNER_SUCCESS_SUFFIX}`,
   [BannerSeverity.warning]:
     'Indexing was stopped before completion. Click Reindex to restart indexing, or check History for the reason it stopped.',
   [BannerSeverity.error]:

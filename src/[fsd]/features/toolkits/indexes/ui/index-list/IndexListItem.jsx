@@ -5,7 +5,11 @@ import { format } from 'date-fns';
 import { Box, CircularProgress, Skeleton, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
-import { IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
+import { normalizeIndexingReport } from '@/[fsd]/entities/indexing-report';
+import {
+  IndexStatuses,
+  RUNNABLE_INDEX_STATUSES,
+} from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
@@ -50,16 +54,7 @@ const IndexListItem = memo(props => {
   const documents = useMemo(() => {
     if (!index.metadata) return { tooltip: '-', count: '–', skipped: '-' };
 
-    let skipped = { total_skipped: 0 };
-
-    try {
-      skipped =
-        typeof index.metadata.skipped === 'string'
-          ? JSON.parse(index.metadata.skipped)
-          : index.metadata.skipped;
-    } catch {
-      // silente catch
-    }
+    const report = normalizeIndexingReport(index.metadata);
 
     // Reindex detection: the SDK records a history entry per state transition (in_progress
     // + completed), so history.length > 1 fires on any completed run. Count only completed
@@ -68,24 +63,14 @@ const IndexListItem = memo(props => {
     // documents fetched from the source. Mixing chunks and docs (previous behavior) made
     // the ratio meaningless when a doc chunker produces multiple chunks per document.
     const completedRuns = Array.isArray(index.metadata.history)
-      ? index.metadata.history.filter(h => h?.state === 'completed').length
+      ? index.metadata.history.filter(h => RUNNABLE_INDEX_STATUSES.includes(h?.state)).length
       : 0;
-    const isReindex = completedRuns > 1;
     const total = index.metadata.total ?? index.metadata.indexed ?? '–';
     const indexedDocs = index.metadata.indexed ?? '–';
-
-    if (isReindex) {
-      return {
-        tooltip: 'reindexed / total',
-        count: `${indexedDocs} / ${total}`,
-        skipped: skipped?.total_skipped || 0,
-      };
-    }
-
     return {
-      tooltip: 'indexed / total',
+      tooltip: completedRuns > 1 ? 'reindexed / total' : 'indexed / total',
       count: `${indexedDocs} / ${total}`,
-      skipped: skipped?.total_skipped || 0,
+      skipped: report?.totals?.leftOut ?? 0,
     };
   }, [index]);
 

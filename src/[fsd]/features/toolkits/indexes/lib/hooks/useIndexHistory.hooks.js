@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { fromUnixTime } from 'date-fns';
 import { useSelector } from 'react-redux';
 
+import { formatIndexingReportText } from '@/[fsd]/entities/indexing-report';
 import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
 import { IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants';
 import { selectHistoryItem } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
@@ -107,15 +108,14 @@ export const useIndexHistory = (progressHistoryOptions = null) => {
       };
 
       const toolExecutionSummary = getExecutionSummary();
-      const content = `{ "indexed": ${indexHistoryItem.indexed ?? 0}, "total": ${indexHistoryItem.total ?? indexHistoryItem.indexed ?? 0} }`;
+      const breakdown = formatIndexingReportText(indexHistoryItem);
 
       return [
         {
           id: WELCOME_MESSAGE_ID,
           role: ROLES.Assistant,
-          content: isFailed
-            ? `${toolExecutionSummary}`
-            : `${toolExecutionSummary}\n\n\`\`\`json\n${content}\n\`\`\``,
+          content:
+            isFailed || !breakdown ? `${toolExecutionSummary}` : `${toolExecutionSummary}\n\n${breakdown}`,
           created_at: new Date(fromUnixTime(indexHistoryItem.updated_on)).getTime(),
           participant_id: 'system',
           exception: isFailed ? getFailedTrace() : null,

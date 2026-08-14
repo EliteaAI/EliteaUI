@@ -101,3 +101,68 @@ describe('bannerVariant — everything else is unchanged', () => {
     expect(bannerVariant(false, IndexStatuses.cancelled, NO_STATS).severity).toBe(BannerSeverity.warning);
   });
 });
+
+const runEntry = totals => ({
+  state: IndexStatuses.success,
+  report: {
+    status: 'ok',
+    item_labels: { singular: 'page', plural: 'pages' },
+    dependent_labels: { singular: 'attachment', plural: 'attachments' },
+    totals: {
+      indexed: 0,
+      skipped: 0,
+      not_indexed: 0,
+      failed: 0,
+      unchanged: 0,
+      dependent_not_indexed: 0,
+      total: 0,
+      ...totals,
+    },
+    categories: [
+      { kind: 'indexed', count: totals.indexed ?? 0, groups: [] },
+      { kind: 'skipped', count: totals.skipped ?? 0, groups: [] },
+      { kind: 'not_indexed', count: totals.not_indexed ?? 0, groups: [] },
+      { kind: 'failed', count: totals.failed ?? 0, groups: [] },
+    ],
+    errors: [],
+    errors_total: 0,
+  },
+});
+
+describe('bannerVariant — success copy', () => {
+  it('describes the run in the source\u2019s own units', () => {
+    const banner = bannerVariant(false, IndexStatuses.success, {
+      latestEntry: runEntry({ indexed: 179, skipped: 12, total: 191 }),
+    });
+
+    expect(banner.severity).toBe(BannerSeverity.success);
+    expect(banner.message).toContain('179 pages indexed, 12 pages skipped');
+    expect(banner.message).not.toContain('unsupported format');
+  });
+
+  it('says a run that changed nothing is up to date', () => {
+    const banner = bannerVariant(false, IndexStatuses.success, {
+      latestEntry: runEntry({ indexed: 0, unchanged: 196, total: 196 }),
+    });
+
+    expect(banner.message).toContain('Up to date \u2014 196 pages unchanged');
+    expect(banner.message).not.toContain('0 pages');
+  });
+
+  it('applies to scheduled and partial runs, not just completed ones', () => {
+    for (const state of [IndexStatuses.scheduledReindex, IndexStatuses.partlyOk]) {
+      const banner = bannerVariant(false, state, {
+        latestEntry: runEntry({ indexed: 5, total: 5 }),
+      });
+
+      expect(banner.severity).toBe(BannerSeverity.success);
+      expect(banner.message).toContain('5 pages indexed');
+    }
+  });
+
+  it('falls back to the generic copy when a run carries no report', () => {
+    const banner = bannerVariant(false, IndexStatuses.success, { latestEntry: null });
+
+    expect(banner.message).toBe(BannerMessageMap[BannerSeverity.success]);
+  });
+});
