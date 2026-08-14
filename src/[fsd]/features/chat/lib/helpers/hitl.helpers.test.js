@@ -98,25 +98,58 @@ describe('HITL helpers', () => {
   });
 
   it('serializes independently selected root cards and skips retired queued identities', () => {
-    const empty = { messageId: null, inFlightIdentity: '', decisions: [] };
+    const empty = { messageId: null, inFlightIdentities: [], decisions: [] };
     const first = { interruptId: 'i1', action: 'reject' };
     const second = { interruptId: 'i2', action: 'approve' };
     const retired = { interruptId: 'retired', action: 'reject' };
 
     const scheduledFirst = scheduleRootHitlDecision(empty, 'message-1', first);
-    expect(scheduledFirst.status).toBe('emit');
+    expect(scheduledFirst.status).toBe('schedule');
     const scheduledRetired = scheduleRootHitlDecision(scheduledFirst.state, 'message-1', retired);
     const scheduledSecond = scheduleRootHitlDecision(scheduledRetired.state, 'message-1', second);
-    expect(scheduledSecond.status).toBe('queued');
+    expect(scheduledSecond.status).toBe('schedule');
     expect(scheduleRootHitlDecision(scheduledSecond.state, 'message-1', second).status).toBe('duplicate');
 
     const completed = completeRootHitlDecision(scheduledSecond.state, [{ interrupt_id: 'i2' }]);
-    expect(completed.nextDecision).toEqual(second);
+    expect(completed.nextDecisions).toEqual([second]);
     expect(completed.state).toMatchObject({
       messageId: 'message-1',
-      inFlightIdentity: '',
+      inFlightIdentities: ['i2'],
       decisions: [],
     });
+  });
+
+  it('coalesces rapid pending decisions into one root resume batch', () => {
+    const first = { interruptId: 'i1', action: 'reject' };
+    const second = { interruptId: 'i2', action: 'approve' };
+    let state = { messageId: null, inFlightIdentities: [], decisions: [] };
+    state = scheduleRootHitlDecision(state, 'message-1', first).state;
+    state = scheduleRootHitlDecision(state, 'message-1', second).state;
+
+    const batch = completeRootHitlDecision(state, [{ interrupt_id: 'i1' }, { interrupt_id: 'i2' }]);
+    expect(batch.nextDecisions).toEqual([first, second]);
+    expect(batch.state.inFlightIdentities).toEqual(['i1', 'i2']);
+  });
+
+  it('coalesces choices made during a running batch into the next resume', () => {
+    const running = {
+      messageId: 'message-1',
+      inFlightIdentities: ['i1'],
+      decisions: [],
+    };
+    const second = { interruptId: 'i2', action: 'reject' };
+    const third = { interruptId: 'i3', action: 'approve' };
+    const queuedSecond = scheduleRootHitlDecision(running, 'message-1', second);
+    const queuedThird = scheduleRootHitlDecision(queuedSecond.state, 'message-1', third);
+
+    expect(queuedSecond.status).toBe('queued');
+    expect(queuedThird.status).toBe('queued');
+    const next = completeRootHitlDecision(queuedThird.state, [
+      { interrupt_id: 'i2' },
+      { interrupt_id: 'i3' },
+    ]);
+    expect(next.nextDecisions).toEqual([second, third]);
+    expect(next.state.inFlightIdentities).toEqual(['i2', 'i3']);
   });
 
   it('keeps pending cards until resume acceptance and restores them after rejection', () => {

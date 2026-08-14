@@ -403,13 +403,14 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
   );
   const pendingAgentPaths = useMemo(
     () =>
-      visibleHitlInterrupts
+      effectiveHitlInterrupts
         // A submitted decision is the one path that is running again. Keep
-        // queued siblings paused until their serialized root resume is sent.
+        // queued siblings paused until their serialized root resume is sent,
+        // even though their cards are already hidden after the click.
         .filter(interrupt => !interrupt?.decided)
         .map(getActionOwnerPath)
         .filter(path => path.length),
-    [visibleHitlInterrupts],
+    [effectiveHitlInterrupts],
   );
 
   // Group paused approvals by the sub-agent they originated from so a parallel

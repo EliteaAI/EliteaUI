@@ -543,7 +543,7 @@ describe('resolveSubAgentLiveness', () => {
     });
   });
 
-  it('keeps an ancestor running while a descendant is paused', () => {
+  it('keeps a waiting ancestor still while a descendant owns HITL activity', () => {
     expect(
       resolveSubAgentLiveness({
         paused: false,
@@ -551,7 +551,7 @@ describe('resolveSubAgentLiveness', () => {
         lastRoundDone: true,
         hasActiveDescendant: true,
       }),
-    ).toEqual({ running: true, done: false });
+    ).toEqual({ running: false, done: false });
   });
 
   it('resumes the approved leaf before its next socket action arrives', () => {

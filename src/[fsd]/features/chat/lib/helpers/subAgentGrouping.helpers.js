@@ -328,9 +328,16 @@ export function resolveSubAgentLiveness({
   // event was lost or arrived under a different run id. A resume marker or an
   // active descendant still wins temporarily because the invocation has been
   // explicitly re-opened; deferred wrappers never set lastRoundDone upstream.
-  const externallyActive = !!resuming || !!hasActiveDescendant;
-  const done = !paused && !externallyActive && !!lastRoundDone;
-  const active = externallyActive || (!done && (!!lastRoundRunning || !!hasInflight || !!isLiveCurrent));
+  // Activity belongs to the deepest invocation that is actually doing work.
+  // An ancestor waiting on a paused/resuming/running child stays mounted but
+  // must not shimmer alongside that child; otherwise a deep hierarchy makes
+  // one leaf resume look like the entire tree restarted.
+  const descendantOwnsActivity = !!hasActiveDescendant;
+  const externallyActive = !!resuming;
+  const done = !paused && !externallyActive && !descendantOwnsActivity && !!lastRoundDone;
+  const active =
+    externallyActive ||
+    (!done && !descendantOwnsActivity && (!!lastRoundRunning || !!hasInflight || !!isLiveCurrent));
   const running = !hasError && !paused && !done && active;
   return { running, done };
 }

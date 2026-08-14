@@ -100,42 +100,30 @@ export const settleHitlResumeAttempt = (interrupts, accepted) => {
 };
 
 export const scheduleRootHitlDecision = (state, messageId, decision) => {
-  const current = state?.messageId === messageId ? state : { messageId, inFlightIdentity: '', decisions: [] };
+  const current =
+    state?.messageId === messageId ? state : { messageId, inFlightIdentities: [], decisions: [] };
   const identity = decision?.interruptId || '';
   const duplicate =
     !identity ||
-    current.inFlightIdentity === identity ||
+    current.inFlightIdentities.includes(identity) ||
     current.decisions.some(item => item.interruptId === identity);
   if (duplicate) return { state: current, status: 'duplicate' };
-  if (!current.inFlightIdentity) {
-    return {
-      state: { ...current, inFlightIdentity: identity },
-      status: 'emit',
-    };
-  }
   return {
     state: { ...current, decisions: [...current.decisions, decision] },
-    status: 'queued',
+    status: current.inFlightIdentities.length ? 'queued' : 'schedule',
   };
 };
 
 export const completeRootHitlDecision = (state, pendingInterrupts) => {
-  const current = state || { messageId: null, inFlightIdentity: '', decisions: [] };
+  const current = state || { messageId: null, inFlightIdentities: [], decisions: [] };
   const pendingIdentities = new Set((pendingInterrupts || []).map(getInterruptIdentity));
-  const decisions = [...current.decisions];
-  let nextDecision;
-  while (decisions.length && !nextDecision) {
-    const candidate = decisions.shift();
-    if (pendingIdentities.has(candidate.interruptId)) nextDecision = candidate;
-  }
+  const nextDecisions = current.decisions.filter(candidate => pendingIdentities.has(candidate.interruptId));
   return {
     state: {
       ...current,
-      // The caller schedules nextDecision through the normal path, which owns
-      // setting the new in-flight identity and updating the selected card.
-      inFlightIdentity: '',
-      decisions,
+      inFlightIdentities: nextDecisions.map(decision => decision.interruptId),
+      decisions: [],
     },
-    nextDecision,
+    nextDecisions,
   };
 };
