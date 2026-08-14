@@ -6,8 +6,7 @@ import * as yup from 'yup';
 
 import { Box, CircularProgress, Tooltip } from '@mui/material';
 
-import { DrawerPage, DrawerPageHeader } from '@/[fsd]/features/settings/ui/drawer-page';
-import { GeneratedTokenDialog } from '@/[fsd]/features/settings/ui/personal-tokes';
+import { DrawerPage, DrawerPageHeader, GeneratedTokenDialog } from '@/[fsd]/features/settings';
 import { Button, Input } from '@/[fsd]/shared/ui';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { useTokenCreateMutation, useTokenListQuery } from '@/api/auth';

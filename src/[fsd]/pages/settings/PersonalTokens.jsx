@@ -7,9 +7,8 @@ import Split from 'react-split';
 import { Box, CircularProgress, useTheme } from '@mui/material';
 
 import { EmptyStatePage } from '@/[fsd]/entities/empty-state-page';
-import { PERSONAL_TOKENS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/personalTokensTourTargets.constants';
-import { DrawerPage, DrawerPageHeader } from '@/[fsd]/features/settings/ui/drawer-page';
-import { SettingsPreview, TokensSection } from '@/[fsd]/features/settings/ui/personal-tokes';
+import { PERSONAL_TOKENS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
+import { DrawerPage, DrawerPageHeader, SettingsPreview, TokensSection } from '@/[fsd]/features/settings';
 import { useTokenListQuery } from '@/api/auth';
 import { useListModelsQuery } from '@/api/configurations';
 import credentialsDarkImage from '@/assets/images/Credentials_Dark.png';

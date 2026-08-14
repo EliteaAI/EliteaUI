@@ -1,7 +1,6 @@
 import { memo } from 'react';
 
-import { DrawerPage, DrawerPageHeader } from '@/[fsd]/features/settings/ui/drawer-page';
-import { EnvironmentSection } from '@/[fsd]/features/settings/ui/environment';
+import { DrawerPage, DrawerPageHeader, EnvironmentSection } from '@/[fsd]/features/settings';
 
 const EnvironmentSettings = memo(() => {
   return (

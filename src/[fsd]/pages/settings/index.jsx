@@ -5,8 +5,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
-import { SettingsLayoutConstants } from '@/[fsd]/features/settings/lib/constants';
-import { SettingsDrawer, SettingsRedirect } from '@/[fsd]/features/settings/ui/settings-drawer';
+import { SettingsDrawer, SettingsLayoutConstants, SettingsRedirect } from '@/[fsd]/features/settings';
 import { useGetPlatformSettingsQuery } from '@/api/platformSettings';
 import AnalyticsIcon from '@/assets/analytics-icon.svg?react';
 import BrainIcon from '@/assets/brain.svg?react';
