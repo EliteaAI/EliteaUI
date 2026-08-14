@@ -2,7 +2,7 @@ import { memo, useCallback, useMemo } from 'react';
 
 import { useFormikContext } from 'formik';
 import { useDispatch } from 'react-redux';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useMatch, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
@@ -138,11 +138,12 @@ const CredentialsControls = memo(props => {
   ]);
 
   const styles = credentialsControlsStyles();
+  const isAIProviderDetailPage = useMatch({ path: RouteDefinitions.EditConfiguration });
 
   const items = useMemo(
     () =>
       [
-        {
+        !isAIProviderDetailPage && {
           ...pinMenuItem,
           key: 'pin-toggle-credential',
           disabled: !(credentialDetails?.id && credentialDetails?.uuid),
@@ -175,6 +176,7 @@ const CredentialsControls = memo(props => {
       formik.values?.settings?.label,
       isDeleting,
       isLastInSection,
+      isAIProviderDetailPage,
       section,
       onDelete,
       pinMenuItem,

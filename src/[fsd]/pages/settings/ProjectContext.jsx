@@ -1,7 +1,6 @@
 import { memo } from 'react';
 
-import { DrawerPage } from '@/[fsd]/features/settings/ui/drawer-page';
-import { ProjectContextContent } from '@/[fsd]/features/settings/ui/project-context';
+import { DrawerPage, ProjectContextContent } from '@/[fsd]/features/settings';
 
 const ProjectContext = memo(() => (
   <DrawerPage>

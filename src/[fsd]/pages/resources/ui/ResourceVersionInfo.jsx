@@ -66,6 +66,7 @@ const ResourceVersionInfo = memo(props => {
               <Typography
                 variant="bodyMedium"
                 color="text.secondary"
+                data-testid="help-center-version-label"
               >
                 {versionLabel}
               </Typography>
@@ -78,7 +79,10 @@ const ResourceVersionInfo = memo(props => {
                       width="8rem"
                     />
                   ) : plugins.length > 0 ? (
-                    <Box sx={styles.tooltipContent}>
+                    <Box
+                      sx={styles.tooltipContent}
+                      data-testid="help-center-version-info-tooltip"
+                    >
                       {plugins.map(plugin => (
                         <Box
                           key={plugin.name}
@@ -94,6 +98,7 @@ const ResourceVersionInfo = memo(props => {
                         onClick={onCopyToClipboard}
                         aria-label="copy version info"
                         sx={styles.copyButton}
+                        data-testid="help-center-version-info-copy-button"
                       >
                         <Box
                           component={CopyIcon}
@@ -107,6 +112,7 @@ const ResourceVersionInfo = memo(props => {
                 <Box
                   component="span"
                   sx={styles.infoIcon}
+                  data-testid="help-center-version-info-icon"
                 >
                   <Box
                     component={InfoIcon}

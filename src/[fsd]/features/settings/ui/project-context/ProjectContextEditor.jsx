@@ -13,6 +13,7 @@ import CodeIcon from '@/assets/code-icon.svg?react';
 import ImportIcon from '@/assets/import-icon.svg?react';
 import OpenEyeIcon from '@/assets/open-eye-icon.svg?react';
 import CopyIcon from '@/components/Icons/CopyIcon';
+import useNavBlocker from '@/hooks/useNavBlocker';
 import useToast from '@/hooks/useToast';
 import { markdown } from '@codemirror/lang-markdown';
 
@@ -23,7 +24,7 @@ import AIEditProjectContextButton from './ai-edit/AIEditProjectContextButton';
 const MAX_CHARS = PROJECT_CONTEXT_MAX_LEN;
 
 const ProjectContextEditor = memo(props => {
-  const { serverData, projectId, isCreate, canEdit, openAiModal, onNavigate } = props;
+  const { serverData, projectId, isCreate, canEdit, openAiModal, openAiEditModal, onNavigate } = props;
   const { toastSuccess, toastError, toastInfo } = useToast();
   const fileInputRef = useRef(null);
   const [isDirty, setIsDirty] = useState(false);
@@ -36,6 +37,15 @@ const ProjectContextEditor = memo(props => {
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
 
   const isFirstRender = useRef(true);
+
+  const blockOptions = useMemo(
+    () => ({
+      blockCondition: isDirty,
+    }),
+    [isDirty],
+  );
+
+  const { setBlockNav } = useNavBlocker(blockOptions);
 
   useEffect(() => {
     if (isFirstRender.current && openAiModal) {
@@ -86,9 +96,10 @@ const ProjectContextEditor = memo(props => {
       const enabled = serverData?.enabled ?? true;
       await updateProjectContext({ projectId, content: suggested, enabled }).unwrap();
       toastSuccess('Project Context saved');
+      setBlockNav(false);
       onNavigate('saved');
     },
-    [serverData, updateProjectContext, projectId, toastSuccess, onNavigate],
+    [serverData, updateProjectContext, projectId, toastSuccess, setBlockNav, onNavigate],
   );
 
   const handleImportClick = useCallback(() => {
@@ -128,11 +139,23 @@ const ProjectContextEditor = memo(props => {
     try {
       await updateProjectContext({ projectId, content, enabled }).unwrap();
       toastSuccess('Project Context saved');
+      setIsDirty(false);
+      setBlockNav(false);
       onNavigate('saved');
     } catch {
       toastError('Failed to save Project Context');
     }
-  }, [canEdit, updateProjectContext, projectId, content, serverData, toastSuccess, toastError, onNavigate]);
+  }, [
+    canEdit,
+    updateProjectContext,
+    projectId,
+    content,
+    serverData,
+    toastSuccess,
+    toastError,
+    setBlockNav,
+    onNavigate,
+  ]);
 
   const handleCopyToClipboard = useCallback(() => {
     if (!content) return;
@@ -143,12 +166,16 @@ const ProjectContextEditor = memo(props => {
   }, [content, toastInfo, toastError]);
 
   const handleCancel = useCallback(() => {
+    setIsDirty(false);
+    setBlockNav(false);
     onNavigate('empty');
-  }, [onNavigate]);
+  }, [setBlockNav, onNavigate]);
 
   const handleDiscard = useCallback(() => {
+    setIsDirty(false);
+    setBlockNav(false);
     onNavigate('saved');
-  }, [onNavigate]);
+  }, [setBlockNav, onNavigate]);
 
   const handleBack = useCallback(() => {
     const hasServerContent = Boolean(serverData?.content?.trim());
@@ -229,6 +256,7 @@ const ProjectContextEditor = memo(props => {
                   <AIEditProjectContextButton
                     currentContent={content}
                     onApplySave={handleAIEditApplySave}
+                    defaultOpen={openAiEditModal}
                   />
                 ) : (
                   <GenerateProjectContextButton onApply={handleAIGenerated} />

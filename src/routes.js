@@ -65,6 +65,8 @@ const RouteDefinitions = {
   CreateConfigurationWithType: '/settings/create-ai-provider/:credentialType',
   CreatePersonalToken: '/settings/create-personal-token',
   EditConfiguration: '/settings/edit-ai-provider/:uid',
+  ProjectContext: '/settings/project-context',
+  ProjectContextEdit: '/settings/project-context/edit',
   Artifacts: '/artifacts',
   CreateBucket: '/artifacts/create-bucket',
   EditBucket: '/artifacts/edit-bucket',
@@ -102,6 +104,7 @@ export const BLOCK_NAV_PATTERNS = [
   RouteDefinitions.EditCredentialFromMain,
   RouteDefinitions.Chat,
   RouteDefinitions.ChatConversation,
+  RouteDefinitions.ProjectContextEdit,
 ];
 
 /**

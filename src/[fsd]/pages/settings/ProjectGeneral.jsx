@@ -1,7 +1,6 @@
 import { memo } from 'react';
 
-import { DrawerPage } from '@/[fsd]/features/settings/ui/drawer-page';
-import { ProjectGeneralContent } from '@/[fsd]/features/settings/ui/project-general';
+import { DrawerPage, ProjectGeneralContent } from '@/[fsd]/features/settings';
 
 const ProjectGeneralPage = memo(() => (
   <DrawerPage>

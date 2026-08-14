@@ -375,42 +375,20 @@ const RunIndexPanel = memo(props => {
   const runFormFields = useMemo(() => Object.keys(adjustedRunSchema?.properties || {}), [adjustedRunSchema]);
   const reindexStats = useMemo(() => {
     const md = index?.metadata;
-    if (!md) return { isReindex: false, updatedOn: null, updated: null, skipped: 0 };
+    if (!md) return { isReindex: false, updatedOn: null, firstEntry: null, latestEntry: null };
 
-    const completedRuns = Array.isArray(md.history) ? md.history.filter(h => h?.state === 'completed') : [];
-    const isReindex = completedRuns.length > 1;
-    const sortedHistory = Array.isArray(completedRuns)
-      ? completedRuns.sort((a, b) => (a?.created_on ?? 0) - (b?.created_on ?? 0))
+    const completedRuns = Array.isArray(md.history)
+      ? md.history.filter(h => RUNNABLE_INDEX_STATUSES.includes(h?.state))
       : [];
-    let skipped = 0;
-    try {
-      const parsed =
-        typeof sortedHistory[sortedHistory.length - 1]?.skipped === 'string'
-          ? JSON.parse(sortedHistory[sortedHistory.length - 1]?.skipped)
-          : sortedHistory[sortedHistory.length - 1]?.skipped;
-      skipped = Number(parsed?.total_skipped ?? 0) || 0;
-    } catch {
-      skipped = 0;
-    }
-    let firstSkipped = 0;
-    try {
-      const parsedFirstSkipped =
-        typeof sortedHistory[0]?.skipped === 'string'
-          ? JSON.parse(sortedHistory[0]?.skipped)
-          : sortedHistory[0]?.skipped;
-      firstSkipped = Number(parsedFirstSkipped?.total_skipped ?? 0) || 0;
-    } catch {
-      firstSkipped = 0;
-    }
+    const sortedHistory = [...completedRuns].sort((a, b) => (a?.created_on ?? 0) - (b?.created_on ?? 0));
+    const latestEntry = sortedHistory[sortedHistory.length - 1] ?? null;
 
     return {
-      isReindex,
+      isReindex: completedRuns.length > 1,
       createdOn: sortedHistory[0]?.created_on ?? null,
-      firstIndexed: sortedHistory[0]?.indexed ?? null,
-      firstSkipped,
       updatedOn: md.updated_on ?? null,
-      updated: sortedHistory[sortedHistory.length - 1]?.indexed ?? null,
-      skipped,
+      firstEntry: sortedHistory[0] ?? null,
+      latestEntry,
     };
   }, [index?.metadata]);
   const banner = useMemo(

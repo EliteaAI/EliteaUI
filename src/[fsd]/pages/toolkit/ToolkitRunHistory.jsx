@@ -8,7 +8,8 @@ import { RunHistoryContainer } from '@/[fsd]/entities/run-history/ui';
 import { ChatMessageList } from '@/[fsd]/features/chat';
 import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits';
-import { IndexBreadcrumb } from '@/[fsd]/features/toolkits/indexes/ui';
+import { useToolkitIndexRuns } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
+import { IndexBreadcrumb, IndexRunDetail } from '@/[fsd]/features/toolkits/indexes/ui';
 import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { useToolkitsDetailsQuery } from '@/api/toolkits.js';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils.jsx';
@@ -53,6 +54,9 @@ const ToolkitRunHistory = memo(() => {
     error,
   } = useToolkitsDetailsQuery({ projectId, toolkitId }, { skip: !projectId || !toolkitId });
 
+  // Scheduler-started runs create no conversation, so nothing else surfaces them.
+  const { indexRunRows } = useToolkitIndexRuns({ projectId, toolkitId, skip: isMCP });
+
   const shouldShowNotFoundPage = isError && isNotFoundError(error);
 
   useEffect(() => {
@@ -88,6 +92,8 @@ const ToolkitRunHistory = memo(() => {
           versions={null}
           ChatMessageListComponent={ChatMessageList}
           prettifyConversation={ToolkitsHelpers.prettifyToolkitConversation}
+          additionalRows={indexRunRows}
+          ConversationlessDetailComponent={IndexRunDetail}
         />
       </Box>
     </Box>

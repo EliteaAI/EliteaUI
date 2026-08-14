@@ -24,6 +24,7 @@ const RESOURCE_CARD_CONFIGS = [
     linksKey: 'resources_documentation_links',
     colorScheme: 'blue',
     tourTargetId: RESOURCES_TOUR_TARGET_IDS.documentationCard,
+    testidCategory: 'documentation',
   },
   {
     enabledKey: 'resources_release_notes_enabled',
@@ -35,6 +36,7 @@ const RESOURCE_CARD_CONFIGS = [
     linksKey: 'resources_release_notes_links',
     colorScheme: 'orange',
     tourTargetId: RESOURCES_TOUR_TARGET_IDS.releaseNotesCard,
+    testidCategory: 'release-notes',
   },
   {
     enabledKey: 'resources_video_library_enabled',
@@ -46,6 +48,7 @@ const RESOURCE_CARD_CONFIGS = [
     linksKey: 'resources_video_library_links',
     colorScheme: 'purple',
     tourTargetId: RESOURCES_TOUR_TARGET_IDS.videoLibraryCard,
+    testidCategory: 'video-library',
   },
   {
     enabledKey: 'resources_tutorials_enabled',
@@ -57,6 +60,7 @@ const RESOURCE_CARD_CONFIGS = [
     linksKey: 'resources_tutorials_links',
     colorScheme: 'green',
     tourTargetId: RESOURCES_TOUR_TARGET_IDS.tutorialsCard,
+    testidCategory: 'tutorials',
   },
   {
     enabledKey: 'resources_interactive_tours_enabled',
@@ -68,6 +72,7 @@ const RESOURCE_CARD_CONFIGS = [
     linksKey: 'resources_interactive_tours_links',
     colorScheme: 'pink',
     tourTargetId: RESOURCES_TOUR_TARGET_IDS.interactiveToursCard,
+    testidCategory: 'interactive-tours',
   },
 ];
 
@@ -136,14 +141,22 @@ const ResourcesPage = memo(() => {
                 )}
                 {!isConfigLoading &&
                   hasLinks &&
-                  links.map((link, idx) =>
-                    link.url ? (
+                  links.map((link, idx) => {
+                    const linkSlug = link.title
+                      .toLowerCase()
+                      .replace(/[^a-z0-9]+/g, '-')
+                      .replace(/(^-|-$)/g, '');
+                    // "More..." is a recurring CTA title reused across multiple resource
+                    // cards (Video Library, Tutorials) — its bare slug alone collided
+                    // page-wide (help-center-tour-link-more matched 2 elements,
+                    // ELITEA-2223/2224). Prefix with the card category only for this
+                    // generic title so every other card's testids stay unchanged.
+                    const testidSlug = linkSlug === 'more' ? `${config.testidCategory}-more` : linkSlug;
+
+                    return link.url ? (
                       <Link
                         key={idx}
-                        data-testid={`help-center-tour-link-${link.title
-                          .toLowerCase()
-                          .replace(/[^a-z0-9]+/g, '-')
-                          .replace(/(^-|-$)/g, '')}`}
+                        data-testid={`help-center-tour-link-${testidSlug}`}
                         href={link.url}
                         target="_blank"
                         rel="noopener noreferrer"
@@ -162,8 +175,8 @@ const ResourcesPage = memo(() => {
                       >
                         {link.title} (undefined)
                       </Typography>
-                    ),
-                  )}
+                    );
+                  })}
                 {!isConfigLoading && !hasLinks && (
                   <Typography
                     variant="bodySmall"

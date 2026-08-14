@@ -163,54 +163,57 @@ const RunHistoryListItem = memo(props => {
           id="actions-block"
           sx={styles.actions}
         >
-          <DotMenu
-            id="run-history-menu"
-            slotProps={{
-              ListItemText: {
-                sx: { color: theme.palette.text.secondary },
-                primaryTypographyProps: { variant: 'bodyMedium' },
-              },
-              ListItemIcon: {
-                sx: {
-                  minWidth: '1rem !important',
-                  marginRight: '.75rem',
+          {/* Every action here acts on a server-side conversation. */}
+          {(item.hasConversation ?? true) && (
+            <DotMenu
+              id="run-history-menu"
+              slotProps={{
+                ListItemText: {
+                  sx: { color: theme.palette.text.secondary },
+                  primaryTypographyProps: { variant: 'bodyMedium' },
                 },
-              },
-            }}
-            onClose={() => setActionMenuOpened(false)}
-            onShowMenuList={() => setActionMenuOpened(true)}
-            anchorOrigin={{
-              vertical: 'bottom',
-              horizontal: 'right',
-            }}
-            transformOrigin={{
-              vertical: 'top',
-              horizontal: 'right',
-            }}
-          >
-            {[
-              {
-                label: 'Share link',
-                icon: linkCopied ? <CheckIcon /> : <CopyLinkIcon />,
-                onClick: handleCopyLink,
-              },
-              {
-                label: 'Delete',
-                icon: <DeleteIcon sx={styles.deleteIcon(isDeleting)} />,
-                onClick: handleDeleteHistoryItem,
-              },
-              ...(handleRestoreConversation
-                ? [
-                    {
-                      label: 'Restore chat',
-                      icon: <RestoreIcon />,
-                      onClick: () => handleRestoreConversation(item.id),
-                      tooltip: `Restores chat history only. ${source?.charAt(0)?.toUpperCase() + source?.slice(1)} configuration, behavior, or settings are not restored and may have changed since then.`,
-                    },
-                  ]
-                : []),
-            ]}
-          </DotMenu>
+                ListItemIcon: {
+                  sx: {
+                    minWidth: '1rem !important',
+                    marginRight: '.75rem',
+                  },
+                },
+              }}
+              onClose={() => setActionMenuOpened(false)}
+              onShowMenuList={() => setActionMenuOpened(true)}
+              anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'right',
+              }}
+              transformOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+              }}
+            >
+              {[
+                {
+                  label: 'Share link',
+                  icon: linkCopied ? <CheckIcon /> : <CopyLinkIcon />,
+                  onClick: handleCopyLink,
+                },
+                {
+                  label: 'Delete',
+                  icon: <DeleteIcon sx={styles.deleteIcon(isDeleting)} />,
+                  onClick: handleDeleteHistoryItem,
+                },
+                ...(handleRestoreConversation
+                  ? [
+                      {
+                        label: 'Restore chat',
+                        icon: <RestoreIcon />,
+                        onClick: () => handleRestoreConversation(item.id),
+                        tooltip: `Restores chat history only. ${source?.charAt(0)?.toUpperCase() + source?.slice(1)} configuration, behavior, or settings are not restored and may have changed since then.`,
+                      },
+                    ]
+                  : []),
+              ]}
+            </DotMenu>
+          )}
         </Box>
       </Box>
 
