@@ -208,7 +208,7 @@ const ConfigurationSection = memo(props => {
           ) : (
             <Box sx={styles.configurationsContainer()}>
               {sortedConfigurations.map((configuration, index) => {
-                const configKey = `${configuration.data?.name}<<>>${configuration.project_id}`;
+                const configKey = `${configuration.data?.name || configuration.label}<<>>${configuration.project_id}`;
                 return (
                   <ConfigurationCard
                     key={`${configuration.id || configuration.name}-${index}`}
