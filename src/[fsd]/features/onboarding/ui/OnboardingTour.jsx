@@ -39,7 +39,10 @@ const OnboardingTour = memo(() => {
 
   return (
     <>
-      <Box sx={styles.wrapper}>
+      <Box
+        data-testid="onboarding-tour-container"
+        sx={styles.wrapper}
+      >
         <IconButton
           variant="elitea"
           color="secondary"

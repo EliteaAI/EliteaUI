@@ -21,6 +21,7 @@ const TourContent = memo(props => {
         />
       </Box>
       <Typography
+        data-testid="onboarding-tour-tip-content"
         component="div"
         variant="bodyMedium"
         sx={styles.title}
@@ -29,6 +30,7 @@ const TourContent = memo(props => {
       </Typography>
       <Box sx={styles.footer}>
         <IconButton
+          data-testid="onboarding-tour-prev-button"
           variant="elitea"
           color="secondary"
           onClick={onPrevious}
@@ -38,6 +40,7 @@ const TourContent = memo(props => {
           <ArrowLeftIcon />
         </IconButton>
         <Typography
+          data-testid="onboarding-tour-page-indicator"
           variant="bodyMedium"
           sx={styles.pageIndicator}
         >

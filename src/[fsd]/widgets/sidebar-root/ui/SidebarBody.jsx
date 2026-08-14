@@ -269,6 +269,7 @@ const SidebarBody = memo(props => {
                   tooltip={i.tooltip}
                   showLabel={!sideBarCollapsed}
                   tourId={i.tourId}
+                  testId={`sidebar-menu-item-${i.value}`}
                 />
               ))}
             </Box>

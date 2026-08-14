@@ -20,6 +20,7 @@ const WorkspaceIsReady = memo(props => {
               sx={styles.image}
             />
             <Typography
+              data-testid="onboarding-workspace-ready-title"
               component="div"
               variant="bodyMedium"
               sx={styles.title}
@@ -28,6 +29,7 @@ const WorkspaceIsReady = memo(props => {
             </Typography>
           </Box>
           <Button.BaseBtn
+            data-testid="onboarding-workspace-ready-jump-in-button"
             variant="elitea"
             color="primary"
             sx={styles.button}

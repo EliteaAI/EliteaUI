@@ -186,12 +186,14 @@ const Onboarding = memo(() => {
           >
             <Box sx={styles.footerHead}>
               <Typography
+                data-testid="onboarding-progress-status-label"
                 sx={styles.footerHeadStatus}
                 variant="headingSmall"
               >
                 Configuring Personal project...
               </Typography>
               <Typography
+                data-testid="onboarding-progress-estimated-time"
                 sx={styles.footerHeadTime}
                 variant="bodySmall"
               >
@@ -200,6 +202,7 @@ const Onboarding = memo(() => {
             </Box>
             <Box sx={styles.progressContainer}>
               <LinearProgress
+                data-testid="onboarding-progress-bar"
                 variant="determinate"
                 value={progress}
                 sx={styles.fileNameLinearProgress}
