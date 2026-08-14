@@ -40,6 +40,7 @@ export const ToolActionsItems = memo(props => {
         >
           <Box component="span">
             <ChipWithCheckIcon
+              testId={`toolkit-tool-chip-${toolValue}`}
               clickable={!disabled}
               isSelected
               label={toolLabel}
@@ -60,6 +61,7 @@ export const ToolActionsItems = memo(props => {
 
   const renderChip = option => (
     <ChipWithCheckIcon
+      testId={`toolkit-tool-chip-${option.value}`}
       clickable={!disabled}
       key={option.value}
       isSelected={selectedTools?.includes(option.value)}

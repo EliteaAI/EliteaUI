@@ -4,7 +4,7 @@ import { Box } from '@mui/material';
 
 import { VoicePersonalizationSection } from '@/[fsd]/features/chat';
 import PreferenceGeneral from '@/[fsd]/features/settings/ui/preference/PreferenceGeneral';
-import { SoundNotificationSection } from '@/[fsd]/pages/user-settings/ui/SoundNotificationSection';
+import { SoundNotificationSection } from '@/[fsd]/features/settings/ui/sound-notification/SoundNotificationSection';
 
 const PreferencesFormContent = memo(() => {
   const styles = preferencesFormContentStyles();

@@ -276,6 +276,7 @@ const NewChatInput = forwardRef((props, ref) => {
                   disableAttachments={disableAttachments || isLoading || isStreaming}
                   attachments={attachments}
                   limits={limits}
+                  testId="chat-attach-button"
                 />
               )}
               {!isAgentsPage && !fromTheChat && (

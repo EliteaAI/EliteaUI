@@ -12,7 +12,10 @@ const CapabilitySection = memo(props => {
   if (!supportsVision && !supportsReasoning) return null;
 
   return (
-    <Box sx={styles.container}>
+    <Box
+      sx={styles.container}
+      data-testid="model-settings-capabilities-section"
+    >
       <Label.InfoLabelWithTooltip
         label="Capabilities"
         variant="subtitle"

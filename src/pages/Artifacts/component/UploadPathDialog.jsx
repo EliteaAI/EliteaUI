@@ -65,6 +65,7 @@ const UploadPathDialog = memo(props => {
   const content = (
     <>
       <Typography
+        data-testid="artifacts-upload-path-description-text"
         variant="bodyMedium"
         color="text.secondary"
         sx={styles.description}
@@ -73,6 +74,7 @@ const UploadPathDialog = memo(props => {
       </Typography>
       <Box sx={styles.textFieldContainer}>
         <TextField
+          data-testid="artifacts-upload-path-input"
           fullWidth
           label="Path"
           value={folderPath}
@@ -93,6 +95,12 @@ const UploadPathDialog = memo(props => {
                 </InputAdornment>
               ),
             },
+            // 'data-testid' on the TextField above lands on the
+            // MuiFormControl-root wrapper (read-only startAdornment +
+            // label), not the editable native <input> itself -- htmlInput
+            // targets the real <input> element, same pattern already
+            // established in UserInput.jsx / CreateSkillForm.jsx.
+            htmlInput: { 'data-testid': 'artifacts-upload-path-input-field' },
           }}
           autoFocus
         />
@@ -111,6 +119,7 @@ const UploadPathDialog = memo(props => {
         Cancel
       </Button.BaseBtn>
       <Button.BaseBtn
+        data-testid="artifacts-upload-path-upload-button"
         variant="elitea"
         color="primary"
         onClick={handleConfirm}
@@ -124,6 +133,7 @@ const UploadPathDialog = memo(props => {
 
   return (
     <BaseModal
+      data-testid="artifacts-upload-path-dialog"
       open={open}
       onClose={handleCancel}
       title="Upload files to ..."

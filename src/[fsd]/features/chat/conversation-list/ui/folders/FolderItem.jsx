@@ -16,6 +16,7 @@ import {
   PERMISSIONS,
 } from '@/common/constants';
 import CancelIcon from '@/components/Icons/CancelIcon';
+import ChatIcon from '@/components/Icons/ChatIcon';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import EditIcon from '@/components/Icons/EditIcon';
 import PinIcon from '@/components/Icons/PinIcon';
@@ -46,6 +47,7 @@ const FolderItem = memo(props => {
     onFolderHover,
     onLoadMoreInFolder,
     isLoadingMoreInFolder = false,
+    onCreateConversationInFolder,
   } = props;
   const { name, isNew: isNewFolder, owner_id } = folder;
 
@@ -81,8 +83,27 @@ const FolderItem = memo(props => {
     onPinFolder(folder, !folder.meta?.is_pinned);
   }, [folder, onPinFolder]);
 
+  const handleCreateConversationInFolder = useCallback(() => {
+    onCreateConversationInFolder?.(folder);
+  }, [folder, onCreateConversationInFolder]);
+
   const menuItems = useMemo(() => {
     const items = [
+      {
+        label: 'New chat',
+        icon: (
+          <ChatIcon
+            sx={{ fontSize: '1rem' }}
+            fill={
+              checkPermission(PERMISSIONS.chat.create)
+                ? theme.palette.icon.fill.default
+                : theme.palette.icon.fill.disabled
+            }
+          />
+        ),
+        disabled: !checkPermission(PERMISSIONS.chat.create) || !!folder.isNew,
+        onClick: handleCreateConversationInFolder,
+      },
       {
         label: 'Rename',
         icon: (
@@ -120,13 +141,16 @@ const FolderItem = memo(props => {
     return items;
   }, [
     theme.palette.icon.fill.default,
+    theme.palette.icon.fill.disabled,
     userId,
     owner_id,
     checkPermission,
     handleDeleteFolder,
     handleEditFolder,
     handlePinFolder,
+    handleCreateConversationInFolder,
     folder.meta?.is_pinned,
+    folder.isNew,
     name,
   ]);
 
@@ -214,6 +238,7 @@ const FolderItem = memo(props => {
         showMode={AccordionConstants.AccordionShowMode.LeftMode}
         defaultExpanded={containsActiveConversation}
         isPinned={folder.meta?.is_pinned}
+        folderId={folder.id}
         items={[
           {
             title: name || '',
@@ -286,12 +311,16 @@ const FolderItem = memo(props => {
           onChange={onChangeFolderName} //splice
           containerProps={{ display: 'flex', flex: 1 }}
           onKeyDown={handleOnKeyDownFolder}
+          inputProps={{ 'data-testid': 'chat-folder-name-input' }}
         />
         <Tooltip
           title={isFolderNameValid ? '' : FolderNameWarningMessage}
           placement="top"
+          slotProps={{ popper: { 'data-testid': 'chat-folder-name-confirm-tooltip-content' } }}
         >
           <Box
+            data-testid="chat-folder-name-confirm-button"
+            data-disabled={!isFolderSaveEnabled ? 'true' : 'false'}
             onClick={isFolderSaveEnabled ? (isNewFolder ? handleOnCreateFolder : handleOnSaveFolder) : null}
             sx={styles.checkButton}
           >
@@ -301,6 +330,7 @@ const FolderItem = memo(props => {
           </Box>
         </Tooltip>
         <Box
+          data-testid="chat-folder-name-cancel-button"
           onClick={isNewFolder ? handleOnCancelCreateFolder : handleOnCloseEditFolder}
           sx={styles.cancelButton}
         >

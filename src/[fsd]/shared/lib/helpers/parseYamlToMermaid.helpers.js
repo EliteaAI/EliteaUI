@@ -1,6 +1,10 @@
 import YAML from 'js-yaml';
 
-import { FlowEditorConstants } from '@/[fsd]/features/pipelines';
+const PIPELINE_NODE_TYPES = {
+  Decision: 'decision',
+  Router: 'router',
+  Hitl: 'hitl',
+};
 
 // Sanitize ID for Mermaid compatibility (alphanumeric and underscore only)
 const sanitizeId = id => id?.replace(/[^a-zA-Z0-9_]/g, '_') || '';
@@ -198,11 +202,7 @@ export const parseYamlToMermaid = yamlString => {
     }
 
     // Handle conditions
-    if (
-      node.condition &&
-      node.condition.condition_definition &&
-      node.type !== FlowEditorConstants.PipelineNodeTypes.Router
-    ) {
+    if (node.condition && node.condition.condition_definition && node.type !== PIPELINE_NODE_TYPES.Router) {
       const conditionId = `${nodeId}_condition`;
       mermaidDiagram += `  ${conditionId}{"Condition"}\n`;
       mermaidDiagram += addMermaidLine(nodeId, conditionId);
@@ -214,16 +214,16 @@ export const parseYamlToMermaid = yamlString => {
       mermaidDiagram = handleDecisionNode(mermaidDiagram, nodeId, node.decision, true);
     }
     // Handle new decision node format (type-based)
-    else if (node.type === FlowEditorConstants.PipelineNodeTypes.Decision) {
+    else if (node.type === PIPELINE_NODE_TYPES.Decision) {
       mermaidDiagram = handleDecisionNode(mermaidDiagram, nodeId, node, false);
     }
     // Handle new decision node format (type-based)
-    else if (node.type === FlowEditorConstants.PipelineNodeTypes.Router) {
+    else if (node.type === PIPELINE_NODE_TYPES.Router) {
       mermaidDiagram = handleRouterNode(mermaidDiagram, nodeId, node);
     }
 
     // Handle HITL nodes - routes is an object with action: target pairs
-    if (node.type === FlowEditorConstants.PipelineNodeTypes.Hitl && node.routes) {
+    if (node.type === PIPELINE_NODE_TYPES.Hitl && node.routes) {
       Object.entries(node.routes).forEach(([action, target]) => {
         if (target) {
           const targetId = sanitizeId(target);

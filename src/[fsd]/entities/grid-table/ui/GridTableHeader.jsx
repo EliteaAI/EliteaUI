@@ -15,6 +15,8 @@ const GridTableHeader = memo(props => {
     isIndeterminate = false,
     gridTemplateColumns,
     showCheckbox = true,
+    columnTestIdPrefix,
+    selectAllCheckboxTestId,
   } = props;
 
   const styles = gridTableHeaderStyles(gridTemplateColumns, showCheckbox);
@@ -24,6 +26,7 @@ const GridTableHeader = memo(props => {
       {showCheckbox && (
         <Box sx={styles.checkboxCell}>
           <Checkbox.BaseCheckbox
+            data-testid={selectAllCheckboxTestId}
             checked={isAllSelected}
             indeterminate={isIndeterminate}
             onChange={onSelectAll}
@@ -41,11 +44,19 @@ const GridTableHeader = memo(props => {
         return (
           <Box
             key={`header-${column.field || index}`}
+            data-testid={
+              columnTestIdPrefix ? `${columnTestIdPrefix}-column-header-${column.field}` : undefined
+            }
             sx={styles.headerCell(isActive, isLastItem, isSortable, column.sortable, column.align)}
             onClick={isSortable || column.sortable ? () => onSort(column.field) : undefined}
           >
             {isSortable && (
-              <Box sx={styles.sortButton}>
+              <Box
+                sx={styles.sortButton}
+                data-testid={
+                  columnTestIdPrefix ? `${columnTestIdPrefix}-sort-icon-${column.field}` : undefined
+                }
+              >
                 <SortArrows style={styles.sortIcon(isActive, sortConfig?.direction === 'desc')} />
               </Box>
             )}

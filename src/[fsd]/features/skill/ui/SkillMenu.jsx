@@ -209,6 +209,7 @@ const SkillMenu = memo(props => {
         showCreateNew
         onCreateNew={handleCreateNew}
         createNewLabel="Create new"
+        createNewTestId="agent-add-skill-create-new-button"
         isLoading={isFetching}
         emptyMessage="No skills available"
         noResultsMessage="No skills found"

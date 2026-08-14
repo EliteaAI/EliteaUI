@@ -42,6 +42,7 @@ const ContextBudgetHeader = memo(props => {
           variant="elitea"
           color="tertiary"
           onClick={onEdit}
+          data-testid="context-budget-edit-button"
         >
           <EditIcon sx={{ fontSize: '1rem' }} />
         </IconButton>

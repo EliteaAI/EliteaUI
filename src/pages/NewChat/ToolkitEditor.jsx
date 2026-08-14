@@ -14,7 +14,6 @@ import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/an
 import { useToolkitsDetailsQuery } from '@/api/toolkits';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import { CONFIGURATION_VIEW_OPTIONS } from '@/pages/Applications/Components/Tools/ToolConfigurationForm.jsx';
 import BaseEditor from '@/pages/NewChat/components/BaseEditor.jsx';
 import CreateToolkitButton from '@/pages/NewChat/components/CreateToolkitButton.jsx';
 import SaveToolkitButton from '@/pages/Toolkits/SaveToolkitButton.jsx';
@@ -47,6 +46,15 @@ const ToolkitEditor = ({ toolkit, onCloseToolkitEditor, onToolkitCreated, onTool
 
   const isCreating = toolkit?.isCreating || false;
   const isMCP = toolkit?.isMCP || toolkit?.meta?.mcp || false;
+
+  // Testid scope ONLY — deliberately not used by any product logic. Captured
+  // once at mount because onToolkitEditorCreated() swaps the whole `toolkit`
+  // prop for the raw API-created entity once Create succeeds
+  // (useEditToolkit.js -> setEditingToolkit), and that entity does not reliably
+  // carry isMCP/meta.mcp — which made the mcp-canvas-* testids vanish mid-flow.
+  // Kept separate from `isMCP` so hideNameInput / hideNameDescriptionInput /
+  // header text / analytics stay byte-identical to main.
+  const [isMcpTestIdScope] = useState(() => toolkit?.isMCP || toolkit?.meta?.mcp || false);
 
   const [validationState, setValidationState] = useState({
     hasErrors: false,
@@ -239,6 +247,8 @@ const ToolkitEditor = ({ toolkit, onCloseToolkitEditor, onToolkitCreated, onTool
       onDiscard={handleDiscard}
       initialValues={normalizedInitialValues}
       error={error}
+      titleTestId={isMcpTestIdScope ? 'mcp-canvas-title' : undefined}
+      closeButtonTestId={isMcpTestIdScope ? 'mcp-canvas-close-button' : undefined}
       saveButton={
         isCreating ? (
           <CreateToolkitButton
@@ -246,6 +256,7 @@ const ToolkitEditor = ({ toolkit, onCloseToolkitEditor, onToolkitCreated, onTool
             onToolkitCreated={handleToolkitCreated}
             hasErrors={validationState.hasErrors}
             triggerValidation={validationState.triggerValidation}
+            testId={isMcpTestIdScope ? 'mcp-canvas-create-button' : undefined}
           />
         ) : (
           <SaveToolkitButton
@@ -273,7 +284,6 @@ const ToolkitEditor = ({ toolkit, onCloseToolkitEditor, onToolkitCreated, onTool
               showNameFieldForcedly={false}
               showToolkitIcon={false}
               showOnlyConfigurationFields={false}
-              configurationViewOptions={CONFIGURATION_VIEW_OPTIONS.CredentialsSelect}
               hasNotSavedCredentials={false}
               hideNameDescriptionInput={isMCP || isCreating ? false : true}
               hideOperationButtons={isCreating}
@@ -303,7 +313,6 @@ const ToolkitEditor = ({ toolkit, onCloseToolkitEditor, onToolkitCreated, onTool
           showNameFieldForcedly={false}
           showToolkitIcon={false}
           showOnlyConfigurationFields={false}
-          configurationViewOptions={CONFIGURATION_VIEW_OPTIONS.CredentialsSelect}
           hasNotSavedCredentials={false}
           hideNameDescriptionInput={false}
           hideNameInput={!isMCP}

@@ -19,7 +19,10 @@ export const DecisionOutputs = memo(props => {
     <Box sx={styles.decisionOutputsContainer}>
       <Chip.HeadingChip label="Decision outputs" />
 
-      <Box sx={styles.outputsBorderContainer}>
+      <Box
+        sx={styles.outputsBorderContainer}
+        data-testid="pipeline-decision-node-outputs-container"
+      >
         {(decisionOutput || []).map(item => {
           const { borderColor, tooltip } = DecisionOutputHelpers.getBorderColorAndTooltip(
             edges,
@@ -40,6 +43,7 @@ export const DecisionOutputs = memo(props => {
                 sx={styles.styledChip(borderColor)}
                 deleteIcon={<RemoveIcon />}
                 onDelete={onRemoveOutput(item)}
+                data-testid={`pipeline-decision-node-output-chip-${item}`}
               />
             </StyledTooltip>
           );

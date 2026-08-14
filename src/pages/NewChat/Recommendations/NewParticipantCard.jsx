@@ -7,7 +7,7 @@ import { ChatParticipantType, PUBLIC_PROJECT_ID } from '@/common/constants';
 import EntityIcon from '@/components/EntityIcon';
 
 const NewParticipantCard = memo(props => {
-  const { participant, onClick, alreadyExists, isActive, itemRef } = props;
+  const { participant, onClick, alreadyExists, isActive, itemRef, testId } = props;
   const cardRef = useRef(null);
   const tooltipRef = useRef(null);
 
@@ -65,6 +65,7 @@ const NewParticipantCard = memo(props => {
     >
       <Box
         ref={setRef}
+        data-testid={testId}
         sx={styles.card(alreadyExists, isActive)}
         onClick={onClickHandler}
       >

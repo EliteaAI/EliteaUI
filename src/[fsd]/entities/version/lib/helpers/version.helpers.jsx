@@ -44,12 +44,13 @@ export const buildVersionOption =
             <PublishIcon sx={{ fontSize: '1rem' }} />
           </Box>
         );
-      if (defaultVersionID === id) return <PinIcon />;
+      if (defaultVersionID === id) return <PinIcon data-testid="version-option-pin-icon" />;
 
       if (handleSetDefaultVersion && !disableSetAsADefault())
         return (
           <Box
             id="show-on-hover"
+            data-testid={`version-option-set-default-${name}`}
             sx={({ palette }) => ({
               display: 'none',
               borderRadius: '50%',

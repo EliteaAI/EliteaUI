@@ -56,6 +56,9 @@ const AgentCategorySection = memo(props => {
         <Typography
           variant="headingMedium"
           sx={styles.categoryTitle}
+          data-testid={`catalog-category-heading-${String(category)
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')}`}
         >
           {category}
         </Typography>

@@ -155,6 +155,8 @@ const SlashSuggestionList = memo(props => {
           total={participantToolkits.length}
           title={isMcpVisible ? 'Mention Toolkit or MCP' : 'Mention Toolkit'}
           activeIndex={activeIndex}
+          containerTestId="slash-mention-list"
+          getItemTestId={participant => `slash-mention-item-${participant.project_id}_${participant.id}`}
         />
       </>
     );

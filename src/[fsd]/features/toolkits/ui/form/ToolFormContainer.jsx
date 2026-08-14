@@ -10,14 +10,16 @@ const ToolFormContainer = memo(props => {
     schema,
     onChangeInputVariables,
     changesDisabled = false,
+    inputTestId,
   } = props;
 
   const fieldValue = useMemo(() => {
     let result = toolInputVariables?.[fieldKey];
+    const keyExists = toolInputVariables && fieldKey in toolInputVariables;
+    const shouldUseDefault =
+      !keyExists && (result === undefined || typeof result === 'function') && property?.default !== undefined;
 
-    // Fallback: if result is undefined but we have a default in the schema, use it
-    if ((result === undefined || typeof result == 'function') && property?.default !== undefined)
-      result = property.default;
+    if (shouldUseDefault) result = property.default;
 
     return result;
   }, [fieldKey, property, toolInputVariables]);
@@ -158,6 +160,7 @@ const ToolFormContainer = memo(props => {
         <Field.CommonStringField
           {...fieldPropsShared}
           property={property}
+          inputTestId={inputTestId}
         />
       );
   }

@@ -8,8 +8,8 @@ import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { Box, IconButton, Menu, MenuItem, Tooltip, Typography } from '@mui/material';
 
 import StyledCircleProgress from '@/ComponentsLib/CircularProgress';
+import { useSetRefetchDetails } from '@/[fsd]/entities/application-tab-bar/lib/hooks';
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
-import { useSetRefetchDetails } from '@/[fsd]/features/agent/lib/hooks';
 import {
   useApplicationDetailsQuery,
   useLazyGetApplicationVersionDetailQuery,
@@ -295,6 +295,7 @@ const AgentPipelineVersionSelector = memo(({ tool, index, applicationId, disable
     <Box sx={styles.contentWrapper}>
       {/* Version Selector Button */}
       <Box
+        data-testid={`agent-tool-version-selector-trigger-${tool.id}`}
         sx={[styles.selector, disabled && { cursor: 'default', '&:hover': {} }]}
         onClick={isUpdating || disabled ? undefined : handleClick}
       >
@@ -333,7 +334,10 @@ const AgentPipelineVersionSelector = memo(({ tool, index, applicationId, disable
         }}
       >
         {/* Version Header with Refresh Button */}
-        <Box sx={styles.versionHeader}>
+        <Box
+          data-testid={`agent-tool-version-selector-menu-${tool.id}`}
+          sx={styles.versionHeader}
+        >
           <Typography
             variant="labelSmall"
             sx={styles.versionHeaderTitle}
@@ -370,6 +374,7 @@ const AgentPipelineVersionSelector = memo(({ tool, index, applicationId, disable
           return (
             <MenuItem
               key={version.id}
+              data-testid={`agent-tool-version-option-${tool.id}-${version.id}`}
               onClick={handleVersionClick(version)}
               sx={isSelected ? styles.selectedMenuItem : styles.menuItem}
             >

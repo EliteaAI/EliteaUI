@@ -29,6 +29,10 @@ const InputMapping = memo(props => {
     onChangeMapping,
     requiredInputs = [],
     disabled,
+    valueTestIdPrefix,
+    typeTestIdPrefix,
+    requiredHeadingTestId,
+    optionalHeadingTestId,
   } = props;
   const inputOptions = useInputOptions();
 
@@ -54,10 +58,22 @@ const InputMapping = memo(props => {
           tooltip={mappingInfo[key]?.tooltip}
           defaultValues={defaultValues}
           mappingInfo={mappingInfo}
+          valueTestId={valueTestIdPrefix ? `${valueTestIdPrefix}-${key}` : undefined}
+          typeTestId={typeTestIdPrefix ? `${typeTestIdPrefix}-${key}` : undefined}
         />
       );
     },
-    [input_mapping, values, mappingInfo, inputOptions, defaultValues, onChangeMapping, disabled],
+    [
+      input_mapping,
+      values,
+      mappingInfo,
+      inputOptions,
+      defaultValues,
+      onChangeMapping,
+      disabled,
+      valueTestIdPrefix,
+      typeTestIdPrefix,
+    ],
   );
 
   const items = useMemo(() => {
@@ -78,6 +94,7 @@ const InputMapping = memo(props => {
           </Box>
         ),
         itemDefaultExpanded: true,
+        testId: requiredHeadingTestId,
       });
     }
 
@@ -88,11 +105,12 @@ const InputMapping = memo(props => {
           <Box sx={styles.optionalContent}>{optionalKeys.map(key => renderMappingItem(key, 'optional'))}</Box>
         ),
         itemDefaultExpanded: false,
+        testId: optionalHeadingTestId,
       });
     }
 
     return accordionItems;
-  }, [input_mapping, requiredInputs, renderMappingItem]);
+  }, [input_mapping, requiredInputs, renderMappingItem, requiredHeadingTestId, optionalHeadingTestId]);
 
   return (
     <BasicAccordion

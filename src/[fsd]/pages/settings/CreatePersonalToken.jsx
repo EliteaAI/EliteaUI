@@ -6,8 +6,7 @@ import * as yup from 'yup';
 
 import { Box, CircularProgress, Tooltip } from '@mui/material';
 
-import { DrawerPage, DrawerPageHeader } from '@/[fsd]/features/settings/ui/drawer-page';
-import { GeneratedTokenDialog } from '@/[fsd]/features/settings/ui/personal-tokes';
+import { DrawerPage, DrawerPageHeader, GeneratedTokenDialog } from '@/[fsd]/features/settings';
 import { Button, Input } from '@/[fsd]/shared/ui';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { useTokenCreateMutation, useTokenListQuery } from '@/api/auth';
@@ -106,6 +105,7 @@ const CreatePersonalToken = memo(() => {
     <DrawerPage>
       <DrawerPageHeader
         title="New Token"
+        titleTestId="create-personal-token-page-title"
         showBackButton
         showBorder
         onBack={onCancel}
@@ -117,6 +117,7 @@ const CreatePersonalToken = memo(() => {
             >
               <Box component="span">
                 <Button.BaseBtn
+                  data-testid="create-personal-token-generate-button"
                   variant="elitea"
                   color="primary"
                   disabled={isGenerateDisabled}
@@ -157,12 +158,17 @@ const CreatePersonalToken = memo(() => {
                   onBlur={formik.handleBlur}
                   error={nameHasError || isAtCharacterLimit}
                   helperText={getNameHelperText()}
-                  inputProps={{ maxLength: MAX_VARIABLES_LENGTH }}
+                  helperTextTestId="create-personal-token-name-error"
+                  inputProps={{
+                    'data-testid': 'create-personal-token-name-input',
+                    maxLength: MAX_VARIABLES_LENGTH,
+                  }}
                 />
               </Box>
               <Box sx={styles.expirationRow}>
                 <Box sx={styles.measureField}>
                   <SingleSelect
+                    data-testid="create-personal-token-expiration-measure-select"
                     showBorder
                     id="measure"
                     name="measure"
@@ -188,6 +194,7 @@ const CreatePersonalToken = memo(() => {
                       value={formik.values.expiration + ''}
                       onChange={onChangeExpiration}
                       onBlur={formik.handleBlur}
+                      inputProps={{ 'data-testid': 'create-personal-token-expiration-value-input' }}
                     />
                   )}
                 </Box>

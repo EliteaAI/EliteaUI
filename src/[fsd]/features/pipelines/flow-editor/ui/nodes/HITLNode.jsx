@@ -201,6 +201,7 @@ const HITLNode = memo(props => {
               }
               inputFieldName="input"
               disabled={isInputSelectDisabled}
+              dataTestId="pipeline-hitl-node-input-select"
             />
           </Box>
         </StyledTooltip>
@@ -215,6 +216,8 @@ const HITLNode = memo(props => {
           disabled={isRunningPipeline || disabled}
           enableAIAssistant
           modelConfig={pipelineLLMConfig}
+          typeSelectTestId="pipeline-hitl-node-user-message-type-select"
+          valueFieldTestId="pipeline-hitl-node-user-message-value-input"
         />
       </Box>
 
@@ -224,6 +227,7 @@ const HITLNode = memo(props => {
         summarySX={styles.accordionSummary}
         titleSX={styles.accordionTitle}
         accordionDetailsSX={styles.accordionDetails}
+        data-testid="pipeline-hitl-node-router-mapping-section"
         items={[
           {
             title: 'Router mapping',
@@ -249,6 +253,7 @@ const HITLNode = memo(props => {
                       error={action.value === 'edit' && isEditRouteInvalid}
                       showBorder
                       className="nopan nodrag"
+                      data-testid={`pipeline-hitl-node-route-select-${action.value}`}
                     />
                   </Box>
                 ))}
@@ -270,6 +275,7 @@ const HITLNode = memo(props => {
           error={isEditRouteInvalid}
           showBorder
           className="nopan nodrag"
+          data-testid="pipeline-hitl-node-edit-state-key-select"
         />
       </Box>
       {isEditRouteInvalid && (

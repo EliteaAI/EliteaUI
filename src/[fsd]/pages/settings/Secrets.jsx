@@ -1,7 +1,6 @@
 import { memo } from 'react';
 
-import { DrawerPage } from '@/[fsd]/features/settings/ui/drawer-page';
-import { SecretsContent } from '@/[fsd]/features/settings/ui/secrets';
+import { DrawerPage, SecretsContent } from '@/[fsd]/features/settings';
 
 const Secrets = memo(() => {
   return (

@@ -5,8 +5,8 @@ import { useLocation, useSearchParams } from 'react-router-dom';
 
 import { Box, useTheme } from '@mui/material';
 
-import { ProjectSelectShowMode } from '@/[fsd]/features/project/lib/constants';
 import { usePublicProjectAccessCheck, useRestoreLastListRoute } from '@/[fsd]/features/project/lib/hooks';
+import { ProjectSelectShowMode } from '@/[fsd]/shared/lib/constants/projectSelect.constants';
 import { Select } from '@/[fsd]/shared/ui';
 import { useProjectListQuery } from '@/api/project';
 import {

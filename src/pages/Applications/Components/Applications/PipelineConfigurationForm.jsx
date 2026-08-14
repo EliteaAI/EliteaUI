@@ -48,10 +48,13 @@ const PipelineConfigurationForm = memo(props => {
       <ApplicationAdvanceSettings
         style={styles.advanceSettings}
         disabled={isDisabled}
+        stepLimitTestId="pipeline-step-limit-input"
       />
       <ApplicationEditorNotes
         style={styles.editorNotes}
         disabled={isDisabled}
+        sectionTestId="pipeline-editor-notes-section"
+        notesInputTestId="pipeline-editor-notes-input"
       />
       <ApplicationInformation
         style={styles.information}

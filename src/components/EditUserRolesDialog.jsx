@@ -14,6 +14,10 @@ const EditUserRolesDialog = memo(props => {
     confirmButtonText = 'Save',
     rolesOptions,
     originalRoles = [],
+    dialogTestId,
+    titleTestId,
+    roleSelectTestId,
+    saveButtonTestId,
   } = props;
   const [selectedRoles, setSelectedRoles] = useState(originalRoles);
 
@@ -54,6 +58,8 @@ const EditUserRolesDialog = memo(props => {
       title={title}
       onClose={onClose}
       onKeyDown={handleKeyDown}
+      data-testid={dialogTestId}
+      titleTestId={titleTestId}
       content={
         <Box sx={styles.contentWrapper}>
           <Typography
@@ -70,6 +76,7 @@ const EditUserRolesDialog = memo(props => {
             multiple
             showBorder
             showEmptyPlaceholder={false}
+            data-testid={roleSelectTestId}
           />
         </Box>
       }
@@ -87,6 +94,7 @@ const EditUserRolesDialog = memo(props => {
             color="primary"
             onClick={handleConfirm}
             disabled={!selectedRoles.length || !hasChangedRoles}
+            data-testid={saveButtonTestId}
           >
             {confirmButtonText}
           </Button.BaseBtn>

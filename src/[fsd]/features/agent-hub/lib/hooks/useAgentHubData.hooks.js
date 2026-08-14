@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useDispatch, useSelector } from 'react-redux';
 
-import { useGetAgentCategoriesQuery } from '@/[fsd]/features/agent';
+import { useGetAgentCategoriesQuery } from '@/[fsd]/entities/version/api';
 import { AgentHubConstants } from '@/[fsd]/features/agent-hub/lib/constants';
 import { useLazyPublicApplicationsListQuery } from '@/api/applications';
 import { CollectionStatus, PUBLIC_PROJECT_ID } from '@/common/constants';

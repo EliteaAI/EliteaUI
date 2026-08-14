@@ -212,6 +212,7 @@ const EditorPanel = forwardRef(({ setYamlDirty, stopRun, display, sx, disabled }
                 variant="elitea"
                 color="tertiary"
                 onClick={onCopy}
+                data-testid="pipeline-yaml-copy-button"
               >
                 <CopyIcon sx={styles.copyIcon} />
               </IconButton>

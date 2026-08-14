@@ -16,6 +16,7 @@ const ToolList = memo(props => {
   const content = (
     <Box
       ref={containerRef}
+      data-testid="slash-mention-tool-list"
       sx={toolListStyles.container}
     >
       <Box
@@ -45,6 +46,7 @@ const ToolList = memo(props => {
             itemRef={el => {
               itemRefs.current[idx] = el;
             }}
+            testId={`slash-mention-tool-item-${tool.name}`}
           />
         ))
       )}

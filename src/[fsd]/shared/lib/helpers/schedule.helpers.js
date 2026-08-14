@@ -1,13 +1,12 @@
 import cronstrue from 'cronstrue';
 
-const HOURLY_FLOOR_MSG = 'Frequency cannot be less than every hour';
 const DAILY_FLOOR_MSG = 'Frequency cannot be more than once per day';
 
 const validateMinimumFrequency = (minute, hour) => {
   const invalid = {
     isValid: false,
     field: 'minutes',
-    message: HOURLY_FLOOR_MSG,
+    message: 'Frequency cannot be less than every hour',
   };
 
   if (minute === '*') return invalid;
@@ -51,9 +50,6 @@ const validateMinimumFrequency = (minute, hour) => {
   return { isValid: true };
 };
 
-// Daily-floor variant used by index scheduling (indexing is heavier than
-// pipeline runs, so we cap it at one execution per day). Pipelines keep the
-// hourly floor via validateMinimumFrequency.
 const validateMinimumDailyFrequency = (minute, hour) => {
   const invalid = {
     isValid: false,
@@ -61,14 +57,8 @@ const validateMinimumDailyFrequency = (minute, hour) => {
     message: DAILY_FLOOR_MSG,
   };
 
-  // Reuse the hourly check, but surface the daily message — anything that
-  // fires more than once per hour also fires more than once per day, and
-  // the user is configuring an index schedule, so they should see the
-  // index-specific limit.
   const hourly = validateMinimumFrequency(minute, hour);
   if (!hourly.isValid) {
-    // Preserve "Invalid hour step value. Step cannot be 0." (a syntax-level
-    // error, not a frequency-floor violation).
     if (hourly.message && hourly.message.startsWith('Invalid hour step')) {
       return hourly;
     }
@@ -160,7 +150,7 @@ export const validateCronExpression = input => {
       message: 'Invalid weekday (0-7 where 0,7=Sunday, *, ranges, lists, steps allowed)',
     };
 
-  const frequencyCheck = validateMinimumFrequency(minute, hour);
+  const frequencyCheck = validateMinimumDailyFrequency(minute, hour);
   if (!frequencyCheck.isValid) return frequencyCheck;
 
   try {
@@ -218,25 +208,4 @@ export const getNextCronRun = (expression, fromDate = new Date()) => {
     d.setMinutes(d.getMinutes() + 1);
   }
   return null;
-};
-
-export const validateCronExpressionDaily = input => {
-  const base = validateCronExpression(input);
-  if (!base.isValid) {
-    // validateCronExpression runs the hourly frequency check internally; for
-    // the index modal those rejections must surface the daily-floor message
-    // instead. Other rejections (syntax errors, hour-step-zero) pass through.
-    if (base.message === HOURLY_FLOOR_MSG) {
-      return { isValid: false, field: base.field, message: DAILY_FLOOR_MSG };
-    }
-    return base;
-  }
-
-  const parts = input.trim().split(/\s+/);
-  const [minute, hour] = parts;
-
-  const dailyCheck = validateMinimumDailyFrequency(minute, hour);
-  if (!dailyCheck.isValid) return dailyCheck;
-
-  return base;
 };

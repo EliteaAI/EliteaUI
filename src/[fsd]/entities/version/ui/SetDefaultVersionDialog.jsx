@@ -14,7 +14,15 @@ const entityMessages = {
 };
 
 const SetDefaultVersionDialog = memo(props => {
-  const { open, onClose, onConfirm, confirming = false, versionName, entityType = 'agent' } = props;
+  const {
+    open,
+    onClose,
+    onConfirm,
+    confirming = false,
+    versionName,
+    entityType = 'agent',
+    confirmButtonTestId,
+  } = props;
 
   return (
     <BaseModal
@@ -53,6 +61,7 @@ const SetDefaultVersionDialog = memo(props => {
             Cancel
           </Button.BaseBtn>
           <Button.BaseBtn
+            data-testid={confirmButtonTestId}
             variant="elitea"
             color="primary"
             onClick={onConfirm}

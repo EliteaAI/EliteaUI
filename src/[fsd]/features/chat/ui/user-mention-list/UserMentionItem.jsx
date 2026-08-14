@@ -23,6 +23,7 @@ const UserMentionItem = memo(props => {
     <Box
       onClick={handleClick}
       sx={styles.item(isActive)}
+      data-testid={`chat-user-mention-item-${user.id}`}
     >
       <UserAvatar
         name={avatarName}

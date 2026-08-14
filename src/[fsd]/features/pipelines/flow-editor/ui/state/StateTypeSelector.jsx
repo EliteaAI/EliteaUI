@@ -26,7 +26,7 @@ const stateTypeOptions = Object.keys(FlowEditorConstants.StateVariableTypes).red
 }, {});
 
 const StateTypeSelector = memo(props => {
-  const { type, onTypeChange, disabled = false } = props;
+  const { name, type, onTypeChange, disabled = false } = props;
 
   const styles = stateTypeSelectorStyles();
 
@@ -54,6 +54,7 @@ const StateTypeSelector = memo(props => {
   return (
     <>
       <FlowEditorState.StateVariableIconButton
+        testId={`pipeline-state-variable-type-select-${name}`}
         tooltip="Select data type"
         onClick={handleClick}
         isActive={open}
@@ -88,6 +89,7 @@ const StateTypeSelector = memo(props => {
           return (
             <MenuItem
               key={typeKey}
+              data-testid={`pipeline-state-type-option-${typeKey}`}
               selected={isSelected}
               onClick={() => handleSelectType(typeKey)}
               sx={styles.menuItem(isSelected)}

@@ -68,6 +68,86 @@ export const getPendingHitlMessage = history => {
   return interrupts.some(interrupt => !interrupt?.decided) ? lastAssistant : undefined;
 };
 
+const ASK_USER_TOOL_NAME = 'ask_user';
+const ANSWER_LINE_PREFIX = '- ';
+
+// Splits the ask_user tool result string ("User answered:\n- <label>: <value>")
+// into its answer-line bodies (prefix stripped), tolerating a non-string input.
+const extractAnswerLines = raw =>
+  typeof raw === 'string'
+    ? raw
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line.startsWith(ANSWER_LINE_PREFIX))
+        .map(line => line.slice(ANSWER_LINE_PREFIX.length))
+    : [];
+
+// Fallback { label: value } map for when the question specs are unavailable.
+const parseAskUserAnswerLines = raw => {
+  const map = {};
+  extractAnswerLines(raw).forEach(body => {
+    const sepIndex = body.indexOf(': ');
+    if (sepIndex === -1) return;
+    const label = body.slice(0, sepIndex).trim();
+    const value = body.slice(sepIndex + 2).trim();
+    if (label) map[label] = value;
+  });
+  return map;
+};
+
+// Reads the questions array from an ask_user tool-inputs value, tolerating a raw
+// object ({ questions: [...] }), a bare array, or a JSON string of either.
+const extractAskUserQuestions = toolInputs => {
+  let src = toolInputs;
+  if (typeof src === 'string') {
+    try {
+      src = JSON.parse(src);
+    } catch {
+      src = null;
+    }
+  }
+  if (Array.isArray(src?.questions)) return src.questions;
+  if (Array.isArray(src)) return src;
+  return [];
+};
+
+// Matches a question to its answer by prefix: the SDK writes each line as
+// "- <full question text>: <value>", and the question text itself may contain
+// ": ", so splitting on the first separator is unreliable.
+const matchAnswer = (label, answerLines) => {
+  const line = answerLines.find(body => body.startsWith(label));
+  return line ? line.slice(label.length).replace(/^:\s*/, '').trim() : '';
+};
+
+// Finds a completed ask_user tool action (live-answered or history-reloaded).
+export const findAskUserAction = toolActions => {
+  if (!Array.isArray(toolActions)) return null;
+  return toolActions.find(item => item?.name === ASK_USER_TOOL_NAME && item?.status === 'complete') || null;
+};
+
+// Builds the display list [{ question, answer }] from an ask_user action's tool
+// inputs (questions) and tool output (answer string). Inputs/outputs come from the
+// live action or, on reload, a lazily-fetched trace-step detail. Returns null when
+// there is nothing to summarize.
+export const buildAskUserSummary = (toolInputs, toolOutputs) => {
+  const questions = extractAskUserQuestions(toolInputs);
+  const answerLines = extractAnswerLines(toolOutputs);
+
+  if (questions.length) {
+    const items = questions
+      .map(spec => {
+        const label = spec?.question || spec?.header || spec?.id || '';
+        return { question: label, answer: label ? matchAnswer(label, answerLines) : '' };
+      })
+      .filter(item => item.question);
+    return items.length ? items : null;
+  }
+
+  const answerMap = parseAskUserAnswerLines(toolOutputs);
+  const fallbackItems = Object.entries(answerMap).map(([question, answer]) => ({ question, answer }));
+  return fallbackItems.length ? fallbackItems : null;
+};
+
 export const getHitlResumeGroup = (interrupts, selected) => {
   const list = Array.isArray(interrupts) ? interrupts : [];
   if (!selected) return [];

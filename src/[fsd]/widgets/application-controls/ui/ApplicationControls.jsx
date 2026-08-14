@@ -67,6 +67,11 @@ const ApplicationControls = memo(props => {
     isPinned,
     onTogglePin: togglePin,
     isLoading: isPinLoading,
+    // ELITEA-2049 — thread a caller-supplied key so this menu item renders
+    // a data-testid (DotMenu.jsx: `testId: item.key`). Scoped to THIS call
+    // site only; the other usePinMenu() callers (Skill/Toolkits/Credentials
+    // controls) are untouched (out of this test's scope).
+    key: isFromPipeline ? 'pipeline-actions-pin-to-top' : 'agent-actions-pin-to-top',
   });
   const { exportApplicationMenuItem } = useExportApplicationMenu();
   const { forkEntityMenuItem } = useForkEntityMenu({

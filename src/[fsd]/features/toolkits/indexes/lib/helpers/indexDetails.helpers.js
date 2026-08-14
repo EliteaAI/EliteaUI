@@ -1,4 +1,6 @@
+import { summarizeIndexingReport } from '@/[fsd]/entities/indexing-report';
 import {
+  BANNER_SUCCESS_SUFFIX,
   BannerMessageMap,
   BannerSeverity,
   BannerTitleMap,
@@ -9,7 +11,7 @@ import { BUDGET_ERROR_VARIANTS } from '@/[fsd]/shared/lib/constants/budgetError.
 
 // The scope code the backend puts in the persisted index error. Reusing the shared copy
 // keeps the banner and the message below it from drifting apart.
-const budgetErrorMessage = error => {
+export const budgetErrorMessage = error => {
   if (typeof error !== 'string') return null;
 
   const code = Object.keys(BUDGET_ERROR_VARIANTS).find(scope => error.includes(scope));
@@ -58,21 +60,14 @@ export const bannerVariant = (isIndexing, state, reindexStats, error) => {
       message: BannerMessageMap[BannerSeverity.warning],
     };
   if (RUNNABLE_INDEX_STATUSES.includes(state)) {
-    let indexedFiles = 0;
-    let skippedFiles = 0;
-    if (reindexStats.isReindex) {
-      indexedFiles = reindexStats.updated ?? 0;
-      skippedFiles = reindexStats.skipped ?? 0;
-    } else {
-      indexedFiles = reindexStats.firstIndexed ?? 0;
-      skippedFiles = reindexStats.firstSkipped ?? 0;
-    }
+    // Only the run's own breakdown knows what it indexed and in what units.
+    const breakdown = summarizeIndexingReport(reindexStats?.latestEntry);
     return {
       severity: BannerSeverity.success,
       label: BannerTitleMap[BannerSeverity.success],
-      message: BannerMessageMap[BannerSeverity.success]
-        .replace('{{indexed_files}}', indexedFiles)
-        .replace('{{skipped_files}}', skippedFiles),
+      message: breakdown
+        ? `${breakdown}. ${BANNER_SUCCESS_SUFFIX}`
+        : BannerMessageMap[BannerSeverity.success],
     };
   }
   return {

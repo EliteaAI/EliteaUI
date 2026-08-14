@@ -4,9 +4,8 @@ import { useLocation, useSearchParams } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
-import { USERS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
-import { DrawerPage, DrawerPageHeader } from '@/[fsd]/features/settings/ui/drawer-page';
-import { DeleteUserButton, EditUsersButton, UsersTable } from '@/[fsd]/features/settings/ui/users';
+import { USERS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
+import { DeleteUserButton, DrawerPage, DrawerPageHeader, EditUsersButton, UsersTable } from '@/[fsd]/features/settings';
 import { useRoleListQuery, useUserCreateMutation, useUserListQuery } from '@/api/admin';
 import { PERMISSIONS } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
@@ -192,6 +191,7 @@ const Users = memo(() => {
         {/* <ProjectGroupEditor /> */}
         <DrawerPageHeader
           title="Users"
+          titleTestId="users-page-title"
           showAddButton={checkPermission(PERMISSIONS.users.create)}
           showSearchInput={checkPermission(PERMISSIONS.users.view)}
           slotProps={{
@@ -199,11 +199,13 @@ const Users = memo(() => {
               search,
               onChangeSearch: handleChange,
               placeholder: 'Search ',
+              testId: 'users-search-input',
             },
             addButton: {
               onAdd: handleOpenInviteDialog,
               tooltip: 'Invite users',
               tourId: USERS_TOUR_TARGET_IDS.inviteButton,
+              testId: 'users-invite-button',
             },
           }}
           extraContent={
@@ -217,6 +219,11 @@ const Users = memo(() => {
                   rolesOptions={rolesOptions}
                   sx={styles.actionButton}
                   isBatchEdit
+                  testId="users-header-edit-button"
+                  dialogTestId="users-edit-roles-dialog"
+                  dialogTitleTestId="users-edit-roles-title"
+                  roleSelectTestId="users-edit-roles-select"
+                  saveButtonTestId="users-edit-roles-save-button"
                 />
               )}
               {checkPermission(PERMISSIONS.users.delete) && (
@@ -227,6 +234,7 @@ const Users = memo(() => {
                   setSelectedUsers={setSelectedUsers}
                   useSecondaryButton
                   sx={styles.actionButton}
+                  testId="users-header-delete-button"
                 />
               )}
             </>
@@ -266,6 +274,10 @@ const Users = memo(() => {
         onCancel={handleCloseInviteDialog}
         onConfirm={handleConfirmInvite}
         rolesOptions={rolesOptions}
+        emailsInputTestId="users-invite-emails-input"
+        roleSelectTestId="users-invite-role-select"
+        confirmButtonTestId="users-invite-confirm-button"
+        emailsErrorTestId="users-invite-emails-error-text"
       />
     </>
   );

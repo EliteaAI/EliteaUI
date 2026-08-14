@@ -57,6 +57,7 @@ const RotatingMessages = ({ sx = {}, duration = 2000 }) => {
 
   return (
     <Typography
+      data-testid="chat-answer-loading-placeholder"
       sx={{
         fontWeight: '400',
         fontSize: '14px',

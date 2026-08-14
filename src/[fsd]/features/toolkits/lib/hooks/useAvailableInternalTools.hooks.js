@@ -16,7 +16,7 @@ export const useAvailableInternalTools = (options = {}) => {
         return false;
       }
 
-      if (tool.name === 'internal_mcp' && !isMcpVisible) {
+      if (['internal_mcp', 'skill_builder', 'project_context_builder'].includes(tool.name) && !isMcpVisible) {
         return false;
       }
 

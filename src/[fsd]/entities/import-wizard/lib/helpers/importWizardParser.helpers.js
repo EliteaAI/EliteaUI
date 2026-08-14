@@ -2,13 +2,6 @@ import yaml from 'js-yaml';
 import { v4 as uuidv4 } from 'uuid';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
-import {
-  FlowEditorHelpers,
-  LAYOUT_VERSION,
-  LayoutHelpers,
-  ORIENTATION,
-  ParsePipelineHelpers,
-} from '@/[fsd]/features/pipelines';
 import { deepCloneObject } from '@/common/utils';
 
 import { setDefaultModelsForImportedAgents } from './importWizardModels.helpers';
@@ -33,10 +26,8 @@ export const parseMdFrontmatter = content => {
   return { frontmatter, body };
 };
 
-const buildInstructionsBasedOnType = ({ agentType, frontmatter, body }) => {
+const buildInstructionsBasedOnType = ({ agentType, frontmatter, body, generatePipelineLayout }) => {
   if (agentType === 'pipeline') {
-    // For pipelines, reconstruct YAML instructions from frontmatter
-    // NOTE: toolkits should NOT be included in pipeline instructions - they are processed separately
     const pipelineConfig = {};
     if (frontmatter.state) pipelineConfig.state = frontmatter.state;
     if (frontmatter.entry_point) pipelineConfig.entry_point = frontmatter.entry_point;
@@ -46,38 +37,13 @@ const buildInstructionsBasedOnType = ({ agentType, frontmatter, body }) => {
 
     const instructions = Object.keys(pipelineConfig).length > 0 ? yaml.dump(pipelineConfig) : '';
 
-    // Use exported pipeline_settings when available to preserve the original visual layout.
-    // Fall back to regenerating layout from YAML for older exports that lack this field.
     if (frontmatter.pipeline_settings) {
       return { instructions, pipelineSettings: frontmatter.pipeline_settings };
     }
 
-    let parsedYamlJson = undefined;
-    try {
-      parsedYamlJson = yaml.load(instructions);
-    } catch {
-      // YAML parsing failed, parsedYamlJson remains undefined
-    }
-    const { nodes: parsedNodes, edges: parsedEdges } = ParsePipelineHelpers.parseYaml(
-      parsedYamlJson,
-      ORIENTATION.vertical,
-    );
-    const { nodes, edges } = LayoutHelpers.doLayout({
-      nodes: parsedNodes,
-      edges: parsedEdges,
-      orientation: ORIENTATION.vertical,
-      flowNodes: [],
-    });
+    const pipelineSettings = generatePipelineLayout?.(instructions) ?? {};
 
-    return {
-      instructions,
-      pipelineSettings: {
-        nodes: nodes.map(node => FlowEditorHelpers.convertNode(node, LAYOUT_VERSION)),
-        edges,
-        orientation: ORIENTATION.vertical,
-        layout_version: LAYOUT_VERSION,
-      },
-    };
+    return { instructions, pipelineSettings };
   } else return { instructions: body };
 };
 
@@ -188,10 +154,15 @@ const buildApplicationObject = props => {
 };
 
 //  Convert MD frontmatter to import wizard format
-export const mdToApplicationJson = (frontmatter, body) => {
+export const mdToApplicationJson = (frontmatter, body, { generatePipelineLayout } = {}) => {
   const agentType = frontmatter.agent_type || 'react';
 
-  const { instructions, pipelineSettings } = buildInstructionsBasedOnType({ agentType, frontmatter, body });
+  const { instructions, pipelineSettings } = buildInstructionsBasedOnType({
+    agentType,
+    frontmatter,
+    body,
+    generatePipelineLayout,
+  });
   const tools = buildToolsFromToolkits(frontmatter);
   const nestedAgentTools = buildToolsFromNestedAgents(frontmatter);
   const nestedPipelineTools = buildToolsFromNestedPipelines(frontmatter);

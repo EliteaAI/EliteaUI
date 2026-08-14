@@ -5,12 +5,15 @@ import { Box, Typography } from '@mui/material';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 
 const KpiCard = memo(props => {
-  const { label, value, valueSuffix, subtitle, color, badge, tooltip } = props;
+  const { label, value, valueSuffix, subtitle, color, badge, tooltip, testId, valueTestId } = props;
 
   const styles = kpiCardStyles();
 
   return (
-    <Box sx={styles.kpiCard}>
+    <Box
+      sx={styles.kpiCard}
+      data-testid={testId}
+    >
       <Box sx={styles.kpiLabelRow}>
         <Typography
           variant="labelSmall"
@@ -31,6 +34,7 @@ const KpiCard = memo(props => {
         <Typography
           variant="headingMedium"
           sx={[styles.kpiValue, color ? { color } : {}]}
+          data-testid={valueTestId}
         >
           {value}
         </Typography>

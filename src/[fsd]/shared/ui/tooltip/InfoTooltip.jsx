@@ -22,6 +22,8 @@ const InfoTooltip = memo(props => {
     disableTooltip = false,
     TitleComponent,
     titleComponentProps,
+    testId,
+    contentTestId,
   } = props;
   const styles = infoTooltipStyles();
 
@@ -73,6 +75,7 @@ const InfoTooltip = memo(props => {
   const iconElement = (
     <Box
       data-info-tooltip
+      data-testid={testId}
       sx={[styles.iconContainer, sx]}
       component="span"
       {...boxProps}
@@ -107,6 +110,11 @@ const InfoTooltip = memo(props => {
             zIndex: tooltipConfig.zIndex,
           },
         },
+        // Caller-scoped testid on MuiTooltip's own `tooltip` slot (the bubble
+        // element that already exists), NOT on a new wrapper node — so the
+        // popper DOM is byte-identical for every InfoTooltip instance,
+        // whether or not a caller opts in. `undefined` renders no attribute.
+        tooltip: { 'data-testid': contentTestId },
       }}
     >
       {iconElement}
