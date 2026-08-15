@@ -209,6 +209,10 @@ const ConversationItem = memo(props => {
               !checkPermission(PERMISSIONS.chat.folders.update) ||
               (isActive && isEditingCanvas),
             subMenuItems: moveToFoldersMenuItems,
+            // Caller-supplied testid for DotMenu's nested submenu popover —
+            // DotMenu.jsx is shared (16+ consumers), so the testid must not
+            // be hardcoded there; this is the only call site requesting one.
+            submenuTestId: 'chat-move-to-submenu-popover',
           },
           {
             key: 'chat-conversation-menu-playback',

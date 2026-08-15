@@ -17,6 +17,7 @@ const BasicMenuItem = ({
   onClick,
   disabled,
   subMenuItems,
+  submenuTestId,
   onCloseSubMenu,
   slotProps = { ListItemText: {}, MenuItem: {}, ListItemIcon: {} },
   addSeparator = false,
@@ -107,7 +108,13 @@ const BasicMenuItem = ({
           // (scrollHeight > clientHeight when many folders exist) couldn't
           // be asserted. Zero new DOM node — MUI already renders this
           // Paper, this is a pure attribute pass-through via slotProps.
-          slotProps={{ paper: { 'data-testid': 'chat-move-to-submenu-popover' } }}
+          // REWIRED (fix-round-1 pass) — DotMenu.jsx is a shared component
+          // (16+ consumers); the testid must not be a feature-scoped literal
+          // baked in here. `submenuTestId` is caller-supplied, threaded down
+          // from the menu-item definition (today only the chat "Move to"
+          // item in ConversationItem.jsx sets it). No other caller currently
+          // passes it, so the popover renders with no testid unless asked.
+          slotProps={submenuTestId ? { paper: { 'data-testid': submenuTestId } } : undefined}
         >
           {subMenuItems.map(subMenuItem => {
             const subCommonProps = {
@@ -398,6 +405,7 @@ const DotMenu = memo(props => {
                 entityName: item.entityName,
                 disabled: item.disabled,
                 subMenuItems: item.subMenuItems,
+                submenuTestId: item.submenuTestId,
                 slotProps: { ...(slotProps || {}), ...(item.slotProps || {}) },
                 addSeparator: item.addSeparator,
                 isSelected: item.isSelected,
@@ -459,6 +467,7 @@ const DotMenu = memo(props => {
                     entityName: item.entityName,
                     disabled: item.disabled,
                     subMenuItems: item.subMenuItems,
+                    submenuTestId: item.submenuTestId,
                     slotProps: { ...(slotProps || {}), ...(item.slotProps || {}) },
                     addSeparator: item.addSeparator,
                     isSelected: item.isSelected,
