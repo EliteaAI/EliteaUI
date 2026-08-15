@@ -222,6 +222,7 @@ const ConversationItem = memo(props => {
             onClick: handlePlayback,
           },
           {
+            key: 'chat-conversation-menu-duplicate',
             label: 'Duplicate',
             icon: <CopyIcon sx={{ fontSize: '1rem' }} />,
             disabled: isActive && isEditingCanvas,
