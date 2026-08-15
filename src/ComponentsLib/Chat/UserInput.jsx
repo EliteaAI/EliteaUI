@@ -408,6 +408,8 @@ const UserInput = forwardRef((props, ref) => {
 
   return (
     <Box
+      data-testid="chat-composer-focus-border"
+      data-focused={isFocused}
       sx={styles.gradientBorder}
       data-tour={dataTourTargetId || undefined}
     >
