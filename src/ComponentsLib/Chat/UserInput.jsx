@@ -556,6 +556,7 @@ const UserInput = forwardRef((props, ref) => {
                       color="secondary"
                       sx={styles.stopButton(stopButton)}
                       onClick={onStop}
+                      data-testid="chat-stop-generation-button"
                     >
                       <StopIcon style={styles.stopIconStyle} />
                     </BaseBtn>
