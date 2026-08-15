@@ -31,6 +31,7 @@ const BaseModal = memo(props => {
     confirming = false,
     'data-testid': dataTestId,
     titleTestId,
+    titleIconTestId,
     closeButtonTestId,
     confirmButtonTestId,
     cancelButtonTestId,
@@ -63,6 +64,7 @@ const BaseModal = memo(props => {
 
     return (
       <Icon
+        data-testid={titleIconTestId}
         style={{
           width: ModalConstants.MODAL_ICON_SIZE.width,
           height: ModalConstants.MODAL_ICON_SIZE.height,
