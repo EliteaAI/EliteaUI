@@ -119,7 +119,6 @@ const LLMModelSelector = memo(props => {
               title={settingsTooltip}
             >
               <Button.BaseBtn
-                data-testid="llm-model-settings-button"
                 variant={Button.BUTTON_VARIANTS.secondary}
                 onClick={handleSettingsClick}
                 disabled={!onSetLLMSettings || disabled}
