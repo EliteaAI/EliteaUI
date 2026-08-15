@@ -76,6 +76,7 @@ const FolderAccordion = memo(props => {
           key={index}
           data-testid={folderId != null ? `chat-folder-item-${folderId}` : undefined}
           data-expanded={expanded}
+          data-pinned={isPinned}
           sx={[styles.accordion, slotProps?.sx]}
           expanded={expanded}
           onChange={onChange}

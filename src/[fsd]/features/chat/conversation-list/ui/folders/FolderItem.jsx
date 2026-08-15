@@ -105,6 +105,7 @@ const FolderItem = memo(props => {
         onClick: handleCreateConversationInFolder,
       },
       {
+        key: 'chat-folder-menu-rename',
         label: 'Rename',
         icon: (
           <EditIcon
@@ -116,6 +117,7 @@ const FolderItem = memo(props => {
         onClick: handleEditFolder,
       },
       {
+        key: 'chat-folder-menu-pin',
         label: folder.meta?.is_pinned ? 'Unpin' : 'Pin on top',
         icon: <PinIcon sx={{ fontSize: '1rem' }} />,
         disabled: userId != owner_id || !checkPermission(PERMISSIONS.chat.folders.update),
