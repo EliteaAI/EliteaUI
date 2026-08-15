@@ -53,6 +53,7 @@ const SendButton = memo(props => {
       >
         <Box component="span">
           <BaseBtn
+            data-testid="chat-voice-mode-button"
             variant="icon"
             disabled={disabledSend}
             onClick={onEnterSpeakingMode}

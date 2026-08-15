@@ -184,6 +184,7 @@ const VoiceButton = memo(
         >
           <Box component="span">
             <BaseBtn
+              data-testid="chat-voice-input-button"
               variant={BUTTON_VARIANTS.icon}
               color={isRecording ? 'tertiary' : 'secondary'}
               onClick={isAdminDisabled || isRecording ? undefined : handleStartRecording}
