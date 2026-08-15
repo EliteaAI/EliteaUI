@@ -251,6 +251,7 @@ export const EllipsisTextWithTooltip = memo(props => {
           placement="top"
           title={text}
           extraStyles={styles.tooltip}
+          slotProps={{ tooltip: { 'data-testid': 'chat-conversation-starter-tile-tooltip' } }}
         >
           {TextComponent}
         </Tooltip>
