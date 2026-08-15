@@ -30,6 +30,8 @@ const DroppableFolderItem = memo(props => {
     >
       <Box
         ref={setNodeRef}
+        data-testid={`chat-folder-drop-zone-${folder.id}`}
+        data-drop-active={shouldShowDropFeedback}
         sx={{
           position: 'relative',
           borderRadius: '.375rem',

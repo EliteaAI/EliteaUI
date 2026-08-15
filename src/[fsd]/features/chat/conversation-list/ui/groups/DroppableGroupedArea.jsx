@@ -31,6 +31,8 @@ const DroppableGroupedArea = memo(props => {
     >
       <Box
         ref={setNodeRef}
+        data-testid="chat-conversation-list-drop-zone"
+        data-drop-active={shouldShowDropFeedback}
         sx={{
           position: 'relative',
           minHeight: '3.125rem',
