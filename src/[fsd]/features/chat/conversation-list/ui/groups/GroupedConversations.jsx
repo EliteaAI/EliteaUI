@@ -80,6 +80,7 @@ const GroupedConversations = memo(props => {
       )}
       {visibleGroups.length === 0 && totalConversationsAmount === 0 && (
         <Typography
+          data-testid="chat-conversations-empty-state-message"
           variant="bodyMedium"
           color="text.button.disabled"
         >

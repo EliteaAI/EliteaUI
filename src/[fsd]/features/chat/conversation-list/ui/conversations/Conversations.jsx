@@ -773,6 +773,7 @@ const Conversations = memo(props => {
               conversations.length === 0 &&
               folders.every(f => !f.conversations?.length) && (
                 <Box
+                  data-testid="chat-search-no-results-message"
                   sx={{
                     display: 'flex',
                     flexDirection: 'column',
