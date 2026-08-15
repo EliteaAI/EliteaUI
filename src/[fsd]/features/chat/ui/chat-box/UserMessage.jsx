@@ -135,8 +135,10 @@ const UserMessage = React.forwardRef((props, ref) => {
               name={name}
               avatar={avatar}
               size={24}
+              testId="chat-message-sender-avatar"
             />
             <Typography
+              data-testid="chat-message-sender-name"
               variant="bodySmall"
               color={'text.secondary'}
               sx={styles.userName}
