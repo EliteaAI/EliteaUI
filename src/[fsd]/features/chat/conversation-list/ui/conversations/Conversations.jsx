@@ -730,6 +730,7 @@ const Conversations = memo(props => {
         ) : (
           <Box
             ref={listRef}
+            data-testid="chat-conversation-list-scroll-container"
             sx={{
               marginTop: '0.5rem',
               display: collapsed && !isSmallWindow ? 'none' : 'flex',

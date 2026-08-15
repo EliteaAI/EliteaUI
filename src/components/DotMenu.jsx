@@ -102,6 +102,12 @@ const BasicMenuItem = ({
             horizontal: 'left',
           }}
           onClose={handleClose}
+          // ADDED (ELITEA-2147 implementer pass) — the nested submenu's
+          // Paper carried no testid/id at all, so its genuine scrollability
+          // (scrollHeight > clientHeight when many folders exist) couldn't
+          // be asserted. Zero new DOM node — MUI already renders this
+          // Paper, this is a pure attribute pass-through via slotProps.
+          slotProps={{ paper: { 'data-testid': 'chat-move-to-submenu-popover' } }}
         >
           {subMenuItems.map(subMenuItem => {
             const subCommonProps = {
