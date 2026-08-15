@@ -242,6 +242,17 @@ const ConversationItem = memo(props => {
             onConfirm: handleMakePublic,
             display: projectId == PUBLIC_PROJECT_ID || projectId == personal_project_id ? 'none' : undefined,
             disabled: isActive && isEditingCanvas,
+            // Caller-supplied testids for DotMenu's shared "confirm" dialog
+            // (ELITEA-2188) — DotMenu.jsx's Modal.BaseModal branch (used by
+            // any menu item with confirmText but no entityName) previously
+            // forwarded none of BaseModal's own testid props, so this
+            // dialog rendered with zero testids at all. Same
+            // caller-supplied-prop precedent as `submenuTestId` above —
+            // the shared component stays feature-agnostic, only this call
+            // site names the ids.
+            dialogTestId: 'chat-conversation-make-public-confirm-dialog',
+            confirmButtonTestId: 'chat-conversation-make-public-confirm-button',
+            cancelButtonTestId: 'chat-conversation-make-public-cancel-button',
           },
           {
             key: 'chat-conversation-menu-share',
@@ -418,6 +429,7 @@ const ConversationItem = memo(props => {
       <Box
         data-testid="conversation-multi-user-icon"
         data-has-icon={conversationType === 'private_with_users' || conversationType === 'public'}
+        data-conversation-type={conversationType}
         sx={styles.conversationIconWrapper}
       >
         {/* Always show users icon with appropriate color based on type */}

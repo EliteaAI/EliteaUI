@@ -193,6 +193,9 @@ const ActionWithDialog = ({
   skipConfirmation,
   addSeparator,
   testId,
+  dialogTestId,
+  confirmButtonTestId,
+  cancelButtonTestId,
 }) => {
   const openDialog = useCallback(
     event => {
@@ -217,6 +220,9 @@ const ActionWithDialog = ({
           inlineExtraContent,
           textContent,
           modalSx,
+          dialogTestId,
+          confirmButtonTestId,
+          cancelButtonTestId,
         },
       });
       closeMenu();
@@ -238,6 +244,9 @@ const ActionWithDialog = ({
       textContent,
       modalSx,
       skipConfirmation,
+      dialogTestId,
+      confirmButtonTestId,
+      cancelButtonTestId,
     ],
   );
 
@@ -436,6 +445,9 @@ const DotMenu = memo(props => {
                     setActiveDialog={setActiveDialog}
                     dialogKey={item.key || item.label}
                     skipConfirmation={skipConfirmation}
+                    dialogTestId={item.dialogTestId}
+                    confirmButtonTestId={item.confirmButtonTestId}
+                    cancelButtonTestId={item.cancelButtonTestId}
                   />
                 </TooltipWrapper>
               ) : (
@@ -497,6 +509,9 @@ const DotMenu = memo(props => {
                         setActiveDialog={setActiveDialog}
                         dialogKey={item.key || item.label}
                         skipConfirmation={skipConfirmation}
+                        dialogTestId={item.dialogTestId}
+                        confirmButtonTestId={item.confirmButtonTestId}
+                        cancelButtonTestId={item.cancelButtonTestId}
                       />
                     </TooltipWrapper>
                   ) : (
@@ -542,6 +557,9 @@ const DotMenu = memo(props => {
             onConfirm={handleDialogConfirm}
             confirmButtonText={activeDialog.props.confirmButtonTitle}
             alarm={activeDialog.props.alarm}
+            data-testid={activeDialog.props.dialogTestId}
+            confirmButtonTestId={activeDialog.props.confirmButtonTestId}
+            cancelButtonTestId={activeDialog.props.cancelButtonTestId}
           />
         ))}
     </Box>
