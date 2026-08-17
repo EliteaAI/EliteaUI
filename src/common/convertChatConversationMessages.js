@@ -1,5 +1,6 @@
 import { ChatHelpers } from '@/[fsd]/features/chat/lib/helpers';
 import { normalizeExecutionHierarchy } from '@/[fsd]/features/chat/lib/helpers/executionHierarchy.helpers.js';
+import { buildMcpAuthorizationToolAction } from '@/[fsd]/features/chat/lib/helpers/mcpAuthorization.helpers.js';
 import {
   hasUnresolvedSkillAction,
   mentionSkillActions,
@@ -334,6 +335,18 @@ export const convertToAIAnswer = (message_group, message_groups, participants, t
       });
     }
   }) || [];
+
+  const authorizationRequests = Array.isArray(meta?.authorization_requests)
+    ? meta.authorization_requests
+    : [];
+  authorizationRequests.forEach(request => {
+    const action = buildMcpAuthorizationToolAction({
+      metadata: request,
+      content: 'Toolkit authorization is required.',
+      createdAt: convertTime(updated_at || created_at),
+    });
+    if (action && !toolActions.some(existing => existing.id === action.id)) toolActions.push(action);
+  });
 
   if (!hasUnresolvedSkillAction(toolActions)) {
     toolActions.unshift(...mentionSkillActions(toolActions, meta?.invoked_skills, convertTime(created_at)));
