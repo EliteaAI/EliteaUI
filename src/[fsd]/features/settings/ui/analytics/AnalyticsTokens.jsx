@@ -10,31 +10,12 @@ import { ChartTooltip, KPICard } from '@/[fsd]/features/settings/ui/analytics';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 import { useAnalyticsCostsQuery } from '@/api';
 
+import { tokenStats } from '../../lib/helpers/analyticsToken.helpers.js';
+import TokenTable from './components/TokenTable';
+
 const NO_TOKENS_MSG = 'No token usage is available for the selected date range.';
 
 const getNumber = value => (Number.isFinite(Number(value)) ? Number(value) : 0);
-
-const getTokenStats = item => {
-  const input = getNumber(
-    item?.input_tokens ??
-      item?.total_input_tokens ??
-      item?.input_token ??
-      item?.prompt_tokens ??
-      item?.total_prompt_tokens ??
-      item?.input,
-  );
-  const output = getNumber(
-    item?.output_tokens ??
-      item?.total_output_tokens ??
-      item?.output_token ??
-      item?.completion_tokens ??
-      item?.total_completion_tokens ??
-      item?.output,
-  );
-  const totalCandidate = item?.total_tokens ?? item?.tokens_total ?? item?.total;
-  const total = Number.isFinite(Number(totalCandidate)) ? Number(totalCandidate) : input + output;
-  return { total, input, output };
-};
 
 const toPercentage = (value, total) => (total > 0 ? (value / total) * 100 : 0);
 
@@ -56,7 +37,7 @@ const AnalyticsTokens = memo(props => {
     () =>
       [...(data?.by_user || [])]
         .map(user => {
-          const tokens = getTokenStats(user);
+          const tokens = tokenStats(user);
           return {
             name:
               user.user_display_name ||
@@ -75,7 +56,7 @@ const AnalyticsTokens = memo(props => {
     () =>
       [...(data?.by_model || [])]
         .map(model => {
-          const tokens = getTokenStats(model);
+          const tokens = tokenStats(model);
           return {
             name: model.display_name || model.model_name || 'Unknown model',
             ...tokens,
@@ -90,7 +71,7 @@ const AnalyticsTokens = memo(props => {
     () =>
       [...(data?.by_agent || [])]
         .map(agent => {
-          const tokens = getTokenStats(agent);
+          const tokens = tokenStats(agent);
           return {
             name: agent.entity_name || agent.display_name || 'Unattributed',
             ...tokens,
@@ -104,7 +85,7 @@ const AnalyticsTokens = memo(props => {
   const dailyChartData = useMemo(
     () =>
       (data?.daily || []).map(day => {
-        const tokens = getTokenStats(day);
+        const tokens = tokenStats(day);
         return {
           date: day.date,
           total_tokens: tokens.total,
@@ -256,75 +237,6 @@ const AnalyticsTokens = memo(props => {
     </Box>
   );
 });
-
-const TokenTable = memo(props => {
-  const { title, subtitleTooltip, nameHeader, rows, emptyState } = props;
-
-  return (
-    <Box sx={styles.chartCard}>
-      <Box sx={styles.subtitleRow}>
-        <Typography
-          variant="labelMedium"
-          sx={[styles.chartTitle, { marginBottom: 0 }]}
-        >
-          {title}
-        </Typography>
-        <InfoTooltip
-          infoTooltip={{
-            title: subtitleTooltip,
-            icon: { width: 12, height: 12 },
-          }}
-        />
-      </Box>
-      {rows.length > 0 ? (
-        <Box sx={styles.tableWrapper}>
-          <Box sx={styles.tableHeader}>
-            <Typography sx={[styles.tableCell, styles.nameCell]}>{nameHeader}</Typography>
-            <Typography sx={[styles.tableCell, styles.rightAlignedCell]}>TOTAL TOKENS</Typography>
-            <Typography sx={[styles.tableCell, styles.rightAlignedCell]}>INPUT TOKENS</Typography>
-            <Typography sx={[styles.tableCell, styles.rightAlignedCell]}>OUTPUT TOKENS</Typography>
-            <Typography sx={[styles.tableCell, styles.rightAlignedCell]}>SHARE</Typography>
-          </Box>
-          {rows.map((row, index) => (
-            <Box
-              key={`${row.name}-${index}`}
-              sx={styles.tableRow}
-            >
-              <Typography
-                sx={[styles.tableCellValue, styles.nameCell]}
-                noWrap
-              >
-                {row.name}
-              </Typography>
-              <Typography sx={[styles.tableCellValue, styles.rightAlignedCell]}>
-                {AnalyticCommonHelpers.fmtNum(row.total)}
-              </Typography>
-              <Typography sx={[styles.tableCellValue, styles.rightAlignedCell]}>
-                {AnalyticCommonHelpers.fmtNum(row.input)}
-              </Typography>
-              <Typography sx={[styles.tableCellValue, styles.rightAlignedCell]}>
-                {AnalyticCommonHelpers.fmtNum(row.output)}
-              </Typography>
-              <Typography sx={[styles.tableCellValue, styles.rightAlignedCell]}>
-                {`${row.share.toFixed(1)}%`}
-              </Typography>
-            </Box>
-          ))}
-        </Box>
-      ) : (
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          sx={styles.noDataText}
-        >
-          {emptyState}
-        </Typography>
-      )}
-    </Box>
-  );
-});
-
-TokenTable.displayName = 'TokenTable';
 AnalyticsTokens.displayName = 'AnalyticsTokens';
 
 const styles = {
@@ -352,36 +264,5 @@ const styles = {
     marginBottom: '0.5rem',
   },
   chartWrapper: { width: '100%', overflow: 'hidden', height: 240 },
-  tableWrapper: { display: 'flex', flexDirection: 'column', width: '100%', overflow: 'auto' },
-  tableHeader: ({ palette }) => ({
-    display: 'flex',
-    padding: '0.5rem 0.75rem',
-    borderBottom: `1px solid ${palette.border.table}`,
-    gap: '0.5rem',
-  }),
-  tableCell: ({ palette }) => ({
-    fontSize: '0.6875rem',
-    fontWeight: 600,
-    color: palette.text.metrics || palette.text.disabled,
-    textTransform: 'uppercase',
-  }),
-  tableRow: ({ palette }) => ({
-    display: 'flex',
-    padding: '0.5rem 0.75rem',
-    gap: '0.5rem',
-    borderBottom: `1px solid ${palette.border.table}`,
-    '&:last-child': { borderBottom: 'none' },
-  }),
-  tableCellValue: ({ palette }) => ({
-    fontSize: '0.8125rem',
-    color: palette.text.secondary,
-    fontVariantNumeric: 'tabular-nums',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-  }),
-  nameCell: { flex: 3, textAlign: 'left' },
-  rightAlignedCell: { flex: 1.25, textAlign: 'right' },
 };
-
 export default AnalyticsTokens;
