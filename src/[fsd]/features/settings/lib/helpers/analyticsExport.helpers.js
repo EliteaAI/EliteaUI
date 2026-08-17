@@ -1,5 +1,7 @@
 import { ExcelFormats, sanitizeFileNamePart } from '@/[fsd]/shared/lib/utils/exportToExcel.utils';
 
+import { tokenStats } from './analyticsToken.helpers.js';
+
 const EXPORT_LIMIT = 10_000;
 
 const fmtISODate = iso => (iso ? new Date(iso).toISOString().slice(0, 10) : '');
@@ -186,6 +188,105 @@ const buildCostsSheet = (data, meta) => {
   return {
     sheetName: 'Costs',
     metadata: buildMetadata('Costs', meta),
+    sections,
+  };
+};
+
+const buildTokenRows = (items, nameMapper, totalProjectTokens) =>
+  [...items]
+    .map(item => {
+      const stats = tokenStats(item);
+      return {
+        name: nameMapper(item),
+        total_tokens: stats.total,
+        input_tokens: stats.input,
+        output_tokens: stats.output,
+        share: totalProjectTokens > 0 ? Number(((stats.total / totalProjectTokens) * 100).toFixed(2)) : 0,
+      };
+    })
+    .sort((a, b) => b.total_tokens - a.total_tokens);
+
+const buildTokensSheet = (data, meta) => {
+  const { kpis = {}, by_model = [], by_agent = [], by_user = [], daily = [] } = data || {};
+  const totalProjectTokens = Number(kpis.total_tokens ?? 0) || 0;
+
+  const sections = [];
+
+  sections.push({
+    title: 'Token Summary',
+    columns: [
+      { header: 'Metric', key: 'metric' },
+      { header: 'Value', key: 'value', numFmt: ExcelFormats.integer },
+    ],
+    rows: [
+      { metric: 'Total Tokens', value: Number(kpis.total_tokens ?? 0) || 0 },
+      { metric: 'Input Tokens', value: Number(kpis.total_input_tokens ?? 0) || 0 },
+      { metric: 'Output Tokens', value: Number(kpis.total_output_tokens ?? 0) || 0 },
+    ],
+  });
+
+  const dailyCols = [
+    { header: 'Date', key: 'date' },
+    { header: 'Total Tokens', key: 'total_tokens', numFmt: ExcelFormats.integer },
+    { header: 'Input Tokens', key: 'input_tokens', numFmt: ExcelFormats.integer },
+    { header: 'Output Tokens', key: 'output_tokens', numFmt: ExcelFormats.integer },
+  ];
+  sections.push({
+    title: 'Daily Token Usage',
+    columns: dailyCols,
+    rows: daily.map(d => {
+      const stats = tokenStats(d);
+      return {
+        date: d.date,
+        total_tokens: stats.total,
+        input_tokens: stats.input,
+        output_tokens: stats.output,
+      };
+    }),
+  });
+
+  const tokenCols = (nameHeader, nameKey = 'name') => [
+    { header: nameHeader, key: nameKey },
+    { header: 'Total Tokens', key: 'total_tokens', numFmt: ExcelFormats.integer },
+    { header: 'Input Tokens', key: 'input_tokens', numFmt: ExcelFormats.integer },
+    { header: 'Output Tokens', key: 'output_tokens', numFmt: ExcelFormats.integer },
+    { header: 'Share', key: 'share', numFmt: ExcelFormats.percent },
+  ];
+
+  sections.push({
+    title: 'Token Usage by User',
+    columns: tokenCols('User'),
+    rows: buildTokenRows(
+      by_user,
+      user =>
+        user.user_display_name || user.user_email || `User ${user.user_id ?? ''}`.trim() || 'Unknown user',
+      totalProjectTokens,
+    ),
+  });
+
+  sections.push({
+    title: 'Token Usage by Model',
+    columns: tokenCols('Model'),
+    rows: buildTokenRows(
+      by_model,
+      model => model.display_name || model.model_name || 'Unknown model',
+      totalProjectTokens,
+    ),
+  });
+
+  sections.push({
+    title: 'Token Usage by Agent & Pipeline',
+    columns: tokenCols('Agent / Pipeline'),
+    rows: buildTokenRows(
+      by_agent,
+      agent => agent.entity_name || agent.display_name || 'Unattributed',
+      totalProjectTokens,
+    ),
+  });
+
+  return {
+    sheetName: 'Tokens',
+    metadata: buildMetadata('Tokens', meta),
     sections,
   };
 };
@@ -410,6 +511,7 @@ export const fetchAllAnalyticsData = async (dispatch, endpoints, { projectId, da
 export const buildAnalyticsSheets = ({ overview, costs, agents, tools, users, meta }) => [
   buildOverviewSheet(overview, meta),
   buildCostsSheet(costs, meta),
+  buildTokensSheet(costs, meta),
   buildAgentsSheet(agents, meta),
   buildToolsSheet(tools, meta),
   buildUsersSheet(users, meta),
