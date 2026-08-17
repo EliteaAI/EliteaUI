@@ -281,7 +281,9 @@ const AnalyticsAgents = memo(props => {
             <Typography sx={[styles.tableCell, { flex: 3 }]}>Agent / Pipeline</Typography>
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Runs</Typography>
             {!isPersonalProject && <Typography sx={[styles.tableCell, { flex: 1 }]}>Users</Typography>}
-            <Typography sx={[styles.tableCell, styles.flexOne]}>Cost</Typography>
+            <Typography sx={[styles.tableCell, styles.flexOne]}>Total Cost</Typography>
+            <Typography sx={[styles.tableCell, styles.flexOne]}>Input Token Cost</Typography>
+            <Typography sx={[styles.tableCell, styles.flexOne]}>Output Token Cost</Typography>
             <Typography sx={[styles.tableCell, styles.flexOne]}>Total Tokens</Typography>
             <Typography sx={[styles.tableCell, styles.flexOne]}>Input Tokens</Typography>
             <Typography sx={[styles.tableCell, styles.flexOne]}>Output Tokens</Typography>
@@ -316,8 +318,14 @@ const AnalyticsAgents = memo(props => {
                 {!isPersonalProject && (
                   <Typography sx={[styles.tableCellValue, { flex: 1 }]}>{a.users}</Typography>
                 )}
-                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
+                <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
                   {AnalyticCommonHelpers.fmtCost(a.llm_cost)}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
+                  {AnalyticCommonHelpers.fmtCost(a.input_cost)}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
+                  {AnalyticCommonHelpers.fmtCost(a.output_cost)}
                 </Typography>
                 <Typography sx={[styles.tableCellValue, styles.flexOne]}>
                   {AnalyticCommonHelpers.fmtNum(a.total_tokens)}

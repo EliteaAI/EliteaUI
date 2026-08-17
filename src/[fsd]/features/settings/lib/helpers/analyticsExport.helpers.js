@@ -121,6 +121,8 @@ const buildCostsSheet = (data, meta) => {
     ],
     rows: [
       { metric: 'Total Cost (USD)', value: kpis.total_cost ?? 0 },
+      { metric: 'Input Token Cost (USD)', value: kpis.total_input_cost ?? 0 },
+      { metric: 'Output Token Cost (USD)', value: kpis.total_output_cost ?? 0 },
       { metric: 'Total Tokens', value: kpis.total_tokens ?? 0 },
       { metric: 'Input Tokens', value: kpis.total_input_tokens ?? 0 },
       { metric: 'Output Tokens', value: kpis.total_output_tokens ?? 0 },
@@ -129,7 +131,9 @@ const buildCostsSheet = (data, meta) => {
 
   const dailyCols = [
     { header: 'Date', key: 'date' },
-    { header: 'Cost (USD)', key: 'total_cost', numFmt: ExcelFormats.currency },
+    { header: 'Total Cost (USD)', key: 'total_cost', numFmt: ExcelFormats.currency },
+    { header: 'Input Token Cost (USD)', key: 'input_cost', numFmt: ExcelFormats.currency },
+    { header: 'Output Token Cost (USD)', key: 'output_cost', numFmt: ExcelFormats.currency },
   ];
   sections.push({
     title: 'Daily Cost Trend',
@@ -139,7 +143,9 @@ const buildCostsSheet = (data, meta) => {
 
   const costShareCols = (nameHeader, nameKey) => [
     { header: nameHeader, key: nameKey },
-    { header: 'Cost (USD)', key: 'total_cost', numFmt: ExcelFormats.currency },
+    { header: 'Total Cost (USD)', key: 'total_cost', numFmt: ExcelFormats.currency },
+    { header: 'Input Token Cost (USD)', key: 'input_cost', numFmt: ExcelFormats.currency },
+    { header: 'Output Token Cost (USD)', key: 'output_cost', numFmt: ExcelFormats.currency },
     { header: 'Share (%)', key: 'share', numFmt: ExcelFormats.percent },
   ];
 
@@ -149,6 +155,8 @@ const buildCostsSheet = (data, meta) => {
       .map(item => ({
         name: nameMapper(item),
         total_cost: item.total_cost ?? 0,
+        input_cost: item.input_cost ?? 0,
+        output_cost: item.output_cost ?? 0,
         share: totalCost > 0 ? Number((((item.total_cost ?? 0) / totalCost) * 100).toFixed(2)) : 0,
       }));
 
@@ -324,7 +332,9 @@ const buildAgentsSheet = (data, meta) => {
     { header: 'Agent / Pipeline', key: 'entity_name' },
     { header: 'Runs', key: 'events', numFmt: ExcelFormats.integer },
     { header: 'Users', key: 'users', numFmt: ExcelFormats.integer },
-    { header: 'Cost (USD)', key: 'llm_cost', numFmt: ExcelFormats.currency },
+    { header: 'Total Cost (USD)', key: 'llm_cost', numFmt: ExcelFormats.currency },
+    { header: 'Input Token Cost (USD)', key: 'input_cost', numFmt: ExcelFormats.currency },
+    { header: 'Output Token Cost (USD)', key: 'output_cost', numFmt: ExcelFormats.currency },
     { header: 'Total Tokens', key: 'total_tokens', numFmt: ExcelFormats.integer },
     { header: 'Input Tokens', key: 'input_tokens', numFmt: ExcelFormats.integer },
     { header: 'Output Tokens', key: 'output_tokens', numFmt: ExcelFormats.integer },
@@ -394,7 +404,11 @@ const buildUsersSheet = (data, meta) => {
     { header: 'Chat Messages', key: 'chat_events', numFmt: ExcelFormats.integer },
     { header: 'Errors', key: 'errors', numFmt: ExcelFormats.integer },
     { header: 'Total Tokens', key: 'total_tokens', numFmt: ExcelFormats.integer },
+    { header: 'Input Tokens', key: 'input_tokens', numFmt: ExcelFormats.integer },
+    { header: 'Output Tokens', key: 'output_tokens', numFmt: ExcelFormats.integer },
     { header: 'Total Cost (USD)', key: 'llm_cost', numFmt: ExcelFormats.currency },
+    { header: 'Input Token Cost (USD)', key: 'input_cost', numFmt: ExcelFormats.currency },
+    { header: 'Output Token Cost (USD)', key: 'output_cost', numFmt: ExcelFormats.currency },
   ];
 
   return {

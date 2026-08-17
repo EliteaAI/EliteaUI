@@ -27,6 +27,8 @@ const AnalyticsCosts = memo(props => {
     return sorted.map(m => ({
       name: m.display_name || m.model_name,
       cost: m.total_cost,
+      input_cost: m.input_cost,
+      output_cost: m.output_cost,
       share: totalCost > 0 ? (m.total_cost / totalCost) * 100 : null,
     }));
   }, [data?.by_model]);
@@ -37,6 +39,8 @@ const AnalyticsCosts = memo(props => {
     return sorted.map(a => ({
       name: a.entity_name,
       cost: a.total_cost,
+      input_cost: a.input_cost,
+      output_cost: a.output_cost,
       share: totalCost > 0 ? (a.total_cost / totalCost) * 100 : null,
     }));
   }, [data?.by_agent]);
@@ -47,6 +51,8 @@ const AnalyticsCosts = memo(props => {
     return sorted.map(u => ({
       name: u.user_email,
       cost: u.total_cost,
+      input_cost: u.input_cost,
+      output_cost: u.output_cost,
       share: totalCost > 0 ? (u.total_cost / totalCost) * 100 : null,
     }));
   }, [data?.by_user]);
@@ -96,6 +102,18 @@ const AnalyticsCosts = memo(props => {
           value={AnalyticCommonHelpers.fmtCost(kpis.total_cost)}
           subtitle="estimated USD cost"
           tooltip={AnalyticsCommonConstants.TOOLTIP_TEXTS.costs.TOTAL_COST}
+        />
+        <KPICard
+          label="INPUT TOKEN COST"
+          value={AnalyticCommonHelpers.fmtCost(kpis.total_input_cost)}
+          subtitle="estimated USD cost"
+          tooltip={AnalyticsCommonConstants.TOOLTIP_TEXTS.costs.INPUT_TOKEN_COST}
+        />
+        <KPICard
+          label="OUTPUT TOKEN COST"
+          value={AnalyticCommonHelpers.fmtCost(kpis.total_output_cost)}
+          subtitle="estimated USD cost"
+          tooltip={AnalyticsCommonConstants.TOOLTIP_TEXTS.costs.OUTPUT_TOKEN_COST}
         />
         <KPICard
           label="TOTAL TOKENS"
@@ -177,7 +195,9 @@ const AnalyticsCosts = memo(props => {
           <Box sx={styles.tableWrapper}>
             <Box sx={styles.tableHeader}>
               <Typography sx={[styles.tableCell, { flex: 3 }]}>USER</Typography>
-              <Typography sx={[styles.tableCell, styles.flexOneHalf]}>COST</Typography>
+              <Typography sx={[styles.tableCell, styles.flexOneHalf]}>TOTAL COST</Typography>
+              <Typography sx={[styles.tableCell, styles.flexOneHalf]}>INPUT TOKEN COST</Typography>
+              <Typography sx={[styles.tableCell, styles.flexOneHalf]}>OUTPUT TOKEN COST</Typography>
               <Typography sx={[styles.tableCell, styles.flexOne]}>SHARE</Typography>
             </Box>
             {userTableData.map((u, i) => (
@@ -193,6 +213,12 @@ const AnalyticsCosts = memo(props => {
                 </Typography>
                 <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
                   {AnalyticCommonHelpers.fmtCost(u.cost)}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
+                  {AnalyticCommonHelpers.fmtCost(u.input_cost)}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
+                  {AnalyticCommonHelpers.fmtCost(u.output_cost)}
                 </Typography>
                 <Typography sx={[styles.tableCellValue, styles.flexOne]}>
                   {u.share != null ? `${u.share.toFixed(1)}%` : '—'}
@@ -222,7 +248,9 @@ const AnalyticsCosts = memo(props => {
           <Box sx={styles.tableWrapper}>
             <Box sx={styles.tableHeader}>
               <Typography sx={[styles.tableCell, { flex: 3 }]}>MODEL</Typography>
-              <Typography sx={[styles.tableCell, styles.flexOneHalf]}>COST</Typography>
+              <Typography sx={[styles.tableCell, styles.flexOneHalf]}>TOTAL COST</Typography>
+              <Typography sx={[styles.tableCell, styles.flexOneHalf]}>INPUT TOKEN COST</Typography>
+              <Typography sx={[styles.tableCell, styles.flexOneHalf]}>OUTPUT TOKEN COST</Typography>
               <Typography sx={[styles.tableCell, styles.flexOne]}>SHARE</Typography>
             </Box>
             {modelTableData.map((m, i) => (
@@ -238,6 +266,12 @@ const AnalyticsCosts = memo(props => {
                 </Typography>
                 <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
                   {AnalyticCommonHelpers.fmtCost(m.cost)}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
+                  {AnalyticCommonHelpers.fmtCost(m.input_cost)}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
+                  {AnalyticCommonHelpers.fmtCost(m.output_cost)}
                 </Typography>
                 <Typography sx={[styles.tableCellValue, styles.flexOne]}>
                   {m.share != null ? `${m.share.toFixed(1)}%` : '—'}
@@ -267,7 +301,9 @@ const AnalyticsCosts = memo(props => {
           <Box sx={styles.tableWrapper}>
             <Box sx={styles.tableHeader}>
               <Typography sx={[styles.tableCell, { flex: 3 }]}>AGENT / PIPELINE</Typography>
-              <Typography sx={[styles.tableCell, styles.flexOneHalf]}>COST</Typography>
+              <Typography sx={[styles.tableCell, styles.flexOneHalf]}>TOTAL COST</Typography>
+              <Typography sx={[styles.tableCell, styles.flexOneHalf]}>INPUT TOKEN COST</Typography>
+              <Typography sx={[styles.tableCell, styles.flexOneHalf]}>OUTPUT TOKEN COST</Typography>
               <Typography sx={[styles.tableCell, styles.flexOne]}>SHARE</Typography>
             </Box>
             {agentTableData.map((a, i) => (
@@ -283,6 +319,12 @@ const AnalyticsCosts = memo(props => {
                 </Typography>
                 <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
                   {AnalyticCommonHelpers.fmtCost(a.cost)}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
+                  {AnalyticCommonHelpers.fmtCost(a.input_cost)}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
+                  {AnalyticCommonHelpers.fmtCost(a.output_cost)}
                 </Typography>
                 <Typography sx={[styles.tableCellValue, styles.flexOne]}>
                   {a.share != null ? `${a.share.toFixed(1)}%` : '—'}

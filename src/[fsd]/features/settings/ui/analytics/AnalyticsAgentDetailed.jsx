@@ -93,6 +93,22 @@ const AnalyticAgentDetailed = memo(props => {
           valueTestId="analytics-agent-detail-kpi-value"
         />
         <KPICard
+          label="INPUT TOKEN COST"
+          value={AnalyticCommonHelpers.fmtCost(kpis.input_cost)}
+          subtitle="estimated"
+          tooltip={tt.INPUT_TOKEN_COST}
+          testId="analytics-agent-detail-kpi-card"
+          valueTestId="analytics-agent-detail-kpi-value"
+        />
+        <KPICard
+          label="OUTPUT TOKEN COST"
+          value={AnalyticCommonHelpers.fmtCost(kpis.output_cost)}
+          subtitle="estimated"
+          tooltip={tt.OUTPUT_TOKEN_COST}
+          testId="analytics-agent-detail-kpi-card"
+          valueTestId="analytics-agent-detail-kpi-value"
+        />
+        <KPICard
           label="TOTAL TOKENS"
           value={AnalyticCommonHelpers.fmtNum(kpis.total_tokens)}
           tooltip={tt.TOTAL_TOKENS}

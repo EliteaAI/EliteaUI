@@ -114,7 +114,11 @@ const AnalyticsUsers = memo(props => {
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Chat Msg</Typography>
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Errors</Typography>
             <Typography sx={[styles.tableCell, styles.flexOne]}>Total Tokens</Typography>
+            <Typography sx={[styles.tableCell, styles.flexOne]}>Input Tokens</Typography>
+            <Typography sx={[styles.tableCell, styles.flexOne]}>Output Tokens</Typography>
             <Typography sx={[styles.tableCell, styles.flexOne]}>Total Cost</Typography>
+            <Typography sx={[styles.tableCell, styles.flexOne]}>Input Token Cost</Typography>
+            <Typography sx={[styles.tableCell, styles.flexOne]}>Output Token Cost</Typography>
           </Box>
           {isFetching && (
             <Box
@@ -164,7 +168,19 @@ const AnalyticsUsers = memo(props => {
                   {AnalyticCommonHelpers.fmtNum(u.total_tokens)}
                 </Typography>
                 <Typography sx={[styles.tableCellValue, styles.flexOne]}>
+                  {AnalyticCommonHelpers.fmtNum(u.input_tokens)}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
+                  {AnalyticCommonHelpers.fmtNum(u.output_tokens)}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
                   {AnalyticCommonHelpers.fmtCost(u.llm_cost)}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
+                  {AnalyticCommonHelpers.fmtCost(u.input_cost)}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
+                  {AnalyticCommonHelpers.fmtCost(u.output_cost)}
                 </Typography>
               </Box>
             ))}

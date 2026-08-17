@@ -142,6 +142,22 @@ const AnalyticsUserDetailed = memo(props => {
           testId="analytics-user-detail-kpi-card"
           valueTestId="analytics-user-detail-kpi-value"
         />
+        <KPICard
+          label="INPUT TOKEN COST"
+          value={AnalyticCommonHelpers.fmtCost(kpis.input_cost)}
+          subtitle="estimated"
+          tooltip={tt.INPUT_TOKEN_COST}
+          testId="analytics-user-detail-kpi-card"
+          valueTestId="analytics-user-detail-kpi-value"
+        />
+        <KPICard
+          label="OUTPUT TOKEN COST"
+          value={AnalyticCommonHelpers.fmtCost(kpis.output_cost)}
+          subtitle="estimated"
+          tooltip={tt.OUTPUT_TOKEN_COST}
+          testId="analytics-user-detail-kpi-card"
+          valueTestId="analytics-user-detail-kpi-value"
+        />
       </Box>
 
       {daily_activity.length > 0 && (
