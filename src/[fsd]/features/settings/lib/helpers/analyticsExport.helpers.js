@@ -1,5 +1,7 @@
 import { ExcelFormats, sanitizeFileNamePart } from '@/[fsd]/shared/lib/utils/exportToExcel.utils';
 
+import { tokenStats } from './analyticsToken.helpers.js';
+
 const EXPORT_LIMIT = 10_000;
 
 const fmtISODate = iso => (iso ? new Date(iso).toISOString().slice(0, 10) : '');
@@ -188,32 +190,6 @@ const buildCostsSheet = (data, meta) => {
     metadata: buildMetadata('Costs', meta),
     sections,
   };
-};
-
-const tokenStats = item => {
-  const input =
-    Number(
-      item?.input_tokens ??
-        item?.total_input_tokens ??
-        item?.input_token ??
-        item?.prompt_tokens ??
-        item?.total_prompt_tokens ??
-        item?.input ??
-        0,
-    ) || 0;
-  const output =
-    Number(
-      item?.output_tokens ??
-        item?.total_output_tokens ??
-        item?.output_token ??
-        item?.completion_tokens ??
-        item?.total_completion_tokens ??
-        item?.output ??
-        0,
-    ) || 0;
-  const totalCandidate = item?.total_tokens ?? item?.tokens_total ?? item?.total;
-  const total = Number.isFinite(Number(totalCandidate)) ? Number(totalCandidate) : input + output;
-  return { total, input, output };
 };
 
 const buildTokenRows = (items, nameMapper, totalProjectTokens) =>
