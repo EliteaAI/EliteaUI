@@ -1,5 +1,6 @@
 import { AuthPopupHelpers } from '@/[fsd]/features/auth/lib/helpers';
 import { DEV, VITE_DEV_TOKEN, VITE_SERVER_URL } from '@/common/constants.js';
+import { getBasename } from '@/routes';
 import { generateTraceparent } from '@/services/tracing';
 import { getEnvVar } from '@/utils/env';
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
@@ -26,6 +27,19 @@ export const eliteaApi = createApi({
         // Check if this is a session expiry redirect (forward-auth login page)
         // Backend redirects to: /forward-auth/auth_form/login or /forward-auth/auth_oidc/login
         const isSessionAuthRedirect = loginUrl.includes('/forward-auth/') && loginUrl.includes('/login');
+
+        // Public share-view pages must not be bounced to login — they are designed
+        // for unauthenticated visitors. If the browser is already on /shared/<token>,
+        // return the response as-is so RTK Query surfaces an error instead.
+        const basename = getBasename();
+        const pathWithoutBase = window.location.pathname.slice(basename.length) || '/';
+        // RouteDefinitions.SharedConversation === '/shared/:token' — match exactly
+        const sharedConversationRe = /^\/shared\/[^/]+\/?$/;
+        const isPublicSharedPage = sharedConversationRe.test(pathWithoutBase);
+
+        if (isPublicSharedPage) {
+          return response;
+        }
 
         if (isSessionAuthRedirect) {
           // Open popup for re-authentication instead of redirecting main window
