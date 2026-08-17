@@ -2,10 +2,20 @@ import { memo, useCallback } from 'react';
 
 import { Stack, Typography } from '@mui/material';
 
-import { Checkbox, Tooltip } from '@/[fsd]/shared/ui';
+import { Checkbox, Chip, Tooltip } from '@/[fsd]/shared/ui';
 
 const ToolGroupHeader = memo(props => {
-  const { groupKey, label, tooltip, values, selectedCount, onToggleTools, disabled } = props;
+  const {
+    groupKey,
+    label,
+    tooltip,
+    values,
+    selectedCount,
+    matchCount,
+    isSearching,
+    onToggleTools,
+    disabled,
+  } = props;
 
   const totalCount = values.length;
   const handleToggle = useCallback(
@@ -13,12 +23,39 @@ const ToolGroupHeader = memo(props => {
     [onToggleTools, values, selectedCount],
   );
 
-  const styles = toolGroupHeaderStyles();
+  const styles = toolGroupHeaderStyles(isSearching);
+
+  const definition = (
+    <Tooltip.InfoTooltip
+      infoTooltip={tooltip}
+      testId={`tool-group-info-${groupKey}`}
+    />
+  );
+
+  if (isSearching) {
+    return (
+      <Stack
+        direction="row"
+        spacing={0.5}
+        alignItems="center"
+        sx={styles.root}
+      >
+        <Typography
+          variant="bodyMedium"
+          color="text.secondary"
+          data-testid={`tool-group-label-${groupKey}`}
+        >
+          {label} ({matchCount})
+        </Typography>
+        {definition}
+      </Stack>
+    );
+  }
 
   return (
     <Stack
       direction="row"
-      spacing={0.5}
+      spacing={1.25}
       alignItems="center"
       sx={styles.root}
     >
@@ -34,24 +71,28 @@ const ToolGroupHeader = memo(props => {
         }}
         sx={styles.checkbox}
       />
-      <Typography
-        variant="labelSmall"
-        onClick={disabled ? undefined : handleToggle}
-        sx={styles.label(disabled)}
+      <Stack
+        direction="row"
+        spacing={0.5}
+        alignItems="center"
       >
-        {label}
-      </Typography>
-      <Tooltip.InfoTooltip
-        infoTooltip={tooltip}
-        testId={`tool-group-info-${groupKey}`}
+        <Typography
+          variant="bodyMedium"
+          color="text.secondary"
+          onClick={disabled ? undefined : handleToggle}
+          sx={styles.label(disabled)}
+          data-testid={`tool-group-label-${groupKey}`}
+        >
+          {label}
+        </Typography>
+        {definition}
+      </Stack>
+      <Chip.CountBadge
+        count={selectedCount}
+        total={totalCount}
+        ariaLabel={`${selectedCount} of ${totalCount} ${label} tools enabled`}
+        testId={`tool-group-count-${groupKey}`}
       />
-      <Typography
-        variant="labelSmall"
-        color="text.secondary"
-        data-testid={`tool-group-count-${groupKey}`}
-      >
-        {selectedCount} / {totalCount}
-      </Typography>
     </Stack>
   );
 });
@@ -59,12 +100,16 @@ const ToolGroupHeader = memo(props => {
 ToolGroupHeader.displayName = 'ToolGroupHeader';
 
 /** @type {MuiSx} */
-const toolGroupHeaderStyles = () => ({
+const toolGroupHeaderStyles = isSearching => ({
   root: {
-    marginBottom: '0.5rem',
+    display: isSearching ? 'inline-flex' : 'flex',
+    marginBottom: isSearching ? '0.5rem' : '1rem',
   },
   checkbox: {
-    padding: '0.25rem',
+    padding: 0,
+    '& .MuiSvgIcon-root': {
+      fontSize: '1rem',
+    },
   },
   label: disabled => ({
     cursor: disabled ? 'default' : 'pointer',
