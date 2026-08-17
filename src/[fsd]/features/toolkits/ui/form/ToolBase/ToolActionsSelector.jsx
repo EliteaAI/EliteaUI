@@ -2,7 +2,7 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { Box, Stack, Tooltip, Typography, useTheme } from '@mui/material';
+import { Box, Tooltip, Typography, useTheme } from '@mui/material';
 
 import {
   McpAuthModal,
@@ -12,7 +12,7 @@ import {
 } from '@/[fsd]/features/mcp';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { AccordionConstants, TourTargetConstants } from '@/[fsd]/shared/lib/constants';
-import { Button, Input } from '@/[fsd]/shared/ui';
+import { Input } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import OnlineIcon from '@/assets/online-icon.svg?react';
 import { useToolkitView } from '@/hooks/toolkit/useToolkitView.js';
@@ -83,8 +83,6 @@ export const ToolActionsSelector = memo(props => {
     [availableTools],
   );
 
-  const hasGroups = toolGroups && Object.keys(toolGroups).length > 0;
-
   // Find selected tools that are NOT in available tools
   const toolsOptionsValues = toolsOptions.map(option => option.value);
   const warningTools = (selectedTools || []).filter(tool => !toolsOptionsValues.includes(tool));
@@ -108,62 +106,19 @@ export const ToolActionsSelector = memo(props => {
     [selectedTools, onChange],
   );
 
-  // Unavailable (warning) selections are left untouched — only classified tools are cleared
-  const nonReadSelected = useMemo(
-    () =>
-      hasGroups
-        ? selectedTools.filter(tool => toolsOptionsValues.includes(tool) && toolGroups[tool] !== 'read')
-        : [],
-    [hasGroups, selectedTools, toolsOptionsValues, toolGroups],
-  );
-
-  const onKeepReadOnly = useCallback(() => {
-    onChange(selectedTools.filter(tool => !nonReadSelected.includes(tool)));
-  }, [selectedTools, nonReadSelected, onChange]);
-
   const showSearch = toolsOptions.length > 0;
 
   const renderToolsControls = () =>
     showSearch && (
-      <Stack
-        direction="row"
-        spacing={1}
-        alignItems="center"
+      <Input.SimpleSearchBar
+        searchQuery={searchTerm}
+        onSearchChange={setSearchTerm}
+        onSearchClear={() => setSearchTerm('')}
+        placeholder="Search tools"
+        autoFocus={false}
+        data-testid="toolkit-tools-search"
         sx={styles.controlsRow}
-      >
-        <Input.SimpleSearchBar
-          searchQuery={searchTerm}
-          onSearchChange={setSearchTerm}
-          onSearchClear={() => setSearchTerm('')}
-          placeholder="Search tools"
-          autoFocus={false}
-          data-testid="toolkit-tools-search"
-          sx={styles.search}
-        />
-        {hasGroups && (
-          <Tooltip
-            title={
-              nonReadSelected.length
-                ? `Deselects the ${nonReadSelected.length} selected tools that create, delete, or execute actions. You can re-select them afterwards.`
-                : ''
-            }
-            placement="top"
-          >
-            <Box component="span">
-              <Button.BaseBtn
-                variant="text"
-                size="small"
-                disabled={disabled || !nonReadSelected.length}
-                onClick={onKeepReadOnly}
-                data-testid="toolkit-keep-read-only-button"
-                sx={styles.keepReadOnly}
-              >
-                Keep read-only only
-              </Button.BaseBtn>
-            </Box>
-          </Tooltip>
-        )}
-      </Stack>
+      />
     );
 
   const renderItems = () => (
@@ -256,12 +211,6 @@ const toolActionsSelectorStyles = () => ({
   }),
   controlsRow: {
     marginTop: '0.5rem',
-  },
-  search: {
-    flexGrow: 1,
-  },
-  keepReadOnly: {
-    whiteSpace: 'nowrap',
   },
   mcpToggleRow: ({ palette }) => ({
     marginTop: '1rem',
