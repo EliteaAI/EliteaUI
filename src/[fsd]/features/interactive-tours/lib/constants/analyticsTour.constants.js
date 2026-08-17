@@ -46,7 +46,7 @@ Below the cards: a **Daily Activity** area chart, a **Top 5 AI Adopters** leader
   },
   {
     id: 'agents-tab',
-    tabIndex: 1,
+    tabIndex: 3,
     target: ANALYTICS_TOUR_TARGETS.tabSection,
     placement: 'right',
     title: 'Agents & Pipelines Tab',
@@ -56,7 +56,7 @@ The **Agent & Pipeline Activity** table lists all agents and pipelines with tota
   },
   {
     id: 'tools-tab',
-    tabIndex: 2,
+    tabIndex: 4,
     target: ANALYTICS_TOUR_TARGETS.tabSection,
     placement: 'right',
     title: 'Tools Tab',
@@ -66,7 +66,7 @@ The **Tool Details** table lists all tools with call count, distinct users, aver
   },
   {
     id: 'users-tab',
-    tabIndex: 3,
+    tabIndex: 5,
     target: ANALYTICS_TOUR_TARGETS.tabSection,
     placement: 'right',
     title: 'Users Tab',
@@ -76,7 +76,7 @@ Click any user row to open a drill-down showing a daily activity chart broken do
   },
   {
     id: 'health-tab',
-    tabIndex: 4,
+    tabIndex: 6,
     target: ANALYTICS_TOUR_TARGETS.tabSection,
     placement: 'right',
     title: 'Health Tab',
@@ -86,7 +86,7 @@ The **Health by Event Type** table shows error rate and average latency for each
   },
   {
     id: 'costs-tab',
-    tabIndex: 5,
+    tabIndex: 1,
     target: ANALYTICS_TOUR_TARGETS.tabSection,
     placement: 'right',
     title: 'Costs Tab',
@@ -95,8 +95,18 @@ The **Health by Event Type** table shows error rate and average latency for each
 The **Cost by Agent & Pipeline** and **Cost by User** lists rank the top spenders, helping you attribute spend and spot unexpectedly expensive workloads.`,
   },
   {
+    id: 'tokens-tab',
+    tabIndex: 2,
+    target: ANALYTICS_TOUR_TARGETS.tabSection,
+    placement: 'right',
+    title: 'Tokens Tab',
+    content: `The **Tokens** tab breaks down LLM token consumption for the selected period. KPI tiles summarize total, input, and output tokens, while the daily chart shows trend by day.
+
+The **Token Usage by User**, **Token Usage by Model**, and **Token Usage by Agent & Pipeline** tables help attribute usage and identify where token volume is concentrated.`,
+  },
+  {
     id: 'guide-tab',
-    tabIndex: 6,
+    tabIndex: 7,
     target: ANALYTICS_TOUR_TARGETS.tabSection,
     placement: 'right',
     title: 'Guide Tab',
