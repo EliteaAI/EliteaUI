@@ -103,7 +103,7 @@ const ShareConversationDialog = memo(props => {
     setSelectedGroupIds(prev => (prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]));
   }, []);
 
-  const isPasswordValid = useMemo(() => !password.trim() || password.trim().length >= 4, [password]);
+  const isPasswordValid = useMemo(() => !password.trim() || password.trim().length >= 8, [password]);
 
   const canGenerate = useMemo(() => {
     if (!isPasswordValid || isCreating) return false;
@@ -211,12 +211,12 @@ const ShareConversationDialog = memo(props => {
         showBorder
       />
       <Input.StyledInputEnhancer
-        label="Password protection (optional)"
+        label="Password protection (optional, at least 8 characters)"
         type="password"
         value={password}
         onChange={e => setPassword(e.target.value)}
         error={!isPasswordValid}
-        helperText={!isPasswordValid ? 'Minimum 4 characters.' : ''}
+        helperText={!isPasswordValid ? 'Minimum 8 characters.' : ''}
         variant="standard"
         fullWidth
         sx={{ marginTop: '-1rem' }}
