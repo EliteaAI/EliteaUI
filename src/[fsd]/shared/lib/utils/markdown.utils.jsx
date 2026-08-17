@@ -1,7 +1,7 @@
 import { Typography } from '@mui/material';
 import Link from '@mui/material/Link';
 
-import { typographyVariants } from '@/MainTheme';
+import { typographyVariants } from '@/[fsd]/shared/config/theme';
 
 export const removeHTMLTags = htmlString => htmlString.replace(/<\/?[^>]+(>|$)/g, '');
 

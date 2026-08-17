@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
@@ -12,13 +12,16 @@ import {
 } from '@/[fsd]/features/mcp';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { AccordionConstants, TourTargetConstants } from '@/[fsd]/shared/lib/constants';
+import { Input } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
+import OnlineIcon from '@/assets/online-icon.svg?react';
 import { useToolkitView } from '@/hooks/toolkit/useToolkitView.js';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 export const ToolActionsSelector = memo(props => {
   const {
     availableTools = [],
+    toolGroups,
     onChange = () => {},
     extraProperties,
     disabled,
@@ -31,6 +34,8 @@ export const ToolActionsSelector = memo(props => {
   const { values } = useFormikContext();
   const { settings: { selected_tools } = {} } = values ?? { settings: {} };
   const selectedTools = useMemo(() => selected_tools ?? [], [selected_tools]);
+
+  const [searchTerm, setSearchTerm] = useState('');
 
   const styles = toolActionsSelectorStyles();
   const theme = useTheme();
@@ -91,6 +96,45 @@ export const ToolActionsSelector = memo(props => {
     [selectedTools, onChange],
   );
 
+  const onToggleTools = useCallback(
+    (toolValues, allSelected) => {
+      const newValue = allSelected
+        ? selectedTools.filter(tool => !toolValues.includes(tool))
+        : [...selectedTools, ...toolValues.filter(tool => !selectedTools.includes(tool))];
+      onChange(newValue);
+    },
+    [selectedTools, onChange],
+  );
+
+  const showSearch = toolsOptions.length > 0;
+
+  const renderToolsControls = () =>
+    showSearch && (
+      <Input.SimpleSearchBar
+        searchQuery={searchTerm}
+        onSearchChange={setSearchTerm}
+        onSearchClear={() => setSearchTerm('')}
+        placeholder="Search tools"
+        autoFocus={false}
+        data-testid="toolkit-tools-search"
+        sx={styles.controlsRow}
+      />
+    );
+
+  const renderItems = () => (
+    <ToolkitForm.ToolActionsItems
+      toolsOptions={toolsOptions}
+      toolGroups={toolGroups}
+      warningTools={warningTools}
+      selectedTools={selectedTools}
+      onSelectTool={onSelectTool}
+      onToggleTools={onToggleTools}
+      searchTerm={searchTerm}
+      disabled={disabled}
+      styles={styles}
+    />
+  );
+
   return (
     <Box
       sx={styles.container(shouldUseAccordionView)}
@@ -124,18 +168,22 @@ export const ToolActionsSelector = memo(props => {
                 ) : null,
               content: (
                 <>
-                  {!isRemoteMcp && !isPreconfiguredMcp ? extraProperties : null}
                   {(isRemoteMcp || isPreconfiguredMcp) && availableTools.length === 0 && (
                     <ToolkitForm.EmptyMcpTools />
                   )}
-                  <ToolkitForm.ToolActionsItems
-                    toolsOptions={toolsOptions}
-                    warningTools={warningTools}
-                    selectedTools={selectedTools}
-                    onSelectTool={onSelectTool}
-                    disabled={disabled}
-                    styles={styles}
-                  />
+                  {renderToolsControls()}
+                  {renderItems()}
+                  {!isRemoteMcp && !isPreconfiguredMcp && extraProperties ? (
+                    <Box sx={styles.mcpToggleRow}>
+                      <Box sx={styles.mcpToggleIcon}>
+                        <OnlineIcon
+                          width={16}
+                          height={16}
+                        />
+                      </Box>
+                      {extraProperties}
+                    </Box>
+                  ) : null}
                 </>
               ),
             },
@@ -144,14 +192,8 @@ export const ToolActionsSelector = memo(props => {
       ) : (
         <>
           <Typography variant="bodyMedium">Tools</Typography>
-          <ToolkitForm.ToolActionsItems
-            toolsOptions={toolsOptions}
-            warningTools={warningTools}
-            selectedTools={selectedTools}
-            onSelectTool={onSelectTool}
-            disabled={disabled}
-            styles={styles}
-          />
+          {renderToolsControls()}
+          {renderItems()}
         </>
       )}
       <McpAuthModal {...getModalProps()} />
@@ -166,6 +208,30 @@ const toolActionsSelectorStyles = () => ({
   container: shouldUseAccordionView => ({
     marginTop: '1rem',
     padding: shouldUseAccordionView ? '' : '0 0 0 0.75rem',
+  }),
+  controlsRow: {
+    marginTop: '0.5rem',
+  },
+  mcpToggleRow: ({ palette }) => ({
+    marginTop: '1rem',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    padding: '0.5rem 0.75rem',
+    borderRadius: '0.75rem',
+    backgroundColor: palette.background.tabButton.default,
+    border: `0.0625rem solid ${palette.border.cardsOutlines}`,
+  }),
+  mcpToggleIcon: ({ palette }) => ({
+    width: '1.25rem',
+    height: '1.25rem',
+    borderRadius: '50%',
+    flexShrink: 0,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: palette.secondary.main,
+    color: palette.background.default,
   }),
   stack: {
     marginTop: '0.5rem',

@@ -415,7 +415,10 @@ const BucketAccessTable = memo(props => {
   const renderEmptyState = () => (
     <Box sx={styles.emptyStateWrapper}>
       <Box sx={styles.emptyStateContainer}>
-        <NoPermissionsIcon sx={styles.emptyStateIcon} />
+        <Box
+          component={NoPermissionsIcon}
+          sx={styles.emptyStateIcon}
+        />
         <Typography
           variant="headingSmall"
           color="text.secondary"

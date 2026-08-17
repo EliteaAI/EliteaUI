@@ -4,7 +4,7 @@
 import { FormControl, Input } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
-import { typographyVariants } from '@/MainTheme';
+import { typographyVariants } from '@/[fsd]/shared/config/theme';
 
 const getCommonStyle = theme => ({
   width: '100%',

@@ -52,7 +52,10 @@ const AddBucketUserDialog = memo(props => {
   }, [open]);
 
   const availableUsers = useMemo(
-    () => users.filter(u => !existingUserIds.includes(u.id)),
+    () =>
+      users
+        .filter(u => !existingUserIds.includes(u.id))
+        .map(u => ({ ...u, name: u.name || u.email || '' })),
     [users, existingUserIds],
   );
 
