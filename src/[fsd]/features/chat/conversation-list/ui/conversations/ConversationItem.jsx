@@ -35,9 +35,6 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 import { getBasename } from '@/routes';
 
-import ManageLinksDialog from './ManageLinksDialog';
-import ShareConversationDialog from './ShareConversationDialog';
-
 const ConversationItem = memo(props => {
   const {
     conversation = {},
@@ -58,6 +55,8 @@ const ConversationItem = memo(props => {
     isDragDisabled = false,
     isNextItemHovered = false,
     onItemHover,
+    onShareExternal,
+    onManageLinks,
   } = props;
   const {
     name,
@@ -83,9 +82,6 @@ const ConversationItem = memo(props => {
   const [showMenu, setShowMenu] = useState(false);
   const [isEditing, setIsEditing] = useState(isNew && !isNamingPending);
   const [conversationName, setConversationName] = useState(name);
-  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
-  const [isManageLinksDialogOpen, setIsManageLinksDialogOpen] = useState(false);
-
   const isConversationNameValid = useMemo(
     () => ConversationNameRegExp.test(conversationName ?? ''),
     [conversationName],
@@ -180,20 +176,12 @@ const ConversationItem = memo(props => {
   }, [conversation, projectId, toastInfo]);
 
   const handleShareExternal = useCallback(() => {
-    setIsShareDialogOpen(true);
-  }, []);
-
-  const handleCloseShareDialog = useCallback(() => {
-    setIsShareDialogOpen(false);
-  }, []);
+    onShareExternal?.(conversation);
+  }, [conversation, onShareExternal]);
 
   const handleManageLinks = useCallback(() => {
-    setIsManageLinksDialogOpen(true);
-  }, []);
-
-  const handleCloseManageLinksDialog = useCallback(() => {
-    setIsManageLinksDialogOpen(false);
-  }, []);
+    onManageLinks?.(conversation);
+  }, [conversation, onManageLinks]);
 
   const menuItems = useMemo(() => {
     const items = !isPlayback
@@ -532,30 +520,16 @@ const ConversationItem = memo(props => {
   );
 
   if (!isEditing)
-    return (
-      <>
-        {enableDragAndDrop ? (
-          <DraggableConversationItem
-            conversation={conversation}
-            isActive={isActive}
-            isDragDisabled={isDragDisabled || isEditingCanvas}
-          >
-            {renderConversationContent()}
-          </DraggableConversationItem>
-        ) : (
-          renderConversationContent()
-        )}
-        <ShareConversationDialog
-          open={isShareDialogOpen}
-          conversation={conversation}
-          onClose={handleCloseShareDialog}
-        />
-        <ManageLinksDialog
-          open={isManageLinksDialogOpen}
-          conversation={conversation}
-          onClose={handleCloseManageLinksDialog}
-        />
-      </>
+    return enableDragAndDrop ? (
+      <DraggableConversationItem
+        conversation={conversation}
+        isActive={isActive}
+        isDragDisabled={isDragDisabled || isEditingCanvas}
+      >
+        {renderConversationContent()}
+      </DraggableConversationItem>
+    ) : (
+      renderConversationContent()
     );
 
   return (

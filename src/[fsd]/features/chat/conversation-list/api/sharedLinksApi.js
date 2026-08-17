@@ -29,8 +29,7 @@ export const sharedLinksApiSlice = eliteaApi
         ],
       }),
       revokeShareLink: build.mutation({
-        // eslint-disable-next-line no-unused-vars
-        query: ({ projectId, token, conversationId }) => ({
+        query: ({ projectId, token }) => ({
           url: `${apiSlicePath}/shared_chat_link/prompt_lib/${projectId}/${token}`,
           method: 'DELETE',
         }),

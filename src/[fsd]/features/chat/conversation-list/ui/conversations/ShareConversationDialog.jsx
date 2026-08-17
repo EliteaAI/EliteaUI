@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Box, Checkbox, FormControlLabel, List, ListItem, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import { useLazyMessageListQuery } from '@/[fsd]/features/chat/api';
 import { Input, Select } from '@/[fsd]/shared/ui';
@@ -12,6 +12,9 @@ import { getBasename } from '@/routes';
 
 import { useCreateShareLinkMutation, useRevokeShareLinkMutation } from '../../api/sharedLinksApi';
 import { EXPIRY_OPTIONS, SCOPE_OPTIONS } from '../../lib/constants';
+import MessageGroupChecklist from './MessageGroupChecklist';
+
+const MESSAGE_PAGE_SIZE = 4;
 
 const ShareConversationDialog = memo(props => {
   const { open, conversation = {}, onClose } = props;
@@ -26,22 +29,55 @@ const ShareConversationDialog = memo(props => {
   const [createdToken, setCreatedToken] = useState(null);
   const [createError, setCreateError] = useState('');
   const [selectedGroupIds, setSelectedGroupIds] = useState([]);
+  const [messagesPage, setMessagesPage] = useState(0);
 
   const conversationId = conversation?.id;
 
   const [createShareLink, { isLoading: isCreating }] = useCreateShareLinkMutation();
   const [revokeShareLink, { isLoading: isRevoking }] = useRevokeShareLinkMutation();
 
-  const [fetchMessages, { data: messagesData, isFetching: isLoadingMessages }] = useLazyMessageListQuery();
+  const [fetchMessages, { isFetching: isLoadingMessages }] = useLazyMessageListQuery();
+  const [accumulatedRows, setAccumulatedRows] = useState([]);
+  const [messagesTotal, setMessagesTotal] = useState(0);
 
   useEffect(() => {
     if (scope === 'partial' && open && conversationId) {
-      fetchMessages({ projectId, conversationId, page: 0, pageSize: 200 });
+      setAccumulatedRows([]);
+      setMessagesTotal(0);
+      setMessagesPage(0);
+      fetchMessages({ projectId, conversationId, page: 0, pageSize: MESSAGE_PAGE_SIZE }).then(result => {
+        if (result.data) {
+          setAccumulatedRows(result.data.rows ?? []);
+          setMessagesTotal(result.data.total ?? 0);
+        }
+      });
     }
   }, [scope, open, conversationId, fetchMessages, projectId]);
 
+  useEffect(() => {
+    if (messagesPage === 0) return;
+    if (scope === 'partial' && open && conversationId) {
+      fetchMessages({ projectId, conversationId, page: messagesPage, pageSize: MESSAGE_PAGE_SIZE }).then(
+        result => {
+          if (result.data) {
+            const newRows = result.data.rows ?? [];
+            setAccumulatedRows(prev => {
+              const existingIds = new Set(prev.map(r => r.id));
+              return [...prev, ...newRows.filter(r => !existingIds.has(r.id))];
+            });
+            setMessagesTotal(result.data.total ?? 0);
+          }
+        },
+      );
+    }
+  }, [messagesPage, scope, open, conversationId, fetchMessages, projectId]);
+
+  const handleLoadMoreMessages = useCallback(() => {
+    setMessagesPage(prev => prev + 1);
+  }, []);
+
   const messageGroups = useMemo(() => {
-    const rows = messagesData?.rows ?? [];
+    const rows = accumulatedRows;
     return rows.map((group, index) => {
       const textItem = (group.message_items ?? []).find(item => item.item_type === 'text_message');
       const preview = textItem?.item_details?.content
@@ -54,7 +90,7 @@ const ShareConversationDialog = memo(props => {
         authorName: `${authorName} · message ${index + 1}`,
       };
     });
-  }, [messagesData]);
+  }, [accumulatedRows]);
 
   const styles = shareConversationDialogStyles();
 
@@ -89,10 +125,14 @@ const ShareConversationDialog = memo(props => {
       const shareUrl = `${window.location.protocol}//${window.location.host}${basename}/shared/${result.token}`;
       setCreatedLink(shareUrl);
       setCreatedToken(result.token);
-      await navigator.clipboard.writeText(shareUrl);
-      toastInfo('Share link created and copied to clipboard.');
       setPassword('');
       setSelectedGroupIds([]);
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        toastInfo('Share link created and copied to clipboard.');
+      } catch {
+        toastInfo('Share link created. Copy it from the field below.');
+      }
     } catch {
       setCreateError('Failed to create share link. Please try again.');
       toastError('Failed to create share link. Please try again.');
@@ -151,83 +191,16 @@ const ShareConversationDialog = memo(props => {
       />
 
       {scope === 'partial' && (
-        <Box sx={styles.groupChecklist}>
-          {isLoadingMessages ? (
-            <Typography
-              variant="bodySmall2"
-              color="text.disabled"
-              sx={styles.checklistFeedback}
-            >
-              Loading messages…
-            </Typography>
-          ) : messageGroups.length === 0 ? (
-            <Typography
-              variant="bodySmall2"
-              color="text.disabled"
-              sx={styles.checklistFeedback}
-            >
-              No messages found.
-            </Typography>
-          ) : (
-            <List
-              dense
-              disablePadding
-            >
-              {messageGroups.map(group => (
-                <ListItem
-                  key={group.id}
-                  disablePadding
-                  sx={styles.checklistItem}
-                >
-                  <FormControlLabel
-                    sx={styles.checklistLabel}
-                    control={
-                      <Checkbox
-                        size="small"
-                        checked={selectedGroupIds.includes(group.id)}
-                        onChange={() => handleToggleGroup(group.id)}
-                        sx={styles.checkbox}
-                      />
-                    }
-                    label={
-                      <Box sx={styles.checklistLabelContent}>
-                        <Typography
-                          variant="bodySmall"
-                          color="text.secondary"
-                          sx={styles.checklistAuthor}
-                        >
-                          {group.authorName}
-                        </Typography>
-                        {group.preview && (
-                          <Typography
-                            variant="bodySmall2"
-                            color="text.disabled"
-                            noWrap
-                            sx={styles.checklistPreview}
-                          >
-                            {group.preview}
-                          </Typography>
-                        )}
-                      </Box>
-                    }
-                  />
-                </ListItem>
-              ))}
-            </List>
-          )}
-          {scope === 'partial' &&
-            selectedGroupIds.length === 0 &&
-            !isLoadingMessages &&
-            messageGroups.length > 0 && (
-              <Typography
-                variant="bodySmall2"
-                color="error.main"
-                sx={styles.partialError}
-              >
-                Select at least one message to share.
-              </Typography>
-            )}
-        </Box>
+        <MessageGroupChecklist
+          groups={messageGroups}
+          selectedGroupIds={selectedGroupIds}
+          onToggle={handleToggleGroup}
+          isLoading={isLoadingMessages}
+          loadedCount={accumulatedRows.length}
+          totalCount={messagesTotal}
+          onLoadMore={handleLoadMoreMessages}
+          resetPageDependencies={conversationId}
+        />
       )}
 
       <Select.SingleSelect
@@ -373,46 +346,6 @@ const shareConversationDialogStyles = () => ({
     display: 'flex',
     flexDirection: 'column',
     gap: '1rem',
-  },
-  groupChecklist: ({ palette }) => ({
-    maxHeight: '12rem',
-    overflowY: 'auto',
-    border: `.0625rem solid ${palette.border.lines}`,
-    borderRadius: '0.5rem',
-    padding: '0.25rem 0',
-    background: palette.background.tabPanel,
-  }),
-  checklistFeedback: {
-    padding: '0.75rem 1rem',
-  },
-  checklistItem: {
-    padding: '0 0.5rem',
-  },
-  checklistLabel: {
-    width: '100%',
-    margin: 0,
-    gap: '0.25rem',
-    alignItems: 'flex-start',
-    padding: '0.25rem 0',
-  },
-  checkbox: {
-    padding: '0.125rem',
-    marginTop: '0.125rem',
-  },
-  checklistLabelContent: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.125rem',
-    overflow: 'hidden',
-  },
-  checklistAuthor: {
-    fontWeight: 600,
-  },
-  checklistPreview: {
-    maxWidth: '28rem',
-  },
-  partialError: {
-    padding: '0.25rem 1rem 0.5rem',
   },
   createdLinkRow: ({ palette }) => ({
     display: 'flex',
