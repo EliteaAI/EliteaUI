@@ -4,13 +4,13 @@ import { useSelector } from 'react-redux';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { useImport } from '@/[fsd]/entities/import-wizard/lib/hooks';
-import BaseBtn from '@/[fsd]/shared/ui/button/BaseBtn';
+import { Button } from '@/[fsd]/shared/ui';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import ImportIcon from '@/assets/import-icon.svg?react';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
 
 const ToolbarImportButton = memo(props => {
   const { testId } = props ?? {};
-  const styles = importButtonStyles();
 
   const { projects } = useSelector(state => state.settings);
 
@@ -23,27 +23,18 @@ const ToolbarImportButton = memo(props => {
       title="Import"
       placement="top"
     >
-      <BaseBtn
-        variant="icon"
+      <Button.BaseBtn
+        variant={BUTTON_VARIANTS.iconLabel}
         onClick={openFileDialog}
-        sx={styles.importBtn}
         data-testid={testId}
+        startIcon={<ImportIcon />}
       >
-        <ImportIcon />
-      </BaseBtn>
+        Import
+      </Button.BaseBtn>
     </StyledTooltip>
   );
 });
 
 ToolbarImportButton.displayName = 'ToolbarImportButton';
-
-/** @type {MuiSx} */
-const importButtonStyles = () => ({
-  importBtn: {
-    ml: 1,
-    width: '1.75rem',
-    height: '1.75rem',
-  },
-});
 
 export default ToolbarImportButton;

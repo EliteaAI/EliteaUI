@@ -5,7 +5,7 @@ import { Box, FormControl, InputLabel, ListItemIcon, MenuItem, Typography } from
 import FormHelperText from '@mui/material/FormHelperText';
 
 import { genModelSelectValue } from '@/DEPRECATED';
-import { typographyVariants } from '@/MainTheme';
+import { typographyVariants } from '@/[fsd]/shared/config/theme';
 import CheckedIcon from '@/assets/checked-icon.svg?react';
 import { GROUP_SELECT_VALUE_SEPARATOR } from '@/common/constants';
 import { useTheme } from '@emotion/react';
