@@ -16,6 +16,7 @@ import {
   AnalyticsGuide,
   AnalyticsHealth,
   AnalyticsOverview,
+  AnalyticsTokens,
   AnalyticsTools,
   AnalyticsUsers,
 } from '@/[fsd]/features/settings/ui/analytics';
@@ -42,6 +43,19 @@ const DEFAULT_PRESETS = [
 
 const PRESETS_WITH_CUSTOM = [...DEFAULT_PRESETS, { label: 'Custom', value: CUSTOM_PRESET_VALUE }];
 
+// {label, testid} pairs for the Analytics tabs (ELITEA-2310) — kept as a
+// module-level template so the testid inventory stays greppable, per
+// .agents/testing.md § Locator policy (dynamic/derived-list testid pattern).
+const ANALYTICS_TABS = [
+  { label: 'Overview', testid: 'analytics-tab-overview' },
+  { label: 'Costs', testid: 'analytics-tab-costs' },
+  { label: 'Tokens', testid: 'analytics-tab-tokens' },
+  { label: 'Agents & Pipelines', testid: 'analytics-tab-agents-pipelines' },
+  { label: 'Tools', testid: 'analytics-tab-tools' },
+  { label: 'Users', testid: 'analytics-tab-users' },
+  { label: 'Health', testid: 'analytics-tab-health' },
+  { label: 'Guide', testid: 'analytics-tab-guide' },
+];
 const AnalyticsContainer = memo(() => {
   const projectId = useSelectedProjectId();
   const projectName = useSelectedProjectName();
@@ -76,8 +90,8 @@ const AnalyticsContainer = memo(() => {
     [projectId, dateFromISO, dateToISO],
   );
 
-  // Only fetch overview data for Overview (0) and Health (4) tabs
-  const needsOverview = activeTab === 0 || activeTab === 5;
+  // Only fetch overview data for Overview (0) and Health (6) tabs
+  const needsOverview = activeTab === 0 || activeTab === 6;
 
   const { data, isFetching, isError } = useProjectAnalyticsQuery(queryParams, {
     skip: !projectId || !needsOverview,
@@ -117,7 +131,7 @@ const AnalyticsContainer = memo(() => {
 
   const handleOverviewUserClick = useCallback(userId => {
     setPendingUserId(userId);
-    setActiveTab(4);
+    setActiveTab(5);
   }, []);
 
   const handleBackToOverview = useCallback(() => {
@@ -275,10 +289,11 @@ const AnalyticsContainer = memo(() => {
             value={activeTab}
             onChange={handleTabChange}
           >
-            {['Overview', 'Costs', 'Agents & Pipelines', 'Tools', 'Users', 'Health', 'Guide'].map(label => (
+            {ANALYTICS_TABS.map(({ label, testid }) => (
               <BaseTab
-                key={label}
+                key={testid}
                 label={label}
+                data-testid={testid}
               />
             ))}
           </BaseTabs>
@@ -314,20 +329,27 @@ const AnalyticsContainer = memo(() => {
             />
           )}
           {activeTab === 2 && (
-            <AnalyticsAgents
+            <AnalyticsTokens
               projectId={projectId}
               dateFrom={dateFromISO}
               dateTo={dateToISO}
             />
           )}
           {activeTab === 3 && (
-            <AnalyticsTools
+            <AnalyticsAgents
               projectId={projectId}
               dateFrom={dateFromISO}
               dateTo={dateToISO}
             />
           )}
           {activeTab === 4 && (
+            <AnalyticsTools
+              projectId={projectId}
+              dateFrom={dateFromISO}
+              dateTo={dateToISO}
+            />
+          )}
+          {activeTab === 5 && (
             <AnalyticsUsers
               projectId={projectId}
               dateFrom={dateFromISO}
@@ -336,13 +358,13 @@ const AnalyticsContainer = memo(() => {
               onBackToSource={handleBackToOverview}
             />
           )}
-          {data && !isFetching && activeTab === 5 && (
+          {data && !isFetching && activeTab === 6 && (
             <AnalyticsHealth
               health={data.health}
               daily_activity={data.daily_activity}
             />
           )}
-          {activeTab === 6 && <AnalyticsGuide />}
+          {activeTab === 7 && <AnalyticsGuide />}
         </Box>
       </Box>
 
