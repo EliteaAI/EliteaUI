@@ -9,6 +9,7 @@ import {
   getMcpAuthorizationRequests,
   getToolkitAuthorizationContext,
   groupToolkitAuthorizationActions,
+  hasProcessingSiblingForAuthorization,
 } from './mcpAuthorization.helpers';
 
 describe('toolkit authorization helpers', () => {
@@ -169,5 +170,72 @@ describe('toolkit authorization helpers', () => {
 
     expect(action.status).toBe(ToolActionStatus.error);
     expect(action.content).toContain('did not provide authorization server configuration');
+  });
+
+  it('detects a processing parallel sibling for nested authorization', () => {
+    const parent = { name: 'Full Name Resolver', call_id: 'full-name-call' };
+    const authorization = buildMcpAuthorizationToolAction({
+      metadata: {
+        tool_run_id: 'surname-auth',
+        tool_name: 'sharepoint',
+        authorization_servers: ['https://login.example'],
+        metadata: {
+          parent_agent_path: [parent, { name: 'Surname Resolver', call_id: 'surname-call' }],
+        },
+      },
+    });
+    const processingNameResolver = {
+      id: 'name-llm',
+      status: ToolActionStatus.processing,
+      parent_agent_path: [parent, { name: 'Name Resolver', call_id: 'name-call' }],
+    };
+
+    expect(
+      hasProcessingSiblingForAuthorization(
+        [authorization, processingNameResolver],
+        [authorization],
+      ),
+    ).toBe(true);
+  });
+
+  it('does not treat an ancestor, completed sibling, or direct auth as processing sibling work', () => {
+    const parent = { name: 'Full Name Resolver', call_id: 'full-name-call' };
+    const nestedAuthorization = buildMcpAuthorizationToolAction({
+      metadata: {
+        tool_run_id: 'surname-auth',
+        tool_name: 'sharepoint',
+        authorization_servers: ['https://login.example'],
+        metadata: {
+          parent_agent_path: [parent, { name: 'Surname Resolver', call_id: 'surname-call' }],
+        },
+      },
+    });
+    const ancestor = {
+      id: 'parent-wrapper',
+      status: ToolActionStatus.processing,
+      parent_agent_path: [parent],
+    };
+    const completedSibling = {
+      id: 'name-complete',
+      status: ToolActionStatus.complete,
+      parent_agent_path: [parent, { name: 'Name Resolver', call_id: 'name-call' }],
+    };
+    const directAuthorization = buildMcpAuthorizationToolAction({
+      metadata: {
+        tool_run_id: 'direct-auth',
+        tool_name: 'sharepoint',
+        authorization_servers: ['https://login.example'],
+      },
+    });
+
+    expect(
+      hasProcessingSiblingForAuthorization(
+        [nestedAuthorization, ancestor, completedSibling],
+        [nestedAuthorization],
+      ),
+    ).toBe(false);
+    expect(
+      hasProcessingSiblingForAuthorization([directAuthorization, ancestor], [directAuthorization]),
+    ).toBe(false);
   });
 });

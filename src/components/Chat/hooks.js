@@ -18,6 +18,7 @@ import {
 import {
   buildMcpAuthorizationToolAction,
   getMcpAuthorizationRequests,
+  hasProcessingSiblingForAuthorization,
 } from '@/[fsd]/features/chat/lib/helpers/mcpAuthorization.helpers.js';
 import {
   mentionSkillActions,
@@ -1105,8 +1106,9 @@ export const useChatSocket = ({
           // SDK-nested Applications also carry child_thread_id, but only a
           // worker-owned fan-out child keeps the parked parent run active.
           const isDurableChild = response_metadata?.resume_strategy === 'aggregate_child';
+          const hasProcessingSibling = hasProcessingSiblingForAuthorization(msg.toolActions, actions);
           msg.isLoading = false;
-          msg.isStreaming = isDurableChild;
+          msg.isStreaming = isDurableChild || (msg.isStreaming && hasProcessingSibling);
           msg.isRegenerating = false;
           msg.isSending = false;
           onRcvAgentEventRef.current && onRcvAgentEventRef.current({ ...message });

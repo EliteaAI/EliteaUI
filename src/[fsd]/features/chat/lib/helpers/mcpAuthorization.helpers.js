@@ -181,6 +181,34 @@ export const buildToolkitAuthorizationMessage = (context, fallbackMessage = DEFA
   return `Authorization is required for toolkit "${context.toolkitName}". Authorize now or skip it for this run?`;
 };
 
+const sameInvocationTier = (left, right) =>
+  Boolean(
+    left &&
+      right &&
+      ((left.call_id && right.call_id && left.call_id === right.call_id) ||
+        (!left.call_id && !right.call_id && left.name && left.name === right.name)),
+  );
+
+const areSiblingInvocationPaths = (left, right) =>
+  left.length > 0 &&
+  left.length === right.length &&
+  left.slice(0, -1).every((tier, index) => sameInvocationTier(tier, right[index])) &&
+  !sameInvocationTier(left.at(-1), right.at(-1));
+
+/** Whether a nested authorization paused while a parallel sibling is still working. */
+export const hasProcessingSiblingForAuthorization = (actions, authorizationActions) => {
+  const authorizationPaths = (authorizationActions || []).map(getActionOwnerPath).filter(path => path.length);
+  if (!authorizationPaths.length) return false;
+
+  return authorizationPaths.some(authorizationPath =>
+    (actions || []).some(
+      action =>
+        action?.status === ToolActionStatus.processing &&
+        areSiblingInvocationPaths(authorizationPath, getActionOwnerPath(action)),
+    ),
+  );
+};
+
 /**
  * Keep direct toolkit authorization cards flat while grouping delegated
  * requests under the same hierarchical execution accordion used by HITL.
