@@ -636,6 +636,17 @@ const darkPalette = {
       icon: darkOrange,
     },
   },
+  suggestionChip: {
+    border: gray30,
+    background: {
+      default: 'transparent',
+      hover: white10,
+    },
+    text: {
+      default: gray00,
+      hover: white,
+    },
+  },
 };
 
 export default darkPalette;
