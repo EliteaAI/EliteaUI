@@ -1,4 +1,5 @@
 export { default as NameDescriptionInput } from './NameDescriptionInput';
+export { default as SectionStatusIcon } from './SectionStatusIcon';
 export {
   ToolBase,
   ToolActionsSelector,

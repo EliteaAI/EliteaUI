@@ -11,12 +11,12 @@ import ChipWithCheckIcon from '@/components/ChipWithCheckIcon.jsx';
 const UNCLASSIFIED_GROUP = 'unclassified';
 
 const TOOL_GROUP_ORDER = [
-  { key: 'read', label: 'Read only', tooltip: 'Returns data. Nothing is created, changed or destroyed.' },
-  { key: 'write', label: 'Change data', tooltip: 'Creates or modifies data in the target system.' },
-  { key: 'delete', label: 'Destructive', tooltip: 'Destroys data. Not reversible from Elitea.' },
+  { key: 'read', label: 'Read', tooltip: 'Returns data. Nothing is created, changed or destroyed.' },
+  { key: 'write', label: 'Create & update', tooltip: 'Creates or modifies data in the target system.' },
+  { key: 'delete', label: 'Delete', tooltip: 'Destroys data. Not reversible from Elitea.' },
   {
     key: 'execute',
-    label: 'Unrestricted',
+    label: 'Execute',
     tooltip:
       'Runs a caller-supplied query, script, pipeline or raw API call. Effect is not bounded by the tool.',
   },
@@ -148,7 +148,7 @@ export const ToolActionsItems = memo(props => {
 
   return (
     <Stack
-      sx={styles.stack}
+      sx={styles.groupStack(!!query)}
       direction="column"
     >
       {warningTools.length > 0 && (
@@ -175,6 +175,8 @@ export const ToolActionsItems = memo(props => {
               tooltip={group.tooltip}
               values={group.values}
               selectedCount={group.values.filter(value => selectedTools?.includes(value)).length}
+              matchCount={group.visibleOptions.length}
+              isSearching={!!query}
               onToggleTools={onToggleTools}
               disabled={disabled}
             />
