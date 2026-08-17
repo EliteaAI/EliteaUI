@@ -651,8 +651,8 @@ export const useChatSocket = ({
 
           // For existing messages, use state update with proper new object references
           // so React detects the change and re-renders
-          setChatHistoryRef.current?.(prevState =>
-            prevState.map((item, idx) => {
+          setChatHistoryRef.current?.(prevState => {
+            const nextState = prevState.map((item, idx) => {
               if (idx !== msgIndex) return item;
               const existingToolActions = item.toolActions || [];
               const existingAction = existingToolActions.find(ta => ta.id === toolRunId);
@@ -703,8 +703,16 @@ export const useChatSocket = ({
                 ...item,
                 toolActions: updatedToolActions,
               };
-            }),
-          );
+            });
+
+            // Socket events can arrive in the same tick, before React commits
+            // this functional update and the ref-sync effect runs. Advance the
+            // ref here as well so a following authorization/interrupt event
+            // cannot rebuild the message from stale toolActions and temporarily
+            // drop a parallel child from the live thinking tree.
+            chatHistoryRef.current = nextState;
+            return nextState;
+          });
           return;
         }
         case SocketMessageType.AgentLlmEnd: {
