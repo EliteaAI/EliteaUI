@@ -1,21 +1,11 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
-import {
-  Box,
-  Checkbox,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  FormControlLabel,
-  List,
-  ListItem,
-  Typography,
-} from '@mui/material';
+import { Box, Checkbox, FormControlLabel, List, ListItem, Typography } from '@mui/material';
 
 import { useLazyMessageListQuery } from '@/[fsd]/features/chat/api';
 import { Input, Select } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import BaseModal from '@/[fsd]/shared/ui/modal/BaseModal';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 import { getBasename } from '@/routes';
@@ -150,208 +140,215 @@ const ShareConversationDialog = memo(props => {
     }
   }, [conversationId, createdToken, projectId, revokeShareLink, toastError, toastInfo]);
 
-  return (
-    <Dialog
-      open={open}
-      onClose={handleClose}
-      sx={styles.dialog}
-    >
-      <DialogTitle sx={styles.dialogTitle}>
-        <Box sx={styles.titleContent}>
-          <Typography variant="headingMedium">Share conversation</Typography>
-          <Typography
-            variant="bodySmall"
-            color="text.disabled"
-            noWrap
-            sx={styles.conversationName}
-          >
-            {conversation?.name}
-          </Typography>
-        </Box>
-      </DialogTitle>
+  const content = (
+    <Box sx={styles.contentWrapper}>
+      <Select.SingleSelect
+        label="What to share"
+        value={scope}
+        options={SCOPE_OPTIONS}
+        onValueChange={handleScopeChange}
+        showBorder
+      />
 
-      <DialogContent sx={styles.dialogContent}>
-        <Select.SingleSelect
-          label="What to share"
-          value={scope}
-          options={SCOPE_OPTIONS}
-          onValueChange={handleScopeChange}
-          showBorder
-        />
-
-        {scope === 'partial' && (
-          <Box sx={styles.groupChecklist}>
-            {isLoadingMessages ? (
-              <Typography
-                variant="bodySmall2"
-                color="text.disabled"
-                sx={styles.checklistFeedback}
-              >
-                Loading messages…
-              </Typography>
-            ) : messageGroups.length === 0 ? (
-              <Typography
-                variant="bodySmall2"
-                color="text.disabled"
-                sx={styles.checklistFeedback}
-              >
-                No messages found.
-              </Typography>
-            ) : (
-              <List
-                dense
-                disablePadding
-              >
-                {messageGroups.map(group => (
-                  <ListItem
-                    key={group.id}
-                    disablePadding
-                    sx={styles.checklistItem}
-                  >
-                    <FormControlLabel
-                      sx={styles.checklistLabel}
-                      control={
-                        <Checkbox
-                          size="small"
-                          checked={selectedGroupIds.includes(group.id)}
-                          onChange={() => handleToggleGroup(group.id)}
-                          sx={styles.checkbox}
-                        />
-                      }
-                      label={
-                        <Box sx={styles.checklistLabelContent}>
-                          <Typography
-                            variant="bodySmall"
-                            color="text.secondary"
-                            sx={styles.checklistAuthor}
-                          >
-                            {group.authorName}
-                          </Typography>
-                          {group.preview && (
-                            <Typography
-                              variant="bodySmall2"
-                              color="text.disabled"
-                              noWrap
-                              sx={styles.checklistPreview}
-                            >
-                              {group.preview}
-                            </Typography>
-                          )}
-                        </Box>
-                      }
-                    />
-                  </ListItem>
-                ))}
-              </List>
-            )}
-            {scope === 'partial' &&
-              selectedGroupIds.length === 0 &&
-              !isLoadingMessages &&
-              messageGroups.length > 0 && (
-                <Typography
-                  variant="bodySmall2"
-                  color="error.main"
-                  sx={styles.partialError}
-                >
-                  Select at least one message to share.
-                </Typography>
-              )}
-          </Box>
-        )}
-
-        <Select.SingleSelect
-          label="Link expires after"
-          value={expiry}
-          options={EXPIRY_OPTIONS}
-          onValueChange={setExpiry}
-          showBorder
-        />
-        <Input.StyledInputEnhancer
-          label="Password protection (optional)"
-          type="password"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          error={!isPasswordValid}
-          helperText={!isPasswordValid ? 'Minimum 4 characters.' : ''}
-          variant="standard"
-          fullWidth
-          sx={{ marginTop: '-1rem' }}
-        />
-
-        {createError && (
-          <Typography
-            variant="bodySmall2"
-            color="error.main"
-          >
-            {createError}
-          </Typography>
-        )}
-
-        {createdLink && (
-          <>
-            <Box sx={styles.createdLinkRow}>
-              <Typography
-                variant="bodySmall2"
-                color="text.secondary"
-                sx={styles.createdLinkText}
-                noWrap
-                title={createdLink}
-              >
-                {createdLink}
-              </Typography>
-            </Box>
+      {scope === 'partial' && (
+        <Box sx={styles.groupChecklist}>
+          {isLoadingMessages ? (
             <Typography
               variant="bodySmall2"
               color="text.disabled"
-              sx={styles.guidelinesText}
+              sx={styles.checklistFeedback}
             >
-              This link provides read-only access to the selected conversation content. Anyone with the link
-              can view it — avoid sharing links that contain sensitive information. You can revoke access at
-              any time from Manage links.
+              Loading messages…
             </Typography>
-          </>
-        )}
-      </DialogContent>
+          ) : messageGroups.length === 0 ? (
+            <Typography
+              variant="bodySmall2"
+              color="text.disabled"
+              sx={styles.checklistFeedback}
+            >
+              No messages found.
+            </Typography>
+          ) : (
+            <List
+              dense
+              disablePadding
+            >
+              {messageGroups.map(group => (
+                <ListItem
+                  key={group.id}
+                  disablePadding
+                  sx={styles.checklistItem}
+                >
+                  <FormControlLabel
+                    sx={styles.checklistLabel}
+                    control={
+                      <Checkbox
+                        size="small"
+                        checked={selectedGroupIds.includes(group.id)}
+                        onChange={() => handleToggleGroup(group.id)}
+                        sx={styles.checkbox}
+                      />
+                    }
+                    label={
+                      <Box sx={styles.checklistLabelContent}>
+                        <Typography
+                          variant="bodySmall"
+                          color="text.secondary"
+                          sx={styles.checklistAuthor}
+                        >
+                          {group.authorName}
+                        </Typography>
+                        {group.preview && (
+                          <Typography
+                            variant="bodySmall2"
+                            color="text.disabled"
+                            noWrap
+                            sx={styles.checklistPreview}
+                          >
+                            {group.preview}
+                          </Typography>
+                        )}
+                      </Box>
+                    }
+                  />
+                </ListItem>
+              ))}
+            </List>
+          )}
+          {scope === 'partial' &&
+            selectedGroupIds.length === 0 &&
+            !isLoadingMessages &&
+            messageGroups.length > 0 && (
+              <Typography
+                variant="bodySmall2"
+                color="error.main"
+                sx={styles.partialError}
+              >
+                Select at least one message to share.
+              </Typography>
+            )}
+        </Box>
+      )}
 
-      <DialogActions sx={styles.dialogActions}>
-        {createdLink ? (
-          <BaseBtn
-            variant={BUTTON_VARIANTS.alarm}
-            loading={isRevoking}
-            onClick={handleRevoke}
+      <Select.SingleSelect
+        label="Link expires after"
+        value={expiry}
+        options={EXPIRY_OPTIONS}
+        onValueChange={setExpiry}
+        showBorder
+      />
+      <Input.StyledInputEnhancer
+        label="Password protection (optional)"
+        type="password"
+        value={password}
+        onChange={e => setPassword(e.target.value)}
+        error={!isPasswordValid}
+        helperText={!isPasswordValid ? 'Minimum 4 characters.' : ''}
+        variant="standard"
+        fullWidth
+        sx={{ marginTop: '-1rem' }}
+      />
+
+      {createError && (
+        <Typography
+          variant="bodySmall2"
+          color="error.main"
+        >
+          {createError}
+        </Typography>
+      )}
+
+      {createdLink && (
+        <>
+          <Box sx={styles.createdLinkRow}>
+            <Typography
+              variant="bodySmall2"
+              color="text.secondary"
+              sx={styles.createdLinkText}
+              noWrap
+              title={createdLink}
+            >
+              {createdLink}
+            </Typography>
+          </Box>
+          <Typography
+            variant="bodySmall2"
+            color="text.disabled"
+            sx={styles.guidelinesText}
           >
-            Revoke
-          </BaseBtn>
-        ) : (
-          <BaseBtn
-            variant={BUTTON_VARIANTS.elitea}
-            color={BUTTON_COLORS.secondary}
-            onClick={handleClose}
-          >
-            Cancel
-          </BaseBtn>
-        )}
-        {createdLink ? (
-          <BaseBtn
-            variant={BUTTON_VARIANTS.elitea}
-            color={BUTTON_COLORS.primary}
-            onClick={handleCopyCreated}
-          >
-            Copy
-          </BaseBtn>
-        ) : (
-          <BaseBtn
-            variant={BUTTON_VARIANTS.elitea}
-            color={BUTTON_COLORS.primary}
-            disabled={!canGenerate}
-            loading={isCreating}
-            onClick={handleCreate}
-          >
-            Generate link
-          </BaseBtn>
-        )}
-      </DialogActions>
-    </Dialog>
+            This link provides read-only access to the selected conversation content. Anyone with the link can
+            view it — avoid sharing links that contain sensitive information. You can revoke access at any
+            time from Manage links.
+          </Typography>
+        </>
+      )}
+    </Box>
+  );
+
+  const actions = createdLink ? (
+    <>
+      <BaseBtn
+        variant={BUTTON_VARIANTS.alarm}
+        loading={isRevoking}
+        onClick={handleRevoke}
+      >
+        Revoke
+      </BaseBtn>
+      <BaseBtn
+        variant={BUTTON_VARIANTS.elitea}
+        color={BUTTON_COLORS.primary}
+        onClick={handleCopyCreated}
+      >
+        Copy
+      </BaseBtn>
+    </>
+  ) : (
+    <>
+      <BaseBtn
+        variant={BUTTON_VARIANTS.elitea}
+        color={BUTTON_COLORS.secondary}
+        onClick={handleClose}
+      >
+        Cancel
+      </BaseBtn>
+      <BaseBtn
+        variant={BUTTON_VARIANTS.elitea}
+        color={BUTTON_COLORS.primary}
+        disabled={!canGenerate}
+        loading={isCreating}
+        onClick={handleCreate}
+      >
+        Generate link
+      </BaseBtn>
+    </>
+  );
+
+  const title = (
+    <Box sx={styles.titleContent}>
+      <Typography variant="headingMedium">Share conversation</Typography>
+      {conversation?.name && (
+        <Typography
+          variant="bodySmall"
+          color="text.disabled"
+          noWrap
+          sx={styles.conversationName}
+        >
+          {conversation.name}
+        </Typography>
+      )}
+    </Box>
+  );
+
+  return (
+    <BaseModal
+      open={open}
+      onClose={handleClose}
+      title={title}
+      showCloseButton={false}
+      content={content}
+      actions={actions}
+      sx={styles.modal}
+    />
   );
 });
 
@@ -359,24 +356,10 @@ ShareConversationDialog.displayName = 'ShareConversationDialog';
 
 /** @type {MuiSx} */
 const shareConversationDialogStyles = () => ({
-  dialog: {
-    '& .MuiDialog-paper': ({ palette }) => ({
-      width: '37.5rem',
-      maxWidth: '37.5rem',
-      borderRadius: '1rem',
-      backgroundColor: palette.background.tabPanel,
-      backgroundImage: 'none',
-      border: `.0625rem solid ${palette.border.lines}`,
-      boxShadow: '0 0 1.475rem 0 rgba(255, 255, 255, 0.05)',
-    }),
+  modal: {
+    width: '37.5rem',
+    maxWidth: '37.5rem',
   },
-  dialogTitle: ({ palette }) => ({
-    display: 'flex',
-    alignItems: 'flex-start',
-    minHeight: '3.75rem',
-    padding: '0.875rem 1.5rem',
-    backgroundColor: palette.background.tabPanel,
-  }),
   titleContent: {
     display: 'flex',
     flexDirection: 'column',
@@ -386,16 +369,11 @@ const shareConversationDialogStyles = () => ({
   conversationName: {
     maxWidth: '100%',
   },
-  dialogContent: ({ palette }) => ({
+  contentWrapper: {
     display: 'flex',
     flexDirection: 'column',
-    padding: '1.5rem !important',
-    borderTop: `.0625rem solid ${palette.border.lines}`,
-    borderBottom: `.0625rem solid ${palette.border.lines}`,
-    background: palette.background.secondary,
     gap: '1rem',
-    minHeight: '12rem',
-  }),
+  },
   groupChecklist: ({ palette }) => ({
     maxHeight: '12rem',
     overflowY: 'auto',
@@ -453,13 +431,6 @@ const shareConversationDialogStyles = () => ({
   guidelinesText: {
     marginTop: '-0.5rem',
   },
-  dialogActions: ({ palette }) => ({
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    padding: '1rem 1.5rem',
-    backgroundColor: palette.background.tabPanel,
-  }),
 });
 
 export default ShareConversationDialog;
