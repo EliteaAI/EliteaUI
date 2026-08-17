@@ -27,6 +27,7 @@ import {
   getHitlResumeThreadId,
   getInterruptIdentity,
   getPendingHitlMessage,
+  hasRootHitlTurnEnded,
   scheduleRootHitlDecision,
 } from '@/[fsd]/features/chat/lib/helpers/hitl.helpers.js';
 import * as NewConversationHelpers from '@/[fsd]/features/chat/lib/helpers/newConversation.helpers';
@@ -1301,6 +1302,35 @@ const ChatBox = forwardRef((props, boxRef) => {
         sessionDeclinedMcpServers,
       };
       const isDurableAuthorization = authMeta.guardrail_type === 'mcp_auth' && Boolean(authMeta.interrupt_id);
+      const isRootDurableAuthorization =
+        isDurableAuthorization && authMeta.resume_strategy !== 'aggregate_child';
+      if (isRootDurableAuthorization) {
+        // Root-scoped durable MCP auth shares the same LangGraph checkpoint as
+        // sensitive-tool HITL cards. Route it through the root queue so rapid
+        // auth + sensitive decisions cannot launch concurrent worker resumes.
+        setChatHistory(prevMessages =>
+          prevMessages.map(msg =>
+            msg.id !== messageId
+              ? msg
+              : {
+                  ...msg,
+                  toolActions: msg.toolActions?.filter(
+                    action =>
+                      action.authorizationRequestId !== exactRequestId && action.id !== exactRequestId,
+                  ),
+                },
+          ),
+        );
+        onHitlResumeRef.current?.({
+          action: authorizationAction,
+          value: '',
+          toolCallId: authMeta.tool_call_id,
+          interruptId: exactRequestId,
+          guardrailType: authMeta.guardrail_type,
+          sessionDeclinedMcpServers,
+        });
+        return;
+      }
       const payload = isDurableAuthorization
         ? generateMcpContinuePayload({
             ...continuePayload,
@@ -1402,6 +1432,7 @@ const ChatBox = forwardRef((props, boxRef) => {
   const rootHitlResumeQueueRef = useRef({
     messageId: null,
     inFlightIdentities: [],
+    requiredTurnEndRevision: 0,
     decisions: [],
   });
   const rootHitlBatchTimerRef = useRef(null);
@@ -1411,11 +1442,17 @@ const ChatBox = forwardRef((props, boxRef) => {
     async resumeRequest => {
       const rootBatch = Array.isArray(resumeRequest?.rootBatch) ? resumeRequest.rootBatch : null;
       const primaryRequest = rootBatch?.[0] || resumeRequest || {};
+      const sessionDeclinedMcpServers =
+        [...(rootBatch || [])]
+          .reverse()
+          .find(request => Array.isArray(request?.sessionDeclinedMcpServers))
+          ?.sessionDeclinedMcpServers || resumeRequest?.sessionDeclinedMcpServers;
       const {
         action,
         value,
         toolCallId: providedToolCallId,
         interruptId: providedInterruptId,
+        guardrailType,
       } = primaryRequest;
       const lastMessage = pendingHitlMessage;
       if (!lastMessage) return;
@@ -1472,8 +1509,9 @@ const ChatBox = forwardRef((props, boxRef) => {
       const isParallel =
         action !== 'answer' &&
         !isFanoutChild &&
-        Array.isArray(lastMessage.hitlInterrupts) &&
-        lastMessage.hitlInterrupts.length > 0 &&
+        ((Array.isArray(lastMessage.hitlInterrupts) && lastMessage.hitlInterrupts.length > 0) ||
+          guardrailType === 'mcp_auth' ||
+          rootBatch?.some(decision => decision.guardrailType === 'mcp_auth')) &&
         Boolean(selectedIdentity || toolCallId);
       let parallelDecisions;
 
@@ -1548,6 +1586,8 @@ const ChatBox = forwardRef((props, boxRef) => {
           value: value ?? '',
           toolCallId,
           interruptId: decisionIdentity,
+          ...(guardrailType ? { guardrailType } : {}),
+          ...(Array.isArray(sessionDeclinedMcpServers) ? { sessionDeclinedMcpServers } : {}),
         };
         const scheduled = scheduleRootHitlDecision(
           rootHitlResumeQueueRef.current,
@@ -1579,7 +1619,11 @@ const ChatBox = forwardRef((props, boxRef) => {
           if (rootHitlBatchTimerRef.current) clearTimeout(rootHitlBatchTimerRef.current);
           rootHitlBatchTimerRef.current = setTimeout(() => {
             rootHitlBatchTimerRef.current = null;
-            const batch = completeRootHitlDecision(rootHitlResumeQueueRef.current, interrupts);
+            const batch = completeRootHitlDecision(
+              rootHitlResumeQueueRef.current,
+              interrupts,
+              Number(lastMessage.hitlTurnStartRevision || 0) + 1,
+            );
             rootHitlResumeQueueRef.current = batch.state;
             if (batch.nextDecisions.length) {
               onHitlResumeRef.current?.({ rootBatch: batch.nextDecisions });
@@ -1595,7 +1639,9 @@ const ChatBox = forwardRef((props, boxRef) => {
             interrupt => getInterruptIdentity(interrupt) === decision.interruptId,
           );
           return {
-            ...(entry?.interrupt_id ? { interrupt_id: entry.interrupt_id } : {}),
+            ...(entry?.interrupt_id || decision.interruptId
+              ? { interrupt_id: entry?.interrupt_id || decision.interruptId }
+              : {}),
             tool_call_id: decision.toolCallId || entry?.tool_call_id,
             action: decision.action,
             value: decision.value ?? '',
@@ -1636,6 +1682,7 @@ const ChatBox = forwardRef((props, boxRef) => {
         thread_id: threadId,
         participants: activeConversation?.participants || [],
         question: action === 'edit' ? (value ?? '') : action,
+        sessionDeclinedMcpServers,
       });
 
       payload.hitl_resume = true;
@@ -1759,13 +1806,19 @@ const ChatBox = forwardRef((props, boxRef) => {
     if (!queueState.inFlightIdentities.length) return;
 
     if (!pendingHitlMessage || pendingHitlMessage.id !== queueState.messageId) {
-      rootHitlResumeQueueRef.current = { messageId: null, inFlightIdentities: [], decisions: [] };
+      rootHitlResumeQueueRef.current = {
+        messageId: null,
+        inFlightIdentities: [],
+        requiredTurnEndRevision: 0,
+        decisions: [],
+      };
       return;
     }
     if (pendingHitlMessage.exception) {
       rootHitlResumeQueueRef.current = {
         messageId: pendingHitlMessage.id,
         inFlightIdentities: [],
+        requiredTurnEndRevision: 0,
         decisions: [],
       };
       setChatHistory(prevMessages =>
@@ -1785,12 +1838,20 @@ const ChatBox = forwardRef((props, boxRef) => {
       );
       return;
     }
-    if (pendingHitlMessage.isLoading) return;
+
+    // Loading and nested HITL events can toggle while the root checkpoint is
+    // still active. The indexer's InjectionConsumedReport is emitted from the
+    // worker finally block and is the authoritative per-turn release signal.
+    if (!hasRootHitlTurnEnded(queueState, pendingHitlMessage.hitlTurnEndRevision)) return;
 
     const currentInterrupts = Array.isArray(pendingHitlMessage.hitlInterrupts)
       ? pendingHitlMessage.hitlInterrupts
       : [];
-    const completed = completeRootHitlDecision(queueState, currentInterrupts);
+    const completed = completeRootHitlDecision(
+      queueState,
+      currentInterrupts,
+      Number(pendingHitlMessage.hitlTurnStartRevision || 0) + 1,
+    );
     rootHitlResumeQueueRef.current = completed.state;
     if (completed.nextDecisions.length) {
       onHitlResumeRef.current?.({ rootBatch: completed.nextDecisions });

@@ -59,6 +59,22 @@ export const mergeHitlInterrupts = (existing = [], incoming = []) => {
   return result;
 };
 
+export const reconcileRootHitlInterrupts = (existing = [], incoming = []) => {
+  const localByIdentity = new Map(
+    existing.map(interrupt => [getInterruptIdentity(interrupt), interrupt]),
+  );
+  return incoming.map(interrupt => {
+    const local = localByIdentity.get(getInterruptIdentity(interrupt));
+    if (!local || (!local.queued && !local.decided && !local.hidden)) return interrupt;
+    return {
+      ...interrupt,
+      queued: Boolean(local.queued),
+      decided: Boolean(local.decided),
+      hidden: true,
+    };
+  });
+};
+
 export const getPendingHitlMessage = history => {
   const messages = Array.isArray(history) ? history : [];
   const lastAssistant = messages[messages.length - 1];
@@ -93,15 +109,24 @@ export const getHitlResumeThreadId = interrupt =>
 
 export const settleHitlResumeAttempt = (interrupts, accepted) => {
   const list = Array.isArray(interrupts) ? interrupts : [];
-  if (accepted) return list.filter(interrupt => !interrupt?.decided);
+  // StartTask acknowledges only that Core accepted the continuation request.
+  // It is not an authoritative per-interrupt result: the React state carrying
+  // `decided` can race the socket event, and choices queued behind the active
+  // root resume have not been submitted yet. Keep the complete local array
+  // until the next interrupt aggregate or terminal event reconciles it.
+  if (accepted) return list;
   return list.map(interrupt =>
-    interrupt?.decided ? { ...interrupt, decided: false, hidden: false } : interrupt,
+    interrupt?.decided || interrupt?.queued || interrupt?.hidden
+      ? { ...interrupt, decided: false, queued: false, hidden: false }
+      : interrupt,
   );
 };
 
 export const scheduleRootHitlDecision = (state, messageId, decision) => {
   const current =
-    state?.messageId === messageId ? state : { messageId, inFlightIdentities: [], decisions: [] };
+    state?.messageId === messageId
+      ? state
+      : { messageId, inFlightIdentities: [], requiredTurnEndRevision: 0, decisions: [] };
   const identity = decision?.interruptId || '';
   const duplicate =
     !identity ||
@@ -114,16 +139,39 @@ export const scheduleRootHitlDecision = (state, messageId, decision) => {
   };
 };
 
-export const completeRootHitlDecision = (state, pendingInterrupts) => {
-  const current = state || { messageId: null, inFlightIdentities: [], decisions: [] };
+export const completeRootHitlDecision = (
+  state,
+  pendingInterrupts,
+  requiredTurnEndRevision = 1,
+) => {
+  const current = state || {
+    messageId: null,
+    inFlightIdentities: [],
+    requiredTurnEndRevision: 0,
+    decisions: [],
+  };
   const pendingIdentities = new Set((pendingInterrupts || []).map(getInterruptIdentity));
-  const nextDecisions = current.decisions.filter(candidate => pendingIdentities.has(candidate.interruptId));
+  // Durable MCP authorization is rendered from toolActions, not from the
+  // sensitive-tool hitlInterrupts collection. Once explicitly selected it is
+  // still part of this root checkpoint batch even though its public interrupt
+  // id is absent from pendingInterrupts.
+  const nextDecisions = current.decisions.filter(
+    candidate =>
+      pendingIdentities.has(candidate.interruptId) || candidate.guardrailType === 'mcp_auth',
+  );
   return {
     state: {
       ...current,
       inFlightIdentities: nextDecisions.map(decision => decision.interruptId),
+      requiredTurnEndRevision,
       decisions: [],
     },
     nextDecisions,
   };
 };
+
+export const hasRootHitlTurnEnded = (state, turnEndRevision) =>
+  Boolean(
+    state?.inFlightIdentities?.length &&
+      Number(turnEndRevision || 0) >= Number(state.requiredTurnEndRevision || 1),
+  );

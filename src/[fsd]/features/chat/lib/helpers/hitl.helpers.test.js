@@ -6,8 +6,10 @@ import {
   getHitlResumeThreadId,
   getInterruptIdentity,
   getPendingHitlMessage,
+  hasRootHitlTurnEnded,
   mergeHitlInterrupts,
   normalizeHitlInterrupt,
+  reconcileRootHitlInterrupts,
   scheduleRootHitlDecision,
   settleHitlResumeAttempt,
 } from './hitl.helpers';
@@ -110,11 +112,16 @@ describe('HITL helpers', () => {
     expect(scheduledSecond.status).toBe('schedule');
     expect(scheduleRootHitlDecision(scheduledSecond.state, 'message-1', second).status).toBe('duplicate');
 
-    const completed = completeRootHitlDecision(scheduledSecond.state, [{ interrupt_id: 'i2' }]);
+    const completed = completeRootHitlDecision(
+      scheduledSecond.state,
+      [{ interrupt_id: 'i2' }],
+      7,
+    );
     expect(completed.nextDecisions).toEqual([second]);
     expect(completed.state).toMatchObject({
       messageId: 'message-1',
       inFlightIdentities: ['i2'],
+      requiredTurnEndRevision: 7,
       decisions: [],
     });
   });
@@ -129,6 +136,19 @@ describe('HITL helpers', () => {
     const batch = completeRootHitlDecision(state, [{ interrupt_id: 'i1' }, { interrupt_id: 'i2' }]);
     expect(batch.nextDecisions).toEqual([first, second]);
     expect(batch.state.inFlightIdentities).toEqual(['i1', 'i2']);
+  });
+
+  it('keeps a selected durable MCP auth decision outside the sensitive interrupt list', () => {
+    const auth = { interruptId: 'auth-i1', action: 'skip', guardrailType: 'mcp_auth' };
+    const sensitive = { interruptId: 'delete-i1', action: 'reject' };
+    let state = { messageId: null, inFlightIdentities: [], decisions: [] };
+    state = scheduleRootHitlDecision(state, 'message-1', auth).state;
+    state = scheduleRootHitlDecision(state, 'message-1', sensitive).state;
+
+    const batch = completeRootHitlDecision(state, [{ interrupt_id: 'delete-i1' }]);
+
+    expect(batch.nextDecisions).toEqual([auth, sensitive]);
+    expect(batch.state.inFlightIdentities).toEqual(['auth-i1', 'delete-i1']);
   });
 
   it('coalesces choices made during a running batch into the next resume', () => {
@@ -152,17 +172,51 @@ describe('HITL helpers', () => {
     expect(next.state.inFlightIdentities).toEqual(['i2', 'i3']);
   });
 
-  it('keeps pending cards until resume acceptance and restores them after rejection', () => {
+  it('does not complete a root resume before the worker turn-end report', () => {
+    const waiting = {
+      messageId: 'message-1',
+      inFlightIdentities: ['i1'],
+      requiredTurnEndRevision: 5,
+      decisions: [{ interruptId: 'i2', action: 'reject' }],
+    };
+
+    expect(hasRootHitlTurnEnded(waiting, 4)).toBe(false);
+    expect(hasRootHitlTurnEnded(waiting, 5)).toBe(true);
+  });
+
+  it('keeps clicked root cards hidden across an aggregate refresh', () => {
+    const existing = [
+      { interrupt_id: 'auth', decided: true, hidden: true },
+      { interrupt_id: 'name-delete', queued: true, hidden: true },
+    ];
+    const incoming = [
+      { interrupt_id: 'name-delete', tool_name: 'delete_file' },
+      { interrupt_id: 'surname-delete', tool_name: 'delete_file' },
+    ];
+
+    expect(reconcileRootHitlInterrupts(existing, incoming)).toEqual([
+      {
+        interrupt_id: 'name-delete',
+        tool_name: 'delete_file',
+        queued: true,
+        decided: false,
+        hidden: true,
+      },
+      { interrupt_id: 'surname-delete', tool_name: 'delete_file' },
+    ]);
+  });
+
+  it('keeps the interrupt array through resume acceptance and restores it after rejection', () => {
     const interrupts = [
       { interrupt_id: 'i1', decided: true, hidden: true },
-      { interrupt_id: 'i2', decided: true, hidden: true },
+      { interrupt_id: 'i2', decided: false, queued: true, hidden: true },
       { interrupt_id: 'i3' },
     ];
 
-    expect(settleHitlResumeAttempt(interrupts, true)).toEqual([{ interrupt_id: 'i3' }]);
+    expect(settleHitlResumeAttempt(interrupts, true)).toEqual(interrupts);
     expect(settleHitlResumeAttempt(interrupts, false)).toEqual([
-      { interrupt_id: 'i1', decided: false, hidden: false },
-      { interrupt_id: 'i2', decided: false, hidden: false },
+      { interrupt_id: 'i1', decided: false, queued: false, hidden: false },
+      { interrupt_id: 'i2', decided: false, queued: false, hidden: false },
       { interrupt_id: 'i3' },
     ]);
   });

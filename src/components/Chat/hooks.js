@@ -10,9 +10,9 @@ import {
   normalizeExecutionHierarchy,
 } from '@/[fsd]/features/chat/lib/helpers/executionHierarchy.helpers.js';
 import {
-  getInterruptIdentity,
   mergeHitlInterrupts,
   normalizeHitlInterrupt,
+  reconcileRootHitlInterrupts,
   settleHitlResumeAttempt,
 } from '@/[fsd]/features/chat/lib/helpers/hitl.helpers.js';
 import {
@@ -444,6 +444,7 @@ export const useChatSocket = ({
       switch (socketMessageType) {
         case SocketMessageType.StartTask: {
           const isContinuing = msg.isContinuing;
+          msg.hitlTurnStartRevision = (msg.hitlTurnStartRevision || 0) + 1;
           msg.isLoading = true;
           msg.isStreaming = true;
           msg.isSending = false;
@@ -458,11 +459,15 @@ export const useChatSocket = ({
           msg.participant_id = participant_id;
           msg.question_id = question_id;
           msg.requiresConfirmation = undefined; // Clear confirmation state when task resumes
-          const hadDecidedInterrupts = msg.hitlInterrupts?.some(interrupt => interrupt?.decided);
-          if (hadDecidedInterrupts) {
-            const remainingInterrupts = settleHitlResumeAttempt(msg.hitlInterrupts, true);
-            msg.hitlInterrupts = remainingInterrupts.length ? remainingInterrupts : undefined;
-            msg.hitlInterrupt = remainingInterrupts[0];
+          if (Array.isArray(msg.hitlInterrupts)) {
+            // StartTask is only a transport-level acknowledgement. Preserve the
+            // parallel interrupt array (including untouched visible siblings)
+            // until the next authoritative aggregate or terminal event. This
+            // also closes the race where StartTask arrives before React commits
+            // the selected card's `decided` marker and used to clear every card.
+            const retainedInterrupts = settleHitlResumeAttempt(msg.hitlInterrupts, true);
+            msg.hitlInterrupts = retainedInterrupts.length ? retainedInterrupts : undefined;
+            msg.hitlInterrupt = retainedInterrupts[0];
           } else {
             msg.hitlInterrupt = undefined; // Clear scalar/legacy HITL state when task resumes
             msg.hitlInterrupts = undefined;
@@ -1151,6 +1156,8 @@ export const useChatSocket = ({
           const isFanoutChild =
             response_metadata?.resume_strategy === 'aggregate_child' && Boolean(hitlMeta.child_thread_id);
           const childThreadId = isFanoutChild ? hitlMeta.child_thread_id : '';
+          const hasExistingRootHitlAggregate =
+            !isFanoutChild && Array.isArray(msg.hitlInterrupts);
 
           // Track 1 in-process parallel aggregate (#5379): N paused sub-agents
           // arrive in ONE interrupt, each entry labeled with its parent_agent_name
@@ -1163,8 +1170,9 @@ export const useChatSocket = ({
           // pausing would simply disappear until the run ends).
           const isParallelSubAgentAggregate =
             !isFanoutChild &&
-            Array.isArray(response_metadata?.hitl_interrupts) &&
-            response_metadata.hitl_interrupts.some(r => r?.parent_agent_name);
+            ((Array.isArray(response_metadata?.hitl_interrupts) &&
+              response_metadata.hitl_interrupts.some(r => r?.parent_agent_name)) ||
+              hasExistingRootHitlAggregate);
 
           if (!isFanoutChild && !isParallelSubAgentAggregate) {
             msg.isLoading = false;
@@ -1273,20 +1281,19 @@ export const useChatSocket = ({
             // queued client-side. Preserve that per-card marker across the
             // authoritative aggregate refresh so queued cards cannot briefly
             // become clickable again and enqueue a duplicate decision.
-            const queuedIdentities = new Set(
-              (msg.hitlInterrupts || []).filter(interrupt => interrupt?.queued).map(getInterruptIdentity),
-            );
-            msg.hitlInterrupts = incomingInterrupts.map(interrupt =>
-              queuedIdentities.has(getInterruptIdentity(interrupt))
-                ? { ...interrupt, queued: true, hidden: true }
-                : interrupt,
+            msg.hitlInterrupts = reconcileRootHitlInterrupts(
+              msg.hitlInterrupts,
+              incomingInterrupts,
             );
           } else {
             // Legacy single pause: leave hitlInterrupts UNSET. ChatBox's
             // isParallel detection keys off the mere presence of the array; a
             // single pause must keep the sequential hitl_action resume shape.
             // ApplicationAnswer falls back to [hitlInterrupt] for rendering.
-            msg.hitlInterrupts = undefined;
+            // A scalar nested event may arrive while a root parallel resume is
+            // still running. It is not an authoritative replacement for the
+            // existing aggregate; the root will follow with hitl_interrupts.
+            if (!hasExistingRootHitlAggregate) msg.hitlInterrupts = undefined;
           }
           // Keep the singular field populated with the first entry for
           // back-compat with consumers that read hitlInterrupt, and as the sole
@@ -1345,6 +1352,10 @@ export const useChatSocket = ({
           // the turn. Emitted even when empty, so silence is meaningful.
           msg.isInjectable = false;
           msg.consumedInjectionIds = response_metadata?.consumed || [];
+          // Emitted from the indexer worker's finally block after this root
+          // turn has released its checkpoint. Loading and nested HITL events
+          // are not sufficient completion signals for queued root resumes.
+          msg.hitlTurnEndRevision = (msg.hitlTurnEndRevision || 0) + 1;
           onInjectionReportRef.current?.({
             messageId: msg.id,
             consumed: msg.consumedInjectionIds,
