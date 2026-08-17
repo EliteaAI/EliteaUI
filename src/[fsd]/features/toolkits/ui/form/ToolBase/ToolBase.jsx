@@ -549,6 +549,7 @@ const ToolBase = memo(props => {
               onChange={checked => editField('meta.mcp_options.available_by_mcp', checked)}
               disabled={disabled}
               slotProps={{
+                container: { sx: { height: 'auto' } },
                 formControlLabel: {
                   labelPlacement: 'start',
                   sx: { width: '100%', justifyContent: 'space-between', marginLeft: 0, marginRight: 0 },

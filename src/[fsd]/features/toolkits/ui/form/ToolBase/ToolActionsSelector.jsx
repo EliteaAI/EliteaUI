@@ -14,6 +14,7 @@ import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { AccordionConstants, TourTargetConstants } from '@/[fsd]/shared/lib/constants';
 import { Button, Input } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
+import OnlineIcon from '@/assets/online-icon.svg?react';
 import { useToolkitView } from '@/hooks/toolkit/useToolkitView.js';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
@@ -218,7 +219,15 @@ export const ToolActionsSelector = memo(props => {
                   {renderToolsControls()}
                   {renderItems()}
                   {!isRemoteMcp && !isPreconfiguredMcp && extraProperties ? (
-                    <Box sx={styles.mcpToggleRow}>{extraProperties}</Box>
+                    <Box sx={styles.mcpToggleRow}>
+                      <Box sx={styles.mcpToggleIcon}>
+                        <OnlineIcon
+                          width={16}
+                          height={16}
+                        />
+                      </Box>
+                      {extraProperties}
+                    </Box>
                   ) : null}
                 </>
               ),
@@ -256,8 +265,24 @@ const toolActionsSelectorStyles = () => ({
   },
   mcpToggleRow: ({ palette }) => ({
     marginTop: '1rem',
-    paddingTop: '0.75rem',
-    borderTop: `0.0625rem solid ${palette.border.lines}`,
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    padding: '0.5rem 0.75rem',
+    borderRadius: '0.75rem',
+    backgroundColor: palette.background.tabButton.default,
+    border: `0.0625rem solid ${palette.border.cardsOutlines}`,
+  }),
+  mcpToggleIcon: ({ palette }) => ({
+    width: '1.25rem',
+    height: '1.25rem',
+    borderRadius: '50%',
+    flexShrink: 0,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: palette.secondary.main,
+    color: palette.background.default,
   }),
   stack: {
     marginTop: '0.5rem',
