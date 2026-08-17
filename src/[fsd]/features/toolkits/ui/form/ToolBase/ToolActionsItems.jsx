@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { Box, Typography } from '@mui/material';
@@ -52,6 +52,25 @@ export const ToolActionsItems = memo(props => {
 
   const hasGroups = toolGroups && Object.keys(toolGroups).length > 0;
   const query = searchTerm.trim().toLowerCase();
+
+  const groupSections = useMemo(() => {
+    if (!hasGroups) return [];
+    return TOOL_GROUP_ORDER.map(group => {
+      const groupOptions = toolsOptions
+        .filter(option =>
+          group.key === UNCLASSIFIED_GROUP
+            ? !KNOWN_GROUPS.has(toolGroups[option.value])
+            : toolGroups[option.value] === group.key,
+        )
+        .sort((a, b) => (a.label || '').toLowerCase().localeCompare((b.label || '').toLowerCase()));
+      return {
+        ...group,
+        groupOptions,
+        values: groupOptions.map(option => option.value),
+        visibleOptions: groupOptions.filter(option => matchesSearch(option, query)),
+      };
+    }).filter(group => group.groupOptions.length > 0);
+  }, [hasGroups, toolsOptions, toolGroups, query]);
 
   const renderWarningChips = () =>
     warningTools.map(tool => {
@@ -125,18 +144,6 @@ export const ToolActionsItems = memo(props => {
     );
   }
 
-  const groupSections = TOOL_GROUP_ORDER.map(group => {
-    const groupOptions = toolsOptions
-      .filter(option =>
-        group.key === UNCLASSIFIED_GROUP
-          ? !KNOWN_GROUPS.has(toolGroups[option.value])
-          : toolGroups[option.value] === group.key,
-      )
-      .sort((a, b) => (a.label || '').toLowerCase().localeCompare((b.label || '').toLowerCase()));
-    const visibleOptions = groupOptions.filter(option => matchesSearch(option, query));
-    return { ...group, groupOptions, visibleOptions };
-  }).filter(group => group.groupOptions.length > 0);
-
   const nothingMatches = query && groupSections.every(group => !group.visibleOptions.length);
 
   return (
@@ -155,11 +162,9 @@ export const ToolActionsItems = memo(props => {
         </Stack>
       )}
       {nothingMatches && renderNoMatches()}
-      {groupSections.map(group => {
-        if (query && !group.visibleOptions.length) return null;
-        const groupValues = group.groupOptions.map(option => option.value);
-        const selectedCount = groupValues.filter(value => selectedTools?.includes(value)).length;
-        return (
+      {groupSections
+        .filter(group => !query || group.visibleOptions.length)
+        .map(group => (
           <Box
             key={group.key}
             data-testid={`tool-group-${group.key}`}
@@ -168,9 +173,9 @@ export const ToolActionsItems = memo(props => {
               groupKey={group.key}
               label={group.label}
               tooltip={group.tooltip}
-              selectedCount={selectedCount}
-              totalCount={groupValues.length}
-              onToggleAll={() => onToggleTools(groupValues, selectedCount === groupValues.length)}
+              values={group.values}
+              selectedCount={group.values.filter(value => selectedTools?.includes(value)).length}
+              onToggleTools={onToggleTools}
               disabled={disabled}
             />
             <Stack
@@ -182,8 +187,7 @@ export const ToolActionsItems = memo(props => {
               {group.visibleOptions.map(renderChip)}
             </Stack>
           </Box>
-        );
-      })}
+        ))}
     </Stack>
   );
 });

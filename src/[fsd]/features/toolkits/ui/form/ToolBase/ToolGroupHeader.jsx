@@ -1,11 +1,17 @@
-import { memo } from 'react';
+import { memo, useCallback } from 'react';
 
 import { Stack, Typography } from '@mui/material';
 
 import { Checkbox, Tooltip } from '@/[fsd]/shared/ui';
 
 const ToolGroupHeader = memo(props => {
-  const { groupKey, label, tooltip, selectedCount, totalCount, onToggleAll, disabled } = props;
+  const { groupKey, label, tooltip, values, selectedCount, onToggleTools, disabled } = props;
+
+  const totalCount = values.length;
+  const handleToggle = useCallback(
+    () => onToggleTools(values, selectedCount === values.length),
+    [onToggleTools, values, selectedCount],
+  );
 
   const styles = toolGroupHeaderStyles();
 
@@ -19,7 +25,7 @@ const ToolGroupHeader = memo(props => {
       <Checkbox.BaseCheckbox
         checked={selectedCount === totalCount}
         indeterminate={selectedCount > 0 && selectedCount < totalCount}
-        onChange={onToggleAll}
+        onChange={handleToggle}
         disabled={disabled}
         size="small"
         inputProps={{
@@ -30,7 +36,7 @@ const ToolGroupHeader = memo(props => {
       />
       <Typography
         variant="labelSmall"
-        onClick={disabled ? undefined : onToggleAll}
+        onClick={disabled ? undefined : handleToggle}
         sx={styles.label(disabled)}
       >
         {label}
