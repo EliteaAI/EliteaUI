@@ -1,7 +1,7 @@
 import { memo } from 'react';
 
 import AppLayoutInner from '@/[fsd]/app/layout/AppLayoutInner';
-import { useInteractiveTourController, InteractiveTourRoot } from '@/[fsd]/features/interactive-tours';
+import { InteractiveTourRoot, useInteractiveTourController } from '@/[fsd]/features/interactive-tours';
 import { InteractiveTourProvider } from '@/[fsd]/shared/lib/context';
 import { SupportAssistantWidget } from '@/[fsd]/widgets/support-assistant';
 
