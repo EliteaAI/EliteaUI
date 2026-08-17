@@ -88,7 +88,6 @@ export const useDuplicateConversation = props => {
         const participantsToAdd = (sourceConversation.participants || [])
           .filter(
             p =>
-              p.entity_name !== ChatParticipantType.Users &&
               p.entity_name !== ChatParticipantType.Dummy &&
               !p.meta?.added_from_agent &&
               !existingParticipantIds.has(p.id),
