@@ -99,6 +99,29 @@ describe('HITL helpers', () => {
     expect(getHitlResumeGroup([first, second], first)).toEqual([first]);
   });
 
+  it('keeps supervised child identity but routes continuation through the root thread', () => {
+    const interrupt = normalizeHitlInterrupt(
+      {
+        interrupt_id: 'i-live',
+        child_thread_id: 'leaf-thread',
+        tool_call_id: 'call-live',
+      },
+      {
+        root_thread_id: 'root-thread',
+        resume_strategy: 'supervised_child',
+      },
+    );
+
+    expect(interrupt).toMatchObject({
+      interrupt_id: 'i-live',
+      child_thread_id: 'leaf-thread',
+      root_thread_id: 'root-thread',
+      resume_strategy: 'supervised_child',
+    });
+    expect(getHitlResumeThreadId(interrupt)).toBe('');
+    expect(getHitlResumeGroup([interrupt], interrupt)).toEqual([interrupt]);
+  });
+
   it('serializes independently selected root cards and skips retired queued identities', () => {
     const empty = { messageId: null, inFlightIdentities: [], decisions: [] };
     const first = { interruptId: 'i1', action: 'reject' };

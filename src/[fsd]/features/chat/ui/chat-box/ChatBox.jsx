@@ -1303,7 +1303,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       };
       const isDurableAuthorization = authMeta.guardrail_type === 'mcp_auth' && Boolean(authMeta.interrupt_id);
       const isRootDurableAuthorization =
-        isDurableAuthorization && authMeta.resume_strategy !== 'aggregate_child';
+        isDurableAuthorization && !['aggregate_child', 'supervised_child'].includes(authMeta.resume_strategy);
       if (isRootDurableAuthorization) {
         // Root-scoped durable MCP auth shares the same LangGraph checkpoint as
         // sensitive-tool HITL cards. Route it through the root queue so rapid
@@ -1492,6 +1492,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       // resume route.
       const childThreadId = getHitlResumeThreadId(decidedEntry);
       const isFanoutChild = Boolean(childThreadId);
+      const isSupervisedChild = decidedEntry?.resume_strategy === 'supervised_child';
       const resumeGroup = rootBatch ? rootBatchEntries : getHitlResumeGroup(interrupts, decidedEntry);
 
       // Detect a (Track 1) parallel aggregate by the PRESENCE of the
@@ -1507,11 +1508,56 @@ const ChatBox = forwardRef((props, boxRef) => {
       const isParallel =
         action !== 'answer' &&
         !isFanoutChild &&
+        !isSupervisedChild &&
         ((Array.isArray(lastMessage.hitlInterrupts) && lastMessage.hitlInterrupts.length > 0) ||
           guardrailType === 'mcp_auth' ||
           rootBatch?.some(decision => decision.guardrailType === 'mcp_auth')) &&
         Boolean(selectedIdentity || toolCallId);
       let parallelDecisions;
+
+      // Single-process supervisor (#6264): send one exact decision immediately
+      // on the active root thread. Core's offer/commit handshake assigns live
+      // ownership without starting another agent process.
+      if (isSupervisedChild && !rootBatch) {
+        const decisionIdentity = getInterruptIdentity(decidedEntry);
+        const supervisedPayload = generateChatContinuePayload({
+          conversation_uuid: activeConversation?.uuid,
+          projectId,
+          message_id: lastMessage.id,
+          thread_id: decidedEntry?.root_thread_id || lastMessage.threadId,
+          participants: activeConversation?.participants || [],
+          question: action === 'edit' ? (value ?? '') : action,
+          sessionDeclinedMcpServers,
+        });
+        supervisedPayload.hitl_resume = true;
+        supervisedPayload.hitl_decisions = [
+          {
+            interrupt_id: decisionIdentity,
+            tool_call_id: toolCallId,
+            action,
+            value: value ?? '',
+          },
+        ];
+        setChatHistory(prevMessages =>
+          prevMessages.map(msg =>
+            msg.id !== lastMessage.id || !Array.isArray(msg.hitlInterrupts)
+              ? msg
+              : {
+                  ...msg,
+                  isLoading: false,
+                  isStreaming: true,
+                  resumingAgentPaths: [getActionOwnerPath(decidedEntry)].filter(path => path.length),
+                  hitlInterrupts: msg.hitlInterrupts.map(entry =>
+                    getInterruptIdentity(entry) === decisionIdentity
+                      ? { ...entry, decided: true, hidden: true }
+                      : entry,
+                  ),
+                },
+          ),
+        );
+        emitContinue(supervisedPayload);
+        return;
+      }
 
       // Track 2 independent child resume: emit this child's decision NOW on its
       // own thread; clear ONLY this child's card and leave the parent message

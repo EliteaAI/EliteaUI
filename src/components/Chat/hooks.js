@@ -1113,7 +1113,9 @@ export const useChatSocket = ({
 
           // SDK-nested Applications also carry child_thread_id, but only a
           // worker-owned fan-out child keeps the parked parent run active.
-          const isDurableChild = response_metadata?.resume_strategy === 'aggregate_child';
+          const isDurableChild = ['aggregate_child', 'supervised_child'].includes(
+            response_metadata?.resume_strategy,
+          );
           const hasProcessingSibling = hasProcessingSiblingForAuthorization(msg.toolActions, actions);
           msg.isLoading = false;
           msg.isStreaming = isDurableChild || (msg.isStreaming && hasProcessingSibling);
@@ -1165,6 +1167,7 @@ export const useChatSocket = ({
           const hitlMeta = response_metadata?.metadata || {};
           const isFanoutChild =
             response_metadata?.resume_strategy === 'aggregate_child' && Boolean(hitlMeta.child_thread_id);
+          const isSupervisedChild = response_metadata?.resume_strategy === 'supervised_child';
           const childThreadId = isFanoutChild ? hitlMeta.child_thread_id : '';
           const hasExistingRootHitlAggregate = !isFanoutChild && Array.isArray(msg.hitlInterrupts);
 
@@ -1183,12 +1186,12 @@ export const useChatSocket = ({
               response_metadata.hitl_interrupts.some(r => r?.parent_agent_name)) ||
               hasExistingRootHitlAggregate);
 
-          if (!isFanoutChild && !isParallelSubAgentAggregate) {
+          if (!isFanoutChild && !isSupervisedChild && !isParallelSubAgentAggregate) {
             msg.isLoading = false;
             msg.isStreaming = false;
             msg.isRegenerating = false;
             msg.isSending = false;
-          } else if (isFanoutChild) {
+          } else if (isFanoutChild || isSupervisedChild) {
             // A fan-out child pausing for approval means the overall run is still
             // active: siblings keep streaming and this child awaits a human
             // decision. The parent's park-by-return may have already emitted an
@@ -1278,7 +1281,7 @@ export const useChatSocket = ({
             incomingInterrupts = [buildHitlInterrupt(singleRaw, fallbackMessage)];
           }
 
-          if (isFanoutChild) {
+          if (isFanoutChild || isSupervisedChild) {
             // interrupt_id distinguishes multiple approvals emitted by one
             // aggregate child; thread/tool ids remain compatibility fallbacks.
             msg.hitlInterrupts = mergeHitlInterrupts(msg.hitlInterrupts, incomingInterrupts);

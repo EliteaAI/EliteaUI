@@ -42,6 +42,7 @@ export const normalizeHitlInterrupt = (raw = {}, overlay = {}) => {
     tool_call_id: nonEmpty(raw.tool_call_id) || nonEmpty(overlay.tool_call_id) || '',
     child_thread_id: childThreadId,
     thread_id: threadId,
+    root_thread_id: nonEmpty(raw.root_thread_id) || nonEmpty(overlay.root_thread_id) || '',
     resume_strategy: runtimeResumeStrategy || nonEmpty(raw.resume_strategy) || 'single',
     ...hierarchy,
   };
