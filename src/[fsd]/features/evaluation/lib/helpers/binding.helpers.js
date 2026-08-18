@@ -1,0 +1,70 @@
+import { EVAL_BINDING_KIND, EVAL_ENGINE } from '../constants';
+
+/**
+ * Derives a binding's kind from which reference column is populated. Exactly one
+ * of dimension_id / code_validation_id / platform_key is set (§13.1).
+ */
+export const getBindingKind = binding => {
+  if (!binding) return null;
+  if (binding.dimension_id != null) return EVAL_BINDING_KIND.dimension;
+  if (binding.code_validation_id != null) return EVAL_BINDING_KIND.codeValidation;
+  if (binding.platform_key != null) return EVAL_BINDING_KIND.platform;
+  return null;
+};
+
+/** Platform bindings are catalog-defined: engine is locked to code, no delete/edit of source. */
+export const isPlatformBinding = binding => getBindingKind(binding) === EVAL_BINDING_KIND.platform;
+
+/**
+ * Resolves a display label for a binding by looking up its referenced library
+ * entity. Falls back to the stored platform_key or a generic label.
+ */
+export const getBindingLabel = (binding, { dimensions = [], codeValidations = [] } = {}) => {
+  const kind = getBindingKind(binding);
+  if (kind === EVAL_BINDING_KIND.dimension) {
+    const found = dimensions.find(d => d.id === binding.dimension_id);
+    return found?.name || `Dimension #${binding.dimension_id}`;
+  }
+  if (kind === EVAL_BINDING_KIND.codeValidation) {
+    const found = codeValidations.find(c => c.id === binding.code_validation_id);
+    return found?.name || `Code validation #${binding.code_validation_id}`;
+  }
+  if (kind === EVAL_BINDING_KIND.platform) {
+    return binding.platform_key || 'Platform validation';
+  }
+  return 'Validation';
+};
+
+/** Splits an ordered binding list into the three grouped sections shown in §13.1. */
+export const groupBindings = (bindings = []) => {
+  const groups = {
+    [EVAL_BINDING_KIND.dimension]: [],
+    [EVAL_BINDING_KIND.codeValidation]: [],
+    [EVAL_BINDING_KIND.platform]: [],
+  };
+  for (const binding of bindings) {
+    const kind = getBindingKind(binding);
+    if (kind) groups[kind].push(binding);
+  }
+  return groups;
+};
+
+/** Human-readable engine label for a binding badge. */
+export const getEngineLabel = engine => {
+  if (engine === EVAL_ENGINE.ai) return 'AI';
+  if (engine === EVAL_ENGINE.human) return 'Human';
+  if (engine === EVAL_ENGINE.code) return 'Code';
+  return engine || '';
+};
+
+/**
+ * Engine label as it applies to a binding. Only dimension bindings carry an
+ * overridable engine (AI / Human); code validations and platform validations
+ * always run on the code engine regardless of the stored `engine` column.
+ */
+export const getBindingEngineLabel = binding => {
+  if (getBindingKind(binding) === EVAL_BINDING_KIND.dimension) {
+    return getEngineLabel(binding.engine);
+  }
+  return 'Code';
+};

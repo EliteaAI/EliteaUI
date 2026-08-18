@@ -6,6 +6,7 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { InstructionsInputRefProvider } from '@/[fsd]/app/providers';
 import { ApplicationControls, ApplicationTabBar } from '@/[fsd]/entities/application-tab-bar/ui';
 import { useIsVersionNotFound } from '@/[fsd]/entities/version/lib/hooks';
+import { EvaluationTab } from '@/[fsd]/features/evaluation/ui';
 import { ViewMode } from '@/common/constants';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils';
 import StyledTabs from '@/components/StyledTabs';
@@ -98,10 +99,23 @@ const EditApplication = memo(() => {
           />
         ),
       },
+      {
+        label: 'Evaluation',
+        tabProps: { 'data-testid': 'evaluation-tab' },
+        content: (
+          <EvaluationTab
+            isFetching={isFetching}
+            isError={isError}
+            applicationId={applicationId}
+            applicationVersionId={initialValues?.version_details?.id}
+          />
+        ),
+      },
     ],
     [
       initialValues?.name,
       initialValues?.version_details?.tools?.length,
+      initialValues?.version_details?.id,
       isFetching,
       isError,
       applicationId,
@@ -156,29 +170,21 @@ const editApplicationStyles = () => ({
       display: 'none !important',
     },
     '& .MuiTab-root': {
-      width: 'calc(100% - 2.215rem)',
       minWidth: 0,
+      maxWidth: '18rem',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      whiteSpace: 'nowrap',
     },
     '& .MuiTab-textColorPrimary': ({ palette }) => ({
       color: palette.text.secondary,
     }),
     '& .Mui-selected': ({ palette }) => ({
-      pointerEvents: 'none',
       color: `${palette.text.secondary} !important`,
-      minWidth: 0,
-      maxWidth: '100%',
-      width: '100%',
-      justifyContent: 'flex-start !important',
-      paddingLeft: '0rem !important',
-      paddingRight: '0rem !important',
-      overflow: 'hidden',
-      textOverflow: 'ellipsis',
-      whiteSpace: 'nowrap',
-      display: 'block',
     }),
   },
   leftTabbarSection: {
-    maxWidth: '33%',
+    maxWidth: '50%',
     width: 'fit-content',
   },
 });
