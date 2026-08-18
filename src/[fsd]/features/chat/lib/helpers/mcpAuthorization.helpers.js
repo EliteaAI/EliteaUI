@@ -184,9 +184,9 @@ export const buildToolkitAuthorizationMessage = (context, fallbackMessage = DEFA
 const sameInvocationTier = (left, right) =>
   Boolean(
     left &&
-      right &&
-      ((left.call_id && right.call_id && left.call_id === right.call_id) ||
-        (!left.call_id && !right.call_id && left.name && left.name === right.name)),
+    right &&
+    ((left.call_id && right.call_id && left.call_id === right.call_id) ||
+      (!left.call_id && !right.call_id && left.name && left.name === right.name)),
   );
 
 const areSiblingInvocationPaths = (left, right) =>

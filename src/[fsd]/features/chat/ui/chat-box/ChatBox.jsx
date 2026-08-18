@@ -1443,9 +1443,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       const rootBatch = Array.isArray(resumeRequest?.rootBatch) ? resumeRequest.rootBatch : null;
       const primaryRequest = rootBatch?.[0] || resumeRequest || {};
       const sessionDeclinedMcpServers =
-        [...(rootBatch || [])]
-          .reverse()
-          .find(request => Array.isArray(request?.sessionDeclinedMcpServers))
+        [...(rootBatch || [])].reverse().find(request => Array.isArray(request?.sessionDeclinedMcpServers))
           ?.sessionDeclinedMcpServers || resumeRequest?.sessionDeclinedMcpServers;
       const {
         action,
@@ -2225,25 +2223,19 @@ const ChatBox = forwardRef((props, boxRef) => {
     activeParticipantDetails,
   ]);
 
-  const onMentionChange = useCallback(
-    mentions => {
-      // isMentioningEveryone is only ever SET by onSelectUserMention (dropdown confirmation).
-      // Here we only CLEAR it when the @Everyone text has been deleted from the input.
-      const everyoneStillPresent = mentions.some(mention => mention.user?.id === '@everyone');
-      if (!everyoneStillPresent) {
-        setIsMentioningEveryone(false);
-      }
+  const onMentionChange = useCallback(mentions => {
+    // isMentioningEveryone is only ever SET by onSelectUserMention (dropdown confirmation).
+    // Here we only CLEAR it when the @Everyone text has been deleted from the input.
+    const everyoneStillPresent = mentions.some(mention => mention.user?.id === '@everyone');
+    if (!everyoneStillPresent) {
+      setIsMentioningEveryone(false);
+    }
 
-      const mentionedUsers = mentions.filter(
-        mention => mention.isValid && mention.user && mention.user.id !== '@everyone',
-      );
-      if (mentionedUsers.length > 0) {
-        onClearActiveParticipant();
-      }
-      setSelectedUsers(mentionedUsers);
-    },
-    [onClearActiveParticipant],
-  );
+    const mentionedUsers = mentions.filter(
+      mention => mention.isValid && mention.user && mention.user.id !== '@everyone',
+    );
+    setSelectedUsers(mentionedUsers);
+  }, []);
 
   const onShowParticipantsList = useCallback(() => {
     setShowRecommendationList(prev => !prev);

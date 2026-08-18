@@ -1166,8 +1166,7 @@ export const useChatSocket = ({
           const isFanoutChild =
             response_metadata?.resume_strategy === 'aggregate_child' && Boolean(hitlMeta.child_thread_id);
           const childThreadId = isFanoutChild ? hitlMeta.child_thread_id : '';
-          const hasExistingRootHitlAggregate =
-            !isFanoutChild && Array.isArray(msg.hitlInterrupts);
+          const hasExistingRootHitlAggregate = !isFanoutChild && Array.isArray(msg.hitlInterrupts);
 
           // Track 1 in-process parallel aggregate (#5379): N paused sub-agents
           // arrive in ONE interrupt, each entry labeled with its parent_agent_name
@@ -1291,10 +1290,7 @@ export const useChatSocket = ({
             // queued client-side. Preserve that per-card marker across the
             // authoritative aggregate refresh so queued cards cannot briefly
             // become clickable again and enqueue a duplicate decision.
-            msg.hitlInterrupts = reconcileRootHitlInterrupts(
-              msg.hitlInterrupts,
-              incomingInterrupts,
-            );
+            msg.hitlInterrupts = reconcileRootHitlInterrupts(msg.hitlInterrupts, incomingInterrupts);
           } else {
             // Legacy single pause: leave hitlInterrupts UNSET. ChatBox's
             // isParallel detection keys off the mere presence of the array; a

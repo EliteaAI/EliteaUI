@@ -112,11 +112,7 @@ describe('HITL helpers', () => {
     expect(scheduledSecond.status).toBe('schedule');
     expect(scheduleRootHitlDecision(scheduledSecond.state, 'message-1', second).status).toBe('duplicate');
 
-    const completed = completeRootHitlDecision(
-      scheduledSecond.state,
-      [{ interrupt_id: 'i2' }],
-      7,
-    );
+    const completed = completeRootHitlDecision(scheduledSecond.state, [{ interrupt_id: 'i2' }], 7);
     expect(completed.nextDecisions).toEqual([second]);
     expect(completed.state).toMatchObject({
       messageId: 'message-1',

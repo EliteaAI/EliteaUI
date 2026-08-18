@@ -191,10 +191,7 @@ describe('toolkit authorization helpers', () => {
     };
 
     expect(
-      hasProcessingSiblingForAuthorization(
-        [authorization, processingNameResolver],
-        [authorization],
-      ),
+      hasProcessingSiblingForAuthorization([authorization, processingNameResolver], [authorization]),
     ).toBe(true);
   });
 
@@ -234,8 +231,8 @@ describe('toolkit authorization helpers', () => {
         [nestedAuthorization],
       ),
     ).toBe(false);
-    expect(
-      hasProcessingSiblingForAuthorization([directAuthorization, ancestor], [directAuthorization]),
-    ).toBe(false);
+    expect(hasProcessingSiblingForAuthorization([directAuthorization, ancestor], [directAuthorization])).toBe(
+      false,
+    );
   });
 });
