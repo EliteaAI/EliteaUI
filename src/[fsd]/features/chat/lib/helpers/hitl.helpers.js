@@ -60,9 +60,7 @@ export const mergeHitlInterrupts = (existing = [], incoming = []) => {
 };
 
 export const reconcileRootHitlInterrupts = (existing = [], incoming = []) => {
-  const localByIdentity = new Map(
-    existing.map(interrupt => [getInterruptIdentity(interrupt), interrupt]),
-  );
+  const localByIdentity = new Map(existing.map(interrupt => [getInterruptIdentity(interrupt), interrupt]));
   return incoming.map(interrupt => {
     const local = localByIdentity.get(getInterruptIdentity(interrupt));
     if (!local || (!local.queued && !local.decided && !local.hidden)) return interrupt;
@@ -219,11 +217,7 @@ export const scheduleRootHitlDecision = (state, messageId, decision) => {
   };
 };
 
-export const completeRootHitlDecision = (
-  state,
-  pendingInterrupts,
-  requiredTurnEndRevision = 1,
-) => {
+export const completeRootHitlDecision = (state, pendingInterrupts, requiredTurnEndRevision = 1) => {
   const current = state || {
     messageId: null,
     inFlightIdentities: [],
@@ -236,8 +230,7 @@ export const completeRootHitlDecision = (
   // still part of this root checkpoint batch even though its public interrupt
   // id is absent from pendingInterrupts.
   const nextDecisions = current.decisions.filter(
-    candidate =>
-      pendingIdentities.has(candidate.interruptId) || candidate.guardrailType === 'mcp_auth',
+    candidate => pendingIdentities.has(candidate.interruptId) || candidate.guardrailType === 'mcp_auth',
   );
   return {
     state: {
@@ -253,5 +246,5 @@ export const completeRootHitlDecision = (
 export const hasRootHitlTurnEnded = (state, turnEndRevision) =>
   Boolean(
     state?.inFlightIdentities?.length &&
-      Number(turnEndRevision || 0) >= Number(state.requiredTurnEndRevision || 1),
+    Number(turnEndRevision || 0) >= Number(state.requiredTurnEndRevision || 1),
   );
