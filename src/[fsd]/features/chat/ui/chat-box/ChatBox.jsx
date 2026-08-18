@@ -720,7 +720,7 @@ const ChatBox = forwardRef((props, boxRef) => {
   });
 
   const {
-    suggestion: nextInputSuggestion,
+    suggestions: nextInputSuggestions,
     accept: acceptNextInputSuggestion,
     dismiss: dismissNextInputSuggestion,
   } = useNextInputSuggestion({
@@ -728,6 +728,17 @@ const ChatBox = forwardRef((props, boxRef) => {
     conversationUuid: activeConversation?.uuid,
     getInputContent: () => chatInput.current?.getInputContent(),
   });
+
+  const handleSuggestionSelect = useCallback(
+    index => {
+      const text = acceptNextInputSuggestion(index);
+      if (text) {
+        chatInput.current?.setValue(text);
+        chatInput.current?.focus();
+      }
+    },
+    [acceptNextInputSuggestion],
+  );
 
   const userParticipantId = useMemo(
     () =>
@@ -2103,12 +2114,6 @@ const ChatBox = forwardRef((props, boxRef) => {
 
   const combinedKeyDown = useCallback(
     event => {
-      if (event.key === 'Tab' && nextInputSuggestion && !chatInput.current?.getInputContent()) {
-        event.preventDefault();
-        const accepted = acceptNextInputSuggestion();
-        if (accepted) chatInput.current?.setValue(accepted);
-        return;
-      }
       onKeyDown(event);
       if (isSkillPhaseActive) {
         onSkillKeyDown(event);
@@ -2116,14 +2121,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       }
       slashOnKeyDown(event);
     },
-    [
-      onKeyDown,
-      slashOnKeyDown,
-      isSkillPhaseActive,
-      onSkillKeyDown,
-      nextInputSuggestion,
-      acceptNextInputSuggestion,
-    ],
+    [onKeyDown, slashOnKeyDown, isSkillPhaseActive, onSkillKeyDown],
   );
 
   const combinedInputChange = useCallback(
@@ -2739,6 +2737,8 @@ const ChatBox = forwardRef((props, boxRef) => {
         <ChatMessageList
           sx={messageListSX}
           chat_history={chat_history}
+          suggestions={nextInputSuggestions}
+          onSelectSuggestion={handleSuggestionSelect}
           isLoading={isStreaming}
           isStreaming={isStreaming}
           activeConversation={activeConversation}
@@ -2864,7 +2864,6 @@ const ChatBox = forwardRef((props, boxRef) => {
             fromTheChat={fromTheChat}
             conversationId={activeConversation?.id}
             placeholder={inputPlaceholder}
-            suggestion={nextInputSuggestion}
             ref={chatInput}
             onSend={onSendMessage}
             isLoading={isInputLoading}

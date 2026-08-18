@@ -58,7 +58,6 @@ const headingChipStyles = variant => ({
       display: 'inline-flex',
       flexDirection: 'row',
       alignItems: 'center',
-      alignSelf: 'flex-start',
       gap: '0.625rem',
       boxSizing: 'border-box',
       flexShrink: 0,
