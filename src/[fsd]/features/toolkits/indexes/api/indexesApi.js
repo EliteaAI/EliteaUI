@@ -70,6 +70,8 @@ const indexesApi = eliteaApi
     }),
   });
 
+export const invalidateIndexesList = () => indexesApi.util.invalidateTags([INDEXES_LIST]);
+
 export const {
   useGetIndexesListQuery,
   useLazyGetIndexesListQuery,

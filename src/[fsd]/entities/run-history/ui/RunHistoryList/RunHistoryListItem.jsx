@@ -1,10 +1,9 @@
 import { memo, useCallback, useMemo, useState } from 'react';
 
-import { format } from 'date-fns';
-
 import { Box, Skeleton, Typography, useTheme } from '@mui/material';
 
 import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
+import { formatRunTimestamp, resolveRunHistoryColumns } from '@/[fsd]/entities/run-history/lib/helpers';
 import { RunHistoryTooltipCell } from '@/[fsd]/entities/run-history/ui';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { SharedHelpers } from '@/[fsd]/shared/lib/helpers';
@@ -29,6 +28,7 @@ const RunHistoryListItem = memo(props => {
     tooltipTrigger,
     handleRestoreConversation,
     source,
+    hasEvent = false,
   } = props;
 
   const noVersions = useMemo(() => versions === null, [versions]);
@@ -41,7 +41,7 @@ const RunHistoryListItem = memo(props => {
   const [actionsMenuOpened, setActionMenuOpened] = useState(false);
 
   const theme = useTheme();
-  const styles = runHistoryListItemStyles(noVersions, actionsMenuOpened);
+  const styles = runHistoryListItemStyles(noVersions, actionsMenuOpened, hasEvent);
 
   const [deleteHistoryItem, { isLoading: isDeleting }] = RunHistoryApi.useDeleteRunHistoryItemMutation();
 
@@ -106,7 +106,7 @@ const RunHistoryListItem = memo(props => {
       useMock
         ? { date: '-', version: '-', duration: '-' }
         : {
-            date: format(new Date(item.created_at.replace('Z', '')), 'dd-MM-yyyy, hh:mm a'),
+            date: formatRunTimestamp(item.created_at),
             version: getCurrentVersion(item.version_id),
             duration: SharedHelpers.secondsInHumanFormat(item.duration),
           },
@@ -121,6 +121,13 @@ const RunHistoryListItem = memo(props => {
           width={noVersions ? '50%' : '70%'}
           height={20}
         />
+        {hasEvent && (
+          <Skeleton
+            variant="text"
+            width="50%"
+            height={20}
+          />
+        )}
         {!noVersions && (
           <Skeleton
             variant="text"
@@ -149,6 +156,13 @@ const RunHistoryListItem = memo(props => {
           text={date}
           trigger={tooltipTrigger}
         />
+        {hasEvent && (
+          <RunHistoryTooltipCell
+            text={item.event_label ?? '-'}
+            tooltipText={item.event_tooltip ?? ''}
+            trigger={tooltipTrigger}
+          />
+        )}
         {!noVersions && (
           <RunHistoryTooltipCell
             text={version}
@@ -235,10 +249,10 @@ const RunHistoryListItem = memo(props => {
 RunHistoryListItem.displayName = 'RunHistoryListItem';
 
 /** @type {MuiSx} */
-const runHistoryListItemStyles = (noVersions, actionsMenuOpened) => ({
+const runHistoryListItemStyles = (noVersions, actionsMenuOpened, hasEvent) => ({
   listItem: ({ palette }) => ({
     display: 'grid',
-    gridTemplateColumns: noVersions ? '1.5fr 1.5fr' : '1.5fr 1.5fr 1fr',
+    gridTemplateColumns: resolveRunHistoryColumns(noVersions, hasEvent),
     alignItems: 'center',
     padding: '.5rem 1rem',
     width: '100%',
