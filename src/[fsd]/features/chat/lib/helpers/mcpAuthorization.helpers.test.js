@@ -29,7 +29,7 @@ describe('toolkit authorization helpers', () => {
     ]);
   });
 
-  it('builds one exact SharePoint authorization action without persisting credentials', () => {
+  it('keeps non-secret SharePoint OAuth hints without persisting secret material', () => {
     const action = buildMcpAuthorizationToolAction({
       metadata: {
         tool_run_id: 'call-sharepoint-1',
@@ -48,8 +48,9 @@ describe('toolkit authorization helpers', () => {
             id_token: 'must-not-be-rendered',
           },
           provided_settings: {
-            mcp_client_id: 'must-not-be-rendered',
-            mcp_client_secret: 'must-not-be-rendered',
+            mcp_client_id: 'configured-client-id',
+            mcp_client_secret: 'masked-secret',
+            scopes: ['Files.Read'],
           },
         },
         metadata: {
@@ -79,7 +80,12 @@ describe('toolkit authorization helpers', () => {
       },
     });
     expect(action.toolOutputs).not.toHaveProperty('provided_settings');
-    expect(action.toolMeta).not.toHaveProperty('provided_settings');
+    expect(action.toolMeta.provided_settings).toEqual({
+      mcp_client_id: 'configured-client-id',
+      scopes: ['Files.Read'],
+      has_mcp_client_secret: true,
+    });
+    expect(action.toolMeta.provided_settings).not.toHaveProperty('mcp_client_secret');
     expect(action.toolMeta.resource_metadata).not.toHaveProperty('provided_settings');
     expect(action.toolMeta.resource_metadata.oauth_authorization_server).toEqual({
       token_endpoint: 'https://login.example/tenant/token',

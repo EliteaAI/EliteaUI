@@ -25,6 +25,29 @@ const stripPrivateAuthorizationFields = value => {
   );
 };
 
+const getSafeProvidedSettings = metadata => {
+  const resourceSettings = metadata?.resource_metadata?.provided_settings;
+  const topLevelSettings = metadata?.provided_settings;
+  const providedSettings = {
+    ...(resourceSettings && typeof resourceSettings === 'object' ? resourceSettings : {}),
+    ...(topLevelSettings && typeof topLevelSettings === 'object' ? topLevelSettings : {}),
+  };
+  if (!Object.keys(providedSettings).length) return null;
+
+  // The OAuth authorization URL needs the public client ID, while Core resolves
+  // the real secret from toolkit_id during token exchange. Keep this projection
+  // allowlisted so future configuration fields cannot leak into chat state.
+  const safeSettings = {};
+  if (providedSettings.mcp_client_id) {
+    safeSettings.mcp_client_id = providedSettings.mcp_client_id;
+  }
+  if (providedSettings.scopes) safeSettings.scopes = providedSettings.scopes;
+  if (providedSettings.mcp_client_secret || providedSettings.client_secret) {
+    safeSettings.has_mcp_client_secret = true;
+  }
+  return Object.keys(safeSettings).length ? safeSettings : null;
+};
+
 const renderAuthorizationMessage = content => {
   if (typeof content === 'string') return content;
   try {
@@ -88,6 +111,8 @@ export const buildMcpAuthorizationToolAction = ({
   const statusCode = metadata?.status || 401;
   const hierarchy = normalizeExecutionHierarchy(metadata?.metadata, metadata);
   const safeMetadata = stripPrivateAuthorizationFields(metadata || {});
+  const safeProvidedSettings = getSafeProvidedSettings(metadata);
+  if (safeProvidedSettings) safeMetadata.provided_settings = safeProvidedSettings;
 
   const renderedContent = hasAuthorizationServers
     ? `${renderAuthorizationMessage(content || DEFAULT_AUTH_MESSAGE)}${
