@@ -539,7 +539,6 @@ const NewChat = props => {
   });
 
   const { onDuplicateConversation, duplicatingConversationId } = useDuplicateConversation({
-    conversations,
     setActiveConversation,
     setConversations,
     emitEnterRoom,
