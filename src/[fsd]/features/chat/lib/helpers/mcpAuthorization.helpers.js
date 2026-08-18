@@ -72,6 +72,24 @@ export const getMcpAuthorizationRequests = responseMetadata => {
   return responseMetadata?.tool_run_id || responseMetadata?.interrupt_id ? [responseMetadata] : [];
 };
 
+/**
+ * Root Toolkit authorization shares a checkpoint queue only when that same
+ * assistant turn also owns a regular HITL interrupt. Auth-only pauses are not
+ * represented by `hitlInterrupt(s)`, so sending them to the HITL queue would
+ * remove the card without ever emitting a continuation.
+ */
+export const shouldQueueRootAuthorizationWithHitl = (metadata, pendingHitlMessage, messageId) => {
+  const isRootDurableAuthorization =
+    metadata?.guardrail_type === 'mcp_auth' &&
+    Boolean(metadata?.interrupt_id) &&
+    !['aggregate_child', 'supervised_child'].includes(metadata?.resume_strategy);
+  if (!isRootDurableAuthorization || pendingHitlMessage?.id !== messageId) return false;
+  return Boolean(
+    pendingHitlMessage.hitlInterrupt ||
+      (Array.isArray(pendingHitlMessage.hitlInterrupts) && pendingHitlMessage.hitlInterrupts.length),
+  );
+};
+
 const getAuthorizationServers = metadata =>
   metadata?.resource_metadata?.authorization_servers || metadata?.authorization_servers || [];
 

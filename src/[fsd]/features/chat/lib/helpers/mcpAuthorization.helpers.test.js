@@ -10,9 +10,45 @@ import {
   getToolkitAuthorizationContext,
   groupToolkitAuthorizationActions,
   hasProcessingSiblingForAuthorization,
+  shouldQueueRootAuthorizationWithHitl,
 } from './mcpAuthorization.helpers';
 
 describe('toolkit authorization helpers', () => {
+  it('uses the dedicated MCP resume protocol for an auth-only root pause', () => {
+    const rootAuthorization = {
+      guardrail_type: 'mcp_auth',
+      interrupt_id: 'mcp_auth_123',
+      resume_strategy: 'root',
+    };
+
+    expect(shouldQueueRootAuthorizationWithHitl(rootAuthorization, undefined, 'message-id')).toBe(false);
+    expect(
+      shouldQueueRootAuthorizationWithHitl(rootAuthorization, { id: 'message-id' }, 'message-id'),
+    ).toBe(false);
+  });
+
+  it('queues only a root authorization accompanied by HITL on the same turn', () => {
+    const rootAuthorization = {
+      guardrail_type: 'mcp_auth',
+      interrupt_id: 'mcp_auth_123',
+      resume_strategy: 'root',
+    };
+    const mixedPause = {
+      id: 'message-id',
+      hitlInterrupt: { interrupt_id: 'sensitive_123' },
+    };
+
+    expect(shouldQueueRootAuthorizationWithHitl(rootAuthorization, mixedPause, 'message-id')).toBe(true);
+    expect(
+      shouldQueueRootAuthorizationWithHitl(
+        { ...rootAuthorization, resume_strategy: 'supervised_child' },
+        mixedPause,
+        'message-id',
+      ),
+    ).toBe(false);
+    expect(shouldQueueRootAuthorizationWithHitl(rootAuthorization, mixedPause, 'other-message')).toBe(false);
+  });
+
   it('keeps every distinct pending request and replaces replay duplicates by exact invocation id', () => {
     const requests = getMcpAuthorizationRequests({
       authorization_requests: [
