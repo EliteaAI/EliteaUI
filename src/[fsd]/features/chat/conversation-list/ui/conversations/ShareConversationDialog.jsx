@@ -122,7 +122,7 @@ const ShareConversationDialog = memo(props => {
 
     try {
       const result = await createShareLink({ projectId, conversationId, ...body }).unwrap();
-      const shareUrl = `${window.location.protocol}//${window.location.host}${basename}/shared/${result.token}`;
+      const shareUrl = `${window.location.protocol}//${window.location.host}${basename}/shared/chat/${result.token}`;
       setCreatedLink(shareUrl);
       setCreatedToken(result.token);
       setPassword('');

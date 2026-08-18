@@ -42,7 +42,7 @@ const ManageLinksDialog = memo(props => {
 
   const buildLinkUrl = useCallback(token => {
     const basename = getBasename();
-    return `${window.location.protocol}//${window.location.host}${basename}/shared/${token}`;
+    return `${window.location.protocol}//${window.location.host}${basename}/shared/chat/${token}`;
   }, []);
 
   const handleCopyLink = useCallback(

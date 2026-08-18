@@ -18,6 +18,9 @@ export const eliteaApi = createApi({
       // Clone request BEFORE first fetch for potential retry (body can only be read once)
       const retryRequest = input instanceof Request ? input.clone() : null;
 
+      // Capture the original request URL before fetch (response.url will be the redirect target)
+      const originalUrl = input instanceof Request ? input.url : String(input);
+
       const response = await fetch(input, init);
       if (response.redirected) {
         const redirectUrl = new URL(response.url);
@@ -29,13 +32,16 @@ export const eliteaApi = createApi({
         const isSessionAuthRedirect = loginUrl.includes('/forward-auth/') && loginUrl.includes('/login');
 
         // Public share-view pages must not be bounced to login — they are designed
-        // for unauthenticated visitors. If the browser is already on /shared/<token>,
-        // return the response as-is so RTK Query surfaces an error instead.
+        // for unauthenticated visitors. Return the response as-is so RTK Query
+        // surfaces an error instead of redirecting the whole window.
+        // Two complementary checks:
+        //   1. Browser is on /shared/chat/<token>  (RouteDefinitions.SharedConversation)
+        //   2. The request itself targeted the shared-chat API  (/elitea_core/shared_chat_*)
         const basename = getBasename();
         const pathWithoutBase = window.location.pathname.slice(basename.length) || '/';
-        // RouteDefinitions.SharedConversation === '/shared/:token' — match exactly
-        const sharedConversationRe = /^\/shared\/[^/]+\/?$/;
-        const isPublicSharedPage = sharedConversationRe.test(pathWithoutBase);
+        const sharedConversationRe = /^\/shared\/chat\/[^/]+\/?$/;
+        const isPublicSharedPage =
+          sharedConversationRe.test(pathWithoutBase) || /\/elitea_core\/shared_chat_/.test(originalUrl);
 
         if (isPublicSharedPage) {
           return response;
