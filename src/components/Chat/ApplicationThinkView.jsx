@@ -58,7 +58,7 @@ const SubAgentThinkBlock = memo(props => {
   const ordinal = subEntry?.ordinal || 0;
   const label = subEntry?.breadcrumbLabel || (ordinal ? `${displayName} (${ordinal})` : displayName);
   const groups = subEntry?.groups || [];
-  const { running, done } = resolveSubAgentLiveness({
+  const { running } = resolveSubAgentLiveness({
     paused,
     resuming,
     hasActiveDescendant,
@@ -93,10 +93,10 @@ const SubAgentThinkBlock = memo(props => {
       )}
       {inflight ? (
         <ActionView
-          showProgress={!done}
+          showProgress={running}
           action={inflight}
           tools={tools}
-          isStreaming={!done}
+          isStreaming={running}
         />
       ) : (
         isLiveCurrent && currentActionBox

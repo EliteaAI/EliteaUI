@@ -3,9 +3,9 @@ import { memo } from 'react';
 import { AccordionDetails } from '@mui/material';
 
 const StyledAccordionDetails = memo(props => {
-  const { sx, ...rest } = props;
+  const { card, sx, ...rest } = props;
 
-  const styles = styledAccordionDetailsStyles();
+  const styles = styledAccordionDetailsStyles(card);
 
   return (
     <AccordionDetails
@@ -18,9 +18,9 @@ const StyledAccordionDetails = memo(props => {
 StyledAccordionDetails.displayName = 'StyledAccordionDetails';
 
 /** @type {MuiSx} */
-const styledAccordionDetailsStyles = () => ({
+const styledAccordionDetailsStyles = card => ({
   details: {
-    padding: '0 0 0 2.25rem',
+    padding: card ? '1rem 0.75rem 0.75rem 2.25rem' : '0 0 0 2.25rem',
     '& .MuiAccordionDetails-root': {
       padding: 0,
     },
