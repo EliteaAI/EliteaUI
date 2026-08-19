@@ -4,13 +4,13 @@ import { useFormikContext } from 'formik';
 import { useSelector } from 'react-redux';
 import { useParams, useSearchParams } from 'react-router-dom';
 
-import { Box, CircularProgress, Typography } from '@mui/material';
+import { Box, CircularProgress, Tooltip, Typography } from '@mui/material';
 
 import { McpAuthHelpers, McpPatBanner } from '@/[fsd]/features/mcp';
 import { useIndexesSectionSummary } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import IndexesContainer from '@/[fsd]/features/toolkits/indexes/ui/IndexesContainer.jsx';
 import RunIndexBanner from '@/[fsd]/features/toolkits/indexes/ui/RunIndexBanner.jsx';
-import { ToolkitFormConstants } from '@/[fsd]/features/toolkits/lib/constants';
+import { ToolkitFormConstants, ToolkitLayoutConstants } from '@/[fsd]/features/toolkits/lib/constants';
 import { ToolComponentHelpers, ToolkitFormHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import {
   useCollapsedSection,
@@ -20,11 +20,13 @@ import {
 import { ToolkitForm as GeneralToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { TourTargetConstants } from '@/[fsd]/shared/lib/constants';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion.jsx';
+import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import ViewRunHistoryButton from '@/[fsd]/shared/ui/button/ViewRunHistoryButton.jsx';
 import { FormViewToggle } from '@/[fsd]/shared/ui/tab-group-button';
 import { useGetConfigurationsListQuery } from '@/api/configurations.js';
 import { useToolkitAvailableToolsQuery, useValidateToolkitQuery } from '@/api/toolkits.js';
 import InfoIcon from '@/assets/info.svg?react';
+import TestIcon from '@/assets/test.svg?react';
 import { ToolkitViewOptions } from '@/common/constants';
 import { convertToolkitSchema } from '@/common/toolkitSchemaUtils';
 import { updateObjectByPath } from '@/common/utils.jsx';
@@ -66,6 +68,8 @@ export const ToolkitForm = memo(props => {
     indexingUnavailableReason = '',
     toolkitId,
     handleShowHistory,
+    handleShowTest,
+    isTestDisabled = false,
   } = props;
   const hasSetViewManually = useRef(false);
   const [view, setView] = useState(ToolkitViewOptions.Form);
@@ -538,6 +542,26 @@ export const ToolkitForm = memo(props => {
               </Box>
             )}
             <Box sx={styles.actionBarControls}>
+              {isDetailsActionBar && handleShowTest && (
+                <Tooltip
+                  title={isTestDisabled ? 'Save your changes to test' : 'Test toolkit'}
+                  placement="top"
+                >
+                  <Box component="span">
+                    <BaseBtn
+                      variant={BUTTON_VARIANTS.iconLabel}
+                      size="small"
+                      aria-label="test toolkit"
+                      data-testid="toolkit-test-button"
+                      disabled={isTestDisabled}
+                      onClick={handleShowTest}
+                      startIcon={<TestIcon />}
+                    >
+                      Test
+                    </BaseBtn>
+                  </Box>
+                </Tooltip>
+              )}
               {isDetailsActionBar && <ViewRunHistoryButton onShowHistory={handleShowHistory} />}
               {isViewTogglePresent && (
                 <FormViewToggle
@@ -658,6 +682,8 @@ ToolkitForm.displayName = 'ToolkitForm';
 
 export default ToolkitForm;
 
+const { PANEL_HEADER_HEIGHT } = ToolkitLayoutConstants;
+
 const CONTENT_GUTTER = '1.5rem';
 const CONTENT_WIDTH = '40.1875rem';
 
@@ -675,6 +701,7 @@ const toolkitFormStyles = isDetailsActionBar => ({
           position: 'sticky',
           top: 0,
           zIndex: 2,
+          height: PANEL_HEADER_HEIGHT,
           background: palette.background.section,
           borderBottom: `0.0625rem solid ${palette.border.table}`,
         }
@@ -685,7 +712,9 @@ const toolkitFormStyles = isDetailsActionBar => ({
     justifyContent: 'space-between',
     gap: '0.5rem',
     minHeight: '2rem',
-    ...(isDetailsActionBar ? { padding: `0.75rem ${CONTENT_GUTTER}`, ...centeredContentColumn } : {}),
+    ...(isDetailsActionBar
+      ? { height: '100%', padding: `0 ${CONTENT_GUTTER}`, ...centeredContentColumn }
+      : {}),
   },
   content: isDetailsActionBar
     ? { isolation: 'isolate', padding: `1rem ${CONTENT_GUTTER}`, ...centeredContentColumn }

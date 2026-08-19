@@ -1,20 +1,22 @@
-import { memo, useCallback } from 'react';
+import { memo } from 'react';
 
 import { useFormikContext } from 'formik';
 
 import { Box, Tooltip, Typography } from '@mui/material';
 
 import { PAT_REQUIRED_ACTION_HINT, useInternalMcpPatStatus } from '@/[fsd]/features/mcp';
-import { IndexesToolsEnum } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
+import { ToolkitLayoutConstants } from '@/[fsd]/features/toolkits/lib/constants';
 import { useToolkitToolOptions } from '@/[fsd]/features/toolkits/lib/hooks';
-import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { TourTargetConstants } from '@/[fsd]/shared/lib/constants';
-import { Button, Select } from '@/[fsd]/shared/ui/';
+import { Button, ScrollableContainer, Select } from '@/[fsd]/shared/ui/';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { LLMModelSelector } from '@/[fsd]/widgets/llm-model-selector';
 import SendIcon from '@/components/Icons/SendIcon';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import { ContentContainer } from '@/pages/Common/Components';
+
+import ToolFormContainer from '../form/ToolFormContainer';
+
+const { PANEL_HEADER_HEIGHT } = ToolkitLayoutConstants;
 
 const TestToolSettings = memo(props => {
   const {
@@ -30,36 +32,18 @@ const TestToolSettings = memo(props => {
     llmSettings,
     onSetLLMSettings,
     isRunning,
-    clearIndexNameError,
-    updateIndexNameError,
-    isIndexNameValid,
-    indexNameError,
     isValidForm,
     selectedToolSchema,
+    hideHeader = false,
   } = props;
 
   const { values } = useFormikContext();
   const projectId = useSelectedProjectId();
   const { patInvalid } = useInternalMcpPatStatus({ projectId, toolkitType: values?.type });
   const { allToolsOptions } = useToolkitToolOptions({ toolkitId });
-  const disabledRunTool = !isValidForm || isRunning || indexNameError || patInvalid;
+  const disabledRunTool = !isValidForm || isRunning || patInvalid;
 
   const styles = testToolSettingsStyles();
-
-  const onChangeInputVariablesWrapper = useCallback(
-    value => {
-      const isInvalid =
-        selectedTool === IndexesToolsEnum.indexData &&
-        value.index_name &&
-        !isIndexNameValid(value.index_name);
-
-      if (isInvalid) updateIndexNameError(value.index_name);
-      else clearIndexNameError();
-
-      onChangeInputVariables(value);
-    },
-    [clearIndexNameError, isIndexNameValid, onChangeInputVariables, selectedTool, updateIndexNameError],
-  );
 
   return (
     <Box
@@ -68,53 +52,57 @@ const TestToolSettings = memo(props => {
       data-tour={TourTargetConstants.SHARED_TOUR_TARGET_IDS.testSettings}
       sx={styles.root}
     >
-      <Box sx={styles.header}>
-        <Typography
-          variant="headingSmall"
-          color="text.secondary"
-        >
-          Test Settings
-        </Typography>
-      </Box>
-      <ContentContainer sx={styles.contentContainer}>
-        <Box sx={styles.toolSelectContainer}>
-          <Select.SingleSelect
-            data-testid="toolkit-test-tool-select"
-            value={selectedTool}
-            label="Tool"
-            onValueChange={onChangeTool}
-            onClear={() => onChangeTool(null)}
-            options={allToolsOptions}
-            withSearch
-            emptyPlaceholder="No tools found"
-            showEmptyPlaceholder={false}
-            displayEmpty
-            showBorder
-          />
+      {!hideHeader && (
+        <Box sx={styles.header}>
+          <Typography
+            variant="headingSmall"
+            color="text.secondary"
+          >
+            Test Settings
+          </Typography>
         </Box>
-        <Box sx={styles.toolSelectContainer}>
-          <LLMModelSelector
-            selectedModel={selectedModel}
-            onSelectModel={onSelectModel}
-            models={modelList}
-            llmSettings={llmSettings}
-            onSetLLMSettings={onSetLLMSettings}
-            variant="field"
-          />
-        </Box>
+      )}
+      <ScrollableContainer>
+        <Box sx={styles.content}>
+          <Box sx={styles.toolSelectContainer}>
+            <Select.SingleSelect
+              data-testid="toolkit-test-tool-select"
+              value={selectedTool}
+              label="Tool"
+              onValueChange={onChangeTool}
+              onClear={() => onChangeTool(null)}
+              options={allToolsOptions}
+              withSearch
+              emptyPlaceholder="No tools found"
+              showEmptyPlaceholder={false}
+              displayEmpty
+              showBorder
+            />
+          </Box>
+          <Box sx={styles.toolSelectContainer}>
+            <LLMModelSelector
+              selectedModel={selectedModel}
+              onSelectModel={onSelectModel}
+              models={modelList}
+              llmSettings={llmSettings}
+              onSetLLMSettings={onSetLLMSettings}
+              variant="field"
+            />
+          </Box>
 
-        {Object.keys(selectedTool ? selectedToolSchema?.properties || {} : {}).map(key => (
-          <ToolkitForm.ToolFormContainer
-            key={key}
-            fieldKey={key}
-            property={selectedToolSchema.properties[key]}
-            toolInputVariables={toolInputVariables}
-            schema={selectedToolSchema}
-            onChangeInputVariables={onChangeInputVariablesWrapper}
-            inputTestId={`toolkit-test-param-${key}-input`}
-          />
-        ))}
-      </ContentContainer>
+          {Object.keys(selectedTool ? selectedToolSchema?.properties || {} : {}).map(key => (
+            <ToolFormContainer
+              key={key}
+              fieldKey={key}
+              property={selectedToolSchema.properties[key]}
+              toolInputVariables={toolInputVariables}
+              schema={selectedToolSchema}
+              onChangeInputVariables={onChangeInputVariables}
+              inputTestId={`toolkit-test-param-${key}-input`}
+            />
+          ))}
+        </Box>
+      </ScrollableContainer>
       <Box sx={styles.footer}>
         <Tooltip title={patInvalid ? PAT_REQUIRED_ACTION_HINT : ''}>
           <Box component="span">
@@ -136,33 +124,32 @@ const TestToolSettings = memo(props => {
 
 TestToolSettings.displayName = 'TestToolSettings';
 
+// 511px of fields plus the 32px Figma gutters — caps the column so it cannot straddle the divider.
+const CONTENT_MAX_WIDTH = '35.9375rem';
+
 /** @type {MuiSx} */
 const testToolSettingsStyles = () => ({
   root: {
     display: 'flex',
     flexDirection: 'column',
-    alignItems: 'center',
   },
   header: ({ palette }) => ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    background: palette.background.aiProviderAccordion.default,
+    background: palette.background.section,
     borderBottom: `0.0625rem solid ${palette.border.table}`,
     flexShrink: 0,
-    height: '3rem',
+    height: PANEL_HEADER_HEIGHT,
     width: '100%',
   }),
-  contentContainer: {
-    flex: 1,
-    maxHeight: '100%',
+  content: {
     display: 'flex',
     flexDirection: 'column',
-    justifyContent: 'flex-start',
-    paddingBottom: '1rem',
-    paddingTop: '1.5rem',
-    overflow: 'auto',
-    width: '28.125rem',
+    width: '100%',
+    maxWidth: CONTENT_MAX_WIDTH,
+    margin: '0 auto',
+    padding: '1rem 2rem',
     gap: '0.5rem',
     '& .index-config-field': {
       marginTop: '0 !important',
@@ -173,46 +160,18 @@ const testToolSettingsStyles = () => ({
     },
   },
   toolSelectContainer: {
-    paddingRight: '0.5rem',
     height: '3.75rem',
   },
-  configContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    flex: 1,
-    minHeight: '25rem',
-  },
-  scrollableSection: ({ palette }) => ({
-    flex: 1,
-    overflowY: 'auto',
-    overflowX: 'hidden',
-    paddingRight: '.5rem',
-    marginRight: '-.5rem',
-
-    '&::-webkit-scrollbar': {
-      width: '.375rem',
-    },
-    '&::-webkit-scrollbar-track': {
-      background: 'transparent',
-    },
-    '&::-webkit-scrollbar-thumb': {
-      background: palette.divider,
-      borderRadius: '.1875rem',
-    },
-    '&::-webkit-scrollbar-thumb:hover': {
-      background: palette.action.hover,
-    },
-  }),
   footer: ({ palette }) => ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     padding: '0.5rem 1rem',
-    backgroundColor: palette.background.secondary,
+    background: palette.background.section,
     borderTop: `0.0625rem solid ${palette.border.table}`,
     flexShrink: 0,
     width: '100%',
-    height: '3rem',
+    height: '3.25rem',
   }),
   icon: {
     fontSize: '1rem',

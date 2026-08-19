@@ -1,19 +1,18 @@
 import { memo, useCallback } from 'react';
 
-import { useNavigate } from 'react-router-dom';
-
 import { Box, CircularProgress, Grid } from '@mui/material';
 
+import { useToolkitDetailNavigation } from '@/[fsd]/features/toolkits/lib/hooks';
 import { TestTools } from '@/[fsd]/features/toolkits/ui';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui/form/ToolkitForm';
 import DirtyDetector from '@/components/Formik/DirtyDetector.jsx';
-import RouteDefinitions from '@/routes';
 
 const ConfigurationTab = memo(props => {
   const {
     isFetching,
     applicationId,
     setDirty,
+    dirty,
     editToolDetail,
     setEditToolDetail,
     isToolDirty,
@@ -27,7 +26,7 @@ const ConfigurationTab = memo(props => {
     indexingUnavailableReason,
     shouldHideIndexes = true,
   } = props;
-  const navigate = useNavigate();
+  const { goToRunHistory, goToTest } = useToolkitDetailNavigation({ toolkitId, isMCP });
 
   const onChangeToolDetail = useCallback(
     (updater, options) => {
@@ -38,12 +37,6 @@ const ConfigurationTab = memo(props => {
     },
     [setEditToolDetail, setIsToolDirty],
   );
-
-  const handleShowHistory = useCallback(() => {
-    navigate(
-      `${RouteDefinitions.ToolkitRunHistory.replace(':tab', 'all').replace(':toolkitId', String(toolkitId))}?isMCP=${isMCP}`,
-    );
-  }, [isMCP, navigate, toolkitId]);
 
   return isFetching ? (
     <Box
@@ -82,7 +75,9 @@ const ConfigurationTab = memo(props => {
                 shouldHideIndexes={shouldHideIndexes}
                 indexingUnavailableReason={indexingUnavailableReason}
                 toolkitId={toolkitId}
-                handleShowHistory={handleShowHistory}
+                handleShowHistory={goToRunHistory}
+                handleShowTest={goToTest}
+                isTestDisabled={dirty}
               />
             </Grid>
           )}

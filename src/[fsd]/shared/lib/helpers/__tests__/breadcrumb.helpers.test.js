@@ -79,6 +79,19 @@ describe('resolveBreadcrumbTrail', () => {
 
     expect(trail.map(crumb => crumb.to)).toEqual(['/mcps/all', '/mcps/all/5']);
   });
+
+  it('keeps the test page under the detail page of its own entity type', () => {
+    const toolkitTest = resolveBreadcrumbTrail('/toolkits/my-liked/42/test');
+    const mcpTest = resolveBreadcrumbTrail('/mcps/all/5/test');
+
+    expect(toolkitTest.map(crumb => crumb.to)).toEqual([
+      '/toolkits/my-liked',
+      '/toolkits/my-liked/42',
+      '/toolkits/my-liked/42/test',
+    ]);
+    expect(mcpTest.map(crumb => crumb.to)).toEqual(['/mcps/all', '/mcps/all/5', '/mcps/all/5/test']);
+    expect(toolkitTest[toolkitTest.length - 1].key).toBe('/toolkits/:tab/:toolkitId/test');
+  });
 });
 
 describe('getBreadcrumbEntityId', () => {

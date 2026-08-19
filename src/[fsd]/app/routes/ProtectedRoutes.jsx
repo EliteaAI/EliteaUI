@@ -83,6 +83,7 @@ const CreateToolkit = ChunkHelpers.lazyWithRetry(() => import('@/pages/Toolkits/
 const EditToolkit = ChunkHelpers.lazyWithRetry(() => import('@/pages/Toolkits/EditToolkit'));
 const Toolkits = ChunkHelpers.lazyWithRetry(() => import('@/pages/Toolkits/Toolkits'));
 const ToolkitRunHistory = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/toolkit/ToolkitRunHistory'));
+const ToolkitTest = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/toolkit/ToolkitTest'));
 const CreateIndex = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/indexes/CreateIndex'));
 const RunIndex = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/indexes/RunIndex'));
 const IndexHistoryPage = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/indexes/IndexHistoryPage'));
@@ -248,6 +249,7 @@ const ProtectedRoutes = memo(() => {
       { path: RouteDefinitions.ToolkitsWithTab, element: <Toolkits /> },
       { path: RouteDefinitions.ToolkitDetail, element: <EditToolkit /> },
       { path: RouteDefinitions.ToolkitRunHistory, element: <ToolkitRunHistory /> },
+      { path: RouteDefinitions.ToolkitTest, element: <ToolkitTest /> },
       { path: RouteDefinitions.ToolkitIndexNew, element: <CreateIndex /> },
       { path: RouteDefinitions.ToolkitIndex, element: <RunIndex /> },
       { path: RouteDefinitions.ToolkitIndexHistory, element: <IndexHistoryPage /> },
@@ -258,6 +260,7 @@ const ProtectedRoutes = memo(() => {
       { path: RouteDefinitions.CreateMCPType, element: <CreateToolkit isMCP={true} /> },
       { path: RouteDefinitions.MCPsWithTab, element: <Toolkits isMCP={true} /> },
       { path: RouteDefinitions.MCPDetail, element: <EditToolkit isMCP={true} /> },
+      { path: RouteDefinitions.MCPTest, element: <ToolkitTest /> },
 
       /* apps */
       { path: RouteDefinitions.Apps, element: <Apps /> },
