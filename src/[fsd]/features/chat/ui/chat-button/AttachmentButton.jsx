@@ -221,6 +221,7 @@ const AttachmentButton = forwardRef((props, ref) => {
       />
       <Box
         component={AttachIcon}
+        data-testid={testId ? `${testId}-icon` : undefined}
         sx={styles.attachIcon}
       />
       {showLabel && (
