@@ -32,6 +32,9 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useSortQueryParamsFromUrl from '@/hooks/useSortQueryParamsFromUrl';
 import { DndContext, closestCenter } from '@dnd-kit/core';
 
+import ManageLinksDialog from './ManageLinksDialog';
+import ShareConversationDialog from './ShareConversationDialog';
+
 const Conversations = memo(props => {
   const {
     conversations,
@@ -95,6 +98,25 @@ const Conversations = memo(props => {
 
   const [loadingGroups, setLoadingGroups] = useState(new Set());
   const [loadingFolders, setLoadingFolders] = useState(new Set());
+
+  const [shareDialogConversation, setShareDialogConversation] = useState(null);
+  const [manageLinksConversation, setManageLinksConversation] = useState(null);
+
+  const handleOpenShareDialog = useCallback(conversation => {
+    setShareDialogConversation(conversation);
+  }, []);
+
+  const handleCloseShareDialog = useCallback(() => {
+    setShareDialogConversation(null);
+  }, []);
+
+  const handleOpenManageLinksDialog = useCallback(conversation => {
+    setManageLinksConversation(conversation);
+  }, []);
+
+  const handleCloseManageLinksDialog = useCallback(() => {
+    setManageLinksConversation(null);
+  }, []);
 
   const savedStateBeforeSearchRef = useRef(null);
   const dateGroupsRef = useRef(dateGroups);
@@ -455,6 +477,8 @@ const Conversations = memo(props => {
         isDragDisabled={isEditingCanvas || conversation.isPlayback || conversation.isPinned}
         onItemHover={onItemHover}
         isNextItemHovered={isNextItemHovered}
+        onShareExternal={handleOpenShareDialog}
+        onManageLinks={handleOpenManageLinksDialog}
       />
     ),
     [
@@ -474,6 +498,8 @@ const Conversations = memo(props => {
       isEditingCanvas,
       onClickSelectConversation,
       enableDragAndDrop,
+      handleOpenShareDialog,
+      handleOpenManageLinksDialog,
     ],
   );
 
@@ -802,6 +828,16 @@ const Conversations = memo(props => {
           </Box>
         )}
       </Box>
+      <ShareConversationDialog
+        open={!!shareDialogConversation}
+        conversation={shareDialogConversation ?? {}}
+        onClose={handleCloseShareDialog}
+      />
+      <ManageLinksDialog
+        open={!!manageLinksConversation}
+        conversation={manageLinksConversation ?? {}}
+        onClose={handleCloseManageLinksDialog}
+      />
     </DndContext>
   );
 });

@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { Box, CircularProgress, InputBase, List, ListItem, ListSubheader } from '@mui/material';
 
-import { typographyVariants } from '@/MainTheme';
+import { typographyVariants } from '@/[fsd]/shared/config/theme';
 import { SUGGESTION_PAGE_SIZE } from '@/common/constants';
 import { useTheme } from '@emotion/react';
 

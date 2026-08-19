@@ -1,7 +1,6 @@
+import { RtkTagsConstants } from '@/[fsd]/shared/lib/constants';
 import { eliteaApi } from '@/api/eliteaApi.js';
 import { PAGE_SIZE, PUBLIC_PROJECT_ID } from '@/common/constants';
-
-import { RtkTagsConstants } from '@/[fsd]/shared/lib/constants';
 
 const { TAG_TYPE_PUBLIC_SKILLS, TAG_TYPE_PUBLIC_SKILL_DETAILS } = RtkTagsConstants;
 const TAG_TYPE_AGENTS_WITH_SKILL = 'TAG_TYPE_AGENTS_WITH_SKILL';

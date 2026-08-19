@@ -108,6 +108,38 @@ export const isIntegerType = propertySchema => {
   );
 };
 
+const matchesVisibleWhen = (visibleWhen, settings) => {
+  const currentValue = settings?.[visibleWhen.field];
+  const expectedValue = visibleWhen.value;
+  return typeof currentValue === 'string' && typeof expectedValue === 'string'
+    ? currentValue.toLowerCase() === expectedValue.toLowerCase()
+    : currentValue === expectedValue;
+};
+
+const hasValue = value => value !== null && value !== undefined && value !== '';
+
+export const isPropertyVisible = ({
+  propertyKey,
+  property,
+  settings,
+  required = false,
+  disableConfigFields = false,
+  showOnlyConfigurationFields = false,
+  showOnlyRequiredFields = false,
+}) => {
+  if (!property || property.hidden) return false;
+
+  if (property.visible_when && !matchesVisibleWhen(property.visible_when, settings)) return false;
+
+  if (disableConfigFields) {
+    return propertyKey === 'elitea_title' || hasValue(settings?.[propertyKey]);
+  }
+
+  if (showOnlyConfigurationFields && !property.configuration) return false;
+
+  return !(showOnlyRequiredFields && !required);
+};
+
 /**
  * Validate required fields and return errors object
  */

@@ -80,8 +80,8 @@ The `pages/settings/` directory is the largest offender — nearly every setting
 <details>
 <summary>Click to expand full list (25 bypasses)</summary>
 
-| File                                     | Import                                                                |
-| ---------------------------------------- | --------------------------------------------------------------------- |
+| File                                         | Import                                                                      |
+| -------------------------------------------- | --------------------------------------------------------------------------- |
 | ~~`pages/settings/EnvironmentSettings.jsx`~~ | ~~`from '@/[fsd]/features/settings/ui/drawer-page'`~~ ✓                     |
 | ~~`pages/settings/EnvironmentSettings.jsx`~~ | ~~`from '@/[fsd]/features/settings/ui/environment'`~~ ✓                     |
 | ~~`pages/settings/Users.jsx`~~               | ~~`from '@/[fsd]/features/interactive-tours/lib/constants'`~~ ✓             |
@@ -104,31 +104,31 @@ The `pages/settings/` directory is the largest offender — nearly every setting
 | ~~`pages/settings/PersonalTokens.jsx`~~      | ~~`from '@/[fsd]/features/interactive-tours/lib/constants/...'`~~ ✓         |
 | ~~`pages/settings/PersonalTokens.jsx`~~      | ~~`from '@/[fsd]/features/settings/ui/drawer-page'`~~ ✓                     |
 | ~~`pages/settings/PersonalTokens.jsx`~~      | ~~`from '@/[fsd]/features/settings/ui/personal-tokes'`~~ ✓                  |
-| `pages/auth/index.jsx`                   | `from '@/[fsd]/features/auth/lib/constants'`                          |
-| `pages/auth/index.jsx`                   | `from '@/[fsd]/features/auth/lib/helpers'`                            |
-| `pages/resources/index.jsx`              | `from '@/[fsd]/features/interactive-tours/lib/constants/...'`         |
-| `pages/skills/Skills.jsx`                | `from '@/[fsd]/features/skill/ui/PrivateSkillsList'`                  |
-| `pages/skills/Skills.jsx`                | `from '@/[fsd]/features/skill/ui/import'`                             |
-| `pages/skills/EditSkill.jsx`             | `from '@/[fsd]/features/skill/lib/validation'`                        |
-| `pages/skills/EditSkill.jsx`             | `from '@/[fsd]/features/skill/ui/SkillControls'`                      |
-| `pages/skills/EditSkill.jsx`             | `from '@/[fsd]/features/skill/ui/SkillInformation'`                   |
-| `pages/skills/EditSkill.jsx`             | `from '@/[fsd]/features/skill/ui/ai-edit-skill-modal'`                |
-| `pages/skills/EditSkill.jsx`             | `from '@/[fsd]/features/skill/ui/skill-details/form/CreateSkillForm'` |
-| `pages/skills/EditSkill.jsx`             | `from '@/[fsd]/features/skill/ui/skill-test-panel/SkillTestPanel'`    |
-| `pages/skills/CreateSkill.jsx`           | `from '@/[fsd]/features/skill/lib/validation'`                        |
-| `pages/skills/CreateSkill.jsx`           | `from '@/[fsd]/features/skill/ui/CreateSkillTabBar'`                  |
-| `pages/skills/CreateSkill.jsx`           | `from '@/[fsd]/features/skill/ui/skill-details/form/CreateSkillForm'` |
-| `pages/apps/AppDetail.jsx`               | `from '@/[fsd]/features/apps/lib/hooks'`                              |
-| `pages/apps/Apps.jsx`                    | `from '@/[fsd]/features/apps/ui/catalog'`                             |
-| `pages/apps/Apps.jsx`                    | `from '@/[fsd]/features/toolkits/ui/list/ToolkitsList'`               |
-| `pages/toolkit/ToolkitRunHistory.jsx`    | `from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader'`    |
-| `pages/indexes/RunIndex.jsx`             | `from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader'`    |
-| `pages/indexes/IndexHistoryPage.jsx`     | `from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader'`    |
-| `pages/indexes/CreateIndexForm.jsx`      | `from '@/[fsd]/features/mcp/lib/hooks'`                               |
-| `pages/indexes/CreateIndexForm.jsx`      | `from '@/[fsd]/features/toolkits/lib/constants'`                      |
-| `pages/indexes/CreateIndexForm.jsx`      | `from '@/[fsd]/features/toolkits/lib/helpers'`                        |
-| `pages/indexes/CreateIndexForm.jsx`      | `from '@/[fsd]/features/toolkits/lib/hooks'`                          |
-| `pages/indexes/CreateIndex.jsx`          | `from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader'`    |
+| `pages/auth/index.jsx`                       | `from '@/[fsd]/features/auth/lib/constants'`                                |
+| `pages/auth/index.jsx`                       | `from '@/[fsd]/features/auth/lib/helpers'`                                  |
+| `pages/resources/index.jsx`                  | `from '@/[fsd]/features/interactive-tours/lib/constants/...'`               |
+| `pages/skills/Skills.jsx`                    | `from '@/[fsd]/features/skill/ui/PrivateSkillsList'`                        |
+| `pages/skills/Skills.jsx`                    | `from '@/[fsd]/features/skill/ui/import'`                                   |
+| `pages/skills/EditSkill.jsx`                 | `from '@/[fsd]/features/skill/lib/validation'`                              |
+| `pages/skills/EditSkill.jsx`                 | `from '@/[fsd]/features/skill/ui/SkillControls'`                            |
+| `pages/skills/EditSkill.jsx`                 | `from '@/[fsd]/features/skill/ui/SkillInformation'`                         |
+| `pages/skills/EditSkill.jsx`                 | `from '@/[fsd]/features/skill/ui/ai-edit-skill-modal'`                      |
+| `pages/skills/EditSkill.jsx`                 | `from '@/[fsd]/features/skill/ui/skill-details/form/CreateSkillForm'`       |
+| `pages/skills/EditSkill.jsx`                 | `from '@/[fsd]/features/skill/ui/skill-test-panel/SkillTestPanel'`          |
+| `pages/skills/CreateSkill.jsx`               | `from '@/[fsd]/features/skill/lib/validation'`                              |
+| `pages/skills/CreateSkill.jsx`               | `from '@/[fsd]/features/skill/ui/CreateSkillTabBar'`                        |
+| `pages/skills/CreateSkill.jsx`               | `from '@/[fsd]/features/skill/ui/skill-details/form/CreateSkillForm'`       |
+| `pages/apps/AppDetail.jsx`                   | `from '@/[fsd]/features/apps/lib/hooks'`                                    |
+| `pages/apps/Apps.jsx`                        | `from '@/[fsd]/features/apps/ui/catalog'`                                   |
+| `pages/apps/Apps.jsx`                        | `from '@/[fsd]/features/toolkits/ui/list/ToolkitsList'`                     |
+| `pages/toolkit/ToolkitRunHistory.jsx`        | `from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader'`          |
+| `pages/indexes/RunIndex.jsx`                 | `from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader'`          |
+| `pages/indexes/IndexHistoryPage.jsx`         | `from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader'`          |
+| `pages/indexes/CreateIndexForm.jsx`          | `from '@/[fsd]/features/mcp/lib/hooks'`                                     |
+| `pages/indexes/CreateIndexForm.jsx`          | `from '@/[fsd]/features/toolkits/lib/constants'`                            |
+| `pages/indexes/CreateIndexForm.jsx`          | `from '@/[fsd]/features/toolkits/lib/helpers'`                              |
+| `pages/indexes/CreateIndexForm.jsx`          | `from '@/[fsd]/features/toolkits/lib/hooks'`                                |
+| `pages/indexes/CreateIndex.jsx`              | `from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader'`          |
 
 </details>
 
@@ -392,14 +392,14 @@ Should be `kebab-case`:
 
 ### 4.7 Missing Barrel Files — Slice Root Level (5)
 
-| Directory            |
-| -------------------- |
-| `features/apps/`     |
-| `features/auth/`     |
+| Directory                  |
+| -------------------------- |
+| `features/apps/`           |
+| `features/auth/`           |
 | ~~`features/settings/`~~ ✓ |
-| `shared/config/`     |
-| `shared/lib/`        |
-| `stories/shared/`    |
+| `shared/config/`           |
+| `shared/lib/`              |
+| `stories/shared/`          |
 
 ### 4.8 Missing Barrel Files — Segment Level (42)
 
@@ -644,8 +644,9 @@ from the canonical location — no dead barrels.
 - **Updated** `features/skill/api/skillsApi.js` — removed cross-slice import, now imports from
   `shared/lib/constants`
 
-**Design decision:** Only constants shared between multiple slices are moved to `shared/`. Slice-local constants
-(e.g., `TAG_TYPE_SKILLS`, `TAG_TYPE_AGENTS_WITH_SKILL`) remain in their respective slices per FSD principles.
+**Design decision:** Only constants shared between multiple slices are moved to `shared/`. Slice-local
+constants (e.g., `TAG_TYPE_SKILLS`, `TAG_TYPE_AGENTS_WITH_SKILL`) remain in their respective slices per FSD
+principles.
 
 **Build verification:** `npm run build` passed with no errors (45.10s).
 
@@ -694,9 +695,11 @@ from the canonical location — no dead barrels.
 
 ### 2026-08-13 — Session 5
 
-**Scope:** Section 1.3 — External Barrel Bypasses, `pages/settings/` → `features/settings` (22 violations resolved).
+**Scope:** Section 1.3 — External Barrel Bypasses, `pages/settings/` → `features/settings` (22 violations
+resolved).
 
-**Fix strategy:** Create complete barrel file hierarchy for `features/settings`, update all `pages/settings/` imports to use main slice barrel.
+**Fix strategy:** Create complete barrel file hierarchy for `features/settings`, update all `pages/settings/`
+imports to use main slice barrel.
 
 #### New barrel files created (8 files):
 
@@ -710,20 +713,21 @@ from the canonical location — no dead barrels.
 
 #### Files updated (10 pages/settings files):
 
-| File | Violations fixed | New import |
-|------|------------------|------------|
-| `EnvironmentSettings.jsx` | 2 | `{ DrawerPage, DrawerPageHeader, EnvironmentSection } from '@/[fsd]/features/settings'` |
-| `AIProviders.jsx` | 2 | `{ AIProvidersContent, DrawerPage } from '@/[fsd]/features/settings'` |
-| `Users.jsx` | 3 | `{ DeleteUserButton, DrawerPage, DrawerPageHeader, EditUsersButton, UsersTable } from '@/[fsd]/features/settings'` + `{ USERS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours'` |
-| `ServicePromptsPage.jsx` | 2 | `{ DrawerPage, ServicePromptsSection } from '@/[fsd]/features/settings'` |
-| `ProjectContext.jsx` | 2 | `{ DrawerPage, ProjectContextContent } from '@/[fsd]/features/settings'` |
-| `Secrets.jsx` | 2 | `{ DrawerPage, SecretsContent } from '@/[fsd]/features/settings'` |
-| `ProjectGeneral.jsx` | 2 | `{ DrawerPage, ProjectGeneralContent } from '@/[fsd]/features/settings'` |
-| `CreatePersonalToken.jsx` | 2 | `{ DrawerPage, DrawerPageHeader, GeneratedTokenDialog } from '@/[fsd]/features/settings'` |
-| `index.jsx` | 2 | `{ SettingsDrawer, SettingsLayoutConstants, SettingsRedirect } from '@/[fsd]/features/settings'` |
-| `PersonalTokens.jsx` | 3 | `{ DrawerPage, DrawerPageHeader, SettingsPreview, TokensSection } from '@/[fsd]/features/settings'` + `{ PERSONAL_TOKENS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours'` |
+| File                      | Violations fixed | New import                                                                                                                                                                                 |
+| ------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `EnvironmentSettings.jsx` | 2                | `{ DrawerPage, DrawerPageHeader, EnvironmentSection } from '@/[fsd]/features/settings'`                                                                                                    |
+| `AIProviders.jsx`         | 2                | `{ AIProvidersContent, DrawerPage } from '@/[fsd]/features/settings'`                                                                                                                      |
+| `Users.jsx`               | 3                | `{ DeleteUserButton, DrawerPage, DrawerPageHeader, EditUsersButton, UsersTable } from '@/[fsd]/features/settings'` + `{ USERS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours'` |
+| `ServicePromptsPage.jsx`  | 2                | `{ DrawerPage, ServicePromptsSection } from '@/[fsd]/features/settings'`                                                                                                                   |
+| `ProjectContext.jsx`      | 2                | `{ DrawerPage, ProjectContextContent } from '@/[fsd]/features/settings'`                                                                                                                   |
+| `Secrets.jsx`             | 2                | `{ DrawerPage, SecretsContent } from '@/[fsd]/features/settings'`                                                                                                                          |
+| `ProjectGeneral.jsx`      | 2                | `{ DrawerPage, ProjectGeneralContent } from '@/[fsd]/features/settings'`                                                                                                                   |
+| `CreatePersonalToken.jsx` | 2                | `{ DrawerPage, DrawerPageHeader, GeneratedTokenDialog } from '@/[fsd]/features/settings'`                                                                                                  |
+| `index.jsx`               | 2                | `{ SettingsDrawer, SettingsLayoutConstants, SettingsRedirect } from '@/[fsd]/features/settings'`                                                                                           |
+| `PersonalTokens.jsx`      | 3                | `{ DrawerPage, DrawerPageHeader, SettingsPreview, TokensSection } from '@/[fsd]/features/settings'` + `{ PERSONAL_TOKENS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours'`      |
 
 **Note:** Section 4.8 (Missing Barrel Files) can mark these directories as resolved:
+
 - `features/settings/ui/ai-providers/` ✓
 - `features/settings/ui/profile/` ✓
 - `features/settings/ui/shared/` ✓

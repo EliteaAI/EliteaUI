@@ -1,8 +1,8 @@
 import { Button } from '@mui/material';
 import ButtonGroup from '@mui/material/ButtonGroup';
 
-import { typographyVariants } from '@/MainTheme';
 import { PIPELINE_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
+import { typographyVariants } from '@/[fsd]/shared/config/theme';
 import { useTheme } from '@emotion/react';
 import styled from '@emotion/styled';
 

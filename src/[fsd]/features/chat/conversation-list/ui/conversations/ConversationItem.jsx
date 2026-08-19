@@ -9,6 +9,8 @@ import { DraggableConversationItem } from '@/[fsd]/features/chat/conversation-li
 import { Input } from '@/[fsd]/shared/ui';
 import CheckedIcon from '@/assets/checked-icon.svg?react';
 import CopyLinkIcon from '@/assets/copy-link-icon.svg?react';
+import ListViewIcon from '@/assets/list-view-icon.svg?react';
+import ShareIcon from '@/assets/share-icon.svg?react';
 import {
   ConversationNameRegExp,
   ConversationNameWarningMessage,
@@ -53,6 +55,8 @@ const ConversationItem = memo(props => {
     isDragDisabled = false,
     isNextItemHovered = false,
     onItemHover,
+    onShareExternal,
+    onManageLinks,
   } = props;
   const {
     name,
@@ -78,7 +82,6 @@ const ConversationItem = memo(props => {
   const [showMenu, setShowMenu] = useState(false);
   const [isEditing, setIsEditing] = useState(isNew && !isNamingPending);
   const [conversationName, setConversationName] = useState(name);
-
   const isConversationNameValid = useMemo(
     () => ConversationNameRegExp.test(conversationName ?? ''),
     [conversationName],
@@ -171,6 +174,14 @@ const ConversationItem = memo(props => {
 
     toastInfo('The link has been copied to the clipboard.');
   }, [conversation, projectId, toastInfo]);
+
+  const handleShareExternal = useCallback(() => {
+    onShareExternal?.(conversation);
+  }, [conversation, onShareExternal]);
+
+  const handleManageLinks = useCallback(() => {
+    onManageLinks?.(conversation);
+  }, [conversation, onManageLinks]);
 
   const menuItems = useMemo(() => {
     const items = !isPlayback
@@ -266,6 +277,30 @@ const ConversationItem = memo(props => {
             display: projectId == personal_project_id ? 'none' : undefined,
           },
           {
+            key: 'chat-conversation-menu-share-external',
+            label: 'Share externally',
+            icon: (
+              <Box sx={{ svg: { path: { fill: ({ palette }) => palette.secondary.main } } }}>
+                <ShareIcon />
+              </Box>
+            ),
+            onClick: handleShareExternal,
+          },
+          ...(conversation.has_shared_links
+            ? [
+                {
+                  key: 'chat-conversation-menu-manage-links',
+                  label: 'Manage links',
+                  icon: (
+                    <Box sx={{ svg: { path: { fill: ({ palette }) => palette.secondary.main } } }}>
+                      <ListViewIcon />
+                    </Box>
+                  ),
+                  onClick: handleManageLinks,
+                },
+              ]
+            : []),
+          {
             key: 'chat-conversation-menu-pin',
             label: isPinned ? 'Unpin' : 'Pin on top',
             icon: <PinIcon sx={{ fontSize: '1rem' }} />,
@@ -319,7 +354,10 @@ const ConversationItem = memo(props => {
     projectId,
     personal_project_id,
     handleShareConversation,
+    handleShareExternal,
+    handleManageLinks,
     handlePlayback,
+    conversation.has_shared_links,
     conversation.folder_id,
     handlePin,
     is_private,

@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
@@ -10,15 +10,22 @@ import {
   useGetRemoteMcpTools,
   useInternalMcpPatStatus,
 } from '@/[fsd]/features/mcp';
+import { SectionStatusConstants } from '@/[fsd]/features/toolkits/lib/constants';
+import { useCollapsedSection } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { AccordionConstants, TourTargetConstants } from '@/[fsd]/shared/lib/constants';
+import { Chip, Input } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
+import OnlineIcon from '@/assets/online-icon.svg?react';
 import { useToolkitView } from '@/hooks/toolkit/useToolkitView.js';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
+
+const { SECTION_STATUS } = SectionStatusConstants;
 
 export const ToolActionsSelector = memo(props => {
   const {
     availableTools = [],
+    toolGroups,
     onChange = () => {},
     extraProperties,
     disabled,
@@ -26,13 +33,17 @@ export const ToolActionsSelector = memo(props => {
     isPreconfiguredMcp,
     toolkitType,
     onToolsFetched,
+    selectedToolsError,
+    toolsSection,
   } = props;
 
   const { values } = useFormikContext();
   const { settings: { selected_tools } = {} } = values ?? { settings: {} };
   const selectedTools = useMemo(() => selected_tools ?? [], [selected_tools]);
 
-  const styles = toolActionsSelectorStyles();
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const styles = useMemo(toolActionsSelectorStyles, []);
   const theme = useTheme();
   const { shouldUseAccordionView } = useToolkitView();
 
@@ -78,9 +89,12 @@ export const ToolActionsSelector = memo(props => {
     [availableTools],
   );
 
-  // Find selected tools that are NOT in available tools
-  const toolsOptionsValues = toolsOptions.map(option => option.value);
-  const warningTools = (selectedTools || []).filter(tool => !toolsOptionsValues.includes(tool));
+  const warningTools = useMemo(() => {
+    const availableValues = new Set(toolsOptions.map(option => option.value));
+    return selectedTools.filter(tool => !availableValues.has(tool));
+  }, [toolsOptions, selectedTools]);
+
+  const selectedAvailableCount = selectedTools.length - warningTools.length;
 
   const onSelectTool = useCallback(
     value => () => {
@@ -91,6 +105,94 @@ export const ToolActionsSelector = memo(props => {
     [selectedTools, onChange],
   );
 
+  const onToggleTools = useCallback(
+    (toolValues, allSelected) => {
+      const newValue = allSelected
+        ? selectedTools.filter(tool => !toolValues.includes(tool))
+        : [...selectedTools, ...toolValues.filter(tool => !selectedTools.includes(tool))];
+      onChange(newValue);
+    },
+    [selectedTools, onChange],
+  );
+
+  const showSearch = toolsOptions.length > 0;
+
+  const renderToolsControls = () =>
+    showSearch && (
+      <Input.SimpleSearchBar
+        searchQuery={searchTerm}
+        onSearchChange={setSearchTerm}
+        onSearchClear={() => setSearchTerm('')}
+        placeholder="Search tools"
+        autoFocus={false}
+        data-testid="toolkit-tools-search"
+        sx={styles.controlsRow}
+      />
+    );
+
+  const isMcpToolkit = isRemoteMcp || isPreconfiguredMcp;
+
+  const toolsStatus = useMemo(() => {
+    if (selectedToolsError) {
+      return { status: SECTION_STATUS.error, message: selectedToolsError };
+    }
+    if (warningTools.length > 0) {
+      const subject = warningTools.length === 1 ? 'tool is' : 'tools are';
+      return {
+        status: SECTION_STATUS.warning,
+        message: `${warningTools.length} selected ${subject} no longer available`,
+      };
+    }
+    return null;
+  }, [selectedToolsError, warningTools]);
+
+  const ownToolsSection = useCollapsedSection();
+  const { isExpanded, toggleExpanded } = toolsSection ?? ownToolsSection;
+
+  const renderHeaderContent = () => (
+    <>
+      <ToolkitForm.SectionStatusIcon
+        status={toolsStatus?.status}
+        message={toolsStatus?.message}
+        testId="toolkit-tools-status-icon"
+      />
+      <Box sx={styles.headerActions}>
+        {isMcpToolkit && (
+          <Tooltip title={patInvalid ? PAT_REQUIRED_ACTION_HINT : ''}>
+            <Typography
+              data-testid="toolkit-load-tools-button"
+              variant="labelSmall"
+              sx={styles.syncButton(!canGetTools || isFetchingTools)}
+              onClick={onClickGetTools}
+            >
+              {isFetchingTools ? 'Loading...' : 'Load Tools'}
+            </Typography>
+          </Tooltip>
+        )}
+        <Chip.CountBadge
+          count={selectedAvailableCount}
+          total={toolsOptions.length}
+          ariaLabel={`${selectedAvailableCount} of ${toolsOptions.length} tools enabled`}
+          testId="toolkit-tools-total-count"
+        />
+      </Box>
+    </>
+  );
+
+  const renderItems = () => (
+    <ToolkitForm.ToolActionsItems
+      toolsOptions={toolsOptions}
+      toolGroups={toolGroups}
+      warningTools={warningTools}
+      selectedTools={selectedTools}
+      onSelectTool={onSelectTool}
+      onToggleTools={onToggleTools}
+      searchTerm={searchTerm}
+      disabled={disabled}
+      styles={styles}
+    />
+  );
+
   return (
     <Box
       sx={styles.container(shouldUseAccordionView)}
@@ -98,44 +200,34 @@ export const ToolActionsSelector = memo(props => {
     >
       {shouldUseAccordionView ? (
         <BasicAccordion
+          card
           showMode={AccordionConstants.AccordionShowMode.LeftMode}
           accordionSX={{
             background: `${theme.palette.background.tabPanel} !important`,
           }}
-          summarySX={{
-            '& .MuiAccordionSummary-content': { alignItems: 'center', paddingRight: 0 },
-            paddingRight: '0 !important',
-          }}
+          expanded={isExpanded}
+          onChange={toggleExpanded}
           items={[
             {
               title: 'Tools',
-              summaryAction:
-                isRemoteMcp || isPreconfiguredMcp ? (
-                  <Tooltip title={patInvalid ? PAT_REQUIRED_ACTION_HINT : ''}>
-                    <Typography
-                      data-testid="toolkit-load-tools-button"
-                      variant="labelSmall"
-                      sx={styles.syncButton(!canGetTools || isFetchingTools)}
-                      onClick={onClickGetTools}
-                    >
-                      {isFetchingTools ? 'Loading...' : 'Load Tools'}
-                    </Typography>
-                  </Tooltip>
-                ) : null,
+              testId: 'toolkit-tools-accordion-summary',
+              headerContent: renderHeaderContent(),
               content: (
                 <>
-                  {!isRemoteMcp && !isPreconfiguredMcp ? extraProperties : null}
-                  {(isRemoteMcp || isPreconfiguredMcp) && availableTools.length === 0 && (
-                    <ToolkitForm.EmptyMcpTools />
-                  )}
-                  <ToolkitForm.ToolActionsItems
-                    toolsOptions={toolsOptions}
-                    warningTools={warningTools}
-                    selectedTools={selectedTools}
-                    onSelectTool={onSelectTool}
-                    disabled={disabled}
-                    styles={styles}
-                  />
+                  {isMcpToolkit && availableTools.length === 0 && <ToolkitForm.EmptyMcpTools />}
+                  {renderToolsControls()}
+                  {renderItems()}
+                  {!isMcpToolkit && extraProperties ? (
+                    <Box sx={styles.mcpToggleRow}>
+                      <Box sx={styles.mcpToggleIcon}>
+                        <OnlineIcon
+                          width={16}
+                          height={16}
+                        />
+                      </Box>
+                      {extraProperties}
+                    </Box>
+                  ) : null}
                 </>
               ),
             },
@@ -144,14 +236,8 @@ export const ToolActionsSelector = memo(props => {
       ) : (
         <>
           <Typography variant="bodyMedium">Tools</Typography>
-          <ToolkitForm.ToolActionsItems
-            toolsOptions={toolsOptions}
-            warningTools={warningTools}
-            selectedTools={selectedTools}
-            onSelectTool={onSelectTool}
-            disabled={disabled}
-            styles={styles}
-          />
+          {renderToolsControls()}
+          {renderItems()}
         </>
       )}
       <McpAuthModal {...getModalProps()} />
@@ -167,19 +253,56 @@ const toolActionsSelectorStyles = () => ({
     marginTop: '1rem',
     padding: shouldUseAccordionView ? '' : '0 0 0 0.75rem',
   }),
+  controlsRow: {
+    marginTop: '0.5rem',
+  },
+  mcpToggleRow: ({ palette }) => ({
+    marginTop: '1rem',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    padding: '0.5rem 0.75rem',
+    borderRadius: '0.75rem',
+    backgroundColor: palette.background.tabButton.default,
+    border: `0.0625rem solid ${palette.border.cardsOutlines}`,
+  }),
+  mcpToggleIcon: ({ palette }) => ({
+    width: '1.25rem',
+    height: '1.25rem',
+    borderRadius: '50%',
+    flexShrink: 0,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: palette.secondary.main,
+    color: palette.background.default,
+  }),
   stack: {
     marginTop: '0.5rem',
     gap: '1rem',
   },
+  groupStack: isSearching => ({
+    marginTop: '1rem',
+    gap: isSearching ? '1rem' : '1.5rem',
+  }),
   chip: {
+    paddingTop: '0.25rem',
+    paddingBottom: '0.25rem',
     '.MuiChip-label': {
       paddingLeft: 0,
       paddingRight: 0,
+      fontSize: '0.875rem',
+      lineHeight: '1.5rem',
     },
     '.MuiChip-icon': {
       marginLeft: 0,
       marginRight: 0,
     },
+  },
+  headerActions: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
   },
   syncButton:
     disabled =>

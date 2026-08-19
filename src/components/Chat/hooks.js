@@ -12,7 +12,14 @@ import {
 import {
   mergeHitlInterrupts,
   normalizeHitlInterrupt,
+  reconcileRootHitlInterrupts,
+  settleHitlResumeAttempt,
 } from '@/[fsd]/features/chat/lib/helpers/hitl.helpers.js';
+import {
+  buildMcpAuthorizationToolAction,
+  getMcpAuthorizationRequests,
+  hasProcessingSiblingForAuthorization,
+} from '@/[fsd]/features/chat/lib/helpers/mcpAuthorization.helpers.js';
 import {
   mentionSkillActions,
   supersedeMentionSkillAction,
@@ -106,13 +113,16 @@ export const useStopStreaming = ({
                     isStreaming: false,
                     isLoading: false,
                     task_id: undefined,
-                    // Stop freezes the run: drop any pending HITL approval cards
+                    // Stop freezes the run: drop pending HITL/auth cards
                     // (#4993 Track 2). They are client-side only, so the backend
                     // sync can't clear them — and a click on a stale card would
                     // re-invoke the parent and re-fan-out every child.
                     hitlInterrupts: undefined,
                     hitlInterrupt: undefined,
                     resumingAgentPaths: undefined,
+                    toolActions: msg.toolActions?.filter(
+                      action => action.status !== ToolActionStatus.actionRequired,
+                    ),
                   }
                 : { ...msg, task_id: undefined },
             ),
@@ -144,9 +154,10 @@ export const useStopStreaming = ({
             isStreaming: false,
             isLoading: false,
             task_id: undefined,
-            // Stop freezes the run — drop pending HITL cards (#4993 Track 2).
+            // Stop freezes the run — drop pending HITL/auth cards (#4993 Track 2).
             hitlInterrupts: undefined,
             hitlInterrupt: undefined,
+            toolActions: msg.toolActions?.filter(action => action.status !== ToolActionStatus.actionRequired),
           })),
         ),
       200,
@@ -434,6 +445,7 @@ export const useChatSocket = ({
       switch (socketMessageType) {
         case SocketMessageType.StartTask: {
           const isContinuing = msg.isContinuing;
+          msg.hitlTurnStartRevision = (msg.hitlTurnStartRevision || 0) + 1;
           msg.isLoading = true;
           msg.isStreaming = true;
           msg.isSending = false;
@@ -448,8 +460,19 @@ export const useChatSocket = ({
           msg.participant_id = participant_id;
           msg.question_id = question_id;
           msg.requiresConfirmation = undefined; // Clear confirmation state when task resumes
-          msg.hitlInterrupt = undefined; // Clear HITL state when task resumes
-          msg.hitlInterrupts = undefined;
+          if (Array.isArray(msg.hitlInterrupts)) {
+            // StartTask is only a transport-level acknowledgement. Preserve the
+            // parallel interrupt array (including untouched visible siblings)
+            // until the next authoritative aggregate or terminal event. This
+            // also closes the race where StartTask arrives before React commits
+            // the selected card's `decided` marker and used to clear every card.
+            const retainedInterrupts = settleHitlResumeAttempt(msg.hitlInterrupts, true);
+            msg.hitlInterrupts = retainedInterrupts.length ? retainedInterrupts : undefined;
+            msg.hitlInterrupt = retainedInterrupts[0];
+          } else {
+            msg.hitlInterrupt = undefined; // Clear scalar/legacy HITL state when task resumes
+            msg.hitlInterrupts = undefined;
+          }
           if (!msg.replyTo) {
             const questionMessage = chatHistoryRef.current.find(m => m.id === question_id);
             if (questionMessage) {
@@ -628,8 +651,8 @@ export const useChatSocket = ({
 
           // For existing messages, use state update with proper new object references
           // so React detects the change and re-renders
-          setChatHistoryRef.current?.(prevState =>
-            prevState.map((item, idx) => {
+          setChatHistoryRef.current?.(prevState => {
+            const nextState = prevState.map((item, idx) => {
               if (idx !== msgIndex) return item;
               const existingToolActions = item.toolActions || [];
               const existingAction = existingToolActions.find(ta => ta.id === toolRunId);
@@ -680,8 +703,16 @@ export const useChatSocket = ({
                 ...item,
                 toolActions: updatedToolActions,
               };
-            }),
-          );
+            });
+
+            // Socket events can arrive in the same tick, before React commits
+            // this functional update and the ref-sync effect runs. Advance the
+            // ref here as well so a following authorization/interrupt event
+            // cannot rebuild the message from stale toolActions and temporarily
+            // drop a parallel child from the live thinking tree.
+            chatHistoryRef.current = nextState;
+            return nextState;
+          });
           return;
         }
         case SocketMessageType.AgentLlmEnd: {
@@ -1025,9 +1056,12 @@ export const useChatSocket = ({
             // returns a deferred sentinel; its invocation wrapper still ends here.
             // Flag it so the thinking view keeps the sub-agent's shimmer alive
             // through the approval gap instead of treating the child as finished.
-            if (metadata?.hitl_deferred) {
-              t.hitlDeferred = true;
-            }
+            // The resumed round can reuse this same tool_run_id; its terminal
+            // event is authoritative and must also CLEAR the old deferred flag,
+            // otherwise a completed child spins until the entire message ends.
+            const hitlDeferred = Boolean(metadata?.hitl_deferred);
+            t.hitlDeferred = hitlDeferred;
+            t.toolMeta.hitl_deferred = hitlDeferred;
 
             Object.assign(t, {
               message: undefined, // we clear status messages when the tool ends
@@ -1063,99 +1097,28 @@ export const useChatSocket = ({
           if (msg.toolActions === undefined) {
             msg.toolActions = [];
           }
-          const toolRunId = response_metadata?.tool_run_id || v4();
-          const existingAction = msg.toolActions.find(i => i.id === toolRunId);
-          const resourceMetadataUrl = response_metadata?.resource_metadata_url;
-          const toolName = response_metadata?.tool_name || 'MCP toolkit';
-          const serverUrl = response_metadata?.server_url || 'MCP server';
-          const statusCode = response_metadata?.status || 401;
+          const actions = getMcpAuthorizationRequests(response_metadata)
+            .map((metadata, index) =>
+              buildMcpAuthorizationToolAction({
+                metadata,
+                content: message?.content,
+                createdAt: message.created_at,
+                fallbackId: `${v4()}-${index}`,
+              }),
+            )
+            .filter(Boolean);
+          const byId = new Map(msg.toolActions.map(action => [action.id, action]));
+          actions.forEach(action => byId.set(action.id, { ...byId.get(action.id), ...action }));
+          msg.toolActions = [...byId.values()];
 
-          // Check if we have authorization servers (either from resource_metadata or directly)
-          const authServers =
-            response_metadata?.resource_metadata?.authorization_servers ||
-            response_metadata?.authorization_servers;
-          const hasAuthServers = authServers && authServers.length > 0;
-
-          // Token storage key must match what get_toolkit() looks up in kwargs['tokens'].
-          // SharePoint and OpenAPI use a composite key or the oauth discovery endpoint (not server URL).
-          // Pre-built MCPs (type starts with "mcp_") use toolkit_type as the key — the backend
-          // looks up tokens by server_name / toolkit_name, not by the OAuth server URL.
-          // All other toolkits (regular MCP) use serverUrl (the MCP server URL = oauth endpoint).
-          const isSharePoint = response_metadata?.resource_metadata?.resource_name === 'SharePoint';
-          const isOpenApi = response_metadata?.resource_metadata?.resource_name === 'OpenAPI';
-          const configUuid = response_metadata?.resource_metadata?.configuration_uuid;
-          const oauthEndpoint = authServers?.[0];
-          const toolkitType = response_metadata?.toolkit_type;
-          const isPrebuildMcpToolkit =
-            typeof toolkitType === 'string' && toolkitType.startsWith('mcp_') && toolkitType !== 'mcp';
-          const effectiveServerUrl = isPrebuildMcpToolkit
-            ? // Pre-built MCP: use toolkit type as token storage key so backend can match it.
-              toolkitType
-            : configUuid && oauthEndpoint
-              ? // Composite key "{configUuid}:{oauthEndpoint}" — matches SDK primary lookup for
-                // any delegated OAuth toolkit where configuration_uuid is present.
-                `${configUuid}:${oauthEndpoint}`
-              : isSharePoint || isOpenApi
-                ? // Delegated OAuth without configUuid: token lives under the discovery endpoint.
-                  oauthEndpoint || serverUrl
-                : // Regular MCP: the MCP server URL is itself the OAuth endpoint.
-                  serverUrl;
-
-          let contentMessage;
-          let status;
-
-          if (!hasAuthServers) {
-            // Cannot process authorization - show error message
-            contentMessage =
-              `${statusCode}: Authorization error in "${toolName}" toolkit.\n\n` +
-              `The MCP server at ${serverUrl} requires OAuth authorization, but the server ` +
-              `did not provide the authorization server configuration. ` +
-              `Please contact the server administrator or check the toolkit configuration.`;
-            status = ToolActionStatus.error;
-          } else {
-            // Can process authorization - show normal message
-            const baseMessage = convertJsonToString(message?.content ?? 'Authorization required.', true);
-            const metadataInfo = resourceMetadataUrl
-              ? `\n\nResource metadata: ${resourceMetadataUrl}`
-              : `\n\nAuthorization servers: ${authServers.join(', ')}`;
-            contentMessage = `${baseMessage}${metadataInfo}`;
-            status = ToolActionStatus.actionRequired;
-          }
-
-          const toolActionPayload = {
-            name: toolName,
-            id: toolRunId,
-            status,
-            toolInputs: undefined,
-            toolOutputs: hasAuthServers
-              ? {
-                  resource_metadata_url: resourceMetadataUrl || null,
-                  authorization_servers: authServers,
-                  server_url: effectiveServerUrl,
-                }
-              : undefined,
-            toolMeta: response_metadata,
-            created_at: message.created_at,
-            ended_at: message.created_at,
-            type: TOOL_ACTION_TYPES.Toolkit,
-            markdown: false,
-            renderHtml: false,
-            content: contentMessage,
-          };
-
-          if (existingAction) {
-            // Create new array with updated action to trigger React re-render
-            msg.toolActions = msg.toolActions.map(action =>
-              action.id === existingAction.id ? { ...action, ...toolActionPayload } : action,
-            );
-          } else {
-            // Create new array reference to trigger React re-render
-            msg.toolActions = [...msg.toolActions, toolActionPayload];
-          }
-
-          // Stop streaming/loading/regenerating state when auth is required - user needs to take action
+          // SDK-nested Applications also carry child_thread_id, but only a
+          // worker-owned fan-out child keeps the parked parent run active.
+          const isDurableChild = ['aggregate_child', 'supervised_child'].includes(
+            response_metadata?.resume_strategy,
+          );
+          const hasProcessingSibling = hasProcessingSiblingForAuthorization(msg.toolActions, actions);
           msg.isLoading = false;
-          msg.isStreaming = false;
+          msg.isStreaming = isDurableChild || (msg.isStreaming && hasProcessingSibling);
           msg.isRegenerating = false;
           msg.isSending = false;
           onRcvAgentEventRef.current && onRcvAgentEventRef.current({ ...message });
@@ -1187,6 +1150,13 @@ export const useChatSocket = ({
           break;
         }
         case SocketMessageType.AgentHitlInterrupt: {
+          // A new interrupt aggregate is the checkpoint acknowledgement for
+          // the previously selected leaf. That leaf is no longer resuming: it
+          // either completed or paused again and will be represented by a new
+          // pending card below. Do not leave its header shimmer/spinner alive
+          // while unresolved siblings remain on screen.
+          msg.resumingAgentPaths = undefined;
+
           // Track 2 fan-out child (#4993): the indexer stamps the child's own
           // thread + sub-agent name into event metadata. Such a pause belongs to
           // ONE child that streams onto the parent's message while its siblings
@@ -1195,8 +1165,11 @@ export const useChatSocket = ({
           // resume routing, and must NOT stop the message's streaming state (the
           // running siblings still need their live boxes + shimmer).
           const hitlMeta = response_metadata?.metadata || {};
-          const childThreadId = hitlMeta.child_thread_id || '';
-          const isFanoutChild = Boolean(hitlMeta.parent_agent_name && childThreadId);
+          const isFanoutChild =
+            response_metadata?.resume_strategy === 'aggregate_child' && Boolean(hitlMeta.child_thread_id);
+          const isSupervisedChild = response_metadata?.resume_strategy === 'supervised_child';
+          const childThreadId = isFanoutChild ? hitlMeta.child_thread_id : '';
+          const hasExistingRootHitlAggregate = !isFanoutChild && Array.isArray(msg.hitlInterrupts);
 
           // Track 1 in-process parallel aggregate (#5379): N paused sub-agents
           // arrive in ONE interrupt, each entry labeled with its parent_agent_name
@@ -1209,15 +1182,16 @@ export const useChatSocket = ({
           // pausing would simply disappear until the run ends).
           const isParallelSubAgentAggregate =
             !isFanoutChild &&
-            Array.isArray(response_metadata?.hitl_interrupts) &&
-            response_metadata.hitl_interrupts.some(r => r?.parent_agent_name);
+            ((Array.isArray(response_metadata?.hitl_interrupts) &&
+              response_metadata.hitl_interrupts.some(r => r?.parent_agent_name)) ||
+              hasExistingRootHitlAggregate);
 
-          if (!isFanoutChild && !isParallelSubAgentAggregate) {
+          if (!isFanoutChild && !isSupervisedChild && !isParallelSubAgentAggregate) {
             msg.isLoading = false;
             msg.isStreaming = false;
             msg.isRegenerating = false;
             msg.isSending = false;
-          } else if (isFanoutChild) {
+          } else if (isFanoutChild || isSupervisedChild) {
             // A fan-out child pausing for approval means the overall run is still
             // active: siblings keep streaming and this child awaits a human
             // decision. The parent's park-by-return may have already emitted an
@@ -1270,6 +1244,7 @@ export const useChatSocket = ({
                 ...hitlMeta,
                 child_thread_id: childThreadId,
                 thread_id: childThreadId,
+                resume_strategy: response_metadata?.resume_strategy,
               },
             );
 
@@ -1306,7 +1281,7 @@ export const useChatSocket = ({
             incomingInterrupts = [buildHitlInterrupt(singleRaw, fallbackMessage)];
           }
 
-          if (isFanoutChild) {
+          if (isFanoutChild || isSupervisedChild) {
             // interrupt_id distinguishes multiple approvals emitted by one
             // aggregate child; thread/tool ids remain compatibility fallbacks.
             msg.hitlInterrupts = mergeHitlInterrupts(msg.hitlInterrupts, incomingInterrupts);
@@ -1314,13 +1289,20 @@ export const useChatSocket = ({
             // True backend parallel aggregate (Track 1): N entries arrive in
             // hitl_interrupts. Populate the array so ChatBox routes resume via
             // hitl_decisions (keyed by tool_call_id).
-            msg.hitlInterrupts = incomingInterrupts;
+            // Choices made while a previous root decision was in flight are
+            // queued client-side. Preserve that per-card marker across the
+            // authoritative aggregate refresh so queued cards cannot briefly
+            // become clickable again and enqueue a duplicate decision.
+            msg.hitlInterrupts = reconcileRootHitlInterrupts(msg.hitlInterrupts, incomingInterrupts);
           } else {
             // Legacy single pause: leave hitlInterrupts UNSET. ChatBox's
             // isParallel detection keys off the mere presence of the array; a
             // single pause must keep the sequential hitl_action resume shape.
             // ApplicationAnswer falls back to [hitlInterrupt] for rendering.
-            msg.hitlInterrupts = undefined;
+            // A scalar nested event may arrive while a root parallel resume is
+            // still running. It is not an authoritative replacement for the
+            // existing aggregate; the root will follow with hitl_interrupts.
+            if (!hasExistingRootHitlAggregate) msg.hitlInterrupts = undefined;
           }
           // Keep the singular field populated with the first entry for
           // back-compat with consumers that read hitlInterrupt, and as the sole
@@ -1379,6 +1361,10 @@ export const useChatSocket = ({
           // the turn. Emitted even when empty, so silence is meaningful.
           msg.isInjectable = false;
           msg.consumedInjectionIds = response_metadata?.consumed || [];
+          // Emitted from the indexer worker's finally block after this root
+          // turn has released its checkpoint. Loading and nested HITL events
+          // are not sufficient completion signals for queued root resumes.
+          msg.hitlTurnEndRevision = (msg.hitlTurnEndRevision || 0) + 1;
           onInjectionReportRef.current?.({
             messageId: msg.id,
             consumed: msg.consumedInjectionIds,
@@ -1699,8 +1685,10 @@ export const useChatSocket = ({
                     isStreaming: false,
                     isRegenerating: false,
                     isSending: false,
-                    hitlInterrupt: undefined,
-                    hitlInterrupts: undefined,
+                    hitlInterrupt: settleHitlResumeAttempt(item.hitlInterrupts, false)[0],
+                    hitlInterrupts: item.hitlInterrupts?.length
+                      ? settleHitlResumeAttempt(item.hitlInterrupts, false)
+                      : item.hitlInterrupts,
                   };
                 }
                 if (item.id === message_id) {
@@ -1710,8 +1698,10 @@ export const useChatSocket = ({
                     isStreaming: false,
                     isRegenerating: false,
                     isSending: false,
-                    hitlInterrupt: undefined,
-                    hitlInterrupts: undefined,
+                    hitlInterrupt: settleHitlResumeAttempt(item.hitlInterrupts, false)[0],
+                    hitlInterrupts: item.hitlInterrupts?.length
+                      ? settleHitlResumeAttempt(item.hitlInterrupts, false)
+                      : item.hitlInterrupts,
                   };
                 }
                 return item;

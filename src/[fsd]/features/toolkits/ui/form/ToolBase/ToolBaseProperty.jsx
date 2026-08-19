@@ -64,7 +64,6 @@ const ToolBaseProperty = memo(props => {
     anyOf,
     max_toolkit_length,
     ui_component: uiComponent,
-    visible_when: visibleWhen,
     placeholder: schemaPlaceholder,
   } = v || {};
 
@@ -190,40 +189,17 @@ const ToolBaseProperty = memo(props => {
     [description, label, styles.infoIconWrapper],
   );
 
-  // Hide field if it has property hidden === true
-  if (v && v.hidden) {
-    return null;
-  }
+  const isVisible = ToolBaseHelpers.isPropertyVisible({
+    propertyKey: k,
+    property: v,
+    settings,
+    required,
+    disableConfigFields,
+    showOnlyConfigurationFields,
+    showOnlyRequiredFields,
+  });
 
-  // Hide field based on visible_when condition (e.g., show custom_header_name only when auth_type='custom')
-  if (visibleWhen) {
-    const { field: conditionField, value: conditionValue } = visibleWhen;
-    const currentFieldValue = settings[conditionField];
-    // Compare case-insensitively for string values
-    const matches =
-      typeof currentFieldValue === 'string' && typeof conditionValue === 'string'
-        ? currentFieldValue.toLowerCase() === conditionValue.toLowerCase()
-        : currentFieldValue === conditionValue;
-    if (!matches) {
-      return null;
-    }
-  }
-
-  // For disabled configuration fields mode, handle configuration vs regular fields differently
-  if (disableConfigFields) {
-    // This is a configuration field being shown as disabled
-
-    // Only show configuration fields that have non-empty values
-    const value = settings[k];
-    if (k !== 'elitea_title' && (value === null || value === undefined || value === '')) {
-      return null;
-    }
-    // Field has a value and will be shown as disabled
-  } else if (showOnlyConfigurationFields && !v?.configuration) {
-    // In configuration-only mode, hide non-configuration fields
-    return null;
-  } else if (showOnlyRequiredFields && !required) {
-    // In required-only mode, hide non-required fields
+  if (!isVisible) {
     return null;
   }
 
@@ -275,7 +251,7 @@ const ToolBaseProperty = memo(props => {
     );
   }
   if (k === 'selected_tools') {
-    const { items, args_schemas } = v;
+    const { items, args_schemas, tool_groups } = v;
     // Check if args_schemas actually has content (not just empty object)
     const hasArgsSchemas = args_schemas && Object.keys(args_schemas).length > 0;
     const tools = hasArgsSchemas ? Object.keys(args_schemas) : items?.enum;
@@ -283,6 +259,7 @@ const ToolBaseProperty = memo(props => {
       <ToolkitForm.ToolActionsSelector
         key={k}
         availableTools={tools}
+        toolGroups={tool_groups}
         onChange={value => editField(buildEditFieldPath('selected_tools'), value)}
         disabled={disableConfigFields || disabled}
       />
