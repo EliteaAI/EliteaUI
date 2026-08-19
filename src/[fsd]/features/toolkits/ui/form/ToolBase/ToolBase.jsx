@@ -71,11 +71,11 @@ const ToolBase = memo(props => {
   } = editToolDetail;
   // console.log('toolErrors', toolErrors);
   const theme = useTheme();
-  const styles = toolBaseStyles();
   const systemSenderName = useSystemSenderName();
   const [, setNotSelectedFields] = useState([]);
   const [showDisabledConfigFields, setShowDisabledConfigFields] = useState(false);
-  const { shouldUseAccordionView } = useToolkitView();
+  const { shouldUseAccordionView, shouldHideConfigurationHeader } = useToolkitView();
+  const styles = toolBaseStyles(shouldHideConfigurationHeader);
   const { sections, sectionProps } = useToolkitConfigurationProperties({ toolType: editToolDetail?.type });
 
   // Get platform settings to check if MCP exposure is enabled
@@ -649,23 +649,21 @@ const ToolBase = memo(props => {
       {isSharepointToolkit && <SharepointOAuthStatus />}
       {isOpenApiToolkit && showTools && <OpenApiOAuthStatus />}
 
-      {shouldUseAccordionView ? (
-        <>
-          <BasicAccordion
-            card
-            showMode={AccordionConstants.AccordionShowMode.LeftMode}
-            accordionSX={{ background: `${theme.palette.background.tabPanel} !important` }}
-            items={[
-              {
-                title: 'Configuration',
-                testId: 'toolkit-configuration-accordion-summary',
-                content: toolBaseConfiguration,
-              },
-            ]}
-          />
-        </>
+      {shouldUseAccordionView && !shouldHideConfigurationHeader ? (
+        <BasicAccordion
+          card
+          showMode={AccordionConstants.AccordionShowMode.LeftMode}
+          accordionSX={{ background: `${theme.palette.background.tabPanel} !important` }}
+          items={[
+            {
+              title: 'Configuration',
+              testId: 'toolkit-configuration-accordion-summary',
+              content: toolBaseConfiguration,
+            },
+          ]}
+        />
       ) : (
-        <>{toolBaseConfiguration}</>
+        toolBaseConfiguration
       )}
       {showTools ? renderTools() : null}
     </>
@@ -675,11 +673,12 @@ const ToolBase = memo(props => {
 ToolBase.displayName = 'ToolBase';
 
 /** @type {MuiSx} */
-const toolBaseStyles = () => ({
+const toolBaseStyles = shouldHideConfigurationHeader => ({
   configurationContainer: {
     display: 'flex',
     flexDirection: 'column',
     gap: '0.5rem',
+    ...(shouldHideConfigurationHeader && { padding: '0.5rem 1rem 0' }),
   },
   showMore: ({ palette }) => ({
     alignSelf: 'flex-start',
