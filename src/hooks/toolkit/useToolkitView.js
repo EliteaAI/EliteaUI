@@ -19,11 +19,6 @@ export const useToolkitView = () => {
     [isToolkitsPage, isMcpsPage, isChatPage],
   );
 
-  const setSaveActionParam = useCallback(() => {
-    const newSearchParams = new URLSearchParams(searchParams);
-    newSearchParams.append(SearchParams.SaveToolkit, 1);
-  }, [searchParams]);
-
   const hasSaveActionParam = useCallback(() => {
     const newSearchParams = new URLSearchParams(searchParams);
     return newSearchParams.has(SearchParams.SaveToolkit);
@@ -33,8 +28,6 @@ export const useToolkitView = () => {
     isToolkitsPage,
     isChatPage,
     shouldUseAccordionView,
-
-    setSaveActionParam,
     hasSaveActionParam,
   };
 };

@@ -1,8 +1,8 @@
 import { memo, useCallback, useMemo } from 'react';
 
+import OpenEyeIcon from '@/assets/open-eye-icon.svg?react';
 import { ToolkitViewOptions } from '@/common/constants';
 import CodeIcon from '@/components/Icons/CodeIcon';
-import OpenEyeIcon from '@/components/Icons/OpenEyeIcon';
 
 import TabGroupButton from './TabGroupButton';
 
