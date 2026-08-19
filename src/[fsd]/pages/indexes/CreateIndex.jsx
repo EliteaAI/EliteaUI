@@ -7,7 +7,8 @@ import { Box, CircularProgress } from '@mui/material';
 
 import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
 import { useGetIndexesListQuery } from '@/[fsd]/features/toolkits/indexes/api';
-import { IndexBreadcrumb } from '@/[fsd]/features/toolkits/indexes/ui';
+import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
+import Breadcrumbs from '@/[fsd]/shared/ui/breadcrumbs';
 import { useToolkitsDetailsQuery } from '@/api/toolkits.js';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils.jsx';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -25,16 +26,8 @@ const CreateIndex = memo(() => {
   const { toastError } = useToast();
   const styles = createIndexStyles();
 
-  const goBackToToolkit = useCallback(() => {
-    const target = RouteDefinitions.ToolkitDetail.replace(':tab', tab ?? 'all').replace(
-      ':toolkitId',
-      String(toolkitId),
-    );
-    navigate(target);
-  }, [navigate, tab, toolkitId]);
-
   const goToToolkitsList = useCallback(() => {
-    navigate(RouteDefinitions.ToolkitsWithTab.replace(':tab', tab ?? 'all'));
+    navigate(NavigationHelpers.buildRoute(RouteDefinitions.ToolkitsWithTab, { tab: tab ?? 'all' }));
   }, [navigate, tab]);
 
   const {
@@ -67,20 +60,11 @@ const CreateIndex = memo(() => {
 
   if (shouldShowNotFoundPage) return null;
 
-  const toolkitName = publicToolkitData?.name || '';
-
   return (
     <Box sx={styles.wrapper}>
       <DrawerPageHeader
         showBorder
-        title={
-          <IndexBreadcrumb
-            toolkitName={toolkitName}
-            current="New index"
-            onToolkitsClick={goToToolkitsList}
-            onToolkitClick={goBackToToolkit}
-          />
-        }
+        title={<Breadcrumbs />}
       />
       <Box sx={styles.content}>
         {isFetching || !publicToolkitData?.id ? (
