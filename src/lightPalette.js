@@ -119,6 +119,8 @@ const lightPalette = {
     eliteaDefault: gradient,
     secondary: white,
     tabPanel: white01,
+    pageSection: white01,
+    section: grey003,
     modal: {
       simple: white,
     },
