@@ -12,9 +12,6 @@ export { default as IndexesList } from './index-list';
 // Run History
 export { default as IndexRunDetail } from './run-history/IndexRunDetail';
 
-// Breadcrumb
-export { default as IndexBreadcrumb } from './IndexBreadcrumb';
-
 // Main container
 export { default as IndexesContainer } from './IndexesContainer';
 

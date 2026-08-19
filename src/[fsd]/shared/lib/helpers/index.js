@@ -33,3 +33,4 @@ export { getFilenameFromContentDisposition } from './download.helpers';
 export * as ParseYamlToMermaidHelpers from './parseYamlToMermaid.helpers.js';
 export * as ScheduleHelpers from './schedule.helpers';
 export * as CronBuilderHelpers from './cronBuilder.helpers';
+export * as BreadcrumbHelpers from './breadcrumb.helpers';
