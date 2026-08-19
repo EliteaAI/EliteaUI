@@ -51,6 +51,7 @@ const ContextStrategySummarization = memo(props => {
             handleInputChange({ target: { checked: checkedValue, type: 'checkbox' } }, 'enable_summarization')
           }
           disabled={!isEnabled}
+          data-testid="context-modal-summarization-toggle"
           label="Enable automatic summarization"
           slotProps={{
             switch: { size: 'small' },
