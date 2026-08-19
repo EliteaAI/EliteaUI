@@ -1,12 +1,10 @@
 import { memo } from 'react';
 
-import { Box } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import { Button } from '@/[fsd]/shared/ui';
-import InfoIcon from '@/assets/info.svg?react';
 import PlusIcon from '@/assets/plus-icon.svg?react';
 
-import RunIndexBanner from '../RunIndexBanner';
 import IndexListItem from './IndexListItem';
 
 const IndexesList = memo(props => {
@@ -27,15 +25,13 @@ const IndexesList = memo(props => {
   return (
     <Box sx={styles.wrapper}>
       {!indexesList.length && !loading ? (
-        <RunIndexBanner
-          banner={{
-            severity: 'info',
-            label: 'No indexes yet',
-            message: 'Create your first index to get started.',
-          }}
-          CustomIcon={() => <InfoIcon />}
-          sx={styles.banner}
-        />
+        <Typography
+          variant="bodyMedium"
+          sx={styles.emptyState}
+          data-testid="toolkit-indexes-empty-state"
+        >
+          No indexes created yet.
+        </Typography>
       ) : (
         <Box sx={styles.indexesListContainer}>
           {loading
@@ -104,9 +100,9 @@ const indexesListStyles = () => ({
     alignItems: 'center',
     marginTop: '0.5rem',
   },
-  banner: {
-    padding: '0rem !important',
-  },
+  emptyState: ({ palette }) => ({
+    color: palette.text.primary,
+  }),
 });
 
 export default IndexesList;

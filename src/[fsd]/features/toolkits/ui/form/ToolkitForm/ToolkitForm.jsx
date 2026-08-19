@@ -4,24 +4,30 @@ import { useFormikContext } from 'formik';
 import { useSelector } from 'react-redux';
 import { useParams, useSearchParams } from 'react-router-dom';
 
-import { Box, CircularProgress } from '@mui/material';
+import { Box, CircularProgress, Typography } from '@mui/material';
 
 import { McpAuthHelpers, McpPatBanner } from '@/[fsd]/features/mcp';
+import { useIndexesSectionSummary } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import IndexesContainer from '@/[fsd]/features/toolkits/indexes/ui/IndexesContainer.jsx';
 import RunIndexBanner from '@/[fsd]/features/toolkits/indexes/ui/RunIndexBanner.jsx';
 import { ToolkitFormConstants } from '@/[fsd]/features/toolkits/lib/constants';
 import { ToolComponentHelpers, ToolkitFormHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
-import { useGetCurrentToolkitSchemas, useToolkitNameProp } from '@/[fsd]/features/toolkits/lib/hooks';
+import {
+  useCollapsedSection,
+  useGetCurrentToolkitSchemas,
+  useToolkitNameProp,
+} from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitForm as GeneralToolkitForm } from '@/[fsd]/features/toolkits/ui';
+import { TourTargetConstants } from '@/[fsd]/shared/lib/constants';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion.jsx';
 import ViewRunHistoryButton from '@/[fsd]/shared/ui/button/ViewRunHistoryButton.jsx';
+import { FormViewToggle } from '@/[fsd]/shared/ui/tab-group-button';
 import { useGetConfigurationsListQuery } from '@/api/configurations.js';
 import { useToolkitAvailableToolsQuery, useValidateToolkitQuery } from '@/api/toolkits.js';
 import InfoIcon from '@/assets/info.svg?react';
 import { ToolkitViewOptions } from '@/common/constants';
 import { convertToolkitSchema } from '@/common/toolkitSchemaUtils';
 import { updateObjectByPath } from '@/common/utils.jsx';
-import { FormViewToggle } from '@/components/FormViewToggle';
 import useCreateConfiguration from '@/hooks/application/useCreateConfiguration';
 import { useToolkitView } from '@/hooks/toolkit/useToolkitView.js';
 import { Create_Personal_Title, Create_Project_Title } from '@/hooks/useConfigurations';
@@ -63,6 +69,10 @@ export const ToolkitForm = memo(props => {
   } = props;
   const hasSetViewManually = useRef(false);
   const [view, setView] = useState(ToolkitViewOptions.Form);
+  const indexesSummary = useIndexesSectionSummary(toolkitId);
+  const { isExpanded: isIndexesExpanded, toggleExpanded: toggleIndexes } = useCollapsedSection();
+  const configurationSection = useCollapsedSection();
+  const toolsSection = useCollapsedSection();
   const { configurationsAsSchema } = useGetCurrentConfigurationAsSchemas();
   const { values, initialValues, setFieldValue, resetForm } = useFormikContext();
   const { toolkitType } = useParams();
@@ -549,6 +559,7 @@ export const ToolkitForm = memo(props => {
           view={view}
           onChangeView={onChangeView}
           disabled={!isValidSchema}
+          jsonViewTourTarget={TourTargetConstants.SHARED_TOUR_TARGET_IDS.rawJsonTab}
         />
       )}
       {!hideOperationButtons && (
@@ -578,6 +589,8 @@ export const ToolkitForm = memo(props => {
         editToolDetail={editToolDetail}
         // editToolDetail={values}
         setEditToolDetail={onChangeToolDetail}
+        configurationSection={configurationSection}
+        toolsSection={toolsSection}
         editField={editField}
         toolErrors={mergedToolErrors}
         setToolErrors={setToolErrors}
@@ -610,12 +623,33 @@ export const ToolkitForm = memo(props => {
       />
       {!shouldHideIndexes && (
         <BasicAccordion
+          card
           data-testid="toolkit-indexes-accordion"
           style={styles.indexesAccordionWrapper}
           accordionSX={styles.indexesAccordion}
+          expanded={isIndexesExpanded}
+          onChange={toggleIndexes}
           items={[
             {
               title: 'Indexes',
+              testId: 'toolkit-indexes-accordion-summary',
+              headerContent: (
+                <>
+                  <GeneralToolkitForm.SectionStatusIcon
+                    status={indexesSummary.status?.status}
+                    message={indexesSummary.status?.message}
+                    testId="toolkit-indexes-status-icon"
+                  />
+                  <Typography
+                    variant="bodySmall"
+                    color="text.primary"
+                    aria-label={indexesSummary.label}
+                    data-testid="toolkit-indexes-count"
+                  >
+                    {indexesSummary.count}
+                  </Typography>
+                </>
+              ),
               content: indexingUnavailableReason ? (
                 <RunIndexBanner
                   banner={{

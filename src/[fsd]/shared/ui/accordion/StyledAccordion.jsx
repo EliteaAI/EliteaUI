@@ -5,9 +5,9 @@ import { Accordion } from '@mui/material';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 
 const StyledAccordion = memo(props => {
-  const { showMode, sx, ...rest } = props;
+  const { showMode, card, sx, ...rest } = props;
 
-  const styles = styledAccordionStyles(showMode);
+  const styles = styledAccordionStyles(showMode, card);
 
   return (
     <Accordion
@@ -19,13 +19,18 @@ const StyledAccordion = memo(props => {
 
 StyledAccordion.displayName = 'StyledAccordion';
 
+const getSummaryPadding = (showMode, card) => {
+  if (card) return '0.5rem 0.75rem';
+  return showMode === AccordionConstants.AccordionShowMode.LeftMode ? '0.5rem' : '0 0.75rem';
+};
+
 /** @type {MuiSx} */
-const styledAccordionStyles = showMode => ({
+const styledAccordionStyles = (showMode, card) => ({
   accordion: {
     boxShadow: 'none',
     '& .MuiButtonBase-root.MuiAccordionSummary-root': {
       minHeight: '2.5rem',
-      padding: showMode === AccordionConstants.AccordionShowMode.LeftMode ? '0.5rem' : '0 0.75rem',
+      padding: getSummaryPadding(showMode, card),
     },
     '::before': {
       content: 'none',

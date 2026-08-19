@@ -37,6 +37,7 @@ const BasicAccordion = memo(props => {
     summarySX,
     titleSX,
     accordionDetailsSX,
+    card = false,
     'data-testid': dataTestId,
   } = props;
 
@@ -47,7 +48,7 @@ const BasicAccordion = memo(props => {
       sx={style}
       data-testid={dataTestId}
     >
-      {items.map(({ title, content, summaryAction, testId }, index) => (
+      {items.map(({ title, content, summaryAction, headerContent, testId }, index) => (
         <Box
           key={index}
           sx={styles.accordionWrapper}
@@ -55,6 +56,7 @@ const BasicAccordion = memo(props => {
           <StyledAccordion
             sx={accordionSX}
             showMode={showMode}
+            card={card}
             defaultExpanded={defaultExpanded}
             expanded={expanded}
             onChange={onChange}
@@ -63,6 +65,7 @@ const BasicAccordion = memo(props => {
               expandIcon={<StyledExpandMoreIcon sx={styles.expandIcon} />}
               aria-controls={`panel-content-${index}`}
               showMode={showMode}
+              card={card}
               sx={summarySX}
               data-testid={testId}
             >
@@ -72,8 +75,14 @@ const BasicAccordion = memo(props => {
               >
                 {title}
               </StyledTypography>
+              {headerContent && <Box sx={styles.headerContent}>{headerContent}</Box>}
             </StyledAccordionSummary>
-            <StyledAccordionDetails sx={accordionDetailsSX}>{content}</StyledAccordionDetails>
+            <StyledAccordionDetails
+              card={card}
+              sx={accordionDetailsSX}
+            >
+              {content}
+            </StyledAccordionDetails>
           </StyledAccordion>
           {summaryAction && (
             <Box
@@ -96,6 +105,12 @@ BasicAccordion.displayName = 'BasicAccordion';
 const basicAccordionStyles = () => ({
   accordionWrapper: {
     position: 'relative',
+  },
+  headerContent: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    marginLeft: 'auto',
   },
   expandIcon: {
     width: '1rem',

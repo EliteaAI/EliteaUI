@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Box, useTheme } from '@mui/material';
 
@@ -6,11 +6,16 @@ import { McpAuthStatus } from '@/[fsd]/features/mcp';
 import { OpenApiOAuthStatus } from '@/[fsd]/features/openapi/ui';
 import { SharepointOAuthStatus } from '@/[fsd]/features/sharepoint';
 import { ToolBaseHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
+import {
+  useCollapsedSection,
+  useExpandOnAttention,
+  useSectionExpansion,
+} from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { AccordionConstants, TourTargetConstants } from '@/[fsd]/shared/lib/constants';
 import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
 import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
-import { Switch } from '@/[fsd]/shared/ui';
+import { Button, Switch } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import {
   convertToValidEliteaTitle,
@@ -53,6 +58,8 @@ const ToolBase = memo(props => {
     validationErrorMessages = {},
     advancedFields = [],
     onCredentialReload,
+    configurationSection,
+    toolsSection,
   } = props;
   const {
     name = '',
@@ -216,6 +223,122 @@ const ToolBase = memo(props => {
     }
   };
 
+  const shouldCollapseConfiguration =
+    shouldUseAccordionView && !showOnlyConfigurationFields && !showOnlyRequiredFields;
+
+  const isPinnedCredential = useCallback(
+    key => shouldCollapseConfiguration && schema?.properties?.[key]?.type === 'configuration',
+    [shouldCollapseConfiguration, schema],
+  );
+
+  const collapsedPropertyKeys = useMemo(
+    () =>
+      Object.keys(schema?.properties || {}).filter(
+        key => key !== 'selected_tools' && !isPinnedCredential(key) && !excludedFields?.includes(key),
+      ),
+    [schema, isPinnedCredential, excludedFields],
+  );
+
+  const isDisabledConfigField = useCallback(
+    key =>
+      (showDisabledConfigFields && schema?.properties?.[key]?.configuration) ||
+      (key === 'elitea_title' && !enableEditEliteaTitle),
+    [showDisabledConfigFields, schema, enableEditEliteaTitle],
+  );
+
+  const propertiesRevealedByShowMore = useMemo(
+    () =>
+      collapsedPropertyKeys.filter(
+        key =>
+          !sectionProps.includes(key) &&
+          ToolBaseHelpers.isPropertyVisible({
+            propertyKey: key,
+            property: schema?.properties?.[key],
+            settings,
+            required: schema?.required?.includes(key),
+            disableConfigFields: isDisabledConfigField(key),
+            showOnlyRequiredFields,
+          }),
+      ),
+    [collapsedPropertyKeys, sectionProps, schema, settings, isDisabledConfigField, showOnlyRequiredFields],
+  );
+
+  const sectionsRevealedByShowMore = showSections && sectionProps.length > 0;
+
+  const canCollapseConfiguration =
+    shouldCollapseConfiguration && (propertiesRevealedByShowMore.length > 0 || sectionsRevealedByShowMore);
+
+  const missingRequiredValues = useMemo(
+    () => ToolBaseHelpers.validateRequiredFields(schema, settings, [], enableEditEliteaTitle),
+    [schema, settings, enableEditEliteaTitle],
+  );
+
+  const needsAttention = useCallback(
+    key => missingRequiredValues[key] === true || (showValidation && Boolean(toolErrors[key])),
+    [missingRequiredValues, showValidation, toolErrors],
+  );
+
+  const collapsedFieldsNeedAttention = useMemo(
+    () => shouldCollapseConfiguration && collapsedPropertyKeys.some(needsAttention),
+    [shouldCollapseConfiguration, collapsedPropertyKeys, needsAttention],
+  );
+
+  const advancedFieldsNeedAttention = useMemo(
+    () => advancedFields.some(needsAttention),
+    [advancedFields, needsAttention],
+  );
+
+  const ownConfigurationSection = useCollapsedSection();
+  const activeConfigurationSection = configurationSection ?? ownConfigurationSection;
+  const { isExpanded: isConfigurationExpanded, setIsExpanded: setIsConfigurationExpanded } =
+    activeConfigurationSection;
+
+  useExpandOnAttention(collapsedFieldsNeedAttention, activeConfigurationSection);
+
+  const { isExpanded: isAdvancedExpanded, toggleExpanded: toggleAdvanced } =
+    useSectionExpansion(advancedFieldsNeedAttention);
+
+  const renderConfigurationProperty = (k, v) => (
+    <ToolkitForm.ToolBaseProperty
+      key={k}
+      k={k}
+      v={v}
+      theme={theme}
+      showValidation={showValidation}
+      toolErrors={toolErrors}
+      setToolErrors={setToolErrors}
+      settings={settings}
+      editField={editField}
+      handleInputChange={handleInputChange}
+      required={
+        schema?.required?.includes(k) ||
+        (k === 'google_cse_id' && settings?.selected_tools?.includes('google')) ||
+        (k === 'google_api_key' && settings?.selected_tools?.includes('google'))
+      }
+      showOnlyRequiredFields={showOnlyRequiredFields}
+      showOnlyConfigurationFields={false}
+      editFieldRootPath={editFieldRootPath}
+      disableConfigFields={isDisabledConfigField(k)}
+      checkboxAsteriskRequired={checkboxAsteriskRequired}
+      disabled={disabled && v.type !== 'configuration'}
+      validationErrorMessages={validationErrorMessages}
+      options={editToolDetail.options?.[k]}
+      onCredentialReload={onCredentialReload}
+    />
+  );
+
+  const credentialProperties = useMemo(
+    () =>
+      Object.entries(schema?.properties || {}).filter(
+        ([k]) =>
+          isPinnedCredential(k) &&
+          !sectionProps.includes(k) &&
+          !excludedFields?.includes(k) &&
+          !advancedFields.includes(k),
+      ),
+    [schema, isPinnedCredential, sectionProps, excludedFields, advancedFields],
+  );
+
   const toolBaseConfiguration = (
     <Box
       sx={styles.configurationContainer}
@@ -242,245 +365,189 @@ const ToolBase = memo(props => {
           disabled={disabled}
         />
       )}
-      {/* Render priority fields (like 'title') first */}
-      {priorityFieldsOrder.map(fieldKey => {
-        const propertyEntry = Object.entries(schema?.properties || {}).find(([k]) => k === fieldKey);
-        if (!propertyEntry) return null;
+      {credentialProperties.map(([k, v]) => renderConfigurationProperty(k, v))}
 
-        const [k, v] = propertyEntry;
-
-        // Apply the same filtering logic as the main section
-        if (sectionProps.includes(k) || k === 'selected_tools' || advancedFields.includes(k)) {
-          return null;
-        }
-
-        return (
-          <ToolkitForm.ToolBaseProperty
-            key={k}
-            k={k}
-            v={v}
-            theme={theme}
-            showValidation={showValidation}
-            toolErrors={toolErrors}
-            setToolErrors={setToolErrors}
-            settings={settings}
-            editField={editField}
-            handleInputChange={handleInputChange}
-            required={
-              schema?.required?.includes(k) ||
-              (k === 'google_cse_id' && settings?.selected_tools?.includes('google')) ||
-              (k === 'google_api_key' && settings?.selected_tools?.includes('google'))
-            }
-            showOnlyRequiredFields={showOnlyRequiredFields}
-            showOnlyConfigurationFields={false}
-            editFieldRootPath={editFieldRootPath}
-            disableConfigFields={
-              (showDisabledConfigFields && v.configuration) ||
-              (k === 'elitea_title' && !enableEditEliteaTitle)
-            }
-            checkboxAsteriskRequired={checkboxAsteriskRequired}
-            disabled={disabled && v.type !== 'configuration'}
-            validationErrorMessages={validationErrorMessages}
-            options={editToolDetail.options?.[k]}
-            onCredentialReload={onCredentialReload}
-          />
-        );
-      })}
-
-      {/* We removed the notification box per user request */}
-      {Object.entries(schema?.properties || {})
-        .filter(([k]) => {
-          // Always exclude fields that are handled by sections and selected_tools
-          if (sectionProps.includes(k) || k === 'selected_tools') {
-            return false;
-          }
-
-          // Exclude priority fields, bottom fields, excluded fields, and advanced fields
-          if (
-            priorityFieldsOrder.includes(k) ||
-            fieldNeedToRenderAtBottom.includes(k) ||
-            excludedFields?.includes(k) ||
-            advancedFields.includes(k)
-          ) {
-            return false;
-          }
-
-          // If we're showing disabled configuration fields, include both:
-          // 1. Configuration fields (will be shown as disabled)
-          // 2. Regular fields (will be shown as normal)
-          if (showDisabledConfigFields) {
-            return true; // Show all fields
-          }
-
-          // Otherwise use the normal filtering logic
-          return true;
-        })
-        .map(([k, v]) => {
-          return (
-            <ToolkitForm.ToolBaseProperty
-              key={k}
-              k={k}
-              v={v}
-              theme={theme}
-              showValidation={showValidation}
-              toolErrors={toolErrors}
-              setToolErrors={setToolErrors}
-              settings={settings}
-              editField={editField}
-              handleInputChange={handleInputChange}
-              required={
-                schema?.required?.includes(k) ||
-                (k === 'google_cse_id' && settings?.selected_tools?.includes('google')) ||
-                (k === 'google_api_key' && settings?.selected_tools?.includes('google'))
-              }
-              showOnlyRequiredFields={showOnlyRequiredFields}
-              showOnlyConfigurationFields={false}
-              editFieldRootPath={editFieldRootPath}
-              disableConfigFields={
-                (showDisabledConfigFields && v.configuration) ||
-                (k === 'elitea_title' && !enableEditEliteaTitle)
-              }
-              checkboxAsteriskRequired={checkboxAsteriskRequired}
-              disabled={disabled && v.type !== 'configuration'}
-              validationErrorMessages={validationErrorMessages}
-              options={editToolDetail.options?.[k]}
-              onCredentialReload={onCredentialReload}
-            />
-          );
-        })}
-
-      {advancedFields.length > 0 && (
-        <Box sx={{ display: 'flex', flexDirection: 'column', marginTop: '0.5rem' }}>
-          <BasicAccordion
-            showMode={AccordionConstants.AccordionShowMode.LeftMode}
-            accordionSX={{ background: `${theme.palette.background.tabPanel} !important` }}
-            defaultExpanded={false}
-            items={[
-              {
-                title: 'Advanced Settings',
-                content: (
-                  <>
-                    {advancedFields
-                      .filter(fieldKey => !excludedFields?.includes(fieldKey))
-                      .map(fieldKey => {
-                        const propertyEntry = Object.entries(schema?.properties || {}).find(
-                          ([k]) => k === fieldKey,
-                        );
-
-                        if (!propertyEntry) return null;
-
-                        const [k, v] = propertyEntry;
-
-                        if (sectionProps.includes(k) || k === 'selected_tools') return null;
-
-                        return (
-                          <ToolkitForm.ToolBaseProperty
-                            key={k}
-                            k={k}
-                            v={v}
-                            noAccordionWrapper
-                            theme={theme}
-                            showValidation={showValidation}
-                            toolErrors={toolErrors}
-                            setToolErrors={setToolErrors}
-                            settings={settings}
-                            editField={editField}
-                            handleInputChange={handleInputChange}
-                            required={schema?.required?.includes(k)}
-                            showOnlyRequiredFields={showOnlyRequiredFields}
-                            showOnlyConfigurationFields={false}
-                            editFieldRootPath={editFieldRootPath}
-                            disableConfigFields={
-                              (showDisabledConfigFields && v.configuration) ||
-                              (k === 'elitea_title' && !enableEditEliteaTitle)
-                            }
-                            checkboxAsteriskRequired={checkboxAsteriskRequired}
-                            disabled={disabled && v.type !== 'configuration'}
-                            validationErrorMessages={validationErrorMessages}
-                            onCredentialReload={onCredentialReload}
-                          />
-                        );
-                      })}
-                  </>
-                ),
-              },
-            ]}
-          />
-        </Box>
+      {canCollapseConfiguration && !isConfigurationExpanded && (
+        <Button.BaseBtn
+          variant="text"
+          sx={styles.showMore}
+          onClick={() => setIsConfigurationExpanded(true)}
+          data-testid="toolkit-configuration-show-more"
+        >
+          Show more
+        </Button.BaseBtn>
       )}
 
-      {showSections &&
-        sectionProps.length > 0 &&
-        Object.entries(sections).map(([k, v]) => {
-          const { required, subsections } = v;
-          return (
-            <ToolkitForm.ToolSection
-              key={k}
-              sectionKey={k}
-              subsections={subsections}
-              required={required}
-              schema={schema}
-              showValidation={showValidation}
-              toolErrors={toolErrors}
-              settings={settings}
-              editField={editField}
-              handleInputChange={handleInputChange}
-              setToolErrors={setToolErrors}
-              setNotSelectedFields={setNotSelectedFields}
-              setEditToolDetail={setEditToolDetail}
-              showOnlyConfigurationFields={false} // Don't filter here, let Section handle it
-              disableConfigFields={showDisabledConfigFields}
-              checkboxAsteriskRequired={checkboxAsteriskRequired}
-              disabled={disabled}
-              validationErrorMessages={validationErrorMessages}
-              onCredentialReload={onCredentialReload}
-            />
-          );
-        })}
-      {fieldNeedToRenderAtBottom
-        .filter(fieldKey => !excludedFields?.includes(fieldKey))
-        .map(fieldKey => {
-          const propertyEntry = Object.entries(schema?.properties || {}).find(([k]) => k === fieldKey);
-          if (!propertyEntry) return null;
+      {(!canCollapseConfiguration || isConfigurationExpanded) && (
+        <>
+          {/* Render priority fields (like 'title') first */}
+          {priorityFieldsOrder.map(fieldKey => {
+            const propertyEntry = Object.entries(schema?.properties || {}).find(([k]) => k === fieldKey);
+            if (!propertyEntry) return null;
 
-          const [k, v] = propertyEntry;
+            const [k, v] = propertyEntry;
 
-          // Apply the same filtering logic as the main section
-          if (sectionProps.includes(k) || k === 'selected_tools') {
-            return null;
-          }
+            // Apply the same filtering logic as the main section
+            if (
+              sectionProps.includes(k) ||
+              k === 'selected_tools' ||
+              advancedFields.includes(k) ||
+              isPinnedCredential(k)
+            ) {
+              return null;
+            }
 
-          return (
-            <ToolkitForm.ToolBaseProperty
-              key={k}
-              k={k}
-              v={v}
-              theme={theme}
-              showValidation={showValidation}
-              toolErrors={toolErrors}
-              setToolErrors={setToolErrors}
-              settings={settings}
-              editField={editField}
-              handleInputChange={handleInputChange}
-              required={
-                schema?.required?.includes(k) ||
-                (k === 'google_cse_id' && settings?.selected_tools?.includes('google')) ||
-                (k === 'google_api_key' && settings?.selected_tools?.includes('google'))
+            return renderConfigurationProperty(k, v);
+          })}
+
+          {/* We removed the notification box per user request */}
+          {Object.entries(schema?.properties || {})
+            .filter(([k]) => {
+              // Always exclude fields that are handled by sections and selected_tools
+              if (sectionProps.includes(k) || k === 'selected_tools') {
+                return false;
               }
-              showOnlyRequiredFields={showOnlyRequiredFields}
-              showOnlyConfigurationFields={false}
-              editFieldRootPath={editFieldRootPath}
-              disableConfigFields={
-                (showDisabledConfigFields && v.configuration) ||
-                (k === 'elitea_title' && !enableEditEliteaTitle)
+
+              if (isPinnedCredential(k)) {
+                return false;
               }
-              checkboxAsteriskRequired={checkboxAsteriskRequired}
-              disabled={disabled && v.type !== 'configuration'}
-              validationErrorMessages={validationErrorMessages}
-              onCredentialReload={onCredentialReload}
-            />
-          );
-        })}
+
+              // Exclude priority fields, bottom fields, excluded fields, and advanced fields
+              if (
+                priorityFieldsOrder.includes(k) ||
+                fieldNeedToRenderAtBottom.includes(k) ||
+                excludedFields?.includes(k) ||
+                advancedFields.includes(k)
+              ) {
+                return false;
+              }
+
+              // If we're showing disabled configuration fields, include both:
+              // 1. Configuration fields (will be shown as disabled)
+              // 2. Regular fields (will be shown as normal)
+              if (showDisabledConfigFields) {
+                return true; // Show all fields
+              }
+
+              // Otherwise use the normal filtering logic
+              return true;
+            })
+            .map(([k, v]) => renderConfigurationProperty(k, v))}
+
+          {advancedFields.length > 0 && (
+            <Box sx={{ display: 'flex', flexDirection: 'column', marginTop: '0.5rem' }}>
+              <BasicAccordion
+                showMode={AccordionConstants.AccordionShowMode.LeftMode}
+                accordionSX={{ background: `${theme.palette.background.tabPanel} !important` }}
+                expanded={isAdvancedExpanded}
+                onChange={toggleAdvanced}
+                items={[
+                  {
+                    title: 'Advanced Settings',
+                    content: (
+                      <>
+                        {advancedFields
+                          .filter(fieldKey => !excludedFields?.includes(fieldKey))
+                          .map(fieldKey => {
+                            const propertyEntry = Object.entries(schema?.properties || {}).find(
+                              ([k]) => k === fieldKey,
+                            );
+
+                            if (!propertyEntry) return null;
+
+                            const [k, v] = propertyEntry;
+
+                            if (sectionProps.includes(k) || k === 'selected_tools') return null;
+
+                            return (
+                              <ToolkitForm.ToolBaseProperty
+                                key={k}
+                                k={k}
+                                v={v}
+                                noAccordionWrapper
+                                theme={theme}
+                                showValidation={showValidation}
+                                toolErrors={toolErrors}
+                                setToolErrors={setToolErrors}
+                                settings={settings}
+                                editField={editField}
+                                handleInputChange={handleInputChange}
+                                required={schema?.required?.includes(k)}
+                                showOnlyRequiredFields={showOnlyRequiredFields}
+                                showOnlyConfigurationFields={false}
+                                editFieldRootPath={editFieldRootPath}
+                                disableConfigFields={isDisabledConfigField(k)}
+                                checkboxAsteriskRequired={checkboxAsteriskRequired}
+                                disabled={disabled && v.type !== 'configuration'}
+                                validationErrorMessages={validationErrorMessages}
+                                onCredentialReload={onCredentialReload}
+                              />
+                            );
+                          })}
+                      </>
+                    ),
+                  },
+                ]}
+              />
+            </Box>
+          )}
+
+          {showSections &&
+            sectionProps.length > 0 &&
+            Object.entries(sections).map(([k, v]) => {
+              const { required, subsections } = v;
+              return (
+                <ToolkitForm.ToolSection
+                  key={k}
+                  sectionKey={k}
+                  subsections={subsections}
+                  required={required}
+                  schema={schema}
+                  showValidation={showValidation}
+                  toolErrors={toolErrors}
+                  settings={settings}
+                  editField={editField}
+                  handleInputChange={handleInputChange}
+                  setToolErrors={setToolErrors}
+                  setNotSelectedFields={setNotSelectedFields}
+                  setEditToolDetail={setEditToolDetail}
+                  showOnlyConfigurationFields={false} // Don't filter here, let Section handle it
+                  disableConfigFields={showDisabledConfigFields}
+                  checkboxAsteriskRequired={checkboxAsteriskRequired}
+                  disabled={disabled}
+                  validationErrorMessages={validationErrorMessages}
+                  onCredentialReload={onCredentialReload}
+                />
+              );
+            })}
+          {fieldNeedToRenderAtBottom
+            .filter(fieldKey => !excludedFields?.includes(fieldKey))
+            .map(fieldKey => {
+              const propertyEntry = Object.entries(schema?.properties || {}).find(([k]) => k === fieldKey);
+              if (!propertyEntry) return null;
+
+              const [k, v] = propertyEntry;
+
+              // Apply the same filtering logic as the main section
+              if (sectionProps.includes(k) || k === 'selected_tools' || isPinnedCredential(k)) {
+                return null;
+              }
+
+              return renderConfigurationProperty(k, v);
+            })}
+        </>
+      )}
+
+      {canCollapseConfiguration && isConfigurationExpanded && (
+        <Button.BaseBtn
+          variant="text"
+          sx={styles.showMore}
+          onClick={() => setIsConfigurationExpanded(false)}
+          data-testid="toolkit-configuration-show-less"
+        >
+          Show less
+        </Button.BaseBtn>
+      )}
     </Box>
   );
 
@@ -530,16 +597,21 @@ const ToolBase = memo(props => {
     // Check if this is a pre-configured MCP toolkit (type starts with 'mcp_')
     const isPreconfiguredMcp = editToolDetail?.type?.startsWith('mcp_') && editToolDetail?.type !== 'mcp';
 
+    const selectedToolsError =
+      typeof toolErrors?.selected_tools === 'string' ? toolErrors.selected_tools : '';
+
     return (
       <ToolkitForm.ToolActionsSelector
         key={'selected_tools'}
         availableTools={tools ?? []}
         toolGroups={tool_groups}
+        toolsSection={toolsSection}
         onChange={value => editField('settings.selected_tools', value)}
         isRemoteMcp={schema.title === 'mcp'}
         isPreconfiguredMcp={isPreconfiguredMcp}
         toolkitType={editToolDetail?.type}
         onToolsFetched={handleToolsFetched}
+        selectedToolsError={selectedToolsError}
         extraProperties={
           isMcpExposureEnabled ? (
             <Switch.BaseSwitch
@@ -580,12 +652,13 @@ const ToolBase = memo(props => {
       {shouldUseAccordionView ? (
         <>
           <BasicAccordion
-            // style={style}
+            card
             showMode={AccordionConstants.AccordionShowMode.LeftMode}
             accordionSX={{ background: `${theme.palette.background.tabPanel} !important` }}
             items={[
               {
                 title: 'Configuration',
+                testId: 'toolkit-configuration-accordion-summary',
                 content: toolBaseConfiguration,
               },
             ]}
@@ -608,6 +681,21 @@ const toolBaseStyles = () => ({
     flexDirection: 'column',
     gap: '0.5rem',
   },
+  showMore: ({ palette }) => ({
+    alignSelf: 'flex-start',
+    minWidth: 'auto',
+    padding: 0,
+    marginTop: '0.25rem',
+    textTransform: 'none',
+    fontSize: '0.75rem',
+    fontWeight: 400,
+    lineHeight: '1rem',
+    color: palette.text.button.showMore,
+    '&:hover': {
+      background: 'none',
+      textDecoration: 'underline',
+    },
+  }),
 });
 
 export default ToolBase;

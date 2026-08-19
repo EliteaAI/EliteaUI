@@ -64,7 +64,6 @@ const ToolBaseProperty = memo(props => {
     anyOf,
     max_toolkit_length,
     ui_component: uiComponent,
-    visible_when: visibleWhen,
     placeholder: schemaPlaceholder,
   } = v || {};
 
@@ -190,40 +189,17 @@ const ToolBaseProperty = memo(props => {
     [description, label, styles.infoIconWrapper],
   );
 
-  // Hide field if it has property hidden === true
-  if (v && v.hidden) {
-    return null;
-  }
+  const isVisible = ToolBaseHelpers.isPropertyVisible({
+    propertyKey: k,
+    property: v,
+    settings,
+    required,
+    disableConfigFields,
+    showOnlyConfigurationFields,
+    showOnlyRequiredFields,
+  });
 
-  // Hide field based on visible_when condition (e.g., show custom_header_name only when auth_type='custom')
-  if (visibleWhen) {
-    const { field: conditionField, value: conditionValue } = visibleWhen;
-    const currentFieldValue = settings[conditionField];
-    // Compare case-insensitively for string values
-    const matches =
-      typeof currentFieldValue === 'string' && typeof conditionValue === 'string'
-        ? currentFieldValue.toLowerCase() === conditionValue.toLowerCase()
-        : currentFieldValue === conditionValue;
-    if (!matches) {
-      return null;
-    }
-  }
-
-  // For disabled configuration fields mode, handle configuration vs regular fields differently
-  if (disableConfigFields) {
-    // This is a configuration field being shown as disabled
-
-    // Only show configuration fields that have non-empty values
-    const value = settings[k];
-    if (k !== 'elitea_title' && (value === null || value === undefined || value === '')) {
-      return null;
-    }
-    // Field has a value and will be shown as disabled
-  } else if (showOnlyConfigurationFields && !v?.configuration) {
-    // In configuration-only mode, hide non-configuration fields
-    return null;
-  } else if (showOnlyRequiredFields && !required) {
-    // In required-only mode, hide non-required fields
+  if (!isVisible) {
     return null;
   }
 

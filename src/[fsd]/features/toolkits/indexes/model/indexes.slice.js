@@ -9,6 +9,7 @@ const indexesSlice = createSlice({
       isFetching: false,
       isLoading: false,
       hasData: false,
+      toolkitId: null,
     },
     toolkitScheduler: {},
     selectedHistoryItem: null,
@@ -44,17 +45,19 @@ const indexesSlice = createSlice({
         state.indexesList.isFetching = true;
         state.indexesList.isLoading = !state.indexesList.hasData;
       })
-      .addMatcher(eliteaApi.endpoints.getIndexesList.matchFulfilled, (state, { payload }) => {
+      .addMatcher(eliteaApi.endpoints.getIndexesList.matchFulfilled, (state, { payload, meta }) => {
         state.indexesList.data = payload ?? [];
         state.indexesList.isLoading = false;
         state.indexesList.isFetching = false;
         state.indexesList.hasData = true;
+        state.indexesList.toolkitId = meta?.arg?.originalArgs?.toolkitId ?? null;
       })
-      .addMatcher(eliteaApi.endpoints.getIndexesList.matchRejected, state => {
+      .addMatcher(eliteaApi.endpoints.getIndexesList.matchRejected, (state, { meta }) => {
         state.indexesList.data = [];
         state.indexesList.hasData = false;
         state.indexesList.isLoading = false;
         state.indexesList.isFetching = false;
+        state.indexesList.toolkitId = meta?.arg?.originalArgs?.toolkitId ?? null;
       })
       .addMatcher(eliteaApi.endpoints.getIndexSchedule.matchFulfilled, (state, { payload }) => {
         state.toolkitScheduler = payload.meta?.indexes_meta ?? {};
