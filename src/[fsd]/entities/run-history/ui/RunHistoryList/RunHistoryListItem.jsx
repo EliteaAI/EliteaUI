@@ -125,7 +125,7 @@ const RunHistoryListItem = memo(props => {
           <Skeleton
             variant="text"
             width="50%"
-            height={20}
+            height="1.25rem"
           />
         )}
         {!noVersions && (

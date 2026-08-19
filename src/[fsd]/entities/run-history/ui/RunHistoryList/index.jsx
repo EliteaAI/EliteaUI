@@ -102,7 +102,7 @@ const RunHistoryList = memo(props => {
                 useMock
                 source={source}
                 hasEvent={hasEvent}
-                {...(source == ParticipantEntityTypes.Toolkit ? { versions: null } : {})}
+                {...(source === ParticipantEntityTypes.Toolkit ? { versions: null } : {})}
               />
             ))
           ) : (

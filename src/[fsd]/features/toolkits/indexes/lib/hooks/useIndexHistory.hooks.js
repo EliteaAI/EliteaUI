@@ -75,7 +75,9 @@ export const useIndexHistory = (progressHistoryOptions = null) => {
       projectId,
       conversationId,
       params: buildTraceListParams(conversationDetails.message_groups),
-    }).then(result => setTraceSteps(result.data || null));
+    })
+      .then(result => setTraceSteps(result.data || null))
+      .catch(() => setTraceSteps(null));
   }, [conversationDetails, getMessageTraces, projectId]);
 
   const { isHistoryLoading, historyMessages, historyConversation } = useMemo(() => {

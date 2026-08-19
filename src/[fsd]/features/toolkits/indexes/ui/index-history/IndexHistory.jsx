@@ -68,9 +68,12 @@ const IndexHistory = memo(props => {
     [],
   );
 
-  const handleSelectHistoryItem = item => {
-    dispatch(actions.selectHistoryItem(item));
-  };
+  const handleSelectHistoryItem = useCallback(
+    item => {
+      dispatch(actions.selectHistoryItem(item));
+    },
+    [dispatch],
+  );
 
   return (
     <Box sx={styles.wrapper}>
@@ -81,9 +84,9 @@ const IndexHistory = memo(props => {
         gridTemplateColumns="1fr 1fr"
       />
       <Box sx={styles.scrollableContent}>
-        {sortedHistory.map((historyItem, idx) => (
+        {sortedHistory.map(historyItem => (
           <Box
-            key={`${idx}_${historyItem.conversation_id}`}
+            key={`${historyItem.updated_on}_${historyItem.conversation_id}`}
             sx={[
               styles.historyItem,
               historyItem.updated_on === selectedHistoryItem?.updated_on &&
