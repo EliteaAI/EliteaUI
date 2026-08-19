@@ -121,6 +121,8 @@ const darkPalette = {
     eliteaDefault: gray60,
     secondary: gray50,
     tabPanel: gray55,
+    pageSection: gray60,
+    section: white3,
     modal: {
       simple: gray50,
     },

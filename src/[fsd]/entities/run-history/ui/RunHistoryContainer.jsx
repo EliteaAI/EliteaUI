@@ -24,7 +24,8 @@ const RunHistoryContainer = memo(props => {
     ChatMessageListComponent,
     prettifyConversation,
     additionalRows = [],
-    ConversationlessDetailComponent = null,
+    decorateRow = null,
+    DetailComponent = null,
   } = props;
 
   const projectId = useSelectedProjectId();
@@ -40,15 +41,16 @@ const RunHistoryContainer = memo(props => {
 
   // Not part of server-side pagination, so they are merged into every page.
   const historyRows = useMemo(() => {
-    if (!additionalRows.length) return allConversations;
-    return [...allConversations, ...additionalRows].sort(
+    const conversationRows = decorateRow ? allConversations.map(decorateRow) : allConversations;
+    if (!additionalRows.length) return conversationRows;
+    return [...conversationRows, ...additionalRows].sort(
       (a, b) => new Date(b.created_at) - new Date(a.created_at),
     );
-  }, [allConversations, additionalRows]);
+  }, [allConversations, additionalRows, decorateRow]);
 
-  const selectedConversationlessRow = useMemo(
-    () => additionalRows.find(row => row.id === selectedHistoryItem) || null,
-    [additionalRows, selectedHistoryItem],
+  const selectedRow = useMemo(
+    () => historyRows.find(historyRow => historyRow.id === selectedHistoryItem) ?? null,
+    [historyRows, selectedHistoryItem],
   );
 
   useEffect(() => {
@@ -131,11 +133,12 @@ const RunHistoryContainer = memo(props => {
             selectedHistoryItem={selectedHistoryItem}
             source={source}
             handleRestoreConversation={handleRestoreConversation}
+            hasEvent={Boolean(decorateRow)}
           />
         </Box>
 
-        {selectedConversationlessRow && ConversationlessDetailComponent ? (
-          <ConversationlessDetailComponent row={selectedConversationlessRow} />
+        {selectedRow?.entry && DetailComponent ? (
+          <DetailComponent row={selectedRow} />
         ) : (
           <RunHistoryChat
             selectedHistoryItem={selectedHistoryItem}

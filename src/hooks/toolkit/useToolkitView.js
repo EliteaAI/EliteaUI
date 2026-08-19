@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
 
-import { useSearchParams } from 'react-router-dom';
+import { useMatch, useSearchParams } from 'react-router-dom';
 
 import { SearchParams } from '@/common/constants.js';
 import { useIsFrom } from '@/hooks/useIsFromSpecificPageHooks';
@@ -19,10 +19,15 @@ export const useToolkitView = () => {
     [isToolkitsPage, isMcpsPage, isChatPage],
   );
 
-  const setSaveActionParam = useCallback(() => {
-    const newSearchParams = new URLSearchParams(searchParams);
-    newSearchParams.append(SearchParams.SaveToolkit, 1);
-  }, [searchParams]);
+  const toolkitDetailMatch = useMatch(RouteDefinitions.ToolkitDetail);
+  const mcpDetailMatch = useMatch(RouteDefinitions.MCPDetail);
+  const toolkitCreateMatch = useMatch(RouteDefinitions.CreateToolkitType);
+  const mcpCreateMatch = useMatch(RouteDefinitions.CreateMCPType);
+
+  const isDetailsRoute = !!toolkitDetailMatch || !!mcpDetailMatch;
+  const isCreateRoute = !!toolkitCreateMatch || !!mcpCreateMatch;
+
+  const shouldHideConfigurationHeader = isDetailsRoute && !isCreateRoute;
 
   const hasSaveActionParam = useCallback(() => {
     const newSearchParams = new URLSearchParams(searchParams);
@@ -33,8 +38,7 @@ export const useToolkitView = () => {
     isToolkitsPage,
     isChatPage,
     shouldUseAccordionView,
-
-    setSaveActionParam,
+    shouldHideConfigurationHeader,
     hasSaveActionParam,
   };
 };

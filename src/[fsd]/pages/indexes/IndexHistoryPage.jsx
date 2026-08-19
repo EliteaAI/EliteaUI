@@ -9,8 +9,11 @@ import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
 import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
 import { useGetIndexesListQuery } from '@/[fsd]/features/toolkits/indexes/api';
 import { IndexStatuses, RUN_TEST_OPERATION_TYPES } from '@/[fsd]/features/toolkits/indexes/lib/constants';
-import { selectIndexesList } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
-import { IndexChatContainer, IndexHistory } from '@/[fsd]/features/toolkits/indexes/ui';
+import { initialCompletedTsOf } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexEvent.helpers';
+import { buildIndexHistoryDetailRow } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexHistoryDetail.helpers';
+import { useIndexRunLiveRefresh } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
+import { selectHistoryItem, selectIndexesList } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
+import { IndexChatContainer, IndexHistory, IndexRunDetail } from '@/[fsd]/features/toolkits/indexes/ui';
 import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import Breadcrumbs from '@/[fsd]/shared/ui/breadcrumbs';
@@ -41,6 +44,7 @@ const IndexHistoryPage = memo(() => {
   );
 
   useGetIndexesListQuery({ toolkitId, projectId }, { skip: !projectId || !toolkitId });
+  useIndexRunLiveRefresh({ toolkitId });
 
   const {
     data: indexesList,
@@ -96,6 +100,15 @@ const IndexHistoryPage = memo(() => {
 
   const history = useMemo(() => [...baseHistory, ...runTestHistoryItems], [baseHistory, runTestHistoryItems]);
 
+  const selectedHistoryItem = useSelector(selectHistoryItem);
+
+  const initialCompletedTs = useMemo(() => initialCompletedTsOf(history), [history]);
+
+  const detailRow = useMemo(
+    () => buildIndexHistoryDetailRow({ entry: selectedHistoryItem, indexName, initialCompletedTs }),
+    [selectedHistoryItem, initialCompletedTs, indexName],
+  );
+
   const isLoading = indexesLoading || indexesFetching || !hasData || runHistoryLoading;
 
   useEffect(() => {
@@ -139,19 +152,23 @@ const IndexHistoryPage = memo(() => {
               <IndexHistory history={history} />
             </Box>
             <Box sx={styles.chatColumn}>
-              <IndexChatContainer
-                selectedModel={null}
-                onSelectModel={() => null}
-                modelList={[]}
-                llmSettings={undefined}
-                onSetLLMSettings={() => null}
-                toggleFullScreenChat={null}
-                clearChat={() => null}
-                chatHistory={[]}
-                conversation={null}
-                showHeader={false}
-                chatContainerSX={styles.chatContainer}
-              />
+              {detailRow ? (
+                <IndexRunDetail row={detailRow} />
+              ) : (
+                <IndexChatContainer
+                  selectedModel={null}
+                  onSelectModel={() => null}
+                  modelList={[]}
+                  llmSettings={undefined}
+                  onSetLLMSettings={() => null}
+                  toggleFullScreenChat={null}
+                  clearChat={() => null}
+                  chatHistory={[]}
+                  conversation={null}
+                  showHeader={false}
+                  chatContainerSX={styles.chatContainer}
+                />
+              )}
             </Box>
           </Box>
         )}
@@ -203,6 +220,7 @@ const indexHistoryPageStyles = () => ({
     minWidth: 0,
     display: 'flex',
     flexDirection: 'column',
+    gap: '0.5rem',
     overflow: 'hidden',
   },
   chatContainer: {
