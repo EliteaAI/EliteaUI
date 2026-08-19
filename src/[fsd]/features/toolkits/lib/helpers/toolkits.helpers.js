@@ -36,13 +36,42 @@ export const getToolkitTypeLabel = type => {
   return t.charAt(0).toUpperCase() + t.slice(1);
 };
 
+const PYTHON_ESCAPES = { n: '\n', r: '\r', t: '\t', "'": "'", '"': '"', '\\': '\\' };
+const PYTHON_LITERALS = { None: 'null', True: 'true', False: 'false' };
+const PYTHON_STRING_LITERAL = /('(?:\\.|[^'\\])*'|"(?:\\.|[^"\\])*")/;
+
+const decodePythonStringContent = raw =>
+  raw.replace(/\\(.)/g, (escape, char) => PYTHON_ESCAPES[char] ?? escape);
+
+const rewritePythonLiteralsOutsideStrings = structural =>
+  structural.replace(/\b(None|True|False)\b/g, word => PYTHON_LITERALS[word]);
+
+const toJsonStringLiteral = pythonStringLiteral =>
+  JSON.stringify(decodePythonStringContent(pythonStringLiteral.slice(1, -1)));
+
+const parsePythonReprValue = value => {
+  const json = value
+    .split(PYTHON_STRING_LITERAL)
+    .map((segment, index) =>
+      index % 2 ? toJsonStringLiteral(segment) : rewritePythonLiteralsOutsideStrings(segment),
+    )
+    .join('');
+
+  try {
+    return JSON.parse(json);
+  } catch {
+    return undefined;
+  }
+};
+
 const parseParametersString = parametersString => {
   // Handle the case where parameters are already in proper format
   if (parametersString.trim().startsWith('{')) {
     try {
       return JSON.parse(parametersString);
     } catch {
-      // Continue to manual parsing if JSON parsing fails
+      const salvaged = parsePythonReprValue(parametersString.trim());
+      if (salvaged !== undefined) return salvaged;
     }
   }
 
@@ -102,13 +131,13 @@ const parseParametersString = parametersString => {
       try {
         params[key] = JSON.parse(value);
       } catch {
-        params[key] = value;
+        params[key] = parsePythonReprValue(value) ?? value;
       }
     } else if (value.startsWith('[') && value.endsWith(']')) {
       try {
         params[key] = JSON.parse(value);
       } catch {
-        params[key] = value;
+        params[key] = parsePythonReprValue(value) ?? value;
       }
     } else {
       try {

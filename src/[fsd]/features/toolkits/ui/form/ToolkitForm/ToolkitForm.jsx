@@ -29,10 +29,11 @@ import { ToolkitViewOptions } from '@/common/constants';
 import { convertToolkitSchema } from '@/common/toolkitSchemaUtils';
 import { updateObjectByPath } from '@/common/utils.jsx';
 import useCreateConfiguration from '@/hooks/application/useCreateConfiguration';
-import { useToolkitView } from '@/hooks/toolkit/useToolkitView.js';
+import { useIconMetaTooltipType } from '@/hooks/toolkit/useIconMetaTooltipType.js';
 import { Create_Personal_Title, Create_Project_Title } from '@/hooks/useConfigurations';
 import useGetCurrentConfigurationAsSchemas from '@/hooks/useGetCurrentConfigurationAsSchemas';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
+import { formatTitleFromSnakeCase } from '@/utils/stringUtils';
 
 import ToolkitsOperationButtons from './ToolkitsOperationButtons.jsx';
 
@@ -43,7 +44,6 @@ export const ToolkitForm = memo(props => {
     editToolDetail,
     onChangeToolDetail,
     isEditing,
-    isToolDirty,
     hasNotSavedCredentials,
     isViewToggleVisible = true,
     hideConfigurationNameInput = false,
@@ -88,47 +88,11 @@ export const ToolkitForm = memo(props => {
     private: editToolDetail?.settings?.private,
   });
 
-  const { setSaveActionParam } = useToolkitView();
-
   const { personal_project_id } = useSelector(state => state.user);
   const onChangeView = useCallback(newView => {
     setView(newView);
     hasSetViewManually.current = true;
   }, []);
-  //@todo: consider to remove this function and dependencies since we do not have GoBack functionality similar to old Tools
-  const handleGoBack = useCallback(
-    async (option = {}) => {
-      const { saveChanges = true, deleteIt, onlySave, needSaveAgent } = option;
-      // eslint-disable-next-line no-unused-vars
-      const { index, schema, ...toolDetail } = editToolDetail;
-      //@todo: action: when you click on Save
-      if (saveChanges) {
-        Object.keys(toolDetail).forEach(async key => {
-          await setFieldValue(key, toolDetail[key]);
-        });
-
-        setSaveActionParam();
-
-        if (onlySave) {
-          return;
-        }
-        //@todo: action: when you click on Save -> Delete
-      } else if (deleteIt) {
-        //@todo: need to be checked
-        const result = [...(values?.version_details?.tools || [])];
-        result.splice(index, 1);
-        await setFieldValue(`version_details.tools`, []);
-      }
-      if (onlySave || needSaveAgent) {
-        return;
-      }
-
-      // @todo: need to handle discard changes properly when click on popup warning window
-      // onChangeToolDetail(null)
-    },
-    [editToolDetail, setFieldValue, values?.version_details?.tools, setSaveActionParam],
-  );
-  // }, [editToolDetail, onChangeToolDetail, setFieldValue, values]);
 
   const toolType = useMemo(() => {
     return editToolDetail?.type || '';
@@ -137,6 +101,13 @@ export const ToolkitForm = memo(props => {
   const { toolkitSchemas, isFetching } = useGetCurrentToolkitSchemas({
     isMCP: isMCP && toolType !== 'mcp',
   });
+
+  const typeIconMeta = useIconMetaTooltipType(toolType, isMCP);
+
+  const toolkitTypeLabel = useMemo(() => {
+    const typeSchema = toolkitSchemas?.[toolType];
+    return typeSchema?.metadata?.label || typeSchema?.title || formatTitleFromSnakeCase(toolType);
+  }, [toolkitSchemas, toolType]);
 
   const toolSchema = useMemo(() => {
     return editToolDetail?.schema || convertToolkitSchema(toolkitSchemas?.[toolType]);
@@ -396,17 +367,16 @@ export const ToolkitForm = memo(props => {
     return editToolDetail?.type;
   }, [editToolDetail?.type]);
 
-  const { onCreateConfiguration, onTestConnection, isCreatingConfiguration, isTestingConnection } =
-    useCreateConfiguration({
-      type: configurationType,
-      configuration,
-      configurationName,
-      settings: editToolDetail?.settings,
-      onSaveConfiguration,
-      setShowConfigurationValidateError,
-      configurationErrors,
-      configurationsAsSchema,
-    });
+  const { onCreateConfiguration } = useCreateConfiguration({
+    type: configurationType,
+    configuration,
+    configurationName,
+    settings: editToolDetail?.settings,
+    onSaveConfiguration,
+    setShowConfigurationValidateError,
+    configurationErrors,
+    configurationsAsSchema,
+  });
 
   const onRevertCredentials = useCallback(() => {
     const initialSettings = initialValues?.settings || {};
@@ -536,137 +506,150 @@ export const ToolkitForm = memo(props => {
     }
   }, [error, isError]);
 
-  const styles = toolkitFormStyles();
+  const isViewTogglePresent =
+    editToolDetail.type !== ToolTypes.custom.value && !!effectiveToolSchema && isViewToggleVisible;
+  const isDetailsActionBar = !!handleShowHistory;
+  const isActionBarPresent = isDetailsActionBar || isViewTogglePresent;
+
+  const styles = toolkitFormStyles(isDetailsActionBar);
 
   return isFetching || editToolDetail?.isLoadingConfigurations ? (
     <Box sx={styles.loadingContainer}>
       <CircularProgress />
     </Box>
   ) : (
-    <Box sx={[styles.container, sx]}>
-      {handleShowHistory && (
-        <Box sx={styles.historyButtonWrapper}>
-          <ViewRunHistoryButton onShowHistory={handleShowHistory} />
+    <Box sx={sx}>
+      {isActionBarPresent && (
+        <Box
+          sx={styles.actionBar}
+          data-testid="toolkit-action-bar"
+        >
+          <Box sx={styles.actionBarRow}>
+            {isDetailsActionBar && (
+              <Box sx={styles.toolkitIdentity}>
+                {typeIconMeta?.component}
+                <Typography
+                  variant="headingSmall"
+                  color="text.secondary"
+                  data-testid="toolkit-type-label"
+                >
+                  {toolkitTypeLabel}
+                </Typography>
+              </Box>
+            )}
+            <Box sx={styles.actionBarControls}>
+              {isDetailsActionBar && <ViewRunHistoryButton onShowHistory={handleShowHistory} />}
+              {isViewTogglePresent && (
+                <FormViewToggle
+                  view={view}
+                  onChangeView={onChangeView}
+                  disabled={!isValidSchema}
+                  jsonViewTourTarget={TourTargetConstants.SHARED_TOUR_TARGET_IDS.rawJsonTab}
+                />
+              )}
+            </Box>
+          </Box>
         </Box>
       )}
-      <McpPatBanner
-        projectId={selectedProjectId}
-        toolkitType={editToolDetail?.type || values?.type || toolkitType}
-      />
-      {editToolDetail.type !== ToolTypes.custom.value && !!effectiveToolSchema && isViewToggleVisible && (
-        <FormViewToggle
-          containerSX={styles.formViewToggle}
-          view={view}
-          onChangeView={onChangeView}
-          disabled={!isValidSchema}
-          jsonViewTourTarget={TourTargetConstants.SHARED_TOUR_TARGET_IDS.rawJsonTab}
+      <Box sx={styles.content}>
+        <McpPatBanner
+          projectId={selectedProjectId}
+          toolkitType={editToolDetail?.type || values?.type || toolkitType}
         />
-      )}
-      {!hideOperationButtons && (
-        <ToolkitsOperationButtons
-          isAdding={!isEditing}
-          isDirty={isToolDirty}
-          handleGoBack={handleGoBack}
-          setShowValidation={setShowValidation}
-          hasErrors={hasErrors}
-          // hasNotSavedToolConfiguration={hasNotSavedToolConfiguration}
-          hasNotSavedToolConfiguration={hasNotSavedCredentials}
-          type={editToolDetail.type}
+        {!hideOperationButtons && (
+          <ToolkitsOperationButtons
+            isAdding={!isEditing}
+            setShowValidation={setShowValidation}
+            hasErrors={hasErrors}
+            hasNotSavedToolConfiguration={hasNotSavedCredentials}
+            onCreateConfiguration={onCreateConfiguration}
+            onRevertCredentials={onRevertCredentials}
+            toolSchema={effectiveToolSchema}
+          />
+        )}
+        <ToolComponent
+          key={updateKey}
+          editToolDetail={editToolDetail}
+          setEditToolDetail={onChangeToolDetail}
+          configurationSection={configurationSection}
+          toolsSection={toolsSection}
+          editField={editField}
+          toolErrors={mergedToolErrors}
+          setToolErrors={setToolErrors}
+          showValidation={showValidation || validationTrigger}
+          configurationErrors={configurationErrors}
+          setConfigurationErrors={setConfigurationErrors}
+          showConfigurationValidateError={showConfigurationValidateError}
+          setShowConfigurationValidateError={setShowConfigurationValidateError}
+          configurationName={configurationName}
+          setConfigurationName={setConfigurationName}
           configuration={configuration}
-          isCreatingConfiguration={isCreatingConfiguration}
-          isTestingConnection={isTestingConnection}
-          onCreateConfiguration={onCreateConfiguration}
-          onTestConnection={onTestConnection}
-          onRevertCredentials={onRevertCredentials}
-          view={view}
-          onChangeView={setView}
-          hideViewToggle={!effectiveToolSchema}
-          toolSchema={effectiveToolSchema}
+          setConfiguration={setConfiguration}
+          schema={effectiveToolSchema}
+          configurationSchema={configurationSchema}
+          hideConfigurationNameInput={hideConfigurationNameInput}
+          showOnlyRequiredFields={showOnlyRequiredFields}
+          showOnlyConfigurationFields={showOnlyConfigurationFields}
+          showNameFieldForcedly={showNameFieldForcedly}
+          showToolkitIcon={showToolkitIcon}
+          hideNameDescriptionInput={hideNameDescriptionInput}
+          hideNameInput={hideNameInput}
+          disabledConfigFieldsForOldToolkits={shouldShowDisabledConfigFields}
+          shouldInitRequiredFields={false}
+          isMCP={isMCP}
+          needToCheckSection={false}
+          disabled={disabled}
+          onSyntaxError={onSyntaxError}
+          excludedFields={toolType !== 'mcp' ? [] : ['discovery_mode', 'discovery_interval']}
+          onCredentialReload={onCredentialReload}
         />
-      )}
-      <ToolComponent
-        key={updateKey}
-        editToolDetail={editToolDetail}
-        // editToolDetail={values}
-        setEditToolDetail={onChangeToolDetail}
-        configurationSection={configurationSection}
-        toolsSection={toolsSection}
-        editField={editField}
-        toolErrors={mergedToolErrors}
-        setToolErrors={setToolErrors}
-        showValidation={showValidation || validationTrigger}
-        configurationErrors={configurationErrors}
-        setConfigurationErrors={setConfigurationErrors}
-        showConfigurationValidateError={showConfigurationValidateError}
-        setShowConfigurationValidateError={setShowConfigurationValidateError}
-        configurationName={configurationName}
-        setConfigurationName={setConfigurationName}
-        configuration={configuration}
-        setConfiguration={setConfiguration}
-        schema={effectiveToolSchema}
-        configurationSchema={configurationSchema}
-        hideConfigurationNameInput={hideConfigurationNameInput}
-        showOnlyRequiredFields={showOnlyRequiredFields}
-        showOnlyConfigurationFields={showOnlyConfigurationFields}
-        showNameFieldForcedly={showNameFieldForcedly}
-        showToolkitIcon={showToolkitIcon}
-        hideNameDescriptionInput={hideNameDescriptionInput}
-        hideNameInput={hideNameInput}
-        disabledConfigFieldsForOldToolkits={shouldShowDisabledConfigFields}
-        shouldInitRequiredFields={false}
-        isMCP={isMCP}
-        needToCheckSection={false}
-        disabled={disabled}
-        onSyntaxError={onSyntaxError}
-        excludedFields={toolType !== 'mcp' ? [] : ['discovery_mode', 'discovery_interval']}
-        onCredentialReload={onCredentialReload}
-      />
-      {!shouldHideIndexes && (
-        <BasicAccordion
-          card
-          data-testid="toolkit-indexes-accordion"
-          style={styles.indexesAccordionWrapper}
-          accordionSX={styles.indexesAccordion}
-          expanded={isIndexesExpanded}
-          onChange={toggleIndexes}
-          items={[
-            {
-              title: 'Indexes',
-              testId: 'toolkit-indexes-accordion-summary',
-              headerContent: (
-                <>
-                  <GeneralToolkitForm.SectionStatusIcon
-                    status={indexesSummary.status?.status}
-                    message={indexesSummary.status?.message}
-                    testId="toolkit-indexes-status-icon"
+        {!shouldHideIndexes && (
+          <BasicAccordion
+            card
+            data-testid="toolkit-indexes-accordion"
+            style={styles.indexesAccordionWrapper}
+            accordionSX={styles.indexesAccordion}
+            expanded={isIndexesExpanded}
+            onChange={toggleIndexes}
+            items={[
+              {
+                title: 'Indexes',
+                testId: 'toolkit-indexes-accordion-summary',
+                headerContent: (
+                  <>
+                    <GeneralToolkitForm.SectionStatusIcon
+                      status={indexesSummary.status?.status}
+                      message={indexesSummary.status?.message}
+                      testId="toolkit-indexes-status-icon"
+                    />
+                    <Typography
+                      variant="bodySmall"
+                      color="text.primary"
+                      aria-label={indexesSummary.label}
+                      data-testid="toolkit-indexes-count"
+                    >
+                      {indexesSummary.count}
+                    </Typography>
+                  </>
+                ),
+                content: indexingUnavailableReason ? (
+                  <RunIndexBanner
+                    banner={{
+                      severity: 'info',
+                      label: 'Indexing is not available for now',
+                      message: 'Enable the “Index data” tool to activate indexing and create indexes.',
+                    }}
+                    CustomIcon={() => <InfoIcon />}
+                    sx={styles.banner}
                   />
-                  <Typography
-                    variant="bodySmall"
-                    color="text.primary"
-                    aria-label={indexesSummary.label}
-                    data-testid="toolkit-indexes-count"
-                  >
-                    {indexesSummary.count}
-                  </Typography>
-                </>
-              ),
-              content: indexingUnavailableReason ? (
-                <RunIndexBanner
-                  banner={{
-                    severity: 'info',
-                    label: 'Indexing is not available for now',
-                    message: 'Enable the “Index data” tool to activate indexing and create indexes.',
-                  }}
-                  CustomIcon={() => <InfoIcon />}
-                  sx={styles.banner}
-                />
-              ) : (
-                <IndexesContainer toolkitId={toolkitId} />
-              ),
-            },
-          ]}
-        />
-      )}
+                ) : (
+                  <IndexesContainer toolkitId={toolkitId} />
+                ),
+              },
+            ]}
+          />
+        )}
+      </Box>
     </Box>
   );
 });
@@ -675,18 +658,52 @@ ToolkitForm.displayName = 'ToolkitForm';
 
 export default ToolkitForm;
 
+const CONTENT_GUTTER = '1.5rem';
+const CONTENT_WIDTH = '40.1875rem';
+
 /** @type {MuiSx} */
-const toolkitFormStyles = () => ({
-  container: {
-    position: 'relative',
+const centeredContentColumn = {
+  maxWidth: { lg: 'unset', xs: `calc(${CONTENT_WIDTH} + 2 * ${CONTENT_GUTTER})` },
+  margin: { lg: 'unset', xs: '0 auto' },
+};
+
+/** @type {MuiSx} */
+const toolkitFormStyles = isDetailsActionBar => ({
+  actionBar: ({ palette }) =>
+    isDetailsActionBar
+      ? {
+          position: 'sticky',
+          top: 0,
+          zIndex: 2,
+          background: palette.background.section,
+          borderBottom: `0.0625rem solid ${palette.border.table}`,
+        }
+      : { marginBottom: '0.75rem' },
+  actionBarRow: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '0.5rem',
+    minHeight: '2rem',
+    ...(isDetailsActionBar ? { padding: `0.75rem ${CONTENT_GUTTER}`, ...centeredContentColumn } : {}),
   },
-  historyButtonWrapper: {
-    position: 'absolute',
-    top: '0rem',
-    right: '0rem',
+  content: isDetailsActionBar
+    ? { isolation: 'isolate', padding: `1rem ${CONTENT_GUTTER}`, ...centeredContentColumn }
+    : {},
+  toolkitIdentity: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    overflow: 'hidden',
+    '> svg': {
+      flexShrink: 0,
+    },
   },
-  formViewToggle: {
-    marginBottom: '0.625rem',
+  actionBarControls: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    flexShrink: 0,
   },
   banner: {
     padding: '0rem !important',

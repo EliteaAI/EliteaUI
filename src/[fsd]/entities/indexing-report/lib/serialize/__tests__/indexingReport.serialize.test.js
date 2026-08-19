@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { normalizeIndexingReport, resolveIndexingReport } from '../indexingReport.serialize';
+import {
+  normalizeIndexingReport,
+  parseIndexEntryJson,
+  resolveIndexingReport,
+} from '../indexingReport.serialize';
 
 const canonicalReport = (overrides = {}) => ({
   version: 1,
@@ -414,5 +418,21 @@ describe('normalizeIndexingReport with pre-report rows', () => {
     });
 
     expect(report.isUpToDate).toBe(false);
+  });
+});
+
+describe('parseIndexEntryJson — the store keeps JSON as strings, callers may hold objects', () => {
+  it('passes objects through untouched and parses stringified objects', () => {
+    const object = { index_name: 'docs' };
+
+    expect(parseIndexEntryJson(object)).toBe(object);
+    expect(parseIndexEntryJson('{"index_name": "docs"}')).toEqual(object);
+  });
+
+  it('returns null for absent, blank, malformed, or non-object JSON — never throws', () => {
+    expect(parseIndexEntryJson(undefined)).toBeNull();
+    expect(parseIndexEntryJson('   ')).toBeNull();
+    expect(parseIndexEntryJson("{'repr': True}")).toBeNull();
+    expect(parseIndexEntryJson('42')).toBeNull();
   });
 });

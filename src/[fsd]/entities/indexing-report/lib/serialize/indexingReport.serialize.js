@@ -11,7 +11,7 @@ import {
 const ITEMS_SAMPLE_SIZE = 5;
 const FAILED_STATES = ['failed', 'cancelled'];
 
-const parseJson = value => {
+export const parseIndexEntryJson = value => {
   if (value && typeof value === 'object') return value;
   if (typeof value !== 'string' || !value.trim()) return null;
   try {
@@ -155,7 +155,7 @@ const legacyGroupsFor = (kind, skipped, dependentLabels) => {
 
 // Pre-report rows still carry the raw IndexingStats blob; only the nouns were lost.
 const fromLegacyEntry = entry => {
-  const skipped = parseJson(entry?.skipped);
+  const skipped = parseIndexEntryJson(entry?.skipped);
   const itemLabels = DEFAULT_INDEXING_ITEM_LABELS;
   const dependentLabels = DEFAULT_INDEXING_DEPENDENT_LABELS;
   const unchanged = countOf(skipped?.documents_already_indexed?.count);
@@ -240,7 +240,7 @@ export const normalizeIndexingReport = source => {
   if (!source || typeof source !== 'object') return null;
 
   const entry = source.metadata && typeof source.metadata === 'object' ? source.metadata : source;
-  const report = parseJson(entry.report);
+  const report = parseIndexEntryJson(entry.report);
 
   if (report && !contradictsState(report, entry.state)) return fromCanonicalReport(report, entry);
   if (entry.skipped || entry.indexed !== undefined || entry.state || entry.error) {

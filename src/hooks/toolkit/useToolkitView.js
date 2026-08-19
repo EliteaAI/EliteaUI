@@ -29,11 +29,6 @@ export const useToolkitView = () => {
 
   const shouldHideConfigurationHeader = isDetailsRoute && !isCreateRoute;
 
-  const setSaveActionParam = useCallback(() => {
-    const newSearchParams = new URLSearchParams(searchParams);
-    newSearchParams.append(SearchParams.SaveToolkit, 1);
-  }, [searchParams]);
-
   const hasSaveActionParam = useCallback(() => {
     const newSearchParams = new URLSearchParams(searchParams);
     return newSearchParams.has(SearchParams.SaveToolkit);
@@ -44,8 +39,6 @@ export const useToolkitView = () => {
     isChatPage,
     shouldUseAccordionView,
     shouldHideConfigurationHeader,
-
-    setSaveActionParam,
     hasSaveActionParam,
   };
 };

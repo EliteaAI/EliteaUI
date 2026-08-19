@@ -73,7 +73,6 @@ const ConfigurationTab = memo(props => {
                 editFieldRootPath={editFieldRootPath}
                 isCustomBackButtons={true}
                 showNameFieldForcedly={true}
-                showToolkitIcon={true}
                 hideConfigurationNameInput={true}
                 hasNotSavedCredentials={hasNotSavedCredentials}
                 updateKey={updateKey}
@@ -122,17 +121,10 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '1rem',
-    padding: '1rem 1.5rem',
     borderRight: ({ palette }) => `0.0625rem solid ${palette.border.table}`,
     position: 'relative',
-    background: ({ palette }) => palette.background.toolkitDetailLeftPanel,
     ' & .MuiAccordion-root': {
-      background: ({ palette }) => `${palette.background.toolkitDetailLeftPanel} !important`,
-    },
-
-    '>div': {
-      maxWidth: { lg: 'unset', xs: '40.1875rem' },
-      margin: { lg: 'unset', xs: '0 auto' },
+      background: ({ palette }) => `${palette.background.section} !important`,
     },
   },
   rightPanel: {

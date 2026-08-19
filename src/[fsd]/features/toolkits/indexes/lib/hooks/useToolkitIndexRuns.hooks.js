@@ -1,7 +1,12 @@
 import { useMemo } from 'react';
 
 import { useGetIndexesListQuery } from '@/[fsd]/features/toolkits/indexes/api';
-import { IndexHistoryItemsLabels, IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants';
+import { IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants';
+import {
+  initialCompletedTsOf,
+  resolveIndexEventLabel,
+} from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexEvent.helpers';
+import { useIndexRunLiveRefresh } from '@/[fsd]/features/toolkits/indexes/lib/hooks/useIndexRunLiveRefresh.hooks';
 
 const TERMINAL_STATES = new Set([
   IndexStatuses.success,
@@ -17,7 +22,7 @@ const TERMINAL_STATES = new Set([
 const toNaiveIsoString = unixSeconds =>
   Number.isFinite(unixSeconds) ? new Date(unixSeconds * 1000).toISOString().replace('Z', '') : null;
 
-const toRunRow = (entry, indexName) => {
+const toRunRow = (entry, indexName, eventLabel) => {
   const createdAt = toNaiveIsoString(entry.updated_on);
   if (!createdAt) return null;
 
@@ -32,7 +37,9 @@ const toRunRow = (entry, indexName) => {
   return {
     id: `index-run:${indexName}:${entry.updated_on}`,
     created_at: createdAt,
-    name: `${IndexHistoryItemsLabels[entry.state] || 'Indexed'} — ${indexName}`,
+    name: `${eventLabel} — ${indexName}`,
+    event_label: eventLabel,
+    event_tooltip: `${eventLabel} — ${indexName}`,
     duration,
     version_id: null,
     index_name: indexName,
@@ -40,6 +47,31 @@ const toRunRow = (entry, indexName) => {
     hasConversation: false,
     entry,
   };
+};
+
+export const buildIndexRunLookup = indexesData => {
+  const lookup = new Map();
+  if (!Array.isArray(indexesData)) return lookup;
+
+  indexesData.forEach(index => {
+    const metadata = index?.metadata;
+    const indexName = metadata?.collection;
+    if (!indexName || !Array.isArray(metadata.history)) return;
+
+    const initialCompletedTs = initialCompletedTsOf(metadata.history);
+    metadata.history
+      .filter(entry => entry?.conversation_id && TERMINAL_STATES.has(entry.state))
+      .forEach(entry => {
+        const run = { entry, indexName, initialCompletedTs };
+        const existing = lookup.get(entry.conversation_id);
+        if (existing) existing.push(run);
+        else lookup.set(entry.conversation_id, [run]);
+      });
+  });
+
+  lookup.forEach(runs => runs.sort((a, b) => a.entry.updated_on - b.entry.updated_on));
+
+  return lookup;
 };
 
 /**
@@ -51,6 +83,8 @@ const toRunRow = (entry, indexName) => {
  * another toolkit.
  */
 export const useToolkitIndexRuns = ({ projectId, toolkitId, skip = false }) => {
+  useIndexRunLiveRefresh({ toolkitId });
+
   const { data, isLoading } = useGetIndexesListQuery(
     { projectId, toolkitId },
     { skip: skip || !projectId || !toolkitId },
@@ -64,12 +98,15 @@ export const useToolkitIndexRuns = ({ projectId, toolkitId, skip = false }) => {
       const indexName = metadata?.collection;
       if (!indexName || !Array.isArray(metadata.history)) return [];
 
+      const initialCompletedTs = initialCompletedTsOf(metadata.history);
       return metadata.history
         .filter(entry => entry && !entry.conversation_id && TERMINAL_STATES.has(entry.state))
-        .map(entry => toRunRow(entry, indexName))
+        .map(entry => toRunRow(entry, indexName, resolveIndexEventLabel(entry, initialCompletedTs)))
         .filter(Boolean);
     });
   }, [data]);
 
-  return { indexRunRows: rows, isIndexRunsLoading: isLoading };
+  const indexRunLookup = useMemo(() => buildIndexRunLookup(data), [data]);
+
+  return { indexRunRows: rows, indexRunLookup, isIndexRunsLoading: isLoading };
 };

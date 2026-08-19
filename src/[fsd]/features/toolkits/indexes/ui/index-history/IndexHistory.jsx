@@ -1,13 +1,17 @@
 import { memo, useCallback, useEffect, useMemo } from 'react';
 
-import { format, fromUnixTime } from 'date-fns';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { Box, Typography } from '@mui/material';
 
+import { formatRunTimestamp } from '@/[fsd]/entities/run-history/lib/helpers';
 import { useRunHistorySorting } from '@/[fsd]/entities/run-history/lib/hooks';
 import { RunHistorySortableHeader } from '@/[fsd]/entities/run-history/ui';
-import { IndexHistoryItemsLabels, IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants';
+import { IndexHistoryItemsLabels } from '@/[fsd]/features/toolkits/indexes/lib/constants';
+import {
+  initialCompletedTsOf,
+  resolveIndexEventLabel,
+} from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexEvent.helpers';
 import { actions, selectHistoryItem } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
 
 const SORT_TYPES = {
@@ -24,23 +28,10 @@ const IndexHistory = memo(props => {
   const selectedHistoryItem = useSelector(selectHistoryItem);
   const { sortConfig, handleSortItems, getSortedData } = useRunHistorySorting(SORT_TYPES.DATE);
 
-  const initialCompletedTs = useMemo(() => {
-    const completed = history.filter(h => h.state === IndexStatuses.success);
-    if (!completed.length) return null;
-    return completed.reduce((min, h) => (h.updated_on < min ? h.updated_on : min), completed[0].updated_on);
-  }, [history]);
-
-  const annotateItem = useMemo(
-    () => item => {
-      if (!item) return item;
-      const isInitialIndex = item.state === IndexStatuses.success && item.updated_on === initialCompletedTs;
-      return { ...item, isInitialIndex };
-    },
-    [initialCompletedTs],
-  );
+  const initialCompletedTs = useMemo(() => initialCompletedTsOf(history), [history]);
 
   useEffect(() => {
-    dispatch(actions.selectHistoryItem(annotateItem(history[history.length - 1])));
+    dispatch(actions.selectHistoryItem(history[history.length - 1]));
 
     return () => {
       dispatch(actions.selectHistoryItem(null));
@@ -49,14 +40,7 @@ const IndexHistory = memo(props => {
   }, []);
 
   const resolveLabel = useCallback(
-    item => {
-      if (item.state === IndexStatuses.success && item.updated_on !== initialCompletedTs) {
-        return 'Reindexed';
-      } else if (item.state === IndexStatuses.runTest) {
-        return 'Search index';
-      }
-      return IndexHistoryItemsLabels[item.state] || item.state;
-    },
+    item => resolveIndexEventLabel(item, initialCompletedTs),
     [initialCompletedTs],
   );
 
@@ -84,9 +68,12 @@ const IndexHistory = memo(props => {
     [],
   );
 
-  const handleSelectHistoryItem = item => {
-    dispatch(actions.selectHistoryItem(annotateItem(item)));
-  };
+  const handleSelectHistoryItem = useCallback(
+    item => {
+      dispatch(actions.selectHistoryItem(item));
+    },
+    [dispatch],
+  );
 
   return (
     <Box sx={styles.wrapper}>
@@ -97,9 +84,9 @@ const IndexHistory = memo(props => {
         gridTemplateColumns="1fr 1fr"
       />
       <Box sx={styles.scrollableContent}>
-        {sortedHistory.map((historyItem, idx) => (
+        {sortedHistory.map(historyItem => (
           <Box
-            key={`${idx}_${historyItem.conversation_id}`}
+            key={`${historyItem.updated_on}_${historyItem.conversation_id}`}
             sx={[
               styles.historyItem,
               historyItem.updated_on === selectedHistoryItem?.updated_on &&
@@ -118,7 +105,7 @@ const IndexHistory = memo(props => {
               variant="bodyMedium"
               color="text.secondary"
             >
-              {format(new Date(fromUnixTime(historyItem.updated_on)), 'dd-MM-yyyy, hh:mm a')}
+              {formatRunTimestamp(historyItem.updated_on)}
             </Typography>
           </Box>
         ))}
