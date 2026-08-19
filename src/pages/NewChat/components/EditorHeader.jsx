@@ -22,6 +22,8 @@ import useIsPipelineYamlCodeDirty from '@/pages/Pipelines/useIsPipelineYamlCodeD
  * @param {string} [closeButtonTestId] - Optional data-testid for the close (X) IconButton.
  * @param {string} [publicLabelTestId] - Optional data-testid for the "Public" label Typography
  *   shown instead of Discard/Save when `isPublic` is true (ELITEA-2075).
+ * @param {string} [discardButtonTestId] - Optional data-testid for the Discard button.
+ *   Caller-supplied (never hardcoded here) since this component is shared across editors.
  */
 const EditorHeader = ({
   title,
@@ -34,6 +36,7 @@ const EditorHeader = ({
   subtitleTestId,
   closeButtonTestId,
   publicLabelTestId,
+  discardButtonTestId,
 }) => {
   const theme = useTheme();
   const { discardApplicationChanges } = useDiscardApplicationChanges(onDiscard);
@@ -87,6 +90,7 @@ const EditorHeader = ({
               onDiscard={discardApplicationChanges}
               size="small"
               sx={styles.discardButton}
+              dataTestId={discardButtonTestId}
             />
           )}
           {!isPublic && saveButton}
