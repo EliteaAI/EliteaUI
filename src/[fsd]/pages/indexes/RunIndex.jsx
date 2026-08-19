@@ -11,8 +11,9 @@ import { useGetIndexScheduleQuery } from '@/[fsd]/features/toolkits/indexes/api'
 import { IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import { useIndexesListPolling } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import { selectIndexesList } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
-import { IndexBreadcrumb } from '@/[fsd]/features/toolkits/indexes/ui';
 import RunIndexPanel from '@/[fsd]/features/toolkits/indexes/ui/run-index/RunIndexPanel';
+import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
+import Breadcrumbs from '@/[fsd]/shared/ui/breadcrumbs';
 import { useToolkitsDetailsQuery } from '@/api/toolkits.js';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils.jsx';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -32,16 +33,8 @@ const RunIndex = memo(() => {
   const { toastError } = useToast();
   const styles = runIndexStyles();
 
-  const goBackToToolkit = useCallback(() => {
-    const target = RouteDefinitions.ToolkitDetail.replace(':tab', tab ?? 'all').replace(
-      ':toolkitId',
-      String(toolkitId),
-    );
-    navigate(target);
-  }, [navigate, tab, toolkitId]);
-
   const goToToolkitsList = useCallback(() => {
-    navigate(RouteDefinitions.ToolkitsWithTab.replace(':tab', tab ?? 'all'));
+    navigate(NavigationHelpers.buildRoute(RouteDefinitions.ToolkitsWithTab, { tab: tab ?? 'all' }));
   }, [navigate, tab]);
 
   const {
@@ -164,14 +157,7 @@ const RunIndex = memo(() => {
     <Box sx={styles.wrapper}>
       <DrawerPageHeader
         showBorder
-        title={
-          <IndexBreadcrumb
-            toolkitName={toolkitData?.name || ''}
-            current={indexName || 'Index'}
-            onToolkitsClick={goToToolkitsList}
-            onToolkitClick={goBackToToolkit}
-          />
-        }
+        title={<Breadcrumbs />}
       />
       <Box sx={styles.content}>
         {isLoading || showCreatingPlaceholder ? (
