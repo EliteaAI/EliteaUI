@@ -29,6 +29,7 @@ const ContextBudgetProgress = memo(props => {
           <Typography
             variant="bodySmall2"
             sx={styles.percentageText}
+            data-testid="context-budget-percentage"
           >
             {utilizationPercentage}%
           </Typography>

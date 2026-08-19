@@ -73,7 +73,14 @@ const ContextStats = memo(props => {
                 item.value
               )}
             </Typography>
-            {item.suffix && <Typography variant="bodyMedium">{item.suffix}</Typography>}
+            {item.suffix && (
+              <Typography
+                variant="bodyMedium"
+                data-testid="context-modal-stat-percentage"
+              >
+                {item.suffix}
+              </Typography>
+            )}
           </Box>
         </Box>
       ))}
