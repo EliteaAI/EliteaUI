@@ -1,4 +1,5 @@
 export {
+  invalidateIndexesList,
   useGetIndexesListQuery,
   useLazyGetIndexesListQuery,
   useDeleteIndexItemMutation,

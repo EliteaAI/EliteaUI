@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect } from 'react';
+import { memo, useCallback, useEffect, useMemo } from 'react';
 
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
@@ -8,6 +8,7 @@ import { RunHistoryContainer } from '@/[fsd]/entities/run-history/ui';
 import { ChatMessageList } from '@/[fsd]/features/chat';
 import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits';
+import { buildRunHistoryRowDecorator } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexRunRow.helpers';
 import { useToolkitIndexRuns } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import { IndexRunDetail } from '@/[fsd]/features/toolkits/indexes/ui';
 import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
@@ -40,7 +41,16 @@ const ToolkitRunHistory = memo(() => {
   );
 
   // Scheduler-started runs create no conversation, so nothing else surfaces them.
-  const { indexRunRows } = useToolkitIndexRuns({ projectId, toolkitId, skip: isMCP });
+  const { indexRunRows, indexRunLookup, isIndexRunsLoading } = useToolkitIndexRuns({
+    projectId,
+    toolkitId,
+    skip: isMCP,
+  });
+
+  const decorateRow = useMemo(
+    () => buildRunHistoryRowDecorator({ lookup: indexRunLookup, isLookupReady: !isIndexRunsLoading }),
+    [indexRunLookup, isIndexRunsLoading],
+  );
 
   const shouldShowNotFoundPage = isError && isNotFoundError(error);
 
@@ -68,7 +78,8 @@ const ToolkitRunHistory = memo(() => {
           ChatMessageListComponent={ChatMessageList}
           prettifyConversation={ToolkitsHelpers.prettifyToolkitConversation}
           additionalRows={indexRunRows}
-          ConversationlessDetailComponent={IndexRunDetail}
+          decorateRow={isMCP ? null : decorateRow}
+          DetailComponent={IndexRunDetail}
         />
       </Box>
     </Box>
