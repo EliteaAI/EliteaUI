@@ -68,6 +68,7 @@ const ContextStats = memo(props => {
                   conversationId={conversationId}
                   disabled={item.value === 0}
                   isCompact={false}
+                  testId="context-modal-stat-summaries"
                 />
               ) : (
                 item.value

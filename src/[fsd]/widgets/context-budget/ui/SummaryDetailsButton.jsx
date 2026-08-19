@@ -10,7 +10,7 @@ import { Box, Typography } from '@mui/material';
 // import SummaryDetailsModal from './SummaryDetailsModal';
 
 const SummaryDetailsButton = memo(props => {
-  const { count } = props;
+  const { count, testId = 'context-budget-summaries-count' } = props;
   // FEATURE TOGGLE: Summarization details modal - isCompact used in disabled button styles
   const isCompact = true;
   // FEATURE TOGGLE: Summarization details modal
@@ -29,7 +29,7 @@ const SummaryDetailsButton = memo(props => {
     <Box sx={styles.countDisplay}>
       <Typography
         variant={isCompact ? 'bodySmall2' : 'bodyMedium'}
-        data-testid="context-budget-summaries-count"
+        data-testid={testId}
       >
         {count}
       </Typography>
