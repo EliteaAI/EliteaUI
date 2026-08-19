@@ -136,6 +136,7 @@ const FileList = memo(props => {
             slotProps={{
               list: {
                 'aria-labelledby': 'more-files-button',
+                'data-testid': 'chat-attachment-overflow-menu',
               },
               paper: {
                 sx: styles.paperMenu,
