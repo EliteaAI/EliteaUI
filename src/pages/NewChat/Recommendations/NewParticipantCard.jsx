@@ -51,6 +51,15 @@ const NewParticipantCard = memo(props => {
     [onClick, participant],
   );
 
+  // ELITEA-2206: derived from the caller-supplied `testId` (never a hardcoded
+  // literal — .agents/testing.md § Locator policy, shared components never
+  // hardcode feature-scoped testids). Lets automation disambiguate the type
+  // subtitle / icon / "Public" chip from each other and from the name
+  // Typography without a raw tag/class selector.
+  const typeTestId = testId ? `${testId}-type` : undefined;
+  const iconTestId = testId ? `${testId}-icon` : undefined;
+  const publicLabelTestId = testId ? `${testId}-public-label` : undefined;
+
   return (
     <TooltipWithDuration
       delaySeconds={1000}
@@ -73,6 +82,7 @@ const NewParticipantCard = memo(props => {
           icon={participant.icon_meta}
           entityType={participant.agent_type === 'pipeline' ? 'pipeline' : participant.participantType}
           editable={false}
+          data-testid={iconTestId}
         />
         <Box sx={styles.bodyContainer}>
           <Typography
@@ -87,6 +97,7 @@ const NewParticipantCard = memo(props => {
             color="text.default"
             sx={styles.typeText}
             component={'span'}
+            data-testid={typeTestId}
           >
             {participant.participantType === ChatParticipantType.Applications
               ? participant.agent_type === 'pipeline'
@@ -104,6 +115,7 @@ const NewParticipantCard = memo(props => {
               <Typography
                 variant="bodySmall"
                 sx={styles.publicLabel}
+                data-testid={publicLabelTestId}
               >
                 {'Public'}
               </Typography>
