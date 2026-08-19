@@ -24,3 +24,14 @@ export const getListRouteByPageType = (pageType, fallbackRoute = null) => {
 
   return pageTypeToListRoute[pageType] ?? fallbackRoute;
 };
+
+/**
+ * Build a concrete path from a route pattern by substituting its `:param` placeholders.
+ * An optional param (`:tab?`) loses its `?` so it cannot leak into the path as a query-string
+ * boundary; a param with no value becomes an empty segment rather than throwing.
+ * @param {string} pattern - Route pattern, e.g. '/toolkits/:tab/:toolkitId'
+ * @param {Record<string, string | number>} [params] - Values keyed by param name
+ * @returns {string} Concrete path with every value URI-encoded
+ */
+export const buildRoute = (pattern, params = {}) =>
+  pattern.replace(/:([A-Za-z_]\w*)\??/g, (_, key) => encodeURIComponent(String(params[key] ?? '')));

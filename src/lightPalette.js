@@ -634,6 +634,17 @@ const lightPalette = {
       icon: lightOrange,
     },
   },
+  suggestionChip: {
+    border: light30,
+    background: {
+      default: 'transparent',
+      hover: dark10,
+    },
+    text: {
+      default: light00,
+      hover: gray60,
+    },
+  },
 };
 
 export default lightPalette;

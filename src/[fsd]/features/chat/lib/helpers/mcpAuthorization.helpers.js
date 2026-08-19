@@ -25,6 +25,29 @@ const stripPrivateAuthorizationFields = value => {
   );
 };
 
+const getSafeProvidedSettings = metadata => {
+  const resourceSettings = metadata?.resource_metadata?.provided_settings;
+  const topLevelSettings = metadata?.provided_settings;
+  const providedSettings = {
+    ...(resourceSettings && typeof resourceSettings === 'object' ? resourceSettings : {}),
+    ...(topLevelSettings && typeof topLevelSettings === 'object' ? topLevelSettings : {}),
+  };
+  if (!Object.keys(providedSettings).length) return null;
+
+  // The OAuth authorization URL needs the public client ID, while Core resolves
+  // the real secret from toolkit_id during token exchange. Keep this projection
+  // allowlisted so future configuration fields cannot leak into chat state.
+  const safeSettings = {};
+  if (providedSettings.mcp_client_id) {
+    safeSettings.mcp_client_id = providedSettings.mcp_client_id;
+  }
+  if (providedSettings.scopes) safeSettings.scopes = providedSettings.scopes;
+  if (providedSettings.mcp_client_secret || providedSettings.client_secret) {
+    safeSettings.has_mcp_client_secret = true;
+  }
+  return Object.keys(safeSettings).length ? safeSettings : null;
+};
+
 const renderAuthorizationMessage = content => {
   if (typeof content === 'string') return content;
   try {
@@ -47,6 +70,24 @@ export const getMcpAuthorizationRequests = responseMetadata => {
   const pending = responseMetadata?.authorization_requests;
   if (Array.isArray(pending) && pending.length) return uniqueAuthorizationRequests(pending);
   return responseMetadata?.tool_run_id || responseMetadata?.interrupt_id ? [responseMetadata] : [];
+};
+
+/**
+ * Root Toolkit authorization shares a checkpoint queue only when that same
+ * assistant turn also owns a regular HITL interrupt. Auth-only pauses are not
+ * represented by `hitlInterrupt(s)`, so sending them to the HITL queue would
+ * remove the card without ever emitting a continuation.
+ */
+export const shouldQueueRootAuthorizationWithHitl = (metadata, pendingHitlMessage, messageId) => {
+  const isRootDurableAuthorization =
+    metadata?.guardrail_type === 'mcp_auth' &&
+    Boolean(metadata?.interrupt_id) &&
+    !['aggregate_child', 'supervised_child'].includes(metadata?.resume_strategy);
+  if (!isRootDurableAuthorization || pendingHitlMessage?.id !== messageId) return false;
+  return Boolean(
+    pendingHitlMessage.hitlInterrupt ||
+      (Array.isArray(pendingHitlMessage.hitlInterrupts) && pendingHitlMessage.hitlInterrupts.length),
+  );
 };
 
 const getAuthorizationServers = metadata =>
@@ -88,6 +129,8 @@ export const buildMcpAuthorizationToolAction = ({
   const statusCode = metadata?.status || 401;
   const hierarchy = normalizeExecutionHierarchy(metadata?.metadata, metadata);
   const safeMetadata = stripPrivateAuthorizationFields(metadata || {});
+  const safeProvidedSettings = getSafeProvidedSettings(metadata);
+  if (safeProvidedSettings) safeMetadata.provided_settings = safeProvidedSettings;
 
   const renderedContent = hasAuthorizationServers
     ? `${renderAuthorizationMessage(content || DEFAULT_AUTH_MESSAGE)}${
@@ -184,9 +227,9 @@ export const buildToolkitAuthorizationMessage = (context, fallbackMessage = DEFA
 const sameInvocationTier = (left, right) =>
   Boolean(
     left &&
-      right &&
-      ((left.call_id && right.call_id && left.call_id === right.call_id) ||
-        (!left.call_id && !right.call_id && left.name && left.name === right.name)),
+    right &&
+    ((left.call_id && right.call_id && left.call_id === right.call_id) ||
+      (!left.call_id && !right.call_id && left.name && left.name === right.name)),
   );
 
 const areSiblingInvocationPaths = (left, right) =>

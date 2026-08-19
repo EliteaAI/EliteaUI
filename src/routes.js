@@ -73,6 +73,7 @@ const RouteDefinitions = {
 
   McpAuthPage: '/mcp-auth-callback',
   AuthCallbackPage: '/auth-callback',
+  SharedConversation: '/shared/chat/:token',
 
   Onboarding: '/onboarding',
   HelpCenter: '/help-center',

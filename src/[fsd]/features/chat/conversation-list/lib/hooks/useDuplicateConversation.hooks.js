@@ -17,7 +17,6 @@ import useToast from '@/hooks/useToast';
 
 export const useDuplicateConversation = props => {
   const {
-    conversations,
     setActiveConversation,
     setConversations,
     emitEnterRoom,
@@ -129,11 +128,12 @@ export const useDuplicateConversation = props => {
 
         const conversationWithTimestamp = {
           ...finalConversation,
-          updated_at: finalConversation.updated_at || new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         };
 
-        const sortedData = sortConversations([...conversations, conversationWithTimestamp]);
-        setConversations(sortedData);
+        setConversations(prevConversations =>
+          sortConversations([...prevConversations, conversationWithTimestamp]),
+        );
 
         selectConversation({
           projectId,
@@ -151,7 +151,6 @@ export const useDuplicateConversation = props => {
       activeConversation,
       addParticipant,
       changeUrlByConversation,
-      conversations,
       createConversation,
       emitEnterRoom,
       emitLeaveRoom,

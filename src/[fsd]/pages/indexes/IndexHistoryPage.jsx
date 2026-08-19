@@ -13,13 +13,10 @@ import { initialCompletedTsOf } from '@/[fsd]/features/toolkits/indexes/lib/help
 import { buildIndexHistoryDetailRow } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexHistoryDetail.helpers';
 import { useIndexRunLiveRefresh } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import { selectHistoryItem, selectIndexesList } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
-import {
-  IndexBreadcrumb,
-  IndexChatContainer,
-  IndexHistory,
-  IndexRunDetail,
-} from '@/[fsd]/features/toolkits/indexes/ui';
+import { IndexChatContainer, IndexHistory, IndexRunDetail } from '@/[fsd]/features/toolkits/indexes/ui';
 import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
+import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
+import Breadcrumbs from '@/[fsd]/shared/ui/breadcrumbs';
 import { useToolkitsDetailsQuery } from '@/api/toolkits.js';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils.jsx';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -35,32 +32,16 @@ const IndexHistoryPage = memo(() => {
   const { toastError } = useToast();
   const styles = indexHistoryPageStyles();
 
-  const goBackToRunIndex = useCallback(() => {
-    const target = RouteDefinitions.ToolkitIndex.replace(':tab', tab ?? 'all')
-      .replace(':toolkitId', String(toolkitId))
-      .replace(':indexName', rawIndexName ?? '');
-    navigate(target);
-  }, [navigate, tab, toolkitId, rawIndexName]);
-
-  const goBackToToolkit = useCallback(() => {
-    const target = RouteDefinitions.ToolkitDetail.replace(':tab', tab ?? 'all').replace(
-      ':toolkitId',
-      String(toolkitId),
-    );
-    navigate(target);
-  }, [navigate, tab, toolkitId]);
-
   const goToToolkitsList = useCallback(() => {
-    navigate(RouteDefinitions.ToolkitsWithTab.replace(':tab', tab ?? 'all'));
+    navigate(NavigationHelpers.buildRoute(RouteDefinitions.ToolkitsWithTab, { tab: tab ?? 'all' }));
   }, [navigate, tab]);
 
   const indexName = useMemo(() => (rawIndexName ? decodeURIComponent(rawIndexName) : ''), [rawIndexName]);
 
-  const {
-    data: publicToolkitData,
-    isError,
-    error,
-  } = useToolkitsDetailsQuery({ projectId, toolkitId }, { skip: !projectId || !toolkitId });
+  const { isError, error } = useToolkitsDetailsQuery(
+    { projectId, toolkitId },
+    { skip: !projectId || !toolkitId },
+  );
 
   useGetIndexesListQuery({ toolkitId, projectId }, { skip: !projectId || !toolkitId });
   useIndexRunLiveRefresh({ toolkitId });
@@ -136,22 +117,11 @@ const IndexHistoryPage = memo(() => {
 
   if (shouldShowNotFoundPage) return null;
 
-  const toolkitName = publicToolkitData?.name || '';
-
   return (
     <Box sx={styles.wrapper}>
       <DrawerPageHeader
         showBorder
-        title={
-          <IndexBreadcrumb
-            toolkitName={toolkitName}
-            current="History"
-            onToolkitsClick={goToToolkitsList}
-            onToolkitClick={goBackToToolkit}
-            onIndexClick={goBackToRunIndex}
-            indexName={indexName}
-          />
-        }
+        title={<Breadcrumbs />}
       />
       <Box sx={styles.content}>
         {isLoading ? (

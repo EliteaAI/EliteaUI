@@ -30,6 +30,7 @@ import {
   hasRootHitlTurnEnded,
   scheduleRootHitlDecision,
 } from '@/[fsd]/features/chat/lib/helpers/hitl.helpers.js';
+import { shouldQueueRootAuthorizationWithHitl } from '@/[fsd]/features/chat/lib/helpers/mcpAuthorization.helpers.js';
 import * as NewConversationHelpers from '@/[fsd]/features/chat/lib/helpers/newConversation.helpers';
 import {
   useBudgetWarning,
@@ -1302,9 +1303,12 @@ const ChatBox = forwardRef((props, boxRef) => {
         sessionDeclinedMcpServers,
       };
       const isDurableAuthorization = authMeta.guardrail_type === 'mcp_auth' && Boolean(authMeta.interrupt_id);
-      const isRootDurableAuthorization =
-        isDurableAuthorization && authMeta.resume_strategy !== 'aggregate_child';
-      if (isRootDurableAuthorization) {
+      const shouldQueueWithRootHitl = shouldQueueRootAuthorizationWithHitl(
+        authMeta,
+        pendingHitlMessage,
+        messageId,
+      );
+      if (shouldQueueWithRootHitl) {
         // Root-scoped durable MCP auth shares the same LangGraph checkpoint as
         // sensitive-tool HITL cards. Route it through the root queue so rapid
         // auth + sensitive decisions cannot launch concurrent worker resumes.
@@ -1366,7 +1370,15 @@ const ChatBox = forwardRef((props, boxRef) => {
       setStreamingInfo(question_id);
       emitContinue(payload);
     },
-    [chat_history, activeConversation, projectId, setChatHistory, setStreamingInfo, emitContinue],
+    [
+      chat_history,
+      activeConversation,
+      projectId,
+      pendingHitlMessage,
+      setChatHistory,
+      setStreamingInfo,
+      emitContinue,
+    ],
   );
 
   /**
@@ -1443,9 +1455,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       const rootBatch = Array.isArray(resumeRequest?.rootBatch) ? resumeRequest.rootBatch : null;
       const primaryRequest = rootBatch?.[0] || resumeRequest || {};
       const sessionDeclinedMcpServers =
-        [...(rootBatch || [])]
-          .reverse()
-          .find(request => Array.isArray(request?.sessionDeclinedMcpServers))
+        [...(rootBatch || [])].reverse().find(request => Array.isArray(request?.sessionDeclinedMcpServers))
           ?.sessionDeclinedMcpServers || resumeRequest?.sessionDeclinedMcpServers;
       const {
         action,
@@ -1494,6 +1504,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       // resume route.
       const childThreadId = getHitlResumeThreadId(decidedEntry);
       const isFanoutChild = Boolean(childThreadId);
+      const isSupervisedChild = decidedEntry?.resume_strategy === 'supervised_child';
       const resumeGroup = rootBatch ? rootBatchEntries : getHitlResumeGroup(interrupts, decidedEntry);
 
       // Detect a (Track 1) parallel aggregate by the PRESENCE of the
@@ -1509,11 +1520,56 @@ const ChatBox = forwardRef((props, boxRef) => {
       const isParallel =
         action !== 'answer' &&
         !isFanoutChild &&
+        !isSupervisedChild &&
         ((Array.isArray(lastMessage.hitlInterrupts) && lastMessage.hitlInterrupts.length > 0) ||
           guardrailType === 'mcp_auth' ||
           rootBatch?.some(decision => decision.guardrailType === 'mcp_auth')) &&
         Boolean(selectedIdentity || toolCallId);
       let parallelDecisions;
+
+      // Single-process supervisor (#6264): send one exact decision immediately
+      // on the active root thread. Core's offer/commit handshake assigns live
+      // ownership without starting another agent process.
+      if (isSupervisedChild && !rootBatch) {
+        const decisionIdentity = getInterruptIdentity(decidedEntry);
+        const supervisedPayload = generateChatContinuePayload({
+          conversation_uuid: activeConversation?.uuid,
+          projectId,
+          message_id: lastMessage.id,
+          thread_id: decidedEntry?.root_thread_id || lastMessage.threadId,
+          participants: activeConversation?.participants || [],
+          question: action === 'edit' ? (value ?? '') : action,
+          sessionDeclinedMcpServers,
+        });
+        supervisedPayload.hitl_resume = true;
+        supervisedPayload.hitl_decisions = [
+          {
+            interrupt_id: decisionIdentity,
+            tool_call_id: toolCallId,
+            action,
+            value: value ?? '',
+          },
+        ];
+        setChatHistory(prevMessages =>
+          prevMessages.map(msg =>
+            msg.id !== lastMessage.id || !Array.isArray(msg.hitlInterrupts)
+              ? msg
+              : {
+                  ...msg,
+                  isLoading: false,
+                  isStreaming: true,
+                  resumingAgentPaths: [getActionOwnerPath(decidedEntry)].filter(path => path.length),
+                  hitlInterrupts: msg.hitlInterrupts.map(entry =>
+                    getInterruptIdentity(entry) === decisionIdentity
+                      ? { ...entry, decided: true, hidden: true }
+                      : entry,
+                  ),
+                },
+          ),
+        );
+        emitContinue(supervisedPayload);
+        return;
+      }
 
       // Track 2 independent child resume: emit this child's decision NOW on its
       // own thread; clear ONLY this child's card and leave the parent message
@@ -2225,25 +2281,19 @@ const ChatBox = forwardRef((props, boxRef) => {
     activeParticipantDetails,
   ]);
 
-  const onMentionChange = useCallback(
-    mentions => {
-      // isMentioningEveryone is only ever SET by onSelectUserMention (dropdown confirmation).
-      // Here we only CLEAR it when the @Everyone text has been deleted from the input.
-      const everyoneStillPresent = mentions.some(mention => mention.user?.id === '@everyone');
-      if (!everyoneStillPresent) {
-        setIsMentioningEveryone(false);
-      }
+  const onMentionChange = useCallback(mentions => {
+    // isMentioningEveryone is only ever SET by onSelectUserMention (dropdown confirmation).
+    // Here we only CLEAR it when the @Everyone text has been deleted from the input.
+    const everyoneStillPresent = mentions.some(mention => mention.user?.id === '@everyone');
+    if (!everyoneStillPresent) {
+      setIsMentioningEveryone(false);
+    }
 
-      const mentionedUsers = mentions.filter(
-        mention => mention.isValid && mention.user && mention.user.id !== '@everyone',
-      );
-      if (mentionedUsers.length > 0) {
-        onClearActiveParticipant();
-      }
-      setSelectedUsers(mentionedUsers);
-    },
-    [onClearActiveParticipant],
-  );
+    const mentionedUsers = mentions.filter(
+      mention => mention.isValid && mention.user && mention.user.id !== '@everyone',
+    );
+    setSelectedUsers(mentionedUsers);
+  }, []);
 
   const onShowParticipantsList = useCallback(() => {
     setShowRecommendationList(prev => !prev);
