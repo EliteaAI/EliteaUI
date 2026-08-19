@@ -76,7 +76,7 @@ const DefaultModulesSettings = memo(() => {
           variant="bodySmall"
           sx={styles.headerCell}
         >
-          Conversations
+          Chats
         </Typography>
         <Typography
           variant="bodySmall"
