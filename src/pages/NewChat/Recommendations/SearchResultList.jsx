@@ -12,6 +12,11 @@ export default function SearchResultList({
   stopProcessingSymbols,
   existingParticipants = [],
   onClose = () => {},
+  // ELITEA-2206: caller-supplied testids, mirroring SlashSuggestionList's own
+  // wiring of the same shared NewParticipantList (.agents/testing.md §
+  // Locator policy — shared components never hardcode feature-scoped testids).
+  containerTestId,
+  getItemTestId,
 }) {
   const mismatchedTimerRef = useRef(0);
   const { participants, isLoading, isFetching, onLoadMore, total } = useParticipants({
@@ -69,6 +74,8 @@ export default function SearchResultList({
       onLoadMore={onLoadMore}
       total={total}
       title={'Search results'}
+      containerTestId={containerTestId}
+      getItemTestId={getItemTestId}
     />
   );
 }

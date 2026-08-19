@@ -2702,6 +2702,10 @@ const ChatBox = forwardRef((props, boxRef) => {
               onClose={event => {
                 if (event.target.innerHTML !== query) stopProcessingSymbols();
               }}
+              containerTestId="chat-hash-search-results-list"
+              getItemTestId={participant =>
+                `chat-hash-search-item-${participant.project_id}_${participant.id}`
+              }
             />
           )}
           {slashPhase !== 'idle' && (
