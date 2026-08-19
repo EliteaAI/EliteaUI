@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildScorecard, getTargetKey } from '../scorecard.helpers';
+import { buildScorecard, getTargetKey, normalizeScore } from '../scorecard.helpers';
 
 // A run snapshot with one case and one code-validation binding (engine 'code').
 const makeRun = () => ({
@@ -65,5 +65,56 @@ describe('buildScorecard — code validation results', () => {
     expect(card.counts.metAll).toBe(0);
     // The errored row still joins (it has code_validation_id), so the cell is present.
     expect(card.cases[0].cells[0].result).not.toBeNull();
+  });
+});
+
+// Mirrors tests/unit/utils/test_evaluation_scoring.py — this helper is a fallback whose output is
+// summed together with server-provided normalized_score values, so it has to agree with the
+// server on scale, range and rounding or it silently skews the provisional headline.
+describe('normalizeScore — parity with the server normalizer', () => {
+  it('returns null for an absent or non-numeric native score', () => {
+    expect(normalizeScore(null, { scaleType: 'continuous' })).toBeNull();
+    expect(normalizeScore('abc', { scaleType: 'continuous' })).toBeNull();
+    expect(normalizeScore(Number.NaN, { scaleType: 'continuous' })).toBeNull();
+  });
+
+  it('maps onto 0..100, not 0..1', () => {
+    expect(normalizeScore(78, { scaleType: 'continuous', scaleMin: 0, scaleMax: 100 })).toBe(78);
+    expect(normalizeScore(15, { scaleType: 'continuous', scaleMin: 10, scaleMax: 20 })).toBe(50);
+  });
+
+  it('scores binary on truthiness', () => {
+    expect(normalizeScore(true, { scaleType: 'binary' })).toBe(100);
+    expect(normalizeScore(0, { scaleType: 'binary' })).toBe(0);
+  });
+
+  it('honours the authored ordinal min instead of assuming 1', () => {
+    expect(normalizeScore(4, { scaleType: 'ordinal', scaleMin: 1, scaleMax: 5 })).toBe(75);
+    expect(normalizeScore(2, { scaleType: 'ordinal', scaleMin: 0, scaleMax: 4 })).toBe(50);
+    expect(normalizeScore(4, { scaleType: 'ordinal', scaleMin: 2, scaleMax: 6 })).toBe(50);
+  });
+
+  it('clamps before flipping polarity', () => {
+    expect(normalizeScore(120, { scaleType: 'continuous', scaleMin: 0, scaleMax: 100 })).toBe(100);
+    expect(
+      normalizeScore(12, { scaleType: 'continuous', scaleMin: 0, scaleMax: 100, polarity: 'lower_better' }),
+    ).toBe(88);
+  });
+
+  it('reproduces the canonical 86.5 worked example', () => {
+    const items = [
+      [normalizeScore(78, { scaleType: 'continuous', scaleMin: 0, scaleMax: 100 }), 2],
+      [normalizeScore(4, { scaleType: 'ordinal', scaleMin: 1, scaleMax: 5 }), 1],
+      [normalizeScore(true, { scaleType: 'binary' }), 1],
+      [
+        normalizeScore(12, { scaleType: 'continuous', scaleMin: 0, scaleMax: 100, polarity: 'lower_better' }),
+        1,
+      ],
+      [normalizeScore(true, { scaleType: 'binary' }), 1],
+    ];
+    expect(items.map(([value]) => value)).toEqual([78, 75, 100, 88, 100]);
+    const weighted = items.reduce((sum, [value, weight]) => sum + value * weight, 0);
+    const total = items.reduce((sum, [, weight]) => sum + weight, 0);
+    expect(weighted / total).toBe(86.5);
   });
 });

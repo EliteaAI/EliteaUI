@@ -10,6 +10,8 @@ import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { useCreateEvalCodeValidationMutation, useUpdateEvalCodeValidationMutation } from '../api';
 import {
   DEFAULT_CODE_VALIDATION_FORM,
+  EVAL_POLARITY,
+  EVAL_RETURN_CONTRACT,
   EVIDENCE_SCOPE_OPTIONS,
   NEW_ITEM_EVIDENCE_SCOPE,
   POLARITY_OPTIONS,
@@ -81,12 +83,13 @@ const CodeValidationEditorDialog = memo(props => {
     if (!isEdit && !Object.values(form.evidence_scope).some(Boolean)) {
       return 'Evidence scope must have at least one option selected.';
     }
-    if (form.return_contract === 'number') {
+    if (form.return_contract === EVAL_RETURN_CONTRACT.number) {
       const hasMin = form.scale_min !== '' && form.scale_min !== null;
       const hasMax = form.scale_max !== '' && form.scale_max !== null;
       if (hasMin && hasMax && Number(form.scale_min) >= Number(form.scale_max)) {
         return 'Scale min must be strictly less than scale max.';
       }
+      if (!form.polarity) return 'Pick a polarity — inverse metrics must be "Lower is better".';
     }
     return '';
   }, [form, isEdit]);
@@ -107,7 +110,10 @@ const CodeValidationEditorDialog = memo(props => {
       return_contract: form.return_contract,
       scale_min: hasMin ? Number(form.scale_min) : null,
       scale_max: hasMax ? Number(form.scale_max) : null,
-      polarity: form.polarity,
+      // A bool contract has no direction to state (pass is always the good outcome), so the
+      // selector is hidden and the value is fixed rather than left unset.
+      polarity:
+        form.return_contract === EVAL_RETURN_CONTRACT.number ? form.polarity : EVAL_POLARITY.higher_better,
     };
 
     try {
@@ -220,7 +226,7 @@ const CodeValidationEditorDialog = memo(props => {
         data-testid="code-validation-return-contract-select"
       />
 
-      {form.return_contract === 'number' && (
+      {form.return_contract === EVAL_RETURN_CONTRACT.number && (
         <>
           <Box sx={styles.row}>
             <TextField

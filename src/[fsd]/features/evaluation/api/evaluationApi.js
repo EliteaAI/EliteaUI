@@ -331,6 +331,17 @@ export const evaluationApi = eliteaApi
         }),
         invalidatesTags: [TAG_EVAL_RUN],
       }),
+      // Ask a run to stop (§14.2). A queued run comes back already `cancelled`; a
+      // running one keeps reporting `running` until its worker reaches the next case
+      // boundary and writes the terminal row, so the progress poll is what surfaces
+      // the final status rather than this response.
+      cancelEvalRun: build.mutation({
+        query: ({ projectId, runId }) => ({
+          url: `/elitea_core/eval_run_cancel/prompt_lib/${projectId}/${runId}`,
+          method: 'POST',
+        }),
+        invalidatesTags: [TAG_EVAL_RUN],
+      }),
 
       // ---- Results scorecard (B5, #6202) ----
       // Returns { run, results[], human_scores[], headline_score } for a single
@@ -408,6 +419,7 @@ export const {
   useEvalRunsQuery,
   useEvalRunQuery,
   useStartEvalRunMutation,
+  useCancelEvalRunMutation,
   useEvalRunResultsQuery,
   useEvalHumanScoresQuery,
   useWriteEvalHumanScoreMutation,

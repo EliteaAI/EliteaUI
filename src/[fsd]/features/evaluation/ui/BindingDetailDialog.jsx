@@ -57,6 +57,16 @@ const BindingDetailDialog = memo(props => {
   );
   const rubricDescription = dimensionDef?.description || codeValidationDef?.description || '';
 
+  // A dimension declares which engines it may be scored on (§16). Offering an engine the
+  // definition disallows lets the author save a binding the backend then rejects — or worse, one
+  // that runs on an engine the rubric was never written for. Fall back to the full set only when
+  // the definition isn't loaded, so the current value stays selectable.
+  const engineOptions = useMemo(() => {
+    const allowed = dimensionDef?.allowed_engines;
+    if (!allowed?.length) return BINDING_ENGINE_OPTIONS;
+    return BINDING_ENGINE_OPTIONS.filter(option => allowed.includes(option.value));
+  }, [dimensionDef]);
+
   useEffect(() => {
     let active = true;
     CodeMirrorLinterHelpers.getExtensionsByLang('python').then(({ extensionWithLinter }) => {
@@ -179,7 +189,7 @@ const BindingDetailDialog = memo(props => {
             value={form.engine}
             onChange={event => setField('engine', event.target.value)}
           >
-            {BINDING_ENGINE_OPTIONS.map(option => (
+            {engineOptions.map(option => (
               <FormControlLabel
                 key={option.value}
                 value={option.value}

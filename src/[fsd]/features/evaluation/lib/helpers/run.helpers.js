@@ -5,12 +5,15 @@ const RUN_STATUS_LABEL = {
   [EVAL_RUN_STATUS.running]: 'Running',
   [EVAL_RUN_STATUS.finished]: 'Finished',
   [EVAL_RUN_STATUS.errored]: 'Failed',
+  [EVAL_RUN_STATUS.cancelled]: 'Cancelled',
 };
 
 // A run is terminal once it can no longer change on its own — the progress
 // screen (#6) stops polling at this point (§14.2).
 export const isRunTerminal = status =>
-  status === EVAL_RUN_STATUS.finished || status === EVAL_RUN_STATUS.errored;
+  status === EVAL_RUN_STATUS.finished ||
+  status === EVAL_RUN_STATUS.errored ||
+  status === EVAL_RUN_STATUS.cancelled;
 
 export const isRunActive = status => status === EVAL_RUN_STATUS.created || status === EVAL_RUN_STATUS.running;
 

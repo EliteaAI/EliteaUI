@@ -48,19 +48,35 @@ export const evaluateTargetMet = (nativeScore, operator, target) => {
 };
 
 /**
- * Normalizes a native score to 0..1 using the scale bounds and polarity. Used as
- * a client-side fallback for a provisional headline while a human dimension is
- * still unscored; the server value is authoritative once present.
+ * Normalizes a native score onto the 0..100 quality axis. Used as a client-side fallback for a
+ * provisional headline while a human dimension is still unscored; the server value is
+ * authoritative once present.
+ *
+ * Mirrors the server's `normalize_score` exactly — same scale ranges, same 0..100 output, same
+ * clamp-then-flip order, same 2dp rounding. It has to: the fallback value is summed together
+ * with server-provided `normalized_score` values into one headline, so a 0..1 result here would
+ * silently drag the average down, and ignoring `scaleType` mis-scored every non-default ordinal.
  */
-export const normalizeScore = (nativeScore, { scaleMin = 0, scaleMax = 1, polarity } = {}) => {
+export const normalizeScore = (nativeScore, { scaleType, scaleMin, scaleMax, polarity } = {}) => {
   if (nativeScore == null) return null;
   const value = Number(nativeScore);
-  const min = Number(scaleMin);
-  const max = Number(scaleMax);
-  if (Number.isNaN(value) || Number.isNaN(min) || Number.isNaN(max) || max === min) return null;
-  let norm = (value - min) / (max - min);
-  if (polarity === EVAL_POLARITY.lower_better) norm = 1 - norm;
-  return Math.min(1, Math.max(0, norm));
+  if (!Number.isFinite(value)) return null;
+
+  let norm;
+  if (scaleType === EVAL_SCALE_TYPE.binary) {
+    norm = value ? 100 : 0;
+  } else {
+    // Ordinal points are 1-based unless the author set an explicit min; continuous defaults to 0..100.
+    const isOrdinal = scaleType === EVAL_SCALE_TYPE.ordinal;
+    const min = Number(scaleMin ?? (isOrdinal ? 1 : 0));
+    const max = Number(scaleMax ?? (isOrdinal ? NaN : 100));
+    if (!Number.isFinite(min) || !Number.isFinite(max) || max === min) return null;
+    norm = ((value - min) / (max - min)) * 100;
+  }
+
+  norm = Math.min(100, Math.max(0, norm));
+  if (polarity === EVAL_POLARITY.lower_better) norm = 100 - norm;
+  return Math.round(norm * 100) / 100;
 };
 
 /** Short numeric label for a score cell; '—' when absent. */
@@ -207,6 +223,7 @@ export const buildScorecard = ({ run, results = [], humanScores = [], headlineSc
         normalizedScore != null
           ? normalizedScore
           : normalizeScore(nativeScore, {
+              scaleType: binding.scaleType,
               scaleMin: binding.scaleMin,
               scaleMax: binding.scaleMax,
               polarity: binding.polarity,

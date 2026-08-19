@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildRunHistory, formatScoreDelta } from '../run.helpers';
+import {
+  buildRunHistory,
+  formatRunStatus,
+  formatScoreDelta,
+  isRunActive,
+  isRunTerminal,
+} from '../run.helpers';
 
 // Runs arrive newest first, mirroring the eval_runs list endpoint.
 const runs = [
@@ -39,6 +45,24 @@ describe('buildRunHistory', () => {
   it('does not mutate the input runs', () => {
     buildRunHistory(runs);
     expect(runs[0]).not.toHaveProperty('delta');
+  });
+});
+
+describe('run status vocabulary', () => {
+  it('stops the progress poll on a cancelled run', () => {
+    expect(isRunTerminal('cancelled')).toBe(true);
+    expect(isRunTerminal('running')).toBe(false);
+    expect(isRunTerminal('created')).toBe(false);
+  });
+
+  it('does not treat a cancelled run as still active', () => {
+    expect(isRunActive('cancelled')).toBe(false);
+  });
+
+  // A deliberate stop must not read as a failure of the agent or the rubric.
+  it('labels a cancelled run distinctly from a failed one', () => {
+    expect(formatRunStatus('cancelled')).toBe('Cancelled');
+    expect(formatRunStatus('errored')).toBe('Failed');
   });
 });
 

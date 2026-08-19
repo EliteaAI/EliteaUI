@@ -1,11 +1,11 @@
-import { memo, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Box, CircularProgress, LinearProgress, Typography } from '@mui/material';
 
 import { Button, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 
-import { useEvalRunQuery } from '../api';
+import { useCancelEvalRunMutation, useEvalRunQuery } from '../api';
 import { EVAL_RUN_STATUS } from '../lib/constants';
 import { formatRunStatus, formatScore, isRunActive, isRunTerminal, runProgressPercent } from '../lib/helpers';
 
@@ -50,6 +50,26 @@ const RunProgressDialog = memo(props => {
     }
   }, [run, run?.status, isError, runId, onTerminal]);
 
+  const [cancelRun, { isLoading: isCancelling }] = useCancelEvalRunMutation();
+
+  // A running worker only observes the stop flag at its next case boundary, so the
+  // status keeps reading `running` for a while after the request succeeds. Track the
+  // request locally to explain that gap instead of leaving the button looking inert.
+  const [cancelRequested, setCancelRequested] = useState(false);
+
+  useEffect(() => {
+    setCancelRequested(false);
+  }, [runId]);
+
+  const handleCancel = useCallback(async () => {
+    try {
+      await cancelRun({ projectId, runId }).unwrap();
+      setCancelRequested(true);
+    } catch {
+      // A 409 means the run reached a terminal state first; the poll shows the truth.
+    }
+  }, [cancelRun, projectId, runId]);
+
   const styles = runProgressDialogStyles();
 
   const view = useMemo(() => {
@@ -64,6 +84,7 @@ const RunProgressDialog = memo(props => {
       active: isRunActive(status) || (!status && !isError),
       finished: status === EVAL_RUN_STATUS.finished,
       errored: status === EVAL_RUN_STATUS.errored,
+      cancelled: status === EVAL_RUN_STATUS.cancelled,
       headline: run?.headline_score,
       error: run?.error,
     };
@@ -102,14 +123,25 @@ const RunProgressDialog = memo(props => {
             </Typography>
           </Box>
 
-          {view.finished && (
+          {cancelRequested && view.active && (
+            <Typography
+              variant="bodySmall"
+              color="text.secondary"
+              data-testid="evaluation-run-progress-cancel-pending"
+            >
+              Stop requested. The run finishes the case it is on, then stops and keeps the cases it already
+              scored.
+            </Typography>
+          )}
+
+          {(view.finished || view.cancelled) && (
             <Box sx={styles.scoreRow}>
               <Typography variant="headingSmall">{formatScore(view.headline)}</Typography>
               <Typography
                 variant="bodySmall"
                 color="text.secondary"
               >
-                Weighted score
+                {view.cancelled ? 'Weighted score (partial)' : 'Weighted score'}
               </Typography>
             </Box>
           )}
@@ -121,6 +153,19 @@ const RunProgressDialog = memo(props => {
               data-testid="evaluation-run-progress-error"
             >
               {view.error || 'The run failed. Please try again.'}
+            </Typography>
+          )}
+
+          {/* A stopped run only carries a reason when nobody asked it to stop — currently the
+              wall-clock cap. Without it a timed-out run is indistinguishable from a cancellation
+              and the missing cases look like someone's choice. */}
+          {view.cancelled && view.error && (
+            <Typography
+              variant="bodySmall"
+              sx={styles.error}
+              data-testid="evaluation-run-progress-stop-reason"
+            >
+              {view.error}
             </Typography>
           )}
         </>
@@ -144,7 +189,18 @@ const RunProgressDialog = memo(props => {
           >
             Close
           </Button.BaseBtn>
-          {view.finished && (
+          {view.active && !isError && (
+            <Button.BaseBtn
+              variant={BUTTON_VARIANTS.elitea}
+              color={BUTTON_COLORS.secondary}
+              disabled={isCancelling || cancelRequested}
+              onClick={handleCancel}
+              data-testid="evaluation-run-progress-cancel"
+            >
+              {cancelRequested ? 'Stopping…' : 'Cancel run'}
+            </Button.BaseBtn>
+          )}
+          {(view.finished || view.cancelled) && (
             <Button.BaseBtn
               variant={BUTTON_VARIANTS.elitea}
               color={BUTTON_COLORS.primary}

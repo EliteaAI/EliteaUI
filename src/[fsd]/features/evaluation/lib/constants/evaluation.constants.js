@@ -80,13 +80,15 @@ export const EVAL_PERMISSIONS = {
 };
 
 // Eval run lifecycle (§14.2). Backend EvalRunStatus: a run is created, moves to
-// running, then reaches finished or errored. The progress screen (#6) polls
-// until a terminal status is reached.
+// running, then reaches finished, errored, or cancelled. The progress screen (#6)
+// polls until a terminal status is reached. `cancelled` is kept distinct from
+// `errored` so a deliberate stop is not read as a failure of the agent or rubric.
 export const EVAL_RUN_STATUS = {
   created: 'created',
   running: 'running',
   finished: 'finished',
   errored: 'errored',
+  cancelled: 'cancelled',
 };
 
 export const EVAL_RUN_TRIGGER = {
@@ -207,7 +209,9 @@ export const DEFAULT_CODE_VALIDATION_FORM = {
   return_contract: EVAL_RETURN_CONTRACT.bool,
   scale_min: '',
   scale_max: '',
-  polarity: EVAL_POLARITY.higher_better,
+  // Left unset on purpose (same reason as DEFAULT_DIMENSION_FORM): a "lower is better" check
+  // (latency, error count) scores inverted if the author never states the direction.
+  polarity: '',
 };
 
 // Dataset case provenance (§17). Set by the backend; the UI only displays it.
