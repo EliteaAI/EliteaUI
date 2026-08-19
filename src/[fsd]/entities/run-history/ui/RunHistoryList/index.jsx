@@ -3,15 +3,19 @@ import { memo, useMemo } from 'react';
 import { Box } from '@mui/material';
 
 import ListInfiniteMoreLoader from '@/ComponentsLib/ListInfiniteMoreLoader';
+import { resolveRunHistoryColumns } from '@/[fsd]/entities/run-history/lib/helpers';
 import { useRunHistorySorting } from '@/[fsd]/entities/run-history/lib/hooks';
 import { RunHistoryListItem, RunHistorySortableHeader } from '@/[fsd]/entities/run-history/ui';
-import { ParticipantEntityTypes } from '@/[fsd]/features/chat/participants/lib/constants/participant.constants';
+import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import useGetWindowWidth from '@/hooks/useGetWindowWidth';
 import useIsSmallWindow from '@/hooks/useIsSmallWindow';
 import { ContentContainer } from '@/pages/Common';
 
+const { ParticipantEntityTypes } = ParticipantEntityConstants;
+
 const SORT_TYPES = {
   DATE: 'date',
+  EVENT: 'event',
   VERSION: 'version',
   DURATION: 'duration',
 };
@@ -30,6 +34,7 @@ const RunHistoryList = memo(props => {
     selectedHistoryItem,
     source,
     handleRestoreConversation,
+    hasEvent = false,
   } = props;
   const { isSmallWindow } = useIsSmallWindow();
   const { windowWidth } = useGetWindowWidth();
@@ -47,6 +52,9 @@ const RunHistoryList = memo(props => {
         const dateB = new Date(b.created_at?.replace?.('Z', '') || b.created_at);
         return dateA.getTime() - dateB.getTime();
       },
+      [SORT_TYPES.EVENT]: (a, b) =>
+        (a.event_sort ?? a.event_label ?? '').localeCompare(b.event_sort ?? b.event_label ?? '') ||
+        (a.event_label ?? '').localeCompare(b.event_label ?? ''),
       [SORT_TYPES.VERSION]: (a, b) => {
         if (noVersions) return 0;
 
@@ -63,10 +71,11 @@ const RunHistoryList = memo(props => {
   const tableHeaderItems = useMemo(
     () => [
       { label: 'Date', type: SORT_TYPES.DATE },
+      ...(hasEvent ? [{ label: 'Event', type: SORT_TYPES.EVENT }] : []),
       ...(noVersions ? [] : [{ label: 'Version', type: SORT_TYPES.VERSION }]),
       { label: 'Duration', type: SORT_TYPES.DURATION },
     ],
-    [noVersions],
+    [noVersions, hasEvent],
   );
 
   const sortedConversations = useMemo(
@@ -82,7 +91,7 @@ const RunHistoryList = memo(props => {
             headerItems={tableHeaderItems}
             sortConfig={sortConfig}
             onSort={handleSortItems}
-            gridTemplateColumns={noVersions ? '1.5fr 1.5fr' : '1.5fr 1.5fr 1fr'}
+            gridTemplateColumns={resolveRunHistoryColumns(noVersions, hasEvent)}
           />
         )}
         <Box sx={styles.list}>
@@ -92,7 +101,8 @@ const RunHistoryList = memo(props => {
                 key={`skeleton-${index}`}
                 useMock
                 source={source}
-                {...(source == ParticipantEntityTypes.Toolkit ? { versions: null } : {})}
+                hasEvent={hasEvent}
+                {...(source === ParticipantEntityTypes.Toolkit ? { versions: null } : {})}
               />
             ))
           ) : (
@@ -107,6 +117,7 @@ const RunHistoryList = memo(props => {
                   tooltipTrigger={windowWidth}
                   handleRestoreConversation={handleRestoreConversation}
                   source={source}
+                  hasEvent={hasEvent}
                 />
               ))}
             </>

@@ -3,7 +3,7 @@ import { memo, useCallback, useMemo } from 'react';
 import { Box, IconButton, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
-import { PinButton } from '@/[fsd]/widgets/pin-toggler/ui';
+import { PinButton } from '@/[fsd]/widgets/pin-toggler';
 import { useEliteaAssistantRef, useGetSupportAssistantConfigQuery } from '@/[fsd]/widgets/support-assistant';
 import EliteaAssistantIcon from '@/assets/icons/elitea-assistant-icon.svg?react';
 import PublishIcon from '@/assets/publish-version.svg?react';
@@ -68,6 +68,7 @@ const DataTableNameCell = memo(props => {
           <Typography
             variant="headingSmall"
             component="div"
+            data-testid={String(cardType).toLowerCase().includes('mcp') ? 'mcp-table-row-name' : undefined}
             sx={styles.nameText}
           >
             <HighlightQuery

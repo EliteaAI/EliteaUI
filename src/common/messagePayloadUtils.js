@@ -232,4 +232,16 @@ export const generateChatContinuePayload = ({
   };
 };
 
-export const generateMcpContinuePayload = payload => generateChatContinuePayload(payload);
+export const generateMcpContinuePayload = ({
+  authorization_request_id,
+  authorization_action,
+  mcp_auth_decisions,
+  ...payload
+}) => ({
+  ...generateChatContinuePayload(payload),
+  mcp_auth_resume: true,
+  mcp_auth_action: authorization_action,
+  mcp_auth_decisions,
+  authorization_request_id,
+  should_continue: false,
+});

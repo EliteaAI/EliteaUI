@@ -14,12 +14,12 @@ import {
   Typography,
 } from '@mui/material';
 
+import { AgentDetails } from '@/[fsd]/features/agent';
 import AgentConversationStarters from '@/[fsd]/features/agent-hub/ui/AgentConversationStarters';
 import AgentHubLike from '@/[fsd]/features/agent-hub/ui/AgentHubLike';
 import AgentHubModalMenu from '@/[fsd]/features/agent-hub/ui/AgentHubModalMenu';
 import AgentWelcomeMessage from '@/[fsd]/features/agent-hub/ui/AgentWelcomeMessage';
-import { ConfigurationModal } from '@/[fsd]/features/agent/ui/agent-details/configurations';
-import { ELITEA_CATALOG_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/eliteaCatalogTourTargets.constants';
+import { ELITEA_CATALOG_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { useLazyPublicApplicationDetailsQuery } from '@/api';
 import { ChatParticipantType, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
 import AuthorContainer from '@/components/AuthorContainer';
@@ -177,7 +177,10 @@ const AgentModal = memo(props => {
         aria-describedby="agent-modal-description"
         sx={styles.dialog}
       >
-        <Box sx={styles.mainPanel}>
+        <Box
+          sx={styles.mainPanel}
+          data-testid="catalog-agent-modal"
+        >
           <DialogTitle sx={styles.dialogTitle}>
             <Box sx={styles.authorContainer}>
               <AuthorContainer
@@ -190,6 +193,7 @@ const AgentModal = memo(props => {
               <Typography
                 variant="bodyMedium"
                 color="text.secondary"
+                data-testid="catalog-agent-modal-owner-name"
               >
                 {cardAuthors[0]?.name || 'Author'}
               </Typography>
@@ -198,6 +202,7 @@ const AgentModal = memo(props => {
               <AgentHubLike
                 viewMode={ViewMode.Public}
                 data={agent?.name ? agent : agentDetails || {}}
+                testId="catalog-agent-modal-like-button"
               />
               <AgentHubModalMenu
                 agentId={agent?.id}
@@ -206,6 +211,7 @@ const AgentModal = memo(props => {
                 link={link}
               />
               <IconButton
+                data-testid="catalog-agent-modal-close-button"
                 variant="elitea"
                 color="secondary"
                 aria-label="close"
@@ -224,17 +230,20 @@ const AgentModal = memo(props => {
                   entityType={ChatParticipantType.Applications}
                   projectId={PUBLIC_PROJECT_ID}
                   editable={false}
+                  data-testid="catalog-agent-modal-agent-icon"
                 />
               </Box>
               <Typography
                 variant="headingMedium"
                 color="text.secondary"
+                data-testid="catalog-agent-modal-agent-name"
               >
                 {name}
               </Typography>
               <Typography
                 variant="bodySmall2"
                 sx={styles.description(isSmallHeight)}
+                data-testid="catalog-agent-modal-description"
               >
                 {description}
               </Typography>
@@ -242,6 +251,7 @@ const AgentModal = memo(props => {
                 variant="bodySmall"
                 sx={styles.showContext}
                 onClick={onShowContext}
+                data-testid="catalog-agent-modal-show-instructions-link"
               >
                 Show instructions
               </Typography>
@@ -249,14 +259,19 @@ const AgentModal = memo(props => {
                 <AgentConversationStarters
                   conversation_starters={agentDetails?.version_details?.conversation_starters || []}
                   onSelectStarter={onSelectStarter}
+                  testId="catalog-agent-modal-chat-starters-section"
                 />
-                <AgentWelcomeMessage welcome_message={welcomeMessage} />
+                <AgentWelcomeMessage
+                  welcome_message={welcomeMessage}
+                  testId="catalog-agent-modal-welcome-message-section"
+                />
               </Box>
             </Box>
           </DialogContent>
           <DialogActions sx={styles.dialogActions}>
             <Button
               data-tour={ELITEA_CATALOG_TOUR_TARGET_IDS.primaryActionButton}
+              data-testid="catalog-agent-modal-start-chat-button"
               variant="elitea"
               color="primary"
               onClick={onStartConversation()}
@@ -267,7 +282,7 @@ const AgentModal = memo(props => {
         </Box>
       </Dialog>
       {showContext && (
-        <ConfigurationModal.StyledShowContextModal
+        <AgentDetails.ConfigurationModal.StyledShowContextModal
           context={agentDetails?.version_details?.instructions || ''}
           open={showContext}
           onClose={() => setShowContext(false)}

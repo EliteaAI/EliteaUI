@@ -5,7 +5,7 @@ import { Typography } from '@mui/material';
 import Tooltip from '@/ComponentsLib/Tooltip';
 
 const RunHistoryTooltipCell = memo(props => {
-  const { text, trigger } = props;
+  const { text, trigger, tooltipText } = props;
 
   const cellRef = useRef(null);
 
@@ -19,7 +19,7 @@ const RunHistoryTooltipCell = memo(props => {
 
   return (
     <Tooltip
-      title={tooltip ? text : ''}
+      title={tooltipText || (tooltip ? text : '')}
       placement="top"
     >
       <Typography

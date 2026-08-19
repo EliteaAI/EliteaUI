@@ -4,9 +4,9 @@ import { useFormikContext } from 'formik';
 
 import { Box, Typography } from '@mui/material';
 
+import { ContextStrategyConstants } from '@/[fsd]/shared/lib/constants';
+import { handleConvertToNumberChange } from '@/[fsd]/shared/lib/helpers/contextStrategy.helpers';
 import { Input, Switch } from '@/[fsd]/shared/ui';
-import { CONTEXT_MESSAGES } from '@/[fsd]/widgets/context-budget/lib/constants';
-import { handleConvertToNumberChange } from '@/[fsd]/widgets/context-budget/lib/validation';
 
 const MemorySummarization = memo(props => {
   const { onAutoSaveRequested } = props;
@@ -53,6 +53,7 @@ const MemorySummarization = memo(props => {
           </Typography>
         </Box>
         <Switch.BaseSwitch
+          data-testid="automatic-summarization-toggle"
           checked={values.enable_summarization}
           onChange={handleSummarizationEnabledChange}
           disabled={!values.context_enabled}
@@ -74,12 +75,15 @@ const MemorySummarization = memo(props => {
           error={!!errors.summary_llm_settings?.instructions}
           helperText={errors.summary_llm_settings?.instructions}
           disabled={isSummarizationDisabled}
-          placeholder={CONTEXT_MESSAGES.DEFAULT_SUMMARY_INSTRUCTION}
+          placeholder={ContextStrategyConstants.CONTEXT_MESSAGES.DEFAULT_SUMMARY_INSTRUCTION}
           hasActionsToolBar
           showCopyAction
           showExpandAction={false}
           fieldName="Summarization Instructions"
           containerProps={styles.inputContainer}
+          inputProps={{
+            'data-testid': 'summarization-instructions-textarea',
+          }}
         />
       </Box>
 
@@ -99,6 +103,7 @@ const MemorySummarization = memo(props => {
           containerProps={styles.inputContainer}
           inputProps={{
             pattern: '[1-9][0-9]*',
+            'data-testid': 'target-summary-tokens-input',
           }}
         />
       </Box>

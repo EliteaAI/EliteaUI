@@ -1,12 +1,10 @@
 import * as yup from 'yup';
 
-import { DEFAULT_MAX_TOKENS_CUSTOM } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
-import {
-  DEFAULT_CONTEXT_STRATEGY,
-  SEPARATOR,
-  VALIDATION_LIMITS,
-} from '@/[fsd]/widgets/context-budget/lib/constants';
+import { ContextStrategyConstants, LLMSettingsConstants } from '@/[fsd]/shared/lib/constants';
 import { DEFAULT_PERSONA, PERSONA_OPTIONS } from '@/common/constants';
+
+const { DEFAULT_CONTEXT_STRATEGY, SEPARATOR, VALIDATION_LIMITS } = ContextStrategyConstants;
+const { DEFAULT_MAX_TOKENS_CUSTOM } = LLMSettingsConstants;
 
 // #5392: every persona starts with an empty instructions slot.
 export const EMPTY_PERSONALITY_INSTRUCTIONS = PERSONA_OPTIONS.reduce(
@@ -18,6 +16,25 @@ export const PROFILE_INITIAL_VALUES = {
   persona: DEFAULT_PERSONA,
   personality_instructions: { ...EMPTY_PERSONALITY_INSTRUCTIONS },
   default_internal_mcp_enabled: false,
+  default_skill_builder_enabled: false,
+  default_project_context_builder_enabled: false,
+  default_agent_internal_mcp_enabled: false,
+  default_agent_skill_builder_enabled: false,
+  default_agent_project_context_builder_enabled: false,
+  default_agent_ask_user_enabled: false,
+  default_ask_user_enabled: false,
+  default_image_generation_enabled: false,
+  default_data_analysis_enabled: false,
+  default_planner_enabled: false,
+  default_pyodide_enabled: false,
+  default_swarm_enabled: false,
+  default_lazy_tools_mode_enabled: false,
+  default_agent_image_generation_enabled: false,
+  default_agent_data_analysis_enabled: false,
+  default_agent_planner_enabled: false,
+  default_agent_pyodide_enabled: false,
+  default_agent_swarm_enabled: false,
+  default_agent_lazy_tools_mode_enabled: false,
   context_enabled: DEFAULT_CONTEXT_STRATEGY.ENABLED,
   max_context_tokens: DEFAULT_CONTEXT_STRATEGY.MAX_CONTEXT_TOKENS,
   preserve_recent_messages: DEFAULT_CONTEXT_STRATEGY.PRESERVE_RECENT_MESSAGES,
@@ -58,7 +75,26 @@ export const serializeProfileFormData = (authorData, defaultModel, selectedProje
       ...(p.personality_instructions || {}),
     },
     default_internal_mcp_enabled: p.default_internal_mcp_enabled ?? false,
+    default_skill_builder_enabled: p.default_skill_builder_enabled ?? false,
+    default_project_context_builder_enabled: p.default_project_context_builder_enabled ?? false,
+    default_agent_internal_mcp_enabled: p.default_agent_internal_mcp_enabled ?? false,
+    default_agent_skill_builder_enabled: p.default_agent_skill_builder_enabled ?? false,
+    default_agent_project_context_builder_enabled: p.default_agent_project_context_builder_enabled ?? false,
+    default_agent_ask_user_enabled: p.default_agent_ask_user_enabled ?? false,
     midturn_injection_enabled: p.midturn_injection_enabled ?? false,
+    default_ask_user_enabled: p.default_ask_user_enabled ?? false,
+    default_image_generation_enabled: p.default_image_generation_enabled ?? false,
+    default_data_analysis_enabled: p.default_data_analysis_enabled ?? false,
+    default_planner_enabled: p.default_planner_enabled ?? false,
+    default_pyodide_enabled: p.default_pyodide_enabled ?? false,
+    default_swarm_enabled: p.default_swarm_enabled ?? false,
+    default_lazy_tools_mode_enabled: p.default_lazy_tools_mode_enabled ?? false,
+    default_agent_image_generation_enabled: p.default_agent_image_generation_enabled ?? false,
+    default_agent_data_analysis_enabled: p.default_agent_data_analysis_enabled ?? false,
+    default_agent_planner_enabled: p.default_agent_planner_enabled ?? false,
+    default_agent_pyodide_enabled: p.default_agent_pyodide_enabled ?? false,
+    default_agent_swarm_enabled: p.default_agent_swarm_enabled ?? false,
+    default_agent_lazy_tools_mode_enabled: p.default_agent_lazy_tools_mode_enabled ?? false,
     context_enabled: cm.enabled ?? DEFAULT_CONTEXT_STRATEGY.ENABLED,
     max_context_tokens: cm.max_context_tokens ?? DEFAULT_CONTEXT_STRATEGY.MAX_CONTEXT_TOKENS,
     preserve_recent_messages:
@@ -80,7 +116,26 @@ export const deserializeProfileFormData = formValues => ({
     // #5392: send the full per-persona map; default_instructions is server-owned now.
     personality_instructions: formValues.personality_instructions,
     default_internal_mcp_enabled: formValues.default_internal_mcp_enabled,
+    default_skill_builder_enabled: formValues.default_skill_builder_enabled,
+    default_project_context_builder_enabled: formValues.default_project_context_builder_enabled,
+    default_agent_internal_mcp_enabled: formValues.default_agent_internal_mcp_enabled,
+    default_agent_skill_builder_enabled: formValues.default_agent_skill_builder_enabled,
+    default_agent_project_context_builder_enabled: formValues.default_agent_project_context_builder_enabled,
+    default_agent_ask_user_enabled: formValues.default_agent_ask_user_enabled,
     midturn_injection_enabled: formValues.midturn_injection_enabled,
+    default_ask_user_enabled: formValues.default_ask_user_enabled,
+    default_image_generation_enabled: formValues.default_image_generation_enabled,
+    default_data_analysis_enabled: formValues.default_data_analysis_enabled,
+    default_planner_enabled: formValues.default_planner_enabled,
+    default_pyodide_enabled: formValues.default_pyodide_enabled,
+    default_swarm_enabled: formValues.default_swarm_enabled,
+    default_lazy_tools_mode_enabled: formValues.default_lazy_tools_mode_enabled,
+    default_agent_image_generation_enabled: formValues.default_agent_image_generation_enabled,
+    default_agent_data_analysis_enabled: formValues.default_agent_data_analysis_enabled,
+    default_agent_planner_enabled: formValues.default_agent_planner_enabled,
+    default_agent_pyodide_enabled: formValues.default_agent_pyodide_enabled,
+    default_agent_swarm_enabled: formValues.default_agent_swarm_enabled,
+    default_agent_lazy_tools_mode_enabled: formValues.default_agent_lazy_tools_mode_enabled,
   },
   default_context_management: {
     enabled: formValues.context_enabled,

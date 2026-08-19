@@ -5,7 +5,8 @@ import { useSelector } from 'react-redux';
 import { Box, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
-import { SIDEBAR_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
+import { SIDEBAR_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
+import LazyProjectAvatar from '@/[fsd]/widgets/sidebar-root/ui/LazyProjectAvatar';
 import ProjectAvatar from '@/[fsd]/widgets/sidebar-root/ui/ProjectAvatar';
 import ProjectSelect from '@/components/ProjectSelect';
 
@@ -16,8 +17,8 @@ const SidebarProjectSelect = memo(() => {
   const styles = sidebarProjectSelectStyles(sideBarCollapsed);
 
   const handleContainerMouseDown = useCallback(e => {
+    if (!containerRef.current?.contains(e.target)) return;
     if (e.target.closest('[role="combobox"]')) return;
-    if (e.target.closest('[role="dialog"]')) return;
     const select = containerRef.current?.querySelector('[role="combobox"]');
     if (select?.getAttribute('aria-expanded') === 'true') return;
     select?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
@@ -66,7 +67,7 @@ const SidebarProjectSelect = memo(() => {
   const customRenderOption = useCallback(option => {
     return (
       <Box sx={optionStyles.optionRow}>
-        <ProjectAvatar
+        <LazyProjectAvatar
           projectName={option?.label}
           projectId={option?.value}
           size="1.5rem"
@@ -90,6 +91,7 @@ const SidebarProjectSelect = memo(() => {
     >
       <ProjectSelect
         tourId={SIDEBAR_TOUR_TARGET_IDS.projectSwitcher}
+        data-testid="project-selector-trigger"
         sx={styles.selectWrapper}
         selectSX={styles.selectSX}
         containerSX={styles.containerSX}
@@ -97,6 +99,7 @@ const SidebarProjectSelect = memo(() => {
         customRenderOption={customRenderOption}
         inputSX={styles.inputSX}
         showBorder={false}
+        maxListHeight="15.5rem"
         selectPlaceholder={
           <StyledTooltip
             placement="right"

@@ -35,17 +35,20 @@ Importing FROM legacy code into FSD code is acceptable during migration (e.g., `
 
 ```
 src/[fsd]/
-  app/        → application shell: store, layout, providers, routes
+  app/        → application shell: layout, providers, routes
   pages/      → thin page wrappers that compose widgets/features
-  widgets/    → self-contained composite UI blocks
-  features/   → business feature modules (largest layer)
+  widgets/    → self-contained composite UI blocks (peers with features)
+  features/   → business feature modules — largest layer (peers with widgets)
   entities/   → domain entity components and logic
-  shared/     → reusable UI kit, hooks, helpers, constants, config
+  shared/     → reusable UI kit, hooks, helpers, constants, config, store
   stories/    → Storybook stories (non-standard layer, collocated)
 ```
 
-**Import rule:** a layer may only import from layers below it. `features/` can import from `entities/` and
-`shared/`, but never from `widgets/` or `pages/`.
+**Import rule:** a layer may only import from layers below it. `features/` and `widgets/` are **peers** — they
+may import from each other. Features are large business modules; widgets are smaller self-contained UI blocks.
+Neither may import from `pages/` or `app/`.
+
+**Redux store** lives in `shared/config/store.js` — accessible from any layer.
 
 ### Slice Internal Structure
 
@@ -237,6 +240,15 @@ export const STATUS_OPTIONS = {
   archived: 'archived',
   draft: 'draft',
 };
+```
+
+**Importing shared constants** — import the namespace from the shared barrel, then destructure:
+
+```js
+import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
+
+// Inside component or function:
+const { ParticipantEntityTypes } = ParticipantEntityConstants;
 ```
 
 ### Helpers

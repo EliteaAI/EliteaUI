@@ -119,6 +119,8 @@ const lightPalette = {
     eliteaDefault: gradient,
     secondary: white,
     tabPanel: white01,
+    pageSection: white01,
+    section: grey003,
     modal: {
       simple: white,
     },
@@ -632,6 +634,17 @@ const lightPalette = {
     reasoning: {
       background: lightOrangeBgr,
       icon: lightOrange,
+    },
+  },
+  suggestionChip: {
+    border: light30,
+    background: {
+      default: 'transparent',
+      hover: dark10,
+    },
+    text: {
+      default: light00,
+      hover: gray60,
     },
   },
 };

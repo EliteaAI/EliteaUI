@@ -22,10 +22,15 @@ import {
   getActionOwnerPath,
 } from '@/[fsd]/features/chat/lib/helpers/executionHierarchy.helpers.js';
 import {
+  completeRootHitlDecision,
   getHitlResumeGroup,
+  getHitlResumeThreadId,
   getInterruptIdentity,
   getPendingHitlMessage,
+  hasRootHitlTurnEnded,
+  scheduleRootHitlDecision,
 } from '@/[fsd]/features/chat/lib/helpers/hitl.helpers.js';
+import { shouldQueueRootAuthorizationWithHitl } from '@/[fsd]/features/chat/lib/helpers/mcpAuthorization.helpers.js';
 import * as NewConversationHelpers from '@/[fsd]/features/chat/lib/helpers/newConversation.helpers';
 import {
   useBudgetWarning,
@@ -41,15 +46,9 @@ import { useFetchParticipantDetails } from '@/[fsd]/features/chat/participants/l
 import { BudgetWarningBanner, SlashSuggestionList, VoiceMiniPlayer } from '@/[fsd]/features/chat/ui';
 import { ChatMessageList } from '@/[fsd]/features/chat/ui/chat-box';
 import { UserMentionList } from '@/[fsd]/features/chat/ui/user-mention-list';
-import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
-import { MentionSkillList } from '@/[fsd]/features/skill/ui';
-import { MentionConstants } from '@/[fsd]/shared/lib/constants';
-import {
-  DEFAULT_MAX_TOKENS,
-  DEFAULT_REASONING_EFFORT,
-  DEFAULT_STEPS_LIMIT,
-  DEFAULT_TEMPERATURE,
-} from '@/[fsd]/shared/lib/constants/llmSettings.constants';
+import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
+import { MentionSkillList } from '@/[fsd]/features/skill';
+import { LLMSettingsConstants, MentionConstants } from '@/[fsd]/shared/lib/constants';
 import {
   cleanLLMSettings,
   isLLMSettingsFamilyConflict,
@@ -94,6 +93,9 @@ import NewChatInput from '@/pages/NewChat/NewChatInput';
 import RecommendationList from '@/pages/NewChat/Recommendations/RecommendationList';
 import SearchResultList from '@/pages/NewChat/Recommendations/SearchResultList';
 import { actions as chatActions } from '@/slices/chat';
+
+const { DEFAULT_MAX_TOKENS, DEFAULT_REASONING_EFFORT, DEFAULT_STEPS_LIMIT, DEFAULT_TEMPERATURE } =
+  LLMSettingsConstants;
 
 const ChatBox = forwardRef((props, boxRef) => {
   const {
@@ -182,6 +184,8 @@ const ChatBox = forwardRef((props, boxRef) => {
   // Map<serverUrl, { tool_name, resource_metadata_url, www_authenticate, resource_metadata }>
   // Resets automatically when the conversation changes — never written to localStorage.
   const sessionDeclinedMcpServersRef = useRef(new Map());
+  const lastSentQuestionRef = useRef('');
+  const stopRequestedRef = useRef(false);
 
   const dispatch = useDispatch();
   const { toastError, toastInfo } = useToast();
@@ -220,6 +224,22 @@ const ChatBox = forwardRef((props, boxRef) => {
   const hasPendingHitlInterrupt = Boolean(
     pendingHitlMessage?.hitlInterrupt || pendingHitlMessage?.hitlInterrupts?.length,
   );
+
+  // A clarifying question (ask_user) is a single scalar pause that accepts a
+  // free-text answer. Unlike other HITL pauses it should NOT lock the composer:
+  // the user may either pick an option on the card or type their own reply,
+  // which is routed back as the answer (see onSendMessage).
+  const isPendingClarifyingQuestion = useMemo(() => {
+    if (!pendingHitlMessage) return false;
+    const interrupts = Array.isArray(pendingHitlMessage.hitlInterrupts)
+      ? pendingHitlMessage.hitlInterrupts
+      : pendingHitlMessage.hitlInterrupt
+        ? [pendingHitlMessage.hitlInterrupt]
+        : [];
+    return interrupts.length === 1 && interrupts[0]?.guardrail_type === 'clarifying_question';
+  }, [pendingHitlMessage]);
+
+  const hasBlockingHitlInterrupt = hasPendingHitlInterrupt && !isPendingClarifyingQuestion;
 
   // Chat states
   const [selectedUsers, setSelectedUsers] = useState([]);
@@ -667,6 +687,18 @@ const ChatBox = forwardRef((props, boxRef) => {
   }, [stopStreaming]);
 
   useEffect(() => {
+    if (isStreaming) return;
+
+    const shouldRestore = stopRequestedRef.current && lastSentQuestionRef.current;
+    if (shouldRestore) {
+      chatInput.current?.setValue(lastSentQuestionRef.current);
+    }
+
+    lastSentQuestionRef.current = '';
+    stopRequestedRef.current = false;
+  }, [isStreaming]);
+
+  useEffect(() => {
     activeConversationRef.current = activeConversation;
   }, [activeConversation]);
 
@@ -694,6 +726,7 @@ const ChatBox = forwardRef((props, boxRef) => {
   }, [activeConversation?.uuid]);
 
   const handleStopStreaming = useCallback(() => {
+    stopRequestedRef.current = true;
     stopStreamingRef.current?.();
     onStopRun?.();
   }, [onStopRun]);
@@ -1015,6 +1048,7 @@ const ChatBox = forwardRef((props, boxRef) => {
           });
         }
 
+        lastSentQuestionRef.current = question;
         onClearAttachments?.();
         chatInput.current?.reset();
         // Handle participant state changes
@@ -1130,6 +1164,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       const theQuestion =
         chat_history[questionIndex]?.message_items?.find(item => item.item_type === 'text_message')
           ?.item_details?.content || '';
+      lastSentQuestionRef.current = theQuestion;
       const attachmentList =
         newAttachmentItems !== undefined
           ? newAttachmentItems.map(i => ({ filepath: i.item_details.filepath }))
@@ -1185,10 +1220,12 @@ const ChatBox = forwardRef((props, boxRef) => {
   /**
    * Continue MCP execution - shared logic for both auth success and skip auth flows.
    * @param {string} messageId - The message ID to continue from
-   * @param {boolean} addToIgnoreList - If true, adds the MCP server to ignore list (for "Skip" button)
+   * @param {boolean} addToIgnoreList - If true, adds the toolkit to this run's declined list
+   * @param {string} authorizationRequestId - Exact durable request to resolve
+   * @param {object} selectedAuthorizationAction - Card/routing metadata for that request
    */
   const continueMcpExecution = useCallback(
-    async (messageId, addToIgnoreList = false) => {
+    async (messageId, addToIgnoreList = false, authorizationRequestId, selectedAuthorizationAction) => {
       const message = chat_history.find(item => item.id === messageId);
       const questionIndex = chat_history.findIndex(item => item.id === message?.question_id);
       const theQuestion =
@@ -1199,9 +1236,15 @@ const ChatBox = forwardRef((props, boxRef) => {
       }
 
       // Track or remove the MCP server in the session-declined ref (never localStorage)
-      const authRequiredAction = message.toolActions?.find(
-        action => action.status === ToolActionStatus.actionRequired,
-      );
+      const authRequiredAction =
+        selectedAuthorizationAction ||
+        message.toolActions?.find(
+          action =>
+            action.status === ToolActionStatus.actionRequired &&
+            (!authorizationRequestId ||
+              action.authorizationRequestId === authorizationRequestId ||
+              action.id === authorizationRequestId),
+        );
       const serverUrl = authRequiredAction?.toolOutputs?.server_url;
       if (addToIgnoreList) {
         // User clicked "Skip" — track as declined for this conversation only
@@ -1234,6 +1277,14 @@ const ChatBox = forwardRef((props, boxRef) => {
       }
 
       const { question_id, threadId } = message;
+      const authMeta = authRequiredAction?.toolMeta || {};
+      const resumeThreadId =
+        authMeta.resume_strategy === 'aggregate_child'
+          ? authMeta.child_thread_id || authMeta.thread_id
+          : authMeta.root_thread_id || threadId;
+      const authorizationAction = addToIgnoreList ? 'skip' : 'authorize';
+      const exactRequestId =
+        authorizationRequestId || authRequiredAction?.authorizationRequestId || authRequiredAction?.id;
 
       const sessionDeclinedMcpServers = [...sessionDeclinedMcpServersRef.current.entries()].map(
         ([url, { actual_server_url, ...rest }]) => ({
@@ -1242,15 +1293,64 @@ const ChatBox = forwardRef((props, boxRef) => {
         }),
       );
 
-      const payload = generateMcpContinuePayload({
+      const continuePayload = {
         conversation_uuid: activeConversation?.uuid,
         projectId,
         message_id: messageId,
-        thread_id: threadId,
+        thread_id: resumeThreadId,
         participants: activeConversation?.participants || [],
         question: theQuestion,
         sessionDeclinedMcpServers,
-      });
+      };
+      const isDurableAuthorization = authMeta.guardrail_type === 'mcp_auth' && Boolean(authMeta.interrupt_id);
+      const shouldQueueWithRootHitl = shouldQueueRootAuthorizationWithHitl(
+        authMeta,
+        pendingHitlMessage,
+        messageId,
+      );
+      if (shouldQueueWithRootHitl) {
+        // Root-scoped durable MCP auth shares the same LangGraph checkpoint as
+        // sensitive-tool HITL cards. Route it through the root queue so rapid
+        // auth + sensitive decisions cannot launch concurrent worker resumes.
+        setChatHistory(prevMessages =>
+          prevMessages.map(msg =>
+            msg.id !== messageId
+              ? msg
+              : {
+                  ...msg,
+                  toolActions: msg.toolActions?.filter(
+                    action =>
+                      action.authorizationRequestId !== exactRequestId && action.id !== exactRequestId,
+                  ),
+                },
+          ),
+        );
+        onHitlResumeRef.current?.({
+          action: authorizationAction,
+          value: '',
+          toolCallId: authMeta.tool_call_id,
+          interruptId: exactRequestId,
+          guardrailType: authMeta.guardrail_type,
+          sessionDeclinedMcpServers,
+        });
+        return;
+      }
+      const payload = isDurableAuthorization
+        ? generateMcpContinuePayload({
+            ...continuePayload,
+            authorization_request_id: exactRequestId,
+            authorization_action: authorizationAction,
+            mcp_auth_decisions: [
+              {
+                interrupt_id: exactRequestId,
+                tool_call_id: authMeta.tool_call_id,
+                child_thread_id: authMeta.child_thread_id,
+                action: authorizationAction,
+                value: '',
+              },
+            ],
+          })
+        : generateChatContinuePayload(continuePayload);
 
       setChatHistory(prevMessages =>
         prevMessages.map(msg =>
@@ -1261,7 +1361,7 @@ const ChatBox = forwardRef((props, boxRef) => {
                 isLoading: true,
                 isStreaming: true,
                 toolActions: msg.toolActions?.filter(
-                  action => action.status !== ToolActionStatus.actionRequired,
+                  action => action.authorizationRequestId !== exactRequestId && action.id !== exactRequestId,
                 ),
               },
         ),
@@ -1270,7 +1370,15 @@ const ChatBox = forwardRef((props, boxRef) => {
       setStreamingInfo(question_id);
       emitContinue(payload);
     },
-    [chat_history, activeConversation, projectId, setChatHistory, setStreamingInfo, emitContinue],
+    [
+      chat_history,
+      activeConversation,
+      projectId,
+      pendingHitlMessage,
+      setChatHistory,
+      setStreamingInfo,
+      emitContinue,
+    ],
   );
 
   /**
@@ -1323,13 +1431,39 @@ const ChatBox = forwardRef((props, boxRef) => {
     [chat_history, activeConversation, projectId, setChatHistory, setStreamingInfo, emitContinue],
   );
 
-  // Accumulates per-child decisions for a parallel sub-agent fan-out so the
-  // single resume call carries every approve/reject once all N cards are
-  // actioned. Keyed by message id so a fresh interrupt resets the buffer.
+  // A separately dispatched worker child is resumed only once, so decisions
+  // belonging to that durable child are grouped here. In-process root
+  // aggregates do not use this buffer: the SDK supports one leaf decision per
+  // root resume and checkpoints the unresolved siblings.
   const pendingDecisionsRef = useRef({ messageId: null, decisions: {} });
+  // A root LangGraph checkpoint can accept only one resume command at a time.
+  // Keep cards independently actionable and coalesce rapid choices into one
+  // multi-decision resume. Choices made during an in-flight resume form the
+  // next batch. This stays lightweight: no worker park-and-dispatch task per
+  // paused child.
+  const rootHitlResumeQueueRef = useRef({
+    messageId: null,
+    inFlightIdentities: [],
+    requiredTurnEndRevision: 0,
+    decisions: [],
+  });
+  const rootHitlBatchTimerRef = useRef(null);
+  const onHitlResumeRef = useRef(null);
 
   const onHitlResume = useCallback(
-    async ({ action, value, toolCallId: providedToolCallId, interruptId: providedInterruptId }) => {
+    async resumeRequest => {
+      const rootBatch = Array.isArray(resumeRequest?.rootBatch) ? resumeRequest.rootBatch : null;
+      const primaryRequest = rootBatch?.[0] || resumeRequest || {};
+      const sessionDeclinedMcpServers =
+        [...(rootBatch || [])].reverse().find(request => Array.isArray(request?.sessionDeclinedMcpServers))
+          ?.sessionDeclinedMcpServers || resumeRequest?.sessionDeclinedMcpServers;
+      const {
+        action,
+        value,
+        toolCallId: providedToolCallId,
+        interruptId: providedInterruptId,
+        guardrailType,
+      } = primaryRequest;
       const lastMessage = pendingHitlMessage;
       if (!lastMessage) return;
 
@@ -1346,11 +1480,17 @@ const ChatBox = forwardRef((props, boxRef) => {
       // the legacy hitl_action shape (which the SDK can't match to the child).
       const selectedIdentity =
         providedInterruptId || (interrupts.length === 1 ? getInterruptIdentity(interrupts[0]) : undefined);
-      const decidedEntry = selectedIdentity
-        ? interrupts.find(entry => getInterruptIdentity(entry) === selectedIdentity)
-        : providedToolCallId
-          ? interrupts.find(entry => entry?.tool_call_id === providedToolCallId)
-          : undefined;
+      const rootBatchIdentities = new Set((rootBatch || []).map(decision => decision.interruptId));
+      const rootBatchEntries = rootBatch
+        ? interrupts.filter(entry => rootBatchIdentities.has(getInterruptIdentity(entry)))
+        : [];
+      const decidedEntry =
+        rootBatchEntries[0] ||
+        (selectedIdentity
+          ? interrupts.find(entry => getInterruptIdentity(entry) === selectedIdentity)
+          : providedToolCallId
+            ? interrupts.find(entry => entry?.tool_call_id === providedToolCallId)
+            : undefined);
       const toolCallId =
         providedToolCallId ||
         decidedEntry?.tool_call_id ||
@@ -1358,9 +1498,14 @@ const ChatBox = forwardRef((props, boxRef) => {
       // Track 2 fan-out child: each paused child carries its OWN thread_id and
       // resumes INDEPENDENTLY — emit immediately on that child's thread while
       // siblings keep running, instead of batching until every card is decided.
-      const childThreadId = decidedEntry?.thread_id || decidedEntry?.child_thread_id || '';
+      // ``child_thread_id`` is the durable worker route backed by Core's Redis
+      // launch stash. ``thread_id`` may identify a deeper in-process LangGraph
+      // leaf and must stay inside the per-leaf decision, not become the socket
+      // resume route.
+      const childThreadId = getHitlResumeThreadId(decidedEntry);
       const isFanoutChild = Boolean(childThreadId);
-      const resumeGroup = getHitlResumeGroup(interrupts, decidedEntry);
+      const isSupervisedChild = decidedEntry?.resume_strategy === 'supervised_child';
+      const resumeGroup = rootBatch ? rootBatchEntries : getHitlResumeGroup(interrupts, decidedEntry);
 
       // Detect a (Track 1) parallel aggregate by the PRESENCE of the
       // hitlInterrupts array (hooks.js sets it only for backend
@@ -1375,9 +1520,56 @@ const ChatBox = forwardRef((props, boxRef) => {
       const isParallel =
         action !== 'answer' &&
         !isFanoutChild &&
-        Array.isArray(lastMessage.hitlInterrupts) &&
-        lastMessage.hitlInterrupts.length > 0 &&
+        !isSupervisedChild &&
+        ((Array.isArray(lastMessage.hitlInterrupts) && lastMessage.hitlInterrupts.length > 0) ||
+          guardrailType === 'mcp_auth' ||
+          rootBatch?.some(decision => decision.guardrailType === 'mcp_auth')) &&
         Boolean(selectedIdentity || toolCallId);
+      let parallelDecisions;
+
+      // Single-process supervisor (#6264): send one exact decision immediately
+      // on the active root thread. Core's offer/commit handshake assigns live
+      // ownership without starting another agent process.
+      if (isSupervisedChild && !rootBatch) {
+        const decisionIdentity = getInterruptIdentity(decidedEntry);
+        const supervisedPayload = generateChatContinuePayload({
+          conversation_uuid: activeConversation?.uuid,
+          projectId,
+          message_id: lastMessage.id,
+          thread_id: decidedEntry?.root_thread_id || lastMessage.threadId,
+          participants: activeConversation?.participants || [],
+          question: action === 'edit' ? (value ?? '') : action,
+          sessionDeclinedMcpServers,
+        });
+        supervisedPayload.hitl_resume = true;
+        supervisedPayload.hitl_decisions = [
+          {
+            interrupt_id: decisionIdentity,
+            tool_call_id: toolCallId,
+            action,
+            value: value ?? '',
+          },
+        ];
+        setChatHistory(prevMessages =>
+          prevMessages.map(msg =>
+            msg.id !== lastMessage.id || !Array.isArray(msg.hitlInterrupts)
+              ? msg
+              : {
+                  ...msg,
+                  isLoading: false,
+                  isStreaming: true,
+                  resumingAgentPaths: [getActionOwnerPath(decidedEntry)].filter(path => path.length),
+                  hitlInterrupts: msg.hitlInterrupts.map(entry =>
+                    getInterruptIdentity(entry) === decisionIdentity
+                      ? { ...entry, decided: true, hidden: true }
+                      : entry,
+                  ),
+                },
+          ),
+        );
+        emitContinue(supervisedPayload);
+        return;
+      }
 
       // Track 2 independent child resume: emit this child's decision NOW on its
       // own thread; clear ONLY this child's card and leave the parent message
@@ -1389,7 +1581,8 @@ const ChatBox = forwardRef((props, boxRef) => {
         const decisionIdentity = getInterruptIdentity(decidedEntry);
         pendingDecisionsRef.current.decisions[decisionIdentity] = {
           ...(decidedEntry?.interrupt_id ? { interrupt_id: decidedEntry.interrupt_id } : {}),
-          thread_id: childThreadId,
+          ...(decidedEntry?.thread_id ? { thread_id: decidedEntry.thread_id } : {}),
+          ...(decidedEntry?.child_thread_id ? { child_thread_id: decidedEntry.child_thread_id } : {}),
           tool_call_id: toolCallId,
           action,
           value: value ?? '',
@@ -1401,6 +1594,7 @@ const ChatBox = forwardRef((props, boxRef) => {
               ? msg
               : {
                   ...msg,
+                  exception: undefined,
                   hitlInterrupts: msg.hitlInterrupts.map(entry =>
                     getInterruptIdentity(entry) === decisionIdentity ? { ...entry, decided: true } : entry,
                   ),
@@ -1431,45 +1625,36 @@ const ChatBox = forwardRef((props, boxRef) => {
           delete pendingDecisionsRef.current.decisions[identity];
         });
 
-        // Remove the resumed child's card in place (do NOT blank the message).
-        setChatHistory(prevMessages =>
-          prevMessages.map(msg => {
-            if (msg.id !== lastMessage.id || !Array.isArray(msg.hitlInterrupts)) {
-              return msg;
-            }
-            const remaining = msg.hitlInterrupts.filter(
-              entry => !resumeIdentities.has(getInterruptIdentity(entry)),
-            );
-            return {
-              ...msg,
-              hitlInterrupts: remaining,
-              hitlInterrupt: remaining[0],
-              // Keep the message in the streaming state: this child resumes and
-              // its siblings are still running.
-              isStreaming: true,
-              isLoading: true,
-            };
-          }),
-        );
+        // Keep the disabled cards until Core accepts the resume. StartTask is
+        // the acceptance signal and removes only this decided child group;
+        // socket_validation_error restores the cards for another attempt.
         emitContinue(childPayload);
         return;
       }
 
-      // Parallel fan-out: buffer this child's decision and disable its card.
-      // Defer the actual resume emit until every child has been actioned.
-      if (isParallel) {
-        if (pendingDecisionsRef.current.messageId !== lastMessage.id) {
-          pendingDecisionsRef.current = { messageId: lastMessage.id, decisions: {} };
-        }
+      // In-process root aggregate: retire every clicked card immediately, then
+      // coalesce rapid choices before issuing the single checkpoint command.
+      // The root returns any still-pending siblings with stable public IDs.
+      if (isParallel && !rootBatch) {
         const decisionIdentity = selectedIdentity || getInterruptIdentity(decidedEntry);
-        pendingDecisionsRef.current.decisions[decisionIdentity] = {
-          ...(decidedEntry?.interrupt_id ? { interrupt_id: decidedEntry.interrupt_id } : {}),
-          tool_call_id: toolCallId,
+        const queuedDecision = {
           action,
           value: value ?? '',
+          toolCallId,
+          interruptId: decisionIdentity,
+          ...(guardrailType ? { guardrailType } : {}),
+          ...(Array.isArray(sessionDeclinedMcpServers) ? { sessionDeclinedMcpServers } : {}),
         };
+        const scheduled = scheduleRootHitlDecision(
+          rootHitlResumeQueueRef.current,
+          lastMessage.id,
+          queuedDecision,
+        );
+        rootHitlResumeQueueRef.current = scheduled.state;
+        if (scheduled.status === 'duplicate') return;
 
-        // Mark the just-decided card disabled in place.
+        // Retire the chosen card visually on click while retaining its queued
+        // entry until the coalesced checkpoint resume is accepted.
         setChatHistory(prevMessages =>
           prevMessages.map(msg => {
             if (msg.id !== lastMessage.id || !Array.isArray(msg.hitlInterrupts)) {
@@ -1478,19 +1663,59 @@ const ChatBox = forwardRef((props, boxRef) => {
             return {
               ...msg,
               hitlInterrupts: msg.hitlInterrupts.map(entry =>
-                getInterruptIdentity(entry) === decisionIdentity ? { ...entry, decided: true } : entry,
+                getInterruptIdentity(entry) === decisionIdentity
+                  ? { ...entry, decided: false, queued: true, hidden: true }
+                  : entry,
               ),
             };
           }),
         );
 
-        const allDecided = interrupts.every(
-          entry => pendingDecisionsRef.current.decisions[getInterruptIdentity(entry)],
-        );
-        if (!allDecided) {
-          // Still waiting on sibling card(s); do not emit yet.
-          return;
+        if (scheduled.status === 'schedule') {
+          if (rootHitlBatchTimerRef.current) clearTimeout(rootHitlBatchTimerRef.current);
+          rootHitlBatchTimerRef.current = setTimeout(() => {
+            rootHitlBatchTimerRef.current = null;
+            const batch = completeRootHitlDecision(
+              rootHitlResumeQueueRef.current,
+              interrupts,
+              Number(lastMessage.hitlTurnStartRevision || 0) + 1,
+            );
+            rootHitlResumeQueueRef.current = batch.state;
+            if (batch.nextDecisions.length) {
+              onHitlResumeRef.current?.({ rootBatch: batch.nextDecisions });
+            }
+          }, 150);
         }
+        return;
+      }
+
+      if (isParallel) {
+        parallelDecisions = rootBatch.map(decision => {
+          const entry = interrupts.find(
+            interrupt => getInterruptIdentity(interrupt) === decision.interruptId,
+          );
+          return {
+            ...(entry?.interrupt_id || decision.interruptId
+              ? { interrupt_id: entry?.interrupt_id || decision.interruptId }
+              : {}),
+            tool_call_id: decision.toolCallId || entry?.tool_call_id,
+            action: decision.action,
+            value: decision.value ?? '',
+          };
+        });
+        setChatHistory(prevMessages =>
+          prevMessages.map(msg => {
+            if (msg.id !== lastMessage.id || !Array.isArray(msg.hitlInterrupts)) return msg;
+            return {
+              ...msg,
+              hitlInterrupts: msg.hitlInterrupts.map(entry =>
+                rootBatchIdentities.has(getInterruptIdentity(entry))
+                  ? { ...entry, decided: true, queued: false, hidden: true }
+                  : entry,
+              ),
+            };
+          }),
+        );
       }
 
       const { question_id, threadId, participant_id } = lastMessage;
@@ -1513,15 +1738,12 @@ const ChatBox = forwardRef((props, boxRef) => {
         thread_id: threadId,
         participants: activeConversation?.participants || [],
         question: action === 'edit' ? (value ?? '') : action,
+        sessionDeclinedMcpServers,
       });
 
       payload.hitl_resume = true;
       if (isParallel) {
-        // One resume carrying every child's decision.
-        payload.hitl_decisions = interrupts.map(
-          entry => pendingDecisionsRef.current.decisions[getInterruptIdentity(entry)],
-        );
-        pendingDecisionsRef.current = { messageId: null, decisions: {} };
+        payload.hitl_decisions = parallelDecisions;
       } else {
         payload.hitl_action = action;
         // `edit` carries the rewritten prompt; `block_with_comment` carries the
@@ -1553,7 +1775,8 @@ const ChatBox = forwardRef((props, boxRef) => {
         // container is also technically unreturned while it waits for that leaf,
         // but it is not itself replayed and must remain mounted/shimmering. Older
         // interrupts without an identified path retain the broad fallback.
-        const resumingAgentPaths = interrupts.map(getActionOwnerPath).filter(path => path.length);
+        const resumingInterrupts = isParallel ? resumeGroup : interrupts;
+        const resumingAgentPaths = resumingInterrupts.map(getActionOwnerPath).filter(path => path.length);
         const resumingInvocationIds = new Set(
           resumingAgentPaths.map(path => path[path.length - 1]?.call_id).filter(Boolean),
         );
@@ -1585,15 +1808,18 @@ const ChatBox = forwardRef((props, boxRef) => {
         // message lingering in the view until reload.
         const resumedAssistantMessage = {
           ...assistantMessage,
-          content: '',
+          content: isParallel ? assistantMessage.content : '',
           isLoading: true,
           isStreaming: true,
           isRegenerating: false,
           isSending: false,
           requiresConfirmation: undefined,
           exception: undefined,
-          hitlInterrupt: undefined,
-          hitlInterrupts: undefined,
+          // A partial root resume keeps sibling cards mounted while the single
+          // worker checkpoint advances. Only the selected/queued cards are
+          // disabled; untouched siblings stay independently actionable.
+          hitlInterrupt: isParallel ? assistantMessage.hitlInterrupt : undefined,
+          hitlInterrupts: isParallel ? assistantMessage.hitlInterrupts : undefined,
           resumingAgentPaths,
           references: [],
           toolActions: preservedToolActions,
@@ -1626,19 +1852,105 @@ const ChatBox = forwardRef((props, boxRef) => {
     ],
   );
 
+  onHitlResumeRef.current = onHitlResume;
+
+  // An updated aggregate is the acknowledgement that the previous root resume
+  // finished. Drain every choice made during that run as ONE next batch;
+  // emitting concurrent commands against the same checkpoint is unsafe.
+  useEffect(() => {
+    const queueState = rootHitlResumeQueueRef.current;
+    if (!queueState.inFlightIdentities.length) return;
+
+    if (!pendingHitlMessage || pendingHitlMessage.id !== queueState.messageId) {
+      rootHitlResumeQueueRef.current = {
+        messageId: null,
+        inFlightIdentities: [],
+        requiredTurnEndRevision: 0,
+        decisions: [],
+      };
+      return;
+    }
+    if (pendingHitlMessage.exception) {
+      rootHitlResumeQueueRef.current = {
+        messageId: pendingHitlMessage.id,
+        inFlightIdentities: [],
+        requiredTurnEndRevision: 0,
+        decisions: [],
+      };
+      setChatHistory(prevMessages =>
+        prevMessages.map(msg =>
+          msg.id !== pendingHitlMessage.id || !Array.isArray(msg.hitlInterrupts)
+            ? msg
+            : {
+                ...msg,
+                hitlInterrupts: msg.hitlInterrupts.map(entry => ({
+                  ...entry,
+                  queued: false,
+                  decided: false,
+                  hidden: false,
+                })),
+              },
+        ),
+      );
+      return;
+    }
+
+    // Loading and nested HITL events can toggle while the root checkpoint is
+    // still active. The indexer's InjectionConsumedReport is emitted from the
+    // worker finally block and is the authoritative per-turn release signal.
+    if (!hasRootHitlTurnEnded(queueState, pendingHitlMessage.hitlTurnEndRevision)) return;
+
+    const currentInterrupts = Array.isArray(pendingHitlMessage.hitlInterrupts)
+      ? pendingHitlMessage.hitlInterrupts
+      : [];
+    const completed = completeRootHitlDecision(
+      queueState,
+      currentInterrupts,
+      Number(pendingHitlMessage.hitlTurnStartRevision || 0) + 1,
+    );
+    rootHitlResumeQueueRef.current = completed.state;
+    if (completed.nextDecisions.length) {
+      onHitlResumeRef.current?.({ rootBatch: completed.nextDecisions });
+    }
+  }, [onHitlResume, pendingHitlMessage, setChatHistory]);
+
+  useEffect(
+    () => () => {
+      if (rootHitlBatchTimerRef.current) clearTimeout(rootHitlBatchTimerRef.current);
+    },
+    [],
+  );
+
   const onSendMessage = useCallback(
     async question => {
       stopTTS?.();
       resetSlash();
       dismissNextInputSuggestion();
 
-      if (hasPendingHitlInterrupt) {
+      // A clarifying-question pause accepts a free-text reply: route the typed
+      // message back as the answer instead of starting a new turn.
+      if (isPendingClarifyingQuestion) {
+        const text = typeof question === 'string' ? question.trim() : '';
+        if (!text) return;
+        chatInput.current?.reset();
+        return onHitlResume({ action: 'answer', value: text });
+      }
+
+      if (hasBlockingHitlInterrupt) {
         return;
       }
 
       return onPredictStream(question);
     },
-    [hasPendingHitlInterrupt, onPredictStream, resetSlash, stopTTS, dismissNextInputSuggestion],
+    [
+      hasBlockingHitlInterrupt,
+      isPendingClarifyingQuestion,
+      onHitlResume,
+      onPredictStream,
+      resetSlash,
+      stopTTS,
+      dismissNextInputSuggestion,
+    ],
   );
 
   // Rollback re-sends through the normal path; ref because onPredictStream is
@@ -1969,25 +2281,19 @@ const ChatBox = forwardRef((props, boxRef) => {
     activeParticipantDetails,
   ]);
 
-  const onMentionChange = useCallback(
-    mentions => {
-      // isMentioningEveryone is only ever SET by onSelectUserMention (dropdown confirmation).
-      // Here we only CLEAR it when the @Everyone text has been deleted from the input.
-      const everyoneStillPresent = mentions.some(mention => mention.user?.id === '@everyone');
-      if (!everyoneStillPresent) {
-        setIsMentioningEveryone(false);
-      }
+  const onMentionChange = useCallback(mentions => {
+    // isMentioningEveryone is only ever SET by onSelectUserMention (dropdown confirmation).
+    // Here we only CLEAR it when the @Everyone text has been deleted from the input.
+    const everyoneStillPresent = mentions.some(mention => mention.user?.id === '@everyone');
+    if (!everyoneStillPresent) {
+      setIsMentioningEveryone(false);
+    }
 
-      const mentionedUsers = mentions.filter(
-        mention => mention.isValid && mention.user && mention.user.id !== '@everyone',
-      );
-      if (mentionedUsers.length > 0) {
-        onClearActiveParticipant();
-      }
-      setSelectedUsers(mentionedUsers);
-    },
-    [onClearActiveParticipant],
-  );
+    const mentionedUsers = mentions.filter(
+      mention => mention.isValid && mention.user && mention.user.id !== '@everyone',
+    );
+    setSelectedUsers(mentionedUsers);
+  }, []);
 
   const onShowParticipantsList = useCallback(() => {
     setShowRecommendationList(prev => !prev);
@@ -2304,7 +2610,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       isUploadingAttachments ||
       isUpdatingInternalToolsConfig ||
       activeConversation?.isSending ||
-      hasPendingHitlInterrupt ||
+      hasBlockingHitlInterrupt ||
       (isStreamingNow && !isInjectable) ||
       isActiveParticipantBroken,
     [
@@ -2314,7 +2620,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       isUploadingAttachments,
       isUpdatingInternalToolsConfig,
       activeConversation?.isSending,
-      hasPendingHitlInterrupt,
+      hasBlockingHitlInterrupt,
       isStreamingNow,
       isInjectable,
       isActiveParticipantBroken,

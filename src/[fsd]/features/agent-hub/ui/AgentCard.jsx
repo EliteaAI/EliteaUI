@@ -3,7 +3,7 @@ import { memo, useCallback, useMemo } from 'react';
 import { Box, Card, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
-import { ELITEA_CATALOG_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/eliteaCatalogTourTargets.constants';
+import { ELITEA_CATALOG_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { ChatParticipantType, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
 import AuthorContainer from '@/components/AuthorContainer';
 import EntityIcon from '@/components/EntityIcon';
@@ -38,6 +38,7 @@ const AgentCard = memo(props => {
   return (
     <Card
       data-tour={ELITEA_CATALOG_TOUR_TARGET_IDS.entityCard}
+      data-testid={`catalog-agent-card-${application.id}`}
       sx={styles.card}
       onClick={handleClick}
     >
@@ -75,6 +76,7 @@ const AgentCard = memo(props => {
         <AgentHubLike
           viewMode={ViewMode.Public}
           data={application}
+          testId={`catalog-agent-like-button-${application.id}`}
         />
       </Box>
     </Card>

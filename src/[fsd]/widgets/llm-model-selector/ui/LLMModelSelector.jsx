@@ -102,6 +102,7 @@ const LLMModelSelector = memo(props => {
             </Typography>
             <Box sx={styles.fieldValueRow}>
               <Typography
+                data-testid="model-selector-name"
                 variant="labelMedium"
                 color="text.secondary"
                 noWrap
@@ -230,6 +231,7 @@ const LLMModelSelector = memo(props => {
             >
               <Box component="span">
                 <Button.BaseBtn
+                  data-testid="model-settings-button"
                   size="small"
                   aria-expanded={showLLMSettings ? 'true' : undefined}
                   aria-label="model settings menu"

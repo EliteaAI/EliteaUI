@@ -12,7 +12,7 @@ import {
   GridTablePagination,
   GridTableRow,
 } from '@/[fsd]/entities/grid-table/ui';
-import { USERS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
+import { USERS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { Text } from '@/[fsd]/shared/ui';
 import { PERMISSIONS } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
@@ -152,6 +152,7 @@ const UsersTable = memo(props => {
               users={row}
               refetch={refetch}
               rolesOptions={rolesOptions}
+              testId="user-row-edit-button"
             />
           )}
           {checkPermission(PERMISSIONS.users.delete) && (
@@ -159,6 +160,7 @@ const UsersTable = memo(props => {
               users={[row]}
               refetch={refetch}
               setSelectedUsers={setSelectedUsers}
+              testId="user-row-delete-button"
             />
           )}
         </Box>
@@ -186,6 +188,8 @@ const UsersTable = memo(props => {
           isAllSelected={isAllSelected}
           isIndeterminate={isIndeterminate}
           gridTemplateColumns={gridTemplateColumns}
+          columnTestIdPrefix="user"
+          selectAllCheckboxTestId="user-select-all-checkbox"
         />
 
         <GridTableBody>
@@ -203,6 +207,10 @@ const UsersTable = memo(props => {
               renderCell={renderCell}
               actions={renderActions(row)}
               dataCellSx={styles.dataCell}
+              data-testid="user-row"
+              checkboxTestId="user-row-checkbox"
+              nameCellTestId="user-row-name"
+              dataCellTestIdPrefix="user"
             />
           ))}
         </GridTableBody>

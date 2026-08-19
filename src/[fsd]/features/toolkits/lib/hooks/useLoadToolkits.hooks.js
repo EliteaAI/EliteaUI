@@ -2,8 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useTheme } from '@mui/material';
 
-import { CredentialNameHelpers } from '@/[fsd]/features/credentials/lib/helpers';
-import { McpAuthConstants } from '@/[fsd]/features/mcp/lib/constants';
+import { CredentialNameHelpers } from '@/[fsd]/features/credentials';
+import { McpAuthConstants } from '@/[fsd]/features/mcp';
 import { McpConstants } from '@/[fsd]/features/toolkits/lib/constants';
 import { McpToolkitHelpers, ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useListToolkitTypesQuery, useToolkitsListQuery } from '@/api/toolkits.js';

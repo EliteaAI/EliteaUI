@@ -7,7 +7,7 @@ import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import BaseCheckbox from './BaseCheckbox';
 
 const RadioButtonGroup = memo(props => {
-  const { value, defaultValue, onChange, items, wrapRow = false, columnGap, disabled } = props;
+  const { value, defaultValue, onChange, items, wrapRow = false, columnGap, disabled, testId } = props;
   const theme = useTheme();
   const styles = radioButtonGroupStyles(theme, wrapRow, columnGap);
 
@@ -33,6 +33,9 @@ const RadioButtonGroup = memo(props => {
             sx={styles.itemContainer}
           >
             <FormControlLabel
+              data-testid={
+                testId ? `${testId}-${String(item.value).toLowerCase().replace(/\s+/g, '-')}` : undefined
+              }
               sx={styles.formControlLabel}
               value={item.value}
               control={

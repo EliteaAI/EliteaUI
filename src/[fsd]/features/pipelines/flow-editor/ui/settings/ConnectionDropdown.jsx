@@ -129,6 +129,7 @@ const ConnectionDropdown = memo(props => {
 
   return (
     <Menu
+      data-testid="pipeline-connection-dropdown-menu"
       open={open}
       onClose={handleClose}
       {...menuAnchorProps}

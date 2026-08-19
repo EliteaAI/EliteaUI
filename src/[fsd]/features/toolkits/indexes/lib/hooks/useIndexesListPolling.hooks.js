@@ -2,6 +2,7 @@ import { useSelector } from 'react-redux';
 
 import { useGetIndexesListQuery } from '@/[fsd]/features/toolkits/indexes/api';
 import { IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
+import { useIndexRunLiveRefresh } from '@/[fsd]/features/toolkits/indexes/lib/hooks/useIndexRunLiveRefresh.hooks';
 import { selectIndexesList } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
 
 // The GET is expensive server-side (fresh engine + vault round trip per request), and
@@ -15,6 +16,8 @@ const POLL_INTERVAL_MS = 300_000;
 // belief must arm the poll themselves. Multiple subscribers per route are deliberate
 // (RTK dedupes on the cache key; lowest positive interval wins) — do not collapse.
 export const useIndexesListPolling = ({ toolkitId, projectId, skip = false, forcePoll = false }) => {
+  useIndexRunLiveRefresh({ toolkitId });
+
   const { data } = useSelector(selectIndexesList);
   const hasInProgress = Boolean(data?.some(item => item?.metadata?.state === IndexStatuses.progress));
 

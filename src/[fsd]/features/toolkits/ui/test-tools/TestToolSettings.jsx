@@ -4,12 +4,11 @@ import { useFormikContext } from 'formik';
 
 import { Box, Tooltip, Typography } from '@mui/material';
 
-import { SHARED_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
-import { PAT_REQUIRED_ACTION_HINT } from '@/[fsd]/features/mcp/lib/constants';
-import { useInternalMcpPatStatus } from '@/[fsd]/features/mcp/lib/hooks';
+import { PAT_REQUIRED_ACTION_HINT, useInternalMcpPatStatus } from '@/[fsd]/features/mcp';
 import { IndexesToolsEnum } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import { useToolkitToolOptions } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
+import { TourTargetConstants } from '@/[fsd]/shared/lib/constants';
 import { Button, Select } from '@/[fsd]/shared/ui/';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { LLMModelSelector } from '@/[fsd]/widgets/llm-model-selector';
@@ -66,7 +65,7 @@ const TestToolSettings = memo(props => {
     <Box
       width="100%"
       height="100%"
-      data-tour={SHARED_TOUR_TARGET_IDS.testSettings}
+      data-tour={TourTargetConstants.SHARED_TOUR_TARGET_IDS.testSettings}
       sx={styles.root}
     >
       <Box sx={styles.header}>
@@ -80,6 +79,7 @@ const TestToolSettings = memo(props => {
       <ContentContainer sx={styles.contentContainer}>
         <Box sx={styles.toolSelectContainer}>
           <Select.SingleSelect
+            data-testid="toolkit-test-tool-select"
             value={selectedTool}
             label="Tool"
             onValueChange={onChangeTool}
@@ -111,6 +111,7 @@ const TestToolSettings = memo(props => {
             toolInputVariables={toolInputVariables}
             schema={selectedToolSchema}
             onChangeInputVariables={onChangeInputVariablesWrapper}
+            inputTestId={`toolkit-test-param-${key}-input`}
           />
         ))}
       </ContentContainer>
@@ -118,6 +119,7 @@ const TestToolSettings = memo(props => {
         <Tooltip title={patInvalid ? PAT_REQUIRED_ACTION_HINT : ''}>
           <Box component="span">
             <Button.BaseBtn
+              data-testid="toolkit-test-run-tool-button"
               variant={BUTTON_VARIANTS.special}
               disabled={disabledRunTool}
               onClick={onRunTool}

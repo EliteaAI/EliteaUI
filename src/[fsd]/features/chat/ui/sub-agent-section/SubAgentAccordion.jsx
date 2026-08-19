@@ -41,6 +41,7 @@ const SubAgentAccordion = memo(props => {
       slotProps={{ transition: { unmountOnExit: true } }}
     >
       <StyledAccordionSummary
+        data-testid={`chat-answer-nested-agent-accordion-summary-${name}`}
         expandIcon={<ArrowRightIcon style={subAgentAccordionStyles.expandIcon} />}
         showMode={AccordionConstants.AccordionShowMode.LeftMode}
         sx={subAgentAccordionStyles.summary}
@@ -62,7 +63,12 @@ const SubAgentAccordion = memo(props => {
           )}
         </Box>
       </StyledAccordionSummary>
-      <StyledAccordionDetails sx={subAgentAccordionStyles.details}>{children}</StyledAccordionDetails>
+      <StyledAccordionDetails
+        data-testid={`chat-answer-nested-agent-accordion-details-${name}`}
+        sx={subAgentAccordionStyles.details}
+      >
+        {children}
+      </StyledAccordionDetails>
     </StyledAccordion>
   );
 });

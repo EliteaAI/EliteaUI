@@ -6,7 +6,6 @@ import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import { Alert, Box, CircularProgress, Snackbar, Tooltip, Typography } from '@mui/material';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 
-import { useInteractiveTour } from '@/[fsd]/app/providers';
 import { ANALYTICS_TOUR_ID, ANALYTICS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { analyticsApi, useProjectAnalyticsQuery } from '@/[fsd]/features/settings/api/analyticsApi';
 import { AnalyticsExportHelpers } from '@/[fsd]/features/settings/lib/helpers';
@@ -16,10 +15,12 @@ import {
   AnalyticsGuide,
   AnalyticsHealth,
   AnalyticsOverview,
+  AnalyticsTokens,
   AnalyticsTools,
   AnalyticsUsers,
 } from '@/[fsd]/features/settings/ui/analytics';
 import { DrawerPage } from '@/[fsd]/features/settings/ui/drawer-page';
+import { useInteractiveTour } from '@/[fsd]/shared/lib/context';
 import { exportToExcel } from '@/[fsd]/shared/lib/utils';
 import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import TabGroupButton from '@/[fsd]/shared/ui/tab-group-button/TabGroupButton';
@@ -34,13 +35,27 @@ import { useSelectedProjectId, useSelectedProjectName } from '@/hooks/useSelecte
 const CUSTOM_PRESET_VALUE = 'custom';
 
 const DEFAULT_PRESETS = [
-  { label: 'Last 24h', value: 1 },
-  { label: 'Last 7d', value: 7 },
-  { label: 'Last 30d', value: 30 },
-  { label: 'Last 90d', value: 90 },
+  { label: 'Last 24h', value: 1, buttonProps: { 'data-testid': 'analytics-date-preset-1' } },
+  { label: 'Last 7d', value: 7, buttonProps: { 'data-testid': 'analytics-date-preset-7' } },
+  { label: 'Last 30d', value: 30, buttonProps: { 'data-testid': 'analytics-date-preset-30' } },
+  { label: 'Last 90d', value: 90, buttonProps: { 'data-testid': 'analytics-date-preset-90' } },
 ];
 
 const PRESETS_WITH_CUSTOM = [...DEFAULT_PRESETS, { label: 'Custom', value: CUSTOM_PRESET_VALUE }];
+
+// {label, testid} pairs for the Analytics tabs (ELITEA-2310) — kept as a
+// module-level template so the testid inventory stays greppable, per
+// .agents/testing.md § Locator policy (dynamic/derived-list testid pattern).
+const ANALYTICS_TABS = [
+  { label: 'Overview', testid: 'analytics-tab-overview' },
+  { label: 'Costs', testid: 'analytics-tab-costs' },
+  { label: 'Tokens', testid: 'analytics-tab-tokens' },
+  { label: 'Agents & Pipelines', testid: 'analytics-tab-agents-pipelines' },
+  { label: 'Tools', testid: 'analytics-tab-tools' },
+  { label: 'Users', testid: 'analytics-tab-users' },
+  { label: 'Health', testid: 'analytics-tab-health' },
+  { label: 'Guide', testid: 'analytics-tab-guide' },
+];
 
 const AnalyticsContainer = memo(() => {
   const projectId = useSelectedProjectId();
@@ -76,8 +91,8 @@ const AnalyticsContainer = memo(() => {
     [projectId, dateFromISO, dateToISO],
   );
 
-  // Only fetch overview data for Overview (0) and Health (4) tabs
-  const needsOverview = activeTab === 0 || activeTab === 5;
+  // Only fetch overview data for Overview (0) and Health (6) tabs
+  const needsOverview = activeTab === 0 || activeTab === 6;
 
   const { data, isFetching, isError } = useProjectAnalyticsQuery(queryParams, {
     skip: !projectId || !needsOverview,
@@ -117,7 +132,7 @@ const AnalyticsContainer = memo(() => {
 
   const handleOverviewUserClick = useCallback(userId => {
     setPendingUserId(userId);
-    setActiveTab(4);
+    setActiveTab(5);
   }, []);
 
   const handleBackToOverview = useCallback(() => {
@@ -178,15 +193,23 @@ const AnalyticsContainer = memo(() => {
       rightArrowIcon: ArrowRightIcon,
       switchViewIcon: ArrowDownIcon,
     },
-    slotProps: {
-      textField: { size: 'small', sx: styles.dateInput, variant: 'standard' },
-      actionBar: { actions: ['clear', 'accept'] },
-      popper: {
-        sx: styles.datePickerPopper,
-        modifiers: [{ name: 'offset', options: { offset: [0, 8] } }],
-      },
-    },
   };
+
+  // Per-field slotProps (From/To need distinct testids on their <input>,
+  // so they can no longer share one slotProps object — ELITEA-2310).
+  const getDateFieldSlotProps = testid => ({
+    textField: {
+      size: 'small',
+      sx: styles.dateInput,
+      variant: 'standard',
+      inputProps: { 'data-testid': testid },
+    },
+    actionBar: { actions: ['clear', 'accept'] },
+    popper: {
+      sx: styles.datePickerPopper,
+      modifiers: [{ name: 'offset', options: { offset: [0, 8] } }],
+    },
+  });
 
   return (
     <DrawerPage data-tour={ANALYTICS_TOUR_TARGET_IDS.page}>
@@ -194,11 +217,15 @@ const AnalyticsContainer = memo(() => {
         <Typography
           variant="headingSmall"
           color="text.secondary"
+          data-testid="analytics-page-title"
         >
           Analytics
         </Typography>
         {projectName && (
-          <Box sx={styles.projectLabel}>
+          <Box
+            sx={styles.projectLabel}
+            data-testid="analytics-project-badge"
+          >
             <BriefcaseIcon />
             <Typography variant="bodySmall">Project: {projectName}</Typography>
           </Box>
@@ -247,6 +274,7 @@ const AnalyticsContainer = memo(() => {
               onOpen={() => setFromOpen(true)}
               onClose={() => setFromOpen(false)}
               {...datePickerCommonProps}
+              slotProps={getDateFieldSlotProps('analytics-date-from-input')}
             />
           </Box>
           <Box sx={[styles.datePickerField, toOpen && styles.datePickerFieldActive]}>
@@ -259,6 +287,7 @@ const AnalyticsContainer = memo(() => {
               onOpen={() => setToOpen(true)}
               onClose={() => setToOpen(false)}
               {...datePickerCommonProps}
+              slotProps={getDateFieldSlotProps('analytics-date-to-input')}
             />
           </Box>
         </Box>
@@ -275,10 +304,11 @@ const AnalyticsContainer = memo(() => {
             value={activeTab}
             onChange={handleTabChange}
           >
-            {['Overview', 'Costs', 'Agents & Pipelines', 'Tools', 'Users', 'Health', 'Guide'].map(label => (
+            {ANALYTICS_TABS.map(({ label, testid }) => (
               <BaseTab
                 key={label}
                 label={label}
+                data-testid={testid}
               />
             ))}
           </BaseTabs>
@@ -286,7 +316,10 @@ const AnalyticsContainer = memo(() => {
 
         <Box sx={styles.contentArea}>
           {needsOverview && isFetching && (
-            <Box sx={styles.loadingState}>
+            <Box
+              sx={styles.loadingState}
+              data-testid="analytics-loading-indicator"
+            >
               <CircularProgress size={32} />
             </Box>
           )}
@@ -314,20 +347,27 @@ const AnalyticsContainer = memo(() => {
             />
           )}
           {activeTab === 2 && (
-            <AnalyticsAgents
+            <AnalyticsTokens
               projectId={projectId}
               dateFrom={dateFromISO}
               dateTo={dateToISO}
             />
           )}
           {activeTab === 3 && (
-            <AnalyticsTools
+            <AnalyticsAgents
               projectId={projectId}
               dateFrom={dateFromISO}
               dateTo={dateToISO}
             />
           )}
           {activeTab === 4 && (
+            <AnalyticsTools
+              projectId={projectId}
+              dateFrom={dateFromISO}
+              dateTo={dateToISO}
+            />
+          )}
+          {activeTab === 5 && (
             <AnalyticsUsers
               projectId={projectId}
               dateFrom={dateFromISO}
@@ -336,13 +376,13 @@ const AnalyticsContainer = memo(() => {
               onBackToSource={handleBackToOverview}
             />
           )}
-          {data && !isFetching && activeTab === 5 && (
+          {data && !isFetching && activeTab === 6 && (
             <AnalyticsHealth
               health={data.health}
               daily_activity={data.daily_activity}
             />
           )}
-          {activeTab === 6 && <AnalyticsGuide />}
+          {activeTab === 7 && <AnalyticsGuide />}
         </Box>
       </Box>
 

@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useSearchParams } from 'react-router-dom';
 
@@ -6,14 +6,27 @@ import { Box, IconButton, Typography } from '@mui/material';
 
 import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
 import { RunHistoryChat, RunHistoryList } from '@/[fsd]/entities/run-history/ui';
-import { ParticipantEntityTypes } from '@/[fsd]/features/chat/participants/lib/constants/participant.constants';
+import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { SearchParams } from '@/common/constants';
 import CloseIcon from '@/components/Icons/CloseIcon';
 import useIsSmallWindow from '@/hooks/useIsSmallWindow';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
+const { ParticipantEntityTypes } = ParticipantEntityConstants;
+
 const RunHistoryContainer = memo(props => {
-  const { entityId, versions, source, handleRestoreConversation, onClose } = props;
+  const {
+    entityId,
+    versions,
+    source,
+    handleRestoreConversation,
+    onClose,
+    ChatMessageListComponent,
+    prettifyConversation,
+    additionalRows = [],
+    decorateRow = null,
+    DetailComponent = null,
+  } = props;
 
   const projectId = useSelectedProjectId();
   const [searchParams] = useSearchParams();
@@ -26,15 +39,29 @@ const RunHistoryContainer = memo(props => {
 
   const [fetchRunList, { data, isLoading, isFetching }] = RunHistoryApi.useLazyGetRunHistoryListQuery();
 
+  // Not part of server-side pagination, so they are merged into every page.
+  const historyRows = useMemo(() => {
+    const conversationRows = decorateRow ? allConversations.map(decorateRow) : allConversations;
+    if (!additionalRows.length) return conversationRows;
+    return [...conversationRows, ...additionalRows].sort(
+      (a, b) => new Date(b.created_at) - new Date(a.created_at),
+    );
+  }, [allConversations, additionalRows, decorateRow]);
+
+  const selectedRow = useMemo(
+    () => historyRows.find(historyRow => historyRow.id === selectedHistoryItem) ?? null,
+    [historyRows, selectedHistoryItem],
+  );
+
   useEffect(() => {
     const historyRunId = searchParams.get(SearchParams.HistoryRunId);
 
-    if (historyRunId && allConversations.length > 0) {
+    if (historyRunId && historyRows.length > 0) {
       setSelectedHistoryItem(+historyRunId);
-    } else if (!selectedHistoryItem && allConversations.length > 0) {
-      setSelectedHistoryItem(allConversations[0].id);
+    } else if (!selectedHistoryItem && historyRows.length > 0) {
+      setSelectedHistoryItem(historyRows[0].id);
     }
-  }, [allConversations, searchParams, selectedHistoryItem]);
+  }, [historyRows, searchParams, selectedHistoryItem]);
 
   useEffect(() => {
     if (projectId && entityId) {
@@ -75,6 +102,7 @@ const RunHistoryContainer = memo(props => {
       {onClose && (
         <Box sx={styles.header}>
           <IconButton
+            data-testid="run-history-close-button"
             variant="elitea"
             color="tertiary"
             aria-label="close run history"
@@ -93,7 +121,7 @@ const RunHistoryContainer = memo(props => {
       <Box sx={onClose ? styles.wrapperFlex : styles.wrapper}>
         <Box sx={styles.historyList}>
           <RunHistoryList
-            conversations={allConversations}
+            conversations={historyRows}
             versions={versions}
             isLoading={isLoading && page === 0}
             isLoadingMore={isFetching && page > 0}
@@ -105,13 +133,20 @@ const RunHistoryContainer = memo(props => {
             selectedHistoryItem={selectedHistoryItem}
             source={source}
             handleRestoreConversation={handleRestoreConversation}
+            hasEvent={Boolean(decorateRow)}
           />
         </Box>
 
-        <RunHistoryChat
-          selectedHistoryItem={selectedHistoryItem}
-          prettifyChat={[ParticipantEntityTypes.Toolkit, ParticipantEntityTypes.MCP].includes(source)}
-        />
+        {selectedRow?.entry && DetailComponent ? (
+          <DetailComponent row={selectedRow} />
+        ) : (
+          <RunHistoryChat
+            selectedHistoryItem={selectedHistoryItem}
+            prettifyChat={[ParticipantEntityTypes.Toolkit, ParticipantEntityTypes.MCP].includes(source)}
+            ChatMessageListComponent={ChatMessageListComponent}
+            prettifyConversation={prettifyConversation}
+          />
+        )}
       </Box>
     </Box>
   );

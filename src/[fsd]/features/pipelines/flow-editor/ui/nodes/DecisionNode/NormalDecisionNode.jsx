@@ -1,6 +1,5 @@
 import { memo, useCallback, useContext, useMemo } from 'react';
 
-import { FlowEditorContext } from '@/[fsd]/app/providers';
 import { AIAssistantInput } from '@/[fsd]/features/pipelines/ai-assistant/ui';
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
@@ -10,6 +9,7 @@ import {
   FlowEditorSelect,
   FlowEditorSettings,
 } from '@/[fsd]/features/pipelines/flow-editor/ui';
+import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import { useEdges } from '@xyflow/react';
 
 import { DecisionOutputs, commonComponentStyles } from './DecisionNodeShared';
@@ -87,6 +87,7 @@ const NormalDecisionNode = memo(props => {
               isRunningPipeline={isRunningPipeline}
               isPerforming={data?.isPerforming}
               style={styles.nodesHandle}
+              testId="pipeline-decision-node-output-handle"
             />
             <FlowEditorNodes.CustomHandle
               type="source"
@@ -96,6 +97,7 @@ const NormalDecisionNode = memo(props => {
               isRunningPipeline={isRunningPipeline}
               isPerforming={data?.isPerforming}
               style={styles.defaultOutputHandle}
+              testId="pipeline-decision-node-default-output-handle"
             />
           </>
         );
@@ -108,6 +110,7 @@ const NormalDecisionNode = memo(props => {
         id={id}
         inputFieldName={'input'}
         disabled={isRunningPipeline}
+        dataTestId="pipeline-decision-node-input-select"
       />
       <AIAssistantInput
         autoComplete="off"
@@ -127,6 +130,7 @@ const NormalDecisionNode = memo(props => {
         containerProps={styles.inputEnhancerContainer}
         disabled={isRunningPipeline || disabled}
         modelConfig={pipelineLLMConfig}
+        inputProps={{ 'data-testid': 'pipeline-decision-node-description-input' }}
       />
       <DecisionOutputs
         id={id}
@@ -140,6 +144,7 @@ const NormalDecisionNode = memo(props => {
         showStructuredOutput={false}
         type={FlowEditorConstants.PipelineNodeTypes.Decision}
         disabled={isRunningPipeline}
+        interruptAfterTestId="pipeline-decision-node-interrupt-after-toggle"
       />
     </FlowEditorNodes.NodeCard>
   );

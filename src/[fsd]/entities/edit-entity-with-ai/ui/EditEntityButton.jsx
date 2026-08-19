@@ -8,9 +8,9 @@ import SparkleIcon from '@/assets/ai-sparkle-icon.svg?react';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
 const EditEntityButton = memo(props => {
-  const { permission, renderModal, buttonTestId, disabled } = props;
+  const { permission, renderModal, buttonTestId, disabled, defaultOpen = false } = props;
 
-  const { isOpen, handleOpen, handleClose } = useModal();
+  const { isOpen, handleOpen, handleClose } = useModal(defaultOpen);
   const { checkPermission } = useCheckPermission();
 
   if (!checkPermission(permission)) return null;

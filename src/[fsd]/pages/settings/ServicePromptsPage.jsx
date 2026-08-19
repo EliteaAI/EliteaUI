@@ -1,7 +1,6 @@
 import { memo } from 'react';
 
-import { DrawerPage } from '@/[fsd]/features/settings/ui/drawer-page';
-import { ServicePromptsSection } from '@/[fsd]/features/settings/ui/system-prompts';
+import { DrawerPage, ServicePromptsSection } from '@/[fsd]/features/settings';
 
 const ServicePromptsPage = memo(() => {
   return (

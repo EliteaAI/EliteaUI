@@ -13,10 +13,10 @@ import {
   useSkillExport,
   useUnpublishSkillMenu,
 } from '@/[fsd]/features/skill/lib/hooks';
+import { PinEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
 import { Controls } from '@/[fsd]/shared/ui';
-import { PinEntityType } from '@/[fsd]/widgets/pin-toggler/lib/constants';
-import { usePin, usePinMenu } from '@/[fsd]/widgets/pin-toggler/lib/hooks';
+import { usePin, usePinMenu } from '@/[fsd]/widgets/pin-toggler';
 import { PERMISSIONS, SkillsTabs } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils.jsx';
 import { useCopyLinkMenu } from '@/components/CopyLinkToEntityButton.jsx';
@@ -73,7 +73,7 @@ const SkillControls = memo(props => {
     isLoading: isPinLoading,
   } = usePin({
     entityId: skillId,
-    entityType: PinEntityType.Skill,
+    entityType: PinEntityConstants.PinEntityType.Skill,
     initialPinned: !!initialPinned,
   });
 
@@ -206,7 +206,7 @@ const SkillControls = memo(props => {
           slotProps: { MenuItem: { sx: { pointerEvents: 'none' } } },
         },
         shareSkillMenuItem,
-        pinMenuItem,
+        { ...pinMenuItem, key: 'pin-toggle-skill' },
         canDeleteSkill && {
           key: 'delete-skill',
           label: 'Delete skill',

@@ -6,17 +6,24 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Box, CircularProgress, Typography } from '@mui/material';
 
 import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
-import { ParticipantEntityTypes } from '@/[fsd]/features/chat/participants/lib/constants/participant.constants';
 import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
 import { useGetIndexesListQuery } from '@/[fsd]/features/toolkits/indexes/api';
 import { IndexStatuses, RUN_TEST_OPERATION_TYPES } from '@/[fsd]/features/toolkits/indexes/lib/constants';
-import { selectIndexesList } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
-import { IndexBreadcrumb, IndexChatContainer, IndexHistory } from '@/[fsd]/features/toolkits/indexes/ui';
+import { initialCompletedTsOf } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexEvent.helpers';
+import { buildIndexHistoryDetailRow } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexHistoryDetail.helpers';
+import { useIndexRunLiveRefresh } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
+import { selectHistoryItem, selectIndexesList } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
+import { IndexChatContainer, IndexHistory, IndexRunDetail } from '@/[fsd]/features/toolkits/indexes/ui';
+import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
+import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
+import Breadcrumbs from '@/[fsd]/shared/ui/breadcrumbs';
 import { useToolkitsDetailsQuery } from '@/api/toolkits.js';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils.jsx';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast.jsx';
 import RouteDefinitions from '@/routes';
+
+const { ParticipantEntityTypes } = ParticipantEntityConstants;
 
 const IndexHistoryPage = memo(() => {
   const { tab, toolkitId, indexName: rawIndexName } = useParams();
@@ -25,34 +32,19 @@ const IndexHistoryPage = memo(() => {
   const { toastError } = useToast();
   const styles = indexHistoryPageStyles();
 
-  const goBackToRunIndex = useCallback(() => {
-    const target = RouteDefinitions.ToolkitIndex.replace(':tab', tab ?? 'all')
-      .replace(':toolkitId', String(toolkitId))
-      .replace(':indexName', rawIndexName ?? '');
-    navigate(target);
-  }, [navigate, tab, toolkitId, rawIndexName]);
-
-  const goBackToToolkit = useCallback(() => {
-    const target = RouteDefinitions.ToolkitDetail.replace(':tab', tab ?? 'all').replace(
-      ':toolkitId',
-      String(toolkitId),
-    );
-    navigate(target);
-  }, [navigate, tab, toolkitId]);
-
   const goToToolkitsList = useCallback(() => {
-    navigate(RouteDefinitions.ToolkitsWithTab.replace(':tab', tab ?? 'all'));
+    navigate(NavigationHelpers.buildRoute(RouteDefinitions.ToolkitsWithTab, { tab: tab ?? 'all' }));
   }, [navigate, tab]);
 
   const indexName = useMemo(() => (rawIndexName ? decodeURIComponent(rawIndexName) : ''), [rawIndexName]);
 
-  const {
-    data: publicToolkitData,
-    isError,
-    error,
-  } = useToolkitsDetailsQuery({ projectId, toolkitId }, { skip: !projectId || !toolkitId });
+  const { isError, error } = useToolkitsDetailsQuery(
+    { projectId, toolkitId },
+    { skip: !projectId || !toolkitId },
+  );
 
   useGetIndexesListQuery({ toolkitId, projectId }, { skip: !projectId || !toolkitId });
+  useIndexRunLiveRefresh({ toolkitId });
 
   const {
     data: indexesList,
@@ -108,6 +100,15 @@ const IndexHistoryPage = memo(() => {
 
   const history = useMemo(() => [...baseHistory, ...runTestHistoryItems], [baseHistory, runTestHistoryItems]);
 
+  const selectedHistoryItem = useSelector(selectHistoryItem);
+
+  const initialCompletedTs = useMemo(() => initialCompletedTsOf(history), [history]);
+
+  const detailRow = useMemo(
+    () => buildIndexHistoryDetailRow({ entry: selectedHistoryItem, indexName, initialCompletedTs }),
+    [selectedHistoryItem, initialCompletedTs, indexName],
+  );
+
   const isLoading = indexesLoading || indexesFetching || !hasData || runHistoryLoading;
 
   useEffect(() => {
@@ -116,22 +117,11 @@ const IndexHistoryPage = memo(() => {
 
   if (shouldShowNotFoundPage) return null;
 
-  const toolkitName = publicToolkitData?.name || '';
-
   return (
     <Box sx={styles.wrapper}>
       <DrawerPageHeader
         showBorder
-        title={
-          <IndexBreadcrumb
-            toolkitName={toolkitName}
-            current="History"
-            onToolkitsClick={goToToolkitsList}
-            onToolkitClick={goBackToToolkit}
-            onIndexClick={goBackToRunIndex}
-            indexName={indexName}
-          />
-        }
+        title={<Breadcrumbs />}
       />
       <Box sx={styles.content}>
         {isLoading ? (
@@ -162,19 +152,23 @@ const IndexHistoryPage = memo(() => {
               <IndexHistory history={history} />
             </Box>
             <Box sx={styles.chatColumn}>
-              <IndexChatContainer
-                selectedModel={null}
-                onSelectModel={() => null}
-                modelList={[]}
-                llmSettings={undefined}
-                onSetLLMSettings={() => null}
-                toggleFullScreenChat={null}
-                clearChat={() => null}
-                chatHistory={[]}
-                conversation={null}
-                showHeader={false}
-                chatContainerSX={styles.chatContainer}
-              />
+              {detailRow ? (
+                <IndexRunDetail row={detailRow} />
+              ) : (
+                <IndexChatContainer
+                  selectedModel={null}
+                  onSelectModel={() => null}
+                  modelList={[]}
+                  llmSettings={undefined}
+                  onSetLLMSettings={() => null}
+                  toggleFullScreenChat={null}
+                  clearChat={() => null}
+                  chatHistory={[]}
+                  conversation={null}
+                  showHeader={false}
+                  chatContainerSX={styles.chatContainer}
+                />
+              )}
             </Box>
           </Box>
         )}
@@ -226,6 +220,7 @@ const indexHistoryPageStyles = () => ({
     minWidth: 0,
     display: 'flex',
     flexDirection: 'column',
+    gap: '0.5rem',
     overflow: 'hidden',
   },
   chatContainer: {

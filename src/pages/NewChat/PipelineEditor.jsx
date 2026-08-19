@@ -16,14 +16,14 @@ import { useDispatch } from 'react-redux';
 import { Box, Tab, Tabs } from '@mui/material';
 
 import { useTrackEvent } from '@/GA';
-import { InstructionsInputRefProvider } from '@/[fsd]/app/providers';
 import CreateAgentForm from '@/[fsd]/features/agent/ui/agent-details/configurations/form/CreateAgentForm';
 import { useConversationStartersSync } from '@/[fsd]/features/chat/lib/hooks';
 import useRefetchAgentVersionDetailsOnClose from '@/[fsd]/features/chat/lib/hooks/useRefetchAgentVersionDetailsOnClose';
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { LayoutHelpers, ParsePipelineHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { usePipelineAttachmentYamlSync } from '@/[fsd]/features/pipelines/lib/hooks';
-import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
+import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
+import { InstructionsInputRefProvider } from '@/[fsd]/shared/lib/context';
 import { useGetApplicationVersionDetailQuery, usePublicApplicationDetailsQuery } from '@/api/applications';
 import FlowIcon from '@/assets/flow-icon.svg?react';
 import { ChatParticipantType, PERMISSIONS, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants.js';
@@ -43,6 +43,8 @@ import LLMModelSelectorWrapper from '@/pages/NewChat/components/LLMModelSelector
 import EditorPanel from '@/pages/Pipelines/Components/EditorPanel';
 import { actions } from '@/slices/pipeline';
 import { actions as editorActions } from '@/slices/pipelineEditor';
+
+const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
 
 const getPipelineId = pipeline => {
   // pipeline is a chat participant with entity_meta structure
@@ -472,6 +474,7 @@ const PipelineEditor = forwardRef(
           validationSchema={getValidateSchema}
           error={error}
           onDirtyStateChange={onPipelineDirtyStateChange}
+          closeButtonTestId="pipeline-canvas-close-button"
           formContent={
             !isCreateMode ? (
               <StyledTabBar sx={styles.tabBar}>
@@ -487,12 +490,14 @@ const PipelineEditor = forwardRef(
                       icon={<GearIcon />}
                       label="Configuration"
                       iconPosition="start"
+                      data-testid="pipeline-canvas-tab-configuration"
                     />
                     <Tab
                       sx={styles.tab}
                       icon={<FlowIcon />}
                       label="Flow editor"
                       iconPosition="start"
+                      data-testid="pipeline-canvas-tab-flow"
                     />
                   </Tabs>
                 </Box>
@@ -501,7 +506,10 @@ const PipelineEditor = forwardRef(
           }
           saveButton={
             isCreateMode ? (
-              <CreateApplicationSaveButton onSuccess={handlePipelineCreated} />
+              <CreateApplicationSaveButton
+                onSuccess={handlePipelineCreated}
+                data-testid="agent-save-button"
+              />
             ) : (
               <SaveApplicationButton onSuccess={handleSaveSuccess} />
             )

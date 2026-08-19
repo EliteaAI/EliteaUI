@@ -6,7 +6,7 @@ import { useLocation, useSearchParams } from 'react-router-dom';
 import { Box } from '@mui/material';
 import { GridRowModes } from '@mui/x-data-grid';
 
-import { SECRETS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
+import { SECRETS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { DrawerPageHeader } from '@/[fsd]/features/settings/ui/drawer-page';
 import { SecretsTable } from '@/[fsd]/features/settings/ui/secrets';
 import { useSecretsListQuery } from '@/api/secrets.js';
@@ -140,6 +140,7 @@ const SecretsContent = memo(() => {
     <>
       <DrawerPageHeader
         title="Secrets"
+        titleTestId="secrets-page-title"
         showSearchInput
         showAddButton
         slotProps={{
@@ -154,6 +155,7 @@ const SecretsContent = memo(() => {
               isFetching || Object.values(rowModesModel).filter(mode => mode.mode === 'edit').length > 0,
             tooltip: 'Create new secret',
             tourId: SECRETS_TOUR_TARGET_IDS.addButton,
+            testId: 'secrets-add-button',
           },
         }}
       />

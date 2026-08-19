@@ -1,13 +1,21 @@
 import { memo, useCallback, useContext, useMemo } from 'react';
 
-import { FlowEditorContext } from '@/[fsd]/app/providers';
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { useNodeOptions } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
+import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import { Select } from '@/[fsd]/shared/ui';
 
 const RouteSelect = memo(props => {
-  const { id, label = 'Route', fieldName = 'routes', nodesFilter = () => true, addEndNode, disabled } = props;
+  const {
+    id,
+    label = 'Route',
+    fieldName = 'routes',
+    nodesFilter = () => true,
+    addEndNode,
+    disabled,
+    dataTestId,
+  } = props;
 
   const { setFlowEdges, setYamlJsonObject, yamlJsonObject } = useContext(FlowEditorContext);
 
@@ -97,6 +105,7 @@ const RouteSelect = memo(props => {
       multiple
       className="nopan nodrag nowheel"
       onDeleteOption={onDeleteOption}
+      data-testid={dataTestId}
     />
   );
 });

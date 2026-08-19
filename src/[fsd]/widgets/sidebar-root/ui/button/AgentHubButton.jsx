@@ -6,7 +6,7 @@ import { useLocation, useMatch, useNavigate } from 'react-router-dom';
 import { Box, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
-import { SIDEBAR_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
+import { SIDEBAR_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import agentHubIconRaw from '@/assets/agent-hub-icon.svg?raw';
 import RouteDefinitions from '@/routes';
 

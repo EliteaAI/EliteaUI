@@ -14,7 +14,7 @@ import {
   GridTablePagination,
   GridTableRow,
 } from '@/[fsd]/entities/grid-table/ui';
-import { SECRETS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
+import { SECRETS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import {
   useSecretRowActions,
   useSecretRowUpdate,
@@ -384,6 +384,7 @@ const SecretsTable = memo(props => {
       // For existing secrets or view mode, show name as text
       return (
         <Text.EllipsisTypography
+          data-testid="secret-name-cell"
           variant="bodyMedium"
           color="text.secondary"
         >
@@ -452,6 +453,7 @@ const SecretsTable = memo(props => {
         return (
           <Box sx={styles.actionsContainer}>
             <IconButton
+              data-testid="secret-row-save-button"
               variant="elitea"
               color="tertiary"
               onClick={handleSaveClick(row.id)}
@@ -461,6 +463,7 @@ const SecretsTable = memo(props => {
               <CheckIcon sx={styles.checkIcon} />
             </IconButton>
             <IconButton
+              data-testid="secret-row-cancel-button"
               variant="elitea"
               color="tertiary"
               onClick={handleCancelClick(row.id)}
@@ -492,20 +495,28 @@ const SecretsTable = memo(props => {
           {/* Show/Hide secret action */}
           {checkPermission(PERMISSIONS.secrets.unsecret) && !row.isNew && (
             <IconButton
+              data-testid="secret-row-visibility-toggle-button"
               variant="elitea"
               color="tertiary"
               onClick={isSecretVisible ? () => handleHideSecret(row.id) : () => handleShowSecret(row.id)}
               sx={styles.actionButton}
             >
               {isSecretVisible ? (
-                <VisibilityOffIcon sx={styles.actionIcon} />
+                <VisibilityOffIcon
+                  data-testid="secret-row-visibility-icon-hide"
+                  sx={styles.actionIcon}
+                />
               ) : (
-                <VisibilityIcon sx={styles.actionIcon} />
+                <VisibilityIcon
+                  data-testid="secret-row-visibility-icon-show"
+                  sx={styles.actionIcon}
+                />
               )}
             </IconButton>
           )}
           {/* More actions menu */}
           <IconButton
+            data-testid="secret-row-actions-button"
             variant="elitea"
             color="tertiary"
             onClick={handleActionsMenuClick(row.id)}
@@ -555,6 +566,7 @@ const SecretsTable = memo(props => {
           {paginatedRows.map(row => (
             <GridTableRow
               key={row.id}
+              data-testid="secret-row"
               row={row}
               isSelected={false}
               isHovered={hoveredRowId === row.id}
@@ -570,7 +582,12 @@ const SecretsTable = memo(props => {
           ))}
         </GridTableBody>
 
-        {sortedRows.length > 0 && <GridTablePagination {...pagination} />}
+        {sortedRows.length > 0 && (
+          <GridTablePagination
+            {...pagination}
+            pageInfoTestId="secrets-pagination-info"
+          />
+        )}
       </GridTableContainer>
 
       {/* Render menus and dialogs for all rows */}

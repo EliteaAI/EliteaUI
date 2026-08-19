@@ -5,10 +5,10 @@ import { ErrorBoundary } from 'react-error-boundary';
 import * as MuiAll from '@mui/material';
 import { Box, Chip, CircularProgress, Divider, Link, Paper, ThemeProvider, Typography } from '@mui/material';
 
-import { typographyVariants } from '@/MainTheme';
 import { MdxStatus } from '@/[fsd]/features/artifacts/lib/constants/previewMdx.constants';
 import { useMdxEvaluator } from '@/[fsd]/features/artifacts/lib/hooks';
 import MdxAlert from '@/[fsd]/features/artifacts/ui/FilePreviewCanvas/MdxAlert';
+import { typographyVariants } from '@/[fsd]/shared/config/theme';
 import { useEliteATheme } from '@/[fsd]/shared/lib/hooks';
 import Markdown from '@/[fsd]/shared/ui/markdown';
 import { MDXProvider } from '@mdx-js/react';

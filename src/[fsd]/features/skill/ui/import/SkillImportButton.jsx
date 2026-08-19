@@ -5,13 +5,12 @@ import { useSelector } from 'react-redux';
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { useSkillImport } from '@/[fsd]/features/skill/lib/hooks';
 import SkillImportModal from '@/[fsd]/features/skill/ui/import/SkillImportModal';
-import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { Button } from '@/[fsd]/shared/ui';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import ImportIcon from '@/assets/import-icon.svg?react';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
 
 const SkillImportButton = memo(() => {
-  const styles = skillImportButtonStyles();
-
   const { projects } = useSelector(state => state.settings);
 
   const {
@@ -32,15 +31,15 @@ const SkillImportButton = memo(() => {
         title="Import"
         placement="top"
       >
-        <BaseBtn
+        <Button.BaseBtn
           data-testid="skills-import-button"
-          variant={BUTTON_VARIANTS.icon}
+          variant={BUTTON_VARIANTS.iconLabel}
           onClick={openFileDialog}
           disabled={isImporting}
-          sx={styles.importBtn}
+          startIcon={<ImportIcon />}
         >
-          <ImportIcon />
-        </BaseBtn>
+          Import
+        </Button.BaseBtn>
       </StyledTooltip>
       <SkillImportModal
         open={isModalOpen}
@@ -55,14 +54,5 @@ const SkillImportButton = memo(() => {
 });
 
 SkillImportButton.displayName = 'SkillImportButton';
-
-/** @type {MuiSx} */
-const skillImportButtonStyles = () => ({
-  importBtn: {
-    ml: 1,
-    width: '1.75rem',
-    height: '1.75rem',
-  },
-});
 
 export default SkillImportButton;

@@ -4,7 +4,7 @@ import { useFormikContext } from 'formik';
 
 import { Box, Tooltip, Typography } from '@mui/material';
 
-import { MCP_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
+import { MCP_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { PAT_REQUIRED_ACTION_HINT } from '@/[fsd]/features/mcp/lib/constants';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import {
@@ -133,6 +133,7 @@ const McpAuthStatus = memo((props = {}) => {
         <Box sx={styles.statusContent}>
           <OnlineIcon style={styles.statusIconOnline} />
           <Typography
+            data-testid="toolkit-connection-status"
             variant="bodySmall"
             sx={styles.loginStatusText}
           >
@@ -145,6 +146,7 @@ const McpAuthStatus = memo((props = {}) => {
               onClick={hasLoggedInToMcp ? onLogout : onLogin}
               disabled={isButtonDisabled}
               variant={BUTTON_VARIANTS.secondary}
+              data-testid="toolkit-connection-login-button"
             >
               {buttonLabel}
             </Button.BaseBtn>

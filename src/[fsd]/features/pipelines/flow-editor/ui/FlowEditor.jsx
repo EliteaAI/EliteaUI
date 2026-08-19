@@ -7,8 +7,7 @@ import { styled } from '@mui/material/styles';
 import { deepClone } from '@mui/x-data-grid/internals';
 
 import { useTrackEvent } from '@/GA';
-import { FlowEditorProvider } from '@/[fsd]/app/providers';
-import { PIPELINE_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
+import { PIPELINE_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { PipelineStatus } from '@/[fsd]/features/pipelines/flow-editor/lib/constants/flowEditor.constants';
 import {
@@ -29,7 +28,8 @@ import {
   FlowEditorSettings,
   FlowEditorState,
 } from '@/[fsd]/features/pipelines/flow-editor/ui';
-import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
+import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
+import { FlowEditorProvider } from '@/[fsd]/shared/lib/context';
 import { Button, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import ClipboardIcon from '@/assets/clipboard-icon.svg?react';
@@ -51,6 +51,8 @@ import {
   useReactFlow,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
+
+const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
 
 const edgeTypes = {
   custom: FlowEditorNodes.CustomEdge,
@@ -512,6 +514,7 @@ const FlowEditor = forwardRef((props, ref) => {
               </Box>
             }
             sx={styles.stateDrawerButton}
+            data-testid="pipeline-state-drawer-toggle-button"
           >
             State
           </Button.BaseBtn>

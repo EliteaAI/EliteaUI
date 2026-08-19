@@ -9,7 +9,15 @@ export const redistributeConversationsIntoGroups = (prevGroups, newFlatConversat
     });
   });
 
-  return prevGroups.map(group => ({
+  const hasTodayGroup = prevGroups.some(g => g.name === 'today');
+  const hasNewConversations = newFlatConversations.some(conv => !idToGroup.has(conv.id));
+
+  const groups =
+    hasTodayGroup || !hasNewConversations
+      ? prevGroups
+      : [{ name: 'today', conversations: [], offset: 0 }, ...prevGroups];
+
+  return groups.map(group => ({
     ...group,
     conversations: newFlatConversations.filter(conv => {
       const originalGroup = idToGroup.get(conv.id);
@@ -17,6 +25,14 @@ export const redistributeConversationsIntoGroups = (prevGroups, newFlatConversat
       return group.name === 'today' && !idToGroup.has(conv.id);
     }),
   }));
+};
+
+export const generateDuplicateName = originalName => {
+  const baseNameMatch = originalName.match(/^(.+?)\s*\((\d+)\)$/);
+
+  if (baseNameMatch) return `${baseNameMatch[1]} (${parseInt(baseNameMatch[2], 10) + 1})`;
+
+  return `${originalName} (1)`;
 };
 
 export const sortConversations = conversations =>

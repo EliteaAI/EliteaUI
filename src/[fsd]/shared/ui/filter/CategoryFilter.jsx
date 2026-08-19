@@ -14,6 +14,7 @@ const CategoryFilter = memo(props => {
     selectedCategories = [],
     onSelectCategory,
     children,
+    searchInputTestId,
     slotProps = {
       categoryList: {
         sx: {},
@@ -55,6 +56,9 @@ const CategoryFilter = memo(props => {
             sx={styles.searchField}
             variant="outlined"
             size="small"
+            slotProps={{
+              htmlInput: { 'data-testid': searchInputTestId },
+            }}
           />
         </Box>
 
@@ -65,6 +69,7 @@ const CategoryFilter = memo(props => {
               {allCategories.map(category => (
                 <Chip
                   key={category}
+                  data-testid="category-filter-tab"
                   label={category}
                   clickable
                   onClick={() => onSelectCategory(category)}

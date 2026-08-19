@@ -6,12 +6,13 @@ import { PERMISSIONS } from '@/common/constants';
 import AIEditProjectContextModal from './AIEditProjectContextModal';
 
 const AIEditProjectContextButton = memo(props => {
-  const { currentContent, onApplySave, disabled } = props;
+  const { currentContent, onApplySave, disabled, defaultOpen = false } = props;
 
   return (
     <EditEntityButton
       permission={PERMISSIONS.projectContext.edit}
       disabled={disabled}
+      defaultOpen={defaultOpen}
       buttonTestId="ai-edit-project-context-open-button"
       renderModal={({ open, onClose }) => (
         <AIEditProjectContextModal

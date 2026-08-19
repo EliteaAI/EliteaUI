@@ -10,8 +10,12 @@ rules strictly.
 
 ## Architecture
 
-- **Layer import direction is strict**: `app → pages → widgets → features → entities → shared`. A layer may
-  only import from layers below it. Never import upward.
+- **Layer import direction**: `app → pages → widgets / features → entities → shared`. A layer may only import
+  from layers below it. Never import upward.
+- **`features` and `widgets` are peers**: `features` may import from `widgets` and vice-versa. In this project
+  features are large business modules while widgets are smaller self-contained UI blocks, so cross-imports
+  between them are allowed.
+- **Redux store** lives in `shared/config/store.js` so every layer can import it.
 - **Cross-slice imports within the same layer**: import through the barrel file (`index.js`), never reach into
   another slice's internals.
 - **No new files in legacy directories** (`src/components/`, `src/pages/`, `src/hooks/`, `src/api/`,
@@ -77,6 +81,15 @@ rules strictly.
 - Local-only constants (used in one file) — define at the top of that file.
 - Shared constants (exported, used by multiple files) — move to `lib/constants/` in the appropriate slice.
 - Use `UPPER_SNAKE_CASE` for constant object names.
+- **Importing shared constants**: import the namespace from the shared barrel, then destructure inside the
+  component body:
+
+  ```js
+  import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
+
+  // Inside component or function:
+  const { ParticipantEntityTypes } = ParticipantEntityConstants;
+  ```
 
 ## Hooks
 

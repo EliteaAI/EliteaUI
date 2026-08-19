@@ -2,7 +2,7 @@ import { memo } from 'react';
 
 import { Box } from '@mui/material';
 
-import { McpLogoutButton } from '@/[fsd]/features/mcp/ui';
+import { McpLogoutButton } from '@/[fsd]/features/mcp';
 import { ChatParticipantType, PUBLIC_PROJECT_ID } from '@/common/constants';
 
 import DeleteParticipantButton from './DeleteParticipantButton';
@@ -28,6 +28,7 @@ const ParticipantActions = memo(props => {
       {showEditButton && (
         <EditParticipantButton
           id="EditButton"
+          testId="chat-participant-edit-view-button"
           sx={{
             width: '1.75rem',
             height: '1.75rem',

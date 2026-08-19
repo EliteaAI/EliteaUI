@@ -1,0 +1,58 @@
+import { importWizardReducer, importWizardReducerName } from '@/[fsd]/entities/import-wizard';
+import indexesReducer, {
+  name as indexesReducerName,
+} from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
+// Important! Need to have been already imported all APIs before the store will be created
+import '@/api';
+import {
+  middleware as eliteaMiddleware,
+  reducer as eliteaReducer,
+  reducerPath as eliteaReducerName,
+} from '@/api/eliteaApi';
+import agentHubReducer, { name as agentHubReducerName } from '@/slices/agentHub';
+import applicationsReducer, { name as applicationsReducerName } from '@/slices/applications';
+import artifactReducer, { name as artifactReducerName } from '@/slices/artifact';
+import chatReducer, { name as chatReducerName } from '@/slices/chat';
+import fileTypesReducer, { name as fileTypesReducerName } from '@/slices/fileTypes';
+import pipelineReducer, { name as pipelineReducerName } from '@/slices/pipeline';
+import pipelineEditorReducer, { name as pipelineEditorReducerName } from '@/slices/pipelineEditor';
+import searchReducer, { name as searchReducerName } from '@/slices/search';
+import settingsReducer, { name as settingsReducerName } from '@/slices/settings';
+import skillHubReducer, { name as skillHubReducerName } from '@/slices/skillHub';
+import tagsReducer, { name as tagsReducerName } from '@/slices/tags';
+import authorReducer, { name as authorReducerName } from '@/slices/trendingAuthors';
+import uploadReducer, { name as uploadReducerName } from '@/slices/upload';
+import userReducer, { name as userReducerName } from '@/slices/user';
+import { configureStore } from '@reduxjs/toolkit';
+
+const store = configureStore({
+  reducer: {
+    [eliteaReducerName]: eliteaReducer,
+    [agentHubReducerName]: agentHubReducer,
+    [skillHubReducerName]: skillHubReducer,
+    [applicationsReducerName]: applicationsReducer,
+    [artifactReducerName]: artifactReducer,
+    [authorReducerName]: authorReducer,
+    [chatReducerName]: chatReducer,
+    [fileTypesReducerName]: fileTypesReducer,
+    [importWizardReducerName]: importWizardReducer,
+    [pipelineEditorReducerName]: pipelineEditorReducer,
+    [pipelineReducerName]: pipelineReducer,
+    [searchReducerName]: searchReducer,
+    [settingsReducerName]: settingsReducer,
+    [tagsReducerName]: tagsReducer,
+    [uploadReducerName]: uploadReducer,
+    [userReducerName]: userReducer,
+    [indexesReducerName]: indexesReducer,
+  },
+  middleware: getDefaultMiddleware =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        // Ignore actions that process the Blob
+        ignoredActions: ['eliteaApi/executeQuery/fulfilled'],
+        ignoredPaths: [eliteaReducerName],
+      },
+    }).concat([eliteaMiddleware]),
+});
+
+export default store;

@@ -2,7 +2,7 @@ import { memo, useContext } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { FlowEditorContext, NodeCardContext } from '@/[fsd]/app/providers';
+import { FlowEditorContext, NodeCardContext } from '@/[fsd]/shared/lib/context';
 import FlagIcon from '@/assets/flag-icon.svg?react';
 import { Handle } from '@xyflow/react';
 

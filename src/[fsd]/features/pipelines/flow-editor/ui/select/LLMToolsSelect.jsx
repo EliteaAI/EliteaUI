@@ -1,8 +1,8 @@
 import { memo, useCallback, useContext, useMemo } from 'react';
 
-import { FlowEditorContext } from '@/[fsd]/app/providers';
 import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
+import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import { Select } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion.jsx';
 

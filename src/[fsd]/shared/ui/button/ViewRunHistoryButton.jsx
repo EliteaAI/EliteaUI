@@ -2,7 +2,7 @@ import { memo, useCallback } from 'react';
 
 import { Box, IconButton, Tooltip, useTheme } from '@mui/material';
 
-import { SHARED_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
+import { TourTargetConstants } from '@/[fsd]/shared/lib/constants';
 import { Button } from '@/[fsd]/shared/ui';
 import ClockIcon from '@/assets/clock_icon.svg?react';
 
@@ -29,7 +29,7 @@ const ViewRunHistoryButton = memo(props => {
             color="secondary"
             aria-label="view run history"
             data-testid="pipeline-history-tab"
-            data-tour={SHARED_TOUR_TARGET_IDS.runHistory}
+            data-tour={TourTargetConstants.SHARED_TOUR_TARGET_IDS.runHistory}
             onClick={handleShowHistory}
           >
             <ClockIcon
@@ -52,7 +52,7 @@ const ViewRunHistoryButton = memo(props => {
         size="small"
         aria-label="view run history"
         data-testid="pipeline-history-tab"
-        data-tour={SHARED_TOUR_TARGET_IDS.runHistory}
+        data-tour={TourTargetConstants.SHARED_TOUR_TARGET_IDS.runHistory}
         onClick={handleShowHistory}
         startIcon={<ClockIcon />}
       >

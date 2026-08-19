@@ -9,7 +9,13 @@ import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 
-export default function CreateToolkitButton({ toolSchema, onToolkitCreated, hasErrors, triggerValidation }) {
+export default function CreateToolkitButton({
+  toolSchema,
+  onToolkitCreated,
+  hasErrors,
+  triggerValidation,
+  testId,
+}) {
   const { dirty: isFormDirty, values } = useFormikContext();
   const { toastError, toastSuccess } = useToast();
   const projectId = useSelectedProjectId();
@@ -73,6 +79,7 @@ export default function CreateToolkitButton({ toolSchema, onToolkitCreated, hasE
       variant="elitea"
       color="primary"
       onClick={onCreateToolkit}
+      data-testid={testId}
     >
       {isCreating && <StyledCircleProgress size={16} />}
       Create

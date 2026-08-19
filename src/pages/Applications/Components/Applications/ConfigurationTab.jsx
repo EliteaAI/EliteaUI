@@ -6,9 +6,10 @@ import { Box, CircularProgress, Typography } from '@mui/material';
 
 import RunHistoryContainer from '@/[fsd]/entities/run-history/ui/RunHistoryContainer';
 import { useApplicationChat } from '@/[fsd]/features/agent/lib/hooks';
-import { ParticipantEntityTypes } from '@/[fsd]/features/chat/participants/lib/constants/participant.constants';
-import { ChatBox, ChatButton } from '@/[fsd]/features/chat/ui';
+import { ChatBox, ChatButton, ChatMessageList } from '@/[fsd]/features/chat/ui';
 import { AGENT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
+import { ToolkitsHelpers } from '@/[fsd]/features/toolkits';
+import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { useShowRunHistoryFromUrl } from '@/[fsd]/shared/lib/hooks';
 import { ViewRunHistoryButton } from '@/[fsd]/shared/ui/button';
 import { ContextBudgetUI } from '@/[fsd]/widgets/context-budget';
@@ -27,6 +28,8 @@ import {
 } from '@/pages/Common/Components/StyledComponents';
 
 import ApplicationConfigurationForm from './ApplicationConfigurationForm';
+
+const { ParticipantEntityTypes } = ParticipantEntityConstants;
 
 const ConfigurationRightContent = memo(props => {
   const {
@@ -335,6 +338,8 @@ const ConfigurationTab = memo(props => {
           source={ParticipantEntityTypes.Agent}
           handleRestoreConversation={handleRestoreConversation}
           onClose={handleCloseHistory}
+          ChatMessageListComponent={ChatMessageList}
+          prettifyConversation={ToolkitsHelpers.prettifyToolkitConversation}
         />
       )}
       {!showHistory && (

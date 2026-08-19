@@ -26,7 +26,10 @@ const AnalyticAgentDetailed = memo(props => {
 
   if (isFetching)
     return (
-      <Box sx={styles.loadingState}>
+      <Box
+        sx={styles.loadingState}
+        data-testid="analytics-agent-detail-loading-indicator"
+      >
         <CircularProgress size={32} />
       </Box>
     );
@@ -53,12 +56,14 @@ const AnalyticAgentDetailed = memo(props => {
         <IconButton
           onClick={onBack}
           size="small"
+          data-testid="analytics-agent-detail-back-button"
         >
           <ArrowBackIcon />
         </IconButton>
         <Typography
           variant="labelMedium"
           sx={styles.chartTitle}
+          data-testid="analytics-agent-detail-title"
         >
           {entity_name}
         </Typography>
@@ -69,43 +74,59 @@ const AnalyticAgentDetailed = memo(props => {
           label="TOTAL RUNS"
           value={AnalyticCommonHelpers.fmtNum(kpis.total_events)}
           tooltip={tt.TOTAL_RUNS}
+          testId="analytics-agent-detail-kpi-card"
+          valueTestId="analytics-agent-detail-kpi-value"
         />
         <KPICard
           label="UNIQUE USERS"
           value={AnalyticCommonHelpers.fmtNum(kpis.unique_users)}
           tooltip={tt.UNIQUE_USERS}
+          testId="analytics-agent-detail-kpi-card"
+          valueTestId="analytics-agent-detail-kpi-value"
         />
         <KPICard
           label="TOTAL COST"
           value={AnalyticCommonHelpers.fmtCost(kpis.llm_cost)}
           subtitle="estimated"
           tooltip={tt.TOTAL_COST}
+          testId="analytics-agent-detail-kpi-card"
+          valueTestId="analytics-agent-detail-kpi-value"
         />
         <KPICard
           label="TOTAL TOKENS"
           value={AnalyticCommonHelpers.fmtNum(kpis.total_tokens)}
           tooltip={tt.TOTAL_TOKENS}
+          testId="analytics-agent-detail-kpi-card"
+          valueTestId="analytics-agent-detail-kpi-value"
         />
         <KPICard
           label="INPUT TOKENS"
           value={AnalyticCommonHelpers.fmtNum(kpis.input_tokens)}
           tooltip={tt.INPUT_TOKENS}
+          testId="analytics-agent-detail-kpi-card"
+          valueTestId="analytics-agent-detail-kpi-value"
         />
         <KPICard
           label="OUTPUT TOKENS"
           value={AnalyticCommonHelpers.fmtNum(kpis.output_tokens)}
           tooltip={tt.OUTPUT_TOKENS}
+          testId="analytics-agent-detail-kpi-card"
+          valueTestId="analytics-agent-detail-kpi-value"
         />
         <KPICard
           label="AVG LATENCY"
           value={AnalyticCommonHelpers.fmtDuration(kpis.avg_duration_ms)}
           tooltip={tt.AVG_LATENCY}
+          testId="analytics-agent-detail-kpi-card"
+          valueTestId="analytics-agent-detail-kpi-value"
         />
         <KPICard
           label="ERRORS"
           value={AnalyticCommonHelpers.fmtNum(kpis.errors)}
           color={kpis.errors > 0 ? palette.status.rejected : undefined}
           tooltip={tt.ERRORS}
+          testId="analytics-agent-detail-kpi-card"
+          valueTestId="analytics-agent-detail-kpi-value"
         />
       </Box>
 
@@ -114,10 +135,14 @@ const AnalyticAgentDetailed = memo(props => {
           <Typography
             variant="labelMedium"
             sx={styles.chartTitle}
+            data-testid="analytics-agent-detail-chart-title"
           >
             Runs by Day
           </Typography>
-          <Box sx={styles.chartWrapper}>
+          <Box
+            sx={styles.chartWrapper}
+            data-testid="analytics-agent-detail-chart-container"
+          >
             <ResponsiveContainer
               width="100%"
               height={200}
@@ -178,7 +203,10 @@ const AnalyticAgentDetailed = memo(props => {
           alignItems: 'stretch',
         }}
       >
-        <Box sx={styles.chartCard}>
+        <Box
+          sx={styles.chartCard}
+          data-testid="analytics-agent-detail-users-panel"
+        >
           <Typography
             variant="labelMedium"
             sx={styles.chartTitle}
@@ -245,7 +273,10 @@ const AnalyticAgentDetailed = memo(props => {
             </Box>
           </Box>
         </Box>
-        <Box sx={styles.chartCard}>
+        <Box
+          sx={styles.chartCard}
+          data-testid="analytics-agent-detail-tools-panel"
+        >
           <Typography
             variant="labelMedium"
             sx={styles.chartTitle}

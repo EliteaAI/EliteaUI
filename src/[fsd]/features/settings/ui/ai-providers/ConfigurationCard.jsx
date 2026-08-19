@@ -43,6 +43,7 @@ const ConfigurationCard = memo(props => {
 
   return (
     <Box
+      data-testid="ai-provider-configuration-card"
       onClick={handleCardClick}
       sx={styles.cardContainer(disabled)}
     >
@@ -57,6 +58,7 @@ const ConfigurationCard = memo(props => {
         <Box sx={styles.textContainer}>
           <Box sx={styles.titleRow}>
             <Typography
+              data-testid="ai-provider-configuration-card-name"
               variant="bodyMedium"
               color="text.secondary"
               sx={styles.displayName}
@@ -86,6 +88,7 @@ const ConfigurationCard = memo(props => {
             {statusText}
             {isHighTier && (
               <Typography
+                data-testid="ai-provider-configuration-badge"
                 component={Box}
                 variant="bodySmall"
                 color="text.secondary"
@@ -96,6 +99,7 @@ const ConfigurationCard = memo(props => {
             )}
             {isLowTier && (
               <Typography
+                data-testid="ai-provider-configuration-badge"
                 component={Box}
                 variant="bodySmall"
                 color="text.secondary"
@@ -106,6 +110,7 @@ const ConfigurationCard = memo(props => {
             )}
             {isDefault && (
               <Typography
+                data-testid="ai-provider-configuration-badge"
                 component={Box}
                 variant="bodySmall"
                 color="text.secondary"

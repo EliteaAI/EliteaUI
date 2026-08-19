@@ -1,13 +1,11 @@
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
-import {
-  TAG_TYPE_PUBLIC_SKILLS,
-  TAG_TYPE_PUBLIC_SKILL_DETAILS,
-} from '@/[fsd]/features/skill-hub/api/skillHubApi';
+import { RtkTagsConstants } from '@/[fsd]/shared/lib/constants';
 import { getFilenameFromContentDisposition } from '@/[fsd]/shared/lib/helpers';
 import { eliteaApi } from '@/api/eliteaApi.js';
 import { PAGE_SIZE } from '@/common/constants';
 import { convertToJson, removeDuplicateObjects } from '@/common/utils.jsx';
 
+const { TAG_TYPE_PUBLIC_SKILLS, TAG_TYPE_PUBLIC_SKILL_DETAILS } = RtkTagsConstants;
 const TAG_TYPE_SKILLS = 'TAG_TYPE_SKILLS';
 const TAG_TYPE_SKILL_DETAILS = 'TAG_TYPE_SKILL_DETAILS';
 const TAG_TYPE_TOTAL_SKILLS = 'TAG_TYPE_TOTAL_SKILLS';

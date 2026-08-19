@@ -39,6 +39,7 @@ const RunStateNodeGroup = memo(props => {
   return (
     <Box sx={styles.wrapper}>
       <Box
+        data-testid="pipeline-run-node-history-button"
         sx={styles.historyWrapper}
         onClick={e => toggleHistory(e.currentTarget)}
       >

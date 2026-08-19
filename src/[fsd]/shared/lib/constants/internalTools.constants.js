@@ -49,6 +49,24 @@ export const INTERNAL_TOOLS_LIST = [
     toolkitNames: ['internal_mcp'],
   },
   {
+    name: 'skill_builder',
+    title: 'Skill Builder',
+    icon: 'McpIcon',
+    infoTooltip: {
+      text: 'Create and update skills from chat using internal Elitea MCP tools.',
+    },
+    toolkitNames: ['skill_builder'],
+  },
+  {
+    name: 'project_context_builder',
+    title: 'Project Context Builder',
+    icon: 'McpIcon',
+    infoTooltip: {
+      text: 'Create and update project context from chat using internal Elitea MCP tools.',
+    },
+    toolkitNames: ['project_context_builder'],
+  },
+  {
     name: 'planner',
     title: 'Planner',
     icon: 'CalendarIcon',
@@ -97,3 +115,41 @@ export const INTERNAL_TOOLS_LIST = [
     toolkitNames: ['lazy_tools_mode'],
   },
 ];
+
+export const INTERNAL_TOOL_PERSONALIZATION_FIELD_MAP = {
+  internal_mcp: 'default_internal_mcp_enabled',
+  skill_builder: 'default_skill_builder_enabled',
+  project_context_builder: 'default_project_context_builder_enabled',
+  ask_user: 'default_ask_user_enabled',
+  image_generation: 'default_image_generation_enabled',
+  data_analysis: 'default_data_analysis_enabled',
+  planner: 'default_planner_enabled',
+  pyodide: 'default_pyodide_enabled',
+  swarm: 'default_swarm_enabled',
+  lazy_tools_mode: 'default_lazy_tools_mode_enabled',
+};
+
+export const INTERNAL_TOOL_AGENT_PERSONALIZATION_FIELD_MAP = {
+  internal_mcp: 'default_agent_internal_mcp_enabled',
+  skill_builder: 'default_agent_skill_builder_enabled',
+  project_context_builder: 'default_agent_project_context_builder_enabled',
+  ask_user: 'default_agent_ask_user_enabled',
+  image_generation: 'default_agent_image_generation_enabled',
+  data_analysis: 'default_agent_data_analysis_enabled',
+  planner: 'default_agent_planner_enabled',
+  pyodide: 'default_agent_pyodide_enabled',
+  swarm: 'default_agent_swarm_enabled',
+  lazy_tools_mode: 'default_agent_lazy_tools_mode_enabled',
+};
+
+export const getEnabledInternalToolNames = personalization => {
+  return Object.entries(INTERNAL_TOOL_PERSONALIZATION_FIELD_MAP)
+    .filter(([, fieldName]) => personalization?.[fieldName])
+    .map(([toolName]) => toolName);
+};
+
+export const getEnabledAgentInternalToolNames = personalization => {
+  return Object.entries(INTERNAL_TOOL_AGENT_PERSONALIZATION_FIELD_MAP)
+    .filter(([, fieldName]) => personalization?.[fieldName])
+    .map(([toolName]) => toolName);
+};

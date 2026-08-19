@@ -7,7 +7,6 @@ import { Box, CircularProgress, Grid } from '@mui/material';
 import { TestTools } from '@/[fsd]/features/toolkits/ui';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui/form/ToolkitForm';
 import DirtyDetector from '@/components/Formik/DirtyDetector.jsx';
-import { CONFIGURATION_VIEW_OPTIONS } from '@/pages/Applications/Components/Tools/ToolConfigurationForm.jsx';
 import RouteDefinitions from '@/routes';
 
 const ConfigurationTab = memo(props => {
@@ -74,9 +73,7 @@ const ConfigurationTab = memo(props => {
                 editFieldRootPath={editFieldRootPath}
                 isCustomBackButtons={true}
                 showNameFieldForcedly={true}
-                showToolkitIcon={true}
                 hideConfigurationNameInput={true}
-                configurationViewOptions={CONFIGURATION_VIEW_OPTIONS.CredentialsSelect}
                 hasNotSavedCredentials={hasNotSavedCredentials}
                 updateKey={updateKey}
                 isMCP={isMCP}
@@ -124,17 +121,10 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '1rem',
-    padding: '1rem 1.5rem',
     borderRight: ({ palette }) => `0.0625rem solid ${palette.border.table}`,
     position: 'relative',
-    background: ({ palette }) => palette.background.toolkitDetailLeftPanel,
     ' & .MuiAccordion-root': {
-      background: ({ palette }) => `${palette.background.toolkitDetailLeftPanel} !important`,
-    },
-
-    '>div': {
-      maxWidth: { lg: 'unset', xs: '40.1875rem' },
-      margin: { lg: 'unset', xs: '0 auto' },
+      background: ({ palette }) => `${palette.background.section} !important`,
     },
   },
   rightPanel: {

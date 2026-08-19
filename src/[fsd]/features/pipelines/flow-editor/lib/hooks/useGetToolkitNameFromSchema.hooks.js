@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 
 import { useSelector } from 'react-redux';
 
-import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
+import { ToolkitsHelpers } from '@/[fsd]/features/toolkits';
 
 export const useGetToolkitNameFromSchema = () => {
   const schemaOfTools = useSelector(state => state.applications.toolkitSchemas || {});

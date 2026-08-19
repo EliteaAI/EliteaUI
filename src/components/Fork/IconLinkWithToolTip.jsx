@@ -4,6 +4,7 @@ import { Box, Link } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip.jsx';
 import { useForkedFromSourceName } from '@/[fsd]/entities/fork/lib';
+import { useLazySkillDetailsQuery } from '@/[fsd]/features/skill';
 import { buildForkedEntityHref } from '@/common/utils.jsx';
 import ForkIcon from '@/components/Icons/ForkIcon.jsx';
 import { useTheme } from '@emotion/react';
@@ -11,7 +12,7 @@ import { useTheme } from '@emotion/react';
 export const IconLinkWithToolTip = ({ meta, type }) => {
   const theme = useTheme();
   const href = buildForkedEntityHref(type, meta);
-  const { sourceName, loadSourceName } = useForkedFromSourceName(type, meta);
+  const { sourceName, loadSourceName } = useForkedFromSourceName(type, meta, useLazySkillDetailsQuery);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '4px' }}>
@@ -21,6 +22,7 @@ export const IconLinkWithToolTip = ({ meta, type }) => {
         onOpen={loadSourceName}
       >
         <Link
+          data-testid="entity-card-forked-from-link"
           sx={{
             display: 'flex',
             justifyContent: 'center',

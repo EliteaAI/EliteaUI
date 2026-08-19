@@ -1,0 +1,73 @@
+export const typographyVariants = {
+  headingLarge: {
+    color: theme => theme.palette.text.secondary,
+    fontStyle: 'semibold',
+    fontWeight: 600,
+    fontSize: '1.25rem',
+    lineHeight: '2rem',
+  },
+  headingMedium: {
+    color: theme => theme.palette.text.secondary,
+    fontStyle: 'normal',
+    fontWeight: 600,
+    fontSize: '1rem',
+    lineHeight: '1.5rem',
+  },
+  headingSmall: {
+    color: theme => theme.palette.text.secondary,
+    fontStyle: 'normal',
+    fontWeight: 600,
+    fontSize: '0.875rem',
+    lineHeight: '1.5rem',
+  },
+  labelLarge: {
+    fontStyle: 'normal',
+    fontWeight: 500,
+    fontSize: '1rem',
+    lineHeight: '1.5rem',
+  },
+  labelMedium: {
+    fontStyle: 'normal',
+    fontWeight: 500,
+    fontSize: '0.875rem',
+    lineHeight: '1.5rem',
+  },
+  labelSmall: {
+    fontStyle: 'normal',
+    fontWeight: 500,
+    fontSize: '0.75rem',
+    lineHeight: '1rem',
+  },
+  labelTiny: {
+    fontStyle: 'normal',
+    fontWeight: 400,
+    fontSize: '0.625rem',
+    lineHeight: '1rem',
+  },
+  bodyMedium: {
+    fontStyle: 'normal',
+    fontWeight: 400,
+    fontSize: '0.875rem',
+    lineHeight: '1.5rem',
+  },
+  bodySmall: {
+    fontStyle: 'normal',
+    fontWeight: 400,
+    fontSize: '0.75rem',
+    lineHeight: '1rem',
+  },
+  bodySmall2: {
+    fontStyle: 'normal',
+    fontWeight: 400,
+    fontSize: '0.75rem',
+    lineHeight: '1.25rem',
+  },
+  subtitle: {
+    fontStyle: 'normal',
+    fontWeight: 500,
+    fontSize: '0.75rem',
+    lineHeight: '1rem',
+    letterSpacing: '0.72px',
+    textTransform: 'uppercase',
+  },
+};

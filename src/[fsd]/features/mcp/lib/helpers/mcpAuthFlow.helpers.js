@@ -1,4 +1,4 @@
-import store from '@/[fsd]/app/store';
+import store from '@/[fsd]/shared/config/store';
 import { mcpOAuthApi } from '@/api/mcpOAuth';
 import { toolkitsApi } from '@/api/toolkits';
 import RouteDefinitions, { getBasename } from '@/routes';

@@ -25,6 +25,7 @@ const CommonBooleanField = memo(props => {
   return (
     <Box
       key={fieldKey}
+      data-testid={`toolkit-test-param-${fieldKey}`}
       sx={styles.wrapper(disabled)}
       className="index-config-field"
     >

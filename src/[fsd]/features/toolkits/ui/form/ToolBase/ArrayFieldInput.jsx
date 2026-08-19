@@ -14,6 +14,7 @@ const ArrayFieldInput = memo(
     disabled,
     editField,
     buildEditFieldPath,
+    testId,
   }) => {
     const styles = getStyles();
     const arrayValue = settings[k];
@@ -49,6 +50,7 @@ const ArrayFieldInput = memo(
         helperText={errorText || 'Enter scopes separated by commas or spaces'}
         FormHelperTextProps={{ sx: styles.helperText }}
         disabled={disableConfigFields || disabled}
+        inputProps={testId ? { 'data-testid': testId } : undefined}
       />
     );
   },

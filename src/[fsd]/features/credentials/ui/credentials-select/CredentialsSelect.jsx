@@ -7,8 +7,8 @@ import { Box, Tooltip, Typography } from '@mui/material';
 import { useTrackEvent } from '@/GA';
 import { useCredentialValidation, useCredentialsData } from '@/[fsd]/features/credentials/lib/hooks';
 import { CredentialOptionLabel } from '@/[fsd]/features/credentials/ui';
-import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
-import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
+import { McpAuthHelpers } from '@/[fsd]/features/mcp';
+import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
 import { useContextExecutionEntity } from '@/[fsd]/shared/lib/hooks';
 import { Select } from '@/[fsd]/shared/ui';
 import { BaseBtn } from '@/[fsd]/shared/ui/button';
@@ -21,6 +21,8 @@ import RouteDefinitions, { getBasename } from '@/routes';
 import CredentialCreateLabel from './CredentialCreateLabel';
 import CredentialMismatchFooter from './CredentialMismatchFooter';
 import CredentialNotFoundValue from './CredentialNotFoundValue';
+
+const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
 
 const credentialMenuItemValue = Object.freeze({
   keyKind: 'kind',
@@ -310,12 +312,15 @@ const CredentialsSelect = memo(
         return null;
       }
 
-      if (section === 'credentials')
-        return (
-          savedCredentialsMenuData.find(
+      if (section === 'credentials') {
+        if (!isBlankEliteaTitle(value?.elitea_title)) {
+          const sharedMatch = savedCredentialsMenuData.find(
             option => option.elitea_title && option.elitea_title === value?.elitea_title && option.shared,
-          ) || null
-        );
+          );
+          return sharedMatch ?? null;
+        }
+        return savedCredentialsMenuData[0] ?? null;
+      }
 
       return null;
     }, [createMenuData, savedCredentialsMenuData, value, section, projectDefaultVectorStorageModel]);
@@ -328,11 +333,11 @@ const CredentialsSelect = memo(
       if (section === 'vectorstorage') {
         return selectedOption;
       }
-      if (isBlankEliteaTitle(value?.elitea_title)) {
-        return savedCredentialsMenuData[0];
+      if (section === 'credentials') {
+        return selectedOption?.elitea_title !== value?.elitea_title ? selectedOption : null;
       }
       return null;
-    }, [section, savedCredentialsMenuData, selectedOption, value?.elitea_title]);
+    }, [section, selectedOption, value?.elitea_title]);
 
     useEffect(() => {
       if (!hasFetchedData || hasAutoSelectedRef.current || !credentialToAutoSelect) return;
@@ -397,6 +402,7 @@ const CredentialsSelect = memo(
             size="small"
             onClick={onRefresh}
             sx={styles.refreshIcon}
+            data-testid="credential-select-refresh-button"
           >
             <RefreshIcon />
           </BaseBtn>
@@ -510,6 +516,7 @@ const CredentialsSelect = memo(
     return (
       <Box sx={[styles.container, sx]}>
         <Select.SingleSelect
+          data-testid={`toolkit-credential-select-${type}`}
           label={label}
           shrinkLabel
           infoIconDescription={description}

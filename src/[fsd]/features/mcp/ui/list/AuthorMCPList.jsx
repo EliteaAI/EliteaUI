@@ -2,8 +2,7 @@ import { memo, useCallback, useEffect, useMemo } from 'react';
 
 import { useSelector } from 'react-redux';
 
-import { useLoadToolkits } from '@/[fsd]/features/toolkits/lib/hooks';
-import { AuthorEmptyListPlaceHolder } from '@/[fsd]/features/toolkits/ui/list';
+import { ToolkitsList, useLoadToolkits } from '@/[fsd]/features/toolkits';
 import { ContentType } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import CardList from '@/components/CardList';
@@ -85,7 +84,7 @@ const AuthorMCPList = memo(props => {
         isLoadingMore={isToolkitsFetching}
         loadMoreFunc={loadMoreItems}
         emptyListPlaceHolder={
-          <AuthorEmptyListPlaceHolder
+          <ToolkitsList.AuthorEmptyListPlaceHolder
             query={query}
             name={name}
           />

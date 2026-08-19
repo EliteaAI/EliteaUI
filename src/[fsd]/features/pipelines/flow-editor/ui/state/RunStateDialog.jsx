@@ -14,7 +14,7 @@ import {
   Typography,
 } from '@mui/material';
 
-import { BudgetErrorMessage } from '@/[fsd]/features/chat/ui/error-trace';
+import { BudgetErrorMessage } from '@/[fsd]/features/chat';
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import ProcessConnector from '@/[fsd]/features/pipelines/flow-editor/ui/state/ProcessConnector';
 import ProcessStepIcon from '@/[fsd]/features/pipelines/flow-editor/ui/state/ProcessStepIcon';
@@ -81,12 +81,16 @@ const RunStateDialog = memo(props => {
           },
         }}
       >
-        <DialogContent sx={styles.dialogContent}>
+        <DialogContent
+          sx={styles.dialogContent}
+          data-testid="pipeline-run-details-panel"
+        >
           <Box sx={styles.mainContainer}>
             <Box sx={styles.header}>
               <Typography
                 variant="labelMedium"
                 color="text.secondary"
+                data-testid="pipeline-run-details-header"
               >
                 {data.label}
               </Typography>
@@ -112,6 +116,7 @@ const RunStateDialog = memo(props => {
                     color="tertiary"
                     sx={styles.iconButton}
                     onClick={onDelete}
+                    data-testid="pipeline-run-details-delete-button"
                   >
                     <DeleteIcon sx={{ fontSize: '1rem' }} />
                   </IconButton>
@@ -121,6 +126,7 @@ const RunStateDialog = memo(props => {
                   color="tertiary"
                   sx={styles.iconButton}
                   onClick={onClose}
+                  data-testid="pipeline-run-details-close-button"
                 >
                   <Box sx={({ palette }) => ({ color: palette.icon.fill.secondary })}>
                     <CollapseIcon
@@ -269,6 +275,7 @@ const RunStateDialog = memo(props => {
                     <Typography
                       sx={styles.stepLabel}
                       variant="bodySmall"
+                      data-testid={`pipeline-run-details-timeline-timestamp-${index}`}
                     >
                       {format(new Date(step.created_at), 'HH:mm:ss')}
                     </Typography>
@@ -320,6 +327,7 @@ const RunStateDialog = memo(props => {
                       items={[
                         {
                           title: variable,
+                          testId: `pipeline-run-details-state-row-${variable}`,
                           content: (
                             <StateItemView
                               name={variable}
@@ -346,6 +354,10 @@ const RunStateDialog = memo(props => {
         onClose={onCloseValueModal}
         label={selectedState?.name}
         value={selectedState.value}
+        testId="pipeline-run-details-value-modal"
+        headerTestId="pipeline-run-details-value-modal-header"
+        closeButtonTestId="pipeline-run-details-value-modal-close-button"
+        contentTestId="pipeline-run-details-value-modal-content"
       />
     </>
   );

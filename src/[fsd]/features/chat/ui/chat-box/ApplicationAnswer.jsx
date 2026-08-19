@@ -21,9 +21,16 @@ import {
   normalizeExecutionHierarchy,
 } from '@/[fsd]/features/chat/lib/helpers/executionHierarchy.helpers.js';
 import { getInterruptIdentity } from '@/[fsd]/features/chat/lib/helpers/hitl.helpers.js';
+import { groupToolkitAuthorizationActions } from '@/[fsd]/features/chat/lib/helpers/mcpAuthorization.helpers.js';
 import { computeBreadcrumbs } from '@/[fsd]/features/chat/lib/helpers/subAgentGrouping.helpers.js';
 import { useParticipantEntityIcon, useParticipantName } from '@/[fsd]/features/chat/participants/lib/hooks';
-import { ChatAttachment, ChatContinue, ChatHitlActions, ErrorTrace } from '@/[fsd]/features/chat/ui';
+import {
+  AskUserAnswerSummary,
+  ChatAttachment,
+  ChatContinue,
+  ChatHitlActions,
+  ErrorTrace,
+} from '@/[fsd]/features/chat/ui';
 import { SubAgentAccordion } from '@/[fsd]/features/chat/ui/sub-agent-section';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
 import { BaseBtn } from '@/[fsd]/shared/ui/button';
@@ -122,20 +129,64 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
   const participantName = useParticipantName(participant);
   const entityIcon = useParticipantEntityIcon(participant);
 
-  // Find the single toolAction that requires auth (should only be one)
-  const authRequiredAction = useMemo(
-    () => toolActions.find(action => action.status === ToolActionStatus.actionRequired),
+  const authRequiredActions = useMemo(
+    () => toolActions.filter(action => action.status === ToolActionStatus.actionRequired),
     [toolActions],
   );
+  const authorizationBuckets = useMemo(
+    () => groupToolkitAuthorizationActions(authRequiredActions, toolActions),
+    [authRequiredActions, toolActions],
+  );
   /** Skip auth for this run - adds server to ignore list */
-  const onContinueWithoutAuth = useCallback(() => {
-    onContinueMcpExecution?.(messageId, true);
-  }, [onContinueMcpExecution, messageId]);
+  const onContinueWithoutAuth = useCallback(
+    authRequiredAction => {
+      onContinueMcpExecution?.(
+        messageId,
+        true,
+        authRequiredAction.authorizationRequestId || authRequiredAction.id,
+        authRequiredAction,
+      );
+    },
+    [onContinueMcpExecution, messageId],
+  );
 
   /** Continue after successful auth - does NOT add to ignore list */
-  const onAuthSuccess = useCallback(() => {
-    onContinueMcpExecution?.(messageId, false);
-  }, [onContinueMcpExecution, messageId]);
+  const onAuthSuccess = useCallback(
+    authRequiredAction => {
+      onContinueMcpExecution?.(
+        messageId,
+        false,
+        authRequiredAction.authorizationRequestId || authRequiredAction.id,
+        authRequiredAction,
+      );
+    },
+    [onContinueMcpExecution, messageId],
+  );
+  const resolveAuthorizationAgentType = useCallback(
+    bucket => {
+      const participantType = subAgentTypeByName?.[bucket.name];
+      if (participantType === 'pipeline') return 'pipeline';
+      if (participantType) return 'application';
+      const action = bucket.actions.find(item => item?.agent_type || item?.toolMeta?.agent_type);
+      const agentType = action?.agent_type || action?.toolMeta?.agent_type;
+      if (agentType === 'pipeline') return 'pipeline';
+      return agentType ? 'application' : '';
+    },
+    [subAgentTypeByName],
+  );
+  const renderAuthorizationCard = useCallback(
+    authRequiredAction => (
+      <ChatContinue
+        key={authRequiredAction.authorizationRequestId || authRequiredAction.id}
+        disabled={!onContinueMcpExecution}
+        onContinue={() => onContinueWithoutAuth(authRequiredAction)}
+        onAuthSuccess={() => onAuthSuccess(authRequiredAction)}
+        authRequiredAction={authRequiredAction}
+        continueLabel="Skip"
+      />
+    ),
+    [onAuthSuccess, onContinueMcpExecution, onContinueWithoutAuth],
+  );
 
   const onContinueWithConfirmation = useCallback(() => {
     if (onContinueTokenLimitExecution && requiresConfirmation) {
@@ -348,8 +399,23 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
     }
     return hitlInterrupt ? [hitlInterrupt] : [];
   }, [hitlInterrupts, hitlInterrupt]);
+  // A selected card disappears immediately, but its interrupt stays in the
+  // message state until the root checkpoint acknowledges the decision. This
+  // keeps queue reconciliation durable without making the user wait for the
+  // next aggregate before the card is retired visually.
+  const visibleHitlInterrupts = useMemo(
+    () => effectiveHitlInterrupts.filter(interrupt => !interrupt?.hidden),
+    [effectiveHitlInterrupts],
+  );
   const pendingAgentPaths = useMemo(
-    () => effectiveHitlInterrupts.map(getActionOwnerPath).filter(path => path.length),
+    () =>
+      effectiveHitlInterrupts
+        // A submitted decision is the one path that is running again. Keep
+        // queued siblings paused until their serialized root resume is sent,
+        // even though their cards are already hidden after the click.
+        .filter(interrupt => !interrupt?.decided)
+        .map(getActionOwnerPath)
+        .filter(path => path.length),
     [effectiveHitlInterrupts],
   );
 
@@ -363,7 +429,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
     const coordinator = [];
     const order = [];
     const byInvocation = new Map();
-    effectiveHitlInterrupts.forEach((interrupt, index) => {
+    visibleHitlInterrupts.forEach((interrupt, index) => {
       const hierarchy = normalizeExecutionHierarchy(interrupt);
       const name = hierarchy.parent_agent_name;
       const entry = { interrupt, index };
@@ -430,7 +496,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
       }),
       hasSubAgents: order.length > 0,
     };
-  }, [effectiveHitlInterrupts, subAgentTypeByName, toolActions]);
+  }, [visibleHitlInterrupts, subAgentTypeByName, toolActions]);
 
   const renderHitlCard = useCallback(
     ({ interrupt, index }) => {
@@ -443,7 +509,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
           toolCallId={toolCallId}
           interruptId={interruptId}
           onHitlResume={onHitlResume}
-          disabled={!onHitlResume || Boolean(interrupt?.decided)}
+          disabled={!onHitlResume || Boolean(interrupt?.decided) || Boolean(interrupt?.queued)}
         />
       );
     },
@@ -458,9 +524,9 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
       !!answer ||
       hasRenderableMessageItems ||
       !!exception ||
-      (authRequiredAction && !!onContinueMcpExecution) ||
+      (authRequiredActions.length > 0 && !!onContinueMcpExecution) ||
       (requiresConfirmation && !!onContinueTokenLimitExecution) ||
-      effectiveHitlInterrupts.length > 0
+      visibleHitlInterrupts.length > 0
     );
   }, [
     answer,
@@ -469,11 +535,11 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
     hasAttachments,
     canRenderContent,
     exception,
-    authRequiredAction,
+    authRequiredActions.length,
     onContinueMcpExecution,
     requiresConfirmation,
     onContinueTokenLimitExecution,
-    effectiveHitlInterrupts.length,
+    visibleHitlInterrupts.length,
   ]);
 
   const isWideView = actionButtonsWrapperWidth > COMPACT_VIEW_BREAKPOINT;
@@ -640,6 +706,8 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
               data-testid={isLastMessage ? 'skill-test-last-response' : 'chat-answer-content'}
               sx={styles.answerBlock(messageId === speakingMessageId)}
             >
+              {canRenderContent && <AskUserAnswerSummary toolActions={toolActions} />}
+
               {canRenderContent && !isNullOrUndefined(answer) && !message_items?.length && (
                 <Markdown
                   interaction_uuid={interaction_uuid}
@@ -744,17 +812,21 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                   budgetErrorCode={budgetErrorCode}
                 />
               )}
-              {!!authRequiredAction && (
-                <ChatContinue
-                  message="Authentication required for remote MCP servers. Authenticate now or skip them for this run?"
-                  disabled={!onContinueMcpExecution}
-                  onContinue={onContinueWithoutAuth}
-                  onAuthSuccess={onAuthSuccess}
+              {authorizationBuckets.coordinator.map(renderAuthorizationCard)}
+              {authorizationBuckets.subAgents.map(bucket => (
+                <SubAgentAccordion
+                  key={`authorization-sa-${bucket.instanceKey}`}
+                  name={bucket.name}
+                  label={bucket.label}
                   tools={tools}
-                  authRequiredAction={authRequiredAction}
-                  continueLabel="Skip"
-                />
-              )}
+                  agentType={resolveAuthorizationAgentType(bucket)}
+                  paused
+                  defaultExpanded
+                  transparent
+                >
+                  {bucket.actions.map(renderAuthorizationCard)}
+                </SubAgentAccordion>
+              ))}
               {/* Agent Requires Confirmation - user needs to confirm to proceed */}
               {!hideContinueButton && !!requiresConfirmation && (
                 <ChatContinue
@@ -782,7 +854,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                   ))}
                 </Box>
               ) : (
-                effectiveHitlInterrupts.map((interrupt, index) => renderHitlCard({ interrupt, index }))
+                visibleHitlInterrupts.map((interrupt, index) => renderHitlCard({ interrupt, index }))
               )}
               {/* Add ref for ApplicationAnswer compatibility */}
               {isApplicationParticipant && <Box ref={ref} />}
@@ -847,6 +919,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                       placement="top"
                     >
                       <IconButton
+                        data-testid="chat-copy-button"
                         disabled={isProcessing || !realAnswer}
                         sx={styles.iconButton}
                         variant="elitea"
@@ -880,6 +953,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                     >
                       <Box>
                         <IconButton
+                          data-testid="chat-regenerate-button"
                           sx={styles.iconButton}
                           variant="elitea"
                           color="tertiary"
@@ -956,7 +1030,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
             // While an approval card is pending (e.g. a fan-out sibling awaiting a
             // decision while another child re-runs after resume) the loading
             // placeholder must not cover the cards (#4993).
-            effectiveHitlInterrupts.length === 0 && (
+            visibleHitlInterrupts.length === 0 && (
               <RotatingMessages
                 sx={styles.rotatingMessages}
                 duration={2000}

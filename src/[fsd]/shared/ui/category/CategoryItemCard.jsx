@@ -11,6 +11,7 @@ const CategoryItemCard = memo(props => {
   return (
     <Card
       key={itemKey}
+      data-testid={`toolkit-type-card-${itemKey}`}
       sx={styles.itemCard}
       onClick={onClick}
     >

@@ -1,3 +1,4 @@
+import { typographyVariants } from '@/[fsd]/shared/config/theme';
 import { MuiButtonStyles } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { eliteaCheckboxVariants, eliteaUnifiedRadioVariants } from '@/[fsd]/shared/ui/checkbox/BaseCheckbox';
 import { eliteaInputVariants, eliteaTextFieldVariants } from '@/[fsd]/shared/ui/input/textFieldVariants';
@@ -13,80 +14,6 @@ import { eliteaIconButtonStyle } from './components/IconButton';
 import darkPalette, { darkBlue, white } from './darkPalette';
 import lightPalette from './lightPalette';
 import { eliteaMenuItemVariants, eliteaMenuListVariants } from './theme/menuListVariants';
-
-export const typographyVariants = {
-  headingLarge: {
-    color: theme => theme.palette.text.secondary,
-    fontStyle: 'semibold',
-    fontWeight: 600,
-    fontSize: '1.25rem',
-    lineHeight: '2rem',
-  },
-  headingMedium: {
-    color: theme => theme.palette.text.secondary,
-    fontStyle: 'normal',
-    fontWeight: 600,
-    fontSize: '1rem',
-    lineHeight: '1.5rem',
-  },
-  headingSmall: {
-    color: theme => theme.palette.text.secondary,
-    fontStyle: 'normal',
-    fontWeight: 600,
-    fontSize: '0.875rem',
-    lineHeight: '1.5rem',
-  },
-  labelLarge: {
-    fontStyle: 'normal',
-    fontWeight: 500,
-    fontSize: '1rem',
-    lineHeight: '1.5rem',
-  },
-  labelMedium: {
-    fontStyle: 'normal',
-    fontWeight: 500,
-    fontSize: '0.875rem',
-    lineHeight: '1.5rem',
-  },
-  labelSmall: {
-    fontStyle: 'normal',
-    fontWeight: 500,
-    fontSize: '0.75rem',
-    lineHeight: '1rem',
-  },
-  labelTiny: {
-    fontStyle: 'normal',
-    fontWeight: 400,
-    fontSize: '0.625rem',
-    lineHeight: '1rem',
-  },
-  bodyMedium: {
-    fontStyle: 'normal',
-    fontWeight: 400,
-    fontSize: '0.875rem',
-    lineHeight: '1.5rem',
-  },
-  bodySmall: {
-    fontStyle: 'normal',
-    fontWeight: 400,
-    fontSize: '0.75rem',
-    lineHeight: '1rem',
-  },
-  bodySmall2: {
-    fontStyle: 'normal',
-    fontWeight: 400,
-    fontSize: '0.75rem',
-    lineHeight: '1.25rem',
-  },
-  subtitle: {
-    fontStyle: 'normal',
-    fontWeight: 500,
-    fontSize: '0.75rem',
-    lineHeight: '1rem',
-    letterSpacing: '0.72px',
-    textTransform: 'uppercase',
-  },
-};
 
 const getDesignTokens = mode => ({
   breakpoints: {

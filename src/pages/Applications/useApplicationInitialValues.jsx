@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 
 import YAML from 'js-yaml';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 
 import { deepClone } from '@mui/x-data-grid/internals';
@@ -17,6 +17,7 @@ import {
   LayoutHelpers,
   ParsePipelineHelpers,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import { InternalToolsConstants } from '@/[fsd]/shared/lib/constants';
 import { cleanLLMSettings, generateLLMSettings } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
 import {
   useApplicationDetailsQuery,
@@ -32,6 +33,11 @@ import { actions as editorActions } from '@/slices/pipelineEditor';
 
 export const useCreateApplicationInitialValues = forPipeline => {
   const selectedProjectId = useSelectedProjectId();
+  const user = useSelector(state => state.user);
+  const defaultAgentInternalTools = useMemo(
+    () => InternalToolsConstants.getEnabledAgentInternalToolNames(user?.personalization ?? {}),
+    [user?.personalization],
+  );
   const { data: modelsData = { items: [], total: 0 } } = useListModelsQuery(
     {
       projectId: selectedProjectId,
@@ -68,13 +74,13 @@ export const useCreateApplicationInitialValues = forPipeline => {
         agent_type: forPipeline ? 'pipeline' : undefined,
         meta: {
           step_limit: 25,
-          internal_tools: ['internal_mcp'],
+          internal_tools: defaultAgentInternalTools,
         },
         notes: '',
       },
       yamlJsonObject: undefined,
     }),
-    [defaultModel, forPipeline],
+    [defaultAgentInternalTools, defaultModel, forPipeline],
   );
 
   return {

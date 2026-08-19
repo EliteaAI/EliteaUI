@@ -1,7 +1,9 @@
+export { useAvailableInternalTools } from './useAvailableInternalTools.hooks';
 export { useGetCurrentToolkitSchemas } from './useGetCurrentToolkitSchemas.hooks';
 export { useGetCurrentMCPSchemas } from './useGetCurrentMCPSchemas.hooks';
 export { useToolkitChat } from './useToolkitChat.hooks';
 export { useLoadToolkits } from './useLoadToolkits.hooks.js';
 export { useToolkitNameProp } from './useToolkitNameProp.hooks';
 export { useParseSections } from './useParseSections.hooks';
+export { useCollapsedSection, useExpandOnAttention, useSectionExpansion } from './useSectionExpansion.hooks';
 export { useToolkitToolOptions } from './useToolkitToolOptions.hooks.js';

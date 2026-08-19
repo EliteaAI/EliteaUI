@@ -12,7 +12,7 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 
 const DeleteUserButton = memo(props => {
-  const { users, refetch, disabled, setSelectedUsers, useSecondaryButton = false } = props;
+  const { users, refetch, disabled, setSelectedUsers, useSecondaryButton = false, testId } = props;
   const styles = deleteUserButtonStyles(disabled, useSecondaryButton);
   const { toastError, toastSuccess } = useToast();
   const projectId = useSelectedProjectId();
@@ -63,6 +63,7 @@ const DeleteUserButton = memo(props => {
       >
         <Box component="span">
           <IconButton
+            data-testid={testId}
             sx={styles.iconButton}
             variant="elitea"
             color={useSecondaryButton ? 'secondary' : 'tertiary'}

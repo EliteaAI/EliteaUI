@@ -5,7 +5,7 @@ import { MuiMarkdown } from 'mui-markdown';
 import { Box, Typography } from '@mui/material';
 import { keyframes } from '@mui/material/styles';
 
-import { useInteractiveTour } from '@/[fsd]/app/providers/InteractiveTourProvider';
+import { useInteractiveTour } from '@/[fsd]/shared/lib/context';
 import { MarkdownMapping } from '@/[fsd]/shared/lib/utils/markdown.utils';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 
@@ -123,15 +123,26 @@ const InteractiveTourCard = memo(() => {
           key={stepIndex}
           sx={styles.stepContent}
         >
-          {currentStep.title && <Typography variant="headingMedium">{currentStep.title}</Typography>}
+          {currentStep.title && (
+            <Typography
+              data-testid="interactive-tour-title"
+              variant="headingMedium"
+            >
+              {currentStep.title}
+            </Typography>
+          )}
 
-          <Box sx={[styles.body, cardBodySx]}>
+          <Box
+            data-testid="interactive-tour-description"
+            sx={[styles.body, cardBodySx]}
+          >
             <MuiMarkdown overrides={MarkdownMapping}>{currentStep.content}</MuiMarkdown>
           </Box>
         </Box>
 
         <Box sx={styles.footer}>
           <Typography
+            data-testid="interactive-tour-step-counter"
             variant="labelSmall"
             sx={styles.counter}
           >
@@ -140,12 +151,14 @@ const InteractiveTourCard = memo(() => {
 
           <Box sx={styles.footerButtons}>
             <BaseBtn
+              data-testid="interactive-tour-skip-button"
               variant={BUTTON_VARIANTS.tertiary}
               onClick={skip}
             >
               Skip
             </BaseBtn>
             <BaseBtn
+              data-testid="interactive-tour-back-button"
               variant={BUTTON_VARIANTS.secondary}
               disabled={isFirstStep}
               onClick={back}
@@ -153,6 +166,7 @@ const InteractiveTourCard = memo(() => {
               Back
             </BaseBtn>
             <BaseBtn
+              data-testid="interactive-tour-next-button"
               variant={BUTTON_VARIANTS.contained}
               ref={primaryActionRef}
               onClick={next}

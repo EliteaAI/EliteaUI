@@ -2,7 +2,7 @@ import { memo, useCallback, useState } from 'react';
 
 import { Box, IconButton, Tooltip } from '@mui/material';
 
-import { PERSONAL_TOKENS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/personalTokensTourTargets.constants';
+import { PERSONAL_TOKENS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import VsCodeIcon from '@/assets/vscode.svg?react';
 import DeleteEntityButton from '@/components/DeleteEntityButton';
 import JetBrainsIcon from '@/components/Icons/JetBrainsIcon';
@@ -38,6 +38,7 @@ const TokenActionsCell = memo(props => {
           placement="top"
         >
           <IconButton
+            data-testid="token-action-preview-button"
             variant="elitea"
             size="small"
             color="tertiary"
@@ -53,6 +54,7 @@ const TokenActionsCell = memo(props => {
           placement="top"
         >
           <Box
+            data-testid="token-action-vscode-button"
             sx={styles.downloadBox}
             onClick={onVsCodeDownload}
           >
@@ -69,6 +71,7 @@ const TokenActionsCell = memo(props => {
           placement="top"
         >
           <Box
+            data-testid="token-action-jetbrains-button"
             sx={styles.downloadBox}
             onClick={onDownload}
           >
@@ -83,6 +86,7 @@ const TokenActionsCell = memo(props => {
         isLoading={isDeleting}
         validatePermission={false}
         buttonColor="tertiary"
+        testId="token-action-delete-button"
       />
     </Box>
   );

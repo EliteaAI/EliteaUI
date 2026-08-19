@@ -3,11 +3,11 @@ import React, { memo, useCallback, useMemo, useRef, useState } from 'react';
 import { useFormikContext } from 'formik';
 
 import { useTrackEvent } from '@/GA';
-import { InstructionsInputRefProvider } from '@/[fsd]/app/providers';
 import CreateAgentForm from '@/[fsd]/features/agent/ui/agent-details/configurations/form/CreateAgentForm';
 import { useConversationStartersSync } from '@/[fsd]/features/chat/lib/hooks';
 import useRefetchAgentVersionDetailsOnClose from '@/[fsd]/features/chat/lib/hooks/useRefetchAgentVersionDetailsOnClose';
-import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
+import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
+import { InstructionsInputRefProvider } from '@/[fsd]/shared/lib/context';
 import { useGetApplicationVersionDetailQuery, usePublicApplicationDetailsQuery } from '@/api/applications';
 import { ChatParticipantType, PERMISSIONS, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants.js';
 import useCheckPermission from '@/hooks/useCheckPermission';
@@ -21,6 +21,8 @@ import { useCreateApplicationInitialValues } from '@/pages/Applications/useAppli
 import { ContentContainer } from '@/pages/Common/Components/StyledComponents.jsx';
 import BaseEditor from '@/pages/NewChat/components/BaseEditor.jsx';
 import LLMModelSelectorWrapper from '@/pages/NewChat/components/LLMModelSelectorWrapper';
+
+const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
 
 const getAgentId = agent => {
   // agent is a chat participant with entity_meta structure
@@ -328,12 +330,19 @@ const AgentEditor = memo(
           onDirtyStateChange={onAgentDirtyStateChange}
           saveButton={
             isCreateMode ? (
-              <CreateApplicationSaveButton onSuccess={handleAgentCreated} />
+              <CreateApplicationSaveButton
+                data-testid="agent-save-button"
+                onSuccess={handleAgentCreated}
+              />
             ) : (
               <SaveApplicationButton onSuccess={handleSaveSuccess} />
             )
           }
           isPublic={!canEditIt}
+          titleTestId="agent-canvas-title"
+          subtitleTestId="agent-canvas-subtitle"
+          closeButtonTestId="agent-canvas-close-button"
+          publicLabelTestId="agent-canvas-public-label"
         >
           <AgentEditorContent
             agentId={agentId}

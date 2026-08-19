@@ -32,6 +32,7 @@ const Folders = memo(props => {
     isPinned = false,
     onLoadMoreInFolder,
     loadingFolders,
+    onCreateConversationInFolder,
   } = props;
 
   const { isSmallWindow } = useIsSmallWindow();
@@ -98,6 +99,7 @@ const Folders = memo(props => {
           isDragDisabled={isSearchMode || isFolderOperationInProgress || isPinned}
           onLoadMoreInFolder={onLoadMoreInFolder}
           isLoadingMoreInFolder={loadingFolders?.has(folder.id)}
+          onCreateConversationInFolder={onCreateConversationInFolder}
         />
       );
     });

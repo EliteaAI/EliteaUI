@@ -121,6 +121,8 @@ const darkPalette = {
     eliteaDefault: gray60,
     secondary: gray50,
     tabPanel: gray55,
+    pageSection: gray60,
+    section: white3,
     modal: {
       simple: gray50,
     },
@@ -634,6 +636,17 @@ const darkPalette = {
     reasoning: {
       background: darkOrangeBgr,
       icon: darkOrange,
+    },
+  },
+  suggestionChip: {
+    border: gray30,
+    background: {
+      default: 'transparent',
+      hover: white10,
+    },
+    text: {
+      default: gray00,
+      hover: white,
     },
   },
 };

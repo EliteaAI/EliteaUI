@@ -14,9 +14,9 @@ import { McpAuthModal, McpLogoutModal } from '@/[fsd]/features/mcp/ui';
 import { ToolComponentHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { Button } from '@/[fsd]/shared/ui';
+import { FormViewToggle } from '@/[fsd]/shared/ui/tab-group-button';
 import { PUBLIC_PROJECT_ID, ToolkitViewOptions } from '@/common/constants';
 import { updateObjectByPath } from '@/common/utils.jsx';
-import { FormViewToggle } from '@/components/FormViewToggle';
 import useCreateConfiguration from '@/hooks/application/useCreateConfiguration';
 import { Create_Personal_Title, Create_Project_Title, Manual_Title } from '@/hooks/useConfigurations';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -354,6 +354,7 @@ const CredentialForm = memo(props => {
           variant="bodyMedium"
           component="div"
           sx={styles.errorMessage}
+          data-testid="credential-form-api-error-message"
         >
           {apiError}
         </Typography>

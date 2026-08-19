@@ -73,6 +73,7 @@ const PipelineAddNodeMenu = memo(props => {
         enterDelay={500}
       >
         <IconButton
+          data-testid="pipeline-add-node-button"
           variant="elitea"
           color="primary"
           id="pipeline-add-node-menu-action"
@@ -89,6 +90,7 @@ const PipelineAddNodeMenu = memo(props => {
         </IconButton>
       </Tooltip>
       <Menu
+        data-testid="pipeline-add-node-menu"
         id="pipeline-add-node-menu"
         anchorEl={anchorEl}
         open={open}
@@ -115,6 +117,7 @@ const PipelineAddNodeMenu = memo(props => {
             {leftColumnItems.map(item => (
               <MenuItem
                 key={item.type}
+                data-testid={`pipeline-add-node-menu-item-${item.type}`}
                 onClick={handleItemClick(item.type)}
                 sx={styles.menuItem}
               >
@@ -137,6 +140,7 @@ const PipelineAddNodeMenu = memo(props => {
             {rightColumnItems.map(item => (
               <MenuItem
                 key={item.type}
+                data-testid={`pipeline-add-node-menu-item-${item.type}`}
                 onClick={handleItemClick(item.type)}
                 sx={styles.menuItem}
               >

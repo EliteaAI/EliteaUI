@@ -37,6 +37,7 @@ const AgentConversationStarterItem = memo(props => {
 
   return (
     <Box
+      data-testid="catalog-agent-modal-starter-item"
       sx={styles.starterItem}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}

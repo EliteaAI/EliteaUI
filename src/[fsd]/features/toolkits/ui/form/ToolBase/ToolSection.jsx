@@ -287,6 +287,7 @@ const ToolSection = memo(props => {
           items={sectionOptions}
           onChange={onChangeOption}
           wrapRow
+          testId={`toolkit-field-${sectionKey}-radio`}
         />
       </Box>
       {sectionProps.map(([k, v]) => {

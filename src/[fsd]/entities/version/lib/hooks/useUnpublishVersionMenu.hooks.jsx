@@ -106,6 +106,7 @@ export const useUnpublishVersionMenu = onSuccess => {
     () =>
       canUnpublish && !isFromPipeline
         ? {
+            key: 'unpublish-version',
             label: 'Unpublish',
             icon: (
               <Box

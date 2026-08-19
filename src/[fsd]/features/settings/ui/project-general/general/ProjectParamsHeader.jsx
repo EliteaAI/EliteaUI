@@ -3,7 +3,7 @@ import { memo, useCallback, useState } from 'react';
 import { Box, IconButton, Typography } from '@mui/material';
 
 import { useProjectInfoQuery } from '@/[fsd]/features/settings/api/projectInfoApi';
-import ProjectAvatar from '@/[fsd]/widgets/sidebar-root/ui/ProjectAvatar';
+import { ProjectAvatar } from '@/[fsd]/widgets/sidebar-root';
 import { PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';
 import EditIcon from '@/components/Icons/EditIcon';
 import UsersIcon from '@/components/Icons/UsersIcon';
@@ -22,9 +22,12 @@ const ProjectParamsHeader = memo(() => {
 
   const canEdit = checkPermission(PERMISSIONS.projectContext.edit);
 
-  const { data: projectInfo } = useProjectInfoQuery(projectId, {
-    skip: !projectId,
-  });
+  const { data: projectInfo } = useProjectInfoQuery(
+    { projectId },
+    {
+      skip: !projectId,
+    },
+  );
 
   const [openIconDialog, setOpenIconDialog] = useState(false);
 

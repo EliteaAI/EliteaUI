@@ -1,10 +1,13 @@
-import { ParticipantEntityTypes } from '@/[fsd]/features/chat/participants/lib/constants/participant.constants';
-import { CredentialNameHelpers } from '@/[fsd]/features/credentials/lib/helpers';
+import { formatIndexingReportText, normalizeIndexingReport } from '@/[fsd]/entities/indexing-report';
+import { CredentialNameHelpers } from '@/[fsd]/features/credentials';
 import { McpConstants } from '@/[fsd]/features/toolkits/lib/constants';
+import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { resolveToolkitSchemaByType } from '@/[fsd]/shared/lib/helpers';
 import { BLOCKED_TOOLKITS } from '@/common/constants';
 import { getToolIconByType } from '@/common/toolkitUtils';
 import { ToolTypes } from '@/pages/Applications/Components/Tools/consts';
+
+const { ParticipantEntityTypes } = ParticipantEntityConstants;
 
 // Separator/case-insensitive key, matching the SDK/admin guardrail normalization
 // so 'GitHub', 'github' and 'git_hub' all collapse to the same comparison key.
@@ -33,13 +36,42 @@ export const getToolkitTypeLabel = type => {
   return t.charAt(0).toUpperCase() + t.slice(1);
 };
 
+const PYTHON_ESCAPES = { n: '\n', r: '\r', t: '\t', "'": "'", '"': '"', '\\': '\\' };
+const PYTHON_LITERALS = { None: 'null', True: 'true', False: 'false' };
+const PYTHON_STRING_LITERAL = /('(?:\\.|[^'\\])*'|"(?:\\.|[^"\\])*")/;
+
+const decodePythonStringContent = raw =>
+  raw.replace(/\\(.)/g, (escape, char) => PYTHON_ESCAPES[char] ?? escape);
+
+const rewritePythonLiteralsOutsideStrings = structural =>
+  structural.replace(/\b(None|True|False)\b/g, word => PYTHON_LITERALS[word]);
+
+const toJsonStringLiteral = pythonStringLiteral =>
+  JSON.stringify(decodePythonStringContent(pythonStringLiteral.slice(1, -1)));
+
+const parsePythonReprValue = value => {
+  const json = value
+    .split(PYTHON_STRING_LITERAL)
+    .map((segment, index) =>
+      index % 2 ? toJsonStringLiteral(segment) : rewritePythonLiteralsOutsideStrings(segment),
+    )
+    .join('');
+
+  try {
+    return JSON.parse(json);
+  } catch {
+    return undefined;
+  }
+};
+
 const parseParametersString = parametersString => {
   // Handle the case where parameters are already in proper format
   if (parametersString.trim().startsWith('{')) {
     try {
       return JSON.parse(parametersString);
     } catch {
-      // Continue to manual parsing if JSON parsing fails
+      const salvaged = parsePythonReprValue(parametersString.trim());
+      if (salvaged !== undefined) return salvaged;
     }
   }
 
@@ -99,13 +131,13 @@ const parseParametersString = parametersString => {
       try {
         params[key] = JSON.parse(value);
       } catch {
-        params[key] = value;
+        params[key] = parsePythonReprValue(value) ?? value;
       }
     } else if (value.startsWith('[') && value.endsWith(']')) {
       try {
         params[key] = JSON.parse(value);
       } catch {
-        params[key] = value;
+        params[key] = parsePythonReprValue(value) ?? value;
       }
     } else {
       try {
@@ -222,6 +254,12 @@ const prettifyToolkitMessage = message => {
   if (match) {
     try {
       const parsed = JSON.parse(match[1]);
+
+      // The regex path below stays for messages persisted before reports existed.
+      if (parsed?.report) {
+        const report = normalizeIndexingReport(parsed);
+        if (report) return formatIndexingReportText(report);
+      }
 
       if (isIndexingResultMessage(parsed)) return prettifyIndexingResultMessage(parsed);
 

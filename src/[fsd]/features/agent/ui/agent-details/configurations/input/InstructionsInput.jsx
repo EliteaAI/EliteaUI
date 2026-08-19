@@ -4,12 +4,11 @@ import { useFormikContext } from 'formik';
 
 import { Box, useTheme } from '@mui/material';
 
-import { useInstructionsInputRefContext } from '@/[fsd]/app/providers';
 import { useInstructionsMention } from '@/[fsd]/features/agent/lib/hooks/useInstructionsMention.hooks';
 import { useInstructionsSkillMention } from '@/[fsd]/features/agent/lib/hooks/useInstructionsSkillMention.hooks';
-import { AGENT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
-import { MentionSkillList } from '@/[fsd]/features/skill/ui';
-import { AccordionConstants, MentionConstants } from '@/[fsd]/shared/lib/constants';
+import { MentionSkillList } from '@/[fsd]/features/skill';
+import { AccordionConstants, MentionConstants, TourTargetConstants } from '@/[fsd]/shared/lib/constants';
+import { useInstructionsInputRefContext } from '@/[fsd]/shared/lib/context';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { FileReaderEnhancer } from '@/[fsd]/shared/ui/input';
 import { contextResolver } from '@/common/utils';
@@ -332,10 +331,11 @@ const InstructionsInput = memo(props => {
       items={[
         {
           title: 'Instructions',
+          testId: 'agent-canvas-section-instructions',
           content: (
             <Box
               sx={styles.wrapper}
-              data-tour={AGENT_TOUR_TARGET_IDS.instructions}
+              data-tour={TourTargetConstants.AGENT_TOUR_TARGET_IDS.instructions}
             >
               <Box sx={containerStyle}>
                 <FileReaderEnhancer

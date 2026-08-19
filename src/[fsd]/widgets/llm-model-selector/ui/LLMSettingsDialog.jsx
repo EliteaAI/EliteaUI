@@ -47,6 +47,7 @@ const LLMSettingsDialog = memo(props => {
   return (
     <Modal.BaseModal
       open={open}
+      data-testid="model-settings-dialog"
       title="Model settings"
       titleVariant="headingMedium"
       onClose={onCancel}
@@ -74,6 +75,7 @@ const LLMSettingsDialog = memo(props => {
             </Button.BaseBtn>
           )}
           <Button.BaseBtn
+            data-testid="model-settings-cancel-button"
             variant="elitea"
             color="secondary"
             onClick={onCancel}
@@ -81,6 +83,7 @@ const LLMSettingsDialog = memo(props => {
             Cancel
           </Button.BaseBtn>
           <Button.BaseBtn
+            data-testid="model-settings-apply-button"
             variant="elitea"
             onClick={handleOK}
             disabled={isDisabled}

@@ -2,10 +2,10 @@ import { memo } from 'react';
 
 import { Box, Input, InputAdornment } from '@mui/material';
 
-import { typographyVariants } from '@/MainTheme';
+import { typographyVariants } from '@/[fsd]/shared/config/theme';
 import SearchIcon from '@/components/Icons/SearchIcon.jsx';
 
-const SearchInput = memo(({ search, onChangeSearch, sx, placeholder = 'Search' }) => {
+const SearchInput = memo(({ search, onChangeSearch, sx, placeholder = 'Search', testId }) => {
   const styles = getStyles();
 
   return (
@@ -17,6 +17,7 @@ const SearchInput = memo(({ search, onChangeSearch, sx, placeholder = 'Search' }
         placeholder={placeholder}
         value={search}
         onChange={onChangeSearch}
+        inputProps={testId ? { 'data-testid': testId } : undefined}
         startAdornment={
           <InputAdornment
             sx={styles.inputAdornment}

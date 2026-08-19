@@ -2,13 +2,15 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 
-import { Box, ClickAwayListener, CircularProgress, Typography, useTheme } from '@mui/material';
+import { Box, CircularProgress, ClickAwayListener, Typography, useTheme } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { DraggableConversationItem } from '@/[fsd]/features/chat/conversation-list/ui';
 import { Input } from '@/[fsd]/shared/ui';
 import CheckedIcon from '@/assets/checked-icon.svg?react';
 import CopyLinkIcon from '@/assets/copy-link-icon.svg?react';
+import ListViewIcon from '@/assets/list-view-icon.svg?react';
+import ShareIcon from '@/assets/share-icon.svg?react';
 import {
   ConversationNameRegExp,
   ConversationNameWarningMessage,
@@ -20,6 +22,7 @@ import {
 import DotMenu from '@/components/DotMenu';
 import ArrowRightIcon from '@/components/Icons/ArrowRightIcon.jsx';
 import CancelIcon from '@/components/Icons/CancelIcon';
+import CopyIcon from '@/components/Icons/CopyIcon';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import EditIcon from '@/components/Icons/EditIcon';
 import MoveTo from '@/components/Icons/MoveTo';
@@ -41,6 +44,8 @@ const ConversationItem = memo(props => {
     onEdit,
     onPlayback,
     onPin,
+    onDuplicate,
+    isDuplicating,
     onCreateConversation,
     onCancelCreate,
     onChangeActiveConversationName,
@@ -50,6 +55,8 @@ const ConversationItem = memo(props => {
     isDragDisabled = false,
     isNextItemHovered = false,
     onItemHover,
+    onShareExternal,
+    onManageLinks,
   } = props;
   const {
     name,
@@ -75,7 +82,6 @@ const ConversationItem = memo(props => {
   const [showMenu, setShowMenu] = useState(false);
   const [isEditing, setIsEditing] = useState(isNew && !isNamingPending);
   const [conversationName, setConversationName] = useState(name);
-
   const isConversationNameValid = useMemo(
     () => ConversationNameRegExp.test(conversationName ?? ''),
     [conversationName],
@@ -92,6 +98,7 @@ const ConversationItem = memo(props => {
     isNextItemHovered,
     showMenu,
     isSaveEnabled,
+    isDuplicating,
   });
 
   // Sync local conversationName state with the name prop when it changes
@@ -153,6 +160,10 @@ const ConversationItem = memo(props => {
     onPlayback(conversation);
   }, [conversation, onPlayback]);
 
+  const handleDuplicate = useCallback(() => {
+    onDuplicate(conversation);
+  }, [conversation, onDuplicate]);
+
   const handleShareConversation = useCallback(async () => {
     const baseUrl = `${window.location.protocol}//${window.location.host}`;
     const basename = getBasename();
@@ -164,10 +175,19 @@ const ConversationItem = memo(props => {
     toastInfo('The link has been copied to the clipboard.');
   }, [conversation, projectId, toastInfo]);
 
+  const handleShareExternal = useCallback(() => {
+    onShareExternal?.(conversation);
+  }, [conversation, onShareExternal]);
+
+  const handleManageLinks = useCallback(() => {
+    onManageLinks?.(conversation);
+  }, [conversation, onManageLinks]);
+
   const menuItems = useMemo(() => {
     const items = !isPlayback
       ? [
           {
+            key: 'chat-conversation-menu-rename',
             label: 'Rename',
             icon: (
               <Box sx={{ svg: { path: { fill: ({ palette }) => `${palette.secondary.main} !important` } } }}>
@@ -178,6 +198,7 @@ const ConversationItem = memo(props => {
             onClick: handleEdit,
           },
           {
+            key: 'chat-conversation-menu-move-to',
             label: (
               <Box
                 style={{
@@ -201,12 +222,20 @@ const ConversationItem = memo(props => {
             subMenuItems: moveToFoldersMenuItems,
           },
           {
+            key: 'chat-conversation-menu-playback',
             label: 'Playback',
             icon: <PlayIcon sx={{ fontSize: '1rem' }} />,
             disabled: isActive && isEditingCanvas,
             onClick: handlePlayback,
           },
           {
+            label: 'Duplicate',
+            icon: <CopyIcon sx={{ fontSize: '1rem' }} />,
+            disabled: isActive && isEditingCanvas,
+            onClick: handleDuplicate,
+          },
+          {
+            key: 'chat-conversation-menu-make-public',
             label: 'Make public',
             icon: <OpenEyeIcon sx={{ fontSize: '1rem' }} />,
             alertTitle: 'Public conversation?',
@@ -221,6 +250,7 @@ const ConversationItem = memo(props => {
             disabled: isActive && isEditingCanvas,
           },
           {
+            key: 'chat-conversation-menu-share',
             label: 'Share',
             icon: (
               <Box sx={{ svg: { path: { fill: ({ palette }) => palette.secondary.main } } }}>
@@ -231,12 +261,38 @@ const ConversationItem = memo(props => {
             display: projectId == personal_project_id ? 'none' : undefined,
           },
           {
+            key: 'chat-conversation-menu-share-external',
+            label: 'Share externally',
+            icon: (
+              <Box sx={{ svg: { path: { fill: ({ palette }) => palette.secondary.main } } }}>
+                <ShareIcon />
+              </Box>
+            ),
+            onClick: handleShareExternal,
+          },
+          ...(conversation.has_shared_links
+            ? [
+                {
+                  key: 'chat-conversation-menu-manage-links',
+                  label: 'Manage links',
+                  icon: (
+                    <Box sx={{ svg: { path: { fill: ({ palette }) => palette.secondary.main } } }}>
+                      <ListViewIcon />
+                    </Box>
+                  ),
+                  onClick: handleManageLinks,
+                },
+              ]
+            : []),
+          {
+            key: 'chat-conversation-menu-pin',
             label: isPinned ? 'Unpin' : 'Pin on top',
             icon: <PinIcon sx={{ fontSize: '1rem' }} />,
             disabled: !isPinned && !!conversation.folder_id,
             onClick: handlePin,
           },
           {
+            key: 'chat-conversation-menu-delete',
             label: 'Delete',
             icon: <DeleteIcon sx={{ fontSize: '1rem' }} />,
             entityName: name,
@@ -272,6 +328,7 @@ const ConversationItem = memo(props => {
     isEditingCanvas,
     handleDelete,
     handleEdit,
+    handleDuplicate,
     isPinned,
     checkPermission,
     moveToFoldersMenuItems,
@@ -281,7 +338,10 @@ const ConversationItem = memo(props => {
     projectId,
     personal_project_id,
     handleShareConversation,
+    handleShareExternal,
+    handleManageLinks,
     handlePlayback,
+    conversation.has_shared_links,
     conversation.folder_id,
     handlePin,
     is_private,
@@ -344,6 +404,9 @@ const ConversationItem = memo(props => {
 
   const renderConversationContent = () => (
     <Box
+      data-testid={`chat-conversation-item-${conversation.id}`}
+      data-active={isActive ? 'true' : 'false'}
+      data-pinned={isPinned ? 'true' : 'false'}
       sx={styles.conversationContentWrapper}
       onClick={onClickConversation}
       onMouseEnter={onMouseEnter}
@@ -385,7 +448,11 @@ const ConversationItem = memo(props => {
         </Box>
       </Box>
       {/* Updated icon logic based on conversation type */}
-      <Box sx={styles.conversationIconWrapper}>
+      <Box
+        data-testid="conversation-multi-user-icon"
+        data-has-icon={conversationType === 'private_with_users' || conversationType === 'public'}
+        sx={styles.conversationIconWrapper}
+      >
         {/* Always show users icon with appropriate color based on type */}
         {conversationType === 'private_with_users' && (
           <UsersIcon
@@ -401,40 +468,52 @@ const ConversationItem = memo(props => {
         )}
         {/* Private without users shows nothing as requested */}
         {/* Pin icon */}
-        {isPinned && !isPlayback && <PinIcon sx={{ fontSize: '.875rem' }} />}
+        {isPinned && !isPlayback && (
+          <PinIcon
+            data-testid="chat-pin-icon"
+            sx={{ fontSize: '.875rem' }}
+          />
+        )}
       </Box>
       {!isNamingPending && (
         <Box
           id="Menu"
           sx={styles.menuWrapper}
         >
-          <DotMenu
-            id="conversation-menu"
-            slotProps={{
-              ListItemText: {
-                sx: { color: theme.palette.text.secondary },
-                primaryTypographyProps: { variant: 'bodyMedium' },
-              },
-              ListItemIcon: {
-                sx: {
-                  minWidth: '1rem !important',
-                  marginRight: '.75rem',
+          {isDuplicating ? (
+            <CircularProgress
+              size={16}
+              thickness={5}
+            />
+          ) : (
+            <DotMenu
+              id="conversation-menu"
+              slotProps={{
+                ListItemText: {
+                  sx: { color: theme.palette.text.secondary },
+                  primaryTypographyProps: { variant: 'bodyMedium' },
                 },
-              },
-            }}
-            onClose={onCloseMenuList}
-            onShowMenuList={onShowMenuList}
-            anchorOrigin={{
-              vertical: 'bottom',
-              horizontal: 'right',
-            }}
-            transformOrigin={{
-              vertical: 'top',
-              horizontal: 'right',
-            }}
-          >
-            {menuItems}
-          </DotMenu>
+                ListItemIcon: {
+                  sx: {
+                    minWidth: '1rem !important',
+                    marginRight: '.75rem',
+                  },
+                },
+              }}
+              onClose={onCloseMenuList}
+              onShowMenuList={onShowMenuList}
+              anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'right',
+              }}
+              transformOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+              }}
+            >
+              {menuItems}
+            </DotMenu>
+          )}
         </Box>
       )}
     </Box>
@@ -477,9 +556,7 @@ const ConversationItem = memo(props => {
             sx={styles.checkedIconWrapper}
           >
             <CheckedIcon
-              fill={
-                isSaveEnabled ? theme.palette.icon.fill.default : theme.palette.icon.fill.disabled
-              }
+              fill={isSaveEnabled ? theme.palette.icon.fill.default : theme.palette.icon.fill.disabled}
             />
           </Box>
         </Tooltip>
@@ -501,6 +578,7 @@ const conversationItemStyles = ({
   isActive,
   isHovering,
   isNextItemHovered,
+  isDuplicating,
   isSaveEnabled,
   showMenu,
 }) => {
@@ -561,9 +639,9 @@ const conversationItemStyles = ({
     },
     menuWrapper: {
       height: '100%',
-      width: isHovering ? undefined : 0,
-      visibility: showMenu ? 'visible' : 'hidden',
-      display: isHovering || showMenu ? 'flex' : 'none',
+      width: isHovering || isDuplicating ? undefined : 0,
+      visibility: showMenu || isDuplicating ? 'visible' : 'hidden',
+      display: isHovering || showMenu || isDuplicating ? 'flex' : 'none',
       justifyContent: 'center',
       alignItems: 'center',
       alignSelf: 'center',

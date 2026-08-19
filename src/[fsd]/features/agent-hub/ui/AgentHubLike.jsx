@@ -1,12 +1,12 @@
 import { memo, useCallback, useRef } from 'react';
 
-import { useAgentHubContext } from '@/[fsd]/app/providers';
 import { AgentHubHelpers } from '@/[fsd]/features/agent-hub/lib/helpers';
+import { useAgentHubContext } from '@/[fsd]/shared/lib/context';
 import { ContentType } from '@/common/constants';
 import Like from '@/components/Like';
 
 const AgentHubLike = memo(props => {
-  const { viewMode, data } = props;
+  const { viewMode, data, testId } = props;
   const { updateApplicationInState, addToMyLiked, removeFromMyLiked } = useAgentHubContext();
 
   const dataRef = useRef(data);
@@ -49,6 +49,7 @@ const AgentHubLike = memo(props => {
       type={ContentType.ApplicationAll}
       data={data}
       onLikeSuccess={handleLikeSuccess}
+      testId={testId}
     />
   );
 });

@@ -1,10 +1,9 @@
 import { memo, useCallback, useMemo, useState } from 'react';
 
-import { format } from 'date-fns';
-
 import { Box, Skeleton, Typography, useTheme } from '@mui/material';
 
 import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
+import { formatRunTimestamp, resolveRunHistoryColumns } from '@/[fsd]/entities/run-history/lib/helpers';
 import { RunHistoryTooltipCell } from '@/[fsd]/entities/run-history/ui';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { SharedHelpers } from '@/[fsd]/shared/lib/helpers';
@@ -29,6 +28,7 @@ const RunHistoryListItem = memo(props => {
     tooltipTrigger,
     handleRestoreConversation,
     source,
+    hasEvent = false,
   } = props;
 
   const noVersions = useMemo(() => versions === null, [versions]);
@@ -41,7 +41,7 @@ const RunHistoryListItem = memo(props => {
   const [actionsMenuOpened, setActionMenuOpened] = useState(false);
 
   const theme = useTheme();
-  const styles = runHistoryListItemStyles(noVersions, actionsMenuOpened);
+  const styles = runHistoryListItemStyles(noVersions, actionsMenuOpened, hasEvent);
 
   const [deleteHistoryItem, { isLoading: isDeleting }] = RunHistoryApi.useDeleteRunHistoryItemMutation();
 
@@ -106,7 +106,7 @@ const RunHistoryListItem = memo(props => {
       useMock
         ? { date: '-', version: '-', duration: '-' }
         : {
-            date: format(new Date(item.created_at.replace('Z', '')), 'dd-MM-yyyy, hh:mm a'),
+            date: formatRunTimestamp(item.created_at),
             version: getCurrentVersion(item.version_id),
             duration: SharedHelpers.secondsInHumanFormat(item.duration),
           },
@@ -121,6 +121,13 @@ const RunHistoryListItem = memo(props => {
           width={noVersions ? '50%' : '70%'}
           height={20}
         />
+        {hasEvent && (
+          <Skeleton
+            variant="text"
+            width="50%"
+            height="1.25rem"
+          />
+        )}
         {!noVersions && (
           <Skeleton
             variant="text"
@@ -140,6 +147,8 @@ const RunHistoryListItem = memo(props => {
   return (
     <>
       <Box
+        data-testid="run-history-list-item"
+        data-selected={selectedItem === item.id}
         sx={[styles.listItem, selectedItem === item.id && styles.selected]}
         onClick={() => onItemSelect(item.id)}
       >
@@ -147,6 +156,13 @@ const RunHistoryListItem = memo(props => {
           text={date}
           trigger={tooltipTrigger}
         />
+        {hasEvent && (
+          <RunHistoryTooltipCell
+            text={item.event_label ?? '-'}
+            tooltipText={item.event_tooltip ?? ''}
+            trigger={tooltipTrigger}
+          />
+        )}
         {!noVersions && (
           <RunHistoryTooltipCell
             text={version}
@@ -161,54 +177,57 @@ const RunHistoryListItem = memo(props => {
           id="actions-block"
           sx={styles.actions}
         >
-          <DotMenu
-            id="run-history-menu"
-            slotProps={{
-              ListItemText: {
-                sx: { color: theme.palette.text.secondary },
-                primaryTypographyProps: { variant: 'bodyMedium' },
-              },
-              ListItemIcon: {
-                sx: {
-                  minWidth: '1rem !important',
-                  marginRight: '.75rem',
+          {/* Every action here acts on a server-side conversation. */}
+          {(item.hasConversation ?? true) && (
+            <DotMenu
+              id="run-history-menu"
+              slotProps={{
+                ListItemText: {
+                  sx: { color: theme.palette.text.secondary },
+                  primaryTypographyProps: { variant: 'bodyMedium' },
                 },
-              },
-            }}
-            onClose={() => setActionMenuOpened(false)}
-            onShowMenuList={() => setActionMenuOpened(true)}
-            anchorOrigin={{
-              vertical: 'bottom',
-              horizontal: 'right',
-            }}
-            transformOrigin={{
-              vertical: 'top',
-              horizontal: 'right',
-            }}
-          >
-            {[
-              {
-                label: 'Share link',
-                icon: linkCopied ? <CheckIcon /> : <CopyLinkIcon />,
-                onClick: handleCopyLink,
-              },
-              {
-                label: 'Delete',
-                icon: <DeleteIcon sx={styles.deleteIcon(isDeleting)} />,
-                onClick: handleDeleteHistoryItem,
-              },
-              ...(handleRestoreConversation
-                ? [
-                    {
-                      label: 'Restore chat',
-                      icon: <RestoreIcon />,
-                      onClick: () => handleRestoreConversation(item.id),
-                      tooltip: `Restores chat history only. ${source?.charAt(0)?.toUpperCase() + source?.slice(1)} configuration, behavior, or settings are not restored and may have changed since then.`,
-                    },
-                  ]
-                : []),
-            ]}
-          </DotMenu>
+                ListItemIcon: {
+                  sx: {
+                    minWidth: '1rem !important',
+                    marginRight: '.75rem',
+                  },
+                },
+              }}
+              onClose={() => setActionMenuOpened(false)}
+              onShowMenuList={() => setActionMenuOpened(true)}
+              anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'right',
+              }}
+              transformOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+              }}
+            >
+              {[
+                {
+                  label: 'Share link',
+                  icon: linkCopied ? <CheckIcon /> : <CopyLinkIcon />,
+                  onClick: handleCopyLink,
+                },
+                {
+                  label: 'Delete',
+                  icon: <DeleteIcon sx={styles.deleteIcon(isDeleting)} />,
+                  onClick: handleDeleteHistoryItem,
+                },
+                ...(handleRestoreConversation
+                  ? [
+                      {
+                        label: 'Restore chat',
+                        icon: <RestoreIcon />,
+                        onClick: () => handleRestoreConversation(item.id),
+                        tooltip: `Restores chat history only. ${source?.charAt(0)?.toUpperCase() + source?.slice(1)} configuration, behavior, or settings are not restored and may have changed since then.`,
+                      },
+                    ]
+                  : []),
+              ]}
+            </DotMenu>
+          )}
         </Box>
       </Box>
 
@@ -230,10 +249,10 @@ const RunHistoryListItem = memo(props => {
 RunHistoryListItem.displayName = 'RunHistoryListItem';
 
 /** @type {MuiSx} */
-const runHistoryListItemStyles = (noVersions, actionsMenuOpened) => ({
+const runHistoryListItemStyles = (noVersions, actionsMenuOpened, hasEvent) => ({
   listItem: ({ palette }) => ({
     display: 'grid',
-    gridTemplateColumns: noVersions ? '1.5fr 1.5fr' : '1.5fr 1.5fr 1fr',
+    gridTemplateColumns: resolveRunHistoryColumns(noVersions, hasEvent),
     alignItems: 'center',
     padding: '.5rem 1rem',
     width: '100%',

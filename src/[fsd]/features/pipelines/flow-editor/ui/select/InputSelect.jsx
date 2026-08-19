@@ -1,12 +1,12 @@
 import { memo, useCallback, useContext, useMemo } from 'react';
 
-import { FlowEditorContext } from '@/[fsd]/app/providers';
 import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { useInputOptions } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
+import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import { Select } from '@/[fsd]/shared/ui';
 
 const InputSelect = memo(props => {
-  const { id, label = 'Input', inputFieldName = 'input', disabled } = props;
+  const { id, label = 'Input', inputFieldName = 'input', disabled, dataTestId } = props;
 
   const { setYamlJsonObject, yamlJsonObject } = useContext(FlowEditorContext);
 
@@ -64,6 +64,7 @@ const InputSelect = memo(props => {
       showBorder
       className="nopan nodrag nowheel"
       onDeleteOption={onDeleteOption}
+      data-testid={dataTestId}
     />
   );
 });

@@ -13,7 +13,8 @@ import { IndexesToolsEnum } from '@/[fsd]/features/toolkits/indexes/lib/constant
 import { LegacyOpenApiMigration } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitsControls, ToolkitsTabBar } from '@/[fsd]/features/toolkits/ui';
-import { useEliteATheme } from '@/[fsd]/shared/lib/hooks';
+import { useEliteATheme, useHasBreadcrumbTrail } from '@/[fsd]/shared/lib/hooks';
+import Breadcrumbs from '@/[fsd]/shared/ui/breadcrumbs';
 import { useListModelsQuery } from '@/api/configurations.js';
 import { useToolkitsDetailsQuery } from '@/api/toolkits.js';
 import { CapabilityTypes, SearchParams } from '@/common/constants.js';
@@ -49,6 +50,7 @@ const EditToolkit = memo(props => {
   const [updateConfigKey, setUpdateConfigKey] = useState(1);
   const [hasValidationErrors, setHasValidationErrors] = useState(false);
   const { resolvedMode } = useEliteATheme();
+  const hasBreadcrumbTrail = useHasBreadcrumbTrail();
   const iframeRef = useRef(null);
   const [iframeKey, setIframeKey] = useState(0);
   const [showIframeFallback, setShowIframeFallback] = useState(false);
@@ -226,6 +228,7 @@ const EditToolkit = memo(props => {
       {
         label: 'Configuration',
         icon: <GearIcon />,
+        tabProps: { 'data-testid': 'toolkit-detail-configuration-tab' },
         tabBarItems: !isFetchingPublic && (
           <ToolkitsTabBar
             showPlaceholder={!editToolDetail}
@@ -413,12 +416,17 @@ const EditToolkit = memo(props => {
           leftPart={
             <Box sx={styles.leftPart}>
               <BackButton />
-              <Typography
-                variant="headingSmall"
-                color="text.secondary"
-              >
-                {publicToolkitData?.name || 'Edit Toolkit'}
-              </Typography>
+              {hasBreadcrumbTrail ? (
+                <Breadcrumbs />
+              ) : (
+                <Typography
+                  variant="headingSmall"
+                  color="text.secondary"
+                  data-testid="toolkit-detail-title"
+                >
+                  {publicToolkitData?.name || 'Edit Toolkit'}
+                </Typography>
+              )}
             </Box>
           }
           tabsSX={styles.tabsSX}
@@ -451,6 +459,7 @@ const editToolkitStyles = isMCP => ({
   panelStyle: {
     paddingLeft: '0rem !important',
     paddingRight: '0rem !important',
+    backgroundColor: ({ palette }) => palette.background.pageSection,
   },
   containerStyle: {
     '& .MuiTab-root.Mui-selected': {

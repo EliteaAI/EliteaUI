@@ -32,6 +32,7 @@ const TestToolsEmptyState = memo(props => {
         </Typography>
       </Box>
       <Select.PopoverSelect
+        data-testid="toolkit-test-empty-tool-select"
         options={allToolsOptions}
         onValueChange={onChangeTool}
         label="Select Tool"

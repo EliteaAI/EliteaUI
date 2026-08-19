@@ -5,8 +5,8 @@ import { Dialog, DialogContent, DialogTitle, IconButton, Typography } from '@mui
 import { Box, useTheme } from '@mui/system';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
-import { FlowEditorContext } from '@/[fsd]/app/providers';
 import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import { CodeMirrorEditorHelpers, CodeMirrorLinterHelpers } from '@/[fsd]/shared/lib/helpers';
 import { Field } from '@/[fsd]/shared/ui';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
@@ -21,7 +21,7 @@ const MIN_HEIGHT = '18.75rem';
 const MAX_HEIGHT = '37.5rem';
 
 const CustomNodeInput = memo(props => {
-  const { id } = props;
+  const { id, contentTestId } = props;
   const editorRef = useRef();
   const fullScreenEditorRef = useRef();
   const theme = useTheme();
@@ -195,6 +195,7 @@ const CustomNodeInput = memo(props => {
           notifyChange={handleChange}
           onBlur={handleBlur}
           ref={editorRef}
+          contentTestId={contentTestId}
         />
       </Box>
       <Dialog

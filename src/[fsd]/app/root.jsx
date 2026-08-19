@@ -11,9 +11,9 @@ import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3';
 
 // Store must be imported before App to ensure API endpoints are injected before slice extraReducers run
-import store from '@/[fsd]/app/store';
+import store from '@/[fsd]/shared/config/store';
 import App from '@/[fsd]/app/App';
-import { ToolkitSocketProvider } from '@/[fsd]/app/providers';
+import { ToolkitSocketProvider } from '@/[fsd]/shared/lib/context';
 import { DEV, VITE_DEV_TOKEN, VITE_SOCKET_PATH, VITE_SOCKET_SERVER } from '@/common/constants';
 import { NpsSurveyWidget } from '@/[fsd]/widgets/nps-survey';
 import { ToastComponent, ToastProvider } from '@/components/ToastProvider';
@@ -21,11 +21,11 @@ import { FilePreviewNavigationProvider } from '@/contexts/FilePreviewNavigationC
 import SocketContext from '@/contexts/SocketContext';
 import { useEliteATheme } from '@/[fsd]/shared/lib/hooks';
 import { actions as settingsActions } from '@/slices/settings.js';
-import { startTokenRefreshScheduler } from '@/[fsd]/features/mcp/lib/helpers/mcpAuth.helpers';
+import { McpAuthHelpers } from '@/[fsd]/features/mcp';
 import { logVersion } from '@/utils.js';
 
 logVersion();
-startTokenRefreshScheduler();
+McpAuthHelpers.startTokenRefreshScheduler();
 
 const RootComponent = memo(() => {
   const { globalTheme } = useEliteATheme();

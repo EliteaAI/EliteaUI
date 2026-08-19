@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { Box, Unstable_TrapFocus as TrapFocus, Typography, useTheme } from '@mui/material';
 
-import { useInteractiveTour } from '@/[fsd]/app/providers/InteractiveTourProvider';
+import { useInteractiveTour } from '@/[fsd]/shared/lib/context';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import TutorialsSuccessIconDark from '@/assets/tutorials-success-icon-dark.svg?react';
 import TutorialsSuccessIconLight from '@/assets/tutorials-success-icon-light.svg?react';
@@ -67,6 +67,7 @@ const TourCompleteCard = memo(props => {
           {keepExploring.length > 0 && (
             <Box sx={styles.keepExploringSection}>
               <Typography
+                data-testid="interactive-tour-complete-keep-exploring-label"
                 variant="headingSmall"
                 sx={styles.keepExploringLabel}
               >
@@ -77,6 +78,7 @@ const TourCompleteCard = memo(props => {
                 {keepExploring.map(item => (
                   <BaseBtn
                     key={item.tourId}
+                    data-testid={`interactive-tour-complete-keep-exploring-${item.tourId}`}
                     data-tour-id={item.tourId}
                     data-path={item.path}
                     variant={BUTTON_VARIANTS.secondary}
@@ -92,6 +94,7 @@ const TourCompleteCard = memo(props => {
 
           <Box sx={styles.footer}>
             <BaseBtn
+              data-testid="interactive-tour-complete-done-button"
               variant={BUTTON_VARIANTS.secondary}
               onClick={closeComplete}
             >

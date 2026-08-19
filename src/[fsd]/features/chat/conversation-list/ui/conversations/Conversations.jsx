@@ -12,7 +12,7 @@ import {
   GroupedConversations,
   PinnedConversations,
 } from '@/[fsd]/features/chat/conversation-list/ui';
-import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
+import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { SimpleSearchBar } from '@/[fsd]/shared/ui/input';
 import { useLazyDateGroupConversationsQuery, useLazyFolderConversationsQuery } from '@/api';
 import { PERMISSIONS } from '@/common/constants';
@@ -32,6 +32,9 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useSortQueryParamsFromUrl from '@/hooks/useSortQueryParamsFromUrl';
 import { DndContext, closestCenter } from '@dnd-kit/core';
 
+import ManageLinksDialog from './ManageLinksDialog';
+import ShareConversationDialog from './ShareConversationDialog';
+
 const Conversations = memo(props => {
   const {
     conversations,
@@ -47,6 +50,8 @@ const Conversations = memo(props => {
     onEditConversation,
     onPlaybackConversation,
     onDeleteConversation,
+    onDuplicateConversation,
+    duplicatingConversationId,
     onLoadMore,
     isLoadConversations,
     isLoadMoreConversations,
@@ -67,6 +72,7 @@ const Conversations = memo(props => {
     moveTargetConversationToNewFolder,
     cancelMovingTargetConversationToNewFolder,
     onClickCreateNewFolder,
+    onCreateConversationInFolder,
     enableDragAndDrop = true,
     toastSuccess,
     toastError,
@@ -92,6 +98,25 @@ const Conversations = memo(props => {
 
   const [loadingGroups, setLoadingGroups] = useState(new Set());
   const [loadingFolders, setLoadingFolders] = useState(new Set());
+
+  const [shareDialogConversation, setShareDialogConversation] = useState(null);
+  const [manageLinksConversation, setManageLinksConversation] = useState(null);
+
+  const handleOpenShareDialog = useCallback(conversation => {
+    setShareDialogConversation(conversation);
+  }, []);
+
+  const handleCloseShareDialog = useCallback(() => {
+    setShareDialogConversation(null);
+  }, []);
+
+  const handleOpenManageLinksDialog = useCallback(conversation => {
+    setManageLinksConversation(conversation);
+  }, []);
+
+  const handleCloseManageLinksDialog = useCallback(() => {
+    setManageLinksConversation(null);
+  }, []);
 
   const savedStateBeforeSearchRef = useRef(null);
   const dateGroupsRef = useRef(dateGroups);
@@ -338,7 +363,11 @@ const Conversations = memo(props => {
       const newFolderMenuItem = [
         {
           disabled: !checkPermission(PERMISSIONS.chat.folders.create),
-          key: 'create_folder',
+          // Renamed from 'create_folder' -> the shared {section}-{element}-{type}
+          // testid family (ELITEA-2135/2137 analyst pass). DotMenu.jsx's
+          // submenu BasicMenuItem now forwards `testId={subMenuItem.key}`,
+          // which renders `data-testid="chat-move-to-create-folder-menuitem"`.
+          key: 'chat-move-to-create-folder',
           label: (
             <Box style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <NewFolder
@@ -362,7 +391,8 @@ const Conversations = memo(props => {
         {
           addSeparator: true,
           disabled: !conversation.folder_id || !checkPermission(PERMISSIONS.chat.folders.update),
-          key: 'back_to_the_list',
+          // Renamed from 'back_to_the_list' -> testid family, see note above.
+          key: 'chat-move-to-back-to-list',
           label: (
             <Box style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <FromFolder
@@ -387,6 +417,14 @@ const Conversations = memo(props => {
 
       const folderItems = folders.map(targetFolder => {
         return {
+          // ADDED (ELITEA-2135/2137 analyst pass) — was previously absent,
+          // so DotMenu.jsx's submenu React `key` fell back to `label`
+          // (the folder's plain name). Two same-named folders (the common
+          // "New folder" default) then collided on that key, producing a
+          // live-confirmed "two children with the same key" React warning.
+          // The `.id`-keyed value also drives this item's own
+          // `data-testid="chat-move-to-folder-{id}-menuitem"`.
+          key: `chat-move-to-folder-${targetFolder.id}`,
           label: targetFolder.name,
           disabled:
             targetFolder?.owner_id !== userId ||
@@ -427,6 +465,8 @@ const Conversations = memo(props => {
         onEdit={onEditConversation}
         onPlayback={onPlaybackConversation}
         onDelete={onDeleteConversation}
+        onDuplicate={onDuplicateConversation}
+        isDuplicating={duplicatingConversationId === conversation.id}
         onPin={onPinConversation}
         onCreateConversation={onCreateConversation}
         onCancelCreate={onCancelCreateConversation}
@@ -437,16 +477,20 @@ const Conversations = memo(props => {
         isDragDisabled={isEditingCanvas || conversation.isPlayback || conversation.isPinned}
         onItemHover={onItemHover}
         isNextItemHovered={isNextItemHovered}
+        onShareExternal={handleOpenShareDialog}
+        onManageLinks={handleOpenManageLinksDialog}
       />
     ),
     [
       collapsed,
+      duplicatingConversationId,
       getMoveConversationToFoldersMenuItems,
       isSmallWindow,
       onCancelCreateConversation,
       onChangeActiveConversationName,
       onCreateConversation,
       onDeleteConversation,
+      onDuplicateConversation,
       onEditConversation,
       onPinConversation,
       onPlaybackConversation,
@@ -454,6 +498,8 @@ const Conversations = memo(props => {
       isEditingCanvas,
       onClickSelectConversation,
       enableDragAndDrop,
+      handleOpenShareDialog,
+      handleOpenManageLinksDialog,
     ],
   );
 
@@ -484,6 +530,7 @@ const Conversations = memo(props => {
         isPinned={isPinned}
         onLoadMoreInFolder={onLoadMoreInFolder}
         loadingFolders={loadingFolders}
+        onCreateConversationInFolder={onCreateConversationInFolder}
       />
     ),
     [
@@ -510,6 +557,7 @@ const Conversations = memo(props => {
       isFolderOperationInProgress,
       onLoadMoreInFolder,
       loadingFolders,
+      onCreateConversationInFolder,
     ],
   );
 
@@ -543,7 +591,14 @@ const Conversations = memo(props => {
             alignItems={'center'}
             gap={'0.5rem'}
           >
-            {(!collapsed || isSmallWindow) && <Typography variant="subtitle">Chats</Typography>}
+            {(!collapsed || isSmallWindow) && (
+              <Typography
+                data-testid="chat-conversations-heading"
+                variant="subtitle"
+              >
+                Chats
+              </Typography>
+            )}
             {(!collapsed || isSmallWindow) && (
               <>
                 <Tooltip
@@ -552,6 +607,7 @@ const Conversations = memo(props => {
                 >
                   <span>
                     <Button
+                      data-testid="chat-create-folder-button"
                       disabled={!checkPermission(PERMISSIONS.chat.folders.create)}
                       onClick={clickCreateNewFolder(false)}
                       variant="elitea"
@@ -627,6 +683,7 @@ const Conversations = memo(props => {
             >
               <Box component="span">
                 <Button
+                  data-testid="chat-create-folder-button"
                   disabled={!checkPermission(PERMISSIONS.chat.folders.create)}
                   onClick={clickCreateNewFolder(true)}
                   variant="elitea"
@@ -675,6 +732,7 @@ const Conversations = memo(props => {
               data-testid="conversation-search-input"
             />
             <IconButton
+              data-testid="conversation-search-clear-button"
               onClick={handleSearchClear}
               variant="elitea"
               color="tertiary"
@@ -768,6 +826,16 @@ const Conversations = memo(props => {
           </Box>
         )}
       </Box>
+      <ShareConversationDialog
+        open={!!shareDialogConversation}
+        conversation={shareDialogConversation ?? {}}
+        onClose={handleCloseShareDialog}
+      />
+      <ManageLinksDialog
+        open={!!manageLinksConversation}
+        conversation={manageLinksConversation ?? {}}
+        onClose={handleCloseManageLinksDialog}
+      />
     </DndContext>
   );
 });

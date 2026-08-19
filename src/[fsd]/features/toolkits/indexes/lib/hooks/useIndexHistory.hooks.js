@@ -1,14 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
-import { fromUnixTime } from 'date-fns';
 import { useSelector } from 'react-redux';
 
 import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
-import { IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants';
 import { selectHistoryItem } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useLazyMessageTracesQuery } from '@/api';
-import { ROLES, WELCOME_MESSAGE_ID } from '@/common/constants';
 import {
   buildTraceListParams,
   convertConversationToChatHistory,
@@ -78,79 +75,24 @@ export const useIndexHistory = (progressHistoryOptions = null) => {
       projectId,
       conversationId,
       params: buildTraceListParams(conversationDetails.message_groups),
-    }).then(result => setTraceSteps(result.data || null));
+    })
+      .then(result => setTraceSteps(result.data || null))
+      .catch(() => setTraceSteps(null));
   }, [conversationDetails, getMessageTraces, projectId]);
 
-  const getHistoryMockMessage = useCallback(
-    showMockMessage => {
-      if (!showMockMessage) return [];
-
-      const isScheduled = indexHistoryItem?.state === IndexStatuses.scheduledReindex;
-      const isInitialIndex = Boolean(indexHistoryItem?.isInitialIndex);
-
-      const getFailedTrace = () => {
-        if (indexHistoryItem?.error) return indexHistoryItem?.error;
-
-        if (isScheduled)
-          return 'The system encountered an issue and was unable to complete the scheduled reindexing operation';
-        return `The system encountered an issue and was unable to complete the ${isInitialIndex ? 'indexing' : 'reindexing'} operation`;
-      };
-
-      const isFailed = indexHistoryItem?.state === IndexStatuses.fail;
-      const isPartlyOk = indexHistoryItem?.state === IndexStatuses.partlyOk;
-
-      const getExecutionSummary = () => {
-        if (isFailed) return getFailedTrace();
-        if (isPartlyOk) return isScheduled ? 'Partially indexed by schedule' : 'Partially indexed';
-        if (isScheduled) return 'Successfully reindexed by schedule';
-        return isInitialIndex ? 'Successfully indexed' : 'Successfully reindexed';
-      };
-
-      const toolExecutionSummary = getExecutionSummary();
-      const content = `{ "indexed": ${indexHistoryItem.indexed ?? 0}, "total": ${indexHistoryItem.total ?? indexHistoryItem.indexed ?? 0} }`;
-
-      return [
-        {
-          id: WELCOME_MESSAGE_ID,
-          role: ROLES.Assistant,
-          content: isFailed
-            ? `${toolExecutionSummary}`
-            : `${toolExecutionSummary}\n\n\`\`\`json\n${content}\n\`\`\``,
-          created_at: new Date(fromUnixTime(indexHistoryItem.updated_on)).getTime(),
-          participant_id: 'system',
-          exception: isFailed ? getFailedTrace() : null,
-        },
-      ];
-    },
-    [indexHistoryItem],
-  );
-
-  // Use this data fot the indexes history tab
   const { isHistoryLoading, historyMessages, historyConversation } = useMemo(() => {
-    const showMockMessage =
-      isHistoryMode && (indexHistoryItem?.conversation_id === null || indexHistoryItem?.error);
-
     const conversation = isHistoryMode ? (conversationDetails ?? null) : null;
 
     const currentConversationMessages = conversation
       ? convertConversationToChatHistory(conversation, traceSteps)
-      : getHistoryMockMessage(showMockMessage);
+      : [];
 
     return {
       isHistoryLoading: isConversationDetailsFetching,
-      historyMessages: showMockMessage
-        ? currentConversationMessages
-        : ToolkitsHelpers.prettifyToolkitConversation(currentConversationMessages),
+      historyMessages: ToolkitsHelpers.prettifyToolkitConversation(currentConversationMessages),
       historyConversation: conversation,
     };
-  }, [
-    isHistoryMode,
-    isConversationDetailsFetching,
-    indexHistoryItem,
-    conversationDetails,
-    traceSteps,
-    getHistoryMockMessage,
-  ]);
+  }, [isHistoryMode, isConversationDetailsFetching, conversationDetails, traceSteps]);
 
   const needGenerateProgressingIndexHistory = useMemo(
     () =>

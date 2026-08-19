@@ -33,7 +33,7 @@ const RouteDefinitions = {
   CreateToolkitType: '/toolkits/create/:toolkitType',
   ToolkitDetail: '/toolkits/:tab/:toolkitId',
   ToolkitRunHistory: '/toolkits/:tab/:toolkitId/history',
-  ToolkitIndexNew: '/toolkits/:tab/:toolkitId/index/new',
+  ToolkitIndexNew: '/toolkits/:tab/:toolkitId/create-index',
   ToolkitIndex: '/toolkits/:tab/:toolkitId/index/:indexName',
   ToolkitIndexHistory: '/toolkits/:tab/:toolkitId/index/:indexName/history',
 
@@ -65,12 +65,15 @@ const RouteDefinitions = {
   CreateConfigurationWithType: '/settings/create-ai-provider/:credentialType',
   CreatePersonalToken: '/settings/create-personal-token',
   EditConfiguration: '/settings/edit-ai-provider/:uid',
+  ProjectContext: '/settings/project-context',
+  ProjectContextEdit: '/settings/project-context/edit',
   Artifacts: '/artifacts',
   CreateBucket: '/artifacts/create-bucket',
   EditBucket: '/artifacts/edit-bucket',
 
   McpAuthPage: '/mcp-auth-callback',
   AuthCallbackPage: '/auth-callback',
+  SharedConversation: '/shared/chat/:token',
 
   Onboarding: '/onboarding',
   HelpCenter: '/help-center',
@@ -102,6 +105,7 @@ export const BLOCK_NAV_PATTERNS = [
   RouteDefinitions.EditCredentialFromMain,
   RouteDefinitions.Chat,
   RouteDefinitions.ChatConversation,
+  RouteDefinitions.ProjectContextEdit,
 ];
 
 /**

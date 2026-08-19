@@ -79,6 +79,7 @@ const CanvasEditHeader = ({
         }}
       >
         <IconButton
+          data-testid="chat-canvas-close-button"
           sx={{ marginLeft: '0px' }}
           variant="elitea"
           color="tertiary"
@@ -90,6 +91,7 @@ const CanvasEditHeader = ({
           />
         </IconButton>
         <Typography
+          data-testid="chat-canvas-title"
           variant="bodyMedium"
           color={'text.secondary'}
           sx={{

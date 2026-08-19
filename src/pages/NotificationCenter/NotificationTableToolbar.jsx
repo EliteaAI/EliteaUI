@@ -54,6 +54,7 @@ const NotificationTableToolbar = memo(props => {
               variant={BUTTON_VARIANTS.secondary}
               startIcon={<MarkIcon />}
               aria-label={markToggleLabel}
+              data-testid="notification-mark-toggle-button"
               onClick={onMarkToggle}
               disabled={isSelectionEmpty}
             />

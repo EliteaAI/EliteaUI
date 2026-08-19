@@ -38,6 +38,7 @@ import { actions as settingsActions } from '@/slices/settings';
 
 import DataTableActionsCell from './DataTableActionsCell';
 import DataTableCell from './DataTableCell';
+import DataTableNameCell from './DataTableNameCell';
 
 const DataTable = memo(props => {
   const {
@@ -443,6 +444,7 @@ const DataTable = memo(props => {
               onSort={handleSort}
               gridTemplateColumns={gridTemplateColumns}
               showCheckbox={false}
+              columnTestIdPrefix={isMCPs ? 'mcp-table' : undefined}
             />
             <GridTableBody
               sx={styles.tableBody}
@@ -459,7 +461,7 @@ const DataTable = memo(props => {
                   isHovered={hoveredRowId === row?.id}
                   onMouseEnter={() => setHoveredRowId(row?.id)}
                   onMouseLeave={() => setHoveredRowId(null)}
-                  isRedesign
+                  NameCellComponent={DataTableNameCell}
                   nameCellProps={nameCellProps}
                   ActionsComponent={DataTableActionsCell}
                   actionsProps={actionsProps}

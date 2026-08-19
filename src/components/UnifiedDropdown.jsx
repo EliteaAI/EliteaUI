@@ -59,6 +59,9 @@ export const DROPDOWN_CONSTANTS = {
  * @param {function} props.onCreateNew - Function to call when "Create new" is clicked
  * @param {string} props.createNewLabel - Label for the "Create new" option
  * @param {boolean} props.showCreateNew - Whether to show the "Create new" option
+ * @param {string} [props.createNewTestId] - Optional data-testid for the "Create new" MenuItem.
+ *   Left undefined by default so existing callers render no attribute at all — each caller
+ *   opts in with a name scoped to its OWN section (never a shared/hardcoded value here).
  * @param {boolean} props.isLoading - Whether data is loading
  * @param {string} props.emptyMessage - Message to show when no items available
  * @param {string} props.noResultsMessage - Message to show when search has no results
@@ -78,6 +81,7 @@ const UnifiedDropdown = memo(
     onCreateNew,
     createNewLabel = 'Create new',
     showCreateNew = false,
+    createNewTestId,
     isLoading = false,
     emptyMessage = 'No items available',
     noResultsMessage = 'No items found',
@@ -251,6 +255,7 @@ const UnifiedDropdown = memo(
                         placement="right"
                       >
                         <MenuItem
+                          data-testid={createNewTestId}
                           onClick={onCreateNew}
                           sx={styles.createNewItemStyles}
                         >

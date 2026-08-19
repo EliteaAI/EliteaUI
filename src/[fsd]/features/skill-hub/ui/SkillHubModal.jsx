@@ -10,7 +10,7 @@ import {
   Typography,
 } from '@mui/material';
 
-import { ELITEA_CATALOG_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/eliteaCatalogTourTargets.constants';
+import { ELITEA_CATALOG_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { useGetPublicSkillDetailsQuery } from '@/[fsd]/features/skill-hub/api';
 import { SkillHubConstants } from '@/[fsd]/features/skill-hub/lib/constants';
 import AttachToAgentDialog from '@/[fsd]/features/skill-hub/ui/AttachToAgentDialog';

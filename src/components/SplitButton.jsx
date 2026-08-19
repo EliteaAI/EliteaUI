@@ -34,7 +34,7 @@ const StyledMenuItemIcon = styled(ListItemIcon)(() => ({
   },
 }));
 
-export default function SplitButton({ defaultValue = '', options = [], onClick }) {
+export default function SplitButton({ defaultValue = '', options = [], onClick, testId }) {
   const theme = useTheme();
   const [open, setOpen] = React.useState(false);
   const anchorRef = React.useRef(null);
@@ -110,6 +110,7 @@ export default function SplitButton({ defaultValue = '', options = [], onClick }
             aria-label="split button"
           >
             <Button
+              data-testid={testId}
               variant="elitea"
               disableRipple
               sx={{ marginRight: '0px' }}

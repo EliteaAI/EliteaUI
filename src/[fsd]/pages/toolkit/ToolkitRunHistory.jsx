@@ -1,18 +1,26 @@
-import { memo, useCallback, useEffect } from 'react';
+import { memo, useCallback, useEffect, useMemo } from 'react';
 
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
 import { RunHistoryContainer } from '@/[fsd]/entities/run-history/ui';
-import { ParticipantEntityTypes } from '@/[fsd]/features/chat/participants/lib/constants/participant.constants';
+import { ChatMessageList } from '@/[fsd]/features/chat';
 import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
-import { IndexBreadcrumb } from '@/[fsd]/features/toolkits/indexes/ui';
+import { ToolkitsHelpers } from '@/[fsd]/features/toolkits';
+import { buildRunHistoryRowDecorator } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexRunRow.helpers';
+import { useToolkitIndexRuns } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
+import { IndexRunDetail } from '@/[fsd]/features/toolkits/indexes/ui';
+import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
+import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
+import Breadcrumbs from '@/[fsd]/shared/ui/breadcrumbs';
 import { useToolkitsDetailsQuery } from '@/api/toolkits.js';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils.jsx';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast.jsx';
 import RouteDefinitions from '@/routes';
+
+const { ParticipantEntityTypes } = ParticipantEntityConstants;
 
 const ToolkitRunHistory = memo(() => {
   const { tab, toolkitId } = useParams();
@@ -23,31 +31,26 @@ const ToolkitRunHistory = memo(() => {
   const { toastError } = useToast();
   const styles = getStyles();
 
-  const goBackToRunIndex = useCallback(() => {
-    const target = RouteDefinitions.ToolkitIndex.replace(':tab', tab ?? 'all').replace(
-      ':toolkitId',
-      String(toolkitId),
-    );
-    navigate(target);
-  }, [navigate, tab, toolkitId]);
-
-  const goBackToToolkit = useCallback(() => {
-    const target = RouteDefinitions.ToolkitDetail.replace(':tab', tab ?? 'all').replace(
-      ':toolkitId',
-      String(toolkitId),
-    );
-    navigate(target);
-  }, [navigate, tab, toolkitId]);
-
   const goToToolkitsList = useCallback(() => {
-    navigate(RouteDefinitions.ToolkitsWithTab.replace(':tab', tab ?? 'all'));
+    navigate(NavigationHelpers.buildRoute(RouteDefinitions.ToolkitsWithTab, { tab: tab ?? 'all' }));
   }, [navigate, tab]);
 
-  const {
-    data: publicToolkitData,
-    isError,
-    error,
-  } = useToolkitsDetailsQuery({ projectId, toolkitId }, { skip: !projectId || !toolkitId });
+  const { isError, error } = useToolkitsDetailsQuery(
+    { projectId, toolkitId },
+    { skip: !projectId || !toolkitId },
+  );
+
+  // Scheduler-started runs create no conversation, so nothing else surfaces them.
+  const { indexRunRows, indexRunLookup, isIndexRunsLoading } = useToolkitIndexRuns({
+    projectId,
+    toolkitId,
+    skip: isMCP,
+  });
+
+  const decorateRow = useMemo(
+    () => buildRunHistoryRowDecorator({ lookup: indexRunLookup, isLookupReady: !isIndexRunsLoading }),
+    [indexRunLookup, isIndexRunsLoading],
+  );
 
   const shouldShowNotFoundPage = isError && isNotFoundError(error);
 
@@ -61,27 +64,22 @@ const ToolkitRunHistory = memo(() => {
 
   if (shouldShowNotFoundPage) return null;
 
-  const toolkitName = publicToolkitData?.name || '';
-
   return (
     <Box sx={styles.wrapper}>
       <DrawerPageHeader
         showBorder
-        title={
-          <IndexBreadcrumb
-            toolkitName={toolkitName}
-            current="Run History"
-            onToolkitsClick={goToToolkitsList}
-            onToolkitClick={goBackToToolkit}
-            onIndexClick={goBackToRunIndex}
-          />
-        }
+        title={<Breadcrumbs />}
       />
       <Box sx={styles.content}>
         <RunHistoryContainer
           entityId={toolkitId}
           source={isMCP ? ParticipantEntityTypes.MCP : ParticipantEntityTypes.Toolkit}
           versions={null}
+          ChatMessageListComponent={ChatMessageList}
+          prettifyConversation={ToolkitsHelpers.prettifyToolkitConversation}
+          additionalRows={indexRunRows}
+          decorateRow={isMCP ? null : decorateRow}
+          DetailComponent={IndexRunDetail}
         />
       </Box>
     </Box>

@@ -13,6 +13,7 @@ import { redistributeConversationsIntoGroups } from '@/[fsd]/features/chat/conve
 import {
   useCreateFolder,
   useDeleteFolder,
+  useDuplicateConversation,
   useMoveToFolderConversation,
   usePinConversation,
   useQueryFoldersList,
@@ -518,6 +519,7 @@ const NewChat = props => {
     conversations,
     setActiveConversation,
     setConversations,
+    setFolders,
     emitEnterRoom,
     emitLeaveRoom,
     toastError,
@@ -534,6 +536,18 @@ const NewChat = props => {
     setFolders,
     toastError,
     setActiveParticipant,
+  });
+
+  const { onDuplicateConversation, duplicatingConversationId } = useDuplicateConversation({
+    setActiveConversation,
+    setConversations,
+    emitEnterRoom,
+    emitLeaveRoom,
+    activeConversation,
+    listenCanvasEditorsChangeEvent,
+    stopListenCanvasEditorsChangeEvent,
+    listenCanvasContentChangeEvent,
+    stopListenCanvasContentChangeEvent,
   });
 
   const { addNewParticipants, addParticipantsToNewConversation } = useAddNewParticipants({
@@ -1187,14 +1201,21 @@ const NewChat = props => {
     }));
   }, []);
 
-  useEffect(() => {
-    if (isCreatingConversation && !activeConversation?.isNew) {
-      if (isStreaming) {
-        boxRef.current?.stopAll?.();
-      }
-      // Leave the current socket room before replacing activeConversation with a stub.
-      // The stub has no uuid, so onCreateConversation's leave-room guard would be skipped,
-      // leaving the user subscribed to the old room and receiving cross-chat messages.
+  const onClickCreateNewFolder = useCallback(() => {
+    if (!isStreaming && !activeFolder?.isNew) {
+      const newFolder = {
+        id: uuidv4(),
+        name: DefaultFolderName,
+        conversations: [],
+        isNew: true,
+      };
+      setActiveFolder({ ...newFolder });
+      setFolders(prev => [newFolder, ...prev]);
+    }
+  }, [isStreaming, activeFolder?.isNew]);
+
+  const startNewConversation = useCallback(
+    (folderId = null) => {
       if (activeConversation?.id && activeConversation?.uuid) {
         stopListenCanvasEditorsChangeEvent();
         stopListenCanvasContentChangeEvent();
@@ -1213,34 +1234,58 @@ const NewChat = props => {
         participants: [],
         chat_history: [],
         isNew: true,
+        ...(folderId && { folder_id: folderId }),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        isNamingPending: false, // Don't show "Naming…" until conversation is actually created
+        isNamingPending: false,
       };
       setActiveConversation(newConversation);
       setActiveParticipant();
-      // Close editors when active participant is cleared
       handleCloseAgentEditor();
       onCloseToolkitEditor();
       handleClosePipelineEditor();
       setSelectedCodeBlockInfo();
       onCloseArtifactEditor();
+    },
+    [
+      activeConversation?.id,
+      activeConversation?.uuid,
+      dispatch,
+      clearUrlConversation,
+      projectId,
+      setActiveConversation,
+      setActiveParticipant,
+      handleCloseAgentEditor,
+      onCloseToolkitEditor,
+      handleClosePipelineEditor,
+      setSelectedCodeBlockInfo,
+      onCloseArtifactEditor,
+      emitLeaveRoom,
+      stopListenCanvasEditorsChangeEvent,
+      stopListenCanvasContentChangeEvent,
+    ],
+  );
+
+  const onCreateConversationInFolder = useCallback(
+    folder => {
+      if (isStreaming || folder?.isNew) return;
+      startNewConversation(folder.id);
+    },
+    [isStreaming, startNewConversation],
+  );
+
+  useEffect(() => {
+    if (isCreatingConversation && !activeConversation?.isNew) {
+      if (isStreaming) {
+        boxRef.current?.stopAll?.();
+      }
+      const parentFolder = activeConversation?.folder_id
+        ? folders.find(f => f.id === activeConversation.folder_id)
+        : null;
+      startNewConversation(parentFolder?.id ?? null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clearUrlConversation, isCreatingConversation, isStreaming, activeConversation?.isNew]);
-
-  const onClickCreateNewFolder = useCallback(() => {
-    if (!isStreaming && !activeFolder?.isNew) {
-      const newFolder = {
-        id: uuidv4(),
-        name: DefaultFolderName,
-        conversations: [],
-        isNew: true,
-      };
-      setActiveFolder({ ...newFolder });
-      setFolders(prev => [newFolder, ...prev]);
-    }
-  }, [isStreaming, activeFolder?.isNew]);
+  }, [isCreatingConversation, activeConversation?.isNew]);
 
   useEffect(() => {
     if (preProjectId !== projectId) {
@@ -1386,6 +1431,8 @@ const NewChat = props => {
             onSelectConversation={onHandleSelectConversation}
             onEditConversation={onEditConversation}
             onDeleteConversation={onDeleteConversation}
+            onDuplicateConversation={onDuplicateConversation}
+            duplicatingConversationId={duplicatingConversationId}
             onPlaybackConversation={onPlaybackConversation}
             collapsed={collapsedConversations}
             onCollapsed={onConversationCollapsed}
@@ -1407,6 +1454,7 @@ const NewChat = props => {
             moveTargetConversationToNewFolder={moveTargetConversationToNewFolder}
             cancelMovingTargetConversationToNewFolder={cancelMovingTargetConversationToNewFolder}
             onClickCreateNewFolder={onClickCreateNewFolder}
+            onCreateConversationInFolder={onCreateConversationInFolder}
             onCloseCanvas={onCloseCanvas}
             toastSuccess={toastSuccess}
             toastError={toastError}

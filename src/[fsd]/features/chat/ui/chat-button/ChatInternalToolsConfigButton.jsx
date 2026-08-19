@@ -3,8 +3,8 @@ import React, { memo, useRef, useState } from 'react';
 import { ClickAwayListener, IconButton, Paper, Popper } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
-import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
-import { useAvailableInternalTools } from '@/[fsd]/shared/lib/hooks';
+import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
+import { useAvailableInternalTools } from '@/[fsd]/features/toolkits';
 import { Switch, Text } from '@/[fsd]/shared/ui';
 import ValueIcon from '@/assets/value-icon.svg?react';
 

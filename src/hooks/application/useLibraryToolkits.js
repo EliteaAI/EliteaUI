@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { useTheme } from '@mui/material';
 
-import { useSetRefetchDetails } from '@/[fsd]/features/agent/lib/hooks';
+import { useSetRefetchDetails } from '@/[fsd]/entities/application-tab-bar/lib/hooks';
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useGetCurrentMCPSchemas, useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
 import { resolveToolkitSchemaByType } from '@/[fsd]/shared/lib/helpers';

@@ -1,21 +1,21 @@
-import { PinEntityType } from '@/[fsd]/widgets/pin-toggler/lib/constants';
+import { PinEntityConstants } from '@/[fsd]/shared/lib/constants';
 
 const CONTENT_TYPE_MAPPING = [
   {
     match: ['application', 'pipeline', 'agent'],
-    type: PinEntityType.Application,
+    type: PinEntityConstants.PinEntityType.Application,
   },
   {
     match: ['toolkit', 'mcp'],
-    type: PinEntityType.Toolkit,
+    type: PinEntityConstants.PinEntityType.Toolkit,
   },
   {
     match: ['credential', 'configuration'],
-    type: PinEntityType.Configuration,
+    type: PinEntityConstants.PinEntityType.Configuration,
   },
   {
     match: ['skill'],
-    type: PinEntityType.Skill,
+    type: PinEntityConstants.PinEntityType.Skill,
   },
 ];
 
@@ -28,5 +28,5 @@ export const mapContentTypeToEntityType = contentType => {
     }
   }
 
-  return PinEntityType.Application;
+  return PinEntityConstants.PinEntityType.Application;
 };

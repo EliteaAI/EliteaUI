@@ -51,6 +51,7 @@ export default function AlertDialog({
       <DialogContent>
         <StyledDialogContentText
           id="alert-dialog-description"
+          data-testid="alert-dialog-content"
           sx={
             !multiline
               ? undefined

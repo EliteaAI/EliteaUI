@@ -333,6 +333,7 @@ export default function SelectIconDialog({
         </Typography>
         <Box sx={styles.iconGrid}>
           <ProjectIconItem
+            data-testid="agent-icon-picker-default-icon"
             isSelected={!selectedIcon || !selectedIcon?.url}
             onClick={onSelectDefaultIcon}
           >
@@ -345,6 +346,7 @@ export default function SelectIconDialog({
           </ProjectIconItem>
           {applicationDefaultIcons.map((icon, index) => (
             <ProjectIconItem
+              data-testid={`agent-icon-picker-option-${index}`}
               isSelected={selectedIcon?.url === icon.url}
               key={'default' + index}
               onClick={onClickIcon(icon)}
@@ -375,6 +377,7 @@ export default function SelectIconDialog({
           )}
           {iconList.map((icon, index) => (
             <UserIconItem
+              data-testid={`agent-icon-picker-uploaded-${index}`}
               key={index}
               isSelected={selectedIcon?.url === icon.url}
               onClick={onClickIcon(icon)}
@@ -417,6 +420,8 @@ export default function SelectIconDialog({
 
   return (
     <BaseModal
+      data-testid="agent-icon-picker-dialog"
+      closeButtonDataTestId="agent-icon-picker-close-button"
       open={open}
       onClose={onClose}
       title="Choose the image from the list or upload"

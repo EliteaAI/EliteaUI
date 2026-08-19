@@ -4,7 +4,7 @@ import YAML from 'js-yaml';
 
 import { Box, FormControlLabel, Typography } from '@mui/material';
 
-import { CredentialsSelect } from '@/[fsd]/features/credentials/ui';
+import { CredentialsSelect } from '@/[fsd]/features/credentials';
 import { OpenApiHelpers, ToolBaseHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { ArrayFieldInput } from '@/[fsd]/features/toolkits/ui/form/ToolBase';
@@ -64,7 +64,6 @@ const ToolBaseProperty = memo(props => {
     anyOf,
     max_toolkit_length,
     ui_component: uiComponent,
-    visible_when: visibleWhen,
     placeholder: schemaPlaceholder,
   } = v || {};
 
@@ -190,40 +189,17 @@ const ToolBaseProperty = memo(props => {
     [description, label, styles.infoIconWrapper],
   );
 
-  // Hide field if it has property hidden === true
-  if (v && v.hidden) {
-    return null;
-  }
+  const isVisible = ToolBaseHelpers.isPropertyVisible({
+    propertyKey: k,
+    property: v,
+    settings,
+    required,
+    disableConfigFields,
+    showOnlyConfigurationFields,
+    showOnlyRequiredFields,
+  });
 
-  // Hide field based on visible_when condition (e.g., show custom_header_name only when auth_type='custom')
-  if (visibleWhen) {
-    const { field: conditionField, value: conditionValue } = visibleWhen;
-    const currentFieldValue = settings[conditionField];
-    // Compare case-insensitively for string values
-    const matches =
-      typeof currentFieldValue === 'string' && typeof conditionValue === 'string'
-        ? currentFieldValue.toLowerCase() === conditionValue.toLowerCase()
-        : currentFieldValue === conditionValue;
-    if (!matches) {
-      return null;
-    }
-  }
-
-  // For disabled configuration fields mode, handle configuration vs regular fields differently
-  if (disableConfigFields) {
-    // This is a configuration field being shown as disabled
-
-    // Only show configuration fields that have non-empty values
-    const value = settings[k];
-    if (k !== 'elitea_title' && (value === null || value === undefined || value === '')) {
-      return null;
-    }
-    // Field has a value and will be shown as disabled
-  } else if (showOnlyConfigurationFields && !v?.configuration) {
-    // In configuration-only mode, hide non-configuration fields
-    return null;
-  } else if (showOnlyRequiredFields && !required) {
-    // In required-only mode, hide non-required fields
+  if (!isVisible) {
     return null;
   }
 
@@ -275,7 +251,7 @@ const ToolBaseProperty = memo(props => {
     );
   }
   if (k === 'selected_tools') {
-    const { items, args_schemas } = v;
+    const { items, args_schemas, tool_groups } = v;
     // Check if args_schemas actually has content (not just empty object)
     const hasArgsSchemas = args_schemas && Object.keys(args_schemas).length > 0;
     const tools = hasArgsSchemas ? Object.keys(args_schemas) : items?.enum;
@@ -283,6 +259,7 @@ const ToolBaseProperty = memo(props => {
       <ToolkitForm.ToolActionsSelector
         key={k}
         availableTools={tools}
+        toolGroups={tool_groups}
         onChange={value => editField(buildEditFieldPath('selected_tools'), value)}
         disabled={disableConfigFields || disabled}
       />
@@ -301,6 +278,7 @@ const ToolBaseProperty = memo(props => {
         disabled={disabled}
         editField={editField}
         buildEditFieldPath={buildEditFieldPath}
+        testId={`toolkit-field-${k}-input`}
       />
     );
   } else {
@@ -335,6 +313,7 @@ const ToolBaseProperty = memo(props => {
           required={required}
           specifiedProjectId={specifiedProjectId}
           description={description}
+          testId={`toolkit-field-${k}-input`}
         />
       );
     } else if (type === 'object' || anyOf?.find(item => item.type === 'object')) {
@@ -357,6 +336,8 @@ const ToolBaseProperty = memo(props => {
               fieldName={title}
               onChange={handleObjectFieldChange}
               readOnly={disableConfigFields || disabled}
+              data-testid={`toolkit-field-${k}-editor`}
+              contentTestId={`toolkit-field-${k}-editor-content`}
             />
           </Box>
         );
@@ -382,6 +363,8 @@ const ToolBaseProperty = memo(props => {
                     fieldName={title}
                     onChange={handleObjectFieldChange}
                     readOnly={disableConfigFields || disabled}
+                    data-testid={`toolkit-field-${k}-editor`}
+                    contentTestId={`toolkit-field-${k}-editor-content`}
                   />
                 ),
               },
@@ -404,6 +387,8 @@ const ToolBaseProperty = memo(props => {
             sx={styles.formControlLabel}
             control={
               <Checkbox.BaseCheckbox
+                data-testid={`toolkit-field-${k}-checkbox`}
+                inputProps={{ 'data-testid': `toolkit-field-${k}-checkbox-field` }}
                 checked={!!settings[k]}
                 onChange={(_, value) => {
                   editField(buildEditFieldPath(k), value);
@@ -498,7 +483,7 @@ const ToolBaseProperty = memo(props => {
           label={label}
           description={v.description}
           onSelectConfiguration={(value, options) =>
-            editField(buildEditFieldPath(k), value, undefined, options)
+            editField(buildEditFieldPath(k), value, undefined, { ...options, section })
           }
           onReload={onCredentialReload}
           value={settings[k]}
@@ -601,7 +586,7 @@ const ToolBaseProperty = memo(props => {
     } else {
       const isInteger = type === 'integer' || anyOf?.some(item => item.type === 'integer');
       const maxLength = k === 'label' ? MAX_NAME_LENGTH : max_toolkit_length;
-      const inputProps = maxLength ? { maxLength } : undefined;
+      const inputProps = { ...(maxLength ? { maxLength } : {}), 'data-testid': `toolkit-field-${k}-input` };
 
       // Get placeholder - use schema placeholder if provided, or default value for integer fields
       // Check both direct property and anyOf (for Optional[int] types)
@@ -625,6 +610,10 @@ const ToolBaseProperty = memo(props => {
             disabled={disableConfigFields || disabled}
             inputProps={inputProps}
             placeholder={placeholder}
+            {...(k === 'bucket' && {
+              tooltipTestId: 'toolkit-field-bucket-info-icon',
+              tooltipContentTestId: 'toolkit-field-bucket-info-tooltip-content',
+            })}
             onFocus={() => toggleFieldFocus(k)}
             onBlur={() => toggleFieldFocus(null)}
             {...(isNameField && {

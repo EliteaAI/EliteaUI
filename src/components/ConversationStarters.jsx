@@ -85,6 +85,7 @@ const ConversationStarters = memo(props => {
       items={[
         {
           title: 'Chat starters',
+          testId: 'agent-canvas-section-chat-starters',
           content: (
             <Box data-tour={AGENT_TOUR_TARGET_IDS.conversationStarters}>
               {values.map((value, index) => {
@@ -136,6 +137,7 @@ const ConversationStarters = memo(props => {
                           title="Delete"
                         >
                           <BaseBtn
+                            data-testid="agent-conversation-starter-delete"
                             variant={BUTTON_VARIANTS.tertiary}
                             aria-label="delete starter"
                             onClick={onDelete(index)}
@@ -207,7 +209,7 @@ ConversationStarters.displayName = 'ConversationStarters';
 export default ConversationStarters;
 
 export const EllipsisTextWithTooltip = memo(props => {
-  const { text, onClick, sx, textSX } = props;
+  const { text, onClick, sx, textSX, testId } = props;
 
   const styles = ellipsisTextWithTooltipStyles();
   const [isTooltipVisible, setIsTooltipVisible] = useState(false);
@@ -238,6 +240,7 @@ export const EllipsisTextWithTooltip = memo(props => {
 
   return (
     <Box
+      data-testid={testId}
       sx={[styles.starterItem, sx]}
       onClick={onClick}
       onMouseEnter={handleMouseEnter}

@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 
 import { useSearchParams } from 'react-router-dom';
 
-import { useInteractiveTour } from '@/[fsd]/app/providers/InteractiveTourProvider';
+import { useInteractiveTour } from '@/[fsd]/shared/lib/context';
 
 export const useTourFromUrl = () => {
   const [searchParams, setSearchParams] = useSearchParams();

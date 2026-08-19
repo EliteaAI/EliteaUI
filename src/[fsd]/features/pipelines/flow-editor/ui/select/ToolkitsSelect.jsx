@@ -2,13 +2,25 @@ import { memo, useCallback, useContext, useMemo } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { FlowEditorContext } from '@/[fsd]/app/providers';
 import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { useGetToolkitNameFromSchema } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
+import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import { Select } from '@/[fsd]/shared/ui';
 
+// data-testid (ELITEA-2004): caller-supplied, opt-in — the LLM node is the
+// only call site today (`pipeline-llm-node-toolkits-select`); any future
+// caller that doesn't pass one renders untagged, same discipline as the
+// Toolkit/Tool/Input/Output testids in BaseToolNode.jsx
+// (.agents/testing.md § Locator policy — testid scope is load-bearing).
 const ToolkitsSelect = memo(props => {
-  const { id, label = 'Toolkits', disabled, onValueChange, allowApplications = false } = props;
+  const {
+    id,
+    label = 'Toolkits',
+    disabled,
+    onValueChange,
+    allowApplications = false,
+    'data-testid': dataTestId,
+  } = props;
 
   const { setYamlJsonObject, yamlJsonObject } = useContext(FlowEditorContext);
   const { values } = useFormikContext();
@@ -89,6 +101,7 @@ const ToolkitsSelect = memo(props => {
       showBorder
       multiple
       className="nopan nodrag"
+      data-testid={dataTestId}
     />
   );
 });

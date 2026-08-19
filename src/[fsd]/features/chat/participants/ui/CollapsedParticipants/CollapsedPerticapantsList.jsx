@@ -151,7 +151,10 @@ const CollapsedPerticapantsList = memo(props => {
           onOpen={() => onTriggerTooltipOpen(USERS_SECTION.type)}
           onClose={onTriggerTooltipClose}
         >
-          <Box sx={styles.root}>
+          <Box
+            sx={styles.root}
+            data-testid={`chat-participants-badge-${USERS_SECTION.section}`}
+          >
             <UsersParticipantDropdown
               showTrigger
               users={usersGroup.participants}
@@ -227,7 +230,10 @@ const CollapsedPerticapantsList = memo(props => {
                   sx={styles.collapsedTriggerButton(group.count, sectionHasError, sectionHasSkippedContainer)}
                   data-testid="chat-participants-badge-button"
                 >
-                  <entity.icon sx={styles.collapsedIcon} />
+                  <entity.icon
+                    sx={styles.collapsedIcon}
+                    data-testid={`chat-participants-badge-icon-${entity.section}`}
+                  />
                 </IconButton>
                 {sectionHasError ? (
                   <Box sx={styles.warningIcon}>

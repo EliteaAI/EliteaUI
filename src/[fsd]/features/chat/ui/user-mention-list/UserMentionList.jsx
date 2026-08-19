@@ -45,7 +45,10 @@ const UserMentionList = memo(props => {
 
   return (
     <ClickAwayListener onClickAway={onClose}>
-      <Box sx={styles.container}>
+      <Box
+        sx={styles.container}
+        data-testid="chat-user-mention-list"
+      >
         <Box sx={styles.header}>
           <Typography
             variant="subtitle"

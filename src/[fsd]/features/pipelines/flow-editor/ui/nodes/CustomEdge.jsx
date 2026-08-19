@@ -65,6 +65,7 @@ const CustomEdge = memo(props => {
         <EdgeLabelRenderer>
           <Typography
             component={'div'}
+            data-testid={`pipeline-edge-label-${id}`}
             sx={{
               position: 'absolute',
               transform: `translate(-50%, -50%) translate(${fallbackLabelX}px,${fallbackLabelY}px)`,

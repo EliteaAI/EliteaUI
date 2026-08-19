@@ -2,8 +2,7 @@ import { memo, useCallback, useMemo } from 'react';
 
 import { Box, Button, Tooltip } from '@mui/material';
 
-import { useConfigOAuthModal, useMcpTokenChange } from '@/[fsd]/features/mcp/lib/hooks';
-import { McpAuthModal } from '@/[fsd]/features/mcp/ui';
+import { McpAuthModal, useConfigOAuthModal, useMcpTokenChange } from '@/[fsd]/features/mcp';
 import { useSharepointCheckConnection } from '@/[fsd]/features/sharepoint/lib/hooks/useSharepointCheckConnection.hooks';
 import OfflineIcon from '@/assets/offline-icon.svg?react';
 import OnlineIcon from '@/assets/online-icon.svg?react';

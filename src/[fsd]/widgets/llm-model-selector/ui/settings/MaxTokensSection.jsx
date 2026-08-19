@@ -51,7 +51,10 @@ const MaxTokensSection = memo(props => {
   );
 
   return (
-    <Box sx={styles.container}>
+    <Box
+      data-testid="model-settings-max-tokens-section"
+      sx={styles.container}
+    >
       <Label.InfoLabelWithTooltip
         label="Max Completion Tokens"
         tooltip="Limits the maximum length of AI responses measured in tokens (roughly 4 characters per token)."

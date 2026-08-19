@@ -3,7 +3,7 @@ import { memo, useCallback, useRef } from 'react';
 import { Box, Typography } from '@mui/material';
 
 const ToolItem = memo(props => {
-  const { label, description, onClick, isActive, itemRef } = props;
+  const { label, description, onClick, isActive, itemRef, testId } = props;
 
   // Keep a stable ref callback so the Box ref doesn't change on every render.
   const itemRefLatest = useRef(itemRef);
@@ -15,6 +15,7 @@ const ToolItem = memo(props => {
   return (
     <Box
       ref={setRef}
+      data-testid={testId}
       onClick={onClick}
       sx={toolItemStyles.container(isActive)}
     >
