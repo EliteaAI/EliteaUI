@@ -272,6 +272,7 @@ const ParticipantItem = memo(props => {
             specifiedFontSize="0.875rem"
             isActive={isActive}
             imgTestId="chat-participant-avatar"
+            data-testid="chat-participant-icon"
           />
           {!collapsed && (
             <Box sx={styles.nameWrapper}>
