@@ -5,9 +5,9 @@ import { useParams, useSearchParams } from 'react-router-dom';
 
 import { ApplicationTabBar } from '@/[fsd]/entities/application-tab-bar/ui';
 import { useIsVersionNotFound } from '@/[fsd]/entities/version/lib/hooks';
-import { EvaluationTab } from '@/[fsd]/features/evaluation/ui';
 import { InstructionsInputRefProvider } from '@/[fsd]/shared/lib/context';
 import { ApplicationControls } from '@/[fsd]/widgets/application-controls';
+import { EvaluationTab } from '@/[fsd]/widgets/evaluation/ui';
 import { ViewMode } from '@/common/constants';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils';
 import StyledTabs from '@/components/StyledTabs';
