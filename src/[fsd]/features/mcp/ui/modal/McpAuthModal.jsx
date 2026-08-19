@@ -61,7 +61,9 @@ const McpAuthModal = memo(props => {
 
   // Flags to indicate if credentials are provided by backend (don't show inputs)
   const hasBackendClientId = Boolean(providedSettings?.mcp_client_id);
-  const hasBackendClientSecret = Boolean(providedSettings?.mcp_client_secret);
+  const hasBackendClientSecret = Boolean(
+    providedSettings?.mcp_client_secret || providedSettings?.has_mcp_client_secret,
+  );
 
   const [clientId, setClientId] = useState('');
   const [clientSecret, setClientSecret] = useState('');
