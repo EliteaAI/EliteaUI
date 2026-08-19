@@ -96,6 +96,7 @@ const FileList = memo(props => {
             {attachment.name}
           </TypographyWithConditionalTooltip>
           <Box
+            data-testid={`chat-attachment-chip-remove-${index}`}
             style={styles.itemRemove}
             onClick={onClickRemove(index)}
           >
