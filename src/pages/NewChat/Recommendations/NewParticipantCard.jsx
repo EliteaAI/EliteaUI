@@ -59,6 +59,7 @@ const NewParticipantCard = memo(props => {
   const typeTestId = testId ? `${testId}-type` : undefined;
   const iconTestId = testId ? `${testId}-icon` : undefined;
   const publicLabelTestId = testId ? `${testId}-public-label` : undefined;
+  const nameTestId = testId ? `${testId}-name` : undefined;
 
   return (
     <TooltipWithDuration
@@ -89,6 +90,7 @@ const NewParticipantCard = memo(props => {
             variant="headingSmall"
             color="text.secondary"
             sx={styles.nameText}
+            data-testid={nameTestId}
           >
             {participant.name}
           </Typography>
