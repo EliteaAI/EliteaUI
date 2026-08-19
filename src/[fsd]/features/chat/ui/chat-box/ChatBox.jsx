@@ -30,6 +30,7 @@ import {
   hasRootHitlTurnEnded,
   scheduleRootHitlDecision,
 } from '@/[fsd]/features/chat/lib/helpers/hitl.helpers.js';
+import { shouldQueueRootAuthorizationWithHitl } from '@/[fsd]/features/chat/lib/helpers/mcpAuthorization.helpers.js';
 import * as NewConversationHelpers from '@/[fsd]/features/chat/lib/helpers/newConversation.helpers';
 import {
   useBudgetWarning,
@@ -1302,9 +1303,12 @@ const ChatBox = forwardRef((props, boxRef) => {
         sessionDeclinedMcpServers,
       };
       const isDurableAuthorization = authMeta.guardrail_type === 'mcp_auth' && Boolean(authMeta.interrupt_id);
-      const isRootDurableAuthorization =
-        isDurableAuthorization && !['aggregate_child', 'supervised_child'].includes(authMeta.resume_strategy);
-      if (isRootDurableAuthorization) {
+      const shouldQueueWithRootHitl = shouldQueueRootAuthorizationWithHitl(
+        authMeta,
+        pendingHitlMessage,
+        messageId,
+      );
+      if (shouldQueueWithRootHitl) {
         // Root-scoped durable MCP auth shares the same LangGraph checkpoint as
         // sensitive-tool HITL cards. Route it through the root queue so rapid
         // auth + sensitive decisions cannot launch concurrent worker resumes.
@@ -1366,7 +1370,15 @@ const ChatBox = forwardRef((props, boxRef) => {
       setStreamingInfo(question_id);
       emitContinue(payload);
     },
-    [chat_history, activeConversation, projectId, setChatHistory, setStreamingInfo, emitContinue],
+    [
+      chat_history,
+      activeConversation,
+      projectId,
+      pendingHitlMessage,
+      setChatHistory,
+      setStreamingInfo,
+      emitContinue,
+    ],
   );
 
   /**

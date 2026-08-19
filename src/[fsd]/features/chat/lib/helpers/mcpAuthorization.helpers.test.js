@@ -10,9 +10,45 @@ import {
   getToolkitAuthorizationContext,
   groupToolkitAuthorizationActions,
   hasProcessingSiblingForAuthorization,
+  shouldQueueRootAuthorizationWithHitl,
 } from './mcpAuthorization.helpers';
 
 describe('toolkit authorization helpers', () => {
+  it('uses the dedicated MCP resume protocol for an auth-only root pause', () => {
+    const rootAuthorization = {
+      guardrail_type: 'mcp_auth',
+      interrupt_id: 'mcp_auth_123',
+      resume_strategy: 'root',
+    };
+
+    expect(shouldQueueRootAuthorizationWithHitl(rootAuthorization, undefined, 'message-id')).toBe(false);
+    expect(
+      shouldQueueRootAuthorizationWithHitl(rootAuthorization, { id: 'message-id' }, 'message-id'),
+    ).toBe(false);
+  });
+
+  it('queues only a root authorization accompanied by HITL on the same turn', () => {
+    const rootAuthorization = {
+      guardrail_type: 'mcp_auth',
+      interrupt_id: 'mcp_auth_123',
+      resume_strategy: 'root',
+    };
+    const mixedPause = {
+      id: 'message-id',
+      hitlInterrupt: { interrupt_id: 'sensitive_123' },
+    };
+
+    expect(shouldQueueRootAuthorizationWithHitl(rootAuthorization, mixedPause, 'message-id')).toBe(true);
+    expect(
+      shouldQueueRootAuthorizationWithHitl(
+        { ...rootAuthorization, resume_strategy: 'supervised_child' },
+        mixedPause,
+        'message-id',
+      ),
+    ).toBe(false);
+    expect(shouldQueueRootAuthorizationWithHitl(rootAuthorization, mixedPause, 'other-message')).toBe(false);
+  });
+
   it('keeps every distinct pending request and replaces replay duplicates by exact invocation id', () => {
     const requests = getMcpAuthorizationRequests({
       authorization_requests: [
@@ -29,7 +65,7 @@ describe('toolkit authorization helpers', () => {
     ]);
   });
 
-  it('builds one exact SharePoint authorization action without persisting credentials', () => {
+  it('keeps non-secret SharePoint OAuth hints without persisting secret material', () => {
     const action = buildMcpAuthorizationToolAction({
       metadata: {
         tool_run_id: 'call-sharepoint-1',
@@ -48,8 +84,9 @@ describe('toolkit authorization helpers', () => {
             id_token: 'must-not-be-rendered',
           },
           provided_settings: {
-            mcp_client_id: 'must-not-be-rendered',
-            mcp_client_secret: 'must-not-be-rendered',
+            mcp_client_id: 'configured-client-id',
+            mcp_client_secret: 'masked-secret',
+            scopes: ['Files.Read'],
           },
         },
         metadata: {
@@ -79,7 +116,12 @@ describe('toolkit authorization helpers', () => {
       },
     });
     expect(action.toolOutputs).not.toHaveProperty('provided_settings');
-    expect(action.toolMeta).not.toHaveProperty('provided_settings');
+    expect(action.toolMeta.provided_settings).toEqual({
+      mcp_client_id: 'configured-client-id',
+      scopes: ['Files.Read'],
+      has_mcp_client_secret: true,
+    });
+    expect(action.toolMeta.provided_settings).not.toHaveProperty('mcp_client_secret');
     expect(action.toolMeta.resource_metadata).not.toHaveProperty('provided_settings');
     expect(action.toolMeta.resource_metadata.oauth_authorization_server).toEqual({
       token_endpoint: 'https://login.example/tenant/token',
