@@ -126,6 +126,7 @@ const ContextStrategyModalContent = memo(props => {
           <Switch.BaseSwitch
             checked={values.enabled}
             onChange={e => handleInputChange(e, 'enabled')}
+            data-testid="context-modal-management-toggle"
             label="Context Management"
             infoTooltip="Configure how conversation context is managed and optimized"
             slotProps={{

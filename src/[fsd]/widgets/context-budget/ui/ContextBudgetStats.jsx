@@ -22,11 +22,13 @@ const ContextStats = memo(props => {
         icon: <TokensIcon fill={theme.palette.icon.fill.secondary} />,
         value: tokensDisplay,
         suffix: `${utilizationPercentage}%`,
+        testId: 'context-modal-stat-tokens',
       },
       {
         label: 'Messages',
         icon: <MessagesIcon fill={theme.palette.icon.fill.secondary} />,
         value: messageGroups,
+        testId: 'context-modal-stat-messages',
       },
       {
         label: 'Summaries',
@@ -58,6 +60,7 @@ const ContextStats = memo(props => {
             <Typography
               variant="bodyMedium"
               sx={styles.statValue}
+              data-testid={item.testId}
             >
               {item.isButton ? (
                 <SummaryDetailsButton
