@@ -25,6 +25,8 @@ const getMessage = (
   isEditingArtifact,
   streamingType,
   isToolkitCreateMode,
+  isEditingSkill,
+  isEditingProjectContext,
 ) => {
   if (isBlockNav) {
     if (isStreaming) {
@@ -44,6 +46,10 @@ const getMessage = (
       return 'You are editing a toolkit now. Do you want to discard current changes and continue?';
     } else if (isEditingArtifact) {
       return 'You are previewing an artifact now. Do you want to close the preview and continue?';
+    } else if (isEditingSkill) {
+      return 'You are editing a skill now. Do you want to discard current changes and continue?';
+    } else if (isEditingProjectContext) {
+      return 'You are editing a project context now. Do you want to discard current changes and continue?';
     } else {
       return 'There are unsaved changes. Are you sure you want to leave?';
     }
@@ -63,6 +69,10 @@ const getMessage = (
       return 'You are editing a toolkit now. Are you sure you want to leave?';
     } else if (isEditingArtifact) {
       return 'You are previewing an artifact now. Are you sure you want to leave?';
+    } else if (isEditingSkill) {
+      return 'You are editing a skill now. Are you sure you want to leave?';
+    } else if (isEditingProjectContext) {
+      return 'You are editing a project context now. Are you sure you want to leave?';
     } else {
       return 'It seems the chatting is finished. You can leave now!';
     }
@@ -83,6 +93,8 @@ const settingsSlice = createSlice({
       isEditingPipeline: false,
       isEditingToolkit: false,
       isEditingArtifact: false,
+      isEditingSkill: false,
+      isEditingProjectContext: false,
       isToolkitCreateMode: false,
       streamingType: 'application',
       isResetApiState: false,
@@ -216,6 +228,38 @@ const settingsSlice = createSlice({
         payload,
         state.navBlocker.streamingType,
         state.navBlocker.isToolkitCreateMode,
+      );
+    },
+    setSkillEditingBlockNav: (state, { payload }) => {
+      state.navBlocker.isEditingSkill = payload;
+      state.navBlocker.warningMessage = getMessage(
+        state.navBlocker.isBlockNav,
+        state.navBlocker.isStreaming,
+        state.navBlocker.isEditingCanvas,
+        state.navBlocker.isEditingAgent,
+        state.navBlocker.isEditingToolkit,
+        state.navBlocker.isEditingPipeline,
+        state.navBlocker.isEditingArtifact,
+        state.navBlocker.streamingType,
+        state.navBlocker.isToolkitCreateMode,
+        payload,
+        state.navBlocker.isEditingProjectContext,
+      );
+    },
+    setProjectContextEditingBlockNav: (state, { payload }) => {
+      state.navBlocker.isEditingProjectContext = payload;
+      state.navBlocker.warningMessage = getMessage(
+        state.navBlocker.isBlockNav,
+        state.navBlocker.isStreaming,
+        state.navBlocker.isEditingCanvas,
+        state.navBlocker.isEditingAgent,
+        state.navBlocker.isEditingToolkit,
+        state.navBlocker.isEditingPipeline,
+        state.navBlocker.isEditingArtifact,
+        state.navBlocker.streamingType,
+        state.navBlocker.isToolkitCreateMode,
+        state.navBlocker.isEditingSkill,
+        payload,
       );
     },
     setToolkitCreateMode: (state, { payload }) => {

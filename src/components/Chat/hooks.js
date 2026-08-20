@@ -293,6 +293,7 @@ export const useChatSocket = ({
   onRcvAgentEvent,
   onInjectionReport,
   onInjectionConsumed,
+  onEntityCreated,
 }) => {
   const trackEvent = useTrackEvent();
 
@@ -322,6 +323,7 @@ export const useChatSocket = ({
   const onRcvAgentEventRef = useRef(onRcvAgentEvent);
   const onInjectionReportRef = useRef(onInjectionReport);
   const onInjectionConsumedRef = useRef(onInjectionConsumed);
+  const onEntityCreatedRef = useRef(onEntityCreated);
   const isMonoChattingRef = useRef(isMonoChatting);
   const setChatHistoryRef = useRef(setChatHistory);
   const setIsRunningRef = useRef(setIsRunning);
@@ -350,6 +352,10 @@ export const useChatSocket = ({
   useEffect(() => {
     onInjectionConsumedRef.current = onInjectionConsumed;
   }, [onInjectionConsumed]);
+
+  useEffect(() => {
+    onEntityCreatedRef.current = onEntityCreated;
+  }, [onEntityCreated]);
 
   useEffect(() => {
     activeParticipantRef.current = activeParticipant;
@@ -1627,6 +1633,14 @@ export const useChatSocket = ({
               status: ToolActionStatus.complete,
               ended_at: new Date().getTime(),
             });
+          }
+          break;
+        }
+        case SocketMessageType.AgentEntityCreated: {
+          const entityPayload = response_metadata || {};
+          if (entityPayload.entity_type && entityPayload.entity_name) {
+            msg.created_entities = [...(msg.created_entities || []), entityPayload];
+            onEntityCreatedRef.current?.(entityPayload);
           }
           break;
         }

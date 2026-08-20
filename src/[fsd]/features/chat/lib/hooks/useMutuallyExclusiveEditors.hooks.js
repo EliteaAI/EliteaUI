@@ -2,8 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 
 import useNavBlocker from '@/hooks/useNavBlocker';
 
-// --- Custom hook for mutual exclusivity between AgentEditor, ToolkitEditor, PipelineEditor, CanvasEditor, and ArtifactEditor ---
-export function useMutuallyExclusiveEditors({
+export const useMutuallyExclusiveEditors = ({
   //AgentEditor
   onShowAgentEditor,
   onCloseAgentEditor,
@@ -25,7 +24,16 @@ export function useMutuallyExclusiveEditors({
   onShowToolkitEditorCreator,
   // Pipeline creation
   onShowPipelineEditorCreator,
-}) {
+  //SkillEditor
+  onShowSkillEditor,
+  onCloseSkillEditor,
+  //ProjectContextEditor
+  onShowProjectContextEditor,
+  onCloseProjectContextEditor,
+  // Generated entities tab panel (local state, not Redux)
+  isEditingGeneratedEntities = false,
+  onCloseGeneratedEntitiesPanel,
+}) => {
   const [openEditingAlert, setEditingAlert] = useState(false);
   const [newEditingBlockInfo, setNewEditingBlockInfo] = useState();
   const {
@@ -34,6 +42,8 @@ export function useMutuallyExclusiveEditors({
     isEditingToolkit,
     isEditingPipeline,
     isEditingArtifact,
+    isEditingSkill,
+    isEditingProjectContext,
     isAnyEditorOpen,
   } = useNavBlocker();
 
@@ -55,9 +65,27 @@ export function useMutuallyExclusiveEditors({
       isEditingArtifact: () => {
         onCloseArtifactEditor();
       },
+      isEditingSkill: () => {
+        onCloseSkillEditor();
+      },
+      isEditingProjectContext: () => {
+        onCloseProjectContextEditor();
+      },
+      isEditingGeneratedEntities: () => {
+        onCloseGeneratedEntitiesPanel?.();
+      },
       unknown: null,
     }),
-    [canvasEditorRef, onCloseAgentEditor, onCloseToolkitEditor, onClosePipelineEditor, onCloseArtifactEditor],
+    [
+      canvasEditorRef,
+      onCloseAgentEditor,
+      onCloseToolkitEditor,
+      onClosePipelineEditor,
+      onCloseArtifactEditor,
+      onCloseSkillEditor,
+      onCloseProjectContextEditor,
+      onCloseGeneratedEntitiesPanel,
+    ],
   );
 
   // Enhanced open handlers for new editing actions
@@ -87,6 +115,12 @@ export function useMutuallyExclusiveEditors({
       forArtifact: information => {
         onShowArtifactEditor(information);
       },
+      forSkill: information => {
+        onShowSkillEditor(information);
+      },
+      forProjectContext: information => {
+        onShowProjectContextEditor(information);
+      },
     }),
     [
       onShowAgentEditorCreator,
@@ -97,6 +131,8 @@ export function useMutuallyExclusiveEditors({
       onShowPipelineEditor,
       onShowPipelineEditorCreator,
       onShowArtifactEditor,
+      onShowSkillEditor,
+      onShowProjectContextEditor,
     ],
   );
 
@@ -107,15 +143,27 @@ export function useMutuallyExclusiveEditors({
     if (isEditingToolkit) return 'isEditingToolkit';
     if (isEditingPipeline) return 'isEditingPipeline';
     if (isEditingArtifact) return 'isEditingArtifact';
+    if (isEditingSkill) return 'isEditingSkill';
+    if (isEditingProjectContext) return 'isEditingProjectContext';
+    if (isEditingGeneratedEntities) return 'isEditingGeneratedEntities';
     return 'unknown';
-  }, [isEditingCanvas, isEditingAgent, isEditingToolkit, isEditingPipeline, isEditingArtifact]);
+  }, [
+    isEditingCanvas,
+    isEditingAgent,
+    isEditingToolkit,
+    isEditingPipeline,
+    isEditingArtifact,
+    isEditingSkill,
+    isEditingProjectContext,
+    isEditingGeneratedEntities,
+  ]);
 
   const onEditCanvas = useCallback(
     (
       message,
       { rawData, codeBlock, language, isBlock, startPos, endPos, canvasId, messageItemId, blockId, viewOnly },
     ) => {
-      if (isAnyEditorOpen) {
+      if (isAnyEditorOpen || isEditingGeneratedEntities) {
         setEditingAlert(true);
         setNewEditingBlockInfo({
           forCanvas: true,
@@ -149,7 +197,7 @@ export function useMutuallyExclusiveEditors({
         });
       }
     },
-    [isAnyEditorOpen, onShowCanvasEditor],
+    [isAnyEditorOpen, isEditingGeneratedEntities, onShowCanvasEditor],
   );
 
   const onCloseEditorAlert = useCallback(() => {
@@ -159,14 +207,14 @@ export function useMutuallyExclusiveEditors({
 
   const onEditToolkit = useCallback(
     theSelectedParticipant => {
-      if (isAnyEditorOpen) {
+      if (isAnyEditorOpen || isEditingGeneratedEntities) {
         setEditingAlert(true);
         setNewEditingBlockInfo({ forToolkit: true, information: theSelectedParticipant });
       } else {
         onShowToolkitEditor(theSelectedParticipant);
       }
     },
-    [isAnyEditorOpen, onShowToolkitEditor],
+    [isAnyEditorOpen, isEditingGeneratedEntities, onShowToolkitEditor],
   );
 
   const onConfirmCloseEditor = useCallback(() => {
@@ -190,80 +238,95 @@ export function useMutuallyExclusiveEditors({
 
   const onEditAgent = useCallback(
     theSelectedParticipant => {
-      if (isAnyEditorOpen) {
+      if (isAnyEditorOpen || isEditingGeneratedEntities) {
         setEditingAlert(true);
         setNewEditingBlockInfo({ forAgent: true, information: theSelectedParticipant });
       } else {
         onShowAgentEditor(theSelectedParticipant);
       }
     },
-    [isAnyEditorOpen, onShowAgentEditor],
+    [isAnyEditorOpen, isEditingGeneratedEntities, onShowAgentEditor],
   );
 
   // Direct agent creation that checks for editor conflicts
   const onCreateAgent = useCallback(() => {
-    // Check if any editor is currently open
-    if (isAnyEditorOpen) {
-      // Show warning dialog
+    if (isAnyEditorOpen || isEditingGeneratedEntities) {
       setEditingAlert(true);
       setNewEditingBlockInfo({ forAgentCreation: true });
     } else {
-      // No editors open, proceed directly with agent creation
       onShowAgentEditorCreator();
     }
-  }, [isAnyEditorOpen, onShowAgentEditorCreator]);
+  }, [isAnyEditorOpen, isEditingGeneratedEntities, onShowAgentEditorCreator]);
 
   // Direct toolkit creation that checks for editor conflicts
   const onCreateToolkit = useCallback(
     (isMCP = false) => {
-      // Check if any editor is currently open
-      if (isAnyEditorOpen) {
-        // Show warning dialog
+      if (isAnyEditorOpen || isEditingGeneratedEntities) {
         setEditingAlert(true);
         setNewEditingBlockInfo({ forToolkitCreation: true, information: { isMCP } });
       } else {
-        // No editors open, proceed directly with toolkit creation
         onShowToolkitEditorCreator(isMCP);
       }
     },
-    [isAnyEditorOpen, onShowToolkitEditorCreator],
+    [isAnyEditorOpen, isEditingGeneratedEntities, onShowToolkitEditorCreator],
   );
 
   const onEditPipeline = useCallback(
     theSelectedParticipant => {
-      if (isAnyEditorOpen) {
+      if (isAnyEditorOpen || isEditingGeneratedEntities) {
         setEditingAlert(true);
         setNewEditingBlockInfo({ forPipeline: true, information: theSelectedParticipant });
       } else {
         onShowPipelineEditor(theSelectedParticipant);
       }
     },
-    [isAnyEditorOpen, onShowPipelineEditor],
+    [isAnyEditorOpen, isEditingGeneratedEntities, onShowPipelineEditor],
   );
 
   // Direct pipeline creation that checks for editor conflicts
   const onCreatePipeline = useCallback(() => {
-    // Check if any editor is currently open
-    if (isAnyEditorOpen) {
-      // Show warning dialog
+    if (isAnyEditorOpen || isEditingGeneratedEntities) {
       setEditingAlert(true);
       setNewEditingBlockInfo({ forPipelineCreation: true });
     } else {
-      // No editors open, proceed directly with pipeline creation
       onShowPipelineEditorCreator();
     }
-  }, [isAnyEditorOpen, onShowPipelineEditorCreator]);
+  }, [isAnyEditorOpen, isEditingGeneratedEntities, onShowPipelineEditorCreator]);
 
   const onEditArtifact = useCallback(
     artifactData => {
-      if (isAnyEditorOpen) {
+      if (isAnyEditorOpen || isEditingGeneratedEntities) {
         setEditingAlert(true);
         setNewEditingBlockInfo({ forArtifact: true, information: artifactData });
       } else {
         onShowArtifactEditor(artifactData);
       }
     },
-    [isAnyEditorOpen, onShowArtifactEditor],
+    [isAnyEditorOpen, isEditingGeneratedEntities, onShowArtifactEditor],
+  );
+
+  const onEditSkill = useCallback(
+    theSelectedSkill => {
+      if (isAnyEditorOpen || isEditingGeneratedEntities) {
+        setEditingAlert(true);
+        setNewEditingBlockInfo({ forSkill: true, information: theSelectedSkill });
+      } else {
+        onShowSkillEditor(theSelectedSkill);
+      }
+    },
+    [isAnyEditorOpen, isEditingGeneratedEntities, onShowSkillEditor],
+  );
+
+  const onEditProjectContext = useCallback(
+    theSelectedProjectContext => {
+      if (isAnyEditorOpen || isEditingGeneratedEntities) {
+        setEditingAlert(true);
+        setNewEditingBlockInfo({ forProjectContext: true, information: theSelectedProjectContext });
+      } else {
+        onShowProjectContextEditor(theSelectedProjectContext);
+      }
+    },
+    [isAnyEditorOpen, isEditingGeneratedEntities, onShowProjectContextEditor],
   );
 
   return {
@@ -275,11 +338,10 @@ export function useMutuallyExclusiveEditors({
     onEditToolkit,
     onEditPipeline,
     onEditArtifact,
-    // Agent creation functionality
     onCreateAgent,
-    // Toolkit creation functionality
     onCreateToolkit,
-    // Pipeline creation functionality
     onCreatePipeline,
+    onEditSkill,
+    onEditProjectContext,
   };
-}
+};

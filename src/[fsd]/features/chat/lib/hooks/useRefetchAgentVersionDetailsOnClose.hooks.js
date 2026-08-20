@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { actions } from '@/slices/applications';
 
-const useRefetchAgentVersionDetailsOnClose = ({ refetchVersionDetails }) => {
+export const useRefetchAgentVersionDetailsOnClose = ({ refetchVersionDetails }) => {
   const dispatch = useDispatch();
   const { shouldRefetchDetails } = useSelector(state => state.applications);
 
@@ -17,5 +17,3 @@ const useRefetchAgentVersionDetailsOnClose = ({ refetchVersionDetails }) => {
 
   return { refetchAgentVersionDetailsOnClose };
 };
-
-export default useRefetchAgentVersionDetailsOnClose;

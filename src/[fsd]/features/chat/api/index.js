@@ -34,6 +34,7 @@ export {
   useSetAttachmentStorageMutation,
   useUploadAttachmentsMutation,
   useRemoveAttachmentsMutation,
+  useUpdateMessageMetaMutation,
   TAG_TYPE_CONVERSATION_DETAILS,
 } from './chat.api';
 

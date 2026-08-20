@@ -5,6 +5,8 @@ import { Box, Typography } from '@mui/material';
 import { useTrackEvent } from '@/GA';
 import { useCredentialWarning } from '@/[fsd]/entities/credential-warning/hooks';
 import { CredentialWarningModal } from '@/[fsd]/entities/credential-warning/ui';
+import BaseEditor from '@/[fsd]/features/chat/ui/editors/BaseEditor.jsx';
+import CreateToolkitButton from '@/[fsd]/features/chat/ui/editors/CreateToolkitButton.jsx';
 import { usePublicProjectAccessCheck } from '@/[fsd]/features/project/lib/hooks';
 // TODO: DELETE after migration period (Q1 2026) - Legacy OpenAPI toolkit migration
 import { LegacyOpenApiMigration } from '@/[fsd]/features/toolkits/lib/helpers';
@@ -14,8 +16,6 @@ import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/an
 import { useToolkitsDetailsQuery } from '@/api/toolkits';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import BaseEditor from '@/pages/NewChat/components/BaseEditor.jsx';
-import CreateToolkitButton from '@/pages/NewChat/components/CreateToolkitButton.jsx';
 import SaveToolkitButton from '@/pages/Toolkits/SaveToolkitButton.jsx';
 import ToolkitTypeSelector from '@/pages/Toolkits/ToolkitTypeSelector';
 import { formatTitleFromSnakeCase } from '@/utils/stringUtils';

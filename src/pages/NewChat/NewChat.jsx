@@ -8,7 +8,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { Box, CircularProgress, Grid, useTheme } from '@mui/material';
 
 import { useEditingArtifactsNavBlocker } from '@/[fsd]/features/artifacts/lib/hooks/useEditingArtifactsNavBlocker.hooks';
-import { FilePreviewCanvas } from '@/[fsd]/features/artifacts/ui';
 import { redistributeConversationsIntoGroups } from '@/[fsd]/features/chat/conversation-list/lib/helpers';
 import {
   useCreateFolder,
@@ -20,12 +19,11 @@ import {
 } from '@/[fsd]/features/chat/conversation-list/lib/hooks';
 import { Conversations } from '@/[fsd]/features/chat/conversation-list/ui';
 import {
-  useAttachmentToolChange,
   useConversationNavigation,
-  useConversationStarters,
   useEditConversation,
   useInternalToolsConfig,
 } from '@/[fsd]/features/chat/lib/hooks';
+import { useChatEditors } from '@/[fsd]/features/chat/lib/hooks/useChatEditors.hooks';
 import {
   canParticipantBeActiveInChat,
   getChatParticipantUniqueId,
@@ -37,6 +35,7 @@ import {
 import { ParticipantsWrapper } from '@/[fsd]/features/chat/participants/ui';
 import { ChatBox } from '@/[fsd]/features/chat/ui';
 import { AddNewUserModal } from '@/[fsd]/features/chat/ui/chat-modal';
+import { ChatEditorPanel } from '@/[fsd]/features/chat/ui/editors';
 import { FIRST_ELITEA_TOUR_ID, useProposePendingTour } from '@/[fsd]/features/interactive-tours';
 import { ChunkHelpers } from '@/[fsd]/shared/lib/helpers';
 import { eliteaApi } from '@/api/eliteaApi';
@@ -61,8 +60,6 @@ import {
   useChatParticipantUpdateSocket,
 } from '@/components/Chat/hooks';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
-import useAgentCreation from '@/hooks/chat/useAgentCreation';
-import { useAgentEditorUrlSync } from '@/hooks/chat/useAgentEditorUrlSync';
 import useAttachments from '@/hooks/chat/useAttachments';
 import useChangeParticipantSettings from '@/hooks/chat/useChangeParticipantSettings';
 import useChatCanvasContentChange from '@/hooks/chat/useChatCanvasContentChange';
@@ -74,22 +71,16 @@ import useDeleteAllMessageFromConversation from '@/hooks/chat/useDeleteAllMessag
 import useDeleteConversation from '@/hooks/chat/useDeleteConversation';
 import useDeleteMessageFromConversation from '@/hooks/chat/useDeleteMessageFromConversation';
 import useDeleteParticipant from '@/hooks/chat/useDeleteParticipant';
-import useEditAgent from '@/hooks/chat/useEditAgent';
 import useEditCanvas from '@/hooks/chat/useEditCanvas';
 import useEditFolder from '@/hooks/chat/useEditFolder.js';
-import useEditPipeline from '@/hooks/chat/useEditPipeline';
-import useEditToolkit from '@/hooks/chat/useEditToolkit';
 import useEditingCanvasNavBlocker from '@/hooks/chat/useEditingCanvasNavBlocker';
 import useLocalActiveParticipant from '@/hooks/chat/useLocalActiveParticipant';
-import { useMutuallyExclusiveEditors } from '@/hooks/chat/useMutuallyExclusiveEditors';
-import usePipelineCreation from '@/hooks/chat/usePipelineCreation';
 import usePlaybackConversation from '@/hooks/chat/usePlaybackConversation';
 import useRemoteParticipantUpdate from '@/hooks/chat/useRemoteParticipantUpdate';
 import useReorderFolders from '@/hooks/chat/useReorderFolders.js';
 import useSelectConversation from '@/hooks/chat/useSelectConversation';
 import useStreamingNavBlocker from '@/hooks/chat/useStreamingNavBlocker';
 import useSynChatMessage from '@/hooks/chat/useSyncChatMessage';
-import useToolkitCreation from '@/hooks/chat/useToolkitCreation';
 import useUploadAttachments from '@/hooks/chat/useUploadAttachments';
 import useGetWindowWidth from '@/hooks/useGetWindowWidth';
 import { useIsCreatingConversation } from '@/hooks/useIsFromSpecificPageHooks';
@@ -101,11 +92,9 @@ import NewConversationView from '@/pages/NewChat/NewConversationView';
 import { actions as chatActions } from '@/slices/chat';
 import { actions } from '@/slices/settings';
 
-const AgentEditor = ChunkHelpers.lazyWithRetry(() => import('@/pages/NewChat/AgentEditor'));
-const CanvasEditor = ChunkHelpers.lazyWithRetry(() => import('@/pages/NewChat/CanvasEditor'));
-const PipelineEditor = ChunkHelpers.lazyWithRetry(() => import('@/pages/NewChat/PipelineEditor'));
-const PlaybackChatBox = ChunkHelpers.lazyWithRetry(() => import('@/pages/NewChat/PlaybackChatBox'));
-const ToolkitEditor = ChunkHelpers.lazyWithRetry(() => import('@/pages/NewChat/ToolkitEditor'));
+const PlaybackChatBox = ChunkHelpers.lazyWithRetry(
+  () => import('@/[fsd]/features/chat/ui/playback/PlaybackChatBox'),
+);
 
 const TAG_TYPE_FOLDERS = 'TAG_TYPE_FOLDERS';
 
@@ -116,9 +105,9 @@ const NewChat = props => {
 
   const dispatch = useDispatch();
 
-  // For syncing AgentEditor state with URL
   const boxRef = useRef();
   const newConversationViewRef = useRef();
+  const pipelineEditorRef = useRef();
 
   const { toastError, toastInfo, toastSuccess } = useToast({ topPosition: '.625rem' });
 
@@ -128,7 +117,6 @@ const NewChat = props => {
 
   const { isAnyEditorOpen } = useNavBlocker();
 
-  // State variables
   const [activeConversation, setActiveConversation] = useState(dummyConversation);
   const [dateGroups, setDateGroups] = useState([]);
   const [pinnedConversations, setPinnedConversations] = useState([]);
@@ -172,11 +160,6 @@ const NewChat = props => {
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [newConversationQuestion, setNewConversationQuestion] = useState('');
 
-  // Track dirty state for both agent and pipeline editors
-  const [editorIsDirty, setEditorIsDirty] = useState(false);
-  const [showVersionChangeAlert, setShowVersionChangeAlert] = useState(false);
-  const [pendingVersionChangeCallback, setPendingVersionChangeCallback] = useState(null);
-
   const { windowWidth } = useGetWindowWidth();
   const { isSmallWindow } = useIsSmallWindow();
 
@@ -200,7 +183,6 @@ const NewChat = props => {
     const folderConversationsCount = (Array.isArray(folders) ? folders : []).reduce((acc, folder) => {
       return acc + (folder.total || folder.conversations?.length || 0);
     }, 0);
-
     return ungroupedConversationsCount + folderConversationsCount;
   }, [ungroupedConversationsCount, folders]);
 
@@ -215,49 +197,6 @@ const NewChat = props => {
     toastError,
   });
 
-  const {
-    isEditingAgent,
-    editingAgent,
-    isCreateMode,
-    onShowAgentEditor,
-    onShowAgentEditorCreator,
-    onAgentEditorCreated,
-    onCloseAgentEditor,
-    handleAgentSaved,
-  } = useEditAgent({ activeParticipant, setActiveParticipant, onChangeParticipantSettings });
-
-  const {
-    isEditingToolkit,
-    editingToolkit,
-    isToolkitCreateMode,
-    onShowToolkitEditor,
-    onCloseToolkitEditor,
-    onToolkitEditorCreated,
-    onShowToolkitEditorCreator,
-  } = useEditToolkit();
-
-  const {
-    isEditingPipeline,
-    editingPipeline,
-    isPipelineCreateMode,
-    onShowPipelineEditor,
-    onClosePipelineEditor,
-    onPipelineEditorCreated,
-    onShowPipelineEditorCreator,
-    sizes: pipelineSizes,
-    onDragEnd: pipelineOnDragEnd,
-    gutterStyle: pipelineGutterStyle,
-  } = useEditPipeline();
-
-  // --- AgentEditor URL sync logic moved to custom hook ---
-  const { markAgentEditorClosed, markPipelineEditorClosed } = useAgentEditorUrlSync({
-    editingAgent,
-    editingPipeline,
-    onShowAgentEditor,
-    onShowPipelineEditor,
-    activeConversation,
-  });
-
   const { activeParticipantDetails, refetchParticipantDetails } = useActiveParticipantDetails({
     activeParticipant,
   });
@@ -269,84 +208,13 @@ const NewChat = props => {
     [activeParticipantDetails?.versions, activeParticipant?.entity_settings?.version_id],
   );
 
-  const { handleAttachmentToolChange } = useAttachmentToolChange({
-    activeParticipant,
-    refetchParticipantDetails,
+  const { addNewParticipants, addParticipantsToNewConversation } = useAddNewParticipants({
+    toastError,
+    activeConversation,
+    setActiveConversation,
+    setConversations,
+    newConversationViewRef,
   });
-
-  const {
-    displayedConversationStarters,
-    handleEditorConversationStartersChange,
-    resetEditorConversationStarters,
-  } = useConversationStarters({
-    activeParticipant,
-    activeParticipantDetails,
-    editingAgent,
-    editingPipeline,
-  });
-
-  // Wrap onCloseAgentEditor to mark explicit close
-  const handleCloseAgentEditor = useCallback(() => {
-    markAgentEditorClosed();
-    resetEditorConversationStarters();
-    onCloseAgentEditor();
-  }, [markAgentEditorClosed, onCloseAgentEditor, resetEditorConversationStarters]);
-
-  // Save per-conversation LLM override for a published public agent from the AgentEditor panel
-  const handleConversationLlmOverride = useCallback(
-    llmSettings => {
-      if (!editingAgent) return;
-      const updatedParticipant = {
-        ...editingAgent,
-        entity_settings: {
-          ...(editingAgent.entity_settings || {}),
-          llm_settings: llmSettings ?? undefined,
-        },
-      };
-      onChangeParticipantSettings(updatedParticipant, true);
-    },
-    [editingAgent, onChangeParticipantSettings],
-  );
-
-  // Wrap onClosePipelineEditor to mark explicit close
-  const handleClosePipelineEditor = useCallback(() => {
-    markPipelineEditorClosed();
-    resetEditorConversationStarters();
-    onClosePipelineEditor();
-  }, [markPipelineEditorClosed, onClosePipelineEditor, resetEditorConversationStarters]);
-
-  // Handle dirty state changes for both agent and pipeline editors
-  const handleEditorDirtyStateChange = useCallback(isDirty => {
-    setEditorIsDirty(isDirty);
-  }, []);
-
-  const handleShowVersionChangeAlert = useCallback(onConfirmCallback => {
-    setPendingVersionChangeCallback(() => onConfirmCallback);
-    setShowVersionChangeAlert(true);
-  }, []);
-
-  const handleVersionChangeConfirm = useCallback(() => {
-    // Close whichever editor is currently open
-    if (isEditingAgent) handleCloseAgentEditor();
-    if (isEditingPipeline) handleClosePipelineEditor();
-
-    if (pendingVersionChangeCallback) pendingVersionChangeCallback();
-
-    setShowVersionChangeAlert(false);
-    setPendingVersionChangeCallback(null);
-    setEditorIsDirty(false);
-  }, [
-    isEditingAgent,
-    isEditingPipeline,
-    handleCloseAgentEditor,
-    handleClosePipelineEditor,
-    pendingVersionChangeCallback,
-  ]);
-
-  const handleVersionChangeCancel = useCallback(() => {
-    setShowVersionChangeAlert(false);
-    setPendingVersionChangeCallback(null);
-  }, []);
 
   const playbackChatBoxRef = useRef();
 
@@ -393,13 +261,8 @@ const NewChat = props => {
   const { emit: emitEnterRoom } = useManualSocket(sioEvents.chat_enter_room);
   const { emit: emitLeaveRoom } = useManualSocket(sioEvents.chat_leave_rooms);
 
-  useChatMessageDeleteSocket({
-    onRemoteDeleteMessage,
-  });
-
-  useChatMessageDeleteAllSocket({
-    onRemoteDeleteAllMessages,
-  });
+  useChatMessageDeleteSocket({ onRemoteDeleteMessage });
+  useChatMessageDeleteAllSocket({ onRemoteDeleteAllMessages });
 
   const { onDeleteParticipant, onRemoteDeleteParticipant } = useDeleteParticipant({
     setActiveConversation,
@@ -411,9 +274,7 @@ const NewChat = props => {
     newConversationViewRef,
   });
 
-  useChatParticipantDeleteSocket({
-    onRemoteDeleteParticipant,
-  });
+  useChatParticipantDeleteSocket({ onRemoteDeleteParticipant });
 
   const { onRemoteUpdateParticipant } = useRemoteParticipantUpdate({
     setActiveConversation,
@@ -425,20 +286,12 @@ const NewChat = props => {
 
   useChatParticipantUpdateSocket({ onRemoteUpdateParticipant });
 
-  // Handle conversation name auto-update
   const onRemoteUpdateConversationName = useCallback(
     data => {
-      // Update active conversation if it matches
       if (activeConversation?.uuid === data.conversation_uuid) {
         changeUrlByConversation(data.conversation_id, data.name);
-        setActiveConversation(prev => ({
-          ...prev,
-          name: data.name,
-          isNamingPending: false,
-        }));
+        setActiveConversation(prev => ({ ...prev, name: data.name, isNamingPending: false }));
       }
-
-      // Update conversation in the conversations list
       setConversations(prev =>
         prev.map(conversation =>
           conversation.uuid === data.conversation_uuid
@@ -446,8 +299,6 @@ const NewChat = props => {
             : conversation,
         ),
       );
-
-      // Update conversation in folders as well
       setFolders(prev =>
         prev.map(folder => ({
           ...folder,
@@ -458,7 +309,6 @@ const NewChat = props => {
           ),
         })),
       );
-
       dispatch(eliteaApi.util.invalidateTags([TAG_TYPE_FOLDERS]));
     },
     [activeConversation?.uuid, changeUrlByConversation, dispatch, setConversations],
@@ -479,23 +329,19 @@ const NewChat = props => {
   const onClearActiveParticipant = useCallback(
     restorePrevActiveParticipant => {
       setActiveParticipant(undefined);
-
       if (restorePrevActiveParticipant) {
         const localActiveParticipant = getLocalActiveParticipant(activeConversation.id);
         const foundParticipant = activeConversation.participants.find(
           item => getChatParticipantUniqueId(item) == localActiveParticipant.participantId,
         );
-
         if (foundParticipant) {
           setActiveParticipant(foundParticipant);
           return;
         }
-
         setActiveParticipant(undefined);
         clearLocalActiveParticipant(activeConversation?.id);
         return;
       }
-
       clearLocalActiveParticipant(activeConversation?.id);
     },
     [
@@ -550,19 +396,10 @@ const NewChat = props => {
     stopListenCanvasContentChangeEvent,
   });
 
-  const { addNewParticipants, addParticipantsToNewConversation } = useAddNewParticipants({
-    toastError,
-    activeConversation,
-    setActiveConversation,
-    setConversations,
-    newConversationViewRef,
-  });
-
   const doAddNewUsers = useCallback(
     participants => {
       setShowAddUserModal(false);
       addNewParticipants(participants);
-      // boxRef.current?.mentionUser?.(participants.map(user => `@${user.name}`).join(' '))
     },
     [addNewParticipants],
   );
@@ -570,51 +407,6 @@ const NewChat = props => {
   const onAddNewUsers = useCallback(() => {
     setShowAddUserModal(true);
   }, []);
-
-  const onSelectParticipant = useCallback(
-    (participant, shouldMentionUser = true) => {
-      // If AgentEditor is open, update it to show the new participant only if different
-      if (isEditingAgent) return;
-
-      if (participant?.entity_name === ChatParticipantType.Users) {
-        const mentionTarget =
-          activeConversation?.isNew || !activeConversation?.id
-            ? newConversationViewRef.current
-            : boxRef.current;
-        shouldMentionUser && mentionTarget?.mentionUser?.(`@${participant.meta.user_name} `);
-        return;
-      } else if (participant === 'All users') {
-        const mentionTarget =
-          activeConversation?.isNew || !activeConversation?.id
-            ? newConversationViewRef.current
-            : boxRef.current;
-        shouldMentionUser && mentionTarget?.selectEveryoneMention?.();
-        return;
-      }
-
-      if (!activeConversation?.isNew && activeConversation?.id) {
-        setActiveParticipant(participant);
-        if (participant) {
-          if (participant?.entity_name !== ChatParticipantType.Users) {
-            // Use unique ID to distinguish between public and custom entities with same ID
-            const uniqueId = getChatParticipantUniqueId(participant);
-            setLocalActiveParticipant(activeConversation?.id, uniqueId);
-          }
-        } else {
-          clearLocalActiveParticipant(activeConversation?.id);
-        }
-      } else {
-        newConversationViewRef.current?.onSelectParticipant(participant);
-      }
-    },
-    [
-      activeConversation?.isNew,
-      activeConversation?.id,
-      isEditingAgent,
-      setLocalActiveParticipant,
-      clearLocalActiveParticipant,
-    ],
-  );
 
   const { onSelectConversation, isLoadingConversation, isSelectingConversation } = useSelectConversation({
     activeConversation,
@@ -636,12 +428,10 @@ const NewChat = props => {
   const handleNotFoundAcknowledge = useCallback(() => {
     setConversationNotFound(false);
     clearUrlConversation();
-
     const pinnedList = pinnedConversations || [];
     const dateGroupList = dateGroups?.flatMap(g => g.conversations) || [];
     const folderList = folders?.flatMap(f => f.conversations) || [];
     const firstAvailable = [...pinnedList, ...dateGroupList, ...folderList][0];
-
     if (firstAvailable) onSelectConversation(firstAvailable);
   }, [clearUrlConversation, pinnedConversations, dateGroups, folders, onSelectConversation]);
 
@@ -700,81 +490,81 @@ const NewChat = props => {
     setArtifactEditingBlockNav(false);
   }, [setPreviewingArtifact, setArtifactEditingBlockNav]);
 
-  // Ensure AgentEditor, ToolkitEditor, PipelineEditor, CanvasEditor, and ArtifactEditor are mutually exclusive
+  // All editing concerns extracted into a single hook
+  const editors = useChatEditors({
+    projectId,
+    activeParticipant,
+    setActiveParticipant,
+    activeParticipantDetails,
+    activeConversation,
+    onChangeParticipantSettings,
+    addNewParticipants,
+    onShowCanvasEditor,
+    canvasEditorRef,
+    onShowArtifactEditor,
+    onCloseArtifactEditor,
+    refetchParticipantDetails,
+    activeVersionName,
+    getChatParticipantUniqueId,
+    setLocalActiveParticipant,
+  });
+
   const {
-    openEditingAlert,
-    onCloseEditorAlert,
-    onConfirmCloseEditor,
-    onEditCanvas,
     onEditAgent,
     onEditToolkit,
     onEditPipeline,
+    onEditSkill,
+    onEditProjectContext,
+    onEditCanvas,
     onEditArtifact,
     onCreateAgent,
     onCreatePipeline,
     onCreateToolkit,
-  } = useMutuallyExclusiveEditors({
-    //AgentEditor
-    onCloseAgentEditor: handleCloseAgentEditor,
-    onShowAgentEditor,
-    //ToolkitEditor
-    onShowToolkitEditor,
+    handleCloseAgentEditor,
+    handleClosePipelineEditor,
     onCloseToolkitEditor,
-    //PipelineEditor
-    onShowPipelineEditor,
-    onClosePipelineEditor,
-    //CanvasEditor
-    onShowCanvasEditor,
-    canvasEditorRef,
-    //ArtifactEditor
-    onShowArtifactEditor,
-    onCloseArtifactEditor,
-    // Agent creation
-    onShowAgentEditorCreator,
-    // Toolkit creation
-    onShowToolkitEditorCreator,
-    // Pipeline creation
-    onShowPipelineEditorCreator,
-  });
-
-  // Agent creation workflow hook
-  const { onAgentCreated } = useAgentCreation({
-    // Agent editor functions
-    onAgentEditorCreated,
-
-    // Participant management
-    addNewParticipants,
-    onSetActiveParticipant: participant => {
-      setActiveParticipant(participant);
-      if (activeConversation?.id) {
-        setLocalActiveParticipant(activeConversation.id, getChatParticipantUniqueId(participant));
-      }
-    },
-  });
-
-  // Toolkit creation workflow hook
-  const { onToolkitCreated } = useToolkitCreation({
-    // Toolkit editor functions
-    onToolkitEditorCreated,
-
-    // Participant management
-    addNewParticipants,
-  });
-
-  // Pipeline creation workflow hook
-  const { onPipelineCreated } = usePipelineCreation({
-    // Pipeline editor functions
-    onPipelineEditorCreated,
-
-    // Participant management
-    addNewParticipants,
-    onSetActiveParticipant: participant => {
-      setActiveParticipant(participant);
-      if (activeConversation?.id) {
-        setLocalActiveParticipant(activeConversation.id, getChatParticipantUniqueId(participant));
-      }
-    },
-  });
+    onCloseSkillEditor,
+    onCloseProjectContextEditor,
+    isEditingAgent,
+    isEditingToolkit,
+    isEditingPipeline,
+    isEditingSkill,
+    isEditingProjectContext,
+    isCreateMode,
+    isPipelineCreateMode,
+    editingAgent,
+    editingToolkit,
+    editingPipeline,
+    editingSkill,
+    pipelineSizes,
+    pipelineOnDragEnd,
+    pipelineGutterStyle,
+    onAgentCreated,
+    onPipelineCreated,
+    onToolkitCreated,
+    handleAgentSaved,
+    handleEditorDirtyStateChange,
+    handleShowVersionChangeAlert,
+    handleAttachmentToolChange,
+    handleEditorConversationStartersChange,
+    handleConversationLlmOverride,
+    openEditingAlert,
+    onCloseEditorAlert,
+    onConfirmCloseEditor,
+    showVersionChangeAlert,
+    handleVersionChangeConfirm,
+    handleVersionChangeCancel,
+    editorIsDirty,
+    displayedConversationStarters,
+    generatedEditorTabs,
+    activeGeneratedTabIndex,
+    setActiveGeneratedTabIndex,
+    isEditingGeneratedEntities,
+    onGeneratedEntityCreated,
+    handleCloseGeneratedTab,
+    isEditorOpen,
+    isAnyEditorPanelOpen,
+  } = editors;
 
   const { onRemoteChatMessageSync } = useSynChatMessage({
     activeConversation,
@@ -784,9 +574,50 @@ const NewChat = props => {
     setSelectedCodeBlockInfo,
   });
 
-  useChatMessageSyncSocket({
-    onRemoteChatMessageSync,
-  });
+  useChatMessageSyncSocket({ onRemoteChatMessageSync });
+
+  const onSelectParticipant = useCallback(
+    (participant, shouldMentionUser = true) => {
+      if (isEditingAgent) return;
+
+      if (participant?.entity_name === ChatParticipantType.Users) {
+        const mentionTarget =
+          activeConversation?.isNew || !activeConversation?.id
+            ? newConversationViewRef.current
+            : boxRef.current;
+        shouldMentionUser && mentionTarget?.mentionUser?.(`@${participant.meta.user_name} `);
+        return;
+      } else if (participant === 'All users') {
+        const mentionTarget =
+          activeConversation?.isNew || !activeConversation?.id
+            ? newConversationViewRef.current
+            : boxRef.current;
+        shouldMentionUser && mentionTarget?.selectEveryoneMention?.();
+        return;
+      }
+
+      if (!activeConversation?.isNew && activeConversation?.id) {
+        setActiveParticipant(participant);
+        if (participant) {
+          if (participant?.entity_name !== ChatParticipantType.Users) {
+            const uniqueId = getChatParticipantUniqueId(participant);
+            setLocalActiveParticipant(activeConversation?.id, uniqueId);
+          }
+        } else {
+          clearLocalActiveParticipant(activeConversation?.id);
+        }
+      } else {
+        newConversationViewRef.current?.onSelectParticipant(participant);
+      }
+    },
+    [
+      activeConversation?.isNew,
+      activeConversation?.id,
+      isEditingAgent,
+      setLocalActiveParticipant,
+      clearLocalActiveParticipant,
+    ],
+  );
 
   const onSelectThisParticipant = useCallback(
     selectedParticipant => {
@@ -805,11 +636,9 @@ const NewChat = props => {
           }
         });
       } else {
-        // Only set as active participant if it's allowed to be active in chat (excludes toolkits)
         if (canParticipantBeActiveInChat(foundParticipant || selectedParticipant)) {
           onSelectParticipant(foundParticipant, false);
         }
-        // For toolkits, we just add them to the conversation but don't set them as active
       }
     },
     [activeConversation, addNewParticipants, onSelectParticipant],
@@ -825,7 +654,6 @@ const NewChat = props => {
     if (isEditingPipeline) return 'pipeline';
     if (isEditingToolkit) return editingToolkit?.meta?.mcp ? 'mcp' : 'toolkit';
     if (isEditingArtifact) return 'artifact';
-
     return 'canvas';
   }, [
     editingToolkit?.meta?.mcp,
@@ -836,23 +664,9 @@ const NewChat = props => {
     selectedCodeBlockInfo,
   ]);
 
-  const isEditorOpen = useMemo(
-    () =>
-      !!(
-        selectedCodeBlockInfo ||
-        isEditingAgent ||
-        isEditingPipeline ||
-        (isEditingToolkit && !isToolkitCreateMode) ||
-        isEditingArtifact
-      ),
-    [
-      isEditingAgent,
-      isEditingArtifact,
-      isEditingPipeline,
-      isEditingToolkit,
-      isToolkitCreateMode,
-      selectedCodeBlockInfo,
-    ],
+  const isEditorOpenWithCanvas = useMemo(
+    () => !!(selectedCodeBlockInfo || isEditorOpen || isEditingArtifact),
+    [selectedCodeBlockInfo, isEditorOpen, isEditingArtifact],
   );
 
   const onCloseEditor = useCallback(() => {
@@ -861,6 +675,8 @@ const NewChat = props => {
     else if (isEditingPipeline) handleClosePipelineEditor();
     else if (isEditingToolkit) onCloseToolkitEditor();
     else if (isEditingArtifact) onCloseArtifactEditor();
+    else if (isEditingSkill) onCloseSkillEditor();
+    else if (isEditingProjectContext) onCloseProjectContextEditor();
     else onCloseCanvasEditor();
   }, [
     handleCloseAgentEditor,
@@ -869,9 +685,13 @@ const NewChat = props => {
     isEditingArtifact,
     isEditingPipeline,
     isEditingToolkit,
+    isEditingSkill,
+    isEditingProjectContext,
     onCloseArtifactEditor,
     onCloseCanvasEditor,
     onCloseToolkitEditor,
+    onCloseSkillEditor,
+    onCloseProjectContextEditor,
     selectedCodeBlockInfo,
   ]);
 
@@ -883,7 +703,7 @@ const NewChat = props => {
     onConfirmOperation,
   } = useCloseEditorAlert({
     editorType: detectedEditorType,
-    isEditorOpen,
+    isEditorOpen: isEditorOpenWithCanvas,
     onCloseEditor,
     onSelectParticipant,
     onSelectConversation,
@@ -892,9 +712,6 @@ const NewChat = props => {
     setIsStreaming,
     boxRef,
   });
-
-  // Pipeline run nodes editor ref and handlers
-  const pipelineEditorRef = useRef();
 
   const onStopRun = useCallback(isNode => {
     if (isNode) boxRef.current?.stopAll?.(true);
@@ -907,11 +724,11 @@ const NewChat = props => {
     pipelineEditorRef.current?.deleteAllRunNodes?.();
   }, []);
 
-  // Collapse tabs when any editor (CanvasEditor, AgentEditor, or ToolkitEditor) is open
+  const isAnyPanelOpen = isAnyEditorOpen || isAnyEditorPanelOpen;
   useEffect(() => {
-    if (isAnyEditorOpen) setCollapsedParticipants(isAnyEditorOpen);
-    setCollapsedConversations(isAnyEditorOpen);
-  }, [isAnyEditorOpen]);
+    if (isAnyPanelOpen) setCollapsedParticipants(isAnyPanelOpen);
+    setCollapsedConversations(isAnyPanelOpen);
+  }, [isAnyPanelOpen]);
 
   const [newConversationSelectedManager, setNewConversationSelectedManager] = useState(null);
 
@@ -936,7 +753,6 @@ const NewChat = props => {
     setActiveConversation,
   });
 
-  // Memoize functions that don't need to change frequently
   const stableCallbacks = useMemo(
     () => ({
       onChangeParticipantSettings,
@@ -994,7 +810,6 @@ const NewChat = props => {
     uploadProgress,
   } = useUploadAttachments();
 
-  // Create base settings without frequently changing props
   const baseSettings = useMemo(
     () => ({
       activeParticipant,
@@ -1045,28 +860,23 @@ const NewChat = props => {
     }
     if (isSelectingConversation || activeConversation?.id) return;
 
-    // If conversations are loaded, try to find the conversation in the list first
     if (isConversationsLoaded) {
       const folderConversations = folders?.map(folder => folder.conversations) || [];
       const conversationList = [...conversations, ...folderConversations.flat()];
       const conversationFromUrl = conversationList.find(
         conversation => conversation.id == conversationIdFromUrl,
       );
-
       if (conversationFromUrl) {
         setConversationNotFound(false);
         onSelectConversation(conversationFromUrl);
         return;
       }
-
-      // Conversations loaded but not found — check if we already tried
       if (hasAttemptedUrlConversationRef.current) {
         setConversationNotFound(true);
         return;
       }
     }
 
-    // Fire immediately with URL ID — don't wait for sidebar to load
     if (!hasAttemptedUrlConversationRef.current) {
       const numericId = parseInt(conversationIdFromUrl, 10);
       if (!isNaN(numericId)) {
@@ -1092,7 +902,6 @@ const NewChat = props => {
     if (isLoadMoreConversations) return true;
     if (!conversations?.length && !isConversationsLoaded) return true;
     if (conversations?.length && isConversationsLoaded && !activeConversation?.name) return true;
-
     return false;
   }, [
     isLoadMoreConversations,
@@ -1166,7 +975,6 @@ const NewChat = props => {
     emitLeaveRoom,
     stopListenCanvasEditorsChangeEvent,
     stopListenCanvasContentChangeEvent,
-    // Add missing parameters for conversation selection after deletion
     conversations,
     folders,
     onSelectConversation,
@@ -1188,17 +996,11 @@ const NewChat = props => {
   });
 
   const onChangeActiveConversationName = useCallback(newName => {
-    setActiveConversation(prev => ({
-      ...prev,
-      name: newName,
-    }));
+    setActiveConversation(prev => ({ ...prev, name: newName }));
   }, []);
 
   const onChangeActiveFolderName = useCallback(newName => {
-    setActiveFolder(prev => ({
-      ...prev,
-      name: newName,
-    }));
+    setActiveFolder(prev => ({ ...prev, name: newName }));
   }, []);
 
   const onClickCreateNewFolder = useCallback(() => {
@@ -1246,6 +1048,8 @@ const NewChat = props => {
       handleClosePipelineEditor();
       setSelectedCodeBlockInfo();
       onCloseArtifactEditor();
+      onCloseSkillEditor();
+      onCloseProjectContextEditor();
     },
     [
       activeConversation?.id,
@@ -1260,6 +1064,8 @@ const NewChat = props => {
       handleClosePipelineEditor,
       setSelectedCodeBlockInfo,
       onCloseArtifactEditor,
+      onCloseSkillEditor,
+      onCloseProjectContextEditor,
       emitLeaveRoom,
       stopListenCanvasEditorsChangeEvent,
       stopListenCanvasContentChangeEvent,
@@ -1276,9 +1082,7 @@ const NewChat = props => {
 
   useEffect(() => {
     if (isCreatingConversation && !activeConversation?.isNew) {
-      if (isStreaming) {
-        boxRef.current?.stopAll?.();
-      }
+      if (isStreaming) boxRef.current?.stopAll?.();
       const parentFolder = activeConversation?.folder_id
         ? folders.find(f => f.id === activeConversation.folder_id)
         : null;
@@ -1331,12 +1135,11 @@ const NewChat = props => {
   }, []);
 
   useEffect(() => {
-    if (isAnyEditorOpen) {
+    if (isAnyPanelOpen) {
       dispatch(actions.setSideBarCollapsed(true));
     }
-  }, [dispatch, isAnyEditorOpen]);
+  }, [dispatch, isAnyPanelOpen]);
 
-  // Show resize gutter for Canvas or Pipeline editors
   const showResizeGutter = !!(selectedCodeBlockInfo || isEditingPipeline || isEditingArtifact);
 
   const styles = chatStyles({
@@ -1347,17 +1150,13 @@ const NewChat = props => {
     leftPanelWidth,
     rightPanelWidth,
     showResizeGutter,
-    isAnyEditorOpen,
+    isAnyEditorOpen: isAnyPanelOpen,
   });
 
-  // Unified edit function that routes to the appropriate editor based on participant type
   const onEditParticipant = useCallback(
     participant => {
       if (!participant) return;
-
       const { entity_name } = participant;
-
-      // Route to the appropriate editor based on participant type
       if (entity_name === ChatParticipantType.Toolkits) {
         onEditToolkit(participant);
       } else if (
@@ -1474,18 +1273,9 @@ const NewChat = props => {
             direction={isSmallWindow ? 'vertical' : 'horizontal'}
             style={styles.splitWrapper}
             sizes={(() => {
-              // Use pipeline sizes when pipeline editor is open
-              if (isEditingPipeline) {
-                return pipelineSizes;
-              }
-              // Use canvas sizes when canvas is open
-              if (selectedCodeBlockInfo?.codeBlock) {
-                return sizes;
-              }
-              // Use 50/50 for other editors
-              if (isAnyEditorOpen) {
-                return [50, 50];
-              }
+              if (isEditingPipeline) return pipelineSizes;
+              if (selectedCodeBlockInfo?.codeBlock) return sizes;
+              if (isAnyPanelOpen) return [50, 50];
               return sizes;
             })()}
             minSize={28}
@@ -1536,6 +1326,9 @@ const NewChat = props => {
                 selectedCodeBlockInfo={selectedCodeBlockInfo}
                 onShowAgentEditor={onEditAgent}
                 onShowPipelineEditor={onEditPipeline}
+                onShowSkillEditor={onEditSkill}
+                onShowProjectContextEditor={onEditProjectContext}
+                onShowToolkitEditor={onEditToolkit}
                 onCloseAgentEditor={handleCloseAgentEditor}
                 onClosePipelineEditor={handleClosePipelineEditor}
                 isEditorDirty={editorIsDirty}
@@ -1545,6 +1338,7 @@ const NewChat = props => {
                 isUploadingAttachments={isUploadingAttachments}
                 uploadProgress={uploadProgress}
                 newConversationQuestion={newConversationQuestion}
+                onEntityCreated={onGeneratedEntityCreated}
                 {...baseSettings}
               />
               {isPlayback && (
@@ -1576,113 +1370,74 @@ const NewChat = props => {
             <Box
               sx={{
                 ...styles.splitChatWrapper,
-                display: isAnyEditorOpen ? 'block' : 'none',
+                display: isAnyPanelOpen ? 'block' : 'none',
                 position: 'relative',
-                paddingLeft: isAnyEditorOpen && !showResizeGutter ? '10px' : undefined,
+                paddingLeft: isAnyPanelOpen && !showResizeGutter ? '10px' : undefined,
               }}
             >
-              {isEditingAgent && (
-                <Suspense
-                  fallback={
-                    <Box sx={styles.loadingContainer}>
-                      <CircularProgress />
-                    </Box>
-                  }
-                >
-                  <AgentEditor
-                    agent={editingAgent}
-                    versionName={activeVersionName}
-                    onCloseAgentEditor={handleCloseAgentEditor}
-                    onAgentCreated={onAgentCreated}
-                    onAgentSaved={handleAgentSaved}
-                    onAttachmentToolChange={handleAttachmentToolChange}
-                    isVisible={isEditingAgent}
-                    isCreateMode={isCreateMode}
-                    onAgentDirtyStateChange={handleEditorDirtyStateChange}
-                    onConversationStartersChange={handleEditorConversationStartersChange}
-                    onConversationLlmOverride={handleConversationLlmOverride}
-                    activeAgentId={
-                      activeParticipant?.entity_name === ChatParticipantType.Applications
-                        ? activeParticipant.entity_meta?.id
-                        : undefined
-                    }
-                  />
-                </Suspense>
-              )}
-              {isEditingToolkit && (
-                <Suspense
-                  fallback={
-                    <Box sx={styles.loadingContainer}>
-                      <CircularProgress />
-                    </Box>
-                  }
-                >
-                  <ToolkitEditor
-                    toolkit={editingToolkit}
-                    onCloseToolkitEditor={onCloseToolkitEditor}
-                    onToolkitCreated={onToolkitCreated}
-                    onToolkitUpdated={onChangeParticipantSettings}
-                    isVisible={isEditingToolkit}
-                  />
-                </Suspense>
-              )}
-              {isEditingPipeline && (
-                <Suspense
-                  fallback={
-                    <Box sx={styles.loadingContainer}>
-                      <CircularProgress />
-                    </Box>
-                  }
-                >
-                  <PipelineEditor
-                    ref={pipelineEditorRef}
-                    pipeline={editingPipeline}
-                    onClosePipelineEditor={handleClosePipelineEditor}
-                    onPipelineCreated={onPipelineCreated}
-                    onPipelineSaved={onChangeParticipantSettings}
-                    isVisible={isEditingPipeline}
-                    isCreateMode={isPipelineCreateMode}
-                    onPipelineDirtyStateChange={handleEditorDirtyStateChange}
-                    onConversationStartersChange={handleEditorConversationStartersChange}
-                    activePipelineId={
-                      activeParticipant?.entity_name === ChatParticipantType.Pipelines ||
-                      activeParticipant?.entity_name === ChatParticipantType.Applications
-                        ? activeParticipant.entity_meta?.id
-                        : undefined
-                    }
-                    activeParticipantId={activeParticipant?.id}
-                    stopRunOnNodeStop={onStopRun}
-                    onAttachmentToolChange={handleAttachmentToolChange}
-                  />
-                </Suspense>
-              )}
-              {selectedCodeBlockInfo && (
-                <Suspense
-                  fallback={
-                    <Box sx={styles.loadingContainer}>
-                      <CircularProgress />
-                    </Box>
-                  }
-                >
-                  <CanvasEditor
-                    ref={canvasEditorRef}
-                    selectedCodeBlockInfo={selectedCodeBlockInfo}
-                    onCloseCanvasEditor={onCloseCanvasEditor}
-                    interaction_uuid={interaction_uuid}
-                    conversation_uuid={activeConversation.uuid}
-                    key={selectedCodeBlockInfo?.blockId}
-                  />
-                </Suspense>
-              )}
-              {previewingArtifact && (
-                <FilePreviewCanvas
-                  key={`${previewingArtifact.name}-${previewingArtifact.bucket}`}
-                  file={previewingArtifact}
-                  projectId={projectId}
-                  bucket={previewingArtifact.bucket}
-                  onClose={onCloseArtifactEditor}
-                />
-              )}
+              <ChatEditorPanel
+                // Agent
+                isEditingAgent={isEditingAgent}
+                editingAgent={editingAgent}
+                isCreateMode={isCreateMode}
+                onCloseAgentEditor={handleCloseAgentEditor}
+                onAgentCreated={onAgentCreated}
+                handleAgentSaved={handleAgentSaved}
+                handleAttachmentToolChange={handleAttachmentToolChange}
+                handleEditorDirtyStateChange={handleEditorDirtyStateChange}
+                handleEditorConversationStartersChange={handleEditorConversationStartersChange}
+                handleConversationLlmOverride={handleConversationLlmOverride}
+                activeVersionName={activeVersionName}
+                activeParticipant={activeParticipant}
+                // Toolkit
+                isEditingToolkit={isEditingToolkit}
+                editingToolkit={editingToolkit}
+                onCloseToolkitEditor={onCloseToolkitEditor}
+                onToolkitCreated={onToolkitCreated}
+                onChangeParticipantSettings={onChangeParticipantSettings}
+                // Pipeline
+                isEditingPipeline={isEditingPipeline}
+                editingPipeline={editingPipeline}
+                isPipelineCreateMode={isPipelineCreateMode}
+                pipelineEditorRef={pipelineEditorRef}
+                handleClosePipelineEditor={handleClosePipelineEditor}
+                onPipelineCreated={onPipelineCreated}
+                onStopRun={onStopRun}
+                // Canvas
+                selectedCodeBlockInfo={selectedCodeBlockInfo}
+                canvasEditorRef={canvasEditorRef}
+                onCloseCanvasEditor={onCloseCanvasEditor}
+                interaction_uuid={interaction_uuid}
+                conversation_uuid={activeConversation.uuid}
+                // Artifact
+                previewingArtifact={previewingArtifact}
+                projectId={projectId}
+                onCloseArtifactEditor={onCloseArtifactEditor}
+                // Skill
+                isEditingSkill={isEditingSkill}
+                editingSkill={editingSkill}
+                onCloseSkillEditor={onCloseSkillEditor}
+                // Project context
+                isEditingProjectContext={isEditingProjectContext}
+                onCloseProjectContextEditor={onCloseProjectContextEditor}
+                // Generated entities
+                isEditingGeneratedEntities={isEditingGeneratedEntities}
+                generatedEditorTabs={generatedEditorTabs}
+                activeGeneratedTabIndex={activeGeneratedTabIndex}
+                onTabChange={setActiveGeneratedTabIndex}
+                onCloseTab={handleCloseGeneratedTab}
+                // Alerts
+                openEditingAlert={openEditingAlert}
+                onCloseEditorAlert={onCloseEditorAlert}
+                onConfirmCloseEditor={onConfirmCloseEditor}
+                showVersionChangeAlert={showVersionChangeAlert}
+                handleVersionChangeConfirm={handleVersionChangeConfirm}
+                handleVersionChangeCancel={handleVersionChangeCancel}
+                openEditorAlert={openEditorAlert}
+                alertContent={alertContent}
+                onCancelOperation={onCancelOperation}
+                onConfirmOperation={onConfirmOperation}
+              />
             </Box>
           </Split>
         </Grid>
@@ -1690,40 +1445,11 @@ const NewChat = props => {
         {renderRightPanel(!isSmallWindow)}
       </Grid>
 
-      <AlertDialog
-        title="Warning"
-        alertContent="You are editing now. Do you want to discard current changes and continue?"
-        open={openEditingAlert}
-        alarm
-        onClose={onCloseEditorAlert}
-        onCancel={onCloseEditorAlert}
-        onConfirm={onConfirmCloseEditor}
-      />
       <AddNewUserModal
         open={showAddUserModal}
         onAdd={doAddNewUsers}
         onCancel={() => setShowAddUserModal(false)}
         participants={activeConversation?.participants || []}
-      />
-      <AlertDialog
-        title="Warning"
-        multiline
-        alertContent={alertContent}
-        open={openEditorAlert}
-        alarm
-        onClose={onCancelOperation}
-        onCancel={onCancelOperation}
-        onConfirm={onConfirmOperation}
-      />
-      <AlertDialog
-        title="Warning"
-        alertContent="You are editing now. Do you want to discard current changes and continue?"
-        open={showVersionChangeAlert}
-        alarm
-        onClose={handleVersionChangeCancel}
-        onCancel={handleVersionChangeCancel}
-        onConfirm={handleVersionChangeConfirm}
-        confirmButtonText="Discard Changes"
       />
       <AlertDialog
         open={conversationNotFound}
@@ -1810,7 +1536,6 @@ const chatStyles = ({
         minWidth: '100% !important',
       },
     },
-
     conversationWrapper: {
       height: '100%',
       minHeight: '100%',
@@ -1824,33 +1549,27 @@ const chatStyles = ({
         lg: '0px',
       },
       gap: '12px',
-
       [theme.breakpoints.up('prompt_list_lg')]: {
         maxWidth: getChatWidthLG(),
         minWidth: getChatWidthLG(),
       },
-
       [theme.breakpoints.down('prompt_list_lg')]: {
         maxWidth: getChatWidthSM(),
         minWidth: getChatWidthSM(),
       },
-
       [theme.breakpoints.down('lg')]: {
         maxWidth: '100% !important',
         minWidth: '100% !important',
       },
-
       '& split': {
         display: 'flex',
         flexDirection: 'row',
       },
-
       '& .gutter': {
         backgroundRepeat: 'no-repeat',
         backgroundPosition: '50%',
         height: !isSmallWindow ? '100%' : undefined,
         width: isSmallWindow ? '100% !important' : undefined,
-
         '&.gutter-horizontal': {
           backgroundImage: `url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bMfxAGAgYYmwGrIIiDjrELjpo5aiZeMwF+yNnOs5KSvgAAAABJRU5ErkJggg==')`,
           cursor: 'col-resize',
@@ -1862,7 +1581,6 @@ const chatStyles = ({
         },
       },
     },
-
     splitWrapper: {
       display: 'flex',
       flex: 1,
@@ -1872,7 +1590,6 @@ const chatStyles = ({
       maxWidth: '100%',
       gap: isSmallWindow ? '12px' : undefined,
     },
-
     splitChatWrapper: {
       position: 'relative',
       display: 'flex',

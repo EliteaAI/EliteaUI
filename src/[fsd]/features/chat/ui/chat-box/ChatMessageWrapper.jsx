@@ -41,6 +41,8 @@ const ChatMessageWrapper = memo(props => {
     speakingMessageId,
     speakingSegments,
     spokenRange,
+    onEntityCreated,
+    onDeleteEntity,
   } = props;
 
   const isLastMessage = chat_history.length - 1 === index;
@@ -199,6 +201,9 @@ const ChatMessageWrapper = memo(props => {
       speakingMessageId={speakingMessageId}
       speakingSegments={speakingSegments}
       spokenRange={spokenRange}
+      created_entities={message.created_entities}
+      onEntityCreated={onEntityCreated}
+      onDeleteEntity={onDeleteEntity}
     />
   );
 });

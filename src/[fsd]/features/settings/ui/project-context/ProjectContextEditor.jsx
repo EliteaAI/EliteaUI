@@ -24,7 +24,18 @@ import AIEditProjectContextButton from './ai-edit/AIEditProjectContextButton';
 const MAX_CHARS = PROJECT_CONTEXT_MAX_LEN;
 
 const ProjectContextEditor = memo(props => {
-  const { serverData, projectId, isCreate, canEdit, openAiModal, openAiEditModal, onNavigate } = props;
+  const {
+    serverData,
+    projectId,
+    isCreate,
+    canEdit,
+    openAiModal,
+    openAiEditModal,
+    onNavigate,
+    inlineMode,
+    onDirtyChange,
+    saveRef,
+  } = props;
   const { toastSuccess, toastError, toastInfo } = useToast();
   const fileInputRef = useRef(null);
   const [isDirty, setIsDirty] = useState(false);
@@ -37,6 +48,14 @@ const ProjectContextEditor = memo(props => {
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
 
   const isFirstRender = useRef(true);
+  const hasInitializedContent = useRef(false);
+
+  useEffect(() => {
+    if (!hasInitializedContent.current && serverData?.content !== undefined) {
+      setContent(serverData.content ?? '');
+      hasInitializedContent.current = true;
+    }
+  }, [serverData?.content]);
 
   const blockOptions = useMemo(
     () => ({
@@ -157,6 +176,16 @@ const ProjectContextEditor = memo(props => {
     onNavigate,
   ]);
 
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
+
+  useEffect(() => {
+    if (saveRef) {
+      saveRef.current = handleSave;
+    }
+  }, [handleSave, saveRef]);
+
   const handleCopyToClipboard = useCallback(() => {
     if (!content) return;
     navigator.clipboard.writeText(content).then(
@@ -229,13 +258,14 @@ const ProjectContextEditor = memo(props => {
 
   return (
     <Box sx={styles.root}>
-      <DrawerPageHeader
-        title={breadcrumbTitle}
-        showBorder
-        extraContent={headerActions}
-      />
-
-      <Box sx={styles.body}>
+      {!inlineMode && (
+        <DrawerPageHeader
+          title={breadcrumbTitle}
+          showBorder
+          extraContent={headerActions}
+        />
+      )}
+      <Box sx={[styles.body, inlineMode && styles.bodyInline]}>
         {!canEdit && (
           <Banner.BannerMessage
             message="You don't have permission to edit this setting."
@@ -365,6 +395,10 @@ const getStyles = (limitReached, isEditorFocused) => ({
     maxWidth: '46.875rem',
     alignSelf: 'center',
     boxSizing: 'border-box',
+  },
+  bodyInline: {
+    maxWidth: '100%',
+    alignSelf: 'stretch',
   },
   editorHeader: {
     display: 'flex',

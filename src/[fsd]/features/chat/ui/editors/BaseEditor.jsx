@@ -5,12 +5,12 @@ import { Form, Formik } from 'formik';
 import { Alert, Box, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 
+import EditorHeader from '@/[fsd]/features/chat/ui/editors/EditorHeader';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { Modal } from '@/[fsd]/shared/ui';
 import DirtyDetector from '@/components/Formik/DirtyDetector';
 import useEditorNavBlocking from '@/hooks/useEditorNavBlocking';
 import useIsSmallWindow from '@/hooks/useIsSmallWindow';
-import EditorHeader from '@/pages/NewChat/components/EditorHeader';
 
 /**
  * Base editor component that provides common functionality for all editor types

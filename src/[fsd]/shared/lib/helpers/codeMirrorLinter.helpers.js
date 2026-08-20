@@ -197,6 +197,7 @@ export const getExtensionsByLang = async lang => {
         extensionWithLinter: [langs.mermaid?.(), mermaidLinter].filter(Boolean),
       };
     }
+    case 'md':
     case 'markdown':
     case 'mdx': {
       const { markdown } = await import('@codemirror/lang-markdown');
