@@ -535,17 +535,19 @@ const ChatBox = forwardRef((props, boxRef) => {
         ? activeParticipant?.entity_settings?.llm_settings
         : undefined;
 
+      const isSendingToUser = Boolean(isMentioningEveryone || selectedUsers.length);
+
       return generateMessagePayload({
         attachmentList,
         question,
         question_id,
-        participant,
+        participant: isSendingToUser ? null : participant,
         conversation_uuid: conversationUuid || activeConversation?.uuid,
-        activeParticipant,
+        activeParticipant: isSendingToUser ? null : activeParticipant,
         interaction_uuid,
         projectId,
         selectedModel,
-        isSendingToUser: isMentioningEveryone || selectedUsers.length,
+        isSendingToUser,
         userIds: isMentioningEveryone
           ? activeConversation?.participants
               .filter(
@@ -1050,7 +1052,8 @@ const ChatBox = forwardRef((props, boxRef) => {
 
       // Ensure participant_id is set even if activeParticipant.id is undefined
       // (can happen when React state update hasn't propagated yet)
-      if (!eventPayload.participant_id && participantIdRef.current) {
+      // But skip this when sending to a user via @mention - agent should not respond
+      if (!isSendingToUser && !eventPayload.participant_id && participantIdRef.current) {
         eventPayload.participant_id = participantIdRef.current;
       }
 
@@ -1080,16 +1083,19 @@ const ChatBox = forwardRef((props, boxRef) => {
 
           // For agent chats with new conversation creation, always preserve the existing participant_id
           // to prevent "participant does not exist" errors when attachments are involved
-          if (isAgentsPage && isNewConversationCreated && existingParticipantId) {
-            eventPayload.participant_id = existingParticipantId;
-          } else {
-            // Restore participant_id if it was set but not included in the rebuilt payload
-            if (existingParticipantId && !eventPayload.participant_id)
+          // But skip this when sending to a user via @mention - agent should not respond
+          if (!isSendingToUser) {
+            if (isAgentsPage && isNewConversationCreated && existingParticipantId) {
               eventPayload.participant_id = existingParticipantId;
+            } else {
+              // Restore participant_id if it was set but not included in the rebuilt payload
+              if (existingParticipantId && !eventPayload.participant_id)
+                eventPayload.participant_id = existingParticipantId;
 
-            // Also fall back to stored participant_id ref if still undefined
-            if (!eventPayload.participant_id && participantIdRef.current)
-              eventPayload.participant_id = participantIdRef.current;
+              // Also fall back to stored participant_id ref if still undefined
+              if (!eventPayload.participant_id && participantIdRef.current)
+                eventPayload.participant_id = participantIdRef.current;
+            }
           }
         }
       } else {

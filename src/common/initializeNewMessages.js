@@ -18,7 +18,16 @@ const createTextMessageItem = (question, itemUUID) => {
   };
 };
 
-const createUserMessage = ({ question_id, name, avatar, userId, participant, question, itemUUID }) => {
+const createUserMessage = ({
+  question_id,
+  name,
+  avatar,
+  userId,
+  participant,
+  question,
+  itemUUID,
+  isSendingToUser,
+}) => {
   return {
     id: question_id,
     role: ROLES.User,
@@ -26,8 +35,8 @@ const createUserMessage = ({ question_id, name, avatar, userId, participant, que
     avatar,
     created_at: new Date().getTime(),
     user_id: userId,
-    participant_id: participant?.id,
-    sentTo: participant ?? {},
+    participant_id: isSendingToUser ? undefined : participant?.id,
+    sentTo: isSendingToUser ? {} : (participant ?? {}),
     message_items: [createTextMessageItem(question, itemUUID)],
   };
 };
@@ -62,6 +71,7 @@ export const initializeNewMessages = ({
     participant,
     question,
     itemUUID: isUserToUserMessage ? question_id : uuidv4(),
+    isSendingToUser,
   });
 
   if (isUserToUserMessage) {

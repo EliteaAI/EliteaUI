@@ -88,7 +88,7 @@ export const generateMessagePayload = ({
         llm_settings: defaultLlmSettings,
         ...(stepsLimit !== undefined ? { step_limit: stepsLimit } : {}),
         project_id: projectId,
-        participant_id: participantId,
+        participant_id: isSendingToUser ? undefined : participantId,
         conversation_uuid,
         question_id,
         interaction_uuid,
