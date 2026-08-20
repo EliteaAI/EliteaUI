@@ -23,6 +23,23 @@ export const formatTokens = tokens => {
   return String(value);
 };
 
+/** Markdown breakdown of the TOKENS KPI card, for its hover tooltip. */
+export const tokensBreakdownTooltip = usage => {
+  const {
+    input_tokens: input,
+    output_tokens: output,
+    cache_read_tokens: cacheRead,
+    cache_creation_tokens: cacheCreation,
+  } = usage || {};
+
+  return [
+    `**Input:** ${formatTokens(input)}`,
+    `**Output:** ${formatTokens(output)}`,
+    `**Cache read:** ${formatTokens(cacheRead)}`,
+    `**Cache write:** ${formatTokens(cacheCreation)}`,
+  ].join('\n\n');
+};
+
 /** Strip provider paths and the shared-project id prefix for display only. */
 export const formatModelName = model => {
   if (!model) return 'Unknown';

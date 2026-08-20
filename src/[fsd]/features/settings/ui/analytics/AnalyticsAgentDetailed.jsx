@@ -93,6 +93,22 @@ const AnalyticAgentDetailed = memo(props => {
           valueTestId="analytics-agent-detail-kpi-value"
         />
         <KPICard
+          label="INPUT TOKEN COST"
+          value={AnalyticCommonHelpers.fmtCost(kpis.input_cost)}
+          subtitle="estimated"
+          tooltip={tt.INPUT_TOKEN_COST}
+          testId="analytics-agent-detail-kpi-card"
+          valueTestId="analytics-agent-detail-kpi-value"
+        />
+        <KPICard
+          label="OUTPUT TOKEN COST"
+          value={AnalyticCommonHelpers.fmtCost(kpis.output_cost)}
+          subtitle="estimated"
+          tooltip={tt.OUTPUT_TOKEN_COST}
+          testId="analytics-agent-detail-kpi-card"
+          valueTestId="analytics-agent-detail-kpi-value"
+        />
+        <KPICard
           label="TOTAL TOKENS"
           value={AnalyticCommonHelpers.fmtNum(kpis.total_tokens)}
           tooltip={tt.TOTAL_TOKENS}
@@ -110,6 +126,36 @@ const AnalyticAgentDetailed = memo(props => {
           label="OUTPUT TOKENS"
           value={AnalyticCommonHelpers.fmtNum(kpis.output_tokens)}
           tooltip={tt.OUTPUT_TOKENS}
+          testId="analytics-agent-detail-kpi-card"
+          valueTestId="analytics-agent-detail-kpi-value"
+        />
+        <KPICard
+          label="CACHE READ TOKENS"
+          value={AnalyticCommonHelpers.fmtNum(kpis.cache_read_tokens)}
+          tooltip={tt.CACHE_READ_TOKENS}
+          testId="analytics-agent-detail-kpi-card"
+          valueTestId="analytics-agent-detail-kpi-value"
+        />
+        <KPICard
+          label="CACHE WRITE TOKENS"
+          value={AnalyticCommonHelpers.fmtNum(kpis.cache_creation_tokens)}
+          tooltip={tt.CACHE_WRITE_TOKENS}
+          testId="analytics-agent-detail-kpi-card"
+          valueTestId="analytics-agent-detail-kpi-value"
+        />
+        <KPICard
+          label="CACHE READ COST"
+          value={AnalyticCommonHelpers.fmtCost(kpis.cache_read_cost)}
+          subtitle="estimated"
+          tooltip={tt.CACHE_READ_COST}
+          testId="analytics-agent-detail-kpi-card"
+          valueTestId="analytics-agent-detail-kpi-value"
+        />
+        <KPICard
+          label="CACHE WRITE COST"
+          value={AnalyticCommonHelpers.fmtCost(kpis.cache_creation_cost)}
+          subtitle="estimated"
+          tooltip={tt.CACHE_WRITE_COST}
           testId="analytics-agent-detail-kpi-card"
           valueTestId="analytics-agent-detail-kpi-value"
         />

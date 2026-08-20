@@ -114,6 +114,7 @@ const UsageSummary = memo(props => {
           label="TOKENS"
           value={UsageHelpers.formatTokens(totalTokens)}
           subtitle="prompt and completion"
+          tooltip={UsageHelpers.tokensBreakdownTooltip(data)}
         />
         <KPICard
           label="CALLS"
