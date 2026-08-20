@@ -115,7 +115,7 @@ const styles = {
     paddingRight: '0rem !important',
   },
   leftPanel: {
-    overflow: 'auto',
+    overflow: 'hidden',
     maxHeight: '100%',
     height: '100%',
     display: 'flex',

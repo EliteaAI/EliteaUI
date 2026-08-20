@@ -518,7 +518,7 @@ export const ToolkitForm = memo(props => {
       <CircularProgress />
     </Box>
   ) : (
-    <Box sx={sx}>
+    <Box sx={[styles.root, sx]}>
       {isActionBarPresent && (
         <Box
           sx={styles.actionBar}
@@ -669,12 +669,13 @@ const centeredContentColumn = {
 
 /** @type {MuiSx} */
 const toolkitFormStyles = isDetailsActionBar => ({
+  root: isDetailsActionBar
+    ? { display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, overflow: 'hidden' }
+    : {},
   actionBar: ({ palette }) =>
     isDetailsActionBar
       ? {
-          position: 'sticky',
-          top: 0,
-          zIndex: 2,
+          flexShrink: 0,
           background: palette.background.section,
           borderBottom: `0.0625rem solid ${palette.border.table}`,
         }
@@ -688,7 +689,14 @@ const toolkitFormStyles = isDetailsActionBar => ({
     ...(isDetailsActionBar ? { padding: `0.75rem ${CONTENT_GUTTER}`, ...centeredContentColumn } : {}),
   },
   content: isDetailsActionBar
-    ? { isolation: 'isolate', padding: `1rem ${CONTENT_GUTTER}`, ...centeredContentColumn }
+    ? {
+        flex: 1,
+        minHeight: 0,
+        overflowY: 'auto',
+        width: '100%',
+        padding: `1rem ${CONTENT_GUTTER}`,
+        ...centeredContentColumn,
+      }
     : {},
   toolkitIdentity: {
     display: 'flex',

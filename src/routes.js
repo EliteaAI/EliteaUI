@@ -33,6 +33,7 @@ const RouteDefinitions = {
   CreateToolkitType: '/toolkits/create/:toolkitType',
   ToolkitDetail: '/toolkits/:tab/:toolkitId',
   ToolkitRunHistory: '/toolkits/:tab/:toolkitId/history',
+  ToolkitTest: '/toolkits/:tab/:toolkitId/test',
   ToolkitIndexNew: '/toolkits/:tab/:toolkitId/create-index',
   ToolkitIndex: '/toolkits/:tab/:toolkitId/index/:indexName',
   ToolkitIndexHistory: '/toolkits/:tab/:toolkitId/index/:indexName/history',
@@ -50,6 +51,7 @@ const RouteDefinitions = {
   CreateMCP: '/mcps/create',
   CreateMCPType: '/mcps/create/:mcpType',
   MCPDetail: '/mcps/:tab/:mcpId',
+  MCPTest: '/mcps/:tab/:mcpId/test',
 
   UserPublic: '/user-public',
   UserPublicWithTab: '/user-public/:tab',
