@@ -9,14 +9,12 @@ const DEFAULT_TAB = 'all';
 
 export const useIndexNavigation = toolkitId => {
   const navigate = useNavigate();
-  const { tab } = useParams();
+  const { tab = DEFAULT_TAB } = useParams();
   const projectId = useSelectedProjectId();
 
   const buildIndexPath = useCallback(
     (template, indexName) => {
-      const path = template
-        .replace(':tab', tab ?? DEFAULT_TAB)
-        .replace(':toolkitId', String(toolkitId ?? ''));
+      const path = template.replace(':tab', tab).replace(':toolkitId', String(toolkitId ?? ''));
       return indexName === undefined ? path : path.replace(':indexName', encodeURIComponent(indexName));
     },
     [tab, toolkitId],

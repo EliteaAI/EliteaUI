@@ -2,7 +2,7 @@ import { memo } from 'react';
 
 import { Box, Skeleton, Typography } from '@mui/material';
 
-import { TOOLKIT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
+import { TOOLKIT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { IndexingBlockerBanners, IndexingBlockers } from '@/[fsd]/features/toolkits/indexes/lib/constants';
 import { canListIndexes } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexingBlocker.helpers';
 import { useIndexNavigation, useToolkitIndexes } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
@@ -15,8 +15,6 @@ import RunIndexBanner from './RunIndexBanner';
 import IndexesList from './index-list/IndexesList';
 
 const { PANEL_GUTTER, PANEL_HEADER_HEIGHT } = ToolkitLayoutConstants;
-
-const NO_INDEXES = [];
 
 const IndexesPanel = memo(props => {
   const { toolkitId, indexingBlocker } = props;
@@ -76,10 +74,7 @@ const IndexesPanel = memo(props => {
       </Box>
       <Box sx={styles.body}>
         {indexingBlocker === IndexingBlockers.loading ? (
-          <IndexesList
-            loading
-            indexesList={NO_INDEXES}
-          />
+          <IndexesList loading />
         ) : (
           <>
             {banner && (

@@ -11,7 +11,7 @@ const IndexesList = memo(props => {
   const {
     canIndex = true,
     handleAddIndex,
-    indexesList,
+    indexesList = [],
     onIndexClick,
     currentIndex,
     loading,
