@@ -5,9 +5,10 @@ import { useFormikContext } from 'formik';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
-import { Box, Tooltip, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import { McpAuthModal, useMcpAuthModal } from '@/[fsd]/features/mcp';
+import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
 import {
   useDeleteIndexItemMutation,
   useUpdateIndexScheduleMutation,
@@ -15,6 +16,7 @@ import {
 import {
   BannerSeverity,
   IndexCronDefault,
+  IndexDetailsTabs,
   IndexStatuses,
   IndexesToolsEnum,
   RUNNABLE_INDEX_STATUSES,
@@ -23,7 +25,10 @@ import {
   adjustIndexDataSchema,
   getMockToolkitIndexConversation,
 } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexChat.helpers';
-import { bannerVariant } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
+import {
+  bannerVariant,
+  hasLiveRun,
+} from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
 import { useIndexesListPolling } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import { selectToolkitScheduler } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
 import { IndexError, IndexScheduleModal, IndexSuccess } from '@/[fsd]/features/toolkits/indexes/ui';
@@ -31,10 +36,10 @@ import { ToolkitChatHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useGetCurrentToolkitSchemas, useToolkitChat } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { ScheduleHelpers } from '@/[fsd]/shared/lib/helpers';
-import { Button, Modal } from '@/[fsd]/shared/ui';
+import { Modal } from '@/[fsd]/shared/ui';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
+import Breadcrumbs from '@/[fsd]/shared/ui/breadcrumbs';
 import { useDeleteIndexScheduleMutation } from '@/api';
-import ClockIcon from '@/assets/clock_icon.svg?react';
 import { PERMISSIONS, WELCOME_MESSAGE_ID } from '@/common/constants';
 import { convertToolkitSchema } from '@/common/toolkitSchemaUtils';
 import { useGetSelectedToolSchema } from '@/hooks/toolkit/useGetSelectedToolSchema';
@@ -42,6 +47,9 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast.jsx';
 import RouteDefinitions from '@/routes';
 
+import IndexDetailsDeleteAction from './IndexDetailsDeleteAction';
+import IndexDetailsLeftBand from './IndexDetailsLeftBand';
+import IndexDetailsTabsBand from './IndexDetailsTabsBand';
 import RunIndexConfigSection from './RunIndexConfigSection';
 import RunIndexGeneralSection from './RunIndexGeneralSection';
 import RunIndexScheduleContent from './RunIndexScheduleContent';
@@ -64,6 +72,7 @@ const RunIndexPanel = memo(props => {
   const { toastSuccess, toastError } = useToast();
   const { values } = useFormikContext();
 
+  const [activeTab, setActiveTab] = useState(IndexDetailsTabs.activity);
   const [selectedSearchTool, setSelectedSearchTool] = useState(null);
   const [hasSearchResults, setHasSearchResults] = useState(false);
   const [hasIndexedThisSession, setHasIndexedThisSession] = useState(false);
@@ -205,6 +214,13 @@ const RunIndexPanel = memo(props => {
     fulfilledTimeStamp >= startedTimeStamp,
   );
   const effectiveStale = localMetaOverride?.state && !serverSupersedes ? false : index?.stale;
+  const isAwaitingTaskStart = isWaitingForTaskStart && !serverSupersedes;
+  const runIsLive = hasLiveRun({
+    isIndexing: effectiveIsIndexing,
+    canStopIndexing,
+    isStale: effectiveStale,
+  });
+  const deleteDisabled = isDeleting || isAwaitingTaskStart || runIsLive;
   // const canRunTools = selectedSearchTool && RUNNABLE_INDEX_STATUSES.includes(effectiveState);
 
   const schedulingTooltipMessage = useMemo(() => {
@@ -304,6 +320,8 @@ const RunIndexPanel = memo(props => {
   }, [index?.metadata?.state, localMetaOverride]);
 
   const onChangeInputVariables = useCallback(value => setToolInputVariables(value), []);
+
+  const handleChangeTab = useCallback((_event, value) => setActiveTab(value), []);
 
   const handleSelectSearchTool = useCallback(tool => {
     if (!tool) setHasSearchResults(false);
@@ -438,15 +456,12 @@ const RunIndexPanel = memo(props => {
       title: 'General',
       content: (
         <RunIndexGeneralSection
-          indexName={indexName}
           index={index}
           reindexStats={reindexStats}
           isRunning={isRunning}
           isIndexing={effectiveIsIndexing}
           isStale={effectiveStale}
-          // A kill before the StartTask event leaves the waiting flag with nothing to
-          // clear it — a post-activity server payload expires that belief too.
-          isWaitingForTaskStart={isWaitingForTaskStart && !serverSupersedes}
+          isWaitingForTaskStart={isAwaitingTaskStart}
           canStopIndexing={canStopIndexing}
           isDeleting={isDeleting}
           onReindex={handleReindex}
@@ -499,6 +514,11 @@ const RunIndexPanel = memo(props => {
   const questionItemRef = useRef();
 
   const historyDisabled = !index?.metadata?.history?.length || effectiveIsIndexing;
+  const historyTooltip = effectiveIsIndexing
+    ? 'Unavailable while indexing is in progress'
+    : historyDisabled
+      ? 'No history available'
+      : 'View index history';
 
   const showSearchResults = (isRunning && Boolean(selectedSearchTool)) || hasSearchResults;
   const showIndexingResults =
@@ -514,79 +534,89 @@ const RunIndexPanel = memo(props => {
   }, [navigate, tab, toolkitId, indexName]);
 
   return (
-    <Box sx={styles.body}>
-      <Box sx={styles.leftColumn}>
-        <Box sx={styles.leftHeader}>
-          <Tooltip title={historyDisabled ? 'No history available' : 'View index history'}>
-            <Box component="span">
-              <Button.BaseBtn
-                variant={Button.BUTTON_VARIANTS.iconLabel}
-                size="small"
-                disabled={historyDisabled}
-                onClick={goToHistory}
-                startIcon={<ClockIcon />}
-              >
-                History
-              </Button.BaseBtn>
-            </Box>
-          </Tooltip>
+    <>
+      <DrawerPageHeader
+        showBorder
+        title={<Breadcrumbs />}
+        extraContent={
+          <IndexDetailsDeleteAction
+            disabled={deleteDisabled}
+            onDelete={openDelete}
+          />
+        }
+      />
+      <Box sx={styles.body}>
+        <Box sx={styles.leftColumn}>
+          <IndexDetailsLeftBand
+            indexName={indexName}
+            historyDisabled={historyDisabled}
+            historyTooltip={historyTooltip}
+            onShowHistory={goToHistory}
+          />
+          <Box
+            data-testid="run-index-accordions"
+            sx={styles.accordionWrapper}
+          >
+            {accordionSections.map(section => (
+              <BasicAccordion
+                key={section.key}
+                accordionSX={styles.accordion}
+                items={[
+                  {
+                    title: section.title,
+                    content: section.content,
+                    summaryAction: section.summaryAction,
+                  },
+                ]}
+                defaultExpanded={section.defaultExpanded}
+              />
+            ))}
+          </Box>
         </Box>
-        <Box
-          data-testid="run-index-accordions"
-          sx={styles.accordionWrapper}
-        >
-          {accordionSections.map(section => (
-            <BasicAccordion
-              key={section.key}
-              accordionSX={styles.accordion}
-              items={[
-                {
-                  title: section.title,
-                  content: section.content,
-                  summaryAction: section.summaryAction,
-                },
-              ]}
-              defaultExpanded={section.defaultExpanded}
-            />
-          ))}
-        </Box>
-      </Box>
 
-      <Box sx={styles.rightColumn}>
-        {banner.severity === BannerSeverity.success && (
-          <IndexSuccess
-            banner={banner}
-            onSelectSearchTool={handleSelectSearchTool}
-            selectedSearchTool={selectedSearchTool}
-            selectedIndexTools={selectedIndexTools}
-            runFormFields={runFormFields}
-            adjustedRunSchema={adjustedRunSchema}
-            toolInputVariables={toolInputVariables}
-            onChangeInputVariables={onChangeInputVariables}
-            isRunning={isRunning}
-            effectiveIsIndexing={effectiveIsIndexing}
-            handleRunTool={handleRunSearch}
-            chatHistory={chatHistory}
-            chatConversation={chatConversation}
-            questionItemRef={questionItemRef}
-            isRunFormValid={isRunFormValid}
-            showResults={showSearchResults}
-            showBanner={hasIndexedThisSession}
+        <Box sx={styles.rightColumn}>
+          <IndexDetailsTabsBand
+            activeTab={activeTab}
+            onChangeTab={handleChangeTab}
+            configurationDisabled
           />
-        )}
-        {banner.severity !== BannerSeverity.success && (
-          <IndexError
-            banner={banner}
-            isIndexing={effectiveIsIndexing}
-            isStoppingIndexing={isStoppingIndexing}
-            canStopIndexing={canStopIndexing}
-            onStop={onCancelIndexing}
-            chatHistory={chatHistory}
-            chatConversation={chatConversation}
-            questionItemRef={questionItemRef}
-            showResults={showIndexingResults}
-          />
-        )}
+          <Box sx={styles.tabBody}>
+            {banner.severity === BannerSeverity.success && (
+              <IndexSuccess
+                banner={banner}
+                onSelectSearchTool={handleSelectSearchTool}
+                selectedSearchTool={selectedSearchTool}
+                selectedIndexTools={selectedIndexTools}
+                runFormFields={runFormFields}
+                adjustedRunSchema={adjustedRunSchema}
+                toolInputVariables={toolInputVariables}
+                onChangeInputVariables={onChangeInputVariables}
+                isRunning={isRunning}
+                effectiveIsIndexing={effectiveIsIndexing}
+                handleRunTool={handleRunSearch}
+                chatHistory={chatHistory}
+                chatConversation={chatConversation}
+                questionItemRef={questionItemRef}
+                isRunFormValid={isRunFormValid}
+                showResults={showSearchResults}
+                showBanner={hasIndexedThisSession}
+              />
+            )}
+            {banner.severity !== BannerSeverity.success && (
+              <IndexError
+                banner={banner}
+                isIndexing={effectiveIsIndexing}
+                isStoppingIndexing={isStoppingIndexing}
+                canStopIndexing={canStopIndexing}
+                onStop={onCancelIndexing}
+                chatHistory={chatHistory}
+                chatConversation={chatConversation}
+                questionItemRef={questionItemRef}
+                showResults={showIndexingResults}
+              />
+            )}
+          </Box>
+        </Box>
       </Box>
 
       <Modal.DeleteEntityModal
@@ -635,7 +665,7 @@ const RunIndexPanel = memo(props => {
         toolkitName={toolkitName}
       />
       <McpAuthModal {...getModalProps()} />
-    </Box>
+    </>
   );
 });
 
@@ -652,22 +682,9 @@ const runIndexPanelStyles = () => ({
     flex: 0.8,
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.75rem',
     minHeight: 0,
-    padding: '0.5rem 1.5rem 1rem 1.5rem',
-    borderRight: ({ palette }) => `1px solid ${palette.border.table}`,
-    position: 'relative',
+    borderRight: ({ palette }) => `0.0625rem solid ${palette.border.table}`,
     background: ({ palette }) => palette.background.toolkitDetailLeftPanel,
-  },
-  leftHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: '0.5rem',
-    position: 'absolute',
-    top: '1rem',
-    right: '1.5rem',
-    zIndex: 999,
   },
   accordion: {
     background: ({ palette }) => palette.background.toolkitDetailLeftPanel,
@@ -676,14 +693,22 @@ const runIndexPanelStyles = () => ({
     flex: 1,
     minHeight: 0,
     overflowY: 'auto',
+    padding: '0.5rem 1.5rem 1rem 1.5rem',
   },
   rightColumn: {
     flex: 1,
     display: 'flex',
     flexDirection: 'column',
     minWidth: 0,
-    gap: '0.75rem',
     minHeight: 0,
+  },
+  tabBody: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    minWidth: 0,
+    minHeight: 0,
+    gap: '0.75rem',
   },
   rightContent: {
     flex: 1,

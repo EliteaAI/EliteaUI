@@ -11,6 +11,11 @@ export const EditViewTabsEnum = {
   history: 'history',
 };
 
+export const IndexDetailsTabs = {
+  configuration: 'configuration',
+  activity: 'activity',
+};
+
 export const IndexesToolsEnum = {
   indexData: 'index_data',
   searchIndexData: 'search_index',
