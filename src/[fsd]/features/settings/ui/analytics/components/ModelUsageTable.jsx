@@ -7,7 +7,7 @@ import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 
 const ModelUsageTable = memo(props => {
-  const { models = [], totalCalls } = props;
+  const { models = [], totalCalls, isPersonalProject = false } = props;
 
   const styles = modelUsageTableStyles();
 
@@ -28,11 +28,13 @@ const ModelUsageTable = memo(props => {
           variant="bodySmall"
           sx={styles.chartSubtitle}
         >
-          LLM calls per model
+          LLM calls/runs per model
         </Typography>
         <InfoTooltip
           infoTooltip={{
-            title: AnalyticsCommonConstants.TOOLTIP_TEXTS.overview.MODEL_USAGE,
+            title: isPersonalProject
+              ? AnalyticsCommonConstants.TOOLTIP_TEXTS.overview.MODEL_USAGE_PRIVATE
+              : AnalyticsCommonConstants.TOOLTIP_TEXTS.overview.MODEL_USAGE,
             icon: { width: 12, height: 12 },
           }}
         />
@@ -41,8 +43,10 @@ const ModelUsageTable = memo(props => {
         <Box sx={styles.tableHeader}>
           <Typography sx={[styles.tableCell, { flex: '0 0 2rem', textAlign: 'right' }]}>#</Typography>
           <Typography sx={[styles.tableCell, { flex: 3 }]}>Model</Typography>
-          <Typography sx={[styles.tableCell, { flex: 1, textAlign: 'right' }]}>Calls</Typography>
-          <Typography sx={[styles.tableCell, { flex: 1, textAlign: 'right' }]}>Users</Typography>
+          <Typography sx={[styles.tableCell, { flex: 1, textAlign: 'right' }]}>Calls/Runs</Typography>
+          {!isPersonalProject && (
+            <Typography sx={[styles.tableCell, { flex: 1, textAlign: 'right' }]}>Users</Typography>
+          )}
           <Typography sx={[styles.tableCell, { flex: 2, textAlign: 'right' }]}>Share</Typography>
         </Box>
         {models.map((model, index) => {
@@ -83,9 +87,11 @@ const ModelUsageTable = memo(props => {
               <Typography sx={[styles.tableCellValue, { flex: 1, textAlign: 'right' }]}>
                 {AnalyticCommonHelpers.fmtNum(model.calls)}
               </Typography>
-              <Typography sx={[styles.tableCellValue, { flex: 1, textAlign: 'right' }]}>
-                {model.users}
-              </Typography>
+              {!isPersonalProject && (
+                <Typography sx={[styles.tableCellValue, { flex: 1, textAlign: 'right' }]}>
+                  {model.users}
+                </Typography>
+              )}
               <Box
                 sx={{ flex: 2, display: 'flex', alignItems: 'center', gap: '0.5rem', paddingLeft: '0.5rem' }}
               >

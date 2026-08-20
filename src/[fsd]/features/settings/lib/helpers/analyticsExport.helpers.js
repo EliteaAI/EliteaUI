@@ -29,7 +29,7 @@ const emptyRow = (columns, message) => {
 
 const NO_DATA_MSG = 'No data available for the selected date range.';
 
-const buildOverviewSheet = (data, meta) => {
+const buildOverviewSheet = (data, meta, isPersonalProject = false) => {
   const { kpis = {}, daily_activity = [], models = [], top_ai_users = [] } = data || {};
 
   const totalModelCalls = models.reduce((s, m) => s + (m.calls || 0), 0);
@@ -70,8 +70,8 @@ const buildOverviewSheet = (data, meta) => {
 
   const modelCols = [
     { header: 'Model', key: 'name' },
-    { header: 'Calls', key: 'calls', numFmt: ExcelFormats.integer },
-    { header: 'Users', key: 'users', numFmt: ExcelFormats.integer },
+    { header: 'Calls/Runs', key: 'calls', numFmt: ExcelFormats.integer },
+    ...(isPersonalProject ? [] : [{ header: 'Users', key: 'users', numFmt: ExcelFormats.integer }]),
     { header: 'Share (%)', key: 'share', numFmt: ExcelFormats.percent },
   ];
   sections.push({
@@ -82,7 +82,7 @@ const buildOverviewSheet = (data, meta) => {
         ? models.map(m => ({
             name: m.display_name || m.model_name || 'Unknown',
             calls: m.calls ?? 0,
-            users: m.users ?? 0,
+            ...(isPersonalProject ? {} : { users: m.users ?? 0 }),
             share: totalModelCalls > 0 ? Number((((m.calls || 0) / totalModelCalls) * 100).toFixed(2)) : 0,
           }))
         : emptyRow(modelCols, NO_DATA_MSG),
@@ -545,8 +545,8 @@ export const fetchAllAnalyticsData = async (dispatch, endpoints, { projectId, da
   };
 };
 
-export const buildAnalyticsSheets = ({ overview, costs, agents, tools, users, meta }) => [
-  buildOverviewSheet(overview, meta),
+export const buildAnalyticsSheets = ({ overview, costs, agents, tools, users, meta, isPersonalProject }) => [
+  buildOverviewSheet(overview, meta, isPersonalProject),
   buildCostsSheet(costs, meta),
   buildTokensSheet(costs, meta),
   buildAgentsSheet(agents, meta),

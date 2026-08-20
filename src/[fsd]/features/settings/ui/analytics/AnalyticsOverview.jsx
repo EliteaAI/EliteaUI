@@ -11,7 +11,7 @@ import { ChartTooltip, KPICard, ModelUsageTable } from '@/[fsd]/features/setting
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 
 const AnalyticsOverview = memo(props => {
-  const { data, onUserClick } = props;
+  const { data, onUserClick, isPersonalProject = false } = props;
 
   const styles = analyticsOverviewStyles();
   const { palette } = useTheme();
@@ -239,6 +239,7 @@ const AnalyticsOverview = memo(props => {
       <ModelUsageTable
         models={models}
         totalCalls={totalModelCalls}
+        isPersonalProject={isPersonalProject}
       />
     </Box>
   );
