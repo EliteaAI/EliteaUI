@@ -2,8 +2,9 @@ import { useCallback, useMemo } from 'react';
 
 import { useNavigate, useParams } from 'react-router-dom';
 
+import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import RouteDefinitions, { getBasename } from '@/routes';
+import RouteDefinitions from '@/routes';
 
 const DEFAULT_TAB = 'all';
 
@@ -37,8 +38,10 @@ export const useIndexNavigation = toolkitId => {
     index => {
       const name = index?.metadata?.collection;
       if (!name) return;
-      const origin = `${window.location.protocol}//${window.location.host}`;
-      const url = `${origin}${getBasename()}/${projectId}${buildIndexPath(RouteDefinitions.ToolkitIndex, name)}`;
+      const url = NavigationHelpers.buildAbsoluteAppUrl(
+        projectId,
+        buildIndexPath(RouteDefinitions.ToolkitIndex, name),
+      );
       window.open(url, '_blank', 'noopener,noreferrer');
     },
     [buildIndexPath, projectId],

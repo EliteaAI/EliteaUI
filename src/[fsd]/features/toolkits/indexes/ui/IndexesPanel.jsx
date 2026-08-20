@@ -4,7 +4,7 @@ import { Box, Skeleton, Typography } from '@mui/material';
 
 import { TOOLKIT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { IndexingBlockerBanners, IndexingBlockers } from '@/[fsd]/features/toolkits/indexes/lib/constants';
-import { canListIndexes } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexingBlocker.helpers';
+import { shouldFetchIndexes } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexingBlocker.helpers';
 import { useIndexNavigation, useToolkitIndexes } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import { ToolkitLayoutConstants } from '@/[fsd]/features/toolkits/lib/constants';
 import InfoIcon from '@/assets/info.svg?react';
@@ -24,7 +24,7 @@ const IndexesPanel = memo(props => {
 
   const styles = indexesPanelStyles();
 
-  const isListFetched = canListIndexes(indexingBlocker);
+  const isListFetched = shouldFetchIndexes(indexingBlocker);
   const isCountPending = indexingBlocker === IndexingBlockers.loading || (isListFetched && isLoading);
   const banner = IndexingBlockerBanners[indexingBlocker];
 

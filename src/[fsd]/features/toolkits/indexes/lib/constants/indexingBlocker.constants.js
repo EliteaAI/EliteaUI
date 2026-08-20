@@ -14,7 +14,7 @@ export const IndexingBlockerBanners = {
   },
   [IndexingBlockers.buildsDisabled]: {
     severity: BannerSeverity.info,
-    label: 'Indexing is not available for now',
+    label: 'Index data tool not enabled',
     message: 'Enable the “Index data” tool to activate indexing and create indexes.',
   },
 };

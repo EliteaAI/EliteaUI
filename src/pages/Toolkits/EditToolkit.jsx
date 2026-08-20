@@ -8,7 +8,7 @@ import { Box, Typography } from '@mui/material';
 import { SHARED_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { useGetIndexesListQuery } from '@/[fsd]/features/toolkits/indexes/api';
 import { IndexesToolsEnum, IndexingBlockers } from '@/[fsd]/features/toolkits/indexes/lib/constants';
-import { canListIndexes } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexingBlocker.helpers';
+import { shouldFetchIndexes } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexingBlocker.helpers';
 // TODO: DELETE after migration period (Q1 2026) - Legacy OpenAPI toolkit migration
 import { LegacyOpenApiMigration, ToolkitFormHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
@@ -209,7 +209,7 @@ const EditToolkit = memo(props => {
       toolkitId: realId,
       projectId: currentProjectId,
     },
-    { skip: !canListIndexes(indexingBlocker) || shouldHideIndexesTab || !realId || !currentProjectId },
+    { skip: !shouldFetchIndexes(indexingBlocker) || shouldHideIndexesTab || !realId || !currentProjectId },
   );
 
   const tabs = useMemo(
