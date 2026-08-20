@@ -22,9 +22,9 @@ describe('toolkit authorization helpers', () => {
     };
 
     expect(shouldQueueRootAuthorizationWithHitl(rootAuthorization, undefined, 'message-id')).toBe(false);
-    expect(
-      shouldQueueRootAuthorizationWithHitl(rootAuthorization, { id: 'message-id' }, 'message-id'),
-    ).toBe(false);
+    expect(shouldQueueRootAuthorizationWithHitl(rootAuthorization, { id: 'message-id' }, 'message-id')).toBe(
+      false,
+    );
   });
 
   it('queues only a root authorization accompanied by HITL on the same turn', () => {

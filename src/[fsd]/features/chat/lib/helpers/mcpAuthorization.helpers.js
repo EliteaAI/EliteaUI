@@ -86,7 +86,7 @@ export const shouldQueueRootAuthorizationWithHitl = (metadata, pendingHitlMessag
   if (!isRootDurableAuthorization || pendingHitlMessage?.id !== messageId) return false;
   return Boolean(
     pendingHitlMessage.hitlInterrupt ||
-      (Array.isArray(pendingHitlMessage.hitlInterrupts) && pendingHitlMessage.hitlInterrupts.length),
+    (Array.isArray(pendingHitlMessage.hitlInterrupts) && pendingHitlMessage.hitlInterrupts.length),
   );
 };
 
