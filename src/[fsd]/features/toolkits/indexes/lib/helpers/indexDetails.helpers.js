@@ -76,3 +76,12 @@ export const bannerVariant = (isIndexing, state, reindexStats, error) => {
     message: BannerMessageMap[BannerSeverity.info],
   };
 };
+
+/**
+ * A run the backend has marked stale while it still claims to be in progress: the process died
+ * without ever reporting a terminal state, so nothing else will ever update it.
+ * @param {object} index - Index row as returned by the indexes list
+ * @returns {boolean}
+ */
+export const isAbandonedRun = index =>
+  Boolean(index?.stale) && index?.metadata?.state === IndexStatuses.progress;

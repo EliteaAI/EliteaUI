@@ -46,11 +46,11 @@ Tools that require **PgVector** and an **Embedding Model** — such as *Index da
   {
     id: 'indexes-tab',
     target: TOOLKIT_TOUR_TARGETS.indexesTab,
-    placement: 'bottom',
+    placement: 'left',
     title: 'Indexes',
-    content: `Toolkits that support document processing provide an **Indexes** tab for managing indexed content. Indexing enables the AI to perform semantic search over documents from the connected service — finding content by meaning rather than exact keywords.
+    content: `Toolkits that support document processing show an **Indexes** panel for managing indexed content. Indexing enables the AI to perform semantic search over documents from the connected service, finding content by meaning rather than exact keywords.
 
-From the Indexes tab, create and manage indexes for any supported content source. Once indexed, the AI can use semantic search tools to query the data during a conversation.`,
+From this panel, create and manage indexes for any supported content source. Once indexed, the AI can use semantic search tools to query the data during a conversation.`,
   },
   {
     id: 'raw-json',
@@ -62,9 +62,11 @@ From the Indexes tab, create and manage indexes for any supported content source
   {
     id: 'test-settings',
     target: SHARED_TOUR_TARGETS.testSettings,
-    placement: 'left',
-    title: 'Test Settings',
-    content: `The toolkit detail page includes a built-in test interface. Select a model, choose a tool, provide any required parameters, and click **RUN TOOL** to execute it in real time. Results appear inline so you can verify the integration works correctly before attaching it to an agent or pipeline.`,
+    placement: 'bottom',
+    title: 'Test Toolkit',
+    content: `**Test** opens a dedicated test page for the saved toolkit. Choose a tool, select a model, fill in any required parameters, and click **Run Test** to execute it in real time. Results appear beside the settings so you can verify the integration works correctly before attaching it to an agent or pipeline.
+
+The test page runs the saved configuration, so **Test** stays disabled while you have unsaved changes.`,
   },
   {
     id: 'run-history',

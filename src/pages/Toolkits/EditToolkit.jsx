@@ -5,19 +5,18 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import { Box, Typography } from '@mui/material';
 
-import { getIntegrationOptions } from '@/DEPRECATED.js';
 import { SHARED_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { useGetIndexesListQuery } from '@/[fsd]/features/toolkits/indexes/api';
-import { IndexesToolsEnum } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
+import { IndexesToolsEnum, IndexingBlockers } from '@/[fsd]/features/toolkits/indexes/lib/constants';
+import { shouldFetchIndexes } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexingBlocker.helpers';
 // TODO: DELETE after migration period (Q1 2026) - Legacy OpenAPI toolkit migration
 import { LegacyOpenApiMigration, ToolkitFormHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitsControls, ToolkitsTabBar } from '@/[fsd]/features/toolkits/ui';
 import { useEliteATheme, useHasBreadcrumbTrail } from '@/[fsd]/shared/lib/hooks';
 import Breadcrumbs from '@/[fsd]/shared/ui/breadcrumbs';
-import { useListModelsQuery } from '@/api/configurations.js';
 import { useToolkitsDetailsQuery } from '@/api/toolkits.js';
-import { CapabilityTypes, SearchParams } from '@/common/constants.js';
+import { SearchParams } from '@/common/constants.js';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils.jsx';
 import BackButton from '@/components/BackButton';
 import ConfirmRedirectModal from '@/components/ConfirmRedirectModal';
@@ -32,7 +31,6 @@ import ConfigurationTab from '@/pages/Toolkits/ConfigurationTab.jsx';
 import RouteDefinitions from '@/routes';
 import { interpolateUrl } from '@/utils/urlInterpolation';
 
-const applicationCapabilities = [CapabilityTypes.chat_completion.value];
 const emptyToolDetail = {};
 
 const EditToolkit = memo(props => {
@@ -152,7 +150,9 @@ const EditToolkit = memo(props => {
     return editToolDetail?.type || '';
   }, [editToolDetail?.type]);
 
-  const { toolkitSchemas, isFetching } = useGetCurrentToolkitSchemas({ isMCP: isMCP && toolType !== 'mcp' });
+  const { toolkitSchemas, isSettled: areToolkitTypesSettled } = useGetCurrentToolkitSchemas({
+    isMCP: isMCP && toolType !== 'mcp',
+  });
 
   const toolSchema = useMemo(() => {
     return toolkitSchemas?.[toolType];
@@ -167,40 +167,29 @@ const EditToolkit = memo(props => {
 
   const { setBlockNav } = useNavBlocker(blockOptions);
 
-  const selectedProjectId = useSelectedProjectId();
-  const { data: modelsData = [] } = useListModelsQuery(
-    { projectId: selectedProjectId, include_shared: true },
-    { skip: !selectedProjectId },
-  );
-  const modelOptions = useMemo(
-    () => getIntegrationOptions(modelsData?.items || [], applicationCapabilities),
-    [modelsData],
-  );
+  const indexingBlocker = useMemo(() => {
+    if (!areToolkitTypesSettled || editToolDetail?.isLoadingConfigurations) {
+      return IndexingBlockers.loading;
+    }
 
-  const disableIndexingReason = useMemo(() => {
-    const needToSelectIndexData = !editToolDetail?.settings?.selected_tools?.includes(
-      IndexesToolsEnum.indexData,
-    );
-    const loading =
-      !publicToolkitData?.settings?.pgvector_configuration ||
-      !publicToolkitData?.settings?.embedding_model ||
-      isFetching ||
-      editToolDetail?.isLoadingConfigurations;
+    const savedSettings = publicToolkitData?.settings;
+    if (!savedSettings?.pgvector_configuration || !savedSettings?.embedding_model) {
+      return IndexingBlockers.notConfigured;
+    }
 
-    return needToSelectIndexData || loading ? { loading, needToSelectIndexData } : null;
+    if (!editToolDetail?.settings?.selected_tools?.includes(IndexesToolsEnum.indexData)) {
+      return IndexingBlockers.buildsDisabled;
+    }
+
+    return null;
   }, [
-    publicToolkitData,
-    isFetching,
+    publicToolkitData?.settings,
+    areToolkitTypesSettled,
     editToolDetail?.isLoadingConfigurations,
     editToolDetail?.settings?.selected_tools,
   ]);
 
-  const selectedIndexTools = useMemo(
-    () =>
-      editToolDetail?.settings?.selected_tools?.filter(st => Object.values(IndexesToolsEnum).includes(st)) ??
-      [],
-    [editToolDetail?.settings?.selected_tools],
-  );
+  const isSidePanelUndecided = !mcpId && !areToolkitTypesSettled;
 
   const shouldHideIndexesTab = useMemo(() => {
     try {
@@ -220,7 +209,7 @@ const EditToolkit = memo(props => {
       toolkitId: realId,
       projectId: currentProjectId,
     },
-    { skip: !!disableIndexingReason || shouldHideIndexesTab || !realId || !currentProjectId },
+    { skip: !shouldFetchIndexes(indexingBlocker) || shouldHideIndexesTab || !realId || !currentProjectId },
   );
 
   const tabs = useMemo(
@@ -249,8 +238,8 @@ const EditToolkit = memo(props => {
         content: (
           <ConfigurationTab
             updateKey={updateConfigKey}
-            isFetching={isFetchingPublic}
-            modelOptions={modelOptions}
+            isFetching={isFetchingPublic || isSidePanelUndecided}
+            hasLoadError={isPublicError}
             setDirty={setDirty}
             dirty={dirty}
             editToolDetail={editToolDetail}
@@ -262,8 +251,7 @@ const EditToolkit = memo(props => {
             isMCP={isMCP}
             toolkitId={realId}
             onValidationStateChange={handleValidationStateChange}
-            selectedIndexTools={selectedIndexTools}
-            indexingUnavailableReason={disableIndexingReason}
+            indexingBlocker={indexingBlocker}
             shouldHideIndexes={shouldHideIndexesTab}
           />
         ),
@@ -281,10 +269,10 @@ const EditToolkit = memo(props => {
       publicToolkitData,
       isMCP,
       updateConfigKey,
-      modelOptions,
       realId,
-      selectedIndexTools,
-      disableIndexingReason,
+      isPublicError,
+      isSidePanelUndecided,
+      indexingBlocker,
       shouldHideIndexesTab,
       hasValidationErrors,
       handleValidationStateChange,

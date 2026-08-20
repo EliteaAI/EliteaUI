@@ -3,7 +3,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMcpAuthModal } from '@/[fsd]/features/mcp';
 import { ToolkitChatModesEnum } from '@/[fsd]/features/toolkits/lib/constants';
 import { ToolkitChatHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
-import { WELCOME_MESSAGE_ID } from '@/common/constants';
 import { useGetSelectedToolSchema } from '@/hooks/toolkit/useGetSelectedToolSchema';
 import { ToolTypes } from '@/pages/Applications/Components/Tools/consts';
 
@@ -133,11 +132,6 @@ export const useToolkitTestRunner = ({ toolkitId, values }) => {
     setToolInputVariables(current => seedMissingDefaults(current, selectedToolSchema.properties));
   }, [selectedTool, selectedToolSchema?.properties]);
 
-  const hasResults = useMemo(
-    () => chatHistory.some(message => message.id !== WELCOME_MESSAGE_ID),
-    [chatHistory],
-  );
-
   const mcpAuthModalProps = getModalProps();
 
   return {
@@ -148,10 +142,8 @@ export const useToolkitTestRunner = ({ toolkitId, values }) => {
     selectedToolSchema,
     isValidForm,
     chatHistory,
-    hasResults,
     isRunning,
     handleRunTool,
-    handleClearChat,
     modelList,
     selectedModel,
     onSelectModel,

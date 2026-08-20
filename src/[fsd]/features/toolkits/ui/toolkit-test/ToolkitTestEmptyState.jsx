@@ -9,11 +9,11 @@ import { isMcpToolkitType } from '@/[fsd]/shared/lib/helpers';
 import { Select } from '@/[fsd]/shared/ui/';
 import TestIcon from '@/assets/test.svg?react';
 
-const TestToolsEmptyState = memo(props => {
+const ToolkitTestEmptyState = memo(props => {
   const { toolkitId, onChangeTool, sx = {} } = props;
   const { values } = useFormikContext();
   const { allToolsOptions } = useToolkitToolOptions({ toolkitId });
-  const styles = getStyles();
+  const styles = toolkitTestEmptyStateStyles();
 
   return (
     <Box sx={[styles.root, sx]}>
@@ -47,12 +47,12 @@ const TestToolsEmptyState = memo(props => {
   );
 });
 
-TestToolsEmptyState.displayName = 'TestToolsEmptyState';
+ToolkitTestEmptyState.displayName = 'ToolkitTestEmptyState';
 
-export default TestToolsEmptyState;
+export default ToolkitTestEmptyState;
 
 /** @type {MuiSx} */
-const getStyles = () => ({
+const toolkitTestEmptyStateStyles = () => ({
   root: {
     display: 'flex',
     flexDirection: 'column',

@@ -10,6 +10,7 @@ import {
   IndexStatuses,
   RUNNABLE_INDEX_STATUSES,
 } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
+import { isAbandonedRun } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
 import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
@@ -262,6 +263,16 @@ const IndexListItem = memo(props => {
                     height={16}
                   />
                 </Box>
+              )}
+              {isAbandonedRun(index) && (
+                <Tooltip title="This run stopped without finishing. Reindex to try again.">
+                  <Box sx={[styles.stateIcon, styles.error, styles.stateIconContainer]}>
+                    <AttentionIcon
+                      width={16}
+                      height={16}
+                    />
+                  </Box>
+                </Tooltip>
               )}
             </Box>
           )}
