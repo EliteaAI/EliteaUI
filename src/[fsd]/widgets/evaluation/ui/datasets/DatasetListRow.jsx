@@ -5,6 +5,8 @@ import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import EditIcon from '@/components/Icons/EditIcon';
 
+import { EvaluationRowBadge, evaluationRowStyles } from '../common';
+
 const DatasetListRow = memo(props => {
   const { dataset, canEdit = false, canDelete = false, onOpen, onRename, onDelete } = props;
 
@@ -24,7 +26,7 @@ const DatasetListRow = memo(props => {
     [onDelete, dataset],
   );
 
-  const styles = datasetListRowStyles();
+  const styles = evaluationRowStyles({ clickable: true });
 
   const caseCount = dataset.case_count ?? dataset.cases?.length ?? 0;
 
@@ -37,13 +39,9 @@ const DatasetListRow = memo(props => {
       <Box sx={styles.info}>
         <Box sx={styles.titleRow}>
           <Typography variant="bodyMedium">{dataset.name}</Typography>
-          <Typography
-            component="span"
-            variant="bodySmall"
-            sx={styles.badge}
-          >
+          <EvaluationRowBadge>
             {caseCount} case{caseCount === 1 ? '' : 's'}
-          </Typography>
+          </EvaluationRowBadge>
         </Box>
         {dataset.description && (
           <Typography
@@ -92,46 +90,5 @@ const DatasetListRow = memo(props => {
 });
 
 DatasetListRow.displayName = 'DatasetListRow';
-
-/** @type {MuiSx} */
-const datasetListRowStyles = () => ({
-  root: ({ palette }) => ({
-    display: 'flex',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    gap: '0.75rem',
-    padding: '0.5rem 0.75rem',
-    borderRadius: '0.5rem',
-    cursor: 'pointer',
-    border: `0.0625rem solid ${palette.border.lines}`,
-    '&:hover': {
-      backgroundColor: palette.background.tabButton.default,
-    },
-  }),
-  info: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.25rem',
-    minWidth: 0,
-  },
-  titleRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-    flexWrap: 'wrap',
-  },
-  badge: ({ palette }) => ({
-    padding: '0.0625rem 0.5rem',
-    borderRadius: '0.75rem',
-    color: palette.text.secondary,
-    backgroundColor: palette.background.tabPanel,
-    border: `0.0625rem solid ${palette.border.lines}`,
-  }),
-  actions: {
-    display: 'flex',
-    gap: '0.25rem',
-    flexShrink: 0,
-  },
-});
 
 export default DatasetListRow;

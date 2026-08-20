@@ -21,6 +21,7 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 
 import { useDeleteEvalDatasetCaseMutation, useEvalDatasetQuery } from '../../api';
+import { EVAL_DATASET_CASE_PAGE_SIZE } from '../../lib/constants/evaluation.constants';
 import {
   caseSourceLabel,
   excerpt,
@@ -38,17 +39,32 @@ const DatasetDetailView = memo(props => {
 
   const [caseDialog, setCaseDialog] = useState({ open: false, datasetCase: null });
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [offset, setOffset] = useState(0);
 
   const {
     data: dataset,
     isLoading,
     isError,
-  } = useEvalDatasetQuery({ projectId, datasetId }, { skip: !projectId || datasetId == null });
+  } = useEvalDatasetQuery(
+    { projectId, datasetId, limit: EVAL_DATASET_CASE_PAGE_SIZE, offset },
+    { skip: !projectId || datasetId == null },
+  );
 
   const [deleteCase, { isLoading: isDeletingCase }] = useDeleteEvalDatasetCaseMutation();
 
   const cases = useMemo(() => dataset?.cases ?? [], [dataset?.cases]);
   const missingExpected = useMemo(() => withoutExpectedCount(cases), [cases]);
+
+  const total = dataset?.case_count ?? cases.length;
+  const isPaged = total > cases.length;
+  const hasPrev = offset > 0;
+  const hasNext = offset + cases.length < total;
+
+  const goPrev = useCallback(
+    () => setOffset(current => Math.max(0, current - EVAL_DATASET_CASE_PAGE_SIZE)),
+    [],
+  );
+  const goNext = useCallback(() => setOffset(current => current + EVAL_DATASET_CASE_PAGE_SIZE), []);
 
   const openAddCase = useCallback(() => setCaseDialog({ open: true, datasetCase: null }), []);
   const openEditCase = useCallback(datasetCase => setCaseDialog({ open: true, datasetCase }), []);
@@ -63,10 +79,12 @@ const DatasetDetailView = memo(props => {
       await deleteCase({ projectId, datasetId, caseId: deleteTarget.id }).unwrap();
       toastSuccess('Case deleted.');
       setDeleteTarget(null);
+      // Emptying the last page would otherwise leave the view stranded past the end.
+      if (cases.length === 1) goPrev();
     } catch (error) {
       toastError(parseEvalError(error, 'Failed to delete case.'));
     }
-  }, [deleteTarget, deleteCase, projectId, datasetId, toastSuccess, toastError]);
+  }, [deleteTarget, deleteCase, projectId, datasetId, toastSuccess, toastError, cases.length, goPrev]);
 
   const styles = datasetDetailViewStyles();
 
@@ -158,7 +176,8 @@ const DatasetDetailView = memo(props => {
           sx={styles.warning}
           data-testid="dataset-detail-missing-expected"
         >
-          ⚠ {missingExpected} case{missingExpected === 1 ? '' : 's'} without expected output.
+          ⚠ {missingExpected} case{missingExpected === 1 ? '' : 's'} without expected output
+          {isPaged ? ' on this page' : ''}.
         </Typography>
       )}
 
@@ -229,6 +248,39 @@ const DatasetDetailView = memo(props => {
         </Box>
       )}
 
+      {isPaged && (
+        <Box
+          sx={styles.pager}
+          data-testid="dataset-cases-pager"
+        >
+          <Typography
+            variant="bodySmall"
+            color="text.secondary"
+            data-testid="dataset-cases-page-label"
+          >
+            Showing {cases.length === 0 ? 0 : offset + 1}–{offset + cases.length} of {total} cases
+          </Typography>
+          <Button.BaseBtn
+            variant={BUTTON_VARIANTS.text}
+            color={BUTTON_COLORS.secondary}
+            disabled={!hasPrev}
+            onClick={goPrev}
+            data-testid="dataset-cases-prev"
+          >
+            Previous
+          </Button.BaseBtn>
+          <Button.BaseBtn
+            variant={BUTTON_VARIANTS.text}
+            color={BUTTON_COLORS.secondary}
+            disabled={!hasNext}
+            onClick={goNext}
+            data-testid="dataset-cases-next"
+          >
+            Next
+          </Button.BaseBtn>
+        </Box>
+      )}
+
       <CaseEditorDialog
         open={caseDialog.open}
         projectId={projectId}
@@ -289,6 +341,11 @@ const datasetDetailViewStyles = () => ({
   }),
   tableWrapper: {
     overflowX: 'auto',
+  },
+  pager: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
   },
 });
 

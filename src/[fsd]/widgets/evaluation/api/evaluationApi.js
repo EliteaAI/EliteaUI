@@ -1,5 +1,7 @@
 import { eliteaApi } from '@/api';
 
+import { EVAL_DATASET_CASE_PAGE_SIZE, EVAL_RESULT_MAX_LIMIT } from '../lib/constants/evaluation.constants';
+
 const TAG_EVAL_DIMENSION = 'EVAL_DIMENSION';
 const TAG_EVAL_CODE_VALIDATION = 'EVAL_CODE_VALIDATION';
 const TAG_EVAL_SUITE = 'EVAL_SUITE';
@@ -201,11 +203,18 @@ export const evaluationApi = eliteaApi
         }),
         providesTags: [TAG_EVAL_DATASET],
       }),
+      // Server-paged: the response carries `case_count` (total across the dataset) and
+      // `cases_truncated`, so a caller can tell a whole dataset from one page of it.
       evalDataset: build.query({
-        query: ({ projectId, datasetId }) => ({
-          url: `/elitea_core/eval_dataset/prompt_lib/${projectId}/${datasetId}`,
-          method: 'GET',
-        }),
+        query: ({ projectId, datasetId, limit = EVAL_DATASET_CASE_PAGE_SIZE, offset = 0 }) => {
+          const params = new URLSearchParams();
+          params.set('limit', String(limit));
+          params.set('offset', String(offset));
+          return {
+            url: `/elitea_core/eval_dataset/prompt_lib/${projectId}/${datasetId}?${params.toString()}`,
+            method: 'GET',
+          };
+        },
         providesTags: [TAG_EVAL_DATASET, TAG_EVAL_DATASET_CASE],
       }),
       createEvalDataset: build.mutation({
@@ -346,11 +355,18 @@ export const evaluationApi = eliteaApi
       // ---- Results scorecard (B5, #6202) ----
       // Returns { run, results[], human_scores[], headline_score } for a single
       // run so the scorecard (§15) can render aggregates and drill-downs.
+      // Rows are ordered by (dataset_case_id, id), so a page is a contiguous case range whose
+      // last case may be partial. `total` lets the scorecard detect that and say so.
       evalRunResults: build.query({
-        query: ({ projectId, runId }) => ({
-          url: `/elitea_core/eval_results/prompt_lib/${projectId}/${runId}`,
-          method: 'GET',
-        }),
+        query: ({ projectId, runId, limit = EVAL_RESULT_MAX_LIMIT, offset = 0 }) => {
+          const params = new URLSearchParams();
+          params.set('limit', String(limit));
+          params.set('offset', String(offset));
+          return {
+            url: `/elitea_core/eval_results/prompt_lib/${projectId}/${runId}?${params.toString()}`,
+            method: 'GET',
+          };
+        },
         providesTags: [TAG_EVAL_RESULT, TAG_EVAL_HUMAN_SCORE],
       }),
 

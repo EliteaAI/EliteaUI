@@ -5,13 +5,15 @@ import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import EditIcon from '@/components/Icons/EditIcon';
 
+import { EvaluationRowBadge, evaluationRowStyles } from '../common';
+
 const EvaluationItemRow = memo(props => {
   const { item, readOnly = false, canEdit = false, canDelete = false, onEdit, onDelete } = props;
 
   const handleEdit = useCallback(() => onEdit?.(item), [onEdit, item]);
   const handleDelete = useCallback(() => onDelete?.(item), [onDelete, item]);
 
-  const styles = evaluationItemRowStyles();
+  const styles = evaluationRowStyles();
 
   const badges = [];
   if (item.tier) badges.push(item.tier);
@@ -27,14 +29,7 @@ const EvaluationItemRow = memo(props => {
         <Box sx={styles.titleRow}>
           <Typography variant="bodyMedium">{item.name}</Typography>
           {badges.map(badge => (
-            <Typography
-              key={badge}
-              component="span"
-              variant="bodySmall"
-              sx={styles.badge}
-            >
-              {badge}
-            </Typography>
+            <EvaluationRowBadge key={badge}>{badge}</EvaluationRowBadge>
           ))}
         </Box>
         {item.description && (
@@ -84,42 +79,5 @@ const EvaluationItemRow = memo(props => {
 });
 
 EvaluationItemRow.displayName = 'EvaluationItemRow';
-
-/** @type {MuiSx} */
-const evaluationItemRowStyles = () => ({
-  root: ({ palette }) => ({
-    display: 'flex',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    gap: '0.75rem',
-    padding: '0.5rem 0.75rem',
-    borderRadius: '0.5rem',
-    border: `0.0625rem solid ${palette.border.lines}`,
-  }),
-  info: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.25rem',
-    minWidth: 0,
-  },
-  titleRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-    flexWrap: 'wrap',
-  },
-  badge: ({ palette }) => ({
-    padding: '0.0625rem 0.5rem',
-    borderRadius: '0.75rem',
-    color: palette.text.secondary,
-    backgroundColor: palette.background.tabPanel,
-    border: `0.0625rem solid ${palette.border.lines}`,
-  }),
-  actions: {
-    display: 'flex',
-    gap: '0.25rem',
-    flexShrink: 0,
-  },
-});
 
 export default EvaluationItemRow;

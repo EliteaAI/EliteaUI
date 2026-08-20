@@ -274,3 +274,10 @@ export const EVAL_SIO_EVENTS = {
 // degraded mode — but "connected" is not the same as "receiving", so it stays armed until the
 // server confirms the room join (see useEvalRunLiveProgress).
 export const EVAL_RUN_FALLBACK_POLL_MS = 10000;
+
+// Server-side page caps the UI must opt into, or reads silently truncate. Backend:
+// DEFAULT/MAX_CASE_LIMIT in evaluation_dataset_utils.py (200/1000) and
+// DEFAULT/MAX_RESULT_LIMIT in evaluation_result_utils.py (500/2000). The scorecard asks for the
+// maximum in one shot because it renders a whole run at once; the dataset view pages instead.
+export const EVAL_DATASET_CASE_PAGE_SIZE = 200;
+export const EVAL_RESULT_MAX_LIMIT = 2000;

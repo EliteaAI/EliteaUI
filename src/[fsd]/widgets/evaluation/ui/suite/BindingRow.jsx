@@ -9,6 +9,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
 import { getBindingEngineLabel, getBindingLabel, isPlatformBinding } from '../../lib/helpers';
+import { EvaluationRowBadge, evaluationRowStyles } from '../common';
 
 const BindingRow = memo(props => {
   const {
@@ -46,7 +47,7 @@ const BindingRow = memo(props => {
     <Box
       ref={setNodeRef}
       style={styles.dragStyle}
-      sx={styles.root}
+      sx={[styles.root, styles.dragging]}
       data-testid="evaluation-binding-row"
     >
       {canReorder && (
@@ -63,14 +64,7 @@ const BindingRow = memo(props => {
       <Box sx={styles.info}>
         <Typography variant="bodyMedium">{label}</Typography>
         {badges.filter(Boolean).map(badge => (
-          <Typography
-            key={badge}
-            component="span"
-            variant="bodySmall"
-            sx={styles.badge}
-          >
-            {badge}
-          </Typography>
+          <EvaluationRowBadge key={badge}>{badge}</EvaluationRowBadge>
         ))}
       </Box>
 
@@ -112,19 +106,13 @@ BindingRow.displayName = 'BindingRow';
 
 /** @type {MuiSx} */
 const bindingRowStyles = ({ transform, transition, isDragging } = {}) => ({
+  ...evaluationRowStyles({ dense: true }),
   dragStyle: {
     transform: CSS.Translate.toString(transform),
     transition,
     zIndex: isDragging ? 1 : 'auto',
   },
-  root: ({ palette }) => ({
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: '0.5rem',
-    padding: '0.375rem 0.75rem',
-    borderRadius: '0.5rem',
-    border: `0.0625rem solid ${palette.border.lines}`,
+  dragging: ({ palette }) => ({
     backgroundColor: palette.background.paper,
     opacity: isDragging ? 0.5 : 1,
   }),
@@ -135,25 +123,6 @@ const bindingRowStyles = ({ transform, transition, isDragging } = {}) => ({
     cursor: isDragging ? 'grabbing' : 'grab',
     touchAction: 'none',
   }),
-  info: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-    flexWrap: 'wrap',
-    minWidth: 0,
-  },
-  badge: ({ palette }) => ({
-    padding: '0.0625rem 0.5rem',
-    borderRadius: '0.75rem',
-    color: palette.text.secondary,
-    backgroundColor: palette.background.tabPanel,
-    border: `0.0625rem solid ${palette.border.lines}`,
-  }),
-  actions: {
-    display: 'flex',
-    gap: '0.25rem',
-    flexShrink: 0,
-  },
 });
 
 export default BindingRow;

@@ -153,14 +153,50 @@ export const resolveBindingMeta = (binding, snapshot = {}) => {
 };
 
 /**
+ * Case ids fully covered by one page of results, or `null` when the page covers the whole run.
+ *
+ * The backend orders results by (dataset_case_id, id), so a page is a contiguous case range whose
+ * last case may be cut mid-way. That trailing case is dropped, since a partially-scored case is
+ * what makes truncation look like missing scores rather than missing data.
+ *
+ * A human-only run legitimately has zero results, so a full page is reported as unrestricted rather
+ * than as "no cases covered".
+ */
+export const coveredCaseIdsFromPage = ({ results = [], total = 0, offset = 0 } = {}) => {
+  if (offset + results.length >= total) return null;
+
+  const ordered = [];
+  const seen = new Set();
+  for (const row of results) {
+    const id = String(row.dataset_case_id);
+    if (seen.has(id)) continue;
+    seen.add(id);
+    ordered.push(id);
+  }
+  return ordered.length > 1 ? ordered.slice(0, -1) : ordered;
+};
+
+/**
  * Builds the full scorecard view-model for a run from the B5 payload
  * ({ run, results, human_scores }). Produces per-binding aggregates, per-case
  * drill-down cells, run-level counts and a headline with a provisional flag while
  * any human validation is still unscored (§15). Pure — safe to unit test.
+ *
+ * `caseIds`, when given, restricts the card to those snapshot cases. The caller passes it when the
+ * result page it holds does not cover the whole run; without it the uncovered cases would render as
+ * unscored cells that are indistinguishable from genuine gaps.
  */
-export const buildScorecard = ({ run, results = [], humanScores = [], headlineScore } = {}) => {
+export const buildScorecard = ({
+  run,
+  results = [],
+  humanScores = [],
+  headlineScore,
+  caseIds = null,
+} = {}) => {
   const snapshot = run?.snapshot ?? {};
-  const cases = [...(snapshot.cases ?? [])].sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
+  const allCases = [...(snapshot.cases ?? [])].sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
+  const allowedCaseIds = caseIds ? new Set(caseIds.map(String)) : null;
+  const cases = allowedCaseIds ? allCases.filter(item => allowedCaseIds.has(String(item.id))) : allCases;
   const bindingsRaw = [...(snapshot.bindings ?? [])].sort(
     (a, b) => (a.order_index ?? 0) - (b.order_index ?? 0),
   );

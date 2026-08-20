@@ -14,6 +14,7 @@ import { EVAL_PERMISSIONS } from '../../lib/constants';
 import {
   buildEvaluationResultsSheets,
   buildScorecard,
+  coveredCaseIdsFromPage,
   evaluationExportFileName,
   formatScore,
   parseEvalError,
@@ -61,6 +62,18 @@ const ResultsScorecardDialog = memo(props => {
 
   const [writeHumanScore] = useWriteEvalHumanScoreMutation();
 
+  // The results read is paged (EVAL_RESULT_MAX_LIMIT). A run bigger than one page is shown as the
+  // case range the page actually covers, so a truncated read cannot pass for a complete scorecard.
+  const coveredCaseIds = useMemo(
+    () =>
+      coveredCaseIdsFromPage({
+        results: data?.results ?? [],
+        total: data?.total ?? 0,
+        offset: data?.offset ?? 0,
+      }),
+    [data],
+  );
+
   const scorecard = useMemo(
     () =>
       buildScorecard({
@@ -68,8 +81,9 @@ const ResultsScorecardDialog = memo(props => {
         results: data?.results,
         humanScores: data?.human_scores,
         headlineScore: data?.headline_score,
+        caseIds: coveredCaseIds,
       }),
-    [data],
+    [data, coveredCaseIds],
   );
 
   const needsScoreCount = useMemo(
@@ -147,6 +161,18 @@ const ResultsScorecardDialog = memo(props => {
         </Box>
       ) : (
         <>
+          {coveredCaseIds && (
+            <Typography
+              variant="bodySmall"
+              sx={styles.truncated}
+              data-testid="evaluation-scorecard-truncated"
+            >
+              ⚠ This run is too large to show at once — {scorecard.cases.length} of{' '}
+              {data?.run?.snapshot?.cases?.length ?? scorecard.cases.length} cases are shown, and Export
+              covers only those. The headline score below still spans the whole run.
+            </Typography>
+          )}
+
           <ScorecardOverview scorecard={scorecard} />
 
           <Divider />
@@ -286,6 +312,9 @@ const resultsScorecardDialogStyles = () => ({
   }),
   error: ({ palette }) => ({
     color: palette.error.main,
+  }),
+  truncated: ({ palette }) => ({
+    color: palette.warning?.main ?? palette.error.main,
   }),
 });
 
