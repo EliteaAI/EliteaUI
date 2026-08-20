@@ -135,6 +135,36 @@ const AnalyticsUserDetailed = memo(props => {
           valueTestId="analytics-user-detail-kpi-value"
         />
         <KPICard
+          label="CACHE READ TOKENS"
+          value={AnalyticCommonHelpers.fmtNum(kpis.cache_read_tokens)}
+          tooltip={tt.CACHE_READ_TOKENS}
+          testId="analytics-user-detail-kpi-card"
+          valueTestId="analytics-user-detail-kpi-value"
+        />
+        <KPICard
+          label="CACHE WRITE TOKENS"
+          value={AnalyticCommonHelpers.fmtNum(kpis.cache_creation_tokens)}
+          tooltip={tt.CACHE_WRITE_TOKENS}
+          testId="analytics-user-detail-kpi-card"
+          valueTestId="analytics-user-detail-kpi-value"
+        />
+        <KPICard
+          label="CACHE READ COST"
+          value={AnalyticCommonHelpers.fmtCost(kpis.cache_read_cost)}
+          subtitle="estimated"
+          tooltip={tt.CACHE_READ_COST}
+          testId="analytics-user-detail-kpi-card"
+          valueTestId="analytics-user-detail-kpi-value"
+        />
+        <KPICard
+          label="CACHE WRITE COST"
+          value={AnalyticCommonHelpers.fmtCost(kpis.cache_creation_cost)}
+          subtitle="estimated"
+          tooltip={tt.CACHE_WRITE_COST}
+          testId="analytics-user-detail-kpi-card"
+          valueTestId="analytics-user-detail-kpi-value"
+        />
+        <KPICard
           label="TOTAL COST"
           value={AnalyticCommonHelpers.fmtCost(kpis.llm_cost)}
           subtitle="estimated"

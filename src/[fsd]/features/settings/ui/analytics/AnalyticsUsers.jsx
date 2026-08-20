@@ -119,6 +119,10 @@ const AnalyticsUsers = memo(props => {
             <Typography sx={[styles.tableCell, styles.flexOne]}>Total Cost</Typography>
             <Typography sx={[styles.tableCell, styles.flexOne]}>Input Token Cost</Typography>
             <Typography sx={[styles.tableCell, styles.flexOne]}>Output Token Cost</Typography>
+            <Typography sx={[styles.tableCell, styles.flexOne]}>Cache Read Tokens</Typography>
+            <Typography sx={[styles.tableCell, styles.flexOne]}>Cache Write Tokens</Typography>
+            <Typography sx={[styles.tableCell, styles.flexOne]}>Cache Read Cost</Typography>
+            <Typography sx={[styles.tableCell, styles.flexOne]}>Cache Write Cost</Typography>
           </Box>
           {isFetching && (
             <Box
@@ -181,6 +185,18 @@ const AnalyticsUsers = memo(props => {
                 </Typography>
                 <Typography sx={[styles.tableCellValue, styles.flexOne]}>
                   {AnalyticCommonHelpers.fmtCost(u.output_cost)}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
+                  {AnalyticCommonHelpers.fmtNum(u.cache_read_tokens)}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
+                  {AnalyticCommonHelpers.fmtNum(u.cache_creation_tokens)}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
+                  {AnalyticCommonHelpers.fmtCost(u.cache_read_cost)}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
+                  {AnalyticCommonHelpers.fmtCost(u.cache_creation_cost)}
                 </Typography>
               </Box>
             ))}

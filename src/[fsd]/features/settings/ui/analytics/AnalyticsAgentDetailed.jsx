@@ -130,6 +130,36 @@ const AnalyticAgentDetailed = memo(props => {
           valueTestId="analytics-agent-detail-kpi-value"
         />
         <KPICard
+          label="CACHE READ TOKENS"
+          value={AnalyticCommonHelpers.fmtNum(kpis.cache_read_tokens)}
+          tooltip={tt.CACHE_READ_TOKENS}
+          testId="analytics-agent-detail-kpi-card"
+          valueTestId="analytics-agent-detail-kpi-value"
+        />
+        <KPICard
+          label="CACHE WRITE TOKENS"
+          value={AnalyticCommonHelpers.fmtNum(kpis.cache_creation_tokens)}
+          tooltip={tt.CACHE_WRITE_TOKENS}
+          testId="analytics-agent-detail-kpi-card"
+          valueTestId="analytics-agent-detail-kpi-value"
+        />
+        <KPICard
+          label="CACHE READ COST"
+          value={AnalyticCommonHelpers.fmtCost(kpis.cache_read_cost)}
+          subtitle="estimated"
+          tooltip={tt.CACHE_READ_COST}
+          testId="analytics-agent-detail-kpi-card"
+          valueTestId="analytics-agent-detail-kpi-value"
+        />
+        <KPICard
+          label="CACHE WRITE COST"
+          value={AnalyticCommonHelpers.fmtCost(kpis.cache_creation_cost)}
+          subtitle="estimated"
+          tooltip={tt.CACHE_WRITE_COST}
+          testId="analytics-agent-detail-kpi-card"
+          valueTestId="analytics-agent-detail-kpi-value"
+        />
+        <KPICard
           label="AVG LATENCY"
           value={AnalyticCommonHelpers.fmtDuration(kpis.avg_duration_ms)}
           tooltip={tt.AVG_LATENCY}

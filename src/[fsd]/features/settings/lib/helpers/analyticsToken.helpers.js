@@ -17,7 +17,13 @@ export const tokenStats = item => {
       item?.total_completion_tokens ??
       item?.output,
   );
+  const cacheRead = toNumber(item?.cache_read_tokens ?? item?.total_cache_read_tokens ?? item?.cacheRead);
+  const cacheWrite = toNumber(
+    item?.cache_creation_tokens ?? item?.total_cache_creation_tokens ?? item?.cacheWrite,
+  );
   const totalCandidate = item?.total_tokens ?? item?.tokens_total ?? item?.total;
-  const total = Number.isFinite(Number(totalCandidate)) ? Number(totalCandidate) : input + output;
-  return { total, input, output };
+  const total = Number.isFinite(Number(totalCandidate))
+    ? Number(totalCandidate)
+    : input + output + cacheRead + cacheWrite;
+  return { total, input, output, cacheRead, cacheWrite };
 };

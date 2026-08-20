@@ -123,9 +123,8 @@ const buildCostsSheet = (data, meta) => {
       { metric: 'Total Cost (USD)', value: kpis.total_cost ?? 0 },
       { metric: 'Input Token Cost (USD)', value: kpis.total_input_cost ?? 0 },
       { metric: 'Output Token Cost (USD)', value: kpis.total_output_cost ?? 0 },
-      { metric: 'Total Tokens', value: kpis.total_tokens ?? 0 },
-      { metric: 'Input Tokens', value: kpis.total_input_tokens ?? 0 },
-      { metric: 'Output Tokens', value: kpis.total_output_tokens ?? 0 },
+      { metric: 'Cache Read Cost (USD)', value: kpis.total_cache_read_cost ?? 0 },
+      { metric: 'Cache Write Cost (USD)', value: kpis.total_cache_creation_cost ?? 0 },
     ],
   });
 
@@ -134,6 +133,8 @@ const buildCostsSheet = (data, meta) => {
     { header: 'Total Cost (USD)', key: 'total_cost', numFmt: ExcelFormats.currency },
     { header: 'Input Token Cost (USD)', key: 'input_cost', numFmt: ExcelFormats.currency },
     { header: 'Output Token Cost (USD)', key: 'output_cost', numFmt: ExcelFormats.currency },
+    { header: 'Cache Read Cost (USD)', key: 'cache_read_cost', numFmt: ExcelFormats.currency },
+    { header: 'Cache Write Cost (USD)', key: 'cache_creation_cost', numFmt: ExcelFormats.currency },
   ];
   sections.push({
     title: 'Daily Cost Trend',
@@ -146,6 +147,8 @@ const buildCostsSheet = (data, meta) => {
     { header: 'Total Cost (USD)', key: 'total_cost', numFmt: ExcelFormats.currency },
     { header: 'Input Token Cost (USD)', key: 'input_cost', numFmt: ExcelFormats.currency },
     { header: 'Output Token Cost (USD)', key: 'output_cost', numFmt: ExcelFormats.currency },
+    { header: 'Cache Read Cost (USD)', key: 'cache_read_cost', numFmt: ExcelFormats.currency },
+    { header: 'Cache Write Cost (USD)', key: 'cache_creation_cost', numFmt: ExcelFormats.currency },
     { header: 'Share (%)', key: 'share', numFmt: ExcelFormats.percent },
   ];
 
@@ -157,6 +160,8 @@ const buildCostsSheet = (data, meta) => {
         total_cost: item.total_cost ?? 0,
         input_cost: item.input_cost ?? 0,
         output_cost: item.output_cost ?? 0,
+        cache_read_cost: item.cache_read_cost ?? 0,
+        cache_creation_cost: item.cache_creation_cost ?? 0,
         share: totalCost > 0 ? Number((((item.total_cost ?? 0) / totalCost) * 100).toFixed(2)) : 0,
       }));
 
@@ -209,6 +214,8 @@ const buildTokenRows = (items, nameMapper, totalProjectTokens) =>
         total_tokens: stats.total,
         input_tokens: stats.input,
         output_tokens: stats.output,
+        cache_read_tokens: stats.cacheRead,
+        cache_write_tokens: stats.cacheWrite,
         share: totalProjectTokens > 0 ? Number(((stats.total / totalProjectTokens) * 100).toFixed(2)) : 0,
       };
     })
@@ -230,6 +237,8 @@ const buildTokensSheet = (data, meta) => {
       { metric: 'Total Tokens', value: Number(kpis.total_tokens ?? 0) || 0 },
       { metric: 'Input Tokens', value: Number(kpis.total_input_tokens ?? 0) || 0 },
       { metric: 'Output Tokens', value: Number(kpis.total_output_tokens ?? 0) || 0 },
+      { metric: 'Cache Read Tokens', value: Number(kpis.total_cache_read_tokens ?? 0) || 0 },
+      { metric: 'Cache Write Tokens', value: Number(kpis.total_cache_creation_tokens ?? 0) || 0 },
     ],
   });
 
@@ -238,6 +247,8 @@ const buildTokensSheet = (data, meta) => {
     { header: 'Total Tokens', key: 'total_tokens', numFmt: ExcelFormats.integer },
     { header: 'Input Tokens', key: 'input_tokens', numFmt: ExcelFormats.integer },
     { header: 'Output Tokens', key: 'output_tokens', numFmt: ExcelFormats.integer },
+    { header: 'Cache Read Tokens', key: 'cache_read_tokens', numFmt: ExcelFormats.integer },
+    { header: 'Cache Write Tokens', key: 'cache_write_tokens', numFmt: ExcelFormats.integer },
   ];
   sections.push({
     title: 'Daily Token Usage',
@@ -249,6 +260,8 @@ const buildTokensSheet = (data, meta) => {
         total_tokens: stats.total,
         input_tokens: stats.input,
         output_tokens: stats.output,
+        cache_read_tokens: stats.cacheRead,
+        cache_write_tokens: stats.cacheWrite,
       };
     }),
   });
@@ -258,6 +271,8 @@ const buildTokensSheet = (data, meta) => {
     { header: 'Total Tokens', key: 'total_tokens', numFmt: ExcelFormats.integer },
     { header: 'Input Tokens', key: 'input_tokens', numFmt: ExcelFormats.integer },
     { header: 'Output Tokens', key: 'output_tokens', numFmt: ExcelFormats.integer },
+    { header: 'Cache Read Tokens', key: 'cache_read_tokens', numFmt: ExcelFormats.integer },
+    { header: 'Cache Write Tokens', key: 'cache_write_tokens', numFmt: ExcelFormats.integer },
     { header: 'Share', key: 'share', numFmt: ExcelFormats.percent },
   ];
 

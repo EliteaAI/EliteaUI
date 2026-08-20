@@ -138,6 +138,18 @@ const AnalyticsTokens = memo(props => {
           subtitle="completion tokens"
           tooltip={tt.OUTPUT_TOKENS}
         />
+        <KPICard
+          label="CACHE READ"
+          value={AnalyticCommonHelpers.fmtNum(getNumber(kpis.total_cache_read_tokens))}
+          subtitle="cache read tokens"
+          tooltip={tt.CACHE_READ_TOKENS}
+        />
+        <KPICard
+          label="CACHE WRITE"
+          value={AnalyticCommonHelpers.fmtNum(getNumber(kpis.total_cache_creation_tokens))}
+          subtitle="cache write tokens"
+          tooltip={tt.CACHE_WRITE_TOKENS}
+        />
       </Box>
 
       <Box sx={styles.chartCard}>
