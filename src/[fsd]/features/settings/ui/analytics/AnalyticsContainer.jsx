@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useStore } from 'react-redux';
+import { useSelector, useStore } from 'react-redux';
 
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import { Alert, Box, CircularProgress, Snackbar, Tooltip, Typography } from '@mui/material';
@@ -60,6 +60,11 @@ const AnalyticsContainer = memo(() => {
   const projectId = useSelectedProjectId();
   const projectName = useSelectedProjectName();
   const store = useStore();
+  const personalProjectId = useSelector(state => state.user?.personal_project_id);
+  const isPersonalProject = useMemo(
+    () => Boolean(projectId && personalProjectId && projectId === personalProjectId),
+    [projectId, personalProjectId],
+  );
 
   const { currentStep, tourId } = useInteractiveTour() ?? {};
 
@@ -155,6 +160,7 @@ const AnalyticsContainer = memo(() => {
       const sheets = AnalyticsExportHelpers.buildAnalyticsSheets({
         ...allData,
         meta: { projectName, dateFrom: dateFromISO, dateTo: dateToISO, timeZone },
+        isPersonalProject,
       });
 
       await exportToExcel(
@@ -170,7 +176,7 @@ const AnalyticsContainer = memo(() => {
     } finally {
       setExporting(false);
     }
-  }, [store, projectId, projectName, dateFromISO, dateToISO]);
+  }, [store, projectId, projectName, dateFromISO, dateToISO, isPersonalProject]);
 
   const handleCloseExportError = useCallback(() => setExportError(false), []);
 
@@ -319,6 +325,7 @@ const AnalyticsContainer = memo(() => {
             <AnalyticsOverview
               data={data}
               onUserClick={handleOverviewUserClick}
+              isPersonalProject={isPersonalProject}
             />
           )}
           {activeTab === 1 && (
