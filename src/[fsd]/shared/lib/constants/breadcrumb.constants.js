@@ -21,7 +21,7 @@ export const BREADCRUMB_REGISTRY = {
   },
   [RouteDefinitions.ToolkitTest]: {
     parent: RouteDefinitions.ToolkitDetail,
-    label: 'Test',
+    label: 'Test Toolkit',
   },
   [RouteDefinitions.ToolkitIndexNew]: {
     parent: RouteDefinitions.ToolkitDetail,
@@ -45,6 +45,6 @@ export const BREADCRUMB_REGISTRY = {
   },
   [RouteDefinitions.MCPTest]: {
     parent: RouteDefinitions.MCPDetail,
-    label: 'Test',
+    label: 'Test MCP',
   },
 };
