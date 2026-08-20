@@ -46,11 +46,19 @@ export const useMcpTokenChange = serverUrlOrOptions => {
       }
     };
 
+    const handleCrossTabLogout = event => {
+      if (event.key === McpAuthConstants.MCP_LOGOUT_SYNC_STORAGE_KEY) {
+        refreshLoginStatus();
+      }
+    };
+
     // Listen for token change events
     window.addEventListener(McpAuthConstants.MCP_TOKEN_CHANGE_EVENT, handleTokenChange);
+    window.addEventListener('storage', handleCrossTabLogout);
 
     return () => {
       window.removeEventListener(McpAuthConstants.MCP_TOKEN_CHANGE_EVENT, handleTokenChange);
+      window.removeEventListener('storage', handleCrossTabLogout);
     };
   }, [storageKey, refreshLoginStatus]);
 

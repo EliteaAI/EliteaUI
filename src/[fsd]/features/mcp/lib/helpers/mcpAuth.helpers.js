@@ -20,6 +20,7 @@ const safeParse = value => {
 };
 
 const isStorageAvailable = () => typeof window !== 'undefined' && window.sessionStorage;
+const isLocalStorageAvailable = () => typeof window !== 'undefined' && window.localStorage;
 
 const saveToStorage = (key, data) => {
   if (!isStorageAvailable()) return;
@@ -116,9 +117,54 @@ const loadFromStorage = key => {
   return safeParse(window.sessionStorage.getItem(key));
 };
 
+const loadLogoutMarkers = () => {
+  if (!isLocalStorageAvailable()) return {};
+  try {
+    const markers = safeParse(
+      window.localStorage.getItem(McpAuthConstants.MCP_LOGOUT_SYNC_STORAGE_KEY),
+    );
+    return markers && typeof markers === 'object' && !Array.isArray(markers) ? markers : {};
+  } catch {
+    return {};
+  }
+};
+
+const publishLogout = key => {
+  if (!isLocalStorageAvailable()) return;
+  try {
+    const markers = loadLogoutMarkers();
+    const previous = Number(markers[key]) || 0;
+    markers[key] = Math.max(Date.now(), previous + 1);
+    // Only logout timestamps are shared between tabs. OAuth tokens remain in
+    // sessionStorage and are never copied through cross-tab storage.
+    window.localStorage.setItem(
+      McpAuthConstants.MCP_LOGOUT_SYNC_STORAGE_KEY,
+      JSON.stringify(markers),
+    );
+  } catch {
+    // Cross-tab synchronization is best-effort when localStorage is unavailable.
+  }
+};
+
 // Token storage
 const saveTokens = tokens => saveToStorage(McpAuthConstants.MC_TOKENS_STORAGE_KEY, tokens);
-export const loadTokens = () => loadFromStorage(McpAuthConstants.MC_TOKENS_STORAGE_KEY);
+export const loadTokens = () => {
+  const tokens = loadFromStorage(McpAuthConstants.MC_TOKENS_STORAGE_KEY);
+  const logoutMarkers = loadLogoutMarkers();
+  let changed = false;
+
+  Object.entries(tokens).forEach(([key, tokenInfo]) => {
+    const loggedOutAt = Number(logoutMarkers[key]) || 0;
+    const issuedAt = Number(tokenInfo?.issued_at) || 0;
+    if (loggedOutAt && issuedAt <= loggedOutAt) {
+      delete tokens[key];
+      changed = true;
+    }
+  });
+
+  if (changed) saveTokens(tokens);
+  return tokens;
+};
 
 // Credentials storage
 const saveCredentials = credentials =>
@@ -241,7 +287,8 @@ export const setAccessToken = (
   const tokens = loadTokens();
   const key = getStorageKey({ serverUrl, toolkitType });
   if (!key) return;
-  const now = Date.now();
+  const lastLogout = Number(loadLogoutMarkers()[key]) || 0;
+  const now = Math.max(Date.now(), lastLogout + 1);
   const expiresAt = expiresInSec ? now + Number(expiresInSec) * 1000 : null;
 
   // Preserve existing metadata for refresh scenarios
@@ -253,7 +300,7 @@ export const setAccessToken = (
   tokens[key] = {
     // Core token data
     access_token: accessToken,
-    issued_at: oauthMeta.issued_at || now,
+    issued_at: Math.max(Number(oauthMeta.issued_at) || 0, now),
     expires_at: expiresAt,
     // Optional token data
     ...(sessionId && { session_id: sessionId }),
@@ -311,9 +358,11 @@ export const logout = (serverUrl, toolkitType) => {
   if (tokens[key]) {
     delete tokens[key];
     saveTokens(tokens);
-    // Notify components that token has been removed
-    dispatchTokenChangeEvent(key, 'logout');
   }
+  publishLogout(key);
+  // Notify components in this tab. Other tabs observe the durable logout
+  // marker through the browser storage event.
+  dispatchTokenChangeEvent(key, 'logout');
 };
 
 // =============================================================================
@@ -585,7 +634,8 @@ export const setConnectionVerified = (serverUrl, toolkitType) => {
     return;
   }
 
-  const now = Date.now();
+  const lastLogout = Number(loadLogoutMarkers()[key]) || 0;
+  const now = Math.max(Date.now(), lastLogout + 1);
   // Store a marker with a long expiry (24 hours) - this is just a "verified" flag
   // The actual auth is handled by backend headers
   tokens[key] = {
