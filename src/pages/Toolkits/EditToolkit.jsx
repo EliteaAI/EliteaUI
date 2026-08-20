@@ -10,7 +10,7 @@ import { SHARED_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/c
 import { useGetIndexesListQuery } from '@/[fsd]/features/toolkits/indexes/api';
 import { IndexesToolsEnum } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 // TODO: DELETE after migration period (Q1 2026) - Legacy OpenAPI toolkit migration
-import { LegacyOpenApiMigration } from '@/[fsd]/features/toolkits/lib/helpers';
+import { LegacyOpenApiMigration, ToolkitFormHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitsControls, ToolkitsTabBar } from '@/[fsd]/features/toolkits/ui';
 import { useEliteATheme, useHasBreadcrumbTrail } from '@/[fsd]/shared/lib/hooks';
@@ -252,6 +252,7 @@ const EditToolkit = memo(props => {
             isFetching={isFetchingPublic}
             modelOptions={modelOptions}
             setDirty={setDirty}
+            dirty={dirty}
             editToolDetail={editToolDetail}
             setEditToolDetail={setEditToolDetail}
             isToolDirty={isToolDirty}
@@ -267,17 +268,12 @@ const EditToolkit = memo(props => {
           />
         ),
       },
-      {
-        label: 'Test',
-        tabBarItems: null,
-        content: <></>,
-        display: 'none',
-      },
     ],
     [
       isFetchingPublic,
       editToolDetail,
       handleDiscard,
+      dirty,
       isToolDirty,
       handleClearEditTool,
       toolSchema,
@@ -342,23 +338,11 @@ const EditToolkit = memo(props => {
     return 0;
   }, [tabs, tab, destTab]);
 
-  // Normalize initial values to prevent dirty state on initialization
-  const normalizedInitialValues = useMemo(() => {
-    if (!publicToolkitData) {
-      return {};
-    }
-
-    // TODO: DELETE LegacyOpenApiMigration usage after migration period (Q1 2026)
-    const normalized = LegacyOpenApiMigration.normalizeLegacyOpenApiToolkit(publicToolkitData);
-
-    return {
-      ...normalized,
-      // Ensure settings object exists to prevent setFieldValue from making form dirty
-      settings: normalized.settings || {},
-      // Ensure type is set to prevent setFieldValue from making form dirty
-      type: normalized.type || '',
-    };
-  }, [publicToolkitData]);
+  // Shared with the Test page so both seed Formik from an identically normalized toolkit.
+  const normalizedInitialValues = useMemo(
+    () => ToolkitFormHelpers.buildToolkitFormInitialValues(publicToolkitData),
+    [publicToolkitData],
+  );
 
   const styles = useMemo(() => editToolkitStyles(isMCP), [isMCP]);
 

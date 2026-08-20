@@ -1,4 +1,23 @@
+// TODO: DELETE LegacyOpenApiMigration usage after migration period (Q1 2026)
+import { normalizeLegacyOpenApiToolkit } from './legacyOpenApiMigration.helpers.js';
+
 const VALUE_ERROR_PREFIX = 'Value error, ';
+
+/**
+ * Seeds a toolkit form. `settings` and `type` are forced to be present so the first `setFieldValue`
+ * from a child does not create the key and mark an untouched form dirty.
+ */
+export const buildToolkitFormInitialValues = toolkit => {
+  if (!toolkit) return {};
+
+  const normalized = normalizeLegacyOpenApiToolkit(toolkit);
+
+  return {
+    ...normalized,
+    settings: normalized.settings || {},
+    type: normalized.type || '',
+  };
+};
 
 const pythonToJson = str =>
   str

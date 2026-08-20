@@ -7,12 +7,12 @@ import { Select } from '@/[fsd]/shared/ui/';
 import TestIcon from '@/assets/test.svg?react';
 
 const TestToolsEmptyState = memo(props => {
-  const { toolkitId, onChangeTool } = props;
+  const { toolkitId, onChangeTool, sx = {} } = props;
   const { allToolsOptions } = useToolkitToolOptions({ toolkitId });
   const styles = getStyles();
 
   return (
-    <Box sx={styles.root}>
+    <Box sx={[styles.root, sx]}>
       <TestIcon
         width="2rem"
         height="2rem"
