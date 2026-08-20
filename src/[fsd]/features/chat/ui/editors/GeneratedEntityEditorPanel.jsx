@@ -1,23 +1,19 @@
 import React, { Suspense, memo, useCallback } from 'react';
 
-import { Box, CircularProgress } from '@mui/material';
+import { Box } from '@mui/material';
 
 import { getEntityIcon, getIconStyleProps } from '@/[fsd]/features/chat/lib/helpers';
 import { ChunkHelpers } from '@/[fsd]/shared/lib/helpers';
 import BaseTab from '@/[fsd]/shared/ui/tabs/BaseTab';
 import BaseTabs, { TABS_VARIANTS } from '@/[fsd]/shared/ui/tabs/BaseTabs';
 
+import EditorLoading from './EditorLoading';
+
 const AgentEditor = ChunkHelpers.lazyWithRetry(() => import('./AgentEditor'));
 const PipelineEditor = ChunkHelpers.lazyWithRetry(() => import('./PipelineEditor'));
 const SkillEditor = ChunkHelpers.lazyWithRetry(() => import('./SkillEditor'));
 const ToolkitEditor = ChunkHelpers.lazyWithRetry(() => import('./ToolkitEditor'));
 const ProjectContextEditor = ChunkHelpers.lazyWithRetry(() => import('./ProjectContextEditor'));
-
-const EditorLoading = () => (
-  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '10rem' }}>
-    <CircularProgress size={32} />
-  </Box>
-);
 
 const GeneratedEntityEditorPanel = memo(props => {
   const {

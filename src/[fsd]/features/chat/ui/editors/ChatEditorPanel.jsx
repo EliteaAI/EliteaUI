@@ -1,11 +1,11 @@
 import { Suspense, memo } from 'react';
 
-import { Box, CircularProgress } from '@mui/material';
-
 import { FilePreviewCanvas } from '@/[fsd]/features/artifacts/ui';
 import { ChunkHelpers } from '@/[fsd]/shared/lib/helpers';
 import { ChatParticipantType } from '@/common/constants';
 import AlertDialog from '@/components/AlertDialog';
+
+import EditorLoading from './EditorLoading';
 
 const AgentEditor = ChunkHelpers.lazyWithRetry(() => import('./AgentEditor'));
 const CanvasEditor = ChunkHelpers.lazyWithRetry(() => import('./CanvasEditor'));
@@ -14,12 +14,6 @@ const PipelineEditor = ChunkHelpers.lazyWithRetry(() => import('./PipelineEditor
 const ProjectContextEditor = ChunkHelpers.lazyWithRetry(() => import('./ProjectContextEditor'));
 const SkillEditor = ChunkHelpers.lazyWithRetry(() => import('./SkillEditor'));
 const ToolkitEditor = ChunkHelpers.lazyWithRetry(() => import('./ToolkitEditor'));
-
-const EditorLoading = () => (
-  <Box sx={styles.loading}>
-    <CircularProgress />
-  </Box>
-);
 
 const ChatEditorPanel = memo(props => {
   const {
@@ -91,7 +85,7 @@ const ChatEditorPanel = memo(props => {
   return (
     <>
       {isEditingAgent && (
-        <Suspense fallback={<EditorLoading />}>
+        <Suspense fallback={<EditorLoading fullCover />}>
           <AgentEditor
             agent={editingAgent}
             versionName={activeVersionName}
@@ -114,7 +108,7 @@ const ChatEditorPanel = memo(props => {
       )}
 
       {isEditingToolkit && (
-        <Suspense fallback={<EditorLoading />}>
+        <Suspense fallback={<EditorLoading fullCover />}>
           <ToolkitEditor
             toolkit={editingToolkit}
             onCloseToolkitEditor={onCloseToolkitEditor}
@@ -126,7 +120,7 @@ const ChatEditorPanel = memo(props => {
       )}
 
       {isEditingPipeline && (
-        <Suspense fallback={<EditorLoading />}>
+        <Suspense fallback={<EditorLoading fullCover />}>
           <PipelineEditor
             ref={pipelineEditorRef}
             pipeline={editingPipeline}
@@ -151,7 +145,7 @@ const ChatEditorPanel = memo(props => {
       )}
 
       {selectedCodeBlockInfo && (
-        <Suspense fallback={<EditorLoading />}>
+        <Suspense fallback={<EditorLoading fullCover />}>
           <CanvasEditor
             ref={canvasEditorRef}
             selectedCodeBlockInfo={selectedCodeBlockInfo}
@@ -174,7 +168,7 @@ const ChatEditorPanel = memo(props => {
       )}
 
       {isEditingSkill && (
-        <Suspense fallback={<EditorLoading />}>
+        <Suspense fallback={<EditorLoading fullCover />}>
           <SkillEditor
             skill={editingSkill}
             onCloseSkillEditor={onCloseSkillEditor}
@@ -184,7 +178,7 @@ const ChatEditorPanel = memo(props => {
       )}
 
       {isEditingProjectContext && (
-        <Suspense fallback={<EditorLoading />}>
+        <Suspense fallback={<EditorLoading fullCover />}>
           <ProjectContextEditor
             onCloseProjectContextEditor={onCloseProjectContextEditor}
             isVisible={isEditingProjectContext}
@@ -193,7 +187,7 @@ const ChatEditorPanel = memo(props => {
       )}
 
       {isEditingGeneratedEntities && (
-        <Suspense fallback={<EditorLoading />}>
+        <Suspense fallback={<EditorLoading fullCover />}>
           <GeneratedEntityEditorPanel
             tabs={generatedEditorTabs}
             activeIndex={activeGeneratedTabIndex}
@@ -250,20 +244,5 @@ const ChatEditorPanel = memo(props => {
 });
 
 ChatEditorPanel.displayName = 'ChatEditorPanel';
-
-const styles = {
-  loading: {
-    width: '100%',
-    height: '100%',
-    boxSizing: 'border-box',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    zIndex: 1000,
-  },
-};
 
 export default ChatEditorPanel;

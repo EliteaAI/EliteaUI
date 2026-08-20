@@ -1,4 +1,5 @@
 export { default as AgentEditor } from './AgentEditor';
+export { default as EditorLoading } from './EditorLoading';
 export { default as ChatEditorPanel } from './ChatEditorPanel';
 export { default as BaseEditor } from './BaseEditor';
 export { default as CanvasEditHeader } from './CanvasEditHeader';
