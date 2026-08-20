@@ -260,3 +260,17 @@ export const DEFAULT_PROMOTE_FORM = {
   conversation_id: null,
   include_expected: true,
 };
+
+// Socket events carrying live run progress. Backend: SioEvents in
+// elitea_core/utils/sio_utils.py — the room is keyed by run id alone.
+export const EVAL_SIO_EVENTS = {
+  eval_run_progress: 'eval_run_progress',
+  eval_run_enter_room: 'eval_run_enter_room',
+  eval_run_leave_room: 'eval_run_leave_room',
+  eval_run_room_joined: 'eval_run_room_joined',
+};
+
+// Fallback poll used while progress is not being pushed. Push is the normal path, so this is a
+// degraded mode — but "connected" is not the same as "receiving", so it stays armed until the
+// server confirms the room join (see useEvalRunLiveProgress).
+export const EVAL_RUN_FALLBACK_POLL_MS = 10000;

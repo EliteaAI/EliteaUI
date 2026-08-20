@@ -6,7 +6,7 @@ import { Button, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 
 import { useCancelEvalRunMutation, useEvalRunQuery } from '../../api';
-import { EVAL_RUN_STATUS } from '../../lib/constants';
+import { EVAL_RUN_FALLBACK_POLL_MS, EVAL_RUN_STATUS } from '../../lib/constants';
 import {
   formatRunStatus,
   formatScore,
@@ -14,12 +14,12 @@ import {
   isRunTerminal,
   runProgressPercent,
 } from '../../lib/helpers';
-
-const POLL_INTERVAL_MS = 1500;
+import { useEvalRunLiveProgress } from '../../lib/hooks';
 
 // Progress screen (#6, §14.2): after a run is started it executes in the
-// background and returns 202, so this dialog polls the single-run endpoint
-// until the run reaches a terminal status, then shows the headline / error.
+// background and returns 202, so this dialog follows the run until it reaches a
+// terminal status, then shows the headline / error. Progress arrives pushed over
+// the socket; the initial GET seeds it and a slow poll covers a dead socket.
 const RunProgressDialog = memo(props => {
   const { open, projectId, runId, onClose, onViewResults, onTerminal } = props;
 
@@ -30,26 +30,31 @@ const RunProgressDialog = memo(props => {
   // non-scoped tag, so the poll refreshes only its own cache — see SuiteConfigView).
   const terminalNotifiedRef = useRef(null);
 
-  // Poll while the run is in flight; stop once it settles. Kept in state so the
-  // interval can be driven by the fetched status without referencing the query
-  // result inline (which RTK Query cannot do).
-  const [pollingInterval, setPollingInterval] = useState(POLL_INTERVAL_MS);
+  // Kept in state so the fallback can be switched off on a query error without
+  // referencing the query result inline (which RTK Query cannot do).
+  const [pollingInterval, setPollingInterval] = useState(0);
 
   const { data: run, isError } = useEvalRunQuery(
     { projectId, runId },
     {
       skip: !shouldFetch,
-      pollingInterval: shouldFetch ? pollingInterval : 0,
+      pollingInterval,
     },
   );
 
-  // Reset polling whenever a new run is opened.
+  const settled = isRunTerminal(run?.status) || isError;
+
+  // Follow the run's progress room while it is in flight. Terminal frames arrive
+  // here too, so the dialog settles without another request.
+  const { isLive } = useEvalRunLiveProgress({ projectId, runId, enabled: shouldFetch && !settled });
+
+  // Degraded mode only: with a live socket the progress is pushed, so polling at
+  // all would just re-read what was already delivered.
   useEffect(() => {
-    if (shouldFetch) setPollingInterval(POLL_INTERVAL_MS);
-  }, [shouldFetch, runId]);
+    setPollingInterval(shouldFetch && !settled && !isLive ? EVAL_RUN_FALLBACK_POLL_MS : 0);
+  }, [shouldFetch, settled, isLive]);
 
   useEffect(() => {
-    if (isRunTerminal(run?.status) || isError) setPollingInterval(0);
     if (isRunTerminal(run?.status) && terminalNotifiedRef.current !== runId) {
       terminalNotifiedRef.current = runId;
       onTerminal?.(run);
