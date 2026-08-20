@@ -259,12 +259,34 @@ const RunIndexPanel = memo(props => {
     }
   }, [scheduleData.cron]);
 
+  const scheduleTimezoneHint = useMemo(() => {
+    const scheduleTz = scheduleData.timezone;
+
+    if (!scheduleTz) return null;
+
+    try {
+      const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (scheduleTz === browserTz) return null;
+      return `Scheduled: ${scheduleTz}\nShown: ${browserTz}`;
+    } catch {
+      return null;
+    }
+  }, [scheduleData.timezone]);
+
   const scheduleNextRun = useMemo(() => {
     if (!scheduleData.cron) return null;
-    const date = ScheduleHelpers.getNextCronRun(scheduleData.cron || IndexCronDefault);
+    const cron = scheduleData.cron || IndexCronDefault;
+    const date = ScheduleHelpers.getNextCronRunInTimezone(cron, scheduleData.timezone);
+
     if (!date) return null;
-    return date.toLocaleDateString(undefined, { day: '2-digit', month: '2-digit', year: 'numeric' });
-  }, [scheduleData.cron]);
+    return date.toLocaleString(undefined, {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }, [scheduleData.cron, scheduleData.timezone]);
 
   const handleApplyScheduleModal = useCallback(
     (cron, credentials) => {
@@ -440,6 +462,7 @@ const RunIndexPanel = memo(props => {
         <RunIndexScheduleContent
           enabled={scheduleData.enabled}
           scheduleSummary={scheduleSummary}
+          timezoneHint={scheduleTimezoneHint}
           nextRun={scheduleNextRun}
           credentialsTitle={scheduleData.credentials?.elitea_title}
           onAddSchedule={onAddSchedule}

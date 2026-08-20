@@ -13,6 +13,7 @@ const RunIndexScheduleContent = memo(props => {
   const {
     enabled,
     scheduleSummary,
+    timezoneHint,
     credentialsTitle,
     nextRun,
     onAddSchedule,
@@ -62,6 +63,14 @@ const RunIndexScheduleContent = memo(props => {
           >
             {scheduleSummary}
           </Typography>
+          {timezoneHint && (
+            <Typography
+              component="span"
+              sx={styles.timezoneHint}
+            >
+              {timezoneHint}
+            </Typography>
+          )}
           {nextRun && (
             <Typography
               variant="bodySmall2"
@@ -188,6 +197,12 @@ const runIndexScheduleContentStyles = () => ({
     flexShrink: 0,
   },
   nextRunLabel: { marginRight: '0.5rem' },
+  timezoneHint: ({ palette }) => ({
+    fontStyle: 'italic',
+    fontSize: '0.675rem',
+    color: palette.icon.secondary,
+    whiteSpace: 'pre-line',
+  }),
   iconFill: ({ palette }) => palette.icon.secondary,
   banner: {
     marginTop: '0.5rem',
