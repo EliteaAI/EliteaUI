@@ -249,6 +249,13 @@ const ToolkitEditor = ({ toolkit, onCloseToolkitEditor, onToolkitCreated, onTool
       error={error}
       titleTestId={isMcpTestIdScope ? 'mcp-canvas-title' : 'toolkit-canvas-title'}
       closeButtonTestId={isMcpTestIdScope ? 'mcp-canvas-close-button' : 'toolkit-canvas-close-button'}
+      discardButtonTestId={isMcpTestIdScope ? 'mcp-canvas-discard-button' : 'toolkit-canvas-discard-button'}
+      discardModalTestId={
+        isMcpTestIdScope ? 'mcp-canvas-discard-confirm-modal' : 'toolkit-canvas-discard-confirm-modal'
+      }
+      discardConfirmButtonTestId={
+        isMcpTestIdScope ? 'mcp-canvas-discard-confirm-button' : 'toolkit-canvas-discard-confirm-button'
+      }
       saveButton={
         isCreating ? (
           <CreateToolkitButton
