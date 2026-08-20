@@ -663,7 +663,14 @@ const toolkitFormStyles = (isDetailsActionBar, hasSidePanel) => ({
     justifyContent: 'space-between',
     gap: '0.5rem',
     minHeight: '2rem',
-    ...(isDetailsActionBar ? { height: '100%', padding: `0 ${PANEL_GUTTER}` } : {}),
+    ...(isDetailsActionBar
+      ? {
+          height: '100%',
+          width: '100%',
+          padding: `0 ${PANEL_GUTTER}`,
+          ...formContentColumn(hasSidePanel),
+        }
+      : {}),
   },
   content: isDetailsActionBar
     ? {
