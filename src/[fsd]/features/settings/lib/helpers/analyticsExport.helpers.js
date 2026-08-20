@@ -353,6 +353,10 @@ const buildAgentsSheet = (data, meta) => {
     { header: 'Total Tokens', key: 'total_tokens', numFmt: ExcelFormats.integer },
     { header: 'Input Tokens', key: 'input_tokens', numFmt: ExcelFormats.integer },
     { header: 'Output Tokens', key: 'output_tokens', numFmt: ExcelFormats.integer },
+    { header: 'Cache Read Tokens', key: 'cache_read_tokens', numFmt: ExcelFormats.integer },
+    { header: 'Cache Write Tokens', key: 'cache_creation_tokens', numFmt: ExcelFormats.integer },
+    { header: 'Cache Read Cost (USD)', key: 'cache_read_cost', numFmt: ExcelFormats.currency },
+    { header: 'Cache Write Cost (USD)', key: 'cache_creation_cost', numFmt: ExcelFormats.currency },
     { header: 'Avg Latency (ms)', key: 'avg_duration_ms', numFmt: ExcelFormats.integer },
     { header: 'Errors', key: 'errors', numFmt: ExcelFormats.integer },
   ];
@@ -424,6 +428,10 @@ const buildUsersSheet = (data, meta) => {
     { header: 'Total Cost (USD)', key: 'llm_cost', numFmt: ExcelFormats.currency },
     { header: 'Input Token Cost (USD)', key: 'input_cost', numFmt: ExcelFormats.currency },
     { header: 'Output Token Cost (USD)', key: 'output_cost', numFmt: ExcelFormats.currency },
+    { header: 'Cache Read Tokens', key: 'cache_read_tokens', numFmt: ExcelFormats.integer },
+    { header: 'Cache Write Tokens', key: 'cache_creation_tokens', numFmt: ExcelFormats.integer },
+    { header: 'Cache Read Cost (USD)', key: 'cache_read_cost', numFmt: ExcelFormats.currency },
+    { header: 'Cache Write Cost (USD)', key: 'cache_creation_cost', numFmt: ExcelFormats.currency },
   ];
 
   return {
