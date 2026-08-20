@@ -44,7 +44,9 @@ export const TOOLTIP_TEXTS = {
     LEADERBOARD:
       'Ranks users by combined LLM calls, tool runs, and Agent & Pipeline runs during the selected date range.',
     MODEL_USAGE:
-      "Shows LLM usage by model, including the number of calls, unique users, and each model's share of total LLM calls.",
+      "Shows LLM usage by model, including calls/runs, unique users for Team Projects, and each model's share of total LLM usage.",
+    MODEL_USAGE_PRIVATE:
+      "Shows LLM usage by model, including calls/runs and each model's share of total LLM usage.",
   },
   costs: {
     TOTAL_COST:
@@ -214,7 +216,7 @@ export const GUIDE_SECTIONS = [
       {
         name: 'Model Usage Breakdown',
         description:
-          'Table showing which AI models are used most frequently. Columns include Model, Calls, Users, and Share percentage relative to total LLM calls.',
+          'Table showing which AI models are used most frequently. Columns include Model, Calls/Runs, Users (for Team Projects), and Share percentage relative to total LLM usage.',
       },
     ],
   },
