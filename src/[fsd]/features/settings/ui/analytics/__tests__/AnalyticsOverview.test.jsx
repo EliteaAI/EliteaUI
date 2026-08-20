@@ -15,6 +15,7 @@ vi.mock('recharts', () => ({
   XAxis: () => null,
   YAxis: () => null,
   Tooltip: () => null,
+  Legend: () => null,
 }));
 
 vi.mock('@/[fsd]/features/settings/ui/analytics', () => ({
@@ -33,6 +34,18 @@ vi.mock('@/[fsd]/features/settings/lib/constants', () => ({
   AnalyticsCommonConstants: {
     CHART_COLORS: ['#4285F4', '#34A853', '#FBBC04', '#EA4335', '#9C27B0'],
     MEDAL_COLORS: ['#FFD700', '#C0C0C0', '#CD7F32'],
+    EVENT_TYPE_COLORS: {
+      llm: '#BC8CFF',
+      tool: '#F0883E',
+      agent: '#3FB950',
+    },
+    TOOLTIP_TEXTS: {
+      overview: {
+        DAILY_ACTIVITY: 'Shows daily AI usage for the selected period.',
+        DAILY_ACTIVITY_PRIVATE: 'Shows daily AI usage for the selected period.',
+        LEADERBOARD: 'Ranks users by combined LLM calls, tool runs, and Agent & Pipeline runs.',
+      },
+    },
   },
 }));
 
@@ -91,8 +104,8 @@ const MOCK_DATA = {
     },
   ],
   daily_activity: [
-    { date: '2026-01-15', events: 120, users: 8 },
-    { date: '2026-01-16', events: 145, users: 10 },
+    { date: '2026-01-15', llm_calls: 80, tool_runs: 30, agent_runs: 10, active_users: 8 },
+    { date: '2026-01-16', llm_calls: 95, tool_runs: 35, agent_runs: 15, active_users: 10 },
   ],
   models: [
     { model_name: 'gpt-4o', calls: 3000, input_tokens: 800000, output_tokens: 400000 },
@@ -116,9 +129,9 @@ describe('AnalyticsOverview', () => {
     expect(screen.getByTestId('kpi-LLM CALLS')).toBeInTheDocument();
     expect(screen.getByTestId('kpi-TOOL RUNS')).toBeInTheDocument();
     expect(screen.getByTestId('kpi-CHAT MSG')).toBeInTheDocument();
-    expect(screen.getByTestId('kpi-AGENT RUNS')).toBeInTheDocument();
+    expect(screen.getByTestId('kpi-AGENT & PIPELINE RUNS')).toBeInTheDocument();
     expect(screen.getByTestId('kpi-TOKENS')).toBeInTheDocument();
-    expect(screen.getByTestId('kpi-LLM COST')).toBeInTheDocument();
+    expect(screen.getByTestId('kpi-COST')).toBeInTheDocument();
   });
 
   it('renders daily activity chart section', () => {

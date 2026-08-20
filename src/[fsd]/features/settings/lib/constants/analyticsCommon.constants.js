@@ -47,6 +47,10 @@ export const TOOLTIP_TEXTS = {
       "Shows LLM usage by model, including calls/runs, unique users for Team Projects, and each model's share of total LLM usage.",
     MODEL_USAGE_PRIVATE:
       "Shows LLM usage by model, including calls/runs and each model's share of total LLM usage.",
+    DAILY_ACTIVITY:
+      'Shows daily AI usage for the selected period, including LLM Calls, Tool Runs, and Agent & Pipeline Runs. For Team Projects, it also shows the number of distinct active users per day.',
+    DAILY_ACTIVITY_PRIVATE:
+      'Shows daily AI usage for the selected period, including LLM Calls, Tool Runs, and Agent & Pipeline Runs.',
   },
   costs: {
     TOTAL_COST:
@@ -206,12 +210,7 @@ export const GUIDE_SECTIONS = [
       {
         name: 'Daily Activity',
         description:
-          'Shows the trend of platform usage over time with two lines: total events per day (blue) and unique users per day (green). Helps identify usage patterns, peak days, and adoption trends.',
-      },
-      {
-        name: 'Event Type Breakdown',
-        description:
-          'Horizontal bar chart showing the distribution of events by type. Helps understand what the platform is primarily used for - API interactions, chat conversations, LLM calls, tool executions, etc.',
+          'Shows daily AI usage for the selected period, including LLM Calls, Tool Runs, and Agent & Pipeline Runs. For Team Projects, it also shows the number of distinct active users per day. Active Users is not shown for Private Projects.',
       },
       {
         name: 'Model Usage Breakdown',

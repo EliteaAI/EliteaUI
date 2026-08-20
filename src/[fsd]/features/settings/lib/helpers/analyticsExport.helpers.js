@@ -58,9 +58,10 @@ const buildOverviewSheet = (data, meta, isPersonalProject = false) => {
 
   const dailyCols = [
     { header: 'Date', key: 'date' },
-    { header: 'Events', key: 'events', numFmt: ExcelFormats.integer },
-    { header: 'Users', key: 'users', numFmt: ExcelFormats.integer },
-    { header: 'Errors', key: 'errors', numFmt: ExcelFormats.integer },
+    ...(isPersonalProject ? [] : [{ header: 'Active Users', key: 'active_users', numFmt: ExcelFormats.integer }]),
+    { header: 'LLM Calls', key: 'llm_calls', numFmt: ExcelFormats.integer },
+    { header: 'Tool Runs', key: 'tool_runs', numFmt: ExcelFormats.integer },
+    { header: 'Agent & Pipeline Runs', key: 'agent_runs', numFmt: ExcelFormats.integer },
   ];
   sections.push({
     title: 'Daily Activity',
