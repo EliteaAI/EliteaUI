@@ -108,16 +108,32 @@ describe('useToolkitTestRunner default seeding', () => {
     });
   });
 
-  it('keeps a value the user already filled but replaces a schema-supplied function', () => {
-    toolSchema = { properties: { title: { type: 'string' }, filter: { type: 'string' } } };
+  it('does not re-seed over values entered after the tool was initialized', () => {
+    toolSchema = { properties: { title: { type: 'string' }, status: { type: 'string', default: 'open' } } };
 
     const { result } = renderRunner();
     selectTool(result, 'create_issue');
 
+    act(() => result.current.onChangeInputVariables({ title: 'typed', status: 'closed' }));
+
+    expect(result.current.toolInputVariables).toEqual({ title: 'typed', status: 'closed' });
+  });
+
+  it('replaces a schema-supplied function when a late schema finally seeds the tool', () => {
+    toolSchema = null;
+
+    const { result, rerender } = renderRunner();
+    selectTool(result, 'create_issue');
+
+    // No schema yet, so nothing is seeded and a schema-supplied function survives.
     act(() => result.current.onChangeInputVariables({ title: 'typed', filter: () => {} }));
+    expect(result.current.toolInputVariables.filter).toBeTypeOf('function');
+
+    toolSchema = { properties: { title: { type: 'string' }, filter: { type: 'string' } } };
+    act(() => rerender());
 
     expect(result.current.toolInputVariables.title).toBe('typed');
-    expect(result.current.toolInputVariables.filter).toBeTypeOf('function');
+    expect(result.current.toolInputVariables.filter).toBe('');
   });
 });
 
