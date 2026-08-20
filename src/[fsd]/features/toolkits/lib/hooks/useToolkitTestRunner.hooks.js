@@ -35,6 +35,19 @@ const resolveSchemaDefault = property => {
   }
 };
 
+const seedMissingDefaults = (current, properties) => {
+  const seeded = Object.entries(properties).reduce((acc, [key, property]) => {
+    const value = current?.[key];
+    // A function value comes from the schema itself, not the user, so it still needs a default.
+    const isFilledByUser = value !== undefined && value !== '' && typeof value !== 'function';
+
+    if (!isFilledByUser) acc[key] = resolveSchemaDefault(property);
+    return acc;
+  }, {});
+
+  return Object.keys(seeded).length ? { ...current, ...seeded } : current;
+};
+
 /**
  * Drives a toolkit tool test run: tool selection, parameter state, schema resolution and the chat
  * socket. Takes `values` rather than reading Formik so it stays usable outside a form provider.
@@ -117,27 +130,15 @@ export const useToolkitTestRunner = ({ toolkitId, values }) => {
 
     initializedToolRef.current = selectedTool;
 
-    const seeded = Object.entries(selectedToolSchema.properties).reduce((acc, [key, property]) => {
-      const currentValue = toolInputVariables?.[key];
-      // A function value comes from the schema itself, not the user, so it still needs a default.
-      const isFilledByUser =
-        currentValue !== undefined && currentValue !== '' && typeof currentValue !== 'function';
-
-      if (!isFilledByUser) acc[key] = resolveSchemaDefault(property);
-      return acc;
-    }, {});
-
-    if (Object.keys(seeded).length) {
-      setToolInputVariables(current => ({ ...current, ...seeded }));
-    }
-  }, [selectedTool, selectedToolSchema?.properties, toolInputVariables]);
+    setToolInputVariables(current => seedMissingDefaults(current, selectedToolSchema.properties));
+  }, [selectedTool, selectedToolSchema?.properties]);
 
   const hasResults = useMemo(
     () => chatHistory.some(message => message.id !== WELCOME_MESSAGE_ID),
     [chatHistory],
   );
 
-  const mcpAuthModalProps = useMemo(() => getModalProps(), [getModalProps]);
+  const mcpAuthModalProps = getModalProps();
 
   return {
     selectedTool,

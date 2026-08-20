@@ -40,22 +40,19 @@ const ToolkitTest = memo(() => {
     error,
   } = useToolkitsDetailsQuery({ projectId, toolkitId: entityId }, { skip: !projectId || !entityId });
 
-  const shouldShowNotFoundPage = isError && isNotFoundError(error);
-
   useEffect(() => {
-    if (isError && !shouldShowNotFoundPage) toastError(buildErrorMessage(error));
-  }, [error, isError, shouldShowNotFoundPage, toastError]);
+    if (!isError) return;
 
-  useEffect(() => {
-    if (shouldShowNotFoundPage) goToList();
-  }, [shouldShowNotFoundPage, goToList]);
+    if (!isNotFoundError(error)) toastError(buildErrorMessage(error));
+    goToList();
+  }, [error, isError, goToList, toastError]);
 
   const initialValues = useMemo(
     () => ToolkitFormHelpers.buildToolkitFormInitialValues(toolkitData),
     [toolkitData],
   );
 
-  if (shouldShowNotFoundPage) return null;
+  if (isError) return null;
 
   return (
     <Box sx={styles.wrapper}>

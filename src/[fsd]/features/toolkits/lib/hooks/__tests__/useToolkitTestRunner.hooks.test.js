@@ -119,6 +119,21 @@ describe('useToolkitTestRunner default seeding', () => {
     expect(result.current.toolInputVariables).toEqual({ title: 'typed', status: 'closed' });
   });
 
+  it('keeps the parameters object identity while the user edits an initialized tool', () => {
+    toolSchema = { properties: { title: { type: 'string' } } };
+
+    const { result } = renderRunner();
+    selectTool(result, 'create_issue');
+
+    act(() => result.current.onChangeInputVariables({ title: 'a' }));
+    const afterFirstEdit = result.current.toolInputVariables;
+
+    act(() => result.current.onChangeInputVariables({ title: 'ab' }));
+
+    expect(result.current.toolInputVariables).toEqual({ title: 'ab' });
+    expect(result.current.toolInputVariables).not.toBe(afterFirstEdit);
+  });
+
   it('replaces a schema-supplied function when a late schema finally seeds the tool', () => {
     toolSchema = null;
 
