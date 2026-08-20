@@ -31,6 +31,8 @@ const TokenTable = memo(props => {
             <Typography sx={[styles.tableCell, styles.rightAlignedCell]}>TOTAL TOKENS</Typography>
             <Typography sx={[styles.tableCell, styles.rightAlignedCell]}>INPUT TOKENS</Typography>
             <Typography sx={[styles.tableCell, styles.rightAlignedCell]}>OUTPUT TOKENS</Typography>
+            <Typography sx={[styles.tableCell, styles.rightAlignedCell]}>CACHE READ</Typography>
+            <Typography sx={[styles.tableCell, styles.rightAlignedCell]}>CACHE WRITE</Typography>
             <Typography sx={[styles.tableCell, styles.rightAlignedCell]}>SHARE</Typography>
           </Box>
           {rows.map((row, index) => (
@@ -52,6 +54,12 @@ const TokenTable = memo(props => {
               </Typography>
               <Typography sx={[styles.tableCellValue, styles.rightAlignedCell]}>
                 {AnalyticCommonHelpers.fmtNum(row.output)}
+              </Typography>
+              <Typography sx={[styles.tableCellValue, styles.rightAlignedCell]}>
+                {AnalyticCommonHelpers.fmtNum(row.cacheRead)}
+              </Typography>
+              <Typography sx={[styles.tableCellValue, styles.rightAlignedCell]}>
+                {AnalyticCommonHelpers.fmtNum(row.cacheWrite)}
               </Typography>
               <Typography sx={[styles.tableCellValue, styles.rightAlignedCell]}>
                 {`${row.share.toFixed(1)}%`}

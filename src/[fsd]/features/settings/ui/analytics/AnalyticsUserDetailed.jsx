@@ -112,10 +112,56 @@ const AnalyticsUserDetailed = memo(props => {
           tooltip={tt.OUTPUT_TOKENS}
         />
         <KPICard
+          label="CACHE READ TOKENS"
+          value={AnalyticCommonHelpers.fmtNum(kpis.cache_read_tokens)}
+          tooltip={tt.CACHE_READ_TOKENS}
+          testId="analytics-user-detail-kpi-card"
+          valueTestId="analytics-user-detail-kpi-value"
+        />
+        <KPICard
+          label="CACHE WRITE TOKENS"
+          value={AnalyticCommonHelpers.fmtNum(kpis.cache_creation_tokens)}
+          tooltip={tt.CACHE_WRITE_TOKENS}
+          testId="analytics-user-detail-kpi-card"
+          valueTestId="analytics-user-detail-kpi-value"
+        />
+        <KPICard
+          label="CACHE READ COST"
+          value={AnalyticCommonHelpers.fmtCost(kpis.cache_read_cost)}
+          subtitle="estimated"
+          tooltip={tt.CACHE_READ_COST}
+          testId="analytics-user-detail-kpi-card"
+          valueTestId="analytics-user-detail-kpi-value"
+        />
+        <KPICard
+          label="CACHE WRITE COST"
+          value={AnalyticCommonHelpers.fmtCost(kpis.cache_creation_cost)}
+          subtitle="estimated"
+          tooltip={tt.CACHE_WRITE_COST}
+          testId="analytics-user-detail-kpi-card"
+          valueTestId="analytics-user-detail-kpi-value"
+        />
+        <KPICard
           label="TOTAL COST"
           value={AnalyticCommonHelpers.fmtCost(kpis.llm_cost)}
           subtitle="estimated"
           tooltip={tt.TOTAL_COST}
+        />
+        <KPICard
+          label="INPUT TOKEN COST"
+          value={AnalyticCommonHelpers.fmtCost(kpis.input_cost)}
+          subtitle="estimated"
+          tooltip={tt.INPUT_TOKEN_COST}
+          testId="analytics-user-detail-kpi-card"
+          valueTestId="analytics-user-detail-kpi-value"
+        />
+        <KPICard
+          label="OUTPUT TOKEN COST"
+          value={AnalyticCommonHelpers.fmtCost(kpis.output_cost)}
+          subtitle="estimated"
+          tooltip={tt.OUTPUT_TOKEN_COST}
+          testId="analytics-user-detail-kpi-card"
+          valueTestId="analytics-user-detail-kpi-value"
         />
       </Box>
 
