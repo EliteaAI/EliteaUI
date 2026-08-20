@@ -1,3 +1,5 @@
+import { useMemo } from 'react';
+
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
 import { useToolkitAvailableToolsQuery } from '@/api/toolkits.js';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -33,9 +35,12 @@ export const useGetSelectedToolSchema = ({ toolkitType, toolOptionType, toolkitI
       ? null
       : staticToolSchema || mcpToolSchema || dynamicToolsData?.args_schemas?.[toolOptionType] || null;
 
-  if (!toolSchema) return null;
+  // Flattening inputSchema inline would hand consumers a new object every render, defeating their
+  // memos and re-rendering the whole parameter form on each streamed chunk of a running test.
+  return useMemo(() => {
+    if (!toolSchema) return null;
+    if (!toolSchema.inputSchema) return toolSchema;
 
-  if (toolSchema.inputSchema) {
     return {
       properties: toolSchema.inputSchema.properties || {},
       required: toolSchema.inputSchema.required || [],
@@ -43,7 +48,5 @@ export const useGetSelectedToolSchema = ({ toolkitType, toolOptionType, toolkitI
       description: toolSchema.description,
       type: 'object',
     };
-  }
-
-  return toolSchema;
+  }, [toolSchema]);
 };
