@@ -474,6 +474,7 @@ const PipelineEditor = forwardRef(
           validationSchema={getValidateSchema}
           error={error}
           onDirtyStateChange={onPipelineDirtyStateChange}
+          titleTestId="pipeline-canvas-title"
           closeButtonTestId="pipeline-canvas-close-button"
           discardButtonTestId="pipeline-canvas-discard-button"
           discardModalTestId="pipeline-canvas-discard-confirm-modal"
