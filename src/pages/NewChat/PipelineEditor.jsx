@@ -475,6 +475,9 @@ const PipelineEditor = forwardRef(
           error={error}
           onDirtyStateChange={onPipelineDirtyStateChange}
           closeButtonTestId="pipeline-canvas-close-button"
+          discardButtonTestId="pipeline-canvas-discard-button"
+          discardModalTestId="pipeline-canvas-discard-confirm-modal"
+          discardConfirmButtonTestId="pipeline-canvas-discard-confirm-button"
           formContent={
             !isCreateMode ? (
               <StyledTabBar sx={styles.tabBar}>

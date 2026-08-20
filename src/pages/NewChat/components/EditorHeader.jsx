@@ -24,6 +24,11 @@ import useIsPipelineYamlCodeDirty from '@/pages/Pipelines/useIsPipelineYamlCodeD
  *   shown instead of Discard/Save when `isPublic` is true (ELITEA-2075).
  * @param {string} [discardButtonTestId] - Optional data-testid for the Discard button.
  *   Caller-supplied (never hardcoded here) since this component is shared across editors.
+ * @param {string} [discardModalTestId] - Optional data-testid for the Discard confirmation
+ *   modal (BaseModal) opened by the Discard button. Caller-supplied, same rationale as
+ *   discardButtonTestId (ELITEA-2076).
+ * @param {string} [discardConfirmButtonTestId] - Optional data-testid for the Discard
+ *   button inside the confirmation modal. Caller-supplied (ELITEA-2076).
  */
 const EditorHeader = ({
   title,
@@ -37,6 +42,8 @@ const EditorHeader = ({
   closeButtonTestId,
   publicLabelTestId,
   discardButtonTestId,
+  discardModalTestId,
+  discardConfirmButtonTestId,
 }) => {
   const theme = useTheme();
   const { discardApplicationChanges } = useDiscardApplicationChanges(onDiscard);
@@ -91,6 +98,8 @@ const EditorHeader = ({
               size="small"
               sx={styles.discardButton}
               dataTestId={discardButtonTestId}
+              modalDataTestId={discardModalTestId}
+              confirmButtonDataTestId={discardConfirmButtonTestId}
             />
           )}
           {!isPublic && saveButton}

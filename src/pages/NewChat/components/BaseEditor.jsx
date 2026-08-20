@@ -37,6 +37,10 @@ import EditorHeader from '@/pages/NewChat/components/EditorHeader';
  * @param {string} [publicLabelTestId] - Optional data-testid forwarded to EditorHeader's "Public" label.
  * @param {string} [discardButtonTestId] - Optional data-testid forwarded to EditorHeader's Discard button.
  *   Caller-supplied (never hardcoded here) since this component is shared across Agent/Pipeline/Toolkit editors.
+ * @param {string} [discardModalTestId] - Optional data-testid forwarded to EditorHeader's Discard
+ *   confirmation modal. Caller-supplied (ELITEA-2076).
+ * @param {string} [discardConfirmButtonTestId] - Optional data-testid forwarded to EditorHeader's
+ *   Discard confirmation modal's confirm button. Caller-supplied (ELITEA-2076).
  */
 const BaseEditor = ({
   isVisible,
@@ -61,6 +65,8 @@ const BaseEditor = ({
   closeButtonTestId,
   publicLabelTestId,
   discardButtonTestId,
+  discardModalTestId,
+  discardConfirmButtonTestId,
 }) => {
   const theme = useTheme();
   const { isSmallWindow } = useIsSmallWindow();
@@ -132,6 +138,8 @@ const BaseEditor = ({
             closeButtonTestId={closeButtonTestId}
             publicLabelTestId={publicLabelTestId}
             discardButtonTestId={discardButtonTestId}
+            discardModalTestId={discardModalTestId}
+            discardConfirmButtonTestId={discardConfirmButtonTestId}
           />
 
           {/* Optional form content (e.g., tabs) */}
