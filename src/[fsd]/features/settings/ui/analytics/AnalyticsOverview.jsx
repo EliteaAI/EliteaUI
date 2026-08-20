@@ -1,6 +1,14 @@
 import { memo, useMemo } from 'react';
 
-import { Area, AreaChart, Tooltip as RechartsTooltip, ResponsiveContainer, XAxis, YAxis } from 'recharts';
+import {
+  Area,
+  AreaChart,
+  Legend,
+  Tooltip as RechartsTooltip,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+} from 'recharts';
 
 import { Box, Typography, useTheme } from '@mui/material';
 
@@ -83,12 +91,20 @@ const AnalyticsOverview = memo(props => {
       </Box>
       <Box sx={styles.chartsRowEqual}>
         <Box sx={styles.chartCard}>
-          <Typography
-            variant="labelMedium"
-            sx={styles.chartTitle}
-          >
-            Daily Activity
-          </Typography>
+          <Box sx={styles.subtitleRow}>
+            <Typography
+              variant="labelMedium"
+              sx={styles.chartTitle}
+            >
+              Daily Activity
+            </Typography>
+            <InfoTooltip
+              infoTooltip={{
+                title: isPersonalProject ? tt.DAILY_ACTIVITY_PRIVATE : tt.DAILY_ACTIVITY,
+                icon: { width: 12, height: 12 },
+              }}
+            />
+          </Box>
           <Box sx={styles.chartWrapper}>
             <ResponsiveContainer
               width="100%"
@@ -103,39 +119,68 @@ const AnalyticsOverview = memo(props => {
                   tickLine={{ stroke: axisStroke }}
                 />
                 <YAxis
-                  yAxisId="events"
+                  yAxisId="metrics"
                   tick={axisTickStyle}
                   axisLine={{ stroke: axisStroke }}
                   tickLine={{ stroke: axisStroke }}
                 />
-                <YAxis
-                  yAxisId="users"
-                  orientation="right"
-                  tick={axisTickStyle}
-                  axisLine={{ stroke: axisStroke }}
-                  tickLine={{ stroke: axisStroke }}
-                />
+                {!isPersonalProject && (
+                  <YAxis
+                    yAxisId="users"
+                    orientation="right"
+                    tick={axisTickStyle}
+                    axisLine={{ stroke: axisStroke }}
+                    tickLine={{ stroke: axisStroke }}
+                  />
+                )}
                 <RechartsTooltip content={<ChartTooltip />} />
+                <Legend
+                  wrapperStyle={{ fontSize: '0.6875rem' }}
+                  iconType="circle"
+                  iconSize={8}
+                />
                 <Area
-                  yAxisId="events"
+                  yAxisId="metrics"
                   type="monotone"
-                  dataKey="events"
-                  name="Events"
-                  stroke={palette.status.draft}
-                  fill={palette.status.draft}
+                  dataKey="llm_calls"
+                  name="LLM Calls"
+                  stroke={AnalyticsCommonConstants.EVENT_TYPE_COLORS.llm}
+                  fill={AnalyticsCommonConstants.EVENT_TYPE_COLORS.llm}
                   fillOpacity={0.15}
                   strokeWidth={2}
                 />
                 <Area
-                  yAxisId="users"
+                  yAxisId="metrics"
                   type="monotone"
-                  dataKey="users"
-                  name="Users"
-                  stroke={palette.status.published}
-                  fill={palette.status.published}
+                  dataKey="tool_runs"
+                  name="Tool Runs"
+                  stroke={AnalyticsCommonConstants.EVENT_TYPE_COLORS.tool}
+                  fill={AnalyticsCommonConstants.EVENT_TYPE_COLORS.tool}
                   fillOpacity={0.1}
                   strokeWidth={2}
                 />
+                <Area
+                  yAxisId="metrics"
+                  type="monotone"
+                  dataKey="agent_runs"
+                  name="Agent & Pipeline Runs"
+                  stroke={AnalyticsCommonConstants.EVENT_TYPE_COLORS.agent}
+                  fill={AnalyticsCommonConstants.EVENT_TYPE_COLORS.agent}
+                  fillOpacity={0.1}
+                  strokeWidth={2}
+                />
+                {!isPersonalProject && (
+                  <Area
+                    yAxisId="users"
+                    type="monotone"
+                    dataKey="active_users"
+                    name="Active Users"
+                    stroke="#58A6FF"
+                    fill="#58A6FF"
+                    fillOpacity={0.1}
+                    strokeWidth={2}
+                  />
+                )}
               </AreaChart>
             </ResponsiveContainer>
           </Box>
