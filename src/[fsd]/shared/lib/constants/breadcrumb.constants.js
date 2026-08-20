@@ -19,6 +19,10 @@ export const BREADCRUMB_REGISTRY = {
     parent: RouteDefinitions.ToolkitDetail,
     label: 'Run History',
   },
+  [RouteDefinitions.ToolkitTest]: {
+    parent: RouteDefinitions.ToolkitDetail,
+    label: 'Test Toolkit',
+  },
   [RouteDefinitions.ToolkitIndexNew]: {
     parent: RouteDefinitions.ToolkitDetail,
     label: 'New index',
@@ -38,5 +42,9 @@ export const BREADCRUMB_REGISTRY = {
     entityName: true,
     fallbackLabel: 'Edit MCP',
     testId: 'toolkit-detail-title',
+  },
+  [RouteDefinitions.MCPTest]: {
+    parent: RouteDefinitions.MCPDetail,
+    label: 'Test MCP',
   },
 };
