@@ -48,14 +48,12 @@ const ProjectContextEditor = memo(props => {
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
 
   const isFirstRender = useRef(true);
-  const hasInitializedContent = useRef(false);
 
   useEffect(() => {
-    if (!hasInitializedContent.current && serverData?.content !== undefined) {
+    if (!isDirty && serverData?.content !== undefined) {
       setContent(serverData.content ?? '');
-      hasInitializedContent.current = true;
     }
-  }, [serverData?.content]);
+  }, [serverData?.content, isDirty]);
 
   const blockOptions = useMemo(
     () => ({

@@ -10,7 +10,10 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 const ProjectContextEditor = memo(props => {
   const { onCloseProjectContextEditor, isVisible } = props;
   const projectId = useSelectedProjectId();
-  const { data: serverData } = useProjectContextQuery(projectId, { skip: !projectId || !isVisible });
+  const { data: serverData } = useProjectContextQuery(projectId, {
+    skip: !projectId,
+    refetchOnMountOrArgChange: true,
+  });
   const [isDirty, setIsDirty] = useState(false);
   const saveRef = useRef(null);
 
