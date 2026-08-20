@@ -6,21 +6,25 @@ import useSocket from '@/hooks/useSocket';
 // Ephemeral, per-sid hint: only ever shown if it matches the conversation's
 // latest message, so a newer send or a reconnect naturally invalidates it.
 export const useNextInputSuggestion = ({ chatHistoryRef, conversationUuid, getInputContent }) => {
-  const [suggestion, setSuggestion] = useState(null);
+  const [suggestions, setSuggestions] = useState([]);
 
   const handleSuggestionReady = useCallback(
     payload => {
-      const { stream_id, message_id, suggestion: text } = payload || {};
-      if (!text) return;
+      const { stream_id, message_id, suggestions: list } = payload || {};
 
       const history = chatHistoryRef?.current;
       const lastMessage = history?.[history.length - 1];
       const matchesLastMessage = lastMessage && (lastMessage.id == message_id || lastMessage.id == stream_id);
-      if (!matchesLastMessage) return;
 
+      if (!matchesLastMessage) {
+        setSuggestions([]);
+        return;
+      }
+
+      if (!list?.length) return;
       if (getInputContent?.()) return;
 
-      setSuggestion(text);
+      setSuggestions(list.slice(0, 3));
     },
     [chatHistoryRef, getInputContent],
   );
@@ -28,15 +32,18 @@ export const useNextInputSuggestion = ({ chatHistoryRef, conversationUuid, getIn
   useSocket(sioEvents.next_input_suggestion_ready, handleSuggestionReady);
 
   useEffect(() => {
-    setSuggestion(null);
+    setSuggestions([]);
   }, [conversationUuid]);
 
-  const dismiss = useCallback(() => setSuggestion(null), []);
+  const dismiss = useCallback(() => setSuggestions([]), []);
 
-  const accept = useCallback(() => {
-    setSuggestion(null);
-    return suggestion;
-  }, [suggestion]);
+  const accept = useCallback(
+    index => {
+      const text = suggestions[index];
+      return text;
+    },
+    [suggestions],
+  );
 
-  return { suggestion, accept, dismiss };
+  return { suggestions, accept, dismiss };
 };
