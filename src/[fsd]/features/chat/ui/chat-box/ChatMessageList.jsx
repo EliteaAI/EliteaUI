@@ -44,8 +44,9 @@ const ChatMessageList = memo(props => {
     speakingMessageId,
     speakingSegments,
     spokenRange,
+    onEntityCreated,
+    onDeleteEntity,
   } = props;
-
   const dispatch = useDispatch();
   const listRef = useRef();
   const listRefs = useRef([]);
@@ -271,6 +272,8 @@ const ChatMessageList = memo(props => {
             speakingMessageId={speakingMessageId}
             speakingSegments={speakingSegments}
             spokenRange={spokenRange}
+            onEntityCreated={onEntityCreated}
+            onDeleteEntity={onDeleteEntity}
           />
         ))}
         {/* Spacer placed AFTER messages to create extra scrollable area below target */}

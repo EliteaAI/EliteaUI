@@ -17,6 +17,7 @@ import { Box } from '@mui/system';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import * as ChatHelpers from '@/[fsd]/features/chat/lib/helpers/chat.helpers';
+import { buildEntityParticipant } from '@/[fsd]/features/chat/lib/helpers/entityParticipant.helpers.js';
 import {
   actionBelongsToInvocationSet,
   getActionOwnerPath,
@@ -45,9 +46,14 @@ import {
 import { useFetchParticipantDetails } from '@/[fsd]/features/chat/participants/lib/hooks';
 import { BudgetWarningBanner, SlashSuggestionList, VoiceMiniPlayer } from '@/[fsd]/features/chat/ui';
 import { ChatMessageList } from '@/[fsd]/features/chat/ui/chat-box';
+import ChatConversationStarters from '@/[fsd]/features/chat/ui/chat-conversation-starters/ChatConversationStarters';
+import NewChatInput from '@/[fsd]/features/chat/ui/chat-input/NewChatInput';
+import RecommendationList from '@/[fsd]/features/chat/ui/recommendations/RecommendationList';
+import SearchResultList from '@/[fsd]/features/chat/ui/recommendations/SearchResultList';
 import { UserMentionList } from '@/[fsd]/features/chat/ui/user-mention-list';
 import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { MentionSkillList } from '@/[fsd]/features/skill';
+import { useDeleteSkillMutation } from '@/[fsd]/features/skill/api';
 import { LLMSettingsConstants, MentionConstants } from '@/[fsd]/shared/lib/constants';
 import {
   cleanLLMSettings,
@@ -60,9 +66,13 @@ import {
   useInjectMessageMutation,
   useRegenerateMutation,
   useRemoveAttachmentsMutation,
+  useUpdateMessageMetaMutation,
   useUpdateParticipantLlmSettingsMutation,
 } from '@/api';
+import { useDeleteApplicationMutation } from '@/api/applications';
 import { useListModelsQuery } from '@/api/configurations.js';
+import { apis as projectContextApis, useDeleteProjectContextMutation } from '@/api/projectContext';
+import { useToolkitDeleteMutation } from '@/api/toolkits';
 import {
   ChatParticipantType,
   PROMPT_PAYLOAD_KEY,
@@ -88,10 +98,6 @@ import useLoadMoreMessages from '@/hooks/chat/useLoadMoreMessages';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useSocket from '@/hooks/useSocket';
 import useToast from '@/hooks/useToast';
-import ChatConversationStarters from '@/pages/NewChat/ChatConversationStarters';
-import NewChatInput from '@/pages/NewChat/NewChatInput';
-import RecommendationList from '@/pages/NewChat/Recommendations/RecommendationList';
-import SearchResultList from '@/pages/NewChat/Recommendations/SearchResultList';
 import { actions as chatActions } from '@/slices/chat';
 
 const { DEFAULT_MAX_TOKENS, DEFAULT_REASONING_EFFORT, DEFAULT_STEPS_LIMIT, DEFAULT_TEMPERATURE } =
@@ -122,6 +128,9 @@ const ChatBox = forwardRef((props, boxRef) => {
     isEditingAgent,
     onShowAgentEditor,
     onShowPipelineEditor,
+    onShowSkillEditor,
+    onShowProjectContextEditor,
+    onShowToolkitEditor,
     onCloseAgentEditor,
     onClosePipelineEditor,
     activeParticipantDetails,
@@ -169,6 +178,9 @@ const ChatBox = forwardRef((props, boxRef) => {
     isUploadingAttachments,
     uploadProgress,
     onOpenArtifactPreview,
+
+    // Override for entity-created routing (e.g. generated-entities tab panel)
+    onEntityCreated: onEntityCreatedProp,
   } = props;
 
   const styles = chatBoxStyles();
@@ -614,6 +626,83 @@ const ChatBox = forwardRef((props, boxRef) => {
     unconsumed.forEach(text => onPredictStreamRef.current?.(text));
   }, []);
 
+  const onEntityCreated = useCallback(
+    ({ entity_type, entity_id, version_id, entity_name, is_mcp }) => {
+      const participant = buildEntityParticipant({ entity_id, entity_name, version_id, is_mcp, projectId });
+      if (entity_type === 'agent') {
+        onShowAgentEditor?.(participant);
+      } else if (entity_type === 'pipeline') {
+        onShowPipelineEditor?.(participant);
+      } else if (entity_type === 'skill') {
+        onShowSkillEditor?.(participant);
+      } else if (entity_type === 'project_context') {
+        dispatch(projectContextApis.util.invalidateTags([{ type: 'PROJECT_CONTEXT', id: projectId }]));
+        onShowProjectContextEditor?.(participant);
+      } else if (entity_type === 'toolkit') {
+        onShowToolkitEditor?.(participant);
+      }
+    },
+    [
+      dispatch,
+      projectId,
+      onShowAgentEditor,
+      onShowPipelineEditor,
+      onShowSkillEditor,
+      onShowProjectContextEditor,
+      onShowToolkitEditor,
+    ],
+  );
+
+  const [deleteApplication] = useDeleteApplicationMutation();
+  const [deleteSkill] = useDeleteSkillMutation();
+  const [deleteProjectContext] = useDeleteProjectContextMutation();
+  const [deleteToolkit] = useToolkitDeleteMutation();
+  const [updateMessageMeta] = useUpdateMessageMetaMutation();
+
+  const onDeleteEntity = useCallback(
+    async ({ entity_type, entity_id }, messageId) => {
+      try {
+        if (entity_type === 'agent' || entity_type === 'pipeline') {
+          await deleteApplication({ projectId, applicationId: entity_id }).unwrap();
+        } else if (entity_type === 'skill') {
+          await deleteSkill({ projectId, skillId: entity_id }).unwrap();
+        } else if (entity_type === 'project_context') {
+          await deleteProjectContext({ projectId }).unwrap();
+        } else if (entity_type === 'toolkit') {
+          await deleteToolkit({ projectId, toolkitId: entity_id }).unwrap();
+        }
+      } catch (err) {
+        toastError(buildErrorMessage(err) || 'Failed to delete entity');
+        return;
+      }
+      const updatedHistory = chat_history.map(msg =>
+        msg.created_entities?.length
+          ? { ...msg, created_entities: msg.created_entities.filter(e => e.entity_id !== entity_id) }
+          : msg,
+      );
+      setChatHistory(updatedHistory);
+      if (messageId) {
+        const updatedMsg = updatedHistory.find(msg => msg.id === messageId);
+        updateMessageMeta({
+          projectId,
+          messageId,
+          meta: { created_entities: updatedMsg?.created_entities ?? [] },
+        });
+      }
+    },
+    [
+      projectId,
+      chat_history,
+      deleteApplication,
+      deleteSkill,
+      deleteProjectContext,
+      deleteToolkit,
+      updateMessageMeta,
+      setChatHistory,
+      toastError,
+    ],
+  );
+
   const { chatHistoryRef, emit, emitLeaveRoom } = useChatSocket({
     mode: 'chat',
     handleError,
@@ -625,6 +714,7 @@ const ChatBox = forwardRef((props, boxRef) => {
     onInjectionReport,
     onInjectionConsumed,
     isMonoChatting: isAgentsPage,
+    onEntityCreated: onEntityCreatedProp ?? onEntityCreated,
   });
 
   const {
@@ -2669,6 +2759,8 @@ const ChatBox = forwardRef((props, boxRef) => {
           speakingMessageId={speakingMessageId}
           speakingSegments={speakingSegments}
           spokenRange={spokenRange}
+          onEntityCreated={onEntityCreated}
+          onDeleteEntity={onDeleteEntity}
         />
         {displayConversationStarters && (
           <ChatConversationStarters

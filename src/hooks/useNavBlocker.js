@@ -14,6 +14,8 @@ export default function useNavBlocker(options) {
     isEditingToolkit,
     isEditingPipeline,
     isEditingArtifact,
+    isEditingSkill,
+    isEditingProjectContext,
     isToolkitCreateMode,
     isResetApiState,
     warningMessage,
@@ -21,8 +23,23 @@ export default function useNavBlocker(options) {
 
   // Derived state - calculated from individual editor states
   const isAnyEditorOpen = useMemo(
-    () => isEditingCanvas || isEditingAgent || isEditingToolkit || isEditingPipeline || isEditingArtifact,
-    [isEditingCanvas, isEditingAgent, isEditingToolkit, isEditingPipeline, isEditingArtifact],
+    () =>
+      isEditingCanvas ||
+      isEditingAgent ||
+      isEditingToolkit ||
+      isEditingPipeline ||
+      isEditingArtifact ||
+      isEditingSkill ||
+      isEditingProjectContext,
+    [
+      isEditingCanvas,
+      isEditingAgent,
+      isEditingToolkit,
+      isEditingPipeline,
+      isEditingArtifact,
+      isEditingSkill,
+      isEditingProjectContext,
+    ],
   );
 
   const resetApiState = useCallback(() => {
@@ -76,6 +93,18 @@ export default function useNavBlocker(options) {
     },
     [dispatch],
   );
+  const setSkillEditingBlockNav = useCallback(
+    value => {
+      dispatch(settingsActions.setSkillEditingBlockNav(value));
+    },
+    [dispatch],
+  );
+  const setProjectContextEditingBlockNav = useCallback(
+    value => {
+      dispatch(settingsActions.setProjectContextEditingBlockNav(value));
+    },
+    [dispatch],
+  );
   const setToolkitCreateMode = useCallback(
     value => {
       dispatch(settingsActions.setToolkitCreateMode(value));
@@ -103,6 +132,8 @@ export default function useNavBlocker(options) {
     isEditingToolkit,
     isEditingPipeline,
     isEditingArtifact,
+    isEditingSkill,
+    isEditingProjectContext,
     isToolkitCreateMode,
     isAnyEditorOpen,
     warningMessage,
@@ -114,6 +145,8 @@ export default function useNavBlocker(options) {
     setToolkitEditingBlockNav,
     setPipelineEditingBlockNav,
     setArtifactEditingBlockNav,
+    setSkillEditingBlockNav,
+    setProjectContextEditingBlockNav,
     setToolkitCreateMode,
     setIsResetApiState,
     resetApiState,

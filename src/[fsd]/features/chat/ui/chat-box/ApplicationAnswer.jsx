@@ -30,6 +30,7 @@ import {
   ChatContinue,
   ChatHitlActions,
   ErrorTrace,
+  GeneratedEntityChip,
 } from '@/[fsd]/features/chat/ui';
 import { SubAgentAccordion } from '@/[fsd]/features/chat/ui/sub-agent-section';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
@@ -121,6 +122,9 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
     speakingMessageId,
     speakingSegments,
     spokenRange,
+    created_entities = [],
+    onEntityCreated,
+    onDeleteEntity,
   } = props;
 
   // Ref for scrolling to message header after clicking continue
@@ -877,6 +881,23 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                   ]}
                 />
               )}
+              {!isStreaming && !isLoading && created_entities?.length > 0 && (
+                <Box sx={styles.createdEntitiesContainer}>
+                  {created_entities.map((entity, idx) => (
+                    <GeneratedEntityChip
+                      key={entity.entity_id ?? idx}
+                      entityType={entity.entity_type}
+                      entityId={entity.entity_id}
+                      isMcp={!!entity.is_mcp}
+                      label={entity.entity_name}
+                      entity={entity}
+                      messageId={messageId}
+                      onEntityCreated={onEntityCreated}
+                      onDeleteEntity={onDeleteEntity}
+                    />
+                  ))}
+                </Box>
+              )}
               <Box
                 sx={styles.actionButtonsBox}
                 ref={actionButtonsWrapperRef}
@@ -1165,6 +1186,12 @@ const applicationAnswerStyles = (
     width: '100%',
     flexWrap: 'wrap',
     marginTop: imageAttachmentsLength > 0 ? '0.5rem' : '0',
+  },
+  createdEntitiesContainer: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '0.5rem',
+    marginTop: '0.75rem',
   },
   actionButtonsBox: {
     display: 'flex',

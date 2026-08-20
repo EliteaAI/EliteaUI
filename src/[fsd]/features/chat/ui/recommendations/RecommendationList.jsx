@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef } from 'react';
 
+import { useRecommendations } from '@/[fsd]/features/chat/lib/hooks/useRecommendations.hooks';
 import { getChatParticipantUniqueId } from '@/[fsd]/features/chat/participants/lib/helpers';
 
 import NewParticipantList from './NewParticipantList';
-import useRecommendations from './useRecommendations';
 
 export default function RecommendationList({
   onSelectParticipant,

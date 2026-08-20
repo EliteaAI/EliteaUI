@@ -4,7 +4,7 @@ import { useGetRecommendationsQuery } from '@/api/applications';
 import { ChatParticipantType } from '@/common/constants';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
-export default function useRecommendations() {
+export const useRecommendations = () => {
   const selectedProjectId = useSelectedProjectId();
   const {
     data = { applications: [] },
@@ -35,4 +35,4 @@ export default function useRecommendations() {
     isFetching,
     isLoading,
   };
-}
+};

@@ -5,7 +5,9 @@ import { useFormikContext } from 'formik';
 import { useTrackEvent } from '@/GA';
 import CreateAgentForm from '@/[fsd]/features/agent/ui/agent-details/configurations/form/CreateAgentForm';
 import { useConversationStartersSync } from '@/[fsd]/features/chat/lib/hooks';
-import useRefetchAgentVersionDetailsOnClose from '@/[fsd]/features/chat/lib/hooks/useRefetchAgentVersionDetailsOnClose';
+import { useRefetchAgentVersionDetailsOnClose } from '@/[fsd]/features/chat/lib/hooks/useRefetchAgentVersionDetailsOnClose.hooks';
+import BaseEditor from '@/[fsd]/features/chat/ui/editors/BaseEditor.jsx';
+import LLMModelSelectorWrapper from '@/[fsd]/features/chat/ui/editors/LLMModelSelectorWrapper';
 import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
 import { InstructionsInputRefProvider } from '@/[fsd]/shared/lib/context';
 import { useGetApplicationVersionDetailQuery, usePublicApplicationDetailsQuery } from '@/api/applications';
@@ -19,8 +21,6 @@ import CreateApplicationSaveButton from '@/pages/Applications/Components/Applica
 import SaveApplicationButton from '@/pages/Applications/Components/Applications/SaveApplicationButton.jsx';
 import { useCreateApplicationInitialValues } from '@/pages/Applications/useApplicationInitialValues';
 import { ContentContainer } from '@/pages/Common/Components/StyledComponents.jsx';
-import BaseEditor from '@/pages/NewChat/components/BaseEditor.jsx';
-import LLMModelSelectorWrapper from '@/pages/NewChat/components/LLMModelSelectorWrapper';
 
 const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
 

@@ -24,3 +24,10 @@ export { useIsMidturnInjectionAvailable, useIsMidturnInjectionEnabled } from './
 export { useNextInputSuggestion } from './useNextInputSuggestion.hook';
 
 export * from './chat-button/useApplicationSubmenu.hooks';
+
+export { useEditProjectContext } from './useEditProjectContext.hooks';
+export { useEditSkill } from './useEditSkill.hooks';
+export { useMutuallyExclusiveEditors } from './useMutuallyExclusiveEditors.hooks';
+export { useRefetchAgentVersionDetailsOnClose } from './useRefetchAgentVersionDetailsOnClose.hooks';
+export { useRecommendations } from './useRecommendations.hooks';
+export { useChatEditors } from './useChatEditors.hooks';

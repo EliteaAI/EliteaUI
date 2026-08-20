@@ -158,6 +158,10 @@ export const languageOptions = [
     value: 'markdown',
   },
   {
+    label: 'MD',
+    value: 'md',
+  },
+  {
     label: 'MDX',
     value: 'mdx',
   },
