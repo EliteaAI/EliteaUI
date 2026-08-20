@@ -1,33 +1,30 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import useNavBlocker from '@/hooks/useNavBlocker';
 
 export const useEditSkill = () => {
   const { isEditingSkill, setSkillEditingBlockNav } = useNavBlocker();
-  const setSkillEditingBlockNavRef = useRef(setSkillEditingBlockNav);
-
-  useEffect(() => {
-    setSkillEditingBlockNavRef.current = setSkillEditingBlockNav;
-  }, [setSkillEditingBlockNav]);
-
   const [editingSkill, setEditingSkill] = useState(null);
 
-  const onShowSkillEditor = useCallback(theSelectedSkill => {
-    if (!theSelectedSkill) return;
-    setEditingSkill(theSelectedSkill);
-    setSkillEditingBlockNavRef.current(true);
-  }, []);
+  const onShowSkillEditor = useCallback(
+    theSelectedSkill => {
+      if (!theSelectedSkill) return;
+      setEditingSkill(theSelectedSkill);
+      setSkillEditingBlockNav(true);
+    },
+    [setSkillEditingBlockNav],
+  );
 
   const onCloseSkillEditor = useCallback(() => {
-    setSkillEditingBlockNavRef.current(false);
+    setSkillEditingBlockNav(false);
     setEditingSkill(null);
-  }, []);
+  }, [setSkillEditingBlockNav]);
 
   useEffect(() => {
     return () => {
-      setSkillEditingBlockNavRef.current(false);
+      setSkillEditingBlockNav(false);
     };
-  }, []);
+  }, [setSkillEditingBlockNav]);
 
   return {
     isEditingSkill,

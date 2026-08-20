@@ -58,7 +58,7 @@ const GeneratedEntityEditorPanel = memo(props => {
               <BaseTab
                 key={tab.entity_id ?? idx}
                 label={tab.entity_name}
-                icon={Icon ? <Icon /> : undefined}
+                icon={Icon ? <Icon style={styles.tabIcon} /> : undefined}
                 iconPosition="start"
                 variant={TABS_VARIANTS.elitea}
               />
@@ -150,6 +150,10 @@ const generatedEntityEditorPanelStyles = () => ({
     display: 'flex',
     alignItems: 'center',
     flexShrink: 0,
+  },
+  tabIcon: {
+    width: '1rem',
+    height: '1rem',
   },
   tabs: {
     flex: 1,

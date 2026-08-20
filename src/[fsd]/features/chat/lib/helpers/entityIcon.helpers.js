@@ -11,7 +11,6 @@ const ENTITY_ICONS = {
   skill: SkillsIcon,
   toolkit: ToolIcon,
   project_context: ContextIcon,
-  projectContext: ContextIcon,
 };
 
 /**

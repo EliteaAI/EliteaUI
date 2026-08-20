@@ -8,6 +8,7 @@ import useEditToolkit from '@/hooks/chat/useEditToolkit';
 import usePipelineCreation from '@/hooks/chat/usePipelineCreation';
 import useToolkitCreation from '@/hooks/chat/useToolkitCreation';
 
+import { buildEntityParticipant } from '../helpers';
 import { useAttachmentToolChange } from './useAttachmentToolChange.hooks';
 import { useConversationStarters } from './useConversationStarters.hooks';
 import { useEditProjectContext } from './useEditProjectContext.hooks';
@@ -111,14 +112,7 @@ export const useChatEditors = ({
 
   const onGeneratedEntityCreated = useCallback(
     ({ entity_type, entity_id, version_id, entity_name, is_mcp }) => {
-      const participant = {
-        id: entity_id,
-        name: entity_name,
-        isMCP: !!is_mcp,
-        meta: { name: entity_name, mcp: !!is_mcp },
-        entity_meta: { id: entity_id, project_id: projectId },
-        entity_settings: { version_id },
-      };
+      const participant = buildEntityParticipant({ entity_id, entity_name, version_id, is_mcp, projectId });
       setGeneratedEditorTabs(prev => {
         if (prev.some(t => t.entity_id === entity_id)) return prev;
         if (prev.length === 0) setActiveGeneratedTabIndex(0);

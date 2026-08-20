@@ -1,4 +1,5 @@
 export * as ChatHelpers from './chat.helpers.js';
+export { buildEntityParticipant } from './entityParticipant.helpers.js';
 export { getEntityIcon } from './entityIcon.helpers.js';
 export * as ExecutionHierarchyHelpers from './executionHierarchy.helpers.js';
 export * as HitlHelpers from './hitl.helpers.js';

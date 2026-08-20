@@ -36,6 +36,8 @@ const GeneratedEntityChip = memo(props => {
     }
     if (entityType === 'skill') return isEditingSkill;
     if (entityType === 'project_context') return isEditingProjectContext;
+    // The toolkit editor does not write an ID to searchParams, so all toolkit chips highlight
+    // when any toolkit editor is open. This matches the behaviour of useEditToolkit today.
     if (entityType === 'toolkit') return isEditingToolkit;
     return false;
   }, [
@@ -181,10 +183,11 @@ const generatedEntityChipStyles = () => ({
     flexShrink: 0,
     color: ({ palette }) => palette.icon.fill.default,
   },
-  entityIcon: ({ palette }) => ({
-    fontSize: '1rem',
-    color: palette.icon.fill.default,
-  }),
+  entityIcon: {
+    width: '1rem',
+    height: '1rem',
+    color: 'inherit',
+  },
   actionsVisible: {
     display: 'flex',
     alignItems: 'center',

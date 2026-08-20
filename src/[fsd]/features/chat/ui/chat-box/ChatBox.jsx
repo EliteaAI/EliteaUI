@@ -17,6 +17,7 @@ import { Box } from '@mui/system';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import * as ChatHelpers from '@/[fsd]/features/chat/lib/helpers/chat.helpers';
+import { buildEntityParticipant } from '@/[fsd]/features/chat/lib/helpers/entityParticipant.helpers.js';
 import {
   actionBelongsToInvocationSet,
   getActionOwnerPath,
@@ -627,14 +628,7 @@ const ChatBox = forwardRef((props, boxRef) => {
 
   const onEntityCreated = useCallback(
     ({ entity_type, entity_id, version_id, entity_name, is_mcp }) => {
-      const participant = {
-        id: entity_id,
-        name: entity_name,
-        isMCP: !!is_mcp,
-        meta: { name: entity_name, mcp: !!is_mcp },
-        entity_meta: { id: entity_id, project_id: projectId },
-        entity_settings: { version_id },
-      };
+      const participant = buildEntityParticipant({ entity_id, entity_name, version_id, is_mcp, projectId });
       if (entity_type === 'agent') {
         onShowAgentEditor?.(participant);
       } else if (entity_type === 'pipeline') {
