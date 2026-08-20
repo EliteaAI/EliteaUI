@@ -131,7 +131,7 @@ const SuiteConfigView = memo(props => {
   const { data: datasets = [] } = useEvalDatasetsQuery({ projectId }, { skip: !projectId });
 
   const { data: modelsData = { items: [] } } = useListModelsQuery(
-    { projectId, include_shared: true },
+    { projectId, include_shared: true, section: 'llm' },
     { skip: !projectId },
   );
 
@@ -193,10 +193,13 @@ const SuiteConfigView = memo(props => {
     setDatasetDraft(suiteDetail?.dataset_id ?? NONE_DATASET);
   }, [suiteDetail?.id, suiteDetail?.dataset_id]);
 
-  // Sync the judge model draft to the loaded suite.
+  // Sync the judge model draft to the loaded suite. `judge_model` is an object, so it must not
+  // be a dependency here — its reference changes on every refetch even when the value is the
+  // same, which would silently wipe an in-progress selection.
   useEffect(() => {
     setJudgeModelDraft(suiteDetail?.judge_model ?? null);
-  }, [suiteDetail?.id, suiteDetail?.judge_model]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [suiteDetail?.id]);
 
   const suiteOptions = useMemo(() => suites.map(s => ({ value: s.id, label: s.name })), [suites]);
   const datasetOptions = useMemo(
@@ -220,8 +223,10 @@ const SuiteConfigView = memo(props => {
   const lastRun = runs.length ? runs[0] : null;
 
   const datasetDirty = (suiteDetail?.dataset_id ?? NONE_DATASET) !== datasetDraft;
+  const savedJudgeModel = suiteDetail?.judge_model ?? null;
   const judgeModelDirty =
-    JSON.stringify(suiteDetail?.judge_model ?? null) !== JSON.stringify(judgeModelDraft);
+    (savedJudgeModel?.model_name ?? null) !== (judgeModelDraft?.model_name ?? null) ||
+    (savedJudgeModel?.model_project_id ?? null) !== (judgeModelDraft?.model_project_id ?? null);
 
   const autoJudgeModelLabel = modelsData.low_tier_default_model_name
     ? `Auto (${modelsData.low_tier_default_model_name})`
@@ -243,7 +248,7 @@ const SuiteConfigView = memo(props => {
       match || {
         id: 'judge-model-missing',
         name: judgeModelDraft.model_name,
-        display_name: judgeModelDraft.model_name,
+        display_name: `${judgeModelDraft.model_name} (unavailable)`,
       }
     );
   }, [judgeModelDraft, autoJudgeModelOption, modelsData.items]);
@@ -569,7 +574,10 @@ const SuiteConfigView = memo(props => {
               </Button.BaseBtn>
             </Box>
 
-            <Box sx={styles.selectorRow}>
+            <Box
+              sx={styles.selectorRow}
+              data-testid="evaluation-judge-model-select"
+            >
               <Box sx={styles.selectorGrow}>
                 <LLMModelSelector
                   variant="field"
@@ -578,8 +586,6 @@ const SuiteConfigView = memo(props => {
                   onSelectModel={handleSelectJudgeModel}
                   disabled={!canUpdateSuite}
                   showSettingsEntry={false}
-                  modelTooltip="Select evaluation judge model"
-                  dataTourTargetId="evaluation-judge-model-select"
                 />
               </Box>
             </Box>
