@@ -3,7 +3,7 @@ import { memo, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { GenerateEntityModal } from '@/[fsd]/entities/generate-entity-with-ai';
-import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
+import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
 import { useGenerateSkillDraftMutation, useSkillCreateMutation } from '@/[fsd]/features/skill/api';
 import { SearchParams, SkillsTabs } from '@/common/constants';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';

@@ -503,6 +503,8 @@ export const ToolkitForm = memo(props => {
 
   const isViewTogglePresent =
     editToolDetail.type !== ToolTypes.custom.value && !!effectiveToolSchema && isViewToggleVisible;
+  const testEntityLabel = isMCP ? 'Test MCP' : 'Test toolkit';
+
   const isDetailsActionBar = !!handleShowHistory;
   const isActionBarPresent = isDetailsActionBar || isViewTogglePresent;
 
@@ -538,14 +540,14 @@ export const ToolkitForm = memo(props => {
             <Box sx={styles.actionBarControls}>
               {isDetailsActionBar && handleShowTest && (
                 <Tooltip
-                  title={isTestDisabled ? 'Save your changes to test' : 'Test toolkit'}
+                  title={isTestDisabled ? 'Save your changes to test' : testEntityLabel}
                   placement="top"
                 >
                   <Box component="span">
                     <BaseBtn
                       variant={BUTTON_VARIANTS.iconLabel}
                       size="small"
-                      aria-label="test toolkit"
+                      aria-label={testEntityLabel}
                       data-testid="toolkit-test-button"
                       data-tour={TourTargetConstants.SHARED_TOUR_TARGET_IDS.testSettings}
                       disabled={isTestDisabled}

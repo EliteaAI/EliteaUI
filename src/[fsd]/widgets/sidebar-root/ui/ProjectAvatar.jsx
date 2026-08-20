@@ -2,7 +2,7 @@ import { memo, useMemo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { useProjectInfoQuery } from '@/[fsd]/features/settings/api/projectInfoApi';
+import { useProjectInfoQuery } from '@/[fsd]/features/settings';
 import { getProjectAvatarColor } from '@/[fsd]/widgets/sidebar-root/lib/helpers';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
 

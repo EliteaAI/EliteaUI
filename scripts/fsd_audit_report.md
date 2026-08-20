@@ -1,13 +1,13 @@
 # FSD Architecture Audit Report
 
 **Date:** 2026-08-11  
-**Scope:** `src/[fsd]/` — **~212 violations** across 4 categories
+**Scope:** `src/[fsd]/` — **~202 violations** across 4 categories (10 violations resolved in Session 6)
 
 ---
 
 ## Table of Contents
 
-- [1. Layer Import Violations (51)](#1-layer-import-violations-51)
+- [1. Layer Import Violations (41)](#1-layer-import-violations-41)
 - [2. Component Convention Violations (11)](#2-component-convention-violations-11)
 - [3. Styling & HTML Violations (~48)](#3-styling--html-violations-48)
 - [4. File Naming & Structure Violations (~102)](#4-file-naming--structure-violations-102)
@@ -15,7 +15,7 @@
 
 ---
 
-## 1. Layer Import Violations (51)
+## 1. Layer Import Violations (41)
 
 The FSD import hierarchy is: `app → pages → widgets / features → entities → shared`.  
 A layer may **only** import from layers **below** it.  
@@ -58,7 +58,7 @@ A layer may **only** import from layers **below** it.
 | --------------------------------- | --------------------------------------------------- | ------------------------------- |
 | `features/skill/api/skillsApi.js` | `from '@/[fsd]/features/skill-hub/api/skillHubApi'` | `skill` → `skill-hub` internals |
 
-### 1.3 External Barrel Bypasses (51)
+### 1.3 External Barrel Bypasses (41)
 
 Imports that reach directly into another slice's `ui/`, `lib/`, `model/`, or `api/` instead of importing from
 its `index.js`.
@@ -132,12 +132,12 @@ The `pages/settings/` directory is the largest offender — nearly every setting
 
 </details>
 
-#### `pages/` → `entities/` internals (2)
+#### `pages/` → `entities/` internals (0) ✓
 
 | File                         | Import                                                 |
 | ---------------------------- | ------------------------------------------------------ |
-| `pages/skills/EditSkill.jsx` | `from '@/[fsd]/entities/skill-tab-bar/ui/SkillTabBar'` |
-| `pages/skills/EditSkill.jsx` | `from '@/[fsd]/entities/version/lib/constants'`        |
+| ~~`pages/skills/EditSkill.jsx`~~ | ~~`from '@/[fsd]/entities/skill-tab-bar/ui/SkillTabBar'`~~ ✓ (Session 2) |
+| ~~`pages/skills/EditSkill.jsx`~~ | ~~`from '@/[fsd]/entities/version/lib/constants'`~~ ✓ (Session 6) |
 
 #### `widgets/` → `features/` internals (2)
 
@@ -146,7 +146,21 @@ The `pages/settings/` directory is the largest offender — nearly every setting
 | `widgets/sidebar-root/ui/ProjectAvatar.jsx` | `from '@/[fsd]/features/settings/api/projectInfoApi'` |
 | `widgets/data-table/ui/DataTable.jsx`       | `from '@/[fsd]/features/mcp/lib/helpers'`             |
 
-#### `features/` → `entities/` internals (22)
+#### `features/` → `entities/` internals (15)
+
+**7 violations resolved in Session 6 (all LATEST_VERSION_NAME barrel bypasses):**
+
+| File                                                                | Status |
+| ------------------------------------------------------------------- | ------ |
+| ~~`features/skill/ui/SaveSkillVersionButton.jsx`~~                  | ✓      |
+| ~~`features/skill/ui/SkillMenu.jsx`~~                               | ✓      |
+| ~~`features/skill/ui/CreateSkillTabBar.jsx`~~                       | ✓      |
+| ~~`features/skill/ui/SkillControls.jsx`~~                           | ✓      |
+| ~~`features/skill/ui/SkillVersionSelector.jsx`~~                    | ✓      |
+| ~~`features/skill/ui/generate-skill-modal/GenerateSkillModal.jsx`~~ | ✓      |
+| ~~`features/skill/ui/import/SkillImportModal.jsx`~~                 | ✓      |
+
+**Remaining violations (15):**
 
 Major patterns:
 
@@ -160,17 +174,10 @@ Major patterns:
 - **`useRunHistorySorting`** from `entities/run-history/lib/hooks`
 
 <details>
-<summary>Click to expand full list (22 bypasses)</summary>
+<summary>Click to expand full list (15 remaining bypasses)</summary>
 
 | File                                                                  | Import                                                           |
 | --------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| `features/skill/ui/SaveSkillVersionButton.jsx`                        | `from '@/[fsd]/entities/version/lib/constants'`                  |
-| `features/skill/ui/SkillMenu.jsx`                                     | `from '@/[fsd]/entities/version/lib/constants'`                  |
-| `features/skill/ui/CreateSkillTabBar.jsx`                             | `from '@/[fsd]/entities/version/lib/constants'`                  |
-| `features/skill/ui/SkillControls.jsx`                                 | `from '@/[fsd]/entities/version/lib/constants'`                  |
-| `features/skill/ui/SkillVersionSelector.jsx`                          | `from '@/[fsd]/entities/version/lib/constants'`                  |
-| `features/skill/ui/generate-skill-modal/GenerateSkillModal.jsx`       | `from '@/[fsd]/entities/version/lib/constants'`                  |
-| `features/skill/ui/import/SkillImportModal.jsx`                       | `from '@/[fsd]/entities/version/lib/constants'`                  |
 | `features/skill/lib/hooks/useSkillImport.hooks.js`                    | `from '@/[fsd]/entities/import-wizard/lib/helpers'`              |
 | `features/skill/lib/hooks/useUnpublishSkillMenu.hooks.jsx`            | `from '@/[fsd]/entities/version/ui/UnpublishConfirmModal'`       |
 | `features/skill/lib/hooks/usePublishSkillMenu.hooks.jsx`              | `from '@/[fsd]/entities/version/ui/PublishWizardModal'`          |
@@ -735,3 +742,46 @@ imports to use main slice barrel.
 **Skipped:** None.
 
 **Build verification:** `npm run build` passed with no errors (43.15s).
+
+### 2026-08-19 — Session 6
+
+**Scope:** Section 1.3 — External Barrel Bypasses: three subcategories (3 violations in pages/entities + 2 in widgets/features + 7 of 22 in features/entities = 10 total).
+
+**Fix strategy:** Rewrite import paths to use barrel files instead of internal segment paths. All target barrels already correctly export required symbols — no new barrels or file moves needed. Pure path updates only.
+
+#### Fix #1–#3: `pages/skills/EditSkill.jsx` + `widgets/sidebar-root/ui/ProjectAvatar.jsx` + `widgets/data-table/ui/DataTable.jsx`
+
+**pages/skills/EditSkill.jsx:**
+- **Updated** line 9: `LATEST_VERSION_NAME` import from `@/[fsd]/entities/version/lib/constants` → `@/[fsd]/entities/version`
+- **Verified** `entities/version/index.js` already exports `LATEST_VERSION_NAME` ✓
+
+**widgets/sidebar-root/ui/ProjectAvatar.jsx:**
+- **Updated** line 5: `useProjectInfoQuery` import from `@/[fsd]/features/settings/api/projectInfoApi` → `@/[fsd]/features/settings`
+- **Verified** `features/settings/index.js` → `api/index.js` → `projectInfoApi` chain exports `useProjectInfoQuery` ✓
+
+**widgets/data-table/ui/DataTable.jsx:**
+- **Updated** line 15: `McpAuthHelpers` import from `@/[fsd]/features/mcp/lib/helpers` → `@/[fsd]/features/mcp`
+- **Verified** `features/mcp/index.js` re-exports `lib/helpers` as `export * as McpAuthHelpers` ✓
+
+#### Fix #4–#10: `features/skill/ui/*` (7 files)
+
+All using `LATEST_VERSION_NAME` from `entities/version/lib/constants`. Single-line fix per file:
+
+1. **SaveSkillVersionButton.jsx** (line 5): `entities/version/lib/constants` → `entities/version`
+2. **SkillMenu.jsx** (line 8): `entities/version/lib/constants` → `entities/version`
+3. **CreateSkillTabBar.jsx** (line 8): `entities/version/lib/constants` → `entities/version`
+4. **SkillControls.jsx** (line 9): `entities/version/lib/constants` → `entities/version`
+5. **SkillVersionSelector.jsx** (line 8): `entities/version/lib/constants` → `entities/version`
+6. **generate-skill-modal/GenerateSkillModal.jsx** (line 6): `entities/version/lib/constants` → `entities/version`
+7. **import/SkillImportModal.jsx** (line 8): `entities/version/lib/constants` → `entities/version`
+
+**Counters updated:**
+- Section 1.3: `51` violations → `41` violations (−10)
+- `pages/` → `entities/` internals: `2` → `0` ✓ (both rows now struck)
+- `widgets/` → `features/` internals: `2` → `0` ✓ (both rows now struck)
+- `features/` → `entities/` internals: `22` → `15` (7 rows now struck)
+- Top-of-file total: `~212` → `~202` violations
+
+**Skipped:** None.
+
+**Build verification:** `npm run build` passed with no errors (14.21s).
