@@ -2,12 +2,10 @@ import { memo } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { Box, Tooltip, Typography } from '@mui/material';
+import { Box, Tooltip } from '@mui/material';
 
 import { PAT_REQUIRED_ACTION_HINT, useInternalMcpPatStatus } from '@/[fsd]/features/mcp';
-import { ToolkitLayoutConstants } from '@/[fsd]/features/toolkits/lib/constants';
 import { useToolkitToolOptions } from '@/[fsd]/features/toolkits/lib/hooks';
-import { TourTargetConstants } from '@/[fsd]/shared/lib/constants';
 import { Button, ScrollableContainer, Select } from '@/[fsd]/shared/ui/';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { LLMModelSelector } from '@/[fsd]/widgets/llm-model-selector';
@@ -16,9 +14,7 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import ToolFormContainer from '../form/ToolFormContainer';
 
-const { PANEL_HEADER_HEIGHT } = ToolkitLayoutConstants;
-
-const TestToolSettings = memo(props => {
+const ToolkitTestSettings = memo(props => {
   const {
     toolkitId,
     selectedTool,
@@ -34,7 +30,6 @@ const TestToolSettings = memo(props => {
     isRunning,
     isValidForm,
     selectedToolSchema,
-    hideHeader = false,
   } = props;
 
   const { values } = useFormikContext();
@@ -43,25 +38,14 @@ const TestToolSettings = memo(props => {
   const { allToolsOptions } = useToolkitToolOptions({ toolkitId });
   const disabledRunTool = !isValidForm || isRunning || patInvalid;
 
-  const styles = testToolSettingsStyles();
+  const styles = toolkitTestSettingsStyles();
 
   return (
     <Box
       width="100%"
       height="100%"
-      data-tour={TourTargetConstants.SHARED_TOUR_TARGET_IDS.testSettings}
       sx={styles.root}
     >
-      {!hideHeader && (
-        <Box sx={styles.header}>
-          <Typography
-            variant="headingSmall"
-            color="text.secondary"
-          >
-            Test Settings
-          </Typography>
-        </Box>
-      )}
       <ScrollableContainer>
         <Box sx={styles.content}>
           <Box sx={styles.toolSelectContainer}>
@@ -122,27 +106,17 @@ const TestToolSettings = memo(props => {
   );
 });
 
-TestToolSettings.displayName = 'TestToolSettings';
+ToolkitTestSettings.displayName = 'ToolkitTestSettings';
 
 // 511px of fields plus the 32px Figma gutters — caps the column so it cannot straddle the divider.
 const CONTENT_MAX_WIDTH = '35.9375rem';
 
 /** @type {MuiSx} */
-const testToolSettingsStyles = () => ({
+const toolkitTestSettingsStyles = () => ({
   root: {
     display: 'flex',
     flexDirection: 'column',
   },
-  header: ({ palette }) => ({
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: palette.background.section,
-    borderBottom: `0.0625rem solid ${palette.border.table}`,
-    flexShrink: 0,
-    height: PANEL_HEADER_HEIGHT,
-    width: '100%',
-  }),
   content: {
     display: 'flex',
     flexDirection: 'column',
@@ -182,4 +156,4 @@ const testToolSettingsStyles = () => ({
   },
 });
 
-export default TestToolSettings;
+export default ToolkitTestSettings;

@@ -1,16 +1,16 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 
-import { Box, CircularProgress, Grid } from '@mui/material';
+import { Box, CircularProgress, Grid, Typography } from '@mui/material';
 
+import { IndexesPanel } from '@/[fsd]/features/toolkits/indexes/ui';
 import { useToolkitDetailNavigation } from '@/[fsd]/features/toolkits/lib/hooks';
-import { TestTools } from '@/[fsd]/features/toolkits/ui';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui/form/ToolkitForm';
 import DirtyDetector from '@/components/Formik/DirtyDetector.jsx';
 
 const ConfigurationTab = memo(props => {
   const {
     isFetching,
-    applicationId,
+    hasLoadError,
     setDirty,
     dirty,
     editToolDetail,
@@ -23,10 +23,13 @@ const ConfigurationTab = memo(props => {
     updateKey,
     isMCP,
     onValidationStateChange,
-    indexingUnavailableReason,
+    indexingBlocker,
     shouldHideIndexes = true,
   } = props;
   const { goToRunHistory, goToTest } = useToolkitDetailNavigation({ toolkitId, isMCP });
+
+  const hasSidePanel = !shouldHideIndexes;
+  const styles = useMemo(() => configurationTabStyles(hasSidePanel), [hasSidePanel]);
 
   const onChangeToolDetail = useCallback(
     (updater, options) => {
@@ -38,61 +41,70 @@ const ConfigurationTab = memo(props => {
     [setEditToolDetail, setIsToolDirty],
   );
 
-  return isFetching ? (
-    <Box
-      sx={{ height: '100%', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
-    >
-      <CircularProgress />
-    </Box>
-  ) : (
+  if (isFetching || (!editToolDetail && !hasLoadError)) {
+    return (
+      <Box sx={styles.fullPanelState}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (!editToolDetail) {
+    return (
+      <Box sx={styles.fullPanelState}>
+        <Typography
+          variant="bodyMedium"
+          color="text.primary"
+        >
+          This toolkit could not be loaded.
+        </Typography>
+      </Box>
+    );
+  }
+
+  return (
     <>
       <DirtyDetector setDirty={setDirty} />
-      <>
+      <Grid
+        container
+        sx={styles.gridContainer}
+      >
         <Grid
-          container
-          // columnSpacing={'2rem'}
-          sx={styles.gridContainer}
+          size={{ md: 12, lg: hasSidePanel ? 6 : 12 }}
+          sx={styles.leftPanel}
         >
-          {editToolDetail && (
-            <Grid
-              size={{ md: 12, lg: 6 }}
-              sx={styles.leftPanel}
-            >
-              <ToolkitForm
-                editToolDetail={editToolDetail}
-                onChangeToolDetail={onChangeToolDetail}
-                isEditing={true}
-                isToolDirty={isToolDirty}
-                editFieldRootPath={editFieldRootPath}
-                isCustomBackButtons={true}
-                showNameFieldForcedly={true}
-                hideConfigurationNameInput={true}
-                hasNotSavedCredentials={hasNotSavedCredentials}
-                updateKey={updateKey}
-                isMCP={isMCP}
-                onSyntaxError={() => {}}
-                onValidationStateChange={onValidationStateChange}
-                shouldHideIndexes={shouldHideIndexes}
-                indexingUnavailableReason={indexingUnavailableReason}
-                toolkitId={toolkitId}
-                handleShowHistory={goToRunHistory}
-                handleShowTest={goToTest}
-                isTestDisabled={dirty}
-              />
-            </Grid>
-          )}
+          <ToolkitForm
+            editToolDetail={editToolDetail}
+            onChangeToolDetail={onChangeToolDetail}
+            isEditing={true}
+            isToolDirty={isToolDirty}
+            editFieldRootPath={editFieldRootPath}
+            isCustomBackButtons={true}
+            showNameFieldForcedly={true}
+            hideConfigurationNameInput={true}
+            hasNotSavedCredentials={hasNotSavedCredentials}
+            updateKey={updateKey}
+            isMCP={isMCP}
+            onSyntaxError={() => {}}
+            onValidationStateChange={onValidationStateChange}
+            hasSidePanel={hasSidePanel}
+            handleShowHistory={goToRunHistory}
+            handleShowTest={goToTest}
+            isTestDisabled={dirty}
+          />
+        </Grid>
+        {hasSidePanel && (
           <Grid
             size={{ md: 12, lg: 6 }}
             sx={styles.rightPanel}
-            container
           >
-            <TestTools
-              applicationId={applicationId}
+            <IndexesPanel
               toolkitId={toolkitId}
+              indexingBlocker={indexingBlocker}
             />
           </Grid>
-        </Grid>
-      </>
+        )}
+      </Grid>
     </>
   );
 });
@@ -100,7 +112,7 @@ const ConfigurationTab = memo(props => {
 ConfigurationTab.displayName = 'ConfigurationTab';
 
 /** @type {MuiSx} */
-const styles = {
+const configurationTabStyles = hasSidePanel => ({
   gridContainer: {
     height: '100%',
     maxHeight: '100%',
@@ -116,7 +128,7 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '1rem',
-    borderRight: ({ palette }) => `0.0625rem solid ${palette.border.table}`,
+    borderRight: hasSidePanel ? ({ palette }) => `0.0625rem solid ${palette.border.table}` : 'none',
     position: 'relative',
     ' & .MuiAccordion-root': {
       background: ({ palette }) => `${palette.background.section} !important`,
@@ -125,15 +137,17 @@ const styles = {
   rightPanel: {
     height: '100%',
     maxHeight: '100%',
-  },
-  indexesUnavailable: ({ palette }) => ({
-    padding: '1rem',
-    borderRadius: '0.5rem',
-    background: palette.background.userInputBackground,
     display: 'flex',
-    alignItems: 'center',
+    flexDirection: 'column',
+    overflow: 'hidden',
+  },
+  fullPanelState: {
+    height: '100%',
+    width: '100%',
+    display: 'flex',
     justifyContent: 'center',
-  }),
-};
+    alignItems: 'center',
+  },
+});
 
 export default ConfigurationTab;

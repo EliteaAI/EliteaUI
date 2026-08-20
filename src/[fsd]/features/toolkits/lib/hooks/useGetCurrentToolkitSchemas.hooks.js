@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useSelector } from 'react-redux';
 
+import { eliteaApi } from '@/api/eliteaApi.js';
 import { useLazyToolkitTypesQuery } from '@/api/toolkits';
 import { sioEvents } from '@/common/constants';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -39,8 +40,21 @@ export const useGetCurrentToolkitSchemas = ({ skip, isMCP } = {}) => {
 
   useSocket(sioEvents.mcp_status, handleMCPStatusEvent);
 
+  const selectToolkitTypesResult = useMemo(
+    () => eliteaApi.endpoints.toolkitTypes.select({ projectId }),
+    [projectId],
+  );
+  const { isSuccess, isError } = useSelector(selectToolkitTypesResult);
+  const hasSharedRequestFinished = isSuccess || isError;
+  const isAnswered = hasSharedRequestFinished || !!Object.keys(toolkitSchemas || {}).length;
+
+  const hasEverBeenAnsweredRef = useRef(false);
+  hasEverBeenAnsweredRef.current ||= isAnswered;
+  const isSettled = hasEverBeenAnsweredRef.current;
+
   return {
     toolkitSchemas,
     isFetching,
+    isSettled,
   };
 };

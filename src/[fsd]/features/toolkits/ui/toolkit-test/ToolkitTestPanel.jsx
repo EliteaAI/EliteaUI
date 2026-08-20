@@ -8,9 +8,9 @@ import { McpAuthModal } from '@/[fsd]/features/mcp';
 import { ToolkitLayoutConstants } from '@/[fsd]/features/toolkits/lib/constants';
 import { useToolkitTestRunner } from '@/[fsd]/features/toolkits/lib/hooks';
 
-import TestToolSettings from './TestToolSettings';
-import TestToolsEmptyState from './TestToolsEmptyState';
+import ToolkitTestEmptyState from './ToolkitTestEmptyState';
 import ToolkitTestResults from './ToolkitTestResults';
+import ToolkitTestSettings from './ToolkitTestSettings';
 
 const { PANEL_HEADER_HEIGHT } = ToolkitLayoutConstants;
 
@@ -50,8 +50,7 @@ const ToolkitTestPanel = memo(props => {
         </Box>
         <Box sx={styles.columnBody}>
           {selectedTool ? (
-            <TestToolSettings
-              hideHeader
+            <ToolkitTestSettings
               toolkitId={toolkitId}
               selectedTool={selectedTool}
               onChangeTool={onChangeTool}
@@ -68,7 +67,7 @@ const ToolkitTestPanel = memo(props => {
               selectedToolSchema={selectedToolSchema}
             />
           ) : (
-            <TestToolsEmptyState
+            <ToolkitTestEmptyState
               toolkitId={toolkitId}
               onChangeTool={onChangeTool}
               sx={styles.emptyState}
