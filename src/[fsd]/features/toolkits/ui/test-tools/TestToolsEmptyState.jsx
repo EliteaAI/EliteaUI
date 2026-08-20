@@ -1,13 +1,17 @@
 import { memo } from 'react';
 
+import { useFormikContext } from 'formik';
+
 import { Box, Typography } from '@mui/material';
 
 import { useToolkitToolOptions } from '@/[fsd]/features/toolkits/lib/hooks';
+import { isMcpToolkitType } from '@/[fsd]/shared/lib/helpers';
 import { Select } from '@/[fsd]/shared/ui/';
 import TestIcon from '@/assets/test.svg?react';
 
 const TestToolsEmptyState = memo(props => {
   const { toolkitId, onChangeTool, sx = {} } = props;
+  const { values } = useFormikContext();
   const { allToolsOptions } = useToolkitToolOptions({ toolkitId });
   const styles = getStyles();
 
@@ -22,7 +26,7 @@ const TestToolsEmptyState = memo(props => {
           variant="headingSmall"
           color="text.secondary"
         >
-          Test toolkit
+          {isMcpToolkitType(values?.type) ? 'Test MCP' : 'Test toolkit'}
         </Typography>
         <Typography
           variant="bodyMedium"
