@@ -475,6 +475,7 @@ const PipelineEditor = forwardRef(
           error={error}
           onDirtyStateChange={onPipelineDirtyStateChange}
           titleTestId="pipeline-canvas-title"
+          subtitleTestId="pipeline-canvas-subtitle"
           closeButtonTestId="pipeline-canvas-close-button"
           discardButtonTestId="pipeline-canvas-discard-button"
           discardModalTestId="pipeline-canvas-discard-confirm-modal"
