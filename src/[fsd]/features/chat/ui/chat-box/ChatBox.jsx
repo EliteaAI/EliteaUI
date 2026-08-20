@@ -660,15 +660,20 @@ const ChatBox = forwardRef((props, boxRef) => {
   const [updateMessageMeta] = useUpdateMessageMetaMutation();
 
   const onDeleteEntity = useCallback(
-    ({ entity_type, entity_id }, messageId) => {
-      if (entity_type === 'agent' || entity_type === 'pipeline') {
-        deleteApplication({ projectId, applicationId: entity_id });
-      } else if (entity_type === 'skill') {
-        deleteSkill({ projectId, skillId: entity_id });
-      } else if (entity_type === 'project_context') {
-        deleteProjectContext({ projectId });
-      } else if (entity_type === 'toolkit') {
-        deleteToolkit({ projectId, toolkitId: entity_id });
+    async ({ entity_type, entity_id }, messageId) => {
+      try {
+        if (entity_type === 'agent' || entity_type === 'pipeline') {
+          await deleteApplication({ projectId, applicationId: entity_id }).unwrap();
+        } else if (entity_type === 'skill') {
+          await deleteSkill({ projectId, skillId: entity_id }).unwrap();
+        } else if (entity_type === 'project_context') {
+          await deleteProjectContext({ projectId }).unwrap();
+        } else if (entity_type === 'toolkit') {
+          await deleteToolkit({ projectId, toolkitId: entity_id }).unwrap();
+        }
+      } catch (err) {
+        toastError(buildErrorMessage(err) || 'Failed to delete entity');
+        return;
       }
       const updatedHistory = chat_history.map(msg =>
         msg.created_entities?.length
@@ -694,6 +699,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       deleteToolkit,
       updateMessageMeta,
       setChatHistory,
+      toastError,
     ],
   );
 

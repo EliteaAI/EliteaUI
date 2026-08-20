@@ -21,3 +21,10 @@ export const getEntityIcon = ({ entity_type, is_mcp }) => {
   if (entity_type === 'toolkit' && is_mcp) return McpIcon;
   return ENTITY_ICONS[entity_type];
 };
+
+/**
+ * Returns the correct style prop for an icon component.
+ * MUI icons (identified by muiName) accept sx; plain SVG ?react imports accept style only.
+ */
+export const getIconStyleProps = (Icon, stylesObj) =>
+  Icon?.muiName ? { sx: stylesObj } : { style: stylesObj };

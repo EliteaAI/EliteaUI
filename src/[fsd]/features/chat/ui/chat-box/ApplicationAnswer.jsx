@@ -890,8 +890,10 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                       entityId={entity.entity_id}
                       isMcp={!!entity.is_mcp}
                       label={entity.entity_name}
-                      onOpen={() => onEntityCreated?.(entity)}
-                      onDelete={onDeleteEntity ? () => onDeleteEntity(entity, messageId) : undefined}
+                      entity={entity}
+                      messageId={messageId}
+                      onEntityCreated={onEntityCreated}
+                      onDeleteEntity={onDeleteEntity}
                     />
                   ))}
                 </Box>

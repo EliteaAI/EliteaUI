@@ -2,7 +2,7 @@ import React, { Suspense, memo, useCallback } from 'react';
 
 import { Box, CircularProgress } from '@mui/material';
 
-import { getEntityIcon } from '@/[fsd]/features/chat/lib/helpers';
+import { getEntityIcon, getIconStyleProps } from '@/[fsd]/features/chat/lib/helpers';
 import { ChunkHelpers } from '@/[fsd]/shared/lib/helpers';
 import BaseTab from '@/[fsd]/shared/ui/tabs/BaseTab';
 import BaseTabs, { TABS_VARIANTS } from '@/[fsd]/shared/ui/tabs/BaseTabs';
@@ -58,7 +58,7 @@ const GeneratedEntityEditorPanel = memo(props => {
               <BaseTab
                 key={tab.entity_id ?? idx}
                 label={tab.entity_name}
-                icon={Icon ? <Icon style={styles.tabIcon} /> : undefined}
+                icon={Icon ? <Icon {...getIconStyleProps(Icon, styles.tabIcon)} /> : undefined}
                 iconPosition="start"
                 variant={TABS_VARIANTS.elitea}
               />

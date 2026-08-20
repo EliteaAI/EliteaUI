@@ -236,16 +236,21 @@ export const useChatEditors = ({
     onCloseGeneratedEntitiesPanel: handleCloseGeneratedEntitiesPanel,
   });
 
-  // Creation hooks
-  const { onAgentCreated } = useAgentCreation({
-    onAgentEditorCreated,
-    addNewParticipants,
-    onSetActiveParticipant: participant => {
+  const handleSetActiveParticipant = useCallback(
+    participant => {
       setActiveParticipant(participant);
       if (activeConversation?.id && getChatParticipantUniqueId && setLocalActiveParticipant) {
         setLocalActiveParticipant(activeConversation.id, getChatParticipantUniqueId(participant));
       }
     },
+    [setActiveParticipant, activeConversation?.id, getChatParticipantUniqueId, setLocalActiveParticipant],
+  );
+
+  // Creation hooks
+  const { onAgentCreated } = useAgentCreation({
+    onAgentEditorCreated,
+    addNewParticipants,
+    onSetActiveParticipant: handleSetActiveParticipant,
   });
 
   const { onToolkitCreated } = useToolkitCreation({
@@ -256,12 +261,7 @@ export const useChatEditors = ({
   const { onPipelineCreated } = usePipelineCreation({
     onPipelineEditorCreated,
     addNewParticipants,
-    onSetActiveParticipant: participant => {
-      setActiveParticipant(participant);
-      if (activeConversation?.id && getChatParticipantUniqueId && setLocalActiveParticipant) {
-        setLocalActiveParticipant(activeConversation.id, getChatParticipantUniqueId(participant));
-      }
-    },
+    onSetActiveParticipant: handleSetActiveParticipant,
   });
 
   // isEditorOpen: used by useCloseEditorAlert in NewChat

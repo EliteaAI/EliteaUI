@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 
 import { Box, Tooltip, Typography } from '@mui/material';
 
-import { getEntityIcon } from '@/[fsd]/features/chat/lib/helpers';
+import { getEntityIcon, getIconStyleProps } from '@/[fsd]/features/chat/lib/helpers';
 import { Button, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import TypographyWithConditionalTooltip from '@/[fsd]/shared/ui/tooltip/TypographyWithConditionalTooltip';
@@ -14,9 +14,17 @@ import EditIcon from '@/components/Icons/EditIcon';
 import useNavBlocker from '@/hooks/useNavBlocker';
 
 const GeneratedEntityChip = memo(props => {
-  const { entityType, entityId, isMcp, label, onOpen, onDelete } = props;
+  const { entityType, entityId, isMcp, label, entity, messageId, onEntityCreated, onDeleteEntity } = props;
 
   const Icon = getEntityIcon({ entity_type: entityType, is_mcp: isMcp });
+
+  const handleOpen = useCallback(() => {
+    onEntityCreated?.(entity);
+  }, [onEntityCreated, entity]);
+
+  const handleDelete = useCallback(() => {
+    onDeleteEntity?.(entity, messageId);
+  }, [onDeleteEntity, entity, messageId]);
 
   const [isHovering, setIsHovering] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -54,12 +62,14 @@ const GeneratedEntityChip = memo(props => {
   const handleMouseEnter = useCallback(() => setIsHovering(true), []);
   const handleMouseLeave = useCallback(() => setIsHovering(false), []);
 
+  const canDelete = !!onDeleteEntity;
+
   const handleDeleteClick = useCallback(() => setIsConfirmOpen(true), []);
   const handleConfirmClose = useCallback(() => setIsConfirmOpen(false), []);
   const handleConfirmDelete = useCallback(() => {
     setIsConfirmOpen(false);
-    onDelete?.();
-  }, [onDelete]);
+    handleDelete();
+  }, [handleDelete]);
 
   const styles = generatedEntityChipStyles();
 
@@ -71,9 +81,7 @@ const GeneratedEntityChip = memo(props => {
         sx={styles.mainContainer}
         data-testid="generated-entity-chip"
       >
-        <Box sx={styles.iconWrapper}>
-          <Icon sx={styles.entityIcon} />
-        </Box>
+        <Box sx={styles.iconWrapper}>{Icon && <Icon {...getIconStyleProps(Icon, styles.entityIcon)} />}</Box>
 
         <Box sx={styles.contentContainer}>
           <TypographyWithConditionalTooltip
@@ -103,13 +111,13 @@ const GeneratedEntityChip = memo(props => {
             >
               <Button.BaseBtn
                 variant={BUTTON_VARIANTS.tertiary}
-                onClick={onOpen}
+                onClick={handleOpen}
                 sx={styles.iconButton}
                 startIcon={<EditIcon sx={styles.icon} />}
                 aria-label="Open entity"
               />
             </Tooltip>
-            {onDelete && (
+            {canDelete && (
               <Tooltip
                 title="Delete entity"
                 placement="top"
@@ -127,7 +135,7 @@ const GeneratedEntityChip = memo(props => {
         )}
       </Box>
 
-      {onDelete && (
+      {canDelete && (
         <Modal.DeleteEntityModal
           open={isConfirmOpen}
           onClose={handleConfirmClose}
