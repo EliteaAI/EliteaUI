@@ -6,7 +6,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { Box, CircularProgress } from '@mui/material';
 
-import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
+import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
 import { SetDefaultVersionDialog } from '@/[fsd]/entities/version/ui';
 import { useSetSkillDefaultVersionMutation, useSkillDetailsQuery } from '@/[fsd]/features/skill/api';
 import { SkillValidateSchema } from '@/[fsd]/features/skill/lib/validation';
@@ -15,7 +15,7 @@ import SkillInformation from '@/[fsd]/features/skill/ui/SkillInformation';
 import { AIEditSkillButton } from '@/[fsd]/features/skill/ui/ai-edit-skill-modal';
 import CreateSkillForm from '@/[fsd]/features/skill/ui/skill-details/form/CreateSkillForm';
 import SkillTestPanel from '@/[fsd]/features/skill/ui/skill-test-panel/SkillTestPanel';
-import SkillTabBar from '@/[fsd]/widgets/skill-tab-bar/ui/SkillTabBar';
+import { SkillTabBar } from '@/[fsd]/widgets/skill-tab-bar';
 import { eliteaApi } from '@/api/eliteaApi';
 import { SkillsTabs, ViewMode } from '@/common/constants';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils.jsx';

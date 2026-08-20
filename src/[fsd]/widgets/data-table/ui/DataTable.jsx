@@ -12,7 +12,7 @@ import {
   GridTablePagination,
   GridTableRow,
 } from '@/[fsd]/entities/grid-table/ui';
-import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
+import { McpAuthHelpers } from '@/[fsd]/features/mcp';
 import FlowIcon from '@/assets/flow-icon.svg?react';
 import OfflineIcon from '@/assets/offline-icon.svg?react';
 import OnlineIcon from '@/assets/online-icon.svg?react';

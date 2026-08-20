@@ -2,7 +2,7 @@ import { memo, useCallback, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
+import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
 import { useSaveSkillVersion } from '@/[fsd]/features/skill/lib/hooks';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { Button, Input, Modal } from '@/[fsd]/shared/ui';
