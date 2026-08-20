@@ -399,17 +399,19 @@ const EditToolkit = memo(props => {
           containerStyle={styles.containerStyle}
           leftPart={
             <Box sx={styles.leftPart}>
-              <BackButton />
               {hasBreadcrumbTrail ? (
                 <Breadcrumbs />
               ) : (
-                <Typography
-                  variant="headingSmall"
-                  color="text.secondary"
-                  data-testid="toolkit-detail-title"
-                >
-                  {publicToolkitData?.name || 'Edit Toolkit'}
-                </Typography>
+                <>
+                  <BackButton />
+                  <Typography
+                    variant="headingSmall"
+                    color="text.secondary"
+                    data-testid="toolkit-detail-title"
+                  >
+                    {publicToolkitData?.name || 'Edit Toolkit'}
+                  </Typography>
+                </>
               )}
             </Box>
           }
