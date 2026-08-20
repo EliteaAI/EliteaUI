@@ -1,9 +1,9 @@
 import { memo, useMemo } from 'react';
 
-import { Box, Typography } from '@mui/material';
+import { Box } from '@mui/material';
 
 import { normalizeIndexingReport } from '@/[fsd]/entities/indexing-report';
-import { formatDate } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
+import { formatDate, hasLiveRun } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
 import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
@@ -12,7 +12,6 @@ import FileIcon from '@/assets/file.svg?react';
 import IndexingIcon from '@/assets/indexing.svg?react';
 import UnavailableIcon from '@/assets/unavailable.svg?react';
 import { PERMISSIONS } from '@/common/constants';
-import EntityIcon from '@/components/EntityIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
 import IndexStatItem from './IndexStatItem';
@@ -33,7 +32,6 @@ const summarizeRun = entry => {
 
 const RunIndexGeneralSection = memo(props => {
   const {
-    indexName,
     index,
     reindexStats,
     isRunning,
@@ -53,27 +51,10 @@ const RunIndexGeneralSection = memo(props => {
   const latestRun = useMemo(() => summarizeRun(reindexStats.latestEntry), [reindexStats.latestEntry]);
 
   const canDeleteIndex = isPrivate || checkPermission(PERMISSIONS.index.delete);
-
-  // Only the backend's stale flag proves a run dead — agent-started runs never carry
-  // a task id in this panel, and acting on a live run orphans its vectors.
-  const isDeadRun = isIndexing && !canStopIndexing && isStale;
+  const runIsLive = hasLiveRun({ isIndexing, canStopIndexing, isStale });
 
   return (
     <Box sx={styles.root}>
-      <Box sx={styles.nameRow}>
-        <EntityIcon
-          entityType="index"
-          projectId={index?.metadata?.project_id}
-          editable={false}
-        />
-        <Typography
-          variant="headingSmall"
-          color="text.primary"
-          noWrap
-        >
-          {indexName}
-        </Typography>
-      </Box>
       <Box sx={styles.statsSection}>
         <Box sx={styles.latestSection}>
           <IndexStatItem
@@ -126,7 +107,7 @@ const RunIndexGeneralSection = memo(props => {
           onClick={onReindex}
           // isRunning stays in this gate (unlike Delete's): a live non-indexing tool
           // run must not start a concurrent index.
-          disabled={isRunning || isWaitingForTaskStart || (isIndexing && !isDeadRun)}
+          disabled={isRunning || isWaitingForTaskStart || runIsLive}
         >
           Reindex
         </Button.BaseBtn>
@@ -136,7 +117,7 @@ const RunIndexGeneralSection = memo(props => {
             onClick={onOpenDelete}
             // No isRunning here — recovering an in-progress conversation on page load
             // sets it too, which is the stuck case this escape hatch exists for.
-            disabled={isDeleting || isWaitingForTaskStart || (isIndexing && !isDeadRun)}
+            disabled={isDeleting || isWaitingForTaskStart || runIsLive}
           >
             Delete Index
           </Button.BaseBtn>
@@ -155,12 +136,6 @@ const runIndexGeneralSectionStyles = () => ({
     flexDirection: 'column',
     gap: '0.5rem',
     paddingBottom: '1.5rem',
-  },
-  nameRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.75rem',
-    paddingBottom: '0.25rem',
   },
   avatar: {
     width: '2.25rem',

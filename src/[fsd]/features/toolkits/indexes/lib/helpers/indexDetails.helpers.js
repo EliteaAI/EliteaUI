@@ -85,3 +85,11 @@ export const bannerVariant = (isIndexing, state, reindexStats, error) => {
  */
 export const isAbandonedRun = index =>
   Boolean(index?.stale) && index?.metadata?.state === IndexStatuses.progress;
+
+/**
+ * A run that may still be executing: it is stoppable, or the backend has not marked it stale.
+ * @param {{isIndexing: boolean, canStopIndexing: boolean, isStale: boolean}} runState
+ * @returns {boolean}
+ */
+export const hasLiveRun = ({ isIndexing, canStopIndexing, isStale }) =>
+  Boolean(isIndexing) && (Boolean(canStopIndexing) || !isStale);

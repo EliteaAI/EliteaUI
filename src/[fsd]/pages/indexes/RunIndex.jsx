@@ -153,6 +153,32 @@ const RunIndex = memo(() => {
     : isFetching || indexesLoading || indexesFetching || !hasData || !toolkitData?.id;
 
   const showCreatingPlaceholder = awaitingCreation && !stableIndex;
+  const isPanelReady = !isLoading && !showCreatingPlaceholder && Boolean(stableIndex);
+
+  if (isPanelReady) {
+    return (
+      <Box sx={styles.wrapper}>
+        <Formik
+          enableReinitialize
+          initialValues={initialValues}
+          onSubmit={() => {}}
+        >
+          <RunIndexPanel
+            toolkitId={toolkitId}
+            tab={tab}
+            indexName={indexName}
+            index={effectiveIndex ?? stableIndex}
+            selectedIndexTools={selectedIndexTools}
+            refetchIndexesList={handleRefetch}
+            isCreating={isCreating}
+            initialConversation={initialConversation}
+            toolkitName={toolkitData?.name || ''}
+          />
+        </Formik>
+      </Box>
+    );
+  }
+
   return (
     <Box sx={styles.wrapper}>
       <DrawerPageHeader
@@ -173,7 +199,7 @@ const RunIndex = memo(() => {
               </Typography>
             )}
           </Box>
-        ) : !stableIndex ? (
+        ) : (
           <Box sx={styles.loading}>
             <Typography
               variant="bodyMedium"
@@ -182,24 +208,6 @@ const RunIndex = memo(() => {
               Index &quot;{indexName}&quot; was not found for this toolkit.
             </Typography>
           </Box>
-        ) : (
-          <Formik
-            enableReinitialize
-            initialValues={initialValues}
-            onSubmit={() => {}}
-          >
-            <RunIndexPanel
-              toolkitId={toolkitId}
-              tab={tab}
-              indexName={indexName}
-              index={effectiveIndex ?? stableIndex}
-              selectedIndexTools={selectedIndexTools}
-              refetchIndexesList={handleRefetch}
-              isCreating={isCreating}
-              initialConversation={initialConversation}
-              toolkitName={toolkitData?.name || ''}
-            />
-          </Formik>
         )}
       </Box>
     </Box>
