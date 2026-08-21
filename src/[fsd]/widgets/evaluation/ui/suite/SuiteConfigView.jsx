@@ -235,10 +235,6 @@ const SuiteConfigView = memo(props => {
     () => ({ id: AUTO_JUDGE_MODEL_ID, name: AUTO_JUDGE_MODEL_ID, display_name: autoJudgeModelLabel }),
     [autoJudgeModelLabel],
   );
-  const judgeModelOptions = useMemo(
-    () => [autoJudgeModelOption, ...modelsData.items],
-    [autoJudgeModelOption, modelsData.items],
-  );
   const selectedJudgeModel = useMemo(() => {
     if (judgeModelDraft == null) return autoJudgeModelOption;
     const match = modelsData.items.find(
@@ -252,6 +248,12 @@ const SuiteConfigView = memo(props => {
       }
     );
   }, [judgeModelDraft, autoJudgeModelOption, modelsData.items]);
+  const judgeModelOptions = useMemo(() => {
+    const base = [autoJudgeModelOption, ...modelsData.items];
+    // Surface an unavailable saved model so the user can at least see it and replace it.
+    if (selectedJudgeModel?.id === 'judge-model-missing') base.push(selectedJudgeModel);
+    return base;
+  }, [autoJudgeModelOption, modelsData.items, selectedJudgeModel]);
 
   const handleSelectSuite = useCallback(value => setSelectedSuiteId(value), [setSelectedSuiteId]);
 
@@ -577,8 +579,16 @@ const SuiteConfigView = memo(props => {
             <Box
               sx={styles.selectorRow}
               data-testid="evaluation-judge-model-select"
+              aria-label="Judge model"
             >
               <Box sx={styles.selectorGrow}>
+                <Typography
+                  variant="labelSmall"
+                  color="text.secondary"
+                  sx={styles.judgeModelLabel}
+                >
+                  Judge model
+                </Typography>
                 <LLMModelSelector
                   variant="field"
                   models={judgeModelOptions}
@@ -817,6 +827,9 @@ const suiteConfigViewStyles = () => ({
   selectorGrow: {
     flex: 1,
     minWidth: 0,
+  },
+  judgeModelLabel: {
+    marginBottom: '0.25rem',
   },
   bindingsWrapper: {
     flex: 1,
