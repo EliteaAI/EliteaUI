@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
 import { EmptyStatePage } from '@/[fsd]/entities/empty-state-page';
+import { ENTITY_FOLDER_TYPES } from '@/[fsd]/entities/folder';
 import { useLoadSkills } from '@/[fsd]/features/skill/lib/hooks';
 import skillsDarkImage from '@/assets/images/Skills_Dark_1.png';
 import skillsLightImage from '@/assets/images/Skills_Light_1.png';
@@ -91,6 +92,8 @@ const PrivateSkillsList = memo(props => {
       resetPageOnSort={() => setPage(0)}
       rightPanelContent={
         <RightInfoPanel
+          showFolders
+          folderEntityType={ENTITY_FOLDER_TYPES.skill}
           tagList={tagList}
           entityType="skill"
         />

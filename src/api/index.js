@@ -27,3 +27,4 @@ export * from '@/[fsd]/features/agent/api/generateAgentDraftApi';
 export * from '@/[fsd]/features/settings/api/generateProjectContextDraftApi';
 export * from '@/[fsd]/features/settings/api/usageApi';
 export * from '@/[fsd]/widgets/evaluation/api';
+export * from '@/[fsd]/entities/folder/api';
