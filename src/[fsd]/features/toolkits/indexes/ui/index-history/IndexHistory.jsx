@@ -4,9 +4,11 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { Box, Typography } from '@mui/material';
 
-import { formatRunTimestamp } from '@/[fsd]/entities/run-history/lib/helpers';
-import { useRunHistorySorting } from '@/[fsd]/entities/run-history/lib/hooks';
-import { RunHistorySortableHeader } from '@/[fsd]/entities/run-history/ui';
+import {
+  RunHistorySortableHeader,
+  formatRunTimestamp,
+  useRunHistorySorting,
+} from '@/[fsd]/entities/run-history';
 import { IndexHistoryItemsLabels } from '@/[fsd]/features/toolkits/indexes/lib/constants';
 import {
   initialCompletedTsOf,

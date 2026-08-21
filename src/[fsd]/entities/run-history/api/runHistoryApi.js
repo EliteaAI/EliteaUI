@@ -1,4 +1,4 @@
-import { RunHistorySerialize } from '@/[fsd]/entities/run-history/lib';
+import { serializeRunHistoryListResponse } from '@/[fsd]/entities/run-history';
 import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { eliteaApi } from '@/api/eliteaApi.js';
 import { PAGE_SIZE } from '@/common/constants';
@@ -31,8 +31,7 @@ const runHistoryApi = eliteaApi
           },
         }),
         providesTags: [HISTORY_ITEMS_TAG],
-        transformResponse: (response, _, args) =>
-          RunHistorySerialize.serializeRunHistoryListResponse(response, args.page > 0),
+        transformResponse: (response, _, args) => serializeRunHistoryListResponse(response, args.page > 0),
         forceRefetch({ currentArg, previousArg }) {
           return currentArg !== previousArg;
         },
