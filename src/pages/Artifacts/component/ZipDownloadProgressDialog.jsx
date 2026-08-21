@@ -62,6 +62,7 @@ const ZipDownloadProgressDialog = memo(props => {
       data-testid="artifacts-zip-download-progress-dialog"
       title={`Preparing ${bucket || 'artifacts'}.zip`}
       titleTestId="artifacts-zip-download-progress-title"
+      closeButtonTestId="artifacts-zip-download-progress-close-button"
       content={content}
       actions={actions}
       onClose={onCancel}
