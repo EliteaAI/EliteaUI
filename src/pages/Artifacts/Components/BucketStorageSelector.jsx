@@ -43,6 +43,7 @@ const BucketStorageSelector = memo(props => {
       <Box
         sx={styles.container}
         onClick={handleMenuOpen}
+        data-testid="artifacts-storage-selector"
         data-tour={ARTIFACT_TOUR_TARGET_IDS.storageSelector}
       >
         <DatasetIcon sx={styles.icon} />
@@ -56,6 +57,7 @@ const BucketStorageSelector = memo(props => {
         </Box>
         <Box
           component={ArrowDownIcon}
+          data-testid="artifacts-storage-selector-arrow"
           sx={styles.chevron}
         />
       </Box>

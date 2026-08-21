@@ -514,6 +514,7 @@ export default function ArtifactTable(props) {
               isAllSelected={isAllSelected}
               isIndeterminate={isIndeterminate}
               gridTemplateColumns={gridTemplateColumns}
+              columnTestIdPrefix="artifacts-file-table"
               selectAllCheckboxTestId="artifacts-select-all-checkbox"
             />
 
@@ -575,7 +576,15 @@ export default function ArtifactTable(props) {
                 <LinearProgress sx={styles.batchProgressBar} />
               </Box>
             )}
-            {filteredRows.length > 0 && <GridTablePagination {...pagination} />}
+            {filteredRows.length > 0 && (
+              <GridTablePagination
+                {...pagination}
+                pageInfoTestId="artifacts-pagination-page-info"
+                prevButtonTestId="artifacts-pagination-prev-button"
+                nextButtonTestId="artifacts-pagination-next-button"
+                pageSizeSelectTestId="artifacts-pagination-page-size-select"
+              />
+            )}
           </>
         )}
       </ArtifactTableContainer>

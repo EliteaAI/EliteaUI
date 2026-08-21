@@ -8,7 +8,10 @@ const BucketFooter = memo(props => {
 
   return (
     <Box sx={styles.container}>
-      <Box sx={styles.statItem}>
+      <Box
+        sx={styles.statItem}
+        data-testid="artifacts-buckets-footer-count"
+      >
         <Typography
           component="span"
           variant="bodySmall2"
@@ -24,7 +27,10 @@ const BucketFooter = memo(props => {
           {bucketCount}
         </Typography>
       </Box>
-      <Box sx={styles.statItem}>
+      <Box
+        sx={styles.statItem}
+        data-testid="artifacts-buckets-footer-size"
+      >
         <Typography
           component="span"
           color="text.primary"

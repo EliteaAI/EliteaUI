@@ -29,7 +29,10 @@ const BucketInfoTooltip = memo(props => {
 
   const tooltipContent = useMemo(
     () => (
-      <Box sx={styles.contentBox}>
+      <Box
+        sx={styles.contentBox}
+        data-testid="artifacts-bucket-info-tooltip-content"
+      >
         {tooltipItems.map((item, index) => (
           <Box
             key={index}
@@ -67,6 +70,7 @@ const BucketInfoTooltip = memo(props => {
         sx={styles.iconButton}
         size="small"
         aria-label="Bucket info"
+        data-testid="artifacts-bucket-info-button"
       >
         <InfoOutlinedIcon sx={styles.icon} />
       </IconButton>

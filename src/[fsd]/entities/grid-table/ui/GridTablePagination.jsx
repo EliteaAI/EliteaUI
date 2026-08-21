@@ -24,7 +24,9 @@ const GridTablePagination = memo(props => {
     // Optional customization
     rowsPerPageLabel = 'Rows per page:',
     nextButtonTestId,
+    prevButtonTestId,
     pageInfoTestId,
+    pageSizeSelectTestId,
   } = props;
 
   const styles = gridTablePaginationStyles();
@@ -45,6 +47,7 @@ const GridTablePagination = memo(props => {
           </Typography>
           <Box sx={styles.pageSizeSelect}>
             <SingleSelect
+              data-testid={pageSizeSelectTestId}
               value={pageSize}
               onValueChange={handlePageSizeChange}
               options={pageSizeSelectOptions}
@@ -63,6 +66,7 @@ const GridTablePagination = memo(props => {
         </Typography>
         <Box sx={styles.right}>
           <IconButton
+            data-testid={prevButtonTestId}
             onClick={handlePrevPage}
             sx={styles.paginationButton(isFirstPage)}
             size="small"

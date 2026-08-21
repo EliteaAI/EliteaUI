@@ -84,6 +84,7 @@ const BucketContent = memo(props => {
         <Typography
           variant="bodySmall"
           color="text.button.disabled"
+          data-testid={`artifacts-bucket-tree-empty-label-${bucket?.name}`}
         >
           No files in this bucket
         </Typography>
