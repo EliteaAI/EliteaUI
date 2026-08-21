@@ -1,4 +1,4 @@
-import { memo, useCallback } from 'react';
+import { memo } from 'react';
 
 import RocketIcon from '@/assets/rocket-icon.svg?react';
 
@@ -6,13 +6,6 @@ import IconLabelButton from './IconLabelButton';
 
 const SearchIndexButton = memo(props => {
   const { onSearch, disabled = false, tooltip = 'Search this index', testId = 'index-search-button' } = props;
-
-  const handleSearch = useCallback(
-    event => {
-      onSearch?.(event);
-    },
-    [onSearch],
-  );
 
   return (
     <IconLabelButton
@@ -22,7 +15,7 @@ const SearchIndexButton = memo(props => {
       ariaLabel="search index"
       testId={testId}
       disabled={disabled}
-      onClick={handleSearch}
+      onClick={onSearch}
     />
   );
 });

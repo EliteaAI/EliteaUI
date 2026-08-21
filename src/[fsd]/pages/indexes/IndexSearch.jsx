@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Formik } from 'formik';
 import { useSelector } from 'react-redux';
@@ -70,21 +70,24 @@ const IndexSearch = memo(() => {
     if (shouldShowNotFoundPage) goToToolkitsList();
   }, [shouldShowNotFoundPage, goToToolkitsList]);
 
-  const stableIndexRef = useRef(null);
+  const [lastResolvedIndex, setLastResolvedIndex] = useState(null);
+
+  useEffect(() => {
+    if (currentIndex) setLastResolvedIndex(currentIndex);
+  }, [currentIndex]);
+
+  const indexOutlivingRefetches = currentIndex ?? lastResolvedIndex;
 
   if (shouldShowNotFoundPage) return null;
 
-  if (currentIndex) stableIndexRef.current = currentIndex;
-
-  const stableIndex = stableIndexRef.current;
-
-  // Every background refetch flips the list to isFetching and a rejected one drops hasData, so
-  // gating the panel on either would remount it mid-search and wipe the entered settings and results.
-  const isLoading = stableIndex
+  const isLoading = indexOutlivingRefetches
     ? !toolkitData?.id
     : isFetching || indexesLoading || !hasData || !toolkitData?.id;
 
-  const blockedReason = indexSearchBlockedReason(stableIndex?.metadata?.state, selectedIndexTools);
+  const blockedReason = indexSearchBlockedReason(
+    indexOutlivingRefetches?.metadata?.state,
+    selectedIndexTools,
+  );
 
   return (
     <Box sx={styles.wrapper}>
@@ -98,7 +101,7 @@ const IndexSearch = memo(() => {
             <CircularProgress size={24} />
           </Box>
         )}
-        {!isLoading && !stableIndex && (
+        {!isLoading && !indexOutlivingRefetches && (
           <Box sx={styles.message}>
             <Typography
               variant="bodyMedium"
@@ -108,7 +111,7 @@ const IndexSearch = memo(() => {
             </Typography>
           </Box>
         )}
-        {!isLoading && stableIndex && (
+        {!isLoading && indexOutlivingRefetches && (
           <Formik
             enableReinitialize
             initialValues={initialValues}

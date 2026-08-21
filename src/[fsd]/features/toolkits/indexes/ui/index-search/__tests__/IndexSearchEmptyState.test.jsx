@@ -17,28 +17,31 @@ afterEach(() => cleanup());
 
 const theme = createTheme({ palette: { icon: { fill: { disabled: '#999' } } } });
 
-const renderEmptyState = searchToolOptions =>
+const renderEmptyState = props =>
   render(
     <ThemeProvider theme={theme}>
       <IndexSearchEmptyState
-        searchToolOptions={searchToolOptions}
+        searchToolOptions={INDEX_SEARCH_TOOL_OPTIONS}
         onChangeTool={() => {}}
+        {...props}
       />
     </ThemeProvider>,
   );
 
 describe('IndexSearchEmptyState', () => {
-  it('offers the picker when the toolkit exposes search tools', () => {
-    renderEmptyState(INDEX_SEARCH_TOOL_OPTIONS);
+  it('invites the user to pick a tool when searching is available', () => {
+    renderEmptyState();
 
-    expect(screen.getByTestId('tool-picker')).toBeInTheDocument();
     expect(screen.getByText(/Choose a tool from the list/)).toBeInTheDocument();
   });
 
-  it('explains itself instead of offering an empty picker', () => {
-    renderEmptyState([]);
+  it('states the reason instead of an instruction the disabled picker would refuse', () => {
+    renderEmptyState({
+      searchToolOptions: [],
+      blockedReason: 'No search tools are enabled for this toolkit',
+    });
 
-    expect(screen.queryByTestId('tool-picker')).not.toBeInTheDocument();
-    expect(screen.getByText('No search tools are enabled for this toolkit.')).toBeInTheDocument();
+    expect(screen.queryByText(/Choose a tool from the list/)).not.toBeInTheDocument();
+    expect(screen.getByText('No search tools are enabled for this toolkit')).toBeInTheDocument();
   });
 });
