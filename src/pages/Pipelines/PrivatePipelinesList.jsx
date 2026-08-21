@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { Box } from '@mui/material';
 
 import { EmptyStatePage } from '@/[fsd]/entities/empty-state-page';
+import { ENTITY_FOLDER_TYPES } from '@/[fsd]/entities/folder';
 import { ContentType, ViewMode } from '@/common/constants';
 import { buildErrorMessage, uniqueArrayByProp } from '@/common/utils';
 import CardList from '@/components/CardList';
@@ -115,6 +116,8 @@ const PrivatePipelinesList = memo(props => {
         rightPanelContent={
           cardContentType !== ContentType.ApplicationAdmin ? (
             <RightInfoPanel
+              showFolders
+              folderEntityType={ENTITY_FOLDER_TYPES.pipeline}
               tagList={tagList}
               specifiedStatus={statuses[0]}
             />

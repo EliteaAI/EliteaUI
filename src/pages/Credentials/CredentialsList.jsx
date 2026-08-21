@@ -6,6 +6,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Box } from '@mui/material';
 
 import { AuthorInformation } from '@/[fsd]/entities/author/ui';
+import { ENTITY_FOLDER_TYPES, FolderSection } from '@/[fsd]/entities/folder';
 import { ContentType, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
 import { buildErrorMessage, uniqueArrayByProp } from '@/common/utils';
 import CardList from '@/components/CardList';
@@ -77,6 +78,7 @@ const CredentialsList = memo(props => {
   const rightPanelContent = useMemo(
     () => (
       <Box sx={styles.rightInfoPanelStyle}>
+        <FolderSection entityType={ENTITY_FOLDER_TYPES.configuration} />
         <CredentialsTypesPanel
           tagList={tagList}
           title="Types"

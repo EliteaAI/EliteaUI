@@ -7,6 +7,7 @@ import { Box } from '@mui/material';
 
 import { AuthorInformation } from '@/[fsd]/entities/author/ui';
 import { EmptyStatePage } from '@/[fsd]/entities/empty-state-page';
+import { ENTITY_FOLDER_TYPES, FolderSection } from '@/[fsd]/entities/folder';
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useLoadToolkits } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitTypesPanel, ToolkitsEmptyListPlaceHolder } from '@/[fsd]/features/toolkits/ui/list';
@@ -78,9 +79,15 @@ const ToolkitsList = memo(props => {
   const { isLoadingAuthor, authorId } = useQueryTrendingAuthor(projectId);
   const { personal_project_id: privateProjectId } = useSelector(state => state.user);
 
+  const folderEntityType = useMemo(() => {
+    if (isMCP) return ENTITY_FOLDER_TYPES.mcp;
+    return ENTITY_FOLDER_TYPES.toolkit;
+  }, [isMCP]);
+
   const rightPanelContent = useMemo(
     () => (
       <Box style={styles.rightInfoPanelContainer}>
+        <FolderSection entityType={folderEntityType} />
         <ToolkitTypesPanel
           tagList={tagList}
           title="Types"
@@ -106,6 +113,7 @@ const ToolkitsList = memo(props => {
       indexesTotal,
       isMCP,
       isApplication,
+      folderEntityType,
     ],
   );
 

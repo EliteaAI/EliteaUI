@@ -179,21 +179,42 @@ const cardStyles = (isActive, isCompact) => ({
 });
 ```
 
+### Shared UI Components — Always Prefer Shared Over Legacy
+
+**Always use shared FSD components from `@/[fsd]/shared/ui` instead of legacy or direct MUI imports:**
+
+| Instead of                      | Use                                                                      |
+| ------------------------------- | ------------------------------------------------------------------------ |
+| `<StyledDialog>` (legacy)       | `<Modal.BaseModal>` with `ModalConstants.MODAL_VARIANT`                  |
+| `<IconButton>` (MUI)            | `<Button.BaseBtn>` with `BUTTON_VARIANTS.tertiary` for icon-only         |
+| `<TextField>` (MUI)             | `<Input.InputBase>` with `INPUT_VARIANTS`                                |
+| `<MuiButton>` (MUI)             | `<Button.BaseBtn>` with `BUTTON_VARIANTS.elitea` and `BUTTON_COLORS`     |
+| `<ConfirmationDialog>` (legacy) | `<Modal.BaseModal>` with `variant={ModalConstants.MODAL_VARIANT.simple}` |
+
+Import shared components and constants:
+
+```jsx
+import { ModalConstants } from '@/[fsd]/shared/lib/constants';
+import { Button, Input, Modal } from '@/[fsd]/shared/ui';
+import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { INPUT_VARIANTS } from '@/[fsd]/shared/ui/input';
+```
+
 ### MUI Components — Always Prefer MUI Over Raw HTML
 
 **Never use raw HTML elements when an MUI equivalent exists:**
 
-| Instead of  | Use                                                            |
-| ----------- | -------------------------------------------------------------- |
-| `<div>`     | `<Box>`                                                        |
-| `<span>`    | `<Box component="span">` or `<Typography>`                     |
-| `<p>`       | `<Typography>`                                                 |
-| `<button>`  | `<BaseBtn>` (from `@/[fsd]/shared/ui/button`) or `<MuiButton>` |
-| `<input>`   | `<Input.InputBase>` (from `@/[fsd]/shared/ui/input`)           |
-| `<select>`  | MUI `<Select>`                                                 |
-| `<ul>/<li>` | MUI `<List>/<ListItem>`                                        |
-| `<a>`       | React Router `<Link>` or MUI `<Link>`                          |
-| `<table>`   | MUI X `<DataGrid>`                                             |
+| Instead of  | Use                                                  |
+| ----------- | ---------------------------------------------------- |
+| `<div>`     | `<Box>`                                              |
+| `<span>`    | `<Box component="span">` or `<Typography>`           |
+| `<p>`       | `<Typography>`                                       |
+| `<button>`  | `<Button.BaseBtn>` (from `@/[fsd]/shared/ui/button`) |
+| `<input>`   | `<Input.InputBase>` (from `@/[fsd]/shared/ui/input`) |
+| `<select>`  | MUI `<Select>`                                       |
+| `<ul>/<li>` | MUI `<List>/<ListItem>`                              |
+| `<a>`       | React Router `<Link>` or MUI `<Link>`                |
+| `<table>`   | MUI X `<DataGrid>`                                   |
 
 Custom Typography variants used in the project: `'bodyMedium'`, `'bodySmall'`, `'bodySmall2'`,
 `'headingSmall'`, `'labelMedium'`, `'labelSmall'`.
@@ -360,6 +381,7 @@ Configured in `.prettierrc`:
 - [ ] Style function below component with `/** @type {MuiSx} */`
 - [ ] `rem` units (never `px`)
 - [ ] MUI components (never raw HTML `div`/`span`/`button`)
+- [ ] Shared UI components (Modal.BaseModal, Button.BaseBtn, Input.InputBase) over legacy equivalents
 - [ ] `useTheme` from `@mui/material` (not from `@emotion/react`)
 - [ ] Palette colors from theme (never hardcoded hex except in theme config)
 - [ ] New files only in `src/[fsd]/` (never in legacy directories)

@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 import Box from '@mui/material/Box';
 
 import { AuthorInformation } from '@/[fsd]/entities/author/ui';
+import { FolderSection } from '@/[fsd]/entities/folder';
 import Categories from '@/components/Categories';
 import TeamMates from '@/components/TeamMates';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -12,7 +13,16 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useQueryTrendingAuthor from '../hooks/useQueryTrendingAuthor';
 
 const RightInfoPanel = memo(props => {
-  const { tagList, specifiedStatus, title = 'Tags', entityType = 'application' } = props;
+  const {
+    tagList,
+    specifiedStatus,
+    title = 'Tags',
+    entityType = 'application',
+    folderEntityType,
+    showFolders = false,
+    onFolderSelect,
+    selectedFolderId,
+  } = props;
 
   const styles = stylesRightInfoPanel();
   const projectId = useSelectedProjectId();
@@ -35,6 +45,13 @@ const RightInfoPanel = memo(props => {
 
   return (
     <Box style={styles.mainContainer}>
+      {showFolders && folderEntityType && (
+        <FolderSection
+          entityType={folderEntityType}
+          onFolderSelect={onFolderSelect}
+          selectedFolderId={selectedFolderId}
+        />
+      )}
       <Categories
         tagList={tagList}
         title={title}
