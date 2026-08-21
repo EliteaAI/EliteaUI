@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { generateMcpContinuePayload } from './messagePayloadUtils';
+import { generateChatContinuePayload, generateMcpContinuePayload } from './messagePayloadUtils';
 
 vi.mock('@/[fsd]/features/mcp/lib/helpers', () => ({
   McpAuthHelpers: {
@@ -40,5 +40,26 @@ describe('generateMcpContinuePayload', () => {
       should_continue: false,
     });
     expect(payload).not.toHaveProperty('hitl_resume');
+    expect(payload.token_limit_continuation).toBe(false);
+  });
+});
+
+describe('generateChatContinuePayload', () => {
+  it('explicitly identifies an output-token continuation', () => {
+    const payload = generateChatContinuePayload({
+      projectId: 7,
+      conversation_uuid: 'conversation-id',
+      message_id: 'message-id',
+      thread_id: 'thread-id',
+      question: 'Write a long answer',
+      tokenLimitContinuation: true,
+    });
+
+    expect(payload).toMatchObject({
+      message_id: 'message-id',
+      thread_id: 'thread-id',
+      user_input: 'Write a long answer',
+      token_limit_continuation: true,
+    });
   });
 });
