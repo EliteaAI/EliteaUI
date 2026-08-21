@@ -111,6 +111,7 @@ const UploadPathDialog = memo(props => {
   const actions = (
     <>
       <Button.BaseBtn
+        data-testid="artifacts-upload-path-cancel-button"
         variant="elitea"
         color="secondary"
         onClick={handleCancel}
