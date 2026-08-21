@@ -195,6 +195,7 @@ export const generateChatContinuePayload = ({
   thread_id,
   participants = [], // Extract MCP toolkit URLs
   question,
+  tokenLimitContinuation = false,
   sessionDeclinedMcpServers = [], // Servers user declined this session (NOT from localStorage)
 }) => {
   // Get MCP server URLs from toolkit participants to check for valid tokens
@@ -229,6 +230,7 @@ export const generateChatContinuePayload = ({
     ignored_mcp_servers: allIgnored,
     user_declined_mcp_servers: effectiveDeclinedServers,
     user_input: question,
+    token_limit_continuation: tokenLimitContinuation,
   };
 };
 
