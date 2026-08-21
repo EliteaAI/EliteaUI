@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 
 import { Box } from '@mui/material';
 
@@ -17,7 +17,10 @@ const IndexDetailsFooterBand = memo(props => {
     reindexDisabled = false,
     onReindex,
   } = props;
-  const styles = indexDetailsFooterBandStyles();
+  const styles = useMemo(() => indexDetailsFooterBandStyles(), []);
+
+  const runIsStoppable = canStopIndexing && !isStoppingIndexing;
+  const stopLabel = isStoppingIndexing ? 'Stopping...' : canStopIndexing ? 'Stop' : 'Starting...';
 
   return (
     <Box sx={styles.root}>
@@ -25,10 +28,10 @@ const IndexDetailsFooterBand = memo(props => {
         <Button.BaseBtn
           data-testid="index-details-footer-action"
           variant={Button.BUTTON_VARIANTS.alarm}
-          disabled={isStoppingIndexing || !canStopIndexing}
+          disabled={!runIsStoppable}
           onClick={onStop}
         >
-          {isStoppingIndexing ? 'Stopping...' : canStopIndexing ? 'Stop' : 'Starting...'}
+          {stopLabel}
         </Button.BaseBtn>
       ) : (
         <Button.BaseBtn

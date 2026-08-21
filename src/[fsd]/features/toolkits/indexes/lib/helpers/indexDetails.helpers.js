@@ -113,5 +113,15 @@ export const isAbandonedRun = index =>
 export const hasLiveRun = ({ isIndexing, canStopIndexing, isStale }) =>
   Boolean(isIndexing) && (Boolean(canStopIndexing) || !isStale);
 
+/**
+ * Whether a status banner should stay on screen once its run's transcript is gone, i.e. on a fresh
+ * visit. `error` and `warning` do, so a failed or stopped run keeps its retry guidance and its
+ * budget-block copy instead of looking untouched. `success` does not — the idle design shows a
+ * finished index with no banner, and the left panel already reports what it indexed. `info` must not,
+ * because {@link bannerVariant} uses it as the catch-all for `created`/unknown, so persisting it would
+ * make a never-indexed row claim a run is under way.
+ * @param {string} severity - `severity` from {@link bannerVariant}
+ * @returns {boolean}
+ */
 export const bannerOutlivesRun = severity =>
   severity === BannerSeverity.error || severity === BannerSeverity.warning;

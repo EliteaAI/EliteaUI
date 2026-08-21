@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 
 import { Box } from '@mui/material';
 
@@ -14,7 +14,7 @@ const IndexActivityPanel = memo(props => {
     questionItemRef,
     onOpenConfiguration,
   } = props;
-  const styles = indexActivityPanelStyles();
+  const styles = useMemo(() => indexActivityPanelStyles(), []);
 
   return (
     <Box
