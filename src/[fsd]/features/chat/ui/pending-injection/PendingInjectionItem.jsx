@@ -6,7 +6,7 @@ import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 
 const PendingInjectionItem = memo(props => {
-  const { item, onRemove } = props;
+  const { item, onRemove, hideDelete = true } = props;
 
   const handleRemove = useCallback(() => {
     onRemove(item.id);
@@ -26,7 +26,7 @@ const PendingInjectionItem = memo(props => {
       >
         {item.text}
       </Typography>
-      {!item.inFlight && (
+      {!item.inFlight && !hideDelete && (
         <Tooltip
           title="Remove queued message"
           placement="top"
