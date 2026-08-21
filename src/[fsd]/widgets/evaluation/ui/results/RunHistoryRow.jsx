@@ -1,6 +1,8 @@
 import { memo, useCallback } from 'react';
 
-import { Box, Typography } from '@mui/material';
+import { Box, IconButton, Tooltip, Typography } from '@mui/material';
+
+import DeleteIcon from '@/components/Icons/DeleteIcon';
 
 import { formatRunStatus, formatScore, formatScoreDelta, isRunTerminal } from '../../lib/helpers';
 
@@ -11,11 +13,19 @@ const formatDate = value => {
 };
 
 const RunHistoryRow = memo(props => {
-  const { run, onViewResults } = props;
+  const { run, onViewResults, canDelete = false, onRequestDelete } = props;
 
   const handleClick = useCallback(() => {
     if (isRunTerminal(run.status)) onViewResults?.(run.id);
   }, [run.id, run.status, onViewResults]);
+
+  const handleDeleteClick = useCallback(
+    event => {
+      event.stopPropagation();
+      onRequestDelete?.(run);
+    },
+    [run, onRequestDelete],
+  );
 
   const styles = runHistoryRowStyles(isRunTerminal(run.status), run.delta);
   const deltaLabel = formatScoreDelta(run.delta);
@@ -46,6 +56,20 @@ const RunHistoryRow = memo(props => {
           >
             {deltaLabel}
           </Typography>
+        )}
+        {canDelete && (
+          <Tooltip
+            title="Delete run"
+            placement="top"
+          >
+            <IconButton
+              size="small"
+              onClick={handleDeleteClick}
+              data-testid={`evaluation-run-history-delete-${run.id}`}
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Tooltip>
         )}
       </Box>
     </Box>

@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useState } from 'react';
 
-import { Box, Typography } from '@mui/material';
+import { Box, Checkbox, FormControlLabel, Typography } from '@mui/material';
 
 import { Button, Input, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
@@ -14,11 +14,12 @@ const toFormState = dataset => {
   return {
     name: dataset.name ?? '',
     description: dataset.description ?? '',
+    isShared: !!dataset.is_shared,
   };
 };
 
 const DatasetFormDialog = memo(props => {
-  const { open, onClose, projectId, dataset, onSaved } = props;
+  const { open, onClose, projectId, applicationId, dataset, onSaved } = props;
 
   const isEdit = !!dataset?.id;
 
@@ -49,16 +50,22 @@ const DatasetFormDialog = memo(props => {
     }
     setErrorMessage('');
 
-    const body = {
-      name,
-      description: form.description?.trim() || null,
-    };
-
     try {
       let result;
       if (isEdit) {
+        const body = {
+          name,
+          description: form.description?.trim() || null,
+          is_shared: form.isShared,
+        };
         result = await updateDataset({ projectId, datasetId: dataset.id, body }).unwrap();
       } else {
+        const body = {
+          name,
+          description: form.description?.trim() || null,
+          agent_id: applicationId,
+          is_shared: form.isShared,
+        };
         result = await createDataset({ projectId, body }).unwrap();
       }
       onSaved?.(result);
@@ -66,7 +73,7 @@ const DatasetFormDialog = memo(props => {
     } catch (error) {
       setErrorMessage(parseEvalError(error, 'Failed to save dataset.'));
     }
-  }, [form, isEdit, updateDataset, projectId, dataset, createDataset, onSaved, onClose]);
+  }, [form, isEdit, updateDataset, projectId, applicationId, dataset, createDataset, onSaved, onClose]);
 
   const styles = datasetFormDialogStyles();
 
@@ -91,6 +98,16 @@ const DatasetFormDialog = memo(props => {
         label="Description (optional)"
         value={form.description}
         onChange={event => setField('description', event.target.value)}
+      />
+      <FormControlLabel
+        control={
+          <Checkbox
+            checked={form.isShared}
+            onChange={event => setField('isShared', event.target.checked)}
+            data-testid="dataset-shared-checkbox"
+          />
+        }
+        label="Project shared — selectable from any agent's suite config"
       />
       {errorMessage && (
         <Typography
