@@ -14,26 +14,22 @@ import {
   useUpdateIndexScheduleMutation,
 } from '@/[fsd]/features/toolkits/indexes/api';
 import {
-  BannerSeverity,
   IndexCronDefault,
   IndexDetailsTabs,
   IndexStatuses,
   IndexesToolsEnum,
   RUNNABLE_INDEX_STATUSES,
 } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
+import { getMockToolkitIndexConversation } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexChat.helpers';
 import {
-  adjustIndexDataSchema,
-  getMockToolkitIndexConversation,
-} from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexChat.helpers';
-import {
+  bannerOutlivesRun,
   bannerVariant,
   hasLiveRun,
   indexSearchBlockedReason,
 } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
 import { useIndexesListPolling } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import { selectToolkitScheduler } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
-import { IndexError, IndexScheduleModal, IndexSuccess } from '@/[fsd]/features/toolkits/indexes/ui';
-import { ToolkitChatHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
+import { IndexActivityPanel, IndexScheduleModal, RunIndexBanner } from '@/[fsd]/features/toolkits/indexes/ui';
 import { useGetCurrentToolkitSchemas, useToolkitChat } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { NavigationHelpers, ScheduleHelpers } from '@/[fsd]/shared/lib/helpers';
@@ -50,6 +46,7 @@ import RouteDefinitions from '@/routes';
 
 import IndexConfigurationTab from './IndexConfigurationTab';
 import IndexDetailsDeleteAction from './IndexDetailsDeleteAction';
+import IndexDetailsFooterBand from './IndexDetailsFooterBand';
 import IndexDetailsLeftBand from './IndexDetailsLeftBand';
 import IndexDetailsTabsBand from './IndexDetailsTabsBand';
 import RunIndexGeneralSection from './RunIndexGeneralSection';
@@ -74,12 +71,8 @@ const RunIndexPanel = memo(props => {
   const { values } = useFormikContext();
 
   const [activeTab, setActiveTab] = useState(IndexDetailsTabs.activity);
-  const [selectedSearchTool, setSelectedSearchTool] = useState(null);
-  const [hasSearchResults, setHasSearchResults] = useState(false);
-  const [hasIndexedThisSession, setHasIndexedThisSession] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [reindexConfirmOpen, setReindexConfirmOpen] = useState(false);
-  const [toolInputVariables, setToolInputVariables] = useState({});
   const [configInputVariables, setConfigInputVariables] = useState({});
   const [localMetaOverride, setLocalMetaOverride] = useState(null);
   const overrideObservedAtRef = useRef(null);
@@ -97,29 +90,13 @@ const RunIndexPanel = memo(props => {
     return schedule ?? {};
   }, [toolkitScheduler, indexName, userId]);
 
-  const runSchema = useGetSelectedToolSchema({
-    toolkitType: values.type,
-    toolOptionType: selectedSearchTool || IndexesToolsEnum.searchIndexData,
-  });
-
-  const adjustedRunSchema = useMemo(() => {
-    if (!runSchema) return null;
-    return adjustIndexDataSchema(runSchema, { query: { clipboard: true } });
-  }, [runSchema]);
-
   const configSchema = useGetSelectedToolSchema({
     toolkitType: values.type,
     toolOptionType: IndexesToolsEnum.indexData,
   });
 
-  const isRunFormValid = useMemo(() => {
-    if (!adjustedRunSchema?.properties) return false;
-    return ToolkitChatHelpers.validateToolkitForm(adjustedRunSchema, toolInputVariables);
-  }, [adjustedRunSchema, toolInputVariables]);
-
   const traceNewIndex = useCallback((id, metadata) => {
     if (!metadata) return;
-    setHasIndexedThisSession(true);
     overrideObservedAtRef.current = Date.now();
     setLocalMetaOverride(prev => ({ ...(prev || {}), ...metadata }));
   }, []);
@@ -141,7 +118,6 @@ const RunIndexPanel = memo(props => {
     handleClearChat,
     handleClearActiveConversation,
     handleIndexData,
-    handleRunTool,
     retryLastRun,
     onCancelIndexing,
   } = useToolkitChat({
@@ -153,11 +129,8 @@ const RunIndexPanel = memo(props => {
     },
     index,
     indexConfigOverride: configInputVariables,
-    isValidForm: isRunFormValid,
     refetchIndexesList,
-    runTool: selectedSearchTool,
     toolkitId,
-    toolInputVariables,
     traceNewIndex,
     values,
     modes: [],
@@ -222,6 +195,7 @@ const RunIndexPanel = memo(props => {
     isStale: effectiveStale,
   });
   const deleteDisabled = isDeleting || isAwaitingTaskStart || runIsLive;
+  const reindexDisabled = isRunning || isAwaitingTaskStart || runIsLive;
 
   const schedulingTooltipMessage = useMemo(() => {
     if (effectiveState === IndexStatuses.cancelled || effectiveState === IndexStatuses.fail)
@@ -319,24 +293,13 @@ const RunIndexPanel = memo(props => {
     if (index?.metadata?.state === localMetaOverride.state) setLocalMetaOverride(null);
   }, [index?.metadata?.state, localMetaOverride]);
 
-  const onChangeInputVariables = useCallback(value => setToolInputVariables(value), []);
-
   const handleChangeTab = useCallback((_event, value) => setActiveTab(value), []);
 
-  const handleSelectSearchTool = useCallback(tool => {
-    if (!tool) setHasSearchResults(false);
-    setSelectedSearchTool(tool);
-  }, []);
-
-  const handleRunSearch = useCallback(() => {
-    setHasSearchResults(true);
-    handleRunTool();
-  }, [handleRunTool]);
+  const openConfigurationTab = useCallback(() => setActiveTab(IndexDetailsTabs.configuration), []);
 
   const handleReindex = useCallback(() => setReindexConfirmOpen(true), []);
   const confirmReindex = useCallback(() => {
     setReindexConfirmOpen(false);
-    setHasSearchResults(false);
     handleClearActiveConversation();
     handleClearChat();
     handleIndexData();
@@ -412,7 +375,6 @@ const RunIndexPanel = memo(props => {
     setConfigInputVariables(prev => ({ ...configuredValues, ...prev }));
   }, [configSchema, configuredValues]);
 
-  const runFormFields = useMemo(() => Object.keys(adjustedRunSchema?.properties || {}), [adjustedRunSchema]);
   const reindexStats = useMemo(() => {
     const md = index?.metadata;
     if (!md) return { isReindex: false, updatedOn: null, firstEntry: null, latestEntry: null };
@@ -431,9 +393,10 @@ const RunIndexPanel = memo(props => {
       latestEntry,
     };
   }, [index?.metadata]);
+  const runInFlight = effectiveIsIndexing || isAwaitingTaskStart;
   const banner = useMemo(
-    () => bannerVariant(effectiveIsIndexing, effectiveState, reindexStats, index?.metadata?.error),
-    [effectiveIsIndexing, effectiveState, reindexStats, index?.metadata?.error],
+    () => bannerVariant(runInFlight, effectiveState, reindexStats, index?.metadata?.error),
+    [runInFlight, effectiveState, reindexStats, index?.metadata?.error],
   );
 
   const onAddSchedule = useCallback(() => {
@@ -458,14 +421,6 @@ const RunIndexPanel = memo(props => {
         <RunIndexGeneralSection
           index={index}
           reindexStats={reindexStats}
-          isRunning={isRunning}
-          isIndexing={effectiveIsIndexing}
-          isStale={effectiveStale}
-          isWaitingForTaskStart={isAwaitingTaskStart}
-          canStopIndexing={canStopIndexing}
-          isDeleting={isDeleting}
-          onReindex={handleReindex}
-          onOpenDelete={openDelete}
         />
       ),
       defaultExpanded: true,
@@ -493,9 +448,13 @@ const RunIndexPanel = memo(props => {
       defaultExpanded: false,
     },
   ];
-  const chatConversation = useMemo(
-    () => getMockToolkitIndexConversation(chatHistory?.filter(msg => msg.id !== WELCOME_MESSAGE_ID)),
+  const indexingMessages = useMemo(
+    () => chatHistory?.filter(msg => msg.id !== WELCOME_MESSAGE_ID),
     [chatHistory],
+  );
+  const chatConversation = useMemo(
+    () => getMockToolkitIndexConversation(indexingMessages),
+    [indexingMessages],
   );
   const questionItemRef = useRef();
 
@@ -514,11 +473,9 @@ const RunIndexPanel = memo(props => {
   const isConfigurationTab = activeTab === IndexDetailsTabs.configuration;
   const isActivityTab = activeTab === IndexDetailsTabs.activity;
 
-  const showSearchResults = (isRunning && Boolean(selectedSearchTool)) || hasSearchResults;
-  const showIndexingResults =
-    (isRunning && !selectedSearchTool) ||
-    effectiveIsIndexing ||
-    (banner.severity !== BannerSeverity.success && chatConversation?.chat_history?.length > 0);
+  const hasTranscript = indexingMessages?.length > 0;
+  const hasIndexingActivity = runInFlight || hasTranscript;
+  const showStatusBanner = hasIndexingActivity || bannerOutlivesRun(banner.severity);
 
   const indexRouteParams = useMemo(
     () => ({ tab: tab ?? 'all', toolkitId, indexName }),
@@ -581,6 +538,12 @@ const RunIndexPanel = memo(props => {
             activeTab={activeTab}
             onChangeTab={handleChangeTab}
           />
+          {showStatusBanner && (
+            <RunIndexBanner
+              fullBleed
+              banner={banner}
+            />
+          )}
           <Box sx={styles.tabBody}>
             {isConfigurationTab && (
               <IndexConfigurationTab
@@ -591,41 +554,25 @@ const RunIndexPanel = memo(props => {
                 disabled={isRunning || effectiveIsIndexing}
               />
             )}
-            {isActivityTab && banner.severity === BannerSeverity.success && (
-              <IndexSuccess
-                banner={banner}
-                onSelectSearchTool={handleSelectSearchTool}
-                selectedSearchTool={selectedSearchTool}
-                selectedIndexTools={selectedIndexTools}
-                runFormFields={runFormFields}
-                adjustedRunSchema={adjustedRunSchema}
-                toolInputVariables={toolInputVariables}
-                onChangeInputVariables={onChangeInputVariables}
-                isRunning={isRunning}
-                effectiveIsIndexing={effectiveIsIndexing}
-                handleRunTool={handleRunSearch}
-                chatHistory={chatHistory}
+            {isActivityTab && (
+              <IndexActivityPanel
+                hasActivity={hasIndexingActivity}
+                statusShownAbove={showStatusBanner}
+                chatHistory={indexingMessages}
                 chatConversation={chatConversation}
                 questionItemRef={questionItemRef}
-                isRunFormValid={isRunFormValid}
-                showResults={showSearchResults}
-                showBanner={hasIndexedThisSession}
-              />
-            )}
-            {isActivityTab && banner.severity !== BannerSeverity.success && (
-              <IndexError
-                banner={banner}
-                isIndexing={effectiveIsIndexing}
-                isStoppingIndexing={isStoppingIndexing}
-                canStopIndexing={canStopIndexing}
-                onStop={onCancelIndexing}
-                chatHistory={chatHistory}
-                chatConversation={chatConversation}
-                questionItemRef={questionItemRef}
-                showResults={showIndexingResults}
+                onOpenConfiguration={openConfigurationTab}
               />
             )}
           </Box>
+          <IndexDetailsFooterBand
+            isIndexing={runIsLive || isAwaitingTaskStart}
+            isStoppingIndexing={isStoppingIndexing}
+            canStopIndexing={canStopIndexing}
+            onStop={onCancelIndexing}
+            reindexDisabled={reindexDisabled}
+            onReindex={handleReindex}
+          />
         </Box>
       </Box>
 
@@ -718,47 +665,6 @@ const runIndexPanelStyles = () => ({
     flexDirection: 'column',
     minWidth: 0,
     minHeight: 0,
-    gap: '0.75rem',
-  },
-  rightContent: {
-    flex: 1,
-    minHeight: 0,
-    display: 'flex',
-    flexDirection: 'column',
-    overflow: 'hidden',
-    alignItems: 'center',
-  },
-  rightFooter: {
-    display: 'flex',
-    alignItems: 'center',
-    paddingTop: '0.5rem',
-    width: '100%',
-    position: 'relative',
-    justifyContent: 'center',
-  },
-  footerRunSlot: {
-    width: '100%',
-    maxWidth: '48rem',
-    display: 'flex',
-    justifyContent: 'center',
-  },
-  footerClearSlot: {
-    display: 'flex',
-    justifyContent: 'flex-end',
-    width: '100%',
-  },
-  readyRow: {
-    width: '100%',
-    maxWidth: '48rem',
-    display: 'flex',
-    justifyContent: 'center',
-    paddingTop: '0.25rem',
-    alignSelf: 'center',
-  },
-  readyRowInner: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
   },
 });
 

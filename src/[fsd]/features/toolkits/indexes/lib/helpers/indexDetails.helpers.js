@@ -112,3 +112,6 @@ export const isAbandonedRun = index =>
  */
 export const hasLiveRun = ({ isIndexing, canStopIndexing, isStale }) =>
   Boolean(isIndexing) && (Boolean(canStopIndexing) || !isStale);
+
+export const bannerOutlivesRun = severity =>
+  severity === BannerSeverity.error || severity === BannerSeverity.warning;

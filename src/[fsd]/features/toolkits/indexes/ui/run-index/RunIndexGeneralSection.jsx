@@ -3,16 +3,11 @@ import { memo, useMemo } from 'react';
 import { Box } from '@mui/material';
 
 import { normalizeIndexingReport } from '@/[fsd]/entities/indexing-report';
-import { formatDate, hasLiveRun } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
-import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
-import { Button } from '@/[fsd]/shared/ui';
-import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { formatDate } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
 import ClockIcon from '@/assets/clock.svg?react';
 import FileIcon from '@/assets/file.svg?react';
 import IndexingIcon from '@/assets/indexing.svg?react';
 import UnavailableIcon from '@/assets/unavailable.svg?react';
-import { PERMISSIONS } from '@/common/constants';
-import useCheckPermission from '@/hooks/useCheckPermission';
 
 import IndexStatItem from './IndexStatItem';
 
@@ -31,27 +26,11 @@ const summarizeRun = entry => {
 };
 
 const RunIndexGeneralSection = memo(props => {
-  const {
-    index,
-    reindexStats,
-    isRunning,
-    isIndexing,
-    isStale = false,
-    isWaitingForTaskStart = false,
-    canStopIndexing = false,
-    isDeleting,
-    onReindex,
-    onOpenDelete,
-  } = props;
+  const { index, reindexStats } = props;
   const styles = runIndexGeneralSectionStyles();
-  const { isPrivate } = useProjectType();
-  const { checkPermission } = useCheckPermission();
 
   const firstRun = useMemo(() => summarizeRun(reindexStats.firstEntry), [reindexStats.firstEntry]);
   const latestRun = useMemo(() => summarizeRun(reindexStats.latestEntry), [reindexStats.latestEntry]);
-
-  const canDeleteIndex = isPrivate || checkPermission(PERMISSIONS.index.delete);
-  const runIsLive = hasLiveRun({ isIndexing, canStopIndexing, isStale });
 
   return (
     <Box sx={styles.root}>
@@ -101,28 +80,6 @@ const RunIndexGeneralSection = memo(props => {
           </Box>
         )}
       </Box>
-      <Box sx={styles.actions}>
-        <Button.BaseBtn
-          variant={BUTTON_VARIANTS.elitea}
-          onClick={onReindex}
-          // isRunning stays in this gate (unlike Delete's): a live non-indexing tool
-          // run must not start a concurrent index.
-          disabled={isRunning || isWaitingForTaskStart || runIsLive}
-        >
-          Reindex
-        </Button.BaseBtn>
-        {canDeleteIndex && (
-          <Button.BaseBtn
-            variant={BUTTON_VARIANTS.secondary}
-            onClick={onOpenDelete}
-            // No isRunning here — recovering an in-progress conversation on page load
-            // sets it too, which is the stuck case this escape hatch exists for.
-            disabled={isDeleting || isWaitingForTaskStart || runIsLive}
-          >
-            Delete Index
-          </Button.BaseBtn>
-        )}
-      </Box>
     </Box>
   );
 });
@@ -168,11 +125,6 @@ const runIndexGeneralSectionStyles = () => ({
     borderRadius: '0.5rem',
     border: ({ palette }) => `0.0625rem solid ${palette.border.reindexInfoContainer}`,
     padding: '0.5rem',
-  },
-  actions: {
-    display: 'flex',
-    gap: '0.5rem',
-    paddingTop: '0.5rem',
   },
 });
 

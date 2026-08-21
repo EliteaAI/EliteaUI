@@ -1,16 +1,3 @@
-export const NEW_INDEX_ID = 'new_index';
-
-export const IndexViewsEnum = {
-  create: 'create',
-  edit: 'edit',
-};
-
-export const EditViewTabsEnum = {
-  run: 'run',
-  configuration: 'configuration',
-  history: 'history',
-};
-
 export const IndexDetailsTabs = {
   configuration: 'configuration',
   activity: 'activity',
@@ -50,9 +37,9 @@ export const BannerSeverity = {
 
 export const BannerTitleMap = {
   [BannerSeverity.success]: 'Index is ready!',
-  [BannerSeverity.warning]: 'Indexing stopped',
+  [BannerSeverity.warning]: 'Stopped',
   [BannerSeverity.error]: 'Index processing error',
-  [BannerSeverity.info]: 'Indexing in progress…',
+  [BannerSeverity.info]: 'Indexing…',
 };
 
 export const BANNER_SUCCESS_SUFFIX = 'The index is ready to search.';
@@ -64,7 +51,7 @@ export const BannerMessageMap = {
   [BannerSeverity.error]:
     'Indexing failed before any files could be processed. Check the source connection and permissions, then try Reindex. See History for error details.',
   [BannerSeverity.info]:
-    "Indexing — this may take a few minutes depending on size. You can navigate to other sections; indexing will continue in the background and you'll be notified when it's done.",
+    "Indexing may take a few minutes depending on size. You can navigate to other sections; indexing will continue in the background and you'll be notified when it's done.",
 };
 
 // Statuses that allow the index to be searched and run tools against

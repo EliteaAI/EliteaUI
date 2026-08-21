@@ -3,7 +3,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
 import {
-  EditViewTabsEnum,
   IndexStatuses,
   IndexesToolsEnum,
 } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
@@ -485,7 +484,7 @@ export const useToolkitChat = props => {
         toastSuccess('Index no longer exists');
         setIsRunning(false);
         setChatHistory(prev => prev.map(msg => ({ ...msg, isStreaming: false, isLoading: false })));
-        if (cancelIndexingCallback) cancelIndexingCallback(EditViewTabsEnum.configuration);
+        if (cancelIndexingCallback) cancelIndexingCallback();
         return;
       }
 
@@ -501,7 +500,7 @@ export const useToolkitChat = props => {
       setIsRunning(false);
       setChatHistory(prev => prev.map(msg => ({ ...msg, isStreaming: false, isLoading: false })));
 
-      if (cancelIndexingCallback) cancelIndexingCallback(EditViewTabsEnum.configuration);
+      if (cancelIndexingCallback) cancelIndexingCallback();
     } catch {
       toastError('Failed to stop indexing');
     }

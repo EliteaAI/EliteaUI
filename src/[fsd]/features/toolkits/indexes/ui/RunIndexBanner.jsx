@@ -2,7 +2,6 @@ import { memo, useMemo } from 'react';
 
 import { Box, CircularProgress, Typography } from '@mui/material';
 
-import { Button } from '@/[fsd]/shared/ui';
 import ErrorIcon from '@/assets/error-icon.svg?react';
 import FailIcon from '@/assets/fail-icon.svg?react';
 import SuccessIcon from '@/assets/success-icon.svg?react';
@@ -22,16 +21,16 @@ const RunIndexBanner = memo(props => {
       label,
       message = 'Some description of status, important details or instructions.',
     } = {},
-    isIndexing,
-    isStoppingIndexing,
-    canStopIndexing = true,
-    onStop,
     showBottomBorder = true,
+    fullBleed = false,
     CustomIcon,
     sx,
     contentSX,
   } = props;
-  const styles = useMemo(() => getStyles(severity, showBottomBorder), [severity, showBottomBorder]);
+  const styles = useMemo(
+    () => getStyles(severity, showBottomBorder, fullBleed),
+    [severity, showBottomBorder, fullBleed],
+  );
   const Icon = IconMap[severity];
   return (
     <Box sx={[styles.root, sx]}>
@@ -57,28 +56,28 @@ const RunIndexBanner = memo(props => {
           </Typography>
         )}
       </Box>
-      {isIndexing && onStop && (
-        <Button.BaseBtn
-          variant={Button.BUTTON_VARIANTS.alarm}
-          onClick={onStop}
-          disabled={isStoppingIndexing || !canStopIndexing}
-        >
-          {isStoppingIndexing ? 'Stopping...' : canStopIndexing ? 'Stop' : 'Starting...'}
-        </Button.BaseBtn>
-      )}
     </Box>
   );
 });
 
 RunIndexBanner.displayName = 'RunIndexBanner';
 
+const CARD_PRESENTATION = {
+  root: { gap: '1rem', padding: '1rem 1.5rem' },
+  content: { alignItems: 'stretch', padding: '0.75rem 1rem', borderRadius: '0.75rem' },
+};
+
+const FULL_BLEED_PRESENTATION = {
+  root: { gap: 0, padding: 0 },
+  content: { alignItems: 'center', textAlign: 'center', padding: '1rem 1.5rem', borderRadius: 0 },
+};
+
 /** @type {MuiSx} */
-const getStyles = (severity, showBottomBorder) => ({
+const getStyles = (severity, showBottomBorder, fullBleed) => ({
   root: {
     display: 'flex',
-    gap: '1rem',
     alignItems: 'center',
-    padding: '1rem 1.5rem',
+    ...(fullBleed ? FULL_BLEED_PRESENTATION.root : CARD_PRESENTATION.root),
     borderBottom: showBottomBorder ? ({ palette }) => `0.0625rem solid ${palette.border.table}` : 'none',
   },
   contentContainer: {
@@ -86,12 +85,13 @@ const getStyles = (severity, showBottomBorder) => ({
     flexDirection: 'column',
     flex: 1,
     gap: '0.375rem',
-    padding: '0.75rem 1rem',
+    ...(fullBleed ? FULL_BLEED_PRESENTATION.content : CARD_PRESENTATION.content),
     background: ({ palette }) =>
       palette.background.indexResult[severity] || palette.background.indexResult.info,
-    borderRadius: '0.75rem',
-    border: ({ palette }) =>
-      `0.0625rem solid ${palette.border.indexResult[severity] || palette.border.indexResult.info}`,
+    border: fullBleed
+      ? 'none'
+      : ({ palette }) =>
+          `0.0625rem solid ${palette.border.indexResult[severity] || palette.border.indexResult.info}`,
   },
   titleContainer: {
     display: 'flex',
