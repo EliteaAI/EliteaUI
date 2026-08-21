@@ -30,7 +30,7 @@ const RunIndexScheduleContent = memo(props => {
           variant="bodyMedium"
           color="text.button.disabled"
         >
-          No schedule configured yet.
+          Schedule is not configured yet.
         </Typography>
         <Tooltip
           title={disabledReason || ''}
