@@ -243,6 +243,7 @@ export const NEW_DATASET_MENU = {
 export const DEFAULT_DATASET_FORM = {
   name: '',
   description: '',
+  isShared: false,
 };
 
 export const DEFAULT_CASE_FORM = {
@@ -281,3 +282,7 @@ export const EVAL_RUN_FALLBACK_POLL_MS = 10000;
 // maximum in one shot because it renders a whole run at once; the dataset view pages instead.
 export const EVAL_DATASET_CASE_PAGE_SIZE = 200;
 export const EVAL_RESULT_MAX_LIMIT = 2000;
+
+// P1 hard cap on cases per dataset (#6349). Backend: MAX_CASES_PER_DATASET in
+// evaluation_dataset_utils.py — keep this in sync with the server-side constant.
+export const MAX_CASES_PER_DATASET = 10;

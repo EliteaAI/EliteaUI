@@ -42,7 +42,7 @@ const DatasetsView = memo(props => {
     data: datasets = [],
     isLoading,
     isError,
-  } = useEvalDatasetsQuery({ projectId }, { skip: !projectId });
+  } = useEvalDatasetsQuery({ projectId, agentId: applicationId }, { skip: !projectId });
 
   const [deleteDataset, { isLoading: isDeleting }] = useDeleteEvalDatasetMutation();
 
@@ -149,6 +149,7 @@ const DatasetsView = memo(props => {
       ) : (
         <DatasetList
           datasets={datasets}
+          applicationId={applicationId}
           canCreate={canCreate}
           canEdit={canUpdate}
           canDelete={canDelete}
@@ -162,6 +163,7 @@ const DatasetsView = memo(props => {
       <DatasetFormDialog
         open={formDialog.open}
         projectId={projectId}
+        applicationId={applicationId}
         dataset={formDialog.dataset}
         onSaved={handleFormSaved}
         onClose={closeForm}

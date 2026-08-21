@@ -8,7 +8,15 @@ import EditIcon from '@/components/Icons/EditIcon';
 import { EvaluationRowBadge, evaluationRowStyles } from '../common';
 
 const DatasetListRow = memo(props => {
-  const { dataset, canEdit = false, canDelete = false, onOpen, onRename, onDelete } = props;
+  const {
+    dataset,
+    applicationId = null,
+    canEdit = false,
+    canDelete = false,
+    onOpen,
+    onRename,
+    onDelete,
+  } = props;
 
   const handleOpen = useCallback(() => onOpen?.(dataset), [onOpen, dataset]);
   const handleRename = useCallback(
@@ -29,6 +37,7 @@ const DatasetListRow = memo(props => {
   const styles = evaluationRowStyles({ clickable: true });
 
   const caseCount = dataset.case_count ?? dataset.cases?.length ?? 0;
+  const isSharedIn = applicationId != null && dataset.agent_id != null && dataset.agent_id !== applicationId;
 
   return (
     <Box
@@ -42,6 +51,9 @@ const DatasetListRow = memo(props => {
           <EvaluationRowBadge>
             {caseCount} case{caseCount === 1 ? '' : 's'}
           </EvaluationRowBadge>
+          {dataset.is_shared && (
+            <EvaluationRowBadge>{isSharedIn ? 'Shared in' : 'Shared'}</EvaluationRowBadge>
+          )}
         </Box>
         {dataset.description && (
           <Typography
