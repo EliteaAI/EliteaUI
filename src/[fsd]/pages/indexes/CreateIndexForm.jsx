@@ -14,6 +14,7 @@ import { ToolkitChatModesEnum } from '@/[fsd]/features/toolkits/lib/constants';
 import { ToolkitChatHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useToolkitChat } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
+import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { Button } from '@/[fsd]/shared/ui';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
 import { useGetSelectedToolSchema } from '@/hooks/toolkit/useGetSelectedToolSchema';
@@ -179,8 +180,8 @@ const CreateIndexForm = memo(props => {
   );
 
   const handleCancel = useCallback(() => {
-    navigate(-1);
-  }, [navigate]);
+    navigate(NavigationHelpers.buildRoute(RouteDefinitions.ToolkitDetail, { tab: tab ?? 'all', toolkitId }));
+  }, [navigate, tab, toolkitId]);
 
   const configFields = useMemo(
     () => Object.keys(adjustedIndexDataSchema?.properties || {}),
