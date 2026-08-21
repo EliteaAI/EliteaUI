@@ -3,8 +3,9 @@ import { memo, useCallback } from 'react';
 import { Box, IconButton, Tooltip, useTheme } from '@mui/material';
 
 import { TourTargetConstants } from '@/[fsd]/shared/lib/constants';
-import { Button } from '@/[fsd]/shared/ui';
 import ClockIcon from '@/assets/clock_icon.svg?react';
+
+import IconLabelButton from './IconLabelButton';
 
 const ViewRunHistoryButton = memo(props => {
   const {
@@ -50,28 +51,16 @@ const ViewRunHistoryButton = memo(props => {
   }
 
   return (
-    <Tooltip
-      title={tooltip}
-      placement="top"
-    >
-      <Box
-        component="span"
-        sx={{ display: 'inline-flex' }}
-      >
-        <Button.BaseBtn
-          variant={Button.BUTTON_VARIANTS.iconLabel}
-          size="small"
-          aria-label="view run history"
-          data-testid={testId}
-          data-tour={TourTargetConstants.SHARED_TOUR_TARGET_IDS.runHistory}
-          disabled={disabled}
-          onClick={handleShowHistory}
-          startIcon={<ClockIcon />}
-        >
-          Run History
-        </Button.BaseBtn>
-      </Box>
-    </Tooltip>
+    <IconLabelButton
+      label="Run History"
+      icon={<ClockIcon />}
+      tooltip={tooltip}
+      ariaLabel="view run history"
+      testId={testId}
+      disabled={disabled}
+      onClick={handleShowHistory}
+      data-tour={TourTargetConstants.SHARED_TOUR_TARGET_IDS.runHistory}
+    />
   );
 });
 

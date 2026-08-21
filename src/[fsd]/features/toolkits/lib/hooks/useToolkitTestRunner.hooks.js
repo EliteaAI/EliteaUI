@@ -48,10 +48,13 @@ const seedMissingDefaults = (current, properties) => {
 };
 
 /**
- * Drives a toolkit tool test run: tool selection, parameter state, schema resolution and the chat
- * socket. Takes `values` rather than reading Formik so it stays usable outside a form provider.
+ * Drives a toolkit tool run: tool selection, parameter state, schema resolution and the chat socket.
+ * Takes `values` rather than reading Formik so it stays usable outside a form provider.
+ *
+ * Passing `index` makes the chat hook prefix every tool param set with that index's collection.
+ * `adjustSchema` must be a stable reference, or the parameter form remounts on every render.
  */
-export const useToolkitTestRunner = ({ toolkitId, values }) => {
+export const useToolkitTestRunner = ({ toolkitId, values, index, adjustSchema }) => {
   const initializedToolRef = useRef(null);
   const [selectedTool, setSelectedTool] = useState(null);
   const [toolInputVariables, setToolInputVariables] = useState({});
@@ -62,12 +65,17 @@ export const useToolkitTestRunner = ({ toolkitId, values }) => {
     mcpAuthRequiredRef.current?.(message);
   }, []);
 
-  const selectedToolSchema = useGetSelectedToolSchema({
+  const resolvedToolSchema = useGetSelectedToolSchema({
     toolkitType: values?.type,
     toolOptionType: selectedTool,
     toolkitId,
     availableMcpTools: values?.settings?.available_mcp_tools,
   });
+
+  const selectedToolSchema = useMemo(
+    () => (adjustSchema && resolvedToolSchema ? adjustSchema(resolvedToolSchema) : resolvedToolSchema),
+    [adjustSchema, resolvedToolSchema],
+  );
 
   const isValidForm = useMemo(() => {
     if (values?.type === ToolTypes.custom.value) return true;
@@ -88,6 +96,7 @@ export const useToolkitTestRunner = ({ toolkitId, values }) => {
     selectedModel,
     llmSettings,
   } = useToolkitChat({
+    index,
     runTool: selectedTool,
     toolInputVariables,
     toolkitId,

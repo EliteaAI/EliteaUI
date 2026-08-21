@@ -36,6 +36,10 @@ export const BREADCRUMB_REGISTRY = {
     parent: RouteDefinitions.ToolkitIndex,
     label: 'History',
   },
+  [RouteDefinitions.ToolkitIndexSearch]: {
+    parent: RouteDefinitions.ToolkitIndex,
+    label: 'Search',
+  },
 
   [RouteDefinitions.MCPDetail]: {
     parent: RouteDefinitions.MCPsWithTab,
