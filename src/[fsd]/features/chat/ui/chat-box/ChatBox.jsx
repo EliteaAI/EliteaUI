@@ -616,6 +616,12 @@ const ChatBox = forwardRef((props, boxRef) => {
     setPendingInjections(prev => prev.filter(item => item.id !== injectionId));
   }, []);
 
+  // User explicitly removed a queued item before it was consumed.
+  const onRemovePendingInjection = useCallback(injectionId => {
+    pendingInjectionsRef.current.delete(injectionId);
+    setPendingInjections(prev => prev.filter(item => item.id !== injectionId));
+  }, []);
+
   // Turn ended: anything still pending was never folded in, so re-send it as a
   // normal message rather than leaving it silently stranded in history.
   const onInjectionReport = useCallback(({ consumed }) => {
@@ -2076,7 +2082,9 @@ const ChatBox = forwardRef((props, boxRef) => {
 
       const injectionId = uuidv4();
       pendingInjectionsRef.current.set(injectionId, text);
-      setPendingInjections(prev => [...prev, { id: injectionId, text }]);
+      // inFlight from the start: the POST fires immediately, so the remove
+      // button should never be shown for this item.
+      setPendingInjections(prev => [...prev, { id: injectionId, text, inFlight: true }]);
       // Chat passes clearInputAfterSubmit={false}, so clearing is the caller's job
       // here just as it is in onPredictStream.
       chatInput.current?.reset();
@@ -2640,10 +2648,10 @@ const ChatBox = forwardRef((props, boxRef) => {
   // than one turn running only open the affordance for a turn that is listening.
   const isInjectable = useMemo(() => {
     if (!isMidturnInjectionEnabled) return false;
-    if (!isStreamingNow || hasPendingHitlInterrupt) return false;
+    if (hasPendingHitlInterrupt) return false;
     const streaming = chat_history.find(msg => msg.isStreaming && msg.isInjectable);
     return Boolean(streaming);
-  }, [chat_history, hasPendingHitlInterrupt, isMidturnInjectionEnabled, isStreamingNow]);
+  }, [chat_history, hasPendingHitlInterrupt, isMidturnInjectionEnabled]);
 
   const isInputLoading = useMemo(
     () =>
@@ -2767,6 +2775,8 @@ const ChatBox = forwardRef((props, boxRef) => {
           spokenRange={spokenRange}
           onEntityCreated={onEntityCreated}
           onDeleteEntity={onDeleteEntity}
+          pendingInjections={pendingInjections}
+          onRemovePendingInjection={onRemovePendingInjection}
         />
         {displayConversationStarters && (
           <ChatConversationStarters
@@ -2835,30 +2845,6 @@ const ChatBox = forwardRef((props, boxRef) => {
               percentUsed={budgetWarning.percentUsed}
               onDismiss={budgetWarning.dismiss}
             />
-          )}
-          {pendingInjections.length > 0 && (
-            <Box sx={styles.pendingInjections}>
-              {pendingInjections.map(item => (
-                <Box
-                  key={item.id}
-                  sx={styles.pendingInjectionChip}
-                  data-testid="pending-injection-chip"
-                >
-                  <Box
-                    component="span"
-                    sx={styles.pendingInjectionLabel}
-                  >
-                    Queued
-                  </Box>
-                  <Box
-                    component="span"
-                    sx={styles.pendingInjectionText}
-                  >
-                    {item.text}
-                  </Box>
-                </Box>
-              ))}
-            </Box>
           )}
           <NewChatInput
             fromTheChat={fromTheChat}
@@ -2964,39 +2950,6 @@ const chatBoxStyles = () => ({
     padding: '0 0.5rem 0.5rem 0.5rem',
     gap: '0.5rem',
   },
-  pendingInjections: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.25rem',
-    padding: '0 0.75rem 0.25rem 0.75rem',
-  },
-  pendingInjectionChip: ({ palette }) => ({
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-    fontSize: '0.75rem',
-    fontStyle: 'italic',
-    color: palette.text.secondary,
-    opacity: 0.8,
-    minWidth: 0,
-  }),
-  pendingInjectionText: {
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-  },
-  // A plain word, not a spinner: StyledCircleProgress is position:absolute, so it
-  // takes no layout space and lands on top of the text beside it.
-  pendingInjectionLabel: ({ palette }) => ({
-    flexShrink: 0,
-    fontStyle: 'normal',
-    padding: '0.0625rem 0.375rem',
-    borderRadius: '0.25rem',
-    border: `0.0625rem solid ${palette.border.lines}`,
-    fontSize: '0.6875rem',
-    textTransform: 'uppercase',
-    letterSpacing: '0.03em',
-  }),
 });
 
 export default memo(ChatBox);

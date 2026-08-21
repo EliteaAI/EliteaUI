@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Box, Skeleton } from '@mui/material';
 
 import { getPendingHitlMessage } from '@/[fsd]/features/chat/lib/helpers/hitl.helpers.js';
+import { PendingInjectionList } from '@/[fsd]/features/chat/ui/pending-injection';
 import { ScrollableContainer } from '@/[fsd]/shared/ui';
 import HeadingChip, { HEADING_CHIP_VARIANTS } from '@/[fsd]/shared/ui/chip/HeadingChip';
 import { ChatParticipantType, ROLES } from '@/common/constants';
@@ -49,6 +50,8 @@ const ChatMessageList = memo(props => {
     spokenRange,
     onEntityCreated,
     onDeleteEntity,
+    pendingInjections = [],
+    onRemovePendingInjection,
   } = props;
   const dispatch = useDispatch();
   const listRef = useRef();
@@ -279,6 +282,10 @@ const ChatMessageList = memo(props => {
             onDeleteEntity={onDeleteEntity}
           />
         ))}
+        <PendingInjectionList
+          items={pendingInjections}
+          onRemove={onRemovePendingInjection}
+        />
         {/* Spacer placed AFTER messages to create extra scrollable area below target */}
         {bottomSpacer > 0 && (
           <Box

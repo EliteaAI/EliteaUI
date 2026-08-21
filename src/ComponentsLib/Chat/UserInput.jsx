@@ -406,6 +406,7 @@ const UserInput = forwardRef((props, ref) => {
     <Box
       sx={styles.gradientBorder}
       data-tour={dataTourTargetId || undefined}
+      {...(isStreaming && isInjectable ? { 'data-testid': 'interjection-composer' } : {})}
     >
       <Tooltip
         title={tooltip?.title}
@@ -510,43 +511,48 @@ const UserInput = forwardRef((props, ref) => {
                 )}
               </Box>
             ) : (
-              <Box sx={styles.sendButtonContainer}>
-                {/* Stop stays available while streaming; inject is offered alongside
+              <>
+                <Box sx={styles.sendButtonContainer}>
+                  {/* Stop stays available while streaming; inject is offered alongside
                     it only once the running turn reports that it is listening. */}
-                {isInjectable && (
                   <Tooltip
-                    title="Send to the running agent"
+                    title={stopButton?.tooltip?.title || ''}
                     placement="top"
                   >
                     <Box component="span">
                       <BaseBtn
                         variant="icon"
                         color="secondary"
-                        data-testid="chat-inject-button"
-                        disabled={!question.trim()}
-                        onClick={injectQuestion}
+                        sx={styles.stopButton(stopButton)}
+                        onClick={onStop}
                       >
-                        <SendIcon />
+                        <StopIcon style={styles.stopIconStyle} />
                       </BaseBtn>
                     </Box>
                   </Tooltip>
-                )}
-                <Tooltip
-                  title={stopButton?.tooltip?.title || ''}
-                  placement="top"
-                >
-                  <Box component="span">
-                    <BaseBtn
-                      variant="icon"
-                      color="secondary"
-                      sx={styles.stopButton(stopButton)}
-                      onClick={onStop}
+                </Box>
+                {isInjectable && (
+                  <Box sx={styles.sendButtonContainer}>
+                    <Tooltip
+                      title="Send to the running agent"
+                      placement="top"
                     >
-                      <StopIcon style={styles.stopIconStyle} />
-                    </BaseBtn>
+                      <Box component="span">
+                        <BaseBtn
+                          variant="icon"
+                          color="secondary"
+                          data-testid="chat-inject-button"
+                          disabled={!question.trim()}
+                          onClick={injectQuestion}
+                          sx={styles.sendButton(sendButton)}
+                        >
+                          <SendIcon sx={styles.sendIcon(sendButton)} />
+                        </BaseBtn>
+                      </Box>
+                    </Tooltip>
                   </Box>
-                </Tooltip>
-              </Box>
+                )}
+              </>
             )}
           </Box>
         </Box>
