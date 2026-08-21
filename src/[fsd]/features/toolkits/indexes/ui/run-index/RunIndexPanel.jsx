@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { Box, Typography } from '@mui/material';
 
+import { useConversationTranscript } from '@/[fsd]/entities/run-history/lib/hooks';
 import { McpAuthModal, useMcpAuthModal } from '@/[fsd]/features/mcp';
 import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
 import {
@@ -30,6 +31,7 @@ import {
 import { useIndexesListPolling } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import { selectToolkitScheduler } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
 import { IndexActivityPanel, IndexScheduleModal, RunIndexBanner } from '@/[fsd]/features/toolkits/indexes/ui';
+import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useGetCurrentToolkitSchemas, useToolkitChat } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { NavigationHelpers, ScheduleHelpers } from '@/[fsd]/shared/lib/helpers';
@@ -37,7 +39,7 @@ import { Modal } from '@/[fsd]/shared/ui';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
 import Breadcrumbs from '@/[fsd]/shared/ui/breadcrumbs';
 import { useDeleteIndexScheduleMutation } from '@/api';
-import { PERMISSIONS, WELCOME_MESSAGE_ID } from '@/common/constants';
+import { PERMISSIONS, ROLES, WELCOME_MESSAGE_ID } from '@/common/constants';
 import { convertToolkitSchema } from '@/common/toolkitSchemaUtils';
 import { useGetSelectedToolSchema } from '@/hooks/toolkit/useGetSelectedToolSchema';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -436,10 +438,25 @@ const RunIndexPanel = memo(props => {
       ),
     },
   ];
-  const indexingMessages = useMemo(
+  const liveMessages = useMemo(
     () => chatHistory?.filter(msg => msg.id !== WELCOME_MESSAGE_ID),
     [chatHistory],
   );
+  const hasLiveMessages = liveMessages?.length > 0;
+
+  const { transcript: pastRunTranscript, isTranscriptLoading } = useConversationTranscript({
+    conversationId: index?.metadata?.conversation_id ?? null,
+    skip: runInFlight || hasLiveMessages,
+  });
+  const pastRunMessages = useMemo(
+    () =>
+      ToolkitsHelpers.prettifyToolkitConversation(
+        pastRunTranscript.filter(message => message.role !== ROLES.User),
+      ),
+    [pastRunTranscript],
+  );
+
+  const indexingMessages = hasLiveMessages ? liveMessages : pastRunMessages;
   const chatConversation = useMemo(
     () => getMockToolkitIndexConversation(indexingMessages),
     [indexingMessages],
@@ -462,7 +479,7 @@ const RunIndexPanel = memo(props => {
   const isActivityTab = activeTab === IndexDetailsTabs.activity;
 
   const hasTranscript = indexingMessages?.length > 0;
-  const hasIndexingActivity = runInFlight || hasTranscript;
+  const hasIndexingActivity = runInFlight || hasTranscript || isTranscriptLoading;
   const showStatusBanner = hasIndexingActivity || bannerOutlivesRun(banner.severity);
 
   const indexRouteParams = useMemo(
