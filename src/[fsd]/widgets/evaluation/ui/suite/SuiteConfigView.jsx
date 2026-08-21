@@ -5,6 +5,8 @@ import { Box, CircularProgress, Typography } from '@mui/material';
 import { Button, Input, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
+import { LLMModelSelector } from '@/[fsd]/widgets/llm-model-selector';
+import { useListModelsQuery } from '@/api/configurations';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
@@ -51,6 +53,7 @@ import BindingList from './BindingList';
 import LibraryPickerDialog from './LibraryPickerDialog';
 
 const NONE_DATASET = '';
+const AUTO_JUDGE_MODEL_ID = '__auto__';
 
 // A new binding inherits the dimension's configured defaults (weight / target /
 // operator). Used both when attaching from the library and when a freshly
@@ -91,6 +94,7 @@ const SuiteConfigView = memo(props => {
 
   const [selectedSuiteId, setSelectedSuiteId] = useStickySuiteSelection(projectId, applicationId);
   const [datasetDraft, setDatasetDraft] = useState(NONE_DATASET);
+  const [judgeModelDraft, setJudgeModelDraft] = useState(null);
   const [newSuiteDialog, setNewSuiteDialog] = useState({ open: false, name: '' });
   const [bindingDialog, setBindingDialog] = useState({ open: false, binding: null });
   const [pickerDialog, setPickerDialog] = useState({ open: false, kind: null });
@@ -125,6 +129,11 @@ const SuiteConfigView = memo(props => {
   );
 
   const { data: datasets = [] } = useEvalDatasetsQuery({ projectId }, { skip: !projectId });
+
+  const { data: modelsData = { items: [] } } = useListModelsQuery(
+    { projectId, include_shared: true, section: 'llm' },
+    { skip: !projectId },
+  );
 
   const { data: suiteDetail, isFetching: isSuiteDetailFetching } = useEvalSuiteQuery(
     { projectId, suiteId: selectedSuiteId },
@@ -184,6 +193,14 @@ const SuiteConfigView = memo(props => {
     setDatasetDraft(suiteDetail?.dataset_id ?? NONE_DATASET);
   }, [suiteDetail?.id, suiteDetail?.dataset_id]);
 
+  // Sync the judge model draft to the loaded suite. `judge_model` is an object, so it must not
+  // be a dependency here — its reference changes on every refetch even when the value is the
+  // same, which would silently wipe an in-progress selection.
+  useEffect(() => {
+    setJudgeModelDraft(suiteDetail?.judge_model ?? null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [suiteDetail?.id]);
+
   const suiteOptions = useMemo(() => suites.map(s => ({ value: s.id, label: s.name })), [suites]);
   const datasetOptions = useMemo(
     () => [
@@ -206,6 +223,37 @@ const SuiteConfigView = memo(props => {
   const lastRun = runs.length ? runs[0] : null;
 
   const datasetDirty = (suiteDetail?.dataset_id ?? NONE_DATASET) !== datasetDraft;
+  const savedJudgeModel = suiteDetail?.judge_model ?? null;
+  const judgeModelDirty =
+    (savedJudgeModel?.model_name ?? null) !== (judgeModelDraft?.model_name ?? null) ||
+    (savedJudgeModel?.model_project_id ?? null) !== (judgeModelDraft?.model_project_id ?? null);
+
+  const autoJudgeModelLabel = modelsData.low_tier_default_model_name
+    ? `Auto (${modelsData.low_tier_default_model_name})`
+    : 'Auto';
+  const autoJudgeModelOption = useMemo(
+    () => ({ id: AUTO_JUDGE_MODEL_ID, name: AUTO_JUDGE_MODEL_ID, display_name: autoJudgeModelLabel }),
+    [autoJudgeModelLabel],
+  );
+  const selectedJudgeModel = useMemo(() => {
+    if (judgeModelDraft == null) return autoJudgeModelOption;
+    const match = modelsData.items.find(
+      m => m.name === judgeModelDraft.model_name && m.project_id === judgeModelDraft.model_project_id,
+    );
+    return (
+      match || {
+        id: 'judge-model-missing',
+        name: judgeModelDraft.model_name,
+        display_name: `${judgeModelDraft.model_name} (unavailable)`,
+      }
+    );
+  }, [judgeModelDraft, autoJudgeModelOption, modelsData.items]);
+  const judgeModelOptions = useMemo(() => {
+    const base = [autoJudgeModelOption, ...modelsData.items];
+    // Surface an unavailable saved model so the user can at least see it and replace it.
+    if (selectedJudgeModel?.id === 'judge-model-missing') base.push(selectedJudgeModel);
+    return base;
+  }, [autoJudgeModelOption, modelsData.items, selectedJudgeModel]);
 
   const handleSelectSuite = useCallback(value => setSelectedSuiteId(value), [setSelectedSuiteId]);
 
@@ -215,13 +263,16 @@ const SuiteConfigView = memo(props => {
       await updateSuite({
         projectId,
         suiteId: selectedSuiteId,
-        body: { dataset_id: datasetDraft === NONE_DATASET ? null : datasetDraft },
+        body: {
+          dataset_id: datasetDraft === NONE_DATASET ? null : datasetDraft,
+          judge_model: judgeModelDraft,
+        },
       }).unwrap();
       toastSuccess('Suite saved.');
     } catch (error) {
       toastError(parseEvalError(error, 'Failed to save suite.'));
     }
-  }, [selectedSuiteId, updateSuite, projectId, datasetDraft, toastSuccess, toastError]);
+  }, [selectedSuiteId, updateSuite, projectId, datasetDraft, judgeModelDraft, toastSuccess, toastError]);
 
   const handleCreateSuite = useCallback(async () => {
     const name = newSuiteDialog.name.trim();
@@ -391,6 +442,14 @@ const SuiteConfigView = memo(props => {
     onOpenDatasets?.(datasetDraft === NONE_DATASET ? null : datasetDraft);
   }, [onOpenDatasets, datasetDraft]);
 
+  const handleSelectJudgeModel = useCallback(model => {
+    if (!model || model.id === AUTO_JUDGE_MODEL_ID) {
+      setJudgeModelDraft(null);
+      return;
+    }
+    setJudgeModelDraft({ model_name: model.name, model_project_id: model.project_id });
+  }, []);
+
   const pickerItems = useMemo(() => {
     if (pickerDialog.kind === 'dimension') {
       return dimensions.filter(d => d.tier !== EVAL_TIER.platform && !boundDimensionIds.has(d.id));
@@ -517,6 +576,30 @@ const SuiteConfigView = memo(props => {
               </Button.BaseBtn>
             </Box>
 
+            <Box
+              sx={styles.selectorRow}
+              data-testid="evaluation-judge-model-select"
+              aria-label="Judge model"
+            >
+              <Box sx={styles.selectorGrow}>
+                <Typography
+                  variant="labelSmall"
+                  color="text.secondary"
+                  sx={styles.judgeModelLabel}
+                >
+                  Judge model
+                </Typography>
+                <LLMModelSelector
+                  variant="field"
+                  models={judgeModelOptions}
+                  selectedModel={selectedJudgeModel}
+                  onSelectModel={handleSelectJudgeModel}
+                  disabled={!canUpdateSuite}
+                  showSettingsEntry={false}
+                />
+              </Box>
+            </Box>
+
             <Box sx={styles.bindingsWrapper}>
               {isSuiteDetailFetching ? (
                 <Box sx={styles.centeredInline}>
@@ -548,7 +631,7 @@ const SuiteConfigView = memo(props => {
                 <Button.BaseBtn
                   variant={BUTTON_VARIANTS.elitea}
                   color={BUTTON_COLORS.primary}
-                  disabled={!datasetDirty || isSavingSuite}
+                  disabled={!(datasetDirty || judgeModelDirty) || isSavingSuite}
                   onClick={handleSaveSuite}
                   data-testid="evaluation-save-suite"
                 >
@@ -744,6 +827,9 @@ const suiteConfigViewStyles = () => ({
   selectorGrow: {
     flex: 1,
     minWidth: 0,
+  },
+  judgeModelLabel: {
+    marginBottom: '0.25rem',
   },
   bindingsWrapper: {
     flex: 1,
