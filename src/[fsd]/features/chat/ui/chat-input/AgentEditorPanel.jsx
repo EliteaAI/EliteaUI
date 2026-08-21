@@ -12,7 +12,7 @@ import {
   useTheme,
 } from '@mui/material';
 
-import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
+import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
 import { useParticipantEntityIcon } from '@/[fsd]/features/chat/participants/lib/hooks';
 import { usePublicProjectAccessCheck } from '@/[fsd]/features/project';
 import { PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';

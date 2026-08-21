@@ -58,7 +58,7 @@ A layer may **only** import from layers **below** it.
 | --------------------------------- | --------------------------------------------------- | ------------------------------- |
 | `features/skill/api/skillsApi.js` | `from '@/[fsd]/features/skill-hub/api/skillHubApi'` | `skill` → `skill-hub` internals |
 
-### 1.3 External Barrel Bypasses (41)
+### 1.3 External Barrel Bypasses (26)
 
 Imports that reach directly into another slice's `ui/`, `lib/`, `model/`, or `api/` instead of importing from
 its `index.js`.
@@ -146,7 +146,7 @@ The `pages/settings/` directory is the largest offender — nearly every setting
 | `widgets/sidebar-root/ui/ProjectAvatar.jsx` | `from '@/[fsd]/features/settings/api/projectInfoApi'` |
 | `widgets/data-table/ui/DataTable.jsx`       | `from '@/[fsd]/features/mcp/lib/helpers'`             |
 
-#### `features/` → `entities/` internals (15)
+#### `features/` → `entities/` internals (0) ✓
 
 **7 violations resolved in Session 6 (all LATEST_VERSION_NAME barrel bypasses):**
 
@@ -160,39 +160,28 @@ The `pages/settings/` directory is the largest offender — nearly every setting
 | ~~`features/skill/ui/generate-skill-modal/GenerateSkillModal.jsx`~~ | ✓      |
 | ~~`features/skill/ui/import/SkillImportModal.jsx`~~                 | ✓      |
 
-**Remaining violations (15):**
-
-Major patterns:
-
-- **`LATEST_VERSION_NAME`** from `entities/version/lib/constants` — imported in ~10 files across
-  `features/skill`, `features/chat`, `features/agent`
-- **`importWizardActions`** from `entities/import-wizard/model/` — imported in `features/skill`,
-  `features/agent-hub`
-- **`PublishWizardModal`/`UnpublishConfirmModal`** from `entities/version/ui/`
-- **`parseMdFrontmatter`** from `entities/import-wizard/lib/helpers`
-- **`resolveEntityType`** from `entities/edit-entity-with-ai/lib/helpers`
-- **`useRunHistorySorting`** from `entities/run-history/lib/hooks`
+**8 remaining violations resolved in Session 7:**
 
 <details>
-<summary>Click to expand full list (15 remaining bypasses)</summary>
+<summary>Click to expand full list (15 resolved bypasses)</summary>
 
 | File                                                                  | Import                                                           |
 | --------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| `features/skill/lib/hooks/useSkillImport.hooks.js`                    | `from '@/[fsd]/entities/import-wizard/lib/helpers'`              |
-| `features/skill/lib/hooks/useUnpublishSkillMenu.hooks.jsx`            | `from '@/[fsd]/entities/version/ui/UnpublishConfirmModal'`       |
-| `features/skill/lib/hooks/usePublishSkillMenu.hooks.jsx`              | `from '@/[fsd]/entities/version/ui/PublishWizardModal'`          |
-| `features/skill/lib/hooks/useForkSkill.hooks.js`                      | `from '@/[fsd]/entities/import-wizard/model/importWizard.slice'` |
-| `features/skill/lib/hooks/usePublishSkill.hooks.js`                   | `from '@/[fsd]/entities/version/ui/PublishWizardModal'`          |
-| `features/skill/api/skillsApi.js`                                     | `from '@/[fsd]/entities/version/lib/constants'`                  |
-| `features/chat/ui/chat-input/AgentEditorPanel.jsx`                    | `from '@/[fsd]/entities/version/lib/constants'`                  |
-| `features/chat/ui/chat-box/ChatBox.jsx`                               | `from '@/[fsd]/entities/version/lib/constants'`                  |
-| `features/agent-hub/lib/hooks/useForkAgentHub.hooks.js`               | `from '@/[fsd]/entities/import-wizard/model/importWizard.slice'` |
-| `features/toolkits/indexes/ui/index-history/IndexHistory.jsx`         | `from '@/[fsd]/entities/run-history/lib/hooks'`                  |
-| `features/agent/ui/generate-agent-modal/GenerateAgentModal.jsx`       | `from '@/[fsd]/entities/version/lib/constants'`                  |
-| `features/agent/ui/ai-edit-agent-modal/AIEditAgentModal.jsx`          | `from '@/[fsd]/entities/edit-entity-with-ai/lib/helpers'`        |
-| `features/agent/ui/ai-edit-agent-modal/steps/SummaryStep.jsx`         | `from '@/[fsd]/entities/edit-entity-with-ai/lib/helpers'`        |
-| `features/agent/ui/ai-edit-agent-modal/steps/ToolsSkillsStep.jsx`     | `from '@/[fsd]/entities/edit-entity-with-ai/lib/helpers'`        |
-| `features/agent/ui/agent-details/version/VersionReplacementModal.jsx` | `from '@/[fsd]/entities/version/lib/constants'`                  |
+| ~~`features/skill/lib/hooks/useSkillImport.hooks.js`~~                    | ~~`from '@/[fsd]/entities/import-wizard/lib/helpers'`~~ ✓ (Session 7)              |
+| ~~`features/skill/lib/hooks/useUnpublishSkillMenu.hooks.jsx`~~            | ~~`from '@/[fsd]/entities/version/ui/UnpublishConfirmModal'`~~ ✓ (Session 7)       |
+| ~~`features/skill/lib/hooks/usePublishSkillMenu.hooks.jsx`~~              | ~~`from '@/[fsd]/entities/version/ui/PublishWizardModal'`~~ ✓ (Session 7)          |
+| ~~`features/skill/lib/hooks/useForkSkill.hooks.js`~~                      | ~~`from '@/[fsd]/entities/import-wizard/model/importWizard.slice'`~~ ✓ (Session 7) |
+| ~~`features/skill/lib/hooks/usePublishSkill.hooks.js`~~                   | ~~`from '@/[fsd]/entities/version/ui/PublishWizardModal'`~~ ✓ (Session 7)          |
+| ~~`features/skill/api/skillsApi.js`~~                                     | ~~`from '@/[fsd]/entities/version/lib/constants'`~~ ✓ (Session 7)                  |
+| ~~`features/chat/ui/chat-input/AgentEditorPanel.jsx`~~                    | ~~`from '@/[fsd]/entities/version/lib/constants'`~~ ✓ (Session 7)                  |
+| ~~`features/chat/ui/chat-box/ChatBox.jsx`~~                               | ~~`from '@/[fsd]/entities/version/lib/constants'`~~ ✓ (Session 7)                  |
+| ~~`features/agent-hub/lib/hooks/useForkAgentHub.hooks.js`~~               | ~~`from '@/[fsd]/entities/import-wizard/model/importWizard.slice'`~~ ✓ (Session 7) |
+| ~~`features/toolkits/indexes/ui/index-history/IndexHistory.jsx`~~         | ~~`from '@/[fsd]/entities/run-history/lib/hooks'`~~ ✓ (Session 7)                  |
+| ~~`features/agent/ui/generate-agent-modal/GenerateAgentModal.jsx`~~       | ~~`from '@/[fsd]/entities/version/lib/constants'`~~ ✓ (Session 7)                  |
+| ~~`features/agent/ui/ai-edit-agent-modal/AIEditAgentModal.jsx`~~          | ~~`from '@/[fsd]/entities/edit-entity-with-ai/lib/helpers'`~~ ✓ (Session 7)        |
+| ~~`features/agent/ui/ai-edit-agent-modal/steps/SummaryStep.jsx`~~         | ~~`from '@/[fsd]/entities/edit-entity-with-ai/lib/helpers'`~~ ✓ (Session 7)        |
+| ~~`features/agent/ui/ai-edit-agent-modal/steps/ToolsSkillsStep.jsx`~~     | ~~`from '@/[fsd]/entities/edit-entity-with-ai/lib/helpers'`~~ ✓ (Session 7)        |
+| ~~`features/agent/ui/agent-details/version/VersionReplacementModal.jsx`~~ | ~~`from '@/[fsd]/entities/version/lib/constants'`~~ ✓ (устарела — перемещён в Session 2) |
 
 </details>
 
@@ -785,3 +774,94 @@ All using `LATEST_VERSION_NAME` from `entities/version/lib/constants`. Single-li
 **Skipped:** None.
 
 **Build verification:** `npm run build` passed with no errors (14.21s).
+
+### 2026-08-21 — Session 7
+
+**Scope:** Section 1.3, `features/` → `entities/` internals — remaining 15 barrel-bypass violations.
+
+**Fix strategy:** update consumer imports to go through the entity's public barrel (`index.js`),
+extending barrels that were missing the needed re-export.
+
+#### Fix #1: `LATEST_VERSION_NAME` (barrel already complete, import-path fix only, 4 files)
+
+- `features/skill/api/skillsApi.js`, `features/chat/ui/chat-input/AgentEditorPanel.jsx`,
+  `features/chat/ui/chat-box/ChatBox.jsx`, `features/agent/ui/generate-agent-modal/GenerateAgentModal.jsx`:
+  `entities/version/lib/constants` → `entities/version`
+
+#### Fix #2: `importWizardActions` (barrel already complete, import-path fix only, 2 files)
+
+- `features/skill/lib/hooks/useForkSkill.hooks.js`, `features/agent-hub/lib/hooks/useForkAgentHub.hooks.js`:
+  `entities/import-wizard/model/importWizard.slice` → `entities/import-wizard`
+
+#### Fix #3: `PUBLISH_STEPS` (barrel already complete, import-path fix only, 1 file)
+
+- `features/skill/lib/hooks/usePublishSkill.hooks.js`: `entities/version/ui/PublishWizardModal` → `entities/version`
+
+#### Fix #4: `PublishWizardModal` / `UnpublishConfirmModal` (barrel extended, 2 files)
+
+- Extended `entities/version/ui/index.js`: merged `PUBLISH_STEPS` re-export into the `PublishWizardModal`
+  line, added `export { default as UnpublishConfirmModal } from './UnpublishConfirmModal';`
+- Updated `features/skill/lib/hooks/usePublishSkillMenu.hooks.jsx` and
+  `features/skill/lib/hooks/useUnpublishSkillMenu.hooks.jsx` to import from `entities/version`.
+
+#### Fix #5: `parseMdFrontmatter` (barrel extended, 1 file)
+
+- Created `entities/import-wizard/lib/index.js` (`export * from './helpers';`), added
+  `export * from './lib';` to `entities/import-wizard/index.js`. Closes audit item 4.8
+  (`entities/import-wizard/lib/` — missing barrel).
+- Updated `features/skill/lib/hooks/useSkillImport.hooks.js` to import from `entities/import-wizard`.
+
+#### Fix #6: `resolveEntityType` (barrel extended, 3 files)
+
+- Extended `entities/edit-entity-with-ai/index.js`: merged `resolveEntityType` into the existing
+  `computeWordDiff` re-export line.
+- Updated `features/agent/ui/ai-edit-agent-modal/AIEditAgentModal.jsx`,
+  `features/agent/ui/ai-edit-agent-modal/steps/SummaryStep.jsx`,
+  `features/agent/ui/ai-edit-agent-modal/steps/ToolsSkillsStep.jsx` to import from `entities/edit-entity-with-ai`.
+
+#### Fix #7: `useRunHistorySorting` (barrel extended, 1 file)
+
+- Added `export * from './hooks';` to `entities/run-history/lib/index.js`.
+- Updated `features/toolkits/indexes/ui/index-history/IndexHistory.jsx` to import from `entities/run-history`.
+
+**Counters updated:**
+- Section 1.3: `41` violations → `26` violations (−15)
+- `features/` → `entities/` internals: `15` → `0` ✓
+
+**Skipped:**
+- `features/agent/ui/agent-details/version/VersionReplacementModal.jsx` — stale audit row; the file no longer
+  exists at this path (moved to `entities/version/ui/VersionReplacementModal.jsx` in Session 2). Struck
+  without a code fix.
+- `features/chat/ui/editors/SkillEditor.jsx` — out-of-scope side finding (also imports `LATEST_VERSION_NAME`
+  directly from `entities/version/lib/constants`, not in the original 15); left untouched.
+
+**Build verification:** `npm run build` passed with no errors.
+
+### 2026-08-25 — Session 8
+
+**Scope:** Circular dependency resolution in run-history entity barrel.
+
+**Issue:** Session 7 added `export * from './api'` to `entities/run-history/index.js`, which introduced a circular import cycle:
+- `IndexHistory.jsx` → `entities/run-history/index.js`
+- `entities/run-history/index.js` → `api/index.js`
+- `api/index.js` → `runHistoryApi.js`
+- `runHistoryApi.js` → `entities/run-history` (cycle closes)
+
+**Root cause:** API files (`api/`) are implementation details — they should never be re-exported from the public barrel. The public barrel should only expose UI components, utilities, and domain logic, not internal API machinery.
+
+**Fix strategy:**
+1. Remove `export * from './api'` from `entities/run-history/index.js`
+2. Keep `runHistoryApi.js` importing from `lib` (internal path, no cycle)
+3. Update `IndexHistory.jsx` to import from public barrel (UI components and utilities still available)
+
+#### Changes applied:
+
+| File                                                    | Change                                                                                                              |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `entities/run-history/index.js`                        | Removed `export * from './api'` — API files never belong in public barrel                                           |
+| `entities/run-history/api/runHistoryApi.js`            | Import from `@/[fsd]/entities/run-history/lib` (internal, avoids cycle)                                            |
+| `features/toolkits/indexes/ui/index-history/IndexHistory.jsx` | Import UI components and utilities from `@/[fsd]/entities/run-history` (public barrel now safe)                   |
+
+**Build verification:** `npm run build` passed with no errors and no circular dependency warnings.
+
+**Key principle:** API layer (`api/`) must never be exported from the entity's public barrel. It is internal machinery. The public barrel exposes only: `ui/` components, `lib/` utilities, and (if applicable) `model/` domain state — never `api/` or its dependencies.

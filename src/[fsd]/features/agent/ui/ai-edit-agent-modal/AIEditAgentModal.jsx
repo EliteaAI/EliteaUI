@@ -7,8 +7,8 @@ import {
   EditEntityGeneralStep,
   EditEntityInstructionsStep,
   EditEntityModal,
+  resolveEntityType,
 } from '@/[fsd]/entities/edit-entity-with-ai';
-import { resolveEntityType } from '@/[fsd]/entities/edit-entity-with-ai/lib/helpers';
 import { useGenerateAgentDraftMutation } from '@/[fsd]/features/agent/api';
 import { EDIT_STEP_KEYS } from '@/[fsd]/features/agent/lib/constants';
 import { AgentAIEditionStepsHelpers } from '@/[fsd]/features/agent/lib/helpers';

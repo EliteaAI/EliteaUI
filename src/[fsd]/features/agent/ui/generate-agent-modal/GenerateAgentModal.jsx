@@ -3,7 +3,7 @@ import { memo, useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { GenerateEntityModal } from '@/[fsd]/entities/generate-entity-with-ai';
-import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
+import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
 import { useLazySkillDetailsQuery, useUpdateSkillRelationMutation } from '@/[fsd]/features/skill';
 import { generateLLMSettings } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
 import {
