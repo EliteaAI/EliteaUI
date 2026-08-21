@@ -122,6 +122,7 @@ const DeleteEntityModal = memo(props => {
       title={title}
       titleTestId="delete-confirm-title"
       titleIconTestId="delete-confirm-title-icon"
+      closeButtonTestId="delete-confirm-close-button"
       content={customContent ?? contentNode}
       actions={actions ?? actionsNode}
       onClose={e => resetButtonState(e, onClose)}
