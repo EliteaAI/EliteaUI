@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 
 import { Box } from '@mui/material';
 
-import PublishWizardModal from '@/[fsd]/entities/version/ui/PublishWizardModal';
+import { PublishWizardModal } from '@/[fsd]/entities/version';
 import PublishIcon from '@/assets/publish-version.svg?react';
 
 import { usePublishSkill } from './usePublishSkill.hooks';

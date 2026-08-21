@@ -6,7 +6,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
-import UnpublishConfirmModal from '@/[fsd]/entities/version/ui/UnpublishConfirmModal';
+import { UnpublishConfirmModal } from '@/[fsd]/entities/version';
 import { useUnpublishSkillMutation } from '@/[fsd]/features/skill/api';
 import { CollectionStatus, PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';
 import UnpublishIcon from '@/components/Icons/UnpublishIcon';

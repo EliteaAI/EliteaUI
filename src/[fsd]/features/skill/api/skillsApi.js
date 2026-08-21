@@ -1,4 +1,4 @@
-import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
+import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
 import { RtkTagsConstants } from '@/[fsd]/shared/lib/constants';
 import { getFilenameFromContentDisposition } from '@/[fsd]/shared/lib/helpers';
 import { eliteaApi } from '@/api/eliteaApi.js';
