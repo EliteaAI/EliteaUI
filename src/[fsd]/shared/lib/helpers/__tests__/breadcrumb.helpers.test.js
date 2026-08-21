@@ -133,6 +133,16 @@ describe('applyBreadcrumbLabels', () => {
     ]);
   });
 
+  it('labels the create-index crumb as New Index', () => {
+    const trail = resolveBreadcrumbTrail('/toolkits/all/44/create-index');
+
+    expect(labelsOf(applyBreadcrumbLabels(trail, 'Confluence'))).toEqual([
+      'Toolkits & Indexes',
+      'Confluence',
+      'New Index',
+    ]);
+  });
+
   it('keeps an unlabelled crumb only while it is the current one', () => {
     const unlabelled = { key: '/x', entry: { fallbackLabel: 'Index' }, params: {}, to: '/x' };
 

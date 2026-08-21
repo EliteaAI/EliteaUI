@@ -25,7 +25,7 @@ export const BREADCRUMB_REGISTRY = {
   },
   [RouteDefinitions.ToolkitIndexNew]: {
     parent: RouteDefinitions.ToolkitDetail,
-    label: 'New index',
+    label: 'New Index',
   },
   [RouteDefinitions.ToolkitIndex]: {
     parent: RouteDefinitions.ToolkitDetail,
