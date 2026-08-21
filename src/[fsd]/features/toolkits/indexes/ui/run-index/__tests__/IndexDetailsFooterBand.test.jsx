@@ -34,7 +34,7 @@ const action = () => screen.getByTestId('index-details-footer-action');
 describe('IndexDetailsFooterBand', () => {
   it('offers Reindex when nothing is running', () => {
     const onReindex = vi.fn();
-    renderFooter({ isIndexing: false, onReindex });
+    renderFooter({ isRunActive: false, onReindex });
 
     expect(action()).toHaveTextContent('Reindex');
     fireEvent.click(action());
@@ -42,14 +42,14 @@ describe('IndexDetailsFooterBand', () => {
   });
 
   it('disables Reindex while a run is being set up', () => {
-    renderFooter({ isIndexing: false, reindexDisabled: true });
+    renderFooter({ isRunActive: false, reindexDisabled: true });
 
     expect(action()).toBeDisabled();
   });
 
   it('offers Stop while indexing', () => {
     const onStop = vi.fn();
-    renderFooter({ isIndexing: true, canStopIndexing: true, onStop });
+    renderFooter({ isRunActive: true, canStopIndexing: true, onStop });
 
     expect(action()).toHaveTextContent('Stop');
     fireEvent.click(action());
@@ -57,14 +57,14 @@ describe('IndexDetailsFooterBand', () => {
   });
 
   it('keeps Stop unusable until the task id arrives, then while stopping', () => {
-    const { rerender } = renderFooter({ isIndexing: true, canStopIndexing: false });
+    const { rerender } = renderFooter({ isRunActive: true, canStopIndexing: false });
     expect(action()).toHaveTextContent('Starting...');
     expect(action()).toBeDisabled();
 
     rerender(
       <ThemeProvider theme={theme}>
         <IndexDetailsFooterBand
-          isIndexing
+          isRunActive
           canStopIndexing
           isStoppingIndexing
         />

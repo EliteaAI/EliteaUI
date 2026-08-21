@@ -42,5 +42,13 @@ describe('IndexActivityPanel', () => {
 
     expect(screen.getByTestId('index-activity-empty-state')).toBeInTheDocument();
     expect(screen.queryByTestId('run-index-results-panel')).not.toBeInTheDocument();
+    expect(screen.getByText('No indexing activity')).toBeInTheDocument();
+  });
+
+  it('lets a banner above own the heading', () => {
+    renderPanel({ hasActivity: false, statusShownAbove: true });
+
+    expect(screen.getByTestId('index-activity-empty-state')).toBeInTheDocument();
+    expect(screen.queryByText('No indexing activity')).not.toBeInTheDocument();
   });
 });

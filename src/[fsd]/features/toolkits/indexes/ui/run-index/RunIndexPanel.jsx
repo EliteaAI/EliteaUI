@@ -566,7 +566,7 @@ const RunIndexPanel = memo(props => {
             )}
           </Box>
           <IndexDetailsFooterBand
-            isIndexing={runIsLive || isAwaitingTaskStart}
+            isRunActive={runIsLive || isAwaitingTaskStart}
             isStoppingIndexing={isStoppingIndexing}
             canStopIndexing={canStopIndexing}
             onStop={onCancelIndexing}

@@ -10,7 +10,7 @@ const { PANEL_FOOTER_HEIGHT } = ToolkitLayoutConstants;
 
 const IndexDetailsFooterBand = memo(props => {
   const {
-    isIndexing,
+    isRunActive,
     isStoppingIndexing,
     canStopIndexing = true,
     onStop,
@@ -21,7 +21,7 @@ const IndexDetailsFooterBand = memo(props => {
 
   return (
     <Box sx={styles.root}>
-      {isIndexing ? (
+      {isRunActive ? (
         <Button.BaseBtn
           data-testid="index-details-footer-action"
           variant={Button.BUTTON_VARIANTS.alarm}
