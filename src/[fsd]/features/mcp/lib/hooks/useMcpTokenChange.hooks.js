@@ -19,6 +19,7 @@ export const useMcpTokenChange = serverUrlOrOptions => {
 
   // Get the storage key based on serverUrl or toolkitType
   const storageKey = McpAuthHelpers.getStorageKey({ serverUrl, toolkitType });
+  const logoutMarkerStorageKey = McpAuthHelpers.getLogoutMarkerStorageKey(storageKey);
 
   const [isLoggedIn, setIsLoggedIn] = useState(() =>
     storageKey ? McpAuthHelpers.getAccessToken(serverUrl, toolkitType) !== null : false,
@@ -47,7 +48,7 @@ export const useMcpTokenChange = serverUrlOrOptions => {
     };
 
     const handleCrossTabLogout = event => {
-      if (event.key === McpAuthConstants.MCP_LOGOUT_SYNC_STORAGE_KEY) {
+      if (event.key === logoutMarkerStorageKey && event.newValue !== null) {
         refreshLoginStatus();
       }
     };
@@ -60,7 +61,7 @@ export const useMcpTokenChange = serverUrlOrOptions => {
       window.removeEventListener(McpAuthConstants.MCP_TOKEN_CHANGE_EVENT, handleTokenChange);
       window.removeEventListener('storage', handleCrossTabLogout);
     };
-  }, [storageKey, refreshLoginStatus]);
+  }, [storageKey, logoutMarkerStorageKey, refreshLoginStatus]);
 
   return { isLoggedIn, refreshLoginStatus };
 };

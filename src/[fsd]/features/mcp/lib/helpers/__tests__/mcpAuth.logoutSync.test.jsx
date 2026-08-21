@@ -7,6 +7,7 @@ vi.mock('@/[fsd]/features/mcp/lib/helpers/mcpAuthFlow.helpers', () => ({
 }));
 
 const TOKEN_KEY = 'cfg-1:https://login.microsoftonline.com/tenant';
+const SECOND_TOKEN_KEY = 'cfg-2:https://login.microsoftonline.com/tenant';
 const originalWindow = globalThis.window;
 const originalLocalStorage = globalThis.localStorage;
 const originalCustomEvent = globalThis.CustomEvent;
@@ -17,6 +18,7 @@ const buildStorage = () => {
   return {
     clear: () => values.clear(),
     getItem: key => (values.has(key) ? values.get(key) : null),
+    removeItem: key => values.delete(key),
     setItem: (key, value) => values.set(key, String(value)),
   };
 };
@@ -49,23 +51,21 @@ afterAll(() => {
 
 afterEach(() => vi.restoreAllMocks());
 
-const storeToken = ({ accessToken = 'stale-token', issuedAt = 100 } = {}) => {
-  window.sessionStorage.setItem(
-    McpAuthConstants.MC_TOKENS_STORAGE_KEY,
-    JSON.stringify({
-      [TOKEN_KEY]: {
-        access_token: accessToken,
-        issued_at: issuedAt,
-      },
-    }),
-  );
+const storeTokens = tokens => {
+  window.sessionStorage.setItem(McpAuthConstants.MC_TOKENS_STORAGE_KEY, JSON.stringify(tokens));
 };
 
-const storeLogoutMarker = loggedOutAt => {
-  window.localStorage.setItem(
-    McpAuthConstants.MCP_LOGOUT_SYNC_STORAGE_KEY,
-    JSON.stringify({ [TOKEN_KEY]: loggedOutAt }),
-  );
+const storeToken = ({ accessToken = 'stale-token', issuedAt = 100 } = {}) => {
+  storeTokens({
+    [TOKEN_KEY]: {
+      access_token: accessToken,
+      issued_at: issuedAt,
+    },
+  });
+};
+
+const storeLogoutMarker = (loggedOutAt, tokenKey = TOKEN_KEY) => {
+  window.localStorage.setItem(McpAuthHelpers.getLogoutMarkerStorageKey(tokenKey), String(loggedOutAt));
 };
 
 describe('MCP cross-tab logout synchronization', () => {
@@ -80,9 +80,7 @@ describe('MCP cross-tab logout synchronization', () => {
 
     expect(McpAuthHelpers.getAccessToken(TOKEN_KEY)).toBeNull();
     expect(McpAuthHelpers.getAllTokens()).toEqual({});
-    expect(JSON.parse(window.sessionStorage.getItem(McpAuthConstants.MC_TOKENS_STORAGE_KEY))).toEqual(
-      {},
-    );
+    expect(JSON.parse(window.sessionStorage.getItem(McpAuthConstants.MC_TOKENS_STORAGE_KEY))).toEqual({});
   });
 
   it('keeps a token obtained after the most recent logout', () => {
@@ -106,16 +104,31 @@ describe('MCP cross-tab logout synchronization', () => {
     storeToken({ issuedAt: 100 });
     McpAuthHelpers.logout(TOKEN_KEY);
 
-    const markers = JSON.parse(
-      window.localStorage.getItem(McpAuthConstants.MCP_LOGOUT_SYNC_STORAGE_KEY),
-    );
-    expect(markers[TOKEN_KEY]).toBeTypeOf('number');
+    const marker = Number(window.localStorage.getItem(McpAuthHelpers.getLogoutMarkerStorageKey(TOKEN_KEY)));
+    expect(marker).toBeGreaterThan(0);
     expect(McpAuthHelpers.getAccessToken(TOKEN_KEY)).toBeNull();
   });
 
-  it('ignores a malformed cross-tab marker payload', () => {
+  it('keeps markers for concurrent logouts of different credentials independent', () => {
+    storeTokens({
+      [TOKEN_KEY]: { access_token: 'first-token', issued_at: 100 },
+      [SECOND_TOKEN_KEY]: { access_token: 'second-token', issued_at: 100 },
+    });
+
+    McpAuthHelpers.logout(TOKEN_KEY);
+    McpAuthHelpers.logout(SECOND_TOKEN_KEY);
+
+    expect(
+      Number(window.localStorage.getItem(McpAuthHelpers.getLogoutMarkerStorageKey(TOKEN_KEY))),
+    ).toBeGreaterThan(0);
+    expect(
+      Number(window.localStorage.getItem(McpAuthHelpers.getLogoutMarkerStorageKey(SECOND_TOKEN_KEY))),
+    ).toBeGreaterThan(0);
+  });
+
+  it('ignores a malformed cross-tab marker value', () => {
     storeToken({ issuedAt: 100 });
-    window.localStorage.setItem(McpAuthConstants.MCP_LOGOUT_SYNC_STORAGE_KEY, 'null');
+    window.localStorage.setItem(McpAuthHelpers.getLogoutMarkerStorageKey(TOKEN_KEY), 'invalid');
 
     expect(McpAuthHelpers.getAccessToken(TOKEN_KEY)).toBe('stale-token');
   });
