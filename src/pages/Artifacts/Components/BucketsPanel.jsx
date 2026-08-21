@@ -141,7 +141,10 @@ const BucketsPanel = memo(props => {
         </Box>
       )}
 
-      <Box sx={styles.bucketListOuterContainer}>
+      <Box
+        data-testid="artifacts-buckets-scroll-container"
+        sx={styles.bucketListOuterContainer}
+      >
         {isLoadingBuckets &&
           Array.from({ length: 8 }).map((_, index) => (
             <Skeleton
