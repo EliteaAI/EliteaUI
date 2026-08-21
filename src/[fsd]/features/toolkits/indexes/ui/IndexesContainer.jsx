@@ -1,55 +1,29 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useSelector } from 'react-redux';
-import { useNavigate, useParams } from 'react-router-dom';
-
 import { Box, Typography } from '@mui/material';
 
 import { useDeleteIndexItemMutation, useGetIndexScheduleQuery } from '@/[fsd]/features/toolkits/indexes/api';
 import { IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
-import { useIndexesListPolling } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
-import { selectIndexesList } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
+import {
+  useIndexNavigation,
+  useIndexesListPolling,
+  useToolkitIndexes,
+} from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import { HeadlessReindexRunner, IndexesList } from '@/[fsd]/features/toolkits/indexes/ui';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { Modal } from '@/[fsd]/shared/ui';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
-import RouteDefinitions, { getBasename } from '@/routes';
 
 const IndexesContainer = memo(props => {
-  const { toolkitId } = props;
+  const { toolkitId, canIndex = true } = props;
 
   const { toastSuccess, toastError } = useToast();
-
-  const navigate = useNavigate();
-  const { tab } = useParams();
 
   const projectId = useSelectedProjectId();
   const styles = indexesContainerStyles();
 
-  const buildIndexPath = useCallback(
-    (template, indexName) => {
-      let path = template.replace(':tab', tab ?? 'all').replace(':toolkitId', String(toolkitId ?? ''));
-      if (indexName !== undefined) {
-        path = path.replace(':indexName', encodeURIComponent(indexName));
-      }
-      return path;
-    },
-    [tab, toolkitId],
-  );
-
-  const handleAddIndexNav = useCallback(() => {
-    navigate(buildIndexPath(RouteDefinitions.ToolkitIndexNew));
-  }, [navigate, buildIndexPath]);
-
-  const handleIndexCardClick = useCallback(
-    index => {
-      const name = index?.metadata?.collection;
-      if (!name) return;
-      navigate(buildIndexPath(RouteDefinitions.ToolkitIndex, name));
-    },
-    [navigate, buildIndexPath],
-  );
+  const { goToCreateIndex, goToIndex, openIndexInNewTab } = useIndexNavigation(toolkitId);
 
   useGetIndexScheduleQuery(
     { projectId, toolkitId },
@@ -72,7 +46,7 @@ const IndexesContainer = memo(props => {
     forcePoll: Boolean(reindexRunning),
   });
 
-  const { data: indexesList, isLoading, isFetching } = useSelector(selectIndexesList);
+  const { indexes: indexesList, isLoading } = useToolkitIndexes(toolkitId);
 
   // A hard-killed run never emits the terminal trace onDone needs, so the stub (and
   // its isReindexing lock) would pin the cards all session. Expire it only on a
@@ -147,18 +121,6 @@ const IndexesContainer = memo(props => {
     setReindexConfirmOpen(true);
   }, []);
 
-  const handleOpenIndexInNewTab = useCallback(
-    index => {
-      const name = index?.metadata?.collection;
-      if (!name) return;
-      const baseUrl = `${window.location.protocol}//${window.location.host}`;
-      const basename = getBasename();
-      const url = `${baseUrl}${basename}/${projectId}${buildIndexPath(RouteDefinitions.ToolkitIndex, name)}`;
-      window.open(url, '_blank', 'noopener,noreferrer');
-    },
-    [buildIndexPath, projectId],
-  );
-
   const cancelReindexConfirm = useCallback(() => {
     setReindexConfirmOpen(false);
     setReindexTarget(null);
@@ -204,14 +166,15 @@ const IndexesContainer = memo(props => {
   return (
     <Box sx={styles.wrapper}>
       <IndexesList
-        handleAddIndex={handleAddIndexNav}
+        canIndex={canIndex}
+        handleAddIndex={goToCreateIndex}
         indexesList={indexesWithStub}
-        onIndexClick={handleIndexCardClick}
+        onIndexClick={goToIndex}
         currentIndex={null}
-        loading={isLoading || isFetching}
-        onCardReindex={handleReindexFromCard}
+        loading={isLoading}
+        onCardReindex={canIndex ? handleReindexFromCard : undefined}
         onCardDelete={handleDeleteFromCard}
-        onCardOpenNewTab={handleOpenIndexInNewTab}
+        onCardOpenNewTab={openIndexInNewTab}
         reindexingId={reindexRunning?.id}
       />
       {deleteTarget && (

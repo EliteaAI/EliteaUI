@@ -1,0 +1,73 @@
+import { memo } from 'react';
+
+import { useFormikContext } from 'formik';
+
+import { Box, Typography } from '@mui/material';
+
+import { useToolkitToolOptions } from '@/[fsd]/features/toolkits/lib/hooks';
+import { isMcpToolkitType } from '@/[fsd]/shared/lib/helpers';
+import { Select } from '@/[fsd]/shared/ui/';
+import TestIcon from '@/assets/test.svg?react';
+
+const ToolkitTestEmptyState = memo(props => {
+  const { toolkitId, onChangeTool, sx = {} } = props;
+  const { values } = useFormikContext();
+  const { allToolsOptions } = useToolkitToolOptions({ toolkitId });
+  const styles = toolkitTestEmptyStateStyles();
+
+  return (
+    <Box sx={[styles.root, sx]}>
+      <TestIcon
+        width="2rem"
+        height="2rem"
+      />
+      <Box sx={styles.textContainer}>
+        <Typography
+          variant="headingSmall"
+          color="text.secondary"
+        >
+          {isMcpToolkitType(values?.type) ? 'Test MCP' : 'Test toolkit'}
+        </Typography>
+        <Typography
+          variant="bodyMedium"
+          color="text.primary"
+        >
+          Choose a tool from the list to configure parameters and run the test.
+        </Typography>
+      </Box>
+      <Select.PopoverSelect
+        data-testid="toolkit-test-empty-tool-select"
+        options={allToolsOptions}
+        onValueChange={onChangeTool}
+        label="Select Tool"
+        placeholder="Search tools..."
+        emptyPlaceholder="No tools found"
+      />
+    </Box>
+  );
+});
+
+ToolkitTestEmptyState.displayName = 'ToolkitTestEmptyState';
+
+export default ToolkitTestEmptyState;
+
+/** @type {MuiSx} */
+const toolkitTestEmptyStateStyles = () => ({
+  root: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    flex: 1,
+    gap: '1.5rem',
+    padding: '3.75rem 0 0 0',
+    textAlign: 'center',
+    color: ({ palette }) => palette.icon.fill.disabled,
+  },
+  textContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '0.5rem',
+    maxWidth: '20.5rem',
+  },
+});

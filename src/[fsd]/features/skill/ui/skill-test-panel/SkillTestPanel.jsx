@@ -14,6 +14,7 @@ import {
   useBudgetWarning,
   useReadAloud,
 } from '@/[fsd]/features/chat';
+import NewChatInput from '@/[fsd]/features/chat/ui/chat-input/NewChatInput';
 import { LLMSettingsConstants } from '@/[fsd]/shared/lib/constants';
 import { useListModelsQuery } from '@/api/configurations.js';
 import { useGenerateContentStreamingMutation, useStopLlmTaskMutation } from '@/api/llm';
@@ -27,7 +28,6 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { useManualSocket } from '@/hooks/useSocket';
 import useToast from '@/hooks/useToast';
 import { ContentContainer } from '@/pages/Common/Components/StyledComponents';
-import NewChatInput from '@/pages/NewChat/NewChatInput';
 
 const { DEFAULT_MAX_TOKENS, DEFAULT_TEMPERATURE } = LLMSettingsConstants;
 

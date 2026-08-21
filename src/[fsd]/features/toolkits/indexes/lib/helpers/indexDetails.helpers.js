@@ -4,6 +4,7 @@ import {
   BannerMessageMap,
   BannerSeverity,
   BannerTitleMap,
+  INDEX_SEARCH_TOOL_OPTIONS,
   IndexStatuses,
   RUNNABLE_INDEX_STATUSES,
 } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
@@ -76,3 +77,38 @@ export const bannerVariant = (isIndexing, state, reindexStats, error) => {
     message: BannerMessageMap[BannerSeverity.info],
   };
 };
+
+export const indexSearchToolOptions = selectedTools =>
+  INDEX_SEARCH_TOOL_OPTIONS.filter(option => (selectedTools || []).includes(option.value));
+
+/**
+ * Preserves the rule the embedded search enforced by only ever mounting itself for a success banner,
+ * and doubles as the tooltip for every disabled search affordance so they never explain themselves
+ * differently.
+ * @param {string} state - `metadata.state` of the index row
+ * @param {string[]} selectedTools - the toolkit's `settings.selected_tools`
+ * @returns {string | null} the reason, or null when the index can be searched
+ */
+export const indexSearchBlockedReason = (state, selectedTools) => {
+  if (state === IndexStatuses.progress) return 'Unavailable while indexing is in progress';
+  if (!RUNNABLE_INDEX_STATUSES.includes(state)) return 'Index is not ready to search yet';
+  if (!indexSearchToolOptions(selectedTools).length) return 'No search tools are enabled for this toolkit';
+  return null;
+};
+
+/**
+ * A run the backend has marked stale while it still claims to be in progress: the process died
+ * without ever reporting a terminal state, so nothing else will ever update it.
+ * @param {object} index - Index row as returned by the indexes list
+ * @returns {boolean}
+ */
+export const isAbandonedRun = index =>
+  Boolean(index?.stale) && index?.metadata?.state === IndexStatuses.progress;
+
+/**
+ * A run that may still be executing: it is stoppable, or the backend has not marked it stale.
+ * @param {{isIndexing: boolean, canStopIndexing: boolean, isStale: boolean}} runState
+ * @returns {boolean}
+ */
+export const hasLiveRun = ({ isIndexing, canStopIndexing, isStale }) =>
+  Boolean(isIndexing) && (Boolean(canStopIndexing) || !isStale);

@@ -7,13 +7,17 @@ import { Box, Typography } from '@mui/material';
 
 import { NewConversationHelpers } from '@/[fsd]/features/chat/lib/helpers';
 import {
+  useBudgetWarning,
   useChatSkillMention,
   useNewStartConversationInputKeyDownHandler,
   useSlashMention,
 } from '@/[fsd]/features/chat/lib/hooks';
 import { getChatParticipantUniqueId } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { useFetchParticipantDetails } from '@/[fsd]/features/chat/participants/lib/hooks';
-import { SlashSuggestionList } from '@/[fsd]/features/chat/ui';
+import { BudgetWarningBanner, SlashSuggestionList } from '@/[fsd]/features/chat/ui';
+import NewChatInput from '@/[fsd]/features/chat/ui/chat-input/NewChatInput';
+import RecommendationList from '@/[fsd]/features/chat/ui/recommendations/RecommendationList';
+import SearchResultList from '@/[fsd]/features/chat/ui/recommendations/SearchResultList';
 import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { MentionSkillList } from '@/[fsd]/features/skill/ui';
 import { InternalToolsConstants, MentionConstants } from '@/[fsd]/shared/lib/constants';
@@ -50,10 +54,6 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useSocket from '@/hooks/useSocket';
 import useToast from '@/hooks/useToast';
 import { actions } from '@/slices/chat';
-
-import NewChatInput from './NewChatInput';
-import RecommendationList from './Recommendations/RecommendationList';
-import SearchResultList from './Recommendations/SearchResultList';
 
 const NewConversationView = forwardRef(
   (
@@ -230,6 +230,8 @@ const NewConversationView = forwardRef(
     });
 
     const isSkillPhaseActive = skillPhase !== MentionConstants.MentionPhase.Idle;
+
+    const budgetWarning = useBudgetWarning({ projectId: selectedProjectId });
 
     const onPredictStream = useCallback(
       (question, specifiedParticipant, conversation) => {
@@ -929,6 +931,13 @@ const NewConversationView = forwardRef(
             />
           )}
           <Box sx={styles.inputContainer}>
+            {budgetWarning.shouldShow && (
+              <BudgetWarningBanner
+                scope={budgetWarning.scope}
+                percentUsed={budgetWarning.percentUsed}
+                onDismiss={budgetWarning.dismiss}
+              />
+            )}
             <NewChatInput
               fromTheChat
               placeholder="Type your message..."
@@ -1077,6 +1086,7 @@ const newConversationViewStyles = () => ({
   }),
   inputContainer: {
     display: 'flex',
+    flexDirection: 'column',
     minHeight: '6.25rem',
     width: '100%',
     boxSizing: 'border-box',

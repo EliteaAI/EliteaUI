@@ -281,10 +281,16 @@ const AnalyticsAgents = memo(props => {
             <Typography sx={[styles.tableCell, { flex: 3 }]}>Agent / Pipeline</Typography>
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Runs</Typography>
             {!isPersonalProject && <Typography sx={[styles.tableCell, { flex: 1 }]}>Users</Typography>}
-            <Typography sx={[styles.tableCell, styles.flexOne]}>Cost</Typography>
+            <Typography sx={[styles.tableCell, styles.flexOne]}>Total Cost</Typography>
+            <Typography sx={[styles.tableCell, styles.flexOne]}>Input Token Cost</Typography>
+            <Typography sx={[styles.tableCell, styles.flexOne]}>Output Token Cost</Typography>
             <Typography sx={[styles.tableCell, styles.flexOne]}>Total Tokens</Typography>
             <Typography sx={[styles.tableCell, styles.flexOne]}>Input Tokens</Typography>
             <Typography sx={[styles.tableCell, styles.flexOne]}>Output Tokens</Typography>
+            <Typography sx={[styles.tableCell, styles.flexOne]}>Cache Read Tokens</Typography>
+            <Typography sx={[styles.tableCell, styles.flexOne]}>Cache Write Tokens</Typography>
+            <Typography sx={[styles.tableCell, styles.flexOne]}>Cache Read Cost</Typography>
+            <Typography sx={[styles.tableCell, styles.flexOne]}>Cache Write Cost</Typography>
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Avg Latency</Typography>
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Errors</Typography>
           </Box>
@@ -316,8 +322,14 @@ const AnalyticsAgents = memo(props => {
                 {!isPersonalProject && (
                   <Typography sx={[styles.tableCellValue, { flex: 1 }]}>{a.users}</Typography>
                 )}
-                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
+                <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
                   {AnalyticCommonHelpers.fmtCost(a.llm_cost)}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
+                  {AnalyticCommonHelpers.fmtCost(a.input_cost)}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
+                  {AnalyticCommonHelpers.fmtCost(a.output_cost)}
                 </Typography>
                 <Typography sx={[styles.tableCellValue, styles.flexOne]}>
                   {AnalyticCommonHelpers.fmtNum(a.total_tokens)}
@@ -327,6 +339,18 @@ const AnalyticsAgents = memo(props => {
                 </Typography>
                 <Typography sx={[styles.tableCellValue, styles.flexOne]}>
                   {AnalyticCommonHelpers.fmtNum(a.output_tokens)}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
+                  {AnalyticCommonHelpers.fmtNum(a.cache_read_tokens)}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
+                  {AnalyticCommonHelpers.fmtNum(a.cache_creation_tokens)}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
+                  {AnalyticCommonHelpers.fmtCost(a.cache_read_cost)}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
+                  {AnalyticCommonHelpers.fmtCost(a.cache_creation_cost)}
                 </Typography>
                 <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
                   {AnalyticCommonHelpers.fmtDuration(a.avg_duration_ms)}

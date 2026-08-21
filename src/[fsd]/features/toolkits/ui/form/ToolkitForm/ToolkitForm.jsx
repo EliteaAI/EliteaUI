@@ -7,9 +7,6 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { Box, CircularProgress, Tooltip, Typography } from '@mui/material';
 
 import { McpAuthHelpers, McpPatBanner } from '@/[fsd]/features/mcp';
-import { useIndexesSectionSummary } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
-import IndexesContainer from '@/[fsd]/features/toolkits/indexes/ui/IndexesContainer.jsx';
-import RunIndexBanner from '@/[fsd]/features/toolkits/indexes/ui/RunIndexBanner.jsx';
 import { ToolkitFormConstants, ToolkitLayoutConstants } from '@/[fsd]/features/toolkits/lib/constants';
 import { ToolComponentHelpers, ToolkitFormHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import {
@@ -19,13 +16,11 @@ import {
 } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitForm as GeneralToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { TourTargetConstants } from '@/[fsd]/shared/lib/constants';
-import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion.jsx';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import ViewRunHistoryButton from '@/[fsd]/shared/ui/button/ViewRunHistoryButton.jsx';
 import { FormViewToggle } from '@/[fsd]/shared/ui/tab-group-button';
 import { useGetConfigurationsListQuery } from '@/api/configurations.js';
 import { useToolkitAvailableToolsQuery, useValidateToolkitQuery } from '@/api/toolkits.js';
-import InfoIcon from '@/assets/info.svg?react';
 import TestIcon from '@/assets/test.svg?react';
 import { ToolkitViewOptions } from '@/common/constants';
 import { convertToolkitSchema } from '@/common/toolkitSchemaUtils';
@@ -64,17 +59,13 @@ export const ToolkitForm = memo(props => {
     onSyntaxError,
     validationTrigger,
     revertCredentialsRef,
-    shouldHideIndexes = true,
-    indexingUnavailableReason = '',
-    toolkitId,
+    hasSidePanel = false,
     handleShowHistory,
     handleShowTest,
     isTestDisabled = false,
   } = props;
   const hasSetViewManually = useRef(false);
   const [view, setView] = useState(ToolkitViewOptions.Form);
-  const indexesSummary = useIndexesSectionSummary(toolkitId);
-  const { isExpanded: isIndexesExpanded, toggleExpanded: toggleIndexes } = useCollapsedSection();
   const configurationSection = useCollapsedSection();
   const toolsSection = useCollapsedSection();
   const { configurationsAsSchema } = useGetCurrentConfigurationAsSchemas();
@@ -512,10 +503,15 @@ export const ToolkitForm = memo(props => {
 
   const isViewTogglePresent =
     editToolDetail.type !== ToolTypes.custom.value && !!effectiveToolSchema && isViewToggleVisible;
+  const testEntityLabel = isMCP ? 'Test MCP' : 'Test toolkit';
+
   const isDetailsActionBar = !!handleShowHistory;
   const isActionBarPresent = isDetailsActionBar || isViewTogglePresent;
 
-  const styles = toolkitFormStyles(isDetailsActionBar);
+  const styles = useMemo(
+    () => toolkitFormStyles(isDetailsActionBar, hasSidePanel),
+    [isDetailsActionBar, hasSidePanel],
+  );
 
   return isFetching || editToolDetail?.isLoadingConfigurations ? (
     <Box sx={styles.loadingContainer}>
@@ -544,15 +540,16 @@ export const ToolkitForm = memo(props => {
             <Box sx={styles.actionBarControls}>
               {isDetailsActionBar && handleShowTest && (
                 <Tooltip
-                  title={isTestDisabled ? 'Save your changes to test' : 'Test toolkit'}
+                  title={isTestDisabled ? 'Save your changes to test' : testEntityLabel}
                   placement="top"
                 >
                   <Box component="span">
                     <BaseBtn
                       variant={BUTTON_VARIANTS.iconLabel}
                       size="small"
-                      aria-label="test toolkit"
+                      aria-label={testEntityLabel}
                       data-testid="toolkit-test-button"
+                      data-tour={TourTargetConstants.SHARED_TOUR_TARGET_IDS.testSettings}
                       disabled={isTestDisabled}
                       onClick={handleShowTest}
                       startIcon={<TestIcon />}
@@ -627,52 +624,6 @@ export const ToolkitForm = memo(props => {
           excludedFields={toolType !== 'mcp' ? [] : ['discovery_mode', 'discovery_interval']}
           onCredentialReload={onCredentialReload}
         />
-        {!shouldHideIndexes && (
-          <BasicAccordion
-            card
-            data-testid="toolkit-indexes-accordion"
-            style={styles.indexesAccordionWrapper}
-            accordionSX={styles.indexesAccordion}
-            expanded={isIndexesExpanded}
-            onChange={toggleIndexes}
-            items={[
-              {
-                title: 'Indexes',
-                testId: 'toolkit-indexes-accordion-summary',
-                headerContent: (
-                  <>
-                    <GeneralToolkitForm.SectionStatusIcon
-                      status={indexesSummary.status?.status}
-                      message={indexesSummary.status?.message}
-                      testId="toolkit-indexes-status-icon"
-                    />
-                    <Typography
-                      variant="bodySmall"
-                      color="text.primary"
-                      aria-label={indexesSummary.label}
-                      data-testid="toolkit-indexes-count"
-                    >
-                      {indexesSummary.count}
-                    </Typography>
-                  </>
-                ),
-                content: indexingUnavailableReason ? (
-                  <RunIndexBanner
-                    banner={{
-                      severity: 'info',
-                      label: 'Indexing is not available for now',
-                      message: 'Enable the “Index data” tool to activate indexing and create indexes.',
-                    }}
-                    CustomIcon={() => <InfoIcon />}
-                    sx={styles.banner}
-                  />
-                ) : (
-                  <IndexesContainer toolkitId={toolkitId} />
-                ),
-              },
-            ]}
-          />
-        )}
       </Box>
     </Box>
   );
@@ -682,19 +633,18 @@ ToolkitForm.displayName = 'ToolkitForm';
 
 export default ToolkitForm;
 
-const { PANEL_HEADER_HEIGHT } = ToolkitLayoutConstants;
+const { PANEL_GUTTER, PANEL_HEADER_HEIGHT } = ToolkitLayoutConstants;
 
-const CONTENT_GUTTER = '1.5rem';
 const CONTENT_WIDTH = '40.1875rem';
+const CONTENT_CAP = `calc(${CONTENT_WIDTH} + 2 * ${PANEL_GUTTER})`;
+
+const formContentColumn = hasSidePanel => ({
+  maxWidth: hasSidePanel ? { lg: 'unset', xs: CONTENT_CAP } : CONTENT_CAP,
+  margin: hasSidePanel ? { lg: 'unset', xs: '0 auto' } : '0 auto',
+});
 
 /** @type {MuiSx} */
-const centeredContentColumn = {
-  maxWidth: { lg: 'unset', xs: `calc(${CONTENT_WIDTH} + 2 * ${CONTENT_GUTTER})` },
-  margin: { lg: 'unset', xs: '0 auto' },
-};
-
-/** @type {MuiSx} */
-const toolkitFormStyles = isDetailsActionBar => ({
+const toolkitFormStyles = (isDetailsActionBar, hasSidePanel) => ({
   root: isDetailsActionBar
     ? { display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, overflow: 'hidden' }
     : {},
@@ -714,7 +664,12 @@ const toolkitFormStyles = isDetailsActionBar => ({
     gap: '0.5rem',
     minHeight: '2rem',
     ...(isDetailsActionBar
-      ? { height: '100%', padding: `0 ${CONTENT_GUTTER}`, ...centeredContentColumn }
+      ? {
+          height: '100%',
+          width: '100%',
+          padding: `0 ${PANEL_GUTTER}`,
+          ...formContentColumn(hasSidePanel),
+        }
       : {}),
   },
   content: isDetailsActionBar
@@ -723,8 +678,8 @@ const toolkitFormStyles = isDetailsActionBar => ({
         minHeight: 0,
         overflowY: 'auto',
         width: '100%',
-        padding: `1rem ${CONTENT_GUTTER}`,
-        ...centeredContentColumn,
+        padding: `1rem ${PANEL_GUTTER}`,
+        ...formContentColumn(hasSidePanel),
       }
     : {},
   toolkitIdentity: {
@@ -742,21 +697,11 @@ const toolkitFormStyles = isDetailsActionBar => ({
     gap: '0.5rem',
     flexShrink: 0,
   },
-  banner: {
-    padding: '0rem !important',
-  },
   loadingContainer: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',
     height: '100%',
-  },
-  indexesAccordionWrapper: {
-    width: '100%',
-    marginTop: '1rem',
-  },
-  indexesAccordion: {
-    width: '100%',
   },
 });

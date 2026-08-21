@@ -5,7 +5,7 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { Box, Menu, MenuItem, Typography } from '@mui/material';
 
 import StyledCircleProgress from '@/ComponentsLib/CircularProgress';
-import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
+import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
 import { useSkillDetailsQuery } from '@/[fsd]/features/skill/api';
 import { useAttachSkill, useDetachSkill } from '@/[fsd]/features/skill/lib/hooks';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';

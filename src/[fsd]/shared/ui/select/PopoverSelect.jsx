@@ -20,6 +20,7 @@ const PopoverSelect = memo(props => {
     startIcon,
     endIcon,
     buttonSx,
+    disabled = false,
     'data-testid': dataTestId,
   } = props;
 
@@ -70,6 +71,7 @@ const PopoverSelect = memo(props => {
         color={buttonColor}
         endIcon={endIcon}
         startIcon={startIcon}
+        disabled={disabled}
         onClick={handleOpen}
         sx={buttonSx}
       >

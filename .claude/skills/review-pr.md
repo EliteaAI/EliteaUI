@@ -150,12 +150,29 @@ Use the GitHub MCP tools to post a formal review:
    The summary body should be 2-3 sentences max. Mention what looks good if appropriate, then state the main
    concern if any.
 
-### 6. Report to the user
+### 6. Update PR labels
+
+After submitting the review, set the appropriate label on the PR using `mcp__github__issue_write` with
+`method: "update"` and the PR number as `issue_number`. Replace any existing review-status labels with the
+correct one based on the review outcome:
+
+| Review event      | Set label        | Remove labels                                          |
+|-------------------|------------------|--------------------------------------------------------|
+| `APPROVE`         | `ready to merge` | `review in progress`, `need review`, `need updates`    |
+| `REQUEST_CHANGES` | `need updates`   | `review in progress`, `need review`, `ready to merge`  |
+| `COMMENT`         | `need review`    | `review in progress`, `ready to merge`                 |
+
+To do this, read the PR's current labels, remove any review-status labels from the list above, add the new
+one, and pass the full resulting label array. Preserve all other labels (e.g., `do not merge till
+confirmation`) that are not in the review-status set.
+
+### 7. Report to the user
 
 After posting, tell the user:
 
 - The review outcome (approved / commented / requested changes)
 - How many comments were posted
+- The label that was applied
 - The PR URL
 
 ## Writing style for comments

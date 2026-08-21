@@ -2,10 +2,10 @@ import { memo, useEffect, useMemo } from 'react';
 
 import { useSelector } from 'react-redux';
 
+import NewParticipantList from '@/[fsd]/features/chat/ui/recommendations/NewParticipantList';
 import { isMcpToolkit } from '@/[fsd]/shared/lib/helpers';
 import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
 import { useToolkitsDetailsQuery } from '@/api/toolkits';
-import NewParticipantList from '@/pages/NewChat/Recommendations/NewParticipantList';
 
 import ToolList from './ToolList';
 import ToolkitValidator from './ToolkitValidator';

@@ -315,9 +315,13 @@ const MermaidDiagramOutput = memo(props => {
               center: true,
               minZoom: 0.1,
             });
-            panZoomTigerRef.current.resetPan();
-            panZoomTigerRef.current.resetZoom();
-            panZoomTigerRef.current.zoom(1);
+            try {
+              panZoomTigerRef.current.resetPan();
+              panZoomTigerRef.current.resetZoom();
+              panZoomTigerRef.current.zoom(1);
+            } catch {
+              // SVG has no renderable size yet; pan/zoom state will be correct once it renders
+            }
             panZoomTigerRef.current.setBeforePan(() => {
               setHasBeenChanged(true);
             });

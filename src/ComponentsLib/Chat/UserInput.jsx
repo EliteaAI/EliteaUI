@@ -69,7 +69,6 @@ const UserInput = forwardRef((props, ref) => {
       },
       footerContainer = {},
       highlight = {},
-      suggestion = {},
     } = {},
     clearInputAfterSend = true,
     disabledSend,
@@ -147,9 +146,6 @@ const UserInput = forwardRef((props, ref) => {
 
   const { ranges: highlightRanges = [] } = highlight;
   const hasHighlights = highlightRanges.length > 0 && !!inputContent;
-
-  const { text: suggestionText, color: suggestionColor } = suggestion;
-  const hasSuggestion = !!suggestionText && !inputContent;
 
   const styles = userInputStyles(isFocused, isDragOver, isRecording);
 
@@ -412,6 +408,7 @@ const UserInput = forwardRef((props, ref) => {
       data-focused={isFocused}
       sx={styles.gradientBorder}
       data-tour={dataTourTargetId || undefined}
+      {...(isStreaming && isInjectable ? { 'data-testid': 'interjection-composer' } : {})}
     >
       <Tooltip
         title={tooltip?.title}
@@ -442,14 +439,6 @@ const UserInput = forwardRef((props, ref) => {
                 />
               </div>
             )}
-            {hasSuggestion && (
-              <Box
-                ref={mirrorCallbackRef}
-                sx={{ color: suggestionColor, opacity: 0.6 }}
-              >
-                {suggestionText}
-              </Box>
-            )}
             <TextField
               data-testid="chat-input"
               value={inputContent}
@@ -467,7 +456,7 @@ const UserInput = forwardRef((props, ref) => {
               onCompositionEnd={onCompositionEnd}
               onPaste={handlePaste}
               disabled={disabledInput}
-              placeholder={isFocused || hasSuggestion ? '' : input?.placeholder}
+              placeholder={isFocused ? '' : input?.placeholder}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
               sx={styles.textField}
@@ -525,44 +514,49 @@ const UserInput = forwardRef((props, ref) => {
                 )}
               </Box>
             ) : (
-              <Box sx={styles.sendButtonContainer}>
-                {/* Stop stays available while streaming; inject is offered alongside
+              <>
+                <Box sx={styles.sendButtonContainer}>
+                  {/* Stop stays available while streaming; inject is offered alongside
                     it only once the running turn reports that it is listening. */}
-                {isInjectable && (
                   <Tooltip
-                    title="Send to the running agent"
+                    title={stopButton?.tooltip?.title || ''}
                     placement="top"
                   >
                     <Box component="span">
                       <BaseBtn
                         variant="icon"
                         color="secondary"
-                        data-testid="chat-inject-button"
-                        disabled={!question.trim()}
-                        onClick={injectQuestion}
+                        sx={styles.stopButton(stopButton)}
+                        onClick={onStop}
+                        data-testid="chat-stop-generation-button"
                       >
-                        <SendIcon />
+                        <StopIcon style={styles.stopIconStyle} />
                       </BaseBtn>
                     </Box>
                   </Tooltip>
-                )}
-                <Tooltip
-                  title={stopButton?.tooltip?.title || ''}
-                  placement="top"
-                >
-                  <Box component="span">
-                    <BaseBtn
-                      variant="icon"
-                      color="secondary"
-                      sx={styles.stopButton(stopButton)}
-                      onClick={onStop}
-                      data-testid="chat-stop-generation-button"
+                </Box>
+                {isInjectable && (
+                  <Box sx={styles.sendButtonContainer}>
+                    <Tooltip
+                      title="Send to the running agent"
+                      placement="top"
                     >
-                      <StopIcon style={styles.stopIconStyle} />
-                    </BaseBtn>
+                      <Box component="span">
+                        <BaseBtn
+                          variant="icon"
+                          color="secondary"
+                          data-testid="chat-inject-button"
+                          disabled={!question.trim()}
+                          onClick={injectQuestion}
+                          sx={styles.sendButton(sendButton)}
+                        >
+                          <SendIcon sx={styles.sendIcon(sendButton)} />
+                        </BaseBtn>
+                      </Box>
+                    </Tooltip>
                   </Box>
-                </Tooltip>
-              </Box>
+                )}
+              </>
             )}
           </Box>
         </Box>

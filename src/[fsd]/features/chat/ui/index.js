@@ -11,3 +11,4 @@ export { VoiceMiniPlayer } from './voice-mini-player';
 export { VoiceConfigControls, VoiceConfigDialog, VoicePersonalizationSection } from '../voice-config';
 export { VoiceControlButton } from './voice-control-button';
 export { ChatBox, ChatMessageList } from './chat-box';
+export { GeneratedEntityChip } from './chat-created-entity';

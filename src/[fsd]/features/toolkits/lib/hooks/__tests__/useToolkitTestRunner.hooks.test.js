@@ -191,11 +191,3 @@ describe('useToolkitTestRunner tool changes', () => {
     expect(result.current.toolInputVariables).toEqual({ status: 'open' });
   });
 });
-
-describe('useToolkitTestRunner results', () => {
-  it('does not count the welcome message as a result', () => {
-    const { result } = renderRunner();
-
-    expect(result.current.hasResults).toBe(false);
-  });
-});

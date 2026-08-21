@@ -5,7 +5,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Box } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
-import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
+import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
 import { useLazySkillDetailsQuery, useSkillListQuery } from '@/[fsd]/features/skill/api';
 import { useAttachSkill } from '@/[fsd]/features/skill/lib/hooks';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';

@@ -1,4 +1,4 @@
-import RouteDefinitions from '@/routes';
+import RouteDefinitions, { getBasename } from '@/routes';
 
 /**
  * Get the list route for a given page type.
@@ -35,3 +35,13 @@ export const getListRouteByPageType = (pageType, fallbackRoute = null) => {
  */
 export const buildRoute = (pattern, params = {}) =>
   pattern.replace(/:([A-Za-z_]\w*)\??/g, (_, key) => encodeURIComponent(String(params[key] ?? '')));
+
+/**
+ * Build an absolute, shareable URL for a path inside a project workspace, as needed for
+ * `window.open` and copy-link affordances.
+ * @param {string | number} projectId - Project the path belongs to
+ * @param {string} path - Concrete in-app path, e.g. '/toolkits/all/43/index/docs'
+ * @returns {string} Absolute URL including origin and router basename
+ */
+export const buildAbsoluteAppUrl = (projectId, path) =>
+  `${window.location.origin}${getBasename()}/${projectId}${path}`;

@@ -5,7 +5,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Box, Skeleton } from '@mui/material';
 
 import { getPendingHitlMessage } from '@/[fsd]/features/chat/lib/helpers/hitl.helpers.js';
+import { PendingInjectionList } from '@/[fsd]/features/chat/ui/pending-injection';
 import { ScrollableContainer } from '@/[fsd]/shared/ui';
+import HeadingChip, { HEADING_CHIP_VARIANTS } from '@/[fsd]/shared/ui/chip/HeadingChip';
 import { ChatParticipantType, ROLES } from '@/common/constants';
 import { MessageList } from '@/components/Chat/StyledComponents';
 import { actions as chatActions, selectMessageIdToView } from '@/slices/chat';
@@ -17,6 +19,8 @@ const ChatMessageList = memo(props => {
     sx,
     chat_history,
     activeConversation,
+    suggestions,
+    onSelectSuggestion,
     onSubmitEditedMessage,
     onAddEditAttachment,
     onDeleteAnswer,
@@ -44,8 +48,11 @@ const ChatMessageList = memo(props => {
     speakingMessageId,
     speakingSegments,
     spokenRange,
+    onEntityCreated,
+    onDeleteEntity,
+    pendingInjections = [],
+    onRemovePendingInjection,
   } = props;
-
   const dispatch = useDispatch();
   const listRef = useRef();
   const listRefs = useRef([]);
@@ -271,8 +278,14 @@ const ChatMessageList = memo(props => {
             speakingMessageId={speakingMessageId}
             speakingSegments={speakingSegments}
             spokenRange={spokenRange}
+            onEntityCreated={onEntityCreated}
+            onDeleteEntity={onDeleteEntity}
           />
         ))}
+        <PendingInjectionList
+          items={pendingInjections}
+          onRemove={onRemovePendingInjection}
+        />
         {/* Spacer placed AFTER messages to create extra scrollable area below target */}
         {bottomSpacer > 0 && (
           <Box
@@ -280,6 +293,18 @@ const ChatMessageList = memo(props => {
             data-testid="chat-bottom-spacer"
             sx={styles.bottomSpacer}
           />
+        )}
+        {suggestions?.length > 0 && (
+          <Box sx={styles.suggestionsContainer}>
+            {suggestions.map((text, index) => (
+              <HeadingChip
+                key={index}
+                label={text}
+                variant={HEADING_CHIP_VARIANTS.suggestion}
+                onClick={() => onSelectSuggestion?.(index)}
+              />
+            ))}
+          </Box>
         )}
         <Box ref={messagesEndRef} />
         {externalEndRef && <Box ref={externalEndRef} />}
@@ -307,6 +332,13 @@ const chatMessageListStyles = bottomSpacer => ({
     margin: 0,
     padding: 0,
     visibility: 'hidden',
+  },
+  suggestionsContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+    gap: '0.5rem',
+    padding: '0.5rem 0.75rem',
   },
 });
 

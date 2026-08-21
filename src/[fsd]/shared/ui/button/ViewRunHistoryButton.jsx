@@ -3,11 +3,18 @@ import { memo, useCallback } from 'react';
 import { Box, IconButton, Tooltip, useTheme } from '@mui/material';
 
 import { TourTargetConstants } from '@/[fsd]/shared/lib/constants';
-import { Button } from '@/[fsd]/shared/ui';
 import ClockIcon from '@/assets/clock_icon.svg?react';
 
+import IconLabelButton from './IconLabelButton';
+
 const ViewRunHistoryButton = memo(props => {
-  const { onShowHistory, compact } = props;
+  const {
+    onShowHistory,
+    compact,
+    disabled = false,
+    tooltip = 'View run history',
+    testId = 'pipeline-history-tab',
+  } = props;
   const theme = useTheme();
 
   const handleShowHistory = useCallback(
@@ -20,7 +27,7 @@ const ViewRunHistoryButton = memo(props => {
   if (compact) {
     return (
       <Tooltip
-        title="View run history"
+        title={tooltip}
         placement="top"
       >
         <Box component="span">
@@ -28,8 +35,9 @@ const ViewRunHistoryButton = memo(props => {
             variant="elitea"
             color="secondary"
             aria-label="view run history"
-            data-testid="pipeline-history-tab"
+            data-testid={testId}
             data-tour={TourTargetConstants.SHARED_TOUR_TARGET_IDS.runHistory}
+            disabled={disabled}
             onClick={handleShowHistory}
           >
             <ClockIcon
@@ -43,22 +51,16 @@ const ViewRunHistoryButton = memo(props => {
   }
 
   return (
-    <Tooltip
-      title="View run history"
-      placement="top"
-    >
-      <Button.BaseBtn
-        variant={Button.BUTTON_VARIANTS.iconLabel}
-        size="small"
-        aria-label="view run history"
-        data-testid="pipeline-history-tab"
-        data-tour={TourTargetConstants.SHARED_TOUR_TARGET_IDS.runHistory}
-        onClick={handleShowHistory}
-        startIcon={<ClockIcon />}
-      >
-        Run History
-      </Button.BaseBtn>
-    </Tooltip>
+    <IconLabelButton
+      label="Run History"
+      icon={<ClockIcon />}
+      tooltip={tooltip}
+      ariaLabel="view run history"
+      testId={testId}
+      disabled={disabled}
+      onClick={handleShowHistory}
+      data-tour={TourTargetConstants.SHARED_TOUR_TARGET_IDS.runHistory}
+    />
   );
 });
 

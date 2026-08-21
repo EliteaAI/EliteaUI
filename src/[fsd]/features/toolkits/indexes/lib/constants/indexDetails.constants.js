@@ -11,6 +11,11 @@ export const EditViewTabsEnum = {
   history: 'history',
 };
 
+export const IndexDetailsTabs = {
+  configuration: 'configuration',
+  activity: 'activity',
+};
+
 export const IndexesToolsEnum = {
   indexData: 'index_data',
   searchIndexData: 'search_index',
@@ -18,6 +23,12 @@ export const IndexesToolsEnum = {
   stepbackSummaryIndex: 'stepback_summary_index',
   removeIndex: 'remove_index',
 };
+
+export const INDEX_SEARCH_TOOL_OPTIONS = [
+  { label: 'Search Index', value: IndexesToolsEnum.searchIndexData },
+  { label: 'Stepback Search Index', value: IndexesToolsEnum.stepbackSearchIndex },
+  { label: 'Stepback Summary Index', value: IndexesToolsEnum.stepbackSummaryIndex },
+];
 
 export const IndexStatuses = {
   progress: 'in_progress',

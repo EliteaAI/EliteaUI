@@ -176,6 +176,16 @@ const matchesCronField = (value, field) => {
   return value === parseInt(field, 10);
 };
 
+export const getNextCronRunInTimezone = (expression, scheduleTimezone) => {
+  if (!scheduleTimezone) return getNextCronRun(expression);
+  const now = new Date();
+  const tzNow = new Date(now.toLocaleString('en-US', { timeZone: scheduleTimezone }));
+  const offsetMs = tzNow.getTime() - now.getTime();
+  const nextInTz = getNextCronRun(expression, tzNow);
+  if (!nextInTz) return null;
+  return new Date(nextInTz.getTime() - offsetMs);
+};
+
 export const getNextCronRun = (expression, fromDate = new Date()) => {
   if (!expression || typeof expression !== 'string') return null;
   const parts = expression.trim().split(/\s+/);

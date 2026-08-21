@@ -17,6 +17,7 @@ import { Box } from '@mui/system';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import * as ChatHelpers from '@/[fsd]/features/chat/lib/helpers/chat.helpers';
+import { buildEntityParticipant } from '@/[fsd]/features/chat/lib/helpers/entityParticipant.helpers.js';
 import {
   actionBelongsToInvocationSet,
   getActionOwnerPath,
@@ -45,9 +46,14 @@ import {
 import { useFetchParticipantDetails } from '@/[fsd]/features/chat/participants/lib/hooks';
 import { BudgetWarningBanner, SlashSuggestionList, VoiceMiniPlayer } from '@/[fsd]/features/chat/ui';
 import { ChatMessageList } from '@/[fsd]/features/chat/ui/chat-box';
+import ChatConversationStarters from '@/[fsd]/features/chat/ui/chat-conversation-starters/ChatConversationStarters';
+import NewChatInput from '@/[fsd]/features/chat/ui/chat-input/NewChatInput';
+import RecommendationList from '@/[fsd]/features/chat/ui/recommendations/RecommendationList';
+import SearchResultList from '@/[fsd]/features/chat/ui/recommendations/SearchResultList';
 import { UserMentionList } from '@/[fsd]/features/chat/ui/user-mention-list';
 import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { MentionSkillList } from '@/[fsd]/features/skill';
+import { useDeleteSkillMutation } from '@/[fsd]/features/skill/api';
 import { LLMSettingsConstants, MentionConstants } from '@/[fsd]/shared/lib/constants';
 import {
   cleanLLMSettings,
@@ -60,9 +66,13 @@ import {
   useInjectMessageMutation,
   useRegenerateMutation,
   useRemoveAttachmentsMutation,
+  useUpdateMessageMetaMutation,
   useUpdateParticipantLlmSettingsMutation,
 } from '@/api';
+import { useDeleteApplicationMutation } from '@/api/applications';
 import { useListModelsQuery } from '@/api/configurations.js';
+import { apis as projectContextApis, useDeleteProjectContextMutation } from '@/api/projectContext';
+import { useToolkitDeleteMutation } from '@/api/toolkits';
 import {
   ChatParticipantType,
   PROMPT_PAYLOAD_KEY,
@@ -88,10 +98,6 @@ import useLoadMoreMessages from '@/hooks/chat/useLoadMoreMessages';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useSocket from '@/hooks/useSocket';
 import useToast from '@/hooks/useToast';
-import ChatConversationStarters from '@/pages/NewChat/ChatConversationStarters';
-import NewChatInput from '@/pages/NewChat/NewChatInput';
-import RecommendationList from '@/pages/NewChat/Recommendations/RecommendationList';
-import SearchResultList from '@/pages/NewChat/Recommendations/SearchResultList';
 import { actions as chatActions } from '@/slices/chat';
 
 const { DEFAULT_MAX_TOKENS, DEFAULT_REASONING_EFFORT, DEFAULT_STEPS_LIMIT, DEFAULT_TEMPERATURE } =
@@ -122,6 +128,9 @@ const ChatBox = forwardRef((props, boxRef) => {
     isEditingAgent,
     onShowAgentEditor,
     onShowPipelineEditor,
+    onShowSkillEditor,
+    onShowProjectContextEditor,
+    onShowToolkitEditor,
     onCloseAgentEditor,
     onClosePipelineEditor,
     activeParticipantDetails,
@@ -169,6 +178,9 @@ const ChatBox = forwardRef((props, boxRef) => {
     isUploadingAttachments,
     uploadProgress,
     onOpenArtifactPreview,
+
+    // Override for entity-created routing (e.g. generated-entities tab panel)
+    onEntityCreated: onEntityCreatedProp,
   } = props;
 
   const styles = chatBoxStyles();
@@ -523,17 +535,19 @@ const ChatBox = forwardRef((props, boxRef) => {
         ? activeParticipant?.entity_settings?.llm_settings
         : undefined;
 
+      const isSendingToUser = Boolean(isMentioningEveryone || selectedUsers.length);
+
       return generateMessagePayload({
         attachmentList,
         question,
         question_id,
-        participant,
+        participant: isSendingToUser ? null : participant,
         conversation_uuid: conversationUuid || activeConversation?.uuid,
-        activeParticipant,
+        activeParticipant: isSendingToUser ? null : activeParticipant,
         interaction_uuid,
         projectId,
         selectedModel,
-        isSendingToUser: isMentioningEveryone || selectedUsers.length,
+        isSendingToUser,
         userIds: isMentioningEveryone
           ? activeConversation?.participants
               .filter(
@@ -602,6 +616,12 @@ const ChatBox = forwardRef((props, boxRef) => {
     setPendingInjections(prev => prev.filter(item => item.id !== injectionId));
   }, []);
 
+  // User explicitly removed a queued item before it was consumed.
+  const onRemovePendingInjection = useCallback(injectionId => {
+    pendingInjectionsRef.current.delete(injectionId);
+    setPendingInjections(prev => prev.filter(item => item.id !== injectionId));
+  }, []);
+
   // Turn ended: anything still pending was never folded in, so re-send it as a
   // normal message rather than leaving it silently stranded in history.
   const onInjectionReport = useCallback(({ consumed }) => {
@@ -614,6 +634,83 @@ const ChatBox = forwardRef((props, boxRef) => {
     unconsumed.forEach(text => onPredictStreamRef.current?.(text));
   }, []);
 
+  const onEntityCreated = useCallback(
+    ({ entity_type, entity_id, version_id, entity_name, is_mcp }) => {
+      const participant = buildEntityParticipant({ entity_id, entity_name, version_id, is_mcp, projectId });
+      if (entity_type === 'agent') {
+        onShowAgentEditor?.(participant);
+      } else if (entity_type === 'pipeline') {
+        onShowPipelineEditor?.(participant);
+      } else if (entity_type === 'skill') {
+        onShowSkillEditor?.(participant);
+      } else if (entity_type === 'project_context') {
+        dispatch(projectContextApis.util.invalidateTags([{ type: 'PROJECT_CONTEXT', id: projectId }]));
+        onShowProjectContextEditor?.(participant);
+      } else if (entity_type === 'toolkit') {
+        onShowToolkitEditor?.(participant);
+      }
+    },
+    [
+      dispatch,
+      projectId,
+      onShowAgentEditor,
+      onShowPipelineEditor,
+      onShowSkillEditor,
+      onShowProjectContextEditor,
+      onShowToolkitEditor,
+    ],
+  );
+
+  const [deleteApplication] = useDeleteApplicationMutation();
+  const [deleteSkill] = useDeleteSkillMutation();
+  const [deleteProjectContext] = useDeleteProjectContextMutation();
+  const [deleteToolkit] = useToolkitDeleteMutation();
+  const [updateMessageMeta] = useUpdateMessageMetaMutation();
+
+  const onDeleteEntity = useCallback(
+    async ({ entity_type, entity_id }, messageId) => {
+      try {
+        if (entity_type === 'agent' || entity_type === 'pipeline') {
+          await deleteApplication({ projectId, applicationId: entity_id }).unwrap();
+        } else if (entity_type === 'skill') {
+          await deleteSkill({ projectId, skillId: entity_id }).unwrap();
+        } else if (entity_type === 'project_context') {
+          await deleteProjectContext({ projectId }).unwrap();
+        } else if (entity_type === 'toolkit') {
+          await deleteToolkit({ projectId, toolkitId: entity_id }).unwrap();
+        }
+      } catch (err) {
+        toastError(buildErrorMessage(err) || 'Failed to delete entity');
+        return;
+      }
+      const updatedHistory = chat_history.map(msg =>
+        msg.created_entities?.length
+          ? { ...msg, created_entities: msg.created_entities.filter(e => e.entity_id !== entity_id) }
+          : msg,
+      );
+      setChatHistory(updatedHistory);
+      if (messageId) {
+        const updatedMsg = updatedHistory.find(msg => msg.id === messageId);
+        updateMessageMeta({
+          projectId,
+          messageId,
+          meta: { created_entities: updatedMsg?.created_entities ?? [] },
+        });
+      }
+    },
+    [
+      projectId,
+      chat_history,
+      deleteApplication,
+      deleteSkill,
+      deleteProjectContext,
+      deleteToolkit,
+      updateMessageMeta,
+      setChatHistory,
+      toastError,
+    ],
+  );
+
   const { chatHistoryRef, emit, emitLeaveRoom } = useChatSocket({
     mode: 'chat',
     handleError,
@@ -625,10 +722,11 @@ const ChatBox = forwardRef((props, boxRef) => {
     onInjectionReport,
     onInjectionConsumed,
     isMonoChatting: isAgentsPage,
+    onEntityCreated: onEntityCreatedProp ?? onEntityCreated,
   });
 
   const {
-    suggestion: nextInputSuggestion,
+    suggestions: nextInputSuggestions,
     accept: acceptNextInputSuggestion,
     dismiss: dismissNextInputSuggestion,
   } = useNextInputSuggestion({
@@ -636,6 +734,17 @@ const ChatBox = forwardRef((props, boxRef) => {
     conversationUuid: activeConversation?.uuid,
     getInputContent: () => chatInput.current?.getInputContent(),
   });
+
+  const handleSuggestionSelect = useCallback(
+    index => {
+      const text = acceptNextInputSuggestion(index);
+      if (text) {
+        chatInput.current?.setValue(text);
+        chatInput.current?.focus();
+      }
+    },
+    [acceptNextInputSuggestion],
+  );
 
   const userParticipantId = useMemo(
     () =>
@@ -960,7 +1069,8 @@ const ChatBox = forwardRef((props, boxRef) => {
 
       // Ensure participant_id is set even if activeParticipant.id is undefined
       // (can happen when React state update hasn't propagated yet)
-      if (!eventPayload.participant_id && participantIdRef.current) {
+      // But skip this when sending to a user via @mention - agent should not respond
+      if (!isSendingToUser && !eventPayload.participant_id && participantIdRef.current) {
         eventPayload.participant_id = participantIdRef.current;
       }
 
@@ -990,16 +1100,19 @@ const ChatBox = forwardRef((props, boxRef) => {
 
           // For agent chats with new conversation creation, always preserve the existing participant_id
           // to prevent "participant does not exist" errors when attachments are involved
-          if (isAgentsPage && isNewConversationCreated && existingParticipantId) {
-            eventPayload.participant_id = existingParticipantId;
-          } else {
-            // Restore participant_id if it was set but not included in the rebuilt payload
-            if (existingParticipantId && !eventPayload.participant_id)
+          // But skip this when sending to a user via @mention - agent should not respond
+          if (!isSendingToUser) {
+            if (isAgentsPage && isNewConversationCreated && existingParticipantId) {
               eventPayload.participant_id = existingParticipantId;
+            } else {
+              // Restore participant_id if it was set but not included in the rebuilt payload
+              if (existingParticipantId && !eventPayload.participant_id)
+                eventPayload.participant_id = existingParticipantId;
 
-            // Also fall back to stored participant_id ref if still undefined
-            if (!eventPayload.participant_id && participantIdRef.current)
-              eventPayload.participant_id = participantIdRef.current;
+              // Also fall back to stored participant_id ref if still undefined
+              if (!eventPayload.participant_id && participantIdRef.current)
+                eventPayload.participant_id = participantIdRef.current;
+            }
           }
         }
       } else {
@@ -1969,7 +2082,9 @@ const ChatBox = forwardRef((props, boxRef) => {
 
       const injectionId = uuidv4();
       pendingInjectionsRef.current.set(injectionId, text);
-      setPendingInjections(prev => [...prev, { id: injectionId, text }]);
+      // inFlight from the start: the POST fires immediately, so the remove
+      // button should never be shown for this item.
+      setPendingInjections(prev => [...prev, { id: injectionId, text, inFlight: true }]);
       // Chat passes clearInputAfterSubmit={false}, so clearing is the caller's job
       // here just as it is in onPredictStream.
       chatInput.current?.reset();
@@ -2007,12 +2122,6 @@ const ChatBox = forwardRef((props, boxRef) => {
 
   const combinedKeyDown = useCallback(
     event => {
-      if (event.key === 'Tab' && nextInputSuggestion && !chatInput.current?.getInputContent()) {
-        event.preventDefault();
-        const accepted = acceptNextInputSuggestion();
-        if (accepted) chatInput.current?.setValue(accepted);
-        return;
-      }
       onKeyDown(event);
       if (isSkillPhaseActive) {
         onSkillKeyDown(event);
@@ -2020,14 +2129,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       }
       slashOnKeyDown(event);
     },
-    [
-      onKeyDown,
-      slashOnKeyDown,
-      isSkillPhaseActive,
-      onSkillKeyDown,
-      nextInputSuggestion,
-      acceptNextInputSuggestion,
-    ],
+    [onKeyDown, slashOnKeyDown, isSkillPhaseActive, onSkillKeyDown],
   );
 
   const combinedInputChange = useCallback(
@@ -2546,10 +2648,10 @@ const ChatBox = forwardRef((props, boxRef) => {
   // than one turn running only open the affordance for a turn that is listening.
   const isInjectable = useMemo(() => {
     if (!isMidturnInjectionEnabled) return false;
-    if (!isStreamingNow || hasPendingHitlInterrupt) return false;
+    if (hasPendingHitlInterrupt) return false;
     const streaming = chat_history.find(msg => msg.isStreaming && msg.isInjectable);
     return Boolean(streaming);
-  }, [chat_history, hasPendingHitlInterrupt, isMidturnInjectionEnabled, isStreamingNow]);
+  }, [chat_history, hasPendingHitlInterrupt, isMidturnInjectionEnabled]);
 
   const isInputLoading = useMemo(
     () =>
@@ -2643,6 +2745,8 @@ const ChatBox = forwardRef((props, boxRef) => {
         <ChatMessageList
           sx={messageListSX}
           chat_history={chat_history}
+          suggestions={nextInputSuggestions}
+          onSelectSuggestion={handleSuggestionSelect}
           isLoading={isStreaming}
           isStreaming={isStreaming}
           activeConversation={activeConversation}
@@ -2669,6 +2773,10 @@ const ChatBox = forwardRef((props, boxRef) => {
           speakingMessageId={speakingMessageId}
           speakingSegments={speakingSegments}
           spokenRange={spokenRange}
+          onEntityCreated={onEntityCreatedProp ?? onEntityCreated}
+          onDeleteEntity={onDeleteEntity}
+          pendingInjections={pendingInjections}
+          onRemovePendingInjection={onRemovePendingInjection}
         />
         {displayConversationStarters && (
           <ChatConversationStarters
@@ -2742,35 +2850,10 @@ const ChatBox = forwardRef((props, boxRef) => {
               onDismiss={budgetWarning.dismiss}
             />
           )}
-          {pendingInjections.length > 0 && (
-            <Box sx={styles.pendingInjections}>
-              {pendingInjections.map(item => (
-                <Box
-                  key={item.id}
-                  sx={styles.pendingInjectionChip}
-                  data-testid="pending-injection-chip"
-                >
-                  <Box
-                    component="span"
-                    sx={styles.pendingInjectionLabel}
-                  >
-                    Queued
-                  </Box>
-                  <Box
-                    component="span"
-                    sx={styles.pendingInjectionText}
-                  >
-                    {item.text}
-                  </Box>
-                </Box>
-              ))}
-            </Box>
-          )}
           <NewChatInput
             fromTheChat={fromTheChat}
             conversationId={activeConversation?.id}
             placeholder={inputPlaceholder}
-            suggestion={nextInputSuggestion}
             ref={chatInput}
             onSend={onSendMessage}
             isLoading={isInputLoading}
@@ -2871,39 +2954,6 @@ const chatBoxStyles = () => ({
     padding: '0 0.5rem 0.5rem 0.5rem',
     gap: '0.5rem',
   },
-  pendingInjections: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.25rem',
-    padding: '0 0.75rem 0.25rem 0.75rem',
-  },
-  pendingInjectionChip: ({ palette }) => ({
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-    fontSize: '0.75rem',
-    fontStyle: 'italic',
-    color: palette.text.secondary,
-    opacity: 0.8,
-    minWidth: 0,
-  }),
-  pendingInjectionText: {
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-  },
-  // A plain word, not a spinner: StyledCircleProgress is position:absolute, so it
-  // takes no layout space and lands on top of the text beside it.
-  pendingInjectionLabel: ({ palette }) => ({
-    flexShrink: 0,
-    fontStyle: 'normal',
-    padding: '0.0625rem 0.375rem',
-    borderRadius: '0.25rem',
-    border: `0.0625rem solid ${palette.border.lines}`,
-    fontSize: '0.6875rem',
-    textTransform: 'uppercase',
-    letterSpacing: '0.03em',
-  }),
 });
 
 export default memo(ChatBox);

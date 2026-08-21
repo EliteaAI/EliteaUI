@@ -196,6 +196,8 @@ export const SocketMessageType = {
   AgentSwarmAgentStart: 'agent_swarm_agent_start',
   AgentSwarmAgentResponse: 'agent_swarm_agent_response',
   AgentSwarmHandoff: 'agent_swarm_handoff',
+  // Entity creation - fired when an agent creates an Agent/Pipeline/Skill/ProjectContext
+  AgentEntityCreated: 'agent_entity_created',
 };
 
 export const SortOrderOptions = {

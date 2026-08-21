@@ -56,9 +56,11 @@ For Local MCPs, the connection depends on the Elitea MCP Client running on your 
   {
     id: 'test-settings',
     target: SHARED_TOUR_TARGETS.testSettings,
-    placement: 'left',
-    title: 'Test Settings',
-    content: `The MCP detail page includes a built-in test interface. Select a model, choose a tool, provide any required parameters, and click **RUN TOOL** to execute it in real time. Results appear inline so you can verify the integration works correctly before attaching it to an agent or pipeline.`,
+    placement: 'bottom',
+    title: 'Test MCP',
+    content: `**Test** opens a dedicated test page for the saved MCP. Choose a tool, select a model, fill in any required parameters, and click **Run Test** to execute it in real time. Results appear beside the settings so you can verify the integration works correctly before attaching it to an agent or pipeline.
+
+The test page runs the saved configuration, so **Test** stays disabled while you have unsaved changes.`,
   },
   {
     id: 'run-history',

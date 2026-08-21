@@ -5,7 +5,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { Button as MuiButton } from '@mui/material';
 
-import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
+import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
 import { useSkillCreateMutation } from '@/[fsd]/features/skill/api';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';

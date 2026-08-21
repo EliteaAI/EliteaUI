@@ -72,6 +72,14 @@ export const apiSlice = eliteaApi
           return currentArg !== previousArg;
         },
       }),
+      updateMessageMeta: build.mutation({
+        query: ({ projectId, messageId, meta }) => ({
+          url: apiSlicePath + '/message/prompt_lib/' + projectId + '/' + messageId,
+          method: 'PATCH',
+          headers,
+          body: meta,
+        }),
+      }),
       deleteMessageFromConversation: build.mutation({
         // eslint-disable-next-line no-unused-vars
         query: ({ projectId, id, conversationId: _conversationId }) => {
@@ -536,6 +544,7 @@ export const apiSlice = eliteaApi
   });
 
 export const {
+  useUpdateMessageMetaMutation,
   useConversationCreateMutation,
   useConversationEditMutation,
   useConversationDetailsQuery,
