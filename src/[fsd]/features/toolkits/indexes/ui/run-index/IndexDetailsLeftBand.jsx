@@ -3,13 +3,20 @@ import { memo } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import { ToolkitLayoutConstants } from '@/[fsd]/features/toolkits/lib/constants';
-import { ViewRunHistoryButton } from '@/[fsd]/shared/ui/button';
+import { SearchIndexButton, ViewRunHistoryButton } from '@/[fsd]/shared/ui/button';
 import { EntityTypeIcon } from '@/components/EntityIcon';
 
 const { PANEL_GUTTER, PANEL_HEADER_HEIGHT } = ToolkitLayoutConstants;
 
 const IndexDetailsLeftBand = memo(props => {
-  const { indexName, historyDisabled = false, historyTooltip, onShowHistory } = props;
+  const {
+    indexName,
+    historyDisabled = false,
+    historyTooltip,
+    onShowHistory,
+    searchBlockedReason,
+    onSearch,
+  } = props;
   const styles = indexDetailsLeftBandStyles();
 
   return (
@@ -28,6 +35,11 @@ const IndexDetailsLeftBand = memo(props => {
         </Typography>
       </Box>
       <Box sx={styles.controls}>
+        <SearchIndexButton
+          disabled={Boolean(searchBlockedReason)}
+          tooltip={searchBlockedReason ?? undefined}
+          onSearch={onSearch}
+        />
         <ViewRunHistoryButton
           disabled={historyDisabled}
           tooltip={historyTooltip}

@@ -4,6 +4,7 @@ import {
   BannerMessageMap,
   BannerSeverity,
   BannerTitleMap,
+  INDEX_SEARCH_TOOL_OPTIONS,
   IndexStatuses,
   RUNNABLE_INDEX_STATUSES,
 } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
@@ -75,6 +76,24 @@ export const bannerVariant = (isIndexing, state, reindexStats, error) => {
     label: BannerTitleMap[BannerSeverity.info],
     message: BannerMessageMap[BannerSeverity.info],
   };
+};
+
+export const indexSearchToolOptions = selectedTools =>
+  INDEX_SEARCH_TOOL_OPTIONS.filter(option => (selectedTools || []).includes(option.value));
+
+/**
+ * Preserves the rule the embedded search enforced by only ever mounting itself for a success banner,
+ * and doubles as the tooltip for every disabled search affordance so they never explain themselves
+ * differently.
+ * @param {string} state - `metadata.state` of the index row
+ * @param {string[]} selectedTools - the toolkit's `settings.selected_tools`
+ * @returns {string | null} the reason, or null when the index can be searched
+ */
+export const indexSearchBlockedReason = (state, selectedTools) => {
+  if (state === IndexStatuses.progress) return 'Unavailable while indexing is in progress';
+  if (!RUNNABLE_INDEX_STATUSES.includes(state)) return 'Index is not ready to search yet';
+  if (!indexSearchToolOptions(selectedTools).length) return 'No search tools are enabled for this toolkit';
+  return null;
 };
 
 /**

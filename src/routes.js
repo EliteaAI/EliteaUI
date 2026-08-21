@@ -37,6 +37,7 @@ const RouteDefinitions = {
   ToolkitIndexNew: '/toolkits/:tab/:toolkitId/create-index',
   ToolkitIndex: '/toolkits/:tab/:toolkitId/index/:indexName',
   ToolkitIndexHistory: '/toolkits/:tab/:toolkitId/index/:indexName/history',
+  ToolkitIndexSearch: '/toolkits/:tab/:toolkitId/index/:indexName/search',
 
   Apps: '/apps',
   AppsApplications: '/apps/applications',
