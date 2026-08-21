@@ -2773,7 +2773,7 @@ const ChatBox = forwardRef((props, boxRef) => {
           speakingMessageId={speakingMessageId}
           speakingSegments={speakingSegments}
           spokenRange={spokenRange}
-          onEntityCreated={onEntityCreated}
+          onEntityCreated={onEntityCreatedProp ?? onEntityCreated}
           onDeleteEntity={onDeleteEntity}
           pendingInjections={pendingInjections}
           onRemovePendingInjection={onRemovePendingInjection}

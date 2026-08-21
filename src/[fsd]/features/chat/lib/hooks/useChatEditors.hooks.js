@@ -111,11 +111,14 @@ export const useChatEditors = ({
   }, []);
 
   const onGeneratedEntityCreated = useCallback(
-    ({ entity_type, entity_id, version_id, entity_name, is_mcp }) => {
+    ({ entity_type, entity_id, version_id, entity_name, is_mcp }, setAsActive) => {
       const participant = buildEntityParticipant({ entity_id, entity_name, version_id, is_mcp, projectId });
       setGeneratedEditorTabs(prev => {
         if (prev.some(t => t.entity_id === entity_id)) return prev;
         if (prev.length === 0) setActiveGeneratedTabIndex(0);
+        if (setAsActive) {
+          setActiveGeneratedTabIndex(prev.length);
+        }
         return [...prev, { entity_type, entity_id, entity_name, version_id, is_mcp: !!is_mcp, participant }];
       });
       setIsEditingGeneratedEntities(true);

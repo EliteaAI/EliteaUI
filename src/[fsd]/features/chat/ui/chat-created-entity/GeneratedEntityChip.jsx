@@ -19,7 +19,7 @@ const GeneratedEntityChip = memo(props => {
   const Icon = getEntityIcon({ entity_type: entityType, is_mcp: isMcp });
 
   const handleOpen = useCallback(() => {
-    onEntityCreated?.(entity);
+    onEntityCreated?.(entity, true);
   }, [onEntityCreated, entity]);
 
   const handleDelete = useCallback(() => {

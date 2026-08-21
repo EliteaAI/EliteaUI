@@ -413,21 +413,10 @@ const RunIndexPanel = memo(props => {
     setDeleteScheduleOpen(true);
   }, []);
 
-  const accordionSections = [
+  const scheduleAccordionItems = [
     {
-      key: 'general',
-      title: 'General',
-      content: (
-        <RunIndexGeneralSection
-          index={index}
-          reindexStats={reindexStats}
-        />
-      ),
-      defaultExpanded: true,
-    },
-    {
-      key: 'schedule',
       title: 'Schedule',
+      testId: 'index-schedule-accordion-summary',
       content: (
         <RunIndexScheduleContent
           enabled={scheduleData.enabled}
@@ -445,7 +434,6 @@ const RunIndexPanel = memo(props => {
           toolkitName={toolkitName}
         />
       ),
-      defaultExpanded: false,
     },
   ];
   const indexingMessages = useMemo(
@@ -513,23 +501,21 @@ const RunIndexPanel = memo(props => {
             onSearch={goToSearch}
           />
           <Box
-            data-testid="run-index-accordions"
-            sx={styles.accordionWrapper}
+            data-testid="index-details-info-panel"
+            sx={styles.leftBody}
           >
-            {accordionSections.map(section => (
-              <BasicAccordion
-                key={section.key}
-                accordionSX={styles.accordion}
-                items={[
-                  {
-                    title: section.title,
-                    content: section.content,
-                    summaryAction: section.summaryAction,
-                  },
-                ]}
-                defaultExpanded={section.defaultExpanded}
+            <Box sx={styles.stats}>
+              <RunIndexGeneralSection
+                index={index}
+                reindexStats={reindexStats}
               />
-            ))}
+            </Box>
+            <BasicAccordion
+              card
+              accordionSX={styles.accordion}
+              accordionDetailsSX={styles.accordionDetails}
+              items={scheduleAccordionItems}
+            />
           </Box>
         </Box>
 
@@ -644,13 +630,19 @@ const runIndexPanelStyles = () => ({
     background: ({ palette }) => palette.background.toolkitDetailLeftPanel,
   },
   accordion: {
-    background: ({ palette }) => palette.background.toolkitDetailLeftPanel,
+    background: 'transparent',
   },
-  accordionWrapper: {
+  accordionDetails: {
+    padding: '1rem 0.75rem 0.75rem',
+  },
+  leftBody: {
     flex: 1,
     minHeight: 0,
     overflowY: 'auto',
     padding: '0.5rem 1.5rem 1rem 1.5rem',
+  },
+  stats: {
+    paddingLeft: '0.75rem',
   },
   rightColumn: {
     flex: 1,
