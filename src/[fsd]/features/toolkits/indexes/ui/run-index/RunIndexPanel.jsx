@@ -47,10 +47,10 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast.jsx';
 import RouteDefinitions from '@/routes';
 
+import IndexConfigurationTab from './IndexConfigurationTab';
 import IndexDetailsDeleteAction from './IndexDetailsDeleteAction';
 import IndexDetailsLeftBand from './IndexDetailsLeftBand';
 import IndexDetailsTabsBand from './IndexDetailsTabsBand';
-import RunIndexConfigSection from './RunIndexConfigSection';
 import RunIndexGeneralSection from './RunIndexGeneralSection';
 import RunIndexScheduleContent from './RunIndexScheduleContent';
 
@@ -492,20 +492,6 @@ const RunIndexPanel = memo(props => {
       ),
       defaultExpanded: false,
     },
-    {
-      key: 'index-configuration',
-      title: 'Index configuration',
-      content: (
-        <RunIndexConfigSection
-          configFields={configFields}
-          configSchema={configSchema}
-          configInputVariables={configInputVariables}
-          onChangeInputVariables={setConfigInputVariables}
-          disabled={isRunning || effectiveIsIndexing}
-        />
-      ),
-      defaultExpanded: false,
-    },
   ];
   const chatConversation = useMemo(
     () => getMockToolkitIndexConversation(chatHistory?.filter(msg => msg.id !== WELCOME_MESSAGE_ID)),
@@ -519,6 +505,9 @@ const RunIndexPanel = memo(props => {
     : historyDisabled
       ? 'No history available'
       : 'View index history';
+
+  const isConfigurationTab = activeTab === IndexDetailsTabs.configuration;
+  const isActivityTab = activeTab === IndexDetailsTabs.activity;
 
   const showSearchResults = (isRunning && Boolean(selectedSearchTool)) || hasSearchResults;
   const showIndexingResults =
@@ -578,10 +567,18 @@ const RunIndexPanel = memo(props => {
           <IndexDetailsTabsBand
             activeTab={activeTab}
             onChangeTab={handleChangeTab}
-            configurationDisabled
           />
           <Box sx={styles.tabBody}>
-            {banner.severity === BannerSeverity.success && (
+            {isConfigurationTab && (
+              <IndexConfigurationTab
+                configFields={configFields}
+                configSchema={configSchema}
+                configInputVariables={configInputVariables}
+                onChangeInputVariables={setConfigInputVariables}
+                disabled={isRunning || effectiveIsIndexing}
+              />
+            )}
+            {isActivityTab && banner.severity === BannerSeverity.success && (
               <IndexSuccess
                 banner={banner}
                 onSelectSearchTool={handleSelectSearchTool}
@@ -602,7 +599,7 @@ const RunIndexPanel = memo(props => {
                 showBanner={hasIndexedThisSession}
               />
             )}
-            {banner.severity !== BannerSeverity.success && (
+            {isActivityTab && banner.severity !== BannerSeverity.success && (
               <IndexError
                 banner={banner}
                 isIndexing={effectiveIsIndexing}

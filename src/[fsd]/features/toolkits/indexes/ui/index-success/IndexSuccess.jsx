@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 
 import { IndexesToolsEnum, SuccessPageStatus } from '@/[fsd]/features/toolkits/indexes/lib/constants';
 
@@ -28,7 +28,11 @@ const IndexSuccess = memo(props => {
     showBanner,
   } = props;
 
-  const [activePanel, setActivePanel] = useState(SuccessPageStatus.Init);
+  const activePanel = showResults
+    ? SuccessPageStatus.Results
+    : selectedSearchTool
+      ? SuccessPageStatus.Settings
+      : SuccessPageStatus.Init;
 
   const searchToolOptions = useMemo(
     () =>
@@ -40,27 +44,7 @@ const IndexSuccess = memo(props => {
     [selectedIndexTools],
   );
 
-  useEffect(() => {
-    if (showResults) setActivePanel(SuccessPageStatus.Results);
-  }, [showResults]);
-
-  const handleSelectSearchTool = useCallback(
-    value => {
-      setActivePanel(SuccessPageStatus.Settings);
-      onSelectSearchTool(value);
-    },
-    [onSelectSearchTool],
-  );
-
-  const handleBackToInit = useCallback(() => {
-    setActivePanel(SuccessPageStatus.Init);
-    onSelectSearchTool(null);
-  }, [onSelectSearchTool]);
-
-  const onRunSearchTool = useCallback(() => {
-    setActivePanel(SuccessPageStatus.Results);
-    handleRunTool();
-  }, [handleRunTool]);
+  const clearSearchTool = useCallback(() => onSelectSearchTool(null), [onSelectSearchTool]);
 
   switch (activePanel) {
     case SuccessPageStatus.Init:
@@ -68,7 +52,7 @@ const IndexSuccess = memo(props => {
         <SuccessPanel
           banner={banner}
           showBanner={showBanner}
-          onSelectSearchTool={handleSelectSearchTool}
+          onSelectSearchTool={onSelectSearchTool}
           selectedSearchTool={selectedSearchTool}
           searchToolOptions={searchToolOptions}
         />
@@ -87,7 +71,7 @@ const IndexSuccess = memo(props => {
           disabled={isRunning || effectiveIsIndexing}
           isRunFormValid={isRunFormValid}
           canRunTools={canRunTools}
-          onRunSearchTool={onRunSearchTool}
+          onRunSearchTool={handleRunTool}
         />
       );
     case SuccessPageStatus.Results:
@@ -98,7 +82,7 @@ const IndexSuccess = memo(props => {
           questionItemRef={questionItemRef}
           isRunning={isRunning}
           effectiveIsIndexing={effectiveIsIndexing}
-          onBack={handleBackToInit}
+          onBack={clearSearchTool}
         />
       );
     default:
