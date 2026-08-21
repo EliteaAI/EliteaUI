@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react';
+import { memo } from 'react';
 
 import { Box } from '@mui/material';
 
@@ -8,26 +8,22 @@ import { Tab } from '@/[fsd]/shared/ui';
 
 const { PANEL_GUTTER, PANEL_HEADER_HEIGHT } = ToolkitLayoutConstants;
 
-const IndexDetailsTabsBand = memo(props => {
-  const { activeTab, onChangeTab, configurationDisabled = false } = props;
-  const styles = indexDetailsTabsBandStyles();
+const TABS = [
+  {
+    value: IndexDetailsTabs.configuration,
+    label: 'Configuration',
+    tooltip: 'Configuration',
+  },
+  {
+    value: IndexDetailsTabs.activity,
+    label: 'Activity',
+    tooltip: 'Activity',
+  },
+];
 
-  const tabs = useMemo(
-    () => [
-      {
-        value: IndexDetailsTabs.configuration,
-        label: 'Configuration',
-        tooltip: configurationDisabled ? 'Coming soon' : 'Configuration',
-        buttonProps: { disabled: configurationDisabled },
-      },
-      {
-        value: IndexDetailsTabs.activity,
-        label: 'Activity',
-        tooltip: 'Activity',
-      },
-    ],
-    [configurationDisabled],
-  );
+const IndexDetailsTabsBand = memo(props => {
+  const { activeTab, onChangeTab } = props;
+  const styles = indexDetailsTabsBandStyles();
 
   return (
     <Box
@@ -35,7 +31,7 @@ const IndexDetailsTabsBand = memo(props => {
       data-testid="index-details-tabs"
     >
       <Tab.TabGroupButton
-        arrayBtn={tabs}
+        arrayBtn={TABS}
         value={activeTab}
         onChange={onChangeTab}
         aria-label="Index details view"
