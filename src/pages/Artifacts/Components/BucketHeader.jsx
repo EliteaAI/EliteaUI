@@ -78,6 +78,8 @@ const BucketHeader = memo(props => {
         </Box>
 
         <IconButton
+          data-testid="artifacts-buckets-panel-toggle-button"
+          data-collapsed={collapsed ? 'true' : 'false'}
           variant="elitea"
           color="tertiary"
           onClick={onCollapsed}

@@ -24,6 +24,7 @@ const SettingsButton = memo(props => {
       label="Settings"
       tooltip="Settings"
       tourId={SIDEBAR_TOUR_TARGET_IDS.settings}
+      testId="sidebar-settings-button"
       onClick={handleSettingsClick}
       isActive={!!isOnSettings}
     />

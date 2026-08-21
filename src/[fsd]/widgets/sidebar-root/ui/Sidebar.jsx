@@ -41,6 +41,8 @@ const Sidebar = memo(props => {
         onToggleAssistant={onToggleAssistant}
       />
       <Box
+        data-testid="sidebar-collapse-toggle-button"
+        data-collapsed={sideBarCollapsed ? 'true' : 'false'}
         onClick={onClickCollapsed}
         sx={styles.collapseButton}
       >
