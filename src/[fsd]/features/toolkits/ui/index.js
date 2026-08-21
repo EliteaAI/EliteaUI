@@ -2,6 +2,7 @@ export * as ToolkitForm from './form';
 export * as ToolkitsList from './list';
 
 export { default as ToolkitTestPanel } from './toolkit-test/ToolkitTestPanel';
+export { default as ToolkitTestResults } from './toolkit-test/ToolkitTestResults';
 
 export { default as ToolkitsControls } from './toolkits-tab-bar/ToolkitsControls';
 export { default as ToolkitsTabBar } from './toolkits-tab-bar/ToolkitsTabBar';

@@ -1,6 +1,7 @@
 import { memo, useCallback, useMemo } from 'react';
 
-import { IndexesToolsEnum, SuccessPageStatus } from '@/[fsd]/features/toolkits/indexes/lib/constants';
+import { SuccessPageStatus } from '@/[fsd]/features/toolkits/indexes/lib/constants';
+import { indexSearchToolOptions } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
 
 import RunIndexSettingsPanel from './RunIndexSettingsPanel';
 import SearchResult from './SearchResult';
@@ -19,7 +20,6 @@ const IndexSuccess = memo(props => {
     isRunning,
     effectiveIsIndexing,
     isRunFormValid,
-    canRunTools,
     handleRunTool,
     chatHistory,
     chatConversation,
@@ -34,15 +34,7 @@ const IndexSuccess = memo(props => {
       ? SuccessPageStatus.Settings
       : SuccessPageStatus.Init;
 
-  const searchToolOptions = useMemo(
-    () =>
-      [
-        { label: 'Search Index', value: IndexesToolsEnum.searchIndexData },
-        { label: 'Stepback Search Index', value: IndexesToolsEnum.stepbackSearchIndex },
-        { label: 'Stepback Summary Index', value: IndexesToolsEnum.stepbackSummaryIndex },
-      ].filter(opt => (selectedIndexTools || []).includes(opt.value)),
-    [selectedIndexTools],
-  );
+  const searchToolOptions = useMemo(() => indexSearchToolOptions(selectedIndexTools), [selectedIndexTools]);
 
   const clearSearchTool = useCallback(() => onSelectSearchTool(null), [onSelectSearchTool]);
 
@@ -70,7 +62,6 @@ const IndexSuccess = memo(props => {
           onChangeInputVariables={onChangeInputVariables}
           disabled={isRunning || effectiveIsIndexing}
           isRunFormValid={isRunFormValid}
-          canRunTools={canRunTools}
           onRunSearchTool={handleRunTool}
         />
       );

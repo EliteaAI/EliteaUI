@@ -87,6 +87,7 @@ const ToolkitTest = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/toolk
 const CreateIndex = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/indexes/CreateIndex'));
 const RunIndex = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/indexes/RunIndex'));
 const IndexHistoryPage = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/indexes/IndexHistoryPage'));
+const IndexSearch = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/indexes/IndexSearch'));
 const UserPublic = ChunkHelpers.lazyWithRetry(() => import('@/pages/UserPublic/UserPublic'));
 const Profile = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/features/settings/ui/profile/Profile'));
 const Preferences = ChunkHelpers.lazyWithRetry(
@@ -253,6 +254,7 @@ const ProtectedRoutes = memo(() => {
       { path: RouteDefinitions.ToolkitIndexNew, element: <CreateIndex /> },
       { path: RouteDefinitions.ToolkitIndex, element: <RunIndex /> },
       { path: RouteDefinitions.ToolkitIndexHistory, element: <IndexHistoryPage /> },
+      { path: RouteDefinitions.ToolkitIndexSearch, element: <IndexSearch /> },
 
       /* mcp */
       { path: RouteDefinitions.MCPs, element: getIndexElement(ToolkitsTabs[0]) },

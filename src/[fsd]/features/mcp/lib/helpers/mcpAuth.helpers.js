@@ -20,6 +20,14 @@ const safeParse = value => {
 };
 
 const isStorageAvailable = () => typeof window !== 'undefined' && window.sessionStorage;
+const getLocalStorage = () => {
+  if (typeof window === 'undefined') return null;
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+};
 
 const saveToStorage = (key, data) => {
   if (!isStorageAvailable()) return;
@@ -116,9 +124,53 @@ const loadFromStorage = key => {
   return safeParse(window.sessionStorage.getItem(key));
 };
 
+export const getLogoutMarkerStorageKey = key =>
+  key ? `${McpAuthConstants.MCP_LOGOUT_SYNC_STORAGE_KEY}:${key}` : null;
+
+const loadLogoutMarker = key => {
+  const storage = getLocalStorage();
+  const markerKey = getLogoutMarkerStorageKey(key);
+  if (!storage || !markerKey) return 0;
+  try {
+    const marker = Number(storage.getItem(markerKey));
+    return Number.isFinite(marker) && marker > 0 ? marker : 0;
+  } catch {
+    // Storage access can be denied by browser privacy/security policy.
+    return 0;
+  }
+};
+
+const publishLogout = key => {
+  const storage = getLocalStorage();
+  const markerKey = getLogoutMarkerStorageKey(key);
+  if (!storage || !markerKey) return;
+  try {
+    const previous = loadLogoutMarker(key);
+    // Only logout timestamps are shared between tabs. OAuth tokens remain in
+    // sessionStorage and are never copied through cross-tab storage. Each
+    // credential has an independent key so concurrent logouts cannot overwrite
+    // another credential's marker.
+    storage.setItem(markerKey, String(Math.max(Date.now(), previous + 1)));
+  } catch {
+    // Cross-tab synchronization is best-effort when localStorage is unavailable.
+  }
+};
+
 // Token storage
 const saveTokens = tokens => saveToStorage(McpAuthConstants.MC_TOKENS_STORAGE_KEY, tokens);
-export const loadTokens = () => loadFromStorage(McpAuthConstants.MC_TOKENS_STORAGE_KEY);
+export const loadTokens = () => {
+  const storedTokens = loadFromStorage(McpAuthConstants.MC_TOKENS_STORAGE_KEY);
+  const tokens = Object.fromEntries(
+    Object.entries(storedTokens).filter(([key, tokenInfo]) => {
+      const loggedOutAt = loadLogoutMarker(key);
+      const issuedAt = Number(tokenInfo?.issued_at) || 0;
+      return !loggedOutAt || issuedAt > loggedOutAt;
+    }),
+  );
+
+  if (Object.keys(tokens).length !== Object.keys(storedTokens).length) saveTokens(tokens);
+  return tokens;
+};
 
 // Credentials storage
 const saveCredentials = credentials =>
@@ -241,7 +293,8 @@ export const setAccessToken = (
   const tokens = loadTokens();
   const key = getStorageKey({ serverUrl, toolkitType });
   if (!key) return;
-  const now = Date.now();
+  const lastLogout = loadLogoutMarker(key);
+  const now = Math.max(Date.now(), lastLogout + 1);
   const expiresAt = expiresInSec ? now + Number(expiresInSec) * 1000 : null;
 
   // Preserve existing metadata for refresh scenarios
@@ -253,7 +306,7 @@ export const setAccessToken = (
   tokens[key] = {
     // Core token data
     access_token: accessToken,
-    issued_at: oauthMeta.issued_at || now,
+    issued_at: Math.max(Number(oauthMeta.issued_at) || 0, now),
     expires_at: expiresAt,
     // Optional token data
     ...(sessionId && { session_id: sessionId }),
@@ -311,9 +364,11 @@ export const logout = (serverUrl, toolkitType) => {
   if (tokens[key]) {
     delete tokens[key];
     saveTokens(tokens);
-    // Notify components that token has been removed
-    dispatchTokenChangeEvent(key, 'logout');
   }
+  publishLogout(key);
+  // Notify components in this tab. Other tabs observe the durable logout
+  // marker through the browser storage event.
+  dispatchTokenChangeEvent(key, 'logout');
 };
 
 // =============================================================================
@@ -585,7 +640,8 @@ export const setConnectionVerified = (serverUrl, toolkitType) => {
     return;
   }
 
-  const now = Date.now();
+  const lastLogout = loadLogoutMarker(key);
+  const now = Math.max(Date.now(), lastLogout + 1);
   // Store a marker with a long expiry (24 hours) - this is just a "verified" flag
   // The actual auth is handled by backend headers
   tokens[key] = {

@@ -28,6 +28,7 @@ import {
 import {
   bannerVariant,
   hasLiveRun,
+  indexSearchBlockedReason,
 } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
 import { useIndexesListPolling } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import { selectToolkitScheduler } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
@@ -35,7 +36,7 @@ import { IndexError, IndexScheduleModal, IndexSuccess } from '@/[fsd]/features/t
 import { ToolkitChatHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useGetCurrentToolkitSchemas, useToolkitChat } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
-import { ScheduleHelpers } from '@/[fsd]/shared/lib/helpers';
+import { NavigationHelpers, ScheduleHelpers } from '@/[fsd]/shared/lib/helpers';
 import { Modal } from '@/[fsd]/shared/ui';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
 import Breadcrumbs from '@/[fsd]/shared/ui/breadcrumbs';
@@ -221,7 +222,6 @@ const RunIndexPanel = memo(props => {
     isStale: effectiveStale,
   });
   const deleteDisabled = isDeleting || isAwaitingTaskStart || runIsLive;
-  // const canRunTools = selectedSearchTool && RUNNABLE_INDEX_STATUSES.includes(effectiveState);
 
   const schedulingTooltipMessage = useMemo(() => {
     if (effectiveState === IndexStatuses.cancelled || effectiveState === IndexStatuses.fail)
@@ -499,6 +499,11 @@ const RunIndexPanel = memo(props => {
   );
   const questionItemRef = useRef();
 
+  const searchBlockedReason = indexSearchBlockedReason(
+    effectiveIsIndexing ? IndexStatuses.progress : effectiveState,
+    selectedIndexTools,
+  );
+
   const historyDisabled = !index?.metadata?.history?.length || effectiveIsIndexing;
   const historyTooltip = effectiveIsIndexing
     ? 'Unavailable while indexing is in progress'
@@ -515,12 +520,18 @@ const RunIndexPanel = memo(props => {
     effectiveIsIndexing ||
     (banner.severity !== BannerSeverity.success && chatConversation?.chat_history?.length > 0);
 
+  const indexRouteParams = useMemo(
+    () => ({ tab: tab ?? 'all', toolkitId, indexName }),
+    [tab, toolkitId, indexName],
+  );
+
   const goToHistory = useCallback(() => {
-    const target = RouteDefinitions.ToolkitIndexHistory.replace(':tab', tab ?? 'all')
-      .replace(':toolkitId', String(toolkitId))
-      .replace(':indexName', encodeURIComponent(indexName));
-    navigate(target);
-  }, [navigate, tab, toolkitId, indexName]);
+    navigate(NavigationHelpers.buildRoute(RouteDefinitions.ToolkitIndexHistory, indexRouteParams));
+  }, [navigate, indexRouteParams]);
+
+  const goToSearch = useCallback(() => {
+    navigate(NavigationHelpers.buildRoute(RouteDefinitions.ToolkitIndexSearch, indexRouteParams));
+  }, [navigate, indexRouteParams]);
 
   return (
     <>
@@ -541,6 +552,8 @@ const RunIndexPanel = memo(props => {
             historyDisabled={historyDisabled}
             historyTooltip={historyTooltip}
             onShowHistory={goToHistory}
+            searchBlockedReason={searchBlockedReason}
+            onSearch={goToSearch}
           />
           <Box
             data-testid="run-index-accordions"
