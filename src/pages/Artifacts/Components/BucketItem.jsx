@@ -173,6 +173,7 @@ export const BucketItem = forwardRef((props, ref) => {
         onClick: handleEditBucket,
       },
       {
+        key: 'bucket-menu-pin',
         label: isPinned ? 'Unpin from top' : 'Pin to top',
         icon: (
           <Box
@@ -265,7 +266,10 @@ export const BucketItem = forwardRef((props, ref) => {
       </Box>
 
       {isPinned && (
-        <Box onClick={e => e.stopPropagation()}>
+        <Box
+          data-testid={`artifacts-bucket-pin-indicator-${name}`}
+          onClick={e => e.stopPropagation()}
+        >
           <Button.BaseBtn
             variant="tertiary"
             startIcon={<PinIconFilled />}
