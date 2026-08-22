@@ -444,7 +444,7 @@ const DataTable = memo(props => {
               onSort={handleSort}
               gridTemplateColumns={gridTemplateColumns}
               showCheckbox={false}
-              columnTestIdPrefix={isMCPs ? 'mcp-table' : undefined}
+              columnTestIdPrefix={isMCPs ? 'mcp-table' : isCredentials ? 'credentials-table' : undefined}
             />
             <GridTableBody
               sx={styles.tableBody}
@@ -478,6 +478,9 @@ const DataTable = memo(props => {
           endRow={total === 0 ? 0 : Math.min(tablePage * rowsPerPage + rowsPerPage, total)}
           pageSizeSelectOptions={rowsPerPageOptions.map(n => ({ value: n, label: String(n) }))}
           pageSize={rowsPerPage}
+          prevButtonTestId={isCredentials ? 'credentials-pagination-prev-button' : undefined}
+          nextButtonTestId={isCredentials ? 'credentials-pagination-next-button' : undefined}
+          pageInfoTestId={isCredentials ? 'credentials-pagination-page-info' : undefined}
           handlePrevPage={() => handleChangePage(null, tablePage - 1)}
           handleNextPage={() => handleChangePage(null, tablePage + 1)}
           handlePageSizeChange={newPageSize =>
