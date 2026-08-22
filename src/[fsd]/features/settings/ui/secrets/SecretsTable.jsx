@@ -560,6 +560,7 @@ const SecretsTable = memo(props => {
           onSort={hasNewRow ? undefined : handleSort}
           gridTemplateColumns={gridTemplateColumns}
           showCheckbox={false}
+          columnTestIdPrefix="secret"
         />
 
         <GridTableBody>

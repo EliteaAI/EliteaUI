@@ -75,6 +75,12 @@ const SecretField = memo(props => {
   // for the real input from the caller's, so automation has a stable handle
   // to the actual editable element without a raw-CSS chain off the wrapper.
   const nativeInputTestId = inputProps['data-testid'] ? `${inputProps['data-testid']}-field` : undefined;
+  // Same caller-derived scheme for the "Saved Secrets" group-header refresh
+  // button, so a page rendering several secret fields keeps one unique handle
+  // per field (the shared SecretField hardcodes no feature-scoped testid).
+  const refreshSecretsTestId = inputProps['data-testid']
+    ? `${inputProps['data-testid']}-refresh-secrets-button`
+    : undefined;
 
   const toggleOptions = useMemo(() => {
     return [
@@ -163,13 +169,14 @@ const SecretField = memo(props => {
           variant={BUTTON_VARIANTS.tertiary}
           size="small"
           onClick={refetch}
+          data-testid={refreshSecretsTestId}
           sx={styles.refreshIcon}
         >
           <RefreshIcon />
         </BaseBtn>
       </Tooltip>
     ),
-    [refetch, styles.refreshIcon],
+    [refetch, refreshSecretsTestId, styles.refreshIcon],
   );
 
   const secretOptionGroups = useMemo(() => {
