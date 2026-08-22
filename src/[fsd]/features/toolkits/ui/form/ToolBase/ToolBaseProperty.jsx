@@ -607,6 +607,7 @@ const ToolBaseProperty = memo(props => {
             onChange={handleInputChange(buildEditFieldPath(k))}
             error={!!toastError}
             helperText={errorText}
+            helperTextTestId={`toolkit-field-${k}-input-helper-text`}
             type={isInteger ? 'tel' : undefined}
             disabled={disableConfigFields || disabled}
             inputProps={inputProps}

@@ -7,6 +7,7 @@ export const contentPageStyle = { minHeight: 'calc(100vh - 141px)' };
 const Page404 = () => {
   return (
     <Container
+      data-testid="page-not-found"
       style={{
         ...contentPageStyle,
         marginTop: '50px',
