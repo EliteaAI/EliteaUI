@@ -81,6 +81,11 @@ const SecretField = memo(props => {
   const refreshSecretsTestId = inputProps['data-testid']
     ? `${inputProps['data-testid']}-refresh-secrets-button`
     : undefined;
+  // Same caller-derived scheme for the inline error/helper text rendered under
+  // the field, so automation can read a failed validation message (e.g. the
+  // credential "Test connection" failure) testid-only instead of chaining a raw
+  // MUI class selector off the wrapper.
+  const helperTextTestId = inputProps['data-testid'] ? `${inputProps['data-testid']}-helper-text` : undefined;
 
   const toggleOptions = useMemo(() => {
     return [
@@ -293,6 +298,7 @@ const SecretField = memo(props => {
             helperText={helperText}
             inputProps={{ 'data-testid': nativeInputTestId }}
             slotProps={{
+              formHelperText: { 'data-testid': helperTextTestId },
               inputLabel: tooltipDescription
                 ? undefined
                 : {
