@@ -294,6 +294,7 @@ const SidebarBody = memo(props => {
           >
             <Box
               data-tour={SIDEBAR_TOUR_TARGET_IDS.supportAssistant}
+              data-testid="sidebar-support-assistant-button"
               sx={styles.assistantBlock}
               onClick={onToggleAssistant}
             >
