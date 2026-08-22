@@ -1,6 +1,7 @@
 import { ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 
-export default function Toggle({ value, onChange, id, name, sx = {}, options, disabled }) {
+export default function Toggle({ value, onChange, id, name, sx = {}, options, disabled, testIdPrefix }) {
+  const optionTestId = optionValue => (testIdPrefix ? `${testIdPrefix}-${optionValue}` : undefined);
   return (
     <ToggleButtonGroup
       size="small"
@@ -17,6 +18,7 @@ export default function Toggle({ value, onChange, id, name, sx = {}, options, di
         variant="elitea"
         value={options[0].value}
         key={options[0].value}
+        data-testid={optionTestId(options[0].value)}
         disabled={options[0].disabled}
         sx={{ borderRadius: '8px 0 0 8px' }}
         disableRipple
@@ -28,6 +30,7 @@ export default function Toggle({ value, onChange, id, name, sx = {}, options, di
           variant="elitea"
           value={option.value}
           key={option.value}
+          data-testid={optionTestId(option.value)}
           disabled={option.disabled}
           sx={{ borderRadius: '8px 0 0 8px' }}
           disableRipple
@@ -39,6 +42,7 @@ export default function Toggle({ value, onChange, id, name, sx = {}, options, di
         variant="elitea"
         value={options[options.length - 1].value}
         key={options[options.length - 1].value}
+        data-testid={optionTestId(options[options.length - 1].value)}
         disabled={options[options.length - 1].disabled}
         sx={{ borderRadius: '0 8px 8px 0' }}
         disableRipple

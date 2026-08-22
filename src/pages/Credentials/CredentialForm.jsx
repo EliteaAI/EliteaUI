@@ -319,6 +319,7 @@ const CredentialForm = memo(props => {
             <Button.BaseBtn
               variant="elitea"
               color="secondary"
+              data-testid="credential-form-test-connection-button"
               onClick={onClickTestConnection}
               disabled={
                 !credentialDetails?.has_test_connection || !isTestConnectionAllowed || isTestingConnection

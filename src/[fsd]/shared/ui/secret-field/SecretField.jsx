@@ -326,6 +326,7 @@ const SecretField = memo(props => {
         options={toggleOptions}
         onChange={handleToggleTab}
         disabled={disableSecret}
+        testIdPrefix={inputProps['data-testid'] ? `${inputProps['data-testid']}-toggle` : undefined}
         {...toggleProps}
       />
     </Box>

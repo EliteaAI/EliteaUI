@@ -423,6 +423,7 @@ const ToolBaseProperty = memo(props => {
         <SingleSelect
           showBorder
           label={label}
+          data-testid={`toolkit-field-${k}-select`}
           infoIconDescription={description}
           required={required}
           onValueChange={value => editField(buildEditFieldPath(k), value)}
