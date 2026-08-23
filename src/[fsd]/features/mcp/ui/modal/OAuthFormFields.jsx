@@ -20,6 +20,7 @@ const OAuthFormFields = memo(props => {
     saveCredentials = false,
     onSaveCredentialsChange,
     showSaveCredentials = false,
+    scopeTestId,
   } = props;
   const styles = getStyles({ scope });
   return (
@@ -69,6 +70,7 @@ const OAuthFormFields = memo(props => {
         value={scope}
         placeholder="Enter OAuth scopes (space-separated)"
         enableAutoBlur={false}
+        {...(scopeTestId && { inputProps: { 'data-testid': scopeTestId } })}
       />
       {showSaveCredentials && (
         <FormControlLabel

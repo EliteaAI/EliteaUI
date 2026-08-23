@@ -343,6 +343,7 @@ const CredentialForm = memo(props => {
           <Button.BaseBtn
             variant="elitea"
             color="secondary"
+            data-testid="credential-form-oauth-login-button"
             onClick={onClickTestConnection}
             disabled={isTestingConnection}
           >

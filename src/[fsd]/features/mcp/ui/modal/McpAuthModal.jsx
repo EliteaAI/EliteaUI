@@ -370,6 +370,7 @@ const McpAuthModal = memo(props => {
     <Dialog
       open={open}
       keepMounted
+      data-testid="oauth-auth-dialog"
       onKeyDown={handleKeyDown}
       slotProps={{
         paper: {
@@ -381,6 +382,7 @@ const McpAuthModal = memo(props => {
         variant="headingMedium"
         color="text.secondary"
         sx={styles.dialogTitle}
+        data-testid="oauth-auth-dialog-title"
       >
         {title || 'MCP Authorization'}
         <IconButton
@@ -398,6 +400,7 @@ const McpAuthModal = memo(props => {
           variant="bodyMedium"
           component={'div'}
           sx={styles.description}
+          data-testid="oauth-auth-dialog-description"
         >
           {`This MCP server requires OAuth authorization to access its tools. ${
             serverMetadata.requiresClientSecret
@@ -426,12 +429,14 @@ const McpAuthModal = memo(props => {
               target="_blank"
               rel="noopener noreferrer"
               sx={styles.link}
+              data-testid="oauth-auth-dialog-server-link"
             >
               {serverUrl}
             </Link>
           </Typography>
         </Typography>
         <OAuthFormFields
+          scopeTestId="oauth-auth-dialog-scope-input"
           clientId={clientId}
           clientSecret={clientSecret}
           scope={scope}
@@ -476,6 +481,7 @@ const McpAuthModal = memo(props => {
         <Button
           variant="elitea"
           color="secondary"
+          data-testid="oauth-auth-dialog-cancel-button"
           onClick={handleCancel}
           disabled={authSuccess}
           disableRipple
@@ -485,6 +491,7 @@ const McpAuthModal = memo(props => {
         <Button
           variant="elitea"
           color="primary"
+          data-testid="oauth-auth-dialog-authorize-button"
           onClick={onAuthorize}
           disabled={isAuthorizeDisabled}
           disableRipple
