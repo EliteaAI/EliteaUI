@@ -74,6 +74,7 @@ const NameDescriptionInput = memo(props => {
               onChange={handleInputChange('name')}
               error={showValidation && toolErrors?.name}
               helperText={showValidation && toolErrors?.name && 'Field is required'}
+              helperTextTestId="toolkit-form-name-input-helper-text"
               inputProps={{ maxLength: MAX_NAME_LENGTH, 'data-testid': 'toolkit-form-name-input' }}
               onFocus={() => toggleFieldFocus(PROMPT_PAYLOAD_KEY.name)}
               onBlur={() => toggleFieldFocus(null)}
