@@ -157,6 +157,8 @@ const ToolkitsTabBarContainer = memo(props => {
         </MuiButton>
         <Button.DiscardButton
           dataTestId="toolkit-detail-discard-button"
+          modalDataTestId="toolkit-detail-discard-confirm-modal"
+          confirmButtonDataTestId="toolkit-detail-discard-confirm-button"
           disabled={isSaving || !isFormDirtyExcluding}
           onDiscard={discardApplicationChanges}
         />
