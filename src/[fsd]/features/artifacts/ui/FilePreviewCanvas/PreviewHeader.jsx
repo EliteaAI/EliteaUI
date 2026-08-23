@@ -215,6 +215,12 @@ const PreviewHeader = memo(props => {
                 disabled={isSaving || !hasUnsavedChanges}
                 discarding={false}
                 dataTestId="artifacts-preview-discard-button"
+                modalDataTestId="artifacts-preview-discard-warning-dialog"
+                modalTitleTestId="artifacts-preview-discard-warning-title"
+                modalTitleIconTestId="artifacts-preview-discard-warning-icon"
+                closeButtonTestId="artifacts-preview-discard-warning-close-button"
+                cancelButtonTestId="artifacts-preview-discard-warning-cancel-button"
+                confirmButtonDataTestId="artifacts-preview-discard-warning-confirm-button"
               />
             </>
           )}

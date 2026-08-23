@@ -18,6 +18,10 @@ const DiscardButton = memo(props => {
     dataTestId,
     modalDataTestId,
     confirmButtonDataTestId,
+    cancelButtonTestId,
+    closeButtonTestId,
+    modalTitleTestId,
+    modalTitleIconTestId,
     ...rest
   } = props;
 
@@ -59,6 +63,10 @@ const DiscardButton = memo(props => {
         dialogSx={{ fontSize: '0.875rem' }}
         data-testid={modalDataTestId}
         confirmButtonTestId={confirmButtonDataTestId}
+        cancelButtonTestId={cancelButtonTestId}
+        closeButtonTestId={closeButtonTestId}
+        titleTestId={modalTitleTestId}
+        titleIconTestId={modalTitleIconTestId}
       />
     </>
   );
