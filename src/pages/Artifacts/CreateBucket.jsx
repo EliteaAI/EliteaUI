@@ -246,6 +246,7 @@ const CreateBucket = memo(() => {
                 />
                 {isFocused('name') && formik.values.name?.length === MAX_BUCKET_NAME_LENGTH && (
                   <Text.CharacterCounter
+                    data-testid="artifacts-bucket-name-character-counter"
                     value={formik.values.name}
                     maxLength={MAX_BUCKET_NAME_LENGTH}
                     hideMaxLimitMessage
