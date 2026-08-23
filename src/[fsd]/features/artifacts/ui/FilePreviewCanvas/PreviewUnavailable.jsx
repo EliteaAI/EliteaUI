@@ -19,22 +19,26 @@ const PreviewUnavailable = memo(props => {
       <Box sx={styles.contentContainer}>
         <Box
           component={UnavailableIcon}
+          data-testid="artifacts-preview-unavailable-icon"
           sx={styles.icon}
         />
         <Typography
           variant="headingSmall"
+          data-testid="artifacts-preview-unavailable-title"
           sx={styles.header}
         >
           Preview Not Available
         </Typography>
         <Typography
           variant="bodyMedium"
+          data-testid="artifacts-preview-unavailable-message"
           sx={styles.message}
         >
           {message}
         </Typography>
         <Typography
           variant="bodySmall"
+          data-testid="artifacts-preview-unavailable-formats"
           sx={styles.description}
         >
           Supported formats: txt, md, json, js, ts, py, java, html, css, xml, yaml, csv, tsv, log, sql,
@@ -46,6 +50,7 @@ const PreviewUnavailable = memo(props => {
             variant={BUTTON_VARIANTS.elitea}
             color={BUTTON_COLORS.secondary}
             sx={styles.downloadButton}
+            data-testid="artifacts-preview-unavailable-download-button"
             onClick={handleDownload}
           >
             Download
