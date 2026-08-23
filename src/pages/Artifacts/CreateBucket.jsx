@@ -207,6 +207,7 @@ const CreateBucket = memo(() => {
         <Box sx={styles.contentWrapper}>
           <Box sx={styles.headerWrapper}>
             <Typography
+              data-testid="artifacts-bucket-form-heading"
               variant="headingMedium"
               color="text.main"
             >
@@ -304,6 +305,7 @@ const CreateBucket = memo(() => {
                   {(isCreating || isUpdating) && <StyledCircleProgress size={20} />}
                 </Button.BaseBtn>
                 <Button.BaseBtn
+                  data-testid="artifacts-bucket-cancel-button"
                   onClick={onCancel}
                   variant="elitea"
                   color="secondary"

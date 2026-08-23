@@ -162,6 +162,7 @@ export const BucketItem = forwardRef((props, ref) => {
         onClick: handleUploadClick,
       },
       {
+        key: 'bucket-menu-rename',
         label: 'Rename',
         icon: (
           <EditIcon
