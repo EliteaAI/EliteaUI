@@ -4,6 +4,13 @@ import { Box, Chip, TextField, Typography, useTheme } from '@mui/material';
 
 import SearchIcon from '@/components/Icons/SearchIcon';
 
+// Mirrors the sibling CategoryRail.jsx helper so a chip testid is derived the
+// same way on both category surfaces.
+const slugifyCategory = category =>
+  String(category)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-');
+
 const CategoryFilter = memo(props => {
   const {
     title,
@@ -15,6 +22,8 @@ const CategoryFilter = memo(props => {
     onSelectCategory,
     children,
     searchInputTestId,
+    titleTestId,
+    chipTestIdPrefix,
     slotProps = {
       categoryList: {
         sx: {},
@@ -32,6 +41,7 @@ const CategoryFilter = memo(props => {
       {/* Title */}
       {title && (
         <Typography
+          data-testid={titleTestId}
           variant="headingSmall"
           color="text.secondary"
           sx={styles.title}
@@ -69,7 +79,12 @@ const CategoryFilter = memo(props => {
               {allCategories.map(category => (
                 <Chip
                   key={category}
-                  data-testid="category-filter-tab"
+                  data-testid={
+                    chipTestIdPrefix
+                      ? `${chipTestIdPrefix}-${slugifyCategory(category)}`
+                      : 'category-filter-tab'
+                  }
+                  data-selected={selectedCategories.includes(category) ? 'true' : 'false'}
                   label={category}
                   clickable
                   onClick={() => onSelectCategory(category)}

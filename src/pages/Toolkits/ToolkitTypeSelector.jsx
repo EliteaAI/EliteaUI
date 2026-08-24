@@ -177,6 +177,7 @@ const ToolkitTypeSelector = memo(
               >
                 {'Still no local MCP available. Follow creation guides in our '}
                 <Link
+                  data-testid="mcp-type-picker-local-documentation-link"
                   href="https://docs.elitea.ai/integrations/mcp/create-and-use-server-stdio"
                   target="_blank"
                   rel="noopener noreferrer"
@@ -221,6 +222,8 @@ const ToolkitTypeSelector = memo(
           renderCategory={renderCategory}
           renderNoResults={renderNoResults}
           searchInputTestId={!isApplication && !isMCP ? 'toolkit-wizard-type-search-input' : undefined}
+          titleTestId={isMCP ? 'mcp-type-picker-heading' : undefined}
+          chipTestIdPrefix={isMCP ? 'mcp-type-picker-filter-chip' : undefined}
           {...searchProps}
         />
       </>
