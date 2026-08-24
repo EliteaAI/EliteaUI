@@ -38,6 +38,7 @@ const toRunRow = (entry, indexName, eventLabel) => {
     index_name: indexName,
     operation_type: null,
     hasConversation: false,
+    canShare: true,
     entry,
   };
 };

@@ -1,6 +1,7 @@
 import { memo, useCallback, useEffect, useMemo } from 'react';
 
 import { useDispatch, useSelector } from 'react-redux';
+import { useSearchParams } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
@@ -13,6 +14,7 @@ import {
   indexHistoryRowId,
 } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexHistoryRow.helpers';
 import { actions, selectHistoryItem } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
+import { SearchParams } from '@/common/constants';
 import useGetWindowWidth from '@/hooks/useGetWindowWidth';
 
 const SORT_TYPES = {
@@ -39,6 +41,7 @@ const IndexHistory = memo(props => {
   const { history } = props;
   const dispatch = useDispatch();
   const { windowWidth } = useGetWindowWidth();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const styles = indexHistoryStyles();
 
@@ -47,19 +50,32 @@ const IndexHistory = memo(props => {
 
   const initialCompletedTs = useMemo(() => initialCompletedTsOf(history), [history]);
 
+  const historyRows = useMemo(
+    () => buildIndexHistoryRows(history, initialCompletedTs),
+    [history, initialCompletedTs],
+  );
+
   useEffect(() => {
-    dispatch(actions.selectHistoryItem(history[history.length - 1]));
+    const sharedRunId = searchParams.get(SearchParams.HistoryRunId);
+    const sharedRow = historyRows.find(row => row.id === sharedRunId);
+
+    dispatch(actions.selectHistoryItem(sharedRow?.entry ?? history[history.length - 1]));
+
+    if (sharedRunId) {
+      setSearchParams(
+        params => {
+          params.delete(SearchParams.HistoryRunId);
+          return params;
+        },
+        { replace: true },
+      );
+    }
 
     return () => {
       dispatch(actions.selectHistoryItem(null));
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const historyRows = useMemo(
-    () => buildIndexHistoryRows(history, initialCompletedTs),
-    [history, initialCompletedTs],
-  );
 
   const sortedRows = useMemo(() => getSortedData(historyRows, SORT_FUNCTIONS), [historyRows, getSortedData]);
 

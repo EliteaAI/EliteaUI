@@ -6,7 +6,7 @@ import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
 import { formatRunTimestamp, resolveRunHistoryColumns } from '@/[fsd]/entities/run-history/lib/helpers';
 import { RunHistoryTooltipCell } from '@/[fsd]/entities/run-history/ui';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
-import { SharedHelpers } from '@/[fsd]/shared/lib/helpers';
+import { NavigationHelpers, SharedHelpers } from '@/[fsd]/shared/lib/helpers';
 import { Modal } from '@/[fsd]/shared/ui';
 import CopyLinkIcon from '@/assets/copy-link-icon.svg?react';
 import { SearchParams } from '@/common/constants';
@@ -17,6 +17,7 @@ import RestoreIcon from '@/components/Icons/RestoreIcon';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 import { getBasename } from '@/routes';
+import { copyToClipboard } from '@/utils/browserUtils';
 
 const RunHistoryListItem = memo(props => {
   const {
@@ -29,9 +30,13 @@ const RunHistoryListItem = memo(props => {
     handleRestoreConversation,
     source,
     hasEvent = false,
+    shareOpensHistoryTab = false,
   } = props;
 
   const noVersions = useMemo(() => versions === null, [versions]);
+
+  const hasConversation = item?.hasConversation ?? true;
+  const canShare = item?.canShare ?? hasConversation;
 
   const projectId = useSelectedProjectId();
   const { toastSuccess, toastError, toastInfo } = useToast();
@@ -62,19 +67,18 @@ const RunHistoryListItem = memo(props => {
 
   const handleCopyLink = useCallback(async () => {
     const url = new URL(window.location.href);
-    const searchParams = url.searchParams;
 
-    searchParams.set(SearchParams.HistoryRunId, item.id);
-    searchParams.set(SearchParams.DestTab, 'History');
+    url.searchParams.set(SearchParams.HistoryRunId, item.id);
+    if (shareOpensHistoryTab) url.searchParams.set(SearchParams.DestTab, 'History');
 
-    const entityURL = url.toString();
+    const appPath = `${url.pathname.replace(getBasename(), '')}${url.search}`;
 
-    const baseUrl = `${window.location.protocol}//${window.location.host}`;
-    const basename = getBasename();
-
-    const destinationUrl = `${baseUrl}${basename}/${projectId}${entityURL.replace(baseUrl, '').replace(basename, '')}`;
-
-    await navigator.clipboard.writeText(destinationUrl);
+    try {
+      await copyToClipboard(NavigationHelpers.buildAbsoluteAppUrl(projectId, appPath));
+    } catch {
+      toastError('Failed to copy the link to the clipboard.');
+      return;
+    }
 
     setLinkCopied(true);
     toastInfo('The link has been copied to the clipboard.');
@@ -82,7 +86,7 @@ const RunHistoryListItem = memo(props => {
     setTimeout(() => {
       setLinkCopied(false);
     }, 2500);
-  }, [item?.id, projectId, toastInfo]);
+  }, [item?.id, projectId, shareOpensHistoryTab, toastError, toastInfo]);
 
   const confirmHistoryItemRemoval = useCallback(async () => {
     if (isDeleting) return;
@@ -144,6 +148,37 @@ const RunHistoryListItem = memo(props => {
       </Box>
     );
 
+  const actionMenuItems = [
+    ...(canShare
+      ? [
+          {
+            label: 'Share link',
+            icon: linkCopied ? <CheckIcon /> : <CopyLinkIcon />,
+            onClick: handleCopyLink,
+          },
+        ]
+      : []),
+    ...(hasConversation
+      ? [
+          {
+            label: 'Delete',
+            icon: <DeleteIcon sx={styles.deleteIcon(isDeleting)} />,
+            onClick: handleDeleteHistoryItem,
+          },
+        ]
+      : []),
+    ...(hasConversation && handleRestoreConversation
+      ? [
+          {
+            label: 'Restore chat',
+            icon: <RestoreIcon />,
+            onClick: () => handleRestoreConversation(item.id),
+            tooltip: `Restores chat history only. ${source?.charAt(0)?.toUpperCase() + source?.slice(1)} configuration, behavior, or settings are not restored and may have changed since then.`,
+          },
+        ]
+      : []),
+  ];
+
   return (
     <>
       <Box
@@ -177,8 +212,7 @@ const RunHistoryListItem = memo(props => {
           id="actions-block"
           sx={styles.actions}
         >
-          {/* Every action here acts on a server-side conversation. */}
-          {(item.hasConversation ?? true) && (
+          {actionMenuItems.length > 0 && (
             <DotMenu
               id="run-history-menu"
               slotProps={{
@@ -204,28 +238,7 @@ const RunHistoryListItem = memo(props => {
                 horizontal: 'right',
               }}
             >
-              {[
-                {
-                  label: 'Share link',
-                  icon: linkCopied ? <CheckIcon /> : <CopyLinkIcon />,
-                  onClick: handleCopyLink,
-                },
-                {
-                  label: 'Delete',
-                  icon: <DeleteIcon sx={styles.deleteIcon(isDeleting)} />,
-                  onClick: handleDeleteHistoryItem,
-                },
-                ...(handleRestoreConversation
-                  ? [
-                      {
-                        label: 'Restore chat',
-                        icon: <RestoreIcon />,
-                        onClick: () => handleRestoreConversation(item.id),
-                        tooltip: `Restores chat history only. ${source?.charAt(0)?.toUpperCase() + source?.slice(1)} configuration, behavior, or settings are not restored and may have changed since then.`,
-                      },
-                    ]
-                  : []),
-              ]}
+              {actionMenuItems}
             </DotMenu>
           )}
         </Box>

@@ -35,6 +35,7 @@ const RunHistoryList = memo(props => {
     source,
     handleRestoreConversation,
     hasEvent = false,
+    shareOpensHistoryTab = false,
   } = props;
   const { isSmallWindow } = useIsSmallWindow();
   const { windowWidth } = useGetWindowWidth();
@@ -118,6 +119,7 @@ const RunHistoryList = memo(props => {
                   handleRestoreConversation={handleRestoreConversation}
                   source={source}
                   hasEvent={hasEvent}
+                  shareOpensHistoryTab={shareOpensHistoryTab}
                 />
               ))}
             </>

@@ -23,5 +23,6 @@ export const buildIndexHistoryRows = (history, initialCompletedTs) =>
     event_label: resolveIndexEventLabel(entry, initialCompletedTs),
     duration: resolveIndexRunDuration(entry),
     hasConversation: false,
+    canShare: true,
     entry,
   }));

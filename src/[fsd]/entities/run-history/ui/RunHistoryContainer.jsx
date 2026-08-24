@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useSearchParams } from 'react-router-dom';
 
@@ -11,6 +11,7 @@ import { SearchParams } from '@/common/constants';
 import CloseIcon from '@/components/Icons/CloseIcon';
 import useIsSmallWindow from '@/hooks/useIsSmallWindow';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
+import useToast from '@/hooks/useToast';
 
 const { ParticipantEntityTypes } = ParticipantEntityConstants;
 
@@ -24,20 +25,25 @@ const RunHistoryContainer = memo(props => {
     ChatMessageListComponent,
     prettifyConversation,
     additionalRows = [],
+    additionalRowsLoading = false,
     decorateRow = null,
     DetailComponent = null,
+    shareOpensHistoryTab = false,
   } = props;
 
   const projectId = useSelectedProjectId();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { toastInfo } = useToast();
 
   const { isSmallWindow } = useIsSmallWindow();
 
   const [allConversations, setAllConversations] = useState([]);
   const [page, setPage] = useState(0);
   const [selectedHistoryItem, setSelectedHistoryItem] = useState(null);
+  const handledSharedRunId = useRef(null);
 
-  const [fetchRunList, { data, isLoading, isFetching }] = RunHistoryApi.useLazyGetRunHistoryListQuery();
+  const [fetchRunList, { data, isLoading, isFetching, isUninitialized }] =
+    RunHistoryApi.useLazyGetRunHistoryListQuery();
 
   // Not part of server-side pagination, so they are merged into every page.
   const historyRows = useMemo(() => {
@@ -54,14 +60,40 @@ const RunHistoryContainer = memo(props => {
   );
 
   useEffect(() => {
+    if (!historyRows.length) return;
+
     const historyRunId = searchParams.get(SearchParams.HistoryRunId);
 
-    if (historyRunId && historyRows.length > 0) {
-      setSelectedHistoryItem(+historyRunId);
-    } else if (!selectedHistoryItem && historyRows.length > 0) {
-      setSelectedHistoryItem(historyRows[0].id);
+    if (historyRunId && handledSharedRunId.current !== historyRunId) {
+      const sharedRow = historyRows.find(historyRow => String(historyRow.id) === historyRunId);
+      if (!sharedRow && (isUninitialized || isLoading || isFetching || additionalRowsLoading)) return;
+
+      handledSharedRunId.current = historyRunId;
+      if (!sharedRow) toastInfo('That run is not in this list. Showing the most recent run instead.');
+
+      setSelectedHistoryItem(sharedRow?.id ?? historyRows[0].id);
+      setSearchParams(
+        params => {
+          params.delete(SearchParams.HistoryRunId);
+          return params;
+        },
+        { replace: true },
+      );
+      return;
     }
-  }, [historyRows, searchParams, selectedHistoryItem]);
+
+    if (!selectedHistoryItem) setSelectedHistoryItem(historyRows[0].id);
+  }, [
+    historyRows,
+    searchParams,
+    setSearchParams,
+    selectedHistoryItem,
+    isUninitialized,
+    isLoading,
+    isFetching,
+    additionalRowsLoading,
+    toastInfo,
+  ]);
 
   useEffect(() => {
     if (projectId && entityId) {
@@ -134,6 +166,7 @@ const RunHistoryContainer = memo(props => {
             source={source}
             handleRestoreConversation={handleRestoreConversation}
             hasEvent={Boolean(decorateRow)}
+            shareOpensHistoryTab={shareOpensHistoryTab}
           />
         </Box>
 
