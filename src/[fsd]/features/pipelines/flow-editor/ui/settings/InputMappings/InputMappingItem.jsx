@@ -227,6 +227,13 @@ const InputMappingItem = memo(props => {
                 showBorder
                 className="nopan nodrag"
                 labelSX={styles.labelSX}
+                // Same testid as the Fixed/F-String branches' TextInputField above
+                // (ELITEA-1953). Setting a row's Type to "Variable" swaps its Value
+                // control to this state-variable select; giving it the SAME testid
+                // keeps ONE stable identity for the row's Value across both widget
+                // shapes — the testid's value never changes with state
+                // (.agents/testing.md § "Testid = stable identity").
+                data-testid={valueTestId}
               />
             ) : (
               <Select.SingleSelect
@@ -252,11 +259,6 @@ const InputMappingItem = memo(props => {
               showBorder
               className="nopan nodrag"
               labelSX={styles.labelSX}
-              // Same testid as the Fixed/F-String branches' TextInputField above
-              // (ELITEA-1953): the row's Value control keeps ONE stable identity
-              // across both widget shapes, so switching Type does not change the
-              // testid's value — .agents/testing.md § "Testid = stable identity".
-              data-testid={valueTestId}
             />
           )}
         </Box>
