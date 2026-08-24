@@ -115,6 +115,7 @@ const SingleSelectMenuItem = memo(props => {
     <MenuItem
       {...restProps}
       data-testid={option.testId ?? `select-option-${option.value}`}
+      data-selected={isSelected ? 'true' : 'false'}
       sx={[
         muiSx,
         styles.menuItem,
@@ -136,7 +137,10 @@ const SingleSelectMenuItem = memo(props => {
         </ListItemIcon>
       ) : (
         isSelected && (
-          <ListItemIcon sx={[styles.menuItemIcon, styles.menuItemSelectedIcon]}>
+          <ListItemIcon
+            data-testid="select-option-selected-icon"
+            sx={[styles.menuItemIcon, styles.menuItemSelectedIcon]}
+          >
             <CheckedIcon />
           </ListItemIcon>
         )
