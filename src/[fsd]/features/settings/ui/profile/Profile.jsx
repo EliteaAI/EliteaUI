@@ -76,7 +76,7 @@ const Profile = memo(() => {
           <BaseBtn
             data-testid="settings-profile-logout-button"
             variant="secondary"
-            startIcon={<LogoutIcon />}
+            startIcon={<LogoutIcon data-testid="settings-profile-logout-icon" />}
             onClick={onLogout}
             sx={styles.logoutButton}
           >
