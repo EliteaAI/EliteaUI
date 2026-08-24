@@ -34,7 +34,7 @@ export const useConversationTranscript = ({ conversationId, skip = false }) => {
   }, [shouldLoad, fetchConversation, projectId, conversationId, reset]);
 
   useEffect(() => {
-    if (!shouldLoad || !conversation?.id) return;
+    if (!conversation?.id) return;
     getMessageTraces({
       projectId,
       conversationId: conversation.id,
@@ -42,7 +42,7 @@ export const useConversationTranscript = ({ conversationId, skip = false }) => {
     })
       .then(result => setTraceSteps(result.data || null))
       .catch(() => setTraceSteps(null));
-  }, [shouldLoad, conversation, getMessageTraces, projectId]);
+  }, [conversation, getMessageTraces, projectId]);
 
   return useMemo(() => {
     const loaded = shouldLoad ? (conversation ?? null) : null;
