@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
-import { INDEX_SEARCH_TOOL_OPTIONS, IndexStatuses } from '../../constants/indexDetails.constants';
-import { hasLiveRun, indexSearchBlockedReason, indexSearchToolOptions } from '../indexDetails.helpers';
+import {
+  BannerSeverity,
+  INDEX_SEARCH_TOOL_OPTIONS,
+  IndexStatuses,
+} from '../../constants/indexDetails.constants';
+import {
+  bannerOutlivesRun,
+  hasLiveRun,
+  indexSearchBlockedReason,
+  indexSearchToolOptions,
+} from '../indexDetails.helpers';
 
 const runState = over => ({ isIndexing: true, canStopIndexing: false, isStale: false, ...over });
 
@@ -61,5 +70,23 @@ describe('indexSearchBlockedReason', () => {
     expect(indexSearchBlockedReason(IndexStatuses.success, ['index_data'])).toMatch(
       /No search tools are enabled/,
     );
+  });
+});
+
+describe('bannerOutlivesRun', () => {
+  it('keeps a failed run visible after its transcript is gone', () => {
+    expect(bannerOutlivesRun(BannerSeverity.error)).toBe(true);
+  });
+
+  it('keeps a stopped run visible after its transcript is gone', () => {
+    expect(bannerOutlivesRun(BannerSeverity.warning)).toBe(true);
+  });
+
+  it('lets a finished run go quiet', () => {
+    expect(bannerOutlivesRun(BannerSeverity.success)).toBe(false);
+  });
+
+  it('lets a never-indexed row go quiet rather than claim a run is under way', () => {
+    expect(bannerOutlivesRun(BannerSeverity.info)).toBe(false);
   });
 });

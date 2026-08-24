@@ -5,4 +5,6 @@
  */
 export const PANEL_HEADER_HEIGHT = '3.3125rem';
 
+export const PANEL_FOOTER_HEIGHT = '3.25rem';
+
 export const PANEL_GUTTER = '1.5rem';
