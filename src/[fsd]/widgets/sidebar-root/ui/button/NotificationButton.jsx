@@ -67,10 +67,15 @@ const NotificationButton = memo(() => {
     <>
       <Box
         data-tour={SIDEBAR_TOUR_TARGET_IDS.notifications}
+        data-testid="sidebar-notifications-button"
         onClick={onClickNotificationButton}
         sx={styles.container}
       >
-        <BellIcon hasMessages={hasMessages} />
+        <BellIcon
+          hasMessages={hasMessages}
+          data-testid="sidebar-notifications-bell-icon"
+          data-has-messages={hasMessages ? 'true' : 'false'}
+        />
       </Box>
       {notificationListAnchorEl && (
         <NotificationList

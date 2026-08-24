@@ -99,6 +99,7 @@ const NotificationList = memo(props => {
       slotProps={{
         paper: {
           sx: styles.popoverPaper,
+          'data-testid': 'sidebar-notifications-popover',
         },
       }}
       sx={styles.popover}
@@ -106,12 +107,14 @@ const NotificationList = memo(props => {
       <Box sx={styles.container}>
         <Box sx={styles.header}>
           <Typography
+            data-testid="sidebar-notifications-popover-title"
             variant="labelMedium"
             color="text.secondary"
           >
             Notifications
           </Typography>
           <BaseBtn
+            data-testid="sidebar-notifications-close-button"
             variant={BUTTON_VARIANTS.tertiary}
             startIcon={<CloseIcon />}
             onClick={onCloseNotificationList}
@@ -147,6 +150,7 @@ const NotificationList = memo(props => {
         </Box>
         {notifications.length > 0 && (
           <BaseBtn
+            data-testid="sidebar-notifications-mark-all-read-button"
             variant={BUTTON_VARIANTS.auxiliary}
             onClick={onMarkAllAsRead}
             sx={styles.markAllButton}
