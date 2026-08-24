@@ -2,7 +2,6 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useSelector, useStore } from 'react-redux';
 
-import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import { Alert, Box, CircularProgress, Snackbar, Tooltip, Typography } from '@mui/material';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 
@@ -25,6 +24,8 @@ import { exportToExcel } from '@/[fsd]/shared/lib/utils';
 import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import TabGroupButton from '@/[fsd]/shared/ui/tab-group-button/TabGroupButton';
 import { BaseTab, BaseTabs } from '@/[fsd]/shared/ui/tabs';
+import DownloadIcon from '@/assets/download.svg?react';
+import RefreshIcon from '@/assets/refresh-icon.svg?react';
 import ArrowDownIcon from '@/components/Icons/ArrowDownIcon';
 import ArrowLeftIcon from '@/components/Icons/ArrowLeftIcon';
 import ArrowRightIcon from '@/components/Icons/ArrowRightIcon';
@@ -86,6 +87,7 @@ const AnalyticsContainer = memo(() => {
 
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const dateFromISO = useMemo(() => dateFrom?.toISOString(), [dateFrom]);
   const dateToISO = useMemo(() => dateTo?.toISOString(), [dateTo]);
@@ -180,6 +182,17 @@ const AnalyticsContainer = memo(() => {
 
   const handleCloseExportError = useCallback(() => setExportError(false), []);
 
+  const handleRefresh = useCallback(() => {
+    setRefreshing(true);
+    setDateTo(new Date());
+  }, []);
+
+  useEffect(() => {
+    if (refreshing && !isFetching) {
+      setRefreshing(false);
+    }
+  }, [isFetching, refreshing]);
+
   useEffect(() => {
     if (tourId !== ANALYTICS_TOUR_ID || !currentStep) return;
     if (typeof currentStep.tabIndex === 'number') {
@@ -224,23 +237,38 @@ const AnalyticsContainer = memo(() => {
           </Box>
         )}
         <Tooltip
-          title={exporting ? 'Preparing export…' : 'Export to Excel'}
+          title="Refresh data"
           placement="top"
         >
           <Box
             component="span"
-            sx={styles.exportButtonWrapper}
+            sx={styles.refreshButtonWrapper}
           >
             <BaseBtn
-              variant={BUTTON_VARIANTS.icon}
+              variant={BUTTON_VARIANTS.secondary}
+              color="secondary"
+              onClick={handleRefresh}
+              disabled={refreshing}
+              aria-label="Refresh data"
+              data-testid="analytics-refresh-button"
+              startIcon={refreshing ? <CircularProgress size="1rem" /> : <RefreshIcon sx={styles.icon} />}
+            />
+          </Box>
+        </Tooltip>
+        <Tooltip
+          title={exporting ? 'Preparing export…' : 'Export to Excel'}
+          placement="top"
+        >
+          <Box component="span">
+            <BaseBtn
+              variant={BUTTON_VARIANTS.secondary}
               color="secondary"
               onClick={handleExport}
               disabled={exporting}
               aria-label="Export to Excel"
               data-testid="analytics-export-button"
-            >
-              {exporting ? <CircularProgress size={16} /> : <FileDownloadOutlinedIcon fontSize="small" />}
-            </BaseBtn>
+              startIcon={exporting ? <CircularProgress size="1rem" /> : <DownloadIcon sx={styles.icon} />}
+            />
           </Box>
         </Tooltip>
       </Box>
@@ -406,7 +434,10 @@ const analyticsContainerStyles = () => ({
     padding: '0 1.5rem',
     boxSizing: 'border-box',
   },
-  exportButtonWrapper: {
+  icon: {
+    fontSize: '1rem',
+  },
+  refreshButtonWrapper: {
     marginLeft: 'auto',
   },
   projectLabel: ({ palette }) => ({
