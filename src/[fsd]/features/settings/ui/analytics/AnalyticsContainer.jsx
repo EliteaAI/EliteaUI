@@ -272,10 +272,7 @@ const AnalyticsContainer = memo(() => {
           title={exporting ? 'Preparing export…' : 'Export to Excel'}
           placement="top"
         >
-          <Box
-            component="span"
-            sx={styles.exportButtonWrapper}
-          >
+          <Box component="span">
             <BaseBtn
               variant={BUTTON_VARIANTS.secondary}
               color="secondary"
@@ -458,7 +455,6 @@ const analyticsContainerStyles = () => ({
   icon: {
     fontSize: '1rem',
   },
-  exportButtonWrapper: {},
   refreshButtonWrapper: {
     marginLeft: 'auto',
   },
