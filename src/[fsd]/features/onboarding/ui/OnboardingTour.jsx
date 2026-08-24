@@ -44,6 +44,7 @@ const OnboardingTour = memo(() => {
         sx={styles.wrapper}
       >
         <IconButton
+          data-testid="onboarding-tour-fullscreen-button"
           variant="elitea"
           color="secondary"
           onClick={onOpenTourFullScreen}
@@ -70,12 +71,14 @@ const OnboardingTour = memo(() => {
       >
         <Box sx={styles.tourDialogHeader}>
           <Typography
+            data-testid="onboarding-tour-fullscreen-title"
             color="text.secondary"
             variant="headingMedium"
           >
             Onboarding tips
           </Typography>
           <IconButton
+            data-testid="onboarding-tour-fullscreen-close-button"
             variant="elitea"
             color="tertiary"
             onClick={onCloseTourFullScreen}
@@ -170,6 +173,7 @@ const styles = {
 
 const tourDialogSlotProps = {
   paper: {
+    'data-testid': 'onboarding-tour-fullscreen-dialog',
     sx: styles.tourDialogPaper,
   },
 };

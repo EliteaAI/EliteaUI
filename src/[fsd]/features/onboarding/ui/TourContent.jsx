@@ -14,6 +14,7 @@ const TourContent = memo(props => {
     <>
       <Box sx={styles.imageWrapper}>
         <Box
+          data-testid="onboarding-tour-tip-image"
           component="img"
           src={onboardingTips[currentStep - 1].image}
           alt="Elitea"

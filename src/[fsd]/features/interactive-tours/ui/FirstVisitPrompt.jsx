@@ -36,6 +36,7 @@ const FirstVisitPrompt = memo(props => {
     <InteractiveTourBackdrop>
       <TrapFocus open>
         <TourCard
+          data-testid="interactive-tour-first-visit-prompt"
           role="dialog"
           aria-modal="true"
           aria-labelledby={TITLE_ID}
@@ -63,6 +64,7 @@ const FirstVisitPrompt = memo(props => {
 
           <Box sx={styles.footer}>
             <BaseBtn
+              data-testid="interactive-tour-first-visit-skip-button"
               variant={BUTTON_VARIANTS.secondary}
               onClick={onSkip}
             >
