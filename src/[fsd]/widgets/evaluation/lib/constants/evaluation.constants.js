@@ -75,6 +75,10 @@ export const EVAL_PERMISSIONS = {
   datasetDelete: 'models.applications.evaluation.dataset.delete',
   runRead: 'models.applications.evaluation.run.read',
   runCreate: 'models.applications.evaluation.run.create',
+  // Backend has no dedicated run.delete permission yet — delete is guarded by
+  // run.create too (see eval_run.py). Kept as its own key so call sites read
+  // correctly and only need updating here if/when the backend splits it out.
+  runDelete: 'models.applications.evaluation.run.create',
   humanScoreRead: 'models.applications.evaluation.human_score.read',
   humanScoreCreate: 'models.applications.evaluation.human_score.create',
 };

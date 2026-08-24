@@ -51,7 +51,7 @@ const ResultsScorecardDialog = memo(props => {
   const { checkPermission } = useCheckPermission();
   const { toastError, toastSuccess } = useToast();
   const canScore = checkPermission(EVAL_PERMISSIONS.humanScoreCreate);
-  const canDelete = checkPermission(EVAL_PERMISSIONS.runCreate);
+  const canDelete = checkPermission(EVAL_PERMISSIONS.runDelete);
 
   const [filter, setFilter] = useState(CASE_FILTER.all);
   const [selectedCaseId, setSelectedCaseId] = useState(null);

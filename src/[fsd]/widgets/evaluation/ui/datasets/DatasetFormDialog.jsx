@@ -7,7 +7,7 @@ import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn
 
 import { useCreateEvalDatasetMutation, useUpdateEvalDatasetMutation } from '../../api';
 import { DEFAULT_DATASET_FORM } from '../../lib/constants';
-import { parseEvalError } from '../../lib/helpers';
+import { isDatasetSharedIn, parseEvalError } from '../../lib/helpers';
 
 const toFormState = dataset => {
   if (!dataset) return { ...DEFAULT_DATASET_FORM };
@@ -22,6 +22,9 @@ const DatasetFormDialog = memo(props => {
   const { open, onClose, projectId, applicationId, dataset, onSaved } = props;
 
   const isEdit = !!dataset?.id;
+  // A shared-in dataset (owned by another agent) is never reachable through the rename
+  // action, but the checkbox is disabled here too as a second line of defense.
+  const isSharedIn = isDatasetSharedIn(dataset, applicationId);
 
   const [form, setForm] = useState(() => toFormState(dataset));
   const [errorMessage, setErrorMessage] = useState('');
@@ -103,6 +106,7 @@ const DatasetFormDialog = memo(props => {
         control={
           <Checkbox
             checked={form.isShared}
+            disabled={isSharedIn}
             onChange={event => setField('isShared', event.target.checked)}
             data-testid="dataset-shared-checkbox"
           />

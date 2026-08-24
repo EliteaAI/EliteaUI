@@ -9,7 +9,7 @@ import useToast from '@/hooks/useToast';
 
 import { useDeleteEvalDatasetMutation, useEvalDatasetsQuery } from '../../api';
 import { EVAL_PERMISSIONS, NEW_DATASET_MENU } from '../../lib/constants';
-import { parseEvalError } from '../../lib/helpers';
+import { isDatasetSharedIn, parseEvalError } from '../../lib/helpers';
 import DatasetDetailView from './DatasetDetailView';
 import DatasetFormDialog from './DatasetFormDialog';
 import DatasetImportDialog from './DatasetImportDialog';
@@ -50,6 +50,8 @@ const DatasetsView = memo(props => {
     () => datasets.find(d => d.id === selectedDatasetId) ?? null,
     [datasets, selectedDatasetId],
   );
+
+  const canUpdateSelected = canUpdate && !isDatasetSharedIn(selectedDataset, applicationId);
 
   const openDataset = useCallback(dataset => setSelectedDatasetId(dataset.id), []);
   const backToList = useCallback(() => setSelectedDatasetId(null), []);
@@ -141,7 +143,7 @@ const DatasetsView = memo(props => {
       {selectedDataset ? (
         <DatasetDetailView
           datasetId={selectedDataset.id}
-          canUpdate={canUpdate}
+          canUpdate={canUpdateSelected}
           onBack={backToList}
           onImport={openImport}
           onPromote={openPromote}

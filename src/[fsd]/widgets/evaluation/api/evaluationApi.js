@@ -197,15 +197,11 @@ export const evaluationApi = eliteaApi
 
       // ---- Datasets ----
       evalDatasets: build.query({
-        query: ({ projectId, agentId }) => {
-          const params = new URLSearchParams();
-          if (agentId != null) params.set('agent_id', String(agentId));
-          const query = params.toString();
-          return {
-            url: `/elitea_core/eval_datasets/prompt_lib/${projectId}${query ? `?${query}` : ''}`,
-            method: 'GET',
-          };
-        },
+        query: ({ projectId, agentId }) => ({
+          url: `/elitea_core/eval_datasets/prompt_lib/${projectId}`,
+          method: 'GET',
+          params: agentId != null ? { agent_id: agentId } : undefined,
+        }),
         providesTags: [TAG_EVAL_DATASET],
       }),
       // Server-paged: the response carries `case_count` (total across the dataset) and

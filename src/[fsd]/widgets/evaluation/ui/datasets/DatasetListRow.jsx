@@ -5,6 +5,7 @@ import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import EditIcon from '@/components/Icons/EditIcon';
 
+import { isDatasetSharedIn } from '../../lib/helpers';
 import { EvaluationRowBadge, evaluationRowStyles } from '../common';
 
 const DatasetListRow = memo(props => {
@@ -37,7 +38,9 @@ const DatasetListRow = memo(props => {
   const styles = evaluationRowStyles({ clickable: true });
 
   const caseCount = dataset.case_count ?? dataset.cases?.length ?? 0;
-  const isSharedIn = applicationId != null && dataset.agent_id != null && dataset.agent_id !== applicationId;
+  const isSharedIn = isDatasetSharedIn(dataset, applicationId);
+  const canEditRow = canEdit && !isSharedIn;
+  const canDeleteRow = canDelete && !isSharedIn;
 
   return (
     <Box
@@ -65,9 +68,9 @@ const DatasetListRow = memo(props => {
         )}
       </Box>
 
-      {(canEdit || canDelete) && (
+      {(canEditRow || canDeleteRow) && (
         <Box sx={styles.actions}>
-          {canEdit && (
+          {canEditRow && (
             <Tooltip
               title="Rename"
               placement="top"
@@ -81,7 +84,7 @@ const DatasetListRow = memo(props => {
               </IconButton>
             </Tooltip>
           )}
-          {canDelete && (
+          {canDeleteRow && (
             <Tooltip
               title="Delete"
               placement="top"
