@@ -97,6 +97,7 @@ const ConfigurationSection = memo(props => {
         <Typography
           variant="bodyMedium"
           color="text.primary"
+          data-testid={sectionTestId ? `${sectionTestId}-loading` : undefined}
         >
           Loading...
         </Typography>
