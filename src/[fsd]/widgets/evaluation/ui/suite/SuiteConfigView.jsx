@@ -50,6 +50,7 @@ import { LastRunSummary, ResultsScorecardDialog, RunHistoryList, RunProgressDial
 import AddValidationMenu from './AddValidationMenu';
 import BindingDetailDialog from './BindingDetailDialog';
 import BindingList from './BindingList';
+import GenerateDimensionsDialog from './GenerateDimensionsDialog';
 import LibraryPickerDialog from './LibraryPickerDialog';
 
 const NONE_DATASET = '';
@@ -99,6 +100,7 @@ const SuiteConfigView = memo(props => {
   const [bindingDialog, setBindingDialog] = useState({ open: false, binding: null });
   const [pickerDialog, setPickerDialog] = useState({ open: false, kind: null });
   const [dimensionDialog, setDimensionDialog] = useState(false);
+  const [generateDialog, setGenerateDialog] = useState(false);
   const [codeValidationDialog, setCodeValidationDialog] = useState(false);
   const [removeTarget, setRemoveTarget] = useState(null);
   const [runDialog, setRunDialog] = useState({ open: false, runId: null });
@@ -360,6 +362,9 @@ const SuiteConfigView = memo(props => {
       case ADD_VALIDATION_MENU.newCodeValidation:
         setCodeValidationDialog(true);
         break;
+      case ADD_VALIDATION_MENU.generateWithAi:
+        setGenerateDialog(true);
+        break;
       default:
         break;
     }
@@ -438,6 +443,7 @@ const SuiteConfigView = memo(props => {
   const handleCloseBindingDialog = useCallback(() => setBindingDialog({ open: false, binding: null }), []);
   const handleClosePickerDialog = useCallback(() => setPickerDialog({ open: false, kind: null }), []);
   const handleCloseDimensionDialog = useCallback(() => setDimensionDialog(false), []);
+  const handleCloseGenerateDialog = useCallback(() => setGenerateDialog(false), []);
   const handleCloseCodeValidationDialog = useCallback(() => setCodeValidationDialog(false), []);
   const handleCloseRemoveTarget = useCallback(() => setRemoveTarget(null), []);
 
@@ -756,6 +762,15 @@ const SuiteConfigView = memo(props => {
           result?.id != null && attachBinding(dimensionBindingBody(result, evidenceScope))
         }
         onClose={handleCloseDimensionDialog}
+      />
+
+      <GenerateDimensionsDialog
+        open={generateDialog}
+        projectId={projectId}
+        applicationId={applicationId}
+        applicationVersionId={applicationVersionId}
+        suiteId={selectedSuiteId}
+        onClose={handleCloseGenerateDialog}
       />
 
       <CodeValidationEditorDialog

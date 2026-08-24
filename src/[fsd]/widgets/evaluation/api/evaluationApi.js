@@ -106,6 +106,17 @@ export const evaluationApi = eliteaApi
         invalidatesTags: [TAG_EVAL_CODE_VALIDATION],
       }),
 
+      // Draft-only: proposes dimensions + binding suggestions from an agent's current
+      // instructions. Nothing is persisted here — accepted items are created via the
+      // regular createEvalDimension/addEvalBinding calls.
+      generateEvalDimensions: build.mutation({
+        query: ({ projectId, body }) => ({
+          url: `/elitea_core/generate_eval_dimensions/prompt_lib/${projectId}`,
+          method: 'POST',
+          body,
+        }),
+      }),
+
       // ---- Suites ----
       evalSuites: build.query({
         query: ({ projectId, applicationId }) => ({
@@ -420,6 +431,7 @@ export const {
   useCreateEvalCodeValidationMutation,
   useUpdateEvalCodeValidationMutation,
   useDeleteEvalCodeValidationMutation,
+  useGenerateEvalDimensionsMutation,
   useEvalSuitesQuery,
   useBootstrapEvalSuiteMutation,
   useCreateEvalSuiteMutation,
