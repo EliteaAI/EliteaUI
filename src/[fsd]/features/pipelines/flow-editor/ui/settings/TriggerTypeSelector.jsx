@@ -8,6 +8,7 @@ import { Box, IconButton } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { PipelineNodeTypes } from '@/[fsd]/features/pipelines/flow-editor/lib/constants/flowEditor.constants';
+import { useDelegatedOauthToolkits } from '@/[fsd]/features/toolkits/lib/hooks';
 import { InfoLabelWithTooltip } from '@/[fsd]/shared/ui/label';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { useGetPipelineTriggerQuery, useUpdatePipelineTriggerMutation } from '@/api/applications';
@@ -78,13 +79,23 @@ const TriggerTypeSelector = memo(props => {
     return hasInteractiveNodes || hasInterrupts;
   }, [versionInstructions]);
 
-  // Filter trigger options based on pipeline content
+  // Toolkits authenticated by a per-user OAuth login only hold a token for the browser session of the
+  // person who logged in, so a pipeline using them cannot run unattended on a schedule or webhook.
+  const { delegatedOauthToolkitNames, hasDelegatedOauthToolkit } = useDelegatedOauthToolkits(
+    values?.version_details?.tools,
+    projectId,
+  );
+
+  const restrictedToChatMessage = hasInteractiveElements || hasDelegatedOauthToolkit;
+
+  // Unattended triggers stay visible but greyed out so the restriction is discoverable; the Trigger
+  // label tooltip explains why.
   const availableTriggerOptions = useMemo(() => {
-    if (hasInteractiveElements) {
-      return TRIGGER_OPTIONS.filter(opt => opt.value === TRIGGER_TYPES.chat_message);
-    }
-    return TRIGGER_OPTIONS;
-  }, [hasInteractiveElements]);
+    if (!restrictedToChatMessage) return TRIGGER_OPTIONS;
+    return TRIGGER_OPTIONS.map(opt =>
+      opt.value === TRIGGER_TYPES.chat_message ? opt : { ...opt, disabled: true },
+    );
+  }, [restrictedToChatMessage]);
 
   // State for schedule modal
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
@@ -105,18 +116,21 @@ const TriggerTypeSelector = memo(props => {
     [triggerData?.type],
   );
 
-  // Track previous hasInteractiveElements to detect when it changes from false to true
-  const prevHasInteractiveRef = useRef(hasInteractiveElements);
+  // Track the previous restriction state to detect when it changes from false to true
+  const prevRestrictedRef = useRef(restrictedToChatMessage);
 
-  // Auto-reset to Chat Message when interactive elements are added to a pipeline with incompatible trigger
+  // Auto-reset to Chat Message when the pipeline becomes incompatible with its configured trigger
   useEffect(() => {
-    const wasNotInteractive = !prevHasInteractiveRef.current;
-    const isNowInteractive = hasInteractiveElements;
+    const wasNotRestricted = !prevRestrictedRef.current;
     const hasIncompatibleTrigger =
       currentTriggerType === TRIGGER_TYPES.schedule || currentTriggerType === TRIGGER_TYPES.webhook;
 
-    // Only reset if: became interactive AND has incompatible trigger AND we can make the API call
-    if (wasNotInteractive && isNowInteractive && hasIncompatibleTrigger && projectId && versionId) {
+    // Only reset if: became restricted AND has incompatible trigger AND we can make the API call
+    if (wasNotRestricted && restrictedToChatMessage && hasIncompatibleTrigger && projectId && versionId) {
+      const reason = hasInteractiveElements
+        ? 'pipeline now contains interactive elements'
+        : 'pipeline now contains a toolkit that requires user authorization';
+
       updateTrigger({
         projectId,
         versionId,
@@ -124,15 +138,16 @@ const TriggerTypeSelector = memo(props => {
       })
         .unwrap()
         .then(() => {
-          toastSuccess('Trigger reset to Chat Message (pipeline now contains interactive elements)');
+          toastSuccess(`Trigger reset to Chat Message (${reason})`);
         })
         .catch(() => {
           toastError('Failed to reset trigger');
         });
     }
 
-    prevHasInteractiveRef.current = hasInteractiveElements;
+    prevRestrictedRef.current = restrictedToChatMessage;
   }, [
+    restrictedToChatMessage,
     hasInteractiveElements,
     currentTriggerType,
     projectId,
@@ -279,8 +294,13 @@ const TriggerTypeSelector = memo(props => {
     if (hasInteractiveElements) {
       return `${baseTooltip}\n\nNote: This pipeline contains HITL, Printer nodes, or interrupts that require user interaction. Only Chat Message trigger is available.`;
     }
+    if (hasDelegatedOauthToolkit) {
+      return `${baseTooltip}\n\nNote: ${delegatedOauthToolkitNames.join(', ')} ${
+        delegatedOauthToolkitNames.length > 1 ? 'require' : 'requires'
+      } an interactive user login, which is not possible in unattended runs. Only Chat Message trigger is available.`;
+    }
     return baseTooltip;
-  }, [hasInteractiveElements]);
+  }, [hasInteractiveElements, hasDelegatedOauthToolkit, delegatedOauthToolkitNames]);
 
   return (
     <Box sx={styles.container}>

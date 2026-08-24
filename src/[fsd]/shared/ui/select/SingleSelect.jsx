@@ -452,6 +452,7 @@ const SingleSelect = memo(props => {
             key={option.value}
             value={option.value}
             option={option}
+            disabled={option.disabled}
             isSelected={effectiveMultiple ? realValue.includes(option.value) : option.value === realValue}
             onClear={onClear ? wrappedOnClear : undefined}
             customRenderOption={customRenderOption}
