@@ -182,7 +182,7 @@ describe('AnalyticsCosts', () => {
     expect(screen.getByText('Daily Cost Trend')).toBeTruthy();
     const bar = screen.getByTestId('bar-total_cost');
     expect(bar).toBeTruthy();
-    expect(bar).toHaveAttribute('data-name', 'Cost');
+    expect(bar).toHaveAttribute('data-name', 'Total Cost');
   });
 
   it('does not render the charts when their series are empty', () => {

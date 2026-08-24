@@ -91,6 +91,8 @@ const AnalyticsTokens = memo(props => {
           total_tokens: tokens.total,
           input_tokens: tokens.input,
           output_tokens: tokens.output,
+          cache_read_tokens: tokens.cacheRead,
+          cache_creation_tokens: tokens.cacheWrite,
         };
       }),
     [data?.daily],
@@ -209,6 +211,18 @@ const AnalyticsTokens = memo(props => {
                   dataKey="output_tokens"
                   name="Output Tokens"
                   fill={AnalyticsCommonConstants.CHART_COLORS[2]}
+                  radius={[4, 4, 0, 0]}
+                />
+                <Bar
+                  dataKey="cache_read_tokens"
+                  name="Cache Read Tokens"
+                  fill={AnalyticsCommonConstants.CHART_COLORS[3]}
+                  radius={[4, 4, 0, 0]}
+                />
+                <Bar
+                  dataKey="cache_creation_tokens"
+                  name="Cache Write Tokens"
+                  fill={AnalyticsCommonConstants.CHART_COLORS[4]}
                   radius={[4, 4, 0, 0]}
                 />
               </BarChart>
