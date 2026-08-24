@@ -131,7 +131,10 @@ const McpAuthStatus = memo((props = {}) => {
         data-tour={MCP_TOUR_TARGET_IDS.connectionStatus}
       >
         <Box sx={styles.statusContent}>
-          <OnlineIcon style={styles.statusIconOnline} />
+          <OnlineIcon
+            data-testid="toolkit-connection-status-icon"
+            style={styles.statusIconOnline}
+          />
           <Typography
             data-testid="toolkit-connection-status"
             variant="bodySmall"
