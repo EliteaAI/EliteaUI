@@ -315,7 +315,10 @@ const RunStateDialog = memo(props => {
                   States
                 </Typography>
               </Box>
-              <Box sx={styles.statesContainer}>
+              <Box
+                sx={styles.statesContainer}
+                data-testid="pipeline-run-details-states-section"
+              >
                 {variables.map((variable, index) => {
                   return (
                     <BasicAccordion
