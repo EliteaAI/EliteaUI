@@ -616,6 +616,9 @@ const ToolBaseProperty = memo(props => {
               tooltipTestId: 'toolkit-field-bucket-info-icon',
               tooltipContentTestId: 'toolkit-field-bucket-info-tooltip-content',
             })}
+            {...((k === 'timeout' || k === 'cache_ttl') && {
+              tooltipTestId: `toolkit-field-${k}-info-icon`,
+            })}
             onFocus={() => toggleFieldFocus(k)}
             onBlur={() => toggleFieldFocus(null)}
             {...(isNameField && {
