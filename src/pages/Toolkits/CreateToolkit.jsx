@@ -202,6 +202,8 @@ const CreateToolkit = memo(props => {
                           setFormikInitialValues={setFormikInitialValues}
                           isMCP={isMCP}
                           isApplication={isApplication}
+                          titleTestId={isMCP ? 'mcp-type-picker-heading' : undefined}
+                          chipTestIdPrefix={isMCP ? 'mcp-type-picker-filter-chip' : undefined}
                         />
                       </Box>
                     )}

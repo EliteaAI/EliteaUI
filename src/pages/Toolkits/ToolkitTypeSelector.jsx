@@ -20,7 +20,15 @@ import { ToolInitialValues } from '@/pages/Applications/Components/Tools/consts'
 const predefinedTools = ['custom'];
 
 const ToolkitTypeSelector = memo(
-  ({ onSelectTool, setFormikInitialValues, isMCP, isApplication, disableNavigation = false }) => {
+  ({
+    onSelectTool,
+    setFormikInitialValues,
+    isMCP,
+    isApplication,
+    disableNavigation = false,
+    titleTestId,
+    chipTestIdPrefix,
+  }) => {
     const [getModels] = useLazyListModelsQuery();
     const projectId = useSelectedProjectId();
     const { personal_project_id } = useSelector(state => state.user);
@@ -222,8 +230,8 @@ const ToolkitTypeSelector = memo(
           renderCategory={renderCategory}
           renderNoResults={renderNoResults}
           searchInputTestId={!isApplication && !isMCP ? 'toolkit-wizard-type-search-input' : undefined}
-          titleTestId={isMCP ? 'mcp-type-picker-heading' : undefined}
-          chipTestIdPrefix={isMCP ? 'mcp-type-picker-filter-chip' : undefined}
+          titleTestId={titleTestId}
+          chipTestIdPrefix={chipTestIdPrefix}
           {...searchProps}
         />
       </>
