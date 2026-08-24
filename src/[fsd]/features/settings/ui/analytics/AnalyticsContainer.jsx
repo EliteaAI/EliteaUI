@@ -3,6 +3,7 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector, useStore } from 'react-redux';
 
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
+import RefreshOutlinedIcon from '@mui/icons-material/RefreshOutlined';
 import { Alert, Box, CircularProgress, Snackbar, Tooltip, Typography } from '@mui/material';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 
@@ -87,6 +88,7 @@ const AnalyticsContainer = memo(() => {
 
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const dateFromISO = useMemo(() => dateFrom?.toISOString(), [dateFrom]);
   const dateToISO = useMemo(() => dateTo?.toISOString(), [dateTo]);
@@ -181,6 +183,17 @@ const AnalyticsContainer = memo(() => {
 
   const handleCloseExportError = useCallback(() => setExportError(false), []);
 
+  const handleRefresh = useCallback(() => {
+    setRefreshing(true);
+    setDateTo(new Date());
+  }, []);
+
+  useEffect(() => {
+    if (refreshing && !isFetching) {
+      setRefreshing(false);
+    }
+  }, [isFetching, refreshing]);
+
   useEffect(() => {
     if (tourId !== ANALYTICS_TOUR_ID || !currentStep) return;
     if (typeof currentStep.tabIndex === 'number') {
@@ -236,6 +249,26 @@ const AnalyticsContainer = memo(() => {
             <Typography variant="bodySmall">Project: {projectName}</Typography>
           </Box>
         )}
+        <Tooltip
+          title="Refresh data"
+          placement="top"
+        >
+          <Box
+            component="span"
+            sx={styles.refreshButtonWrapper}
+          >
+            <BaseBtn
+              variant={BUTTON_VARIANTS.icon}
+              color="secondary"
+              onClick={handleRefresh}
+              disabled={refreshing}
+              aria-label="Refresh data"
+              data-testid="analytics-refresh-button"
+            >
+              {refreshing ? <CircularProgress size={16} /> : <RefreshOutlinedIcon fontSize="small" />}
+            </BaseBtn>
+          </Box>
+        </Tooltip>
         <Tooltip
           title={exporting ? 'Preparing export…' : 'Export to Excel'}
           placement="top"
@@ -424,7 +457,8 @@ const analyticsContainerStyles = () => ({
     padding: '0 1.5rem',
     boxSizing: 'border-box',
   },
-  exportButtonWrapper: {
+  exportButtonWrapper: {},
+  refreshButtonWrapper: {
     marginLeft: 'auto',
   },
   projectLabel: ({ palette }) => ({
