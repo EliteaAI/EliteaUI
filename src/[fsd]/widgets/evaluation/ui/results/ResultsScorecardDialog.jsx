@@ -9,7 +9,7 @@ import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import useToast from '@/hooks/useToast';
 
-import { useEvalRunResultsQuery, useWriteEvalHumanScoreMutation } from '../../api';
+import { useDeleteEvalRunMutation, useEvalRunResultsQuery, useWriteEvalHumanScoreMutation } from '../../api';
 import { EVAL_PERMISSIONS } from '../../lib/constants';
 import {
   buildEvaluationResultsSheets,
@@ -51,16 +51,19 @@ const ResultsScorecardDialog = memo(props => {
   const { checkPermission } = useCheckPermission();
   const { toastError, toastSuccess } = useToast();
   const canScore = checkPermission(EVAL_PERMISSIONS.humanScoreCreate);
+  const canDelete = checkPermission(EVAL_PERMISSIONS.runDelete);
 
   const [filter, setFilter] = useState(CASE_FILTER.all);
   const [selectedCaseId, setSelectedCaseId] = useState(null);
   const [savingKey, setSavingKey] = useState(null);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   const shouldFetch = open && projectId != null && runId != null;
 
   const { data, isFetching, isError } = useEvalRunResultsQuery({ projectId, runId }, { skip: !shouldFetch });
 
   const [writeHumanScore] = useWriteEvalHumanScoreMutation();
+  const [deleteEvalRun, { isLoading: isDeleting }] = useDeleteEvalRunMutation();
 
   // The results read is paged (EVAL_RESULT_MAX_LIMIT). A run bigger than one page is shown as the
   // case range the page actually covers, so a truncated read cannot pass for a complete scorecard.
@@ -140,6 +143,19 @@ const ResultsScorecardDialog = memo(props => {
       toastError(parseEvalError(error, 'Failed to export results.'));
     }
   }, [scorecard, runId, toastError]);
+
+  const requestDelete = useCallback(() => setConfirmingDelete(true), []);
+  const cancelDelete = useCallback(() => setConfirmingDelete(false), []);
+  const confirmDelete = useCallback(async () => {
+    try {
+      await deleteEvalRun({ projectId, runId }).unwrap();
+      toastSuccess('Run deleted.');
+      setConfirmingDelete(false);
+      onClose?.();
+    } catch (error) {
+      toastError(parseEvalError(error, 'Failed to delete run.'));
+    }
+  }, [deleteEvalRun, projectId, runId, toastSuccess, toastError, onClose]);
 
   const styles = resultsScorecardDialogStyles();
 
@@ -237,34 +253,55 @@ const ResultsScorecardDialog = memo(props => {
   );
 
   return (
-    <Modal.BaseModal
-      open={open}
-      title={runId != null ? `Run #${runId} results` : 'Evaluation results'}
-      onClose={onClose}
-      content={content}
-      actions={
-        <>
-          <Button.BaseBtn
-            variant={BUTTON_VARIANTS.elitea}
-            color={BUTTON_COLORS.secondary}
-            onClick={handleExport}
-            disabled={!data}
-            data-testid="evaluation-scorecard-export"
-          >
-            Export
-          </Button.BaseBtn>
-          <Button.BaseBtn
-            variant={BUTTON_VARIANTS.elitea}
-            color={BUTTON_COLORS.secondary}
-            onClick={onClose}
-            data-testid="evaluation-scorecard-close"
-          >
-            Close
-          </Button.BaseBtn>
-        </>
-      }
-      data-testid="evaluation-scorecard-dialog"
-    />
+    <>
+      <Modal.BaseModal
+        open={open}
+        title={runId != null ? `Run #${runId} results` : 'Evaluation results'}
+        onClose={onClose}
+        content={content}
+        actions={
+          <>
+            {canDelete && (
+              <Button.BaseBtn
+                variant={BUTTON_VARIANTS.elitea}
+                color={BUTTON_COLORS.alarm}
+                onClick={requestDelete}
+                data-testid="evaluation-scorecard-delete"
+              >
+                Delete run
+              </Button.BaseBtn>
+            )}
+            <Button.BaseBtn
+              variant={BUTTON_VARIANTS.elitea}
+              color={BUTTON_COLORS.secondary}
+              onClick={handleExport}
+              disabled={!data}
+              data-testid="evaluation-scorecard-export"
+            >
+              Export
+            </Button.BaseBtn>
+            <Button.BaseBtn
+              variant={BUTTON_VARIANTS.elitea}
+              color={BUTTON_COLORS.secondary}
+              onClick={onClose}
+              data-testid="evaluation-scorecard-close"
+            >
+              Close
+            </Button.BaseBtn>
+          </>
+        }
+        data-testid="evaluation-scorecard-dialog"
+      />
+
+      <Modal.DeleteEntityModal
+        open={confirmingDelete}
+        name={runId != null ? `Run #${runId}` : ''}
+        onClose={cancelDelete}
+        onConfirm={confirmDelete}
+        alarm
+        confirming={isDeleting}
+      />
+    </>
   );
 });
 
