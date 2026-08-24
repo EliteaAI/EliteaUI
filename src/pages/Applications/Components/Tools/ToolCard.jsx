@@ -417,6 +417,7 @@ const ToolCard = memo(props => {
             <Box sx={styles.contentBox(isAgentOrPipeline)}>
               <Box sx={styles.titleRow}>
                 <TypographyWithConditionalTooltip
+                  data-testid="toolkit-card-name"
                   title={toolkitName}
                   placement="right"
                   variant="bodyMedium"
@@ -577,7 +578,11 @@ const ToolCard = memo(props => {
                   title={mcpDisconnectedTip}
                   placement="top"
                 >
-                  <Box sx={styles.statusIconBox(isMcpAuthorized)}>
+                  <Box
+                    data-testid="toolkit-card-connection-status"
+                    data-connected={String(isMcpAuthorized)}
+                    sx={styles.statusIconBox(isMcpAuthorized)}
+                  >
                     {isMcpAuthorized ? (
                       <OnlineIcon style={styles.statusIconOnline} />
                     ) : (

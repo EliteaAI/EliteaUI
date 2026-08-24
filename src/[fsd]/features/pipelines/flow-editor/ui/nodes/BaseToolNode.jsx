@@ -200,13 +200,15 @@ const BaseToolNode = memo(props => {
         onChangeMapping={onChangeMapping}
         disabled={isRunningPipeline}
         valueTestIdPrefix={testIdPrefix ? `${testIdPrefix}-input-mapping-value` : undefined}
-        // Toolkit-only (ELITEA-2010): the Input-mapping Type select is exercised only by
-        // the Toolkit node's test. The MCP node's equivalent select is untouched by any
-        // test and still relies on the positional `#simple-select-Type` workaround — do
-        // not widen this to `testIdPrefix` (that would add an unreferenced testid on MCP,
-        // .agents/testing.md § Locator policy — testid scope is load-bearing).
+        // Toolkit (ELITEA-2010) + MCP (ELITEA-1953): the Input-mapping Type select is
+        // exercised by those two node types' tests only. MCP was widened in for
+        // ELITEA-1953, whose whole subject IS this select (change Fixed -> Variable and
+        // assert it persists) — so the testid is referenced on an executed code path,
+        // which is exactly what .agents/testing.md § Locator policy (canon ruling #511)
+        // requires. Do NOT widen further to node types no test exercises.
         typeTestIdPrefix={
-          nodeType === FlowEditorConstants.PipelineNodeTypes.Toolkit
+          nodeType === FlowEditorConstants.PipelineNodeTypes.Toolkit ||
+          nodeType === FlowEditorConstants.PipelineNodeTypes.Mcp
             ? `${testIdPrefix}-input-mapping-type`
             : undefined
         }

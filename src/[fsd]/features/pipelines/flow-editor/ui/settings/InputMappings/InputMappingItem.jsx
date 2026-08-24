@@ -252,6 +252,11 @@ const InputMappingItem = memo(props => {
               showBorder
               className="nopan nodrag"
               labelSX={styles.labelSX}
+              // Same testid as the Fixed/F-String branches' TextInputField above
+              // (ELITEA-1953): the row's Value control keeps ONE stable identity
+              // across both widget shapes, so switching Type does not change the
+              // testid's value — .agents/testing.md § "Testid = stable identity".
+              data-testid={valueTestId}
             />
           )}
         </Box>
