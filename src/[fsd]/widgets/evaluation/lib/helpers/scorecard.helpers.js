@@ -343,7 +343,7 @@ export const buildScorecard = ({
 };
 
 /**
- * Markdown explanation of the two-level weighted-score formula (§15) for the
+ * Markdown explanation of the weighted-score formula (§15) for the
  * headline tooltip. Reuses only numbers already computed by buildScorecard()
  * (case.caseScore, cell.binding.weight/normalizedScore) — no new math.
  */
@@ -364,15 +364,15 @@ export const buildWeightedScoreExplanation = scorecard => {
     const scoredCells = exampleCase.cells.filter(c => c.normalizedScore != null);
     const weightedTerms = scoredCells.map(c => `${c.binding.weight ?? 1}×${formatScore(c.normalizedScore)}`);
     const weights = scoredCells.map(c => c.binding.weight ?? 1);
-    caseFormula = `Case score = (${weightedTerms.join(' + ')}) / (${weights.join(' + ')}) = ${formatScore(
+    caseFormula = `Per case: Case score = (${weightedTerms.join(' + ')}) / (${weights.join(' + ')}) = ${formatScore(
       exampleCase.caseScore,
     )}`;
   }
 
   return [
-    'Weighted score is computed in two steps:',
-    caseFormula ? `1. Per case: ${caseFormula}` : null,
-    `2. Per run: ${runFormula}`,
+    'Weighted score formula:',
+    caseFormula,
+    `Per run: ${runFormula}`,
     'Skipped or unscored items (no score, or weight 0) are excluded from both sums.',
   ]
     .filter(Boolean)
