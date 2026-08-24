@@ -91,6 +91,7 @@ const IndexHistoryPage = memo(() => {
         return {
           state: IndexStatuses.runTest,
           updated_on: Number.isFinite(ms) ? Math.floor(ms / 1000) : null,
+          duration: row.duration,
           conversation_id: row.id,
           operation_type: row.operation_type,
         };
