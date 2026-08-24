@@ -20,6 +20,5 @@ export { default as AddIndexButton } from './AddIndexButton';
 // Headless reindex runner
 export { default as HeadlessReindexRunner } from './HeadlessReindexRunner';
 export { default as RunIndexBanner } from './RunIndexBanner';
-export { IndexSuccess } from './index-success';
-export { IndexError } from './index-error';
+export { IndexActivityPanel } from './activity';
 export { IndexSearchPanel } from './index-search';
