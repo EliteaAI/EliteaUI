@@ -231,7 +231,11 @@ const SidebarBody = memo(props => {
                 title={`${systemSenderName} is ${socketStatus}`}
                 placement="right"
               >
-                <Box sx={styles.socketIconContainer} />
+                <Box
+                  data-testid="sidebar-socket-status-indicator"
+                  data-socket-status={socketStatus}
+                  sx={styles.socketIconContainer}
+                />
               </Tooltip>
             )}
           </IconButton>
