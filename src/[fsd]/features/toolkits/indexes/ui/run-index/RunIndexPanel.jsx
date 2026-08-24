@@ -451,7 +451,7 @@ const RunIndexPanel = memo(props => {
   const pastRunMessages = useMemo(
     () =>
       ToolkitsHelpers.prettifyToolkitConversation(
-        pastRunTranscript.filter(message => message.role !== ROLES.User),
+        pastRunTranscript.filter(message => message.role === ROLES.Assistant),
       ),
     [pastRunTranscript],
   );

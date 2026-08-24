@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react';
+import { memo } from 'react';
 
 import { Box, Link, Typography } from '@mui/material';
 
@@ -7,7 +7,7 @@ import IndexingIcon from '@/assets/indexing.svg?react';
 const IndexActivityEmptyState = memo(props => {
   const { statusShownAbove = false, onOpenConfiguration } = props;
 
-  const styles = useMemo(() => indexActivityEmptyStateStyles(), []);
+  const styles = indexActivityEmptyStateStyles();
 
   return (
     <Box

@@ -22,19 +22,19 @@ export const useConversationTranscript = ({ conversationId, skip = false }) => {
   const [getMessageTraces] = useLazyMessageTracesQuery();
   const [traceSteps, setTraceSteps] = useState(null);
 
-  const wanted = !skip && Boolean(conversationId) && Boolean(projectId);
+  const shouldLoad = !skip && Boolean(conversationId) && Boolean(projectId);
 
   useEffect(() => {
-    if (!wanted) {
+    if (!shouldLoad) {
       reset();
       setTraceSteps(null);
       return;
     }
     fetchConversation({ projectId, conversationId });
-  }, [wanted, fetchConversation, projectId, conversationId, reset]);
+  }, [shouldLoad, fetchConversation, projectId, conversationId, reset]);
 
   useEffect(() => {
-    if (!wanted || !conversation?.id) return;
+    if (!shouldLoad || !conversation?.id) return;
     getMessageTraces({
       projectId,
       conversationId: conversation.id,
@@ -42,14 +42,14 @@ export const useConversationTranscript = ({ conversationId, skip = false }) => {
     })
       .then(result => setTraceSteps(result.data || null))
       .catch(() => setTraceSteps(null));
-  }, [wanted, conversation, getMessageTraces, projectId]);
+  }, [shouldLoad, conversation, getMessageTraces, projectId]);
 
   return useMemo(() => {
-    const loaded = wanted ? (conversation ?? null) : null;
+    const loaded = shouldLoad ? (conversation ?? null) : null;
     return {
       transcript: loaded ? convertConversationToChatHistory(loaded, traceSteps) : [],
       conversation: loaded,
-      isTranscriptLoading: wanted && isFetching,
+      isTranscriptLoading: shouldLoad && isFetching,
     };
-  }, [wanted, conversation, traceSteps, isFetching]);
+  }, [shouldLoad, conversation, traceSteps, isFetching]);
 };

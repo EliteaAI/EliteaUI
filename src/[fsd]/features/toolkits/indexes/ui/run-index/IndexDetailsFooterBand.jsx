@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react';
+import { memo } from 'react';
 
 import { Box } from '@mui/material';
 
@@ -17,7 +17,7 @@ const IndexDetailsFooterBand = memo(props => {
     reindexDisabled = false,
     onReindex,
   } = props;
-  const styles = useMemo(() => indexDetailsFooterBandStyles(), []);
+  const styles = indexDetailsFooterBandStyles();
 
   const runIsStoppable = canStopIndexing && !isStoppingIndexing;
   const stopLabel = isStoppingIndexing ? 'Stopping...' : canStopIndexing ? 'Stop' : 'Starting...';
