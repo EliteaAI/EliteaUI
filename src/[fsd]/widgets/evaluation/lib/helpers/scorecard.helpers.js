@@ -341,3 +341,40 @@ export const buildScorecard = ({
     provisional: pendingHuman > 0,
   };
 };
+
+/**
+ * Markdown explanation of the weighted-score formula (§15) for the
+ * headline tooltip. Reuses only numbers already computed by buildScorecard()
+ * (case.caseScore, cell.binding.weight/normalizedScore) — no new math.
+ */
+export const buildWeightedScoreExplanation = scorecard => {
+  const { headline, cases = [] } = scorecard;
+  const scoredCases = cases.filter(c => c.caseScore != null);
+
+  const caseLine = scoredCases.map(c => formatScore(c.caseScore)).join(', ');
+
+  const runFormula =
+    scoredCases.length > 0
+      ? `Run score = mean(${caseLine}) = ${headline != null ? formatScore(headline) : '—'}`
+      : `Run score = — (no scored cases yet)`;
+
+  const exampleCase = scoredCases[0];
+  let caseFormula = '';
+  if (exampleCase) {
+    const scoredCells = exampleCase.cells.filter(c => c.normalizedScore != null);
+    const weightedTerms = scoredCells.map(c => `${c.binding.weight ?? 1}×${formatScore(c.normalizedScore)}`);
+    const weights = scoredCells.map(c => c.binding.weight ?? 1);
+    caseFormula = `Per case: Case score = (${weightedTerms.join(' + ')}) / (${weights.join(' + ')}) = ${formatScore(
+      exampleCase.caseScore,
+    )}`;
+  }
+
+  return [
+    'Weighted score formula:',
+    caseFormula,
+    `Per run: ${runFormula}`,
+    'Skipped or unscored items (no score, or weight 0) are excluded from both sums.',
+  ]
+    .filter(Boolean)
+    .join('\n\n');
+};

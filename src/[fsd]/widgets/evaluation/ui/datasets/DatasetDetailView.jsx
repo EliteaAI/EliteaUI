@@ -15,13 +15,14 @@ import {
 
 import { Button, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import CountBadge from '@/[fsd]/shared/ui/chip/CountBadge';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import EditIcon from '@/components/Icons/EditIcon';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 
 import { useDeleteEvalDatasetCaseMutation, useEvalDatasetQuery } from '../../api';
-import { EVAL_DATASET_CASE_PAGE_SIZE } from '../../lib/constants/evaluation.constants';
+import { EVAL_DATASET_CASE_PAGE_SIZE, MAX_CASES_PER_DATASET } from '../../lib/constants/evaluation.constants';
 import {
   caseSourceLabel,
   excerpt,
@@ -57,6 +58,7 @@ const DatasetDetailView = memo(props => {
 
   const total = dataset?.case_count ?? cases.length;
   const isPaged = total > cases.length;
+  const atCap = total >= MAX_CASES_PER_DATASET;
   const hasPrev = offset > 0;
   const hasNext = offset + cases.length < total;
 
@@ -131,6 +133,12 @@ const DatasetDetailView = memo(props => {
             ← Datasets
           </Button.BaseBtn>
           <Typography variant="headingSmall">{dataset.name}</Typography>
+          <CountBadge
+            count={total}
+            total={MAX_CASES_PER_DATASET}
+            ariaLabel="Cases used out of the dataset cap"
+            testId="dataset-detail-case-cap"
+          />
           {dataset.description && (
             <Typography
               variant="bodySmall"
@@ -142,30 +150,54 @@ const DatasetDetailView = memo(props => {
         </Box>
         {canUpdate && (
           <Box sx={styles.headerActions}>
-            <Button.BaseBtn
-              variant={BUTTON_VARIANTS.elitea}
-              color={BUTTON_COLORS.secondary}
-              onClick={() => onImport?.(dataset)}
-              data-testid="dataset-detail-import"
+            <Tooltip
+              title={atCap ? `Dataset is at the ${MAX_CASES_PER_DATASET}-case limit.` : ''}
+              placement="top"
             >
-              Import
-            </Button.BaseBtn>
-            <Button.BaseBtn
-              variant={BUTTON_VARIANTS.elitea}
-              color={BUTTON_COLORS.secondary}
-              onClick={() => onPromote?.(dataset)}
-              data-testid="dataset-detail-promote"
+              <span>
+                <Button.BaseBtn
+                  variant={BUTTON_VARIANTS.elitea}
+                  color={BUTTON_COLORS.secondary}
+                  disabled={atCap}
+                  onClick={() => onImport?.(dataset)}
+                  data-testid="dataset-detail-import"
+                >
+                  Import
+                </Button.BaseBtn>
+              </span>
+            </Tooltip>
+            <Tooltip
+              title={atCap ? `Dataset is at the ${MAX_CASES_PER_DATASET}-case limit.` : ''}
+              placement="top"
             >
-              From conversation
-            </Button.BaseBtn>
-            <Button.BaseBtn
-              variant={BUTTON_VARIANTS.elitea}
-              color={BUTTON_COLORS.primary}
-              onClick={openAddCase}
-              data-testid="dataset-detail-add-case"
+              <span>
+                <Button.BaseBtn
+                  variant={BUTTON_VARIANTS.elitea}
+                  color={BUTTON_COLORS.secondary}
+                  disabled={atCap}
+                  onClick={() => onPromote?.(dataset)}
+                  data-testid="dataset-detail-promote"
+                >
+                  From conversation
+                </Button.BaseBtn>
+              </span>
+            </Tooltip>
+            <Tooltip
+              title={atCap ? `Dataset is at the ${MAX_CASES_PER_DATASET}-case limit.` : ''}
+              placement="top"
             >
-              + Add case
-            </Button.BaseBtn>
+              <span>
+                <Button.BaseBtn
+                  variant={BUTTON_VARIANTS.elitea}
+                  color={BUTTON_COLORS.primary}
+                  disabled={atCap}
+                  onClick={openAddCase}
+                  data-testid="dataset-detail-add-case"
+                >
+                  + Add case
+                </Button.BaseBtn>
+              </span>
+            </Tooltip>
           </Box>
         )}
       </Box>

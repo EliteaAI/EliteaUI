@@ -197,9 +197,10 @@ export const evaluationApi = eliteaApi
 
       // ---- Datasets ----
       evalDatasets: build.query({
-        query: ({ projectId }) => ({
+        query: ({ projectId, agentId }) => ({
           url: `/elitea_core/eval_datasets/prompt_lib/${projectId}`,
           method: 'GET',
+          params: agentId != null ? { agent_id: agentId } : undefined,
         }),
         providesTags: [TAG_EVAL_DATASET],
       }),
@@ -351,6 +352,15 @@ export const evaluationApi = eliteaApi
         }),
         invalidatesTags: [TAG_EVAL_RUN],
       }),
+      // Hard-deletes a run and its results/human-scores (#6348). Does not touch the
+      // dataset, suite, or dimension definitions the run referenced.
+      deleteEvalRun: build.mutation({
+        query: ({ projectId, runId }) => ({
+          url: `/elitea_core/eval_run/prompt_lib/${projectId}/${runId}`,
+          method: 'DELETE',
+        }),
+        invalidatesTags: [TAG_EVAL_RUN],
+      }),
 
       // ---- Results scorecard (B5, #6202) ----
       // Returns { run, results[], human_scores[], headline_score } for a single
@@ -436,6 +446,7 @@ export const {
   useEvalRunQuery,
   useStartEvalRunMutation,
   useCancelEvalRunMutation,
+  useDeleteEvalRunMutation,
   useEvalRunResultsQuery,
   useEvalHumanScoresQuery,
   useWriteEvalHumanScoreMutation,

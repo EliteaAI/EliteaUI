@@ -5,10 +5,19 @@ import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import EditIcon from '@/components/Icons/EditIcon';
 
+import { isDatasetSharedIn } from '../../lib/helpers';
 import { EvaluationRowBadge, evaluationRowStyles } from '../common';
 
 const DatasetListRow = memo(props => {
-  const { dataset, canEdit = false, canDelete = false, onOpen, onRename, onDelete } = props;
+  const {
+    dataset,
+    applicationId = null,
+    canEdit = false,
+    canDelete = false,
+    onOpen,
+    onRename,
+    onDelete,
+  } = props;
 
   const handleOpen = useCallback(() => onOpen?.(dataset), [onOpen, dataset]);
   const handleRename = useCallback(
@@ -29,6 +38,9 @@ const DatasetListRow = memo(props => {
   const styles = evaluationRowStyles({ clickable: true });
 
   const caseCount = dataset.case_count ?? dataset.cases?.length ?? 0;
+  const isSharedIn = isDatasetSharedIn(dataset, applicationId);
+  const canEditRow = canEdit && !isSharedIn;
+  const canDeleteRow = canDelete && !isSharedIn;
 
   return (
     <Box
@@ -42,6 +54,9 @@ const DatasetListRow = memo(props => {
           <EvaluationRowBadge>
             {caseCount} case{caseCount === 1 ? '' : 's'}
           </EvaluationRowBadge>
+          {dataset.is_shared && (
+            <EvaluationRowBadge>{isSharedIn ? 'Shared in' : 'Shared'}</EvaluationRowBadge>
+          )}
         </Box>
         {dataset.description && (
           <Typography
@@ -53,9 +68,9 @@ const DatasetListRow = memo(props => {
         )}
       </Box>
 
-      {(canEdit || canDelete) && (
+      {(canEditRow || canDeleteRow) && (
         <Box sx={styles.actions}>
-          {canEdit && (
+          {canEditRow && (
             <Tooltip
               title="Rename"
               placement="top"
@@ -69,7 +84,7 @@ const DatasetListRow = memo(props => {
               </IconButton>
             </Tooltip>
           )}
-          {canDelete && (
+          {canDeleteRow && (
             <Tooltip
               title="Delete"
               placement="top"

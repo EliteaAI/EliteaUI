@@ -1,24 +1,45 @@
-import { memo, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { Button } from '@/[fsd]/shared/ui';
+import { Button, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { useSelectedProjectId } from '@/hooks/useSelectedProject';
+import useToast from '@/hooks/useToast';
 
-import { buildRunHistory } from '../../lib/helpers';
+import { useDeleteEvalRunMutation } from '../../api';
+import { buildRunHistory, parseEvalError } from '../../lib/helpers';
 import RunHistoryRow from './RunHistoryRow';
 
 const COLLAPSED_COUNT = 5;
 
 const RunHistoryList = memo(props => {
-  const { runs = [], onViewResults } = props;
+  const { runs = [], onViewResults, canDelete = false } = props;
 
   const [expanded, setExpanded] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
+  const projectId = useSelectedProjectId();
+  const { toastError, toastSuccess } = useToast();
+  const [deleteEvalRun, { isLoading: isDeleting }] = useDeleteEvalRunMutation();
 
   const history = useMemo(() => buildRunHistory(runs), [runs]);
   const visible = expanded ? history : history.slice(0, COLLAPSED_COUNT);
 
   const styles = runHistoryListStyles();
+
+  const requestDelete = useCallback(run => setDeleteTarget(run), []);
+  const cancelDelete = useCallback(() => setDeleteTarget(null), []);
+  const confirmDelete = useCallback(async () => {
+    if (!deleteTarget) return;
+    try {
+      await deleteEvalRun({ projectId, runId: deleteTarget.id }).unwrap();
+      toastSuccess('Run deleted.');
+      setDeleteTarget(null);
+    } catch (error) {
+      toastError(parseEvalError(error, 'Failed to delete run.'));
+    }
+  }, [deleteTarget, deleteEvalRun, projectId, toastSuccess, toastError]);
 
   if (!history.length) return null;
 
@@ -41,6 +62,8 @@ const RunHistoryList = memo(props => {
             key={run.id}
             run={run}
             onViewResults={onViewResults}
+            canDelete={canDelete}
+            onRequestDelete={requestDelete}
           />
         ))}
       </Box>
@@ -57,6 +80,15 @@ const RunHistoryList = memo(props => {
           </Button.BaseBtn>
         </Box>
       )}
+
+      <Modal.DeleteEntityModal
+        open={!!deleteTarget}
+        name={deleteTarget ? `Run #${deleteTarget.id}` : ''}
+        onClose={cancelDelete}
+        onConfirm={confirmDelete}
+        alarm
+        confirming={isDeleting}
+      />
     </Box>
   );
 });

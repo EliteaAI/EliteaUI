@@ -128,7 +128,10 @@ const SuiteConfigView = memo(props => {
     { skip: !projectId },
   );
 
-  const { data: datasets = [] } = useEvalDatasetsQuery({ projectId }, { skip: !projectId });
+  const { data: datasets = [] } = useEvalDatasetsQuery(
+    { projectId, agentId: applicationId },
+    { skip: !projectId },
+  );
 
   const { data: modelsData = { items: [] } } = useListModelsQuery(
     { projectId, include_shared: true, section: 'llm' },
@@ -667,6 +670,7 @@ const SuiteConfigView = memo(props => {
             <RunHistoryList
               runs={runs}
               onViewResults={handleViewResults}
+              canDelete={canRun}
             />
           </Box>
         </ContentContainer>
