@@ -138,7 +138,10 @@ const RunStateDialog = memo(props => {
               </Box>
             </Box>
             <Box sx={styles.contentContainer}>
-              <Box sx={styles.timelineHeader}>
+              <Box
+                sx={styles.timelineHeader}
+                data-testid="pipeline-run-details-timeline-section"
+              >
                 <Box sx={styles.timelineStep}>
                   <Typography
                     variant="subtitle"
