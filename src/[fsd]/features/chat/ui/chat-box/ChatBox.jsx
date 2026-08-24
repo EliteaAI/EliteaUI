@@ -1902,7 +1902,7 @@ const ChatBox = forwardRef((props, boxRef) => {
             version_id: versionDetails.id,
             variables: versionDetails.variables,
             llm_settings: versionDetails.llm_settings || activeParticipant?.entity_settings.llm_settings,
-            icon_meta: versionDetails.meta.icon_meta,
+            icon_meta: versionDetails.meta?.icon_meta || versionDetails.icon_meta,
             ...(activeParticipant?.entity_name === 'application' &&
               versionDetails.agent_type && {
                 agent_type: versionDetails.agent_type,
