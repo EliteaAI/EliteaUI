@@ -66,7 +66,10 @@ const SidebarProjectSelect = memo(() => {
 
   const customRenderOption = useCallback(option => {
     return (
-      <Box sx={optionStyles.optionRow}>
+      <Box
+        data-testid={`project-selector-option-${option?.label}`}
+        sx={optionStyles.optionRow}
+      >
         <LazyProjectAvatar
           projectName={option?.label}
           projectId={option?.value}
