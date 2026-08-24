@@ -62,13 +62,27 @@ const ToolkitsControls = memo(props => {
       [
         {
           ...exportToolkitMenuItem,
+          // ELITEA-1946 — DotMenu.jsx wires `testId: item.key`, and
+          // useExportToolkitMenu()'s menuItem carries no `key`, so this item
+          // rendered no data-testid at all. Supplying the key at THIS call
+          // site (same shape as SkillControls.jsx's
+          // `{ ...pinMenuItem, key: 'pin-toggle-skill' }`) keeps the testid
+          // scoped to the toolkit/MCP menu and leaves the shared hook alone.
+          key: 'toolkit-actions-export',
           disabled:
             !checkPermission(PERMISSIONS.applications.export) ||
             !checkPermission(PERMISSIONS.toolkits.export),
         },
         forkEntityMenuItem,
-        copyLinkMenuItem,
-        pinMenuItem,
+        // ELITEA-1959 — useCopyLinkMenu() defaults `key: key || label`, which
+        // leaked the visible label into the testid as `Copy link-menuitem`
+        // (with a space). Naming the key here renders
+        // `copy-link-toolkit-menuitem`, matching {section}-{element}-{type}.
+        { ...copyLinkMenuItem, key: 'copy-link-toolkit' },
+        // ELITEA-1946 — same reason as CredentialsControls.jsx's
+        // `key: 'pin-toggle-credential'`: the testid is the item's STABLE
+        // identity; its pinned/unpinned state stays in the visible label.
+        { ...pinMenuItem, key: 'pin-toggle-toolkit' },
         canDelete && deleteToolkitMenuItem,
       ].filter(Boolean),
     [
