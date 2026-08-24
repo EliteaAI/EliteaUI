@@ -265,6 +265,7 @@ const Settings = memo(() => {
       </Box>
       <Box
         component="main"
+        data-testid="settings-content"
         sx={styles.mainContent}
       >
         <Outlet />

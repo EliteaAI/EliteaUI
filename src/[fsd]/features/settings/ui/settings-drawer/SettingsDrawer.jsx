@@ -98,6 +98,8 @@ const SettingsDrawer = memo(props => {
             return (
               <Box
                 key={tab.id}
+                data-testid={`settings-nav-item-${tab.id}`}
+                data-active={isActive}
                 onClick={() => handleItemClick(tab.id)}
                 sx={styles.menuItem(isActive)}
               >
@@ -119,7 +121,10 @@ const SettingsDrawer = memo(props => {
   );
 
   return (
-    <Box sx={styles.drawer}>
+    <Box
+      data-testid="settings-drawer"
+      sx={styles.drawer}
+    >
       <Box sx={styles.header}>
         <Typography
           variant="headingSmall"
@@ -129,7 +134,12 @@ const SettingsDrawer = memo(props => {
         </Typography>
       </Box>
 
-      <Box sx={styles.menuContainer}>{renderedSections}</Box>
+      <Box
+        data-testid="settings-drawer-menu"
+        sx={styles.menuContainer}
+      >
+        {renderedSections}
+      </Box>
     </Box>
   );
 });

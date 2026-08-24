@@ -23,7 +23,10 @@ const Profile = memo(() => {
   }, [dispatch]);
 
   return (
-    <Box sx={styles.container}>
+    <Box
+      data-testid="settings-profile-page"
+      sx={styles.container}
+    >
       <Box sx={styles.header}>
         <Typography
           variant="labelMedium"
@@ -71,6 +74,7 @@ const Profile = memo(() => {
           </Box>
 
           <BaseBtn
+            data-testid="settings-profile-logout-button"
             variant="secondary"
             startIcon={<LogoutIcon />}
             onClick={onLogout}
