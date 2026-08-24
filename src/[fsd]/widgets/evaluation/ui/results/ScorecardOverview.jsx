@@ -1,8 +1,10 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 
 import { Box, Chip, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material';
 
-import { formatScore, getBindingEngineLabel } from '../../lib/helpers';
+import { Tooltip } from '@/[fsd]/shared/ui';
+
+import { buildWeightedScoreExplanation, formatScore, getBindingEngineLabel } from '../../lib/helpers';
 
 const formatTarget = binding => {
   if (binding.target == null || binding.target === '' || !binding.operator) return '—';
@@ -22,6 +24,8 @@ const ScorecardOverview = memo(props => {
 
   const { headline, provisional, pendingHuman, counts, bindings } = scorecard;
 
+  const scoreExplanation = useMemo(() => buildWeightedScoreExplanation(scorecard), [scorecard]);
+
   const styles = scorecardOverviewStyles();
 
   return (
@@ -38,6 +42,10 @@ const ScorecardOverview = memo(props => {
           >
             Weighted score
           </Typography>
+          <Tooltip.InfoTooltip
+            infoTooltip={scoreExplanation}
+            testId="evaluation-scorecard-score-info"
+          />
         </Box>
         {provisional && (
           <Chip

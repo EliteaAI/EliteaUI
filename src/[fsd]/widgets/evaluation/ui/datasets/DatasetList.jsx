@@ -8,6 +8,7 @@ import NewDatasetMenu from './NewDatasetMenu';
 const DatasetList = memo(props => {
   const {
     datasets = [],
+    applicationId = null,
     canCreate = false,
     canEdit = false,
     canDelete = false,
@@ -50,6 +51,7 @@ const DatasetList = memo(props => {
             <DatasetListRow
               key={dataset.id}
               dataset={dataset}
+              applicationId={applicationId}
               canEdit={canEdit}
               canDelete={canDelete}
               onOpen={onOpen}
