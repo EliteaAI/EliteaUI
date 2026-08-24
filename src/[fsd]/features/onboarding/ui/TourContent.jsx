@@ -48,6 +48,7 @@ const TourContent = memo(props => {
           {currentStep} / {onboardingTips.length}
         </Typography>
         <IconButton
+          data-testid="onboarding-tour-next-button"
           variant="elitea"
           color="secondary"
           onClick={onNext}
