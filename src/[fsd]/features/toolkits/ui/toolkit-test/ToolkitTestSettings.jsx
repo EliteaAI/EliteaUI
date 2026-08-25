@@ -56,6 +56,7 @@ const ToolkitTestSettings = memo(props => {
               onValueChange={onChangeTool}
               onClear={() => onChangeTool(null)}
               options={allToolsOptions}
+              disabled={isRunning}
               withSearch
               emptyPlaceholder="No tools found"
               showEmptyPlaceholder={false}
@@ -82,6 +83,7 @@ const ToolkitTestSettings = memo(props => {
               toolInputVariables={toolInputVariables}
               schema={selectedToolSchema}
               onChangeInputVariables={onChangeInputVariables}
+              changesDisabled={isRunning}
               inputTestId={`toolkit-test-param-${key}-input`}
             />
           ))}

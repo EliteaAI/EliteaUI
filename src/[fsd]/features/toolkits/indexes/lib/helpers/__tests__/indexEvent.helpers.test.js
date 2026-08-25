@@ -4,6 +4,8 @@ import { initialCompletedTsOf, resolveIndexEventLabel } from '../indexEvent.help
 
 const entry = (state, updated_on) => ({ state, updated_on });
 
+const runTestEntry = operation_type => ({ state: 'run_test', updated_on: 400, operation_type });
+
 describe('initialCompletedTsOf', () => {
   it('picks the earliest completed run regardless of order', () => {
     expect(
@@ -29,7 +31,20 @@ describe('resolveIndexEventLabel', () => {
     expect(resolveIndexEventLabel(entry('cancelled', 400), 200)).toBe('Stopped');
     expect(resolveIndexEventLabel(entry('partly_indexed', 400), 200)).toBe('Partially Indexed');
     expect(resolveIndexEventLabel(entry('scheduled_reindex', 400), 200)).toBe('Reindexed by schedule');
-    expect(resolveIndexEventLabel(entry('run_test', 400), 200)).toBe('Search index');
+  });
+
+  it('names a run test after the search tool it was started with', () => {
+    expect(resolveIndexEventLabel(runTestEntry('search_index'), 200)).toBe('Search Index');
+    expect(resolveIndexEventLabel(runTestEntry('stepback_search_index'), 200)).toBe('Stepback Search Index');
+    expect(resolveIndexEventLabel(runTestEntry('stepback_summary_index'), 200)).toBe(
+      'Stepback Summary Index',
+    );
+  });
+
+  it('stays with the generic run test label when the search tool is unknown', () => {
+    expect(resolveIndexEventLabel(runTestEntry('who_knows'), 200)).toBe('Run test');
+    expect(resolveIndexEventLabel(runTestEntry(undefined), 200)).toBe('Run test');
+    expect(resolveIndexEventLabel(runTestEntry('constructor'), 200)).toBe('Run test');
   });
 
   it('falls back to the raw state so an unknown one is never mislabelled', () => {

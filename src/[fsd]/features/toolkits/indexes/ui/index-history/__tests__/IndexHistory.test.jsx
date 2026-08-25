@@ -67,7 +67,13 @@ const theme = createTheme({
 const CREATED = { state: 'created', created_on: 100, updated_on: 150, conversation_id: 11 };
 const INDEXED = { state: 'completed', created_on: 196.891, updated_on: 200, conversation_id: 12 };
 const GHOST = { state: 'in_progress', created_on: 300, updated_on: 300, conversation_id: 13 };
-const RUN_TEST = { state: 'run_test', updated_on: 400, conversation_id: 14, duration: 3661 };
+const RUN_TEST = {
+  state: 'run_test',
+  updated_on: 400,
+  conversation_id: 14,
+  duration: 3661,
+  operation_type: 'search_index',
+};
 
 const LocationProbe = () => <Box data-testid="search">{useLocation().search}</Box>;
 
@@ -88,7 +94,7 @@ const selectedEntry = () => store.getState().indexes.selectedHistoryItem;
 const historyRows = () => screen.getAllByTestId('run-history-list-item');
 
 const eventLabels = () =>
-  historyRows().map(row => within(row).getByText(/^(Created|Indexed|Search index)$/).textContent);
+  historyRows().map(row => within(row).getByText(/^(Created|Indexed|Search Index)$/).textContent);
 
 describe('IndexHistory', () => {
   it('lists the columns in the order the toolkit run history uses', () => {
@@ -104,7 +110,7 @@ describe('IndexHistory', () => {
 
     const rows = historyRows();
 
-    expect(within(rows[0]).getByText('Search index')).toBeInTheDocument();
+    expect(within(rows[0]).getByText('Search Index')).toBeInTheDocument();
     expect(within(rows[0]).getByText('1 h 1 m 1 s')).toBeInTheDocument();
     expect(within(rows[1]).getByText('Indexed')).toBeInTheDocument();
     expect(within(rows[1]).getByText('3.11 s')).toBeInTheDocument();
@@ -192,6 +198,6 @@ describe('IndexHistory', () => {
 
     fireEvent.click(screen.getByText('Duration'));
 
-    expect(eventLabels()).toEqual(['Indexed', 'Created', 'Search index']);
+    expect(eventLabels()).toEqual(['Indexed', 'Created', 'Search Index']);
   });
 });

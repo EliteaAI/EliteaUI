@@ -1,4 +1,8 @@
-import { IndexHistoryItemsLabels, IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants';
+import {
+  INDEX_SEARCH_TOOL_LABELS,
+  IndexHistoryItemsLabels,
+  IndexStatuses,
+} from '@/[fsd]/features/toolkits/indexes/lib/constants';
 
 export const initialCompletedTsOf = history => {
   const completed = (history || []).filter(entry => entry?.state === IndexStatuses.success);
@@ -13,6 +17,9 @@ export const resolveIndexEventLabel = (entry, initialCompletedTs) => {
   if (entry.state === IndexStatuses.success && entry.updated_on !== initialCompletedTs) {
     return 'Reindexed';
   }
-  if (entry.state === IndexStatuses.runTest) return 'Search index';
+
+  const searchToolLabel = INDEX_SEARCH_TOOL_LABELS.get(entry.operation_type);
+  if (entry.state === IndexStatuses.runTest && searchToolLabel) return searchToolLabel;
+
   return IndexHistoryItemsLabels[entry.state] || entry.state;
 };

@@ -17,6 +17,10 @@ export const INDEX_SEARCH_TOOL_OPTIONS = [
   { label: 'Stepback Summary Index', value: IndexesToolsEnum.stepbackSummaryIndex },
 ];
 
+export const INDEX_SEARCH_TOOL_LABELS = new Map(
+  INDEX_SEARCH_TOOL_OPTIONS.map(({ value, label }) => [value, label]),
+);
+
 export const IndexStatuses = {
   progress: 'in_progress',
   success: 'completed',
@@ -71,10 +75,6 @@ export const IndexHistoryItemsLabels = {
   [IndexStatuses.runTest]: 'Run test',
 };
 
-export const RUN_TEST_OPERATION_TYPES = new Set([
-  'search_index',
-  'stepback_search_index',
-  'stepback_summary_index',
-]);
+export const RUN_TEST_OPERATION_TYPES = new Set(INDEX_SEARCH_TOOL_LABELS.keys());
 
 export const IndexCronDefault = '0 0 * * 6';
