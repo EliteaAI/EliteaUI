@@ -26,6 +26,8 @@ import {
   bannerOutlivesRun,
   bannerVariant,
   hasLiveRun,
+  indexBuildBlockedReason,
+  indexScheduleBlockedReason,
   indexSearchBlockedReason,
 } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
 import { useIndexesListPolling } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
@@ -197,20 +199,21 @@ const RunIndexPanel = memo(props => {
     isStale: effectiveStale,
   });
   const deleteDisabled = isDeleting || isAwaitingTaskStart || runIsLive;
-  const reindexDisabled = isRunning || isAwaitingTaskStart || runIsLive;
+  const buildBlockedReason = indexBuildBlockedReason(selectedIndexTools);
+  const reindexDisabled = Boolean(buildBlockedReason) || isRunning || isAwaitingTaskStart || runIsLive;
 
-  const schedulingTooltipMessage = useMemo(() => {
-    if (effectiveState === IndexStatuses.cancelled || effectiveState === IndexStatuses.fail)
-      return 'Scheduling is unavailable while the index is in a stopped/error state';
-    const noPermissions =
-      Array.isArray(userPermissions) && !userPermissions.includes(PERMISSIONS.index.schedule);
-    if (noPermissions)
-      return `Insufficient permissions to perform this action on ${currentProjectName} project`;
-    if (scheduleData.enabled) return null;
-    if (!RUNNABLE_INDEX_STATUSES.includes(effectiveState) && effectiveState !== IndexStatuses.progress)
-      return 'Index state is not valid';
-    return null;
-  }, [effectiveState, userPermissions, scheduleData.enabled, currentProjectName]);
+  const schedulingTooltipMessage = useMemo(
+    () =>
+      indexScheduleBlockedReason({
+        state: effectiveState,
+        hasSchedulePermission:
+          !Array.isArray(userPermissions) || userPermissions.includes(PERMISSIONS.index.schedule),
+        projectName: currentProjectName,
+        scheduleEnabled: scheduleData.enabled,
+        buildBlockedReason,
+      }),
+    [buildBlockedReason, effectiveState, userPermissions, scheduleData.enabled, currentProjectName],
+  );
 
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
   const [scheduleModalIsEdit, setScheduleModalIsEdit] = useState(false);
@@ -574,6 +577,7 @@ const RunIndexPanel = memo(props => {
             canStopIndexing={canStopIndexing}
             onStop={onCancelIndexing}
             reindexDisabled={reindexDisabled}
+            reindexTooltip={buildBlockedReason ?? undefined}
             onReindex={handleReindex}
           />
         </Box>

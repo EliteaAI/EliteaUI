@@ -4,8 +4,10 @@ import {
   BannerMessageMap,
   BannerSeverity,
   BannerTitleMap,
+  INDEX_DATA_DISABLED_REASON,
   INDEX_SEARCH_TOOL_OPTIONS,
   IndexStatuses,
+  IndexesToolsEnum,
   RUNNABLE_INDEX_STATUSES,
 } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import { BUDGET_ERROR_VARIANTS } from '@/[fsd]/shared/lib/constants/budgetError.constants';
@@ -93,6 +95,50 @@ export const indexSearchBlockedReason = (state, selectedTools) => {
   if (state === IndexStatuses.progress) return 'Unavailable while indexing is in progress';
   if (!RUNNABLE_INDEX_STATUSES.includes(state)) return 'Index is not ready to search yet';
   if (!indexSearchToolOptions(selectedTools).length) return 'No search tools are enabled for this toolkit';
+  return null;
+};
+
+/**
+ * Every build starts the toolkit's `index_data` tool, and the backend resets the row's counts to an
+ * `in_progress` stub before the worker discovers the tool is missing — so a build the toolkit cannot run
+ * destroys the healthy index's metadata rather than leaving it untouched. Doubles as the tooltip for every
+ * disabled build affordance.
+ *
+ * An empty or absent list is the platform's unrestricted state, not "no tools": every toolkit filters with
+ * `if selected_tools:` and exposes everything when it is empty.
+ * @param {string[]} selectedTools - the toolkit's `settings.selected_tools`
+ * @returns {string | null} the reason, or null when the index can be rebuilt
+ */
+export const indexBuildBlockedReason = selectedTools => {
+  const restrictsTools = Array.isArray(selectedTools) && selectedTools.length > 0;
+  if (!restrictsTools || selectedTools.includes(IndexesToolsEnum.indexData)) return null;
+  return INDEX_DATA_DISABLED_REASON;
+};
+
+/**
+ * An armed schedule must always stay switchable-off: the scheduler fires `index_data` every tick with no
+ * toolset check of its own, so greying out the control while a cron is live would trap the user with a job
+ * that keeps resetting the index. Every reason therefore has to sit behind the `scheduleEnabled` escape
+ * hatch, which gates arming only.
+ * @param {{state: string, hasSchedulePermission: boolean, projectName: string, scheduleEnabled: boolean,
+ *   buildBlockedReason: string | null}} scheduleState
+ * @returns {string | null} the reason, or null when scheduling can be changed
+ */
+export const indexScheduleBlockedReason = ({
+  state,
+  hasSchedulePermission,
+  projectName,
+  scheduleEnabled,
+  buildBlockedReason,
+}) => {
+  if (state === IndexStatuses.cancelled || state === IndexStatuses.fail)
+    return 'Scheduling is unavailable while the index is in a stopped/error state';
+  if (!hasSchedulePermission)
+    return `Insufficient permissions to perform this action on ${projectName} project`;
+  if (scheduleEnabled) return null;
+  if (buildBlockedReason) return buildBlockedReason;
+  if (!RUNNABLE_INDEX_STATUSES.includes(state) && state !== IndexStatuses.progress)
+    return 'Index state is not valid';
   return null;
 };
 

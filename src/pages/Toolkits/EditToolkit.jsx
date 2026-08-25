@@ -8,6 +8,7 @@ import { Box, Typography } from '@mui/material';
 import { SHARED_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { useGetIndexesListQuery } from '@/[fsd]/features/toolkits/indexes/api';
 import { IndexesToolsEnum, IndexingBlockers } from '@/[fsd]/features/toolkits/indexes/lib/constants';
+import { indexBuildBlockedReason } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
 import { shouldFetchIndexes } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexingBlocker.helpers';
 // TODO: DELETE after migration period (Q1 2026) - Legacy OpenAPI toolkit migration
 import { LegacyOpenApiMigration, ToolkitFormHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
@@ -177,7 +178,7 @@ const EditToolkit = memo(props => {
       return IndexingBlockers.notConfigured;
     }
 
-    if (!editToolDetail?.settings?.selected_tools?.includes(IndexesToolsEnum.indexData)) {
+    if (indexBuildBlockedReason(editToolDetail?.settings?.selected_tools)) {
       return IndexingBlockers.buildsDisabled;
     }
 
