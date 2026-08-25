@@ -10,6 +10,8 @@ import { useCreateEvalDimensionMutation, useUpdateEvalDimensionMutation } from '
 import {
   DEFAULT_DIMENSION_FORM,
   DIMENSION_ENGINE_OPTIONS,
+  DIMENSION_TIER_OPTIONS,
+  EVAL_TIER,
   EVIDENCE_SCOPE_OPTIONS,
   NEW_ITEM_EVIDENCE_SCOPE,
   POLARITY_OPTIONS,
@@ -19,10 +21,17 @@ import {
 import { parseEvalError } from '../../lib/helpers';
 
 const toFormState = dimension => {
-  if (!dimension) return { ...DEFAULT_DIMENSION_FORM, evidence_scope: { ...NEW_ITEM_EVIDENCE_SCOPE } };
+  if (!dimension) {
+    return {
+      ...DEFAULT_DIMENSION_FORM,
+      tier: EVAL_TIER.project,
+      evidence_scope: { ...NEW_ITEM_EVIDENCE_SCOPE },
+    };
+  }
   return {
     name: dimension.name ?? '',
     description: dimension.description ?? '',
+    tier: dimension.tier ?? EVAL_TIER.project,
     allowed_engines: dimension.allowed_engines?.length
       ? dimension.allowed_engines
       : DEFAULT_DIMENSION_FORM.allowed_engines,
@@ -38,7 +47,7 @@ const toFormState = dimension => {
 };
 
 const DimensionEditorDialog = memo(props => {
-  const { open, onClose, projectId, dimension, onSaved } = props;
+  const { open, onClose, projectId, applicationId = null, dimension, onSaved } = props;
 
   const isEdit = !!dimension?.id;
 
@@ -83,6 +92,9 @@ const DimensionEditorDialog = memo(props => {
     if (!isEdit && !Object.values(form.evidence_scope).some(Boolean)) {
       return 'Evidence scope must have at least one option selected.';
     }
+    if (!isEdit && form.tier === EVAL_TIER.agent_adhoc && applicationId == null) {
+      return '"This agent only" tier is unavailable without an agent context.';
+    }
     const min = Number(form.scale_min);
     const max = Number(form.scale_max);
     if (Number.isNaN(min) || Number.isNaN(max)) return 'Scale bounds must be numbers.';
@@ -91,7 +103,7 @@ const DimensionEditorDialog = memo(props => {
     const hasOperator = !!form.default_target_operator;
     if (hasTarget !== hasOperator) return 'Provide both a default target and an operator, or neither.';
     return '';
-  }, [form, isEdit]);
+  }, [form, isEdit, applicationId]);
 
   const handleSave = useCallback(async () => {
     if (validationError) {
@@ -112,6 +124,12 @@ const DimensionEditorDialog = memo(props => {
       default_weight: Number(form.default_weight),
       default_target: hasTarget ? Number(form.default_target) : null,
       default_target_operator: hasTarget ? form.default_target_operator : null,
+      ...(!isEdit
+        ? {
+            tier: form.tier,
+            agent_id: form.tier === EVAL_TIER.agent_adhoc ? applicationId : null,
+          }
+        : {}),
     };
 
     try {
@@ -133,6 +151,7 @@ const DimensionEditorDialog = memo(props => {
     isEdit,
     updateDimension,
     projectId,
+    applicationId,
     dimension,
     createDimension,
     onSaved,
@@ -162,6 +181,26 @@ const DimensionEditorDialog = memo(props => {
         value={form.description}
         onChange={event => setField('description', event.target.value)}
       />
+
+      {isEdit ? (
+        <Input.InputBase
+          data-testid="dimension-tier-readonly"
+          fullWidth
+          disabled
+          variant="standard"
+          label="Scope"
+          value={DIMENSION_TIER_OPTIONS.find(option => option.value === form.tier)?.label ?? form.tier}
+        />
+      ) : (
+        <SingleSelect
+          label="Scope"
+          showBorder
+          value={form.tier}
+          options={DIMENSION_TIER_OPTIONS}
+          onValueChange={value => setField('tier', value)}
+          data-testid="dimension-tier-select"
+        />
+      )}
 
       <Box sx={styles.field}>
         <Typography variant="labelMedium">Engines</Typography>
