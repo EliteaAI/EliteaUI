@@ -115,7 +115,7 @@ const SuiteConfigView = memo(props => {
   } = useEvalSuitesQuery({ projectId, applicationId }, { skip });
 
   const { data: dimensions = [], isError: isDimensionsError } = useEvalDimensionsQuery(
-    { projectId },
+    { projectId, agentId: applicationId },
     { skip: !projectId },
   );
 
@@ -757,6 +757,7 @@ const SuiteConfigView = memo(props => {
       <DimensionEditorDialog
         open={dimensionDialog}
         projectId={projectId}
+        applicationId={applicationId}
         dimension={null}
         onSaved={(result, evidenceScope) =>
           result?.id != null && attachBinding(dimensionBindingBody(result, evidenceScope))

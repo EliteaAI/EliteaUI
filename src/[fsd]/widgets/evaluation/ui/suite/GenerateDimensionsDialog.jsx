@@ -25,19 +25,23 @@ const STEPS = {
 // Weight is always sized 1 for generated drafts, whatever the LLM proposed — the
 // user tunes relative weighting after review, once the dimension is actually in the
 // suite alongside its siblings; a stale AI guess at that number isn't worth carrying in.
-const dimensionCreateBody = draft => ({
-  name: draft.name,
-  description: draft.description,
-  allowed_engines: draft.allowed_engines,
-  scale_type: draft.scale_type,
-  scale_min: draft.scale_min,
-  scale_max: draft.scale_max,
-  polarity: draft.polarity,
-  default_weight: 1,
-  default_target: draft.default_target ?? null,
-  default_target_operator: draft.default_target_operator ?? null,
-  tier: draft.tier ?? EVAL_TIER.agent_adhoc,
-});
+const dimensionCreateBody = (draft, applicationId) => {
+  const tier = draft.tier ?? EVAL_TIER.agent_adhoc;
+  return {
+    name: draft.name,
+    description: draft.description,
+    allowed_engines: draft.allowed_engines,
+    scale_type: draft.scale_type,
+    scale_min: draft.scale_min,
+    scale_max: draft.scale_max,
+    polarity: draft.polarity,
+    default_weight: 1,
+    default_target: draft.default_target ?? null,
+    default_target_operator: draft.default_target_operator ?? null,
+    tier,
+    agent_id: tier === EVAL_TIER.agent_adhoc ? applicationId : null,
+  };
+};
 
 const bindingCreateBody = (dimensionId, draft) => ({
   dimension_id: dimensionId,
@@ -135,7 +139,10 @@ const GenerateDimensionsDialog = memo(props => {
     try {
       for (const index of checkedIndexes) {
         const draft = drafts[index];
-        const created = await createDimension({ projectId, body: dimensionCreateBody(draft) }).unwrap();
+        const created = await createDimension({
+          projectId,
+          body: dimensionCreateBody(draft, applicationId),
+        }).unwrap();
         if (created?.id != null) {
           await addBinding({ projectId, suiteId, body: bindingCreateBody(created.id, draft) }).unwrap();
         }
@@ -159,7 +166,7 @@ const GenerateDimensionsDialog = memo(props => {
       );
       setStep(STEPS.review);
     }
-  }, [checkedIndexes, drafts, createDimension, addBinding, projectId, suiteId, reset, onClose]);
+  }, [checkedIndexes, drafts, createDimension, addBinding, projectId, applicationId, suiteId, reset, onClose]);
 
   const styles = generateDimensionsDialogStyles();
 

@@ -29,9 +29,13 @@ export const evaluationApi = eliteaApi
   .injectEndpoints({
     endpoints: build => ({
       evalDimensions: build.query({
-        query: ({ projectId, includePlatform = true }) => ({
-          url: `/elitea_core/eval_dimensions/prompt_lib/${projectId}?include_platform=${includePlatform}`,
+        query: ({ projectId, includePlatform = true, agentId }) => ({
+          url: `/elitea_core/eval_dimensions/prompt_lib/${projectId}`,
           method: 'GET',
+          params: {
+            include_platform: includePlatform,
+            ...(agentId != null ? { agent_id: agentId } : {}),
+          },
         }),
         providesTags: [TAG_EVAL_DIMENSION],
       }),
