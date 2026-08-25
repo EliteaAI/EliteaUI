@@ -136,8 +136,16 @@ const ProjectSelect = memo(props => {
   const changeProject = useCallback(
     (id, name) => {
       const newSearchParams = new URLSearchParams(searchParams);
+      let changed = false;
       if (newSearchParams.has(URL_PARAMS_KEY_TAGS)) {
         newSearchParams.delete(URL_PARAMS_KEY_TAGS);
+        changed = true;
+      }
+      if (newSearchParams.has('folder')) {
+        newSearchParams.delete('folder');
+        changed = true;
+      }
+      if (changed) {
         setSearchParams(newSearchParams, {
           replace: true,
           state: location.state,

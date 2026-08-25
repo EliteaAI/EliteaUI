@@ -346,6 +346,7 @@ const DataRowAction = memo(props => {
         skillId={data?.id}
         skillName={data?.name}
         versionId={data?.version_details?.id || data?.version?.id}
+        folderId={data?.folder_id}
       />
     );
   }

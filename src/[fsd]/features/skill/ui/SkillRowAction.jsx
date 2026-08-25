@@ -4,11 +4,12 @@ import { useNavigate } from 'react-router-dom';
 
 import { Box, IconButton, Menu } from '@mui/material';
 
+import { MoveToFolderSubmenu } from '@/[fsd]/entities/folder/ui';
 import { useDeleteSkillMutation } from '@/[fsd]/features/skill/api';
 import { useSkillExport } from '@/[fsd]/features/skill/lib/hooks';
 import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
-import { PERMISSIONS, SkillsTabs } from '@/common/constants';
+import { ContentType, PERMISSIONS, SkillsTabs } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils.jsx';
 import DotsMenuIcon from '@/components/Icons/DotsMenuIcon';
 import ExportIcon from '@/components/Icons/ExportIcon';
@@ -27,14 +28,17 @@ const SkillRowAction = memo(props => {
     deleteVersionOnly = false,
     navigateToListAfterDelete = false,
     onDeleted,
+    folderId,
     sx,
   } = props;
 
   const navigate = useNavigate();
   const projectId = useSelectedProjectId();
   const { toastError, toastSuccess } = useToast();
-  const { isPrivate } = useProjectType();
+  const { isPrivate, isPublic: isPublicProject } = useProjectType();
   const { checkPermission } = useCheckPermission();
+
+  const showFolderActions = !isPublicProject;
 
   const canDeleteSkill = isPrivate || checkPermission(PERMISSIONS.skills.delete);
 
@@ -125,6 +129,16 @@ const SkillRowAction = memo(props => {
         }}
         keepMounted
       >
+        {showFolderActions && (
+          <MoveToFolderSubmenu
+            entityId={skillId}
+            entityType={ContentType.SkillAll}
+            currentFolderId={folderId}
+            parentMenuOpen={open}
+            onAction={handleClose}
+            menuItemSx={styles.menuItem}
+          />
+        )}
         <SkillRowMenuItem
           icon={<ExportIcon fontSize="inherit" />}
           label="Export"
@@ -160,6 +174,16 @@ const skillRowActionStyles = () => ({
       '& svg': {
         fill: palette.icon.fill.secondary,
       },
+    },
+  }),
+  menuItem: ({ palette }) => ({
+    minWidth: '13.75rem',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem',
+    padding: '0.5rem 1.25rem',
+    '& .MuiTypography-root': {
+      color: palette.text.secondary,
     },
   }),
 });
