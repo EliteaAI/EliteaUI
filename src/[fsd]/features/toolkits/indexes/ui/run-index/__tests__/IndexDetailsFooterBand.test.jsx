@@ -47,6 +47,25 @@ describe('IndexDetailsFooterBand', () => {
     expect(action()).toBeDisabled();
   });
 
+  it('explains a Reindex the toolkit can no longer run and swallows the click', async () => {
+    const onReindex = vi.fn();
+    renderFooter({
+      isRunActive: false,
+      reindexDisabled: true,
+      reindexTooltip: 'Enable the “Index data” tool to activate indexing',
+      onReindex,
+    });
+
+    expect(action()).toBeDisabled();
+    fireEvent.click(action());
+    expect(onReindex).not.toHaveBeenCalled();
+
+    fireEvent.mouseOver(action().parentElement);
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(
+      'Enable the “Index data” tool to activate indexing',
+    );
+  });
+
   it('offers Stop while indexing', () => {
     const onStop = vi.fn();
     renderFooter({ isRunActive: true, canStopIndexing: true, onStop });

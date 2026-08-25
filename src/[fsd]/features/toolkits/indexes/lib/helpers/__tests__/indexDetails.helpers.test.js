@@ -2,12 +2,15 @@ import { describe, expect, it } from 'vitest';
 
 import {
   BannerSeverity,
+  INDEX_DATA_DISABLED_REASON,
   INDEX_SEARCH_TOOL_OPTIONS,
   IndexStatuses,
 } from '../../constants/indexDetails.constants';
 import {
   bannerOutlivesRun,
   hasLiveRun,
+  indexBuildBlockedReason,
+  indexScheduleBlockedReason,
   indexSearchBlockedReason,
   indexSearchToolOptions,
 } from '../indexDetails.helpers';
@@ -70,6 +73,65 @@ describe('indexSearchBlockedReason', () => {
     expect(indexSearchBlockedReason(IndexStatuses.success, ['index_data'])).toMatch(
       /No search tools are enabled/,
     );
+  });
+});
+
+describe('indexBuildBlockedReason', () => {
+  it('allows a rebuild while the toolkit still exposes index_data', () => {
+    expect(indexBuildBlockedReason(['index_data', 'search_index'])).toBeNull();
+  });
+
+  it('blocks a rebuild once index_data is unselected', () => {
+    expect(indexBuildBlockedReason(['search_index'])).toMatch(/Index data/);
+  });
+
+  it('allows a rebuild when the toolkit restricts nothing, since that exposes every tool', () => {
+    expect(indexBuildBlockedReason([])).toBeNull();
+    expect(indexBuildBlockedReason(undefined)).toBeNull();
+  });
+});
+
+const scheduleState = over => ({
+  state: IndexStatuses.success,
+  hasSchedulePermission: true,
+  projectName: 'Private',
+  scheduleEnabled: false,
+  buildBlockedReason: null,
+  ...over,
+});
+
+describe('indexScheduleBlockedReason', () => {
+  it('allows scheduling a healthy index', () => {
+    expect(indexScheduleBlockedReason(scheduleState())).toBeNull();
+  });
+
+  it('blocks arming a schedule the toolkit could not run', () => {
+    expect(
+      indexScheduleBlockedReason(scheduleState({ buildBlockedReason: INDEX_DATA_DISABLED_REASON })),
+    ).toMatch(/Index data/);
+  });
+
+  it('keeps an armed schedule switchable off once builds become blocked', () => {
+    expect(
+      indexScheduleBlockedReason(
+        scheduleState({ scheduleEnabled: true, buildBlockedReason: INDEX_DATA_DISABLED_REASON }),
+      ),
+    ).toBeNull();
+  });
+
+  it('keeps an armed schedule switchable off from a state that forbids arming', () => {
+    expect(
+      indexScheduleBlockedReason(scheduleState({ scheduleEnabled: true, state: IndexStatuses.created })),
+    ).toBeNull();
+  });
+
+  it('still reports the reasons that outrank the armed-schedule escape hatch', () => {
+    expect(
+      indexScheduleBlockedReason(scheduleState({ scheduleEnabled: true, state: IndexStatuses.fail })),
+    ).toMatch(/stopped\/error state/);
+    expect(
+      indexScheduleBlockedReason(scheduleState({ scheduleEnabled: true, hasSchedulePermission: false })),
+    ).toMatch(/Insufficient permissions/);
   });
 });
 

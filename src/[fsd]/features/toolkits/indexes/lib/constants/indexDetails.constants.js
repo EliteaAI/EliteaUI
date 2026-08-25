@@ -11,6 +11,8 @@ export const IndexesToolsEnum = {
   removeIndex: 'remove_index',
 };
 
+export const INDEX_DATA_DISABLED_REASON = 'Enable the “Index data” tool to activate indexing';
+
 export const INDEX_SEARCH_TOOL_OPTIONS = [
   { label: 'Search Index', value: IndexesToolsEnum.searchIndexData },
   { label: 'Stepback Search Index', value: IndexesToolsEnum.stepbackSearchIndex },
