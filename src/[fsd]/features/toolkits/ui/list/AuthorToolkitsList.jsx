@@ -79,12 +79,7 @@ const AuthorToolkitsList = memo(props => {
         isLoading={isToolkitsLoading || isToolkitsFirstFetching}
         isError={isToolkitsError}
         rightPanelOffset={rightPanelOffset}
-        rightPanelContent={
-          <RightInfoPanel
-            tagList={tagList}
-            entityType="toolkit"
-          />
-        }
+        rightPanelContent={<RightInfoPanel tagList={tagList} />}
         renderCard={renderCard}
         isLoadingMore={isToolkitsFetching}
         loadMoreFunc={loadMoreItems}

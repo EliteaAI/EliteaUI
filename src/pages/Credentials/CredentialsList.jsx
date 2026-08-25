@@ -5,17 +5,14 @@ import { useLocation, useNavigate } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
-import { AuthorInformation } from '@/[fsd]/entities/author/ui';
 import { ENTITY_FOLDER_TYPES, FolderSection } from '@/[fsd]/entities/folder';
 import { ContentType, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
 import { buildErrorMessage, uniqueArrayByProp } from '@/common/utils';
 import CardList from '@/components/CardList';
-import TeamMates from '@/components/TeamMates';
 import useCredentialTypes from '@/hooks/credentials/useCredentialTypes';
 import { useLoadAllCredentials } from '@/hooks/credentials/useLoadAllCredentials';
 import useCardList from '@/hooks/useCardList';
 import useIsTableView from '@/hooks/useIsTableView';
-import useQueryTrendingAuthor from '@/hooks/useQueryTrendingAuthor';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes';
@@ -53,10 +50,6 @@ const CredentialsList = memo(props => {
   const { toastError } = useToast();
   const styles = credentialsListStyles();
 
-  const projectId = useSelectedProjectId();
-  const { isLoadingAuthor, authorId } = useQueryTrendingAuthor(projectId);
-  const { personal_project_id: privateProjectId } = useSelector(state => state.user);
-
   const {
     onLoadMore,
     data,
@@ -84,14 +77,9 @@ const CredentialsList = memo(props => {
           title="Types"
           style={{ flex: 1 }}
         />
-        {selectedProjectId == privateProjectId || authorId ? (
-          <AuthorInformation isLoading={isLoadingAuthor} />
-        ) : (
-          <TeamMates />
-        )}
       </Box>
     ),
-    [tagList, selectedProjectId, privateProjectId, authorId, isLoadingAuthor, styles],
+    [tagList, styles],
   );
 
   useEffect(() => {

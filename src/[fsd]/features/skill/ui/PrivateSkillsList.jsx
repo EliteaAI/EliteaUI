@@ -95,7 +95,6 @@ const PrivateSkillsList = memo(props => {
           showFolders
           folderEntityType={ENTITY_FOLDER_TYPES.skill}
           tagList={tagList}
-          entityType="skill"
         />
       }
       renderCard={renderCard}

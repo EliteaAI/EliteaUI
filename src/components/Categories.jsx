@@ -277,13 +277,15 @@ const Categories = ({
             flexWrap: 'wrap',
             flexDirection: 'row',
             justifyContent: 'space-between',
+            alignItems: 'center',
             paddingRight: '16px',
+            marginBottom: '0.5rem',
           }}
         >
           <Typography
             component="div"
             variant="subtitle"
-            sx={{ mb: 1, mr: 2 }}
+            sx={{ mr: 2 }}
           >
             {title}
           </Typography>

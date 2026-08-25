@@ -5,7 +5,6 @@ import { useNavigate } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
-import { AuthorInformation } from '@/[fsd]/entities/author/ui';
 import { EmptyStatePage } from '@/[fsd]/entities/empty-state-page';
 import { ENTITY_FOLDER_TYPES, FolderSection } from '@/[fsd]/entities/folder';
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
@@ -16,12 +15,10 @@ import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
 import { ContentType, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
 import { buildErrorMessage, uniqueArrayByProp } from '@/common/utils';
 import CardList from '@/components/CardList';
-import TeamMates from '@/components/TeamMates';
 import useMCPListStatusMonitor from '@/hooks/toolkit/useMCPListStatusMonitor';
 import useTypes from '@/hooks/toolkit/useTypes';
 import useCardList from '@/hooks/useCardList';
 import useIsTableView from '@/hooks/useIsTableView';
-import useQueryTrendingAuthor from '@/hooks/useQueryTrendingAuthor';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes';
@@ -61,7 +58,6 @@ const ToolkitsList = memo(props => {
     page,
     pageSize,
     totalCount,
-    indexesTotal,
     setPage,
   } = useLoadToolkits({ isMCP, isApplication, isTableView });
 
@@ -74,10 +70,6 @@ const ToolkitsList = memo(props => {
       }),
     );
   }, [dispatch, tagList]);
-
-  const projectId = useSelectedProjectId();
-  const { isLoadingAuthor, authorId } = useQueryTrendingAuthor(projectId);
-  const { personal_project_id: privateProjectId } = useSelector(state => state.user);
 
   const folderEntityType = useMemo(() => {
     if (isMCP) return ENTITY_FOLDER_TYPES.mcp;
@@ -93,28 +85,9 @@ const ToolkitsList = memo(props => {
           title="Types"
           style={styles.rightInfoPanel}
         />
-        {selectedProjectId == privateProjectId || authorId ? (
-          <AuthorInformation
-            isLoading={isLoadingAuthor}
-            indexesTotal={!isMCP && !isApplication ? indexesTotal : null}
-          />
-        ) : (
-          <TeamMates entityType="toolkit" />
-        )}
       </Box>
     ),
-    [
-      tagList,
-      styles,
-      selectedProjectId,
-      privateProjectId,
-      authorId,
-      isLoadingAuthor,
-      indexesTotal,
-      isMCP,
-      isApplication,
-      folderEntityType,
-    ],
+    [tagList, styles, folderEntityType],
   );
 
   // Navigate to New Toolkit page for private projects with no toolkits

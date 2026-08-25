@@ -39,7 +39,7 @@ export const entityFoldersApi = eliteaApi
       }),
       updateFolder: build.mutation({
         query: ({ projectId, folderId, name, meta }) => ({
-          url: `${apiSlicePath}/prompt_lib/${projectId}/${folderId}`,
+          url: `/social/folder/prompt_lib/${projectId}/${folderId}`,
           method: 'PUT',
           body: { name, meta },
         }),
@@ -48,9 +48,9 @@ export const entityFoldersApi = eliteaApi
           { type: TAG_TYPE_FOLDER, id: `LIST_${entityType}` },
         ],
       }),
-      deleteFolder: build.mutation({
+      removeFolder: build.mutation({
         query: ({ projectId, folderId }) => ({
-          url: `${apiSlicePath}/prompt_lib/${projectId}/${folderId}`,
+          url: `/social/folder/prompt_lib/${projectId}/${folderId}`,
           method: 'DELETE',
         }),
         invalidatesTags: (_result, _error, { folderId, entityType }) => [
@@ -78,6 +78,17 @@ export const entityFoldersApi = eliteaApi
           { type: TAG_TYPE_FOLDER, id: `LIST_${entityType}` },
         ],
       }),
+      pinFolder: build.mutation({
+        query: ({ projectId, folderId, isPinned }) => ({
+          url: `/social/folder/prompt_lib/${projectId}/${folderId}`,
+          method: 'PATCH',
+          body: { is_pinned: isPinned },
+        }),
+        invalidatesTags: (_result, _error, { folderId, entityType }) => [
+          { type: TAG_TYPE_FOLDER, id: folderId },
+          { type: TAG_TYPE_FOLDER, id: `LIST_${entityType}` },
+        ],
+      }),
     }),
   });
 
@@ -86,7 +97,8 @@ export const {
   useLazyGetFoldersQuery: useLazyGetEntityFoldersQuery,
   useCreateFolderMutation: useCreateEntityFolderMutation,
   useUpdateFolderMutation: useUpdateEntityFolderMutation,
-  useDeleteFolderMutation: useDeleteEntityFolderMutation,
+  useRemoveFolderMutation: useDeleteEntityFolderMutation,
   useMoveEntityToFolderMutation,
   useRemoveEntityFromFolderMutation,
+  usePinFolderMutation,
 } = entityFoldersApi;

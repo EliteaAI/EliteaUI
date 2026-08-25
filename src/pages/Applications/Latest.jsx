@@ -1,11 +1,11 @@
 import * as React from 'react';
 
+import { ENTITY_FOLDER_TYPES, FolderSection } from '@/[fsd]/entities/folder';
 import { usePublicApplicationsListQuery } from '@/api/applications';
 import { CollectionStatus, ContentType, ViewMode } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import CardList from '@/components/CardList';
 import Categories from '@/components/Categories';
-import TrendingAuthors from '@/components/TrendingAuthors';
 import useCardList from '@/hooks/useCardList';
 import usePageQuery from '@/hooks/usePageQuery';
 import useSortQueryParamsFromUrl from '@/hooks/useSortQueryParamsFromUrl';
@@ -71,11 +71,11 @@ export default function Latest() {
         rightPanelOffset={'16px'}
         rightPanelContent={
           <div style={rightInfoPanelStyle}>
+            <FolderSection entityType={ENTITY_FOLDER_TYPES.agent} />
             <Categories
               tagList={tagList}
               style={{ flex: 1 }}
             />
-            <TrendingAuthors />
           </div>
         }
         renderCard={renderCard}

@@ -1,5 +1,6 @@
 import * as React from 'react';
 
+import { ENTITY_FOLDER_TYPES, FolderSection } from '@/[fsd]/entities/folder';
 import { usePublicApplicationsListQuery } from '@/api/applications';
 import { CollectionStatus, ContentType, ViewMode } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
@@ -73,6 +74,7 @@ export default function MyLiked() {
         rightPanelOffset={'16px'}
         rightPanelContent={
           <div style={rightInfoPanelStyle}>
+            <FolderSection entityType={ENTITY_FOLDER_TYPES.pipeline} />
             <Categories
               tagList={tagList}
               style={{ flex: 1 }}

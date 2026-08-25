@@ -1,4 +1,4 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useEffect, useState } from 'react';
 
 import { Box } from '@mui/material';
 
@@ -6,15 +6,27 @@ import { Input, Modal } from '@/[fsd]/shared/ui';
 import { INPUT_VARIANTS } from '@/[fsd]/shared/ui/input';
 import useToast from '@/hooks/useToast';
 
-import { useCreateFolder } from '../lib/hooks';
+import { useCreateFolder, useUpdateFolder } from '../lib/hooks';
 
 const CreateFolderDialog = memo(props => {
-  const { open, onClose, entityType } = props;
+  const { open, onClose, entityType, folder } = props;
 
+  const isEditMode = !!folder;
   const [folderName, setFolderName] = useState('');
   const [error, setError] = useState('');
-  const { createFolder, isLoading } = useCreateFolder();
+  const { createFolder, isLoading: isCreating } = useCreateFolder();
+  const { updateFolder, isLoading: isUpdating } = useUpdateFolder();
   const { toastSuccess, toastError } = useToast();
+  const isLoading = isCreating || isUpdating;
+
+  useEffect(() => {
+    if (open && folder) {
+      setFolderName(folder.name || '');
+    } else if (!open) {
+      setFolderName('');
+      setError('');
+    }
+  }, [open, folder]);
 
   const handleNameChange = useCallback(
     e => {
@@ -43,13 +55,18 @@ const CreateFolderDialog = memo(props => {
     }
 
     try {
-      await createFolder({ name: trimmedName, entityType });
-      toastSuccess('Folder created successfully');
+      if (isEditMode) {
+        await updateFolder({ folderId: folder.id, name: trimmedName, entityType });
+        toastSuccess('Folder updated successfully');
+      } else {
+        await createFolder({ name: trimmedName, entityType });
+        toastSuccess('Folder created successfully');
+      }
       handleClose();
     } catch {
-      toastError('Failed to create folder');
+      toastError(isEditMode ? 'Failed to update folder' : 'Failed to create folder');
     }
-  }, [folderName, entityType, createFolder, toastSuccess, toastError, handleClose]);
+  }, [folderName, entityType, isEditMode, folder, createFolder, updateFolder, toastSuccess, toastError, handleClose]);
 
   const handleKeyDown = useCallback(
     e => {
@@ -82,7 +99,7 @@ const CreateFolderDialog = memo(props => {
   return (
     <Modal.BaseModal
       open={open}
-      title="Create Folder"
+      title={isEditMode ? 'Edit Folder' : 'Create Folder'}
       onClose={handleClose}
       onConfirm={handleSubmit}
       content={renderContent}
