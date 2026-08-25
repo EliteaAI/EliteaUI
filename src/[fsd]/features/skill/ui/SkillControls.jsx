@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 import { useSelector } from 'react-redux';
@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { Box } from '@mui/material';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
+import { CompareVersionsModal } from '@/[fsd]/features/compare-versions';
 import {
   useForkSkill,
   usePublishSkillMenu,
@@ -21,6 +22,7 @@ import { PERMISSIONS, SkillsTabs } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils.jsx';
 import { useCopyLinkMenu } from '@/components/CopyLinkToEntityButton.jsx';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
+import DifferenceIcon from '@/components/Icons/DifferenceIcon';
 import ExportIcon from '@/components/Icons/ExportIcon';
 import ForkIcon from '@/components/Icons/ForkIcon';
 import PinIcon from '@/components/Icons/PinIcon';
@@ -49,10 +51,12 @@ const SkillControls = memo(props => {
 
   const navigate = useNavigate();
   const projectId = useSelectedProjectId();
+  const [compareVersionsOpen, setCompareVersionsOpen] = useState(false);
   const { isPrivate } = useProjectType();
   const { checkPermission } = useCheckPermission();
   const { toastError, toastSuccess } = useToast();
   const { values } = useFormikContext();
+  const versions = useMemo(() => values?.versions ?? [], [values?.versions]);
 
   const { publishSkillMenuItem, publishDialog } = usePublishSkillMenu(onSuccess);
   const { unpublishSkillMenuItem, unpublishDialog } = useUnpublishSkillMenu(onSuccess);
@@ -178,6 +182,13 @@ const SkillControls = memo(props => {
           onClick: onExport,
         },
         shareVersionMenuItem,
+        versions.length >= 2 &&
+          (isPrivate || checkPermission(PERMISSIONS.skills.update)) && {
+            key: 'compare-versions',
+            label: 'Compare versions',
+            icon: <DifferenceIcon sx={{ fontSize: '1rem' }} />,
+            onClick: () => setCompareVersionsOpen(true),
+          },
         {
           key: 'fork',
           label: 'Fork',
@@ -239,6 +250,9 @@ const SkillControls = memo(props => {
       onDeleteSkill,
       canDeleteVersion,
       canDeleteSkill,
+      versions,
+      isPrivate,
+      checkPermission,
     ],
   );
 
@@ -250,6 +264,17 @@ const SkillControls = memo(props => {
       />
       {publishDialog}
       {unpublishDialog}
+      {compareVersionsOpen && (
+        <CompareVersionsModal
+          open={compareVersionsOpen}
+          onClose={() => setCompareVersionsOpen(false)}
+          entityType="skill"
+          entityId={skillId}
+          projectId={projectId}
+          leftVersionId={currentVersionId}
+          versions={versions}
+        />
+      )}
     </Box>
   );
 });
