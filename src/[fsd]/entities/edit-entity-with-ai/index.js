@@ -5,4 +5,4 @@ export { default as EditEntityComparisonLayout } from './ui/EditEntityComparison
 export { default as TextDiffHighlight } from './ui/TextDiffHighlight';
 export { default as EditEntityGeneralStep } from './ui/GeneralStep';
 export { default as EditEntityInstructionsStep } from './ui/InstructionsStep';
-export { computeWordDiff } from './lib/helpers';
+export { computeWordDiff, resolveEntityType } from './lib/helpers';
