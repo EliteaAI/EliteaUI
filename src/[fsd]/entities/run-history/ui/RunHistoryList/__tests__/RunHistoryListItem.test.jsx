@@ -6,7 +6,7 @@ import { Box, ThemeProvider, createTheme } from '@mui/material';
 
 import store from '@/[fsd]/shared/config/store';
 import '@testing-library/jest-dom/vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 import RunHistoryListItem from '../RunHistoryListItem';
 
@@ -49,6 +49,10 @@ vi.mock('@/hooks/useToast', () => ({
 vi.mock('@/components/DotMenu', () => ({
   default: props => (
     <Box data-testid="dot-menu">
+      <button
+        data-testid="open-menu"
+        onClick={props.onShowMenuList}
+      />
       {props.children.map(menuItem => (
         <Box
           key={menuItem.label}
@@ -58,6 +62,15 @@ vi.mock('@/components/DotMenu', () => ({
       ))}
     </Box>
   ),
+}));
+
+const { cellRenders } = vi.hoisted(() => ({ cellRenders: { count: 0 } }));
+
+vi.mock('@/[fsd]/entities/run-history/ui', () => ({
+  RunHistoryTooltipCell: props => {
+    cellRenders.count += 1;
+    return <Box>{props.text}</Box>;
+  },
 }));
 
 const theme = createTheme({
@@ -71,19 +84,20 @@ const theme = createTheme({
 
 const CONVERSATION_ROW = { id: 42, created_at: 1786693433, duration: 12 };
 
-const renderItem = (item = CONVERSATION_ROW, props = {}) =>
-  render(
-    <Provider store={store}>
-      <ThemeProvider theme={theme}>
-        <RunHistoryListItem
-          item={item}
-          versions={null}
-          onItemSelect={vi.fn()}
-          {...props}
-        />
-      </ThemeProvider>
-    </Provider>,
-  );
+const itemTree = (item, props) => (
+  <Provider store={store}>
+    <ThemeProvider theme={theme}>
+      <RunHistoryListItem
+        item={item}
+        versions={null}
+        onItemSelect={vi.fn()}
+        {...props}
+      />
+    </ThemeProvider>
+  </Provider>
+);
+
+const renderItem = (item = CONVERSATION_ROW, props = {}) => render(itemTree(item, props));
 
 const clickShare = async () => {
   screen.getByTestId('menu-item-Share link').click();
@@ -148,5 +162,34 @@ describe('RunHistoryListItem actions', () => {
     renderItem({ ...CONVERSATION_ROW, hasConversation: false });
 
     expect(screen.queryByTestId('dot-menu')).not.toBeInTheDocument();
+  });
+});
+
+describe('RunHistoryListItem re-rendering', () => {
+  it('re-renders the row when the row itself changes', () => {
+    const { rerender } = renderItem();
+    const before = cellRenders.count;
+
+    rerender(itemTree(CONVERSATION_ROW, { selectedItem: CONVERSATION_ROW.id }));
+
+    expect(cellRenders.count).toBeGreaterThan(before);
+  });
+
+  it('leaves the row alone while the actions menu opens', () => {
+    renderItem();
+    const before = cellRenders.count;
+
+    fireEvent.click(screen.getByTestId('open-menu'));
+
+    expect(cellRenders.count).toBe(before);
+  });
+
+  it('leaves the row alone while the copied-link feedback runs', async () => {
+    renderItem();
+    const before = cellRenders.count;
+
+    await clickShare();
+
+    expect(cellRenders.count).toBe(before);
   });
 });

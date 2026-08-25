@@ -1,23 +1,12 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 
-import { Box, Skeleton, Typography, useTheme } from '@mui/material';
+import { Box, Skeleton } from '@mui/material';
 
-import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
 import { formatRunTimestamp, resolveRunHistoryColumns } from '@/[fsd]/entities/run-history/lib/helpers';
 import { RunHistoryTooltipCell } from '@/[fsd]/entities/run-history/ui';
-import { ModalConstants } from '@/[fsd]/shared/lib/constants';
-import { NavigationHelpers, SharedHelpers } from '@/[fsd]/shared/lib/helpers';
-import { Modal } from '@/[fsd]/shared/ui';
-import CopyLinkIcon from '@/assets/copy-link-icon.svg?react';
-import { SearchParams } from '@/common/constants';
-import DotMenu from '@/components/DotMenu';
-import CheckIcon from '@/components/Icons/CheckIcon.jsx';
-import DeleteIcon from '@/components/Icons/DeleteIcon';
-import RestoreIcon from '@/components/Icons/RestoreIcon';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast';
-import { getBasename } from '@/routes';
-import { copyToClipboard } from '@/utils/browserUtils';
+import { SharedHelpers } from '@/[fsd]/shared/lib/helpers';
+
+import RunHistoryRowActions from './RunHistoryRowActions';
 
 const RunHistoryListItem = memo(props => {
   const {
@@ -35,20 +24,7 @@ const RunHistoryListItem = memo(props => {
 
   const noVersions = useMemo(() => versions === null, [versions]);
 
-  const hasConversation = item?.hasConversation ?? true;
-  const canShare = item?.canShare ?? hasConversation;
-
-  const projectId = useSelectedProjectId();
-  const { toastSuccess, toastError, toastInfo } = useToast();
-
-  const [confirmRemoveModal, setConfirmRemoveModal] = useState(false);
-  const [linkCopied, setLinkCopied] = useState(false);
-  const [actionsMenuOpened, setActionMenuOpened] = useState(false);
-
-  const theme = useTheme();
-  const styles = runHistoryListItemStyles(noVersions, actionsMenuOpened, hasEvent);
-
-  const [deleteHistoryItem, { isLoading: isDeleting }] = RunHistoryApi.useDeleteRunHistoryItemMutation();
+  const styles = runHistoryListItemStyles(noVersions, hasEvent);
 
   const getCurrentVersion = useCallback(
     id => {
@@ -58,52 +34,6 @@ const RunHistoryListItem = memo(props => {
     },
     [versions, noVersions],
   );
-
-  const closeConfirmationModal = () => setConfirmRemoveModal(false);
-
-  const handleDeleteHistoryItem = useCallback(() => {
-    setConfirmRemoveModal(true);
-  }, []);
-
-  const handleCopyLink = useCallback(async () => {
-    const url = new URL(window.location.href);
-
-    url.searchParams.set(SearchParams.HistoryRunId, item.id);
-    if (shareOpensHistoryTab) url.searchParams.set(SearchParams.DestTab, 'History');
-
-    const appPath = `${url.pathname.replace(getBasename(), '')}${url.search}`;
-
-    try {
-      await copyToClipboard(NavigationHelpers.buildAbsoluteAppUrl(projectId, appPath));
-    } catch {
-      toastError('Failed to copy the link to the clipboard.');
-      return;
-    }
-
-    setLinkCopied(true);
-    toastInfo('The link has been copied to the clipboard.');
-
-    setTimeout(() => {
-      setLinkCopied(false);
-    }, 2500);
-  }, [item?.id, projectId, shareOpensHistoryTab, toastError, toastInfo]);
-
-  const confirmHistoryItemRemoval = useCallback(async () => {
-    if (isDeleting) return;
-
-    try {
-      await deleteHistoryItem({
-        projectId,
-        historyId: item.id,
-      }).unwrap();
-
-      toastSuccess('The run has been successfully deleted.');
-      setConfirmRemoveModal(false);
-      onItemSelect(null);
-    } catch {
-      toastError('Failed to delete chat');
-    }
-  }, [deleteHistoryItem, isDeleting, item, onItemSelect, projectId, toastError, toastSuccess]);
 
   const { date, version, duration } = useMemo(
     () =>
@@ -148,121 +78,49 @@ const RunHistoryListItem = memo(props => {
       </Box>
     );
 
-  const actionMenuItems = [
-    ...(canShare
-      ? [
-          {
-            label: 'Share link',
-            icon: linkCopied ? <CheckIcon /> : <CopyLinkIcon />,
-            onClick: handleCopyLink,
-          },
-        ]
-      : []),
-    ...(hasConversation
-      ? [
-          {
-            label: 'Delete',
-            icon: <DeleteIcon sx={styles.deleteIcon(isDeleting)} />,
-            onClick: handleDeleteHistoryItem,
-          },
-        ]
-      : []),
-    ...(hasConversation && handleRestoreConversation
-      ? [
-          {
-            label: 'Restore chat',
-            icon: <RestoreIcon />,
-            onClick: () => handleRestoreConversation(item.id),
-            tooltip: `Restores chat history only. ${source?.charAt(0)?.toUpperCase() + source?.slice(1)} configuration, behavior, or settings are not restored and may have changed since then.`,
-          },
-        ]
-      : []),
-  ];
-
   return (
-    <>
-      <Box
-        data-testid="run-history-list-item"
-        data-selected={selectedItem === item.id}
-        sx={[styles.listItem, selectedItem === item.id && styles.selected]}
-        onClick={() => onItemSelect(item.id)}
-      >
-        <RunHistoryTooltipCell
-          text={date}
-          trigger={tooltipTrigger}
-        />
-        {hasEvent && (
-          <RunHistoryTooltipCell
-            text={item.event_label ?? '-'}
-            tooltipText={item.event_tooltip ?? ''}
-            trigger={tooltipTrigger}
-          />
-        )}
-        {!noVersions && (
-          <RunHistoryTooltipCell
-            text={version}
-            trigger={tooltipTrigger}
-          />
-        )}
-        <RunHistoryTooltipCell
-          text={duration}
-          trigger={tooltipTrigger}
-        />
-        <Box
-          id="actions-block"
-          sx={styles.actions}
-        >
-          {actionMenuItems.length > 0 && (
-            <DotMenu
-              id="run-history-menu"
-              slotProps={{
-                ListItemText: {
-                  sx: { color: theme.palette.text.secondary },
-                  primaryTypographyProps: { variant: 'bodyMedium' },
-                },
-                ListItemIcon: {
-                  sx: {
-                    minWidth: '1rem !important',
-                    marginRight: '.75rem',
-                  },
-                },
-              }}
-              onClose={() => setActionMenuOpened(false)}
-              onShowMenuList={() => setActionMenuOpened(true)}
-              anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'right',
-              }}
-              transformOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-            >
-              {actionMenuItems}
-            </DotMenu>
-          )}
-        </Box>
-      </Box>
-
-      <Modal.DeleteEntityModal
-        open={confirmRemoveModal}
-        onClose={closeConfirmationModal}
-        onConfirm={confirmHistoryItemRemoval}
-        title="Remove run?"
-        titleIcon={ModalConstants.MODAL_ICON_TYPE.warning}
-        customContent={
-          <Typography variant="bodyMedium">Are you sure you want to remove this run?</Typography>
-        }
-        confirmButtonText="Remove"
+    <Box
+      data-testid="run-history-list-item"
+      data-selected={selectedItem === item.id}
+      sx={[styles.listItem, selectedItem === item.id && styles.selected]}
+      onClick={() => onItemSelect(item.id)}
+    >
+      <RunHistoryTooltipCell
+        text={date}
+        trigger={tooltipTrigger}
       />
-    </>
+      {hasEvent && (
+        <RunHistoryTooltipCell
+          text={item.event_label ?? '-'}
+          tooltipText={item.event_tooltip ?? ''}
+          trigger={tooltipTrigger}
+        />
+      )}
+      {!noVersions && (
+        <RunHistoryTooltipCell
+          text={version}
+          trigger={tooltipTrigger}
+        />
+      )}
+      <RunHistoryTooltipCell
+        text={duration}
+        trigger={tooltipTrigger}
+      />
+      <RunHistoryRowActions
+        item={item}
+        source={source}
+        onItemSelect={onItemSelect}
+        handleRestoreConversation={handleRestoreConversation}
+        shareOpensHistoryTab={shareOpensHistoryTab}
+      />
+    </Box>
   );
 });
 
 RunHistoryListItem.displayName = 'RunHistoryListItem';
 
 /** @type {MuiSx} */
-const runHistoryListItemStyles = (noVersions, actionsMenuOpened, hasEvent) => ({
+const runHistoryListItemStyles = (noVersions, hasEvent) => ({
   listItem: ({ palette }) => ({
     display: 'grid',
     gridTemplateColumns: resolveRunHistoryColumns(noVersions, hasEvent),
@@ -298,14 +156,6 @@ const runHistoryListItemStyles = (noVersions, actionsMenuOpened, hasEvent) => ({
       '&:after': { display: 'none' },
     },
 
-    ...(actionsMenuOpened
-      ? {
-          '#actions-block': {
-            display: 'flex',
-          },
-        }
-      : {}),
-
     '&:hover': {
       cursor: 'pointer',
       backgroundColor: palette.background.userInputBackground,
@@ -338,31 +188,6 @@ const runHistoryListItemStyles = (noVersions, actionsMenuOpened, hasEvent) => ({
     '+ *:after': {
       display: 'none',
     },
-  }),
-  actions: ({ palette }) => ({
-    display: 'none',
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'absolute',
-    right: '0rem',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    gap: '0.25rem',
-    padding: '0.5rem',
-    borderRadius: '0.25rem',
-
-    svg: {
-      fontSize: '.9rem',
-
-      path: {
-        fill: palette.secondary.main,
-      },
-    },
-  }),
-  deleteIcon: isDeleting => ({
-    fontSize: '.875rem',
-    opacity: isDeleting ? 0.5 : 1,
-    pointerEvents: isDeleting ? 'none' : 'auto',
   }),
 });
 
