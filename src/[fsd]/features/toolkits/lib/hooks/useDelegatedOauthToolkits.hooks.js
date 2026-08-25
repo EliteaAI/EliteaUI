@@ -43,6 +43,9 @@ const hasOauthCredential = (tool, configsByProject) => {
 export const useDelegatedOauthToolkits = (tools, projectId) => {
   const { personal_project_id: personalProjectId } = useSelector(state => state.user);
 
+  // Which credential lists actually have to be fetched. A toolkit without a credential reference needs no
+  // query — `hasOauthCredential` classifies it from its own settings — so those are deliberately absent
+  // here and their lookup below falls through to an empty list.
   const pendingTypes = useMemo(() => {
     const types = new Set();
     (tools || []).forEach(tool => {

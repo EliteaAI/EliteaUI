@@ -129,10 +129,6 @@ const TriggerTypeSelector = memo(props => {
 
     // Only reset if: became restricted AND has incompatible trigger AND we can make the API call
     if (wasNotRestricted && restrictedToChatMessage && hasIncompatibleTrigger && projectId && versionId) {
-      const reason = hasInteractiveElements
-        ? 'pipeline now contains interactive elements'
-        : 'pipeline now contains a toolkit that requires user authorization';
-
       updateTrigger({
         projectId,
         versionId,
@@ -140,6 +136,9 @@ const TriggerTypeSelector = memo(props => {
       })
         .unwrap()
         .then(() => {
+          const reason = hasInteractiveElements
+            ? 'pipeline now contains interactive elements'
+            : 'pipeline now contains a toolkit that requires user authorization';
           toastSuccess(`Trigger reset to Chat Message (${reason})`);
         })
         .catch(() => {
