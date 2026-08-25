@@ -64,7 +64,10 @@ const renderHistory = (history = [CREATED, INDEXED, GHOST, RUN_TEST]) =>
 
 const selectedEntry = () => store.getState().indexes.selectedHistoryItem;
 
-const rowTexts = () => screen.getAllByTestId('run-history-list-item').map(row => row.textContent);
+const historyRows = () => screen.getAllByTestId('run-history-list-item');
+
+const eventLabels = () =>
+  historyRows().map(row => within(row).getByText(/^(Created|Indexed|Search index)$/).textContent);
 
 describe('IndexHistory', () => {
   it('lists the columns in the order the toolkit run history uses', () => {
@@ -78,7 +81,7 @@ describe('IndexHistory', () => {
   it('shows a duration for every kind of run', () => {
     renderHistory();
 
-    const rows = screen.getAllByTestId('run-history-list-item');
+    const rows = historyRows();
 
     expect(within(rows[0]).getByText('Search index')).toBeInTheDocument();
     expect(within(rows[0]).getByText('1 h 1 m 1 s')).toBeInTheDocument();
@@ -91,7 +94,7 @@ describe('IndexHistory', () => {
   it('keeps the in-progress placeholders out of the list', () => {
     renderHistory();
 
-    expect(rowTexts()).toHaveLength(3);
+    expect(historyRows()).toHaveLength(3);
     expect(screen.queryByText('in_progress')).not.toBeInTheDocument();
   });
 
@@ -105,16 +108,16 @@ describe('IndexHistory', () => {
     renderHistory();
 
     expect(selectedEntry()).toEqual(RUN_TEST);
-    expect(screen.getAllByTestId('run-history-list-item')[0]).toHaveAttribute('data-selected', 'true');
+    expect(historyRows()[0]).toHaveAttribute('data-selected', 'true');
   });
 
   it('hands the clicked entry to the store so the detail pane can resolve it', () => {
     renderHistory();
 
-    fireEvent.click(screen.getAllByTestId('run-history-list-item')[1]);
+    fireEvent.click(historyRows()[1]);
 
     expect(selectedEntry()).toEqual(INDEXED);
-    expect(screen.getAllByTestId('run-history-list-item')[1]).toHaveAttribute('data-selected', 'true');
+    expect(historyRows()[1]).toHaveAttribute('data-selected', 'true');
   });
 
   it('sorts by duration when that column is chosen', () => {
@@ -122,10 +125,6 @@ describe('IndexHistory', () => {
 
     fireEvent.click(screen.getByText('Duration'));
 
-    expect(rowTexts().map(text => text.match(/(Created|Indexed|Search index)/)[0])).toEqual([
-      'Indexed',
-      'Created',
-      'Search index',
-    ]);
+    expect(eventLabels()).toEqual(['Indexed', 'Created', 'Search index']);
   });
 });
