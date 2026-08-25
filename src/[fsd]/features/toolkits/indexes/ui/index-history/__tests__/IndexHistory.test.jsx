@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { Provider } from 'react-redux';
 import { MemoryRouter, useLocation } from 'react-router-dom';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Box, ThemeProvider, createTheme } from '@mui/material';
 
@@ -30,8 +30,10 @@ vi.mock('@/[fsd]/entities/run-history/api', () => ({
 
 vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectId: () => 1 }));
 
+const { toastInfo } = vi.hoisted(() => ({ toastInfo: vi.fn() }));
+
 vi.mock('@/hooks/useToast', () => ({
-  default: () => ({ toastSuccess: vi.fn(), toastError: vi.fn(), toastInfo: vi.fn() }),
+  default: () => ({ toastSuccess: vi.fn(), toastError: vi.fn(), toastInfo }),
 }));
 
 vi.mock('@/hooks/useGetWindowWidth', () => ({ default: () => ({ windowWidth: 1280 }) }));
@@ -48,6 +50,8 @@ vi.mock('@/components/DotMenu', () => ({
     </Box>
   ),
 }));
+
+beforeEach(() => vi.clearAllMocks());
 
 afterEach(() => cleanup());
 
@@ -137,11 +141,34 @@ describe('IndexHistory', () => {
     expect(screen.getAllByTestId('run-history-list-item')[1]).toHaveAttribute('data-selected', 'true');
   });
 
-  it('falls back to the newest run when the shared run is gone', () => {
+  it('falls back to the newest run when the shared run is gone, and says so', () => {
     renderHistory(undefined, '?history_run_id=1_999');
 
     expect(selectedEntry()).toEqual(RUN_TEST);
     expect(screen.getAllByTestId('run-history-list-item')[0]).toHaveAttribute('data-selected', 'true');
+    expect(toastInfo).toHaveBeenCalledWith(
+      'That run is not in this list. Showing the most recent run instead.',
+    );
+  });
+
+  it('falls back to the newest listed run, not the last appended one', () => {
+    const STALE_RUN_TEST = { state: 'run_test', updated_on: 120, conversation_id: 15, duration: 4 };
+
+    renderHistory([CREATED, INDEXED, GHOST, STALE_RUN_TEST]);
+
+    expect(selectedEntry()).toEqual(INDEXED);
+  });
+
+  it('never falls back to an entry that renders no row', () => {
+    renderHistory([INDEXED, GHOST]);
+
+    expect(selectedEntry()).toEqual(INDEXED);
+  });
+
+  it('says nothing when no run was shared', () => {
+    renderHistory();
+
+    expect(toastInfo).not.toHaveBeenCalled();
   });
 
   it('drops the consumed run id so a reload does not re-pin the selection', () => {

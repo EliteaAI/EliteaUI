@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { Provider } from 'react-redux';
-import { MemoryRouter, useLocation } from 'react-router-dom';
+import { MemoryRouter, useLocation, useSearchParams } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Box, ThemeProvider, createTheme } from '@mui/material';
@@ -101,6 +101,17 @@ const theme = createTheme({
 
 const LocationProbe = () => <Box data-testid="search">{useLocation().search}</Box>;
 
+const ReshareControl = () => {
+  const [, setSearchParams] = useSearchParams();
+
+  return (
+    <button
+      data-testid="reshare"
+      onClick={() => setSearchParams({ history_run_id: String(CONVERSATION_ID) })}
+    />
+  );
+};
+
 const renderContainer = (search, containerProps = {}) =>
   render(
     <Provider store={store}>
@@ -114,6 +125,7 @@ const renderContainer = (search, containerProps = {}) =>
             {...containerProps}
           />
           <LocationProbe />
+          <ReshareControl />
         </ThemeProvider>
       </MemoryRouter>
     </Provider>,
@@ -183,10 +195,31 @@ describe('RunHistoryContainer shared-link restore', () => {
     expect(screen.getByTestId('search').textContent).toContain('history_run_id');
   });
 
-  it('says so rather than silently opening the wrong run', () => {
+  it('opens a conversation the list has not paged to yet', () => {
     queryResult.data = { rows: CONVERSATION_ROWS, total: 40 };
 
     renderContainer('?history_run_id=99999');
+
+    const selection = screen.getByTestId('selection');
+
+    expect(selection).toHaveAttribute('data-value', '99999');
+    expect(selection).toHaveAttribute('data-type', 'number');
+    expect(toastInfo).not.toHaveBeenCalled();
+  });
+
+  it('says so rather than silently opening the wrong run once the list is complete', () => {
+    renderContainer('?history_run_id=99999');
+
+    expect(toastInfo).toHaveBeenCalledWith(
+      'That run is not in this list. Showing the most recent run instead.',
+    );
+    expect(screen.getByTestId('selection')).toHaveAttribute('data-value', '1234');
+  });
+
+  it('does not treat an index run as a run on an unfetched page', () => {
+    queryResult.data = { rows: CONVERSATION_ROWS, total: 40 };
+
+    renderContainer(`?history_run_id=${encodeURIComponent('index-run:docs:404')}`);
 
     expect(toastInfo).toHaveBeenCalledWith(
       'That run is not in this list. Showing the most recent run instead.',
@@ -204,14 +237,42 @@ describe('RunHistoryContainer shared-link restore', () => {
   });
 
   it('reports a missing run once, not on every render', () => {
-    queryResult.data = { rows: CONVERSATION_ROWS, total: 40 };
-
     renderContainer('?history_run_id=99999');
 
     fireEvent.click(screen.getByTestId('select-5678'));
     fireEvent.click(screen.getByTestId('select-1234'));
 
     expect(toastInfo).toHaveBeenCalledTimes(1);
+  });
+
+  it('honours the same link again when it is re-opened without a remount', () => {
+    renderContainer(`?history_run_id=${CONVERSATION_ID}`);
+
+    fireEvent.click(screen.getByTestId('select-5678'));
+    expect(screen.getByTestId('selection')).toHaveAttribute('data-value', '5678');
+
+    fireEvent.click(screen.getByTestId('reshare'));
+
+    expect(screen.getByTestId('selection')).toHaveAttribute('data-value', '1234');
+    expect(screen.getByTestId('search').textContent).not.toContain('history_run_id');
+  });
+
+  it('consumes the run id when the query settles without data', () => {
+    queryResult.data = undefined;
+
+    renderContainer('?history_run_id=99999');
+
+    expect(toastInfo).toHaveBeenCalledWith('That run is no longer available.');
+    expect(screen.getByTestId('search').textContent).not.toContain('history_run_id');
+  });
+
+  it('consumes the run id even when the entity has no runs at all', () => {
+    queryResult.data = { rows: [], total: 0 };
+
+    renderContainer('?history_run_id=99999');
+
+    expect(toastInfo).toHaveBeenCalledWith('That run is no longer available.');
+    expect(screen.getByTestId('search').textContent).not.toContain('history_run_id');
   });
 
   it('falls back to the newest run when the shared run is gone', () => {

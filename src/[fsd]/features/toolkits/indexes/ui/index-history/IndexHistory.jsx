@@ -16,6 +16,7 @@ import {
 import { actions, selectHistoryItem } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
 import { SearchParams } from '@/common/constants';
 import useGetWindowWidth from '@/hooks/useGetWindowWidth';
+import useToast from '@/hooks/useToast';
 
 const SORT_TYPES = {
   DATE: 'date',
@@ -42,6 +43,7 @@ const IndexHistory = memo(props => {
   const dispatch = useDispatch();
   const { windowWidth } = useGetWindowWidth();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { toastInfo } = useToast();
 
   const styles = indexHistoryStyles();
 
@@ -58,8 +60,20 @@ const IndexHistory = memo(props => {
   useEffect(() => {
     const sharedRunId = searchParams.get(SearchParams.HistoryRunId);
     const sharedRow = historyRows.find(row => row.id === sharedRunId);
+    const newestRow = historyRows.reduce(
+      (newest, row) => (newest && newest.created_at >= row.created_at ? newest : row),
+      null,
+    );
 
-    dispatch(actions.selectHistoryItem(sharedRow?.entry ?? history[history.length - 1]));
+    if (sharedRunId && !sharedRow) {
+      toastInfo(
+        newestRow
+          ? 'That run is not in this list. Showing the most recent run instead.'
+          : 'That run is no longer available.',
+      );
+    }
+
+    dispatch(actions.selectHistoryItem(sharedRow?.entry ?? newestRow?.entry ?? null));
 
     if (sharedRunId) {
       setSearchParams(

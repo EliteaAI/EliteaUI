@@ -17,14 +17,11 @@ const TERMINAL_STATES = new Set([
   IndexStatuses.cancelled,
 ]);
 
-// Conversation rows carry a naive isoformat() timestamp, which JS reads as local time.
-// A trailing Z here would make the merged list sort the two kinds of row against
-// different clocks and pick the wrong one as latest in any non-UTC browser.
-const toNaiveIsoString = unixSeconds =>
-  Number.isFinite(unixSeconds) ? new Date(unixSeconds * 1000).toISOString().replace('Z', '') : null;
+const toIsoString = unixSeconds =>
+  Number.isFinite(unixSeconds) ? new Date(unixSeconds * 1000).toISOString() : null;
 
 const toRunRow = (entry, indexName, eventLabel) => {
-  const createdAt = toNaiveIsoString(entry.updated_on);
+  const createdAt = toIsoString(entry.updated_on);
   if (!createdAt) return null;
 
   return {

@@ -6,6 +6,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Box, CircularProgress, Typography } from '@mui/material';
 
 import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
+import { parseRunTimestamp } from '@/[fsd]/entities/run-history/lib/helpers';
 import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
 import { useGetIndexesListQuery } from '@/[fsd]/features/toolkits/indexes/api';
 import { IndexStatuses, RUN_TEST_OPERATION_TYPES } from '@/[fsd]/features/toolkits/indexes/lib/constants';
@@ -46,12 +47,7 @@ const IndexHistoryPage = memo(() => {
   useGetIndexesListQuery({ toolkitId, projectId }, { skip: !projectId || !toolkitId });
   useIndexRunLiveRefresh({ toolkitId });
 
-  const {
-    data: indexesList,
-    isLoading: indexesLoading,
-    isFetching: indexesFetching,
-    hasData,
-  } = useSelector(selectIndexesList);
+  const { data: indexesList, isLoading: indexesLoading, hasData } = useSelector(selectIndexesList);
 
   const currentIndex = useMemo(() => {
     if (!hasData || !indexName) return null;
@@ -83,11 +79,7 @@ const IndexHistoryPage = memo(() => {
     return rows
       .filter(row => row.index_name === indexName && RUN_TEST_OPERATION_TYPES.has(row.operation_type))
       .map(row => {
-        // Backend emits malformed ISO like "2026-07-20T11:52:57+00:00Z" (offset + trailing Z).
-        // Strip the redundant Z when a numeric offset is present so Date() can parse it.
-        const raw = typeof row.created_at === 'string' ? row.created_at : '';
-        const normalized = raw.replace(/([+-]\d{2}:?\d{2})Z$/, '$1');
-        const ms = new Date(normalized).getTime();
+        const ms = parseRunTimestamp(row.created_at);
         return {
           state: IndexStatuses.runTest,
           updated_on: Number.isFinite(ms) ? Math.floor(ms / 1000) : null,
@@ -110,7 +102,7 @@ const IndexHistoryPage = memo(() => {
     [selectedHistoryItem, initialCompletedTs, indexName],
   );
 
-  const isLoading = indexesLoading || indexesFetching || !hasData || runHistoryLoading;
+  const isLoading = indexesLoading || !hasData || runHistoryLoading;
 
   useEffect(() => {
     if (shouldShowNotFoundPage) goToToolkitsList();

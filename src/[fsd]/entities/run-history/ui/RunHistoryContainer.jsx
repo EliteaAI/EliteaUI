@@ -5,6 +5,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Box, IconButton, Typography } from '@mui/material';
 
 import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
+import { byNewestRunFirst } from '@/[fsd]/entities/run-history/lib/helpers';
 import { RunHistoryChat, RunHistoryList } from '@/[fsd]/entities/run-history/ui';
 import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { SearchParams } from '@/common/constants';
@@ -41,6 +42,7 @@ const RunHistoryContainer = memo(props => {
   const [page, setPage] = useState(0);
   const [selectedHistoryItem, setSelectedHistoryItem] = useState(null);
   const handledSharedRunId = useRef(null);
+  const mergedData = useRef();
 
   const [fetchRunList, { data, isLoading, isFetching, isUninitialized }] =
     RunHistoryApi.useLazyGetRunHistoryListQuery();
@@ -49,9 +51,7 @@ const RunHistoryContainer = memo(props => {
   const historyRows = useMemo(() => {
     const conversationRows = decorateRow ? allConversations.map(decorateRow) : allConversations;
     if (!additionalRows.length) return conversationRows;
-    return [...conversationRows, ...additionalRows].sort(
-      (a, b) => new Date(b.created_at) - new Date(a.created_at),
-    );
+    return [...conversationRows, ...additionalRows].sort(byNewestRunFirst);
   }, [allConversations, additionalRows, decorateRow]);
 
   const selectedRow = useMemo(
@@ -59,30 +59,56 @@ const RunHistoryContainer = memo(props => {
     [historyRows, selectedHistoryItem],
   );
 
-  useEffect(() => {
-    if (!historyRows.length) return;
+  const conversationsSettled = mergedData.current === data;
 
+  const resolveSharedRun = useCallback(
+    (sharedRow, historyRunId) => {
+      if (sharedRow) return { selection: sharedRow.id };
+
+      const isConversationId = /^\d+$/.test(historyRunId);
+      const listIsComplete = allConversations.length >= (data?.total ?? 0);
+
+      if (isConversationId && !listIsComplete) return { selection: Number(historyRunId) };
+
+      return {
+        selection: historyRows[0]?.id ?? null,
+        unavailableMessage: historyRows.length
+          ? 'That run is not in this list. Showing the most recent run instead.'
+          : 'That run is no longer available.',
+      };
+    },
+    [allConversations, data, historyRows],
+  );
+
+  useEffect(() => {
     const historyRunId = searchParams.get(SearchParams.HistoryRunId);
 
-    if (historyRunId && handledSharedRunId.current !== historyRunId) {
-      const sharedRow = historyRows.find(historyRow => String(historyRow.id) === historyRunId);
-      if (!sharedRow && (isUninitialized || isLoading || isFetching || additionalRowsLoading)) return;
+    if (!historyRunId) handledSharedRunId.current = null;
 
-      handledSharedRunId.current = historyRunId;
-      if (!sharedRow) toastInfo('That run is not in this list. Showing the most recent run instead.');
-
-      setSelectedHistoryItem(sharedRow?.id ?? historyRows[0].id);
-      setSearchParams(
-        params => {
-          params.delete(SearchParams.HistoryRunId);
-          return params;
-        },
-        { replace: true },
-      );
+    if (!historyRunId || handledSharedRunId.current === historyRunId) {
+      if (!selectedHistoryItem && historyRows.length) setSelectedHistoryItem(historyRows[0].id);
       return;
     }
 
-    if (!selectedHistoryItem) setSelectedHistoryItem(historyRows[0].id);
+    const sharedRow = historyRows.find(historyRow => String(historyRow.id) === historyRunId);
+    const stillArriving =
+      isUninitialized || isLoading || isFetching || additionalRowsLoading || !conversationsSettled;
+
+    if (!sharedRow && stillArriving) return;
+
+    const { selection, unavailableMessage } = resolveSharedRun(sharedRow, historyRunId);
+
+    handledSharedRunId.current = historyRunId;
+    if (unavailableMessage) toastInfo(unavailableMessage);
+
+    setSelectedHistoryItem(selection);
+    setSearchParams(
+      params => {
+        params.delete(SearchParams.HistoryRunId);
+        return params;
+      },
+      { replace: true },
+    );
   }, [
     historyRows,
     searchParams,
@@ -92,6 +118,8 @@ const RunHistoryContainer = memo(props => {
     isLoading,
     isFetching,
     additionalRowsLoading,
+    conversationsSettled,
+    resolveSharedRun,
     toastInfo,
   ]);
 
@@ -117,6 +145,8 @@ const RunHistoryContainer = memo(props => {
         return [...prev, ...newItems];
       });
     }
+
+    mergedData.current = data;
   }, [data]);
 
   const handleLoadMore = useCallback(() => {
