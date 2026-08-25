@@ -67,12 +67,15 @@ export const TARGET_OPERATOR_OPTIONS = [
 
 // RBAC permission strings (must match backend check_api decorators, §19.6).
 export const EVAL_PERMISSIONS = {
+  dimensionRead: 'models.applications.evaluation.dimension.read',
   dimensionCreate: 'models.applications.evaluation.dimension.create',
   dimensionUpdate: 'models.applications.evaluation.dimension.update',
   dimensionDelete: 'models.applications.evaluation.dimension.delete',
+  codeValidationRead: 'models.applications.evaluation.code_validation.read',
   codeValidationCreate: 'models.applications.evaluation.code_validation.create',
   codeValidationUpdate: 'models.applications.evaluation.code_validation.update',
   codeValidationDelete: 'models.applications.evaluation.code_validation.delete',
+  suiteRead: 'models.applications.evaluation.suite.read',
   suiteCreate: 'models.applications.evaluation.suite.create',
   suiteUpdate: 'models.applications.evaluation.suite.update',
   suiteDelete: 'models.applications.evaluation.suite.delete',
@@ -82,10 +85,7 @@ export const EVAL_PERMISSIONS = {
   datasetDelete: 'models.applications.evaluation.dataset.delete',
   runRead: 'models.applications.evaluation.run.read',
   runCreate: 'models.applications.evaluation.run.create',
-  // Backend has no dedicated run.delete permission yet — delete is guarded by
-  // run.create too (see eval_run.py). Kept as its own key so call sites read
-  // correctly and only need updating here if/when the backend splits it out.
-  runDelete: 'models.applications.evaluation.run.create',
+  runDelete: 'models.applications.evaluation.run.delete',
   humanScoreRead: 'models.applications.evaluation.human_score.read',
   humanScoreCreate: 'models.applications.evaluation.human_score.create',
 };
