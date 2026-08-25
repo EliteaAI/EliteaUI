@@ -3,7 +3,11 @@ import { memo, useMemo } from 'react';
 import { Box } from '@mui/material';
 
 import ListInfiniteMoreLoader from '@/ComponentsLib/ListInfiniteMoreLoader';
-import { compareRunDuration, resolveRunHistoryColumns } from '@/[fsd]/entities/run-history/lib/helpers';
+import {
+  compareRunDuration,
+  compareRunTimestamp,
+  resolveRunHistoryColumns,
+} from '@/[fsd]/entities/run-history/lib/helpers';
 import { useRunHistorySorting } from '@/[fsd]/entities/run-history/lib/hooks';
 import { RunHistoryListItem, RunHistorySortableHeader } from '@/[fsd]/entities/run-history/ui';
 import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
@@ -35,6 +39,7 @@ const RunHistoryList = memo(props => {
     source,
     handleRestoreConversation,
     hasEvent = false,
+    shareOpensHistoryTab = false,
   } = props;
   const { isSmallWindow } = useIsSmallWindow();
   const { windowWidth } = useGetWindowWidth();
@@ -47,11 +52,7 @@ const RunHistoryList = memo(props => {
 
   const sortFunctions = useMemo(
     () => ({
-      [SORT_TYPES.DATE]: (a, b) => {
-        const dateA = new Date(a.created_at?.replace?.('Z', '') || a.created_at);
-        const dateB = new Date(b.created_at?.replace?.('Z', '') || b.created_at);
-        return dateA.getTime() - dateB.getTime();
-      },
+      [SORT_TYPES.DATE]: (a, b) => compareRunTimestamp(a.created_at, b.created_at),
       [SORT_TYPES.EVENT]: (a, b) =>
         (a.event_sort ?? a.event_label ?? '').localeCompare(b.event_sort ?? b.event_label ?? '') ||
         (a.event_label ?? '').localeCompare(b.event_label ?? ''),
@@ -118,6 +119,7 @@ const RunHistoryList = memo(props => {
                   handleRestoreConversation={handleRestoreConversation}
                   source={source}
                   hasEvent={hasEvent}
+                  shareOpensHistoryTab={shareOpensHistoryTab}
                 />
               ))}
             </>

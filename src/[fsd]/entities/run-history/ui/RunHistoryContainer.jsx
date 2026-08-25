@@ -1,16 +1,18 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useSearchParams } from 'react-router-dom';
 
 import { Box, IconButton, Typography } from '@mui/material';
 
 import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
+import { byNewestRunFirst } from '@/[fsd]/entities/run-history/lib/helpers';
 import { RunHistoryChat, RunHistoryList } from '@/[fsd]/entities/run-history/ui';
 import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { SearchParams } from '@/common/constants';
 import CloseIcon from '@/components/Icons/CloseIcon';
 import useIsSmallWindow from '@/hooks/useIsSmallWindow';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
+import useToast from '@/hooks/useToast';
 
 const { ParticipantEntityTypes } = ParticipantEntityConstants;
 
@@ -24,28 +26,32 @@ const RunHistoryContainer = memo(props => {
     ChatMessageListComponent,
     prettifyConversation,
     additionalRows = [],
+    additionalRowsLoading = false,
     decorateRow = null,
     DetailComponent = null,
+    shareOpensHistoryTab = false,
   } = props;
 
   const projectId = useSelectedProjectId();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { toastInfo } = useToast();
 
   const { isSmallWindow } = useIsSmallWindow();
 
   const [allConversations, setAllConversations] = useState([]);
   const [page, setPage] = useState(0);
   const [selectedHistoryItem, setSelectedHistoryItem] = useState(null);
+  const handledSharedRunId = useRef(null);
+  const [mergedData, setMergedData] = useState();
 
-  const [fetchRunList, { data, isLoading, isFetching }] = RunHistoryApi.useLazyGetRunHistoryListQuery();
+  const [fetchRunList, { data, isLoading, isFetching, isUninitialized }] =
+    RunHistoryApi.useLazyGetRunHistoryListQuery();
 
   // Not part of server-side pagination, so they are merged into every page.
   const historyRows = useMemo(() => {
     const conversationRows = decorateRow ? allConversations.map(decorateRow) : allConversations;
     if (!additionalRows.length) return conversationRows;
-    return [...conversationRows, ...additionalRows].sort(
-      (a, b) => new Date(b.created_at) - new Date(a.created_at),
-    );
+    return [...conversationRows, ...additionalRows].sort(byNewestRunFirst);
   }, [allConversations, additionalRows, decorateRow]);
 
   const selectedRow = useMemo(
@@ -53,15 +59,69 @@ const RunHistoryContainer = memo(props => {
     [historyRows, selectedHistoryItem],
   );
 
+  const conversationsSettled = mergedData === data;
+
+  const resolveSharedRun = useCallback(
+    (sharedRow, historyRunId) => {
+      if (sharedRow) return { selection: sharedRow.id };
+
+      const isConversationId = /^\d+$/.test(historyRunId);
+      const listIsComplete = allConversations.length >= (data?.total ?? 0);
+
+      if (isConversationId && !listIsComplete) return { selection: Number(historyRunId) };
+
+      return {
+        selection: historyRows[0]?.id ?? null,
+        unavailableMessage: historyRows.length
+          ? 'That run is not in this list. Showing the most recent run instead.'
+          : 'That run is no longer available.',
+      };
+    },
+    [allConversations, data, historyRows],
+  );
+
   useEffect(() => {
     const historyRunId = searchParams.get(SearchParams.HistoryRunId);
 
-    if (historyRunId && historyRows.length > 0) {
-      setSelectedHistoryItem(+historyRunId);
-    } else if (!selectedHistoryItem && historyRows.length > 0) {
-      setSelectedHistoryItem(historyRows[0].id);
+    if (!historyRunId) handledSharedRunId.current = null;
+
+    if (!historyRunId || handledSharedRunId.current === historyRunId) {
+      if (!selectedHistoryItem && historyRows.length) setSelectedHistoryItem(historyRows[0].id);
+      return;
     }
-  }, [historyRows, searchParams, selectedHistoryItem]);
+
+    const sharedRow = historyRows.find(historyRow => String(historyRow.id) === historyRunId);
+    const stillArriving =
+      isUninitialized || isLoading || isFetching || additionalRowsLoading || !conversationsSettled;
+
+    if (!sharedRow && stillArriving) return;
+
+    const { selection, unavailableMessage } = resolveSharedRun(sharedRow, historyRunId);
+
+    handledSharedRunId.current = historyRunId;
+    if (unavailableMessage) toastInfo(unavailableMessage);
+
+    setSelectedHistoryItem(selection);
+    setSearchParams(
+      params => {
+        params.delete(SearchParams.HistoryRunId);
+        return params;
+      },
+      { replace: true },
+    );
+  }, [
+    historyRows,
+    searchParams,
+    setSearchParams,
+    selectedHistoryItem,
+    isUninitialized,
+    isLoading,
+    isFetching,
+    additionalRowsLoading,
+    conversationsSettled,
+    resolveSharedRun,
+    toastInfo,
+  ]);
 
   useEffect(() => {
     if (projectId && entityId) {
@@ -85,6 +145,8 @@ const RunHistoryContainer = memo(props => {
         return [...prev, ...newItems];
       });
     }
+
+    setMergedData(data);
   }, [data]);
 
   const handleLoadMore = useCallback(() => {
@@ -134,6 +196,7 @@ const RunHistoryContainer = memo(props => {
             source={source}
             handleRestoreConversation={handleRestoreConversation}
             hasEvent={Boolean(decorateRow)}
+            shareOpensHistoryTab={shareOpensHistoryTab}
           />
         </Box>
 

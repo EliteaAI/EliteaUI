@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { Provider } from 'react-redux';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { MemoryRouter, useLocation } from 'react-router-dom';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Box, ThemeProvider, createTheme } from '@mui/material';
 
@@ -29,13 +30,28 @@ vi.mock('@/[fsd]/entities/run-history/api', () => ({
 
 vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectId: () => 1 }));
 
+const { toastInfo } = vi.hoisted(() => ({ toastInfo: vi.fn() }));
+
 vi.mock('@/hooks/useToast', () => ({
-  default: () => ({ toastSuccess: vi.fn(), toastError: vi.fn(), toastInfo: vi.fn() }),
+  default: () => ({ toastSuccess: vi.fn(), toastError: vi.fn(), toastInfo }),
 }));
 
 vi.mock('@/hooks/useGetWindowWidth', () => ({ default: () => ({ windowWidth: 1280 }) }));
 
-vi.mock('@/components/DotMenu', () => ({ default: () => <Box data-testid="dot-menu" /> }));
+vi.mock('@/components/DotMenu', () => ({
+  default: props => (
+    <Box data-testid="dot-menu">
+      {props.children.map(menuItem => (
+        <Box
+          key={menuItem.label}
+          data-testid={`menu-item-${menuItem.label}`}
+        />
+      ))}
+    </Box>
+  ),
+}));
+
+beforeEach(() => vi.clearAllMocks());
 
 afterEach(() => cleanup());
 
@@ -53,12 +69,17 @@ const INDEXED = { state: 'completed', created_on: 196.891, updated_on: 200, conv
 const GHOST = { state: 'in_progress', created_on: 300, updated_on: 300, conversation_id: 13 };
 const RUN_TEST = { state: 'run_test', updated_on: 400, conversation_id: 14, duration: 3661 };
 
-const renderHistory = (history = [CREATED, INDEXED, GHOST, RUN_TEST]) =>
+const LocationProbe = () => <Box data-testid="search">{useLocation().search}</Box>;
+
+const renderHistory = (history = [CREATED, INDEXED, GHOST, RUN_TEST], search = '') =>
   render(
     <Provider store={store}>
-      <ThemeProvider theme={theme}>
-        <IndexHistory history={history} />
-      </ThemeProvider>
+      <MemoryRouter initialEntries={[`/index/history${search}`]}>
+        <ThemeProvider theme={theme}>
+          <IndexHistory history={history} />
+          <LocationProbe />
+        </ThemeProvider>
+      </MemoryRouter>
     </Provider>,
   );
 
@@ -98,10 +119,12 @@ describe('IndexHistory', () => {
     expect(screen.queryByText('in_progress')).not.toBeInTheDocument();
   });
 
-  it('offers no run actions this page cannot honour', () => {
+  it('offers Share link without the run actions this page cannot honour', () => {
     renderHistory();
 
-    expect(screen.queryByTestId('dot-menu')).not.toBeInTheDocument();
+    expect(screen.getAllByTestId('menu-item-Share link')).toHaveLength(3);
+    expect(screen.queryByTestId('menu-item-Delete')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('menu-item-Restore chat')).not.toBeInTheDocument();
   });
 
   it('selects the newest entry on mount and hands the whole entry to the store', () => {
@@ -109,6 +132,50 @@ describe('IndexHistory', () => {
 
     expect(selectedEntry()).toEqual(RUN_TEST);
     expect(historyRows()[0]).toHaveAttribute('data-selected', 'true');
+  });
+
+  it('restores the shared run named by the url', () => {
+    renderHistory(undefined, `?history_run_id=${INDEXED.updated_on}_${INDEXED.conversation_id}`);
+
+    expect(selectedEntry()).toEqual(INDEXED);
+    expect(screen.getAllByTestId('run-history-list-item')[1]).toHaveAttribute('data-selected', 'true');
+  });
+
+  it('falls back to the newest run when the shared run is gone, and says so', () => {
+    renderHistory(undefined, '?history_run_id=1_999');
+
+    expect(selectedEntry()).toEqual(RUN_TEST);
+    expect(screen.getAllByTestId('run-history-list-item')[0]).toHaveAttribute('data-selected', 'true');
+    expect(toastInfo).toHaveBeenCalledWith(
+      'That run is not in this list. Showing the most recent run instead.',
+    );
+  });
+
+  it('falls back to the newest listed run, not the last appended one', () => {
+    const STALE_RUN_TEST = { state: 'run_test', updated_on: 120, conversation_id: 15, duration: 4 };
+
+    renderHistory([CREATED, INDEXED, GHOST, STALE_RUN_TEST]);
+
+    expect(selectedEntry()).toEqual(INDEXED);
+  });
+
+  it('never falls back to an entry that renders no row', () => {
+    renderHistory([INDEXED, GHOST]);
+
+    expect(selectedEntry()).toEqual(INDEXED);
+  });
+
+  it('says nothing when no run was shared', () => {
+    renderHistory();
+
+    expect(toastInfo).not.toHaveBeenCalled();
+  });
+
+  it('drops the consumed run id so a reload does not re-pin the selection', () => {
+    renderHistory(undefined, `?history_run_id=${INDEXED.updated_on}_${INDEXED.conversation_id}&tab=all`);
+
+    expect(screen.getByTestId('search')).toHaveTextContent('tab=all');
+    expect(screen.getByTestId('search').textContent).not.toContain('history_run_id');
   });
 
   it('hands the clicked entry to the store so the detail pane can resolve it', () => {

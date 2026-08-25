@@ -62,10 +62,11 @@ describe('buildIndexHistoryRows', () => {
     expect(rows.map(row => row.event_label)).toEqual(['Indexed']);
   });
 
-  it('leaves the run actions to the surfaces that own a conversation', () => {
+  it('shares a run while leaving the conversation actions to the surfaces that own one', () => {
     const rows = build([{ state: 'completed', created_on: 190, updated_on: 200, conversation_id: 9 }]);
 
     expect(rows[0].hasConversation).toBe(false);
+    expect(rows[0].canShare).toBe(true);
   });
 
   it('survives an index that has no history yet', () => {

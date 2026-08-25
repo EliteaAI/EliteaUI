@@ -1,6 +1,7 @@
 import { memo, useCallback, useEffect, useMemo } from 'react';
 
 import { useDispatch, useSelector } from 'react-redux';
+import { useSearchParams } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
@@ -17,7 +18,9 @@ import {
   indexHistoryRowId,
 } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexHistoryRow.helpers';
 import { actions, selectHistoryItem } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
+import { SearchParams } from '@/common/constants';
 import useGetWindowWidth from '@/hooks/useGetWindowWidth';
+import useToast from '@/hooks/useToast';
 
 const SORT_TYPES = {
   DATE: 'date',
@@ -43,6 +46,8 @@ const IndexHistory = memo(props => {
   const { history } = props;
   const dispatch = useDispatch();
   const { windowWidth } = useGetWindowWidth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { toastInfo } = useToast();
 
   const styles = indexHistoryStyles();
 
@@ -51,19 +56,44 @@ const IndexHistory = memo(props => {
 
   const initialCompletedTs = useMemo(() => initialCompletedTsOf(history), [history]);
 
+  const historyRows = useMemo(
+    () => buildIndexHistoryRows(history, initialCompletedTs),
+    [history, initialCompletedTs],
+  );
+
   useEffect(() => {
-    dispatch(actions.selectHistoryItem(history[history.length - 1]));
+    const sharedRunId = searchParams.get(SearchParams.HistoryRunId);
+    const sharedRow = historyRows.find(row => row.id === sharedRunId);
+    const newestRow = historyRows.reduce(
+      (newest, row) => (newest && newest.created_at >= row.created_at ? newest : row),
+      null,
+    );
+
+    if (sharedRunId && !sharedRow) {
+      toastInfo(
+        newestRow
+          ? 'That run is not in this list. Showing the most recent run instead.'
+          : 'That run is no longer available.',
+      );
+    }
+
+    dispatch(actions.selectHistoryItem(sharedRow?.entry ?? newestRow?.entry ?? null));
+
+    if (sharedRunId) {
+      setSearchParams(
+        params => {
+          params.delete(SearchParams.HistoryRunId);
+          return params;
+        },
+        { replace: true },
+      );
+    }
 
     return () => {
       dispatch(actions.selectHistoryItem(null));
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const historyRows = useMemo(
-    () => buildIndexHistoryRows(history, initialCompletedTs),
-    [history, initialCompletedTs],
-  );
 
   const sortedRows = useMemo(() => getSortedData(historyRows, SORT_FUNCTIONS), [historyRows, getSortedData]);
 
