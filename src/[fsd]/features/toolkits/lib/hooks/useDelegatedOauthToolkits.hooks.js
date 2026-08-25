@@ -16,14 +16,18 @@ const isMcpToolkit = tool =>
 const getConfigRef = tool => tool?.settings?.[`${tool.type}_configuration`];
 
 const hasOauthCredential = (tool, configsByProject) => {
-  if (tool?.settings?.oauth_discovery_endpoint) return true;
-
   const configRef = getConfigRef(tool);
-  if (!configRef?.elitea_title) return false;
 
-  const configs = configsByProject[configRef.private ? 'personal' : 'project']?.[tool.type] ?? [];
-  const cred = configs.find(item => item.elitea_title === configRef.elitea_title);
-  return Boolean(cred?.data?.oauth_discovery_endpoint);
+  // A referenced credential is authoritative: an app-only credential must not be reported as delegated
+  // just because an endpoint lingers in the toolkit's own settings.
+  if (configRef?.elitea_title) {
+    const configs = configsByProject[configRef.private ? 'personal' : 'project']?.[tool.type] ?? [];
+    const cred = configs.find(item => item.elitea_title === configRef.elitea_title);
+    return Boolean(cred?.data?.oauth_discovery_endpoint);
+  }
+
+  // Only OpenAPI can carry the endpoint inline instead of referencing a credential.
+  return tool?.type === 'openapi' && Boolean(tool?.settings?.oauth_discovery_endpoint);
 };
 
 /**
@@ -33,7 +37,8 @@ const hasOauthCredential = (tool, configsByProject) => {
  *
  * @param {Array} tools toolkits attached to an agent or pipeline version
  * @param {string} projectId project owning the entity
- * @returns {{ delegatedOauthToolkitNames: string[], hasDelegatedOauthToolkit: boolean }}
+ * @returns {{ delegatedOauthToolkitNames: string[], hasDelegatedOauthToolkit: boolean,
+ *   isResolvingCredentials: boolean }}
  */
 export const useDelegatedOauthToolkits = (tools, projectId) => {
   const { personal_project_id: personalProjectId } = useSelector(state => state.user);
@@ -48,19 +53,20 @@ export const useDelegatedOauthToolkits = (tools, projectId) => {
     return types;
   }, [tools]);
 
-  const { data: projectSharepoint } = useGetConfigurationsByTypeQuery(
+  const { data: projectSharepoint, isLoading: isLoadingProjectSharepoint } = useGetConfigurationsByTypeQuery(
     { projectId, type: 'sharepoint' },
     { skip: !projectId || !pendingTypes.has('project:sharepoint') },
   );
-  const { data: personalSharepoint } = useGetConfigurationsByTypeQuery(
-    { projectId: personalProjectId, type: 'sharepoint' },
-    { skip: !personalProjectId || !pendingTypes.has('personal:sharepoint') },
-  );
-  const { data: projectOpenApi } = useGetConfigurationsByTypeQuery(
+  const { data: personalSharepoint, isLoading: isLoadingPersonalSharepoint } =
+    useGetConfigurationsByTypeQuery(
+      { projectId: personalProjectId, type: 'sharepoint' },
+      { skip: !personalProjectId || !pendingTypes.has('personal:sharepoint') },
+    );
+  const { data: projectOpenApi, isLoading: isLoadingProjectOpenApi } = useGetConfigurationsByTypeQuery(
     { projectId, type: 'openapi' },
     { skip: !projectId || !pendingTypes.has('project:openapi') },
   );
-  const { data: personalOpenApi } = useGetConfigurationsByTypeQuery(
+  const { data: personalOpenApi, isLoading: isLoadingPersonalOpenApi } = useGetConfigurationsByTypeQuery(
     { projectId: personalProjectId, type: 'openapi' },
     { skip: !personalProjectId || !pendingTypes.has('personal:openapi') },
   );
@@ -89,5 +95,12 @@ export const useDelegatedOauthToolkits = (tools, projectId) => {
   return {
     delegatedOauthToolkitNames,
     hasDelegatedOauthToolkit: delegatedOauthToolkitNames.length > 0,
+    // Callers acting on a change of the result (rather than just rendering it) must wait for this, since
+    // credentials resolve after mount and the pre-resolution answer understates the delegated toolkits.
+    isResolvingCredentials:
+      isLoadingProjectSharepoint ||
+      isLoadingPersonalSharepoint ||
+      isLoadingProjectOpenApi ||
+      isLoadingPersonalOpenApi,
   };
 };

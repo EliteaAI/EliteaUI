@@ -81,10 +81,8 @@ const TriggerTypeSelector = memo(props => {
 
   // Toolkits authenticated by a per-user OAuth login only hold a token for the browser session of the
   // person who logged in, so a pipeline using them cannot run unattended on a schedule or webhook.
-  const { delegatedOauthToolkitNames, hasDelegatedOauthToolkit } = useDelegatedOauthToolkits(
-    values?.version_details?.tools,
-    projectId,
-  );
+  const { delegatedOauthToolkitNames, hasDelegatedOauthToolkit, isResolvingCredentials } =
+    useDelegatedOauthToolkits(values?.version_details?.tools, projectId);
 
   const restrictedToChatMessage = hasInteractiveElements || hasDelegatedOauthToolkit;
 
@@ -116,12 +114,16 @@ const TriggerTypeSelector = memo(props => {
     [triggerData?.type],
   );
 
-  // Track the previous restriction state to detect when it changes from false to true
-  const prevRestrictedRef = useRef(restrictedToChatMessage);
+  // Previous restriction state, used to detect a change from false to true. Stays `null` until the
+  // credentials behind it have resolved: those queries settle after mount, so the pre-resolution `false`
+  // is not a real state and treating it as one would reset a trigger the user never touched.
+  const prevRestrictedRef = useRef(null);
 
   // Auto-reset to Chat Message when the pipeline becomes incompatible with its configured trigger
   useEffect(() => {
-    const wasNotRestricted = !prevRestrictedRef.current;
+    if (isResolvingCredentials) return;
+
+    const wasNotRestricted = prevRestrictedRef.current === false;
     const hasIncompatibleTrigger =
       currentTriggerType === TRIGGER_TYPES.schedule || currentTriggerType === TRIGGER_TYPES.webhook;
 
@@ -147,6 +149,7 @@ const TriggerTypeSelector = memo(props => {
 
     prevRestrictedRef.current = restrictedToChatMessage;
   }, [
+    isResolvingCredentials,
     restrictedToChatMessage,
     hasInteractiveElements,
     currentTriggerType,

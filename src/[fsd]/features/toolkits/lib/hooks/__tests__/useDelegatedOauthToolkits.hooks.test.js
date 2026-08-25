@@ -100,4 +100,29 @@ describe('useDelegatedOauthToolkits', () => {
 
     expect(renderWith(tools).delegatedOauthToolkitNames).toEqual(['Petstore']);
   });
+
+  it('lets a referenced app-only credential override an endpoint left in the toolkit settings', () => {
+    shared.configsByProjectAndType[`${PROJECT_ID}:openapi`] = [{ elitea_title: 'app-only', data: {} }];
+
+    const tools = [
+      {
+        name: 'Petstore',
+        type: 'openapi',
+        settings: {
+          oauth_discovery_endpoint: 'https://auth/.well-known',
+          openapi_configuration: { elitea_title: 'app-only' },
+        },
+      },
+    ];
+
+    expect(renderWith(tools).hasDelegatedOauthToolkit).toBe(false);
+  });
+
+  it('ignores an inline endpoint on toolkits other than OpenAPI', () => {
+    const tools = [
+      { name: 'SP Inline', type: 'sharepoint', settings: { oauth_discovery_endpoint: 'https://login' } },
+    ];
+
+    expect(renderWith(tools).hasDelegatedOauthToolkit).toBe(false);
+  });
 });
