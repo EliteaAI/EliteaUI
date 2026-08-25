@@ -112,24 +112,25 @@ const ReshareControl = () => {
   );
 };
 
-const renderContainer = (search, containerProps = {}) =>
-  render(
-    <Provider store={store}>
-      <MemoryRouter initialEntries={[`/agents/1${search}`]}>
-        <ThemeProvider theme={theme}>
-          <RunHistoryContainer
-            entityId={1}
-            source="agent"
-            versions={[]}
-            DetailComponent={DetailComponent}
-            {...containerProps}
-          />
-          <LocationProbe />
-          <ReshareControl />
-        </ThemeProvider>
-      </MemoryRouter>
-    </Provider>,
-  );
+const containerTree = (search, containerProps = {}) => (
+  <Provider store={store}>
+    <MemoryRouter initialEntries={[`/agents/1${search}`]}>
+      <ThemeProvider theme={theme}>
+        <RunHistoryContainer
+          entityId={1}
+          source="agent"
+          versions={[]}
+          DetailComponent={DetailComponent}
+          {...containerProps}
+        />
+        <LocationProbe />
+        <ReshareControl />
+      </ThemeProvider>
+    </MemoryRouter>
+  </Provider>
+);
+
+const renderContainer = (search, containerProps = {}) => render(containerTree(search, containerProps));
 
 describe('RunHistoryContainer shared-link restore', () => {
   it('restores a shared run as a number so it matches a conversation id', () => {
@@ -254,6 +255,17 @@ describe('RunHistoryContainer shared-link restore', () => {
     fireEvent.click(screen.getByTestId('reshare'));
 
     expect(screen.getByTestId('selection')).toHaveAttribute('data-value', '1234');
+    expect(screen.getByTestId('search').textContent).not.toContain('history_run_id');
+  });
+
+  it('resolves a shared run when a refetch returns the rows it already had', () => {
+    const { rerender } = renderContainer('?history_run_id=99999', { additionalRowsLoading: true });
+
+    expect(screen.getByTestId('search').textContent).toContain('history_run_id');
+
+    queryResult.data = { rows: CONVERSATION_ROWS, total: CONVERSATION_ROWS.length };
+    rerender(containerTree('?history_run_id=99999', { additionalRowsLoading: false }));
+
     expect(screen.getByTestId('search').textContent).not.toContain('history_run_id');
   });
 

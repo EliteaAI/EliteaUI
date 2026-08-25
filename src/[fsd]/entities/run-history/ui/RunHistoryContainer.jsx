@@ -42,7 +42,7 @@ const RunHistoryContainer = memo(props => {
   const [page, setPage] = useState(0);
   const [selectedHistoryItem, setSelectedHistoryItem] = useState(null);
   const handledSharedRunId = useRef(null);
-  const mergedData = useRef();
+  const [mergedData, setMergedData] = useState();
 
   const [fetchRunList, { data, isLoading, isFetching, isUninitialized }] =
     RunHistoryApi.useLazyGetRunHistoryListQuery();
@@ -59,7 +59,7 @@ const RunHistoryContainer = memo(props => {
     [historyRows, selectedHistoryItem],
   );
 
-  const conversationsSettled = mergedData.current === data;
+  const conversationsSettled = mergedData === data;
 
   const resolveSharedRun = useCallback(
     (sharedRow, historyRunId) => {
@@ -146,7 +146,7 @@ const RunHistoryContainer = memo(props => {
       });
     }
 
-    mergedData.current = data;
+    setMergedData(data);
   }, [data]);
 
   const handleLoadMore = useCallback(() => {
