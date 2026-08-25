@@ -1,7 +1,7 @@
 import { IndexHistoryItemsLabels } from '@/[fsd]/features/toolkits/indexes/lib/constants';
 import { resolveIndexEventLabel } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexEvent.helpers';
 
-export const indexHistoryRowId = entry => `${entry?.updated_on}_${entry?.conversation_id}`;
+export const indexHistoryRowId = entry => `${entry?.updated_on}_${entry?.conversation_id ?? entry?.state}`;
 
 export const resolveIndexRunDuration = entry => {
   const { duration: serverComputedDuration, created_on: startedOn, updated_on: finishedOn } = entry;

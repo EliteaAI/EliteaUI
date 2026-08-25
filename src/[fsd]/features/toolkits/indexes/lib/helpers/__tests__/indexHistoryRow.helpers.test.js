@@ -99,8 +99,20 @@ describe('indexHistoryRowId', () => {
     );
   });
 
+  it('falls back to the state when a run produced no conversation', () => {
+    expect(indexHistoryRowId({ updated_on: 200, state: 'scheduled_reindex' })).toBe('200_scheduled_reindex');
+    expect(indexHistoryRowId({ updated_on: 200, conversation_id: null, state: 'failed' })).toBe('200_failed');
+  });
+
   it('matches a row back to the entry the store holds', () => {
     const entry = { state: 'completed', created_on: 190, updated_on: 200, conversation_id: 9 };
+    const [row] = build([entry]);
+
+    expect(indexHistoryRowId(entry)).toBe(row.id);
+  });
+
+  it('matches a conversationless row back to the entry the store holds', () => {
+    const entry = { state: 'scheduled_reindex', created_on: 190, updated_on: 200 };
     const [row] = build([entry]);
 
     expect(indexHistoryRowId(entry)).toBe(row.id);
