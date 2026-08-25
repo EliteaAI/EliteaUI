@@ -327,9 +327,9 @@ const moveToFolderButtonStyles = isVisible => ({
       color: palette.icon.fill.default,
     },
   }),
-  activeMenuItem: {
-    backgroundColor: 'rgba(106, 232, 250, 0.1)',
-  },
+  activeMenuItem: ({ palette }) => ({
+    backgroundColor: palette.background.tabButton.active,
+  }),
   menuItemIcon: {
     minWidth: '1.5rem',
   },

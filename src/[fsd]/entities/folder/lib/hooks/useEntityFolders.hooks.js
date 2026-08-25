@@ -18,8 +18,8 @@ export const useEntityFolders = (entityType, options = {}) => {
       const aPinned = a.meta?.is_pinned ? 1 : 0;
       const bPinned = b.meta?.is_pinned ? 1 : 0;
       if (aPinned !== bPinned) return bPinned - aPinned;
-      const aDate = new Date(a.updated_at || a.created_at);
-      const bDate = new Date(b.updated_at || b.created_at);
+      const aDate = new Date(a.updated_at || a.created_at || 0);
+      const bDate = new Date(b.updated_at || b.created_at || 0);
       return bDate - aDate;
     });
   }, [data]);
