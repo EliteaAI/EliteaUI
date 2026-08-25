@@ -1519,6 +1519,7 @@ const ChatBox = forwardRef((props, boxRef) => {
         thread_id: threadId,
         participants: activeConversation?.participants || [],
         question: theQuestion,
+        tokenLimitContinuation: true,
       });
 
       // Update UI to show it's continuing and clear the confirmation state
