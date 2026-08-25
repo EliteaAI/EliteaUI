@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useState } from 'react';
 
 import { Box, Divider, ListItemIcon, ListItemText, Menu, MenuItem, Typography } from '@mui/material';
 
@@ -11,25 +11,14 @@ import CheckIcon from '@/components/Icons/CheckIcon';
 import FolderIcon from '@/components/Icons/FolderIcon';
 import MoveTo from '@/components/Icons/MoveTo';
 import PlusIcon from '@/components/Icons/PlusIcon';
-import useToast from '@/hooks/useToast';
 
-import { getFolderEntityType } from '../lib/helpers';
-import { useEntityFolders, useMoveEntityToFolder, useRemoveEntityFromFolder } from '../lib/hooks';
+import { useFolderMenuActions } from '../lib/hooks';
 import CreateFolderDialog from './CreateFolderDialog';
 
 const MoveToFolderButton = memo(props => {
   const { entityId, entityType, currentFolderId, isVisible = false } = props;
 
-  const folderEntityType = useMemo(() => getFolderEntityType(entityType), [entityType]);
-  const { folders, isLoading: foldersLoading } = useEntityFolders(folderEntityType, {
-    skip: !folderEntityType,
-  });
-  const { moveEntityToFolder, isLoading: isMoving } = useMoveEntityToFolder();
-  const { removeEntityFromFolder, isLoading: isRemoving } = useRemoveEntityFromFolder();
-  const { toastSuccess, toastError } = useToast();
-
   const [anchorEl, setAnchorEl] = useState(null);
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const isMenuOpen = Boolean(anchorEl);
 
   const handleButtonClick = useCallback(event => {
@@ -43,99 +32,18 @@ const MoveToFolderButton = memo(props => {
     setAnchorEl(null);
   }, []);
 
-  const handleCreateFolderClick = useCallback(
-    event => {
-      event.stopPropagation();
-      handleMenuClose(event);
-      setCreateDialogOpen(true);
-    },
-    [handleMenuClose],
-  );
+  const {
+    folderEntityType,
+    folders,
+    isLoading,
+    createDialogOpen,
+    handleFolderClick,
+    handleRemoveFromFolder,
+    handleCreateFolderClick,
+    handleFolderCreated,
+    handleCloseCreateDialog,
+  } = useFolderMenuActions({ entityId, entityType, currentFolderId, onAction: handleMenuClose });
 
-  const handleCreateDialogClose = useCallback(() => {
-    setCreateDialogOpen(false);
-  }, []);
-
-  const handleFolderCreated = useCallback(
-    async newFolder => {
-      setCreateDialogOpen(false);
-      if (!newFolder?.id) return;
-
-      try {
-        await moveEntityToFolder({
-          folderId: newFolder.id,
-          folderName: newFolder.name,
-          entityType: folderEntityType,
-          entityId,
-          previousFolderId: currentFolderId,
-        });
-        toastSuccess(`Moved to "${newFolder.name}"`);
-      } catch {
-        toastError('Failed to move to folder');
-      }
-    },
-    [currentFolderId, entityId, folderEntityType, moveEntityToFolder, toastSuccess, toastError],
-  );
-
-  const handleFolderClick = useCallback(
-    async (event, folder) => {
-      event.stopPropagation();
-      handleMenuClose(event);
-
-      if (folder.id === currentFolderId) return;
-
-      try {
-        await moveEntityToFolder({
-          folderId: folder.id,
-          folderName: folder.name,
-          entityType: folderEntityType,
-          entityId,
-          previousFolderId: currentFolderId,
-        });
-        toastSuccess(`Moved to "${folder.name}"`);
-      } catch {
-        toastError('Failed to move to folder');
-      }
-    },
-    [
-      currentFolderId,
-      entityId,
-      folderEntityType,
-      handleMenuClose,
-      moveEntityToFolder,
-      toastSuccess,
-      toastError,
-    ],
-  );
-
-  const handleRemoveFromFolder = useCallback(
-    async event => {
-      event.stopPropagation();
-      handleMenuClose(event);
-
-      try {
-        await removeEntityFromFolder({
-          entityType: folderEntityType,
-          entityId,
-          previousFolderId: currentFolderId,
-        });
-        toastSuccess('Removed from folder');
-      } catch {
-        toastError('Failed to remove from folder');
-      }
-    },
-    [
-      currentFolderId,
-      entityId,
-      folderEntityType,
-      handleMenuClose,
-      removeEntityFromFolder,
-      toastSuccess,
-      toastError,
-    ],
-  );
-
-  const isLoading = foldersLoading || isMoving || isRemoving;
   const styles = moveToFolderButtonStyles(isVisible || isMenuOpen);
 
   if (!folderEntityType) return null;
@@ -255,7 +163,7 @@ const MoveToFolderButton = memo(props => {
 
       <CreateFolderDialog
         open={createDialogOpen}
-        onClose={handleCreateDialogClose}
+        onClose={handleCloseCreateDialog}
         onFolderCreated={handleFolderCreated}
         entityType={folderEntityType}
       />

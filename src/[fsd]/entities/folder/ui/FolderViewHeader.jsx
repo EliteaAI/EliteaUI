@@ -1,9 +1,11 @@
 import { memo } from 'react';
 
 import CloseIcon from '@mui/icons-material/Close';
-import { Box, IconButton, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
+import { Button } from '@/[fsd]/shared/ui';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import FolderIcon from '@/components/Icons/FolderIcon';
 
 const FolderViewHeader = memo(props => {
@@ -34,13 +36,14 @@ const FolderViewHeader = memo(props => {
         title="Close folder"
         placement="top"
       >
-        <IconButton
+        <Button.BaseBtn
+          variant={BUTTON_VARIANTS.icon}
           onClick={onClose}
           sx={styles.closeButton}
           data-testid="folder-view-close-btn"
         >
           <CloseIcon sx={styles.closeIcon} />
-        </IconButton>
+        </Button.BaseBtn>
       </StyledTooltip>
     </Box>
   );
@@ -82,6 +85,7 @@ const folderViewHeaderStyles = () => ({
   closeButton: ({ palette }) => ({
     padding: '0.25rem',
     color: palette.icon.fill.default,
+    backgroundColor: 'transparent',
     '&:hover': {
       backgroundColor: palette.background.button.secondary.default,
     },

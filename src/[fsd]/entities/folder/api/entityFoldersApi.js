@@ -1,69 +1,15 @@
+import { RtkCacheHelpers } from '@/[fsd]/shared/lib/helpers';
 import { eliteaApi } from '@/api/eliteaApi';
 
 const apiSlicePath = '/social/folders';
 const TAG_TYPE_FOLDER = 'EntityFolder';
 
 /**
- * Regex to parse RTK Query cache keys.
- * Cache keys follow the format: "endpointName{\"arg1\":\"value1\",...}"
- * Example: "applicationList{\"projectId\":123,\"page\":0}"
- */
-const CACHE_KEY_REGEX = /^([a-zA-Z]+)(\{.+\})$/;
-
-/**
- * Parses an RTK Query cache key into endpoint name and arguments.
- * Used to identify which cached queries contain a specific entity.
- */
-const parseCacheKey = cacheKey => {
-  const match = cacheKey.match(CACHE_KEY_REGEX);
-  if (!match) return null;
-  try {
-    const args = JSON.parse(match[2]);
-    return { endpointName: match[1], args };
-  } catch {
-    return null;
-  }
-};
-
-/**
  * Optimistically updates folder_id/folder_name on an entity across all cached list queries.
- *
- * When moving an entity to/from a folder, we need to update the entity card immediately
- * without waiting for the API response or a full page refresh. This function:
- *
- * 1. Iterates through all RTK Query caches looking for list queries (data.rows or data.items)
- * 2. Finds caches that contain the target entity by ID
- * 3. Patches those caches to update folder_id and folder_name on the entity
- * 4. Returns patch results that can be undone if the API call fails
- *
- * This enables the folder icon to appear/disappear on entity cards instantly.
+ * Uses shared patchListCaches helper to find and update entity caches.
  */
-const patchListCaches = (state, dispatch, matchFn, patchFn) => {
-  const patchResults = [];
-  Object.entries(state.eliteaApi.queries).forEach(([cacheKey, cacheEntry]) => {
-    if (!cacheEntry?.data?.rows && !cacheEntry?.data?.items) return;
-    const data = cacheEntry.data;
-    const hasMatch = data.rows?.some(matchFn) || data.items?.some(matchFn);
-    if (!hasMatch) return;
-    const parsed = parseCacheKey(cacheKey);
-    if (!parsed) return;
-    try {
-      const patchResult = dispatch(
-        eliteaApi.util.updateQueryData(parsed.endpointName, parsed.args, draft => {
-          const list = draft?.rows || draft?.items;
-          if (!list) return;
-          list.forEach(item => {
-            if (matchFn(item)) patchFn(item);
-          });
-        }),
-      );
-      patchResults.push(patchResult);
-    } catch {
-      // Skip
-    }
-  });
-  return patchResults;
-};
+const patchListCaches = (state, dispatch, matchFn, patchFn) =>
+  RtkCacheHelpers.patchListCaches(state, dispatch, matchFn, patchFn, eliteaApi);
 
 const patchListCachesForFolder = (state, entityId, folderId, folderName, dispatch) =>
   patchListCaches(

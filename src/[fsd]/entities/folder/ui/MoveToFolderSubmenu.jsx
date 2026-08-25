@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo } from 'react';
 
 import { Box, Divider, ListItemIcon, ListItemText, MenuItem, Typography } from '@mui/material';
 
@@ -9,98 +9,24 @@ import FolderIcon from '@/components/Icons/FolderIcon';
 import MoveTo from '@/components/Icons/MoveTo';
 import PlusIcon from '@/components/Icons/PlusIcon';
 import NestedMenuItem from '@/components/NestedMenuItem';
-import useToast from '@/hooks/useToast';
 
-import { getFolderEntityType } from '../lib/helpers';
-import { useEntityFolders, useMoveEntityToFolder, useRemoveEntityFromFolder } from '../lib/hooks';
+import { useFolderMenuActions } from '../lib/hooks';
 import CreateFolderDialog from './CreateFolderDialog';
 
 const MoveToFolderSubmenu = memo(props => {
   const { entityId, entityType, currentFolderId, parentMenuOpen, onAction, menuItemSx } = props;
 
-  const folderEntityType = useMemo(() => getFolderEntityType(entityType), [entityType]);
-  const { folders, isLoading: foldersLoading } = useEntityFolders(folderEntityType, {
-    skip: !folderEntityType,
-  });
-  const { moveEntityToFolder, isLoading: isMoving } = useMoveEntityToFolder();
-  const { removeEntityFromFolder, isLoading: isRemoving } = useRemoveEntityFromFolder();
-  const { toastSuccess, toastError } = useToast();
-
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
-
-  const isLoading = foldersLoading || isMoving || isRemoving;
-
-  const handleFolderClick = useCallback(
-    async (event, folder) => {
-      event.stopPropagation();
-      onAction?.();
-
-      if (folder.id === currentFolderId) return;
-
-      try {
-        await moveEntityToFolder({
-          folderId: folder.id,
-          folderName: folder.name,
-          entityType: folderEntityType,
-          entityId,
-          previousFolderId: currentFolderId,
-        });
-        toastSuccess(`Moved to "${folder.name}"`);
-      } catch {
-        toastError('Failed to move to folder');
-      }
-    },
-    [currentFolderId, entityId, folderEntityType, moveEntityToFolder, onAction, toastSuccess, toastError],
-  );
-
-  const handleRemoveFromFolder = useCallback(
-    async event => {
-      event.stopPropagation();
-      onAction?.();
-
-      try {
-        await removeEntityFromFolder({
-          entityType: folderEntityType,
-          entityId,
-          previousFolderId: currentFolderId,
-        });
-        toastSuccess('Removed from folder');
-      } catch {
-        toastError('Failed to remove from folder');
-      }
-    },
-    [currentFolderId, entityId, folderEntityType, onAction, removeEntityFromFolder, toastSuccess, toastError],
-  );
-
-  const handleCreateFolderClick = useCallback(
-    event => {
-      event.stopPropagation();
-      onAction?.();
-      setCreateDialogOpen(true);
-    },
-    [onAction],
-  );
-
-  const handleFolderCreated = useCallback(
-    async newFolder => {
-      setCreateDialogOpen(false);
-      if (!newFolder?.id) return;
-
-      try {
-        await moveEntityToFolder({
-          folderId: newFolder.id,
-          folderName: newFolder.name,
-          entityType: folderEntityType,
-          entityId,
-          previousFolderId: currentFolderId,
-        });
-        toastSuccess(`Moved to "${newFolder.name}"`);
-      } catch {
-        toastError('Failed to move to folder');
-      }
-    },
-    [currentFolderId, entityId, folderEntityType, moveEntityToFolder, toastSuccess, toastError],
-  );
+  const {
+    folderEntityType,
+    folders,
+    isLoading,
+    createDialogOpen,
+    handleFolderClick,
+    handleRemoveFromFolder,
+    handleCreateFolderClick,
+    handleFolderCreated,
+    handleCloseCreateDialog,
+  } = useFolderMenuActions({ entityId, entityType, currentFolderId, onAction });
 
   const styles = moveToFolderSubmenuStyles();
 
@@ -198,7 +124,7 @@ const MoveToFolderSubmenu = memo(props => {
 
       <CreateFolderDialog
         open={createDialogOpen}
-        onClose={() => setCreateDialogOpen(false)}
+        onClose={handleCloseCreateDialog}
         onFolderCreated={handleFolderCreated}
         entityType={folderEntityType}
       />
