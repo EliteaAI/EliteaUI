@@ -37,6 +37,7 @@ vi.mock('../useToolkitChat.hooks', () => ({
     chatHistory: [],
     handleRunTool: () => {},
     handleClearChat: () => {},
+    handleClearActiveConversation: () => {},
     isRunning: false,
     retryLastRun: () => {},
     modelList: [],

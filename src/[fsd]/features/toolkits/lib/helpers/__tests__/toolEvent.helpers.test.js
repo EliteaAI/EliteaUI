@@ -8,10 +8,16 @@ describe('resolveToolEventLabel', () => {
     expect(resolveToolEventLabel('index_data')).toBe('Index data');
   });
 
-  it('names every search-index variant the same way', () => {
-    expect(resolveToolEventLabel('search_index')).toBe('Search index');
-    expect(resolveToolEventLabel('stepback_search_index')).toBe('Search index');
-    expect(resolveToolEventLabel('stepback_summary_index')).toBe('Search index');
+  it('names each search-index variant after the tool that was actually run', () => {
+    expect(resolveToolEventLabel('search_index')).toBe('Search Index');
+    expect(resolveToolEventLabel('stepback_search_index')).toBe('Stepback Search Index');
+    expect(resolveToolEventLabel('stepback_summary_index')).toBe('Stepback Summary Index');
+  });
+
+  it('humanises a tool named after an Object member instead of returning the member', () => {
+    expect(resolveToolEventLabel('constructor')).toBe('Constructor');
+    expect(resolveToolEventLabel('toString')).toBe('ToString');
+    expect(resolveToolEventLabel('__proto__')).toBe('  proto  ');
   });
 
   it('has nothing to say without a tool', () => {

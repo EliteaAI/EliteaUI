@@ -88,6 +88,7 @@ export const useToolkitTestRunner = ({ toolkitId, values, index, adjustSchema })
     chatHistory,
     handleRunTool,
     handleClearChat,
+    handleClearActiveConversation,
     isRunning,
     retryLastRun,
     modelList,
@@ -128,8 +129,9 @@ export const useToolkitTestRunner = ({ toolkitId, values, index, adjustSchema })
       setSelectedTool(value || null);
       setToolInputVariables({});
       handleClearChat();
+      handleClearActiveConversation();
     },
-    [handleClearChat],
+    [handleClearChat, handleClearActiveConversation],
   );
 
   useEffect(() => {

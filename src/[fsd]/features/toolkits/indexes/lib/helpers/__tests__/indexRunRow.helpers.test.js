@@ -54,6 +54,13 @@ describe('buildRunHistoryRowDecorator — rows with no index run', () => {
     expect(decorate({ id: 1, operation_type: null }).event_label).toBeNull();
   });
 
+  it('tells the search tools apart instead of collapsing them into one label', () => {
+    const decorated = decorate({ id: 1, operation_type: 'stepback_search_index' });
+
+    expect(decorated.event_label).toBe('Stepback Search Index');
+    expect(decorated.event_tooltip).toBe('Started with Stepback Search Index');
+  });
+
   it("hedges the tooltip — the stamp is only the conversation's first tool", () => {
     expect(decorate({ id: 1, operation_type: 'get_issues' }).event_tooltip).toBe('Started with Get issues');
     expect(decorate({ id: 1, operation_type: null }).event_tooltip).toBeUndefined();

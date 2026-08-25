@@ -18,10 +18,18 @@ describe('buildIndexHistoryRows', () => {
   });
 
   it('prefers the server-side duration a Run Test row carries', () => {
-    const [row] = build([{ state: 'run_test', updated_on: 400, conversation_id: 9, duration: 12.5 }]);
+    const [row] = build([
+      {
+        state: 'run_test',
+        updated_on: 400,
+        conversation_id: 9,
+        duration: 12.5,
+        operation_type: 'stepback_search_index',
+      },
+    ]);
 
     expect(row.duration).toBe(12.5);
-    expect(row.event_label).toBe('Search index');
+    expect(row.event_label).toBe('Stepback Search Index');
   });
 
   it('reports no duration when the run boundaries cannot bound one', () => {
