@@ -13,6 +13,8 @@ import {
 import { DIMENSION_TIER_OPTIONS, EVAL_TIER } from '../../lib/constants';
 import { parseEvalError } from '../../lib/helpers';
 
+const MAX_COUNT_HINT = 20;
+
 const STEPS = {
   input: 'input',
   loading: 'loading',
@@ -70,10 +72,15 @@ const GenerateDimensionsDialog = memo(props => {
     setError('');
   }, []);
 
+  const isBusy = step === STEPS.loading || step === STEPS.saving;
+
+  // Guards every dismissal path at once — BaseModal wires onClose to Cancel, the X button, the
+  // backdrop and Escape, and none of the in-flight calls are cancellable.
   const handleClose = useCallback(() => {
+    if (isBusy) return;
     reset();
     onClose?.();
-  }, [reset, onClose]);
+  }, [isBusy, reset, onClose]);
 
   const handleGenerate = useCallback(async () => {
     setStep(STEPS.loading);
@@ -85,7 +92,10 @@ const GenerateDimensionsDialog = memo(props => {
         body: {
           application_id: applicationId,
           version_id: applicationVersionId ?? null,
-          ...(Number.isFinite(parsedCount) && parsedCount > 0 ? { count_hint: parsedCount } : {}),
+          // Backend validates count_hint as 1..20; clamp rather than let a typed 50 come back a 400.
+          ...(Number.isFinite(parsedCount) && parsedCount > 0
+            ? { count_hint: Math.min(parsedCount, MAX_COUNT_HINT) }
+            : {}),
         },
       }).unwrap();
       const items = (result?.dimensions ?? []).map(item => ({ ...item, tier: EVAL_TIER.agent_adhoc }));
@@ -118,6 +128,10 @@ const GenerateDimensionsDialog = memo(props => {
     if (suiteId == null) return;
     setStep(STEPS.saving);
     setError('');
+    // Items are saved one at a time and there is no rollback, so a mid-loop failure leaves the
+    // earlier items persisted. Drop those from the review list on failure so the user retries
+    // only what actually failed instead of double-creating what already landed.
+    const saved = new Set();
     try {
       for (const index of checkedIndexes) {
         const draft = drafts[index];
@@ -125,13 +139,27 @@ const GenerateDimensionsDialog = memo(props => {
         if (created?.id != null) {
           await addBinding({ projectId, suiteId, body: bindingCreateBody(created.id, draft) }).unwrap();
         }
+        saved.add(index);
       }
-      handleClose();
+      reset();
+      onClose?.();
     } catch (saveError) {
-      setError(parseEvalError(saveError, 'Failed to save the selected dimensions.'));
+      const remaining = drafts
+        .map((draft, index) => ({ draft, index }))
+        .filter(({ index }) => !saved.has(index));
+      setDrafts(remaining.map(({ draft }) => draft));
+      setCheckedIndexes(
+        new Set(remaining.flatMap(({ index }, position) => (checkedIndexes.has(index) ? [position] : []))),
+      );
+      const reason = parseEvalError(saveError, 'Failed to save the selected dimensions.');
+      setError(
+        saved.size
+          ? `${reason} ${saved.size} dimension(s) were already added and have been removed from this list.`
+          : reason,
+      );
       setStep(STEPS.review);
     }
-  }, [checkedIndexes, drafts, createDimension, addBinding, projectId, suiteId, handleClose]);
+  }, [checkedIndexes, drafts, createDimension, addBinding, projectId, suiteId, reset, onClose]);
 
   const styles = generateDimensionsDialogStyles();
 
@@ -155,7 +183,7 @@ const GenerateDimensionsDialog = memo(props => {
         <Box sx={styles.reviewList}>
           {drafts.map((draft, index) => (
             <Box
-              key={`${draft.name}-${index}`}
+              key={index}
               sx={styles.reviewItem}
               data-testid="generate-dimensions-review-item"
             >
@@ -208,7 +236,8 @@ const GenerateDimensionsDialog = memo(props => {
           label="Number of dimensions (optional)"
           value={countHint}
           onChange={event => setCountHint(event.target.value)}
-          inputProps={{ inputMode: 'numeric', maxLength: 2 }}
+          type="number"
+          inputProps={{ inputMode: 'numeric', min: 1, max: 20 }}
           data-testid="generate-dimensions-count-hint"
         />
       </Box>
@@ -236,7 +265,7 @@ const GenerateDimensionsDialog = memo(props => {
       onConfirm={step === STEPS.review ? handleSave : handleGenerate}
       confirmButtonText={step === STEPS.review ? 'Add selected' : 'Generate'}
       confirming={
-        step === STEPS.loading || step === STEPS.saving || (step === STEPS.review && !checkedIndexes.size)
+        isBusy || (step === STEPS.review && !checkedIndexes.size)
       }
       data-testid="generate-dimensions-dialog"
     />
