@@ -100,6 +100,7 @@ export const useToolkitTestRunner = ({ toolkitId, values, index, adjustSchema })
     index,
     runTool: selectedTool,
     toolInputVariables,
+    toolSchema: selectedToolSchema,
     toolkitId,
     isValidForm,
     values,

@@ -13,7 +13,7 @@ import {
 } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexChat.helpers';
 import { useIndexHistory } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import { ToolkitChatModesEnum } from '@/[fsd]/features/toolkits/lib/constants';
-import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
+import { ToolkitChatHelpers, ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import {
   createToolkitConversationWithParticipant,
   findToolkitParticipant,
@@ -46,6 +46,7 @@ export const useToolkitChat = props => {
     runTool,
     isValidForm,
     toolInputVariables,
+    toolSchema,
     index,
     indexConfigOverride,
     traceNewIndex,
@@ -373,10 +374,16 @@ export const useToolkitChat = props => {
           participants: currentConversation?.participants || [],
         });
 
-        const toolParams =
+        const rawToolParams =
           typeof relevantInputVariables === 'object' && !Array.isArray(relevantInputVariables)
             ? relevantInputVariables
             : {};
+
+        // Strip optional params left empty by the user so they're omitted from the call
+        // rather than sent as null/'' — matching how an agent invokes the same tool (#6263).
+        const toolParams = toolSchema
+          ? ToolkitChatHelpers.sanitizeToolParams(toolSchema, rawToolParams)
+          : rawToolParams;
 
         const specificToolkitPayload = {
           ...commonPayload,
@@ -420,6 +427,7 @@ export const useToolkitChat = props => {
       selectedModel,
       llmSettings,
       socketEmit,
+      toolSchema,
       setProgressingIndexHistoryRecovered,
       createToolkitConversation,
       traceNewIndex,
