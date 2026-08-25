@@ -175,14 +175,14 @@ const folderItemStyles = isSelected => ({
   count: ({ palette }) => ({
     color: palette.text.primary,
     flexShrink: 0,
-    marginLeft: '0.25rem',
+    marginLeft: '.375rem',
   }),
   pinIcon: ({ palette }) => ({
     width: '0.75rem',
     height: '0.75rem',
     color: palette.background.button.primary.disabled,
     flexShrink: 0,
-    marginLeft: '0.25rem',
+    marginLeft: '.375rem',
   }),
   moreButton: {
     '&.MuiButtonBase-root': {

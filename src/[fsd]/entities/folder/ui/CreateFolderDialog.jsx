@@ -9,7 +9,7 @@ import useToast from '@/hooks/useToast';
 import { useCreateFolder, useUpdateFolder } from '../lib/hooks';
 
 const CreateFolderDialog = memo(props => {
-  const { open, onClose, entityType, folder } = props;
+  const { open, onClose, onFolderCreated, entityType, folder } = props;
 
   const isEditMode = !!folder;
   const [folderName, setFolderName] = useState('');
@@ -58,15 +58,20 @@ const CreateFolderDialog = memo(props => {
       if (isEditMode) {
         await updateFolder({ folderId: folder.id, name: trimmedName, entityType });
         toastSuccess('Folder updated successfully');
+        handleClose();
       } else {
-        await createFolder({ name: trimmedName, entityType });
-        toastSuccess('Folder created successfully');
+        const newFolder = await createFolder({ name: trimmedName, entityType });
+        if (onFolderCreated) {
+          onFolderCreated(newFolder);
+        } else {
+          toastSuccess('Folder created successfully');
+          handleClose();
+        }
       }
-      handleClose();
     } catch {
       toastError(isEditMode ? 'Failed to update folder' : 'Failed to create folder');
     }
-  }, [folderName, entityType, isEditMode, folder, createFolder, updateFolder, toastSuccess, toastError, handleClose]);
+  }, [folderName, entityType, isEditMode, folder, createFolder, updateFolder, toastSuccess, toastError, handleClose, onFolderCreated]);
 
   const handleKeyDown = useCallback(
     e => {

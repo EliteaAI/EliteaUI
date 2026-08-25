@@ -54,7 +54,12 @@ const CardTagSection = memo(props => {
             text={tagName}
             hoverHighlight
             paddingLeft={!!index}
-            showDivider={index !== tagLength - 1 && (dynamic || index !== MAX_NUMBER_TAGS_SHOWN - 1)}
+            showDivider={
+              dynamic
+                ? index !== tagLength - 1
+                : index !== Math.min(tagLength, MAX_NUMBER_TAGS_SHOWN) - 1 ||
+                  tagLength + extraTagsCount - MAX_NUMBER_TAGS_SHOWN > 0
+            }
             onClick={disableClickTags ? null : handleTagClick(tag)}
           />
         );
