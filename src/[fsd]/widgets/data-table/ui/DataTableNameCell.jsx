@@ -18,7 +18,7 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const DataTableNameCell = memo(props => {
   const styles = dataTableNameCellStyles();
-  const { row, cardType, viewMode } = props;
+  const { row, cardType, viewMode, showFolders = true } = props;
   const { id, status, is_forked: isForked, meta, folder_id: folderId } = row;
   const projectId = useSelectedProjectId();
   const { isPublic: isPublicProject } = useProjectType();
@@ -125,7 +125,7 @@ const DataTableNameCell = memo(props => {
           type={getEntityTypeByCardType(cardType)}
         />
       )}
-      {folderId && !isPublicProject && (
+      {showFolders && folderId && !isPublicProject && (
         <StyledTooltip
           placement="top"
           title={row.folder_name || 'In folder'}

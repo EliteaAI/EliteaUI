@@ -30,6 +30,7 @@ const SkillRowAction = memo(props => {
     onDeleted,
     folderId,
     sx,
+    showExportPublish = true,
   } = props;
 
   const navigate = useNavigate();
@@ -139,12 +140,16 @@ const SkillRowAction = memo(props => {
             menuItemSx={styles.menuItem}
           />
         )}
-        <SkillRowMenuItem
-          icon={<ExportIcon fontSize="inherit" />}
-          label="Export"
-          onClick={withClose(onExport)}
-        />
-        <DisabledPublishMenuItem />
+        {showExportPublish && (
+          <>
+            <SkillRowMenuItem
+              icon={<ExportIcon fontSize="inherit" />}
+              label="Export"
+              onClick={withClose(onExport)}
+            />
+            <DisabledPublishMenuItem />
+          </>
+        )}
         {canDeleteSkill && (
           <SkillDeleteActionWithDialog
             name={skillName}

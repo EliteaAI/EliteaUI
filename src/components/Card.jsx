@@ -39,6 +39,7 @@ const Card = memo(props => {
     hideCardBottom = false,
     disableCardClick = false,
     onCardClick,
+    showFolders = true,
   } = props;
 
   const projectId = useSelectedProjectId();
@@ -303,7 +304,7 @@ const Card = memo(props => {
                     />
                   </Box>
                 </StyledTooltip>
-                {(isForked || folderId || data?.tags?.length > 0) && (
+                {(isForked || (showFolders && folderId) || data?.tags?.length > 0) && (
                   <Divider
                     orientation="vertical"
                     flexItem
@@ -316,7 +317,7 @@ const Card = memo(props => {
                       meta={meta}
                       type={getEntityTypeByCardType(type)}
                     />
-                    {(folderId || data?.tags?.length > 0) && (
+                    {((showFolders && folderId) || data?.tags?.length > 0) && (
                       <Divider
                         orientation="vertical"
                         flexItem
@@ -325,7 +326,7 @@ const Card = memo(props => {
                     )}
                   </>
                 )}
-                {folderId && !isPublicProject && (
+                {showFolders && folderId && !isPublicProject && (
                   <>
                     <StyledTooltip
                       placement="top"
@@ -355,7 +356,7 @@ const Card = memo(props => {
               <Box sx={styles.bottomRightSection}>
                 {!disableCardActions && (
                   <>
-                    {!isPublicProject && (
+                    {showFolders && !isPublicProject && (
                       <MoveToFolderButton
                         entityId={id}
                         entityType={type}

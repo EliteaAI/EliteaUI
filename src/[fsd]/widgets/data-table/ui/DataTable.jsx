@@ -57,6 +57,7 @@ const DataTable = memo(props => {
     setPage: externalSetPage,
     hideStatusColumn,
     hasListHeader = false,
+    showFolders = true,
   } = props;
 
   const { windowWidth } = useGetWindowWidth();
@@ -336,9 +337,15 @@ const DataTable = memo(props => {
     [columns, cardType, viewMode],
   );
 
-  const nameCellProps = useMemo(() => ({ cardType, viewMode }), [cardType, viewMode]);
+  const nameCellProps = useMemo(
+    () => ({ cardType, viewMode, showFolders }),
+    [cardType, viewMode, showFolders],
+  );
 
-  const actionsProps = useMemo(() => ({ cardType, viewMode }), [cardType, viewMode]);
+  const actionsProps = useMemo(
+    () => ({ cardType, viewMode, showFolders }),
+    [cardType, viewMode, showFolders],
+  );
 
   useEffect(() => {
     if (typeof externalPage === 'number' && tablePage !== externalPage) {

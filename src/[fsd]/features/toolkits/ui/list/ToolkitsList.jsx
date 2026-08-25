@@ -39,6 +39,7 @@ const ToolkitsList = memo(props => {
     emptyListPlaceHolder,
     isMCP = false,
     isApplication = false,
+    showFolders = true,
   } = props;
   const navigate = useNavigate();
   const { selectedTypes } = useTypes();
@@ -48,7 +49,9 @@ const ToolkitsList = memo(props => {
   const isMcpVisible = useIsMcpVisible();
   const isPublicProject = selectedProjectId == PUBLIC_PROJECT_ID;
 
-  const { renderCard } = useCardList(!isPublicProject ? ViewMode.Owner : ViewMode.Public);
+  const { renderCard } = useCardList(!isPublicProject ? ViewMode.Owner : ViewMode.Public, null, {
+    showFolders,
+  });
   const isTableView = useIsTableView();
 
   const folderEntityType = useMemo(() => {
@@ -56,20 +59,21 @@ const ToolkitsList = memo(props => {
     return ENTITY_FOLDER_TYPES.toolkit;
   }, [isMCP]);
 
-  const { folders } = useEntityFolders(folderEntityType, { includeCounts: true });
-  const { selectedFolderId, selectedFolder, isFolderViewActive, openFolder, closeFolder } =
-    useFolderView(folders);
+  const { folders } = useEntityFolders(folderEntityType, { includeCounts: true, skip: !showFolders });
+  const { selectedFolderId, selectedFolder, isFolderViewActive, openFolder, closeFolder } = useFolderView(
+    showFolders ? folders : [],
+  );
 
   const {
     idsQueryParam: folderEntityIds,
     isLoading: isLoadingFolderItems,
     isEmpty: isFolderEmpty,
   } = useFolderApplications({
-    folderId: selectedFolderId,
+    folderId: showFolders ? selectedFolderId : null,
     projectId: selectedProjectId,
   });
 
-  const shouldSkipQuery = isFolderViewActive && isLoadingFolderItems;
+  const shouldSkipQuery = showFolders && isFolderViewActive && isLoadingFolderItems;
 
   const [isFoldersExpanded, setIsFoldersExpanded] = useState(false);
   const handleExpandChange = useCallback(expanded => {
@@ -94,7 +98,7 @@ const ToolkitsList = memo(props => {
     isApplication,
     isTableView,
     forceSkip: shouldSkipQuery,
-    folderEntityIds,
+    folderEntityIds: showFolders ? folderEntityIds : undefined,
   });
 
   useMCPListStatusMonitor({ isMCP });
@@ -123,7 +127,7 @@ const ToolkitsList = memo(props => {
   const rightPanelContent = useMemo(
     () => (
       <Box sx={toolkitsRightPanelStyles(isFoldersExpanded).container}>
-        {!isPublicProject && (
+        {showFolders && !isPublicProject && (
           <FolderSection
             entityType={folderEntityType}
             onFolderSelect={openFolder}
@@ -143,6 +147,7 @@ const ToolkitsList = memo(props => {
       folderTagList,
       folderEntityType,
       isPublicProject,
+      showFolders,
       openFolder,
       selectedFolderId,
       isFolderViewActive,
@@ -290,6 +295,7 @@ const ToolkitsList = memo(props => {
       setPage={setPage}
       page={page}
       pageSize={pageSize}
+      showFolders={showFolders}
     />
   );
 });

@@ -90,7 +90,7 @@ const ActionWithDialog = memo(props => {
 ActionWithDialog.displayName = 'ActionWithDialog';
 
 const DataRowAction = memo(props => {
-  const { data, viewMode, type, isPinnedItem = false, onTogglePin } = props;
+  const { data, viewMode, type, isPinnedItem = false, onTogglePin, showFolders = true } = props;
   const { checkPermission } = useCheckPermission();
   const { isPrivate, isPublic: isPublicProject } = useProjectType();
   const { id: myAuthorId } = useSelector(state => state.user);
@@ -110,6 +110,7 @@ const DataRowAction = memo(props => {
   }, []);
 
   const showFolderActions =
+    showFolders &&
     !isPublicProject &&
     (entity_name === 'applications' ||
       entity_name === 'pipelines' ||
@@ -351,6 +352,7 @@ const DataRowAction = memo(props => {
         skillName={data?.name}
         versionId={data?.version_details?.id || data?.version?.id}
         folderId={data?.folder_id}
+        showExportPublish={false}
       />
     );
   }
