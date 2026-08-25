@@ -1,6 +1,7 @@
-import * as React from 'react';
+import { useCallback, useEffect } from 'react';
 
-import { ENTITY_FOLDER_TYPES, FolderSection } from '@/[fsd]/entities/folder';
+import { Box } from '@mui/material';
+
 import { usePublicApplicationsListQuery } from '@/api/applications';
 import { CollectionStatus, ContentType, ViewMode } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
@@ -13,16 +14,16 @@ import useToast from '@/hooks/useToast';
 import { rightInfoPanelStyle } from '@/styles/RightInfoPanelStyle';
 
 const emptyListPlaceHolder = (
-  <div>
+  <Box>
     No pipelines available. <br />
     Create yours now!
-  </div>
+  </Box>
 );
 const emptySearchedListPlaceHolder = (
-  <div>
+  <Box>
     No pipelines found. <br />
     Create yours now!
-  </div>
+  </Box>
 );
 
 export default function Latest() {
@@ -33,6 +34,7 @@ export default function Latest() {
     defaultSortOrder: 'desc',
     defaultSortBy: 'created_at',
   });
+
   const { error, data, isError, isFetching } = usePublicApplicationsListQuery({
     page,
     pageSize,
@@ -47,7 +49,7 @@ export default function Latest() {
   });
   const { rows: pipelines = [], total } = data || {};
 
-  const loadMoreApplications = React.useCallback(() => {
+  const loadMorePipelines = useCallback(() => {
     const existsMore = total && pipelines.length < total && (page + 1) * pageSize < total;
     if (!existsMore || isFetching) {
       return;
@@ -55,35 +57,32 @@ export default function Latest() {
     setPage(page + 1);
   }, [total, pipelines.length, page, pageSize, isFetching, setPage]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (isError) {
       toastError(buildErrorMessage(error));
     }
   }, [error, isError, toastError]);
 
   return (
-    <>
-      <CardList
-        cardList={pipelines}
-        total={total}
-        isLoading={!page && isFetching}
-        isError={isError}
-        rightPanelOffset={'16px'}
-        rightPanelContent={
-          <div style={rightInfoPanelStyle}>
-            <FolderSection entityType={ENTITY_FOLDER_TYPES.pipeline} />
-            <Categories
-              tagList={tagList}
-              style={{ flex: 1 }}
-            />
-          </div>
-        }
-        renderCard={renderCard}
-        isLoadingMore={!!page && isFetching}
-        loadMoreFunc={loadMoreApplications}
-        cardType={ContentType.PipelineLatest}
-        emptyListPlaceHolder={query ? emptySearchedListPlaceHolder : emptyListPlaceHolder}
-      />
-    </>
+    <CardList
+      cardList={pipelines}
+      total={total}
+      isLoading={!page && isFetching}
+      isError={isError}
+      rightPanelOffset="16px"
+      rightPanelContent={
+        <div style={rightInfoPanelStyle}>
+          <Categories
+            tagList={tagList}
+            style={{ flex: 1 }}
+          />
+        </div>
+      }
+      renderCard={renderCard}
+      isLoadingMore={!!page && isFetching}
+      loadMoreFunc={loadMorePipelines}
+      cardType={ContentType.PipelineLatest}
+      emptyListPlaceHolder={query ? emptySearchedListPlaceHolder : emptyListPlaceHolder}
+    />
   );
 }

@@ -3,9 +3,9 @@ import { memo, useCallback, useMemo, useRef, useState } from 'react';
 import { Box, CardContent, Divider, IconButton, Card as MuiCard, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
+import { MoveToFolderButton } from '@/[fsd]/entities/folder/ui';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { useMcpTokenChange } from '@/[fsd]/features/mcp/lib/hooks';
-import { MoveToFolderButton } from '@/[fsd]/entities/folder/ui';
 import { PinButton } from '@/[fsd]/widgets/pin-toggler/ui';
 import { useEliteaAssistantRef, useGetSupportAssistantConfigQuery } from '@/[fsd]/widgets/support-assistant';
 import EliteaAssistantIcon from '@/assets/icons/elitea-assistant-icon.svg?react';
@@ -13,14 +13,14 @@ import OfflineIcon from '@/assets/offline-icon.svg?react';
 import OnlineIcon from '@/assets/online-icon.svg?react';
 import PublishIcon from '@/assets/publish-version.svg?react';
 import { isApplicationCard, isSkillCard, isToolkitCard } from '@/common/checkCardType';
-import { ContentType, ViewMode } from '@/common/constants';
+import { ContentType, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
 import { getEntityType, getEntityTypeByCardType } from '@/common/utils';
 import AuthorContainer from '@/components/AuthorContainer';
 import CardTagSection from '@/components/CardTagSection';
 import EntityIcon from '@/components/EntityIcon';
-import FolderIcon from '@/components/Icons/FolderIcon';
 import { IconLinkWithToolTip } from '@/components/Fork/IconLinkWithToolTip.jsx';
 import HighlightQuery from '@/components/HighlightQuery';
+import FolderIcon from '@/components/Icons/FolderIcon';
 import Like from '@/components/Like';
 import useCardNavigate from '@/hooks/useCardNavigate';
 import useCardResize from '@/hooks/useCardResize';
@@ -62,6 +62,7 @@ const Card = memo(props => {
 
   const viewMode = useDataViewMode(pageViewMode, data);
   const [isCardHovered, setIsCardHovered] = useState(false);
+  const isPublicProject = projectId === PUBLIC_PROJECT_ID;
 
   const cardTitleRef = useRef(null);
   const cardRef = useRef(null);
@@ -324,7 +325,7 @@ const Card = memo(props => {
                     )}
                   </>
                 )}
-                {folderId && (
+                {folderId && !isPublicProject && (
                   <>
                     <StyledTooltip
                       placement="top"
@@ -354,12 +355,14 @@ const Card = memo(props => {
               <Box sx={styles.bottomRightSection}>
                 {!disableCardActions && (
                   <>
-                    <MoveToFolderButton
-                      entityId={id}
-                      entityType={type}
-                      currentFolderId={folderId}
-                      isVisible={isCardHovered}
-                    />
+                    {!isPublicProject && (
+                      <MoveToFolderButton
+                        entityId={id}
+                        entityType={type}
+                        currentFolderId={folderId}
+                        isVisible={isCardHovered}
+                      />
+                    )}
                     <PinButton
                       entityId={id}
                       entityType={type}
@@ -426,7 +429,7 @@ const cardStyles = (hasCardDetails, showCardBottom, isWholeCardClickable, isClic
     top: '0.75rem',
     right: '0.75rem',
     display: 'flex',
-    gap: '0.25rem',
+    gap: '0.125rem',
     alignItems: 'center',
     zIndex: 1,
   },
@@ -435,7 +438,7 @@ const cardStyles = (hasCardDetails, showCardBottom, isWholeCardClickable, isClic
     height: hasCardDetails ? '3.75rem' : '4.5rem',
     cursor: isClickable ? 'pointer' : 'default',
     width: '100%',
-    padding: hasCardDetails ? '1rem 1.25rem 0.75rem' : '1.25rem',
+    padding: hasCardDetails ? '1rem 6rem 0.75rem 1.25rem' : '1.25rem 6rem 1.25rem 1.25rem',
     boxSizing: 'border-box',
     display: 'flex',
     flexDirection: 'row',

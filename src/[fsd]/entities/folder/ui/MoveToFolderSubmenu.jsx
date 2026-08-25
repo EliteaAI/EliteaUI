@@ -1,24 +1,22 @@
 import { memo, useCallback, useMemo, useState } from 'react';
 
-import { Box, Divider, ListItemIcon, ListItemText, Menu, MenuItem, Typography } from '@mui/material';
+import { Box, Divider, ListItemIcon, ListItemText, MenuItem, Typography } from '@mui/material';
 
-import StyledTooltip from '@/ComponentsLib/Tooltip';
-import { Button } from '@/[fsd]/shared/ui';
-import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import PinIconFilled from '@/assets/pin-filled-icon.svg?react';
 import UngroupIcon from '@/assets/ungroup.svg?react';
 import CheckIcon from '@/components/Icons/CheckIcon';
 import FolderIcon from '@/components/Icons/FolderIcon';
 import MoveTo from '@/components/Icons/MoveTo';
 import PlusIcon from '@/components/Icons/PlusIcon';
+import NestedMenuItem from '@/components/NestedMenuItem';
 import useToast from '@/hooks/useToast';
 
 import { getFolderEntityType } from '../lib/helpers';
 import { useEntityFolders, useMoveEntityToFolder, useRemoveEntityFromFolder } from '../lib/hooks';
 import CreateFolderDialog from './CreateFolderDialog';
 
-const MoveToFolderButton = memo(props => {
-  const { entityId, entityType, currentFolderId, isVisible = false } = props;
+const MoveToFolderSubmenu = memo(props => {
+  const { entityId, entityType, currentFolderId, parentMenuOpen, onAction, menuItemSx } = props;
 
   const folderEntityType = useMemo(() => getFolderEntityType(entityType), [entityType]);
   const { folders, isLoading: foldersLoading } = useEntityFolders(folderEntityType, {
@@ -28,33 +26,60 @@ const MoveToFolderButton = memo(props => {
   const { removeEntityFromFolder, isLoading: isRemoving } = useRemoveEntityFromFolder();
   const { toastSuccess, toastError } = useToast();
 
-  const [anchorEl, setAnchorEl] = useState(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const isMenuOpen = Boolean(anchorEl);
 
-  const handleButtonClick = useCallback(event => {
-    event.stopPropagation();
-    event.preventDefault();
-    setAnchorEl(event.currentTarget);
-  }, []);
+  const isLoading = foldersLoading || isMoving || isRemoving;
 
-  const handleMenuClose = useCallback(event => {
-    event?.stopPropagation?.();
-    setAnchorEl(null);
-  }, []);
+  const handleFolderClick = useCallback(
+    async (event, folder) => {
+      event.stopPropagation();
+      onAction?.();
+
+      if (folder.id === currentFolderId) return;
+
+      try {
+        await moveEntityToFolder({
+          folderId: folder.id,
+          folderName: folder.name,
+          entityType: folderEntityType,
+          entityId,
+          previousFolderId: currentFolderId,
+        });
+        toastSuccess(`Moved to "${folder.name}"`);
+      } catch {
+        toastError('Failed to move to folder');
+      }
+    },
+    [currentFolderId, entityId, folderEntityType, moveEntityToFolder, onAction, toastSuccess, toastError],
+  );
+
+  const handleRemoveFromFolder = useCallback(
+    async event => {
+      event.stopPropagation();
+      onAction?.();
+
+      try {
+        await removeEntityFromFolder({
+          entityType: folderEntityType,
+          entityId,
+          previousFolderId: currentFolderId,
+        });
+        toastSuccess('Removed from folder');
+      } catch {
+        toastError('Failed to remove from folder');
+      }
+    },
+    [currentFolderId, entityId, folderEntityType, onAction, removeEntityFromFolder, toastSuccess, toastError],
+  );
 
   const handleCreateFolderClick = useCallback(
     event => {
       event.stopPropagation();
-      handleMenuClose(event);
+      onAction?.();
       setCreateDialogOpen(true);
     },
-    [handleMenuClose],
+    [onAction],
   );
-
-  const handleCreateDialogClose = useCallback(() => {
-    setCreateDialogOpen(false);
-  }, []);
 
   const handleFolderCreated = useCallback(
     async newFolder => {
@@ -77,103 +102,23 @@ const MoveToFolderButton = memo(props => {
     [currentFolderId, entityId, folderEntityType, moveEntityToFolder, toastSuccess, toastError],
   );
 
-  const handleFolderClick = useCallback(
-    async (event, folder) => {
-      event.stopPropagation();
-      handleMenuClose(event);
-
-      if (folder.id === currentFolderId) return;
-
-      try {
-        await moveEntityToFolder({
-          folderId: folder.id,
-          folderName: folder.name,
-          entityType: folderEntityType,
-          entityId,
-          previousFolderId: currentFolderId,
-        });
-        toastSuccess(`Moved to "${folder.name}"`);
-      } catch {
-        toastError('Failed to move to folder');
-      }
-    },
-    [
-      currentFolderId,
-      entityId,
-      folderEntityType,
-      handleMenuClose,
-      moveEntityToFolder,
-      toastSuccess,
-      toastError,
-    ],
-  );
-
-  const handleRemoveFromFolder = useCallback(
-    async event => {
-      event.stopPropagation();
-      handleMenuClose(event);
-
-      try {
-        await removeEntityFromFolder({
-          entityType: folderEntityType,
-          entityId,
-          previousFolderId: currentFolderId,
-        });
-        toastSuccess('Removed from folder');
-      } catch {
-        toastError('Failed to remove from folder');
-      }
-    },
-    [
-      currentFolderId,
-      entityId,
-      folderEntityType,
-      handleMenuClose,
-      removeEntityFromFolder,
-      toastSuccess,
-      toastError,
-    ],
-  );
-
-  const isLoading = foldersLoading || isMoving || isRemoving;
-  const styles = moveToFolderButtonStyles(isVisible || isMenuOpen);
+  const styles = moveToFolderSubmenuStyles();
 
   if (!folderEntityType) return null;
 
   return (
     <>
-      <StyledTooltip
-        title="Move to folder"
-        placement="top"
-        enterDelay={1000}
-        enterNextDelay={1000}
-      >
-        <Box component="span">
-          <Button.BaseBtn
-            variant={BUTTON_VARIANTS.icon}
-            onClick={handleButtonClick}
-            disabled={isLoading}
-            sx={styles.button}
-            data-testid={`move-to-folder-btn-${entityId}`}
-          >
-            <MoveTo sx={{ fontSize: '1rem' }} />
-          </Button.BaseBtn>
-        </Box>
-      </StyledTooltip>
-
-      <Menu
-        anchorEl={anchorEl}
-        open={isMenuOpen}
-        onClose={handleMenuClose}
-        onClick={e => e.stopPropagation()}
-        slotProps={{
-          paper: { sx: styles.menuPaper },
-          list: { sx: styles.menuList },
-        }}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      <NestedMenuItem
+        leftIcon={<MoveTo sx={{ fontSize: '1rem' }} />}
+        label="Move to folder"
+        parentMenuOpen={parentMenuOpen}
+        MenuItemComponent={MenuItem}
+        disabled={isLoading}
+        sx={menuItemSx}
+        anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        subMenuProps={{ MenuListProps: { sx: { py: 0 } } }}
       >
-        {/* Create folder - fixed at top */}
         <Box sx={styles.fixedTopSection}>
           <MenuItem
             onClick={handleCreateFolderClick}
@@ -189,7 +134,6 @@ const MoveToFolderButton = memo(props => {
           <Divider sx={styles.divider} />
         </Box>
 
-        {/* Folders list - scrollable */}
         <Box sx={styles.scrollableSection}>
           {folders.length > 0 ? (
             folders.map(folder => {
@@ -234,7 +178,6 @@ const MoveToFolderButton = memo(props => {
           )}
         </Box>
 
-        {/* Remove from folder - fixed at bottom */}
         {currentFolderId && (
           <Box sx={styles.fixedBottomSection}>
             <Divider sx={styles.divider} />
@@ -251,11 +194,11 @@ const MoveToFolderButton = memo(props => {
             </MenuItem>
           </Box>
         )}
-      </Menu>
+      </NestedMenuItem>
 
       <CreateFolderDialog
         open={createDialogOpen}
-        onClose={handleCreateDialogClose}
+        onClose={() => setCreateDialogOpen(false)}
         onFolderCreated={handleFolderCreated}
         entityType={folderEntityType}
       />
@@ -263,39 +206,16 @@ const MoveToFolderButton = memo(props => {
   );
 });
 
-MoveToFolderButton.displayName = 'MoveToFolderButton';
+MoveToFolderSubmenu.displayName = 'MoveToFolderSubmenu';
 
 /** @type {MuiSx} */
-const moveToFolderButtonStyles = isVisible => ({
-  button: ({ palette }) => ({
-    width: '1.75rem',
-    height: '1.75rem',
-    minWidth: '1.75rem',
-    padding: 0,
-    opacity: isVisible ? 1 : 0,
-    transition: 'opacity 0.2s ease-in-out',
-    color: palette.icon.fill.default,
-    backgroundColor: 'transparent',
-    '&:hover': {
-      backgroundColor: palette.background.button.secondary.default,
-    },
-  }),
-  menuPaper: ({ palette }) => ({
-    minWidth: '12rem',
-    maxWidth: '18rem',
-    backgroundColor: palette.background.secondary,
-    border: `0.0625rem solid ${palette.border.lines}`,
-  }),
-  menuList: {
-    padding: 0,
-    display: 'flex',
-    flexDirection: 'column',
-    maxHeight: '20rem',
-  },
+const moveToFolderSubmenuStyles = () => ({
   fixedTopSection: {
     flexShrink: 0,
-    pt: '0.25rem',
-    pb: '0.25rem',
+    minWidth: '13.75rem',
+
+    marginTop: '0.25rem',
+    marginBottom: '0.25rem',
 
     '> li': {
       marginBottom: '0.25rem',
@@ -308,17 +228,19 @@ const moveToFolderButtonStyles = isVisible => ({
   },
   fixedBottomSection: {
     flexShrink: 0,
-    pt: '0.25rem',
-    pb: '0.25rem',
+    marginTop: '0.25rem',
 
     '> li': {
+      marginBottom: '0.25rem',
       marginTop: '0.25rem',
     },
   },
+
   scrollableSection: {
     overflowY: 'auto',
     flex: 1,
     minHeight: 0,
+    maxHeight: '15rem',
   },
   menuItem: ({ palette }) => ({
     padding: '0.5rem 1rem',
@@ -363,4 +285,4 @@ const moveToFolderButtonStyles = isVisible => ({
   },
 });
 
-export default MoveToFolderButton;
+export default MoveToFolderSubmenu;

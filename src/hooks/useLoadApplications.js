@@ -15,6 +15,7 @@ export const useLoadApplications = (
   forceSkip = false,
   onlyPipeline,
   onlyAgent,
+  folderEntityIds = null,
 ) => {
   const { query, page, pageSize, setPage, tagList, selectedTagIds, projectId } = usePageQuery();
   const authorId = useAuthorIdFromUrl();
@@ -36,6 +37,7 @@ export const useLoadApplications = (
         sort_order: sortOrder,
         query,
         agents_type: onlyPipeline ? 'pipeline' : onlyAgent ? 'classic' : undefined,
+        ids: folderEntityIds || undefined,
       },
     },
     { skip: viewMode !== ViewMode.Public || forceSkip },
@@ -60,6 +62,7 @@ export const useLoadApplications = (
         sort_order: sortOrder,
         query,
         agents_type: onlyPipeline ? 'pipeline' : onlyAgent ? 'classic' : undefined,
+        ids: folderEntityIds || undefined,
       },
     },
     { skip: viewMode !== ViewMode.Owner || !projectId || forceSkip },

@@ -38,41 +38,54 @@ const parseCacheKey = cacheKey => {
  *
  * This enables the folder icon to appear/disappear on entity cards instantly.
  */
-const patchListCachesForFolder = (state, entityId, folderId, folderName, dispatch) => {
+const patchListCaches = (state, dispatch, matchFn, patchFn) => {
   const patchResults = [];
   Object.entries(state.eliteaApi.queries).forEach(([cacheKey, cacheEntry]) => {
-    // Only process list queries that have rows or items arrays
     if (!cacheEntry?.data?.rows && !cacheEntry?.data?.items) return;
     const data = cacheEntry.data;
-
-    // Check if this cache contains the entity we're updating
-    const hasEntity =
-      data.rows?.some(row => row.id === entityId) || data.items?.some(item => item.id === entityId);
-    if (!hasEntity) return;
-
+    const hasMatch = data.rows?.some(matchFn) || data.items?.some(matchFn);
+    if (!hasMatch) return;
     const parsed = parseCacheKey(cacheKey);
     if (!parsed) return;
-
     try {
-      // Use RTK Query's updateQueryData for immutable cache updates with undo support
       const patchResult = dispatch(
         eliteaApi.util.updateQueryData(parsed.endpointName, parsed.args, draft => {
           const list = draft?.rows || draft?.items;
           if (!list) return;
-          const item = list.find(i => i.id === entityId);
-          if (item) {
-            item.folder_id = folderId;
-            item.folder_name = folderName;
-          }
+          list.forEach(item => {
+            if (matchFn(item)) patchFn(item);
+          });
         }),
       );
       patchResults.push(patchResult);
     } catch {
-      // Skip if updateQueryData fails (e.g., endpoint doesn't exist)
+      // Skip
     }
   });
   return patchResults;
 };
+
+const patchListCachesForFolder = (state, entityId, folderId, folderName, dispatch) =>
+  patchListCaches(
+    state,
+    dispatch,
+    item => item.id === entityId,
+    item => {
+      item.folder_id = folderId;
+      item.folder_name = folderName;
+    },
+  );
+
+const clearDeletedFolderFromCaches = (state, folderId, dispatch) =>
+  patchListCaches(
+    state,
+    dispatch,
+    item => item.folder_id === folderId,
+    item => {
+      item.folder_id = null;
+      item.folder_name = null;
+    },
+  );
 
 export const entityFoldersApi = eliteaApi
   .enhanceEndpoints({
@@ -129,6 +142,14 @@ export const entityFoldersApi = eliteaApi
           { type: TAG_TYPE_FOLDER, id: folderId },
           { type: TAG_TYPE_FOLDER, id: `LIST_${entityType}` },
         ],
+        async onQueryStarted({ folderId }, { dispatch, queryFulfilled, getState }) {
+          const patchResults = clearDeletedFolderFromCaches(getState(), folderId, dispatch);
+          try {
+            await queryFulfilled;
+          } catch {
+            patchResults.forEach(p => p.undo());
+          }
+        },
       }),
       moveEntityToFolder: build.mutation({
         query: ({ projectId, folderId, entityType, entityId }) => ({
@@ -136,9 +157,11 @@ export const entityFoldersApi = eliteaApi
           method: 'PUT',
           body: { entity_type: entityType, entity_id: entityId, folder_id: folderId },
         }),
-        // Invalidate folder list to update entity counts
-        invalidatesTags: (_result, _error, { entityType }) => [
+        // Invalidate folder list (for counts) and folder items (for content)
+        invalidatesTags: (_result, _error, { entityType, folderId, previousFolderId }) => [
           { type: TAG_TYPE_FOLDER, id: `LIST_${entityType}` },
+          { type: TAG_TYPE_FOLDER, id: `ITEMS_${folderId}` },
+          ...(previousFolderId ? [{ type: TAG_TYPE_FOLDER, id: `ITEMS_${previousFolderId}` }] : []),
         ],
         /**
          * Optimistic update: immediately show folder icon on entity card.
@@ -165,8 +188,10 @@ export const entityFoldersApi = eliteaApi
           // Same endpoint as move, but with folder_id: null to remove from folder
           body: { entity_type: entityType, entity_id: entityId, folder_id: null },
         }),
-        invalidatesTags: (_result, _error, { entityType }) => [
+        // Invalidate folder list (for counts) and previous folder items
+        invalidatesTags: (_result, _error, { entityType, previousFolderId }) => [
           { type: TAG_TYPE_FOLDER, id: `LIST_${entityType}` },
+          ...(previousFolderId ? [{ type: TAG_TYPE_FOLDER, id: `ITEMS_${previousFolderId}` }] : []),
         ],
         // Optimistic update: immediately hide folder icon on entity card
         async onQueryStarted({ entityId }, { dispatch, queryFulfilled, getState }) {
@@ -191,6 +216,26 @@ export const entityFoldersApi = eliteaApi
           { type: TAG_TYPE_FOLDER, id: `LIST_${entityType}` },
         ],
       }),
+      /**
+       * Get paginated list of entity IDs in a folder.
+       * Returns { folder_id, entity_type, total, limit, offset, items: [{entity_id, entity_type, sort_name}] }
+       *
+       * Used to fetch folder contents - returns only IDs which are then mapped to full entities
+       * using the entity-specific list endpoint with ids filter.
+       */
+      getFolderItems: build.query({
+        query: ({ projectId, folderId, sortBy = 'name', sortOrder = 'asc', limit = 100, offset = 0 }) => {
+          const params = new URLSearchParams();
+          params.append('sort_by', sortBy);
+          params.append('sort_order', sortOrder);
+          params.append('limit', String(limit));
+          params.append('offset', String(offset));
+          return {
+            url: `/social/folder_items/prompt_lib/${projectId}/${folderId}?${params.toString()}`,
+          };
+        },
+        providesTags: (_result, _error, { folderId }) => [{ type: TAG_TYPE_FOLDER, id: `ITEMS_${folderId}` }],
+      }),
     }),
   });
 
@@ -203,4 +248,6 @@ export const {
   useMoveEntityToFolderMutation,
   useRemoveEntityFromFolderMutation,
   usePinFolderMutation,
+  useGetFolderItemsQuery,
+  useLazyGetFolderItemsQuery,
 } = entityFoldersApi;

@@ -71,7 +71,18 @@ const CreateFolderDialog = memo(props => {
     } catch {
       toastError(isEditMode ? 'Failed to update folder' : 'Failed to create folder');
     }
-  }, [folderName, entityType, isEditMode, folder, createFolder, updateFolder, toastSuccess, toastError, handleClose, onFolderCreated]);
+  }, [
+    folderName,
+    entityType,
+    isEditMode,
+    folder,
+    createFolder,
+    updateFolder,
+    toastSuccess,
+    toastError,
+    handleClose,
+    onFolderCreated,
+  ]);
 
   const handleKeyDown = useCallback(
     e => {

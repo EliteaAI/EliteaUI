@@ -1,6 +1,7 @@
-import * as React from 'react';
+import { useCallback, useEffect } from 'react';
 
-import { ENTITY_FOLDER_TYPES, FolderSection } from '@/[fsd]/entities/folder';
+import { Box } from '@mui/material';
+
 import { usePublicApplicationsListQuery } from '@/api/applications';
 import { CollectionStatus, ContentType, ViewMode } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
@@ -13,16 +14,16 @@ import useToast from '@/hooks/useToast';
 import { rightInfoPanelStyle } from '@/styles/RightInfoPanelStyle';
 
 const emptyListPlaceHolder = (
-  <div>
+  <Box>
     No public agents yet. <br />
     Publish yours now!
-  </div>
+  </Box>
 );
 const emptySearchedListPlaceHolder = (
-  <div>
+  <Box>
     No agents found. <br />
     Create yours now!
-  </div>
+  </Box>
 );
 
 export default function Latest() {
@@ -47,7 +48,7 @@ export default function Latest() {
   });
   const { rows: applications = [], total } = data || {};
 
-  const loadMoreApplications = React.useCallback(() => {
+  const loadMoreApplications = useCallback(() => {
     const existsMore = total && applications.length < total && (page + 1) * pageSize < total;
     if (!existsMore || isFetching) {
       return;
@@ -55,35 +56,32 @@ export default function Latest() {
     setPage(page + 1);
   }, [total, applications.length, page, pageSize, isFetching, setPage]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (isError) {
       toastError(buildErrorMessage(error));
     }
   }, [error, isError, toastError]);
 
   return (
-    <>
-      <CardList
-        cardList={applications}
-        total={total}
-        isLoading={!page && isFetching}
-        isError={isError}
-        rightPanelOffset={'16px'}
-        rightPanelContent={
-          <div style={rightInfoPanelStyle}>
-            <FolderSection entityType={ENTITY_FOLDER_TYPES.agent} />
-            <Categories
-              tagList={tagList}
-              style={{ flex: 1 }}
-            />
-          </div>
-        }
-        renderCard={renderCard}
-        isLoadingMore={!!page && isFetching}
-        loadMoreFunc={loadMoreApplications}
-        cardType={ContentType.ApplicationLatest}
-        emptyListPlaceHolder={query ? emptySearchedListPlaceHolder : emptyListPlaceHolder}
-      />
-    </>
+    <CardList
+      cardList={applications}
+      total={total}
+      isLoading={!page && isFetching}
+      isError={isError}
+      rightPanelOffset="16px"
+      rightPanelContent={
+        <div style={rightInfoPanelStyle}>
+          <Categories
+            tagList={tagList}
+            style={{ flex: 1 }}
+          />
+        </div>
+      }
+      renderCard={renderCard}
+      isLoadingMore={!!page && isFetching}
+      loadMoreFunc={loadMoreApplications}
+      cardType={ContentType.ApplicationLatest}
+      emptyListPlaceHolder={query ? emptySearchedListPlaceHolder : emptyListPlaceHolder}
+    />
   );
 }

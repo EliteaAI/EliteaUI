@@ -8,9 +8,9 @@ export const useRemoveEntityFromFolder = () => {
   const [removeEntityMutation, { isLoading, isError, error }] = useRemoveEntityFromFolderMutation();
 
   const removeEntityFromFolder = useCallback(
-    async ({ entityType, entityId }) => {
+    async ({ entityType, entityId, previousFolderId }) => {
       if (!projectId) return null;
-      const result = await removeEntityMutation({ projectId, entityType, entityId });
+      const result = await removeEntityMutation({ projectId, entityType, entityId, previousFolderId });
       return result.data;
     },
     [projectId, removeEntityMutation],

@@ -47,7 +47,7 @@ const FolderActionsMenu = memo(props => {
           variant="labelMedium"
           color="text.secondary"
         >
-          Edit
+          Rename
         </Typography>
       </MenuItem>
       <MenuItem

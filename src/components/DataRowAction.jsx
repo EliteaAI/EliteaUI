@@ -5,10 +5,12 @@ import { useSelector } from 'react-redux';
 import { IconButton, Menu, MenuItem, Typography } from '@mui/material';
 import { Box } from '@mui/system';
 
+import { MoveToFolderSubmenu } from '@/[fsd]/entities/folder/ui';
 import SkillRowAction from '@/[fsd]/features/skill/ui/SkillRowAction';
 import { useDeleteConfirmationDisabled } from '@/[fsd]/shared/lib/hooks';
 import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
 import { Modal } from '@/[fsd]/shared/ui';
+import { usePin } from '@/[fsd]/widgets/pin-toggler';
 import { useDeleteApplicationMutation } from '@/api/applications';
 import { useDeleteConfigurationMutation } from '@/api/configurations';
 import { useToolkitDeleteMutation } from '@/api/toolkits.js';
@@ -90,7 +92,7 @@ ActionWithDialog.displayName = 'ActionWithDialog';
 const DataRowAction = memo(props => {
   const { data, viewMode, type, isPinnedItem = false, onTogglePin } = props;
   const { checkPermission } = useCheckPermission();
-  const { isPrivate } = useProjectType();
+  const { isPrivate, isPublic: isPublicProject } = useProjectType();
   const { id: myAuthorId } = useSelector(state => state.user);
   const { cardType } = data;
   const realCardType = useMemo(() => cardType || type, [cardType, type]);
@@ -106,6 +108,19 @@ const DataRowAction = memo(props => {
   const handleClose = useCallback(() => {
     setAnchorEl(null);
   }, []);
+
+  const showFolderActions =
+    !isPublicProject && (entity_name === 'applications' || entity_name === 'pipelines');
+
+  const {
+    isPinned: pinState,
+    togglePin,
+    isLoading: isPinLoading,
+  } = usePin({
+    entityId: data?.id,
+    entityType: realCardType,
+    initialPinned: data?.is_pinned ?? isPinnedItem,
+  });
 
   const withClose = useCallback(
     onClickSub => () => {
@@ -204,26 +219,29 @@ const DataRowAction = memo(props => {
   const pinMenuItem = useMemo(
     () => ({
       onClick: () => {
-        onTogglePin?.(data?.id);
+        if (onTogglePin) {
+          onTogglePin(data?.id);
+        } else {
+          togglePin();
+        }
         handleClose();
       },
       icon: <PinIcon sx={menuItemStyles.pinIcon} />,
-      label: isPinnedItem ? 'Unpin' : 'Pin to top',
+      label: pinState ? 'Unpin from top' : 'Pin to top',
+      disabled: isPinLoading,
     }),
-    [isPinnedItem, onTogglePin, data?.id, handleClose, menuItemStyles.pinIcon],
+    [pinState, isPinLoading, onTogglePin, togglePin, data?.id, handleClose, menuItemStyles.pinIcon],
   );
 
   const applicationMenu = useMemo(() => {
     const list = [];
-    if (onTogglePin) {
-      list.push(pinMenuItem);
-    }
+    list.push(pinMenuItem);
     if (isPrivate || checkPermission(PERMISSIONS[entity_name]?.delete)) {
       list.push(deleteMenuItem);
     }
 
     return list;
-  }, [checkPermission, deleteMenuItem, entity_name, onTogglePin, pinMenuItem, isPrivate]);
+  }, [checkPermission, deleteMenuItem, entity_name, pinMenuItem, isPrivate]);
 
   const toolkitsMenu = useMemo(() => {
     const list = [];
@@ -319,7 +337,8 @@ const DataRowAction = memo(props => {
     });
   }, [entity_name, applicationMenu, toolkitsMenu, credentialsMenu, withClose, open, handleClose, data?.name]);
 
-  const styles = dataRowActionStyles(menuList.length > 0);
+  const hasMenuItems = menuList.length > 0 || showFolderActions;
+  const styles = dataRowActionStyles(hasMenuItems);
 
   if (isSkill) {
     return (
@@ -342,7 +361,7 @@ const DataRowAction = memo(props => {
         aria-controls={open ? 'action-menu' : undefined}
         aria-haspopup="true"
         aria-expanded={open ? 'true' : undefined}
-        disabled={!menuList.length}
+        disabled={!hasMenuItems}
         onClick={handleClick}
       >
         <DotsMenuIcon />
@@ -359,6 +378,16 @@ const DataRowAction = memo(props => {
         }}
         keepMounted
       >
+        {showFolderActions && (
+          <MoveToFolderSubmenu
+            entityId={data?.id}
+            entityType={realCardType}
+            currentFolderId={data?.folder_id}
+            parentMenuOpen={open}
+            onAction={handleClose}
+            menuItemSx={basicMenuItemStyles().menuItem}
+          />
+        )}
         {menuList}
       </Menu>
     </Box>

@@ -8,9 +8,16 @@ export const useMoveEntityToFolder = () => {
   const [moveEntityMutation, { isLoading, isError, error }] = useMoveEntityToFolderMutation();
 
   const moveEntityToFolder = useCallback(
-    async ({ folderId, folderName, entityType, entityId }) => {
+    async ({ folderId, folderName, entityType, entityId, previousFolderId }) => {
       if (!projectId) return null;
-      const result = await moveEntityMutation({ projectId, folderId, folderName, entityType, entityId });
+      const result = await moveEntityMutation({
+        projectId,
+        folderId,
+        folderName,
+        entityType,
+        entityId,
+        previousFolderId,
+      });
       return result.data;
     },
     [projectId, moveEntityMutation],

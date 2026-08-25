@@ -3,7 +3,7 @@ import { memo, useCallback, useMemo } from 'react';
 import { Box, IconButton, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
-import { PinButton } from '@/[fsd]/widgets/pin-toggler';
+import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
 import { useEliteaAssistantRef, useGetSupportAssistantConfigQuery } from '@/[fsd]/widgets/support-assistant';
 import EliteaAssistantIcon from '@/assets/icons/elitea-assistant-icon.svg?react';
 import PublishIcon from '@/assets/publish-version.svg?react';
@@ -11,15 +11,17 @@ import { isApplicationCard } from '@/common/checkCardType';
 import { getEntityTypeByCardType } from '@/common/utils';
 import { IconLinkWithToolTip } from '@/components/Fork/IconLinkWithToolTip.jsx';
 import HighlightQuery from '@/components/HighlightQuery';
+import FolderIcon from '@/components/Icons/FolderIcon';
 import useCardNavigate from '@/hooks/useCardNavigate';
 import useDataViewMode from '@/hooks/useDataViewMode';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const DataTableNameCell = memo(props => {
   const styles = dataTableNameCellStyles();
-  const { row, cardType, viewMode, onPinChange, isRowHovered = false } = props;
-  const { id, status, is_pinned: isPinned = false, is_forked: isForked, meta } = row;
+  const { row, cardType, viewMode } = props;
+  const { id, status, is_forked: isForked, meta, folder_id: folderId } = row;
   const projectId = useSelectedProjectId();
+  const { isPublic: isPublicProject } = useProjectType();
   const { data: supportAssistantConfig } = useGetSupportAssistantConfigQuery({ enabled: false });
   const assistantRef = useEliteaAssistantRef();
   const dataViewMode = useDataViewMode(viewMode, row);
@@ -29,8 +31,6 @@ const DataTableNameCell = memo(props => {
     type: row.cardType || cardType,
     name: row.name,
   });
-  const handlePinChange = useCallback(newState => onPinChange?.(id, newState), [onPinChange, id]);
-
   const handleAssistantClick = useCallback(
     event => {
       event.stopPropagation();
@@ -125,13 +125,23 @@ const DataTableNameCell = memo(props => {
           type={getEntityTypeByCardType(cardType)}
         />
       )}
-      <PinButton
-        entityId={id}
-        entityType={cardType}
-        initialPinned={isPinned}
-        alwaysVisible={isRowHovered}
-        onPinChange={handlePinChange}
-      />
+      {folderId && !isPublicProject && (
+        <StyledTooltip
+          placement="top"
+          title={row.folder_name || 'In folder'}
+        >
+          <Box
+            sx={({ palette }) => ({
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              color: palette.icon.fill.default,
+            })}
+          >
+            <FolderIcon sx={{ fontSize: '1rem' }} />
+          </Box>
+        </StyledTooltip>
+      )}
     </Box>
   );
 });

@@ -3,4 +3,6 @@ export { default as FolderItem } from './FolderItem';
 export { default as FolderActionsMenu } from './FolderActionsMenu';
 export { default as CreateFolderDialog } from './CreateFolderDialog';
 export { default as DeleteFolderDialog } from './DeleteFolderDialog';
+export { default as FolderViewHeader } from './FolderViewHeader';
 export { default as MoveToFolderButton } from './MoveToFolderButton';
+export { default as MoveToFolderSubmenu } from './MoveToFolderSubmenu';

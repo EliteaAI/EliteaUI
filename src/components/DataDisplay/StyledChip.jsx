@@ -16,13 +16,8 @@ const StyledChip = styled(
   background: isSelected
     ? theme.palette.background.tagChip.active.default
     : theme.palette.background.tagChip.default,
-  color: isSelected
-    ? theme.palette.text.tagChip.active
-    : theme.palette.text.tagChip.default,
-  boxShadow:
-    theme.palette.mode === 'light' && !isSelected
-      ? '0px 2px 4px rgba(0, 0, 0, 0.12)'
-      : 'none',
+  color: isSelected ? theme.palette.text.tagChip.active : theme.palette.text.tagChip.default,
+  boxShadow: theme.palette.mode === 'light' && !isSelected ? '0px 2px 4px rgba(0, 0, 0, 0.12)' : 'none',
   fontFamily: 'Montserrat',
   padding: '8px 16px',
 
