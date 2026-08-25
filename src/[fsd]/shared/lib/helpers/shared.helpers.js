@@ -1,4 +1,5 @@
 export const secondsInHumanFormat = value => {
+  if (value === null || value === undefined) return '—';
   if (!value || value <= 0) return '0 s';
 
   const hours = Math.floor(value / 3600);

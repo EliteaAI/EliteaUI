@@ -6,6 +6,7 @@ import {
   initialCompletedTsOf,
   resolveIndexEventLabel,
 } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexEvent.helpers';
+import { resolveIndexRunDuration } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexHistoryRow.helpers';
 import { useIndexRunLiveRefresh } from '@/[fsd]/features/toolkits/indexes/lib/hooks/useIndexRunLiveRefresh.hooks';
 
 const TERMINAL_STATES = new Set([
@@ -26,21 +27,13 @@ const toRunRow = (entry, indexName, eventLabel) => {
   const createdAt = toNaiveIsoString(entry.updated_on);
   if (!createdAt) return null;
 
-  const startedOn = Number(entry.created_on);
-  const finishedOn = Number(entry.updated_on);
-  // Raw epoch floats; the conversation rows beside these arrive already rounded.
-  const duration =
-    Number.isFinite(startedOn) && finishedOn > startedOn
-      ? Math.round((finishedOn - startedOn) * 100) / 100
-      : null;
-
   return {
     id: `index-run:${indexName}:${entry.updated_on}`,
     created_at: createdAt,
     name: `${eventLabel} — ${indexName}`,
     event_label: eventLabel,
     event_tooltip: `${eventLabel} — ${indexName}`,
-    duration,
+    duration: resolveIndexRunDuration(entry),
     version_id: null,
     index_name: indexName,
     operation_type: null,

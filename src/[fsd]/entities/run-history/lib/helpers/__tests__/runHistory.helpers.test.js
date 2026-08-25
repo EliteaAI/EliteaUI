@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatRunTimestamp, resolveRunHistoryColumns } from '../runHistory.helpers';
+import { compareRunDuration, formatRunTimestamp, resolveRunHistoryColumns } from '../runHistory.helpers';
 
 describe('resolveRunHistoryColumns', () => {
   it('keeps the historical track lists when there is no event column', () => {
@@ -11,6 +11,23 @@ describe('resolveRunHistoryColumns', () => {
   it('gives the event the wide track and narrows the trailing duration', () => {
     expect(resolveRunHistoryColumns(true, true)).toBe('1.5fr 1.5fr 1fr');
     expect(resolveRunHistoryColumns(false, true)).toBe('1.5fr 1.5fr 1.5fr 1fr');
+  });
+});
+
+describe('compareRunDuration', () => {
+  it('orders known durations shortest first', () => {
+    expect(compareRunDuration({ duration: 1 }, { duration: 2 })).toBeLessThan(0);
+    expect(compareRunDuration({ duration: 2 }, { duration: 1 })).toBeGreaterThan(0);
+  });
+
+  it('keeps a genuine zero among the known durations', () => {
+    expect(compareRunDuration({ duration: 0 }, { duration: 1 })).toBeLessThan(0);
+  });
+
+  it('sinks an unmeasured run below every measured one', () => {
+    expect(compareRunDuration({ duration: null }, { duration: 0 })).toBeGreaterThan(0);
+    expect(compareRunDuration({ duration: 0 }, { duration: null })).toBeLessThan(0);
+    expect(compareRunDuration({ duration: null }, { duration: null })).toBe(0);
   });
 });
 
