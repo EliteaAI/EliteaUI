@@ -1,4 +1,4 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
@@ -13,8 +13,10 @@ import DeleteFolderDialog from './DeleteFolderDialog';
 import FolderActionsMenu from './FolderActionsMenu';
 import FolderItem from './FolderItem';
 
+const VISIBLE_FOLDER_COUNT = 6;
+
 const FolderSection = memo(props => {
-  const { entityType, title = 'Folders', onFolderSelect, selectedFolderId } = props;
+  const { entityType, title = 'Folders', onFolderSelect, selectedFolderId, onExpandChange } = props;
 
   const { folders, isLoading, isError } = useEntityFolders(entityType, { includeCounts: true });
   const { togglePin } = usePinFolder(entityType);
@@ -23,8 +25,23 @@ const FolderSection = memo(props => {
   const [deleteFolder, setDeleteFolder] = useState(null);
   const [menuAnchorEl, setMenuAnchorEl] = useState(null);
   const [menuFolder, setMenuFolder] = useState(null);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const styles = folderSectionStyles();
+
+  const hasMoreFolders = folders.length > VISIBLE_FOLDER_COUNT;
+  const visibleFolders = useMemo(() => {
+    if (!hasMoreFolders || isExpanded) return folders;
+    return folders.slice(0, VISIBLE_FOLDER_COUNT);
+  }, [folders, hasMoreFolders, isExpanded]);
+
+  const handleToggleExpand = useCallback(() => {
+    setIsExpanded(prev => {
+      const next = !prev;
+      onExpandChange?.(next);
+      return next;
+    });
+  }, [onExpandChange]);
 
   const handleOpenCreateDialog = useCallback(() => {
     setIsCreateDialogOpen(true);
@@ -113,7 +130,7 @@ const FolderSection = memo(props => {
 
         {!isLoading && !isError && folders.length > 0 && (
           <Box sx={styles.folders}>
-            {folders.map(folder => (
+            {visibleFolders.map(folder => (
               <FolderItem
                 key={folder.id}
                 folder={folder}
@@ -127,6 +144,16 @@ const FolderSection = memo(props => {
 
         {isError && <Typography variant="labelSmall">Failed to load folders</Typography>}
       </Box>
+
+      {hasMoreFolders && (
+        <Typography
+          variant="bodyMedium"
+          sx={styles.showMoreLink}
+          onClick={handleToggleExpand}
+        >
+          {isExpanded ? 'Show less' : 'Show more'}
+        </Typography>
+      )}
 
       <FolderActionsMenu
         anchorEl={menuAnchorEl}
@@ -166,6 +193,7 @@ FolderSection.displayName = 'FolderSection';
 const folderSectionStyles = () => ({
   container: {
     marginBottom: '1.5rem',
+    flexShrink: 0,
   },
   header: {
     display: 'flex',
@@ -184,13 +212,7 @@ const folderSectionStyles = () => ({
   }),
   folderList: {
     minHeight: '1.5rem',
-    maxHeight: '12rem',
-    overflowY: 'auto',
-    padding: '0.25rem 0.375rem 0.375rem',
-    margin: '0 -0.375rem -0.375rem',
-    '::-webkit-scrollbar': {
-      display: 'none',
-    },
+    padding: '0.25rem 0 0.375rem',
   },
   loadingText: {
     fontSize: '.875rem',
@@ -204,6 +226,15 @@ const folderSectionStyles = () => ({
     flexDirection: 'column',
     gap: '.5rem',
   },
+  showMoreLink: ({ palette }) => ({
+    color: palette.primary.main,
+    cursor: 'pointer',
+    fontSize: '0.8125rem',
+    marginTop: '0.5rem',
+    '&:hover': {
+      textDecoration: 'underline',
+    },
+  }),
 });
 
 export default FolderSection;

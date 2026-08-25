@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
@@ -41,7 +41,6 @@ const ToolkitsList = memo(props => {
     isApplication = false,
   } = props;
   const navigate = useNavigate();
-  const styles = toolkitsListStyles();
   const { selectedTypes } = useTypes();
   const dispatch = useDispatch();
   const { query } = useSelector(state => state.search);
@@ -71,6 +70,11 @@ const ToolkitsList = memo(props => {
   });
 
   const shouldSkipQuery = isFolderViewActive && isLoadingFolderItems;
+
+  const [isFoldersExpanded, setIsFoldersExpanded] = useState(false);
+  const handleExpandChange = useCallback(expanded => {
+    setIsFoldersExpanded(expanded);
+  }, []);
 
   const {
     onLoadMoreToolkits,
@@ -118,30 +122,32 @@ const ToolkitsList = memo(props => {
 
   const rightPanelContent = useMemo(
     () => (
-      <Box style={styles.rightInfoPanelContainer}>
+      <Box sx={toolkitsRightPanelStyles(isFoldersExpanded).container}>
         {!isPublicProject && (
           <FolderSection
             entityType={folderEntityType}
             onFolderSelect={openFolder}
             selectedFolderId={selectedFolderId}
+            onExpandChange={handleExpandChange}
           />
         )}
         <ToolkitTypesPanel
           tagList={isFolderViewActive ? folderTagList : tagList}
           title="Types"
-          style={styles.rightInfoPanel}
+          style={isFoldersExpanded ? { overflowY: 'visible' } : { flex: 1, minHeight: 0 }}
         />
       </Box>
     ),
     [
       tagList,
       folderTagList,
-      styles,
       folderEntityType,
       isPublicProject,
       openFolder,
       selectedFolderId,
       isFolderViewActive,
+      isFoldersExpanded,
+      handleExpandChange,
     ],
   );
 
@@ -289,12 +295,18 @@ const ToolkitsList = memo(props => {
 });
 
 /** @type {MuiSx} */
-const toolkitsListStyles = () => ({
-  rightInfoPanel: { flex: 1 },
-  rightInfoPanelContainer: {
+const toolkitsRightPanelStyles = isFoldersExpanded => ({
+  container: {
     height: '100dvh',
     display: 'flex',
     flexDirection: 'column',
+    ...(isFoldersExpanded && {
+      overflowY: 'auto',
+      overflowX: 'hidden',
+      '::-webkit-scrollbar': {
+        display: 'none',
+      },
+    }),
   },
 });
 

@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -70,6 +70,11 @@ const CredentialsList = memo(props => {
 
   const shouldSkipQuery = isFolderViewActive && isLoadingFolderItems;
 
+  const [isFoldersExpanded, setIsFoldersExpanded] = useState(false);
+  const handleExpandChange = useCallback(expanded => {
+    setIsFoldersExpanded(expanded);
+  }, []);
+
   const {
     onLoadMore,
     data,
@@ -108,22 +113,32 @@ const CredentialsList = memo(props => {
 
   const rightPanelContent = useMemo(
     () => (
-      <Box sx={styles.rightInfoPanelStyle}>
+      <Box sx={credentialsRightPanelStyles(isFoldersExpanded).container}>
         {!isPublicProject && (
           <FolderSection
             entityType={ENTITY_FOLDER_TYPES.configuration}
             onFolderSelect={openFolder}
             selectedFolderId={selectedFolderId}
+            onExpandChange={handleExpandChange}
           />
         )}
         <CredentialsTypesPanel
           tagList={isFolderViewActive ? folderTagList : tagList}
           title="Types"
-          style={{ flex: 1 }}
+          style={isFoldersExpanded ? { overflowY: 'visible' } : { flex: 1, minHeight: 0 }}
         />
       </Box>
     ),
-    [tagList, folderTagList, styles, isPublicProject, openFolder, selectedFolderId, isFolderViewActive],
+    [
+      tagList,
+      folderTagList,
+      isPublicProject,
+      openFolder,
+      selectedFolderId,
+      isFolderViewActive,
+      isFoldersExpanded,
+      handleExpandChange,
+    ],
   );
 
   useEffect(() => {
@@ -236,12 +251,23 @@ CredentialsList.displayName = 'CredentialsList';
 export default CredentialsList;
 
 /** @type {MuiSx} */
-const credentialsListStyles = () => ({
-  rightInfoPanelStyle: {
+const credentialsRightPanelStyles = isFoldersExpanded => ({
+  container: {
     height: `calc(100dvh - 4.375rem)`,
     display: 'flex',
     flexDirection: 'column',
+    ...(isFoldersExpanded && {
+      overflowY: 'auto',
+      overflowX: 'hidden',
+      '::-webkit-scrollbar': {
+        display: 'none',
+      },
+    }),
   },
+});
+
+/** @type {MuiSx} */
+const credentialsListStyles = () => ({
   wrapper: {
     width: '100%',
     '& > .MuiGrid-container': {

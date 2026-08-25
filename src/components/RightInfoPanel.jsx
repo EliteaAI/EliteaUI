@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useCallback, useState } from 'react';
 
 import Box from '@mui/material/Box';
 
@@ -16,32 +16,47 @@ const RightInfoPanel = memo(props => {
     selectedFolderId,
   } = props;
 
-  const styles = stylesRightInfoPanel();
+  const [isFoldersExpanded, setIsFoldersExpanded] = useState(false);
+
+  const handleExpandChange = useCallback(expanded => {
+    setIsFoldersExpanded(expanded);
+  }, []);
+
+  const styles = stylesRightInfoPanel(isFoldersExpanded);
 
   return (
-    <Box style={styles.mainContainer}>
+    <Box sx={styles.mainContainer}>
       {showFolders && folderEntityType && (
         <FolderSection
           entityType={folderEntityType}
           onFolderSelect={onFolderSelect}
           selectedFolderId={selectedFolderId}
+          onExpandChange={handleExpandChange}
         />
       )}
       <Categories
         tagList={tagList}
         title={title}
-        style={{ flex: 1 }}
+        style={isFoldersExpanded ? { overflowY: 'visible' } : { flex: 1, minHeight: 0 }}
         specifiedStatus={specifiedStatus}
       />
     </Box>
   );
 });
 
-const stylesRightInfoPanel = () => ({
+/** @type {MuiSx} */
+const stylesRightInfoPanel = isFoldersExpanded => ({
   mainContainer: {
-    height: `calc(100vh)`,
+    height: '100dvh',
     display: 'flex',
     flexDirection: 'column',
+    ...(isFoldersExpanded && {
+      overflowY: 'auto',
+      overflowX: 'hidden',
+      '::-webkit-scrollbar': {
+        display: 'none',
+      },
+    }),
   },
 });
 
