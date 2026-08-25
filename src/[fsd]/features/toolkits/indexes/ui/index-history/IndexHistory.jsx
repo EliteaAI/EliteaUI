@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { Box } from '@mui/material';
 
-import { resolveRunHistoryColumns } from '@/[fsd]/entities/run-history/lib/helpers';
+import { compareRunDuration, resolveRunHistoryColumns } from '@/[fsd]/entities/run-history/lib/helpers';
 import { useRunHistorySorting } from '@/[fsd]/entities/run-history/lib/hooks';
 import { RunHistoryListItem, RunHistorySortableHeader } from '@/[fsd]/entities/run-history/ui';
 import { initialCompletedTsOf } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexEvent.helpers';
@@ -32,7 +32,7 @@ const TABLE_HEADER_ITEMS = [
 const SORT_FUNCTIONS = {
   [SORT_TYPES.DATE]: (a, b) => a.created_at - b.created_at,
   [SORT_TYPES.EVENT]: (a, b) => a.event_label.localeCompare(b.event_label),
-  [SORT_TYPES.DURATION]: (a, b) => (a.duration || 0) - (b.duration || 0),
+  [SORT_TYPES.DURATION]: compareRunDuration,
 };
 
 const IndexHistory = memo(props => {

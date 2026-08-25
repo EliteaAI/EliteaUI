@@ -11,6 +11,14 @@ export const resolveRunHistoryColumns = (noVersions, hasEvent) => {
   return [date, ...event, ...version, duration].join(' ');
 };
 
+export const compareRunDuration = (a, b) => {
+  if (a.duration == null && b.duration == null) return 0;
+  if (a.duration == null) return 1;
+  if (b.duration == null) return -1;
+
+  return a.duration - b.duration;
+};
+
 export const formatRunTimestamp = value => {
   if (value === null || value === undefined || value === '') return '—';
 

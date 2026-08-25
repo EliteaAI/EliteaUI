@@ -3,7 +3,7 @@ import { memo, useMemo } from 'react';
 import { Box } from '@mui/material';
 
 import ListInfiniteMoreLoader from '@/ComponentsLib/ListInfiniteMoreLoader';
-import { resolveRunHistoryColumns } from '@/[fsd]/entities/run-history/lib/helpers';
+import { compareRunDuration, resolveRunHistoryColumns } from '@/[fsd]/entities/run-history/lib/helpers';
 import { useRunHistorySorting } from '@/[fsd]/entities/run-history/lib/hooks';
 import { RunHistoryListItem, RunHistorySortableHeader } from '@/[fsd]/entities/run-history/ui';
 import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
@@ -63,7 +63,7 @@ const RunHistoryList = memo(props => {
 
         return versionA.localeCompare(versionB);
       },
-      [SORT_TYPES.DURATION]: (a, b) => (a.duration || 0) - (b.duration || 0),
+      [SORT_TYPES.DURATION]: compareRunDuration,
     }),
     [noVersions, versions],
   );
